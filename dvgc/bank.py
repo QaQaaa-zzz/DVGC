@@ -16,7 +16,7 @@ from scipy.stats import beta as beta_dist
 
 from .config import PHASES, SNAPSHOT_SCHEMA
 
-BANK_VERSION = 3
+BANK_VERSION = 4
 LABELS = ("safe", "boundary", "dead", "unknown")
 
 
@@ -151,6 +151,7 @@ class SnapshotBank:
         r.setdefault("policy_version", None)
         r.setdefault("estimator_version", None)
         r.setdefault("tube_version", None)
+        r.setdefault("certification_branches", [])
         r.setdefault("label_timestamp", None)
         r.setdefault("label_age", 0)
         r.setdefault("reset_use_count", 0)
@@ -205,8 +206,23 @@ class SnapshotBank:
         tube_version: str,
         protocol: Mapping[str, Any],
         seed_namespace: str,
+        branch_evidence: Sequence[Mapping[str, Any]],
     ) -> dict[str, Any]:
         r = self.get(record_id)
+        evidence = copy.deepcopy([dict(row) for row in branch_evidence])
+        expected_branches = int(chain_successes) + int(chain_failures)
+        if expected_branches != int(final_successes) + int(final_failures):
+            raise ValueError("Chain and Final certification must use the same branches")
+        if len(evidence) != expected_branches:
+            raise ValueError(
+                f"Expected {expected_branches} branch evidence rows, got {len(evidence)}"
+            )
+        evidence_chain = sum(bool(row.get("chain_success")) for row in evidence)
+        evidence_final = sum(bool(row.get("final_recovery")) for row in evidence)
+        if evidence_chain != int(chain_successes) or evidence_final != int(final_successes):
+            raise ValueError("Branch evidence does not match Chain/Final success counts")
+        if any(str(row.get("seed_namespace")) != str(seed_namespace) for row in evidence):
+            raise ValueError("Branch evidence seed namespace does not match certification")
         old_version = (r.get("policy_version"), r.get("estimator_version"))
         new_version = (str(policy_version), str(estimator_version))
         if old_version != (None, None) and old_version != new_version:
@@ -216,6 +232,7 @@ class SnapshotBank:
                     "estimator_version": old_version[1],
                     "chain": copy.deepcopy(r["chain"]),
                     "final": copy.deepcopy(r["final"]),
+                    "certification_branches": copy.deepcopy(r["certification_branches"]),
                     "label_timestamp": r.get("label_timestamp"),
                 }
             )
@@ -248,6 +265,7 @@ class SnapshotBank:
         r["policy_version"] = str(policy_version)
         r["estimator_version"] = str(estimator_version)
         r["tube_version"] = str(tube_version)
+        r["certification_branches"] = evidence
         r["label_timestamp"] = time.time()
         r["label_age"] = 0
         r["seed_namespace"] = str(seed_namespace)
@@ -264,6 +282,7 @@ class SnapshotBank:
                         "estimator_version": r.get("estimator_version"),
                         "chain": copy.deepcopy(r["chain"]),
                         "final": copy.deepcopy(r["final"]),
+                        "certification_branches": copy.deepcopy(r["certification_branches"]),
                         "reason": reason,
                     }
                 )
@@ -272,6 +291,7 @@ class SnapshotBank:
             r["policy_version"] = None
             r["estimator_version"] = None
             r["tube_version"] = None
+            r["certification_branches"] = []
             r["label_age"] = 0
             count += 1
         return count
