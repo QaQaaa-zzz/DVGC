@@ -12,6 +12,12 @@ python -m cli.prepare_project
 python -m pytest -q
 ```
 
+在已配置好的 Ubuntu MuJoCo Playground 环境中，不安装或升级依赖，直接运行：
+
+```bash
+bash scripts/local_preflight.sh
+```
+
 本项目只读取 `assets/orange_bike_4kg_horizontal.xml`，不生成 runtime XML，也不修改碰撞几何。正式模型使用 4 kg 负载和 hip/knee `±50 N·m` 限幅，默认使用 `impl="warp"`、`contact_mode="imu"`；Actor observation 不读取 oracle contact。请将你已有的 STL 保持在 XML 指定的 `assets/meshes/` 目录。
 
 模型与 knee 动作映射的完整说明见 `docs/XML_AND_KNEE_MAPPING.md`。
