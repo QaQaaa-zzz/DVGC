@@ -46,7 +46,11 @@ def main():
     narrowphase_overflow="narrowphase overflow" in console.lower()
     nonfinite=_nonfinite_paths(payload); training_sps=[item["value"] for item in _series(rows,"training/sps")]
     eval_sps=[item["value"] for item in _series(rows,"eval/sps")]
-    phase_visitation={"landing":1.0,"flight":0.0,"takeoff":0.0,"approach":0.0} if stage=="landing" else {"available":False}
+    episode_length=float(last.get("eval/avg_episode_length",0.0))
+    phase_visitation={
+        phase:(float(last.get(f"eval/episode_reward/phase/{phase}",0.0))/episode_length if episode_length>0 else 0.0)
+        for phase in ("approach","takeoff","flight","landing")
+    }
     report={
         "status":payload.get("status"),"stage":stage,"seed":payload.get("seed"),
         "requested_timesteps":payload.get("requested_timesteps"),"effective_timesteps":payload.get("effective_timesteps"),

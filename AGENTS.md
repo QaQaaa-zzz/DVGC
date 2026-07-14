@@ -29,6 +29,18 @@
 - Keep each validated change in a focused Git commit.
 - Never mix policies, banks, or results across XML hashes, action mappings, or
   policy versions.
+- Continue autonomously through Landing -> Flight -> Takeoff -> Approach ->
+  natural-start evaluation, then the minimum RA-L seed/baseline/ablation
+  matrix.  Pause only for environment reconfiguration, destructive operations,
+  a claim-changing research fork, two failed evidence-based repairs of one
+  critical gate, or an external hardware/permission/data blocker.
+- Use one main agent.  Do not browse, draft the paper, make figures, or launch
+  the multi-seed matrix before the seed-0 end-to-end chain passes.
+- Maintain `docs/EXPERIMENT_STATE.md`; after context recovery read only this
+  file plus `AGENTS.md` and `PROJECT.md` before resuming the last valid marker.
+- Runs must be resumable and provenance-keyed.  Skip a completed step only when
+  its input hashes and output hashes still match; never overwrite a run or feed
+  independent-audit labels back into training.
 
 ## Verification
 
@@ -36,3 +48,10 @@
 - Before a long PPO run, require a model-load test, reset/step smoke test,
   snapshot round-trip test, deterministic inference test, and short PPO test.
 - Report physical failures and timeouts separately.
+- During PPO, use a persistent process and inspect only sparse milestones,
+  completion, or abnormal exit.  Prefer compact JSON extraction and log tails;
+  avoid repeated full-log reads, broad reviews, and unrelated refactors.
+- Run targeted tests for ordinary controller/report changes.  Re-run the full
+  runtime gate only when runtime source, configuration, XML, or its fingerprint
+  changes.  Commit only validated source/config/script/research-document edits;
+  keep checkpoints and run artifacts ignored.

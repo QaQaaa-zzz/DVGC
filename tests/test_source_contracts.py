@@ -58,3 +58,16 @@ def test_runtime_gate_has_bounded_warp_replay_tolerances_and_exact_semantics():
     assert '"actor_obs": 2e-2' in gate
     assert "SNAPSHOT_DISCRETE_FIELDS" in gate
     assert "np.array_equal" in gate
+
+
+def test_remaining_pipeline_is_resumable_and_stage_complete():
+    controller = Path("scripts/run_remaining_pipeline.sh").read_text()
+    assert "cli.pipeline_marker check" in controller
+    assert "certify_chunked" in controller and "audit_chunked" in controller
+    assert controller.index("run_stage flight") < controller.index("run_stage takeoff") < controller.index("run_stage approach")
+    assert "natural_start_seed0" in controller
+    env = Path("dvgc/env.py").read_text()
+    analysis = Path("cli/analyze_training.py").read_text()
+    for phase in ("approach", "takeoff", "flight", "landing"):
+        assert f'"phase/{phase}"' in env
+    assert 'eval/episode_reward/phase/{phase}' in analysis
