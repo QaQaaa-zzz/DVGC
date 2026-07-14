@@ -65,7 +65,9 @@ python -m cli.certify \
 bash scripts/run_backward_bootstrap.sh
 ```
 
-脚本按 Landing → Flight → Takeoff → Approach → natural-start 顺序执行。后续阶段通过 `--resume` 继承前一阶段共享 Actor，并混入已认证下游 rehearsal。
+脚本按 Landing → Flight → Takeoff → Approach → natural-start 顺序执行。每个阶段先用几何候选完成 backward bootstrap，冻结策略并认证第一版 Tube；只有达到 Final-safe 激活门槛后，才从 Final-safe/Boundary Tube 继续 RSI refinement，然后再次冻结、重新认证并独立 audit。bootstrap/refinement 按 60%/40% 拆分原阶段 PPO 预算；中间认证的 branch rollout 是额外环境交互，必须单独计入并报告总交互成本。后续阶段通过 `--resume` 继承前一阶段共享 Actor，并混入单独计权的已认证下游 rehearsal。
+
+`scripts/local_preflight.sh` 只是本地基础预检；正式长训练仍须先满足 `docs/VERIFICATION_PROTOCOL.md` 中的完整训练 gates。
 
 ## 4. 认证原则
 

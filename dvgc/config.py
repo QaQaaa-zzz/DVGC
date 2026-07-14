@@ -119,9 +119,9 @@ def default_config() -> config_dict.ConfigDict:
         # learning near the decision surface.  Auxiliary velocity seeds are
         # training-only and can never enter certification/audit.
         rsi_safe_mass=0.70,
-        rsi_boundary_mass=0.20,
-        rsi_aux_mass=0.20,
-        downstream_rehearsal_mass=0.20,
+        rsi_boundary_mass=0.15,
+        rsi_aux_mass=0.05,
+        downstream_rehearsal_mass=0.10,
         natural_prob_landing=0.00,
         natural_prob_flight=0.05,
         natural_prob_takeoff=0.10,

@@ -32,3 +32,11 @@ def test_candidate_rng_and_incremental_training_log_contracts():
     assert "np.random.uniform" not in candidates
     assert 'metric_log["status"]="running"' in training
     assert '"status":"failed"' in training
+
+
+def test_formal_pipeline_contains_tube_rsi_refinement_and_recertification():
+    script = Path("scripts/run_backward_bootstrap.sh").read_text()
+    assert "_bootstrap_tube.pkl" in script
+    assert "--require-final-safe-rsi" in script
+    assert script.count("-m cli.certify") == 2
+    assert "600000 400000" in script

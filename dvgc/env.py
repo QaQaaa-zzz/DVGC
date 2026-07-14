@@ -204,6 +204,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
                 safe_mass=float(self._config.rsi_safe_mass),
                 boundary_mass=float(self._config.rsi_boundary_mass),
                 aux_mass=float(self._config.rsi_aux_mass),
+                rehearsal_mass=float(self._config.downstream_rehearsal_mass),
                 tube_activation_min_safe=int(self._config.tube_activation_min_safe),
             )
             if self._stage_name != "full" else ([], np.empty((0,), np.float32))

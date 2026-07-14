@@ -48,3 +48,18 @@ def test_certification_provenance_rejects_policy_and_tube_mixtures():
     assert b.validate_certification_provenance("landing",policy_version="p",estimator_version="e")=="t0"
     with pytest.raises(ValueError,match="another policy"):
         b.validate_certification_provenance("landing",policy_version="other",estimator_version="e")
+
+
+def test_tube_reset_distribution_separates_final_core_boundary_aux_and_rehearsal():
+    rows=[record() for _ in range(4)]
+    rows[2].update({"training_only":True,"candidate_kind":"velocity_seed"})
+    rows[3].update({"training_only":True,"candidate_kind":"downstream_rehearsal"})
+    b=SnapshotBank(rows)
+    b.records[0]["final"]["label"]="safe"
+    b.records[1]["final"]["label"]="boundary"
+    selected,weights=b.reset_distribution("landing",safe_mass=.70,boundary_mass=.15,aux_mass=.05,rehearsal_mass=.10,tube_activation_min_safe=1)
+    pairs=list(zip(selected,weights))
+    assert sum(float(w) for row,w in pairs if row["final"]["label"]=="safe")==pytest.approx(.70)
+    assert sum(float(w) for row,w in pairs if row["final"]["label"]=="boundary")==pytest.approx(.15)
+    assert sum(float(w) for row,w in pairs if row["candidate_kind"]=="velocity_seed")==pytest.approx(.05)
+    assert sum(float(w) for row,w in pairs if row["candidate_kind"]=="downstream_rehearsal")==pytest.approx(.10)

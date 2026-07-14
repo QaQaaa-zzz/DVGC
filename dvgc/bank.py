@@ -350,6 +350,7 @@ class SnapshotBank:
         safe_mass: float,
         boundary_mass: float,
         aux_mass: float,
+        rehearsal_mass: float,
         tube_activation_min_safe: int,
     ) -> tuple[list[dict[str, Any]], np.ndarray]:
         rows = self.records_for_phase(phase)
@@ -357,12 +358,31 @@ class SnapshotBank:
             return [], np.empty((0,), np.float32)
         safe = [r for r in rows if r["final"]["label"] == "safe" and not r["training_only"]]
         boundary = [r for r in rows if r["final"]["label"] == "boundary" and not r["training_only"]]
-        aux = [r for r in rows if r["training_only"]]
+        rehearsal = [
+            r
+            for r in rows
+            if r["training_only"] and r.get("candidate_kind") == "downstream_rehearsal"
+        ]
+        aux = [
+            r
+            for r in rows
+            if r["training_only"] and r.get("candidate_kind") != "downstream_rehearsal"
+        ]
         if len(safe) < int(tube_activation_min_safe):
             base = [r for r in rows if bool(r.get("bootstrap_eligible", True)) and not r["training_only"]]
-            groups = [(base, 1.0 - float(aux_mass)), (aux, float(aux_mass))]
+            base_mass = max(0.0, 1.0 - float(aux_mass) - float(rehearsal_mass))
+            groups = [
+                (base, base_mass),
+                (aux, float(aux_mass)),
+                (rehearsal, float(rehearsal_mass)),
+            ]
         else:
-            groups = [(safe, safe_mass), (boundary, boundary_mass), (aux, aux_mass)]
+            groups = [
+                (safe, safe_mass),
+                (boundary, boundary_mass),
+                (aux, aux_mass),
+                (rehearsal, rehearsal_mass),
+            ]
         selected: list[dict[str, Any]] = []
         weights: list[float] = []
         for group, mass in groups:

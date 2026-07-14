@@ -1,37 +1,73 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Run from the project root.  Each stage uses the SAME shared Actor by passing
-# the previous policy bundle as the training resume source in your Playground
-# installation.  Labels are updated only by certify.py after freezing policy.
 
-PYTHON=${PYTHON:-python}
-CFG=${CFG:-configs/default.json}
+# Formal shared-Actor path:
+# geometric bootstrap -> frozen-policy Tube -> Tube-guided RSI refinement ->
+# fresh frozen-policy Tube -> independent audit.  Bootstrap and refinement
+# split the previous per-stage PPO budget.  The intermediate certification
+# branches are additional environment interactions and must be reported.
 
-$PYTHON -m cli.prepare_project --xml assets/orange_bike_4kg_horizontal.xml --reference data/reference_jump.csv
+ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+PYTHON="${PYTHON:-/home/qy/mujoco_playground/.venv/bin/python}"
+CFG="${CFG:-configs/default.json}"
 
-echo "1) Build/train/certify Landing -> Recovery"
-$PYTHON -m cli.build_candidates --phase landing --target 96 --bank artifacts/landing_candidates.pkl --config "$CFG"
-$PYTHON -m cli.train --stage landing --bank artifacts/landing_candidates.pkl --config "$CFG" --run runs/landing --timesteps 1000000
-$PYTHON -m cli.certify --phase landing --policy runs/landing/policy --candidate-bank artifacts/landing_candidates.pkl --output-bank artifacts/landing_tube.pkl
-$PYTHON -m cli.audit --phase landing --policy runs/landing/policy --bank artifacts/landing_tube.pkl --output runs/landing/audit.json
+cd "$ROOT"
+bash scripts/local_preflight.sh
 
-echo "2) Flight -> certified Landing entry -> Recovery"
-$PYTHON -m cli.build_candidates --phase flight --target 160 --bank artifacts/flight_candidates.pkl --config "$CFG"
-$PYTHON -m cli.train --stage flight --bank artifacts/flight_candidates.pkl --downstream-bank artifacts/landing_tube.pkl --config "$CFG" --run runs/flight --resume runs/landing/policy --timesteps 1200000
-$PYTHON -m cli.certify --phase flight --policy runs/flight/policy --candidate-bank artifacts/flight_candidates.pkl --downstream-bank artifacts/landing_tube.pkl --output-bank artifacts/flight_tube.pkl
-$PYTHON -m cli.audit --phase flight --policy runs/flight/policy --bank artifacts/flight_tube.pkl --downstream-bank artifacts/landing_tube.pkl --output runs/flight/audit.json
+run_stage() {
+  local phase="$1"
+  local target="$2"
+  local bootstrap_steps="$3"
+  local refine_steps="$4"
+  local downstream_bank="$5"
+  local resume_policy="$6"
+  local candidates="artifacts/${phase}_candidates.pkl"
+  local bootstrap_run="runs/${phase}_bootstrap"
+  local bootstrap_tube="artifacts/${phase}_bootstrap_tube.pkl"
+  local final_run="runs/${phase}"
+  local final_tube="artifacts/${phase}_tube.pkl"
+  local downstream_args=()
+  local resume_args=()
 
-echo "3) Takeoff ground states -> certified Flight entry -> Recovery"
-$PYTHON -m cli.build_candidates --phase takeoff --target 180 --bank artifacts/takeoff_candidates.pkl --config "$CFG"
-$PYTHON -m cli.train --stage takeoff --bank artifacts/takeoff_candidates.pkl --downstream-bank artifacts/flight_tube.pkl --config "$CFG" --run runs/takeoff --resume runs/flight/policy --timesteps 1500000
-$PYTHON -m cli.certify --phase takeoff --policy runs/takeoff/policy --candidate-bank artifacts/takeoff_candidates.pkl --downstream-bank artifacts/flight_tube.pkl --output-bank artifacts/takeoff_tube.pkl
-$PYTHON -m cli.audit --phase takeoff --policy runs/takeoff/policy --bank artifacts/takeoff_tube.pkl --downstream-bank artifacts/flight_tube.pkl --output runs/takeoff/audit.json
+  if [[ -n "$downstream_bank" ]]; then
+    downstream_args=(--downstream-bank "$downstream_bank")
+  fi
+  if [[ -n "$resume_policy" ]]; then
+    resume_args=(--resume "$resume_policy")
+  fi
 
-echo "4) Approach -> certified Takeoff entry -> Recovery"
-$PYTHON -m cli.build_candidates --phase approach --target 160 --bank artifacts/approach_candidates.pkl --config "$CFG"
-$PYTHON -m cli.train --stage approach --bank artifacts/approach_candidates.pkl --downstream-bank artifacts/takeoff_tube.pkl --config "$CFG" --run runs/approach --resume runs/takeoff/policy --timesteps 1800000
-$PYTHON -m cli.certify --phase approach --policy runs/approach/policy --candidate-bank artifacts/approach_candidates.pkl --downstream-bank artifacts/takeoff_tube.pkl --output-bank artifacts/approach_tube.pkl
-$PYTHON -m cli.audit --phase approach --policy runs/approach/policy --bank artifacts/approach_tube.pkl --downstream-bank artifacts/takeoff_tube.pkl --output runs/approach/audit.json
+  "$PYTHON" -m cli.build_candidates \
+    --phase "$phase" --target "$target" --bank "$candidates" --config "$CFG"
+  "$PYTHON" -m cli.train \
+    --stage "$phase" --bank "$candidates" "${downstream_args[@]}" \
+    --config "$CFG" --run "$bootstrap_run" "${resume_args[@]}" \
+    --timesteps "$bootstrap_steps"
+  "$PYTHON" -m cli.certify \
+    --phase "$phase" --policy "$bootstrap_run/policy" \
+    --candidate-bank "$candidates" "${downstream_args[@]}" \
+    --output-bank "$bootstrap_tube"
 
-echo "5) Natural-start complete jump evaluation"
-$PYTHON -m cli.evaluate --stage full --policy runs/approach/policy --episodes 200 --output runs/natural_start_evaluation.json
+  "$PYTHON" -m cli.train \
+    --stage "$phase" --bank "$bootstrap_tube" "${downstream_args[@]}" \
+    --config "$CFG" --run "$final_run" --resume "$bootstrap_run/policy" \
+    --require-final-safe-rsi --timesteps "$refine_steps"
+  "$PYTHON" -m cli.certify \
+    --phase "$phase" --policy "$final_run/policy" \
+    --candidate-bank "$bootstrap_tube" "${downstream_args[@]}" \
+    --output-bank "$final_tube"
+  "$PYTHON" -m cli.audit \
+    --phase "$phase" --policy "$final_run/policy" --bank "$final_tube" \
+    "${downstream_args[@]}" --output "$final_run/audit.json"
+}
+
+run_stage landing 96 600000 400000 "" ""
+run_stage flight 160 720000 480000 \
+  artifacts/landing_tube.pkl runs/landing/policy
+run_stage takeoff 180 900000 600000 \
+  artifacts/flight_tube.pkl runs/flight/policy
+run_stage approach 160 1080000 720000 \
+  artifacts/takeoff_tube.pkl runs/takeoff/policy
+
+"$PYTHON" -m cli.evaluate \
+  --stage full --policy runs/approach/policy --episodes 200 \
+  --output runs/natural_start_evaluation.json
