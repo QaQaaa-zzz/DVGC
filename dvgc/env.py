@@ -249,6 +249,15 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
                 valid.append(ok)
             self._bank_obs_history = jp.asarray(np.stack(histories), jp.float32)
             self._bank_obs_history_valid = jp.asarray(valid, bool)
+            default_actor_observation = np.zeros((self._actor_obs_dim,), np.float32)
+            actor_observations, actor_observation_valid = [], []
+            for r in records:
+                value = np.asarray(ps(r).get("actor_observation", default_actor_observation), np.float32)
+                ok = value.shape == default_actor_observation.shape
+                actor_observations.append(value if ok else default_actor_observation)
+                actor_observation_valid.append(ok)
+            self._bank_actor_observation = jp.asarray(np.stack(actor_observations), jp.float32)
+            self._bank_actor_observation_valid = jp.asarray(actor_observation_valid, bool)
             self._bank_logw = jp.log(jp.asarray(weights) + 1e-12)
         else:
             self._bank_qpos = jp.zeros((1, nq), jp.float32); self._bank_qvel = jp.zeros((1, nv), jp.float32)
@@ -263,6 +272,8 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             self._bank_last_action = jp.zeros((1, nu), jp.float32)
             self._bank_obs_history = jp.zeros((1, self._actor_history_len, self._actor_frame_dim), jp.float32)
             self._bank_obs_history_valid = jp.zeros((1,), bool); self._bank_logw = jp.zeros((1,), jp.float32)
+            self._bank_actor_observation = jp.zeros((1, self._actor_obs_dim), jp.float32)
+            self._bank_actor_observation_valid = jp.zeros((1,), bool)
 
         # Recursive bootstrap entry set comes from the next phase's independently
         # certified Final-safe core.  Matching uses robust standardized features,
@@ -735,6 +746,8 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         prev_vz: Optional[jax.Array] = None,
         obs_history: Optional[jax.Array] = None,
         obs_history_valid: Optional[jax.Array] = None,
+        actor_observation: Optional[jax.Array] = None,
+        actor_observation_valid: Optional[jax.Array] = None,
     ) -> mjx_env.State:
         data = self._make_data(qpos, qvel, ctrl)
         last_action = self._neutral_action if last_action is None else last_action
@@ -779,6 +792,8 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             data, phase, had_airborne, had_valid_landing, support, contact_age, rec_count, last_action
         )
         obs = self._stack_actor_history(history, frame)
+        if actor_observation is not None and actor_observation_valid is not None:
+            obs = jp.where(actor_observation_valid, jp.asarray(actor_observation, jp.float32), obs)
         return mjx_env.State(
             data, {"state": obs, "privileged_state": privileged_obs},
             jp.zeros(()), jp.zeros(()), self._empty_metrics(), info
@@ -836,6 +851,8 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             last_action = jp.where(use_bank, self._bank_last_action[idx], self._neutral_action)
             obs_history = self._bank_obs_history[idx]
             obs_history_valid = use_bank & self._bank_obs_history_valid[idx]
+            actor_observation = self._bank_actor_observation[idx]
+            actor_observation_valid = use_bank & self._bank_actor_observation_valid[idx]
             return self._state_from_values(
                 qpos, qvel, ctrl, rng, phase, airborne, landed, age, last_action,
                 estimated_phase=estimated_phase, phase_probs=phase_probs,
@@ -843,6 +860,8 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
                 landing_bounce_count=bounce_count, invalid_wheel_count=invalid_count,
                 recovery_count=recovery_count, prev_acc_z=prev_acc_z, prev_vz=prev_vz,
                 obs_history=obs_history, obs_history_valid=obs_history_valid,
+                actor_observation=actor_observation,
+                actor_observation_valid=actor_observation_valid,
             )
         return self._state_from_values(qnat, vnat, cnat, rng, jp.asarray(STAGE_ID["approach"], jp.int32), jp.zeros((), jp.int32), jp.zeros((), jp.int32), jp.zeros((), jp.int32))
 
@@ -862,6 +881,8 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         prev_vz: Optional[jax.Array] = None,
         obs_history: Optional[jax.Array] = None,
         obs_history_valid: Optional[jax.Array] = None,
+        actor_observation: Optional[jax.Array] = None,
+        actor_observation_valid: Optional[jax.Array] = None,
     ) -> mjx_env.State:
         """Restore physical and IMU phase-filter state for branch certification.
 
@@ -876,6 +897,8 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             landing_bounce_count=landing_bounce_count, invalid_wheel_count=invalid_wheel_count,
             recovery_count=recovery_count, prev_acc_z=prev_acc_z, prev_vz=prev_vz,
             obs_history=obs_history, obs_history_valid=obs_history_valid,
+            actor_observation=actor_observation,
+            actor_observation_valid=actor_observation_valid,
         )
 
     def reset_from_com_seed(self, seed: Dict[str, Any], rng: jax.Array) -> mjx_env.State:
@@ -951,6 +974,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "policy_state": {
                 "last_action": np.asarray(info["last_action"], np.float32),
                 "obs_history": np.asarray(info["obs_history"], np.float32),
+                "actor_observation": np.asarray(jax.device_get(state.obs["state"]), np.float32),
                 "filter_phase": estimated_phase,
                 "phase_probs": phase_probs,
                 "contact_probs": np.asarray([1.0 - float(info["had_airborne"]), float(info["had_valid_landing"])], np.float32),

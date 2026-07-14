@@ -30,7 +30,9 @@ PHASES = ("approach", "takeoff", "flight", "landing")
 STAGE_ID = {name: i for i, name in enumerate(PHASES)}
 ID_STAGE = {i: name for name, i in STAGE_ID.items()}
 ACTION_MAPPING_VERSION = "steer_drive_hip_knee.incremental_positive_flexion.v2"
-SNAPSHOT_SCHEMA = "dvgc_physical_belief_v1"
+SNAPSHOT_SCHEMA = "dvgc_physical_policy_state_v2"
+AUTHORITATIVE_XML_PATH = "assets/orange_bike_4kg_horizontal.xml"
+AUTHORITATIVE_XML_SHA256 = "d7e9f43ff8fb9e4571203f81062ce9c828acfa38692ee8c71a3e5daa15ce794c"
 
 
 def default_config() -> config_dict.ConfigDict:
@@ -41,7 +43,7 @@ def default_config() -> config_dict.ConfigDict:
     """
     return config_dict.create(
         # Simulation and files.
-        xml_path="assets/orange_bike_4kg_horizontal.xml",
+        xml_path=AUTHORITATIVE_XML_PATH,
         ctrl_dt=0.020,
         sim_dt=0.002,
         episode_length=750,

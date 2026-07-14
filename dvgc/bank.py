@@ -16,7 +16,7 @@ from scipy.stats import beta as beta_dist
 
 from .config import PHASES, SNAPSHOT_SCHEMA
 
-BANK_VERSION = 4
+BANK_VERSION = 5
 LABELS = ("safe", "boundary", "dead", "unknown")
 
 
@@ -140,7 +140,7 @@ class SnapshotBank:
             r[key] = _as_float32(r[key])
         r.setdefault("policy_state", {})
         ps = r["policy_state"]
-        for key in ("last_action", "obs_history", "phase_probs", "contact_probs", "estimator_hidden", "delay_buffer"):
+        for key in ("last_action", "obs_history", "actor_observation", "phase_probs", "contact_probs", "estimator_hidden", "delay_buffer"):
             if key in ps:
                 ps[key] = _as_float32(ps[key])
         r.setdefault("training_only", False)

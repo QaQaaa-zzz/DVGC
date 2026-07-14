@@ -14,6 +14,7 @@ def restore_snapshot(env, record: dict[str, Any], rng):
     ps = dict(record.get("policy_state", {}))
     phase = int(record.get("oracle_phase", STAGE_ID[record["source_phase"]]))
     history = ps.get("obs_history")
+    actor_observation = ps.get("actor_observation")
     return env.reset_from_snapshot(
         jp.asarray(record["qpos"]), jp.asarray(record["qvel"]), jp.asarray(record["ctrl"]), rng,
         jp.asarray(phase, jp.int32), jp.asarray(int(record.get("had_airborne", 0)), jp.int32),
@@ -31,6 +32,8 @@ def restore_snapshot(env, record: dict[str, Any], rng):
         prev_vz=jp.asarray(float(ps.get("prev_vz", np.nan)), jp.float32),
         obs_history=(None if history is None else jp.asarray(history)),
         obs_history_valid=jp.asarray(history is not None),
+        actor_observation=(None if actor_observation is None else jp.asarray(actor_observation)),
+        actor_observation_valid=jp.asarray(actor_observation is not None),
     )
 
 
