@@ -217,6 +217,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             self._bank_qpos = jp.asarray(np.stack([r["qpos"] for r in records]))
             self._bank_qvel = jp.asarray(np.stack([r["qvel"] for r in records]))
             self._bank_ctrl = jp.asarray(np.stack([r["ctrl"] for r in records]))
+            self._bank_qacc_warmstart = jp.asarray(np.stack([r["qacc_warmstart"] for r in records]))
             self._bank_phase = jp.asarray([int(r.get("oracle_phase", STAGE_ID.get(self._stage_name, 0))) for r in records], jp.int32)
             self._bank_estimated_phase = jp.asarray([int(ps(r).get("filter_phase", r.get("oracle_phase", self._stage_id))) for r in records], jp.int32)
             self._bank_phase_probs = jp.asarray(np.stack([
@@ -262,6 +263,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         else:
             self._bank_qpos = jp.zeros((1, nq), jp.float32); self._bank_qvel = jp.zeros((1, nv), jp.float32)
             self._bank_ctrl = jp.zeros((1, nu), jp.float32); self._bank_phase = jp.zeros((1,), jp.int32)
+            self._bank_qacc_warmstart = jp.zeros((1, nv), jp.float32)
             self._bank_estimated_phase = jp.zeros((1,), jp.int32)
             self._bank_phase_probs = jp.zeros((1, 4), jp.float32)
             self._bank_airborne = jp.zeros((1,), jp.int32); self._bank_landed = jp.zeros((1,), jp.int32)
@@ -748,8 +750,11 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         obs_history_valid: Optional[jax.Array] = None,
         actor_observation: Optional[jax.Array] = None,
         actor_observation_valid: Optional[jax.Array] = None,
+        qacc_warmstart: Optional[jax.Array] = None,
     ) -> mjx_env.State:
         data = self._make_data(qpos, qvel, ctrl)
+        if qacc_warmstart is not None:
+            data = data.replace(qacc_warmstart=jp.asarray(qacc_warmstart, jp.float32))
         last_action = self._neutral_action if last_action is None else last_action
         accel_z = self._sensor_vec(data, "acc_local", 3)[2]
         qpos_root, qvel_root, _, _, _ = self._root_state(data)
@@ -831,6 +836,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             qpos = jp.where(use_bank, self._bank_qpos[idx], qnat)
             qvel = jp.where(use_bank, self._bank_qvel[idx], vnat)
             ctrl = jp.where(use_bank, self._bank_ctrl[idx], cnat)
+            qacc_warmstart = jp.where(use_bank, self._bank_qacc_warmstart[idx], jp.zeros_like(vnat))
             phase = jp.where(use_bank, self._bank_phase[idx], jp.asarray(STAGE_ID["approach"], jp.int32))
             estimated_phase = jp.where(use_bank, self._bank_estimated_phase[idx], jp.asarray(STAGE_ID["approach"], jp.int32))
             phase_probs = jp.where(
@@ -859,6 +865,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
                 airborne_count=airborne_count, prelaunch_airborne_count=prelaunch_count,
                 landing_bounce_count=bounce_count, invalid_wheel_count=invalid_count,
                 recovery_count=recovery_count, prev_acc_z=prev_acc_z, prev_vz=prev_vz,
+                qacc_warmstart=qacc_warmstart,
                 obs_history=obs_history, obs_history_valid=obs_history_valid,
                 actor_observation=actor_observation,
                 actor_observation_valid=actor_observation_valid,
@@ -883,6 +890,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         obs_history_valid: Optional[jax.Array] = None,
         actor_observation: Optional[jax.Array] = None,
         actor_observation_valid: Optional[jax.Array] = None,
+        qacc_warmstart: Optional[jax.Array] = None,
     ) -> mjx_env.State:
         """Restore physical and IMU phase-filter state for branch certification.
 
@@ -899,6 +907,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             obs_history=obs_history, obs_history_valid=obs_history_valid,
             actor_observation=actor_observation,
             actor_observation_valid=actor_observation_valid,
+            qacc_warmstart=qacc_warmstart,
         )
 
     def reset_from_com_seed(self, seed: Dict[str, Any], rng: jax.Array) -> mjx_env.State:
@@ -960,6 +969,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "qpos": np.asarray(data.qpos, np.float32),
             "qvel": np.asarray(data.qvel, np.float32),
             "ctrl": np.asarray(data.ctrl, np.float32),
+            "qacc_warmstart": np.asarray(data.qacc_warmstart, np.float32),
             "physical_feature": feature,
             "source_phase": str(source_stage),
             "oracle_phase": int(info["phase"]),

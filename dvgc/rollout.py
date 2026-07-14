@@ -34,6 +34,7 @@ def restore_snapshot(env, record: dict[str, Any], rng):
         obs_history_valid=jp.asarray(history is not None),
         actor_observation=(None if actor_observation is None else jp.asarray(actor_observation)),
         actor_observation_valid=jp.asarray(actor_observation is not None),
+        qacc_warmstart=jp.asarray(record["qacc_warmstart"]),
     )
 
 

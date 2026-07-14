@@ -16,7 +16,7 @@ from scipy.stats import beta as beta_dist
 
 from .config import PHASES, SNAPSHOT_SCHEMA
 
-BANK_VERSION = 5
+BANK_VERSION = 6
 LABELS = ("safe", "boundary", "dead", "unknown")
 
 
@@ -138,6 +138,11 @@ class SnapshotBank:
             if key not in r:
                 raise KeyError(f"Snapshot missing {key}")
             r[key] = _as_float32(r[key])
+        # Iterative-solver warmstart is part of the physical simulator state;
+        # qpos/qvel/ctrl alone can change the very next contact step.
+        r["qacc_warmstart"] = _as_float32(
+            r.get("qacc_warmstart", np.zeros_like(r["qvel"], dtype=np.float32))
+        )
         r.setdefault("policy_state", {})
         ps = r["policy_state"]
         for key in ("last_action", "obs_history", "actor_observation", "phase_probs", "contact_probs", "estimator_hidden", "delay_buffer"):

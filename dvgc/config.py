@@ -30,7 +30,7 @@ PHASES = ("approach", "takeoff", "flight", "landing")
 STAGE_ID = {name: i for i, name in enumerate(PHASES)}
 ID_STAGE = {i: name for name, i in STAGE_ID.items()}
 ACTION_MAPPING_VERSION = "steer_drive_hip_knee.incremental_positive_flexion.v2"
-SNAPSHOT_SCHEMA = "dvgc_physical_policy_state_v2"
+SNAPSHOT_SCHEMA = "dvgc_physical_policy_state_v3_warmstart"
 AUTHORITATIVE_XML_PATH = "assets/orange_bike_4kg_horizontal.xml"
 AUTHORITATIVE_XML_SHA256 = "d7e9f43ff8fb9e4571203f81062ce9c828acfa38692ee8c71a3e5daa15ce794c"
 
@@ -66,6 +66,26 @@ def default_config() -> config_dict.ConfigDict:
         step_top_xy_margin=0.02,
         valid_landing_min_past_edge=0.25,
         valid_landing_back_margin=0.50,
+        # Landing candidate construction.  The reference supplies a broad
+        # pose/velocity envelope, but its vertical coordinate is not the
+        # authoritative XML's collision height.  Proposals are therefore
+        # placed by the actual wheel geometry, then advanced through a real
+        # low-height impact before their snapshots become bootstrap states.
+        landing_candidate_clearance_min=0.002,
+        landing_candidate_clearance_max=0.010,
+        landing_candidate_descend_vz_min=0.18,
+        landing_candidate_descend_vz_max=0.38,
+        landing_candidate_x_jitter=0.040,
+        landing_candidate_y_jitter=0.015,
+        landing_candidate_roll_jitter_deg=1.0,
+        landing_candidate_pitch_jitter_deg=1.5,
+        landing_candidate_yaw_jitter_deg=1.0,
+        landing_candidate_vx_jitter=0.12,
+        landing_candidate_vy_jitter=0.05,
+        landing_candidate_hip_jitter=0.015,
+        landing_candidate_knee_jitter=0.030,
+        landing_candidate_impact_horizon=12,
+        landing_candidate_relaxation_steps=5,
         # Robot/action convention.  Action order is fixed and stored in every
         # policy manifest: [steer, rear-wheel drive, hip, knee].
         action_mapping_version=ACTION_MAPPING_VERSION,

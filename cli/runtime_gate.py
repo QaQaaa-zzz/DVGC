@@ -176,6 +176,7 @@ def _snapshot_gate(env: OrangeBikeDVGC, work: Path) -> dict[str, Any]:
         "qpos": _max_abs(state.data.qpos, restored.data.qpos),
         "qvel": _max_abs(state.data.qvel, restored.data.qvel),
         "ctrl": _max_abs(state.data.ctrl, restored.data.ctrl),
+        "qacc_warmstart": _max_abs(state.data.qacc_warmstart, restored.data.qacc_warmstart),
         "actor_obs": _max_abs(state.obs["state"], restored.obs["state"]),
         "critic_obs": _max_abs(state.obs["privileged_state"], restored.obs["privileged_state"]),
     }
