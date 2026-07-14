@@ -14,11 +14,13 @@ NUM_ENVS="${NUM_ENVS:-320}"
 NUM_EVAL_ENVS="${NUM_EVAL_ENVS:-128}"
 BATCH_SIZE="${BATCH_SIZE:-80}"
 NUM_MINIBATCHES="${NUM_MINIBATCHES:-4}"
+LEARNING_RATE="${LEARNING_RATE:-0.0001}"
 TRAIN_LAYOUT=(
   --num-envs "$NUM_ENVS"
   --num-eval-envs "$NUM_EVAL_ENVS"
   --batch-size "$BATCH_SIZE"
   --num-minibatches "$NUM_MINIBATCHES"
+  --learning-rate "$LEARNING_RATE"
 )
 
 cd "$ROOT"

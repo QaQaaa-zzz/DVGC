@@ -32,6 +32,8 @@ def main():
     p.add_argument("--require-final-safe-rsi", action="store_true")
     p.add_argument("--batch-size", type=int, default=80)
     p.add_argument("--num-minibatches", type=int, default=4)
+    p.add_argument("--learning-rate", type=float, default=1e-4)
+    p.add_argument("--entropy-cost", type=float, default=None)
     a=p.parse_args()
     run=Path(a.run)
     if run.exists(): raise SystemExit(f"Run directory already exists: {run}")
@@ -83,11 +85,14 @@ def main():
     eval_env=OrangeBikeDVGC(eval_cfg,snapshot_bank=bank,cert_bank=downstream)
     run.mkdir(parents=True,exist_ok=False); save_config(cfg,run/"config.json")
     metrics_path=run/"training_metrics.json"
-    entropy_cost=LANDING_ENTROPY_COST if a.stage=="landing" else DEFAULT_ENTROPY_COST
-    train_fn=make_ppo_train_fn(timesteps=a.timesteps,episode_length=int(cfg.episode_length),num_envs=a.num_envs,num_eval_envs=a.num_eval_envs,num_evals=11,seed=a.seed,learning_rate=1e-4,entropy_cost=entropy_cost,reward_scaling=0.1,checkpoint_dir=run/"orbax",unroll_length=32,batch_size=a.batch_size,num_minibatches=a.num_minibatches,num_updates_per_batch=2,discounting=.995,gae_lambda=.97,clipping_epsilon=.10,max_grad_norm=.75,restore_params=restore_params)
+    learning_rate=float(a.learning_rate)
+    entropy_cost=(LANDING_ENTROPY_COST if a.stage=="landing" else DEFAULT_ENTROPY_COST) if a.entropy_cost is None else float(a.entropy_cost)
+    if learning_rate<=0: raise SystemExit("--learning-rate must be positive")
+    if entropy_cost<0: raise SystemExit("--entropy-cost must be non-negative")
+    train_fn=make_ppo_train_fn(timesteps=a.timesteps,episode_length=int(cfg.episode_length),num_envs=a.num_envs,num_eval_envs=a.num_eval_envs,num_evals=11,seed=a.seed,learning_rate=learning_rate,entropy_cost=entropy_cost,reward_scaling=0.1,checkpoint_dir=run/"orbax",unroll_length=32,batch_size=a.batch_size,num_minibatches=a.num_minibatches,num_updates_per_batch=2,discounting=.995,gae_lambda=.97,clipping_epsilon=.10,max_grad_norm=.75,restore_params=restore_params)
     rows=[]
     started_at=time.time()
-    metric_log={"stage":a.stage,"seed":a.seed,"requested_timesteps":a.timesteps,"effective_timesteps":effective_timesteps,"ppo_layout":{"num_envs":a.num_envs,"num_eval_envs":a.num_eval_envs,"unroll_length":32,"batch_size":a.batch_size,"num_minibatches":a.num_minibatches,"num_evals":11},"ppo_hyperparameters":{"learning_rate":1e-4,"entropy_cost":entropy_cost,"reward_scaling":0.1,"num_updates_per_batch":2,"discounting":.995,"gae_lambda":.97,"clipping_epsilon":.10,"max_grad_norm":.75},"reset_protocol":reset_protocol,"status":"initialized","started_at":started_at,"progress":rows}
+    metric_log={"stage":a.stage,"seed":a.seed,"requested_timesteps":a.timesteps,"effective_timesteps":effective_timesteps,"ppo_layout":{"num_envs":a.num_envs,"num_eval_envs":a.num_eval_envs,"unroll_length":32,"batch_size":a.batch_size,"num_minibatches":a.num_minibatches,"num_evals":11},"ppo_hyperparameters":{"learning_rate":learning_rate,"entropy_cost":entropy_cost,"reward_scaling":0.1,"num_updates_per_batch":2,"discounting":.995,"gae_lambda":.97,"clipping_epsilon":.10,"max_grad_norm":.75},"reset_protocol":reset_protocol,"status":"initialized","started_at":started_at,"progress":rows}
     save_json(metrics_path,metric_log)
     def progress(step,metrics):
         row={"step":int(step),"recorded_at":time.time(),**{k:float(v) for k,v in metrics.items() if hasattr(v,"__float__")}}; rows.append(row)
