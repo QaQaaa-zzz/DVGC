@@ -390,7 +390,11 @@ def assert_brax_metric_contract(env: Any) -> None:
     reset_metrics["reward"] = state.reward
     wrapped_like_state = state.replace(metrics=reset_metrics)
     action = jp.zeros((int(env.action_size),), dtype=jp.float32)
-    next_state = env.step(wrapped_like_state, action)
+    # Keep Warp on the same JIT custom-call path used by rollouts and PPO.
+    # An eager call creates a distinct Warp execution path whose shared
+    # scratch state can perturb a later, otherwise exact snapshot replay.
+    next_state = jax.jit(env.step)(wrapped_like_state, action)
+    jax.block_until_ready(next_state)
     before, after = set(reset_metrics), set(next_state.metrics)
     if before != after:
         raise RuntimeError(
