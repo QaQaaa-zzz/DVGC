@@ -34,6 +34,7 @@ POLICY_HIDDEN_LAYER_SIZES = (256, 256, 256)
 VALUE_HIDDEN_LAYER_SIZES = (256, 256, 256)
 POLICY_OBS_KEY = "state"
 VALUE_OBS_KEY = "privileged_state"
+POLICY_INITIAL_ACTION_STD = 0.05
 
 
 def require_training_stack() -> Tuple[Any, Any, Any]:
@@ -56,16 +57,90 @@ def require_training_stack() -> Tuple[Any, Any, Any]:
     return ppo_networks, ppo_train, wrapper
 
 
-def build_network_factory() -> Callable[..., Any]:
-    """Build asymmetric PPO networks for deployable actor / privileged critic."""
+def make_dvgc_ppo_networks(
+    observation_size: Any,
+    action_size: int,
+    preprocess_observations_fn: Callable,
+) -> Any:
+    """Build a bounded actor with a neutral, low-variance control prior.
+
+    Landing candidates already contain a large zero-action recoverable subset.
+    Brax's generic tanh-normal head initializes both distribution halves with a
+    random dense layer, yielding roughly 0.69 action standard deviation and a
+    non-neutral deterministic mean.  That destroys the 25-step recovery hold
+    before PPO sees useful successes.  This head keeps tanh bounds while making
+    the initial mode exactly zero and the initial scale explicitly auditable.
+    """
     ppo_networks, _, _ = require_training_stack()
-    return functools.partial(
-        ppo_networks.make_ppo_networks,
+    from brax.training import distribution
+    from brax.training import networks as brax_networks
+    from flax import linen
+
+    target_scale_parameter = math.log(math.expm1(POLICY_INITIAL_ACTION_STD - 0.001))
+
+    class NeutralTanhActor(linen.Module):
+        @linen.compact
+        def __call__(self, obs: jax.Array) -> jax.Array:
+            hidden = brax_networks.MLP(
+                layer_sizes=POLICY_HIDDEN_LAYER_SIZES,
+                activation=linen.swish,
+                activate_final=True,
+                name="trunk",
+            )(obs)
+            loc = linen.Dense(
+                int(action_size),
+                kernel_init=jax.nn.initializers.zeros,
+                bias_init=jax.nn.initializers.zeros,
+                name="neutral_loc",
+            )(hidden)
+            scale_parameter = self.param(
+                "scale_parameter",
+                lambda _key, shape: jp.full(shape, target_scale_parameter, jp.float32),
+                (int(action_size),),
+            )
+            scale_parameter = jp.broadcast_to(scale_parameter, loc.shape)
+            return jp.concatenate((loc, scale_parameter), axis=-1)
+
+    actor_module = NeutralTanhActor()
+    actor_obs_size = observation_size[POLICY_OBS_KEY]
+    actor_obs_size = int(math.prod(actor_obs_size))
+    dummy_obs = jp.zeros((1, actor_obs_size), jp.float32)
+
+    def actor_apply(processor_params: Any, policy_params: Any, observation: Any) -> jax.Array:
+        actor_obs = observation[POLICY_OBS_KEY] if isinstance(observation, dict) else observation
+        selected_params = (
+            brax_networks.normalizer_select(processor_params, POLICY_OBS_KEY)
+            if processor_params is not None and isinstance(observation, dict)
+            else processor_params
+        )
+        actor_obs = preprocess_observations_fn(actor_obs, selected_params)
+        return actor_module.apply(policy_params, actor_obs)
+
+    policy_network = brax_networks.FeedForwardNetwork(
+        init=lambda key: actor_module.init(key, dummy_obs),
+        apply=actor_apply,
+    )
+    base = ppo_networks.make_ppo_networks(
+        observation_size=observation_size,
+        action_size=int(action_size),
+        preprocess_observations_fn=preprocess_observations_fn,
         policy_hidden_layer_sizes=POLICY_HIDDEN_LAYER_SIZES,
         value_hidden_layer_sizes=VALUE_HIDDEN_LAYER_SIZES,
         policy_obs_key=POLICY_OBS_KEY,
         value_obs_key=VALUE_OBS_KEY,
     )
+    return ppo_networks.PPONetworks(
+        policy_network=policy_network,
+        value_network=base.value_network,
+        parametric_action_distribution=distribution.NormalTanhDistribution(
+            event_size=int(action_size)
+        ),
+    )
+
+
+def build_network_factory() -> Callable[..., Any]:
+    """Build asymmetric PPO networks for deployable actor / privileged critic."""
+    return make_dvgc_ppo_networks
 
 
 def _atomic_pickle_dump(path: Path, payload: Any) -> None:
@@ -163,13 +238,9 @@ def build_inference(env: Any, params: Any, *, deterministic: bool = True) -> Cal
     if missing:
         raise RuntimeError(f"Environment observations are missing required PPO keys: {sorted(missing)}")
     observation_size = {key: tuple(value.shape) for key, value in sample_obs.items()}
-    networks = ppo_networks.make_ppo_networks(
+    networks = make_dvgc_ppo_networks(
         observation_size=observation_size,
         action_size=int(env.action_size),
-        policy_hidden_layer_sizes=POLICY_HIDDEN_LAYER_SIZES,
-        value_hidden_layer_sizes=VALUE_HIDDEN_LAYER_SIZES,
-        policy_obs_key=POLICY_OBS_KEY,
-        value_obs_key=VALUE_OBS_KEY,
         preprocess_observations_fn=running_statistics.normalize,
     )
     make_inference_fn = ppo_networks.make_inference_fn(networks)

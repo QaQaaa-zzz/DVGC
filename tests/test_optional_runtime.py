@@ -74,3 +74,30 @@ def test_final_safe_tube_reset_smoke():
     env = OrangeBikeDVGC(rsi_cfg, snapshot_bank=bank)
     state = env.reset(jax.random.PRNGKey(1))
     assert int(state.info["phase"]) == STAGE_ID["landing"]
+
+
+@pytest.mark.skipif(
+    not RUNTIME_READY,
+    reason="The configured Brax runtime is required for the policy-network test.",
+)
+def test_policy_network_starts_neutral_and_low_variance():
+    import jax
+    import jax.numpy as jp
+    import numpy as np
+
+    from dvgc.runtime import POLICY_INITIAL_ACTION_STD, make_dvgc_ppo_networks
+
+    networks=make_dvgc_ppo_networks(
+        observation_size={"state":(140,),"privileged_state":(29,)},
+        action_size=4,
+        preprocess_observations_fn=lambda obs,_params:obs,
+    )
+    params=networks.policy_network.init(jax.random.PRNGKey(0))
+    logits=networks.policy_network.apply(
+        None,params,{"state":jp.ones((3,140),jp.float32)}
+    )
+    dist=networks.parametric_action_distribution.create_dist(logits)
+    np.testing.assert_allclose(np.asarray(dist.loc),0.0,atol=0.0)
+    np.testing.assert_allclose(
+        np.asarray(dist.scale),POLICY_INITIAL_ACTION_STD,rtol=1e-6,atol=1e-7
+    )

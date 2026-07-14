@@ -1,6 +1,6 @@
 import pytest
 
-from dvgc.config import load_config
+from dvgc.config import POLICY_NETWORK_VERSION, load_config
 from dvgc.policy import load_bundle, save_bundle, verify_manifest_artifact
 
 def test_policy_bundle_provenance(tmp_path):
@@ -9,6 +9,19 @@ def test_policy_bundle_provenance(tmp_path):
     params,stored,manifest=load_bundle(root,verify_files=True)
     assert params["x"]==1
     assert stored["action_mapping_version"]==manifest["action_mapping_version"]
+    assert manifest["policy_network_version"]==POLICY_NETWORK_VERSION
+
+
+def test_policy_bundle_rejects_unknown_network_version(tmp_path):
+    cfg=load_config("configs/default.json")
+    root=save_bundle(tmp_path/"policy",params={"x":1},config=cfg,xml_path="assets/orange_bike_4kg_horizontal.xml",candidate_bank=None,downstream_bank=None,policy_version="test")
+    manifest_path=root/"manifest.json"
+    import json
+    manifest=json.loads(manifest_path.read_text())
+    manifest["policy_network_version"]="incompatible"
+    manifest_path.write_text(json.dumps(manifest))
+    with pytest.raises(ValueError,match="Policy network version"):
+        load_bundle(root,verify_files=True)
 
 
 def test_manifest_artifact_verification_rejects_a_different_bank(tmp_path):

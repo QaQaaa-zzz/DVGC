@@ -30,6 +30,7 @@ PHASES = ("approach", "takeoff", "flight", "landing")
 STAGE_ID = {name: i for i, name in enumerate(PHASES)}
 ID_STAGE = {i: name for name, i in STAGE_ID.items()}
 ACTION_MAPPING_VERSION = "steer_drive_hip_knee.incremental_positive_flexion.v2"
+POLICY_NETWORK_VERSION = "bounded_neutral_tanh.v2"
 SNAPSHOT_SCHEMA = "dvgc_physical_policy_state_v3_warmstart"
 AUTHORITATIVE_XML_PATH = "assets/orange_bike_4kg_horizontal.xml"
 AUTHORITATIVE_XML_SHA256 = "d7e9f43ff8fb9e4571203f81062ce9c828acfa38692ee8c71a3e5daa15ce794c"

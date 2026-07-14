@@ -10,6 +10,10 @@ from dvgc.policy import load_bundle, save_bundle
 from dvgc.runtime import make_ppo_train_fn, ppo_effective_timesteps, save_json, validate_ppo_batch_layout
 
 
+LANDING_ENTROPY_COST = 1e-4
+DEFAULT_ENTROPY_COST = 1e-3
+
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument("--stage", required=True, choices=["landing","flight","takeoff","approach","full"])
@@ -76,10 +80,11 @@ def main():
     eval_env=OrangeBikeDVGC(eval_cfg,snapshot_bank=bank,cert_bank=downstream)
     run.mkdir(parents=True,exist_ok=False); save_config(cfg,run/"config.json")
     metrics_path=run/"training_metrics.json"
-    train_fn=make_ppo_train_fn(timesteps=a.timesteps,episode_length=int(cfg.episode_length),num_envs=a.num_envs,num_eval_envs=a.num_eval_envs,num_evals=11,seed=a.seed,learning_rate=1e-4,entropy_cost=1e-3,reward_scaling=0.1,checkpoint_dir=run/"orbax",unroll_length=32,batch_size=a.batch_size,num_minibatches=a.num_minibatches,num_updates_per_batch=2,discounting=.995,gae_lambda=.97,clipping_epsilon=.10,max_grad_norm=.75,restore_params=restore_params)
+    entropy_cost=LANDING_ENTROPY_COST if a.stage=="landing" else DEFAULT_ENTROPY_COST
+    train_fn=make_ppo_train_fn(timesteps=a.timesteps,episode_length=int(cfg.episode_length),num_envs=a.num_envs,num_eval_envs=a.num_eval_envs,num_evals=11,seed=a.seed,learning_rate=1e-4,entropy_cost=entropy_cost,reward_scaling=0.1,checkpoint_dir=run/"orbax",unroll_length=32,batch_size=a.batch_size,num_minibatches=a.num_minibatches,num_updates_per_batch=2,discounting=.995,gae_lambda=.97,clipping_epsilon=.10,max_grad_norm=.75,restore_params=restore_params)
     rows=[]
     started_at=time.time()
-    metric_log={"stage":a.stage,"seed":a.seed,"requested_timesteps":a.timesteps,"effective_timesteps":effective_timesteps,"ppo_layout":{"num_envs":a.num_envs,"num_eval_envs":a.num_eval_envs,"unroll_length":32,"batch_size":a.batch_size,"num_minibatches":a.num_minibatches,"num_evals":11},"reset_protocol":reset_protocol,"status":"initialized","started_at":started_at,"progress":rows}
+    metric_log={"stage":a.stage,"seed":a.seed,"requested_timesteps":a.timesteps,"effective_timesteps":effective_timesteps,"ppo_layout":{"num_envs":a.num_envs,"num_eval_envs":a.num_eval_envs,"unroll_length":32,"batch_size":a.batch_size,"num_minibatches":a.num_minibatches,"num_evals":11},"ppo_hyperparameters":{"learning_rate":1e-4,"entropy_cost":entropy_cost,"reward_scaling":0.1,"num_updates_per_batch":2,"discounting":.995,"gae_lambda":.97,"clipping_epsilon":.10,"max_grad_norm":.75},"reset_protocol":reset_protocol,"status":"initialized","started_at":started_at,"progress":rows}
     save_json(metrics_path,metric_log)
     def progress(step,metrics):
         row={"step":int(step),"recorded_at":time.time(),**{k:float(v) for k,v in metrics.items() if hasattr(v,"__float__")}}; rows.append(row)
@@ -94,6 +99,6 @@ def main():
     metric_log.update({"status":"completed","final_metrics":final_metrics,"finished_at":time.time(),"elapsed_seconds":time.time()-started_at})
     save_json(metrics_path,metric_log)
     version=f"{a.stage}-{dt.datetime.now().strftime('%Y%m%d-%H%M%S')}"
-    save_bundle(run/"policy",params=params,config=cfg,xml_path=cfg.xml_path,candidate_bank=a.bank,downstream_bank=(a.downstream_bank or None),policy_version=version,extra={"stage":a.stage,"seed":a.seed,"timesteps":a.timesteps,"reset_protocol":reset_protocol})
+    save_bundle(run/"policy",params=params,config=cfg,xml_path=cfg.xml_path,candidate_bank=a.bank,downstream_bank=(a.downstream_bank or None),policy_version=version,extra={"stage":a.stage,"seed":a.seed,"timesteps":a.timesteps,"reset_protocol":reset_protocol,"ppo_hyperparameters":metric_log["ppo_hyperparameters"]})
     print(run/"policy")
 if __name__=="__main__": main()

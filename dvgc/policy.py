@@ -8,7 +8,7 @@ import shutil
 from pathlib import Path
 from typing import Any
 
-from .config import config_hash, file_sha256
+from .config import POLICY_NETWORK_VERSION, config_hash, file_sha256
 
 BUNDLE_VERSION = 1
 
@@ -62,6 +62,7 @@ def save_bundle(
         "estimator_version": str(estimator_version),
         "config_hash": config_hash(config),
         "action_mapping_version": str(config.action_mapping_version),
+        "policy_network_version": POLICY_NETWORK_VERSION,
         "xml_path": str(Path(xml_path).resolve()),
         "xml_sha256": file_sha256(xml_path),
         "candidate_bank": str(Path(candidate_bank).resolve()) if candidate_bank else None,
@@ -85,6 +86,11 @@ def load_bundle(directory: str | Path, *, verify_files: bool = True) -> tuple[An
         raise ValueError("Policy config.json does not match its manifest")
     if config.get("action_mapping_version") != manifest.get("action_mapping_version"):
         raise ValueError("Policy action mapping does not match its manifest")
+    if manifest.get("policy_network_version") != POLICY_NETWORK_VERSION:
+        raise ValueError(
+            "Policy network version is incompatible with this source: "
+            f"expected {POLICY_NETWORK_VERSION}, got {manifest.get('policy_network_version')}"
+        )
     if verify_files:
         xml_path = Path(manifest["xml_path"])
         if not xml_path.exists() or file_sha256(xml_path) != manifest["xml_sha256"]:
