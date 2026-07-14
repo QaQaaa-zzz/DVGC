@@ -34,6 +34,7 @@ def test_candidate_rng_and_incremental_training_log_contracts():
     assert '"status":"failed"' in training
     assert '"PARTIAL" if a.allow_partial' in candidates
     assert 'candidate_build_history' in candidates
+    assert 'distance=float(a.dedup_distance)' in candidates
 
 
 def test_formal_pipeline_contains_tube_rsi_refinement_and_recertification():

@@ -16,6 +16,7 @@ CERT_CHUNK_STATES="${CERT_CHUNK_STATES:-40}"
 AUDIT_CHUNK_STATES="${AUDIT_CHUNK_STATES:-40}"
 PILOT_STEPS="${PILOT_STEPS:-100000}"
 CANDIDATE_ATTEMPT_BUDGET="${CANDIDATE_ATTEMPT_BUDGET:-450}"
+CANDIDATE_DEDUP_DISTANCE="${CANDIDATE_DEDUP_DISTANCE:-0.03}"
 NUM_ENVS="${NUM_ENVS:-320}"
 NUM_EVAL_ENVS="${NUM_EVAL_ENVS:-128}"
 BATCH_SIZE="${BATCH_SIZE:-80}"
@@ -49,7 +50,7 @@ run_step() {
     return 0
   fi
   for value in "${outputs[@]}"; do
-    if [[ -e "$value" ]]; then echo "[pipeline] stale/unmarked output blocks $step: $value" >&2; return 3; fi
+    if [[ -e "$value" && "${RUN_STEP_ALLOW_EXISTING:-0}" != 1 ]]; then echo "[pipeline] stale/unmarked output blocks $step: $value" >&2; return 3; fi
   done
   if [[ -e "$log" ]]; then echo "[pipeline] prior log blocks $step under revision $REVISION: $log" >&2; return 3; fi
   echo "[pipeline] start $step"
@@ -109,14 +110,20 @@ stage_value() {
 }
 
 build_candidates_chunked() {
-  local phase="$1" target="$2" bank="$3" chunk=0 previous=-1 stagnant=0 count
+  local phase="$1" target="$2" bank="$3" chunk previous=-1 stagnant=0 count
+  chunk=$("$PYTHON" - "$bank" <<'PY'
+import sys
+from dvgc.bank import SnapshotBank
+print(len(SnapshotBank.load(sys.argv[1]).metadata.get("candidate_build_history",[])))
+PY
+)
   while true; do
     count=$("$PYTHON" -m cli.pipeline_gate bank-count --bank "$bank" --phase "$phase")
     (( count>=target )) && break
     if (( count==previous )); then stagnant=$((stagnant+1)); else stagnant=0; fi
     if (( stagnant>=2 || chunk>=30 )); then echo "Candidate construction made insufficient progress: $count/$target" >&2; return 2; fi
     previous=$count
-    "$PYTHON" -u -m cli.build_candidates --phase "$phase" --target "$target" --bank "$bank" --config "$CFG" --seed "$chunk" --aux-fraction 0 --attempt-budget "$CANDIDATE_ATTEMPT_BUDGET" --allow-partial
+    "$PYTHON" -u -m cli.build_candidates --phase "$phase" --target "$target" --bank "$bank" --config "$CFG" --seed "$chunk" --aux-fraction 0 --attempt-budget "$CANDIDATE_ATTEMPT_BUDGET" --dedup-distance "$CANDIDATE_DEDUP_DISTANCE" --allow-partial
     chunk=$((chunk+1))
   done
   "$PYTHON" - <<PY
@@ -141,7 +148,7 @@ run_stage() {
   continuation_steps=$((total_bootstrap-PILOT_STEPS))
   mkdir -p "$stage_root"
 
-  run_step "${phase}_candidates" "$phase:$target:0:$CANDIDATE_ATTEMPT_BUDGET" "$(join_by_semicolon data/reference_jump.csv "$CFG")" "$(join_by_semicolon "$candidates" "${candidates%.pkl}.build.json")" build_candidates_chunked "$phase" "$target" "$candidates"
+  RUN_STEP_ALLOW_EXISTING=1 run_step "${phase}_candidates" "$phase:$target:0:$CANDIDATE_ATTEMPT_BUDGET:$CANDIDATE_DEDUP_DISTANCE" "$(join_by_semicolon data/reference_jump.csv "$CFG")" "$(join_by_semicolon "$candidates" "${candidates%.pkl}.build.json")" build_candidates_chunked "$phase" "$target" "$candidates"
   run_step "${phase}_candidate_audit" "$phase:$target:25" "$candidates" "$stage_root/candidate_audit.json" "$PYTHON" -u -m cli.audit_candidates --phase "$phase" --bank "$candidates" --config "$CFG" --expected-count "$target" --horizon 25 --output "$stage_root/candidate_audit.json"
   run_step "${phase}_candidate_gate" "$phase:$target" "$(join_by_semicolon "${candidates%.pkl}.build.json" "$stage_root/candidate_audit.json")" "$stage_root/candidate_decision.json" "$PYTHON" -m cli.pipeline_gate candidate --build "${candidates%.pkl}.build.json" --audit "$stage_root/candidate_audit.json" --output "$stage_root/candidate_decision.json"
 

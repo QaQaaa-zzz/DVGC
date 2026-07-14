@@ -16,5 +16,9 @@
   on an 8 KiB allocation after about 725 proposals; no candidate artifact or
   PPO was accepted. First repair uses deterministic <=450-attempt fresh-process
   chunks with atomic partial banks and aggregate build history.
-- Next: resume as pipeline revision v2, validate `flight_candidates.pkl` using
+- Flight v2: fresh-process chunks eliminated OOM, but the original 0.06 feature
+  dedup radius saturated at 132/160 (one complete seed chunk accepted 0/450).
+  Second repair resumes the valid 132-state partial bank with a recorded 0.03
+  radius; existing states already have minimum nearest distance 0.06034.
+- Next: resume as pipeline revision v3, validate `flight_candidates.pkl` using
   Landing Tube `6f6b2ac...61ce8`, then run the Flight seed-0 pilot.

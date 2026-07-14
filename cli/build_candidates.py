@@ -100,6 +100,7 @@ def main():
     p.add_argument("--aux-fraction",type=float,default=.20)
     p.add_argument("--attempt-budget",type=int,default=0)
     p.add_argument("--allow-partial",action="store_true")
+    p.add_argument("--dedup-distance",type=float,default=.06)
     a=p.parse_args(); rng=np.random.default_rng(a.seed)
     cfg=load_config(a.config,{"training_stage":a.phase,"use_bank_resets":False,"domain_randomization":False,"obs_noise_enable":False})
     env=OrangeBikeDVGC(cfg,snapshot_bank=SnapshotBank()); bank=SnapshotBank.load(a.bank)
@@ -127,6 +128,7 @@ def main():
     step=jax.jit(env.step); zero=jp.zeros(env.action_size,jp.float32)
     attempt_budget=int(a.attempt_budget) if a.attempt_budget else a.target*30
     if attempt_budget<=0: raise SystemExit("--attempt-budget must be positive")
+    if float(a.dedup_distance)<=0: raise SystemExit("--dedup-distance must be positive")
     while len(bank.records_for_phase(a.phase))<a.target and attempts<attempt_budget:
         attempts+=1; idx=int(rng.integers(lo,hi+1)); row=df.iloc[idx]
         training_only=(a.phase=="takeoff" and rng.random()<a.aux_fraction)
@@ -182,7 +184,7 @@ def main():
         # Certification candidates must respect phase semantics.
         if a.phase=="takeoff":
             rec["had_airborne"]=0; rec["airborne_count"]=0; rec["policy_state"]["filter_phase"]=STAGE_ID["takeoff"]
-        if not bank.add(rec,deduplicate=True,distance=.06):
+        if not bank.add(rec,deduplicate=True,distance=float(a.dedup_distance)):
             duplicates+=1
         elif a.phase=="landing":
             impact_steps.append(impact_step); vertical_corrections.append(proposal["vertical_correction_m"]); clearances.append(proposal["preimpact_clearance_m"])
@@ -190,7 +192,7 @@ def main():
             print(f"[candidates] phase={a.phase} accepted={len(bank.records_for_phase(a.phase))}/{a.target} attempts={attempts} duplicates={duplicates} semantic_rejects={semantic_rejects}",flush=True)
     history=list(bank.metadata.get("candidate_build_history",[]))
     history.append({
-        "seed":int(a.seed),"attempt_budget":attempt_budget,"attempts":attempts,
+        "seed":int(a.seed),"attempt_budget":attempt_budget,"dedup_distance":float(a.dedup_distance),"attempts":attempts,
         "accepted_before":accepted_before,"accepted_after":len(bank.records_for_phase(a.phase)),
         "accepted_new":len(bank.records_for_phase(a.phase))-accepted_before,
         "duplicates":duplicates,"semantic_rejects":semantic_rejects,
@@ -203,6 +205,7 @@ def main():
         "reference_anchors":anchors.as_dict(),
         "build_seed":int(bank.metadata.get("build_seed",a.seed)),
         "build_seeds":[int(row["seed"]) for row in history],
+        "candidate_dedup_distance":float(a.dedup_distance),
         "candidate_build_history":history,
         "candidate_generation":{
             "landing":"reference envelope perturbation -> XML wheel-clearance placement -> real IMU impact snapshot -> zero-action relaxation",
