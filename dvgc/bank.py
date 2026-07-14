@@ -301,6 +301,48 @@ class SnapshotBank:
             if r["final"]["branches"] > 0:
                 r["label_age"] = int(r.get("label_age", 0)) + 1
 
+    def validate_certification_provenance(
+        self,
+        phase: str,
+        *,
+        policy_version: str,
+        estimator_version: str,
+        require_evidence: bool = True,
+    ) -> str | None:
+        """Reject policy, estimator, or Tube-version mixtures in one phase."""
+        rows = [
+            r
+            for r in self.records_for_phase(phase, include_training_only=False)
+            if r["final"]["branches"] > 0
+        ]
+        if require_evidence and not rows:
+            raise ValueError(f"Bank has no certified {phase} candidates")
+        mismatched_policy = [
+            r["id"] for r in rows if r.get("policy_version") != str(policy_version)
+        ]
+        if mismatched_policy:
+            raise ValueError(
+                f"Bank contains {phase} labels from another policy: {mismatched_policy[:3]}"
+            )
+        mismatched_estimator = [
+            r["id"] for r in rows if r.get("estimator_version") != str(estimator_version)
+        ]
+        if mismatched_estimator:
+            raise ValueError(
+                f"Bank contains {phase} labels from another estimator: {mismatched_estimator[:3]}"
+            )
+        tube_versions = {str(r.get("tube_version")) for r in rows}
+        if len(tube_versions) > 1:
+            raise ValueError(f"Bank mixes {phase} Tube versions: {sorted(tube_versions)}")
+        tube_version = next(iter(tube_versions), None)
+        metadata_policy = self.metadata.get("last_policy_version")
+        metadata_tube = self.metadata.get("last_tube_version")
+        if rows and metadata_policy != str(policy_version):
+            raise ValueError("Bank policy metadata does not match its certified records")
+        if rows and metadata_tube != tube_version:
+            raise ValueError("Bank Tube metadata does not match its certified records")
+        return tube_version
+
     def reset_distribution(
         self,
         phase: str,

@@ -13,6 +13,31 @@ from .config import config_hash, file_sha256
 BUNDLE_VERSION = 1
 
 
+def verify_manifest_artifact(
+    manifest: dict[str, Any], role: str, path: str | Path | None, *, required: bool = True
+) -> None:
+    """Verify that a CLI artifact is exactly the one declared by a policy."""
+    if role not in ("candidate_bank", "downstream_bank"):
+        raise ValueError(f"Unsupported policy artifact role: {role}")
+    expected = manifest.get(f"{role}_sha256")
+    if not path:
+        if required:
+            raise ValueError(f"Policy requires its declared {role}")
+        if expected is not None:
+            raise ValueError(f"Policy declares {role}, but the CLI omitted it")
+        return
+    artifact = Path(path)
+    if expected is None:
+        raise ValueError(f"Policy manifest does not declare a {role}")
+    if not artifact.is_file():
+        raise ValueError(f"Policy {role} is missing: {artifact}")
+    actual = file_sha256(artifact)
+    if actual != expected:
+        raise ValueError(
+            f"Policy {role} mismatch: expected SHA-256 {expected}, got {actual}"
+        )
+
+
 def save_bundle(
     directory: str | Path,
     *,

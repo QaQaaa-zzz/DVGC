@@ -7,7 +7,7 @@ from dvgc.bank import SnapshotBank, beta_posterior, posterior_label
 from dvgc.certification import DYNAMICS_VARIANTS, branch_evidence, branch_seed, summarize_branches
 from dvgc.config import load_config
 from dvgc.env import OrangeBikeDVGC
-from dvgc.policy import load_bundle
+from dvgc.policy import load_bundle, verify_manifest_artifact
 from dvgc.rollout import restore_snapshot, frozen_rollout
 from dvgc.runtime import build_inference
 
@@ -28,6 +28,12 @@ def main():
     p.add_argument("--output-bank",required=True); p.add_argument("--seed",type=int,default=0)
     p.add_argument("--namespace",default="build"); p.add_argument("--limit",type=int,default=0)
     a=p.parse_args(); params,cfg_dict,manifest=load_bundle(a.policy,verify_files=True)
+    if manifest.get("stage") not in (None,a.phase): raise SystemExit(f"Policy stage {manifest.get('stage')} cannot certify {a.phase}")
+    if Path(a.candidate_bank).resolve()==Path(a.output_bank).resolve(): raise SystemExit("--output-bank must differ from --candidate-bank so policy provenance remains immutable")
+    try:
+        verify_manifest_artifact(manifest,"candidate_bank",a.candidate_bank)
+        verify_manifest_artifact(manifest,"downstream_bank",a.downstream_bank or None,required=(a.phase!="landing"))
+    except ValueError as exc: raise SystemExit(str(exc)) from exc
     cfg=load_config(overrides={**cfg_dict,"training_stage":a.phase,"domain_randomization":False,"obs_noise_enable":False})
     candidates=SnapshotBank.load(a.candidate_bank); downstream=SnapshotBank.load(a.downstream_bank) if a.downstream_bank else SnapshotBank()
     if a.phase!="landing" and not a.downstream_bank: raise SystemExit("--downstream-bank is mandatory outside Landing")
@@ -38,7 +44,9 @@ def main():
         variants.append((spec["id"],OrangeBikeDVGC(vc,snapshot_bank=SnapshotBank(),cert_bank=downstream)))
     inference=build_inference(variants[0][1],params,deterministic=True)
     rows=candidates.records_for_phase(a.phase,include_training_only=False); rows=rows[:a.limit or None]
+    if not rows: raise SystemExit(f"Candidate bank has no certifiable {a.phase} records")
     tube_version=f"{a.phase}-{uuid.uuid4().hex[:10]}"; namespace=f"{a.namespace}:{a.phase}"; results=[]; all_branches=[]
+    candidates.invalidate_phase(a.phase,reason=f"fresh certification for {manifest['policy_version']}")
     for ri,row in enumerate(rows):
         cs=cf=fs=ff=0; branches=[]
         for b in range(int(cfg.max_branches)):

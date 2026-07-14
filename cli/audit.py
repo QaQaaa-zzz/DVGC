@@ -8,7 +8,7 @@ from dvgc.bank import SnapshotBank
 from dvgc.certification import DYNAMICS_VARIANTS, assert_disjoint_branch_seeds, branch_evidence, branch_seed, summarize_branches
 from dvgc.config import load_config
 from dvgc.env import OrangeBikeDVGC
-from dvgc.policy import load_bundle
+from dvgc.policy import load_bundle, verify_manifest_artifact
 from dvgc.rollout import restore_snapshot, frozen_rollout
 from dvgc.runtime import build_inference
 
@@ -19,9 +19,14 @@ def main():
     p.add_argument("--phase",required=True,choices=["landing","flight","takeoff","approach"]); p.add_argument("--output",required=True)
     p.add_argument("--seed",type=int,default=1000000); p.add_argument("--namespace",default="audit"); p.add_argument("--branches",type=int,default=16); p.add_argument("--limit",type=int,default=0)
     a=p.parse_args(); params,cfg_dict,manifest=load_bundle(a.policy,verify_files=True)
+    if manifest.get("stage") not in (None,a.phase): raise SystemExit(f"Policy stage {manifest.get('stage')} cannot audit {a.phase}")
+    try: verify_manifest_artifact(manifest,"downstream_bank",a.downstream_bank or None,required=(a.phase!="landing"))
+    except ValueError as exc: raise SystemExit(str(exc)) from exc
     cfg=load_config(overrides={**cfg_dict,"training_stage":a.phase,"domain_randomization":False,"obs_noise_enable":False})
     bank=SnapshotBank.load(a.bank); downstream=SnapshotBank.load(a.downstream_bank) if a.downstream_bank else SnapshotBank()
     if a.phase!="landing" and not a.downstream_bank: raise SystemExit("--downstream-bank is mandatory outside Landing")
+    try: bank.validate_certification_provenance(a.phase,policy_version=manifest["policy_version"],estimator_version=manifest.get("estimator_version","event_filter_v1"))
+    except ValueError as exc: raise SystemExit(str(exc)) from exc
     variants=[]
     for spec in DYNAMICS_VARIANTS:
         overrides={key:value for key,value in spec.items() if key!="id"}
