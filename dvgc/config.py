@@ -86,6 +86,10 @@ def default_config() -> config_dict.ConfigDict:
         landing_candidate_knee_jitter=0.030,
         landing_candidate_impact_horizon=12,
         landing_candidate_relaxation_steps=5,
+        # A candidate bank must include learnable Boundary/Dead states; it is
+        # not a pre-certified Safe tube.  Immediate explosions remain banned,
+        # while a small zero-action 0.5 s failure tail is reported and bounded.
+        landing_candidate_max_short_horizon_failure_rate=0.10,
         # Robot/action convention.  Action order is fixed and stored in every
         # policy manifest: [steer, rear-wheel drive, hip, knee].
         action_mapping_version=ACTION_MAPPING_VERSION,

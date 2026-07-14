@@ -84,6 +84,7 @@
   "landing_candidate_hip_jitter": 0.015,
   "landing_candidate_impact_horizon": 12,
   "landing_candidate_knee_jitter": 0.03,
+  "landing_candidate_max_short_horizon_failure_rate": 0.1,
   "landing_candidate_pitch_jitter_deg": 1.5,
   "landing_candidate_relaxation_steps": 5,
   "landing_candidate_roll_jitter_deg": 1.0,

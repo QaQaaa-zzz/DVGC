@@ -64,7 +64,7 @@ def _contact_audit(rows, xml_path, deep_penetration_threshold):
 def _rollout_audit(rows, cfg, horizon):
     env=OrangeBikeDVGC(cfg,snapshot_bank=SnapshotBank()); step=jax.jit(env.step)
     zero=jp.zeros(env.action_size,jp.float32); causes=Counter(); reasons=Counter(); phases=Counter()
-    one_step_failures=0; nonfinite=0
+    one_step_failures=0; nonfinite=0; physical_failure_records=[]
     for i,row in enumerate(rows):
         state=restore_snapshot(env,row,jax.random.PRNGKey(500000+i))
         for t in range(int(horizon)):
@@ -81,7 +81,13 @@ def _rollout_audit(rows, cfg, horizon):
                 cause="final_recovery" if final else "physical_failure" if terminated else "timeout" if truncated else "invalid_done"
                 causes[cause]+=1; one_step_failures+=int(t==0 and cause=="physical_failure")
                 code=int(np.asarray(jax.device_get(state.info["end_code"])))
-                reasons[END_REASON.get(code,f"unknown_{code}")]+=1
+                reason=END_REASON.get(code,f"unknown_{code}"); reasons[reason]+=1
+                if cause=="physical_failure":
+                    physical_failure_records.append({
+                        "bank_index":i,"record_id":row.get("id"),
+                        "reference_index":row.get("reference_index"),
+                        "terminal_step":t+1,"reason":reason,
+                    })
                 break
         else:
             causes["active_at_horizon"]+=1
@@ -95,6 +101,7 @@ def _rollout_audit(rows, cfg, horizon):
         "short_horizon_timeout_rate":float(causes["timeout"]/total) if total else 0.0,
         "nonfinite_records":nonfinite,
         "phase_visitation_steps":dict(phases),
+        "physical_failure_records":physical_failure_records,
     }
 
 
@@ -131,7 +138,7 @@ def main():
         "no_deep_penetration":contact["records_with_deep_penetration"]==0,
         "no_body_terrain_contact":contact["records_with_body_terrain_contact"]==0,
         "no_one_step_physical_failure":rollout["one_step_physical_failure_rate"]==0.0,
-        "no_short_horizon_physical_failure":rollout["short_horizon_physical_failure_rate"]==0.0,
+        "short_horizon_physical_failure_within_limit":rollout["short_horizon_physical_failure_rate"]<=float(cfg.landing_candidate_max_short_horizon_failure_rate),
         "no_nonfinite_rollout":rollout["nonfinite_records"]==0,
         "contract_consistent":all(contract_flags.values()),
     }
@@ -141,7 +148,9 @@ def main():
         "candidate_count":len(rows),"finite_records":finite_records,"bootstrap_eligible":eligible,
         "training_only":training_only,"oracle_phase_counts":dict(oracle),"filter_phase_counts":dict(filtered),
         "feature_ranges":_ranges(rows) if rows else {},"contact_audit":contact,"rollout_audit":rollout,
-        "quality_flags":quality_flags,"contract_flags":contract_flags,"bank_metadata":bank.metadata,
+        "quality_flags":quality_flags,"contract_flags":contract_flags,
+        "quality_thresholds":{"max_short_horizon_physical_failure_rate":float(cfg.landing_candidate_max_short_horizon_failure_rate)},
+        "bank_metadata":bank.metadata,
     }
     output=Path(args.output); output.parent.mkdir(parents=True,exist_ok=True)
     output.write_text(json.dumps(report,indent=2,sort_keys=True),encoding="utf-8")
