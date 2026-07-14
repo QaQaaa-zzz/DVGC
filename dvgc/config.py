@@ -1,0 +1,295 @@
+"""Single source of truth for the cleaned DVGC project configuration."""
+from __future__ import annotations
+
+import hashlib
+import json
+from pathlib import Path
+from typing import Any, Mapping
+
+try:
+    from ml_collections import config_dict
+except ModuleNotFoundError:  # lightweight fallback for offline audits/tests
+    class _Config(dict):
+        def __getattr__(self, name):
+            try:
+                return self[name]
+            except KeyError as exc:
+                raise AttributeError(name) from exc
+        def __setattr__(self, name, value):
+            self[name] = value
+        def to_dict(self):
+            return dict(self)
+    class _ConfigModule:
+        ConfigDict = _Config
+        @staticmethod
+        def create(**kwargs):
+            return _Config(kwargs)
+    config_dict = _ConfigModule()
+
+PHASES = ("approach", "takeoff", "flight", "landing")
+STAGE_ID = {name: i for i, name in enumerate(PHASES)}
+ID_STAGE = {i: name for name, i in STAGE_ID.items()}
+ACTION_MAPPING_VERSION = "steer_drive_hip_knee.incremental_positive_flexion.v2"
+SNAPSHOT_SCHEMA = "dvgc_physical_belief_v1"
+
+
+def default_config() -> config_dict.ConfigDict:
+    """Returns the only supported environment configuration.
+
+    The reference trajectory is used to set broad candidate envelopes only.  It
+    is never used as a pointwise tracking target or as the formal success label.
+    """
+    return config_dict.create(
+        # Simulation and files.
+        xml_path="assets/orange_bike_2kg_horizontal.xml",
+        ctrl_dt=0.020,
+        sim_dt=0.002,
+        episode_length=750,
+        action_repeat=1,
+        impl="warp",
+        contact_mode="imu",
+        naconmax=512,
+        naccdmax=512,
+        njmax=512,
+        root_body_name="base_link",
+        # Current backward-bootstrap stage.
+        training_stage="landing",
+        use_bank_resets=True,
+        downstream_bank_path="",
+        # Terrain, copied from the supplied XML.
+        step_front_x=3.60,
+        step_back_x=7.60,
+        step_top_z=0.16,
+        step_half_width=1.00,
+        step_top_xy_margin=0.02,
+        valid_landing_min_past_edge=0.25,
+        valid_landing_back_margin=0.50,
+        # Robot/action convention.  Action order is fixed and stored in every
+        # policy manifest: [steer, rear-wheel drive, hip, knee].
+        action_mapping_version=ACTION_MAPPING_VERSION,
+        ground_spawn_x=1.50,
+        nominal_base_z_ground=0.120,
+        initial_velocity=2.00,
+        target_forward_speed=2.00,
+        landing_target_forward_speed=2.00,
+        wheel_roll_radius=0.070,
+        hip_initial=-1.20,
+        knee_initial=2.50,
+        hip_min=-1.30,
+        hip_max=0.50,
+        knee_min=-1.50,
+        knee_max=2.50,
+        steer_action_scale=0.80,
+        rear_wheel_action_min=-5.0,
+        rear_wheel_action_max=40.0,
+        # Event anchors and deployable phase filter.
+        takeoff_window_far=1.25,
+        takeoff_window_near=0.18,
+        takeoff_liftoff_before_step=0.55,
+        takeoff_clearance_before_step=0.20,
+        takeoff_liftoff_height=0.015,
+        takeoff_liftoff_vz=0.20,
+        airborne_confirm_steps=2,
+        landing_confirm_steps=2,
+        landing_bounce_grace_steps=20,
+        invalid_wheel_confirm_steps=2,
+        phase_output_delay_steps=0,
+        phase_delay_random_max=2,
+        phase_progress_clip=True,
+        # Recovery and failures.
+        recovery_hold_steps=25,
+        recovery_min_vx=0.55,
+        recovery_max_roll_deg=14.0,
+        recovery_max_pitch_deg=22.0,
+        recovery_max_angvel=4.0,
+        max_roll_deg=35.0,
+        max_pitch_deg=75.0,
+        max_backward_distance=1.0,
+        stage_timeout_landing=3.0,
+        stage_timeout_flight=4.0,
+        stage_timeout_takeoff=5.0,
+        stage_timeout_approach=7.0,
+        stage_timeout_full=15.0,
+        # Tube matching is phase-conditioned and standardized by the certified
+        # downstream bank.  Radius is in standardized feature space.
+        tube_match_radius_z=2.75,
+        tube_match_k=1,
+        tube_activation_min_safe=4,
+        # RSI mixture.  Final-safe states form the core; boundary states keep
+        # learning near the decision surface.  Auxiliary velocity seeds are
+        # training-only and can never enter certification/audit.
+        rsi_safe_mass=0.70,
+        rsi_boundary_mass=0.20,
+        rsi_aux_mass=0.20,
+        downstream_rehearsal_mass=0.20,
+        natural_prob_landing=0.00,
+        natural_prob_flight=0.05,
+        natural_prob_takeoff=0.10,
+        natural_prob_approach=0.25,
+        natural_prob_full=1.00,
+        # Observation and policy state.
+        actor_history_steps=4,
+        obs_noise_enable=True,
+        joint_pos_noise_std=0.002,
+        joint_vel_noise_std=0.020,
+        gyro_noise_std=0.10,
+        gravity_noise_std=0.015,
+        accel_noise_std=0.20,
+        # Initial-state randomization.
+        domain_randomization=True,
+        init_roll_deg=3.0,
+        init_pitch_deg=3.0,
+        init_yaw_deg=3.0,
+        init_pos_y_std=0.010,
+        init_vel_x_std=0.10,
+        # Contact/IMU adapter and exact-label compatibility.
+        landing_side_margin=0.18,
+        step_top_z_tol=0.030,
+        step_top_normal_z_min=0.65,
+        pretakeoff_airborne_fail_steps=4,
+        platform_back_edge_diagnostic_margin=0.20,
+        imu_impact_delta_threshold=6.0,
+        imu_impact_use_abs_delta=True,
+        imu_impact_sign=1.0,
+        imu_impact_min_descend_vz=-0.15,
+        imu_support_height_tol=0.095,
+        imu_support_max_abs_vz=1.20,
+        imu_airborne_height_margin=0.055,
+        imu_airborne_min_abs_vz=0.45,
+        takeoff_use_wheel_clearance=True,
+        takeoff_wheel_radius=0.070,
+        # Incremental knee target mapping.  Positive action decreases the XML
+        # knee angle (flexion); negative action increases it (extension).
+        # The XML joint range and actuator parameters remain unchanged.
+        knee_action_target_delta=0.20,
+        rear_wheel_action_delta=15.0,
+        # Clean takeoff signal/reward protocol.
+        takeoff_frontmost_offset=0.235,
+        takeoff_disable_base_z_success=True,
+        takeoff_positive_pitch_soft_deg=12.0,
+        takeoff_positive_pitch_hard_deg=28.0,
+        takeoff_positive_pitch_terminate_ticks=5,
+        takeoff_wheelie_pitch_deg=16.0,
+        takeoff_wheelie_terminate_ticks=5,
+        takeoff_sync_height_diff_max=0.10,
+        takeoff_sync_vz_diff_max=1.50,
+        takeoff_step_clearance_margin=0.025,
+        takeoff_reward_profile="minimal_dual_wheel",
+        takeoff_reward_scale_dual_wheel_vz=1.20,
+        takeoff_reward_scale_dual_wheel_height=1.00,
+        takeoff_reward_scale_dual_wheel_clearance=0.80,
+        takeoff_reward_scale_knee_useful_motion=0.12,
+        takeoff_penalty_scale_positive_pitch=0.65,
+        takeoff_penalty_scale_wheelie=1.50,
+        takeoff_penalty_scale_wheel_unsync=0.60,
+        takeoff_terminal_failure_penalty=12.0,
+        # Certification may instantiate several actual dynamics variants.
+        mass_scale=1.0,
+        friction_scale=1.0,
+        actuator_force_scale=1.0,
+        gravity_scale=1.0,
+        tube_activation_min_safe_records=4,
+        certified_match_radius=2.75,
+        # Recovery-centred legacy-compatible shaping terms retained by env.py.
+        landing_reward_profile="imu_recovery_strict",
+        forward_sigma=0.60,
+        roll_sigma_deg=12.0,
+        pitch_sigma_deg=26.0,
+        coeff_action_mag=0.03,
+        coeff_action_saturation=0.10,
+        coeff_lateral_vel=0.45,
+        coeff_yaw_rate=0.08,
+        coeff_yaw_angle=0.15,
+        coeff_downrange=0.00,
+        landing_forward_sigma=0.60,
+        landing_coeff_forward_speed=0.20,
+        landing_coeff_progress=0.00,
+        landing_coeff_platform_contact=0.15,
+        landing_coeff_recovery_shaping=1.20,
+        landing_coeff_recovery_streak=8.00,
+        landing_terminal_hard_failure_penalty=30.00,
+        landing_terminal_timeout_penalty=3.00,
+        landing_roll_excess_penalty=2.00,
+        landing_pitch_excess_penalty=0.75,
+        landing_gyro_excess_penalty=0.25,
+        landing_quality_requires_recovery_gates=True,
+        landing_target_x=4.15,
+        landing_stage_timeout_step_penalty=0.0,
+        # Unified stage-continuation reward.  Chain is a bootstrap event; Final
+        # Recovery remains the formal Tube label and receives the largest bonus.
+        coeff_alive=0.05,
+        coeff_forward_speed=0.45,
+        coeff_progress=0.18,
+        coeff_roll=0.40,
+        coeff_pitch=0.30,
+        coeff_action_smooth=0.02,
+        coeff_takeoff_vz=1.20,
+        coeff_takeoff_height=1.00,
+        coeff_takeoff_posture=0.45,
+        coeff_takeoff_joint_motion=0.15,
+        coeff_takeoff_event=2.0,
+        coeff_valid_landing_event=3.0,
+        coeff_platform_contact=0.80,
+        coeff_recovery_shaping=1.00,
+        coeff_chain_event=8.0,
+        coeff_recovery_success=30.0,
+        coeff_hard_failure=12.0,
+        coeff_timeout=2.0,
+        # Certification protocol.
+        beta_alpha0=1.0,
+        beta_beta0=1.0,
+        posterior_q_low=0.05,
+        posterior_q_high=0.95,
+        safe_threshold=0.70,
+        dead_threshold=0.30,
+        boundary_max_width=0.35,
+        min_branches=8,
+        max_branches=32,
+        branch_horizon=750,
+        action_noise_std=0.03,
+        # Re-label/audit trigger metadata.
+        max_label_age=4,
+        policy_kl_trigger=0.08,
+        eval_drop_trigger=0.08,
+        relabel_budget=64,
+        audit_seed_namespace="audit",
+        build_seed_namespace="build",
+    )
+
+
+def apply_overrides(cfg: config_dict.ConfigDict, values: Mapping[str, Any]) -> config_dict.ConfigDict:
+    cfg = config_dict.ConfigDict(cfg.to_dict())
+    for key, value in values.items():
+        if key not in cfg:
+            raise KeyError(f"Unknown DVGC config key: {key}")
+        cfg[key] = value
+    return cfg
+
+
+def load_config(path: str | Path | None = None, overrides: Mapping[str, Any] | None = None) -> config_dict.ConfigDict:
+    cfg = default_config()
+    if path:
+        payload = json.loads(Path(path).read_text(encoding="utf-8"))
+        cfg = apply_overrides(cfg, payload)
+    if overrides:
+        cfg = apply_overrides(cfg, overrides)
+    return cfg
+
+
+def config_hash(cfg: config_dict.ConfigDict) -> str:
+    raw = json.dumps(cfg.to_dict(), sort_keys=True, separators=(",", ":"), default=str).encode()
+    return hashlib.sha256(raw).hexdigest()
+
+
+def file_sha256(path: str | Path) -> str:
+    h = hashlib.sha256()
+    with Path(path).open("rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def save_config(cfg: config_dict.ConfigDict, path: str | Path) -> None:
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(cfg.to_dict(), indent=2, sort_keys=True), encoding="utf-8")

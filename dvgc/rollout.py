@@ -1,0 +1,53 @@
+"""Shared frozen-policy rollout helpers used by certification and evaluation."""
+from __future__ import annotations
+
+from typing import Any
+
+import jax
+import jax.numpy as jp
+import numpy as np
+
+from .config import STAGE_ID
+
+
+def restore_snapshot(env, record: dict[str, Any], rng):
+    ps = dict(record.get("policy_state", {}))
+    phase = int(record.get("oracle_phase", STAGE_ID[record["source_phase"]]))
+    history = ps.get("obs_history")
+    return env.reset_from_snapshot(
+        jp.asarray(record["qpos"]), jp.asarray(record["qvel"]), jp.asarray(record["ctrl"]), rng,
+        jp.asarray(phase, jp.int32), jp.asarray(int(record.get("had_airborne", 0)), jp.int32),
+        jp.asarray(int(record.get("had_valid_landing", 0)), jp.int32),
+        jp.asarray(int(record.get("contact_age", 0)), jp.int32),
+        jp.asarray(ps.get("last_action", np.zeros(env.action_size, np.float32))),
+        estimated_phase=jp.asarray(int(ps.get("filter_phase", phase)), jp.int32),
+        phase_probs=jp.asarray(ps.get("phase_probs", np.eye(4, dtype=np.float32)[phase])),
+        airborne_count=jp.asarray(int(record.get("airborne_count", 0)), jp.int32),
+        prelaunch_airborne_count=jp.asarray(int(record.get("prelaunch_airborne_count", 0)), jp.int32),
+        landing_bounce_count=jp.asarray(int(record.get("landing_bounce_count", 0)), jp.int32),
+        invalid_wheel_count=jp.asarray(int(record.get("invalid_wheel_count", 0)), jp.int32),
+        recovery_count=jp.asarray(int(record.get("recovery_count", 0)), jp.int32),
+        prev_acc_z=jp.asarray(float(ps.get("prev_acc_z", np.nan)), jp.float32),
+        prev_vz=jp.asarray(float(ps.get("prev_vz", np.nan)), jp.float32),
+        obs_history=(None if history is None else jp.asarray(history)),
+        obs_history_valid=jp.asarray(history is not None),
+    )
+
+
+def frozen_rollout(env, inference_fn, state, rng, *, horizon: int, action_noise_std: float = 0.0):
+    step_fn = jax.jit(env.step)
+    trace = []
+    for step in range(int(horizon)):
+        rng, action_key, noise_key = jax.random.split(rng, 3)
+        action, _ = inference_fn(state.obs, action_key)
+        if action_noise_std > 0:
+            action = jp.clip(action + jax.random.normal(noise_key, action.shape) * float(action_noise_std), -1.0, 1.0)
+        state = step_fn(state, action)
+        trace.append(state)
+        if float(np.asarray(jax.device_get(state.done))) > 0.5:
+            break
+    chain = int(np.asarray(jax.device_get(state.info.get("chain_ever", state.info.get("chain_success", 0)))))
+    final = int(np.asarray(jax.device_get(state.info.get("recovery_success", 0))))
+    terminated = int(np.asarray(jax.device_get(state.info.get("terminated", 0))))
+    truncated = int(np.asarray(jax.device_get(state.info.get("truncated", 0))))
+    return state, {"chain": chain, "final": final, "terminated": terminated, "truncated": truncated, "steps": len(trace)}

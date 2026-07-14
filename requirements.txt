@@ -1,0 +1,12 @@
+# Use the versions compatible with your installed MuJoCo Playground stack.
+numpy>=1.26
+scipy>=1.12
+pandas>=2.1
+jax[cuda12]>=0.4.35
+mujoco>=3.2
+mujoco-playground
+brax
+flax
+optax
+ml-collections
+pytest>=8

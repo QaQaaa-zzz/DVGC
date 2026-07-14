@@ -1,0 +1,135 @@
+{
+  "xml_path": "assets/orange_bike_2kg_horizontal.xml",
+  "xml_sha256": "ceda4f7e43895cee09bd7582d9b46688971740e74b6553615739f980eb098138",
+  "model_name": "orange_bike",
+  "meshdir": "meshes",
+  "mesh_assets": [
+    {
+      "name": "base_link",
+      "file": "base_link.STL",
+      "resolved_path": "assets/meshes/base_link.STL",
+      "exists_in_current_copy": false
+    },
+    {
+      "name": "frontwheel",
+      "file": "frontwheel.STL",
+      "resolved_path": "assets/meshes/frontwheel.STL",
+      "exists_in_current_copy": false
+    },
+    {
+      "name": "rearwheel",
+      "file": "rearwheel.STL",
+      "resolved_path": "assets/meshes/rearwheel.STL",
+      "exists_in_current_copy": false
+    },
+    {
+      "name": "steer",
+      "file": "steer.STL",
+      "resolved_path": "assets/meshes/steer.STL",
+      "exists_in_current_copy": false
+    },
+    {
+      "name": "downarm",
+      "file": "downarm.STL",
+      "resolved_path": "assets/meshes/downarm.STL",
+      "exists_in_current_copy": false
+    },
+    {
+      "name": "uparm",
+      "file": "uparm.STL",
+      "resolved_path": "assets/meshes/uparm.STL",
+      "exists_in_current_copy": false
+    }
+  ],
+  "joints": [
+    {
+      "name": "floating_base_joint",
+      "type": "free",
+      "range": null,
+      "axis": null
+    },
+    {
+      "name": "rearwheel_joint",
+      "type": "hinge",
+      "range": null,
+      "axis": "0 0 1"
+    },
+    {
+      "name": "steering_joint",
+      "type": "hinge",
+      "range": "-0.8 0.8",
+      "axis": "0 0 1"
+    },
+    {
+      "name": "frontwheel_joint",
+      "type": "hinge",
+      "range": null,
+      "axis": "0 0 1"
+    },
+    {
+      "name": "hip_joint",
+      "type": "hinge",
+      "range": "-1.3 0.5",
+      "axis": "0 1 0"
+    },
+    {
+      "name": "knee_joint",
+      "type": "hinge",
+      "range": "-1.5 2.5",
+      "axis": "0 1 0"
+    }
+  ],
+  "actuators": [
+    {
+      "name": "cmd_steering_v",
+      "type": "position",
+      "joint": "steering_joint",
+      "ctrlrange": "-0.8 0.8",
+      "forcerange": "-5 5",
+      "kp": "10",
+      "kv": "0.1"
+    },
+    {
+      "name": "cmd_rearwheel_f",
+      "type": "velocity",
+      "joint": "rearwheel_joint",
+      "ctrlrange": "-5 40",
+      "forcerange": "-6 6",
+      "kp": null,
+      "kv": "5"
+    },
+    {
+      "name": "cmd_hip_f",
+      "type": "position",
+      "joint": "hip_joint",
+      "ctrlrange": "-1.3 0.5",
+      "forcerange": "-25 25",
+      "kp": "200",
+      "kv": "5"
+    },
+    {
+      "name": "cmd_knee_f",
+      "type": "position",
+      "joint": "knee_joint",
+      "ctrlrange": "-1.5 2.5",
+      "forcerange": "-25 25",
+      "kp": "200",
+      "kv": "5"
+    }
+  ],
+  "step": {
+    "center": [
+      5.6,
+      0.0,
+      0.0
+    ],
+    "half_size": [
+      2.0,
+      1.0,
+      0.16
+    ],
+    "front_x": 3.5999999999999996,
+    "back_x": 7.6,
+    "top_z": 0.16
+  }
+}

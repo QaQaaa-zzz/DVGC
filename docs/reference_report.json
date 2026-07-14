@@ -1,0 +1,42 @@
+{
+  "rows": 821,
+  "duration_s": 1.64,
+  "median_dt_s": 0.0020000000000000018,
+  "max_dt_jitter_s": 2.220446049250313e-16,
+  "angle_unit": "degree",
+  "anchors": {
+    "approach_end": 113,
+    "takeoff_end": 129,
+    "apex": 220,
+    "landing_start": 329,
+    "recovery_start": 379,
+    "recovery_end": 640
+  },
+  "anchor_times_s": {
+    "approach_end": 0.228,
+    "takeoff_end": 0.26,
+    "apex": 0.442,
+    "landing_start": 0.66,
+    "recovery_start": 0.76,
+    "recovery_end": 1.282
+  },
+  "anchor_x_m": {
+    "approach_end": 2.307473661741498,
+    "takeoff_end": 2.4307729974389227,
+    "apex": 3.1042915798882267,
+    "landing_start": 3.911350602473696,
+    "recovery_start": 4.241921263567887,
+    "recovery_end": 5.83011159683169
+  },
+  "max_z_m": 0.5515475838251305,
+  "max_vz_mps": 2.536448209545862,
+  "hip_range": [
+    -1.3162725639852169,
+    -0.9905554798014664
+  ],
+  "knee_range": [
+    1.6625417739709227,
+    2.577113531776893
+  ],
+  "note": "The post-recovery roll failure is excluded from the desired envelope."
+}

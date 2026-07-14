@@ -1,0 +1,12 @@
+{
+  "python_compileall": "PASS",
+  "pytest": "11 passed, 1 skipped",
+  "skipped_reason": "Dynamic MJX smoke test requires MuJoCo Playground and the user's original STL files in assets/meshes.",
+  "original_xml_only": true,
+  "runtime_xml_absent": true,
+  "xml_sha256": "ceda4f7e43895cee09bd7582d9b46688971740e74b6553615739f980eb098138",
+  "action_mapping_version": "steer_drive_hip_knee.incremental_positive_flexion.v2",
+  "file_count": 46,
+  "python_file_count": 29,
+  "python_source_lines": 3755
+}

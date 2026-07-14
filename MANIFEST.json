@@ -1,0 +1,233 @@
+{
+  "project": "DVGC_clean_project_v2",
+  "model_policy": "Only assets/orange_bike_2kg_horizontal.xml is used; no runtime XML is generated.",
+  "action_mapping_version": "steer_drive_hip_knee.incremental_positive_flexion.v2",
+  "original_xml_sha256": "ceda4f7e43895cee09bd7582d9b46688971740e74b6553615739f980eb098138",
+  "files": [
+    {
+      "path": "PROJECT_SUMMARY.md",
+      "size_bytes": 9144,
+      "sha256": "3f9c8d8a946fa5ec44a9e1a7fe822bfaab8b52a12be30ddc915812907d8b45f6"
+    },
+    {
+      "path": "README.md",
+      "size_bytes": 3198,
+      "sha256": "47d3fbf71e709e3ae7af805a684d5d5fe733e6a359f5e11b9a839a363551b229"
+    },
+    {
+      "path": "REVISION_REPORT.md",
+      "size_bytes": 5499,
+      "sha256": "aca7a8454324c3191207656b3accf1cdd9f0493a9ccbcd73d30149168190e1af"
+    },
+    {
+      "path": "assets/orange_bike_2kg_horizontal.xml",
+      "size_bytes": 10325,
+      "sha256": "ceda4f7e43895cee09bd7582d9b46688971740e74b6553615739f980eb098138"
+    },
+    {
+      "path": "cli/__init__.py",
+      "size_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "cli/audit.py",
+      "size_bytes": 3845,
+      "sha256": "a6327b6674beecea3e84fdb1031f6835e4be2d631bda6236fe2b574150ec7f58"
+    },
+    {
+      "path": "cli/build_candidates.py",
+      "size_bytes": 4210,
+      "sha256": "9d10e09e6ae7580e2544e5927a4e1410f5ab1c61fe2ddde03360ca26cf9b55be"
+    },
+    {
+      "path": "cli/certify.py",
+      "size_bytes": 4203,
+      "sha256": "e8efc9893b28ed15baa6f52fdf76b167268c0dff5513e3a5204d2d8ae0ac1ed6"
+    },
+    {
+      "path": "cli/evaluate.py",
+      "size_bytes": 2406,
+      "sha256": "c2e139d9a7e721af347530a7f71ef7b4795b4575bdb5467d06c7242b72a9f58d"
+    },
+    {
+      "path": "cli/fit_viability.py",
+      "size_bytes": 804,
+      "sha256": "f436cbc1b60fec353b4c0ae41190aa5892459d3aa5c9a788d319c92e9330c48c"
+    },
+    {
+      "path": "cli/prepare_project.py",
+      "size_bytes": 919,
+      "sha256": "71ee533274ebf511178439c2f55853f9b1672fa19c8e642bf5fe915087da4245"
+    },
+    {
+      "path": "cli/relabel_plan.py",
+      "size_bytes": 1272,
+      "sha256": "af5d3541e4ad21806ad1d10665ccb1644a9d1ffc8e0b353247d60aca4ba526bd"
+    },
+    {
+      "path": "cli/train.py",
+      "size_bytes": 3754,
+      "sha256": "e2f1bf1df60c631cf2fd5f1d38b32bf1c3d23d4099c9fb58d9b2cc5ba588fa87"
+    },
+    {
+      "path": "configs/default.json",
+      "size_bytes": 6009,
+      "sha256": "6559834327c7080200f08aa9624597901f84d3d143245d93cee35287825312da"
+    },
+    {
+      "path": "data/reference_jump.csv",
+      "size_bytes": 504308,
+      "sha256": "612fe758eb1042481b9c7642cc9b92d3e9c14b4a75c9deaf5340183c928bc41f"
+    },
+    {
+      "path": "docs/BUILD_VALIDATION.json",
+      "size_bytes": 499,
+      "sha256": "d58a64bb41affc24f99eab626c0a48409e99c976027c078b79072e58f58702cb"
+    },
+    {
+      "path": "docs/REMOVED_FILES.md",
+      "size_bytes": 2462,
+      "sha256": "fa7034eb84fd54c237926278ea87603d1497d9056ca093d6a626e7dc8724be8d"
+    },
+    {
+      "path": "docs/VERIFICATION_PROTOCOL.md",
+      "size_bytes": 1418,
+      "sha256": "9875b4dd3b9c201aecd145fcbe20d31415c69ebd105c608968405236cf3c464e"
+    },
+    {
+      "path": "docs/XML_AND_KNEE_MAPPING.md",
+      "size_bytes": 6184,
+      "sha256": "a0d955abdb68ea10047bf23a4b1066d7ed1cc3a719ece38131d2f9850e506b42"
+    },
+    {
+      "path": "docs/model_report.json",
+      "size_bytes": 2867,
+      "sha256": "65d26241f8564c790a8b2db6f34799241ba2f15574397b351364b6e5743785ab"
+    },
+    {
+      "path": "docs/reference_phase_envelopes.csv",
+      "size_bytes": 8300,
+      "sha256": "ef7bf2b8a3a69e4906f39c4b965204dd014a612335b7d1610c361f5568ef7763"
+    },
+    {
+      "path": "docs/reference_report.json",
+      "size_bytes": 1033,
+      "sha256": "a4449f8aae2fa1062f4a43430522ba44839c68daeabb964344813075e9547275"
+    },
+    {
+      "path": "dvgc/__init__.py",
+      "size_bytes": 379,
+      "sha256": "ded5bbaa1cc0009376d227f4f22b0d7fc9d0a05555b5281ade7df6013f0da840"
+    },
+    {
+      "path": "dvgc/action_mapping.py",
+      "size_bytes": 1001,
+      "sha256": "f5b9338be653642051d0c92edc1cfa99358702fc36e07ff2395771f945d1c932"
+    },
+    {
+      "path": "dvgc/bank.py",
+      "size_bytes": 14385,
+      "sha256": "23b2a73ad3152c9f1a9c21a436d687a2e1dbb6025037cc3620e2533dcb5a9531"
+    },
+    {
+      "path": "dvgc/config.py",
+      "size_bytes": 10886,
+      "sha256": "23d4a09a96922a990a60cd4092723ab677f0dd4cd20a90ae5de411d8d8c75234"
+    },
+    {
+      "path": "dvgc/env.py",
+      "size_bytes": 84970,
+      "sha256": "c069854741caca7c19679b06e7e0ca718f90299fbdc66f681f2ddf4ef0d0cb52"
+    },
+    {
+      "path": "dvgc/model.py",
+      "size_bytes": 3045,
+      "sha256": "804a3c261ed1d6c2cef454116b363b1c991558509688ec8eaf005a7ceb9f214d"
+    },
+    {
+      "path": "dvgc/policy.py",
+      "size_bytes": 3658,
+      "sha256": "30f9bcdfece5afb189fd7c0f7d0bacbed6a4bca744a0dcdc2ffcb8b6bedc82fe"
+    },
+    {
+      "path": "dvgc/reference.py",
+      "size_bytes": 7840,
+      "sha256": "308892b264f8b8d08a290380261b19eaed31993af65efbc6cb099f09a654f7d7"
+    },
+    {
+      "path": "dvgc/rewards.py",
+      "size_bytes": 7762,
+      "sha256": "ee78913d09838a84840c5bd0b067016d912c0330a7a7f43e54a5cf1980683d52"
+    },
+    {
+      "path": "dvgc/rollout.py",
+      "size_bytes": 2890,
+      "sha256": "e5db9164dee7553bfaf8da875e1c402d26c29f600c8d8259083b12c159f4e33e"
+    },
+    {
+      "path": "dvgc/runtime.py",
+      "size_bytes": 14657,
+      "sha256": "28cb0e607088ff6dc510866d2efdcf254617892147af4037e720aec4b4a042b2"
+    },
+    {
+      "path": "dvgc/signals.py",
+      "size_bytes": 6625,
+      "sha256": "ac2a27bff2645a992fdb437ba3ee2e22f9f0c086f910ada4a3663064ddcbf83e"
+    },
+    {
+      "path": "dvgc/viability.py",
+      "size_bytes": 7210,
+      "sha256": "bcf7d2e12c8e93b11bfec920dedce01e27834e513c256faa5fcf61bb01f4d965"
+    },
+    {
+      "path": "pyproject.toml",
+      "size_bytes": 298,
+      "sha256": "3f14dd7bf348a427d22c5d7beb92909cd5fec8032d27378f8dd967ad63e60d72"
+    },
+    {
+      "path": "requirements.txt",
+      "size_bytes": 202,
+      "sha256": "08464b42ae08db853fa329790ccac3c8d284631068506ca372c42371a9d90b45"
+    },
+    {
+      "path": "scripts/run_backward_bootstrap.sh",
+      "size_bytes": 3509,
+      "sha256": "ce137be44b9d350a93aa322ee901d3c6af5258f243569e94276e5e7e9f1d9ba3"
+    },
+    {
+      "path": "tests/test_action_mapping.py",
+      "size_bytes": 839,
+      "sha256": "3040cca38d9cf0d295efbd3086e7f5deec5858628e3ff76ba628faf994d87745"
+    },
+    {
+      "path": "tests/test_bank.py",
+      "size_bytes": 1061,
+      "sha256": "fcfc280415296991d0bbe19b0b0ccc84283561d3d8a21444fde985d1d9a1faf2"
+    },
+    {
+      "path": "tests/test_model.py",
+      "size_bytes": 570,
+      "sha256": "374d3afc2f9ebc636f38b704f742a6eb7b7b268b6cfdd6cfeaef0f7ded4028df"
+    },
+    {
+      "path": "tests/test_optional_runtime.py",
+      "size_bytes": 1116,
+      "sha256": "67dfa6944775d414121bbeb5d0f0205b8d9354a70ef0fbc6b43a2269d43379ff"
+    },
+    {
+      "path": "tests/test_policy.py",
+      "size_bytes": 522,
+      "sha256": "b6edeba543820862f6efd3e1a258896c6a406c09fbc636b2ae120aa251f1096b"
+    },
+    {
+      "path": "tests/test_reference.py",
+      "size_bytes": 391,
+      "sha256": "85a4a1384a021d3324ff07a407bb85b5e255277c2d67639bbe610aabd6a85092"
+    },
+    {
+      "path": "tests/test_source_contracts.py",
+      "size_bytes": 997,
+      "sha256": "d6903bbf60d29e985185a2f73fe468fc8aa1ae914c5666cecf13d1f6655907e4"
+    }
+  ]
+}

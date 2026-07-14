@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "orange-bike-dvgc"
+version = "1.0.0"
+description = "Clean, verifiable DVGC implementation for single-track robot jumping"
+requires-python = ">=3.10"
+
+[tool.setuptools]
+packages = ["dvgc", "cli"]
