@@ -31,7 +31,8 @@ def main():
     for spec in DYNAMICS_VARIANTS:
         overrides={key:value for key,value in spec.items() if key!="id"}
         vc=load_config(overrides={**cfg.to_dict(),**overrides})
-        variants.append((spec["id"],OrangeBikeDVGC(vc,snapshot_bank=SnapshotBank(),cert_bank=downstream)))
+        env=OrangeBikeDVGC(vc,snapshot_bank=SnapshotBank(),cert_bank=downstream)
+        variants.append((spec["id"],env,jax.jit(env.step)))
     inference=build_inference(variants[0][1],params,deterministic=True)
     rows=[r for r in bank.records_for_phase(a.phase,include_training_only=False) if r["final"]["branches"]>0]
     rows=rows[:a.limit or None]; namespace=f"{a.namespace}:{a.phase}"; audit=[]; all_branches=[]
@@ -42,8 +43,8 @@ def main():
         except ValueError as exc: raise SystemExit(str(exc)) from exc
         cs=fs=0; branches=[]
         for b in range(a.branches):
-            variant_id,env=variants[b%len(variants)]; seed=audit_seeds[b]; key=jax.random.PRNGKey(seed); state=restore_snapshot(env,row,key)
-            _,out=frozen_rollout(env,inference,state,key,horizon=int(cfg.branch_horizon),action_noise_std=float(cfg.action_noise_std))
+            variant_id,env,step_fn=variants[b%len(variants)]; seed=audit_seeds[b]; key=jax.random.PRNGKey(seed); state=restore_snapshot(env,row,key)
+            _,out=frozen_rollout(env,inference,state,key,horizon=int(cfg.branch_horizon),action_noise_std=float(cfg.action_noise_std),step_fn=step_fn)
             evidence=branch_evidence(branch_index=b,seed=seed,seed_namespace=namespace,dynamics_variant=variant_id,outcome=out)
             branches.append(evidence); all_branches.append(evidence); cs+=out["chain"]; fs+=out["final"]
         p=fs/a.branches; terminal=summarize_branches(branches); audit.append({"id":row["id"],"predicted_label":row["final"]["label"],"predicted_mean":row["final"]["posterior"]["mean"],"audit_chain":cs/a.branches,"audit_final":p,"terminal_summary":terminal,"branches":branches})

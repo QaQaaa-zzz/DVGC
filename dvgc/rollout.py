@@ -1,6 +1,7 @@
 """Shared frozen-policy rollout helpers used by certification and evaluation."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 import jax
@@ -38,8 +39,23 @@ def restore_snapshot(env, record: dict[str, Any], rng):
     )
 
 
-def frozen_rollout(env, inference_fn, state, rng, *, horizon: int, action_noise_std: float = 0.0):
-    step_fn = jax.jit(env.step)
+def frozen_rollout(
+    env,
+    inference_fn,
+    state,
+    rng,
+    *,
+    horizon: int,
+    action_noise_std: float = 0.0,
+    step_fn: Callable | None = None,
+):
+    """Roll out a frozen policy, optionally reusing a caller-owned JIT.
+
+    Sequential evaluation and certification call this helper many times.  The
+    caller should compile one step function per dynamics environment and pass
+    it here so those runs do not accumulate equivalent MJX/Warp executables.
+    """
+    step_fn = jax.jit(env.step) if step_fn is None else step_fn
     trace = []
     for step in range(int(horizon)):
         rng, action_key, noise_key = jax.random.split(rng, 3)
@@ -54,4 +70,12 @@ def frozen_rollout(env, inference_fn, state, rng, *, horizon: int, action_noise_
     final = int(np.asarray(jax.device_get(state.info.get("recovery_success", 0))))
     terminated = int(np.asarray(jax.device_get(state.info.get("terminated", 0))))
     truncated = int(np.asarray(jax.device_get(state.info.get("truncated", 0))))
-    return state, {"chain": chain, "final": final, "terminated": terminated, "truncated": truncated, "steps": len(trace)}
+    end_code = int(np.asarray(jax.device_get(state.info.get("end_code", 0))))
+    return state, {
+        "chain": chain,
+        "final": final,
+        "terminated": terminated,
+        "truncated": truncated,
+        "end_code": end_code,
+        "steps": len(trace),
+    }

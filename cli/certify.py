@@ -41,7 +41,8 @@ def main():
     for spec in DYNAMICS_VARIANTS:
         overrides={key:value for key,value in spec.items() if key!="id"}
         vc=load_config(overrides={**cfg.to_dict(),**overrides})
-        variants.append((spec["id"],OrangeBikeDVGC(vc,snapshot_bank=SnapshotBank(),cert_bank=downstream)))
+        env=OrangeBikeDVGC(vc,snapshot_bank=SnapshotBank(),cert_bank=downstream)
+        variants.append((spec["id"],env,jax.jit(env.step)))
     inference=build_inference(variants[0][1],params,deterministic=True)
     rows=candidates.records_for_phase(a.phase,include_training_only=False); rows=rows[:a.limit or None]
     if not rows: raise SystemExit(f"Candidate bank has no certifiable {a.phase} records")
@@ -50,9 +51,9 @@ def main():
     for ri,row in enumerate(rows):
         cs=cf=fs=ff=0; branches=[]
         for b in range(int(cfg.max_branches)):
-            variant_id,env=variants[b%len(variants)]; seed=branch_seed(a.seed,ri,b); key=jax.random.PRNGKey(seed)
+            variant_id,env,step_fn=variants[b%len(variants)]; seed=branch_seed(a.seed,ri,b); key=jax.random.PRNGKey(seed)
             state=restore_snapshot(env,row,key)
-            _,out=frozen_rollout(env,inference,state,key,horizon=int(cfg.branch_horizon),action_noise_std=float(cfg.action_noise_std))
+            _,out=frozen_rollout(env,inference,state,key,horizon=int(cfg.branch_horizon),action_noise_std=float(cfg.action_noise_std),step_fn=step_fn)
             evidence=branch_evidence(branch_index=b,seed=seed,seed_namespace=namespace,dynamics_variant=variant_id,outcome=out)
             branches.append(evidence); all_branches.append(evidence)
             cs+=out["chain"]; cf+=1-out["chain"]; fs+=out["final"]; ff+=1-out["final"]
