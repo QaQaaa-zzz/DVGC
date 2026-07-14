@@ -32,6 +32,8 @@ def test_candidate_rng_and_incremental_training_log_contracts():
     assert "np.random.uniform" not in candidates
     assert 'metric_log["status"]="running"' in training
     assert '"status":"failed"' in training
+    assert '"PARTIAL" if a.allow_partial' in candidates
+    assert 'candidate_build_history' in candidates
 
 
 def test_formal_pipeline_contains_tube_rsi_refinement_and_recertification():
@@ -58,6 +60,8 @@ def test_runtime_gate_has_bounded_warp_replay_tolerances_and_exact_semantics():
     assert '"actor_obs": 2e-2' in gate
     assert "SNAPSHOT_DISCRETE_FIELDS" in gate
     assert "np.array_equal" in gate
+    assert '"dvgc/env.py"' in gate and '"cli/train.py"' in gate
+    assert '"scripts", {".sh"}' not in gate
 
 
 def test_remaining_pipeline_is_resumable_and_stage_complete():

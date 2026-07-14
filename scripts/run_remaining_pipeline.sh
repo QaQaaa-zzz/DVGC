@@ -15,6 +15,7 @@ LOG_ROOT="${STATE_ROOT}/logs"
 CERT_CHUNK_STATES="${CERT_CHUNK_STATES:-40}"
 AUDIT_CHUNK_STATES="${AUDIT_CHUNK_STATES:-40}"
 PILOT_STEPS="${PILOT_STEPS:-100000}"
+CANDIDATE_ATTEMPT_BUDGET="${CANDIDATE_ATTEMPT_BUDGET:-450}"
 NUM_ENVS="${NUM_ENVS:-320}"
 NUM_EVAL_ENVS="${NUM_EVAL_ENVS:-128}"
 BATCH_SIZE="${BATCH_SIZE:-80}"
@@ -107,6 +108,27 @@ stage_value() {
   case "$phase" in flight) echo "$flight";; takeoff) echo "$takeoff";; approach) echo "$approach";; esac
 }
 
+build_candidates_chunked() {
+  local phase="$1" target="$2" bank="$3" chunk=0 previous=-1 stagnant=0 count
+  while true; do
+    count=$("$PYTHON" -m cli.pipeline_gate bank-count --bank "$bank" --phase "$phase")
+    (( count>=target )) && break
+    if (( count==previous )); then stagnant=$((stagnant+1)); else stagnant=0; fi
+    if (( stagnant>=2 || chunk>=30 )); then echo "Candidate construction made insufficient progress: $count/$target" >&2; return 2; fi
+    previous=$count
+    "$PYTHON" -u -m cli.build_candidates --phase "$phase" --target "$target" --bank "$bank" --config "$CFG" --seed "$chunk" --aux-fraction 0 --attempt-budget "$CANDIDATE_ATTEMPT_BUDGET" --allow-partial
+    chunk=$((chunk+1))
+  done
+  "$PYTHON" - <<PY
+import json
+from pathlib import Path
+p=Path("${bank%.pkl}.build.json")
+r=json.loads(p.read_text())
+if r.get("status")!="PASS": raise SystemExit("Final candidate chunk did not reach PASS")
+print(json.dumps({"status":r["status"],"phase":r["phase"],"target":r["target"],"aggregate_attempts":r["aggregate_attempts"],"deduplication_rate":r["deduplication_rate"]}))
+PY
+}
+
 run_stage() {
   local phase="$1" target="$2" total_bootstrap="$3" refine_steps="$4" downstream="$5" resume_policy="$6"
   local stage_root="runs/${phase}/pipeline_seed0_${REVISION}" candidates="artifacts/${phase}_candidates.pkl"
@@ -119,7 +141,7 @@ run_stage() {
   continuation_steps=$((total_bootstrap-PILOT_STEPS))
   mkdir -p "$stage_root"
 
-  run_step "${phase}_candidates" "$phase:$target:0" "$(join_by_semicolon data/reference_jump.csv "$CFG")" "$(join_by_semicolon "$candidates" "${candidates%.pkl}.build.json")" "$PYTHON" -u -m cli.build_candidates --phase "$phase" --target "$target" --bank "$candidates" --config "$CFG" --seed 0 --aux-fraction 0
+  run_step "${phase}_candidates" "$phase:$target:0:$CANDIDATE_ATTEMPT_BUDGET" "$(join_by_semicolon data/reference_jump.csv "$CFG")" "$(join_by_semicolon "$candidates" "${candidates%.pkl}.build.json")" build_candidates_chunked "$phase" "$target" "$candidates"
   run_step "${phase}_candidate_audit" "$phase:$target:25" "$candidates" "$stage_root/candidate_audit.json" "$PYTHON" -u -m cli.audit_candidates --phase "$phase" --bank "$candidates" --config "$CFG" --expected-count "$target" --horizon 25 --output "$stage_root/candidate_audit.json"
   run_step "${phase}_candidate_gate" "$phase:$target" "$(join_by_semicolon "${candidates%.pkl}.build.json" "$stage_root/candidate_audit.json")" "$stage_root/candidate_decision.json" "$PYTHON" -m cli.pipeline_gate candidate --build "${candidates%.pkl}.build.json" --audit "$stage_root/candidate_audit.json" --output "$stage_root/candidate_decision.json"
 

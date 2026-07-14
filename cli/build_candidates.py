@@ -98,6 +98,8 @@ def main():
     p.add_argument("--config",default="configs/default.json")
     p.add_argument("--seed",type=int,default=0)
     p.add_argument("--aux-fraction",type=float,default=.20)
+    p.add_argument("--attempt-budget",type=int,default=0)
+    p.add_argument("--allow-partial",action="store_true")
     a=p.parse_args(); rng=np.random.default_rng(a.seed)
     cfg=load_config(a.config,{"training_stage":a.phase,"use_bank_resets":False,"domain_randomization":False,"obs_noise_enable":False})
     env=OrangeBikeDVGC(cfg,snapshot_bank=SnapshotBank()); bank=SnapshotBank.load(a.bank)
@@ -123,7 +125,9 @@ def main():
     semantic_rejects=0; relaxation_rejects=0; nonfinite_rejects=0
     physical_failures=0; timeouts=0; end_reasons={}; impact_steps=[]; vertical_corrections=[]; clearances=[]
     step=jax.jit(env.step); zero=jp.zeros(env.action_size,jp.float32)
-    while len(bank.records_for_phase(a.phase))<a.target and attempts<a.target*30:
+    attempt_budget=int(a.attempt_budget) if a.attempt_budget else a.target*30
+    if attempt_budget<=0: raise SystemExit("--attempt-budget must be positive")
+    while len(bank.records_for_phase(a.phase))<a.target and attempts<attempt_budget:
         attempts+=1; idx=int(rng.integers(lo,hi+1)); row=df.iloc[idx]
         training_only=(a.phase=="takeoff" and rng.random()<a.aux_fraction)
         seed=_landing_seed(row,cfg,rng) if a.phase=="landing" else _seed(row,a.phase,cfg,training_only,rng)
@@ -184,11 +188,22 @@ def main():
             impact_steps.append(impact_step); vertical_corrections.append(proposal["vertical_correction_m"]); clearances.append(proposal["preimpact_clearance_m"])
         if attempts%25==0 or len(bank.records_for_phase(a.phase))==a.target:
             print(f"[candidates] phase={a.phase} accepted={len(bank.records_for_phase(a.phase))}/{a.target} attempts={attempts} duplicates={duplicates} semantic_rejects={semantic_rejects}",flush=True)
+    history=list(bank.metadata.get("candidate_build_history",[]))
+    history.append({
+        "seed":int(a.seed),"attempt_budget":attempt_budget,"attempts":attempts,
+        "accepted_before":accepted_before,"accepted_after":len(bank.records_for_phase(a.phase)),
+        "accepted_new":len(bank.records_for_phase(a.phase))-accepted_before,
+        "duplicates":duplicates,"semantic_rejects":semantic_rejects,
+        "relaxation_rejects":relaxation_rejects,"nonfinite_rejects":nonfinite_rejects,
+        "proposal_physical_failures":physical_failures,"proposal_timeouts":timeouts,
+    })
     bank.metadata.update({
         "reference":str(Path(a.reference)),
         "reference_usage":"candidate envelopes only; never reward tracking",
         "reference_anchors":anchors.as_dict(),
-        "build_seed":int(a.seed),
+        "build_seed":int(bank.metadata.get("build_seed",a.seed)),
+        "build_seeds":[int(row["seed"]) for row in history],
+        "candidate_build_history":history,
         "candidate_generation":{
             "landing":"reference envelope perturbation -> XML wheel-clearance placement -> real IMU impact snapshot -> zero-action relaxation",
             "landing_clearance_m":[float(cfg.landing_candidate_clearance_min),float(cfg.landing_candidate_clearance_max)],
@@ -203,8 +218,9 @@ def main():
     valid_proposals=accepted_new+duplicates
     reached=len(bank.records_for_phase(a.phase))>=a.target
     range_or_none=lambda values: None if not values else {"min":float(min(values)),"max":float(max(values)),"mean":float(np.mean(values))}
-    report={"status":"PASS" if reached else "FAIL","phase":a.phase,"target":a.target,"attempts":attempts,"accepted_before":accepted_before,"accepted_new":accepted_new,"duplicates":duplicates,"deduplication_rate":float(duplicates/valid_proposals) if valid_proposals else 0.0,"semantic_rejects":semantic_rejects,"relaxation_rejects":relaxation_rejects,"nonfinite_rejects":nonfinite_rejects,"proposal_physical_failures":physical_failures,"proposal_timeouts":timeouts,"proposal_physical_failure_rate":float(physical_failures/attempts) if attempts else 0.0,"proposal_timeout_rate":float(timeouts/attempts) if attempts else 0.0,"proposal_end_reasons":end_reasons,"accepted_impact_step_range":range_or_none(impact_steps),"accepted_vertical_correction_range_m":range_or_none(vertical_corrections),"accepted_preimpact_clearance_range_m":range_or_none(clearances),"contract":contract,"summary":bank.summary()}
+    aggregate_attempts=sum(int(row["attempts"]) for row in history); aggregate_duplicates=sum(int(row["duplicates"]) for row in history); aggregate_accepted=sum(int(row["accepted_new"]) for row in history)
+    report={"status":"PASS" if reached else "PARTIAL" if a.allow_partial else "FAIL","phase":a.phase,"target":a.target,"attempts":attempts,"aggregate_attempts":aggregate_attempts,"accepted_before":accepted_before,"accepted_new":accepted_new,"aggregate_accepted_new":aggregate_accepted,"duplicates":duplicates,"aggregate_duplicates":aggregate_duplicates,"deduplication_rate":float(aggregate_duplicates/(aggregate_accepted+aggregate_duplicates)) if aggregate_accepted+aggregate_duplicates else 0.0,"semantic_rejects":semantic_rejects,"relaxation_rejects":relaxation_rejects,"nonfinite_rejects":nonfinite_rejects,"proposal_physical_failures":physical_failures,"proposal_timeouts":timeouts,"proposal_physical_failure_rate":float(physical_failures/attempts) if attempts else 0.0,"proposal_timeout_rate":float(timeouts/attempts) if attempts else 0.0,"proposal_end_reasons":end_reasons,"accepted_impact_step_range":range_or_none(impact_steps),"accepted_vertical_correction_range_m":range_or_none(vertical_corrections),"accepted_preimpact_clearance_range_m":range_or_none(clearances),"contract":contract,"build_history":history,"summary":bank.summary()}
     Path(a.bank).with_suffix(".build.json").write_text(json.dumps(report,indent=2),encoding="utf-8")
     print(json.dumps(report,indent=2))
-    if not reached: raise SystemExit(2)
+    if not reached and not a.allow_partial: raise SystemExit(2)
 if __name__=="__main__": main()

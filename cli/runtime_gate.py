@@ -72,21 +72,20 @@ SNAPSHOT_DISCRETE_FIELDS = (
 
 
 def source_fingerprint(root: Path) -> str:
-    """Hash runtime-relevant source without including generated reports."""
-    files: list[Path] = []
-    for directory, suffixes in (
-        ("dvgc", {".py"}),
-        ("cli", {".py"}),
-        ("configs", {".json"}),
-        ("scripts", {".sh"}),
-        ("tests", {".py"}),
-    ):
-        files.extend(
-            path
-            for path in (root / directory).rglob("*")
-            if path.is_file() and path.suffix in suffixes and "__pycache__" not in path.parts
-        )
-    files.extend(root / name for name in ("pyproject.toml", "requirements.txt") if (root / name).is_file())
+    """Hash the actual PPO/reset/step dependency closure.
+
+    Offline audit, report, controller, and test edits do not invalidate a
+    previously executed dynamic runtime gate.  The resolved config and XML
+    retain their separate hashes in the gate report.
+    """
+    relative_files = (
+        "dvgc/action_mapping.py", "dvgc/bank.py", "dvgc/config.py",
+        "dvgc/env.py", "dvgc/model.py", "dvgc/policy.py",
+        "dvgc/rewards.py", "dvgc/rollout.py", "dvgc/runtime.py",
+        "dvgc/signals.py", "cli/train.py", "cli/runtime_gate.py",
+        "pyproject.toml", "requirements.txt",
+    )
+    files = [root / name for name in relative_files if (root / name).is_file()]
     digest = hashlib.sha256()
     for path in sorted(files):
         digest.update(str(path.relative_to(root)).encode())
