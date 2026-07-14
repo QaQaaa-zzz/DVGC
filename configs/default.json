@@ -118,7 +118,7 @@
   "max_pitch_deg": 75.0,
   "max_roll_deg": 35.0,
   "min_branches": 8,
-  "naccdmax": 512,
+  "naccdmax": 1024,
   "naconmax": 1024,
   "natural_prob_approach": 0.25,
   "natural_prob_flight": 0.05,

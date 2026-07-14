@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import re
 from pathlib import Path
 
 from dvgc.bank import SnapshotBank
@@ -40,6 +41,8 @@ def main():
     if bank_path and Path(bank_path).is_file(): bank_count=len(SnapshotBank.load(bank_path).records_for_phase(stage))
     cfg=json.loads((run/"config.json").read_text(encoding="utf-8")); natural=float(cfg.get(f"natural_prob_{stage}",1.0))
     console=Path(args.console_log).read_text(encoding="utf-8",errors="replace") if args.console_log and Path(args.console_log).is_file() else ""
+    broadphase_requirements=[int(value) for value in re.findall(r"naconmax to (\d+)",console)]
+    ccd_requirements=[int(value) for value in re.findall(r"naccdmax to (\d+)",console)]
     nonfinite=_nonfinite_paths(payload); training_sps=[item["value"] for item in _series(rows,"training/sps")]
     eval_sps=[item["value"] for item in _series(rows,"eval/sps")]
     phase_visitation={"landing":1.0,"flight":0.0,"takeoff":0.0,"approach":0.0} if stage=="landing" else {"available":False}
@@ -54,9 +57,11 @@ def main():
         "reset_source_distribution":{"candidate_bank":1.0-natural,"natural_start":natural,"candidate_records":bank_count,"protocol":payload.get("reset_protocol")},
         "optimization":{"entropy_loss":_series(rows,"training/entropy_loss"),"kl_mean":_series(rows,"training/kl_mean"),"value_loss":_series(rows,"training/v_loss")},
         "throughput":{"training_sps":_series(rows,"training/sps"),"eval_sps":_series(rows,"eval/sps"),"training_sps_range":None if not training_sps else [min(training_sps),max(training_sps)],"eval_sps_range":None if not eval_sps else [min(eval_sps),max(eval_sps)]},
-        "health":{"nonfinite_count":len(nonfinite),"nonfinite_paths":nonfinite,"oom":("out of memory" in console.lower() or "oom" in console.lower()),"broadphase_overflow":"broadphase overflow" in console.lower(),"compile_restart":("compile restart" in console.lower()),"error_type":payload.get("error_type"),"error":payload.get("error")},
+        "health":{"nonfinite_count":len(nonfinite),"nonfinite_paths":nonfinite,"oom":("out of memory" in console.lower() or "oom" in console.lower()),"broadphase_overflow":"broadphase overflow" in console.lower(),"peak_reported_naconmax_requirement":max(broadphase_requirements,default=None),"ccd_overflow":"ccd overflow" in console.lower(),"peak_reported_naccdmax_requirement":max(ccd_requirements,default=None),"compile_restart":("compile restart" in console.lower()),"error_type":payload.get("error_type"),"error":payload.get("error")},
         "evaluation_series":[{"step":int(row["step"]),"final_recovery_rate":float(row.get("eval/episode_end/recovery",0.0)),"physical_failure_rate":sum(float(value) for key,value in row.items() if key.startswith(end_prefix) and not key.endswith("_std") and key not in (end_prefix+"recovery",end_prefix+"stage_timeout")),"timeout_rate":float(row.get(end_prefix+"stage_timeout",0.0)),"episode_reward":float(row["eval/episode_reward"]),"avg_episode_length":float(row.get("eval/avg_episode_length",0.0))} for row in eval_rows],
     }
+    runtime_invalid=(report["health"]["oom"] or report["health"]["broadphase_overflow"] or report["health"]["ccd_overflow"] or report["health"]["nonfinite_count"]>0)
+    report["analysis_status"]=("INVALID_RUNTIME" if runtime_invalid else "COMPLETED_HEALTHY" if payload.get("status")=="completed" else "INCOMPLETE")
     output=Path(args.output) if args.output else run/"analysis.json"
     if output.exists(): raise SystemExit(f"Analysis output already exists: {output}")
     save_json(output,report); print(json.dumps({"status":report["status"],"outcomes":report["outcomes"],"health":report["health"],"throughput":report["throughput"]},indent=2))

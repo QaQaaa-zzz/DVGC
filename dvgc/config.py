@@ -51,7 +51,7 @@ def default_config() -> config_dict.ConfigDict:
         impl="warp",
         contact_mode="imu",
         naconmax=1024,
-        naccdmax=512,
+        naccdmax=1024,
         njmax=512,
         root_body_name="base_link",
         # Current backward-bootstrap stage.
