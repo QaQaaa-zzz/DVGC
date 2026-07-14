@@ -32,8 +32,10 @@
 - Continue autonomously through Landing -> Flight -> Takeoff -> Approach ->
   natural-start evaluation, then the minimum RA-L seed/baseline/ablation
   matrix.  Pause only for environment reconfiguration, destructive operations,
-  a claim-changing research fork, two failed evidence-based repairs of one
-  critical gate, or an external hardware/permission/data blocker.
+  a claim-changing research fork, or an external hardware/permission/data
+  blocker.  Geometry mapping and candidate-validation repairs that stay within
+  an existing gate and do not alter the paper method may proceed autonomously
+  for up to three evidence-based rounds; pause only after the third fails.
 - Use one main agent.  Do not browse, draft the paper, make figures, or launch
   the multi-seed matrix before the seed-0 end-to-end chain passes.
 - Maintain `docs/EXPERIMENT_STATE.md`; after context recovery read only this

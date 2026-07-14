@@ -6,15 +6,16 @@ import jax
 import jax.numpy as jp
 import numpy as np
 from dvgc.bank import SnapshotBank
+from dvgc.candidate_geometry import TerrainClearanceSolver
 from dvgc.config import STAGE_ID, config_hash, file_sha256, load_config
 from dvgc.env import END_REASON
 from dvgc.env import OrangeBikeDVGC
 from dvgc.reference import ReferenceTrajectory
 
 
-def _seed(row, phase, cfg, training_only, rng):
+def _seed(row, phase, cfg, training_only, rng, angular_velocity=None):
     euler=np.deg2rad([row.roll_angle,row.pitch_angle,row.yaw_angle]).astype(np.float32)
-    common={"euler":euler,"steer":0.0,"hip":float(np.clip(row.hip_position,cfg.hip_min,cfg.hip_max)),"knee":float(np.clip(row.knee_position,cfg.knee_min,cfg.knee_max)),"linear_velocity":np.asarray([row.vel_x,row.vel_y,row.vel_z],np.float32),"angular_velocity":np.zeros(3,np.float32)}
+    common={"euler":euler,"steer":0.0,"hip":float(np.clip(row.hip_position,cfg.hip_min,cfg.hip_max)),"knee":float(np.clip(row.knee_position,cfg.knee_min,cfg.knee_max)),"linear_velocity":np.asarray([row.vel_x,row.vel_y,row.vel_z],np.float32),"angular_velocity":np.zeros(3,np.float32) if angular_velocity is None else np.asarray(angular_velocity,np.float32)}
     if phase in ("flight","landing"):
         common.update(seed_type="system_com",desired_com=np.asarray([row.pos_x,row.pos_y,row.pos_z],np.float32))
     else:
@@ -89,6 +90,12 @@ def _finite_state(state):
     return all(np.isfinite(np.asarray(jax.device_get(value))).all() for value in values)
 
 
+def _flight_region(index, anchors, window):
+    if index < anchors.apex-window: return "ascent"
+    if index <= anchors.apex+window: return "apex"
+    return "descent"
+
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument("--phase",required=True,choices=["landing","flight","takeoff","approach"])
@@ -115,6 +122,8 @@ def main():
             if bank.metadata.get(key)!=value:
                 raise SystemExit(f"Existing candidate bank has incompatible {key}")
     reference=ReferenceTrajectory.load(a.reference); df=reference.df; anchors=reference.anchors()
+    angle_values=np.unwrap(np.deg2rad(df[["roll_angle","pitch_angle","yaw_angle"]].to_numpy(float)),axis=0)
+    angular_velocities=np.gradient(angle_values,df["time"].to_numpy(float),axis=0)
     bounds={
         "approach":(0,anchors.approach_end),
         "takeoff":(anchors.approach_end,anchors.takeoff_end),
@@ -125,6 +134,16 @@ def main():
     attempts=0; accepted_before=len(bank.records_for_phase(a.phase)); duplicates=0
     semantic_rejects=0; relaxation_rejects=0; nonfinite_rejects=0
     physical_failures=0; timeouts=0; end_reasons={}; impact_steps=[]; vertical_corrections=[]; clearances=[]
+    rejection_counts={}; region_proposals={name:0 for name in ("ascent","apex","descent")}
+    region_accepted={name:0 for name in region_proposals}
+    clearance_solver=None
+    if a.phase=="flight":
+        clearance_solver=TerrainClearanceSolver(
+            cfg.xml_path,margin=cfg.flight_candidate_clearance_margin,
+            max_correction=cfg.flight_candidate_max_root_z_correction,
+            tolerance=cfg.flight_candidate_clearance_tolerance,
+            max_iterations=cfg.flight_candidate_clearance_iterations,
+        )
     step=jax.jit(env.step); zero=jp.zeros(env.action_size,jp.float32)
     attempt_budget=int(a.attempt_budget) if a.attempt_budget else a.target*30
     if attempt_budget<=0: raise SystemExit("--attempt-budget must be positive")
@@ -132,8 +151,51 @@ def main():
     while len(bank.records_for_phase(a.phase))<a.target and attempts<attempt_budget:
         attempts+=1; idx=int(rng.integers(lo,hi+1)); row=df.iloc[idx]
         training_only=(a.phase=="takeoff" and rng.random()<a.aux_fraction)
-        seed=_landing_seed(row,cfg,rng) if a.phase=="landing" else _seed(row,a.phase,cfg,training_only,rng)
+        region=_flight_region(idx,anchors,int(cfg.flight_candidate_apex_window_steps)) if a.phase=="flight" else None
+        if region: region_proposals[region]+=1
+        seed=_landing_seed(row,cfg,rng) if a.phase=="landing" else _seed(row,a.phase,cfg,training_only,rng,angular_velocities[idx])
         state=env.reset_from_com_seed(seed,jax.random.PRNGKey(a.seed+attempts))
+        if a.phase=="flight":
+            # The reference joint rates and all rigid-body velocity/orientation
+            # components are retained; placement may alter free-root z only.
+            qvel=state.data.qvel.at[env._joint_qvel["hip_joint"]].set(float(row.hip_velocity))
+            qvel=qvel.at[env._joint_qvel["knee_joint"]].set(float(row.knee_velocity))
+            qpos0=np.asarray(jax.device_get(state.data.qpos),np.float64)
+            qvel0=np.asarray(jax.device_get(qvel),np.float64)
+            ctrl0=np.asarray(jax.device_get(state.data.ctrl),np.float64)
+            placement=clearance_solver.solve(
+                qpos0,qvel0,ctrl0,
+                com_z_tolerance=cfg.flight_candidate_com_z_envelope_tolerance,
+            )
+            if not placement.accepted:
+                rejection_counts[placement.reason]=rejection_counts.get(placement.reason,0)+1
+                continue
+            changed=np.flatnonzero(np.abs(placement.qpos-qpos0)>2e-7)
+            if any(int(i)!=clearance_solver.root_z_index for i in changed):
+                raise RuntimeError("Flight clearance changed a non-root-z coordinate")
+            state=env.reset_from_snapshot(
+                jp.asarray(placement.qpos,jp.float32),qvel,state.data.ctrl,
+                jax.random.PRNGKey(a.seed+200000+attempts),
+                jp.asarray(STAGE_ID["flight"],jp.int32),jp.asarray(1,jp.int32),
+                jp.asarray(0,jp.int32),jp.asarray(0,jp.int32),
+            )
+            if not _finite_state(state):
+                nonfinite_rejects+=1; rejection_counts["nonfinite"] = rejection_counts.get("nonfinite",0)+1; continue
+            if int(np.asarray(jax.device_get(state.info["phase"])))!=STAGE_ID["flight"]:
+                semantic_rejects+=1; rejection_counts["non_flight_phase"] = rejection_counts.get("non_flight_phase",0)+1; continue
+            probe=state; failed=False
+            for _ in range(int(cfg.flight_candidate_validation_steps)):
+                probe=step(probe,zero)
+                if not _finite_state(probe):
+                    nonfinite_rejects+=1; rejection_counts["short_rollout_nonfinite"] = rejection_counts.get("short_rollout_nonfinite",0)+1; failed=True; break
+                if float(np.asarray(jax.device_get(probe.done)))>.5:
+                    terminated=bool(np.asarray(jax.device_get(probe.info["terminated"])))
+                    truncated=bool(np.asarray(jax.device_get(probe.info["truncated"])))
+                    physical_failures+=int(terminated and not truncated); timeouts+=int(truncated)
+                    code=int(np.asarray(jax.device_get(probe.info["end_code"])))
+                    reason=END_REASON.get(code,f"unknown_{code}"); end_reasons[reason]=end_reasons.get(reason,0)+1
+                    key="short_rollout_"+reason; rejection_counts[key]=rejection_counts.get(key,0)+1; failed=True; break
+            if failed: continue
         # Convert the grounded proposal to the requested semantic phase.
         if a.phase=="approach":
             state=env.reset_from_snapshot(state.data.qpos,state.data.qvel,state.data.ctrl,jax.random.PRNGKey(a.seed+100000+attempts),jp.asarray(STAGE_ID["approach"],jp.int32),jp.asarray(0,jp.int32),jp.asarray(0,jp.int32),jp.asarray(0,jp.int32))
@@ -179,6 +241,17 @@ def main():
                 continue
         rec=env.snapshot_record(state,a.phase)
         rec.update({"training_only":training_only,"bootstrap_eligible":True,"candidate_kind":"reference_envelope_impact" if a.phase=="landing" else "velocity_seed" if training_only else "reference_envelope","reference_index":idx})
+        if a.phase=="flight":
+            rec.update({
+                "flight_subinterval":region,
+                "source_index":idx,
+                "original_system_com":placement.original_com.astype(np.float32),
+                "corrected_system_com":placement.corrected_com.astype(np.float32),
+                "root_z_shift_m":float(placement.root_z_shift),
+                "terrain_clearance_m":float(placement.clearance),
+                "wheel_clearance_m":float(placement.wheel_clearance),
+                "nonwheel_clearance_m":float(placement.nonwheel_clearance),
+            })
         if a.phase=="landing":
             rec.update(proposal); rec["impact_step"]=impact_step
         # Certification candidates must respect phase semantics.
@@ -188,6 +261,8 @@ def main():
             duplicates+=1
         elif a.phase=="landing":
             impact_steps.append(impact_step); vertical_corrections.append(proposal["vertical_correction_m"]); clearances.append(proposal["preimpact_clearance_m"])
+        elif a.phase=="flight":
+            vertical_corrections.append(float(placement.root_z_shift)); clearances.append(float(placement.clearance)); region_accepted[region]+=1
         if attempts%25==0 or len(bank.records_for_phase(a.phase))==a.target:
             print(f"[candidates] phase={a.phase} accepted={len(bank.records_for_phase(a.phase))}/{a.target} attempts={attempts} duplicates={duplicates} semantic_rejects={semantic_rejects}",flush=True)
     history=list(bank.metadata.get("candidate_build_history",[]))
@@ -198,6 +273,8 @@ def main():
         "duplicates":duplicates,"semantic_rejects":semantic_rejects,
         "relaxation_rejects":relaxation_rejects,"nonfinite_rejects":nonfinite_rejects,
         "proposal_physical_failures":physical_failures,"proposal_timeouts":timeouts,
+        "rejection_counts":rejection_counts,"flight_region_proposals":region_proposals,
+        "flight_region_accepted":region_accepted,
     })
     bank.metadata.update({
         "reference":str(Path(a.reference)),
@@ -213,6 +290,11 @@ def main():
             "landing_descend_vz_mps":[-float(cfg.landing_candidate_descend_vz_max),-float(cfg.landing_candidate_descend_vz_min)],
             "landing_impact_horizon":int(cfg.landing_candidate_impact_horizon),
             "landing_relaxation_steps":int(cfg.landing_candidate_relaxation_steps),
+            "flight":"reference state -> authoritative XML geom-distance/contact minimal root-z clearance -> unchanged-state short rollout",
+            "flight_clearance_margin_m":float(cfg.flight_candidate_clearance_margin),
+            "flight_max_root_z_correction_m":float(cfg.flight_candidate_max_root_z_correction),
+            "flight_com_z_envelope_tolerance_m":float(cfg.flight_candidate_com_z_envelope_tolerance),
+            "flight_validation_steps":int(cfg.flight_candidate_validation_steps),
         },
         **contract,
     })
@@ -222,8 +304,26 @@ def main():
     reached=len(bank.records_for_phase(a.phase))>=a.target
     range_or_none=lambda values: None if not values else {"min":float(min(values)),"max":float(max(values)),"mean":float(np.mean(values))}
     aggregate_attempts=sum(int(row["attempts"]) for row in history); aggregate_duplicates=sum(int(row["duplicates"]) for row in history); aggregate_accepted=sum(int(row["accepted_new"]) for row in history)
-    report={"status":"PASS" if reached else "PARTIAL" if a.allow_partial else "FAIL","phase":a.phase,"target":a.target,"attempts":attempts,"aggregate_attempts":aggregate_attempts,"accepted_before":accepted_before,"accepted_new":accepted_new,"aggregate_accepted_new":aggregate_accepted,"duplicates":duplicates,"aggregate_duplicates":aggregate_duplicates,"deduplication_rate":float(aggregate_duplicates/(aggregate_accepted+aggregate_duplicates)) if aggregate_accepted+aggregate_duplicates else 0.0,"semantic_rejects":semantic_rejects,"relaxation_rejects":relaxation_rejects,"nonfinite_rejects":nonfinite_rejects,"proposal_physical_failures":physical_failures,"proposal_timeouts":timeouts,"proposal_physical_failure_rate":float(physical_failures/attempts) if attempts else 0.0,"proposal_timeout_rate":float(timeouts/attempts) if attempts else 0.0,"proposal_end_reasons":end_reasons,"accepted_impact_step_range":range_or_none(impact_steps),"accepted_vertical_correction_range_m":range_or_none(vertical_corrections),"accepted_preimpact_clearance_range_m":range_or_none(clearances),"contract":contract,"build_history":history,"summary":bank.summary()}
+    flight_rows=bank.records_for_phase("flight") if a.phase=="flight" else []
+    accepted_regions={name:sum(row.get("flight_subinterval")==name for row in flight_rows) for name in region_proposals}
+    aggregate_region_proposals={name:sum(int(h.get("flight_region_proposals",{}).get(name,0)) for h in history) for name in region_proposals}
+    region_acceptance={name:{"accepted":accepted_regions[name],"proposals":aggregate_region_proposals[name],"acceptance_rate":float(accepted_regions[name]/aggregate_region_proposals[name]) if aggregate_region_proposals[name] else 0.0} for name in region_proposals}
+    coverage_flags={}
+    if a.phase=="flight":
+        coverage_flags={
+            "ascent":accepted_regions["ascent"]>=int(np.ceil(a.target*cfg.flight_candidate_min_ascent_fraction)),
+            "apex":accepted_regions["apex"]>=int(np.ceil(a.target*cfg.flight_candidate_min_apex_fraction)),
+            "descent":accepted_regions["descent"]>=int(np.ceil(a.target*cfg.flight_candidate_min_descent_fraction)),
+        }
+    coverage_ok=all(coverage_flags.values()) if coverage_flags else True
+    status="PASS" if reached and coverage_ok else "PARTIAL" if a.allow_partial and not reached else "FAIL"
+    corrections=[float(row["root_z_shift_m"]) for row in flight_rows]
+    correction_quantiles=None if not corrections else {"min":float(np.min(corrections)),"p50":float(np.quantile(corrections,.50)),"p95":float(np.quantile(corrections,.95)),"max":float(np.max(corrections))}
+    aggregate_rejections={}
+    for h in history:
+        for key,value in h.get("rejection_counts",{}).items(): aggregate_rejections[key]=aggregate_rejections.get(key,0)+int(value)
+    report={"status":status,"phase":a.phase,"target":a.target,"attempts":attempts,"aggregate_attempts":aggregate_attempts,"accepted_before":accepted_before,"accepted_new":accepted_new,"aggregate_accepted_new":aggregate_accepted,"duplicates":duplicates,"aggregate_duplicates":aggregate_duplicates,"deduplication_rate":float(aggregate_duplicates/(aggregate_accepted+aggregate_duplicates)) if aggregate_accepted+aggregate_duplicates else 0.0,"semantic_rejects":semantic_rejects,"relaxation_rejects":relaxation_rejects,"nonfinite_rejects":nonfinite_rejects,"proposal_physical_failures":physical_failures,"proposal_timeouts":timeouts,"proposal_physical_failure_rate":float(physical_failures/attempts) if attempts else 0.0,"proposal_timeout_rate":float(timeouts/attempts) if attempts else 0.0,"proposal_end_reasons":end_reasons,"rejection_counts":aggregate_rejections,"accepted_impact_step_range":range_or_none(impact_steps),"accepted_vertical_correction_range_m":range_or_none(vertical_corrections),"accepted_preimpact_clearance_range_m":range_or_none(clearances),"flight_correction_quantiles_m":correction_quantiles,"flight_subintervals":region_acceptance,"flight_coverage_flags":coverage_flags,"contract":contract,"build_history":history,"summary":bank.summary()}
     Path(a.bank).with_suffix(".build.json").write_text(json.dumps(report,indent=2),encoding="utf-8")
     print(json.dumps(report,indent=2))
-    if not reached and not a.allow_partial: raise SystemExit(2)
+    if (not reached or not coverage_ok) and not (a.allow_partial and not reached): raise SystemExit(2)
 if __name__=="__main__": main()

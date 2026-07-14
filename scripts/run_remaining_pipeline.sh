@@ -8,7 +8,7 @@ set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 PYTHON="${PYTHON:-/home/qy/mujoco_playground/.venv/bin/python}"
 CFG="${CFG:-configs/default.json}"
-REVISION="${PIPELINE_REVISION:-v1}"
+REVISION="${PIPELINE_REVISION:-v4}"
 STATE_ROOT="runs/remaining_pipeline/${REVISION}"
 MARKER_ROOT="${STATE_ROOT}/markers"
 LOG_ROOT="${STATE_ROOT}/logs"
@@ -139,6 +139,7 @@ PY
 run_stage() {
   local phase="$1" target="$2" total_bootstrap="$3" refine_steps="$4" downstream="$5" resume_policy="$6"
   local stage_root="runs/${phase}/pipeline_seed0_${REVISION}" candidates="artifacts/${phase}_candidates.pkl"
+  [[ "$phase" == flight ]] && candidates="${FLIGHT_CANDIDATE_BANK:-artifacts/flight_candidates_geometry_v1.pkl}"
   local pilot="$stage_root/pilot" formal="$stage_root/bootstrap" refine="$stage_root/refinement"
   local bootstrap_tube="artifacts/${phase}_bootstrap_tube.pkl" final_tube="artifacts/${phase}_tube.pkl"
   local minimum_final learning_rate eval_seed continuation_steps

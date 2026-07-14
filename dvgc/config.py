@@ -91,6 +91,16 @@ def default_config() -> config_dict.ConfigDict:
         # not a pre-certified Safe tube.  Immediate explosions remain banned,
         # while a small zero-action 0.5 s failure tail is reported and bounded.
         landing_candidate_max_short_horizon_failure_rate=0.10,
+        flight_candidate_clearance_margin=0.002,
+        flight_candidate_max_root_z_correction=0.20,
+        flight_candidate_com_z_envelope_tolerance=0.20,
+        flight_candidate_clearance_tolerance=1e-5,
+        flight_candidate_clearance_iterations=32,
+        flight_candidate_validation_steps=25,
+        flight_candidate_apex_window_steps=12,
+        flight_candidate_min_ascent_fraction=0.20,
+        flight_candidate_min_apex_fraction=0.08,
+        flight_candidate_min_descent_fraction=0.20,
         # Robot/action convention.  Action order is fixed and stored in every
         # policy manifest: [steer, rear-wheel drive, hip, knee].
         action_mapping_version=ACTION_MAPPING_VERSION,

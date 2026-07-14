@@ -34,9 +34,12 @@ def _ranges(rows):
 
 def _contact_audit(rows, xml_path, deep_penetration_threshold):
     model=mujoco.MjModel.from_xml_path(str(xml_path)); data=mujoco.MjData(model)
-    wheel={model.geom(name).id for name in ("frontwheel_collision","rearwheel_collision")}
-    terrain={model.geom(name).id for name in ("floor","step")}
-    body={model.geom(name).id for name in ("base_collision","steer_collision","downarm_collision","knee_motor_collision","uparm_collision")}
+    enabled=lambda g: bool(int(model.geom_contype[g]) or int(model.geom_conaffinity[g]))
+    terrain={g for g in range(model.ngeom) if int(model.geom_bodyid[g])==0 and enabled(g)}
+    wheel_bodies={model.body(name).id for name in ("frontwheel","rearwheel")}
+    wheel={g for g in range(model.ngeom) if int(model.geom_bodyid[g]) in wheel_bodies and enabled(g)}
+    robot={g for g in range(model.ngeom) if int(model.geom_bodyid[g])!=0 and enabled(g)}
+    body=robot-wheel
     contact_records=deep_records=body_records=0; min_dist=float("inf"); pairs=Counter()
     for row in rows:
         data.qpos[:]=row["qpos"]; data.qvel[:]=row["qvel"]; data.ctrl[:]=row["ctrl"]
@@ -44,6 +47,8 @@ def _contact_audit(rows, xml_path, deep_penetration_threshold):
         has_contact=has_deep=has_body=False
         for i in range(data.ncon):
             con=data.contact[i]; g1,g2=int(con.geom1),int(con.geom2); distance=float(con.dist)
+            is_robot_terrain=((g1 in robot and g2 in terrain) or (g2 in robot and g1 in terrain))
+            if not is_robot_terrain: continue
             has_contact=True; has_deep|=distance<float(deep_penetration_threshold)
             has_body|=((g1 in body and g2 in terrain) or (g2 in body and g1 in terrain))
             min_dist=min(min_dist,distance)
@@ -52,6 +57,7 @@ def _contact_audit(rows, xml_path, deep_penetration_threshold):
         contact_records+=int(has_contact); deep_records+=int(has_deep); body_records+=int(has_body)
     return {
         "records_with_any_contact":contact_records,
+        "records_with_robot_terrain_contact":contact_records,
         "records_with_deep_penetration":deep_records,
         "records_with_body_terrain_contact":body_records,
         "deep_penetration_threshold_m":float(deep_penetration_threshold),
@@ -136,18 +142,31 @@ def main():
         "all_bootstrap_eligible":eligible==len(rows),
         "no_training_only":training_only==0,
         "no_deep_penetration":contact["records_with_deep_penetration"]==0,
+        "no_robot_terrain_contact":contact["records_with_robot_terrain_contact"]==0,
         "no_body_terrain_contact":contact["records_with_body_terrain_contact"]==0,
         "no_one_step_physical_failure":rollout["one_step_physical_failure_rate"]==0.0,
         "short_horizon_physical_failure_within_limit":rollout["short_horizon_physical_failure_rate"]<=float(cfg.landing_candidate_max_short_horizon_failure_rate),
         "no_nonfinite_rollout":rollout["nonfinite_records"]==0,
         "contract_consistent":all(contract_flags.values()),
     }
+    if args.phase=="flight":
+        regions=Counter(row.get("flight_subinterval","missing") for row in rows)
+        quality_flags.update({
+            "flight_ascent_coverage":regions["ascent"]>=int(np.ceil(len(rows)*cfg.flight_candidate_min_ascent_fraction)),
+            "flight_apex_coverage":regions["apex"]>=int(np.ceil(len(rows)*cfg.flight_candidate_min_apex_fraction)),
+            "flight_descent_coverage":regions["descent"]>=int(np.ceil(len(rows)*cfg.flight_candidate_min_descent_fraction)),
+            "flight_clearance_metadata":all(
+                all(key in row for key in ("source_index","original_system_com","corrected_system_com","root_z_shift_m","terrain_clearance_m"))
+                for row in rows
+            ),
+        })
     report={
         "status":"PASS" if all(quality_flags.values()) else "FAIL",
         "bank":str(Path(args.bank).resolve()),"bank_sha256":file_sha256(args.bank),"phase":args.phase,
         "candidate_count":len(rows),"finite_records":finite_records,"bootstrap_eligible":eligible,
         "training_only":training_only,"oracle_phase_counts":dict(oracle),"filter_phase_counts":dict(filtered),
         "feature_ranges":_ranges(rows) if rows else {},"contact_audit":contact,"rollout_audit":rollout,
+        "flight_subinterval_counts":dict(Counter(row.get("flight_subinterval","missing") for row in rows)) if args.phase=="flight" else {},
         "quality_flags":quality_flags,"contract_flags":contract_flags,
         "quality_thresholds":{"max_short_horizon_physical_failure_rate":float(cfg.landing_candidate_max_short_horizon_failure_rate)},
         "bank_metadata":bank.metadata,
