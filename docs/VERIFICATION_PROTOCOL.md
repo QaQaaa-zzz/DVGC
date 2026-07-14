@@ -21,3 +21,12 @@
 10. natural-start 评估只允许使用 Approach 完成后的冻结共享 Actor。
 11. 任何阶段若下游固定评估退化，先做 rehearsal/回滚，不得继续向前扩展。
 12. 训练 return、视频、单条轨迹和文件名都不是 Tube 认证证据。
+
+## 本地执行顺序
+
+```bash
+bash scripts/local_preflight.sh
+/home/qy/mujoco_playground/.venv/bin/python -m cli.runtime_gate
+```
+
+长 PPO 脚本只接受与当前源码指纹、配置 hash 和权威 XML hash 一致的 `docs/RUNTIME_GATE.json` PASS 报告。runtime gate 分别记录零/随机动作物理失败与 timeout，并执行 snapshot round-trip、short PPO compile/run/resume、policy save/load 和确定性推理检查。

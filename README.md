@@ -69,6 +69,12 @@ bash scripts/run_backward_bootstrap.sh
 
 `scripts/local_preflight.sh` 只是本地基础预检；正式长训练仍须先满足 `docs/VERIFICATION_PROTOCOL.md` 中的完整训练 gates。
 
+首次长训练前运行完整 gate（会执行两个极短 PPO compile/run/resume probe），之后正式脚本会校验报告是否仍与源码、XML 和配置一致：
+
+```bash
+/home/qy/mujoco_playground/.venv/bin/python -m cli.runtime_gate
+```
+
 ## 4. 认证原则
 
 - Candidate bank 与 downstream certified bank 是两个不同参数；

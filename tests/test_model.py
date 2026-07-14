@@ -1,8 +1,10 @@
+from dvgc.config import AUTHORITATIVE_XML_SHA256
 from dvgc.model import inspect_model
 
 
 def test_original_model_contract():
     model = inspect_model("assets/orange_bike_4kg_horizontal.xml")
+    assert model["xml_sha256"] == AUTHORITATIVE_XML_SHA256
     assert model["xml_path"].endswith("orange_bike_4kg_horizontal.xml")
     assert abs(model["step"]["front_x"] - 3.6) < 1e-9
     assert abs(model["step"]["top_z"] - 0.16) < 1e-9

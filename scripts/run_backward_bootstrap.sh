@@ -12,7 +12,9 @@ PYTHON="${PYTHON:-/home/qy/mujoco_playground/.venv/bin/python}"
 CFG="${CFG:-configs/default.json}"
 
 cd "$ROOT"
+export XLA_PYTHON_CLIENT_PREALLOCATE="${XLA_PYTHON_CLIENT_PREALLOCATE:-false}"
 bash scripts/local_preflight.sh
+"$PYTHON" -m cli.runtime_gate --config "$CFG" --output docs/RUNTIME_GATE.json --check-only
 
 run_stage() {
   local phase="$1"

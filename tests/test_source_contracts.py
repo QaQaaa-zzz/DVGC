@@ -40,3 +40,4 @@ def test_formal_pipeline_contains_tube_rsi_refinement_and_recertification():
     assert "--require-final-safe-rsi" in script
     assert script.count("-m cli.certify") == 2
     assert "600000 400000" in script
+    assert "cli.runtime_gate" in script and "--check-only" in script
