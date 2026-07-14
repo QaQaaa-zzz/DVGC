@@ -10,6 +10,16 @@ set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 PYTHON="${PYTHON:-/home/qy/mujoco_playground/.venv/bin/python}"
 CFG="${CFG:-configs/default.json}"
+NUM_ENVS="${NUM_ENVS:-320}"
+NUM_EVAL_ENVS="${NUM_EVAL_ENVS:-128}"
+BATCH_SIZE="${BATCH_SIZE:-80}"
+NUM_MINIBATCHES="${NUM_MINIBATCHES:-4}"
+TRAIN_LAYOUT=(
+  --num-envs "$NUM_ENVS"
+  --num-eval-envs "$NUM_EVAL_ENVS"
+  --batch-size "$BATCH_SIZE"
+  --num-minibatches "$NUM_MINIBATCHES"
+)
 
 cd "$ROOT"
 export XLA_PYTHON_CLIENT_PREALLOCATE="${XLA_PYTHON_CLIENT_PREALLOCATE:-false}"
@@ -43,7 +53,7 @@ run_stage() {
   "$PYTHON" -m cli.train \
     --stage "$phase" --bank "$candidates" "${downstream_args[@]}" \
     --config "$CFG" --run "$bootstrap_run" "${resume_args[@]}" \
-    --timesteps "$bootstrap_steps"
+    --timesteps "$bootstrap_steps" "${TRAIN_LAYOUT[@]}"
   "$PYTHON" -m cli.certify \
     --phase "$phase" --policy "$bootstrap_run/policy" \
     --candidate-bank "$candidates" "${downstream_args[@]}" \
@@ -52,7 +62,7 @@ run_stage() {
   "$PYTHON" -m cli.train \
     --stage "$phase" --bank "$bootstrap_tube" "${downstream_args[@]}" \
     --config "$CFG" --run "$final_run" --resume "$bootstrap_run/policy" \
-    --require-final-safe-rsi --timesteps "$refine_steps"
+    --require-final-safe-rsi --timesteps "$refine_steps" "${TRAIN_LAYOUT[@]}"
   "$PYTHON" -m cli.certify \
     --phase "$phase" --policy "$final_run/policy" \
     --candidate-bank "$bootstrap_tube" "${downstream_args[@]}" \

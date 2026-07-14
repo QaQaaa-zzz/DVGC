@@ -22,12 +22,15 @@ def main():
     p.add_argument("--config", default="configs/default.json")
     p.add_argument("--run", required=True)
     p.add_argument("--timesteps", type=int, default=1_000_000)
-    p.add_argument("--num-envs", type=int, default=1024)
+    # The authoritative Warp model exceeds its aggregate contact capacity at
+    # 1024 parallel Landing environments even when each individual state is
+    # valid.  This 320 x (80 * 4) layout is the validated formal default.
+    p.add_argument("--num-envs", type=int, default=320)
     p.add_argument("--num-eval-envs", type=int, default=128)
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--resume", default="")
     p.add_argument("--require-final-safe-rsi", action="store_true")
-    p.add_argument("--batch-size", type=int, default=256)
+    p.add_argument("--batch-size", type=int, default=80)
     p.add_argument("--num-minibatches", type=int, default=4)
     a=p.parse_args()
     run=Path(a.run)
