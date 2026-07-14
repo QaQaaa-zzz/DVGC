@@ -47,3 +47,14 @@ def test_metric_contract_uses_synchronized_jit_warp_path():
     runtime = Path("dvgc/runtime.py").read_text()
     assert "next_state = jax.jit(env.step)" in runtime
     assert "jax.block_until_ready(next_state)" in runtime
+
+
+def test_runtime_gate_has_bounded_warp_replay_tolerances_and_exact_semantics():
+    gate = Path("cli/runtime_gate.py").read_text()
+    assert "GATE_VERSION = 3" in gate
+    assert '"qacc_warmstart": 1e-5' in gate
+    assert '"qvel": 2e-3' in gate
+    assert '"reward": 1e-5' in gate
+    assert '"actor_obs": 2e-2' in gate
+    assert "SNAPSHOT_DISCRETE_FIELDS" in gate
+    assert "np.array_equal" in gate

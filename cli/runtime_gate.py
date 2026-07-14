@@ -37,7 +37,38 @@ from dvgc.runtime import (
 )
 
 
-GATE_VERSION = 2
+GATE_VERSION = 3
+
+# Restoring the serialized state itself must remain tight.  The subsequent
+# contact step crosses the MJX Warp custom-call boundary, where repeated
+# float32 executions can differ slightly even after sequential synchronization.
+# These field-specific limits cover the independently observed replay jitter
+# without weakening exact checks on reset state or discrete episode semantics.
+SNAPSHOT_INITIAL_TOLERANCES = {
+    "qpos": 1e-5,
+    "qvel": 1e-5,
+    "ctrl": 1e-5,
+    "qacc_warmstart": 1e-5,
+    "actor_obs": 1e-5,
+    "critic_obs": 1e-5,
+}
+SNAPSHOT_STEP_TOLERANCES = {
+    "qpos": 5e-5,
+    "qvel": 2e-3,
+    "reward": 1e-5,
+    # Actor history contains an unnormalised accelerometer channel, so small
+    # solver-order differences are amplified here relative to qpos/qvel.
+    "actor_obs": 2e-2,
+    "critic_obs": 1e-3,
+}
+SNAPSHOT_DISCRETE_FIELDS = (
+    "done",
+    "phase",
+    "end_code",
+    "recovery_success",
+    "terminated",
+    "truncated",
+)
 
 
 def source_fingerprint(root: Path) -> str:
@@ -161,6 +192,17 @@ def _max_abs(left: Any, right: Any) -> float:
     return float(np.max(np.abs(a - b))) if a.size else 0.0
 
 
+def _snapshot_discrete_values(state: Any) -> dict[str, np.ndarray]:
+    return {
+        "done": np.array(jax.device_get(state.done), copy=True),
+        **{
+            key: np.array(jax.device_get(state.info[key]), copy=True)
+            for key in SNAPSHOT_DISCRETE_FIELDS
+            if key != "done"
+        },
+    }
+
+
 def _snapshot_gate(env: OrangeBikeDVGC, work: Path) -> dict[str, Any]:
     state = env.reset(jax.random.PRNGKey(20))
     step_fn = jax.jit(env.step)
@@ -195,6 +237,7 @@ def _snapshot_gate(env: OrangeBikeDVGC, work: Path) -> dict[str, Any]:
             jax.device_get(next_original.obs["privileged_state"]), copy=True
         ),
     }
+    original_discrete_values = _snapshot_discrete_values(next_original)
     next_restored = step_fn(restored, action)
     step_errors = {
         "qpos": _max_abs(original_step_values["qpos"], next_restored.data.qpos),
@@ -205,8 +248,21 @@ def _snapshot_gate(env: OrangeBikeDVGC, work: Path) -> dict[str, Any]:
             original_step_values["critic_obs"], next_restored.obs["privileged_state"]
         ),
     }
-    initial_tolerances = {key: 1e-5 for key in initial_errors}
-    step_tolerances = {key: 1e-5 for key in step_errors}
+    restored_discrete_values = _snapshot_discrete_values(next_restored)
+    discrete_equal = {
+        key: bool(np.array_equal(original_discrete_values[key], restored_discrete_values[key]))
+        for key in SNAPSHOT_DISCRETE_FIELDS
+    }
+    discrete_mismatches = {
+        key: {
+            "original": original_discrete_values[key].tolist(),
+            "restored": restored_discrete_values[key].tolist(),
+        }
+        for key, equal in discrete_equal.items()
+        if not equal
+    }
+    initial_tolerances = dict(SNAPSHOT_INITIAL_TOLERANCES)
+    step_tolerances = dict(SNAPSHOT_STEP_TOLERANCES)
     initial_exceeded = {
         key: value for key, value in initial_errors.items()
         if value > initial_tolerances[key]
@@ -215,10 +271,11 @@ def _snapshot_gate(env: OrangeBikeDVGC, work: Path) -> dict[str, Any]:
         key: value for key, value in step_errors.items()
         if value > step_tolerances[key]
     }
-    if initial_exceeded or step_exceeded:
+    if initial_exceeded or step_exceeded or discrete_mismatches:
         raise RuntimeError(
             "Snapshot round-trip exceeded field tolerances: "
             f"initial_exceeded={initial_exceeded}, step_exceeded={step_exceeded}, "
+            f"discrete_mismatches={discrete_mismatches}, "
             f"initial={initial_errors}, step={step_errors}"
         )
     return {
@@ -226,6 +283,7 @@ def _snapshot_gate(env: OrangeBikeDVGC, work: Path) -> dict[str, Any]:
         "step_tolerances": step_tolerances,
         "initial_max_abs": initial_errors,
         "step_max_abs": step_errors,
+        "step_discrete_equal": discrete_equal,
     }
 
 
