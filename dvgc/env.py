@@ -1170,6 +1170,14 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         else:
             chain = recovery
         chain_ever = (state.info["chain_ever"] > 0) | chain
+        # No downstream certified Tube exists during Landing bootstrap.  Keep
+        # the matching sentinel finite so Brax episode aggregation never turns
+        # an inapplicable diagnostic into NaN.
+        safe_dist_metric = jp.where(
+            jp.isfinite(safe_dist),
+            safe_dist,
+            jp.asarray(float(cfg.tube_match_radius_z) + 1.0, jp.float32),
+        )
 
         step_no = state.info["episode_step"] + 1
         takeoff_profile = compute_takeoff_reward_profile(
@@ -1401,7 +1409,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "diag/cert_bank_explicit": jp.asarray(float(self._cert_bank_explicit), jp.float32),
             "event/dual_wheel_liftoff": takeoff_signals["dual_wheel_liftoff"].astype(jp.float32),
             "state/phase_before": phase0.astype(jp.float32), "state/phase": phase1.astype(jp.float32),
-            "state/estimated_phase": estimated1.astype(jp.float32), "state/tube_distance_z": safe_dist,
+            "state/estimated_phase": estimated1.astype(jp.float32), "state/tube_distance_z": safe_dist_metric,
             "state/recovery_count": recovery_count.astype(jp.float32),
             "state/contact_age": contact_age.astype(jp.float32), "done/code": code.astype(jp.float32),
             "end/recovery": (code == END_RECOVERY).astype(jp.float32),

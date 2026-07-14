@@ -1,13 +1,13 @@
 """Train one backward-bootstrap stage without modifying Tube labels."""
 from __future__ import annotations
-import argparse, copy, datetime as dt
+import argparse, copy, datetime as dt, time
 from pathlib import Path
 import jax
 from dvgc.bank import SnapshotBank
 from dvgc.config import file_sha256, load_config, save_config
 from dvgc.env import OrangeBikeDVGC
 from dvgc.policy import load_bundle, save_bundle
-from dvgc.runtime import make_ppo_train_fn, save_json, validate_ppo_batch_layout
+from dvgc.runtime import make_ppo_train_fn, ppo_effective_timesteps, save_json, validate_ppo_batch_layout
 
 
 def main():
@@ -26,7 +26,13 @@ def main():
     p.add_argument("--batch-size", type=int, default=256)
     p.add_argument("--num-minibatches", type=int, default=4)
     a=p.parse_args()
+    run=Path(a.run)
+    if run.exists(): raise SystemExit(f"Run directory already exists: {run}")
     validate_ppo_batch_layout(num_envs=a.num_envs,batch_size=a.batch_size,num_minibatches=a.num_minibatches)
+    effective_timesteps=ppo_effective_timesteps(
+        a.timesteps,unroll_length=32,batch_size=a.batch_size,
+        num_minibatches=a.num_minibatches,num_evals=11,
+    )
     cfg=load_config(a.config, {"training_stage":a.stage})
     bank=SnapshotBank.load(a.bank); downstream=SnapshotBank.load(a.downstream_bank) if a.downstream_bank else SnapshotBank()
     restore_params=None; resume_manifest={}
@@ -68,23 +74,24 @@ def main():
     env=OrangeBikeDVGC(cfg,snapshot_bank=training_bank,cert_bank=downstream)
     eval_cfg=load_config(a.config,{"training_stage":a.stage,"domain_randomization":False,"obs_noise_enable":False})
     eval_env=OrangeBikeDVGC(eval_cfg,snapshot_bank=bank,cert_bank=downstream)
-    run=Path(a.run); run.mkdir(parents=True,exist_ok=True); save_config(cfg,run/"config.json")
+    run.mkdir(parents=True,exist_ok=False); save_config(cfg,run/"config.json")
     metrics_path=run/"training_metrics.json"
     train_fn=make_ppo_train_fn(timesteps=a.timesteps,episode_length=int(cfg.episode_length),num_envs=a.num_envs,num_eval_envs=a.num_eval_envs,num_evals=11,seed=a.seed,learning_rate=1e-4,entropy_cost=1e-3,reward_scaling=0.1,checkpoint_dir=run/"orbax",unroll_length=32,batch_size=a.batch_size,num_minibatches=a.num_minibatches,num_updates_per_batch=2,discounting=.995,gae_lambda=.97,clipping_epsilon=.10,max_grad_norm=.75,restore_params=restore_params)
     rows=[]
-    metric_log={"stage":a.stage,"seed":a.seed,"requested_timesteps":a.timesteps,"reset_protocol":reset_protocol,"status":"initialized","progress":rows}
+    started_at=time.time()
+    metric_log={"stage":a.stage,"seed":a.seed,"requested_timesteps":a.timesteps,"effective_timesteps":effective_timesteps,"ppo_layout":{"num_envs":a.num_envs,"num_eval_envs":a.num_eval_envs,"unroll_length":32,"batch_size":a.batch_size,"num_minibatches":a.num_minibatches,"num_evals":11},"reset_protocol":reset_protocol,"status":"initialized","started_at":started_at,"progress":rows}
     save_json(metrics_path,metric_log)
     def progress(step,metrics):
-        row={"step":int(step),**{k:float(v) for k,v in metrics.items() if hasattr(v,"__float__")}}; rows.append(row)
+        row={"step":int(step),"recorded_at":time.time(),**{k:float(v) for k,v in metrics.items() if hasattr(v,"__float__")}}; rows.append(row)
         metric_log["status"]="running"; save_json(metrics_path,metric_log)
         print(f"[train] stage={a.stage} step={step:,}")
     try:
         _,params,final_metrics=train_fn(environment=env,progress_fn=progress,eval_env=eval_env)
     except BaseException as exc:
-        metric_log.update({"status":"failed","error_type":type(exc).__name__,"error":str(exc)})
+        metric_log.update({"status":"failed","error_type":type(exc).__name__,"error":str(exc),"finished_at":time.time(),"elapsed_seconds":time.time()-started_at})
         save_json(metrics_path,metric_log)
         raise
-    metric_log.update({"status":"completed","final_metrics":final_metrics})
+    metric_log.update({"status":"completed","final_metrics":final_metrics,"finished_at":time.time(),"elapsed_seconds":time.time()-started_at})
     save_json(metrics_path,metric_log)
     version=f"{a.stage}-{dt.datetime.now().strftime('%Y%m%d-%H%M%S')}"
     save_bundle(run/"policy",params=params,config=cfg,xml_path=cfg.xml_path,candidate_bank=a.bank,downstream_bank=(a.downstream_bank or None),policy_version=version,extra={"stage":a.stage,"seed":a.seed,"timesteps":a.timesteps,"reset_protocol":reset_protocol})

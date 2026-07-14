@@ -50,7 +50,7 @@ def default_config() -> config_dict.ConfigDict:
         action_repeat=1,
         impl="warp",
         contact_mode="imu",
-        naconmax=512,
+        naconmax=1024,
         naccdmax=512,
         njmax=512,
         root_body_name="base_link",
