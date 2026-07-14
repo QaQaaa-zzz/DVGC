@@ -218,6 +218,16 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             self._bank_ctrl = jp.asarray(np.stack([r["ctrl"] for r in records]))
             self._bank_phase = jp.asarray([int(r.get("oracle_phase", STAGE_ID.get(self._stage_name, 0))) for r in records], jp.int32)
             self._bank_estimated_phase = jp.asarray([int(ps(r).get("filter_phase", r.get("oracle_phase", self._stage_id))) for r in records], jp.int32)
+            self._bank_phase_probs = jp.asarray(np.stack([
+                np.asarray(
+                    ps(r).get(
+                        "phase_probs",
+                        np.eye(4, dtype=np.float32)[int(ps(r).get("filter_phase", r.get("oracle_phase", self._stage_id)))],
+                    ),
+                    np.float32,
+                )
+                for r in records
+            ]))
             self._bank_airborne = jp.asarray([int(r.get("had_airborne", 0)) for r in records], jp.int32)
             self._bank_landed = jp.asarray([int(r.get("had_valid_landing", 0)) for r in records], jp.int32)
             self._bank_age = jp.asarray([int(r.get("contact_age", 0)) for r in records], jp.int32)
@@ -243,6 +253,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             self._bank_qpos = jp.zeros((1, nq), jp.float32); self._bank_qvel = jp.zeros((1, nv), jp.float32)
             self._bank_ctrl = jp.zeros((1, nu), jp.float32); self._bank_phase = jp.zeros((1,), jp.int32)
             self._bank_estimated_phase = jp.zeros((1,), jp.int32)
+            self._bank_phase_probs = jp.zeros((1, 4), jp.float32)
             self._bank_airborne = jp.zeros((1,), jp.int32); self._bank_landed = jp.zeros((1,), jp.int32)
             self._bank_age = jp.zeros((1,), jp.int32); self._bank_recovery_count = jp.zeros((1,), jp.int32)
             self._bank_bounce_count = jp.zeros((1,), jp.int32); self._bank_airborne_count = jp.zeros((1,), jp.int32)
@@ -806,7 +817,11 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             ctrl = jp.where(use_bank, self._bank_ctrl[idx], cnat)
             phase = jp.where(use_bank, self._bank_phase[idx], jp.asarray(STAGE_ID["approach"], jp.int32))
             estimated_phase = jp.where(use_bank, self._bank_estimated_phase[idx], jp.asarray(STAGE_ID["approach"], jp.int32))
-            phase_probs = jax.nn.one_hot(estimated_phase, 4, dtype=jp.float32)
+            phase_probs = jp.where(
+                use_bank,
+                self._bank_phase_probs[idx],
+                jax.nn.one_hot(STAGE_ID["approach"], 4, dtype=jp.float32),
+            )
             airborne = jp.where(use_bank, self._bank_airborne[idx], jp.asarray(0, jp.int32))
             landed = jp.where(use_bank, self._bank_landed[idx], jp.asarray(0, jp.int32))
             age = jp.where(use_bank, self._bank_age[idx], jp.asarray(0, jp.int32))

@@ -56,11 +56,15 @@ def posterior_label(
 ) -> str:
     if int(branches) < int(min_branches):
         return "unknown"
+    mean = float(posterior["mean"])
     if float(posterior["lower"]) >= float(safe_threshold):
         return "safe"
-    if float(posterior["upper"]) <= float(dead_threshold):
+    if float(posterior["upper"]) < float(dead_threshold):
         return "dead"
-    if float(posterior["width"]) <= float(boundary_max_width):
+    if (
+        float(dead_threshold) <= mean <= float(safe_threshold)
+        and float(posterior["width"]) <= float(boundary_max_width)
+    ):
         return "boundary"
     return "unknown"
 

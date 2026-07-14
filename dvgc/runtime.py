@@ -292,7 +292,7 @@ def make_ppo_train_fn(
     )
     signature = inspect.signature(ppo_train)
     if "gae_lambda" not in signature.parameters:
-        raise RuntimeError("Installed Brax PPO does not expose gae_lambda; update Brax/Playground before training DVGC v2.")
+        raise RuntimeError("Installed Brax PPO does not expose gae_lambda; use the configured MuJoCo Playground training environment.")
     kwargs["gae_lambda"] = float(gae_lambda)
     # Evaluation is a policy-selection signal.  Use the mean action rather
     # than a newly sampled exploratory action at every evaluation rollout.

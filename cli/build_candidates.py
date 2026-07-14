@@ -5,21 +5,19 @@ from pathlib import Path
 import jax
 import jax.numpy as jp
 import numpy as np
-import pandas as pd
 from dvgc.bank import SnapshotBank
 from dvgc.config import STAGE_ID, load_config
 from dvgc.env import OrangeBikeDVGC
+from dvgc.reference import ReferenceTrajectory
 
-ANCHORS={"approach":(0,113),"takeoff":(113,129),"flight":(129,329),"landing":(300,350)}
 
-
-def _seed(row, phase, cfg, training_only):
+def _seed(row, phase, cfg, training_only, rng):
     euler=np.deg2rad([row.roll_angle,row.pitch_angle,row.yaw_angle]).astype(np.float32)
     common={"euler":euler,"steer":0.0,"hip":float(np.clip(row.hip_position,cfg.hip_min,cfg.hip_max)),"knee":float(np.clip(row.knee_position,cfg.knee_min,cfg.knee_max)),"linear_velocity":np.asarray([row.vel_x,row.vel_y,row.vel_z],np.float32),"angular_velocity":np.zeros(3,np.float32)}
     if phase in ("flight","landing"):
         common.update(seed_type="system_com",desired_com=np.asarray([row.pos_x,row.pos_y,row.pos_z],np.float32))
     else:
-        vz=float(np.random.uniform(0.35,0.85)) if (phase=="takeoff" and training_only) else float(np.clip(row.vel_z,-.08,.08))
+        vz=float(rng.uniform(0.35,0.85)) if (phase=="takeoff" and training_only) else float(np.clip(row.vel_z,-.08,.08))
         common["linear_velocity"]=np.asarray([row.vel_x,row.vel_y,vz],np.float32)
         common.update(seed_type="ground",base_pos=np.asarray([row.pos_x,row.pos_y,cfg.nominal_base_z_ground+0.03],np.float32))
     return common
@@ -37,12 +35,19 @@ def main():
     a=p.parse_args(); rng=np.random.default_rng(a.seed)
     cfg=load_config(a.config,{"training_stage":a.phase,"use_bank_resets":False,"domain_randomization":False,"obs_noise_enable":False})
     env=OrangeBikeDVGC(cfg,snapshot_bank=SnapshotBank()); bank=SnapshotBank.load(a.bank)
-    df=pd.read_csv(a.reference); lo,hi=ANCHORS[a.phase]
+    reference=ReferenceTrajectory.load(a.reference); df=reference.df; anchors=reference.anchors()
+    bounds={
+        "approach":(0,anchors.approach_end),
+        "takeoff":(anchors.approach_end,anchors.takeoff_end),
+        "flight":(anchors.takeoff_end,anchors.landing_start),
+        "landing":(anchors.landing_start,anchors.recovery_start),
+    }
+    lo,hi=bounds[a.phase]
     attempts=0
     while len(bank.records_for_phase(a.phase))<a.target and attempts<a.target*30:
         attempts+=1; idx=int(rng.integers(lo,hi+1)); row=df.iloc[idx]
         training_only=(a.phase=="takeoff" and rng.random()<a.aux_fraction)
-        seed=_seed(row,a.phase,cfg,training_only)
+        seed=_seed(row,a.phase,cfg,training_only,rng)
         state=env.reset_from_com_seed(seed,jax.random.PRNGKey(a.seed+attempts))
         # Convert the grounded proposal to the requested semantic phase.
         if a.phase=="approach":
@@ -60,7 +65,12 @@ def main():
         if a.phase=="takeoff":
             rec["had_airborne"]=0; rec["airborne_count"]=0; rec["policy_state"]["filter_phase"]=STAGE_ID["takeoff"]
         bank.add(rec,deduplicate=True,distance=.06)
-    bank.metadata.update({"reference":"reference_jump.csv","reference_usage":"candidate envelopes only; never reward tracking"})
+    bank.metadata.update({
+        "reference":str(Path(a.reference)),
+        "reference_usage":"candidate envelopes only; never reward tracking",
+        "reference_anchors":anchors.as_dict(),
+        "build_seed":int(a.seed),
+    })
     bank.save(a.bank)
     report={"phase":a.phase,"target":a.target,"attempts":attempts,"summary":bank.summary()}
     Path(a.bank).with_suffix(".build.json").write_text(json.dumps(report,indent=2),encoding="utf-8")

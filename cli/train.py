@@ -4,10 +4,10 @@ import argparse, copy, datetime as dt
 from pathlib import Path
 import jax
 from dvgc.bank import SnapshotBank
-from dvgc.config import load_config, save_config
+from dvgc.config import file_sha256, load_config, save_config
 from dvgc.env import OrangeBikeDVGC
 from dvgc.policy import load_bundle, save_bundle
-from dvgc.runtime import make_ppo_train_fn, validate_ppo_batch_layout
+from dvgc.runtime import make_ppo_train_fn, save_json, validate_ppo_batch_layout
 
 
 def main():
@@ -42,14 +42,31 @@ def main():
     eval_env=OrangeBikeDVGC(eval_cfg,snapshot_bank=bank,cert_bank=downstream)
     restore_params=None
     if a.resume:
-        restore_params,_,_=load_bundle(a.resume,verify_files=False)
+        restore_params,resume_cfg,resume_manifest=load_bundle(a.resume,verify_files=False)
+        if resume_manifest.get("xml_sha256") != file_sha256(cfg.xml_path):
+            raise SystemExit("Resume policy was trained with a different XML model")
+        if resume_manifest.get("action_mapping_version") != cfg.action_mapping_version:
+            raise SystemExit("Resume policy uses a different action mapping")
+        if int(resume_cfg.get("actor_history_steps",-1)) != int(cfg.actor_history_steps):
+            raise SystemExit("Resume policy uses an incompatible Actor observation history")
     run=Path(a.run); run.mkdir(parents=True,exist_ok=True); save_config(cfg,run/"config.json")
+    metrics_path=run/"training_metrics.json"
     train_fn=make_ppo_train_fn(timesteps=a.timesteps,episode_length=int(cfg.episode_length),num_envs=a.num_envs,num_eval_envs=a.num_eval_envs,num_evals=11,seed=a.seed,learning_rate=1e-4,entropy_cost=1e-3,reward_scaling=0.1,checkpoint_dir=run/"orbax",unroll_length=32,batch_size=a.batch_size,num_minibatches=a.num_minibatches,num_updates_per_batch=2,discounting=.995,gae_lambda=.97,clipping_epsilon=.10,max_grad_norm=.75,restore_params=restore_params)
     rows=[]
+    metric_log={"stage":a.stage,"seed":a.seed,"requested_timesteps":a.timesteps,"status":"initialized","progress":rows}
+    save_json(metrics_path,metric_log)
     def progress(step,metrics):
         row={"step":int(step),**{k:float(v) for k,v in metrics.items() if hasattr(v,"__float__")}}; rows.append(row)
+        metric_log["status"]="running"; save_json(metrics_path,metric_log)
         print(f"[train] stage={a.stage} step={step:,}")
-    _,params,_=train_fn(environment=env,progress_fn=progress,eval_env=eval_env)
+    try:
+        _,params,final_metrics=train_fn(environment=env,progress_fn=progress,eval_env=eval_env)
+    except BaseException as exc:
+        metric_log.update({"status":"failed","error_type":type(exc).__name__,"error":str(exc)})
+        save_json(metrics_path,metric_log)
+        raise
+    metric_log.update({"status":"completed","final_metrics":final_metrics})
+    save_json(metrics_path,metric_log)
     version=f"{a.stage}-{dt.datetime.now().strftime('%Y%m%d-%H%M%S')}"
     save_bundle(run/"policy",params=params,config=cfg,xml_path=cfg.xml_path,candidate_bank=a.bank,downstream_bank=(a.downstream_bank or None),policy_version=version,extra={"stage":a.stage,"seed":a.seed,"timesteps":a.timesteps})
     print(run/"policy")

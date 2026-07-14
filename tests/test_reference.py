@@ -7,3 +7,6 @@ def test_supplied_reference():
     assert abs(report["median_dt_s"]-.002)<1e-9
     assert report["angle_unit"]=="degree"
     assert a.approach_end<a.takeoff_end<a.apex<a.landing_start<a.recovery_start<a.recovery_end
+    bounds={"approach":(0,a.approach_end),"takeoff":(a.approach_end,a.takeoff_end),"flight":(a.takeoff_end,a.landing_start),"landing":(a.landing_start,a.recovery_start)}
+    assert bounds["takeoff"]==(113,129)
+    assert bounds["flight"][1]==a.landing_start
