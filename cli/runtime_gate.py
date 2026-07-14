@@ -37,7 +37,7 @@ from dvgc.runtime import (
 )
 
 
-GATE_VERSION = 1
+GATE_VERSION = 2
 
 
 def source_fingerprint(root: Path) -> str:
@@ -181,23 +181,52 @@ def _snapshot_gate(env: OrangeBikeDVGC, work: Path) -> dict[str, Any]:
         "critic_obs": _max_abs(state.obs["privileged_state"], restored.obs["privileged_state"]),
     }
     next_original = step_fn(state, action)
-    next_restored = step_fn(restored, action)
-    step_errors = {
-        "qpos": _max_abs(next_original.data.qpos, next_restored.data.qpos),
-        "qvel": _max_abs(next_original.data.qvel, next_restored.data.qvel),
-        "reward": _max_abs(next_original.reward, next_restored.reward),
-        "actor_obs": _max_abs(next_original.obs["state"], next_restored.obs["state"]),
-        "critic_obs": _max_abs(
-            next_original.obs["privileged_state"], next_restored.obs["privileged_state"]
+    # MJX Warp custom calls may use shared scratch storage.  Dispatching two
+    # independent contact steps before either one is synchronized can race and
+    # make even step_fn(state, action) disagree with itself.  Snapshot replay
+    # is a sequential comparison, so finish the original branch first.
+    jax.block_until_ready(next_original)
+    original_step_values = {
+        "qpos": np.array(jax.device_get(next_original.data.qpos), copy=True),
+        "qvel": np.array(jax.device_get(next_original.data.qvel), copy=True),
+        "reward": np.array(jax.device_get(next_original.reward), copy=True),
+        "actor_obs": np.array(jax.device_get(next_original.obs["state"]), copy=True),
+        "critic_obs": np.array(
+            jax.device_get(next_original.obs["privileged_state"]), copy=True
         ),
     }
-    tolerance = 1e-5
-    if max(initial_errors.values()) > tolerance or max(step_errors.values()) > tolerance:
+    next_restored = step_fn(restored, action)
+    step_errors = {
+        "qpos": _max_abs(original_step_values["qpos"], next_restored.data.qpos),
+        "qvel": _max_abs(original_step_values["qvel"], next_restored.data.qvel),
+        "reward": _max_abs(original_step_values["reward"], next_restored.reward),
+        "actor_obs": _max_abs(original_step_values["actor_obs"], next_restored.obs["state"]),
+        "critic_obs": _max_abs(
+            original_step_values["critic_obs"], next_restored.obs["privileged_state"]
+        ),
+    }
+    initial_tolerances = {key: 1e-5 for key in initial_errors}
+    step_tolerances = {key: 1e-5 for key in step_errors}
+    initial_exceeded = {
+        key: value for key, value in initial_errors.items()
+        if value > initial_tolerances[key]
+    }
+    step_exceeded = {
+        key: value for key, value in step_errors.items()
+        if value > step_tolerances[key]
+    }
+    if initial_exceeded or step_exceeded:
         raise RuntimeError(
-            f"Snapshot round-trip exceeded tolerance {tolerance}: "
+            "Snapshot round-trip exceeded field tolerances: "
+            f"initial_exceeded={initial_exceeded}, step_exceeded={step_exceeded}, "
             f"initial={initial_errors}, step={step_errors}"
         )
-    return {"tolerance": tolerance, "initial_max_abs": initial_errors, "step_max_abs": step_errors}
+    return {
+        "initial_tolerances": initial_tolerances,
+        "step_tolerances": step_tolerances,
+        "initial_max_abs": initial_errors,
+        "step_max_abs": step_errors,
+    }
 
 
 def _ppo_gate(env: OrangeBikeDVGC, work: Path) -> tuple[Any, dict[str, Any]]:
