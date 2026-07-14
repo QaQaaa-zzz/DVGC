@@ -12,7 +12,7 @@ python -m cli.prepare_project
 python -m python -m pytest -q
 ```
 
-本项目只读取 `assets/orange_bike_2kg_horizontal.xml`，不生成 runtime XML，也不修改碰撞几何。原模型默认使用 `impl="warp"`、`contact_mode="imu"`；Actor observation 不读取 oracle contact。请将你已有的 STL 保持在 XML 指定的 `assets/meshes/` 目录。
+本项目只读取 `assets/orange_bike_4kg_horizontal.xml`，不生成 runtime XML，也不修改碰撞几何。正式模型使用 4 kg 负载和 hip/knee `±50 N·m` 限幅，默认使用 `impl="warp"`、`contact_mode="imu"`；Actor observation 不读取 oracle contact。请将你已有的 STL 保持在 XML 指定的 `assets/meshes/` 目录。
 
 模型与 knee 动作映射的完整说明见 `docs/XML_AND_KNEE_MAPPING.md`。
 
@@ -71,7 +71,7 @@ bash scripts/run_backward_bootstrap.sh
 - build 与 audit 使用不同 seed namespace；
 - timeout 单独报告，不能写成物理 Failure；
 - policy manifest 校验 action mapping、原始 XML、config 和 bank 版本；
-- 全部入口直接读取 `orange_bike_2kg_horizontal.xml`，禁止 runtime XML 或替代几何。
+- 全部入口直接读取 `orange_bike_4kg_horizontal.xml`，禁止 runtime XML 或替代几何。
 
 ## 5. 参考轨迹的允许用途
 

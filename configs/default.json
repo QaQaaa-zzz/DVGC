@@ -187,5 +187,5 @@
   "valid_landing_back_margin": 0.5,
   "valid_landing_min_past_edge": 0.25,
   "wheel_roll_radius": 0.07,
-  "xml_path": "assets/orange_bike_2kg_horizontal.xml"
+  "xml_path": "assets/orange_bike_4kg_horizontal.xml"
 }

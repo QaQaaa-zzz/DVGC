@@ -31,6 +31,11 @@ def inspect_model(path: str | Path) -> dict[str, Any]:
             )
 
     step = next((g for g in root.iter("geom") if g.attrib.get("name") == "step"), None)
+    named_masses = {
+        geom.attrib["name"]: float(geom.attrib["mass"])
+        for geom in root.iter("geom")
+        if "name" in geom.attrib and "mass" in geom.attrib
+    }
     actuators = []
     actuator_root = root.find("actuator")
     if actuator_root is not None:
@@ -64,6 +69,7 @@ def inspect_model(path: str | Path) -> dict[str, Any]:
         "model_name": root.attrib.get("model"),
         "meshdir": meshdir,
         "mesh_assets": mesh_assets,
+        "named_masses_kg": named_masses,
         "joints": joints,
         "actuators": actuators,
     }

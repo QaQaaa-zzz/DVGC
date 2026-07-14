@@ -1,7 +1,7 @@
 
 ## 模型一致性前置条件
 
-- 训练、评估、认证和可视化必须直接读取 `assets/orange_bike_2kg_horizontal.xml`；
+- 训练、评估、认证和可视化必须直接读取 `assets/orange_bike_4kg_horizontal.xml`；
 - 禁止创建或引用 runtime XML；
 - policy manifest 中的 XML SHA-256 必须与当前原始 XML 一致；
 - STL 由原 XML 的 `meshdir="meshes"` 解析，不允许删除视觉 mesh 或转换碰撞体；

@@ -5,7 +5,7 @@
 本版本只使用：
 
 ```text
-assets/orange_bike_2kg_horizontal.xml
+assets/orange_bike_4kg_horizontal.xml
 ```
 
 代码不会再执行以下操作：
@@ -35,7 +35,7 @@ self._mj_model = mujoco.MjModel.from_xml_path(self._xml_path)
 
 ```text
 assets/
-├── orange_bike_2kg_horizontal.xml
+├── orange_bike_4kg_horizontal.xml
 └── meshes/
     ├── base_link.STL
     ├── frontwheel.STL
@@ -79,7 +79,7 @@ action_knee = 1.0  -> q_target = 2.5
 
 整个正半轴都对应同一个执行器目标。PPO 即使改变正动作，实际控制量也不改变，这就是“正半轴死区”。
 
-它与 XML 的 `kp=200`、`kv=5` 或 `forcerange=-25 25` 无关；根因是动作符号和初始关节限位冲突。
+它与 XML 的 `kp=200`、`kv=5` 或 `forcerange=-50 50` 无关；根因是动作符号和初始关节限位冲突。
 
 ## 3. 新映射
 
@@ -137,7 +137,7 @@ action_knee = -1.00 -> q_target = 2.40
 1. 零动作必须保持 reset/snapshot 中原有的 knee 状态，不能一 reset 就强制跳到另一个人为中值；
 2. Takeoff、Flight、Landing 的合理 knee 基准不同，固定中值会给共享 Actor 引入阶段偏置；
 3. 增量目标使动作近似具有“期望关节运动方向和强度”的含义；
-4. `Δq=0.20 rad` 与 `kp=200` 配合时，满动作产生约 `40 N·m` 的未限幅位置误差力矩需求，随后仍由原 XML 的 `±25 N·m` 真实力矩范围裁剪，因此没有绕过执行器物理限制；
+4. `Δq=0.20 rad` 与 `kp=200` 配合时，满动作产生约 `40 N·m` 的静态比例项需求，实际输出仍受 XML 的 `±50 N·m` 执行器力矩范围限制，因此没有绕过执行器物理限制；
 5. 参考轨迹中大量正 `action_knee` 与 knee 角度下降阶段相对应，新符号与参考数据的控制方向一致。
 
 ## 5. 所有入口如何保证使用同一映射
@@ -193,6 +193,6 @@ contact_mode = "imu"
 `tests/test_source_contracts.py` 还检查：
 
 - 环境直接调用 `MjModel.from_xml_path`；
-- 唯一模型路径为 `orange_bike_2kg_horizontal.xml`；
+- 唯一模型路径为 `orange_bike_4kg_horizontal.xml`；
 - 工程中不存在 `prepare_runtime_xml`；
 - 配置和代码中不存在 `orange_bike_runtime.xml`。

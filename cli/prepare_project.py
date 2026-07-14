@@ -10,7 +10,7 @@ from dvgc.reference import ReferenceTrajectory
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--xml", default="assets/orange_bike_2kg_horizontal.xml")
+    parser.add_argument("--xml", default="assets/orange_bike_4kg_horizontal.xml")
     parser.add_argument("--reference", default="data/reference_jump.csv")
     parser.add_argument("--docs", default="docs")
     args = parser.parse_args()

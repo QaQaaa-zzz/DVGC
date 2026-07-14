@@ -26,7 +26,7 @@ ceda4f7e43895cee09bd7582d9b46688971740e74b6553615739f980eb098138
 ### 当前唯一模型路径
 
 ```text
-assets/orange_bike_2kg_horizontal.xml
+assets/orange_bike_4kg_horizontal.xml
 ```
 
 ### 当前加载方式
@@ -77,7 +77,7 @@ q_target = clip(q_current - action_knee × 0.20, -1.5, 2.5)
 - `action_knee < 0`：增大 knee 角，伸展；
 - `action_knee = 0`：保持当前 knee 角。
 
-这套映射不修改 XML，不绕过 joint limit，也不绕过 `±25 N·m` 的 actuator force range。
+这套映射不修改 XML，不绕过 joint limit，也不绕过 `±50 N·m` 的 actuator force range。
 
 ### 为什么改成增量目标
 

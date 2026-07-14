@@ -41,7 +41,7 @@ def default_config() -> config_dict.ConfigDict:
     """
     return config_dict.create(
         # Simulation and files.
-        xml_path="assets/orange_bike_2kg_horizontal.xml",
+        xml_path="assets/orange_bike_4kg_horizontal.xml",
         ctrl_dt=0.020,
         sim_dt=0.002,
         episode_length=750,

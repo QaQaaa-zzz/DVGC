@@ -13,7 +13,7 @@ def test_original_xml_is_the_only_model_path():
     env = Path("dvgc/env.py").read_text()
     cfg = Path("dvgc/config.py").read_text()
     assert "MjModel.from_xml_path(self._xml_path)" in env
-    assert "orange_bike_2kg_horizontal.xml" in cfg
+    assert "orange_bike_4kg_horizontal.xml" in cfg
     assert "orange_bike_runtime.xml" not in env + cfg
     assert "prepare_runtime_xml" not in Path("dvgc/model.py").read_text()
 

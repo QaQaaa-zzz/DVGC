@@ -7,7 +7,7 @@ set -euo pipefail
 PYTHON=${PYTHON:-python}
 CFG=${CFG:-configs/default.json}
 
-$PYTHON -m cli.prepare_project --xml assets/orange_bike_2kg_horizontal.xml --reference data/reference_jump.csv
+$PYTHON -m cli.prepare_project --xml assets/orange_bike_4kg_horizontal.xml --reference data/reference_jump.csv
 
 echo "1) Build/train/certify Landing -> Recovery"
 $PYTHON -m cli.build_candidates --phase landing --target 96 --bank artifacts/landing_candidates.pkl --config "$CFG"

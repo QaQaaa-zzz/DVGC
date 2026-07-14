@@ -35,14 +35,15 @@
 
 需要注意：轨迹 knee 峰值略高于 XML 的 2.5 rad，属于约 0.077 rad 的仿真/记录超调。本版本不会扩大关节限位，而是在候选构造时裁剪至 XML 合法范围。
 
-### 2.2 模型 `assets/orange_bike_2kg_horizontal.xml`
+### 2.2 模型 `assets/orange_bike_4kg_horizontal.xml`
 
 - 障碍物前沿 `x=3.6 m`，后沿 `x=7.6 m`，顶面 `z=0.16 m`；
 - 动作固定为 `[steer, rear-wheel drive, hip, knee]`；
 - hip 范围 `[-1.3, 0.5] rad`；
 - knee 范围 `[-1.5, 2.5] rad`；
-- hip/knee 位置执行器 `kp=200, kv=5, force ±25 N·m`；
-- 工程只使用 `assets/orange_bike_2kg_horizontal.xml`；不生成 runtime XML，不删除视觉 mesh，不转换轮胎碰撞体，也不改写任何 XML 节点；
+- 上臂末端负载为 `4.0 kg`；
+- hip/knee 位置执行器 `kp=200, kv=5, force ±50 N·m`；
+- 工程只使用 `assets/orange_bike_4kg_horizontal.xml`；不生成 runtime XML，不删除视觉 mesh，不转换轮胎碰撞体，也不改写任何 XML 节点；
 - MuJoCo 通过 `MjModel.from_xml_path` 按原 XML 的 `meshdir="meshes"` 读取你已有的 STL；
 - 原 ellipsoid 轮胎碰撞体保持不变，默认后端恢复为 `MJX-Warp + IMU/event contact estimation`。
 
@@ -133,7 +134,7 @@ DVGC_clean_project/
 ├── README.md
 ├── configs/default.json
 ├── assets/
-│   └── orange_bike_2kg_horizontal.xml
+│   └── orange_bike_4kg_horizontal.xml
 ├── data/reference_jump.csv
 ├── dvgc/
 │   ├── config.py          # 唯一配置源
