@@ -108,6 +108,7 @@ def load_bundle(directory: str | Path, *, verify_files: bool = True) -> tuple[An
 def copy_bundle(source: str | Path, destination: str | Path) -> Path:
     dst = Path(destination)
     if dst.exists():
-        shutil.rmtree(dst)
+        raise FileExistsError(f"Policy destination already exists: {dst}")
     shutil.copytree(source, dst)
+    load_bundle(dst, verify_files=True)
     return dst

@@ -23,7 +23,9 @@ from dvgc.config import (
     file_sha256,
     load_config,
 )
+from dvgc.composite import CompositeSession
 from dvgc.env import END_REASON, OrangeBikeDVGC
+from dvgc.experts import StageExpertRegistry
 from dvgc.model import inspect_model
 from dvgc.policy import load_bundle, save_bundle
 from dvgc.rollout import restore_snapshot
@@ -37,7 +39,7 @@ from dvgc.runtime import (
 )
 
 
-GATE_VERSION = 3
+GATE_VERSION = 4
 
 # Restoring the serialized state itself must remain tight.  The subsequent
 # contact step crosses the MJX Warp custom-call boundary, where repeated
@@ -80,7 +82,7 @@ def source_fingerprint(root: Path) -> str:
     """
     relative_files = (
         "dvgc/action_mapping.py", "dvgc/bank.py", "dvgc/config.py",
-        "dvgc/env.py", "dvgc/model.py", "dvgc/policy.py",
+        "dvgc/env.py", "dvgc/experts.py", "dvgc/composite.py", "dvgc/model.py", "dvgc/policy.py",
         "dvgc/rewards.py", "dvgc/rollout.py", "dvgc/runtime.py",
         "dvgc/signals.py", "cli/train.py", "cli/runtime_gate.py",
         "pyproject.toml", "requirements.txt",
@@ -388,6 +390,26 @@ def _policy_gate(env: OrangeBikeDVGC, cfg: Any, params: Any, work: Path) -> dict
     return {"bundle": str(bundle), "different_key_action_max_abs": error}
 
 
+def _composite_gate(env: OrangeBikeDVGC, cfg: Any, params: Any, work: Path) -> dict[str, Any]:
+    entry=work/"runtime_entry.pkl"; SnapshotBank().save(entry); policies={}
+    for stage in ("landing","flight"):
+        stage_cfg=load_config(overrides={**cfg.to_dict(),"training_stage":stage})
+        policies[stage]=save_bundle(work/f"expert_{stage}",params=params,config=stage_cfg,xml_path=stage_cfg.xml_path,candidate_bank=None,downstream_bank=(entry if stage=="flight" else None),policy_version=f"runtime-{stage}",extra={"stage":stage})
+    registry=StageExpertRegistry.build(policies,{"flight":entry},runtime_source_fingerprint=source_fingerprint(Path(__file__).resolve().parents[1])); registry.validate_files()
+    inference={stage:build_inference(env,params,deterministic=True) for stage in policies}
+    class Always:
+        def match(self,state): return True,0.0
+    key=jax.random.PRNGKey(70); initial=env.reset(key); action,_=inference["flight"](initial.obs,jax.random.PRNGKey(71)); step=jax.jit(env.step)
+    direct=step(initial,action); jax.block_until_ready(direct)
+    session=CompositeSession(env,("flight","landing"),inference,{"flight":Always()},initial,key); handed=session.step(step_fn=step); jax.block_until_ready(handed)
+    errors={"qpos":_max_abs(direct.data.qpos,handed.data.qpos),"qvel":_max_abs(direct.data.qvel,handed.data.qvel),"actor_obs":_max_abs(direct.obs["state"],handed.obs["state"]),"last_action":_max_abs(direct.info["last_action"],handed.info["last_action"])}
+    limits={"qpos":5e-5,"qvel":3e-3,"actor_obs":2e-2,"last_action":1e-6}
+    exceeded={k:v for k,v in errors.items() if v>limits[k]}
+    if exceeded or session.active_stage!="landing" or len(session.handoffs)!=1: raise RuntimeError(f"Composite handoff continuity failed: errors={errors}, exceeded={exceeded}")
+    landing_hash=registry.specs["landing"].policy_hash; registry.validate_files()
+    return {"registry_hash":registry.registry_hash,"controller_stack_hash":registry.specs["flight"].controller_stack_hash,"landing_policy_hash_before":landing_hash,"landing_policy_hash_after":registry.specs["landing"].policy_hash,"active_stage_after_handoff":session.active_stage,"handoffs":len(session.handoffs),"continuity_errors":errors,"continuity_tolerances":limits}
+
+
 def _check_report(report_path: Path, root: Path, config_path: str) -> None:
     report = json.loads(report_path.read_text(encoding="utf-8"))
     cfg = load_config(config_path)
@@ -474,6 +496,9 @@ def main() -> None:
         report["gates"]["policy_roundtrip_determinism"] = {
             "status": "PASS",
             **_policy_gate(env, cfg, params, work),
+        }
+        report["gates"]["expert_registry_composite_handoff"] = {
+            "status": "PASS", **_composite_gate(env,cfg,params,work)
         }
         report["status"] = "PASS"
     except BaseException as exc:

@@ -1,10 +1,23 @@
 # DVGC Experiment State
 
+- Active route: sequential shared-Actor backward training is formally closed.
+  Proceed with stage-expert discovery, composite Final-Recovery validation,
+  joint shared-policy consolidation, then final shared-policy recertification.
+- Stage-expert infrastructure milestone: registry and irreversible composite
+  controller implemented and validated.  Registry binds policy/params, XML,
+  observation/action/PolicyState schema, candidate, downstream entry set and
+  downstream controller-stack hashes.  Current policies are stateless MLPs;
+  deployable observation history and last action remain in the uninterrupted
+  environment PolicyState across handoff.
+- Runtime gate v4: PASS/current; source `a0ee8b7...7652bb`, config
+  `307f41a...d28e9`, XML `d7e9f43...ce794c`.  Composite handoff continuity
+  errors qpos/qvel/actor-observation/last-action are all exactly zero; frozen
+  downstream policy hash is unchanged.  Full suite: 57 passed.
 - Current validated source commit: retention repair `3d2cc6a`, bounded controller `b2189df`,
   full-reset correction `f4de96d`, deferred gate `861c20f`, metric-preserving
   resampling `55e9c64`.
 - Worktree: clean after the documentation-only v12 result commit.
-- Runtime gate: PASS/current; source `c7b7b09...bce12e`, config
+- Prior shared-Actor runtime gate (superseded by v4): source `c7b7b09...bce12e`, config
   `307f41a...d28e9`, XML `d7e9f43...ce794c`; authoritative action mapping is
   unchanged.
 - Landing policy: `landing-20260714-190401`, params `fa3a518b...34bb7e`.

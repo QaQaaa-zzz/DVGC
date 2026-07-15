@@ -180,3 +180,28 @@ def test_full_reset_resamples_bank_without_losing_terminal_source_metrics():
     transition_total=sum(float(np.asarray(state.info["episode_metrics"][f"reset/transition/{name}"]).sum()) for name in RESET_SOURCE)
     assert episode_total==64.0 and transition_total==64.0
     assert np.any(np.asarray(state.info["reset_source"])!=original)
+
+
+@pytest.mark.skipif(not RUNTIME_READY,reason="MuJoCo runtime required")
+def test_composite_handoff_preserves_physics_and_policy_state():
+    import jax
+    import jax.numpy as jp
+    import numpy as np
+    from dvgc.bank import SnapshotBank
+    from dvgc.composite import CompositeSession
+    from dvgc.config import load_config
+    from dvgc.env import OrangeBikeDVGC
+
+    class Always:
+        def match(self,state): return True,0.0
+    def zero(obs,key): return jp.zeros(4,jp.float32),{}
+    cfg=load_config("configs/default.json",{"training_stage":"flight","domain_randomization":False,"obs_noise_enable":False})
+    env=OrangeBikeDVGC(cfg,snapshot_bank=SnapshotBank()); key=jax.random.PRNGKey(123); initial=env.reset(key); step=jax.jit(env.step); action=jp.zeros(4,jp.float32)
+    direct=step(initial,action); jax.block_until_ready(direct)
+    session=CompositeSession(env,("flight","landing"),{"flight":zero,"landing":zero},{"flight":Always()},initial,key)
+    handed=session.step(step_fn=step); jax.block_until_ready(handed)
+    np.testing.assert_allclose(np.asarray(handed.data.qpos),np.asarray(direct.data.qpos),atol=5e-5)
+    np.testing.assert_allclose(np.asarray(handed.data.qvel),np.asarray(direct.data.qvel),atol=3e-3)
+    np.testing.assert_allclose(np.asarray(handed.info["obs_history"]),np.asarray(direct.info["obs_history"]),atol=1e-5)
+    np.testing.assert_allclose(np.asarray(handed.info["last_action"]),np.asarray(direct.info["last_action"]),atol=1e-6)
+    assert session.active_stage=="landing" and len(session.handoffs)==1
