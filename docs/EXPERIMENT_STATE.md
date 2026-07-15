@@ -1,8 +1,8 @@
 # DVGC Experiment State
 
-- Current HEAD: retention sampler/reward/probe repair `3d2cc6a`; controller
-  update is validated and pending commit.
-- Runtime gate: PASS/current; source `498b6c6...69d1b`, config
+- Current HEAD: retention repair `3d2cc6a`, bounded controller `b2189df`;
+  full-reset correction is validated and pending commit.
+- Runtime gate: PASS/current; source `ed70904...841d4`, config
   `307f41a...d28e9`, XML `d7e9f43...ce794c`; authoritative action mapping is
   unchanged.
 - Landing policy: `landing-20260714-190401`, params `fa3a518b...34bb7e`.
@@ -79,3 +79,10 @@
   fixed Flight Chain/Final, full-safe/boundary local probes, reset episode and
   transition sources, timeout and nonfinite health.  No pending C_L entry is
   eligible until this bounded run completes.
+- v8 block 1 is retained as an invalid sampler diagnostic, not formal evidence:
+  25,600 steps gave Flight Chain/Final=0/8.125% and Landing retention=89.583%,
+  but exposed that the default Brax wrapper reused cached initial resets and
+  the callback read the wrong metric prefix.  v9 enables per-episode full bank
+  reset only for multi-source training; a 128-step short PPO smoke and the full
+  runtime gate pass.  The formal bounded run restarts from the unchanged old
+  pilot in a new v9 path, preserving v6/v7/v8.

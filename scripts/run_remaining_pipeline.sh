@@ -8,7 +8,7 @@ set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 PYTHON="${PYTHON:-/home/qy/mujoco_playground/.venv/bin/python}"
 CFG="${CFG:-configs/default.json}"
-REVISION="${PIPELINE_REVISION:-v8}"
+REVISION="${PIPELINE_REVISION:-v9}"
 STATE_ROOT="runs/remaining_pipeline/${REVISION}"
 MARKER_ROOT="${STATE_ROOT}/markers"
 LOG_ROOT="${STATE_ROOT}/logs"

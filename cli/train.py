@@ -207,8 +207,8 @@ def main():
             probes=drift_probe(params,reference_params,cfg.to_dict(),probe_groups,downstream,7300000+index*10000)
             improved=flight_report["chain_rate"]>previous_chain or flight_report["final_recovery_rate"]>previous_final
             stagnant=0 if improved else stagnant+1; previous_chain=flight_report["chain_rate"]; previous_final=flight_report["final_recovery_rate"]
-            episode_ratios=source_ratios("training/reset/episode/")
-            transition_ratios=source_ratios("training/reset/transition/")
+            episode_ratios=source_ratios("episode/reset/episode/")
+            transition_ratios=source_ratios("episode/reset/transition/")
             reasons=[]
             for source in ("flight_curriculum","canonical_entry_rehearsal","landing_tube_rehearsal"):
                 if episode_ratios[source]<=0: reasons.append(f"missing episode reset source: {source}")
@@ -228,7 +228,7 @@ def main():
             if reasons: raise BoundedStop("; ".join(reasons))
     else:
         block_callback=lambda *_:None
-    train_fn=make_ppo_train_fn(timesteps=a.timesteps,episode_length=int(cfg.episode_length),num_envs=a.num_envs,num_eval_envs=a.num_eval_envs,num_evals=a.num_evals,seed=ppo_seed,learning_rate=learning_rate,entropy_cost=entropy_cost,reward_scaling=0.1,checkpoint_dir=run/"orbax",unroll_length=32,batch_size=a.batch_size,num_minibatches=a.num_minibatches,num_updates_per_batch=2,discounting=.995,gae_lambda=.97,clipping_epsilon=.10,max_grad_norm=.75,restore_params=restore_params,policy_params_fn=block_callback)
+    train_fn=make_ppo_train_fn(timesteps=a.timesteps,episode_length=int(cfg.episode_length),num_envs=a.num_envs,num_eval_envs=a.num_eval_envs,num_evals=a.num_evals,seed=ppo_seed,learning_rate=learning_rate,entropy_cost=entropy_cost,reward_scaling=0.1,checkpoint_dir=run/"orbax",unroll_length=32,batch_size=a.batch_size,num_minibatches=a.num_minibatches,num_updates_per_batch=2,discounting=.995,gae_lambda=.97,clipping_epsilon=.10,max_grad_norm=.75,restore_params=restore_params,policy_params_fn=block_callback,full_reset=multi_source)
     try:
         _,params,final_metrics=train_fn(environment=env,progress_fn=progress,eval_env=eval_env)
     except BoundedStop as exc:

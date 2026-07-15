@@ -349,6 +349,7 @@ def make_ppo_train_fn(
     restore_params: Optional[Any] = None,
     restore_checkpoint_path: Optional[str | Path] = None,
     policy_params_fn: Optional[Callable[..., None]] = None,
+    full_reset: bool = False,
 ) -> Callable[..., Tuple[Any, Any, Any]]:
     """Return a Brax PPO training callable with normalized observations."""
     _, ppo_train, wrapper = require_training_stack()
@@ -377,7 +378,9 @@ def make_ppo_train_fn(
         network_factory=build_network_factory(),
         seed=int(seed),
         save_checkpoint_path=str(Path(checkpoint_dir).expanduser().resolve()),
-        wrap_env_fn=wrapper.wrap_for_brax_training,
+        wrap_env_fn=functools.partial(
+            wrapper.wrap_for_brax_training, full_reset=bool(full_reset)
+        ),
         policy_params_fn=(policy_params_fn if policy_params_fn is not None else (lambda *_: None)),
     )
     signature = inspect.signature(ppo_train)
