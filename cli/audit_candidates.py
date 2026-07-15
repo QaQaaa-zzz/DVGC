@@ -125,6 +125,16 @@ def main():
     finite_records=sum(all(np.isfinite(np.asarray(row[key])).all() for key in ("qpos","qvel","ctrl","qacc_warmstart","physical_feature")) for row in rows)
     contact=_contact_audit(rows,cfg.xml_path,args.deep_penetration_threshold)
     rollout=_rollout_audit(rows,cfg,args.horizon)
+    kind_counts=Counter(row.get("candidate_kind","missing") for row in rows)
+    grouped_audits={}
+    if args.phase=="flight" and kind_counts:
+        for kind in ("reference_anchor","local_augmented"):
+            subset=[row for row in rows if row.get("candidate_kind")==kind]
+            grouped_audits[kind]={
+                "candidate_count":len(subset),
+                "contact_audit":_contact_audit(subset,cfg.xml_path,args.deep_penetration_threshold),
+                "rollout_audit":_rollout_audit(subset,cfg,args.horizon),
+            }
     eligible=sum(bool(row.get("bootstrap_eligible",False)) for row in rows)
     training_only=sum(bool(row.get("training_only",False)) for row in rows)
     expected_ok=(not args.expected_count or len(rows)==args.expected_count)
@@ -151,14 +161,25 @@ def main():
     }
     if args.phase=="flight":
         regions=Counter(row.get("flight_subinterval","missing") for row in rows)
+        quotas=bank.metadata.get("augmentation_region_quotas",{})
+        augmented=[row for row in rows if row.get("candidate_kind")=="local_augmented"]
+        parent_counts=Counter(row.get("parent_anchor_id") for row in augmented)
+        parent_cap=int(cfg.flight_augmentation_max_children_per_parent)
         quality_flags.update({
-            "flight_ascent_coverage":regions["ascent"]>=int(np.ceil(len(rows)*cfg.flight_candidate_min_ascent_fraction)),
-            "flight_apex_coverage":regions["apex"]>=int(np.ceil(len(rows)*cfg.flight_candidate_min_apex_fraction)),
-            "flight_descent_coverage":regions["descent"]>=int(np.ceil(len(rows)*cfg.flight_candidate_min_descent_fraction)),
+            "flight_ascent_coverage":regions["ascent"]>=int(quotas.get("ascent",np.ceil(len(rows)*cfg.flight_candidate_min_ascent_fraction))),
+            "flight_apex_coverage":regions["apex"]>=int(quotas.get("apex",np.ceil(len(rows)*cfg.flight_candidate_min_apex_fraction))),
+            "flight_descent_coverage":regions["descent"]>=int(quotas.get("descent",np.ceil(len(rows)*cfg.flight_candidate_min_descent_fraction))),
             "flight_clearance_metadata":all(
                 all(key in row for key in ("source_index","original_system_com","corrected_system_com","root_z_shift_m","terrain_clearance_m"))
                 for row in rows
             ),
+            "flight_anchor_support":kind_counts["reference_anchor"]>=80,
+            "flight_augmented_count":kind_counts["local_augmented"]==len(rows)-kind_counts["reference_anchor"],
+            "flight_correction_within_limit":all(float(row["root_z_shift_m"])<=float(cfg.flight_candidate_max_root_z_correction)+1e-7 for row in rows),
+            "flight_dual_wheel_airborne":all(float(row.get("wheel_clearance_m",-1))>=float(cfg.flight_candidate_clearance_margin) for row in rows),
+            "flight_normalized_dedup":all(float(row.get("normalized_nearest_neighbor_distance",float("inf")))>=float(cfg.flight_augmentation_normalized_dedup_distance) for row in augmented),
+            "flight_parent_cap":max(parent_counts.values(),default=0)<=parent_cap,
+            "flight_parent_diversity":len(parent_counts)>=int(np.ceil(len(augmented)/parent_cap)) if augmented else True,
         })
     report={
         "status":"PASS" if all(quality_flags.values()) else "FAIL",
@@ -166,6 +187,7 @@ def main():
         "candidate_count":len(rows),"finite_records":finite_records,"bootstrap_eligible":eligible,
         "training_only":training_only,"oracle_phase_counts":dict(oracle),"filter_phase_counts":dict(filtered),
         "feature_ranges":_ranges(rows) if rows else {},"contact_audit":contact,"rollout_audit":rollout,
+        "candidate_kind_counts":dict(kind_counts),"grouped_audits":grouped_audits,
         "flight_subinterval_counts":dict(Counter(row.get("flight_subinterval","missing") for row in rows)) if args.phase=="flight" else {},
         "quality_flags":quality_flags,"contract_flags":contract_flags,
         "quality_thresholds":{"max_short_horizon_physical_failure_rate":float(cfg.landing_candidate_max_short_horizon_failure_rate)},

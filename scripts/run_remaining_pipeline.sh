@@ -8,7 +8,7 @@ set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 PYTHON="${PYTHON:-/home/qy/mujoco_playground/.venv/bin/python}"
 CFG="${CFG:-configs/default.json}"
-REVISION="${PIPELINE_REVISION:-v4}"
+REVISION="${PIPELINE_REVISION:-v5}"
 STATE_ROOT="runs/remaining_pipeline/${REVISION}"
 MARKER_ROOT="${STATE_ROOT}/markers"
 LOG_ROOT="${STATE_ROOT}/logs"
@@ -17,6 +17,7 @@ AUDIT_CHUNK_STATES="${AUDIT_CHUNK_STATES:-40}"
 PILOT_STEPS="${PILOT_STEPS:-100000}"
 CANDIDATE_ATTEMPT_BUDGET="${CANDIDATE_ATTEMPT_BUDGET:-450}"
 CANDIDATE_DEDUP_DISTANCE="${CANDIDATE_DEDUP_DISTANCE:-0.03}"
+FLIGHT_AUGMENT_CHUNK_ATTEMPTS="${FLIGHT_AUGMENT_CHUNK_ATTEMPTS:-300}"
 NUM_ENVS="${NUM_ENVS:-320}"
 NUM_EVAL_ENVS="${NUM_EVAL_ENVS:-128}"
 BATCH_SIZE="${BATCH_SIZE:-80}"
@@ -136,20 +137,37 @@ print(json.dumps({"status":r["status"],"phase":r["phase"],"target":r["target"],"
 PY
 }
 
+augment_flight_candidates_chunked() {
+  local anchors="$1" target="$2" bank="$3" status attempts
+  while true; do
+    "$PYTHON" -u -m cli.augment_flight_candidates --anchor-bank "$anchors" --output-bank "$bank" --config "$CFG" --target "$target" --seed 17001 --attempt-budget "$FLIGHT_AUGMENT_CHUNK_ATTEMPTS" --allow-partial
+    status=$("$PYTHON" -c "import json; print(json.load(open('${bank%.pkl}.build.json'))['status'])")
+    [[ "$status" == PASS ]] && break
+    attempts=$("$PYTHON" -c "import json; print(json.load(open('${bank%.pkl}.build.json'))['aggregate_attempts'])")
+    if (( attempts>=3000 )); then echo "Flight augmentation exhausted 3000 proposals" >&2; return 2; fi
+  done
+}
+
 run_stage() {
   local phase="$1" target="$2" total_bootstrap="$3" refine_steps="$4" downstream="$5" resume_policy="$6"
   local stage_root="runs/${phase}/pipeline_seed0_${REVISION}" candidates="artifacts/${phase}_candidates.pkl"
-  [[ "$phase" == flight ]] && candidates="${FLIGHT_CANDIDATE_BANK:-artifacts/flight_candidates_geometry_v1.pkl}"
+  [[ "$phase" == flight ]] && candidates="${FLIGHT_CANDIDATE_BANK:-artifacts/flight_candidates_augmented_v1.pkl}"
   local pilot="$stage_root/pilot" formal="$stage_root/bootstrap" refine="$stage_root/refinement"
   local bootstrap_tube="artifacts/${phase}_bootstrap_tube.pkl" final_tube="artifacts/${phase}_tube.pkl"
-  local minimum_final learning_rate eval_seed continuation_steps
+  local minimum_final learning_rate eval_seed continuation_steps cert_seed recert_seed
   minimum_final=$(stage_value "$phase" "${FLIGHT_MIN_FINAL:-0.50}" "${TAKEOFF_MIN_FINAL:-0.35}" "${APPROACH_MIN_FINAL:-0.20}")
   learning_rate=$(stage_value "$phase" "${FLIGHT_LEARNING_RATE:-0.0001}" "${TAKEOFF_LEARNING_RATE:-0.0001}" "${APPROACH_LEARNING_RATE:-0.0001}")
   eval_seed=$(stage_value "$phase" 2100000 2200000 2300000)
+  cert_seed=$(stage_value "$phase" 3100000 3200000 3300000)
+  recert_seed=$((cert_seed+1000))
   continuation_steps=$((total_bootstrap-PILOT_STEPS))
   mkdir -p "$stage_root"
 
-  RUN_STEP_ALLOW_EXISTING=1 run_step "${phase}_candidates" "$phase:$target:0:$CANDIDATE_ATTEMPT_BUDGET:$CANDIDATE_DEDUP_DISTANCE" "$(join_by_semicolon data/reference_jump.csv "$CFG")" "$(join_by_semicolon "$candidates" "${candidates%.pkl}.build.json")" build_candidates_chunked "$phase" "$target" "$candidates"
+  if [[ "$phase" == flight ]]; then
+    run_step "${phase}_candidates" "$phase:$target:17001:3000:$FLIGHT_AUGMENT_CHUNK_ATTEMPTS" "$(join_by_semicolon artifacts/flight_candidates_geometry_v1.pkl data/reference_jump.csv "$CFG")" "$(join_by_semicolon "$candidates" "${candidates%.pkl}.build.json")" augment_flight_candidates_chunked artifacts/flight_candidates_geometry_v1.pkl "$target" "$candidates"
+  else
+    RUN_STEP_ALLOW_EXISTING=1 run_step "${phase}_candidates" "$phase:$target:0:$CANDIDATE_ATTEMPT_BUDGET:$CANDIDATE_DEDUP_DISTANCE" "$(join_by_semicolon data/reference_jump.csv "$CFG")" "$(join_by_semicolon "$candidates" "${candidates%.pkl}.build.json")" build_candidates_chunked "$phase" "$target" "$candidates"
+  fi
   run_step "${phase}_candidate_audit" "$phase:$target:25" "$candidates" "$stage_root/candidate_audit.json" "$PYTHON" -u -m cli.audit_candidates --phase "$phase" --bank "$candidates" --config "$CFG" --expected-count "$target" --horizon 25 --output "$stage_root/candidate_audit.json"
   run_step "${phase}_candidate_gate" "$phase:$target" "$(join_by_semicolon "${candidates%.pkl}.build.json" "$stage_root/candidate_audit.json")" "$stage_root/candidate_decision.json" "$PYTHON" -m cli.pipeline_gate candidate --build "${candidates%.pkl}.build.json" --audit "$stage_root/candidate_audit.json" --output "$stage_root/candidate_decision.json"
 
@@ -165,7 +183,7 @@ run_stage() {
   run_step "${phase}_bootstrap_eval" "$phase:$target:$eval_seed" "$(join_by_semicolon "$formal/policy" "$candidates" "$downstream")" "$formal/fixed_candidate_evaluation.json" "$PYTHON" -u -m cli.evaluate --stage "$phase" --policy "$formal/policy" --bank "$candidates" --downstream-bank "$downstream" --episodes "$target" --seed "$eval_seed" --output "$formal/fixed_candidate_evaluation.json"
   run_step "${phase}_bootstrap_gate" "$phase:$minimum_final:$MAX_TIMEOUT:0.05" "$(join_by_semicolon "$formal/analysis.json" "$formal/fixed_candidate_evaluation.json" "$pilot/fixed_candidate_evaluation.json")" "$formal/decision.json" "$PYTHON" -m cli.pipeline_gate training --analysis "$formal/analysis.json" --evaluation "$formal/fixed_candidate_evaluation.json" --reference-evaluation "$pilot/fixed_candidate_evaluation.json" --minimum-final "$minimum_final" --maximum-timeout "$MAX_TIMEOUT" --maximum-final-drop 0.05 --output "$formal/decision.json"
 
-  certify_chunked "$phase" "$formal/policy" "$candidates" "$downstream" "$bootstrap_tube" 0 build "${phase}_bootstrap"
+  certify_chunked "$phase" "$formal/policy" "$candidates" "$downstream" "$bootstrap_tube" "$cert_seed" build "${phase}_bootstrap"
   run_step "${phase}_bootstrap_cert_gate" "$phase:4" "${bootstrap_tube%.pkl}.cert.json" "$stage_root/bootstrap_certification_analysis.json" "$PYTHON" -m cli.pipeline_gate certification --report "${bootstrap_tube%.pkl}.cert.json" --phase "$phase" --minimum-safe 4 --output "$stage_root/bootstrap_certification_analysis.json"
 
   local -a refine_cmd=("$PYTHON" -u -m cli.train --stage "$phase" --bank "$bootstrap_tube" --downstream-bank "$downstream" --config "$CFG" --run "$refine" --resume "$formal/policy" --require-final-safe-rsi --timesteps "$refine_steps" --seed 0 --num-envs "$NUM_ENVS" --num-eval-envs "$NUM_EVAL_ENVS" --batch-size "$BATCH_SIZE" --num-minibatches "$NUM_MINIBATCHES" --learning-rate "$learning_rate")
@@ -174,7 +192,7 @@ run_stage() {
   run_step "${phase}_refinement_eval" "$phase:$target:$eval_seed" "$(join_by_semicolon "$refine/policy" "$candidates" "$downstream")" "$refine/fixed_candidate_evaluation.json" "$PYTHON" -u -m cli.evaluate --stage "$phase" --policy "$refine/policy" --bank "$candidates" --downstream-bank "$downstream" --episodes "$target" --seed "$eval_seed" --output "$refine/fixed_candidate_evaluation.json"
   run_step "${phase}_refinement_gate" "$phase:$minimum_final:$MAX_TIMEOUT:0.05" "$(join_by_semicolon "$refine/analysis.json" "$refine/fixed_candidate_evaluation.json" "$formal/fixed_candidate_evaluation.json")" "$refine/decision.json" "$PYTHON" -m cli.pipeline_gate training --analysis "$refine/analysis.json" --evaluation "$refine/fixed_candidate_evaluation.json" --reference-evaluation "$formal/fixed_candidate_evaluation.json" --minimum-final "$minimum_final" --maximum-timeout "$MAX_TIMEOUT" --maximum-final-drop 0.05 --output "$refine/decision.json"
 
-  certify_chunked "$phase" "$refine/policy" "$bootstrap_tube" "$downstream" "$final_tube" 2000 recert "${phase}_recert"
+  certify_chunked "$phase" "$refine/policy" "$bootstrap_tube" "$downstream" "$final_tube" "$recert_seed" recert "${phase}_recert"
   run_step "${phase}_recert_gate" "$phase:4" "${final_tube%.pkl}.cert.json" "$refine/final_recertification_analysis.json" "$PYTHON" -m cli.pipeline_gate certification --report "${final_tube%.pkl}.cert.json" --phase "$phase" --minimum-safe 4 --output "$refine/final_recertification_analysis.json"
   audit_chunked "$phase" "$refine/policy" "$final_tube" "$downstream" "$refine"
 }

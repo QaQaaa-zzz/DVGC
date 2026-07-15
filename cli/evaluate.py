@@ -28,10 +28,15 @@ def main():
         state=restore_snapshot(env,row,key) if row else env.reset(key)
         _,result=frozen_rollout(env,inference,state,key,horizon=int(cfg.branch_horizon),action_noise_std=0.0,step_fn=step_fn)
         result["episode"]=i; result["seed"]=a.seed+i
-        if row: result["candidate_id"]=row["id"]
+        if row:
+            result["candidate_id"]=row["id"]
+            result["candidate_kind"]=row.get("candidate_kind","unknown")
         result["termination_reason"]=END_REASON.get(result["end_code"],f"unknown_{result['end_code']}")
         out.append(result)
     reasons=Counter(x["termination_reason"] for x in out)
-    report={"policy_version":manifest["policy_version"],"stage":a.stage,"episodes":len(out),"chain_rate":float(np.mean([x["chain"] for x in out])),"final_recovery_rate":float(np.mean([x["final"] for x in out])),"physical_failure_rate":float(np.mean([x["terminated"] and not x["final"] for x in out])),"timeout_rate":float(np.mean([x["truncated"] for x in out])),"mean_steps":float(np.mean([x["steps"] for x in out])),"termination_reason_counts":dict(sorted(reasons.items())),"rows":out}
+    def summarize(values):
+        return {"episodes":len(values),"chain_rate":float(np.mean([x["chain"] for x in values])),"final_recovery_rate":float(np.mean([x["final"] for x in values])),"physical_failure_rate":float(np.mean([x["terminated"] and not x["final"] for x in values])),"timeout_rate":float(np.mean([x["truncated"] for x in values]))}
+    grouped={kind:summarize([x for x in out if x.get("candidate_kind")==kind]) for kind in sorted({x.get("candidate_kind") for x in out if x.get("candidate_kind")})}
+    report={"policy_version":manifest["policy_version"],"stage":a.stage,"episodes":len(out),"chain_rate":float(np.mean([x["chain"] for x in out])),"final_recovery_rate":float(np.mean([x["final"] for x in out])),"physical_failure_rate":float(np.mean([x["terminated"] and not x["final"] for x in out])),"timeout_rate":float(np.mean([x["truncated"] for x in out])),"mean_steps":float(np.mean([x["steps"] for x in out])),"termination_reason_counts":dict(sorted(reasons.items())),"grouped_candidate_metrics":grouped,"rows":out}
     output.parent.mkdir(parents=True,exist_ok=True); output.write_text(json.dumps(report,indent=2),encoding="utf-8"); print(json.dumps({key:value for key,value in report.items() if key!="rows"},indent=2))
 if __name__=="__main__": main()

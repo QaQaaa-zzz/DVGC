@@ -101,6 +101,14 @@ def default_config() -> config_dict.ConfigDict:
         flight_candidate_min_ascent_fraction=0.20,
         flight_candidate_min_apex_fraction=0.08,
         flight_candidate_min_descent_fraction=0.20,
+        flight_augmentation_seed=17001,
+        flight_augmentation_proposal_budget=3000,
+        flight_augmentation_covariance_scale=0.30,
+        flight_augmentation_interpolation_min=0.15,
+        flight_augmentation_interpolation_max=0.85,
+        flight_augmentation_max_children_per_parent=3,
+        flight_augmentation_normalized_dedup_distance=0.15,
+        flight_augmentation_envelope_sigma=0.50,
         # Robot/action convention.  Action order is fixed and stored in every
         # policy manifest: [steer, rear-wheel drive, hip, knee].
         action_mapping_version=ACTION_MAPPING_VERSION,

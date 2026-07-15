@@ -137,4 +137,18 @@ def merge_audit_reports(parts: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
             ],
         }
     )
+    merged["grouped_candidate_metrics"] = grouped_audit_metrics(
+        rows, policy_version=str(expected["policy_version"]), phase=str(expected["phase"]),
+        seed_namespace=str(expected["seed_namespace"]), branches_per_state=int(expected["branches_per_state"]),
+        safe_threshold=float(expected["safe_threshold"]), dynamics_variants=expected["dynamics_variants"],
+    )
     return merged
+
+
+def grouped_audit_metrics(rows, **kwargs) -> dict[str, Any]:
+    groups={}
+    for kind in sorted({str(row.get("candidate_kind","unknown")) for row in rows}):
+        subset=[row for row in rows if str(row.get("candidate_kind","unknown"))==kind]
+        report=build_audit_report(subset,**kwargs)
+        groups[kind]={key:value for key,value in report.items() if key not in ("rows","dynamics_variants")}
+    return groups

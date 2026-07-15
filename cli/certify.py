@@ -63,12 +63,16 @@ def main():
             if b+1>=int(cfg.min_branches) and decided(cs,cf,cfg) and decided(fs,ff,cfg): break
         candidates.update_certification(row["id"],chain_successes=cs,chain_failures=cf,final_successes=fs,final_failures=ff,policy_version=manifest["policy_version"],estimator_version=manifest.get("estimator_version","event_filter_v1"),tube_version=tube_version,protocol=protocol(cfg),seed_namespace=namespace,branch_evidence=branches)
         terminal=summarize_branches(branches)
-        results.append({"id":row["id"],"chain":cs,"final":fs,"branches":cs+cf,"branch_evidence":branches,"terminal_summary":terminal})
+        results.append({"id":row["id"],"candidate_kind":row.get("candidate_kind","unknown"),"chain":cs,"final":fs,"branches":cs+cf,"branch_evidence":branches,"terminal_summary":terminal})
         results[-1]["state_index"]=ri
         print(f"[cert] {local_index+1}/{len(rows)} global={ri+1}/{len(all_rows)} chain={cs}/{cs+cf} final={fs}/{fs+ff} physical_failure={terminal['physical_failures']} timeout={terminal['timeouts']} horizon={terminal['horizon_exhaustions']}")
     candidates.metadata.update({"last_policy_version":manifest["policy_version"],"last_tube_version":tube_version,"downstream_bank":a.downstream_bank,"construction_seed":int(a.seed),"construction_seed_namespace":namespace,"dynamics_variants":[dict(spec) for spec in DYNAMICS_VARIANTS]})
     candidates.save(a.output_bank)
-    report={"phase":a.phase,"policy_version":manifest["policy_version"],"estimator_version":manifest.get("estimator_version","event_filter_v1"),"tube_version":tube_version,"seed_namespace":namespace,"construction_seed":int(a.seed),"candidate_bank_sha256":file_sha256(a.candidate_bank),"downstream_bank":str(Path(a.downstream_bank).resolve()) if a.downstream_bank else "","downstream_bank_sha256":file_sha256(a.downstream_bank) if a.downstream_bank else None,"state_index_start":start,"state_index_end_exclusive":stop,"total_bank_states":len(all_rows),"summary":candidates.summary(),"terminal_summary":summarize_branches(all_branches),"results":results}
+    grouped={}
+    for kind in sorted({row["candidate_kind"] for row in results}):
+        subset=[row for row in results if row["candidate_kind"]==kind]; evidence=[branch for row in subset for branch in row["branch_evidence"]]
+        grouped[kind]={"states":len(subset),"terminal_summary":summarize_branches(evidence)}
+    report={"phase":a.phase,"policy_version":manifest["policy_version"],"estimator_version":manifest.get("estimator_version","event_filter_v1"),"tube_version":tube_version,"seed_namespace":namespace,"construction_seed":int(a.seed),"candidate_bank_sha256":file_sha256(a.candidate_bank),"downstream_bank":str(Path(a.downstream_bank).resolve()) if a.downstream_bank else "","downstream_bank_sha256":file_sha256(a.downstream_bank) if a.downstream_bank else None,"state_index_start":start,"state_index_end_exclusive":stop,"total_bank_states":len(all_rows),"summary":candidates.summary(),"terminal_summary":summarize_branches(all_branches),"grouped_candidate_metrics":grouped,"results":results}
     Path(a.output_bank).with_suffix(".cert.json").write_text(json.dumps(report,indent=2),encoding="utf-8")
     print(json.dumps(report["summary"],indent=2))
 if __name__=="__main__": main()

@@ -4,7 +4,7 @@ import argparse, json
 from pathlib import Path
 import jax
 from dvgc.bank import SnapshotBank
-from dvgc.audit import build_audit_report
+from dvgc.audit import build_audit_report, grouped_audit_metrics
 from dvgc.certification import DYNAMICS_VARIANTS, assert_disjoint_branch_seeds, branch_evidence, branch_seed, summarize_branches
 from dvgc.config import load_config
 from dvgc.env import OrangeBikeDVGC
@@ -54,10 +54,11 @@ def main():
             _,out=frozen_rollout(env,inference,state,key,horizon=int(cfg.branch_horizon),action_noise_std=float(cfg.action_noise_std),step_fn=step_fn)
             evidence=branch_evidence(branch_index=b,seed=seed,seed_namespace=namespace,dynamics_variant=variant_id,outcome=out)
             branches.append(evidence); cs+=out["chain"]; fs+=out["final"]
-        p=fs/a.branches; terminal=summarize_branches(branches); audit.append({"id":row["id"],"predicted_label":row["final"]["label"],"predicted_mean":row["final"]["posterior"]["mean"],"audit_chain":cs/a.branches,"audit_final":p,"terminal_summary":terminal,"branches":branches})
+        p=fs/a.branches; terminal=summarize_branches(branches); audit.append({"id":row["id"],"candidate_kind":row.get("candidate_kind","unknown"),"predicted_label":row["final"]["label"],"predicted_mean":row["final"]["posterior"]["mean"],"audit_chain":cs/a.branches,"audit_final":p,"terminal_summary":terminal,"branches":branches})
         audit[-1]["state_index"]=i
         print(f"[audit] {local_index+1}/{len(indexed_rows)} global={i+1}/{len(all_rows)} chain={cs}/{a.branches} final={fs}/{a.branches} physical_failure={terminal['physical_failures']} timeout={terminal['timeouts']} horizon={terminal['horizon_exhaustions']}")
     report=build_audit_report(audit,policy_version=manifest["policy_version"],phase=a.phase,seed_namespace=namespace,branches_per_state=a.branches,safe_threshold=float(cfg.safe_threshold),dynamics_variants=DYNAMICS_VARIANTS)
+    report["grouped_candidate_metrics"]=grouped_audit_metrics(audit,policy_version=manifest["policy_version"],phase=a.phase,seed_namespace=namespace,branches_per_state=a.branches,safe_threshold=float(cfg.safe_threshold),dynamics_variants=DYNAMICS_VARIANTS)
     report.update({"state_index_start":start,"state_index_end_exclusive":stop,"total_bank_states":len(all_rows)})
     output.parent.mkdir(parents=True,exist_ok=True); output.write_text(json.dumps(report,indent=2),encoding="utf-8"); print(json.dumps({k:v for k,v in report.items() if k!="rows"},indent=2))
 if __name__=="__main__": main()

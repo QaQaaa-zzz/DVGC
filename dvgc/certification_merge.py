@@ -45,7 +45,11 @@ def merge_certification_parts(
             index=int(result["state_index"]); source=part_rows[index]; target=merged_rows[index]
             if source["id"]!=target["id"] or int(source["final"]["branches"])<=0: raise ValueError("Certification part contains missing or misindexed evidence")
             for key in LABEL_FIELDS: target[key]=copy.deepcopy(source[key])
-            all_branches.extend(target["certification_branches"]); results.append(copy.deepcopy(result))
+            all_branches.extend(target["certification_branches"])
+            merged_result=copy.deepcopy(result)
+            merged_result.setdefault("candidate_kind",target.get("candidate_kind","unknown"))
+            merged_result.setdefault("branch_evidence",copy.deepcopy(target["certification_branches"]))
+            results.append(merged_result)
     seeds=[int(row["branch_seed"]) for row in all_branches]
     if len(seeds)!=len(set(seeds)): raise ValueError("Certification parts reuse branch seeds")
     tube_version=f"{phase}-{uuid.uuid4().hex[:10]}"
@@ -65,4 +69,9 @@ def merge_certification_parts(
         "merged_part_ranges":[[int(p["state_index_start"]),int(p["state_index_end_exclusive"])] for p in parts],
         "summary":merged.summary(),"terminal_summary":summarize_branches(all_branches),"results":results,
     }
+    report["grouped_candidate_metrics"]={}
+    for kind in sorted({row.get("candidate_kind","unknown") for row in results}):
+        subset=[row for row in results if row.get("candidate_kind","unknown")==kind]
+        evidence=[branch for row in subset for branch in row["branch_evidence"]]
+        report["grouped_candidate_metrics"][kind]={"states":len(subset),"terminal_summary":summarize_branches(evidence)}
     return merged,report
