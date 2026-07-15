@@ -12,14 +12,15 @@
 - Runtime gate v4: PASS/current; source `265fcec...cc07a`, config
   `50e9d14...64607`, XML `d7e9f43...ce794c`.  Composite handoff continuity
   errors qpos/qvel/actor-observation/last-action are all exactly zero; frozen
-  downstream policy hash is unchanged.  Full suite: 57 passed.
+  downstream policy hash is unchanged.  Full suite: 60 passed.
 - Immutable expert baseline root:
   `runs/stage_experts/flight_seed0_20260715T2045`.  Owned π_F initialization
   params `35fcb61...7000c` is a non-overwriting clone of
   `flight-20260715-124908`; frozen π_L params remain
   `fa3a518...34bb7e`.  C_L remains `a98a246...2d964`; initial registry hash
-  `f78e5e7...901b2b`.  Before/after hashes of π_L manifest/params, C_L and the
-  Flight bank are identical.
+  `f78e5e7...901b2b`; current runtime registry is
+  `expert_registry_runtime_gate.json`, hash `f63ace6...d8c3a`.  Before/after
+  hashes of π_L manifest/params, C_L and the Flight bank are identical.
 - Flight expert training protocol implemented: π_F episodes terminate with a
   distinct `chain_entry` success at fixed C_L, while full-bank evaluation uses
   uninterrupted `π_F→π_L` composite Final-Recovery.  Curriculum is late
@@ -28,10 +29,20 @@
   Chain-missed Final, subintervals, physical/timeout causes, PPO reset and
   transition shares, π_F action drift, controller stack and immutable π_L/C_L
   hashes.  Full suite: 60 passed; runtime gate includes the new protocol.
-- Current validated source commit: retention repair `3d2cc6a`, bounded controller `b2189df`,
-  full-reset correction `f4de96d`, deferred gate `861c20f`, metric-preserving
-  resampling `55e9c64`.
-- Worktree: clean after the documentation-only v12 result commit.
+- Current validated source commits: immutable composite stack `4cb2d97` and
+  Flight expert protocol `06ec637`.  The only pending tracked change selects
+  the corrected 96-state Landing baseline filename in the expert controller.
+- Pretraining composite baseline on the fixed 160 Flight bank: Chain=0,
+  composite Final=7.5%, Chain-missed Final=7.5%, physical failure=92.5%,
+  timeout=0; pitch/roll/recovery=101/47/12.  This exactly reproduces the old
+  pilot baseline under the new composite semantics.
+- Frozen π_L independent 96-state checks at seeds 8200000 and 2300000 both
+  give Final=Chain=91.667% (88 recovery/8 roll).  The historical seed-2300000
+  report was 89.583%: 94/96 terminal outcomes match and two change from roll
+  to recovery.  Policy, candidate, XML and action hashes are unchanged and
+  the stage-expert diff adds no active Landing dynamics/reward path; the old
+  report lacks a runtime fingerprint, so exact cross-runtime replay is not
+  claimed.  The current check has no degradation and is preserved separately.
 - Prior shared-Actor runtime gate (superseded by v4): source `c7b7b09...bce12e`, config
   `307f41a...d28e9`, XML `d7e9f43...ce794c`; authoritative action mapping is
   unchanged.

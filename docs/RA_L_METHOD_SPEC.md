@@ -16,7 +16,8 @@ The concise implementation contains:
 - separate recursive Chain and end-to-end Final-Recovery labels;
 - Beta-posterior empirical Tube classification;
 - Final-safe/boundary Tube-guided RSI;
-- downstream rehearsal for a shared Actor;
+- stage-expert discovery with irreversible certified handoffs;
+- joint consolidation into one deployable shared Actor;
 - independent candidate and branch seeds for construction and audit;
 - final natural-start evaluation.
 
@@ -62,6 +63,30 @@ Final-Recovery outcomes define Safe, Dead, Boundary, and Unknown:
 
 Only Final-safe states form the high-mass RSI core. Chain-safe sets are stage
 connection targets, not substitutes for end-to-end recoverability.
+
+## Stage-Expert Discovery and Formal JEL
+
+Sequential shared-Actor backward training is not the active discovery route.
+Discovery uses independently owned frozen controllers in the stack
+`pi_A -> pi_T -> pi_F -> pi_L`.  An upstream expert is trained only to enter
+the fixed certified canonical entry set of its successor.  A handoff is
+irreversible and continues the same physical state, observation/action
+history, PolicyState, terrain, command, disturbance, and episode seed.  Chain
+denotes the canonical-entry event; Final denotes end-to-end Recovery under the
+complete downstream controller stack.  Final trajectories that never match
+the canonical entry are reported separately as Chain-missed Final.
+
+Any Tube certified under a composite expert stack is provisional recoverable
+support (an expert-conditioned or discovery Tube).  Its manifest binds every
+expert and entry-set hash, the controller-stack hash, candidate bank, XML and
+runtime hashes, branch seed/dynamics variant, oracle phase, and PolicyState
+provenance.  It is not a formal Jump Capability Envelope.
+
+After all four seed-0 expert stacks pass their composite audits, a new shared
+Actor is initialized by phase-balanced, label-aware joint distillation and is
+then trained jointly from all provisional Tubes.  Oracle stage and teacher ID
+remain excluded from Actor input.  Only phase-wise Tubes independently
+recertified under the frozen final shared policy may be named the formal JEL.
 
 ## Flight-to-Landing Entry Contract
 

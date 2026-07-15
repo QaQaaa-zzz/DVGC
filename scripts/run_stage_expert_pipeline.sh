@@ -9,7 +9,7 @@ ENTRY="${LANDING_ENTRY_SET:-artifacts/landing_entry_tube_v2.pkl}"
 REGISTRY="${EXPERT_REGISTRY:-$ROOT/expert_registry_runtime_gate.json}"
 POLICY="$ROOT/pi_f_init"
 INITIAL_COMPOSITE="$ROOT/initial_composite_evaluation.json"
-LANDING_BASELINE="$ROOT/frozen_landing_baseline.json"
+LANDING_BASELINE="$ROOT/frozen_landing_baseline_fixed.json"
 mkdir -p "$ROOT/logs"
 
 [[ -x "$PYTHON" && -f "$REGISTRY" && -d "$POLICY" ]] || { echo "Missing expert baseline inputs" >&2; exit 2; }
