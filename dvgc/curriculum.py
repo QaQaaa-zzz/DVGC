@@ -5,7 +5,7 @@ from collections.abc import Sequence
 from typing import Any
 
 
-FLIGHT_RESET_STAGES = ("late_descent", "descent", "apex_descent", "full")
+FLIGHT_RESET_STAGES = ("late_descent", "descent", "apex", "ascent", "full", "apex_descent")
 
 
 def select_flight_reset_records(records: Sequence[dict[str, Any]], stage: str) -> list[dict[str, Any]]:
@@ -16,6 +16,8 @@ def select_flight_reset_records(records: Sequence[dict[str, Any]], stage: str) -
         selected = rows
     elif stage == "apex_descent":
         selected = [row for row in rows if row.get("flight_subinterval") in ("apex", "descent")]
+    elif stage in ("apex", "ascent"):
+        selected = [row for row in rows if row.get("flight_subinterval") == stage]
     elif stage == "descent":
         selected = [row for row in rows if row.get("flight_subinterval") == "descent"]
     else:

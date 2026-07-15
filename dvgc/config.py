@@ -59,6 +59,9 @@ def default_config() -> config_dict.ConfigDict:
         training_stage="landing",
         use_bank_resets=True,
         downstream_bank_path="",
+        # Stage experts terminate successfully at their immutable downstream
+        # canonical entry.  Composite Final-Recovery evaluation keeps this off.
+        expert_chain_termination=False,
         # Terrain, copied from the supplied XML.
         step_front_x=3.60,
         step_back_x=7.60,

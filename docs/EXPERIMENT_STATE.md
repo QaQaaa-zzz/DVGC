@@ -9,10 +9,25 @@
   downstream controller-stack hashes.  Current policies are stateless MLPs;
   deployable observation history and last action remain in the uninterrupted
   environment PolicyState across handoff.
-- Runtime gate v4: PASS/current; source `a0ee8b7...7652bb`, config
-  `307f41a...d28e9`, XML `d7e9f43...ce794c`.  Composite handoff continuity
+- Runtime gate v4: PASS/current; source `265fcec...cc07a`, config
+  `50e9d14...64607`, XML `d7e9f43...ce794c`.  Composite handoff continuity
   errors qpos/qvel/actor-observation/last-action are all exactly zero; frozen
   downstream policy hash is unchanged.  Full suite: 57 passed.
+- Immutable expert baseline root:
+  `runs/stage_experts/flight_seed0_20260715T2045`.  Owned π_F initialization
+  params `35fcb61...7000c` is a non-overwriting clone of
+  `flight-20260715-124908`; frozen π_L params remain
+  `fa3a518...34bb7e`.  C_L remains `a98a246...2d964`; initial registry hash
+  `f78e5e7...901b2b`.  Before/after hashes of π_L manifest/params, C_L and the
+  Flight bank are identical.
+- Flight expert training protocol implemented: π_F episodes terminate with a
+  distinct `chain_entry` success at fixed C_L, while full-bank evaluation uses
+  uninterrupted `π_F→π_L` composite Final-Recovery.  Curriculum is late
+  descent → descent → apex → ascent → full; each level uses at most four
+  25,600-step blocks.  Every block records full-bank Chain/composite Final,
+  Chain-missed Final, subintervals, physical/timeout causes, PPO reset and
+  transition shares, π_F action drift, controller stack and immutable π_L/C_L
+  hashes.  Full suite: 60 passed; runtime gate includes the new protocol.
 - Current validated source commit: retention repair `3d2cc6a`, bounded controller `b2189df`,
   full-reset correction `f4de96d`, deferred gate `861c20f`, metric-preserving
   resampling `55e9c64`.

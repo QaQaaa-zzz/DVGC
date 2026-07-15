@@ -66,6 +66,14 @@ def test_runtime_gate_has_bounded_warp_replay_tolerances_and_exact_semantics():
     assert '"scripts", {".sh"}' not in gate
 
 
+def test_stage_expert_pipeline_uses_owned_policy_and_fixed_entry_set():
+    script=Path("scripts/run_stage_expert_pipeline.sh").read_text()
+    assert "late_descent descent apex ascent full" in script
+    assert "cli.train_expert" in script
+    assert "artifacts/landing_entry_tube_v2.pkl" in script
+    assert "pi_f_init" in script
+
+
 def test_remaining_pipeline_is_resumable_and_stage_complete():
     controller = Path("scripts/run_remaining_pipeline.sh").read_text()
     assert "cli.pipeline_marker check" in controller

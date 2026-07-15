@@ -42,6 +42,7 @@
   "dead_threshold": 0.3,
   "domain_randomization": true,
   "downstream_bank_path": "",
+  "expert_chain_termination": false,
   "downstream_rehearsal_mass": 0.1,
   "episode_length": 750,
   "eval_drop_trigger": 0.08,

@@ -23,3 +23,9 @@ def test_flight_curriculum_is_nested_and_late_descent_is_near_entry():
 
 def test_unknown_flight_curriculum_stage_is_rejected():
     with pytest.raises(ValueError): select_flight_reset_records(_rows(),"unknown")
+
+
+def test_stage_expert_schedule_has_explicit_apex_and_ascent_support():
+    rows=_rows()
+    assert {r["id"] for r in select_flight_reset_records(rows,"apex")}=={"p"}
+    assert {r["id"] for r in select_flight_reset_records(rows,"ascent")}=={"a0","a1"}

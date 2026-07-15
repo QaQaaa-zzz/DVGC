@@ -50,6 +50,7 @@ END_TAKEOFF_POSITIVE_PITCH_FAILURE = 10
 END_TAKEOFF_WHEELIE_FAILURE = 11
 END_TAKEOFF_MISSED_LIFTOFF_DEADLINE = 12
 END_TAKEOFF_MISSED_WHEEL_CLEARANCE = 13
+END_CHAIN_ENTRY = 14
 
 END_REASON = {
     END_NONE: "horizon",
@@ -66,6 +67,7 @@ END_REASON = {
     END_TAKEOFF_WHEELIE_FAILURE: "takeoff_wheelie_failure",
     END_TAKEOFF_MISSED_LIFTOFF_DEADLINE: "takeoff_missed_liftoff_deadline",
     END_TAKEOFF_MISSED_WHEEL_CLEARANCE: "takeoff_missed_wheel_clearance_deadline",
+    END_CHAIN_ENTRY: "chain_entry",
 }
 
 RESET_SOURCE = {
@@ -675,6 +677,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "end/stage_timeout", "end/prelaunch_airborne",
             "end/takeoff_positive_pitch_failure", "end/takeoff_wheelie_failure",
             "end/takeoff_missed_liftoff_deadline", "end/takeoff_missed_wheel_clearance_deadline",
+            "end/chain_entry",
         )
         return {k: jp.zeros((), dtype=jp.float32) for k in keys}
 
@@ -1255,11 +1258,13 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         back_edge = (had_landing > 0) & (x >= cfg.step_back_x - cfg.platform_back_edge_diagnostic_margin)
         prelaunch_fail = prelaunch_airborne >= int(cfg.pretakeoff_airborne_fail_steps)
         hard_failure = contact["prohibited"] | invalid_fail | roll_bad | pitch_bad | backward | back_edge | prelaunch_fail | takeoff_task_failure
-        terminated = recovery | hard_failure
+        chain_terminal = jp.asarray(bool(cfg.expert_chain_termination)) & chain & (self._stage_name != "landing")
+        terminated = recovery | hard_failure | chain_terminal
         truncated = timeout & (~terminated)
         done = terminated | truncated
         code = jp.where(recovery, END_RECOVERY, END_NONE)
         code = jp.where(timeout & ~recovery, END_STAGE_TIMEOUT, code)
+        code = jp.where(chain_terminal & ~recovery, END_CHAIN_ENTRY, code)
         code = jp.where(takeoff_profile["missed_wheel_clearance_deadline"] & ~recovery, END_TAKEOFF_MISSED_WHEEL_CLEARANCE, code)
         code = jp.where(takeoff_profile["missed_liftoff_deadline"] & ~recovery, END_TAKEOFF_MISSED_LIFTOFF_DEADLINE, code)
         code = jp.where(takeoff_profile["wheelie_failure"] & ~recovery, END_TAKEOFF_WHEELIE_FAILURE, code)
@@ -1382,7 +1387,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         metrics.update({
             # ``reward`` is required by Brax EvalWrapper's static metric
             # contract; ``reward/total`` remains the DVGC diagnostic name.
-            "reward": reward, "success": recovery.astype(jp.float32), "reward/total": reward,
+            "reward": reward, "success": (recovery | chain_terminal).astype(jp.float32), "reward/total": reward,
             "reward/roll": reward_roll, "reward/pitch": reward_pitch,
             "reward/speed": jp.where(landing_reward_active,reward_forward,cfg.coeff_forward_speed * r_speed),
             "reward/recovery_shaping": reward_recovery_shape,
@@ -1495,6 +1500,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "end/takeoff_wheelie_failure": (code == END_TAKEOFF_WHEELIE_FAILURE).astype(jp.float32),
             "end/takeoff_missed_liftoff_deadline": (code == END_TAKEOFF_MISSED_LIFTOFF_DEADLINE).astype(jp.float32),
             "end/takeoff_missed_wheel_clearance_deadline": (code == END_TAKEOFF_MISSED_WHEEL_CLEARANCE).astype(jp.float32),
+            "end/chain_entry": (code == END_CHAIN_ENTRY).astype(jp.float32),
         })
         info = dict(state.info)
         frame = self._actor_frame(

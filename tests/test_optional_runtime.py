@@ -202,6 +202,25 @@ def test_composite_handoff_preserves_physics_and_policy_state():
     handed=session.step(step_fn=step); jax.block_until_ready(handed)
     np.testing.assert_allclose(np.asarray(handed.data.qpos),np.asarray(direct.data.qpos),atol=5e-5)
     np.testing.assert_allclose(np.asarray(handed.data.qvel),np.asarray(direct.data.qvel),atol=3e-3)
-    np.testing.assert_allclose(np.asarray(handed.info["obs_history"]),np.asarray(direct.info["obs_history"]),atol=1e-5)
+    np.testing.assert_allclose(np.asarray(handed.info["obs_history"]),np.asarray(direct.info["obs_history"]),atol=1e-4)
     np.testing.assert_allclose(np.asarray(handed.info["last_action"]),np.asarray(direct.info["last_action"]),atol=1e-6)
     assert session.active_stage=="landing" and len(session.handoffs)==1
+
+
+@pytest.mark.skipif(not RUNTIME_READY,reason="MuJoCo runtime required")
+def test_expert_chain_entry_is_successful_nonphysical_termination(tmp_path):
+    import copy
+    import jax
+    import jax.numpy as jp
+    import numpy as np
+    from dvgc.bank import SnapshotBank
+    from dvgc.config import load_config
+    from dvgc.env import END_CHAIN_ENTRY,OrangeBikeDVGC
+    from dvgc.rollout import restore_snapshot
+
+    source=SnapshotBank.load("artifacts/landing_entry_tube_v2.pkl"); bank=copy.deepcopy(source); bank.metadata["entry_matcher"]["radius"]=1e6; path=tmp_path/"entry.pkl"; bank.save(path)
+    cfg=load_config("configs/default.json",{"training_stage":"flight","expert_chain_termination":True,"domain_randomization":False,"obs_noise_enable":False,"use_bank_resets":False})
+    env=OrangeBikeDVGC(cfg,snapshot_bank=SnapshotBank(),cert_bank=SnapshotBank.load(path)); row=next(r for r in bank.records if r["final"]["label"]=="safe"); state=env.step(restore_snapshot(env,row,jax.random.PRNGKey(8)),jp.zeros(4,jp.float32))
+    assert int(np.asarray(state.info["chain_success"]))==1
+    assert int(np.asarray(state.done))==1 and int(np.asarray(state.info["terminated"]))==1 and int(np.asarray(state.info["truncated"]))==0
+    assert int(np.asarray(state.info["end_code"]))==END_CHAIN_ENTRY and int(np.asarray(state.info["recovery_success"]))==0

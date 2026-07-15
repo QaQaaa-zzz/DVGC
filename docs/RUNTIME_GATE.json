@@ -1,16 +1,16 @@
 {
-  "config_hash": "307f41a17c51e6efb997b23f523311e929fe5b37698a7d35bc9d23e97fbd28e9",
-  "elapsed_seconds": 75.59313416481018,
-  "finished_at": 1784119194.6826522,
+  "config_hash": "50e9d146c870276ac0e31eb4a45cc7718055c943edcc7356bdcd2e866ce64607",
+  "elapsed_seconds": 76.4323832988739,
+  "finished_at": 1784120320.923579,
   "gate_version": 4,
   "gates": {
     "expert_registry_composite_handoff": {
       "active_stage_after_handoff": "landing",
       "continuity_errors": {
-        "actor_obs": 0.0,
+        "actor_obs": 0.00016546249389648438,
         "last_action": 0.0,
-        "qpos": 0.0,
-        "qvel": 0.0
+        "qpos": 1.1368683772161603e-13,
+        "qvel": 1.9073486328125e-06
       },
       "continuity_tolerances": {
         "actor_obs": 0.02,
@@ -18,11 +18,11 @@
         "qpos": 5e-05,
         "qvel": 0.003
       },
-      "controller_stack_hash": "480f0bd5b20079db4621fd785fbf9957719e63e3026641faeccf5805ad151392",
+      "controller_stack_hash": "3153534009fb178bc6df43e1fb566b401bcedfc39468659e94d3045a0db76222",
       "handoffs": 1,
-      "landing_policy_hash_after": "7e38bf2abab17b6b5ca027791abdf212ac8f594b5c0370e3762de0aac172c83c",
-      "landing_policy_hash_before": "7e38bf2abab17b6b5ca027791abdf212ac8f594b5c0370e3762de0aac172c83c",
-      "registry_hash": "74cdaab34ca954544ba6a8f19320719c4afb4b345ad40f00b8b0c0ce967cd305",
+      "landing_policy_hash_after": "f8acba294febabdc1f45e05c7a5b34e0e8db79b3642e0972d6a5d7db9969d4de",
+      "landing_policy_hash_before": "f8acba294febabdc1f45e05c7a5b34e0e8db79b3642e0972d6a5d7db9969d4de",
+      "registry_hash": "5c7db664753dbaed35ab10d6bea618ff4b9ae7c455f70ca6a94cc5338ab61b75",
       "status": "PASS"
     },
     "model_load": {
@@ -55,6 +55,7 @@
         "diag/wheelie_detected",
         "done/code",
         "end/backward",
+        "end/chain_entry",
         "end/invalid_wheel_step_contact",
         "end/pitch_limit",
         "end/platform_back_edge_exit",
@@ -188,7 +189,7 @@
       "status": "PASS"
     },
     "policy_roundtrip_determinism": {
-      "bundle": "/home/qy/DVGC/runs/runtime_gate_stage_experts_20260715_1900/policy_bundle",
+      "bundle": "/home/qy/DVGC/runs/runtime_gate_stage_expert_final_20260715T2115/policy_bundle",
       "different_key_action_max_abs": 0.0,
       "status": "PASS"
     },
@@ -213,6 +214,8 @@
           "eval/avg_episode_length": 33.5,
           "eval/episode_end/backward": 0.0,
           "eval/episode_end/backward_std": 0.0,
+          "eval/episode_end/chain_entry": 0.0,
+          "eval/episode_end/chain_entry_std": 0.0,
           "eval/episode_end/invalid_wheel_step_contact": 0.0,
           "eval/episode_end/invalid_wheel_step_contact_std": 0.0,
           "eval/episode_end/pitch_limit": 0.0,
@@ -237,16 +240,16 @@
           "eval/episode_end/takeoff_positive_pitch_failure_std": 0.0,
           "eval/episode_end/takeoff_wheelie_failure": 1.0,
           "eval/episode_end/takeoff_wheelie_failure_std": 0.0,
-          "eval/episode_reward": 71.78302764892578,
-          "eval/episode_reward_std": 1.0500946044921875,
+          "eval/episode_reward": 71.92886352539062,
+          "eval/episode_reward_std": 1.0271797180175781,
           "eval/episode_success": 0.0,
           "eval/episode_success_std": 0.0,
           "eval/std_episode_length": 0.5,
           "training/entropy_loss": 0.00631681177765131,
-          "training/kl_mean": 16650.0703125,
-          "training/policy_loss": 0.1750287264585495,
-          "training/total_loss": 0.24456104636192322,
-          "training/v_loss": 0.06321550160646439
+          "training/kl_mean": 17230.904296875,
+          "training/policy_loss": 0.18378128111362457,
+          "training/total_loss": 0.25510916113853455,
+          "training/v_loss": 0.06501106172800064
         },
         "progress": [
           {
@@ -254,6 +257,8 @@
               "eval/avg_episode_length": 27.0,
               "eval/episode_end/backward": 0.0,
               "eval/episode_end/backward_std": 0.0,
+              "eval/episode_end/chain_entry": 0.0,
+              "eval/episode_end/chain_entry_std": 0.0,
               "eval/episode_end/invalid_wheel_step_contact": 0.0,
               "eval/episode_end/invalid_wheel_step_contact_std": 0.0,
               "eval/episode_end/pitch_limit": 0.0,
@@ -278,8 +283,8 @@
               "eval/episode_end/takeoff_positive_pitch_failure_std": 0.0,
               "eval/episode_end/takeoff_wheelie_failure": 0.0,
               "eval/episode_end/takeoff_wheelie_failure_std": 0.0,
-              "eval/episode_reward": 63.128089904785156,
-              "eval/episode_reward_std": 0.11988067626953125,
+              "eval/episode_reward": 63.18378448486328,
+              "eval/episode_reward_std": 0.17307281494140625,
               "eval/episode_success": 0.0,
               "eval/episode_success_std": 0.0,
               "eval/std_episode_length": 0.0
@@ -299,6 +304,8 @@
               "eval/avg_episode_length": 33.5,
               "eval/episode_end/backward": 0.0,
               "eval/episode_end/backward_std": 0.0,
+              "eval/episode_end/chain_entry": 0.0,
+              "eval/episode_end/chain_entry_std": 0.0,
               "eval/episode_end/invalid_wheel_step_contact": 0.0,
               "eval/episode_end/invalid_wheel_step_contact_std": 0.0,
               "eval/episode_end/pitch_limit": 0.0,
@@ -323,16 +330,16 @@
               "eval/episode_end/takeoff_positive_pitch_failure_std": 0.0,
               "eval/episode_end/takeoff_wheelie_failure": 1.0,
               "eval/episode_end/takeoff_wheelie_failure_std": 0.0,
-              "eval/episode_reward": 71.78302764892578,
-              "eval/episode_reward_std": 1.0500946044921875,
+              "eval/episode_reward": 71.92886352539062,
+              "eval/episode_reward_std": 1.0271797180175781,
               "eval/episode_success": 0.0,
               "eval/episode_success_std": 0.0,
               "eval/std_episode_length": 0.5,
               "training/entropy_loss": 0.00631681177765131,
-              "training/kl_mean": 16650.0703125,
-              "training/policy_loss": 0.1750287264585495,
-              "training/total_loss": 0.24456104636192322,
-              "training/v_loss": 0.06321550160646439
+              "training/kl_mean": 17230.904296875,
+              "training/policy_loss": 0.18378128111362457,
+              "training/total_loss": 0.25510916113853455,
+              "training/v_loss": 0.06501106172800064
             },
             "step": 64
           }
@@ -342,9 +349,11 @@
       "resume": {
         "effective_timesteps": 32,
         "final_metrics": {
-          "eval/avg_episode_length": 33.5,
+          "eval/avg_episode_length": 33.0,
           "eval/episode_end/backward": 0.0,
           "eval/episode_end/backward_std": 0.0,
+          "eval/episode_end/chain_entry": 0.0,
+          "eval/episode_end/chain_entry_std": 0.0,
           "eval/episode_end/invalid_wheel_step_contact": 0.0,
           "eval/episode_end/invalid_wheel_step_contact_std": 0.0,
           "eval/episode_end/pitch_limit": 0.0,
@@ -369,16 +378,16 @@
           "eval/episode_end/takeoff_positive_pitch_failure_std": 0.0,
           "eval/episode_end/takeoff_wheelie_failure": 1.0,
           "eval/episode_end/takeoff_wheelie_failure_std": 0.0,
-          "eval/episode_reward": 72.4315185546875,
-          "eval/episode_reward_std": 0.7667160034179688,
+          "eval/episode_reward": 70.48063659667969,
+          "eval/episode_reward_std": 0.12283706665039062,
           "eval/episode_success": 0.0,
           "eval/episode_success_std": 0.0,
-          "eval/std_episode_length": 0.5,
-          "training/entropy_loss": 0.006315229926258326,
-          "training/kl_mean": 4.5979395508766174e-05,
-          "training/policy_loss": -0.0006458554416894913,
-          "training/total_loss": 0.1037866473197937,
-          "training/v_loss": 0.09811726957559586
+          "eval/std_episode_length": 0.0,
+          "training/entropy_loss": 0.006315238308161497,
+          "training/kl_mean": 4.74490225315094e-05,
+          "training/policy_loss": -0.00027656368911266327,
+          "training/total_loss": 0.10477495938539505,
+          "training/v_loss": 0.09873628616333008
         },
         "progress": [
           {
@@ -386,6 +395,8 @@
               "eval/avg_episode_length": 33.0,
               "eval/episode_end/backward": 0.0,
               "eval/episode_end/backward_std": 0.0,
+              "eval/episode_end/chain_entry": 0.0,
+              "eval/episode_end/chain_entry_std": 0.0,
               "eval/episode_end/invalid_wheel_step_contact": 0.0,
               "eval/episode_end/invalid_wheel_step_contact_std": 0.0,
               "eval/episode_end/pitch_limit": 0.0,
@@ -410,11 +421,11 @@
               "eval/episode_end/takeoff_positive_pitch_failure_std": 0.0,
               "eval/episode_end/takeoff_wheelie_failure": 1.0,
               "eval/episode_end/takeoff_wheelie_failure_std": 0.0,
-              "eval/episode_reward": 70.59321594238281,
-              "eval/episode_reward_std": 0.1420745849609375,
+              "eval/episode_reward": 70.84477233886719,
+              "eval/episode_reward_std": 2.029804229736328,
               "eval/episode_success": 0.0,
               "eval/episode_success_std": 0.0,
-              "eval/std_episode_length": 0.0
+              "eval/std_episode_length": 1.0
             },
             "step": 0
           },
@@ -424,9 +435,11 @@
           },
           {
             "metrics": {
-              "eval/avg_episode_length": 33.5,
+              "eval/avg_episode_length": 33.0,
               "eval/episode_end/backward": 0.0,
               "eval/episode_end/backward_std": 0.0,
+              "eval/episode_end/chain_entry": 0.0,
+              "eval/episode_end/chain_entry_std": 0.0,
               "eval/episode_end/invalid_wheel_step_contact": 0.0,
               "eval/episode_end/invalid_wheel_step_contact_std": 0.0,
               "eval/episode_end/pitch_limit": 0.0,
@@ -451,16 +464,16 @@
               "eval/episode_end/takeoff_positive_pitch_failure_std": 0.0,
               "eval/episode_end/takeoff_wheelie_failure": 1.0,
               "eval/episode_end/takeoff_wheelie_failure_std": 0.0,
-              "eval/episode_reward": 72.4315185546875,
-              "eval/episode_reward_std": 0.7667160034179688,
+              "eval/episode_reward": 70.48063659667969,
+              "eval/episode_reward_std": 0.12283706665039062,
               "eval/episode_success": 0.0,
               "eval/episode_success_std": 0.0,
-              "eval/std_episode_length": 0.5,
-              "training/entropy_loss": 0.006315229926258326,
-              "training/kl_mean": 4.5979395508766174e-05,
-              "training/policy_loss": -0.0006458554416894913,
-              "training/total_loss": 0.1037866473197937,
-              "training/v_loss": 0.09811726957559586
+              "eval/std_episode_length": 0.0,
+              "training/entropy_loss": 0.006315238308161497,
+              "training/kl_mean": 4.74490225315094e-05,
+              "training/policy_loss": -0.00027656368911266327,
+              "training/total_loss": 0.10477495938539505,
+              "training/v_loss": 0.09873628616333008
             },
             "step": 32
           }
@@ -496,11 +509,11 @@
         "truncated": true
       },
       "step_max_abs": {
-        "actor_obs": 0.0,
-        "critic_obs": 0.0,
-        "qpos": 0.0,
-        "qvel": 0.0,
-        "reward": 0.0
+        "actor_obs": 0.00159454345703125,
+        "critic_obs": 0.0005893707275390625,
+        "qpos": 1.430511474609375e-06,
+        "qvel": 0.0005893707275390625,
+        "reward": 2.1457672119140625e-06
       },
       "step_tolerances": {
         "actor_obs": 0.02,
@@ -530,8 +543,8 @@
   ],
   "python": "/home/qy/mujoco_playground/.venv/bin/python",
   "python_version": "3.12.13",
-  "source_fingerprint": "a0ee8b776e3c9e5ac3565ec2df2f67f5344621dfbc1d5bb8d804a090447652bb",
-  "started_at": 1784119119.089518,
+  "source_fingerprint": "265fcec2967e0dc1ace1e84f6d0f378263db498d1495ddc251618def6d8cc07a",
+  "started_at": 1784120244.4911957,
   "status": "PASS",
   "xml_sha256": "d7e9f43ff8fb9e4571203f81062ce9c828acfa38692ee8c71a3e5daa15ce794c"
 }
