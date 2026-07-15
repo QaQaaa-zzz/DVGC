@@ -155,3 +155,23 @@
   repair now: no ratio/LR/budget adjustment, no pending-entry activation and
   no Flight curriculum continuation.  Await stage-expert plus final shared-
   policy direction.
+- Stage-expert Flight late-descent round 1 completed four 25,600-step blocks
+  (102400 cumulative) from the owned old-pilot clone.  Composite Final rose
+  6.875/8.750/11.875/15.000%, but fixed-C_L Chain remained zero throughout;
+  the final 24 recoveries are all Chain-missed Final.  Descent Final is
+  31.169%; ascent/apex remain zero.  Physical failure=85%, timeout=nonfinite=0;
+  frozen pi_L params remain `fa3a518...34bb7e`, C_L `a98a246...2d964` and
+  Flight bank `2d5d7de...f62934` were unchanged during the run.
+- Post-round support isolation: all 24 Final trajectories had valid contact;
+  frozen pi_L recovered 14, all unmatched by original C_L.  Independent seed
+  6700000 branch certification labels the 14 new proposals as 7 safe, 6
+  boundary, 1 unknown.  Together with the previously isolated independently
+  certified 13 safe proposals, immutable extended C_L
+  `landing-entry-0ef5a5913228` has 99 Final-safe / 110 records, hash
+  `185164d...2aa41`; matcher radius remains exactly 1.1067926888.
+- Zero-training evaluation of block-4 pi_F against the extended C_L gives
+  Chain=11.875%, composite Final=12.5%, Chain-missed Final=5.0%, physical
+  failure=87.5%, timeout=0.  This proves the learned descent support is
+  connectable after independently certified entry-envelope extension; next is
+  bridge/predecessor integration and one bounded curriculum recovery, without
+  changing matcher radius or downstream pi_L.

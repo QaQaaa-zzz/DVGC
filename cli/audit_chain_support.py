@@ -11,6 +11,12 @@ from dvgc.policy import load_bundle
 from dvgc.rollout import frozen_rollout,restore_snapshot
 from dvgc.runtime import build_inference
 
+def evaluation_rows(report):
+ rows=report.get('rows')
+ if rows is None and isinstance(report.get('composite'),dict): rows=report['composite'].get('rows')
+ if not isinstance(rows,list): raise ValueError('Evaluation report has no candidate rows')
+ return rows
+
 def main():
  p=argparse.ArgumentParser(description=__doc__); p.add_argument('--policy',action='append',required=True,help='label=policy_dir')
  p.add_argument('--evaluation',action='append',required=True,help='label=fixed_evaluation.json')
@@ -32,7 +38,7 @@ def main():
   safe_z=np.asarray(jax.device_get(env._safe_features)); center=np.asarray(jax.device_get(env._safe_center)); scale=np.asarray(jax.device_get(env._safe_scale))
   lcfg=load_config(overrides={**landing_cfg,'training_stage':'landing','domain_randomization':False,'obs_noise_enable':False,'use_bank_resets':False})
   lenv=OrangeBikeDVGC(lcfg,snapshot_bank=SnapshotBank()); linfer=build_inference(lenv,landing_params,deterministic=True); lstep=jax.jit(lenv.step)
-  selected_ids={r['candidate_id'] for r in json.loads(Path(evaluations[label]).read_text())['rows'] if r.get('final',r.get('final_recovery',False))}
+  selected_ids={r['candidate_id'] for r in evaluation_rows(json.loads(Path(evaluations[label]).read_text())) if r.get('final',r.get('final_recovery',False))}
   selected=[row for row in rows if row['id'] in selected_ids]
   if len(selected)!=len(selected_ids): raise SystemExit(f'{label}: evaluation candidate IDs do not match bank')
   successes=[]
