@@ -172,6 +172,8 @@
 - Zero-training evaluation of block-4 pi_F against the extended C_L gives
   Chain=11.875%, composite Final=12.5%, Chain-missed Final=5.0%, physical
   failure=87.5%, timeout=0.  This proves the learned descent support is
-  connectable after independently certified entry-envelope extension; next is
-  bridge/predecessor integration and one bounded curriculum recovery, without
-  changing matcher radius or downstream pi_L.
+  connectable after independently certified entry-envelope extension.  The
+  recovery marker passes the late-descent dual gate without further training;
+  the controller next enters full-descent, without changing matcher radius or
+  downstream pi_L.  Predecessor bridge resets remain conditional on a later
+  evidenced support gap rather than being added pre-emptively.

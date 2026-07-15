@@ -10,6 +10,7 @@ REGISTRY="${EXPERT_REGISTRY:-$ROOT/expert_registry_runtime_gate.json}"
 POLICY="$ROOT/pi_f_init"
 INITIAL_COMPOSITE="$ROOT/initial_composite_evaluation.json"
 LANDING_BASELINE="$ROOT/frozen_landing_baseline_fixed.json"
+ENTRY_RECOVERY_GATE="$ROOT/bridge_recovery/late_descent_gate.json"
 mkdir -p "$ROOT/logs"
 
 [[ -x "$PYTHON" && -f "$REGISTRY" && -d "$POLICY" ]] || { echo "Missing expert baseline inputs" >&2; exit 2; }
@@ -18,6 +19,14 @@ mkdir -p "$ROOT/logs"
 
 for curriculum in late_descent descent apex ascent full; do
   run="$ROOT/curriculum/$curriculum"; log="$ROOT/logs/$curriculum.log"
+  if [[ "$curriculum" == late_descent && -f "$ENTRY_RECOVERY_GATE" ]] &&
+     "$PYTHON" -c "import json; raise SystemExit(0 if json.load(open('$ENTRY_RECOVERY_GATE'))['status']=='PASS' else 1)"; then
+    POLICY=$($PYTHON -c "import json; print(json.load(open('$ENTRY_RECOVERY_GATE'))['policy'])")
+    REGISTRY=$($PYTHON -c "import json; print(json.load(open('$ENTRY_RECOVERY_GATE'))['registry'])")
+    ENTRY=$($PYTHON -c "import json; print(json.load(open('$ENTRY_RECOVERY_GATE'))['entry_set'])")
+    echo "[expert-pipeline] skip recovered late_descent policy=$POLICY"
+    continue
+  fi
   if [[ -f "$run/training_metrics.json" ]] && "$PYTHON" -c "import json; raise SystemExit(0 if json.load(open('$run/training_metrics.json'))['status']=='gate_pass' else 1)"; then
     echo "[expert-pipeline] skip passed $curriculum"
   else
