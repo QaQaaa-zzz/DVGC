@@ -1,8 +1,8 @@
 # DVGC Experiment State
 
-- Current HEAD lineage: controller `af5ed79`; terrain-clearance Flight repair
-  `6f32933`. Flight is paused at its third candidate gate before PPO.
-- Runtime gate: PASS/current; config `9711096...dae7c`; XML
+- Current HEAD lineage: controller `af5ed79`; terrain-clearance repair
+  `6f32933`; constrained Flight diversification `1256728`.
+- Runtime gate: PASS/current; config `05993a9...a91b9`; XML
   `d7e9f43...ce794c`.
 - Landing policy: `landing-20260714-190401`, params `fa3a518b...34bb7e`.
 - Landing candidates: `9784649...099505`; 96/96 eligible, 0 duplicates,
@@ -13,21 +13,29 @@
   failure=12.83%, timeout=horizon=0; precision/recall/coverage=98.73/96.30/
   82.29%, Brier=0.00888, ECE=0.06843. PASS; one held-out false-safe retained.
 - Confirmed fixes: `9caaf23` chunked audit, `3421c47` bounded Warp replay gate.
-- Flight geometry-v1 partial bank: `c00504b...93cda`; 83/160 finite/eligible.
-  It uses authoritative-XML geom distance/contact forward, minimal root-z-only
-  correction, unchanged pose/velocity/joints, and a 25-step pre-insert rollout.
-  Correction min/p50/p95/max = 0/0.01236/0.15800/0.19023 m.
-- Third-round build evidence: 900 proposals, 83 unique accepted; seed 0/1
-  proposals covered 197/201 reference indices, so even accepting every unseen
-  index caps the bank at 87. Rejections: pitch 289, roll 168, correction above
-  0.20 m 47. Accepted ascent/apex/descent = 22/19/42; proposal acceptance =
-  6.65/17.27/9.15%, with the largest deficit in ascent.
-- Full partial-bank audit: expected-count FAIL only. All 83 are finite,
-  eligible and Flight-semantic; robot-terrain contact=0, deep penetration=0,
-  25-step physical failure=timeout=nonfinite=0; subinterval coverage and all
-  provenance flags pass. Decision report:
-  `runs/flight/pipeline_seed0_v4/candidate_decision.json`.
-- Pause reason: the authorized third geometry/candidate repair cannot construct
-  160 states from the unmodified 201-row reference under the required envelope,
-  collision and short-rollout constraints. No PPO started. A next step would
-  require a research choice about target size or permitted proposal diversity.
+- Flight augmented bank: `2d5d7de...f62934`; 83 fixed reference anchors plus
+  77 constrained local candidates. Automatic ascent/apex/descent quotas and
+  counts are 63/20/77. Build used 178/3000 proposals, 58 unique parents,
+  maximum two children/parent; normalized NN min/p50/p95/max =
+  0.1546/0.2807/1.3375/3.5079 at threshold 0.15. Rejections: joint range 74,
+  normalized duplicate 26, pitch 1.
+- Candidate gate: PASS. Overall and anchor/augmented grouped audits have
+  contact=deep penetration=25-step physical failure=timeout=nonfinite=0;
+  all 160 are finite/eligible/Flight-semantic and provenance-current.
+  Anchor correction min/p50/p95/max=0/0.01236/0.15800/0.19023 m; augmented=
+  0/0/0.00256/0.03318 m.
+- Flight pilot: `runs/flight/pipeline_seed0_v5/pilot`, policy
+  `flight-20260715-124908`, seed 0, 102400 effective steps. Healthy runtime,
+  no NaN/OOM/compile restart; throughput 7.5k--11.3k SPS after compile.
+  Fixed evaluation: Final=7.5%, Chain=0, physical failure=92.5%, timeout=0;
+  pitch/roll/recovery=101/47/12. Anchor Final=6.02%, augmented=9.09%.
+  Ascent/apex Final=0 in both groups; descent=15.58% overall.
+- Frozen Landing-policy baseline on the same bank: Final=1.875%, Chain=0,
+  physical failure=98.125%, timeout=0. Pilot improves Final fourfold and mean
+  steps 20.82->25.30, but evaluation oscillates at 3.1--11.7% and misses the
+  50% pilot gate. Value loss converged to 0.137, KL to 0.0131, policy std
+  remained 0.0502; reset mix is 90% candidates/10% downstream rehearsal.
+- Pause reason: candidate support is valid, but the first healthy Flight pilot
+  does not establish ascent/apex learning. Choosing between a longer same-reset
+  continuation and an intra-Flight backward reset curriculum affects the core
+  training interpretation; no formal PPO/certification was started.
