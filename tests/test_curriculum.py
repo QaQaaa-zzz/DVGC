@@ -29,3 +29,8 @@ def test_stage_expert_schedule_has_explicit_apex_and_ascent_support():
     rows=_rows()
     assert {r["id"] for r in select_flight_reset_records(rows,"apex")}=={"p"}
     assert {r["id"] for r in select_flight_reset_records(rows,"ascent")}=={"a0","a1"}
+
+
+def test_apex_bridge_pairs_apex_with_nearest_early_descent():
+    rows = _rows()
+    assert [r["id"] for r in select_flight_reset_records(rows, "apex_bridge")] == ["p", "d3"]

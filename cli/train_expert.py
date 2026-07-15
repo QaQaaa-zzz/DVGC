@@ -58,7 +58,7 @@ def main():
         report=evaluate_flight_composite(current,cfg.to_dict(),landing_params,records,a.entry_set,seed=8300000+index*1000,controller_stack_hash=block_registry.specs["flight"].controller_stack_hash); drift=action_drift(current,params,cfg.to_dict(),training_records,8400000+index*1000); landing_hash_after=file_sha256(Path(landing_spec.checkpoint_path)/"params.pkl")
         nonfinite_metrics=[k for row in rows for k,v in row.items() if k!="step" and isinstance(v,float) and not math.isfinite(v)]
         improved=report["composite_final_rate"]>best_final; best_final=max(best_final,report["composite_final_rate"]); stagnant=stagnant+1 if report["chain_rate"]==0 and not improved else 0
-        target="descent" if a.curriculum in ("late_descent","descent") else a.curriculum
+        target="descent" if a.curriculum in ("late_descent","descent") else "apex" if a.curriculum=="apex_bridge" else a.curriculum
         if target=="full": target_before={"chain_rate":baseline["chain_rate"],"composite_final_rate":baseline["composite_final_rate"]}; target_after={"chain_rate":report["chain_rate"],"composite_final_rate":report["composite_final_rate"]}
         else: target_before=baseline["subintervals"][target]; target_after=report["subintervals"][target]
         target_improved=target_after["chain_rate"]>target_before["chain_rate"] or target_after["composite_final_rate"]>target_before["composite_final_rate"]

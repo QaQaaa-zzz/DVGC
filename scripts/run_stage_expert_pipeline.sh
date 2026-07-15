@@ -11,6 +11,7 @@ POLICY="$ROOT/pi_f_init"
 INITIAL_COMPOSITE="$ROOT/initial_composite_evaluation.json"
 LANDING_BASELINE="$ROOT/frozen_landing_baseline_fixed.json"
 ENTRY_RECOVERY_GATE="${ENTRY_RECOVERY_GATE:-$ROOT/bridge_recovery/late_descent_gate_runtime_current.json}"
+APEX_BRIDGE_REGISTRY="${APEX_BRIDGE_REGISTRY:-$ROOT/bridge_recovery/descent_registry_apex_bridge.json}"
 EXPERT_LR="${EXPERT_LEARNING_RATE:-0.0001}"
 mkdir -p "$ROOT/logs"
 
@@ -26,6 +27,24 @@ for curriculum in late_descent descent apex ascent full; do
     REGISTRY=$($PYTHON -c "import json; print(json.load(open('$ENTRY_RECOVERY_GATE'))['registry'])")
     ENTRY=$($PYTHON -c "import json; print(json.load(open('$ENTRY_RECOVERY_GATE'))['entry_set'])")
     echo "[expert-pipeline] skip recovered late_descent policy=$POLICY"
+    continue
+  fi
+  if [[ "$curriculum" == apex && -f "$run/training_metrics.json" ]] &&
+     "$PYTHON" -c "import json; raise SystemExit(0 if json.load(open('$run/training_metrics.json'))['status']=='gate_stop' else 1)"; then
+    recovery="$ROOT/curriculum/apex_bridge"; recovery_log="$ROOT/logs/apex_bridge.log"
+    [[ -f "$APEX_BRIDGE_REGISTRY" ]] && REGISTRY="$APEX_BRIDGE_REGISTRY"
+    if [[ ! -e "$recovery" ]]; then
+      [[ ! -e "$recovery_log" ]] || { echo "Existing apex bridge log blocks recovery" >&2; exit 3; }
+      echo "[expert-pipeline] start apex_bridge"
+      set +e
+      "$PYTHON" -u -m cli.train_expert --stage flight --curriculum apex_bridge --bank "$BANK" --entry-set "$ENTRY" --registry "$REGISTRY" --resume "$POLICY" --run "$recovery" --config "$CFG" --seed 0 --learning-rate "$EXPERT_LR" >"$recovery_log" 2>&1
+      status=$?
+      set -e
+      if (( status != 0 )); then echo "[expert-pipeline] FAIL apex_bridge exit=$status" >&2; tail -n 40 "$recovery_log" >&2; exit "$status"; fi
+    fi
+    passed_report=$($PYTHON -c "import json,pathlib; xs=[p for p in pathlib.Path('$recovery/blocks').glob('block_*/report.json') if json.load(open(p))['status']=='PASS']; assert len(xs)==1; print(xs[0])")
+    block_dir="$(dirname "$passed_report")"; POLICY="$block_dir/policy"; REGISTRY="$block_dir/expert_registry.json"
+    echo "[expert-pipeline] passed apex_bridge policy=$POLICY"
     continue
   fi
   if [[ -f "$run/training_metrics.json" ]] && "$PYTHON" -c "import json; raise SystemExit(0 if json.load(open('$run/training_metrics.json'))['status']=='gate_pass' else 1)"; then
