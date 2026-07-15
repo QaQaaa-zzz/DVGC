@@ -8,7 +8,7 @@ set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 PYTHON="${PYTHON:-/home/qy/mujoco_playground/.venv/bin/python}"
 CFG="${CFG:-configs/default.json}"
-REVISION="${PIPELINE_REVISION:-v5}"
+REVISION="${PIPELINE_REVISION:-v6}"
 STATE_ROOT="runs/remaining_pipeline/${REVISION}"
 MARKER_ROOT="${STATE_ROOT}/markers"
 LOG_ROOT="${STATE_ROOT}/logs"
@@ -50,6 +50,15 @@ run_step() {
     echo "[pipeline] skip $step"
     return 0
   fi
+  if [[ "${RUN_STEP_ADOPT_EXISTING:-0}" == 1 ]]; then
+    local complete=1
+    for value in "${outputs[@]}"; do [[ -e "$value" ]] || complete=0; done
+    if (( complete )); then
+      "$PYTHON" -m cli.pipeline_marker record "${marker_args[@]}" --exit-status 0 >/dev/null
+      echo "[pipeline] adopt validated existing $step"
+      return 0
+    fi
+  fi
   for value in "${outputs[@]}"; do
     if [[ -e "$value" && "${RUN_STEP_ALLOW_EXISTING:-0}" != 1 ]]; then echo "[pipeline] stale/unmarked output blocks $step: $value" >&2; return 3; fi
   done
@@ -66,6 +75,26 @@ run_step() {
     return "$status"
   fi
   echo "[pipeline] complete $step"
+}
+
+run_flight_curriculum() {
+  local candidates="$1" downstream="$2" start_policy="$3"
+  local root="runs/flight/pipeline_seed0_${REVISION}/curriculum" resume="$start_policy"
+  local landing_reference="runs/landing/refinement_seed0/fixed_candidate_evaluation.json"
+  local -a stages=(late_descent descent apex_descent full)
+  local -a chain_lcb=(0.01 0.03 0.05 0.10)
+  local -a final_gate=(0.05 0.10 0.15 0.25)
+  local i stage run
+  for i in "${!stages[@]}"; do
+    stage="${stages[$i]}"; run="$root/$stage"
+    run_step "flight_curriculum_${stage}" "$stage:100000:0" "$(join_by_semicolon "$candidates" "$downstream" "$resume")" "$(join_by_semicolon "$run/training_metrics.json" "$run/policy")" "$PYTHON" -u -m cli.train --stage flight --flight-reset-stage "$stage" --bank "$candidates" --downstream-bank "$downstream" --config "$CFG" --run "$run" --resume "$resume" --timesteps 100000 --seed 0 --num-envs "$NUM_ENVS" --num-eval-envs "$NUM_EVAL_ENVS" --batch-size "$BATCH_SIZE" --num-minibatches "$NUM_MINIBATCHES" --learning-rate "${FLIGHT_LEARNING_RATE:-0.0001}"
+    run_step "flight_curriculum_${stage}_analysis" "$stage" "$(join_by_semicolon "$run/training_metrics.json" "$LOG_ROOT/flight_curriculum_${stage}.log")" "$run/analysis.json" "$PYTHON" -m cli.analyze_training --run "$run" --console-log "$LOG_ROOT/flight_curriculum_${stage}.log"
+    run_step "flight_curriculum_${stage}_eval" "$stage:160:2100000" "$(join_by_semicolon "$run/policy" "$candidates" "$downstream")" "$run/fixed_candidate_evaluation.json" "$PYTHON" -u -m cli.evaluate --stage flight --policy "$run/policy" --bank "$candidates" --downstream-bank "$downstream" --episodes 160 --seed 2100000 --output "$run/fixed_candidate_evaluation.json"
+    run_step "flight_curriculum_${stage}_landing_retention" "$stage:96:2150000" "$(join_by_semicolon "$run/policy" artifacts/landing_candidates.pkl)" "$run/landing_retention.json" "$PYTHON" -u -m cli.evaluate --stage landing --policy "$run/policy" --bank artifacts/landing_candidates.pkl --episodes 96 --seed 2150000 --output "$run/landing_retention.json"
+    run_step "flight_curriculum_${stage}_gate" "$stage:${chain_lcb[$i]}:${final_gate[$i]}" "$(join_by_semicolon "$run/fixed_candidate_evaluation.json" "$run/landing_retention.json" "$landing_reference" "$run/analysis.json")" "$run/decision.json" "$PYTHON" -m cli.pipeline_gate curriculum --evaluation "$run/fixed_candidate_evaluation.json" --landing-retention "$run/landing_retention.json" --landing-reference "$landing_reference" --minimum-chain-lcb "${chain_lcb[$i]}" --minimum-final "${final_gate[$i]}" --output "$run/decision.json"
+    resume="$run/policy"
+  done
+  FLIGHT_CURRICULUM_POLICY="$resume"
 }
 
 certify_chunked() {
@@ -199,9 +228,18 @@ run_stage() {
 
 LANDING_POLICY="runs/landing/refinement_seed0/policy"
 LANDING_TUBE="artifacts/landing_tube.pkl"
-[[ -d "$LANDING_POLICY" && -f "$LANDING_TUBE" ]] || { echo "Frozen Landing inputs are missing" >&2; exit 2; }
+LANDING_ENTRY_TUBE="${LANDING_ENTRY_TUBE:-artifacts/landing_entry_tube_v2.pkl}"
+HANDOFF_ROOT="${HANDOFF_ROOT:-runs/flight/handoff_v3}"
+[[ -d "$LANDING_POLICY" && -f "$LANDING_TUBE" && -f "$LANDING_ENTRY_TUBE" ]] || { echo "Frozen Landing or canonical entry inputs are missing" >&2; exit 2; }
 
-run_stage flight 160 720000 480000 "$LANDING_TUBE" "$LANDING_POLICY"
+run_step flight_handoff_gate "entry-v2:0.95" "$(join_by_semicolon "$HANDOFF_ROOT/landing_policy.json" "$HANDOFF_ROOT/flight_pilot_policy.json" "${LANDING_ENTRY_TUBE%.pkl}.calibration.json")" "$STATE_ROOT/flight_handoff_gate.json" "$PYTHON" -m cli.pipeline_gate handoff --landing-diagnostic "$HANDOFF_ROOT/landing_policy.json" --flight-diagnostic "$HANDOFF_ROOT/flight_pilot_policy.json" --entry-calibration "${LANDING_ENTRY_TUBE%.pkl}.calibration.json" --minimum-precision 0.95 --output "$STATE_ROOT/flight_handoff_gate.json"
+
+# Chain reachability is the primary curriculum-start criterion.  The frozen
+# Landing policy reaches C_L (1/160) while the old Flight pilot reaches none.
+FLIGHT_CURRICULUM_POLICY=""
+run_flight_curriculum artifacts/flight_candidates_augmented_v1.pkl "$LANDING_ENTRY_TUBE" "$LANDING_POLICY"
+
+RUN_STEP_ADOPT_EXISTING=1 run_stage flight 160 720000 480000 "$LANDING_ENTRY_TUBE" "$FLIGHT_CURRICULUM_POLICY"
 run_stage takeoff 180 900000 600000 artifacts/flight_tube.pkl "runs/flight/pipeline_seed0_${REVISION}/refinement/policy"
 run_stage approach 160 1080000 720000 artifacts/takeoff_tube.pkl "runs/takeoff/pipeline_seed0_${REVISION}/refinement/policy"
 

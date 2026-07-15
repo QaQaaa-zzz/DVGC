@@ -1,8 +1,8 @@
 # DVGC Experiment State
 
-- Current HEAD: `6d056c7`; worktree contains the validated Landing-entry
-  handoff repair pending runtime-gate commit.
-- Runtime gate: PASS/current; source `dba2a94...a9b47`, config
+- Current HEAD: handoff repair `a0ca3c2`; Flight curriculum controller is
+  validated and pending commit.
+- Runtime gate: PASS/current; source `4680996...a1b6e`, config
   `307f41a...d28e9`, XML `d7e9f43...ce794c`; authoritative action mapping is
   unchanged.
 - Landing policy: `landing-20260714-190401`, params `fa3a518b...34bb7e`.
@@ -48,6 +48,9 @@
   have valid landing.  Existing Flight pilot has Chain/Final=0/12, so its
   learned trajectory does not reach `C_L`; this is no longer a missing event
   or reward signal.
-- Current step: add resumable Flight late-descent -> descent -> apex+descent ->
-  full-reset curriculum, run full runtime gate, then start the first curriculum
-  segment.  No additional PPO was started during handoff repair.
+- Current step: resumable Flight late-descent -> descent -> apex+descent ->
+  full-reset curriculum is implemented.  Every 100k segment evaluates all 160
+  Flight candidates plus Landing retention and unlocks by Chain 95% LCB and
+  Final rate.  Full runtime gate passes; next automatic step is late-descent
+  training from the frozen Landing policy.  No additional PPO was started
+  during handoff repair.

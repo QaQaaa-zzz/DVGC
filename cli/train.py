@@ -5,6 +5,7 @@ from pathlib import Path
 import jax
 from dvgc.bank import SnapshotBank
 from dvgc.config import file_sha256, load_config, save_config
+from dvgc.curriculum import FLIGHT_RESET_STAGES, select_flight_reset_records
 from dvgc.env import OrangeBikeDVGC
 from dvgc.policy import load_bundle, save_bundle
 from dvgc.runtime import make_ppo_train_fn, ppo_effective_timesteps, save_json, validate_ppo_batch_layout
@@ -34,6 +35,7 @@ def main():
     p.add_argument("--num-minibatches", type=int, default=4)
     p.add_argument("--learning-rate", type=float, default=1e-4)
     p.add_argument("--entropy-cost", type=float, default=None)
+    p.add_argument("--flight-reset-stage", choices=FLIGHT_RESET_STAGES, default="full")
     a=p.parse_args()
     run=Path(a.run)
     if run.exists(): raise SystemExit(f"Run directory already exists: {run}")
@@ -74,11 +76,17 @@ def main():
     # Rehearse the already certified downstream phase while extending the same
     # shared Actor backward.  These copies are training-only and can never be
     # certified as current-stage states.
-    train_records=[copy.deepcopy(r) for r in bank.records]
+    current_records=bank.records
+    if a.stage=="flight":
+        current_records=select_flight_reset_records(bank.records_for_phase("flight",include_training_only=False),a.flight_reset_stage)
+    elif a.flight_reset_stage!="full":
+        raise SystemExit("--flight-reset-stage is only valid for Flight")
+    train_records=[copy.deepcopy(r) for r in current_records]
     if a.downstream_bank:
         for row in downstream.records:
             if row["final"]["label"] in ("safe","boundary") and not row.get("training_only",False):
                 rehearsal=copy.deepcopy(row); rehearsal["source_phase"]=a.stage; rehearsal["training_only"]=True; rehearsal["candidate_kind"]="downstream_rehearsal"; train_records.append(rehearsal)
+    reset_protocol.update({"flight_reset_stage":a.flight_reset_stage if a.stage=="flight" else None,"current_stage_reset_records":len(current_records),"full_candidate_records":len(bank.records_for_phase(a.stage,include_training_only=False)) if a.stage!="full" else 0})
     training_bank=SnapshotBank(train_records,bank.metadata)
     env=OrangeBikeDVGC(cfg,snapshot_bank=training_bank,cert_bank=downstream)
     eval_cfg=load_config(a.config,{"training_stage":a.stage,"domain_randomization":False,"obs_noise_enable":False})

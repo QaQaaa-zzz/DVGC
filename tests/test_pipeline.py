@@ -6,7 +6,7 @@ import numpy as np
 from dvgc.bank import SnapshotBank
 from dvgc.certification import branch_evidence, branch_seed, summarize_branches
 from dvgc.certification_merge import merge_certification_parts
-from dvgc.pipeline import marker_is_current, training_decision, write_marker
+from dvgc.pipeline import curriculum_decision, marker_is_current, training_decision, write_marker
 
 
 def _record(index):
@@ -64,3 +64,12 @@ def test_training_gate_rejects_runtime_failure_and_policy_regression():
     decision=training_decision(analysis,evaluation,minimum_final=.5,maximum_timeout=.05,reference_evaluation=reference,maximum_final_drop=.05)
     assert decision["status"]=="FAIL"
     assert "regressed" in decision["reasons"][0]
+
+
+def test_curriculum_gate_uses_chain_lcb_and_landing_retention():
+    evaluation={"episodes":160,"chain_rate":.20,"final_recovery_rate":.30}
+    landing={"final_recovery_rate":.85}; reference={"final_recovery_rate":.87}
+    decision=curriculum_decision(evaluation,landing,reference,minimum_chain_lcb=.10,minimum_final=.25)
+    assert decision["status"]=="PASS" and decision["chain_lcb_95"]>.10
+    decision=curriculum_decision(evaluation,{"final_recovery_rate":.70},reference,minimum_chain_lcb=.10,minimum_final=.25)
+    assert decision["status"]=="FAIL" and "retention" in decision["reasons"][0]

@@ -145,6 +145,34 @@ def training_decision(
     }
 
 
+def curriculum_decision(
+    evaluation: Mapping[str, Any],
+    landing_retention: Mapping[str, Any],
+    landing_reference: Mapping[str, Any],
+    *,
+    minimum_chain_lcb: float,
+    minimum_final: float,
+    maximum_landing_drop: float = 0.05,
+) -> dict[str, Any]:
+    episodes=int(evaluation.get("episodes",0)); chain=float(evaluation.get("chain_rate",float("nan")))
+    final=float(evaluation.get("final_recovery_rate",float("nan")))
+    successes=round(chain*episodes)
+    if episodes:
+        z=1.959963984540054
+        center=(chain+z*z/(2*episodes))/(1+z*z/episodes)
+        radius=z*math.sqrt(chain*(1-chain)/episodes+z*z/(4*episodes*episodes))/(1+z*z/episodes)
+        chain_lcb=max(0.0,center-radius)
+    else: chain_lcb=float("nan")
+    landing=float(landing_retention.get("final_recovery_rate",float("nan")))
+    landing_base=float(landing_reference.get("final_recovery_rate",float("nan")))
+    reasons=[]
+    if not all(math.isfinite(x) for x in (chain_lcb,final,landing,landing_base)): reasons.append("nonfinite curriculum outcome")
+    if chain_lcb<float(minimum_chain_lcb): reasons.append("Chain LCB below unlock gate")
+    if final<float(minimum_final): reasons.append("Final-Recovery below unlock gate")
+    if landing<landing_base-float(maximum_landing_drop): reasons.append("Landing retention regressed")
+    return {"status":"PASS" if not reasons else "FAIL","episodes":episodes,"chain_successes":successes,"chain_rate":chain,"chain_lcb_95":chain_lcb,"minimum_chain_lcb":float(minimum_chain_lcb),"final_recovery_rate":final,"minimum_final":float(minimum_final),"landing_retention":landing,"landing_reference":landing_base,"maximum_landing_drop":float(maximum_landing_drop),"reasons":reasons}
+
+
 def certification_decision(report: Mapping[str, Any], phase: str, minimum_safe: int) -> dict[str, Any]:
     summary = report["summary"][phase]
     terminal = report["terminal_summary"]
