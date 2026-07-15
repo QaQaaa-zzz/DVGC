@@ -9,10 +9,10 @@
   downstream controller-stack hashes.  Current policies are stateless MLPs;
   deployable observation history and last action remain in the uninterrupted
   environment PolicyState across handoff.
-- Runtime gate v4: PASS/current; source `265fcec...cc07a`, config
+- Runtime gate v4: PASS/current; source `7ad49c7...58ca0`, config
   `50e9d14...64607`, XML `d7e9f43...ce794c`.  Composite handoff continuity
-  errors qpos/qvel/actor-observation/last-action are all exactly zero; frozen
-  downstream policy hash is unchanged.  Full suite: 60 passed.
+  continuity errors remain within declared tolerances; frozen downstream
+  policy hash is unchanged.  Full suite: 60 passed plus targeted bridge tests.
 - Immutable expert baseline root:
   `runs/stage_experts/flight_seed0_20260715T2045`.  Owned π_F initialization
   params `35fcb61...7000c` is a non-overwriting clone of
@@ -29,9 +29,11 @@
   Chain-missed Final, subintervals, physical/timeout causes, PPO reset and
   transition shares, π_F action drift, controller stack and immutable π_L/C_L
   hashes.  Full suite: 60 passed; runtime gate includes the new protocol.
-- Current validated source commits: immutable composite stack `4cb2d97` and
-  Flight expert protocol `06ec637`.  The only pending tracked change selects
-  the corrected 96-state Landing baseline filename in the expert controller.
+- Current validated source commits: immutable composite stack `4cb2d97`,
+  Flight expert protocol `06ec637`, route/protocol state `a30cf98`, nested
+  support audit `7859e1f`, entry recovery `397027d`, continuation provenance
+  `ba75bd0`, current-registry selection `f6dfd51`, and bounded apex bridge
+  `9a2516a`.
 - Pretraining composite baseline on the fixed 160 Flight bank: Chain=0,
   composite Final=7.5%, Chain-missed Final=7.5%, physical failure=92.5%,
   timeout=0; pitch/roll/recovery=101/47/12.  This exactly reproduces the old
@@ -177,3 +179,22 @@
   the controller next enters full-descent, without changing matcher radius or
   downstream pi_L.  Predecessor bridge resets remain conditional on a later
   evidenced support gap rather than being added pre-emptively.
+- Full-descent passed at block 2 (51200 cumulative): full-bank Chain/Final =
+  10.0/13.125%, descent Chain/Final = 20.779/27.273%, physical failure
+  86.875%, timeout=nonfinite=0.  Frozen pi_L and extended C_L hashes remained
+  unchanged.
+- Apex round 1 exhausted 102400 steps with apex Chain=Final=0 in all four
+  blocks and 100% apex physical failure.  The single authorized bounded repair
+  used a deterministic 40-state bridge layer (20 apex + 20 nearest early-
+  descent candidates), fixed LR/PPO budget/reward/matcher, and restarted from
+  the last passed descent checkpoint.  It also exhausted 102400 steps: final
+  full-bank Chain/Final=3.125/14.375%, while apex remained 0/0 and 100%
+  physical failure.  No timeout, nonfinite or provenance error occurred.
+- Paused at the second evidenced apex gate failure; ascent was not started.
+  No-training trace seed 6900000 shows all 20 apex trajectories terminate
+  before valid contact (pitch 18, roll 2) at 16--22 steps.  Their minimum
+  distance to C_L radius 1.10679 is min/p50/p95/max =
+  4.463/6.145/7.080/7.111, so Chain reward credit is exactly zero.  Bridge
+  block-4 action drift L2 mean/p95/max = 0.01053/0.01260/0.01917 and KL =
+  0.02325/0.03240/0.07601.  The evidence indicates a real apex-to-descent
+  dynamical support gap under the fixed method, not matcher or timeout failure.
