@@ -56,7 +56,18 @@
 - Start-policy comparison now includes retention: frozen Landing has
   Flight Chain/Final=1/3 and Landing retention=89.58%; old Flight pilot has
   0/12 and retention=87.50%.  The pilot wins combined fixed Chain+Final while
-  satisfying retention, so v7 selects it by evidence.  Repair round uses
-  learning rate 1e-5 and 30% canonical Landing-entry rehearsal; next automatic
-  step is a fresh v7 late-descent 100k segment.  A second failure of the same
-  unlock gate will pause rather than add steps.
+  satisfying retention, so v7 selected it by evidence.  Its repair round used
+  learning rate 1e-5 and 30% canonical Landing-entry rehearsal.
+- Curriculum v7 late-descent completed 102400 effective steps from the old
+  Flight pilot with LR=1e-5 and 30% canonical-entry rehearsal.  Runtime was
+  healthy (NaN/OOM/compile restart=0), KL stayed 0.00063--0.00314 and value
+  loss fell 4.10->0.258.  Fixed Flight: Chain=0, Final=13.125%, physical
+  failure=86.875%, timeout=0; anchor/augmented Final=12.05/14.29%; termination
+  pitch/roll/recovery=99/40/21.  Landing retention=61.458% versus 89.583%
+  reference, so the same late-descent unlock gate failed again.
+- PAUSED after two evidence-based attempts at the same gate.  Root cause now
+  points to conflating the narrow canonical entry bank used for Chain matching
+  with the rehearsal bank: 30% rehearsal preserves only `C_L`, not the full
+  certified Landing envelope.  The next bounded repair should add a separate
+  full Landing Tube rehearsal input while keeping `C_L` fixed for Chain; do not
+  add PPO steps or widen the entry matcher before that distinction is reviewed.
