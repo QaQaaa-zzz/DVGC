@@ -232,7 +232,10 @@ def main():
             if step: pending_params[int(step)]=params
         def after_progress(step):
             if not step: return
-            if step not in pending_params: raise BoundedStop(f"Missing deferred policy params at step {step}")
+            # Brax's training logger publishes episode metrics from inside the
+            # epoch before policy_params_fn runs.  The evaluator publishes a
+            # second progress event at the same step after params are ready.
+            if step not in pending_params: return
             process_block(step,pending_params.pop(step))
     else:
         block_callback=lambda *_:None

@@ -353,6 +353,11 @@ def make_ppo_train_fn(
 ) -> Callable[..., Tuple[Any, Any, Any]]:
     """Return a Brax PPO training callable with normalized observations."""
     _, ppo_train, wrapper = require_training_stack()
+    if full_reset:
+        from .wrappers import wrap_for_training
+        wrap_env_fn=wrap_for_training
+    else:
+        wrap_env_fn=wrapper.wrap_for_brax_training
     kwargs: Dict[str, Any] = dict(
         num_timesteps=int(timesteps),
         num_evals=int(num_evals),
@@ -378,9 +383,7 @@ def make_ppo_train_fn(
         network_factory=build_network_factory(),
         seed=int(seed),
         save_checkpoint_path=str(Path(checkpoint_dir).expanduser().resolve()),
-        wrap_env_fn=functools.partial(
-            wrapper.wrap_for_brax_training, full_reset=bool(full_reset)
-        ),
+        wrap_env_fn=wrap_env_fn,
         policy_params_fn=(policy_params_fn if policy_params_fn is not None else (lambda *_: None)),
     )
     signature = inspect.signature(ppo_train)

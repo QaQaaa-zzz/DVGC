@@ -1,8 +1,9 @@
 # DVGC Experiment State
 
 - Current HEAD: retention repair `3d2cc6a`, bounded controller `b2189df`,
-  full-reset correction `f4de96d`; deferred-gate correction pending commit.
-- Runtime gate: PASS/current; source `740347a...62836b`, config
+  full-reset correction `f4de96d`, deferred gate `861c20f`; metric-preserving
+  full-reset correction pending commit.
+- Runtime gate: PASS/current; source `c7b7b09...bce12e`, config
   `307f41a...d28e9`, XML `d7e9f43...ce794c`; authoritative action mapping is
   unchanged.
 - Landing policy: `landing-20260714-190401`, params `fa3a518b...34bb7e`.
@@ -92,3 +93,10 @@
   empty data.  v10 defers block evaluation/gating until progress receives the
   matching epoch metrics; no policy, bank, C_L, reset ratio or PPO parameter
   changed.  Runtime gate and v10 fixed-C_L preflight pass.
+- v10 stopped before completing block 1 evaluation: Playground full reset
+  replaced terminal EpisodeWrapper metrics with the next reset's zero metrics.
+  v12 uses a repository-owned wrapper that resamples all task/provenance state
+  while preserving only terminal episode metrics/done/steps/truncation.  A
+  64-environment, one-step terminal test proves every old source is counted and
+  bank sources are resampled.  Targeted tests (14) and full runtime gate pass;
+  v12 preflight keeps C_L and 60/10/30 inputs unchanged.

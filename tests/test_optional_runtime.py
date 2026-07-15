@@ -154,3 +154,29 @@ def test_landing_snapshot_reward_and_gates_match_in_flight_rehearsal():
     assert int(ls.info["phase"])==int(fs.info["phase"])==STAGE_ID["landing"]
     assert int(ls.info["end_code"])==int(fs.info["end_code"])
     assert int(ls.info["recovery_success"])==int(fs.info["recovery_success"])
+
+
+@pytest.mark.skipif(not RUNTIME_READY,reason="MuJoCo runtime required")
+def test_full_reset_resamples_bank_without_losing_terminal_source_metrics():
+    import copy
+    import jax
+    import jax.numpy as jp
+    import numpy as np
+    from dvgc.bank import SnapshotBank
+    from dvgc.config import STAGE_ID,load_config
+    from dvgc.env import OrangeBikeDVGC,RESET_SOURCE
+    from dvgc.wrappers import wrap_for_training
+
+    cfg=load_config("configs/default.json",{"training_stage":"flight","obs_noise_enable":False})
+    base=OrangeBikeDVGC(cfg,snapshot_bank=SnapshotBank())
+    record=base.snapshot_record(base.reset(jax.random.PRNGKey(0)),"flight"); rows=[]
+    for source,phase,weight in (("flight_curriculum",STAGE_ID["flight"],.6),("canonical_entry_rehearsal",STAGE_ID["landing"],.1),("landing_tube_rehearsal",STAGE_ID["landing"],.3)):
+        row=copy.deepcopy(record); row["id"]="full-reset-"+source; row["reset_source"]=source; row["reset_weight"]=weight; row["oracle_phase"]=phase; rows.append(row)
+    raw=OrangeBikeDVGC(cfg,snapshot_bank=SnapshotBank(rows,{"reset_source_protocol":{"version":1}}))
+    env=wrap_for_training(raw,episode_length=1); keys=jax.random.split(jax.random.PRNGKey(91),64)
+    state=env.reset(keys); original=np.asarray(state.info["reset_source"]); state=env.step(state,jp.zeros((64,raw.action_size),jp.float32))
+    assert np.all(np.asarray(state.info["episode_done"])==1)
+    episode_total=sum(float(np.asarray(state.info["episode_metrics"][f"reset/episode/{name}"]).sum()) for name in RESET_SOURCE)
+    transition_total=sum(float(np.asarray(state.info["episode_metrics"][f"reset/transition/{name}"]).sum()) for name in RESET_SOURCE)
+    assert episode_total==64.0 and transition_total==64.0
+    assert np.any(np.asarray(state.info["reset_source"])!=original)
