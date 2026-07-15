@@ -1,8 +1,16 @@
-# DVGC RA-L Core Method Contract
+# Jump Envelope Learning RA-L Core Method Contract
 
 ## Scope
 
-The RA-L implementation is DVGC-Physical. It contains:
+The paper-facing method is Jump Envelope Learning (JEL).  The repository keeps
+the historical `dvgc` package name, but the empirical objects are defined as:
+
+- a phase-wise Final-Recovery Tube is a policy-conditioned recoverable set;
+- the union of phase-wise Tubes over task conditions is the empirical Jump
+  Capability Envelope;
+- Chain is only recursive progress into the certified successor entry set.
+
+The concise implementation contains:
 
 - event-anchored Landing-first backward bootstrap;
 - separate recursive Chain and end-to-end Final-Recovery labels;
@@ -54,6 +62,23 @@ Final-Recovery outcomes define Safe, Dead, Boundary, and Unknown:
 
 Only Final-safe states form the high-mass RSI core. Chain-safe sets are stage
 connection targets, not substitutes for end-to-end recoverability.
+
+## Flight-to-Landing Entry Contract
+
+The Flight successor set `C_L` is a canonical Landing-entry bank, not the
+entire Landing Final-safe Tube.  Proposals are captured from the frozen Landing
+policy at the first confirmed valid landing contact.  A source snapshot that
+already starts after contact is admissible only when its contact age is within
+the declared three-control-step entry window.  Every proposal is deduplicated,
+then independently Final-Recovery certified; only Final-safe entries belong to
+`C_L`.
+
+Matching uses the declared task-relative 20-dimensional entry feature and
+robust physical-unit scale floors.  Its radius is calibrated exclusively from
+Landing entry construction/certification data.  Flight Chain is latched when a
+state matches `C_L` during the fixed three-step handoff window; Flight Final is
+the later end-to-end Recovery event.  Flight outcomes and audit labels cannot
+calibrate the matcher.
 
 ## Minimum Main Experiments
 

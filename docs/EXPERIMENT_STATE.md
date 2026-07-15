@@ -1,9 +1,10 @@
 # DVGC Experiment State
 
-- Current HEAD lineage: controller `af5ed79`; terrain-clearance repair
-  `6f32933`; constrained Flight diversification `1256728`.
-- Runtime gate: PASS/current; config `05993a9...a91b9`; XML
-  `d7e9f43...ce794c`.
+- Current HEAD: `6d056c7`; worktree contains the validated Landing-entry
+  handoff repair pending runtime-gate commit.
+- Runtime gate: PASS/current; source `dba2a94...a9b47`, config
+  `307f41a...d28e9`, XML `d7e9f43...ce794c`; authoritative action mapping is
+  unchanged.
 - Landing policy: `landing-20260714-190401`, params `fa3a518b...34bb7e`.
 - Landing candidates: `9784649...099505`; 96/96 eligible, 0 duplicates,
   one-step failure 0, 25-step physical failure 2/96, timeout 0.
@@ -35,7 +36,18 @@
   steps 20.82->25.30, but evaluation oscillates at 3.1--11.7% and misses the
   50% pilot gate. Value loss converged to 0.137, KL to 0.0131, policy std
   remained 0.0502; reset mix is 90% candidates/10% downstream rehearsal.
-- Pause reason: candidate support is valid, but the first healthy Flight pilot
-  does not establish ascent/apex learning. Choosing between a longer same-reset
-  continuation and an intra-Flight backward reset curriculum affects the core
-  training interpretation; no formal PPO/certification was started.
+- Canonical Landing-entry v2: construction seed 4100000, certification seed
+  4200000, audit seed 5200000; 90 proposals, 79 safe / 8 boundary / 0 dead /
+  3 unknown.  Three proposals are true first-valid-contact snapshots; one is
+  Final-safe.  Independent entry audit: precision/recall/coverage =
+  98.73/92.86/87.78%, physical failure 7.29%, timeout=horizon=0.  Matcher
+  radius 1.10679; independent matcher precision/recall=98.77/95.24%; bank
+  `a98a246...2d964`.
+- Flight handoff v3, fixed 160 candidates: frozen Landing policy has
+  Chain/Final=1/3, false progress=0, Chain reward=8 and all Final trajectories
+  have valid landing.  Existing Flight pilot has Chain/Final=0/12, so its
+  learned trajectory does not reach `C_L`; this is no longer a missing event
+  or reward signal.
+- Current step: add resumable Flight late-descent -> descent -> apex+descent ->
+  full-reset curriculum, run full runtime gate, then start the first curriculum
+  segment.  No additional PPO was started during handoff repair.

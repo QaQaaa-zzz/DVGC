@@ -109,6 +109,13 @@ def default_config() -> config_dict.ConfigDict:
         flight_augmentation_max_children_per_parent=3,
         flight_augmentation_normalized_dedup_distance=0.15,
         flight_augmentation_envelope_sigma=0.50,
+        landing_entry_window_steps=3,
+        landing_entry_dedup_distance_z=0.15,
+        landing_entry_minimum_calibration_precision=0.95,
+        landing_entry_construction_seed=4100000,
+        landing_entry_certification_seed=4200000,
+        landing_entry_audit_seed=5200000,
+        landing_entry_scale_floors=[0.10,0.05,0.03,0.0873,0.0873,0.0873,0.25,0.10,0.20,0.50,0.50,0.50,0.05,0.05,0.08,1.0,1.0,1.0,0.3333,0.10],
         # Robot/action convention.  Action order is fixed and stored in every
         # policy manifest: [steer, rear-wheel drive, hip, knee].
         action_mapping_version=ACTION_MAPPING_VERSION,

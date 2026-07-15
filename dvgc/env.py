@@ -30,6 +30,7 @@ from mujoco_playground._src import mjx_env
 from .bank import SnapshotBank
 from .action_mapping import knee_position_target
 from .config import ID_STAGE, STAGE_ID, default_config
+from .entry import ENTRY_FEATURE_NAMES
 from .signals import compute_takeoff_signals, wheel_tire_bottoms
 from .rewards import compute_takeoff_reward_profile
 
@@ -285,21 +286,20 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         chain_bank = self._cert_bank if self._cert_bank is not None else snapshot_bank
         safe = chain_bank.records_for_phase(next_stage, final_labels=["safe"], include_training_only=False) if next_stage else []
         self._safe_count = len(safe)
+        matcher = chain_bank.metadata.get("entry_matcher") if next_stage == "landing" else None
+        self._entry_matcher = bool(matcher)
         if safe:
-            host = np.asarray([r["physical_feature"] for r in safe], np.float32)
-            center = np.median(host, axis=0)
-            mad = np.median(np.abs(host - center[None, :]), axis=0) * 1.4826
-            std = host.std(axis=0)
-            scale = np.maximum(np.maximum(mad, 0.25 * std), 1e-4)
+            host = np.asarray([r["entry_feature"] if self._entry_matcher else r["physical_feature"] for r in safe], np.float32)
+            if self._entry_matcher:
+                center=np.asarray(matcher["center"],np.float32); scale=np.asarray(matcher["scale"],np.float32); self._safe_radius=float(matcher["radius"])
+            else:
+                center=np.median(host,axis=0); mad=np.median(np.abs(host-center[None,:]),axis=0)*1.4826; std=host.std(axis=0); scale=np.maximum(np.maximum(mad,.25*std),1e-4); self._safe_radius=float(self._config.tube_match_radius_z)
             self._safe_features = jp.asarray((host - center) / scale)
             self._safe_center = jp.asarray(center)
             self._safe_scale = jp.asarray(scale)
         else:
-            self._safe_features = jp.zeros((1, 16), jp.float32)
-            self._safe_center = jp.zeros((16,), jp.float32)
-            self._safe_scale = jp.ones((16,), jp.float32)
-            self._safe_center = jp.zeros((16,), jp.float32)
-            self._safe_scale = jp.ones((16,), jp.float32)
+            dim=len(ENTRY_FEATURE_NAMES) if self._entry_matcher else 16
+            self._safe_features=jp.zeros((1,dim),jp.float32); self._safe_center=jp.zeros((dim,),jp.float32); self._safe_scale=jp.ones((dim,),jp.float32); self._safe_radius=float(self._config.tube_match_radius_z)
 
     @property
     def action_size(self) -> int:
@@ -372,6 +372,11 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
                 data.qvel[self._joint_qvel["rearwheel_joint"]],
             ]),
         ])
+
+    def _landing_entry_feature(self, data, had_valid_landing, support, entry_age):
+        f=self._physical_feature(data); cfg=self._config
+        progress=(f[0]-(cfg.step_front_x+cfg.valid_landing_min_past_edge))/max(float(cfg.step_back_x-cfg.valid_landing_back_margin-(cfg.step_front_x+cfg.valid_landing_min_past_edge)),1e-6)
+        return jp.concatenate([jp.asarray([f[0]-cfg.step_front_x,f[1],f[2]-cfg.step_top_z]),f[3:16],jp.asarray([had_valid_landing.astype(jp.float32),support.astype(jp.float32),jp.minimum(entry_age.astype(jp.float32),float(cfg.landing_entry_window_steps))/float(cfg.landing_entry_window_steps),progress])])
 
     def _contact_masks(self, data: mjx.Data) -> Dict[str, jax.Array]:
         """Return JAX contact masks, or all-false in deployment IMU mode.
@@ -612,7 +617,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "reward/roll_excess_penalty", "reward/pitch_excess_penalty", "reward/gyro_excess_penalty",
             "reward/lateral_penalty", "reward/yaw_rate_penalty", "reward/yaw_angle_penalty",
             "reward/action_mag_penalty", "reward/action_saturation_penalty", "reward/downrange_penalty",
-            "reward/time_penalty", "reward/action_smooth_penalty",
+            "reward/time_penalty", "reward/action_smooth_penalty", "reward/chain_event",
             "diag/legacy_recovery_gate_fraction", "diag/recovery_quality_gate",
             "event/takeoff", "event/landing", "event/chain", "event/chain_ever", "event/recovery",
             "phase/approach", "phase/takeoff", "phase/flight", "phase/landing",
@@ -713,6 +718,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "recovery_success": jp.zeros((), jp.int32),
             "chain_success": jp.zeros((), jp.int32),
             "chain_ever": jp.zeros((), jp.int32),
+            "landing_entry_age": jp.where(had_valid_landing>0,jp.maximum(contact_age,1),0).astype(jp.int32),
             "terminated": jp.zeros((), jp.int32),
             "truncated": jp.zeros((), jp.int32),
             "episode_step": jp.zeros((), jp.int32),
@@ -977,6 +983,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "had_airborne": int(info["had_airborne"]),
             "had_valid_landing": int(info["had_valid_landing"]),
             "contact_age": int(info["contact_age"]),
+            "landing_entry_age": int(info["landing_entry_age"]),
             "airborne_count": int(info["airborne_count"]),
             "prelaunch_airborne_count": int(info["prelaunch_airborne_count"]),
             "landing_bounce_count": int(info["landing_bounce_count"]),
@@ -1152,18 +1159,19 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         recovery_count = jp.where(recovery_now, state.info["recovery_count"] + 1, 0)
         recovery = recovery_count >= int(cfg.recovery_hold_steps)
 
-        feature = self._physical_feature(data)
+        landing_entry_age=jp.where(valid_landing & (state.info["had_valid_landing"]==0),1,jp.where(had_landing>0,state.info["landing_entry_age"]+1,0))
+        feature = self._landing_entry_feature(data,had_landing,support,landing_entry_age) if self._entry_matcher else self._physical_feature(data)
         if self._safe_count:
             feature_z = (feature - self._safe_center) / self._safe_scale
             safe_dist = jp.min(jp.linalg.norm(self._safe_features - feature_z[None, :], axis=1))
-            safe_entry = safe_dist <= cfg.tube_match_radius_z
+            safe_entry = safe_dist <= self._safe_radius
         else:
             safe_dist = jp.asarray(jp.inf, dtype=jp.float32)
             safe_entry = jp.asarray(False)
         if self._stage_name == "landing":
             chain = recovery
         elif self._stage_name == "flight":
-            chain = valid_landing & safe_entry
+            chain = (landing_entry_age>=1) & (landing_entry_age<=int(cfg.landing_entry_window_steps)) & safe_entry
         elif self._stage_name == "takeoff":
             chain = confirmed_airborne & safe_entry
         elif self._stage_name == "approach":
@@ -1177,7 +1185,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         safe_dist_metric = jp.where(
             jp.isfinite(safe_dist),
             safe_dist,
-            jp.asarray(float(cfg.tube_match_radius_z) + 1.0, jp.float32),
+            jp.asarray(float(self._safe_radius) + 1.0, jp.float32),
         )
 
         step_no = state.info["episode_step"] + 1
@@ -1345,6 +1353,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "reward/action_mag_penalty": action_mag_penalty, "reward/action_saturation_penalty": action_saturation_penalty,
             "reward/downrange_penalty": downrange_penalty, "reward/time_penalty": time_penalty,
             "reward/action_smooth_penalty": action_smooth_penalty,
+            "reward/chain_event": cfg.coeff_chain_event * chain.astype(jp.float32),
             "reward/takeoff_total": takeoff_profile["reward"],
             "reward/takeoff_dual_wheel_vz": takeoff_profile["terms"]["dual_wheel_vz"],
             "reward/takeoff_dual_wheel_height": takeoff_profile["terms"]["dual_wheel_height"],
@@ -1447,6 +1456,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "invalid_wheel_count": invalid_count.astype(jp.int32), "recovery_count": recovery_count.astype(jp.int32),
             "recovery_success": recovery.astype(jp.int32), "chain_success": chain.astype(jp.int32),
             "chain_ever": chain_ever.astype(jp.int32),
+            "landing_entry_age": landing_entry_age.astype(jp.int32),
             "estimated_phase": estimated1.astype(jp.int32), "phase_probs": phase_probs1,
             "terminated": terminated.astype(jp.int32), "truncated": truncated.astype(jp.int32),
             "episode_step": step_no.astype(jp.int32), "last_action": action, "prev_acc_z": acc_z,

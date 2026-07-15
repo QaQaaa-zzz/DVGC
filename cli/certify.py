@@ -27,15 +27,19 @@ def main():
     p.add_argument("--downstream-bank",default=""); p.add_argument("--phase",required=True,choices=["landing","flight","takeoff","approach"])
     p.add_argument("--output-bank",required=True); p.add_argument("--seed",type=int,default=0)
     p.add_argument("--namespace",default="build"); p.add_argument("--limit",type=int,default=0); p.add_argument("--start-index",type=int,default=0)
+    p.add_argument("--allow-independent-candidates",action="store_true")
     a=p.parse_args(); params,cfg_dict,manifest=load_bundle(a.policy,verify_files=True)
     if manifest.get("stage") not in (None,a.phase): raise SystemExit(f"Policy stage {manifest.get('stage')} cannot certify {a.phase}")
     if Path(a.candidate_bank).resolve()==Path(a.output_bank).resolve(): raise SystemExit("--output-bank must differ from --candidate-bank so policy provenance remains immutable")
     try:
-        verify_manifest_artifact(manifest,"candidate_bank",a.candidate_bank)
+        if not a.allow_independent_candidates: verify_manifest_artifact(manifest,"candidate_bank",a.candidate_bank)
         verify_manifest_artifact(manifest,"downstream_bank",a.downstream_bank or None,required=(a.phase!="landing"))
     except ValueError as exc: raise SystemExit(str(exc)) from exc
     cfg=load_config(overrides={**cfg_dict,"training_stage":a.phase,"domain_randomization":False,"obs_noise_enable":False})
     candidates=SnapshotBank.load(a.candidate_bank); downstream=SnapshotBank.load(a.downstream_bank) if a.downstream_bank else SnapshotBank()
+    if a.allow_independent_candidates:
+        for key,value in (("xml_sha256",manifest["xml_sha256"]),("action_mapping_version",manifest["action_mapping_version"])):
+            if candidates.metadata.get(key)!=value: raise SystemExit(f"Independent candidate {key} mismatch")
     if a.phase!="landing" and not a.downstream_bank: raise SystemExit("--downstream-bank is mandatory outside Landing")
     variants=[]
     for spec in DYNAMICS_VARIANTS:
