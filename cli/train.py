@@ -170,10 +170,12 @@ def main():
     started_at=time.time()
     metric_log={"stage":a.stage,"seed":a.seed,"segment_index":a.segment_index,"ppo_seed":ppo_seed,"requested_timesteps":a.timesteps,"effective_timesteps":effective_timesteps,"ppo_layout":{"num_envs":a.num_envs,"num_eval_envs":a.num_eval_envs,"unroll_length":32,"batch_size":a.batch_size,"num_minibatches":a.num_minibatches,"num_evals":a.num_evals},"ppo_hyperparameters":{"learning_rate":learning_rate,"entropy_cost":entropy_cost,"reward_scaling":0.1,"num_updates_per_batch":2,"discounting":.995,"gae_lambda":.97,"clipping_epsilon":.10,"max_grad_norm":.75},"reset_protocol":reset_protocol,"status":"initialized","started_at":started_at,"progress":rows}
     save_json(metrics_path,metric_log)
+    after_progress=lambda _step:None
     def progress(step,metrics):
         row={"step":int(step),"recorded_at":time.time(),**{k:float(v) for k,v in metrics.items() if hasattr(v,"__float__")}}; rows.append(row)
         metric_log["status"]="running"; save_json(metrics_path,metric_log)
         print(f"[train] stage={a.stage} step={step:,}")
+        after_progress(int(step))
     class BoundedStop(RuntimeError): pass
     block_history=[]
     if a.bounded_block_dir:
@@ -196,9 +198,8 @@ def main():
             candidates=[row for row in rows if any(key.startswith(prefix) for key in row)]
             row=candidates[-1] if candidates else {}; values={name:float(row.get(prefix+name,0.0)) for name in ("flight_curriculum","canonical_entry_rehearsal","landing_tube_rehearsal","natural")}; total=sum(values.values())
             return {key:(value/total if total else 0.0) for key,value in values.items()}
-        def block_callback(step,_,params):
+        def process_block(step,params):
             nonlocal previous_chain,previous_final,stagnant
-            if step==0: return
             if step not in (25600,51200,76800,102400): raise BoundedStop(f"Unexpected cumulative block step {step}")
             index=step//25600; block=block_root/f"block_{index}_{step:06d}"; block.mkdir()
             version=f"flight-bounded-{step:06d}"; save_bundle(block/"policy",params=params,config=cfg,xml_path=cfg.xml_path,candidate_bank=a.bank,downstream_bank=a.downstream_bank,policy_version=version,extra={"stage":"flight","seed":a.seed,"cumulative_timesteps":step,"reset_protocol":reset_protocol})
@@ -226,6 +227,13 @@ def main():
             save_json(block/"report.json",report); block_history.append({"block":index,"step":step,"status":decision,"report":str((block/"report.json").resolve())}); metric_log["bounded_blocks"]=block_history; save_json(metrics_path,metric_log)
             print(f"[bounded] block={index} step={step} status={decision} chain={flight_report['chain_rate']:.4f} final={flight_report['final_recovery_rate']:.4f} retention={landing_report['final_recovery_rate']:.4f}")
             if reasons: raise BoundedStop("; ".join(reasons))
+        pending_params={}
+        def block_callback(step,_,params):
+            if step: pending_params[int(step)]=params
+        def after_progress(step):
+            if not step: return
+            if step not in pending_params: raise BoundedStop(f"Missing deferred policy params at step {step}")
+            process_block(step,pending_params.pop(step))
     else:
         block_callback=lambda *_:None
     train_fn=make_ppo_train_fn(timesteps=a.timesteps,episode_length=int(cfg.episode_length),num_envs=a.num_envs,num_eval_envs=a.num_eval_envs,num_evals=a.num_evals,seed=ppo_seed,learning_rate=learning_rate,entropy_cost=entropy_cost,reward_scaling=0.1,checkpoint_dir=run/"orbax",unroll_length=32,batch_size=a.batch_size,num_minibatches=a.num_minibatches,num_updates_per_batch=2,discounting=.995,gae_lambda=.97,clipping_epsilon=.10,max_grad_norm=.75,restore_params=restore_params,policy_params_fn=block_callback,full_reset=multi_source)

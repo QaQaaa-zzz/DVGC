@@ -1,8 +1,8 @@
 # DVGC Experiment State
 
-- Current HEAD: retention repair `3d2cc6a`, bounded controller `b2189df`;
-  full-reset correction is validated and pending commit.
-- Runtime gate: PASS/current; source `ed70904...841d4`, config
+- Current HEAD: retention repair `3d2cc6a`, bounded controller `b2189df`,
+  full-reset correction `f4de96d`; deferred-gate correction pending commit.
+- Runtime gate: PASS/current; source `740347a...62836b`, config
   `307f41a...d28e9`, XML `d7e9f43...ce794c`; authoritative action mapping is
   unchanged.
 - Landing policy: `landing-20260714-190401`, params `fa3a518b...34bb7e`.
@@ -86,3 +86,9 @@
   reset only for multi-source training; a 128-step short PPO smoke and the full
   runtime gate pass.  The formal bounded run restarts from the unchanged old
   pilot in a new v9 path, preserving v6/v7/v8.
+- v9 block 1 is also retained as instrumentation-only: Flight Chain/Final =
+  0/6.25%, Landing retention=89.583%, timeout=0.  Brax invokes the policy
+  callback before publishing same-epoch metrics, so the source gate again saw
+  empty data.  v10 defers block evaluation/gating until progress receives the
+  matching epoch metrics; no policy, bank, C_L, reset ratio or PPO parameter
+  changed.  Runtime gate and v10 fixed-C_L preflight pass.
