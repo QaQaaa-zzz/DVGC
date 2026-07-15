@@ -247,6 +247,25 @@ def build_inference(env: Any, params: Any, *, deterministic: bool = True) -> Cal
     return jax.jit(make_inference_fn(params, deterministic=deterministic))
 
 
+def build_policy_distribution(env: Any, params: Any) -> Callable[[Any], Any]:
+    """Return pre-tanh Gaussian loc/scale and deterministic action for probes."""
+    try:
+        from brax.training.acme import running_statistics
+    except ImportError:
+        from brax.training import running_statistics
+    sample_obs=env.reset(jax.random.PRNGKey(0)).obs
+    observation_size={key:tuple(value.shape) for key,value in sample_obs.items()}
+    networks=make_dvgc_ppo_networks(
+        observation_size=observation_size,action_size=int(env.action_size),
+        preprocess_observations_fn=running_statistics.normalize,
+    )
+    def apply(obs):
+        logits=networks.policy_network.apply(params[0],params[1],obs)
+        dist=networks.parametric_action_distribution.create_dist(logits)
+        return dist.loc,dist.scale,jp.tanh(dist.loc)
+    return jax.jit(apply)
+
+
 def ppo_rollout_block_steps(*, unroll_length: int, batch_size: int, num_minibatches: int) -> int:
     """Return one Brax PPO rollout/update quantum in environment steps."""
     values = (int(unroll_length), int(batch_size), int(num_minibatches))
