@@ -13,6 +13,11 @@ from dvgc.experts import StageExpertRegistry
 from dvgc.policy import load_bundle,save_bundle
 from dvgc.runtime import make_ppo_train_fn,save_json
 
+def resolve_learning_rate(manifest, explicit):
+    if explicit is not None: return float(explicit)
+    try: return float(manifest["ppo_hyperparameters"]["learning_rate"])
+    except (KeyError,TypeError,ValueError) as exc: raise ValueError("Expert continuation requires --learning-rate when the source manifest has no PPO metadata") from exc
+
 
 def ratios(rows,prefix):
     row=next((r for r in reversed(rows) if any(k.startswith(prefix) for k in r)),{}); values={name:float(row.get(prefix+name,0.0)) for name in ("flight_curriculum","canonical_entry_rehearsal","landing_tube_rehearsal","natural")}; total=sum(values.values()); return {k:(v/total if total else 0.0) for k,v in values.items()}
@@ -27,7 +32,7 @@ def main():
     if file_sha256(Path(a.resume)/"params.pkl")!=initial_spec.policy_hash: raise SystemExit("Resume policy does not match owned expert registry")
     if file_sha256(a.entry_set)!=initial_spec.downstream_entry_set_sha256: raise SystemExit("Canonical entry set hash mismatch")
     landing_spec=registry.specs["landing"]; landing_hash_before=file_sha256(Path(landing_spec.checkpoint_path)/"params.pkl"); landing_params,landing_cfg,_=load_bundle(landing_spec.checkpoint_path,verify_files=True)
-    params,cfg_dict,manifest=load_bundle(a.resume,verify_files=True); learning_rate=float(a.learning_rate if a.learning_rate is not None else manifest["ppo_hyperparameters"]["learning_rate"])
+    params,cfg_dict,manifest=load_bundle(a.resume,verify_files=True); learning_rate=resolve_learning_rate(manifest,a.learning_rate)
     cfg=load_config(a.config,{**cfg_dict,"training_stage":a.stage,"expert_chain_termination":True}); bank=SnapshotBank.load(a.bank); records=bank.records_for_phase("flight",include_training_only=False); training_records=select_flight_reset_records(records,a.curriculum); training_bank=SnapshotBank(training_records,bank.metadata); entry=SnapshotBank.load(a.entry_set)
     env=OrangeBikeDVGC(cfg,snapshot_bank=training_bank,cert_bank=entry); eval_env=OrangeBikeDVGC(load_config(a.config,{**cfg.to_dict(),"domain_randomization":False,"obs_noise_enable":False}),snapshot_bank=training_bank,cert_bank=entry)
     run.mkdir(parents=True); blocks=run/"blocks"; blocks.mkdir(); rows=[]; metrics={"status":"preflight","stage":a.stage,"curriculum":a.curriculum,"seed":a.seed,"effective_steps":102400,"block_steps":25600,"entry_set_sha256":file_sha256(a.entry_set),"candidate_bank_sha256":file_sha256(a.bank),"initial_policy_hash":initial_spec.policy_hash,"landing_policy_hash_before":landing_hash_before,"progress":rows}; save_json(run/"training_metrics.json",metrics)
@@ -48,7 +53,7 @@ def main():
     def process_block(step,current):
         nonlocal best_final,stagnant
         if step not in (25600,51200,76800,102400): raise GateStop(f"unexpected block step {step}",False)
-        index=step//25600; root=blocks/f"block_{index}_{step:06d}"; root.mkdir(); policy=root/"policy"; save_bundle(policy,params=current,config=cfg,xml_path=cfg.xml_path,candidate_bank=a.bank,downstream_bank=a.entry_set,policy_version=f"flight-expert-{a.curriculum}-{step:06d}",extra={"stage":"flight","expert_role":"provisional_support_discovery","seed":a.seed,"cumulative_effective_steps":step,"initial_policy_hash":initial_spec.policy_hash})
+        index=step//25600; root=blocks/f"block_{index}_{step:06d}"; root.mkdir(); policy=root/"policy"; save_bundle(policy,params=current,config=cfg,xml_path=cfg.xml_path,candidate_bank=a.bank,downstream_bank=a.entry_set,policy_version=f"flight-expert-{a.curriculum}-{step:06d}",extra={"stage":"flight","expert_role":"provisional_support_discovery","seed":a.seed,"cumulative_effective_steps":step,"initial_policy_hash":initial_spec.policy_hash,"ppo_hyperparameters":{"learning_rate":learning_rate,"entropy_cost":.001,"reward_scaling":.1,"discounting":.995,"gae_lambda":.97,"clipping_epsilon":.10,"max_grad_norm":.75,"num_updates_per_batch":2}})
         block_registry=StageExpertRegistry.build({"landing":landing_spec.checkpoint_path,"flight":policy},{"flight":a.entry_set},runtime_source_fingerprint=registry.runtime_source_fingerprint); block_registry.save(root/"expert_registry.json")
         report=evaluate_flight_composite(current,cfg.to_dict(),landing_params,records,a.entry_set,seed=8300000+index*1000,controller_stack_hash=block_registry.specs["flight"].controller_stack_hash); drift=action_drift(current,params,cfg.to_dict(),training_records,8400000+index*1000); landing_hash_after=file_sha256(Path(landing_spec.checkpoint_path)/"params.pkl")
         nonfinite_metrics=[k for row in rows for k,v in row.items() if k!="step" and isinstance(v,float) and not math.isfinite(v)]

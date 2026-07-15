@@ -11,6 +11,7 @@ POLICY="$ROOT/pi_f_init"
 INITIAL_COMPOSITE="$ROOT/initial_composite_evaluation.json"
 LANDING_BASELINE="$ROOT/frozen_landing_baseline_fixed.json"
 ENTRY_RECOVERY_GATE="$ROOT/bridge_recovery/late_descent_gate.json"
+EXPERT_LR="${EXPERT_LEARNING_RATE:-0.0001}"
 mkdir -p "$ROOT/logs"
 
 [[ -x "$PYTHON" && -f "$REGISTRY" && -d "$POLICY" ]] || { echo "Missing expert baseline inputs" >&2; exit 2; }
@@ -30,12 +31,17 @@ for curriculum in late_descent descent apex ascent full; do
   if [[ -f "$run/training_metrics.json" ]] && "$PYTHON" -c "import json; raise SystemExit(0 if json.load(open('$run/training_metrics.json'))['status']=='gate_pass' else 1)"; then
     echo "[expert-pipeline] skip passed $curriculum"
   else
-    [[ ! -e "$run" && ! -e "$log" ]] || { echo "Existing non-passed run blocks $curriculum: $run" >&2; exit 3; }
+    [[ ! -e "$run" ]] || { echo "Existing non-passed run blocks $curriculum: $run" >&2; exit 3; }
+    if [[ -e "$log" ]]; then
+      retry=1
+      while [[ -e "$ROOT/logs/${curriculum}_retry_${retry}.log" ]]; do ((retry+=1)); done
+      log="$ROOT/logs/${curriculum}_retry_${retry}.log"
+    fi
     echo "[expert-pipeline] start $curriculum"
     set +e
     extra=()
     [[ "$curriculum" == late_descent ]] && extra=(--initial-composite-evaluation "$INITIAL_COMPOSITE" --landing-baseline "$LANDING_BASELINE")
-    "$PYTHON" -u -m cli.train_expert --stage flight --curriculum "$curriculum" --bank "$BANK" --entry-set "$ENTRY" --registry "$REGISTRY" --resume "$POLICY" --run "$run" --config "$CFG" --seed 0 "${extra[@]}" >"$log" 2>&1
+    "$PYTHON" -u -m cli.train_expert --stage flight --curriculum "$curriculum" --bank "$BANK" --entry-set "$ENTRY" --registry "$REGISTRY" --resume "$POLICY" --run "$run" --config "$CFG" --seed 0 --learning-rate "$EXPERT_LR" "${extra[@]}" >"$log" 2>&1
     status=$?
     set -e
     if (( status != 0 )); then echo "[expert-pipeline] FAIL $curriculum exit=$status" >&2; tail -n 40 "$log" >&2; exit "$status"; fi

@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
 from cli.accept_expert_entry_extension import validate
+from cli.train_expert import resolve_learning_rate
 
 
 class Registry:
@@ -18,3 +19,8 @@ def test_validate_rejects_chain_zero(monkeypatch):
     monkeypatch.setattr("cli.accept_expert_entry_extension.file_sha256", lambda path: {"bank": "bank", "entry": "entry"}[path])
     report = {"candidate_bank_sha256": "bank", "entry_set_sha256": "entry", "registry_hash": "registry", "chain_rate": 0, "composite_final_rate": .12, "timeout_rate": 0}
     assert "Chain is zero" in validate(Registry(), report, "bank", "entry")
+
+
+def test_expert_learning_rate_requires_explicit_legacy_fallback():
+    assert resolve_learning_rate({}, 1e-4) == 1e-4
+    assert resolve_learning_rate({"ppo_hyperparameters": {"learning_rate": 2e-4}}, None) == 2e-4
