@@ -10,7 +10,7 @@ REGISTRY="${EXPERT_REGISTRY:-$ROOT/expert_registry_runtime_gate.json}"
 POLICY="$ROOT/pi_f_init"
 INITIAL_COMPOSITE="$ROOT/initial_composite_evaluation.json"
 LANDING_BASELINE="$ROOT/frozen_landing_baseline_fixed.json"
-ENTRY_RECOVERY_GATE="$ROOT/bridge_recovery/late_descent_gate.json"
+ENTRY_RECOVERY_GATE="${ENTRY_RECOVERY_GATE:-$ROOT/bridge_recovery/late_descent_gate_runtime_current.json}"
 EXPERT_LR="${EXPERT_LEARNING_RATE:-0.0001}"
 mkdir -p "$ROOT/logs"
 
