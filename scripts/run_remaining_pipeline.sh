@@ -8,7 +8,7 @@ set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 PYTHON="${PYTHON:-/home/qy/mujoco_playground/.venv/bin/python}"
 CFG="${CFG:-configs/default.json}"
-REVISION="${PIPELINE_REVISION:-v7}"
+REVISION="${PIPELINE_REVISION:-v8}"
 STATE_ROOT="runs/remaining_pipeline/${REVISION}"
 MARKER_ROOT="${STATE_ROOT}/markers"
 LOG_ROOT="${STATE_ROOT}/logs"
@@ -78,7 +78,7 @@ run_step() {
 }
 
 run_flight_curriculum() {
-  local candidates="$1" downstream="$2" start_policy="$3"
+  local candidates="$1" downstream="$2" start_policy="$3" start_index="${4:-0}"
   local root="runs/flight/pipeline_seed0_${REVISION}/curriculum" resume="$start_policy"
   local landing_reference="runs/landing/refinement_seed0/fixed_candidate_evaluation.json"
   local -a stages=(late_descent descent apex_descent full)
@@ -86,6 +86,7 @@ run_flight_curriculum() {
   local -a final_gate=(0.05 0.10 0.15 0.25)
   local i stage run
   for i in "${!stages[@]}"; do
+    (( i<start_index )) && continue
     stage="${stages[$i]}"; run="$root/$stage"
     run_step "flight_curriculum_${stage}" "$stage:100000:0:0.30" "$(join_by_semicolon "$candidates" "$downstream" "$resume")" "$(join_by_semicolon "$run/training_metrics.json" "$run/policy")" "$PYTHON" -u -m cli.train --stage flight --flight-reset-stage "$stage" --bank "$candidates" --downstream-bank "$downstream" --downstream-rehearsal-mass "${FLIGHT_CURRICULUM_REHEARSAL_MASS:-0.30}" --config "$CFG" --run "$run" --resume "$resume" --timesteps 100000 --seed 0 --num-envs "$NUM_ENVS" --num-eval-envs "$NUM_EVAL_ENVS" --batch-size "$BATCH_SIZE" --num-minibatches "$NUM_MINIBATCHES" --learning-rate "${FLIGHT_CURRICULUM_LEARNING_RATE:-0.00001}"
     run_step "flight_curriculum_${stage}_analysis" "$stage" "$(join_by_semicolon "$run/training_metrics.json" "$LOG_ROOT/flight_curriculum_${stage}.log")" "$run/analysis.json" "$PYTHON" -m cli.analyze_training --run "$run" --console-log "$LOG_ROOT/flight_curriculum_${stage}.log"
@@ -234,13 +235,28 @@ HANDOFF_ROOT="${HANDOFF_ROOT:-runs/flight/handoff_v3}"
 
 run_step flight_handoff_gate "entry-v2:0.95" "$(join_by_semicolon "$HANDOFF_ROOT/landing_policy.json" "$HANDOFF_ROOT/flight_pilot_policy.json" "${LANDING_ENTRY_TUBE%.pkl}.calibration.json")" "$STATE_ROOT/flight_handoff_gate.json" "$PYTHON" -m cli.pipeline_gate handoff --landing-diagnostic "$HANDOFF_ROOT/landing_policy.json" --flight-diagnostic "$HANDOFF_ROOT/flight_pilot_policy.json" --entry-calibration "${LANDING_ENTRY_TUBE%.pkl}.calibration.json" --minimum-precision 0.95 --output "$STATE_ROOT/flight_handoff_gate.json"
 
-# Both starts retain Landing.  On the fixed Flight bank the old pilot has
-# Chain+Final=12 versus 4 for Landing, so it is the evidence-selected start;
-# it is not selected merely because it already consumed 100k steps.
-FLIGHT_CURRICULUM_POLICY=""
-run_flight_curriculum artifacts/flight_candidates_augmented_v1.pkl "$LANDING_ENTRY_TUBE" runs/flight/pipeline_seed0_v5/pilot/policy
+# Bounded forgetting experiment: one uninterrupted PPO invocation with four
+# policy callbacks at cumulative 25,600-step boundaries.  Active C_L remains
+# v2; pending support proposals are deliberately absent from every input.
+BOUNDED_ROOT="runs/flight/pipeline_seed0_${REVISION}/bounded_late_descent"
+run_step flight_multisource_preflight "60:10:30:cl-v2" "$(join_by_semicolon artifacts/flight_candidates_augmented_v1.pkl "$LANDING_ENTRY_TUBE" "$LANDING_TUBE" runs/flight/pipeline_seed0_v5/pilot/policy docs/RUNTIME_GATE.json)" "$STATE_ROOT/flight_multisource_preflight.json" "$PYTHON" -m cli.train --stage flight --flight-reset-stage late_descent --bank artifacts/flight_candidates_augmented_v1.pkl --downstream-bank "$LANDING_ENTRY_TUBE" --entry-rehearsal-bank "$LANDING_ENTRY_TUBE" --landing-rehearsal-bank "$LANDING_TUBE" --flight-reset-mass .60 --entry-reset-mass .10 --landing-reset-mass .30 --config "$CFG" --run "$STATE_ROOT/preflight_unused" --resume runs/flight/pipeline_seed0_v5/pilot/policy --preflight-output "$STATE_ROOT/flight_multisource_preflight.json"
+run_step flight_bounded_late_descent "102400:4x25600:60:10:30:lr1e-5:cl-v2" "$(join_by_semicolon artifacts/flight_candidates_augmented_v1.pkl "$LANDING_ENTRY_TUBE" "$LANDING_TUBE" artifacts/landing_candidates.pkl runs/flight/pipeline_seed0_v5/pilot/policy runs/flight/pipeline_seed0_v5/pilot/fixed_candidate_evaluation.json runs/landing/refinement_seed0/fixed_candidate_evaluation.json "$STATE_ROOT/flight_multisource_preflight.json")" "$(join_by_semicolon "$BOUNDED_ROOT/training_metrics.json" "$BOUNDED_ROOT/blocks")" "$PYTHON" -u -m cli.train --stage flight --flight-reset-stage late_descent --bank artifacts/flight_candidates_augmented_v1.pkl --downstream-bank "$LANDING_ENTRY_TUBE" --entry-rehearsal-bank "$LANDING_ENTRY_TUBE" --landing-rehearsal-bank "$LANDING_TUBE" --flight-reset-mass .60 --entry-reset-mass .10 --landing-reset-mass .30 --config "$CFG" --run "$BOUNDED_ROOT" --resume runs/flight/pipeline_seed0_v5/pilot/policy --timesteps 102400 --num-envs 160 --num-eval-envs 128 --num-evals 5 --batch-size 80 --num-minibatches 10 --learning-rate .00001 --seed 0 --bounded-block-dir "$BOUNDED_ROOT/blocks" --reference-policy runs/landing/refinement_seed0/policy --fixed-flight-bank artifacts/flight_candidates_augmented_v1.pkl --landing-retention-bank artifacts/landing_candidates.pkl --baseline-flight-evaluation runs/flight/pipeline_seed0_v5/pilot/fixed_candidate_evaluation.json --landing-reference-evaluation runs/landing/refinement_seed0/fixed_candidate_evaluation.json --retention-minimum .80
 
-RUN_STEP_ADOPT_EXISTING=1 run_stage flight 160 720000 480000 "$LANDING_ENTRY_TUBE" "$FLIGHT_CURRICULUM_POLICY"
+# The bounded callback itself enforces retention, local probes, stagnation and
+# timeout gates.  Chain-positive completion resumes at full descent; Chain-zero
+# completion leaves the fixed-C_L experiment complete before pending proposals
+# are allowed to affect a later entry-set version.
+FINAL_BOUNDED_REPORT="$BOUNDED_ROOT/blocks/block_4_102400/report.json"
+FINAL_BOUNDED_POLICY="$BOUNDED_ROOT/blocks/block_4_102400/policy"
+FINAL_BOUNDED_CHAIN=$($PYTHON -c "import json; print(json.load(open('$FINAL_BOUNDED_REPORT'))['flight']['chain_rate'])")
+if "$PYTHON" -c "raise SystemExit(0 if float('$FINAL_BOUNDED_CHAIN')>0 else 1)"; then
+  FLIGHT_CURRICULUM_POLICY=""
+  run_flight_curriculum artifacts/flight_candidates_augmented_v1.pkl "$LANDING_ENTRY_TUBE" "$FINAL_BOUNDED_POLICY" 1
+  RUN_STEP_ADOPT_EXISTING=1 run_stage flight 160 720000 480000 "$LANDING_ENTRY_TUBE" "$FLIGHT_CURRICULUM_POLICY"
+else
+  echo "[pipeline] bounded retention repair passed with Chain=0; pending entry-extension route is now eligible"
+  exit 0
+fi
 run_stage takeoff 180 900000 600000 artifacts/flight_tube.pkl "runs/flight/pipeline_seed0_${REVISION}/refinement/policy"
 run_stage approach 160 1080000 720000 artifacts/takeoff_tube.pkl "runs/takeoff/pipeline_seed0_${REVISION}/refinement/policy"
 

@@ -1,8 +1,8 @@
 # DVGC Experiment State
 
-- Current HEAD: handoff repair `a0ca3c2`, initial curriculum controller
-  `76c98ef`; retention repair is validated and pending commit.
-- Runtime gate: PASS/current; source `c6f1b0e...65b93`, config
+- Current HEAD: retention sampler/reward/probe repair `3d2cc6a`; controller
+  update is validated and pending commit.
+- Runtime gate: PASS/current; source `498b6c6...69d1b`, config
   `307f41a...d28e9`, XML `d7e9f43...ce794c`; authoritative action mapping is
   unchanged.
 - Landing policy: `landing-20260714-190401`, params `fa3a518b...34bb7e`.
@@ -65,9 +65,17 @@
   failure=86.875%, timeout=0; anchor/augmented Final=12.05/14.29%; termination
   pitch/roll/recovery=99/40/21.  Landing retention=61.458% versus 89.583%
   reference, so the same late-descent unlock gate failed again.
-- PAUSED after two evidence-based attempts at the same gate.  Root cause now
-  points to conflating the narrow canonical entry bank used for Chain matching
-  with the rehearsal bank: 30% rehearsal preserves only `C_L`, not the full
-  certified Landing envelope.  The next bounded repair should add a separate
-  full Landing Tube rehearsal input while keeping `C_L` fixed for Chain; do not
-  add PPO steps or widen the entry matcher before that distinction is reviewed.
+- Read-only Chain support audit captured all 3/12/21 prior Flight Final
+  trajectories.  Frozen Landing recovery among them is 3/10/11; C_L matches
+  are 1/0/0.  Twenty-two recoverable unmatched states are isolated in pending
+  bank `6a441ae...f977898`; none is active in training or Chain matching.
+- Fixed-C_L bounded retention preflight: PASS.  Bank-reset weights are exactly
+  Flight/canonical-entry/full-Landing = 60/10/30; source record counts are
+  39/79/91.  Landing snapshots preserve Landing phase and PolicyState, and
+  standalone/rehearsal reward, termination and recovery gates match.  Active
+  C_L remains v2 `a98a246...2d964`; Flight bank remains `2d5d7de...f62934`.
+- Next automatic step: one continuous old-pilot continuation with callbacks at
+  25,600/51,200/76,800/102,400 steps.  Each callback gates Landing retention,
+  fixed Flight Chain/Final, full-safe/boundary local probes, reset episode and
+  transition sources, timeout and nonfinite health.  No pending C_L entry is
+  eligible until this bounded run completes.
