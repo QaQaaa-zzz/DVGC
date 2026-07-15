@@ -36,6 +36,7 @@ def main():
     p.add_argument("--learning-rate", type=float, default=1e-4)
     p.add_argument("--entropy-cost", type=float, default=None)
     p.add_argument("--flight-reset-stage", choices=FLIGHT_RESET_STAGES, default="full")
+    p.add_argument("--downstream-rehearsal-mass", type=float, default=None)
     a=p.parse_args()
     run=Path(a.run)
     if run.exists(): raise SystemExit(f"Run directory already exists: {run}")
@@ -44,7 +45,11 @@ def main():
         a.timesteps,unroll_length=32,batch_size=a.batch_size,
         num_minibatches=a.num_minibatches,num_evals=11,
     )
-    cfg=load_config(a.config, {"training_stage":a.stage})
+    overrides={"training_stage":a.stage}
+    if a.downstream_rehearsal_mass is not None:
+        if not 0.0<=a.downstream_rehearsal_mass<1.0: raise SystemExit("--downstream-rehearsal-mass must be in [0,1)")
+        overrides["downstream_rehearsal_mass"]=a.downstream_rehearsal_mass
+    cfg=load_config(a.config, overrides)
     bank=SnapshotBank.load(a.bank); downstream=SnapshotBank.load(a.downstream_bank) if a.downstream_bank else SnapshotBank()
     restore_params=None; resume_manifest={}
     if a.resume:
@@ -86,7 +91,7 @@ def main():
         for row in downstream.records:
             if row["final"]["label"] in ("safe","boundary") and not row.get("training_only",False):
                 rehearsal=copy.deepcopy(row); rehearsal["source_phase"]=a.stage; rehearsal["training_only"]=True; rehearsal["candidate_kind"]="downstream_rehearsal"; train_records.append(rehearsal)
-    reset_protocol.update({"flight_reset_stage":a.flight_reset_stage if a.stage=="flight" else None,"current_stage_reset_records":len(current_records),"full_candidate_records":len(bank.records_for_phase(a.stage,include_training_only=False)) if a.stage!="full" else 0})
+    reset_protocol.update({"flight_reset_stage":a.flight_reset_stage if a.stage=="flight" else None,"current_stage_reset_records":len(current_records),"full_candidate_records":len(bank.records_for_phase(a.stage,include_training_only=False)) if a.stage!="full" else 0,"downstream_rehearsal_mass":float(cfg.downstream_rehearsal_mass)})
     training_bank=SnapshotBank(train_records,bank.metadata)
     env=OrangeBikeDVGC(cfg,snapshot_bank=training_bank,cert_bank=downstream)
     eval_cfg=load_config(a.config,{"training_stage":a.stage,"domain_randomization":False,"obs_noise_enable":False})

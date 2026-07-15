@@ -8,7 +8,7 @@ set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 PYTHON="${PYTHON:-/home/qy/mujoco_playground/.venv/bin/python}"
 CFG="${CFG:-configs/default.json}"
-REVISION="${PIPELINE_REVISION:-v6}"
+REVISION="${PIPELINE_REVISION:-v7}"
 STATE_ROOT="runs/remaining_pipeline/${REVISION}"
 MARKER_ROOT="${STATE_ROOT}/markers"
 LOG_ROOT="${STATE_ROOT}/logs"
@@ -87,7 +87,7 @@ run_flight_curriculum() {
   local i stage run
   for i in "${!stages[@]}"; do
     stage="${stages[$i]}"; run="$root/$stage"
-    run_step "flight_curriculum_${stage}" "$stage:100000:0" "$(join_by_semicolon "$candidates" "$downstream" "$resume")" "$(join_by_semicolon "$run/training_metrics.json" "$run/policy")" "$PYTHON" -u -m cli.train --stage flight --flight-reset-stage "$stage" --bank "$candidates" --downstream-bank "$downstream" --config "$CFG" --run "$run" --resume "$resume" --timesteps 100000 --seed 0 --num-envs "$NUM_ENVS" --num-eval-envs "$NUM_EVAL_ENVS" --batch-size "$BATCH_SIZE" --num-minibatches "$NUM_MINIBATCHES" --learning-rate "${FLIGHT_LEARNING_RATE:-0.0001}"
+    run_step "flight_curriculum_${stage}" "$stage:100000:0:0.30" "$(join_by_semicolon "$candidates" "$downstream" "$resume")" "$(join_by_semicolon "$run/training_metrics.json" "$run/policy")" "$PYTHON" -u -m cli.train --stage flight --flight-reset-stage "$stage" --bank "$candidates" --downstream-bank "$downstream" --downstream-rehearsal-mass "${FLIGHT_CURRICULUM_REHEARSAL_MASS:-0.30}" --config "$CFG" --run "$run" --resume "$resume" --timesteps 100000 --seed 0 --num-envs "$NUM_ENVS" --num-eval-envs "$NUM_EVAL_ENVS" --batch-size "$BATCH_SIZE" --num-minibatches "$NUM_MINIBATCHES" --learning-rate "${FLIGHT_CURRICULUM_LEARNING_RATE:-0.00001}"
     run_step "flight_curriculum_${stage}_analysis" "$stage" "$(join_by_semicolon "$run/training_metrics.json" "$LOG_ROOT/flight_curriculum_${stage}.log")" "$run/analysis.json" "$PYTHON" -m cli.analyze_training --run "$run" --console-log "$LOG_ROOT/flight_curriculum_${stage}.log"
     run_step "flight_curriculum_${stage}_eval" "$stage:160:2100000" "$(join_by_semicolon "$run/policy" "$candidates" "$downstream")" "$run/fixed_candidate_evaluation.json" "$PYTHON" -u -m cli.evaluate --stage flight --policy "$run/policy" --bank "$candidates" --downstream-bank "$downstream" --episodes 160 --seed 2100000 --output "$run/fixed_candidate_evaluation.json"
     run_step "flight_curriculum_${stage}_landing_retention" "$stage:96:2150000" "$(join_by_semicolon "$run/policy" artifacts/landing_candidates.pkl)" "$run/landing_retention.json" "$PYTHON" -u -m cli.evaluate --stage landing --policy "$run/policy" --bank artifacts/landing_candidates.pkl --episodes 96 --seed 2150000 --output "$run/landing_retention.json"
@@ -234,10 +234,11 @@ HANDOFF_ROOT="${HANDOFF_ROOT:-runs/flight/handoff_v3}"
 
 run_step flight_handoff_gate "entry-v2:0.95" "$(join_by_semicolon "$HANDOFF_ROOT/landing_policy.json" "$HANDOFF_ROOT/flight_pilot_policy.json" "${LANDING_ENTRY_TUBE%.pkl}.calibration.json")" "$STATE_ROOT/flight_handoff_gate.json" "$PYTHON" -m cli.pipeline_gate handoff --landing-diagnostic "$HANDOFF_ROOT/landing_policy.json" --flight-diagnostic "$HANDOFF_ROOT/flight_pilot_policy.json" --entry-calibration "${LANDING_ENTRY_TUBE%.pkl}.calibration.json" --minimum-precision 0.95 --output "$STATE_ROOT/flight_handoff_gate.json"
 
-# Chain reachability is the primary curriculum-start criterion.  The frozen
-# Landing policy reaches C_L (1/160) while the old Flight pilot reaches none.
+# Both starts retain Landing.  On the fixed Flight bank the old pilot has
+# Chain+Final=12 versus 4 for Landing, so it is the evidence-selected start;
+# it is not selected merely because it already consumed 100k steps.
 FLIGHT_CURRICULUM_POLICY=""
-run_flight_curriculum artifacts/flight_candidates_augmented_v1.pkl "$LANDING_ENTRY_TUBE" "$LANDING_POLICY"
+run_flight_curriculum artifacts/flight_candidates_augmented_v1.pkl "$LANDING_ENTRY_TUBE" runs/flight/pipeline_seed0_v5/pilot/policy
 
 RUN_STEP_ADOPT_EXISTING=1 run_stage flight 160 720000 480000 "$LANDING_ENTRY_TUBE" "$FLIGHT_CURRICULUM_POLICY"
 run_stage takeoff 180 900000 600000 artifacts/flight_tube.pkl "runs/flight/pipeline_seed0_${REVISION}/refinement/policy"

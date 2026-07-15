@@ -1,8 +1,8 @@
 # DVGC Experiment State
 
-- Current HEAD: handoff repair `a0ca3c2`; Flight curriculum controller is
-  validated and pending commit.
-- Runtime gate: PASS/current; source `4680996...a1b6e`, config
+- Current HEAD: handoff repair `a0ca3c2`, initial curriculum controller
+  `76c98ef`; retention repair is validated and pending commit.
+- Runtime gate: PASS/current; source `c6f1b0e...65b93`, config
   `307f41a...d28e9`, XML `d7e9f43...ce794c`; authoritative action mapping is
   unchanged.
 - Landing policy: `landing-20260714-190401`, params `fa3a518b...34bb7e`.
@@ -48,9 +48,15 @@
   have valid landing.  Existing Flight pilot has Chain/Final=0/12, so its
   learned trajectory does not reach `C_L`; this is no longer a missing event
   or reward signal.
-- Current step: resumable Flight late-descent -> descent -> apex+descent ->
-  full-reset curriculum is implemented.  Every 100k segment evaluates all 160
-  Flight candidates plus Landing retention and unlocks by Chain 95% LCB and
-  Final rate.  Full runtime gate passes; next automatic step is late-descent
-  training from the frozen Landing policy.  No additional PPO was started
-  during handoff repair.
+- Curriculum v6 late-descent from Landing completed 102400 effective steps:
+  Chain=0, Final=4.375%, physical failure=95.625%, timeout=0, Landing retention
+  53.125%.  Runtime was healthy but early KL spikes (613.95 and 117.94) and the
+  10% rehearsal mix caused destructive forgetting; the gate stopped before
+  descent unlock.
+- Start-policy comparison now includes retention: frozen Landing has
+  Flight Chain/Final=1/3 and Landing retention=89.58%; old Flight pilot has
+  0/12 and retention=87.50%.  The pilot wins combined fixed Chain+Final while
+  satisfying retention, so v7 selects it by evidence.  Repair round uses
+  learning rate 1e-5 and 30% canonical Landing-entry rehearsal; next automatic
+  step is a fresh v7 late-descent 100k segment.  A second failure of the same
+  unlock gate will pause rather than add steps.
