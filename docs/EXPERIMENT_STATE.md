@@ -1,8 +1,9 @@
 # DVGC Experiment State
 
-- Current HEAD: retention repair `3d2cc6a`, bounded controller `b2189df`,
-  full-reset correction `f4de96d`, deferred gate `861c20f`; metric-preserving
-  full-reset correction pending commit.
+- Current validated source commit: retention repair `3d2cc6a`, bounded controller `b2189df`,
+  full-reset correction `f4de96d`, deferred gate `861c20f`, metric-preserving
+  resampling `55e9c64`.
+- Worktree: clean after the documentation-only v12 result commit.
 - Runtime gate: PASS/current; source `c7b7b09...bce12e`, config
   `307f41a...d28e9`, XML `d7e9f43...ce794c`; authoritative action mapping is
   unchanged.
@@ -100,3 +101,18 @@
   64-environment, one-step terminal test proves every old source is counted and
   bank sources are resampled.  Targeted tests (14) and full runtime gate pass;
   v12 preflight keeps C_L and 60/10/30 inputs unchanged.
+- v12 formal bounded run stopped at block 1 (25,600 cumulative steps).  Actual
+  episode reset shares Flight/entry/full-Landing/natural = 55/11/30/4%; PPO
+  completed-episode transition shares = 60.654/10.133/28.638/0.575%.
+  Aggregate Landing retention=88.542% (gate 84.583%), but boundary Final fell
+  75.0->58.333% and triggered the fixed local-collapse gate; full-safe and C_L
+  Final both remained 97.468%.  Flight Chain/Final=0/6.875% versus old-pilot
+  0/7.5%; ascent/apex/descent Final=0/0/14.286%.  Terminations were Flight
+  pitch/roll/recovery=97/52/11 and Landing roll/recovery=11/85; timeout=0.
+  No NaN, OOM, provenance error or compile restart occurred.  The active C_L
+  remains `a98a246...2d964`; pending entries remain isolated.
+- Decision: the fixed-C_L shared-Actor forgetting repair did not satisfy the
+  required full-safe+boundary local retention criterion.  Stop shared-Actor
+  repair now: no ratio/LR/budget adjustment, no pending-entry activation and
+  no Flight curriculum continuation.  Await stage-expert plus final shared-
+  policy direction.
