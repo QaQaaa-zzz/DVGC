@@ -1,16 +1,16 @@
 {
-  "config_hash": "50e9d146c870276ac0e31eb4a45cc7718055c943edcc7356bdcd2e866ce64607",
-  "elapsed_seconds": 76.19492197036743,
-  "finished_at": 1784126185.3119936,
+  "config_hash": "0c323d037f477605d897c406c10ec52af4774bd5906557d3557a6541e988fe7c",
+  "elapsed_seconds": 75.33929562568665,
+  "finished_at": 1784189474.6032481,
   "gate_version": 4,
   "gates": {
     "expert_registry_composite_handoff": {
       "active_stage_after_handoff": "landing",
       "continuity_errors": {
-        "actor_obs": 3.4332275390625e-05,
+        "actor_obs": 5.7220458984375e-05,
         "last_action": 0.0,
-        "qpos": 4.547473508864641e-13,
-        "qvel": 1.9073486328125e-06
+        "qpos": 5.960464477539063e-08,
+        "qvel": 2.86102294921875e-05
       },
       "continuity_tolerances": {
         "actor_obs": 0.02,
@@ -18,11 +18,11 @@
         "qpos": 5e-05,
         "qvel": 0.003
       },
-      "controller_stack_hash": "d9f7d078dc94be517387cc47748f80ad14591c92199799b8d6ed2319f1dae35b",
+      "controller_stack_hash": "b1de59f532222ae99551c90138c1a0cf0db6dceecc1510f64297399e26fe169b",
       "handoffs": 1,
-      "landing_policy_hash_after": "513c3f75089ca0ceca4233315d5386d5dc489954c97b41fd95c7a6fb4624db84",
-      "landing_policy_hash_before": "513c3f75089ca0ceca4233315d5386d5dc489954c97b41fd95c7a6fb4624db84",
-      "registry_hash": "09d32d6044b37b2e242dd61a11c598fc69c77e1ace32a41dc504c1db8465936a",
+      "landing_policy_hash_after": "b7c92de51d2dd4278ab7aef024c08e3f759f81106b59e668dd392ab339daf91a",
+      "landing_policy_hash_before": "b7c92de51d2dd4278ab7aef024c08e3f759f81106b59e668dd392ab339daf91a",
+      "registry_hash": "f9d86a8acb92cc51161051625fb901e537216a1aceb5c662561d6cd54559ef87",
       "status": "PASS"
     },
     "model_load": {
@@ -189,7 +189,7 @@
       "status": "PASS"
     },
     "policy_roundtrip_determinism": {
-      "bundle": "/home/qy/DVGC/runs/runtime_gate_apex_bridge_20260715T2240/policy_bundle",
+      "bundle": "/home/qy/DVGC/runs/runtime_gate_apex_cd_final_20260716T1610/policy_bundle",
       "different_key_action_max_abs": 0.0,
       "status": "PASS"
     },
@@ -211,7 +211,7 @@
       "initial": {
         "effective_timesteps": 64,
         "final_metrics": {
-          "eval/avg_episode_length": 33.5,
+          "eval/avg_episode_length": 32.0,
           "eval/episode_end/backward": 0.0,
           "eval/episode_end/backward_std": 0.0,
           "eval/episode_end/chain_entry": 0.0,
@@ -240,21 +240,21 @@
           "eval/episode_end/takeoff_positive_pitch_failure_std": 0.0,
           "eval/episode_end/takeoff_wheelie_failure": 1.0,
           "eval/episode_end/takeoff_wheelie_failure_std": 0.0,
-          "eval/episode_reward": 72.02976989746094,
-          "eval/episode_reward_std": 0.8912239074707031,
+          "eval/episode_reward": 68.21701049804688,
+          "eval/episode_reward_std": 0.23890304565429688,
           "eval/episode_success": 0.0,
           "eval/episode_success_std": 0.0,
-          "eval/std_episode_length": 0.5,
-          "training/entropy_loss": 0.00631681177765131,
-          "training/kl_mean": 16876.26171875,
-          "training/policy_loss": 0.1737014353275299,
-          "training/total_loss": 0.24455878138542175,
-          "training/v_loss": 0.06454054266214371
+          "eval/std_episode_length": 0.0,
+          "training/entropy_loss": 0.006316812708973885,
+          "training/kl_mean": 20242.7109375,
+          "training/policy_loss": 0.17684423923492432,
+          "training/total_loss": 0.24445205926895142,
+          "training/v_loss": 0.06129099428653717
         },
         "progress": [
           {
             "metrics": {
-              "eval/avg_episode_length": 27.5,
+              "eval/avg_episode_length": 27.0,
               "eval/episode_end/backward": 0.0,
               "eval/episode_end/backward_std": 0.0,
               "eval/episode_end/chain_entry": 0.0,
@@ -283,11 +283,11 @@
               "eval/episode_end/takeoff_positive_pitch_failure_std": 0.0,
               "eval/episode_end/takeoff_wheelie_failure": 0.0,
               "eval/episode_end/takeoff_wheelie_failure_std": 0.0,
-              "eval/episode_reward": 64.45988464355469,
-              "eval/episode_reward_std": 1.3073177337646484,
+              "eval/episode_reward": 63.2811393737793,
+              "eval/episode_reward_std": 0.19867324829101562,
               "eval/episode_success": 0.0,
               "eval/episode_success_std": 0.0,
-              "eval/std_episode_length": 0.5
+              "eval/std_episode_length": 0.0
             },
             "step": 0
           },
@@ -301,7 +301,7 @@
           },
           {
             "metrics": {
-              "eval/avg_episode_length": 33.5,
+              "eval/avg_episode_length": 32.0,
               "eval/episode_end/backward": 0.0,
               "eval/episode_end/backward_std": 0.0,
               "eval/episode_end/chain_entry": 0.0,
@@ -330,16 +330,16 @@
               "eval/episode_end/takeoff_positive_pitch_failure_std": 0.0,
               "eval/episode_end/takeoff_wheelie_failure": 1.0,
               "eval/episode_end/takeoff_wheelie_failure_std": 0.0,
-              "eval/episode_reward": 72.02976989746094,
-              "eval/episode_reward_std": 0.8912239074707031,
+              "eval/episode_reward": 68.21701049804688,
+              "eval/episode_reward_std": 0.23890304565429688,
               "eval/episode_success": 0.0,
               "eval/episode_success_std": 0.0,
-              "eval/std_episode_length": 0.5,
-              "training/entropy_loss": 0.00631681177765131,
-              "training/kl_mean": 16876.26171875,
-              "training/policy_loss": 0.1737014353275299,
-              "training/total_loss": 0.24455878138542175,
-              "training/v_loss": 0.06454054266214371
+              "eval/std_episode_length": 0.0,
+              "training/entropy_loss": 0.006316812708973885,
+              "training/kl_mean": 20242.7109375,
+              "training/policy_loss": 0.17684423923492432,
+              "training/total_loss": 0.24445205926895142,
+              "training/v_loss": 0.06129099428653717
             },
             "step": 64
           }
@@ -349,14 +349,14 @@
       "resume": {
         "effective_timesteps": 32,
         "final_metrics": {
-          "eval/avg_episode_length": 34.0,
+          "eval/avg_episode_length": 35.0,
           "eval/episode_end/backward": 0.0,
           "eval/episode_end/backward_std": 0.0,
           "eval/episode_end/chain_entry": 0.0,
           "eval/episode_end/chain_entry_std": 0.0,
           "eval/episode_end/invalid_wheel_step_contact": 0.0,
           "eval/episode_end/invalid_wheel_step_contact_std": 0.0,
-          "eval/episode_end/pitch_limit": 0.0,
+          "eval/episode_end/pitch_limit": 1.0,
           "eval/episode_end/pitch_limit_std": 0.0,
           "eval/episode_end/platform_back_edge_exit": 0.0,
           "eval/episode_end/platform_back_edge_exit_std": 0.0,
@@ -376,23 +376,23 @@
           "eval/episode_end/takeoff_missed_wheel_clearance_deadline_std": 0.0,
           "eval/episode_end/takeoff_positive_pitch_failure": 0.0,
           "eval/episode_end/takeoff_positive_pitch_failure_std": 0.0,
-          "eval/episode_end/takeoff_wheelie_failure": 1.0,
+          "eval/episode_end/takeoff_wheelie_failure": 0.0,
           "eval/episode_end/takeoff_wheelie_failure_std": 0.0,
-          "eval/episode_reward": 72.62264251708984,
-          "eval/episode_reward_std": 0.46819305419921875,
+          "eval/episode_reward": 72.08836364746094,
+          "eval/episode_reward_std": 2.0428695678710938,
           "eval/episode_success": 0.0,
           "eval/episode_success_std": 0.0,
-          "eval/std_episode_length": 0.0,
-          "training/entropy_loss": 0.006315239239484072,
-          "training/kl_mean": 4.54634428024292e-05,
-          "training/policy_loss": -0.00026849284768104553,
-          "training/total_loss": 0.10406307131052017,
-          "training/v_loss": 0.09801632910966873
+          "eval/std_episode_length": 1.0,
+          "training/entropy_loss": 0.0063152308575809,
+          "training/kl_mean": 5.362369120121002e-05,
+          "training/policy_loss": 2.8522685170173645e-05,
+          "training/total_loss": 0.1043827086687088,
+          "training/v_loss": 0.09803895652294159
         },
         "progress": [
           {
             "metrics": {
-              "eval/avg_episode_length": 33.5,
+              "eval/avg_episode_length": 32.0,
               "eval/episode_end/backward": 0.0,
               "eval/episode_end/backward_std": 0.0,
               "eval/episode_end/chain_entry": 0.0,
@@ -421,11 +421,11 @@
               "eval/episode_end/takeoff_positive_pitch_failure_std": 0.0,
               "eval/episode_end/takeoff_wheelie_failure": 1.0,
               "eval/episode_end/takeoff_wheelie_failure_std": 0.0,
-              "eval/episode_reward": 71.88874816894531,
-              "eval/episode_reward_std": 0.6430778503417969,
+              "eval/episode_reward": 68.42556762695312,
+              "eval/episode_reward_std": 0.031398773193359375,
               "eval/episode_success": 0.0,
               "eval/episode_success_std": 0.0,
-              "eval/std_episode_length": 0.5
+              "eval/std_episode_length": 0.0
             },
             "step": 0
           },
@@ -435,14 +435,14 @@
           },
           {
             "metrics": {
-              "eval/avg_episode_length": 34.0,
+              "eval/avg_episode_length": 35.0,
               "eval/episode_end/backward": 0.0,
               "eval/episode_end/backward_std": 0.0,
               "eval/episode_end/chain_entry": 0.0,
               "eval/episode_end/chain_entry_std": 0.0,
               "eval/episode_end/invalid_wheel_step_contact": 0.0,
               "eval/episode_end/invalid_wheel_step_contact_std": 0.0,
-              "eval/episode_end/pitch_limit": 0.0,
+              "eval/episode_end/pitch_limit": 1.0,
               "eval/episode_end/pitch_limit_std": 0.0,
               "eval/episode_end/platform_back_edge_exit": 0.0,
               "eval/episode_end/platform_back_edge_exit_std": 0.0,
@@ -462,18 +462,18 @@
               "eval/episode_end/takeoff_missed_wheel_clearance_deadline_std": 0.0,
               "eval/episode_end/takeoff_positive_pitch_failure": 0.0,
               "eval/episode_end/takeoff_positive_pitch_failure_std": 0.0,
-              "eval/episode_end/takeoff_wheelie_failure": 1.0,
+              "eval/episode_end/takeoff_wheelie_failure": 0.0,
               "eval/episode_end/takeoff_wheelie_failure_std": 0.0,
-              "eval/episode_reward": 72.62264251708984,
-              "eval/episode_reward_std": 0.46819305419921875,
+              "eval/episode_reward": 72.08836364746094,
+              "eval/episode_reward_std": 2.0428695678710938,
               "eval/episode_success": 0.0,
               "eval/episode_success_std": 0.0,
-              "eval/std_episode_length": 0.0,
-              "training/entropy_loss": 0.006315239239484072,
-              "training/kl_mean": 4.54634428024292e-05,
-              "training/policy_loss": -0.00026849284768104553,
-              "training/total_loss": 0.10406307131052017,
-              "training/v_loss": 0.09801632910966873
+              "eval/std_episode_length": 1.0,
+              "training/entropy_loss": 0.0063152308575809,
+              "training/kl_mean": 5.362369120121002e-05,
+              "training/policy_loss": 2.8522685170173645e-05,
+              "training/total_loss": 0.1043827086687088,
+              "training/v_loss": 0.09803895652294159
             },
             "step": 32
           }
@@ -543,8 +543,8 @@
   ],
   "python": "/home/qy/mujoco_playground/.venv/bin/python",
   "python_version": "3.12.13",
-  "source_fingerprint": "7ad49c79dac93cd0245e8ad0ff15f477a4d3979c8d0a2eda04fd7faa58b58ca0",
-  "started_at": 1784126109.1170716,
+  "source_fingerprint": "364209d26d5937a5894fba35ba771dd4e5ff26910c3bc885ddca678179dc8e53",
+  "started_at": 1784189399.2639525,
   "status": "PASS",
   "xml_sha256": "d7e9f43ff8fb9e4571203f81062ce9c828acfa38692ee8c71a3e5daa15ce794c"
 }

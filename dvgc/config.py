@@ -62,6 +62,8 @@ def default_config() -> config_dict.ConfigDict:
         # Stage experts terminate successfully at their immutable downstream
         # canonical entry.  Composite Final-Recovery evaluation keeps this off.
         expert_chain_termination=False,
+        descent_entry_minimum_calibration_precision=0.95,
+        descent_entry_scale_floors=[0.10,0.05,0.05,0.03,0.03,0.03,0.20,0.10,0.20,0.20,0.20,0.20,0.03,0.05,0.05,0.50],
         # Terrain, copied from the supplied XML.
         step_front_x=3.60,
         step_back_x=7.60,

@@ -198,3 +198,34 @@
   block-4 action drift L2 mean/p95/max = 0.01053/0.01260/0.01917 and KL =
   0.02325/0.03240/0.07601.  The evidence indicates a real apex-to-descent
   dynamical support gap under the fixed method, not matcher or timeout failure.
+- Apex C_D investigation (2026-07-16): froze π_F,D params
+  `917f77c...af041`, π_L `fa3a518...34bb7e`, extended C_L
+  `185164d...2aa41`, Flight bank `2d5d7de...f62934` and XML
+  `d7e9f43...ce794c` in immutable run
+  `runs/stage_experts/apex_seed0_20260716T124806`.
+- C_D proposals use complete pre-contact Flight snapshots from successful
+  frozen π_F,D→C_L→π_L rollouts, authoritative MuJoCo contact/geom checks,
+  and no root correction.  Fixed dynamics variants produced 70 proposals;
+  confirm-safe-to-32 certification (seed 7100000) gave Final labels
+  safe/boundary/dead/unknown = 3/22/33/12, below the existing four-safe
+  activation gate.  No C_D matcher was activated.
+- Independent C_D audit seed 7200000 was recovered after one Warp OOM by seven
+  new-process global-index shards.  Merge verified indices 0--69 and 2240
+  unique branch seeds: Final=604/2240, physical failure=1043/2240,
+  timeout=horizon=0.  One of the three confirmed-safe states audits at only
+  23/32, so a 0.95-precision matcher cannot be justified from this support.
+- A final bounded support extension used the already-declared 0.03 action
+  noise.  It retained 32 byte-unique full snapshots from 21 successful
+  rollouts (12 exact duplicates and 38 contact/penetration states rejected),
+  spanning proposal steps 0--13.  Fresh confirm-safe-to-32 certification seed
+  7150000 yielded Final safe/boundary/dead/unknown = 0/13/12/7;
+  timeout=horizon=0.  This repair also fails C_D activation.
+- Decision: do not run the reward baseline against an invalid C_D, do not add
+  apex shaping, and do not start PPO.  The same critical C_D support gate has
+  failed two evidence-backed repairs; pause for research direction rather than
+  lowering Final-safe, matcher precision or minimum-support gates.
+- Verification after tooling changes: local preflight 72 passed, final targeted
+  suite 10 passed; runtime gate PASS/current, source `364209d...c8e53`, config
+  `0c323d0...8fe7c`, XML
+  unchanged.  OOM was isolated to the abandoned monolithic audit process; all
+  seven accepted audit shards completed without OOM.

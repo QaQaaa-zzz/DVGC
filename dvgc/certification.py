@@ -85,7 +85,7 @@ def summarize_branches(rows: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
     total = len(branches)
     causes = {
         name: sum(str(row["terminal_cause"]) == name for row in branches)
-        for name in ("final_recovery", "physical_failure", "timeout", "horizon_exhausted")
+        for name in ("final_recovery", "physical_failure", "timeout", "horizon_exhausted", "handoff_missed_final")
     }
     if sum(causes.values()) != total:
         raise ValueError("Every branch must have one recognized terminal_cause")
@@ -110,6 +110,7 @@ def summarize_branches(rows: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
         "physical_failures": causes["physical_failure"],
         "timeouts": causes["timeout"],
         "horizon_exhaustions": causes["horizon_exhausted"],
+        "handoff_missed_finals": causes["handoff_missed_final"],
         "final_recovery_rate": rate(causes["final_recovery"]),
         "physical_failure_rate": rate(causes["physical_failure"]),
         "timeout_rate": rate(causes["timeout"]),
