@@ -1,11 +1,14 @@
 """Bounded, parent-aware local support expansion for pre-Tube descent."""
 from __future__ import annotations
 
+import copy
 from collections import Counter
 from collections.abc import Mapping, Sequence
 
 import numpy as np
 
+from .bank import SnapshotBank
+from .config import file_sha256
 from .flight_augmentation import tangent_difference
 
 
@@ -51,3 +54,79 @@ def balanced_parent(rows, children: Counter, rng, cap):
     sources=sorted({row.get("entry_source_id",row["id"]) for row in eligible if sum(children[x["id"]] for x in eligible if x.get("entry_source_id",x["id"])==row.get("entry_source_id",row["id"]))==source_min})
     source=sources[int(rng.integers(len(sources)))]; subset=[row for row in eligible if row.get("entry_source_id",row["id"])==source]; minimum=min(children[row["id"]] for row in subset); subset=[row for row in subset if children[row["id"]]==minimum]
     return subset[int(rng.integers(len(subset)))]
+
+
+def build_candidate_bootstrap_bank(
+    bank: SnapshotBank, bank_path: str, cfg: Mapping
+) -> tuple[SnapshotBank, dict]:
+    """Build the auditable pre-Tube reset distribution.
+
+    Mass is assigned to the three declared evidence groups, then equally to
+    distinct parent snapshots, then equally to records belonging to a parent.
+    Thus local children add coverage but cannot multiply a parent's reset mass.
+    """
+    rows = [
+        row for row in bank.records_for_phase("flight", include_training_only=False)
+        if row.get("local_bootstrap_eligible")
+    ]
+    masses = {
+        "provisional_safe": float(cfg.descent_local_reset_safe_mass),
+        "boundary": float(cfg.descent_local_reset_boundary_mass),
+        "successful_anchor": float(cfg.descent_local_reset_anchor_mass),
+    }
+    if set(row.get("bootstrap_group") for row in rows) - set(masses):
+        raise ValueError("Eligible descent records contain an undeclared bootstrap group")
+    if any(value <= 0 for value in masses.values()) or not np.isclose(sum(masses.values()), 1.0):
+        raise ValueError("Descent bootstrap group masses must be positive and sum to one")
+    source_hash = file_sha256(bank_path)
+    output, parent_weights = [], {}
+    for group, group_mass in masses.items():
+        group_rows = [row for row in rows if row["bootstrap_group"] == group]
+        by_parent = {}
+        for row in group_rows:
+            parent = str(row.get("parent_candidate_id", row["id"]))
+            by_parent.setdefault(parent, []).append(row)
+        if not by_parent:
+            raise ValueError(f"Descent bootstrap group {group} is empty")
+        parent_mass = group_mass / len(by_parent)
+        for parent, parent_rows in sorted(by_parent.items()):
+            parent_weights[f"{group}:{parent}"] = parent_mass
+            for row in parent_rows:
+                item = copy.deepcopy(row)
+                item.setdefault("origin_phase", item.get("source_phase", "flight"))
+                item.update({
+                    "reset_source": "flight_curriculum",
+                    "reset_weight": parent_mass / len(parent_rows),
+                    "reset_parent_id": parent,
+                    "original_bank_path": str(bank_path),
+                    "original_bank_sha256": source_hash,
+                })
+                output.append(item)
+    metadata = copy.deepcopy(bank.metadata)
+    metadata["reset_source_protocol"] = {
+        "version": 1,
+        "mode": "candidate_guided_local_bootstrap",
+        "source_bank_sha256": source_hash,
+        "group_masses": masses,
+        "parent_balanced": True,
+    }
+    actual_group = {
+        group: float(sum(row["reset_weight"] for row in output if row["bootstrap_group"] == group))
+        for group in masses
+    }
+    actual_layer = {
+        layer: float(sum(row["reset_weight"] for row in output if row["descent_layer"] == layer))
+        for layer in ("late", "middle", "early")
+    }
+    report = {
+        "records": len(output),
+        "group_counts": dict(Counter(row["bootstrap_group"] for row in output)),
+        "layer_counts": dict(Counter(row["descent_layer"] for row in output)),
+        "expected_group_reset_ratio": actual_group,
+        "expected_layer_reset_ratio": actual_layer,
+        "parent_count": len(parent_weights),
+        "parent_reset_weights": parent_weights,
+        "maximum_parent_reset_weight": max(parent_weights.values()),
+        "source_bank_sha256": source_hash,
+    }
+    return SnapshotBank(output, metadata), report

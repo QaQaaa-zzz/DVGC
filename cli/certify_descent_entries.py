@@ -10,6 +10,7 @@ from dvgc.bank import SnapshotBank, beta_posterior, posterior_label
 from dvgc.certification import DYNAMICS_VARIANTS, branch_evidence, branch_seed, summarize_branches
 from dvgc.composite import CanonicalEntryMatcher, composite_rollout
 from dvgc.config import file_sha256, load_config
+from dvgc.descent_entry import descent_entry_feature
 from dvgc.env import OrangeBikeDVGC
 from dvgc.policy import load_bundle
 from dvgc.rollout import restore_snapshot
@@ -33,10 +34,13 @@ def protocol(cfg):
 
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__); p.add_argument("--descent-policy",required=True); p.add_argument("--landing-policy",required=True); p.add_argument("--candidate-bank",required=True); p.add_argument("--landing-entry-set",required=True); p.add_argument("--output",required=True); p.add_argument("--config",default="configs/default.json"); p.add_argument("--seed",type=int,required=True); p.add_argument("--namespace",required=True); p.add_argument("--audit-only",action="store_true"); p.add_argument("--confirm-safe-to-max",action="store_true"); p.add_argument("--start-index",type=int,default=0); p.add_argument("--end-index",type=int,default=None); a=p.parse_args(); out=Path(a.output)
+    p=argparse.ArgumentParser(description=__doc__); p.add_argument("--descent-policy",required=True); p.add_argument("--candidate-source-policy",default=""); p.add_argument("--landing-policy",required=True); p.add_argument("--candidate-bank",required=True); p.add_argument("--landing-entry-set",required=True); p.add_argument("--output",required=True); p.add_argument("--config",default="configs/default.json"); p.add_argument("--seed",type=int,required=True); p.add_argument("--namespace",required=True); p.add_argument("--audit-only",action="store_true"); p.add_argument("--confirm-safe-to-max",action="store_true"); p.add_argument("--start-index",type=int,default=0); p.add_argument("--end-index",type=int,default=None); a=p.parse_args(); out=Path(a.output)
     if out.exists(): raise SystemExit(f"Output exists: {out}")
     dp,dc,dm=load_bundle(a.descent_policy,verify_files=True); lp,_,lm=load_bundle(a.landing_policy,verify_files=True); source=SnapshotBank.load(a.candidate_bank)
-    if source.metadata.get("descent_policy_hash")!=file_sha256(Path(a.descent_policy)/"params.pkl") or source.metadata.get("landing_entry_set_sha256")!=file_sha256(a.landing_entry_set): raise SystemExit("C_D proposal provenance mismatch")
+    source_policy_hash=source.metadata.get("descent_policy_hash"); current_policy_hash=file_sha256(Path(a.descent_policy)/"params.pkl")
+    if source_policy_hash!=current_policy_hash:
+        if not a.candidate_source_policy or source_policy_hash!=file_sha256(Path(a.candidate_source_policy)/"params.pkl"): raise SystemExit("C_D proposal source-policy provenance mismatch")
+    if source.metadata.get("landing_entry_set_sha256")!=file_sha256(a.landing_entry_set): raise SystemExit("C_D proposal C_L provenance mismatch")
     base=load_config(a.config,{**dc,"training_stage":"flight","expert_chain_termination":False,"domain_randomization":False,"obs_noise_enable":False,"use_bank_resets":False})
     variants=[]
     for spec in DYNAMICS_VARIANTS:
@@ -46,6 +50,8 @@ def main():
     if not (0<=a.start_index<end<=len(all_rows)): raise SystemExit(f"Invalid candidate index range [{a.start_index},{end}) for {len(all_rows)} states")
     if not a.audit_only and (a.start_index!=0 or end!=len(all_rows)): raise SystemExit("Candidate slicing is restricted to immutable audit-only runs")
     indexed_rows=list(enumerate(all_rows))[a.start_index:end]; results=[]; all_evidence=[]; tube_version=f"descent-entry-{uuid.uuid4().hex[:10]}"; work=SnapshotBank(source.records,source.metadata)
+    for record in work.records:
+        record["entry_feature"] = descent_entry_feature(record["physical_feature"], base).astype("float32")
     if not a.audit_only: work.invalidate_phase("flight",reason=f"C_D certification under {dm['policy_version']} -> {lm['policy_version']}")
     for local_index,(i,row) in enumerate(indexed_rows):
         successes=failures=chain_successes=chain_failures=raw_final_successes=0; evidence=[]
@@ -62,7 +68,7 @@ def main():
         if not a.audit_only: work.update_certification(row["id"],chain_successes=chain_successes,chain_failures=chain_failures,final_successes=successes,final_failures=failures,policy_version=dm["policy_version"],estimator_version=dm.get("estimator_version","event_filter_v1"),tube_version=tube_version,protocol=protocol(base),seed_namespace=f"{a.namespace}:descent_entry",branch_evidence=evidence)
         results.append({"id":row["id"],"candidate_index":i,"source_id":row.get("entry_source_id"),"proposal_step":row.get("proposal_step"),"chain":chain_successes,"raw_final":raw_final_successes,"final":successes,"branches":successes+failures,"final_rate":successes/(successes+failures),"branch_evidence":evidence})
         print(f"[C_D {'audit' if a.audit_only else 'cert'}] {local_index+1}/{len(indexed_rows)} global={i} chain={chain_successes}/{chain_successes+chain_failures} final={successes}/{successes+failures}")
-    summary=summarize_branches(all_evidence); common={"status":"PASS","audit_only":a.audit_only,"confirm_safe_to_max":a.confirm_safe_to_max,"seed":a.seed,"seed_namespace":f"{a.namespace}:descent_entry","candidate_bank_sha256":file_sha256(a.candidate_bank),"landing_entry_set_sha256":file_sha256(a.landing_entry_set),"descent_policy_hash":file_sha256(Path(a.descent_policy)/"params.pkl"),"landing_policy_hash":file_sha256(Path(a.landing_policy)/"params.pkl"),"states":len(indexed_rows),"total_states":len(all_rows),"start_index":a.start_index,"end_index":end,"terminal_summary":summary,"rows":results}
+    summary=summarize_branches(all_evidence); common={"status":"PASS","audit_only":a.audit_only,"confirm_safe_to_max":a.confirm_safe_to_max,"seed":a.seed,"seed_namespace":f"{a.namespace}:descent_entry","candidate_bank_sha256":file_sha256(a.candidate_bank),"candidate_source_policy_hash":source_policy_hash,"landing_entry_set_sha256":file_sha256(a.landing_entry_set),"descent_policy_hash":current_policy_hash,"landing_policy_hash":file_sha256(Path(a.landing_policy)/"params.pkl"),"states":len(indexed_rows),"total_states":len(all_rows),"start_index":a.start_index,"end_index":end,"terminal_summary":summary,"rows":results}
     if a.audit_only: save_json(out,common)
     else:
         work.metadata.update({"entry_bank_role":"certified_descent_handoff_candidates","last_policy_version":dm["policy_version"],"last_tube_version":tube_version,"construction_seed":a.seed,"construction_seed_namespace":f"{a.namespace}:descent_entry","landing_policy_version":lm["policy_version"],"landing_policy_hash":common["landing_policy_hash"],"landing_entry_set_sha256":common["landing_entry_set_sha256"],"dynamics_variants":[dict(x) for x in DYNAMICS_VARIANTS]}); work.save(out); common.update({"tube_version":tube_version,"summary":work.summary(),"bank_sha256":file_sha256(out)}); save_json(out.with_suffix(".cert.json"),common)

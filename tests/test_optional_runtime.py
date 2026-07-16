@@ -183,6 +183,27 @@ def test_full_reset_resamples_bank_without_losing_terminal_source_metrics():
 
 
 @pytest.mark.skipif(not RUNTIME_READY,reason="MuJoCo runtime required")
+def test_descent_local_reset_labels_are_auditable_but_not_actor_inputs():
+    import jax
+    import jax.numpy as jp
+    import numpy as np
+    from dvgc.bank import SnapshotBank
+    from dvgc.config import STAGE_ID,load_config
+    from dvgc.env import OrangeBikeDVGC
+
+    cfg=load_config("configs/default.json",{"training_stage":"flight","use_bank_resets":False,"obs_noise_enable":False,"domain_randomization":False,"descent_local_reward_enable":True})
+    env=OrangeBikeDVGC(cfg,snapshot_bank=SnapshotBank(),cert_bank=SnapshotBank.load("artifacts/landing_entry_tube_v2.pkl"))
+    natural=env.reset(jax.random.PRNGKey(41)); phase=jp.asarray(STAGE_ID["flight"],jp.int32); common=dict(qacc_warmstart=natural.data.qacc_warmstart,reset_source=jp.asarray(0,jp.int32),descent_layer=jp.asarray(0,jp.int32),reset_parent=jp.asarray(0,jp.int32))
+    safe=env.reset_from_snapshot(natural.data.qpos,natural.data.qvel,natural.data.ctrl,jax.random.PRNGKey(42),phase,jp.ones((),jp.int32),jp.zeros((),jp.int32),jp.zeros((),jp.int32),bootstrap_group=jp.asarray(0,jp.int32),**common)
+    boundary=env.reset_from_snapshot(natural.data.qpos,natural.data.qvel,natural.data.ctrl,jax.random.PRNGKey(42),phase,jp.ones((),jp.int32),jp.zeros((),jp.int32),jp.zeros((),jp.int32),bootstrap_group=jp.asarray(1,jp.int32),**common)
+    np.testing.assert_array_equal(np.asarray(safe.obs["state"]),np.asarray(boundary.obs["state"]))
+    action=jp.zeros(env.action_size,jp.float32); stepped=env.step(safe,action)
+    assert float(stepped.metrics["reset/transition/group/provisional_safe"])==1.0
+    assert float(stepped.metrics["reset/transition/layer/late"])==1.0
+    assert np.isfinite(float(stepped.metrics["reward/descent_local_shaping"]))
+
+
+@pytest.mark.skipif(not RUNTIME_READY,reason="MuJoCo runtime required")
 def test_composite_handoff_preserves_physics_and_policy_state():
     import jax
     import jax.numpy as jp

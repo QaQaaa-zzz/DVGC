@@ -253,3 +253,23 @@
   five-step physical failure=0, timeout=0, nonfinite=0, and all eligible/child
   identities unique.  XML `d7e9f43...ce794c`, C_L `185164d...2aa41`, Flight
   bank `2d5d7de...f62934`, and candidate seed 7400000 remain fixed.
+- No-training reward decomposition seed 7500000 exposed the old unified-reward
+  failure: neutral Chain=0 but positive return p95=103.13.  The bounded local
+  profile now keeps C_L Chain bonus=8, uses robust descent/C_L posture and
+  velocity scales, potential distance progress, <=0.005 survival, and clips
+  per-step shaping to [-0.35,0.25].  Final preflight on the same 83 states:
+  pi_F,D-local Chain=74.70%, physical failure=12.05%, timeout=0, mean return
+  5.03; neutral Chain=0, physical failure=53.01%, timeout=0, mean return=-2.83,
+  positive shaping p95=0.482.  A missed C_L entry cannot collect the downstream
+  Landing Recovery bonus during this candidate-guided episode.
+- Parent-balanced bootstrap bank `1eb7898...bbd9d` has expected internal reset
+  masses provisional-safe/boundary/successful-anchor=35/45/20%, 26 parents,
+  and late/middle/early expected episode mass=52.67/41.33/6.00%; natural reset
+  remains a separate 5%.  Actor observations exclude reset group/layer/parent,
+  while episode and completed-transition ratios are instrumented for all three.
+- Local bootstrap/reward/current-policy recertification controller is ready for
+  cumulative 25,600-step blocks, exact optimizer-checkpoint continuation,
+  immutable pi_F,D/pi_L checks, fresh construction seeds, and chunked fresh-
+  process independent audit.  Full local preflight: 77 passed.  Runtime gate
+  PASS/current: source `92ba819...0d534`, config `bf93618...04294b`, XML
+  `d7e9f43...ce794c`.  Next automatic step is block 1; PPO has not yet started.

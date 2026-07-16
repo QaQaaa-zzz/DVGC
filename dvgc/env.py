@@ -32,7 +32,7 @@ from .action_mapping import knee_position_target
 from .config import ID_STAGE, STAGE_ID, default_config
 from .entry import ENTRY_FEATURE_NAMES
 from .signals import compute_takeoff_signals, wheel_tire_bottoms
-from .rewards import compute_takeoff_reward_profile
+from .rewards import compute_descent_local_reward, compute_takeoff_reward_profile
 
 # Primary terminal/event codes.  They are integers because State.info must be a
 # JAX pytree; host tools map them back to readable V21-style strings.
@@ -76,6 +76,9 @@ RESET_SOURCE = {
     "landing_tube_rehearsal": 2,
     "natural": 3,
 }
+
+DESCENT_BOOTSTRAP_GROUP = {"provisional_safe": 0, "boundary": 1, "successful_anchor": 2}
+DESCENT_LAYER = {"late": 0, "middle": 1, "early": 2}
 
 
 def _deg2rad(x: float) -> float:
@@ -281,6 +284,17 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             self._bank_reset_source = jp.asarray([
                 RESET_SOURCE[r.get("reset_source", "flight_curriculum")] for r in records
             ], jp.int32)
+            self._bank_bootstrap_group = jp.asarray([
+                DESCENT_BOOTSTRAP_GROUP.get(r.get("bootstrap_group"), -1) for r in records
+            ], jp.int32)
+            self._bank_descent_layer = jp.asarray([
+                DESCENT_LAYER.get(r.get("descent_layer"), -1) for r in records
+            ], jp.int32)
+            self._reset_parent_ids = tuple(sorted({str(r["reset_parent_id"]) for r in records if r.get("reset_parent_id")}))
+            parent_index = {name: index for index, name in enumerate(self._reset_parent_ids)}
+            self._bank_reset_parent = jp.asarray([
+                parent_index.get(str(r.get("reset_parent_id", "")), -1) for r in records
+            ], jp.int32)
             self._bank_logw = jp.log(jp.asarray(weights) + 1e-12)
         else:
             self._bank_qpos = jp.zeros((1, nq), jp.float32); self._bank_qvel = jp.zeros((1, nv), jp.float32)
@@ -299,6 +313,10 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             self._bank_actor_observation = jp.zeros((1, self._actor_obs_dim), jp.float32)
             self._bank_actor_observation_valid = jp.zeros((1,), bool)
             self._bank_reset_source = jp.zeros((1,), jp.int32)
+            self._bank_bootstrap_group = -jp.ones((1,), jp.int32)
+            self._bank_descent_layer = -jp.ones((1,), jp.int32)
+            self._bank_reset_parent = -jp.ones((1,), jp.int32)
+            self._reset_parent_ids = ()
 
         # Recursive bootstrap entry set comes from the next phase's independently
         # certified Final-safe core.  Matching uses robust standardized features,
@@ -640,6 +658,12 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "reward/lateral_penalty", "reward/yaw_rate_penalty", "reward/yaw_angle_penalty",
             "reward/action_mag_penalty", "reward/action_saturation_penalty", "reward/downrange_penalty",
             "reward/time_penalty", "reward/action_smooth_penalty", "reward/chain_event",
+            "reward/descent_local_shaping", "reward/descent_local_pitch_posture",
+            "reward/descent_local_pitch_rate_penalty", "reward/descent_local_pitch_soft_penalty",
+            "reward/descent_local_roll_score", "reward/descent_local_roll_penalty",
+            "reward/descent_local_speed_score", "reward/descent_local_progress",
+            "reward/descent_local_survival", "reward/descent_local_action_difference_penalty",
+            "reward/descent_local_action_magnitude_penalty", "reward/descent_local_failure_penalty",
             "diag/legacy_recovery_gate_fraction", "diag/recovery_quality_gate",
             "event/takeoff", "event/landing", "event/chain", "event/chain_ever", "event/recovery",
             "phase/approach", "phase/takeoff", "phase/flight", "phase/landing",
@@ -671,6 +695,11 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "reset/episode/landing_tube_rehearsal", "reset/episode/natural",
             "reset/transition/flight_curriculum", "reset/transition/canonical_entry_rehearsal",
             "reset/transition/landing_tube_rehearsal", "reset/transition/natural",
+            "reset/episode/group/provisional_safe", "reset/episode/group/boundary",
+            "reset/episode/group/successful_anchor", "reset/transition/group/provisional_safe",
+            "reset/transition/group/boundary", "reset/transition/group/successful_anchor",
+            "reset/episode/layer/late", "reset/episode/layer/middle", "reset/episode/layer/early",
+            "reset/transition/layer/late", "reset/transition/layer/middle", "reset/transition/layer/early",
             "done/code",
             "end/recovery", "end/prohibited_contact", "end/invalid_wheel_step_contact",
             "end/roll_limit", "end/pitch_limit", "end/backward", "end/platform_back_edge_exit",
@@ -679,7 +708,11 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "end/takeoff_missed_liftoff_deadline", "end/takeoff_missed_wheel_clearance_deadline",
             "end/chain_entry",
         )
-        return {k: jp.zeros((), dtype=jp.float32) for k in keys}
+        dynamic = tuple(
+            f"reset/{kind}/parent/p{index:03d}"
+            for kind in ("episode", "transition") for index in range(len(self._reset_parent_ids))
+        )
+        return {k: jp.zeros((), dtype=jp.float32) for k in keys + dynamic}
 
     def _stage_timeout_steps(self) -> int:
         name = self._stage_name
@@ -712,6 +745,9 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         dual_wheel_liftoff_seen: Optional[jax.Array] = None,
         obs_history: Optional[jax.Array] = None,
         reset_source: Optional[jax.Array] = None,
+        bootstrap_group: Optional[jax.Array] = None,
+        descent_layer: Optional[jax.Array] = None,
+        reset_parent: Optional[jax.Array] = None,
     ) -> Dict[str, jax.Array]:
         """Initialise physical state plus the IMU phase-filter state.
 
@@ -750,6 +786,14 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "landing_phase_step": jp.zeros((), jp.int32),
             "reset_source": jp.asarray(
                 RESET_SOURCE["natural"] if reset_source is None else reset_source, jp.int32
+            ),
+            "bootstrap_group": jp.asarray(-1 if bootstrap_group is None else bootstrap_group, jp.int32),
+            "descent_layer": jp.asarray(-1 if descent_layer is None else descent_layer, jp.int32),
+            "reset_parent": jp.asarray(-1 if reset_parent is None else reset_parent, jp.int32),
+            "descent_local_episode": (
+                jp.asarray(bool(self._config.descent_local_reward_enable))
+                & ((jp.asarray(-1 if bootstrap_group is None else bootstrap_group, jp.int32) >= 0)
+                   | (phase == STAGE_ID["flight"]))
             ),
             "terminated": jp.zeros((), jp.int32),
             "truncated": jp.zeros((), jp.int32),
@@ -791,6 +835,9 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         actor_observation_valid: Optional[jax.Array] = None,
         qacc_warmstart: Optional[jax.Array] = None,
         reset_source: Optional[jax.Array] = None,
+        bootstrap_group: Optional[jax.Array] = None,
+        descent_layer: Optional[jax.Array] = None,
+        reset_parent: Optional[jax.Array] = None,
     ) -> mjx_env.State:
         data = self._make_data(qpos, qvel, ctrl)
         if qacc_warmstart is not None:
@@ -832,6 +879,9 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             prev_rear_tire_bottom_z=init_rear_tire_z,
             obs_history=history,
             reset_source=reset_source,
+            bootstrap_group=bootstrap_group,
+            descent_layer=descent_layer,
+            reset_parent=reset_parent,
         )
         support = self._imu_support_estimate(qpos, qvel_root, had_valid_landing)
         privileged_obs = self._privileged_obs(
@@ -903,6 +953,9 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             reset_source = jp.where(
                 use_bank, self._bank_reset_source[idx], jp.asarray(RESET_SOURCE["natural"], jp.int32)
             )
+            bootstrap_group = jp.where(use_bank, self._bank_bootstrap_group[idx], jp.asarray(-1, jp.int32))
+            descent_layer = jp.where(use_bank, self._bank_descent_layer[idx], jp.asarray(-1, jp.int32))
+            reset_parent = jp.where(use_bank, self._bank_reset_parent[idx], jp.asarray(-1, jp.int32))
             return self._state_from_values(
                 qpos, qvel, ctrl, rng, phase, airborne, landed, age, last_action,
                 estimated_phase=estimated_phase, phase_probs=phase_probs,
@@ -914,6 +967,9 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
                 actor_observation=actor_observation,
                 actor_observation_valid=actor_observation_valid,
                 reset_source=reset_source,
+                bootstrap_group=bootstrap_group,
+                descent_layer=descent_layer,
+                reset_parent=reset_parent,
             )
         return self._state_from_values(qnat, vnat, cnat, rng, jp.asarray(STAGE_ID["approach"], jp.int32), jp.zeros((), jp.int32), jp.zeros((), jp.int32), jp.zeros((), jp.int32))
 
@@ -936,6 +992,10 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         actor_observation: Optional[jax.Array] = None,
         actor_observation_valid: Optional[jax.Array] = None,
         qacc_warmstart: Optional[jax.Array] = None,
+        reset_source: Optional[jax.Array] = None,
+        bootstrap_group: Optional[jax.Array] = None,
+        descent_layer: Optional[jax.Array] = None,
+        reset_parent: Optional[jax.Array] = None,
     ) -> mjx_env.State:
         """Restore physical and IMU phase-filter state for branch certification.
 
@@ -953,6 +1013,10 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             actor_observation=actor_observation,
             actor_observation_valid=actor_observation_valid,
             qacc_warmstart=qacc_warmstart,
+            reset_source=reset_source,
+            bootstrap_group=bootstrap_group,
+            descent_layer=descent_layer,
+            reset_parent=reset_parent,
         )
 
     def reset_from_com_seed(self, seed: Dict[str, Any], rng: jax.Array) -> mjx_env.State:
@@ -1197,13 +1261,22 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         recovery_count = jp.where(recovery_now, state.info["recovery_count"] + 1, 0)
         recovery = recovery_count >= int(cfg.recovery_hold_steps)
 
+        previous_feature = self._landing_entry_feature(
+            state.data,
+            state.info["had_valid_landing"] > 0,
+            state.info["contact_age"] > 0,
+            state.info["landing_entry_age"],
+        ) if self._entry_matcher else self._physical_feature(state.data)
         landing_entry_age=jp.where(valid_landing & (state.info["had_valid_landing"]==0),1,jp.where(had_landing>0,state.info["landing_entry_age"]+1,0))
         feature = self._landing_entry_feature(data,had_landing,support,landing_entry_age) if self._entry_matcher else self._physical_feature(data)
         if self._safe_count:
+            previous_feature_z = (previous_feature - self._safe_center) / self._safe_scale
+            previous_safe_dist = jp.min(jp.linalg.norm(self._safe_features - previous_feature_z[None, :], axis=1))
             feature_z = (feature - self._safe_center) / self._safe_scale
             safe_dist = jp.min(jp.linalg.norm(self._safe_features - feature_z[None, :], axis=1))
             safe_entry = safe_dist <= self._safe_radius
         else:
+            previous_safe_dist = jp.asarray(float(self._safe_radius) + 1.0, dtype=jp.float32)
             safe_dist = jp.asarray(jp.inf, dtype=jp.float32)
             safe_entry = jp.asarray(False)
         if self._stage_name == "landing":
@@ -1373,8 +1446,27 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             + cfg.coeff_recovery_success * recovery.astype(jp.float32)
             - cfg.coeff_action_smooth * action_delta
         )
+        descent_local = compute_descent_local_reward(
+            cfg=cfg,
+            pitch=pitch,
+            pitch_rate=gyro[1],
+            roll=roll,
+            roll_rate=gyro[0],
+            vx=vx,
+            previous_distance=jp.where(jp.isfinite(previous_safe_dist), previous_safe_dist, safe_dist_metric),
+            current_distance=safe_dist_metric,
+            action=action,
+            previous_action=state.info["last_action"],
+            chain=chain,
+            hard_failure=hard_failure,
+        )
         landing_reward_active = phase1 == STAGE_ID["landing"]
         reward = jp.where(landing_reward_active, landing_reward, unified_reward)
+        # Candidate-guided descent episodes retain the local C_L objective even
+        # after a missed entry contact; otherwise the much larger Landing
+        # Recovery bonus would reward bypassing the fixed C_L matcher.
+        descent_local_active = state.info["descent_local_episode"]
+        reward = jp.where(descent_local_active, descent_local["reward"], reward)
         # Stage-C must not lose its objective immediately after liftoff.  Local
         # launch shaping is used only while still in Takeoff; after transition
         # the same Actor receives continuation/chain/final reward through Flight
@@ -1403,6 +1495,18 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "reward/downrange_penalty": downrange_penalty, "reward/time_penalty": time_penalty,
             "reward/action_smooth_penalty": action_smooth_penalty,
             "reward/chain_event": cfg.coeff_chain_event * chain.astype(jp.float32),
+            "reward/descent_local_shaping": descent_local["shaping"],
+            "reward/descent_local_pitch_posture": descent_local["pitch_posture"],
+            "reward/descent_local_pitch_rate_penalty": descent_local["pitch_rate_penalty"],
+            "reward/descent_local_pitch_soft_penalty": descent_local["pitch_soft_penalty"],
+            "reward/descent_local_roll_score": descent_local["roll_score"],
+            "reward/descent_local_roll_penalty": descent_local["roll_penalty"],
+            "reward/descent_local_speed_score": descent_local["speed_score"],
+            "reward/descent_local_progress": descent_local["progress"],
+            "reward/descent_local_survival": descent_local["survival"],
+            "reward/descent_local_action_difference_penalty": descent_local["action_difference_penalty"],
+            "reward/descent_local_action_magnitude_penalty": descent_local["action_magnitude_penalty"],
+            "reward/descent_local_failure_penalty": descent_local["failure_penalty"],
             "reward/takeoff_total": takeoff_profile["reward"],
             "reward/takeoff_dual_wheel_vz": takeoff_profile["terms"]["dual_wheel_vz"],
             "reward/takeoff_dual_wheel_height": takeoff_profile["terms"]["dual_wheel_height"],
@@ -1478,6 +1582,42 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
                     state.info["reset_source"] == source_id
                 ).astype(jp.float32)
                 for name, source_id in RESET_SOURCE.items()
+            },
+            **{
+                f"reset/episode/group/{name}": (
+                    (state.info["bootstrap_group"] == group_id) & (step_no == 1)
+                ).astype(jp.float32)
+                for name, group_id in DESCENT_BOOTSTRAP_GROUP.items()
+            },
+            **{
+                f"reset/transition/group/{name}": (
+                    state.info["bootstrap_group"] == group_id
+                ).astype(jp.float32)
+                for name, group_id in DESCENT_BOOTSTRAP_GROUP.items()
+            },
+            **{
+                f"reset/episode/layer/{name}": (
+                    (state.info["descent_layer"] == layer_id) & (step_no == 1)
+                ).astype(jp.float32)
+                for name, layer_id in DESCENT_LAYER.items()
+            },
+            **{
+                f"reset/transition/layer/{name}": (
+                    state.info["descent_layer"] == layer_id
+                ).astype(jp.float32)
+                for name, layer_id in DESCENT_LAYER.items()
+            },
+            **{
+                f"reset/episode/parent/p{index:03d}": (
+                    (state.info["reset_parent"] == index) & (step_no == 1)
+                ).astype(jp.float32)
+                for index in range(len(self._reset_parent_ids))
+            },
+            **{
+                f"reset/transition/parent/p{index:03d}": (
+                    state.info["reset_parent"] == index
+                ).astype(jp.float32)
+                for index in range(len(self._reset_parent_ids))
             },
             "phase/approach": (phase1 == STAGE_ID["approach"]).astype(jp.float32),
             "phase/takeoff": (phase1 == STAGE_ID["takeoff"]).astype(jp.float32),

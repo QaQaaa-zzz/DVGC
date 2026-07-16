@@ -11,6 +11,58 @@ from typing import Dict
 import jax.numpy as jp
 
 
+def compute_descent_local_reward(
+    *, cfg, pitch, pitch_rate, roll, roll_rate, vx, previous_distance,
+    current_distance, action, previous_action, chain, hard_failure,
+) -> Dict[str, jp.ndarray]:
+    """Low-budget potential shaping for pre-Tube local descent bootstrap."""
+    pitch_z = (pitch - float(cfg.descent_local_pitch_center)) / float(cfg.descent_local_pitch_scale)
+    pitch_rate_z = (pitch_rate - float(cfg.descent_local_pitch_rate_center)) / float(cfg.descent_local_pitch_rate_scale)
+    roll_z = (roll - float(cfg.descent_local_roll_center)) / float(cfg.descent_local_roll_scale)
+    roll_rate_z = (roll_rate - float(cfg.descent_local_roll_rate_center)) / float(cfg.descent_local_roll_rate_scale)
+    speed_z = (vx - float(cfg.descent_local_vx_center)) / float(cfg.descent_local_vx_scale)
+    pitch_posture = 0.025 * jp.exp(-0.5 * pitch_z ** 2)
+    pitch_rate_penalty = 0.055 * jp.minimum(pitch_rate_z ** 2, 4.0)
+    soft = float(cfg.descent_local_pitch_soft_limit_deg) * jp.pi / 180.0
+    hard = float(cfg.max_pitch_deg) * jp.pi / 180.0
+    pitch_excess = jp.maximum(0.0, jp.abs(pitch) - soft) / jp.maximum(hard - soft, 1e-6)
+    pitch_soft_penalty = 0.12 * pitch_excess ** 2
+    roll_score = 0.0075 * jp.exp(-0.5 * roll_z ** 2)
+    roll_penalty = 0.0125 * jp.minimum(jp.maximum(jp.abs(roll_z) - 2.0, 0.0) ** 2 + 0.25 * roll_rate_z ** 2, 4.0)
+    speed_score = 0.0075 * jp.exp(-0.5 * speed_z ** 2)
+    progress = 0.10 * jp.clip(
+        (previous_distance - current_distance) / float(cfg.descent_local_progress_scale), -1.0, 1.0
+    )
+    survival = jp.asarray(float(cfg.descent_local_survival_reward), jp.float32)
+    action_difference_penalty = 0.008 * jp.mean((action - previous_action) ** 2)
+    action_magnitude_penalty = 0.004 * jp.mean(jp.abs(action) ** 1.5)
+    shaping = jp.clip(
+        survival + pitch_posture + roll_score + speed_score + progress
+        - pitch_rate_penalty - pitch_soft_penalty - roll_penalty
+        - action_difference_penalty - action_magnitude_penalty,
+        float(cfg.descent_local_shaping_clip_min),
+        float(cfg.descent_local_shaping_clip_max),
+    )
+    chain_reward = float(cfg.coeff_chain_event) * chain.astype(jp.float32)
+    failure_penalty = float(cfg.descent_local_terminal_failure_penalty) * hard_failure.astype(jp.float32)
+    return {
+        "reward": shaping + chain_reward - failure_penalty,
+        "shaping": shaping,
+        "pitch_posture": pitch_posture,
+        "pitch_rate_penalty": pitch_rate_penalty,
+        "pitch_soft_penalty": pitch_soft_penalty,
+        "roll_score": roll_score,
+        "roll_penalty": roll_penalty,
+        "speed_score": speed_score,
+        "progress": progress,
+        "survival": survival,
+        "action_difference_penalty": action_difference_penalty,
+        "action_magnitude_penalty": action_magnitude_penalty,
+        "chain": chain_reward,
+        "failure_penalty": failure_penalty,
+    }
+
+
 def _clip01(x: jp.ndarray) -> jp.ndarray:
     return jp.clip(x, 0.0, 1.0)
 
