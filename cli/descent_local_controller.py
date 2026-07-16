@@ -63,10 +63,16 @@ class Controller:
         }
 
     def _write_lock_info(self):
+        policy_hash = self.state.get("provenance", {}).get("current_policy_hash")
+        if not policy_hash:
+            block = int(self.state.get("active_block", 1))
+            candidate = self.run / f"blocks/block_{block}_{block * 25600}/train/policy/params.pkl"
+            if candidate.exists():
+                policy_hash = file_sha256(candidate)
         self.lock.seek(0)
         self.lock.truncate()
         self.lock.write(json.dumps({"pid": os.getpid(), "run_id": self.run.name,
-                                    "policy_hash": self.state.get("provenance", {}).get("current_policy_hash"),
+                                    "policy_hash": policy_hash,
                                     "started_at": time.time()}))
         self.lock.flush()
         os.fsync(self.lock.fileno())
@@ -141,7 +147,8 @@ class Controller:
                 "completed_atomic_shards": 0,
                 "partial_log_rows_not_reused": True,
             })
-        self.save(provenance=provenance, current_stage="certify_block", last_completed_action="inspect",
+        self.save(provenance=provenance, current_stage="certify_block", active_block=1,
+                  last_completed_action="inspect", in_progress_action=None, expected_outputs=[],
                   next_decision="merge_certification")
 
     def block_paths(self, block):
