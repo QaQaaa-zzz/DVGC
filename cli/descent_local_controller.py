@@ -125,6 +125,7 @@ class Controller:
             "landing_policy_hash": file_sha256(LANDING / "params.pkl"),
             "initial_policy_hash": file_sha256(INITIAL / "params.pkl"),
             "flight_bank_sha256": file_sha256("artifacts/flight_candidates_augmented_v1.pkl"),
+            "current_policy_hash": file_sha256(self.run / "blocks/block_1_25600/train/policy/params.pkl"),
         }
         gate = json.loads(RUNTIME_GATE.read_text(encoding="utf-8"))
         provenance["runtime_source_fingerprint"] = gate["source_fingerprint"]
@@ -285,6 +286,7 @@ class Controller:
                    "--candidate-bank", POOL, "--entry-set", ENTRY, "--run", root / "train",
                    "--cumulative-steps", next_block * 25600, "--restore-checkpoint", checkpoint, "--seed", 0]
         self.run_command(f"run_next_block_{next_block}", command, root / "train.log", [report, policy / "params.pkl"])
+        self.state["provenance"]["current_policy_hash"] = file_sha256(policy / "params.pkl")
         self.save(current_stage="certify_block", active_block=next_block, next_decision="merge_certification")
 
     def build_matcher(self, block):
