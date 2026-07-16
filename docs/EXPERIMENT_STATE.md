@@ -309,3 +309,24 @@
   one-state seed-7609000 dynamic shard smoke passed with complete provenance,
   explicit end reasons and atomic output.  Formal seed 7610000 remains unused
   by completed shards and is the next automatic stage.
+- Seed-7610000 block-1 construction is now complete: 12 atomic shards cover
+  global indices 0--138 exactly once and strict merge passed.  Current-policy
+  labels over 139 diagnostic records are safe/boundary/dead/unknown =
+  8/41/73/17; after byte-state deduplication there are four Final-safe states
+  from two sources.  Across 2660 branches, Chain=45.79%, Final=36.17%,
+  physical failure=39.32%, timeout=nonfinite=0.
+- Unit v3 stopped with `ExecMainCode=1`, `ExecMainStatus=1`; kernel, journal,
+  CUDA and Warp logs show no OOM or signal.  Exact cause: the four-safe support
+  admits no construction-only C_D matcher radius at the fixed 0.95 precision
+  gate (best leave-one-out construction precision is 0.75).  No matcher or
+  independent audit was activated and PPO did not continue.  Structured
+  evidence is retained in `termination_diagnosis.json`.
+- Controller recovery v4 separates persistent parent and GPU shard worker
+  systemd services, validates every atomic marker, and applies certification-
+  worker-only OOM backoff 12->6->3->1 without changing branch seeds/budgets.
+  Exit 40 is now a non-restarting research `gate_pause`; exit 41 is an
+  authorized stop; other nonzero exits remain restartable engineering errors.
+  Full preflight is 86 passed, a fresh isolated runtime gate is PASS/current,
+  and an independent worker-unit single-state smoke passed.  Current terminal
+  state remains the fixed matcher-precision gate pause; there are no missing
+  certification indices to rerun.

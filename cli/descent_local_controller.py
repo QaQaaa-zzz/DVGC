@@ -27,6 +27,41 @@ LANDING = Path("runs/landing/refinement_seed0/policy")
 ENTRY = Path("runs/stage_experts/flight_seed0_20260715T2045/bridge_recovery/entry_set_bridge.pkl")
 RUNTIME_GATE = Path("docs/RUNTIME_GATE.json")
 SHARD_SIZE = 12
+GATE_PAUSE_EXIT = 40
+AUTHORIZED_STOP_EXIT = 41
+
+
+def is_stale_lock(lock_payload, *, unit_active, worker_pids, heartbeat_age):
+    """A lock is stale only after every independent liveness check agrees."""
+    pid = int(lock_payload.get("pid", 0) or 0)
+    try:
+        os.kill(pid, 0)
+        pid_alive = pid > 0
+    except OSError:
+        pid_alive = False
+    return bool(not pid_alive and not unit_active and not worker_pids and heartbeat_age > 60.0)
+
+
+def split_range_after_oom(start, end):
+    """Apply the declared 12 -> 6 -> 3 -> 1 state OOM backoff."""
+    width = int(end) - int(start)
+    if width <= 1:
+        return [(int(start), int(end))]
+    target = 6 if width > 6 else 3 if width > 3 else 1
+    return [(left, min(left + target, int(end))) for left in range(int(start), int(end), target)]
+
+
+def completed_coverage(payloads, total):
+    """Return exact completed coverage, rejecting gaps and overlaps."""
+    indices = sorted(int(row["candidate_index"]) for payload in payloads for row in payload["rows"])
+    if indices != list(range(int(total))):
+        raise ValueError("Completed shard markers do not cover every global index exactly once")
+    return indices
+
+
+def worker_log_is_oom(text):
+    lowered = str(text).lower()
+    return any(token in lowered for token in ("out of memory", "failed to allocate", "resource_exhausted"))
 
 
 class Controller:
@@ -111,6 +146,40 @@ class Controller:
                   stop_reason=None)
         self.log(f"DONE {action}")
 
+    def run_worker_command(self, action, command, log_path, outputs, *, unit_suffix, preallocate=True):
+        """Run one GPU-capable command in a distinct transient service/cgroup."""
+        spec_path = self.run / "worker_specs" / f"{unit_suffix}.json"
+        spec_path.parent.mkdir(parents=True, exist_ok=True)
+        environment = {} if preallocate else {"XLA_PYTHON_CLIENT_PREALLOCATE": "false"}
+        save_json(spec_path, {"command": [str(value) for value in command],
+                              "log": str(log_path.resolve()), "environment": environment})
+        unit = f"dvgc-descent-worker-{unit_suffix}"
+        launch = ["systemd-run", "--user", "--wait", "--collect", f"--unit={unit}",
+                  "--property=WorkingDirectory=/home/qy/DVGC", PYTHON, "-m", "cli.descent_worker",
+                  "--spec", str(spec_path.resolve())]
+        self.save(in_progress_action=action, expected_outputs=[str(path) for path in outputs],
+                  active_worker_unit=f"{unit}.service")
+        self.log(f"START WORKER {action} unit={unit}.service")
+        process = subprocess.Popen(launch, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        while process.poll() is None:
+            self.save()
+            time.sleep(30)
+        self.save(active_worker_unit=None)
+        if process.returncode:
+            text = log_path.read_text(encoding="utf-8", errors="replace") if log_path.exists() else ""
+            oom = worker_log_is_oom(text)
+            return {"ok": False, "oom": oom, "returncode": int(process.returncode), "unit": f"{unit}.service"}
+        missing = [str(path) for path in outputs if not Path(path).exists()]
+        if missing:
+            return {"ok": False, "oom": False, "returncode": 70, "missing": missing, "unit": f"{unit}.service"}
+        self.state.setdefault("history", []).append({"action": action, "completed_at": time.time(),
+                                                       "worker_unit": f"{unit}.service",
+                                                       "outputs": [str(path) for path in outputs]})
+        self.save(last_completed_action=action, in_progress_action=None, expected_outputs=[], retry_count=0,
+                  stop_reason=None)
+        self.log(f"DONE WORKER {action} unit={unit}.service")
+        return {"ok": True, "oom": False, "returncode": 0, "unit": f"{unit}.service"}
+
     def inspect(self):
         if shutil.which(PYTHON) is None and not Path(PYTHON).is_file():
             raise RuntimeError(f"Configured runtime missing: {PYTHON}")
@@ -175,11 +244,11 @@ class Controller:
         shard_root = root / f"construction_seed{seed}_sharded_v1"
         shard_root.mkdir(parents=True, exist_ok=True)
         total = len(SnapshotBank.load(POOL).records_for_phase("flight", include_training_only=False))
-        shards = []
-        for start in range(0, total, SHARD_SIZE):
-            end = min(start + SHARD_SIZE, total)
+        pending = [(start, min(start + SHARD_SIZE, total)) for start in range(0, total, SHARD_SIZE)]
+        single_oom_attempts = {}
+        while pending:
+            start, end = pending.pop(0)
             output = shard_root / f"shard_{start:03d}_{end:03d}.completed.json"
-            shards.append(output)
             if output.exists():
                 payload = json.loads(output.read_text(encoding="utf-8"))
                 valid = (payload.get("complete") is True and payload.get("start_index") == start
@@ -198,8 +267,30 @@ class Controller:
                        "--landing-entry-set", ENTRY, "--output", output, "--seed", seed,
                        "--namespace", f"descent_local_block_{block}", "--start-index", start,
                        "--end-index", end, "--confirm-safe-to-max"]
-            self.run_command(f"certify_block_{block}_shard_{start}_{end}", command,
-                             shard_root / f"shard_{start:03d}_{end:03d}.log", [output])
+            result = self.run_worker_command(
+                f"certify_block_{block}_shard_{start}_{end}", command,
+                shard_root / f"shard_{start:03d}_{end:03d}.log", [output],
+                unit_suffix=f"{self.run.name[-8:]}-b{block}-{start}-{end}-{int(time.time())}",
+                preallocate=(end-start == SHARD_SIZE),
+            )
+            if result["ok"]:
+                continue
+            if not result["oom"]:
+                raise RuntimeError(f"Certification worker failed without OOM: {result}")
+            if end-start == 1:
+                attempts = single_oom_attempts.get(start, 0) + 1
+                single_oom_attempts[start] = attempts
+                if attempts >= 2:
+                    self.save(current_stage="pause_with_reason",
+                              stop_reason=f"Global state {start} OOMed twice as a single-state worker")
+                    return
+                pending.insert(0, (start, end))
+            else:
+                pending = split_range_after_oom(start, end) + pending
+        shard_payloads = [json.loads(path.read_text(encoding="utf-8"))
+                          for path in sorted(shard_root.glob("shard_*.completed.json"))]
+        completed_coverage(shard_payloads, total)
+        shards = sorted(shard_root.glob("shard_*.completed.json"))
         self.save(current_stage="merge_certification", next_decision="decide_after_certification",
                   expected_outputs=[str(path) for path in shards])
 
@@ -208,6 +299,9 @@ class Controller:
         seed = 7600000 + block * 10000
         shard_root = root / f"construction_seed{seed}_sharded_v1"
         shards = sorted(shard_root.glob("shard_*.completed.json"))
+        payloads = [json.loads(path.read_text(encoding="utf-8")) for path in shards]
+        total = len(SnapshotBank.load(POOL).records_for_phase("flight", include_training_only=False))
+        completed_coverage(payloads, total)
         bank = root / "current_policy_certified_sharded.pkl"
         report = root / "current_policy_certified_sharded.cert.json"
         analysis = root / "current_policy_analysis_sharded.json"
@@ -302,10 +396,29 @@ class Controller:
         matcher = root / "canonical_descent_entry_pre_audit.pkl"
         manifest = root / "canonical_descent_entry_pre_audit.manifest.json"
         if not matcher.exists() or not manifest.exists():
-            self.run_command("build_matcher",
-                             [PYTHON, "-m", "cli.build_descent_matcher", "--certified-bank", certified,
-                              "--output-bank", matcher, "--manifest", manifest],
-                             root / "build_matcher.log", [matcher, manifest])
+            try:
+                self.run_command("build_matcher",
+                                 [PYTHON, "-m", "cli.build_descent_matcher", "--certified-bank", certified,
+                                  "--output-bank", matcher, "--manifest", manifest],
+                                 root / "build_matcher.log", [matcher, manifest])
+            except RuntimeError:
+                text = (root / "build_matcher.log").read_text(encoding="utf-8", errors="replace")
+                if "No Landing-entry radius meets calibration precision" in text:
+                    report = root / "matcher_gate_pause.json"
+                    save_json(report, {
+                        "status": "GATE_PAUSE",
+                        "exit_semantics": GATE_PAUSE_EXIT,
+                        "reason": "No construction-only C_D matcher radius meets the fixed precision gate",
+                        "minimum_precision": 0.95,
+                        "policy_hash": file_sha256(self.block_paths(block)[1] / "params.pkl"),
+                        "certified_bank_sha256": file_sha256(certified),
+                        "action": "Do not lower precision, start PPO, or run independent audit",
+                    })
+                    self.save(current_stage="gate_pause", next_decision="authorized_method_direction",
+                              in_progress_action=None, expected_outputs=[],
+                              stop_reason="No construction-only C_D matcher radius meets precision >= 0.95")
+                    return
+                raise
         self.save(current_stage="run_independent_audit", next_decision="audit_analysis")
 
     def run_independent_audit(self, block):
@@ -316,20 +429,47 @@ class Controller:
         audit_root.mkdir(exist_ok=True)
         total = len(SnapshotBank.load(matcher).records_for_phase("flight", include_training_only=False))
         seed = 8700000 + block * 100000
-        shards = []
-        for start in range(0, total, SHARD_SIZE):
-            end = min(start + SHARD_SIZE, total)
+        pending = [(start, min(start + SHARD_SIZE, total)) for start in range(0, total, SHARD_SIZE)]
+        single_oom_attempts = {}
+        while pending:
+            start, end = pending.pop(0)
             output = audit_root / f"shard_{start:03d}_{end:03d}.completed.json"
-            shards.append(output)
-            if not output.exists():
-                self.run_command(f"independent_audit_shard_{start}_{end}",
-                                 [PYTHON, "-u", "-m", "cli.certify_descent_entries", "--audit-only",
-                                  "--descent-policy", policy, "--candidate-source-policy", INITIAL,
-                                  "--landing-policy", LANDING, "--candidate-bank", matcher,
-                                  "--landing-entry-set", ENTRY, "--output", output, "--seed", seed,
-                                  "--namespace", f"audit_descent_local_block_{block}",
-                                  "--start-index", start, "--end-index", end],
-                                 audit_root / f"shard_{start:03d}_{end:03d}.log", [output])
+            if output.exists():
+                payload = json.loads(output.read_text(encoding="utf-8"))
+                if payload.get("status") == "PASS" and payload.get("start_index") == start and payload.get("end_index") == end:
+                    continue
+                invalid = audit_root / "invalid_diagnostic"
+                invalid.mkdir(exist_ok=True)
+                output.rename(invalid / f"{output.name}.{int(time.time())}")
+            command = [PYTHON, "-u", "-m", "cli.certify_descent_entries", "--audit-only",
+                       "--descent-policy", policy, "--candidate-source-policy", INITIAL,
+                       "--landing-policy", LANDING, "--candidate-bank", matcher,
+                       "--landing-entry-set", ENTRY, "--output", output, "--seed", seed,
+                       "--namespace", f"audit_descent_local_block_{block}",
+                       "--start-index", start, "--end-index", end]
+            result = self.run_worker_command(
+                f"independent_audit_shard_{start}_{end}", command,
+                audit_root / f"shard_{start:03d}_{end:03d}.log", [output],
+                unit_suffix=f"{self.run.name[-8:]}-audit-b{block}-{start}-{end}-{int(time.time())}",
+                preallocate=(end-start == SHARD_SIZE),
+            )
+            if result["ok"]:
+                continue
+            if not result["oom"]:
+                raise RuntimeError(f"Independent audit worker failed without OOM: {result}")
+            if end-start == 1:
+                attempts = single_oom_attempts.get(start, 0) + 1
+                single_oom_attempts[start] = attempts
+                if attempts >= 2:
+                    self.save(current_stage="gate_pause",
+                              stop_reason=f"Audit state {start} OOMed twice as a single-state worker")
+                    return
+                pending.insert(0, (start, end))
+            else:
+                pending = split_range_after_oom(start, end) + pending
+        shards = sorted(audit_root.glob("shard_*.completed.json"))
+        payloads = [json.loads(path.read_text(encoding="utf-8")) for path in shards]
+        completed_coverage(payloads, total)
         merged = root / "independent_audit_sharded.json"
         if not merged.exists():
             command = [PYTHON, "-m", "cli.merge_descent_entry_audits"]
@@ -344,8 +484,8 @@ class Controller:
                               "--matcher-manifest", manifest, "--audit-report", merged, "--output", result],
                              root / "audit_analysis.log", [result])
         report = json.loads(result.read_text(encoding="utf-8"))
-        self.save(current_stage="train_viability" if report["status"] == "PASS" else "pause_with_reason",
-                  next_decision="train_viability" if report["status"] == "PASS" else "pause_with_reason",
+        self.save(current_stage="train_viability" if report["status"] == "PASS" else "gate_pause",
+                  next_decision="train_viability" if report["status"] == "PASS" else "authorized_method_direction",
                   stop_reason=None if report["status"] == "PASS" else "; ".join(report["reasons"]))
 
     def train_viability(self, block):
@@ -375,9 +515,18 @@ class Controller:
             elif stage == "build_matcher": self.build_matcher(block)
             elif stage == "run_independent_audit": self.run_independent_audit(block)
             elif stage == "train_viability": self.train_viability(block)
+            elif stage == "gate_pause":
+                self.log(f"controller gate pause: {self.state.get('stop_reason')}")
+                return GATE_PAUSE_EXIT
+            elif stage == "authorized_stop":
+                self.log(f"controller authorized stop: {self.state.get('stop_reason')}")
+                return AUTHORIZED_STOP_EXIT
+            elif stage == "pipeline_complete":
+                self.log("controller pipeline complete")
+                return 0
             elif stage in {"run_acquisition", "run_tube_rsi", "pause_with_reason", "complete"}:
                 self.log(f"controller stopped at {stage}: {self.state.get('stop_reason')}")
-                return 0 if stage == "complete" else 2
+                return 70
             else: raise RuntimeError(f"Unknown controller stage: {stage}")
 
 
