@@ -273,3 +273,18 @@
   process independent audit.  Full local preflight: 77 passed.  Runtime gate
   PASS/current: source `92ba819...0d534`, config `bf93618...04294b`, XML
   `d7e9f43...ce794c`.  Next automatic step is block 1; PPO has not yet started.
+- First block attempt under commit `bac6380` completed 25,600 steps and is
+  retained at `descent_local_seed0_20260716T163504/blocks/block_1_25600`, but
+  was rejected before certification: block-end eval had 98 NaN aggregate
+  metrics (no OOM/timeout; policy params and initial actions were finite).
+  Fixed-candidate reproduction found 0/166 nonfinite episodes; a separate
+  128-way full-reset probe completed 7,448 episodes without raw-state NaN,
+  isolating a rare unclassified solver transition rather than bad candidates.
+- Bounded repair adds an explicit `nonfinite` physical termination, preserves
+  the prior finite qpos/qvel/ctrl/warmstart for the terminal sample, sanitizes
+  terminal observations/diagnostics, and never changes normal finite dynamics.
+  The failed checkpoint/run is not overwritten; the retry root is
+  `descent_local_nonfinite_repair_seed0_20260716T1825`.  Full preflight now
+  passes 78 tests; runtime gate PASS/current source `f3389b1...977ed`, config
+  `bf93618...04294b`, authoritative XML unchanged.  Next step is a fresh block
+  1 retry from the immutable pi_F,D-local clone.

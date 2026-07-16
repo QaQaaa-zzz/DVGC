@@ -51,6 +51,7 @@ END_TAKEOFF_WHEELIE_FAILURE = 11
 END_TAKEOFF_MISSED_LIFTOFF_DEADLINE = 12
 END_TAKEOFF_MISSED_WHEEL_CLEARANCE = 13
 END_CHAIN_ENTRY = 14
+END_NONFINITE = 15
 
 END_REASON = {
     END_NONE: "horizon",
@@ -68,6 +69,7 @@ END_REASON = {
     END_TAKEOFF_MISSED_LIFTOFF_DEADLINE: "takeoff_missed_liftoff_deadline",
     END_TAKEOFF_MISSED_WHEEL_CLEARANCE: "takeoff_missed_wheel_clearance_deadline",
     END_CHAIN_ENTRY: "chain_entry",
+    END_NONFINITE: "nonfinite",
 }
 
 RESET_SOURCE = {
@@ -686,6 +688,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "state/knee_target", "state/knee_pos", "state/knee_vel", "state/knee_target_delta",
             "diag/dual_wheel_liftoff", "diag/wheelie_detected", "diag/positive_pitch_bad",
             "diag/knee_moved", "diag/base_z_success_disabled", "diag/cert_bank_safe_count", "diag/cert_bank_explicit",
+            "diag/nonfinite_transition",
             "event/dual_wheel_liftoff",
             "reward/takeoff_total", "reward/takeoff_dual_wheel_vz", "reward/takeoff_dual_wheel_height",
             "reward/takeoff_min_tire_clearance", "reward/takeoff_knee_useful_motion",
@@ -707,6 +710,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "end/takeoff_positive_pitch_failure", "end/takeoff_wheelie_failure",
             "end/takeoff_missed_liftoff_deadline", "end/takeoff_missed_wheel_clearance_deadline",
             "end/chain_entry",
+            "end/nonfinite",
         )
         dynamic = tuple(
             f"reset/{kind}/parent/p{index:03d}"
@@ -1117,6 +1121,23 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         knee_position0 = state.data.qpos[self._joint_qpos["knee_joint"]]
         ctrl = self._action_to_ctrl(action, knee_position0)
         data = mjx_env.step(self.mjx_model, state.data, ctrl, self.n_substeps)
+        nonfinite = ~(
+            jp.all(jp.isfinite(action))
+            & jp.all(jp.isfinite(data.qpos))
+            & jp.all(jp.isfinite(data.qvel))
+            & jp.all(jp.isfinite(data.qacc_warmstart))
+        )
+        # A rare divergent solver transition must terminate as explicit
+        # physical evidence without leaking NaNs into PPO observations or
+        # aggregate metrics.  Preserve the last finite simulator state only
+        # for this terminal transition; normal dynamics remain untouched.
+        data = data.replace(
+            qpos=jp.where(nonfinite, state.data.qpos, data.qpos),
+            qvel=jp.where(nonfinite, state.data.qvel, data.qvel),
+            ctrl=jp.where(nonfinite, state.data.ctrl, data.ctrl),
+            qacc_warmstart=jp.where(nonfinite, state.data.qacc_warmstart, data.qacc_warmstart),
+        )
+        action = jp.where(nonfinite, state.info["last_action"], action)
         qpos, qvel, roll, pitch, yaw = self._root_state(data)
         x, y, z = qpos[0], qpos[1], qpos[2]
         vx, vy, vz = qvel[0], qvel[1], qvel[2]
@@ -1330,7 +1351,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         backward = x < state.info["start_x"] - cfg.max_backward_distance
         back_edge = (had_landing > 0) & (x >= cfg.step_back_x - cfg.platform_back_edge_diagnostic_margin)
         prelaunch_fail = prelaunch_airborne >= int(cfg.pretakeoff_airborne_fail_steps)
-        hard_failure = contact["prohibited"] | invalid_fail | roll_bad | pitch_bad | backward | back_edge | prelaunch_fail | takeoff_task_failure
+        hard_failure = contact["prohibited"] | invalid_fail | roll_bad | pitch_bad | backward | back_edge | prelaunch_fail | takeoff_task_failure | nonfinite
         chain_terminal = jp.asarray(bool(cfg.expert_chain_termination)) & chain & (self._stage_name != "landing")
         terminated = recovery | hard_failure | chain_terminal
         truncated = timeout & (~terminated)
@@ -1349,6 +1370,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         code = jp.where(roll_bad & ~recovery, END_ROLL_LIMIT, code)
         code = jp.where(invalid_fail & ~recovery, END_INVALID_WHEEL_STEP, code)
         code = jp.where(contact["prohibited"] & ~recovery, END_PROHIBITED_CONTACT, code)
+        code = jp.where(nonfinite & ~recovery, END_NONFINITE, code)
 
         # Landing reward: no CoM tracking and no fixed-height target.  The
         # strict profile corrects a V21 legacy issue where an ever-growing
@@ -1474,6 +1496,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         takeoff_local = (phase0 == STAGE_ID["takeoff"]) & (phase1 == STAGE_ID["takeoff"])
         takeoff_total = jp.where(takeoff_local, takeoff_profile["reward"], reward)
         reward = jp.where(self._stage_name == "takeoff", takeoff_total, reward)
+        reward = jp.where(nonfinite, -jp.asarray(float(cfg.coeff_hard_failure), jp.float32), reward)
 
         metrics = self._empty_metrics()
         metrics.update({
@@ -1570,6 +1593,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "diag/base_z_success_disabled": takeoff_signals["base_z_success_disabled"],
             "diag/cert_bank_safe_count": jp.asarray(float(self._safe_count), jp.float32),
             "diag/cert_bank_explicit": jp.asarray(float(self._cert_bank_explicit), jp.float32),
+            "diag/nonfinite_transition": nonfinite.astype(jp.float32),
             "event/dual_wheel_liftoff": takeoff_signals["dual_wheel_liftoff"].astype(jp.float32),
             **{
                 f"reset/episode/{name}": (
@@ -1641,16 +1665,20 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "end/takeoff_missed_liftoff_deadline": (code == END_TAKEOFF_MISSED_LIFTOFF_DEADLINE).astype(jp.float32),
             "end/takeoff_missed_wheel_clearance_deadline": (code == END_TAKEOFF_MISSED_WHEEL_CLEARANCE).astype(jp.float32),
             "end/chain_entry": (code == END_CHAIN_ENTRY).astype(jp.float32),
+            "end/nonfinite": (code == END_NONFINITE).astype(jp.float32),
         })
+        metrics = {key: jp.nan_to_num(value) for key, value in metrics.items()}
         info = dict(state.info)
         frame = self._actor_frame(
             data, action, phase_probs1, had_landing, contact_age, recovery_count,
             state.info["prev_acc_z"], obs_rng,
         )
+        frame = jp.nan_to_num(frame)
         next_history = self._advance_actor_history(state.info["obs_history"], frame)
         privileged_obs = self._privileged_obs(
             data, phase1, had_airborne, had_landing, support, contact_age, recovery_count, action
         )
+        privileged_obs = jp.nan_to_num(privileged_obs)
         info.update({
             "rng": rng, "phase": phase1.astype(jp.int32), "had_airborne": had_airborne.astype(jp.int32),
             "had_valid_landing": had_landing.astype(jp.int32), "airborne_count": airborne_count.astype(jp.int32),

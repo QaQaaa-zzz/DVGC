@@ -204,6 +204,24 @@ def test_descent_local_reset_labels_are_auditable_but_not_actor_inputs():
 
 
 @pytest.mark.skipif(not RUNTIME_READY,reason="MuJoCo runtime required")
+def test_nonfinite_action_is_explicit_finite_terminal_transition():
+    import jax
+    import jax.numpy as jp
+    import numpy as np
+    from dvgc.bank import SnapshotBank
+    from dvgc.config import load_config
+    from dvgc.env import END_NONFINITE,OrangeBikeDVGC
+
+    cfg=load_config("configs/default.json",{"training_stage":"flight","use_bank_resets":False,"obs_noise_enable":False,"domain_randomization":False})
+    env=OrangeBikeDVGC(cfg,snapshot_bank=SnapshotBank()); state=env.reset(jax.random.PRNGKey(55))
+    terminal=env.step(state,jp.full((env.action_size,),jp.nan))
+    assert int(terminal.info["end_code"])==END_NONFINITE and int(terminal.info["terminated"])==1
+    assert float(terminal.metrics["diag/nonfinite_transition"])==1.0
+    assert np.isfinite(np.asarray(terminal.data.qpos)).all() and np.isfinite(np.asarray(terminal.data.qvel)).all()
+    assert np.isfinite(np.asarray(terminal.obs["state"])).all() and np.isfinite(float(terminal.reward))
+
+
+@pytest.mark.skipif(not RUNTIME_READY,reason="MuJoCo runtime required")
 def test_composite_handoff_preserves_physics_and_policy_state():
     import jax
     import jax.numpy as jp
