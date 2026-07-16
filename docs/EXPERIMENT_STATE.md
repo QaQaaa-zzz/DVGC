@@ -330,3 +330,22 @@
   and an independent worker-unit single-state smoke passed.  Current terminal
   state remains the fixed matcher-precision gate pause; there are no missing
   certification indices to rerun.
+- Authorized exact-Tube branch freezes block-1 policy
+  `3ed8f3d...9dddea`, certification `613626b...3a889`, and 98 byte/state-
+  unique snapshots as D_emp_safe/boundary/dead/unknown = 4/31/51/12.  Exact
+  safe construction evidence is 114/128 Final (89.06%), 9/128 physical
+  failures, timeout=nonfinite=0; support spans three middle and one late state
+  from two parents.  Exact membership requires immutable id + full snapshot
+  hash + policy hash + certification hash and performs no distance expansion.
+- The failed global matcher remains inactive and immutable: robust-axis-scaled
+  isotropic radius 0.5186367 has construction TP/FP/FN/TN=3/1/1/93,
+  precision=recall=0.75.  Its sole false-safe is a dead state from the dominant
+  safe parent; normalized proximity is dominated by `wy`, with smaller hip,
+  pitch, vx and vz contributions.  This diagnostic is not overwritten.
+- New `descent-tube` route uses fresh pointwise audit seed 9310000 in isolated
+  worker services.  All 98 unique candidates are audited so exact safe,
+  boundary, dead, unknown and Tube-outside mass share one independent seed
+  namespace.  Pointwise failure alone triggers exact-optimizer block 2;
+  pointwise success activates snapshot-only D_emp_safe while continuous C_D
+  remains inactive and sends construction state-level labels—not audit data—
+  to the parent-group-split acquisition-only Viability ensemble.

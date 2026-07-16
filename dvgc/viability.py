@@ -68,12 +68,16 @@ class ViabilityEnsemble:
             raise RuntimeError("Viability ensemble has not been fitted")
         return ((np.asarray(x, np.float32) - self.mean) / self.std).astype(np.float32)
 
-    def fit(self, records: Sequence[dict[str, Any]], *, epochs: int = 400, batch_size: int = 96, learning_rate: float = 2e-3) -> dict[str, float]:
+    def fit(self, records: Sequence[dict[str, Any]], *, epochs: int = 400, batch_size: int = 96, learning_rate: float = 2e-3, sample_weights: np.ndarray | None = None) -> dict[str, float]:
         rows = [r for r in records if int(r.get("final", {}).get("branches", 0)) > 0 and not bool(r.get("training_only", False))]
         if len(rows) < 8:
             raise ValueError("Need at least 8 Final-certified snapshots")
         x = np.stack([physical_belief_feature(r) for r in rows]).astype(np.float32)
         y = np.asarray([float(r["final"]["posterior"]["mean"]) for r in rows], np.float32)
+        weights = np.ones(len(rows), np.float64) if sample_weights is None else np.asarray(sample_weights, np.float64)
+        if weights.shape != (len(rows),) or not np.isfinite(weights).all() or (weights <= 0).any():
+            raise ValueError("sample_weights must be positive finite state-level weights")
+        weights /= weights.sum()
         self.mean = x.mean(axis=0)
         self.std = x.std(axis=0) + 1e-5
         xx = self._transform(x)
@@ -82,7 +86,7 @@ class ViabilityEnsemble:
         self.members = []
         losses = []
         for _member_id in range(self.members_n):
-            boot = rng.integers(0, len(xx), size=len(xx))
+            boot = rng.choice(len(xx), size=len(xx), replace=True, p=weights)
             xb, yb = xx[boot], y[boot]
             member = _Member(
                 (rng.normal(size=(xx.shape[1], self.hidden)) / np.sqrt(xx.shape[1])).astype(np.float32),
