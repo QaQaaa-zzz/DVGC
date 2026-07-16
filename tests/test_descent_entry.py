@@ -9,6 +9,8 @@ from dvgc.descent_local import balanced_parent, build_candidate_bootstrap_bank, 
 from cli.certify_descent_entries import qualified_descent_success
 from cli.build_descent_entries import snapshot_identity
 from cli.merge_descent_entry_audits import merge_reports
+from cli.merge_descent_construction_shards import validate_and_merge
+from cli.audit_descent_matcher import calibration_metrics
 from dvgc.certification import summarize_branches
 from dvgc.config import load_config
 from dvgc.rewards import compute_descent_local_reward
@@ -56,6 +58,47 @@ def test_descent_audit_shards_require_complete_indices_and_unique_seeds():
     try: merge_reports([_audit_shard(0,10),duplicate])
     except ValueError as exc: assert "globally unique" in str(exc)
     else: raise AssertionError("duplicate global audit seed was accepted")
+
+
+def _construction_shard(index, seed, *, duplicate_seed=False):
+    branch_seed_value = seed if duplicate_seed else 7 + index * 10_000
+    evidence = [{"branch_index": b, "branch_seed": branch_seed_value + b,
+                 "seed_namespace": "construction", "chain_success": False,
+                 "final_recovery": False, "terminal_cause": "physical_failure"}
+                for b in range(8)]
+    common = {"status":"PASS", "complete":True, "seed":7,
+              "seed_namespace":"construction", "candidate_bank_sha256":"bank",
+              "candidate_source_policy_hash":"source", "landing_entry_set_sha256":"entry",
+              "descent_policy_hash":"descent", "descent_policy_version":"descent-v1",
+              "descent_estimator_version":"event-v1", "landing_policy_hash":"landing",
+              "landing_policy_version":"landing-v1", "xml_sha256":"xml", "config_hash":"config",
+              "runtime_source_fingerprint":"runtime", "protocol":{}, "min_branches":8,
+              "max_branches":32, "branch_horizon":64, "total_states":2,
+              "confirm_safe_to_max":True, "start_index":index, "end_index":index+1}
+    common["rows"] = [{"id":str(index), "candidate_index":index, "branches":8,
+                       "chain":0, "final":0, "branch_evidence":evidence}]
+    return common
+
+
+def test_descent_construction_shards_require_global_indices_and_stable_branch_seeds():
+    source = SnapshotBank([{"id":str(i), "source_phase":"flight", "qpos":np.zeros(2),
+                            "qvel":np.zeros(2), "ctrl":np.zeros(1),
+                            "physical_feature":np.zeros(16)} for i in range(2)])
+    cfg = SimpleNamespace(beta_alpha0=1., beta_beta0=1., posterior_q_low=.05,
+                          posterior_q_high=.95, min_branches=8, safe_threshold=.7,
+                          dead_threshold=.3, boundary_max_width=.4)
+    rows = validate_and_merge([_construction_shard(0, 7), _construction_shard(1, 10007)], source, cfg)
+    assert [row["candidate_index"] for row in rows] == [0, 1]
+    bad = _construction_shard(1, 7, duplicate_seed=True)
+    try: validate_and_merge([_construction_shard(0, 7), bad], source, cfg)
+    except ValueError as exc: assert "seed" in str(exc).lower()
+    else: raise AssertionError("unstable construction branch seed was accepted")
+
+
+def test_descent_matcher_calibration_metrics_use_independent_rates():
+    result = calibration_metrics([0.1, 0.9], [0.0, 1.0], bins=2)
+    assert np.isclose(result["brier"], 0.01)
+    assert np.isclose(result["ece"], 0.1)
 
 
 def test_descent_proposal_identity_covers_full_policy_snapshot():

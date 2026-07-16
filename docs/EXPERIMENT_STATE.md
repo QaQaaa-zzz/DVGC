@@ -288,3 +288,24 @@
   passes 78 tests; runtime gate PASS/current source `f3389b1...977ed`, config
   `bf93618...04294b`, authoritative XML unchanged.  Next step is a fresh block
   1 retry from the immutable pi_F,D-local clone.
+- Formal nonfinite-repair block 1 is complete and healthy at 25,600 effective
+  steps: policy `3ed8f3d...9dddea`, seed 0, exact optimizer checkpoint
+  `000000025600`.  Candidate pool `cc2f2c1...7a76ff`, bootstrap bank
+  `1eb7898...bbd9d`, C_L `185164d...2aa41`, pi_L
+  `fa3a518...34bb7e`, source pi_F,D `917f77c...af041`, Flight bank
+  `2d5d7de...f62934`, XML `d7e9f43...ce794c`, and runtime source
+  `f3389b1...977ed` remain fixed.
+- The original seed-7610000 monolithic current-policy certification reached
+  global index 71, then exited on a GPU allocation failure before writing an
+  atomic bank/report.  It is retained as an invalid/incomplete diagnostic and
+  none of its log-only rows are reused.  Recovery uses 12-state new-process
+  construction shards with the unchanged global branch-seed map, atomic
+  completion JSON, strict 0--138 merge, and no block-1 retraining.
+- The persistent descent-local controller now owns inspect -> sharded
+  certification -> strict merge -> evidence-based decision -> exact optimizer
+  continuation or pre-audit matcher freeze -> chunked independent audit ->
+  viability state transitions.  Matcher radius is fixed solely from
+  construction evidence before audit.  Targeted tests pass 16/16; a separate
+  one-state seed-7609000 dynamic shard smoke passed with complete provenance,
+  explicit end reasons and atomic output.  Formal seed 7610000 remains unused
+  by completed shards and is the next automatic stage.
