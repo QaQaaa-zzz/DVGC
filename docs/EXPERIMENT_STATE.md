@@ -242,3 +242,14 @@
   contact=deep penetration=5-step physical failure=nonfinite=0; child states
   are unique against all base states.  The 41 duplicate historical diagnostic
   snapshots remain evaluation-only and do not create training multiplicity.
+- The superseding deduplicated pool `cc2f2c1...7a76ff` keeps all 139 records for
+  diagnostics but exposes only 83 byte-unique training states: 12 provisional-
+  safe-neighborhood, 51 boundary-neighborhood and 20 successful-anchor states
+  across late/middle/early = 50/27/6.  It contains 57 structured children from
+  26 unique parents (maximum four per parent); the aspirational 60-child quota
+  was not reached in 1200 fixed proposals, but every one of the 26 unique base
+  parents has bounded local support and all three source groups are represented.
+  Final candidate audit PASS: robot-terrain contact=0, deep penetration=0,
+  five-step physical failure=0, timeout=0, nonfinite=0, and all eligible/child
+  identities unique.  XML `d7e9f43...ce794c`, C_L `185164d...2aa41`, Flight
+  bank `2d5d7de...f62934`, and candidate seed 7400000 remain fixed.
