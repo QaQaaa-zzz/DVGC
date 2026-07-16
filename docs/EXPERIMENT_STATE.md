@@ -229,3 +229,16 @@
   `0c323d0...8fe7c`, XML
   unchanged.  OOM was isolated to the abandoned monolithic audit process; all
   seven accepted audit shards completed without OOM.
+- Descent-local route authorized at HEAD `6c99b18`.  Immutable working root is
+  `runs/stage_experts/descent_local_seed0_20260716T163504`; π_F,D-local is a
+  params-only clone of π_F,D (`917f77c...af041`) with no optimizer state.
+  Frozen π_F,D, π_L, C_L, Flight bank and XML hashes were rechecked unchanged;
+  audit seed 7200000 is permanently marked consumed diagnostic evidence.
+- Parent-bounded local pool `47c5854...1c9d9` contains 70 retained diagnostic
+  records, 12 successful descent anchors and 60 structured children.  Training
+  eligible groups safe-neighborhood/boundary-neighborhood/success-anchor are
+  15/58/24; late/middle/early layers are 52/30/15.  Children use 37 original
+  parents from 12 source trajectories, max four children/parent.  MuJoCo audit:
+  contact=deep penetration=5-step physical failure=nonfinite=0; child states
+  are unique against all base states.  The 41 duplicate historical diagnostic
+  snapshots remain evaluation-only and do not create training multiplicity.

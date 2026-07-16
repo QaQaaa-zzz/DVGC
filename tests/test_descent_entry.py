@@ -3,6 +3,7 @@ from types import SimpleNamespace
 import numpy as np
 
 from dvgc.descent_entry import DESCENT_ENTRY_FEATURE_NAMES, descent_entry_feature, matcher_audit
+from dvgc.descent_local import balanced_parent, difficulty_layers
 from cli.certify_descent_entries import qualified_descent_success
 from cli.build_descent_entries import snapshot_identity
 from cli.merge_descent_entry_audits import merge_reports
@@ -59,3 +60,13 @@ def test_descent_proposal_identity_covers_full_policy_snapshot():
     changed={**same,"policy_state":{**same["policy_state"],"last_action":np.ones(2,np.float32)}}
     assert snapshot_identity(row)==snapshot_identity(same)
     assert snapshot_identity(row)!=snapshot_identity(changed)
+
+
+def test_descent_layers_and_parent_sampling_are_deterministic_and_balanced():
+    rows=[]
+    for i in range(6): rows.append({"id":str(i),"entry_source_id":str(i//2),"proposal_step":i%2,"physical_feature":np.full(16,float(i),np.float32)})
+    layers=difficulty_layers(rows,{str(i):float(i) for i in range(6)})
+    assert list(layers.values()).count("late")==2 and list(layers.values()).count("middle")==2 and list(layers.values()).count("early")==2
+    children={row["id"]:0 for row in rows}; children["0"]=children["1"]=2
+    selected=balanced_parent(rows,children,np.random.default_rng(7),4)
+    assert selected["entry_source_id"]!="0"
