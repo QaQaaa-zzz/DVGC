@@ -176,6 +176,28 @@ def core_metrics(paths: list[str]) -> dict:
     return metrics
 
 
+def frozen_manifest_provenance(run: Path, state: dict) -> dict:
+    """Resolve the current policy from the frozen manifest, never a source lock."""
+    explicit = state.get("provenance", {}).get("frozen_manifest")
+    candidates = [Path(explicit)] if explicit else []
+    active_round = state.get("active_round")
+    if active_round is not None:
+        candidates.append(run / f"round_{int(active_round)}/frozen/discrete_tube_manifest.json")
+    candidates.extend(sorted(run.glob("round_*/frozen/discrete_tube_manifest.json"), reverse=True))
+    for path in candidates:
+        payload = load_json(path, {})
+        if payload.get("status") != "PASS" or not payload.get("policy_hash"):
+            continue
+        sets = payload.get("sets", {})
+        return {
+            "manifest": str(path),
+            "policy_hash": payload["policy_hash"],
+            "candidate_hash": sets.get("all", {}).get("sha256"),
+            "tube_hash": sets.get("safe", {}).get("sha256"),
+        }
+    return {}
+
+
 def collect_status(run: Path, now: float | None = None) -> dict:
     now = time.time() if now is None else float(now)
     state_path = run / "controller_state.json"
@@ -193,7 +215,8 @@ def collect_status(run: Path, now: float | None = None) -> dict:
     latest_progress = max(float(progress.get("latest_marker_mtime") or 0.0),
                           float(state.get("history", [{}])[-1].get("completed_at", 0.0) if state.get("history") else 0.0))
     provenance = state.get("provenance", {})
-    expected_policy = provenance.get("current_policy_hash") or provenance.get("policy_hash")
+    frozen = frozen_manifest_provenance(run, state)
+    expected_policy = frozen.get("policy_hash") or provenance.get("current_policy_hash") or provenance.get("policy_hash")
     lock_pid = int(lock.get("pid", 0) or 0)
     lock_policy = lock.get("policy_hash")
     terminal = None
@@ -235,8 +258,9 @@ def collect_status(run: Path, now: float | None = None) -> dict:
         "heartbeat_age_seconds": now - heartbeat if heartbeat else None,
         "progress_age_seconds": now - latest_progress if latest_progress else None,
         "policy_hash": expected_policy or lock_policy,
-        "tube_hash": provenance.get("exact_safe_hash") or provenance.get("construction_certification_hash"),
-        "candidate_hash": provenance.get("candidate_hash") or provenance.get("candidate_bank_sha256"),
+        "tube_hash": frozen.get("tube_hash") or provenance.get("exact_safe_hash") or provenance.get("construction_certification_hash"),
+        "candidate_hash": frozen.get("candidate_hash") or provenance.get("candidate_hash") or provenance.get("candidate_bank_sha256"),
+        "frozen_manifest": frozen.get("manifest"),
         "last_completed_action": state.get("last_completed_action"),
         "next_automatic_action": state.get("next_decision"),
         "in_progress_action": state.get("in_progress_action"),

@@ -11,7 +11,8 @@ from cli.build_descent_entries import snapshot_identity
 from cli.merge_descent_entry_audits import merge_reports
 from cli.merge_descent_construction_shards import validate_and_merge
 from cli.audit_descent_matcher import calibration_metrics
-from dvgc.certification import summarize_branches
+from dvgc.certification import detailed_terminal_summary, summarize_branches
+from dvgc.audit_manifest import completed_manifest, invalid_manifest
 from dvgc.config import load_config
 from dvgc.rewards import compute_descent_local_reward
 
@@ -58,6 +59,37 @@ def test_descent_audit_shards_require_complete_indices_and_unique_seeds():
     try: merge_reports([_audit_shard(0,10),duplicate])
     except ValueError as exc: assert "globally unique" in str(exc)
     else: raise AssertionError("duplicate global audit seed was accepted")
+
+
+def test_future_audit_preserves_detailed_physical_end_reasons():
+    rows = [
+        {"chain_success":False,"final_recovery":False,"terminal_cause":"physical_failure","end_reason":"roll_limit"},
+        {"chain_success":False,"final_recovery":False,"terminal_cause":"physical_failure","end_reason":"pitch_limit"},
+        {"chain_success":False,"final_recovery":False,"terminal_cause":"physical_failure","end_reason":"platform_back_edge_exit"},
+        {"chain_success":False,"final_recovery":False,"terminal_cause":"physical_failure","end_reason":"nonfinite"},
+        {"chain_success":False,"final_recovery":False,"terminal_cause":"timeout","end_reason":"stage_timeout"},
+        {"chain_success":False,"final_recovery":False,"terminal_cause":"horizon_exhausted","end_reason":None},
+    ]
+    summary = detailed_terminal_summary(rows)
+    assert summary["physical_end_reasons"] == {
+        "roll":1,"pitch":1,"platform_back_edge_exit":1,"nonfinite":1,
+        "other_physical":0,"timeout":1,"horizon":1,
+    }
+
+
+def test_pointwise_manifest_has_terminal_states_and_strict_provenance():
+    launch={"status":"ACTIVE","states":2,"policy_hash":"p","candidate_bank_sha256":"c",
+            "landing_entry_set_sha256":"e","landing_policy_hash":"l"}
+    merged={"states":2,"descent_policy_hash":"p","candidate_bank_sha256":"c",
+            "landing_entry_set_sha256":"e","landing_policy_hash":"l",
+            "terminal_summary":{"branches":64}}
+    assert completed_manifest(launch,{"status":"PASS"},merged)["status"]=="COMPLETED_PASS"
+    assert completed_manifest(launch,{"status":"FAIL"},merged)["status"]=="COMPLETED_FAIL"
+    assert invalid_manifest(launch,"seed conflict")["status"]=="INVALID"
+    merged["descent_policy_hash"]="wrong"
+    try: completed_manifest(launch,{"status":"FAIL"},merged)
+    except ValueError as exc: assert "provenance" in str(exc)
+    else: raise AssertionError("terminal manifest accepted mismatched policy")
 
 
 def _construction_shard(index, seed, *, duplicate_seed=False):

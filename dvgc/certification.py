@@ -120,6 +120,36 @@ def summarize_branches(rows: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
     }
 
 
+def detailed_terminal_summary(rows: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
+    """Add mutually exclusive physical end reasons to a branch summary.
+
+    Older development audits did not persist ``end_reason``.  Those artifacts
+    remain valid aggregate evidence, but future formal audits must expose the
+    physical failure composition instead of collapsing it into one count.
+    """
+    branches = list(rows)
+    summary = summarize_branches(branches)
+    physical = [row for row in branches if str(row["terminal_cause"]) == "physical_failure"]
+    named = {
+        "roll": sum(str(row.get("end_reason")) == "roll_limit" for row in physical),
+        "pitch": sum(str(row.get("end_reason")) == "pitch_limit" for row in physical),
+        "platform_back_edge_exit": sum(
+            str(row.get("end_reason")) == "platform_back_edge_exit" for row in physical
+        ),
+        "nonfinite": sum(str(row.get("end_reason")) == "nonfinite" for row in physical),
+    }
+    named["other_physical"] = len(physical) - sum(named.values())
+    named["timeout"] = int(summary["timeouts"])
+    named["horizon"] = int(summary["horizon_exhaustions"])
+    if any(value < 0 for value in named.values()):
+        raise ValueError("Physical end-reason counts are inconsistent")
+    summary["physical_end_reasons"] = named
+    summary["physical_end_reasons_available"] = all(
+        row.get("end_reason") is not None for row in physical
+    )
+    return summary
+
+
 def assert_disjoint_branch_seeds(
     construction: Iterable[Mapping[str, Any]], audit_seeds: Iterable[int]
 ) -> None:

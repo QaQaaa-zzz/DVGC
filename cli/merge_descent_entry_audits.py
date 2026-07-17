@@ -5,7 +5,7 @@ import argparse
 import json
 from pathlib import Path
 
-from dvgc.certification import summarize_branches
+from dvgc.certification import detailed_terminal_summary
 from dvgc.runtime import save_json
 
 
@@ -18,7 +18,7 @@ def merge_reports(shards):
     if indices!=list(range(total)): raise ValueError(f"Audit candidate indices are not complete and unique: {indices}")
     evidence=[ev for row in rows for ev in row["branch_evidence"]]; seed_keys=[(ev["seed_namespace"],ev["branch_seed"]) for ev in evidence]
     if len(seed_keys)!=len(set(seed_keys)): raise ValueError("Audit branch seeds are not globally unique")
-    report={key:shards[0][key] for key in keys}; report.update({"status":"PASS","audit_only":True,"states":len(rows),"shards":[{"start_index":s["start_index"],"end_index":s["end_index"]} for s in shards],"terminal_summary":summarize_branches(evidence),"rows":rows})
+    report={key:shards[0][key] for key in keys}; report.update({"status":"PASS","audit_only":True,"states":len(rows),"shards":[{"start_index":s["start_index"],"end_index":s["end_index"]} for s in shards],"terminal_summary":detailed_terminal_summary(evidence),"rows":rows})
     return report
 
 

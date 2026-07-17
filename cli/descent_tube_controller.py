@@ -22,6 +22,7 @@ from cli.descent_local_controller import (
     split_range_after_oom,
 )
 from dvgc.bank import SnapshotBank
+from dvgc.audit_manifest import completed_manifest
 from dvgc.certification import assert_disjoint_branch_seeds, branch_seed
 from dvgc.config import file_sha256
 from dvgc.runtime import save_json
@@ -268,6 +269,10 @@ class DescentTubeController(Controller):
             self.run_command(f"analyze_pointwise_round_{round_id}",[PYTHON,"-m","cli.analyze_pointwise_descent_audit",
                              "--candidate-bank",candidate,"--manifest",manifest,"--construction-report",construction,
                              "--audit-report",merged,"--output",analysis],root/"analysis.log",[analysis])
+        launch=json.loads(audit_manifest.read_text())
+        terminal=completed_manifest(launch,json.loads(analysis.read_text()),json.loads(merged.read_text()))
+        if launch != terminal:
+            save_json(audit_manifest,terminal)
         self.save(current_stage="pointwise_decision",next_decision="viability_train_or_exact_optimizer_block2")
 
     def pointwise_decision(self,round_id):

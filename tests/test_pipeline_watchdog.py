@@ -81,3 +81,14 @@ def test_status_script_is_read_only():
     assert "--print-only" in text
     assert "systemctl" not in text
     assert "start" not in text and "restart" not in text
+
+
+def test_status_policy_comes_from_current_frozen_manifest(tmp_path):
+    manifest = tmp_path / "round_3/frozen/discrete_tube_manifest.json"
+    manifest.parent.mkdir(parents=True)
+    manifest.write_text('{"status":"PASS","policy_hash":"current","sets":{"all":{"sha256":"all"},"safe":{"sha256":"safe"}}}')
+    state = {"active_round": 3, "provenance": {"policy_hash": "old-source"}}
+    assert watchdog.frozen_manifest_provenance(tmp_path, state) == {
+        "manifest": str(manifest), "policy_hash": "current",
+        "candidate_hash": "all", "tube_hash": "safe",
+    }

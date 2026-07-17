@@ -422,3 +422,16 @@
   separately verifies the current audit-policy hash.  Volatile worker launch
   timestamps are normalized in the three-failure fuse.  No seed, candidate,
   policy, checkpoint, branch budget, certification result, or gate changed.
+- Round-3 pointwise audit seed 600000000 is complete and formally FAIL:
+  114 states/3648 unique branches, Final=29.167%, physical failure=42.599%,
+  timeout=horizon=0, exact precision/recall=50/50% with 4 construction-safe
+  snapshots from two parents.  Policy `5272166...353f2`, D_all
+  `16d61f7...d43dde`, D_emp_safe `5913f11...f9209`, C_L, pi_L and XML are
+  frozen.  This audit is `CONSUMED_DEVELOPMENT_EVIDENCE`: it remains the
+  official Round-3 failure but is ineligible as a future independent audit.
+  Global matcher remains inactive; Round-3 PPO must not be repeated.
+- Authorized next route: frozen-policy two-batch stable-safe construction with
+  preallocated disjoint Stage-A/Stage-B/adaptive seeds, followed by a fresh
+  pointwise audit when stable safe support and parent diversity pass; otherwise
+  at most two parent-balanced Viability-guided acquisition rounds.  No PPO or
+  apex starts before a discrete empirical descent Tube passes independently.

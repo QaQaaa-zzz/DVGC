@@ -134,6 +134,7 @@ def main() -> None:
     nonfinite=end_reasons.get("nonfinite") if end_reasons else None
     if nonfinite is not None and any(ev.get("end_reason")=="nonfinite" and ev.get("terminal_cause")!="physical_failure" for ev in audit_evidence):
         raise SystemExit("A nonfinite branch was not counted as physical failure")
+    physical_end_reasons = audit["terminal_summary"].get("physical_end_reasons", {})
     report = {
         "status": "PASS" if precision >= .95 and len(member_rows) >= 4 else "FAIL",
         "gate": {"minimum_precision": .95, "minimum_unique_safe": 4,
@@ -153,10 +154,18 @@ def main() -> None:
         "branch_validation":{"states":len(evaluated),"branches_per_state":int(cfg.max_branches),
                              "unique_branch_seeds":len(set(audit_seeds)),"global_indices_complete":True},
         "terminal_causes":dict(terminal_causes),
-        "termination_subcauses":{"available":bool(end_reasons),"counts":dict(end_reasons),
-                                  "pitch":end_reasons.get("pitch") if end_reasons else None,
-                                  "roll":end_reasons.get("roll") if end_reasons else None,
-                                  "nonfinite":nonfinite},
+        "termination_subcauses":{"available":bool(audit["terminal_summary"].get("physical_end_reasons_available", end_reasons)),
+                                  "counts":dict(end_reasons),
+                                  "physical_end_reasons":physical_end_reasons,
+                                  "pitch":physical_end_reasons.get("pitch"),
+                                  "roll":physical_end_reasons.get("roll"),
+                                  "nonfinite":physical_end_reasons.get("nonfinite", nonfinite)},
+        "provenance":{"consistent":True,"policy_hash":audit["descent_policy_hash"],
+                      "candidate_bank_sha256":audit["candidate_bank_sha256"],
+                      "xml_sha256":audit_manifest.get("xml_sha256") if audit_manifest_path.exists() else None,
+                      "landing_entry_set_sha256":audit["landing_entry_set_sha256"],
+                      "landing_policy_hash":audit["landing_policy_hash"],
+                      "frozen_manifest_policy_hash":manifest_data["policy_hash"]},
         "member_results": member_rows, "audit_label_distribution": dict(Counter(row["audit_label"] for row in evaluated)),
         "member_parent_count":len({row["parent"] for row in member_rows}),
         "by_parent":grouped_summary(evaluated,"parent"),"by_layer":grouped_summary(evaluated,"layer"),
