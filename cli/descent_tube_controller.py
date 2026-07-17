@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import subprocess
 import time
 from pathlib import Path
@@ -62,11 +63,23 @@ def planned_branch_seeds(base_seed: int, state_count: int, branches: int = AUDIT
 
 def failure_fuse_update(state, stage: str, exc: Exception):
     """Count identical deterministic controller failures across service restarts."""
-    message = f"{stage}|{type(exc).__name__}|{exc}"
+    # Worker unit names contain launch timestamps.  They must not make the
+    # same deterministic failure look unique on every systemd restart.
+    normalized = re.sub(r"-\d{10}\.service", "-<launch>.service", str(exc))
+    message = f"{stage}|{type(exc).__name__}|{normalized}"
     signature = hashlib.sha256(message.encode("utf-8")).hexdigest()
     previous = state.get("failure_signature")
     count = int(state.get("consecutive_failure_count", 0)) + 1 if previous == signature else 1
     return signature, count
+
+
+def select_policy_for_hash(source_hash: str, candidates, hash_fn=file_sha256) -> Path:
+    """Resolve candidate provenance to an existing immutable policy bundle."""
+    matches = [Path(path) for path in candidates
+               if (Path(path)/"params.pkl").exists() and hash_fn(Path(path)/"params.pkl") == str(source_hash)]
+    if not matches:
+        raise RuntimeError(f"No immutable policy matches candidate source hash {source_hash}")
+    return sorted(matches, key=lambda path: str(path))[0]
 
 
 class DescentTubeController(Controller):
@@ -122,6 +135,13 @@ class DescentTubeController(Controller):
         construction=BLOCK1_CERT_REPORT if round_id==1 else self.run/f"round_{round_id}/construction/current_policy.cert.json"
         manifest=FROZEN/"discrete_tube_manifest.json" if round_id==1 else self.run/f"round_{round_id}/frozen/discrete_tube_manifest.json"
         return root,candidate,policy,construction,manifest
+
+    def _audit_candidate_source_policy(self, candidate: Path) -> Path:
+        bank=SnapshotBank.load(candidate);source_hash=bank.metadata.get("descent_policy_hash")
+        if not source_hash:raise RuntimeError("Pointwise candidate bank lacks descent source-policy hash")
+        candidates=[INITIAL,BLOCK1_POLICY]
+        candidates.extend(sorted(self.run.glob("round_*/train/policy")))
+        return select_policy_for_hash(str(source_hash),candidates)
 
     def _registered_audit_seed(self, round_id, total):
         """Allocate and persist a grid disjoint from every registered seed set."""
@@ -196,7 +216,11 @@ class DescentTubeController(Controller):
         if round_id==2:
             self._mark_legacy_round2_audit_invalid()
         root,candidate,policy,construction,manifest=self._audit_paths(round_id)
-        total=len(SnapshotBank.load(candidate).records_for_phase("flight",include_training_only=False))
+        candidate_bank=SnapshotBank.load(candidate)
+        total=len(candidate_bank.records_for_phase("flight",include_training_only=False))
+        if candidate_bank.metadata.get("policy_hash")!=file_sha256(policy/"params.pkl"):
+            raise RuntimeError("Pointwise candidate/current-policy provenance mismatch")
+        source_policy=self._audit_candidate_source_policy(candidate)
         seed=self._registered_audit_seed(round_id,total)
         root,candidate,policy,construction,manifest=self._audit_paths(round_id);root.mkdir(parents=True,exist_ok=True)
         audit_manifest=root/"pointwise_audit_manifest.json"
@@ -220,7 +244,7 @@ class DescentTubeController(Controller):
                 if p.get("status")=="PASS" and p.get("start_index")==start and p.get("end_index")==end:continue
                 invalid=root/"invalid_diagnostic";invalid.mkdir(exist_ok=True);out.rename(invalid/f"{out.name}.{int(time.time())}")
             cmd=[PYTHON,"-u","-m","cli.certify_descent_entries","--audit-only","--descent-policy",policy,
-                 "--candidate-source-policy",INITIAL,"--landing-policy",LANDING,"--candidate-bank",candidate,
+                 "--candidate-source-policy",source_policy,"--landing-policy",LANDING,"--candidate-bank",candidate,
                  "--landing-entry-set",ENTRY,"--output",out,"--seed",seed,"--namespace",f"descent_pointwise_round_{round_id}",
                  "--start-index",start,"--end-index",end]
             result=self.run_worker_command(f"pointwise_audit_r{round_id}_{start}_{end}",cmd,root/f"shard_{start:03d}_{end:03d}.log",[out],

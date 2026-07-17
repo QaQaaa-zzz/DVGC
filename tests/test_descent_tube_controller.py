@@ -4,6 +4,7 @@ from cli.descent_tube_controller import (
     failure_fuse_update,
     planned_branch_seeds,
     pointwise_seed,
+    select_policy_for_hash,
 )
 from dvgc.certification import assert_disjoint_branch_seeds, branch_seed
 
@@ -44,6 +45,24 @@ def test_identical_controller_failure_fuses_on_third_restart():
     assert count == 3
     _, changed = failure_fuse_update(state, "merge", RuntimeError("different"))
     assert changed == 1
+
+
+def test_failure_fuse_ignores_worker_launch_timestamp():
+    state = {}
+    first = RuntimeError("worker failed unit=dvgc-worker-audit-1784275003.service")
+    signature, count = failure_fuse_update(state, "audit", first)
+    state.update(failure_signature=signature, consecutive_failure_count=count)
+    second = RuntimeError("worker failed unit=dvgc-worker-audit-1784275093.service")
+    _, count = failure_fuse_update(state, "audit", second)
+    assert count == 2
+
+
+def test_candidate_source_policy_is_selected_by_exact_hash(tmp_path):
+    first=tmp_path/"first";second=tmp_path/"second";first.mkdir();second.mkdir()
+    (first/"params.pkl").write_bytes(b"first");(second/"params.pkl").write_bytes(b"second")
+    import hashlib
+    wanted=hashlib.sha256(b"second").hexdigest()
+    assert select_policy_for_hash(wanted,[first,second])==second
 
 
 def test_post_audit_resume_waits_for_old_controller_to_exit():

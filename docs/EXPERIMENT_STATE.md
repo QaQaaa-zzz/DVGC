@@ -410,3 +410,15 @@
   transitions, pipeline completion, research gate, or exhausted engineering
   recovery.  Monitoring does not import the training stack or alter any
   policy, bank, seed, branch budget, checkpoint, gate, or completed marker.
+- Round-3 support repair completed one authorized continuation to 76,800
+  cumulative steps, policy `5272166...353f2`.  Fresh construction over 114
+  states labels exact safe/boundary/dead/unknown=4/43/52/15; aggregate
+  Final=36.31%, physical failure=36.36%, timeout=nonfinite=0.  The first
+  round-3 pointwise worker was correctly rejected before any branch completed
+  because the controller supplied the original descent policy instead of the
+  candidate bank's exact round-2 source policy `4ab92ad...f848c`; 31 transient
+  restarts produced no accepted shard or audit evidence.  The controller now
+  resolves candidate-source policy strictly by the bank metadata hash and
+  separately verifies the current audit-policy hash.  Volatile worker launch
+  timestamps are normalized in the three-failure fuse.  No seed, candidate,
+  policy, checkpoint, branch budget, certification result, or gate changed.
