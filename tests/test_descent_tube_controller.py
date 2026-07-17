@@ -26,8 +26,9 @@ def test_round2_pointwise_seed_is_disjoint_from_construction_global_indices():
 def test_pointwise_seed_requires_an_explicit_reviewed_round():
     assert pointwise_seed(1) == 9_310_000
     assert pointwise_seed(2) == 200_000_000
+    assert pointwise_seed(3) == 600_000_000
     with pytest.raises(ValueError, match="No independent pointwise seed"):
-        pointwise_seed(3)
+        pointwise_seed(4)
 
 
 def test_identical_controller_failure_fuses_on_third_restart():
@@ -43,3 +44,11 @@ def test_identical_controller_failure_fuses_on_third_restart():
     assert count == 3
     _, changed = failure_fuse_update(state, "merge", RuntimeError("different"))
     assert changed == 1
+
+
+def test_post_audit_resume_waits_for_old_controller_to_exit():
+    text=open("scripts/resume_descent_tube_after_current_audit.sh",encoding="utf-8").read()
+    assert '"$active" != "active"' in text
+    assert '"$active" != "activating"' in text
+    assert 'systemctl --user start "$UNIT"' in text
+    assert "Round-2 exact pointwise Tube precision" in text

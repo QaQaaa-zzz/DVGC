@@ -382,3 +382,14 @@
   exact membership is mandatory and the continuous matcher remains inactive.
   Future controller launches use exact-set allocation with up to three
   automatic namespace reallocations before the deterministic-error fuse.
+- The single authorized post-round-2 support repair is implemented but has not
+  started while the active audit runs.  It is capped at 64 byte/state-unique
+  proposals and four children per real trajectory parent, prioritizes new
+  parents then boundary and safe-continuity neighborhoods, preserves complete
+  PolicyState, and enforces XML contact/penetration, finite Flight phase,
+  short-rollout and normalized dedup gates.  It uses no policy success or
+  independent-audit labels for proposal selection.  On a round-2 FAIL the
+  resumable route is fresh proposal certification -> parent-balanced reset
+  bank -> exactly one additional 25,600-step optimizer continuation -> fresh
+  recertification -> seed-600000000 pointwise audit.  A further pointwise gate
+  failure is the structured research pause; no threshold/radius is relaxed.
