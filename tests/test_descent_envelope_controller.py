@@ -29,3 +29,9 @@ def test_controller_has_no_round3_training_transition():
     source=__import__("pathlib").Path("cli/descent_envelope_controller.py").read_text()
     assert "round_3/train/orbax/000000076800" in source
     assert "run_next_block" not in source
+
+
+def test_watchdog_restart_script_can_resolve_active_run():
+    source=__import__("pathlib").Path("scripts/start_descent_envelope_controller.sh").read_text()
+    assert "ACTIVE_PIPELINE.json" in source
+    assert "DESCENT_ENVELOPE_RUN:-" in source

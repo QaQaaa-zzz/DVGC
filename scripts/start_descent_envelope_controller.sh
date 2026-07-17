@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-RUN="${DESCENT_ENVELOPE_RUN:?DESCENT_ENVELOPE_RUN must be set}"
+if [[ -n "${DESCENT_ENVELOPE_RUN:-}" ]]; then
+  RUN="$DESCENT_ENVELOPE_RUN"
+else
+  RUN=$(/usr/bin/python3 -c "import json; print(json.load(open('$ROOT/runs/ACTIVE_PIPELINE.json'))['run_path'])")
+fi
 cd "$ROOT"
 exec systemd-run --user --unit=dvgc-descent-envelope-controller \
   --description="DVGC stable descent envelope controller" \
