@@ -24,6 +24,11 @@ from dvgc.bank import SnapshotBank
 from dvgc.certification import assert_disjoint_branch_seeds, branch_seed
 from dvgc.config import file_sha256
 from dvgc.runtime import save_json
+from dvgc.seed_registry import (
+    allocate_disjoint_grid,
+    make_claim,
+    save_registry,
+)
 
 
 SOURCE_RUN = Path("runs/stage_experts/descent_local_nonfinite_repair_seed0_20260716T1825")
@@ -104,12 +109,42 @@ class DescentTubeController(Controller):
                   in_progress_action=None,expected_outputs=[],next_decision="pointwise_decision")
 
     def _audit_paths(self, round_id):
-        root=self.run/f"round_{round_id}/pointwise_audit_seed{pointwise_seed(round_id)}"
+        overrides=self.state.get("pointwise_seed_overrides",{})
+        seed=int(overrides.get(str(round_id),pointwise_seed(round_id)))
+        root=self.run/f"round_{round_id}/pointwise_audit_seed{seed}"
         candidate=FROZEN/"D_all_unique.pkl" if round_id==1 else self.run/f"round_{round_id}/frozen/D_all_unique.pkl"
         policy=BLOCK1_POLICY if round_id==1 else self.run/f"round_{round_id}/train/policy"
         construction=BLOCK1_CERT_REPORT if round_id==1 else self.run/f"round_{round_id}/construction/current_policy.cert.json"
         manifest=FROZEN/"discrete_tube_manifest.json" if round_id==1 else self.run/f"round_{round_id}/frozen/discrete_tube_manifest.json"
         return root,candidate,policy,construction,manifest
+
+    def _registered_audit_seed(self, round_id, total):
+        """Allocate and persist a grid disjoint from every registered seed set."""
+        registry_path=self.run/"seed_registry.json"
+        if not registry_path.exists():
+            subprocess.run([PYTHON,"-m","cli.build_descent_seed_registry","--run",self.run],check=True)
+        registry=json.loads(registry_path.read_text())
+        claim_name=("round1_pointwise_audit" if int(round_id)==1
+                    else f"round{round_id}_pointwise_seed{pointwise_seed(round_id)}")
+        existing=[claim for claim in registry["claims"] if claim["name"]!=claim_name]
+        preferred=int(self.state.get("pointwise_seed_overrides",{}).get(str(round_id),pointwise_seed(round_id)))
+        allocated,proof,attempts=allocate_disjoint_grid(preferred,total,AUDIT_BRANCHES,existing)
+        overrides=dict(self.state.get("pointwise_seed_overrides",{}));overrides[str(round_id)]=allocated
+        claim=make_claim(
+            claim_name,"pointwise_audit",planned_branch_seeds(allocated,total),status="active",
+            base_seed=allocated,state_count=total,branches_per_state=AUDIT_BRANCHES,
+            branch_variation_indices=list(range(AUDIT_BRANCHES)),
+        )
+        claims=[row for row in registry["claims"] if row["name"]!=claim_name]+[claim]
+        metadata={key:value for key,value in registry.items() if key not in {"schema_version","claims","historical_intersections"}}
+        save_registry(registry_path,claims,**metadata)
+        self.save(pointwise_seed_overrides=overrides,seed_registry=str(registry_path))
+        root=self.run/f"round_{round_id}/pointwise_audit_seed{allocated}";root.mkdir(parents=True,exist_ok=True)
+        proof_path=root/"seed_intersection_proof.json"
+        save_json(proof_path,{**proof,"allocation_attempts":attempts,"registry":str(registry_path),
+                              "registry_sha256":file_sha256(registry_path)})
+        self.save(seed_intersection_proof=str(proof_path))
+        return allocated
 
     def _mark_legacy_round2_audit_invalid(self):
         """Retain, but permanently exclude, the collided round-2 audit."""
@@ -150,8 +185,10 @@ class DescentTubeController(Controller):
     def _run_sharded_audit(self, round_id):
         if round_id==2:
             self._mark_legacy_round2_audit_invalid()
+        root,candidate,policy,construction,manifest=self._audit_paths(round_id)
+        total=len(SnapshotBank.load(candidate).records_for_phase("flight",include_training_only=False))
+        seed=self._registered_audit_seed(round_id,total)
         root,candidate,policy,construction,manifest=self._audit_paths(round_id);root.mkdir(parents=True,exist_ok=True)
-        total=len(SnapshotBank.load(candidate).records_for_phase("flight",include_training_only=False)); seed=pointwise_seed(round_id)
         construction_payload=json.loads(construction.read_text())
         construction_evidence=[ev for row in construction_payload["rows"] for ev in row["branch_evidence"]]
         assert_disjoint_branch_seeds(construction_evidence,planned_branch_seeds(seed,total))

@@ -366,3 +366,19 @@
   before launching any worker, and stops identical engineering restart loops
   after three occurrences.  Next automatic step is the replacement round-2
   independent audit; block-1 and block-2 training outputs remain immutable.
+- Unified exact seed registry is active at
+  `descent_tube_seed0_20260716T2330/seed_registry.json`.  It records candidate
+  generation, PPO root seed, both construction sets, both completed audit
+  sets, the invalid seed-9330000 set, the active audit, and reserved future
+  acquisition/matcher/final-audit categories.  Historical evidence records
+  two pre-registry intersections (including 1,195 block-2-construction seeds
+  reused from earlier namespaces); no audit labels or thresholds were reused,
+  and these namespaces will never be allocated again.
+- Active round-2 pointwise seed 200000000 expands to exactly 3,136 unique
+  branch seeds.  Its persisted full-set proof has intersection=0 against the
+  7,093-seed union of every prior registered candidate/PPO/construction/audit
+  namespace.  The audit manifest binds policy `4ab92ad...f848c`, 98-state
+  candidate hash `644635c...3e17`, XML `d7e9f43...ce794c`, C_L and pi_L;
+  exact membership is mandatory and the continuous matcher remains inactive.
+  Future controller launches use exact-set allocation with up to three
+  automatic namespace reallocations before the deterministic-error fuse.
