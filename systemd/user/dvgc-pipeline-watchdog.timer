@@ -1,0 +1,12 @@
+[Unit]
+Description=Run DVGC pipeline watchdog every two minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=2min
+AccuracySec=15s
+Persistent=true
+Unit=dvgc-pipeline-watchdog.service
+
+[Install]
+WantedBy=timers.target

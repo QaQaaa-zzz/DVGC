@@ -401,3 +401,12 @@
   branch, it restarts that same unit once so controller v3 migrates directly
   into the authorized support repair.  It cannot start while the parent is
   active/activating and therefore cannot duplicate the current audit.
+- Unattended monitoring is implemented as a separate two-minute user-systemd
+  timer.  It atomically maintains `runs/CURRENT_PIPELINE_STATUS.{json,md}`;
+  reports controller/worker PID, heartbeat, lock/provenance, shard progress,
+  errors and next action; and performs at most three recoveries only for an
+  inactive non-terminal controller or stale controller with no live worker.
+  Desktop events are persistent-ID deduplicated and limited to major stage
+  transitions, pipeline completion, research gate, or exhausted engineering
+  recovery.  Monitoring does not import the training stack or alter any
+  policy, bank, seed, branch budget, checkpoint, gate, or completed marker.

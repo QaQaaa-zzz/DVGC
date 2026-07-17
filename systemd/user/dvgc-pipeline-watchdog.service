@@ -1,0 +1,10 @@
+[Unit]
+Description=DVGC persistent pipeline watchdog
+After=default.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/qy/DVGC
+ExecStart=/usr/bin/python3 -m cli.pipeline_watchdog
+Nice=10
+IOSchedulingClass=idle
