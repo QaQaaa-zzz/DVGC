@@ -349,3 +349,20 @@
   pointwise success activates snapshot-only D_emp_safe while continuous C_D
   remains inactive and sends construction state-level labels—not audit data—
   to the parent-group-split acquisition-only Viability ensemble.
+- Round-1 pointwise audit completed all 98 states/3136 branches at seed
+  9310000: exact-member precision/recall=75/60%, aggregate Final=25.45%,
+  physical failure=48.34%, timeout=0.  It failed the fixed pointwise gate and
+  correctly triggered the single exact-optimizer block 2.
+- Block 2 is an exact 51,200-step optimizer continuation from block 1, policy
+  `4ab92ad...f848c`; no retraining or restart occurred.  Construction seed
+  9630000 completed 139 states/2490 branches with Final=36.39%, physical
+  failure=37.27%, timeout=nonfinite=0.  Its 98-state frozen exact labels are
+  safe/boundary/dead/unknown=3/36/48/11.
+- The first round-2 audit at seed 9330000 is retained only as an invalid
+  diagnostic: 1,259 branch seeds overlap construction because the two
+  global-index seed grids differ by exactly 30 state strides.  Strict seed
+  isolation correctly rejected analysis.  The controller now uses explicit
+  round-2 seed 200000000, verifies the complete planned seed grid is disjoint
+  before launching any worker, and stops identical engineering restart loops
+  after three occurrences.  Next automatic step is the replacement round-2
+  independent audit; block-1 and block-2 training outputs remain immutable.

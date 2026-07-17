@@ -1,6 +1,7 @@
 """Persistent controller for exact descent Tube audit and expansion."""
 from __future__ import annotations
 
+import hashlib
 import json
 import subprocess
 import time
@@ -20,6 +21,7 @@ from cli.descent_local_controller import (
     split_range_after_oom,
 )
 from dvgc.bank import SnapshotBank
+from dvgc.certification import assert_disjoint_branch_seeds, branch_seed
 from dvgc.config import file_sha256
 from dvgc.runtime import save_json
 
@@ -30,7 +32,35 @@ BLOCK1_POLICY = BLOCK1_ROOT / "train/policy"
 BLOCK1_CERT = BLOCK1_ROOT / "current_policy_certified_sharded.pkl"
 BLOCK1_CERT_REPORT = BLOCK1_ROOT / "current_policy_certified_sharded.cert.json"
 FROZEN = Path("runs/stage_experts/descent_tube_seed0_20260716T2330/frozen_block1_v2")
-POINTWISE_SEED = 9310000
+POINTWISE_SEEDS = {1: 9_310_000, 2: 200_000_000}
+AUDIT_BRANCHES = 32
+LEGACY_COLLIDING_ROUND2_SEED = 9_330_000
+
+
+def pointwise_seed(round_id: int) -> int:
+    """Return an explicitly reviewed audit namespace for each bounded round."""
+    try:
+        return POINTWISE_SEEDS[int(round_id)]
+    except KeyError as exc:
+        raise ValueError(f"No independent pointwise seed declared for round {round_id}") from exc
+
+
+def planned_branch_seeds(base_seed: int, state_count: int, branches: int = AUDIT_BRANCHES):
+    """Enumerate the exact global-index seed map before launching an audit."""
+    return [
+        branch_seed(base_seed, state_index, branch_index)
+        for state_index in range(int(state_count))
+        for branch_index in range(int(branches))
+    ]
+
+
+def failure_fuse_update(state, stage: str, exc: Exception):
+    """Count identical deterministic controller failures across service restarts."""
+    message = f"{stage}|{type(exc).__name__}|{exc}"
+    signature = hashlib.sha256(message.encode("utf-8")).hexdigest()
+    previous = state.get("failure_signature")
+    count = int(state.get("consecutive_failure_count", 0)) + 1 if previous == signature else 1
+    return signature, count
 
 
 class DescentTubeController(Controller):
@@ -38,14 +68,17 @@ class DescentTubeController(Controller):
         super().__init__(run)
         if self.state.get("controller_type") != "descent_tube":
             self.state = {
-                "controller_type": "descent_tube", "controller_version": 1,
+                "controller_type": "descent_tube", "controller_version": 2,
                 "run_id": run.name, "current_stage": "inspect", "active_round": 1,
                 "last_completed_action": None, "in_progress_action": None,
                 "expected_outputs": [], "next_decision": "pointwise_audit",
                 "retry_count": 0, "heartbeat": time.time(), "stop_reason": None,
                 "active_worker_unit": None, "history": [], "provenance": {},
+                "failure_signature": None, "consecutive_failure_count": 0,
             }
             self.save()
+        elif int(self.state.get("controller_version", 1)) < 2:
+            self.save(controller_version=2)
 
     def inspect_tube(self):
         if subprocess.run(["git", "status", "--porcelain", "--untracked-files=no"], capture_output=True, text=True, check=True).stdout.strip():
@@ -71,16 +104,57 @@ class DescentTubeController(Controller):
                   in_progress_action=None,expected_outputs=[],next_decision="pointwise_decision")
 
     def _audit_paths(self, round_id):
-        root=self.run/f"round_{round_id}/pointwise_audit_seed{POINTWISE_SEED+(round_id-1)*20000}"
+        root=self.run/f"round_{round_id}/pointwise_audit_seed{pointwise_seed(round_id)}"
         candidate=FROZEN/"D_all_unique.pkl" if round_id==1 else self.run/f"round_{round_id}/frozen/D_all_unique.pkl"
         policy=BLOCK1_POLICY if round_id==1 else self.run/f"round_{round_id}/train/policy"
         construction=BLOCK1_CERT_REPORT if round_id==1 else self.run/f"round_{round_id}/construction/current_policy.cert.json"
         manifest=FROZEN/"discrete_tube_manifest.json" if round_id==1 else self.run/f"round_{round_id}/frozen/discrete_tube_manifest.json"
         return root,candidate,policy,construction,manifest
 
+    def _mark_legacy_round2_audit_invalid(self):
+        """Retain, but permanently exclude, the collided round-2 audit."""
+        legacy = self.run/f"round_2/pointwise_audit_seed{LEGACY_COLLIDING_ROUND2_SEED}"
+        merged = legacy/"merged.json"
+        construction = self.run/"round_2/construction/current_policy.cert.json"
+        marker = legacy/"INVALID_DIAGNOSTIC.json"
+        if marker.exists() or not (merged.exists() and construction.exists()):
+            return
+        construction_payload=json.loads(construction.read_text())
+        audit_payload=json.loads(merged.read_text())
+        construction_seeds={
+            int(ev["branch_seed"])
+            for row in construction_payload["rows"] for ev in row["branch_evidence"]
+        }
+        audit_seeds={
+            int(ev["branch_seed"])
+            for row in audit_payload["rows"] for ev in row["branch_evidence"]
+        }
+        overlap=sorted(construction_seeds & audit_seeds)
+        if not overlap:
+            raise RuntimeError("Legacy round-2 audit expected a documented seed collision")
+        save_json(marker,{
+            "status":"INVALID_DIAGNOSTIC",
+            "reason":"audit branch seeds overlap round-2 Tube construction branch seeds",
+            "excluded_from_analysis_and_gates":True,
+            "construction_report":str(construction),
+            "construction_report_sha256":file_sha256(construction),
+            "audit_report":str(merged),
+            "audit_report_sha256":file_sha256(merged),
+            "construction_seed":int(construction_payload["seed"]),
+            "audit_seed":int(audit_payload["seed"]),
+            "overlap_count":len(overlap),
+            "overlap_preview":overlap[:10],
+            "replacement_audit_seed":pointwise_seed(2),
+        })
+
     def _run_sharded_audit(self, round_id):
+        if round_id==2:
+            self._mark_legacy_round2_audit_invalid()
         root,candidate,policy,construction,manifest=self._audit_paths(round_id);root.mkdir(parents=True,exist_ok=True)
-        total=len(SnapshotBank.load(candidate).records_for_phase("flight",include_training_only=False)); seed=POINTWISE_SEED+(round_id-1)*20000
+        total=len(SnapshotBank.load(candidate).records_for_phase("flight",include_training_only=False)); seed=pointwise_seed(round_id)
+        construction_payload=json.loads(construction.read_text())
+        construction_evidence=[ev for row in construction_payload["rows"] for ev in row["branch_evidence"]]
+        assert_disjoint_branch_seeds(construction_evidence,planned_branch_seeds(seed,total))
         pending=[(s,min(s+SHARD_SIZE,total)) for s in range(0,total,SHARD_SIZE)];single={}
         while pending:
             start,end=pending.pop(0);out=root/f"shard_{start:03d}_{end:03d}.completed.json"
@@ -184,6 +258,7 @@ class DescentTubeController(Controller):
             elif stage=="gate_pause":return 40
             elif stage=="pipeline_complete":return 0
             else:raise RuntimeError(f"Unknown descent-tube stage {stage}")
+            self.save(failure_signature=None,consecutive_failure_count=0)
 
 
 def main():
@@ -192,7 +267,15 @@ def main():
     controller=DescentTubeController(Path(args.run))
     try:raise SystemExit(controller.loop())
     except Exception as exc:
-        controller.log(f"ERROR {type(exc).__name__}: {exc}");controller.save(stop_reason=f"{type(exc).__name__}: {exc}");raise
+        stage=str(controller.state.get("current_stage","unknown"))
+        signature,count=failure_fuse_update(controller.state,stage,exc)
+        controller.log(f"ERROR {type(exc).__name__}: {exc} (identical failure {count}/3)")
+        controller.save(stop_reason=f"{type(exc).__name__}: {exc}",failure_signature=signature,
+                        consecutive_failure_count=count)
+        if count>=3:
+            controller.log("ENGINEERING PAUSE: identical deterministic failure reached restart fuse")
+            raise SystemExit(41) from exc
+        raise
 
 
 if __name__=="__main__":main()
