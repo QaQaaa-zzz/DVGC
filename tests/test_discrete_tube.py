@@ -3,7 +3,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from cli.fit_viability import parent_split
+from cli.fit_viability import development_rows, parent_split
 from cli.build_descent_entries import snapshot_identity as legacy_snapshot_identity
 from dvgc.discrete_tube import ExactTubeMembership, prediction_cannot_promote, snapshot_identity
 from dvgc.descent_membership import FrozenViabilityThreshold, LocalTrustRegions
@@ -55,3 +55,25 @@ def test_viability_threshold_is_frozen_and_rejects_uncertainty():
     assert model.contains(.95,.05,calibration_hash="calibration")
     assert not model.contains(.95,.2,calibration_hash="calibration")
     with pytest.raises(ValueError):model.contains(.95,.05,calibration_hash="audit-tuned")
+
+
+def test_development_evidence_keeps_one_sample_per_snapshot(tmp_path):
+    import json
+    from dvgc.bank import SnapshotBank
+    rows=[]
+    for i in range(3):
+        row=_row(str(i),str(i),"boundary")
+        row["certification_branches"]=[{"final_recovery":True}]
+        row["final"]["branches"]=1
+        rows.append(row)
+    bank=SnapshotBank(rows,{"policy_hash":"policy"})
+    report=tmp_path/"development.json"
+    report.write_text(json.dumps({"descent_policy_hash":"policy","rows":[
+        {"id":str(i),"branch_evidence":[{"final_recovery":False} for _ in range(4)]}
+        for i in range(3)]}))
+    cfg=SimpleNamespace(beta_alpha0=1.,beta_beta0=1.,posterior_q_low=.05,
+                        posterior_q_high=.95,min_branches=1,safe_threshold=.7,
+                        dead_threshold=.3,boundary_max_width=.35)
+    combined,sources=development_rows(bank,[str(report)],cfg)
+    assert len(combined)==3 and all(row["final"]["branches"]==5 for row in combined)
+    assert len(sources)==1

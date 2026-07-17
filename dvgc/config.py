@@ -76,6 +76,18 @@ def default_config() -> config_dict.ConfigDict:
         descent_local_reset_safe_mass=0.35,
         descent_local_reset_boundary_mass=0.45,
         descent_local_reset_anchor_mass=0.20,
+        stable_construction_stage_branches=32,
+        stable_construction_adaptive_max_branches=32,
+        stable_construction_near_safe_lcb_margin=0.05,
+        stable_construction_min_safe_states=4,
+        stable_construction_min_safe_parents=2,
+        descent_acquisition_max_rounds=2,
+        descent_acquisition_max_proposals=64,
+        descent_acquisition_middle_mass=0.45,
+        descent_acquisition_late_mass=0.35,
+        descent_acquisition_early_mass=0.20,
+        discrete_tube_rsi_safe_mass=0.70,
+        discrete_tube_rsi_boundary_mass=0.30,
         descent_local_reward_enable=False,
         # Robust centers/scales calibrated from the 11 immutable successful or
         # provisional-safe descent anchors plus 99 canonical C_L safe entries.

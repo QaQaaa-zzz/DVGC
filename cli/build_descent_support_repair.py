@@ -22,6 +22,7 @@ from dvgc.descent_local import robust_scale, tangent_factor
 from dvgc.env import END_REASON, OrangeBikeDVGC
 from dvgc.flight_augmentation import apply_tangent, normalized_distance
 from dvgc.runtime import save_json
+from dvgc.viability import ViabilityEnsemble
 
 
 def parent_key(row):
@@ -35,8 +36,9 @@ def proposal_group(row, safe_parents):
     return "safe_continuity"
 
 
-def choose_parent(rows, source_children, row_children, cap, rng):
-    available=[row for row in rows if source_children[parent_key(row)]<cap]
+def choose_parent(rows, source_children, row_children, cap, rng, scores=None, allowed_layers=None):
+    available=[row for row in rows if source_children[parent_key(row)]<cap
+               and (not allowed_layers or row.get("descent_layer") in allowed_layers)]
     if not available:return None
     minimum=min(source_children[parent_key(row)] for row in available)
     sources=sorted({parent_key(row) for row in available if source_children[parent_key(row)]==minimum})
@@ -44,6 +46,9 @@ def choose_parent(rows, source_children, row_children, cap, rng):
     candidates=[row for row in available if parent_key(row)==source]
     minimum=min(row_children[row["id"]] for row in candidates)
     candidates=[row for row in candidates if row_children[row["id"]]==minimum]
+    if scores:
+        weight=np.asarray([max(float(scores.get(row["id"],0.0)),1e-6) for row in candidates],np.float64)
+        return candidates[int(rng.choice(len(candidates),p=weight/weight.sum()))]
     return candidates[int(rng.integers(len(candidates)))]
 
 
@@ -67,6 +72,7 @@ def main():
     parser.add_argument("--output-report",required=True);parser.add_argument("--config",default="configs/default.json")
     parser.add_argument("--seed",type=int,required=True);parser.add_argument("--target",type=int,default=64)
     parser.add_argument("--proposal-budget",type=int,default=3000);parser.add_argument("--parent-cap",type=int,default=4)
+    parser.add_argument("--viability-model",default="");parser.add_argument("--acquisition-round",type=int,default=0)
     args=parser.parse_args();out=Path(args.output_bank)
     if out.exists() or Path(args.output_report).exists():raise SystemExit("Support-repair output already exists")
     if not 1<=args.target<=64:raise SystemExit("Support-repair target must be in [1,64]")
@@ -79,6 +85,14 @@ def main():
     if any(int(row.get("oracle_phase",-1))!=STAGE_ID["flight"] for row in rows):raise SystemExit("Non-Flight base state")
     safe_parents={parent_key(row) for row in rows if row["final"]["label"]=="safe"}
     support=[row for row in rows if row["final"]["label"] in {"safe","boundary","unknown"}]
+    scores={}
+    viability_summary=None
+    if args.viability_model:
+        model=ViabilityEnsemble.load(args.viability_model);mean,std,support_score=model.predict_records(support)
+        for row,p,s,q in zip(support,mean,std,support_score):
+            scores[row["id"]]=float(p+s+.25*(1-q)+.10*(row.get("candidate_kind")=="descent_support_repair_proposal"))
+        viability_summary={"model_sha256":file_sha256(args.viability_model),"mean_probability":float(np.mean(mean)),
+                           "mean_disagreement":float(np.mean(std)),"mean_support":float(np.mean(support_score))}
     grouped=defaultdict(list)
     for row in support:grouped[proposal_group(row,safe_parents)].append(row)
     if any(not grouped[name] for name in ("new_parent","boundary","safe_continuity")):
@@ -104,14 +118,20 @@ def main():
     scales={"new_parent":float(cfg.descent_local_boundary_covariance_scale),
             "boundary":float(cfg.descent_local_boundary_covariance_scale),
             "safe_continuity":float(cfg.descent_local_safe_covariance_scale)}
-    attempts=0
+    masses={"middle":float(cfg.descent_acquisition_middle_mass),"late":float(cfg.descent_acquisition_late_mass),"early":float(cfg.descent_acquisition_early_mass)}
+    raw={key:args.target*value for key,value in masses.items()};layer_targets={key:int(np.floor(value)) for key,value in raw.items()}
+    for key in sorted(raw,key=lambda name:raw[name]-layer_targets[name],reverse=True)[:args.target-sum(layer_targets.values())]:layer_targets[key]+=1
+    layer_accepted=Counter();attempts=0
     while sum(accepted.values())<args.target and attempts<args.proposal_budget:
         attempts+=1
-        available=[name for name in group_weights if choose_parent(grouped[name],source_children,row_children,args.parent_cap,np.random.default_rng(args.seed)) is not None]
+        under={key for key,value in layer_targets.items() if layer_accepted[key]<value}
+        available=[name for name in group_weights if choose_parent(grouped[name],source_children,row_children,args.parent_cap,np.random.default_rng(args.seed),scores,under) is not None]
+        if not available and under:
+            under=set();available=[name for name in group_weights if choose_parent(grouped[name],source_children,row_children,args.parent_cap,np.random.default_rng(args.seed),scores,under) is not None]
         if not available:break
         weights=np.asarray([group_weights[name]/(1+accepted[name]) for name in available],np.float64)
         group=str(rng.choice(available,p=weights/weights.sum()))
-        parent=choose_parent(grouped[group],source_children,row_children,args.parent_cap,rng)
+        parent=choose_parent(grouped[group],source_children,row_children,args.parent_cap,rng,scores,under)
         if parent is None:rejected["parent_cap"]+=1;continue
         latent=rng.normal(size=factor.shape[1]);raw_norm=float(np.linalg.norm(latent));latent*=min(1.0,2.0/max(raw_norm,1e-9))
         delta=scales[group]*(factor@latent);qpos,qvel=apply_tangent(parent["qpos"],parent["qvel"],delta)
@@ -143,17 +163,19 @@ def main():
                        "entry_source_id":source,"descent_layer":parent.get("descent_layer"),"bootstrap_group":bootstrap,
                        "local_bootstrap_eligible":True,"bootstrap_eligible":True,"training_only":False,
                        "support_repair_group":group,"candidate_generation_seed":args.seed,"candidate_proposal_index":attempts,
+                       "acquisition_round":args.acquisition_round,"acquisition_model_score":scores.get(parent["id"]),
                        "perturbation_tangent":delta.astype(np.float32),"sampling_latent_norm":raw_norm,
                        "snapshot_identity_sha256":identity,"normalized_nearest_neighbor_distance":nn,
                        "root_z_shift_m":0.0,"terrain_clearance_m":placement.clearance,
                        "wheel_clearance_m":placement.wheel_clearance,"nonwheel_clearance_m":placement.nonwheel_clearance})
-        records.append(record);existing.append(feature);identities.add(identity);source_children[source]+=1;row_children[parent["id"]]+=1;accepted[group]+=1
+        records.append(record);existing.append(feature);identities.add(identity);source_children[source]+=1;row_children[parent["id"]]+=1;accepted[group]+=1;layer_accepted[parent.get("descent_layer")]+=1
+    snapshot_source_hash=base.metadata.get("snapshot_source_policy_hash",base.metadata.get("descent_policy_hash"))
     metadata=copy.deepcopy(base.metadata);metadata.update({"bank_role":"descent_candidate_support_repair","policy_hash":policy_hash,
-        "descent_policy_hash":policy_hash,"support_repair_seed":args.seed,"support_repair_target":args.target,
+        "snapshot_source_policy_hash":snapshot_source_hash,"support_repair_seed":args.seed,"support_repair_target":args.target,
         "support_repair_parent_cap":args.parent_cap,"source_bank_sha256":file_sha256(args.base_bank),
         "candidate_config_hash":config_hash(cfg),"xml_sha256":file_sha256(cfg.xml_path)})
     SnapshotBank(records,metadata).save(out)
-    children=[row for row in records if row.get("candidate_kind")=="descent_support_repair_proposal"]
+    children=[row for row in records if row.get("candidate_generation_seed")==args.seed]
     minimum_children=min(args.target,12);minimum_parents=min(6,len({parent_key(row) for row in support}))
     quality=(len(children)>=minimum_children and len(source_children)>=minimum_parents
              and max(source_children.values(),default=0)<=args.parent_cap and len(identities)==len(records))
@@ -162,9 +184,12 @@ def main():
             "minimum_children":minimum_children,"minimum_parents":minimum_parents,
             "accepted":dict(accepted),"rejections":dict(rejected),"unique_child_parents":len(source_children),
             "maximum_children_per_parent":max(source_children.values(),default=0),"layers":dict(Counter(row.get("descent_layer") for row in children)),
+            "layer_targets":layer_targets,"layer_accepted":dict(layer_accepted),"viability":viability_summary,
+            "prediction_can_promote_empirical_safe":False,"acquisition_round":args.acquisition_round,
             "labels_of_parents":dict(Counter(next(x for x in rows if x["id"]==row["parent_candidate_id"])["final"]["label"] for row in children)),
             "all_state_unique":len(identities)==len(records),"bank_sha256":file_sha256(out),
             "provenance":{"base_bank_sha256":file_sha256(args.base_bank),"policy_hash":policy_hash,
+                          "snapshot_source_policy_hash":snapshot_source_hash,
                           "c_l_sha256":file_sha256(args.landing_entry_set),"xml_sha256":file_sha256(cfg.xml_path)}}
     save_json(args.output_report,report);print(json.dumps(report,indent=2))
     if report["status"]!="PASS":raise SystemExit(2)

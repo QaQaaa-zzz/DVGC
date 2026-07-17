@@ -92,3 +92,11 @@ def test_status_policy_comes_from_current_frozen_manifest(tmp_path):
         "manifest": str(manifest), "policy_hash": "current",
         "candidate_hash": "all", "tube_hash": "safe",
     }
+
+
+def test_active_pipeline_pointer_selects_new_controller(monkeypatch, tmp_path):
+    pointer=tmp_path/"ACTIVE_PIPELINE.json"
+    pointer.write_text('{"run_path":"runs/new","controller_unit":"new.service","start_script":"scripts/start-new.sh"}')
+    monkeypatch.setattr(watchdog,"ACTIVE_PIPELINE",pointer)
+    run,unit,start=watchdog.pipeline_target()
+    assert str(run)=="runs/new" and unit=="new.service" and start=="scripts/start-new.sh"

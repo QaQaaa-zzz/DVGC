@@ -435,3 +435,13 @@
   pointwise audit when stable safe support and parent diversity pass; otherwise
   at most two parent-balanced Viability-guided acquisition rounds.  No PPO or
   apex starts before a discrete empirical descent Tube passes independently.
+- Provenance/lifecycle repair commit `64843a7` makes the frozen Round-3 policy
+  authoritative in monitoring, persists terminal audit manifests and detailed
+  physical end reasons, and marks the seed-600000000 evidence consumed.  The
+  new stable-envelope controller implements independent 32-branch Stage A/B,
+  preregistered adaptive resolution, exact global seed-set proofs, stable-safe
+  dual-batch admission, fresh pointwise audit, two bounded acquisition rounds,
+  and 70/30 parent-balanced discrete Tube-RSI blocks.  Snapshot-source policy
+  provenance is kept separate from the policy being certified.  Targeted
+  verification is 32 passed; full suite/runtime gate and persistent launch are
+  the remaining preflight actions.

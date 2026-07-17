@@ -16,6 +16,7 @@ from pathlib import Path
 ROOT = Path("/home/qy/DVGC")
 DEFAULT_RUN = ROOT / "runs/stage_experts/descent_tube_seed0_20260716T2330"
 CONTROLLER_UNIT = "dvgc-descent-tube-controller.service"
+ACTIVE_PIPELINE = ROOT / "runs/ACTIVE_PIPELINE.json"
 RESUME_UNIT = "dvgc-descent-tube-postaudit-resume.service"
 STATUS_JSON = ROOT / "runs/CURRENT_PIPELINE_STATUS.json"
 STATUS_MD = ROOT / "runs/CURRENT_PIPELINE_STATUS.md"
@@ -198,13 +199,21 @@ def frozen_manifest_provenance(run: Path, state: dict) -> dict:
     return {}
 
 
-def collect_status(run: Path, now: float | None = None) -> dict:
+def pipeline_target(run: Path | None = None, controller_unit: str | None = None) -> tuple[Path, str, str | None]:
+    pointer = load_json(ACTIVE_PIPELINE, {}) if run is None else {}
+    selected_run = Path(run or pointer.get("run_path") or DEFAULT_RUN)
+    unit = str(controller_unit or pointer.get("controller_unit") or CONTROLLER_UNIT)
+    return selected_run, unit, pointer.get("start_script")
+
+
+def collect_status(run: Path, now: float | None = None, *, controller_unit: str = CONTROLLER_UNIT,
+                   start_script: str | None = None) -> dict:
     now = time.time() if now is None else float(now)
     state_path = run / "controller_state.json"
     lock_path = run / "controller.lock"
     state = load_json(state_path, {})
     lock = load_json(lock_path, {})
-    controller = unit_properties(CONTROLLER_UNIT)
+    controller = unit_properties(controller_unit)
     workers = active_worker_units()
     named_worker = str(state.get("active_worker_unit") or "")
     worker = unit_properties(named_worker) if named_worker else {
@@ -224,7 +233,7 @@ def collect_status(run: Path, now: float | None = None) -> dict:
     transition_pending = bool(
         stage == "gate_pause"
         and "Round-2 exact pointwise Tube precision" in str(state.get("stop_reason") or "")
-        and unit_properties(RESUME_UNIT).get("active")
+        and controller_unit == CONTROLLER_UNIT and unit_properties(RESUME_UNIT).get("active")
     )
     if stage == "pipeline_complete":
         terminal = "pipeline_complete"
@@ -239,7 +248,8 @@ def collect_status(run: Path, now: float | None = None) -> dict:
         "timestamp_epoch": now,
         "run_id": run.name,
         "run_path": str(run),
-        "controller_unit": CONTROLLER_UNIT,
+        "controller_unit": controller_unit,
+        "controller_start_script": start_script,
         "controller_pid": controller["pid"],
         "controller_active": controller["active"],
         "controller_active_state": controller.get("ActiveState"),
@@ -278,7 +288,7 @@ def collect_status(run: Path, now: float | None = None) -> dict:
             "policy_hash": lock_policy,
             "policy_hash_matches": bool(not expected_policy or lock_policy == expected_policy),
         },
-        "duplicate_controller_processes": max(0, process_count("cli.descent_tube_controller") - 1),
+        "duplicate_controller_processes": max(0, process_count(str(state.get("controller_module") or "cli.descent_tube_controller")) - 1),
         "duplicate_worker_units": max(0, len(workers) - (1 if worker.get("active") else 0)),
     }
     return status
@@ -332,6 +342,10 @@ def terminal_notification(status: dict) -> tuple[str, str, str, str] | None:
 
 
 MAJOR_STAGES = {
+    "stable_stage_a": "稳定 safe-tail 新路线启动",
+    "pointwise_audit": "Stable construction 通过，开始独立 pointwise audit",
+    "tube_rsi_prepare": "Stable pointwise Tube PASS，开始 Tube-RSI",
+    "continuous_cd": "Early descent support 已建立，开始 continuous C_D",
     "viability_train": "Pointwise Tube PASS，进入 Viability",
     "support_repair_build": "Pointwise Tube 未通过，进入有界支持修复",
     "acquisition": "Viability 完成，进入 acquisition",
@@ -388,15 +402,17 @@ def send_notification(event: tuple[str, str, str, str], notification_state: dict
     return delivered
 
 
-def perform_recovery(action: str) -> tuple[bool, str]:
+def perform_recovery(action: str, status: dict) -> tuple[bool, str]:
+    controller_unit = str(status.get("controller_unit") or CONTROLLER_UNIT)
     if action == "start_controller":
-        props = unit_properties(CONTROLLER_UNIT)
+        props = unit_properties(controller_unit)
         if props.get("LoadState") == "not-found":
-            command = ["bash", str(ROOT / "scripts/start_descent_tube_controller.sh")]
+            start_script = status.get("controller_start_script") or str(ROOT / "scripts/start_descent_tube_controller.sh")
+            command = ["bash", str(start_script)]
         else:
-            command = ["systemctl", "--user", "start", CONTROLLER_UNIT]
+            command = ["systemctl", "--user", "start", controller_unit]
     elif action == "restart_stale_controller":
-        command = ["systemctl", "--user", "restart", CONTROLLER_UNIT]
+        command = ["systemctl", "--user", "restart", controller_unit]
     else:
         return False, "unsupported recovery action"
     result = subprocess.run(command, capture_output=True, text=True, timeout=30)
@@ -433,14 +449,14 @@ def concise(status: dict) -> str:
             f"terminal={status.get('terminal_state') or 'no'} | status={STATUS_JSON}")
 
 
-def run_watchdog(run: Path) -> int:
+def run_watchdog(run: Path, controller_unit: str = CONTROLLER_UNIT, start_script: str | None = None) -> int:
     now = time.time()
     monitor = load_json(WATCHDOG_STATE, {})
     notifications = load_json(NOTIFICATION_STATE, {"sent_event_ids": []})
-    status = collect_status(run, now)
+    status = collect_status(run, now, controller_unit=controller_unit, start_script=start_script)
     decision = recovery_decision(status, monitor, now)
     if decision in {"start_controller", "restart_stale_controller"}:
-        ok, detail = perform_recovery(decision)
+        ok, detail = perform_recovery(decision, status)
         monitor["consecutive_recoveries"] = int(monitor.get("consecutive_recoveries", 0)) + 1
         monitor["last_recovery_at"] = now
         monitor["last_recovery_action"] = decision
@@ -466,17 +482,19 @@ def run_watchdog(run: Path) -> int:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--run", type=Path, default=DEFAULT_RUN)
+    parser.add_argument("--run", type=Path, default=None)
+    parser.add_argument("--controller-unit", default=None)
     parser.add_argument("--print-only", action="store_true")
     parser.add_argument("--test-notification", action="store_true")
     parser.add_argument("--flush-pending", action="store_true")
     args = parser.parse_args()
+    run, controller_unit, start_script = pipeline_target(args.run, args.controller_unit)
     if args.print_only:
-        print(concise(collect_status(args.run)))
+        print(concise(collect_status(run, controller_unit=controller_unit, start_script=start_script)))
         return
     if args.test_notification:
         state = load_json(NOTIFICATION_STATE, {"sent_event_ids": []})
-        event_id = f"{args.run.name}:watchdog:enabled"
+        event_id = f"{run.name}:watchdog:enabled"
         send_notification((event_id, "DVGC监控已启用", "后台流水线将自动运行，仅在完成或需要决策时通知。", "normal"), state)
         return
     if args.flush_pending:
@@ -488,7 +506,7 @@ def main() -> None:
             if pending["event_id"] in set(refreshed.get("sent_event_ids", [])):
                 PENDING_NOTIFICATION.unlink(missing_ok=True)
         return
-    raise SystemExit(run_watchdog(args.run))
+    raise SystemExit(run_watchdog(run, controller_unit, start_script))
 
 
 if __name__ == "__main__":
