@@ -393,3 +393,11 @@
   bank -> exactly one additional 25,600-step optimizer continuation -> fresh
   recertification -> seed-600000000 pointwise audit.  A further pointwise gate
   failure is the structured research pause; no threshold/radius is relaxed.
+- Persistent execution at HEAD `1291a53`: seed-200000000 pointwise audit has
+  atomically completed global indices 0--23 (24/98) and is running 24--35
+  under parent unit `dvgc-descent-tube-controller.service`, MainPID 57224.
+  A non-controller watcher unit only observes the structured terminal state;
+  after the current, already-running controller exits at its old round-2 FAIL
+  branch, it restarts that same unit once so controller v3 migrates directly
+  into the authorized support repair.  It cannot start while the parent is
+  active/activating and therefore cannot duplicate the current audit.
