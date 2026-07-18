@@ -11,6 +11,7 @@ from dvgc.bank import SnapshotBank
 from dvgc.config import file_sha256,load_config
 from dvgc.runtime import save_json
 from dvgc.seed_registry import save_registry
+from cli.analyze_stable_descent_construction import validate_unique_candidates
 
 
 SOURCE_RUN=Path("runs/stage_experts/descent_envelope_seed0_20260718T004058")
@@ -90,6 +91,38 @@ class TrajectoryMiningController(DescentEnvelopeController):
             else:self.save(current_stage="gate_pause",stop_reason="Single roll-targeted PPO block did not pass stable retention/expansion gate")
             return
         raise RuntimeError("Unexpected stable decision route")
+
+    def stage_a(self):
+        candidate=Path(self.state["current_candidate"]);audit_path=Path(self.state.get("candidate_physical_audit",""))
+        preflight=self._cycle_root()/"candidate_preflight.json"
+        try:
+            tracked=subprocess.check_output(["git","status","--porcelain","--untracked-files=no"],text=True).strip()
+            subprocess.run([PYTHON,"-m","cli.runtime_gate","--config","configs/default.json","--output",RUNTIME_GATE,"--check-only"],
+                check=True,stdout=subprocess.DEVNULL)
+            gate=json.loads(RUNTIME_GATE.read_text());policy_hash=file_sha256(Path(self.state["current_policy"])/"params.pkl")
+            uniqueness=validate_unique_candidates(SnapshotBank.load(candidate).records_for_phase("flight",include_training_only=False))
+            audit=json.loads(audit_path.read_text()) if audit_path.is_file() else {}
+            checks={"tracked_worktree_clean":not tracked,"runtime_gate_pass_current":gate.get("status")=="PASS",
+                "three_layer_uniqueness":uniqueness["status"]=="PASS","physical_audit_pass":audit.get("status")=="PASS",
+                "candidate_hash_matches":audit.get("candidate_bank_sha256")==file_sha256(candidate),
+                "policy_hash_matches":self.state["provenance"].get("current_policy_hash")==policy_hash,
+                "xml_hash_matches":self.state["provenance"].get("xml_sha256")==file_sha256(XML),
+                "c_l_hash_matches":self.state["provenance"].get("c_l_hash")==file_sha256(ENTRY),
+                "pi_l_hash_matches":self.state["provenance"].get("pi_l_hash")==file_sha256(LANDING/"params.pkl")}
+            save_json(preflight,{"status":"PASS" if all(checks.values()) else "FAIL","checks":checks,
+                "uniqueness":uniqueness,"candidate_bank_sha256":file_sha256(candidate),"physical_audit":str(audit_path)})
+            if not all(checks.values()):
+                self.save(current_stage="authorized_stop",stop_reason="Corrected candidate preflight failed",
+                    recommended_resume_action="repair_corrected_candidate_preflight");return
+            self.state["provenance"].update({"head":subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip(),
+                "runtime_source_fingerprint":gate["source_fingerprint"],"current_policy_hash":policy_hash,
+                "candidate_bank_sha256":file_sha256(candidate)})
+            self.save()
+        except (SystemExit,Exception) as exc:
+            save_json(preflight,{"status":"FAIL","error":str(exc),"candidate_bank":str(candidate)})
+            self.save(current_stage="authorized_stop",stop_reason=f"Corrected candidate uniqueness preflight failed: {exc}",
+                recommended_resume_action="repair_corrected_candidate_preflight");return
+        super().stage_a()
 
     def roll_controllability(self):
         root=self.run/"roll_controllability";report=root/"report.json";bank=Path(self.state["current_stable_bank"])

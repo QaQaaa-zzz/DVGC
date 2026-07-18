@@ -239,7 +239,9 @@ def collect_status(run: Path, now: float | None = None, *, controller_unit: str 
         terminal = "pipeline_complete"
     elif stage == "gate_pause" and not transition_pending:
         terminal = "gate_pause"
-    elif stage == "authorized_stop":
+    elif stage == "authorized_stop" or (
+        not controller.get("active") and int(state.get("consecutive_failure_count",0) or 0)>=3
+    ):
         terminal = "engineering_failure_after_retries"
     reports = result_paths(state, progress)
     log_paths = [str(run / "persistent_controller.log"), str(run / "systemd-controller.stdout.log")]
@@ -276,6 +278,12 @@ def collect_status(run: Path, now: float | None = None, *, controller_unit: str 
         "in_progress_action": state.get("in_progress_action"),
         "retry_count": int(state.get("retry_count", 0) or 0),
         "last_error": state.get("stop_reason"),
+        "failed_stage": stage if terminal else None,
+        "last_valid_checkpoint": state.get("current_checkpoint"),
+        "recommended_resume_action": (
+            state.get("recommended_resume_action")
+            or ("repair_then_resume_from_last_valid_checkpoint" if terminal=="engineering_failure_after_retries" else None)
+        ),
         "terminal_state": terminal,
         "automatic_transition_pending": transition_pending,
         "result_report_paths": reports,
@@ -446,10 +454,15 @@ def concise(status: dict) -> str:
     progress = status["progress"]
     completed = f"{progress.get('completed')}/{progress.get('total') or '?'}"
     worker = f"{status.get('worker_unit') or 'none'} pid={status.get('worker_pid', 0)}"
-    return (f"DVGC {status['current_stage']} | progress={completed} range={progress.get('current_index_range')}\n"
+    terminal=status.get("terminal_state")
+    summary=(f"DVGC {status['current_stage']} | progress={completed} range={progress.get('current_index_range')}\n"
             f"controller={status['controller_active_state']}/{status['controller_substate']} pid={status['controller_pid']} | worker={worker}\n"
             f"heartbeat={status.get('heartbeat_age_seconds', 0):.1f}s | last={status.get('last_completed_action')} | next={status.get('next_automatic_action')}\n"
-            f"terminal={status.get('terminal_state') or 'no'} | status={STATUS_JSON}")
+            f"terminal={'yes' if terminal else 'no'} type={terminal or 'none'} | status={STATUS_JSON}")
+    if terminal:
+        summary+=(f"\nexit_reason={status.get('last_error')} | failed_stage={status.get('failed_stage') or status.get('current_stage')}"
+                  f"\nlast_valid_checkpoint={status.get('last_valid_checkpoint')} | recommended_resume={status.get('recommended_resume_action')}")
+    return summary
 
 
 def run_watchdog(run: Path, controller_unit: str = CONTROLLER_UNIT, start_script: str | None = None) -> int:

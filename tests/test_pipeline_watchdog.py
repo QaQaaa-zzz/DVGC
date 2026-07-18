@@ -100,3 +100,14 @@ def test_active_pipeline_pointer_selects_new_controller(monkeypatch, tmp_path):
     monkeypatch.setattr(watchdog,"ACTIVE_PIPELINE",pointer)
     run,unit,start=watchdog.pipeline_target()
     assert str(run)=="runs/new" and unit=="new.service" and start=="scripts/start-new.sh"
+
+
+def test_concise_terminal_status_names_failure_and_resume_action():
+    status=_status(current_stage="stable_analyze",terminal_state="engineering_failure_after_retries",
+        failed_stage="stable_analyze",last_valid_checkpoint="checkpoint",recommended_resume_action="repair_selector",
+        last_error="duplicate snapshots",progress={"completed":0,"total":None,"current_index_range":None},
+        controller_active_state="failed",controller_substate="failed",controller_pid=0,heartbeat_age_seconds=1)
+    text=watchdog.concise(status)
+    assert "terminal=yes type=engineering_failure_after_retries" in text
+    assert "failed_stage=stable_analyze" in text and "last_valid_checkpoint=checkpoint" in text
+    assert "recommended_resume=repair_selector" in text

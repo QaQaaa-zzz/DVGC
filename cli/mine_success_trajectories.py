@@ -22,7 +22,7 @@ from dvgc.policy import load_bundle
 from dvgc.rollout import restore_snapshot
 from dvgc.runtime import build_inference,save_json
 from dvgc.snapshot_provenance import validate_snapshot_source_records
-from dvgc.trajectory_mining import policy_state_complete,select_parent_balanced,select_trace_records,trajectory_parent_id
+from dvgc.trajectory_mining import policy_state_complete,select_parent_balanced_with_report,select_trace_records,trajectory_parent_id
 from dvgc.viability import ViabilityEnsemble
 
 FEATURE_NAMES=("x","y","z","roll","pitch","yaw","vx","vy","vz","wx","wy","wz","steer","hip","knee","rearwheel_velocity")
@@ -136,7 +136,7 @@ def main():
             row.update({"viability_probability":float(pred),"viability_disagreement":float(unc),"viability_support":float(sup),
                 "boundary_distance":float(bd),"roll_margin_score":float(roll_margin),
                 "mining_rank_score":float(pred+.75*unc+.25*(1-sup)+.20*roll_margin+.10/(1+bd))})
-    masses={"middle":.40,"late":.40,"early":.20};selected=select_parent_balanced(raw_candidates,target=a.target,masses=masses,parent_cap=4)
+    masses={"middle":.40,"late":.40,"early":.20};selected,selection=select_parent_balanced_with_report(raw_candidates,target=a.target,masses=masses,parent_cap=4)
     base_records=copy.deepcopy(rows)
     fallback=old_sources[0] if len(old_sources)==1 else None
     for row in base_records:
@@ -154,7 +154,12 @@ def main():
         "source_states":len(rows),"rollouts":len(rows)*a.branches_per_state,"successful_trajectories":len(successful),
         "successful_trajectory_parents":len({x["trajectory_parent_id"] for x in successful}),"raw_valid_snapshots":len(raw_candidates),
         "successful_trajectories_with_flight_snapshots":len(successful)-empty_successful_traces,"empty_successful_flight_traces":empty_successful_traces,
-        "selected_snapshots":len(selected),"selected_trajectory_parents":len(selected_parents),
+        "selected_snapshots":len(selected),"selected_unique":selection["selected_records"],
+        "quota_target":selection["quota_target"],"configured_target":selection["configured_target"],
+        "quota_shortfall":selection["quota_shortfall"],"exhausted_unique_support":selection["exhausted_unique_support"],
+        "unique_candidate_ids":selection["unique_candidate_ids"],"unique_snapshot_hashes":selection["unique_snapshot_hashes"],
+        "unique_state_byte_hashes":selection["unique_state_byte_hashes"],"selected_order":selection["selected_order"],
+        "duplicate_rejected":selection["duplicate_rejected"],"selected_trajectory_parents":len(selected_parents),
         "maximum_children_per_trajectory_parent":max(Counter(row["trajectory_parent_id"] for row in selected).values(),default=0),
         "selected_layers":dict(Counter(row["descent_layer"] for row in selected)),"proposal_target_masses":masses,
         "original_parent_count":len({row["original_candidate_parent"] for row in selected}),"rejections":dict(rejected),

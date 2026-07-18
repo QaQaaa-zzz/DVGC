@@ -14,6 +14,7 @@ from dvgc.config import file_sha256, load_config
 from dvgc.discrete_tube import snapshot_identity
 from dvgc.runtime import save_json
 from dvgc.stable_construction import adaptive_indices, outcome, stable_result
+from dvgc.trajectory_mining import selection_uniqueness
 
 
 def parent_key(row):
@@ -22,6 +23,15 @@ def parent_key(row):
 
 def load_report(path):
     return json.loads(Path(path).read_text()) if path else None
+
+
+def validate_unique_candidates(records):
+    result=selection_uniqueness(records)
+    if not result["checks"]["candidate_ids_unique"]:
+        raise SystemExit("Stable construction candidate bank contains duplicate candidate IDs")
+    if not result["checks"]["snapshot_hashes_unique"] or not result["checks"]["state_byte_hashes_unique"]:
+        raise SystemExit("Stable construction candidate bank contains duplicate snapshots")
+    return result
 
 
 def main() -> None:
@@ -41,8 +51,7 @@ def main() -> None:
     cfg = load_config(args.config)
     bank = SnapshotBank.load(args.candidate_bank)
     records = bank.records_for_phase("flight", include_training_only=False)
-    if len({snapshot_identity(row) for row in records}) != len(records):
-        raise SystemExit("Stable construction candidate bank contains duplicate snapshots")
+    validate_unique_candidates(records)
     stage_a, stage_b, adaptive = load_report(args.stage_a), load_report(args.stage_b), load_report(args.adaptive)
     reports = [stage_a, stage_b] + ([adaptive] if adaptive else [])
     common_keys = ("candidate_bank_sha256", "candidate_source_policy_hash", "candidate_source_policy_hashes", "descent_policy_hash",

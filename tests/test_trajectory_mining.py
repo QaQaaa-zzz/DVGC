@@ -1,8 +1,23 @@
 from types import SimpleNamespace
 
+import numpy as np
+import pytest
+
+from cli.analyze_stable_descent_construction import validate_unique_candidates
 from dvgc.roll_controllability import audit_decision
 from dvgc.snapshot_provenance import validate_snapshot_source_records,verify_source_policy_paths
-from dvgc.trajectory_mining import layer_targets,select_parent_balanced,select_trace_records,trajectory_parent_id
+from dvgc.trajectory_mining import canonical_state_byte_hash,layer_targets,select_parent_balanced,select_parent_balanced_with_report,select_trace_records,trajectory_parent_id
+
+
+def _row(identifier,parent=None,layer="middle",state=None,**extra):
+    value=float(state if state is not None else sum(identifier.encode()))
+    row={"id":identifier,"trajectory_parent_id":parent or f"p-{identifier}","descent_layer":layer,
+        "mining_rank_score":10.0,"qpos":np.array([value],np.float32),"qvel":np.array([value+.1],np.float32),
+        "ctrl":np.array([value+.2],np.float32),"qacc_warmstart":np.array([value+.3],np.float32),
+        "policy_state":{"last_action":np.array([value+.4],np.float32)},"oracle_phase":2,
+        "had_airborne":1,"had_valid_landing":0,"contact_age":0,"airborne_count":1,"recovery_count":0,
+        "bootstrap_eligible":True,"training_only":False}
+    row.update(extra);return row
 
 
 def test_each_successful_branch_is_a_distinct_trajectory_parent():
@@ -21,8 +36,8 @@ def test_trace_selection_is_sparse_and_capped_at_four():
 def test_parent_balanced_selection_uses_trajectory_parent_not_original_parent():
     rows=[]
     for parent in range(10):
-        for child in range(4):rows.append({"id":f"{parent}-{child}","trajectory_parent_id":f"t{parent}",
-            "original_candidate_parent":"same","descent_layer":("middle","late","early")[parent%3],"mining_rank_score":100-child})
+        for child in range(4):rows.append(_row(f"{parent}-{child}",f"t{parent}",("middle","late","early")[parent%3],state=parent*10+child,
+            original_candidate_parent="same",mining_rank_score=100-child))
     chosen=select_parent_balanced(rows,target=20,masses={"middle":.4,"late":.4,"early":.2},parent_cap=4)
     assert len(chosen)==20 and len({x["trajectory_parent_id"] for x in chosen})==10
     assert max(sum(x["trajectory_parent_id"]==parent for x in chosen) for parent in {x["trajectory_parent_id"] for x in chosen})<=4
@@ -30,9 +45,56 @@ def test_parent_balanced_selection_uses_trajectory_parent_not_original_parent():
 
 
 def test_layer_targets_do_not_block_validated_surplus_support():
-    rows=[{"id":str(i),"trajectory_parent_id":f"t{i}","descent_layer":"middle","mining_rank_score":10-i} for i in range(8)]
+    rows=[_row(str(i),f"t{i}",state=i,mining_rank_score=10-i) for i in range(8)]
     selected=select_parent_balanced(rows,target=8,masses={"middle":.4,"late":.4,"early":.2},parent_cap=4)
     assert len(selected)==8
+
+
+def test_seven_unique_candidates_do_not_repeat_across_four_quota_rounds():
+    rows=[_row(str(i),f"p{i}",("middle","late")[i%2],state=i) for i in range(7)]
+    selected,report=select_parent_balanced_with_report(rows,target=28,masses={"middle":.4,"late":.4,"early":.2},parent_cap=4)
+    assert len(selected)==7 and report["quota_target"]==28 and report["quota_shortfall"]==21
+    assert report["exhausted_unique_support"] and report["unique_state_byte_hashes"]==7
+
+
+def test_different_candidate_ids_with_same_snapshot_keep_one():
+    rows=[_row("a",state=1),_row("b",state=1)]
+    selected,report=select_parent_balanced_with_report(rows,target=2,masses={"middle":1,"late":0,"early":0})
+    assert len(selected)==1 and report["duplicate_rejected"]["state_byte_hash"]==1
+
+
+def test_same_candidate_id_with_different_wrappers_keeps_one():
+    rows=[_row("a",state=1),_row("a",state=2,mining_rank_score=9)]
+    selected,report=select_parent_balanced_with_report(rows,target=2,masses={"middle":1,"late":0,"early":0})
+    assert len(selected)==1 and report["duplicate_rejected"]["candidate_id"]==1
+
+
+def test_duplicate_across_source_groups_and_layer_fallback_keeps_one():
+    rows=[_row("a",state=1,source_group="one"),_row("b",layer="late",state=1,source_group="two")]
+    selected,_=select_parent_balanced_with_report(rows,target=2,masses={"middle":0,"late":0,"early":1})
+    assert len(selected)==1
+
+
+def test_parent_cap_counts_only_unique_states():
+    rows=[_row(f"a{i}",parent="p",state=i) for i in range(6)]+[_row("duplicate",parent="p",state=0)]
+    selected,report=select_parent_balanced_with_report(rows,target=6,masses={"middle":1,"late":0,"early":0},parent_cap=4)
+    assert len(selected)==4 and report["maximum_children_per_parent"]==4
+
+
+def test_selection_is_deterministic_in_order_and_hash():
+    rows=[_row(str(i),f"p{i%3}",("middle","late","early")[i%3],state=i,mining_rank_score=i%2) for i in range(9)]
+    first,one=select_parent_balanced_with_report(rows,target=8,masses={"middle":.4,"late":.4,"early":.2},parent_cap=4)
+    second,two=select_parent_balanced_with_report(list(reversed(rows)),target=8,masses={"middle":.4,"late":.4,"early":.2},parent_cap=4)
+    assert [x["id"] for x in first]==[x["id"] for x in second]
+    assert one["selected_order"]==two["selected_order"]
+
+
+def test_unique_shortfall_is_valid_for_construction_but_duplicate_bank_is_rejected():
+    unique=[_row(str(i),state=i) for i in range(7)]
+    selected,report=select_parent_balanced_with_report(unique,target=28,masses={"middle":.4,"late":.4,"early":.2})
+    assert report["status"]=="PASS" and validate_unique_candidates(selected)["status"]=="PASS"
+    with pytest.raises(SystemExit,match="duplicate snapshots"):
+        validate_unique_candidates(selected+[dict(selected[0],id="new-wrapper")])
 
 
 def test_mixed_snapshot_source_policy_requires_exact_record_declarations():
