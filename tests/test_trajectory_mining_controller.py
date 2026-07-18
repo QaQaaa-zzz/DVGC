@@ -26,7 +26,7 @@ def test_controller_preflights_corrected_bank_before_construction():
     source=Path("cli/trajectory_mining_controller.py").read_text()
     assert "candidate_preflight.json" in source
     assert source.index("validate_unique_candidates")<source.index("super().stage_a()")
-    assert "physical_audit_pass" in source
+    assert "physical_audit_pass" in source and "source_policy_records_complete" in source
     assert "runtime_gate_pass_current" in source and "tracked_worktree_clean" in source
 
 
@@ -46,7 +46,9 @@ def test_prepare_resume_freezes_invalid_bank_and_reports_unique_shortfall(tmp_pa
     base_path=tmp_path/"base.pkl";SnapshotBank(base_rows,{"policy_hash":"policy"}).save(base_path)
     metadata={"policy_hash":"policy","xml_sha256":"xml","landing_entry_set_sha256":"entry",
         "landing_policy_hash":"landing","candidate_config_hash":"config","snapshot_source_policy_hashes":["policy"]}
-    SnapshotBank(base_rows+[row for row in additions for _ in range(4)],metadata).save(mining/"candidate_pool.pkl")
+    invalid_base=[dict(row,snapshot_source_policy_hash="policy") for row in base_rows]
+    invalid_additions=[dict(row,snapshot_source_policy_hash="policy") for row in additions]
+    SnapshotBank(invalid_base+[row for row in invalid_additions for _ in range(4)],metadata).save(mining/"candidate_pool.pkl")
     (mining/"report.json").write_text('{"selected_snapshots":28}')
     state={"current_stage":"stable_analyze","stop_reason":"duplicate snapshots","failure_signature":"sig",
         "consecutive_failure_count":3,"provenance":{},"current_policy":"policy-dir","current_checkpoint":"checkpoint",
@@ -56,6 +58,8 @@ def test_prepare_resume_freezes_invalid_bank_and_reports_unique_shortfall(tmp_pa
     output=tmp_path/"corrected";report=prepare(invalid_run=invalid,output_run=output,base_bank_path=base_path)
     assert report["unique_additions"]==7 and report["quota_target"]==28 and report["quota_shortfall"]==21
     assert report["corrected_states"]==9 and report["analyzer_preflight"]["status"]=="PASS"
+    corrected=SnapshotBank.load(output/"trajectory_mining_corrected/candidate_pool.pkl")
+    assert all(row["snapshot_source_policy_hash"]=="policy" for row in corrected.records_for_phase("flight",include_training_only=False))
     frozen=json.loads((output/"trajectory_mining_corrected/invalid_engineering_manifest.json").read_text())
     assert frozen["status"]=="INVALID_ENGINEERING_DUPLICATE_SELECTION" and len(frozen["duplicate_groups"])==7
 

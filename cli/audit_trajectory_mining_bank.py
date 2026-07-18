@@ -16,6 +16,7 @@ from dvgc.config import STAGE_ID,config_hash,file_sha256,load_config
 from dvgc.env import OrangeBikeDVGC
 from dvgc.policy import load_bundle
 from dvgc.runtime import build_inference,save_json
+from dvgc.snapshot_provenance import validate_snapshot_source_records
 from dvgc.trajectory_mining import canonical_state_byte_hash
 
 
@@ -40,7 +41,7 @@ def main():
         if ok:accepted.append({"id":str(row["id"]),"state_byte_hash":canonical_state_byte_hash(row),
             "terrain_clearance_m":placement.clearance,"wheel_clearance_m":placement.wheel_clearance,
             "nonwheel_clearance_m":placement.nonwheel_clearance,"root_z_shift_m":placement.root_z_shift})
-    uniqueness=validate_unique_candidates(rows)
+    uniqueness=validate_unique_candidates(rows);source_hashes=validate_snapshot_source_records(rows,bank.metadata)
     provenance={"policy_hash":bank.metadata.get("policy_hash")==file_sha256(Path(a.policy)/"params.pkl"),
         "xml_hash":bank.metadata.get("xml_sha256")==file_sha256(cfg.xml_path),
         "c_l_hash":bank.metadata.get("landing_entry_set_sha256")==file_sha256(a.landing_entry_set),
@@ -48,11 +49,13 @@ def main():
         "config_hash":bank.metadata.get("candidate_config_hash")==config_hash(cfg)}
     checks={"base_prefix_unchanged":prefix_ok,"all_additions_accepted":len(accepted)==len(additions),
         "seven_unique_additions":len(additions)==7,"flight_semantic":all(int(row.get("oracle_phase",-1))==STAGE_ID["flight"] for row in additions),
-        "analyzer_preflight":uniqueness["status"]=="PASS","provenance_current":all(provenance.values())}
+        "analyzer_preflight":uniqueness["status"]=="PASS","source_policy_records_complete":bool(source_hashes),
+        "provenance_current":all(provenance.values())}
     report={"status":"PASS" if all(checks.values()) else "FAIL","artifact_role":"corrected_trajectory_mining_physical_audit",
         "seed":a.seed,"base_states":len(base_rows),"candidate_states":len(rows),"unique_additions":len(additions),
         "accepted_additions":len(accepted),"rejection_counts":dict(reasons),"checks":checks,"provenance_checks":provenance,
-        "analyzer_preflight":uniqueness,"candidate_bank_sha256":file_sha256(a.candidate_bank),"accepted":accepted}
+        "analyzer_preflight":uniqueness,"snapshot_source_policy_hashes":list(source_hashes),
+        "candidate_bank_sha256":file_sha256(a.candidate_bank),"accepted":accepted}
     save_json(output,report);print(json.dumps({k:v for k,v in report.items() if k!="accepted"},indent=2))
     if report["status"]!="PASS":raise SystemExit(2)
 

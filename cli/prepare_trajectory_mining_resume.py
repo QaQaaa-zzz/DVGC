@@ -47,7 +47,13 @@ def prepare(*,invalid_run:Path,output_run:Path,base_bank_path:Path,configured_ta
         "corrected_from_run":str(invalid_run),"selection_configured_target":configured_target,
         "selection_quota_target":selection["quota_target"],"selection_quota_shortfall":selection["quota_shortfall"],
         "selection_exhausted_unique_support":selection["exhausted_unique_support"]})
-    corrected=SnapshotBank(copy.deepcopy(base_rows)+copy.deepcopy(selected),corrected_metadata)
+    # Use the mining bank's byte-identical base prefix because mining adds the
+    # required per-record snapshot-source policy declaration without changing
+    # simulator or PolicyState bytes.
+    corrected_base=copy.deepcopy(invalid_rows[:len(base_rows)])
+    if any(not row.get("snapshot_source_policy_hash") for row in corrected_base):
+        raise SystemExit("Corrected base prefix lacks per-record source-policy provenance")
+    corrected=SnapshotBank(corrected_base+copy.deepcopy(selected),corrected_metadata)
     uniqueness=validate_unique_candidates(corrected.records_for_phase("flight",include_training_only=False))
 
     output_run.mkdir(parents=True)

@@ -11,6 +11,7 @@ from dvgc.bank import SnapshotBank
 from dvgc.config import file_sha256,load_config
 from dvgc.runtime import save_json
 from dvgc.seed_registry import save_registry
+from dvgc.snapshot_provenance import validate_snapshot_source_records
 from cli.analyze_stable_descent_construction import validate_unique_candidates
 
 
@@ -100,11 +101,14 @@ class TrajectoryMiningController(DescentEnvelopeController):
             subprocess.run([PYTHON,"-m","cli.runtime_gate","--config","configs/default.json","--output",RUNTIME_GATE,"--check-only"],
                 check=True,stdout=subprocess.DEVNULL)
             gate=json.loads(RUNTIME_GATE.read_text());policy_hash=file_sha256(Path(self.state["current_policy"])/"params.pkl")
-            uniqueness=validate_unique_candidates(SnapshotBank.load(candidate).records_for_phase("flight",include_training_only=False))
+            candidate_bank=SnapshotBank.load(candidate);candidate_records=candidate_bank.records_for_phase("flight",include_training_only=False)
+            uniqueness=validate_unique_candidates(candidate_records)
+            source_hashes=validate_snapshot_source_records(candidate_records,candidate_bank.metadata)
             audit=json.loads(audit_path.read_text()) if audit_path.is_file() else {}
             checks={"tracked_worktree_clean":not tracked,"runtime_gate_pass_current":gate.get("status")=="PASS",
                 "three_layer_uniqueness":uniqueness["status"]=="PASS","physical_audit_pass":audit.get("status")=="PASS",
                 "candidate_hash_matches":audit.get("candidate_bank_sha256")==file_sha256(candidate),
+                "source_policy_records_complete":bool(source_hashes),
                 "policy_hash_matches":self.state["provenance"].get("current_policy_hash")==policy_hash,
                 "xml_hash_matches":self.state["provenance"].get("xml_sha256")==file_sha256(XML),
                 "c_l_hash_matches":self.state["provenance"].get("c_l_hash")==file_sha256(ENTRY),
