@@ -497,3 +497,36 @@
   duplicate Cycle-3 evidence is explicitly prohibited. Resume Cycle 4 will
   therefore run fresh full stable construction on the corrected 153-state bank
   with new registered seed namespaces; no trajectory mining or PPO is rerun.
+- Post-PPO lifecycle repair commit `31e4b75` invalidated the stale Cycle-4
+  comparison without overwriting it, bound every construction artifact to the
+  policy/bank/XML/C_L/pi_L/config/runtime/protocol/seed-epoch identity, and
+  resumed directly at fresh Cycle 5. Targeted tests were 32 passed, the full
+  preflight was 154 passed, and the retry runtime gate is PASS/current. The
+  authorized roll-targeted PPO was not repeated: the only post-Cycle-4 policy
+  remains `da9bd48...24fdce` at cumulative 102,400 steps.
+- Fresh Cycle-5 construction is complete over the fixed corrected 153-state
+  bank `d031e96...20e55`: Stage A 153 states, Stage B 101 selected states, and
+  adaptive 53 states used 9,824 branches under
+  `stable-descent-cross-seed-v1`, construction epoch 5. Final labels are
+  safe/boundary/dead/unknown=0/65/60/28; stable-safe support is 0 states from
+  0 parents and all layers are empty. Both Cycle-4 stable-safe states became
+  unknown (84/96 and 73/96 combined Final branches), all seven trajectory-mined
+  additions remain non-safe (5 boundary, 2 unknown), Stage-A/B consistency is
+  58.42%, and boundary/unknown-to-stable-safe is 0. No Tube or audit candidate
+  was frozen.
+- The fresh before/after gate is formally FAIL with all lifecycle checks PASS.
+  Cycle 4 -> Cycle 5 Final is 40.7586% -> 40.6963% (-0.0624 percentage points),
+  stable-safe is 2 -> 0, and parents are 1 -> 0. Roll failures improve
+  3,129/9,728 -> 2,757/9,824 and total physical failure improves 32.4630% ->
+  28.2471%; pitch/back-edge are 2/16 after training, timeout/nonfinite/horizon
+  remain zero. Chain is 4,859 -> 5,010 branches, but false-progress rises
+  9.1900% -> 10.3013% and handoff-missed-final rises 2,605 -> 3,051. Thus the
+  roll objective improved its targeted failure mode without retaining or
+  expanding exact stable recoverability.
+- Terminal state is a valid preregistered research gate (controller exit 40),
+  not an engineering failure: `gate_pause`, `research_gate_valid=true`, last
+  action `analyze_stable_construction`, reason `roll-targeted PPO failed fresh
+  stable retention/expansion gate`. This is branch C; no pointwise independent
+  audit, exact C_D, Tube-RSI, apex, or further PPO may start from this result.
+  Authoritative artifacts are `cycle_5/stable/report.json` and
+  `cycle_5/roll_targeted_block_gate.json` under the corrected resume root.
