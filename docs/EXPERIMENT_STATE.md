@@ -466,3 +466,26 @@
   draft states Nmax=32 and one shared Actor, while current discovery uses
   separate 32-branch Stage A/B confirmation plus bounded adaptive branches and
   a stage expert. Formal membership remains frozen-policy Final-Recovery only.
+- Trajectory-mining selector engineering repair: failed run
+  `trajectory_mining_seed0_20260718T141645` is frozen as
+  `INVALID_ENGINEERING_DUPLICATE_SELECTION`; its 28 appended records are four
+  selections of seven unique states and all Cycle-3 construction evidence is
+  ineligible for formal Tube use. Commit `a328ae9` enforces global candidate
+  ID, declared snapshot hash and canonical full-state byte uniqueness across
+  every quota/fallback round, keeps the analyzer rejection, and reports valid
+  support exhaustion instead of filling with duplicates. Full suite 146
+  passed; runtime gate PASS/current.
+- Corrected non-overwriting resume root is
+  `runs/stage_experts/trajectory_mining_resume_seed0_20260718T193738`.
+  Corrected bank has 153 states = 146 unchanged base + seven unique additions,
+  hash `675ca61...b488e`; unique ID/snapshot/byte counts are 153/153/153.
+  Configured target is 64, parent-cap quota capacity is 28, selected unique is
+  seven and quota shortfall is 21; selected layers middle/late/early=5/2/0,
+  seven parents and maximum one selected child/parent. Fresh physical preflight
+  seed 1700000001 accepts 7/7 with finite Flight semantics, zero construction
+  rejection and current policy/XML/C_L/pi_L/config provenance.
+- Prior evidence is not reused: existing Stage-A/B/adaptive artifacts are
+  whole-bank-hash bound and do not bind per-state snapshot hashes, while the
+  duplicate Cycle-3 evidence is explicitly prohibited. Resume Cycle 4 will
+  therefore run fresh full stable construction on the corrected 153-state bank
+  with new registered seed namespaces; no trajectory mining or PPO is rerun.
