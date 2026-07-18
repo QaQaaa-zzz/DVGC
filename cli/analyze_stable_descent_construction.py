@@ -56,7 +56,7 @@ def main() -> None:
     reports = [stage_a, stage_b] + ([adaptive] if adaptive else [])
     common_keys = ("candidate_bank_sha256", "candidate_source_policy_hash", "candidate_source_policy_hashes", "descent_policy_hash",
                    "landing_policy_hash", "landing_entry_set_sha256", "xml_sha256", "config_hash",
-                   "runtime_source_fingerprint")
+                   "runtime_source_fingerprint","certification_protocol_version","construction_seed_epoch")
     for key in common_keys:
         if len({str(report.get(key)) for report in reports}) != 1:
             raise SystemExit(f"Stable construction {key} mismatch")
@@ -131,6 +131,8 @@ def main() -> None:
         "output_bank_sha256": file_sha256(args.output_bank), "xml_sha256": stage_a["xml_sha256"],
         "landing_entry_set_sha256": stage_a["landing_entry_set_sha256"],
         "landing_policy_hash": stage_a["landing_policy_hash"],
+        "config_hash":stage_a["config_hash"],"certification_protocol_version":stage_a["certification_protocol_version"],
+        "construction_seed_epoch":stage_a["construction_seed_epoch"],
         "runtime_source_fingerprint": stage_a["runtime_source_fingerprint"],
         "seed_namespaces": [report["seed_namespace"] for report in reports],
         "seed_namespace": "stable_cross_seed_construction",

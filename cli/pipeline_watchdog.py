@@ -266,18 +266,24 @@ def collect_status(run: Path, now: float | None = None, *, controller_unit: str 
         "worker_substate": worker.get("SubState"),
         "active_worker_units": workers,
         "current_stage": stage,
+        "phase": state.get("route_phase", stage),
+        "cycle": state.get("current_cycle", state.get("active_round")),
         "progress": progress,
         "heartbeat_age_seconds": now - heartbeat if heartbeat else None,
         "progress_age_seconds": now - latest_progress if latest_progress else None,
         "policy_hash": expected_policy or lock_policy,
+        "certified_policy_hash": provenance.get("certified_policy_hash") or provenance.get("current_policy_hash") or expected_policy,
         "tube_hash": frozen.get("tube_hash") or provenance.get("exact_safe_hash") or provenance.get("construction_certification_hash"),
         "candidate_hash": frozen.get("candidate_hash") or provenance.get("candidate_hash") or provenance.get("candidate_bank_sha256"),
         "frozen_manifest": frozen.get("manifest"),
         "last_completed_action": state.get("last_completed_action"),
+        "last_successful_artifact": state.get("last_successful_artifact") or (reports[-1] if reports else None),
         "next_automatic_action": state.get("next_decision"),
         "in_progress_action": state.get("in_progress_action"),
         "retry_count": int(state.get("retry_count", 0) or 0),
         "last_error": state.get("stop_reason"),
+        "terminal_reason": state.get("stop_reason") if terminal else None,
+        "research_gate_valid": bool(state.get("research_gate_valid",terminal=="gate_pause")) if terminal else False,
         "failed_stage": stage if terminal else None,
         "last_valid_checkpoint": state.get("current_checkpoint"),
         "recommended_resume_action": (
@@ -455,10 +461,10 @@ def concise(status: dict) -> str:
     completed = f"{progress.get('completed')}/{progress.get('total') or '?'}"
     worker = f"{status.get('worker_unit') or 'none'} pid={status.get('worker_pid', 0)}"
     terminal=status.get("terminal_state")
-    summary=(f"DVGC {status['current_stage']} | progress={completed} range={progress.get('current_index_range')}\n"
+    summary=(f"DVGC {status['current_stage']} | cycle={status.get('cycle')} progress={completed} range={progress.get('current_index_range')}\n"
             f"controller={status['controller_active_state']}/{status['controller_substate']} pid={status['controller_pid']} | worker={worker}\n"
             f"heartbeat={status.get('heartbeat_age_seconds', 0):.1f}s | last={status.get('last_completed_action')} | next={status.get('next_automatic_action')}\n"
-            f"terminal={'yes' if terminal else 'no'} type={terminal or 'none'} | status={STATUS_JSON}")
+            f"terminal={'yes' if terminal else 'no'} type={terminal or 'none'} gate_valid={status.get('research_gate_valid',False)} | status={STATUS_JSON}")
     if terminal:
         summary+=(f"\nexit_reason={status.get('last_error')} | failed_stage={status.get('failed_stage') or status.get('current_stage')}"
                   f"\nlast_valid_checkpoint={status.get('last_valid_checkpoint')} | recommended_resume={status.get('recommended_resume_action')}")

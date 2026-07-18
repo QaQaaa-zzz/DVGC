@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 from pathlib import Path
 
 import jax
@@ -12,6 +13,7 @@ from cli.certify_descent_entries import qualified_descent_success
 from dvgc.bank import SnapshotBank
 from dvgc.certification import DYNAMICS_VARIANTS, branch_evidence, branch_seed, detailed_terminal_summary
 from dvgc.composite import CanonicalEntryMatcher, composite_rollout
+from dvgc.construction_lifecycle import PROTOCOL_VERSION
 from dvgc.config import config_hash, file_sha256, load_config
 from dvgc.env import END_REASON, OrangeBikeDVGC
 from dvgc.policy import load_bundle
@@ -131,6 +133,8 @@ def main() -> None:
         })
         print(f"[stable {args.stage}] {offset-args.start_index+1}/{args.end_index-args.start_index} global={global_index}", flush=True)
 
+    match=re.fullmatch(r"stable_cycle_(\d+)",str(args.namespace))
+    if not match:raise SystemExit("Stable construction namespace lacks immutable cycle epoch")
     payload = {
         "status": "PASS", "complete": True, "artifact_role": "stable_construction_shard",
         "stage": args.stage, "seed": int(args.seed), "seed_namespace": namespace,
@@ -143,6 +147,7 @@ def main() -> None:
         "landing_policy_version": landing_manifest["policy_version"],
         "landing_entry_set_sha256": entry_hash, "xml_sha256": file_sha256(cfg.xml_path),
         "config_hash": config_hash(cfg), "runtime_source_fingerprint": gate.get("source_fingerprint"),
+        "certification_protocol_version":PROTOCOL_VERSION,"construction_seed_epoch":int(match.group(1)),
         "protocol": protocol_from_config(cfg), "branch_horizon": int(cfg.branch_horizon),
         "branches_per_state": branch_budget, "total_states": len(rows),
         "selected_states": len(selected), "selected_indices_sha256": indices_hash(selected),

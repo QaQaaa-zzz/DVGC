@@ -14,11 +14,13 @@ from cli.descent_tube_controller import failure_fuse_update, select_policy_for_h
 from dvgc.audit_manifest import completed_manifest
 from dvgc.bank import SnapshotBank
 from dvgc.certification import branch_seed
-from dvgc.config import file_sha256, load_config
+from dvgc.config import config_hash,file_sha256, load_config
+from dvgc.construction_lifecycle import PROTOCOL_VERSION,validate_artifact
+from dvgc.policy import load_bundle
 from dvgc.runtime import save_json
 from dvgc.seed_registry import exact_intersection_proof, make_claim, save_registry
 from dvgc.snapshot_provenance import declared_snapshot_source_hashes
-from dvgc.stable_construction import adaptive_indices, stage_b_indices
+from dvgc.stable_construction import adaptive_indices,protocol_from_config,stage_b_indices
 
 
 SOURCE_RUN = Path("runs/stage_experts/descent_tube_seed0_20260716T2330")
@@ -104,6 +106,37 @@ class DescentEnvelopeController(Controller):
     def _cycle_root(self):
         return self.run/f"cycle_{int(self.state.get('current_cycle',0))}"
 
+    def _construction_identity(self):
+        policy=Path(self.state["current_policy"]);_,saved_cfg,_=load_bundle(policy,verify_files=True)
+        cfg=load_config("configs/default.json",{**saved_cfg,"training_stage":"flight","expert_chain_termination":False,
+            "domain_randomization":False,"obs_noise_enable":False,"use_bank_resets":False})
+        gate=json.loads(RUNTIME_GATE.read_text())
+        return {"policy_hash":file_sha256(policy/"params.pkl"),"candidate_bank_sha256":file_sha256(self.state["current_candidate"]),
+            "xml_sha256":file_sha256(XML),"landing_entry_set_sha256":file_sha256(ENTRY),
+            "landing_policy_hash":file_sha256(LANDING/"params.pkl"),"config_hash":config_hash(cfg),
+            "protocol":protocol_from_config(cfg),"certification_protocol_version":PROTOCOL_VERSION,
+            "construction_seed_epoch":int(self.state["current_cycle"]),"runtime_source_fingerprint":gate["source_fingerprint"]}
+
+    def _ensure_cycle_manifest(self):
+        root=self._cycle_root();root.mkdir(parents=True,exist_ok=True);path=root/"construction_cycle_manifest.json"
+        expected={"status":"ACTIVE","artifact_role":"immutable_stable_construction_cycle","cycle":int(self.state["current_cycle"]),
+            "identity":self._construction_identity(),"checkpoint":str(self.state["current_checkpoint"]),
+            "policy":str(self.state["current_policy"]),"candidate_bank":str(self.state["current_candidate"])}
+        if path.exists():
+            actual=json.loads(path.read_text())
+            if actual!=expected:raise RuntimeError("Construction cycle manifest does not match current policy/bank provenance")
+        else:save_json(path,expected)
+        return expected
+
+    def _validate_stage_artifact(self,path,stage,seed,*,complete=False):
+        identity=self._ensure_cycle_manifest()["identity"]
+        return validate_artifact(path,identity,checkpoint_mtime=(Path(self.state["current_policy"])/"params.pkl").stat().st_mtime,
+            stage=stage,seed=seed,require_complete=complete)
+
+    def _validate_stable_report(self,path):
+        identity=self._ensure_cycle_manifest()["identity"]
+        return validate_artifact(path,identity,checkpoint_mtime=(Path(self.state["current_policy"])/"params.pkl").stat().st_mtime)
+
     def _allocate_indices(self, name, category, preferred, indices, branches):
         registry_path=self.run/"seed_registry.json";registry=json.loads(registry_path.read_text())
         existing=[row for row in registry["claims"] if row["name"]!=name]
@@ -135,7 +168,8 @@ class DescentEnvelopeController(Controller):
         payload={key:reference[key] for key in (
             "candidate_bank_sha256","candidate_source_policy_hash","candidate_source_policy_hashes","descent_policy_hash","descent_policy_version",
             "landing_policy_hash","landing_policy_version","landing_entry_set_sha256","xml_sha256","config_hash",
-            "runtime_source_fingerprint","protocol","branch_horizon","total_states")}
+            "runtime_source_fingerprint","protocol","certification_protocol_version","construction_seed_epoch",
+            "branch_horizon","total_states")}
         payload.update({"status":"PASS","artifact_role":"merged_stable_construction_stage","stage":stage,
                         "seed":seed,"seed_namespace":f"stable_cycle_{self.state['current_cycle']}:{stage}:descent_entry",
                         "branches_per_state":reference["protocol"]["adaptive_max_branches" if stage=="adaptive" else "stage_branches"],
@@ -144,6 +178,7 @@ class DescentEnvelopeController(Controller):
         save_json(output,payload)
 
     def _run_stable_stage(self, stage, indices, preferred):
+        self._ensure_cycle_manifest()
         cfg=load_config("configs/default.json")
         branches=int(cfg.stable_construction_adaptive_max_branches if stage=="adaptive" else cfg.stable_construction_stage_branches)
         cycle=int(self.state["current_cycle"]);root=self._cycle_root()/stage;root.mkdir(parents=True,exist_ok=True)
@@ -162,7 +197,7 @@ class DescentEnvelopeController(Controller):
         pending=[(start,min(start+SHARD_SIZE,len(indices))) for start in range(0,len(indices),SHARD_SIZE)];single={}
         while pending:
             start,end=pending.pop(0);out=root/f"shard_{start:03d}_{end:03d}.completed.json"
-            if out.exists():continue
+            if out.exists():self._validate_stage_artifact(out,stage,seed,complete=True);continue
             command=[PYTHON,"-u","-m","cli.certify_stable_descent_shard","--stage",stage,
                      "--descent-policy",policy]
             for source in sources:command.extend(["--candidate-source-policy",source])
@@ -185,6 +220,7 @@ class DescentEnvelopeController(Controller):
             for shard in shards:command.extend(["--shard",shard])
             command.extend(["--indices-file",indices_path,"--output",merged])
             self.run_command(f"merge_{claim}",command,root/"merge.log",[merged])
+        self._validate_stage_artifact(merged,stage,seed)
         return merged
 
     def stage_a(self):
@@ -196,6 +232,7 @@ class DescentEnvelopeController(Controller):
 
     def stage_b(self):
         cfg=load_config("configs/default.json");a=json.loads((self._cycle_root()/"stage_a/merged.json").read_text())
+        self._validate_stage_artifact(self._cycle_root()/"stage_a/merged.json","stage_a",a["seed"])
         indices=stage_b_indices(a["rows"],cfg);cycle=int(self.state["current_cycle"])
         if self._run_stable_stage("stage_b",indices,900_000_000+cycle*10_000_000) is None:return
         self.save(current_stage="stable_adaptive",next_decision="stable_analyze")
@@ -203,6 +240,8 @@ class DescentEnvelopeController(Controller):
     def adaptive(self):
         cfg=load_config("configs/default.json")
         a=json.loads((self._cycle_root()/"stage_a/merged.json").read_text());b=json.loads((self._cycle_root()/"stage_b/merged.json").read_text())
+        self._validate_stage_artifact(self._cycle_root()/"stage_a/merged.json","stage_a",a["seed"])
+        self._validate_stage_artifact(self._cycle_root()/"stage_b/merged.json","stage_b",b["seed"])
         indices=adaptive_indices(a["rows"],b["rows"],cfg);cycle=int(self.state["current_cycle"])
         if self._run_stable_stage("adaptive",indices,1_000_000_000+cycle*10_000_000) is None:return
         self.save(current_stage="stable_analyze",next_decision="stable_decision")
@@ -215,8 +254,11 @@ class DescentEnvelopeController(Controller):
                 "--stage-b",root/"stage_b/merged.json","--adaptive",root/"adaptive/merged.json",
                 "--policy",self.state["current_policy"],"--output-bank",bank,"--output-report",report],
                 root/"stable/analyze.log",[bank,report])
+        self._validate_stable_report(report)
+        stable_payload=json.loads(report.read_text());self.state.setdefault("provenance",{}).update({
+            "certified_policy_hash":stable_payload["policy_hash"],"candidate_bank_sha256":stable_payload["candidate_bank_sha256"]})
         self.save(current_stable_bank=str(bank),current_stable_report=str(report),
-                  current_stage="stable_decision",next_decision="freeze_or_viability")
+                  current_stage="stable_decision",next_decision="freeze_or_viability",last_successful_artifact=str(report))
 
     def stable_decision(self):
         report=json.loads(Path(self.state["current_stable_report"]).read_text())

@@ -53,6 +53,7 @@ def _shard(indices, start, end, seed=1_000_000):
             "descent_policy_version":"policy-v","landing_policy_hash":"landing",
             "landing_policy_version":"landing-v","landing_entry_set_sha256":"entry",
             "xml_sha256":"xml","config_hash":"config","runtime_source_fingerprint":"runtime",
+            "certification_protocol_version":"stable-descent-cross-seed-v1","construction_seed_epoch":5,
             "protocol":{},"branch_horizon":750,"branches_per_state":32,"total_states":3,
             "selected_states":len(indices)}
     from cli.certify_stable_descent_shard import indices_hash

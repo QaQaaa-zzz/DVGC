@@ -14,6 +14,8 @@ def test_new_route_is_bounded_and_does_not_repeat_old_ppo():
     assert "single_roll_targeted_ppo" in source
     assert source.count("25600")==1
     assert "descent_acquisition_max_rounds" not in source
+    assert "current_cycle=4" not in source and "next_cycle=int(self.state[\"pre_roll_cycle\"])+1" in source
+    assert '"--target",32' in source and "roll_policy_acquisition_used" in source
 
 
 def test_persistent_start_script_uses_new_unit_and_active_pointer():
@@ -72,3 +74,10 @@ def test_resume_controller_preserves_prepared_stage(tmp_path):
     first=TrajectoryMiningController(tmp_path)
     assert first.state["current_stage"]=="stable_stage_a" and first.state["current_cycle"]==4
     first.lock.close()
+
+
+def test_cycle5_resume_is_explicit_and_never_retrains_ppo():
+    source=Path("cli/resume_roll_targeted_cycle5.py").read_text()
+    assert '"current_cycle":5' in source and '"current_stage":"stable_stage_a"' in source
+    assert "INVALID_ENGINEERING_STALE_POSTTRAIN_REPORT" in source
+    assert "train_descent_local_block" not in source

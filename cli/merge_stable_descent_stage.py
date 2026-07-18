@@ -16,6 +16,7 @@ COMMON = (
     "descent_policy_hash", "descent_policy_version",
     "landing_policy_hash", "landing_policy_version", "landing_entry_set_sha256",
     "xml_sha256", "config_hash", "runtime_source_fingerprint", "protocol",
+    "certification_protocol_version", "construction_seed_epoch",
     "branch_horizon", "branches_per_state", "total_states", "selected_states",
     "selected_indices_sha256",
 )

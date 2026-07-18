@@ -22,6 +22,7 @@ from dvgc.descent_local import robust_scale, tangent_factor
 from dvgc.env import END_REASON, OrangeBikeDVGC
 from dvgc.flight_augmentation import apply_tangent, normalized_distance
 from dvgc.runtime import save_json
+from dvgc.trajectory_mining import canonical_state_byte_hash,declared_snapshot_hash
 from dvgc.viability import ViabilityEnsemble
 
 
@@ -90,7 +91,8 @@ def main():
     if args.viability_model:
         model=ViabilityEnsemble.load(args.viability_model);mean,std,support_score=model.predict_records(support)
         for row,p,s,q in zip(support,mean,std,support_score):
-            scores[row["id"]]=float(p+s+.25*(1-q)+.10*(row.get("candidate_kind")=="descent_support_repair_proposal"))
+            scores[row["id"]]=float(p+s+.25*(1-q)+.10*(row.get("candidate_kind")=="descent_support_repair_proposal")
+                +.20*(row.get("candidate_kind")=="successful_trajectory_snapshot"))
         viability_summary={"model_sha256":file_sha256(args.viability_model),"mean_probability":float(np.mean(mean)),
                            "mean_disagreement":float(np.mean(std)),"mean_support":float(np.mean(support_score))}
     grouped=defaultdict(list)
@@ -112,7 +114,9 @@ def main():
         except KeyError:pass
     factor=tangent_factor(support,allowed);_,feature_scale=robust_scale([row["physical_feature"] for row in support],1e-4)
     existing=[np.asarray(row["physical_feature"],np.float64) for row in rows]
-    identities={snapshot_identity(row) for row in rows};records=[copy.deepcopy(row) for row in rows]
+    identities={snapshot_identity(row) for row in rows};declared_hashes={declared_snapshot_hash(row) for row in rows}
+    byte_hashes={canonical_state_byte_hash(row) for row in rows};candidate_ids={str(row["id"]) for row in rows}
+    records=[copy.deepcopy(row) for row in rows]
     rng=np.random.default_rng(args.seed);source_children=Counter();row_children=Counter();accepted=Counter();rejected=Counter()
     group_weights={"new_parent":.50,"boundary":.30,"safe_continuity":.20}
     scales={"new_parent":float(cfg.descent_local_boundary_covariance_scale),
@@ -155,30 +159,36 @@ def main():
         nn=normalized_distance(feature,existing,feature_scale)
         if nn<float(cfg.descent_local_normalized_dedup_distance):rejected["normalized_duplicate"]+=1;continue
         record=env.snapshot_record(state,"flight");record["policy_state"]=copy.deepcopy(parent.get("policy_state",{}))
-        identity=snapshot_identity(record)
-        if identity in identities:rejected["byte_duplicate"]+=1;continue
+        identity=snapshot_identity(record);declared=declared_snapshot_hash(record);byte_hash=canonical_state_byte_hash(record)
+        if identity in identities or declared in declared_hashes or byte_hash in byte_hashes:rejected["byte_duplicate"]+=1;continue
         source=parent_key(parent);identifier=hashlib.sha256(f"descent-support:{args.seed}:{attempts}:{parent['id']}".encode()).hexdigest()[:32]
+        if identifier in candidate_ids:rejected["candidate_id_duplicate"]+=1;continue
         bootstrap="provisional_safe" if parent["final"]["label"]=="safe" else "boundary"
         record.update({"id":identifier,"candidate_kind":"descent_support_repair_proposal","parent_candidate_id":parent["id"],
                        "entry_source_id":source,"descent_layer":parent.get("descent_layer"),"bootstrap_group":bootstrap,
                        "local_bootstrap_eligible":True,"bootstrap_eligible":True,"training_only":False,
                        "support_repair_group":group,"candidate_generation_seed":args.seed,"candidate_proposal_index":attempts,
                        "acquisition_round":args.acquisition_round,"acquisition_model_score":scores.get(parent["id"]),
+                       "snapshot_source_policy_hash":policy_hash,
                        "perturbation_tangent":delta.astype(np.float32),"sampling_latent_norm":raw_norm,
                        "snapshot_identity_sha256":identity,"normalized_nearest_neighbor_distance":nn,
                        "root_z_shift_m":0.0,"terrain_clearance_m":placement.clearance,
                        "wheel_clearance_m":placement.wheel_clearance,"nonwheel_clearance_m":placement.nonwheel_clearance})
-        records.append(record);existing.append(feature);identities.add(identity);source_children[source]+=1;row_children[parent["id"]]+=1;accepted[group]+=1;layer_accepted[parent.get("descent_layer")]+=1
-    snapshot_source_hash=base.metadata.get("snapshot_source_policy_hash",base.metadata.get("descent_policy_hash"))
+        records.append(record);existing.append(feature);identities.add(identity);declared_hashes.add(declared);byte_hashes.add(byte_hash);candidate_ids.add(identifier)
+        source_children[source]+=1;row_children[parent["id"]]+=1;accepted[group]+=1;layer_accepted[parent.get("descent_layer")]+=1
+    prior_sources=set(base.metadata.get("snapshot_source_policy_hashes",[]))
+    if base.metadata.get("snapshot_source_policy_hash"):prior_sources.add(str(base.metadata["snapshot_source_policy_hash"]))
+    prior_sources|={str(row.get("snapshot_source_policy_hash")) for row in rows if row.get("snapshot_source_policy_hash")}
     metadata=copy.deepcopy(base.metadata);metadata.update({"bank_role":"descent_candidate_support_repair","policy_hash":policy_hash,
-        "snapshot_source_policy_hash":snapshot_source_hash,"support_repair_seed":args.seed,"support_repair_target":args.target,
+        "snapshot_source_policy_hashes":sorted(prior_sources|{policy_hash}),"support_repair_seed":args.seed,"support_repair_target":args.target,
         "support_repair_parent_cap":args.parent_cap,"source_bank_sha256":file_sha256(args.base_bank),
         "candidate_config_hash":config_hash(cfg),"xml_sha256":file_sha256(cfg.xml_path)})
     SnapshotBank(records,metadata).save(out)
     children=[row for row in records if row.get("candidate_generation_seed")==args.seed]
     minimum_children=min(args.target,12);minimum_parents=min(6,len({parent_key(row) for row in support}))
     quality=(len(children)>=minimum_children and len(source_children)>=minimum_parents
-             and max(source_children.values(),default=0)<=args.parent_cap and len(identities)==len(records))
+             and max(source_children.values(),default=0)<=args.parent_cap and len(identities)==len(records)
+             and len(declared_hashes)==len(records) and len(byte_hashes)==len(records) and len(candidate_ids)==len(records))
     report={"status":"PASS" if quality else "FAIL","seed":args.seed,"target":args.target,"proposal_budget":args.proposal_budget,
             "attempts":attempts,"base_states":len(rows),"children":len(children),"total_states":len(records),
             "minimum_children":minimum_children,"minimum_parents":minimum_parents,
@@ -187,9 +197,11 @@ def main():
             "layer_targets":layer_targets,"layer_accepted":dict(layer_accepted),"viability":viability_summary,
             "prediction_can_promote_empirical_safe":False,"acquisition_round":args.acquisition_round,
             "labels_of_parents":dict(Counter(next(x for x in rows if x["id"]==row["parent_candidate_id"])["final"]["label"] for row in children)),
-            "all_state_unique":len(identities)==len(records),"bank_sha256":file_sha256(out),
+            "all_state_unique":len(identities)==len(records) and len(declared_hashes)==len(records) and len(byte_hashes)==len(records) and len(candidate_ids)==len(records),
+            "unique_candidate_ids":len(candidate_ids),"unique_snapshot_hashes":len(declared_hashes),"unique_state_byte_hashes":len(byte_hashes),
+            "quota_shortfall":max(0,args.target-len(children)),"exhausted_unique_support":len(children)<args.target,"bank_sha256":file_sha256(out),
             "provenance":{"base_bank_sha256":file_sha256(args.base_bank),"policy_hash":policy_hash,
-                          "snapshot_source_policy_hash":snapshot_source_hash,
+                          "snapshot_source_policy_hashes":sorted(prior_sources|{policy_hash}),
                           "c_l_sha256":file_sha256(args.landing_entry_set),"xml_sha256":file_sha256(cfg.xml_path)}}
     save_json(args.output_report,report);print(json.dumps(report,indent=2))
     if report["status"]!="PASS":raise SystemExit(2)

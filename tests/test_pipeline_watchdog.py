@@ -111,3 +111,11 @@ def test_concise_terminal_status_names_failure_and_resume_action():
     assert "terminal=yes type=engineering_failure_after_retries" in text
     assert "failed_stage=stable_analyze" in text and "last_valid_checkpoint=checkpoint" in text
     assert "recommended_resume=repair_selector" in text
+
+
+def test_concise_status_exposes_cycle_and_gate_validity():
+    status=_status(current_stage="stable_stage_a",cycle=5,research_gate_valid=False,
+        progress={"completed":12,"total":153,"current_index_range":[12,24]},controller_active_state="active",
+        controller_substate="running",controller_pid=1,heartbeat_age_seconds=2)
+    text=watchdog.concise(status)
+    assert "cycle=5" in text and "gate_valid=False" in text

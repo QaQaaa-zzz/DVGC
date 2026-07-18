@@ -9,6 +9,7 @@ from cli.descent_local_controller import Controller,ENTRY,LANDING,PYTHON,RUNTIME
 from cli.descent_tube_controller import failure_fuse_update
 from dvgc.bank import SnapshotBank
 from dvgc.config import file_sha256,load_config
+from dvgc.construction_lifecycle import validate_policy_update_gate
 from dvgc.runtime import save_json
 from dvgc.seed_registry import save_registry
 from dvgc.snapshot_provenance import validate_snapshot_source_records
@@ -76,25 +77,64 @@ class TrajectoryMiningController(DescentEnvelopeController):
         self.save(current_candidate=str(bank),current_cycle=3,current_stage="stable_stage_a",next_decision="stable_stage_b")
 
     def stable_decision(self):
-        report=json.loads(Path(self.state["current_stable_report"]).read_text())
-        if report["activation_support_pass"] and report["parent_diversity_pass"]:
-            self.save(current_stage="stable_freeze",next_decision="fresh_pointwise_audit");return
+        report=self._validate_stable_report(Path(self.state["current_stable_report"]))
         if self.state.get("route_phase")=="trajectory_mining":
+            if report["activation_support_pass"] and report["parent_diversity_pass"]:
+                self.save(current_stage="stable_freeze",next_decision="fresh_pointwise_audit");return
             self.save(current_stage="roll_controllability",next_decision="roll_targeted_or_gate");return
         if self.state.get("route_phase")=="roll_targeted":
-            baseline=json.loads(Path(self.state["pre_roll_stable_report"]).read_text());before={row["id"] for row in baseline["rows"] if row["stable_safe"]};after={row["id"] for row in report["rows"] if row["stable_safe"]}
+            before_path=Path(self.state["pre_roll_stable_report"]);after_path=Path(self.state["current_stable_report"])
+            baseline,report,lifecycle=validate_policy_update_gate(before_path,after_path,
+                before_policy_hash=self.state["pre_roll_policy_hash"],after_policy_hash=file_sha256(Path(self.state["current_policy"])/"params.pkl"),
+                before_cycle=int(self.state["pre_roll_cycle"]),after_cycle=int(self.state["current_cycle"]))
+            before={row["id"] for row in baseline["rows"] if row["stable_safe"]};after={row["id"] for row in report["rows"] if row["stable_safe"]}
             bterm=baseline["terminal_summary"];aterm=report["terminal_summary"]
             gate={"stable_safe_retained":before<=after,"roll_failure_decreased":aterm["physical_end_reasons"]["roll"] / aterm["branches"] < bterm["physical_end_reasons"]["roll"] / bterm["branches"],
-                "final_not_worse":aterm["final_recovery_rate"]>=bterm["final_recovery_rate"],"stable_safe_at_least_four":report["stable_safe_states"]>=4}
-            save_json(self._cycle_root()/"roll_targeted_block_gate.json",{"status":"PASS" if all(gate.values()) else "FAIL","checks":gate,
-                "before_report_sha256":file_sha256(self.state["pre_roll_stable_report"]),"after_report_sha256":file_sha256(self.state["current_stable_report"])})
-            if all(gate.values()):self.save(current_stage="stable_freeze",next_decision="fresh_pointwise_audit")
-            else:self.save(current_stage="gate_pause",stop_reason="Single roll-targeted PPO block did not pass stable retention/expansion gate")
+                "final_not_worse":aterm["final_recovery_rate"]>=bterm["final_recovery_rate"],
+                "stable_safe_not_decreased":int(report["stable_safe_states"])>=int(baseline["stable_safe_states"]),
+                "stable_safe_at_least_four":report["stable_safe_states"]>=4,
+                "parent_diversity":bool(report["parent_diversity_pass"])}
+            passed=all(gate[key] for key in ("stable_safe_retained","roll_failure_decreased","final_not_worse","stable_safe_at_least_four","parent_diversity"))
+            clear_improvement=(gate["roll_failure_decreased"] and gate["final_not_worse"] and gate["stable_safe_not_decreased"]
+                and int(report["stable_safe_states"]) in (2,3))
+            mined_ids={row["id"] for row in SnapshotBank.load(self.state["current_candidate"]).records_for_phase("flight",include_training_only=False)
+                if row.get("candidate_kind")=="successful_trajectory_snapshot"}
+            def compact(row):return {key:row.get(key) for key in ("id","parent","layer","label","stable_safe","stage_a","stage_b","adaptive","combined")}
+            comparison={"status":"PASS" if passed else "BOUNDED_ACQUISITION" if clear_improvement else "FAIL",
+                "artifact_role":"fresh_roll_targeted_cycle_comparison","lifecycle_checks":lifecycle,"checks":gate,
+                "before":{"cycle":self.state["pre_roll_cycle"],"policy_hash":baseline["policy_hash"],"report_sha256":file_sha256(before_path),
+                    "stable_safe":baseline["stable_safe_states"],"parents":baseline["stable_safe_parents"],"layers":baseline["stable_safe_layers"],"terminal":bterm},
+                "after":{"cycle":self.state["current_cycle"],"policy_hash":report["policy_hash"],"report_sha256":file_sha256(after_path),
+                    "stable_safe":report["stable_safe_states"],"parents":report["stable_safe_parents"],"layers":report["stable_safe_layers"],"terminal":aterm},
+                "prior_safe_state_results":[compact(row) for row in report["rows"] if row["id"] in before],
+                "trajectory_mined_state_results":[compact(row) for row in report["rows"] if row["id"] in mined_ids]}
+            comparison_path=self._cycle_root()/"roll_targeted_block_gate.json";save_json(comparison_path,comparison)
+            if passed:self.save(current_stage="stable_freeze",next_decision="fresh_pointwise_audit",research_gate_valid=False)
+            elif clear_improvement and not self.state.get("roll_policy_acquisition_used"):
+                self.save(roll_cycle5_comparison=str(comparison_path),current_stage="roll_acquisition_prepare",
+                    next_decision="single_policy_conditioned_acquisition",research_gate_valid=False)
+            else:
+                blocker=self._cycle_root()/"research_blocker.json";save_json(blocker,{"status":"VALID_RESEARCH_GATE",
+                    "reason":"Single roll-targeted PPO did not establish sufficient stable-safe descent support","comparison":comparison})
+                self.save(current_stage="gate_pause",stop_reason="Valid research gate: roll-targeted PPO failed fresh stable retention/expansion gate",
+                    research_gate_valid=True,last_successful_artifact=str(comparison_path),next_decision="research_direction")
+            return
+        if self.state.get("route_phase")=="roll_targeted_acquisition":
+            if report["activation_support_pass"] and report["parent_diversity_pass"]:
+                self.save(current_stage="stable_freeze",next_decision="fresh_pointwise_audit",research_gate_valid=False)
+            else:
+                blocker=self._cycle_root()/"research_blocker.json";save_json(blocker,{"status":"VALID_RESEARCH_GATE",
+                    "reason":"Single policy-conditioned acquisition exhausted below stable support gate",
+                    "stable_report":str(self.state["current_stable_report"]),"stable_report_sha256":file_sha256(self.state["current_stable_report"])})
+                self.save(current_stage="gate_pause",stop_reason="Valid research gate: bounded post-PPO acquisition exhausted",
+                    research_gate_valid=True,last_successful_artifact=str(self.state["current_stable_report"]),next_decision="research_direction")
             return
         raise RuntimeError("Unexpected stable decision route")
 
     def stage_a(self):
-        candidate=Path(self.state["current_candidate"]);audit_path=Path(self.state.get("candidate_physical_audit",""))
+        candidate=Path(self.state["current_candidate"])
+        audit_path=Path(self.state.get("roll_acquisition_report") if self.state.get("route_phase")=="roll_targeted_acquisition"
+            else self.state.get("candidate_physical_audit",""))
         preflight=self._cycle_root()/"candidate_preflight.json"
         try:
             tracked=subprocess.check_output(["git","status","--porcelain","--untracked-files=no"],text=True).strip()
@@ -107,7 +147,7 @@ class TrajectoryMiningController(DescentEnvelopeController):
             audit=json.loads(audit_path.read_text()) if audit_path.is_file() else {}
             checks={"tracked_worktree_clean":not tracked,"runtime_gate_pass_current":gate.get("status")=="PASS",
                 "three_layer_uniqueness":uniqueness["status"]=="PASS","physical_audit_pass":audit.get("status")=="PASS",
-                "candidate_hash_matches":audit.get("candidate_bank_sha256")==file_sha256(candidate),
+                "candidate_hash_matches":audit.get("candidate_bank_sha256",audit.get("bank_sha256"))==file_sha256(candidate),
                 "source_policy_records_complete":bool(source_hashes),
                 "policy_hash_matches":self.state["provenance"].get("current_policy_hash")==policy_hash,
                 "xml_hash_matches":self.state["provenance"].get("xml_sha256")==file_sha256(XML),
@@ -146,7 +186,8 @@ class TrajectoryMiningController(DescentEnvelopeController):
         root=self.run/"roll_targeted";bank=root/"reset_bank.pkl";report=root/"reset_bank.report.json"
         if not report.exists():self.run_command("build_roll_targeted_reset_bank",[PYTHON,"-m","cli.build_roll_targeted_reset_bank",
             "--stable-bank",self.state["current_stable_bank"],"--output-bank",bank,"--output-report",report],root/"reset_bank.log",[bank,report])
-        self.save(pre_roll_stable_report=self.state["current_stable_report"],pending_roll_reset_bank=str(bank),current_stage="roll_targeted_train",next_decision="stable_stage_a")
+        self.save(pre_roll_cycle=int(self.state["current_cycle"]),pre_roll_policy_hash=file_sha256(Path(self.state["current_policy"])/"params.pkl"),
+            pre_roll_stable_report=self.state["current_stable_report"],pending_roll_reset_bank=str(bank),current_stage="roll_targeted_train",next_decision="stable_stage_a")
 
     def roll_targeted_train(self):
         root=self.run/"roll_targeted/train";report=root/"report.json";cumulative=int(self.state["current_cumulative_steps"])+25600
@@ -162,11 +203,40 @@ class TrajectoryMiningController(DescentEnvelopeController):
             self.save(current_stage="gate_pause",stop_reason="Roll-targeted PPO health gate failed");return
         policy=root/"policy";checkpoint=root/"orbax"/f"{cumulative:012d}";history=list(self.state.get("policy_history",[]));history.append(str(policy))
         self.state["provenance"]["current_policy_hash"]=file_sha256(policy/"params.pkl")
+        next_cycle=int(self.state["pre_roll_cycle"])+1
         self.save(route_phase="roll_targeted",current_policy=str(policy),current_checkpoint=str(checkpoint),current_cumulative_steps=cumulative,
-            policy_history=history,current_cycle=4,current_stage="stable_stage_a",next_decision="stable_stage_b")
+            policy_history=history,current_cycle=next_cycle,current_stage="stable_stage_a",next_decision="stable_stage_b")
+
+    def roll_acquisition_prepare(self):
+        root=self.run/"roll_targeted/policy_conditioned_acquisition";model=root/"viability.pkl";report=root/"viability.report.json"
+        seed,proof,attempts=self._allocate_indices("roll_policy_conditioned_viability","viability_training",1_900_000_000,[0],1)
+        save_json(root/"viability.seed_proof.json",{**proof,"allocation_attempts":attempts})
+        if not report.exists():self.run_command("fit_roll_policy_conditioned_viability",[PYTHON,"-m","cli.fit_viability",
+            "--bank",self.state["current_stable_bank"],"--output",model,"--report",report,"--seed",seed],root/"viability.log",[model,report])
+        self.save(current_viability_model=str(model),current_stage="roll_acquisition",next_decision="fresh_extended_stable_construction")
+
+    def roll_acquisition(self):
+        root=self.run/"roll_targeted/policy_conditioned_acquisition";bank=root/"candidate_pool.pkl";report=root/"candidate_pool.report.json"
+        indices=list(range(3001));seed,proof,attempts=self._allocate_indices("roll_policy_conditioned_candidates","candidate_generation",2_000_000_000,indices,1)
+        save_json(root/"candidate.seed_proof.json",{**proof,"allocation_attempts":attempts})
+        if not report.exists():
+            result=self.run_worker_command("single_roll_policy_conditioned_acquisition",[PYTHON,"-u","-m","cli.build_descent_support_repair",
+                "--base-bank",self.state["current_stable_bank"],"--policy",self.state["current_policy"],"--landing-entry-set",ENTRY,
+                "--output-bank",bank,"--output-report",report,"--seed",seed,"--target",32,"--proposal-budget",3000,
+                "--parent-cap",4,"--viability-model",self.state["current_viability_model"],"--acquisition-round",1],
+                root/"candidate.log",[bank,report],unit_suffix=f"roll-policy-acquisition-{int(time.time())}",preallocate=False)
+            if not result["ok"]:raise RuntimeError(f"Policy-conditioned acquisition worker failed: {result}")
+        payload=json.loads(report.read_text())
+        if payload.get("status")!="PASS" or payload.get("maximum_children_per_parent",99)>4 or not payload.get("all_state_unique"):
+            self.save(current_stage="gate_pause",stop_reason="Valid research gate: policy-conditioned candidate acquisition quality exhausted",
+                research_gate_valid=True,next_decision="research_direction");return
+        self.save(roll_policy_acquisition_used=True,roll_acquisition_report=str(report),route_phase="roll_targeted_acquisition",current_candidate=str(bank),
+            current_source_policy=str(self.state["current_policy"]),current_cycle=int(self.state["current_cycle"])+1,
+            current_stage="stable_stage_a",next_decision="stable_stage_b")
 
     def pointwise_decision(self):
         super().pointwise_decision()
+        if self.state.get("current_stage")=="gate_pause":self.save(research_gate_valid=True,next_decision="research_direction")
         if self.state.get("current_stage")=="tube_rsi_prepare":
             self.save(tube_rsi_base_cumulative=int(self.state.get("current_cumulative_steps",76800)))
 
@@ -179,6 +249,8 @@ class TrajectoryMiningController(DescentEnvelopeController):
             elif stage=="roll_controllability":self.roll_controllability()
             elif stage=="roll_targeted_prepare":self.roll_targeted_prepare()
             elif stage=="roll_targeted_train":self.roll_targeted_train()
+            elif stage=="roll_acquisition_prepare":self.roll_acquisition_prepare()
+            elif stage=="roll_acquisition":self.roll_acquisition()
             elif stage=="stable_stage_a":self.stage_a()
             elif stage=="stable_stage_b":self.stage_b()
             elif stage=="stable_adaptive":self.adaptive()
@@ -203,7 +275,9 @@ def main():
     controller=TrajectoryMiningController(Path(a.run))
     try:raise SystemExit(controller.loop())
     except Exception as exc:
-        stage=str(controller.state.get("current_stage","unknown"));signature,count=failure_fuse_update(controller.state,stage,exc)
+        stage=str(controller.state.get("current_stage","unknown"))
+        retry_key=f"{stage}:{controller.state.get('provenance',{}).get('current_policy_hash')}:{controller.state.get('provenance',{}).get('candidate_bank_sha256')}"
+        signature,count=failure_fuse_update(controller.state,retry_key,exc)
         controller.log(f"ERROR {type(exc).__name__}: {exc} (identical failure {count}/3)")
         controller.save(stop_reason=f"{type(exc).__name__}: {exc}",failure_signature=signature,consecutive_failure_count=count)
         if count>=3:raise SystemExit(41) from exc
