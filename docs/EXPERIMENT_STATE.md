@@ -475,15 +475,23 @@
   every quota/fallback round, keeps the analyzer rejection, and reports valid
   support exhaustion instead of filling with duplicates. Full suite 146
   passed; runtime gate PASS/current.
+- The first resume attempt
+  `trajectory_mining_resume_seed0_20260718T193738` is retained as an invalid
+  provenance-wrapper diagnostic: no branch completed because its byte-identical
+  base records omitted the mining-added per-record source-policy declaration.
+  Commit `a83d796` preserves the invalid bank's verified base wrapper and adds
+  this declaration to the pre-worker hard gate. No scientific evidence from
+  that attempt is consumed.
 - Corrected non-overwriting resume root is
-  `runs/stage_experts/trajectory_mining_resume_seed0_20260718T193738`.
+  `runs/stage_experts/trajectory_mining_resume_seed0_20260718T194327`.
   Corrected bank has 153 states = 146 unchanged base + seven unique additions,
-  hash `675ca61...b488e`; unique ID/snapshot/byte counts are 153/153/153.
+  hash `d031e96...20e55`; unique ID/snapshot/byte counts are 153/153/153.
   Configured target is 64, parent-cap quota capacity is 28, selected unique is
   seven and quota shortfall is 21; selected layers middle/late/early=5/2/0,
   seven parents and maximum one selected child/parent. Fresh physical preflight
   seed 1700000001 accepts 7/7 with finite Flight semantics, zero construction
-  rejection and current policy/XML/C_L/pi_L/config provenance.
+  rejection, complete two-policy per-record source provenance and current
+  policy/XML/C_L/pi_L/config hashes.
 - Prior evidence is not reused: existing Stage-A/B/adaptive artifacts are
   whole-bank-hash bound and do not bind per-state snapshot hashes, while the
   duplicate Cycle-3 evidence is explicitly prohibited. Resume Cycle 4 will
