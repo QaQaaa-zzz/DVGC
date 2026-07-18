@@ -34,8 +34,8 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--learning-rate", type=float, default=None)
     args = parser.parse_args()
-    if args.cumulative_steps not in (25600, 51200, 76800, 102400):
-        raise SystemExit("cumulative steps must be one of 25600, 51200, 76800, 102400")
+    if args.cumulative_steps not in tuple(range(25600,204801,25600)):
+        raise SystemExit("cumulative steps must be a 25,600-step milestone through 204,800")
     run = Path(args.run)
     if run.exists():
         raise SystemExit(f"Run exists: {run}")

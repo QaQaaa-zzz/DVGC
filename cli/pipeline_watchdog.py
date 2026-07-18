@@ -342,6 +342,9 @@ def terminal_notification(status: dict) -> tuple[str, str, str, str] | None:
 
 
 MAJOR_STAGES = {
+    "trajectory_mining": "开始成功 Final 轨迹 snapshot 挖掘",
+    "roll_controllability": "稳定支持仍不足，开始 roll controllability audit",
+    "roll_targeted_prepare": "Roll controllability PASS，准备唯一一次 targeted PPO",
     "stable_stage_a": "稳定 safe-tail 新路线启动",
     "pointwise_audit": "Stable construction 通过，开始独立 pointwise audit",
     "tube_rsi_prepare": "Stable pointwise Tube PASS，开始 Tube-RSI",

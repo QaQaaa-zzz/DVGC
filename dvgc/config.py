@@ -88,6 +88,18 @@ def default_config() -> config_dict.ConfigDict:
         descent_acquisition_early_mass=0.20,
         discrete_tube_rsi_safe_mass=0.70,
         discrete_tube_rsi_boundary_mass=0.30,
+        trajectory_mining_branches_per_state=2,
+        trajectory_mining_target_snapshots=64,
+        trajectory_mining_middle_mass=0.40,
+        trajectory_mining_late_mass=0.40,
+        trajectory_mining_early_mass=0.20,
+        roll_controllability_action_delta=0.15,
+        roll_controllability_horizon=10,
+        roll_controllability_pulse_steps=3,
+        roll_controllability_min_roll_sensitivity=0.01,
+        roll_controllability_min_roll_rate_sensitivity=0.05,
+        roll_controllability_min_beneficial_fraction=0.25,
+        roll_controllability_max_pitch_side_effect=0.10,
         descent_local_reward_enable=False,
         # Robust centers/scales calibrated from the 11 immutable successful or
         # provisional-safe descent anchors plus 99 canonical C_L safe entries.

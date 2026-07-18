@@ -17,6 +17,7 @@ from dvgc.env import END_REASON, OrangeBikeDVGC
 from dvgc.policy import load_bundle
 from dvgc.rollout import restore_snapshot
 from dvgc.runtime import build_inference, save_json
+from dvgc.snapshot_provenance import validate_snapshot_source_records,verify_source_policy_paths
 from dvgc.stable_construction import protocol_from_config
 
 
@@ -28,7 +29,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--stage", choices=("stage_a", "stage_b", "adaptive"), required=True)
     parser.add_argument("--descent-policy", required=True)
-    parser.add_argument("--candidate-source-policy", required=True)
+    parser.add_argument("--candidate-source-policy", action="append", required=True)
     parser.add_argument("--landing-policy", required=True)
     parser.add_argument("--candidate-bank", required=True)
     parser.add_argument("--landing-entry-set", required=True)
@@ -57,11 +58,11 @@ def main() -> None:
     rows = source.records_for_phase("flight", include_training_only=False)
     if selected and (selected[0] < 0 or selected[-1] >= len(rows)):
         raise SystemExit("Stable construction candidate index out of range")
-    source_policy_hash = source.metadata.get(
-        "snapshot_source_policy_hash", source.metadata.get("descent_policy_hash")
-    )
-    if source_policy_hash != file_sha256(Path(args.candidate_source_policy) / "params.pkl"):
-        raise SystemExit("Stable construction candidate source-policy mismatch")
+    try:
+        source_policy_hashes=validate_snapshot_source_records(rows,source.metadata)
+        verify_source_policy_paths(source_policy_hashes,
+            [str(Path(path)/"params.pkl") for path in args.candidate_source_policy],file_sha256)
+    except ValueError as exc:raise SystemExit(str(exc)) from exc
     entry_hash = file_sha256(args.landing_entry_set)
     if source.metadata.get("landing_entry_set_sha256") != entry_hash:
         raise SystemExit("Stable construction C_L mismatch")
@@ -134,7 +135,8 @@ def main() -> None:
         "status": "PASS", "complete": True, "artifact_role": "stable_construction_shard",
         "stage": args.stage, "seed": int(args.seed), "seed_namespace": namespace,
         "candidate_bank_sha256": file_sha256(args.candidate_bank),
-        "candidate_source_policy_hash": source_policy_hash,
+        "candidate_source_policy_hash": source_policy_hashes[0] if len(source_policy_hashes)==1 else None,
+        "candidate_source_policy_hashes": list(source_policy_hashes),
         "descent_policy_hash": file_sha256(Path(args.descent_policy) / "params.pkl"),
         "descent_policy_version": descent_manifest["policy_version"],
         "landing_policy_hash": file_sha256(Path(args.landing_policy) / "params.pkl"),

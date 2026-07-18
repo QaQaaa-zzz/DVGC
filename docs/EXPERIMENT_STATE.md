@@ -445,3 +445,24 @@
   provenance is kept separate from the policy being certified.  Targeted
   verification is 32 passed; full suite/runtime gate and persistent launch are
   the remaining preflight actions.
+- Stable-envelope run `descent_envelope_seed0_20260718T004058` exhausted its
+  preregistered bounded protocol without engineering failure. Cycle 0/1/2
+  stable-safe support was 2/3/3 states and 1/2/2 parents; final Cycle-2 labels
+  are safe/boundary/dead/unknown=3/59/57/27 over 146 states and 9,248 branches.
+  Final=40.39%, Chain=50.15%, physical failure=33.29%, timeout=nonfinite=0;
+  roll accounts for 3,045/3,079 physical failures. Two acquisition rounds
+  added 16 candidates each but no early stable-safe support. No pointwise
+  audit, discrete Tube, Tube-RSI, or PPO started because minimum safe=4 failed.
+- Authorized next branch mines complete snapshots from successful Final
+  trajectories under the same frozen policy. Each successful branch becomes a
+  distinct trajectory parent while retaining the original candidate parent;
+  mixed snapshot PolicyState sources are recorded per state and must match the
+  exact supplied source-policy hash set. Viability remains acquisition-only.
+  The mined pool receives the unchanged Stage A/B/adaptive protocol and a new
+  independent audit only after stable safe>=4. If support remains insufficient,
+  a preregistered finite-difference roll controllability audit decides between
+  one 25,600-step roll-targeted block and a structured research pause.
+- Draft difference to reconcile only after the seed-0 chain succeeds: the
+  draft states Nmax=32 and one shared Actor, while current discovery uses
+  separate 32-branch Stage A/B confirmation plus bounded adaptive branches and
+  a stage expert. Formal membership remains frozen-policy Final-Recovery only.

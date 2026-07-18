@@ -12,7 +12,8 @@ from dvgc.runtime import save_json
 
 COMMON = (
     "stage", "seed", "seed_namespace", "candidate_bank_sha256",
-    "candidate_source_policy_hash", "descent_policy_hash", "descent_policy_version",
+    "candidate_source_policy_hash", "candidate_source_policy_hashes",
+    "descent_policy_hash", "descent_policy_version",
     "landing_policy_hash", "landing_policy_version", "landing_entry_set_sha256",
     "xml_sha256", "config_hash", "runtime_source_fingerprint", "protocol",
     "branch_horizon", "branches_per_state", "total_states", "selected_states",

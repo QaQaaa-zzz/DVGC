@@ -45,7 +45,7 @@ def main() -> None:
         raise SystemExit("Stable construction candidate bank contains duplicate snapshots")
     stage_a, stage_b, adaptive = load_report(args.stage_a), load_report(args.stage_b), load_report(args.adaptive)
     reports = [stage_a, stage_b] + ([adaptive] if adaptive else [])
-    common_keys = ("candidate_bank_sha256", "candidate_source_policy_hash", "descent_policy_hash",
+    common_keys = ("candidate_bank_sha256", "candidate_source_policy_hash", "candidate_source_policy_hashes", "descent_policy_hash",
                    "landing_policy_hash", "landing_entry_set_sha256", "xml_sha256", "config_hash",
                    "runtime_source_fingerprint")
     for key in common_keys:
@@ -105,7 +105,7 @@ def main() -> None:
         })
     work.metadata.update({
         "bank_role": "stable_descent_construction", "policy_hash": stage_a["descent_policy_hash"],
-        "snapshot_source_policy_hash": stage_a["candidate_source_policy_hash"],
+        "snapshot_source_policy_hashes": stage_a["candidate_source_policy_hashes"],
         "stable_construction_policy_hash": stage_a["descent_policy_hash"],
         "stable_construction_stage_seeds": {report["stage"]: report["seed"] for report in reports},
         "stable_construction_protocol": stage_a["protocol"], "last_tube_version": tube_version,

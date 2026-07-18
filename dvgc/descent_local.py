@@ -84,7 +84,7 @@ def build_candidate_bootstrap_bank(
         group_rows = [row for row in rows if row["bootstrap_group"] == group]
         by_parent = {}
         for row in group_rows:
-            parent = str(row.get("parent_candidate_id", row["id"]))
+            parent = str(row.get("trajectory_parent_id",row.get("parent_candidate_id", row["id"])))
             by_parent.setdefault(parent, []).append(row)
         if not by_parent:
             raise ValueError(f"Descent bootstrap group {group} is empty")

@@ -17,6 +17,7 @@ from dvgc.certification import branch_seed
 from dvgc.config import file_sha256, load_config
 from dvgc.runtime import save_json
 from dvgc.seed_registry import exact_intersection_proof, make_claim, save_registry
+from dvgc.snapshot_provenance import declared_snapshot_source_hashes
 from dvgc.stable_construction import adaptive_indices, stage_b_indices
 
 
@@ -117,12 +118,13 @@ class DescentEnvelopeController(Controller):
         save_registry(registry_path,existing+[claim],status="ACTIVE")
         return seed,proof,attempts
 
-    def _source_policy(self, candidate):
-        metadata=SnapshotBank.load(candidate).metadata
-        source_hash=metadata.get("snapshot_source_policy_hash",metadata.get("descent_policy_hash"))
+    def _source_policies(self, candidate):
+        source_hashes=set(declared_snapshot_source_hashes(SnapshotBank.load(candidate).metadata))
         candidates=[SOURCE_POLICY_ORIGIN,SOURCE_POLICY]
         candidates.extend(Path(path) for path in self.state.get("policy_history",[]))
-        return select_policy_for_hash(source_hash,candidates)
+        resolved=[]
+        for source_hash in sorted(source_hashes):resolved.append(select_policy_for_hash(source_hash,candidates))
+        return resolved
 
     def _write_indices(self, path, indices):
         if not path.exists():save_json(path,[int(value) for value in indices])
@@ -131,7 +133,7 @@ class DescentEnvelopeController(Controller):
 
     def _empty_stage(self, stage, seed, indices, output, reference):
         payload={key:reference[key] for key in (
-            "candidate_bank_sha256","candidate_source_policy_hash","descent_policy_hash","descent_policy_version",
+            "candidate_bank_sha256","candidate_source_policy_hash","candidate_source_policy_hashes","descent_policy_hash","descent_policy_version",
             "landing_policy_hash","landing_policy_version","landing_entry_set_sha256","xml_sha256","config_hash",
             "runtime_source_fingerprint","protocol","branch_horizon","total_states")}
         payload.update({"status":"PASS","artifact_role":"merged_stable_construction_stage","stage":stage,
@@ -156,16 +158,18 @@ class DescentEnvelopeController(Controller):
                 reference=json.loads((self._cycle_root()/"stage_a/merged.json").read_text())
                 self._empty_stage(stage,seed,indices,merged,reference)
             return merged
-        candidate=Path(self.state["current_candidate"]);policy=Path(self.state["current_policy"]);source=self._source_policy(candidate)
+        candidate=Path(self.state["current_candidate"]);policy=Path(self.state["current_policy"]);sources=self._source_policies(candidate)
         pending=[(start,min(start+SHARD_SIZE,len(indices))) for start in range(0,len(indices),SHARD_SIZE)];single={}
         while pending:
             start,end=pending.pop(0);out=root/f"shard_{start:03d}_{end:03d}.completed.json"
             if out.exists():continue
             command=[PYTHON,"-u","-m","cli.certify_stable_descent_shard","--stage",stage,
-                     "--descent-policy",policy,"--candidate-source-policy",source,"--landing-policy",LANDING,
+                     "--descent-policy",policy]
+            for source in sources:command.extend(["--candidate-source-policy",source])
+            command.extend(["--landing-policy",LANDING,
                      "--candidate-bank",candidate,"--landing-entry-set",ENTRY,"--indices-file",indices_path,
                      "--start-index",start,"--end-index",end,"--seed",seed,
-                     "--namespace",f"stable_cycle_{cycle}","--output",out]
+                     "--namespace",f"stable_cycle_{cycle}","--output",out])
             result=self.run_worker_command(f"{claim}_{start}_{end}",command,root/f"shard_{start:03d}_{end:03d}.log",[out],
                                            unit_suffix=f"envelope-{claim}-{start}-{end}-{int(time.time())}",preallocate=end-start==SHARD_SIZE)
             if result["ok"]:continue
@@ -292,14 +296,16 @@ class DescentEnvelopeController(Controller):
             "xml_sha256":file_sha256(XML),"landing_entry_set_sha256":file_sha256(ENTRY),
             "landing_policy_hash":file_sha256(LANDING/"params.pkl"),"exact_membership_only":True,
             "continuous_matcher_active":False,"development_evidence_excluded":True})
-        source=self._source_policy(candidate);pending=[(start,min(start+SHARD_SIZE,total)) for start in range(0,total,SHARD_SIZE)];single={}
+        sources=self._source_policies(candidate);pending=[(start,min(start+SHARD_SIZE,total)) for start in range(0,total,SHARD_SIZE)];single={}
         while pending:
             start,end=pending.pop(0);out=root/f"shard_{start:03d}_{end:03d}.completed.json"
             if out.exists():continue
-            result=self.run_worker_command(f"independent_audit_{start}_{end}",[PYTHON,"-u","-m","cli.certify_descent_entries","--audit-only",
-                "--descent-policy",policy,"--candidate-source-policy",source,"--landing-policy",LANDING,
-                "--candidate-bank",candidate,"--landing-entry-set",ENTRY,"--output",out,"--seed",seed,
-                "--namespace",f"stable_cycle_{self.state['current_cycle']}_audit","--start-index",start,"--end-index",end],
+            command=[PYTHON,"-u","-m","cli.certify_descent_entries","--audit-only","--descent-policy",policy]
+            for source in sources:command.extend(["--candidate-source-policy",source])
+            command.extend(["--landing-policy",LANDING,"--candidate-bank",candidate,"--landing-entry-set",ENTRY,
+                "--output",out,"--seed",seed,"--namespace",f"stable_cycle_{self.state['current_cycle']}_audit",
+                "--start-index",start,"--end-index",end])
+            result=self.run_worker_command(f"independent_audit_{start}_{end}",command,
                 root/f"shard_{start:03d}_{end:03d}.log",[out],unit_suffix=f"envelope-audit-{start}-{end}-{int(time.time())}",preallocate=end-start==SHARD_SIZE)
             if result["ok"]:continue
             if not result["oom"]:raise RuntimeError(f"Independent audit worker failed: {result}")
@@ -360,7 +366,7 @@ class DescentEnvelopeController(Controller):
 
     def tube_rsi_train(self):
         block=int(self.state["pending_tube_rsi_block"]);root=self.run/f"tube_rsi/block_{block}";train=root/"train";report=train/"report.json"
-        cumulative=76800+block*25600
+        cumulative=int(self.state.get("tube_rsi_base_cumulative",76800))+block*25600
         if not report.exists():
             result=self.run_worker_command(f"tube_rsi_train_{block}",[PYTHON,"-u","-m","cli.train_descent_local_block",
                 "--resume-policy",self.state["current_policy"],"--bootstrap-bank",self.state["pending_tube_rsi_bank"],

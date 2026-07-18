@@ -49,6 +49,7 @@ def _shard(indices, start, end, seed=1_000_000):
     common={"status":"PASS","complete":True,"stage":"stage_a","seed":seed,
             "seed_namespace":"stable:stage_a","candidate_bank_sha256":"bank",
             "candidate_source_policy_hash":"source","descent_policy_hash":"policy",
+            "candidate_source_policy_hashes":["source"],
             "descent_policy_version":"policy-v","landing_policy_hash":"landing",
             "landing_policy_version":"landing-v","landing_entry_set_sha256":"entry",
             "xml_sha256":"xml","config_hash":"config","runtime_source_fingerprint":"runtime",
