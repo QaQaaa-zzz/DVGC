@@ -713,3 +713,20 @@
   `expert_conditioned_provisional_envelope` and is never final JEL evidence.
   The frozen final shared Actor receives new independent certification under
   `final_shared_policy_jel`; expert labels do not survive consolidation.
+- Decoupled Flight Apex gate result: late-descent and descent were skipped
+  without PPO because the frozen initial pi_F already produced canonical C_L
+  Chain support.  Apex then used four cumulative 25,600-step blocks under
+  `chain_only`, with no Landing rehearsal or Landing-retention requirement.
+  Apex remained Chain=Final=0/20 and physical failure=100% at every block.
+  Full-bank Chain/Final changed 7.5%/7.5% baseline -> 6.25%/6.25% ->
+  4.375%/5.0% -> 5.0%/4.375% -> 3.125%/3.75%; timeout and nonfinite remained
+  zero and provenance remained current.  Final full-bank terminations are
+  pitch/roll/recovery=100/54/6.
+- The persistent controller stopped normally with exit 40 at
+  `flight_apex_expert_chain_blocker`.  The four failed Apex checkpoints are
+  diagnostics and are not frozen experts.  The last valid pi_F therefore
+  remains the immutable initialization `35fcb613...7000c`; Ascent,
+  provisional-envelope certification, pi_T/pi_A, distillation and joint RSI
+  were not started.  This demonstrates that decoupling removes the Landing
+  forgetting constraint but does not by itself make the current Apex reset
+  support reach C_L; adding PPO budget is not authorized by this gate.
