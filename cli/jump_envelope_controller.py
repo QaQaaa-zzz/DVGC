@@ -13,6 +13,7 @@ CANDIDATES=ROOT/'trajectory_mining_corrected/candidate_pool.pkl'
 PHYSICAL_AUDIT=ROOT/'trajectory_mining_corrected/physical_audit.json'
 CYCLE4_REPORT=ROOT/'cycle_4/stable/report.json';CYCLE5_REPORT=ROOT/'cycle_5/stable/report.json'
 CYCLE4_POLICY=Path('runs/stage_experts/descent_tube_seed0_20260716T2330/round_3/train/policy')
+CYCLE4_SOURCE_ORIGIN=Path('runs/stage_experts/descent_tube_seed0_20260716T2330/round_2/train/policy')
 CYCLE5_POLICY=ROOT/'roll_targeted/train/policy'
 LANDING_BANK=Path('artifacts/landing_tube.pkl');LANDING_AUDIT=Path('runs/landing/refinement_seed0/audit.json')
 XML=Path('assets/orange_bike_4kg_horizontal.xml');SHARD=24
@@ -58,6 +59,48 @@ class JumpEnvelopeController(Controller):
   if not out.exists():self.run_command('combine_handoff',[PYTHON,'-m','cli.combine_handoff_decomposition','--report',root/'cycle4/report.json','--report',root/'cycle5/report.json','--proposal-bank-input',root/'cycle4/pending_entries.pkl','--proposal-bank-input',root/'cycle5/pending_entries.pkl','--entry-bank',ENTRY,'--output',out,'--proposal-bank',pending],root/'combine.log',[out,pending])
   report=json.loads(out.read_text());self.save(handoff_report=str(out),pending_entry_bank=str(pending),handoff_classes=report['summary']['classes'],current_stage='entry_extension_certify' if report['new_entry_extension_eligible'] else 'landing_calibration_stage_a',next_decision='landing_calibration_stage_a')
 
+ def fast_prepare(self):
+  root=self.run/'handoff/fast_route';bank=root/'h1_selected.pkl';report=root/'selection.json';indices=root/'h4_indices.json'
+  if not report.exists():self.run_command('prepare_fast_handoff',[PYTHON,'-m','cli.prepare_fast_handoff_route','--shard-root',self.run/'handoff/cycle4','--entry-bank',ENTRY,'--output-bank',bank,'--output-report',report,'--h4-indices',indices],root/'prepare.log',[bank,report,indices])
+  self.save(pending_entry_bank=str(bank),fast_handoff_selection=str(report),current_stage='h4_formal_replay',last_completed_action='prepare_fast_handoff',next_decision='h4_analyze')
+
+ def h4_replay(self):
+  root=self.run/'handoff/fast_route';indices=json.loads((root/'h4_indices.json').read_text());out=root/'h4_formal_replay.json'
+  if not indices:self.save(current_stage='h1_independent_certify',next_decision='h1_entry_decision');return
+  if not out.exists():
+   result=self.run_worker_command('h4_formal_replay',[PYTHON,'-u','-m','cli.certify_stable_descent_shard','--stage','stage_a','--descent-policy',CYCLE4_POLICY,'--candidate-source-policy',CYCLE4_SOURCE_ORIGIN,'--candidate-source-policy',CYCLE4_POLICY,'--landing-policy',LANDING,'--candidate-bank',CANDIDATES,'--landing-entry-set',ENTRY,'--indices-file',root/'h4_indices.json','--start-index',0,'--end-index',len(indices),'--seed',840000000,'--namespace','stable_cycle_4','--output',out],root/'h4_formal_replay.log',[out],unit_suffix=f'h4-replay-{int(time.time())}',preallocate=False)
+   if not result['ok']:raise RuntimeError(f'H4 replay failed: {result}')
+  self.save(current_stage='h4_analyze',next_decision='h1_independent_certify')
+
+ def h4_analyze(self):
+  root=self.run/'handoff/fast_route';out=root/'h4_analysis.json';shards=sorted((self.run/'handoff/cycle4').glob('shard_*.json'))
+  if not out.exists():
+   cmd=[PYTHON,'-m','cli.analyze_h4_replay','--formal-replay',root/'h4_formal_replay.json','--source-stable-report',CYCLE4_REPORT,'--output',out]
+   for path in shards:cmd+=['--handoff-shard',path]
+   self.run_command('analyze_h4_replay',cmd,root/'h4_analysis.log',[out])
+  self.save(h4_analysis=str(out),current_stage='h1_independent_certify',last_completed_action='analyze_h4_replay',next_decision='h1_entry_decision')
+
+ def h1_certify(self):
+  root=self.run/'handoff/fast_route';cert=root/'h1_certified.pkl'
+  if not cert.exists():
+   result=self.run_worker_command('h1_independent_certification',[PYTHON,'-u','-m','cli.certify','--policy',LANDING,'--candidate-bank',self.state['pending_entry_bank'],'--phase','landing','--output-bank',cert,'--seed',2_500_000_000,'--namespace','fast-h1-independent','--allow-independent-candidates','--fixed-branches'],root/'h1_certify.log',[cert,cert.with_suffix('.cert.json')],unit_suffix=f'h1-cert-{int(time.time())}',preallocate=False)
+   if not result['ok']:raise RuntimeError(f'H1 certification failed: {result}')
+  self.save(h1_certified_bank=str(cert),current_stage='h1_entry_decision',next_decision='handoff_zero_training_ab')
+
+ def h1_decision(self):
+  root=self.run/'handoff/fast_route';cert=Path(self.state['h1_certified_bank']);bank=SnapshotBank.load(cert);safe=[r for r in bank.records_for_phase('landing',final_labels=['safe'],include_training_only=False)];parents={r.get('selection_parent') or r.get('entry_source_parent') or r.get('entry_source_id') for r in safe};decision=root/'h1_decision.json';extended=root/'entry_set.pkl'
+  eligible=len(safe)>=4 and len(parents)>=2
+  if eligible and not extended.exists():self.run_command('extend_c_l_fast',[PYTHON,'-m','cli.extend_landing_entries','--base-bank',ENTRY,'--certified-proposals',cert,'--output-bank',extended],root/'extend.log',[extended,extended.with_suffix('.extension.json')])
+  save_json(decision,{'status':'PASS','safe_states':len(safe),'safe_parents':len(parents),'extension_eligible':eligible,'new_entry_bank':str(extended) if extended.exists() else None,'new_entry_bank_sha256':file_sha256(extended) if extended.exists() else None,'matcher_radius':SnapshotBank.load(ENTRY).metadata['entry_matcher']['radius'],'matcher_unchanged':True})
+  self.save(new_c_l_generated=extended.exists(),current_entry_bank=str(extended if extended.exists() else ENTRY),h1_decision=str(decision),current_stage='handoff_zero_training_ab' if extended.exists() else 'landing_calibration_stage_a',last_completed_action='h1_entry_decision',next_decision='handoff_zero_training_ab' if extended.exists() else 'landing_calibration_stage_a')
+
+ def handoff_ab(self):
+  root=self.run/'handoff/fast_route';out=root/'handoff_ab.json'
+  if not out.exists():
+   result=self.run_worker_command('handoff_zero_training_ab',[PYTHON,'-u','-m','cli.evaluate_handoff_ab','--policy',CYCLE5_POLICY,'--landing-policy',LANDING,'--candidate-bank',CANDIDATES,'--entry-bank',f'canonical={ENTRY}','--entry-bank',f"extended={self.state['current_entry_bank']}",'--output',out,'--seed',2_600_000_000,'--branches-per-state',8],root/'handoff_ab.log',[out],unit_suffix=f'handoff-ab-{int(time.time())}',preallocate=False)
+   if not result['ok']:raise RuntimeError(f'Handoff A/B failed: {result}')
+  self.save(handoff_ab=str(out),current_stage='landing_calibration_stage_a',last_completed_action='handoff_zero_training_ab',next_decision='landing_calibration_stage_a')
+
  def entry_extension(self):
   root=self.run/'handoff/entry_extension';root.mkdir(parents=True,exist_ok=True);cert=root/'certified.pkl'
   if not cert.exists():
@@ -98,6 +141,12 @@ class JumpEnvelopeController(Controller):
    elif stage=='handoff_cycle4':self.handoff('cycle4')
    elif stage=='handoff_cycle5':self.handoff('cycle5')
    elif stage=='handoff_combine':self.combine()
+   elif stage=='fast_handoff_prepare':self.fast_prepare()
+   elif stage=='h4_formal_replay':self.h4_replay()
+   elif stage=='h4_analyze':self.h4_analyze()
+   elif stage=='h1_independent_certify':self.h1_certify()
+   elif stage=='h1_entry_decision':self.h1_decision()
+   elif stage=='handoff_zero_training_ab':self.handoff_ab()
    elif stage=='entry_extension_certify':self.entry_extension()
    elif stage=='landing_calibration_stage_a':self.landing_stage('stage_a',2_300_000_000,'landing_calibration_stage_b')
    elif stage=='landing_calibration_stage_b':self.landing_stage('stage_b',2_400_000_000,'certifier_calibration')

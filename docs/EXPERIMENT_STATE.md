@@ -559,3 +559,24 @@
   proposals remain inactive until a second independent certification yields at
   least four Final-safe states from at least two parents; matcher radius is
   immutable.  The next automatic stage is `handoff_cycle4`; no PPO is active.
+- Evidence-funnel override (2026-07-19): exhaustive handoff replay stopped at
+  the atomic Cycle-4 `[168,192)` boundary because 192 events already contain
+  99 H1 branches from 15 states/12 parents and all descent layers.  Continuing
+  roughly 5,500 correlated events would require about 150k Landing rollouts
+  without changing the immediate decision.  Global byte/normalized-feature
+  dedup retained 96 distinct H1 contacts; the bounded selector chose 24 from
+  12 parents (cap two), layers early/middle/late=16/2/6 and dynamics counts
+  high/low/nominal=7/9/8.  Selected bank hash is
+  `312af9c...eb778`; it remains pending and inactive for C_L matching.
+- The fast route is H4 exact formal-code replay -> H1 independent fixed
+  32-branch certification -> optional immutable C_L extension at >=4 safe from
+  >=2 parents -> paired zero-training canonical/new-C_L evaluation on the full
+  fixed bank.  Eight observed H4 branches span six candidate indices and are
+  isolated for exact replay.  No PPO, matcher-radius change, threshold change,
+  or result overwrite is authorized by this acceleration.
+- Paired A/B smoke initially exposed different outcomes even when both arms
+  referenced the identical C_L, because two separately constructed MJX physics
+  environments were not a valid paired control.  The evaluator now shares the
+  exact physics env, inference, state and seed and varies only the immutable
+  matcher.  The repeated identical-bank control is exactly equal and PASS;
+  formal canonical/extended evaluation is forbidden unless this control holds.
