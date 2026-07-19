@@ -680,3 +680,36 @@
   were not started.  Next work requires a research decision on Takeoff reset,
   entry detector, or physical stage definition; increasing PPO budget is not
   authorized by this result.
+
+## Decoupled bootstrap-expert route (2026-07-20)
+
+- The sequential shared-Actor Flight-retention route and the bounded
+  stage-local Takeoff blocker remain preserved as engineering diagnostics but
+  are no longer active training evidence.  The active method is independent
+  bootstrap experts `pi_A -> pi_T -> pi_F -> pi_L`, irreversible canonical
+  handoffs, expert-conditioned provisional envelopes, phase-balanced
+  distillation plus joint RSI PPO, then fresh final shared-policy branch
+  recertification.
+- Frozen contract PASS at
+  `runs/decoupled_bootstrap_seed0_20260720/frozen/frozen_contract.json`:
+  `pi_L=fa3a518...34bb7e`, initial independent
+  `pi_F=35fcb613...7000c`, fixed canonical
+  `C_L=185164d...2aa41` with 99 Final-safe entries, matcher radius
+  1.1067926888 and three-step window, and Flight bank
+  `2d5d7de...f62934`.  XML, action mapping, Actor schema and PolicyState
+  history schema agree.  Landing retention is explicitly not a pi_F gate.
+- Runtime gate PASS/current after the expert gate change; source fingerprint
+  `8eb0cec...2f9fd`.  Pure/targeted verification passed.  Composite handoff
+  preserves uninterrupted physics and PolicyState/history and switches
+  irreversibly from pi_F to frozen pi_L.
+- Current-runtime initial composite evaluation on the fixed 160 Flight states:
+  Chain=7.5%, composite Final=7.5%, Chain-missed Final=2.5%, physical
+  failure=92.5%, timeout=0.  Descent is already supported (Chain/Final
+  15.584%/15.584% over 77 states); Apex and Ascent remain 0/20 and 0/63.
+  Therefore late-descent and descent PPO are skipped as already reachable.
+  The next active gap is Apex; its pretraining fixed-bank evaluation is in
+  progress under the persistent decoupled controller.
+- Composite-policy branch evidence must use artifact role
+  `expert_conditioned_provisional_envelope` and is never final JEL evidence.
+  The frozen final shared Actor receives new independent certification under
+  `final_shared_policy_jel`; expert labels do not survive consolidation.
