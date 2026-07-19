@@ -22,6 +22,7 @@ class StageReachabilityController(Controller):
  def pause_old(self):
   state=json.loads((OLD_RUN/'controller_state.json').read_text())
   if state.get('terminal_state')!='SUPERSEDED_BY_STAGE_REACHABILITY_PROTOCOL':raise RuntimeError('Old route is not atomically superseded')
+  save_json(Path('runs/ACTIVE_PIPELINE.json'),{"status":"ACTIVE","activated_at":time.time(),"run_path":str(self.run),"controller_unit":"dvgc-stage-reachability-controller.service","start_script":"/home/qy/DVGC/scripts/start_stage_reachability_controller.sh","supersedes":str(OLD_RUN),"supersession_reason":state['terminal_state']})
   self.save(current_stage='h4_replay_smoke',last_completed_action='safe_pause_old_route',next_decision='define_stage_entry_protocol',old_route_terminal_state=state['terminal_state'])
 
  def replay_smoke(self):
