@@ -1,0 +1,51 @@
+import math
+
+import numpy as np
+
+from dvgc.config import default_config
+from dvgc.stage_reachability import CANONICAL_PHASE, evaluate_entry, next_branch_budget, protocol_payload, reachability_label
+
+
+def sample(**kw):
+    f=np.zeros(16,np.float32);f[0]=4.;f[2]=.55;f[6]=3.;f[8]=0.
+    row={"physical_feature":f,"canonical_phase":"flight","dual_wheel_airborne":True}
+    row.update(kw);return row
+
+
+def test_flight_substages_map_to_existing_canonical_phase():
+    assert CANONICAL_PHASE["ascent"]==CANONICAL_PHASE["apex"]==CANONICAL_PHASE["descent"]=="flight"
+
+
+def test_takeoff_ascent_requires_real_airborne_and_upward_motion():
+    cfg=default_config();row=sample(canonical_phase="takeoff",dual_wheel_airborne=True);row["physical_feature"][8]=.3
+    assert evaluate_entry("takeoff",row,cfg)["valid"]
+    row["dual_wheel_airborne"]=False
+    assert not evaluate_entry("takeoff",row,cfg)["valid"]
+
+
+def test_apex_entry_and_descent_crossing_are_event_aligned():
+    cfg=default_config();assert evaluate_entry("ascent",sample(),cfg)["valid"]
+    row=sample(previous_vz=.1);row["physical_feature"][8]=-.1
+    assert evaluate_entry("apex",row,cfg)["valid"]
+    row["previous_vz"]=-.2
+    assert not evaluate_entry("apex",row,cfg)["valid"]
+
+
+def test_descent_entry_rejects_body_contact_and_bad_support():
+    cfg=default_config();row=sample(canonical_phase="landing",first_valid_landing=True,support=True)
+    row["physical_feature"][2]=.42
+    assert evaluate_entry("descent",row,cfg)["valid"]
+    row["body_terrain_contact"]=True
+    assert not evaluate_entry("descent",row,cfg)["valid"]
+
+
+def test_landing_stable_uses_existing_hold_gate():
+    cfg=default_config();row=sample(canonical_phase="landing",support=True,recovery_count=cfg.recovery_hold_steps)
+    assert evaluate_entry("landing",row,cfg)["valid"]
+
+
+def test_soft_labels_do_not_call_controller_failure_physically_unreachable():
+    x=reachability_label(stage="descent",successes=0,branches=8,branch_records=[],controller_bank_exhausted=True)
+    assert x["label"]=="negative_under_current_controller_bank"
+    assert next_branch_budget(reachability_label(stage="apex",successes=2,branches=4,branch_records=[]))==8
+    assert len(protocol_payload(default_config())["protocol_sha256"])==64
