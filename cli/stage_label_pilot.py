@@ -16,7 +16,7 @@ from dvgc.stage_reachability import CANONICAL_PHASE,evaluate_entry,protocol_payl
 STAGE_SEED={"takeoff":9200000,"ascent":9300000,"apex":9400000,"descent":9500000,"landing":9600000}
 
 def terminal_is_physical_failure(terminated,end_reason):
- return bool(terminated and end_reason not in ("recovery","chain_entry"))
+ return bool(terminated and end_reason not in ("recovery","chain_entry","next_stage_entry"))
 
 def evenly(rows,count):
  if len(rows)<=count:return list(rows)
@@ -57,8 +57,9 @@ def run_branch(env,step,inference,row,stage,seed,horizon,noise):
  return False,None,None,{},"horizon_exhaustion"
 
 def main():
- p=argparse.ArgumentParser();p.add_argument('--takeoff-bank',required=True);p.add_argument('--flight-bank',required=True);p.add_argument('--landing-bank',required=True);p.add_argument('--flight-policy',action='append',required=True);p.add_argument('--landing-policy',required=True);p.add_argument('--output',required=True);p.add_argument('--entry-bank',required=True);p.add_argument('--states-per-stage',type=int,default=6);p.add_argument('--branches',type=int,default=4);p.add_argument('--horizon',type=int,default=200);p.add_argument('--action-noise',type=float,default=.03);p.add_argument('--config',default='configs/default.json');a=p.parse_args()
+ p=argparse.ArgumentParser();p.add_argument('--takeoff-bank',required=True);p.add_argument('--flight-bank',required=True);p.add_argument('--landing-bank',required=True);p.add_argument('--flight-policy',action='append',required=True);p.add_argument('--landing-policy',required=True);p.add_argument('--output',required=True);p.add_argument('--entry-bank',required=True);p.add_argument('--states-per-stage',type=int,default=6);p.add_argument('--branches',type=int,default=4);p.add_argument('--horizon',type=int,default=200);p.add_argument('--action-noise',type=float,default=.03);p.add_argument('--config',default='configs/default.json');p.add_argument('--only-stage',choices=['takeoff','ascent','apex','descent','landing']);a=p.parse_args()
  banks={"takeoff":SnapshotBank.load(a.takeoff_bank),"flight":SnapshotBank.load(a.flight_bank),"landing":SnapshotBank.load(a.landing_bank)};selected={"takeoff":evenly(banks['takeoff'].records_for_phase('takeoff'),a.states_per_stage),"ascent":evenly([r for r in banks['flight'].records if r.get('flight_subinterval')=='ascent'],a.states_per_stage),"apex":evenly([r for r in banks['flight'].records if r.get('flight_subinterval')=='apex'],a.states_per_stage),"descent":evenly([r for r in banks['flight'].records if r.get('flight_subinterval')=='descent'],a.states_per_stage),"landing":evenly(banks['landing'].records_for_phase('landing'),a.states_per_stage)}
+ if a.only_stage:selected={a.only_stage:selected[a.only_stage]}
  if any(len(v)!=a.states_per_stage for v in selected.values()):raise SystemExit({k:len(v) for k,v in selected.items()})
  envs={};entries=[];labels=[];terminal=Counter();protocol=None
  for stage,rows in selected.items():
