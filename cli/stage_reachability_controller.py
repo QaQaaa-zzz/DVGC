@@ -10,6 +10,12 @@ from dvgc.stage_reachability import protocol_payload
 
 OLD_RUN=Path('runs/jump_envelope_seed0_20260719')
 FLIGHT_BANK=Path('artifacts/flight_candidates_augmented_v1.pkl')
+CONTROLLER_PROPOSALS=(
+ CYCLE5_POLICY,
+ Path('runs/flight/pipeline_seed0_v5/pilot/policy'),
+ Path('runs/stage_experts/flight_seed0_20260715T2045/curriculum/apex/blocks/block_4_102400/policy'),
+ Path('runs/stage_experts/flight_seed0_20260715T2045/curriculum/descent/blocks/block_2_051200/policy'),
+)
 ROUTE=("safe_pause_old_route","h4_replay_smoke","define_stage_entry_protocol","relabel_existing_data","coverage_inventory","stage_candidate_pilot","stage_label_acquisition","train_reachability_model","active_candidate_acquisition","build_stage_tubes","Tube_RSI_final_PPO","final_policy_certification")
 
 class StageReachabilityController(Controller):
@@ -69,10 +75,19 @@ class StageReachabilityController(Controller):
   if not (self.run/'stage_candidate_pilot/report_v2.json').exists():
    self.save(current_stage='stage_candidate_pilot',next_decision='stage_candidate_pilot_v2',pilot_v1_preserved=str(self.run/'stage_candidate_pilot/report.json'))
    return
-  marker=self.run/'stage_label_acquisition/implementation_pending.json'
-  if not marker.exists():save_json(marker,{"status":"ENGINEERING_CONTINUATION","research_gate":False,"reason":"adaptive 4-8-16/32 acquisition worker is next after pilot analysis","pilot":self.state.get('stage_candidate_pilot')})
-  self.save(last_completed_action='stage_candidate_pilot',next_decision='implement_adaptive_stage_label_acquisition')
-  time.sleep(60)
+  root=self.run/'stage_label_acquisition';cost=root/'cost_estimate.json';out=root/'controller_bank_probe.json';entries=root/'entry_snapshots.pkl'
+  if not cost.exists():self.run_command('controller_bank_probe_cost',[PYTHON,'-m','cli.stage_cost_estimate','--output',cost,'--unique-states','30','--branches','4','--horizon','200','--pilot-fraction','.04','--hypothesis','historical controller diversity recovers next-stage positives missed by the current checkpoint'],root/'cost.log',[cost])
+  if not out.exists():
+   command=[PYTHON,'-u','-m','cli.stage_label_pilot','--takeoff-bank',self.run/'stage_candidate_pilot/takeoff_candidates.pkl','--flight-bank',FLIGHT_BANK,'--landing-bank','artifacts/landing_tube.pkl','--landing-policy',LANDING,'--output',out,'--entry-bank',entries,'--states-per-stage','6','--branches','4','--horizon','200']
+   for policy in CONTROLLER_PROPOSALS:command+=['--flight-policy',policy]
+   result=self.run_worker_command('controller_bank_probe',command,root/'controller_bank_probe.log',[out,entries],unit_suffix=f'stage-controller-bank-{int(time.time())}',preallocate=False)
+   if not result['ok']:raise RuntimeError(f'Controller-bank probe failed: {result}')
+  report=json.loads(out.read_text());zero=[stage for stage,rate in report['success_rates'].items() if stage!='landing' and rate==0]
+  marker=root/'decision.json';save_json(marker,{"status":"PASS","zero_support_stages":zero,"success_rates":report['success_rates'],"decision":"bounded_stage_objective_controller_pilot" if zero else "adaptive_label_acquisition","controller_bank":[str(x) for x in CONTROLLER_PROPOSALS],"no_state_declared_physically_unreachable":True})
+  if zero:
+   self.save(last_completed_action='controller_bank_probe',controller_bank_probe=str(out),controller_support_gap=zero,next_decision='implement_bounded_stage_objective_controller_pilot')
+   time.sleep(60);return
+  self.save(current_stage='train_reachability_model',last_completed_action='stage_label_acquisition',next_decision='train_reachability_model')
 
  def loop(self):
   while True:
