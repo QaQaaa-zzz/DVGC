@@ -14,7 +14,8 @@ import jax.numpy as jp
 def compute_stage_next_entry_reward(
     *, cfg, objective: str, feature: jp.ndarray, previous_feature: jp.ndarray,
     action: jp.ndarray, previous_action: jp.ndarray, next_entry: jp.ndarray,
-    hard_failure: jp.ndarray,
+    hard_failure: jp.ndarray, jump_latched: jp.ndarray, window_active: jp.ndarray,
+    joint_energy: jp.ndarray,
 ) -> Dict[str, jp.ndarray]:
     """Bounded phase objective inspired by the supplied jump reward design.
 
@@ -23,16 +24,21 @@ def compute_stage_next_entry_reward(
     clipped so survival/height cannot substitute for the successor event.
     """
     f=feature;prev=previous_feature
-    roll,pitch=f[3],f[4];vx,vz=f[6],f[8];gyro=f[9:12]
+    roll,pitch,yaw=f[3],f[4],f[5];vx,vz=f[6],f[8];gyro=f[9:12]
     pose=jp.exp(-((roll/jp.deg2rad(12.0))**2+(pitch/jp.deg2rad(22.0))**2))
-    speed=jp.exp(-(((vx-float(cfg.target_forward_speed))/float(cfg.forward_sigma))**2))
+    yaw_score=jp.exp(-((yaw/jp.deg2rad(25.0))**2))
+    target_speed=jp.where(jump_latched,float(cfg.stage_postjump_target_speed),float(cfg.stage_prejump_target_speed))
+    speed=jp.exp(-(((vx-target_speed)/float(cfg.forward_sigma))**2))
     angular=jp.minimum(jp.sum(gyro*gyro)/(float(cfg.recovery_max_angvel)**2),4.0)
+    curriculum=jp.clip(float(cfg.stage_curriculum_scale),0.0,1.0)
+    height_target=float(cfg.stage_height_target_easy)+(float(cfg.stage_height_target_hard)-float(cfg.stage_height_target_easy))*curriculum
+    bounded_height=jp.clip(f[2]/jp.maximum(height_target,1e-6),0.0,1.0)
     if objective=="takeoff_to_ascent":
-        progress=jp.clip(vz/max(float(cfg.takeoff_liftoff_vz),1e-6),-1.0,1.0)
+        progress=jp.clip(vz/max(float(cfg.takeoff_liftoff_vz),1e-6),-1.0,1.0)*window_active.astype(jp.float32)
     elif objective=="ascent_to_apex":
-        progress=jp.clip((f[2]-prev[2])/0.05,-1.0,1.0)
+        progress=0.65*jp.clip((f[2]-prev[2])/0.05,-1.0,1.0)+0.35*bounded_height
     elif objective=="apex_to_descent":
-        height=jp.exp(-(((f[2]-0.5515475838251305)/0.15)**2))
+        height=jp.exp(-(((f[2]-float(cfg.stage_apex_target_height))/0.15)**2))
         vertical=jp.exp(-((vz/0.25)**2))
         progress=0.5*(height+vertical)
     elif objective=="descent_to_landing":
@@ -42,14 +48,17 @@ def compute_stage_next_entry_reward(
     smooth=jp.mean((action-previous_action)**2);magnitude=jp.mean(action*action)
     dense=(float(cfg.stage_entry_survival_reward)+float(cfg.stage_entry_progress_coeff)*progress+
            float(cfg.stage_entry_pose_coeff)*pose+float(cfg.stage_entry_speed_coeff)*speed-
+           float(cfg.stage_entry_yaw_coeff)*(1.0-yaw_score)-
            float(cfg.stage_entry_angular_penalty_coeff)*angular-
            float(cfg.stage_entry_action_smooth_coeff)*smooth-
-           float(cfg.stage_entry_action_magnitude_coeff)*magnitude)
+           float(cfg.stage_entry_action_magnitude_coeff)*magnitude-
+           float(cfg.stage_entry_joint_energy_coeff)*joint_energy)
     shaping=jp.clip(dense,float(cfg.stage_entry_shaping_clip_min),float(cfg.stage_entry_shaping_clip_max))
     event=float(cfg.stage_entry_event_reward)*next_entry.astype(jp.float32)
     failure=float(cfg.stage_entry_failure_penalty)*hard_failure.astype(jp.float32)
     return {"reward":shaping+event-failure,"shaping":shaping,"event":event,"failure_penalty":failure,
             "progress":progress,"pose":pose,"speed":speed,"angular_penalty":angular,
+            "yaw_score":yaw_score,"bounded_height":bounded_height,"joint_energy_penalty":joint_energy,
             "action_smooth_penalty":smooth,"action_magnitude_penalty":magnitude}
 
 

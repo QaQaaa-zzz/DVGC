@@ -115,6 +115,16 @@ def default_config() -> config_dict.ConfigDict:
         stage_entry_shaping_clip_min=-0.25,
         stage_entry_shaping_clip_max=0.20,
         stage_entry_failure_penalty=2.0,
+        stage_jump_window_length_easy=0.80,
+        stage_jump_window_length_hard=1.40,
+        stage_height_target_easy=0.40,
+        stage_height_target_hard=0.5515475838251305,
+        stage_apex_target_height=0.5515475838251305,
+        stage_prejump_target_speed=2.0,
+        stage_postjump_target_speed=3.5,
+        stage_entry_yaw_coeff=0.01,
+        stage_entry_joint_energy_coeff=0.002,
+        stage_curriculum_scale=0.0,
         # Robust centers/scales calibrated from the 11 immutable successful or
         # provisional-safe descent anchors plus 99 canonical C_L safe entries.
         descent_local_roll_center=0.07294333,
