@@ -51,12 +51,18 @@
   themselves to safe.  Intermediate expert discovery and full-jump data
   collection must not be blocked merely because an intermediate Tube has fewer
   than four certified-safe states.
-- The handoff/roll-targeted descent route is superseded by the stage-
-  reachability protocol.  Never auto-resume its exhaustive handoff scan, H1
-  Final-safe scan, C_L A/B, or same-objective descent PPO.  Ascent, Apex and
-  Descent remain substages of canonical Flight.  Intermediate labels measure
-  valid next-stage entry, while only the frozen final unified policy is judged
-  by end-to-end Final-Recovery.
+- The exhaustive H1/C_L A/B and roll-targeted shared-Actor retention route is
+  superseded and must not auto-resume.  Ascent, Apex and Descent remain
+  substages of the independently owned Flight expert; canonical expert
+  handoffs remain active.  Intermediate labels measure valid next-stage entry,
+  while only the frozen final unified policy is judged as the formal JEL by
+  end-to-end Final-Recovery.
+- Sequential shared-Actor Flight retention repair is closed.  Use independently
+  owned bootstrap experts with irreversible canonical-entry handoffs, mark all
+  composite-policy recoverability as `expert_conditioned_provisional_envelope`,
+  then consolidate with phase-balanced distillation plus joint RSI PPO.  Only
+  fresh independent recertification of the frozen final shared Actor may use
+  the `final_shared_policy_jel` role or support formal JEL claims.
 - Before any expensive acquisition write `cost_estimate.json`, run a 2--5%
   pilot, and use the 4 -> 8 -> 16/32 adaptive branch funnel.  A failed current
   controller bank means negative-under-current-controller-bank or unknown,

@@ -1,5 +1,7 @@
 from dvgc.research_semantics import (
-    classify_handoff, proposal_training_weight, summarize_handoff,
+    EXPERT_CONDITIONED_PROVISIONAL_ENVELOPE, FINAL_SHARED_POLICY_JEL,
+    classify_handoff, permits_formal_jel_claim, proposal_training_weight,
+    summarize_handoff,
 )
 from cli.handoff_decomposition_shard import _events
 
@@ -46,3 +48,16 @@ def test_event_selector_keeps_handoff_and_marks_physical_to_handoff_pairs():
     selected = _events(after, before)
     assert len(selected) == 1
     assert selected[0]["physical_to_handoff"] is True
+
+
+def test_expert_envelope_can_never_be_reported_as_final_jel():
+    assert not permits_formal_jel_claim({
+        "artifact_role": EXPERT_CONDITIONED_PROVISIONAL_ENVELOPE,
+        "controller_mode": "expert_stack",
+        "independent_recertification": True,
+    })
+    assert permits_formal_jel_claim({
+        "artifact_role": FINAL_SHARED_POLICY_JEL,
+        "controller_mode": "single_shared_actor",
+        "independent_recertification": True,
+    })

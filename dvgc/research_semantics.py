@@ -7,6 +7,21 @@ from typing import Iterable, Mapping
 
 CERTIFIED_TUBE = "certified_tube"
 PROPOSAL_SUPPORT_BANK = "proposal_support_bank"
+EXPERT_CONDITIONED_PROVISIONAL_ENVELOPE = "expert_conditioned_provisional_envelope"
+FINAL_SHARED_POLICY_JEL = "final_shared_policy_jel"
+
+
+FORMAL_SAFE_ROLES = frozenset({CERTIFIED_TUBE, FINAL_SHARED_POLICY_JEL})
+
+
+def permits_formal_jel_claim(metadata: Mapping) -> bool:
+    """Only a frozen shared-policy recertification may define final JEL."""
+    role = metadata.get("artifact_role") or metadata.get("entry_bank_role")
+    return bool(
+        role == FINAL_SHARED_POLICY_JEL
+        and metadata.get("controller_mode") == "single_shared_actor"
+        and metadata.get("independent_recertification") is True
+    )
 
 
 def validate_artifact_role(metadata: Mapping, *, expected: str) -> None:

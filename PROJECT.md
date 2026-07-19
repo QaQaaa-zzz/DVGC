@@ -39,6 +39,21 @@ the archived v23 research specification.
   not a Tube; dead, penetrating and nonfinite states are excluded.
 - Intermediate experts and the full-jump teacher generate trajectories and
   candidates.  They are frozen data generators, not the final shared policy.
+- `expert_conditioned_provisional_envelope`: Final-Recovery evidence under an
+  immutable expert stack.  It may provide distillation and RSI data but cannot
+  be called a formal shared-policy Tube or JEL.
+- `final_shared_policy_jel`: independently recertified phase-wise evidence
+  under one frozen shared Actor.  This is the only artifact role permitted to
+  define the paper's final empirical Jump Capability Envelope.
+
+## Active Training Architecture
+
+Sequential shared-Actor backward extension and Flight Landing-retention repair
+are diagnostic-only.  The active seed-0 route is independently owned
+`pi_L`, `pi_F`, `pi_T`, and `pi_A`, irreversible canonical-entry handoffs,
+expert-conditioned provisional envelopes, phase-balanced distillation, joint
+RSI PPO, and fresh certification of the final shared Actor.  `C_L` remains
+immutable while `pi_F` is trained, and `pi_F` has no Landing-retention gate.
 
 ## Existing Runtime
 

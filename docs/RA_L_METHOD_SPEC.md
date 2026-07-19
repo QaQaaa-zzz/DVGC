@@ -88,6 +88,31 @@ then trained jointly from all provisional Tubes.  Oracle stage and teacher ID
 remain excluded from Actor input.  Only phase-wise Tubes independently
 recertified under the frozen final shared policy may be named the formal JEL.
 
+The three evidence objects are deliberately non-interchangeable:
+
+| Object | Controller semantics | Permitted claim |
+| --- | --- | --- |
+| Chain entry | The active expert reaches the immutable canonical successor entry set | Recursive progress only |
+| Expert bootstrap envelope | Final-Recovery under an immutable composite expert stack | Expert-conditioned provisional recoverability; RSI/distillation data only |
+| Final shared-policy JEL | Final-Recovery branch recertification under one frozen shared Actor | Formal phase-wise Tube and empirical JEL |
+
+The Flight expert `pi_F` is optimized only for `Flight -> C_L`.  It stops its
+Chain episode at the first valid canonical match and has no Landing-retention
+objective.  End-to-end evaluation switches irreversibly to frozen `pi_L`
+without resetting physics, observation/action history, event-filter state, or
+any other PolicyState field.  Flight reset support unlocks in the fixed order
+late descent -> descent -> apex -> ascent.  The same ownership and handoff
+rules apply to `pi_T` and `pi_A` once their successor entry sets exist.
+
+The final shared Actor is a new policy, not an alias for any expert.  Its
+initialization dataset is phase-balanced across expert trajectories and keeps
+teacher actions, physical state, deployable observation/history and empirical
+labels, while stage oracle and teacher identity are supervision metadata only.
+Joint RSI PPO may consume safe/boundary states from expert-conditioned
+provisional envelopes, but those labels do not survive the policy change.
+Every candidate is relabeled by fresh independent branches after the shared
+Actor is frozen; only that recertification defines the paper's final JEL.
+
 ## Flight-to-Landing Entry Contract
 
 The Flight successor set `C_L` is a canonical Landing-entry bank, not the
