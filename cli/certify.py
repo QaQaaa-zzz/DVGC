@@ -28,6 +28,7 @@ def main():
     p.add_argument("--output-bank",required=True); p.add_argument("--seed",type=int,default=0)
     p.add_argument("--namespace",default="build"); p.add_argument("--limit",type=int,default=0); p.add_argument("--start-index",type=int,default=0)
     p.add_argument("--allow-independent-candidates",action="store_true")
+    p.add_argument("--fixed-branches",action="store_true",help="run max_branches for every state")
     a=p.parse_args(); params,cfg_dict,manifest=load_bundle(a.policy,verify_files=True)
     if manifest.get("stage") not in (None,a.phase): raise SystemExit(f"Policy stage {manifest.get('stage')} cannot certify {a.phase}")
     if Path(a.candidate_bank).resolve()==Path(a.output_bank).resolve(): raise SystemExit("--output-bank must differ from --candidate-bank so policy provenance remains immutable")
@@ -64,7 +65,7 @@ def main():
             evidence=branch_evidence(branch_index=b,seed=seed,seed_namespace=namespace,dynamics_variant=variant_id,outcome=out)
             branches.append(evidence); all_branches.append(evidence)
             cs+=out["chain"]; cf+=1-out["chain"]; fs+=out["final"]; ff+=1-out["final"]
-            if b+1>=int(cfg.min_branches) and decided(cs,cf,cfg) and decided(fs,ff,cfg): break
+            if not a.fixed_branches and b+1>=int(cfg.min_branches) and decided(cs,cf,cfg) and decided(fs,ff,cfg): break
         candidates.update_certification(row["id"],chain_successes=cs,chain_failures=cf,final_successes=fs,final_failures=ff,policy_version=manifest["policy_version"],estimator_version=manifest.get("estimator_version","event_filter_v1"),tube_version=tube_version,protocol=protocol(cfg),seed_namespace=namespace,branch_evidence=branches)
         terminal=summarize_branches(branches)
         results.append({"id":row["id"],"candidate_kind":row.get("candidate_kind","unknown"),"chain":cs,"final":fs,"branches":cs+cf,"branch_evidence":branches,"terminal_summary":terminal})
@@ -76,7 +77,7 @@ def main():
     for kind in sorted({row["candidate_kind"] for row in results}):
         subset=[row for row in results if row["candidate_kind"]==kind]; evidence=[branch for row in subset for branch in row["branch_evidence"]]
         grouped[kind]={"states":len(subset),"terminal_summary":summarize_branches(evidence)}
-    report={"phase":a.phase,"policy_version":manifest["policy_version"],"estimator_version":manifest.get("estimator_version","event_filter_v1"),"tube_version":tube_version,"seed_namespace":namespace,"construction_seed":int(a.seed),"candidate_bank_sha256":file_sha256(a.candidate_bank),"downstream_bank":str(Path(a.downstream_bank).resolve()) if a.downstream_bank else "","downstream_bank_sha256":file_sha256(a.downstream_bank) if a.downstream_bank else None,"state_index_start":start,"state_index_end_exclusive":stop,"total_bank_states":len(all_rows),"summary":candidates.summary(),"terminal_summary":summarize_branches(all_branches),"grouped_candidate_metrics":grouped,"results":results}
+    report={"phase":a.phase,"policy_version":manifest["policy_version"],"estimator_version":manifest.get("estimator_version","event_filter_v1"),"tube_version":tube_version,"seed_namespace":namespace,"construction_seed":int(a.seed),"fixed_branches":bool(a.fixed_branches),"candidate_bank_sha256":file_sha256(a.candidate_bank),"downstream_bank":str(Path(a.downstream_bank).resolve()) if a.downstream_bank else "","downstream_bank_sha256":file_sha256(a.downstream_bank) if a.downstream_bank else None,"state_index_start":start,"state_index_end_exclusive":stop,"total_bank_states":len(all_rows),"summary":candidates.summary(),"terminal_summary":summarize_branches(all_branches),"grouped_candidate_metrics":grouped,"results":results}
     Path(a.output_bank).with_suffix(".cert.json").write_text(json.dumps(report,indent=2),encoding="utf-8")
     print(json.dumps(report["summary"],indent=2))
 if __name__=="__main__": main()
