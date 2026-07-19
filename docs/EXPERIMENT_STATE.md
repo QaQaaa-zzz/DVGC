@@ -30,11 +30,33 @@
   four branches/state, horizon 200 = 3,000 rollouts / 600,000 environment
   steps.  The required 4% pilot is 30 states / 120 rollouts / 24,000 steps.
   No new MJX rollout has started yet; deterministic replay smoke gates it.
+- Deterministic replay smoke PASS: 3/3 fixed snapshots, eight control steps
+  each; action/qpos/qvel first-step and full-window maximum absolute error are
+  all exactly 0.  New label collection is authorized; H4 remains a later
+  runtime-sensitive boundary rather than a snapshot replay defect.
+- Stage-label pilot v1 is preserved as an instrumentation diagnostic: it
+  exposed that successful `recovery` termination was incorrectly counted as
+  physical failure.  Fix `f938003` separates successful terminal events from
+  physical failures and keeps 0/4 outcomes unknown rather than boundary.
+- Corrected 4% pilot v2: 30 unique states, 120 rollouts, 200-step horizon,
+  37 complete entry snapshots.  Landing->Stable = 24/24 (all step 24);
+  Descent->Landing = 13/24 across 4/6 states, time-to-entry 3--36 steps;
+  Takeoff->Ascent, Ascent->Apex and Apex->Descent = 0/24 under the current
+  controller.  No timeout, nonfinite or worker failure occurred.  All outputs
+  remain proposal support, not certified Tubes.
+- Four-controller proposal-bank probe (`da9bd486`, `35fcb613`, `cc0288fe`,
+  `917f77c8`) on the same 30 states also gives Takeoff/Ascent/Apex = 0,
+  Descent = 11/24 and Landing = 24/24.  The zero stages are therefore marked
+  controller-support gaps/unknown, never physically unreachable.  Do not
+  expand to 750-state acquisition with this weak bank.
 - Current validated commits: stage protocol/schema `f8c6323`, inventory and
-  replay/cost gates `a89e447`, resumable controller migration `cacc86d`.
-- Next automatic action: run the bounded deterministic replay smoke, then
-  record the frozen protocol and advance through relabel/inventory to the
-  2--5% candidate pilot.  No old-route task is eligible for recovery.
+  replay/cost gates `a89e447`, resumable migration `cacc86d`, pilot worker
+  `40a6d5b`, terminal-label fix `f938003`, controller-bank probe `d42755d`.
+- Controller stage: `stage_label_acquisition`; next automatic action is a
+  bounded next-stage-objective controller/reward pilot for Takeoff, Ascent and
+  Apex, using the supplied reward calculator only as read-only design input.
+  It must precede large acquisition; no old-route task is eligible for
+  recovery.
 
 - Active route: sequential shared-Actor backward training is formally closed.
   Proceed with stage-expert discovery, composite Final-Recovery validation,
