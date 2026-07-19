@@ -2,7 +2,7 @@
 from __future__ import annotations
 import json,subprocess,time
 from pathlib import Path
-from cli.descent_local_controller import Controller,PYTHON
+from cli.descent_local_controller import Controller,LANDING,PYTHON
 from cli.jump_envelope_controller import CYCLE5_POLICY
 from dvgc.config import file_sha256,load_config
 from dvgc.runtime import save_json
@@ -55,9 +55,20 @@ class StageReachabilityController(Controller):
   # artifact. No label worker may be launched by bypassing this condition.
   smoke=json.loads((self.run/'deterministic_replay_smoke.json').read_text())
   if not smoke.get('label_acquisition_allowed'):raise RuntimeError('Replay smoke does not authorize label acquisition')
-  marker=self.run/'stage_candidate_pilot/implementation_ready.json'
-  if not marker.exists():save_json(marker,{"status":"ENGINEERING_CONTINUATION","research_gate":False,"reason":"event-aligned candidate pilot worker is the next bounded implementation action","cost_estimate":str(cost),"no_rollout_started":True})
-  self.save(last_completed_action='candidate_pilot_cost',next_decision='implement_stage_candidate_pilot_worker')
+  root=self.run/'stage_candidate_pilot';takeoff=root/'takeoff_candidates.pkl'
+  if not takeoff.exists():
+   result=self.run_worker_command('takeoff_candidate_pilot',[PYTHON,'-u','-m','cli.build_candidates','--phase','takeoff','--target','6','--bank',takeoff,'--seed','9700000','--attempt-budget','240','--dedup-distance','.06'],root/'takeoff_candidates.log',[takeoff],unit_suffix=f'stage-takeoff-candidates-{int(time.time())}',preallocate=False)
+   if not result['ok']:raise RuntimeError(f'Takeoff candidate pilot failed: {result}')
+  out=root/'report.json';entries=root/'entry_snapshots.pkl'
+  if not out.exists():
+   result=self.run_worker_command('stage_candidate_label_pilot',[PYTHON,'-u','-m','cli.stage_label_pilot','--takeoff-bank',takeoff,'--flight-bank',FLIGHT_BANK,'--landing-bank','artifacts/landing_tube.pkl','--flight-policy',CYCLE5_POLICY,'--landing-policy',LANDING,'--output',out,'--entry-bank',entries,'--states-per-stage','6','--branches','4','--horizon','200'],root/'label_pilot.log',[out,entries],unit_suffix=f'stage-label-pilot-{int(time.time())}',preallocate=False)
+   if not result['ok']:raise RuntimeError(f'Stage label pilot failed: {result}')
+  self.save(current_stage='stage_label_acquisition',last_completed_action='stage_candidate_pilot',next_decision='stage_label_acquisition',stage_candidate_pilot=str(out))
+
+ def acquisition(self):
+  marker=self.run/'stage_label_acquisition/implementation_pending.json'
+  if not marker.exists():save_json(marker,{"status":"ENGINEERING_CONTINUATION","research_gate":False,"reason":"adaptive 4-8-16/32 acquisition worker is next after pilot analysis","pilot":self.state.get('stage_candidate_pilot')})
+  self.save(last_completed_action='stage_candidate_pilot',next_decision='implement_adaptive_stage_label_acquisition')
   time.sleep(60)
 
  def loop(self):
@@ -68,6 +79,7 @@ class StageReachabilityController(Controller):
    elif stage=='define_stage_entry_protocol':self.define_protocol()
    elif stage in ('relabel_existing_data','coverage_inventory'):self.inventory()
    elif stage=='stage_candidate_pilot':self.candidate_pilot()
+   elif stage=='stage_label_acquisition':self.acquisition()
    elif stage=='pipeline_complete':return 0
    else:raise RuntimeError(f'Unimplemented stage-reachability stage: {stage}')
 
