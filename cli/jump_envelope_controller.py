@@ -73,7 +73,7 @@ class JumpEnvelopeController(Controller):
   self.save(current_stage='h4_analyze',next_decision='h1_independent_certify')
 
  def h4_analyze(self):
-  root=self.run/'handoff/fast_route';out=root/'h4_analysis.json';shards=sorted((self.run/'handoff/cycle4').glob('shard_*.json'))
+  root=self.run/'handoff/fast_route';out=root/'h4_analysis_v2.json';shards=sorted((self.run/'handoff/cycle4').glob('shard_*.json'))
   if not out.exists():
    cmd=[PYTHON,'-m','cli.analyze_h4_replay','--formal-replay',root/'h4_formal_replay.json','--source-stable-report',CYCLE4_REPORT,'--output',out]
    for path in shards:cmd+=['--handoff-shard',path]

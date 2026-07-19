@@ -580,3 +580,12 @@
   exact physics env, inference, state and seed and varies only the immutable
   matcher.  The repeated identical-bank control is exactly equal and PASS;
   formal canonical/extended evaluation is forbidden unless this control holds.
+- H4 formal-code replay result: among the isolated six candidates, only
+  171/192 branch terminal outcomes (89.0625%) and 110/192 complete evidence
+  records (57.2917%) reproduce the original formal construction despite fixed
+  seeds and unchanged hashes.  The eight H4 events themselves reproduce
+  exactly in 3/8 formal replays.  They are therefore classified as
+  runtime-sensitive boundary evidence, not an event-order bug; individual
+  branch physical-to-handoff pairing is ineligible for causal claims.  H4 is
+  excluded from entry proposals.  H1 proceeds only as independently recertified
+  contact-state support, so the new C_L decision does not depend on exact replay.
