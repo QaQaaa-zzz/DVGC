@@ -28,6 +28,17 @@ the archived v23 research specification.
 - Formal Tube label: Final Recovery within a fixed horizon before Failure
 - Bootstrap label: entry into the next independently certified stage set
 
+## Artifact Semantics
+
+- `certified_tube`: frozen-policy Final-Recovery states admitted by the locked
+  certification protocol and validated by an independent audit.  Only this
+  role supports safe/precision/coverage claims.
+- `proposal_support_bank`: physically legal provisional-safe, boundary and
+  explicitly marked active-sampling states.  It is training/search support,
+  not a Tube; dead, penetrating and nonfinite states are excluded.
+- Intermediate experts and the full-jump teacher generate trajectories and
+  candidates.  They are frozen data generators, not the final shared policy.
+
 ## Existing Runtime
 
 The user's configured runtime is:

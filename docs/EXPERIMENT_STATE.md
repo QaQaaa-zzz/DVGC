@@ -530,3 +530,32 @@
   audit, exact C_D, Tube-RSI, apex, or further PPO may start from this result.
   Authoritative artifacts are `cycle_5/stable/report.json` and
   `cycle_5/roll_targeted_block_gate.json` under the corrected resume root.
+- Route revision (2026-07-19): the Cycle-5 result remains valid, but it no
+  longer blocks full-jump discovery on an intermediate four-safe quota.  More
+  roll-targeted descent PPO is prohibited.  The active order is no-training
+  Cycle-4/Cycle-5 handoff H1/H2/H3/H4 decomposition, Landing-only certifier
+  calibration, non-certified proposal-support construction, full-jump teacher,
+  reverse trajectory mining, final shared Tube-RSI, and final independent
+  certification.  `certified_tube` is the only safe-claim artifact;
+  `proposal_support_bank` is training/search support and is ineligible for Tube
+  precision or coverage.
+- New immutable seed-0 run root is
+  `runs/jump_envelope_seed0_20260719`.  Canonical C_L remains
+  `185164d...2aa41`, radius 1.1067926888; frozen Landing policy remains
+  `fa3a518...34bb7e`; corrected 153-state bank remains
+  `d031e96...20e55`.  Initial support build is PASS: 93 legal records = 65
+  boundary + 28 unknown active-sampling records, 60 dead excluded; artifact
+  hash `f540122...dd879`, with safe claims and Tube metrics explicitly disabled.
+- The first calibration artifact that split one historical batch in half is
+  retained only as an invalid diagnostic and is not a research conclusion.
+  The controller will run fresh fixed-branch Landing Stage A/B batches with
+  independent seeds 2300000000/2400000000, select a rule on parent-split
+  development data, and require validation precision >=0.95.  Descent results
+  are not used to choose the protocol.
+- Handoff decomposition replays 2,605 Cycle-4 and 3,051 Cycle-5 formal
+  handoff-missed branches; 1,099 Cycle-5 branches are paired
+  physical-to-handoff conversions.  Every first-contact snapshot is evaluated
+  with fresh globally indexed Landing seeds and classified H1/H2/H3/H4.  H1
+  proposals remain inactive until a second independent certification yields at
+  least four Final-safe states from at least two parents; matcher radius is
+  immutable.  The next automatic stage is `handoff_cycle4`; no PPO is active.

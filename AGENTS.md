@@ -43,6 +43,19 @@
 - Runs must be resumable and provenance-keyed.  Skip a completed step only when
   its input hashes and output hashes still match; never overwrite a run or feed
   independent-audit labels back into training.
+- Keep `certified_tube` and `proposal_support_bank` as distinct artifact roles.
+  Only an independently audited frozen-policy Tube may call states safe or
+  contribute Tube precision/coverage.  Legal boundary, provisional and mined
+  states may drive proposal search, teacher data and RSI but never promote
+  themselves to safe.  Intermediate expert discovery and full-jump data
+  collection must not be blocked merely because an intermediate Tube has fewer
+  than four certified-safe states.
+- After the valid Cycle-5 gate, do not run more roll-targeted descent PPO.
+  Continue handoff decomposition, Landing-only certifier calibration,
+  proposal-support construction, full-jump teacher trajectory mining and final
+  shared-policy Tube-RSI.  Keep the Landing policy and C_L matcher radius fixed;
+  a C_L extension requires separately certified contact proposals and a new
+  immutable version/hash.
 
 ## Verification
 
