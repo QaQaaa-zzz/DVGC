@@ -101,6 +101,20 @@ def default_config() -> config_dict.ConfigDict:
         roll_controllability_min_beneficial_fraction=0.25,
         roll_controllability_max_pitch_side_effect=0.10,
         descent_local_reward_enable=False,
+        # Event-aligned stage reachability controller pilots.  The event is
+        # intentionally much larger than the clipped sum of dense terms.
+        stage_reachability_objective="",
+        stage_entry_event_reward=8.0,
+        stage_entry_survival_reward=0.002,
+        stage_entry_progress_coeff=0.10,
+        stage_entry_pose_coeff=0.04,
+        stage_entry_speed_coeff=0.02,
+        stage_entry_angular_penalty_coeff=0.02,
+        stage_entry_action_smooth_coeff=0.005,
+        stage_entry_action_magnitude_coeff=0.003,
+        stage_entry_shaping_clip_min=-0.25,
+        stage_entry_shaping_clip_max=0.20,
+        stage_entry_failure_penalty=2.0,
         # Robust centers/scales calibrated from the 11 immutable successful or
         # provisional-safe descent anchors plus 99 canonical C_L safe entries.
         descent_local_roll_center=0.07294333,

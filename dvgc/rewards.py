@@ -11,6 +11,48 @@ from typing import Dict
 import jax.numpy as jp
 
 
+def compute_stage_next_entry_reward(
+    *, cfg, objective: str, feature: jp.ndarray, previous_feature: jp.ndarray,
+    action: jp.ndarray, previous_action: jp.ndarray, next_entry: jp.ndarray,
+    hard_failure: jp.ndarray,
+) -> Dict[str, jp.ndarray]:
+    """Bounded phase objective inspired by the supplied jump reward design.
+
+    The environment owns every latch/event; this pure function has no mutable
+    Python state.  Entry success is the dominant term and all dense shaping is
+    clipped so survival/height cannot substitute for the successor event.
+    """
+    f=feature;prev=previous_feature
+    roll,pitch=f[3],f[4];vx,vz=f[6],f[8];gyro=f[9:12]
+    pose=jp.exp(-((roll/jp.deg2rad(12.0))**2+(pitch/jp.deg2rad(22.0))**2))
+    speed=jp.exp(-(((vx-float(cfg.target_forward_speed))/float(cfg.forward_sigma))**2))
+    angular=jp.minimum(jp.sum(gyro*gyro)/(float(cfg.recovery_max_angvel)**2),4.0)
+    if objective=="takeoff_to_ascent":
+        progress=jp.clip(vz/max(float(cfg.takeoff_liftoff_vz),1e-6),-1.0,1.0)
+    elif objective=="ascent_to_apex":
+        progress=jp.clip((f[2]-prev[2])/0.05,-1.0,1.0)
+    elif objective=="apex_to_descent":
+        height=jp.exp(-(((f[2]-0.5515475838251305)/0.15)**2))
+        vertical=jp.exp(-((vz/0.25)**2))
+        progress=0.5*(height+vertical)
+    elif objective=="descent_to_landing":
+        progress=jp.exp(-(((vz+0.45)/0.35)**2))
+    else:
+        raise ValueError(f"Unsupported stage reachability objective {objective!r}")
+    smooth=jp.mean((action-previous_action)**2);magnitude=jp.mean(action*action)
+    dense=(float(cfg.stage_entry_survival_reward)+float(cfg.stage_entry_progress_coeff)*progress+
+           float(cfg.stage_entry_pose_coeff)*pose+float(cfg.stage_entry_speed_coeff)*speed-
+           float(cfg.stage_entry_angular_penalty_coeff)*angular-
+           float(cfg.stage_entry_action_smooth_coeff)*smooth-
+           float(cfg.stage_entry_action_magnitude_coeff)*magnitude)
+    shaping=jp.clip(dense,float(cfg.stage_entry_shaping_clip_min),float(cfg.stage_entry_shaping_clip_max))
+    event=float(cfg.stage_entry_event_reward)*next_entry.astype(jp.float32)
+    failure=float(cfg.stage_entry_failure_penalty)*hard_failure.astype(jp.float32)
+    return {"reward":shaping+event-failure,"shaping":shaping,"event":event,"failure_penalty":failure,
+            "progress":progress,"pose":pose,"speed":speed,"angular_penalty":angular,
+            "action_smooth_penalty":smooth,"action_magnitude_penalty":magnitude}
+
+
 def compute_descent_local_reward(
     *, cfg, pitch, pitch_rate, roll, roll_rate, vx, previous_distance,
     current_distance, action, previous_action, chain, hard_failure,
