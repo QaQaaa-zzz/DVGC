@@ -16,6 +16,7 @@ LANDING_SOURCE = Path("runs/landing/refinement_seed0/policy")
 FLIGHT_SOURCE = Path("runs/flight/pipeline_seed0_v5/pilot/policy")
 CANONICAL_C_L = Path("runs/stage_experts/flight_seed0_20260715T2045/bridge_recovery/entry_set_bridge.pkl")
 FLIGHT_BANK = Path("artifacts/flight_candidates_augmented_v1.pkl")
+RETIRED_STAGE_RUN = Path("runs/stage_reachability_seed0_20260719")
 CURRICULA = ("late_descent", "descent", "apex", "ascent")
 
 
@@ -77,6 +78,25 @@ class DecoupledBootstrapController(Controller):
                     "takeoff_approach_and_consolidation": "not launched before Flight expert gate",
                 },
             })
+        supersession = self.run / "supersession.json"
+        if not supersession.exists():
+            retired = json.loads((RETIRED_STAGE_RUN / "controller_state.json").read_text())
+            if retired.get("terminal_state") != "gate_pause" or retired.get("active_worker_unit"):
+                raise RuntimeError("Retired stage-reachability route is not at an inactive gate boundary")
+            save_json(supersession, {
+                "status": "PASS", "supersedes": str(RETIRED_STAGE_RUN),
+                "preserved_terminal_state": retired.get("terminal_state"),
+                "preserved_stop_reason": retired.get("stop_reason"),
+                "research_use": "engineering_diagnostic_only",
+                "no_artifact_overwritten": True,
+            })
+        save_json(Path("runs/ACTIVE_PIPELINE.json"), {
+            "status": "ACTIVE", "activated_at": time.time(), "run_path": str(self.run),
+            "controller_unit": "dvgc-decoupled-bootstrap-controller.service",
+            "start_script": "/home/qy/DVGC/scripts/start_decoupled_bootstrap_controller.sh",
+            "supersedes": str(RETIRED_STAGE_RUN),
+            "supersession_reason": "DECOUPLED_BOOTSTRAP_EXPERT_CONSOLIDATION_AUTHORIZED",
+        })
         self.save(
             current_stage="composite_preflight",
             last_completed_action="freeze_contract",
