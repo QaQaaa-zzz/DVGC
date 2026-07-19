@@ -647,3 +647,36 @@
   branch physical-to-handoff pairing is ineligible for causal claims.  H4 is
   excluded from entry proposals.  H1 proceeds only as independently recertified
   contact-state support, so the new C_L decision does not depend on exact replay.
+
+## Stage-local controller pilot gate (2026-07-19)
+
+- HEAD implementation commits: `f198043` pure-JAX next-stage reward,
+  `aa8b324` reward preflight/tests, and `9b2bae1` resumable bounded pilot
+  controller.  Runtime gate is PASS/current; the configured venv and
+  authoritative XML were not modified.
+- CPU reward preflight is PASS for Takeoff->Ascent, Ascent->Apex,
+  Apex->Descent, and Descent->Landing.  All terms are finite/bounded, the
+  entry event dominates shaping, correct direction beats the adverse case,
+  neutral/random actions do not create false success, terminal classes are
+  mutually exclusive, and Landing recovery is not a physical failure.
+  Artifact: `stage_objective_controller_pilot/reward_preflight_v3.json`.
+- The fixed Takeoff pilot support is 6 unique states x 4 branches, bank hash
+  `ae654d5...ddf8f`; both blocks use the same config hash
+  `e225ca1...30ac`.  Block 1 (6,400 effective steps) reached Ascent on 1/24
+  branches from 1/6 states at step 5, policy `24f5c72...b81873`, with no
+  nonfinite/OOM/timeout.  Failures were missed liftoff 9, missed wheel
+  clearance 6, pitch limit 6, roll limit 1, and positive-pitch failure 1.
+- Per the one-success rule, block 2 was a cumulative continuation to 12,800
+  total steps with unchanged reward semantics.  It reached Ascent on 0/24
+  branches from 0/6 states, policy `b27148b...bbe28`; failures were missed
+  liftoff 13, missed wheel clearance 6, positive-pitch failure 4, and pitch
+  limit 1.  No nonfinite/OOM/timeout occurred.  Dense shaping increased
+  (episode 0.6695 -> 0.8024) while entry event fell to zero, so reward growth
+  did not substitute for the fixed next-stage gate.
+- Formal bounded decision: `gate_pause`, controller exit 40,
+  `takeoff_stage_controller_blocker`.  Takeoff did not meet the required >=2
+  successful unique states after two 6,400-step blocks.  No policy entered the
+  controller proposal bank; Ascent/Apex PPO and 100--200-state label pilots
+  were not started.  Next work requires a research decision on Takeoff reset,
+  entry detector, or physical stage definition; increasing PPO budget is not
+  authorized by this result.
