@@ -39,6 +39,27 @@ def test_environment_smoke():
     assert state.obs["state"].shape[-1] > 0
 
 
+@pytest.mark.skipif(not RUNTIME_READY,reason="MuJoCo Playground runtime required")
+@pytest.mark.parametrize("stage,objective",[("takeoff","takeoff_to_ascent"),("flight","ascent_to_apex"),("flight","apex_to_descent")])
+def test_stage_reachability_reward_step_and_snapshot_latches(stage,objective):
+    import jax
+    import jax.numpy as jp
+    import numpy as np
+    from dvgc.bank import SnapshotBank
+    from dvgc.config import load_config
+    from dvgc.env import OrangeBikeDVGC
+    from dvgc.rollout import restore_snapshot
+    cfg=load_config("configs/default.json",{"training_stage":stage,"stage_reachability_objective":objective,"use_bank_resets":False,"obs_noise_enable":False,"domain_randomization":False})
+    env=OrangeBikeDVGC(cfg,snapshot_bank=SnapshotBank());state=env.reset(jax.random.PRNGKey(710))
+    next_state=env.step(state,jp.zeros(env.action_size,jp.float32))
+    for key in ("reward/stage_entry_total","reward/stage_entry_shaping","reward/stage_entry_event","reward/stage_entry_failure_penalty"):
+        assert np.isfinite(np.asarray(next_state.metrics[key])).all()
+    record=env.snapshot_record(next_state,stage);restored=restore_snapshot(env,record,jax.random.PRNGKey(711))
+    assert int(restored.info["stage_entry_ever"])==int(next_state.info["stage_entry_ever"])
+    assert bool(restored.info["jump_signal_latched"])==bool(next_state.info["jump_signal_latched"])
+    assert np.isclose(float(restored.info["jump_window_end_x"]),float(next_state.info["jump_window_end_x"]))
+
+
 @pytest.mark.skipif(
     not RUNTIME_READY,
     reason="MuJoCo Playground and the user's original STL mesh directory are required for the dynamic smoke test.",
