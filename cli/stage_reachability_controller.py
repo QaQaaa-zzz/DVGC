@@ -59,13 +59,16 @@ class StageReachabilityController(Controller):
   if not takeoff.exists():
    result=self.run_worker_command('takeoff_candidate_pilot',[PYTHON,'-u','-m','cli.build_candidates','--phase','takeoff','--target','6','--bank',takeoff,'--seed','9700000','--attempt-budget','240','--dedup-distance','.06'],root/'takeoff_candidates.log',[takeoff],unit_suffix=f'stage-takeoff-candidates-{int(time.time())}',preallocate=False)
    if not result['ok']:raise RuntimeError(f'Takeoff candidate pilot failed: {result}')
-  out=root/'report.json';entries=root/'entry_snapshots.pkl'
+  out=root/'report_v2.json';entries=root/'entry_snapshots_v2.pkl'
   if not out.exists():
    result=self.run_worker_command('stage_candidate_label_pilot',[PYTHON,'-u','-m','cli.stage_label_pilot','--takeoff-bank',takeoff,'--flight-bank',FLIGHT_BANK,'--landing-bank','artifacts/landing_tube.pkl','--flight-policy',CYCLE5_POLICY,'--landing-policy',LANDING,'--output',out,'--entry-bank',entries,'--states-per-stage','6','--branches','4','--horizon','200'],root/'label_pilot.log',[out,entries],unit_suffix=f'stage-label-pilot-{int(time.time())}',preallocate=False)
    if not result['ok']:raise RuntimeError(f'Stage label pilot failed: {result}')
   self.save(current_stage='stage_label_acquisition',last_completed_action='stage_candidate_pilot',next_decision='stage_label_acquisition',stage_candidate_pilot=str(out))
 
  def acquisition(self):
+  if not (self.run/'stage_candidate_pilot/report_v2.json').exists():
+   self.save(current_stage='stage_candidate_pilot',next_decision='stage_candidate_pilot_v2',pilot_v1_preserved=str(self.run/'stage_candidate_pilot/report.json'))
+   return
   marker=self.run/'stage_label_acquisition/implementation_pending.json'
   if not marker.exists():save_json(marker,{"status":"ENGINEERING_CONTINUATION","research_gate":False,"reason":"adaptive 4-8-16/32 acquisition worker is next after pilot analysis","pilot":self.state.get('stage_candidate_pilot')})
   self.save(last_completed_action='stage_candidate_pilot',next_decision='implement_adaptive_stage_label_acquisition')

@@ -154,9 +154,11 @@ def reachability_label(*, stage: str, successes: int, branches: int, branch_reco
         label = "unknown"
     elif lo >= 0.70:
         label = "high_confidence_positive"
+    elif s == 0 and n < 8:
+        label = "unknown"
     elif hi <= 0.20 or (s == 0 and n >= 8):
         label = "negative_under_current_controller_bank" if controller_bank_exhausted else "unknown"
-    elif hi - lo <= 0.45:
+    elif 0 < s < n and hi - lo <= 0.45:
         label = "boundary"
     else:
         label = "unknown"

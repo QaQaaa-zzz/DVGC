@@ -49,3 +49,7 @@ def test_soft_labels_do_not_call_controller_failure_physically_unreachable():
     assert x["label"]=="negative_under_current_controller_bank"
     assert next_branch_budget(reachability_label(stage="apex",successes=2,branches=4,branch_records=[]))==8
     assert len(protocol_payload(default_config())["protocol_sha256"])==64
+
+def test_four_zero_success_branches_remain_unknown_for_adaptive_funnel():
+    x=reachability_label(stage="apex",successes=0,branches=4,branch_records=[],controller_bank_exhausted=True)
+    assert x["label"]=="unknown" and next_branch_budget(x)==4
