@@ -235,7 +235,10 @@ def collect_status(run: Path, now: float | None = None, *, controller_unit: str 
         and "Round-2 exact pointwise Tube precision" in str(state.get("stop_reason") or "")
         and controller_unit == CONTROLLER_UNIT and unit_properties(RESUME_UNIT).get("active")
     )
-    if stage == "pipeline_complete":
+    declared_terminal = str(state.get("terminal_state") or "")
+    if declared_terminal in ("pipeline_complete", "gate_pause", "engineering_failure_after_retries"):
+        terminal = declared_terminal
+    elif stage == "pipeline_complete":
         terminal = "pipeline_complete"
     elif stage == "gate_pause" and not transition_pending:
         terminal = "gate_pause"
@@ -283,8 +286,8 @@ def collect_status(run: Path, now: float | None = None, *, controller_unit: str 
         "retry_count": int(state.get("retry_count", 0) or 0),
         "last_error": state.get("stop_reason"),
         "terminal_reason": state.get("stop_reason") if terminal else None,
-        "research_gate_valid": bool(state.get("research_gate_valid",terminal=="gate_pause")) if terminal else False,
-        "failed_stage": stage if terminal else None,
+        "research_gate_valid": bool(state.get("research_gate_valid") or terminal=="gate_pause") if terminal else False,
+        "failed_stage": (state.get("blocked_stage") or stage) if terminal else None,
         "last_valid_checkpoint": state.get("current_checkpoint"),
         "recommended_resume_action": (
             state.get("recommended_resume_action")

@@ -64,6 +64,26 @@ def test_gate_pause_and_pipeline_complete_notify_without_restart():
     assert watchdog.terminal_notification(complete)[1] == "DVGC：流水线完成"
 
 
+def test_collect_status_honors_explicit_terminal_without_rewriting_stage(monkeypatch, tmp_path):
+    (tmp_path / "controller_state.json").write_text(
+        '{"current_stage":"takeoff_controller_pilot","terminal_state":"gate_pause",'
+        '"blocked_stage":"takeoff","stop_reason":"takeoff_stage_controller_blocker",'
+        '"heartbeat":100,"history":[],"provenance":{}}'
+    )
+    monkeypatch.setattr(watchdog, "unit_properties", lambda unit: {
+        "unit": unit, "pid": 0, "active": False, "ActiveState": "failed",
+        "SubState": "failed", "Result": "exit-code", "ExecMainCode": "1",
+        "ExecMainStatus": "40",
+    })
+    monkeypatch.setattr(watchdog, "active_worker_units", lambda: [])
+    monkeypatch.setattr(watchdog, "process_count", lambda value: 0)
+    status = watchdog.collect_status(tmp_path, now=101, controller_unit="controller.service")
+    assert status["terminal_state"] == "gate_pause"
+    assert status["current_stage"] == "takeoff_controller_pilot"
+    assert status["failed_stage"] == "takeoff"
+    assert status["research_gate_valid"] is True
+
+
 def test_duplicate_notification_event_is_not_sent_twice(monkeypatch, tmp_path):
     monkeypatch.setattr(watchdog, "NOTIFICATION_STATE", tmp_path / "notifications.json")
     monkeypatch.setattr(watchdog, "PENDING_NOTIFICATION", tmp_path / "pending.json")
