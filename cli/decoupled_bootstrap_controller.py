@@ -234,7 +234,8 @@ class DecoupledBootstrapController(Controller):
                   next_decision="flight_provisional_certification_pilot", frozen_flight_expert=str(output))
 
     def provisional_prepare(self) -> None:
-        marker = self.run / "flight/provisional_certification/cost_estimate.json"
+        root = self.run / "flight/provisional_certification"
+        marker = root / "cost_estimate.json"
         if not marker.exists():
             save_json(marker, {
                 "status": "PASS", "artifact_role": "cost_estimate",
@@ -243,10 +244,62 @@ class DecoupledBootstrapController(Controller):
                 "output_role": "expert_conditioned_provisional_envelope",
                 "formal_jel_eligible": False,
             })
-        self.save(current_stage="flight_provisional_certification_ready",
-                  last_completed_action="flight_provisional_certification_prepare",
-                  next_decision="implement_chunked_composite_branch_pilot",
-                  provisional_certification_cost=str(marker))
+        pilot_bank = root / "pilot_4branch.pkl"
+        pilot_report = root / "pilot_4branch.json"
+        if not pilot_report.exists():
+            result = self.run_worker_command(
+                "flight_provisional_certification_pilot",
+                [PYTHON, "-u", "-m", "cli.certify_expert_provisional",
+                 "--registry", self.state["current_registry"], "--candidate-bank", FLIGHT_BANK,
+                 "--entry-set", self.state["canonical_c_l"], "--output-bank", pilot_bank,
+                 "--report", pilot_report, "--seed", "2840000000", "--branches", "4"],
+                self.run / "logs/flight_provisional_pilot.log", [pilot_bank, pilot_report],
+                unit_suffix=f"decoupled-provisional-pilot-{int(time.time())}", preallocate=False,
+            )
+            if not result["ok"]:
+                raise RuntimeError(f"Flight provisional pilot failed: {result}")
+        pilot = json.loads(pilot_report.read_text())
+        if pilot["states_with_final"] == 0:
+            self.save(current_stage="gate_pause", terminal_state="gate_pause", research_gate_valid=True,
+                      blocked_stage="flight_provisional_certification", stop_reason="expert_stack_has_no_Final_support",
+                      next_decision=None, provisional_pilot=str(pilot_report))
+            raise SystemExit(40)
+        formal_bank = formal_report = None
+        for level, seed in ((8, 2850000000), (16, 2860000000), (32, 2870000000)):
+            formal_bank = root / f"construction_{level}branch.pkl"
+            formal_report = root / f"construction_{level}branch.json"
+            if not formal_report.exists():
+                result = self.run_worker_command(
+                    f"flight_provisional_certification_{level}branch",
+                    [PYTHON, "-u", "-m", "cli.certify_expert_provisional",
+                     "--registry", self.state["current_registry"], "--candidate-bank", FLIGHT_BANK,
+                     "--entry-set", self.state["canonical_c_l"], "--output-bank", formal_bank,
+                     "--report", formal_report, "--seed", str(seed), "--branches", str(level)],
+                    self.run / f"logs/flight_provisional_{level}branch.log", [formal_bank, formal_report],
+                    unit_suffix=f"decoupled-provisional-{level}-{int(time.time())}", preallocate=False,
+                )
+                if not result["ok"]:
+                    raise RuntimeError(f"Flight provisional {level}-branch construction failed: {result}")
+            level_report = json.loads(formal_report.read_text())
+            if level_report["states_with_final"] == 0:
+                self.save(current_stage="gate_pause", terminal_state="gate_pause", research_gate_valid=True,
+                          blocked_stage="flight_provisional_certification",
+                          stop_reason=f"expert_stack_support_exhausted_at_{level}_branches",
+                          next_decision=None, provisional_construction=str(formal_report))
+                raise SystemExit(40)
+        assert formal_bank is not None and formal_report is not None
+        formal = json.loads(formal_report.read_text())
+        if formal["final_label_counts"]["safe"] == 0:
+            self.save(current_stage="gate_pause", terminal_state="gate_pause", research_gate_valid=True,
+                      blocked_stage="flight_provisional_certification", stop_reason="no_expert_conditioned_Final_safe_states",
+                      next_decision=None, provisional_construction=str(formal_report))
+            raise SystemExit(40)
+        self.save(current_stage="takeoff_expert_prepare",
+                  last_completed_action="flight_provisional_certification",
+                  next_decision="build_canonical_flight_entry_from_expert_envelope",
+                  provisional_certification_cost=str(marker),
+                  flight_provisional_envelope=str(formal_bank),
+                  flight_provisional_report=str(formal_report))
 
     def loop(self) -> int:
         while True:
@@ -258,7 +311,7 @@ class DecoupledBootstrapController(Controller):
                 self.flight_curriculum(stage.removeprefix("flight_"))
             elif stage == "freeze_flight_expert": self.freeze_flight_expert()
             elif stage == "flight_provisional_certification": self.provisional_prepare()
-            elif stage == "flight_provisional_certification_ready":
+            elif stage == "takeoff_expert_prepare":
                 time.sleep(60)
             elif stage == "gate_pause": raise SystemExit(40)
             elif stage == "pipeline_complete": return 0
