@@ -1,5 +1,41 @@
 # DVGC Experiment State
 
+- 2026-07-19 route supersession: the handoff-first/descent-Final route is
+  atomically closed as `SUPERSEDED_BY_STAGE_REACHABILITY_PROTOCOL`.  Old
+  controller, watchdog and H1 worker are inactive.  The final already-started
+  H1 atomic output completed normally (exit 0) and is preserved but will not
+  extend C_L or trigger the retired A/B route.
+- H4 remains diagnostic-only `runtime_sensitive_boundary`: formal terminal
+  agreement 171/192 (89.0625%), complete evidence agreement 110/192
+  (57.2917%), exact H4 3/8.  It is not eligible for branch pairing.  Before new
+  label acquisition, a separate same-snapshot/policy/seed first-step and
+  eight-step qpos/qvel/action deterministic replay smoke is mandatory.
+- Active RA-L route: `safe_pause_old_route -> h4_replay_smoke ->
+  define_stage_entry_protocol -> relabel_existing_data -> coverage_inventory
+  -> stage_candidate_pilot -> stage_label_acquisition ->
+  train_reachability_model -> active_candidate_acquisition ->
+  build_stage_tubes -> Tube_RSI_final_PPO -> final_policy_certification`.
+- Stage-entry protocol v1 maps Ascent/Apex/Descent to canonical Flight and
+  defines physical-quality-gated Takeoff->Ascent, Ascent->Apex,
+  Apex->Descent, Descent->Landing and Landing->Stable events.  Intermediate
+  failures are controller-bank-conditioned, not claims of physical
+  unreachability.  `proposal_support_set` and `certified_tube` remain distinct.
+- Read-only coverage inventory (no replay): Takeoff 0 full snapshots; Ascent
+  63; Apex 20; Descent 218 byte-unique states (including the historical 153
+  set plus mined/support additions); Landing 120.  Existing composite reports
+  lack next-entry snapshot/time fields, so their 9k+ branches are reusable as
+  controller outcome evidence only.  Directly reusable Landing->Stable labels
+  are 79 positive / 12 boundary / 4 negative-under-controller / 25 unknown.
+- Candidate/acquisition cost gate: planned five-stage pool 750 unique states,
+  four branches/state, horizon 200 = 3,000 rollouts / 600,000 environment
+  steps.  The required 4% pilot is 30 states / 120 rollouts / 24,000 steps.
+  No new MJX rollout has started yet; deterministic replay smoke gates it.
+- Current validated commits: stage protocol/schema `f8c6323`, inventory and
+  replay/cost gates `a89e447`, resumable controller migration `cacc86d`.
+- Next automatic action: run the bounded deterministic replay smoke, then
+  record the frozen protocol and advance through relabel/inventory to the
+  2--5% candidate pilot.  No old-route task is eligible for recovery.
+
 - Active route: sequential shared-Actor backward training is formally closed.
   Proceed with stage-expert discovery, composite Final-Recovery validation,
   joint shared-policy consolidation, then final shared-policy recertification.

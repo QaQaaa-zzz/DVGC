@@ -5,12 +5,12 @@
 The active target is a concise IEEE RA-L paper. The implementation and paper
 will make three claims only:
 
-1. Event-anchored Landing-first backward bootstrap breaks the natural-start
-   survival bottleneck.
-2. Frozen-policy, branch-based Final-Recovery certification prevents local
-   chain success from being mistaken for end-to-end recoverability.
-3. Final-safe and boundary Tube-guided RSI improves natural-start learning over
-   geometric or phase-only reset curricula.
+1. Event-aligned next-stage labels expose phase reachability without requiring
+   every intermediate controller to finish the whole jump.
+2. Phase-conditioned reachability estimates guide proposal coverage but never
+   replace frozen-policy branch certification.
+3. Phase-wise Tube-RSI supports a final unified policy whose own empirical
+   envelope is established by end-to-end Final-Recovery certification.
 
 The current event filter is deployable but is not a trained Streaming GRU. The
 active Tube is DVGC-Physical, not the full Physical-Belief method described in
@@ -26,7 +26,8 @@ the archived v23 research specification.
 - Control rate: 50 Hz
 - Training order: Landing, Flight, Takeoff, Approach, natural-start evaluation
 - Formal Tube label: Final Recovery within a fixed horizon before Failure
-- Bootstrap label: entry into the next independently certified stage set
+- Intermediate label: valid physical entry into the next canonical stage
+- Final formal label: stable recovery under the frozen unified policy
 
 ## Artifact Semantics
 

@@ -2,8 +2,9 @@
 
 ## Research Scope
 
-- Target the concise RA-L core: event-anchored backward bootstrap, end-to-end
-  Final-Recovery empirical tubes, and tube-guided reset-state initialization.
+- Target the concise RA-L core: event-aligned next-stage reachability labels,
+  phase-conditioned reachability estimation, independently certified
+  phase-wise tubes, Tube-RSI, and final unified-policy Final-Recovery audit.
 - Do not claim that a learned GRU estimator, Physical-Belief variants, or
   trigger-budgeted relabeling is implemented unless the code and experiments
   are added and validated.
@@ -50,12 +51,16 @@
   themselves to safe.  Intermediate expert discovery and full-jump data
   collection must not be blocked merely because an intermediate Tube has fewer
   than four certified-safe states.
-- After the valid Cycle-5 gate, do not run more roll-targeted descent PPO.
-  Continue handoff decomposition, Landing-only certifier calibration,
-  proposal-support construction, full-jump teacher trajectory mining and final
-  shared-policy Tube-RSI.  Keep the Landing policy and C_L matcher radius fixed;
-  a C_L extension requires separately certified contact proposals and a new
-  immutable version/hash.
+- The handoff/roll-targeted descent route is superseded by the stage-
+  reachability protocol.  Never auto-resume its exhaustive handoff scan, H1
+  Final-safe scan, C_L A/B, or same-objective descent PPO.  Ascent, Apex and
+  Descent remain substages of canonical Flight.  Intermediate labels measure
+  valid next-stage entry, while only the frozen final unified policy is judged
+  by end-to-end Final-Recovery.
+- Before any expensive acquisition write `cost_estimate.json`, run a 2--5%
+  pilot, and use the 4 -> 8 -> 16/32 adaptive branch funnel.  A failed current
+  controller bank means negative-under-current-controller-bank or unknown,
+  never physical unreachability.
 
 ## Verification
 
