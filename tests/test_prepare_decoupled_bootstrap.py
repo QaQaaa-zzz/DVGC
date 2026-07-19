@@ -3,7 +3,7 @@ import sys
 
 import numpy as np
 
-from cli.prepare_decoupled_bootstrap import main
+from cli.prepare_decoupled_bootstrap import CANONICAL_C_L_ROLES, main
 from dvgc.bank import SnapshotBank, empty_outcome
 from dvgc.config import file_sha256, load_config
 from dvgc.policy import save_bundle
@@ -63,3 +63,10 @@ def test_freeze_contract_keeps_cl_and_policy_ownership(monkeypatch, tmp_path):
     assert contract["flight_initial"]["landing_retention_required"] is False
     assert contract["expert_certification_role"] == "expert_conditioned_provisional_envelope"
     assert contract["formal_jel_role"] == "final_shared_policy_jel"
+
+
+def test_current_extended_canonical_role_is_explicitly_supported():
+    assert CANONICAL_C_L_ROLES == {
+        "canonical_certified_landing_entry_set",
+        "canonical_certified_landing_entry_set_extended",
+    }

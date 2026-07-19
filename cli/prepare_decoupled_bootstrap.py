@@ -11,6 +11,11 @@ from dvgc.experts import StageExpertRegistry, policy_bundle_hash
 from dvgc.policy import copy_bundle, load_bundle
 from dvgc.runtime import save_json
 
+CANONICAL_C_L_ROLES = frozenset({
+    "canonical_certified_landing_entry_set",
+    "canonical_certified_landing_entry_set_extended",
+})
+
 
 def _owned_copy(source: Path, destination: Path) -> Path:
     if not destination.exists():
@@ -55,7 +60,7 @@ def main() -> None:
     entry = SnapshotBank.load(entry_path)
     safe = entry.records_for_phase("landing", final_labels=["safe"], include_training_only=False)
     matcher = entry.metadata.get("entry_matcher") or {}
-    if entry.metadata.get("entry_bank_role") != "canonical_certified_landing_entry_set":
+    if entry.metadata.get("entry_bank_role") not in CANONICAL_C_L_ROLES:
         raise SystemExit("C_L is not a canonical certified Landing-entry set")
     if not safe or float(matcher.get("radius", 0.0)) <= 0.0:
         raise SystemExit("C_L has no Final-safe entries or calibrated matcher")
