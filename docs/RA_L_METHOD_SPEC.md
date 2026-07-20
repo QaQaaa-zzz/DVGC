@@ -99,7 +99,7 @@ The three evidence objects are deliberately non-interchangeable:
 
 | Object | Controller semantics | Permitted claim |
 | --- | --- | --- |
-| Chain entry | The active expert reaches the immutable canonical successor entry set | Recursive progress only |
+| Local proposal support | A local expert supplies `next_stage_reach` evidence for a frozen protocol-defined successor region | Labels, acquisition and controller proposals only |
 | Expert bootstrap envelope | Final-Recovery under an immutable composite expert stack | Expert-conditioned provisional recoverability; RSI/distillation data only |
 | Final shared-policy JEL | Final-Recovery branch recertification under one frozen shared Actor | Formal phase-wise Tube and empirical JEL |
 
@@ -125,8 +125,10 @@ The final shared Actor is a new policy, not an alias for any expert.  Its
 initialization dataset is phase-balanced across expert trajectories and keeps
 teacher actions, physical state, deployable observation/history and empirical
 labels, while stage oracle and teacher identity are supervision metadata only.
-Joint RSI PPO may consume safe/boundary states from expert-conditioned
-provisional envelopes, but those labels do not survive the policy change.
+Joint RSI PPO may consume Final-positive/boundary states independently
+evaluated under an immutable expert stack.  Ordinary local proposals retain
+only positive/boundary/unknown next-stage labels and are never called safe.
+None of those labels survive the policy change.
 Every candidate is relabeled by fresh independent branches after the shared
 Actor is frozen; only that recertification defines the paper's final JEL.
 
