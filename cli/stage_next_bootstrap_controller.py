@@ -106,8 +106,13 @@ class StageNextController(Controller):
   payload=json.loads(report.read_text());labels=payload['labels'];summary={'unique_states':len(labels),'branches':sum(x['n'] for x in labels),'successful_unique_states':sum(x['s']>0 for x in labels),'branch_successes':sum(x['s'] for x in labels),'label_counts':payload['label_counts'],'success_rates':payload['success_rates'],'termination_reasons':payload['termination_reasons'],'report':str(report),'entry_bank':payload['entry_bank']}
   save_json(self.run/'takeoff/label_support/coverage_analysis.json',summary)
   self.state['stage_status']['takeoff']['label_pilot']=summary
-  blocked=[stage for stage in ('apex','ascent') if self.state['stage_status'].get(stage,{}).get('status')=='controller_support_gap']
-  self.save(current_stage='gate_pause',last_completed_action='takeoff_label_pilot_120x4',next_decision=None,in_progress_action=None,active_worker_unit=None,terminal_state='gate_pause',research_gate_valid=True,blocked_stage=','.join(blocked),stop_reason='bounded local controller support exhausted for Apex and Ascent after independent Takeoff acquisition',takeoff_label_pilot=str(report))
+  self.save(current_stage='takeoff_reachability_model',global_status='stage_reachability_acquisition_partial_support',last_completed_action='takeoff_label_pilot_120x4',next_decision='takeoff_reachability_model',in_progress_action=None,active_worker_unit=None,terminal_state=None,research_gate_valid=False,takeoff_label_pilot=str(report))
+
+ def reachability_model(self):
+  root=self.run/'takeoff/reachability_model';model=root/'model_v1.npz';report=root/'report_v1.json';proposals=root/'ranked_proposals_v1.json'
+  if not report.exists():self.run_command('takeoff_reachability_model',[PYTHON,'-m','cli.train_stage_reachability_model','--bank',self.run/'takeoff/label_support/takeoff_proposal_support_120.pkl','--labels',self.run/'takeoff/label_support/takeoff_label_pilot_120x4.json','--output-model',model,'--output-report',report,'--output-proposals',proposals],root/'train.log',[model,report,proposals])
+  payload=json.loads(report.read_text());self.state['stage_status']['takeoff']['reachability_model']=payload
+  self.save(current_stage='partial_support_complete',last_completed_action='takeoff_reachability_model',next_decision='bounded_apex_ascent_support_diagnosis',takeoff_reachability_model=str(report),takeoff_ranked_proposals=str(proposals),terminal_state=None)
 
  def loop(self):
   while True:
@@ -120,6 +125,8 @@ class StageNextController(Controller):
    elif stage=='takeoff_local_training':self.independent_stage('takeoff')
    elif stage=='controller_proposal_bank_update':self.proposal_bank()
    elif stage=='takeoff_label_pilot':self.finish_takeoff_labels()
+   elif stage=='takeoff_reachability_model':self.reachability_model()
+   elif stage=='partial_support_complete':time.sleep(30);self.save()
    elif stage=='gate_pause':return 40
    else:raise RuntimeError(f'Unknown stage {stage}')
 
