@@ -91,12 +91,23 @@ class StageNextController(Controller):
   self.save(current_stage=next_stage,last_completed_action=f'{stage}_local_training',next_decision=next_stage,**{f'{stage}_current_policy':str(resume)})
 
  def proposal_bank(self):
-  output=self.run/'controller_proposal_bank.json';policies=[]
+  output=self.run/'controller_proposal_bank_v2.json';policies=[];attempted=[]
   for stage in ('apex','ascent','takeoff'):
    status=self.state['stage_status'].get(stage,{});policy=self.state.get(f'{stage}_current_policy')
-   if policy and status.get('status')=='proposal_ready':policies.append({'responsibility':{'apex':'apex_to_descent','ascent':'ascent_to_apex','takeoff':'takeoff_to_ascent'}[stage],'policy':policy,'policy_hash':file_sha256(Path(policy)/'params.pkl'),'evidence':status})
-  save_json(output,{'status':'PASS','artifact_role':'controller_proposal_bank','policies':policies,'local_failures_nonblocking':True,'not_certified_tube':True})
-  self.save(current_stage='coverage_analysis',last_completed_action='controller_proposal_bank_update',next_decision='build_100_200_unique_state_label_inputs',controller_proposal_bank=str(output),terminal_state=None)
+   if policy:
+    row={'responsibility':{'apex':'apex_to_descent','ascent':'ascent_to_apex','takeoff':'takeoff_to_ascent'}[stage],'policy':policy,'policy_hash':file_sha256(Path(policy)/'params.pkl'),'evidence':status}
+    (policies if status.get('status')=='proposal_ready' else attempted).append(row)
+  save_json(output,{'status':'PASS','artifact_role':'controller_proposal_bank','active_policies':policies,'attempted_controller_evidence':attempted,'failed_controllers_excluded_from_teachers':True,'local_failures_nonblocking':True,'not_certified_tube':True})
+  self.save(current_stage='takeoff_label_pilot',last_completed_action='controller_proposal_bank_update',next_decision='takeoff_label_pilot_120x4',controller_proposal_bank=str(output),terminal_state=None)
+
+ def finish_takeoff_labels(self):
+  report=self.run/'takeoff/label_support/takeoff_label_pilot_120x4.json'
+  if not report.exists():time.sleep(30);self.save(in_progress_action='takeoff_label_pilot_120x4',active_worker_unit=None);return
+  payload=json.loads(report.read_text());labels=payload['labels'];summary={'unique_states':len(labels),'branches':sum(x['n'] for x in labels),'successful_unique_states':sum(x['s']>0 for x in labels),'branch_successes':sum(x['s'] for x in labels),'label_counts':payload['label_counts'],'success_rates':payload['success_rates'],'termination_reasons':payload['termination_reasons'],'report':str(report),'entry_bank':payload['entry_bank']}
+  save_json(self.run/'takeoff/label_support/coverage_analysis.json',summary)
+  self.state['stage_status']['takeoff']['label_pilot']=summary
+  blocked=[stage for stage in ('apex','ascent') if self.state['stage_status'].get(stage,{}).get('status')=='controller_support_gap']
+  self.save(current_stage='gate_pause',last_completed_action='takeoff_label_pilot_120x4',next_decision=None,in_progress_action=None,active_worker_unit=None,terminal_state='gate_pause',research_gate_valid=True,blocked_stage=','.join(blocked),stop_reason='bounded local controller support exhausted for Apex and Ascent after independent Takeoff acquisition',takeoff_label_pilot=str(report))
 
  def loop(self):
   while True:
@@ -108,7 +119,8 @@ class StageNextController(Controller):
    elif stage=='ascent_local_training':self.independent_stage('ascent')
    elif stage=='takeoff_local_training':self.independent_stage('takeoff')
    elif stage=='controller_proposal_bank_update':self.proposal_bank()
-   elif stage=='coverage_analysis':return 0
+   elif stage=='takeoff_label_pilot':self.finish_takeoff_labels()
+   elif stage=='gate_pause':return 40
    else:raise RuntimeError(f'Unknown stage {stage}')
 
 def main():
