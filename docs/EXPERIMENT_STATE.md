@@ -1,5 +1,30 @@
 # DVGC Experiment State
 
+- 2026-07-20 route correction: old `flight_apex_expert_chain_blocker` is
+  preserved only as `superseded_apex_to_c_l_objective`; global status is
+  `stage_reachability_acquisition`.  Active local responsibilities are
+  Takeoff->Ascent, Ascent->Apex, Apex->Descent, Descent->Landing/C_L, and
+  Landing->Stable.  C_L remains frozen and is not a gate for Takeoff/Ascent/Apex.
+- `descent_proposal_support_v1` build PASS: 93 byte-unique, finite Flight
+  Descent snapshots under current authoritative XML; robot-terrain contact,
+  deep penetration and nonfinite = 0.  Progress coverage is early/middle/late
+  = 31/31/31.  Bank `1c39f9e...744dde`; it is proposal support only, never a
+  certified Tube or formal JEL.
+- Frozen Apex->Descent entry protocol `b419084...09f85` PASS: 80/93 support
+  records satisfy the bounded entry gate; negative controls for missing
+  apex-passed latch, rolling fall, body contact, wheel contact and nonfinite
+  all reject.  Detector/support thresholds were frozen before policy relabel.
+- Five-policy fixed relabel (20 Apex states x 4 branches each; 400 total,
+  disjoint seeds/dynamics variants) finds Apex->Descent reach = 0/80 for each
+  initial/Block-1/2/3/4 policy.  All terminate by pitch/roll; per-policy
+  minimum support distance is 3.25--3.68.  This is a real local controller
+  support gap, not evidence that Apex cannot reach Descent.
+- Next automatic action: runtime gate refresh, then independent local pi_X
+  25,600-step blocks with potential-based Descent-support progress.  Apex local
+  failure remains nonblocking; Ascent and Takeoff local pilots continue and
+  all outputs remain controller proposals/labels until final shared-policy
+  recertification.
+
 - 2026-07-19 route supersession: the handoff-first/descent-Final route is
   atomically closed as `SUPERSEDED_BY_STAGE_REACHABILITY_PROTOCOL`.  Old
   controller, watchdog and H1 worker are inactive.  The final already-started

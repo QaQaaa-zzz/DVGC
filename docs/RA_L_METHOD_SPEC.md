@@ -68,8 +68,10 @@ connection targets, not substitutes for end-to-end recoverability.
 
 Sequential shared-Actor backward training is not the active discovery route.
 Discovery uses independently owned frozen controllers in the stack
-`pi_A -> pi_T -> pi_F -> pi_L`.  An upstream expert is trained only to enter
-the fixed certified canonical entry set of its successor.  A handoff is
+`pi_A -> pi_T -> pi_U -> pi_X -> pi_D -> pi_L`, where `pi_U`, `pi_X`, and
+`pi_D` own Ascent, Apex, and Descent respectively.  An upstream expert is trained only to enter
+the frozen, protocol-defined next-stage entry region of its successor.  Only
+Descent->Landing uses the independently certified canonical `C_L`.  A handoff is
 irreversible and continues the same physical state, observation/action
 history, PolicyState, terrain, command, disturbance, and episode seed.  Chain
 denotes the canonical-entry event; Final denotes end-to-end Recovery under the
@@ -80,11 +82,16 @@ Any Tube certified under a composite expert stack is provisional recoverable
 support (an expert-conditioned or discovery Tube).  Its manifest binds every
 expert and entry-set hash, the controller-stack hash, candidate bank, XML and
 runtime hashes, branch seed/dynamics variant, oracle phase, and PolicyState
-provenance.  It is not a formal Jump Capability Envelope.
+provenance.  Local entry events are `next_stage_reach`; `composite_chain` is
+reserved for recursive expert connection to `C_L`.  Neither is a formal Jump
+Capability Envelope.
 
-After all four seed-0 expert stacks pass their composite audits, a new shared
-Actor is initialized by phase-balanced, label-aware joint distillation and is
-then trained jointly from all provisional Tubes.  Oracle stage and teacher ID
+After each stage has enough local next-stage evidence for labels,
+reachability estimation, and provisional proposals, a new shared Actor is
+initialized by phase-balanced, label-aware joint distillation and is then
+trained jointly from that evidence.  A complete immutable expert-stack Final
+evaluation, when available, forms a stronger provisional-recoverability
+subset; it is not a mandatory pass gate for every local expert.  Oracle stage and teacher ID
 remain excluded from Actor input.  Only phase-wise Tubes independently
 recertified under the frozen final shared policy may be named the formal JEL.
 
@@ -96,13 +103,23 @@ The three evidence objects are deliberately non-interchangeable:
 | Expert bootstrap envelope | Final-Recovery under an immutable composite expert stack | Expert-conditioned provisional recoverability; RSI/distillation data only |
 | Final shared-policy JEL | Final-Recovery branch recertification under one frozen shared Actor | Formal phase-wise Tube and empirical JEL |
 
-The Flight expert `pi_F` is optimized only for `Flight -> C_L`.  It stops its
-Chain episode at the first valid canonical match and has no Landing-retention
-objective.  End-to-end evaluation switches irreversibly to frozen `pi_L`
-without resetting physics, observation/action history, event-filter state, or
-any other PolicyState field.  Flight reset support unlocks in the fixed order
-late descent -> descent -> apex -> ascent.  The same ownership and handoff
-rules apply to `pi_T` and `pi_A` once their successor entry sets exist.
+Intermediate training gates are exclusively `next_stage_reach`:
+`Takeoff -> Ascent`, `Ascent -> Apex`, `Apex -> Descent`,
+`Descent -> Landing/C_L`, and `Landing -> Stable`.  Only `pi_D` uses `C_L`;
+neither `pi_X`, `pi_U`, nor `pi_T` may use C_L, Full Chain, or Final Recovery
+as a training/unlock gate.  The frozen Flight bootstrap stack
+`pi_U -> pi_X -> pi_D` may be abbreviated `pi_F` only when the component
+responsibilities remain explicit.  A local failure is a support gap under the
+current controller bank and cannot block acquisition in independent stages.
+Composite evaluation switches irreversibly at each valid entry without
+resetting physics, observation/action history, event-filter state, or any
+other PolicyState field.
+
+Local rollout positives, boundaries, reference states, and reachability-model
+proposals form `proposal_support_bank` artifacts only.  End-to-end recovery
+under a fully immutable expert stack may be named
+`expert_conditioned_provisional_envelope`; it remains distinct from both local
+proposal support and the final shared-policy JEL.
 
 The final shared Actor is a new policy, not an alias for any expert.  Its
 initialization dataset is phase-balanced across expert trajectories and keeps

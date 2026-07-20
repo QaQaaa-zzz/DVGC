@@ -51,6 +51,8 @@ class ExpertSpec:
     downstream_entry_set_sha256: str|None
     downstream_controller_stack_hash: str
     controller_stack_hash: str
+    responsibility: str = ""
+    stage_support_sha256: str|None = None
 
 
 class StageExpertRegistry:
@@ -61,17 +63,20 @@ class StageExpertRegistry:
     @classmethod
     def build(cls,policies: Mapping[str,str|Path],entry_sets: Mapping[str,str|Path],*,runtime_source_fingerprint: str) -> "StageExpertRegistry":
         specs={}; downstream_hash=_digest({"stack":"terminal"})
-        for stage in ("landing","flight","takeoff","approach"):
-            if stage not in policies: continue
-            params,cfg,manifest=load_bundle(policies[stage],verify_files=True); del params
+        priority={"landing_to_stable":0,"landing":0,"descent_to_landing":1,"apex_to_descent":2,"ascent_to_apex":3,"takeoff_to_ascent":4,"approach":5}
+        for expert_id in sorted(policies,key=lambda key:(priority.get(key,10),key)):
+            params,cfg,manifest=load_bundle(policies[expert_id],verify_files=True); del params
+            stage=str(manifest.get("stage") or manifest.get("training_stage") or cfg.get("training_stage"))
             declared_stage=manifest.get("stage") or manifest.get("training_stage") or cfg.get("training_stage")
-            if declared_stage!=stage: raise ValueError(f"Expert {stage} bundle declares stage {declared_stage}")
-            entry_path=entry_sets.get(stage); entry_hash=file_sha256(entry_path) if entry_path else None
-            if stage!="landing" and not entry_hash: raise ValueError(f"Expert {stage} requires a downstream entry set")
-            policy_hash=file_sha256(Path(policies[stage])/"params.pkl")
-            stack_hash=_digest({"stage":stage,"policy_hash":policy_hash,"entry_set":entry_hash,"downstream_stack":downstream_hash})
-            spec=ExpertSpec(policy_id=str(manifest["policy_version"]),policy_hash=policy_hash,bundle_hash=policy_bundle_hash(policies[stage]),stage=stage,checkpoint_path=str(Path(policies[stage]).resolve()),observation_schema_hash=observation_schema_hash(cfg),action_schema_hash=action_schema_hash(cfg),policy_state_schema_hash=policy_state_schema_hash(cfg),recurrent_schema="stateless_mlp",xml_sha256=str(manifest["xml_sha256"]),candidate_bank_sha256=manifest.get("candidate_bank_sha256"),downstream_entry_set_sha256=entry_hash,downstream_controller_stack_hash=downstream_hash,controller_stack_hash=stack_hash)
-            specs[stage]=spec; downstream_hash=stack_hash
+            expected_stage={"landing_to_stable":"landing","descent_to_landing":"flight","apex_to_descent":"flight","ascent_to_apex":"flight","takeoff_to_ascent":"takeoff"}.get(expert_id,expert_id)
+            if declared_stage!=expected_stage: raise ValueError(f"Expert {expert_id} bundle declares stage {declared_stage}")
+            entry_path=entry_sets.get(expert_id); entry_hash=file_sha256(entry_path) if entry_path else None
+            if expert_id not in ("landing","landing_to_stable") and not entry_hash: raise ValueError(f"Expert {expert_id} requires a downstream entry set")
+            policy_hash=file_sha256(Path(policies[expert_id])/"params.pkl")
+            responsibility=str(manifest.get("expert_responsibility",expert_id))
+            stack_hash=_digest({"expert_id":expert_id,"stage":stage,"responsibility":responsibility,"policy_hash":policy_hash,"entry_set":entry_hash,"downstream_stack":downstream_hash})
+            spec=ExpertSpec(policy_id=str(manifest["policy_version"]),policy_hash=policy_hash,bundle_hash=policy_bundle_hash(policies[expert_id]),stage=stage,checkpoint_path=str(Path(policies[expert_id]).resolve()),observation_schema_hash=observation_schema_hash(cfg),action_schema_hash=action_schema_hash(cfg),policy_state_schema_hash=policy_state_schema_hash(cfg),recurrent_schema="stateless_mlp",xml_sha256=str(manifest["xml_sha256"]),candidate_bank_sha256=manifest.get("candidate_bank_sha256"),downstream_entry_set_sha256=entry_hash,downstream_controller_stack_hash=downstream_hash,controller_stack_hash=stack_hash,responsibility=responsibility,stage_support_sha256=entry_hash)
+            specs[expert_id]=spec; downstream_hash=stack_hash
         if not specs: raise ValueError("Expert registry is empty")
         schemas={(s.observation_schema_hash,s.action_schema_hash,s.policy_state_schema_hash,s.xml_sha256) for s in specs.values()}
         if len(schemas)!=1: raise ValueError("Stage experts have incompatible XML or observation/action/PolicyState schemas")

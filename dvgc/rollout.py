@@ -37,6 +37,7 @@ def restore_snapshot(env, record: dict[str, Any], rng):
         actor_observation_valid=jp.asarray(actor_observation is not None),
         qacc_warmstart=jp.asarray(record["qacc_warmstart"]),
         stage_entry_ever=jp.asarray(int(record.get("stage_entry_ever",0)),jp.int32),
+        apex_seen=jp.asarray(int(record.get("apex_seen", int(record.get("reference_index", record.get("source_index", -1))) >= 220)),jp.int32),
         jump_signal_latched=jp.asarray(bool(record.get("jump_signal_latched",record.get("had_airborne",0)))),
         jump_window_start_x=jp.asarray(float(record.get("jump_window_start_x",record["qpos"][0])),jp.float32),
         jump_window_end_x=jp.asarray(float(record.get("jump_window_end_x",record["qpos"][0]+1.0)),jp.float32),

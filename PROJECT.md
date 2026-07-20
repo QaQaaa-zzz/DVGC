@@ -50,10 +50,11 @@ the archived v23 research specification.
 
 Sequential shared-Actor backward extension and Flight Landing-retention repair
 are diagnostic-only.  The active seed-0 route is independently owned
-`pi_L`, `pi_F`, `pi_T`, and `pi_A`, irreversible canonical-entry handoffs,
+`pi_L`, `pi_D`, `pi_X`, `pi_U`, `pi_T`, and `pi_A`, irreversible local-entry handoffs,
 expert-conditioned provisional envelopes, phase-balanced distillation, joint
 RSI PPO, and fresh certification of the final shared Actor.  `C_L` remains
-immutable while `pi_F` is trained, and `pi_F` has no Landing-retention gate.
+immutable and is used only by Descent->Landing.  Takeoff, Ascent, and Apex are
+gated only by valid next-stage reach and have no downstream-retention gate.
 
 ## Existing Runtime
 

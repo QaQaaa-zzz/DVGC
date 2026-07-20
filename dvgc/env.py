@@ -127,6 +127,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         config_overrides: Optional[Dict[str, Union[str, int, float, list[Any]]]] = None,
         snapshot_bank: Optional[SnapshotBank] = None,
         cert_bank: Optional[SnapshotBank] = None,
+        stage_support_bank: Optional[SnapshotBank] = None,
     ):
         super().__init__(config, config_overrides=config_overrides)
         self._stage_name = str(self._config.training_stage).lower()
@@ -175,6 +176,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         self._mjx_model = mjx.put_model(self._mj_model, impl=self._config.impl)
         self._cert_bank = cert_bank
         self._cert_bank_explicit = cert_bank is not None
+        self._stage_support_bank = stage_support_bank
         self._post_init(snapshot_bank or SnapshotBank())
 
     # ------------------------------------------------------------------
@@ -273,6 +275,10 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             self._bank_invalid_wheel_count = jp.asarray([int(r.get("invalid_wheel_count", 0)) for r in records], jp.int32)
             self._bank_prev_acc_z = jp.asarray([float(ps(r).get("prev_acc_z", np.nan)) for r in records], jp.float32)
             self._bank_prev_vz = jp.asarray([float(ps(r).get("prev_vz", np.nan)) for r in records], jp.float32)
+            self._bank_apex_seen = jp.asarray([
+                int(r.get("apex_seen", int(r.get("reference_index", r.get("source_index", -1))) >= 220))
+                for r in records
+            ], jp.int32)
             self._bank_last_action = jp.asarray(np.stack([np.asarray(ps(r).get("last_action", np.zeros(nu)), np.float32) for r in records]))
             default_history = np.zeros((self._actor_history_len, self._actor_frame_dim), np.float32)
             histories, valid = [], []
@@ -318,6 +324,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             self._bank_bounce_count = jp.zeros((1,), jp.int32); self._bank_airborne_count = jp.zeros((1,), jp.int32)
             self._bank_prelaunch_airborne_count = jp.zeros((1,), jp.int32); self._bank_invalid_wheel_count = jp.zeros((1,), jp.int32)
             self._bank_prev_acc_z = jp.full((1,), jp.nan, jp.float32); self._bank_prev_vz = jp.full((1,), jp.nan, jp.float32)
+            self._bank_apex_seen = jp.zeros((1,), jp.int32)
             self._bank_last_action = jp.zeros((1, nu), jp.float32)
             self._bank_obs_history = jp.zeros((1, self._actor_history_len, self._actor_frame_dim), jp.float32)
             self._bank_obs_history_valid = jp.zeros((1,), bool); self._bank_logw = jp.zeros((1,), jp.float32)
@@ -351,6 +358,30 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         else:
             dim=len(ENTRY_FEATURE_NAMES) if self._entry_matcher else 16
             self._safe_features=jp.zeros((1,dim),jp.float32); self._safe_center=jp.zeros((dim,),jp.float32); self._safe_scale=jp.ones((dim,),jp.float32); self._safe_radius=float(self._config.tube_match_radius_z)
+
+        # Local stage support is separate from the recursively certified C_L.
+        # It may terminate Apex->Descent discovery, but can never set Chain.
+        stage_matcher = (stage_support_bank.metadata.get("stage_entry_matcher", {})
+                         if (stage_support_bank := self._stage_support_bank) is not None else {})
+        self._stage_support_enabled = bool(stage_matcher and stage_support_bank.records)
+        if self._stage_support_enabled:
+            raw = np.asarray([r["physical_feature"] for r in stage_support_bank.records], np.float32)
+            center = np.asarray(stage_matcher["center"], np.float32); scale = np.asarray(stage_matcher["scale"], np.float32)
+            self._stage_support_features = jp.asarray((raw-center)/scale)
+            self._stage_support_center = jp.asarray(center); self._stage_support_scale = jp.asarray(scale)
+            self._stage_support_radius = float(stage_matcher["radius"])
+            envelope = stage_matcher["reference_envelope"]
+            self._stage_support_x_bounds = (float(envelope["x"]["min"])-float(stage_matcher.get("envelope_tolerance_x",0.0)),
+                                            float(envelope["x"]["max"])+float(stage_matcher.get("envelope_tolerance_x",0.0)))
+            self._stage_support_z_bounds = (float(envelope["z"]["min"])-float(stage_matcher.get("envelope_tolerance_z",0.0)),
+                                            float(envelope["z"]["max"])+float(stage_matcher.get("envelope_tolerance_z",0.0)))
+            self._stage_descent_vz_bounds = (float(stage_matcher.get("descent_vz_min",-2.5)),float(stage_matcher.get("descent_vz_max",-.05)))
+            self._stage_roll_rate_max = float(stage_matcher.get("max_abs_roll_rate",self._config.recovery_max_angvel))
+            self._stage_pitch_rate_max = float(stage_matcher.get("max_abs_pitch_rate",self._config.recovery_max_angvel))
+        else:
+            self._stage_support_features=jp.zeros((1,16),jp.float32);self._stage_support_center=jp.zeros(16,jp.float32);self._stage_support_scale=jp.ones(16,jp.float32)
+            self._stage_support_radius=0.0;self._stage_support_x_bounds=(-jp.inf,jp.inf);self._stage_support_z_bounds=(-jp.inf,jp.inf)
+            self._stage_descent_vz_bounds=(-2.5,-.05);self._stage_roll_rate_max=float(self._config.recovery_max_angvel);self._stage_pitch_rate_max=float(self._config.recovery_max_angvel)
 
     @property
     def action_size(self) -> int:
@@ -761,6 +792,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         wheelie_count: Optional[jax.Array] = None,
         dual_wheel_liftoff_seen: Optional[jax.Array] = None,
         stage_entry_ever: Optional[jax.Array] = None,
+        apex_seen: Optional[jax.Array] = None,
         jump_signal_latched: Optional[jax.Array] = None,
         jump_window_start_x: Optional[jax.Array] = None,
         jump_window_end_x: Optional[jax.Array] = None,
@@ -805,6 +837,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "recovery_count": _i(recovery_count),
             "recovery_success": jp.zeros((), jp.int32),
             "stage_entry_ever": _i(stage_entry_ever),
+            "apex_seen": _i(apex_seen),
             "jump_signal_latched": ((had_airborne>0) | (phase==STAGE_ID["takeoff"])) if jump_signal_latched is None else jp.asarray(jump_signal_latched,bool),
             "jump_window_start_x": qpos[self._qpos0+0] if jump_window_start_x is None else jp.asarray(jump_window_start_x,jp.float32),
             "jump_window_end_x": qpos[self._qpos0+0]+jump_window_length if jump_window_end_x is None else jp.asarray(jump_window_end_x,jp.float32),
@@ -867,6 +900,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         descent_layer: Optional[jax.Array] = None,
         reset_parent: Optional[jax.Array] = None,
         stage_entry_ever: Optional[jax.Array] = None,
+        apex_seen: Optional[jax.Array] = None,
         jump_signal_latched: Optional[jax.Array] = None,
         jump_window_start_x: Optional[jax.Array] = None,
         jump_window_end_x: Optional[jax.Array] = None,
@@ -915,6 +949,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             descent_layer=descent_layer,
             reset_parent=reset_parent,
             stage_entry_ever=stage_entry_ever,
+            apex_seen=apex_seen,
             jump_signal_latched=jump_signal_latched,
             jump_window_start_x=jump_window_start_x,
             jump_window_end_x=jump_window_end_x,
@@ -981,6 +1016,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             invalid_count = jp.where(use_bank, self._bank_invalid_wheel_count[idx], jp.asarray(0, jp.int32))
             prev_acc_z = jp.where(use_bank, self._bank_prev_acc_z[idx], jp.asarray(jp.nan, jp.float32))
             prev_vz = jp.where(use_bank, self._bank_prev_vz[idx], jp.asarray(jp.nan, jp.float32))
+            apex_seen = jp.where(use_bank, self._bank_apex_seen[idx], jp.asarray(0, jp.int32))
             last_action = jp.where(use_bank, self._bank_last_action[idx], self._neutral_action)
             obs_history = self._bank_obs_history[idx]
             obs_history_valid = use_bank & self._bank_obs_history_valid[idx]
@@ -1006,6 +1042,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
                 bootstrap_group=bootstrap_group,
                 descent_layer=descent_layer,
                 reset_parent=reset_parent,
+                apex_seen=apex_seen,
             )
         return self._state_from_values(qnat, vnat, cnat, rng, jp.asarray(STAGE_ID["approach"], jp.int32), jp.zeros((), jp.int32), jp.zeros((), jp.int32), jp.zeros((), jp.int32))
 
@@ -1033,6 +1070,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         descent_layer: Optional[jax.Array] = None,
         reset_parent: Optional[jax.Array] = None,
         stage_entry_ever: Optional[jax.Array] = None,
+        apex_seen: Optional[jax.Array] = None,
         jump_signal_latched: Optional[jax.Array] = None,
         jump_window_start_x: Optional[jax.Array] = None,
         jump_window_end_x: Optional[jax.Array] = None,
@@ -1058,6 +1096,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             descent_layer=descent_layer,
             reset_parent=reset_parent,
             stage_entry_ever=stage_entry_ever,
+            apex_seen=apex_seen,
             jump_signal_latched=jump_signal_latched,
             jump_window_start_x=jump_window_start_x,
             jump_window_end_x=jump_window_end_x,
@@ -1136,6 +1175,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "invalid_wheel_count": int(info["invalid_wheel_count"]),
             "recovery_count": int(info["recovery_count"]),
             "stage_entry_ever": int(info["stage_entry_ever"]),
+            "apex_seen": int(info["apex_seen"]),
             "jump_signal_latched": bool(info["jump_signal_latched"]),
             "jump_window_start_x": float(info["jump_window_start_x"]),
             "jump_window_end_x": float(info["jump_window_end_x"]),
@@ -1403,13 +1443,25 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         prelaunch_fail = prelaunch_airborne >= int(cfg.pretakeoff_airborne_fail_steps)
         hard_failure = contact["prohibited"] | invalid_fail | roll_bad | pitch_bad | backward | back_edge | prelaunch_fail | takeoff_task_failure | nonfinite
         entry_pose_ok=(jp.abs(roll)<=_deg2rad(cfg.max_roll_deg)) & (jp.abs(pitch)<=_deg2rad(min(float(cfg.max_pitch_deg),35.0))) & (gyro_norm<=float(cfg.recovery_max_angvel))
+        current_physical=self._physical_feature(data);previous_physical=self._physical_feature(state.data)
+        current_support_z=(current_physical-self._stage_support_center)/self._stage_support_scale
+        previous_support_z=(previous_physical-self._stage_support_center)/self._stage_support_scale
+        current_stage_support_distance=jp.min(jp.linalg.norm(self._stage_support_features-current_support_z[None,:],axis=1))
+        previous_stage_support_distance=jp.min(jp.linalg.norm(self._stage_support_features-previous_support_z[None,:],axis=1))
+        stage_support_near=jp.asarray(self._stage_support_enabled) & (current_stage_support_distance<=self._stage_support_radius)
+        apex_seen=(state.info["apex_seen"]>0) | ((state.info["prev_vz"]>0.0)&(vz<=0.0))
         stage_entry_raw=jp.asarray(False)
         if self._reachability_objective=="takeoff_to_ascent":
             stage_entry_raw=confirmed_airborne & (vz>=float(cfg.takeoff_liftoff_vz)) & entry_pose_ok
         elif self._reachability_objective=="ascent_to_apex":
             stage_entry_raw=(phase1==STAGE_ID["flight"]) & (z>=0.4015475838251305) & (z<=0.7015475838251305) & (jp.abs(vz)<=0.25) & entry_pose_ok
         elif self._reachability_objective=="apex_to_descent":
-            stage_entry_raw=(phase1==STAGE_ID["flight"]) & (state.info["prev_vz"]>0.0) & (vz<=-0.05) & (z>=0.4015475838251305) & entry_pose_ok
+            stage_entry_raw=(phase1==STAGE_ID["flight"]) & apex_seen & raw_airborne & \
+                (vz>=self._stage_descent_vz_bounds[0]) & (vz<=self._stage_descent_vz_bounds[1]) & \
+                (x>=self._stage_support_x_bounds[0]) & (x<=self._stage_support_x_bounds[1]) & \
+                (z>=self._stage_support_z_bounds[0]) & (z<=self._stage_support_z_bounds[1]) & \
+                (jp.abs(gyro[0])<=self._stage_roll_rate_max) & (jp.abs(gyro[1])<=self._stage_pitch_rate_max) & \
+                stage_support_near & entry_pose_ok
         elif self._reachability_objective=="descent_to_landing":
             stage_entry_raw=(phase1==STAGE_ID["landing"]) & valid_landing & support & in_platform & (jp.abs(vz)<=0.75) & entry_pose_ok
         stage_entry=stage_entry_raw & (~hard_failure)
@@ -1551,12 +1603,13 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
                       "pose":zero,"speed":zero,"angular_penalty":zero,"yaw_score":zero,"bounded_height":zero,
                       "joint_energy_penalty":zero,"action_smooth_penalty":zero,"action_magnitude_penalty":zero}
         if self._reachability_objective:
-            current_physical=self._physical_feature(data);previous_physical=self._physical_feature(state.data)
             joint_energy=(jp.abs(data.ctrl[2]*data.qvel[self._joint_qvel["hip_joint"]])+jp.abs(data.ctrl[3]*data.qvel[self._joint_qvel["knee_joint"]]))/100.0
             stage_reward=compute_stage_next_entry_reward(
                 cfg=cfg,objective=self._reachability_objective,feature=current_physical,previous_feature=previous_physical,
                 action=action,previous_action=state.info["last_action"],next_entry=stage_entry,hard_failure=hard_failure,
                 jump_latched=jump_signal_latched,window_active=jump_window_active,joint_energy=joint_energy,
+                current_support_distance=current_stage_support_distance,
+                previous_support_distance=previous_stage_support_distance,
             )
         landing_reward_active = phase1 == STAGE_ID["landing"]
         reward = jp.where(landing_reward_active, landing_reward, unified_reward)
@@ -1773,6 +1826,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "recovery_success": recovery.astype(jp.int32), "chain_success": chain.astype(jp.int32),
             "chain_ever": chain_ever.astype(jp.int32),
             "stage_entry_ever": stage_entry_ever.astype(jp.int32),
+            "apex_seen": apex_seen.astype(jp.int32),
             "jump_signal_latched": jump_signal_latched.astype(bool),
             "jump_window_start_x": jump_window_start_x,
             "jump_window_end_x": jump_window_end_x,

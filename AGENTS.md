@@ -63,6 +63,11 @@
   then consolidate with phase-balanced distillation plus joint RSI PPO.  Only
   fresh independent recertification of the frozen final shared Actor may use
   the `final_shared_policy_jel` role or support formal JEL claims.
+- Bootstrap objectives are strictly local: Takeoff->Ascent, Ascent->Apex,
+  Apex->Descent, Descent->Landing/C_L, and Landing->Stable.  C_L and Full Chain
+  must not gate Takeoff, Ascent, or Apex.  Local proposal support is not a
+  Tube; only immutable expert-stack Final evidence may be called an
+  expert-conditioned provisional envelope.
 - Before any expensive acquisition write `cost_estimate.json`, run a 2--5%
   pilot, and use the 4 -> 8 -> 16/32 adaptive branch funnel.  A failed current
   controller bank means negative-under-current-controller-bank or unknown,

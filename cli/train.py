@@ -24,6 +24,7 @@ def main():
     p.add_argument("--stage", required=True, choices=["landing","flight","takeoff","approach","full"])
     p.add_argument("--bank", required=True)
     p.add_argument("--downstream-bank", default="")
+    p.add_argument("--stage-support-bank", default="")
     p.add_argument("--config", default="configs/default.json")
     p.add_argument("--run", required=True)
     p.add_argument("--timesteps", type=int, default=1_000_000)
@@ -70,6 +71,7 @@ def main():
         overrides["downstream_rehearsal_mass"]=a.downstream_rehearsal_mass
     cfg=load_config(a.config, overrides)
     bank=SnapshotBank.load(a.bank); downstream=SnapshotBank.load(a.downstream_bank) if a.downstream_bank else SnapshotBank()
+    stage_support=SnapshotBank.load(a.stage_support_bank) if a.stage_support_bank else None
     entry_rehearsal=SnapshotBank.load(a.entry_rehearsal_bank) if a.entry_rehearsal_bank else None
     landing_rehearsal=SnapshotBank.load(a.landing_rehearsal_bank) if a.landing_rehearsal_bank else None
     restore_params=None; resume_manifest={}
@@ -143,9 +145,9 @@ def main():
     training_metadata=copy.deepcopy(bank.metadata)
     if multi_source: training_metadata["reset_source_protocol"]=copy.deepcopy(reset_protocol)
     training_bank=SnapshotBank(train_records,training_metadata)
-    env=OrangeBikeDVGC(cfg,snapshot_bank=training_bank,cert_bank=downstream)
+    env=OrangeBikeDVGC(cfg,snapshot_bank=training_bank,cert_bank=downstream,stage_support_bank=stage_support)
     eval_cfg=load_config(a.config,{"training_stage":a.stage,"domain_randomization":False,"obs_noise_enable":False})
-    eval_env=OrangeBikeDVGC(eval_cfg,snapshot_bank=training_bank if multi_source else bank,cert_bank=downstream)
+    eval_env=OrangeBikeDVGC(eval_cfg,snapshot_bank=training_bank if multi_source else bank,cert_bank=downstream,stage_support_bank=stage_support)
     if a.preflight_output:
         if not multi_source: raise SystemExit("Multi-source preflight requires all three reset sources")
         source_weight={name:0.0 for name in ("flight_curriculum","canonical_entry_rehearsal","landing_tube_rehearsal")}; source_count={name:0 for name in source_weight}

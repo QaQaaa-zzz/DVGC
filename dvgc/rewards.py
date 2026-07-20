@@ -15,7 +15,8 @@ def compute_stage_next_entry_reward(
     *, cfg, objective: str, feature: jp.ndarray, previous_feature: jp.ndarray,
     action: jp.ndarray, previous_action: jp.ndarray, next_entry: jp.ndarray,
     hard_failure: jp.ndarray, jump_latched: jp.ndarray, window_active: jp.ndarray,
-    joint_energy: jp.ndarray,
+    joint_energy: jp.ndarray, current_support_distance: jp.ndarray | None = None,
+    previous_support_distance: jp.ndarray | None = None,
 ) -> Dict[str, jp.ndarray]:
     """Bounded phase objective inspired by the supplied jump reward design.
 
@@ -38,9 +39,15 @@ def compute_stage_next_entry_reward(
     elif objective=="ascent_to_apex":
         progress=0.65*jp.clip((f[2]-prev[2])/0.05,-1.0,1.0)+0.35*bounded_height
     elif objective=="apex_to_descent":
-        height=jp.exp(-(((f[2]-float(cfg.stage_apex_target_height))/0.15)**2))
-        vertical=jp.exp(-((vz/0.25)**2))
-        progress=0.5*(height+vertical)
+        # Potential shaping cannot pay the Actor for hovering indefinitely at
+        # the apex.  The frozen Descent-support matcher supplies the preferred
+        # distance; this kinematic fallback is only for pure reward preflight.
+        current_distance=(jp.abs(vz+0.30)/0.30+jp.abs(f[2]-float(cfg.stage_apex_target_height))/0.15
+                          if current_support_distance is None else current_support_distance)
+        previous_distance=(jp.abs(prev[8]+0.30)/0.30+jp.abs(prev[2]-float(cfg.stage_apex_target_height))/0.15
+                           if previous_support_distance is None else previous_support_distance)
+        phi=-jp.clip(current_distance,0.0,8.0);previous_phi=-jp.clip(previous_distance,0.0,8.0)
+        progress=jp.clip(0.995*phi-previous_phi,-1.0,1.0)
     elif objective=="descent_to_landing":
         progress=jp.exp(-(((vz+0.45)/0.35)**2))
     else:

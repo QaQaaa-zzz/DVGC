@@ -20,8 +20,8 @@ CANONICAL_PHASE = {
     "takeoff": "takeoff", "ascent": "flight", "apex": "flight",
     "descent": "flight", "landing": "landing", "stable": "landing",
 }
-PROTOCOL_VERSION = "stage_next_entry_v1"
-LABEL_SCHEMA_VERSION = "stage_reachability_label_v1"
+PROTOCOL_VERSION = "stage_next_entry_v2_support_aligned"
+LABEL_SCHEMA_VERSION = "stage_reachability_label_v2"
 
 
 @dataclass(frozen=True)
@@ -36,6 +36,7 @@ class StageEntryThresholds:
     apex_max_height: float
     apex_max_abs_vz: float
     descent_max_vz: float
+    descent_min_vz: float
     landing_min_x: float
     landing_max_x: float
     landing_max_abs_y: float
@@ -59,6 +60,7 @@ def thresholds_from_config(cfg: Any) -> StageEntryThresholds:
         apex_max_height=reference_apex_z + 0.15,
         apex_max_abs_vz=0.25,
         descent_max_vz=-0.05,
+        descent_min_vz=-2.5,
         landing_min_x=float(cfg.step_front_x + cfg.valid_landing_min_past_edge),
         landing_max_x=float(cfg.step_back_x - cfg.valid_landing_back_margin),
         landing_max_abs_y=float(cfg.step_half_width - cfg.landing_side_margin),
@@ -68,7 +70,8 @@ def thresholds_from_config(cfg: Any) -> StageEntryThresholds:
     )
 
 
-def protocol_payload(cfg: Any) -> dict[str, Any]:
+def protocol_payload(cfg: Any, support_metadata: Mapping[str, Any] | None = None) -> dict[str, Any]:
+    matcher = dict((support_metadata or {}).get("stage_entry_matcher", {}))
     payload = {
         "version": PROTOCOL_VERSION,
         "stages": list(STAGES),
@@ -78,11 +81,12 @@ def protocol_payload(cfg: Any) -> dict[str, Any]:
         "rules": {
             "takeoff_to_ascent": "confirmed dual-wheel airborne; upward velocity; bounded pose/rates; no illegal contact",
             "ascent_to_apex": "Flight; reference apex height window; |vz| near zero; bounded pose/rates; no illegal contact",
-            "apex_to_descent": "positive-to-negative vz crossing; legal airborne state; bounded pose/rates",
+            "apex_to_descent": "apex-passed latch; bounded negative vz; legal airborne pose/rates; frozen Descent-support proximity",
             "descent_to_landing": "first valid wheel landing/support in platform support region; no body/deep/invalid contact or immediate failure",
             "landing_to_stable": "existing Landing recovery gates held for recovery_hold_steps",
         },
         "success_definition": "reach valid next-stage entry before physical failure and within the stage horizon",
+        "descent_support_matcher": matcher or None,
     }
     canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
     payload["protocol_sha256"] = hashlib.sha256(canonical.encode()).hexdigest()
@@ -94,7 +98,21 @@ def _finite(sample: Mapping[str, Any]) -> bool:
     return bool(np.all(np.isfinite(np.asarray(values, dtype=np.float64))))
 
 
-def evaluate_entry(stage: str, sample: Mapping[str, Any], cfg: Any) -> dict[str, Any]:
+def support_distance(feature: np.ndarray, support_metadata: Mapping[str, Any] | None) -> tuple[float, bool]:
+    matcher = dict((support_metadata or {}).get("stage_entry_matcher", {}))
+    records = (support_metadata or {}).get("support_features")
+    if not matcher or records is None:
+        return float("inf"), False
+    feature = np.asarray(feature, np.float64)
+    center = np.asarray(matcher["center"], np.float64)
+    scale = np.asarray(matcher["scale"], np.float64)
+    support = np.asarray(records, np.float64)
+    distance = float(np.min(np.linalg.norm(((support - center) / scale) - ((feature - center) / scale), axis=1)))
+    return distance, bool(distance <= float(matcher["radius"]))
+
+
+def evaluate_entry(stage: str, sample: Mapping[str, Any], cfg: Any,
+                   support_metadata: Mapping[str, Any] | None = None) -> dict[str, Any]:
     """Evaluate one event-aligned sample without consulting reward or policy labels."""
     stage = str(stage).lower()
     if stage not in NEXT_STAGE:
@@ -119,9 +137,23 @@ def evaluate_entry(stage: str, sample: Mapping[str, Any], cfg: Any) -> dict[str,
         quality.update(phase_ok=phase == "flight", apex_height=bool(t.apex_min_height <= z <= t.apex_max_height),
                        vertical_speed=bool(abs(vz) <= t.apex_max_abs_vz))
     elif stage == "apex":
-        quality.update(phase_ok=phase == "flight", airborne=bool(sample.get("dual_wheel_airborne", True)),
-                       vz_crossing=bool(float(sample.get("previous_vz", np.inf)) > 0.0 and vz <= t.descent_max_vz),
-                       legal_height=bool(z >= t.apex_min_height))
+        matcher = dict((support_metadata or {}).get("stage_entry_matcher", {}))
+        envelope = matcher.get("reference_envelope", {})
+        distance, near_support = support_distance(f, support_metadata)
+        x_bounds = envelope.get("x", {"min": -np.inf, "max": np.inf})
+        z_bounds = envelope.get("z", {"min": t.apex_min_height, "max": t.apex_max_height})
+        x_tol = float(matcher.get("envelope_tolerance_x", 0.0)); z_tol = float(matcher.get("envelope_tolerance_z", 0.0))
+        quality.update(
+            phase_ok=phase == "flight",
+            apex_passed=bool(sample.get("apex_seen", False)),
+            airborne=bool(sample.get("dual_wheel_airborne", False)),
+            descending_speed=bool(float(matcher.get("descent_vz_min", t.descent_min_vz)) <= vz <= float(matcher.get("descent_vz_max", t.descent_max_vz))),
+            envelope_x=bool(float(x_bounds["min"])-x_tol <= x <= float(x_bounds["max"])+x_tol),
+            envelope_z=bool(float(z_bounds["min"])-z_tol <= z <= float(z_bounds["max"])+z_tol),
+            roll_rate=bool(abs(wx) <= float(matcher.get("max_abs_roll_rate", t.max_angular_speed))),
+            pitch_rate=bool(abs(wy) <= float(matcher.get("max_abs_pitch_rate", t.max_angular_speed))),
+            support_matcher_present=bool(matcher), support_proximity=near_support,
+        )
     elif stage == "descent":
         first_valid = bool(sample.get("first_valid_landing", sample.get("had_valid_landing", False)))
         support = bool(sample.get("support", first_valid))
@@ -135,7 +167,8 @@ def evaluate_entry(stage: str, sample: Mapping[str, Any], cfg: Any) -> dict[str,
                        forward_speed=bool(vx >= t.recovery_min_vx))
     valid = bool(common and bounded and all(quality.values()))
     return {"valid": valid, "stage": stage, "next_stage": NEXT_STAGE[stage],
-            "entry_quality": quality, "reasons": [k for k, value in quality.items() if not value]}
+            "entry_quality": quality, "reasons": [k for k, value in quality.items() if not value],
+            "support_distance": distance if stage == "apex" else None}
 
 
 def reachability_label(*, stage: str, successes: int, branches: int, branch_records: list[dict[str, Any]],
@@ -152,13 +185,13 @@ def reachability_label(*, stage: str, successes: int, branches: int, branch_reco
     lo, hi = max(0.0, mean - half), min(1.0, mean + half)
     if n < 4:
         label = "unknown"
-    elif lo >= 0.70:
-        label = "high_confidence_positive"
+    elif s > 0 and s == n:
+        label = "positive"
     elif s == 0 and n < 8:
         label = "unknown"
     elif hi <= 0.20 or (s == 0 and n >= 8):
         label = "negative_under_current_controller_bank" if controller_bank_exhausted else "unknown"
-    elif 0 < s < n and hi - lo <= 0.45:
+    elif 0 < s < n:
         label = "boundary"
     else:
         label = "unknown"
