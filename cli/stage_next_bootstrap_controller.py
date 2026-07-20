@@ -94,7 +94,7 @@ class StageNextController(Controller):
   output=self.run/'controller_proposal_bank.json';policies=[]
   for stage in ('apex','ascent','takeoff'):
    status=self.state['stage_status'].get(stage,{});policy=self.state.get(f'{stage}_current_policy')
-   if policy:policies.append({'responsibility':{'apex':'apex_to_descent','ascent':'ascent_to_apex','takeoff':'takeoff_to_ascent'}[stage],'policy':policy,'policy_hash':file_sha256(Path(policy)/'params.pkl'),'evidence':status})
+   if policy and status.get('status')=='proposal_ready':policies.append({'responsibility':{'apex':'apex_to_descent','ascent':'ascent_to_apex','takeoff':'takeoff_to_ascent'}[stage],'policy':policy,'policy_hash':file_sha256(Path(policy)/'params.pkl'),'evidence':status})
   save_json(output,{'status':'PASS','artifact_role':'controller_proposal_bank','policies':policies,'local_failures_nonblocking':True,'not_certified_tube':True})
   self.save(current_stage='coverage_analysis',last_completed_action='controller_proposal_bank_update',next_decision='build_100_200_unique_state_label_inputs',controller_proposal_bank=str(output),terminal_state=None)
 
