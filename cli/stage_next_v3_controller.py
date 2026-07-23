@@ -505,7 +505,7 @@ class StageNextV3Controller(Controller):
         acquisition = RUN / "ascent/independent_parent_acquisition_v1"
         bc = RUN / "ascent/late_discovery/bc_policy"
         bc_report = RUN / "ascent/late_discovery/bc_report.json"
-        curriculum = RUN / "ascent/late_discovery/curriculum/report.json"
+        curriculum = RUN / "ascent/late_discovery/curriculum_v2/report.json"
         config = Path(
             "runs/stage_next_takeoff_keyposture_seed0_20260723/"
             "controller_inputs_v4_ascent/ascent/config.json"
@@ -526,8 +526,8 @@ class StageNextV3Controller(Controller):
                 "--ascent-entry-bank", acquisition / "fresh_ascent_entries.pkl",
                 "--dynamic-apex-bank", acquisition / "dynamic_apex_proposals.pkl",
                 "--acquisition-report", acquisition / "report.json",
-                "--output-root", RUN / "ascent/late_discovery/curriculum",
-            ], RUN / "ascent/late_discovery/curriculum.log", [curriculum])
+                "--output-root", RUN / "ascent/late_discovery/curriculum_v2",
+            ], RUN / "ascent/late_discovery/curriculum_v2.log", [curriculum])
         self.save(
             current_stage="late_ascent_discovery_training",
             last_completed_action="prepare_late_ascent_discovery",
@@ -550,7 +550,7 @@ class StageNextV3Controller(Controller):
         if not (train / "policy/params.pkl").exists():
             self._worker(f"late_ascent_train_b{block}", [
                 PYTHON, "-u", "-m", "cli.train", "--stage", "flight",
-                "--bank", RUN / f"ascent/late_discovery/curriculum/block_{block}_reset_bank.pkl",
+                "--bank", RUN / f"ascent/late_discovery/curriculum_v2/block_{block}_reset_bank.pkl",
                 "--config", config, "--run", train,
                 "--resume", self.state["late_ascent_resume"],
                 "--timesteps", "25600", "--num-envs", "80",

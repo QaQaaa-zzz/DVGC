@@ -50,7 +50,10 @@ def main() -> None:
         for row in rows:
             row["training_only"] = False
             row["bootstrap_eligible"] = True
-            row["reset_source"] = "late_ascent_discovery_curriculum"
+            # The environment has a frozen reset-source telemetry enum.
+            # Late-Ascent is still the current Flight curriculum source; the
+            # finer discovery identity remains in artifact_role/block fields.
+            row["reset_source"] = "flight_curriculum"
             row["curriculum_block"] = block
         path = root / f"block_{block}_reset_bank.pkl"
         SnapshotBank(rows, {
