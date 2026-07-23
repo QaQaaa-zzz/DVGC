@@ -1,5 +1,41 @@
 # DVGC Experiment State
 
+- 2026-07-23 Takeoff reset authenticity correction is current (`63562c9`,
+  watchdog `fdecf4a`).  Runtime gate v4 PASS; XML
+  `d7e9f43...ce794c`, key `initial_state`, named qpos hip/knee addresses
+  10/11 and values -1.2/2.5; actuators map to hip/knee with +/-50 N m.
+  Old Takeoff policy/results (6/6, 307/480 and reachability model v1) are
+  `superseded_by_takeoff_reset_correction` and are not current proposal or
+  label evidence.
+- New Takeoff bank v3 `ccbfe93...933ce`: 120/120 legal, 60 XML-key canonical
+  plus 60 adjacent-reference-aligned compressed resets.  Body contact,
+  premature Ascent entry and five-step reset-shock failures are all 0;
+  all 120 have valid wheel support.  Old/new hip ranges are
+  [-1.063,-0.991] -> [-1.299,-1.200], knee
+  [1.663,1.862] -> [2.326,2.500].  Policy-free scan reaches Ascent on 6/12
+  sampled states (all reference-aligned); frozen old-policy current-protocol
+  baseline reaches 3/6 and 12/24 branches.
+- New independent Takeoff pi_T (`takeoff-20260723-140623`, seed 103,
+  6,400 steps) reaches 2/6 fixed states and 8/24 branches, all in the
+  reference-aligned subset; no NaN/OOM/timeout.  Fresh 120 x 4 label pilot:
+  196/480 branches, 49/120 unique positives, canonical 0/60 and
+  reference-aligned 49/60; failures are 284 missed-liftoff deadlines.
+  Reachability model v3 `e40235c...c0c2a5` is current-protocol but its near
+  perfect held-out metrics primarily separate the two reset classes and do
+  not establish broad Takeoff capability.
+- Stage reset audit v2: Ascent has 6/6 exact reference-aligned anchors
+  (indices 131--172), correct Flight phase, no t0 Apex entry and no five-step
+  shock.  Its new independent 6,400-step pi_U remains 0/6 and 0/24
+  (pitch/roll 14/10; timeout/nonfinite 0).  Apex has only four exact legal,
+  non-premature anchors (217--220); Apex PPO is not authorized until bounded
+  correlated local support supplies the two missing authentic states.
+- Current stage is `reset_authenticity_followup`: Takeoff proposal/labels are
+  regenerated and isolated; next action is diagnose canonical missed-liftoff
+  versus the better frozen-old-policy baseline, and construct two validated
+  local Apex reset proposals before any Apex PPO.  No controller/worker is
+  active; watchdog pointer remains explicitly QUIESCENT and will not restart
+  the superseded controller.
+
 - 2026-07-20 route correction: old `flight_apex_expert_chain_blocker` is
   preserved only as `superseded_apex_to_c_l_objective`; global status is
   `stage_reachability_acquisition`.  Active local responsibilities are
@@ -24,6 +60,24 @@
   failure remains nonblocking; Ascent and Takeoff local pilots continue and
   all outputs remain controller proposals/labels until final shared-policy
   recertification.
+- Stage-next bounded acquisition result (`23718e5`, `19eac43`, `c3ea8d0`,
+  `b04fba7`): runtime gate PASS/current; no NaN/OOM/timeout/provenance error.
+  Apex pi_X stopped after 2 x 25,600 steps at 0/20 unique and 0/80 branches
+  per block (pitch/roll 73/7 then 76/4).  Ascent pi_U likewise stopped after
+  2 x 25,600 at 0/6 and 0/24 per block (all pitch-limit).  Both are
+  controller-support gaps/negative-under-current-bank evidence only.
+- Takeoff pi_T passed after one 25,600-step block: fixed pilot 6/6 unique,
+  18/24 branches; policy `fc051ae...ad6d6f`.  A separate physically validated
+  proposal pool contains 17 reference anchors + 103 constrained local states,
+  hash `e7275df...b82d7d2`.  The 120-state x 4-branch label pilot gives 307/480
+  next-stage entries across 91/120 unique states (63.958%); labels are
+  positive/boundary/unknown = 56/35/29.  Failures: missed liftoff 131, pitch
+  36, roll 5, positive-pitch gate 1; timeout/nonfinite = 0.
+- Active controller proposal bank v2 contains only the successful Takeoff
+  expert.  Failed Apex/Ascent policies are isolated as attempted evidence and
+  cannot become teachers, positive generators, provisional envelopes, or JEL.
+  Pipeline is at a valid research `gate_pause`: bounded Apex and Ascent local
+  controller support is exhausted after independent Takeoff acquisition.
 
 - 2026-07-19 route supersession: the handoff-first/descent-Final route is
   atomically closed as `SUPERSEDED_BY_STAGE_REACHABILITY_PROTOCOL`.  Old
