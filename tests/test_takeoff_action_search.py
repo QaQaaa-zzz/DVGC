@@ -10,3 +10,4 @@ def test_action_search_is_policy_free_and_checks_real_wheel_clearance():
     assert "hip_full_knee_half" in text
     assert "reference_time_aligned" in text
     assert "row.get(\"reference_index\"" in text
+    assert "source_reference_index" in text

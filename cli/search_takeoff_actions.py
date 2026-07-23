@@ -49,7 +49,12 @@ def reference_action_sequence(reference: pd.DataFrame, row: dict, horizon: int):
     policy.  Candidate provenance chooses the first row; no success outcome is
     consulted.
     """
-    start = int(row.get("reference_index", 0))
+    start = row.get("reference_index")
+    if start is None:
+        start = row.get("source_reference_index")
+    if start is None:
+        start = row.get("source_index", 0)
+    start = int(start)
     start = max(0, min(start, len(reference) - 1))
     actions = []
     for tick in range(horizon):
