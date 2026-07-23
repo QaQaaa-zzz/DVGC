@@ -14,21 +14,31 @@ from dvgc.config import file_sha256
 from dvgc.runtime import save_json
 
 
-def _even_unique(rows: list[dict], count: int) -> list[dict]:
+def _heldout_parent_states(rows: list[dict], count: int, parent_count: int = 4) -> list[dict]:
     by_parent: dict[int, dict] = {}
+    groups: dict[int, list[dict]] = {}
     for row in rows:
         by_parent.setdefault(int(row.get("reference_index", -1)), row)
-    values = list(by_parent.values())
+        groups.setdefault(int(row.get("reference_index", -1)), []).append(row)
+    per_parent = count // parent_count
+    parents = sorted(parent for parent, values in groups.items() if len(values) >= per_parent)
     if len(rows) < count:
         raise ValueError(f"need {count} states, found {len(rows)}")
-    chosen = ([values[int(i)] for i in np.linspace(0, len(values) - 1, count, dtype=int)]
-              if len(values) >= count else list(values))
-    used = {row["id"] for row in chosen}
-    remaining = [row for row in rows if row["id"] not in used]
-    if len(chosen) < count:
-        chosen += [remaining[int(i)] for i in np.linspace(
-            0, len(remaining) - 1, count - len(chosen), dtype=int
-        )]
+    if len(parents) < parent_count:
+        raise ValueError(f"need {parent_count} held-out parents, found {len(parents)}")
+    heldout = [parents[int(i)] for i in np.linspace(
+        0, len(parents) - 1, parent_count, dtype=int
+    )]
+    chosen = []
+    for parent in heldout:
+        values = groups[parent]
+        if len(values) < per_parent:
+            raise ValueError(f"parent {parent} has only {len(values)} states")
+        chosen.extend(values[int(i)] for i in np.linspace(
+            0, len(values) - 1, per_parent, dtype=int
+        ))
+    if len(chosen) != count:
+        raise ValueError("count must divide held-out parent count")
     return chosen
 
 
@@ -51,20 +61,20 @@ def main() -> None:
         excluded.update(str(row["id"]) for row in prior.records)
         prior_hashes.append(file_sha256(path))
     eligible = [row for row in source.records if str(row["id"]) not in excluded]
-    canonical = _even_unique(
+    canonical = _heldout_parent_states(
         [row for row in eligible if row.get("candidate_kind") == "canonical_compressed"], 12
     )
-    aligned = _even_unique(
+    aligned = _heldout_parent_states(
         [row for row in eligible if row.get("candidate_kind") == "reference_aligned_compressed"], 12
     )
     rows = [copy.deepcopy(row) for pair in zip(canonical, aligned) for row in pair]
     contract = {
-        "version": "takeoff_balanced_eval_v1",
+        "version": "takeoff_balanced_eval_v2",
         "source_bank_sha256": file_sha256(args.bank),
         "reset_protocol_sha256": source.metadata["reset_protocol_sha256"],
         "strata": {"canonical_compressed": 12, "reference_aligned_compressed": 12},
         "branches_per_state": 4,
-        "selection": "parent-diverse evenly spaced after prior-training-ID exclusion",
+        "selection": "four held-out reference parents per stratum, three states per parent",
         "future_training_excludes_evaluation_reference_parents": True,
         "historical_policies_predate_this_frozen_split": True,
         "prior_training_bank_sha256": prior_hashes,

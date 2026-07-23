@@ -7,6 +7,7 @@ def test_v3_eval_contract_is_balanced_and_training_disjoint():
     assert '"reference_aligned_compressed": 12' in text
     assert "excluded.update" in text
     assert "accepted_and_frozen_reset_protocol" in text
+    assert "parent_count: int = 4" in text
 
 
 def test_takeoff_controller_eval_reports_strata_union_and_reward_breakdown():

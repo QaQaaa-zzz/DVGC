@@ -13,8 +13,8 @@ from dvgc.runtime import save_json
 
 RUN = Path(os.environ.get("STAGE_NEXT_V3_RUN", "runs/stage_next_reset_v3_seed0_20260723"))
 TAKEOFF_BANK = Path("runs/stage_next_takeoff_keyposture_seed0_20260723/takeoff_reset_bank_v3_120.pkl")
-TAKEOFF_EVAL = RUN / "takeoff/fixed_balanced_eval_v1_24.pkl"
-BASELINE = RUN / "takeoff/controller_bank_baseline_24x4_r3.json"
+TAKEOFF_EVAL = RUN / "takeoff/fixed_balanced_eval_v2_24.pkl"
+BASELINE = RUN / "takeoff/controller_bank_baseline_v2_24x4.json"
 OLD_TAKEOFF = Path("runs/stage_next_bootstrap_seed0_20260720/takeoff/blocks/block_1_025600/train/policy")
 NEW_TAKEOFF = Path("runs/stage_next_takeoff_keyposture_seed0_20260723/takeoff/local_expert_006400/train/policy")
 TAKEOFF_CONFIG = Path("runs/stage_next_takeoff_keyposture_seed0_20260723/controller_inputs_v4_balanced/takeoff/config.json")

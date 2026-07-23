@@ -106,7 +106,7 @@ def main() -> None:
 
     bank = SnapshotBank.load(args.bank)
     contract = bank.metadata.get("evaluation_contract", {})
-    if contract.get("version") != "takeoff_balanced_eval_v1":
+    if contract.get("version") not in ("takeoff_balanced_eval_v1", "takeoff_balanced_eval_v2"):
         raise SystemExit("fixed balanced Takeoff evaluation bank required")
     cfg = load_config(args.config, {
         "training_stage": "takeoff", "use_bank_resets": False,
