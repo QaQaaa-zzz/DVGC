@@ -16,8 +16,10 @@ def knee_position_target(
     """Returns clipped action, incremental target, and requested target change.
 
     Sign convention:
-      * positive action -> smaller XML knee angle -> flexion;
-      * negative action -> larger XML knee angle -> extension;
+      * positive action -> smaller XML knee angle.  For the authoritative
+        preload key (knee=2.5), this is the launch-extension direction seen
+        in the successful reference trajectory;
+      * negative action -> larger XML knee angle, toward the contracted key;
       * zero action -> hold the current knee position.
 
     The function changes only the controller target.  It never changes the XML

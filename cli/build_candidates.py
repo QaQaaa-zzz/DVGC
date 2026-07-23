@@ -11,11 +11,20 @@ from dvgc.config import STAGE_ID, config_hash, file_sha256, load_config
 from dvgc.env import END_REASON
 from dvgc.env import OrangeBikeDVGC
 from dvgc.reference import ReferenceTrajectory
+from dvgc.reference_joints import stage_joint_state
 
 
-def _seed(row, phase, cfg, training_only, rng, angular_velocity=None):
+def _seed(row, phase, cfg, training_only, rng, joint_state, angular_velocity=None):
     euler=np.deg2rad([row.roll_angle,row.pitch_angle,row.yaw_angle]).astype(np.float32)
-    common={"euler":euler,"steer":0.0,"hip":float(np.clip(row.hip_position,cfg.hip_min,cfg.hip_max)),"knee":float(np.clip(row.knee_position,cfg.knee_min,cfg.knee_max)),"linear_velocity":np.asarray([row.vel_x,row.vel_y,row.vel_z],np.float32),"angular_velocity":np.zeros(3,np.float32) if angular_velocity is None else np.asarray(angular_velocity,np.float32)}
+    common={
+        "euler":euler,"steer":0.0,
+        "hip":float(np.clip(joint_state.hip,cfg.hip_min,cfg.hip_max)),
+        "knee":float(np.clip(joint_state.knee,cfg.knee_min,cfg.knee_max)),
+        "hip_velocity":float(joint_state.hip_velocity),
+        "knee_velocity":float(joint_state.knee_velocity),
+        "linear_velocity":np.asarray([row.vel_x,row.vel_y,row.vel_z],np.float32),
+        "angular_velocity":np.zeros(3,np.float32) if angular_velocity is None else np.asarray(angular_velocity,np.float32),
+    }
     if phase in ("flight","landing"):
         common.update(seed_type="system_com",desired_com=np.asarray([row.pos_x,row.pos_y,row.pos_z],np.float32))
     else:
@@ -25,9 +34,9 @@ def _seed(row, phase, cfg, training_only, rng, angular_velocity=None):
     return common
 
 
-def _landing_seed(row, cfg, rng):
+def _landing_seed(row, cfg, rng, joint_state):
     """Perturb a reference envelope into a low-height descending proposal."""
-    seed=_seed(row,"landing",cfg,False,rng)
+    seed=_seed(row,"landing",cfg,False,rng,joint_state)
     seed["desired_com"][0]=np.clip(
         seed["desired_com"][0]+rng.uniform(-cfg.landing_candidate_x_jitter,cfg.landing_candidate_x_jitter),
         cfg.step_front_x+cfg.valid_landing_min_past_edge,
@@ -108,6 +117,16 @@ def main():
     p.add_argument("--attempt-budget",type=int,default=0)
     p.add_argument("--allow-partial",action="store_true")
     p.add_argument("--dedup-distance",type=float,default=.06)
+    p.add_argument(
+        "--validation-steps", type=int, default=0,
+        help="Flight-only short rollout length; 0 uses the configured formal value.",
+    )
+    p.add_argument(
+        "--flight-region", choices=("ascent","apex","descent"), default=None,
+        help="Optional stage-reset pilot filter; formal all-Flight banks omit it.",
+    )
+    p.add_argument("--reference-index-min",type=int,default=None)
+    p.add_argument("--reference-index-max",type=int,default=None)
     a=p.parse_args(); rng=np.random.default_rng(a.seed)
     cfg=load_config(a.config,{"training_stage":a.phase,"use_bank_resets":False,"domain_randomization":False,"obs_noise_enable":False})
     env=OrangeBikeDVGC(cfg,snapshot_bank=SnapshotBank()); bank=SnapshotBank.load(a.bank)
@@ -131,10 +150,37 @@ def main():
         "landing":(anchors.landing_start,anchors.recovery_start),
     }
     lo,hi=bounds[a.phase]
+    sampling_indices=list(range(lo,hi+1))
+    range_prefilter_rejections=0
+    if a.phase!="takeoff":
+        sampling_indices=[
+            idx for idx in sampling_indices
+            if (
+                cfg.hip_min<=float(df.iloc[idx].hip_position)<=cfg.hip_max
+                and cfg.knee_min<=float(df.iloc[idx].knee_position)<=cfg.knee_max
+            )
+        ]
+        range_prefilter_rejections=(hi-lo+1)-len(sampling_indices)
+    if a.phase=="flight" and a.flight_region:
+        sampling_indices=[
+            idx for idx in sampling_indices
+            if _flight_region(
+                idx,anchors,int(cfg.flight_candidate_apex_window_steps)
+            )==a.flight_region
+        ]
+    if a.reference_index_min is not None:
+        sampling_indices=[idx for idx in sampling_indices if idx>=a.reference_index_min]
+    if a.reference_index_max is not None:
+        sampling_indices=[idx for idx in sampling_indices if idx<=a.reference_index_max]
+    if not sampling_indices:
+        raise SystemExit(f"No {a.phase} reference rows satisfy authoritative XML joint ranges")
     attempts=0; accepted_before=len(bank.records_for_phase(a.phase)); duplicates=0
     semantic_rejects=0; relaxation_rejects=0; nonfinite_rejects=0
     physical_failures=0; timeouts=0; end_reasons={}; impact_steps=[]; vertical_corrections=[]; clearances=[]
-    rejection_counts={}; region_proposals={name:0 for name in ("ascent","apex","descent")}
+    rejection_counts={}
+    if range_prefilter_rejections:
+        rejection_counts["reference_joint_outside_authoritative_xml_range_prefilter"] = range_prefilter_rejections
+    region_proposals={name:0 for name in ("ascent","apex","descent")}
     region_accepted={name:0 for name in region_proposals}
     clearance_solver=None
     if a.phase=="flight":
@@ -149,11 +195,23 @@ def main():
     if attempt_budget<=0: raise SystemExit("--attempt-budget must be positive")
     if float(a.dedup_distance)<=0: raise SystemExit("--dedup-distance must be positive")
     while len(bank.records_for_phase(a.phase))<a.target and attempts<attempt_budget:
-        attempts+=1; idx=int(rng.integers(lo,hi+1)); row=df.iloc[idx]
+        attempts+=1; idx=int(rng.choice(sampling_indices)); row=df.iloc[idx]
         training_only=(a.phase=="takeoff" and rng.random()<a.aux_fraction)
         region=_flight_region(idx,anchors,int(cfg.flight_candidate_apex_window_steps)) if a.phase=="flight" else None
         if region: region_proposals[region]+=1
-        seed=_landing_seed(row,cfg,rng) if a.phase=="landing" else _seed(row,a.phase,cfg,training_only,rng,angular_velocities[idx])
+        joints=stage_joint_state(env.mj_model,row,a.phase)
+        if a.phase!="takeoff" and not (
+            cfg.hip_min <= joints.hip <= cfg.hip_max
+            and cfg.knee_min <= joints.knee <= cfg.knee_max
+        ):
+            rejection_counts["reference_joint_outside_authoritative_xml_range"] = (
+                rejection_counts.get(
+                    "reference_joint_outside_authoritative_xml_range", 0
+                )
+                + 1
+            )
+            continue
+        seed=_landing_seed(row,cfg,rng,joints) if a.phase=="landing" else _seed(row,a.phase,cfg,training_only,rng,joints,angular_velocities[idx])
         state=env.reset_from_com_seed(seed,jax.random.PRNGKey(a.seed+attempts))
         if a.phase=="flight":
             # The reference joint rates and all rigid-body velocity/orientation
@@ -184,7 +242,12 @@ def main():
             if int(np.asarray(jax.device_get(state.info["phase"])))!=STAGE_ID["flight"]:
                 semantic_rejects+=1; rejection_counts["non_flight_phase"] = rejection_counts.get("non_flight_phase",0)+1; continue
             probe=state; failed=False
-            for _ in range(int(cfg.flight_candidate_validation_steps)):
+            validation_steps=(
+                int(a.validation_steps)
+                if int(a.validation_steps)>0
+                else int(cfg.flight_candidate_validation_steps)
+            )
+            for _ in range(validation_steps):
                 probe=step(probe,zero)
                 if not _finite_state(probe):
                     nonfinite_rejects+=1; rejection_counts["short_rollout_nonfinite"] = rejection_counts.get("short_rollout_nonfinite",0)+1; failed=True; break
@@ -240,7 +303,22 @@ def main():
             if relaxation_failed:
                 continue
         rec=env.snapshot_record(state,a.phase)
-        rec.update({"training_only":training_only,"bootstrap_eligible":True,"candidate_kind":"reference_envelope_impact" if a.phase=="landing" else "velocity_seed" if training_only else "reference_envelope","reference_index":idx})
+        rec.update({
+            "training_only":training_only,"bootstrap_eligible":True,
+            "candidate_kind":(
+                "reference_envelope_impact" if a.phase=="landing"
+                else "velocity_seed" if training_only
+                else "reference_anchor" if a.phase=="flight"
+                else "reference_envelope"
+            ),
+            "reference_index":idx,
+            "joint_state_source":joints.source,
+            "joint_state_reference_index":None if a.phase=="takeoff" else idx,
+            "joint_state_hip":float(joints.hip),
+            "joint_state_knee":float(joints.knee),
+            "joint_state_hip_velocity":float(joints.hip_velocity),
+            "joint_state_knee_velocity":float(joints.knee_velocity),
+        })
         if a.phase=="flight":
             rec.update({
                 "flight_subinterval":region,
@@ -285,6 +363,10 @@ def main():
         "candidate_dedup_distance":float(a.dedup_distance),
         "candidate_build_history":history,
         "candidate_generation":{
+            "joint_state_contract":{
+                "takeoff":"XML key initial_state hip/knee position and velocity; proposal root pose retained",
+                "other_phases":"corresponding reference trajectory hip/knee position and velocity",
+            },
             "landing":"reference envelope perturbation -> XML wheel-clearance placement -> real IMU impact snapshot -> zero-action relaxation",
             "landing_clearance_m":[float(cfg.landing_candidate_clearance_min),float(cfg.landing_candidate_clearance_max)],
             "landing_descend_vz_mps":[-float(cfg.landing_candidate_descend_vz_max),-float(cfg.landing_candidate_descend_vz_min)],
@@ -294,7 +376,11 @@ def main():
             "flight_clearance_margin_m":float(cfg.flight_candidate_clearance_margin),
             "flight_max_root_z_correction_m":float(cfg.flight_candidate_max_root_z_correction),
             "flight_com_z_envelope_tolerance_m":float(cfg.flight_candidate_com_z_envelope_tolerance),
-            "flight_validation_steps":int(cfg.flight_candidate_validation_steps),
+            "flight_validation_steps":(
+                int(a.validation_steps)
+                if int(a.validation_steps)>0
+                else int(cfg.flight_candidate_validation_steps)
+            ),
         },
         **contract,
     })
@@ -310,11 +396,17 @@ def main():
     region_acceptance={name:{"accepted":accepted_regions[name],"proposals":aggregate_region_proposals[name],"acceptance_rate":float(accepted_regions[name]/aggregate_region_proposals[name]) if aggregate_region_proposals[name] else 0.0} for name in region_proposals}
     coverage_flags={}
     if a.phase=="flight":
-        coverage_flags={
-            "ascent":accepted_regions["ascent"]>=int(np.ceil(a.target*cfg.flight_candidate_min_ascent_fraction)),
-            "apex":accepted_regions["apex"]>=int(np.ceil(a.target*cfg.flight_candidate_min_apex_fraction)),
-            "descent":accepted_regions["descent"]>=int(np.ceil(a.target*cfg.flight_candidate_min_descent_fraction)),
-        }
+        if a.flight_region:
+            coverage_flags={
+                a.flight_region:
+                    accepted_regions[a.flight_region]>=a.target-accepted_before
+            }
+        else:
+            coverage_flags={
+                "ascent":accepted_regions["ascent"]>=int(np.ceil(a.target*cfg.flight_candidate_min_ascent_fraction)),
+                "apex":accepted_regions["apex"]>=int(np.ceil(a.target*cfg.flight_candidate_min_apex_fraction)),
+                "descent":accepted_regions["descent"]>=int(np.ceil(a.target*cfg.flight_candidate_min_descent_fraction)),
+            }
     coverage_ok=all(coverage_flags.values()) if coverage_flags else True
     status="PASS" if reached and coverage_ok else "PARTIAL" if a.allow_partial and not reached else "FAIL"
     corrections=[float(row["root_z_shift_m"]) for row in flight_rows]

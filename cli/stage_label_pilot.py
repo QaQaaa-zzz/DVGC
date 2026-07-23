@@ -28,7 +28,9 @@ def sample_from_state(env,state,previous_vz):
  snap.update({
   "canonical_phase":snap["source_phase"],"previous_vz":float(previous_vz),
   "apex_seen":bool(int(np.asarray(jax.device_get(state.info.get('apex_seen',0))))),
-  "dual_wheel_airborne":bool(snap['physical_feature'][2] > (float(env._config.step_top_z) if float(env._config.step_front_x)<=snap['physical_feature'][0]<=float(env._config.step_back_x) else 0.0)+float(env._config.nominal_base_z_ground)+float(env._config.imu_airborne_height_margin)),
+  # Use the environment's geometry-derived, velocity-synchronised event.
+  # Root/CoM height alone can mislabel a grounded or wheelie reset as airborne.
+  "dual_wheel_airborne":bool(float(np.asarray(jax.device_get(state.metrics["event/dual_wheel_liftoff"])))>.5),
   "first_valid_landing":bool(int(np.asarray(jax.device_get(state.info['had_valid_landing'])))),
   "support":bool(int(np.asarray(jax.device_get(state.info['contact_age'])))>0),
   "recovery_count":int(np.asarray(jax.device_get(state.info['recovery_count']))),

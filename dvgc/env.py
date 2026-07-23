@@ -534,10 +534,11 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
 
             q_target = clip(q_current - action_3 * delta_q, q_min, q_max)
 
-        Therefore positive action decreases the knee angle (flexion), negative
-        action increases it (extension), and zero action holds the current knee
-        position.  Both signs remain proportional until a real XML joint limit
-        is reached.
+        Therefore positive action decreases the knee angle, which is the
+        launch-extension direction from the authoritative compressed key;
+        negative action increases it back toward the compressed upper limit,
+        and zero action holds the current knee position.  Both signs remain
+        proportional until a real XML joint limit is reached.
         """
         cfg = self._config
         return knee_position_target(
@@ -1136,6 +1137,10 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         qvel = qvel.at[self._qvel0 + 3:self._qvel0 + 6].set(ang)
         qvel = qvel.at[self._joint_qvel["rearwheel_joint"]].set(lin[0] / cfg.wheel_roll_radius)
         qvel = qvel.at[self._joint_qvel["frontwheel_joint"]].set(lin[0] / cfg.wheel_roll_radius)
+        if "hip_velocity" in seed:
+            qvel = qvel.at[self._joint_qvel["hip_joint"]].set(float(seed["hip_velocity"]))
+        if "knee_velocity" in seed:
+            qvel = qvel.at[self._joint_qvel["knee_joint"]].set(float(seed["knee_velocity"]))
         ctrl = self._action_to_ctrl(self._neutral_action, qpos[self._joint_qpos["knee_joint"]])
         return self._state_from_values(qpos, qvel, ctrl, rng, phase, had_airborne, jp.zeros((), jp.int32), jp.zeros((), jp.int32))
 
