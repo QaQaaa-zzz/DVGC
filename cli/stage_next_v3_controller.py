@@ -464,6 +464,43 @@ class StageNextV3Controller(Controller):
                   next_decision="acquire_additional_ascent_apex_trajectory_parents",
                   terminal_state=None, research_gate_valid=False)
 
+    def acquire_ascent_apex_parents(self):
+        root = RUN / "ascent/independent_parent_acquisition_v1"
+        report = root / "report.json"
+        if not report.exists():
+            self._worker("acquire_ascent_apex_trajectory_parents", [
+                PYTHON, "-u", "-m", "cli.acquire_ascent_apex_parents",
+                "--takeoff-bank", TAKEOFF_BANK,
+                "--reference-ascent-bank", RUN / "ascent/reverse_diagnostic_v4_6.pkl",
+                "--descent-support-bank", DESCENT_SUPPORT,
+                "--policy", f"old_takeoff={OLD_TAKEOFF}",
+                "--policy", f"new_takeoff={NEW_TAKEOFF}",
+                "--policy", f"canonical_specialist={self.state['takeoff_specialist_best']}",
+                "--output-root", root, "--target-parents", "12",
+                "--round-b-proposals", "96", "--seed", "10610000",
+            ], root / "controller.log", [
+                report, root / "fresh_ascent_entries.pkl",
+                root / "dynamic_apex_proposals.pkl",
+            ])
+        payload = json.loads(report.read_text())
+        parent_count = int(payload["successful_parent_count"])
+        self.state["stage_status"]["ascent"]["independent_parent_acquisition"] = {
+            "report": str(report),
+            "fresh_ascent_entries": payload["fresh_ascent_entries"],
+            "successful_parent_count": parent_count,
+            "dynamic_apex_snapshots": payload["dynamic_apex_snapshots"],
+            "stage_local_blocker": payload["stage_local_blocker"],
+        }
+        self.save(
+            current_stage=("late_ascent_discovery_authorized"
+                           if parent_count >= 2 else "ascent_multi_parent_controller_gap"),
+            last_completed_action="acquire_ascent_apex_trajectory_parents",
+            next_decision=("build_dynamic_apex_bank"
+                           if parent_count >= 2 else "stage_local_gate_no_unbounded_ppo"),
+            report_milestone_ready=True, terminal_state=None,
+            research_gate_valid=False,
+        )
+
     def loop(self):
         while True:
             self.save()
@@ -494,8 +531,18 @@ class StageNextV3Controller(Controller):
             elif stage == "takeoff_frozen_label_pilot": self.takeoff_labels()
             elif stage == "reachability_model_pending": self.reachability_model()
             elif stage == "stage_local_blockers_recorded":
-                self.save()
-                time.sleep(30)
+                if self.state.get("next_decision") == "acquire_additional_ascent_apex_trajectory_parents":
+                    self.save(
+                        current_stage="mine_independent_ascent_apex_parents",
+                        next_decision="reproduce_parent_131_then_round_a_b",
+                    )
+                    continue
+                self.save(); time.sleep(30)
+            elif stage == "mine_independent_ascent_apex_parents":
+                self.acquire_ascent_apex_parents()
+            elif stage in ("late_ascent_discovery_authorized",
+                           "ascent_multi_parent_controller_gap"):
+                self.save(); time.sleep(30)
             elif stage == "build_apex_reset_bank_v3_r3": self.apex_bank_r3()
             elif stage == "apex_bounded_support_search_r3": self.apex_search_r3()
             else:

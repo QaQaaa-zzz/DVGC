@@ -81,3 +81,22 @@ def test_frozen_takeoff_labels_use_all_policy_controllers_and_check_source_mix()
     assert "both_strata_contain_success_and_failure_branches" in analysis
     assert "negative_under_frozen_controller_bank" in analysis
     assert "train_source_stratified_takeoff_reachability" in controller
+
+
+def test_ascent_parent_acquisition_uses_independent_lineage_and_bounded_rounds():
+    text = Path("cli/acquire_ascent_apex_parents.py").read_text()
+    assert '"upstream_source_parent_id"' in text
+    assert '"reset_protocol_hash"' in text
+    assert '"initial_state_id"' in text
+    assert '"dynamics_seed"' in text
+    assert '"round": "A"' in text and '"round": "B"' in text
+    assert "ascent_multi_parent_controller_gap" in text
+    assert "late_ascent_training_authorized" in text
+    assert "certified_tube" in text and "safe_claim_allowed" in text
+
+
+def test_v3_controller_does_not_launch_ascent_ppo_without_two_parents():
+    text = Path("cli/stage_next_v3_controller.py").read_text()
+    assert "mine_independent_ascent_apex_parents" in text
+    assert "if parent_count >= 2" in text
+    assert "stage_local_gate_no_unbounded_ppo" in text
