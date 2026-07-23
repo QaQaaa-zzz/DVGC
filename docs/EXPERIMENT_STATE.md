@@ -1,5 +1,61 @@
 # DVGC Experiment State
 
+- 2026-07-23 corrected-reset stage-next acquisition milestone (`f56b9ec`,
+  `bb1b2f8`, `e0b24f9`, `fab17d9`, `854cae3`, `92e5f5d`, `b430547`,
+  `f036338`, `f4846c0`, `e00eb99`, `9f86e3d`).  Takeoff reset v3 remains
+  frozen at `ccbfe93...9933ce`; authoritative XML, frozen Landing policy/C_L
+  and matcher were not changed.  Fixed Takeoff evaluation bank v2
+  `798f2e7...6d514` has 12 canonical + 12 reference-aligned states from four
+  held-out parents/stratum; all specialist training banks have zero parent
+  overlap with it.
+- Fresh v2 baseline: old Takeoff policy covers canonical/reference =
+  9/12 and 6/12; corrected-reset pi_T covers 0/12 and 9/12; successful
+  bounded sequences cover 1/12 and 9/12.  Their unique union is 9/12 and
+  9/12.  Success return is about 8.05--8.08 versus missed-liftoff
+  -2.18-- -1.55; the stage-entry event is present and one-shot.
+- Canonical specialist was initialized from the old Takeoff policy and trained
+  as one continuation.  Fixed evaluations at 25,600/51,200/76,800 steps are
+  canonical/reference unique = 11/5, 10/4 and 8/3.  Two consecutive
+  canonical stagnations stop before block 4.  Block 1 is the selected best
+  (`9f834a3...679713`); final fresh frozen-bank evaluation gives
+  old/new/specialist policy union plus bounded-sequence union =
+  canonical 10/12, reference 9/12.  All three blocks completed without
+  NaN/OOM/timeout; first-block KL was high (0.988), then 0.0447/0.0461.
+- Frozen Takeoff controller-bank labels use 120 states x 3 policies x 4
+  branches = 1,440 rollouts.  Next-stage entries are 862/1,440 (59.86%):
+  canonical 403/720 and reference-aligned 459/720.  Labels are boundary 119 /
+  positive 1; both strata contain success and failure branches, but neither
+  contains an all-controller-fail state.  The old 307/480 and corrected
+  single-controller 196/480 labels remain superseded/conditional and are not
+  mixed with this bank.
+- Conditional Takeoff reachability model v4
+  `8234472...0df3c`, 16 physical features only, excludes candidate kind,
+  reference index and controller/policy identity.  Leave-one-parent-out:
+  Brier/ECE = 0.007735/0.006919; high-reach precision/recall =
+  0.9245/0.9333.  Canonical precision/recall = 0.8947/0.9444 and
+  reference-aligned = 0.9592/0.9216.  This is a proposal-support conditional
+  model, not a Tube/JEL and not evidence of physical negatives.
+- Apex reset construction exhausted three bounded validation rounds without
+  weakening gates.  R1/R2 retain four reset-valid reference anchors and no
+  dynamic states.  The action-aligned reset-shock correction in R3 captures
+  three dynamically reached Apex states from reference parent 131; final bank
+  `68352a3...fe247` has 7 states, only one dynamic parent, and FAILs the
+  required 16--32 states / >=4 parents.  Apex->Descent bounded search on all
+  seven gives 0/7 unique, pitch/roll = 25/45, support distance
+  min/p50/max = 4.642/43.897/64.977.  Apex PPO was never started.
+- Ascent reverse diagnostic uses exact aligned indices early
+  131/140/144 and late 160/162/172.  Ten bounded/policy controllers find one
+  early-parent Ascent->Apex success (index 131, hip-full/knee-half, tick 15)
+  and 0/3 late successes; remaining causes are roll/pitch = 31/28.  This is a
+  stage-local controller-support blocker, not physical unreachability.
+- Dynamic snapshots exposed `int(None)` in apex-latch restore; `92e5f5d`
+  fixes it and full runtime gate PASS/current at source fingerprint
+  `ce02673...dc96b` (86.0 s).  Reference-action probes now use
+  `source_reference_index` for dynamically reached states.  Controller is
+  active with no worker at `stage_local_blockers_recorded`; next automatic
+  research action is acquire additional independent Ascent/Apex trajectory
+  parents.  No global gate_pause and no Apex/Ascent PPO are active.
+
 - 2026-07-23 Takeoff reset authenticity correction is current (`63562c9`,
   watchdog `fdecf4a`).  Runtime gate v4 PASS; XML
   `d7e9f43...ce794c`, key `initial_state`, named qpos hip/knee addresses
