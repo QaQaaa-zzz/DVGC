@@ -1,5 +1,45 @@
 # DVGC Experiment State
 
+- 2026-07-23 independent Ascent-parent acquisition and bounded late-Ascent
+  discovery (`622db8a`, `d198319`, `797f5c2`).  Frozen Takeoff bank/config/XML,
+  canonical C_L and Landing policy remain unchanged.  Parent-131 reproduces at
+  Apex tick 15 under both deterministic/fresh seed replays; 140/144 fail by
+  roll and 160/162/172 by pitch/roll under the identical control.
+- Fresh Takeoff continuation generated 12 real Flight-confirmed Ascent entries
+  from 12 independent upstream parents, balanced 6 canonical + 6
+  reference-aligned.  Round A evaluated 820 bounded local proposals and found
+  valid generic Apex entries from two distinct reference-aligned parents;
+  Round B was correctly skipped.  The successful controls were
+  `(hip,knee,start,duration)=(1.0,.65,0,16)` at tick 27 and
+  `(.7,.245,0,16)` at tick 7.  Five dynamic Apex snapshots passed validation;
+  one additional snapshot was rejected by the five-step reset-shock gate.
+- BC on 34 action/observation examples from those two parents reduced action
+  MSE from 0.1905 to 2.57e-6.  Late-Ascent PPO then ran as one continuation for
+  two 25,600-step blocks.  Curriculum evaluation showed 55% then 40% generic
+  Apex entry, but the fixed parent-disjoint reference set remained 0/6 and
+  0/6 (block-2 early/late failures: roll 2, pitch 4).  The required two-block
+  parent/unique stagnation rule stopped training; block 1 is retained as the
+  tie-broken best proposal checkpoint.  No NaN/OOM/timeout occurred; block
+  KL/value loss were 0.214/0.804 and 3.406/0.123, indicating large second-block
+  policy drift without held-out coverage gain.
+- Dynamic Apex bank v4 has 4 reset-valid reference anchors plus 8 dynamically
+  reached states from 3 independent trajectory parents; it fails the required
+  16--32 dynamic / >=4-parent authorization gate.  Apex->Descent bounded
+  search evaluated 12 states x 11 controllers = 132 branches and found
+  0 unique / 0 parents; terminations are roll 103 and pitch 29, with no
+  timeout/nonfinite.  Frozen matcher schema/order/16-D normalization agree;
+  current direct-linear angular handling is explicitly reported.  Minimum
+  Descent-support distance remains 4.642; its leading squared contributions
+  are pitch 8.971, x 4.919, vz 4.275 and hip 1.660.  This is
+  negative-under-current-controller-bank only, not physical unreachability.
+- Controller is active and quiescent at
+  `apex_dynamic_support_stage_local_blocker`, with no worker/GPU task and no
+  global terminal.  Chain (generic Apex entry), downstream Descent-support
+  entry and Final-Recovery remain separate; current artifacts are proposal
+  diagnostics, never Tube/JEL evidence.  Apex PPO is unauthorized.  Next
+  bounded action is acquire more genuinely independent dynamic Apex parents,
+  without increasing PPO budget or changing matcher/joint/XML gates.
+
 - 2026-07-23 corrected-reset stage-next acquisition milestone (`f56b9ec`,
   `bb1b2f8`, `e0b24f9`, `fab17d9`, `854cae3`, `92e5f5d`, `b430547`,
   `f036338`, `f4846c0`, `e00eb99`, `9f86e3d`).  Takeoff reset v3 remains
