@@ -39,6 +39,16 @@ def test_worker_oom_and_normal_long_worker_do_not_interrupt_parent():
     assert watchdog.recovery_decision(long_gpu, {}, now=1000) == "none"
 
 
+def test_controller_with_heartbeat_over_thirty_seconds_is_healthy():
+    status = _status(
+        heartbeat_age_seconds=45,
+        progress_age_seconds=45,
+        controller_active=True,
+        worker_active=False,
+    )
+    assert watchdog.recovery_decision(status, {}, now=1000) == "none"
+
+
 def test_seed_conflict_is_left_to_live_controller_allocator():
     status = _status(last_error="seed conflict")
     assert watchdog.recovery_decision(status, {}, now=1000) == "none"
@@ -62,6 +72,30 @@ def test_gate_pause_and_pipeline_complete_notify_without_restart():
     assert watchdog.recovery_decision(gate, {}, now=1000) == "none"
     assert watchdog.terminal_notification(gate)[1] == "DVGC：需要研究决策"
     assert watchdog.terminal_notification(complete)[1] == "DVGC：流水线完成"
+
+
+def test_explicit_quiescent_pointer_never_starts_controller():
+    status = _status(
+        controller_active=False,
+        worker_active=False,
+        lock={"pid_alive": False},
+        explicitly_quiescent=True,
+        pipeline_mode="QUIESCENT",
+    )
+    assert watchdog.recovery_decision(status, {}, now=1000) == "none"
+
+
+def test_duplicate_controller_or_worker_is_never_started():
+    controller = _status(
+        controller_active=False, duplicate_controller_processes=1,
+        lock={"pid_alive": False},
+    )
+    worker = _status(
+        controller_active=False, duplicate_worker_units=1,
+        lock={"pid_alive": False},
+    )
+    assert watchdog.recovery_decision(controller, {}, now=1000) == "none"
+    assert watchdog.recovery_decision(worker, {}, now=1000) == "none"
 
 
 def test_collect_status_honors_explicit_terminal_without_rewriting_stage(monkeypatch, tmp_path):
@@ -120,6 +154,52 @@ def test_active_pipeline_pointer_selects_new_controller(monkeypatch, tmp_path):
     monkeypatch.setattr(watchdog,"ACTIVE_PIPELINE",pointer)
     run,unit,start=watchdog.pipeline_target()
     assert str(run)=="runs/new" and unit=="new.service" and start=="scripts/start-new.sh"
+
+
+def test_stage_next_start_script_launches_detached_systemd_unit():
+    text = Path("scripts/start_stage_next_bootstrap_controller.sh").read_text()
+    assert "systemd-run --user --unit=dvgc-stage-next-bootstrap-controller" in text
+    assert "RuntimeMaxSec=infinity" in text
+    assert "mujoco_playground/.venv/bin/python" in text
+
+
+def test_recovery_timeout_is_reported_not_raised(monkeypatch):
+    status = _status(
+        controller_unit="missing.service",
+        controller_start_script="scripts/start.sh",
+    )
+    monkeypatch.setattr(watchdog, "unit_properties", lambda unit: {
+        "LoadState": "not-found",
+    })
+    def timeout(*args, **kwargs):
+        raise watchdog.subprocess.TimeoutExpired(args[0], 30)
+    monkeypatch.setattr(watchdog.subprocess, "run", timeout)
+    ok, detail = watchdog.perform_recovery("start_controller", status)
+    assert not ok
+    assert "timed out after 30s" in detail
+
+
+def test_persistent_controller_start_is_nonblocking_and_accepts_live_mainpid(monkeypatch):
+    status = _status(controller_unit="controller.service", controller_start_script=None)
+    sequence = iter([
+        {"LoadState": "loaded"},
+        {"LoadState": "loaded", "active": True, "pid": 123,
+         "ActiveState": "active", "SubState": "running"},
+    ])
+    monkeypatch.setattr(watchdog, "unit_properties", lambda unit: next(sequence))
+    calls = []
+    monkeypatch.setattr(
+        watchdog.subprocess, "run",
+        lambda command, **kwargs: calls.append(command) or SimpleNamespace(
+            returncode=0, stdout="", stderr=""
+        ),
+    )
+    ok, detail = watchdog.perform_recovery("start_controller", status)
+    assert ok
+    assert calls == [[
+        "systemctl", "--user", "--no-block", "start", "controller.service"
+    ]]
+    assert "pid=123" in detail
 
 
 def test_concise_terminal_status_names_failure_and_resume_action():

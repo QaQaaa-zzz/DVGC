@@ -213,6 +213,13 @@ def collect_status(run: Path, now: float | None = None, *, controller_unit: str 
     lock_path = run / "controller.lock"
     state = load_json(state_path, {})
     lock = load_json(lock_path, {})
+    pointer = load_json(ACTIVE_PIPELINE, {})
+    pointer_run = Path(pointer.get("run_path", "")) if pointer.get("run_path") else None
+    pointer_applies = pointer_run is not None and pointer_run.resolve() == run.resolve()
+    pipeline_mode = str(pointer.get("status") or "") if pointer_applies else ""
+    explicitly_quiescent = pipeline_mode.upper() in {
+        "QUIESCENT", "GATE_PAUSE", "PIPELINE_COMPLETE",
+    }
     controller = unit_properties(controller_unit)
     workers = active_worker_units()
     named_worker = str(state.get("active_worker_unit") or "")
@@ -295,6 +302,8 @@ def collect_status(run: Path, now: float | None = None, *, controller_unit: str 
         ),
         "terminal_state": terminal,
         "automatic_transition_pending": transition_pending,
+        "pipeline_mode": pipeline_mode or None,
+        "explicitly_quiescent": explicitly_quiescent,
         "result_report_paths": reports,
         "core_metrics": core_metrics(reports),
         "log_paths": [path for path in log_paths if Path(path).exists()],
@@ -313,7 +322,8 @@ def collect_status(run: Path, now: float | None = None, *, controller_unit: str 
 
 def recovery_decision(status: dict, monitor: dict, now: float | None = None) -> str:
     now = time.time() if now is None else float(now)
-    if status.get("terminal_state") or status.get("automatic_transition_pending"):
+    if (status.get("terminal_state") or status.get("automatic_transition_pending")
+            or status.get("explicitly_quiescent")):
         return "none"
     if status.get("duplicate_controller_processes") or status.get("duplicate_worker_units"):
         return "none"
@@ -430,14 +440,38 @@ def perform_recovery(action: str, status: dict) -> tuple[bool, str]:
             start_script = status.get("controller_start_script") or str(ROOT / "scripts/start_descent_tube_controller.sh")
             command = ["bash", str(start_script)]
         else:
-            command = ["systemctl", "--user", "start", controller_unit]
+            command = ["systemctl", "--user", "--no-block", "start", controller_unit]
     elif action == "restart_stale_controller":
-        command = ["systemctl", "--user", "restart", controller_unit]
+        command = ["systemctl", "--user", "--no-block", "restart", controller_unit]
     else:
         return False, "unsupported recovery action"
-    result = subprocess.run(command, capture_output=True, text=True, timeout=30)
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, timeout=30)
+    except subprocess.TimeoutExpired as exc:
+        return False, f"recovery command timed out after {exc.timeout}s: {' '.join(command)}"
     detail = (result.stdout + result.stderr).strip()
-    return result.returncode == 0, detail
+    if result.returncode != 0:
+        return False, detail
+    # A persistent controller is successfully started when systemd owns a live
+    # MainPID.  It is not expected to exit within the watchdog invocation.
+    for _ in range(20):
+        props = unit_properties(controller_unit)
+        if props.get("active") and int(props.get("pid", 0) or 0) > 0:
+            return True, detail or (
+                f"{controller_unit} active/{props.get('SubState')} "
+                f"pid={props.get('pid')}"
+            )
+        if props.get("ActiveState") == "failed":
+            return False, detail or (
+                f"{controller_unit} failed: {props.get('Result')} "
+                f"{props.get('ExecMainStatus')}"
+            )
+        time.sleep(0.25)
+    props = unit_properties(controller_unit)
+    return False, detail or (
+        f"{controller_unit} did not reach active MainPID; "
+        f"state={props.get('ActiveState')}/{props.get('SubState')}"
+    )
 
 
 def status_markdown(status: dict) -> str:
@@ -479,6 +513,11 @@ def run_watchdog(run: Path, controller_unit: str = CONTROLLER_UNIT, start_script
     monitor = load_json(WATCHDOG_STATE, {})
     notifications = load_json(NOTIFICATION_STATE, {"sent_event_ids": []})
     status = collect_status(run, now, controller_unit=controller_unit, start_script=start_script)
+    recovery_identity = f"{status.get('run_id')}:{status.get('current_stage')}"
+    if monitor.get("recovery_identity") != recovery_identity:
+        monitor["consecutive_recoveries"] = 0
+        monitor.pop("recovery_exhausted_identity", None)
+        monitor["recovery_identity"] = recovery_identity
     decision = recovery_decision(status, monitor, now)
     if decision in {"start_controller", "restart_stale_controller"}:
         ok, detail = perform_recovery(decision, status)
@@ -490,6 +529,7 @@ def run_watchdog(run: Path, controller_unit: str = CONTROLLER_UNIT, start_script
     elif decision == "engineering_failure_after_retries":
         status["terminal_state"] = "engineering_failure_after_retries"
         status["retry_count"] = int(monitor.get("consecutive_recoveries", 0))
+        monitor["recovery_exhausted_identity"] = recovery_identity
     elif status.get("controller_active") and float(status.get("heartbeat_age_seconds") or 1e9) < HEARTBEAT_STALE_SECONDS:
         monitor["consecutive_recoveries"] = 0
     event = terminal_notification(status) or stage_notification(status, monitor)
