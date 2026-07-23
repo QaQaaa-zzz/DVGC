@@ -50,6 +50,22 @@ class StageNextV3Controller(Controller):
                 "history": [], "stage_status": {},
             }
             self.save()
+        elif (self.state.get("terminal_state") == "engineering_failure_after_retries"
+              and self.state.get("current_stage") == "apex_bounded_support_search_r3"):
+            self.state.setdefault("recovery_history", []).append({
+                "recovered_at": time.time(),
+                "failed_action": self.state.get("in_progress_action"),
+                "prior_retry_count": self.state.get("retry_count"),
+                "prior_error": self.state.get("stop_reason"),
+                "fix": "None-safe dynamic snapshot apex latch restore",
+                "runtime_gate_source_fingerprint": json.loads(
+                    Path("docs/RUNTIME_GATE.json").read_text()
+                ).get("source_fingerprint"),
+            })
+            self.save(retry_count=0, terminal_state=None, stop_reason=None,
+                      active_worker_unit=None, in_progress_action=None,
+                      expected_outputs=[],
+                      next_decision="resume_missing_apex_bounded_support_search_r3")
 
     def _worker(self, action, command, log, outputs):
         result = self.run_worker_command(

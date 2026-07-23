@@ -64,6 +64,7 @@ def test_v3_controller_uses_best_stratified_checkpoint_and_local_blockers():
     assert "takeoff_canonical_stagnant_blocks" in text
     assert "bounded_controller_support_gap" in text
     assert "research_gate_valid=False" in text
+    assert "resume_missing_apex_bounded_support_search_r3" in text
 
 
 def test_v3_start_is_nonblocking_systemd_controller():
