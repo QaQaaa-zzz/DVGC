@@ -12,14 +12,12 @@ import numpy as np
 import pandas as pd
 
 from cli.search_takeoff_actions import SEQUENCES, action_at, reference_action_sequence
-from cli.stage_label_pilot import sample_from_state
 from dvgc.bank import SnapshotBank
 from dvgc.config import file_sha256, load_config
 from dvgc.env import END_REASON, OrangeBikeDVGC
 from dvgc.reset_geometry import GroundSupportSolver
 from dvgc.rollout import restore_snapshot
 from dvgc.runtime import build_inference, load_params, save_json
-from dvgc.stage_reachability import evaluate_entry
 
 SUCCESSFUL_BOUNDED_SEQUENCES = (
     "hold", "extend_half", "hip_full_knee_half", "hip_half_knee_full",
@@ -30,7 +28,6 @@ SUCCESSFUL_BOUNDED_SEQUENCES = (
 def _rollout(env, step, row, seed, horizon, action_fn, support, noise, hip_q, knee_q):
     key = jax.random.PRNGKey(seed)
     state = restore_snapshot(env, row, key)
-    previous_vz = float(np.asarray(state.data.qvel[2]))
     reward = defaultdict(float)
     trace = []
     reason = "horizon_exhaustion"
@@ -46,30 +43,29 @@ def _rollout(env, step, row, seed, horizon, action_fn, support, noise, hip_q, kn
         qpos = np.asarray(jax.device_get(state.data.qpos))
         qvel = np.asarray(jax.device_get(state.data.qvel))
         ctrl = np.asarray(jax.device_get(state.data.ctrl))
-        contact = support.measure(qpos, qvel, ctrl)
-        sample = sample_from_state(env, state, previous_vz)
-        sample["dual_wheel_airborne"] = bool(
-            sample["dual_wheel_airborne"] and contact["wheel_contacts"] == 0
-            and contact["wheel_min"] >= 0.002
-        )
-        entry = evaluate_entry("takeoff", sample, env._config)
+        feature = np.asarray(jax.device_get(env._physical_feature(state.data)))
+        entry = bool(float(np.asarray(jax.device_get(state.metrics["event/stage_entry"]))) > .5)
         trace.append({
             "tick": tick + 1, "action": np.asarray(action).tolist(),
             "hip": float(qpos[hip_q]), "knee": float(qpos[knee_q]),
             "root_z": float(qpos[2]), "vertical_velocity": float(qvel[2]),
-            "pitch": float(sample["physical_feature"][4]),
-            "roll": float(sample["physical_feature"][3]),
-            "wheel_contacts": int(contact["wheel_contacts"]),
-            "wheel_clearance_min": float(contact["wheel_min"]),
-            "next_stage_entry": bool(entry["valid"]),
+            "pitch": float(feature[4]), "roll": float(feature[3]),
+            "next_stage_entry": entry,
+            "_qpos": qpos, "_qvel": qvel, "_ctrl": ctrl,
         })
-        if entry["valid"]:
+        if entry:
+            for frame in trace:
+                contact = support.measure(frame.pop("_qpos"), frame.pop("_qvel"), frame.pop("_ctrl"))
+                frame["wheel_contacts"] = int(contact["wheel_contacts"])
+                frame["wheel_clearance_min"] = float(contact["wheel_min"])
+                frame["body_contacts"] = int(contact["body_contacts"])
             return True, tick + 1, "next_stage_entry", dict(reward), trace
         if float(np.asarray(jax.device_get(state.done))) > .5:
             code = int(np.asarray(jax.device_get(state.info["end_code"])))
             reason = END_REASON.get(code, f"unknown_{code}")
             break
-        previous_vz = float(sample["physical_feature"][8])
+    for frame in trace:
+        frame.pop("_qpos", None); frame.pop("_qvel", None); frame.pop("_ctrl", None)
     return False, None, reason, dict(reward), trace
 
 
