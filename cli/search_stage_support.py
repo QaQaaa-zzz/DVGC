@@ -20,6 +20,10 @@ from dvgc.rollout import restore_snapshot
 from dvgc.runtime import build_inference, load_params, save_json
 from dvgc.stage_reachability import evaluate_entry
 
+FEATURE_NAMES = (
+    "x", "y", "z", "roll", "pitch", "yaw", "vx", "vy", "vz",
+    "wx", "wy", "wz", "steer", "hip", "knee", "rearwheel_velocity",
+)
 
 LOCAL = {
     "hold": SEQUENCES["hold"],
@@ -66,8 +70,32 @@ def main() -> None:
         controllers.append((f"policy:{name}", lambda state, key, tick, f=infer: f(state.obs, key)[0]))
     outcomes = []
     success_parents = set()
+    matcher_audit = None
+    if support_metadata is not None:
+        matcher = support_metadata.get("stage_entry_matcher", {})
+        names = tuple(matcher.get("feature_names", ()))
+        center = np.asarray(matcher.get("center", []), float)
+        scale = np.asarray(matcher.get("scale", []), float)
+        support_features = np.asarray(support_metadata["support_features"], float)
+        matcher_audit = {
+            "feature_names": list(names),
+            "feature_order_matches_physical_feature": names == FEATURE_NAMES,
+            "dimensions": len(names),
+            "center_dimensions": int(center.size),
+            "scale_dimensions": int(scale.size),
+            "support_feature_dimensions": (
+                int(support_features.shape[1]) if support_features.ndim == 2 else None
+            ),
+            "normalization": "(feature-center)/scale; Euclidean nearest-neighbour",
+            "angular_handling": "direct_linear_difference_in_current_frozen_matcher",
+            "radius": matcher.get("radius"),
+            "matcher_sha256": matcher.get("matcher_sha256"),
+        }
     for i, row in enumerate(bank.records):
-        parent = row.get("trajectory_parent_id", row.get("id"))
+        parent = row.get(
+            "independent_trajectory_parent_id",
+            row.get("source_parent_id", row.get("trajectory_parent_id", row.get("id"))),
+        )
         for ci, (name, action_fn) in enumerate(controllers):
             state = restore_snapshot(env, row, jax.random.PRNGKey(a.seed + i * 100 + ci))
             previous_vz = float(np.asarray(state.data.qvel[2]))
@@ -87,6 +115,17 @@ def main() -> None:
                 if distance is not None:
                     minimum_distance = min(minimum_distance, float(distance))
                 feature = sample["physical_feature"]
+                nearest_id = None
+                distance_contribution = None
+                if support_metadata is not None:
+                    z = ((np.asarray(feature, float) - center) / scale)
+                    support_z = (support_features - center) / scale
+                    squared = np.square(support_z - z[None, :])
+                    nearest = int(np.argmin(np.sum(squared, axis=1)))
+                    nearest_id = support.records[nearest]["id"]
+                    distance_contribution = dict(zip(
+                        FEATURE_NAMES, squared[nearest].tolist()
+                    ))
                 trace.append({
                     "tick": tick + 1, "vertical_velocity": float(feature[8]),
                     "roll": float(feature[3]), "pitch": float(feature[4]),
@@ -94,6 +133,8 @@ def main() -> None:
                     "hip": float(feature[12]), "knee": float(feature[13]),
                     "action": np.asarray(action).tolist(),
                     "support_distance": None if distance is None else float(distance),
+                    "nearest_support_id": nearest_id,
+                    "squared_distance_contribution": distance_contribution,
                     "apex_seen": bool(sample.get("apex_seen")), "valid_entry": bool(entry["valid"]),
                 })
                 if entry["valid"]:
@@ -133,7 +174,7 @@ def main() -> None:
         "states": len(bank.records), "controllers": len(controllers),
         "successful_unique_states": len({row["candidate_id"] for row in outcomes if row["success"]}),
         "successful_parent_count": len(success_parents),
-        "strata": strata, "outcomes": outcomes,
+        "strata": strata, "matcher_audit": matcher_audit, "outcomes": outcomes,
         "failure_semantics": "negative_under_bounded_controller_bank_only",
     })
     print(json.dumps({"states": len(bank.records), "successful_parents": len(success_parents),

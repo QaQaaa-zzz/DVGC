@@ -100,3 +100,24 @@ def test_v3_controller_does_not_launch_ascent_ppo_without_two_parents():
     assert "mine_independent_ascent_apex_parents" in text
     assert "if parent_count >= 2" in text
     assert "stage_local_gate_no_unbounded_ppo" in text
+
+
+def test_late_ascent_discovery_is_bc_initialized_and_bounded():
+    bc = Path("cli/behavior_clone_ascent_sequences.py").read_text()
+    curriculum = Path("cli/build_late_ascent_curriculum.py").read_text()
+    controller = Path("cli/stage_next_v3_controller.py").read_text()
+    assert "len(successful) < 2" in bc
+    assert "proposal_controller_initialization" in bc
+    assert "successful_parent_ids" in curriculum
+    assert '"--timesteps", "25600"' in controller
+    assert "block >= 4 or stagnant >= 2" in controller
+    assert "late_ascent_best_score" in controller
+
+
+def test_dynamic_apex_bank_separates_reference_dynamic_and_descent_positive():
+    text = Path("cli/assemble_dynamic_apex_bank.py").read_text()
+    assert "reference_reset_valid" in text
+    assert "dynamically_reached" in text
+    assert '"descent_positive": 0' in text
+    assert "reference_valid_is_not_dynamic_support" in text
+    assert "dynamic_parent_count" in text

@@ -492,11 +492,203 @@ class StageNextV3Controller(Controller):
             "stage_local_blocker": payload["stage_local_blocker"],
         }
         self.save(
-            current_stage=("late_ascent_discovery_authorized"
+            current_stage=("prepare_late_ascent_discovery"
                            if parent_count >= 2 else "ascent_multi_parent_controller_gap"),
             last_completed_action="acquire_ascent_apex_trajectory_parents",
             next_decision=("build_dynamic_apex_bank"
                            if parent_count >= 2 else "stage_local_gate_no_unbounded_ppo"),
+            report_milestone_ready=True, terminal_state=None,
+            research_gate_valid=False,
+        )
+
+    def prepare_late_ascent(self):
+        acquisition = RUN / "ascent/independent_parent_acquisition_v1"
+        bc = RUN / "ascent/late_discovery/bc_policy"
+        bc_report = RUN / "ascent/late_discovery/bc_report.json"
+        curriculum = RUN / "ascent/late_discovery/curriculum/report.json"
+        config = Path(
+            "runs/stage_next_takeoff_keyposture_seed0_20260723/"
+            "controller_inputs_v4_ascent/ascent/config.json"
+        )
+        if not bc_report.exists():
+            self._worker("behavior_clone_late_ascent_sequences", [
+                PYTHON, "-u", "-m", "cli.behavior_clone_ascent_sequences",
+                "--entry-bank", acquisition / "fresh_ascent_entries.pkl",
+                "--acquisition-report", acquisition / "report.json",
+                "--initial-policy", FLIGHT_INITIAL, "--output-policy", bc,
+                "--output-report", bc_report, "--config", config,
+            ], RUN / "ascent/late_discovery/bc.log", [
+                bc / "params.pkl", bc / "manifest.json", bc_report,
+            ])
+        if not curriculum.exists():
+            self.run_command("build_late_ascent_curriculum", [
+                PYTHON, "-m", "cli.build_late_ascent_curriculum",
+                "--ascent-entry-bank", acquisition / "fresh_ascent_entries.pkl",
+                "--dynamic-apex-bank", acquisition / "dynamic_apex_proposals.pkl",
+                "--acquisition-report", acquisition / "report.json",
+                "--output-root", RUN / "ascent/late_discovery/curriculum",
+            ], RUN / "ascent/late_discovery/curriculum.log", [curriculum])
+        self.save(
+            current_stage="late_ascent_discovery_training",
+            last_completed_action="prepare_late_ascent_discovery",
+            next_decision="train_late_ascent_block_1",
+            late_ascent_block=1, late_ascent_resume=str(bc),
+            late_ascent_best=None, late_ascent_best_score=None,
+            late_ascent_stagnant_blocks=0, late_ascent_best_parent_count=0,
+            late_ascent_best_unique_count=0,
+        )
+
+    def train_late_ascent(self):
+        block = int(self.state["late_ascent_block"])
+        root = RUN / f"ascent/late_discovery/block_{block}_{block*25600:06d}"
+        train = root / "train"
+        evaluation = root / "evaluation_reference_6.json"
+        config = Path(
+            "runs/stage_next_takeoff_keyposture_seed0_20260723/"
+            "controller_inputs_v4_ascent/ascent/config.json"
+        )
+        if not (train / "policy/params.pkl").exists():
+            self._worker(f"late_ascent_train_b{block}", [
+                PYTHON, "-u", "-m", "cli.train", "--stage", "flight",
+                "--bank", RUN / f"ascent/late_discovery/curriculum/block_{block}_reset_bank.pkl",
+                "--config", config, "--run", train,
+                "--resume", self.state["late_ascent_resume"],
+                "--timesteps", "25600", "--num-envs", "80",
+                "--num-eval-envs", "40", "--num-evals", "2",
+                "--batch-size", "40", "--num-minibatches", "4",
+                "--seed", "106", "--segment-index", str(block - 1),
+            ], root / "train.log", [
+                train / "policy/params.pkl", train / "training_metrics.json",
+            ])
+        if not evaluation.exists():
+            self._worker(f"late_ascent_eval_b{block}", [
+                PYTHON, "-u", "-m", "cli.search_stage_support",
+                "--stage", "ascent",
+                "--bank", RUN / "ascent/reverse_diagnostic_v4_6.pkl",
+                "--policy", f"late_ascent={train/'policy'}",
+                "--output", evaluation, "--horizon", "100",
+                "--seed", str(10_700_000 + block * 10_000),
+            ], root / "evaluation.log", [evaluation])
+        payload = json.loads(evaluation.read_text())
+        policy_rows = [
+            row for row in payload["outcomes"]
+            if row["controller"] == "policy:late_ascent"
+        ]
+        parents = len({
+            row["trajectory_parent"] for row in policy_rows if row["success"]
+        })
+        unique = len({
+            row["candidate_id"] for row in policy_rows if row["success"]
+        })
+        branches = sum(bool(row["success"]) for row in policy_rows)
+        score = [parents, unique, branches]
+        best_score = self.state.get("late_ascent_best_score")
+        if best_score is None or score > best_score:
+            self.state["late_ascent_best_score"] = score
+            self.state["late_ascent_best"] = str(train / "policy")
+            self.state["late_ascent_best_report"] = str(evaluation)
+        improved = (
+            parents > int(self.state.get("late_ascent_best_parent_count", 0))
+            or unique > int(self.state.get("late_ascent_best_unique_count", 0))
+        )
+        stagnant = 0 if improved else int(
+            self.state.get("late_ascent_stagnant_blocks", 0)
+        ) + 1
+        self.state.setdefault("late_ascent_blocks", []).append({
+            "block": block, "policy": str(train / "policy"),
+            "evaluation": str(evaluation), "successful_parents": parents,
+            "successful_unique_states": unique,
+            "successful_branches": branches, "score": score,
+        })
+        stop = block >= 4 or stagnant >= 2
+        if stop:
+            self.save(
+                current_stage="build_dynamic_apex_bank",
+                last_completed_action=f"late_ascent_discovery_block_{block}",
+                next_decision="build_dynamic_apex_bank",
+                late_ascent_stagnant_blocks=stagnant,
+                late_ascent_best_parent_count=max(
+                    parents, int(self.state.get("late_ascent_best_parent_count", 0))
+                ),
+                late_ascent_best_unique_count=max(
+                    unique, int(self.state.get("late_ascent_best_unique_count", 0))
+                ),
+            )
+        else:
+            self.save(
+                late_ascent_block=block + 1,
+                late_ascent_resume=str(train / "policy"),
+                late_ascent_stagnant_blocks=stagnant,
+                late_ascent_best_parent_count=max(
+                    parents, int(self.state.get("late_ascent_best_parent_count", 0))
+                ),
+                late_ascent_best_unique_count=max(
+                    unique, int(self.state.get("late_ascent_best_unique_count", 0))
+                ),
+                last_completed_action=f"late_ascent_discovery_block_{block}",
+                next_decision=f"train_late_ascent_block_{block+1}",
+            )
+
+    def build_dynamic_apex(self):
+        root = RUN / "apex/dynamic_bank_v4"
+        bank = root / "bank.pkl"; report = root / "report.json"
+        if not report.exists():
+            self.run_command("assemble_dynamic_apex_bank", [
+                PYTHON, "-m", "cli.assemble_dynamic_apex_bank",
+                "--base-bank", RUN / "apex/apex_reset_bank_v3_r3.pkl",
+                "--new-bank", RUN / "ascent/independent_parent_acquisition_v1/dynamic_apex_proposals.pkl",
+                "--output-bank", bank, "--output-report", report,
+            ], root / "build.log", [bank, report])
+        payload = json.loads(report.read_text())
+        self.state["stage_status"]["apex"]["dynamic_bank_v4"] = {
+            "report": str(report), "bank": str(bank),
+            "status": payload["status"],
+            "reference_reset_valid": payload["reference_reset_valid"],
+            "dynamically_reached": payload["dynamically_reached"],
+            "dynamic_parent_count": payload["dynamic_parent_count"],
+        }
+        self.save(
+            current_stage="apex_descent_bounded_search_v4",
+            last_completed_action="build_dynamic_apex_bank",
+            next_decision="apex_descent_bounded_search",
+        )
+
+    def apex_search_v4(self):
+        root = RUN / "apex/dynamic_bank_v4"
+        report = root / "bounded_descent_search.json"
+        if not report.exists():
+            policies = [
+                "--policy", f"flight_initial={FLIGHT_INITIAL}",
+                "--policy", f"ascent_attempt={ASCENT_ATTEMPT}",
+            ]
+            if self.state.get("late_ascent_best"):
+                policies += [
+                    "--policy", f"late_ascent={self.state['late_ascent_best']}"
+                ]
+            self._worker("apex_descent_bounded_search_v4", [
+                PYTHON, "-u", "-m", "cli.search_stage_support",
+                "--stage", "apex", "--bank", root / "bank.pkl",
+                "--support-bank", DESCENT_SUPPORT, *policies,
+                "--output", report, "--horizon", "80", "--seed", "10810000",
+            ], root / "bounded_descent_search.log", [report])
+        payload = json.loads(report.read_text())
+        bank_report = json.loads((root / "report.json").read_text())
+        authorized = (
+            bank_report["status"] == "PASS"
+            and int(payload["successful_parent_count"]) >= 2
+        )
+        self.state["stage_status"]["apex"]["dynamic_bank_v4"].update({
+            "bounded_search": str(report),
+            "descent_positive_unique": payload["successful_unique_states"],
+            "descent_positive_parents": payload["successful_parent_count"],
+            "apex_training_authorized": authorized,
+        })
+        self.save(
+            current_stage=("apex_training_authorized" if authorized
+                           else "apex_dynamic_support_stage_local_blocker"),
+            last_completed_action="apex_descent_bounded_search_v4",
+            next_decision=("train_apex_block_1" if authorized
+                           else "acquire_more_dynamic_apex_parents_without_unbounded_ppo"),
             report_milestone_ready=True, terminal_state=None,
             research_gate_valid=False,
         )
@@ -540,7 +732,19 @@ class StageNextV3Controller(Controller):
                 self.save(); time.sleep(30)
             elif stage == "mine_independent_ascent_apex_parents":
                 self.acquire_ascent_apex_parents()
-            elif stage in ("late_ascent_discovery_authorized",
+            elif stage == "prepare_late_ascent_discovery":
+                self.prepare_late_ascent()
+            elif stage == "late_ascent_discovery_authorized":
+                self.save(current_stage="prepare_late_ascent_discovery",
+                          next_decision="behavior_clone_successful_sequences")
+            elif stage == "late_ascent_discovery_training":
+                self.train_late_ascent()
+            elif stage == "build_dynamic_apex_bank":
+                self.build_dynamic_apex()
+            elif stage == "apex_descent_bounded_search_v4":
+                self.apex_search_v4()
+            elif stage in ("apex_training_authorized",
+                           "apex_dynamic_support_stage_local_blocker",
                            "ascent_multi_parent_controller_gap"):
                 self.save(); time.sleep(30)
             elif stage == "build_apex_reset_bank_v3_r3": self.apex_bank_r3()
