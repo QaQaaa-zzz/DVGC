@@ -393,6 +393,44 @@ class StageNextV3Controller(Controller):
                   report_milestone_ready=True, terminal_state=None,
                   research_gate_valid=False)
 
+    def takeoff_labels(self):
+        root = RUN / "takeoff/frozen_label_pilot_120x4x3"
+        report = root / "labels.json"; entries = root / "entries.pkl"
+        analysis = root / "analysis.json"
+        best = Path(self.state["takeoff_specialist_best"])
+        if not report.exists():
+            self._worker("takeoff_frozen_label_pilot_120x4x3", [
+                PYTHON, "-u", "-m", "cli.stage_label_pilot",
+                "--takeoff-bank", TAKEOFF_BANK, "--flight-bank", EXACT_STAGE_BANK,
+                "--landing-bank", LANDING_BANK,
+                "--flight-policy", OLD_TAKEOFF, "--flight-policy", NEW_TAKEOFF,
+                "--flight-policy", best, "--landing-policy", LANDING_POLICY,
+                "--output", report, "--entry-bank", entries,
+                "--states-per-stage", "120", "--branches", "4", "--horizon", "200",
+                "--action-noise", ".03", "--only-stage", "takeoff",
+            ], root / "run.log", [report, entries])
+        if not analysis.exists():
+            self.run_command("analyze_takeoff_frozen_labels", [
+                PYTHON, "-m", "cli.analyze_takeoff_frozen_labels",
+                "--labels", report,
+                "--fixed-controller-evaluation", RUN / "takeoff/frozen_controller_bank_evaluation.json",
+                "--output", analysis,
+            ], root / "analysis.log", [analysis])
+        payload = json.loads(analysis.read_text())
+        self.state["stage_status"]["takeoff"]["label_pilot"] = {
+            "report": str(report), "analysis": str(analysis),
+            "strata": payload["strata"],
+            "source_confounding_resolved": payload[
+                "source_confounding_resolved_for_model_training"
+            ],
+        }
+        self.save(current_stage="reachability_model_pending",
+                  last_completed_action="takeoff_frozen_label_pilot_120x4x3",
+                  next_decision=("train_source_stratified_takeoff_reachability"
+                                 if payload["model_training_authorized"]
+                                 else "expand_frozen_takeoff_controller_support"),
+                  terminal_state=None, research_gate_valid=False)
+
     def loop(self):
         while True:
             self.save()
@@ -418,6 +456,10 @@ class StageNextV3Controller(Controller):
                     self.save(current_stage="build_apex_reset_bank_v3_r3",
                               next_decision="build_apex_reset_bank_v3_r3")
                     continue
+                self.save(current_stage="takeoff_frozen_label_pilot",
+                          next_decision="takeoff_frozen_label_pilot_120x4x3")
+            elif stage == "takeoff_frozen_label_pilot": self.takeoff_labels()
+            elif stage == "reachability_model_pending":
                 self.save()
                 time.sleep(30)
             elif stage == "build_apex_reset_bank_v3_r3": self.apex_bank_r3()

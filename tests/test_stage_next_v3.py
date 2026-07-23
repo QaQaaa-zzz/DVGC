@@ -71,3 +71,12 @@ def test_v3_start_is_nonblocking_systemd_controller():
     text = Path("scripts/start_stage_next_v3_controller.sh").read_text()
     assert "systemd-run --user" in text
     assert "RuntimeMaxSec=infinity" in text
+
+
+def test_frozen_takeoff_labels_use_all_policy_controllers_and_check_source_mix():
+    controller = Path("cli/stage_next_v3_controller.py").read_text()
+    analysis = Path("cli/analyze_takeoff_frozen_labels.py").read_text()
+    assert "frozen_label_pilot_120x4x3" in controller
+    assert controller.count('"--flight-policy"') >= 3
+    assert "both_strata_contain_success_and_failure" in analysis
+    assert "negative_under_frozen_controller_bank" in analysis
