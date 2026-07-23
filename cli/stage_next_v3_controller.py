@@ -289,6 +289,50 @@ class StageNextV3Controller(Controller):
                   next_decision=next_action, report_milestone_ready=True,
                   terminal_state=None, research_gate_valid=False)
 
+    def apex_bank_r2(self):
+        bank = RUN / "apex/apex_reset_bank_v3_r2.pkl"
+        report = RUN / "apex/apex_reset_bank_v3_r2.json"
+        if not report.exists():
+            self._worker("build_apex_reset_bank_v3_r2", [
+                PYTHON, "-u", "-m", "cli.build_apex_reset_bank_v3",
+                "--flight-bank", EXACT_STAGE_BANK, "--output-bank", bank,
+                "--output-report", report, "--target", "24", "--branches", "3",
+                "--policy", f"flight_initial={FLIGHT_INITIAL}",
+                "--policy", f"ascent_attempt={ASCENT_ATTEMPT}",
+            ], RUN / "apex/apex_reset_bank_v3_r2.log", [bank, report])
+        payload = json.loads(report.read_text())
+        self.state["stage_status"]["apex"]["refinement_round_2"] = {
+            "report": str(report), "status": payload["status"],
+            "records": payload["records"], "dynamically_reached": payload["dynamically_reached"],
+            "dynamic_parent_count": payload["dynamic_parent_count"],
+        }
+        self.save(current_stage="apex_bounded_support_search_r2",
+                  last_completed_action="build_apex_reset_bank_v3_r2",
+                  next_decision="apex_bounded_support_search_r2",
+                  apex_refinement_round=2, apex_reset_bank_r2=str(bank))
+
+    def apex_search_r2(self):
+        report = RUN / "apex/bounded_support_search_r2.json"
+        if not report.exists():
+            self._worker("apex_bounded_support_search_r2", [
+                PYTHON, "-u", "-m", "cli.search_stage_support", "--stage", "apex",
+                "--bank", self.state["apex_reset_bank_r2"], "--support-bank", DESCENT_SUPPORT,
+                "--policy", f"flight_initial={FLIGHT_INITIAL}",
+                "--policy", f"ascent_attempt={ASCENT_ATTEMPT}",
+                "--output", report, "--horizon", "80",
+            ], RUN / "apex/bounded_support_search_r2.log", [report])
+        payload = json.loads(report.read_text())
+        self.state["stage_status"]["apex"]["refinement_round_2"].update({
+            "bounded_search": str(report),
+            "successful_unique_states": payload["successful_unique_states"],
+            "successful_parent_count": payload["successful_parent_count"],
+        })
+        self.save(current_stage="diagnostic_milestone_final",
+                  last_completed_action="apex_bounded_support_search_r2",
+                  next_decision="freeze_stage_controller_banks_then_label_pilots",
+                  report_milestone_ready=True, terminal_state=None,
+                  research_gate_valid=False)
+
     def loop(self):
         while True:
             self.save()
@@ -301,6 +345,15 @@ class StageNextV3Controller(Controller):
             elif stage == "apex_bounded_support_search": self.apex_search()
             elif stage == "ascent_reverse_controllability": self.ascent_search()
             elif stage == "diagnostic_milestone":
+                if not self.state.get("apex_refinement_round"):
+                    self.save(current_stage="build_apex_reset_bank_v3_r2",
+                              next_decision="build_apex_reset_bank_v3_r2")
+                    continue
+                self.save()
+                time.sleep(30)
+            elif stage == "build_apex_reset_bank_v3_r2": self.apex_bank_r2()
+            elif stage == "apex_bounded_support_search_r2": self.apex_search_r2()
+            elif stage == "diagnostic_milestone_final":
                 self.save()
                 time.sleep(30)
             else:

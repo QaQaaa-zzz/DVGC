@@ -50,6 +50,7 @@ def main() -> None:
     p.add_argument("--output-report", required=True)
     p.add_argument("--policy", action="append", default=[], help="name=policy_dir")
     p.add_argument("--target", type=int, default=24)
+    p.add_argument("--branches", type=int, default=1)
     p.add_argument("--seed", type=int, default=10_300_000)
     p.add_argument("--horizon", type=int, default=100)
     p.add_argument("--config", default="configs/default.json")
@@ -106,80 +107,81 @@ def main() -> None:
         rows.append(item)
     for pi, parent in enumerate(late_ascent):
         for ci, (name, infer, sequence) in enumerate(controllers):
-            if len(rows) >= a.target:
-                break
-            seed = a.seed + pi * 1000 + ci * 10
-            key = jax.random.PRNGKey(seed)
-            state = restore_snapshot(env, parent, key)
-            previous_vz = float(np.asarray(state.data.qvel[2]))
-            captured = None; action_history = []
-            for tick in range(a.horizon):
-                key, action_key, noise_key = jax.random.split(key, 3)
-                if infer is not None:
-                    action, _ = infer(state.obs, action_key)
-                else:
-                    spec = (reference_action_sequence(reference, parent, a.horizon)
-                            if sequence is None else sequence)
-                    action = action_at(spec, tick)
-                action = jp.clip(action + .015 * jax.random.normal(noise_key, (4,)), -1, 1)
-                action_history.append(np.asarray(action).tolist())
-                state = step(state, action)
-                sample = sample_from_state(env, state, previous_vz)
-                entry = evaluate_entry("ascent", sample, cfg)
-                if entry["valid"] and float(sample["physical_feature"][8]) > -.05:
-                    captured = (tick + 1, state, sample); break
-                if float(np.asarray(state.done)) > .5:
+            for branch in range(a.branches):
+                if len(rows) >= a.target:
                     break
-                previous_vz = float(sample["physical_feature"][8])
-            if captured is None:
-                rejection["did_not_reach_apex_event"] += 1; continue
-            tick, state, sample = captured
-            snap = env.snapshot_record(state, "flight")
-            qpos = np.asarray(snap["qpos"]); qvel = np.asarray(snap["qvel"])
-            contact = support.measure(qpos, qvel, snap["ctrl"])
-            reason = None
-            if not np.isfinite(qpos).all() or not np.isfinite(qvel).all():
-                reason = "nonfinite"
-            elif not (model.jnt_range[hip_id, 0] <= qpos[hip_q] <= model.jnt_range[hip_id, 1]
-                      and model.jnt_range[knee_id, 0] <= qpos[knee_q] <= model.jnt_range[knee_id, 1]):
-                reason = "joint_limit"
-            elif contact["body_contacts"] or contact["wheel_contacts"]:
-                reason = "terrain_contact"
-            elif int(np.asarray(state.info["phase"])) != STAGE_ID["flight"]:
-                reason = "wrong_phase"
-            elif float(sample["physical_feature"][8]) <= -.05:
-                reason = "premature_descent"
-            if reason:
-                rejection[reason] += 1; continue
-            # Restoring the exact snapshot must not create an immediate 5-step
-            # failure.  This does not settle or mutate the candidate.
-            probe = restore_snapshot(env, snap, jax.random.PRNGKey(seed + 500_000))
-            shock = False
-            for _ in range(5):
-                probe = step(probe, jp.zeros(4, jp.float32))
-                if float(np.asarray(probe.done)) > .5:
-                    shock = True; break
-            if shock:
-                rejection["five_step_reset_shock"] += 1; continue
-            feature = np.asarray(snap["physical_feature"], float)
-            if any(np.linalg.norm((feature - np.asarray(old["physical_feature"])) / scale) < .05
-                   for old in rows):
-                rejection["normalized_duplicate"] += 1; continue
-            snap.update({
-                "id": _state_hash(snap)[:32],
-                "candidate_kind": "apex_dynamically_reached",
-                "flight_subinterval": "apex", "reference_index": None,
-                "trajectory_parent_id": f"{parent['id']}:{name}:{seed}",
-                "source_parent_id": parent["id"],
-                "source_reference_index": parent.get("reference_index"),
-                "apex_support_class": "dynamically_reached_candidate",
-                "dynamically_reached": True,
-                "generation_seed": seed, "generation_controller": name,
-                "generation_entry_tick": tick, "generation_actions": action_history,
-                "contact_summary": contact,
-                "five_step_reset_shock": False,
-            })
-            rows.append(snap)
+                noise_scale = (0., .005, .015)[min(branch, 2)]
+                seed = a.seed + pi * 1000 + ci * 10 + branch
+                key = jax.random.PRNGKey(seed)
+                state = restore_snapshot(env, parent, key)
+                previous_vz = float(np.asarray(state.data.qvel[2]))
+                captured = None; action_history = []
+                for tick in range(a.horizon):
+                    key, action_key, noise_key = jax.random.split(key, 3)
+                    if infer is not None:
+                        action, _ = infer(state.obs, action_key)
+                    else:
+                        spec = (reference_action_sequence(reference, parent, a.horizon)
+                                if sequence is None else sequence)
+                        action = action_at(spec, tick)
+                    action = jp.clip(action + noise_scale * jax.random.normal(noise_key, (4,)), -1, 1)
+                    action_history.append(np.asarray(action).tolist())
+                    state = step(state, action)
+                    sample = sample_from_state(env, state, previous_vz)
+                    entry = evaluate_entry("ascent", sample, cfg)
+                    if entry["valid"] and float(sample["physical_feature"][8]) > -.05:
+                        captured = (tick + 1, state, sample); break
+                    if float(np.asarray(state.done)) > .5:
+                        break
+                    previous_vz = float(sample["physical_feature"][8])
+                if captured is None:
+                    rejection["did_not_reach_apex_event"] += 1; continue
+                tick, state, sample = captured
+                snap = env.snapshot_record(state, "flight")
+                qpos = np.asarray(snap["qpos"]); qvel = np.asarray(snap["qvel"])
+                contact = support.measure(qpos, qvel, snap["ctrl"])
+                reason = None
+                if not np.isfinite(qpos).all() or not np.isfinite(qvel).all():
+                    reason = "nonfinite"
+                elif not (model.jnt_range[hip_id, 0] <= qpos[hip_q] <= model.jnt_range[hip_id, 1]
+                          and model.jnt_range[knee_id, 0] <= qpos[knee_q] <= model.jnt_range[knee_id, 1]):
+                    reason = "joint_limit"
+                elif contact["body_contacts"] or contact["wheel_contacts"]:
+                    reason = "terrain_contact"
+                elif int(np.asarray(state.info["phase"])) != STAGE_ID["flight"]:
+                    reason = "wrong_phase"
+                elif float(sample["physical_feature"][8]) <= -.05:
+                    reason = "premature_descent"
+                if reason:
+                    rejection[reason] += 1; continue
+                probe = restore_snapshot(env, snap, jax.random.PRNGKey(seed + 500_000))
+                shock = False
+                for _ in range(5):
+                    probe = step(probe, jp.zeros(4, jp.float32))
+                    if float(np.asarray(probe.done)) > .5:
+                        shock = True; break
+                if shock:
+                    rejection["five_step_reset_shock"] += 1; continue
+                feature = np.asarray(snap["physical_feature"], float)
+                if any(np.linalg.norm((feature - np.asarray(old["physical_feature"])) / scale) < .05
+                       for old in rows):
+                    rejection["normalized_duplicate"] += 1; continue
+                snap.update({
+                    "id": _state_hash(snap)[:32],
+                    "candidate_kind": "apex_dynamically_reached",
+                    "flight_subinterval": "apex", "reference_index": None,
+                    "trajectory_parent_id": f"{parent['id']}:{name}:{seed}",
+                    "source_parent_id": parent["id"],
+                    "source_reference_index": parent.get("reference_index"),
+                    "apex_support_class": "dynamically_reached_candidate",
+                    "dynamically_reached": True,
+                    "generation_seed": seed, "generation_controller": name,
+                    "generation_branch": branch, "action_noise_scale": noise_scale,
+                    "generation_entry_tick": tick, "generation_actions": action_history,
+                    "contact_summary": contact,
+                    "five_step_reset_shock": False,
+                })
+                rows.append(snap)
         if len(rows) >= a.target:
             break
     dynamic = [row for row in rows if row.get("dynamically_reached")]
