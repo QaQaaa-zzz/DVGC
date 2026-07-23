@@ -396,7 +396,7 @@ class StageNextV3Controller(Controller):
     def takeoff_labels(self):
         root = RUN / "takeoff/frozen_label_pilot_120x4x3"
         report = root / "labels.json"; entries = root / "entries.pkl"
-        analysis = root / "analysis.json"
+        analysis = root / "analysis_v2.json"
         best = Path(self.state["takeoff_specialist_best"])
         if not report.exists():
             self._worker("takeoff_frozen_label_pilot_120x4x3", [
@@ -431,6 +431,39 @@ class StageNextV3Controller(Controller):
                                  else "expand_frozen_takeoff_controller_support"),
                   terminal_state=None, research_gate_valid=False)
 
+    def reachability_model(self):
+        root = RUN / "takeoff/reachability_model_frozen_v4"
+        model = root / "model.npz"; report = root / "report.json"
+        proposals = root / "ranked_proposals.json"
+        analysis = RUN / "takeoff/frozen_label_pilot_120x4x3/analysis_v2.json"
+        labels = RUN / "takeoff/frozen_label_pilot_120x4x3/labels.json"
+        if not analysis.exists():
+            self.run_command("reanalyze_takeoff_frozen_labels_v2", [
+                PYTHON, "-m", "cli.analyze_takeoff_frozen_labels",
+                "--labels", labels,
+                "--fixed-controller-evaluation", RUN / "takeoff/frozen_controller_bank_evaluation.json",
+                "--output", analysis,
+            ], RUN / "takeoff/frozen_label_pilot_120x4x3/analysis_v2.log", [analysis])
+        if not json.loads(analysis.read_text())["model_training_authorized"]:
+            self.save(current_stage="stage_local_blockers_recorded",
+                      next_decision="expand_takeoff_candidate_support_before_model")
+            return
+        if not report.exists():
+            self.run_command("train_source_stratified_takeoff_reachability", [
+                PYTHON, "-m", "cli.train_stage_reachability_model",
+                "--bank", TAKEOFF_BANK, "--labels", labels,
+                "--output-model", model, "--output-report", report,
+                "--output-proposals", proposals, "--seed", "9841000",
+            ], root / "train.log", [model, report, proposals])
+        self.state["stage_status"]["takeoff"]["reachability_model"] = {
+            "report": str(report), "model": str(model),
+            "artifact_role": "conditional_proposal_support_model",
+        }
+        self.save(current_stage="stage_local_blockers_recorded",
+                  last_completed_action="train_source_stratified_takeoff_reachability",
+                  next_decision="acquire_additional_ascent_apex_trajectory_parents",
+                  terminal_state=None, research_gate_valid=False)
+
     def loop(self):
         while True:
             self.save()
@@ -459,7 +492,8 @@ class StageNextV3Controller(Controller):
                 self.save(current_stage="takeoff_frozen_label_pilot",
                           next_decision="takeoff_frozen_label_pilot_120x4x3")
             elif stage == "takeoff_frozen_label_pilot": self.takeoff_labels()
-            elif stage == "reachability_model_pending":
+            elif stage == "reachability_model_pending": self.reachability_model()
+            elif stage == "stage_local_blockers_recorded":
                 self.save()
                 time.sleep(30)
             elif stage == "build_apex_reset_bank_v3_r3": self.apex_bank_r3()

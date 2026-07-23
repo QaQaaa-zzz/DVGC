@@ -19,17 +19,22 @@ def main() -> None:
     payload = json.loads(Path(a.labels).read_text())
     fixed = json.loads(Path(a.fixed_controller_evaluation).read_text())
     strata = {}
-    mixed = True
+    branch_mixed = True
     for kind in ("canonical_compressed", "reference_aligned_compressed"):
         rows = [row for row in payload["labels"] if row.get("candidate_kind") == kind]
         successes = [row for row in rows if int(row["s"]) > 0]
         failures = [row for row in rows if int(row["s"]) == 0]
-        mixed &= bool(successes and failures)
+        mixed_states = [row for row in rows if 0 < int(row["s"]) < int(row["n"])]
+        branch_successes = sum(int(row["s"]) for row in rows)
+        branches = sum(int(row["n"]) for row in rows)
+        branch_mixed &= bool(branch_successes > 0 and branch_successes < branches)
         strata[kind] = {
             "states": len(rows), "successful_states": len(successes),
             "all_controller_fail_states": len(failures),
-            "branch_successes": sum(int(row["s"]) for row in rows),
-            "branches": sum(int(row["n"]) for row in rows),
+            "branch_successes": branch_successes, "branch_failures": branches - branch_successes,
+            "branches": branches, "mixed_outcome_states": len(mixed_states),
+            "p_next_min": min(float(row["p_next"]) for row in rows),
+            "p_next_max": max(float(row["p_next"]) for row in rows),
             "label_counts": dict(Counter(row["label"] for row in rows)),
         }
     script_only = {}
@@ -48,13 +53,17 @@ def main() -> None:
         "status": "PASS", "artifact_role": "takeoff_frozen_controller_label_analysis",
         "labels_sha256": file_sha256(a.labels),
         "strata": strata,
-        "both_strata_contain_success_and_failure": mixed,
-        "source_confounding_resolved_for_model_training": mixed,
+        "both_strata_contain_success_and_failure_branches": branch_mixed,
+        "both_strata_contain_all_controller_fail_states": all(
+            row["all_controller_fail_states"] > 0 for row in strata.values()
+        ),
+        "source_confounding_resolved_for_model_training": branch_mixed,
         "bounded_sequence_unique_support_not_in_policy_union": script_only,
         "failure_semantics": "negative_under_frozen_controller_bank, never physical unreachability",
-        "model_training_authorized": mixed,
+        "model_scope_limitation": "no all-controller-fail states; estimate conditional p_next within proposal support only",
+        "model_training_authorized": branch_mixed,
     })
-    print(json.dumps({"mixed": mixed, "strata": strata, "script_only": script_only}, indent=2))
+    print(json.dumps({"branch_mixed": branch_mixed, "strata": strata, "script_only": script_only}, indent=2))
 
 
 if __name__ == "__main__":

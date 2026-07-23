@@ -78,5 +78,6 @@ def test_frozen_takeoff_labels_use_all_policy_controllers_and_check_source_mix()
     analysis = Path("cli/analyze_takeoff_frozen_labels.py").read_text()
     assert "frozen_label_pilot_120x4x3" in controller
     assert controller.count('"--flight-policy"') >= 3
-    assert "both_strata_contain_success_and_failure" in analysis
+    assert "both_strata_contain_success_and_failure_branches" in analysis
     assert "negative_under_frozen_controller_bank" in analysis
+    assert "train_source_stratified_takeoff_reachability" in controller
