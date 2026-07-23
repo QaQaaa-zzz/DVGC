@@ -155,9 +155,14 @@ def main() -> None:
                 if reason:
                     rejection[reason] += 1; continue
                 probe = restore_snapshot(env, snap, jax.random.PRNGKey(seed + 500_000))
+                # A reset-shock probe must preserve the trajectory's control
+                # continuation.  Forcing zero action here tests open-loop
+                # survivability instead and falsely rejects dynamically valid
+                # states that need active posture control.
+                continuation_action = jp.asarray(action_history[-1], jp.float32)
                 shock = False
                 for _ in range(5):
-                    probe = step(probe, jp.zeros(4, jp.float32))
+                    probe = step(probe, continuation_action)
                     if float(np.asarray(probe.done)) > .5:
                         shock = True; break
                 if shock:

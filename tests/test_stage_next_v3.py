@@ -41,6 +41,7 @@ def test_apex_v3_requires_dynamic_parents_and_keeps_reset_valid_separate():
     assert "five_step_reset_shock" in text
     assert "reset_valid_is_not_reachability_evidence" in text
     assert "noise_scale = (0., .005, .015)" in text
+    assert "continuation_action = jp.asarray(action_history[-1]" in text
 
 
 def test_ascent_reverse_bank_is_reference_aligned_and_stratified():
