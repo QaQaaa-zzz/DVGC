@@ -1317,6 +1317,38 @@ class StageNextV3Controller(Controller):
             research_gate_valid=False,
         )
 
+    def audit_apex_upstream_lineage(self):
+        root = FEEDBACK_ROOT / "contact_supported_v1"
+        report = root / "upstream_lineage.json"
+        bank = root / "event_aligned_entries.pkl"
+        root.mkdir(parents=True, exist_ok=True)
+        if not report.exists():
+            self._worker("audit_apex_upstream_lineage", [
+                PYTHON, "-u", "-m", "cli.audit_apex_upstream_lineage",
+                "--run-root", RUN,
+                "--takeoff-bank",
+                "runs/stage_next_takeoff_keyposture_seed0_20260723/"
+                "takeoff_reset_bank_v3_120.pkl",
+                "--output-bank", bank, "--output-report", report,
+                "--parent", "reference:131",
+                "--parent",
+                "89ff1a0e3cb74319b16742932c97decf38be3a39a100d49e855613162e23fcf0",
+                "--parent",
+                "2f3411630c83455a034be8083587a76e2901503c626cde1f2c0b578d68b4ca87",
+                "--parent",
+                "3161a8a4ac16bc7aeebf807ab9a8f821f87dc4776f86760a2cb9701f885697f7",
+                "--parent",
+                "5b73a426d2dfd65d1ad426b5d9d577f4b397eef4e514845e95a2e84af78569e4",
+            ], root / "upstream_lineage.log", [report, bank])
+        result = json.loads(report.read_text())
+        if result["status"] != "PASS":
+            raise RuntimeError("exact upstream lineage replay failed")
+        self.save(
+            current_stage="contact_supported_bridge_discovery",
+            last_completed_action="audit_apex_upstream_lineage",
+            next_decision="contact_supported_bridge_discovery",
+        )
+
     def loop(self):
         while True:
             self.save()
@@ -1432,10 +1464,24 @@ class StageNextV3Controller(Controller):
                     FEEDBACK_ROOT / "horizon_momentum_v2"
                     / "centroidal_contact_audit.json"
                 )
+                lineage = (
+                    FEEDBACK_ROOT / "contact_supported_v1"
+                    / "upstream_lineage.json"
+                )
                 if not corrected.exists():
                     self.prepare_pre_apex_horizon_audit()
+                elif (stage == "takeoff_tail_centroidal_momentum_blocker"
+                      and not lineage.exists()):
+                    self.save(
+                        current_stage="audit_apex_upstream_lineage",
+                        next_decision="audit_apex_upstream_lineage",
+                    )
                 else:
                     self.save(); time.sleep(30)
+            elif stage == "audit_apex_upstream_lineage":
+                self.audit_apex_upstream_lineage()
+            elif stage == "contact_supported_bridge_discovery":
+                self.save(); time.sleep(30)
             elif stage == "build_apex_reset_bank_v3_r3": self.apex_bank_r3()
             elif stage == "apex_bounded_support_search_r3": self.apex_search_r3()
             else:
