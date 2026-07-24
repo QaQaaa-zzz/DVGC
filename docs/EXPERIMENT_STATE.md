@@ -1,5 +1,33 @@
 # DVGC Experiment State
 
+- 2026-07-24 `mjx_continuous_pipeline_repair_v1`: MJX-Warp/Newton
+  deterministic replay fails independently of Jacobian AUTO/DENSE/SPARSE.
+  The first natural divergence is the first physics step (`qpos`, about
+  5.96e-8) and grows through contact; policy/history/PRNG remain identical.
+  Snapshot replay first diverges around tick 18--19.  The supported MJX/CG
+  solver is bit-exact for 20/20 snapshot and natural JIT replays and 2/2
+  non-JIT replays (`runs/mjx_continuous_pipeline_repair_v1/determinism/report_v3.json`);
+  full runtime gate is PASS/current at
+  `runs/runtime_gate_mjx_continuous_repair_v1`.  No CPU--MJX gate is active.
+- The new single-lineage runner never restores physics at a handoff and
+  preserves observation history while monotonically switching temporary
+  event controllers.  Its 100-episode natural-start smoke
+  (`runs/mjx_continuous_pipeline_repair_v1/smoke_100_v1/report.json`) reaches
+  Approach/Takeoff/Ascent/Apex/Descent in 100/100, with zero nonfinite,
+  timeout or action-bound violations and valid trajectory reloads.  Landing
+  and Final-Recovery are 0/100; every branch ends by `pitch_limit` after the
+  frozen Descent policy takes over from a physical-Apex event outside its
+  certified support.  Therefore the smoke gate is FAIL, not a pipeline PASS.
+- Natural-lineage bounded search reduced normalized distance to immutable
+  Descent support from 31.20 to 13.28 without matcher/failure changes.
+  Reference-aligned temporary joint control reaches x=3.48 but produces a
+  second upward excursion/pitch failure; it does not constitute valid
+  Descent entry.  Frozen Descent remains executable from its own support
+  (8/10 auxiliary continuations reached Landing), so the current blocker is
+  `natural_takeoff_to_frozen_descent_support_bridge_missing`, not snapshot
+  restore or frozen-policy load failure.  PPO authorization remains false;
+  XML/action mapping, matcher and frozen Descent/Landing hashes remain fixed.
+
 - 2026-07-24 Takeoff-tail runtime-comparability gate (`9e18c20`, `61e40a9`,
   `bdbaeeb`, `6cd9a9b`, continuous-lineage correction `74fb9f1`,
   cross-engine gate `7e597cb`).  The historical 3161/5b73 records cross an
