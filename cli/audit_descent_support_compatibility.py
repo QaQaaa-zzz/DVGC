@@ -197,7 +197,7 @@ def main() -> None:
         "matcher_radius": matcher.get("radius"),
         "matcher_sha256": matcher.get("matcher_sha256"),
         "qpos_joint_order": [
-            cfg.xml_path.name, "floating_base_joint(7)", "frontwheel_joint",
+            Path(cfg.xml_path).name, "floating_base_joint(7)", "frontwheel_joint",
             "steering_joint", "rearwheel_joint", "hip_joint", "knee_joint",
         ],
         "velocity_frame": "root linear velocity is world frame in physical_feature",
