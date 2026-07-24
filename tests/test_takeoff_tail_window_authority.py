@@ -24,3 +24,5 @@ def test_authority_audit_keeps_diagnostic_semantics():
     assert '"ppo_authorization": False' in text
     assert "external_impulse_between_unrelated_snapshots_assumed" in text
     assert "complete_requested_history" in text
+    assert "regardless of its section label" in text
+    assert 'row["section"] == "takeoff"' not in text

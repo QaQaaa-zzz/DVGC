@@ -210,9 +210,12 @@ def main():
             }
             continue
         separation_tick = int(info["separation_tick"])
+        # Contact support can persist beyond the software controller handoff.
+        # The authority window is a physical event interval, so retain every
+        # recorded action before separation regardless of its section label.
         takeoff_actions = [
             row["action"] for row in info["trace"]
-            if row["section"] == "takeoff" and int(row["tick"]) > 0
+            if int(row["tick"]) > 0
             and int(row["tick"]) <= separation_tick
         ]
         if len(takeoff_actions) != separation_tick:
