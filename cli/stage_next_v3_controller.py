@@ -28,6 +28,9 @@ DESCENT_POLICY = Path(
     "runs/stage_experts/descent_tube_seed0_20260716T2330/round_3/train/policy"
 )
 FEEDBACK_ROOT = RUN / "apex/feedback_bridge_v1"
+CROSS_ENGINE_GATE = (
+    FEEDBACK_ROOT / "takeoff_tail_support_v1/cross_engine_gate_v1.json"
+)
 
 
 def _controller_counts(report: Path, name: str) -> tuple[int, int, int]:
@@ -54,6 +57,33 @@ class StageNextV3Controller(Controller):
                 "history": [], "stage_status": {},
             }
             self.save()
+        elif (
+            CROSS_ENGINE_GATE.exists()
+            and json.loads(CROSS_ENGINE_GATE.read_text()).get("status") == "FAIL"
+            and self.state.get("terminal_state") != "gate_pause"
+        ):
+            self.state.setdefault("recovery_history", []).append({
+                "recovered_at": time.time(),
+                "failed_action": self.state.get("in_progress_action"),
+                "prior_retry_count": self.state.get("retry_count"),
+                "prior_error": self.state.get("stop_reason"),
+                "fix": (
+                    "reclassify material CPU MuJoCo versus MJX contact "
+                    "mismatch as a research gate"
+                ),
+                "cross_engine_gate": str(CROSS_ENGINE_GATE),
+            })
+            self.save(
+                current_stage="takeoff_tail_cross_engine_gate",
+                retry_count=0,
+                terminal_state=None,
+                research_gate_valid=False,
+                stop_reason=None,
+                active_worker_unit=None,
+                in_progress_action=None,
+                expected_outputs=[],
+                next_decision="record_takeoff_tail_cross_engine_gate_pause",
+            )
         elif (self.state.get("terminal_state") == "engineering_failure_after_retries"
               and self.state.get("current_stage") == "apex_bounded_support_search_r3"):
             self.state.setdefault("recovery_history", []).append({
@@ -1437,6 +1467,39 @@ class StageNextV3Controller(Controller):
             next_decision="select_shortest_measured_authority_window",
         )
 
+    def pause_takeoff_tail_cross_engine(self):
+        report = json.loads(CROSS_ENGINE_GATE.read_text())
+        if report.get("status") != "FAIL":
+            raise RuntimeError("cross-engine research gate is not FAIL")
+        self.state.setdefault("stage_status", {}).setdefault(
+            "takeoff", {}
+        )["tail_cross_engine_gate"] = {
+            "status": "FAIL",
+            "blocker": report.get("blocker"),
+            "report": str(CROSS_ENGINE_GATE),
+            "authority_or_discovery_allowed": False,
+            "ppo_authorization": False,
+        }
+        self.save(
+            current_stage="gate_pause",
+            last_completed_action="audit_takeoff_tail_cross_engine",
+            next_decision=(
+                "resolve_runtime_cross_engine_contact_semantics_before_discovery"
+            ),
+            terminal_state="gate_pause",
+            research_gate_valid=True,
+            stop_reason=(
+                "Material CPU MuJoCo versus MJX Takeoff contact/separation "
+                "mismatch invalidates exact authority and discovery evidence"
+            ),
+            active_worker_unit=None,
+            in_progress_action=None,
+            expected_outputs=[],
+            ppo_authorization=False,
+            result_report_paths=[str(CROSS_ENGINE_GATE)],
+        )
+        raise SystemExit(40)
+
     def loop(self):
         while True:
             self.save()
@@ -1596,6 +1659,10 @@ class StageNextV3Controller(Controller):
                     )
                 else:
                     self.save(); time.sleep(30)
+            elif stage == "takeoff_tail_cross_engine_gate":
+                self.pause_takeoff_tail_cross_engine()
+            elif stage == "gate_pause":
+                raise SystemExit(40)
             elif stage == "build_apex_reset_bank_v3_r3": self.apex_bank_r3()
             elif stage == "apex_bounded_support_search_r3": self.apex_search_r3()
             else:
