@@ -26,3 +26,4 @@ def test_authority_audit_keeps_diagnostic_semantics():
     assert "complete_requested_history" in text
     assert "regardless of its section label" in text
     assert 'row["section"] == "takeoff"' not in text
+    assert 'source_entry["dynamics_seed"]' in text

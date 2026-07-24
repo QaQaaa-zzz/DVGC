@@ -224,12 +224,23 @@ def main():
                 f"{parent}: incomplete action lineage to separation"
             )
         source_row = source_by_id[info["source_takeoff_state_id"]]
-        seed = 12_000_000 + parent_index * 100_000
+        acquisition_entries = SnapshotBank.load(
+            Path(info["source_acquisition"]) / "fresh_ascent_entries.pkl"
+        )
+        source_entry = next(
+            row for row in acquisition_entries.records
+            if row["id"] == info["source_entry_id"]
+        )
+        seed = int(source_entry["dynamics_seed"])
         _, base_vector, base_diag, base_torque, base_history = rollout(
             source_row, takeoff_actions, seed
         )
         expected = np.asarray(info["separation_h"], float)
         exact_h_error = float(np.max(np.abs(base_vector[:3] - expected)))
+        if exact_h_error > 1e-5:
+            raise RuntimeError(
+                f"{parent}: exact lineage H mismatch {exact_h_error:.6g}"
+            )
         # Compute the full physical contact-window Jacobian once.  The 4/8/12
         # audits are exact column subsets, avoiding repeated MJX/CPU replay.
         all_columns = []
@@ -383,6 +394,8 @@ def main():
         parents[parent] = {
             "status": "PASS",
             "source_takeoff_state_id": source_row["id"],
+            "source_entry_id": source_entry["id"],
+            "exact_dynamics_seed": seed,
             "separation_tick": separation_tick,
             "available_contact_tail_ticks": separation_tick,
             "baseline_separation": dict(
