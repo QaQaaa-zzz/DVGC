@@ -50,6 +50,11 @@ def default_config() -> config_dict.ConfigDict:
         episode_length=750,
         action_repeat=1,
         impl="warp",
+        # MJX-Warp's tiled Newton factorization is not repeatable for the
+        # contact-sensitive single-world lineage used by the continuous
+        # pipeline.  CG is supported by the same MJX-Warp runtime and keeps
+        # identical source/action/seed replays bit-exact.
+        mjx_solver="CG",
         contact_mode="imu",
         naconmax=1024,
         naccdmax=1024,

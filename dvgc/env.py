@@ -166,6 +166,20 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         self._xml_path = str(Path(self._config.xml_path).resolve())
         self._mj_model = mujoco.MjModel.from_xml_path(self._xml_path)
         self._mj_model.opt.timestep = self.sim_dt
+        solver_name = str(getattr(self._config, "mjx_solver", "XML")).upper()
+        solver_map = {
+            "XML": None,
+            "CG": mujoco.mjtSolver.mjSOL_CG,
+            "NEWTON": mujoco.mjtSolver.mjSOL_NEWTON,
+        }
+        if solver_name not in solver_map:
+            raise ValueError(
+                f"Unsupported mjx_solver={solver_name!r}; expected XML, CG, or NEWTON"
+            )
+        self._xml_solver = int(self._mj_model.opt.solver)
+        if solver_map[solver_name] is not None:
+            self._mj_model.opt.solver = solver_map[solver_name]
+        self._effective_mjx_solver = solver_name
         # Real dynamics variants used by branch certification.  These are
         # applied before conversion to MJX, so every branch environment has a
         # genuinely different physical model rather than only action noise.
