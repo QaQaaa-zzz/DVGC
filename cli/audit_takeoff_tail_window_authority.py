@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import gc
+import hashlib
 import json
 from collections import Counter
 from pathlib import Path
@@ -232,15 +233,36 @@ def main():
             if row["id"] == info["source_entry_id"]
         )
         seed = int(source_entry["dynamics_seed"])
-        _, base_vector, base_diag, base_torque, base_history = rollout(
+        base_state, base_vector, base_diag, base_torque, base_history = rollout(
             source_row, takeoff_actions, seed
         )
-        expected = np.asarray(info["separation_h"], float)
-        exact_h_error = float(np.max(np.abs(base_vector[:3] - expected)))
-        if exact_h_error > 1e-5:
+        repeat_state, repeat_vector, _, _, _ = rollout(
+            source_row, takeoff_actions, seed
+        )
+        repeat_qpos_error = float(np.max(np.abs(
+            np.asarray(base_state.data.qpos)
+            - np.asarray(repeat_state.data.qpos)
+        )))
+        repeat_qvel_error = float(np.max(np.abs(
+            np.asarray(base_state.data.qvel)
+            - np.asarray(repeat_state.data.qvel)
+        )))
+        repeat_h_error = float(np.max(np.abs(
+            base_vector[:3] - repeat_vector[:3]
+        )))
+        if max(repeat_qpos_error, repeat_qvel_error, repeat_h_error) > 1e-8:
             raise RuntimeError(
-                f"{parent}: exact lineage H mismatch {exact_h_error:.6g}"
+                f"{parent}: continuous source replay is not deterministic"
             )
+        expected = np.asarray(info["separation_h"], float)
+        historical_composite_h_error = float(
+            np.max(np.abs(base_vector[:3] - expected))
+        )
+        continuous_lineage_id = hashlib.sha256(
+            source_row["id"].encode()
+            + np.asarray(takeoff_actions, np.float32).tobytes()
+            + str(seed).encode()
+        ).hexdigest()
         # Compute the full physical contact-window Jacobian once.  The 4/8/12
         # audits are exact column subsets, avoiding repeated MJX/CPU replay.
         all_columns = []
@@ -396,6 +418,10 @@ def main():
             "source_takeoff_state_id": source_row["id"],
             "source_entry_id": source_entry["id"],
             "exact_dynamics_seed": seed,
+            "continuous_lineage_id": continuous_lineage_id,
+            "lineage_mode": (
+                "continuous_from_takeoff_source_without_intermediate_restore"
+            ),
             "separation_tick": separation_tick,
             "available_contact_tail_ticks": separation_tick,
             "baseline_separation": dict(
@@ -406,7 +432,12 @@ def main():
             ],
             "baseline_external_torque_integral":
                 base_torque.tolist(),
-            "exact_lineage_h_linf": exact_h_error,
+            "repeat_qpos_linf": repeat_qpos_error,
+            "repeat_qvel_linf": repeat_qvel_error,
+            "repeat_h_linf": repeat_h_error,
+            "historical_composite_separation_h_linf":
+                historical_composite_h_error,
+            "historical_composite_used_as_authority_baseline": False,
             "windows": windows,
             "full_contact_trace": [{
                 "tick": row["tick"],

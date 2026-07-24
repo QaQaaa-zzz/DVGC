@@ -1396,7 +1396,7 @@ class StageNextV3Controller(Controller):
     def audit_takeoff_tail_window_authority(self):
         root = FEEDBACK_ROOT / "takeoff_tail_support_v1"
         root.mkdir(parents=True, exist_ok=True)
-        report = root / "window_authority_v2.json"
+        report = root / "window_authority_v3.json"
         if not (root / "cost_estimate.json").exists():
             save_json(root / "cost_estimate.json", {
                 "status": "PASS",
@@ -1430,7 +1430,7 @@ class StageNextV3Controller(Controller):
                 "--parent",
                 "5b73a426d2dfd65d1ad426b5d9d577f4b397eef4e514845e95a2e84af78569e4",
                 "--amplitude", "0.12",
-            ], root / "window_authority_v2.log", [report])
+            ], root / "window_authority_v3.log", [report])
         self.save(
             current_stage="select_takeoff_tail_control_window",
             last_completed_action="audit_takeoff_tail_window_authority",
@@ -1585,14 +1585,14 @@ class StageNextV3Controller(Controller):
             elif stage == "audit_takeoff_tail_window_authority":
                 self.audit_takeoff_tail_window_authority()
             elif stage == "select_takeoff_tail_control_window":
-                authority_v2 = (
+                authority_v3 = (
                     FEEDBACK_ROOT / "takeoff_tail_support_v1"
-                    / "window_authority_v2.json"
+                    / "window_authority_v3.json"
                 )
-                if not authority_v2.exists():
+                if not authority_v3.exists():
                     self.save(
                         current_stage="audit_takeoff_tail_window_authority",
-                        next_decision="rerun_authority_with_exact_lineage_seed",
+                        next_decision="continuous_source_lineage_authority",
                     )
                 else:
                     self.save(); time.sleep(30)

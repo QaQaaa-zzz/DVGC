@@ -27,3 +27,5 @@ def test_authority_audit_keeps_diagnostic_semantics():
     assert "regardless of its section label" in text
     assert 'row["section"] == "takeoff"' not in text
     assert 'source_entry["dynamics_seed"]' in text
+    assert "continuous_from_takeoff_source_without_intermediate_restore" in text
+    assert "historical_composite_used_as_authority_baseline" in text
