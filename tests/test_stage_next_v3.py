@@ -75,6 +75,13 @@ def test_pre_apex_horizon_audit_is_bounded_and_has_no_ppo():
     assert '"apex_centroidal_contact_audit"' in text
 
 
+def test_takeoff_tail_authority_screen_is_bounded_and_no_ppo():
+    text = Path("cli/stage_next_v3_controller.py").read_text()
+    assert '"audit_takeoff_tail_window_authority"' in text
+    assert '"windows": [4, 8, 12, "full"]' in text
+    assert '"ppo_steps": 0' in text
+
+
 def test_v3_start_is_nonblocking_systemd_controller():
     text = Path("scripts/start_stage_next_v3_controller.sh").read_text()
     assert "systemd-run --user" in text

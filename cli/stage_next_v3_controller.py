@@ -1393,6 +1393,50 @@ class StageNextV3Controller(Controller):
             research_gate_valid=False, terminal_state=None,
         )
 
+    def audit_takeoff_tail_window_authority(self):
+        root = FEEDBACK_ROOT / "takeoff_tail_support_v1"
+        root.mkdir(parents=True, exist_ok=True)
+        report = root / "window_authority.json"
+        if not (root / "cost_estimate.json").exists():
+            save_json(root / "cost_estimate.json", {
+                "status": "PASS",
+                "task": "takeoff_tail_4_8_12_full_window_authority",
+                "parents": 4, "finite_difference_amplitude": .12,
+                "windows": [4, 8, 12, "full"],
+                "estimated_mjx_steps_upper_bound": 160000,
+                "estimated_wall_time": "under_2_hours",
+                "ppo_steps": 0,
+            })
+        if not report.exists():
+            self._worker("audit_takeoff_tail_window_authority", [
+                PYTHON, "-u", "-m",
+                "cli.audit_takeoff_tail_window_authority",
+                "--takeoff-bank",
+                "runs/stage_next_takeoff_keyposture_seed0_20260723/"
+                "takeoff_reset_bank_v3_120.pkl",
+                "--lineage-report",
+                FEEDBACK_ROOT / "contact_supported_v1/upstream_lineage.json",
+                "--terminal-bank",
+                FEEDBACK_ROOT / "descent_terminal_proposals_current.pkl",
+                "--terminal-report",
+                FEEDBACK_ROOT / "descent_terminal_clusters_current.json",
+                "--output", report,
+                "--parent",
+                "89ff1a0e3cb74319b16742932c97decf38be3a39a100d49e855613162e23fcf0",
+                "--parent",
+                "2f3411630c83455a034be8083587a76e2901503c626cde1f2c0b578d68b4ca87",
+                "--parent",
+                "3161a8a4ac16bc7aeebf807ab9a8f821f87dc4776f86760a2cb9701f885697f7",
+                "--parent",
+                "5b73a426d2dfd65d1ad426b5d9d577f4b397eef4e514845e95a2e84af78569e4",
+                "--amplitude", "0.12",
+            ], root / "window_authority.log", [report])
+        self.save(
+            current_stage="select_takeoff_tail_control_window",
+            last_completed_action="audit_takeoff_tail_window_authority",
+            next_decision="select_shortest_measured_authority_window",
+        )
+
     def loop(self):
         while True:
             self.save()
@@ -1512,6 +1556,10 @@ class StageNextV3Controller(Controller):
                     FEEDBACK_ROOT / "contact_supported_v1"
                     / "upstream_lineage.json"
                 )
+                authority = (
+                    FEEDBACK_ROOT / "takeoff_tail_support_v1"
+                    / "window_authority.json"
+                )
                 if not corrected.exists():
                     self.prepare_pre_apex_horizon_audit()
                 elif (stage == "takeoff_tail_centroidal_momentum_blocker"
@@ -1520,6 +1568,12 @@ class StageNextV3Controller(Controller):
                         current_stage="audit_apex_upstream_lineage",
                         next_decision="audit_apex_upstream_lineage",
                     )
+                elif (stage == "takeoff_tail_centroidal_momentum_blocker"
+                      and not authority.exists()):
+                    self.save(
+                        current_stage="audit_takeoff_tail_window_authority",
+                        next_decision="audit_takeoff_tail_window_authority",
+                    )
                 else:
                     self.save(); time.sleep(30)
             elif stage == "audit_apex_upstream_lineage":
@@ -1527,6 +1581,10 @@ class StageNextV3Controller(Controller):
             elif stage == "contact_supported_bridge_discovery":
                 self.discover_contact_supported_bridge()
             elif stage == "contact_supported_bridge_fresh_validation":
+                self.save(); time.sleep(30)
+            elif stage == "audit_takeoff_tail_window_authority":
+                self.audit_takeoff_tail_window_authority()
+            elif stage == "select_takeoff_tail_control_window":
                 self.save(); time.sleep(30)
             elif stage == "build_apex_reset_bank_v3_r3": self.apex_bank_r3()
             elif stage == "apex_bounded_support_search_r3": self.apex_search_r3()
