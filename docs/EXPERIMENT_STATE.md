@@ -20,9 +20,12 @@
   certified support.  Therefore the smoke gate is FAIL, not a pipeline PASS.
 - Natural-lineage bounded search reduced normalized distance to immutable
   Descent support from 31.20 to 13.28 without matcher/failure changes.
-  Reference-aligned temporary joint control reaches x=3.48 but produces a
-  second upward excursion/pitch failure; it does not constitute valid
-  Descent entry.  Frozen Descent remains executable from its own support
+  Reference-aligned temporary joint control reaches x=3.48 and reduces the
+  closest distance to 7.075, but produces a second upward excursion/pitch
+  failure; it does not constitute valid Descent entry.  At the closest valid
+  descending tick, the main squared-distance deficits are wheel speed 15.85,
+  vx 14.10, roll 5.11, x 5.10 and z 2.73.  Frozen Descent remains executable
+  from its own support
   (8/10 auxiliary continuations reached Landing), so the current blocker is
   `natural_takeoff_to_frozen_descent_support_bridge_missing`, not snapshot
   restore or frozen-policy load failure.  PPO authorization remains false;
