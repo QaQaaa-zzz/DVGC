@@ -1,5 +1,36 @@
 # DVGC Experiment State
 
+- 2026-07-24 event-aligned horizon/centroidal audit and contact-supported
+  bridge (`e3aab98`, `50ee3d6`, paired-response correction `6242b58`, exact
+  upstream lineage `6fd1672`, segmented bridge `485fc3e`).  The old
+  `apex_local_correctable` diagnostic is now
+  `apex_local_response_detected`; no closed-loop correctability is claimed.
+  Across 36 nominal configurations (parents reference:131, 89ff and 2f34;
+  event/-4/-6-or--8 starts; prediction horizons 3/6/9/12; two-tick
+  replanning), 30 terminate by roll and 6 by pitch.  Stable Descent >=16
+  ticks, formal Descent support, frozen Descent continuation and Landing Final
+  are all 0.  Three-tick prediction reaches at most four stable ticks; longer
+  horizons do not pass the gate.  Action-response latency is measured against
+  a paired zero-action counterfactual, not natural state evolution.
+- CPU MuJoCo exact-state centroidal momentum agrees with subtree momentum to
+  <=2.34e-15.  Exact Takeoff-to-Apex lineage replay has qpos/qvel Linf error
+  0 for 89ff, 2f34, 3161 and 5b73; reference:131 has no recorded Takeoff
+  lineage and is explicitly unavailable.  Last-support/separation/Apex ticks
+  are 1/2/18 (89ff), 1/2/19 (2f34), and 21/22/29 (3161/5b73).
+  Separation Hx is -0.00877/-0.00795/-0.72398/-0.72425, with airborne
+  relative Hx span 1.14%/1.05%/3.26e-5/3.06e-5.  Descent-terminal Hx p05/p95
+  is 0.01665/0.08496; all 36 authority-normalized candidates remain outside
+  the measured local envelope.
+- A bounded real-last-support scan followed by 12-tick receding-horizon
+  feedback evaluated 5 actions each on 89ff and 2f34.  All 10 branches end by
+  roll; maximum stable Descent is 7 and 10 ticks respectively, with no formal,
+  downstream or Final success.  Gate A/B = FAIL/FAIL and Apex PPO remains
+  unauthorized.  Current stage-local blocker is
+  `takeoff_tail_centroidal_momentum_blocker`; the next admissible action is to
+  make bridge-admissible separation momentum an upstream Takeoff-tail proposal
+  target, not more Apex search or PPO.  Controller is active/quiescent, with
+  no worker/GPU task.
+
 - 2026-07-24 pre-Apex feedback bridge diagnostic (`3a21582`, `cd5e2c3`,
   `731be20`, strict Gate-A correction `7da4a37`).  Existing 1,092 dynamic
   branches were aligned to physical Apex without replay: 1,006 cross Apex,

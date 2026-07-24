@@ -161,6 +161,32 @@ preflights pass.  If feedback produces only transient Descent followed by
 physical failure, the result is an upstream-entry/pose-corridor support gap,
 not a Descent-support coverage gap and not physical unreachability.
 
+An effective finite-difference matrix is named
+`apex_local_response_detected`; it is never a correctability claim without a
+closed-loop, no-failure rollout.  Prediction-horizon comparisons use a paired
+zero-action counterfactual for response latency.  When the local bridge fails,
+the diagnostic boundary may move only along the same real upstream trajectory
+to last support and separation.  CPU MuJoCo exact-state replay computes full
+system CoM and centroidal angular momentum by summing every body's spin and
+orbital contributions and cross-checks the result against MuJoCo subtree
+momentum.  A first sampled airborne point is not called separation unless the
+preceding sampled state has real robot-terrain contact.
+
+If separation angular momentum is outside the data-calibrated terminal
+corridor and is approximately conserved while airborne, discovery uses three
+explicit internal segments:
+
+```text
+contact-supported momentum shaping -> ballistic morphology shaping
+-> Descent capture
+```
+
+These segments produce proposal diagnostics only.  Gate A requires one robust
+parent to remain physically valid through either 16 stable Descent ticks or a
+formal support entry under fresh dynamics.  Gate B requires fresh formal entry
+from two independent parents plus the frozen downstream continuation.  Neither
+gate authorizes Apex PPO by itself.
+
 ## Flight-to-Landing Entry Contract
 
 The Flight successor set `C_L` is a canonical Landing-entry bank, not the
