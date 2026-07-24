@@ -89,3 +89,21 @@ def test_controller_keeps_apex_ppo_closed_without_every_gate():
     assert "reward_diagnostic_passed" in text
     assert "reset_and_full_runtime_gate_passed_after_success" in text
     assert "authorized = all(authorization_checks.values())" in text
+
+
+def test_controller_routes_through_feedback_bridge_before_any_apex_ppo():
+    text = Path("cli/stage_next_v3_controller.py").read_text()
+    order = [
+        "freeze_v5_evidence",
+        "analyze_existing_branch_failure_timing",
+        "audit_pre_post_apex_control_authority",
+        "build_current_runtime_descent_terminal_clusters",
+        "select_bridge_start_before_apex",
+        "discover_nominal_stable_descent_trajectory",
+        "synthesize_local_feedback_bridge",
+        "fresh_seed_bridge_validation",
+        "formal_descent_support_and_final_recovery_test",
+    ]
+    positions = [text.index(f'elif stage == "{stage}"') for stage in order]
+    assert positions == sorted(positions)
+    assert '"gate_c_apex_ppo_authorized": False' in text

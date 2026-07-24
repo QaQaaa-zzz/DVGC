@@ -7,6 +7,7 @@ from cli.analyze_apex_bridge_timing import (
 )
 from cli.build_descent_terminal_clusters import _deterministic_kmeans, _physical_shock
 from cli.audit_apex_control_authority import _offset_ticks, _pulse_action
+from cli.discover_apex_feedback_bridge import _actions, _terminal_distance
 
 
 def test_failure_timing_is_strictly_before_first_nonzero_action():
@@ -71,3 +72,25 @@ def test_control_authority_pulses_are_paired_and_nonsaturated():
     minus = np.asarray(_pulse_action("opposite_negative", .25))
     np.testing.assert_allclose(plus, -minus)
     assert np.max(np.abs(plus)) == .25
+
+
+def test_feedback_bridge_action_set_is_bounded_and_has_neutral():
+    actions = np.asarray(_actions())
+    assert np.max(np.abs(actions)) < 1.
+    assert np.allclose(actions[0], 0.)
+    assert actions.shape[1] == 4
+
+
+def test_terminal_distance_uses_declared_physical_projection():
+    feature = np.zeros(16)
+    center = np.zeros(11)
+    scale = np.ones(11)
+    target = np.zeros((1, 11))
+    assert _terminal_distance(feature, target, center, scale) == 0.
+
+
+def test_feedback_bridge_supports_separate_nominal_and_fresh_runs():
+    text = open("cli/discover_apex_feedback_bridge.py").read()
+    assert '"deterministic", "fresh", "all"' in text
+    assert "--nominal-report" in text
+    assert "deterministic_stable" in text

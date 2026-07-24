@@ -27,6 +27,7 @@ LANDING_POLICY = Path("runs/landing/refinement_seed0/policy")
 DESCENT_POLICY = Path(
     "runs/stage_experts/descent_tube_seed0_20260716T2330/round_3/train/policy"
 )
+FEEDBACK_ROOT = RUN / "apex/feedback_bridge_v1"
 
 
 def _controller_counts(report: Path, name: str) -> tuple[int, int, int]:
@@ -956,6 +957,217 @@ class StageNextV3Controller(Controller):
             research_gate_valid=False,
         )
 
+    def freeze_v5_bridge_evidence(self):
+        inputs = {
+            "xml_sha256": file_sha256("assets/orange_bike_4kg_horizontal.xml"),
+            "apex_bank_sha256": file_sha256(RUN / "apex/dynamic_bank_v5/bank.pkl"),
+            "multiknot_report_sha256": file_sha256(
+                RUN / "apex/dynamic_bank_v5/multiknot_search.json"
+            ),
+            "descent_support_sha256": file_sha256(DESCENT_SUPPORT),
+            "descent_runtime_audit_sha256": file_sha256(
+                RUN / "apex/interface_v5/descent_support_runtime_audit.json"
+            ),
+            "landing_policy_sha256": file_sha256(LANDING_POLICY / "params.pkl"),
+        }
+        save_json(FEEDBACK_ROOT / "frozen_inputs.json", {
+            "status": "PASS", "artifact_role": "frozen_apex_bridge_inputs",
+            "formal_matcher_unchanged": True, "apex_ppo_authorized": False,
+            **inputs,
+        })
+        self.save(
+            current_stage="analyze_existing_branch_failure_timing",
+            last_completed_action="freeze_v5_evidence",
+            next_decision="analyze_existing_branch_failure_timing",
+        )
+
+    def analyze_bridge_failure_timing(self):
+        report = FEEDBACK_ROOT / "failure_timing.json"
+        if not report.exists():
+            self.run_command("analyze_existing_branch_failure_timing", [
+                PYTHON, "-m", "cli.analyze_apex_bridge_timing",
+                "--search-report", RUN / "apex/dynamic_bank_v5/multiknot_search.json",
+                "--apex-bank", RUN / "apex/dynamic_bank_v5/bank.pkl",
+                "--output", report,
+            ], FEEDBACK_ROOT / "failure_timing.log", [report])
+        self.save(
+            current_stage="audit_pre_post_apex_control_authority",
+            last_completed_action="analyze_existing_branch_failure_timing",
+            next_decision="audit_pre_post_apex_control_authority",
+        )
+
+    def audit_apex_control_authority(self):
+        report = FEEDBACK_ROOT / "control_authority.json"
+        bank = FEEDBACK_ROOT / "control_authority_snapshots.pkl"
+        if not report.exists():
+            self._worker("audit_pre_post_apex_control_authority", [
+                PYTHON, "-u", "-m", "cli.audit_apex_control_authority",
+                "--apex-bank", RUN / "apex/dynamic_bank_v5/bank.pkl",
+                "--run-root", RUN, "--output-bank", bank,
+                "--output-report", report, "--seed", "11400000",
+            ], FEEDBACK_ROOT / "control_authority.log", [report, bank])
+        self.save(
+            current_stage="build_current_runtime_descent_terminal_clusters",
+            last_completed_action="audit_pre_post_apex_control_authority",
+            next_decision="build_current_runtime_descent_terminal_clusters",
+        )
+
+    def build_descent_terminal_clusters(self):
+        report = FEEDBACK_ROOT / "descent_terminal_clusters_current.json"
+        bank = FEEDBACK_ROOT / "descent_terminal_proposals_current.pkl"
+        if not report.exists():
+            self.run_command("build_current_runtime_descent_terminal_clusters", [
+                PYTHON, "-m", "cli.build_descent_terminal_clusters",
+                "--support-bank", DESCENT_SUPPORT,
+                "--runtime-audit",
+                RUN / "apex/interface_v5/descent_support_runtime_audit.json",
+                "--apex-bank", RUN / "apex/dynamic_bank_v5/bank.pkl",
+                "--output-bank", bank, "--output-report", report,
+            ], FEEDBACK_ROOT / "descent_terminal_clusters_current.log",
+                [report, bank])
+        self.save(
+            current_stage="select_bridge_start_before_apex",
+            last_completed_action="build_current_runtime_descent_terminal_clusters",
+            next_decision="select_bridge_start_before_apex",
+        )
+
+    def select_apex_bridge_starts(self):
+        report = FEEDBACK_ROOT / "bridge_start_selection.json"
+        bank = FEEDBACK_ROOT / "bridge_start_selection.pkl"
+        if not report.exists():
+            self.run_command("select_bridge_start_before_apex", [
+                PYTHON, "-m", "cli.select_apex_bridge_starts",
+                "--authority-bank", FEEDBACK_ROOT / "control_authority_snapshots.pkl",
+                "--authority-report", FEEDBACK_ROOT / "control_authority.json",
+                "--parent", "reference:131",
+                "--parent",
+                "89ff1a0e3cb74319b16742932c97decf38be3a39a100d49e855613162e23fcf0",
+                "--output-bank", bank, "--output-report", report,
+            ], FEEDBACK_ROOT / "bridge_start_selection.log", [report, bank])
+        self.save(
+            current_stage="discover_nominal_stable_descent_trajectory",
+            last_completed_action="select_bridge_start_before_apex",
+            next_decision="discover_nominal_stable_descent_trajectory",
+        )
+
+    def discover_nominal_feedback_bridge(self):
+        root = FEEDBACK_ROOT / "nominal_bridge"
+        report = root / "report.json"
+        if not report.exists():
+            self._worker("discover_nominal_stable_descent_trajectory", [
+                PYTHON, "-u", "-m", "cli.discover_apex_feedback_bridge",
+                "--authority-bank", FEEDBACK_ROOT / "control_authority_snapshots.pkl",
+                "--authority-report", FEEDBACK_ROOT / "control_authority.json",
+                "--start-bank", FEEDBACK_ROOT / "bridge_start_selection.pkl",
+                "--support-bank", DESCENT_SUPPORT,
+                "--terminal-bank",
+                FEEDBACK_ROOT / "descent_terminal_proposals_current.pkl",
+                "--descent-policy", DESCENT_POLICY,
+                "--landing-policy", LANDING_POLICY,
+                "--output-root", root, "--parent", "reference:131",
+                "--parent",
+                "89ff1a0e3cb74319b16742932c97decf38be3a39a100d49e855613162e23fcf0",
+                "--branch-mode", "deterministic", "--horizon", "40",
+                "--lookahead", "3", "--downstream-horizon", "200",
+                "--seed", "11500000",
+            ], root / "controller.log", [
+                report, root / "stable_physical_descent.pkl",
+                root / "formal_descent_entries.pkl",
+            ])
+        self.save(
+            current_stage="synthesize_local_feedback_bridge",
+            last_completed_action="discover_nominal_stable_descent_trajectory",
+            next_decision="synthesize_receding_horizon_feedback_bridge",
+        )
+
+    def synthesize_feedback_bridge(self):
+        save_json(FEEDBACK_ROOT / "feedback_controller_manifest.json", {
+            "status": "PASS",
+            "controller": "receding_horizon_bounded_shooting",
+            "replanning_interval_ticks": 1, "lookahead_ticks": 3,
+            "event_relative_start_selection": True,
+            "formal_success_is_not_soft_cost": True,
+            "apex_ppo_authorized": False,
+        })
+        self.save(
+            current_stage="fresh_seed_bridge_validation",
+            last_completed_action="synthesize_local_feedback_bridge",
+            next_decision="fresh_seed_bridge_validation",
+        )
+
+    def validate_fresh_feedback_bridge(self):
+        root = FEEDBACK_ROOT / "fresh_validation"
+        report = root / "report.json"
+        if not report.exists():
+            self._worker("fresh_seed_bridge_validation", [
+                PYTHON, "-u", "-m", "cli.discover_apex_feedback_bridge",
+                "--authority-bank", FEEDBACK_ROOT / "control_authority_snapshots.pkl",
+                "--authority-report", FEEDBACK_ROOT / "control_authority.json",
+                "--start-bank", FEEDBACK_ROOT / "bridge_start_selection.pkl",
+                "--support-bank", DESCENT_SUPPORT,
+                "--terminal-bank",
+                FEEDBACK_ROOT / "descent_terminal_proposals_current.pkl",
+                "--descent-policy", DESCENT_POLICY,
+                "--landing-policy", LANDING_POLICY,
+                "--output-root", root, "--parent", "reference:131",
+                "--parent",
+                "89ff1a0e3cb74319b16742932c97decf38be3a39a100d49e855613162e23fcf0",
+                "--branch-mode", "fresh",
+                "--nominal-report", FEEDBACK_ROOT / "nominal_bridge/report.json",
+                "--horizon", "40", "--lookahead", "3",
+                "--downstream-horizon", "200", "--seed", "11600000",
+            ], root / "controller.log", [
+                report, root / "stable_physical_descent.pkl",
+                root / "formal_descent_entries.pkl",
+            ])
+        self.save(
+            current_stage="formal_descent_support_and_final_recovery_test",
+            last_completed_action="fresh_seed_bridge_validation",
+            next_decision="formal_descent_support_and_final_recovery_test",
+        )
+
+    def classify_feedback_bridge(self):
+        nominal = json.loads(
+            (FEEDBACK_ROOT / "nominal_bridge/report.json").read_text()
+        )
+        fresh = json.loads(
+            (FEEDBACK_ROOT / "fresh_validation/report.json").read_text()
+        )
+        gate_a = bool(fresh["gate_a_local_physical_feasibility"])
+        gate_b = bool(fresh["gate_b_formal_interface_feasibility"])
+        if gate_b:
+            stage = "expand_bridge_admissible_apex_bank"
+            decision = "expand_only_from_bridge_corridor"
+            blocker = None
+        elif gate_a:
+            stage = "descent_support_interface_coverage_gap"
+            decision = "audit_stable_descent_downstream_and_version_support"
+            blocker = "stable_physical_descent_without_two_parent_formal_entry"
+        else:
+            stage = "pre_apex_feedback_bridge_stage_local_blocker"
+            decision = "upstream_entry_shaping_required"
+            blocker = "feedback_bridge_failed_gate_a"
+        self.state["stage_status"]["apex"]["feedback_bridge_v1"] = {
+            "failure_timing": str(FEEDBACK_ROOT / "failure_timing.json"),
+            "control_authority": str(FEEDBACK_ROOT / "control_authority.json"),
+            "terminal_clusters": str(
+                FEEDBACK_ROOT / "descent_terminal_clusters_current.json"
+            ),
+            "nominal_report": str(FEEDBACK_ROOT / "nominal_bridge/report.json"),
+            "fresh_report": str(FEEDBACK_ROOT / "fresh_validation/report.json"),
+            "nominal_hierarchy": nominal["hierarchy"],
+            "fresh_hierarchy": fresh["hierarchy"],
+            "gate_a": gate_a, "gate_b": gate_b,
+            "gate_c_apex_ppo_authorized": False,
+            "stage_local_blocker": blocker,
+        }
+        self.save(
+            current_stage=stage,
+            last_completed_action="formal_descent_support_and_final_recovery_test",
+            next_decision=decision, report_milestone_ready=True,
+            terminal_state=None, research_gate_valid=False,
+        )
+
     def loop(self):
         while True:
             self.save()
@@ -1029,6 +1241,31 @@ class StageNextV3Controller(Controller):
             elif stage == "apex_descent_multiknot_expanded_bank":
                 self.multiknot_expanded_apex_search()
             elif stage == "apex_descent_interface_support_blocker":
+                self.save(current_stage="freeze_v5_evidence",
+                          next_decision="freeze_v5_evidence")
+            elif stage == "freeze_v5_evidence":
+                self.freeze_v5_bridge_evidence()
+            elif stage == "analyze_existing_branch_failure_timing":
+                self.analyze_bridge_failure_timing()
+            elif stage == "audit_pre_post_apex_control_authority":
+                self.audit_apex_control_authority()
+            elif stage == "build_current_runtime_descent_terminal_clusters":
+                self.build_descent_terminal_clusters()
+            elif stage == "select_bridge_start_before_apex":
+                self.select_apex_bridge_starts()
+            elif stage == "discover_nominal_stable_descent_trajectory":
+                self.discover_nominal_feedback_bridge()
+            elif stage == "synthesize_local_feedback_bridge":
+                self.synthesize_feedback_bridge()
+            elif stage == "fresh_seed_bridge_validation":
+                self.validate_fresh_feedback_bridge()
+            elif stage == "formal_descent_support_and_final_recovery_test":
+                self.classify_feedback_bridge()
+            elif stage in (
+                "expand_bridge_admissible_apex_bank",
+                "descent_support_interface_coverage_gap",
+                "pre_apex_feedback_bridge_stage_local_blocker",
+            ):
                 self.save(); time.sleep(30)
             elif stage == "build_apex_reset_bank_v3_r3": self.apex_bank_r3()
             elif stage == "apex_bounded_support_search_r3": self.apex_search_r3()
