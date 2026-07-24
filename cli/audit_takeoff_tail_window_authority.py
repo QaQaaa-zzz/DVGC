@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import gc
 import json
 from collections import Counter
 from pathlib import Path
@@ -229,66 +230,85 @@ def main():
         )
         expected = np.asarray(info["separation_h"], float)
         exact_h_error = float(np.max(np.abs(base_vector[:3] - expected)))
+        # Compute the full physical contact-window Jacobian once.  The 4/8/12
+        # audits are exact column subsets, avoiding repeated MJX/CPU replay.
+        all_columns = []
+        for tick in range(separation_tick):
+            for action_dim in range(4):
+                plus = np.asarray(takeoff_actions, float).copy()
+                minus = plus.copy()
+                plus[tick, action_dim] = np.clip(
+                    plus[tick, action_dim] + a.amplitude, -1., 1.
+                )
+                minus[tick, action_dim] = np.clip(
+                    minus[tick, action_dim] - a.amplitude, -1., 1.
+                )
+                denominator = plus[tick, action_dim] - minus[tick, action_dim]
+                column = {
+                    "relative_action_tick": tick - separation_tick,
+                    "absolute_action_tick": tick,
+                    "action_dimension": action_dim,
+                    "valid": False,
+                }
+                if denominator <= 1e-9:
+                    column["invalid_reason"] = "saturated_zero_denominator"
+                    all_columns.append(column)
+                    continue
+                _, plus_vector, plus_diag, plus_torque, _ = rollout(
+                    source_row, plus, seed
+                )
+                _, minus_vector, minus_diag, minus_torque, _ = rollout(
+                    source_row, minus, seed
+                )
+                if (plus_diag["robot_terrain_contact_count"] != 0
+                        or minus_diag["robot_terrain_contact_count"] != 0):
+                    column["invalid_reason"] = (
+                        "not_separated_at_baseline_event_tick"
+                    )
+                    all_columns.append(column)
+                    continue
+                derivative = (plus_vector - minus_vector) / denominator
+                torque_delta = max(
+                    np.linalg.norm(plus_torque - base_torque),
+                    np.linalg.norm(minus_torque - base_torque),
+                )
+                column.update({
+                    "valid": True,
+                    "derivative": derivative,
+                    "maximum_change": np.maximum(
+                        np.abs(plus_vector - base_vector),
+                        np.abs(minus_vector - base_vector),
+                    ),
+                    "contact_torque_integral_change": torque_delta,
+                    "hx_derivative": float(derivative[0]),
+                    "hy_derivative": float(derivative[1]),
+                })
+                all_columns.append(column)
+            # MuJoCo CPU replay objects are intentionally short-lived.
+            gc.collect()
+
         windows = {}
         for requested in ("4", "8", "12", "full"):
             start, width, complete = _window_start(
                 separation_tick, requested
             )
-            columns = []
-            column_meta = []
-            invalid_pairs = 0
-            max_changes = np.zeros(len(OUTPUTS))
-            torque_changes = []
-            for tick in range(start, separation_tick):
-                for action_dim in range(4):
-                    plus = np.asarray(takeoff_actions, float).copy()
-                    minus = plus.copy()
-                    plus[tick, action_dim] = np.clip(
-                        plus[tick, action_dim] + a.amplitude, -1., 1.
-                    )
-                    minus[tick, action_dim] = np.clip(
-                        minus[tick, action_dim] - a.amplitude, -1., 1.
-                    )
-                    denominator = (
-                        plus[tick, action_dim] - minus[tick, action_dim]
-                    )
-                    if denominator <= 1e-9:
-                        invalid_pairs += 1
-                        continue
-                    _, plus_vector, plus_diag, plus_torque, _ = rollout(
-                        source_row, plus, seed
-                    )
-                    _, minus_vector, minus_diag, minus_torque, _ = rollout(
-                        source_row, minus, seed
-                    )
-                    if (plus_diag["robot_terrain_contact_count"] != 0
-                            or minus_diag["robot_terrain_contact_count"] != 0):
-                        invalid_pairs += 1
-                        continue
-                    derivative = (
-                        plus_vector - minus_vector
-                    ) / denominator
-                    columns.append(derivative)
-                    max_changes = np.maximum(
-                        max_changes,
-                        np.maximum(
-                            np.abs(plus_vector - base_vector),
-                            np.abs(minus_vector - base_vector),
-                        ),
-                    )
-                    torque_delta = max(
-                        np.linalg.norm(plus_torque - base_torque),
-                        np.linalg.norm(minus_torque - base_torque),
-                    )
-                    torque_changes.append(torque_delta)
-                    column_meta.append({
-                        "relative_action_tick": tick - separation_tick,
-                        "absolute_action_tick": tick,
-                        "action_dimension": action_dim,
-                        "contact_torque_integral_change": torque_delta,
-                        "hx_derivative": float(derivative[0]),
-                        "hy_derivative": float(derivative[1]),
-                    })
+            selected = [
+                row for row in all_columns
+                if row["absolute_action_tick"] >= start
+            ]
+            valid = [row for row in selected if row["valid"]]
+            columns = [row["derivative"] for row in valid]
+            column_meta = [{
+                key: value for key, value in row.items()
+                if key not in ("derivative", "maximum_change")
+            } for row in valid]
+            invalid_pairs = len(selected) - len(valid)
+            max_changes = np.max(
+                [row["maximum_change"] for row in valid], axis=0
+            ) if valid else np.zeros(len(OUTPUTS))
+            torque_changes = [
+                row["contact_torque_integral_change"] for row in valid
+            ]
             matrix = (
                 np.asarray(columns, float).T
                 if columns else np.zeros((len(OUTPUTS), 0))
