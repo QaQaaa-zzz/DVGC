@@ -1,5 +1,37 @@
 # DVGC Experiment State
 
+- 2026-07-24 pre-Apex feedback bridge diagnostic (`3a21582`, `cd5e2c3`,
+  `731be20`, strict Gate-A correction `7da4a37`).  Existing 1,092 dynamic
+  branches were aligned to physical Apex without replay: 1,006 cross Apex,
+  failure-minus-Apex is p50/p95/max = 1/8/13 ticks, and 1,020 already show
+  obvious pose divergence before the first nonzero bridge action.  A transient
+  four-tick negative-vz segment occurs in 113 branches.  State-only
+  leave-one-parent-out survival ranking is non-predictive (AUC 0.502);
+  observed action-family rate variance is 5.37x the initial-candidate grouping
+  variance.  These are diagnostics, never Tube/viability labels.
+- Five-parent, 20-snapshot paired non-saturating pulse audit measures horizons
+  1/2/4/8.  `reference:131` and `89ff...fcf0` retain rank-two event-local
+  pose response; `2f34...a87` requires correction by Apex-3 ticks;
+  `3161...7f7` and `5b73...69e4` have strong pitch but insufficient roll
+  authority throughout the sampled window and classify as upstream-entry
+  shaping required.  Current-runtime terminal proposals contain all 20
+  Final-safe plus 29 stable boundary states; dead/unknown and one unstable
+  boundary are excluded.  The old 35.48% reset-shock statistic is superseded:
+  it counted successful next-entry terminals as shocks; physical reset shock
+  reconstructed from the existing 372 branch records is 0/372.
+- Event-start receding-horizon bounded shooting on robust parents
+  `reference:131` and `89ff...fcf0` forms a four-tick stable negative-vz
+  segment in 2/2 nominal and 8/8 fresh-dynamics branches, but every branch
+  subsequently terminates by roll.  Formal Descent entry, frozen Descent
+  continuation success and Landing Final-Recovery are all 0/10.  Direct
+  continuation from each saved transient state also fails by roll.  Therefore
+  strict Gate A/B/C = FAIL/FAIL/FAIL; the original run-local Gate-A boolean is
+  superseded by `gate_reclassification_v2.json`, which enforces absence of
+  later physical failure.  No PPO or frozen-asset change occurred.  Controller
+  is active/quiescent at `pre_apex_feedback_bridge_stage_local_blocker`; next
+  evidence-based action is earlier pre-Apex/upstream roll-momentum shaping,
+  not matcher expansion or generic-Apex state collection.
+
 - 2026-07-24 Apex->Descent interface audit and fresh-parent acquisition
   (`86e46b7`, `7417b70`, `649acf0`, `4a7321d`, `307a7bf`, OOM-resume
   `b912b4d`/`485b118`).  Frozen XML, Takeoff proposal bank, Landing policy,

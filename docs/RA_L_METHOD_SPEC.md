@@ -132,6 +132,35 @@ None of those labels survive the policy change.
 Every candidate is relabeled by fresh independent branches after the shared
 Actor is frozen; only that recertification defines the paper's final JEL.
 
+## Apex-to-Descent Discovery Bridge
+
+Generic Apex entry is not interchangeable with a valid Descent entry.  When
+open-loop Apex actions fail before the frozen Descent-support event, discovery
+may move its internal control boundary into the real pre-Apex trajectory and
+use a bounded feedback bridge:
+
+```text
+late Ascent pose shaping -> physical Apex crossing -> stable negative-vz
+segment -> formal Descent-support entry -> frozen downstream continuation
+```
+
+Finite-difference authority probes and receding-horizon shooting are local
+controller diagnostics, not learned reachability, Tube certification, or a
+change to the phase detector.  Their actions retain the authoritative limits,
+and formal entry continues to use the frozen matcher and radius.  Evidence is
+reported as a strict hierarchy: physical Apex crossed, stable physical
+Descent, formal Descent-support entry, Descent-controller success, and Landing
+Final-Recovery.  A short negative-vertical-velocity segment that later
+terminates physically is retained as transient diagnostic evidence but does
+not pass the local physical-feasibility gate.
+
+Apex PPO remains closed until at least two parent-disjoint trajectories reach
+formal Descent support under fresh dynamics, the successful bridge restores
+exactly, the dynamic reset bank has the declared coverage, and reward/runtime
+preflights pass.  If feedback produces only transient Descent followed by
+physical failure, the result is an upstream-entry/pose-corridor support gap,
+not a Descent-support coverage gap and not physical unreachability.
+
 ## Flight-to-Landing Entry Contract
 
 The Flight successor set `C_L` is a canonical Landing-entry bank, not the
