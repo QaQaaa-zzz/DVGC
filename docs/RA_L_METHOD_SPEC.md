@@ -187,6 +187,18 @@ formal support entry under fresh dynamics.  Gate B requires fresh formal entry
 from two independent parents plus the frozen downstream continuation.  Neither
 gate authorizes Apex PPO by itself.
 
+Contact-supported authority and bridge discovery also require a runtime
+comparability gate.  From the same named source snapshot, action sequence and
+dynamics seed, CPU MuJoCo and MJX must agree on the last-contact/separation
+event to within one control tick and on full-system separation centroidal
+angular momentum to within a predeclared 0.03 L-infinity tolerance.  CPU
+replays must be repeatable and repeated MJX replays must not exhibit a
+material contact-branch spread.  A stage-handoff save/restore lineage is a
+composite policy trace, not a continuous physical lineage for an authority
+window that spans the handoff.  Failure of this runtime gate invalidates the
+authority screen and stops candidate discovery before E0; it is not evidence
+of physical unreachability and cannot authorize PPO.
+
 ## Flight-to-Landing Entry Contract
 
 The Flight successor set `C_L` is a canonical Landing-entry bank, not the

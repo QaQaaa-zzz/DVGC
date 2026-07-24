@@ -1,5 +1,36 @@
 # DVGC Experiment State
 
+- 2026-07-24 Takeoff-tail runtime-comparability gate (`9e18c20`, `61e40a9`,
+  `bdbaeeb`, `6cd9a9b`, continuous-lineage correction `74fb9f1`,
+  cross-engine gate `7e597cb`).  The historical 3161/5b73 records cross an
+  Ascent handoff restore and therefore are composite policy traces, not one
+  continuous physical lineage for a 22-tick contact-authority window.  A new
+  continuous MJX replay from each real Takeoff source exposed material
+  contact-branch sensitivity; CPU MuJoCo replay is bit-repeatable while the
+  repeated MJX 3161/5b73 terminal spreads reach qpos L-infinity
+  0.1133/0.1666 and qvel L-infinity 0.2450/0.1635.
+- The formal four-parent CPU-MuJoCo/MJX gate replays the identical source
+  snapshot and recorded action prefix.  Its fixed acceptance rule is
+  separation-event delta <=1 control tick and separation centroidal-momentum
+  L-infinity delta <=0.03.  Results are: 2f34 PASS (1 tick, 0.00279);
+  89ff FAIL (1 tick, 0.11733); 3161 FAIL (16 ticks, 0.75370); and 5b73 FAIL
+  (16 ticks, 0.75236).  Overall status is
+  `takeoff_tail_cross_engine_mismatch`; authority/discovery and PPO are false.
+  The completed v1 authority trends are retained as diagnostic-only and are
+  not valid for selecting a control window.  No shortest window, E0,
+  neighborhood, second-parent success, Gate A/B/C, Final result, or new
+  proposal/Tubes were produced.
+- Controller state is the explicit terminal `gate_pause` (exit 40), with no
+  worker/GPU task.  The watchdog reads this as a research gate and does not
+  recover it.  Next action requires choosing and validating one canonical
+  contact runtime or reconciling CPU MuJoCo/MJX contact semantics, then
+  rebuilding continuous lineage provenance; this is a runtime-method decision,
+  not another bounded controller iteration.  Runtime gate itself remains
+  PASS/current at source fingerprint `ce02673...dc96b`; authoritative XML
+  remains `d7e9f43...ce794c`, config `949398...143d`, Takeoff bank
+  `ccbfe9...933ce`, frozen Descent policy `527216...35f2`, and frozen Landing
+  policy `fa3a51...bb7e`.
+
 - 2026-07-24 event-aligned horizon/centroidal audit and contact-supported
   bridge (`e3aab98`, `50ee3d6`, paired-response correction `6242b58`, exact
   upstream lineage `6fd1672`, segmented bridge `485fc3e`).  The old
