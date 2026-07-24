@@ -24,6 +24,9 @@ ASCENT_ATTEMPT = Path("runs/stage_next_takeoff_keyposture_seed0_20260723/ascent/
 DESCENT_SUPPORT = Path("runs/stage_next_bootstrap_seed0_20260720/support_v2/descent_proposal_support_v1.pkl")
 LANDING_BANK = Path("artifacts/landing_tube.pkl")
 LANDING_POLICY = Path("runs/landing/refinement_seed0/policy")
+DESCENT_POLICY = Path(
+    "runs/stage_experts/descent_tube_seed0_20260716T2330/round_3/train/policy"
+)
 
 
 def _controller_counts(report: Path, name: str) -> tuple[int, int, int]:
@@ -693,6 +696,140 @@ class StageNextV3Controller(Controller):
             research_gate_valid=False,
         )
 
+    def freeze_interface_evidence(self):
+        root = RUN / "apex/interface_v5"
+        manifest = root / "frozen_inputs.json"
+        if not manifest.exists():
+            save_json(manifest, {
+                "status": "PASS", "artifact_role": "frozen_apex_descent_interface_inputs",
+                "apex_bank": str((RUN / "apex/dynamic_bank_v4/bank.pkl").resolve()),
+                "apex_bank_sha256": file_sha256(RUN / "apex/dynamic_bank_v4/bank.pkl"),
+                "support_bank": str(DESCENT_SUPPORT.resolve()),
+                "support_bank_sha256": file_sha256(DESCENT_SUPPORT),
+                "descent_policy": str(DESCENT_POLICY.resolve()),
+                "descent_policy_sha256": file_sha256(DESCENT_POLICY / "params.pkl"),
+                "landing_policy": str(LANDING_POLICY.resolve()),
+                "landing_policy_sha256": file_sha256(LANDING_POLICY / "params.pkl"),
+                "xml_sha256": file_sha256("assets/orange_bike_4kg_horizontal.xml"),
+                "late_ascent_policy_role": "proposal_checkpoint_only",
+                "late_ascent_policy_sha256": file_sha256(
+                    RUN / "ascent/late_discovery/block_1_025600/train/policy/params.pkl"
+                ),
+                "matcher_radius_frozen": 2.213986224699026,
+                "no_ppo_authorized": True,
+            })
+        self.state["stage_status"]["apex"]["evidence_classification"] = {
+            "ascent_generic_apex": "multi_parent_dynamic_reachability_confirmed",
+            "late_ascent_ppo": "training_neighborhood_memorization_without_parent_disjoint_generalization",
+            "dynamic_apex_bank": "dynamic_apex_proposal_bank_incomplete",
+            "local_blocker": "apex_descent_interface_support_blocker",
+            "manifest": str(manifest),
+        }
+        self.save(
+            current_stage="reproduce_three_dynamic_parents",
+            last_completed_action="freeze_current_proposal_evidence",
+            next_decision="reproduce_three_dynamic_parents",
+            terminal_state=None, research_gate_valid=False,
+        )
+
+    def reproduce_dynamic_parents(self):
+        root = RUN / "apex/interface_v5"
+        report = root / "parent_robustness.json"
+        if not report.exists():
+            self._worker("reproduce_three_dynamic_apex_parents", [
+                PYTHON, "-u", "-m", "cli.reproduce_dynamic_apex_parents",
+                "--reference-bank", RUN / "ascent/reverse_diagnostic_v4_6.pkl",
+                "--entry-bank", RUN / "ascent/independent_parent_acquisition_v1/fresh_ascent_entries.pkl",
+                "--acquisition-report", RUN / "ascent/independent_parent_acquisition_v1/report.json",
+                "--output", report, "--seed", "10900000",
+            ], root / "parent_robustness.log", [report])
+        self.state["stage_status"]["apex"]["parent_robustness"] = {
+            "report": str(report),
+            "parents": json.loads(report.read_text())["parents"],
+        }
+        self.save(
+            current_stage="audit_descent_support_runtime_compatibility",
+            last_completed_action="reproduce_three_dynamic_parents",
+            next_decision="audit_descent_support_runtime_compatibility",
+        )
+
+    def audit_descent_runtime(self):
+        root = RUN / "apex/interface_v5"
+        report = root / "descent_support_runtime_audit.json"
+        if not report.exists():
+            self._worker("audit_descent_support_runtime_compatibility", [
+                PYTHON, "-u", "-m", "cli.audit_descent_support_compatibility",
+                "--support-bank", DESCENT_SUPPORT,
+                "--descent-policy", DESCENT_POLICY,
+                "--landing-policy", LANDING_POLICY,
+                "--output", report, "--branches", "4", "--horizon", "200",
+                "--seed", "11000000",
+            ], root / "descent_support_runtime_audit.log", [report])
+        payload = json.loads(report.read_text())
+        self.state["stage_status"]["apex"]["descent_runtime_compatibility"] = {
+            "report": str(report),
+            "runtime_stale": payload["descent_support_runtime_stale"],
+            "reset_valid_rate": payload["reset_valid_rate"],
+            "descent_controller_success_rate": payload["descent_controller_success_rate"],
+            "landing_final_recovery_rate": payload["landing_final_recovery_rate"],
+        }
+        self.save(
+            current_stage="audit_descent_feature_semantics",
+            last_completed_action="audit_descent_support_runtime_compatibility",
+            next_decision="audit_descent_feature_semantics",
+        )
+
+    def audit_descent_features(self):
+        root = RUN / "apex/interface_v5"
+        report = root / "descent_feature_semantics.json"
+        if not report.exists():
+            self.run_command("audit_descent_feature_semantics", [
+                PYTHON, "-m", "cli.audit_descent_feature_semantics",
+                "--apex-bank", RUN / "apex/dynamic_bank_v4/bank.pkl",
+                "--support-bank", DESCENT_SUPPORT, "--output", report,
+            ], root / "descent_feature_semantics.log", [report])
+        payload = json.loads(report.read_text())
+        self.state["stage_status"]["apex"]["feature_semantics"] = {
+            "report": str(report),
+            "deterministic_error": payload["deterministic_semantics_error_found"],
+            "angle_rank_changes": payload["angle_wrapping_changed_nearest_count"],
+            "drop_x_rank_changes": payload["drop_absolute_x_changed_nearest_count"],
+        }
+        self.save(
+            current_stage="apex_descent_multiknot_bounded_search",
+            last_completed_action="audit_descent_feature_semantics",
+            next_decision="apex_descent_multiknot_bounded_search",
+        )
+
+    def multiknot_apex_search(self):
+        root = RUN / "apex/interface_v5"
+        report = root / "multiknot_search.json"
+        if not report.exists():
+            self._worker("apex_descent_multiknot_bounded_search", [
+                PYTHON, "-u", "-m", "cli.search_apex_descent_multiknot",
+                "--apex-bank", RUN / "apex/dynamic_bank_v4/bank.pkl",
+                "--support-bank", DESCENT_SUPPORT,
+                "--descent-policy", DESCENT_POLICY,
+                "--landing-policy", LANDING_POLICY,
+                "--output", report, "--horizon", "100",
+                "--downstream-horizon", "200",
+                "--round-b-proposals", "48", "--seed", "11100000",
+            ], root / "multiknot_search.log", [report])
+        payload = json.loads(report.read_text())
+        self.state["stage_status"]["apex"]["multiknot_search"] = {
+            "report": str(report),
+            "descent_positive_unique": payload["dynamic_descent_positive_unique"],
+            "descent_positive_parents": payload["dynamic_descent_positive_parents"],
+            "final_recovery_branches": payload["final_recovery_branches"],
+            "failure_modes": payload["failure_modes"],
+        }
+        self.save(
+            current_stage="mine_fourth_independent_apex_parent",
+            last_completed_action="classify_interface_failure_modes",
+            next_decision="mine_fourth_independent_apex_parent",
+            terminal_state=None, research_gate_valid=False,
+        )
+
     def loop(self):
         while True:
             self.save()
@@ -744,8 +881,22 @@ class StageNextV3Controller(Controller):
             elif stage == "apex_descent_bounded_search_v4":
                 self.apex_search_v4()
             elif stage in ("apex_training_authorized",
-                           "apex_dynamic_support_stage_local_blocker",
                            "ascent_multi_parent_controller_gap"):
+                self.save(); time.sleep(30)
+            elif stage == "apex_dynamic_support_stage_local_blocker":
+                self.save(current_stage="freeze_current_proposal_evidence",
+                          next_decision="freeze_current_proposal_evidence")
+            elif stage == "freeze_current_proposal_evidence":
+                self.freeze_interface_evidence()
+            elif stage == "reproduce_three_dynamic_parents":
+                self.reproduce_dynamic_parents()
+            elif stage == "audit_descent_support_runtime_compatibility":
+                self.audit_descent_runtime()
+            elif stage == "audit_descent_feature_semantics":
+                self.audit_descent_features()
+            elif stage == "apex_descent_multiknot_bounded_search":
+                self.multiknot_apex_search()
+            elif stage == "mine_fourth_independent_apex_parent":
                 self.save(); time.sleep(30)
             elif stage == "build_apex_reset_bank_v3_r3": self.apex_bank_r3()
             elif stage == "apex_bounded_support_search_r3": self.apex_search_r3()

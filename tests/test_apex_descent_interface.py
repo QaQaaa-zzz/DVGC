@@ -41,3 +41,18 @@ def test_multiknot_search_uses_real_event_and_failure_typing():
     assert "round_b_executed" in text
     assert "matcher_radius_unchanged" in text
     assert "final_recovery_branches" in text
+
+
+def test_controller_runs_interface_audits_before_any_apex_training():
+    text = Path("cli/stage_next_v3_controller.py").read_text()
+    order = [
+        "freeze_current_proposal_evidence",
+        "reproduce_three_dynamic_parents",
+        "audit_descent_support_runtime_compatibility",
+        "audit_descent_feature_semantics",
+        "apex_descent_multiknot_bounded_search",
+        "mine_fourth_independent_apex_parent",
+    ]
+    for stage in order:
+        assert stage in text
+    assert '"no_ppo_authorized": True' in text
