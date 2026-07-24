@@ -47,6 +47,14 @@ def main() -> None:
     p.add_argument("--branches", type=int, default=4)
     p.add_argument("--horizon", type=int, default=200)
     p.add_argument("--seed", type=int, default=11_000_000)
+    p.add_argument(
+        "--indices",
+        help="Comma-separated support indices for a targeted runtime check.",
+    )
+    p.add_argument(
+        "--historical-audit",
+        help="Optional prior audit used only for label-agreement reporting.",
+    )
     a = p.parse_args()
     bank = SnapshotBank.load(a.support_bank)
     dp, dc, dm = load_bundle(a.descent_policy, verify_files=True)
@@ -70,8 +78,23 @@ def main() -> None:
         key: {"shape": list(value.shape), "dtype": str(value.dtype)}
         for key, value in sample_obs.items()
     }
+    selected_indices = (
+        [int(value) for value in a.indices.split(",") if value.strip()]
+        if a.indices else list(range(len(bank.records)))
+    )
+    if len(set(selected_indices)) != len(selected_indices) or any(
+        index < 0 or index >= len(bank.records) for index in selected_indices
+    ):
+        raise SystemExit("indices must be unique valid support-bank indices")
+    historical_rows = {}
+    if a.historical_audit:
+        prior = json.loads(Path(a.historical_audit).read_text())
+        historical_rows = {
+            row["candidate_id"]: row for row in prior.get("rows", [])
+        }
     rows = []
-    for i, row in enumerate(bank.records):
+    for i in selected_indices:
+        row = bank.records[i]
         branches = []
         for branch in range(a.branches):
             seed = a.seed + i * 100 + branch
@@ -86,6 +109,13 @@ def main() -> None:
             landing_snapshot = None
             reason = "horizon_exhaustion"
             shock_failure = False
+            stable_descent_ticks = 0
+            maximum_abs_pitch = abs(float(np.asarray(
+                env._physical_feature(state.data)[4]
+            )))
+            maximum_abs_pitch_rate = abs(float(np.asarray(
+                env._physical_feature(state.data)[10]
+            )))
             for tick in range(a.horizon):
                 key, action_key, noise_key = jax.random.split(key, 3)
                 action, _ = infer(state.obs, action_key)
@@ -95,6 +125,13 @@ def main() -> None:
                             noise_key, action.shape)) * .01, -1, 1
                     )
                 state = step(state, action)
+                feature = np.asarray(env._physical_feature(state.data))
+                maximum_abs_pitch = max(
+                    maximum_abs_pitch, abs(float(feature[4]))
+                )
+                maximum_abs_pitch_rate = max(
+                    maximum_abs_pitch_rate, abs(float(feature[10]))
+                )
                 sample = sample_from_state(env, state, previous_vz)
                 entry = evaluate_entry("descent", sample, cfg)
                 if entry["valid"]:
@@ -108,6 +145,7 @@ def main() -> None:
                     ):
                         shock_failure = True
                     break
+                stable_descent_ticks += 1
                 previous_vz = float(sample["physical_feature"][8])
             final = False; landing_reason = None
             if landing_snapshot is not None:
@@ -130,12 +168,19 @@ def main() -> None:
                 "five_step_reset_shock_failure": shock_failure,
                 "descent_controller_success": landing_snapshot is not None,
                 "time_to_landing_entry": tick + 1 if landing_snapshot else None,
+                "stable_descent_ticks": stable_descent_ticks,
+                "maximum_abs_pitch": maximum_abs_pitch,
+                "maximum_abs_pitch_rate": maximum_abs_pitch_rate,
                 "final_landing_recovery": final,
                 "physical_failure": physical,
                 "termination_reason": reason,
                 "landing_termination_reason": landing_reason,
             })
-        original = row.get("final", {}).get("label")
+        historical = historical_rows.get(row["id"], {})
+        original = (
+            historical.get("replay_label")
+            or row.get("final", {}).get("label")
+        )
         replay = _replay_label(branches)
         comparable = {
             "safe": "final_safe_replay", "boundary": "boundary_replay",
@@ -143,13 +188,19 @@ def main() -> None:
         }
         rows.append({
             "candidate_id": row["id"],
+            "support_index": i,
             "parent": row.get("origin_parent", row.get("trajectory_parent_id", row["id"])),
             "region": row.get("descent_support_region"),
             "source_provenance": row.get("support_provenance"),
             "original_final_label": original,
             "replay_label": replay,
             "original_label_agrees": (
-                comparable.get(original) == replay if original in comparable else None
+                original == replay
+                if historical
+                else (
+                    comparable.get(original) == replay
+                    if original in comparable else None
+                )
             ),
             "branches": branches,
         })
@@ -237,6 +288,15 @@ def main() -> None:
         ),
         "staleness_rule": "restore or phase validity below 95%, or more than half of states fail within the fixed five-step continuation window",
         "proposal_support_only": True,
+        "selected_indices": selected_indices,
+        "maximum_stable_descent_ticks": max(
+            (branch["stable_descent_ticks"] for branch in flat), default=0
+        ),
+        "descent_asset_runtime_check": (
+            "PASS"
+            if any(branch["final_landing_recovery"] for branch in flat)
+            else "FAIL"
+        ),
     }
     save_json(a.output, payload)
     print(json.dumps({k: v for k, v in payload.items()
