@@ -97,14 +97,17 @@ def main() -> None:
                 state = step(state, action)
                 sample = sample_from_state(env, state, previous_vz)
                 entry = evaluate_entry("descent", sample, cfg)
-                if tick < 5 and float(np.asarray(state.done)) > .5:
-                    shock_failure = True
                 if entry["valid"]:
                     landing_snapshot = env.snapshot_record(state, "landing")
                     reason = "valid_landing_entry"; break
                 if float(np.asarray(state.done)) > .5:
                     code = int(np.asarray(state.info["end_code"]))
-                    reason = END_REASON.get(code, f"unknown_{code}"); break
+                    reason = END_REASON.get(code, f"unknown_{code}")
+                    if tick < 5 and reason not in (
+                        "recovery", "chain_entry", "next_stage_entry",
+                    ):
+                        shock_failure = True
+                    break
                 previous_vz = float(sample["physical_feature"][8])
             final = False; landing_reason = None
             if landing_snapshot is not None:
