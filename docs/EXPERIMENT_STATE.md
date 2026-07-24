@@ -1093,7 +1093,11 @@
 - Bounded extensions exhausted the local family without a continuing joint
   trend: earlier window 6.8925, pulse-inclusive window 6.8428, larger residual
   bound 6.5863, and three-segment pitch guard 7.0782/roll_limit.  Delaying the
-  launch by 1--6 ticks always caused missed liftoff.  Current state is
+  launch by 1--6 ticks always caused missed liftoff.  A final six-dimensional
+  search added hip/knee control over the last four pre-event Approach ticks;
+  both optimized pre-event residuals remained exactly zero and the result was
+  identical to 6.5863, confirming the momentum plateau within the authorized
+  action family.  Current state is
   `gate_pause: bounded_local_bridge_plateau`; matcher, failure definition,
   frozen policies, XML/action limits and PPO authorization remain unchanged.
   Compact artifact:

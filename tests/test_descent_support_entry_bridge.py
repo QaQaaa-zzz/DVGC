@@ -3,7 +3,7 @@ from pathlib import Path
 
 def test_bridge_search_is_low_dimensional_and_natural_lineage():
     text = Path("cli/search_descent_support_entry_bridge.py").read_text()
-    assert "params = np.zeros(args.segments * 2" in text
+    assert "args.segments * 2 + (" in text
     assert "for radius in (0.16, 0.08, 0.04, 0.02)" in text
     assert "restore_snapshot" not in text
     assert '"domain_randomization": False' in text
@@ -16,4 +16,5 @@ def test_bridge_search_is_low_dimensional_and_natural_lineage():
     assert '"--screen-delays"' in text
     assert "control_tick = local_tick - launch_delay" in text
     assert 'choices=(2, 3)' in text
+    assert '"--approach-tail-start"' in text
     assert '"squared_contribution"' in text

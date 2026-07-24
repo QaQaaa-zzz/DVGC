@@ -20,12 +20,16 @@ from dvgc.runtime import build_inference, save_json
 
 def _run(env, step, matcher, reference, cfg, descent_infer, landing_infer,
          params, seed, horizon, window_start=7, window_end=15,
-         launch_delay=0, record=False):
+         launch_delay=0, segments=2, approach_tail_start=None, record=False):
     state = env.reset(jax.random.PRNGKey(seed))
     key = jax.random.PRNGKey(seed + 1)
     tick = 0
     while int(state.info["phase"]) < 1 and not float(state.done):
-        state = step(state, np.asarray([0.0, 1.0, 0.0, 0.0], np.float32))
+        action = np.asarray([0.0, 1.0, 0.0, 0.0], np.float32)
+        if approach_tail_start is not None and tick >= approach_tail_start:
+            action[2:] += params[segments * 2:segments * 2 + 2]
+            action = np.clip(action, -1.0, 1.0)
+        state = step(state, action)
         tick += 1
     approach_ticks = tick
     previous_vz = float(state.data.qvel[2])
@@ -55,7 +59,6 @@ def _run(env, step, matcher, reference, cfg, descent_infer, landing_infer,
                     env, cfg, state, reference, control_tick, 3, 105, 10
                 )
             if window_start <= control_tick < window_end:
-                segments = len(params) // 2
                 segment = min(
                     (control_tick - window_start) * segments
                     // max(window_end - window_start, 1),
@@ -187,6 +190,11 @@ def main():
     parser.add_argument("--launch-delay", type=int, default=0)
     parser.add_argument("--segments", type=int, choices=(2, 3), default=2)
     parser.add_argument(
+        "--approach-tail-start",
+        type=int,
+        help="natural-reset tick for an additional two-parameter hip/knee tail",
+    )
+    parser.add_argument(
         "--screen-delays",
         help="comma-separated launch delays; evaluate nominal only and exit",
     )
@@ -214,7 +222,10 @@ def main():
     landing_infer = build_inference(env, lp, deterministic=True)
     reference = pd.read_csv(args.reference)
 
-    params = np.zeros(args.segments * 2, np.float32)
+    params = np.zeros(
+        args.segments * 2 + (2 if args.approach_tail_start is not None else 0),
+        np.float32,
+    )
     if args.screen_delays:
         delays = [int(value) for value in args.screen_delays.split(",")]
         rows = []
@@ -222,7 +233,8 @@ def main():
             result, _ = _run(
                 env, step, matcher, reference, cfg,
                 descent_infer, landing_infer, params, args.seed, args.horizon,
-                args.window_start, args.window_end, delay,
+                args.window_start, args.window_end, delay, args.segments,
+                args.approach_tail_start,
             )
             rows.append({"launch_delay": delay, **result})
         save_json(output / "timing_screen.json", {
@@ -237,7 +249,7 @@ def main():
     baseline, _ = _run(
         env, step, matcher, reference, cfg, descent_infer, landing_infer,
         params, args.seed, args.horizon, args.window_start, args.window_end,
-        args.launch_delay,
+        args.launch_delay, args.segments, args.approach_tail_start,
     )
     evaluations.append(baseline)
     best = baseline
@@ -258,6 +270,7 @@ def main():
                         args.seed, args.horizon,
                         args.window_start, args.window_end,
                         args.launch_delay,
+                        args.segments, args.approach_tail_start,
                     )
                     result["radius"] = radius
                     result["dimension"] = dimension
@@ -275,7 +288,8 @@ def main():
         result, arrays = _run(
             env, step, matcher, reference, cfg, descent_infer, landing_infer,
             params, args.seed, args.horizon,
-            args.window_start, args.window_end, args.launch_delay, record=True,
+            args.window_start, args.window_end, args.launch_delay,
+            args.segments, args.approach_tail_start, record=True,
         )
         strict_runs.append(result)
         if strict_arrays is None:
@@ -305,9 +319,13 @@ def main():
             f"segment_{segment}_{joint}"
             for segment in range(1, args.segments + 1)
             for joint in ("hip", "knee")
-        ],
+        ] + (
+            ["approach_tail_hip", "approach_tail_knee"]
+            if args.approach_tail_start is not None else []
+        ),
         "window_ticks": [args.window_start, args.window_end],
         "launch_delay": args.launch_delay,
+        "approach_tail_start": args.approach_tail_start,
         "residual_bound": args.residual_bound,
         "trust_region_schedule": [0.16, 0.08, 0.04, 0.02],
         "evaluations": len(evaluations),
