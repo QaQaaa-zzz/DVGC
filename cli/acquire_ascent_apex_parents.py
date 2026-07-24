@@ -420,23 +420,67 @@ def main() -> None:
     for spec in args.policy:
         name, path = spec.split("=", 1)
         policies.append((name, Path(path)))
-    reference_replay = _reproduce_reference_parents(
-        args, cfg, env, step, reference_bank
-    )
-    entries, takeoff_attempts, source_mix, controller_mix, entry_pool = _takeoff_entries(
-        args, cfg, env, step, source, policies
-    )
-    SnapshotBank(entries, {
-        "artifact_role": "fresh_parent_disjoint_ascent_entry_proposals",
-        "certified_tube": False, "safe_claim_allowed": False,
-        "source_takeoff_bank_sha256": file_sha256(args.takeoff_bank),
-        "generation_seed": args.seed,
-    }).save(root / "fresh_ascent_entries.pkl")
+    entry_path = root / "fresh_ascent_entries.pkl"
+    entry_report_path = root / "fresh_ascent_entries_report.json"
+    if entry_path.exists():
+        entries = SnapshotBank.load(entry_path).records
+        entry_report = (json.loads(entry_report_path.read_text())
+                        if entry_report_path.exists() else {})
+        reference_replay = entry_report.get("reference_parent_replay")
+        if reference_replay is None:
+            reference_replay = _reproduce_reference_parents(
+                args, cfg, env, step, reference_bank
+            )
+        takeoff_attempts = entry_report.get("fresh_takeoff_attempts", [])
+        source_mix = dict(Counter(row["upstream_source_kind"] for row in entries))
+        controller_mix = dict(Counter(row["takeoff_controller"] for row in entries))
+        entry_pool = entry_report.get(
+            "fresh_ascent_entry_pool_before_diversity_selection"
+        )
+    else:
+        reference_replay = _reproduce_reference_parents(
+            args, cfg, env, step, reference_bank
+        )
+        entries, takeoff_attempts, source_mix, controller_mix, entry_pool = _takeoff_entries(
+            args, cfg, env, step, source, policies
+        )
+        SnapshotBank(entries, {
+            "artifact_role": "fresh_parent_disjoint_ascent_entry_proposals",
+            "certified_tube": False, "safe_claim_allowed": False,
+            "source_takeoff_bank_sha256": file_sha256(args.takeoff_bank),
+            "generation_seed": args.seed,
+        }).save(entry_path)
+        save_json(entry_report_path, {
+            "status": "PASS",
+            "reference_parent_replay": reference_replay,
+            "fresh_takeoff_attempts": takeoff_attempts,
+            "fresh_ascent_entry_pool_before_diversity_selection": entry_pool,
+            "fresh_ascent_entries": len(entries),
+            "fresh_ascent_entry_source_mix": source_mix,
+            "fresh_ascent_entry_controller_mix": controller_mix,
+            "entry_bank_sha256": file_sha256(entry_path),
+        })
+    shard_root = root / "parent_search_shards"
+    shard_root.mkdir(parents=True, exist_ok=True)
     round_a, apex_snapshots = [], []
     for row in entries:
-        outcomes, snapshots = _search_parent(
-            args, cfg, env, step, row, _round_a(), "A"
-        )
+        result_path = shard_root / f"{row['trajectory_parent_id']}_round_a.json"
+        snapshot_path = shard_root / f"{row['trajectory_parent_id']}_round_a.pkl"
+        if result_path.exists() and snapshot_path.exists():
+            outcomes = json.loads(result_path.read_text())["outcomes"]
+            snapshots = SnapshotBank.load(snapshot_path).records
+        else:
+            outcomes, snapshots = _search_parent(
+                args, cfg, env, step, row, _round_a(), "A"
+            )
+            save_json(result_path, {
+                "status": "PASS", "trajectory_parent_id": row["trajectory_parent_id"],
+                "outcomes": outcomes,
+            })
+            SnapshotBank(snapshots, {
+                "artifact_role": "per_parent_dynamic_apex_search_shard",
+                "round": "A", "trajectory_parent_id": row["trajectory_parent_id"],
+            }).save(snapshot_path)
         round_a.extend(outcomes); apex_snapshots.extend(snapshots)
     success_parents = {
         row["trajectory_parent_id"] for row in round_a if row["success"]
@@ -444,11 +488,26 @@ def main() -> None:
     round_b = []
     if len(success_parents) < int(args.required_successful_parents):
         for pi, row in enumerate(entries):
-            outcomes, snapshots = _search_parent(
-                args, cfg, env, step, row,
-                _round_b(args.seed + 40_000_000 + pi, args.round_b_proposals),
-                "B",
-            )
+            result_path = shard_root / f"{row['trajectory_parent_id']}_round_b.json"
+            snapshot_path = shard_root / f"{row['trajectory_parent_id']}_round_b.pkl"
+            if result_path.exists() and snapshot_path.exists():
+                outcomes = json.loads(result_path.read_text())["outcomes"]
+                snapshots = SnapshotBank.load(snapshot_path).records
+            else:
+                outcomes, snapshots = _search_parent(
+                    args, cfg, env, step, row,
+                    _round_b(args.seed + 40_000_000 + pi, args.round_b_proposals),
+                    "B",
+                )
+                save_json(result_path, {
+                    "status": "PASS",
+                    "trajectory_parent_id": row["trajectory_parent_id"],
+                    "outcomes": outcomes,
+                })
+                SnapshotBank(snapshots, {
+                    "artifact_role": "per_parent_dynamic_apex_search_shard",
+                    "round": "B", "trajectory_parent_id": row["trajectory_parent_id"],
+                }).save(snapshot_path)
             round_b.extend(outcomes); apex_snapshots.extend(snapshots)
         success_parents.update(
             row["trajectory_parent_id"] for row in round_b if row["success"]

@@ -68,6 +68,17 @@ def test_fresh_parent_mining_is_source_balanced_and_diversity_selected():
     assert "required_successful_parents" in text
 
 
+def test_fresh_parent_mining_resumes_atomic_parent_shards():
+    text = Path("cli/acquire_ascent_apex_parents.py").read_text()
+    assert 'entry_path.exists()' in text
+    assert '"parent_search_shards"' in text
+    assert "_round_a.json" in text
+    assert "_round_a.pkl" in text
+    assert "_round_b.json" in text
+    assert "_round_b.pkl" in text
+    assert "result_path.exists() and snapshot_path.exists()" in text
+
+
 def test_controller_keeps_apex_ppo_closed_without_every_gate():
     text = Path("cli/stage_next_v3_controller.py").read_text()
     assert "mine_fourth_independent_apex_parent" in text
