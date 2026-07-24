@@ -138,7 +138,9 @@ def _run(
     env, step, *_ = runtime
     key = jax.random.PRNGKey(seed)
     state = restore_snapshot(env, start, key)
+    neutral_state = restore_snapshot(env, start, key)
     previous_vz = float(np.asarray(state.data.qvel[2]))
+    neutral_previous_vz = previous_vz
     initial_sample = sample_from_state(env, state, previous_vz)
     initial_feature = np.asarray(initial_sample["physical_feature"], float)
     warm_plan = [jp.zeros((4,), jp.float32)] * prediction_horizon
@@ -150,7 +152,7 @@ def _run(
     stable_snapshot = None
     formal_snapshot = None
     reason = "horizon_exhaustion"
-    response_tick = None
+    action_response_tick = None
     apex_tick = None
     for tick in range(controller_horizon):
         if tick % control_horizon == 0:
@@ -171,6 +173,17 @@ def _run(
             warm_plan = list(active_plan)
         action = active_plan[tick % control_horizon]
         state = step(state, action)
+        if float(np.asarray(neutral_state.done)) <= .5:
+            neutral_state = step(neutral_state, jp.zeros((4,), jp.float32))
+            neutral_sample = sample_from_state(
+                env, neutral_state, neutral_previous_vz
+            )
+            neutral_feature = np.asarray(
+                neutral_sample["physical_feature"], float
+            )
+            neutral_previous_vz = float(neutral_feature[8])
+        else:
+            neutral_feature = None
         _, diagnostic = _state_score(
             env, state, previous_vz, support_metadata, model,
             terminal_target, terminal_center, terminal_scale,
@@ -183,10 +196,12 @@ def _run(
             stable_snapshot = env.snapshot_record(state, "flight")
         if diagnostic["apex"] and apex_tick is None:
             apex_tick = tick + 1
-        delta_roll = abs(float(feature[3] - initial_feature[3]))
-        delta_wx = abs(float(feature[9] - initial_feature[9]))
-        if response_tick is None and (delta_roll >= .02 or delta_wx >= .2):
-            response_tick = tick + 1
+        if neutral_feature is not None:
+            delta_roll = abs(float(feature[3] - neutral_feature[3]))
+            delta_wx = abs(float(feature[9] - neutral_feature[9]))
+            if (action_response_tick is None
+                    and (delta_roll >= .02 or delta_wx >= .2)):
+                action_response_tick = tick + 1
         momentum = replay_centroidal(
             model, np.asarray(state.data.qpos), np.asarray(state.data.qvel),
             np.asarray(state.data.ctrl),
@@ -255,7 +270,8 @@ def _run(
         )
     first_actions = [plan["first_action"] for plan in plans]
     return {
-        "response_latency_ticks": response_tick,
+        "action_response_latency_ticks": action_response_tick,
+        "response_reference": "paired_zero_action_counterfactual",
         "physical_apex_tick": apex_tick,
         "max_stable_descent_ticks": max_stable_count,
         "stable_16_ticks": stable_snapshot is not None,

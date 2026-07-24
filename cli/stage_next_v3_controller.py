@@ -1231,7 +1231,7 @@ class StageNextV3Controller(Controller):
         )
 
     def prepare_pre_apex_horizon_audit(self):
-        root = FEEDBACK_ROOT / "horizon_momentum_v1"
+        root = FEEDBACK_ROOT / "horizon_momentum_v2"
         root.mkdir(parents=True, exist_ok=True)
         save_json(root / "cost_estimate.json", {
             "status": "PASS",
@@ -1250,7 +1250,7 @@ class StageNextV3Controller(Controller):
         )
 
     def run_pre_apex_horizon_audit(self):
-        root = FEEDBACK_ROOT / "horizon_momentum_v1"
+        root = FEEDBACK_ROOT / "horizon_momentum_v2"
         report = root / "horizon_audit.json"
         if not report.exists():
             self._worker("minimal_pre_apex_horizon_audit", [
@@ -1280,7 +1280,7 @@ class StageNextV3Controller(Controller):
         )
 
     def run_apex_centroidal_contact_audit(self):
-        root = FEEDBACK_ROOT / "horizon_momentum_v1"
+        root = FEEDBACK_ROOT / "horizon_momentum_v2"
         report = root / "centroidal_contact_audit.json"
         if not report.exists():
             self.run_command("apex_centroidal_contact_audit", [
@@ -1296,7 +1296,7 @@ class StageNextV3Controller(Controller):
             ], root / "centroidal_contact_audit.log", [report])
         result = json.loads(report.read_text())
         blocker = result["blocker_classification"]
-        self.state["stage_status"]["apex"]["horizon_momentum_v1"] = {
+        self.state["stage_status"]["apex"]["horizon_momentum_v2"] = {
             "horizon_audit": str(root / "horizon_audit.json"),
             "centroidal_contact_audit": str(report),
             "blocker_classification": blocker,
@@ -1428,7 +1428,14 @@ class StageNextV3Controller(Controller):
                 "ballistic_morphology_feedback_blocker",
                 "downstream_controller_gap",
             ):
-                self.save(); time.sleep(30)
+                corrected = (
+                    FEEDBACK_ROOT / "horizon_momentum_v2"
+                    / "centroidal_contact_audit.json"
+                )
+                if not corrected.exists():
+                    self.prepare_pre_apex_horizon_audit()
+                else:
+                    self.save(); time.sleep(30)
             elif stage == "build_apex_reset_bank_v3_r3": self.apex_bank_r3()
             elif stage == "apex_bounded_support_search_r3": self.apex_search_r3()
             else:

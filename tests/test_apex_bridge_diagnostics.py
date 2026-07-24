@@ -134,3 +134,4 @@ def test_horizon_audit_is_bounded_and_not_training():
     assert "apex_ppo_authorized" in text
     assert "prediction_horizons" in text
     assert "replanning_interval_ticks" in text
+    assert "paired_zero_action_counterfactual" in text

@@ -192,6 +192,11 @@ def main():
             if len(hx) >= 2 else None
         )
         info = authority_report["parent_results"][parent]
+        separation_observed = bool(
+            last_contact is not None and airborne
+            and airborne[0]["relative_to_apex"]
+            > last_contact["relative_to_apex"]
+        )
         parent_results[parent] = {
             "parent_id": rows[0]["parent_id"],
             "sampled_offsets": [row["relative_to_apex"] for row in rows],
@@ -201,9 +206,14 @@ def main():
             "first_sampled_airborne_offset": (
                 airborne[0]["relative_to_apex"] if airborne else None
             ),
-            "separation_hx": (
+            "separation_transition_observed": separation_observed,
+            "first_sampled_airborne_hx": (
                 airborne[0]["centroidal_angular_momentum"][0]
                 if airborne else None
+            ),
+            "separation_hx": (
+                airborne[0]["centroidal_angular_momentum"][0]
+                if separation_observed else None
             ),
             "airborne_hx_relative_span": conservation_span,
             "latest_effective_hx_correction_offset":
@@ -293,9 +303,7 @@ def main():
         if (row["airborne_hx_relative_span"] is not None
                 and row["airborne_hx_relative_span"] <= .15):
             conserved.append(parent)
-    robust = {"reference:131",
-              "89ff1a0e3cb74319b16742932c97decf38be3a39a100d49e855613162e23fcf0"}
-    if robust.intersection(outside) and robust.intersection(conserved):
+    if set(outside).intersection(conserved):
         blocker = "takeoff_tail_centroidal_momentum_blocker"
     elif horizon_report["summary"]["stable_16_ticks"]:
         blocker = (
