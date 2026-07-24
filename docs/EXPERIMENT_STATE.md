@@ -1068,3 +1068,33 @@
   were not started.  This demonstrates that decoupling removes the Landing
   forgetting constraint but does not by itself make the current Apex reset
   support reach C_L; adding PPO budget is not authorized by this gate.
+
+## MJX continuous Descent-support bridge (2026-07-24)
+
+- Deterministic CG runtime remains authoritative for development; XML
+  `d7e9f43...ce794c`, support bank `1c39f9e...44dde`, matcher
+  `56570a4...1630`, frozen Descent policy `5272166...35f2`, and frozen
+  Landing policy `fa3a518...bb7e` were not changed.  PPO authorization remains
+  false.
+- Targeted frozen-asset replay PASS: 8 representative support states, 6/8
+  Descent-to-Landing Final-Recovery, 2/8 roll failures, zero reset shock, and
+  maximum 37 stable Descent ticks.  The frozen assets are therefore compatible
+  with the current CG runtime.
+- The nominal natural trajectory's closest support distance was 7.074872 at
+  local tick 15 (Apex tick 3, physical handoff tick 4); pitch_limit occurred at
+  tick 28.  The shortest useful action window was 8 ticks.  Knee action changed
+  vx by +0.5068, wheel speed by +3.6364, z by +0.0334 and distance by -1.6771
+  per action unit in the local finite difference; drive was already saturated.
+- Bounded 4-D two-segment residual search improved the minimum distance to
+  6.586300 with 20/20 bit-exact natural-start replay.  Dominant remaining
+  squared normalized contributions were wheel speed 14.907, vx 10.896, roll
+  5.269, z 3.048, x 2.916 and yaw 2.393.  No formal support entry, frozen
+  Descent handoff, Landing, or Final-Recovery occurred.
+- Bounded extensions exhausted the local family without a continuing joint
+  trend: earlier window 6.8925, pulse-inclusive window 6.8428, larger residual
+  bound 6.5863, and three-segment pitch guard 7.0782/roll_limit.  Delaying the
+  launch by 1--6 ticks always caused missed liftoff.  Current state is
+  `gate_pause: bounded_local_bridge_plateau`; matcher, failure definition,
+  frozen policies, XML/action limits and PPO authorization remain unchanged.
+  Compact artifact:
+  `runs/mjx_continuous_pipeline_repair_v1/descent_support_entry_bridge_v1/bounded_summary.json`.
