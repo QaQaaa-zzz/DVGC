@@ -7,7 +7,11 @@ from cli.analyze_apex_bridge_timing import (
 )
 from cli.build_descent_terminal_clusters import _deterministic_kmeans, _physical_shock
 from cli.audit_apex_control_authority import _offset_ticks, _pulse_action
-from cli.discover_apex_feedback_bridge import _actions, _terminal_distance
+from cli.discover_apex_feedback_bridge import (
+    _actions,
+    _bridge_has_no_physical_failure,
+    _terminal_distance,
+)
 
 
 def test_failure_timing_is_strictly_before_first_nonzero_action():
@@ -94,3 +98,15 @@ def test_feedback_bridge_supports_separate_nominal_and_fresh_runs():
     assert '"deterministic", "fresh", "all"' in text
     assert "--nominal-report" in text
     assert "deterministic_stable" in text
+
+
+def test_gate_a_rejects_transient_descent_followed_by_roll_failure():
+    assert not _bridge_has_no_physical_failure({
+        "termination_reason": "roll_limit",
+    })
+    assert _bridge_has_no_physical_failure({
+        "termination_reason": "horizon_exhaustion",
+    })
+    text = open("cli/stage_next_v3_controller.py").read()
+    assert "feedback_bridge_gate_reclassification_v2" in text
+    assert "transient four-tick negative-vz segment" in text

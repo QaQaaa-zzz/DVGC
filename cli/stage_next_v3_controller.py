@@ -90,6 +90,28 @@ class StageNextV3Controller(Controller):
                 expected_outputs=[],
                 next_decision="reproduce_three_dynamic_parents_v2",
             )
+        elif (
+            self.state.get("current_stage") == "descent_support_interface_coverage_gap"
+            and not (
+                run / "apex/feedback_bridge_v1/fresh_validation/"
+                "gate_reclassification_v2.json"
+            ).exists()
+        ):
+            self.state.setdefault("recovery_history", []).append({
+                "recovered_at": time.time(),
+                "fix": (
+                    "require no later physical failure for feedback bridge Gate A"
+                ),
+                "source_report": str(
+                    run / "apex/feedback_bridge_v1/fresh_validation/report.json"
+                ),
+            })
+            self.save(
+                current_stage="formal_descent_support_and_final_recovery_test",
+                next_decision="reclassify_transient_stable_segments",
+                in_progress_action=None, active_worker_unit=None,
+                expected_outputs=[],
+            )
 
     def _worker(self, action, command, log, outputs):
         result = self.run_worker_command(
@@ -1133,8 +1155,45 @@ class StageNextV3Controller(Controller):
         fresh = json.loads(
             (FEEDBACK_ROOT / "fresh_validation/report.json").read_text()
         )
-        gate_a = bool(fresh["gate_a_local_physical_feasibility"])
+        physical_reasons = {
+            "roll_limit", "pitch_limit", "prohibited_contact",
+            "invalid_wheel_step_contact", "backward", "platform_back_edge_exit",
+            "nonfinite",
+        }
+        clean_fresh_by_parent = {}
+        for row in fresh["outcomes"]:
+            if (row["stable_physical_descent"]
+                    and row["termination_reason"] not in physical_reasons):
+                clean_fresh_by_parent[row["parent"]] = (
+                    clean_fresh_by_parent.get(row["parent"], 0) + 1
+                )
+        gate_a = any(value >= 2 for value in clean_fresh_by_parent.values())
         gate_b = bool(fresh["gate_b_formal_interface_feasibility"])
+        reclassification = {
+            "status": "PASS",
+            "artifact_role": "feedback_bridge_gate_reclassification_v2",
+            "source_report": str(
+                FEEDBACK_ROOT / "fresh_validation/report.json"
+            ),
+            "source_report_sha256": file_sha256(
+                FEEDBACK_ROOT / "fresh_validation/report.json"
+            ),
+            "short_stable_segments": fresh["hierarchy"][
+                "stable_physical_descent"
+            ],
+            "stable_without_later_physical_failure_by_parent":
+                clean_fresh_by_parent,
+            "gate_a_local_physical_feasibility": gate_a,
+            "gate_b_formal_interface_feasibility": gate_b,
+            "supersedes_source_gate_a": True,
+            "reason": (
+                "Gate A requires the feedback bridge branch to avoid physical "
+                "failure; a transient four-tick negative-vz segment followed "
+                "by roll_limit is diagnostic evidence, not Gate A."
+            ),
+        }
+        save_json(FEEDBACK_ROOT / "fresh_validation/gate_reclassification_v2.json",
+                  reclassification)
         if gate_b:
             stage = "expand_bridge_admissible_apex_bank"
             decision = "expand_only_from_bridge_corridor"
@@ -1155,6 +1214,9 @@ class StageNextV3Controller(Controller):
             ),
             "nominal_report": str(FEEDBACK_ROOT / "nominal_bridge/report.json"),
             "fresh_report": str(FEEDBACK_ROOT / "fresh_validation/report.json"),
+            "gate_reclassification": str(
+                FEEDBACK_ROOT / "fresh_validation/gate_reclassification_v2.json"
+            ),
             "nominal_hierarchy": nominal["hierarchy"],
             "fresh_hierarchy": fresh["hierarchy"],
             "gate_a": gate_a, "gate_b": gate_b,

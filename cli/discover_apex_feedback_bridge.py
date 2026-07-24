@@ -40,6 +40,12 @@ def _actions():
     return [jp.asarray([0., 0., hip, knee], jp.float32) for hip, knee in pairs]
 
 
+def _bridge_has_no_physical_failure(row):
+    return row["termination_reason"] in (
+        "formal_descent_support_entry", "horizon_exhaustion", "stage_timeout",
+    )
+
+
 def _terminal_distance(feature, target, center, scale):
     query = np.asarray([
         feature[TERMINAL_INDEX[name]] for name in TERMINAL_FEATURES
@@ -421,10 +427,16 @@ def main() -> None:
     parent_fresh_stable = Counter(
         row["parent"] for row in fresh if row["stable_physical_descent"]
     )
+    parent_fresh_stable_without_failure = Counter(
+        row["parent"] for row in fresh
+        if row["stable_physical_descent"] and _bridge_has_no_physical_failure(row)
+    )
     parent_fresh_formal = Counter(
         row["parent"] for row in fresh if row["formal_descent_support_entry"]
     )
-    gate_a = any(value >= 2 for value in parent_fresh_stable.values())
+    gate_a = any(
+        value >= 2 for value in parent_fresh_stable_without_failure.values()
+    )
     gate_b = sum(value >= 1 for value in parent_fresh_formal.values()) >= 2
     payload = {
         "status": "PASS",
@@ -453,6 +465,9 @@ def main() -> None:
             ),
         },
         "fresh_seed_stable_by_parent": dict(parent_fresh_stable),
+        "fresh_seed_stable_without_physical_failure_by_parent": dict(
+            parent_fresh_stable_without_failure
+        ),
         "fresh_seed_formal_by_parent": dict(parent_fresh_formal),
         "gate_a_local_physical_feasibility": gate_a,
         "gate_b_formal_interface_feasibility": gate_b,
