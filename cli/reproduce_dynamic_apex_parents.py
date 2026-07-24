@@ -40,7 +40,11 @@ def _branch_specs(parent, base, variants):
         {"kind": "deterministic_repeat", "seed": 1, "variant": variants[0],
          "parameters": dict(base)},
     ]
-    for i, variant in enumerate(variants[:4]):
+    # The frozen certification grid currently contains three physical
+    # variants.  Robustness still requires four independent rollout seeds, so
+    # cycle within that immutable grid rather than inventing a fourth variant.
+    for i in range(4):
+        variant = variants[i % len(variants)]
         specs.append({"kind": "fresh_dynamics", "seed": 100 + i,
                       "variant": variant, "parameters": dict(base)})
     for delta in (-2, 2):

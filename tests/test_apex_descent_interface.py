@@ -8,6 +8,7 @@ def test_parent_reproduction_separates_robustness_classes():
     assert "deterministic_only_parent" in text
     assert "fresh_dynamics_successes" in text
     assert "snapshot_five_step_reset_shock" in text
+    assert "for i in range(4)" in text
 
 
 def test_descent_support_audit_keeps_local_and_final_outcomes_separate():

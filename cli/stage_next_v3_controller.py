@@ -69,6 +69,26 @@ class StageNextV3Controller(Controller):
                       active_worker_unit=None, in_progress_action=None,
                       expected_outputs=[],
                       next_decision="resume_missing_apex_bounded_support_search_r3")
+        elif (self.state.get("current_stage") in (
+                "audit_descent_support_runtime_compatibility",
+                "audit_descent_feature_semantics",
+                "apex_descent_multiknot_bounded_search",
+                "mine_fourth_independent_apex_parent",
+              )
+              and not (run / "apex/interface_v5/parent_robustness_v2.json").exists()):
+            self.state.setdefault("recovery_history", []).append({
+                "recovered_at": time.time(),
+                "fix": "complete fourth fresh dynamics seed without changing frozen variant grid",
+                "superseded_diagnostic": str(
+                    run / "apex/interface_v5/parent_robustness.json"
+                ),
+            })
+            self.save(
+                current_stage="reproduce_three_dynamic_parents",
+                in_progress_action=None, active_worker_unit=None,
+                expected_outputs=[],
+                next_decision="reproduce_three_dynamic_parents_v2",
+            )
 
     def _worker(self, action, command, log, outputs):
         result = self.run_worker_command(
@@ -734,7 +754,7 @@ class StageNextV3Controller(Controller):
 
     def reproduce_dynamic_parents(self):
         root = RUN / "apex/interface_v5"
-        report = root / "parent_robustness.json"
+        report = root / "parent_robustness_v2.json"
         if not report.exists():
             self._worker("reproduce_three_dynamic_apex_parents", [
                 PYTHON, "-u", "-m", "cli.reproduce_dynamic_apex_parents",
@@ -742,7 +762,7 @@ class StageNextV3Controller(Controller):
                 "--entry-bank", RUN / "ascent/independent_parent_acquisition_v1/fresh_ascent_entries.pkl",
                 "--acquisition-report", RUN / "ascent/independent_parent_acquisition_v1/report.json",
                 "--output", report, "--seed", "10900000",
-            ], root / "parent_robustness.log", [report])
+            ], root / "parent_robustness_v2.log", [report])
         self.state["stage_status"]["apex"]["parent_robustness"] = {
             "report": str(report),
             "parents": json.loads(report.read_text())["parents"],
