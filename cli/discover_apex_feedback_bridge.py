@@ -318,6 +318,11 @@ def main() -> None:
     )
     for requested in a.parent:
         info = authority["parent_results"][requested]
+        classification = (
+            "apex_local_response_detected"
+            if info["classification"] == "apex_local_correctable"
+            else info["classification"]
+        )
         if selected_start_bank is not None:
             start = next(
                 row for row in selected_start_bank.records
@@ -328,7 +333,7 @@ def main() -> None:
                 row for row in authority_bank.records
                 if row["trajectory_parent_id"] == info["parent_id"]
             ]
-            if info["classification"] == "apex_local_correctable":
+            if classification == "apex_local_response_detected":
                 start = max(rows, key=lambda row: row["relative_to_apex"])
             elif info["latest_effective_relative_to_apex"] is not None:
                 start = next(
@@ -383,7 +388,7 @@ def main() -> None:
                 "parent": display_parent, "parent_id": info["parent_id"],
                 "start_snapshot_id": start["id"],
                 "start_relative_to_apex": start["relative_to_apex"],
-                "control_authority_class": info["classification"],
+                "control_authority_class": classification,
                 "branch_kind": kind, "branch": branch,
                 "dynamics_variant": variant["id"],
                 "seed": a.seed + pi * 100_000 + (

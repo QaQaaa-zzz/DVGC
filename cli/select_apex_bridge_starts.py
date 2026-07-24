@@ -28,7 +28,12 @@ def main() -> None:
             row for row in bank.records
             if row["trajectory_parent_id"] == info["parent_id"]
         ]
-        if info["classification"] == "apex_local_correctable":
+        classification = (
+            "apex_local_response_detected"
+            if info["classification"] == "apex_local_correctable"
+            else info["classification"]
+        )
+        if classification == "apex_local_response_detected":
             chosen = max(candidates, key=lambda row: row["relative_to_apex"])
             reason = "Apex-local rank and roll authority remain effective"
         elif info["latest_effective_relative_to_apex"] is not None:
@@ -42,7 +47,7 @@ def main() -> None:
             reason = "no later effective roll authority; earliest bounded diagnostic"
         chosen = dict(chosen)
         chosen["candidate_kind"] = "selected_pre_apex_feedback_bridge_start"
-        chosen["control_authority_class"] = info["classification"]
+        chosen["control_authority_class"] = classification
         chosen["bridge_start_selection_reason"] = reason
         selected.append(chosen)
         rows.append({

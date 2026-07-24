@@ -322,7 +322,7 @@ def main() -> None:
         event = max(group, key=lambda row: row["relative_to_apex"])
         if (event["roll_authority_normalized"] >= 1.
                 and event["effective_pose_rank"] >= 2):
-            classification = "apex_local_correctable"
+            classification = "apex_local_response_detected"
         elif effective:
             classification = "pre_apex_correction_required"
         else:
@@ -362,7 +362,8 @@ def main() -> None:
         "classification_rule": (
             "effective if a 0.25 normalized action can change roll or roll-rate "
             "by the declared physical resolution within four ticks and the "
-            "normalized [roll,pitch,wx,wy] response has rank two"
+            "normalized [roll,pitch,wx,wy] response has rank two; this detects "
+            "a local response and is not a closed-loop correctability claim"
         ),
         "parent_results": parent_results,
         "rows": rows,

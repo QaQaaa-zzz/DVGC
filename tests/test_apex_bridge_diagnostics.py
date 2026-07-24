@@ -78,6 +78,12 @@ def test_control_authority_pulses_are_paired_and_nonsaturated():
     assert np.max(np.abs(plus)) == .25
 
 
+def test_control_authority_uses_response_not_correctability_label():
+    text = open("cli/audit_apex_control_authority.py").read()
+    assert '"apex_local_response_detected"' in text
+    assert '"apex_local_correctable"' not in text
+
+
 def test_feedback_bridge_action_set_is_bounded_and_has_neutral():
     actions = np.asarray(_actions())
     assert np.max(np.abs(actions)) < 1.
