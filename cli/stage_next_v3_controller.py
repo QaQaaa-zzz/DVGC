@@ -1349,6 +1349,50 @@ class StageNextV3Controller(Controller):
             next_decision="contact_supported_bridge_discovery",
         )
 
+    def discover_contact_supported_bridge(self):
+        root = FEEDBACK_ROOT / "contact_supported_v1"
+        report = root / "segmented_bridge_nominal.json"
+        if not report.exists():
+            self._worker("contact_supported_bridge_discovery", [
+                PYTHON, "-u", "-m",
+                "cli.discover_contact_supported_apex_bridge",
+                "--lineage-bank", root / "event_aligned_entries.pkl",
+                "--lineage-report", root / "upstream_lineage.json",
+                "--support-bank", DESCENT_SUPPORT,
+                "--terminal-bank",
+                FEEDBACK_ROOT / "descent_terminal_proposals_current.pkl",
+                "--descent-policy", DESCENT_POLICY,
+                "--landing-policy", LANDING_POLICY,
+                "--output", report,
+                "--parent",
+                "89ff1a0e3cb74319b16742932c97decf38be3a39a100d49e855613162e23fcf0",
+                "--parent",
+                "2f3411630c83455a034be8083587a76e2901503c626cde1f2c0b578d68b4ca87",
+                "--contact-candidates", "5", "--prediction-horizon", "12",
+                "--controller-horizon", "40", "--seed", "11800000",
+            ], root / "segmented_bridge_nominal.log", [report])
+        result = json.loads(report.read_text())
+        gate_a = result["summary"]["gate_a_nominal"]
+        gate_b = result["summary"]["gate_b_nominal_two_formal_parents"]
+        self.state["stage_status"]["apex"]["contact_supported_v1"] = {
+            "upstream_lineage": str(root / "upstream_lineage.json"),
+            "segmented_bridge_nominal": str(report),
+            "gate_a_nominal": gate_a, "gate_b_nominal": gate_b,
+            "apex_ppo_authorized": False,
+        }
+        if gate_a:
+            stage = "contact_supported_bridge_fresh_validation"
+            decision = "fresh_dynamics_gate_a_validation"
+        else:
+            stage = "takeoff_tail_centroidal_momentum_blocker"
+            decision = "bridge_admissible_takeoff_tail_target_required"
+        self.save(
+            current_stage=stage,
+            last_completed_action="contact_supported_bridge_discovery",
+            next_decision=decision, report_milestone_ready=True,
+            research_gate_valid=False, terminal_state=None,
+        )
+
     def loop(self):
         while True:
             self.save()
@@ -1481,6 +1525,8 @@ class StageNextV3Controller(Controller):
             elif stage == "audit_apex_upstream_lineage":
                 self.audit_apex_upstream_lineage()
             elif stage == "contact_supported_bridge_discovery":
+                self.discover_contact_supported_bridge()
+            elif stage == "contact_supported_bridge_fresh_validation":
                 self.save(); time.sleep(30)
             elif stage == "build_apex_reset_bank_v3_r3": self.apex_bank_r3()
             elif stage == "apex_bounded_support_search_r3": self.apex_search_r3()
