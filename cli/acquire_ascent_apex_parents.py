@@ -66,6 +66,44 @@ def _balanced_rows(records: list[dict]) -> list[dict]:
     return rows
 
 
+def _select_diverse_entries(entries: list[dict], target: int) -> list[dict]:
+    """Select controller/source-balanced, max-min physical Ascent entries."""
+    if len(entries) <= target:
+        return list(entries)
+    chosen, used = [], set()
+    kinds = ("canonical_compressed", "reference_aligned_compressed")
+    controllers = sorted({row["takeoff_controller"] for row in entries})
+    # Seed the set with every available source/controller cell.
+    for kind in kinds:
+        for controller in controllers:
+            row = next((row for row in entries
+                        if row["upstream_source_kind"] == kind
+                        and row["takeoff_controller"] == controller
+                        and row["id"] not in used), None)
+            if row is not None and len(chosen) < target:
+                chosen.append(row); used.add(row["id"])
+    dims = np.asarray([3, 4, 8, 9, 10, 11, 13, 14])
+    matrix = np.asarray([row["physical_feature"] for row in entries], float)[:, dims]
+    scale = np.maximum(np.std(matrix, axis=0), np.asarray([
+        .03, .03, .2, .2, .2, .2, .05, .05,
+    ]))
+    by_id = {row["id"]: i for i, row in enumerate(entries)}
+    while len(chosen) < target:
+        counts = Counter(row["upstream_source_kind"] for row in chosen)
+        desired_kind = min(kinds, key=lambda kind: counts[kind])
+        candidates = [row for row in entries if row["id"] not in used
+                      and row["upstream_source_kind"] == desired_kind]
+        if not candidates:
+            candidates = [row for row in entries if row["id"] not in used]
+        chosen_z = matrix[[by_id[row["id"]] for row in chosen]] / scale
+        def distance(row):
+            z = matrix[by_id[row["id"]]] / scale
+            return float(np.min(np.linalg.norm(chosen_z - z[None, :], axis=1)))
+        row = max(candidates, key=distance)
+        chosen.append(row); used.add(row["id"])
+    return chosen
+
+
 def _round_a() -> list[dict]:
     return [
         {
@@ -124,19 +162,29 @@ def _takeoff_entries(args, cfg, env, step, source, policies):
     )
     entries, attempts = [], []
     kind_parents = Counter()
+    pool_target = min(
+        len(source.records),
+        max(args.target_parents,
+            args.target_parents * int(args.entry_pool_multiplier)),
+    )
     for source_index, row in enumerate(_balanced_rows(source.records)):
-        if len(entries) >= args.target_parents:
+        if len(entries) >= pool_target:
             break
         seed = args.seed + source_index * 1000
         parent_id = _parent_id(row, reset_hash, seed)
-        controllers = [
+        policy_controllers = [
             (name, lambda state, key, tick, infer=infer: infer(state.obs, key)[0], phash)
             for name, infer, phash in inferences
         ]
-        controllers += [
+        if policy_controllers:
+            rotate = source_index % len(policy_controllers)
+            policy_controllers = policy_controllers[rotate:] + policy_controllers[:rotate]
+        controllers = list(policy_controllers)
+        if not args.takeoff_policy_only:
+            controllers += [
             (name, lambda state, key, tick, sequence=sequence: action_at(sequence, tick), None)
             for name, sequence in bounded
-        ]
+            ]
         accepted = False
         for ci, (name, action_fn, policy_hash) in enumerate(controllers):
             state = restore_snapshot(env, row, jax.random.PRNGKey(seed + ci))
@@ -199,7 +247,10 @@ def _takeoff_entries(args, cfg, env, step, source, policies):
                 "trajectory_parent_id": parent_id, "controller": name,
                 "success": False, "failure_reason": reason,
             })
-    return entries, attempts, dict(kind_parents)
+    selected = _select_diverse_entries(entries, args.target_parents)
+    source_mix = dict(Counter(row["upstream_source_kind"] for row in selected))
+    controller_mix = dict(Counter(row["takeoff_controller"] for row in selected))
+    return selected, attempts, source_mix, controller_mix, len(entries)
 
 
 def _search_parent(args, cfg, env, step, row, specs, round_name):
@@ -344,6 +395,9 @@ def main() -> None:
     p.add_argument("--policy", action="append", default=[], help="name=policy_dir")
     p.add_argument("--output-root", required=True)
     p.add_argument("--target-parents", type=int, default=12)
+    p.add_argument("--entry-pool-multiplier", type=int, default=1)
+    p.add_argument("--takeoff-policy-only", action="store_true")
+    p.add_argument("--required-successful-parents", type=int, default=2)
     p.add_argument("--round-b-proposals", type=int, default=96)
     p.add_argument("--takeoff-horizon", type=int, default=80)
     p.add_argument("--ascent-horizon", type=int, default=100)
@@ -369,7 +423,7 @@ def main() -> None:
     reference_replay = _reproduce_reference_parents(
         args, cfg, env, step, reference_bank
     )
-    entries, takeoff_attempts, source_mix = _takeoff_entries(
+    entries, takeoff_attempts, source_mix, controller_mix, entry_pool = _takeoff_entries(
         args, cfg, env, step, source, policies
     )
     SnapshotBank(entries, {
@@ -388,7 +442,7 @@ def main() -> None:
         row["trajectory_parent_id"] for row in round_a if row["success"]
     }
     round_b = []
-    if len(success_parents) < 2:
+    if len(success_parents) < int(args.required_successful_parents):
         for pi, row in enumerate(entries):
             outcomes, snapshots = _search_parent(
                 args, cfg, env, step, row,
@@ -466,7 +520,8 @@ def main() -> None:
     }).save(root / "dynamic_apex_proposals.pkl")
     all_search = round_a + round_b
     payload = {
-        "status": "PASS" if len(success_parents) >= 2 else "STAGE_LOCAL_BLOCKER",
+        "status": ("PASS" if len(success_parents) >= int(args.required_successful_parents)
+                   else "STAGE_LOCAL_BLOCKER"),
         "artifact_role": "ascent_apex_independent_parent_acquisition",
         "claim_scope": "proposal_discovery_only",
         "chain_final_semantics": {
@@ -486,7 +541,9 @@ def main() -> None:
         "reference_parent_replay": reference_replay,
         "fresh_takeoff_attempts": takeoff_attempts,
         "fresh_ascent_entries": len(entries),
+        "fresh_ascent_entry_pool_before_diversity_selection": entry_pool,
         "fresh_ascent_entry_source_mix": source_mix,
+        "fresh_ascent_entry_controller_mix": controller_mix,
         "independent_upstream_parents": len({
             row["trajectory_parent_id"] for row in entries
         }),
@@ -518,7 +575,8 @@ def main() -> None:
         "late_ascent_training_authorized": len(success_parents) >= 2,
         "apex_training_authorized": False,
         "stage_local_blocker": (
-            None if len(success_parents) >= 2 else "ascent_multi_parent_controller_gap"
+            None if len(success_parents) >= int(args.required_successful_parents)
+            else "ascent_multi_parent_controller_gap"
         ),
         "search_outcomes": all_search,
         "artifacts": {

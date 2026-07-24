@@ -850,6 +850,112 @@ class StageNextV3Controller(Controller):
             terminal_state=None, research_gate_valid=False,
         )
 
+    def mine_fourth_apex_parent(self):
+        root = RUN / "ascent/independent_parent_acquisition_v2_24"
+        report = root / "report.json"
+        if not report.exists():
+            self._worker("mine_fourth_independent_apex_parent", [
+                PYTHON, "-u", "-m", "cli.acquire_ascent_apex_parents",
+                "--takeoff-bank", TAKEOFF_BANK,
+                "--reference-ascent-bank", RUN / "ascent/reverse_diagnostic_v4_6.pkl",
+                "--descent-support-bank", DESCENT_SUPPORT,
+                "--policy", f"old_takeoff={OLD_TAKEOFF}",
+                "--policy", f"new_takeoff={NEW_TAKEOFF}",
+                "--policy", f"canonical_specialist={self.state['takeoff_specialist_best']}",
+                "--output-root", root, "--target-parents", "24",
+                "--entry-pool-multiplier", "2", "--takeoff-policy-only",
+                "--required-successful-parents", "1",
+                "--round-b-proposals", "96", "--seed", "11200000",
+            ], root / "controller.log", [
+                report, root / "fresh_ascent_entries.pkl",
+                root / "dynamic_apex_proposals.pkl",
+            ])
+        payload = json.loads(report.read_text())
+        self.state["stage_status"]["apex"]["fourth_parent_mining"] = {
+            "report": str(report),
+            "fresh_entries": payload["fresh_ascent_entries"],
+            "source_mix": payload["fresh_ascent_entry_source_mix"],
+            "controller_mix": payload["fresh_ascent_entry_controller_mix"],
+            "new_successful_parents": payload["successful_parent_count"],
+            "new_dynamic_snapshots": payload["dynamic_apex_snapshots"],
+        }
+        self.save(
+            current_stage="expand_dynamic_apex_bank_v5",
+            last_completed_action="mine_fourth_independent_apex_parent",
+            next_decision="expand_dynamic_apex_bank",
+        )
+
+    def expand_dynamic_apex_v5(self):
+        root = RUN / "apex/dynamic_bank_v5"
+        bank = root / "bank.pkl"; report = root / "report.json"
+        if not report.exists():
+            self.run_command("expand_dynamic_apex_bank_v5", [
+                PYTHON, "-m", "cli.assemble_dynamic_apex_bank",
+                "--base-bank", RUN / "apex/dynamic_bank_v4/bank.pkl",
+                "--new-bank", RUN / "ascent/independent_parent_acquisition_v2_24/dynamic_apex_proposals.pkl",
+                "--output-bank", bank, "--output-report", report,
+            ], root / "build.log", [bank, report])
+        payload = json.loads(report.read_text())
+        self.state["stage_status"]["apex"]["dynamic_bank_v5"] = {
+            "report": str(report), "bank": str(bank),
+            "status": payload["status"],
+            "reference_reset_valid": payload["reference_reset_valid"],
+            "dynamically_reached": payload["dynamically_reached"],
+            "dynamic_parent_count": payload["dynamic_parent_count"],
+        }
+        self.save(
+            current_stage="apex_descent_multiknot_expanded_bank",
+            last_completed_action="expand_dynamic_apex_bank",
+            next_decision="rerun_multiknot_on_new_dynamic_states",
+        )
+
+    def multiknot_expanded_apex_search(self):
+        root = RUN / "apex/dynamic_bank_v5"
+        report = root / "multiknot_search.json"
+        if not report.exists():
+            self._worker("apex_descent_multiknot_expanded_bank", [
+                PYTHON, "-u", "-m", "cli.search_apex_descent_multiknot",
+                "--apex-bank", root / "bank.pkl",
+                "--support-bank", DESCENT_SUPPORT,
+                "--descent-policy", DESCENT_POLICY,
+                "--landing-policy", LANDING_POLICY,
+                "--output", report, "--horizon", "100",
+                "--downstream-horizon", "200",
+                "--round-b-proposals", "48", "--seed", "11300000",
+            ], root / "multiknot_search.log", [report])
+        payload = json.loads(report.read_text())
+        bank_report = json.loads((root / "report.json").read_text())
+        runtime = json.loads(
+            (RUN / "apex/interface_v5/descent_support_runtime_audit.json").read_text()
+        )
+        authorization_checks = {
+            "dynamic_bank_16_to_32_and_four_parents": bank_report["status"] == "PASS",
+            "two_descent_positive_parents": payload["dynamic_descent_positive_parents"] >= 2,
+            "successful_sequences_fresh_seed_reproduced": False,
+            "descent_support_runtime_compatible": not runtime["descent_support_runtime_stale"],
+            "reward_diagnostic_passed": False,
+            "reset_and_full_runtime_gate_passed_after_success": False,
+        }
+        authorized = all(authorization_checks.values())
+        self.state["stage_status"]["apex"]["expanded_multiknot_search"] = {
+            "report": str(report),
+            "descent_positive_unique": payload["dynamic_descent_positive_unique"],
+            "descent_positive_parents": payload["dynamic_descent_positive_parents"],
+            "final_recovery_branches": payload["final_recovery_branches"],
+            "failure_modes": payload["failure_modes"],
+            "authorization_checks": authorization_checks,
+            "apex_training_authorized": authorized,
+        }
+        self.save(
+            current_stage=("apex_training_authorized" if authorized
+                           else "apex_descent_interface_support_blocker"),
+            last_completed_action="apex_descent_multiknot_expanded_bank",
+            next_decision=("apex_training_if_and_only_if_authorized" if authorized
+                           else "stage_local_interface_diagnosis_complete"),
+            report_milestone_ready=True, terminal_state=None,
+            research_gate_valid=False,
+        )
+
     def loop(self):
         while True:
             self.save()
@@ -917,6 +1023,12 @@ class StageNextV3Controller(Controller):
             elif stage == "apex_descent_multiknot_bounded_search":
                 self.multiknot_apex_search()
             elif stage == "mine_fourth_independent_apex_parent":
+                self.mine_fourth_apex_parent()
+            elif stage == "expand_dynamic_apex_bank_v5":
+                self.expand_dynamic_apex_v5()
+            elif stage == "apex_descent_multiknot_expanded_bank":
+                self.multiknot_expanded_apex_search()
+            elif stage == "apex_descent_interface_support_blocker":
                 self.save(); time.sleep(30)
             elif stage == "build_apex_reset_bank_v3_r3": self.apex_bank_r3()
             elif stage == "apex_bounded_support_search_r3": self.apex_search_r3()

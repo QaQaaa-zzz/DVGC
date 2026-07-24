@@ -57,3 +57,22 @@ def test_controller_runs_interface_audits_before_any_apex_training():
     for stage in order:
         assert stage in text
     assert '"no_ppo_authorized": True' in text
+
+
+def test_fresh_parent_mining_is_source_balanced_and_diversity_selected():
+    text = Path("cli/acquire_ascent_apex_parents.py").read_text()
+    assert "_select_diverse_entries" in text
+    assert "entry_pool_multiplier" in text
+    assert "takeoff_policy_only" in text
+    assert "fresh_ascent_entry_controller_mix" in text
+    assert "required_successful_parents" in text
+
+
+def test_controller_keeps_apex_ppo_closed_without_every_gate():
+    text = Path("cli/stage_next_v3_controller.py").read_text()
+    assert "mine_fourth_independent_apex_parent" in text
+    assert "expand_dynamic_apex_bank_v5" in text
+    assert "successful_sequences_fresh_seed_reproduced" in text
+    assert "reward_diagnostic_passed" in text
+    assert "reset_and_full_runtime_gate_passed_after_success" in text
+    assert "authorized = all(authorization_checks.values())" in text
