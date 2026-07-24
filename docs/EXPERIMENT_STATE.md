@@ -1,5 +1,43 @@
 # DVGC Experiment State
 
+- 2026-07-24 Apex->Descent interface audit and fresh-parent acquisition
+  (`86e46b7`, `7417b70`, `649acf0`, `4a7321d`, `307a7bf`, OOM-resume
+  `b912b4d`/`485b118`).  Frozen XML, Takeoff proposal bank, Landing policy,
+  canonical C_L, detector/failure gates and matcher radius 2.213986 were not
+  changed.  Existing parents classify as robust `reference:131` (10/10,
+  fresh dynamics 4/4), robust `89ff...fcf0` (10/10, 4/4), and
+  deterministic-only `5b73...69e4` (6/10, fresh 0/4).
+- Current-runtime Descent support replay: 93 states x 4 branches, exact restore
+  and t0 Descent phase 100%, five-step reset shock 35.48%, local Landing-entry
+  reach 72.85%, Landing Final-Recovery 37.90%, physical failure 26.88%.
+  Replayed labels are Final-safe/boundary/dead/unknown = 20/30/20/23.
+  Only 12 historical labels were comparable (25% agreement), so the bank
+  remains executable proposal support, never a certified Tube; runtime-stale
+  is false.  Formal 16-D matcher semantics are internally consistent:
+  angle wrapping changes 0/12 nearest neighbours, removing absolute x changes
+  3/12 diagnostically, and a common landing-relative translation changes
+  distances by exactly 0.  No metric/radius fix is authorized.
+- Fresh acquisition preserved its atomic 24-entry bank and resumed per parent
+  after two engineering OOMs without repeating completed work.  The entries
+  are 12 canonical + 12 reference-aligned, controller mix old/new/specialist =
+  9/7/8.  Round A evaluated 1,714 bounded proposals and found generic Apex
+  entry from 3 new independent parents; pitch/roll terminations are
+  1,219/492.  Eight reset-valid dynamic Apex snapshots were retained and one
+  reset-shock snapshot rejected.  Merged bank v5
+  `bd9328d...020e0` contains 13 dynamic states from 5 parents plus 4 diagnostic
+  anchors; three normalized duplicates were rejected.  It still fails the
+  required 16--32 dynamic-state gate.
+- Expanded multi-knot Apex->Descent search evaluated 612 Round-A + 624
+  Round-B branches on 13 dynamic states and 4 diagnostic anchors.  Dynamic
+  Descent entry unique/parents/branches = 0/0/0; downstream success and
+  Final-Recovery = 0/0.  Failure typing is pose-instability-before-Descent
+  1,006 and apex-not-crossed 86; terminal pitch/roll = 48/1,044, with no
+  timeout/nonfinite.  This is negative under the bounded controller bank, not
+  physical unreachability.  Apex PPO remains unauthorized.  Controller is
+  active/quiescent at `apex_descent_interface_support_blocker`, no worker/GPU,
+  no global terminal/research gate; the next research action requires a new
+  bounded pose-corridor/bridge-controller decision rather than more PPO steps.
+
 - 2026-07-23 independent Ascent-parent acquisition and bounded late-Ascent
   discovery (`622db8a`, `d198319`, `797f5c2`).  Frozen Takeoff bank/config/XML,
   canonical C_L and Landing policy remain unchanged.  Parent-131 reproduces at
