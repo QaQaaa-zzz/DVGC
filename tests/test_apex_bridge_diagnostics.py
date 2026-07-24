@@ -6,6 +6,7 @@ from cli.analyze_apex_bridge_timing import (
     _first_divergence_tick,
 )
 from cli.build_descent_terminal_clusters import _deterministic_kmeans, _physical_shock
+from cli.audit_apex_control_authority import _offset_ticks, _pulse_action
 
 
 def test_failure_timing_is_strictly_before_first_nonzero_action():
@@ -55,3 +56,18 @@ def test_success_terminal_is_not_a_reset_shock_failure():
     text = open("cli/audit_descent_support_compatibility.py").read()
     assert 'if entry["valid"]:' in text
     assert '"recovery", "chain_entry", "next_stage_entry"' in text
+
+
+def test_control_authority_offsets_cover_pre_and_event():
+    offsets = _offset_ticks(15)
+    assert offsets == [3, 7, 11, 15]
+    short = _offset_ticks(7)
+    assert short[-1] == 7
+    assert len(short) == 4
+
+
+def test_control_authority_pulses_are_paired_and_nonsaturated():
+    plus = np.asarray(_pulse_action("opposite_positive", .25))
+    minus = np.asarray(_pulse_action("opposite_negative", .25))
+    np.testing.assert_allclose(plus, -minus)
+    assert np.max(np.abs(plus)) == .25
