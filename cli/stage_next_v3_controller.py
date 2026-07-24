@@ -1230,6 +1230,93 @@ class StageNextV3Controller(Controller):
             terminal_state=None, research_gate_valid=False,
         )
 
+    def prepare_pre_apex_horizon_audit(self):
+        root = FEEDBACK_ROOT / "horizon_momentum_v1"
+        root.mkdir(parents=True, exist_ok=True)
+        save_json(root / "cost_estimate.json", {
+            "status": "PASS",
+            "task": "minimal_event_aligned_apex_horizon_audit",
+            "prediction_horizons": [3, 6, 9, 12],
+            "parents": 3, "maximum_event_aligned_starts_per_parent": 4,
+            "action_candidates": 13, "controller_horizon_ticks": 40,
+            "estimated_mjx_steps_upper_bound": 249600,
+            "estimated_wall_time": "under_2_hours",
+            "ppo_steps": 0, "generic_apex_search": False,
+        })
+        self.save(
+            current_stage="minimal_pre_apex_horizon_audit",
+            last_completed_action="prepare_pre_apex_horizon_audit",
+            next_decision="minimal_pre_apex_horizon_audit",
+        )
+
+    def run_pre_apex_horizon_audit(self):
+        root = FEEDBACK_ROOT / "horizon_momentum_v1"
+        report = root / "horizon_audit.json"
+        if not report.exists():
+            self._worker("minimal_pre_apex_horizon_audit", [
+                PYTHON, "-u", "-m", "cli.audit_apex_mpc_horizons",
+                "--authority-bank", FEEDBACK_ROOT / "control_authority_snapshots.pkl",
+                "--authority-report", FEEDBACK_ROOT / "control_authority.json",
+                "--support-bank", DESCENT_SUPPORT,
+                "--terminal-bank",
+                FEEDBACK_ROOT / "descent_terminal_proposals_current.pkl",
+                "--descent-policy", DESCENT_POLICY,
+                "--landing-policy", LANDING_POLICY,
+                "--output", report,
+                "--parent", "reference:131",
+                "--parent",
+                "89ff1a0e3cb74319b16742932c97decf38be3a39a100d49e855613162e23fcf0",
+                "--parent",
+                "2f3411630c83455a034be8083587a76e2901503c626cde1f2c0b578d68b4ca87",
+                "--prediction-horizon", "3", "--prediction-horizon", "6",
+                "--prediction-horizon", "9", "--prediction-horizon", "12",
+                "--control-horizon", "2", "--controller-horizon", "40",
+                "--seed", "11700000",
+            ], root / "horizon_audit.log", [report])
+        self.save(
+            current_stage="apex_centroidal_contact_audit",
+            last_completed_action="minimal_pre_apex_horizon_audit",
+            next_decision="apex_centroidal_contact_audit",
+        )
+
+    def run_apex_centroidal_contact_audit(self):
+        root = FEEDBACK_ROOT / "horizon_momentum_v1"
+        report = root / "centroidal_contact_audit.json"
+        if not report.exists():
+            self.run_command("apex_centroidal_contact_audit", [
+                PYTHON, "-m", "cli.audit_apex_centroidal_contact",
+                "--authority-bank", FEEDBACK_ROOT / "control_authority_snapshots.pkl",
+                "--authority-report", FEEDBACK_ROOT / "control_authority.json",
+                "--terminal-bank",
+                FEEDBACK_ROOT / "descent_terminal_proposals_current.pkl",
+                "--terminal-report",
+                FEEDBACK_ROOT / "descent_terminal_clusters_current.json",
+                "--horizon-report", root / "horizon_audit.json",
+                "--output", report,
+            ], root / "centroidal_contact_audit.log", [report])
+        result = json.loads(report.read_text())
+        blocker = result["blocker_classification"]
+        self.state["stage_status"]["apex"]["horizon_momentum_v1"] = {
+            "horizon_audit": str(root / "horizon_audit.json"),
+            "centroidal_contact_audit": str(report),
+            "blocker_classification": blocker,
+            "selected_event_aligned_entries": len(
+                result["selected_event_aligned_entry_proposals"]
+            ),
+            "apex_ppo_authorized": False,
+        }
+        self.save(
+            current_stage=blocker,
+            last_completed_action="apex_centroidal_contact_audit",
+            next_decision=(
+                "contact_supported_momentum_shaping_required"
+                if blocker == "takeoff_tail_centroidal_momentum_blocker"
+                else "segmented_pre_apex_bridge_required"
+            ),
+            report_milestone_ready=True, terminal_state=None,
+            research_gate_valid=False,
+        )
+
     def loop(self):
         while True:
             self.save()
@@ -1327,6 +1414,19 @@ class StageNextV3Controller(Controller):
                 "expand_bridge_admissible_apex_bank",
                 "descent_support_interface_coverage_gap",
                 "pre_apex_feedback_bridge_stage_local_blocker",
+            ):
+                if stage == "pre_apex_feedback_bridge_stage_local_blocker":
+                    self.prepare_pre_apex_horizon_audit()
+                else:
+                    self.save(); time.sleep(30)
+            elif stage == "minimal_pre_apex_horizon_audit":
+                self.run_pre_apex_horizon_audit()
+            elif stage == "apex_centroidal_contact_audit":
+                self.run_apex_centroidal_contact_audit()
+            elif stage in (
+                "takeoff_tail_centroidal_momentum_blocker",
+                "ballistic_morphology_feedback_blocker",
+                "downstream_controller_gap",
             ):
                 self.save(); time.sleep(30)
             elif stage == "build_apex_reset_bank_v3_r3": self.apex_bank_r3()

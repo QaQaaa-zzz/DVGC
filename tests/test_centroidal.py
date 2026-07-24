@@ -2,6 +2,7 @@ import mujoco
 import numpy as np
 
 from dvgc.centroidal import replay_centroidal
+from cli.audit_apex_centroidal_contact import _terminal_calibration
 
 
 def test_explicit_centroidal_momentum_matches_mujoco_subtree():
@@ -30,3 +31,11 @@ def test_centroidal_replay_does_not_modify_input():
     qpos_before = qpos.copy()
     replay_centroidal(model, qpos, qvel)
     np.testing.assert_array_equal(qpos, qpos_before)
+
+
+def test_terminal_calibration_uses_data_and_physical_floors():
+    values = np.zeros((3, 10))
+    center, scale, threshold = _terminal_calibration(values)
+    np.testing.assert_allclose(center, 0.)
+    assert np.all(scale > 0.)
+    assert threshold >= 1.

@@ -7,6 +7,7 @@ from cli.analyze_apex_bridge_timing import (
 )
 from cli.build_descent_terminal_clusters import _deterministic_kmeans, _physical_shock
 from cli.audit_apex_control_authority import _offset_ticks, _pulse_action
+from cli.audit_apex_mpc_horizons import _select_starts
 from cli.discover_apex_feedback_bridge import (
     _actions,
     _bridge_has_no_physical_failure,
@@ -116,3 +117,20 @@ def test_gate_a_rejects_transient_descent_followed_by_roll_failure():
     text = open("cli/stage_next_v3_controller.py").read()
     assert "feedback_bridge_gate_reclassification_v2" in text
     assert "transient four-tick negative-vz segment" in text
+
+
+def test_horizon_audit_selects_unique_event_aligned_starts():
+    rows = [
+        {"id": str(offset), "relative_to_apex": offset}
+        for offset in (-7, -4, -3, 0)
+    ]
+    selected = _select_starts(rows)
+    assert [(requested, row["relative_to_apex"])
+            for requested, row in selected] == [(0, 0), (-4, -4), (-6, -7)]
+
+
+def test_horizon_audit_is_bounded_and_not_training():
+    text = open("cli/audit_apex_mpc_horizons.py").read()
+    assert "apex_ppo_authorized" in text
+    assert "prediction_horizons" in text
+    assert "replanning_interval_ticks" in text

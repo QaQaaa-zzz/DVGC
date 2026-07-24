@@ -67,6 +67,14 @@ def test_v3_controller_uses_best_stratified_checkpoint_and_local_blockers():
     assert "resume_missing_apex_bounded_support_search_r3" in text
 
 
+def test_pre_apex_horizon_audit_is_bounded_and_has_no_ppo():
+    text = Path("cli/stage_next_v3_controller.py").read_text()
+    assert '"minimal_pre_apex_horizon_audit"' in text
+    assert '"prediction_horizons": [3, 6, 9, 12]' in text
+    assert '"ppo_steps": 0' in text
+    assert '"apex_centroidal_contact_audit"' in text
+
+
 def test_v3_start_is_nonblocking_systemd_controller():
     text = Path("scripts/start_stage_next_v3_controller.sh").read_text()
     assert "systemd-run --user" in text
