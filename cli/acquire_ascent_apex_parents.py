@@ -422,15 +422,37 @@ def main() -> None:
         policies.append((name, Path(path)))
     entry_path = root / "fresh_ascent_entries.pkl"
     entry_report_path = root / "fresh_ascent_entries_report.json"
+    reference_replay_source = "inline_fixed_reference_replay"
     if entry_path.exists():
         entries = SnapshotBank.load(entry_path).records
         entry_report = (json.loads(entry_report_path.read_text())
                         if entry_report_path.exists() else {})
         reference_replay = entry_report.get("reference_parent_replay")
+        reference_replay_source = entry_report.get(
+            "reference_parent_replay_source", reference_replay_source
+        )
         if reference_replay is None:
-            reference_replay = _reproduce_reference_parents(
-                args, cfg, env, step, reference_bank
+            completed_audit = (
+                root.parents[1] / "apex/interface_v5/parent_robustness_v2.json"
             )
+            if completed_audit.exists():
+                audit = json.loads(completed_audit.read_text())
+                reference_replay = [
+                    {"parent_id": parent_id, **summary}
+                    for parent_id, summary in audit["parents"].items()
+                ]
+                reference_replay_source = {
+                    "artifact": str(completed_audit.resolve()),
+                    "artifact_sha256": file_sha256(completed_audit),
+                    "reuse_reason": (
+                        "same frozen-runtime parent robustness audit already "
+                        "completed atomically"
+                    ),
+                }
+            else:
+                reference_replay = _reproduce_reference_parents(
+                    args, cfg, env, step, reference_bank
+                )
         takeoff_attempts = entry_report.get("fresh_takeoff_attempts", [])
         source_mix = dict(Counter(row["upstream_source_kind"] for row in entries))
         controller_mix = dict(Counter(row["takeoff_controller"] for row in entries))
@@ -453,6 +475,7 @@ def main() -> None:
         save_json(entry_report_path, {
             "status": "PASS",
             "reference_parent_replay": reference_replay,
+            "reference_parent_replay_source": reference_replay_source,
             "fresh_takeoff_attempts": takeoff_attempts,
             "fresh_ascent_entry_pool_before_diversity_selection": entry_pool,
             "fresh_ascent_entries": len(entries),
@@ -598,6 +621,7 @@ def main() -> None:
             } for name, path in policies],
         },
         "reference_parent_replay": reference_replay,
+        "reference_parent_replay_source": reference_replay_source,
         "fresh_takeoff_attempts": takeoff_attempts,
         "fresh_ascent_entries": len(entries),
         "fresh_ascent_entry_pool_before_diversity_selection": entry_pool,

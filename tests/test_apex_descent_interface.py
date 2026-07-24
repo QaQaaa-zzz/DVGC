@@ -77,6 +77,8 @@ def test_fresh_parent_mining_resumes_atomic_parent_shards():
     assert "_round_b.json" in text
     assert "_round_b.pkl" in text
     assert "result_path.exists() and snapshot_path.exists()" in text
+    assert "parent_robustness_v2.json" in text
+    assert "same frozen-runtime parent robustness audit" in text
 
 
 def test_controller_keeps_apex_ppo_closed_without_every_gate():
