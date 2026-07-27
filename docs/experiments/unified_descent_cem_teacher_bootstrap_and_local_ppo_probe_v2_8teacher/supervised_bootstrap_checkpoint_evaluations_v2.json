@@ -1,0 +1,205 @@
+{
+  "checkpoint_interval_steps": 25,
+  "engineering_recovery": {
+    "final_status": "COMPLETE",
+    "initial_monolithic_run": "OOM_DURING_FOLD_B",
+    "recovery": "per-fold independent processes; completed checkpoints re-evaluated without retraining; incomplete Fold-B LR retried in a non-overwriting directory"
+  },
+  "evaluated_checkpoints": 180,
+  "learning_rates": [
+    1e-05,
+    3e-05,
+    0.0001
+  ],
+  "maximum_steps": 500,
+  "one_shot_relabel_records": 11,
+  "selected_folds": [
+    {
+      "anchor_action": {
+        "delta_max": 0.13256575167179108,
+        "delta_rms": 0.017346803098917007,
+        "imitation_rms": 0.017346803098917007,
+        "residual_direction_agreement": 0.0
+      },
+      "excluded": {
+        "gain_at_least_2": 0,
+        "median_gain": 1.0,
+        "positive": 2,
+        "rows": [
+          {
+            "after": 12,
+            "before": 11,
+            "candidate_id": "84920deacc2d1230124ded1b8cf5c716",
+            "failure_after": "pitch_limit",
+            "failure_before": "pitch_limit",
+            "gain": 1,
+            "margin_gain": -0.02414095401763916
+          },
+          {
+            "after": 13,
+            "before": 12,
+            "candidate_id": "cae6766e2ace79cd8dbc3ee4f6d6ccf5",
+            "failure_after": "pitch_limit",
+            "failure_before": "pitch_limit",
+            "gain": 1,
+            "margin_gain": -0.03629744052886963
+          },
+          {
+            "after": 9,
+            "before": 9,
+            "candidate_id": "062a0d2904b395fe9432459e09fa32f0",
+            "failure_after": "pitch_limit",
+            "failure_before": "pitch_limit",
+            "gain": 0,
+            "margin_gain": 0.08845162391662598
+          }
+        ],
+        "sum_positive": 2
+      },
+      "excluded_candidates": [
+        "062a0d2904b395fe9432459e09fa32f0",
+        "84920deacc2d1230124ded1b8cf5c716",
+        "cae6766e2ace79cd8dbc3ee4f6d6ccf5"
+      ],
+      "excluded_imitation": {
+        "delta_max": 0.20437875390052795,
+        "delta_rms": 0.0685046836733818,
+        "imitation_rms": 0.12143968045711517,
+        "residual_direction_agreement": 0.7083333333333334
+      },
+      "fold": "A",
+      "hard_checkpoint_eligible": false,
+      "original_24_survivor_preserved": true,
+      "selected_lr": 0.0001,
+      "selected_step": 275,
+      "train_imitation": {
+        "delta_max": 0.1994682103395462,
+        "delta_rms": 0.08567079156637192,
+        "imitation_rms": 0.037374284118413925,
+        "residual_direction_agreement": 1.0
+      }
+    },
+    {
+      "anchor_action": {
+        "delta_max": 0.03353387117385864,
+        "delta_rms": 0.007667338941246271,
+        "imitation_rms": 0.007667338941246271,
+        "residual_direction_agreement": 0.0
+      },
+      "excluded": {
+        "gain_at_least_2": 0,
+        "median_gain": 0.0,
+        "positive": 0,
+        "rows": [
+          {
+            "after": 13,
+            "before": 13,
+            "candidate_id": "d7faea27b56ec0e16974d4b5d2fb498a",
+            "failure_after": "pitch_limit",
+            "failure_before": "pitch_limit",
+            "gain": 0,
+            "margin_gain": -0.025377631187438965
+          },
+          {
+            "after": 11,
+            "before": 11,
+            "candidate_id": "2d5836801880022d589e0a8937a7d533",
+            "failure_after": "pitch_limit",
+            "failure_before": "pitch_limit",
+            "gain": 0,
+            "margin_gain": -0.03605985641479492
+          },
+          {
+            "after": 12,
+            "before": 12,
+            "candidate_id": "8df1acfba2f2e3268348ea1c26828b55",
+            "failure_after": "pitch_limit",
+            "failure_before": "pitch_limit",
+            "gain": 0,
+            "margin_gain": 0.0051267147064208984
+          }
+        ],
+        "sum_positive": 0
+      },
+      "excluded_candidates": [
+        "2d5836801880022d589e0a8937a7d533",
+        "8df1acfba2f2e3268348ea1c26828b55",
+        "d7faea27b56ec0e16974d4b5d2fb498a"
+      ],
+      "excluded_imitation": {
+        "delta_max": 0.02645370364189148,
+        "delta_rms": 0.011306566186249256,
+        "imitation_rms": 0.105928935110569,
+        "residual_direction_agreement": 0.8333333333333334
+      },
+      "fold": "B",
+      "hard_checkpoint_eligible": true,
+      "original_24_survivor_preserved": true,
+      "selected_lr": 1e-05,
+      "selected_step": 25,
+      "train_imitation": {
+        "delta_max": 0.025687456130981445,
+        "delta_rms": 0.011185754090547562,
+        "imitation_rms": 0.10232746601104736,
+        "residual_direction_agreement": 0.8863636363636364
+      }
+    },
+    {
+      "anchor_action": {
+        "delta_max": 0.038215190172195435,
+        "delta_rms": 0.010562483221292496,
+        "imitation_rms": 0.010562483221292496,
+        "residual_direction_agreement": 0.0
+      },
+      "excluded": {
+        "gain_at_least_2": 0,
+        "median_gain": 0.0,
+        "positive": 0,
+        "rows": [
+          {
+            "after": 8,
+            "before": 8,
+            "candidate_id": "485551c876749195cfd525c8dc54fbba",
+            "failure_after": "pitch_limit",
+            "failure_before": "pitch_limit",
+            "gain": 0,
+            "margin_gain": -0.07306742668151855
+          },
+          {
+            "after": 13,
+            "before": 13,
+            "candidate_id": "173ee307c84a7ebd74d8aab3ba04f328",
+            "failure_after": "pitch_limit",
+            "failure_before": "pitch_limit",
+            "gain": 0,
+            "margin_gain": 0.05725753307342529
+          }
+        ],
+        "sum_positive": 0
+      },
+      "excluded_candidates": [
+        "173ee307c84a7ebd74d8aab3ba04f328",
+        "485551c876749195cfd525c8dc54fbba"
+      ],
+      "excluded_imitation": {
+        "delta_max": 0.03414785861968994,
+        "delta_rms": 0.01847437210381031,
+        "imitation_rms": 0.08827425539493561,
+        "residual_direction_agreement": 0.6875
+      },
+      "fold": "C",
+      "hard_checkpoint_eligible": true,
+      "original_24_survivor_preserved": true,
+      "selected_lr": 1e-05,
+      "selected_step": 50,
+      "train_imitation": {
+        "delta_max": 0.036919932812452316,
+        "delta_rms": 0.01755433715879917,
+        "imitation_rms": 0.10490292310714722,
+        "residual_direction_agreement": 0.8727272727272727
+      }
+    }
+  ],
+  "status": "COMPLETE"
+}
+

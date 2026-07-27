@@ -1,0 +1,7 @@
+{
+  "heldout_used": false,
+  "ppo_authorization": false,
+  "reason": "candidate-level CV physical transfer gate failed before final bootstrap; held-out remained sealed",
+  "status": "NOT_EXECUTED"
+}
+

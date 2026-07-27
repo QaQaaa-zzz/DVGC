@@ -1,0 +1,44 @@
+{
+  "actor_candidate_id_input": false,
+  "actor_oracle_phase_input": false,
+  "contact_mode_recorded": true,
+  "delay_buffer_consistent": true,
+  "failure_precursor_finite": true,
+  "gate": true,
+  "phase_consistent": true,
+  "status": "MARGINAL_PASS",
+  "teacher": {
+    "candidate_support_p95": {
+      "062a0d2904b395fe9432459e09fa32f0": 1.5214196703071778,
+      "173ee307c84a7ebd74d8aab3ba04f328": 4.056250961114787,
+      "2d5836801880022d589e0a8937a7d533": 2.453136994741265,
+      "485551c876749195cfd525c8dc54fbba": 13.149386485954032,
+      "84920deacc2d1230124ded1b8cf5c716": 2.423131654177908,
+      "8df1acfba2f2e3268348ea1c26828b55": 2.997933972050209,
+      "cae6766e2ace79cd8dbc3ee4f6d6ccf5": 3.8786512663698742,
+      "d7faea27b56ec0e16974d4b5d2fb498a": 4.201846760654215
+    },
+    "close_opposite_conflict_fraction": 0.171875,
+    "criterion": "at most 20% of closest-quartile neighbors have opposite residual direction and action delta >0.10",
+    "cross_candidate_fraction": 0.890625,
+    "distance": {
+      "max": 16.389542710984898,
+      "median": 1.0929478369543086,
+      "min": 0.3310472918671532,
+      "p95": 2.01526946742782
+    },
+    "nearest_action_delta": {
+      "max": 0.43996852495320643,
+      "median": 0.19555768969182338,
+      "p95": 0.36754137523748914
+    },
+    "pairs": 64,
+    "representable": true
+  },
+  "teacher_anchor_close_action_conflict_fraction": 0.046875,
+  "teacher_anchor_nearest_distance": {
+    "median": 2.072720766067505,
+    "p95": 3.8831334114074707
+  }
+}
+

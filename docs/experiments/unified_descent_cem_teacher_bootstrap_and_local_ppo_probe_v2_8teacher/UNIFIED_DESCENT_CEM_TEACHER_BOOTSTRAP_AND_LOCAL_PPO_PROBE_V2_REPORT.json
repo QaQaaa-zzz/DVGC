@@ -1,0 +1,402 @@
+{
+  "authoritative_start_head": "55284df",
+  "authority": {
+    "status": "PASS",
+    "summary_mismatches": [
+      {
+        "baseline_survival": 9,
+        "candidate_id": "da0679b1c04f79fd0c607b7d7c41c6e4",
+        "cv_excluded_fold": null,
+        "exact_gain": 1,
+        "exact_replay_survival": 10,
+        "identity": "anchor",
+        "initial_snapshot_sha256": "0cdc73f450d5872dcf9f99973f773cd89adecce318e45958f848393e759fbec1",
+        "old_gain": 5,
+        "old_selected_survival": 14,
+        "old_summary_exact_summary_equal": false,
+        "replay1_replay2_equal": true,
+        "residual_sequence_sha256": "4831fa0151e674e7239747286ab38ad78d42f293f1c3e9071ce98636d76fc46d"
+      },
+      {
+        "baseline_survival": 13,
+        "candidate_id": "173ee307c84a7ebd74d8aab3ba04f328",
+        "cv_excluded_fold": "C",
+        "exact_gain": 4,
+        "exact_replay_survival": 17,
+        "identity": "positive_teacher",
+        "initial_snapshot_sha256": "5296e708937137c0aba8730bb316daa8804a0f613e20ba3cc10cdf5717b6b8a6",
+        "old_gain": 5,
+        "old_selected_survival": 18,
+        "old_summary_exact_summary_equal": false,
+        "replay1_replay2_equal": true,
+        "residual_sequence_sha256": "a3369a76a62ed2a1fb7415cb6a6590264e22c6828c1bddbbb878a4c48148c759"
+      }
+    ],
+    "teacher_candidates": [
+      "062a0d2904b395fe9432459e09fa32f0",
+      "173ee307c84a7ebd74d8aab3ba04f328",
+      "2d5836801880022d589e0a8937a7d533",
+      "485551c876749195cfd525c8dc54fbba",
+      "84920deacc2d1230124ded1b8cf5c716",
+      "8df1acfba2f2e3268348ea1c26828b55",
+      "cae6766e2ace79cd8dbc3ee4f6d6ccf5",
+      "d7faea27b56ec0e16974d4b5d2fb498a"
+    ],
+    "teacher_count": 8
+  },
+  "candidate_cv": {
+    "combined": {
+      "candidates": [
+        {
+          "after": 12,
+          "before": 11,
+          "candidate_id": "84920deacc2d1230124ded1b8cf5c716",
+          "failure_after": "pitch_limit",
+          "failure_before": "pitch_limit",
+          "gain": 1,
+          "margin_gain": -0.02414095401763916
+        },
+        {
+          "after": 13,
+          "before": 12,
+          "candidate_id": "cae6766e2ace79cd8dbc3ee4f6d6ccf5",
+          "failure_after": "pitch_limit",
+          "failure_before": "pitch_limit",
+          "gain": 1,
+          "margin_gain": -0.03629744052886963
+        },
+        {
+          "after": 9,
+          "before": 9,
+          "candidate_id": "062a0d2904b395fe9432459e09fa32f0",
+          "failure_after": "pitch_limit",
+          "failure_before": "pitch_limit",
+          "gain": 0,
+          "margin_gain": 0.08845162391662598
+        },
+        {
+          "after": 13,
+          "before": 13,
+          "candidate_id": "d7faea27b56ec0e16974d4b5d2fb498a",
+          "failure_after": "pitch_limit",
+          "failure_before": "pitch_limit",
+          "gain": 0,
+          "margin_gain": -0.025377631187438965
+        },
+        {
+          "after": 11,
+          "before": 11,
+          "candidate_id": "2d5836801880022d589e0a8937a7d533",
+          "failure_after": "pitch_limit",
+          "failure_before": "pitch_limit",
+          "gain": 0,
+          "margin_gain": -0.03605985641479492
+        },
+        {
+          "after": 12,
+          "before": 12,
+          "candidate_id": "8df1acfba2f2e3268348ea1c26828b55",
+          "failure_after": "pitch_limit",
+          "failure_before": "pitch_limit",
+          "gain": 0,
+          "margin_gain": 0.0051267147064208984
+        },
+        {
+          "after": 8,
+          "before": 8,
+          "candidate_id": "485551c876749195cfd525c8dc54fbba",
+          "failure_after": "pitch_limit",
+          "failure_before": "pitch_limit",
+          "gain": 0,
+          "margin_gain": -0.07306742668151855
+        },
+        {
+          "after": 13,
+          "before": 13,
+          "candidate_id": "173ee307c84a7ebd74d8aab3ba04f328",
+          "failure_after": "pitch_limit",
+          "failure_before": "pitch_limit",
+          "gain": 0,
+          "margin_gain": 0.05725753307342529
+        }
+      ],
+      "gain_at_least_2": 0,
+      "median_gain": 0.0,
+      "new_failure_types": [],
+      "positive_folds": 1
+    },
+    "folds": [
+      {
+        "anchor_action": {
+          "delta_max": 0.13256575167179108,
+          "delta_rms": 0.017346803098917007,
+          "imitation_rms": 0.017346803098917007,
+          "residual_direction_agreement": 0.0
+        },
+        "excluded": {
+          "gain_at_least_2": 0,
+          "median_gain": 1.0,
+          "positive": 2,
+          "rows": [
+            {
+              "after": 12,
+              "before": 11,
+              "candidate_id": "84920deacc2d1230124ded1b8cf5c716",
+              "failure_after": "pitch_limit",
+              "failure_before": "pitch_limit",
+              "gain": 1,
+              "margin_gain": -0.02414095401763916
+            },
+            {
+              "after": 13,
+              "before": 12,
+              "candidate_id": "cae6766e2ace79cd8dbc3ee4f6d6ccf5",
+              "failure_after": "pitch_limit",
+              "failure_before": "pitch_limit",
+              "gain": 1,
+              "margin_gain": -0.03629744052886963
+            },
+            {
+              "after": 9,
+              "before": 9,
+              "candidate_id": "062a0d2904b395fe9432459e09fa32f0",
+              "failure_after": "pitch_limit",
+              "failure_before": "pitch_limit",
+              "gain": 0,
+              "margin_gain": 0.08845162391662598
+            }
+          ],
+          "sum_positive": 2
+        },
+        "excluded_candidates": [
+          "062a0d2904b395fe9432459e09fa32f0",
+          "84920deacc2d1230124ded1b8cf5c716",
+          "cae6766e2ace79cd8dbc3ee4f6d6ccf5"
+        ],
+        "excluded_imitation": {
+          "delta_max": 0.20437875390052795,
+          "delta_rms": 0.0685046836733818,
+          "imitation_rms": 0.12143968045711517,
+          "residual_direction_agreement": 0.7083333333333334
+        },
+        "fold": "A",
+        "hard_checkpoint_eligible": false,
+        "original_24_survivor_preserved": true,
+        "selected_lr": 0.0001,
+        "selected_step": 275,
+        "train_imitation": {
+          "delta_max": 0.1994682103395462,
+          "delta_rms": 0.08567079156637192,
+          "imitation_rms": 0.037374284118413925,
+          "residual_direction_agreement": 1.0
+        }
+      },
+      {
+        "anchor_action": {
+          "delta_max": 0.03353387117385864,
+          "delta_rms": 0.007667338941246271,
+          "imitation_rms": 0.007667338941246271,
+          "residual_direction_agreement": 0.0
+        },
+        "excluded": {
+          "gain_at_least_2": 0,
+          "median_gain": 0.0,
+          "positive": 0,
+          "rows": [
+            {
+              "after": 13,
+              "before": 13,
+              "candidate_id": "d7faea27b56ec0e16974d4b5d2fb498a",
+              "failure_after": "pitch_limit",
+              "failure_before": "pitch_limit",
+              "gain": 0,
+              "margin_gain": -0.025377631187438965
+            },
+            {
+              "after": 11,
+              "before": 11,
+              "candidate_id": "2d5836801880022d589e0a8937a7d533",
+              "failure_after": "pitch_limit",
+              "failure_before": "pitch_limit",
+              "gain": 0,
+              "margin_gain": -0.03605985641479492
+            },
+            {
+              "after": 12,
+              "before": 12,
+              "candidate_id": "8df1acfba2f2e3268348ea1c26828b55",
+              "failure_after": "pitch_limit",
+              "failure_before": "pitch_limit",
+              "gain": 0,
+              "margin_gain": 0.0051267147064208984
+            }
+          ],
+          "sum_positive": 0
+        },
+        "excluded_candidates": [
+          "2d5836801880022d589e0a8937a7d533",
+          "8df1acfba2f2e3268348ea1c26828b55",
+          "d7faea27b56ec0e16974d4b5d2fb498a"
+        ],
+        "excluded_imitation": {
+          "delta_max": 0.02645370364189148,
+          "delta_rms": 0.011306566186249256,
+          "imitation_rms": 0.105928935110569,
+          "residual_direction_agreement": 0.8333333333333334
+        },
+        "fold": "B",
+        "hard_checkpoint_eligible": true,
+        "original_24_survivor_preserved": true,
+        "selected_lr": 1e-05,
+        "selected_step": 25,
+        "train_imitation": {
+          "delta_max": 0.025687456130981445,
+          "delta_rms": 0.011185754090547562,
+          "imitation_rms": 0.10232746601104736,
+          "residual_direction_agreement": 0.8863636363636364
+        }
+      },
+      {
+        "anchor_action": {
+          "delta_max": 0.038215190172195435,
+          "delta_rms": 0.010562483221292496,
+          "imitation_rms": 0.010562483221292496,
+          "residual_direction_agreement": 0.0
+        },
+        "excluded": {
+          "gain_at_least_2": 0,
+          "median_gain": 0.0,
+          "positive": 0,
+          "rows": [
+            {
+              "after": 8,
+              "before": 8,
+              "candidate_id": "485551c876749195cfd525c8dc54fbba",
+              "failure_after": "pitch_limit",
+              "failure_before": "pitch_limit",
+              "gain": 0,
+              "margin_gain": -0.07306742668151855
+            },
+            {
+              "after": 13,
+              "before": 13,
+              "candidate_id": "173ee307c84a7ebd74d8aab3ba04f328",
+              "failure_after": "pitch_limit",
+              "failure_before": "pitch_limit",
+              "gain": 0,
+              "margin_gain": 0.05725753307342529
+            }
+          ],
+          "sum_positive": 0
+        },
+        "excluded_candidates": [
+          "173ee307c84a7ebd74d8aab3ba04f328",
+          "485551c876749195cfd525c8dc54fbba"
+        ],
+        "excluded_imitation": {
+          "delta_max": 0.03414785861968994,
+          "delta_rms": 0.01847437210381031,
+          "imitation_rms": 0.08827425539493561,
+          "residual_direction_agreement": 0.6875
+        },
+        "fold": "C",
+        "hard_checkpoint_eligible": true,
+        "original_24_survivor_preserved": true,
+        "selected_lr": 1e-05,
+        "selected_step": 50,
+        "train_imitation": {
+          "delta_max": 0.036919932812452316,
+          "delta_rms": 0.01755433715879917,
+          "imitation_rms": 0.10490292310714722,
+          "residual_direction_agreement": 0.8727272727272727
+        }
+      }
+    ],
+    "heldout_used": false,
+    "mode": "head_only_with_one_relabel_round",
+    "physical_transfer_gate": false,
+    "relabel_already_consumed": true,
+    "relabel_records": 11,
+    "relabel_required": false,
+    "status": "TEACHER_MEMORIZATION_OR_SUPPORT_GAP"
+  },
+  "conditional_ppo": {
+    "authorization_final": false,
+    "executed": false,
+    "ppo_additional_learning_signal": "NOT_APPLICABLE"
+  },
+  "controller_worker_expected": "none",
+  "experiment": "unified_descent_cem_teacher_bootstrap_and_local_ppo_probe_v2_8teacher",
+  "final_bootstrap": {
+    "bootstrap_gate": false,
+    "post_bootstrap_14_state": null,
+    "status": "NOT_EXECUTED",
+    "teacher_positive_gain_at_least_2": null
+  },
+  "frozen_pi_d_baseline_14": {
+    "failure_reasons": {
+      "horizon": 1,
+      "pitch_limit": 12,
+      "roll_limit": 1
+    },
+    "lower_quartile": 9.0,
+    "median": 10.0,
+    "saturation_fraction": 0.04236111111111111,
+    "states": 14,
+    "survival_counts": {
+      "12": 5,
+      "16": 1,
+      "24": 1,
+      "8": 14
+    }
+  },
+  "heldout": {
+    "status": "SEALED_NOT_USED"
+  },
+  "implementation_commits": [
+    "5d35404",
+    "75049e1",
+    "cc75375",
+    "33d9dbb",
+    "6285f75",
+    "861a949"
+  ],
+  "landing_retention": {
+    "status": "NOT_EVALUATED_BECAUSE_NO_FINAL_BOOTSTRAP"
+  },
+  "original_24_tick_survivor": {
+    "baseline": true,
+    "selected_fold_checkpoints": [
+      true,
+      true,
+      true
+    ]
+  },
+  "raw_result_path": "runs/unified_descent_cem_teacher_bootstrap_and_local_ppo_probe_v2_8teacher/cv_relabel_v1",
+  "representation": {
+    "close_opposite_conflict_fraction": 0.171875,
+    "nearest_neighbor_distance": {
+      "max": 16.389542710984898,
+      "median": 1.0929478369543086,
+      "min": 0.3310472918671532,
+      "p95": 2.01526946742782
+    },
+    "status": "MARGINAL_PASS",
+    "teacher_anchor_close_action_conflict_fraction": 0.046875,
+    "threshold": 0.2
+  },
+  "status": "TEACHER_MEMORIZATION_OR_SUPPORT_GAP",
+  "termination_reason": "The single support-gated relabel round did not produce candidate-level transfer: 0/8 excluded candidates gained >=2 ticks, median gain was 0, and only one of three folds had positive median gain. No further supervised expansion is authorized.",
+  "training_path": {
+    "head_only": true,
+    "last_hidden_block_unfrozen": false,
+    "one_shot_student_relabel": {
+      "accepted": 11,
+      "audited": 40,
+      "consumed": true,
+      "triggered": true
+    },
+    "reason": "head reduced imitation error, so protocol allowed strict relabel rather than hidden-block unfreeze"
+  }
+}
+

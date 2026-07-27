@@ -1,0 +1,235 @@
+{
+  "candidates": [
+    {
+      "baseline_survival": 9,
+      "candidate_id": "32360755d0791c9a35ac0279b4605d1c",
+      "cv_excluded_fold": null,
+      "exact_gain": 3,
+      "exact_replay_survival": 12,
+      "identity": "anchor",
+      "initial_snapshot_sha256": "569ab7ba2398006619b9044856241970e65c5c169cb179681ad0dafd32125586",
+      "old_gain": 3,
+      "old_selected_survival": 12,
+      "old_summary_exact_summary_equal": true,
+      "replay1_replay2_equal": true,
+      "residual_sequence_sha256": "d14f0e17febc5a2be80e574a0994cb34d0ac3fb65cba59921bb5e154c4fbf2d3"
+    },
+    {
+      "baseline_survival": 9,
+      "candidate_id": "3e4519b7ff079d5ca17901de9bcbcf60",
+      "cv_excluded_fold": null,
+      "exact_gain": 3,
+      "exact_replay_survival": 12,
+      "identity": "anchor",
+      "initial_snapshot_sha256": "313f7ef28330bcbfd396e658b4abd5b1c3ca1ddedadf705fb7bc3fbebe1f6c12",
+      "old_gain": 3,
+      "old_selected_survival": 12,
+      "old_summary_exact_summary_equal": true,
+      "replay1_replay2_equal": true,
+      "residual_sequence_sha256": "1fe955e7de4feebd6d5a423af66d486c357d890795c29607fd2acecb6fd774c0"
+    },
+    {
+      "baseline_survival": 9,
+      "candidate_id": "da0679b1c04f79fd0c607b7d7c41c6e4",
+      "cv_excluded_fold": null,
+      "exact_gain": 1,
+      "exact_replay_survival": 10,
+      "identity": "anchor",
+      "initial_snapshot_sha256": "0cdc73f450d5872dcf9f99973f773cd89adecce318e45958f848393e759fbec1",
+      "old_gain": 5,
+      "old_selected_survival": 14,
+      "old_summary_exact_summary_equal": false,
+      "replay1_replay2_equal": true,
+      "residual_sequence_sha256": "4831fa0151e674e7239747286ab38ad78d42f293f1c3e9071ce98636d76fc46d"
+    },
+    {
+      "baseline_survival": 8,
+      "candidate_id": "23bdc62adfdc2b9232f173a189a6bc5a",
+      "cv_excluded_fold": null,
+      "exact_gain": 2,
+      "exact_replay_survival": 10,
+      "identity": "anchor",
+      "initial_snapshot_sha256": "8238e8a6c92736c199359e7235f64c0bd1db48fdd9d4be678091305d582e2132",
+      "old_gain": 2,
+      "old_selected_survival": 10,
+      "old_summary_exact_summary_equal": true,
+      "replay1_replay2_equal": true,
+      "residual_sequence_sha256": "3b8827a2e265c5ee57bdf3658e1552629c17a705c3610ac0a7cea89fe1521888"
+    },
+    {
+      "baseline_survival": 13,
+      "candidate_id": "d7faea27b56ec0e16974d4b5d2fb498a",
+      "cv_excluded_fold": "B",
+      "exact_gain": 11,
+      "exact_replay_survival": 24,
+      "identity": "positive_teacher",
+      "initial_snapshot_sha256": "dca1ca11987a50b8993bb221d6e1b78ab562f468a962edfe3e281d0d02c984ef",
+      "old_gain": 11,
+      "old_selected_survival": 24,
+      "old_summary_exact_summary_equal": true,
+      "replay1_replay2_equal": true,
+      "residual_sequence_sha256": "e22f88cb945e15d14141e2e58a7e98a5df05e6fbadf3424a61ec11d1b80e6462"
+    },
+    {
+      "baseline_survival": 8,
+      "candidate_id": "0649c1e006ba33d5b992c573d96b3aef",
+      "cv_excluded_fold": null,
+      "exact_gain": 3,
+      "exact_replay_survival": 11,
+      "identity": "anchor",
+      "initial_snapshot_sha256": "b4cb84f767bd250e5b91f8c8b8523ac44cddbaba81f9533e76311a55627ee344",
+      "old_gain": 3,
+      "old_selected_survival": 11,
+      "old_summary_exact_summary_equal": true,
+      "replay1_replay2_equal": true,
+      "residual_sequence_sha256": "025421b1688224121cf6fb0e6f2eb5cba5f1b91c27b3b2da875a8998977b6dcc"
+    },
+    {
+      "baseline_survival": 11,
+      "candidate_id": "84920deacc2d1230124ded1b8cf5c716",
+      "cv_excluded_fold": "A",
+      "exact_gain": 5,
+      "exact_replay_survival": 16,
+      "identity": "positive_teacher",
+      "initial_snapshot_sha256": "8881e50619cd483c43e4516274c90d75f21aae18dea46eb2ed73c95e388a6154",
+      "old_gain": 5,
+      "old_selected_survival": 16,
+      "old_summary_exact_summary_equal": true,
+      "replay1_replay2_equal": true,
+      "residual_sequence_sha256": "a708ba8e308bcf67f40b6db39275383ddeed31a570e23628782b3800912aef98"
+    },
+    {
+      "baseline_survival": 24,
+      "candidate_id": "d3fbf57dbf3d07cfbf4b31d6d11a0428",
+      "cv_excluded_fold": null,
+      "exact_gain": 0,
+      "exact_replay_survival": 24,
+      "identity": "anchor",
+      "initial_snapshot_sha256": "ef5170062fdbb7d282461cf4c879250e35d0a621ee4114e86963f6804a635549",
+      "old_gain": 0,
+      "old_selected_survival": 24,
+      "old_summary_exact_summary_equal": true,
+      "replay1_replay2_equal": true,
+      "residual_sequence_sha256": "714e2bfb30a61e36ec209a8af041b7e0dce790a2abed605a09917a52e8e27668"
+    },
+    {
+      "baseline_survival": 8,
+      "candidate_id": "485551c876749195cfd525c8dc54fbba",
+      "cv_excluded_fold": "C",
+      "exact_gain": 16,
+      "exact_replay_survival": 24,
+      "identity": "positive_teacher",
+      "initial_snapshot_sha256": "8ba3dfa03d27bb0a47bcc51e1c743bb5753d36c3a9e34078453228566247546c",
+      "old_gain": 16,
+      "old_selected_survival": 24,
+      "old_summary_exact_summary_equal": true,
+      "replay1_replay2_equal": true,
+      "residual_sequence_sha256": "4003ed3e2883bef73f958c7236b2b26607ed5e68a1282e93d18fe7adb281d857"
+    },
+    {
+      "baseline_survival": 13,
+      "candidate_id": "173ee307c84a7ebd74d8aab3ba04f328",
+      "cv_excluded_fold": "C",
+      "exact_gain": 4,
+      "exact_replay_survival": 17,
+      "identity": "positive_teacher",
+      "initial_snapshot_sha256": "5296e708937137c0aba8730bb316daa8804a0f613e20ba3cc10cdf5717b6b8a6",
+      "old_gain": 5,
+      "old_selected_survival": 18,
+      "old_summary_exact_summary_equal": false,
+      "replay1_replay2_equal": true,
+      "residual_sequence_sha256": "a3369a76a62ed2a1fb7415cb6a6590264e22c6828c1bddbbb878a4c48148c759"
+    },
+    {
+      "baseline_survival": 11,
+      "candidate_id": "2d5836801880022d589e0a8937a7d533",
+      "cv_excluded_fold": "B",
+      "exact_gain": 5,
+      "exact_replay_survival": 16,
+      "identity": "positive_teacher",
+      "initial_snapshot_sha256": "dea53deade18b27839b2aa59deaa11cddf8342eacc0acf2e3a0959fbe86a284a",
+      "old_gain": 5,
+      "old_selected_survival": 16,
+      "old_summary_exact_summary_equal": true,
+      "replay1_replay2_equal": true,
+      "residual_sequence_sha256": "7f0a5103bf9d189990f95d2307e9c9fae49c82b2f69a6397198c843d6a90688b"
+    },
+    {
+      "baseline_survival": 13,
+      "candidate_id": "cae6766e2ace79cd8dbc3ee4f6d6ccf5",
+      "cv_excluded_fold": "A",
+      "exact_gain": 4,
+      "exact_replay_survival": 17,
+      "identity": "positive_teacher",
+      "initial_snapshot_sha256": "533081f251d042f35841e7cfcff9a4be13fcf4ac2f476c83831974bf873dac99",
+      "old_gain": 4,
+      "old_selected_survival": 17,
+      "old_summary_exact_summary_equal": true,
+      "replay1_replay2_equal": true,
+      "residual_sequence_sha256": "424b552fad0f8ac269c52d1ec9fc8b66d95c58d2f05aed538be45d2cb479a932"
+    },
+    {
+      "baseline_survival": 12,
+      "candidate_id": "8df1acfba2f2e3268348ea1c26828b55",
+      "cv_excluded_fold": "B",
+      "exact_gain": 4,
+      "exact_replay_survival": 16,
+      "identity": "positive_teacher",
+      "initial_snapshot_sha256": "0a7bebadc86bace0990faf37ee9f6e09e6f8510de12024729cccb56ea03b855c",
+      "old_gain": 4,
+      "old_selected_survival": 16,
+      "old_summary_exact_summary_equal": true,
+      "replay1_replay2_equal": true,
+      "residual_sequence_sha256": "6c3860fbd3c185aa9c5d528aa46ca950f1271a5796ef4d456cc833518b6916a0"
+    },
+    {
+      "baseline_survival": 9,
+      "candidate_id": "062a0d2904b395fe9432459e09fa32f0",
+      "cv_excluded_fold": "A",
+      "exact_gain": 5,
+      "exact_replay_survival": 14,
+      "identity": "positive_teacher",
+      "initial_snapshot_sha256": "450075f3b5ff773765803c39808b915cb1a0649deeaaf4d8160a5f4eb7260367",
+      "old_gain": 5,
+      "old_selected_survival": 14,
+      "old_summary_exact_summary_equal": true,
+      "replay1_replay2_equal": true,
+      "residual_sequence_sha256": "fa8084db6a2bf178becd5633a0562ce44a3640a82de0a7a70e90e8974bf57ee4"
+    }
+  ],
+  "exact_replay_summary_role": "teacher_authority",
+  "folds": {
+    "A": [
+      "062a0d2904b395fe9432459e09fa32f0",
+      "84920deacc2d1230124ded1b8cf5c716",
+      "cae6766e2ace79cd8dbc3ee4f6d6ccf5"
+    ],
+    "B": [
+      "2d5836801880022d589e0a8937a7d533",
+      "8df1acfba2f2e3268348ea1c26828b55",
+      "d7faea27b56ec0e16974d4b5d2fb498a"
+    ],
+    "C": [
+      "173ee307c84a7ebd74d8aab3ba04f328",
+      "485551c876749195cfd525c8dc54fbba"
+    ]
+  },
+  "old_selected_summary_role": "historical_only",
+  "protocol": "exact gain >=4 is the sole teacher inclusion condition",
+  "status": "PASS",
+  "summary_mismatch_candidates": [
+    "da0679b1c04f79fd0c607b7d7c41c6e4",
+    "173ee307c84a7ebd74d8aab3ba04f328"
+  ],
+  "teacher_candidates": [
+    "062a0d2904b395fe9432459e09fa32f0",
+    "173ee307c84a7ebd74d8aab3ba04f328",
+    "2d5836801880022d589e0a8937a7d533",
+    "485551c876749195cfd525c8dc54fbba",
+    "84920deacc2d1230124ded1b8cf5c716",
+    "8df1acfba2f2e3268348ea1c26828b55",
+    "cae6766e2ace79cd8dbc3ee4f6d6ccf5",
+    "d7faea27b56ec0e16974d4b5d2fb498a"
+  ]
+}
+

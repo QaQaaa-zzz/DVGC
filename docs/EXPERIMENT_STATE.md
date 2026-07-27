@@ -1268,3 +1268,30 @@
   preflight is 298 passed (one external JAXopt deprecation warning). Compact
   report:
   `docs/experiments/unified_descent_cem_teacher_bootstrap_and_local_ppo_probe_v1/`.
+
+## Unified Descent eight-teacher bootstrap/local-PPO probe v2 (2026-07-27)
+
+- Started from `55284df`; the candidate bank `8e6342b...45a1`, authoritative
+  XML/action mapping, frozen pi_D, normalizer `8f2e36b...93a7e`, and ten-state
+  held-out set remained immutable. Exact replay admits exactly eight teachers.
+  The mismatches are `da0679b1` (selected 14, exact 10; gain 5 -> 1, removed)
+  and `173ee307` (18 -> 17; gain 5 -> 4, retained).
+- The 64 teacher / 198 anchor dataset passes the declared representation gate
+  only marginally: close opposite-label conflict is 17.1875% versus the 20%
+  limit. The frozen three candidate-level folds are 3/3/2 states.
+- Head-only CV reduced imitation error but could not satisfy anchor and
+  physical-transfer constraints together. The one authorized support-gated
+  student relabel round audited 40 visited states and admitted 11; it used no
+  excluded-fold or held-out samples.
+- Final excluded-state gains were Fold A `[1,1,0]`, Fold B `[0,0,0]`, and
+  Fold C `[0,0]`. Combined `gain>=2` is 0/8, median gain 0, and only one fold
+  has positive median gain. Fold A's best diagnostic checkpoint also violates
+  the anchor max-action-drift gate; no new failure type appeared.
+- Classification: `teacher_memorization_or_support_gap`. The relabel allowance
+  is consumed; last-hidden-block training was not triggered. Final bootstrap,
+  held-out evaluation, Landing retention, and conditional PPO were not run.
+  PPO authorization is false and the held-out set remains sealed.
+- A monolithic CV process encountered an engineering OOM. Independent fold
+  processes reused completed checkpoints and retried only the incomplete LR
+  shard without overwriting results; all three folds then completed. Report:
+  `docs/experiments/unified_descent_cem_teacher_bootstrap_and_local_ppo_probe_v2_8teacher/`.
