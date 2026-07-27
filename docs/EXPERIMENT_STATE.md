@@ -1218,3 +1218,31 @@
   compatibility, and candidate horizon/curriculum difficulty. PPO
   authorization is false; no Tube/JEL/second-seed work started. Report:
   `docs/experiments/unified_descent_rsi_optimizer_trust_region_repair_v1/`.
+
+## Unified Descent controllability/reward/curriculum probe v1 (2026-07-27)
+
+- Authoritative start `3aa5758`; immutable bank `8e6342b...45a1`, XML/action
+  mapping, formal failure semantics, frozen pi_D `5272166...353f2` and
+  normalizer `8f2e36b...93a7e` (count 1,024,000) remained unchanged.
+- Checkpoint 6400 relative to checkpoint 0 has analytic/sample KL
+  `0.00413/0.00634`, deterministic action max/RMS delta
+  `0.00505/0.000971`, actor relative L2 `2.70e-5`, and value-prediction RMS
+  delta `0.0192`. The accepted updates were real but did not alter discrete
+  candidate survival.
+- The local action Jacobian is full rank from tick 2 but strongly
+  ill-conditioned. No isolated action channel added more than one tick; no
+  mapping, sign, dead-knee, or control-delay anomaly was found. Effective
+  recovery requires coordinated time-structured action changes.
+- Reward-free bounded CEM gives 8/14 states reaching 16 ticks, 3/14 reaching
+  24, median gain 4.5, and 9/14 gaining at least four ticks. Exact replay is
+  14/14. Reward alignment passes on 51,200 sequences: candidate-stratified
+  Spearman 0.7661 and pairwise accuracy 0.8333.
+- Final classification is `C: initialization_or_exploration_gap`. Only 1/9
+  major improvements has residual RMS within the policy's 2-sigma limit
+  (`0.10`); most require bound `0.20` and coordinated corrections beginning
+  at tick 0. Phase-B curriculum PPO was not run, PPO authorization remains
+  false, and no Tube/JEL claim was made. Proposed next work is a separately
+  authorized short-horizon supervised CEM-teacher bootstrap, not more ordinary
+  PPO. Targeted tests are 2 passed and the final GPU local preflight is
+  293 passed (one external JAXopt deprecation warning). Compact report:
+  `docs/experiments/unified_descent_controllability_reward_curriculum_probe_v1/`.

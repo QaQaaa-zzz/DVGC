@@ -1,0 +1,23 @@
+{
+  "status": "PASS_CONTROLLABLE_BUT_ILL_CONDITIONED",
+  "raw_artifact": "runs/unified_descent_controllability_reward_curriculum_probe_v1/full_v2/local_action_controllability_audit.json",
+  "action_space": "bounded post-mode policy action residual before the authoritative environment action-to-control mapping",
+  "action_order": ["steer", "rear_wheel_drive", "hip", "knee"],
+  "states": 14,
+  "scales": [0.01, 0.025, 0.05],
+  "horizons": [1, 2, 4, 8],
+  "jacobian_summary": {
+    "h1": {"rank_min_median_max": [2, 3, 4], "condition_min_median_p95_max": [7.5561, 841.2420, 4728.6317, 5092.1201]},
+    "h2": {"rank_min_median_max": [4, 4, 4], "condition_min_median_p95_max": [96.9101, 861.6530, 6236.7258, 9175.7363]},
+    "h4": {"rank_min_median_max": [4, 4, 4], "condition_min_median_p95_max": [63.6910, 419.1626, 1916.0788, 2139.3372]},
+    "h8": {"rank_min_median_max": [4, 4, 4], "condition_min_median_p95_max": [152.3239, 658.1183, 10237.4395, 16444.9648]}
+  },
+  "single_channel_result": {
+    "steer": "No tested perturbation extended survival; it changes attitude margins but is not a standalone pitch-failure remedy.",
+    "rear_wheel_drive": "At most one tick of extension; both signs can be state-dependent.",
+    "hip": "Positive residual can add one tick on isolated states, while negative residual generally shortens survival; it is useful only in coordinated sequences.",
+    "knee": "Both signs are dynamically effective, so the channel is neither dead nor sign-swapped, but isolated perturbations usually shorten survival and at best add one tick. It is a state-dependent coordinated control variable, not an independent recovery actuator."
+  },
+  "mapping_or_delay_anomaly": false,
+  "interpretation": "The action-to-state Jacobian is full rank from tick 2 onward, but highly ill-conditioned. No single small channel perturbation supplies the multi-tick gains found by CEM; recovery requires coordinated, time-structured hip/knee/drive/steer corrections."
+}

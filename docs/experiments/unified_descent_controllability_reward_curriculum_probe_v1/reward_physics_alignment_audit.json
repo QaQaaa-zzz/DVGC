@@ -1,0 +1,13 @@
+{
+  "status": "PASS_REWARD_ALIGNED",
+  "raw_artifact": "runs/unified_descent_controllability_reward_curriculum_probe_v1/full_v2/reward_physics_alignment_audit.json",
+  "sequence_count": 51200,
+  "return_survival_spearman_global": 0.945785,
+  "candidate_stratified_spearman_mean": 0.766065,
+  "return_minimum_formal_margin_spearman": 0.438000,
+  "pairwise_ranking_accuracy": 0.833343,
+  "top_reward_survival": {"mean":20.205,"p10":15.0},
+  "top_physical_reward_percentile_mean":0.932343,
+  "component_variance_share": {"failure_penalty":0.568896,"shaping":0.332851,"roll":0.043543,"pitch":0.038015,"angular":0.010374,"survival":0.003739,"vertical_velocity":0.002505,"action_magnitude":0.0000517,"action_smoothness":0.0000250},
+  "interpretation": "The reward reliably ranks longer-lived sequences within candidates. Action penalties are negligible and do not suppress corrective control. Formal-margin correlation is weaker, but neither classification-B threshold is violated and high-reward sequences are not systematically early failures."
+}

@@ -1,0 +1,14 @@
+{
+  "status": "FINAL",
+  "classification": "initialization_or_exploration_gap",
+  "classification_code": "C",
+  "states_reaching_16": 8,
+  "median_time_to_failure_gain": 4.5,
+  "states_gain_at_least_4": 9,
+  "reward_spearman": 0.7660645536,
+  "pairwise_accuracy": 0.8333428571,
+  "major_improvements_within_policy_2sigma": "1/9",
+  "phase_b_authorized": false,
+  "ppo_authorization": false,
+  "reason": "Physical improvement exists and reward ranking passes, but useful residual sequences overwhelmingly lie beyond twice the fixed 0.05 policy action standard deviation. Classification D therefore fails its exploration-range condition."
+}

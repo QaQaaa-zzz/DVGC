@@ -1,0 +1,23 @@
+{
+  "status": "PASS_EXACT_REPLAY",
+  "raw_artifact": "runs/unified_descent_controllability_reward_curriculum_probe_v1/full_v2/residual_cem_oracle_results.json",
+  "protocol": {"knots": 6, "ticks_per_knot": 4, "variables": 24, "bounds": [0.05, 0.10, 0.20], "generations_per_bound_max": 5, "samples_per_generation": 256, "reward_used_for_search": false},
+  "results": [
+    {"id":"32360755","survival":[9,12],"gain":3,"bound":0.20,"rms":0.1255,"max":0.20,"margin":[-1.3992,-0.0713],"end":"pitch_limit"},
+    {"id":"3e4519b7","survival":[9,12],"gain":3,"bound":0.20,"rms":0.1206,"max":0.20,"margin":[-0.1898,-0.0439],"end":"pitch_limit"},
+    {"id":"da0679b1","survival":[9,14],"gain":5,"bound":0.20,"rms":0.1216,"max":0.20,"margin":[-0.1824,-0.0340],"end":"roll_limit"},
+    {"id":"23bdc62a","survival":[8,10],"gain":2,"bound":0.20,"rms":0.1049,"max":0.20,"margin":[-0.1824,-0.0170],"end":"pitch_limit"},
+    {"id":"d7faea27","survival":[13,24],"gain":11,"bound":0.20,"rms":0.1056,"max":0.20,"margin":[0.0000,0.5717],"end":"horizon"},
+    {"id":"0649c1e0","survival":[8,11],"gain":3,"bound":0.20,"rms":0.1110,"max":0.20,"margin":[-0.0121,-0.0370],"end":"pitch_limit"},
+    {"id":"84920dea","survival":[11,16],"gain":5,"bound":0.20,"rms":0.1156,"max":0.20,"margin":[-0.0303,-0.9631],"end":"roll_limit"},
+    {"id":"d3fbf57d","survival":[24,24],"gain":0,"bound":0.05,"rms":0.0265,"max":0.05,"margin":[0.1476,0.5620],"end":"horizon"},
+    {"id":"485551c8","survival":[8,24],"gain":16,"bound":0.20,"rms":0.0907,"max":0.20,"margin":[-0.0755,0.5538],"end":"horizon"},
+    {"id":"173ee307","survival":[13,18],"gain":5,"bound":0.20,"rms":0.1030,"max":0.20,"margin":[-0.0603,-0.0332],"end":"roll_limit"},
+    {"id":"2d583680","survival":[11,16],"gain":5,"bound":0.20,"rms":0.1048,"max":0.20,"margin":[-0.0119,-0.0657],"end":"pitch_limit"},
+    {"id":"cae6766e","survival":[13,17],"gain":4,"bound":0.20,"rms":0.1180,"max":0.1901,"margin":[-0.0742,-0.0076],"end":"pitch_limit"},
+    {"id":"8df1acfb","survival":[12,16],"gain":4,"bound":0.20,"rms":0.1162,"max":0.20,"margin":[-0.0812,-0.0896],"end":"pitch_limit"},
+    {"id":"062a0d29","survival":[9,14],"gain":5,"bound":0.20,"rms":0.1364,"max":0.20,"margin":[-0.0981,-0.0032],"end":"pitch_limit"}
+  ],
+  "aggregate": {"states_reaching_16":8,"median_gain":4.5,"states_gain_at_least_4":9,"exact_replay":"14/14","major_improvements_with_rms_at_most_0_10":"1/9","first_correction_tick":0,"major_first_knot_mean":[-0.0112,0.0498,-0.0137,-0.0184],"major_all_knot_median_abs":[0.0872,0.0646,0.1310,0.0718]},
+  "interpretation": "Valid corrections start immediately and are coordinated. Hip carries the largest median absolute residual over the six knots; steer, drive and knee are also materially used. Most useful sequences require residuals outside the frozen policy's two-sigma exploration scale."
+}

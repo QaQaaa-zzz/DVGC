@@ -1,0 +1,22 @@
+{
+  "status": "PASS_MEASURABLE_BUT_PHYSICALLY_INEFFECTIVE_MOVEMENT",
+  "reference_checkpoint": 0,
+  "raw_artifact": "runs/unified_descent_controllability_reward_curriculum_probe_v1/full_v2/checkpoint_policy_displacement_audit.json",
+  "checkpoints": {
+    "0": {"analytic_kl": 0.0000399351, "sample_kl": 0.0000011330, "action_delta_max": 0.0, "action_delta_rms": 0.0, "actor_relative_l2": 0.0, "value_prediction_delta_rms": 0.0},
+    "1600": {"analytic_kl": 0.0013697168, "sample_kl": 0.0026187117, "action_delta_max": 0.0022482276, "action_delta_rms": 0.0003735005, "actor_relative_l2": 0.0000129392, "value_prediction_delta_rms": 0.0050292839},
+    "3200": {"analytic_kl": 0.0020387012, "sample_kl": 0.0034932231, "action_delta_max": 0.0036077797, "action_delta_rms": 0.0007500944, "actor_relative_l2": 0.0000189016, "value_prediction_delta_rms": 0.0094448030},
+    "4800": {"analytic_kl": 0.0028050367, "sample_kl": 0.0038248026, "action_delta_max": 0.0039383769, "action_delta_rms": 0.0008074556, "actor_relative_l2": 0.0000228764, "value_prediction_delta_rms": 0.0143661061},
+    "6400": {"analytic_kl": 0.0041305218, "sample_kl": 0.0063447165, "action_delta_max": 0.0050525069, "action_delta_rms": 0.0009707659, "actor_relative_l2": 0.0000269697, "value_prediction_delta_rms": 0.0191713497}
+  },
+  "training_batch": {
+    "advantage_mean": -0.2773932219,
+    "advantage_std": 1.0154747963,
+    "positive_fraction": 0.495,
+    "negative_fraction": 0.5025,
+    "advantage_mean_over_std_proxy": 0.2731660306,
+    "return_reward_correlation": 0.0606243880,
+    "note": "The signal-to-noise number is an advantage mean/std proxy, not a measured policy-gradient norm ratio; raw candidate and tick strata are retained in the run artifact."
+  },
+  "interpretation": "Sixteen accepted updates produced monotonic, measurable actor and critic displacement, but the deterministic action change remained about one tenth of the fixed 0.05 action standard deviation and all discrete physical survival outcomes remained unchanged. The critic moved more strongly than the actor."
+}
