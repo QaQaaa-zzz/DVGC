@@ -1135,3 +1135,34 @@
   `runs/mjx_continuous_pipeline_repair_v1/descent_candidate_bank_v1/descent_candidates_v2.pkl`,
   `construction_report_v2.json`, and `rsi_smoke_report_v6.json`.  The failed
   v1 bank and earlier RSI diagnostic reports are preserved and not overwritten.
+
+## Unified Descent RSI learnability pilot v1 (2026-07-27)
+
+- The single authorized seed-0 pilot started from HEAD `04e1a2c`; runtime code
+  was validated and committed at `e1f48cc`.  The immutable candidate bank hash
+  remained `8e6342b...45a1`, runtime gate PASS/current fingerprint
+  `763ad29...9155`, and frozen pi_D parameter copy
+  `5272166...353f2` loaded with 100% compatible parameters.  PPO ran exactly
+  6,400 effective steps: four intervals of `32*25*2=1,600` steps.
+- Pointwise 8/16/24-tick survival changed `14/1/1` at checkpoint 0 to
+  `14/0/0` at 1,600 and remained `14/0/0` through 6,400.  Median survival
+  increased 10 -> 11 ticks, but the sole 24-tick middle/frontier survivor was
+  lost.  Core median improved 9 -> 12 while core 8/16/24 stayed `3/0/0`;
+  frontier stayed 11/11 at 8 ticks but fell `1/1 -> 0/0` at 16/24 ticks.
+- Held-out evaluation used 10 legal sidecar states from 4 clusters.  Its
+  8/16/24 counts stayed `6/0/0`; median increased only 8 -> 9 ticks.  In-bank
+  terminations changed from pitch/roll/horizon=`12/1/1` to pitch=`14`.
+  Action saturation fell 3.53% -> 0%, with no NaN/OOM/timeout or value
+  collapse, but evaluation reward ended below baseline.  KL spiked to
+  8169.58 on the first update and stabilized to 0.0932 by the final update.
+- The exact reset audit sampled every candidate and achieved core/frontier
+  4530/1870 draws (70.8%/29.2%).  A protocol limitation is recorded: frontier
+  candidates were uniform, so frontier early/middle/late draws were
+  182/660/1028 rather than temporal-layer equal.  No candidate was omitted or
+  dominated within its label, but this must be corrected before any future
+  run.  Final-policy expansion yielded 0 legal proposals.
+- Formal result: `no_learnability_signal`; no reward hacking, but no reliable
+  survival/generalization gain.  Longer training, another seed, Tube/JEL
+  certification and automatic expansion are not recommended or authorized.
+  PPO authorization is restored to false.  Full report:
+  `runs/unified_descent_rsi_learnability_pilot_v1_seed0_20260727/UNIFIED_DESCENT_RSI_LEARNABILITY_PILOT_V1_REPORT.json`.

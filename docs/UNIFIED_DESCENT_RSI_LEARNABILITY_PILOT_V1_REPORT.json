@@ -1,0 +1,62 @@
+{
+  "schema": "unified_descent_rsi_learnability_pilot_v1_summary",
+  "classification": "no_learnability_signal",
+  "starting_head": "04e1a2c",
+  "execution_head": "e1f48cc",
+  "seed": 0,
+  "requested_effective_steps": 6400,
+  "completed_effective_steps": 6400,
+  "step_formula": "4 * (32 unroll * 25 batch * 2 minibatches) = 6400",
+  "candidate_bank_sha256": "8e6342bc0d9d5e7821929f6ddccd4fb5b7c23923c66ab2d058309249dfed45a1",
+  "initialization": {
+    "type": "frozen_pi_D_parameter_copy",
+    "checkpoint_sha256": "52721668eed0cc78b41a45ad7c319e687f43add8977f2b4bdfcad8208c4353f2",
+    "parameter_loading_coverage": 1.0,
+    "unloaded_parameters": 0
+  },
+  "final_policy_sha256": "cb842c47d1ce7dfe6a3549141e14bcfff6e4451b72731807c8ff6ffc2bda8b32",
+  "survival_by_checkpoint": {
+    "0": {"8": 14, "16": 1, "24": 1},
+    "1600": {"8": 14, "16": 0, "24": 0},
+    "3200": {"8": 14, "16": 0, "24": 0},
+    "4800": {"8": 14, "16": 0, "24": 0},
+    "6400": {"8": 14, "16": 0, "24": 0}
+  },
+  "median_survival_ticks": {"before": 10.0, "after": 11.0},
+  "heldout": {
+    "states": 10,
+    "clusters": 4,
+    "survival_before": {"8": 6, "16": 0, "24": 0},
+    "survival_after": {"8": 6, "16": 0, "24": 0},
+    "median_before": 8.0,
+    "median_after": 9.0
+  },
+  "termination_before": {"pilot_horizon_reached": 1, "pitch_limit": 12, "roll_limit": 1},
+  "termination_after": {"pitch_limit": 14},
+  "action_saturation_before": 0.03529411764705882,
+  "action_saturation_after": 0.0,
+  "ppo_health": {
+    "first_update_kl": 8169.5771484375,
+    "final_kl": 0.09322430938482285,
+    "final_policy_loss": 0.09843184053897858,
+    "final_value_loss": 0.03812184929847717,
+    "final_entropy_loss": 0.006508524529635906,
+    "nan": false,
+    "oom": false,
+    "timeout": false,
+    "value_collapse": false
+  },
+  "sampler": {
+    "core_draws": 4530,
+    "frontier_draws": 1870,
+    "all_14_candidates_sampled": true,
+    "maximum_candidate_fraction": 0.24140625,
+    "limitation": "frontier candidates were uniform rather than temporal-layer equal; frontier early/middle/late draws were 182/660/1028"
+  },
+  "expansion_proposals": {"states": 0, "clusters": 0},
+  "reward_hacking": false,
+  "recommend_expanded_training": false,
+  "formal_tube_or_jel": false,
+  "ppo_authorization": false,
+  "run_report": "runs/unified_descent_rsi_learnability_pilot_v1_seed0_20260727/UNIFIED_DESCENT_RSI_LEARNABILITY_PILOT_V1_REPORT.json"
+}

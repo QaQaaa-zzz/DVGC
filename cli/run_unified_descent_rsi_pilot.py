@@ -46,7 +46,9 @@ def _classification(base, final, held_base, held_final, integrity):
     saturation=f["action"]["saturation_fraction"] if "action" in f else 0.0
     clear=(delta16>=2 or delta24>=1 or dt>=4) and core_after>=core_before-2 and not held_reverse and saturation<.75
     if clear:return "learnability_pass",[f"delta16={delta16}",f"delta24={delta24}",f"median_delta={dt}"]
-    physical_trend=(delta16>0 or delta24>0 or dt>0) and not held_reverse
+    # A one-tick median shift cannot outweigh loss of the only 16/24-tick
+    # survivor.  Weak-positive requires non-regression at both long horizons.
+    physical_trend=(delta16>0 or delta24>0 or dt>=2) and delta16>=0 and delta24>=0 and not held_reverse
     if physical_trend:return "weak_positive_signal",[f"delta16={delta16}",f"delta24={delta24}",f"median_delta={dt}"]
     return "no_learnability_signal",[f"delta16={delta16}",f"delta24={delta24}",f"median_delta={dt}"]
 
@@ -139,7 +141,8 @@ def main():
     for target in (0,1600,3200,4800,6400):
         path=ckroot/f"checkpoint_{target:04d}";params,_,manifest=load_bundle(path,verify_files=True)
         evaluation=evaluate(env,train_rows,params=params,seed=9500000,policy_name=path.name)
-        metric=min(progress,key=lambda row:abs(row["effective_steps"]-target)) if progress else {}
+        matching=[row for row in progress if row["effective_steps"]==target]
+        metric=max(matching,key=lambda row:sum(key.startswith("training/") for key in row)) if matching else {}
         evaluations[path.name]={"effective_steps":target,"policy_hash":file_sha256(path/"params.pkl"),"evaluation":evaluation,"ppo_metrics":{key:metric.get(key) for key in ("training/policy_loss","training/v_loss","training/entropy_loss","training/kl_mean","eval/episode_reward","eval/avg_episode_length")},"explained_variance":metric.get("training/explained_variance")}
         checkpoint_rows.append(evaluations[path.name])
     save_json(root/"checkpoint_evaluations.json",evaluations)
