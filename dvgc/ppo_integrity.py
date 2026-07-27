@@ -62,11 +62,16 @@ def _network(obs_shape: Any, action_size: int):
                                    preprocess_observations_fn=running_statistics.normalize)
 
 
+def make_optimizer(learning_rate: float, max_grad_norm: float = .75):
+    """Build the exact bounded-pilot Adam optimizer."""
+    import optax
+    return optax.chain(optax.clip_by_global_norm(max_grad_norm), optax.adam(learning_rate))
+
+
 def prepare(env: Any, initial_params: Any, *, seed: int = 0, num_envs: int = 50,
-            episode_length: int = 24) -> dict[str, Any]:
+            episode_length: int = 24, learning_rate: float = 1e-4) -> dict[str, Any]:
     """Create the exact initial single-device learner state and first rollout key."""
     from brax.training.agents.ppo import losses as ppo_losses
-    import optax
 
     key = jax.random.PRNGKey(seed)
     global_key, local_key = jax.random.split(key)
@@ -79,7 +84,7 @@ def prepare(env: Any, initial_params: Any, *, seed: int = 0, num_envs: int = 50,
     obs_shape = jax.tree_util.tree_map(lambda x: x.shape[1:], env_state.obs)
     network = _network(obs_shape, env.action_size)
     learner_params = ppo_losses.PPONetworkParams(policy=initial_params[1], value=initial_params[2])
-    optimizer = optax.chain(optax.clip_by_global_norm(.75), optax.adam(1e-4))
+    optimizer = make_optimizer(learning_rate)
     return {"env": wrapped, "env_state": env_state, "key": local_key,
             "key_envs": key_envs, "network": network, "params": learner_params,
             "normalizer": initial_params[0], "optimizer": optimizer,
