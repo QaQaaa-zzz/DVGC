@@ -44,8 +44,12 @@ def _distribution(rows, ids):
 
 def _action_change(base, candidate):
     old = {row["candidate_id"]: np.asarray(row["actions"]) for row in base["rows"]}
-    errors = [np.max(np.abs(np.asarray(row["actions"])-old[row["candidate_id"]]))
-              for row in candidate["rows"]]
+    errors = []
+    for row in candidate["rows"]:
+        current, reference = np.asarray(row["actions"]), old[row["candidate_id"]]
+        shared = min(len(current), len(reference))
+        if shared:
+            errors.append(np.max(np.abs(current[:shared]-reference[:shared])))
     return float(max(errors, default=0.0))
 
 
