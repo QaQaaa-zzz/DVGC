@@ -19,7 +19,7 @@ from cli.runtime_gate import source_fingerprint
 from dvgc.bank import SnapshotBank
 from dvgc.config import ACTION_MAPPING_VERSION, file_sha256, load_config
 from dvgc.descent_pilot import REWARD_KEYS
-from dvgc.descent_probe import base_state, cem_search, make_residual_rollout
+from dvgc.descent_probe import batched_base_state, cem_search, make_residual_rollout
 from dvgc.env import END_REASON, OrangeBikeDVGC
 from dvgc.policy import load_bundle
 from dvgc.ppo_integrity import logprob_audit, normalizer_summary, tree_delta
@@ -154,12 +154,13 @@ def main():
     displacement=_displacement(env,bank.records,initial,checkpoint_eval);save_json(root/"checkpoint_policy_displacement_audit.json",displacement)
     rollout=make_residual_rollout(env,initial);local={};cem_out=[];all_rows=[];bounds=[float(x) for x in a.bounds.split(",")]
     for index,record in enumerate(records):
-        state=base_state(env,record,202607270+index);local[record["id"]]=_local_probe(rollout,state,record["id"])
+        state_factory=lambda count,record=record,index=index:batched_base_state(env,record,202607270+index,count)
+        state=state_factory(1);local[record["id"]]=_local_probe(rollout,state,record["id"])
         baseline=local[record["id"]]["baseline"];best=None
         for level,bound in enumerate(bounds):
-            knots,summary,rows=cem_search(rollout,state,bound=bound,seed=20260727+index*100+level,generations=a.generations,samples=a.samples,elite_count=max(4,a.samples//8))
+            knots,summary,rows=cem_search(rollout,state_factory,bound=bound,seed=20260727+index*100+level,generations=a.generations,samples=a.samples,elite_count=max(4,a.samples//8))
             for row in rows:row.update({"candidate_id":record["id"],"bound":bound})
-            all_rows.extend(rows);replay1=jax.device_get(rollout(state,jnp.asarray(knots[None]),jax.random.PRNGKey(77)));replay2=jax.device_get(rollout(state,jnp.asarray(knots[None]),jax.random.PRNGKey(77)))
+            all_rows.extend(rows);replay_state=state_factory(1);replay1=jax.device_get(rollout(replay_state,jnp.asarray(knots[None]),jax.random.PRNGKey(77)));replay2=jax.device_get(rollout(replay_state,jnp.asarray(knots[None]),jax.random.PRNGKey(77)))
             exact=all(np.array_equal(np.asarray(replay1[k]),np.asarray(replay2[k])) for k in ("survival","minimum_margin","terminal_margin","end_code"))
             item={"bound":bound,"best":summary,"exact_replay":exact,"residual_knots":knots.tolist()};
             if best is None or summary["survival"]>best["best"]["survival"] or (summary["survival"]==best["best"]["survival"] and summary["minimum_margin"]>best["best"]["minimum_margin"]):best=item

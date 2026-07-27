@@ -27,10 +27,8 @@ def make_residual_rollout(env: Any, params: Any, *, horizon: int = 24):
     feature_fn = jax.vmap(env._physical_feature)
     cfg = env._config
 
-    def rollout(base_state: Any, residual_knots: jax.Array, key: jax.Array):
+    def rollout(state: Any, residual_knots: jax.Array, key: jax.Array):
         count = residual_knots.shape[0]
-        state = jax.tree_util.tree_map(
-            lambda x: jnp.broadcast_to(x, (count,) + x.shape), base_state)
         active = jnp.ones((count,), bool)
         survival = jnp.zeros((count,), jnp.int32)
         minimum_margin = jnp.full((count,), jnp.inf, jnp.float32)
@@ -89,13 +87,19 @@ def base_state(env: Any, record: Mapping[str, Any], seed: int) -> Any:
     return restore_snapshot(env, record, jax.random.PRNGKey(seed))
 
 
+def batched_base_state(env: Any, record: Mapping[str, Any], seed: int, count: int) -> Any:
+    """Restore via vmap so MJX-Warp internal metadata gets legal batch axes."""
+    keys = jax.random.split(jax.random.PRNGKey(seed), int(count))
+    return jax.jit(jax.vmap(lambda key: restore_snapshot(env, record, key)))(keys)
+
+
 def lexicographic_order(result: Mapping[str, np.ndarray]) -> np.ndarray:
     return np.lexsort((result["residual_rms"], -result["terminal_margin"],
                        -result["minimum_margin"], -result["survival"]))
 
 
 def cem_search(
-    rollout: Any, state: Any, *, bound: float, seed: int,
+    rollout: Any, state_factory: Any, *, bound: float, seed: int,
     generations: int = 5, samples: int = 256, elite_count: int = 32,
 ) -> tuple[np.ndarray, dict[str, Any], list[dict[str, Any]]]:
     """Run one fixed-budget 24-D residual CEM level."""
@@ -103,6 +107,7 @@ def cem_search(
     std = np.full((6, 4), bound * .5, np.float32); all_rows = []; best = None
     for generation in range(generations):
         knots = np.clip(rng.normal(mean, std, size=(samples, 6, 4)), -bound, bound).astype(np.float32)
+        state = state_factory(samples)
         result = jax.device_get(rollout(state, jnp.asarray(knots), jax.random.PRNGKey(seed + generation)))
         order = lexicographic_order(result); elite = knots[order[:elite_count]]
         mean = elite.mean(axis=0); std = np.maximum(elite.std(axis=0), bound * .02)
