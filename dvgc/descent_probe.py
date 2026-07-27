@@ -61,10 +61,10 @@ def make_residual_rollout(env: Any, params: Any, *, horizon: int = 24):
             actions = actions.at[tick].set(commanded)
             features = features.at[tick].set(feature)
             end_codes = jnp.where(active & next_state.done.astype(bool), next_state.info["end_code"], end_codes)
-            # Freeze terminal lineages; only active rows may advance further.
-            next_state = jax.tree_util.tree_map(
-                lambda new, old: jnp.where(active.reshape((count,) + (1,) * (new.ndim - 1)), new, old),
-                next_state, state)
+            # MJX-Warp stores some contact metadata flattened across the batch,
+            # so generic per-row tree masking is invalid.  Terminal rows may
+            # continue numerically, but `active` excludes every later value
+            # from objectives, rewards, end codes and survival accounting.
             return ((next_state, alive, survival, minimum_margin, terminal_margin,
                      reward_sum, component_sum, first_action_tick, actions, features, end_codes), None)
 
