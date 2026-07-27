@@ -1,0 +1,8 @@
+{
+  "heldout_used": false,
+  "per_candidate_gain": null,
+  "ppo_authorization": false,
+  "reason": "local support gate failed (12/24 snapshots; 3/8 candidates versus required 16/24 and 6/8)",
+  "status": "NOT_EXECUTED"
+}
+

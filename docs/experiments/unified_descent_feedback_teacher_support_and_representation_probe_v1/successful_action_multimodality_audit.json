@@ -1,0 +1,818 @@
+{
+  "audited_authoritative_snapshots": 12,
+  "heldout_used": false,
+  "mean_physically_valid": 12,
+  "median_physically_valid": 11,
+  "ppo_authorization": false,
+  "rows": [
+    {
+      "action_variance": {
+        "1": {
+          "mean": 0.0,
+          "per_action": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "2": {
+          "mean": 0.0010008752888247567,
+          "per_action": [
+            0.0030902770929098905,
+            0.0006012674166555598,
+            0.0001730355576379239,
+            0.0001389210880956527
+          ]
+        },
+        "4": {
+          "mean": 0.0009339681440727905,
+          "per_action": [
+            0.0025920930049744967,
+            0.000795946985033452,
+            0.00016837021266262464,
+            0.0001794623736205887
+          ]
+        }
+      },
+      "candidate_id": "062a0d2904b395fe9432459e09fa32f0",
+      "mean_replay": {
+        "failure": "pitch_limit",
+        "gain": 2,
+        "physically_valid": true,
+        "repeat1_repeat2_exact": true,
+        "survival": 10
+      },
+      "median_replay": {
+        "failure": "pitch_limit",
+        "gain": 2,
+        "physically_valid": true,
+        "repeat1_repeat2_exact": true,
+        "survival": 10
+      },
+      "opposite_successful_clusters": false,
+      "original_vs_local_medoid": {
+        "cosine": 0.6381190162218895,
+        "local_first_knot_magnitude": 0.21398688475425628,
+        "original_magnitude": 0.315555020008112
+      },
+      "residual_direction_agreement": {
+        "drive": 1.0,
+        "hip": 0.5,
+        "knee": 0.5,
+        "steer": 0.5
+      },
+      "snapshot_index": 0,
+      "stable_point_target": true,
+      "successful_medoid": {
+        "exact": true,
+        "gain": 2,
+        "rank": 2
+      },
+      "successful_sequences": 1,
+      "tick": 1
+    },
+    {
+      "action_variance": {
+        "1": {
+          "mean": 0.003635882106235757,
+          "per_action": [
+            0.00017159477847208393,
+            0.0131770333731835,
+            0.0011335324361119704,
+            6.136783717547445e-05
+          ]
+        },
+        "2": {
+          "mean": 0.004920521453500729,
+          "per_action": [
+            0.0013856505320637403,
+            0.013422853430518893,
+            0.004786078209053888,
+            8.750364236639329e-05
+          ]
+        },
+        "4": {
+          "mean": 0.00464110315879392,
+          "per_action": [
+            0.0010658457203381899,
+            0.013537557518409677,
+            0.003874147884369779,
+            8.686151205803128e-05
+          ]
+        }
+      },
+      "candidate_id": "062a0d2904b395fe9432459e09fa32f0",
+      "mean_replay": {
+        "failure": "pitch_limit",
+        "gain": 3,
+        "physically_valid": true,
+        "repeat1_repeat2_exact": true,
+        "survival": 8
+      },
+      "median_replay": {
+        "failure": "pitch_limit",
+        "gain": 3,
+        "physically_valid": true,
+        "repeat1_repeat2_exact": true,
+        "survival": 8
+      },
+      "opposite_successful_clusters": false,
+      "original_vs_local_medoid": {
+        "cosine": 0.3448101767038464,
+        "local_first_knot_magnitude": 0.3057510201735278,
+        "original_magnitude": 0.26370677470288495
+      },
+      "residual_direction_agreement": {
+        "drive": 0.5,
+        "hip": 0.5,
+        "knee": 1.0,
+        "steer": 0.9
+      },
+      "snapshot_index": 1,
+      "stable_point_target": true,
+      "successful_medoid": {
+        "exact": true,
+        "gain": 3,
+        "rank": 5
+      },
+      "successful_sequences": 5,
+      "tick": 4
+    },
+    {
+      "action_variance": {
+        "1": {
+          "mean": 0.0026276818507484875,
+          "per_action": [
+            0.005642997244690626,
+            0.004861003678184964,
+            6.726480118359745e-06,
+            0.0
+          ]
+        },
+        "2": {
+          "mean": 0.002676885392106959,
+          "per_action": [
+            0.0056334364561413395,
+            0.004875604438896473,
+            0.00018113646555369955,
+            1.736420783632342e-05
+          ]
+        },
+        "4": {
+          "mean": 0.0035206358813673704,
+          "per_action": [
+            0.005912262295400095,
+            0.004910152155417359,
+            0.003202257001609376,
+            5.7872073042652416e-05
+          ]
+        }
+      },
+      "candidate_id": "062a0d2904b395fe9432459e09fa32f0",
+      "mean_replay": {
+        "failure": "pitch_limit",
+        "gain": 3,
+        "physically_valid": true,
+        "repeat1_repeat2_exact": true,
+        "survival": 5
+      },
+      "median_replay": {
+        "failure": "pitch_limit",
+        "gain": 3,
+        "physically_valid": true,
+        "repeat1_repeat2_exact": true,
+        "survival": 5
+      },
+      "opposite_successful_clusters": false,
+      "original_vs_local_medoid": {
+        "cosine": 0.4267657832914564,
+        "local_first_knot_magnitude": 0.29730751376140846,
+        "original_magnitude": 0.26370677470288495
+      },
+      "residual_direction_agreement": {
+        "drive": 0.6,
+        "hip": 1.0,
+        "knee": 0.5,
+        "steer": 0.7
+      },
+      "snapshot_index": 2,
+      "stable_point_target": true,
+      "successful_medoid": {
+        "exact": true,
+        "gain": 3,
+        "rank": 2
+      },
+      "successful_sequences": 5,
+      "tick": 7
+    },
+    {
+      "action_variance": {
+        "1": {
+          "mean": 0.001923724727717061,
+          "per_action": [
+            2.1786898865869958e-05,
+            0.0007360200468212556,
+            6.692858287657422e-05,
+            0.006870163382304544
+          ]
+        },
+        "2": {
+          "mean": 0.002142735963756571,
+          "per_action": [
+            7.047722269859155e-05,
+            0.0008358474331961662,
+            0.0004343174613697619,
+            0.007230301737761763
+          ]
+        },
+        "4": {
+          "mean": 0.0021927488903713674,
+          "per_action": [
+            0.0001956602762678194,
+            0.0007696390362688574,
+            0.0005055466830066361,
+            0.007300149565942157
+          ]
+        }
+      },
+      "candidate_id": "2d5836801880022d589e0a8937a7d533",
+      "mean_replay": {
+        "failure": "pitch_limit",
+        "gain": 2,
+        "physically_valid": true,
+        "repeat1_repeat2_exact": true,
+        "survival": 11
+      },
+      "median_replay": {
+        "failure": "pitch_limit",
+        "gain": 2,
+        "physically_valid": true,
+        "repeat1_repeat2_exact": true,
+        "survival": 11
+      },
+      "opposite_successful_clusters": false,
+      "original_vs_local_medoid": {
+        "cosine": -0.01040616283027767,
+        "local_first_knot_magnitude": 0.22392075460110955,
+        "original_magnitude": 0.16149286116063227
+      },
+      "residual_direction_agreement": {
+        "drive": 0.875,
+        "hip": 0.5,
+        "knee": 0.625,
+        "steer": 0.5
+      },
+      "snapshot_index": 7,
+      "stable_point_target": true,
+      "successful_medoid": {
+        "exact": true,
+        "gain": 2,
+        "rank": 3
+      },
+      "successful_sequences": 4,
+      "tick": 2
+    },
+    {
+      "action_variance": {
+        "1": {
+          "mean": 0.0009667646023734811,
+          "per_action": [
+            0.0021847499559811785,
+            0.0006112033144772511,
+            2.787301537807707e-06,
+            0.0010683178374976874
+          ]
+        },
+        "2": {
+          "mean": 0.004718927581284446,
+          "per_action": [
+            0.0038328116464981217,
+            0.00110218242076904,
+            0.012041936155510092,
+            0.001898780102360529
+          ]
+        },
+        "4": {
+          "mean": 0.004149339181744016,
+          "per_action": [
+            0.0043480336495672015,
+            0.0015400002638114273,
+            0.008838992140796122,
+            0.0018703306728013146
+          ]
+        }
+      },
+      "candidate_id": "485551c876749195cfd525c8dc54fbba",
+      "mean_replay": {
+        "failure": "horizon",
+        "gain": 17,
+        "physically_valid": true,
+        "repeat1_repeat2_exact": true,
+        "survival": 24
+      },
+      "median_replay": {
+        "failure": "horizon",
+        "gain": 17,
+        "physically_valid": true,
+        "repeat1_repeat2_exact": true,
+        "survival": 24
+      },
+      "opposite_successful_clusters": false,
+      "original_vs_local_medoid": {
+        "cosine": 0.7584437891790978,
+        "local_first_knot_magnitude": 0.32581523590498257,
+        "original_magnitude": 0.21108245353424754
+      },
+      "residual_direction_agreement": {
+        "drive": 0.7,
+        "hip": 0.5,
+        "knee": 0.7,
+        "steer": 0.6
+      },
+      "snapshot_index": 9,
+      "stable_point_target": true,
+      "successful_medoid": {
+        "exact": true,
+        "gain": 17,
+        "rank": 3
+      },
+      "successful_sequences": 5,
+      "tick": 1
+    },
+    {
+      "action_variance": {
+        "1": {
+          "mean": 0.0017338535928817004,
+          "per_action": [
+            0.0004044435944626912,
+            0.005141288050799099,
+            0.0013807751392514687,
+            8.907587013542441e-06
+          ]
+        },
+        "2": {
+          "mean": 0.004585306460106895,
+          "per_action": [
+            0.001722165750746427,
+            0.005596852277455539,
+            0.010951520071183617,
+            7.068774104199926e-05
+          ]
+        },
+        "4": {
+          "mean": 0.004930154160970799,
+          "per_action": [
+            0.0013745040555467791,
+            0.005207096555930163,
+            0.013027054203415999,
+            0.0001119618289902541
+          ]
+        }
+      },
+      "candidate_id": "485551c876749195cfd525c8dc54fbba",
+      "mean_replay": {
+        "failure": "pitch_limit",
+        "gain": 2,
+        "physically_valid": true,
+        "repeat1_repeat2_exact": true,
+        "survival": 6
+      },
+      "median_replay": {
+        "failure": "pitch_limit",
+        "gain": 2,
+        "physically_valid": true,
+        "repeat1_repeat2_exact": true,
+        "survival": 6
+      },
+      "opposite_successful_clusters": false,
+      "original_vs_local_medoid": {
+        "cosine": 0.1565389617143277,
+        "local_first_knot_magnitude": 0.29622061460673815,
+        "original_magnitude": 0.20981623337712146
+      },
+      "residual_direction_agreement": {
+        "drive": 0.6,
+        "hip": 1.0,
+        "knee": 0.5,
+        "steer": 0.9
+      },
+      "snapshot_index": 10,
+      "stable_point_target": true,
+      "successful_medoid": {
+        "exact": true,
+        "gain": 2,
+        "rank": 1
+      },
+      "successful_sequences": 5,
+      "tick": 4
+    },
+    {
+      "action_variance": {
+        "1": {
+          "mean": 0.0017155446963701688,
+          "per_action": [
+            0.0012440423506100285,
+            0.00334176120680619,
+            0.002276375228064457,
+            0.0
+          ]
+        },
+        "2": {
+          "mean": 0.0018434725853347757,
+          "per_action": [
+            0.0016495113872222252,
+            0.0033463513176194178,
+            0.0023499369291121092,
+            2.8090707385350908e-05
+          ]
+        },
+        "4": {
+          "mean": 0.0019119177827259795,
+          "per_action": [
+            0.0014647103181743568,
+            0.003330584776213266,
+            0.0028236417897279983,
+            2.8734246788297283e-05
+          ]
+        }
+      },
+      "candidate_id": "84920deacc2d1230124ded1b8cf5c716",
+      "mean_replay": {
+        "failure": "pitch_limit",
+        "gain": 4,
+        "physically_valid": true,
+        "repeat1_repeat2_exact": true,
+        "survival": 8
+      },
+      "median_replay": {
+        "failure": "pitch_limit",
+        "gain": 4,
+        "physically_valid": true,
+        "repeat1_repeat2_exact": true,
+        "survival": 8
+      },
+      "opposite_successful_clusters": false,
+      "original_vs_local_medoid": {
+        "cosine": 0.18004432857191943,
+        "local_first_knot_magnitude": 0.27492907364178093,
+        "original_magnitude": 0.27359320859500347
+      },
+      "residual_direction_agreement": {
+        "drive": 0.7,
+        "hip": 0.5,
+        "knee": 1.0,
+        "steer": 0.9
+      },
+      "snapshot_index": 14,
+      "stable_point_target": true,
+      "successful_medoid": {
+        "exact": true,
+        "gain": 4,
+        "rank": 5
+      },
+      "successful_sequences": 5,
+      "tick": 7
+    },
+    {
+      "action_variance": {
+        "1": {
+          "mean": 0.004425011124789775,
+          "per_action": [
+            0.0025226620127732024,
+            0.014452144941181435,
+            0.0006948718748897043,
+            3.036567031475812e-05
+          ]
+        },
+        "2": {
+          "mean": 0.004437695751784164,
+          "per_action": [
+            0.0025252261604421524,
+            0.014460937405732571,
+            0.0007088764704980724,
+            5.574297046385902e-05
+          ]
+        },
+        "4": {
+          "mean": 0.0045015385519535656,
+          "per_action": [
+            0.002524230856197408,
+            0.014422031285063988,
+            0.0010121504971238933,
+            4.7741569428974014e-05
+          ]
+        }
+      },
+      "candidate_id": "8df1acfba2f2e3268348ea1c26828b55",
+      "mean_replay": {
+        "failure": "pitch_limit",
+        "gain": 3,
+        "physically_valid": true,
+        "repeat1_repeat2_exact": true,
+        "survival": 9
+      },
+      "median_replay": {
+        "failure": "pitch_limit",
+        "gain": 3,
+        "physically_valid": true,
+        "repeat1_repeat2_exact": true,
+        "survival": 9
+      },
+      "opposite_successful_clusters": false,
+      "original_vs_local_medoid": {
+        "cosine": 0.8934321637949507,
+        "local_first_knot_magnitude": 0.24483010264756175,
+        "original_magnitude": 0.21083516292443763
+      },
+      "residual_direction_agreement": {
+        "drive": 0.7,
+        "hip": 0.5,
+        "knee": 1.0,
+        "steer": 1.0
+      },
+      "snapshot_index": 17,
+      "stable_point_target": true,
+      "successful_medoid": {
+        "exact": true,
+        "gain": 3,
+        "rank": 5
+      },
+      "successful_sequences": 5,
+      "tick": 6
+    },
+    {
+      "action_variance": {
+        "1": {
+          "mean": 0.0022329991629165213,
+          "per_action": [
+            0.0058856551606529806,
+            0.0023411477291816257,
+            0.0006958774435466531,
+            9.316318284824376e-06
+          ]
+        },
+        "2": {
+          "mean": 0.002279554439258344,
+          "per_action": [
+            0.00590185900151905,
+            0.0023485568716052935,
+            0.0008578967024401617,
+            9.905181468869985e-06
+          ]
+        },
+        "4": {
+          "mean": 0.0022450713402577724,
+          "per_action": [
+            0.005841020186458224,
+            0.002339547906995389,
+            0.0007776326153380063,
+            2.2084652239471313e-05
+          ]
+        }
+      },
+      "candidate_id": "cae6766e2ace79cd8dbc3ee4f6d6ccf5",
+      "mean_replay": {
+        "failure": "pitch_limit",
+        "gain": 2,
+        "physically_valid": true,
+        "repeat1_repeat2_exact": true,
+        "survival": 8
+      },
+      "median_replay": {
+        "failure": "pitch_limit",
+        "gain": 2,
+        "physically_valid": true,
+        "repeat1_repeat2_exact": true,
+        "survival": 8
+      },
+      "opposite_successful_clusters": false,
+      "original_vs_local_medoid": {
+        "cosine": 0.5035759647839209,
+        "local_first_knot_magnitude": 0.24058411068757726,
+        "original_magnitude": 0.14015400956922816
+      },
+      "residual_direction_agreement": {
+        "drive": 0.7,
+        "hip": 0.5,
+        "knee": 1.0,
+        "steer": 0.9
+      },
+      "snapshot_index": 20,
+      "stable_point_target": true,
+      "successful_medoid": {
+        "exact": true,
+        "gain": 2,
+        "rank": 3
+      },
+      "successful_sequences": 5,
+      "tick": 7
+    },
+    {
+      "action_variance": {
+        "1": {
+          "mean": 0.0,
+          "per_action": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "2": {
+          "mean": 0.00010306829294981588,
+          "per_action": [
+            2.891735942456286e-05,
+            0.0003247344413930299,
+            1.204539670007776e-06,
+            5.7416831311662975e-05
+          ]
+        },
+        "4": {
+          "mean": 0.001298313464432739,
+          "per_action": [
+            0.0011132639863103283,
+            0.00048218107954584987,
+            0.003560958456574115,
+            3.685033530066283e-05
+          ]
+        }
+      },
+      "candidate_id": "d7faea27b56ec0e16974d4b5d2fb498a",
+      "mean_replay": {
+        "failure": "pitch_limit",
+        "gain": 2,
+        "physically_valid": true,
+        "repeat1_repeat2_exact": true,
+        "survival": 14
+      },
+      "median_replay": {
+        "failure": "pitch_limit",
+        "gain": 2,
+        "physically_valid": true,
+        "repeat1_repeat2_exact": true,
+        "survival": 14
+      },
+      "opposite_successful_clusters": false,
+      "original_vs_local_medoid": {
+        "cosine": 0.4819359759960484,
+        "local_first_knot_magnitude": 0.1400467152507343,
+        "original_magnitude": 0.20288302011906398
+      },
+      "residual_direction_agreement": {
+        "drive": 1.0,
+        "hip": 0.5,
+        "knee": 0.5,
+        "steer": 0.5
+      },
+      "snapshot_index": 21,
+      "stable_point_target": true,
+      "successful_medoid": {
+        "exact": true,
+        "gain": 2,
+        "rank": 3
+      },
+      "successful_sequences": 1,
+      "tick": 1
+    },
+    {
+      "action_variance": {
+        "1": {
+          "mean": 0.005896749970665835,
+          "per_action": [
+            8.32858041099153e-05,
+            0.022274248475202,
+            0.00011394184339098678,
+            0.0011155237599604357
+          ]
+        },
+        "2": {
+          "mean": 0.0069097212431602885,
+          "per_action": [
+            0.002476458427857647,
+            0.02240996335898937,
+            0.0012687827255391463,
+            0.0014836804602549906
+          ]
+        },
+        "4": {
+          "mean": 0.006612455818446883,
+          "per_action": [
+            0.0019433104435997745,
+            0.022331030431378494,
+            0.0008415622408187205,
+            0.0013339201579905431
+          ]
+        }
+      },
+      "candidate_id": "d7faea27b56ec0e16974d4b5d2fb498a",
+      "mean_replay": {
+        "failure": "pitch_limit",
+        "gain": 2,
+        "physically_valid": true,
+        "repeat1_repeat2_exact": true,
+        "survival": 11
+      },
+      "median_replay": {
+        "failure": "roll_limit",
+        "gain": 3,
+        "physically_valid": false,
+        "repeat1_repeat2_exact": true,
+        "survival": 12
+      },
+      "opposite_successful_clusters": false,
+      "original_vs_local_medoid": {
+        "cosine": 0.9556423941850831,
+        "local_first_knot_magnitude": 0.3023447591419364,
+        "original_magnitude": 0.2986006020735281
+      },
+      "residual_direction_agreement": {
+        "drive": 0.8333333333333334,
+        "hip": 1.0,
+        "knee": 1.0,
+        "steer": 0.5
+      },
+      "snapshot_index": 22,
+      "stable_point_target": true,
+      "successful_medoid": {
+        "exact": true,
+        "gain": 2,
+        "rank": 1
+      },
+      "successful_sequences": 3,
+      "tick": 4
+    },
+    {
+      "action_variance": {
+        "1": {
+          "mean": 0.0,
+          "per_action": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "2": {
+          "mean": 0.0005364250758873679,
+          "per_action": [
+            0.0014049843800254197,
+            0.00063914463943604,
+            8.170533350206066e-05,
+            1.9865950585951087e-05
+          ]
+        },
+        "4": {
+          "mean": 0.00039342539297503184,
+          "per_action": [
+            0.0008488134769735124,
+            0.0006228633151525997,
+            8.719660521164241e-05,
+            1.4828174562372953e-05
+          ]
+        }
+      },
+      "candidate_id": "d7faea27b56ec0e16974d4b5d2fb498a",
+      "mean_replay": {
+        "failure": "pitch_limit",
+        "gain": 3,
+        "physically_valid": true,
+        "repeat1_repeat2_exact": true,
+        "survival": 10
+      },
+      "median_replay": {
+        "failure": "pitch_limit",
+        "gain": 3,
+        "physically_valid": true,
+        "repeat1_repeat2_exact": true,
+        "survival": 10
+      },
+      "opposite_successful_clusters": false,
+      "original_vs_local_medoid": {
+        "cosine": 0.7629799573737395,
+        "local_first_knot_magnitude": 0.31388539007057603,
+        "original_magnitude": 0.2986006020735281
+      },
+      "residual_direction_agreement": {
+        "drive": 1.0,
+        "hip": 0.5,
+        "knee": 1.0,
+        "steer": 1.0
+      },
+      "snapshot_index": 23,
+      "stable_point_target": true,
+      "successful_medoid": {
+        "exact": true,
+        "gain": 3,
+        "rank": 2
+      },
+      "successful_sequences": 1,
+      "tick": 6
+    }
+  ],
+  "set_valued_or_non_identifiable": false,
+  "snapshots_with_opposite_successful_clusters": 0,
+  "stable_medoid_targets": 12,
+  "status": "PASS"
+}
+

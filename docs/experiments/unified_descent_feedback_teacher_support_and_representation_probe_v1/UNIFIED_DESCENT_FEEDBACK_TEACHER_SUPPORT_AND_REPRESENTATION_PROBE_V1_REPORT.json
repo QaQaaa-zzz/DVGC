@@ -1,0 +1,89 @@
+{
+  "assets": {
+    "critic_read_only": true,
+    "eight_teacher_assets_read_only": true,
+    "frozen_pi_d": true,
+    "heldout_used": false,
+    "log_std_read_only": true,
+    "normalizer_read_only": true
+  },
+  "authoritative_start_head": "439aa8f",
+  "causal_classification": "BRITTLE_OPEN_LOOP_TEACHER",
+  "experiment": "unified_descent_feedback_teacher_support_and_representation_probe_v1",
+  "head_vs_last_block": {
+    "H": null,
+    "L": null,
+    "anchor_drift": null,
+    "heldout_used": false,
+    "ppo_authorization": false,
+    "reason": "receding-horizon feedback oracle was not authorized because local support gate failed",
+    "status": "NOT_EXECUTED"
+  },
+  "implementation_commits": [
+    "0b51757",
+    "2fc6280",
+    "4174ad5"
+  ],
+  "interpretation": "Bounded local feedback corrections exist at some states and have stable medoid targets, but their state/candidate coverage is far below the predeclared support gate. The original open-loop teachers therefore do not establish broad feedback support.",
+  "local_support": {
+    "candidate_pass_counts": {
+      "062a0d2904b395fe9432459e09fa32f0": 3,
+      "173ee307c84a7ebd74d8aab3ba04f328": 0,
+      "2d5836801880022d589e0a8937a7d533": 1,
+      "485551c876749195cfd525c8dc54fbba": 2,
+      "84920deacc2d1230124ded1b8cf5c716": 1,
+      "8df1acfba2f2e3268348ea1c26828b55": 1,
+      "cae6766e2ace79cd8dbc3ee4f6d6ccf5": 1,
+      "d7faea27b56ec0e16974d4b5d2fb498a": 3
+    },
+    "candidate_total": 8,
+    "gate": false,
+    "snapshot_passes": 12,
+    "snapshot_total": 24,
+    "status": "FAIL",
+    "supported_candidates": 3
+  },
+  "multimodality": {
+    "audited_authoritative_snapshots": 12,
+    "heldout_used": false,
+    "mean_physically_valid": 12,
+    "median_physically_valid": 11,
+    "ppo_authorization": false,
+    "set_valued_or_non_identifiable": false,
+    "snapshots_with_opposite_successful_clusters": 0,
+    "stable_medoid_targets": 12,
+    "status": "PASS"
+  },
+  "ppo_authorization": false,
+  "raw_paths": {
+    "discovery": "runs/unified_descent_feedback_teacher_support_and_representation_probe_v1",
+    "multimodality": "runs/unified_descent_feedback_teacher_support_and_representation_probe_v1_multimodality",
+    "replay_authority": "runs/unified_descent_feedback_teacher_support_and_representation_probe_v1_replay_corrected"
+  },
+  "receding_horizon_feedback_oracle": {
+    "heldout_used": false,
+    "per_candidate_gain": null,
+    "ppo_authorization": false,
+    "reason": "local support gate failed (12/24 snapshots; 3/8 candidates versus required 16/24 and 6/8)",
+    "status": "NOT_EXECUTED"
+  },
+  "rejected_relabel_probe": {
+    "authoritative_corrections_found": 3,
+    "retained_rejected_snapshots": 5
+  },
+  "snapshot_selection": {
+    "candidates": 8,
+    "old_accepted_retained": 10,
+    "old_rejected_retained": 5,
+    "per_candidate": 3,
+    "quota_constraint_note": "The historical 11 accepts include four ticks for 173ee307, so the exact 3-per-candidate quota can retain at most 10/11; deterministic quota selection retains the maximum 10 and excludes tick 4 for that candidate.",
+    "regions": {
+      "early": 11,
+      "late": 6,
+      "middle": 7
+    },
+    "snapshots": 24
+  },
+  "status": "BRITTLE_OPEN_LOOP_TEACHER"
+}
+

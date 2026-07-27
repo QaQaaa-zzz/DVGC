@@ -1,0 +1,10 @@
+{
+  "H": null,
+  "L": null,
+  "anchor_drift": null,
+  "heldout_used": false,
+  "ppo_authorization": false,
+  "reason": "receding-horizon feedback oracle was not authorized because local support gate failed",
+  "status": "NOT_EXECUTED"
+}
+

@@ -1295,3 +1295,27 @@
   processes reused completed checkpoints and retried only the incomplete LR
   shard without overwriting results; all three folds then completed. Report:
   `docs/experiments/unified_descent_cem_teacher_bootstrap_and_local_ppo_probe_v2_8teacher/`.
+
+## Unified Descent feedback-teacher support probe v1 (2026-07-27)
+
+- Started from `439aa8f`; frozen pi_D/normalizer/critic/log_std, the eight
+  exact-replay teacher assets, candidate/XML/action provenance, and ten-state
+  held-out set remained immutable. PPO authorization stayed false.
+- Frozen diagnostic support contains 24 snapshots, exactly three per teacher
+  candidate. The quota can retain at most 10/11 historical accepted relabels
+  because one candidate owns four; deterministic selection retained those ten,
+  five audited rejects, and nine states for the previously excluded candidates.
+- A uniform batch-256 discovery versus batch-1 replay-summary mismatch was
+  isolated before making a research conclusion. CEM was not rerun. Authority
+  was recomputed with two bit-exact batch-1 replays from each same snapshot.
+- Local authority passes 12/24 snapshots, but only 3/8 candidates have at
+  least 2/3 passing snapshots, below the fixed 16/24 and 6/8 gates. Five
+  retained rejected-relabel states were tested; three now have authoritative
+  local corrections, showing limited support gaps but not balanced coverage.
+- The 12 passing snapshots have 12/12 valid real medoids, 12/12 valid action
+  means, 11/12 valid action medians, and zero detected opposite successful
+  clusters. The blocker is not widespread action non-identifiability.
+- Classification: `BRITTLE_OPEN_LOOP_TEACHER`. Receding-horizon oracle, H/L
+  candidate CV, held-out evaluation, Landing retention, final bootstrap, and
+  PPO were not executed. Report:
+  `docs/experiments/unified_descent_feedback_teacher_support_and_representation_probe_v1/`.
