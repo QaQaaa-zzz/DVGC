@@ -1,0 +1,78 @@
+{
+  "status": "phase_a_gate_fail",
+  "experiment": "unified_descent_rsi_update_integrity_repair_v1",
+  "authoritative_start_head": "8512e42",
+  "scope_of_previous_result": "no_learnability_signal_under_current_update_protocol_and_budget",
+  "provenance": {
+    "candidate_bank_sha256": "8e6342bc0d9d5e7821929f6ddccd4fb5b7c23923c66ab2d058309249dfed45a1",
+    "xml_sha256": "d7e9f43ff8fb9e4571203f81062ce9c828acfa38692ee8c71a3e5daa15ce794c",
+    "frozen_pi_d_params_sha256": "52721668eed0cc78b41a45ad7c319e687f43add8977f2b4bdfcad8208c4353f2",
+    "runtime_gate": "PASS/current",
+    "candidate_bank_modified": false,
+    "ppo_authorization": false
+  },
+  "effective_step_accounting": {
+    "environment_transitions": 6400,
+    "rollout_iterations": 4,
+    "unique_transitions_per_iteration": 1600,
+    "optimizer_gradient_steps": 16,
+    "optimizer_transition_uses": 12800,
+    "conclusion": "6,400 is a real environment-transition count; two 25-sequence minibatches partition 50 environments, while two optimizer passes are replay and are not counted as new transitions"
+  },
+  "first_batch_integrity": {
+    "learning_rate": 0.0001,
+    "max_gradient_norm": 0.75,
+    "ppo_clip_epsilon": 0.1,
+    "existing_desired_kl": 0.01,
+    "stored_recomputed_logprob_max_abs_error": 0.0023298263549804688,
+    "ratio_p05_median_p95": [0.9999504685401917, 1.0, 1.0000534057617188],
+    "sample_mean_kl": 1.1330098459438886e-06,
+    "analytic_kl": 3.993816426373087e-05,
+    "conclusion": "old log-prob is consistent with the rollout policy within float32 GPU precision"
+  },
+  "normalizer": {
+    "loaded_with_pi_d": true,
+    "loaded_hash": "8f2e36b6f69a3d20da67c1854f7e908c98dd6b03ae70e287e0a7e28522f93a7e",
+    "loaded_count": 1024000,
+    "post_rollout_count_under_old_brax_path": 1025600,
+    "normalizer_only_analytic_kl": 7756.7744140625,
+    "rollout_and_loss_used_same_snapshot_in_repair": true,
+    "source_asset_modified": false
+  },
+  "counterfactuals": {
+    "no_update": {"survival_8_16_24": [14, 1, 1], "median_ticks": 10, "analytic_kl": 0.00003993816426373087},
+    "normalizer_only": {"survival_8_16_24": [14, 0, 0], "median_ticks": 11, "analytic_kl": 7756.7744140625, "action_max_delta": 0.8910388275980949},
+    "optimizer_only": {"survival_8_16_24": [14, 1, 1], "median_ticks": 10, "analytic_kl": 184.45465087890625, "action_max_delta": 1.0880840420722961},
+    "current_combined": {"survival_8_16_24": [14, 0, 0], "median_ticks": 11, "analytic_kl": 7609.62939453125, "action_max_delta": 0.8732383586466312},
+    "target_kl_rollback": {"threshold": 0.01, "candidate_update_kl_range": [140.89120483398438, 192.35487365722656], "accepted_updates": 0, "rolled_back_updates": 4, "survival_8_16_24": [14, 1, 1]}
+  },
+  "root_cause": {
+    "reported_kl_8169": "a real mismatch metric caused primarily by premature normalizer mutation, compounded by a catastrophic actor update; it is not a sum-vs-mean logging bug",
+    "survivor_loss": "normalizer-only and combined paths lose the sole 16/24-tick survivor; optimizer-only retained it in this first-batch reproduction despite unacceptable distribution drift",
+    "actor_update": "global gradient clipping bounded the raw gradient but Adam's first parameter step was still large relative to policy std=0.05; PPO clipping evaluates the pre-update ratio and does not itself bound the resulting first optimizer step"
+  },
+  "sampler": {
+    "reset_draws_core_frontier": [4530, 1870],
+    "reset_draws_frontier_early_middle_late": [661, 616, 593],
+    "transition_occupancy_core_frontier": [996, 604],
+    "transition_occupancy_frontier_early_middle_late": [171, 255, 178],
+    "gradient_distribution": "same 1,600 unique transitions as occupancy, used twice by two optimizer passes",
+    "resume_sequence_byte_exact": true
+  },
+  "phase_a": {
+    "status": "FAIL",
+    "only_failed_gate": "effective_optimizer_update_under_fixed_hyperparameters",
+    "checkpoint_optimizer_normalizer_restore": "PASS",
+    "reason": "all four authorized-lr candidate optimizer steps exceed the existing desired_kl=0.01 and are correctly rolled back"
+  },
+  "phase_b": {
+    "executed": false,
+    "reason": "Phase A did not pass",
+    "integrity_rerun_checkpoint_evaluations": null,
+    "integrity_rerun_heldout_evaluation": null
+  },
+  "recommend_25600_steps": false,
+  "next_required_decision": "A meaningful rerun requires a separately authorized optimizer/trust-region change, such as learning-rate or adaptive-KL protocol selection; the present task explicitly forbids that search.",
+  "formal_tube_or_jel": false,
+  "ppo_authorization_after_run": false
+}

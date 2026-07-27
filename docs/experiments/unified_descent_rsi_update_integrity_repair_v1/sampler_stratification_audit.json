@@ -1,0 +1,111 @@
+{
+  "declared_candidate_weights": {
+    "062a0d2904b395fe9432459e09fa32f0": 0.016666666666666666,
+    "0649c1e006ba33d5b992c573d96b3aef": 0.2333333333333333,
+    "173ee307c84a7ebd74d8aab3ba04f328": 0.024999999999999998,
+    "23bdc62adfdc2b9232f173a189a6bc5a": 0.016666666666666666,
+    "2d5836801880022d589e0a8937a7d533": 0.016666666666666666,
+    "32360755d0791c9a35ac0279b4605d1c": 0.2333333333333333,
+    "3e4519b7ff079d5ca17901de9bcbcf60": 0.2333333333333333,
+    "485551c876749195cfd525c8dc54fbba": 0.016666666666666666,
+    "84920deacc2d1230124ded1b8cf5c716": 0.016666666666666666,
+    "8df1acfba2f2e3268348ea1c26828b55": 0.016666666666666666,
+    "cae6766e2ace79cd8dbc3ee4f6d6ccf5": 0.024999999999999998,
+    "d3fbf57dbf3d07cfbf4b31d6d11a0428": 0.024999999999999998,
+    "d7faea27b56ec0e16974d4b5d2fb498a": 0.024999999999999998,
+    "da0679b1c04f79fd0c607b7d7c41c6e4": 0.09999999999999999
+  },
+  "gradient_samples": {
+    "candidate_counts": {
+      "062a0d2904b395fe9432459e09fa32f0": 9,
+      "0649c1e006ba33d5b992c573d96b3aef": 403,
+      "173ee307c84a7ebd74d8aab3ba04f328": 69,
+      "23bdc62adfdc2b9232f173a189a6bc5a": 27,
+      "2d5836801880022d589e0a8937a7d533": 50,
+      "32360755d0791c9a35ac0279b4605d1c": 287,
+      "3e4519b7ff079d5ca17901de9bcbcf60": 306,
+      "485551c876749195cfd525c8dc54fbba": 17,
+      "84920deacc2d1230124ded1b8cf5c716": 16,
+      "8df1acfba2f2e3268348ea1c26828b55": 59,
+      "cae6766e2ace79cd8dbc3ee4f6d6ccf5": 20,
+      "d3fbf57dbf3d07cfbf4b31d6d11a0428": 137,
+      "d7faea27b56ec0e16974d4b5d2fb498a": 29,
+      "da0679b1c04f79fd0c607b7d7c41c6e4": 171
+    },
+    "label_counts": {
+      "provisional_core": 996,
+      "provisional_frontier": 604
+    },
+    "label_layer_counts": {
+      "provisional_core/early": 996,
+      "provisional_frontier/early": 171,
+      "provisional_frontier/late": 178,
+      "provisional_frontier/middle": 255
+    },
+    "optimizer_uses": 3200,
+    "replay_multiplicity": 2,
+    "total": 1600,
+    "unique_transitions": 1600
+  },
+  "protocol": "label 70/30 -> available temporal layers equal -> candidates equal",
+  "reset_start_draws": {
+    "candidate_counts": {
+      "062a0d2904b395fe9432459e09fa32f0": 114,
+      "0649c1e006ba33d5b992c573d96b3aef": 1536,
+      "173ee307c84a7ebd74d8aab3ba04f328": 158,
+      "23bdc62adfdc2b9232f173a189a6bc5a": 89,
+      "2d5836801880022d589e0a8937a7d533": 102,
+      "32360755d0791c9a35ac0279b4605d1c": 1460,
+      "3e4519b7ff079d5ca17901de9bcbcf60": 1534,
+      "485551c876749195cfd525c8dc54fbba": 114,
+      "84920deacc2d1230124ded1b8cf5c716": 85,
+      "8df1acfba2f2e3268348ea1c26828b55": 89,
+      "cae6766e2ace79cd8dbc3ee4f6d6ccf5": 159,
+      "d3fbf57dbf3d07cfbf4b31d6d11a0428": 162,
+      "d7faea27b56ec0e16974d4b5d2fb498a": 137,
+      "da0679b1c04f79fd0c607b7d7c41c6e4": 661
+    },
+    "label_counts": {
+      "provisional_core": 4530,
+      "provisional_frontier": 1870
+    },
+    "label_layer_counts": {
+      "provisional_core/early": 4530,
+      "provisional_frontier/early": 661,
+      "provisional_frontier/late": 593,
+      "provisional_frontier/middle": 616
+    },
+    "total": 6400
+  },
+  "resume_candidate_sequence_byte_exact": true,
+  "status": "PASS",
+  "transition_occupancy": {
+    "candidate_counts": {
+      "062a0d2904b395fe9432459e09fa32f0": 9,
+      "0649c1e006ba33d5b992c573d96b3aef": 403,
+      "173ee307c84a7ebd74d8aab3ba04f328": 69,
+      "23bdc62adfdc2b9232f173a189a6bc5a": 27,
+      "2d5836801880022d589e0a8937a7d533": 50,
+      "32360755d0791c9a35ac0279b4605d1c": 287,
+      "3e4519b7ff079d5ca17901de9bcbcf60": 306,
+      "485551c876749195cfd525c8dc54fbba": 17,
+      "84920deacc2d1230124ded1b8cf5c716": 16,
+      "8df1acfba2f2e3268348ea1c26828b55": 59,
+      "cae6766e2ace79cd8dbc3ee4f6d6ccf5": 20,
+      "d3fbf57dbf3d07cfbf4b31d6d11a0428": 137,
+      "d7faea27b56ec0e16974d4b5d2fb498a": 29,
+      "da0679b1c04f79fd0c607b7d7c41c6e4": 171
+    },
+    "label_counts": {
+      "provisional_core": 996,
+      "provisional_frontier": 604
+    },
+    "label_layer_counts": {
+      "provisional_core/early": 996,
+      "provisional_frontier/early": 171,
+      "provisional_frontier/late": 178,
+      "provisional_frontier/middle": 255
+    },
+    "total": 1600
+  }
+}

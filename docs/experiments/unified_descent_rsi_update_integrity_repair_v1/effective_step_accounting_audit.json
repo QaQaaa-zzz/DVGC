@@ -1,0 +1,22 @@
+{
+  "environment_transitions": 6400,
+  "first_rollout_completed_episodes": 133,
+  "first_rollout_tensor_shape": [
+    50,
+    32
+  ],
+  "interpretation": "two disjoint 25-sequence minibatches cover 50 environments; the two optimizer passes are replay, not new environment steps",
+  "layout": {
+    "batch_size_per_optimizer_minibatch": 25,
+    "environments": 50,
+    "optimizer_minibatches": 2,
+    "passes_per_rollout": 2,
+    "unroll_ticks": 32,
+    "updates": 4
+  },
+  "optimizer_gradient_steps": 16,
+  "optimizer_transition_uses": 12800,
+  "per_iteration_unique_transitions": 1600,
+  "status": "PASS",
+  "unique_update_time_environment_tuples": 6400
+}

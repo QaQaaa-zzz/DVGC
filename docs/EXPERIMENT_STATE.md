@@ -1166,3 +1166,30 @@
   certification and automatic expansion are not recommended or authorized.
   PPO authorization is restored to false.  Full report:
   `runs/unified_descent_rsi_learnability_pilot_v1_seed0_20260727/UNIFIED_DESCENT_RSI_LEARNABILITY_PILOT_V1_REPORT.json`.
+
+## Unified Descent RSI update-integrity repair v1 (2026-07-27)
+
+- Authoritative start `8512e42`; bank `8e6342b...45a1`, XML/action mapping,
+  failure semantics and frozen pi_D remained immutable. Runtime gate is
+  PASS/current. The previous outcome is scoped as
+  `no_learnability_signal_under_current_update_protocol_and_budget`.
+- Effective-step accounting PASS: four 50-env x 32-tick rollouts are 6,400
+  unique environment transitions. Two optimizer passes produce 16 gradient
+  steps and 12,800 transition uses but no extra environment transitions.
+- Frozen pi_D normalizer loaded correctly (hash `8f2e36b...93a7e`, count
+  1,024,000). Old Brax updated it before same-batch loss, producing KL
+  7,756.77 and losing the sole 16/24-tick survivor. With one fixed snapshot,
+  old-logprob recomputation gives sample KL 1.13e-6 and analytic KL 3.99e-5.
+- Optimizer-only remains invalid: analytic KL 184.45 and maximum deterministic
+  action change 1.088. Existing desired-KL 0.01 rollback rejects all four
+  proposed first-batch steps (candidate KL 140.89--192.35), restores
+  optimizer/normalizer exactly, and preserves baseline survival `14/1/1`.
+- Hierarchical RSI reset is repaired: core/frontier reset draws 4530/1870;
+  frontier early/middle/late 661/616/593. Transition occupancy is 996/604 and
+  differs legitimately with episode length; resume sequence is byte-exact.
+- Phase A `FAIL` only at `effective_optimizer_update_under_fixed_hyperparameters`.
+  Phase B 6,400-step rerun was not started; no held-out/checkpoint rerun results
+  exist. PPO authorization is false and 25,600 steps are not recommended.
+  Next work requires separate authorization of an optimizer/trust-region
+  protocol change; no LR/clip/network/reward sweep was performed. Compact
+  report: `docs/experiments/unified_descent_rsi_update_integrity_repair_v1/`.

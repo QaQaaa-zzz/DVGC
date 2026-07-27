@@ -1,0 +1,19 @@
+{
+  "gates": {
+    "baseline_14_states_repeatable": true,
+    "effective_optimizer_update_under_fixed_hyperparameters": false,
+    "effective_step_accounting": true,
+    "first_update_kl_explained_and_bounded": true,
+    "full_checkpoint_restore": true,
+    "hierarchical_sampler": true,
+    "no_update_ratio": true,
+    "no_update_sample_kl": true,
+    "normalizer_lifecycle_consistent": true,
+    "targeted_regression": true,
+    "trust_region_observable": true
+  },
+  "phase_b_authorized": false,
+  "ppo_authorization": false,
+  "status": "FAIL",
+  "survivor_preserved_by_optimizer_only": true
+}

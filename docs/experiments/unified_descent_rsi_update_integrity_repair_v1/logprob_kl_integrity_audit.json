@@ -1,0 +1,35 @@
+{
+  "premature_normalizer_update": {
+    "analytic_distribution_kl_mean": 7756.7744140625,
+    "distribution_params_max_abs_error": 11.738675117492676,
+    "kl_reduction": "analytic distribution KL summed over action event dimensions, mean over samples/time",
+    "log_prob_semantics": "NormalTanhDistribution.log_prob(raw_pre_squash); Jacobian applied once by distribution",
+    "ratio": {
+      "max": 38.11076354980469,
+      "median": 0.007113020867109299,
+      "min": 0.0,
+      "p05": 0.0,
+      "p95": 1.2816245555877686
+    },
+    "sample_mean_kl": 7756.82763671875,
+    "stored_recomputed_max_abs_error": 29103.04296875,
+    "stored_recomputed_mean_error": -7756.82763671875
+  },
+  "rollout_snapshot": {
+    "analytic_distribution_kl_mean": 3.993816426373087e-05,
+    "distribution_params_max_abs_error": 9.262561798095703e-05,
+    "kl_reduction": "analytic distribution KL summed over action event dimensions, mean over samples/time",
+    "log_prob_semantics": "NormalTanhDistribution.log_prob(raw_pre_squash); Jacobian applied once by distribution",
+    "ratio": {
+      "max": 1.0002670288085938,
+      "median": 1.0,
+      "min": 0.9976729154586792,
+      "p05": 0.9999504685401917,
+      "p95": 1.0000534057617188
+    },
+    "sample_mean_kl": 1.1330098459438886e-06,
+    "stored_recomputed_max_abs_error": 0.0023298263549804688,
+    "stored_recomputed_mean_error": -1.1330098459438886e-06
+  },
+  "status": "PASS"
+}

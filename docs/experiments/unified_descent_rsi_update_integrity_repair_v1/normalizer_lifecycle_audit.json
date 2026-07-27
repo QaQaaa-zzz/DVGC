@@ -1,0 +1,39 @@
+{
+  "frozen_source_asset_modified": false,
+  "loaded": {
+    "count": 1024000,
+    "mean": {
+      "l2": 126.55793998259182,
+      "max": 46.66757583618164,
+      "mean": 2.566365260168629,
+      "min": -5.258039951324463
+    },
+    "sha256": "8f2e36b6f69a3d20da67c1854f7e908c98dd6b03ae70e287e0a7e28522f93a7e",
+    "std": {
+      "l2": 103.52134464714385,
+      "max": 40.17438888549805,
+      "mean": 3.0592084182743204,
+      "min": 0.0009999999310821295
+    }
+  },
+  "same_snapshot_repair": "normalizer frozen for the complete bounded rerun; actor rollout and PPO loss receive identical params[0]",
+  "source": "frozen pi_D params[0]",
+  "source_policy_version": "flight-descent-local-076800",
+  "status": "PASS",
+  "would_be_updated_before_loss": {
+    "count": 1025600,
+    "mean": {
+      "l2": 126.50428049789956,
+      "max": 46.63324737548828,
+      "mean": 2.5661006237329578,
+      "min": -5.259384632110596
+    },
+    "sha256": "03028dfb8611c578bb72c3ba9a894d244f80c84a07c44810d465ff95209ed407",
+    "std": {
+      "l2": 103.62067014316837,
+      "max": 40.181217193603516,
+      "mean": 3.0669498982434242,
+      "min": 0.0009999999310821295
+    }
+  }
+}
