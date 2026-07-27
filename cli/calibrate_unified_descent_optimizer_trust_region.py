@@ -94,6 +94,14 @@ def _ratio_clip_fraction(network,params,normalizer,data,clip=.1):
     return float(np.mean((ratio<1-clip)|(ratio>1+clip)))
 
 
+def _fixed_observation_action_delta(network,before,after,normalizer,data):
+    dist=network.parametric_action_distribution
+    old_logits=network.policy_network.apply(normalizer,before.policy,data.observation)
+    new_logits=network.policy_network.apply(normalizer,after.policy,data.observation)
+    old_action=dist.mode(old_logits);new_action=dist.mode(new_logits)
+    return float(np.max(np.abs(np.asarray(new_action-old_action))))
+
+
 def _gae_summary(network,params,normalizer,data):
     swap=lambda x:jnp.swapaxes(x,0,1)
     obs=jax.tree_util.tree_map(swap,data.observation);nobs=jax.tree_util.tree_map(swap,data.next_observation)
@@ -184,6 +192,8 @@ def main():
                 for row,base in zip(evaluation["rows"],baseline["rows"])])
             ratio=audit["ratio"]
             clip_fraction=_ratio_clip_fraction(network,updated,initial_params[0],data)
+            fixed_action_delta=_fixed_observation_action_delta(
+                network,params,updated,initial_params[0],data)
             finite=all(np.isfinite(np.asarray(x)).all() for x in jax.tree_util.tree_leaves((updated,opt_state)))
             new_failures=set(summary["failure_reasons"])-set(old["failure_reasons"])
             repeats.append({"policy_hash":tree_hash(updated),"optimizer_hash":tree_hash(opt_state),
@@ -191,7 +201,8 @@ def main():
                 "analytic_kl":audit["analytic_distribution_kl_mean"],
                 "sample_mean_kl":audit["sample_mean_kl"],"ratio":ratio,
                 "clip_fraction":clip_fraction,
-                "deterministic_action_max_delta":float(np.max(np.abs(actions))),
+                "deterministic_action_max_delta":fixed_action_delta,
+                "closed_loop_trajectory_action_max_delta":float(np.max(np.abs(actions))),
                 "survival_counts":summary["survival_counts"],
                 "median_time_to_failure":summary["time_to_failure"]["median"],
                 "failure_reasons":summary["failure_reasons"],"new_failure_types":sorted(new_failures),
