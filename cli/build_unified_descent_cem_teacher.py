@@ -14,8 +14,9 @@ import numpy as np
 
 from cli.runtime_gate import source_fingerprint
 from dvgc.bank import SnapshotBank
-from dvgc.config import ACTION_MAPPING_VERSION, file_sha256, load_config
+from dvgc.config import ACTION_MAPPING_VERSION, STAGE_ID, file_sha256, load_config
 from dvgc.descent_probe import formal_dynamic_margin
+from dvgc.descent_probe import batched_base_state
 from dvgc.descent_teacher import (
     ACTION_ORDER, nearest_neighbor_audit, normalized_observation,
     trajectory_support_radius,
@@ -66,6 +67,65 @@ def _pi_action(inference, state, seed):
     return np.asarray(action, np.float32)
 
 
+def _batched_snapshot(env, state, source_stage):
+    """Serialize row zero without collapsing MJX-Warp's batched metadata."""
+    data = state.data; info = state.info
+    feature = np.asarray(jax.device_get(jax.vmap(env._physical_feature)(data)[0]), np.float32)
+    get = lambda name: np.asarray(jax.device_get(info[name][0]))
+    estimated_phase = int(get("estimated_phase")); phase_probs = get("phase_probs").astype(np.float32)
+    x = float(feature[0]); cfg = env._config
+    if estimated_phase == STAGE_ID["approach"]:
+        progress = (x - float(cfg.ground_spawn_x)) / max(float(cfg.step_front_x - cfg.takeoff_window_far - cfg.ground_spawn_x), 1e-6)
+    elif estimated_phase == STAGE_ID["takeoff"]:
+        progress = (x - float(cfg.step_front_x - cfg.takeoff_window_far)) / max(float(cfg.takeoff_window_far - cfg.takeoff_window_near), 1e-6)
+    elif estimated_phase == STAGE_ID["flight"]:
+        progress = (x - float(cfg.step_front_x - cfg.takeoff_window_near)) / max(float(cfg.valid_landing_min_past_edge + cfg.takeoff_window_near), 1e-6)
+    else:
+        progress = float(get("recovery_count")) / max(float(cfg.recovery_hold_steps), 1.0)
+    return {
+        "qpos": np.asarray(jax.device_get(data.qpos[0]), np.float32),
+        "qvel": np.asarray(jax.device_get(data.qvel[0]), np.float32),
+        "ctrl": np.asarray(jax.device_get(data.ctrl[0]), np.float32),
+        "qacc_warmstart": np.asarray(jax.device_get(data.qacc_warmstart[0]), np.float32),
+        "physical_feature": feature, "source_phase": source_stage,
+        "oracle_phase": int(get("phase")), "had_airborne": int(get("had_airborne")),
+        "had_valid_landing": int(get("had_valid_landing")), "contact_age": int(get("contact_age")),
+        "landing_entry_age": int(get("landing_entry_age")), "airborne_count": int(get("airborne_count")),
+        "prelaunch_airborne_count": int(get("prelaunch_airborne_count")),
+        "landing_bounce_count": int(get("landing_bounce_count")), "invalid_wheel_count": int(get("invalid_wheel_count")),
+        "recovery_count": int(get("recovery_count")), "stage_entry_ever": int(get("stage_entry_ever")),
+        "apex_seen": int(get("apex_seen")), "jump_signal_latched": bool(get("jump_signal_latched")),
+        "jump_window_start_x": float(get("jump_window_start_x")), "jump_window_end_x": float(get("jump_window_end_x")),
+        "policy_state": {
+            "last_action": get("last_action").astype(np.float32), "obs_history": get("obs_history").astype(np.float32),
+            "actor_observation": np.asarray(jax.device_get(state.obs["state"][0]), np.float32),
+            "filter_phase": estimated_phase, "phase_probs": phase_probs,
+            "contact_probs": np.asarray([1.0 - float(get("had_airborne")), float(get("had_valid_landing"))], np.float32),
+            "phase_progress": float(np.clip(progress, 0, 1)), "phase_confidence": float(np.max(phase_probs)),
+            "estimator_hidden": np.zeros((0,), np.float32), "delay_buffer": phase_probs[None, :],
+            "prev_acc_z": float(get("prev_acc_z")), "prev_vz": float(get("prev_vz")),
+        },
+    }
+
+
+def _batched_item(state, next_state, env, candidate_id, tick, kind, target, frozen, residual):
+    snapshot = _batched_snapshot(env, state, "flight")
+    next_snapshot = _batched_snapshot(env, next_state, "flight")
+    ps = snapshot["policy_state"]
+    return {
+        "kind": kind, "candidate_id": candidate_id, "tick": int(tick), "snapshot": snapshot,
+        "observation": np.asarray(state.obs["state"][0], np.float32),
+        "target_action": np.asarray(target[0], np.float32), "frozen_action": np.asarray(frozen[0], np.float32),
+        "residual": np.asarray(residual[0], np.float32), "phase": int(snapshot["oracle_phase"]),
+        "contact_mode": int(np.argmax(ps["contact_probs"])), "delay_buffer": np.asarray(ps["delay_buffer"]),
+        "phase_probs": np.asarray(ps["phase_probs"]), "progress": float(ps["phase_progress"]),
+        "confidence": float(ps["phase_confidence"]),
+        "physical_margin": float(formal_dynamic_margin(snapshot["physical_feature"], env._config)),
+        "next_snapshot": next_snapshot,
+        "next_physical_margin": float(formal_dynamic_margin(next_snapshot["physical_feature"], env._config)),
+    }
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run", required=True)
@@ -96,27 +156,30 @@ def main():
     if len(positive) != 9 or len(nonpositive) != 5:
         raise SystemExit(f"unexpected teacher split {len(positive)}/{len(nonpositive)}")
     env = OrangeBikeDVGC(cfg, snapshot_bank=bank); step = jax.jit(env.step)
+    batched_step = jax.jit(jax.vmap(env.step))
     inference = build_inference(env, params, deterministic=True)
     teacher, anchors, alignment = [], [], []
     # Reconstruct the exact best CEM lineage.  Ticks 0--7 are positive labels;
     # later available ticks are frozen-policy anchors on that same lineage.
+    record_index = {row["id"]: index for index, row in enumerate(records)}
     for candidate_index, candidate_id in enumerate(positive):
-        state = restore_snapshot(env, by_id[candidate_id], jax.random.PRNGKey(202607270 + candidate_index))
+        state = batched_base_state(env, by_id[candidate_id], 202607270 + record_index[candidate_id], 1)
         knots = np.asarray(oracle[candidate_id]["oracle"]["residual_knots"], np.float32)
         saved_actions = np.asarray(oracle[candidate_id]["oracle"]["best"]["actions"], np.float32)
         for tick in range(24):
-            frozen = _pi_action(inference, state, 3000000 + candidate_index * 100 + tick)
-            residual = knots[min(tick // 4, len(knots) - 1)]
+            frozen, _ = inference(state.obs, jax.random.PRNGKey(3000000 + candidate_index * 100 + tick))
+            frozen = np.asarray(frozen, np.float32)
+            residual = knots[min(tick // 4, len(knots) - 1)][None, :]
             target = np.clip(frozen + residual, -1, 1)
-            next_state = step(state, target)
-            alignment.append(float(np.max(np.abs(target - saved_actions[tick]))))
-            item = _item(state, env, candidate_id, tick,
-                         "positive_teacher" if tick < 8 else "teacher_tail_anchor",
-                         target if tick < 8 else frozen, frozen,
-                         residual if tick < 8 else np.zeros(4, np.float32), next_state)
+            next_state = batched_step(state, target)
+            alignment.append(float(np.max(np.abs(target[0] - saved_actions[tick]))))
+            item = _batched_item(state, next_state, env, candidate_id, tick,
+                                 "positive_teacher" if tick < 8 else "teacher_tail_anchor",
+                                 target if tick < 8 else frozen, frozen,
+                                 residual if tick < 8 else np.zeros((1, 4), np.float32))
             (teacher if tick < 8 else anchors).append(item)
             state = next_state
-            if float(state.done): break
+            if float(state.done[0]): break
     # Five non-significant candidates: only frozen-policy labels are anchors.
     for candidate_index, candidate_id in enumerate(nonpositive):
         state = restore_snapshot(env, by_id[candidate_id], jax.random.PRNGKey(4000000 + candidate_index))
