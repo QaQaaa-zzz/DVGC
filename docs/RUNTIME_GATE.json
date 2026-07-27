@@ -1,7 +1,7 @@
 {
-  "config_hash": "9b3b124d75cf828f75c5a41bbeeff4360a227737effae961801fd8cff2ae17a2",
-  "elapsed_seconds": 91.64235019683838,
-  "finished_at": 1784880548.3158395,
+  "config_hash": "f9813105b85202f977b088f06c95ffb6eb58e0fb4cac95cdaa628c885c9f5b4a",
+  "elapsed_seconds": 92.90785765647888,
+  "finished_at": 1785129946.783809,
   "gate_version": 4,
   "gates": {
     "expert_registry_composite_handoff": {
@@ -18,11 +18,11 @@
         "qpos": 5e-05,
         "qvel": 0.003
       },
-      "controller_stack_hash": "13844bd18733e7b7ac9bad5796ad6d4da267dd233bf6701b83be602dd3c761c3",
+      "controller_stack_hash": "8c6591272a91607e1265801e60daccb4219bcda61e033312da5e1753ad3e891e",
       "handoffs": 1,
-      "landing_policy_hash_after": "e4598437b9ba7624c71292bb8320398fc1144b264350458801216572545f02ae",
-      "landing_policy_hash_before": "e4598437b9ba7624c71292bb8320398fc1144b264350458801216572545f02ae",
-      "registry_hash": "e9b9244ada6bb80484e8f20d1636f456125c6f5fca42452d0c767fabe84fbe12",
+      "landing_policy_hash_after": "a90bd051cc5db33279e385606f1104235c450aaea68133dbb020703e0c306e1d",
+      "landing_policy_hash_before": "a90bd051cc5db33279e385606f1104235c450aaea68133dbb020703e0c306e1d",
+      "registry_hash": "e608ab5b12be0ca79929e5109ab7fb8940dddb20c99d67553e4f7accc7e27cf1",
       "status": "PASS"
     },
     "model_load": {
@@ -146,6 +146,15 @@
         "reward/descent_local_shaping",
         "reward/descent_local_speed_score",
         "reward/descent_local_survival",
+        "reward/descent_rsi_pilot_action_magnitude_penalty",
+        "reward/descent_rsi_pilot_action_smooth_penalty",
+        "reward/descent_rsi_pilot_angular",
+        "reward/descent_rsi_pilot_failure_penalty",
+        "reward/descent_rsi_pilot_pitch",
+        "reward/descent_rsi_pilot_roll",
+        "reward/descent_rsi_pilot_shaping",
+        "reward/descent_rsi_pilot_survival",
+        "reward/descent_rsi_pilot_vz",
         "reward/downrange_penalty",
         "reward/failure_penalty",
         "reward/gyro_excess_penalty",
@@ -223,7 +232,7 @@
       "status": "PASS"
     },
     "policy_roundtrip_determinism": {
-      "bundle": "/home/qy/DVGC/runs/runtime_gate_mjx_continuous_repair_v1/policy_bundle",
+      "bundle": "/home/qy/DVGC/runs/runtime_gate_unified_descent_rsi_v1/policy_bundle",
       "different_key_action_max_abs": 0.0,
       "status": "PASS"
     },
@@ -245,7 +254,7 @@
       "initial": {
         "effective_timesteps": 64,
         "final_metrics": {
-          "eval/avg_episode_length": 32.0,
+          "eval/avg_episode_length": 37.0,
           "eval/episode_end/backward": 0.0,
           "eval/episode_end/backward_std": 0.0,
           "eval/episode_end/chain_entry": 0.0,
@@ -278,16 +287,16 @@
           "eval/episode_end/takeoff_positive_pitch_failure_std": 0.0,
           "eval/episode_end/takeoff_wheelie_failure": 1.0,
           "eval/episode_end/takeoff_wheelie_failure_std": 0.0,
-          "eval/episode_reward": 67.32223510742188,
+          "eval/episode_reward": 78.23670196533203,
           "eval/episode_reward_std": 0.0,
           "eval/episode_success": 0.0,
           "eval/episode_success_std": 0.0,
           "eval/std_episode_length": 0.0,
-          "training/entropy_loss": 0.006316809449344873,
-          "training/kl_mean": 18943.9765625,
-          "training/policy_loss": 0.16627007722854614,
-          "training/total_loss": 0.24616257846355438,
-          "training/v_loss": 0.0735756978392601
+          "training/entropy_loss": 0.006316810846328735,
+          "training/kl_mean": 23464.234375,
+          "training/policy_loss": 0.1686471551656723,
+          "training/total_loss": 0.24740618467330933,
+          "training/v_loss": 0.07244221121072769
         },
         "progress": [
           {
@@ -343,7 +352,7 @@
           },
           {
             "metrics": {
-              "eval/avg_episode_length": 32.0,
+              "eval/avg_episode_length": 37.0,
               "eval/episode_end/backward": 0.0,
               "eval/episode_end/backward_std": 0.0,
               "eval/episode_end/chain_entry": 0.0,
@@ -376,16 +385,16 @@
               "eval/episode_end/takeoff_positive_pitch_failure_std": 0.0,
               "eval/episode_end/takeoff_wheelie_failure": 1.0,
               "eval/episode_end/takeoff_wheelie_failure_std": 0.0,
-              "eval/episode_reward": 67.32223510742188,
+              "eval/episode_reward": 78.23670196533203,
               "eval/episode_reward_std": 0.0,
               "eval/episode_success": 0.0,
               "eval/episode_success_std": 0.0,
               "eval/std_episode_length": 0.0,
-              "training/entropy_loss": 0.006316809449344873,
-              "training/kl_mean": 18943.9765625,
-              "training/policy_loss": 0.16627007722854614,
-              "training/total_loss": 0.24616257846355438,
-              "training/v_loss": 0.0735756978392601
+              "training/entropy_loss": 0.006316810846328735,
+              "training/kl_mean": 23464.234375,
+              "training/policy_loss": 0.1686471551656723,
+              "training/total_loss": 0.24740618467330933,
+              "training/v_loss": 0.07244221121072769
             },
             "step": 64
           }
@@ -395,7 +404,7 @@
       "resume": {
         "effective_timesteps": 32,
         "final_metrics": {
-          "eval/avg_episode_length": 64.0,
+          "eval/avg_episode_length": 37.0,
           "eval/episode_end/backward": 0.0,
           "eval/episode_end/backward_std": 0.0,
           "eval/episode_end/chain_entry": 0.0,
@@ -406,7 +415,7 @@
           "eval/episode_end/next_stage_entry_std": 0.0,
           "eval/episode_end/nonfinite": 0.0,
           "eval/episode_end/nonfinite_std": 0.0,
-          "eval/episode_end/pitch_limit": 0.0,
+          "eval/episode_end/pitch_limit": 1.0,
           "eval/episode_end/pitch_limit_std": 0.0,
           "eval/episode_end/platform_back_edge_exit": 0.0,
           "eval/episode_end/platform_back_edge_exit_std": 0.0,
@@ -428,21 +437,21 @@
           "eval/episode_end/takeoff_positive_pitch_failure_std": 0.0,
           "eval/episode_end/takeoff_wheelie_failure": 0.0,
           "eval/episode_end/takeoff_wheelie_failure_std": 0.0,
-          "eval/episode_reward": 99.7054672241211,
+          "eval/episode_reward": 76.15409851074219,
           "eval/episode_reward_std": 0.0,
           "eval/episode_success": 0.0,
           "eval/episode_success_std": 0.0,
           "eval/std_episode_length": 0.0,
-          "training/entropy_loss": 0.006315233185887337,
-          "training/kl_mean": 4.942156374454498e-05,
-          "training/policy_loss": -0.0008395761251449585,
-          "training/total_loss": 0.10957667231559753,
-          "training/v_loss": 0.1041010171175003
+          "training/entropy_loss": 0.006315211299806833,
+          "training/kl_mean": 0.0001740194857120514,
+          "training/policy_loss": -0.003396596759557724,
+          "training/total_loss": 0.10857432335615158,
+          "training/v_loss": 0.1056557148694992
         },
         "progress": [
           {
             "metrics": {
-              "eval/avg_episode_length": 32.0,
+              "eval/avg_episode_length": 37.0,
               "eval/episode_end/backward": 0.0,
               "eval/episode_end/backward_std": 0.0,
               "eval/episode_end/chain_entry": 0.0,
@@ -475,7 +484,7 @@
               "eval/episode_end/takeoff_positive_pitch_failure_std": 0.0,
               "eval/episode_end/takeoff_wheelie_failure": 1.0,
               "eval/episode_end/takeoff_wheelie_failure_std": 0.0,
-              "eval/episode_reward": 67.32223510742188,
+              "eval/episode_reward": 78.23670196533203,
               "eval/episode_reward_std": 0.0,
               "eval/episode_success": 0.0,
               "eval/episode_success_std": 0.0,
@@ -489,7 +498,7 @@
           },
           {
             "metrics": {
-              "eval/avg_episode_length": 64.0,
+              "eval/avg_episode_length": 37.0,
               "eval/episode_end/backward": 0.0,
               "eval/episode_end/backward_std": 0.0,
               "eval/episode_end/chain_entry": 0.0,
@@ -500,7 +509,7 @@
               "eval/episode_end/next_stage_entry_std": 0.0,
               "eval/episode_end/nonfinite": 0.0,
               "eval/episode_end/nonfinite_std": 0.0,
-              "eval/episode_end/pitch_limit": 0.0,
+              "eval/episode_end/pitch_limit": 1.0,
               "eval/episode_end/pitch_limit_std": 0.0,
               "eval/episode_end/platform_back_edge_exit": 0.0,
               "eval/episode_end/platform_back_edge_exit_std": 0.0,
@@ -522,16 +531,16 @@
               "eval/episode_end/takeoff_positive_pitch_failure_std": 0.0,
               "eval/episode_end/takeoff_wheelie_failure": 0.0,
               "eval/episode_end/takeoff_wheelie_failure_std": 0.0,
-              "eval/episode_reward": 99.7054672241211,
+              "eval/episode_reward": 76.15409851074219,
               "eval/episode_reward_std": 0.0,
               "eval/episode_success": 0.0,
               "eval/episode_success_std": 0.0,
               "eval/std_episode_length": 0.0,
-              "training/entropy_loss": 0.006315233185887337,
-              "training/kl_mean": 4.942156374454498e-05,
-              "training/policy_loss": -0.0008395761251449585,
-              "training/total_loss": 0.10957667231559753,
-              "training/v_loss": 0.1041010171175003
+              "training/entropy_loss": 0.006315211299806833,
+              "training/kl_mean": 0.0001740194857120514,
+              "training/policy_loss": -0.003396596759557724,
+              "training/total_loss": 0.10857432335615158,
+              "training/v_loss": 0.1056557148694992
             },
             "step": 32
           }
@@ -601,8 +610,8 @@
   ],
   "python": "/home/qy/mujoco_playground/.venv/bin/python",
   "python_version": "3.12.13",
-  "source_fingerprint": "fba1325592041fc009bea5386b19652630c5b868953b797aab4377daf1b1a62e",
-  "started_at": 1784880456.6734893,
+  "source_fingerprint": "763ad2962f81857686036d6a818e4a49dc3e04377fb52e689c9c9ac707459155",
+  "started_at": 1785129853.8759513,
   "status": "PASS",
   "xml_sha256": "d7e9f43ff8fb9e4571203f81062ce9c828acfa38692ee8c71a3e5daa15ce794c"
 }

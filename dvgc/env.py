@@ -32,7 +32,10 @@ from .action_mapping import knee_position_target
 from .config import ID_STAGE, STAGE_ID, default_config
 from .entry import ENTRY_FEATURE_NAMES
 from .signals import compute_takeoff_signals, wheel_tire_bottoms
-from .rewards import compute_descent_local_reward, compute_stage_next_entry_reward, compute_takeoff_reward_profile
+from .rewards import (
+    compute_descent_local_reward, compute_descent_rsi_pilot_reward,
+    compute_stage_next_entry_reward, compute_takeoff_reward_profile,
+)
 
 # Primary terminal/event codes.  They are integers because State.info must be a
 # JAX pytree; host tools map them back to readable V21-style strings.
@@ -721,6 +724,12 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "reward/descent_local_speed_score", "reward/descent_local_progress",
             "reward/descent_local_survival", "reward/descent_local_action_difference_penalty",
             "reward/descent_local_action_magnitude_penalty", "reward/descent_local_failure_penalty",
+            "reward/descent_rsi_pilot_shaping", "reward/descent_rsi_pilot_survival",
+            "reward/descent_rsi_pilot_roll", "reward/descent_rsi_pilot_pitch",
+            "reward/descent_rsi_pilot_angular", "reward/descent_rsi_pilot_vz",
+            "reward/descent_rsi_pilot_action_smooth_penalty",
+            "reward/descent_rsi_pilot_action_magnitude_penalty",
+            "reward/descent_rsi_pilot_failure_penalty",
             "diag/legacy_recovery_gate_fraction", "diag/recovery_quality_gate",
             "event/takeoff", "event/landing", "event/chain", "event/chain_ever", "event/recovery",
             "phase/approach", "phase/takeoff", "phase/flight", "phase/landing",
@@ -1617,6 +1626,10 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             chain=chain,
             hard_failure=hard_failure,
         )
+        descent_rsi_pilot = compute_descent_rsi_pilot_reward(
+            cfg=cfg, roll=roll, pitch=pitch, gyro=gyro, vz=vz, action=action,
+            previous_action=state.info["last_action"], hard_failure=hard_failure,
+        )
         zero=jp.asarray(0.0,jp.float32)
         stage_reward={"reward":zero,"shaping":zero,"event":zero,"failure_penalty":zero,"progress":zero,
                       "pose":zero,"speed":zero,"angular_penalty":zero,"yaw_score":zero,"bounded_height":zero,
@@ -1637,6 +1650,10 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         # Recovery bonus would reward bypassing the fixed C_L matcher.
         descent_local_active = state.info["descent_local_episode"]
         reward = jp.where(descent_local_active, descent_local["reward"], reward)
+        reward = jp.where(
+            jp.asarray(bool(cfg.descent_rsi_pilot_reward_enable)),
+            descent_rsi_pilot["reward"], reward,
+        )
         # Stage-C must not lose its objective immediately after liftoff.  Local
         # launch shaping is used only while still in Takeoff; after transition
         # the same Actor receives continuation/chain/final reward through Flight
@@ -1680,6 +1697,15 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "reward/descent_local_action_difference_penalty": descent_local["action_difference_penalty"],
             "reward/descent_local_action_magnitude_penalty": descent_local["action_magnitude_penalty"],
             "reward/descent_local_failure_penalty": descent_local["failure_penalty"],
+            "reward/descent_rsi_pilot_shaping": descent_rsi_pilot["shaping"],
+            "reward/descent_rsi_pilot_survival": descent_rsi_pilot["survival"],
+            "reward/descent_rsi_pilot_roll": descent_rsi_pilot["roll_score"],
+            "reward/descent_rsi_pilot_pitch": descent_rsi_pilot["pitch_score"],
+            "reward/descent_rsi_pilot_angular": descent_rsi_pilot["angular_score"],
+            "reward/descent_rsi_pilot_vz": descent_rsi_pilot["descent_speed_score"],
+            "reward/descent_rsi_pilot_action_smooth_penalty": descent_rsi_pilot["action_smooth_penalty"],
+            "reward/descent_rsi_pilot_action_magnitude_penalty": descent_rsi_pilot["action_magnitude_penalty"],
+            "reward/descent_rsi_pilot_failure_penalty": descent_rsi_pilot["failure_penalty"],
             "reward/takeoff_total": takeoff_profile["reward"],
             "reward/takeoff_dual_wheel_vz": takeoff_profile["terms"]["dual_wheel_vz"],
             "reward/takeoff_dual_wheel_height": takeoff_profile["terms"]["dual_wheel_height"],

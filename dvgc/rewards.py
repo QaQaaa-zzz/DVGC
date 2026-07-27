@@ -121,6 +121,54 @@ def compute_descent_local_reward(
     }
 
 
+def compute_descent_rsi_pilot_reward(
+    *, cfg, roll, pitch, gyro, vz, action, previous_action, hard_failure,
+) -> Dict[str, jp.ndarray]:
+    """Matcher-free bounded reward for the one-shot Descent RSI pilot.
+
+    This adapter measures local physical control only.  It deliberately has
+    no old-support distance, Chain, Landing, Final-Recovery, or Tube term.
+    """
+    roll_score = float(cfg.descent_rsi_pilot_roll) * jp.exp(
+        -((roll / jp.deg2rad(15.0)) ** 2)
+    )
+    pitch_score = float(cfg.descent_rsi_pilot_pitch) * jp.exp(
+        -((pitch / jp.deg2rad(25.0)) ** 2)
+    )
+    angular_score = float(cfg.descent_rsi_pilot_angular) * jp.exp(
+        -((jp.linalg.norm(gyro) / max(float(cfg.recovery_max_angvel), 1e-6)) ** 2)
+    )
+    descent_speed_score = float(cfg.descent_rsi_pilot_vz) * jp.exp(
+        -(((vz + 0.50) / 0.50) ** 2)
+    )
+    survival = jp.asarray(float(cfg.descent_rsi_pilot_survival), jp.float32)
+    action_smooth_penalty = float(cfg.descent_rsi_pilot_action_smooth) * jp.mean(
+        (action - previous_action) ** 2
+    )
+    action_magnitude_penalty = float(cfg.descent_rsi_pilot_action_magnitude) * jp.mean(
+        action ** 2
+    )
+    shaping = jp.clip(
+        survival + roll_score + pitch_score + angular_score + descent_speed_score
+        - action_smooth_penalty - action_magnitude_penalty,
+        float(cfg.descent_rsi_pilot_shaping_clip_min),
+        float(cfg.descent_rsi_pilot_shaping_clip_max),
+    )
+    failure_penalty = float(cfg.descent_rsi_pilot_failure_penalty) * hard_failure.astype(jp.float32)
+    return {
+        "reward": shaping - failure_penalty,
+        "shaping": shaping,
+        "survival": survival,
+        "roll_score": roll_score,
+        "pitch_score": pitch_score,
+        "angular_score": angular_score,
+        "descent_speed_score": descent_speed_score,
+        "action_smooth_penalty": action_smooth_penalty,
+        "action_magnitude_penalty": action_magnitude_penalty,
+        "failure_penalty": failure_penalty,
+    }
+
+
 def _clip01(x: jp.ndarray) -> jp.ndarray:
     return jp.clip(x, 0.0, 1.0)
 

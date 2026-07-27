@@ -106,6 +106,19 @@ def default_config() -> config_dict.ConfigDict:
         roll_controllability_min_beneficial_fraction=0.25,
         roll_controllability_max_pitch_side_effect=0.10,
         descent_local_reward_enable=False,
+        # One-shot learnability adapter for the provisional Descent RSI bank.
+        # It is matcher/landing independent and is never the formal JEL reward.
+        descent_rsi_pilot_reward_enable=False,
+        descent_rsi_pilot_survival=0.010,
+        descent_rsi_pilot_roll=0.040,
+        descent_rsi_pilot_pitch=0.040,
+        descent_rsi_pilot_angular=0.020,
+        descent_rsi_pilot_vz=0.020,
+        descent_rsi_pilot_action_smooth=0.005,
+        descent_rsi_pilot_action_magnitude=0.003,
+        descent_rsi_pilot_failure_penalty=2.0,
+        descent_rsi_pilot_shaping_clip_min=-0.25,
+        descent_rsi_pilot_shaping_clip_max=0.20,
         # Event-aligned stage reachability controller pilots.  The event is
         # intentionally much larger than the clipped sum of dense terms.
         stage_reachability_objective="",
