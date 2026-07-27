@@ -111,7 +111,10 @@ def _exact(rollout,state_factory,row,seed):
     repeated=all(np.array_equal(np.asarray(one[key]),np.asarray(two[key])) for key in keys)
     summary=all(np.array_equal(np.asarray(one[key])[0],np.asarray(row[key])) for key in ("survival","minimum_margin","terminal_margin","end_code"))
     summary &= np.array_equal(np.asarray(one["actions"])[:,0],np.asarray(row["actions"]))
-    return bool(repeated and summary)
+    replay={"survival":int(one["survival"][0]),"minimum_margin":float(one["minimum_margin"][0]),
+            "terminal_margin":float(one["terminal_margin"][0]),"end_code":int(one["end_code"][0]),
+            "actions":np.asarray(one["actions"])[:,0].tolist(),"features":np.asarray(one["features"])[:,0].tolist()}
+    return {"repeat1_repeat2_exact":bool(repeated),"search_batch_summary_equal":bool(summary),"replay":replay}
 
 
 def _search(root,snapshots,env,params):
@@ -130,11 +133,11 @@ def _search(root,snapshots,env,params):
                 for rank in order[:TOP_PER_GENERATION]:candidates.append(_payload(result,int(rank),knots[int(rank)],generation,int(rank),bound))
         top=distinct_top_sequences(candidates,5)
         for rank,row in enumerate(top):
-            row["rank"]=rank+1;row["exact_replay_twice"]=_exact(rollout,state_factory,row,9400000+snapshot_index*10+rank)
-            row["gain"]=row["survival"]-baseline["survival"];row["failure"]=END_REASON.get(row["end_code"],"horizon")
+            row["rank"]=rank+1;exact=_exact(rollout,state_factory,row,9400000+snapshot_index*10+rank);row["exact_replay"]=exact
+            replay=exact["replay"];row["gain"]=replay["survival"]-baseline["survival"];row["failure"]=END_REASON.get(replay["end_code"],"horizon")
             row["no_new_failure_type"]=row["failure"] in {baseline["failure"],"horizon"}
             row["action_delay_command_alignment"]="same OrangeBikeDVGC step lineage; residual applied at command ticks 0..7 before the unchanged delay model"
-        authoritative=next((row for row in top if row["exact_replay_twice"] and row["gain"]>=2 and row["no_new_failure_type"]),None)
+        authoritative=next((row for row in top if row["exact_replay"]["repeat1_repeat2_exact"] and row["gain"]>=2 and row["no_new_failure_type"]),None)
         rows.append({"snapshot_index":snapshot_index,"candidate_id":item["candidate_id"],"tick":item["tick"],"tick_region":item["tick_region"],"snapshot_hash":item["snapshot_hash"],"old_relabel_accepted":item["old_relabel_accepted"],"old_relabel_rejection_reasons":item["old_relabel_rejection_reasons"],"baseline":baseline,"top5":top,"authoritative_correction":authoritative is not None,"authoritative_rank":None if authoritative is None else authoritative["rank"]})
         save_json(root/"partial_local_cem_authority_results.json",{"completed":len(rows),"total":24,"rows":rows})
     gate=local_support_gate(rows);report={"status":"PASS" if gate["gate"] else "BRITTLE_OPEN_LOOP_TEACHER","protocol":{"search_horizon_ticks":8,"continuation_evaluation_horizon_ticks":24,"knots":2,"ticks_per_knot":4,"bounds":list(BOUNDS),"generations_per_bound":GENERATIONS,"population_per_generation":POPULATION,"elite":ELITE,"same_budget_every_snapshot":True,"candidate_specific_tuning":False,"restart_count":0,"objective":"lexicographic survival, minimum formal margin, terminal formal margin, residual effort"},"gate":gate,"rows":rows,"heldout_used":False,"ppo_authorization":False}
@@ -142,10 +145,35 @@ def _search(root,snapshots,env,params):
     print(json.dumps({"status":report["status"],"gate":gate},indent=2));return report
 
 
+def _reanalyze(root,source,env,params):
+    source_report=json.loads((source/"local_cem_authority_results.json").read_text())
+    with (source/"feedback_probe_snapshots.pkl").open("rb") as handle:snapshots=pickle.load(handle)
+    rollout=make_residual_rollout(env,params,horizon=24,ticks_per_knot=4,residual_ticks=8);rows=[]
+    for snapshot_index,(item,old) in enumerate(zip(snapshots,source_report["rows"],strict=True)):
+        state_factory=lambda count,item=item,snapshot_index=snapshot_index:batched_base_state(env,item["snapshot"],9100000+snapshot_index,count)
+        top=[]
+        for rank,old_top in enumerate(old["top5"]):
+            row={key:value for key,value in old_top.items() if key not in {"exact_replay_twice","gain","failure","no_new_failure_type"}}
+            exact=_exact(rollout,state_factory,row,9400000+snapshot_index*10+rank);row["exact_replay"]=exact
+            replay=exact["replay"];row["gain"]=replay["survival"]-old["baseline"]["survival"]
+            row["failure"]=END_REASON.get(replay["end_code"],"horizon");row["no_new_failure_type"]=row["failure"] in {old["baseline"]["failure"],"horizon"};top.append(row)
+        authoritative=next((row for row in top if row["exact_replay"]["repeat1_repeat2_exact"] and row["gain"]>=2 and row["no_new_failure_type"]),None)
+        rows.append({**{key:value for key,value in old.items() if key not in {"top5","authoritative_correction","authoritative_rank"}},"top5":top,"authoritative_correction":authoritative is not None,"authoritative_rank":None if authoritative is None else authoritative["rank"]})
+    gate=local_support_gate(rows);root.mkdir(parents=True)
+    for name in ("feedback_probe_state_manifest.json","feedback_probe_snapshots_manifest.json"):
+        save_json(root/name,json.loads((source/name).read_text()))
+    report={"status":"PASS" if gate["gate"] else "BRITTLE_OPEN_LOOP_TEACHER","protocol":source_report["protocol"],"authority_correction":"CEM discovery used batch 256; authority uses two bit-exact batch-1 replays from the same frozen snapshot. Search-batch summary equality is audited but is not the authority label.","supersedes_for_authority":str(source/"local_cem_authority_results.json"),"gate":gate,"rows":rows,"heldout_used":False,"ppo_authorization":False}
+    save_json(root/"local_cem_authority_results.json",report);print(json.dumps({"status":report["status"],"gate":gate},indent=2));return report
+
+
 def main():
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument("--run",required=True);args=parser.parse_args();root=Path(args.run)
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument("--run",required=True);parser.add_argument("--reanalyze-source");args=parser.parse_args();root=Path(args.run)
     if root.exists():raise SystemExit(f"refusing overwrite {root}")
-    _,bank,env,params=_assets();snapshots=_snapshot_manifest(root,bank,env,params);result=_search(root,snapshots,env,params)
+    _,bank,env,params=_assets()
+    if args.reanalyze_source:
+        result=_reanalyze(root,Path(args.reanalyze_source),env,params)
+    else:
+        snapshots=_snapshot_manifest(root,bank,env,params);result=_search(root,snapshots,env,params)
     if not result["gate"]["gate"]:
         save_json(root/"successful_action_multimodality_audit.json",{"status":"NOT_EXECUTED","reason":"local support gate failed before multimodality authority stage"})
         save_json(root/"receding_horizon_feedback_oracle_results.json",{"status":"NOT_EXECUTED","reason":"local support gate failed","heldout_used":False})
