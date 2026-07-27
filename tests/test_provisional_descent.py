@@ -3,9 +3,21 @@ import copy
 import numpy as np
 
 from dvgc.provisional_descent import (
-    SCHEMA_VERSION, StratifiedRSISampler, greedy_clusters, state_identity,
+    SCHEMA_VERSION, StratifiedRSISampler, greedy_clusters, hierarchical_reset_weights, state_identity,
     tolerance_unique, validate_candidate,
 )
+
+
+def test_hierarchical_reset_weights_balance_label_layer_candidate():
+    rows = [
+        {"provisional_label": "provisional_core", "descent_layer": "early"},
+        {"provisional_label": "provisional_core", "descent_layer": "early"},
+        {"provisional_label": "provisional_frontier", "descent_layer": "early"},
+        {"provisional_label": "provisional_frontier", "descent_layer": "middle"},
+        {"provisional_label": "provisional_frontier", "descent_layer": "middle"},
+        {"provisional_label": "provisional_frontier", "descent_layer": "late"},
+    ]
+    assert np.allclose(hierarchical_reset_weights(rows), [.35, .35, .10, .05, .05, .10])
 
 
 def _row(index=0, label="provisional_core", layer="early"):

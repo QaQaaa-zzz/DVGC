@@ -22,6 +22,39 @@ FEATURE_NAMES = (
     "x", "y", "z", "roll", "pitch", "yaw", "vx", "vy", "vz",
     "wx", "wy", "wz", "steering", "hip", "knee", "wheel_speed",
 )
+
+
+def hierarchical_reset_weights(
+    records: Sequence[Mapping[str, Any]],
+    label_masses: Mapping[str, float] | None = None,
+) -> list[float]:
+    """Balance reset mass by label, available time layer, then candidate."""
+    masses = dict(label_masses or {
+        "provisional_core": 0.70,
+        "provisional_frontier": 0.30,
+    })
+    buckets: dict[tuple[str, str], list[int]] = defaultdict(list)
+    for index, row in enumerate(records):
+        label, layer = str(row.get("provisional_label")), str(row.get("descent_layer"))
+        if label in masses and layer in LAYERS:
+            buckets[(label, layer)].append(index)
+    active_labels = {label for label, _ in buckets}
+    if not active_labels or any(masses[label] < 0 for label in active_labels):
+        raise ValueError("invalid or empty hierarchical reset support")
+    total = sum(masses[label] for label in active_labels)
+    if total <= 0:
+        raise ValueError("hierarchical reset mass must be positive")
+    result = [0.0] * len(records)
+    for label in sorted(active_labels):
+        layers = [layer for layer in LAYERS if (label, layer) in buckets]
+        layer_mass = masses[label] / total / len(layers)
+        for layer in layers:
+            indices = buckets[(label, layer)]
+            for index in indices:
+                result[index] = layer_mass / len(indices)
+    if not np.isclose(sum(result), 1.0, atol=1e-12):
+        raise AssertionError("hierarchical reset weights do not sum to one")
+    return result
 REQUIRED_POLICY_STATE = (
     "last_action", "obs_history", "actor_observation", "filter_phase",
     "phase_probs", "delay_buffer", "prev_acc_z", "prev_vz",
