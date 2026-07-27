@@ -138,7 +138,8 @@ def _global_norm(tree: Any) -> float:
 
 
 def optimize_batch(state: Mapping[str, Any], data: Any, normalizer: Any, key: Any,
-                   *, passes: int = 2, num_minibatches: int = 2) -> tuple[Any, Any, dict[str, Any]]:
+                   *, passes: int = 2, num_minibatches: int = 2,
+                   rollback_kl: float | None = None) -> tuple[Any, Any, dict[str, Any]]:
     """Apply the authorized PPO update while keeping `normalizer` immutable."""
     from brax.training.agents.ppo import losses as ppo_losses
     import optax
@@ -162,17 +163,30 @@ def optimize_batch(state: Mapping[str, Any], data: Any, normalizer: Any, key: An
             log_std = [x for path, x in jax.tree_util.tree_flatten_with_path(grads.policy)[0]
                        if "scale_parameter" in "/".join(str(p) for p in path)]
             log_std_norm = _global_norm(log_std) if log_std else 0.0
-            updates, opt_state = state["optimizer"].update(grads, opt_state, params)
-            before = params
-            params = optax.apply_updates(params, updates)
+            before, before_opt = params, opt_state
+            updates, candidate_opt = state["optimizer"].update(grads, opt_state, params)
+            candidate_params = optax.apply_updates(params, updates)
+            post_kl = logprob_audit(state["network"], candidate_params, normalizer, data)[
+                "analytic_distribution_kl_mean"]
+            rolled_back = rollback_kl is not None and (not np.isfinite(post_kl) or post_kl > rollback_kl)
+            if rolled_back:
+                params, opt_state = before, before_opt
+            else:
+                params, opt_state = candidate_params, candidate_opt
             records.append({"pass": pass_index, "minibatch": minibatch_index,
                             "loss": float(loss), "gradient_norm_before_clip": raw_norm,
                             "gradient_norm_after_clip_upper_bound": min(raw_norm, .75),
                             "actor_gradient_norm": actor_norm, "critic_gradient_norm": critic_norm,
                             "log_std_gradient_norm": log_std_norm,
+                            "candidate_post_update_analytic_kl": post_kl,
+                            "rolled_back": rolled_back,
+                            "rollback_threshold": rollback_kl,
                             "parameter_delta": tree_delta(params, before),
                             **{k: float(v) for k, v in metrics.items()}})
-    return params, opt_state, {"gradient_steps": len(records), "steps": records,
+    return params, opt_state, {"gradient_steps": len(records),
+                               "accepted_gradient_steps": sum(not row["rolled_back"] for row in records),
+                               "rolled_back_gradient_steps": sum(row["rolled_back"] for row in records),
+                               "steps": records,
                                "final": records[-1]}
 
 
