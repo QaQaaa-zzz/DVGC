@@ -1133,5 +1133,5 @@
   ready, but unified-policy RSI PPO requires separate authorization.
 - Artifacts:
   `runs/mjx_continuous_pipeline_repair_v1/descent_candidate_bank_v1/descent_candidates_v2.pkl`,
-  `construction_report_v2.json`, and `rsi_smoke_report_v5.json`.  The failed
+  `construction_report_v2.json`, and `rsi_smoke_report_v6.json`.  The failed
   v1 bank and earlier RSI diagnostic reports are preserved and not overwritten.

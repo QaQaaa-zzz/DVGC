@@ -54,6 +54,10 @@
     "status": "PASS",
     "records": 14,
     "sampled_draws": 240,
+    "configured_label_mass": {
+      "provisional_core": 0.7,
+      "provisional_frontier": 0.3
+    },
     "all_available_strata_sampled": true,
     "sampler_resume_exact": true,
     "jit_batch_reset_step": true,
@@ -70,6 +74,6 @@
   "run_artifacts": {
     "construction": "runs/mjx_continuous_pipeline_repair_v1/descent_candidate_bank_v1/construction_report_v2.json",
     "bank": "runs/mjx_continuous_pipeline_repair_v1/descent_candidate_bank_v1/descent_candidates_v2.pkl",
-    "rsi_smoke": "runs/mjx_continuous_pipeline_repair_v1/descent_candidate_bank_v1/rsi_smoke_report_v5.json"
+    "rsi_smoke": "runs/mjx_continuous_pipeline_repair_v1/descent_candidate_bank_v1/rsi_smoke_report_v6.json"
   }
 }

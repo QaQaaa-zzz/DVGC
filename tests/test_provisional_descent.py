@@ -49,3 +49,20 @@ def test_stratified_sampler_resume_is_exact():
     expected = sampler.sample_indices(12)
     resumed = StratifiedRSISampler(rows, seed=99); resumed.load_state_dict(state)
     assert resumed.sample_indices(12) == expected
+
+
+def test_stratified_sampler_honors_label_mass_and_balances_layers():
+    rows = [_row(i, label, layer) for i, (label, layer) in enumerate((
+        ("provisional_core", "early"), ("provisional_core", "late"),
+        ("provisional_frontier", "early"),
+        ("provisional_frontier", "middle"),
+        ("provisional_frontier", "late"),
+    ))]
+    for row in rows:
+        count = sum(other["provisional_label"] == row["provisional_label"] for other in rows)
+        mass = .7 if row["provisional_label"] == "provisional_core" else .3
+        row["reset_weight"] = mass / count
+    sampler = StratifiedRSISampler(rows, seed=11)
+    assert np.isclose(sampler.bucket_probabilities[("provisional_core", "early")], .35)
+    assert np.isclose(sampler.bucket_probabilities[("provisional_core", "late")], .35)
+    assert np.isclose(sampler.bucket_probabilities[("provisional_frontier", "middle")], .1)

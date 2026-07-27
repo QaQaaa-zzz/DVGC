@@ -38,6 +38,9 @@ def main() -> None:
         (bank.records[index]["provisional_label"], bank.records[index]["descent_layer"])
         for index in draw_indices
     )
+    label_counts = Counter()
+    for (label, _layer), count in strata.items():
+        label_counts[label] += count
     # Save at an actual interruption boundary, then prove exact continuation.
     sampler.sample_indices(17)
     saved_state = sampler.state_dict()
@@ -135,6 +138,13 @@ def main() -> None:
         "records": len(bank.records),
         "sampled_draws": len(draw_indices),
         "sampled_strata": {f"{label}:{layer}": count for (label, layer), count in sorted(strata.items())},
+        "sampled_label_fractions": {
+            label: count / len(draw_indices) for label, count in sorted(label_counts.items())
+        },
+        "configured_bucket_probabilities": {
+            f"{label}:{layer}": probability
+            for (label, layer), probability in sampler.bucket_probabilities.items()
+        },
         "all_strata_sampled": strata_present,
         "sampler_resume_exact": resume_exact,
         "jit_batch_reset": True,

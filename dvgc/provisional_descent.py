@@ -8,7 +8,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
-from collections import defaultdict
+from collections import Counter, defaultdict
 from typing import Any, Mapping, Sequence
 
 import numpy as np
@@ -122,12 +122,30 @@ class StratifiedRSISampler:
         self.buckets = {key: value for key, value in sorted(buckets.items()) if value}
         if not self.buckets:
             raise ValueError("RSI sampler has no eligible provisional candidates")
+        labels = sorted({key[0] for key in self.buckets})
+        label_mass = {}
+        for label in labels:
+            indices = [index for key, values in self.buckets.items()
+                       if key[0] == label for index in values]
+            weights = [self.records[index].get("reset_weight") for index in indices]
+            label_mass[label] = (float(sum(weights))
+                                 if all(weight is not None for weight in weights)
+                                 else 1.0)
+        total_mass = sum(label_mass.values())
+        if total_mass <= 0.0:
+            raise ValueError("RSI sampler label mass must be positive")
+        keys_per_label = Counter(key[0] for key in self.buckets)
+        self.bucket_probabilities = {
+            key: label_mass[key[0]] / total_mass / keys_per_label[key[0]]
+            for key in self.buckets
+        }
 
     def sample_indices(self, count: int) -> list[int]:
         keys = list(self.buckets)
         result = []
-        for offset in range(int(count)):
-            key = keys[(self.draws + offset) % len(keys)]
+        probabilities = [self.bucket_probabilities[key] for key in keys]
+        for _ in range(int(count)):
+            key = keys[int(self.rng.choice(len(keys), p=probabilities))]
             result.append(int(self.rng.choice(self.buckets[key])))
         self.draws += int(count)
         return result
