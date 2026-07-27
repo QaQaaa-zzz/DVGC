@@ -1,0 +1,91 @@
+{
+  "actor_visible_separable": false,
+  "artifact_role": "provisional_feedback_support_only",
+  "authoritative_start_head": "eff25d5",
+  "authority_origin": {
+    "historical_accepted": {
+      "passed": 4,
+      "total": 10
+    },
+    "historical_rejected": {
+      "passed": 3,
+      "total": 5
+    },
+    "newly_frozen_excluded_candidate": {
+      "passed": 5,
+      "total": 9
+    }
+  },
+  "causal_classification": "ACTOR_OBSERVATION_INFORMATION_GAP",
+  "cem_action_regression_bootstrap_route_closed_under_current_observation": true,
+  "cross_candidate_components": [
+    [
+      "062a0d2904b395fe9432459e09fa32f0",
+      "2d5836801880022d589e0a8937a7d533",
+      "485551c876749195cfd525c8dc54fbba",
+      "84920deacc2d1230124ded1b8cf5c716",
+      "8df1acfba2f2e3268348ea1c26828b55",
+      "cae6766e2ace79cd8dbc3ee4f6d6ccf5",
+      "d7faea27b56ec0e16974d4b5d2fb498a"
+    ],
+    [
+      "173ee307c84a7ebd74d8aab3ba04f328"
+    ]
+  ],
+  "decision_metrics": {
+    "cross_candidate_rate": 0.18691588785046728,
+    "cross_rare_threshold": 11,
+    "cross_target_candidates": 6,
+    "same_candidate_rate": 0.16666666666666666
+  },
+  "experiment": "unified_descent_feedback_correction_transfer_and_support_geometry_audit_v1",
+  "formal_tube_claim": false,
+  "heldout_used": false,
+  "implementation_commits": [
+    "602c0b2"
+  ],
+  "next_permitted_work": "separate observation/history sufficiency audit",
+  "ppo_authorization": false,
+  "privileged_separable": true,
+  "route_semantics_correction": "runs/unified_descent_feedback_correction_transfer_and_support_geometry_audit_v1/route_semantics_correction.json",
+  "status": "PASS",
+  "support_layers": {
+    "frontier": 1,
+    "robust-core": 2,
+    "sparse-support": 4,
+    "unsupported": 1
+  },
+  "transfer_categories": {
+    "cross_candidate": {
+      "eligible": 214,
+      "gain_at_least_2": 40,
+      "margin_only": 66
+    },
+    "diagonal": {
+      "eligible": 12,
+      "gain_at_least_2": 12,
+      "margin_only": 0
+    },
+    "frontier_sparse_to_robust_core": {
+      "eligible": 30,
+      "gain_at_least_2": 6,
+      "margin_only": 4
+    },
+    "robust_core_internal": {
+      "eligible": 12,
+      "gain_at_least_2": 3,
+      "margin_only": 2
+    },
+    "robust_core_to_frontier_sparse": {
+      "eligible": 71,
+      "gain_at_least_2": 14,
+      "margin_only": 27
+    },
+    "same_candidate_off_diagonal": {
+      "eligible": 18,
+      "gain_at_least_2": 3,
+      "margin_only": 6
+    }
+  }
+}
+

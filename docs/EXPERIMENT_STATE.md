@@ -1319,3 +1319,27 @@
   candidate CV, held-out evaluation, Landing retention, final bootstrap, and
   PPO were not executed. Report:
   `docs/experiments/unified_descent_feedback_teacher_support_and_representation_probe_v1/`.
+
+## Unified Descent correction-transfer/support-geometry audit v1 (2026-07-28)
+
+- Started from `eff25d5`; the 24 frozen snapshots, 12 authoritative medoid
+  corrections, frozen pi_D and all asset hashes remained read-only. No CEM,
+  relabel, network training, held-out, Landing retention, or PPO was run.
+- Authority accounting is exact: historical accepted/rejected/newly frozen
+  contribute 4/3/5 passes from totals 10/5/9. Six historical accepts do not
+  reproduce. Candidate counts are `[3,0,1,2,1,1,1,3]`; rejected passes are
+  `485551c8` ticks 1 and 4 and `d7faea27` tick 1.
+- Fixed compatibility conditions admit 244 double-replay pairs. Physical
+  transfers are diagonal 12/12, same-candidate off-diagonal 3/18, and
+  cross-candidate 40/214. Cross transfer reaches six target candidates and
+  forms a seven-candidate weak component; unsupported `173ee307` is isolated.
+  Robust-core -> frontier/sparse is 14/71; the reverse direction is 6/30.
+- Candidate-grouped actor-visible linear diagnostics have balanced accuracy /
+  precision / recall `0.667/0.700/0.583` and fail the fixed separability gate.
+  Privileged features reach `0.750/0.800/0.667` and exceed permutation p95.
+- Classification: `ACTOR_OBSERVATION_INFORMATION_GAP`. Under the current
+  observation contract the CEM action-regression/bootstrap route is closed;
+  only a separate observation/history sufficiency audit is permitted. These
+  are provisional feedback-support results, not a Tube/JEL claim. PPO
+  authorization remains false. Report:
+  `docs/experiments/unified_descent_feedback_correction_transfer_and_support_geometry_audit_v1/`.
