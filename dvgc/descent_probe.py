@@ -102,6 +102,22 @@ def lexicographic_order(result: Mapping[str, np.ndarray]) -> np.ndarray:
                        -result["minimum_margin"], -result["survival"]))
 
 
+def exact_replay_matches(
+    first: Mapping[str, np.ndarray], second: Mapping[str, np.ndarray],
+    selected_summary: Mapping[str, Any],
+) -> bool:
+    """Requires repeatability *and* identity with the selected CEM result."""
+    repeated = all(np.array_equal(np.asarray(first[key]), np.asarray(second[key]))
+                   for key in ("survival", "minimum_margin", "terminal_margin", "end_code", "actions", "features"))
+    if not repeated:
+        return False
+    scalar_matches = all(np.array_equal(np.asarray(first[key])[0], np.asarray(selected_summary[key]))
+                         for key in ("survival", "minimum_margin", "terminal_margin", "end_code"))
+    action_matches = np.array_equal(np.asarray(first["actions"])[:, 0], np.asarray(selected_summary["actions"]))
+    feature_matches = np.array_equal(np.asarray(first["features"])[:, 0], np.asarray(selected_summary["features"]))
+    return bool(scalar_matches and action_matches and feature_matches)
+
+
 def cem_search(
     rollout: Any, state_factory: Any, *, bound: float, seed: int,
     generations: int = 5, samples: int = 256, elite_count: int = 32,

@@ -19,7 +19,7 @@ from cli.runtime_gate import source_fingerprint
 from dvgc.bank import SnapshotBank
 from dvgc.config import ACTION_MAPPING_VERSION, file_sha256, load_config
 from dvgc.descent_pilot import REWARD_KEYS
-from dvgc.descent_probe import batched_base_state, cem_search, make_residual_rollout
+from dvgc.descent_probe import batched_base_state, cem_search, exact_replay_matches, make_residual_rollout
 from dvgc.env import END_REASON, OrangeBikeDVGC
 from dvgc.policy import load_bundle
 from dvgc.ppo_integrity import logprob_audit, normalizer_summary, tree_delta
@@ -161,7 +161,7 @@ def main():
             knots,summary,rows=cem_search(rollout,state_factory,bound=bound,seed=20260727+index*100+level,generations=a.generations,samples=a.samples,elite_count=max(4,a.samples//8))
             for row in rows:row.update({"candidate_id":record["id"],"bound":bound})
             all_rows.extend(rows);replay_state=state_factory(1);replay1=jax.device_get(rollout(replay_state,jnp.asarray(knots[None]),jax.random.PRNGKey(77)));replay2=jax.device_get(rollout(replay_state,jnp.asarray(knots[None]),jax.random.PRNGKey(77)))
-            exact=all(np.array_equal(np.asarray(replay1[k]),np.asarray(replay2[k])) for k in ("survival","minimum_margin","terminal_margin","end_code"))
+            exact=exact_replay_matches(replay1,replay2,summary)
             item={"bound":bound,"best":summary,"exact_replay":exact,"residual_knots":knots.tolist()};
             if best is None or summary["survival"]>best["best"]["survival"] or (summary["survival"]==best["best"]["survival"] and summary["minimum_margin"]>best["best"]["minimum_margin"]):best=item
             if int(summary["survival"])>=24:break
