@@ -136,12 +136,13 @@ def main():
                        "actor_delta":tree_delta(params[1],init_params[1]),
                        "critic_delta":tree_delta(params[2],init_params[2])}
     # Persist enough raw evidence to independently recompute every integrity metric.
+    rollout_value=state["network"].value_network.apply(old_norm,state["params"].value,data.observation)
     np.savez_compressed(root/"first_rollout_read_only.npz",
         observation_state=np.asarray(data.observation["state"]),
         observation_privileged=np.asarray(data.observation["privileged_state"]),
         action=np.asarray(data.action),raw_action=np.asarray(data.extras["policy_extras"]["raw_action"]),
         stored_log_prob=np.asarray(data.extras["policy_extras"]["log_prob"]),
-        value=np.asarray(data.extras["policy_extras"]["value"]),reward=np.asarray(data.reward),
+        value=np.asarray(rollout_value),reward=np.asarray(data.reward),
         discount=np.asarray(data.discount),termination=1-np.asarray(data.discount),
         candidate_index=np.asarray(data.extras["state_extras"]["reset_parent"]),
         episode_done=np.asarray(data.extras["state_extras"]["episode_done"]))
