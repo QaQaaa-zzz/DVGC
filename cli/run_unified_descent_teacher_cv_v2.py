@@ -63,8 +63,8 @@ def save_policy(path, policy):
 
 
 def main():
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument("--run",required=True);parser.add_argument("--relabels",default="");args=parser.parse_args();root=Path(args.run)
-    if root.exists():raise SystemExit(f"refusing overwrite {root}")
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument("--run",required=True);parser.add_argument("--relabels",default="");parser.add_argument("--resume",action="store_true");parser.add_argument("--fold",choices=("A","B","C"));parser.add_argument("--aggregate",action="store_true");args=parser.parse_args();root=Path(args.run)
+    if root.exists() and not args.resume:raise SystemExit(f"refusing overwrite {root}")
     if subprocess.run(["git","merge-base","--is-ancestor",EXPECTED_HEAD,"HEAD"]).returncode or subprocess.check_output(["git","status","--porcelain"],text=True).strip():raise SystemExit("invalid git state")
     cfg=load_config("configs/unified_descent_rsi_learnability_pilot_v1.json");gate=json.loads(Path("docs/RUNTIME_GATE.json").read_text())
     if file_sha256(BANK)!=EXPECTED_BANK or file_sha256(cfg.xml_path)!=EXPECTED_XML or cfg.action_mapping_version!=ACTION_MAPPING_VERSION:raise SystemExit("asset gate")
@@ -86,7 +86,7 @@ def main():
     mismatches=[row["candidate_id"] for row in amendment if not row["old_summary_exact_summary_equal"]]
     authority={"status":"PASS" if len(mismatches)==2 and len(positive)==8 and all(exact[cid]["repeat_exact"] and exact[cid]["replayed_gain"]>=4 for cid in positive) else "FAIL","protocol":"exact gain >=4 is the sole teacher inclusion condition","old_selected_summary_role":"historical_only","exact_replay_summary_role":"teacher_authority","summary_mismatch_candidates":mismatches,"teacher_candidates":positive,"folds":{"A":folds[0],"B":folds[1],"C":folds[2]},"candidates":amendment}
     if authority["status"]!="PASS":raise SystemExit("authority amendment failed")
-    root.mkdir(parents=True);save_json(root/"teacher_authority_protocol_amendment.json",authority)
+    root.mkdir(parents=True,exist_ok=args.resume);save_json(root/"teacher_authority_protocol_amendment.json",authority)
     data=pickle.loads(DATASET.read_bytes());teacher=data["teacher"];anchors=data["anchors"]
     relabels=[]
     if args.relabels:
@@ -116,8 +116,13 @@ def main():
     save_json(root/"teacher_dataset_manifest_v2.json",dataset_manifest)
     save_json(root/"teacher_action_alignment_audit_v2.json",{"status":"PASS","action_order":["steer","drive","hip","knee"],"post_squash_action_target":True,"anchor_reconfirmation_max_abs":anchor_reconfirm_max,"per_tick":json.loads(Path("runs/unified_descent_cem_teacher_bootstrap_and_local_ppo_probe_v1/dataset_v3/teacher_action_alignment_audit.json").read_text())["per_tick_residual"]})
     baseline=evaluate_policy(env,rollout,base_policy,records,7200000);save_json(root/"baseline_14_state.json",baseline)
+    if args.aggregate:
+        fold_reports=[json.loads((root/f"fold_{name}_results.json").read_text()) for name in "ABC"]
+        selected=[row["selected"] for row in fold_reports];all_results=[item for row in fold_reports for item in row["all_checkpoint_results"]]
+        return finish_report(root,selected,all_results,baseline,teacher,relabels)
     all_results=[];selected=[]
     for fold_index,excluded_ids in enumerate(folds):
+        if args.fold and args.fold!="ABC"[fold_index]:continue
         train_ids=set(positive)-set(excluded_ids)
         fold_teacher=[row for row in teacher if row["candidate_id"] in train_ids]
         fold_teacher += [row for row in relabels if row["candidate_id"] in train_ids]
@@ -128,7 +133,7 @@ def main():
         excluded_base=subset_evaluation(baseline,excluded_ids);fold_candidates=[]
         for lr in (1e-5,3e-5,1e-4):
             checkpoint_dir=root/"cv"/f"fold_{'ABC'[fold_index]}"/f"lr_{lr:g}"
-            def callback(step,policy,lr=lr):
+            def callback(step,policy,lr=lr,save_checkpoint=True):
                 current=evaluate_policy(env,rollout,policy,records,7300000+fold_index*10000)
                 excluded=subset_evaluation(current,excluded_ids);transfer=gains(excluded_base,excluded);overall=gains(baseline,current)
                 anchor_audit=action_audit(actor_action,base_policy,policy,anchor_obs,stored)
@@ -136,14 +141,34 @@ def main():
                 excluded_audit=action_audit(actor_action,base_policy,policy,excluded_obs,excluded_y)
                 survivor=next(row for row in current["rows"] if row["candidate_id"]=="d3fbf57dbf3d07cfbf4b31d6d11a0428")["survived_ticks"]>=24
                 payload={"lr":lr,"excluded":transfer,"overall":overall,"excluded_evaluation":excluded,"overall_evaluation":current,"anchor_action":anchor_audit,"train_imitation":train_audit,"excluded_imitation":excluded_audit,"parameter_relative_l2":parameter_drift(base_policy,policy),"original_24_survivor_preserved":survivor,"anchor_gate":anchor_audit["delta_rms"]<=.02 and anchor_audit["delta_max"]<=.05,"finite":all(np.isfinite(x) for x in jax.tree.leaves(policy) for x in np.asarray(x).reshape(-1))}
-                save_policy(checkpoint_dir/f"step_{step:04d}.pkl",policy);return payload
-            _,history=train_supervised(base_policy=base_policy,actor_action=actor_action,teacher_observation=train_obs,teacher_target=train_y,anchor_observation=fold_anchor_obs,anchor_target=fold_anchor_y,learning_rate=lr,callback=callback)
+                if save_checkpoint:save_policy(checkpoint_dir/f"step_{step:04d}.pkl",policy)
+                return payload
+            history_path=checkpoint_dir/"history.json"
+            if history_path.exists():
+                history=json.loads(history_path.read_text())
+            else:
+                saved=sorted(checkpoint_dir.glob("step_*.pkl"))
+                if len(saved)==20:
+                    history=[]
+                    for path in saved:
+                        with path.open("rb") as handle:policy=pickle.load(handle)
+                        step=int(path.stem.split("_")[-1]);history.append({"step":step,"loss":None,**callback(step,policy,save_checkpoint=False)})
+                else:
+                    if saved:checkpoint_dir=checkpoint_dir.with_name(checkpoint_dir.name+"_retry1")
+                    _,history=train_supervised(base_policy=base_policy,actor_action=actor_action,teacher_observation=train_obs,teacher_target=train_y,anchor_observation=fold_anchor_obs,anchor_target=fold_anchor_y,learning_rate=lr,callback=callback)
+                save_json(history_path,history)
             for row in history:
                 row.update({"fold":"ABC"[fold_index],"excluded_candidates":excluded_ids});fold_candidates.append(row);all_results.append(row)
         eligible=[row for row in fold_candidates if row["anchor_gate"] and row["finite"] and row["original_24_survivor_preserved"]]
         def score(row):
             ex=row["excluded"];overall=row["overall"];return (ex["gain_at_least_2"],ex["median_gain"],ex["sum_positive"],overall["gain_at_least_2"],overall["median_gain"],overall["sum_positive"],-row["anchor_action"]["delta_rms"],-row["parameter_relative_l2"],-row["step"])
         best=max(eligible if eligible else [row for row in fold_candidates if row["finite"]],key=score);best["hard_checkpoint_eligible"]=bool(eligible);selected.append(best)
+        save_json(root/f"fold_{'ABC'[fold_index]}_results.json",{"selected":best,"all_checkpoint_results":fold_candidates})
+    if args.fold:return
+    finish_report(root,selected,all_results,baseline,teacher,relabels)
+
+
+def finish_report(root,selected,all_results,baseline,teacher,relabels):
     combined=[item for row in selected for item in row["excluded"]["rows"]];combined_gain=np.asarray([row["gain"] for row in combined]);fold_positive=sum(row["excluded"]["median_gain"]>0 for row in selected)
     base_fail={row["candidate_id"]:row["termination_reason"] for row in baseline["rows"]};new_types={row["failure_after"] for row in combined if row["failure_after"] not in set(base_fail.values())}
     transfer_pass=bool(all(row["hard_checkpoint_eligible"] for row in selected) and np.sum(combined_gain>=2)>=4 and np.median(combined_gain)>=1 and fold_positive>=2 and not new_types)
