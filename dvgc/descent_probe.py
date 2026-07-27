@@ -24,7 +24,10 @@ def formal_dynamic_margin(feature: jax.Array, cfg: Any) -> jax.Array:
     return jnp.minimum(roll, pitch)
 
 
-def make_residual_rollout(env: Any, params: Any, *, horizon: int = 24):
+def make_residual_rollout(
+    env: Any, params: Any, *, horizon: int = 24,
+    ticks_per_knot: int = 4, residual_ticks: int | None = None,
+):
     """Return a JIT batched closed-loop residual rollout callable."""
     inference = build_inference(env, params, deterministic=True)
     step = jax.vmap(env.step)
@@ -48,7 +51,9 @@ def make_residual_rollout(env: Any, params: Any, *, horizon: int = 24):
             (state, active, survival, minimum_margin, terminal_margin,
              reward_sum, component_sum, first_action_tick, actions, features, end_codes) = carry
             action, _ = inference(state.obs, jax.random.fold_in(key, tick))
-            residual = residual_knots[:, jnp.minimum(tick // 4, residual_knots.shape[1] - 1)]
+            residual = residual_knots[:, jnp.minimum(tick // ticks_per_knot, residual_knots.shape[1] - 1)]
+            if residual_ticks is not None:
+                residual = jnp.where(tick < residual_ticks, residual, jnp.zeros_like(residual))
             commanded = jnp.clip(action + residual, -1.0, 1.0)
             next_state = step(state, commanded)
             feature = feature_fn(next_state.data)
@@ -121,12 +126,13 @@ def exact_replay_matches(
 def cem_search(
     rollout: Any, state_factory: Any, *, bound: float, seed: int,
     generations: int = 5, samples: int = 256, elite_count: int = 32,
+    knot_count: int = 6,
 ) -> tuple[np.ndarray, dict[str, Any], list[dict[str, Any]]]:
     """Run one fixed-budget 24-D residual CEM level."""
-    rng = np.random.default_rng(seed); mean = np.zeros((6, 4), np.float32)
-    std = np.full((6, 4), bound * .5, np.float32); all_rows = []; best = None
+    rng = np.random.default_rng(seed); mean = np.zeros((knot_count, 4), np.float32)
+    std = np.full((knot_count, 4), bound * .5, np.float32); all_rows = []; best = None
     for generation in range(generations):
-        knots = np.clip(rng.normal(mean, std, size=(samples, 6, 4)), -bound, bound).astype(np.float32)
+        knots = np.clip(rng.normal(mean, std, size=(samples, knot_count, 4)), -bound, bound).astype(np.float32)
         state = state_factory(samples)
         result = jax.device_get(rollout(state, jnp.asarray(knots), jax.random.PRNGKey(seed + generation)))
         order = lexicographic_order(result); elite = knots[order[:elite_count]]
