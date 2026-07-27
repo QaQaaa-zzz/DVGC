@@ -63,7 +63,7 @@ def save_policy(path, policy):
 
 
 def main():
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument("--run",required=True);args=parser.parse_args();root=Path(args.run)
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument("--run",required=True);parser.add_argument("--relabels",default="");args=parser.parse_args();root=Path(args.run)
     if root.exists():raise SystemExit(f"refusing overwrite {root}")
     if subprocess.run(["git","merge-base","--is-ancestor",EXPECTED_HEAD,"HEAD"]).returncode or subprocess.check_output(["git","status","--porcelain"],text=True).strip():raise SystemExit("invalid git state")
     cfg=load_config("configs/unified_descent_rsi_learnability_pilot_v1.json");gate=json.loads(Path("docs/RUNTIME_GATE.json").read_text())
@@ -88,6 +88,10 @@ def main():
     if authority["status"]!="PASS":raise SystemExit("authority amendment failed")
     root.mkdir(parents=True);save_json(root/"teacher_authority_protocol_amendment.json",authority)
     data=pickle.loads(DATASET.read_bytes());teacher=data["teacher"];anchors=data["anchors"]
+    relabels=[]
+    if args.relabels:
+        with Path(args.relabels).open("rb") as handle:relabels=pickle.load(handle)
+        if any(row.get("kind")!="student_relabel" for row in relabels):raise SystemExit("invalid relabel dataset")
     if len(teacher)!=64 or len(anchors)!=198:raise SystemExit("dataset count mismatch")
     # Reconfirm every anchor label directly from frozen pi_D before gradients.
     env=OrangeBikeDVGC(cfg,snapshot_bank=bank);net,actor_action,loc_scale=build_actor_tools(env,params);base_policy=params[1];rollout=make_fast_rollout(env,params)
@@ -116,6 +120,7 @@ def main():
     for fold_index,excluded_ids in enumerate(folds):
         train_ids=set(positive)-set(excluded_ids)
         fold_teacher=[row for row in teacher if row["candidate_id"] in train_ids]
+        fold_teacher += [row for row in relabels if row["candidate_id"] in train_ids]
         fold_anchor=[row for row in anchors if not (row["kind"]=="teacher_tail_anchor" and row["candidate_id"] in set(excluded_ids))]
         train_obs=np.asarray([row["observation"] for row in fold_teacher]);train_y=np.asarray([row["target_action"] for row in fold_teacher])
         excluded_teacher=[row for row in teacher if row["candidate_id"] in set(excluded_ids)];excluded_obs=np.asarray([row["observation"] for row in excluded_teacher]);excluded_y=np.asarray([row["target_action"] for row in excluded_teacher])
@@ -136,14 +141,13 @@ def main():
             for row in history:
                 row.update({"fold":"ABC"[fold_index],"excluded_candidates":excluded_ids});fold_candidates.append(row);all_results.append(row)
         eligible=[row for row in fold_candidates if row["anchor_gate"] and row["finite"] and row["original_24_survivor_preserved"]]
-        if not eligible:raise SystemExit(f"no eligible checkpoint fold {fold_index}")
         def score(row):
             ex=row["excluded"];overall=row["overall"];return (ex["gain_at_least_2"],ex["median_gain"],ex["sum_positive"],overall["gain_at_least_2"],overall["median_gain"],overall["sum_positive"],-row["anchor_action"]["delta_rms"],-row["parameter_relative_l2"],-row["step"])
-        best=max(eligible,key=score);selected.append(best)
+        best=max(eligible if eligible else [row for row in fold_candidates if row["finite"]],key=score);best["hard_checkpoint_eligible"]=bool(eligible);selected.append(best)
     combined=[item for row in selected for item in row["excluded"]["rows"]];combined_gain=np.asarray([row["gain"] for row in combined]);fold_positive=sum(row["excluded"]["median_gain"]>0 for row in selected)
     base_fail={row["candidate_id"]:row["termination_reason"] for row in baseline["rows"]};new_types={row["failure_after"] for row in combined if row["failure_after"] not in set(base_fail.values())}
-    transfer_pass=bool(np.sum(combined_gain>=2)>=4 and np.median(combined_gain)>=1 and fold_positive>=2 and not new_types)
-    report={"status":"PASS" if transfer_pass else "HEAD_ONLY_CV_FAIL","mode":"head_only","folds":[{"fold":row["fold"],"excluded_candidates":row["excluded_candidates"],"selected_lr":row["lr"],"selected_step":row["step"],"excluded":row["excluded"],"train_imitation":row["train_imitation"],"excluded_imitation":row["excluded_imitation"],"anchor_action":row["anchor_action"],"original_24_survivor_preserved":row["original_24_survivor_preserved"]} for row in selected],"combined":{"candidates":combined,"gain_at_least_2":int(np.sum(combined_gain>=2)),"median_gain":float(np.median(combined_gain)),"positive_folds":fold_positive,"new_failure_types":sorted(new_types)},"physical_transfer_gate":transfer_pass,"relabel_required":not transfer_pass and all(row["train_imitation"]["imitation_rms"]<float(np.sqrt(np.mean((np.asarray([x["target_action"] for x in teacher if x["candidate_id"] not in set(row["excluded_candidates"])])-np.asarray([x["frozen_action"] for x in teacher if x["candidate_id"] not in set(row["excluded_candidates"])]))**2))) for row in selected),"heldout_used":False,"all_checkpoint_results":all_results}
+    transfer_pass=bool(all(row["hard_checkpoint_eligible"] for row in selected) and np.sum(combined_gain>=2)>=4 and np.median(combined_gain)>=1 and fold_positive>=2 and not new_types)
+    report={"status":"PASS" if transfer_pass else "TEACHER_MEMORIZATION_OR_SUPPORT_GAP","mode":"head_only_with_one_relabel_round" if relabels else "head_only","relabel_records":len(relabels),"folds":[{"fold":row["fold"],"excluded_candidates":row["excluded_candidates"],"selected_lr":row["lr"],"selected_step":row["step"],"hard_checkpoint_eligible":row["hard_checkpoint_eligible"],"excluded":row["excluded"],"train_imitation":row["train_imitation"],"excluded_imitation":row["excluded_imitation"],"anchor_action":row["anchor_action"],"original_24_survivor_preserved":row["original_24_survivor_preserved"]} for row in selected],"combined":{"candidates":combined,"gain_at_least_2":int(np.sum(combined_gain>=2)),"median_gain":float(np.median(combined_gain)),"positive_folds":fold_positive,"new_failure_types":sorted(new_types)},"physical_transfer_gate":transfer_pass,"relabel_required":not relabels and not transfer_pass and all(row["train_imitation"]["imitation_rms"]<float(np.sqrt(np.mean((np.asarray([x["target_action"] for x in teacher if x["candidate_id"] not in set(row["excluded_candidates"])])-np.asarray([x["frozen_action"] for x in teacher if x["candidate_id"] not in set(row["excluded_candidates"])]))**2))) for row in selected),"relabel_already_consumed":bool(relabels),"heldout_used":False,"all_checkpoint_results":all_results}
     save_json(root/"candidate_cross_validation_results_v2.json",report)
     print(json.dumps({key:value for key,value in report.items() if key!="all_checkpoint_results"},indent=2))
 
