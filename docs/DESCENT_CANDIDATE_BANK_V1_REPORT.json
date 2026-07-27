@@ -1,0 +1,75 @@
+{
+  "schema": "descent_candidate_bank_v1_summary",
+  "status": "PASS",
+  "base_head": "1aede45",
+  "old_bridge_gate": "superseded_as_training_gate",
+  "formal_tube_or_jel": false,
+  "ppo_authorization": false,
+  "smoke_100_inventory": {
+    "trajectory_files": 100,
+    "trajectory_byte_unique": 1,
+    "state_rows": 4100,
+    "state_byte_unique": 41,
+    "state_tolerance_unique": 41,
+    "descent_ticks_per_trajectory": 11,
+    "evidence_role": "repeatability_only"
+  },
+  "candidate_bank": {
+    "artifact_role": "proposal_support_bank",
+    "schema": "descent_provisional_candidate_v1",
+    "sha256": "8e6342bc0d9d5e7821929f6ddccd4fb5b7c23923c66ab2d058309249dfed45a1",
+    "raw_states": 58,
+    "byte_unique_eligible": 14,
+    "tolerance_unique_eligible": 14,
+    "selected": 14,
+    "provisional_core": 3,
+    "provisional_frontier": 11,
+    "rejected_physical": 29,
+    "clusters": 9,
+    "layers": {
+      "early": 4,
+      "middle": 4,
+      "late": 6
+    },
+    "selected_sources": {
+      "natural_continuous": 12,
+      "local_rsi_perturbation": 2
+    },
+    "survivability": {
+      "8_ticks": 14,
+      "16_ticks": 3,
+      "24_ticks": 1
+    },
+    "reset_replay": {
+      "passed": 14,
+      "total": 14
+    },
+    "legacy_reference": {
+      "used_as_gate": false,
+      "matcher_members": 0,
+      "minimum_distance": 6.586300373077393
+    }
+  },
+  "rsi_interface_smoke": {
+    "status": "PASS",
+    "records": 14,
+    "sampled_draws": 240,
+    "all_available_strata_sampled": true,
+    "sampler_resume_exact": true,
+    "jit_batch_reset_step": true,
+    "finite": true,
+    "history_delay_observation_shapes": "PASS",
+    "batch_state_crosstalk": "PASS",
+    "training_interface_ready": true
+  },
+  "runtime": {
+    "solver": "CG",
+    "xml_sha256": "d7e9f43ff8fb9e4571203f81062ce9c828acfa38692ee8c71a3e5daa15ce794c",
+    "frozen_assets_changed": false
+  },
+  "run_artifacts": {
+    "construction": "runs/mjx_continuous_pipeline_repair_v1/descent_candidate_bank_v1/construction_report_v2.json",
+    "bank": "runs/mjx_continuous_pipeline_repair_v1/descent_candidate_bank_v1/descent_candidates_v2.pkl",
+    "rsi_smoke": "runs/mjx_continuous_pipeline_repair_v1/descent_candidate_bank_v1/rsi_smoke_report_v5.json"
+  }
+}

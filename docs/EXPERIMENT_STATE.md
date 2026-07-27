@@ -1102,3 +1102,36 @@
   frozen policies, XML/action limits and PPO authorization remain unchanged.
   Compact artifact:
   `runs/mjx_continuous_pipeline_repair_v1/descent_support_entry_bridge_v1/bounded_summary.json`.
+
+## Descent provisional candidate bank (2026-07-27)
+
+- The completed `bounded_local_bridge_plateau` result is retained but is now
+  `superseded_as_training_gate`.  Old-support distance 6.586300, formal entry
+  0, frozen-pi_D stable ticks 0, Landing 0 and Final-Recovery 0 are reference
+  diagnostics, not candidate-bank blockers.  Frozen pi_D/pi_L, XML, action
+  mapping, matcher and physical-failure semantics remain unchanged; PPO
+  authorization remains false.
+- `smoke_100_v1` contains 100 byte-identical trajectories: 4,100 stored state
+  rows reduce to 41 byte-exact and 41 tolerance-unique states (41 ticks per
+  trajectory, including 11 physical-Descent ticks).  It is repeatability
+  evidence, not 100-parent diversity evidence.
+- Provisional bank v2 is a `proposal_support_bank`, never a certified Tube or
+  JEL artifact.  Hash `8e6342b...45a1`; 58 raw states (46 natural-continuous,
+  12 local-RSI perturbations) yielded 14 byte/tolerance-unique eligible
+  candidates in 9 clusters: core/frontier=3/11 and early/middle/late=4/4/6.
+  Selected provenance is natural/local=12/2 (85.714%/14.286%).
+- Short-horizon survivability is 14/14 at 8 ticks, 3/14 at 16 ticks and 1/14
+  at 24 ticks; exact reset replay passed 14/14.  Physical rejection reasons
+  among raw proposals were angular-rate margin 14, body clearance 5, absent
+  local action authority 5 and wheel-terrain contact 5.  Fifteen additional
+  rows were byte duplicates; no tolerance-only duplicates remained.
+- RSI interface smoke PASS: all 14 records were reloadable; 240 resumable
+  stratified draws covered every available core/frontier-time stratum.  JIT
+  batch reset/step, finite state, observation/history/delay shapes, phase,
+  action response and controlled batch cross-talk checks passed.  No state
+  terminated during the five-step interface smoke.  Training interface is
+  ready, but unified-policy RSI PPO requires separate authorization.
+- Artifacts:
+  `runs/mjx_continuous_pipeline_repair_v1/descent_candidate_bank_v1/descent_candidates_v2.pkl`,
+  `construction_report_v2.json`, and `rsi_smoke_report_v5.json`.  The failed
+  v1 bank and earlier RSI diagnostic reports are preserved and not overwritten.
