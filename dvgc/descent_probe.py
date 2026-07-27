@@ -13,11 +13,15 @@ from dvgc.runtime import build_inference
 
 
 def formal_dynamic_margin(feature: jax.Array, cfg: Any) -> jax.Array:
-    """Signed margin to the three continuous formal failure boundaries."""
+    """Signed margin to continuous formal hard-failure boundaries.
+
+    Angular velocity is a Recovery-quality gate, not a hard-failure terminal
+    in ``OrangeBikeDVGC.step``; it must therefore not steer the CEM's formal
+    failure-margin objective.
+    """
     roll = jnp.deg2rad(float(cfg.max_roll_deg)) - jnp.abs(feature[..., 3])
     pitch = jnp.deg2rad(float(cfg.max_pitch_deg)) - jnp.abs(feature[..., 4])
-    angular = float(cfg.recovery_max_angvel) - jnp.linalg.norm(feature[..., 9:12], axis=-1)
-    return jnp.minimum(jnp.minimum(roll, pitch), angular)
+    return jnp.minimum(roll, pitch)
 
 
 def make_residual_rollout(env: Any, params: Any, *, horizon: int = 24):
