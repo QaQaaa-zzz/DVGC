@@ -122,7 +122,10 @@ def cem_search(
                 "residual_max": float(result["residual_max"][index]),
                 "end_code": int(result["end_code"][index])})
         candidate = int(order[0])
-        payload = {key: np.asarray(value[candidate]) for key, value in result.items()}
+        payload = {
+            key: np.asarray(value[:, candidate] if key in {"actions", "features"} else value[candidate])
+            for key, value in result.items()
+        }
         if best is None or tuple((-payload["survival"], -payload["minimum_margin"],
                                   -payload["terminal_margin"], payload["residual_rms"])) < best[0]:
             best = ((-payload["survival"], -payload["minimum_margin"],
