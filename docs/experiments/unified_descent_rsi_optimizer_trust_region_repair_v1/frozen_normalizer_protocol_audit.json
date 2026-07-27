@@ -1,0 +1,24 @@
+{
+  "normalizer": {
+    "count": 1024000,
+    "mean": {
+      "l2": 126.55793998259182,
+      "max": 46.66757583618164,
+      "mean": 2.566365260168629,
+      "min": -5.258039951324463
+    },
+    "sha256": "8f2e36b6f69a3d20da67c1854f7e908c98dd6b03ae70e287e0a7e28522f93a7e",
+    "std": {
+      "l2": 103.52134464714385,
+      "max": 40.17438888549805,
+      "mean": 3.0592084182743204,
+      "min": 0.0009999999310821295
+    }
+  },
+  "read_only_copy": true,
+  "rollout_loss_evaluation_same_hash": true,
+  "source_policy_hash": "52721668eed0cc78b41a45ad7c319e687f43add8977f2b4bdfcad8208c4353f2",
+  "status": "PASS",
+  "training_or_heldout_refit": false,
+  "updated_during_calibration": false
+}

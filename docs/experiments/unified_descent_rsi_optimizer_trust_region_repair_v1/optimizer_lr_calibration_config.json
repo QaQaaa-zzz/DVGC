@@ -1,0 +1,27 @@
+{
+  "heldout_used_for_selection": false,
+  "k_hard_max": 0.01,
+  "k_nominal": 0.005,
+  "k_ref": 184.45465087890625,
+  "learning_rates": [
+    2.60321597947626e-07,
+    3.90482396921439e-07,
+    5.20643195895252e-07,
+    6.50803994869065e-07,
+    7.80964793842878e-07
+  ],
+  "lr_ref": 0.0001,
+  "m0": 0.00520643195895252,
+  "multipliers": [
+    0.5,
+    0.75,
+    1.0,
+    1.25,
+    1.5
+  ],
+  "new_training_environment_transitions": 0,
+  "saved_advantage_return_reconstruction_max_abs_error": 0.0,
+  "selection": "maximum candidate passing all fixed update-integrity gates",
+  "source_rollout": "/home/qy/DVGC/runs/unified_descent_rsi_update_integrity_repair_v1_phase_a_v4_20260727/first_rollout_read_only.npz",
+  "status": "PASS"
+}

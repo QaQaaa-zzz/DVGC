@@ -1,0 +1,14 @@
+{
+  "baseline_8_16_24": {
+    "16": 1,
+    "24": 1,
+    "8": 14
+  },
+  "deterministic_repeats": true,
+  "normalizer_hash_unchanged": true,
+  "optimizer_protocol_gate": true,
+  "phase_b_authorized": true,
+  "ppo_authorization": true,
+  "selected_learning_rate": 7.80964793842878e-07,
+  "status": "PASS"
+}

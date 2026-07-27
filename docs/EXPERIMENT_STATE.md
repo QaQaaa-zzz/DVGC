@@ -1193,3 +1193,28 @@
   Next work requires separate authorization of an optimizer/trust-region
   protocol change; no LR/clip/network/reward sweep was performed. Compact
   report: `docs/experiments/unified_descent_rsi_update_integrity_repair_v1/`.
+
+## Unified Descent RSI optimizer trust-region repair v1 (2026-07-27)
+
+- Authoritative start `e61639f`; immutable bank `8e6342b...45a1`, XML/action,
+  failure semantics, frozen pi_D `5272166...353f2` and normalizer
+  `8f2e36b...93a7e` (count 1,024,000) remained unchanged.
+- Saved-rollout five-point calibration reconstructed prior advantage/return
+  exactly without new training transitions. Reference LR `1e-4`,
+  `m0=0.005206431959`; all fixed candidates `2.6032e-7` through `7.8096e-7`
+  passed KL/action/survivor/finite/repeat gates. Maximum passing LR
+  `7.809647938e-7` was selected independently of held-out and reward.
+- The single authorized seed-0 rerun completed exactly 6,400 transitions:
+  17 attempted optimizer updates, 16 accepted, one rollback and one permitted
+  halving to `3.904823969e-7`. Normalizer hash was unchanged at every
+  checkpoint; no NaN/OOM/timeout/provenance error occurred.
+- Checkpoints 0/1600/3200/4800/6400 all remained in-bank `14/1/1`, median 10,
+  lower quartile 9, with pitch/roll/horizon `12/1/1`. Held-out remained
+  `6/0/0`, median 8, lower quartile 7. Core/frontier and all temporal strata
+  were unchanged. The unique long survivor no longer disappears, but no
+  positive physical learning signal emerged.
+- Classification: `update_integrity_pass_but_no_learning_signal`. Do not run
+  25,600 steps. Next diagnosis is reward controllability, pi_D initialization
+  compatibility, and candidate horizon/curriculum difficulty. PPO
+  authorization is false; no Tube/JEL/second-seed work started. Report:
+  `docs/experiments/unified_descent_rsi_optimizer_trust_region_repair_v1/`.

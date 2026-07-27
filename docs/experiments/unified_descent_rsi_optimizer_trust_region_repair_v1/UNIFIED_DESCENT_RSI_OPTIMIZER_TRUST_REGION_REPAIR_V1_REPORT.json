@@ -1,0 +1,77 @@
+{
+  "status": "update_integrity_pass_but_no_learning_signal",
+  "experiment": "unified_descent_rsi_optimizer_trust_region_repair_v1",
+  "authoritative_start_head": "e61639f",
+  "provenance": {
+    "candidate_bank_sha256": "8e6342bc0d9d5e7821929f6ddccd4fb5b7c23923c66ab2d058309249dfed45a1",
+    "xml_sha256": "d7e9f43ff8fb9e4571203f81062ce9c828acfa38692ee8c71a3e5daa15ce794c",
+    "frozen_pi_d_params_sha256": "52721668eed0cc78b41a45ad7c319e687f43add8977f2b4bdfcad8208c4353f2",
+    "normalizer_sha256": "8f2e36b6f69a3d20da67c1854f7e908c98dd6b03ae70e287e0a7e28522f93a7e",
+    "normalizer_count": 1024000,
+    "normalizer_unchanged": true,
+    "candidate_bank_modified": false
+  },
+  "calibration": {
+    "lr_ref": 0.0001,
+    "k_ref": 184.45465087890625,
+    "m0": 0.00520643195895252,
+    "saved_advantage_return_reconstruction_max_abs_error": 0.0,
+    "new_training_rollout_transitions": 0,
+    "candidates": [
+      {"lr": 2.60321597947626e-7, "analytic_kl": 0.0013031926937401295, "sample_kl": 0.0021215900778770447, "clip_fraction": 0.07375, "action_delta": 0.0034189224243164062, "survival": [14,1,1], "pass": true},
+      {"lr": 3.90482396921439e-7, "analytic_kl": 0.0016080993227660656, "sample_kl": 0.002595004625618458, "clip_fraction": 0.086875, "action_delta": 0.002567589282989502, "survival": [14,1,1], "pass": true},
+      {"lr": 5.20643195895252e-7, "analytic_kl": 0.001624354044906795, "sample_kl": 0.003015651134774089, "clip_fraction": 0.099375, "action_delta": 0.0025115609169006348, "survival": [14,1,1], "pass": true},
+      {"lr": 6.50803994869065e-7, "analytic_kl": 0.002242234069854021, "sample_kl": 0.004059603903442621, "clip_fraction": 0.13625, "action_delta": 0.0033085644245147705, "survival": [14,1,1], "pass": true},
+      {"lr": 7.80964793842878e-7, "analytic_kl": 0.0027014955412596464, "sample_kl": 0.004567533265799284, "clip_fraction": 0.14875, "action_delta": 0.003348827362060547, "survival": [14,1,1], "pass": true}
+    ],
+    "selected_learning_rate": 7.80964793842878e-7,
+    "selection_rule": "largest passing fixed candidate; no held-out or reward-based selection",
+    "repeat_determinism": "PASS"
+  },
+  "effective_update_gate": {
+    "status": "PASS",
+    "nonzero_update": true,
+    "baseline_survivor_preserved": true,
+    "fixed_observation_action_delta_below_0_05": true,
+    "normalizer_frozen": true
+  },
+  "rerun": {
+    "executed": true,
+    "seed": 0,
+    "environment_transitions": 6400,
+    "attempted_optimizer_updates": 17,
+    "accepted_optimizer_updates": 16,
+    "rolled_back_updates": 1,
+    "learning_rate_halvings": 1,
+    "initial_learning_rate": 7.80964793842878e-7,
+    "final_learning_rate": 3.90482396921439e-7,
+    "normalizer_hash_unchanged": true,
+    "nonfinite_oom_timeout": false,
+    "checkpoints": {
+      "0": {"survival_8_16_24": [14,1,1], "median": 10, "lower_quartile": 9},
+      "1600": {"survival_8_16_24": [14,1,1], "median": 10, "lower_quartile": 9},
+      "3200": {"survival_8_16_24": [14,1,1], "median": 10, "lower_quartile": 9},
+      "4800": {"survival_8_16_24": [14,1,1], "median": 10, "lower_quartile": 9},
+      "6400": {"survival_8_16_24": [14,1,1], "median": 10, "lower_quartile": 9}
+    },
+    "failure_reasons_all_checkpoints": {"pitch_limit": 12, "roll_limit": 1, "pilot_horizon_reached": 1},
+    "heldout_all_checkpoints": {"survival_8_16_24": [6,0,0], "median": 8, "lower_quartile": 7, "failure_reasons": {"pitch_limit": 9, "roll_limit": 1}},
+    "group_results_unchanged": {
+      "core": {"survival_8_16_24": [3,0,0], "median": 9},
+      "frontier": {"survival_8_16_24": [11,1,1], "median": 11},
+      "early": {"survival_8_16_24": [4,0,0], "median": 9},
+      "middle": {"survival_8_16_24": [4,1,1], "median": 13},
+      "late": {"survival_8_16_24": [6,0,0], "median": 10}
+    }
+  },
+  "interpretation": {
+    "optimizer_integrity": "repaired: 16 of 17 attempts were valid accepted updates; the unsafe attempt was rolled back and succeeded after one permitted halving",
+    "learning_signal": "none at 6,400 transitions: every in-bank, grouped and held-out survival statistic is unchanged",
+    "reward_physics_alignment": "dense shaping increased slightly, but survival, time-to-failure and failure codes did not improve; this is not evidence of physical learnability",
+    "first_update_survivor": "preserved at every checkpoint",
+    "next_diagnostic": "reward controllability, frozen pi_D initialization compatibility, and candidate horizon/curriculum difficulty"
+  },
+  "recommend_25600_steps": false,
+  "formal_tube_or_jel": false,
+  "ppo_authorization_after_run": false
+}

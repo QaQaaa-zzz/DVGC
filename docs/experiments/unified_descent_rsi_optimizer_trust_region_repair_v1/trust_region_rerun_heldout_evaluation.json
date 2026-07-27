@@ -1,0 +1,5677 @@
+{
+  "checkpoint_0000": {
+    "horizon": 24,
+    "policy": "checkpoint_0000",
+    "rows": [
+      {
+        "actions": [
+          [
+            0.4476367235183716,
+            0.460212379693985,
+            1.0,
+            -0.9341351389884949
+          ],
+          [
+            0.4023357331752777,
+            0.46685776114463806,
+            1.0,
+            -0.9378960728645325
+          ],
+          [
+            0.8793116211891174,
+            0.7234399914741516,
+            1.0,
+            -0.9518928527832031
+          ],
+          [
+            0.4494677186012268,
+            0.7628741264343262,
+            1.0,
+            -0.9164928197860718
+          ],
+          [
+            -0.732858419418335,
+            0.5195217728614807,
+            0.9999997615814209,
+            -0.8752854466438293
+          ],
+          [
+            -0.3930869698524475,
+            0.21956351399421692,
+            0.9603403210639954,
+            -0.3663458526134491
+          ],
+          [
+            -0.2937398850917816,
+            0.20465825498104095,
+            0.5022495985031128,
+            -0.09119027107954025
+          ],
+          [
+            -0.12243083864450455,
+            0.04555092379450798,
+            0.3345963656902313,
+            -0.021540535613894463
+          ],
+          [
+            -0.0931730791926384,
+            0.023298796266317368,
+            0.27622169256210327,
+            0.008500776253640652
+          ]
+        ],
+        "candidate_cluster": 1,
+        "candidate_id": "9859a67b128991679eb379b664f52bf1",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -21.118100747694886,
+          "body_clearance_m": 0.06332856892383154,
+          "pitch_rad": -0.013594723411174181,
+          "roll_rad": 0.5306720091783734
+        },
+        "policy": "checkpoint_0000",
+        "provisional_label": "provisional_core",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.011105239827884361,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.009490133365488873,
+          "reward/descent_rsi_pilot_angular": 0.022750599329359047,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.15591485962249862,
+          "reward/descent_rsi_pilot_roll": 0.3556737191975117,
+          "reward/descent_rsi_pilot_shaping": 0.6037448942661285,
+          "reward/descent_rsi_pilot_survival": 0.08999999798834324,
+          "reward/descent_rsi_pilot_vz": 1.0992643401912832e-06
+        },
+        "survived_ticks": 8,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            0.43090131878852844,
+            0.46313831210136414,
+            1.0,
+            -0.9358257055282593
+          ],
+          [
+            0.39424681663513184,
+            0.4697836637496948,
+            1.0,
+            -0.9373461008071899
+          ],
+          [
+            0.8824377059936523,
+            0.7203060984611511,
+            1.0,
+            -0.9520834684371948
+          ],
+          [
+            0.44546088576316833,
+            0.760816216468811,
+            1.0,
+            -0.9173645377159119
+          ],
+          [
+            -0.7345248460769653,
+            0.5119999647140503,
+            0.9999997019767761,
+            -0.8764369487762451
+          ],
+          [
+            -0.3963715136051178,
+            0.21704868972301483,
+            0.9607864022254944,
+            -0.3720872700214386
+          ],
+          [
+            -0.3024899363517761,
+            0.2044602483510971,
+            0.5112765431404114,
+            -0.09352369606494904
+          ],
+          [
+            -0.10755963623523712,
+            0.040380291640758514,
+            0.33366215229034424,
+            -0.02268488146364689
+          ],
+          [
+            -0.09095028042793274,
+            0.021253693848848343,
+            0.2754463255405426,
+            0.003946928773075342
+          ],
+          [
+            -0.029712453484535217,
+            -0.031420376151800156,
+            0.22349993884563446,
+            0.01666778326034546
+          ]
+        ],
+        "candidate_cluster": 1,
+        "candidate_id": "32f7603875293f339e1f907abef46d04",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -19.44949830331995,
+          "body_clearance_m": 0.06164624599454453,
+          "pitch_rad": -0.21301899022635973,
+          "roll_rad": -2.0655211181557442
+        },
+        "policy": "checkpoint_0000",
+        "provisional_label": "provisional_core",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.011140742284624139,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.009424189828223462,
+          "reward/descent_rsi_pilot_angular": 0.023941973309667543,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.1606880195777478,
+          "reward/descent_rsi_pilot_roll": 0.3573228158056736,
+          "reward/descent_rsi_pilot_shaping": 0.6213888470083475,
+          "reward/descent_rsi_pilot_survival": 0.09999999776482582,
+          "reward/descent_rsi_pilot_vz": 9.407067333086889e-07
+        },
+        "survived_ticks": 9,
+        "termination_reason": "roll_limit"
+      },
+      {
+        "actions": [
+          [
+            0.4483289420604706,
+            0.4599173367023468,
+            1.0,
+            -0.9341235160827637
+          ],
+          [
+            0.4025728702545166,
+            0.4664096236228943,
+            1.0,
+            -0.9379115104675293
+          ],
+          [
+            0.8789339661598206,
+            0.7232369780540466,
+            1.0,
+            -0.9518630504608154
+          ],
+          [
+            0.4473970830440521,
+            0.7631806135177612,
+            1.0,
+            -0.9165472984313965
+          ],
+          [
+            -0.7327984571456909,
+            0.519230306148529,
+            0.9999996423721313,
+            -0.8752090930938721
+          ],
+          [
+            -0.39300623536109924,
+            0.21929983794689178,
+            0.9602887034416199,
+            -0.36622968316078186
+          ],
+          [
+            -0.29398903250694275,
+            0.20429790019989014,
+            0.5014715194702148,
+            -0.09098054468631744
+          ],
+          [
+            -0.12153614312410355,
+            0.04510817676782608,
+            0.3341422975063324,
+            -0.021252887323498726
+          ],
+          [
+            -0.0931602343916893,
+            0.022779222577810287,
+            0.2765069901943207,
+            0.008395936340093613
+          ]
+        ],
+        "candidate_cluster": 1,
+        "candidate_id": "aebfaa501b6220035daf954eb5a1c52d",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -21.07046965045374,
+          "body_clearance_m": 0.0,
+          "pitch_rad": -0.01872143811759508,
+          "roll_rad": 0.5286653592073651
+        },
+        "policy": "checkpoint_0000",
+        "provisional_label": "provisional_core",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.011101993419288192,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.009460512678515443,
+          "reward/descent_rsi_pilot_angular": 0.022724346873098225,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.1561207174863739,
+          "reward/descent_rsi_pilot_roll": 0.35549792647361755,
+          "reward/descent_rsi_pilot_shaping": 0.6037816442549229,
+          "reward/descent_rsi_pilot_survival": 0.08999999798834324,
+          "reward/descent_rsi_pilot_vz": 1.1878053698411475e-06
+        },
+        "survived_ticks": 8,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            0.42623642086982727,
+            0.45986369252204895,
+            1.0,
+            -0.9361076354980469
+          ],
+          [
+            0.37952423095703125,
+            0.46815747022628784,
+            1.0,
+            -0.9380967020988464
+          ],
+          [
+            0.8791765570640564,
+            0.7209938764572144,
+            1.0,
+            -0.9530287981033325
+          ],
+          [
+            0.4310833811759949,
+            0.7659376859664917,
+            1.0,
+            -0.9183126091957092
+          ],
+          [
+            -0.7363945245742798,
+            0.5276730060577393,
+            0.9999997019767761,
+            -0.8749237060546875
+          ],
+          [
+            -0.399296373128891,
+            0.2292153388261795,
+            0.960333526134491,
+            -0.35604792833328247
+          ],
+          [
+            -0.30868393182754517,
+            0.20547884702682495,
+            0.5091612339019775,
+            -0.09117776900529861
+          ],
+          [
+            -0.11369940638542175,
+            0.04061075299978256,
+            0.3312245309352875,
+            -0.0190271083265543
+          ],
+          [
+            -0.08817140012979507,
+            0.019245373085141182,
+            0.27163442969322205,
+            0.011264112778007984
+          ]
+        ],
+        "candidate_cluster": 1,
+        "candidate_id": "efc40b7fb62638f121a99d884b922a5e",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -20.50994584960825,
+          "body_clearance_m": 0.05319465921065561,
+          "pitch_rad": -0.14976987905082262,
+          "roll_rad": 0.46317890573379716
+        },
+        "policy": "checkpoint_0000",
+        "provisional_label": "provisional_core",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.0110913676689961,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.009514686113334392,
+          "reward/descent_rsi_pilot_angular": 0.022562185323896037,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.1765572945544136,
+          "reward/descent_rsi_pilot_roll": 0.34827056899666786,
+          "reward/descent_rsi_pilot_shaping": 0.6167853362858295,
+          "reward/descent_rsi_pilot_survival": 0.08999999798834324,
+          "reward/descent_rsi_pilot_vz": 1.3434805662674199e-06
+        },
+        "survived_ticks": 8,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            0.022692568600177765,
+            -0.004989511799067259,
+            0.2822147011756897,
+            -0.04031478241086006
+          ],
+          [
+            0.030282383784651756,
+            -0.013450171798467636,
+            0.18962249159812927,
+            -0.03330826759338379
+          ],
+          [
+            -0.017241816967725754,
+            -0.015717368572950363,
+            0.1860870122909546,
+            -0.03842794522643089
+          ],
+          [
+            0.013581783510744572,
+            -0.004415549803525209,
+            0.13192680478096008,
+            -0.033804502338171005
+          ],
+          [
+            -0.022115183994174004,
+            -0.016997573897242546,
+            0.1304500699043274,
+            -0.02071142941713333
+          ],
+          [
+            0.02032986469566822,
+            -0.014848140068352222,
+            0.09006725251674652,
+            -0.007710776757448912
+          ],
+          [
+            -0.027331272140145302,
+            0.001888103666715324,
+            0.07307954132556915,
+            -0.00039294222369790077
+          ],
+          [
+            -0.003194136545062065,
+            0.0002871755277737975,
+            0.09738609194755554,
+            0.003448265139013529
+          ]
+        ],
+        "candidate_cluster": 2,
+        "candidate_id": "c9551cfe91f1a2ab4b99fdddf68c062f",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -8.5040296298532,
+          "body_clearance_m": -0.022873651143871614,
+          "pitch_rad": -0.17077586717185533,
+          "roll_rad": 0.41557807017204484
+        },
+        "policy": "checkpoint_0000",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.00016350164833056624,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.00017766726557510992,
+          "reward/descent_rsi_pilot_angular": 0.022427213846754057,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.06252976834201718,
+          "reward/descent_rsi_pilot_roll": 0.2999665327370167,
+          "reward/descent_rsi_pilot_shaping": 0.4693745896220207,
+          "reward/descent_rsi_pilot_survival": 0.07999999821186066,
+          "reward/descent_rsi_pilot_vz": 0.00479224956885593
+        },
+        "survived_ticks": 7,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            0.020430155098438263,
+            -0.007442906498908997,
+            0.26659879088401794,
+            -0.03872044384479523
+          ],
+          [
+            0.029562680050730705,
+            -0.01358165591955185,
+            0.1734120398759842,
+            -0.02917712740600109
+          ],
+          [
+            -0.022586513310670853,
+            -0.014813559129834175,
+            0.17095498740673065,
+            -0.03443426638841629
+          ],
+          [
+            0.009109643287956715,
+            -0.0015400770353153348,
+            0.11512137949466705,
+            -0.0322728268802166
+          ],
+          [
+            -0.026362644508481026,
+            -0.016664648428559303,
+            0.1318110227584839,
+            -0.019240401685237885
+          ],
+          [
+            0.020331455394625664,
+            -0.013558526523411274,
+            0.08355318754911423,
+            -0.005562720354646444
+          ],
+          [
+            0.010841630399227142,
+            -0.009082138538360596,
+            0.07746748626232147,
+            -0.0006124884239397943
+          ],
+          [
+            -0.00824963953346014,
+            -0.004452522844076157,
+            0.10139630734920502,
+            -0.002111634938046336
+          ]
+        ],
+        "candidate_cluster": 2,
+        "candidate_id": "24d365f6cf5a4a97188273df8a7c24d9",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -9.065835342554964,
+          "body_clearance_m": -0.02082299551770112,
+          "pitch_rad": -0.18472848004874742,
+          "roll_rad": 0.3336701421820851
+        },
+        "policy": "checkpoint_0000",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.00014508799176837783,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.00014041301095346626,
+          "reward/descent_rsi_pilot_angular": 0.02154592212849593,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.059241849097929844,
+          "reward/descent_rsi_pilot_roll": 0.28901509568095207,
+          "reward/descent_rsi_pilot_shaping": 0.456031858921051,
+          "reward/descent_rsi_pilot_survival": 0.07999999821186066,
+          "reward/descent_rsi_pilot_vz": 0.0065144741111156715
+        },
+        "survived_ticks": 7,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            -0.0033953720703721046,
+            0.006079783663153648,
+            0.1593935787677765,
+            -0.012506251223385334
+          ],
+          [
+            -0.0033191090915352106,
+            0.017703479155898094,
+            0.1370755434036255,
+            -0.002025107853114605
+          ],
+          [
+            -0.05946728214621544,
+            0.0360153391957283,
+            0.11560994386672974,
+            -0.03155920282006264
+          ],
+          [
+            -0.03824934735894203,
+            -0.0007372446125373244,
+            0.08676013350486755,
+            -0.012996346689760685
+          ],
+          [
+            -0.024509161710739136,
+            -0.022987741976976395,
+            0.10939072072505951,
+            -0.000967775413300842
+          ],
+          [
+            -0.04098398983478546,
+            0.009204797446727753,
+            0.05296766012907028,
+            0.020954428240656853
+          ]
+        ],
+        "candidate_cluster": 3,
+        "candidate_id": "05f2b501d77ac36f75a65f4258a3a227",
+        "descent_layer": "late",
+        "minimum_margins": {
+          "angular_rate": -12.357090842249796,
+          "body_clearance_m": -0.006604050715939682,
+          "pitch_rad": -0.1216215855556444,
+          "roll_rad": 0.3384210198008748
+        },
+        "policy": "checkpoint_0000",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 6.839235766165075e-05,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.0003030707487141626,
+          "reward/descent_rsi_pilot_angular": 0.00564109960571213,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.05599904354374985,
+          "reward/descent_rsi_pilot_roll": 0.20196622237563133,
+          "reward/descent_rsi_pilot_shaping": 0.32323587872087955,
+          "reward/descent_rsi_pilot_survival": 0.05999999865889549,
+          "reward/descent_rsi_pilot_vz": 9.83935481674139e-07
+        },
+        "survived_ticks": 5,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            -0.0002920370316132903,
+            0.002247478114441037,
+            0.15299390256404877,
+            -0.011986411176621914
+          ],
+          [
+            -0.0034901928156614304,
+            0.020487526431679726,
+            0.15019796788692474,
+            -0.0026363052893429995
+          ],
+          [
+            -0.055953674018383026,
+            0.027524404227733612,
+            0.12115489691495895,
+            -0.02715347334742546
+          ],
+          [
+            -0.032420650124549866,
+            -0.0033434489741921425,
+            0.091565802693367,
+            -0.01805822178721428
+          ],
+          [
+            -0.028513478115200996,
+            -0.018005123361945152,
+            0.0953262448310852,
+            -0.01062257494777441
+          ],
+          [
+            -0.033719323575496674,
+            0.006559503264725208,
+            0.055100325495004654,
+            0.022052431479096413
+          ]
+        ],
+        "candidate_cluster": 3,
+        "candidate_id": "fb3433efd2b32519a2381fcc71c870d0",
+        "descent_layer": "late",
+        "minimum_margins": {
+          "angular_rate": -11.800159688674498,
+          "body_clearance_m": -0.008276984956882562,
+          "pitch_rad": -0.11697182721671617,
+          "roll_rad": 0.2593676178538533
+        },
+        "policy": "checkpoint_0000",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 6.800299183851166e-05,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.0002788957996813224,
+          "reward/descent_rsi_pilot_angular": 0.0029433214160152765,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.055168133376128026,
+          "reward/descent_rsi_pilot_roll": 0.1883412841707468,
+          "reward/descent_rsi_pilot_shaping": 0.3061066251248121,
+          "reward/descent_rsi_pilot_survival": 0.05999999865889549,
+          "reward/descent_rsi_pilot_vz": 8.007024962488788e-07
+        },
+        "survived_ticks": 5,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            0.0009472435340285301,
+            -0.03807959333062172,
+            0.16132260859012604,
+            0.005030328407883644
+          ],
+          [
+            0.006038207095116377,
+            -0.017803005874156952,
+            0.0901220440864563,
+            0.011766310781240463
+          ],
+          [
+            -0.044539157301187515,
+            0.018891656771302223,
+            0.09328152239322662,
+            0.010657905600965023
+          ],
+          [
+            -0.026494674384593964,
+            0.06300327181816101,
+            0.07883579283952713,
+            0.031048689037561417
+          ],
+          [
+            -0.10276895761489868,
+            0.041615087538957596,
+            0.0904136523604393,
+            0.02479291893541813
+          ],
+          [
+            -0.06260843575000763,
+            0.018525393679738045,
+            0.05028405413031578,
+            0.021277107298374176
+          ],
+          [
+            -0.049822594970464706,
+            0.01975184492766857,
+            0.02329285442829132,
+            0.024785751476883888
+          ],
+          [
+            -0.05273204296827316,
+            0.011233742348849773,
+            0.013714524917304516,
+            0.02980266883969307
+          ],
+          [
+            -0.05166790261864662,
+            0.012480037286877632,
+            0.03197691589593887,
+            0.031792186200618744
+          ],
+          [
+            -0.03682808578014374,
+            0.00753047177568078,
+            0.06089349463582039,
+            0.031198520213365555
+          ]
+        ],
+        "candidate_cluster": 7,
+        "candidate_id": "98b1cfddaed01f1b3602b23df2eb1ee2",
+        "descent_layer": "middle",
+        "minimum_margins": {
+          "angular_rate": -5.3418172569800415,
+          "body_clearance_m": 0.0,
+          "pitch_rad": -0.0423831707912401,
+          "roll_rad": 0.4907443924629422
+        },
+        "policy": "checkpoint_0000",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 7.981010253388376e-05,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.0030733240882625523,
+          "reward/descent_rsi_pilot_angular": 0.02479863505141111,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.1383580286292272,
+          "reward/descent_rsi_pilot_roll": 0.38104506209492683,
+          "reward/descent_rsi_pilot_shaping": 0.641274806112051,
+          "reward/descent_rsi_pilot_survival": 0.09999999776482582,
+          "reward/descent_rsi_pilot_vz": 0.00022619244576205233
+        },
+        "survived_ticks": 9,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            -0.004237502813339233,
+            -0.04093393310904503,
+            0.15834298729896545,
+            0.0006497611757367849
+          ],
+          [
+            0.005235034041106701,
+            -0.016869058832526207,
+            0.10551195591688156,
+            0.008172083646059036
+          ],
+          [
+            -0.04950578510761261,
+            0.02268916182219982,
+            0.11435743421316147,
+            0.006835373118519783
+          ],
+          [
+            -0.012965699657797813,
+            0.05380861833691597,
+            0.13389965891838074,
+            0.026720566675066948
+          ],
+          [
+            -0.10344686359167099,
+            0.053451403975486755,
+            0.12159016728401184,
+            0.014486619271337986
+          ],
+          [
+            -0.0621291920542717,
+            0.025460565462708473,
+            0.0671917051076889,
+            0.0035706637427210808
+          ],
+          [
+            -0.05571084842085838,
+            0.02639908529818058,
+            0.040191829204559326,
+            0.006305027287453413
+          ],
+          [
+            -0.06123028323054314,
+            0.0133425984531641,
+            0.02412315085530281,
+            0.010557390749454498
+          ],
+          [
+            -0.057917457073926926,
+            0.015449484810233116,
+            0.039811473339796066,
+            0.014013489708304405
+          ],
+          [
+            -0.042168159037828445,
+            0.01212137658149004,
+            0.062493715435266495,
+            0.013243763707578182
+          ]
+        ],
+        "candidate_cluster": 7,
+        "candidate_id": "702c059587484d34fc7f4e9bb743a41c",
+        "descent_layer": "middle",
+        "minimum_margins": {
+          "angular_rate": -5.731180872733898,
+          "body_clearance_m": 0.0,
+          "pitch_rad": -0.07829890317496813,
+          "roll_rad": 0.49659542281267366
+        },
+        "policy": "checkpoint_0000",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.00010133949785995355,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.0030965168669467857,
+          "reward/descent_rsi_pilot_angular": 0.01998912157432642,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.14264611188468734,
+          "reward/descent_rsi_pilot_roll": 0.38326314836740494,
+          "reward/descent_rsi_pilot_shaping": 0.6429487206041813,
+          "reward/descent_rsi_pilot_survival": 0.09999999776482582,
+          "reward/descent_rsi_pilot_vz": 0.0002482226723969916
+        },
+        "survived_ticks": 9,
+        "termination_reason": "pitch_limit"
+      }
+    ],
+    "summary": {
+      "labels": {
+        "provisional_core": {
+          "action": {
+            "max_abs": 1.0,
+            "mean": [
+              0.05533563184577066,
+              0.36930757735830705,
+              0.770887604839093,
+              -0.5495728622190654
+            ],
+            "saturation_fraction": 0.1891891891891892,
+            "std": [
+              0.4762494700258138,
+              0.2623836955439523,
+              0.3085816505915052,
+              0.41807681041464834
+            ]
+          },
+          "failure_reasons": {
+            "pitch_limit": 3,
+            "roll_limit": 1
+          },
+          "minimum_margins": {
+            "angular_rate": -21.118100747694886,
+            "body_clearance_m": 0.0,
+            "pitch_rad": -0.21301899022635973,
+            "roll_rad": -2.0655211181557442
+          },
+          "reward_component_sum": {
+            "reward/descent_rsi_pilot_action_magnitude_penalty": 0.04443934320079279,
+            "reward/descent_rsi_pilot_action_smooth_penalty": 0.03788952198556217,
+            "reward/descent_rsi_pilot_angular": 0.09197910483602084,
+            "reward/descent_rsi_pilot_failure_penalty": 8.0,
+            "reward/descent_rsi_pilot_pitch": 0.6492808912410339,
+            "reward/descent_rsi_pilot_roll": 1.4167650304734707,
+            "reward/descent_rsi_pilot_shaping": 2.4457007218152285,
+            "reward/descent_rsi_pilot_survival": 0.36999999172985554,
+            "reward/descent_rsi_pilot_vz": 4.57125700960854e-06
+          },
+          "states": 4,
+          "survival_counts": {
+            "16": 0,
+            "24": 0,
+            "8": 4
+          },
+          "survival_rates": {
+            "16": 0.0,
+            "24": 0.0,
+            "8": 1.0
+          },
+          "time_to_failure": {
+            "lower_quartile": 8.0,
+            "max": 9,
+            "median": 8.0,
+            "min": 8
+          }
+        },
+        "provisional_frontier": {
+          "action": {
+            "max_abs": 0.2822147011756897,
+            "mean": [
+              -0.023724704537016805,
+              0.004863289388595149,
+              0.10813202978655075,
+              -0.001961499493821369
+            ],
+            "saturation_fraction": 0.0,
+            "std": [
+              0.03191298938390249,
+              0.022234942534219794,
+              0.056096994870765624,
+              0.021213827147761842
+            ]
+          },
+          "failure_reasons": {
+            "pitch_limit": 6
+          },
+          "minimum_margins": {
+            "angular_rate": -12.357090842249796,
+            "body_clearance_m": -0.022873651143871614,
+            "pitch_rad": -0.18472848004874742,
+            "roll_rad": 0.2593676178538533
+          },
+          "reward_component_sum": {
+            "reward/descent_rsi_pilot_action_magnitude_penalty": 0.0006261345899929438,
+            "reward/descent_rsi_pilot_action_smooth_penalty": 0.007069887780133399,
+            "reward/descent_rsi_pilot_angular": 0.09734531362271492,
+            "reward/descent_rsi_pilot_failure_penalty": 12.0,
+            "reward/descent_rsi_pilot_pitch": 0.5139429348737394,
+            "reward/descent_rsi_pilot_roll": 1.7435973454266787,
+            "reward/descent_rsi_pilot_shaping": 2.8389724791049957,
+            "reward/descent_rsi_pilot_survival": 0.47999998927116394,
+            "reward/descent_rsi_pilot_vz": 0.011782923436108568
+          },
+          "states": 6,
+          "survival_counts": {
+            "16": 0,
+            "24": 0,
+            "8": 2
+          },
+          "survival_rates": {
+            "16": 0.0,
+            "24": 0.0,
+            "8": 0.3333333333333333
+          },
+          "time_to_failure": {
+            "lower_quartile": 5.5,
+            "max": 9,
+            "median": 7.0,
+            "min": 5
+          }
+        }
+      },
+      "layers": {
+        "early": {
+          "action": {
+            "max_abs": 1.0,
+            "mean": [
+              0.0395754591720003,
+              0.25500002435083446,
+              0.5815847272861678,
+              -0.3899537772236761
+            ],
+            "saturation_fraction": 0.1320754716981132,
+            "std": [
+              0.3987986455922719,
+              0.27980171480320293,
+              0.38793677796860265,
+              0.42545725763453385
+            ]
+          },
+          "failure_reasons": {
+            "pitch_limit": 5,
+            "roll_limit": 1
+          },
+          "minimum_margins": {
+            "angular_rate": -21.118100747694886,
+            "body_clearance_m": -0.022873651143871614,
+            "pitch_rad": -0.21301899022635973,
+            "roll_rad": -2.0655211181557442
+          },
+          "reward_component_sum": {
+            "reward/descent_rsi_pilot_action_magnitude_penalty": 0.044747932840891735,
+            "reward/descent_rsi_pilot_action_smooth_penalty": 0.038207602262090745,
+            "reward/descent_rsi_pilot_angular": 0.13595224081127083,
+            "reward/descent_rsi_pilot_failure_penalty": 12.0,
+            "reward/descent_rsi_pilot_pitch": 0.771052508680981,
+            "reward/descent_rsi_pilot_roll": 2.0057466588914394,
+            "reward/descent_rsi_pilot_shaping": 3.3711071703583,
+            "reward/descent_rsi_pilot_survival": 0.5299999881535769,
+            "reward/descent_rsi_pilot_vz": 0.011311294936981211
+          },
+          "states": 6,
+          "survival_counts": {
+            "16": 0,
+            "24": 0,
+            "8": 4
+          },
+          "survival_rates": {
+            "16": 0.0,
+            "24": 0.0,
+            "8": 0.6666666666666666
+          },
+          "time_to_failure": {
+            "lower_quartile": 7.25,
+            "max": 9,
+            "median": 8.0,
+            "min": 7
+          }
+        },
+        "late": {
+          "action": {
+            "max_abs": 0.1593935787677765,
+            "mean": [
+              -0.027026134824457888,
+              0.006729062714536364,
+              0.11062806006520987,
+              -0.007292067569020825
+            ],
+            "saturation_fraction": 0.0,
+            "std": [
+              0.01975168402658238,
+              0.016529264992518295,
+              0.03433971950112536,
+              0.01565384093028363
+            ]
+          },
+          "failure_reasons": {
+            "pitch_limit": 2
+          },
+          "minimum_margins": {
+            "angular_rate": -12.357090842249796,
+            "body_clearance_m": -0.008276984956882562,
+            "pitch_rad": -0.1216215855556444,
+            "roll_rad": 0.2593676178538533
+          },
+          "reward_component_sum": {
+            "reward/descent_rsi_pilot_action_magnitude_penalty": 0.0001363953495001624,
+            "reward/descent_rsi_pilot_action_smooth_penalty": 0.000581966548395485,
+            "reward/descent_rsi_pilot_angular": 0.008584421021727406,
+            "reward/descent_rsi_pilot_failure_penalty": 4.0,
+            "reward/descent_rsi_pilot_pitch": 0.11116717691987787,
+            "reward/descent_rsi_pilot_roll": 0.39030750654637814,
+            "reward/descent_rsi_pilot_shaping": 0.6293425038456917,
+            "reward/descent_rsi_pilot_survival": 0.11999999731779099,
+            "reward/descent_rsi_pilot_vz": 1.7846379779230178e-06
+          },
+          "states": 2,
+          "survival_counts": {
+            "16": 0,
+            "24": 0,
+            "8": 0
+          },
+          "survival_rates": {
+            "16": 0.0,
+            "24": 0.0,
+            "8": 0.0
+          },
+          "time_to_failure": {
+            "lower_quartile": 5.0,
+            "max": 5,
+            "median": 5.0,
+            "min": 5
+          }
+        },
+        "middle": {
+          "action": {
+            "max_abs": 0.16132260859012604,
+            "mean": [
+              -0.043227657885290684,
+              0.01510341048706323,
+              0.07808257709257305,
+              0.01633535629371181
+            ],
+            "saturation_fraction": 0.0,
+            "std": [
+              0.03027505869210469,
+              0.02689889226795485,
+              0.0432947183109129,
+              0.01007975053124512
+            ]
+          },
+          "failure_reasons": {
+            "pitch_limit": 2
+          },
+          "minimum_margins": {
+            "angular_rate": -5.731180872733898,
+            "body_clearance_m": 0.0,
+            "pitch_rad": -0.07829890317496813,
+            "roll_rad": 0.4907443924629422
+          },
+          "reward_component_sum": {
+            "reward/descent_rsi_pilot_action_magnitude_penalty": 0.00018114960039383732,
+            "reward/descent_rsi_pilot_action_smooth_penalty": 0.006169840955209338,
+            "reward/descent_rsi_pilot_angular": 0.04478775662573753,
+            "reward/descent_rsi_pilot_failure_penalty": 4.0,
+            "reward/descent_rsi_pilot_pitch": 0.28100414051391454,
+            "reward/descent_rsi_pilot_roll": 0.7643082104623318,
+            "reward/descent_rsi_pilot_shaping": 1.2842235267162323,
+            "reward/descent_rsi_pilot_survival": 0.19999999552965164,
+            "reward/descent_rsi_pilot_vz": 0.0004744151181590439
+          },
+          "states": 2,
+          "survival_counts": {
+            "16": 0,
+            "24": 0,
+            "8": 2
+          },
+          "survival_rates": {
+            "16": 0.0,
+            "24": 0.0,
+            "8": 1.0
+          },
+          "time_to_failure": {
+            "lower_quartile": 9.0,
+            "max": 9,
+            "median": 9.0,
+            "min": 9
+          }
+        }
+      },
+      "overall": {
+        "action": {
+          "max_abs": 1.0,
+          "mean": [
+            0.010689794829608325,
+            0.1635037441518815,
+            0.3966256330447162,
+            -0.24033350444480997
+          ],
+          "saturation_fraction": 0.08235294117647059,
+          "std": [
+            0.3175565934315801,
+            0.25079057465114124,
+            0.38884327861431195,
+            0.38736600529021914
+          ]
+        },
+        "failure_reasons": {
+          "pitch_limit": 9,
+          "roll_limit": 1
+        },
+        "minimum_margins": {
+          "angular_rate": -21.118100747694886,
+          "body_clearance_m": -0.022873651143871614,
+          "pitch_rad": -0.21301899022635973,
+          "roll_rad": -2.0655211181557442
+        },
+        "reward_component_sum": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.045065477790785735,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.04495940976569557,
+          "reward/descent_rsi_pilot_angular": 0.18932441845873577,
+          "reward/descent_rsi_pilot_failure_penalty": 20.0,
+          "reward/descent_rsi_pilot_pitch": 1.1632238261147734,
+          "reward/descent_rsi_pilot_roll": 3.1603623759001493,
+          "reward/descent_rsi_pilot_shaping": 5.284673200920224,
+          "reward/descent_rsi_pilot_survival": 0.8499999810010195,
+          "reward/descent_rsi_pilot_vz": 0.011787494693118178
+        },
+        "states": 10,
+        "survival_counts": {
+          "16": 0,
+          "24": 0,
+          "8": 6
+        },
+        "survival_rates": {
+          "16": 0.0,
+          "24": 0.0,
+          "8": 0.6
+        },
+        "time_to_failure": {
+          "lower_quartile": 7.0,
+          "max": 9,
+          "median": 8.0,
+          "min": 5
+        }
+      }
+    }
+  },
+  "checkpoint_1600": {
+    "horizon": 24,
+    "policy": "checkpoint_1600",
+    "rows": [
+      {
+        "actions": [
+          [
+            0.44742947816848755,
+            0.4602586030960083,
+            1.0,
+            -0.9338300824165344
+          ],
+          [
+            0.40207892656326294,
+            0.46692100167274475,
+            1.0,
+            -0.9376059770584106
+          ],
+          [
+            0.879474401473999,
+            0.7244794964790344,
+            1.0,
+            -0.9517048001289368
+          ],
+          [
+            0.4492034912109375,
+            0.7640218734741211,
+            1.0,
+            -0.9162018895149231
+          ],
+          [
+            -0.7328269481658936,
+            0.5211701989173889,
+            0.9999997615814209,
+            -0.8747060298919678
+          ],
+          [
+            -0.3930395841598511,
+            0.22011610865592957,
+            0.9603509902954102,
+            -0.3657439649105072
+          ],
+          [
+            -0.29355472326278687,
+            0.2047947645187378,
+            0.5022988319396973,
+            -0.09086630493402481
+          ],
+          [
+            -0.12270627170801163,
+            0.04558636620640755,
+            0.3344024121761322,
+            -0.02135692723095417
+          ],
+          [
+            -0.09355102479457855,
+            0.023550869897007942,
+            0.2758125066757202,
+            0.008599533699452877
+          ]
+        ],
+        "candidate_cluster": 1,
+        "candidate_id": "9859a67b128991679eb379b664f52bf1",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -21.110240811921855,
+          "body_clearance_m": 0.06332947483260917,
+          "pitch_rad": -0.013727760978312853,
+          "roll_rad": 0.5306392713272305
+        },
+        "policy": "checkpoint_1600",
+        "provisional_label": "provisional_core",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.011106125239166431,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.009489436419698905,
+          "reward/descent_rsi_pilot_angular": 0.022751573030283776,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.15591666741647714,
+          "reward/descent_rsi_pilot_roll": 0.3556709811091423,
+          "reward/descent_rsi_pilot_shaping": 0.6037447564303875,
+          "reward/descent_rsi_pilot_survival": 0.08999999798834324,
+          "reward/descent_rsi_pilot_vz": 1.0992496534763601e-06
+        },
+        "survived_ticks": 8,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            0.43069106340408325,
+            0.4631938934326172,
+            1.0,
+            -0.9355266690254211
+          ],
+          [
+            0.39397692680358887,
+            0.46985286474227905,
+            1.0,
+            -0.9370526075363159
+          ],
+          [
+            0.882594883441925,
+            0.7213539481163025,
+            1.0,
+            -0.9518963694572449
+          ],
+          [
+            0.4451771378517151,
+            0.7619906663894653,
+            1.0,
+            -0.9170789122581482
+          ],
+          [
+            -0.7345026135444641,
+            0.5137330293655396,
+            0.9999997615814209,
+            -0.8758531808853149
+          ],
+          [
+            -0.39644885063171387,
+            0.2177843600511551,
+            0.9608318209648132,
+            -0.3714924454689026
+          ],
+          [
+            -0.3024972975254059,
+            0.20489881932735443,
+            0.5116140246391296,
+            -0.09344088286161423
+          ],
+          [
+            -0.10802941024303436,
+            0.040894415229558945,
+            0.3335091471672058,
+            -0.02263389341533184
+          ],
+          [
+            -0.09114930033683777,
+            0.021528486162424088,
+            0.2752681374549866,
+            0.0038771615363657475
+          ],
+          [
+            -0.02971968799829483,
+            -0.03144579008221626,
+            0.22351014614105225,
+            0.016488023102283478
+          ]
+        ],
+        "candidate_cluster": 1,
+        "candidate_id": "32f7603875293f339e1f907abef46d04",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -19.44058069694698,
+          "body_clearance_m": 0.06164683093753581,
+          "pitch_rad": -0.21306786603507555,
+          "roll_rad": -2.065301773062971
+        },
+        "policy": "checkpoint_1600",
+        "provisional_label": "provisional_core",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.011142472954816185,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.009422890421092234,
+          "reward/descent_rsi_pilot_angular": 0.023938801942249423,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.1607100694761101,
+          "reward/descent_rsi_pilot_roll": 0.3573262542486191,
+          "reward/descent_rsi_pilot_shaping": 0.6214107079431415,
+          "reward/descent_rsi_pilot_survival": 0.09999999776482582,
+          "reward/descent_rsi_pilot_vz": 9.409266205047629e-07
+        },
+        "survived_ticks": 9,
+        "termination_reason": "roll_limit"
+      },
+      {
+        "actions": [
+          [
+            0.4481220245361328,
+            0.45996376872062683,
+            1.0,
+            -0.933818519115448
+          ],
+          [
+            0.4023158848285675,
+            0.46647268533706665,
+            1.0,
+            -0.9376215934753418
+          ],
+          [
+            0.8790969252586365,
+            0.7242766618728638,
+            1.0,
+            -0.95167475938797
+          ],
+          [
+            0.4471324682235718,
+            0.7643268704414368,
+            1.0,
+            -0.9162576198577881
+          ],
+          [
+            -0.7327647805213928,
+            0.5208673477172852,
+            0.9999997019767761,
+            -0.8746311664581299
+          ],
+          [
+            -0.3929436206817627,
+            0.2198232263326645,
+            0.9602947235107422,
+            -0.3656293749809265
+          ],
+          [
+            -0.29381731152534485,
+            0.20440667867660522,
+            0.5014817118644714,
+            -0.09064542502164841
+          ],
+          [
+            -0.12158709019422531,
+            0.04517855867743492,
+            0.33402326703071594,
+            -0.021064504981040955
+          ],
+          [
+            -0.09331770986318588,
+            0.022822104394435883,
+            0.27640053629875183,
+            0.008442780002951622
+          ]
+        ],
+        "candidate_cluster": 1,
+        "candidate_id": "aebfaa501b6220035daf954eb5a1c52d",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -21.069970202358224,
+          "body_clearance_m": 0.0,
+          "pitch_rad": -0.018769479461284044,
+          "roll_rad": 0.5286710812532636
+        },
+        "policy": "checkpoint_1600",
+        "provisional_label": "provisional_core",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.011102897129603662,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.009459901282298233,
+          "reward/descent_rsi_pilot_angular": 0.022725059530402592,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.15612246276737096,
+          "reward/descent_rsi_pilot_roll": 0.3554985448718071,
+          "reward/descent_rsi_pilot_shaping": 0.6037844531238079,
+          "reward/descent_rsi_pilot_survival": 0.08999999798834324,
+          "reward/descent_rsi_pilot_vz": 1.1888106098340047e-06
+        },
+        "survived_ticks": 8,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            0.42602652311325073,
+            0.4599218964576721,
+            1.0,
+            -0.935809850692749
+          ],
+          [
+            0.3792547285556793,
+            0.4682256579399109,
+            1.0,
+            -0.9378074407577515
+          ],
+          [
+            0.879347026348114,
+            0.7220463752746582,
+            1.0,
+            -0.9528457522392273
+          ],
+          [
+            0.43080565333366394,
+            0.766954243183136,
+            1.0,
+            -0.917988657951355
+          ],
+          [
+            -0.7363166809082031,
+            0.529454231262207,
+            0.9999998211860657,
+            -0.8743267059326172
+          ],
+          [
+            -0.3994682729244232,
+            0.2301771193742752,
+            0.9603459239006042,
+            -0.35517990589141846
+          ],
+          [
+            -0.3075329661369324,
+            0.20560626685619354,
+            0.5090293884277344,
+            -0.09031899273395538
+          ],
+          [
+            -0.11407269537448883,
+            0.041013289242982864,
+            0.33101749420166016,
+            -0.018972164019942284
+          ],
+          [
+            -0.08876930177211761,
+            0.017543939873576164,
+            0.2787909209728241,
+            0.00853885430842638
+          ]
+        ],
+        "candidate_cluster": 1,
+        "candidate_id": "efc40b7fb62638f121a99d884b922a5e",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -20.514553095569177,
+          "body_clearance_m": 0.05319498448216391,
+          "pitch_rad": -0.14590380258140123,
+          "roll_rad": 0.4685644983136388
+        },
+        "policy": "checkpoint_1600",
+        "provisional_label": "provisional_core",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.011094740701082628,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.009512332737813267,
+          "reward/descent_rsi_pilot_angular": 0.022542347493831636,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.17655632493313078,
+          "reward/descent_rsi_pilot_roll": 0.34894118644297123,
+          "reward/descent_rsi_pilot_shaping": 0.6174341216683388,
+          "reward/descent_rsi_pilot_survival": 0.08999999798834324,
+          "reward/descent_rsi_pilot_vz": 1.3444520203164147e-06
+        },
+        "survived_ticks": 8,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            0.02267318218946457,
+            -0.004986179061233997,
+            0.2821929454803467,
+            -0.04027508571743965
+          ],
+          [
+            0.030278058722615242,
+            -0.013455078937113285,
+            0.1896037757396698,
+            -0.03328254446387291
+          ],
+          [
+            -0.01724371127784252,
+            -0.015712471678853035,
+            0.18608486652374268,
+            -0.03839289769530296
+          ],
+          [
+            0.013581790961325169,
+            -0.004409851972013712,
+            0.1319231241941452,
+            -0.03377792239189148
+          ],
+          [
+            -0.022117307409644127,
+            -0.016995536163449287,
+            0.13042470812797546,
+            -0.02067713253200054
+          ],
+          [
+            0.02033068984746933,
+            -0.014853883534669876,
+            0.09005261957645416,
+            -0.007682075724005699
+          ],
+          [
+            -0.02738170698285103,
+            0.0018493109382689,
+            0.07296399772167206,
+            -0.000345107342582196
+          ],
+          [
+            -0.0032152754720300436,
+            0.0002625882043503225,
+            0.09733103960752487,
+            0.003485735971480608
+          ]
+        ],
+        "candidate_cluster": 2,
+        "candidate_id": "c9551cfe91f1a2ab4b99fdddf68c062f",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -8.504873813461959,
+          "body_clearance_m": -0.022872756757011104,
+          "pitch_rad": -0.17060432500419176,
+          "roll_rad": 0.4158251910292836
+        },
+        "policy": "checkpoint_1600",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.00016345121002814267,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.0001776542369498202,
+          "reward/descent_rsi_pilot_angular": 0.022425349096522496,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.06252536826968935,
+          "reward/descent_rsi_pilot_roll": 0.2999956887215376,
+          "reward/descent_rsi_pilot_shaping": 0.46939484775066376,
+          "reward/descent_rsi_pilot_survival": 0.07999999821186066,
+          "reward/descent_rsi_pilot_vz": 0.0047895473573269665
+        },
+        "survived_ticks": 7,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            0.020412202924489975,
+            -0.007440171670168638,
+            0.26657816767692566,
+            -0.038683027029037476
+          ],
+          [
+            0.02955857291817665,
+            -0.013586290180683136,
+            0.173395574092865,
+            -0.029153160750865936
+          ],
+          [
+            -0.022594017907977104,
+            -0.014806833118200302,
+            0.1709556132555008,
+            -0.03439835086464882
+          ],
+          [
+            0.00910238828510046,
+            -0.0015347154112532735,
+            0.11509417742490768,
+            -0.032243505120277405
+          ],
+          [
+            -0.02638329565525055,
+            -0.016662128269672394,
+            0.13176287710666656,
+            -0.01920587383210659
+          ],
+          [
+            0.020322700962424278,
+            -0.01357380673289299,
+            0.08352295309305191,
+            -0.005531000904738903
+          ],
+          [
+            0.010851745493710041,
+            -0.009105382487177849,
+            0.07743515819311142,
+            -0.0005618412978947163
+          ],
+          [
+            -0.008222555741667747,
+            -0.0044412086717784405,
+            0.10144315659999847,
+            -0.0020491844043135643
+          ]
+        ],
+        "candidate_cluster": 2,
+        "candidate_id": "24d365f6cf5a4a97188273df8a7c24d9",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -9.064940215540087,
+          "body_clearance_m": -0.020823275876944682,
+          "pitch_rad": -0.18473706311759508,
+          "roll_rad": 0.33355889011261186
+        },
+        "policy": "checkpoint_1600",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.0001450531954105827,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.00014040266188430905,
+          "reward/descent_rsi_pilot_angular": 0.021544261597824743,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.059238545529183284,
+          "reward/descent_rsi_pilot_roll": 0.28900051210075617,
+          "reward/descent_rsi_pilot_shaping": 0.4560102988034487,
+          "reward/descent_rsi_pilot_survival": 0.07999999821186066,
+          "reward/descent_rsi_pilot_vz": 0.006512457939622786
+        },
+        "survived_ticks": 7,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            -0.0034291839692741632,
+            0.006086589768528938,
+            0.15937884151935577,
+            -0.012463172897696495
+          ],
+          [
+            -0.0033467761240899563,
+            0.017703309655189514,
+            0.137053444981575,
+            -0.001986620482057333
+          ],
+          [
+            -0.05951569229364395,
+            0.03603817895054817,
+            0.11560562252998352,
+            -0.03150366246700287
+          ],
+          [
+            -0.03824792802333832,
+            -0.0007500586798414588,
+            0.0867486521601677,
+            -0.012945713475346565
+          ],
+          [
+            -0.02454891987144947,
+            -0.022975923493504524,
+            0.10933561623096466,
+            -0.0009135401924140751
+          ],
+          [
+            -0.04091314971446991,
+            0.009184267371892929,
+            0.05300755426287651,
+            0.02102513611316681
+          ]
+        ],
+        "candidate_cluster": 3,
+        "candidate_id": "05f2b501d77ac36f75a65f4258a3a227",
+        "descent_layer": "late",
+        "minimum_margins": {
+          "angular_rate": -12.353900875295583,
+          "body_clearance_m": -0.006612070583308747,
+          "pitch_rad": -0.12153110570487535,
+          "roll_rad": 0.3385363547885152
+        },
+        "policy": "checkpoint_1600",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 6.83760722495208e-05,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.00030305881068670715,
+          "reward/descent_rsi_pilot_angular": 0.00564163310188881,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.05600102977155075,
+          "reward/descent_rsi_pilot_roll": 0.20197311136871576,
+          "reward/descent_rsi_pilot_shaping": 0.3232453279197216,
+          "reward/descent_rsi_pilot_survival": 0.05999999865889549,
+          "reward/descent_rsi_pilot_vz": 9.841992351463494e-07
+        },
+        "survived_ticks": 5,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            -0.0003245820989832282,
+            0.0022523822262883186,
+            0.15297864377498627,
+            -0.011946546845138073
+          ],
+          [
+            -0.003521402832120657,
+            0.02048875391483307,
+            0.15017147362232208,
+            -0.002597627229988575
+          ],
+          [
+            -0.0553143210709095,
+            0.02739282138645649,
+            0.1217513233423233,
+            -0.027027348056435585
+          ],
+          [
+            -0.031989265233278275,
+            -0.003108471166342497,
+            0.09300939738750458,
+            -0.018365198746323586
+          ],
+          [
+            -0.02689458057284355,
+            -0.017839735373854637,
+            0.09384395182132721,
+            -0.01063590683043003
+          ],
+          [
+            -0.03211970999836922,
+            0.006778832990676165,
+            0.054229721426963806,
+            0.021283676847815514
+          ]
+        ],
+        "candidate_cluster": 3,
+        "candidate_id": "fb3433efd2b32519a2381fcc71c870d0",
+        "descent_layer": "late",
+        "minimum_margins": {
+          "angular_rate": -11.768757236133485,
+          "body_clearance_m": -0.007731983717612018,
+          "pitch_rad": -0.11483488149222887,
+          "roll_rad": 0.2521224348628255
+        },
+        "policy": "checkpoint_1600",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 6.776891245863226e-05,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.00027853287141965666,
+          "reward/descent_rsi_pilot_angular": 0.002949805013823248,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.055174189971410215,
+          "reward/descent_rsi_pilot_roll": 0.18742465693503618,
+          "reward/descent_rsi_pilot_shaping": 0.30520316027104855,
+          "reward/descent_rsi_pilot_survival": 0.05999999865889549,
+          "reward/descent_rsi_pilot_vz": 8.010583374418065e-07
+        },
+        "survived_ticks": 5,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            0.0009003880550153553,
+            -0.03806580230593681,
+            0.16131094098091125,
+            0.005074640270322561
+          ],
+          [
+            0.006023113615810871,
+            -0.017793845385313034,
+            0.09011930972337723,
+            0.011788723058998585
+          ],
+          [
+            -0.044406019151210785,
+            0.018990932032465935,
+            0.09352640807628632,
+            0.010597157292068005
+          ],
+          [
+            -0.026152392849326134,
+            0.062262795865535736,
+            0.07879117876291275,
+            0.030970335006713867
+          ],
+          [
+            -0.10261183977127075,
+            0.041603896766901016,
+            0.0902554839849472,
+            0.0249547827988863
+          ],
+          [
+            -0.0622720867395401,
+            0.0186759103089571,
+            0.049883149564266205,
+            0.020753104239702225
+          ],
+          [
+            -0.050007205456495285,
+            0.019898081198334694,
+            0.0227714404463768,
+            0.024275481700897217
+          ],
+          [
+            -0.0528540313243866,
+            0.011562567204236984,
+            0.01351705938577652,
+            0.0292721726000309
+          ],
+          [
+            -0.05164964869618416,
+            0.012858744710683823,
+            0.03172153979539871,
+            0.03130040317773819
+          ],
+          [
+            -0.03684384748339653,
+            0.007901548407971859,
+            0.060533735901117325,
+            0.030668340623378754
+          ]
+        ],
+        "candidate_cluster": 7,
+        "candidate_id": "98b1cfddaed01f1b3602b23df2eb1ee2",
+        "descent_layer": "middle",
+        "minimum_margins": {
+          "angular_rate": -5.3603363306171445,
+          "body_clearance_m": 0.0,
+          "pitch_rad": -0.044459319778056505,
+          "roll_rad": 0.48853441614744386
+        },
+        "policy": "checkpoint_1600",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 7.95146886503062e-05,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.0030731838300255276,
+          "reward/descent_rsi_pilot_angular": 0.02473663568525808,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.13826052606486883,
+          "reward/descent_rsi_pilot_roll": 0.3806636184453964,
+          "reward/descent_rsi_pilot_shaping": 0.6407338082790375,
+          "reward/descent_rsi_pilot_survival": 0.09999999776482582,
+          "reward/descent_rsi_pilot_vz": 0.00022572707867496433
+        },
+        "survived_ticks": 9,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            -0.00428417231887579,
+            -0.040920086205005646,
+            0.15833167731761932,
+            0.0006931036477908492
+          ],
+          [
+            0.005221822764724493,
+            -0.016858963295817375,
+            0.10550695657730103,
+            0.008208833634853363
+          ],
+          [
+            -0.0492694117128849,
+            0.0227403212338686,
+            0.11474352329969406,
+            0.00689200684428215
+          ],
+          [
+            -0.012723256833851337,
+            0.053382571786642075,
+            0.13492673635482788,
+            0.026272576302289963
+          ],
+          [
+            -0.10263968259096146,
+            0.05404464155435562,
+            0.12324155122041702,
+            0.014481939375400543
+          ],
+          [
+            -0.06288613379001617,
+            0.02613082528114319,
+            0.06797763705253601,
+            0.00299255084246397
+          ],
+          [
+            -0.05675959214568138,
+            0.02711617201566696,
+            0.04014410451054573,
+            0.005629917606711388
+          ],
+          [
+            -0.061928968876600266,
+            0.013856627978384495,
+            0.02409016527235508,
+            0.01023250725120306
+          ],
+          [
+            -0.05812873691320419,
+            0.015547486953437328,
+            0.03977891802787781,
+            0.014043271541595459
+          ],
+          [
+            -0.042186982929706573,
+            0.012130414135754108,
+            0.06268858909606934,
+            0.013464544899761677
+          ]
+        ],
+        "candidate_cluster": 7,
+        "candidate_id": "702c059587484d34fc7f4e9bb743a41c",
+        "descent_layer": "middle",
+        "minimum_margins": {
+          "angular_rate": -5.759908072024471,
+          "body_clearance_m": 0.0,
+          "pitch_rad": -0.0817736155467943,
+          "roll_rad": 0.4935019268476697
+        },
+        "policy": "checkpoint_1600",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.00010215756265097298,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.0030963149452816197,
+          "reward/descent_rsi_pilot_angular": 0.01991474257738446,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.1425399342815581,
+          "reward/descent_rsi_pilot_roll": 0.3827667012810707,
+          "reward/descent_rsi_pilot_shaping": 0.6422706097364426,
+          "reward/descent_rsi_pilot_survival": 0.09999999776482582,
+          "reward/descent_rsi_pilot_vz": 0.00024772780674453543
+        },
+        "survived_ticks": 9,
+        "termination_reason": "pitch_limit"
+      }
+    ],
+    "summary": {
+      "labels": {
+        "provisional_core": {
+          "action": {
+            "max_abs": 1.0,
+            "mean": [
+              0.05524625407682883,
+              0.36983148371045654,
+              0.771053541351009,
+              -0.5493415410227671
+            ],
+            "saturation_fraction": 0.1891891891891892,
+            "std": [
+              0.4762055225467813,
+              0.2627796186071691,
+              0.30832139723675,
+              0.4179139456671663
+            ]
+          },
+          "failure_reasons": {
+            "pitch_limit": 3,
+            "roll_limit": 1
+          },
+          "minimum_margins": {
+            "angular_rate": -21.110240811921855,
+            "body_clearance_m": 0.0,
+            "pitch_rad": -0.21306786603507555,
+            "roll_rad": -2.065301773062971
+          },
+          "reward_component_sum": {
+            "reward/descent_rsi_pilot_action_magnitude_penalty": 0.044446236024668906,
+            "reward/descent_rsi_pilot_action_smooth_penalty": 0.03788456086090264,
+            "reward/descent_rsi_pilot_angular": 0.09195778199676742,
+            "reward/descent_rsi_pilot_failure_penalty": 8.0,
+            "reward/descent_rsi_pilot_pitch": 0.649305524593089,
+            "reward/descent_rsi_pilot_roll": 1.4174369666725397,
+            "reward/descent_rsi_pilot_shaping": 2.4463740391656756,
+            "reward/descent_rsi_pilot_survival": 0.36999999172985554,
+            "reward/descent_rsi_pilot_vz": 4.573438904131542e-06
+          },
+          "states": 4,
+          "survival_counts": {
+            "16": 0,
+            "24": 0,
+            "8": 4
+          },
+          "survival_rates": {
+            "16": 0.0,
+            "24": 0.0,
+            "8": 1.0
+          },
+          "time_to_failure": {
+            "lower_quartile": 8.0,
+            "max": 9,
+            "median": 8.0,
+            "min": 8
+          }
+        },
+        "provisional_frontier": {
+          "action": {
+            "max_abs": 0.2821929454803467,
+            "mean": [
+              -0.023659806981110403,
+              0.004934669771804086,
+              0.10816123130886506,
+              -0.002047564700963752
+            ],
+            "saturation_fraction": 0.0,
+            "std": [
+              0.03188459792935703,
+              0.022238688041383528,
+              0.056165212565167974,
+              0.021093212398477487
+            ]
+          },
+          "failure_reasons": {
+            "pitch_limit": 6
+          },
+          "minimum_margins": {
+            "angular_rate": -12.353900875295583,
+            "body_clearance_m": -0.022872756757011104,
+            "pitch_rad": -0.18473706311759508,
+            "roll_rad": 0.2521224348628255
+          },
+          "reward_component_sum": {
+            "reward/descent_rsi_pilot_action_magnitude_penalty": 0.0006263216414481576,
+            "reward/descent_rsi_pilot_action_smooth_penalty": 0.00706914735624764,
+            "reward/descent_rsi_pilot_angular": 0.09721242707270183,
+            "reward/descent_rsi_pilot_failure_penalty": 12.0,
+            "reward/descent_rsi_pilot_pitch": 0.5137395938882605,
+            "reward/descent_rsi_pilot_roll": 1.7418242888525128,
+            "reward/descent_rsi_pilot_shaping": 2.8368580527603626,
+            "reward/descent_rsi_pilot_survival": 0.47999998927116394,
+            "reward/descent_rsi_pilot_vz": 0.011777245439941842
+          },
+          "states": 6,
+          "survival_counts": {
+            "16": 0,
+            "24": 0,
+            "8": 2
+          },
+          "survival_rates": {
+            "16": 0.0,
+            "24": 0.0,
+            "8": 0.3333333333333333
+          },
+          "time_to_failure": {
+            "lower_quartile": 5.5,
+            "max": 9,
+            "median": 7.0,
+            "min": 5
+          }
+        }
+      },
+      "layers": {
+        "early": {
+          "action": {
+            "max_abs": 1.0,
+            "mean": [
+              0.039510657786795834,
+              0.2553644011045349,
+              0.5816933166868282,
+              -0.389781320602677
+            ],
+            "saturation_fraction": 0.1320754716981132,
+            "std": [
+              0.3987598211034048,
+              0.28021158657492146,
+              0.38785743516952637,
+              0.4252945177347226
+            ]
+          },
+          "failure_reasons": {
+            "pitch_limit": 5,
+            "roll_limit": 1
+          },
+          "minimum_margins": {
+            "angular_rate": -21.110240811921855,
+            "body_clearance_m": -0.022872756757011104,
+            "pitch_rad": -0.21306786603507555,
+            "roll_rad": -2.065301773062971
+          },
+          "reward_component_sum": {
+            "reward/descent_rsi_pilot_action_magnitude_penalty": 0.04475474043010763,
+            "reward/descent_rsi_pilot_action_smooth_penalty": 0.03820261775973677,
+            "reward/descent_rsi_pilot_angular": 0.13592739269111465,
+            "reward/descent_rsi_pilot_failure_penalty": 12.0,
+            "reward/descent_rsi_pilot_pitch": 0.7710694383919616,
+            "reward/descent_rsi_pilot_roll": 2.0064331674948335,
+            "reward/descent_rsi_pilot_shaping": 3.371779185719788,
+            "reward/descent_rsi_pilot_survival": 0.5299999881535769,
+            "reward/descent_rsi_pilot_vz": 0.011306578735853884
+          },
+          "states": 6,
+          "survival_counts": {
+            "16": 0,
+            "24": 0,
+            "8": 4
+          },
+          "survival_rates": {
+            "16": 0.0,
+            "24": 0.0,
+            "8": 0.6666666666666666
+          },
+          "time_to_failure": {
+            "lower_quartile": 7.25,
+            "max": 9,
+            "median": 8.0,
+            "min": 7
+          }
+        },
+        "late": {
+          "action": {
+            "max_abs": 0.15937884151935577,
+            "mean": [
+              -0.026680459316897515,
+              0.006770912295905873,
+              0.11059285358836253,
+              -0.007339710355154239
+            ],
+            "saturation_fraction": 0.0,
+            "std": [
+              0.019606209233706057,
+              0.016484759930683556,
+              0.03445479742100548,
+              0.01554329288337478
+            ]
+          },
+          "failure_reasons": {
+            "pitch_limit": 2
+          },
+          "minimum_margins": {
+            "angular_rate": -12.353900875295583,
+            "body_clearance_m": -0.007731983717612018,
+            "pitch_rad": -0.12153110570487535,
+            "roll_rad": 0.2521224348628255
+          },
+          "reward_component_sum": {
+            "reward/descent_rsi_pilot_action_magnitude_penalty": 0.00013614498470815306,
+            "reward/descent_rsi_pilot_action_smooth_penalty": 0.0005815916821063638,
+            "reward/descent_rsi_pilot_angular": 0.008591438115712058,
+            "reward/descent_rsi_pilot_failure_penalty": 4.0,
+            "reward/descent_rsi_pilot_pitch": 0.11117521974296096,
+            "reward/descent_rsi_pilot_roll": 0.38939776830375195,
+            "reward/descent_rsi_pilot_shaping": 0.6284484881907701,
+            "reward/descent_rsi_pilot_survival": 0.11999999731779099,
+            "reward/descent_rsi_pilot_vz": 1.7852575725881559e-06
+          },
+          "states": 2,
+          "survival_counts": {
+            "16": 0,
+            "24": 0,
+            "8": 0
+          },
+          "survival_rates": {
+            "16": 0.0,
+            "24": 0.0,
+            "8": 0.0
+          },
+          "time_to_failure": {
+            "lower_quartile": 5.0,
+            "max": 5,
+            "median": 5.0,
+            "min": 5
+          }
+        },
+        "middle": {
+          "action": {
+            "max_abs": 0.16131094098091125,
+            "mean": [
+              -0.043272934257402085,
+              0.015253242012113333,
+              0.07819300526753067,
+              0.01612831963575445
+            ],
+            "saturation_fraction": 0.0,
+            "std": [
+              0.0302559986425064,
+              0.026862705272383696,
+              0.0435354630050536,
+              0.009981959642020007
+            ]
+          },
+          "failure_reasons": {
+            "pitch_limit": 2
+          },
+          "minimum_margins": {
+            "angular_rate": -5.759908072024471,
+            "body_clearance_m": 0.0,
+            "pitch_rad": -0.0817736155467943,
+            "roll_rad": 0.48853441614744386
+          },
+          "reward_component_sum": {
+            "reward/descent_rsi_pilot_action_magnitude_penalty": 0.00018167225130127918,
+            "reward/descent_rsi_pilot_action_smooth_penalty": 0.006169498775307147,
+            "reward/descent_rsi_pilot_angular": 0.04465137826264254,
+            "reward/descent_rsi_pilot_failure_penalty": 4.0,
+            "reward/descent_rsi_pilot_pitch": 0.2808004603464269,
+            "reward/descent_rsi_pilot_roll": 0.7634303197264671,
+            "reward/descent_rsi_pilot_shaping": 1.28300441801548,
+            "reward/descent_rsi_pilot_survival": 0.19999999552965164,
+            "reward/descent_rsi_pilot_vz": 0.00047345488541949976
+          },
+          "states": 2,
+          "survival_counts": {
+            "16": 0,
+            "24": 0,
+            "8": 2
+          },
+          "survival_rates": {
+            "16": 0.0,
+            "24": 0.0,
+            "8": 1.0
+          },
+          "time_to_failure": {
+            "lower_quartile": 9.0,
+            "max": 9,
+            "median": 9.0,
+            "min": 9
+          }
+        }
+      },
+      "overall": {
+        "action": {
+          "max_abs": 1.0,
+          "mean": [
+            0.010687537244110205,
+            0.1637721064274528,
+            0.3967143545036807,
+            -0.24028141321751345
+          ],
+          "saturation_fraction": 0.08235294117647059,
+          "std": [
+            0.3175168595409774,
+            0.2511327222921228,
+            0.3888162673326751,
+            0.3871754790876788
+          ]
+        },
+        "failure_reasons": {
+          "pitch_limit": 9,
+          "roll_limit": 1
+        },
+        "minimum_margins": {
+          "angular_rate": -21.110240811921855,
+          "body_clearance_m": -0.022872756757011104,
+          "pitch_rad": -0.21306786603507555,
+          "roll_rad": -2.065301773062971
+        },
+        "reward_component_sum": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.045072557666117063,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.04495370821715028,
+          "reward/descent_rsi_pilot_angular": 0.18917020906946924,
+          "reward/descent_rsi_pilot_failure_penalty": 20.0,
+          "reward/descent_rsi_pilot_pitch": 1.1630451184813495,
+          "reward/descent_rsi_pilot_roll": 3.1592612555250525,
+          "reward/descent_rsi_pilot_shaping": 5.283232091926038,
+          "reward/descent_rsi_pilot_survival": 0.8499999810010195,
+          "reward/descent_rsi_pilot_vz": 0.011781818878845973
+        },
+        "states": 10,
+        "survival_counts": {
+          "16": 0,
+          "24": 0,
+          "8": 6
+        },
+        "survival_rates": {
+          "16": 0.0,
+          "24": 0.0,
+          "8": 0.6
+        },
+        "time_to_failure": {
+          "lower_quartile": 7.0,
+          "max": 9,
+          "median": 8.0,
+          "min": 5
+        }
+      }
+    }
+  },
+  "checkpoint_3200": {
+    "horizon": 24,
+    "policy": "checkpoint_3200",
+    "rows": [
+      {
+        "actions": [
+          [
+            0.4497531056404114,
+            0.45810893177986145,
+            1.0,
+            -0.9342884421348572
+          ],
+          [
+            0.40455541014671326,
+            0.4647575318813324,
+            1.0,
+            -0.9380385279655457
+          ],
+          [
+            0.8803429007530212,
+            0.7239841222763062,
+            1.0,
+            -0.9519940614700317
+          ],
+          [
+            0.45145779848098755,
+            0.7639529705047607,
+            1.0,
+            -0.9166406989097595
+          ],
+          [
+            -0.7315633296966553,
+            0.5215415358543396,
+            0.9999997019767761,
+            -0.8750646114349365
+          ],
+          [
+            -0.39272812008857727,
+            0.22033153474330902,
+            0.9603787064552307,
+            -0.3661022186279297
+          ],
+          [
+            -0.2934649884700775,
+            0.2048192024230957,
+            0.5026252865791321,
+            -0.09111715108156204
+          ],
+          [
+            -0.12291305512189865,
+            0.04589128494262695,
+            0.3346414268016815,
+            -0.021586909890174866
+          ],
+          [
+            -0.09333383291959763,
+            0.023395540192723274,
+            0.2760884165763855,
+            0.008490324020385742
+          ]
+        ],
+        "candidate_cluster": 1,
+        "candidate_id": "9859a67b128991679eb379b664f52bf1",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -21.108030604740467,
+          "body_clearance_m": 0.06332575379679639,
+          "pitch_rad": -0.013834334083171251,
+          "roll_rad": 0.5305596842252942
+        },
+        "policy": "checkpoint_3200",
+        "provisional_label": "provisional_core",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.011110522122180555,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.009496369370936009,
+          "reward/descent_rsi_pilot_angular": 0.022724248566048925,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.15593681371365165,
+          "reward/descent_rsi_pilot_roll": 0.35566406697034836,
+          "reward/descent_rsi_pilot_shaping": 0.6037193201482296,
+          "reward/descent_rsi_pilot_survival": 0.08999999798834324,
+          "reward/descent_rsi_pilot_vz": 1.1009334225176015e-06
+        },
+        "survived_ticks": 8,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            0.43309006094932556,
+            0.4610446095466614,
+            1.0,
+            -0.9359755516052246
+          ],
+          [
+            0.39645910263061523,
+            0.4676957428455353,
+            1.0,
+            -0.9374897480010986
+          ],
+          [
+            0.8834908604621887,
+            0.7208138108253479,
+            1.0,
+            -0.9521810412406921
+          ],
+          [
+            0.44729676842689514,
+            0.7619937658309937,
+            1.0,
+            -0.9175205230712891
+          ],
+          [
+            -0.7332239747047424,
+            0.5139535665512085,
+            0.9999997615814209,
+            -0.8762333393096924
+          ],
+          [
+            -0.39595359563827515,
+            0.2176281213760376,
+            0.9607661366462708,
+            -0.3719318211078644
+          ],
+          [
+            -0.30251604318618774,
+            0.20433562994003296,
+            0.5114213228225708,
+            -0.09338881075382233
+          ],
+          [
+            -0.10663582384586334,
+            0.04056413844227791,
+            0.3339241147041321,
+            -0.02240588888525963
+          ],
+          [
+            -0.0901242271065712,
+            0.021589914336800575,
+            0.2698056995868683,
+            0.006539016030728817
+          ],
+          [
+            -0.042596012353897095,
+            -0.027731535956263542,
+            0.2001265436410904,
+            0.018798306584358215
+          ]
+        ],
+        "candidate_cluster": 1,
+        "candidate_id": "32f7603875293f339e1f907abef46d04",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -19.457575268393555,
+          "body_clearance_m": 0.0,
+          "pitch_rad": -0.19868145055350817,
+          "roll_rad": -2.173731204978254
+        },
+        "policy": "checkpoint_3200",
+        "provisional_label": "provisional_core",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.011136294069729047,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.00943233821544709,
+          "reward/descent_rsi_pilot_angular": 0.02392707184369655,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.16067013885799497,
+          "reward/descent_rsi_pilot_roll": 0.35726265236735344,
+          "reward/descent_rsi_pilot_shaping": 0.6212921775877476,
+          "reward/descent_rsi_pilot_survival": 0.09999999776482582,
+          "reward/descent_rsi_pilot_vz": 9.434305069338846e-07
+        },
+        "survived_ticks": 9,
+        "termination_reason": "roll_limit"
+      },
+      {
+        "actions": [
+          [
+            0.4504443109035492,
+            0.45781269669532776,
+            1.0,
+            -0.9342769384384155
+          ],
+          [
+            0.4047933518886566,
+            0.46430671215057373,
+            1.0,
+            -0.9380539655685425
+          ],
+          [
+            0.8799657821655273,
+            0.7237822413444519,
+            1.0,
+            -0.9519639015197754
+          ],
+          [
+            0.4494054615497589,
+            0.7642667889595032,
+            1.0,
+            -0.9166972637176514
+          ],
+          [
+            -0.7315146923065186,
+            0.5211032629013062,
+            0.9999997615814209,
+            -0.8750054836273193
+          ],
+          [
+            -0.3925569951534271,
+            0.21998678147792816,
+            0.9602943658828735,
+            -0.366001158952713
+          ],
+          [
+            -0.2938385009765625,
+            0.20436562597751617,
+            0.5017400979995728,
+            -0.09074641764163971
+          ],
+          [
+            -0.12216667085886002,
+            0.04478958994150162,
+            0.3339775800704956,
+            -0.02098442055284977
+          ],
+          [
+            -0.09413344413042068,
+            0.023610612377524376,
+            0.27496325969696045,
+            0.009027717635035515
+          ]
+        ],
+        "candidate_cluster": 1,
+        "candidate_id": "aebfaa501b6220035daf954eb5a1c52d",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -21.04890672670173,
+          "body_clearance_m": 0.0,
+          "pitch_rad": -0.019743538566203478,
+          "roll_rad": 0.5282482310020657
+        },
+        "policy": "checkpoint_3200",
+        "provisional_label": "provisional_core",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.011106452941021416,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.009467334718465281,
+          "reward/descent_rsi_pilot_angular": 0.022722377157154965,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.15615460068397624,
+          "reward/descent_rsi_pilot_roll": 0.3554615080356598,
+          "reward/descent_rsi_pilot_shaping": 0.6037658862769604,
+          "reward/descent_rsi_pilot_survival": 0.08999999798834324,
+          "reward/descent_rsi_pilot_vz": 1.1934645439183878e-06
+        },
+        "survived_ticks": 8,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            0.42843544483184814,
+            0.4577638804912567,
+            1.0,
+            -0.9362567663192749
+          ],
+          [
+            0.381783664226532,
+            0.4660557508468628,
+            1.0,
+            -0.9382407665252686
+          ],
+          [
+            0.880252480506897,
+            0.7215714454650879,
+            1.0,
+            -0.9531307816505432
+          ],
+          [
+            0.43330010771751404,
+            0.7670477032661438,
+            1.0,
+            -0.9184537529945374
+          ],
+          [
+            -0.7351270318031311,
+            0.5296854972839355,
+            0.9999999403953552,
+            -0.8747088313102722
+          ],
+          [
+            -0.3984958529472351,
+            0.23006218671798706,
+            0.9603728652000427,
+            -0.3555266857147217
+          ],
+          [
+            -0.30869555473327637,
+            0.20574943721294403,
+            0.5096657276153564,
+            -0.09116304665803909
+          ],
+          [
+            -0.11366251111030579,
+            0.041264086961746216,
+            0.3313644826412201,
+            -0.018928449600934982
+          ],
+          [
+            -0.08767637610435486,
+            0.01893703266978264,
+            0.27250152826309204,
+            0.011062090285122395
+          ]
+        ],
+        "candidate_cluster": 1,
+        "candidate_id": "efc40b7fb62638f121a99d884b922a5e",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -20.51045352459152,
+          "body_clearance_m": 0.0,
+          "pitch_rad": -0.14970276422080553,
+          "roll_rad": 0.46327165056106767
+        },
+        "policy": "checkpoint_3200",
+        "provisional_label": "provisional_core",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.01109701556561049,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.009521866579234484,
+          "reward/descent_rsi_pilot_angular": 0.02255634903759692,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.17658462872049085,
+          "reward/descent_rsi_pilot_roll": 0.34828219562768936,
+          "reward/descent_rsi_pilot_shaping": 0.6168056726455688,
+          "reward/descent_rsi_pilot_survival": 0.08999999798834324,
+          "reward/descent_rsi_pilot_vz": 1.3504671908193701e-06
+        },
+        "survived_ticks": 8,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            0.022690946236252785,
+            -0.00500548304989934,
+            0.28220000863075256,
+            -0.0402979701757431
+          ],
+          [
+            0.030293747782707214,
+            -0.013474030420184135,
+            0.18960732221603394,
+            -0.03329779952764511
+          ],
+          [
+            -0.017228608950972557,
+            -0.01572478376328945,
+            0.18609395623207092,
+            -0.03840966150164604
+          ],
+          [
+            0.01359102874994278,
+            -0.0044160280376672745,
+            0.13192397356033325,
+            -0.033788956701755524
+          ],
+          [
+            -0.02210087887942791,
+            -0.01700538769364357,
+            0.13043619692325592,
+            -0.020686473697423935
+          ],
+          [
+            0.020339451730251312,
+            -0.014856907539069653,
+            0.09005682915449142,
+            -0.007692411076277494
+          ],
+          [
+            -0.027326442301273346,
+            0.0018953743856400251,
+            0.07307412475347519,
+            -0.000366768566891551
+          ],
+          [
+            -0.003149530617520213,
+            0.00034046213841065764,
+            0.09748537838459015,
+            0.0034756583627313375
+          ]
+        ],
+        "candidate_cluster": 2,
+        "candidate_id": "c9551cfe91f1a2ab4b99fdddf68c062f",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -8.505648309177149,
+          "body_clearance_m": -0.022873685448351833,
+          "pitch_rad": -0.1707405812221483,
+          "roll_rad": 0.41563499260780534
+        },
+        "policy": "checkpoint_3200",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.0001634989857848268,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.00017767312067462626,
+          "reward/descent_rsi_pilot_angular": 0.022426344083100958,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.06252746701392198,
+          "reward/descent_rsi_pilot_roll": 0.29997400753200054,
+          "reward/descent_rsi_pilot_shaping": 0.4693775810301304,
+          "reward/descent_rsi_pilot_survival": 0.07999999821186066,
+          "reward/descent_rsi_pilot_vz": 0.0047909269762029276
+        },
+        "survived_ticks": 7,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            0.020428091287612915,
+            -0.0074583375826478004,
+            0.26658475399017334,
+            -0.038704078644514084
+          ],
+          [
+            0.02957276999950409,
+            -0.013604787178337574,
+            0.17339663207530975,
+            -0.02916606143116951
+          ],
+          [
+            -0.022578919306397438,
+            -0.014818364754319191,
+            0.17095795273780823,
+            -0.0344134122133255
+          ],
+          [
+            0.0091117974370718,
+            -0.001539852935820818,
+            0.11510821431875229,
+            -0.0322561115026474
+          ],
+          [
+            -0.026346899569034576,
+            -0.016671782359480858,
+            0.1317945122718811,
+            -0.01921200565993786
+          ],
+          [
+            0.020349225029349327,
+            -0.013568857684731483,
+            0.0835505947470665,
+            -0.005548512563109398
+          ],
+          [
+            0.010846486315131187,
+            -0.009094178676605225,
+            0.07743904739618301,
+            -0.0005930598708800972
+          ],
+          [
+            -0.008229230530560017,
+            -0.004440073389559984,
+            0.1014135405421257,
+            -0.0020820151548832655
+          ]
+        ],
+        "candidate_cluster": 2,
+        "candidate_id": "24d365f6cf5a4a97188273df8a7c24d9",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -9.064920948856457,
+          "body_clearance_m": -0.020821830208987667,
+          "pitch_rad": -0.18474552697715318,
+          "roll_rad": 0.3336832254016133
+        },
+        "policy": "checkpoint_3200",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.00014506934121527593,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.00014041527769848017,
+          "reward/descent_rsi_pilot_angular": 0.02154520219363576,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.059239386887952605,
+          "reward/descent_rsi_pilot_roll": 0.2890173885971308,
+          "reward/descent_rsi_pilot_shaping": 0.4560298081487417,
+          "reward/descent_rsi_pilot_survival": 0.07999999821186066,
+          "reward/descent_rsi_pilot_vz": 0.006513299404120846
+        },
+        "survived_ticks": 7,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            -0.0034152045845985413,
+            0.006078806240111589,
+            0.15938800573349,
+            -0.012472872622311115
+          ],
+          [
+            -0.003327231854200363,
+            0.01768791303038597,
+            0.13705980777740479,
+            -0.001997783314436674
+          ],
+          [
+            -0.05943242087960243,
+            0.03602031245827675,
+            0.1156187653541565,
+            -0.03151337429881096
+          ],
+          [
+            -0.03810299187898636,
+            -0.0008905564900487661,
+            0.08744526654481888,
+            -0.013512197881937027
+          ],
+          [
+            -0.02632262371480465,
+            -0.022609904408454895,
+            0.11098521947860718,
+            -0.0007147662690840662
+          ],
+          [
+            -0.038071904331445694,
+            0.007531696930527687,
+            0.05541633069515228,
+            0.021179955452680588
+          ]
+        ],
+        "candidate_cluster": 3,
+        "candidate_id": "05f2b501d77ac36f75a65f4258a3a227",
+        "descent_layer": "late",
+        "minimum_margins": {
+          "angular_rate": -12.349373805575144,
+          "body_clearance_m": -0.00696409575273846,
+          "pitch_rad": -0.11705932683524645,
+          "roll_rad": 0.33010611225006303
+        },
+        "policy": "checkpoint_3200",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 6.880685236865247e-05,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.0003025492055712675,
+          "reward/descent_rsi_pilot_angular": 0.00564836572626537,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.05600721391294883,
+          "reward/descent_rsi_pilot_roll": 0.20038455072790384,
+          "reward/descent_rsi_pilot_shaping": 0.3216697480529547,
+          "reward/descent_rsi_pilot_survival": 0.05999999865889549,
+          "reward/descent_rsi_pilot_vz": 9.841156777149577e-07
+        },
+        "survived_ticks": 5,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            -0.00031165959080681205,
+            0.0022436303552240133,
+            0.15298661589622498,
+            -0.0119555052369833
+          ],
+          [
+            -0.0034998194314539433,
+            0.020474856719374657,
+            0.15018406510353088,
+            -0.002609476214274764
+          ],
+          [
+            -0.05506381019949913,
+            0.027274584397673607,
+            0.12158039957284927,
+            -0.027021320536732674
+          ],
+          [
+            -0.033050213009119034,
+            -0.002898014849051833,
+            0.09268875420093536,
+            -0.018696751445531845
+          ],
+          [
+            -0.03193650022149086,
+            -0.017410995438694954,
+            0.0952119380235672,
+            -0.010637064464390278
+          ],
+          [
+            -0.04043584689497948,
+            0.006511824205517769,
+            0.05195467174053192,
+            0.022220881655812263
+          ]
+        ],
+        "candidate_cluster": 3,
+        "candidate_id": "fb3433efd2b32519a2381fcc71c870d0",
+        "descent_layer": "late",
+        "minimum_margins": {
+          "angular_rate": -11.765204547510407,
+          "body_clearance_m": -0.007848636993063506,
+          "pitch_rad": -0.11730918950614488,
+          "roll_rad": 0.2596197753035756
+        },
+        "policy": "checkpoint_3200",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 6.843594223937544e-05,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.0002788602937471296,
+          "reward/descent_rsi_pilot_angular": 0.0029421093257004927,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.055176844930826974,
+          "reward/descent_rsi_pilot_roll": 0.1888014655560255,
+          "reward/descent_rsi_pilot_shaping": 0.30657391995191574,
+          "reward/descent_rsi_pilot_survival": 0.05999999865889549,
+          "reward/descent_rsi_pilot_vz": 8.008002074583241e-07
+        },
+        "survived_ticks": 5,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            0.0009143149363808334,
+            -0.03806949406862259,
+            0.16131329536437988,
+            0.005066956393420696
+          ],
+          [
+            0.008088071830570698,
+            -0.015431591309607029,
+            0.10535868257284164,
+            0.00973457284271717
+          ],
+          [
+            -0.0452914796769619,
+            0.022356750443577766,
+            0.11506785452365875,
+            0.0036157211288809776
+          ],
+          [
+            -0.008992031216621399,
+            0.05331418290734291,
+            0.12931182980537415,
+            0.023717930540442467
+          ],
+          [
+            -0.10385517030954361,
+            0.05324157699942589,
+            0.1244022473692894,
+            0.014545929618179798
+          ],
+          [
+            -0.061817873269319534,
+            0.026220887899398804,
+            0.06849177181720734,
+            0.0027468737680464983
+          ],
+          [
+            -0.05673887953162193,
+            0.027181534096598625,
+            0.03979238495230675,
+            0.005160109605640173
+          ],
+          [
+            -0.06040371209383011,
+            0.013871761970221996,
+            0.024671507999300957,
+            0.010210352018475533
+          ],
+          [
+            -0.05677669122815132,
+            0.015315050259232521,
+            0.04002464935183525,
+            0.013812901452183723
+          ],
+          [
+            -0.0413379892706871,
+            0.011736196465790272,
+            0.06222199276089668,
+            0.013088621199131012
+          ]
+        ],
+        "candidate_cluster": 7,
+        "candidate_id": "98b1cfddaed01f1b3602b23df2eb1ee2",
+        "descent_layer": "middle",
+        "minimum_margins": {
+          "angular_rate": -5.678878983575512,
+          "body_clearance_m": 0.0,
+          "pitch_rad": -0.07403478688773668,
+          "roll_rad": 0.480336460360262
+        },
+        "policy": "checkpoint_3200",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.00010109023014592822,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.0030771331710184313,
+          "reward/descent_rsi_pilot_angular": 0.020108731583604822,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.14276674656366595,
+          "reward/descent_rsi_pilot_roll": 0.3797430209815502,
+          "reward/descent_rsi_pilot_shaping": 0.6396819427609444,
+          "reward/descent_rsi_pilot_survival": 0.09999999776482582,
+          "reward/descent_rsi_pilot_vz": 0.00024168732626606015
+        },
+        "survived_ticks": 9,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            -0.004270212724804878,
+            -0.04092324525117874,
+            0.15833434462547302,
+            0.0006857665721327066
+          ],
+          [
+            0.005233478732407093,
+            -0.016857828944921494,
+            0.10551100224256516,
+            0.008200300857424736
+          ],
+          [
+            -0.049265939742326736,
+            0.022732125595211983,
+            0.11471345275640488,
+            0.006874469108879566
+          ],
+          [
+            -0.012693088501691818,
+            0.053475867956876755,
+            0.13482710719108582,
+            0.026268329471349716
+          ],
+          [
+            -0.10262003540992737,
+            0.05403763800859451,
+            0.12317325174808502,
+            0.014441926032304764
+          ],
+          [
+            -0.06263594329357147,
+            0.026131829246878624,
+            0.0680045634508133,
+            0.0030394953209906816
+          ],
+          [
+            -0.05629231035709381,
+            0.027000105008482933,
+            0.04032392054796219,
+            0.0056604682467877865
+          ],
+          [
+            -0.06160004809498787,
+            0.013716899789869785,
+            0.02415640838444233,
+            0.010178029537200928
+          ],
+          [
+            -0.057922493666410446,
+            0.015454093925654888,
+            0.03967474028468132,
+            0.013921801000833511
+          ],
+          [
+            -0.042122505605220795,
+            0.012062548659741879,
+            0.06238938122987747,
+            0.013321110047399998
+          ]
+        ],
+        "candidate_cluster": 7,
+        "candidate_id": "702c059587484d34fc7f4e9bb743a41c",
+        "descent_layer": "middle",
+        "minimum_margins": {
+          "angular_rate": -5.7374642397918425,
+          "body_clearance_m": 0.0,
+          "pitch_rad": -0.07833716935691393,
+          "roll_rad": 0.4952251716339322
+        },
+        "policy": "checkpoint_3200",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.0001019717813051102,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.0030963159635177817,
+          "reward/descent_rsi_pilot_angular": 0.01998849535084446,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.14276625683351085,
+          "reward/descent_rsi_pilot_roll": 0.3830121234059334,
+          "reward/descent_rsi_pilot_shaping": 0.6428174078464508,
+          "reward/descent_rsi_pilot_survival": 0.09999999776482582,
+          "reward/descent_rsi_pilot_vz": 0.0002488291296458556
+        },
+        "survived_ticks": 9,
+        "termination_reason": "pitch_limit"
+      }
+    ],
+    "summary": {
+      "labels": {
+        "provisional_core": {
+          "action": {
+            "max_abs": 1.0,
+            "mean": [
+              0.055997458865513675,
+              0.3694819392183343,
+              0.7701258574788635,
+              -0.5494102843709894
+            ],
+            "saturation_fraction": 0.1891891891891892,
+            "std": [
+              0.4767605044808302,
+              0.26233903219159455,
+              0.30996332980346486,
+              0.41834712594881246
+            ]
+          },
+          "failure_reasons": {
+            "pitch_limit": 3,
+            "roll_limit": 1
+          },
+          "minimum_margins": {
+            "angular_rate": -21.108030604740467,
+            "body_clearance_m": 0.0,
+            "pitch_rad": -0.19868145055350817,
+            "roll_rad": -2.173731204978254
+          },
+          "reward_component_sum": {
+            "reward/descent_rsi_pilot_action_magnitude_penalty": 0.04445028469854151,
+            "reward/descent_rsi_pilot_action_smooth_penalty": 0.03791790888408286,
+            "reward/descent_rsi_pilot_angular": 0.09193004660449736,
+            "reward/descent_rsi_pilot_failure_penalty": 8.0,
+            "reward/descent_rsi_pilot_pitch": 0.6493461819761137,
+            "reward/descent_rsi_pilot_roll": 1.416670423001051,
+            "reward/descent_rsi_pilot_shaping": 2.4455830566585064,
+            "reward/descent_rsi_pilot_survival": 0.36999999172985554,
+            "reward/descent_rsi_pilot_vz": 4.588295664189244e-06
+          },
+          "states": 4,
+          "survival_counts": {
+            "16": 0,
+            "24": 0,
+            "8": 4
+          },
+          "survival_rates": {
+            "16": 0.0,
+            "24": 0.0,
+            "8": 1.0
+          },
+          "time_to_failure": {
+            "lower_quartile": 8.0,
+            "max": 9,
+            "median": 8.0,
+            "min": 8
+          }
+        },
+        "provisional_frontier": {
+          "action": {
+            "max_abs": 0.28220000863075256,
+            "mean": [
+              -0.024023077722328406,
+              0.005565375505587629,
+              0.11194598472987612,
+              -0.0045099635487228324
+            ],
+            "saturation_fraction": 0.0,
+            "std": [
+              0.03252488586243688,
+              0.02252807291677734,
+              0.05437542577810198,
+              0.018489435061991133
+            ]
+          },
+          "failure_reasons": {
+            "pitch_limit": 6
+          },
+          "minimum_margins": {
+            "angular_rate": -12.349373805575144,
+            "body_clearance_m": -0.022873685448351833,
+            "pitch_rad": -0.18474552697715318,
+            "roll_rad": 0.2596197753035756
+          },
+          "reward_component_sum": {
+            "reward/descent_rsi_pilot_action_magnitude_penalty": 0.000648873133059169,
+            "reward/descent_rsi_pilot_action_smooth_penalty": 0.007072947032227717,
+            "reward/descent_rsi_pilot_angular": 0.09265924826315186,
+            "reward/descent_rsi_pilot_failure_penalty": 12.0,
+            "reward/descent_rsi_pilot_pitch": 0.5184839161428272,
+            "reward/descent_rsi_pilot_roll": 1.7409325568005443,
+            "reward/descent_rsi_pilot_shaping": 2.8361504077911377,
+            "reward/descent_rsi_pilot_survival": 0.47999998927116394,
+            "reward/descent_rsi_pilot_vz": 0.011796527752120861
+          },
+          "states": 6,
+          "survival_counts": {
+            "16": 0,
+            "24": 0,
+            "8": 2
+          },
+          "survival_rates": {
+            "16": 0.0,
+            "24": 0.0,
+            "8": 0.3333333333333333
+          },
+          "time_to_failure": {
+            "lower_quartile": 5.5,
+            "max": 9,
+            "median": 7.0,
+            "min": 5
+          }
+        }
+      },
+      "layers": {
+        "early": {
+          "action": {
+            "max_abs": 1.0,
+            "mean": [
+              0.04004092476295553,
+              0.2551205421233427,
+              0.5810524483896652,
+              -0.3898343426726741
+            ],
+            "saturation_fraction": 0.1320754716981132,
+            "std": [
+              0.39924269115736544,
+              0.27982342673244165,
+              0.38844634021887137,
+              0.42560533983498205
+            ]
+          },
+          "failure_reasons": {
+            "pitch_limit": 5,
+            "roll_limit": 1
+          },
+          "minimum_margins": {
+            "angular_rate": -21.108030604740467,
+            "body_clearance_m": -0.022873685448351833,
+            "pitch_rad": -0.19868145055350817,
+            "roll_rad": -2.173731204978254
+          },
+          "reward_component_sum": {
+            "reward/descent_rsi_pilot_action_magnitude_penalty": 0.04475885302554161,
+            "reward/descent_rsi_pilot_action_smooth_penalty": 0.03823599728245597,
+            "reward/descent_rsi_pilot_angular": 0.13590159288123407,
+            "reward/descent_rsi_pilot_failure_penalty": 12.0,
+            "reward/descent_rsi_pilot_pitch": 0.7711130358779883,
+            "reward/descent_rsi_pilot_roll": 2.0056618191301823,
+            "reward/descent_rsi_pilot_shaping": 3.3709904458373785,
+            "reward/descent_rsi_pilot_survival": 0.5299999881535769,
+            "reward/descent_rsi_pilot_vz": 0.011308814675987964
+          },
+          "states": 6,
+          "survival_counts": {
+            "16": 0,
+            "24": 0,
+            "8": 4
+          },
+          "survival_rates": {
+            "16": 0.0,
+            "24": 0.0,
+            "8": 0.6666666666666666
+          },
+          "time_to_failure": {
+            "lower_quartile": 7.25,
+            "max": 9,
+            "median": 8.0,
+            "min": 7
+          }
+        },
+        "late": {
+          "action": {
+            "max_abs": 0.15938800573349,
+            "mean": [
+              -0.027747518882582273,
+              0.0066678460959034664,
+              0.1108766533434391,
+              -0.007310856264666654
+            ],
+            "saturation_fraction": 0.0,
+            "std": [
+              0.019794192975863822,
+              0.01634162381280002,
+              0.03435981206464539,
+              0.015756830224216648
+            ]
+          },
+          "failure_reasons": {
+            "pitch_limit": 2
+          },
+          "minimum_margins": {
+            "angular_rate": -12.349373805575144,
+            "body_clearance_m": -0.007848636993063506,
+            "pitch_rad": -0.11730918950614488,
+            "roll_rad": 0.2596197753035756
+          },
+          "reward_component_sum": {
+            "reward/descent_rsi_pilot_action_magnitude_penalty": 0.0001372427946080279,
+            "reward/descent_rsi_pilot_action_smooth_penalty": 0.0005814094993183971,
+            "reward/descent_rsi_pilot_angular": 0.008590475051965862,
+            "reward/descent_rsi_pilot_failure_penalty": 4.0,
+            "reward/descent_rsi_pilot_pitch": 0.1111840588437758,
+            "reward/descent_rsi_pilot_roll": 0.38918601628392935,
+            "reward/descent_rsi_pilot_shaping": 0.6282436680048704,
+            "reward/descent_rsi_pilot_survival": 0.11999999731779099,
+            "reward/descent_rsi_pilot_vz": 1.7849158851732817e-06
+          },
+          "states": 2,
+          "survival_counts": {
+            "16": 0,
+            "24": 0,
+            "8": 0
+          },
+          "survival_rates": {
+            "16": 0.0,
+            "24": 0.0,
+            "8": 0.0
+          },
+          "time_to_failure": {
+            "lower_quartile": 5.0,
+            "max": 5,
+            "median": 5.0,
+            "min": 5
+          }
+        },
+        "middle": {
+          "action": {
+            "max_abs": 0.16131329536437988,
+            "mean": [
+              -0.04352002692467068,
+              0.016828344482928515,
+              0.08708821944892406,
+              0.010214583238121123
+            ],
+            "saturation_fraction": 0.0,
+            "std": [
+              0.03154914008396077,
+              0.026861945821749122,
+              0.043727761771717936,
+              0.006523492907437751
+            ]
+          },
+          "failure_reasons": {
+            "pitch_limit": 2
+          },
+          "minimum_margins": {
+            "angular_rate": -5.7374642397918425,
+            "body_clearance_m": 0.0,
+            "pitch_rad": -0.07833716935691393,
+            "roll_rad": 0.480336460360262
+          },
+          "reward_component_sum": {
+            "reward/descent_rsi_pilot_action_magnitude_penalty": 0.00020306201145103842,
+            "reward/descent_rsi_pilot_action_smooth_penalty": 0.006173449134536213,
+            "reward/descent_rsi_pilot_angular": 0.04009722693444928,
+            "reward/descent_rsi_pilot_failure_penalty": 4.0,
+            "reward/descent_rsi_pilot_pitch": 0.2855330033971768,
+            "reward/descent_rsi_pilot_roll": 0.7627551443874836,
+            "reward/descent_rsi_pilot_shaping": 1.2824993506073952,
+            "reward/descent_rsi_pilot_survival": 0.19999999552965164,
+            "reward/descent_rsi_pilot_vz": 0.0004905164559119157
+          },
+          "states": 2,
+          "survival_counts": {
+            "16": 0,
+            "24": 0,
+            "8": 2
+          },
+          "survival_rates": {
+            "16": 0.0,
+            "24": 0.0,
+            "8": 1.0
+          },
+          "time_to_failure": {
+            "lower_quartile": 9.0,
+            "max": 9,
+            "median": 9.0,
+            "min": 9
+          }
+        }
+      },
+      "overall": {
+        "action": {
+          "max_abs": 1.0,
+          "mean": [
+            0.0108093911453205,
+            0.16397611500407733,
+            0.3984478116912,
+            -0.24170186790665063
+          ],
+          "saturation_fraction": 0.08235294117647059,
+          "std": [
+            0.3179842781871303,
+            0.25059656114890955,
+            0.38726988820809244,
+            0.3864734120637375
+          ]
+        },
+        "failure_reasons": {
+          "pitch_limit": 9,
+          "roll_limit": 1
+        },
+        "minimum_margins": {
+          "angular_rate": -21.108030604740467,
+          "body_clearance_m": -0.022873685448351833,
+          "pitch_rad": -0.19868145055350817,
+          "roll_rad": -2.173731204978254
+        },
+        "reward_component_sum": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.04509915783160068,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.04499085591631058,
+          "reward/descent_rsi_pilot_angular": 0.18458929486764922,
+          "reward/descent_rsi_pilot_failure_penalty": 20.0,
+          "reward/descent_rsi_pilot_pitch": 1.167830098118941,
+          "reward/descent_rsi_pilot_roll": 3.157602979801595,
+          "reward/descent_rsi_pilot_shaping": 5.281733464449644,
+          "reward/descent_rsi_pilot_survival": 0.8499999810010195,
+          "reward/descent_rsi_pilot_vz": 0.011801116047785052
+        },
+        "states": 10,
+        "survival_counts": {
+          "16": 0,
+          "24": 0,
+          "8": 6
+        },
+        "survival_rates": {
+          "16": 0.0,
+          "24": 0.0,
+          "8": 0.6
+        },
+        "time_to_failure": {
+          "lower_quartile": 7.0,
+          "max": 9,
+          "median": 8.0,
+          "min": 5
+        }
+      }
+    }
+  },
+  "checkpoint_4800": {
+    "horizon": 24,
+    "policy": "checkpoint_4800",
+    "rows": [
+      {
+        "actions": [
+          [
+            0.44829896092414856,
+            0.46060633659362793,
+            1.0,
+            -0.9337835311889648
+          ],
+          [
+            0.4030015468597412,
+            0.4672723710536957,
+            1.0,
+            -0.9375571608543396
+          ],
+          [
+            0.8800767660140991,
+            0.7258984446525574,
+            1.0,
+            -0.9517452120780945
+          ],
+          [
+            0.4503737688064575,
+            0.7651020884513855,
+            1.0,
+            -0.9162529706954956
+          ],
+          [
+            -0.7313216328620911,
+            0.5225296020507812,
+            0.9999995827674866,
+            -0.8745986223220825
+          ],
+          [
+            -0.3924016058444977,
+            0.22062009572982788,
+            0.9603683352470398,
+            -0.36564069986343384
+          ],
+          [
+            -0.2933381199836731,
+            0.20490796864032745,
+            0.5025237798690796,
+            -0.09084345400333405
+          ],
+          [
+            -0.12261432409286499,
+            0.045725706964731216,
+            0.3345424234867096,
+            -0.021242721006274223
+          ],
+          [
+            -0.09346048533916473,
+            0.02360638789832592,
+            0.2757515013217926,
+            0.008696531876921654
+          ]
+        ],
+        "candidate_cluster": 1,
+        "candidate_id": "9859a67b128991679eb379b664f52bf1",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -21.10688380199198,
+          "body_clearance_m": 0.0,
+          "pitch_rad": -0.013651824660869005,
+          "roll_rad": 0.5306630461299153
+        },
+        "policy": "checkpoint_4800",
+        "provisional_label": "provisional_core",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.011111273284768686,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.009487772584179766,
+          "reward/descent_rsi_pilot_angular": 0.02275196834558466,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.15592352160729206,
+          "reward/descent_rsi_pilot_roll": 0.3556732311844826,
+          "reward/descent_rsi_pilot_shaping": 0.6037507615983486,
+          "reward/descent_rsi_pilot_survival": 0.08999999798834324,
+          "reward/descent_rsi_pilot_vz": 1.099453085077384e-06
+        },
+        "survived_ticks": 8,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            0.4316042363643646,
+            0.4635431170463562,
+            1.0,
+            -0.9354801177978516
+          ],
+          [
+            0.3948933184146881,
+            0.470205157995224,
+            1.0,
+            -0.9370027780532837
+          ],
+          [
+            0.8831793069839478,
+            0.7227786779403687,
+            1.0,
+            -0.9519361257553101
+          ],
+          [
+            0.4463497996330261,
+            0.7630748748779297,
+            1.0,
+            -0.9171258807182312
+          ],
+          [
+            -0.7330461740493774,
+            0.5151809453964233,
+            0.9999997615814209,
+            -0.8757510781288147
+          ],
+          [
+            -0.3956623673439026,
+            0.21792015433311462,
+            0.9608381986618042,
+            -0.37142226099967957
+          ],
+          [
+            -0.30221858620643616,
+            0.20466579496860504,
+            0.5114644765853882,
+            -0.09352555871009827
+          ],
+          [
+            -0.10817226767539978,
+            0.0409214086830616,
+            0.33347493410110474,
+            -0.02280065417289734
+          ],
+          [
+            -0.09108204394578934,
+            0.021362924948334694,
+            0.2751387357711792,
+            0.004092990420758724
+          ],
+          [
+            -0.029572859406471252,
+            -0.03143693879246712,
+            0.22335191071033478,
+            0.016799479722976685
+          ]
+        ],
+        "candidate_cluster": 1,
+        "candidate_id": "32f7603875293f339e1f907abef46d04",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -19.442556692406388,
+          "body_clearance_m": 0.0,
+          "pitch_rad": -0.21314868993339098,
+          "roll_rad": -2.064353820792463
+        },
+        "policy": "checkpoint_4800",
+        "provisional_label": "provisional_core",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.011146945365908323,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.009421733509384467,
+          "reward/descent_rsi_pilot_angular": 0.02387981527612795,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.16069118542898764,
+          "reward/descent_rsi_pilot_roll": 0.3573264330625534,
+          "reward/descent_rsi_pilot_shaping": 0.6213297015056014,
+          "reward/descent_rsi_pilot_survival": 0.09999999776482582,
+          "reward/descent_rsi_pilot_vz": 9.397972368279855e-07
+        },
+        "survived_ticks": 9,
+        "termination_reason": "roll_limit"
+      },
+      {
+        "actions": [
+          [
+            0.44899114966392517,
+            0.4603114724159241,
+            1.0,
+            -0.9337718486785889
+          ],
+          [
+            0.4032420814037323,
+            0.46682578325271606,
+            1.0,
+            -0.9375730156898499
+          ],
+          [
+            0.8797048926353455,
+            0.7256958484649658,
+            1.0,
+            -0.9517150521278381
+          ],
+          [
+            0.4483059346675873,
+            0.7654064893722534,
+            1.0,
+            -0.916305422782898
+          ],
+          [
+            -0.7312614321708679,
+            0.5222399830818176,
+            0.9999996423721313,
+            -0.87452232837677
+          ],
+          [
+            -0.3923245966434479,
+            0.2203587293624878,
+            0.9603168964385986,
+            -0.3655261993408203
+          ],
+          [
+            -0.2935847043991089,
+            0.20454806089401245,
+            0.5017492175102234,
+            -0.09063474088907242
+          ],
+          [
+            -0.121612049639225,
+            0.045330967754125595,
+            0.33413881063461304,
+            -0.020962214097380638
+          ],
+          [
+            -0.09329812228679657,
+            0.02294083684682846,
+            0.2762626111507416,
+            0.008499895222485065
+          ]
+        ],
+        "candidate_cluster": 1,
+        "candidate_id": "aebfaa501b6220035daf954eb5a1c52d",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -21.06154898797097,
+          "body_clearance_m": 0.06329115193194536,
+          "pitch_rad": -0.0186942583995775,
+          "roll_rad": 0.5286856992923947
+        },
+        "policy": "checkpoint_4800",
+        "provisional_label": "provisional_core",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.01110811311082216,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.009458101447762601,
+          "reward/descent_rsi_pilot_angular": 0.02272622782270248,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.15612599490350476,
+          "reward/descent_rsi_pilot_roll": 0.3554999902844429,
+          "reward/descent_rsi_pilot_shaping": 0.603787187486887,
+          "reward/descent_rsi_pilot_survival": 0.08999999798834324,
+          "reward/descent_rsi_pilot_vz": 1.187572097802429e-06
+        },
+        "survived_ticks": 8,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            0.42694786190986633,
+            0.4602757692337036,
+            1.0,
+            -0.9357635974884033
+          ],
+          [
+            0.38018903136253357,
+            0.46857592463493347,
+            1.0,
+            -0.9377580881118774
+          ],
+          [
+            0.8799259066581726,
+            0.7234660387039185,
+            1.0,
+            -0.9528837203979492
+          ],
+          [
+            0.43192076683044434,
+            0.768068790435791,
+            1.0,
+            -0.918057918548584
+          ],
+          [
+            -0.7348777651786804,
+            0.5306826829910278,
+            0.9999997019767761,
+            -0.8742310404777527
+          ],
+          [
+            -0.39897701144218445,
+            0.23050321638584137,
+            0.9603585004806519,
+            -0.3553312420845032
+          ],
+          [
+            -0.30757376551628113,
+            0.20573662221431732,
+            0.5094185471534729,
+            -0.09044037014245987
+          ],
+          [
+            -0.11015374958515167,
+            0.04673491045832634,
+            0.33593493700027466,
+            -0.019582921639084816
+          ],
+          [
+            -0.07834959030151367,
+            0.010067996568977833,
+            0.2943861186504364,
+            0.007726999465376139
+          ]
+        ],
+        "candidate_cluster": 1,
+        "candidate_id": "efc40b7fb62638f121a99d884b922a5e",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -20.308021980857152,
+          "body_clearance_m": 0.0531950696292664,
+          "pitch_rad": -0.13595864839133776,
+          "roll_rad": 0.48063791085121355
+        },
+        "policy": "checkpoint_4800",
+        "provisional_label": "provisional_core",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.011107656959211454,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.00950810730523699,
+          "reward/descent_rsi_pilot_angular": 0.022563439627281072,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.17655175842600102,
+          "reward/descent_rsi_pilot_roll": 0.35040767677128315,
+          "reward/descent_rsi_pilot_shaping": 0.6189084425568581,
+          "reward/descent_rsi_pilot_survival": 0.08999999798834324,
+          "reward/descent_rsi_pilot_vz": 1.344417345830175e-06
+        },
+        "survived_ticks": 8,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            0.022679105401039124,
+            -0.004968244582414627,
+            0.2822035253047943,
+            -0.04026753455400467
+          ],
+          [
+            0.030285773798823357,
+            -0.013451158069074154,
+            0.1896030306816101,
+            -0.0332774855196476
+          ],
+          [
+            -0.01723318360745907,
+            -0.015695171430706978,
+            0.18609336018562317,
+            -0.038388706743717194
+          ],
+          [
+            0.0135886762291193,
+            -0.004390719346702099,
+            0.13191314041614532,
+            -0.03377404436469078
+          ],
+          [
+            -0.02208925224840641,
+            -0.016980502754449844,
+            0.13043445348739624,
+            -0.020667515695095062
+          ],
+          [
+            0.020344996824860573,
+            -0.014837384223937988,
+            0.09004567563533783,
+            -0.0076784309931099415
+          ],
+          [
+            -0.027315672487020493,
+            0.0019201630493625998,
+            0.07305474579334259,
+            -0.00034467573277652264
+          ],
+          [
+            -0.0031593150924891233,
+            0.0003877021372318268,
+            0.09745800495147705,
+            0.0035045649856328964
+          ]
+        ],
+        "candidate_cluster": 2,
+        "candidate_id": "c9551cfe91f1a2ab4b99fdddf68c062f",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -8.5046425988878,
+          "body_clearance_m": -0.02287309734565207,
+          "pitch_rad": -0.17076859540519274,
+          "roll_rad": 0.41559547472831926
+        },
+        "policy": "checkpoint_4800",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.00016347965720342472,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.00017763659388947417,
+          "reward/descent_rsi_pilot_angular": 0.02242625728939629,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.06252744603918359,
+          "reward/descent_rsi_pilot_roll": 0.29996778815984726,
+          "reward/descent_rsi_pilot_shaping": 0.46937164291739464,
+          "reward/descent_rsi_pilot_survival": 0.07999999821186066,
+          "reward/descent_rsi_pilot_vz": 0.004791261413776049
+        },
+        "survived_ticks": 7,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            0.020416373386979103,
+            -0.007423616014420986,
+            0.26658719778060913,
+            -0.038676440715789795
+          ],
+          [
+            0.02956511825323105,
+            -0.01358275581151247,
+            0.17339511215686798,
+            -0.02914896234869957
+          ],
+          [
+            -0.02258004993200302,
+            -0.014788460917770863,
+            0.17096160352230072,
+            -0.03439336270093918
+          ],
+          [
+            0.009107513353228569,
+            -0.0015163073549047112,
+            0.1150818020105362,
+            -0.03223799541592598
+          ],
+          [
+            -0.026360131800174713,
+            -0.016644446179270744,
+            0.13175494968891144,
+            -0.019195416942238808
+          ],
+          [
+            0.02033047564327717,
+            -0.013560640625655651,
+            0.0835004523396492,
+            -0.005519967991858721
+          ],
+          [
+            0.010869735851883888,
+            -0.00910266488790512,
+            0.07738519459962845,
+            -0.0005430945893749595
+          ],
+          [
+            -0.008197522722184658,
+            -0.00441607553511858,
+            0.10135876387357712,
+            -0.0020181157160550356
+          ]
+        ],
+        "candidate_cluster": 2,
+        "candidate_id": "24d365f6cf5a4a97188273df8a7c24d9",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -9.064649880377374,
+          "body_clearance_m": -0.020823956063945045,
+          "pitch_rad": -0.18478963441428697,
+          "roll_rad": 0.33338529158470354
+        },
+        "policy": "checkpoint_4800",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.00014502917247227742,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.00014039020709333272,
+          "reward/descent_rsi_pilot_angular": 0.021544789756546834,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.05923934177153001,
+          "reward/descent_rsi_pilot_roll": 0.2889831094071269,
+          "reward/descent_rsi_pilot_shaping": 0.4559951722621918,
+          "reward/descent_rsi_pilot_survival": 0.07999999821186066,
+          "reward/descent_rsi_pilot_vz": 0.00651336871807634
+        },
+        "survived_ticks": 7,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            -0.0034129431005567312,
+            0.0061083040200173855,
+            0.15939509868621826,
+            -0.012448325753211975
+          ],
+          [
+            -0.0033184404019266367,
+            0.017713326960802078,
+            0.13706234097480774,
+            -0.0019699539989233017
+          ],
+          [
+            -0.05938277393579483,
+            0.03582609444856644,
+            0.1152062714099884,
+            -0.03137257695198059
+          ],
+          [
+            -0.03891425579786301,
+            -0.0005069904727861285,
+            0.08512946963310242,
+            -0.012540236115455627
+          ],
+          [
+            -0.02639843337237835,
+            -0.022656280547380447,
+            0.1083199754357338,
+            -0.0003158359322696924
+          ],
+          [
+            -0.042702436447143555,
+            0.008693564683198929,
+            0.053401075303554535,
+            0.022280000150203705
+          ]
+        ],
+        "candidate_cluster": 3,
+        "candidate_id": "05f2b501d77ac36f75a65f4258a3a227",
+        "descent_layer": "late",
+        "minimum_margins": {
+          "angular_rate": -12.345289137698149,
+          "body_clearance_m": -0.0066029320781655285,
+          "pitch_rad": -0.12300322122153795,
+          "roll_rad": 0.3461668520056935
+        },
+        "policy": "checkpoint_4800",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 6.817613621024066e-05,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.00030282257824865155,
+          "reward/descent_rsi_pilot_angular": 0.005642814780839944,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.055997878137134194,
+          "reward/descent_rsi_pilot_roll": 0.2030488746240735,
+          "reward/descent_rsi_pilot_shaping": 0.3243195489048958,
+          "reward/descent_rsi_pilot_survival": 0.05999999865889549,
+          "reward/descent_rsi_pilot_vz": 9.84512669580061e-07
+        },
+        "survived_ticks": 5,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            -0.00030908099142834544,
+            0.0022719423286616802,
+            0.15299300849437714,
+            -0.011932260356843472
+          ],
+          [
+            -0.003490338334813714,
+            0.02050379291176796,
+            0.1501898318529129,
+            -0.002579913940280676
+          ],
+          [
+            -0.05515516176819801,
+            0.027365438640117645,
+            0.1217031329870224,
+            -0.02696738764643669
+          ],
+          [
+            -0.032792363315820694,
+            -0.003083003917708993,
+            0.09309627115726471,
+            -0.0186862014234066
+          ],
+          [
+            -0.031899094581604004,
+            -0.017408572137355804,
+            0.09524792432785034,
+            -0.010714838281273842
+          ],
+          [
+            -0.04021543636918068,
+            0.006586408242583275,
+            0.05175314098596573,
+            0.02204127423465252
+          ]
+        ],
+        "candidate_cluster": 3,
+        "candidate_id": "fb3433efd2b32519a2381fcc71c870d0",
+        "descent_layer": "late",
+        "minimum_margins": {
+          "angular_rate": -11.759288268464962,
+          "body_clearance_m": -0.007845668382861385,
+          "pitch_rad": -0.1170969969707445,
+          "roll_rad": 0.26021910000679216
+        },
+        "policy": "checkpoint_4800",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 6.848547218396561e-05,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.0002788781397669027,
+          "reward/descent_rsi_pilot_angular": 0.002941805704340439,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.055185007085640336,
+          "reward/descent_rsi_pilot_roll": 0.18886719550937414,
+          "reward/descent_rsi_pilot_shaping": 0.3066474571824074,
+          "reward/descent_rsi_pilot_survival": 0.05999999865889549,
+          "reward/descent_rsi_pilot_vz": 8.009942141497019e-07
+        },
+        "survived_ticks": 5,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            0.0009184316731989384,
+            -0.03803841024637222,
+            0.16132104396820068,
+            0.0050961594097316265
+          ],
+          [
+            0.00603222893550992,
+            -0.017770027741789818,
+            0.09011933952569962,
+            0.011800236068665981
+          ],
+          [
+            -0.04413091391324997,
+            0.019030630588531494,
+            0.09376420080661774,
+            0.010579078458249569
+          ],
+          [
+            -0.02545425482094288,
+            0.06151619181036949,
+            0.07950370758771896,
+            0.030273137614130974
+          ],
+          [
+            -0.10224785655736923,
+            0.04188890755176544,
+            0.09118034690618515,
+            0.02524457313120365
+          ],
+          [
+            -0.0620378814637661,
+            0.01900480128824711,
+            0.050536319613456726,
+            0.019948579370975494
+          ],
+          [
+            -0.0501132495701313,
+            0.020642124116420746,
+            0.0221475251019001,
+            0.022989768534898758
+          ],
+          [
+            -0.05283399298787117,
+            0.011858795769512653,
+            0.013105201534926891,
+            0.02838812582194805
+          ],
+          [
+            -0.051409438252449036,
+            0.01311794575303793,
+            0.030909813940525055,
+            0.030532106757164
+          ],
+          [
+            -0.037059199064970016,
+            0.008121118880808353,
+            0.059140127152204514,
+            0.029859211295843124
+          ]
+        ],
+        "candidate_cluster": 7,
+        "candidate_id": "98b1cfddaed01f1b3602b23df2eb1ee2",
+        "descent_layer": "middle",
+        "minimum_margins": {
+          "angular_rate": -5.299331250587015,
+          "body_clearance_m": 0.025060323391662778,
+          "pitch_rad": -0.04070947236594713,
+          "roll_rad": 0.48991450954315385
+        },
+        "policy": "checkpoint_4800",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 7.928504646770307e-05,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.003073044327209118,
+          "reward/descent_rsi_pilot_angular": 0.024893309746403247,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.13863672969205254,
+          "reward/descent_rsi_pilot_roll": 0.38084127753973007,
+          "reward/descent_rsi_pilot_shaping": 0.6414467506110668,
+          "reward/descent_rsi_pilot_survival": 0.09999999776482582,
+          "reward/descent_rsi_pilot_vz": 0.0002277734867348613
+        },
+        "survived_ticks": 9,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            -0.0042662122286856174,
+            -0.040891893208026886,
+            0.15834136307239532,
+            0.0007143978145904839
+          ],
+          [
+            0.005219726357609034,
+            -0.016830924898386,
+            0.10551278293132782,
+            0.008207695558667183
+          ],
+          [
+            -0.05273193493485451,
+            0.01997075043618679,
+            0.10668520629405975,
+            0.009073079563677311
+          ],
+          [
+            -0.022225525230169296,
+            0.06860903650522232,
+            0.12083854526281357,
+            0.033512454479932785
+          ],
+          [
+            -0.11435693502426147,
+            0.048363395035266876,
+            0.09353126585483551,
+            0.01329104881733656
+          ],
+          [
+            -0.06837385147809982,
+            0.020525913685560226,
+            0.052171483635902405,
+            0.01977464370429516
+          ],
+          [
+            -0.05139821022748947,
+            0.022717881947755814,
+            0.024751076474785805,
+            0.02586413361132145
+          ],
+          [
+            -0.057149697095155716,
+            0.009350784122943878,
+            0.010705111548304558,
+            0.02966456115245819
+          ],
+          [
+            -0.054805103689432144,
+            0.012715183198451996,
+            0.03251555562019348,
+            0.03226805105805397
+          ],
+          [
+            -0.0390339121222496,
+            0.008271204307675362,
+            0.06220277398824692,
+            0.031612105667591095
+          ]
+        ],
+        "candidate_cluster": 7,
+        "candidate_id": "702c059587484d34fc7f4e9bb743a41c",
+        "descent_layer": "middle",
+        "minimum_margins": {
+          "angular_rate": -5.694089496030884,
+          "body_clearance_m": 0.0,
+          "pitch_rad": -0.07445583409843004,
+          "roll_rad": 0.5030792011701795
+        },
+        "policy": "checkpoint_4800",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 9.517935382064024e-05,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.0030996507418876718,
+          "reward/descent_rsi_pilot_angular": 0.024227839952800423,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.14088925600117364,
+          "reward/descent_rsi_pilot_roll": 0.3843393474817276,
+          "reward/descent_rsi_pilot_shaping": 0.6465075090527534,
+          "reward/descent_rsi_pilot_survival": 0.09999999776482582,
+          "reward/descent_rsi_pilot_vz": 0.00024591777469851195
+        },
+        "survived_ticks": 9,
+        "termination_reason": "pitch_limit"
+      }
+    ],
+    "summary": {
+      "labels": {
+        "provisional_core": {
+          "action": {
+            "max_abs": 1.0,
+            "mean": [
+              0.056273029059977143,
+              0.3703312227703832,
+              0.7716221249586827,
+              -0.5493500716355
+            ],
+            "saturation_fraction": 0.1891891891891892,
+            "std": [
+              0.47610309599559103,
+              0.2633195893224517,
+              0.30746597291743205,
+              0.4178773486829221
+            ]
+          },
+          "failure_reasons": {
+            "pitch_limit": 3,
+            "roll_limit": 1
+          },
+          "minimum_margins": {
+            "angular_rate": -21.10688380199198,
+            "body_clearance_m": 0.0,
+            "pitch_rad": -0.21314868993339098,
+            "roll_rad": -2.064353820792463
+          },
+          "reward_component_sum": {
+            "reward/descent_rsi_pilot_action_magnitude_penalty": 0.04447398872071062,
+            "reward/descent_rsi_pilot_action_smooth_penalty": 0.037875714846563824,
+            "reward/descent_rsi_pilot_angular": 0.09192145107169616,
+            "reward/descent_rsi_pilot_failure_penalty": 8.0,
+            "reward/descent_rsi_pilot_pitch": 0.6492924603657855,
+            "reward/descent_rsi_pilot_roll": 1.418907331302762,
+            "reward/descent_rsi_pilot_shaping": 2.447776093147695,
+            "reward/descent_rsi_pilot_survival": 0.36999999172985554,
+            "reward/descent_rsi_pilot_vz": 4.571239765537974e-06
+          },
+          "states": 4,
+          "survival_counts": {
+            "16": 0,
+            "24": 0,
+            "8": 4
+          },
+          "survival_rates": {
+            "16": 0.0,
+            "24": 0.0,
+            "8": 1.0
+          },
+          "time_to_failure": {
+            "lower_quartile": 8.0,
+            "max": 9,
+            "median": 8.0,
+            "min": 8
+          }
+        },
+        "provisional_frontier": {
+          "action": {
+            "max_abs": 0.2822035253047943,
+            "mean": [
+              -0.024274914567892363,
+              0.0046778573232586496,
+              0.10590231967701887,
+              1.7910559108713642e-05
+            ],
+            "saturation_fraction": 0.0,
+            "std": [
+              0.032459720006474485,
+              0.02245195682244219,
+              0.05746122159980847,
+              0.02293703207538851
+            ]
+          },
+          "failure_reasons": {
+            "pitch_limit": 6
+          },
+          "minimum_margins": {
+            "angular_rate": -12.345289137698149,
+            "body_clearance_m": -0.02287309734565207,
+            "pitch_rad": -0.18478963441428697,
+            "roll_rad": 0.26021910000679216
+          },
+          "reward_component_sum": {
+            "reward/descent_rsi_pilot_action_magnitude_penalty": 0.0006196348383582517,
+            "reward/descent_rsi_pilot_action_smooth_penalty": 0.007072422588095151,
+            "reward/descent_rsi_pilot_angular": 0.10167681723032718,
+            "reward/descent_rsi_pilot_failure_penalty": 12.0,
+            "reward/descent_rsi_pilot_pitch": 0.5124756587267143,
+            "reward/descent_rsi_pilot_roll": 1.7460475927218795,
+            "reward/descent_rsi_pilot_shaping": 2.84428808093071,
+            "reward/descent_rsi_pilot_survival": 0.47999998927116394,
+            "reward/descent_rsi_pilot_vz": 0.011780106900169491
+          },
+          "states": 6,
+          "survival_counts": {
+            "16": 0,
+            "24": 0,
+            "8": 2
+          },
+          "survival_rates": {
+            "16": 0.0,
+            "24": 0.0,
+            "8": 0.3333333333333333
+          },
+          "time_to_failure": {
+            "lower_quartile": 5.5,
+            "max": 9,
+            "median": 7.0,
+            "min": 5
+          }
+        }
+      },
+      "layers": {
+        "early": {
+          "action": {
+            "max_abs": 1.0,
+            "mean": [
+              0.04023310785041243,
+              0.2557208483010741,
+              0.5820915025641333,
+              -0.3897845251990904
+            ],
+            "saturation_fraction": 0.1320754716981132,
+            "std": [
+              0.39870231083091384,
+              0.2807006039539888,
+              0.3875757274112851,
+              0.42527408011152723
+            ]
+          },
+          "failure_reasons": {
+            "pitch_limit": 5,
+            "roll_limit": 1
+          },
+          "minimum_margins": {
+            "angular_rate": -21.10688380199198,
+            "body_clearance_m": -0.02287309734565207,
+            "pitch_rad": -0.21314868993339098,
+            "roll_rad": -2.064353820792463
+          },
+          "reward_component_sum": {
+            "reward/descent_rsi_pilot_action_magnitude_penalty": 0.044782497550386324,
+            "reward/descent_rsi_pilot_action_smooth_penalty": 0.03819374164754663,
+            "reward/descent_rsi_pilot_angular": 0.1358924981176393,
+            "reward/descent_rsi_pilot_failure_penalty": 12.0,
+            "reward/descent_rsi_pilot_pitch": 0.7710592481764991,
+            "reward/descent_rsi_pilot_roll": 2.007858228869736,
+            "reward/descent_rsi_pilot_shaping": 3.3731429083272815,
+            "reward/descent_rsi_pilot_survival": 0.5299999881535769,
+            "reward/descent_rsi_pilot_vz": 0.011309201371617927
+          },
+          "states": 6,
+          "survival_counts": {
+            "16": 0,
+            "24": 0,
+            "8": 4
+          },
+          "survival_rates": {
+            "16": 0.0,
+            "24": 0.0,
+            "8": 0.6666666666666666
+          },
+          "time_to_failure": {
+            "lower_quartile": 7.25,
+            "max": 9,
+            "median": 8.0,
+            "min": 7
+          }
+        },
+        "late": {
+          "action": {
+            "max_abs": 0.15939509868621826,
+            "mean": [
+              -0.028165896534725714,
+              0.006784502096707001,
+              0.11029146177073319,
+              -0.007100521334602187
+            ],
+            "saturation_fraction": 0.0,
+            "std": [
+              0.02005907632356048,
+              0.016334394825474413,
+              0.03478478718210179,
+              0.015858492472909286
+            ]
+          },
+          "failure_reasons": {
+            "pitch_limit": 2
+          },
+          "minimum_margins": {
+            "angular_rate": -12.345289137698149,
+            "body_clearance_m": -0.007845668382861385,
+            "pitch_rad": -0.12300322122153795,
+            "roll_rad": 0.26021910000679216
+          },
+          "reward_component_sum": {
+            "reward/descent_rsi_pilot_action_magnitude_penalty": 0.00013666160839420627,
+            "reward/descent_rsi_pilot_action_smooth_penalty": 0.0005817007180155542,
+            "reward/descent_rsi_pilot_angular": 0.008584620485180383,
+            "reward/descent_rsi_pilot_failure_penalty": 4.0,
+            "reward/descent_rsi_pilot_pitch": 0.11118288522277453,
+            "reward/descent_rsi_pilot_roll": 0.39191607013344765,
+            "reward/descent_rsi_pilot_shaping": 0.6309670060873032,
+            "reward/descent_rsi_pilot_survival": 0.11999999731779099,
+            "reward/descent_rsi_pilot_vz": 1.785506883729763e-06
+          },
+          "states": 2,
+          "survival_counts": {
+            "16": 0,
+            "24": 0,
+            "8": 0
+          },
+          "survival_rates": {
+            "16": 0.0,
+            "24": 0.0,
+            "8": 0.0
+          },
+          "time_to_failure": {
+            "lower_quartile": 5.0,
+            "max": 5,
+            "median": 5.0,
+            "min": 5
+          }
+        },
+        "middle": {
+          "action": {
+            "max_abs": 0.16132104396820068,
+            "mean": [
+              -0.043872889084741476,
+              0.014608670445159077,
+              0.07294913954101503,
+              0.02093465739453677
+            ],
+            "saturation_fraction": 0.0,
+            "std": [
+              0.031037207412234147,
+              0.027583398597898632,
+              0.04365904881406602,
+              0.01012988773092762
+            ]
+          },
+          "failure_reasons": {
+            "pitch_limit": 2
+          },
+          "minimum_margins": {
+            "angular_rate": -5.694089496030884,
+            "body_clearance_m": 0.0,
+            "pitch_rad": -0.07445583409843004,
+            "roll_rad": 0.48991450954315385
+          },
+          "reward_component_sum": {
+            "reward/descent_rsi_pilot_action_magnitude_penalty": 0.0001744644002883433,
+            "reward/descent_rsi_pilot_action_smooth_penalty": 0.00617269506909679,
+            "reward/descent_rsi_pilot_angular": 0.04912114969920367,
+            "reward/descent_rsi_pilot_failure_penalty": 4.0,
+            "reward/descent_rsi_pilot_pitch": 0.2795259856932262,
+            "reward/descent_rsi_pilot_roll": 0.7651806250214577,
+            "reward/descent_rsi_pilot_shaping": 1.2879542596638203,
+            "reward/descent_rsi_pilot_survival": 0.19999999552965164,
+            "reward/descent_rsi_pilot_vz": 0.00047369126143337326
+          },
+          "states": 2,
+          "survival_counts": {
+            "16": 0,
+            "24": 0,
+            "8": 2
+          },
+          "survival_rates": {
+            "16": 0.0,
+            "24": 0.0,
+            "8": 1.0
+          },
+          "time_to_failure": {
+            "lower_quartile": 9.0,
+            "max": 9,
+            "median": 9.0,
+            "min": 9
+          }
+        }
+      },
+      "overall": {
+        "action": {
+          "max_abs": 1.0,
+          "mean": [
+            0.010787131481886128,
+            0.16384461640024228,
+            0.39568623491727256,
+            -0.2391187405138386
+          ],
+          "saturation_fraction": 0.08235294117647059,
+          "std": [
+            0.31758423958766163,
+            0.251659580945591,
+            0.38981455349809246,
+            0.3879387580185528
+          ]
+        },
+        "failure_reasons": {
+          "pitch_limit": 9,
+          "roll_limit": 1
+        },
+        "minimum_margins": {
+          "angular_rate": -21.10688380199198,
+          "body_clearance_m": -0.02287309734565207,
+          "pitch_rad": -0.21314868993339098,
+          "roll_rad": -2.064353820792463
+        },
+        "reward_component_sum": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.045093623559068874,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.044948137434658975,
+          "reward/descent_rsi_pilot_angular": 0.19359826830202334,
+          "reward/descent_rsi_pilot_failure_penalty": 20.0,
+          "reward/descent_rsi_pilot_pitch": 1.1617681190924998,
+          "reward/descent_rsi_pilot_roll": 3.1649549240246415,
+          "reward/descent_rsi_pilot_shaping": 5.292064174078405,
+          "reward/descent_rsi_pilot_survival": 0.8499999810010195,
+          "reward/descent_rsi_pilot_vz": 0.011784678139935029
+        },
+        "states": 10,
+        "survival_counts": {
+          "16": 0,
+          "24": 0,
+          "8": 6
+        },
+        "survival_rates": {
+          "16": 0.0,
+          "24": 0.0,
+          "8": 0.6
+        },
+        "time_to_failure": {
+          "lower_quartile": 7.0,
+          "max": 9,
+          "median": 8.0,
+          "min": 5
+        }
+      }
+    }
+  },
+  "checkpoint_6400": {
+    "horizon": 24,
+    "policy": "checkpoint_6400",
+    "rows": [
+      {
+        "actions": [
+          [
+            0.4507957696914673,
+            0.45723024010658264,
+            1.0,
+            -0.9333652257919312
+          ],
+          [
+            0.40556973218917847,
+            0.4639642834663391,
+            1.0,
+            -0.9371616840362549
+          ],
+          [
+            0.8805413246154785,
+            0.7247709035873413,
+            1.0,
+            -0.9515708088874817
+          ],
+          [
+            0.45120444893836975,
+            0.764029324054718,
+            1.0,
+            -0.9159470796585083
+          ],
+          [
+            -0.7304442524909973,
+            0.5214306712150574,
+            0.9999995827674866,
+            -0.8742502927780151
+          ],
+          [
+            -0.3923065662384033,
+            0.22058667242527008,
+            0.960443913936615,
+            -0.36535874009132385
+          ],
+          [
+            -0.2930918037891388,
+            0.20486976206302643,
+            0.5030831098556519,
+            -0.09083990752696991
+          ],
+          [
+            -0.12232919037342072,
+            0.046145711094141006,
+            0.33485403656959534,
+            -0.02129460871219635
+          ],
+          [
+            -0.09280166774988174,
+            0.023064222186803818,
+            0.27683624625205994,
+            0.008182477205991745
+          ]
+        ],
+        "candidate_cluster": 1,
+        "candidate_id": "9859a67b128991679eb379b664f52bf1",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -21.099748694188573,
+          "body_clearance_m": 0.0,
+          "pitch_rad": -0.013668990798564318,
+          "roll_rad": 0.5306545748197766
+        },
+        "policy": "checkpoint_6400",
+        "provisional_label": "provisional_core",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.011105162666353863,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.009489143168366354,
+          "reward/descent_rsi_pilot_angular": 0.022752075736135885,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.15596476463088038,
+          "reward/descent_rsi_pilot_roll": 0.3556722551584244,
+          "reward/descent_rsi_pilot_shaping": 0.603795874863863,
+          "reward/descent_rsi_pilot_survival": 0.08999999798834324,
+          "reward/descent_rsi_pilot_vz": 1.1066322239440284e-06
+        },
+        "survived_ticks": 8,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            0.43416181206703186,
+            0.46016380190849304,
+            1.0,
+            -0.9350705146789551
+          ],
+          [
+            0.39748671650886536,
+            0.4668997824192047,
+            1.0,
+            -0.9366030097007751
+          ],
+          [
+            0.8836341500282288,
+            0.7216317057609558,
+            1.0,
+            -0.9517614245414734
+          ],
+          [
+            0.4472014307975769,
+            0.7620114088058472,
+            1.0,
+            -0.9168281555175781
+          ],
+          [
+            -0.7321982979774475,
+            0.5139818787574768,
+            0.9999997615814209,
+            -0.8754183053970337
+          ],
+          [
+            -0.3955079913139343,
+            0.2177935242652893,
+            0.9608983993530273,
+            -0.3711545765399933
+          ],
+          [
+            -0.30221861600875854,
+            0.20459359884262085,
+            0.5119964480400085,
+            -0.09353543817996979
+          ],
+          [
+            -0.10806538909673691,
+            0.04100848734378815,
+            0.33363667130470276,
+            -0.022676996886730194
+          ],
+          [
+            -0.09089791774749756,
+            0.021287593990564346,
+            0.27541792392730713,
+            0.0039720479398965836
+          ],
+          [
+            -0.029149435460567474,
+            -0.03135022893548012,
+            0.22390612959861755,
+            0.016695111989974976
+          ]
+        ],
+        "candidate_cluster": 1,
+        "candidate_id": "32f7603875293f339e1f907abef46d04",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -19.43278411218275,
+          "body_clearance_m": 0.06163706647321067,
+          "pitch_rad": -0.21306178636130846,
+          "roll_rad": -2.0655611724770333
+        },
+        "policy": "checkpoint_6400",
+        "provisional_label": "provisional_core",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.011140612157760188,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.009423426364833176,
+          "reward/descent_rsi_pilot_angular": 0.023891159530463175,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.16075537432206488,
+          "reward/descent_rsi_pilot_roll": 0.3573230318725109,
+          "reward/descent_rsi_pilot_shaping": 0.6214064816012979,
+          "reward/descent_rsi_pilot_survival": 0.09999999776482582,
+          "reward/descent_rsi_pilot_vz": 9.477749250446197e-07
+        },
+        "survived_ticks": 9,
+        "termination_reason": "roll_limit"
+      },
+      {
+        "actions": [
+          [
+            0.4514862895011902,
+            0.45693379640579224,
+            1.0,
+            -0.9333532452583313
+          ],
+          [
+            0.40580567717552185,
+            0.4635160267353058,
+            1.0,
+            -0.9371775388717651
+          ],
+          [
+            0.8801652789115906,
+            0.7245689630508423,
+            1.0,
+            -0.9515407681465149
+          ],
+          [
+            0.449153870344162,
+            0.7643434405326843,
+            1.0,
+            -0.916004478931427
+          ],
+          [
+            -0.7304084300994873,
+            0.521016538143158,
+            0.9999997615814209,
+            -0.874196469783783
+          ],
+          [
+            -0.39202865958213806,
+            0.21998454630374908,
+            0.9603464007377625,
+            -0.365280419588089
+          ],
+          [
+            -0.2935124635696411,
+            0.20421792566776276,
+            0.5019047856330872,
+            -0.09053575247526169
+          ],
+          [
+            -0.11750849336385727,
+            0.04994828253984451,
+            0.3389364778995514,
+            -0.021526159718632698
+          ],
+          [
+            -0.08326210826635361,
+            0.012946965172886848,
+            0.29937922954559326,
+            0.004548405762761831
+          ]
+        ],
+        "candidate_cluster": 1,
+        "candidate_id": "aebfaa501b6220035daf954eb5a1c52d",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -20.851801845912064,
+          "body_clearance_m": 0.0,
+          "pitch_rad": -0.004880762763591173,
+          "roll_rad": 0.5336236311876508
+        },
+        "policy": "checkpoint_6400",
+        "provisional_label": "provisional_core",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.01111128778575221,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.009457252272795813,
+          "reward/descent_rsi_pilot_angular": 0.022725221515314396,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.15617352596609635,
+          "reward/descent_rsi_pilot_roll": 0.35592077299952507,
+          "reward/descent_rsi_pilot_shaping": 0.6042521744966507,
+          "reward/descent_rsi_pilot_survival": 0.08999999798834324,
+          "reward/descent_rsi_pilot_vz": 1.1983137875677007e-06
+        },
+        "survived_ticks": 8,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            0.4295214116573334,
+            0.4568849802017212,
+            1.0,
+            -0.9353557825088501
+          ],
+          [
+            0.38281887769699097,
+            0.4652668535709381,
+            1.0,
+            -0.9373633861541748
+          ],
+          [
+            0.8804623484611511,
+            0.7223642468452454,
+            1.0,
+            -0.9527170062065125
+          ],
+          [
+            0.43302419781684875,
+            0.7670525908470154,
+            1.0,
+            -0.9177502393722534
+          ],
+          [
+            -0.7339959144592285,
+            0.5296422243118286,
+            0.9999997615814209,
+            -0.8738916516304016
+          ],
+          [
+            -0.398090660572052,
+            0.23021149635314941,
+            0.9604184031486511,
+            -0.3546261489391327
+          ],
+          [
+            -0.30766233801841736,
+            0.20553156733512878,
+            0.5098132491111755,
+            -0.09051650762557983
+          ],
+          [
+            -0.11366503685712814,
+            0.04098935052752495,
+            0.33140861988067627,
+            -0.018707718700170517
+          ],
+          [
+            -0.08800003677606583,
+            0.019161388278007507,
+            0.27177295088768005,
+            0.011265262961387634
+          ]
+        ],
+        "candidate_cluster": 1,
+        "candidate_id": "efc40b7fb62638f121a99d884b922a5e",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -20.496162157084004,
+          "body_clearance_m": 0.05318459435788089,
+          "pitch_rad": -0.1498909956890062,
+          "roll_rad": 0.46321310389873704
+        },
+        "policy": "checkpoint_6400",
+        "provisional_label": "provisional_core",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.011090333726315293,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.009515140061921556,
+          "reward/descent_rsi_pilot_angular": 0.022558873325147343,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.17661420714159703,
+          "reward/descent_rsi_pilot_roll": 0.34827557392418385,
+          "reward/descent_rsi_pilot_shaping": 0.6168445236980915,
+          "reward/descent_rsi_pilot_survival": 0.08999999798834324,
+          "reward/descent_rsi_pilot_vz": 1.3563877739440037e-06
+        },
+        "survived_ticks": 8,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            0.02270282804965973,
+            -0.0049879844300448895,
+            0.2822270691394806,
+            -0.040250856429338455
+          ],
+          [
+            0.030303632840514183,
+            -0.013463557697832584,
+            0.18961328268051147,
+            -0.0332641676068306
+          ],
+          [
+            -0.017215587198734283,
+            -0.015702728182077408,
+            0.18610914051532745,
+            -0.03837797790765762
+          ],
+          [
+            0.01360125932842493,
+            -0.004392809234559536,
+            0.13192468881607056,
+            -0.0337684340775013
+          ],
+          [
+            -0.02207382582128048,
+            -0.01698422059416771,
+            0.13043147325515747,
+            -0.02066231705248356
+          ],
+          [
+            0.02035702019929886,
+            -0.014844325371086597,
+            0.09002935141324997,
+            -0.007670530583709478
+          ],
+          [
+            -0.027291376143693924,
+            0.0019113017478957772,
+            0.07304564118385315,
+            -0.00033297721529379487
+          ],
+          [
+            -0.0032007640693336725,
+            0.00024094450054690242,
+            0.0967242643237114,
+            0.003624086966738105
+          ]
+        ],
+        "candidate_cluster": 2,
+        "candidate_id": "c9551cfe91f1a2ab4b99fdddf68c062f",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -8.505095356950278,
+          "body_clearance_m": -0.022874473250247863,
+          "pitch_rad": -0.17110428876456774,
+          "roll_rad": 0.41492338765499315
+        },
+        "policy": "checkpoint_6400",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.0001633876163396053,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.00017758220940322644,
+          "reward/descent_rsi_pilot_angular": 0.022428035479208575,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.06253074793733049,
+          "reward/descent_rsi_pilot_roll": 0.2998802997171879,
+          "reward/descent_rsi_pilot_shaping": 0.46929140016436577,
+          "reward/descent_rsi_pilot_survival": 0.07999999821186066,
+          "reward/descent_rsi_pilot_vz": 0.004793260682318929
+        },
+        "survived_ticks": 7,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            0.020437784492969513,
+            -0.007441253867000341,
+            0.26660841703414917,
+            -0.03866135701537132
+          ],
+          [
+            0.029581181704998016,
+            -0.013593161478638649,
+            0.17340384423732758,
+            -0.029137521982192993
+          ],
+          [
+            -0.02256234548985958,
+            -0.014794479124248028,
+            0.17097778618335724,
+            -0.03438379243016243
+          ],
+          [
+            0.00912211649119854,
+            -0.0015168808167800307,
+            0.11510331928730011,
+            -0.032235413789749146
+          ],
+          [
+            -0.02631654590368271,
+            -0.01665143482387066,
+            0.13180457055568695,
+            -0.0191891398280859
+          ],
+          [
+            0.020363349467515945,
+            -0.01354479230940342,
+            0.08352705836296082,
+            -0.005527483765035868
+          ],
+          [
+            0.010875125415623188,
+            -0.009070608764886856,
+            0.07742730528116226,
+            -0.0005675953580066562
+          ],
+          [
+            -0.008168183267116547,
+            -0.0044115628115832806,
+            0.10142279416322708,
+            -0.0020401673391461372
+          ]
+        ],
+        "candidate_cluster": 2,
+        "candidate_id": "24d365f6cf5a4a97188273df8a7c24d9",
+        "descent_layer": "early",
+        "minimum_margins": {
+          "angular_rate": -9.065797400157242,
+          "body_clearance_m": -0.020821990513247377,
+          "pitch_rad": -0.18474397725638902,
+          "roll_rad": 0.333602639921877
+        },
+        "policy": "checkpoint_6400",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.00014507344485537033,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.00014038260290760718,
+          "reward/descent_rsi_pilot_angular": 0.021546353216223224,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.05924270266376652,
+          "reward/descent_rsi_pilot_roll": 0.2890095729380846,
+          "reward/descent_rsi_pilot_shaping": 0.4560285545885563,
+          "reward/descent_rsi_pilot_survival": 0.07999999821186066,
+          "reward/descent_rsi_pilot_vz": 0.006515384623087231
+        },
+        "survived_ticks": 7,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            -0.003390279598534107,
+            0.0060998499393463135,
+            0.1594136357307434,
+            -0.012438350357115269
+          ],
+          [
+            -0.003291154047474265,
+            0.017703676596283913,
+            0.1370808333158493,
+            -0.001956275664269924
+          ],
+          [
+            -0.059334613382816315,
+            0.03577568009495735,
+            0.11515349894762039,
+            -0.03133228421211243
+          ],
+          [
+            -0.038917992264032364,
+            -0.0006393628427758813,
+            0.08553704619407654,
+            -0.012984993867576122
+          ],
+          [
+            -0.02822628989815712,
+            -0.022201327607035637,
+            0.10928352177143097,
+            0.00024071888765320182
+          ],
+          [
+            -0.03811040148139,
+            0.00668000802397728,
+            0.056472666561603546,
+            0.02271353453397751
+          ]
+        ],
+        "candidate_cluster": 3,
+        "candidate_id": "05f2b501d77ac36f75a65f4258a3a227",
+        "descent_layer": "late",
+        "minimum_margins": {
+          "angular_rate": -12.345040750796276,
+          "body_clearance_m": -0.006930182176357654,
+          "pitch_rad": -0.1169453627544359,
+          "roll_rad": 0.3302529184901448
+        },
+        "policy": "checkpoint_6400",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 6.840957303211326e-05,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.00030205531840010735,
+          "reward/descent_rsi_pilot_angular": 0.005654111902572145,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.056003243126724556,
+          "reward/descent_rsi_pilot_roll": 0.2003400046378374,
+          "reward/descent_rsi_pilot_shaping": 0.32162786461412907,
+          "reward/descent_rsi_pilot_survival": 0.05999999865889549,
+          "reward/descent_rsi_pilot_vz": 9.844911856056124e-07
+        },
+        "survived_ticks": 5,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            -0.00028724013827741146,
+            0.002264342037960887,
+            0.153009295463562,
+            -0.011922750622034073
+          ],
+          [
+            -0.0034621679224073887,
+            0.020493658259510994,
+            0.15020114183425903,
+            -0.002565887523815036
+          ],
+          [
+            -0.05524137616157532,
+            0.027448145672678947,
+            0.12177896499633789,
+            -0.02700345776975155
+          ],
+          [
+            -0.031912513077259064,
+            -0.0030439409893006086,
+            0.09318992495536804,
+            -0.0184292234480381
+          ],
+          [
+            -0.026615474373102188,
+            -0.017832322046160698,
+            0.09397723525762558,
+            -0.01072100829333067
+          ],
+          [
+            -0.03212751820683479,
+            0.0069396947510540485,
+            0.05394952371716499,
+            0.021096816286444664
+          ]
+        ],
+        "candidate_cluster": 3,
+        "candidate_id": "fb3433efd2b32519a2381fcc71c870d0",
+        "descent_layer": "late",
+        "minimum_margins": {
+          "angular_rate": -11.761772014638058,
+          "body_clearance_m": -0.007728400010349723,
+          "pitch_rad": -0.11484501428184068,
+          "roll_rad": 0.2518927483641835
+        },
+        "policy": "checkpoint_6400",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 6.778735132684233e-05,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.000278557873372165,
+          "reward/descent_rsi_pilot_angular": 0.002949276316133176,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.05517969180652926,
+          "reward/descent_rsi_pilot_roll": 0.18741440260782838,
+          "reward/descent_rsi_pilot_shaping": 0.3051978163421154,
+          "reward/descent_rsi_pilot_survival": 0.05999999865889549,
+          "reward/descent_rsi_pilot_vz": 8.011767990318502e-07
+        },
+        "survived_ticks": 5,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            0.0009416724788025022,
+            -0.038046784698963165,
+            0.161344975233078,
+            0.005108246114104986
+          ],
+          [
+            0.008098246529698372,
+            -0.015412070788443089,
+            0.10535025596618652,
+            0.0097615672275424
+          ],
+          [
+            -0.045612405985593796,
+            0.022346554324030876,
+            0.11469448357820511,
+            0.003609549719840288
+          ],
+          [
+            -0.009357496164739132,
+            0.05364685505628586,
+            0.12865173816680908,
+            0.024007735773921013
+          ],
+          [
+            -0.10395003110170364,
+            0.05286598578095436,
+            0.12363367527723312,
+            0.014727292582392693
+          ],
+          [
+            -0.06144382804632187,
+            0.025832319632172585,
+            0.06823944300413132,
+            0.0032879579812288284
+          ],
+          [
+            -0.0564047135412693,
+            0.02696516364812851,
+            0.0398038849234581,
+            0.00552782416343689
+          ],
+          [
+            -0.06048031151294708,
+            0.013911350630223751,
+            0.024391820654273033,
+            0.01029474288225174
+          ],
+          [
+            -0.05680765584111214,
+            0.015303377993404865,
+            0.039890144020318985,
+            0.013954601250588894
+          ],
+          [
+            -0.04120504483580589,
+            0.011663872748613358,
+            0.06220009922981262,
+            0.013326656073331833
+          ]
+        ],
+        "candidate_cluster": 7,
+        "candidate_id": "98b1cfddaed01f1b3602b23df2eb1ee2",
+        "descent_layer": "middle",
+        "minimum_margins": {
+          "angular_rate": -5.670375343410322,
+          "body_clearance_m": 0.029756133660985333,
+          "pitch_rad": -0.07467422551688707,
+          "roll_rad": 0.48055632699367723
+        },
+        "policy": "checkpoint_6400",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.00010069565200865327,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.0030771554593229666,
+          "reward/descent_rsi_pilot_angular": 0.020024284262035508,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.14262603366660187,
+          "reward/descent_rsi_pilot_roll": 0.37980980053544044,
+          "reward/descent_rsi_pilot_shaping": 0.6395234316587448,
+          "reward/descent_rsi_pilot_survival": 0.09999999776482582,
+          "reward/descent_rsi_pilot_vz": 0.00024117219319208516
+        },
+        "survived_ticks": 9,
+        "termination_reason": "pitch_limit"
+      },
+      {
+        "actions": [
+          [
+            -0.00424403790384531,
+            -0.0408993698656559,
+            0.15836378931999207,
+            0.0007257710094563663
+          ],
+          [
+            0.005240726750344038,
+            -0.016833022236824036,
+            0.10551858693361282,
+            0.008222839795053005
+          ],
+          [
+            -0.04922914877533913,
+            0.022769136354327202,
+            0.11477997899055481,
+            0.006888776086270809
+          ],
+          [
+            -0.012637092731893063,
+            0.05347808077931404,
+            0.13480892777442932,
+            0.026296241208910942
+          ],
+          [
+            -0.10261071473360062,
+            0.0541205070912838,
+            0.123195119202137,
+            0.014453981071710587
+          ],
+          [
+            -0.06262610852718353,
+            0.026226380839943886,
+            0.0679292157292366,
+            0.003030900377780199
+          ],
+          [
+            -0.05628382787108421,
+            0.026952804997563362,
+            0.04018965736031532,
+            0.005745952483266592
+          ],
+          [
+            -0.06161763146519661,
+            0.013674478977918625,
+            0.023917237296700478,
+            0.010251129046082497
+          ],
+          [
+            -0.057891156524419785,
+            0.015363131649792194,
+            0.039363257586956024,
+            0.014065856114029884
+          ],
+          [
+            -0.0420357845723629,
+            0.011882125400006771,
+            0.06218433752655983,
+            0.013597704470157623
+          ]
+        ],
+        "candidate_cluster": 7,
+        "candidate_id": "702c059587484d34fc7f4e9bb743a41c",
+        "descent_layer": "middle",
+        "minimum_margins": {
+          "angular_rate": -5.7371814200267774,
+          "body_clearance_m": 0.0,
+          "pitch_rad": -0.07801554269370592,
+          "roll_rad": 0.49546699512836656
+        },
+        "policy": "checkpoint_6400",
+        "provisional_label": "provisional_frontier",
+        "reward_components": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.00010193012394665857,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.0030963892094462153,
+          "reward/descent_rsi_pilot_angular": 0.019985914885182865,
+          "reward/descent_rsi_pilot_failure_penalty": 2.0,
+          "reward/descent_rsi_pilot_pitch": 0.14280318451642415,
+          "reward/descent_rsi_pilot_roll": 0.38304925709962845,
+          "reward/descent_rsi_pilot_shaping": 0.6428886726498604,
+          "reward/descent_rsi_pilot_survival": 0.09999999776482582,
+          "reward/descent_rsi_pilot_vz": 0.0002486426396970387
+        },
+        "survived_ticks": 9,
+        "termination_reason": "pitch_limit"
+      }
+    ],
+    "summary": {
+      "labels": {
+        "provisional_core": {
+          "action": {
+            "max_abs": 1.0,
+            "mean": [
+              0.05718616396188736,
+              0.36915390611298987,
+              0.7717581584646895,
+              -0.5491545064047583
+            ],
+            "saturation_fraction": 0.1891891891891892,
+            "std": [
+              0.47646966187572287,
+              0.262750814327143,
+              0.3073059668179566,
+              0.4177122165143702
+            ]
+          },
+          "failure_reasons": {
+            "pitch_limit": 3,
+            "roll_limit": 1
+          },
+          "minimum_margins": {
+            "angular_rate": -21.099748694188573,
+            "body_clearance_m": 0.0,
+            "pitch_rad": -0.21306178636130846,
+            "roll_rad": -2.0655611724770333
+          },
+          "reward_component_sum": {
+            "reward/descent_rsi_pilot_action_magnitude_penalty": 0.044447396336181555,
+            "reward/descent_rsi_pilot_action_smooth_penalty": 0.0378849618679169,
+            "reward/descent_rsi_pilot_angular": 0.0919273301070608,
+            "reward/descent_rsi_pilot_failure_penalty": 8.0,
+            "reward/descent_rsi_pilot_pitch": 0.6495078720606386,
+            "reward/descent_rsi_pilot_roll": 1.4171916339546442,
+            "reward/descent_rsi_pilot_shaping": 2.446299054659903,
+            "reward/descent_rsi_pilot_survival": 0.36999999172985554,
+            "reward/descent_rsi_pilot_vz": 4.609108710500353e-06
+          },
+          "states": 4,
+          "survival_counts": {
+            "16": 0,
+            "24": 0,
+            "8": 4
+          },
+          "survival_rates": {
+            "16": 0.0,
+            "24": 0.0,
+            "8": 1.0
+          },
+          "time_to_failure": {
+            "lower_quartile": 8.0,
+            "max": 9,
+            "median": 8.0,
+            "min": 8
+          }
+        },
+        "provisional_frontier": {
+          "action": {
+            "max_abs": 0.2822270691394806,
+            "mean": [
+              -0.023761618642311078,
+              0.005546904728059114,
+              0.11183079006150365,
+              -0.004392989209009102
+            ],
+            "saturation_fraction": 0.0,
+            "std": [
+              0.03244204359221654,
+              0.022505216370654384,
+              0.05437889201563371,
+              0.018527357836884688
+            ]
+          },
+          "failure_reasons": {
+            "pitch_limit": 6
+          },
+          "minimum_margins": {
+            "angular_rate": -12.345040750796276,
+            "body_clearance_m": -0.022874473250247863,
+            "pitch_rad": -0.18474397725638902,
+            "roll_rad": 0.2518927483641835
+          },
+          "reward_component_sum": {
+            "reward/descent_rsi_pilot_action_magnitude_penalty": 0.000647283761509243,
+            "reward/descent_rsi_pilot_action_smooth_penalty": 0.007072122672852288,
+            "reward/descent_rsi_pilot_angular": 0.09258797606135549,
+            "reward/descent_rsi_pilot_failure_penalty": 12.0,
+            "reward/descent_rsi_pilot_pitch": 0.5183856037173769,
+            "reward/descent_rsi_pilot_roll": 1.7395033375360072,
+            "reward/descent_rsi_pilot_shaping": 2.8345577400177717,
+            "reward/descent_rsi_pilot_survival": 0.47999998927116394,
+            "reward/descent_rsi_pilot_vz": 0.011800245806279922
+          },
+          "states": 6,
+          "survival_counts": {
+            "16": 0,
+            "24": 0,
+            "8": 2
+          },
+          "survival_rates": {
+            "16": 0.0,
+            "24": 0.0,
+            "8": 0.3333333333333333
+          },
+          "time_to_failure": {
+            "lower_quartile": 5.5,
+            "max": 9,
+            "median": 7.0,
+            "min": 5
+          }
+        }
+      },
+      "layers": {
+        "early": {
+          "action": {
+            "max_abs": 1.0,
+            "mean": [
+              0.040875542201628944,
+              0.25489522590420544,
+              0.582177959804265,
+              -0.38964457325263935
+            ],
+            "saturation_fraction": 0.1320754716981132,
+            "std": [
+              0.39903324653097955,
+              0.27999598671907094,
+              0.38754491258563384,
+              0.42511259333520157
+            ]
+          },
+          "failure_reasons": {
+            "pitch_limit": 5,
+            "roll_limit": 1
+          },
+          "minimum_margins": {
+            "angular_rate": -21.099748694188573,
+            "body_clearance_m": -0.022874473250247863,
+            "pitch_rad": -0.21306178636130846,
+            "roll_rad": -2.0655611724770333
+          },
+          "reward_component_sum": {
+            "reward/descent_rsi_pilot_action_magnitude_penalty": 0.04475585739737653,
+            "reward/descent_rsi_pilot_action_smooth_penalty": 0.03820292668022773,
+            "reward/descent_rsi_pilot_angular": 0.1359017188024926,
+            "reward/descent_rsi_pilot_failure_penalty": 12.0,
+            "reward/descent_rsi_pilot_pitch": 0.7712813226617357,
+            "reward/descent_rsi_pilot_roll": 2.0060815066099167,
+            "reward/descent_rsi_pilot_shaping": 3.371619009412825,
+            "reward/descent_rsi_pilot_survival": 0.5299999881535769,
+            "reward/descent_rsi_pilot_vz": 0.011313254414116661
+          },
+          "states": 6,
+          "survival_counts": {
+            "16": 0,
+            "24": 0,
+            "8": 4
+          },
+          "survival_rates": {
+            "16": 0.0,
+            "24": 0.0,
+            "8": 0.6666666666666666
+          },
+          "time_to_failure": {
+            "lower_quartile": 7.25,
+            "max": 9,
+            "median": 8.0,
+            "min": 7
+          }
+        },
+        "late": {
+          "action": {
+            "max_abs": 0.1594136357307434,
+            "mean": [
+              -0.026743085045988362,
+              0.006640675157541409,
+              0.11075394072880347,
+              -0.007108596837497316
+            ],
+            "saturation_fraction": 0.0,
+            "std": [
+              0.0194657718273696,
+              0.01631259657872437,
+              0.03408883010862382,
+              0.01580087795095814
+            ]
+          },
+          "failure_reasons": {
+            "pitch_limit": 2
+          },
+          "minimum_margins": {
+            "angular_rate": -12.345040750796276,
+            "body_clearance_m": -0.007728400010349723,
+            "pitch_rad": -0.1169453627544359,
+            "roll_rad": 0.2518927483641835
+          },
+          "reward_component_sum": {
+            "reward/descent_rsi_pilot_action_magnitude_penalty": 0.00013619692435895558,
+            "reward/descent_rsi_pilot_action_smooth_penalty": 0.0005806131917722723,
+            "reward/descent_rsi_pilot_angular": 0.008603388218705321,
+            "reward/descent_rsi_pilot_failure_penalty": 4.0,
+            "reward/descent_rsi_pilot_pitch": 0.11118293493325382,
+            "reward/descent_rsi_pilot_roll": 0.3877544072456658,
+            "reward/descent_rsi_pilot_shaping": 0.6268256809562445,
+            "reward/descent_rsi_pilot_survival": 0.11999999731779099,
+            "reward/descent_rsi_pilot_vz": 1.7856679846374626e-06
+          },
+          "states": 2,
+          "survival_counts": {
+            "16": 0,
+            "24": 0,
+            "8": 0
+          },
+          "survival_rates": {
+            "16": 0.0,
+            "24": 0.0,
+            "8": 0.0
+          },
+          "time_to_failure": {
+            "lower_quartile": 5.0,
+            "max": 5,
+            "median": 5.0,
+            "min": 5
+          }
+        },
+        "middle": {
+          "action": {
+            "max_abs": 0.161344975233078,
+            "mean": [
+              -0.04350781721877865,
+              0.016790543915703893,
+              0.08692253138870001,
+              0.010344266271567903
+            ],
+            "saturation_fraction": 0.0,
+            "std": [
+              0.03153082873810029,
+              0.026850473124361902,
+              0.04374008734292895,
+              0.006531919863914611
+            ]
+          },
+          "failure_reasons": {
+            "pitch_limit": 2
+          },
+          "minimum_margins": {
+            "angular_rate": -5.7371814200267774,
+            "body_clearance_m": 0.0,
+            "pitch_rad": -0.07801554269370592,
+            "roll_rad": 0.48055632699367723
+          },
+          "reward_component_sum": {
+            "reward/descent_rsi_pilot_action_magnitude_penalty": 0.00020262577595531184,
+            "reward/descent_rsi_pilot_action_smooth_penalty": 0.006173544668769182,
+            "reward/descent_rsi_pilot_angular": 0.04001019914721837,
+            "reward/descent_rsi_pilot_failure_penalty": 4.0,
+            "reward/descent_rsi_pilot_pitch": 0.285429218183026,
+            "reward/descent_rsi_pilot_roll": 0.7628590576350689,
+            "reward/descent_rsi_pilot_shaping": 1.2824121043086052,
+            "reward/descent_rsi_pilot_survival": 0.19999999552965164,
+            "reward/descent_rsi_pilot_vz": 0.0004898148328891239
+          },
+          "states": 2,
+          "survival_counts": {
+            "16": 0,
+            "24": 0,
+            "8": 2
+          },
+          "survival_rates": {
+            "16": 0.0,
+            "24": 0.0,
+            "8": 1.0
+          },
+          "time_to_failure": {
+            "lower_quartile": 9.0,
+            "max": 9,
+            "median": 9.0,
+            "min": 9
+          }
+        }
+      },
+      "overall": {
+        "action": {
+          "max_abs": 1.0,
+          "mean": [
+            0.01147447496186942,
+            0.16382289356620544,
+            0.399093291601714,
+            -0.24152447316480583
+          ],
+          "saturation_fraction": 0.08235294117647059,
+          "std": [
+            0.31784740111544557,
+            0.2506727250891881,
+            0.38707927514159873,
+            0.38612724363813367
+          ]
+        },
+        "failure_reasons": {
+          "pitch_limit": 9,
+          "roll_limit": 1
+        },
+        "minimum_margins": {
+          "angular_rate": -21.099748694188573,
+          "body_clearance_m": -0.022874473250247863,
+          "pitch_rad": -0.21306178636130846,
+          "roll_rad": -2.0655611724770333
+        },
+        "reward_component_sum": {
+          "reward/descent_rsi_pilot_action_magnitude_penalty": 0.0450946800976908,
+          "reward/descent_rsi_pilot_action_smooth_penalty": 0.04495708454076919,
+          "reward/descent_rsi_pilot_angular": 0.1845153061684163,
+          "reward/descent_rsi_pilot_failure_penalty": 20.0,
+          "reward/descent_rsi_pilot_pitch": 1.1678934757780155,
+          "reward/descent_rsi_pilot_roll": 3.1566949714906514,
+          "reward/descent_rsi_pilot_shaping": 5.280856794677675,
+          "reward/descent_rsi_pilot_survival": 0.8499999810010195,
+          "reward/descent_rsi_pilot_vz": 0.011804854914990422
+        },
+        "states": 10,
+        "survival_counts": {
+          "16": 0,
+          "24": 0,
+          "8": 6
+        },
+        "survival_rates": {
+          "16": 0.0,
+          "24": 0.0,
+          "8": 0.6
+        },
+        "time_to_failure": {
+          "lower_quartile": 7.0,
+          "max": 9,
+          "median": 8.0,
+          "min": 5
+        }
+      }
+    }
+  }
+}
