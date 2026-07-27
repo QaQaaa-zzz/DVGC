@@ -13,7 +13,7 @@ from dvgc.bank import SnapshotBank
 from dvgc.config import file_sha256, load_config
 from dvgc.descent_probe import formal_dynamic_margin
 from dvgc.descent_supervised import build_actor_tools
-from dvgc.descent_teacher import normalized_observation, relabel_support_gate
+from dvgc.descent_teacher import normalized_observation, relabel_support_gate, trajectory_support_radius
 from dvgc.env import OrangeBikeDVGC
 from dvgc.policy import load_bundle
 from dvgc.rollout import restore_snapshot
@@ -47,12 +47,12 @@ def main():
     if output.exists():raise SystemExit(f"refusing overwrite {output}")
     cv=Path(args.cv_run);authority=json.loads((cv/"teacher_authority_protocol_amendment.json").read_text());excluded=set(authority["folds"]["A"]);training=set(authority["teacher_candidates"])-excluded
     data=pickle.loads(DATASET.read_bytes());teacher=data["teacher"];by={(row["candidate_id"],row["tick"]):row for row in teacher}
-    support=json.loads((cv/"teacher_representability_audit_v2.json").read_text())["teacher"]["candidate_support_p95"]
     bank=SnapshotBank.load(BANK);records={row["id"]:row for row in bank.records};cfg=load_config("configs/unified_descent_rsi_learnability_pilot_v1.json");env=OrangeBikeDVGC(cfg,snapshot_bank=bank);step=jax.jit(env.step)
     frozen,_,_=load_bundle(POLICY,verify_files=True);_,frozen_action,_=build_actor_tools(env,frozen)
     with Path(args.student).open("rb") as handle:student_policy=pickle.load(handle)
     student_params=(frozen[0],student_policy,frozen[2]);_,student_action,_=build_actor_tools(env,student_params)
     mean=np.asarray(frozen[0].mean["state"]);std=np.asarray(frozen[0].std["state"]);accepted=[];audits=[]
+    support={cid:trajectory_support_radius(np.asarray([row["normalized_observation"] for row in teacher if row["candidate_id"]==cid])) for cid in authority["teacher_candidates"]}
     for candidate_index,cid in enumerate(sorted(training)):
         state=restore_snapshot(env,records[cid],jax.random.PRNGKey(8100000+candidate_index))
         trajectory=[by[(cid,t)] for t in range(8)]

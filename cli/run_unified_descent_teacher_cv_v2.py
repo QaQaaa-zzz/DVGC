@@ -19,7 +19,7 @@ from dvgc.descent_supervised import (
     action_audit, build_actor_tools, evaluate_policy, make_fast_rollout,
     parameter_drift, train_supervised,
 )
-from dvgc.descent_teacher import fixed_candidate_folds, nearest_neighbor_audit
+from dvgc.descent_teacher import fixed_candidate_folds, nearest_neighbor_audit, trajectory_support_radius
 from dvgc.env import OrangeBikeDVGC
 from dvgc.policy import load_bundle
 from dvgc.ppo_integrity import normalizer_summary
@@ -100,6 +100,7 @@ def main():
     teacher_obs=np.asarray([row["observation"] for row in teacher]);teacher_y=np.asarray([row["target_action"] for row in teacher])
     teacher_norm=np.asarray([row["normalized_observation"] for row in teacher]);residual=np.asarray([row["residual"] for row in teacher])
     represent=nearest_neighbor_audit(teacher_norm,residual,[row["candidate_id"] for row in teacher])
+    represent["candidate_support_p95"]={cid:trajectory_support_radius(np.asarray([row["normalized_observation"] for row in teacher if row["candidate_id"]==cid])) for cid in positive}
     anchor_norm=np.asarray([row["normalized_observation"] for row in anchors]);distance=np.linalg.norm(teacher_norm[:,None]-anchor_norm[None,:],axis=-1)/math.sqrt(teacher_norm.shape[1]);nearest=np.argmin(distance,axis=1);nearest_d=distance[np.arange(len(teacher)),nearest];label_delta=np.linalg.norm(teacher_y-stored[nearest],axis=1)
     close=nearest_d<=np.quantile(represent["distance"].values() if False else np.min(np.where(np.eye(len(teacher),dtype=bool),np.inf,np.linalg.norm(teacher_norm[:,None]-teacher_norm[None,:],axis=-1)/math.sqrt(teacher_norm.shape[1])),axis=1),.25)
     phase_consistent=all(row["phase"]==row["snapshot"]["oracle_phase"] for row in teacher)
