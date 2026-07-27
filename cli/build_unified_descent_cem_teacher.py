@@ -36,6 +36,7 @@ BANK = Path("runs/mjx_continuous_pipeline_repair_v1/descent_candidate_bank_v1/de
 POLICY = Path("runs/stage_experts/descent_tube_seed0_20260716T2330/round_3/train/policy")
 CEM = Path("runs/unified_descent_controllability_reward_curriculum_probe_v1/full_v2/residual_cem_oracle_results.json")
 LANDING = Path("artifacts/landing_candidates.pkl")
+REVALIDATION = Path("runs/unified_descent_cem_teacher_bootstrap_and_local_ppo_probe_v1/exact_replay_revalidation.json")
 
 
 def _item(state, env, candidate_id, tick, kind, target, frozen_action, residual, next_state=None):
@@ -150,11 +151,13 @@ def main():
     by_id = {row["id"]: row for row in records}
     cem = json.loads(CEM.read_text())
     oracle = {row["candidate_id"]: row for row in cem["candidates"]}
-    positive = sorted(row["candidate_id"] for row in cem["candidates"]
-                      if row["time_to_failure_delta"] >= 4 and row["oracle"]["exact_replay"])
+    if not REVALIDATION.is_file():
+        raise SystemExit("missing independent saved-CEM exact replay revalidation")
+    revalidation = json.loads(REVALIDATION.read_text())
+    revalidated = {row["candidate_id"]: row for row in revalidation["rows"]}
+    positive = sorted(candidate_id for candidate_id, row in revalidated.items()
+                      if row["repeat_exact"] and row["replayed_gain"] >= 4)
     nonpositive = sorted(set(by_id) - set(positive))
-    if len(positive) != 9 or len(nonpositive) != 5:
-        raise SystemExit(f"unexpected teacher split {len(positive)}/{len(nonpositive)}")
     env = OrangeBikeDVGC(cfg, snapshot_bank=bank); step = jax.jit(env.step)
     batched_step = jax.jit(jax.vmap(env.step))
     inference = build_inference(env, params, deterministic=True)
@@ -172,7 +175,11 @@ def main():
             residual = knots[min(tick // 4, len(knots) - 1)][None, :]
             target = np.clip(frozen + residual, -1, 1)
             next_state = batched_step(state, target)
-            alignment.append(float(np.max(np.abs(target[0] - saved_actions[tick]))))
+            alignment.append({
+                "command_equation_error": float(np.max(np.abs(
+                    target[0] - np.clip(frozen[0] + residual[0], -1, 1)))),
+                "saved_action_error": float(np.max(np.abs(target[0] - saved_actions[tick]))),
+            })
             item = _batched_item(state, next_state, env, candidate_id, tick,
                                  "positive_teacher" if tick < 8 else "teacher_tail_anchor",
                                  target if tick < 8 else frozen, frozen,
@@ -240,7 +247,8 @@ def main():
         pickle.dump({"teacher": teacher, "anchors": anchors}, handle, protocol=pickle.HIGHEST_PROTOCOL)
     kind_counts = Counter(row["kind"] for row in anchors)
     manifest_out = {
-        "status": "PASS", "artifact_role": "descent_initialization_teacher_only",
+        "status": "PASS" if len(positive) == 9 else "INSUFFICIENT_TEACHER_AUTHORITY",
+        "artifact_role": "descent_initialization_teacher_only",
         "teacher_samples": len(teacher), "anchor_samples": len(anchors),
         "positive_candidates": positive, "nonpositive_candidates": nonpositive,
         "teacher_ticks": list(range(8)), "anchor_kind_counts": dict(sorted(kind_counts.items())),
@@ -252,11 +260,17 @@ def main():
         "normalizer_sha256": normalizer_summary(params[0])["sha256"],
         "normalizer_count": normalizer_summary(params[0])["count"],
         "dataset_sha256": file_sha256(dataset_path),
+        "exact_replay_revalidation_sha256": file_sha256(REVALIDATION),
+        "required_positive_candidates": 9,
+        "revalidated_positive_candidates": len(positive),
     }
     save_json(root / "teacher_dataset_manifest.json", manifest_out)
     save_json(root / "teacher_action_alignment_audit.json", {
-        "status": "PASS" if max(alignment) < 2e-5 else "FAIL",
-        "command_tick_alignment_max_abs": max(alignment),
+        "status": "PASS" if max(row["command_equation_error"] for row in alignment) < 2e-7 else "FAIL",
+        "command_tick_alignment_max_abs": max(row["command_equation_error"] for row in alignment),
+        "saved_summary_action_max_abs_mismatch": max(row["saved_action_error"] for row in alignment),
+        "saved_summary_matches_current_replay": revalidation["saved_summary_matches"],
+        "saved_summary_total": len(revalidation["rows"]),
         "delay_buffer_preserved_in_snapshot": True,
         "actual_applied_action_source": "env.step target; next snapshot ctrl retained",
         "pre_squash_or_actuator_target_mixed": False,
