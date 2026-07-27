@@ -1246,3 +1246,25 @@
   PPO. Targeted tests are 2 passed and the final GPU local preflight is
   293 passed (one external JAXopt deprecation warning). Compact report:
   `docs/experiments/unified_descent_controllability_reward_curriculum_probe_v1/`.
+
+## Unified Descent CEM-teacher bootstrap/local-PPO probe v1 (2026-07-27)
+
+- Started from `ff3e3a1`; immutable bank `8e6342b...45a1`, XML/action,
+  failure semantics, frozen pi_D `5272166...353f2`, and normalizer
+  `8f2e36b...93a7e` (count 1,024,000) remained unchanged.
+- Corrected replay validation found that the prior CEM `exact_replay` flag
+  checked repeat1==repeat2 but not replay==selected summary. Repeats are 14/14
+  deterministic, but only 12/14 selected summaries match. `da0679b1` changes
+  from saved 9->14 to actual 9->10 ticks, so valid gain>=4 teachers fall from
+  nine to eight.
+- The integrity-valid subset has 64 first-8-tick teacher samples and 198
+  anchors. Action equation alignment is exact and representability passes
+  (17.19% close opposite conflicts under the declared 20% limit), but the
+  fixed nine-teacher source-authority contract fails.
+- No gradient update, three-fold CV, student relabel, hidden-block unfreeze,
+  held-out Descent evaluation, or PPO transition ran. PPO authorization is
+  false. Frozen pi_D Landing baseline is 81/96 Final-Recovery, 15 roll
+  failures, zero timeout. Targeted tests are 7 passed and the final GPU local
+  preflight is 298 passed (one external JAXopt deprecation warning). Compact
+  report:
+  `docs/experiments/unified_descent_cem_teacher_bootstrap_and_local_ppo_probe_v1/`.

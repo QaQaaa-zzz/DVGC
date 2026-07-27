@@ -1,0 +1,8 @@
+{
+  "status":"NOT_RUN",
+  "reason":"teacher_asset_integrity_failure_before_gradient_update",
+  "candidate_folds_created":false,
+  "excluded_candidate_used_for_training":false,
+  "student_visited_state_relabel_attempted":false,
+  "relabel_reason":"No student existed. The one-shot relabel protocol therefore remained inactive; no unsupported residual label was written."
+}

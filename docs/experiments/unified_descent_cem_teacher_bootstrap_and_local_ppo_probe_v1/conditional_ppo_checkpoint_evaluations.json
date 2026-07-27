@@ -1,0 +1,8 @@
+{
+  "status":"NOT_EXECUTED",
+  "ppo_authorization_before":false,
+  "bootstrap_gate":false,
+  "environment_transitions":0,
+  "ppo_additional_learning_signal":false,
+  "ppo_authorization_after":false
+}

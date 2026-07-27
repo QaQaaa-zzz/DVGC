@@ -1,0 +1,11 @@
+{
+  "status":"PASS_ON_REVALIDATED_SUBSET",
+  "samples":64,
+  "normalized_observation_nearest_distance":{"min":0.3310473,"median":1.0929478,"p95":2.0152695,"max":16.3895427},
+  "nearest_residual_delta":{"median":0.1955577,"p95":0.3675414,"max":0.4399685},
+  "cross_candidate_nearest_fraction":0.890625,
+  "close_opposite_conflict_fraction":0.171875,
+  "representability_gate":true,
+  "state_unobservability_blocker":false,
+  "note":"Representability itself did not stop the run; source teacher authority failed first."
+}

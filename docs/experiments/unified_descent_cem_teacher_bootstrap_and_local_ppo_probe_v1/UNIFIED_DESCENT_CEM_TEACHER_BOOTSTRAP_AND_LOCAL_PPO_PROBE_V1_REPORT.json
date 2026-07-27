@@ -1,0 +1,21 @@
+{
+  "experiment":"unified_descent_cem_teacher_bootstrap_and_local_ppo_probe_v1",
+  "status":"BLOCKED_BEFORE_SUPERVISED_TRAINING",
+  "classification":"teacher_asset_integrity_failure",
+  "authoritative_start_head":"ff3e3a1",
+  "teacher":{"samples":64,"valid_candidates":8,"required_candidates":9,"anchors":198,"representability_gate":true},
+  "cem_revalidation":{"repeat_exact":"14/14","saved_survival_matches":"12/14","valid_gain_at_least_4":"8/14","invalidated_positive_candidate":"da0679b1","saved_vs_replayed_survival":[14,10],"saved_vs_replayed_gain":[5,1]},
+  "landing_baseline":{"episodes":96,"final_recovery":"81/96","rate":0.84375,"physical_failure":0.15625,"timeout":0.0,"failure_reasons":{"recovery":81,"roll_limit":15}},
+  "cross_validation":{"executed":false},
+  "supervised_bootstrap":{"executed":false,"head_only_sufficient":null,"relabel_triggered":false,"last_block_unfrozen":false},
+  "in_bank_bootstrap_evaluation":null,
+  "descent_heldout":{"opened":false,"states":10},
+  "bootstrap_gate":false,
+  "conditional_ppo":{"executed":false,"transitions":0,"additional_learning_signal":false},
+  "ppo_authorization_after":false,
+  "assets_modified":false,
+  "formal_tube_or_jel":false,
+  "verification":{"targeted_tests":"7 passed","gpu_local_preflight":"298 passed","warning":"one external JAXopt deprecation warning"},
+  "repair":{"implemented":"exact replay now requires replay1==replay2 and replay==selected summary for survival, margins, end code, actions and features","commit_before_report":"c496068"},
+  "next_minimal_experiment":"A separately authorized, single-candidate bounded teacher-authority repair for da0679b1 (or a protocol amendment accepting eight teachers). Do not start supervised training under the current nine-teacher contract."
+}

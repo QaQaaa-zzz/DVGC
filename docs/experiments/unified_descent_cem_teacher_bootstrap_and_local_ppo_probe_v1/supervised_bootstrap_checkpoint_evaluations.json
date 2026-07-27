@@ -1,0 +1,7 @@
+{
+  "status":"NOT_RUN",
+  "head_only_training":false,
+  "last_hidden_block_unfrozen":false,
+  "optimizer_steps":0,
+  "reason":"The protocol requires nine exact-replay gain>=4 teacher candidates, but only eight remain valid after corrected replay validation."
+}

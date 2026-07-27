@@ -1,0 +1,9 @@
+{
+  "status":"SEALED_NOT_OPENED",
+  "heldout_states":10,
+  "used_for_teacher":false,
+  "used_for_anchor":false,
+  "used_for_model_selection":false,
+  "evaluated":false,
+  "reason":"No valid final bootstrap checkpoint existed."
+}

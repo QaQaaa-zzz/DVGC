@@ -1,0 +1,14 @@
+{
+  "status":"PASS_FOR_8_REVALIDATED_TEACHERS",
+  "command_equation_max_abs_error":0.0,
+  "saved_summary_action_max_abs_mismatch":0.0360767916,
+  "saved_summary_survival_matches":"12/14",
+  "per_tick_residual": {
+    "0-3":{"rms":[0.12619084,0.10723965,0.11743689,0.06809490],"max_abs":[0.2,0.16664778,0.18766166,0.13227044]},
+    "4-7":{"rms":[0.09574175,0.10679571,0.13572828,0.10002179],"max_abs":[0.14828996,0.17815904,0.19564672,0.18754794]}
+  },
+  "delay_buffer_and_policy_state_captured":true,
+  "pre_squash_or_actuator_target_mixed":false,
+  "root_cause":"The previous exact flag compared replay1 with replay2, but did not compare either replay with the selected CEM summary. Two selected summaries differ under actual deterministic replay; da0679b1 falls from saved gain 5 to replayed gain 1.",
+  "raw_artifacts":["runs/unified_descent_cem_teacher_bootstrap_and_local_ppo_probe_v1/exact_replay_revalidation.json","runs/unified_descent_cem_teacher_bootstrap_and_local_ppo_probe_v1/dataset_v3/teacher_action_alignment_audit.json"]
+}
