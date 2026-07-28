@@ -1463,3 +1463,31 @@
   preflight passed 347 tests and the dynamic runtime gate is PASS/current.
   Controller/worker/GPU are idle; watchdog timer remains waiting. Result:
   `runs/unified_descent_timing_explicit_packet_delay_reaudit_v1/`.
+
+## Backward recovery Tube fast-track v1 — Descent blocker (2026-07-28)
+
+- Start `974a71c`; current HEAD `7940098`. Frozen XML, action mapping, pi_L,
+  canonical C_L (99 Final-safe entries), pi_D and matcher hashes remained
+  unchanged. L0 only; held-out and delay modes were not read.
+- Recomputed 115 nominal proposal results plus 14 bounded CEM searches. The
+  current provisional construction has 30 P0 and 15 P1 nodes, 6 candidates,
+  4 layers and early/middle/late coverage. Parent lineage is complete 30/30
+  and pointwise replay precision is 100%.
+- `DESCENT_TUBE_RSI_START_GATE=FAIL`: P1 count is 15/16 and one candidate owns
+  7/15 nodes (46.7%, above the 35% cap). Thus the gap is at least five diverse
+  P1 nodes, not merely one numerical count.
+- First-tier CEM searched 11 states and produced 4 P0 / 1 P1. The fixed
+  second-tier 128x6, 12-tick search on three closest first-tier failures
+  produced 0 P0 / 0 P1. No proposal received more than its allowed tiers.
+- The single authorized 6,400-step P0-seeded RSI pilot completed without NaN,
+  OOM or timeout but regressed fresh composite certification from P0/P1
+  26/14 to 23/12. Its checkpoint is rejected as a Tube/policy successor and
+  PPO authorization remains false.
+- No unused, time-aligned predecessor of the 15 P1 nodes exists in the fixed
+  proposal index, including parent/neighbor-anchor matching. Creating a new
+  predecessor shell would require a newly specified, physically validated
+  construction source; mixed reference states are forbidden.
+- Phase blocker: `DESCENT_DIVERSE_P1_SUPPORT_EXHAUSTED`. Apex, Ascent,
+  Takeoff, Approach and nominal full-chain construction were not started.
+  Controller/worker are inactive; watchdog timer remains active. Results:
+  `runs/backward_recovery_tube_fast_track_v1/`.
