@@ -1,5 +1,29 @@
 # DVGC Experiment State
 
+## Descent Tube complete; upstream formal-entry gate remains (2026-07-28)
+
+- Natural-lineage replay against the six-anchor continuous entry v2 remained
+  outside formal support: formal entry=Landing=Final=0, nearest normalized
+  local distance=155.832 (four-anchor v1 was 155.628), and maximum stable
+  Descent continuation was 28 ticks. The selected replay was exact; failures
+  remained pitch/roll plus two Takeoff deadline branches.
+- The closest nominal residuals are platform-relative z -0.211 m, vx
+  -0.754 m/s, obstacle-relative x -0.334 m, roll -0.070 rad and rear-wheel
+  speed -7.25 rad/s. Existing old Apex reset parents are worse and terminate
+  at tick 1 with dominant hip/knee/pose mismatch.
+- Descent itself is complete for the bootstrap-expert stage: Tube v4 has 22
+  independently certified states and continuous entry v2 has independently
+  audited precision 1.0 across early/middle/late. Neither is final shared
+  policy JEL.
+- The upstream gate remains closed: no second parent-disjoint candidate in
+  three bounded acquisition rounds and no natural/Apex trajectory reaches the
+  frozen formal entry. Repeating the same candidate selection or old local
+  action searches is exhausted. Apex PPO remains unauthorized by the current
+  method protocol; the next step requires a research-level choice between
+  changing that preregistered gate or changing the upstream controller/state
+  representation. XML, matcher radii, failure gates and frozen policies were
+  not relaxed.
+
 ## Expanded Descent Tube v4 and continuous entry v2 (2026-07-28)
 
 - Three non-overwriting natural-targeted candidate rounds were run with full
