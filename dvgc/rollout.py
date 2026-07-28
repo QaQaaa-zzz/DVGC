@@ -22,11 +22,24 @@ def inferred_apex_seen(record: dict[str, Any]) -> int:
     return int(index is not None and int(index) >= 220)
 
 
-def restore_snapshot(env, record: dict[str, Any], rng):
+def restore_snapshot_mode(env, record: dict[str, Any], rng, *, observation_mode: str):
+    """Restore a legacy snapshot with an explicit observation authority mode.
+
+    ``logged`` replays the actor input recorded during the online rollout.
+    ``reconstructed`` ignores that sidecar and rebuilds from the physical
+    state and saved policy state.  Legacy snapshots store post-update history,
+    so the latter mode is diagnostic until a self-contained v2 snapshot is
+    available.  The explicit mode prevents either interpretation from being
+    silently presented as the other.
+    """
+    if observation_mode not in {"logged", "reconstructed"}:
+        raise ValueError("observation_mode must be 'logged' or 'reconstructed'")
     ps = dict(record.get("policy_state", {}))
     phase = int(record.get("oracle_phase", STAGE_ID[record["source_phase"]]))
     history = ps.get("obs_history")
-    actor_observation = ps.get("actor_observation")
+    actor_observation = ps.get("actor_observation") if observation_mode == "logged" else None
+    if observation_mode == "logged" and actor_observation is None:
+        raise ValueError("logged replay requires policy_state.actor_observation")
     return env.reset_from_snapshot(
         jp.asarray(record["qpos"]), jp.asarray(record["qvel"]), jp.asarray(record["ctrl"]), rng,
         jp.asarray(phase, jp.int32), jp.asarray(int(record.get("had_airborne", 0)), jp.int32),
@@ -53,6 +66,28 @@ def restore_snapshot(env, record: dict[str, Any], rng):
         jump_window_start_x=jp.asarray(float(record.get("jump_window_start_x",record["qpos"][0])),jp.float32),
         jump_window_end_x=jp.asarray(float(record.get("jump_window_end_x",record["qpos"][0]+1.0)),jp.float32),
     )
+
+
+def restore_snapshot_logged(env, record: dict[str, Any], rng):
+    """Replay the authoritative actor input logged with a legacy snapshot."""
+    return restore_snapshot_mode(env, record, rng, observation_mode="logged")
+
+
+def restore_snapshot_reconstructed(env, record: dict[str, Any], rng):
+    """Independently reconstruct input; never consumes the observation sidecar."""
+    return restore_snapshot_mode(env, record, rng, observation_mode="reconstructed")
+
+
+def restore_snapshot(env, record: dict[str, Any], rng):
+    """Legacy compatibility restore.
+
+    Existing experiment protocols historically replayed a logged observation
+    when present.  New authority-sensitive code must call one of the explicit
+    helpers above; this compatibility entry point is intentionally documented
+    as legacy rather than being used by the timing audit.
+    """
+    mode = "logged" if record.get("policy_state", {}).get("actor_observation") is not None else "reconstructed"
+    return restore_snapshot_mode(env, record, rng, observation_mode=mode)
 
 
 def frozen_rollout(
