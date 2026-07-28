@@ -4,7 +4,7 @@ import pytest
 
 from dvgc.backward_tube import (
     ARTIFACT_ROLE, BackwardTubeNode, balanced_rsi_weights, deduplicate_nodes,
-    p0_decision, p1_decision, tube_gate, validate_parent_lineage,
+    p0_decision, p1_decision, summarize_tube_nodes, tube_gate, validate_parent_lineage,
 )
 
 
@@ -63,3 +63,12 @@ def test_start_gate_requires_real_candidate_layer_region_coverage():
         nodes.append(_node(str(i),candidate=f"c{i%6}",layer=1+i%3,region=("early","middle","late")[i%3]))
     assert tube_gate(nodes)["status"]=="PASS"
     assert tube_gate(nodes[:15])["status"]=="FAIL"
+
+
+def test_typed_node_summary_reports_only_p1_coverage():
+    nodes=[_node("a",candidate="a",layer=1),_node("b",candidate="b",layer=2,region="middle"),_node("c",candidate="c",layer=3,region="early",p1=False)]
+    assert summarize_tube_nodes(nodes)=={
+        "candidate_coverage":2,
+        "layer_coverage":[1,2],
+        "region_coverage":["late","middle"],
+    }

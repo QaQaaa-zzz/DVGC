@@ -189,3 +189,13 @@ def tube_gate(nodes: Sequence[BackwardTubeNode], *, freeze: bool = False) -> dic
     return {"status": "PASS" if all(checks.values()) else "FAIL", "checks": checks,
             "P1_nodes": len(p1), "candidate_counts": dict(candidates),
             "layers": sorted({node.layer for node in p1}), "regions": sorted({node.region for node in p1})}
+
+
+def summarize_tube_nodes(nodes: Sequence[BackwardTubeNode]) -> dict[str, Any]:
+    """Return the typed P1 coverage summary used by construction reports."""
+    p1 = [node for node in nodes if node.p1]
+    return {
+        "candidate_coverage": len({node.candidate_id for node in p1}),
+        "layer_coverage": sorted({node.layer for node in p1}),
+        "region_coverage": sorted({node.region for node in p1}),
+    }

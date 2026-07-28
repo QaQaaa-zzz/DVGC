@@ -14,7 +14,7 @@ import numpy as np
 
 from cli.runtime_gate import source_fingerprint
 from dvgc.backward_search import active_prefix_exact, make_descent_landing_rollout
-from dvgc.backward_tube import BackwardTubeNode, canonical_hash, p0_decision, p1_decision, tube_gate, validate_parent_lineage
+from dvgc.backward_tube import BackwardTubeNode, canonical_hash, p0_decision, p1_decision, summarize_tube_nodes, tube_gate, validate_parent_lineage
 from dvgc.bank import SnapshotBank
 from dvgc.config import ACTION_MAPPING_VERSION, STAGE_ID, file_sha256, load_config
 from dvgc.env import END_REASON, OrangeBikeDVGC
@@ -93,7 +93,7 @@ def main():
         rows.append({"proposal":proposal,"controller":"frozen_pi_D_nominal_L0","repeats":repeat,"P0":p0,"micro_branches":branches,"P1":p1})
         save_json(root/"descent_nominal_pilot.partial.json",{"completed":position+1,"total":len(selected),"P0":sum(x["P0"]["pass"] for x in rows),"P1":sum(x["P1"]["pass"] for x in rows),"rows":rows,"nodes":nodes})
     typed=[BackwardTubeNode(**node) for node in nodes];lineage=validate_parent_lineage(typed,safe_ids);gate_result=tube_gate(typed)
-    report={"status":"PASS","artifact_role":"nominal_provisional_tube_construction_pilot","proposals":len(selected),"P0":sum(x["P0"]["pass"] for x in rows),"P1":sum(x["P1"]["pass"] for x in rows),"candidate_coverage":len({x["candidate_id"] for x in typed if x.p1}),"layer_coverage":sorted({x.layer for x in typed if x.p1}),"region_coverage":sorted({x.region for x in typed if x.p1}),"failure_reasons":dict(Counter(x["repeats"][0]["failure_type"] for x in rows if not x["P0"]["pass"])),"lineage":lineage,"RSI_start_gate":gate_result,"rows":rows,"nodes":nodes,"heldout_used":False,"delay":False,"new_CEM":False,"PPO":False,"provenance":{"proposal_index_sha256":file_sha256(a.proposal_index),"C_L":EXPECTED["C_L"],"pi_D":EXPECTED["pi_D"],"pi_L":EXPECTED["pi_L"],"xml":EXPECTED["xml"]}}
+    report={"status":"PASS","artifact_role":"nominal_provisional_tube_construction_pilot","proposals":len(selected),"P0":sum(x["P0"]["pass"] for x in rows),"P1":sum(x["P1"]["pass"] for x in rows),**summarize_tube_nodes(typed),"failure_reasons":dict(Counter(x["repeats"][0]["failure_type"] for x in rows if not x["P0"]["pass"])),"lineage":lineage,"RSI_start_gate":gate_result,"rows":rows,"nodes":nodes,"heldout_used":False,"delay":False,"new_CEM":False,"PPO":False,"provenance":{"proposal_index_sha256":file_sha256(a.proposal_index),"C_L":EXPECTED["C_L"],"pi_D":EXPECTED["pi_D"],"pi_L":EXPECTED["pi_L"],"xml":EXPECTED["xml"]}}
     save_json(root/"descent_nominal_pilot_report.json",report);save_json(root/"descent_nominal_pilot.completed.json",{"status":"PASS","P0":report["P0"],"P1":report["P1"],"RSI_start_gate":gate_result["status"]});print(json.dumps({k:report[k] for k in ("proposals","P0","P1","candidate_coverage","layer_coverage","region_coverage")}|{"gate":gate_result["status"]},indent=2))
 
 
