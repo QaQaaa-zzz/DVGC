@@ -45,7 +45,7 @@ def test_multiknot_search_uses_real_event_and_failure_typing():
 
 
 def test_event_aligned_ascent_entries_are_dynamic_apex_evidence():
-    from cli.search_apex_descent_multiknot import is_dynamically_reached_apex
+    from cli.search_apex_descent_multiknot import is_dynamically_reached_apex, matcher_identity
 
     assert is_dynamically_reached_apex({
         "candidate_kind": "stage_entry_snapshot",
@@ -57,6 +57,8 @@ def test_event_aligned_ascent_entries_are_dynamic_apex_evidence():
         "entry_from_stage": "takeoff",
         "entry_to_stage": "ascent",
     })
+    assert matcher_identity({"radius": 1.0}) == matcher_identity({"radius": 1.0})
+    assert matcher_identity({"matcher_sha256": "declared"}) == "declared"
 
 
 def test_controller_runs_interface_audits_before_any_apex_training():

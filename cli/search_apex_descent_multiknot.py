@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from collections import Counter
 from pathlib import Path
@@ -37,6 +38,15 @@ def is_dynamically_reached_apex(row: dict) -> bool:
             and row.get("entry_to_stage") == "apex"
         )
     )
+
+
+def matcher_identity(matcher: dict) -> str:
+    """Return the declared matcher hash or a canonical content identity."""
+    declared = matcher.get("matcher_sha256")
+    if declared:
+        return str(declared)
+    payload = json.dumps(matcher, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(payload.encode()).hexdigest()
 
 
 def _round_a():
@@ -302,7 +312,7 @@ def main() -> None:
         "support_bank_sha256": file_sha256(a.support_bank),
         "descent_policy_hash": file_sha256(Path(a.descent_policy) / "params.pkl"),
         "landing_policy_hash": file_sha256(Path(a.landing_policy) / "params.pkl"),
-        "matcher_sha256": matcher["matcher_sha256"],
+        "matcher_sha256": matcher_identity(matcher),
         "matcher_radius_unchanged": matcher["radius"],
         "horizon": a.horizon,
         "horizon_rationale": "100 ticks covers coast, physical vz zero crossing, negative-vz formation, and post-Apex correction; downstream gets a separate 200-tick continuation",
