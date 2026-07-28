@@ -19,11 +19,11 @@ import numpy as np
 from cli.run_unified_descent_feedback_probe import BANK, POLICY, STUDENT, _assets
 from cli.runtime_gate import source_fingerprint
 from dvgc.bank import SnapshotBank
-from dvgc.config import ACTION_MAPPING_VERSION, file_sha256
+from dvgc.config import ACTION_MAPPING_VERSION, file_sha256, load_config
 from dvgc.continuous import load_trajectory
 from dvgc.delay_probe import active_prefix_repeat_comparison, make_packet_delay_rollout
 from dvgc.descent_supervised import build_actor_tools
-from dvgc.env import END_REASON
+from dvgc.env import END_REASON, OrangeBikeDVGC
 from dvgc.observation_audit import array_sha256
 from dvgc.policy import load_bundle
 from dvgc.ppo_integrity import normalizer_summary
@@ -50,6 +50,7 @@ MODES = {
 }
 ACTION_NAMES = ("steer", "drive", "hip", "knee")
 BRIDGE_SEED = 12_330_000
+CONSTRUCTION_SUPPORT = Path("runs/stage_next_bootstrap_seed0_20260720/support_v2/descent_proposal_support_v1.pkl")
 
 
 def _json_hash(value: Any) -> str:
@@ -178,7 +179,18 @@ def _validator(env, params, record, provenance, frozen_action):
 def _recapture(root: Path, cfg, bank, env, params, legacy):
     records = {row["id"]: row for row in bank.records}
     candidate_ids = {item["candidate_id"] for item in legacy}
-    base = _natural_candidate_states(env, records, candidate_ids)
+    construction_cfg = load_config("configs/default.json", {
+        "training_stage": "flight", "use_bank_resets": False,
+        "domain_randomization": False, "obs_noise_enable": False,
+        "stage_reachability_objective": "", "expert_chain_termination": False,
+    })
+    if file_sha256(CONSTRUCTION_SUPPORT) != "1c39f9e3c29bfa1aa2da523cfd5c2a16847bc05a6d94d813d64c456f6e744dde":
+        raise RuntimeError("construction support hash gate")
+    replay_env = OrangeBikeDVGC(
+        construction_cfg, snapshot_bank=SnapshotBank(),
+        stage_support_bank=SnapshotBank.load(CONSTRUCTION_SUPPORT),
+    )
+    base = _natural_candidate_states(replay_env, records, candidate_ids)
     with STUDENT.open("rb") as handle:
         student = pickle.load(handle)
     _, student_action, _ = build_actor_tools(env, (params[0], student, params[2]))
@@ -469,7 +481,7 @@ def main():
     parser.add_argument("--run", required=True)
     args = parser.parse_args(); root = Path(args.run)
     if root.exists():
-        allowed = {"preregistration.json", "restore_call_site_audit.json"}
+        allowed = {"preregistration.json", "restore_call_site_audit.json", "snapshot_schema_v4_contract.json"}
         unexpected = sorted(path.name for path in root.iterdir() if path.name not in allowed)
         if unexpected or not (root / "preregistration.json").is_file():
             raise SystemExit(f"refusing overwrite {root}: {unexpected}")
