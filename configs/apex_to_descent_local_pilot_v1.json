@@ -1,0 +1,8 @@
+{
+  "training_stage": "flight",
+  "stage_reachability_objective": "apex_to_descent",
+  "stage_curriculum_scale": 0.0,
+  "use_bank_resets": true,
+  "domain_randomization": false,
+  "obs_noise_enable": false
+}
