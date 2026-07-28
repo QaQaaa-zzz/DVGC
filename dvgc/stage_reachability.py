@@ -107,8 +107,16 @@ def support_distance(feature: np.ndarray, support_metadata: Mapping[str, Any] | 
     center = np.asarray(matcher["center"], np.float64)
     scale = np.asarray(matcher["scale"], np.float64)
     support = np.asarray(records, np.float64)
-    distance = float(np.min(np.linalg.norm(((support - center) / scale) - ((feature - center) / scale), axis=1)))
-    return distance, bool(distance <= float(matcher["radius"]))
+    distances = np.linalg.norm(((support - center) / scale) - ((feature - center) / scale), axis=1)
+    radii = matcher.get("radii")
+    if radii is None:
+        distance = float(np.min(distances))
+        return distance, bool(distance <= float(matcher["radius"]))
+    radii = np.asarray(radii, np.float64)
+    if radii.shape != distances.shape or np.any(radii <= 0.0):
+        raise ValueError("Per-anchor Descent-support radii are invalid")
+    normalized = distances / radii
+    return float(np.min(normalized)), bool(np.min(normalized) <= 1.0)
 
 
 def evaluate_entry(stage: str, sample: Mapping[str, Any], cfg: Any,

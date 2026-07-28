@@ -393,7 +393,14 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             center = np.asarray(stage_matcher["center"], np.float32); scale = np.asarray(stage_matcher["scale"], np.float32)
             self._stage_support_features = jp.asarray((raw-center)/scale)
             self._stage_support_center = jp.asarray(center); self._stage_support_scale = jp.asarray(scale)
-            self._stage_support_radius = float(stage_matcher["radius"])
+            radii = stage_matcher.get("radii")
+            if radii is None:
+                radii = np.full((len(raw),), float(stage_matcher["radius"]), np.float32)
+            radii = np.asarray(radii, np.float32)
+            if radii.shape != (len(raw),) or np.any(radii <= 0.0):
+                raise ValueError("Per-anchor Descent-support radii are invalid")
+            self._stage_support_radii = jp.asarray(radii)
+            self._stage_support_radius = float(stage_matcher.get("radius", np.max(radii)))
             envelope = stage_matcher["reference_envelope"]
             self._stage_support_x_bounds = (float(envelope["x"]["min"])-float(stage_matcher.get("envelope_tolerance_x",0.0)),
                                             float(envelope["x"]["max"])+float(stage_matcher.get("envelope_tolerance_x",0.0)))
@@ -404,7 +411,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             self._stage_pitch_rate_max = float(stage_matcher.get("max_abs_pitch_rate",self._config.recovery_max_angvel))
         else:
             self._stage_support_features=jp.zeros((1,16),jp.float32);self._stage_support_center=jp.zeros(16,jp.float32);self._stage_support_scale=jp.ones(16,jp.float32)
-            self._stage_support_radius=0.0;self._stage_support_x_bounds=(-jp.inf,jp.inf);self._stage_support_z_bounds=(-jp.inf,jp.inf)
+            self._stage_support_radius=0.0;self._stage_support_radii=jp.ones((1,),jp.float32);self._stage_support_x_bounds=(-jp.inf,jp.inf);self._stage_support_z_bounds=(-jp.inf,jp.inf)
             self._stage_descent_vz_bounds=(-2.5,-.05);self._stage_roll_rate_max=float(self._config.recovery_max_angvel);self._stage_pitch_rate_max=float(self._config.recovery_max_angvel)
 
     @property
@@ -1642,9 +1649,9 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         current_physical=self._physical_feature(data);previous_physical=self._physical_feature(state.data)
         current_support_z=(current_physical-self._stage_support_center)/self._stage_support_scale
         previous_support_z=(previous_physical-self._stage_support_center)/self._stage_support_scale
-        current_stage_support_distance=jp.min(jp.linalg.norm(self._stage_support_features-current_support_z[None,:],axis=1))
-        previous_stage_support_distance=jp.min(jp.linalg.norm(self._stage_support_features-previous_support_z[None,:],axis=1))
-        stage_support_near=jp.asarray(self._stage_support_enabled) & (current_stage_support_distance<=self._stage_support_radius)
+        current_stage_support_distance=jp.min(jp.linalg.norm(self._stage_support_features-current_support_z[None,:],axis=1)/self._stage_support_radii)
+        previous_stage_support_distance=jp.min(jp.linalg.norm(self._stage_support_features-previous_support_z[None,:],axis=1)/self._stage_support_radii)
+        stage_support_near=jp.asarray(self._stage_support_enabled) & (current_stage_support_distance<=1.0)
         apex_seen=(state.info["apex_seen"]>0) | ((state.info["prev_vz"]>0.0)&(vz<=0.0))
         stage_entry_raw=jp.asarray(False)
         if self._reachability_objective=="takeoff_to_ascent":
