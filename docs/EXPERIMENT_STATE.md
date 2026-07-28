@@ -1,5 +1,41 @@
 # DVGC Experiment State
 
+## Upstream Apex proposal acquisition moved to Takeoff-tail handoff (2026-07-29)
+
+- Descent remains complete: Tube v4 contains 22 independently certified
+  states and continuous entry v2 is frozen.  XML, action mapping, matcher,
+  physical-failure gates and frozen downstream policies were unchanged; PPO
+  remained unauthorized.
+- The apparent unreviewed successful parent `6d25e074...` was not independent:
+  its three saved Apex snapshots are exact physical-feature duplicates of the
+  already tested `89ff1a0e...` lineage and were correctly removed by the
+  existing normalized deduplication.  All five real dynamic Apex parents have
+  therefore been tested against current C_D v2 / Tube v4 with zero formal
+  entry.
+- Commits `bdd7b7d`, `46bfe1f`, `a5d17f3` and `530fcf8` added auditable
+  parent ranking plus bounded low-, micro-impulse and state-feedback proposal
+  probes.  On four nearest old-pool parents, 96 fixed-pulse trials, 48
+  low-impulse trials, 24 micro-impulse trials and 32 feedback trials found no
+  new valid Apex entry.  Finite differences confirmed hip pitch-rate authority
+  (one-tick hip 0 -> 0.5 reduced wy 25.10 -> 9.53 rad/s), but rectangular
+  controls overcorrected after the rate changed sign.
+- Commit `e004a73` split fresh Ascent-entry acquisition from downstream search;
+  48 parent-disjoint entries were regenerated from the frozen Takeoff assets,
+  hash `4e7fc7fd...74d9665`, without downstream search.  Commit `690d888`
+  enforced bank-level exclusion of all 24 previously searched parents.
+- The four nearest wholly new parents were only 0.0545--0.3749 normalized
+  units from known generic-Apex support.  Their fixed-pulse minimum height/vz
+  residuals were 0.00262, 0.000146, 0.00479 and 0.03349, yet valid Apex entry
+  remained 0/96; the frozen 16-spec feedback probe also remained 0/64.  Every
+  terminal cause was pitch/roll, with no timeout, nonfinite or provenance
+  error.
+- Classification: `TAKEOFF_TO_ASCENT_HANDOFF_POSE_SUPPORT_GAP`.  Repeating the
+  same Ascent rectangular-pulse or simple feedback families is closed.  The
+  next nonrepeating mainline action is to capture real pre-entry Takeoff-tail
+  snapshots and test a bounded residual on frozen pi_T before considering any
+  new Takeoff training.  Apex PPO remains closed until two parent-disjoint
+  natural upstream trajectories enter frozen formal Descent support.
+
 ## Reachability-ranked unseen-parent acquisition exhausted (2026-07-29)
 
 - Commits `a2f52c8`, `21de782`, `1974212`, `9a08bdd` and `82886ca`
