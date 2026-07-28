@@ -1850,3 +1850,30 @@
   produce a real formal C_D entry before teacher bootstrap or Apex policy
   expansion. The 22-state independently certified Descent Tube v4 remains
   complete and unchanged; upstream composite/final-shared JEL is incomplete.
+
+### Bounded Apex-to-C_D bridge localization (2026-07-29)
+
+- Four parent-disjoint Apex entries with the smallest initial formal-support
+  distances were frozen before search. A 144-branch hip/knee grid plus 192
+  fixed-budget local proposals yielded 0 formal entries; the best raw matcher
+  distance improved from 15.4211 to 14.1378 (about 282.8 frozen radii). Failure
+  modes were 290 pose instability, 45 exhausted joint margin and one support
+  mismatch. Commit `b0e42a5` repairs only missing matcher-hash provenance.
+- A 100-branch 5x5 steer/drive extension around the best joint profiles also
+  yielded 0 formal entries and did not improve the global minimum. It changed
+  the best result for only one parent. Commit `7428312` makes this four-channel
+  screen explicit and bounded.
+- The third and final bounded repair used one-step replanning with three-tick
+  lookahead, all actuator groups and the immutable full 16-D C_D distance
+  (`b70eb65`). All 4/4 fixed parents crossed Apex and produced at least four
+  stable physical-Descent ticks, proving a real local descent bridge. Formal
+  C_D entry remained 0/4; minimum distances were 307.06, 307.10, 326.28 and
+  335.61 frozen radii. Frozen pi_D continuation from those stable snapshots
+  reached Landing in 0/4 and Final-Recovery in 0/4.
+- Final blocker: `PHYSICAL_DESCENT_TO_FROZEN_CD_SUPPORT_GAP`. This is no longer
+  an implementation/reset/detector or missing-action-channel issue. The next
+  action requires a research choice between independently proposing and
+  recertifying a new C_D version from the stable bridge states, or replacing
+  frozen pi_D. Matcher expansion, further Apex PPO and automatic policy
+  replacement remain unauthorized. PPO authorization is false. Runtime gate
+  is PASS/current; controller and workers are inactive, watchdog timer active.
