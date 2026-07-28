@@ -1395,3 +1395,20 @@
   schema; old policy, Tube, Final-Recovery, and JEL evidence cannot be inherited
   automatically. PPO and bootstrap authorization are false. Report:
   `docs/experiments/unified_descent_observation_history_sufficiency_audit_v1/`.
+
+## Timing-explicit snapshot schema v4 and delay reaudit v1 (2026-07-28)
+
+- Schema/runtime implementation commits: `0d0d58d`, `864654f`, and
+  `f923161`. Full local preflight passed 333 tests; dynamic runtime gate is
+  PASS/current with source fingerprint `8fc490e...e6b5f`.
+- Construction-lineage smoke recovered 8/8 frozen candidates with real
+  three-packet FIFO and exact logged actor input. Formal recapture then passed
+  15/24 states, below the fixed 24/24 inheritance gate.
+- All 24 physical hashes, logged observations, frozen pi_D actions,
+  candidate/tick identities, post histories and semantic hashes match. Nine
+  states fail only independent actor/current-frame bit-exact reconstruction.
+- Classification: `V4_RECAPTURE_IDENTITY_FAILURE`. The 12 corrections and 244
+  pairs were not inherited; L0/D1/D2/J12, transfer and held-out were not run.
+  No training, CEM, PPO, bootstrap, Landing retention or Tube/JEL promotion
+  occurred. Controller/worker are stopped; watchdog timer remains waiting.
+- Result: `runs/timing_explicit_snapshot_schema_v4_and_delay_reaudit_v1/`.
