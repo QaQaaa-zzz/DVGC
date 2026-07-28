@@ -100,6 +100,7 @@
   "stage_entry_pose_coeff": 0.04,
   "stage_entry_speed_coeff": 0.02,
   "stage_entry_angular_penalty_coeff": 0.02,
+  "stage_takeoff_handoff_quality_coeff": 1.0,
   "stage_entry_action_smooth_coeff": 0.005,
   "stage_entry_action_magnitude_coeff": 0.003,
   "stage_entry_shaping_clip_min": -0.25,

@@ -37,6 +37,15 @@ def run_preflight(cfg):
   }
   for variant in cases[objective].values():
    for name,value in variant.items():all_terms.setdefault(name,[]).append(value)
+ good_handoff=list(base);bad_handoff=list(base);bad_handoff[4]=.5;bad_handoff[10]=3.5
+ handoff_good=terms(cfg,"takeoff_to_ascent",base,good_handoff,event=True)
+ handoff_bad=terms(cfg,"takeoff_to_ascent",base,bad_handoff,event=True)
+ checks["takeoff_to_ascent"]["handoff_quality_orders_successes"]=(
+  handoff_good["handoff_bonus"]>handoff_bad["handoff_bonus"]>0.
+  and handoff_good["handoff_bonus"]<=float(cfg.stage_takeoff_handoff_quality_coeff)
+ )
+ cases["takeoff_to_ascent"]["good_handoff_event"]=handoff_good
+ cases["takeoff_to_ascent"]["bad_handoff_event"]=handoff_bad
  finite_bounded=all(math.isfinite(v) for values in all_terms.values() for v in values) and all(float(cfg.stage_entry_shaping_clip_min)-1e-6<=x<=float(cfg.stage_entry_shaping_clip_max)+1e-6 for x in all_terms["shaping"])
  terminal_truth=[
   {"name":"success","success":True,"physical_failure":False,"timeout":False},
@@ -46,7 +55,7 @@ def run_preflight(cfg):
  ]
  terminal_mutually_exclusive=all(sum((row["success"],row["physical_failure"],row["timeout"]))==1 for row in terminal_truth)
  stats={}
- positive_names=("event","progress","pose","speed","yaw_score","bounded_height")
+ positive_names=("event","handoff_bonus","progress","pose","speed","yaw_score","bounded_height")
  for name,values in all_terms.items():
   positives=[max(v,0.) for v in values];den=sum(max(v,0.) for key in positive_names for v in all_terms.get(key,[])) or 1.
   stats[name]={"mean":sum(values)/len(values),"p95":percentile(values,95),"max":max(values),"positive_reward_share":sum(positives)/den if name in positive_names else 0.}

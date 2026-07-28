@@ -782,6 +782,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "reward/takeoff_positive_pitch_penalty", "reward/takeoff_wheelie_penalty",
             "reward/takeoff_wheel_unsync_penalty", "reward/takeoff_action_mag_penalty",
             "reward/stage_entry_total", "reward/stage_entry_shaping", "reward/stage_entry_event",
+            "reward/stage_entry_handoff_quality", "reward/stage_entry_handoff_bonus",
             "reward/stage_entry_failure_penalty", "reward/stage_entry_progress",
             "event/stage_entry", "event/stage_entry_ever",
             "reset/episode/flight_curriculum", "reset/episode/canonical_entry_rehearsal",
@@ -1806,7 +1807,8 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             previous_action=state.info["last_action"], hard_failure=hard_failure,
         )
         zero=jp.asarray(0.0,jp.float32)
-        stage_reward={"reward":zero,"shaping":zero,"event":zero,"failure_penalty":zero,"progress":zero,
+        stage_reward={"reward":zero,"shaping":zero,"event":zero,"handoff_quality":zero,
+                      "handoff_bonus":zero,"failure_penalty":zero,"progress":zero,
                       "pose":zero,"speed":zero,"angular_penalty":zero,"yaw_score":zero,"bounded_height":zero,
                       "joint_energy_penalty":zero,"action_smooth_penalty":zero,"action_magnitude_penalty":zero}
         if self._reachability_objective:
@@ -1893,6 +1895,8 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "reward/stage_entry_total": stage_reward["reward"],
             "reward/stage_entry_shaping": stage_reward["shaping"],
             "reward/stage_entry_event": stage_reward["event"],
+            "reward/stage_entry_handoff_quality": stage_reward["handoff_quality"],
+            "reward/stage_entry_handoff_bonus": stage_reward["handoff_bonus"],
             "reward/stage_entry_failure_penalty": stage_reward["failure_penalty"],
             "reward/stage_entry_progress": stage_reward["progress"],
             "diag/legacy_recovery_gate_fraction": legacy_recovery_score,

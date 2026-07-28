@@ -62,8 +62,16 @@ def compute_stage_next_entry_reward(
            float(cfg.stage_entry_joint_energy_coeff)*joint_energy)
     shaping=jp.clip(dense,float(cfg.stage_entry_shaping_clip_min),float(cfg.stage_entry_shaping_clip_max))
     event=float(cfg.stage_entry_event_reward)*next_entry.astype(jp.float32)
+    angular_quality=jp.exp(-jp.sum(gyro*gyro)/(float(cfg.recovery_max_angvel)**2))
+    handoff_quality=0.5*pose+0.5*angular_quality
+    handoff_bonus=jp.where(
+        objective=="takeoff_to_ascent",
+        float(cfg.stage_takeoff_handoff_quality_coeff)*next_entry.astype(jp.float32)*handoff_quality,
+        jp.asarray(0.0,jp.float32),
+    )
     failure=float(cfg.stage_entry_failure_penalty)*hard_failure.astype(jp.float32)
-    return {"reward":shaping+event-failure,"shaping":shaping,"event":event,"failure_penalty":failure,
+    return {"reward":shaping+event+handoff_bonus-failure,"shaping":shaping,"event":event,
+            "handoff_quality":handoff_quality,"handoff_bonus":handoff_bonus,"failure_penalty":failure,
             "progress":progress,"pose":pose,"speed":speed,"angular_penalty":angular,
             "yaw_score":yaw_score,"bounded_height":bounded_height,"joint_energy_penalty":joint_energy,
             "action_smooth_penalty":smooth,"action_magnitude_penalty":magnitude}
