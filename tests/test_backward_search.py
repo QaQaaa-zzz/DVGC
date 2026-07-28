@@ -1,0 +1,16 @@
+import numpy as np
+
+from dvgc.backward_search import active_prefix_exact, backward_lexicographic_order
+
+
+def test_backward_order_prioritizes_final_then_entry_not_survival():
+    rows={"final_recovery":np.array([0,1,0],bool),"downstream_entry":np.array([1,1,1],bool),"minimum_distance":np.array([.1,9.,.01]),"minimum_margin":np.zeros(3),"survival":np.array([24,1,24])}
+    assert backward_lexicographic_order(rows).tolist()==[1,2,0]
+
+
+def test_active_prefix_ignores_terminal_tail_but_checks_events():
+    base={"downstream_entry":np.array([True]),"final_recovery":np.array([False]),"survival":np.array([3]),"entry_tick":np.array([2]),"termination_tick":np.array([4]),"end_code":np.array([5]),"minimum_distance":np.array([.2]),"minimum_margin":np.array([-.1]),"entry_qpos":np.zeros((1,12)),"entry_qvel":np.zeros((1,11)),"actions":np.zeros((6,1,4)),"active_mask":np.ones((6,1),bool),"phase_trace":np.zeros((6,1),int)}
+    other={k:np.copy(v) for k,v in base.items()};other["actions"][5]=9
+    assert active_prefix_exact(base,other)[0]
+    other["actions"][2]=1
+    assert not active_prefix_exact(base,other)[0]
