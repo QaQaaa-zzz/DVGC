@@ -1,4 +1,4 @@
-from cli.run_backward_descent_rsi_pilot import build_p0_training_records
+from cli.run_backward_descent_rsi_pilot import build_p0_training_records, certify_policy
 
 
 def test_p0_training_bank_is_balanced_and_never_claims_safe():
@@ -8,3 +8,7 @@ def test_p0_training_bank_is_balanced_and_never_claims_safe():
     records=build_p0_training_records(nodes,lambda node:{"id":node["node_id"],"final":{"label":"safe"},"policy_version":"old"})
     assert len(records)==3 and sum(row["reset_weight"] for row in records)==1.0
     assert all(row["artifact_role"]=="proposal_support_bank" and "final" not in row and "policy_version" not in row for row in records)
+
+
+def test_certification_exposes_explicit_record_loader():
+    assert "record_loader" in certify_policy.__code__.co_varnames
