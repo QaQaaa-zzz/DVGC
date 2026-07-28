@@ -71,9 +71,12 @@ def train_supervised(
     teacher_observation: np.ndarray, teacher_target: np.ndarray,
     anchor_observation: np.ndarray, anchor_target: np.ndarray,
     learning_rate: float, steps: int = 500, mode: str = "head",
+    teacher_weight: float = .5,
     callback: Any | None = None,
 ):
-    """Full-batch 1:1 teacher/anchor Huber fitting with frozen nonactor assets."""
+    """Full-batch teacher/anchor Huber fitting with frozen nonactor assets."""
+    if not 0.0 < float(teacher_weight) < 1.0:
+        raise ValueError("teacher_weight must be strictly between zero and one")
     teacher_obs = jnp.asarray(teacher_observation); teacher_y = jnp.asarray(teacher_target)
     anchor_obs = jnp.asarray(anchor_observation); anchor_y = jnp.asarray(anchor_target)
     trainable = extract_trainable(base_policy, mode)
@@ -85,7 +88,8 @@ def train_supervised(
         anchor_action = actor_action(policy, anchor_obs)
         teacher_loss = jnp.mean(optax.huber_loss(teacher_action, teacher_y, delta=.05))
         anchor_loss = jnp.mean(optax.huber_loss(anchor_action, anchor_y, delta=.05))
-        return .5 * teacher_loss + .5 * anchor_loss, (teacher_loss, anchor_loss)
+        return (float(teacher_weight) * teacher_loss
+                + (1.0 - float(teacher_weight)) * anchor_loss), (teacher_loss, anchor_loss)
 
     update = jax.jit(jax.value_and_grad(loss_fn, has_aux=True))
     history = []

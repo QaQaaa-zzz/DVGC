@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 import numpy as np
 
-from dvgc.descent_supervised import extract_trainable, replace_trainable
+from dvgc.descent_supervised import extract_trainable, replace_trainable, train_supervised
 
 
 def policy():
@@ -33,3 +33,12 @@ def test_last_block_mode_keeps_earlier_blocks_and_log_std_frozen():
     np.testing.assert_array_equal(updated["params"]["trunk"]["hidden_1"]["kernel"],base["params"]["trunk"]["hidden_1"]["kernel"])
     np.testing.assert_array_equal(updated["params"]["scale_parameter"],base["params"]["scale_parameter"])
     np.testing.assert_array_equal(updated["params"]["trunk"]["hidden_2"]["bias"],np.zeros(2))
+
+
+def test_teacher_weight_must_be_strict_probability():
+    import pytest
+    with pytest.raises(ValueError, match="teacher_weight"):
+        train_supervised(base_policy=policy(), actor_action=lambda p, x: x,
+                         teacher_observation=np.zeros((1, 4)), teacher_target=np.zeros((1, 4)),
+                         anchor_observation=np.zeros((1, 4)), anchor_target=np.zeros((1, 4)),
+                         learning_rate=1e-3, steps=1, teacher_weight=0.0)
