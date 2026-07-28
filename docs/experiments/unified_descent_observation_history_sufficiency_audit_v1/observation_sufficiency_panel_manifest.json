@@ -1,0 +1,21 @@
+{
+  "heldout_used": false,
+  "panels": {
+    "P0": "complete privileged diagnostic",
+    "P1": "true phase/contact block",
+    "P2": "body dynamics block",
+    "P3": "actuation/delay block",
+    "P4": "relative geometry block",
+    "P5": "current constraint-margin block",
+    "V0": "current 4x35 actor observation",
+    "V1": "8-frame causal history",
+    "V2": "16-frame causal history",
+    "V3": "V2 per-signal current/mean/slope/min/max",
+    "V4": "V0 plus deployable command/control trace",
+    "V5": "V0 plus estimator confidence/progress history"
+  },
+  "reason": "OBSERVATION_PIPELINE_AUTHORITY_FAILURE",
+  "selection_after_results": false,
+  "status": "PREREGISTERED_NOT_ACTIVATED"
+}
+

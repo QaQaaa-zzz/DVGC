@@ -1,0 +1,2305 @@
+{
+  "bootstrap_authorization": false,
+  "contract": {
+    "action_mapping_version": "steer_drive_hip_knee.incremental_positive_flexion.v2",
+    "action_order": [
+      "steer",
+      "drive",
+      "hip",
+      "knee"
+    ],
+    "actor_input_shape": [
+      140
+    ],
+    "command_action_distinction": {
+      "actuator_dynamic_state": "MuJoCo na=0",
+      "applied_control": "four XML actuator targets in data.ctrl after _action_to_ctrl; units are actuator-specific, not normalized action",
+      "commanded_action": "policy output after explicit clip; same four-channel order",
+      "last_action": "previous normalized commanded action embedded in every frame",
+      "policy_output": "deterministic post-tanh normalized action in [-1,1]",
+      "snapshot_delay_buffer": "compatibility field equal to phase_probs[None,:], not an action-delay FIFO"
+    },
+    "dimensions": [
+      {
+        "frame_index": 0,
+        "history_age_ticks": 3,
+        "index": 0,
+        "name": "history_t_minus_3/steering_joint_position",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad"
+      },
+      {
+        "frame_index": 1,
+        "history_age_ticks": 3,
+        "index": 1,
+        "name": "history_t_minus_3/hip_joint_position",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad"
+      },
+      {
+        "frame_index": 2,
+        "history_age_ticks": 3,
+        "index": 2,
+        "name": "history_t_minus_3/knee_joint_position",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad"
+      },
+      {
+        "frame_index": 3,
+        "history_age_ticks": 3,
+        "index": 3,
+        "name": "history_t_minus_3/rear_wheel_angular_velocity",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 4,
+        "history_age_ticks": 3,
+        "index": 4,
+        "name": "history_t_minus_3/steering_joint_velocity",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 5,
+        "history_age_ticks": 3,
+        "index": 5,
+        "name": "history_t_minus_3/hip_joint_velocity",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 6,
+        "history_age_ticks": 3,
+        "index": 6,
+        "name": "history_t_minus_3/knee_joint_velocity",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 7,
+        "history_age_ticks": 3,
+        "index": 7,
+        "name": "history_t_minus_3/front_wheel_angular_velocity",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 8,
+        "history_age_ticks": 3,
+        "index": 8,
+        "name": "history_t_minus_3/gyro_x",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 9,
+        "history_age_ticks": 3,
+        "index": 9,
+        "name": "history_t_minus_3/gyro_y",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 10,
+        "history_age_ticks": 3,
+        "index": 10,
+        "name": "history_t_minus_3/gyro_z",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 11,
+        "history_age_ticks": 3,
+        "index": 11,
+        "name": "history_t_minus_3/gravity_body_x",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "1"
+      },
+      {
+        "frame_index": 12,
+        "history_age_ticks": 3,
+        "index": 12,
+        "name": "history_t_minus_3/gravity_body_y",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "1"
+      },
+      {
+        "frame_index": 13,
+        "history_age_ticks": 3,
+        "index": 13,
+        "name": "history_t_minus_3/gravity_body_z",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "1"
+      },
+      {
+        "frame_index": 14,
+        "history_age_ticks": 3,
+        "index": 14,
+        "name": "history_t_minus_3/last_normalized_action_steer",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command_history",
+        "unit": "normalized"
+      },
+      {
+        "frame_index": 15,
+        "history_age_ticks": 3,
+        "index": 15,
+        "name": "history_t_minus_3/last_normalized_action_drive",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command_history",
+        "unit": "normalized"
+      },
+      {
+        "frame_index": 16,
+        "history_age_ticks": 3,
+        "index": 16,
+        "name": "history_t_minus_3/last_normalized_action_hip",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command_history",
+        "unit": "normalized"
+      },
+      {
+        "frame_index": 17,
+        "history_age_ticks": 3,
+        "index": 17,
+        "name": "history_t_minus_3/last_normalized_action_knee",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command_history",
+        "unit": "normalized"
+      },
+      {
+        "frame_index": 18,
+        "history_age_ticks": 3,
+        "index": 18,
+        "name": "history_t_minus_3/task_step_front_relative_x",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command/map",
+        "unit": "scaled"
+      },
+      {
+        "frame_index": 19,
+        "history_age_ticks": 3,
+        "index": 19,
+        "name": "history_t_minus_3/task_step_back_relative_x",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command/map",
+        "unit": "scaled"
+      },
+      {
+        "frame_index": 20,
+        "history_age_ticks": 3,
+        "index": 20,
+        "name": "history_t_minus_3/task_step_height",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command/map",
+        "unit": "scaled"
+      },
+      {
+        "frame_index": 21,
+        "history_age_ticks": 3,
+        "index": 21,
+        "name": "history_t_minus_3/task_target_speed",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command",
+        "unit": "scaled"
+      },
+      {
+        "frame_index": 22,
+        "history_age_ticks": 3,
+        "index": 22,
+        "name": "history_t_minus_3/task_terrain_relative_height",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor+map",
+        "unit": "scaled"
+      },
+      {
+        "frame_index": 23,
+        "history_age_ticks": 3,
+        "index": 23,
+        "name": "history_t_minus_3/accelerometer_x",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "m/s^2"
+      },
+      {
+        "frame_index": 24,
+        "history_age_ticks": 3,
+        "index": 24,
+        "name": "history_t_minus_3/accelerometer_y",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "m/s^2"
+      },
+      {
+        "frame_index": 25,
+        "history_age_ticks": 3,
+        "index": 25,
+        "name": "history_t_minus_3/accelerometer_z",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "m/s^2"
+      },
+      {
+        "frame_index": 26,
+        "history_age_ticks": 3,
+        "index": 26,
+        "name": "history_t_minus_3/accelerometer_z_delta",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor_history",
+        "unit": "m/s^2"
+      },
+      {
+        "frame_index": 27,
+        "history_age_ticks": 3,
+        "index": 27,
+        "name": "history_t_minus_3/rear_wheel_linear_speed",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "m/s"
+      },
+      {
+        "frame_index": 28,
+        "history_age_ticks": 3,
+        "index": 28,
+        "name": "history_t_minus_3/imu_support_estimate",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "boolean"
+      },
+      {
+        "frame_index": 29,
+        "history_age_ticks": 3,
+        "index": 29,
+        "name": "history_t_minus_3/phase_probability_approach",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "probability"
+      },
+      {
+        "frame_index": 30,
+        "history_age_ticks": 3,
+        "index": 30,
+        "name": "history_t_minus_3/phase_probability_takeoff",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "probability"
+      },
+      {
+        "frame_index": 31,
+        "history_age_ticks": 3,
+        "index": 31,
+        "name": "history_t_minus_3/phase_probability_flight",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "probability"
+      },
+      {
+        "frame_index": 32,
+        "history_age_ticks": 3,
+        "index": 32,
+        "name": "history_t_minus_3/phase_probability_landing",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "probability"
+      },
+      {
+        "frame_index": 33,
+        "history_age_ticks": 3,
+        "index": 33,
+        "name": "history_t_minus_3/contact_age",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "normalized"
+      },
+      {
+        "frame_index": 34,
+        "history_age_ticks": 3,
+        "index": 34,
+        "name": "history_t_minus_3/recovery_count",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "normalized"
+      },
+      {
+        "frame_index": 0,
+        "history_age_ticks": 2,
+        "index": 35,
+        "name": "history_t_minus_2/steering_joint_position",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad"
+      },
+      {
+        "frame_index": 1,
+        "history_age_ticks": 2,
+        "index": 36,
+        "name": "history_t_minus_2/hip_joint_position",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad"
+      },
+      {
+        "frame_index": 2,
+        "history_age_ticks": 2,
+        "index": 37,
+        "name": "history_t_minus_2/knee_joint_position",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad"
+      },
+      {
+        "frame_index": 3,
+        "history_age_ticks": 2,
+        "index": 38,
+        "name": "history_t_minus_2/rear_wheel_angular_velocity",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 4,
+        "history_age_ticks": 2,
+        "index": 39,
+        "name": "history_t_minus_2/steering_joint_velocity",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 5,
+        "history_age_ticks": 2,
+        "index": 40,
+        "name": "history_t_minus_2/hip_joint_velocity",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 6,
+        "history_age_ticks": 2,
+        "index": 41,
+        "name": "history_t_minus_2/knee_joint_velocity",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 7,
+        "history_age_ticks": 2,
+        "index": 42,
+        "name": "history_t_minus_2/front_wheel_angular_velocity",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 8,
+        "history_age_ticks": 2,
+        "index": 43,
+        "name": "history_t_minus_2/gyro_x",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 9,
+        "history_age_ticks": 2,
+        "index": 44,
+        "name": "history_t_minus_2/gyro_y",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 10,
+        "history_age_ticks": 2,
+        "index": 45,
+        "name": "history_t_minus_2/gyro_z",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 11,
+        "history_age_ticks": 2,
+        "index": 46,
+        "name": "history_t_minus_2/gravity_body_x",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "1"
+      },
+      {
+        "frame_index": 12,
+        "history_age_ticks": 2,
+        "index": 47,
+        "name": "history_t_minus_2/gravity_body_y",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "1"
+      },
+      {
+        "frame_index": 13,
+        "history_age_ticks": 2,
+        "index": 48,
+        "name": "history_t_minus_2/gravity_body_z",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "1"
+      },
+      {
+        "frame_index": 14,
+        "history_age_ticks": 2,
+        "index": 49,
+        "name": "history_t_minus_2/last_normalized_action_steer",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command_history",
+        "unit": "normalized"
+      },
+      {
+        "frame_index": 15,
+        "history_age_ticks": 2,
+        "index": 50,
+        "name": "history_t_minus_2/last_normalized_action_drive",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command_history",
+        "unit": "normalized"
+      },
+      {
+        "frame_index": 16,
+        "history_age_ticks": 2,
+        "index": 51,
+        "name": "history_t_minus_2/last_normalized_action_hip",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command_history",
+        "unit": "normalized"
+      },
+      {
+        "frame_index": 17,
+        "history_age_ticks": 2,
+        "index": 52,
+        "name": "history_t_minus_2/last_normalized_action_knee",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command_history",
+        "unit": "normalized"
+      },
+      {
+        "frame_index": 18,
+        "history_age_ticks": 2,
+        "index": 53,
+        "name": "history_t_minus_2/task_step_front_relative_x",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command/map",
+        "unit": "scaled"
+      },
+      {
+        "frame_index": 19,
+        "history_age_ticks": 2,
+        "index": 54,
+        "name": "history_t_minus_2/task_step_back_relative_x",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command/map",
+        "unit": "scaled"
+      },
+      {
+        "frame_index": 20,
+        "history_age_ticks": 2,
+        "index": 55,
+        "name": "history_t_minus_2/task_step_height",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command/map",
+        "unit": "scaled"
+      },
+      {
+        "frame_index": 21,
+        "history_age_ticks": 2,
+        "index": 56,
+        "name": "history_t_minus_2/task_target_speed",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command",
+        "unit": "scaled"
+      },
+      {
+        "frame_index": 22,
+        "history_age_ticks": 2,
+        "index": 57,
+        "name": "history_t_minus_2/task_terrain_relative_height",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor+map",
+        "unit": "scaled"
+      },
+      {
+        "frame_index": 23,
+        "history_age_ticks": 2,
+        "index": 58,
+        "name": "history_t_minus_2/accelerometer_x",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "m/s^2"
+      },
+      {
+        "frame_index": 24,
+        "history_age_ticks": 2,
+        "index": 59,
+        "name": "history_t_minus_2/accelerometer_y",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "m/s^2"
+      },
+      {
+        "frame_index": 25,
+        "history_age_ticks": 2,
+        "index": 60,
+        "name": "history_t_minus_2/accelerometer_z",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "m/s^2"
+      },
+      {
+        "frame_index": 26,
+        "history_age_ticks": 2,
+        "index": 61,
+        "name": "history_t_minus_2/accelerometer_z_delta",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor_history",
+        "unit": "m/s^2"
+      },
+      {
+        "frame_index": 27,
+        "history_age_ticks": 2,
+        "index": 62,
+        "name": "history_t_minus_2/rear_wheel_linear_speed",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "m/s"
+      },
+      {
+        "frame_index": 28,
+        "history_age_ticks": 2,
+        "index": 63,
+        "name": "history_t_minus_2/imu_support_estimate",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "boolean"
+      },
+      {
+        "frame_index": 29,
+        "history_age_ticks": 2,
+        "index": 64,
+        "name": "history_t_minus_2/phase_probability_approach",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "probability"
+      },
+      {
+        "frame_index": 30,
+        "history_age_ticks": 2,
+        "index": 65,
+        "name": "history_t_minus_2/phase_probability_takeoff",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "probability"
+      },
+      {
+        "frame_index": 31,
+        "history_age_ticks": 2,
+        "index": 66,
+        "name": "history_t_minus_2/phase_probability_flight",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "probability"
+      },
+      {
+        "frame_index": 32,
+        "history_age_ticks": 2,
+        "index": 67,
+        "name": "history_t_minus_2/phase_probability_landing",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "probability"
+      },
+      {
+        "frame_index": 33,
+        "history_age_ticks": 2,
+        "index": 68,
+        "name": "history_t_minus_2/contact_age",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "normalized"
+      },
+      {
+        "frame_index": 34,
+        "history_age_ticks": 2,
+        "index": 69,
+        "name": "history_t_minus_2/recovery_count",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "normalized"
+      },
+      {
+        "frame_index": 0,
+        "history_age_ticks": 1,
+        "index": 70,
+        "name": "history_t_minus_1/steering_joint_position",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad"
+      },
+      {
+        "frame_index": 1,
+        "history_age_ticks": 1,
+        "index": 71,
+        "name": "history_t_minus_1/hip_joint_position",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad"
+      },
+      {
+        "frame_index": 2,
+        "history_age_ticks": 1,
+        "index": 72,
+        "name": "history_t_minus_1/knee_joint_position",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad"
+      },
+      {
+        "frame_index": 3,
+        "history_age_ticks": 1,
+        "index": 73,
+        "name": "history_t_minus_1/rear_wheel_angular_velocity",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 4,
+        "history_age_ticks": 1,
+        "index": 74,
+        "name": "history_t_minus_1/steering_joint_velocity",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 5,
+        "history_age_ticks": 1,
+        "index": 75,
+        "name": "history_t_minus_1/hip_joint_velocity",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 6,
+        "history_age_ticks": 1,
+        "index": 76,
+        "name": "history_t_minus_1/knee_joint_velocity",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 7,
+        "history_age_ticks": 1,
+        "index": 77,
+        "name": "history_t_minus_1/front_wheel_angular_velocity",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 8,
+        "history_age_ticks": 1,
+        "index": 78,
+        "name": "history_t_minus_1/gyro_x",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 9,
+        "history_age_ticks": 1,
+        "index": 79,
+        "name": "history_t_minus_1/gyro_y",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 10,
+        "history_age_ticks": 1,
+        "index": 80,
+        "name": "history_t_minus_1/gyro_z",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 11,
+        "history_age_ticks": 1,
+        "index": 81,
+        "name": "history_t_minus_1/gravity_body_x",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "1"
+      },
+      {
+        "frame_index": 12,
+        "history_age_ticks": 1,
+        "index": 82,
+        "name": "history_t_minus_1/gravity_body_y",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "1"
+      },
+      {
+        "frame_index": 13,
+        "history_age_ticks": 1,
+        "index": 83,
+        "name": "history_t_minus_1/gravity_body_z",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "1"
+      },
+      {
+        "frame_index": 14,
+        "history_age_ticks": 1,
+        "index": 84,
+        "name": "history_t_minus_1/last_normalized_action_steer",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command_history",
+        "unit": "normalized"
+      },
+      {
+        "frame_index": 15,
+        "history_age_ticks": 1,
+        "index": 85,
+        "name": "history_t_minus_1/last_normalized_action_drive",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command_history",
+        "unit": "normalized"
+      },
+      {
+        "frame_index": 16,
+        "history_age_ticks": 1,
+        "index": 86,
+        "name": "history_t_minus_1/last_normalized_action_hip",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command_history",
+        "unit": "normalized"
+      },
+      {
+        "frame_index": 17,
+        "history_age_ticks": 1,
+        "index": 87,
+        "name": "history_t_minus_1/last_normalized_action_knee",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command_history",
+        "unit": "normalized"
+      },
+      {
+        "frame_index": 18,
+        "history_age_ticks": 1,
+        "index": 88,
+        "name": "history_t_minus_1/task_step_front_relative_x",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command/map",
+        "unit": "scaled"
+      },
+      {
+        "frame_index": 19,
+        "history_age_ticks": 1,
+        "index": 89,
+        "name": "history_t_minus_1/task_step_back_relative_x",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command/map",
+        "unit": "scaled"
+      },
+      {
+        "frame_index": 20,
+        "history_age_ticks": 1,
+        "index": 90,
+        "name": "history_t_minus_1/task_step_height",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command/map",
+        "unit": "scaled"
+      },
+      {
+        "frame_index": 21,
+        "history_age_ticks": 1,
+        "index": 91,
+        "name": "history_t_minus_1/task_target_speed",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command",
+        "unit": "scaled"
+      },
+      {
+        "frame_index": 22,
+        "history_age_ticks": 1,
+        "index": 92,
+        "name": "history_t_minus_1/task_terrain_relative_height",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor+map",
+        "unit": "scaled"
+      },
+      {
+        "frame_index": 23,
+        "history_age_ticks": 1,
+        "index": 93,
+        "name": "history_t_minus_1/accelerometer_x",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "m/s^2"
+      },
+      {
+        "frame_index": 24,
+        "history_age_ticks": 1,
+        "index": 94,
+        "name": "history_t_minus_1/accelerometer_y",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "m/s^2"
+      },
+      {
+        "frame_index": 25,
+        "history_age_ticks": 1,
+        "index": 95,
+        "name": "history_t_minus_1/accelerometer_z",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "m/s^2"
+      },
+      {
+        "frame_index": 26,
+        "history_age_ticks": 1,
+        "index": 96,
+        "name": "history_t_minus_1/accelerometer_z_delta",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor_history",
+        "unit": "m/s^2"
+      },
+      {
+        "frame_index": 27,
+        "history_age_ticks": 1,
+        "index": 97,
+        "name": "history_t_minus_1/rear_wheel_linear_speed",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "m/s"
+      },
+      {
+        "frame_index": 28,
+        "history_age_ticks": 1,
+        "index": 98,
+        "name": "history_t_minus_1/imu_support_estimate",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "boolean"
+      },
+      {
+        "frame_index": 29,
+        "history_age_ticks": 1,
+        "index": 99,
+        "name": "history_t_minus_1/phase_probability_approach",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "probability"
+      },
+      {
+        "frame_index": 30,
+        "history_age_ticks": 1,
+        "index": 100,
+        "name": "history_t_minus_1/phase_probability_takeoff",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "probability"
+      },
+      {
+        "frame_index": 31,
+        "history_age_ticks": 1,
+        "index": 101,
+        "name": "history_t_minus_1/phase_probability_flight",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "probability"
+      },
+      {
+        "frame_index": 32,
+        "history_age_ticks": 1,
+        "index": 102,
+        "name": "history_t_minus_1/phase_probability_landing",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "probability"
+      },
+      {
+        "frame_index": 33,
+        "history_age_ticks": 1,
+        "index": 103,
+        "name": "history_t_minus_1/contact_age",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "normalized"
+      },
+      {
+        "frame_index": 34,
+        "history_age_ticks": 1,
+        "index": 104,
+        "name": "history_t_minus_1/recovery_count",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "normalized"
+      },
+      {
+        "frame_index": 0,
+        "history_age_ticks": 0,
+        "index": 105,
+        "name": "history_t_minus_0/steering_joint_position",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad"
+      },
+      {
+        "frame_index": 1,
+        "history_age_ticks": 0,
+        "index": 106,
+        "name": "history_t_minus_0/hip_joint_position",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad"
+      },
+      {
+        "frame_index": 2,
+        "history_age_ticks": 0,
+        "index": 107,
+        "name": "history_t_minus_0/knee_joint_position",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad"
+      },
+      {
+        "frame_index": 3,
+        "history_age_ticks": 0,
+        "index": 108,
+        "name": "history_t_minus_0/rear_wheel_angular_velocity",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 4,
+        "history_age_ticks": 0,
+        "index": 109,
+        "name": "history_t_minus_0/steering_joint_velocity",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 5,
+        "history_age_ticks": 0,
+        "index": 110,
+        "name": "history_t_minus_0/hip_joint_velocity",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 6,
+        "history_age_ticks": 0,
+        "index": 111,
+        "name": "history_t_minus_0/knee_joint_velocity",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 7,
+        "history_age_ticks": 0,
+        "index": 112,
+        "name": "history_t_minus_0/front_wheel_angular_velocity",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 8,
+        "history_age_ticks": 0,
+        "index": 113,
+        "name": "history_t_minus_0/gyro_x",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 9,
+        "history_age_ticks": 0,
+        "index": 114,
+        "name": "history_t_minus_0/gyro_y",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 10,
+        "history_age_ticks": 0,
+        "index": 115,
+        "name": "history_t_minus_0/gyro_z",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "rad/s"
+      },
+      {
+        "frame_index": 11,
+        "history_age_ticks": 0,
+        "index": 116,
+        "name": "history_t_minus_0/gravity_body_x",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "1"
+      },
+      {
+        "frame_index": 12,
+        "history_age_ticks": 0,
+        "index": 117,
+        "name": "history_t_minus_0/gravity_body_y",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "1"
+      },
+      {
+        "frame_index": 13,
+        "history_age_ticks": 0,
+        "index": 118,
+        "name": "history_t_minus_0/gravity_body_z",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "1"
+      },
+      {
+        "frame_index": 14,
+        "history_age_ticks": 0,
+        "index": 119,
+        "name": "history_t_minus_0/last_normalized_action_steer",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command_history",
+        "unit": "normalized"
+      },
+      {
+        "frame_index": 15,
+        "history_age_ticks": 0,
+        "index": 120,
+        "name": "history_t_minus_0/last_normalized_action_drive",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command_history",
+        "unit": "normalized"
+      },
+      {
+        "frame_index": 16,
+        "history_age_ticks": 0,
+        "index": 121,
+        "name": "history_t_minus_0/last_normalized_action_hip",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command_history",
+        "unit": "normalized"
+      },
+      {
+        "frame_index": 17,
+        "history_age_ticks": 0,
+        "index": 122,
+        "name": "history_t_minus_0/last_normalized_action_knee",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command_history",
+        "unit": "normalized"
+      },
+      {
+        "frame_index": 18,
+        "history_age_ticks": 0,
+        "index": 123,
+        "name": "history_t_minus_0/task_step_front_relative_x",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command/map",
+        "unit": "scaled"
+      },
+      {
+        "frame_index": 19,
+        "history_age_ticks": 0,
+        "index": 124,
+        "name": "history_t_minus_0/task_step_back_relative_x",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command/map",
+        "unit": "scaled"
+      },
+      {
+        "frame_index": 20,
+        "history_age_ticks": 0,
+        "index": 125,
+        "name": "history_t_minus_0/task_step_height",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command/map",
+        "unit": "scaled"
+      },
+      {
+        "frame_index": 21,
+        "history_age_ticks": 0,
+        "index": 126,
+        "name": "history_t_minus_0/task_target_speed",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "command",
+        "unit": "scaled"
+      },
+      {
+        "frame_index": 22,
+        "history_age_ticks": 0,
+        "index": 127,
+        "name": "history_t_minus_0/task_terrain_relative_height",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor+map",
+        "unit": "scaled"
+      },
+      {
+        "frame_index": 23,
+        "history_age_ticks": 0,
+        "index": 128,
+        "name": "history_t_minus_0/accelerometer_x",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "m/s^2"
+      },
+      {
+        "frame_index": 24,
+        "history_age_ticks": 0,
+        "index": 129,
+        "name": "history_t_minus_0/accelerometer_y",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "m/s^2"
+      },
+      {
+        "frame_index": 25,
+        "history_age_ticks": 0,
+        "index": 130,
+        "name": "history_t_minus_0/accelerometer_z",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "m/s^2"
+      },
+      {
+        "frame_index": 26,
+        "history_age_ticks": 0,
+        "index": 131,
+        "name": "history_t_minus_0/accelerometer_z_delta",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor_history",
+        "unit": "m/s^2"
+      },
+      {
+        "frame_index": 27,
+        "history_age_ticks": 0,
+        "index": 132,
+        "name": "history_t_minus_0/rear_wheel_linear_speed",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "sensor",
+        "unit": "m/s"
+      },
+      {
+        "frame_index": 28,
+        "history_age_ticks": 0,
+        "index": 133,
+        "name": "history_t_minus_0/imu_support_estimate",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "boolean"
+      },
+      {
+        "frame_index": 29,
+        "history_age_ticks": 0,
+        "index": 134,
+        "name": "history_t_minus_0/phase_probability_approach",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "probability"
+      },
+      {
+        "frame_index": 30,
+        "history_age_ticks": 0,
+        "index": 135,
+        "name": "history_t_minus_0/phase_probability_takeoff",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "probability"
+      },
+      {
+        "frame_index": 31,
+        "history_age_ticks": 0,
+        "index": 136,
+        "name": "history_t_minus_0/phase_probability_flight",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "probability"
+      },
+      {
+        "frame_index": 32,
+        "history_age_ticks": 0,
+        "index": 137,
+        "name": "history_t_minus_0/phase_probability_landing",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "probability"
+      },
+      {
+        "frame_index": 33,
+        "history_age_ticks": 0,
+        "index": 138,
+        "name": "history_t_minus_0/contact_age",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "normalized"
+      },
+      {
+        "frame_index": 34,
+        "history_age_ticks": 0,
+        "index": 139,
+        "name": "history_t_minus_0/recovery_count",
+        "sampling_tick": "control state before current policy evaluation",
+        "source": "estimated",
+        "unit": "normalized"
+      }
+    ],
+    "environment_observation_clipping": null,
+    "frame_dim": 35,
+    "history_order": "oldest_to_current",
+    "history_steps": 4,
+    "history_update_contract": {
+      "actor_observation_at_step": "pre-update obs_history concatenated with current frame",
+      "required_snapshot_reconstruction": "must retain pre-update history or exact actor_observation sidecar",
+      "snapshot_saved_obs_history": "next_info obs_history after _advance_actor_history"
+    },
+    "normalization": {
+      "clipping": null,
+      "count": 1024000,
+      "location": "Brax policy network apply",
+      "sha256": "8f2e36b6f69a3d20da67c1854f7e908c98dd6b03ae70e287e0a7e28522f93a7e",
+      "type": "frozen running mean/std per flattened dimension"
+    },
+    "obs_noise_enable": false
+  },
+  "frozen_assets": {
+    "authority_labels": 24,
+    "authority_sha256": "9cf20b84c79a71994b07bdd9060881bad430329f2fed83618319afcecd0c2b07",
+    "eligible_transfer_pairs": 244,
+    "normalizer": {
+      "count": 1024000,
+      "mean": {
+        "l2": 126.55793998259182,
+        "max": 46.66757583618164,
+        "mean": 2.566365260168629,
+        "min": -5.258039951324463
+      },
+      "sha256": "8f2e36b6f69a3d20da67c1854f7e908c98dd6b03ae70e287e0a7e28522f93a7e",
+      "std": {
+        "l2": 103.52134464714385,
+        "max": 40.17438888549805,
+        "mean": 3.0592084182743204,
+        "min": 0.0009999999310821295
+      }
+    },
+    "snapshot_artifact_sha256": "d151f9e142a8160e3ea832e0243267600e338b88a138e2f79ea3f8667252cdf3",
+    "snapshots": 24,
+    "transfer_sha256": "fc6a883cab5db3a85a7fb79e3082f81ab16b9bed3e121db184316dec485b5345"
+  },
+  "gate": false,
+  "heldout_used": false,
+  "ppo_authorization": false,
+  "root_cause": "snapshot stores next_info obs_history (post-current) while state.obs was formed from pre-update history plus current frame; actor_observation sidecar override masks the off-by-one during restore",
+  "rows": [
+    {
+      "candidate_id": "062a0d2904b395fe9432459e09fa32f0",
+      "contact_estimator_complete": true,
+      "delay_compatibility_alias_matches_phase_probs": true,
+      "history_alignment": {
+        "history_shape": [
+          3,
+          35
+        ],
+        "observation_frames": 4,
+        "post_current_max_abs_error": 0.0,
+        "pre_current_max_abs_error": 464.3111267089844,
+        "saved_equals_post_current": true,
+        "saved_equals_required_pre_current": false
+      },
+      "independent_reconstruction": {
+        "action_max_abs_error": 0.1235639899969101,
+        "action_repeat_bit_exact": true,
+        "hash": "e40b3ee5ab8730c1fbe3219cf4ad3dd9755db26cdde02d58cd67c825800c1be3",
+        "max_abs_error": 464.3111267089844,
+        "repeat_bit_exact": true
+      },
+      "override_restore": {
+        "action_max_abs_error": 0.0,
+        "action_repeat_bit_exact": true,
+        "hash": "f6fe94621ea132d6412e43154a204d07a7776b32a26645b305932c6ed5b88f35",
+        "max_abs_error": 0.0,
+        "repeat_bit_exact": true
+      },
+      "phase_estimator_complete": true,
+      "policy_state_complete": true,
+      "qacc_warmstart_present": true,
+      "snapshot_hash": "c848c6edc1e738315811c499dd02c5a5a01bead3f954ba872bca098e109c7492",
+      "snapshot_index": 0,
+      "stored_hash": "f6fe94621ea132d6412e43154a204d07a7776b32a26645b305932c6ed5b88f35",
+      "stored_shape": [
+        140
+      ],
+      "tick": 1
+    },
+    {
+      "candidate_id": "062a0d2904b395fe9432459e09fa32f0",
+      "contact_estimator_complete": true,
+      "delay_compatibility_alias_matches_phase_probs": true,
+      "history_alignment": {
+        "history_shape": [
+          3,
+          35
+        ],
+        "observation_frames": 4,
+        "post_current_max_abs_error": 0.0,
+        "pre_current_max_abs_error": 447.4847717285156,
+        "saved_equals_post_current": true,
+        "saved_equals_required_pre_current": false
+      },
+      "independent_reconstruction": {
+        "action_max_abs_error": 0.13164100050926208,
+        "action_repeat_bit_exact": true,
+        "hash": "63ea749f6d48af0547a4d4701891fd1e5f6a0fbb401eaf566db4c4a61efbcfa7",
+        "max_abs_error": 447.4847717285156,
+        "repeat_bit_exact": true
+      },
+      "override_restore": {
+        "action_max_abs_error": 0.0,
+        "action_repeat_bit_exact": true,
+        "hash": "2163ebb8a793b48c900d330dce5da9e8fee401759f9b524c3747bef8b7cb0f0b",
+        "max_abs_error": 0.0,
+        "repeat_bit_exact": true
+      },
+      "phase_estimator_complete": true,
+      "policy_state_complete": true,
+      "qacc_warmstart_present": true,
+      "snapshot_hash": "7ead081cb56d182844043740a5f2a86731b17e97d5ba6ffe716544f990ce81d3",
+      "snapshot_index": 1,
+      "stored_hash": "2163ebb8a793b48c900d330dce5da9e8fee401759f9b524c3747bef8b7cb0f0b",
+      "stored_shape": [
+        140
+      ],
+      "tick": 4
+    },
+    {
+      "candidate_id": "062a0d2904b395fe9432459e09fa32f0",
+      "contact_estimator_complete": true,
+      "delay_compatibility_alias_matches_phase_probs": true,
+      "history_alignment": {
+        "history_shape": [
+          3,
+          35
+        ],
+        "observation_frames": 4,
+        "post_current_max_abs_error": 0.0,
+        "pre_current_max_abs_error": 16.947528839111328,
+        "saved_equals_post_current": true,
+        "saved_equals_required_pre_current": false
+      },
+      "independent_reconstruction": {
+        "action_max_abs_error": 0.01455622911453247,
+        "action_repeat_bit_exact": true,
+        "hash": "1e8ada96723245c7f6055280784f014e3554e7a623ef3c6702e785ffafa92d6e",
+        "max_abs_error": 29.224632263183594,
+        "repeat_bit_exact": true
+      },
+      "override_restore": {
+        "action_max_abs_error": 0.0,
+        "action_repeat_bit_exact": true,
+        "hash": "800065be223699540693baf70b2e08149b15435b7c8fd4a0b3a16c0f8618a7a9",
+        "max_abs_error": 0.0,
+        "repeat_bit_exact": true
+      },
+      "phase_estimator_complete": true,
+      "policy_state_complete": true,
+      "qacc_warmstart_present": true,
+      "snapshot_hash": "318dfc9b62824457e51e72532d4fc5ef8a7dc7fd198d0b36ed42924089e34d7f",
+      "snapshot_index": 2,
+      "stored_hash": "800065be223699540693baf70b2e08149b15435b7c8fd4a0b3a16c0f8618a7a9",
+      "stored_shape": [
+        140
+      ],
+      "tick": 7
+    },
+    {
+      "candidate_id": "173ee307c84a7ebd74d8aab3ba04f328",
+      "contact_estimator_complete": true,
+      "delay_compatibility_alias_matches_phase_probs": true,
+      "history_alignment": {
+        "history_shape": [
+          3,
+          35
+        ],
+        "observation_frames": 4,
+        "post_current_max_abs_error": 0.0,
+        "pre_current_max_abs_error": 77.47250366210938,
+        "saved_equals_post_current": true,
+        "saved_equals_required_pre_current": false
+      },
+      "independent_reconstruction": {
+        "action_max_abs_error": 0.03161260113120079,
+        "action_repeat_bit_exact": true,
+        "hash": "fe61b2e7b428da8ee346e42730003aa8f2e1cf9fab58d887ee2dd0f07c2199bc",
+        "max_abs_error": 77.47250366210938,
+        "repeat_bit_exact": true
+      },
+      "override_restore": {
+        "action_max_abs_error": 0.0,
+        "action_repeat_bit_exact": true,
+        "hash": "88fbd9c9f223e539c1911c54ddaffb599d17803e7236731bba3238a7c02ac0dc",
+        "max_abs_error": 0.0,
+        "repeat_bit_exact": true
+      },
+      "phase_estimator_complete": true,
+      "policy_state_complete": true,
+      "qacc_warmstart_present": true,
+      "snapshot_hash": "3aaff368bd753d4ec40bb07538fb11b166be786afaf80fd93ec3b98fb4aaf783",
+      "snapshot_index": 3,
+      "stored_hash": "88fbd9c9f223e539c1911c54ddaffb599d17803e7236731bba3238a7c02ac0dc",
+      "stored_shape": [
+        140
+      ],
+      "tick": 1
+    },
+    {
+      "candidate_id": "173ee307c84a7ebd74d8aab3ba04f328",
+      "contact_estimator_complete": true,
+      "delay_compatibility_alias_matches_phase_probs": true,
+      "history_alignment": {
+        "history_shape": [
+          3,
+          35
+        ],
+        "observation_frames": 4,
+        "post_current_max_abs_error": 0.0,
+        "pre_current_max_abs_error": 99.51734161376953,
+        "saved_equals_post_current": true,
+        "saved_equals_required_pre_current": false
+      },
+      "independent_reconstruction": {
+        "action_max_abs_error": 0.094664067029953,
+        "action_repeat_bit_exact": true,
+        "hash": "291e969552e3ccdddb0fa24bcd2d4f8c0be2bc0bbef2b368799c13daf3a74ef5",
+        "max_abs_error": 99.51734161376953,
+        "repeat_bit_exact": true
+      },
+      "override_restore": {
+        "action_max_abs_error": 0.0,
+        "action_repeat_bit_exact": true,
+        "hash": "69afb87a40f37725fd16df8e84e4f2442e9671ccbfd040e64fe53c7ce149adb2",
+        "max_abs_error": 0.0,
+        "repeat_bit_exact": true
+      },
+      "phase_estimator_complete": true,
+      "policy_state_complete": true,
+      "qacc_warmstart_present": true,
+      "snapshot_hash": "076932b4dc4240b101bdd5e4ad5611aec43f24ec3aa41f22104b1e94ceb83dae",
+      "snapshot_index": 4,
+      "stored_hash": "69afb87a40f37725fd16df8e84e4f2442e9671ccbfd040e64fe53c7ce149adb2",
+      "stored_shape": [
+        140
+      ],
+      "tick": 2
+    },
+    {
+      "candidate_id": "173ee307c84a7ebd74d8aab3ba04f328",
+      "contact_estimator_complete": true,
+      "delay_compatibility_alias_matches_phase_probs": true,
+      "history_alignment": {
+        "history_shape": [
+          3,
+          35
+        ],
+        "observation_frames": 4,
+        "post_current_max_abs_error": 0.0,
+        "pre_current_max_abs_error": 99.51734161376953,
+        "saved_equals_post_current": true,
+        "saved_equals_required_pre_current": false
+      },
+      "independent_reconstruction": {
+        "action_max_abs_error": 0.05033368617296219,
+        "action_repeat_bit_exact": true,
+        "hash": "0bbd64f3e9db1d5080f0b7877a863b243796e9ca588e4a93533c3308329430fb",
+        "max_abs_error": 99.51734161376953,
+        "repeat_bit_exact": true
+      },
+      "override_restore": {
+        "action_max_abs_error": 0.0,
+        "action_repeat_bit_exact": true,
+        "hash": "8341b8a751614824a1d603f27f3f020b112cc267b3c1d60b0899655ec8d3ecbb",
+        "max_abs_error": 0.0,
+        "repeat_bit_exact": true
+      },
+      "phase_estimator_complete": true,
+      "policy_state_complete": true,
+      "qacc_warmstart_present": true,
+      "snapshot_hash": "dfd533668c88f791547814f7e5cb8b14cfd773de14b7f70a8b7536b1300c4e58",
+      "snapshot_index": 5,
+      "stored_hash": "8341b8a751614824a1d603f27f3f020b112cc267b3c1d60b0899655ec8d3ecbb",
+      "stored_shape": [
+        140
+      ],
+      "tick": 3
+    },
+    {
+      "candidate_id": "2d5836801880022d589e0a8937a7d533",
+      "contact_estimator_complete": true,
+      "delay_compatibility_alias_matches_phase_probs": true,
+      "history_alignment": {
+        "history_shape": [
+          3,
+          35
+        ],
+        "observation_frames": 4,
+        "post_current_max_abs_error": 0.0,
+        "pre_current_max_abs_error": 40.055789947509766,
+        "saved_equals_post_current": true,
+        "saved_equals_required_pre_current": false
+      },
+      "independent_reconstruction": {
+        "action_max_abs_error": 0.08980664610862732,
+        "action_repeat_bit_exact": true,
+        "hash": "2b3670f88c758a6e3045bec9b481833d2b5233708bc582727f45d85499f548ff",
+        "max_abs_error": 40.055789947509766,
+        "repeat_bit_exact": true
+      },
+      "override_restore": {
+        "action_max_abs_error": 0.0,
+        "action_repeat_bit_exact": true,
+        "hash": "ee87d998340aa4a13f08fece982b162e00bc35a8e85926360f6c90e1916b43c5",
+        "max_abs_error": 0.0,
+        "repeat_bit_exact": true
+      },
+      "phase_estimator_complete": true,
+      "policy_state_complete": true,
+      "qacc_warmstart_present": true,
+      "snapshot_hash": "449fb27ea0c8b56b1987d5cc8bca7c592db5e3bf6c5020f0afa7ee65d1706f78",
+      "snapshot_index": 6,
+      "stored_hash": "ee87d998340aa4a13f08fece982b162e00bc35a8e85926360f6c90e1916b43c5",
+      "stored_shape": [
+        140
+      ],
+      "tick": 1
+    },
+    {
+      "candidate_id": "2d5836801880022d589e0a8937a7d533",
+      "contact_estimator_complete": true,
+      "delay_compatibility_alias_matches_phase_probs": true,
+      "history_alignment": {
+        "history_shape": [
+          3,
+          35
+        ],
+        "observation_frames": 4,
+        "post_current_max_abs_error": 0.0,
+        "pre_current_max_abs_error": 151.1141357421875,
+        "saved_equals_post_current": true,
+        "saved_equals_required_pre_current": false
+      },
+      "independent_reconstruction": {
+        "action_max_abs_error": 0.004736477509140968,
+        "action_repeat_bit_exact": true,
+        "hash": "54822eb4641b92711f38ce5623e495de834191e49a252e0fb532bc1c0ba29e5f",
+        "max_abs_error": 151.1141357421875,
+        "repeat_bit_exact": true
+      },
+      "override_restore": {
+        "action_max_abs_error": 0.0,
+        "action_repeat_bit_exact": true,
+        "hash": "3c8a57ee854609bc1a34a680150d53a89812670485e556e8975569e049dcff3c",
+        "max_abs_error": 0.0,
+        "repeat_bit_exact": true
+      },
+      "phase_estimator_complete": true,
+      "policy_state_complete": true,
+      "qacc_warmstart_present": true,
+      "snapshot_hash": "17d32e69b342e232f5d049918b1b3eb63defbad1075979690e82d066640fca6b",
+      "snapshot_index": 7,
+      "stored_hash": "3c8a57ee854609bc1a34a680150d53a89812670485e556e8975569e049dcff3c",
+      "stored_shape": [
+        140
+      ],
+      "tick": 2
+    },
+    {
+      "candidate_id": "2d5836801880022d589e0a8937a7d533",
+      "contact_estimator_complete": true,
+      "delay_compatibility_alias_matches_phase_probs": true,
+      "history_alignment": {
+        "history_shape": [
+          3,
+          35
+        ],
+        "observation_frames": 4,
+        "post_current_max_abs_error": 0.0,
+        "pre_current_max_abs_error": 352.0421142578125,
+        "saved_equals_post_current": true,
+        "saved_equals_required_pre_current": false
+      },
+      "independent_reconstruction": {
+        "action_max_abs_error": 0.02931508794426918,
+        "action_repeat_bit_exact": true,
+        "hash": "f6446535383757c6070190bd4fe5a188e046166c090355d55322df61119b152b",
+        "max_abs_error": 352.0421142578125,
+        "repeat_bit_exact": true
+      },
+      "override_restore": {
+        "action_max_abs_error": 0.0,
+        "action_repeat_bit_exact": true,
+        "hash": "5b163e3962e0fbc85d8d654a743239a22a23f6711a353ede390963045970d1af",
+        "max_abs_error": 0.0,
+        "repeat_bit_exact": true
+      },
+      "phase_estimator_complete": true,
+      "policy_state_complete": true,
+      "qacc_warmstart_present": true,
+      "snapshot_hash": "bb040274477500dac8adfdcc0c749494c939186f93e1ca46a3c0712f651a519b",
+      "snapshot_index": 8,
+      "stored_hash": "5b163e3962e0fbc85d8d654a743239a22a23f6711a353ede390963045970d1af",
+      "stored_shape": [
+        140
+      ],
+      "tick": 4
+    },
+    {
+      "candidate_id": "485551c876749195cfd525c8dc54fbba",
+      "contact_estimator_complete": true,
+      "delay_compatibility_alias_matches_phase_probs": true,
+      "history_alignment": {
+        "history_shape": [
+          3,
+          35
+        ],
+        "observation_frames": 4,
+        "post_current_max_abs_error": 0.0,
+        "pre_current_max_abs_error": 140.9729461669922,
+        "saved_equals_post_current": true,
+        "saved_equals_required_pre_current": false
+      },
+      "independent_reconstruction": {
+        "action_max_abs_error": 0.10606527328491211,
+        "action_repeat_bit_exact": true,
+        "hash": "c3480181baf13ee5270acdee920a4c913ce5bd65e3576078feede84c02f3433e",
+        "max_abs_error": 140.9729461669922,
+        "repeat_bit_exact": true
+      },
+      "override_restore": {
+        "action_max_abs_error": 0.0,
+        "action_repeat_bit_exact": true,
+        "hash": "79477046088eea69d2a756a15d54cb6764ce304e243c22b76e5da30b327f8022",
+        "max_abs_error": 0.0,
+        "repeat_bit_exact": true
+      },
+      "phase_estimator_complete": true,
+      "policy_state_complete": true,
+      "qacc_warmstart_present": true,
+      "snapshot_hash": "d7720215a0b802beace3a6591cd5e14c13db81e99a443c5296cfe3da48831114",
+      "snapshot_index": 9,
+      "stored_hash": "79477046088eea69d2a756a15d54cb6764ce304e243c22b76e5da30b327f8022",
+      "stored_shape": [
+        140
+      ],
+      "tick": 1
+    },
+    {
+      "candidate_id": "485551c876749195cfd525c8dc54fbba",
+      "contact_estimator_complete": true,
+      "delay_compatibility_alias_matches_phase_probs": true,
+      "history_alignment": {
+        "history_shape": [
+          3,
+          35
+        ],
+        "observation_frames": 4,
+        "post_current_max_abs_error": 0.0,
+        "pre_current_max_abs_error": 169.73582458496094,
+        "saved_equals_post_current": true,
+        "saved_equals_required_pre_current": false
+      },
+      "independent_reconstruction": {
+        "action_max_abs_error": 0.18994693458080292,
+        "action_repeat_bit_exact": true,
+        "hash": "e5c683c7f8480693334d7588048c1ee65dbde9e625330211c6d6ab72971d1f62",
+        "max_abs_error": 169.73582458496094,
+        "repeat_bit_exact": true
+      },
+      "override_restore": {
+        "action_max_abs_error": 0.0,
+        "action_repeat_bit_exact": true,
+        "hash": "7d95c0be9276322f8df1ca10a6ed6f4bc166e4a34c644c8c14a67a72bcd9153c",
+        "max_abs_error": 0.0,
+        "repeat_bit_exact": true
+      },
+      "phase_estimator_complete": true,
+      "policy_state_complete": true,
+      "qacc_warmstart_present": true,
+      "snapshot_hash": "b92ad1bee0c3e6f746fec6859347ff54be10bd5e3ec1ff01613e69c3d332fb3f",
+      "snapshot_index": 10,
+      "stored_hash": "7d95c0be9276322f8df1ca10a6ed6f4bc166e4a34c644c8c14a67a72bcd9153c",
+      "stored_shape": [
+        140
+      ],
+      "tick": 4
+    },
+    {
+      "candidate_id": "485551c876749195cfd525c8dc54fbba",
+      "contact_estimator_complete": true,
+      "delay_compatibility_alias_matches_phase_probs": true,
+      "history_alignment": {
+        "history_shape": [
+          3,
+          35
+        ],
+        "observation_frames": 4,
+        "post_current_max_abs_error": 0.0,
+        "pre_current_max_abs_error": 14.602853775024414,
+        "saved_equals_post_current": true,
+        "saved_equals_required_pre_current": false
+      },
+      "independent_reconstruction": {
+        "action_max_abs_error": 0.009210910648107529,
+        "action_repeat_bit_exact": true,
+        "hash": "61402c65fcbc8d3190caf55ddce5bf28dea0511bfe1d36b28d593fecaae18839",
+        "max_abs_error": 29.246126174926758,
+        "repeat_bit_exact": true
+      },
+      "override_restore": {
+        "action_max_abs_error": 0.0,
+        "action_repeat_bit_exact": true,
+        "hash": "1c3e5ae95eadc1dea81bcd3d91e04b9807fdeeb798d99546392fcd8ac906456d",
+        "max_abs_error": 0.0,
+        "repeat_bit_exact": true
+      },
+      "phase_estimator_complete": true,
+      "policy_state_complete": true,
+      "qacc_warmstart_present": true,
+      "snapshot_hash": "648e8d727f367da590f36a4fb93092dd06bc9ff1d5c1c980184d7bc7d030af47",
+      "snapshot_index": 11,
+      "stored_hash": "1c3e5ae95eadc1dea81bcd3d91e04b9807fdeeb798d99546392fcd8ac906456d",
+      "stored_shape": [
+        140
+      ],
+      "tick": 7
+    },
+    {
+      "candidate_id": "84920deacc2d1230124ded1b8cf5c716",
+      "contact_estimator_complete": true,
+      "delay_compatibility_alias_matches_phase_probs": true,
+      "history_alignment": {
+        "history_shape": [
+          3,
+          35
+        ],
+        "observation_frames": 4,
+        "post_current_max_abs_error": 0.0,
+        "pre_current_max_abs_error": 45.44683074951172,
+        "saved_equals_post_current": true,
+        "saved_equals_required_pre_current": false
+      },
+      "independent_reconstruction": {
+        "action_max_abs_error": 0.09568525850772858,
+        "action_repeat_bit_exact": true,
+        "hash": "b7840b4fb7126c01cdfe7fdfbf65a6607daaa21fd5d05aa257de29194738fc1c",
+        "max_abs_error": 45.44683074951172,
+        "repeat_bit_exact": true
+      },
+      "override_restore": {
+        "action_max_abs_error": 0.0,
+        "action_repeat_bit_exact": true,
+        "hash": "678cde2719c7fd78d3d1c25955c8181ce6e0f28fb23547095279a133903115fa",
+        "max_abs_error": 0.0,
+        "repeat_bit_exact": true
+      },
+      "phase_estimator_complete": true,
+      "policy_state_complete": true,
+      "qacc_warmstart_present": true,
+      "snapshot_hash": "bf57fed705e2613dc485b22eea181c389166678a1c18360a403d2bffb1caa89f",
+      "snapshot_index": 12,
+      "stored_hash": "678cde2719c7fd78d3d1c25955c8181ce6e0f28fb23547095279a133903115fa",
+      "stored_shape": [
+        140
+      ],
+      "tick": 1
+    },
+    {
+      "candidate_id": "84920deacc2d1230124ded1b8cf5c716",
+      "contact_estimator_complete": true,
+      "delay_compatibility_alias_matches_phase_probs": true,
+      "history_alignment": {
+        "history_shape": [
+          3,
+          35
+        ],
+        "observation_frames": 4,
+        "post_current_max_abs_error": 0.0,
+        "pre_current_max_abs_error": 453.36474609375,
+        "saved_equals_post_current": true,
+        "saved_equals_required_pre_current": false
+      },
+      "independent_reconstruction": {
+        "action_max_abs_error": 0.040665075182914734,
+        "action_repeat_bit_exact": true,
+        "hash": "9a5be40388fabf27f0637c01eb0c8a06054244555832242ee2d156e0d1a545d6",
+        "max_abs_error": 453.36474609375,
+        "repeat_bit_exact": true
+      },
+      "override_restore": {
+        "action_max_abs_error": 0.0,
+        "action_repeat_bit_exact": true,
+        "hash": "c879078e46067c8897393a3e972b71d95fef86e172e6631f33afb68b24ae1f32",
+        "max_abs_error": 0.0,
+        "repeat_bit_exact": true
+      },
+      "phase_estimator_complete": true,
+      "policy_state_complete": true,
+      "qacc_warmstart_present": true,
+      "snapshot_hash": "6f26bfaf714b56bff92fa3d9521d33e0c66c1d7f7c80dba6d9753df3b8e2c204",
+      "snapshot_index": 13,
+      "stored_hash": "c879078e46067c8897393a3e972b71d95fef86e172e6631f33afb68b24ae1f32",
+      "stored_shape": [
+        140
+      ],
+      "tick": 4
+    },
+    {
+      "candidate_id": "84920deacc2d1230124ded1b8cf5c716",
+      "contact_estimator_complete": true,
+      "delay_compatibility_alias_matches_phase_probs": true,
+      "history_alignment": {
+        "history_shape": [
+          3,
+          35
+        ],
+        "observation_frames": 4,
+        "post_current_max_abs_error": 0.0,
+        "pre_current_max_abs_error": 216.85105895996094,
+        "saved_equals_post_current": true,
+        "saved_equals_required_pre_current": false
+      },
+      "independent_reconstruction": {
+        "action_max_abs_error": 0.037959083914756775,
+        "action_repeat_bit_exact": true,
+        "hash": "12bc238bf3a278b977a8ed8b0d1b2201069d03c8e45cc4e1bdbfc17353862f2c",
+        "max_abs_error": 216.85105895996094,
+        "repeat_bit_exact": true
+      },
+      "override_restore": {
+        "action_max_abs_error": 0.0,
+        "action_repeat_bit_exact": true,
+        "hash": "6d3933e6b44545371a9f321d65a9ae960601a400b9d4f631a4592e46fe4f3657",
+        "max_abs_error": 0.0,
+        "repeat_bit_exact": true
+      },
+      "phase_estimator_complete": true,
+      "policy_state_complete": true,
+      "qacc_warmstart_present": true,
+      "snapshot_hash": "bf52e1a1fca8ca48ae7dde427a21f087701f3076285799fc1252db89d3cd9181",
+      "snapshot_index": 14,
+      "stored_hash": "6d3933e6b44545371a9f321d65a9ae960601a400b9d4f631a4592e46fe4f3657",
+      "stored_shape": [
+        140
+      ],
+      "tick": 7
+    },
+    {
+      "candidate_id": "8df1acfba2f2e3268348ea1c26828b55",
+      "contact_estimator_complete": true,
+      "delay_compatibility_alias_matches_phase_probs": true,
+      "history_alignment": {
+        "history_shape": [
+          3,
+          35
+        ],
+        "observation_frames": 4,
+        "post_current_max_abs_error": 0.0,
+        "pre_current_max_abs_error": 43.93473815917969,
+        "saved_equals_post_current": true,
+        "saved_equals_required_pre_current": false
+      },
+      "independent_reconstruction": {
+        "action_max_abs_error": 0.06915967166423798,
+        "action_repeat_bit_exact": true,
+        "hash": "bb4efb9fc1497cad449437a1a66bec101de8281bf168152563d05133fbf30210",
+        "max_abs_error": 43.93473815917969,
+        "repeat_bit_exact": true
+      },
+      "override_restore": {
+        "action_max_abs_error": 0.0,
+        "action_repeat_bit_exact": true,
+        "hash": "616a7812da0ddf009040076950670321b88a18ba593161aa73a7adaeee4891ae",
+        "max_abs_error": 0.0,
+        "repeat_bit_exact": true
+      },
+      "phase_estimator_complete": true,
+      "policy_state_complete": true,
+      "qacc_warmstart_present": true,
+      "snapshot_hash": "96d6f59b3dd012f6d0250452c221067d02d7f24d5495cc845c6b599ecb31393a",
+      "snapshot_index": 15,
+      "stored_hash": "616a7812da0ddf009040076950670321b88a18ba593161aa73a7adaeee4891ae",
+      "stored_shape": [
+        140
+      ],
+      "tick": 1
+    },
+    {
+      "candidate_id": "8df1acfba2f2e3268348ea1c26828b55",
+      "contact_estimator_complete": true,
+      "delay_compatibility_alias_matches_phase_probs": true,
+      "history_alignment": {
+        "history_shape": [
+          3,
+          35
+        ],
+        "observation_frames": 4,
+        "post_current_max_abs_error": 0.0,
+        "pre_current_max_abs_error": 228.46144104003906,
+        "saved_equals_post_current": true,
+        "saved_equals_required_pre_current": false
+      },
+      "independent_reconstruction": {
+        "action_max_abs_error": 0.024025266990065575,
+        "action_repeat_bit_exact": true,
+        "hash": "16c9fc06512fade74e57d5055d5cf8dc053fc1e04260d292a2e9cf5b02ab9e27",
+        "max_abs_error": 228.46144104003906,
+        "repeat_bit_exact": true
+      },
+      "override_restore": {
+        "action_max_abs_error": 0.0,
+        "action_repeat_bit_exact": true,
+        "hash": "b5fbfee578ab344275937f8a5b8915fc1c70b9712ba0f394d4fab230289c8fb2",
+        "max_abs_error": 0.0,
+        "repeat_bit_exact": true
+      },
+      "phase_estimator_complete": true,
+      "policy_state_complete": true,
+      "qacc_warmstart_present": true,
+      "snapshot_hash": "706f607fa02ad6e006fc36271b8717d7dabe549559e29f9a752a8b9ac4e19742",
+      "snapshot_index": 16,
+      "stored_hash": "b5fbfee578ab344275937f8a5b8915fc1c70b9712ba0f394d4fab230289c8fb2",
+      "stored_shape": [
+        140
+      ],
+      "tick": 2
+    },
+    {
+      "candidate_id": "8df1acfba2f2e3268348ea1c26828b55",
+      "contact_estimator_complete": true,
+      "delay_compatibility_alias_matches_phase_probs": true,
+      "history_alignment": {
+        "history_shape": [
+          3,
+          35
+        ],
+        "observation_frames": 4,
+        "post_current_max_abs_error": 0.0,
+        "pre_current_max_abs_error": 93.53260803222656,
+        "saved_equals_post_current": true,
+        "saved_equals_required_pre_current": false
+      },
+      "independent_reconstruction": {
+        "action_max_abs_error": 0.008677884936332703,
+        "action_repeat_bit_exact": true,
+        "hash": "4de0fc9486c1806076e5660fd7768224ec20c04af7c335f234b60197cf604756",
+        "max_abs_error": 93.53260803222656,
+        "repeat_bit_exact": true
+      },
+      "override_restore": {
+        "action_max_abs_error": 0.0,
+        "action_repeat_bit_exact": true,
+        "hash": "5a4c161da7f517d6bc49b27ae14680dbe2106c323a95017ff8c429f553bedd5e",
+        "max_abs_error": 0.0,
+        "repeat_bit_exact": true
+      },
+      "phase_estimator_complete": true,
+      "policy_state_complete": true,
+      "qacc_warmstart_present": true,
+      "snapshot_hash": "8ec68832259f09c8dbbeb240a72690f486efa8fb8a7b5ad75778c836c4e48514",
+      "snapshot_index": 17,
+      "stored_hash": "5a4c161da7f517d6bc49b27ae14680dbe2106c323a95017ff8c429f553bedd5e",
+      "stored_shape": [
+        140
+      ],
+      "tick": 6
+    },
+    {
+      "candidate_id": "cae6766e2ace79cd8dbc3ee4f6d6ccf5",
+      "contact_estimator_complete": true,
+      "delay_compatibility_alias_matches_phase_probs": true,
+      "history_alignment": {
+        "history_shape": [
+          3,
+          35
+        ],
+        "observation_frames": 4,
+        "post_current_max_abs_error": 0.0,
+        "pre_current_max_abs_error": 77.04065704345703,
+        "saved_equals_post_current": true,
+        "saved_equals_required_pre_current": false
+      },
+      "independent_reconstruction": {
+        "action_max_abs_error": 0.03295266255736351,
+        "action_repeat_bit_exact": true,
+        "hash": "5fbc02e7d7a392b9ff8e6d69969867c531a1431f16975a2b470c710e3a77045e",
+        "max_abs_error": 77.04065704345703,
+        "repeat_bit_exact": true
+      },
+      "override_restore": {
+        "action_max_abs_error": 0.0,
+        "action_repeat_bit_exact": true,
+        "hash": "c59c79317f76b990fddab8f8ca3c168ca15b9a2a1d5eddc3b4d628ab4023e113",
+        "max_abs_error": 0.0,
+        "repeat_bit_exact": true
+      },
+      "phase_estimator_complete": true,
+      "policy_state_complete": true,
+      "qacc_warmstart_present": true,
+      "snapshot_hash": "aef594fd55cb14e0e66514752eea20070cb6a6e4481a46d065eab8d7764d6760",
+      "snapshot_index": 18,
+      "stored_hash": "c59c79317f76b990fddab8f8ca3c168ca15b9a2a1d5eddc3b4d628ab4023e113",
+      "stored_shape": [
+        140
+      ],
+      "tick": 1
+    },
+    {
+      "candidate_id": "cae6766e2ace79cd8dbc3ee4f6d6ccf5",
+      "contact_estimator_complete": true,
+      "delay_compatibility_alias_matches_phase_probs": true,
+      "history_alignment": {
+        "history_shape": [
+          3,
+          35
+        ],
+        "observation_frames": 4,
+        "post_current_max_abs_error": 0.0,
+        "pre_current_max_abs_error": 281.49298095703125,
+        "saved_equals_post_current": true,
+        "saved_equals_required_pre_current": false
+      },
+      "independent_reconstruction": {
+        "action_max_abs_error": 0.08552011847496033,
+        "action_repeat_bit_exact": true,
+        "hash": "74c02bb9afbc68a08c03331e92e8c1b4d5c385dd7256bd10a163802fe733f756",
+        "max_abs_error": 281.49298095703125,
+        "repeat_bit_exact": true
+      },
+      "override_restore": {
+        "action_max_abs_error": 0.0,
+        "action_repeat_bit_exact": true,
+        "hash": "2cd1a1893d0532800e4a06795ecab96d309f2ea78c386389a07b20ffd06521fd",
+        "max_abs_error": 0.0,
+        "repeat_bit_exact": true
+      },
+      "phase_estimator_complete": true,
+      "policy_state_complete": true,
+      "qacc_warmstart_present": true,
+      "snapshot_hash": "849ae46b4556aa206a4d212e9f2ec3d609d3d6de10488cf708b5d0a4f4af2989",
+      "snapshot_index": 19,
+      "stored_hash": "2cd1a1893d0532800e4a06795ecab96d309f2ea78c386389a07b20ffd06521fd",
+      "stored_shape": [
+        140
+      ],
+      "tick": 4
+    },
+    {
+      "candidate_id": "cae6766e2ace79cd8dbc3ee4f6d6ccf5",
+      "contact_estimator_complete": true,
+      "delay_compatibility_alias_matches_phase_probs": true,
+      "history_alignment": {
+        "history_shape": [
+          3,
+          35
+        ],
+        "observation_frames": 4,
+        "post_current_max_abs_error": 0.0,
+        "pre_current_max_abs_error": 209.9568634033203,
+        "saved_equals_post_current": true,
+        "saved_equals_required_pre_current": false
+      },
+      "independent_reconstruction": {
+        "action_max_abs_error": 0.028663400560617447,
+        "action_repeat_bit_exact": true,
+        "hash": "50d64baa1587dbbfa0c3e5734561b5cdba0ffd1169ca6fa100776ad91206e795",
+        "max_abs_error": 209.9568634033203,
+        "repeat_bit_exact": true
+      },
+      "override_restore": {
+        "action_max_abs_error": 0.0,
+        "action_repeat_bit_exact": true,
+        "hash": "ec1e8551550dd174f41e15cdb7f9219bdb36ea9ac7519deb1365a73b9d6670f6",
+        "max_abs_error": 0.0,
+        "repeat_bit_exact": true
+      },
+      "phase_estimator_complete": true,
+      "policy_state_complete": true,
+      "qacc_warmstart_present": true,
+      "snapshot_hash": "07d11b7cb8e226e2aeecb7149d4780ed2755e00c99f95cc1e635b311c3f1cf3c",
+      "snapshot_index": 20,
+      "stored_hash": "ec1e8551550dd174f41e15cdb7f9219bdb36ea9ac7519deb1365a73b9d6670f6",
+      "stored_shape": [
+        140
+      ],
+      "tick": 7
+    },
+    {
+      "candidate_id": "d7faea27b56ec0e16974d4b5d2fb498a",
+      "contact_estimator_complete": true,
+      "delay_compatibility_alias_matches_phase_probs": true,
+      "history_alignment": {
+        "history_shape": [
+          3,
+          35
+        ],
+        "observation_frames": 4,
+        "post_current_max_abs_error": 0.0,
+        "pre_current_max_abs_error": 75.24490356445312,
+        "saved_equals_post_current": true,
+        "saved_equals_required_pre_current": false
+      },
+      "independent_reconstruction": {
+        "action_max_abs_error": 0.03554964065551758,
+        "action_repeat_bit_exact": true,
+        "hash": "89449f0c0a48c1bf30eec76d3e942d866cfd518249e3568d07fced2f54b13904",
+        "max_abs_error": 75.24490356445312,
+        "repeat_bit_exact": true
+      },
+      "override_restore": {
+        "action_max_abs_error": 0.0,
+        "action_repeat_bit_exact": true,
+        "hash": "59bbdc28ea777c455c323688f496ab11fd1c65ae113a941b62678baa41841fac",
+        "max_abs_error": 0.0,
+        "repeat_bit_exact": true
+      },
+      "phase_estimator_complete": true,
+      "policy_state_complete": true,
+      "qacc_warmstart_present": true,
+      "snapshot_hash": "8db5cbce2aaf0d1034f70912a3894e8cf5fccdfb2f0c520cc83627fe7046b36f",
+      "snapshot_index": 21,
+      "stored_hash": "59bbdc28ea777c455c323688f496ab11fd1c65ae113a941b62678baa41841fac",
+      "stored_shape": [
+        140
+      ],
+      "tick": 1
+    },
+    {
+      "candidate_id": "d7faea27b56ec0e16974d4b5d2fb498a",
+      "contact_estimator_complete": true,
+      "delay_compatibility_alias_matches_phase_probs": true,
+      "history_alignment": {
+        "history_shape": [
+          3,
+          35
+        ],
+        "observation_frames": 4,
+        "post_current_max_abs_error": 0.0,
+        "pre_current_max_abs_error": 122.75314331054688,
+        "saved_equals_post_current": true,
+        "saved_equals_required_pre_current": false
+      },
+      "independent_reconstruction": {
+        "action_max_abs_error": 0.08051228523254395,
+        "action_repeat_bit_exact": true,
+        "hash": "209c7279ff3fa5dc92ecbb7c69ed4623ef503cacc8ee5f1587818ade25148ed3",
+        "max_abs_error": 122.75314331054688,
+        "repeat_bit_exact": true
+      },
+      "override_restore": {
+        "action_max_abs_error": 0.0,
+        "action_repeat_bit_exact": true,
+        "hash": "2aa1780a6ad8742ec300c88881371f7854f6e3b431a24b807a1f5a60d13a60f4",
+        "max_abs_error": 0.0,
+        "repeat_bit_exact": true
+      },
+      "phase_estimator_complete": true,
+      "policy_state_complete": true,
+      "qacc_warmstart_present": true,
+      "snapshot_hash": "8806c56e8a5685491f94b628d21a0e5483b1b3fa872f450a080ac13ae8812c4a",
+      "snapshot_index": 22,
+      "stored_hash": "2aa1780a6ad8742ec300c88881371f7854f6e3b431a24b807a1f5a60d13a60f4",
+      "stored_shape": [
+        140
+      ],
+      "tick": 4
+    },
+    {
+      "candidate_id": "d7faea27b56ec0e16974d4b5d2fb498a",
+      "contact_estimator_complete": true,
+      "delay_compatibility_alias_matches_phase_probs": true,
+      "history_alignment": {
+        "history_shape": [
+          3,
+          35
+        ],
+        "observation_frames": 4,
+        "post_current_max_abs_error": 0.0,
+        "pre_current_max_abs_error": 108.25360107421875,
+        "saved_equals_post_current": true,
+        "saved_equals_required_pre_current": false
+      },
+      "independent_reconstruction": {
+        "action_max_abs_error": 0.08693304657936096,
+        "action_repeat_bit_exact": true,
+        "hash": "3eac54bdee137878ed0026b776542e7d7c56025eb45ddff77587f242e3ab9803",
+        "max_abs_error": 108.25360107421875,
+        "repeat_bit_exact": true
+      },
+      "override_restore": {
+        "action_max_abs_error": 0.0,
+        "action_repeat_bit_exact": true,
+        "hash": "c71014a685b481bced96c5b329cfd5ae1bc7d30c2c16ebeaa9d09eebf54097ef",
+        "max_abs_error": 0.0,
+        "repeat_bit_exact": true
+      },
+      "phase_estimator_complete": true,
+      "policy_state_complete": true,
+      "qacc_warmstart_present": true,
+      "snapshot_hash": "c8addf6de7d436f5af7c913c0e3ca2c4b094bb7082857c0a3b80df7902b8207d",
+      "snapshot_index": 23,
+      "stored_hash": "c71014a685b481bced96c5b329cfd5ae1bc7d30c2c16ebeaa9d09eebf54097ef",
+      "stored_shape": [
+        140
+      ],
+      "tick": 6
+    }
+  ],
+  "status": "OBSERVATION_PIPELINE_AUTHORITY_FAILURE",
+  "summary": {
+    "independent_action_error_max": 0.18994693458080292,
+    "independent_action_error_min": 0.004736477509140968,
+    "independent_action_exact": 0,
+    "independent_observation_error_max": 464.3111267089844,
+    "independent_observation_error_min": 29.224632263183594,
+    "independent_observation_exact": 0,
+    "override_restore_exact": 24,
+    "saved_history_is_post_current": 24,
+    "saved_history_is_required_pre_current": 0
+  }
+}
+

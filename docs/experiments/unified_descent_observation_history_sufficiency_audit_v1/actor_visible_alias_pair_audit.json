@@ -1,0 +1,8 @@
+{
+  "bootstrap_authorization": false,
+  "heldout_used": false,
+  "ppo_authorization": false,
+  "reason": "observation authority gate failed before statistical panels",
+  "status": "NOT_EXECUTED"
+}
+

@@ -1343,3 +1343,26 @@
   are provisional feedback-support results, not a Tube/JEL claim. PPO
   authorization remains false. Report:
   `docs/experiments/unified_descent_feedback_correction_transfer_and_support_geometry_audit_v1/`.
+
+## Unified Descent observation/history sufficiency audit v1 (2026-07-28)
+
+- Started from `a781250`; frozen pi_D/normalizer/critic/log_std, 24 snapshots,
+  12 corrections, 244 transfer pairs, and held-out states remained read-only.
+- Saved actor observations and actions restore 24/24 exactly only through the
+  explicit `actor_observation` sidecar override. Independent reconstruction
+  from physical state plus saved PolicyState is 0/24 exact for observation and
+  0/24 for action, despite each path being internally deterministic.
+- Observation max error is `29.225--464.311`; deterministic action max error
+  is `0.00474--0.18995`. In all 24 states, saved `obs_history` equals saved
+  observation frames 1--3 (post-current), while reconstruction requires frames
+  0--2 (pre-current). This is a consistent snapshot history off-by-one.
+- The compatibility `delay_buffer` is exactly `phase_probs[None,:]`, not an
+  actuator-delay FIFO. Phase/contact estimator fields and qacc warmstart are
+  present; action order and frozen normalizer hash remain unchanged.
+- Classification: `OBSERVATION_PIPELINE_AUTHORITY_FAILURE`. Per the protocol,
+  V0/P0, V1--V5, alias pairs, privileged reconstructability, and pairwise
+  transfer diagnostics were not run. This version provides no observation
+  amendment evidence. A new audit version must first correct snapshot history/
+  schema; old policy, Tube, Final-Recovery, and JEL evidence cannot be inherited
+  automatically. PPO and bootstrap authorization are false. Report:
+  `docs/experiments/unified_descent_observation_history_sufficiency_audit_v1/`.

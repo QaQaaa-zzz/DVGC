@@ -1,0 +1,28 @@
+{
+  "alignment_summary": {
+    "independent_action_error_max": 0.18994693458080292,
+    "independent_action_error_min": 0.004736477509140968,
+    "independent_action_exact": 0,
+    "independent_observation_error_max": 464.3111267089844,
+    "independent_observation_error_min": 29.224632263183594,
+    "independent_observation_exact": 0,
+    "override_restore_exact": 24,
+    "saved_history_is_post_current": 24,
+    "saved_history_is_required_pre_current": 0
+  },
+  "authoritative_start_head": "a781250",
+  "authority_manifest": "runs/unified_descent_observation_history_sufficiency_audit_v1/observation_contract_and_alignment_manifest.json",
+  "bootstrap_authorization": false,
+  "causal_classification": "OBSERVATION_PIPELINE_AUTHORITY_FAILURE",
+  "experiment": "unified_descent_observation_history_sufficiency_audit_v1",
+  "heldout_used": false,
+  "implementation_commit": "50cdf4a",
+  "observation_amendment_evidence": false,
+  "old_policy_evidence_inheritance": false,
+  "panel_results": "NOT_EXECUTED",
+  "ppo_authorization": false,
+  "required_next_step": "new audit version after snapshot history/schema correction; do not continue this version with repaired data",
+  "status": "OBSERVATION_PIPELINE_AUTHORITY_FAILURE",
+  "v0_p0_reproduction": "NOT_EXECUTED"
+}
+
