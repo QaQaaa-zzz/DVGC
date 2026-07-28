@@ -48,6 +48,15 @@ def low_impulse_specs() -> list[dict]:
       for hip in (0.45, 0.55, 0.65) for ratio in (0.35, 0.50)]
 
 
+def micro_impulse_specs() -> list[dict]:
+    """Short, low-amplitude braking probe after one-step overcontrol evidence."""
+    return [{
+        "round": "terminal_aligned_micro_impulse", "hip_amplitude": hip,
+        "knee_ratio": ratio, "start_tick": start, "duration": duration,
+    } for start in (0, 1) for duration in (2, 4)
+      for hip in (0.10, 0.20, 0.30) for ratio in (0.35, 0.70)]
+
+
 def select_parent_entries(records: list[dict], count: int) -> list[dict]:
     groups = defaultdict(list)
     for row in records:
@@ -156,7 +165,8 @@ def main() -> None:
     parser.add_argument("--support-report")
     parser.add_argument("--exclude-manifest")
     parser.add_argument("--parent-id", action="append", default=[])
-    parser.add_argument("--spec-profile", choices=("pilot", "low_impulse"), default="pilot")
+    parser.add_argument("--spec-profile", choices=("pilot", "low_impulse", "micro_impulse"),
+                        default="pilot")
     args = parser.parse_args()
     root = Path(args.run)
     if root.exists():
@@ -194,7 +204,9 @@ def main() -> None:
         )
     else:
         selected = select_parent_entries(entries.records, args.parents)
-    specs = pilot_specs() if args.spec_profile == "pilot" else low_impulse_specs()
+    profiles = {"pilot": pilot_specs, "low_impulse": low_impulse_specs,
+                "micro_impulse": micro_impulse_specs}
+    specs = profiles[args.spec_profile]()
     center = np.asarray(terminal.metadata["normalization_center"], float)
     scale = np.asarray(terminal.metadata["normalization_scale"], float)
     target = np.asarray([[(row["physical_feature"][INDEX[name]] - center[i]) / scale[i]
