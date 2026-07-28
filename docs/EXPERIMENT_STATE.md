@@ -1,5 +1,39 @@
 # DVGC Experiment State
 
+## Certified compact-expert Descent Tube (2026-07-28)
+
+- Started from clean `5812143`; authoritative XML/action mapping, frozen
+  pi_D weights, pi_L, canonical C_L and v4 timing contract remained unchanged.
+  Localized head-only and last-block consolidation both failed at 15/18 P1:
+  neither recovered early node `b30f8496...` and both forgot `028dae28...` and
+  `b74dae91...`, despite anchor action RMS below 0.004. No PPO ran.
+- The accepted bootstrap expert keeps pi_D weights bit-identical and adds one
+  actor-visible compact command adapter around the verified five-tick CEM
+  prefix. Its normalized full-command core/radius are 0.311758/0.377304;
+  three of four preregistered micro trajectories lie in the core, while the
+  nearest preservation trajectory is 0.838453 away. XML, matcher, failure
+  definition, reward and frozen downstream policies were not changed.
+- Construction under policy identity `d149961a...4b4ce99` passed P0/P1=18/18
+  over seven candidates, four layers and early/middle/late support, with zero
+  forgetting. The residual-only and all-four-branch radius attempts are
+  preserved separately as failed diagnostics; no valid result was overwritten.
+- Fresh independent audit namespace
+  `descent-compact-expert-independent-audit-v1` used 18 states x 32 branches
+  and three fixed dynamics variants. Final=568/576 (98.611%), Chain=546/576,
+  physical failure=8/576 (all roll), timeout=horizon=nonfinite=0. Tube
+  precision/recall/coverage=1/1/1, Brier=0.001736 and ECE=0.013889. PASS.
+- Frozen phase Tube:
+  `runs/descent_diverse_p1_predecessor_recovery_v5_p1_core_adapter/independent_audit_v1/descent_tube.pkl`,
+  SHA-256 `4b7ba514...8beeac`. It is an independently certified phase Tube under
+  a frozen bootstrap expert, not the final shared-policy JEL. Audit labels are
+  not training inputs. PPO authorization remains false.
+- Validation commits: localized probe `5fb3c65`/`dacf3b0`, compact expert
+  `c08d455`/`975d62c`/`a6b4cb3`, audit `1f30148` and Warp batch repair
+  `de46cc2`; full preflight 389 passed and runtime gate is PASS/current.
+- Current automatic step: derive a provenance-locked exact Descent handoff set
+  from this Tube and run the minimum Apex->Descent compatibility/coverage
+  pilot. Do not use the independent-audit labels to tune the handoff radius.
+
 ## Unified Descent snapshot timing/delay audit v2 (2026-07-28)
 
 - Started from `c540d2f`; frozen pi_D/normalizer, 24 snapshots, 12
