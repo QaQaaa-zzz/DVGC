@@ -469,12 +469,15 @@ def main():
     parser.add_argument("--run", required=True)
     args = parser.parse_args(); root = Path(args.run)
     if root.exists():
-        raise SystemExit(f"refusing overwrite {root}")
+        allowed = {"preregistration.json", "restore_call_site_audit.json"}
+        unexpected = sorted(path.name for path in root.iterdir() if path.name not in allowed)
+        if unexpected or not (root / "preregistration.json").is_file():
+            raise SystemExit(f"refusing overwrite {root}: {unexpected}")
     if subprocess.run(["git", "merge-base", "--is-ancestor", EXPECTED_START, "HEAD"]).returncode:
         raise SystemExit("unexpected git history")
     if subprocess.check_output(["git", "status", "--porcelain"], text=True).strip():
         raise SystemExit("worktree must be clean")
-    root.mkdir(parents=True)
+    root.mkdir(parents=True, exist_ok=True)
     cfg, bank, env, params = _assets()
     legacy = pickle.loads(LEGACY.read_bytes())
     authority = json.loads(AUTHORITY.read_text()); multimodality = json.loads(MULTIMODALITY.read_text())
