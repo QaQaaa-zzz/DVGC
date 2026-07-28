@@ -25,12 +25,13 @@ from dvgc.env import OrangeBikeDVGC
 from dvgc.local_entry import calibrate_local_radii
 from dvgc.policy import load_bundle
 from dvgc.runtime import save_json
+from dvgc.trajectory_mining import canonical_state_byte_hash
 
 
 TUBE = Path("runs/descent_natural_bridge_candidates_v1/independent_audit_2x32/descent_tube_v3.pkl")
 CONSTRUCTION = Path("runs/descent_compact_matcher_neighborhood_v1/construction_24_adaptive/construction_bank.pkl")
 EXPERT = Path("runs/descent_diverse_p1_predecessor_recovery_v5_p1_core_adapter")
-DEFAULT_RUN = Path("runs/descent_local_entry_v1/pilot_4anchors")
+DEFAULT_RUN = Path("runs/descent_local_entry_v1/pilot_4anchors_v2")
 SEED = 3_900_000_000
 DELTAS = np.asarray([
     [-.010, 0.], [.010, 0.], [0., -.010], [0., .010],
@@ -122,7 +123,7 @@ def main():
                            "safe_claim_allowed": False, "tube_metrics_eligible": False})
             candidates.append(record)
             nodes.append({"node_id": identifier, "candidate_id": anchor["id"], "layer": 0,
-                          "region": record["descent_region"], "source_state_hash": record["state_byte_hash"],
+                          "region": record["descent_region"], "source_state_hash": canonical_state_byte_hash(record),
                           "physical_state": record, "parent_node_id": anchor["id"]})
     result = certify_policy(env, dparams, lparams, nodes, SEED + 100_000,
                             record_loader=lambda node: node["physical_state"], descent_action_adapter=adapter,
