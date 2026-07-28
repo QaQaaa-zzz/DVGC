@@ -1,6 +1,6 @@
 """CPU-only actor-history reachability probe from construction labels."""
 from __future__ import annotations
-import argparse,json,os,subprocess,tempfile
+import argparse,json,os,pickle,subprocess,tempfile
 from pathlib import Path
 import numpy as np
 from dvgc.bank import SnapshotBank
@@ -58,7 +58,11 @@ def panel_cv(x,y,assignment):
 def load_proposals(index_rows):
  banks={};records=[]
  for row in index_rows:
-  path=row['source_artifact'];banks.setdefault(path,SnapshotBank.load(path));records.append(banks[path].records[int(row['source_index'])])
+  path=row['source_artifact']
+  if path not in banks:
+   try:banks[path]=SnapshotBank.load(path).records
+   except ValueError:banks[path]=[item.get('snapshot_v4',item) for item in pickle.loads(Path(path).read_bytes())]
+  records.append(banks[path][int(row['source_index'])])
  return records
 
 def main():
