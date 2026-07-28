@@ -41,7 +41,10 @@ ACTION_NAMES = ("steer", "drive", "hip", "knee")
 
 
 def _stack_states(states):
-    return jax.tree_util.tree_map(lambda *values: jnp.stack(values), *states)
+    # MJX-Warp carries explicit batch-rank metadata in contact leaves.  Every
+    # source state is therefore created by vmap with a singleton batch and is
+    # concatenated here rather than stacking an unbatched Data tree.
+    return jax.tree_util.tree_map(lambda *values: jnp.concatenate(values, axis=0), *states)
 
 
 def _take_state(state, indices):
@@ -58,11 +61,12 @@ def _state_and_queue(env, snapshots, mode):
     for item in snapshots:
         record = item["snapshot"]
         key = jax.random.PRNGKey(int(item["generation_seed"]))
+        keys = jax.random.split(key, 1)
         if mode == "R0":
-            state = restore_snapshot_reconstructed(env, record, key)
-            packet = np.asarray(jax.device_get(state.obs["state"]), np.float32)
+            state = jax.vmap(lambda one: restore_snapshot_reconstructed(env, record, one))(keys)
+            packet = np.asarray(jax.device_get(state.obs["state"][0]), np.float32)
         else:
-            state = restore_snapshot_logged(env, record, key)
+            state = jax.vmap(lambda one: restore_snapshot_logged(env, record, one))(keys)
             packet = np.asarray(record["policy_state"]["actor_observation"], np.float32)
         states.append(state)
         queues.append(_queue(packet))
