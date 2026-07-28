@@ -1,0 +1,39 @@
+{
+  "experiment": "unified_descent_snapshot_timing_and_delay_sensitivity_audit_v2",
+  "status": "PASS",
+  "timing_problem": "HYBRID_STATE_RECONSTRUCTION_ERROR",
+  "causal_classification": "DELAY_SENSITIVE_FEEDBACK_SUPPORT",
+  "logged_actor_input_role": "authoritative_logged_actor_input",
+  "logged_action_exact": "24/24",
+  "local_authority_pass": {"L0": 12, "R0": 10, "D1": 9, "D2": 6, "J12": 9},
+  "baseline_failures": {
+    "L0": {"pitch_limit": 24},
+    "R0": {"pitch_limit": 23, "roll_limit": 1},
+    "D1": {"pitch_limit": 23, "roll_limit": 1},
+    "D2": {"pitch_limit": 24},
+    "J12": {"pitch_limit": 24}
+  },
+  "initial_action_delta_vs_L0": {
+    "R0": {"rms": 0.044746683, "max_abs": 0.189946935},
+    "D1": {"rms": 0.056812017, "max_abs": 0.203635186},
+    "D2": {"rms": 0.079745132, "max_abs": 0.281796619},
+    "J12": {"rms": 0.056812017, "max_abs": 0.203635186}
+  },
+  "correction_transfer": {
+    "L0": {"diagonal": "12/12", "same_candidate_off_diagonal": "3/18", "cross_candidate": "40/214"},
+    "D1": {"diagonal": "9/12", "same_candidate_off_diagonal": "6/18", "cross_candidate": "69/214"},
+    "D2": {"diagonal": "6/12", "same_candidate_off_diagonal": "4/18", "cross_candidate": "61/214"}
+  },
+  "delay_acceptance": {"one_tick_D1": true, "two_tick_D2": false},
+  "recapture_24_state_required": false,
+  "evidence_roles": {
+    "online_rollouts": "empirical_online_evidence",
+    "logged_replays": "logged_observation_replay_evidence",
+    "legacy_independent_restore": "independent_reconstruction_unverified",
+    "tube_and_jel": "certification_pending_timing_audit"
+  },
+  "full_run_report": "runs/unified_descent_snapshot_timing_and_delay_sensitivity_audit_v2_retry1/UNIFIED_DESCENT_SNAPSHOT_TIMING_AND_DELAY_SENSITIVITY_AUDIT_V2_REPORT.json",
+  "heldout_used": false,
+  "ppo_authorization": false,
+  "bootstrap_authorization": false
+}

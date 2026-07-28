@@ -1,5 +1,34 @@
 # DVGC Experiment State
 
+## Unified Descent snapshot timing/delay audit v2 (2026-07-28)
+
+- Started from `c540d2f`; frozen pi_D/normalizer, 24 snapshots, 12
+  corrections, 244 compatible pairs and held-out states remained read-only.
+  No training, CEM, relabel, Landing retention or policy update ran.
+- The saved actor tensor is the exact online input: L0 reproduces frozen pi_D
+  actions 24/24 and local authority 12/12.  Snapshot physical state and actor
+  input share tick `t`, while saved history is already post-update
+  `[t-2,t-1,t]`; independent restore incorrectly reuses it as pre-history and
+  appends frame `t`.  Classification of the restore defect is
+  `HYBRID_STATE_RECONSTRUCTION_ERROR`, not an online one-frame delay.
+- Local authority L0/R0/D1/D2/J12 is 12/10/9/6/9.  D1 preserves the
+  preregistered structure (75% authority, 23 pitch + 1 roll versus L0's 24
+  pitch, two candidate-layer changes); D2 does not (50% authority and four
+  layer changes).  Initial action RMS/max delta is 0.0568/0.2036 for D1 and
+  0.0797/0.2818 for D2, dominated by hip action.
+- Frozen transfer diagonal/same/cross successes are L0 `12/3/40`, D1
+  `9/6/69`, and D2 `6/4/61` from eligible totals `12/18/214`.  Transfer
+  remains present, but local authority/support geometry is structurally
+  two-tick-delay-sensitive.  Final classification:
+  `DELAY_SENSITIVE_FEEDBACK_SUPPORT`; one added tick is tolerated under the
+  fixed rule, two are not.
+- Online results remain `empirical_online_evidence`; logged replay remains
+  `logged_observation_replay_evidence`.  Legacy independent reconstruction is
+  unverified and formal Tube/JEL evidence remains pending explicit v2 timing
+  schema.  Recapture of the 24 states is not required for logged evidence.
+  PPO/bootstrap authorization remains false.  Compact report:
+  `docs/experiments/unified_descent_snapshot_timing_and_delay_sensitivity_audit_v2/`.
+
 - 2026-07-24 `mjx_continuous_pipeline_repair_v1`: MJX-Warp/Newton
   deterministic replay fails independently of Jacobian AUTO/DENSE/SPARSE.
   The first natural divergence is the first physics step (`qpos`, about
