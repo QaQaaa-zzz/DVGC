@@ -10,3 +10,8 @@ def test_audit_offsets_are_fixed_inside_and_outside_shells():
     radii = [np.linalg.norm(row[:2]) for row in rows]
     assert max(radii[:8]) < .1
     assert min(radii[8:]) > .1
+
+
+def test_local_entry_audit_accepts_explicit_construction_source():
+    from pathlib import Path
+    assert '--source' in Path('cli/audit_descent_local_entry_v1.py').read_text()

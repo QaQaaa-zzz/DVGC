@@ -52,7 +52,7 @@ def audit_offsets(scale, radius):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--run", default=str(DEFAULT_RUN)); args = parser.parse_args(); root = Path(args.run)
+    parser.add_argument("--run", default=str(DEFAULT_RUN)); parser.add_argument("--source", default=str(SOURCE)); args = parser.parse_args(); root = Path(args.run); source_path = Path(args.source)
     if root.exists(): raise SystemExit(f"refusing overwrite {root}")
     gate = json.loads(Path("docs/RUNTIME_GATE.json").read_text())
     if gate.get("status") != "PASS" or gate.get("source_fingerprint") != source_fingerprint(Path.cwd()):
@@ -62,7 +62,7 @@ def main():
     expected = {"C_L": EXPECTED["C_L"], "pi_D": EXPECTED["pi_D"],
                 "pi_L": EXPECTED["pi_L"], "xml": EXPECTED["xml"]}
     if frozen != expected: raise SystemExit(f"frozen scientific asset mismatch: {frozen}")
-    source = SnapshotBank.load(SOURCE); matcher = source.metadata["stage_entry_matcher"]
+    source = SnapshotBank.load(source_path); matcher = source.metadata["stage_entry_matcher"]
     if not matcher.get("construction_only") or source.metadata.get("continuous_matcher_active"):
         raise SystemExit("source is not an inactive construction matcher")
     artifact = pickle.loads((EXPERT / "adapter.pkl").read_bytes())
@@ -81,7 +81,7 @@ def main():
                           "descent_region": anchor.get("descent_region") or "late"})
             states.append(state)
     root.mkdir(parents=True)
-    inputs = {"construction_matcher_sha256": file_sha256(SOURCE), "adapter_sha256": file_sha256(EXPERT / "adapter.pkl"),
+    inputs = {"construction_matcher_sha256": file_sha256(source_path), "adapter_sha256": file_sha256(EXPERT / "adapter.pkl"),
               "policy_identity_hash": artifact["policy_identity_hash"], **frozen, "seed": SEED,
               "seed_namespace": NAMESPACE, "branches_per_state": BRANCHES}
     save_json(root / "manifest.json", {"status": "FROZEN_BEFORE_AUDIT", "inputs": inputs,

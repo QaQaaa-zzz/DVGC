@@ -16,3 +16,9 @@ def test_pilot_anchor_selection_covers_regions_and_extension():
 def test_generated_snapshot_hash_does_not_require_declared_sidecar():
     row = {"qpos": [1., 2.], "qvel": [3.], "ctrl": [0.], "qacc_warmstart": [0.]}
     assert canonical_state_byte_hash(row) == canonical_state_byte_hash(dict(row))
+
+
+def test_local_entry_pilot_supports_explicit_tube_anchors():
+    from pathlib import Path
+    text=Path('cli/pilot_descent_local_entry_v1.py').read_text()
+    assert '--anchor-id' in text and 'declared local-entry anchor missing' in text

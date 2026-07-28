@@ -80,7 +80,7 @@ def _combined_exact_label(anchor, row, cfg):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--run", default=str(DEFAULT_RUN)); args = parser.parse_args(); root = Path(args.run)
+    parser.add_argument("--run", default=str(DEFAULT_RUN)); parser.add_argument("--tube", default=str(TUBE)); parser.add_argument("--anchor-id", action="append", default=[]); args = parser.parse_args(); root = Path(args.run); tube_path = Path(args.tube)
     if root.exists(): raise SystemExit(f"refusing overwrite {root}")
     frozen = {"C_L": file_sha256(C_L), "pi_D": file_sha256(PI_D / "params.pkl"),
               "pi_L": file_sha256(PI_L / "params.pkl")}
@@ -89,7 +89,13 @@ def main():
     gate = json.loads(Path("docs/RUNTIME_GATE.json").read_text())
     if gate.get("status") != "PASS" or gate.get("source_fingerprint") != source_fingerprint(Path.cwd()):
         raise SystemExit("runtime gate stale")
-    tube = SnapshotBank.load(TUBE); anchors = select_pilot_anchors(tube.records)
+    tube = SnapshotBank.load(tube_path)
+    if args.anchor_id:
+        by_id = {row["id"]: row for row in tube.records}
+        if set(args.anchor_id) - set(by_id): raise SystemExit("declared local-entry anchor missing from Tube")
+        anchors = [by_id[identifier] for identifier in args.anchor_id]
+    else:
+        anchors = select_pilot_anchors(tube.records)
     cfg = load_config("configs/backward_descent_rsi_pilot_v1.json", {
         "use_bank_resets": False, "expert_chain_termination": False,
         "domain_randomization": False, "obs_noise_enable": False,
@@ -103,14 +109,14 @@ def main():
         float(artifact["radius"]), float(artifact["core_radius"]),
     )
     root.mkdir(parents=True)
-    inputs = {"tube_sha256": file_sha256(TUBE), "construction_sha256": file_sha256(CONSTRUCTION),
+    inputs = {"tube_sha256": file_sha256(tube_path), "construction_sha256": file_sha256(CONSTRUCTION),
               "adapter_sha256": file_sha256(EXPERT / "adapter.pkl"), "policy_identity_hash": artifact["policy_identity_hash"],
               "C_L": file_sha256(C_L), "xml": EXPECTED["xml"], "seed": SEED}
     save_json(root / "manifest.json", {"status": "FROZEN_BEFORE_OUTCOMES", "inputs": inputs,
               "anchor_ids": [row["id"] for row in anchors], "regions": [row.get("descent_region") or "late" for row in anchors],
               "deltas_vx_vz": DELTAS.tolist(), "selection": "first early, full-success middle/late, independent extension"})
-    save_json(root / "cost_estimate.json", {"estimated_seconds": 1200, "anchors": 4, "local_states": 32,
-              "rollouts_per_state": "2 exact + 4 micro", "maximum_rollouts": 192, "PPO_steps": 0})
+    save_json(root / "cost_estimate.json", {"estimated_seconds": 300 * len(anchors), "anchors": len(anchors), "local_states": 8 * len(anchors),
+              "rollouts_per_state": "2 exact + 4 micro", "maximum_rollouts": 48 * len(anchors), "PPO_steps": 0})
     candidates = []; nodes = []
     for ai, anchor in enumerate(anchors):
         for di, delta in enumerate(DELTAS):
@@ -147,7 +153,8 @@ def main():
                                        minimum_precision=float(cfg.descent_entry_minimum_calibration_precision))
     active = calibrated["active_anchor_indices"]
     active_regions = {anchors[index].get("descent_region") or "late" for index in active}
-    passed = calibrated["status"] == "PASS" and active_regions >= {"early", "middle", "late"}
+    required_regions = {row.get("descent_region") or "late" for row in anchors}
+    passed = calibrated["status"] == "PASS" and active_regions >= required_regions and len(active) == len(anchors)
     if passed:
         selected = [copy.deepcopy(anchors[index]) for index in active]
         radii = [calibrated["radii"][index] for index in active]
