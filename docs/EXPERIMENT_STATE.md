@@ -1,5 +1,30 @@
 # DVGC Experiment State
 
+## Expanded Descent Tube v4 and continuous entry v2 (2026-07-28)
+
+- Three non-overwriting natural-targeted candidate rounds were run with full
+  cross-round proposal and parent exclusion. Rounds 2 and 3 each found one P1
+  state, but lineage validation correctly showed both came from the same
+  origin parent; the parent-disjoint round 4 found P0/P1=0/0. These states do
+  not satisfy the two-parent Apex gate.
+- The two distinct same-parent states were nevertheless eligible Tube
+  extensions. Fresh namespace `descent-natural-targeted-independent-audit-v2`
+  gave Chain=Final=64/64 with no physical failure, timeout, horizon or
+  nonfinite. Descent Tube v4 contains 22 independently certified states:
+  `runs/descent_natural_bridge_candidates_v1/independent_audit_round2_round3_2x32/descent_tube_v4.pkl`,
+  SHA-256 `7e2e6c87...ab8560`.
+- A new six-anchor local matcher was reconstructed under one Tube-v4 scale;
+  construction P0/P1=48/48, precision=1.0, recall=0.980769 and FP=0. Fresh
+  independent audit evaluated 72 states x 8 branches across three dynamics:
+  Final=576/576, physical failure=timeout=horizon=nonfinite=0, matcher
+  precision=1.0, recall=0.623264 and FP=0. Predicted early/middle/late branch
+  counts are 61/61/237.
+- Frozen continuous entry v2:
+  `runs/descent_local_entry_v2/independent_audit_v1/canonical_descent_local_entry_v1.pkl`,
+  SHA-256 `1f3e7ea1...590d5f`. The four-anchor v1 and all failed acquisition
+  rounds are preserved. No PPO ran; the two-parent Apex authorization gate is
+  still closed pending natural-lineage re-evaluation against entry v2.
+
 ## Independently audited local continuous Descent entry (2026-07-28)
 
 - Commit `b61ed9e` added backward-compatible per-anchor stage-support radii;
