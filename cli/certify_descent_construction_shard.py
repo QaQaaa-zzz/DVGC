@@ -24,7 +24,8 @@ from dvgc.composite import CanonicalEntryMatcher, composite_rollout
 from dvgc.config import config_hash, file_sha256, load_config
 from dvgc.env import END_REASON, OrangeBikeDVGC
 from dvgc.policy import load_bundle
-from dvgc.rollout import restore_snapshot
+from dvgc.rollout import restore_snapshot_mode
+from dvgc.snapshot_timing import authority_replay_mode
 from dvgc.runtime import build_inference, save_json
 
 
@@ -122,7 +123,7 @@ def main() -> None:
                 ("flight", "landing"),
                 inference,
                 {"flight": matcher},
-                restore_snapshot(env, row, key),
+                restore_snapshot_mode(env, row, key, observation_mode=authority_replay_mode(row)),
                 key,
                 horizon=int(base.branch_horizon),
                 step_fn=step,

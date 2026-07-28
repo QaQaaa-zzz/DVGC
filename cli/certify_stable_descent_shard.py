@@ -17,7 +17,8 @@ from dvgc.construction_lifecycle import PROTOCOL_VERSION
 from dvgc.config import config_hash, file_sha256, load_config
 from dvgc.env import END_REASON, OrangeBikeDVGC
 from dvgc.policy import load_bundle
-from dvgc.rollout import restore_snapshot
+from dvgc.rollout import restore_snapshot_mode
+from dvgc.snapshot_timing import authority_replay_mode
 from dvgc.runtime import build_inference, save_json
 from dvgc.snapshot_provenance import validate_snapshot_source_records,verify_source_policy_paths
 from dvgc.stable_construction import protocol_from_config
@@ -103,7 +104,7 @@ def main() -> None:
             key = jax.random.PRNGKey(seed)
             _, result = composite_rollout(
                 env, ("flight", "landing"), inference, {"flight": matcher},
-                restore_snapshot(env, record, key), key, horizon=int(cfg.branch_horizon),
+                restore_snapshot_mode(env, record, key, observation_mode=authority_replay_mode(record)), key, horizon=int(cfg.branch_horizon),
                 step_fn=step, action_noise_std=float(cfg.action_noise_std),
             )
             item = branch_evidence(

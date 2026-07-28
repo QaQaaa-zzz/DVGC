@@ -16,6 +16,7 @@ import numpy as np
 
 from dvgc.bank import SnapshotBank
 from dvgc.config import (
+    ACTION_MAPPING_VERSION,
     AUTHORITATIVE_XML_PATH,
     AUTHORITATIVE_XML_SHA256,
     ID_STAGE,
@@ -28,7 +29,8 @@ from dvgc.env import END_REASON, OrangeBikeDVGC
 from dvgc.experts import StageExpertRegistry
 from dvgc.model import inspect_model
 from dvgc.policy import load_bundle, save_bundle
-from dvgc.rollout import restore_snapshot
+from dvgc.ppo_integrity import normalizer_summary
+from dvgc.rollout import restore_snapshot_mode
 from dvgc.runtime import (
     assert_brax_metric_contract,
     build_inference,
@@ -37,6 +39,7 @@ from dvgc.runtime import (
     save_json,
     scalar,
 )
+from dvgc.snapshot_timing import validate_snapshot_v4
 
 
 GATE_VERSION = 4
@@ -52,6 +55,7 @@ SNAPSHOT_INITIAL_TOLERANCES = {
     "ctrl": 1e-5,
     "qacc_warmstart": 1e-5,
     "actor_obs": 1e-5,
+    "logged_actor_obs": 1e-5,
     "critic_obs": 1e-5,
 }
 SNAPSHOT_STEP_TOLERANCES = {
@@ -205,17 +209,65 @@ def _snapshot_discrete_values(state: Any) -> dict[str, np.ndarray]:
     }
 
 
-def _snapshot_gate(env: OrangeBikeDVGC, work: Path) -> dict[str, Any]:
+def _snapshot_gate(env: OrangeBikeDVGC, cfg: Any, params: Any, work: Path, root: Path) -> dict[str, Any]:
     state = env.reset(jax.random.PRNGKey(20))
     step_fn = jax.jit(env.step)
     action = jp.asarray([0.05, 0.10, -0.05, 0.05], jp.float32)
     for _ in range(5):
         state = step_fn(state, action)
     phase = ID_STAGE[int(np.asarray(jax.device_get(state.info["phase"])))]
+    empty = work / "snapshot_empty_candidates.pkl"
+    SnapshotBank().save(empty)
+    bundle = save_bundle(
+        work / "snapshot_policy_bundle", params=params, config=cfg,
+        xml_path=cfg.xml_path, candidate_bank=empty, downstream_bank=None,
+        policy_version="runtime-gate-v4-snapshot",
+    )
+    inference = build_inference(env, params, deterministic=True)
+    policy_action, _ = inference(state.obs, jax.random.PRNGKey(22))
+    provenance = {
+        "xml_sha256": file_sha256(cfg.xml_path),
+        "config_sha256": file_sha256(bundle / "config.json"),
+        "action_mapping_version": ACTION_MAPPING_VERSION,
+        "policy_params_sha256": file_sha256(bundle / "params.pkl"),
+        "policy_config_sha256": file_sha256(bundle / "config.json"),
+        "policy_manifest_sha256": file_sha256(bundle / "manifest.json"),
+        "normalizer_sha256": normalizer_summary(params[0])["sha256"],
+        "source_fingerprint": source_fingerprint(root),
+    }
     bank_path = work / "snapshot_roundtrip.pkl"
-    SnapshotBank([env.snapshot_record(state, phase)]).save(bank_path)
+    SnapshotBank([env.snapshot_record_v4(state, phase, policy_action, provenance)]).save(bank_path)
     record = SnapshotBank.load(bank_path).records[0]
-    restored = restore_snapshot(env, record, jax.random.PRNGKey(21))
+    def current_frame(row):
+        physical=row["physical_state_t"];est=row["estimator_state_pre_t"]
+        data=env._make_data(jp.asarray(physical["qpos"]),jp.asarray(physical["qvel"]),jp.asarray(physical["ctrl_previous"]))
+        replacements={"qacc_warmstart":jp.asarray(physical["qacc_warmstart"]),"sensordata":jp.asarray(physical["sensordata"]),"time":jp.asarray(physical["time"])}
+        if hasattr(data,"act"):replacements["act"]=jp.asarray(physical["act"])
+        data=data.replace(**replacements)
+        return np.asarray(jax.device_get(env._actor_frame(
+            data,jp.asarray(row["last_normalized_command_t"]),jp.asarray(est["phase_probs"]),
+            jp.asarray(est["had_valid_landing"]),jp.asarray(est["contact_age"]),
+            jp.asarray(est["recovery_count"]),jp.asarray(est["prev_acc_z"]),
+            jp.asarray(row["observation_rng_t"]),
+        )))
+    validation=validate_snapshot_v4(
+        record,
+        expected_shapes={"qpos":(env.mj_model.nq,),"qvel":(env.mj_model.nv,),"act":(env.mj_model.na,),"ctrl_previous":(env.mj_model.nu,),"qacc_warmstart":(env.mj_model.nv,),"sensordata":(env.mj_model.nsensordata,)},
+        expected_hashes=provenance,
+        actor_action_fn=lambda obs:np.asarray(jax.device_get(inference({"state":jp.asarray(obs),"privileged_state":state.obs["privileged_state"]},jax.random.PRNGKey(23))[0])),
+        ctrl_from_action_fn=lambda value:np.asarray(jax.device_get(env._action_to_ctrl(jp.asarray(value),jp.asarray(record["physical_state_t"]["qpos"])[env._joint_qpos["knee_joint"]]))),
+        current_frame_fn=current_frame,
+    )
+    if not validation["valid"]:
+        raise RuntimeError(f"v4 snapshot validation failed: {validation['failed']}")
+    restored = jax.jit(lambda key: restore_snapshot_mode(
+        env, record, key,
+        observation_mode="timing_explicit_independent_reconstruction",
+    ))(jax.random.PRNGKey(21))
+    logged = jax.jit(lambda key: restore_snapshot_mode(
+        env, record, key,
+        observation_mode="timing_explicit_logged_replay",
+    ))(jax.random.PRNGKey(21))
     initial_errors = {
         "qpos": _max_abs(state.data.qpos, restored.data.qpos),
         "qvel": _max_abs(state.data.qvel, restored.data.qvel),
@@ -223,6 +275,7 @@ def _snapshot_gate(env: OrangeBikeDVGC, work: Path) -> dict[str, Any]:
         "qacc_warmstart": _max_abs(state.data.qacc_warmstart, restored.data.qacc_warmstart),
         "actor_obs": _max_abs(state.obs["state"], restored.obs["state"]),
         "critic_obs": _max_abs(state.obs["privileged_state"], restored.obs["privileged_state"]),
+        "logged_actor_obs": _max_abs(state.obs["state"], logged.obs["state"]),
     }
     next_original = step_fn(state, action)
     # MJX Warp custom calls may use shared scratch storage.  Dispatching two
@@ -286,6 +339,9 @@ def _snapshot_gate(env: OrangeBikeDVGC, work: Path) -> dict[str, Any]:
         "initial_max_abs": initial_errors,
         "step_max_abs": step_errors,
         "step_discrete_equal": discrete_equal,
+        "schema_v4_validation": validation,
+        "independent_reconstruction": True,
+        "logged_replay": True,
     }
 
 
@@ -491,9 +547,9 @@ def main() -> None:
         }
         report["gates"]["zero_action_100"] = _rollout_smoke(env, seed=2, random_actions=False)
         report["gates"]["random_action_100"] = _rollout_smoke(env, seed=3, random_actions=True)
-        report["gates"]["snapshot_roundtrip"] = {"status": "PASS", **_snapshot_gate(env, work)}
         params, ppo = _ppo_gate(env, work)
         report["gates"]["short_ppo"] = {"status": "PASS", **ppo}
+        report["gates"]["snapshot_roundtrip"] = {"status": "PASS", **_snapshot_gate(env, cfg, params, work, root)}
         report["gates"]["policy_roundtrip_determinism"] = {
             "status": "PASS",
             **_policy_gate(env, cfg, params, work),

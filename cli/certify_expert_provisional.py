@@ -15,7 +15,8 @@ from dvgc.config import file_sha256, load_config
 from dvgc.env import END_REASON, OrangeBikeDVGC
 from dvgc.experts import StageExpertRegistry
 from dvgc.policy import load_bundle
-from dvgc.rollout import restore_snapshot
+from dvgc.rollout import restore_snapshot_mode
+from dvgc.snapshot_timing import authority_replay_mode
 from dvgc.runtime import build_inference, save_json
 
 
@@ -79,7 +80,7 @@ def main() -> None:
             key = jax.random.PRNGKey(seed)
             _, outcome = composite_rollout(
                 env, ("flight", "landing"), inference, {"flight": matcher},
-                restore_snapshot(env, row, key), key, horizon=int(env._config.branch_horizon),
+                restore_snapshot_mode(env, row, key, observation_mode=authority_replay_mode(row)), key, horizon=int(env._config.branch_horizon),
                 step_fn=step, action_noise_std=float(env._config.action_noise_std),
             )
             item = branch_evidence(

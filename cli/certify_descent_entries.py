@@ -13,7 +13,8 @@ from dvgc.config import file_sha256, load_config
 from dvgc.descent_entry import descent_entry_feature
 from dvgc.env import END_REASON, OrangeBikeDVGC
 from dvgc.policy import load_bundle
-from dvgc.rollout import restore_snapshot
+from dvgc.rollout import restore_snapshot_mode
+from dvgc.snapshot_timing import authority_replay_mode
 from dvgc.runtime import build_inference, save_json
 from dvgc.snapshot_provenance import validate_snapshot_source_records,verify_source_policy_paths
 
@@ -62,7 +63,7 @@ def main():
         successes=failures=chain_successes=chain_failures=raw_final_successes=0; evidence=[]
         for b in range(int(base.max_branches)):
             variant,env,step,inf,matcher=variants[b%len(variants)]; seed=branch_seed(a.seed,i,b); key=jax.random.PRNGKey(seed)
-            _,outcome=composite_rollout(env,("flight","landing"),inf,{"flight":matcher},restore_snapshot(env,row,key),key,horizon=int(base.branch_horizon),step_fn=step,action_noise_std=float(base.action_noise_std))
+            _,outcome=composite_rollout(env,("flight","landing"),inf,{"flight":matcher},restore_snapshot_mode(env,row,key,observation_mode=authority_replay_mode(row)),key,horizon=int(base.branch_horizon),step_fn=step,action_noise_std=float(base.action_noise_std))
             ev=branch_evidence(branch_index=b,seed=seed,seed_namespace=f"{a.namespace}:descent_entry",dynamics_variant=variant,outcome=outcome); qualified=qualified_descent_success(outcome); ev["end_code"]=int(outcome["end_code"]); ev["end_reason"]=END_REASON.get(int(outcome["end_code"]),"unknown"); ev["raw_composite_final_recovery"]=bool(outcome["final"]); ev["descent_entry_final_success"]=qualified
             if outcome["final"] and not outcome["chain"]: ev["final_recovery"]=False; ev["terminal_cause"]="handoff_missed_final"
             evidence.append(ev); all_evidence.append(ev)

@@ -29,7 +29,7 @@ from mujoco_playground._src import mjx_env
 
 from .bank import SnapshotBank
 from .action_mapping import knee_position_target
-from .config import ID_STAGE, STAGE_ID, default_config
+from .config import ID_STAGE, STAGE_ID, SNAPSHOT_SCHEMA, default_config
 from .entry import ENTRY_FEATURE_NAMES
 from .signals import compute_takeoff_signals, wheel_tire_bottoms
 from .rewards import (
@@ -916,8 +916,15 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         prev_vz: Optional[jax.Array] = None,
         obs_history: Optional[jax.Array] = None,
         obs_history_valid: Optional[jax.Array] = None,
+        continuation_obs_history: Optional[jax.Array] = None,
+        actor_packet_fifo: Optional[jax.Array] = None,
+        actor_packet_fifo_valid: Optional[jax.Array] = None,
         actor_observation: Optional[jax.Array] = None,
         actor_observation_valid: Optional[jax.Array] = None,
+        observation_rng: Optional[jax.Array] = None,
+        data_act: Optional[jax.Array] = None,
+        data_sensordata: Optional[jax.Array] = None,
+        data_time: Optional[jax.Array] = None,
         qacc_warmstart: Optional[jax.Array] = None,
         reset_source: Optional[jax.Array] = None,
         bootstrap_group: Optional[jax.Array] = None,
@@ -930,8 +937,17 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         jump_window_end_x: Optional[jax.Array] = None,
     ) -> mjx_env.State:
         data = self._make_data(qpos, qvel, ctrl)
+        data_replacements = {}
         if qacc_warmstart is not None:
-            data = data.replace(qacc_warmstart=jp.asarray(qacc_warmstart, jp.float32))
+            data_replacements["qacc_warmstart"] = jp.asarray(qacc_warmstart, jp.float32)
+        if data_act is not None:
+            data_replacements["act"] = jp.asarray(data_act, jp.float32)
+        if data_sensordata is not None:
+            data_replacements["sensordata"] = jp.asarray(data_sensordata, jp.float32)
+        if data_time is not None:
+            data_replacements["time"] = jp.asarray(data_time, jp.float32)
+        if data_replacements:
+            data = data.replace(**data_replacements)
         last_action = self._neutral_action if last_action is None else last_action
         accel_z = self._sensor_vec(data, "acc_local", 3)[2]
         qpos_root, qvel_root, _, _, _ = self._root_state(data)
@@ -943,6 +959,8 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             fallback_base_z=qpos_root[2],
         )
         r_obs, r_info = jax.random.split(rng)
+        if observation_rng is not None:
+            r_obs = jp.asarray(observation_rng)
         prev_acc_eff = accel_z if prev_acc_z is None else jp.where(jp.isfinite(jp.asarray(prev_acc_z)), jp.asarray(prev_acc_z), accel_z)
         rec_count = jp.zeros((), jp.int32) if recovery_count is None else jp.asarray(recovery_count, jp.int32)
         estimated_phase_eff = phase if estimated_phase is None else jp.asarray(estimated_phase, jp.int32)
@@ -982,9 +1000,32 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         privileged_obs = self._privileged_obs(
             data, phase, had_airborne, had_valid_landing, support, contact_age, rec_count, last_action
         )
-        obs = self._stack_actor_history(history, frame)
+        rebuilt_obs = self._stack_actor_history(history, frame)
+        obs = rebuilt_obs
         if actor_observation is not None and actor_observation_valid is not None:
             obs = jp.where(actor_observation_valid, jp.asarray(actor_observation, jp.float32), obs)
+        # The online actor input and the continuation history are distinct
+        # timing objects.  Legacy records may provide a logged actor tensor and
+        # already-advanced history; v4 records provide both explicitly.
+        frames = obs.reshape((self._actor_history_steps, self._actor_frame_dim))
+        pre_history = frames[:-1]
+        current_frame = frames[-1]
+        post_history = self._advance_actor_history(pre_history, current_frame)
+        continuation = post_history if continuation_obs_history is None else jp.asarray(continuation_obs_history, jp.float32)
+        info["obs_history"] = continuation
+        empty_fifo = jp.zeros((3, self._actor_obs_dim), jp.float32)
+        initial_fifo = empty_fifo.at[2].set(obs)
+        fifo = initial_fifo if actor_packet_fifo is None else jp.asarray(actor_packet_fifo, jp.float32)
+        fifo_valid = jp.asarray(1 if actor_packet_fifo_valid is None else actor_packet_fifo_valid, jp.int32)
+        info.update({
+            "actor_obs_history_pre": pre_history,
+            "actor_current_frame": current_frame,
+            "actor_obs_history_post": post_history,
+            "actor_packet_fifo": fifo,
+            "actor_packet_fifo_valid": fifo_valid,
+            "actor_observation_rng": r_obs,
+            "actor_frame_prev_acc_z": prev_acc_eff,
+        })
         return mjx_env.State(
             data, {"state": obs, "privileged_state": privileged_obs},
             jp.zeros(()), jp.zeros(()), self._empty_metrics(), info
@@ -1086,8 +1127,15 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         prev_vz: Optional[jax.Array] = None,
         obs_history: Optional[jax.Array] = None,
         obs_history_valid: Optional[jax.Array] = None,
+        continuation_obs_history: Optional[jax.Array] = None,
+        actor_packet_fifo: Optional[jax.Array] = None,
+        actor_packet_fifo_valid: Optional[jax.Array] = None,
         actor_observation: Optional[jax.Array] = None,
         actor_observation_valid: Optional[jax.Array] = None,
+        observation_rng: Optional[jax.Array] = None,
+        data_act: Optional[jax.Array] = None,
+        data_sensordata: Optional[jax.Array] = None,
+        data_time: Optional[jax.Array] = None,
         qacc_warmstart: Optional[jax.Array] = None,
         reset_source: Optional[jax.Array] = None,
         bootstrap_group: Optional[jax.Array] = None,
@@ -1112,8 +1160,15 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             landing_bounce_count=landing_bounce_count, invalid_wheel_count=invalid_wheel_count,
             recovery_count=recovery_count, prev_acc_z=prev_acc_z, prev_vz=prev_vz,
             obs_history=obs_history, obs_history_valid=obs_history_valid,
+            continuation_obs_history=continuation_obs_history,
+            actor_packet_fifo=actor_packet_fifo,
+            actor_packet_fifo_valid=actor_packet_fifo_valid,
             actor_observation=actor_observation,
             actor_observation_valid=actor_observation_valid,
+            observation_rng=observation_rng,
+            data_act=data_act,
+            data_sensordata=data_sensordata,
+            data_time=data_time,
             qacc_warmstart=qacc_warmstart,
             reset_source=reset_source,
             bootstrap_group=bootstrap_group,
@@ -1168,7 +1223,11 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         return self._state_from_values(qpos, qvel, ctrl, rng, phase, had_airborne, jp.zeros((), jp.int32), jp.zeros((), jp.int32))
 
     def snapshot_record(self, state: mjx_env.State, source_stage: str) -> Dict[str, Any]:
-        """Serialize complete physical state and deployable PolicyState."""
+        """Serialize a deprecated v3-compatible record.
+
+        Authority-sensitive callers must use :meth:`snapshot_record_v4`,
+        which requires the current policy action and provenance explicitly.
+        """
         data = jax.device_get(state.data)
         info = jax.device_get(state.info)
         feature = np.asarray(jax.device_get(self._physical_feature(state.data)), np.float32)
@@ -1186,6 +1245,8 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         else:
             progress = float(info["recovery_count"]) / max(float(self._config.recovery_hold_steps), 1.0)
         return {
+            "schema_name": "dvgc_physical_policy_state_v3_warmstart",
+            "schema_version": 3,
             "qpos": np.asarray(data.qpos, np.float32),
             "qvel": np.asarray(data.qvel, np.float32),
             "ctrl": np.asarray(data.ctrl, np.float32),
@@ -1222,6 +1283,97 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
                 "prev_vz": float(info["prev_vz"]),
             },
         }
+
+    def snapshot_record_v4(
+        self, state: mjx_env.State, source_stage: str,
+        policy_action: jax.Array, provenance: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Capture the timing-explicit policy-evaluation boundary at tick t."""
+        data = jax.device_get(state.data)
+        info = jax.device_get(state.info)
+        if int(info["actor_packet_fifo_valid"]) != 3:
+            raise ValueError("v4 capture requires three real actor packets; synthetic padding is forbidden")
+        required_hashes = {
+            "xml_sha256", "config_sha256", "action_mapping_version",
+            "policy_params_sha256", "policy_config_sha256",
+            "policy_manifest_sha256", "normalizer_sha256",
+            "source_fingerprint",
+        }
+        if not required_hashes.issubset(provenance):
+            raise ValueError(f"incomplete v4 provenance: {sorted(required_hashes-set(provenance))}")
+        action = np.asarray(jax.device_get(jp.clip(policy_action, -1.0, 1.0)), np.float32)
+        ctrl_applied = np.asarray(jax.device_get(self._action_to_ctrl(
+            jp.asarray(action), state.data.qpos[self._joint_qpos["knee_joint"]]
+        )), np.float32)
+        legacy = self.snapshot_record(state, source_stage)
+        estimator_post = {
+            name: np.asarray(info[name]).copy() if np.asarray(info[name]).ndim else np.asarray(info[name]).item()
+            for name in (
+                "phase", "estimated_phase", "phase_probs", "had_airborne",
+                "had_valid_landing", "airborne_count", "prelaunch_airborne_count",
+                "landing_bounce_count", "invalid_wheel_count", "recovery_count",
+                "contact_age", "landing_entry_age", "landing_phase_step",
+                "prev_acc_z", "prev_vz", "prev_front_tire_bottom_z",
+                "prev_rear_tire_bottom_z", "positive_pitch_count", "wheelie_count",
+                "dual_wheel_liftoff_seen", "stage_entry_ever", "apex_seen",
+                "jump_signal_latched", "jump_window_start_x", "jump_window_end_x",
+                "chain_ever", "recovery_success", "episode_step", "end_code",
+            )
+        }
+        estimator_pre = dict(estimator_post)
+        estimator_pre["prev_acc_z"] = float(info["actor_frame_prev_acc_z"])
+        tick = int(info["episode_step"])
+        simulation_time = float(np.asarray(data.time))
+        record = {
+            **legacy,
+            "schema_name": SNAPSHOT_SCHEMA,
+            "schema_version": 4,
+            "physical_state_t": {
+                "qpos": np.asarray(data.qpos, np.float32),
+                "qvel": np.asarray(data.qvel, np.float32),
+                "act": np.asarray(data.act, np.float32),
+                "ctrl_previous": np.asarray(data.ctrl, np.float32),
+                "qacc_warmstart": np.asarray(data.qacc_warmstart, np.float32),
+                "sensordata": np.asarray(data.sensordata, np.float32),
+                "time": np.asarray(data.time, np.float32),
+            },
+            "obs_history_pre_t": np.asarray(info["actor_obs_history_pre"], np.float32),
+            "current_frame_t": np.asarray(info["actor_current_frame"], np.float32),
+            "actor_observation_t": np.asarray(jax.device_get(state.obs["state"]), np.float32),
+            "obs_history_post_t": np.asarray(info["actor_obs_history_post"], np.float32),
+            "actor_packet_fifo_t": np.asarray(info["actor_packet_fifo"], np.float32),
+            "actor_packet_fifo_valid": int(info["actor_packet_fifo_valid"]),
+            "estimator_state_pre_t": estimator_pre,
+            "estimator_state_post_t": estimator_post,
+            "last_normalized_command_t": np.asarray(info["last_action"], np.float32),
+            "policy_action_t": action,
+            "ctrl_applied_t": ctrl_applied,
+            "rng_state_t": np.asarray(info["rng"]),
+            "observation_rng_t": np.asarray(info["actor_observation_rng"]),
+            "field_ticks": {
+                "physical_state_t": tick,
+                "actor_observation_t": tick,
+                "current_frame_t": tick,
+                "policy_action_t": tick,
+                "ctrl_applied_t": tick,
+                "ctrl_previous": tick - 1,
+                "actor_packet_fifo_t": [tick - 2, tick - 1, tick],
+                "estimator_state_pre_t": tick,
+                "estimator_state_post_t": tick,
+            },
+            "simulation_timestamps": {
+                "physical_state_t": simulation_time,
+                "actor_observation_t": simulation_time,
+                "policy_action_t": simulation_time,
+                "ctrl_applied_t": simulation_time,
+            },
+            "provenance": dict(provenance),
+        }
+        # Keep the compatibility policy state aligned with the explicit v4
+        # semantics instead of exposing post-history under the old name.
+        record["policy_state"]["obs_history"] = record["obs_history_pre_t"]
+        record["policy_state"]["actor_observation"] = record["actor_observation_t"]
+        return record
 
     # ------------------------------------------------------------------
     # Transition, reward, and termination
@@ -1890,6 +2042,20 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "contact_age": contact_age.astype(jp.int32), "end_code": code.astype(jp.int32),
         })
         obs = self._stack_actor_history(state.info["obs_history"], frame)
+        packet_fifo = jp.concatenate(
+            [state.info["actor_packet_fifo"][1:], obs[None, :]], axis=0
+        )
+        info.update({
+            "actor_obs_history_pre": state.info["obs_history"],
+            "actor_current_frame": frame,
+            "actor_obs_history_post": next_history,
+            "actor_packet_fifo": packet_fifo,
+            "actor_packet_fifo_valid": jp.minimum(
+                state.info["actor_packet_fifo_valid"] + 1, 3
+            ).astype(jp.int32),
+            "actor_observation_rng": obs_rng,
+            "actor_frame_prev_acc_z": state.info["prev_acc_z"],
+        })
         return mjx_env.State(
             data, {"state": obs, "privileged_state": privileged_obs},
             reward, done.astype(jp.float32), metrics, info

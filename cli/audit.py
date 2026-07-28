@@ -9,7 +9,8 @@ from dvgc.certification import DYNAMICS_VARIANTS, assert_disjoint_branch_seeds, 
 from dvgc.config import load_config
 from dvgc.env import OrangeBikeDVGC
 from dvgc.policy import load_bundle, verify_manifest_artifact
-from dvgc.rollout import restore_snapshot, frozen_rollout
+from dvgc.rollout import restore_snapshot_mode, frozen_rollout
+from dvgc.snapshot_timing import authority_replay_mode
 from dvgc.runtime import build_inference
 
 
@@ -50,7 +51,7 @@ def main():
         except ValueError as exc: raise SystemExit(str(exc)) from exc
         cs=fs=0; branches=[]
         for b in range(a.branches):
-            variant_id,env,step_fn=variants[b%len(variants)]; seed=audit_seeds[b]; key=jax.random.PRNGKey(seed); state=restore_snapshot(env,row,key)
+            variant_id,env,step_fn=variants[b%len(variants)]; seed=audit_seeds[b]; key=jax.random.PRNGKey(seed); state=restore_snapshot_mode(env,row,key,observation_mode=authority_replay_mode(row))
             _,out=frozen_rollout(env,inference,state,key,horizon=int(cfg.branch_horizon),action_noise_std=float(cfg.action_noise_std),step_fn=step_fn)
             evidence=branch_evidence(branch_index=b,seed=seed,seed_namespace=namespace,dynamics_variant=variant_id,outcome=out)
             branches.append(evidence); cs+=out["chain"]; fs+=out["final"]
