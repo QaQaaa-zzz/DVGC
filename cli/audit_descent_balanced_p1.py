@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import pickle
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -31,8 +32,13 @@ def _records(index: dict) -> dict[str, dict]:
     banks = {}
     for row in index["rows"]:
         path = Path(row["source_artifact"])
-        bank = banks.setdefault(path, SnapshotBank.load(path))
-        record = bank.records[int(row["source_index"])]
+        if path not in banks:
+            if path.name == "timing_explicit_snapshots.pkl":
+                items = pickle.loads(path.read_bytes())
+                banks[path] = [item["snapshot_v4"] for item in items]
+            else:
+                banks[path] = SnapshotBank.load(path).records
+        record = banks[path][int(row["source_index"])]
         result[row["physical_state_sha256"]] = {"proposal": row, "record": record}
     return result
 
