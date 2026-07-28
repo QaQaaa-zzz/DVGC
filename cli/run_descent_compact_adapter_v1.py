@@ -44,9 +44,21 @@ def choose_compact_radius(teacher, preservation, micro, mean, std):
             "teacher_preservation_distance_min":float(cross.min()),"geometry_pass":coverage_floor < exclusion_cap}
 
 
-def _identity_hash(base_hash,prototypes,targets,radius):
+def choose_p1_command_support(teacher,preservation,micro_by_branch,mean,std):
+    """Pre-register a full-command core for the closest 3/4 P1 branches."""
+    normalize=lambda value:(np.asarray(value)-np.asarray(mean))/np.asarray(std)
+    teacher_n=normalize(teacher);preservation_n=normalize(preservation);micro_n=normalize(micro_by_branch)
+    cross=np.sqrt(np.mean((teacher_n[:,None]-preservation_n[None,:])**2,axis=-1))
+    packet=np.sqrt(np.mean((micro_n[:,:,None,:]-teacher_n[None,None,:,:])**2,axis=-1)).min(axis=-1)
+    branch_max=packet.max(axis=1);third=float(np.sort(branch_max)[2]);core=1.01*third;outer=.45*float(cross.min())
+    return {"radius":outer,"core_radius":core,"exclusion_cap":outer,"p1_branch_packet_max":branch_max.tolist(),
+            "covered_branches_by_core":int(np.sum(branch_max<=core)),"teacher_preservation_distance_min":float(cross.min()),
+            "geometry_pass":core<outer and int(np.sum(branch_max<=core))>=3}
+
+
+def _identity_hash(base_hash,prototypes,targets,radius,core_radius=0.0):
     digest=hashlib.sha256(base_hash.encode())
-    for value in (prototypes,targets,np.asarray(radius,np.float32)):
+    for value in (prototypes,targets,np.asarray(radius,np.float32),np.asarray(core_radius,np.float32)):
         array=np.asarray(value);digest.update(str(array.shape).encode());digest.update(array.tobytes())
     return digest.hexdigest()
 
@@ -72,7 +84,7 @@ def _micro_command_observations(env,micro,commands):
     for command in np.asarray(commands):
         observations.append(np.asarray(state.obs["state"],np.float32))
         state=step(state,jnp.broadcast_to(jnp.asarray(command),(state.data.qpos.shape[0],len(command))))
-    return np.concatenate(observations,axis=0)
+    return np.stack(observations,axis=1)
 
 
 def main():
@@ -93,7 +105,7 @@ def main():
     save_json(root/"preregistration.json",{"experiment":"descent_compact_observation_adapter_v1","target_node":TARGET_NODE,
         "prototype_ticks":5,"preservation_ticks":8,"distance":"RMS Euclidean in frozen-normalizer actor space",
         "radius":"1.25 * max target-micro nearest-prototype distance","hard_exclusion_cap":"0.45 * minimum teacher-to-preservation distance",
-        "kernel":"max(1-d/r,0)^2","command_source":args.command_source,
+        "kernel":"full-command core then compact quadratic taper","command_source":args.command_source,
         "physical_gate":"18/18 P0 and P1, no new failure types","PPO_authorization":False,
         "artifact_role":"expert_conditioned_provisional_envelope_controller"})
     dparams,_,_=load_bundle(PI_D,verify_files=True);lparams,_,_=load_bundle(PI_L,verify_files=True)
@@ -117,20 +129,24 @@ def main():
     micro=_micro_states(env,record,85_200_000)
     micro_obs=(_micro_command_observations(env,micro,commands) if args.command_source=="recorded" else np.asarray(micro.obs["state"]))
     mean=np.asarray(dparams[0].mean["state"]);std=np.asarray(dparams[0].std["state"])
-    geometry=choose_compact_radius(prototypes,np.asarray(preservation),micro_obs,mean,std)
+    geometry=(choose_p1_command_support(prototypes,np.asarray(preservation),micro_obs,mean,std)
+              if args.command_source=="recorded" else
+              choose_compact_radius(prototypes,np.asarray(preservation),micro_obs,mean,std))
     save_json(root/"adapter_geometry_preflight.json",geometry|{"teacher_prototypes":len(prototypes),"preservation_samples":len(preservation),
         "target_micro_states":len(micro_obs),"selected_without_physical_results":True})
     if not geometry["geometry_pass"]:raise SystemExit(f"compact support is not geometrically separable: {geometry}")
-    adapter=(compact_observation_command_adapter(jnp.asarray(prototypes),jnp.asarray(commands),jnp.asarray(mean),jnp.asarray(std),geometry["radius"])
+    adapter=(compact_observation_command_adapter(jnp.asarray(prototypes),jnp.asarray(commands),jnp.asarray(mean),jnp.asarray(std),
+                                                 geometry["radius"],geometry.get("core_radius",0.0))
              if args.command_source=="recorded" else
              compact_observation_residual_adapter(jnp.asarray(prototypes),jnp.asarray(residuals[:len(prototypes)]),jnp.asarray(mean),jnp.asarray(std),geometry["radius"]))
     preservation_action=np.asarray(adapter(jnp.asarray(preservation),jnp.zeros((len(preservation),4),jnp.float32)))
     if np.max(np.abs(preservation_action))!=0:raise SystemExit("adapter leaks into preservation prefixes")
     targets=commands if args.command_source=="recorded" else residuals[:len(prototypes)]
-    identity=_identity_hash(EXPECTED["pi_D"],prototypes,targets,geometry["radius"])
+    identity=_identity_hash(EXPECTED["pi_D"],prototypes,targets,geometry["radius"],geometry.get("core_radius",0.0))
     artifact={"schema":"compact-observation-residual-adapter-v1","base_policy_sha256":EXPECTED["pi_D"],"policy_identity_hash":identity,
         "prototypes":prototypes,"targets":targets,"command_source":args.command_source,
         "normalizer_mean":mean,"normalizer_std":std,"radius":geometry["radius"],
+        "core_radius":geometry.get("core_radius",0.0),
         "target_node":TARGET_NODE,"action_order":["steer","drive","hip","knee"]}
     _atomic_pickle(root/"adapter.pkl",artifact)
     save_bundle(root/"checkpoint_expert",params=dparams,config=cfg,xml_path=cfg.xml_path,

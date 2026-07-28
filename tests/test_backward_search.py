@@ -58,6 +58,13 @@ def test_compact_command_adapter_reproduces_command_independent_of_base():
     np.testing.assert_allclose(np.asarray(apply(obs,base)),np.array([[.2,-.1],[.4,.4]]),atol=1e-7)
 
 
+def test_compact_command_adapter_has_full_command_core():
+    apply=compact_observation_command_adapter(jnp.array([[0.,0.]]),jnp.array([[.2,-.1]]),
+                                              jnp.zeros(2),jnp.ones(2),1.0,.5)
+    result=apply(jnp.array([[.2,0.],[2.,2.]]),jnp.array([[.7,.7],[.4,.4]]))
+    np.testing.assert_allclose(np.asarray(result),np.array([[.2,-.1],[.4,.4]]),atol=1e-7)
+
+
 def test_cem_selection_never_retries_attempted_or_p0_proposals():
     def row(identifier,controller,p0,distance,region="middle"):
         return {"proposal":{"proposal_id":identifier,"region":region},"controller":controller,"P0":{"pass":p0},"repeats":[{"minimum_distance":distance}]}
