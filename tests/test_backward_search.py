@@ -2,7 +2,7 @@ import numpy as np
 import jax.numpy as jnp
 
 from cli.run_backward_descent_nominal_pilot import select_incremental_proposals
-from dvgc.backward_search import active_prefix_exact, backward_lexicographic_order, bounded_cem
+from dvgc.backward_search import active_prefix_exact, backward_lexicographic_order, bounded_cem, mask_pre_handoff_residual
 
 
 def test_backward_order_prioritizes_final_then_entry_not_survival():
@@ -32,3 +32,9 @@ def test_bounded_cem_uses_fixed_budget_and_respects_bounds():
     residual,summary,history=bounded_cem(rollout,lambda count:jnp.zeros(count),seed=3,samples=16,iterations=2,knot_count=2,bound=.2)
     assert residual.shape==(2,4) and np.max(np.abs(residual))<=.2
     assert len(history)==16 and summary["minimum_distance"]>=0
+
+
+def test_residual_mask_broadcasts_per_batch_row():
+    knot=jnp.arange(12,dtype=jnp.float32).reshape(3,4)
+    masked=mask_pre_handoff_residual(knot,jnp.asarray([False,True,False]),jnp.asarray([True,True,False]))
+    np.testing.assert_array_equal(masked,np.vstack([np.arange(4),np.zeros(4),np.zeros(4)]))

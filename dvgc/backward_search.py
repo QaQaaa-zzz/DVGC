@@ -11,6 +11,12 @@ from dvgc.descent_probe import formal_dynamic_margin
 from dvgc.runtime import build_inference
 
 
+def mask_pre_handoff_residual(knot: jax.Array, handed: jax.Array,
+                              active_window: jax.Array) -> jax.Array:
+    """Apply one residual per batch row only before the phase handoff."""
+    return jnp.where(((~handed) & active_window)[:, None], knot, jnp.zeros_like(knot))
+
+
 def make_descent_landing_rollout(env: Any, descent_params: Any, landing_params: Any,
                                  *, horizon: int = 200, residual_ticks: int = 8,
                                  ticks_per_knot: int = 4):
@@ -36,7 +42,7 @@ def make_descent_landing_rollout(env: Any, descent_params: Any, landing_params: 
             da,_=descent(state.obs,jax.random.fold_in(key,tick));la,_=landing(state.obs,jax.random.fold_in(key,tick+100000))
             base=jnp.where(handed[:,None],la,da)
             knot=residual_knots[:,jnp.minimum(tick//ticks_per_knot,residual_knots.shape[1]-1)]
-            residual=jnp.where((tick<residual_ticks)&(~handed),knot,jnp.zeros_like(knot))
+            residual=mask_pre_handoff_residual(knot,handed,jnp.full_like(handed,tick<residual_ticks))
             command=jnp.clip(base+residual,-1.,1.);next_state=step(state,command)
             chain_now=next_state.info["chain_ever"]>0;new_handoff=(~handed)&chain_now
             entry_tick=jnp.where(new_handoff,tick+1,entry_tick);handed=handed|chain_now
