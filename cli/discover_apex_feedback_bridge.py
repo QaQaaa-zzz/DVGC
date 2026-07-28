@@ -66,6 +66,24 @@ def _joint_margin(model, qpos):
     return float(min(values))
 
 
+def bridge_objective(*, entry, stable, apex, done, pose_margin, target_distance,
+                     pose_cost, joint_margin, action_energy):
+    """Failure-margin-first proposal score; formal entry remains dominant."""
+    return (
+        1_000_000. * int(entry)
+        - 1_000_000. * int(done)
+        + 10_000. * int(not done)
+        + 2_000. * int(pose_margin >= 0.)
+        + 500. * float(np.clip(pose_margin, -2., 1.))
+        + 50. * int(stable)
+        + 10. * int(apex)
+        - 25. * pose_cost
+        - target_distance
+        - 10. * max(0., .03 - joint_margin)
+        - .2 * action_energy
+    )
+
+
 def _state_score(
     env, state, previous_vz, support_metadata, model,
     terminal_target, terminal_center, terminal_scale, action_energy,
@@ -91,22 +109,21 @@ def _state_score(
         + np.sum(np.square(feature[9:12] / 4.))
     )
     margin = _joint_margin(model, qpos)
-    score = (
-        1_000_000. * int(entry["valid"])
-        + 10_000. * int(stable)
-        + 1_000. * int(apex)
-        + 100. * int(not done)
-        - 50. * pose_cost
-        - .5 * target_distance
-        - 10. * max(0., .03 - margin)
-        - .2 * action_energy
+    pose_margin = min(
+        (np.deg2rad(35.) - abs(feature[3])) / np.deg2rad(35.),
+        (np.deg2rad(75.) - abs(feature[4])) / np.deg2rad(75.),
+        (4. - np.linalg.norm(feature[9:12])) / 4.,
     )
-    if done:
-        score -= 1_000_000.
+    score = bridge_objective(
+        entry=entry["valid"], stable=stable, apex=apex, done=done,
+        pose_margin=pose_margin, target_distance=target_distance,
+        pose_cost=pose_cost, joint_margin=margin, action_energy=action_energy,
+    )
     return score, {
         "feature": feature, "entry": entry, "done": done, "apex": apex,
         "stable": stable, "target_distance": target_distance,
         "joint_margin": margin, "pose_cost": float(pose_cost),
+        "normalized_pose_margin": float(pose_margin),
     }
 
 
