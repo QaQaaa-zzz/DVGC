@@ -1,5 +1,28 @@
 # DVGC Experiment State
 
+## Independently audited local continuous Descent entry (2026-07-28)
+
+- Commit `b61ed9e` added backward-compatible per-anchor stage-support radii;
+  canonical `C_L`, XML, action mapping and frozen policies were unchanged.
+  Full preflight passed 411 tests and the refreshed runtime gate is PASS at
+  fingerprint `cd0e695f...e2eb76`.
+- A non-overwriting four-anchor construction pilot covered early, middle and
+  late Descent. All 32 local perturbation states passed P0 and P1. The four
+  calibrated radii are approximately 0.05 in the frozen robust-normalized
+  physical feature; construction precision=1.0, recall=0.972222, FP=0.
+- Fresh independent namespace `descent-local-entry-independent-audit-v1`
+  evaluated 48 states x 8 branches across three dynamics variants. All
+  384/384 branches reached Final-Recovery; physical failure, timeout, horizon
+  exhaustion and nonfinite were zero. The frozen matcher predicted 239
+  branches with precision=1.0 and conservative recall=0.622396; predicted
+  early/middle/late branch counts are 61/61/117.
+- Canonical continuous entry artifact:
+  `runs/descent_local_entry_v1/independent_audit_v1/canonical_descent_local_entry_v1.pkl`,
+  SHA-256 `e4011cfd...50de80`. It is now an independently audited formal local
+  Descent handoff region; it does not alter Tube v3 or constitute final shared
+  JEL. Next action is a bounded replay of existing parent-disjoint Apex
+  trajectories against this frozen region before any Apex PPO.
+
 ## Descent continuous-entry representation diagnostic (2026-07-28)
 
 - The inactive continuous `C_D` matcher was not relaxed.  A CPU-only
