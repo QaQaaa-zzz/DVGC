@@ -1491,3 +1491,39 @@
   Takeoff, Approach and nominal full-chain construction were not started.
   Controller/worker are inactive; watchdog timer remains active. Results:
   `runs/backward_recovery_tube_fast_track_v1/`.
+
+## Descent diverse-P1 predecessor recovery v1 (2026-07-28)
+
+- Started from clean `b6e20ce`; authoritative XML/action mapping, frozen pi_D,
+  pi_L, canonical C_L (99 Final-safe entries), matcher and v4 contract stayed
+  unchanged. Runtime gate remains PASS/current (`ce28878...b914d`); held-out
+  and delay modes were not used.
+- Deterministic launch selection retained the complete 15-node history and
+  formed a 13-node initial subset by retaining all eight non-dominant nodes
+  and five diversity-selected dominant nodes. The preregistered gap was three
+  non-dominant P1 nodes.
+- Source-A forward MJX harvesting used all 30 successful active prefixes. A
+  1/30 pilot produced seven v4 predecessors; the full pass produced 86 unique
+  predecessors with 100% v4 independent-reconstruction identity and no state
+  splicing. Only three prioritized proposals required certification; all three
+  passed P0 and 3/4-or-better P1 and came from previously P1-empty candidate
+  `0ba06e...`. Source B/C and new CEM were not needed.
+- `DESCENT_BALANCED_P1_LAUNCH_GATE=PASS`: full P1=18, frozen balanced subset=16,
+  seven candidates, four layers, early/middle/late, maximum candidate share
+  5/16=31.25%, parent lineage complete and controller-conditioned pointwise
+  Final-Recovery precision 100%. These artifacts remain nominal provisional
+  launch support, not a formal Tube/JEL.
+- Candidate-balanced behavior data passed with 16 teacher states (maximum
+  candidate share 31.25%), eight one-per-candidate P0 anchors and 16 separate
+  frozen-pi_L transition contracts. The first imbalanced 15-anchor artifact is
+  preserved but superseded for training.
+- The constrained RSI pilot stopped before PPO. Frozen pi_D policy replay gave
+  balanced P0/P1=15/15 of 16 and fixed-bank P0/P1=17/17 of 18. The preregistered
+  100-step head-only behavior prefit passed action drift (anchor RMS `0.00567`,
+  max `0.01972`) but reduced balanced P0/P1 to 13/13 and fixed-bank P0/P1 to
+  15/15. The prefit checkpoint was rejected; effective PPO steps are zero,
+  block 2 is unauthorized, and no nominal Descent Tube/policy was frozen.
+- Final classification: `DESCENT_RSI_RETENTION_FAILURE`. Per the hard stop,
+  no learning-rate/rehearsal repair, Apex run, Tube/JEL promotion or additional
+  budget was attempted. Controller/worker/GPU are idle; watchdog timer remains
+  active. Result: `runs/descent_diverse_p1_predecessor_recovery_v1/`.
