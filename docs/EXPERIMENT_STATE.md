@@ -1,5 +1,31 @@
 # DVGC Experiment State
 
+## Compact Descent matcher neighborhood (2026-07-28)
+
+- Commit `67568fe` added a geometry-only, outcome-blind 24-state expansion
+  with globally distinct parents, eight states in each early/middle/late
+  region, and a fixed 4 -> 8 -> 16/32 branch funnel. Full preflight passed
+  394 tests and the runtime gate was refreshed before dynamic execution.
+- The immutable construction run produced safe/boundary/dead/unknown =
+  3/3/16/2 over 432 branches. Chain=193/432, Final=189/432, physical
+  failure=243/432 (roll 100, pitch 73, other physical 70), and
+  timeout=horizon=nonfinite=0. The three safe extensions are one middle and
+  two late states; early contains one 22/32 boundary state and no safe state.
+- Combining the 18 already certified Tube anchors with the three new
+  construction-safe states still admits no isotropic 16D C_D radius at the
+  fixed 0.95 precision gate. Best construction precision is 0.842105 at
+  recall 0.761905 and radius 0.148784; full recall gives precision 0.724138.
+  Three boundary/unknown construction states have exactly zero normalized
+  16D distance to a safe anchor, demonstrating that the missing distinction
+  lies outside the task-relative physical feature (not in a tunable radius).
+- Therefore the continuous 16D matcher remains inactive and the immutable
+  exact handoff plus independently certified Descent Tube v2 remain current.
+  No audit label entered training, no PPO ran, and no matcher/failure/XML
+  contract was relaxed. Next mainline action is predecessor proposal
+  acquisition using phase-conditioned reachability only as a guide; every
+  promoted state still requires frozen expert-stack Final-Recovery branch
+  certification.
+
 ## Certified compact-expert Descent Tube (2026-07-28)
 
 - Started from clean `5812143`; authoritative XML/action mapping, frozen
