@@ -22,6 +22,16 @@ def inferred_apex_seen(record: dict[str, Any]) -> int:
     return int(index is not None and int(index) >= 220)
 
 
+def _logged_replay_sidecars(record: dict[str, Any], logged: bool):
+    """Read logged tensors only for the explicitly logged restore mode."""
+    if not logged:
+        return None, None
+    return (
+        np.asarray(record["actor_observation_t"], np.float32),
+        np.asarray(record["current_frame_t"], np.float32),
+    )
+
+
 def _legacy_restore(env, record: dict[str, Any], rng, *, use_logged_observation: bool):
     ps = dict(record.get("policy_state", {}))
     phase = int(record.get("oracle_phase", STAGE_ID[record["source_phase"]]))
@@ -69,7 +79,7 @@ def _timing_explicit_restore(env, record: dict[str, Any], rng, *, logged: bool):
     post = np.asarray(record["obs_history_post_t"], np.float32)
     estimator_pre = record["estimator_state_pre_t"]
     estimator_post = record["estimator_state_post_t"]
-    actor = np.asarray(record["actor_observation_t"], np.float32) if logged else None
+    actor, logged_current_frame = _logged_replay_sidecars(record, logged)
     state = env.reset_from_snapshot(
         jp.asarray(physical["qpos"]), jp.asarray(physical["qvel"]), jp.asarray(physical["ctrl_previous"]), rng,
         jp.asarray(int(estimator_pre["phase"]), jp.int32),
@@ -104,6 +114,7 @@ def _timing_explicit_restore(env, record: dict[str, Any], rng, *, logged: bool):
         jump_window_end_x=jp.asarray(float(estimator_pre["jump_window_end_x"]), jp.float32),
     )
     info = dict(state.info)
+    reconstructed_current_frame = info["actor_current_frame"]
     for name, value in estimator_post.items():
         if name in info:
             info[name] = jp.asarray(value, dtype=info[name].dtype)
@@ -111,7 +122,10 @@ def _timing_explicit_restore(env, record: dict[str, Any], rng, *, logged: bool):
         "rng": jp.asarray(record["rng_state_t"]),
         "obs_history": jp.asarray(post),
         "actor_obs_history_pre": jp.asarray(pre),
-        "actor_current_frame": jp.asarray(record["current_frame_t"]),
+        "actor_current_frame": (
+            jp.asarray(logged_current_frame)
+            if logged else reconstructed_current_frame
+        ),
         "actor_obs_history_post": jp.asarray(post),
         "actor_packet_fifo": jp.asarray(record["actor_packet_fifo_t"]),
         "actor_packet_fifo_valid": jp.asarray(3, jp.int32),

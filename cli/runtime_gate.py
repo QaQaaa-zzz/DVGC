@@ -244,7 +244,7 @@ def _snapshot_gate(env: OrangeBikeDVGC, cfg: Any, params: Any, work: Path, root:
         replacements={"qacc_warmstart":jp.asarray(physical["qacc_warmstart"]),"sensordata":jp.asarray(physical["sensordata"]),"time":jp.asarray(physical["time"])}
         if hasattr(data,"act"):replacements["act"]=jp.asarray(physical["act"])
         data=data.replace(**replacements)
-        return np.asarray(jax.device_get(env._actor_frame(
+        return np.asarray(jax.device_get(env.build_actor_current_frame_v4(
             data,jp.asarray(row["last_normalized_command_t"]),jp.asarray(est["phase_probs"]),
             jp.asarray(est["had_valid_landing"]),jp.asarray(est["contact_age"]),
             jp.asarray(est["recovery_count"]),jp.asarray(est["prev_acc_z"]),

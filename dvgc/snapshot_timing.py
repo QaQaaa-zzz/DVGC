@@ -11,6 +11,20 @@ SNAPSHOT_SCHEMA_NAME = "dvgc_physical_policy_state_v4_timing_explicit"
 SNAPSHOT_SCHEMA_VERSION = 4
 LEGACY_SNAPSHOT_SCHEMA = "dvgc_physical_policy_state_v3_warmstart"
 ACTION_ORDER = ("steer", "drive", "hip", "knee")
+ACTOR_FRAME_DIMENSION_NAMES = (
+    "steering_joint_pos", "hip_joint_pos", "knee_joint_pos",
+    "rearwheel_joint_velocity", "steering_joint_velocity",
+    "hip_joint_velocity", "knee_joint_velocity", "frontwheel_joint_velocity",
+    "gyro_x", "gyro_y", "gyro_z", "gravity_body_x", "gravity_body_y",
+    "gravity_body_z", "last_action_steer", "last_action_drive",
+    "last_action_hip", "last_action_knee", "task_distance_to_front",
+    "task_distance_to_back", "task_step_height", "task_target_speed",
+    "task_terrain_relative_height", "accel_x", "accel_y", "accel_z",
+    "accel_z_delta", "wheel_velocity_estimate", "support_estimate",
+    "phase_approach_probability", "phase_takeoff_probability",
+    "phase_flight_probability", "phase_landing_probability",
+    "contact_age_normalized", "recovery_count_normalized",
+)
 J12_DELAY_SEQUENCE = (1, 2, 1, 1, 2, 1, 2, 1) * 3
 REPLAY_MODES = (
     "legacy_logged_replay",
@@ -93,6 +107,43 @@ def _eq(left: Any, right: Any) -> bool:
     return bool(np.array_equal(np.asarray(left), np.asarray(right)))
 
 
+def _ordered_float32_bits(value: Any) -> int:
+    raw = int(np.asarray(value, np.float32).reshape(()).view(np.uint32))
+    return 0xFFFFFFFF - raw if raw & 0x80000000 else raw + 0x80000000
+
+
+def fieldwise_float32_comparison(left: Any, right: Any) -> dict[str, Any]:
+    """Return exact float32 field evidence, including first mismatch and ULPs."""
+    lhs = np.asarray(left, np.float32).reshape((-1,))
+    rhs = np.asarray(right, np.float32).reshape((-1,))
+    if lhs.shape != rhs.shape:
+        raise ValueError(f"shape mismatch: {lhs.shape} != {rhs.shape}")
+    if lhs.size != len(ACTOR_FRAME_DIMENSION_NAMES):
+        raise ValueError(f"actor frame must have {len(ACTOR_FRAME_DIMENSION_NAMES)} fields")
+    rows = []
+    for index, (a, b) in enumerate(zip(lhs, rhs, strict=True)):
+        a_bits = int(np.asarray(a).view(np.uint32))
+        b_bits = int(np.asarray(b).view(np.uint32))
+        rows.append({
+            "index": index,
+            "semantic_name": ACTOR_FRAME_DIMENSION_NAMES[index],
+            "left_value": float(a), "right_value": float(b),
+            "left_uint32": a_bits, "right_uint32": b_bits,
+            "left_hex": f"0x{a_bits:08x}", "right_hex": f"0x{b_bits:08x}",
+            "bit_exact": a_bits == b_bits,
+            "absolute_error": float(abs(np.float64(a) - np.float64(b))),
+            "ulp_distance": abs(_ordered_float32_bits(a) - _ordered_float32_bits(b)),
+        })
+    mismatch = [row for row in rows if not row["bit_exact"]]
+    return {
+        "bit_exact": not mismatch,
+        "mismatch_dimension_count": len(mismatch),
+        "first_mismatching_dimension": None if not mismatch else mismatch[0]["index"],
+        "first_mismatching_semantic": None if not mismatch else mismatch[0]["semantic_name"],
+        "rows": rows,
+    }
+
+
 def validate_snapshot_v4(
     record: Mapping[str, Any], *, frame_dim: int = 35,
     expected_shapes: Mapping[str, tuple[int, ...]] | None = None,
@@ -130,6 +181,7 @@ def validate_snapshot_v4(
     actor = np.asarray(record["actor_observation_t"], np.float32).reshape((-1,))
     post = np.asarray(record["obs_history_post_t"], np.float32)
     fifo = np.asarray(record["actor_packet_fifo_t"], np.float32)
+    checks["frame_semantics"] = frame_dim == len(ACTOR_FRAME_DIMENSION_NAMES) or frame_dim != 35
     checks["history_shapes"] = pre.ndim == 2 and pre.shape[1:] == (frame_dim,) and post.shape == pre.shape and actor.shape == ((len(pre) + 1) * frame_dim,) and fifo.shape == (3, actor.size)
     checks["actor_identity"] = checks["history_shapes"] and _eq(actor, np.concatenate((pre.reshape(-1), frame)))
     expected_post = np.concatenate((pre[1:], frame[None]), axis=0) if len(pre) else pre
@@ -145,6 +197,11 @@ def validate_snapshot_v4(
     ticks = record["field_ticks"]
     tick = ticks.get("physical_state_t") if isinstance(ticks, Mapping) else None
     checks["field_ticks"] = isinstance(tick, int) and all(ticks.get(name) == tick for name in ("actor_observation_t", "current_frame_t", "policy_action_t", "ctrl_applied_t")) and ticks.get("ctrl_previous") == tick - 1 and ticks.get("actor_packet_fifo_t") == [tick - 2, tick - 1, tick]
+    checks["estimator_ticks"] = (
+        isinstance(tick, int)
+        and int(estimator_pre.get("episode_step", -1)) == tick
+        and int(estimator_post.get("episode_step", -1)) == tick
+    )
     timestamps = record["simulation_timestamps"]
     checks["timestamps"] = isinstance(timestamps, Mapping) and _finite(timestamps.get("physical_state_t", np.nan)) and _finite(timestamps.get("ctrl_applied_t", np.nan))
     provenance = record["provenance"]

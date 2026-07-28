@@ -1,7 +1,7 @@
 import jax
 import pytest
 
-from dvgc.rollout import inferred_apex_seen, restore_snapshot_mode
+from dvgc.rollout import _logged_replay_sidecars, inferred_apex_seen, restore_snapshot_mode
 from dvgc.snapshot_timing import SNAPSHOT_SCHEMA_NAME, authority_replay_mode
 
 
@@ -30,3 +30,12 @@ def test_restore_mode_is_never_implicit_for_authority_api():
 def test_authority_mode_never_independently_reconstructs_legacy_records():
     assert authority_replay_mode({"schema_name": SNAPSHOT_SCHEMA_NAME}) == "timing_explicit_independent_reconstruction"
     assert authority_replay_mode({"schema_name": "dvgc_physical_policy_state_v3_warmstart"}) == "legacy_logged_replay"
+
+
+def test_independent_mode_does_not_read_current_frame_or_actor_sidecars():
+    class Guarded(dict):
+        def __getitem__(self, key):
+            if key in {"actor_observation_t", "current_frame_t"}:
+                raise AssertionError(f"independent mode read {key}")
+            return super().__getitem__(key)
+    assert _logged_replay_sidecars(Guarded(), False) == (None, None)

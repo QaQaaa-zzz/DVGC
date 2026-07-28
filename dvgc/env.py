@@ -92,6 +92,13 @@ def _deg2rad(x: float) -> float:
     return float(x) * jp.pi / 180.0
 
 
+def stable_task_distance_to_front(x: jax.Array, step_front_x: float) -> jax.Array:
+    """Bit-stable float32 scaling shared by online and v4 reconstruction."""
+    return (
+        jp.asarray(step_front_x, jp.float32) - jp.asarray(x, jp.float32)
+    ) * jp.asarray(1.0 / 3.0, jp.float32)
+
+
 def _quat_from_euler_xyz(roll: jax.Array, pitch: jax.Array, yaw: jax.Array) -> jax.Array:
     cr, sr = jp.cos(roll * 0.5), jp.sin(roll * 0.5)
     cp, sp = jp.cos(pitch * 0.5), jp.sin(pitch * 0.5)
@@ -600,7 +607,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         vz_ok = jp.abs(qvel[2]) <= self._config.imu_support_max_abs_vz
         return (had_valid_landing > 0) & self._platform_gate(qpos) & height_ok & vz_ok
 
-    def _actor_frame(
+    def build_actor_current_frame_v4(
         self,
         data: mjx.Data,
         last_action: jax.Array,
@@ -631,8 +638,13 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         ])
         x, z = qpos[0], qpos[2]
         local_terrain = jp.where((x >= cfg.step_front_x) & (x <= cfg.step_back_x), cfg.step_top_z, 0.0)
+        # Keep this scale as an explicit float32 multiply.  XLA lowered the
+        # equivalent division context-dependently inside the fused online step
+        # versus standalone snapshot reconstruction, producing a one-ULP
+        # mismatch for otherwise identical materialized qpos values.
+        distance_to_front = stable_task_distance_to_front(x, cfg.step_front_x)
         task = jp.asarray([
-            (cfg.step_front_x - x) / 3.0,
+            distance_to_front,
             (cfg.step_back_x - x) / 4.0,
             cfg.step_top_z / 0.30,
             cfg.target_forward_speed / 3.0,
@@ -661,6 +673,10 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             ])
             frame = frame + noise
         return frame.astype(jp.float32)
+
+    def _actor_frame(self, *args, **kwargs) -> jax.Array:
+        """Deprecated compatibility alias for the canonical v4 producer."""
+        return self.build_actor_current_frame_v4(*args, **kwargs)
 
     def _stack_actor_history(self, history: jax.Array, frame: jax.Array) -> jax.Array:
         return jp.concatenate([history, frame[None, :]], axis=0).reshape((-1,)).astype(jp.float32)
@@ -968,7 +984,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             jax.nn.one_hot(jp.clip(estimated_phase_eff, 0, 3), 4, dtype=jp.float32)
             if phase_probs is None else jp.asarray(phase_probs, jp.float32)
         )
-        frame = self._actor_frame(
+        frame = self.build_actor_current_frame_v4(
             data, last_action, phase_probs_eff, had_valid_landing, contact_age, rec_count, prev_acc_eff, r_obs
         )
         history = self._initial_actor_history(frame, obs_history, obs_history_valid)
@@ -2005,7 +2021,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         })
         metrics = {key: jp.nan_to_num(value) for key, value in metrics.items()}
         info = dict(state.info)
-        frame = self._actor_frame(
+        frame = self.build_actor_current_frame_v4(
             data, action, phase_probs1, had_landing, contact_age, recovery_count,
             state.info["prev_acc_z"], obs_rng,
         )

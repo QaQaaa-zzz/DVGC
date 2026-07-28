@@ -1,19 +1,65 @@
 import copy
+import inspect
 
+import jax.numpy as jnp
 import numpy as np
 import pytest
 
 from dvgc.delay_probe import active_prefix_repeat_comparison
+from dvgc.env import OrangeBikeDVGC, stable_task_distance_to_front
 from dvgc.observation_audit import array_sha256, history_alignment
 from dvgc.snapshot_timing import (
+    ACTOR_FRAME_DIMENSION_NAMES,
     J12_DELAY_SEQUENCE,
     SNAPSHOT_SCHEMA_NAME,
     SNAPSHOT_SCHEMA_VERSION,
     causal_prior_packet,
+    fieldwise_float32_comparison,
     select_delayed_packet,
     validate_snapshot_v4,
     validate_transfer_eligibility,
 )
+
+
+def test_all_actor_frame_dimensions_have_unique_semantic_names():
+    assert len(ACTOR_FRAME_DIMENSION_NAMES) == 35
+    assert len(set(ACTOR_FRAME_DIMENSION_NAMES)) == 35
+    assert ACTOR_FRAME_DIMENSION_NAMES[18] == "task_distance_to_front"
+
+
+def test_fieldwise_comparator_finds_first_one_ulp_mismatch():
+    left = np.zeros(35, np.float32)
+    right = left.copy()
+    right[18] = np.nextafter(np.float32(0), np.float32(1))
+    result = fieldwise_float32_comparison(left, right)
+    assert not result["bit_exact"]
+    assert result["mismatch_dimension_count"] == 1
+    assert result["first_mismatching_dimension"] == 18
+    assert result["first_mismatching_semantic"] == "task_distance_to_front"
+    assert result["rows"][18]["ulp_distance"] == 1
+
+
+@pytest.mark.parametrize("x,expected_bits", [
+    (3.26122784614563, 0x3DE744B6),
+    (3.36965274810791, 0x3D9D4016),
+    (3.376526355743408, 0x3D988ED6),
+    (3.3308637142181396, 0x3DB7BAF6),
+    (3.3307549953460693, 0x3DB7CDF6),
+    (3.386225938796997, 0x3D91EFB6),
+    (3.3864176273345947, 0x3D91CE36),
+    (3.2665908336639404, 0x3DE39B76),
+    (3.3845486640930176, 0x3D9314D6),
+])
+def test_stable_front_distance_covers_nine_original_mismatches(x, expected_bits):
+    value = np.asarray(stable_task_distance_to_front(jnp.asarray(x, jnp.float32), 3.6))
+    assert int(value.view(np.uint32)) == expected_bits
+    strict_division = np.float32(np.float32(3.6) - np.float32(x)) / np.float32(3.0)
+    assert int(np.asarray(strict_division).view(np.uint32)) != expected_bits
+
+
+def test_online_and_reconstruction_call_the_same_canonical_frame_producer():
+    assert "build_actor_current_frame_v4" in inspect.getsource(OrangeBikeDVGC.step)
+    assert "build_actor_current_frame_v4" in inspect.getsource(OrangeBikeDVGC._state_from_values)
 
 
 def test_history_alignment_detects_post_current_off_by_one():
@@ -95,6 +141,17 @@ def _validate(record):
 
 def test_snapshot_v4_positive_contract():
     assert _validate(_record())["valid"]
+
+
+def test_swapping_pre_and_post_estimator_state_fails_identity_gate():
+    row = _record()
+    row["estimator_state_post_t"] = copy.deepcopy(row["estimator_state_pre_t"])
+    row["estimator_state_post_t"]["episode_step"] += 1
+    row["estimator_state_pre_t"], row["estimator_state_post_t"] = (
+        row["estimator_state_post_t"], row["estimator_state_pre_t"]
+    )
+    # The physical tick must agree with the pre-state policy-evaluation tick.
+    assert not _validate(row)["valid"]
 
 
 @pytest.mark.parametrize("mutation",[
