@@ -110,6 +110,12 @@ def test_ascent_parent_acquisition_uses_independent_lineage_and_bounded_rounds()
     assert "certified_tube" in text and "safe_claim_allowed" in text
 
 
+def test_ascent_parent_acquisition_can_stop_before_downstream_search():
+    text = Path("cli/acquire_ascent_apex_parents.py").read_text()
+    assert '"--entries-only"' in text
+    assert '"search_executed": False' in text
+
+
 def test_v3_controller_does_not_launch_ascent_ppo_without_two_parents():
     text = Path("cli/stage_next_v3_controller.py").read_text()
     assert "mine_independent_ascent_apex_parents" in text

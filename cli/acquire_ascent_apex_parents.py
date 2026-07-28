@@ -399,6 +399,8 @@ def main() -> None:
     p.add_argument("--takeoff-policy-only", action="store_true")
     p.add_argument("--required-successful-parents", type=int, default=2)
     p.add_argument("--round-b-proposals", type=int, default=96)
+    p.add_argument("--entries-only", action="store_true",
+                   help="stop after atomically writing fresh Ascent entries")
     p.add_argument("--takeoff-horizon", type=int, default=80)
     p.add_argument("--ascent-horizon", type=int, default=100)
     p.add_argument("--seed", type=int, default=10_610_000)
@@ -483,6 +485,20 @@ def main() -> None:
             "fresh_ascent_entry_controller_mix": controller_mix,
             "entry_bank_sha256": file_sha256(entry_path),
         })
+    if args.entries_only:
+        completed = {
+            "status": "PASS", "artifact_role": "fresh_ascent_entry_acquisition",
+            "fresh_ascent_entries": len(entries),
+            "independent_upstream_parents": len({
+                row["trajectory_parent_id"] for row in entries
+            }),
+            "entry_bank": str(entry_path.resolve()),
+            "entry_bank_sha256": file_sha256(entry_path),
+            "search_executed": False,
+        }
+        save_json(root / "completed.json", completed)
+        print(json.dumps(completed, indent=2))
+        return
     shard_root = root / "parent_search_shards"
     shard_root.mkdir(parents=True, exist_ok=True)
     round_a, apex_snapshots = [], []
