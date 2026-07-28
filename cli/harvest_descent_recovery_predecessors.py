@@ -330,17 +330,48 @@ def _certify():
         "excluded": excluded, "gate": gate,
         "full_P1_nodes": len(current_p1), "balanced_subset_nodes": len(subset),
     })
+    save_json(ROOT / "source_a_certification.completed.json", {
+        "status": "PASS", "certified": len(certification_rows),
+        "new_P0": sum(node.p0 for node in new_nodes), "new_P1": sum(node.p1 for node in new_nodes),
+        "balanced_gate": gate["status"],
+    })
     print(json.dumps({"certified": len(certification_rows), "new_P0": sum(node.p0 for node in new_nodes),
-                      "new_P1": sum(node.p1 for node in new_nodes), "gate": gate}, indent=2))
+                      "new_P1": sum(node.p1 for node in new_nodes), "gate": gate}, indent=2,
+                     default=lambda value: np.asarray(value).item() if np.asarray(value).ndim == 0 else np.asarray(value).tolist()))
+
+
+def _finalize_existing():
+    valid, failed = verify_frozen_assets(ROOT)
+    if not valid: raise SystemExit(f"frozen asset identity failure: {failed}")
+    result = json.loads((ROOT / "source_a_certification_results.json").read_text())
+    subset = json.loads((ROOT / "balanced_p1_launch_subset_v1_final.json").read_text())
+    checks = {
+        "result_status": result.get("status") == "PASS",
+        "balanced_gate": result.get("balanced_gate", {}).get("status") == "PASS",
+        "three_new_P1": int(result.get("new_P1", 0)) >= 3,
+        "subset_identity": subset.get("gate") == result.get("balanced_gate"),
+        "heldout_false": result.get("heldout_used") is False,
+        "delay_false": result.get("delay") is False,
+        "PPO_false": result.get("PPO") is False,
+    }
+    if not all(checks.values()): raise SystemExit(f"existing certification cannot finalize: {checks}")
+    save_json(ROOT / "source_a_certification.completed.json", {
+        "status": "PASS", "recovered_after_console_serialization_failure": True,
+        "checks": checks, "certified": result["certified_proposals"],
+        "new_P0": result["new_P0"], "new_P1": result["new_P1"],
+        "balanced_gate": "PASS",
+    })
+    print(json.dumps({"status": "PASS", "checks": checks}, indent=2))
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=("pilot", "full", "certify"))
+    parser.add_argument("mode", choices=("pilot", "full", "certify", "finalize-existing"))
     args = parser.parse_args()
     ROOT.mkdir(parents=True, exist_ok=True)
     if args.mode in {"pilot", "full"}: _harvest(args.mode)
-    else: _certify()
+    elif args.mode == "certify": _certify()
+    else: _finalize_existing()
 
 
 if __name__ == "__main__":

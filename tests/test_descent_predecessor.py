@@ -42,3 +42,11 @@ def test_artifact_index_is_stable_without_array_dictionary_equality():
         proposal["_artifact_index"] = index
     proposals.reverse()
     assert [row["_artifact_index"] for row in proposals] == [1, 0]
+
+
+def test_numpy_gate_summary_is_json_serializable_with_host_conversion():
+    import json
+    value = {"layers": [np.int64(1)], "share": np.float64(.25)}
+    text = json.dumps(value, default=lambda item: np.asarray(item).item()
+                      if np.asarray(item).ndim == 0 else np.asarray(item).tolist())
+    assert json.loads(text) == {"layers": [1], "share": .25}
