@@ -199,3 +199,97 @@ def summarize_tube_nodes(nodes: Sequence[BackwardTubeNode]) -> dict[str, Any]:
         "layer_coverage": sorted({node.layer for node in p1}),
         "region_coverage": sorted({node.region for node in p1}),
     }
+
+
+def balanced_p1_launch_subset(
+    nodes: Sequence[BackwardTubeNode],
+    feature_by_id: Mapping[str, Sequence[float]],
+    scale: Sequence[float],
+    *,
+    per_candidate_cap: int = 5,
+) -> tuple[list[BackwardTubeNode], list[dict[str, Any]]]:
+    """Select a deterministic, diversity-preserving P1 launch subset.
+
+    Historical nodes are never relabelled or deleted.  Candidates at or below
+    the cap retain every node.  Within an over-cap candidate, every
+    (layer, region, parent) cluster contributes its normalized-feature medoid
+    first; remaining slots use deterministic farthest-point coverage.
+    """
+    eligible = sorted((node for node in nodes if node.p1 and node.phase != "landing"),
+                      key=lambda node: node.node_id)
+    if per_candidate_cap < 1:
+        raise ValueError("per_candidate_cap must be positive")
+    scale_array = np.maximum(np.asarray(scale, np.float64), 1e-8)
+    missing = [node.node_id for node in eligible if node.node_id not in feature_by_id]
+    if missing:
+        raise ValueError(f"missing normalized features: {missing}")
+
+    def distance(left: BackwardTubeNode, right: BackwardTubeNode) -> float:
+        a = np.asarray(feature_by_id[left.node_id], np.float64)
+        b = np.asarray(feature_by_id[right.node_id], np.float64)
+        return float(np.linalg.norm((a - b) / scale_array))
+
+    selected: list[BackwardTubeNode] = []
+    excluded: list[dict[str, Any]] = []
+    candidates: dict[str, list[BackwardTubeNode]] = {}
+    for node in eligible:
+        candidates.setdefault(node.candidate_id, []).append(node)
+    for candidate_id in sorted(candidates):
+        group = candidates[candidate_id]
+        if len(group) <= per_candidate_cap:
+            selected.extend(group)
+            continue
+        clusters: dict[tuple[int, str, str | None], list[BackwardTubeNode]] = {}
+        for node in group:
+            clusters.setdefault((node.layer, node.region, node.parent_node_id), []).append(node)
+        chosen: list[BackwardTubeNode] = []
+        for key in sorted(clusters, key=lambda item: (item[0], item[1], item[2] or "")):
+            cluster = clusters[key]
+            medoid = min(cluster, key=lambda node: (
+                sum(distance(node, other) for other in cluster), node.node_id))
+            chosen.append(medoid)
+        if len(chosen) > per_candidate_cap:
+            raise ValueError("candidate cap cannot preserve layer/region/parent clusters")
+        remaining = [node for node in group if node not in chosen]
+        while len(chosen) < per_candidate_cap:
+            pick = min(remaining, key=lambda node: (
+                -min(distance(node, old) for old in chosen), node.node_id))
+            chosen.append(pick)
+            remaining.remove(pick)
+        selected.extend(chosen)
+        chosen_ids = {node.node_id for node in chosen}
+        for node in group:
+            if node.node_id not in chosen_ids:
+                excluded.append({
+                    "node_id": node.node_id,
+                    "candidate_id": candidate_id,
+                    "reason": "deterministic_candidate_cap_diversity_selection",
+                    "nearest_selected_distance": min(distance(node, old) for old in chosen),
+                })
+    return sorted(selected, key=lambda node: node.node_id), sorted(
+        excluded, key=lambda row: row["node_id"])
+
+
+def balanced_p1_launch_gate(nodes: Sequence[BackwardTubeNode]) -> dict[str, Any]:
+    """Strict launch gate for the diverse Descent predecessor protocol."""
+    p1 = [node for node in nodes if node.p1 and node.phase == "descent"]
+    counts = Counter(node.candidate_id for node in p1)
+    share = 0.0 if not p1 else max(counts.values()) / len(p1)
+    checks = {
+        "minimum_nodes": len(p1) >= 16,
+        "minimum_candidates": len(counts) >= 6,
+        "minimum_layers": len({node.layer for node in p1}) >= 4,
+        "region_coverage": {node.region for node in p1} >= {"early", "middle", "late"},
+        "candidate_cap": share <= .35,
+        "pointwise_precision": all(node.final_recovery for node in p1),
+        "lineage_present": all(node.parent_node_id for node in p1),
+    }
+    return {
+        "status": "PASS" if all(checks.values()) else "FAIL",
+        "checks": checks,
+        "P1_nodes": len(p1),
+        "candidate_counts": dict(sorted(counts.items())),
+        "maximum_candidate_share": share,
+        "layers": sorted({node.layer for node in p1}),
+        "regions": sorted({node.region for node in p1}),
+    }
