@@ -22,17 +22,25 @@
   and three fixed dynamics variants. Final=568/576 (98.611%), Chain=546/576,
   physical failure=8/576 (all roll), timeout=horizon=nonfinite=0. Tube
   precision/recall/coverage=1/1/1, Brier=0.001736 and ECE=0.013889. PASS.
-- Frozen phase Tube:
-  `runs/descent_diverse_p1_predecessor_recovery_v5_p1_core_adapter/independent_audit_v1/descent_tube.pkl`,
-  SHA-256 `4b7ba514...8beeac`. It is an independently certified phase Tube under
+- Standard frozen phase Tube v2:
+  `runs/descent_diverse_p1_predecessor_recovery_v5_p1_core_adapter/independent_audit_v1/descent_tube_v2.pkl`,
+  version `descent-compact-9d98810f9f20`, SHA-256
+  `0e204f69...ca31ed`. The first v1 serialization is preserved but superseded
+  because it retained source proposal labels in the per-record `final` field;
+  v2 writes all 576 independent branches, standard Chain/Final posteriors and
+  entry features without changing any outcome. It is an independently certified phase Tube under
   a frozen bootstrap expert, not the final shared-policy JEL. Audit labels are
   not training inputs. PPO authorization remains false.
+- Exact-only canonical Descent handoff set is
+  `canonical_descent_exact_entry_v1.pkl`, SHA-256 `c5cd06f9...74c413`.
+  Continuous matcher remains inactive; no radius was inferred from the audit.
 - Validation commits: localized probe `5fb3c65`/`dacf3b0`, compact expert
   `c08d455`/`975d62c`/`a6b4cb3`, audit `1f30148` and Warp batch repair
   `de46cc2`; full preflight 389 passed and runtime gate is PASS/current.
-- Current automatic step: derive a provenance-locked exact Descent handoff set
-  from this Tube and run the minimum Apex->Descent compatibility/coverage
-  pilot. Do not use the independent-audit labels to tune the handoff radius.
+- Current automatic step: construct a separate construction-only neighborhood
+  with safe and negative-under-current-expert records, then freeze a C_D
+  matcher before any new independent audit. Run a 2--5% pilot first; do not use
+  the completed independent-audit labels to tune the handoff radius.
 
 ## Unified Descent snapshot timing/delay audit v2 (2026-07-28)
 
