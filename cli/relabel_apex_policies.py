@@ -45,6 +45,21 @@ def state_sample(env, state, *, apex_seen: bool, previous_vz: float) -> tuple[di
     return snap, reason
 
 
+def support_diagnostic(feature, support_metadata):
+    matcher = support_metadata["stage_entry_matcher"]
+    support = np.asarray(support_metadata["support_features"], np.float64)
+    scale = np.asarray(matcher["scale"], np.float64)
+    physical = np.asarray(feature, np.float64)
+    raw = ((support - physical) / scale) ** 2
+    distances = np.sqrt(raw.sum(axis=1))
+    radii = np.asarray(matcher.get("radii", np.full(len(support), matcher["radius"])), np.float64)
+    normalized = distances / radii
+    index = int(np.argmin(normalized))
+    return {"distance": float(normalized[index]), "anchor_index": index,
+            "raw_feature_error": (physical - support[index]).tolist(),
+            "squared_scaled_contributions": (raw[index] / (radii[index] ** 2)).tolist()}
+
+
 def rollout(env, step, inference, row, support_metadata, seed: int, horizon: int, noise: float) -> dict:
     key = jax.random.PRNGKey(seed); state = restore_snapshot(env, row, key)
     previous_vz = float(np.asarray(jax.device_get(state.data.qvel[2])))
@@ -53,7 +68,7 @@ def rollout(env, step, inference, row, support_metadata, seed: int, horizon: int
     # Reset provenance is the only permitted initial latch.  A negative-vz
     # state without post-apex reference provenance is merely falling.
     apex_seen = apex_index >= reference_apex
-    best_distance = float("inf")
+    best_distance = float("inf"); best = None
     for tick in range(1, horizon + 1):
         key, ak, nk = jax.random.split(key, 3); action, _ = inference(state.obs, ak)
         if noise: action = jp.clip(action + noise * jax.random.normal(nk, action.shape), -1.0, 1.0)
@@ -62,17 +77,23 @@ def rollout(env, step, inference, row, support_metadata, seed: int, horizon: int
         apex_seen = apex_seen or previous_vz > 0.0 and vz <= 0.0
         sample, reason = state_sample(env, state, apex_seen=apex_seen, previous_vz=previous_vz)
         result = evaluate_entry("apex", sample, env._config, support_metadata)
-        best_distance = min(best_distance, float(result.get("support_distance", float("inf"))))
+        diagnostic = support_diagnostic(sample["physical_feature"], support_metadata)
+        if diagnostic["distance"] < best_distance:
+            best_distance = diagnostic["distance"]; best = {"tick": tick, **diagnostic,
+                "feature": np.asarray(sample["physical_feature"]).tolist()}
         if result["valid"]:
             return {"success": True, "time_to_entry": tick, "entry_quality": result,
                     "entry_feature": np.asarray(sample["physical_feature"]).tolist(),
-                    "termination_reason": "next_stage_entry", "minimum_support_distance": best_distance}
+                    "termination_reason": "next_stage_entry", "minimum_support_distance": best_distance,
+                    "closest_support": best}
         if float(np.asarray(jax.device_get(state.done))) > .5:
             return {"success": False, "time_to_entry": None, "entry_quality": result,
-                    "termination_reason": reason, "minimum_support_distance": best_distance}
+                    "termination_reason": reason, "minimum_support_distance": best_distance,
+                    "closest_support": best}
         previous_vz = vz
     return {"success": False, "time_to_entry": None, "entry_quality": {},
-            "termination_reason": "horizon_exhaustion", "minimum_support_distance": best_distance}
+            "termination_reason": "horizon_exhaustion", "minimum_support_distance": best_distance,
+            "closest_support": best}
 
 
 def main() -> None:
