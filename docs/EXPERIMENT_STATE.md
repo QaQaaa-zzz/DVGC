@@ -1819,3 +1819,34 @@
   no learning-rate/rehearsal repair, Apex run, Tube/JEL promotion or additional
   budget was attempted. Controller/worker/GPU are idle; watchdog timer remains
   active. Result: `runs/descent_diverse_p1_predecessor_recovery_v1/`.
+
+## Upstream stage-entry continuation and Apex blocker (2026-07-29)
+
+- The corrected Takeoff expert generated 48 parent-disjoint Ascent entries.
+  The first 6,400-step low-angular Ascent expert reached only 1/6 fixed probe
+  states, and the cumulative second block did not extend that small probe.
+  A frozen 48-state evaluation established broader support: 83/192 branches
+  reached generic Apex, with 20 positive and one boundary state over 21
+  distinct trajectory parents. The first policy is retained as the lower-drift
+  `pi_U` proposal policy; no further Ascent PPO is authorized.
+- Commit `5ff05d4` makes event-entry banks directly reusable by recording the
+  next Flight subinterval and immutable upstream provenance. The 83-state
+  artifact was normalized without modifying its physical state.
+- Frozen `pi_U` reaches the tight independently audited continuous C_D in
+  0/332 branches. Minimum normalized support distance is 302.959; terminations
+  are roll 213, pitch 93 and recovery 26. C_D hash remains
+  `1f3e7ea1...590d5f`; neither matcher nor formal Descent Tube was changed.
+- A fresh 6,400-step `pi_X` pilot and its one permitted reward-repair rerun
+  both reach C_D in 0/24 fixed branches and 0/6 states. The diagnosis found
+  the old distance potential saturated above eight radii and paid a constant
+  positive 0.04 per tick at actual distances above 300. Commit `c26b33c`
+  replaces it with bounded relative distance decrease; reward preflight,
+  targeted tests and the full runtime gate pass/current (`0ddba81`). The fix
+  removes false progress (`+0.76` to `-4.18`) but does not improve the physical
+  outcome: both evaluations terminate roll 18, pitch 4, recovery 2.
+- Classification: `APEX_TO_FORMAL_DESCENT_STAGE_CONTROLLER_BLOCKER`. Further
+  Apex PPO is unauthorized. The next bounded action is a no-training local
+  controllability/bridge screen on the new parent-disjoint Apex bank. It must
+  produce a real formal C_D entry before teacher bootstrap or Apex policy
+  expansion. The 22-state independently certified Descent Tube v4 remains
+  complete and unchanged; upstream composite/final-shared JEL is incomplete.
