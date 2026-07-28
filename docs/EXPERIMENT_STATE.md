@@ -1436,3 +1436,30 @@
   held-out was not read. Controller/worker/GPU are idle; watchdog is unchanged.
 - Result:
   `runs/v4_current_frame_independent_reconstruction_localization_v1/`.
+
+## Unified Descent timing-explicit packet-delay reaudit v1 (2026-07-28)
+
+- Started from `948fb24`; preregistration hash is `b7f70fd...3cab16`.
+  Frozen v4 snapshots, 12 corrections, 244 pair identities, pi_D,
+  normalizer, XML and action mapping passed the inherited/runtime identity
+  gates. L0 then reproduced 12/12 corrections and 24/24 packet identities;
+  all action/ctrl/packet active prefixes repeat bit-exact.
+- Local authority is L0/D1/D2/J12 = `12/8/7/9` of 12. D1 and D2 fail the
+  fixed stability gate (authority retention `0.667/0.583`, three candidate
+  layer changes each); J12 passes its fixed aggregate gate at `9/12` with two
+  layer changes. A new delayed-mode `roll_limit` failure appears.
+- Transfer successes are L0/D1/D2/J12 = `55/82/86/100` of 244. Relative to
+  L0, D1 has intersection/lost/gained/Jaccard `48/7/34/0.539`, D2
+  `39/16/47/0.382`, and J12 `48/7/52/0.449`. The increases do not imply
+  recovery: all modes have zero Chain, recovery success and Final-Recovery.
+  Landing-entry counts are `0/4/10/6`; horizon counts are `1/6/14/5`.
+- Classification: `DELAY_SENSITIVE_FEEDBACK_SUPPORT`. Evidence remains
+  provisional feedback support only; no Tube/JEL was formed. A separate
+  `pi_D_delay_aware_v1` stage is recommended because true FIFO and L0 identity
+  passed, D2 failed the preregistered gate, and Final-Recovery remains zero;
+  no policy was created here. Training/PPO/bootstrap/new-CEM are false and
+  held-out was not read.
+- Implementation/report commits: `30ef244`, `4a9b9a3`, `d754bd3`. Full local
+  preflight passed 347 tests and the dynamic runtime gate is PASS/current.
+  Controller/worker/GPU are idle; watchdog timer remains waiting. Result:
+  `runs/unified_descent_timing_explicit_packet_delay_reaudit_v1/`.
