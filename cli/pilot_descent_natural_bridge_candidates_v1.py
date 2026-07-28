@@ -30,20 +30,20 @@ def select_targeted(rows,per_region=4):
  return selected
 
 def main():
- p=argparse.ArgumentParser(description=__doc__);p.add_argument('--run',default=str(DEFAULT_RUN));p.add_argument('--tube',default=str(TUBE));p.add_argument('--target-report',default=str(NATURAL));p.add_argument('--exclude-bank',action='append',default=[str(PRIOR)]);a=p.parse_args();root=Path(a.run);tube_path=Path(a.tube);target_path=Path(a.target_report)
+ p=argparse.ArgumentParser(description=__doc__);p.add_argument('--run',default=str(DEFAULT_RUN));p.add_argument('--tube',default=str(TUBE));p.add_argument('--target-report',default=str(NATURAL));p.add_argument('--exclude-bank',action='append',default=[str(PRIOR)]);p.add_argument('--exclude-manifest',action='append',default=[]);a=p.parse_args();root=Path(a.run);tube_path=Path(a.tube);target_path=Path(a.target_report)
  if root.exists():raise SystemExit(f'refusing overwrite {root}')
  frozen={'C_L':file_sha256(C_L),'pi_D':file_sha256(PI_D/'params.pkl'),'pi_L':file_sha256(PI_L/'params.pkl')};expected={'C_L':EXPECTED['C_L'],'pi_D':EXPECTED['pi_D'],'pi_L':EXPECTED['pi_L']}
  if frozen!=expected:raise SystemExit(f'frozen scientific asset mismatch: {frozen}')
  gate=json.loads(Path('docs/RUNTIME_GATE.json').read_text())
  if gate.get('status')!='PASS' or gate.get('source_fingerprint')!=source_fingerprint(Path.cwd()):raise SystemExit('runtime gate stale')
  cfg=load_config('configs/backward_descent_rsi_pilot_v1.json',{'use_bank_resets':False,'expert_chain_termination':False,'domain_randomization':False,'obs_noise_enable':False});tube=SnapshotBank.load(tube_path)
- target=np.asarray(json.loads(target_path.read_text())['nominal']['closest']['feature'],float);features=np.asarray([r['entry_feature'] for r in tube.records],float);_,scale=robust_normalization(features,cfg.descent_entry_scale_floors);excluded={r['id'] for path in a.exclude_bank for r in SnapshotBank.load(path).records}
+ target=np.asarray(json.loads(target_path.read_text())['nominal']['closest']['feature'],float);features=np.asarray([r['entry_feature'] for r in tube.records],float);_,scale=robust_normalization(features,cfg.descent_entry_scale_floors);excluded={r['id'] for path in a.exclude_bank for r in SnapshotBank.load(path).records};excluded.update(row['proposal_id'] for path in a.exclude_manifest for row in json.loads(Path(path).read_text())['rows'])
  pool=[]
  for row in json.loads(INDEX.read_text())['rows']:
   if row['proposal_id'] in excluded:continue
   record=_load_record(row);feature=descent_entry_feature(record['physical_feature'],cfg);pool.append({**row,'target_distance':float(np.linalg.norm((feature-target)/scale))})
  selected=select_targeted(pool);root.mkdir(parents=True);artifact=pickle.loads((EXPERT/'adapter.pkl').read_bytes())
- save_json(root/'manifest.json',{'status':'FROZEN_BEFORE_OUTCOMES','target_source':str(target_path),'target_source_sha256':file_sha256(target_path),'target_feature':target.tolist(),'tube_sha256':file_sha256(tube_path),'excluded_bank_sha256':[file_sha256(path) for path in a.exclude_bank],'selection':'four nearest globally parent-distinct states per region; declared prior banks excluded','rows':[{k:r[k] for k in ('proposal_id','candidate_id','region','target_distance','physical_state_sha256')} for r in selected]})
+ save_json(root/'manifest.json',{'status':'FROZEN_BEFORE_OUTCOMES','target_source':str(target_path),'target_source_sha256':file_sha256(target_path),'target_feature':target.tolist(),'tube_sha256':file_sha256(tube_path),'excluded_bank_sha256':[file_sha256(path) for path in a.exclude_bank],'excluded_manifest_sha256':[file_sha256(path) for path in a.exclude_manifest],'selection':'four nearest globally parent-distinct states per region; all declared prior manifest proposals excluded','rows':[{k:r[k] for k in ('proposal_id','candidate_id','region','target_distance','physical_state_sha256')} for r in selected]})
  save_json(root/'cost_estimate.json',{'estimated_seconds':900,'states':12,'rollouts_per_state':'2 exact + 4 P1 micro','PPO_steps':0,'new_search':False})
  dp,_,_=load_bundle(PI_D,verify_files=True);lp,_,_=load_bundle(PI_L,verify_files=True);env=OrangeBikeDVGC(cfg,snapshot_bank=SnapshotBank(),cert_bank=SnapshotBank.load(C_L))
  adapter=compact_observation_command_adapter(jnp.asarray(artifact['prototypes']),jnp.asarray(artifact['targets']),jnp.asarray(artifact['normalizer_mean']),jnp.asarray(artifact['normalizer_std']),float(artifact['radius']),float(artifact['core_radius']))

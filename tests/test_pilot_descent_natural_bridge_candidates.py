@@ -12,4 +12,5 @@ def test_candidate_pilot_supports_nonoverwriting_expansion_inputs():
  text=Path('cli/pilot_descent_natural_bridge_candidates_v1.py').read_text()
  assert '--target-report' in text
  assert '--exclude-bank' in text
+ assert '--exclude-manifest' in text
  assert 'excluded_bank_sha256' in text
