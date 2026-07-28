@@ -26,7 +26,7 @@ MODEL = Path("runs/descent_reachability_kernel_v2/construction_parent_cv_feature
 INDEX = Path("runs/backward_recovery_tube_fast_track_v1/proposal_state_index.json")
 TUBE = Path("runs/descent_natural_bridge_candidates_v1/independent_audit_round2_round3_2x32/descent_tube_v4.pkl")
 EXPERT = Path("runs/descent_diverse_p1_predecessor_recovery_v5_p1_core_adapter")
-DEFAULT_RUN = Path("runs/descent_reachability_kernel_v2/ranked_unseen_parent_pilot_v1")
+DEFAULT_RUN = Path("runs/descent_reachability_kernel_v2/ranked_unseen_parent_pilot_v2")
 
 
 def validate_selection(ranking: dict, index_rows: list[dict], model_sha256: str) -> list[dict]:
@@ -54,7 +54,9 @@ def validate_selection(ranking: dict, index_rows: list[dict], model_sha256: str)
         for key in ("candidate_id", "region", "physical_state_sha256", "source_artifact", "source_index"):
             if row[key] != source[key]:
                 raise ValueError(f"immutable index mismatch for {row['proposal_id']}:{key}")
-        checked.append(row)
+        # The ranking intentionally stores only the acquisition fields.  The
+        # immutable index remains authoritative for graph lineage fields.
+        checked.append(source | {"reachability_score": row["reachability_score"]})
     return checked
 
 

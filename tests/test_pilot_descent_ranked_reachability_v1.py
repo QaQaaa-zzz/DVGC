@@ -10,6 +10,7 @@ def _rows():
             "proposal_id": f"p{index}", "candidate_id": f"c{index}", "region": region,
             "shell_layer": 1, "physical_state_sha256": f"h{index}",
             "source_artifact": "bank.pkl", "source_index": index, "reachability_score": 0.5,
+            "nearest_downstream_node_id": f"parent{index}",
         })
     return rows
 
@@ -21,7 +22,9 @@ def test_selection_requires_proposal_only_hash_matched_parent_disjoint_artifact(
         "formal_tube_or_matcher": False, "independent_audit_labels_used": False,
         "model_sha256": "model", "selected": rows,
     }
-    assert validate_selection(ranking, rows, "model") == rows
+    checked = validate_selection(ranking, rows, "model")
+    assert checked == rows
+    assert all(row["nearest_downstream_node_id"] for row in checked)
     bad = dict(ranking, selected=rows[:-1] + [dict(rows[-1], candidate_id="c0")])
     with pytest.raises(ValueError, match="parent-disjoint"):
         validate_selection(bad, rows, "model")
