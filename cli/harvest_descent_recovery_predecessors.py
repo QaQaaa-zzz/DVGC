@@ -229,6 +229,8 @@ def _harvest(mode):
 def _certify():
     report, index, cfg, entry, env, dparams, lparams, policy_cfg = _setup()
     proposals = pickle.loads((ROOT / "trajectory_harvested_snapshots.pkl").read_bytes())
+    for artifact_index, proposal in enumerate(proposals):
+        proposal["_artifact_index"] = artifact_index
     old_nodes = [BackwardTubeNode(**row) for row in report["nodes"]]
     old_p1 = [node for node in old_nodes if node.p1]
     counts = Counter(node.candidate_id for node in old_p1); dominant = counts.most_common(1)[0][0]
@@ -280,7 +282,7 @@ def _certify():
                 phase="descent", layer=layer, region=region, candidate_id=proposal["candidate_id"],
                 source_state_hash=proposal["physical_state_hash"],
                 physical_state={"source_artifact": str(ROOT / "trajectory_harvested_snapshots.pkl"),
-                                "source_index": proposals.index(proposal), "snapshot_sha256": canonical_hash(record)},
+                                "source_index": proposal["_artifact_index"], "snapshot_sha256": canonical_hash(record)},
                 actor_observation=np.asarray(record["actor_observation_t"]).tolist(),
                 parent_node_id=ids[nearest], parent_tube="canonical_C_L",
                 controller_type="reused_successful_controller_suffix",

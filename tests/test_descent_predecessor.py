@@ -34,3 +34,11 @@ def test_no_state_splicing_negative_gate():
     require_forward_lineage(good)
     with pytest.raises(ValueError, match="splicing"):
         require_forward_lineage(good | {"state_splicing": True})
+
+
+def test_artifact_index_is_stable_without_array_dictionary_equality():
+    proposals = [{"array": np.asarray([1., 2.])}, {"array": np.asarray([3., 4.])}]
+    for index, proposal in enumerate(proposals):
+        proposal["_artifact_index"] = index
+    proposals.reverse()
+    assert [row["_artifact_index"] for row in proposals] == [1, 0]
