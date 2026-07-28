@@ -39,6 +39,15 @@ def pilot_specs() -> list[dict]:
       for hip in (0.70, 0.85) for ratio in (0.35, 0.50)]
 
 
+def low_impulse_specs() -> list[dict]:
+    """Evidence-bounded refinement below the exhausted pilot impulse range."""
+    return [{
+        "round": "terminal_aligned_low_impulse", "hip_amplitude": hip,
+        "knee_ratio": ratio, "start_tick": start, "duration": duration,
+    } for start in (0, 3) for duration in (8, 12)
+      for hip in (0.45, 0.55, 0.65) for ratio in (0.35, 0.50)]
+
+
 def select_parent_entries(records: list[dict], count: int) -> list[dict]:
     groups = defaultdict(list)
     for row in records:
@@ -142,10 +151,12 @@ def main() -> None:
     parser.add_argument("--parents", type=int, default=4)
     parser.add_argument("--horizon", type=int, default=100)
     parser.add_argument("--config", default="configs/default.json")
-    parser.add_argument("--selection", choices=("source_round_robin", "nearest_supported"),
+    parser.add_argument("--selection", choices=("source_round_robin", "nearest_supported", "explicit"),
                         default="source_round_robin")
     parser.add_argument("--support-report")
     parser.add_argument("--exclude-manifest")
+    parser.add_argument("--parent-id", action="append", default=[])
+    parser.add_argument("--spec-profile", choices=("pilot", "low_impulse"), default="pilot")
     args = parser.parse_args()
     root = Path(args.run)
     if root.exists():
@@ -161,7 +172,16 @@ def main() -> None:
     selection_distances = None
     supported_parent_ids: set[str] = set()
     excluded_parent_ids: set[str] = set()
-    if args.selection == "nearest_supported":
+    if args.selection == "explicit":
+        requested = list(map(str, args.parent_id))
+        if len(requested) != args.parents or len(set(requested)) != args.parents:
+            raise SystemExit("explicit selection requires one unique --parent-id per parent")
+        by_parent = {str(row["trajectory_parent_id"]): row for row in entries.records}
+        missing = sorted(set(requested) - set(by_parent))
+        if missing:
+            raise SystemExit(f"explicit parent IDs not found: {missing}")
+        selected = [by_parent[parent] for parent in requested]
+    elif args.selection == "nearest_supported":
         if not args.support_report:
             raise SystemExit("--support-report is required for nearest_supported")
         support_report = json.loads(Path(args.support_report).read_text())
@@ -174,7 +194,7 @@ def main() -> None:
         )
     else:
         selected = select_parent_entries(entries.records, args.parents)
-    specs = pilot_specs()
+    specs = pilot_specs() if args.spec_profile == "pilot" else low_impulse_specs()
     center = np.asarray(terminal.metadata["normalization_center"], float)
     scale = np.asarray(terminal.metadata["normalization_scale"], float)
     target = np.asarray([[(row["physical_feature"][INDEX[name]] - center[i]) / scale[i]
@@ -189,6 +209,7 @@ def main() -> None:
     save_json(root / "manifest.json", {"status": "FROZEN_BEFORE_OUTCOMES", "inputs": inputs,
         "parents": [row["trajectory_parent_id"] for row in selected], "specs": specs,
         "selection": args.selection,
+        "spec_profile": args.spec_profile,
         "selection_distances": selection_distances,
         "supported_parent_ids": sorted(supported_parent_ids),
         "excluded_parent_ids": sorted(excluded_parent_ids),
@@ -238,7 +259,8 @@ def main() -> None:
     status = "PASS" if len(best_records) >= 2 and min(distances) < 23.214247689634647 else "FAIL"
     report = {"status": status, "head": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
         "parents": len(selected), "specs_per_parent": len(specs),
-        "selection": args.selection, "selection_distances": selection_distances,
+        "selection": args.selection, "spec_profile": args.spec_profile,
+        "selection_distances": selection_distances,
         "valid_apex_outcomes": sum(x["success"] for x in outcomes),
         "successful_parents": len(best_records), "failure_reasons": dict(Counter(x["failure_reason"] for x in outcomes if not x["success"])),
         "best_terminal_distances": distances, "best_pose_margins": [row["pose_margin"] for row in best_records],

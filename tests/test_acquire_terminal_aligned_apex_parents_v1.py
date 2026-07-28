@@ -1,7 +1,7 @@
 import numpy as np
 
 from cli.acquire_terminal_aligned_apex_parents_v1 import (
-    pilot_specs, select_nearest_supported_entries, select_parent_entries,
+    low_impulse_specs, pilot_specs, select_nearest_supported_entries, select_parent_entries,
     terminal_distance,
 )
 
@@ -12,6 +12,15 @@ def test_pilot_specs_are_bounded_unique_five_percent_grid():
     assert len({tuple(sorted(row.items())) for row in specs}) == 24
     assert len(specs) * 4 / (24 * 81) < 0.05
     assert max(row["hip_amplitude"] for row in specs) <= 0.85
+
+
+def test_low_impulse_specs_are_unique_and_do_not_repeat_pilot():
+    specs = low_impulse_specs()
+    assert len(specs) == 24
+    assert len({tuple(sorted(row.items())) for row in specs}) == 24
+    assert not ({tuple(sorted(row.items())) for row in specs}
+                & {tuple(sorted(row.items())) for row in pilot_specs()})
+    assert max(row["hip_amplitude"] for row in specs) < .70
 
 
 def test_parent_selection_balances_sources_and_is_disjoint():
