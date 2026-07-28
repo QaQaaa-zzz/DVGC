@@ -1,5 +1,38 @@
 # DVGC Experiment State
 
+## Descent Tube upstream bridge bounded audit (2026-07-28)
+
+- The independently certified compact-expert Descent Tube v2 remains frozen
+  and unchanged. A zero-training replay of eight previously saved physical
+  Apex-to-Descent bridge snapshots yielded P0/P1=0/0: all eight hit
+  `roll_limit` eight ticks after handoff and were 40.276--54.660 normalized
+  units from the new Tube. Their dominant incompatibilities were pitch, roll,
+  knee and heading, so this old lineage is not current predecessor support.
+- A fresh natural-reset, single-MJX-lineage probe used the fixed reference
+  controller before handoff and the frozen compact pi_D -> pi_L stack after
+  handoff. The nominal closest Tube distance was 7.304; seven fixed handoff
+  ticks produced at most 26 stable Descent ticks, but Landing=Final=0 and
+  termination was pitch-limit except one early Takeoff clearance failure.
+  The top natural replay was exact.
+- Four evidence-bounded local stages then ran without PPO or CEM: (1) 17
+  finite-difference plus 64 LHS residual trials, (2) an earlier
+  approach/Takeoff window, (3) a 50-point reference offset/pulse timing grid,
+  and (4) a 5-switch pose-feedback screen plus 64-point gain trust region.
+  The best timing result reached distance 7.295 with 12 stable ticks. The
+  feedback result improved pose margin from -0.07835 to -0.00251 and distance
+  from 8.214 to 7.471, but still terminated at pitch limit with no Landing.
+- A final 45-point preregistered combination of switch timing, feedback scale
+  and the prior late residual found no improvement beyond feedback alone.
+  Every selected result reproduced exactly twice from natural reset; no
+  snapshot handoff, XML/action/failure/matcher change, NaN, timeout, OOM or
+  policy update occurred.
+- Classification: `BOUNDED_NATURAL_PREDECESSOR_BRIDGE_SUPPORT_GAP`. The
+  complete phase Tube is valid, but current reference/open-loop controls do
+  not reach it from natural/Apex support. Repeating local action search is
+  closed. The next scientifically distinct action would be a bounded Apex
+  expert/RSI training pilot or a new deployable state representation; PPO
+  remains unauthorized, so neither starts automatically.
+
 ## Compact Descent matcher neighborhood (2026-07-28)
 
 - Commit `67568fe` added a geometry-only, outcome-blind 24-state expansion
