@@ -1,7 +1,8 @@
 import numpy as np
+import jax.numpy as jnp
 
 from cli.run_backward_descent_nominal_pilot import select_incremental_proposals
-from dvgc.backward_search import active_prefix_exact, backward_lexicographic_order
+from dvgc.backward_search import active_prefix_exact, backward_lexicographic_order, bounded_cem
 
 
 def test_backward_order_prioritizes_final_then_entry_not_survival():
@@ -22,3 +23,12 @@ def test_incremental_selection_skips_prior_and_honors_region_and_cap():
         ("a","early"),("a","early"),("a","early"),("a","early"),("b","middle"),("c","early")])]
     selected=select_incremental_proposals(rows,{"1"},4,"early",per_candidate_cap=2)
     assert [row["proposal_id"] for row in selected]==["0","2","5"]
+
+
+def test_bounded_cem_uses_fixed_budget_and_respects_bounds():
+    def rollout(state,knots,key):
+        count=knots.shape[0];score=jnp.sum(knots**2,axis=(1,2))
+        return {"final_recovery":jnp.zeros(count,bool),"downstream_entry":jnp.zeros(count,bool),"minimum_distance":score,"minimum_margin":-score,"survival":jnp.ones(count,jnp.int32),"end_code":jnp.zeros(count,jnp.int32)}
+    residual,summary,history=bounded_cem(rollout,lambda count:jnp.zeros(count),seed=3,samples=16,iterations=2,knot_count=2,bound=.2)
+    assert residual.shape==(2,4) and np.max(np.abs(residual))<=.2
+    assert len(history)==16 and summary["minimum_distance"]>=0
