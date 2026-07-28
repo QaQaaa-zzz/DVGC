@@ -40,18 +40,6 @@ MODES = {
 ACTION_NAMES = ("steer", "drive", "hip", "knee")
 
 
-def _stack_states(states):
-    # MJX-Warp carries explicit batch-rank metadata in contact leaves.  Every
-    # source state is therefore created by vmap with a singleton batch and is
-    # concatenated here rather than stacking an unbatched Data tree.
-    return jax.tree_util.tree_map(lambda *values: jnp.concatenate(values, axis=0), *states)
-
-
-def _take_state(state, indices):
-    indices = jnp.asarray(indices, jnp.int32)
-    return jax.tree_util.tree_map(lambda value: value[indices], state)
-
-
 def _queue(logged):
     return np.stack((causal_prior_packet(logged, 2), causal_prior_packet(logged, 1), np.asarray(logged, np.float32)))
 
@@ -69,8 +57,8 @@ def _state_and_queue(env, snapshots, mode):
             state = jax.vmap(lambda one: restore_snapshot_logged(env, record, one))(keys)
             packet = np.asarray(record["policy_state"]["actor_observation"], np.float32)
         states.append(state)
-        queues.append(_queue(packet))
-    return _stack_states(states), jnp.asarray(np.stack(queues), jnp.float32)
+        queues.append(jnp.asarray(_queue(packet)[None], jnp.float32))
+    return states, queues
 
 
 def _medoid_corrections(authority, multimodality):
@@ -85,6 +73,15 @@ def _medoid_corrections(authority, multimodality):
     return result
 
 
+def _repeat_exact(raw, repeat, position):
+    return all(np.array_equal(np.asarray(raw[key])[:, position] if key == "actions" else np.asarray(raw[key])[position],
+                              np.asarray(repeat[key])[:, position] if key == "actions" else np.asarray(repeat[key])[position]) for key in raw)
+
+
+def _combine(outputs):
+    return {key: np.concatenate([np.asarray(value[key]) for value in outputs], axis=1 if key == "actions" else 0) for key in outputs[0]}
+
+
 def _result_rows(raw, repeat, indices, baseline=None):
     rows = []
     for position, index in enumerate(indices):
@@ -96,7 +93,7 @@ def _result_rows(raw, repeat, indices, baseline=None):
             "terminal_margin": float(raw["terminal_margin"][position]),
             "end_code": code,
             "failure": END_REASON.get(code, "horizon"),
-            "repeat_bit_exact": all(np.array_equal(np.asarray(raw[key])[position], np.asarray(repeat[key])[position]) for key in raw),
+            "repeat_bit_exact": _repeat_exact(raw, repeat, position),
         }
         if baseline is not None:
             before = baseline[index]
@@ -213,7 +210,7 @@ def main():
     states = {}
     queues = {}
     rollouts = {}
-    zero = jnp.zeros((24, 2, 4), jnp.float32)
+    zero = jnp.zeros((1, 2, 4), jnp.float32)
     correction_indices = sorted(corrections)
     correction_knots = jnp.asarray(np.stack([corrections[index] for index in correction_indices]), jnp.float32)
     for mode, schedule in MODES.items():
@@ -221,16 +218,14 @@ def main():
         states[mode], queues[mode] = state, queue
         rollout = make_packet_delay_rollout(env, params, schedule)
         rollouts[mode] = rollout
-        raw = jax.device_get(rollout(state, zero, queue, jax.random.PRNGKey(11_000_000)))
-        repeat = jax.device_get(rollout(state, zero, queue, jax.random.PRNGKey(11_000_000)))
+        raw = _combine([jax.device_get(rollout(one_state, zero, one_queue, jax.random.PRNGKey(11_000_000 + index))) for index, (one_state, one_queue) in enumerate(zip(state, queue, strict=True))])
+        repeat = _combine([jax.device_get(rollout(one_state, zero, one_queue, jax.random.PRNGKey(11_000_000 + index))) for index, (one_state, one_queue) in enumerate(zip(state, queue, strict=True))])
         baseline_rows = _result_rows(raw, repeat, list(range(24)))
         baseline = {row["snapshot_index"]: row for row in baseline_rows}
-        source_state = _take_state(state, correction_indices)
-        source_queue = queue[jnp.asarray(correction_indices)]
-        corrected_raw = jax.device_get(rollout(source_state, correction_knots, source_queue, jax.random.PRNGKey(12_000_000)))
-        corrected_repeat = jax.device_get(rollout(source_state, correction_knots, source_queue, jax.random.PRNGKey(12_000_000)))
+        corrected_raw = _combine([jax.device_get(rollout(state[index], correction_knots[position:position+1], queue[index], jax.random.PRNGKey(12_000_000 + index))) for position, index in enumerate(correction_indices)])
+        corrected_repeat = _combine([jax.device_get(rollout(state[index], correction_knots[position:position+1], queue[index], jax.random.PRNGKey(12_000_000 + index))) for position, index in enumerate(correction_indices)])
         corrected_rows = _result_rows(corrected_raw, corrected_repeat, correction_indices, baseline)
-        initial_packets = np.asarray(queue)[:, 2 - int(schedule[0])]
+        initial_packets = np.stack([np.asarray(one)[0, 2 - int(schedule[0])] for one in queue])
         initial_actions = np.stack([np.asarray(actor_action(params[1], packet), np.float32) for packet in initial_packets])
         modes[mode] = {
             "delay_schedule": list(schedule),
@@ -259,18 +254,17 @@ def main():
     target_indices = [int(pair["target_snapshot_index"]) for pair in old_transfer["pairs"]]
     residuals = jnp.asarray(np.stack([source_to_residual[int(pair["source_snapshot_index"])] for pair in old_transfer["pairs"]]), jnp.float32)
     for mode in ("L0", "D1", "D2"):
-        state = _take_state(states[mode], target_indices)
-        queue = queues[mode][jnp.asarray(target_indices)]
-        raw = jax.device_get(rollouts[mode](state, residuals, queue, jax.random.PRNGKey(13_000_000)))
-        repeat = jax.device_get(rollouts[mode](state, residuals, queue, jax.random.PRNGKey(13_000_000)))
         baseline = {row["snapshot_index"]: row for row in modes[mode]["baseline"]}
         rows = []
         for position, old in enumerate(old_transfer["pairs"]):
-            target = int(old["target_snapshot_index"]); code = int(raw["end_code"][position]); failure = END_REASON.get(code, "horizon")
-            exact = all(np.array_equal(np.asarray(raw[key])[position], np.asarray(repeat[key])[position]) for key in raw)
-            gain = int(raw["survival"][position]) - baseline[target]["survival"]
+            target = int(old["target_snapshot_index"])
+            raw = jax.device_get(rollouts[mode](states[mode][target], residuals[position:position+1], queues[mode][target], jax.random.PRNGKey(13_000_000 + position)))
+            repeat = jax.device_get(rollouts[mode](states[mode][target], residuals[position:position+1], queues[mode][target], jax.random.PRNGKey(13_000_000 + position)))
+            code = int(raw["end_code"][0]); failure = END_REASON.get(code, "horizon")
+            exact = _repeat_exact(raw, repeat, 0)
+            gain = int(raw["survival"][0]) - baseline[target]["survival"]
             no_new = failure in {baseline[target]["failure"], "horizon"}
-            rows.append({key: old[key] for key in ("source_snapshot_index", "source_candidate_id", "target_snapshot_index", "target_candidate_id", "same_snapshot", "same_candidate", "source_layer", "target_layer")} | {"survival": int(raw["survival"][position]), "baseline_survival": baseline[target]["survival"], "gain": gain, "minimum_physical_margin": float(raw["minimum_margin"][position]), "failure": failure, "repeat_bit_exact": exact, "no_new_failure_type": no_new, "physical_transfer": bool(exact and gain >= 2 and no_new), "eligibility_preserved": True})
+            rows.append({key: old[key] for key in ("source_snapshot_index", "source_candidate_id", "target_snapshot_index", "target_candidate_id", "same_snapshot", "same_candidate", "source_layer", "target_layer")} | {"survival": int(raw["survival"][0]), "baseline_survival": baseline[target]["survival"], "gain": gain, "minimum_physical_margin": float(raw["minimum_margin"][0]), "failure": failure, "repeat_bit_exact": exact, "no_new_failure_type": no_new, "physical_transfer": bool(exact and gain >= 2 and no_new), "eligibility_preserved": True})
         transfers[mode] = _transfer_summary(rows, candidate_order) | {"pairs": rows, "eligible_pair_count": len(rows), "semantic_changes": 0}
     l0_authority = modes["L0"]["local_authority_pass"]
     l0_cross = transfers["L0"]["categories"]["cross_candidate"]["gain_at_least_2"]
