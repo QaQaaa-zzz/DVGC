@@ -15,6 +15,18 @@ from dvgc.stage_reachability import CANONICAL_PHASE,evaluate_entry,protocol_payl
 
 STAGE_SEED={"takeoff":9200000,"ascent":9300000,"apex":9400000,"descent":9500000,"landing":9600000}
 
+NEXT_STAGE={"takeoff":"ascent","ascent":"apex","apex":"descent","descent":"landing","landing":"stable"}
+
+def annotate_entry_snapshot(snapshot,row,stage,entry_id,controller_hash,seed,tick,quality):
+ next_stage=NEXT_STAGE[stage]
+ snapshot.update({"id":entry_id,"candidate_kind":"stage_entry_snapshot","entry_from_stage":stage,"entry_to_stage":next_stage,"trajectory_parent_id":row.get('trajectory_parent_id',row['id']),"upstream_candidate_id":row['id'],"controller_id":controller_hash,"rollout_seed":seed,"time_to_next_stage":tick,"entry_quality":quality})
+ # Ascent, Apex and Descent share the Flight oracle phase.  Keep their local
+ # stage semantic explicit so an event bank can be consumed directly by the
+ # next stage without rewriting or guessing from physical state.
+ if next_stage in ("ascent","apex","descent"):
+  snapshot["flight_subinterval"]=next_stage
+ return snapshot
+
 def terminal_is_physical_failure(terminated,end_reason):
  return bool(terminated and end_reason not in ("recovery","chain_entry","next_stage_entry"))
 
@@ -77,7 +89,8 @@ def main():
     for branch in range(a.branches):
      seed=STAGE_SEED[stage]+policy_index*1_000_000+i*100+branch;success,tick,snapshot,quality,reason=run_branch(env,step,inference,row,stage,seed,a.horizon,a.action_noise,support_metadata);successes+=int(success);terminal[f'{stage}:{reason}']+=1;entry_id=None;controller_hash=file_sha256(Path(policy)/'params.pkl')
      if snapshot is not None:
-      entry_id=hashlib.sha256(f'{stage}:{row["id"]}:{seed}:{tick}'.encode()).hexdigest()[:32];snapshot.update({"id":entry_id,"candidate_kind":"stage_entry_snapshot","entry_from_stage":stage,"entry_to_stage":{"takeoff":"ascent","ascent":"apex","apex":"descent","descent":"landing","landing":"stable"}[stage],"trajectory_parent_id":row.get('trajectory_parent_id',row['id']),"controller_id":controller_hash,"rollout_seed":seed,"time_to_next_stage":tick,"entry_quality":quality});entries.append(snapshot)
+      entry_id=hashlib.sha256(f'{stage}:{row["id"]}:{seed}:{tick}'.encode()).hexdigest()[:32]
+      annotate_entry_snapshot(snapshot,row,stage,entry_id,controller_hash,seed,tick,quality);entries.append(snapshot)
      branch_records.append({"branch_index":branch,"seed":seed,"controller_id":controller_hash,"success":success,"time_to_next_stage":tick,"entry_snapshot_id":entry_id,"entry_quality":quality,"failure_reason":None if success else reason})
    label=reachability_label(stage=stage,successes=successes,branches=len(branch_records),branch_records=branch_records,controller_bank_exhausted=True);label.update({"candidate_id":row['id'],"candidate_kind":row.get("candidate_kind"),"state_byte_hash":hashlib.sha256(b''.join(np.ascontiguousarray(np.asarray(row[k],np.float32)).tobytes() for k in ('qpos','qvel','ctrl','qacc_warmstart'))).hexdigest(),"controller_bank":[file_sha256(Path(policy)/'params.pkl') for policy in policies],"reference_index":row.get('reference_index'),"trajectory_parent":row.get('trajectory_parent_id',row.get('parent_candidate_id'))});labels.append(label)
  entry_bank=SnapshotBank(entries,{"artifact_role":"proposal_support_set_stage_entry_snapshots","protocol_sha256":protocol['protocol_sha256'],"not_certified_tube":True});entry_bank.save(a.entry_bank)
