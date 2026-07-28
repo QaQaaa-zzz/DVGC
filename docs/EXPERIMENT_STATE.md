@@ -1412,3 +1412,27 @@
   No training, CEM, PPO, bootstrap, Landing retention or Tube/JEL promotion
   occurred. Controller/worker are stopped; watchdog timer remains waiting.
 - Result: `runs/timing_explicit_snapshot_schema_v4_and_delay_reaudit_v1/`.
+
+## V4 current-frame independent reconstruction localization v1 (2026-07-28)
+
+- Starting at `0be383f`, fieldwise localization found all nine mismatches in
+  the single field `task_distance_to_front` (frame index 18), each exactly one
+  float32 ULP (`7.45058e-09`). The other 831/840 values were already exact.
+- All causal inputs and `(step_front_x - qpos_x)` were bit-exact. The first
+  divergence was context-dependent lowering of division by `3.0`: fused online
+  step matched explicit float32 reciprocal multiplication, while independent
+  restore matched strict materialized float32 division. Classification:
+  `DTYPE_DEVICE_OPERATION_ORDER_NUMERICAL_LINEAGE`.
+- Commit `10baf34` makes the shared canonical producer use explicit float32
+  scaling and prevents independent restore from copying logged frame/actor
+  sidecars. No causal state or schema extension was required; no estimator
+  pre/post mix or duplicated producer existed.
+- Targeted tests passed 57, full local preflight passed 347, and dynamic
+  runtime gate is PASS/current (`ce28878...b914d`). Full natural-lineage
+  recapture now passes 24/24 snapshots and 840/840 frame dimensions.
+- Classification: `V4_RECAPTURE_IDENTITY_GATE_PASS`. A later independent run
+  may inherit correction/pair identity, but this run did not load or execute
+  them and did not run L0/D1/D2/J12. Training/PPO/bootstrap/CEM remain false;
+  held-out was not read. Controller/worker/GPU are idle; watchdog is unchanged.
+- Result:
+  `runs/v4_current_frame_independent_reconstruction_localization_v1/`.
