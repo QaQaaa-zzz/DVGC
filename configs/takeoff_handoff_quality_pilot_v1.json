@@ -1,0 +1,9 @@
+{
+  "training_stage": "takeoff",
+  "stage_reachability_objective": "takeoff_to_ascent",
+  "stage_takeoff_handoff_quality_coeff": 1.0,
+  "stage_curriculum_scale": 0.0,
+  "use_bank_resets": true,
+  "domain_randomization": false,
+  "obs_noise_enable": false
+}
