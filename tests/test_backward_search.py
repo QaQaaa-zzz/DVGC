@@ -2,6 +2,7 @@ import numpy as np
 import jax.numpy as jnp
 
 from cli.run_backward_descent_nominal_pilot import select_incremental_proposals
+from cli.run_backward_descent_cem_pilot import select_unresolved_for_cem
 from dvgc.backward_search import active_prefix_exact, backward_lexicographic_order, bounded_cem, mask_pre_handoff_residual
 
 
@@ -38,3 +39,11 @@ def test_residual_mask_broadcasts_per_batch_row():
     knot=jnp.arange(12,dtype=jnp.float32).reshape(3,4)
     masked=mask_pre_handoff_residual(knot,jnp.asarray([False,True,False]),jnp.asarray([True,True,False]))
     np.testing.assert_array_equal(masked,np.vstack([np.arange(4),np.zeros(4),np.zeros(4)]))
+
+
+def test_cem_selection_never_retries_attempted_or_p0_proposals():
+    def row(identifier,controller,p0,distance,region="middle"):
+        return {"proposal":{"proposal_id":identifier,"region":region},"controller":controller,"P0":{"pass":p0},"repeats":[{"minimum_distance":distance}]}
+    rows=[row("a","frozen_pi_D_nominal_L0",False,2),row("a","bounded_residual_cem_64x5_h8",False,1),row("b","frozen_pi_D_nominal_L0",True,.1),row("c","frozen_pi_D_nominal_L0",False,3),row("d","frozen_pi_D_nominal_L0",False,1,"early")]
+    assert [x["proposal"]["proposal_id"] for x in select_unresolved_for_cem(rows,3)]==["d","c"]
+    assert [x["proposal"]["proposal_id"] for x in select_unresolved_for_cem(rows,3,"middle")]==["c"]

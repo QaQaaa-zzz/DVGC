@@ -27,10 +27,22 @@ from dvgc.policy import load_bundle
 from dvgc.runtime import save_json
 
 
+def select_unresolved_for_cem(rows, limit, region=None):
+    attempted={row["proposal"]["proposal_id"] for row in rows if row.get("controller","").startswith("bounded_residual_cem")}
+    passed={row["proposal"]["proposal_id"] for row in rows if row["P0"]["pass"]}
+    unique={}
+    for row in rows:
+        proposal=row["proposal"];identifier=proposal["proposal_id"]
+        if identifier in attempted or identifier in passed or (region and proposal["region"]!=region):continue
+        if row.get("controller")!="frozen_pi_D_nominal_L0":continue
+        unique.setdefault(identifier,row)
+    return sorted(unique.values(),key=lambda row:row["repeats"][0]["minimum_distance"])[:limit]
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run",required=True);parser.add_argument("--prior-report",required=True)
-    parser.add_argument("--limit",type=int,default=3);args=parser.parse_args()
+    parser.add_argument("--limit",type=int,default=3);parser.add_argument("--region",choices=("early","middle","late"));args=parser.parse_args()
     root=Path(args.run);root.mkdir(parents=True,exist_ok=True)
     if file_sha256(C_L)!=EXPECTED["C_L"] or file_sha256(PI_D/"params.pkl")!=EXPECTED["pi_D"] or file_sha256(PI_L/"params.pkl")!=EXPECTED["pi_L"]:raise SystemExit("frozen asset mismatch")
     dparams,dcfg,_=load_bundle(PI_D,verify_files=True);lparams,_,_=load_bundle(PI_L,verify_files=True)
@@ -41,8 +53,7 @@ def main():
     entry=SnapshotBank.load(C_L);env=OrangeBikeDVGC(cfg,snapshot_bank=SnapshotBank(),cert_bank=entry)
     rollout=make_descent_landing_rollout(env,dparams,lparams,horizon=200,residual_ticks=8)
     prior=json.loads(Path(args.prior_report).read_text());rows=list(prior["rows"]);nodes=list(prior["nodes"])
-    unresolved=[row for row in prior["rows"] if row["proposal"]["region"]=="early" and not row["P0"]["pass"]]
-    selected=sorted(unresolved,key=lambda row:row["repeats"][0]["minimum_distance"])[:args.limit]
+    selected=select_unresolved_for_cem(prior["rows"],args.limit,args.region)
     searches=[]
     for position,row in enumerate(selected):
         proposal=row["proposal"];record=_load_record(proposal);seed=42_000_000+position
@@ -64,7 +75,7 @@ def main():
         save_json(root/"descent_cem_pilot.partial.json",{"completed":position+1,"total":len(selected),"new_P0":sum(x["P0"]["pass"] for x in searches),"new_P1":sum(x["P1"]["pass"] for x in searches)})
     typed=[BackwardTubeNode(**node) for node in nodes];safe_ids={row["id"] for row in entry.records if row["final"]["label"]=="safe"}
     lineage=validate_parent_lineage(typed,safe_ids);gate_result=tube_gate(typed)
-    report={"status":"PASS","artifact_role":"nominal_provisional_tube_construction_cem_pilot","tier":{"samples":64,"iterations":5,"horizon_ticks":8,"bound":.2},"searched":len(searches),"new_P0":sum(x["P0"]["pass"] for x in searches),"new_P1":sum(x["P1"]["pass"] for x in searches),"total_P0":sum(x["P0"]["pass"] for x in rows),"total_P1":sum(x["P1"]["pass"] for x in rows),**summarize_tube_nodes(typed),"lineage":lineage,"RSI_start_gate":gate_result,"searches":searches,"rows":rows,"nodes":nodes,"heldout_used":False,"delay":False,"new_CEM":True,"PPO":False,"provenance":{"prior_report":args.prior_report,"C_L":EXPECTED["C_L"],"pi_D":EXPECTED["pi_D"],"pi_L":EXPECTED["pi_L"],"xml":EXPECTED["xml"]}}
+    report={"status":"PASS","artifact_role":"nominal_provisional_tube_construction_cem_pilot","tier":{"samples":64,"iterations":5,"horizon_ticks":8,"bound":.2},"region_filter":args.region,"searched":len(searches),"new_P0":sum(x["P0"]["pass"] for x in searches),"new_P1":sum(x["P1"]["pass"] for x in searches),"total_P0":sum(x["P0"]["pass"] for x in rows),"total_P1":sum(x["P1"]["pass"] for x in rows),**summarize_tube_nodes(typed),"lineage":lineage,"RSI_start_gate":gate_result,"searches":searches,"rows":rows,"nodes":nodes,"heldout_used":False,"delay":False,"new_CEM":True,"PPO":False,"provenance":{"prior_report":args.prior_report,"C_L":EXPECTED["C_L"],"pi_D":EXPECTED["pi_D"],"pi_L":EXPECTED["pi_L"],"xml":EXPECTED["xml"]}}
     save_json(root/"descent_cem_pilot_report.json",report);save_json(root/"descent_cem_pilot.completed.json",{"status":"PASS","new_P0":report["new_P0"],"new_P1":report["new_P1"],"RSI_start_gate":gate_result["status"]})
     print(json.dumps({key:report[key] for key in ("searched","new_P0","new_P1","total_P0","total_P1","candidate_coverage","layer_coverage","region_coverage")}|{"gate":gate_result["status"]},indent=2))
 
