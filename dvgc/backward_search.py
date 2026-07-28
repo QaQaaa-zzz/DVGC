@@ -81,7 +81,8 @@ def backward_lexicographic_order(result: dict[str,np.ndarray]) -> np.ndarray:
 
 def bounded_cem(rollout: Callable, state_factory: Callable[[int],Any], *, seed: int,
                 samples: int, iterations: int, knot_count: int, bound: float = .2,
-                warm_start: np.ndarray | None = None) -> tuple[np.ndarray,dict,list[dict]]:
+                warm_start: np.ndarray | None = None,
+                evaluation_batch_size: int | None = None) -> tuple[np.ndarray,dict,list[dict]]:
     """Fixed-budget CEM whose ordering is Final -> downstream entry -> distance."""
     rng=np.random.default_rng(seed)
     mean=np.zeros((knot_count,4),np.float32) if warm_start is None else np.asarray(warm_start,np.float32).reshape(knot_count,4).copy()
@@ -89,7 +90,12 @@ def bounded_cem(rollout: Callable, state_factory: Callable[[int],Any], *, seed: 
     for generation in range(iterations):
         knots=np.clip(rng.normal(mean,std,size=(samples,knot_count,4)),-bound,bound).astype(np.float32)
         if generation==0 and warm_start is not None: knots[0]=mean
-        raw=jax.device_get(rollout(state_factory(samples),jnp.asarray(knots),jax.random.PRNGKey(seed+generation)))
+        batch_size=samples if evaluation_batch_size is None else min(samples,evaluation_batch_size)
+        parts=[]
+        for start in range(0,samples,batch_size):
+            stop=min(samples,start+batch_size)
+            parts.append(jax.device_get(rollout(state_factory(stop-start),jnp.asarray(knots[start:stop]),jax.random.PRNGKey(seed+generation))))
+        raw={key:np.concatenate([part[key] for part in parts],axis=1 if key in {"actions","active_mask","phase_trace"} else 0) for key in parts[0]}
         order=backward_lexicographic_order(raw);elite=knots[order[:elite_count]];mean=elite.mean(0);std=np.maximum(elite.std(0),bound*.02)
         for index in order[:min(8,len(order))]:
             history.append({"generation":generation,"sample":int(index),"final_recovery":bool(raw["final_recovery"][index]),"downstream_entry":bool(raw["downstream_entry"][index]),"minimum_distance":float(raw["minimum_distance"][index]),"minimum_margin":float(raw["minimum_margin"][index]),"survival":int(raw["survival"][index]),"end_code":int(raw["end_code"][index])})

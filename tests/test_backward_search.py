@@ -47,3 +47,9 @@ def test_cem_selection_never_retries_attempted_or_p0_proposals():
     rows=[row("a","frozen_pi_D_nominal_L0",False,2),row("a","bounded_residual_cem_64x5_h8",False,1),row("b","frozen_pi_D_nominal_L0",True,.1),row("c","frozen_pi_D_nominal_L0",False,3),row("d","frozen_pi_D_nominal_L0",False,1,"early")]
     assert [x["proposal"]["proposal_id"] for x in select_unresolved_for_cem(rows,3)]==["d","c"]
     assert [x["proposal"]["proposal_id"] for x in select_unresolved_for_cem(rows,3,"middle")]==["c"]
+
+
+def test_second_tier_selects_only_failed_first_tier_once():
+    def row(identifier,controller,p0,distance):return {"proposal":{"proposal_id":identifier,"region":"middle"},"controller":controller,"P0":{"pass":p0},"repeats":[{"minimum_distance":distance}]}
+    rows=[row("a","frozen_pi_D_nominal_L0",False,3),row("a","bounded_residual_cem_64x5_h8",False,1),row("b","bounded_residual_cem_64x5_h8",True,.1),row("c","bounded_residual_cem_64x5_h8",False,2),row("c","bounded_residual_cem_128x6_h12",False,1)]
+    assert [x["proposal"]["proposal_id"] for x in select_unresolved_for_cem(rows,4,tier="second")]==["a"]

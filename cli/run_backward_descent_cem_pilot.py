@@ -27,14 +27,18 @@ from dvgc.policy import load_bundle
 from dvgc.runtime import save_json
 
 
-def select_unresolved_for_cem(rows, limit, region=None):
-    attempted={row["proposal"]["proposal_id"] for row in rows if row.get("controller","").startswith("bounded_residual_cem")}
+def select_unresolved_for_cem(rows, limit, region=None, tier="first"):
+    attempted_first={row["proposal"]["proposal_id"] for row in rows if row.get("controller","").startswith("bounded_residual_cem")}
+    attempted_second={row["proposal"]["proposal_id"] for row in rows if "128x6" in row.get("controller","")}
     passed={row["proposal"]["proposal_id"] for row in rows if row["P0"]["pass"]}
     unique={}
     for row in rows:
         proposal=row["proposal"];identifier=proposal["proposal_id"]
-        if identifier in attempted or identifier in passed or (region and proposal["region"]!=region):continue
-        if row.get("controller")!="frozen_pi_D_nominal_L0":continue
+        if identifier in passed or (region and proposal["region"]!=region):continue
+        if tier=="first":
+            if identifier in attempted_first or row.get("controller")!="frozen_pi_D_nominal_L0":continue
+        else:
+            if identifier in attempted_second or "64x5" not in row.get("controller","") or row["P0"]["pass"]:continue
         unique.setdefault(identifier,row)
     return sorted(unique.values(),key=lambda row:row["repeats"][0]["minimum_distance"])[:limit]
 
@@ -42,7 +46,7 @@ def select_unresolved_for_cem(rows, limit, region=None):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run",required=True);parser.add_argument("--prior-report",required=True)
-    parser.add_argument("--limit",type=int,default=3);parser.add_argument("--region",choices=("early","middle","late"));args=parser.parse_args()
+    parser.add_argument("--limit",type=int,default=3);parser.add_argument("--region",choices=("early","middle","late"));parser.add_argument("--tier",choices=("first","second"),default="first");args=parser.parse_args()
     root=Path(args.run);root.mkdir(parents=True,exist_ok=True)
     if file_sha256(C_L)!=EXPECTED["C_L"] or file_sha256(PI_D/"params.pkl")!=EXPECTED["pi_D"] or file_sha256(PI_L/"params.pkl")!=EXPECTED["pi_L"]:raise SystemExit("frozen asset mismatch")
     dparams,dcfg,_=load_bundle(PI_D,verify_files=True);lparams,_,_=load_bundle(PI_L,verify_files=True)
@@ -51,14 +55,16 @@ def main():
     gate=json.loads((root.parent/"RUNTIME_GATE.json").read_text())
     if gate.get("status")!="PASS" or gate.get("source_fingerprint")!=source_fingerprint(Path.cwd()):raise SystemExit("runtime gate stale")
     entry=SnapshotBank.load(C_L);env=OrangeBikeDVGC(cfg,snapshot_bank=SnapshotBank(),cert_bank=entry)
-    rollout=make_descent_landing_rollout(env,dparams,lparams,horizon=200,residual_ticks=8)
+    samples,iterations,residual_ticks,knot_count=(64,5,8,2) if args.tier=="first" else (128,6,12,3)
+    controller_name=f"bounded_residual_cem_{samples}x{iterations}_h{residual_ticks}"
+    rollout=make_descent_landing_rollout(env,dparams,lparams,horizon=200,residual_ticks=residual_ticks)
     prior=json.loads(Path(args.prior_report).read_text());rows=list(prior["rows"]);nodes=list(prior["nodes"])
-    selected=select_unresolved_for_cem(prior["rows"],args.limit,args.region)
+    selected=select_unresolved_for_cem(prior["rows"],args.limit,args.region,args.tier)
     searches=[]
     for position,row in enumerate(selected):
         proposal=row["proposal"];record=_load_record(proposal);seed=42_000_000+position
         factory=lambda count,record=record,seed=seed:_batched(env,record,count,seed)
-        residual,best,history=bounded_cem(rollout,factory,seed=seed,samples=64,iterations=5,knot_count=2,bound=.2)
+        residual,best,history=bounded_cem(rollout,factory,seed=seed,samples=samples,iterations=iterations,knot_count=knot_count,bound=.2,evaluation_batch_size=64)
         state=_batched(env,record,1,seed);commands=jnp.asarray(residual[None])
         first=jax.device_get(rollout(state,commands,jax.random.PRNGKey(seed+500)))
         second=jax.device_get(rollout(state,commands,jax.random.PRNGKey(seed+500)))
@@ -69,13 +75,13 @@ def main():
             micro=_micro_states(env,record,seed+1000);branch_raw=jax.device_get(rollout(micro,jnp.repeat(commands,4,axis=0),jax.random.PRNGKey(seed+2000)))
             branches=[_outcome(branch_raw,i)|{"perturbation_vx_vz":PERTURBATIONS[i].tolist()} for i in range(4)]
             p1=p1_decision(p0,branches,repeats[0]["failure_type"])
-            node=BackwardTubeNode(node_id=hashlib.sha256(f"descent:{proposal['physical_state_sha256']}:{residual.tobytes().hex()}".encode()).hexdigest()[:32],phase="descent",layer=int(proposal["shell_layer"]),region=proposal["region"],candidate_id=proposal["candidate_id"],source_state_hash=proposal["physical_state_sha256"],physical_state={"source_artifact":proposal["source_artifact"],"source_index":proposal["source_index"],"snapshot_sha256":proposal["snapshot_sha256"]},actor_observation=np.asarray(state.obs["state"])[0].tolist(),parent_node_id=proposal["nearest_downstream_node_id"],parent_tube="canonical_C_L",controller_type="bounded_residual_cem_64x5_h8",controller_artifact_sha256=canonical_hash({"residual":residual.tolist(),"pi_D":EXPECTED["pi_D"],"pi_L":EXPECTED["pi_L"]}),entry_tick=repeats[0]["downstream_entry_tick"],downstream_entry_state={"qpos":np.asarray(first["entry_qpos"])[0].tolist(),"qvel":np.asarray(first["entry_qvel"])[0].tolist(),"nearest_C_L_node_id":proposal["nearest_downstream_node_id"]},final_recovery=True,p0=True,p1=bool(p1["pass"]),branch_results=tuple(branches),nearest_neighbor_radius=0.0,provenance_hashes={"xml":EXPECTED["xml"],"C_L":EXPECTED["C_L"],"pi_D":EXPECTED["pi_D"],"pi_L":EXPECTED["pi_L"]});node.validate();nodes.append(node.to_dict())
-        result={"proposal":proposal,"controller":"bounded_residual_cem_64x5_h8","residual_knots":residual.tolist(),"search_best":best,"search_history":history,"repeats":repeats,"P0":p0,"micro_branches":branches,"P1":p1}
+            node=BackwardTubeNode(node_id=hashlib.sha256(f"descent:{proposal['physical_state_sha256']}:{residual.tobytes().hex()}".encode()).hexdigest()[:32],phase="descent",layer=int(proposal["shell_layer"]),region=proposal["region"],candidate_id=proposal["candidate_id"],source_state_hash=proposal["physical_state_sha256"],physical_state={"source_artifact":proposal["source_artifact"],"source_index":proposal["source_index"],"snapshot_sha256":proposal["snapshot_sha256"]},actor_observation=np.asarray(state.obs["state"])[0].tolist(),parent_node_id=proposal["nearest_downstream_node_id"],parent_tube="canonical_C_L",controller_type=controller_name,controller_artifact_sha256=canonical_hash({"residual":residual.tolist(),"pi_D":EXPECTED["pi_D"],"pi_L":EXPECTED["pi_L"]}),entry_tick=repeats[0]["downstream_entry_tick"],downstream_entry_state={"qpos":np.asarray(first["entry_qpos"])[0].tolist(),"qvel":np.asarray(first["entry_qvel"])[0].tolist(),"nearest_C_L_node_id":proposal["nearest_downstream_node_id"]},final_recovery=True,p0=True,p1=bool(p1["pass"]),branch_results=tuple(branches),nearest_neighbor_radius=0.0,provenance_hashes={"xml":EXPECTED["xml"],"C_L":EXPECTED["C_L"],"pi_D":EXPECTED["pi_D"],"pi_L":EXPECTED["pi_L"]});node.validate();nodes.append(node.to_dict())
+        result={"proposal":proposal,"controller":controller_name,"residual_knots":residual.tolist(),"search_best":best,"search_history":history,"repeats":repeats,"P0":p0,"micro_branches":branches,"P1":p1}
         rows.append(result);searches.append(result)
         save_json(root/"descent_cem_pilot.partial.json",{"completed":position+1,"total":len(selected),"new_P0":sum(x["P0"]["pass"] for x in searches),"new_P1":sum(x["P1"]["pass"] for x in searches)})
     typed=[BackwardTubeNode(**node) for node in nodes];safe_ids={row["id"] for row in entry.records if row["final"]["label"]=="safe"}
     lineage=validate_parent_lineage(typed,safe_ids);gate_result=tube_gate(typed)
-    report={"status":"PASS","artifact_role":"nominal_provisional_tube_construction_cem_pilot","tier":{"samples":64,"iterations":5,"horizon_ticks":8,"bound":.2},"region_filter":args.region,"searched":len(searches),"new_P0":sum(x["P0"]["pass"] for x in searches),"new_P1":sum(x["P1"]["pass"] for x in searches),"total_P0":sum(x["P0"]["pass"] for x in rows),"total_P1":sum(x["P1"]["pass"] for x in rows),**summarize_tube_nodes(typed),"lineage":lineage,"RSI_start_gate":gate_result,"searches":searches,"rows":rows,"nodes":nodes,"heldout_used":False,"delay":False,"new_CEM":True,"PPO":False,"provenance":{"prior_report":args.prior_report,"C_L":EXPECTED["C_L"],"pi_D":EXPECTED["pi_D"],"pi_L":EXPECTED["pi_L"],"xml":EXPECTED["xml"]}}
+    report={"status":"PASS","artifact_role":"nominal_provisional_tube_construction_cem_pilot","tier":{"name":args.tier,"samples":samples,"iterations":iterations,"horizon_ticks":residual_ticks,"bound":.2,"evaluation_batch_size":64},"region_filter":args.region,"searched":len(searches),"new_P0":sum(x["P0"]["pass"] for x in searches),"new_P1":sum(x["P1"]["pass"] for x in searches),"total_P0":sum(x["P0"]["pass"] for x in rows),"total_P1":sum(x["P1"]["pass"] for x in rows),**summarize_tube_nodes(typed),"lineage":lineage,"RSI_start_gate":gate_result,"searches":searches,"rows":rows,"nodes":nodes,"heldout_used":False,"delay":False,"new_CEM":True,"PPO":False,"provenance":{"prior_report":args.prior_report,"C_L":EXPECTED["C_L"],"pi_D":EXPECTED["pi_D"],"pi_L":EXPECTED["pi_L"],"xml":EXPECTED["xml"]}}
     save_json(root/"descent_cem_pilot_report.json",report);save_json(root/"descent_cem_pilot.completed.json",{"status":"PASS","new_P0":report["new_P0"],"new_P1":report["new_P1"],"RSI_start_gate":gate_result["status"]})
     print(json.dumps({key:report[key] for key in ("searched","new_P0","new_P1","total_P0","total_P1","candidate_coverage","layer_coverage","region_coverage")}|{"gate":gate_result["status"]},indent=2))
 
