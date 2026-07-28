@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse,copy,json,pickle,subprocess
 from pathlib import Path
 import jax.numpy as jnp,numpy as np
-from cli.run_backward_descent_nominal_pilot import C_L,PI_D,PI_L,_load_record
+from cli.run_backward_descent_nominal_pilot import C_L,EXPECTED,PI_D,PI_L,_load_record
 from cli.run_backward_descent_rsi_pilot import certify_policy
 from cli.runtime_gate import source_fingerprint
 from dvgc.backward_search import compact_observation_command_adapter
