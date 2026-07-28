@@ -37,7 +37,15 @@ def _actions():
         (.18, .18), (-.18, -.18), (.18, -.18), (-.18, .18),
         (.32, .12), (-.32, -.12), (.12, .32), (-.12, -.32),
     )
-    return [jp.asarray([0., 0., hip, knee], jp.float32) for hip, knee in pairs]
+    joint = [jp.asarray([0., 0., hip, knee], jp.float32) for hip, knee in pairs]
+    chassis = [
+        jp.asarray([steer, drive, 0., 0.], jp.float32)
+        for steer, drive in (
+            (.15, 0.), (-.15, 0.), (0., .25), (0., -.25),
+            (.15, .25), (.15, -.25), (-.15, .25), (-.15, -.25),
+        )
+    ]
+    return joint + chassis
 
 
 def _bridge_has_no_physical_failure(row):
@@ -100,8 +108,13 @@ def _state_score(
         and np.linalg.norm(feature[9:12]) < 4.
     )
     stable = bool(apex and feature[8] < -.05 and pose_ok and not done)
-    target_distance = _terminal_distance(
-        feature, terminal_target, terminal_center, terminal_scale
+    # The formal interface is defined by the immutable full 16-D C_D matcher.
+    # Earlier terminal-cluster features omitted wheel speed, yaw and steering,
+    # which can rank an action highly while moving away from formal support.
+    target_distance = (
+        float(entry["support_distance"])
+        if entry.get("support_distance") is not None
+        else _terminal_distance(feature, terminal_target, terminal_center, terminal_scale)
     )
     pose_cost = (
         (feature[3] / np.deg2rad(35.)) ** 2

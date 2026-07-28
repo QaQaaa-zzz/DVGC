@@ -135,3 +135,14 @@ def test_controller_routes_through_feedback_bridge_before_any_apex_ppo():
     positions = [text.index(f'elif stage == "{stage}"') for stage in order]
     assert positions == sorted(positions)
     assert '"gate_c_apex_ppo_authorized": False' in text
+
+
+def test_feedback_bridge_scores_full_formal_support_and_all_actuator_groups():
+    from cli.discover_apex_feedback_bridge import _actions
+
+    actions = [tuple(float(x) for x in action) for action in _actions()]
+    assert any(abs(a[0]) > 0 for a in actions)
+    assert any(abs(a[1]) > 0 for a in actions)
+    assert any(abs(a[2]) > 0 or abs(a[3]) > 0 for a in actions)
+    text = Path("cli/discover_apex_feedback_bridge.py").read_text()
+    assert 'entry["support_distance"]' in text
