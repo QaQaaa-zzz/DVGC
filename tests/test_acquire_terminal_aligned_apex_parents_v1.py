@@ -1,7 +1,8 @@
 import numpy as np
 
 from cli.acquire_terminal_aligned_apex_parents_v1 import (
-    low_impulse_specs, micro_impulse_specs, pilot_specs,
+    feedback_specs, low_impulse_specs, micro_impulse_specs, pilot_specs,
+    proposal_action,
     select_nearest_supported_entries, select_parent_entries,
     terminal_distance,
 )
@@ -30,6 +31,19 @@ def test_micro_impulse_specs_are_unique_and_below_low_impulse_range():
     assert len({tuple(sorted(row.items())) for row in specs}) == 24
     assert max(row["hip_amplitude"] for row in specs) < .45
     assert max(row["duration"] for row in specs) < 8
+
+
+def test_feedback_specs_are_bounded_and_pitch_rate_correcting():
+    specs = feedback_specs()
+    assert len(specs) == 16
+    feature = np.zeros(16)
+    feature[8], feature[10] = 1.0, 20.0
+    positive = np.asarray(proposal_action(specs[0], 0, feature))
+    feature[8], feature[10] = -1.0, -20.0
+    negative = np.asarray(proposal_action(specs[0], 0, feature))
+    assert 0 < positive[2] <= .8
+    assert -.8 <= negative[2] < 0
+    assert abs(positive[3]) <= .8 and abs(negative[3]) <= .8
 
 
 def test_parent_selection_balances_sources_and_is_disjoint():

@@ -57,6 +57,27 @@ def micro_impulse_specs() -> list[dict]:
       for hip in (0.10, 0.20, 0.30) for ratio in (0.35, 0.70)]
 
 
+def feedback_specs() -> list[dict]:
+    """Low-dimensional pitch-rate/vertical-speed feedback screening."""
+    return [{
+        "round": "terminal_aligned_feedback", "controller_kind": "feedback",
+        "wy_gain": wy_gain, "vz_gain": vz_gain, "bias": bias,
+        "knee_ratio": ratio, "action_limit": .8,
+    } for wy_gain in (.01, .02) for vz_gain in (.05, .10)
+      for bias in (0., .10) for ratio in (.35, .70)]
+
+
+def proposal_action(spec: dict, tick: int, feature: np.ndarray) -> jax.Array:
+    if spec.get("controller_kind") != "feedback":
+        return _local_action(spec, tick)
+    hip = (float(spec["bias"]) + float(spec["wy_gain"]) * float(feature[10])
+           + float(spec["vz_gain"]) * (float(feature[8]) - .25))
+    limit = float(spec["action_limit"])
+    hip = float(np.clip(hip, -limit, limit))
+    knee = float(np.clip(hip * float(spec["knee_ratio"]), -limit, limit))
+    return jax.numpy.asarray([0., 0., hip, knee], jax.numpy.float32)
+
+
 def select_parent_entries(records: list[dict], count: int) -> list[dict]:
     groups = defaultdict(list)
     for row in records:
@@ -119,12 +140,14 @@ def terminal_distance(feature: np.ndarray, target: np.ndarray, center: np.ndarra
 def run_spec(env, step, row, spec, seed, target, center, scale, horizon):
     state = restore_snapshot(env, row, jax.random.PRNGKey(seed))
     previous_vz = float(np.asarray(state.data.qvel[2]))
+    feedback_feature = np.asarray(row["physical_feature"], float)
     minimum_residual = float("inf")
     for tick in range(horizon):
-        action = _local_action(spec, tick)
+        action = proposal_action(spec, tick, feedback_feature)
         state = step(state, action)
         sample = sample_from_state(env, state, previous_vz)
         feature = np.asarray(sample["physical_feature"], float)
+        feedback_feature = feature
         entry = evaluate_entry("ascent", sample, env._config)
         minimum_residual = min(minimum_residual, abs(feature[8]) + max(0., .4015-feature[2]) + max(0., feature[2]-.7015))
         if entry["valid"]:
@@ -165,7 +188,7 @@ def main() -> None:
     parser.add_argument("--support-report")
     parser.add_argument("--exclude-manifest")
     parser.add_argument("--parent-id", action="append", default=[])
-    parser.add_argument("--spec-profile", choices=("pilot", "low_impulse", "micro_impulse"),
+    parser.add_argument("--spec-profile", choices=("pilot", "low_impulse", "micro_impulse", "feedback"),
                         default="pilot")
     args = parser.parse_args()
     root = Path(args.run)
@@ -205,7 +228,7 @@ def main() -> None:
     else:
         selected = select_parent_entries(entries.records, args.parents)
     profiles = {"pilot": pilot_specs, "low_impulse": low_impulse_specs,
-                "micro_impulse": micro_impulse_specs}
+                "micro_impulse": micro_impulse_specs, "feedback": feedback_specs}
     specs = profiles[args.spec_profile]()
     center = np.asarray(terminal.metadata["normalization_center"], float)
     scale = np.asarray(terminal.metadata["normalization_scale"], float)
