@@ -38,17 +38,21 @@ def audit_gate(report, minimum_precision=.95):
             "no_nonfinite":int(report["terminal_summary"]["physical_end_reasons"]["nonfinite"])==0}
 
 
-def _perturb(env,record,seed,delta):
-    base=_restore(env,record,jax.random.PRNGKey(seed));info=base.info
-    qvel=base.data.qvel.at[env._qvel0].add(delta[0]).at[env._qvel0+2].add(delta[1])
-    return env.reset_from_snapshot(base.data.qpos,qvel,base.data.ctrl,jax.random.PRNGKey(seed),info["phase"],
-        info["had_airborne"],info["had_valid_landing"],info["contact_age"],info["last_action"],
-        estimated_phase=info["estimated_phase"],phase_probs=info["phase_probs"],airborne_count=info["airborne_count"],
-        prelaunch_airborne_count=info["prelaunch_airborne_count"],landing_bounce_count=info["landing_bounce_count"],
-        invalid_wheel_count=info["invalid_wheel_count"],recovery_count=info["recovery_count"],prev_acc_z=info["prev_acc_z"],
-        prev_vz=info["prev_vz"],obs_history=info["actor_obs_history_pre"],obs_history_valid=jnp.asarray(True),
-        stage_entry_ever=info["stage_entry_ever"],apex_seen=info["apex_seen"],jump_signal_latched=info["jump_signal_latched"],
-        jump_window_start_x=info["jump_window_start_x"],jump_window_end_x=info["jump_window_end_x"])
+def _perturb_batch(env,record,seeds,deltas):
+    """Vectorized reset preserves Warp contact-dimension metadata."""
+    base=_restore(env,record,jax.random.PRNGKey(int(seeds[0])));info=base.info
+    def reset(delta,key):
+        qvel=base.data.qvel.at[env._qvel0].add(delta[0]).at[env._qvel0+2].add(delta[1])
+        return env.reset_from_snapshot(base.data.qpos,qvel,base.data.ctrl,key,info["phase"],
+            info["had_airborne"],info["had_valid_landing"],info["contact_age"],info["last_action"],
+            estimated_phase=info["estimated_phase"],phase_probs=info["phase_probs"],airborne_count=info["airborne_count"],
+            prelaunch_airborne_count=info["prelaunch_airborne_count"],landing_bounce_count=info["landing_bounce_count"],
+            invalid_wheel_count=info["invalid_wheel_count"],recovery_count=info["recovery_count"],prev_acc_z=info["prev_acc_z"],
+            prev_vz=info["prev_vz"],obs_history=info["actor_obs_history_pre"],obs_history_valid=jnp.asarray(True),
+            stage_entry_ever=info["stage_entry_ever"],apex_seen=info["apex_seen"],jump_signal_latched=info["jump_signal_latched"],
+            jump_window_start_x=info["jump_window_start_x"],jump_window_end_x=info["jump_window_end_x"])
+    keys=jnp.stack([jax.random.PRNGKey(int(seed)) for seed in seeds])
+    return jax.jit(jax.vmap(reset))(jnp.asarray(deltas),keys)
 
 
 def main():
@@ -96,11 +100,11 @@ def main():
     for state_index in range(len(rows),len(full)):
         node=full[state_index];record=_node_record(node,harvested);branches=[]
         for variant_index,(variant_id,env,rollout) in enumerate(variants):
-            branch_indices=list(range(variant_index,BRANCHES,len(variants)));states=[]
+            branch_indices=list(range(variant_index,BRANCHES,len(variants)));seeds=[];deltas=[]
             for branch_index in branch_indices:
                 seed=branch_seed(SEED_BASE,state_index,branch_index);rng=np.random.default_rng(seed)
-                delta=rng.uniform(-.02,.02,size=2).astype(np.float32);states.append(_perturb(env,record,seed,delta))
-            batch=jax.tree.map(lambda *value:jnp.stack(value),*states);zero=jnp.zeros((len(states),2,4),jnp.float32)
+                seeds.append(seed);deltas.append(rng.uniform(-.02,.02,size=2).astype(np.float32))
+            batch=_perturb_batch(env,record,seeds,deltas);zero=jnp.zeros((len(seeds),2,4),jnp.float32)
             raw=jax.device_get(rollout(batch,zero,jax.random.PRNGKey(branch_seed(SEED_BASE,state_index,variant_index))))
             for local,branch_index in enumerate(branch_indices):
                 seed=branch_seed(SEED_BASE,state_index,branch_index);code=int(np.asarray(raw["end_code"])[local])
