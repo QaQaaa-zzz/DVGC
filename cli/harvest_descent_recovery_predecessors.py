@@ -14,6 +14,7 @@ import jax.numpy as jnp
 import numpy as np
 
 from cli.build_backward_tube_proposal_index import state_hash
+from cli.freeze_descent_predecessor_assets import verify_frozen_assets
 from cli.run_backward_descent_nominal_pilot import (
     C_L, EXPECTED, PI_D, PI_L, PERTURBATIONS, _batched, _load_record,
     _micro_states, _outcome, _restore,
@@ -149,6 +150,9 @@ def _trajectory(env, dpolicy, lpolicy, node, controller_row, provenance, seed, *
 
 
 def _setup():
+    valid, failed = verify_frozen_assets(ROOT)
+    if not valid:
+        raise SystemExit(f"frozen asset identity failure: {failed}")
     report = json.loads(PRIOR.read_text()); index = json.loads(INDEX.read_text())
     dparams, policy_cfg, _ = load_bundle(PI_D, verify_files=True)
     lparams, _, _ = load_bundle(PI_L, verify_files=True)
