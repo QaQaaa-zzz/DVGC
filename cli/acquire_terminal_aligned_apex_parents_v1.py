@@ -187,6 +187,7 @@ def main() -> None:
                         default="source_round_robin")
     parser.add_argument("--support-report")
     parser.add_argument("--exclude-manifest")
+    parser.add_argument("--exclude-bank")
     parser.add_argument("--parent-id", action="append", default=[])
     parser.add_argument("--spec-profile", choices=("pilot", "low_impulse", "micro_impulse", "feedback"),
                         default="pilot")
@@ -222,6 +223,11 @@ def main() -> None:
         if args.exclude_manifest:
             exclude_manifest = json.loads(Path(args.exclude_manifest).read_text())
             excluded_parent_ids.update(map(str, exclude_manifest["parents"]))
+        if args.exclude_bank:
+            excluded = SnapshotBank.load(args.exclude_bank)
+            excluded_parent_ids.update(
+                str(row["trajectory_parent_id"]) for row in excluded.records
+            )
         selected, selection_distances = select_nearest_supported_entries(
             entries.records, args.parents, supported_parent_ids, excluded_parent_ids,
         )

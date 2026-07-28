@@ -72,3 +72,10 @@ def test_nearest_supported_selection_is_disjoint_and_excludes_seen():
     )
     assert [row["trajectory_parent_id"] for row in selected] == ["p-2", "p-3"]
     assert distances[0] < distances[1]
+
+
+def test_cli_exposes_bank_level_parent_exclusion():
+    from pathlib import Path
+    text = Path("cli/acquire_terminal_aligned_apex_parents_v1.py").read_text()
+    assert '"--exclude-bank"' in text
+    assert 'excluded_parent_ids.update' in text
