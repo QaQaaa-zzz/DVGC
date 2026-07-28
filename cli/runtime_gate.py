@@ -505,6 +505,7 @@ def main() -> None:
         args.config,
         {
             "training_stage": "full",
+            "stage_reachability_objective": "",
             "use_bank_resets": False,
             "domain_randomization": False,
             "obs_noise_enable": False,

@@ -64,6 +64,8 @@ def test_runtime_gate_has_bounded_warp_replay_tolerances_and_exact_semantics():
     assert "np.array_equal" in gate
     assert '"dvgc/env.py"' in gate and '"cli/train.py"' in gate
     assert '"scripts", {".sh"}' not in gate
+    assert '"training_stage": "full"' in gate
+    assert '"stage_reachability_objective": ""' in gate
 
 
 def test_stage_expert_pipeline_uses_owned_policy_and_fixed_entry_set():
