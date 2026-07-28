@@ -15,7 +15,6 @@ import numpy as np
 
 from cli.run_backward_descent_nominal_pilot import C_L, EXPECTED, PI_D, PI_L, _restore
 from cli.run_backward_descent_rsi_pilot import certify_policy
-from cli.run_descent_localized_consolidation_v1 import verified_assets_allowing_runtime_gate_refresh
 from cli.runtime_gate import source_fingerprint
 from dvgc.backward_search import compact_observation_command_adapter
 from dvgc.bank import SnapshotBank, beta_posterior, posterior_label
@@ -82,8 +81,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run", default=str(DEFAULT_RUN)); args = parser.parse_args(); root = Path(args.run)
     if root.exists(): raise SystemExit(f"refusing overwrite {root}")
-    valid, failed, raw = verified_assets_allowing_runtime_gate_refresh()
-    if not valid: raise SystemExit(f"frozen asset mismatch: {failed}; raw={raw}")
+    frozen = {"C_L": file_sha256(C_L), "pi_D": file_sha256(PI_D / "params.pkl"),
+              "pi_L": file_sha256(PI_L / "params.pkl")}
+    expected = {"C_L": EXPECTED["C_L"], "pi_D": EXPECTED["pi_D"], "pi_L": EXPECTED["pi_L"]}
+    if frozen != expected: raise SystemExit(f"frozen scientific asset mismatch: {frozen}")
     gate = json.loads(Path("docs/RUNTIME_GATE.json").read_text())
     if gate.get("status") != "PASS" or gate.get("source_fingerprint") != source_fingerprint(Path.cwd()):
         raise SystemExit("runtime gate stale")
