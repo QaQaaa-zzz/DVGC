@@ -52,7 +52,7 @@ def main():
     args = parser.parse_args(); root = Path(args.run)
     valid, failed = verify_frozen_assets(root)
     if not valid: raise SystemExit(f"frozen asset identity failure: {failed}")
-    output = root / "descent_recovery_teacher_dataset_v1.pkl"
+    output = root / "descent_recovery_teacher_dataset_v1_balanced.pkl"
     if output.exists(): raise SystemExit("teacher dataset already exists")
     subset = [BackwardTubeNode(**row) for row in json.loads(
         (root / "balanced_p1_launch_subset_v1_frozen.json").read_text())["nodes"]]
@@ -88,10 +88,10 @@ def main():
     p0_only = [node for node in old_all if node.p0 and not node.p1]
     grouped = defaultdict(list)
     for node in sorted(p0_only, key=lambda value: (value.candidate_id, value.node_id)): grouped[node.candidate_id].append(node)
-    anchor_nodes = []
-    while len(anchor_nodes) < len(teacher) and any(grouped.values()):
-        for candidate in sorted(grouped):
-            if grouped[candidate] and len(anchor_nodes) < len(teacher): anchor_nodes.append(grouped[candidate].pop(0))
+    # A small frontier rehearsal set: exactly one deterministic medoid proxy
+    # (lexicographically first node) per P0-only candidate.  Do not exhaust a
+    # populous candidate after sparse candidates run out.
+    anchor_nodes = [grouped[candidate][0] for candidate in sorted(grouped)]
     anchors = []
     for index, node in enumerate(anchor_nodes):
         state = _restore(env, _generic_record(node, root, harvested), jax.random.PRNGKey(62_000_000 + index))
@@ -110,14 +110,19 @@ def main():
                "normalizer_sha256": file_sha256(PI_D / "params.pkl"), "heldout_used": False, "delay": False}
     _atomic_pickle(output, payload)
     counts = Counter(row["candidate_id"] for row in teacher)
-    audit = {"status": "PASS" if all(replay_checks) and len(teacher) == 16 and max(counts.values()) / len(teacher) <= .35 else "FAIL",
+    anchor_counts = Counter(row["candidate_id"] for row in anchors)
+    audit = {"status": "PASS" if all(replay_checks) and len(teacher) == 16 and max(counts.values()) / len(teacher) <= .35 and max(anchor_counts.values()) / len(anchors) <= .35 else "FAIL",
         "teacher_samples": len(teacher), "anchor_samples": len(anchors), "downstream_transition_samples": len(downstream),
         "candidate_counts": dict(sorted(counts.items())), "maximum_candidate_share": max(counts.values()) / len(teacher),
+        "anchor_candidate_counts": dict(sorted(anchor_counts.items())),
+        "anchor_maximum_candidate_share": max(anchor_counts.values()) / len(anchors),
         "layers": sorted({row["layer"] for row in teacher}), "regions": sorted({row["region"] for row in teacher}),
         "teacher_action_replay_exact": all(replay_checks), "action_order": ["steer", "drive", "hip", "knee"],
         "normalizer_fixed": True, "dataset": str(output), "dataset_sha256": file_sha256(output),
-        "downstream_actions_used_as_pi_D_targets": False, "heldout_used": False, "delay": False}
-    save_json(root / "descent_recovery_teacher_dataset_v1_audit.json", audit)
+        "downstream_actions_used_as_pi_D_targets": False, "heldout_used": False, "delay": False,
+        "supersedes_for_training": str(root / "descent_recovery_teacher_dataset_v1.pkl") if (root / "descent_recovery_teacher_dataset_v1.pkl").exists() else None,
+    }
+    save_json(root / "descent_recovery_teacher_dataset_v1_balanced_audit.json", audit)
     if audit["status"] != "PASS": raise SystemExit(f"teacher dataset gate failed: {audit}")
     print(json.dumps(audit, indent=2))
 
