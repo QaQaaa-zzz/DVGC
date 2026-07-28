@@ -43,7 +43,7 @@ EXPECTED_HASHES = {
     "policy_params": "52721668eed0cc78b41a45ad7c319e687f43add8977f2b4bdfcad8208c4353f2",
     "policy_config": "20e3fd3aaf57569ff6d921b8e5a0f389020db36589562326c3ee98b71f7d8d3d",
     "policy_manifest": "5679b73af86664cd780a6ee50d07186ac2eb9e34147e6317ca403e243e586d4f",
-    "normalizer": "8f2e36b3591dcb90f3808b0c1f7c9cd62dfd72a101445716171163d34c93a7e",
+    "normalizer": "8f2e36b6f69a3d20da67c1854f7e908c98dd6b03ae70e287e0a7e28522f93a7e",
     "xml": "d7e9f43ff8fb9e4571203f81062ce9c828acfa38692ee8c71a3e5daa15ce794c",
     "experiment_config": "cc246788e4931bbc84c97cbdb0749ae88cc5f75108d85a0b3a618b08a11a24ff",
 }
