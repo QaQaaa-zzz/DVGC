@@ -116,6 +116,7 @@ def select_nearest_supported_entries(
         [row["physical_feature"] for row in supported], float,
     )
     ranked = []
+    best_by_parent: dict[str, tuple] = {}
     for row in records:
         parent = str(row["trajectory_parent_id"])
         if parent in supported_parent_ids or parent in excluded_parent_ids:
@@ -124,12 +125,15 @@ def select_nearest_supported_entries(
         distance = float(np.min(np.linalg.norm(
             (support_features - feature[None, :]) / scale[None, :], axis=1,
         )))
-        ranked.append((distance, parent, str(row["id"]), row))
+        item = (distance, parent, int(row.get("selection_rank", 0)), str(row["id"]), row)
+        if parent not in best_by_parent or item < best_by_parent[parent]:
+            best_by_parent[parent] = item
+    ranked = list(best_by_parent.values())
     ranked.sort(key=lambda item: item[:3])
     if len(ranked) < count:
         raise ValueError(f"insufficient unseen parent entries: {len(ranked)}/{count}")
     selected = ranked[:count]
-    return [item[3] for item in selected], [item[0] for item in selected]
+    return [item[4] for item in selected], [item[0] for item in selected]
 
 
 def terminal_distance(feature: np.ndarray, target: np.ndarray, center: np.ndarray, scale: np.ndarray) -> float:
@@ -210,7 +214,10 @@ def main() -> None:
         requested = list(map(str, args.parent_id))
         if len(requested) != args.parents or len(set(requested)) != args.parents:
             raise SystemExit("explicit selection requires one unique --parent-id per parent")
-        by_parent = {str(row["trajectory_parent_id"]): row for row in entries.records}
+        by_parent = {}
+        for row in sorted(entries.records, key=lambda item: (
+                int(item.get("selection_rank", 0)), str(item["id"]))):
+            by_parent.setdefault(str(row["trajectory_parent_id"]), row)
         missing = sorted(set(requested) - set(by_parent))
         if missing:
             raise SystemExit(f"explicit parent IDs not found: {missing}")

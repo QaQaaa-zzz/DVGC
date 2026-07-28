@@ -74,6 +74,21 @@ def test_nearest_supported_selection_is_disjoint_and_excludes_seen():
     assert distances[0] < distances[1]
 
 
+def test_nearest_selection_keeps_one_best_snapshot_per_parent():
+    support = {"id": "s", "trajectory_parent_id": "support",
+               "physical_feature": [0.] * 16}
+    near = {"id": "near", "trajectory_parent_id": "p", "selection_rank": 0,
+            "physical_feature": [.1] + [0.] * 15}
+    duplicate = {"id": "duplicate", "trajectory_parent_id": "p", "selection_rank": 1,
+                 "physical_feature": [.2] + [0.] * 15}
+    other = {"id": "other", "trajectory_parent_id": "q",
+             "physical_feature": [.3] + [0.] * 15}
+    selected, _ = select_nearest_supported_entries(
+        [support, duplicate, other, near], 2, {"support"}, set(),
+    )
+    assert [row["id"] for row in selected] == ["near", "other"]
+
+
 def test_cli_exposes_bank_level_parent_exclusion():
     from pathlib import Path
     text = Path("cli/acquire_terminal_aligned_apex_parents_v1.py").read_text()
