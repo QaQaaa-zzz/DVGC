@@ -58,6 +58,41 @@ def select_parent_entries(records: list[dict], count: int) -> list[dict]:
     return selected
 
 
+def select_nearest_supported_entries(
+    records: list[dict], count: int, supported_parent_ids: set[str],
+    excluded_parent_ids: set[str],
+) -> tuple[list[dict], list[float]]:
+    """Rank unseen parents by physical distance to valid-Apex support."""
+    supported = [row for row in records
+                 if str(row["trajectory_parent_id"]) in supported_parent_ids]
+    if not supported:
+        raise ValueError("no supported parent entries found")
+    features = np.asarray([row["physical_feature"] for row in records], float)
+    floor = np.asarray([
+        .05, .05, .05, .05, .05, .05, .2, .2, .2,
+        .2, .2, .2, .1, .1, .2, .2,
+    ])
+    scale = np.maximum(np.std(features, axis=0), floor)
+    support_features = np.asarray(
+        [row["physical_feature"] for row in supported], float,
+    )
+    ranked = []
+    for row in records:
+        parent = str(row["trajectory_parent_id"])
+        if parent in supported_parent_ids or parent in excluded_parent_ids:
+            continue
+        feature = np.asarray(row["physical_feature"], float)
+        distance = float(np.min(np.linalg.norm(
+            (support_features - feature[None, :]) / scale[None, :], axis=1,
+        )))
+        ranked.append((distance, parent, str(row["id"]), row))
+    ranked.sort(key=lambda item: item[:3])
+    if len(ranked) < count:
+        raise ValueError(f"insufficient unseen parent entries: {len(ranked)}/{count}")
+    selected = ranked[:count]
+    return [item[3] for item in selected], [item[0] for item in selected]
+
+
 def terminal_distance(feature: np.ndarray, target: np.ndarray, center: np.ndarray, scale: np.ndarray) -> float:
     query = np.asarray([feature[INDEX[name]] for name in FEATURES], float)
     return float(np.min(np.linalg.norm(target - ((query - center) / scale)[None, :], axis=1)))
@@ -107,6 +142,10 @@ def main() -> None:
     parser.add_argument("--parents", type=int, default=4)
     parser.add_argument("--horizon", type=int, default=100)
     parser.add_argument("--config", default="configs/default.json")
+    parser.add_argument("--selection", choices=("source_round_robin", "nearest_supported"),
+                        default="source_round_robin")
+    parser.add_argument("--support-report")
+    parser.add_argument("--exclude-manifest")
     args = parser.parse_args()
     root = Path(args.run)
     if root.exists():
@@ -119,7 +158,22 @@ def main() -> None:
     terminal = SnapshotBank.load(terminal_path)
     if terminal.metadata.get("artifact_role") != "proposal_terminal_targets_from_certified_tube":
         raise SystemExit("terminal targets are not Tube-locked")
-    selected = select_parent_entries(entries.records, args.parents)
+    selection_distances = None
+    supported_parent_ids: set[str] = set()
+    excluded_parent_ids: set[str] = set()
+    if args.selection == "nearest_supported":
+        if not args.support_report:
+            raise SystemExit("--support-report is required for nearest_supported")
+        support_report = json.loads(Path(args.support_report).read_text())
+        supported_parent_ids = set(map(str, support_report["successful_parent_ids"]))
+        if args.exclude_manifest:
+            exclude_manifest = json.loads(Path(args.exclude_manifest).read_text())
+            excluded_parent_ids.update(map(str, exclude_manifest["parents"]))
+        selected, selection_distances = select_nearest_supported_entries(
+            entries.records, args.parents, supported_parent_ids, excluded_parent_ids,
+        )
+    else:
+        selected = select_parent_entries(entries.records, args.parents)
     specs = pilot_specs()
     center = np.asarray(terminal.metadata["normalization_center"], float)
     scale = np.asarray(terminal.metadata["normalization_scale"], float)
@@ -134,7 +188,11 @@ def main() -> None:
               "seed": SEED}
     save_json(root / "manifest.json", {"status": "FROZEN_BEFORE_OUTCOMES", "inputs": inputs,
         "parents": [row["trajectory_parent_id"] for row in selected], "specs": specs,
-        "selection": "source-kind round-robin, parent-disjoint; all 24 specs evaluated after first valid Apex"})
+        "selection": args.selection,
+        "selection_distances": selection_distances,
+        "supported_parent_ids": sorted(supported_parent_ids),
+        "excluded_parent_ids": sorted(excluded_parent_ids),
+        "all_specs_evaluated_after_first_valid_apex": True})
     save_json(root / "cost_estimate.json", {"estimated_seconds": 1800, "parents": len(selected),
         "specs_per_parent": len(specs), "maximum_rollouts": len(selected)*len(specs)+2*len(selected),
         "fraction_of_24x81_grid": len(selected)*len(specs)/(24*81), "PPO_steps": 0})
@@ -179,7 +237,9 @@ def main() -> None:
     distances = [row["terminal_distance"] for row in best_records]
     status = "PASS" if len(best_records) >= 2 and min(distances) < 23.214247689634647 else "FAIL"
     report = {"status": status, "head": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
-        "parents": len(selected), "specs_per_parent": len(specs), "valid_apex_outcomes": sum(x["success"] for x in outcomes),
+        "parents": len(selected), "specs_per_parent": len(specs),
+        "selection": args.selection, "selection_distances": selection_distances,
+        "valid_apex_outcomes": sum(x["success"] for x in outcomes),
         "successful_parents": len(best_records), "failure_reasons": dict(Counter(x["failure_reason"] for x in outcomes if not x["success"])),
         "best_terminal_distances": distances, "best_pose_margins": [row["pose_margin"] for row in best_records],
         "previous_best_terminal_distance": 23.214247689634647, "proposal_bank": str(bank_path),
