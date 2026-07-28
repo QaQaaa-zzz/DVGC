@@ -20,7 +20,8 @@ from cli.run_descent_localized_consolidation_v1 import (
     verified_assets_allowing_runtime_gate_refresh,
 )
 from cli.runtime_gate import source_fingerprint
-from dvgc.backward_search import compact_observation_residual_adapter
+from dvgc.backward_search import (compact_observation_command_adapter,
+                                  compact_observation_residual_adapter)
 from dvgc.bank import SnapshotBank
 from dvgc.config import ACTION_MAPPING_VERSION, file_sha256, load_config
 from dvgc.descent_predecessor import expand_residual_knots
@@ -43,9 +44,9 @@ def choose_compact_radius(teacher, preservation, micro, mean, std):
             "teacher_preservation_distance_min":float(cross.min()),"geometry_pass":coverage_floor < exclusion_cap}
 
 
-def _identity_hash(base_hash,prototypes,residuals,radius):
+def _identity_hash(base_hash,prototypes,targets,radius):
     digest=hashlib.sha256(base_hash.encode())
-    for value in (prototypes,residuals,np.asarray(radius,np.float32)):
+    for value in (prototypes,targets,np.asarray(radius,np.float32)):
         array=np.asarray(value);digest.update(str(array.shape).encode());digest.update(array.tobytes())
     return digest.hexdigest()
 
@@ -57,8 +58,26 @@ def _atomic_pickle(path,value):
     os.replace(temporary,path)
 
 
+def _collect_recorded_commands(env,actor,policy,record,seed,commands):
+    from cli.run_backward_descent_nominal_pilot import _restore
+    state=_restore(env,record,jax.random.PRNGKey(seed));observations=[]
+    for command in np.asarray(commands):
+        observations.append(np.asarray(state.obs["state"],np.float32))
+        state=env.step(state,jnp.asarray(command))
+    return np.asarray(observations)
+
+
+def _micro_command_observations(env,micro,commands):
+    state=micro;observations=[];step=jax.jit(jax.vmap(env.step))
+    for command in np.asarray(commands):
+        observations.append(np.asarray(state.obs["state"],np.float32))
+        state=step(state,jnp.broadcast_to(jnp.asarray(command),(state.data.qpos.shape[0],len(command))))
+    return np.concatenate(observations,axis=0)
+
+
 def main():
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument("--run",default=str(DEFAULT_RUN));args=parser.parse_args()
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument("--run",default=str(DEFAULT_RUN))
+    parser.add_argument("--command-source",choices=("residual","recorded"),default="residual");args=parser.parse_args()
     root=Path(args.run)
     if root.exists():raise SystemExit(f"refusing overwrite {root}")
     valid,failed,raw_failed=verified_assets_allowing_runtime_gate_refresh()
@@ -74,7 +93,8 @@ def main():
     save_json(root/"preregistration.json",{"experiment":"descent_compact_observation_adapter_v1","target_node":TARGET_NODE,
         "prototype_ticks":5,"preservation_ticks":8,"distance":"RMS Euclidean in frozen-normalizer actor space",
         "radius":"1.25 * max target-micro nearest-prototype distance","hard_exclusion_cap":"0.45 * minimum teacher-to-preservation distance",
-        "kernel":"max(1-d/r,0)^2","physical_gate":"18/18 P0 and P1, no new failure types","PPO_authorization":False,
+        "kernel":"max(1-d/r,0)^2","command_source":args.command_source,
+        "physical_gate":"18/18 P0 and P1, no new failure types","PPO_authorization":False,
         "artifact_role":"expert_conditioned_provisional_envelope_controller"})
     dparams,_,_=load_bundle(PI_D,verify_files=True);lparams,_,_=load_bundle(PI_L,verify_files=True)
     env=OrangeBikeDVGC(cfg,snapshot_bank=SnapshotBank(),cert_bank=SnapshotBank.load(C_L));_,actor,_=build_actor_tools(env,dparams)
@@ -84,24 +104,33 @@ def main():
     harvested=pickle.loads((SOURCE/"trajectory_harvested_snapshots.pkl").read_bytes());by_id={node["node_id"]:node for node in balanced}
     target_node=by_id[TARGET_NODE];prior=json.loads(PRIOR.read_text())
     row=next(value for value in prior["rows"] if value["proposal"]["physical_state_sha256"]==target_node["source_state_hash"] and value["controller"]==target_node["controller_type"])
-    residuals=expand_residual_knots(row["residual_knots"])
-    prototypes,commands=_collect_prefix(env,actor,dparams[1],_node_record(target_node,harvested),85_000_000,targets=residuals,ticks=5)
-    prototypes=np.asarray(prototypes);residuals=np.asarray(residuals[:len(prototypes)])
+    residuals=expand_residual_knots(row["residual_knots"]);record=_node_record(target_node,harvested)
+    if args.command_source=="recorded":
+        commands=np.asarray(row["search_best"]["actions"][:5],np.float32)
+        prototypes=_collect_recorded_commands(env,actor,dparams[1],record,85_000_000,commands)
+    else:
+        prototypes,commands=_collect_prefix(env,actor,dparams[1],record,85_000_000,targets=residuals,ticks=5)
+        prototypes=np.asarray(prototypes);commands=np.asarray(commands)
     preservation=[]
     for index,node_id in enumerate(sorted(baseline_ids)):
         obs,_=_collect_prefix(env,actor,dparams[1],_node_record(by_id[node_id],harvested),85_100_000+index,ticks=8);preservation.extend(obs)
-    micro=_micro_states(env,_node_record(target_node,harvested),85_200_000)
-    micro_obs=np.asarray(micro.obs["state"]);mean=np.asarray(dparams[0].mean["state"]);std=np.asarray(dparams[0].std["state"])
+    micro=_micro_states(env,record,85_200_000)
+    micro_obs=(_micro_command_observations(env,micro,commands) if args.command_source=="recorded" else np.asarray(micro.obs["state"]))
+    mean=np.asarray(dparams[0].mean["state"]);std=np.asarray(dparams[0].std["state"])
     geometry=choose_compact_radius(prototypes,np.asarray(preservation),micro_obs,mean,std)
     save_json(root/"adapter_geometry_preflight.json",geometry|{"teacher_prototypes":len(prototypes),"preservation_samples":len(preservation),
         "target_micro_states":len(micro_obs),"selected_without_physical_results":True})
     if not geometry["geometry_pass"]:raise SystemExit(f"compact support is not geometrically separable: {geometry}")
-    adapter=compact_observation_residual_adapter(jnp.asarray(prototypes),jnp.asarray(residuals),jnp.asarray(mean),jnp.asarray(std),geometry["radius"])
+    adapter=(compact_observation_command_adapter(jnp.asarray(prototypes),jnp.asarray(commands),jnp.asarray(mean),jnp.asarray(std),geometry["radius"])
+             if args.command_source=="recorded" else
+             compact_observation_residual_adapter(jnp.asarray(prototypes),jnp.asarray(residuals[:len(prototypes)]),jnp.asarray(mean),jnp.asarray(std),geometry["radius"]))
     preservation_action=np.asarray(adapter(jnp.asarray(preservation),jnp.zeros((len(preservation),4),jnp.float32)))
     if np.max(np.abs(preservation_action))!=0:raise SystemExit("adapter leaks into preservation prefixes")
-    identity=_identity_hash(EXPECTED["pi_D"],prototypes,residuals,geometry["radius"])
+    targets=commands if args.command_source=="recorded" else residuals[:len(prototypes)]
+    identity=_identity_hash(EXPECTED["pi_D"],prototypes,targets,geometry["radius"])
     artifact={"schema":"compact-observation-residual-adapter-v1","base_policy_sha256":EXPECTED["pi_D"],"policy_identity_hash":identity,
-        "prototypes":prototypes,"residuals":residuals,"normalizer_mean":mean,"normalizer_std":std,"radius":geometry["radius"],
+        "prototypes":prototypes,"targets":targets,"command_source":args.command_source,
+        "normalizer_mean":mean,"normalizer_std":std,"radius":geometry["radius"],
         "target_node":TARGET_NODE,"action_order":["steer","drive","hip","knee"]}
     _atomic_pickle(root/"adapter.pkl",artifact)
     save_bundle(root/"checkpoint_expert",params=dparams,config=cfg,xml_path=cfg.xml_path,

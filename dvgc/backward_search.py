@@ -37,6 +37,26 @@ def compact_observation_residual_adapter(prototypes: jax.Array, residuals: jax.A
     return apply
 
 
+def compact_observation_command_adapter(prototypes: jax.Array, commands: jax.Array,
+                                        mean: jax.Array, std: jax.Array,
+                                        radius: float) -> Callable[[jax.Array, jax.Array], jax.Array]:
+    """Blend toward verified applied commands only inside compact actor support."""
+    prototypes = (jnp.asarray(prototypes) - jnp.asarray(mean)) / jnp.asarray(std)
+    commands = jnp.asarray(commands); radius = float(radius)
+    if radius <= 0:
+        raise ValueError("adapter radius must be positive")
+
+    def apply(observation: jax.Array, base_action: jax.Array) -> jax.Array:
+        normalized = (observation - mean) / std
+        distances = jnp.sqrt(jnp.mean((normalized[:, None, :] - prototypes[None, :, :]) ** 2, axis=-1))
+        nearest = jnp.argmin(distances, axis=-1)
+        minimum = jnp.take_along_axis(distances, nearest[:, None], axis=-1)[:, 0]
+        weight = jnp.square(jnp.maximum(1.0 - minimum / radius, 0.0))
+        target = commands[nearest]
+        return jnp.clip(base_action + weight[:, None] * (target - base_action), -1.0, 1.0)
+    return apply
+
+
 def make_descent_landing_rollout(env: Any, descent_params: Any, landing_params: Any,
                                  *, horizon: int = 200, residual_ticks: int = 8,
                                  ticks_per_knot: int = 4,
