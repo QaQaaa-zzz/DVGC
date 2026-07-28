@@ -184,10 +184,15 @@ def test_snapshot_v4_negative_controls(mutation):
 
 def test_terminal_tail_does_not_invalidate_active_prefix():
     one={name:np.array([value]) for name,value in {"survival":2,"minimum_margin":.1,"terminal_margin":.2,"end_code":5,"termination_tick":3,"landing_entry":False,"chain":False,"recovery_success":False,"final_recovery":False}.items()}
-    one.update({"actions":np.zeros((5,1,4)),"active_action_mask":np.array([[1],[1],[1],[0],[0]],bool),"phase_trace":np.zeros((5,1),int),"contact_age_trace":np.zeros((5,1),int)})
-    two=copy.deepcopy(one);two["actions"][4,0]=99;two["phase_trace"][4,0]=99
+    one.update({
+        "actions":np.zeros((5,1,4)), "ctrls":np.zeros((5,1,4)),
+        "packets":np.zeros((5,1,12)), "packet_delay_trace":np.zeros((5,1),int),
+        "active_action_mask":np.array([[1],[1],[1],[0],[0]],bool),
+        "phase_trace":np.zeros((5,1),int),"contact_age_trace":np.zeros((5,1),int),
+    })
+    two=copy.deepcopy(one);two["actions"][4,0]=99;two["ctrls"][4,0]=99;two["phase_trace"][4,0]=99
     assert active_prefix_repeat_comparison(one,two)["exact"]
-    two["actions"][1,0]=1
+    two["packets"][1,0,0]=1
     assert not active_prefix_repeat_comparison(one,two)["exact"]
 
 

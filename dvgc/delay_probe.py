@@ -32,6 +32,7 @@ def make_packet_delay_rollout(
     inference = build_inference(env, params, deterministic=True)
     step = jax.vmap(env.step)
     feature_fn = jax.vmap(env._physical_feature)
+    ctrl_fn = jax.vmap(env._action_to_ctrl)
     cfg = env._config
 
     def rollout(state, residual_knots, packet_queue, key):
@@ -42,6 +43,9 @@ def make_packet_delay_rollout(
         terminal_margin = jnp.full((count,), jnp.inf, jnp.float32)
         end_codes = jnp.zeros((count,), jnp.int32)
         actions = jnp.zeros((horizon, count, env.action_size), jnp.float32)
+        ctrls = jnp.zeros((horizon, count, env.mj_model.nu), jnp.float32)
+        packets = jnp.zeros((horizon, count, packet_queue.shape[-1]), packet_queue.dtype)
+        packet_delay_trace = jnp.zeros((horizon, count), jnp.int32)
         active_action_mask = jnp.zeros((horizon, count), bool)
         termination_tick = jnp.full((count,), horizon, jnp.int32)
         phase_trace = jnp.zeros((horizon, count), jnp.int32)
@@ -52,7 +56,8 @@ def make_packet_delay_rollout(
 
         def body(carry, tick):
             (state, queue, active, survival, minimum_margin, terminal_margin,
-             end_codes, actions, active_action_mask, termination_tick,
+             end_codes, actions, ctrls, packets, packet_delay_trace,
+             active_action_mask, termination_tick,
              phase_trace, contact_age_trace, landing_entry, chain, recovery) = carry
             delay = schedule[tick]
             actor_packet = jax.lax.dynamic_index_in_dim(queue, 2 - delay, axis=1, keepdims=False)
@@ -62,6 +67,8 @@ def make_packet_delay_rollout(
             residual = residual_knots[:, jnp.minimum(tick // ticks_per_knot, residual_knots.shape[1] - 1)]
             residual = jnp.where(tick < residual_ticks, residual, jnp.zeros_like(residual))
             commanded = jnp.clip(action + residual, -1.0, 1.0)
+            knee_qpos = state.data.qpos[:, env._joint_qpos["knee_joint"]]
+            applied_ctrl = ctrl_fn(commanded, knee_qpos)
             next_state = step(state, commanded)
             feature = feature_fn(next_state.data)
             margin = formal_dynamic_margin(feature, cfg)
@@ -71,6 +78,11 @@ def make_packet_delay_rollout(
             terminal_margin = jnp.where(active, margin, terminal_margin)
             end_codes = jnp.where(active & next_state.done.astype(bool), next_state.info["end_code"], end_codes)
             actions = actions.at[tick].set(commanded)
+            ctrls = ctrls.at[tick].set(applied_ctrl)
+            packets = packets.at[tick].set(actor_packet)
+            packet_delay_trace = packet_delay_trace.at[tick].set(
+                jnp.full((count,), delay, jnp.int32)
+            )
             active_action_mask = active_action_mask.at[tick].set(active)
             termination_tick = jnp.where(active & next_state.done.astype(bool), tick + 1, termination_tick)
             phase_trace = phase_trace.at[tick].set(next_state.info["phase"])
@@ -80,17 +92,20 @@ def make_packet_delay_rollout(
             recovery = recovery | (active & (next_state.info["recovery_success"] > 0))
             queue = jnp.concatenate((queue[:, 1:], next_state.obs["state"][:, None]), axis=1)
             return ((next_state, queue, alive, survival, minimum_margin,
-                     terminal_margin, end_codes, actions, active_action_mask,
+                     terminal_margin, end_codes, actions, ctrls, packets,
+                     packet_delay_trace, active_action_mask,
                      termination_tick, phase_trace, contact_age_trace,
                      landing_entry, chain, recovery), None)
 
         initial = (state, packet_queue, active, survival, minimum_margin,
-                   terminal_margin, end_codes, actions, active_action_mask,
+                   terminal_margin, end_codes, actions, ctrls, packets,
+                   packet_delay_trace, active_action_mask,
                    termination_tick, phase_trace, contact_age_trace,
                    landing_entry, chain, recovery)
         final, _ = jax.lax.scan(body, initial, jnp.arange(horizon))
         (_, _, _, survival, minimum_margin, terminal_margin, end_codes,
-         actions, active_action_mask, termination_tick, phase_trace,
+         actions, ctrls, packets, packet_delay_trace, active_action_mask,
+         termination_tick, phase_trace,
          contact_age_trace, landing_entry, chain, recovery) = final
         return {
             "survival": survival,
@@ -98,6 +113,9 @@ def make_packet_delay_rollout(
             "terminal_margin": terminal_margin,
             "end_code": end_codes,
             "actions": actions,
+            "ctrls": ctrls,
+            "packets": packets,
+            "packet_delay_trace": packet_delay_trace,
             "active_action_mask": active_action_mask,
             "termination_tick": termination_tick,
             "landing_entry": landing_entry,
@@ -118,7 +136,10 @@ def active_prefix_repeat_comparison(first: dict[str, Any], second: dict[str, Any
     tick = int(np.asarray(first["termination_tick"])[index])
     tick2 = int(np.asarray(second["termination_tick"])[index])
     prefix = min(tick, tick2)
-    trace_fields = ("actions", "active_action_mask", "phase_trace", "contact_age_trace")
+    trace_fields = (
+        "actions", "ctrls", "packets", "packet_delay_trace",
+        "active_action_mask", "phase_trace", "contact_age_trace",
+    )
     trace = {
         name: bool(np.array_equal(
             np.asarray(first[name])[:prefix, index],
