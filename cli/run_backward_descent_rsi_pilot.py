@@ -54,10 +54,12 @@ def _params_hash(params):
     return digest.hexdigest()
 
 
-def certify_policy(env,params,landing_params,nodes,seed,record_loader=None):
-    rollout=make_descent_landing_rollout(env,params,landing_params,horizon=200,residual_ticks=8)
+def certify_policy(env,params,landing_params,nodes,seed,record_loader=None,
+                   descent_action_adapter=None,policy_identity_hash=None):
+    rollout=make_descent_landing_rollout(env,params,landing_params,horizon=200,residual_ticks=8,
+                                         descent_action_adapter=descent_action_adapter)
     rows=[];certified=[];safe_ids={row["id"] for row in env._cert_bank.records if row["final"]["label"]=="safe"}
-    policy_hash=_params_hash(params)
+    policy_hash=policy_identity_hash or _params_hash(params)
     for position,source in enumerate(nodes):
         record=(record_loader(source) if record_loader is not None else _load_record(source["physical_state"]));item_seed=seed+position
         state=_batched(env,record,1,item_seed);zero=jnp.zeros((1,2,4),jnp.float32)

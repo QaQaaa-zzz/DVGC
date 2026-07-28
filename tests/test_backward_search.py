@@ -3,7 +3,9 @@ import jax.numpy as jnp
 
 from cli.run_backward_descent_nominal_pilot import select_incremental_proposals
 from cli.run_backward_descent_cem_pilot import select_unresolved_for_cem
-from dvgc.backward_search import active_prefix_exact, backward_lexicographic_order, bounded_cem, mask_pre_handoff_residual
+from dvgc.backward_search import (active_prefix_exact, backward_lexicographic_order,
+                                  bounded_cem, compact_observation_residual_adapter,
+                                  mask_pre_handoff_residual)
 
 
 def test_backward_order_prioritizes_final_then_entry_not_survival():
@@ -39,6 +41,13 @@ def test_residual_mask_broadcasts_per_batch_row():
     knot=jnp.arange(12,dtype=jnp.float32).reshape(3,4)
     masked=mask_pre_handoff_residual(knot,jnp.asarray([False,True,False]),jnp.asarray([True,True,False]))
     np.testing.assert_array_equal(masked,np.vstack([np.arange(4),np.zeros(4),np.zeros(4)]))
+
+
+def test_compact_adapter_is_exact_at_prototype_and_zero_outside():
+    apply=compact_observation_residual_adapter(jnp.array([[0.,0.]]),jnp.array([[.2,-.1]]),
+                                               jnp.zeros(2),jnp.ones(2),.5)
+    base=jnp.zeros((2,2));obs=jnp.array([[0.,0.],[2.,2.]])
+    np.testing.assert_allclose(np.asarray(apply(obs,base)),np.array([[.2,-.1],[0.,0.]]),atol=1e-7)
 
 
 def test_cem_selection_never_retries_attempted_or_p0_proposals():

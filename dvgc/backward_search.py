@@ -17,9 +17,30 @@ def mask_pre_handoff_residual(knot: jax.Array, handed: jax.Array,
     return jnp.where(((~handed) & active_window)[:, None], knot, jnp.zeros_like(knot))
 
 
+def compact_observation_residual_adapter(prototypes: jax.Array, residuals: jax.Array,
+                                         mean: jax.Array, std: jax.Array,
+                                         radius: float) -> Callable[[jax.Array, jax.Array], jax.Array]:
+    """Build a smooth, compact-support residual expert in normalized actor space."""
+    prototypes = (jnp.asarray(prototypes) - jnp.asarray(mean)) / jnp.asarray(std)
+    residuals = jnp.asarray(residuals); radius = float(radius)
+    if radius <= 0:
+        raise ValueError("adapter radius must be positive")
+
+    def apply(observation: jax.Array, base_action: jax.Array) -> jax.Array:
+        normalized = (observation - mean) / std
+        distances = jnp.sqrt(jnp.mean((normalized[:, None, :] - prototypes[None, :, :]) ** 2, axis=-1))
+        nearest = jnp.argmin(distances, axis=-1)
+        minimum = jnp.take_along_axis(distances, nearest[:, None], axis=-1)[:, 0]
+        weight = jnp.square(jnp.maximum(1.0 - minimum / radius, 0.0))
+        correction = residuals[nearest] * weight[:, None]
+        return jnp.clip(base_action + correction, -1.0, 1.0)
+    return apply
+
+
 def make_descent_landing_rollout(env: Any, descent_params: Any, landing_params: Any,
                                  *, horizon: int = 200, residual_ticks: int = 8,
-                                 ticks_per_knot: int = 4):
+                                 ticks_per_knot: int = 4,
+                                 descent_action_adapter: Callable[[jax.Array, jax.Array], jax.Array] | None = None):
     """Roll one uninterrupted MJX lineage, switching only policy after C_L."""
     descent = build_inference(env, descent_params, deterministic=True)
     landing = build_inference(env, landing_params, deterministic=True)
@@ -40,6 +61,8 @@ def make_descent_landing_rollout(env: Any, descent_params: Any, landing_params: 
             (state,active,handed,survival,entry_tick,termination_tick,end_code,final,
              minimum_distance,minimum_margin,entry_qpos,entry_qvel,actions,active_mask,phase_trace)=carry
             da,_=descent(state.obs,jax.random.fold_in(key,tick));la,_=landing(state.obs,jax.random.fold_in(key,tick+100000))
+            if descent_action_adapter is not None:
+                da=descent_action_adapter(state.obs["state"],da)
             base=jnp.where(handed[:,None],la,da)
             knot=residual_knots[:,jnp.minimum(tick//ticks_per_knot,residual_knots.shape[1]-1)]
             residual=mask_pre_handoff_residual(knot,handed,jnp.full_like(handed,tick<residual_ticks))
