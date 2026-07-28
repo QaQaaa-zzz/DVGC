@@ -38,6 +38,17 @@ ANCHOR_RMS_LIMIT = .005
 ANCHOR_MAX_LIMIT = .015
 
 
+def verified_assets_allowing_runtime_gate_refresh():
+    """Keep every scientific asset frozen while accepting a fresh PASS gate file."""
+    valid, failed = verify_frozen_assets(SOURCE)
+    scientific_failures = [name for name in failed if name != "runtime_gate"]
+    gate = json.loads(Path("docs/RUNTIME_GATE.json").read_text())
+    gate_current = (gate.get("status") == "PASS"
+                    and gate.get("source_fingerprint") == source_fingerprint(Path.cwd())
+                    and gate.get("xml_sha256") == EXPECTED["xml"])
+    return (not scientific_failures and gate_current), scientific_failures, failed
+
+
 def select_behavior_candidate(rows):
     eligible = [row for row in rows if row["anchor_gate"]]
     return None if not eligible else min(eligible, key=lambda row: (row["teacher_imitation_rms"], row["steps"]))
@@ -93,8 +104,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__); parser.add_argument("--run", default=str(DEFAULT_RUN))
     args = parser.parse_args(); root = Path(args.run)
     if root.exists(): raise SystemExit(f"refusing overwrite {root}")
-    valid, failed = verify_frozen_assets(SOURCE)
-    if not valid: raise SystemExit(f"frozen asset mismatch: {failed}")
+    valid, failed, raw_failed = verified_assets_allowing_runtime_gate_refresh()
+    if not valid: raise SystemExit(f"frozen asset mismatch: {failed}; raw={raw_failed}")
     gate = json.loads(Path("docs/RUNTIME_GATE.json").read_text()); fingerprint = source_fingerprint(Path.cwd())
     if gate.get("status") != "PASS" or gate.get("source_fingerprint") != fingerprint:
         raise SystemExit("runtime gate stale")
@@ -176,7 +187,8 @@ def main():
     winner=next((mode for mode in ("head","last_block") if mode in accepted),None)
     report={"status":"PASS" if winner else "FAIL","head":subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip(),
         "baseline":baseline_summary,"branches":branch_reports,"winner":winner,"PPO_steps":0,"PPO_authorization":False,
-        "formal_tube_or_jel":False,"heldout_used":False,"frozen_assets_unchanged":verify_frozen_assets(SOURCE)[0],"runtime_fingerprint":fingerprint}
+        "formal_tube_or_jel":False,"heldout_used":False,"frozen_scientific_assets_unchanged":verified_assets_allowing_runtime_gate_refresh()[0],
+        "runtime_gate_refreshed_since_source_freeze":"runtime_gate" in raw_failed,"runtime_fingerprint":fingerprint}
     save_json(root / "DESCENT_LOCALIZED_CONSOLIDATION_V1_REPORT.json",report)
     save_json(root / "completed.json",{"status":report["status"],"winner":winner,"next":"fresh_recertification" if winner else "bounded_local_repair_round_2"})
     print(json.dumps(report,indent=2))
