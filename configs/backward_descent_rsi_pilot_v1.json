@@ -1,0 +1,12 @@
+{
+  "training_stage": "flight",
+  "use_bank_resets": true,
+  "natural_prob_flight": 0.0,
+  "domain_randomization": false,
+  "obs_noise_enable": false,
+  "episode_length": 64,
+  "descent_local_reward_enable": false,
+  "descent_rsi_pilot_reward_enable": false,
+  "stage_reachability_objective": "",
+  "expert_chain_termination": true
+}
