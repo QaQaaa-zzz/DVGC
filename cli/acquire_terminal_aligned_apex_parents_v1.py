@@ -99,10 +99,10 @@ def select_parent_entries(records: list[dict], count: int) -> list[dict]:
 
 def select_nearest_supported_entries(
     records: list[dict], count: int, supported_parent_ids: set[str],
-    excluded_parent_ids: set[str],
+    excluded_parent_ids: set[str], support_records: list[dict] | None = None,
 ) -> tuple[list[dict], list[float]]:
     """Rank unseen parents by physical distance to valid-Apex support."""
-    supported = [row for row in records
+    supported = [row for row in (records if support_records is None else support_records)
                  if str(row["trajectory_parent_id"]) in supported_parent_ids]
     if not supported:
         raise ValueError("no supported parent entries found")
@@ -190,6 +190,7 @@ def main() -> None:
     parser.add_argument("--selection", choices=("source_round_robin", "nearest_supported", "explicit"),
                         default="source_round_robin")
     parser.add_argument("--support-report")
+    parser.add_argument("--support-bank")
     parser.add_argument("--exclude-manifest")
     parser.add_argument("--exclude-bank")
     parser.add_argument("--parent-id", action="append", default=[])
@@ -235,8 +236,11 @@ def main() -> None:
             excluded_parent_ids.update(
                 str(row["trajectory_parent_id"]) for row in excluded.records
             )
+        support_records = (SnapshotBank.load(args.support_bank).records
+                           if args.support_bank else None)
         selected, selection_distances = select_nearest_supported_entries(
             entries.records, args.parents, supported_parent_ids, excluded_parent_ids,
+            support_records,
         )
     else:
         selected = select_parent_entries(entries.records, args.parents)

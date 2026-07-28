@@ -89,6 +89,17 @@ def test_nearest_selection_keeps_one_best_snapshot_per_parent():
     assert [row["id"] for row in selected] == ["near", "other"]
 
 
+def test_nearest_selection_accepts_separate_support_records():
+    support = {"id": "s", "trajectory_parent_id": "support",
+               "physical_feature": [0.] * 16}
+    candidate = {"id": "c", "trajectory_parent_id": "candidate",
+                 "physical_feature": [.1] + [0.] * 15}
+    selected, distances = select_nearest_supported_entries(
+        [candidate], 1, {"support"}, set(), [support],
+    )
+    assert selected == [candidate] and distances[0] > 0.
+
+
 def test_cli_exposes_bank_level_parent_exclusion():
     from pathlib import Path
     text = Path("cli/acquire_terminal_aligned_apex_parents_v1.py").read_text()
