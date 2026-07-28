@@ -14,3 +14,4 @@ def test_candidate_pilot_supports_nonoverwriting_expansion_inputs():
  assert '--exclude-bank' in text
  assert '--exclude-manifest' in text
  assert 'excluded_bank_sha256' in text
+ assert 'excluded_parents' in text

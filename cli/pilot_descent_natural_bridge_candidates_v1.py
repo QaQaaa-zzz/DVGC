@@ -37,10 +37,10 @@ def main():
  gate=json.loads(Path('docs/RUNTIME_GATE.json').read_text())
  if gate.get('status')!='PASS' or gate.get('source_fingerprint')!=source_fingerprint(Path.cwd()):raise SystemExit('runtime gate stale')
  cfg=load_config('configs/backward_descent_rsi_pilot_v1.json',{'use_bank_resets':False,'expert_chain_termination':False,'domain_randomization':False,'obs_noise_enable':False});tube=SnapshotBank.load(tube_path)
- target=np.asarray(json.loads(target_path.read_text())['nominal']['closest']['feature'],float);features=np.asarray([r['entry_feature'] for r in tube.records],float);_,scale=robust_normalization(features,cfg.descent_entry_scale_floors);excluded={r['id'] for path in a.exclude_bank for r in SnapshotBank.load(path).records};excluded.update(row['proposal_id'] for path in a.exclude_manifest for row in json.loads(Path(path).read_text())['rows'])
+ target=np.asarray(json.loads(target_path.read_text())['nominal']['closest']['feature'],float);features=np.asarray([r['entry_feature'] for r in tube.records],float);_,scale=robust_normalization(features,cfg.descent_entry_scale_floors);excluded={r['id'] for path in a.exclude_bank for r in SnapshotBank.load(path).records};prior_manifest_rows=[row for path in a.exclude_manifest for row in json.loads(Path(path).read_text())['rows']];excluded.update(row['proposal_id'] for row in prior_manifest_rows);excluded_parents={row['candidate_id'] for row in prior_manifest_rows}
  pool=[]
  for row in json.loads(INDEX.read_text())['rows']:
-  if row['proposal_id'] in excluded:continue
+  if row['proposal_id'] in excluded or row['candidate_id'] in excluded_parents:continue
   record=_load_record(row);feature=descent_entry_feature(record['physical_feature'],cfg);pool.append({**row,'target_distance':float(np.linalg.norm((feature-target)/scale))})
  selected=select_targeted(pool);root.mkdir(parents=True);artifact=pickle.loads((EXPERT/'adapter.pkl').read_bytes())
  save_json(root/'manifest.json',{'status':'FROZEN_BEFORE_OUTCOMES','target_source':str(target_path),'target_source_sha256':file_sha256(target_path),'target_feature':target.tolist(),'tube_sha256':file_sha256(tube_path),'excluded_bank_sha256':[file_sha256(path) for path in a.exclude_bank],'excluded_manifest_sha256':[file_sha256(path) for path in a.exclude_manifest],'selection':'four nearest globally parent-distinct states per region; all declared prior manifest proposals excluded','rows':[{k:r[k] for k in ('proposal_id','candidate_id','region','target_distance','physical_state_sha256')} for r in selected]})
