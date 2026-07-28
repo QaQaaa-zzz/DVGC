@@ -1,5 +1,6 @@
 import numpy as np
 
+from cli.run_backward_descent_nominal_pilot import select_incremental_proposals
 from dvgc.backward_search import active_prefix_exact, backward_lexicographic_order
 
 
@@ -14,3 +15,10 @@ def test_active_prefix_ignores_terminal_tail_but_checks_events():
     assert active_prefix_exact(base,other)[0]
     other["actions"][2]=1
     assert not active_prefix_exact(base,other)[0]
+
+
+def test_incremental_selection_skips_prior_and_honors_region_and_cap():
+    rows=[{"proposal_id":str(i),"candidate_id":candidate,"region":region} for i,(candidate,region) in enumerate([
+        ("a","early"),("a","early"),("a","early"),("a","early"),("b","middle"),("c","early")])]
+    selected=select_incremental_proposals(rows,{"1"},4,"early",per_candidate_cap=2)
+    assert [row["proposal_id"] for row in selected]==["0","2","5"]

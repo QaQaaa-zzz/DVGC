@@ -31,6 +31,16 @@ EXPECTED={"C_L":"185164da04380291946d02ff6556f867dfd8532f409fcab5f8c61873de82aa4
 PERTURBATIONS=np.asarray([[.02,.02],[.02,-.02],[-.02,.02],[-.02,-.02]],np.float32)
 
 
+def select_incremental_proposals(index_rows, excluded, limit, region=None, per_candidate_cap=3):
+    selected=[];counts=Counter()
+    for row in index_rows:
+        if len(selected)>=limit:break
+        if row["proposal_id"] in excluded or (region and row["region"]!=region):continue
+        if counts[row["candidate_id"]]>=per_candidate_cap:continue
+        selected.append(row);counts[row["candidate_id"]]+=1
+    return selected
+
+
 def _load_record(proposal):
     path=Path(proposal["source_artifact"]);index=int(proposal["source_index"])
     if path==V4:return pickle.loads(path.read_bytes())[index]["snapshot_v4"]
@@ -63,7 +73,7 @@ def _outcome(raw,index,exact=True,mismatches=()):
 
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument("--run",required=True);p.add_argument("--proposal-index",required=True);p.add_argument("--limit",type=int,default=24);a=p.parse_args();root=Path(a.run);root.mkdir(parents=True,exist_ok=True)
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument("--run",required=True);p.add_argument("--proposal-index",required=True);p.add_argument("--limit",type=int,default=24);p.add_argument("--prior-report",action="append",default=[]);p.add_argument("--region",choices=("early","middle","late"));a=p.parse_args();root=Path(a.run);root.mkdir(parents=True,exist_ok=True)
     if file_sha256(C_L)!=EXPECTED["C_L"] or file_sha256(PI_D/"params.pkl")!=EXPECTED["pi_D"] or file_sha256(PI_L/"params.pkl")!=EXPECTED["pi_L"]:raise SystemExit("frozen asset mismatch")
     dparams,dcfg,_=load_bundle(PI_D,verify_files=True);lparams,_,_=load_bundle(PI_L,verify_files=True)
     cfg=load_config("configs/default.json",{**dcfg,"episode_length":750,"use_bank_resets":False,"domain_randomization":False,"obs_noise_enable":False,"expert_chain_termination":False,"training_stage":"flight"})
@@ -72,12 +82,13 @@ def main():
     if gate.get("status")!="PASS" or gate.get("source_fingerprint")!=source_fingerprint(Path.cwd()):raise SystemExit("runtime gate stale")
     entry=SnapshotBank.load(C_L);env=OrangeBikeDVGC(cfg,snapshot_bank=SnapshotBank(),cert_bank=entry)
     rollout=make_descent_landing_rollout(env,dparams,lparams,horizon=200,residual_ticks=8)
-    index=json.loads(Path(a.proposal_index).read_text());selected=[];counts=Counter()
-    for row in index["rows"]:
-        if len(selected)>=a.limit:break
-        if counts[row["candidate_id"]]>=3:continue
-        selected.append(row);counts[row["candidate_id"]]+=1
-    zero=jnp.zeros((1,2,4),jnp.float32);rows=[];nodes=[]
+    prior_reports=[json.loads(Path(path).read_text()) for path in a.prior_report]
+    prior_rows=[row for report in prior_reports for row in report["rows"]]
+    prior_nodes=[node for report in prior_reports for node in report["nodes"]]
+    excluded={row["proposal"]["proposal_id"] for row in prior_rows}
+    index=json.loads(Path(a.proposal_index).read_text())
+    selected=select_incremental_proposals(index["rows"],excluded,a.limit,a.region)
+    zero=jnp.zeros((1,2,4),jnp.float32);rows=list(prior_rows);nodes=list(prior_nodes)
     safe_ids={row["id"] for row in entry.records if row["final"]["label"]=="safe"}
     for position,proposal in enumerate(selected):
         record=_load_record(proposal);seed=41_000_000+position
@@ -91,10 +102,10 @@ def main():
             entry_qpos=np.asarray(first["entry_qpos"])[0];entry_qvel=np.asarray(first["entry_qvel"])[0]
             node=BackwardTubeNode(node_id=hashlib.sha256(f"descent:{proposal['physical_state_sha256']}:zero".encode()).hexdigest()[:32],phase="descent",layer=int(proposal["shell_layer"]),region=proposal["region"],candidate_id=proposal["candidate_id"],source_state_hash=proposal["physical_state_sha256"],physical_state={"source_artifact":proposal["source_artifact"],"source_index":proposal["source_index"],"snapshot_sha256":proposal["snapshot_sha256"]},actor_observation=np.asarray(state.obs["state"])[0].tolist(),parent_node_id=proposal["nearest_downstream_node_id"],parent_tube="canonical_C_L",controller_type="frozen_pi_D_nominal_L0",controller_artifact_sha256=canonical_hash({"pi_D":EXPECTED["pi_D"],"pi_L":EXPECTED["pi_L"],"residual":"zero"}),entry_tick=repeat[0]["downstream_entry_tick"],downstream_entry_state={"qpos":entry_qpos.tolist(),"qvel":entry_qvel.tolist(),"nearest_C_L_node_id":proposal["nearest_downstream_node_id"]},final_recovery=True,p0=True,p1=bool(p1["pass"]),branch_results=tuple(branches),nearest_neighbor_radius=0.0,provenance_hashes={"xml":EXPECTED["xml"],"C_L":EXPECTED["C_L"],"pi_D":EXPECTED["pi_D"],"pi_L":EXPECTED["pi_L"]});node.validate();nodes.append(node.to_dict())
         rows.append({"proposal":proposal,"controller":"frozen_pi_D_nominal_L0","repeats":repeat,"P0":p0,"micro_branches":branches,"P1":p1})
-        save_json(root/"descent_nominal_pilot.partial.json",{"completed":position+1,"total":len(selected),"P0":sum(x["P0"]["pass"] for x in rows),"P1":sum(x["P1"]["pass"] for x in rows),"rows":rows,"nodes":nodes})
+        save_json(root/"descent_nominal_pilot.partial.json",{"completed_this_run":position+1,"total_this_run":len(selected),"total_evaluated":len(rows),"P0":sum(x["P0"]["pass"] for x in rows),"P1":sum(x["P1"]["pass"] for x in rows),"rows":rows,"nodes":nodes})
     typed=[BackwardTubeNode(**node) for node in nodes];lineage=validate_parent_lineage(typed,safe_ids);gate_result=tube_gate(typed)
-    report={"status":"PASS","artifact_role":"nominal_provisional_tube_construction_pilot","proposals":len(selected),"P0":sum(x["P0"]["pass"] for x in rows),"P1":sum(x["P1"]["pass"] for x in rows),**summarize_tube_nodes(typed),"failure_reasons":dict(Counter(x["repeats"][0]["failure_type"] for x in rows if not x["P0"]["pass"])),"lineage":lineage,"RSI_start_gate":gate_result,"rows":rows,"nodes":nodes,"heldout_used":False,"delay":False,"new_CEM":False,"PPO":False,"provenance":{"proposal_index_sha256":file_sha256(a.proposal_index),"C_L":EXPECTED["C_L"],"pi_D":EXPECTED["pi_D"],"pi_L":EXPECTED["pi_L"],"xml":EXPECTED["xml"]}}
-    save_json(root/"descent_nominal_pilot_report.json",report);save_json(root/"descent_nominal_pilot.completed.json",{"status":"PASS","P0":report["P0"],"P1":report["P1"],"RSI_start_gate":gate_result["status"]});print(json.dumps({k:report[k] for k in ("proposals","P0","P1","candidate_coverage","layer_coverage","region_coverage")}|{"gate":gate_result["status"]},indent=2))
+    report={"status":"PASS","artifact_role":"nominal_provisional_tube_construction_pilot","proposals_this_run":len(selected),"total_evaluated":len(rows),"prior_reports":a.prior_report,"region_filter":a.region,"P0":sum(x["P0"]["pass"] for x in rows),"P1":sum(x["P1"]["pass"] for x in rows),**summarize_tube_nodes(typed),"failure_reasons":dict(Counter(x["repeats"][0]["failure_type"] for x in rows if not x["P0"]["pass"])),"lineage":lineage,"RSI_start_gate":gate_result,"rows":rows,"nodes":nodes,"heldout_used":False,"delay":False,"new_CEM":False,"PPO":False,"provenance":{"proposal_index_sha256":file_sha256(a.proposal_index),"C_L":EXPECTED["C_L"],"pi_D":EXPECTED["pi_D"],"pi_L":EXPECTED["pi_L"],"xml":EXPECTED["xml"]}}
+    save_json(root/"descent_nominal_pilot_report.json",report);save_json(root/"descent_nominal_pilot.completed.json",{"status":"PASS","P0":report["P0"],"P1":report["P1"],"RSI_start_gate":gate_result["status"]});print(json.dumps({k:report[k] for k in ("proposals_this_run","total_evaluated","P0","P1","candidate_coverage","layer_coverage","region_coverage")}|{"gate":gate_result["status"]},indent=2))
 
 
 if __name__=="__main__":main()
