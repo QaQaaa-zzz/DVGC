@@ -42,6 +42,17 @@ def test_multiknot_search_uses_real_event_and_failure_typing():
     assert "round_b_executed" in text
     assert "matcher_radius_unchanged" in text
     assert "final_recovery_branches" in text
+    assert "round_c_full_action_branches" in text
+
+
+def test_full_action_extension_is_bounded_and_keeps_best_joint_profile():
+    from cli.search_apex_descent_multiknot import _action, _round_c
+    base = {"coast": 0, "correction_duration": 2, "hip": .1, "knee": -.2,
+            "post_duration": 2, "post_hip": 0., "post_knee": 0.}
+    rows = _round_c(base)
+    assert len(rows) == 25
+    assert all(row["hip"] == .1 and row["knee"] == -.2 for row in rows)
+    assert all(float(abs(x)) <= 1. for row in rows for x in _action(row, 0))
 
 
 def test_event_aligned_ascent_entries_are_dynamic_apex_evidence():

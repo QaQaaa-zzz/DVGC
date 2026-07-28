@@ -86,14 +86,24 @@ def _round_b(best, seed, count):
     return rows
 
 
+def _round_c(best):
+    """Uniform bounded steer/drive screen around the best hip/knee profile."""
+    return [
+        {**best, "round": "C", "steer": float(steer), "drive": float(drive)}
+        for steer in np.linspace(-.2, .2, 5)
+        for drive in np.linspace(-.4, .4, 5)
+    ]
+
+
 def _action(spec, tick):
+    steer = float(spec.get("steer", 0.0)); drive = float(spec.get("drive", 0.0))
     if tick < spec["coast"]:
-        return jp.zeros((4,), jp.float32)
+        return jp.asarray([steer, drive, 0., 0.], jp.float32)
     if tick < spec["coast"] + spec["correction_duration"]:
-        return jp.asarray([0., 0., spec["hip"], spec["knee"]], jp.float32)
+        return jp.asarray([steer, drive, spec["hip"], spec["knee"]], jp.float32)
     if tick < spec["coast"] + spec["correction_duration"] + spec["post_duration"]:
         return jp.asarray(
-            [0., 0., spec["post_hip"], spec["post_knee"]], jp.float32
+            [steer, drive, spec["post_hip"], spec["post_knee"]], jp.float32
         )
     return jp.zeros((4,), jp.float32)
 
@@ -133,6 +143,7 @@ def main() -> None:
     p.add_argument("--horizon", type=int, default=100)
     p.add_argument("--downstream-horizon", type=int, default=200)
     p.add_argument("--round-b-proposals", type=int, default=48)
+    p.add_argument("--full-action-extension", action="store_true")
     p.add_argument("--seed", type=int, default=11_100_000)
     a = p.parse_args()
     bank = SnapshotBank.load(a.apex_bank)
@@ -302,6 +313,21 @@ def main() -> None:
                 if result["valid_descent_entry"]:
                     break
     outcomes = round_a + round_b
+    round_c = []
+    if a.full_action_extension and not any(
+            r["valid_descent_entry"] and r["dynamic_evidence"] for r in outcomes):
+        for row in bank.records:
+            prior = [r for r in outcomes if r["candidate_id"] == row["id"]]
+            base = max(prior, key=lambda r: (
+                int(r["valid_descent_entry"]),
+                -(r["minimum_support_distance"] or 1e9), -r["action_energy"],
+            ))["parameters"]
+            for spec in _round_c(base):
+                result = rollout(row, spec, counter); counter += 1
+                round_c.append(result)
+                if result["valid_descent_entry"]:
+                    break
+        outcomes += round_c
     dynamic_success = [r for r in outcomes if r["valid_descent_entry"]
                        and r["dynamic_evidence"]]
     success_parents = {r["independent_parent"] for r in dynamic_success}
@@ -320,6 +346,8 @@ def main() -> None:
         "dynamic_states": sum(is_dynamically_reached_apex(r) for r in bank.records),
         "round_a_branches": len(round_a), "round_b_executed": bool(round_b),
         "round_b_branches": len(round_b),
+        "round_c_full_action_executed": bool(round_c),
+        "round_c_full_action_branches": len(round_c),
         "dynamic_descent_positive_unique": len({
             r["candidate_id"] for r in dynamic_success
         }),
