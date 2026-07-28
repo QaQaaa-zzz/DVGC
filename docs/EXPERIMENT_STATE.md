@@ -1,5 +1,43 @@
 # DVGC Experiment State
 
+## Reachability-ranked unseen-parent acquisition exhausted (2026-07-29)
+
+- Commits `a2f52c8`, `21de782`, `1974212`, `9a08bdd` and `82886ca`
+  added a construction-only nonlinear proposal guide, provenance-checked
+  ranked pilot and two bounded boundary-neighborhood rounds.  Frozen XML,
+  `pi_D`, `pi_L`, Tube v4, continuous entry v2, matcher radii and
+  Final-Recovery semantics were unchanged; PPO remained unauthorized.
+- The deduplicated construction dataset contained 63 states from 49 parents,
+  including 10 parents with nonzero Final-Recovery probability.  Nested
+  parent-held-out CV selected the deployable physical 16D kernel over the
+  140D Actor history: Brier 0.080083 versus 0.116839, AUPRC 0.784657 versus
+  0.445283; parent-prior Brier/AUPRC were 0.124219/0.147238.  This was a
+  proposal-only CV result, never a Tube or matcher result.
+- Prospective validation on 12 wholly unseen parents failed the robust gate:
+  P0=1, P1=0.  The sole middle-region P0 state had exact replay 2/2 and micro
+  Final-Recovery 3/4; the failed branch was `roll_limit`.  The available
+  unseen-parent pool was already coverage-limited to early/middle/late
+  1/38/4, so the fixed acquisition selected 1/7/4 without reusing parents.
+- A fixed 24-state local `(vx,vz)` grid around that boundary produced P0=10,
+  P1=0.  The evidence-directed nonrepeating 12-state refinement produced
+  P0=8, P1=0.  Every micro failure was `roll_limit`; the best states remained
+  3/4 with minimum roll margin about -0.005.  The parent-local robustification
+  budget is therefore exhausted and no result entered independent audit or
+  Tube v4.
+- The first pilot v1 ended before any candidate label because graph lineage
+  omitted `nearest_downstream_node_id`; it is preserved and marked as an
+  engineering failure.  Commit `1974212` restored the field from the immutable
+  proposal index, and v2 completed normally.  No checkpoint or result was
+  overwritten.
+- Current interpretation: construction CV supports coarse acquisition ranking
+  for any-success, but prospective robust-P1 transfer failed.  Do not use this
+  model to claim robust support or continue the same parent-local search.
+  Descent Tube v4 remains complete at 22 independently certified states and
+  continuous entry v2 remains frozen.  The next nonrepeating mainline action
+  is a bounded upstream-controller search using the reachability signal only
+  as a proposal objective; every candidate must still enter frozen continuous
+  entry v2 and pass branch certification before Apex PPO can be authorized.
+
 ## Descent Tube complete; upstream formal-entry gate remains (2026-07-28)
 
 - Natural-lineage replay against the six-anchor continuous entry v2 remained
