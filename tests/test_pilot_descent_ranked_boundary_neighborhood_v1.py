@@ -1,4 +1,4 @@
-from cli.pilot_descent_ranked_boundary_neighborhood_v1 import local_deltas, p0_anchor_ids
+from cli.pilot_descent_ranked_boundary_neighborhood_v1 import local_deltas, p0_anchor_ids, refinement_deltas
 
 
 def test_local_grid_is_fixed_symmetric_and_excludes_zero():
@@ -16,3 +16,13 @@ def test_only_p0_rows_become_local_anchors():
         {"node_id": "c", "P0": {"pass": False}},
     ]}
     assert p0_anchor_ids(certification) == ["a", "b"]
+
+
+def test_refinement_grid_is_bounded_and_does_not_repeat_coarse_grid():
+    coarse = {tuple(round(float(value), 6) for value in row) for row in local_deltas()}
+    refinement = refinement_deltas()
+    assert refinement.shape == (12, 2)
+    assert not (coarse & {tuple(round(float(value), 6) for value in row) for row in refinement})
+    assert refinement[:, 0].min() > 0
+    assert refinement[:, 1].max() <= 0
+    assert abs(refinement).max() <= 0.01

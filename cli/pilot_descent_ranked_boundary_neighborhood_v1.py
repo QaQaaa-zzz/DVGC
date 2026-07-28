@@ -29,12 +29,21 @@ from dvgc.trajectory_mining import canonical_state_byte_hash
 SOURCE = Path("runs/descent_reachability_kernel_v2/ranked_unseen_parent_pilot_v2")
 EXPERT = Path("runs/descent_diverse_p1_predecessor_recovery_v5_p1_core_adapter")
 DEFAULT_RUN = Path("runs/descent_reachability_kernel_v2/ranked_boundary_neighborhood_v1")
+REFINEMENT_RUN = Path("runs/descent_reachability_kernel_v2/ranked_boundary_neighborhood_v2_refinement")
 SEED = 3_820_000_000
 
 
 def local_deltas() -> np.ndarray:
     values = (-0.01, -0.005, 0.0, 0.005, 0.01)
     return np.asarray([(vx, vz) for vx in values for vz in values if vx != 0 or vz != 0], np.float32)
+
+
+def refinement_deltas() -> np.ndarray:
+    coarse = {tuple(round(float(value), 6) for value in row) for row in local_deltas()}
+    values_vx = (0.0025, 0.005, 0.0075, 0.01)
+    values_vz = (-0.0075, -0.005, -0.0025, 0.0)
+    return np.asarray([(vx, vz) for vx in values_vx for vz in values_vz
+                       if tuple(round(float(value), 6) for value in (vx, vz)) not in coarse], np.float32)
 
 
 def p0_anchor_ids(certification: dict) -> list[str]:
@@ -45,8 +54,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", default=str(SOURCE))
     parser.add_argument("--run", default=str(DEFAULT_RUN))
+    parser.add_argument("--mode", choices=("coarse", "refinement"), default="coarse")
     args = parser.parse_args()
     source, root = Path(args.source), Path(args.run)
+    if args.mode == "refinement" and root == DEFAULT_RUN:
+        root = REFINEMENT_RUN
     if root.exists():
         raise SystemExit(f"refusing overwrite {root}")
     certification = json.loads((source / "certification.json").read_text())
@@ -66,13 +78,14 @@ def main() -> None:
     if gate.get("status") != "PASS" or gate.get("source_fingerprint") != source_fingerprint(Path.cwd()):
         raise SystemExit("runtime gate stale")
 
-    deltas = local_deltas()
+    deltas = local_deltas() if args.mode == "coarse" else refinement_deltas()
+    seed_base = SEED if args.mode == "coarse" else SEED + 10_000_000
     root.mkdir(parents=True)
     inputs = {
         "source_manifest_sha256": file_sha256(source / "manifest.json"),
         "source_certification_sha256": file_sha256(source / "certification.json"),
         "C_L": frozen["C_L"], "pi_D": frozen["pi_D"], "pi_L": frozen["pi_L"],
-        "xml": EXPECTED["xml"], "seed": SEED,
+        "xml": EXPECTED["xml"], "seed": seed_base, "mode": args.mode,
     }
     save_json(root / "manifest.json", {
         "status": "FROZEN_BEFORE_OUTCOMES", "inputs": inputs, "anchor_ids": anchors,
@@ -103,9 +116,9 @@ def main() -> None:
         source_row = selected_by_id[identifier]
         anchor = _load_record(source_row)
         for delta_index, delta in enumerate(deltas):
-            seed = SEED + anchor_index * 1000 + delta_index * 10
+            seed = seed_base + anchor_index * 1000 + delta_index * 10
             record = _perturb_record(env, anchor, delta, seed)
-            node_id = hashlib.sha256(f"ranked-boundary:{identifier}:{delta_index}:{SEED}".encode()).hexdigest()[:32]
+            node_id = hashlib.sha256(f"ranked-boundary:{args.mode}:{identifier}:{delta_index}:{seed_base}".encode()).hexdigest()[:32]
             record.update({
                 "id": node_id, "origin_anchor_id": identifier, "candidate_kind": "descent_ranked_boundary_local",
                 "construction_delta_vx_vz": delta.tolist(), "descent_region": source_row["region"],
@@ -120,7 +133,7 @@ def main() -> None:
                 "parent_node_id": source_row["nearest_downstream_node_id"],
             })
     result = certify_policy(
-        env, descent_policy, landing_policy, nodes, SEED + 100_000,
+        env, descent_policy, landing_policy, nodes, seed_base + 100_000,
         record_loader=lambda node: node["physical_state"], descent_action_adapter=adapter,
         policy_identity_hash=artifact["policy_identity_hash"],
     )
