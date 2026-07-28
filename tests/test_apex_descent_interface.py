@@ -44,6 +44,21 @@ def test_multiknot_search_uses_real_event_and_failure_typing():
     assert "final_recovery_branches" in text
 
 
+def test_event_aligned_ascent_entries_are_dynamic_apex_evidence():
+    from cli.search_apex_descent_multiknot import is_dynamically_reached_apex
+
+    assert is_dynamically_reached_apex({
+        "candidate_kind": "stage_entry_snapshot",
+        "entry_from_stage": "ascent",
+        "entry_to_stage": "apex",
+    })
+    assert not is_dynamically_reached_apex({
+        "candidate_kind": "stage_entry_snapshot",
+        "entry_from_stage": "takeoff",
+        "entry_to_stage": "ascent",
+    })
+
+
 def test_controller_runs_interface_audits_before_any_apex_training():
     text = Path("cli/stage_next_v3_controller.py").read_text()
     order = [

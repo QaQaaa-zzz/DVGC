@@ -27,6 +27,18 @@ FEATURE_NAMES = (
 )
 
 
+def is_dynamically_reached_apex(row: dict) -> bool:
+    """Recognize legacy and event-aligned dynamic Apex proposals."""
+    return bool(
+        row.get("candidate_kind") == "apex_dynamically_reached"
+        or (
+            row.get("candidate_kind") == "stage_entry_snapshot"
+            and row.get("entry_from_stage") == "ascent"
+            and row.get("entry_to_stage") == "apex"
+        )
+    )
+
+
 def _round_a():
     specs = []
     correction = (
@@ -228,7 +240,7 @@ def main() -> None:
                 "independent_trajectory_parent_id",
                 row.get("source_parent_id", row.get("trajectory_parent_id")),
             ),
-            "dynamic_evidence": row.get("candidate_kind") == "apex_dynamically_reached",
+            "dynamic_evidence": is_dynamically_reached_apex(row),
             "proposal_index": proposal_index, "seed": seed, "parameters": spec,
             "valid_descent_entry": valid, "time_to_descent_entry": tick + 1 if valid else None,
             "apex_crossed": zero_crossing is not None,
@@ -270,7 +282,7 @@ def main() -> None:
     round_b = []
     if not dynamic_success_a:
         for ri, row in enumerate(bank.records):
-            if row.get("candidate_kind") != "apex_dynamically_reached":
+            if not is_dynamically_reached_apex(row):
                 continue
             base = best_by_state[row["id"]]["parameters"]
             for spec in _round_b(base, a.seed + 70_000_000 + ri,
@@ -295,8 +307,7 @@ def main() -> None:
         "horizon": a.horizon,
         "horizon_rationale": "100 ticks covers coast, physical vz zero crossing, negative-vz formation, and post-Apex correction; downstream gets a separate 200-tick continuation",
         "states": len(bank.records),
-        "dynamic_states": sum(r.get("candidate_kind") == "apex_dynamically_reached"
-                              for r in bank.records),
+        "dynamic_states": sum(is_dynamically_reached_apex(r) for r in bank.records),
         "round_a_branches": len(round_a), "round_b_executed": bool(round_b),
         "round_b_branches": len(round_b),
         "dynamic_descent_positive_unique": len({
