@@ -125,6 +125,7 @@ def default_config() -> config_dict.ConfigDict:
         stage_entry_event_reward=8.0,
         stage_entry_survival_reward=0.002,
         stage_entry_progress_coeff=0.10,
+        stage_support_relative_progress_gain=4.0,
         stage_entry_pose_coeff=0.04,
         stage_entry_speed_coeff=0.02,
         stage_entry_angular_penalty_coeff=0.02,

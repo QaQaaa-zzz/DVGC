@@ -33,3 +33,10 @@ def test_apex_support_potential_has_no_positive_stall_loop():
  assert float(progress(1.,2.))>0
  assert float(progress(2.,1.))<0
  assert float(progress(1.,1.))<=.01
+
+def test_apex_support_progress_remains_informative_far_from_tight_support():
+ cfg=default_config();f=jp.zeros(16);a=jp.zeros(4)
+ def progress(cur,prev):
+  return compute_stage_next_entry_reward(cfg=cfg,objective='apex_to_descent',feature=f,previous_feature=f,action=a,previous_action=a,next_entry=jp.asarray(False),hard_failure=jp.asarray(False),jump_latched=jp.asarray(True),window_active=jp.asarray(True),joint_energy=jp.asarray(0.0),current_support_distance=jp.asarray(cur),previous_support_distance=jp.asarray(prev))['progress']
+ assert float(progress(300.,310.))>float(progress(310.,310.))>float(progress(320.,310.))
+ assert float(progress(310.,310.))==0.

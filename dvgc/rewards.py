@@ -46,8 +46,13 @@ def compute_stage_next_entry_reward(
                           if current_support_distance is None else current_support_distance)
         previous_distance=(jp.abs(prev[8]+0.30)/0.30+jp.abs(prev[2]-float(cfg.stage_apex_target_height))/0.15
                            if previous_support_distance is None else previous_support_distance)
-        phi=-jp.clip(current_distance,0.0,8.0);previous_phi=-jp.clip(previous_distance,0.0,8.0)
-        progress=jp.clip(0.995*phi-previous_phi,-1.0,1.0)
+        # Tight certified entry regions can put fresh upstream states hundreds
+        # of matcher radii away.  Clipping both potentials at eight erased all
+        # approach/departure information there and created a positive stall
+        # term.  Relative decrease is bounded, scale-aware, and exactly zero
+        # when the state makes no support progress; it does not alter the gate.
+        relative_decrease=(previous_distance-current_distance)/jp.maximum(previous_distance,1.0)
+        progress=jp.clip(float(cfg.stage_support_relative_progress_gain)*relative_decrease,-1.0,1.0)
     elif objective=="descent_to_landing":
         progress=jp.exp(-(((vz+0.45)/0.35)**2))
     else:
