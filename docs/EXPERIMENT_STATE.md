@@ -1,5 +1,31 @@
 # DVGC Experiment State
 
+## Expanded certified compact-expert Descent Tube v3 (2026-07-28)
+
+- A CPU-only parent-held-out reachability probe on the 24 construction states
+  did not justify a history-based proposal model: actor-history Brier=0.24001
+  versus physical-16D Brier=0.23200 (relative change -3.45%). The failed model
+  is advisory-only and was not used to define Tube membership or matching.
+- An outcome-blind natural-targeted candidate pilot instead selected 12 new
+  parent-distinct proposals, four per early/middle/late region. Frozen compact
+  pi_D -> pi_L evaluation found P0=3 and P1=2 from two late-region parents;
+  no PPO, matcher expansion or audit-label feedback was used.
+- Fresh independent namespace
+  `descent-natural-targeted-independent-audit-v1` evaluated the two P1 states
+  with 32 branches each and three fixed dynamics variants. Both were 32/32
+  Final-safe: Final=Chain=64/64, physical failure=timeout=horizon=nonfinite=0.
+- Non-overwriting standard Tube v3 is
+  `runs/descent_natural_bridge_candidates_v1/independent_audit_2x32/descent_tube_v3.pkl`,
+  version `descent-compact-5ed48f633ec7`, SHA-256
+  `f63d4ff7...ae83332b`. It unions the 18 v2 states and two newly audited
+  states: 20/20 records are standard Final-safe under one frozen policy
+  identity, with 640 unique branch records total. Exact handoff v2 is stored
+  beside it. Tube v2 is preserved; continuous C_D matcher remains inactive.
+- This completes and expands the independently certified Descent phase Tube.
+  It remains a bootstrap-expert phase Tube, not final shared-policy JEL. The
+  natural/Apex predecessor bridge remains separately blocked; the new safe
+  states are late support and did not establish a natural-start handoff.
+
 ## Descent Tube upstream bridge bounded audit (2026-07-28)
 
 - The independently certified compact-expert Descent Tube v2 remains frozen
