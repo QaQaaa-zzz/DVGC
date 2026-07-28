@@ -1,5 +1,24 @@
 # DVGC Experiment State
 
+## Descent continuous-entry representation diagnostic (2026-07-28)
+
+- The inactive continuous `C_D` matcher was not relaxed.  A CPU-only
+  construction diagnostic tested the exact deployable 140-dimensional online
+  Actor observation/history on the immutable 24-state construction set.  No
+  fixed robust-normalized radius met the 0.95 precision gate: across scale
+  floors 0.01--0.50, the best precision was 0.157895 at recall 1.0.
+- Adding the separately constructed 12-state natural-targeted pilot (five
+  construction positives in 36 total states) did not resolve the aliasing:
+  best precision was 0.208333 at recall 1.0 for every tested floor.  These are
+  construction labels, not independent-audit feedback.
+- Therefore neither the task-relative 16D feature nor a single global ball in
+  the deployable Actor-history feature can define formal continuous Descent
+  entry.  `C_D` remains inactive and exact handoff plus Tube v3 remain frozen.
+  The next bounded construction test is per-anchor local neighborhoods with
+  construction-only calibration and a fresh, isolated audit; no Apex PPO is
+  authorized before two parent-disjoint upstream trajectories enter a frozen
+  formal Descent region.
+
 ## Expanded certified compact-expert Descent Tube v3 (2026-07-28)
 
 - A CPU-only parent-held-out reachability probe on the 24 construction states
