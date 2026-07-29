@@ -8,6 +8,10 @@ def test_follow_on_controller_is_bounded_and_does_not_touch_apex_worker():
     assert "systemctl --user stop" not in text
     assert "systemctl --user restart" not in text
     assert "build_phase_balanced_teacher_dataset" in text
+    assert "build_phase_balanced_tube_rsi_bank" in text
+    assert "phase_balanced_tube_rsi_v2" in text
+    assert "descent_tube_v6.pkl" in text
+    assert "verification_v2.json" in text
     assert "train_phase_balanced_distillation" in text
     assert "preflight_phase_balanced_unified_rsi" in text
     assert "train_phase_balanced_unified_rsi_pilot" in text
@@ -19,5 +23,6 @@ def test_pipeline_preserves_atomic_nonoverwrite_outputs():
     text = Path("scripts/run_final_shared_policy_pipeline.sh").read_text()
     assert "partial teacher artifact; refusing overwrite" in text
     assert "partial distillation artifact; refusing overwrite" in text
+    assert "partial phase-balanced v2 bank/report; refusing overwrite" in text
     assert "repair_distillation_without_PPO" in text
     assert "without_budget_increase" in text

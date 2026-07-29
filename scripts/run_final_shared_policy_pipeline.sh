@@ -3,11 +3,16 @@ set -euo pipefail
 
 ROOT="${DVGC_ROOT:-/home/qy/DVGC}"
 PY="/home/qy/mujoco_playground/.venv/bin/python"
-PHASE_ROOT="runs/safe_state_tube_rsi_seed0_20260729/phase_balanced_tube_rsi_v1"
+PHASE_ROOT="runs/safe_state_tube_rsi_seed0_20260729/phase_balanced_tube_rsi_v2"
 PHASE_BANK="$PHASE_ROOT/bank.pkl"
 PHASE_REPORT="$PHASE_ROOT/report.json"
+APEX_BANK="runs/safe_state_tube_rsi_seed0_20260729/apex/apex_entry_support_v1/apex_entry_support_v1.pkl"
+APEX_REPORT="runs/safe_state_tube_rsi_seed0_20260729/apex/apex_entry_support_v1/report.json"
+DESCENT_V6="runs/descent_reachability_network_v3/tube_v6_schema_normalization_20260729/descent_tube_v6.pkl"
+DESCENT_V6_REPORT="runs/descent_reachability_network_v3/tube_v6_schema_normalization_20260729/report.json"
+DESCENT_V6_VERIFY="runs/descent_reachability_network_v3/tube_v6_schema_normalization_20260729/verification_v2.json"
 COMPAT="runs/safe_state_tube_rsi_seed0_20260729/phase_expert_compatibility_v1/report.json"
-RUN="runs/safe_state_tube_rsi_seed0_20260729/final_shared_policy_v1"
+RUN="runs/safe_state_tube_rsi_seed0_20260729/final_shared_policy_v2"
 TEACHERS="$RUN/distillation/teacher_dataset.pkl"
 TEACHER_REPORT="$RUN/distillation/teacher_report.json"
 DISTILLED="$RUN/distillation/policy"
@@ -28,14 +33,40 @@ write_state() {
     "$STATE" "$stage" "$status" "$next" "$error"
 }
 
-write_state waiting_for_apex active build_phase_balanced_teacher_dataset
-while [[ ! -s "$PHASE_BANK" || ! -s "$PHASE_REPORT" ]]; do
+write_state waiting_for_apex active build_phase_balanced_tube_rsi_v2
+while [[ ! -s "$APEX_BANK" || ! -s "$APEX_REPORT" ]]; do
   if ! systemctl --user is-active --quiet dvgc-apex-reachability-funnel-v3.service; then
     write_state apex_funnel_blocked gate_pause inspect_apex_funnel "Apex controller ended before atomic phase-balanced bank/report"
     exit 40
   fi
   sleep 120
 done
+
+if [[ ! -s "$DESCENT_V6" || ! -s "$DESCENT_V6_REPORT" || ! -s "$DESCENT_V6_VERIFY" ]]; then
+  write_state descent_tube_v6_missing engineering_failure verify_descent_tube_v6 \
+    "normalized Descent Tube v6 or its PASS verification is absent"
+  exit 2
+fi
+if [[ "$($PY -c 'import json,sys; print(json.load(open(sys.argv[1]))["status"])' "$DESCENT_V6_VERIFY")" != "PASS" ]]; then
+  write_state descent_tube_v6_invalid gate_pause inspect_descent_tube_v6 \
+    "normalized Descent Tube v6 verification is not PASS"
+  exit 40
+fi
+
+if [[ ! -s "$PHASE_BANK" && ! -s "$PHASE_REPORT" ]]; then
+  write_state phase_balanced_bank_v2 active teacher_extraction
+  "$PY" -m cli.build_phase_balanced_tube_rsi_bank \
+    --takeoff-bank runs/safe_state_tube_rsi_seed0_20260729/takeoff/takeoff_entry_support_v2.pkl \
+    --ascent-bank runs/safe_state_tube_rsi_seed0_20260729/ascent/ascent_entry_support_v2.pkl \
+    --apex-bank "$APEX_BANK" --descent-bank "$DESCENT_V6" \
+    --landing-bank artifacts/landing_tube.pkl \
+    --landing-completion-analysis runs/landing/landing_completion_analysis.json \
+    --output-bank "$PHASE_BANK" --output-report "$PHASE_REPORT"
+elif [[ ! -s "$PHASE_BANK" || ! -s "$PHASE_REPORT" ]]; then
+  write_state phase_balanced_bank_v2 engineering_failure inspect_partial_phase_bank \
+    "partial phase-balanced v2 bank/report; refusing overwrite"
+  exit 2
+fi
 
 if [[ ! -s "$TEACHERS" && ! -s "$TEACHER_REPORT" ]]; then
   write_state teacher_extraction active bounded_distillation
