@@ -2,6 +2,12 @@
 
 ## Safe-state network -> Tube -> RSI mainline (2026-07-29)
 
+- HEAD `e2b8aea`; worktree clean after adding the phase-conditioned action
+  retention gate to the bounded unified RSI pilot.  Promotion now requires
+  both fixed Final-state retention and full-bank Descent/Landing action drift
+  RMS <= 0.02 and max <= 0.05; the report records mean/p95/max drift for all
+  five phases.  Targeted tests pass (8/8), and the runtime fingerprint remains
+  current because no runtime source/config/XML changed.
 - Current execution is the bounded Apex reachability funnel.  All sixteen
   parent-diverse model-ranked states passed the first screen (16/16 states,
   64/64 local branches), and the persistent controller has advanced them to
