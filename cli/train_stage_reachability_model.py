@@ -18,7 +18,7 @@ def classification(target,pred,threshold=.5):
  tp=int(np.sum(truth&positive));fp=int(np.sum(~truth&positive));fn=int(np.sum(truth&~positive))
  return {'threshold':threshold,'precision':tp/max(tp+fp,1),'recall':tp/max(tp+fn,1),'tp':tp,'fp':fp,'fn':fn}
 def parent_key(row):
- return str(row.get('trajectory_parent_id') or row.get('parent_candidate_id') or row.get('parent_anchor_pair') or f"reference:{row.get('reference_index')}")
+ return str(row.get('independent_trajectory_parent_id') or row.get('source_parent_id') or row.get('origin_parent') or row.get('trajectory_parent_id') or row.get('parent_candidate_id') or row.get('parent_anchor_pair') or f"reference:{row.get('reference_index')}")
 def fit(group):
  X=np.asarray([x[0]['physical_feature'] for x in group],float);y=np.asarray([x[1]['p_next'] for x in group],float);center=np.median(X,axis=0);scale=np.maximum(np.median(np.abs(X-center),axis=0)*1.4826,np.asarray([.03,.01,.01,.01,.01,.01,.08,.03,.08,.08,.08,.08,.01,.02,.02,.5]));Z=(X-center)/scale;w=np.zeros(Z.shape[1]);b=0.
  for _ in range(4000):

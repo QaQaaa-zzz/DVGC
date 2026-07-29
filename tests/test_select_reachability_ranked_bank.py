@@ -33,3 +33,23 @@ def test_selection_fails_instead_of_implicitly_relaxing_diversity():
     with pytest.raises(ValueError, match="diversity limits"):
         select(records, proposals(records), target=7, max_per_parent=2,
                minimum_per_kind=2)
+
+
+def test_selection_excludes_out_of_support_model_extrapolation():
+    records = rows()
+    ranked = proposals(records)
+    ranked[0]["acquisition_eligible"] = False
+    chosen = select(records, ranked, target=5, max_per_parent=2,
+                    minimum_per_kind=2)
+    assert records[0]["id"] not in {row["id"] for row, _, _ in chosen}
+
+
+def test_generated_seed_suffixes_do_not_create_fake_parent_diversity():
+    records = [
+        {"id": f"x{i}", "candidate_kind": "dynamic",
+         "trajectory_parent_id": f"root:seed:{i}", "source_parent_id": "root"}
+        for i in range(3)
+    ]
+    with pytest.raises(ValueError, match="diversity limits"):
+        select(records, proposals(records), target=2, max_per_parent=1,
+               minimum_per_kind=0)

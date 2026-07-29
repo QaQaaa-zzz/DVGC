@@ -15,16 +15,13 @@ from pathlib import Path
 from dvgc.bank import SnapshotBank
 from dvgc.config import file_sha256
 from dvgc.runtime import save_json
+from cli.train_stage_reachability_model import parent_key as state_parent_key
 
 
 def parent_key(row: dict, proposal: dict) -> str:
-    return str(
-        proposal.get("parent")
-        or row.get("trajectory_parent_id")
-        or row.get("parent_candidate_id")
-        or row.get("parent_anchor_pair")
-        or f"reference:{row.get('reference_index')}"
-    )
+    # Root lineage in the state is authoritative.  A generated branch/seed
+    # suffix must never masquerade as an independent parent.
+    return state_parent_key(row)
 
 
 def select(records: list[dict], proposals: list[dict], target: int,
@@ -34,6 +31,8 @@ def select(records: list[dict], proposals: list[dict], target: int,
     by_id = {str(row["id"]): row for row in records}
     ranked = []
     for proposal in proposals:
+        if proposal.get("acquisition_eligible") is False:
+            continue
         candidate_id = str(proposal["candidate_id"])
         if candidate_id not in by_id:
             raise ValueError(f"ranked proposal is absent from source bank: {candidate_id}")

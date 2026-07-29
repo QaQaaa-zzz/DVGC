@@ -17,3 +17,7 @@ def test_parent_identity_prefers_real_trajectory_lineage():
     assert parent_key({"trajectory_parent_id": "trajectory", "reference_index": 4}) == "trajectory"
     assert parent_key({"parent_candidate_id": "candidate", "reference_index": 4}) == "candidate"
     assert parent_key({"reference_index": 4}) == "reference:4"
+    assert parent_key({"independent_trajectory_parent_id": "root",
+                       "trajectory_parent_id": "root:seed:1"}) == "root"
+    assert parent_key({"source_parent_id": "root",
+                       "trajectory_parent_id": "root:seed:2"}) == "root"
