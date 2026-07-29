@@ -223,6 +223,8 @@ def collect_status(run: Path, now: float | None = None, *, controller_unit: str 
     controller = unit_properties(controller_unit)
     workers = active_worker_units()
     named_worker = str(state.get("active_worker_unit") or "")
+    if not named_worker and state.get("current_stage") == "waiting_for_apex":
+        named_worker = "dvgc-apex-reachability-funnel-v3.service"
     worker = unit_properties(named_worker) if named_worker else {
         "unit": None, "pid": 0, "active": False, "ActiveState": "inactive", "SubState": "dead"
     }

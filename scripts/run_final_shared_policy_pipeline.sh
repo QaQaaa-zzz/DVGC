@@ -13,6 +13,7 @@ DESCENT_V6_REPORT="runs/descent_reachability_network_v3/tube_v6_schema_normaliza
 DESCENT_V6_VERIFY="runs/descent_reachability_network_v3/tube_v6_schema_normalization_20260729/verification_v2.json"
 COMPAT="runs/safe_state_tube_rsi_seed0_20260729/phase_expert_compatibility_v1/report.json"
 RUN="runs/safe_state_tube_rsi_seed0_20260729/final_shared_policy_v2"
+AUDIT_RUN="$RUN/final_jel_audit_v2"
 TEACHERS="$RUN/distillation/teacher_dataset.pkl"
 TEACHER_REPORT="$RUN/distillation/teacher_report.json"
 DISTILLED="$RUN/distillation/policy"
@@ -136,6 +137,16 @@ fi
 status="$($PY -c 'import json,sys; print(json.load(open(sys.argv[1]))["status"])' "$PILOT/report.json")"
 if [[ "$status" == "PASS_PROMOTE" ]]; then
   write_state pilot_complete pass expanded_fixed_phase_evaluation
+  "$PY" -c '
+import sys
+from dvgc.runtime import save_json
+save_json("runs/ACTIVE_PIPELINE.json", {
+    "run_path": sys.argv[1],
+    "controller_unit": "dvgc-final-shared-jel-audit-v2.service",
+    "start_script": "scripts/start_final_shared_v2_followons.sh",
+    "status": "ACTIVE",
+})
+' "$AUDIT_RUN"
 else
   write_state pilot_no_promotion gate_pause diagnose_reward_reset_action_drift_without_budget_increase "$status"
   exit 40

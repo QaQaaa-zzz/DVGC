@@ -30,3 +30,17 @@ def test_pipeline_preserves_atomic_nonoverwrite_outputs():
     assert "repair_distillation_without_PPO" in text
     assert "distillation_downstream_fidelity" in text
     assert "without_budget_increase" in text
+    assert '"controller_unit": "dvgc-final-shared-jel-audit-v2.service"' in text
+    assert '"run_path": sys.argv[1]' in text
+
+
+def test_v2_follow_on_start_is_nonblocking_and_updates_active_pointer():
+    text = Path("scripts/start_final_shared_v2_followons.sh").read_text()
+    assert "systemd-run --user" in text
+    assert "systemctl --user --no-block start" in text
+    assert "dvgc-final-shared-policy-v2.service" in text
+    assert "dvgc-final-shared-jel-audit-v2.service" in text
+    assert "runs/ACTIVE_PIPELINE.json" in text
+    assert "run_final_shared_policy_pipeline.sh" in text
+    assert "run_final_shared_jel_audit.sh" in text
+    assert "rm " not in text

@@ -118,6 +118,29 @@ def test_collect_status_honors_explicit_terminal_without_rewriting_stage(monkeyp
     assert status["research_gate_valid"] is True
 
 
+def test_waiting_v2_status_exposes_apex_dependency_as_worker(monkeypatch, tmp_path):
+    (tmp_path / "controller_state.json").write_text(
+        '{"current_stage":"waiting_for_apex","heartbeat":100,"history":[],"provenance":{}}'
+    )
+
+    def properties(unit):
+        return {
+            "unit": unit, "pid": 22 if "apex" in unit else 11,
+            "active": True, "ActiveState": "active", "SubState": "running",
+            "Result": "success", "ExecMainCode": "0", "ExecMainStatus": "0",
+        }
+
+    monkeypatch.setattr(watchdog, "unit_properties", properties)
+    monkeypatch.setattr(watchdog, "active_worker_units", lambda: [])
+    monkeypatch.setattr(watchdog, "process_count", lambda value: 0)
+    status = watchdog.collect_status(
+        tmp_path, now=101, controller_unit="dvgc-final-shared-policy-v2.service"
+    )
+    assert status["worker_unit"] == "dvgc-apex-reachability-funnel-v3.service"
+    assert status["worker_active"] is True
+    assert status["worker_pid"] == 22
+
+
 def test_duplicate_notification_event_is_not_sent_twice(monkeypatch, tmp_path):
     monkeypatch.setattr(watchdog, "NOTIFICATION_STATE", tmp_path / "notifications.json")
     monkeypatch.setattr(watchdog, "PENDING_NOTIFICATION", tmp_path / "pending.json")
