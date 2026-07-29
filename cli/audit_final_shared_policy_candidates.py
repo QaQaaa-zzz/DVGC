@@ -135,9 +135,18 @@ def main() -> None:
         "status": "PASS", "artifact_role": "final_shared_policy_branch_audit",
         "formal_tube_or_jel": False, "policy_path": str(Path(args.policy)),
         "policy_params_sha256": file_sha256(Path(args.policy) / "params.pkl"),
+        "xml_sha256": manifest["xml_sha256"],
+        "action_mapping_version": manifest["action_mapping_version"],
         "candidate_bank": str(Path(args.candidate_bank)),
         "candidate_bank_sha256": input_hash,
         "root_candidate_bank_sha256": root_hash,
+        "root_candidate_state_count": int(candidates.metadata.get(
+            "root_source_state_count", len(candidates.records)
+        )),
+        "root_phase_state_counts": candidates.metadata.get("root_phase_state_counts", {
+            stage: sum(row.get("phase_rsi_stage") == stage for row in candidates.records)
+            for stage in STAGES
+        }),
         "canonical_entry_bank_sha256": file_sha256(args.canonical_entry_bank),
         "branches_per_state": args.branches, "seed_base": args.seed,
         "seed_namespace": args.namespace, "horizon": args.horizon,

@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import math
 from collections import Counter
 from pathlib import Path
 
@@ -21,6 +22,29 @@ def exact_ids(report: dict, branches: int) -> set[str]:
             and row.get("label") == "positive"
             and len(row.get("branches", [])) == branches
             and all(branch.get("final_recovery") is True for branch in row["branches"])}
+
+
+def calibration_metrics(construction_by_id: dict, audit_by_id: dict, branches: int) -> dict:
+    pairs = []
+    bins = [[] for _ in range(10)]
+    for key in sorted(set(construction_by_id) & set(audit_by_id)):
+        probability = float(construction_by_id[key]["s"]) / branches
+        outcomes = [float(branch["final_recovery"]) for branch in audit_by_id[key]["branches"]]
+        if len(outcomes) != branches:
+            raise ValueError(f"audit branch count mismatch for {key}")
+        pairs.extend((probability, outcome) for outcome in outcomes)
+        bins[min(9, int(probability * 10))].extend((probability, outcome) for outcome in outcomes)
+    if not pairs:
+        raise ValueError("no common construction/audit states")
+    brier = sum((probability - outcome) ** 2 for probability, outcome in pairs) / len(pairs)
+    ece = sum(
+        len(group) / len(pairs) * abs(
+            sum(probability for probability, _ in group) / len(group)
+            - sum(outcome for _, outcome in group) / len(group)
+        )
+        for group in bins if group
+    )
+    return {"brier": brier, "ece_10_bin": ece, "audit_branches": len(pairs)}
 
 
 def main() -> None:
@@ -49,10 +73,17 @@ def main() -> None:
         raise SystemExit("construction and independent audit use different frozen policies")
     if construction.get("canonical_entry_bank_sha256") != audit.get("canonical_entry_bank_sha256"):
         raise SystemExit("construction and independent audit use different C_L banks")
+    for key in ("xml_sha256", "action_mapping_version", "root_candidate_bank_sha256"):
+        if construction.get(key) != audit.get(key):
+            raise SystemExit(f"construction and independent audit disagree on {key}")
     if construction.get("seed_namespace") == audit.get("seed_namespace"):
         raise SystemExit("independent audit reuses construction namespace")
-    construction_seeds = {branch["seed"] for row in construction["labels"] for branch in row["branches"]}
-    audit_seeds = {branch["seed"] for row in audit["labels"] for branch in row["branches"]}
+    construction_seed_list = [branch["seed"] for row in construction["labels"] for branch in row["branches"]]
+    audit_seed_list = [branch["seed"] for row in audit["labels"] for branch in row["branches"]]
+    if (len(construction_seed_list) != len(set(construction_seed_list))
+            or len(audit_seed_list) != len(set(audit_seed_list))):
+        raise SystemExit("a Final audit contains duplicate branch seeds")
+    construction_seeds = set(construction_seed_list); audit_seeds = set(audit_seed_list)
     if construction_seeds & audit_seeds:
         raise SystemExit("independent Final audit reuses construction branch seeds")
     construction_safe = exact_ids(construction, args.branches)
@@ -78,6 +109,22 @@ def main() -> None:
         })
         rows.append(item)
     phase_counts = Counter(row["phase_rsi_stage"] for row in rows)
+    missing_phases = [stage for stage in STAGES if phase_counts.get(stage, 0) == 0]
+    if missing_phases:
+        raise SystemExit(
+            "final shared-policy JEL lacks independently safe support in phases: "
+            + ", ".join(missing_phases)
+        )
+    root_count = int(construction.get("root_candidate_state_count", len(bank.records)))
+    root_phase_counts = {stage: int(construction.get("root_phase_state_counts", {}).get(stage, 0))
+                         for stage in STAGES}
+    if root_count <= 0 or sum(root_phase_counts.values()) != root_count:
+        raise SystemExit("root five-stage candidate coverage denominator is invalid")
+    construction_by_id = {str(row["candidate_id"]): row for row in construction["labels"]}
+    audit_by_id = {str(row["candidate_id"]): row for row in audit["labels"]}
+    calibration = calibration_metrics(construction_by_id, audit_by_id, args.branches)
+    precision = len(safe) / len(construction_safe) if construction_safe else math.nan
+    recall = len(safe) / len(audit_safe) if audit_safe else math.nan
     metadata = {
         "artifact_role": "final_shared_policy_jel", "formal_shared_policy_jel": True,
         "independent_audit": True, "safe_definition": (
@@ -93,9 +140,18 @@ def main() -> None:
     output.parent.mkdir(parents=True, exist_ok=True); SnapshotBank(rows, metadata).save(output)
     report = {
         "status": "PASS", **metadata, "safe_states": len(rows),
-        "source_states": len(bank.records), "coverage": len(rows) / len(bank.records),
+        "source_states_at_final_funnel_level": len(bank.records),
+        "root_source_states": root_count, "coverage": len(rows) / root_count,
         "phase_safe_counts": {stage: phase_counts.get(stage, 0) for stage in STAGES},
+        "phase_root_counts": root_phase_counts,
+        "phase_coverage": {stage: phase_counts.get(stage, 0) / root_phase_counts[stage]
+                           for stage in STAGES},
         "construction_exact_safe": len(construction_safe), "independent_exact_safe": len(audit_safe),
+        "independent_audit_precision": precision,
+        "independent_audit_recall_within_final_funnel": recall,
+        "construction_vs_audit_brier": calibration["brier"],
+        "construction_vs_audit_ece_10_bin": calibration["ece_10_bin"],
+        "independent_audit_branches_for_calibration": calibration["audit_branches"],
         "output_bank": str(output), "output_bank_sha256": file_sha256(output),
     }
     save_json(report_path, report); print(json.dumps(report, indent=2))
