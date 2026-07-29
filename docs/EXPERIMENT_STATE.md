@@ -2,7 +2,16 @@
 
 ## Safe-state network -> Tube -> RSI mainline (2026-07-29)
 
-- Base HEAD `a99d059` before this state-only update; worktree clean.  A
+- Apex reached the next sparse milestone: all 16 parent-diverse states passed
+  the isolated 8-branch screen exactly (16/16 states, 128/128 valid next-stage
+  entries), with no physical failure, timeout or nonfinite outcome.  All 16
+  moved into the disjoint 32-branch audit under seed base `10840000`; the live
+  32-branch worker is the only GPU job.  No Apex state is safe/Tubed yet.
+  The v2 shared-policy controller was reloaded only while waiting so its Tube
+  v6 status/hash/policy triple lock is active; the Apex controller and
+  32-branch worker were not restarted.
+- Commit lineage through `a99d059` established the v2 follow-ons; worktree
+  remained clean before this state-only update.  A
   machine-executable audit found that the
   24-state Descent Tube uses the preregistered Beta-posterior safe rule
   (32 branches, 90% interval lower bound >= 0.70), not an exact 32/32 rule:
