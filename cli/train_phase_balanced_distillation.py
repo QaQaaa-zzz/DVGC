@@ -139,6 +139,7 @@ def main() -> None:
             "formal_tube_or_jel": False, "PPO_authorization": False,
             "teacher_dataset_sha256": file_sha256(args.teacher_dataset),
             "teacher_phase_bank_sha256": payload["phase_bank_sha256"],
+            "expert_controller_identities": payload["expert_controller_identities"],
             "base_policy_version": manifest["policy_version"],
             "frozen_assets": ["normalizer", "critic", "log_std"],
             "trainable_assets": ["actor_trunk", "actor_mean_head"],

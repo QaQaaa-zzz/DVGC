@@ -79,6 +79,15 @@ def main() -> None:
         and manifest.get("formal_tube_or_jel") is False
         and manifest.get("PPO_authorization") is False
     )
+    static["policy_teacher_phase_bank_identity"] = (
+        manifest.get("teacher_phase_bank_sha256") == file_sha256(args.phase_bank)
+    )
+    controller_identities = manifest.get("expert_controller_identities", {})
+    descent_identities = [identity for path, identity in controller_identities.items()
+                          if "descent" in str(path).lower()]
+    static["descent_teacher_uses_certified_adapter"] = (
+        len(descent_identities) == 1 and descent_identities[0].startswith("adapter:")
+    )
     gate = json.loads(Path("docs/RUNTIME_GATE.json").read_text())
     runtime_current = gate.get("status") == "PASS" and gate.get("source_fingerprint") == source_fingerprint(Path.cwd())
     cfg = load_config(overrides={
@@ -161,6 +170,7 @@ def main() -> None:
         "roundtrip_short_window": roundtrips,
         "phase_bank_sha256": file_sha256(args.phase_bank),
         "policy_params_sha256": file_sha256(Path(args.policy) / "params.pkl"),
+        "expert_controller_identities": controller_identities,
         "runtime_source_fingerprint": source_fingerprint(Path.cwd()),
         "next_gate": "bounded 2--5% joint Tube-RSI PPO pilot with fixed phase-wise evaluation",
     }

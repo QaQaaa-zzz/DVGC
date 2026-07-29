@@ -13,7 +13,9 @@ def _payload():
         })
     return {"schema": "dvgc_phase_balanced_distillation_teacher_v1",
             "artifact_role": "phase_balanced_distillation_teacher_dataset",
-            "formal_tube_or_jel": False, "examples": examples}
+            "formal_tube_or_jel": False,
+            "expert_controller_identities": {"descent": "adapter:identity"},
+            "examples": examples}
 
 
 def test_validate_dataset_requires_equal_five_phase_mass():

@@ -298,6 +298,8 @@ def main() -> None:
         "examples": len(examples), "phase_counts": dict(Counter(row["phase"] for row in examples)),
         "phase_weight_mass": masses, "policy_example_counts": dict(Counter(
             row.get("teacher_policy_path", "apex_feedback_medoid") for row in examples)),
+        "teacher_type_counts": dict(Counter(row["teacher_type"] for row in examples)),
+        "expert_controller_identities": policy_identities,
         "apex_multimodality_audit": apex_audits,
         "output_dataset": str(output), "output_dataset_sha256": file_sha256(output),
         "phase_bank_sha256": payload["phase_bank_sha256"],

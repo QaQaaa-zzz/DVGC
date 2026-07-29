@@ -31,3 +31,10 @@ def test_static_contract_requires_balanced_training_only_proposals():
 def test_static_contract_rejects_unequal_stage_mass():
     bank = _bank(); masses = {stage: .2 for stage in STAGES}; masses["apex"] = .1
     assert not validate_static_contract(bank, {"stage_weight_mass": masses})["equal_stage_mass"]
+
+
+def test_runtime_preflight_requires_phase_bank_and_adapter_teacher_identity():
+    text = __import__("pathlib").Path("cli/preflight_phase_balanced_unified_rsi.py").read_text()
+    assert '"policy_teacher_phase_bank_identity"' in text
+    assert '"descent_teacher_uses_certified_adapter"' in text
+    assert 'startswith("adapter:")' in text
