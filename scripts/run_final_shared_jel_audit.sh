@@ -46,7 +46,7 @@ write_cost() {
 
 write_state waiting_for_promoted_pilot active final_4branch_screen
 while [[ ! -s "$PILOT/report.json" ]]; do
-  if ! systemctl --user is-active --quiet dvgc-final-shared-policy-v1.service; then
+  if ! systemctl --user is-active --quiet dvgc-final-shared-policy-v2.service; then
     write_state unified_pilot_missing gate_pause inspect_unified_pipeline "Unified controller ended before atomic pilot report"
     exit 40
   fi

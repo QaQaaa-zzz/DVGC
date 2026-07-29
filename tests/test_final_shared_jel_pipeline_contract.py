@@ -14,6 +14,7 @@ def test_final_jel_controller_uses_exact_disjoint_funnel_and_one_shared_policy()
     assert "cli.freeze_final_shared_policy_jel" in text
     assert "cli.verify_final_shared_policy_jel" in text
     assert "final_shared_policy_v2" in text
+    assert "dvgc-final-shared-policy-v2.service" in text
     assert "phase_balanced_tube_rsi_v2" in text
     assert "final_jel_audit_v2" in text
     assert "--policy \"$POLICY\"" in text
