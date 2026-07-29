@@ -2,6 +2,14 @@
 
 ## Safe-state network -> Tube -> RSI mainline (2026-07-29)
 
+- Commit `1738dbb` closes a pre-PPO retention gap in phase-balanced
+  distillation.  Checkpoint selection is now constrained by full teacher-bank
+  Descent and Landing action fidelity (coordinate RMS <= 0.02 and max <=
+  0.05).  A run with no eligible checkpoint is retained only as a diagnostic
+  and exits at `distillation_downstream_fidelity`; it cannot reach engineering
+  preflight or PPO.  The same evidence is rechecked from the policy manifest
+  in preflight.  Nineteen focused tests pass.  The waiting v2 controller was
+  reloaded; Apex controller/32-branch worker PIDs remained unchanged.
 - Apex reached the next sparse milestone: all 16 parent-diverse states passed
   the isolated 8-branch screen exactly (16/16 states, 128/128 valid next-stage
   entries), with no physical failure, timeout or nonfinite outcome.  All 16
