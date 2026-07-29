@@ -38,7 +38,7 @@ def select_parent_diverse(records: list[dict], per_stage: int = 3) -> list[dict]
     return selected
 
 
-def acceptance(baseline: dict, final: dict, finite: bool) -> dict:
+def acceptance(baseline: dict, final: dict, finite: bool, drift: dict) -> dict:
     before = baseline["by_stage"]; after = final["by_stage"]
     retention = {
         stage: after[stage]["final_states"] >= before[stage]["final_states"]
@@ -49,13 +49,51 @@ def acceptance(baseline: dict, final: dict, finite: bool) -> dict:
                    > before["takeoff"]["final_states"] + before["ascent"]["final_states"]
                    + before["apex"]["final_states"])
     total_improvement = final["final_states"] > baseline["final_states"]
+    downstream_drift = {
+        stage: drift["by_stage"][stage]["rms"] <= .02
+        and drift["by_stage"][stage]["max"] <= .05
+        for stage in ("descent", "landing")
+    }
     return {
         "descent_retention": retention["descent"], "landing_retention": retention["landing"],
+        "descent_action_drift": downstream_drift["descent"],
+        "landing_action_drift": downstream_drift["landing"],
         "upstream_final_improvement": improvement, "total_final_improvement": total_improvement,
         "finite_training": finite, "no_new_nonfinite": final["nonfinite"] == 0,
-        "promote": all(retention.values()) and finite and final["nonfinite"] == 0
+        "promote": all(retention.values()) and all(downstream_drift.values())
+                   and finite and final["nonfinite"] == 0
                    and (improvement or total_improvement),
     }
+
+
+def phase_action_drift(before: np.ndarray, after: np.ndarray,
+                       phases: list[str]) -> dict:
+    """Summarize policy drift over every authoritative phase-bank state."""
+    before = np.asarray(before, dtype=np.float64)
+    after = np.asarray(after, dtype=np.float64)
+    if before.shape != after.shape or before.ndim != 2 or len(phases) != len(before):
+        raise ValueError("invalid phase action arrays")
+    delta = after - before
+
+    def summarize(indices: list[int]) -> dict:
+        values = delta[indices]
+        action_l2 = np.linalg.norm(values, axis=1)
+        return {
+            "states": len(indices),
+            "rms": float(np.sqrt(np.mean(values * values))),
+            "mean_action_l2": float(np.mean(action_l2)),
+            "p95_action_l2": float(np.percentile(action_l2, 95)),
+            "max_action_l2": float(np.max(action_l2)),
+            "max": float(np.max(np.abs(values))),
+        }
+
+    by_stage = {}
+    for stage in STAGES:
+        indices = [index for index, value in enumerate(phases) if value == stage]
+        if not indices:
+            raise ValueError(f"missing {stage} action-drift states")
+        by_stage[stage] = summarize(indices)
+    return {"all": summarize(list(range(len(phases)))), "by_stage": by_stage}
 
 
 def main() -> None:
@@ -77,6 +115,7 @@ def main() -> None:
     from cli.runtime_gate import source_fingerprint
     from dvgc.bank import SnapshotBank
     from dvgc.config import load_config, save_config
+    from dvgc.descent_supervised import build_actor_tools
     from dvgc.env import END_NONFINITE, END_REASON, OrangeBikeDVGC
     from dvgc.policy import load_bundle, save_bundle
     from dvgc.rollout import frozen_rollout, restore_snapshot
@@ -197,7 +236,16 @@ def main() -> None:
     # Use exactly the baseline seed namespace so policy change is the only
     # cause of an outcome change in the fixed pilot evaluation.
     final = evaluate(final_params, 10_900_000)
-    decision = acceptance(baseline, final, finite)
+    observations = np.asarray([
+        row["policy_state"]["actor_observation"] for row in bank.records
+    ], dtype=np.float32)
+    phases = [str(row["phase_rsi_stage"]) for row in bank.records]
+    _, before_actor, _ = build_actor_tools(env, params)
+    _, after_actor, _ = build_actor_tools(env, final_params)
+    before_actions = np.asarray(before_actor(params[1], observations))
+    after_actions = np.asarray(after_actor(final_params[1], observations))
+    drift = phase_action_drift(before_actions, after_actions, phases)
+    decision = acceptance(baseline, final, finite, drift)
     save_bundle(
         root / "policy", params=final_params, config=cfg, xml_path=cfg.xml_path,
         candidate_bank=args.phase_bank, downstream_bank=args.canonical_entry_bank,
@@ -213,6 +261,7 @@ def main() -> None:
         "status": "PASS_PROMOTE" if decision["promote"] else "NO_PROMOTION",
         "PPO_started": True, "effective_steps": EFFECTIVE_STEPS,
         "baseline": baseline, "final": final, "acceptance": decision,
+        "phase_action_drift": drift,
         "finite_parameters": finite, "final_metrics": final_metrics,
         "elapsed_seconds": time.time() - started,
         "policy_params_sha256": file_sha256(root / "policy" / "params.pkl"),
