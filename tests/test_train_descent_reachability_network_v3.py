@@ -60,3 +60,8 @@ def test_pilot_selection_is_parent_disjoint():
     ]
     selected = select_pilot(ranked, count=4)
     assert [row["candidate_id"] for row in selected] == ["a", "b", "c", "d"]
+
+
+def test_pilot_selection_supports_remaining_two_parent_round():
+    ranked = [{"candidate_id": "a"}, {"candidate_id": "b"}]
+    assert len(select_pilot(ranked, count=2)) == 2

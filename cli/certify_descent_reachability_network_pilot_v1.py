@@ -38,8 +38,8 @@ from dvgc.runtime import save_json
 from cli.train_descent_reachability_network_v3 import final_branch_success
 
 
-DEFAULT_RANKING = Path("runs/descent_reachability_network_v3/final_semantics_parent_cv_20260729/ranked_proposals.json")
-DEFAULT_RUN = Path("runs/descent_reachability_network_v3/final_semantics_ranked_pilot_4x4_20260729")
+DEFAULT_RANKING = Path("runs/descent_reachability_network_v3/final_semantics_recalibrated_20260729/ranked_proposals.json")
+DEFAULT_RUN = Path("runs/descent_reachability_network_v3/final_semantics_ranked_pilot_remaining_20260729")
 CONFIG = Path("configs/default.json")
 HORIZON = 200
 
@@ -110,12 +110,12 @@ def main() -> None:
     if ranking.get("status") != "PASS" or ranking.get("formal_tube_or_matcher") is not False:
         raise SystemExit("ranking is not an eligible proposal-only artifact")
     selected = ranking["selected_pilot"]
-    if len(selected) != 4 or len({row["candidate_id"] for row in selected}) != 4:
-        raise SystemExit("pilot must contain four parent-disjoint states")
+    if not 1 <= len(selected) <= 4 or len({row["candidate_id"] for row in selected}) != len(selected):
+        raise SystemExit("pilot must contain one to four parent-disjoint states")
     root.mkdir(parents=True)
     save_json(root / "cost_estimate.json", {
-        "status": "BOUNDED", "states": 4, "P0_exact_replays_per_state": 2,
-        "P1_branches_per_P0_state": 4, "maximum_rollouts": 24,
+        "status": "BOUNDED", "states": len(selected), "P0_exact_replays_per_state": 2,
+        "P1_branches_per_P0_state": 4, "maximum_rollouts": 6 * len(selected),
         "horizon": HORIZON, "estimated_wall_hours_upper_bound": 1.0,
         "PPO": False, "independent_audit": False,
     })

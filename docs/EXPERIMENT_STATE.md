@@ -29,6 +29,17 @@
   C_L matcher nor Final-Recovery definition is changed.  The corrected model
   remains numerically identical because all previously loaded labelled rows
   had aligned Final outcomes; a new non-overwriting pilot is pending.
+- The corrected prospective pilot passed: nominal P0=4/4, Final-safe P1=1/4,
+  micro Final outcomes=9/16 and Chain+Final outcomes=4/16.  The one safe state
+  is 4/4 Final but 0/4 Chain, directly confirming why Chain cannot define the
+  Tube label.  The other three are retained as boundary labels; all seven
+  physical failures were `roll_limit`.
+- Recalibration with these four prospective labels yields 70 states from 53
+  parents (safe/boundary/dead=12/11/47).  Parent-held-out Brier is `0.124705`
+  versus prior `0.153190`, and AUPRC is `0.855502`; confidence decreased as
+  expected after adding hard boundary examples.  The only two remaining
+  wholly unseen parents are preregistered for the next 2-state pilot.  No
+  predicted label has entered a Tube and PPO remains unauthorized.
 
 ## Upstream Apex proposal acquisition moved to Takeoff-tail handoff (2026-07-29)
 

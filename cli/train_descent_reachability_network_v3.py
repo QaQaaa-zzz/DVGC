@@ -134,6 +134,41 @@ def load_source_a_rows(root: Path) -> tuple[list[dict], list[dict], dict]:
     return rows, pool, identity
 
 
+def load_ranked_pilot_rows(path: Path) -> list[dict]:
+    _forbid_audit_path(path)
+    report = json.loads(path.read_text())
+    if report.get("artifact_role") != "reachability_ranked_construction_certification_pilot":
+        raise ValueError(f"ineligible ranked pilot role: {path}")
+    rows = []
+    bank_cache: dict[str, list] = {}
+    for label in report["rows"]:
+        proposal = label["proposal"]
+        artifact = proposal["source_artifact"]
+        _forbid_audit_path(Path(artifact))
+        if artifact not in bank_cache:
+            bank_cache[artifact] = pickle.loads(Path(artifact).read_bytes())
+        source = bank_cache[artifact][int(proposal["source_index"])]
+        if source["physical_state_hash"] != proposal["physical_state_hash"]:
+            raise ValueError(f"ranked pilot physical identity mismatch: {path}")
+        branches = label["branches"]
+        successes = sum(final_branch_success(row) for row in branches)
+        record = source["snapshot_v4"]
+        rows.append({
+            "key": f"ranked_pilot:{proposal['physical_state_hash']}",
+            "state_hash": proposal["physical_state_hash"],
+            "parent": proposal["candidate_id"],
+            "target": successes / len(branches) if branches else 0.0,
+            "successes": successes,
+            "branches": len(branches),
+            "physical": np.asarray(record["physical_feature"], float)[:16],
+            "history": np.asarray(record["actor_observation_t"], float),
+            "source": str(path),
+            "region": proposal["region"],
+            "layer": int(proposal["shell_layer"]),
+        })
+    return rows
+
+
 def apply_final_semantics_to_old_pilots(rows: list[dict], pilot_root: Path) -> list[dict]:
     """Replace legacy Chain+Final P1 counts with Final-only branch outcomes."""
     by_key = {row["key"]: dict(row) for row in rows}
@@ -295,6 +330,7 @@ def main() -> None:
     parser.add_argument("--pilot-root", default=str(PILOT_ROOT))
     parser.add_argument("--index", default=str(INDEX))
     parser.add_argument("--source-a-root", default=str(SOURCE_A_ROOT))
+    parser.add_argument("--additional-pilot", action="append", default=[])
     parser.add_argument("--seed", type=int, default=9_860_000)
     args = parser.parse_args()
     root = Path(args.run)
@@ -306,7 +342,8 @@ def main() -> None:
 
     old = apply_final_semantics_to_old_pilots(load_rows(paths[0], paths[1], paths[2]), paths[1])
     additional, pool, source_a_identity = load_source_a_rows(paths[3])
-    rows = merge_rows(old, additional)
+    pilot_rows = [row for pilot in args.additional_pilot for row in load_ranked_pilot_rows(Path(pilot))]
+    rows = merge_rows(old, additional + pilot_rows)
     features = np.asarray([row["physical"] for row in rows], float)
     target = np.asarray([row["target"] for row in rows], float)
     parents = np.asarray([row["parent"] for row in rows])
@@ -341,7 +378,8 @@ def main() -> None:
             "relative_tick_to_downstream_entry",
         )} | {"predicted_p_safe": float(score), "ranking_only": True})
     ranked.sort(key=lambda row: (-row["predicted_p_safe"], row["candidate_id"], row["proposal_id"]))
-    selected = select_pilot(ranked) if status == "PASS" else []
+    available_parents = len({row["candidate_id"] for row in ranked})
+    selected = select_pilot(ranked, min(4, available_parents)) if status == "PASS" and available_parents else []
 
     root.mkdir(parents=True)
     np.savez(root / "model.npz", **model)
@@ -360,6 +398,9 @@ def main() -> None:
             "target": row["target"], "class": row["class"], "source": row["source"],
         } for row in rows],
         "source_a_identity": source_a_identity,
+        "additional_pilots": [
+            {"path": str(path), "sha256": file_sha256(path)} for path in map(Path, args.additional_pilot)
+        ],
     }
     save_json(root / "dataset_manifest.json", dataset_manifest)
     save_json(root / "ranked_proposals.json", {
