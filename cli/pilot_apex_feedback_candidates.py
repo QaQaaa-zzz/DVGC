@@ -39,8 +39,8 @@ def main() -> None:
     parser.add_argument("--downstream-horizon", type=int, default=200)
     parser.add_argument("--seed", type=int, default=10800000)
     args = parser.parse_args()
-    if args.branches != 4:
-        raise SystemExit("this preregistered pilot requires four branches")
+    if args.branches not in (4, 8, 32):
+        raise SystemExit("Apex branch funnel permits only 4, 8, or 32 branches")
     root = Path(args.output_root)
     outputs = [root / "labels.json", root / "stable_entries.pkl", root / "report.json"]
     if any(path.exists() for path in outputs):
@@ -126,7 +126,8 @@ def main() -> None:
         "safe_claim_allowed": False, "not_a_tube": True, "labels": labels,
         "candidate_bank_sha256": file_sha256(args.candidate_bank), "seed_base": args.seed}
     save_json(root / "labels.json", label_payload)
-    report = {"status": "PASS", "artifact_role": "apex_ood_boundary_feedback_pilot",
+    report = {"status": "PASS", "artifact_role": "apex_feedback_branch_audit",
+        "audit_level": args.branches,
         "controller": {"type": "receding_horizon_bounded_shooting", "lookahead": args.lookahead,
                        "horizon": args.horizon, "actions": [np.asarray(x).tolist() for x in _actions()]},
         "states": len(candidates.records), "root_parents": len({parent_key(row) for row in candidates.records}),

@@ -7,3 +7,4 @@ def test_pilot_keeps_local_formal_and_final_outcomes_separate():
     assert '"formal_successes"' in text
     assert '"final_successes"' in text
     assert '"safe_claim_allowed": False' in text
+    assert "(4, 8, 32)" in text
