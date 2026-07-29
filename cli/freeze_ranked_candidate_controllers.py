@@ -35,7 +35,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--candidate-bank", required=True)
     parser.add_argument("--construction-labels", required=True)
-    parser.add_argument("--controller-bank", required=True)
+    parser.add_argument("--controller-bank")
+    parser.add_argument("--controller-policy", action="append")
     parser.add_argument("--output-root", required=True)
     args = parser.parse_args()
     root = Path(args.output_root)
@@ -43,8 +44,21 @@ def main() -> None:
         raise SystemExit(f"refusing overwrite {root}")
     candidates = SnapshotBank.load(args.candidate_bank)
     label_report = json.loads(Path(args.construction_labels).read_text())
-    registry = json.loads(Path(args.controller_bank).read_text())
-    policies = registry["policies"]
+    if bool(args.controller_bank) == bool(args.controller_policy):
+        raise SystemExit("provide exactly one of --controller-bank or --controller-policy")
+    if args.controller_bank:
+        registry = json.loads(Path(args.controller_bank).read_text())
+        policies = registry["policies"]
+        registry_sha256 = file_sha256(args.controller_bank)
+    else:
+        policies = [{"id": f"controller_{index}", "path": str(path),
+                     "params_sha256": file_sha256(Path(path) / "params.pkl")}
+                    for index, path in enumerate(args.controller_policy)]
+        registry = {"status": "PASS", "artifact_role": "controller_proposal_bank",
+                    "construction_assignment_only": True, "policies": policies}
+        root.mkdir(parents=True)
+        save_json(root / "controller_bank.json", registry)
+        registry_sha256 = file_sha256(root / "controller_bank.json")
     controller_order = [str(policy["params_sha256"]) for policy in policies]
     policy_by_hash = {str(policy["params_sha256"]): policy for policy in policies}
     labels = {str(row["candidate_id"]): row for row in label_report["labels"]}
@@ -70,7 +84,7 @@ def main() -> None:
             "construction_successes_by_controller": successes,
             "used_as_safety_label": False,
         })
-    root.mkdir(parents=True)
+    root.mkdir(parents=True, exist_ok=True)
     outputs = []
     for index, controller in enumerate(controller_order):
         rows = grouped.get(controller, [])
@@ -97,7 +111,7 @@ def main() -> None:
         "fresh_branch_certification_required": True,
         "candidate_bank_sha256": file_sha256(args.candidate_bank),
         "construction_labels_sha256": file_sha256(args.construction_labels),
-        "controller_bank_sha256": file_sha256(args.controller_bank),
+        "controller_bank_sha256": registry_sha256,
         "outputs": outputs,
         "assignments": assignments,
     })

@@ -36,6 +36,22 @@
   the same label/model/audit funnel for Ascent and Apex, followed by a
   phase-balanced union of Landing, Descent, Apex, Ascent and Takeoff Tubes for
   the bounded final shared-policy RSI pilot.  No final PPO has started yet.
+- Ascent has now completed the same funnel without PPO.  Construction used 48
+  real parent-disjoint Takeoff->Ascent entries and three frozen controllers:
+  17/576 branches reached Apex, concentrated in four states; the other 44 are
+  explicitly negative only under that controller bank.  The generic 16D model
+  used all 48 independent parents and achieved leave-one-parent-out AUPRC
+  `0.95` (Brier `0.009280`).
+- The model-ranked pilot selected 16/16 distinct parents.  With construction-
+  frozen per-state controllers, four states passed 8/8 and the other twelve
+  were 0/8.  Fresh 32-branch audit of the four survivors produced
+  `32/32, 32/32, 32/32, 31/32`; the sole failure was `roll_limit`.
+  Ascent Tube v1 therefore contains exactly three safe states, version
+  `ascent-expert-tube-adeb559121fb`, SHA-256
+  `7a6fb821...ce384d`; the 31/32 state remains boundary.  Next is Apex label
+  inventory/acquisition.  The previous physical-Descent bridge states are not
+  silently safe because frozen downstream recovery was 0; Apex must obtain
+  fresh positive evidence or remain a declared support gap.
 
 ## Descent reachability-network construction labels v3 (2026-07-29)
 

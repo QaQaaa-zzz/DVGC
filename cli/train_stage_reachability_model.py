@@ -17,6 +17,8 @@ def classification(target,pred,threshold=.5):
  truth=np.asarray(target)>=threshold;positive=np.asarray(pred)>=threshold
  tp=int(np.sum(truth&positive));fp=int(np.sum(~truth&positive));fn=int(np.sum(truth&~positive))
  return {'threshold':threshold,'precision':tp/max(tp+fp,1),'recall':tp/max(tp+fn,1),'tp':tp,'fp':fp,'fn':fn}
+def parent_key(row):
+ return str(row.get('trajectory_parent_id') or row.get('parent_candidate_id') or row.get('parent_anchor_pair') or f"reference:{row.get('reference_index')}")
 def fit(group):
  X=np.asarray([x[0]['physical_feature'] for x in group],float);y=np.asarray([x[1]['p_next'] for x in group],float);center=np.median(X,axis=0);scale=np.maximum(np.median(np.abs(X-center),axis=0)*1.4826,np.asarray([.03,.01,.01,.01,.01,.01,.08,.03,.08,.08,.08,.08,.01,.02,.02,.5]));Z=(X-center)/scale;w=np.zeros(Z.shape[1]);b=0.
  for _ in range(4000):
@@ -29,7 +31,7 @@ def main():
  bank=SnapshotBank.load(a.bank);report=json.load(open(a.labels));by_id={r['id']:r for r in bank.records};rows=[]
  for label in report['labels']:
   if label.get('stage') not in (None,a.stage):raise SystemExit(f"label stage mismatch: {label.get('stage')} != {a.stage}")
-  row=by_id[label['candidate_id']];parent=row.get('parent_anchor_pair') or f"reference:{row.get('reference_index')}";rows.append((row,label,parent))
+  row=by_id[label['candidate_id']];rows.append((row,label,parent_key(row)))
  if not rows:raise SystemExit(f'no {a.stage} labels')
  parents=sorted({x[2] for x in rows});rng=np.random.default_rng(a.seed);rng.shuffle(parents);hold=set(parents[:max(1,int(np.ceil(.25*len(parents))))]);train=[x for x in rows if x[2] not in hold];test=[x for x in rows if x[2] in hold]
  model=fit(train);center,scale,w,b=model;ptr=predict(train,model);pte=predict(test,model);all_pred=predict(rows,model)
