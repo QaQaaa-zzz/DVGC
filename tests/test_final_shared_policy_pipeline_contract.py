@@ -12,6 +12,9 @@ def test_follow_on_controller_is_bounded_and_does_not_touch_apex_worker():
     assert "phase_balanced_tube_rsi_v2" in text
     assert "descent_tube_v6.pkl" in text
     assert "verification_v2.json" in text
+    assert 'verification.get("tube_sha256") == actual' in text
+    assert 'normalization.get("output_bank_sha256") == actual' in text
+    assert 'verification.get("policy_identity_hash") == normalization.get("policy_identity_hash")' in text
     assert "train_phase_balanced_distillation" in text
     assert "preflight_phase_balanced_unified_rsi" in text
     assert "train_phase_balanced_unified_rsi_pilot" in text

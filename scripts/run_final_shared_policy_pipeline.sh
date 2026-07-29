@@ -47,9 +47,21 @@ if [[ ! -s "$DESCENT_V6" || ! -s "$DESCENT_V6_REPORT" || ! -s "$DESCENT_V6_VERIF
     "normalized Descent Tube v6 or its PASS verification is absent"
   exit 2
 fi
-if [[ "$($PY -c 'import json,sys; print(json.load(open(sys.argv[1]))["status"])' "$DESCENT_V6_VERIFY")" != "PASS" ]]; then
+if ! "$PY" -c '
+import json, sys
+from dvgc.config import file_sha256
+tube, normalization_path, verification_path = sys.argv[1:]
+normalization = json.load(open(normalization_path))
+verification = json.load(open(verification_path))
+actual = file_sha256(tube)
+assert normalization.get("status") == "PASS"
+assert verification.get("status") == "PASS"
+assert normalization.get("output_bank_sha256") == actual
+assert verification.get("tube_sha256") == actual
+assert verification.get("policy_identity_hash") == normalization.get("policy_identity_hash")
+' "$DESCENT_V6" "$DESCENT_V6_REPORT" "$DESCENT_V6_VERIFY"; then
   write_state descent_tube_v6_invalid gate_pause inspect_descent_tube_v6 \
-    "normalized Descent Tube v6 verification is not PASS"
+    "normalized Descent Tube v6 verification/status/hash identity is invalid"
   exit 40
 fi
 
