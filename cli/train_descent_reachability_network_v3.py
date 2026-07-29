@@ -34,6 +34,18 @@ DEFAULT_RUN = Path("runs/descent_reachability_network_v3/construction_parent_cv"
 SAFE_THRESHOLD = 0.75
 
 
+def final_branch_success(row: dict) -> bool:
+    """Final-Recovery label, intentionally independent of Chain entry."""
+    return bool(
+        row.get("final_recovery")
+        and not row.get("illegal_contact")
+        and not row.get("penetration")
+        and not row.get("phase_violation")
+        and not row.get("timeout")
+        and not row.get("nonfinite")
+    )
+
+
 def safety_class(target: float) -> str:
     if target >= SAFE_THRESHOLD:
         return "safe"
@@ -73,9 +85,9 @@ def load_source_a_rows(root: Path) -> tuple[list[dict], list[dict], dict]:
         snapshot = by_hash[state_hash]
         if snapshot["candidate_id"] != label["candidate_id"]:
             raise ValueError(f"Source-A candidate mismatch: {state_hash}")
-        p1 = label["P1"]
-        branches = int(p1.get("branches", 0))
-        successes = int(p1.get("successes", 0))
+        branch_rows = label.get("branches", [])
+        branches = len(branch_rows)
+        successes = sum(final_branch_success(row) for row in branch_rows)
         if branches <= 0 or not 0 <= successes <= branches:
             raise ValueError(f"invalid Source-A branch label: {state_hash}")
         record = snapshot["snapshot_v4"]
@@ -120,6 +132,33 @@ def load_source_a_rows(root: Path) -> tuple[list[dict], list[dict], dict]:
         "prior_nodes": {"path": str(prior_path), "sha256": file_sha256(prior_path)},
     }
     return rows, pool, identity
+
+
+def apply_final_semantics_to_old_pilots(rows: list[dict], pilot_root: Path) -> list[dict]:
+    """Replace legacy Chain+Final P1 counts with Final-only branch outcomes."""
+    by_key = {row["key"]: dict(row) for row in rows}
+    for directory in sorted(pilot_root.glob("pilot_12x_p1*")):
+        if "independent_audit" in str(directory).lower():
+            raise ValueError("independent audit input is forbidden")
+        certification_path = directory / "certification.json"
+        if not certification_path.exists():
+            continue
+        certification = json.loads(certification_path.read_text())
+        for label in certification["rows"]:
+            key = f"pilot:{label['node_id']}"
+            if key not in by_key:
+                continue
+            branches = label.get("micro_branches", [])
+            if not branches:
+                by_key[key]["target"] = 0.0
+                by_key[key]["successes"] = 0
+                by_key[key]["branches"] = 0
+                continue
+            successes = sum(final_branch_success(row) for row in branches)
+            by_key[key]["target"] = successes / len(branches)
+            by_key[key]["successes"] = successes
+            by_key[key]["branches"] = len(branches)
+    return [by_key[row["key"]] for row in rows]
 
 
 def normalize_old_rows(rows: list[dict]) -> list[dict]:
@@ -265,7 +304,7 @@ def main() -> None:
     for path in paths:
         _forbid_audit_path(path)
 
-    old = load_rows(paths[0], paths[1], paths[2])
+    old = apply_final_semantics_to_old_pilots(load_rows(paths[0], paths[1], paths[2]), paths[1])
     additional, pool, source_a_identity = load_source_a_rows(paths[3])
     rows = merge_rows(old, additional)
     features = np.asarray([row["physical"] for row in rows], float)
@@ -342,7 +381,7 @@ def main() -> None:
         "states": len(rows), "unique_parents": len(set(parents)),
         "positive_parents": positive_parents,
         "class_counts": dict(Counter(row["class"] for row in rows)),
-        "target_definition": "frozen-policy Final-Recovery branch success fraction",
+        "target_definition": "legal frozen-policy Final-Recovery branch success fraction; Chain reported separately",
         "safe_threshold": SAFE_THRESHOLD,
         "split": "leave-one-trajectory-candidate-out",
         "parent_prior": prior_metrics,

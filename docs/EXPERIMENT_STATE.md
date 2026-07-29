@@ -19,6 +19,16 @@
   states are frozen for the 2--5% ranked branch-certification pilot.  No PPO,
   Tube mutation, matcher change or independent audit has occurred.  Result:
   `runs/descent_reachability_network_v3/construction_parent_cv_20260729/`.
+- The first prospective pilot exposed an old semantic coupling: all 4/4
+  nominal states reached Final-Recovery, while legacy P1 required both C_L
+  Chain and Final.  Across the 16 micro branches, Final-Recovery counts by
+  state were 4/4, 3/4, 1/4 and 2/4; Chain+Final counts were 0/4, 3/4, 0/4 and
+  2/4.  The run is preserved as a legacy coupled-gate diagnostic.  The v3
+  dataset/certifier now implements the fixed project contract: Final labels
+  train the safety estimator, Chain is reported separately, and neither the
+  C_L matcher nor Final-Recovery definition is changed.  The corrected model
+  remains numerically identical because all previously loaded labelled rows
+  had aligned Final outcomes; a new non-overwriting pilot is pending.
 
 ## Upstream Apex proposal acquisition moved to Takeoff-tail handoff (2026-07-29)
 

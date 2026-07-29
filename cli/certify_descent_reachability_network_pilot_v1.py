@@ -35,12 +35,24 @@ from dvgc.bank import SnapshotBank
 from dvgc.config import file_sha256, load_config
 from dvgc.policy import load_bundle
 from dvgc.runtime import save_json
+from cli.train_descent_reachability_network_v3 import final_branch_success
 
 
-DEFAULT_RANKING = Path("runs/descent_reachability_network_v3/construction_parent_cv_20260729/ranked_proposals.json")
-DEFAULT_RUN = Path("runs/descent_reachability_network_v3/ranked_parent_pilot_4x4_20260729")
+DEFAULT_RANKING = Path("runs/descent_reachability_network_v3/final_semantics_parent_cv_20260729/ranked_proposals.json")
+DEFAULT_RUN = Path("runs/descent_reachability_network_v3/final_semantics_ranked_pilot_4x4_20260729")
 CONFIG = Path("configs/default.json")
 HORIZON = 200
+
+
+def final_safety_decision(branches: list[dict]) -> dict:
+    """Construction P1: 3/4 legal Final outcomes; Chain is not a prerequisite."""
+    if len(branches) != 4:
+        return {"pass": False, "successes": 0, "branches": len(branches),
+                "reasons": ["requires_exactly_four_branches"]}
+    successes = sum(final_branch_success(row) for row in branches)
+    reasons = [] if successes >= 3 else ["fewer_than_three_final_recovery_successes"]
+    return {"pass": not reasons, "successes": successes, "branches": len(branches),
+            "reasons": reasons}
 
 
 def _atomic_pickle(path: Path, value) -> None:
@@ -139,16 +151,19 @@ def main() -> None:
         p0 = p0_decision(repeats)
         branches = []
         p1 = {"pass": False, "reasons": ["p0_not_passed"], "successes": 0, "branches": 0}
+        chain_p1 = {"pass": False, "reasons": ["p0_not_passed"], "successes": 0, "branches": 0}
         if p0["pass"]:
             micro = _micro_states(env, record, seed + 1000)
             branch_commands = jnp.repeat(commands, 4, axis=0)
             raw = jax.device_get(rollout(micro, branch_commands, jax.random.PRNGKey(seed + 2000)))
             branches = [_outcome(raw, index) | {"perturbation_vx_vz": PERTURBATIONS[index].tolist()}
                         for index in range(4)]
-            p1 = p1_decision(p0, branches, repeats[0]["failure_type"])
+            chain_p1 = p1_decision(p0, branches, repeats[0]["failure_type"])
+            p1 = final_safety_decision(branches)
         result = {
             "proposal": {key: proposal[key] for key in proposal if key != "ranking_only"},
-            "P0": p0, "P1": p1, "repeats": repeats, "branches": branches,
+            "P0": p0, "final_safety_P1": p1, "legacy_chain_P1": chain_p1,
+            "repeats": repeats, "branches": branches,
             "construction_label": "safe" if p1["pass"] else (
                 "boundary" if p0["pass"] or p1.get("successes", 0) else "dead"),
         }
@@ -157,7 +172,8 @@ def main() -> None:
             admitted.append({
                 "snapshot_v4": record, "physical_state_hash": source["physical_state_hash"],
                 "candidate_id": source["candidate_id"], "source_node_id": source["source_node_id"],
-                "controller_suffix": source["controller_suffix"], "P0": p0, "P1": p1,
+                "controller_suffix": source["controller_suffix"], "P0": p0,
+                "final_safety_P1": p1, "legacy_chain_P1": chain_p1,
                 "artifact_role": "proposal_support_bank", "formal_tube_or_jel": False,
             })
         save_json(root / "certification.partial.json", {"completed": len(rows), "rows": rows})
@@ -170,7 +186,13 @@ def main() -> None:
         "formal_tube_or_matcher": False,
         "states": len(rows), "unique_parents": len({row["proposal"]["candidate_id"] for row in rows}),
         "P0": sum(row["P0"]["pass"] for row in rows),
-        "P1": sum(row["P1"]["pass"] for row in rows),
+        "final_safety_P1": sum(row["final_safety_P1"]["pass"] for row in rows),
+        "legacy_chain_P1": sum(row["legacy_chain_P1"]["pass"] for row in rows),
+        "final_branch_successes": sum(
+            final_branch_success(branch) for row in rows for branch in row["branches"]),
+        "chain_branch_successes": sum(
+            bool(branch.get("downstream_entry") and final_branch_success(branch))
+            for row in rows for branch in row["branches"]),
         "class_counts": dict(class_counts),
         "termination_reasons": dict(Counter(
             branch["failure_type"] for row in rows for branch in row["branches"]
@@ -185,7 +207,8 @@ def main() -> None:
     save_json(root / "DESCENT_REACHABILITY_RANKED_PILOT_V1_REPORT.json", report)
     save_json(root / "completed.json", {"status": status, "next": report["next"]})
     print(json.dumps({key: report[key] for key in (
-        "status", "states", "unique_parents", "P0", "P1", "class_counts",
+        "status", "states", "unique_parents", "P0", "final_safety_P1", "legacy_chain_P1",
+        "final_branch_successes", "chain_branch_successes", "class_counts",
         "termination_reasons", "PPO_authorization", "next",
     )}, indent=2))
 

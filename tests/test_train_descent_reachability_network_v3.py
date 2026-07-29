@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 from cli.train_descent_reachability_network_v3 import (
+    final_branch_success,
     fit_network,
     merge_rows,
     parent_cv,
@@ -15,6 +16,12 @@ def test_safety_class_preserves_three_way_construction_labels():
     assert safety_class(0.0) == "dead"
     assert safety_class(0.5) == "boundary"
     assert safety_class(0.75) == "safe"
+
+
+def test_final_label_is_independent_of_chain_but_rejects_unhealthy_outcome():
+    assert final_branch_success({"final_recovery": True, "downstream_entry": False})
+    assert not final_branch_success({"final_recovery": True, "timeout": True})
+    assert not final_branch_success({"final_recovery": False, "downstream_entry": True})
 
 
 def test_network_is_deterministic_finite_and_bounded():
