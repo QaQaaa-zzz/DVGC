@@ -59,6 +59,17 @@
   It supersedes v4 without overwriting it and remains an expert-conditioned
   provisional envelope, not final shared-policy JEL.  The next action is a
   short Tube-v5 RSI retention pilot; the 25/32 unknown state is excluded.
+- The first 1,600-step safe-only Tube-RSI pilot was rejected without a policy
+  promotion.  All 24/24 fixed P1 states were retained, but Final branches
+  changed 95/96 -> 94/96 and Chain+Final 90/96 -> 86/96; action drift was only
+  RMS `0.000703`, max `0.002262`, with no NaN/OOM/timeout.  The checkpoint is
+  preserved but further identical budget is unauthorized.
+- Diagnosis: safe-only resets are saturated (baseline 98.96% branch Final), so
+  the block provides almost no expansion signal.  The one permitted
+  evidence-directed repair will keep 80% certified-safe Tube rehearsal and
+  add 20% of the independently audited 25/32 `unknown` frontier as training-
+  only proposal support.  It does not relabel or add that state to the Tube;
+  budget, LR and fixed retention evaluation remain unchanged.
 
 ## Upstream Apex proposal acquisition moved to Takeoff-tail handoff (2026-07-29)
 
