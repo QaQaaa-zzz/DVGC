@@ -66,7 +66,8 @@ def main() -> None:
             if candidate_id in labels:
                 raise SystemExit(f"duplicate audited candidate: {candidate_id}")
             labels[candidate_id] = label
-            seeds = [branch.get("seed") for branch in label.get("branches", [])]
+            seeds = [branch.get("seed", branch.get("branch_seed"))
+                     for branch in label.get("branches", [])]
             if None in seeds:
                 raise SystemExit(f"audit branches omit seeds for {candidate_id}")
             branch_seeds.extend(seeds)

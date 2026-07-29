@@ -29,6 +29,11 @@ def test_final_safe_requires_explicit_full_stack_outcomes():
     assert not final_safe({"branches": [{"final_recovery": True}] * 31}, 32)
 
 
+def test_seed_validation_accepts_legacy_branch_seed_and_new_seed_fields():
+    text = Path("cli/build_stage_tube_from_independent_audit.py").read_text()
+    assert 'branch.get("seed", branch.get("branch_seed"))' in text
+
+
 def test_local_entry_support_is_not_declared_a_tube():
     text = Path("cli/build_stage_tube_from_independent_audit.py").read_text()
     assert '"certified_tube": args.evidence_scope == "final_recovery"' in text
