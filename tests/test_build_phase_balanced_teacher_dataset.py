@@ -88,10 +88,54 @@ def test_each_frozen_expert_uses_its_own_normalizer():
         value = 1.0 if normalizer == "normalizer-a" else 2.0
         return None, lambda _actor, obs: np.full((len(obs), 4), value), None
 
-    actions, _ = build_frozen_policy_actions(
+    actions, _, identities = build_frozen_policy_actions(
         rows, object(), load_policy=lambda path: bundles[path], build_tools=tools,
         hash_params=lambda path: f"hash-{path}",
     )
     obs = np.zeros((1, 140))
     assert np.all(actions["a"](obs) == 1.0)
     assert np.all(actions["b"](obs) == 2.0)
+    assert identities == {"a": "params:hash-a", "b": "params:hash-b"}
+
+
+def test_declared_compact_adapter_is_applied_and_identity_is_preserved():
+    rows = [{"policy_path": "descent", "stage": "descent", "params_sha256": "hash-d"}]
+    bundle = (("normalizer", "actor", "critic"), {},
+              {"adapter_sha256": "adapter-hash", "policy_identity_hash": "combined-id"})
+
+    def tools(_env, _params):
+        return None, lambda _actor, obs: np.zeros((len(obs), 4)), None
+
+    actions, _, identities = build_frozen_policy_actions(
+        rows, object(), load_policy=lambda _path: bundle, build_tools=tools,
+        hash_params=lambda _path: "hash-d",
+        load_adapter=lambda _path, _manifest, _base: (
+            lambda _obs, base: base + 0.25, "combined-id"
+        ),
+    )
+    assert np.all(actions["descent"](np.zeros((2, 140))) == .25)
+    assert identities["descent"] == "adapter:combined-id"
+
+
+def test_declared_adapter_without_verified_loader_is_rejected():
+    rows = [{"policy_path": "descent", "stage": "descent", "params_sha256": "hash-d"}]
+    bundle = (("normalizer", "actor", "critic"), {}, {"adapter_sha256": "adapter-hash"})
+    with pytest.raises(ValueError, match="declares an adapter"):
+        build_frozen_policy_actions(
+            rows, object(), load_policy=lambda _path: bundle,
+            build_tools=lambda _env, _params: (None, lambda _actor, obs: np.zeros((len(obs), 4)), None),
+            hash_params=lambda _path: "hash-d",
+        )
+
+
+def test_descent_teacher_must_match_tube_certified_adapter_identity():
+    row = _record("descent")
+    row["policy_identity_hash"] = "certified-combined-id"
+    action = lambda obs: np.zeros((len(obs), 4))
+    with pytest.raises(ValueError, match="does not match certified Tube controller"):
+        build_examples(
+            [row], policy_actions={"descent-policy": action,
+                                   "descent-policy::descent": action},
+            allowed_policy_paths={"descent-policy"},
+            policy_identities={"descent-policy": "params:base-only"},
+        )

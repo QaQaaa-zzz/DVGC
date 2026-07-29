@@ -80,7 +80,9 @@ def build_examples(
     *,
     policy_actions: dict[str, Callable[[np.ndarray], np.ndarray]],
     allowed_policy_paths: set[str],
+    policy_identities: dict[str, str] | None = None,
 ) -> tuple[list[dict], list[dict]]:
+    policy_identities = policy_identities or {}
     examples, apex_audits = [], []
     for record in records:
         stage = str(record.get("phase_rsi_stage"))
@@ -116,8 +118,22 @@ def build_examples(
                 path = candidates[0].rsplit("::", 1)[0]
             if path not in allowed_policy_paths or path not in policy_actions:
                 raise ValueError(f"{stage} record references unaudited policy {path!r}")
+            source_identity = record.get("policy_identity_hash")
+            if (stage == "descent" and source_identity is not None
+                    and policy_identities.get(path) != f"adapter:{source_identity}"):
+                raise ValueError(
+                    f"Descent teacher identity does not match certified Tube controller: "
+                    f"{policy_identities.get(path)!r} != adapter:{source_identity}"
+                )
             action = np.asarray(policy_actions[path](observation[None, :]), np.float32)[0]
-            teacher = {"teacher_type": "frozen_policy_mode", "teacher_policy_path": path}
+            teacher = {
+                "teacher_type": ("frozen_policy_with_adapter_mode"
+                                 if policy_identities.get(path, "").startswith("adapter:")
+                                 else "frozen_policy_mode"),
+                "teacher_policy_path": path,
+                "teacher_controller_identity": policy_identities.get(path),
+                "source_certified_controller_identity": source_identity,
+            }
         action = np.asarray(action, np.float32)
         if action.shape != (4,) or not np.isfinite(action).all() or np.max(np.abs(action)) > 1.000001:
             raise ValueError(f"invalid teacher action for {record['id']}: {action}")
@@ -153,13 +169,14 @@ def _atomic_pickle(path: Path, payload: dict) -> None:
 
 
 def build_frozen_policy_actions(
-    policy_rows: list[dict], env, *, load_policy, build_tools, hash_params
-) -> tuple[dict[str, Callable[[np.ndarray], np.ndarray]], dict[str, str]]:
+    policy_rows: list[dict], env, *, load_policy, build_tools, hash_params,
+    load_adapter=None,
+) -> tuple[dict[str, Callable[[np.ndarray], np.ndarray]], dict[str, str], dict[str, str]]:
     """Build one evaluator per complete expert bundle, including its normalizer."""
-    actions, hashes = {}, {}
+    actions, hashes, identities = {}, {}, {}
     for row in policy_rows:
         path = str(row["policy_path"])
-        params, _, _ = load_policy(path)
+        params, _, manifest = load_policy(path)
         actual_hash = hash_params(path)
         if actual_hash != row["params_sha256"]:
             raise ValueError(f"expert params changed after compatibility audit: {path}")
@@ -167,10 +184,21 @@ def build_frozen_policy_actions(
         evaluator = lambda obs, action_fn=expert_action, actor=params[1]: np.asarray(
             action_fn(actor, obs)
         )
+        identity = f"params:{actual_hash}"
+        if manifest.get("adapter_sha256") is not None:
+            if load_adapter is None:
+                raise ValueError(f"expert {path} declares an adapter but no verified loader is available")
+            adapter, adapter_identity = load_adapter(path, manifest, actual_hash)
+            base_evaluator = evaluator
+            evaluator = lambda obs, base=base_evaluator, correction=adapter: np.asarray(
+                correction(obs, base(obs))
+            )
+            identity = f"adapter:{adapter_identity}"
         actions[path] = evaluator
         actions[f"{path}::{row['stage']}"] = evaluator
         hashes[path] = actual_hash
-    return actions, hashes
+        identities[path] = identity
+    return actions, hashes, identities
 
 
 def main() -> None:
@@ -197,6 +225,10 @@ def main() -> None:
     from dvgc.descent_supervised import build_actor_tools
     from dvgc.env import OrangeBikeDVGC
     from dvgc.policy import load_bundle
+    from dvgc.backward_search import (
+        compact_observation_command_adapter, compact_observation_residual_adapter,
+    )
+    import jax.numpy as jnp
 
     policy_rows = compatibility["parameterized_experts"]
     allowed_paths = {str(row["policy_path"]) for row in policy_rows}
@@ -209,17 +241,41 @@ def main() -> None:
     })
     env = OrangeBikeDVGC(cfg, snapshot_bank=SnapshotBank())
     try:
-        policy_actions, policy_hashes = build_frozen_policy_actions(
+        def load_verified_adapter(path, manifest, base_hash):
+            adapter_path = Path(path).parent / "adapter.pkl"
+            if not adapter_path.is_file() or file_sha256(adapter_path) != manifest["adapter_sha256"]:
+                raise ValueError(f"frozen adapter identity mismatch: {adapter_path}")
+            with adapter_path.open("rb") as stream:
+                artifact = pickle.load(stream)
+            if (artifact.get("base_policy_sha256") != base_hash
+                    or artifact.get("policy_identity_hash") != manifest.get("policy_identity_hash")):
+                raise ValueError(f"adapter/base-policy provenance mismatch: {adapter_path}")
+            common = (
+                jnp.asarray(artifact["prototypes"]), jnp.asarray(artifact["targets"]),
+                jnp.asarray(artifact["normalizer_mean"]), jnp.asarray(artifact["normalizer_std"]),
+                float(artifact["radius"]),
+            )
+            if artifact.get("command_source") == "recorded":
+                adapter = compact_observation_command_adapter(
+                    *common, float(artifact.get("core_radius", 0.0))
+                )
+            else:
+                adapter = compact_observation_residual_adapter(*common)
+            return adapter, artifact["policy_identity_hash"]
+
+        policy_actions, policy_hashes, policy_identities = build_frozen_policy_actions(
             policy_rows, env,
             load_policy=lambda path: load_bundle(path, verify_files=True),
             build_tools=build_actor_tools,
             hash_params=lambda path: file_sha256(Path(path) / "params.pkl"),
+            load_adapter=load_verified_adapter,
         )
     except ValueError as exc:
         raise SystemExit(str(exc)) from exc
 
     examples, apex_audits = build_examples(
-        bank.records, policy_actions=policy_actions, allowed_policy_paths=allowed_paths
+        bank.records, policy_actions=policy_actions, allowed_policy_paths=allowed_paths,
+        policy_identities=policy_identities,
     )
     masses = {stage: sum(row["training_weight"] for row in examples if row["phase"] == stage)
               for stage in STAGES}
@@ -232,6 +288,7 @@ def main() -> None:
         "phase_bank_sha256": file_sha256(args.phase_bank),
         "expert_compatibility_sha256": file_sha256(args.expert_compatibility),
         "expert_params_sha256s": policy_hashes,
+        "expert_controller_identities": policy_identities,
         "examples": examples,
     }
     _atomic_pickle(output, payload)
