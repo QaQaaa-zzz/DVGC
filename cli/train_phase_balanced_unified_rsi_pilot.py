@@ -16,7 +16,7 @@ from dvgc.runtime import save_json
 
 
 STAGES = ("takeoff", "ascent", "apex", "descent", "landing")
-EFFECTIVE_STEPS = 5120
+EFFECTIVE_STEPS = 4096
 
 
 def select_parent_diverse(records: list[dict], per_stage: int = 3) -> list[dict]:
@@ -101,9 +101,9 @@ def main() -> None:
         raise SystemExit("initial policy is not the bounded distillation output")
     if preflight.get("policy_params_sha256") != file_sha256(Path(args.initial_policy) / "params.pkl"):
         raise SystemExit("preflight policy provenance mismatch")
-    validate_ppo_batch_layout(num_envs=160, batch_size=40, num_minibatches=4)
+    validate_ppo_batch_layout(num_envs=128, batch_size=32, num_minibatches=4)
     effective = ppo_effective_timesteps(
-        1600, unroll_length=32, batch_size=40, num_minibatches=4, num_evals=2
+        1600, unroll_length=32, batch_size=32, num_minibatches=4, num_evals=2
     )
     if effective != EFFECTIVE_STEPS:
         raise SystemExit(f"unexpected effective pilot size {effective}")
@@ -159,7 +159,7 @@ def main() -> None:
     root.mkdir(parents=True); save_config(cfg, root / "effective_config.json")
     save_json(root / "cost_estimate.json", {
         "effective_PPO_steps": EFFECTIVE_STEPS, "fixed_evaluation_states": len(fixed),
-        "estimated_upper_seconds": 7200, "pilot_fraction_of_100k": .0512,
+        "estimated_upper_seconds": 7200, "pilot_fraction_of_100k": .04096,
         "longer_training_authorized": False,
     })
     baseline = evaluate(params, 10_900_000)
@@ -185,10 +185,10 @@ def main() -> None:
             "status": "running", "effective_steps": EFFECTIVE_STEPS, "progress": progress_rows,
         })
     train = make_ppo_train_fn(
-        timesteps=1600, episode_length=int(cfg.episode_length), num_envs=160,
+        timesteps=1600, episode_length=int(cfg.episode_length), num_envs=128,
         num_eval_envs=64, num_evals=2, seed=args.seed, learning_rate=1e-5,
         entropy_cost=1e-4, reward_scaling=.1, checkpoint_dir=root / "orbax",
-        unroll_length=32, batch_size=40, num_minibatches=4, num_updates_per_batch=2,
+        unroll_length=32, batch_size=32, num_minibatches=4, num_updates_per_batch=2,
         discounting=.995, gae_lambda=.97, clipping_epsilon=.10, max_grad_norm=.75,
         restore_params=params,
     )

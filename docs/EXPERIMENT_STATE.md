@@ -31,7 +31,7 @@
 - Two nonblocking follow-on controllers are active and waiting on atomic
   prerequisites.  `dvgc-final-shared-policy-v1.service` performs teacher
   extraction -> 500-step bounded distillation -> engineering preflight ->
-  5,120-effective-step joint RSI pilot.  A pilot is promoted only with
+  4,096-effective-step (4.096% of 100k) joint RSI pilot.  A pilot is promoted only with
   downstream retention and Final improvement.  On promotion,
   `dvgc-final-shared-jel-audit-v1.service` runs one frozen shared Actor through
   exact Final 4 -> 8 -> 32 construction and a disjoint independent 32-branch
