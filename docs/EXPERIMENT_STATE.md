@@ -2,6 +2,25 @@
 
 ## Safe-state network -> Tube -> RSI mainline (2026-07-29)
 
+- Current execution is the bounded Apex reachability funnel.  Sixteen
+  parent-diverse model-ranked states are in the 4-branch screen; the persistent
+  controller will advance only exact 4/4 survivors to 8 branches and exact
+  8/8 survivors to an isolated 32-branch audit.  The live worker/controller
+  are `pilot_apex_feedback_candidates` and
+  `dvgc-apex-reachability-funnel-v3.service`; the old watchdog `gate_pause`
+  status belongs to a superseded cross-engine route and is not current
+  research evidence.
+- Frozen inputs currently available to unified consolidation are: Takeoff six
+  exact 32/32 local-entry states, Ascent three exact 32/32 local-entry states,
+  Descent Tube v5 with 24 independently audited Final-safe states, and the
+  audited Landing Tube with 79 Final-safe states.  Takeoff/Ascent/Apex remain
+  local proposal support, not formal Tubes; their local labels are used for
+  phase coverage only.
+- Phase-balanced reset-bank, provenance-locked teacher extraction and bounded
+  shared-actor distillation code are implemented and unit-tested.  Apex uses
+  a real certified feedback-sequence medoid rather than an averaged action.
+  No teacher dataset, shared checkpoint or joint PPO has been created yet;
+  these steps wait for the Apex 32-branch artifact and its input hashes.
 - The active implementation is reduced to the requested causal chain: fresh
   state branch outcomes -> phase-conditioned reachability probability ->
   parent-diverse ranked proposals -> fresh 8-branch screen -> isolated
