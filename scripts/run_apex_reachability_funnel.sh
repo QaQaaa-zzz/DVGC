@@ -76,7 +76,8 @@ if [[ ! -s "$FINAL/apex_entry_support_v1.pkl" ]]; then
   "$PY" -m cli.build_stage_tube_from_independent_audit \
     --audit-bank "$LEVEL32_BANK" --audit-report "$LEVEL32/labels.json" \
     --output-tube "$FINAL/apex_entry_support_v1.pkl" --output-report "$FINAL/report.json" \
-    --stage apex --branches 32 --evidence-scope local_next_stage
+    --stage apex --branches 32 --evidence-scope local_next_stage \
+    --require-teacher-action-evidence
 fi
 
 if [[ ! -s "$PHASE_RSI/bank.pkl" ]]; then

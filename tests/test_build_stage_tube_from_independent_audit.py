@@ -4,10 +4,15 @@ from cli.build_stage_tube_from_independent_audit import exact_safe, final_safe
 
 
 def test_exact_safe_requires_all_preregistered_branches():
-    assert exact_safe({"label": "positive", "s": 32, "n": 32}, 32)
-    assert not exact_safe({"label": "positive", "s": 31, "n": 32}, 32)
-    assert not exact_safe({"label": "boundary", "s": 32, "n": 32}, 32)
-    assert not exact_safe({"label": "positive", "s": 8, "n": 8}, 32)
+    success = [{"success": True}] * 32
+    assert exact_safe({"label": "positive", "s": 32, "n": 32, "branches": success}, 32)
+    assert not exact_safe({"label": "positive", "s": 31, "n": 32, "branches": success}, 32)
+    assert not exact_safe({"label": "boundary", "s": 32, "n": 32, "branches": success}, 32)
+    assert not exact_safe({"label": "positive", "s": 8, "n": 8,
+                           "branches": [{"success": True}] * 8}, 32)
+    assert not exact_safe({"label": "positive", "s": 32, "n": 32,
+                           "branches": [{"success": True}] * 31 + [{"success": False}]}, 32)
+    assert not exact_safe({"label": "positive", "s": 32, "n": 32}, 32)
 
 
 def test_frozen_support_source_preserves_controller_provenance_contract():
@@ -15,6 +20,7 @@ def test_frozen_support_source_preserves_controller_provenance_contract():
     assert '"controller_descriptors"' in text
     assert '"certifying_controller_bank"' in text
     assert '"certified_teacher_action_evidence"' in text
+    assert '"independent audit branch seeds are not globally unique"' in text
 
 
 def test_final_safe_requires_explicit_full_stack_outcomes():

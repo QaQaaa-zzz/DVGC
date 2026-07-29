@@ -19,9 +19,12 @@ from dvgc.runtime import save_json
 
 
 def exact_safe(label: dict, required_branches: int) -> bool:
+    branches = label.get("branches", [])
     return (label.get("label") == "positive"
             and int(label["n"]) == required_branches
-            and int(label["s"]) == required_branches)
+            and int(label["s"]) == required_branches
+            and len(branches) == required_branches
+            and all(branch.get("success") is True for branch in branches))
 
 
 def final_safe(label: dict, required_branches: int) -> bool:
@@ -39,6 +42,7 @@ def main() -> None:
     parser.add_argument("--stage", required=True)
     parser.add_argument("--branches", type=int, default=32)
     parser.add_argument("--evidence-scope", choices=("local_next_stage", "final_recovery"), required=True)
+    parser.add_argument("--require-teacher-action-evidence", action="store_true")
     args = parser.parse_args()
     output_tube, output_report = Path(args.output_tube), Path(args.output_report)
     if output_tube.exists() or output_report.exists():
@@ -46,6 +50,7 @@ def main() -> None:
     if len(args.audit_bank) != len(args.audit_report):
         raise SystemExit("audit bank/report group counts differ")
     labels = {}
+    branch_seeds = []
     seed_bases = []
     reports = []
     controller_descriptors = []
@@ -61,8 +66,14 @@ def main() -> None:
             if candidate_id in labels:
                 raise SystemExit(f"duplicate audited candidate: {candidate_id}")
             labels[candidate_id] = label
+            seeds = [branch.get("seed") for branch in label.get("branches", [])]
+            if None in seeds:
+                raise SystemExit(f"audit branches omit seeds for {candidate_id}")
+            branch_seeds.extend(seeds)
     if None in seed_bases or len(seed_bases) != len(set(seed_bases)):
         raise SystemExit("independent audit seed namespaces are absent or duplicated")
+    if len(branch_seeds) != len(set(branch_seeds)):
+        raise SystemExit("independent audit branch seeds are not globally unique")
     safe_rows, boundary_rows = [], []
     for bank_path in args.audit_bank:
         bank = SnapshotBank.load(bank_path)
@@ -96,7 +107,13 @@ def main() -> None:
                     "dynamics_variant": branch.get("dynamics_variant"),
                     "first_action": branch.get("first_action"),
                     "action_sequence": branch.get("action_sequence"),
-                } for branch in label.get("branches", []) if branch.get("first_action") is not None]
+                } for branch in label.get("branches", [])
+                    if branch.get("success") is True and branch.get("first_action") is not None]
+                if args.require_teacher_action_evidence and len(teacher_evidence) != args.branches:
+                    raise SystemExit(
+                        f"safe state {row['id']} lacks successful teacher action evidence "
+                        f"for all {args.branches} branches"
+                    )
                 if teacher_evidence:
                     item["certified_teacher_action_evidence"] = teacher_evidence
                 safe_rows.append(item)

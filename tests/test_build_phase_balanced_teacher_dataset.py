@@ -29,10 +29,12 @@ def _record(stage, policy="policy"):
     if stage in {"takeoff", "ascent"}:
         row["selected_controller_path"] = policy
     if stage == "apex":
+        row["independent_branch_count"] = 32
         row["certified_teacher_action_evidence"] = [
-            {"branch_index": 3, "seed": 4, "dynamics_variant": "nominal",
+            {"branch_index": index, "seed": 4 + index, "dynamics_variant": "nominal",
              "first_action": [0.1, 0.2, 0.3, 0.4],
              "action_sequence": [[0.1, 0.2, 0.3, 0.4]]}
+            for index in range(32)
         ]
     return row
 
@@ -53,6 +55,13 @@ def test_examples_are_phase_balanced_and_apex_uses_feedback_evidence():
     assert apex["teacher_type"] == "certified_feedback_sequence_medoid"
     assert np.allclose(apex["action"], [.1, .2, .3, .4])
     assert len(audits) == 1
+
+
+def test_apex_requires_complete_unique_32_branch_teacher_evidence():
+    row = _record("apex")
+    row["certified_teacher_action_evidence"] = row["certified_teacher_action_evidence"][:-1]
+    with pytest.raises(ValueError, match="complete unique 32-branch"):
+        build_examples([row], policy_actions={}, allowed_policy_paths=set())
 
 
 def test_unaudited_policy_and_invalid_observation_are_rejected():

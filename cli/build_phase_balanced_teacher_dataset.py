@@ -89,9 +89,14 @@ def build_examples(
         observation = _actor_observation(record)
         teacher = {}
         if stage == "apex":
-            sequence, multimodality = successful_sequence_medoid(
-                list(record.get("certified_teacher_action_evidence", []))
-            )
+            evidence = list(record.get("certified_teacher_action_evidence", []))
+            expected = int(record.get("independent_branch_count", 0))
+            seeds = [row.get("seed") for row in evidence]
+            if expected != 32 or len(evidence) != expected or None in seeds or len(seeds) != len(set(seeds)):
+                raise ValueError(
+                    f"{record.get('id')} lacks complete unique 32-branch Apex teacher evidence"
+                )
+            sequence, multimodality = successful_sequence_medoid(evidence)
             action = sequence[0]
             teacher = {
                 "teacher_type": "certified_feedback_sequence_medoid",
