@@ -2,10 +2,11 @@
 
 ## Safe-state network -> Tube -> RSI mainline (2026-07-29)
 
-- Current execution is the bounded Apex reachability funnel.  Sixteen
-  parent-diverse model-ranked states are in the 4-branch screen; the persistent
-  controller will advance only exact 4/4 survivors to 8 branches and exact
-  8/8 survivors to an isolated 32-branch audit.  The live worker/controller
+- Current execution is the bounded Apex reachability funnel.  All sixteen
+  parent-diverse model-ranked states passed the first screen (16/16 states,
+  64/64 local branches), and the persistent controller has advanced them to
+  the independent 8-branch level.  Only exact 8/8 survivors can enter the
+  isolated 32-branch audit.  The live worker/controller
   are `pilot_apex_feedback_candidates` and
   `dvgc-apex-reachability-funnel-v3.service`; the old watchdog `gate_pause`
   status belongs to a superseded cross-engine route and is not current
@@ -36,6 +37,12 @@
   exact Final 4 -> 8 -> 32 construction and a disjoint independent 32-branch
   audit.  Only states passing both 32/32 rounds can receive the
   `final_shared_policy_jel` role.
+- Descent teacher extraction is locked to the controller that actually
+  certified Tube v5: base pi_D plus compact command adapter, policy identity
+  `d149961a...44b4ce99`.  The adapter file, base-policy hash and combined
+  identity are reverified at extraction; the resulting identity is carried
+  through the distillation manifest and must pass preflight.  Bare pi_D
+  actions are not accepted as Descent teacher targets.
 - The active implementation is reduced to the requested causal chain: fresh
   state branch outcomes -> phase-conditioned reachability probability ->
   parent-diverse ranked proposals -> fresh 8-branch screen -> isolated
