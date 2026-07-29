@@ -2,6 +2,13 @@
 
 ## Safe-state network -> Tube -> RSI mainline (2026-07-29)
 
+- Watchdog authority now points to `final_shared_policy_v2` instead of the
+  superseded cross-engine gate.  It exposes the active Apex dependency while
+  `waiting_for_apex`, understands v2 `status=gate_pause` as terminal (so it
+  cannot auto-restart a research pause), and atomically hands monitoring to
+  the JEL audit after pilot promotion.  `dvgc_status.sh` is read-only and now
+  handles controllers without a heartbeat field.  Related watchdog/controller
+  tests pass (26/26 plus the heartbeat regression 23/23).
 - Commit `1738dbb` closes a pre-PPO retention gap in phase-balanced
   distillation.  Checkpoint selection is now constrained by full teacher-bank
   Descent and Landing action fidelity (coordinate RMS <= 0.02 and max <=
