@@ -1,4 +1,9 @@
-"""Freeze exact-safe states from isolated 32-branch stage audits."""
+"""Freeze exact-safe support from isolated 32-branch stage audits.
+
+Local next-stage evidence creates certified proposal support, never a formal
+Tube.  Only an explicit full-stack Final-Recovery audit may create an
+expert-conditioned provisional envelope.
+"""
 from __future__ import annotations
 
 import argparse
@@ -19,6 +24,12 @@ def exact_safe(label: dict, required_branches: int) -> bool:
             and int(label["s"]) == required_branches)
 
 
+def final_safe(label: dict, required_branches: int) -> bool:
+    branches = label.get("branches", [])
+    return (len(branches) == required_branches
+            and all(bool(branch.get("final_recovery")) for branch in branches))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--audit-bank", action="append", required=True)
@@ -27,6 +38,7 @@ def main() -> None:
     parser.add_argument("--output-report", required=True)
     parser.add_argument("--stage", required=True)
     parser.add_argument("--branches", type=int, default=32)
+    parser.add_argument("--evidence-scope", choices=("local_next_stage", "final_recovery"), required=True)
     args = parser.parse_args()
     output_tube, output_report = Path(args.output_tube), Path(args.output_report)
     if output_tube.exists() or output_report.exists():
@@ -54,14 +66,20 @@ def main() -> None:
             label = labels.get(str(row["id"]))
             if label is None:
                 raise SystemExit(f"audit result missing for {row['id']}")
-            if exact_safe(label, args.branches):
+            is_safe = (exact_safe(label, args.branches) if args.evidence_scope == "local_next_stage"
+                       else final_safe(label, args.branches))
+            if is_safe:
                 item = copy.deepcopy(row)
+                role = ("stage_entry_certified_proposal_support" if args.evidence_scope == "local_next_stage"
+                        else "expert_conditioned_provisional_envelope")
                 item.update({
-                    "artifact_role": "expert_conditioned_provisional_envelope",
+                    "artifact_role": role,
                     "certified_safe": True,
-                    "safe_claim_allowed": True,
+                    "safe_claim_allowed": args.evidence_scope == "final_recovery",
                     "final_shared_policy_jel": False,
-                    "stage_safe_definition": "valid next-stage entry on every independent branch",
+                    "stage_safe_definition": ("valid next-stage entry on every independent branch"
+                                              if args.evidence_scope == "local_next_stage"
+                                              else "Final-Recovery under immutable expert stack on every independent branch"),
                     "independent_branch_successes": int(label["s"]),
                     "independent_branch_count": int(label["n"]),
                     "independent_seed_base": next(report["seed_base"] for report in reports
@@ -77,16 +95,23 @@ def main() -> None:
         "branches": args.branches,
         "safe_ids": sorted(row["id"] for row in safe_rows),
         "audit_report_sha256s": [file_sha256(path) for path in args.audit_report],
+        "evidence_scope": args.evidence_scope,
     }
-    tube_version = f"{args.stage}-expert-tube-{hashlib.sha256(json.dumps(identity,sort_keys=True).encode()).hexdigest()[:12]}"
+    version_kind = "entry-support" if args.evidence_scope == "local_next_stage" else "expert-tube"
+    artifact_version = f"{args.stage}-{version_kind}-{hashlib.sha256(json.dumps(identity,sort_keys=True).encode()).hexdigest()[:12]}"
+    role = ("stage_entry_certified_proposal_support" if args.evidence_scope == "local_next_stage"
+            else "expert_conditioned_provisional_envelope")
     metadata = {
-        "artifact_role": "expert_conditioned_provisional_envelope",
-        "certified_tube": True,
+        "artifact_role": role,
+        "certified_tube": args.evidence_scope == "final_recovery",
         "independent_audit": True,
         "formal_shared_policy_jel": False,
         "stage": args.stage,
-        "tube_version": tube_version,
-        "safe_definition": "valid next-stage entry on every isolated 32-branch audit rollout",
+        ("support_version" if args.evidence_scope == "local_next_stage" else "tube_version"): artifact_version,
+        "evidence_scope": args.evidence_scope,
+        "safe_definition": ("valid next-stage entry on every isolated 32-branch audit rollout"
+                            if args.evidence_scope == "local_next_stage"
+                            else "Final-Recovery under immutable expert stack on every isolated audit rollout"),
         "branch_count": args.branches,
         "seed_bases": seed_bases,
         "audit_bank_sha256s": [file_sha256(path) for path in args.audit_bank],
@@ -98,7 +123,7 @@ def main() -> None:
                        for branch in label["branches"] if not branch["success"])
     result = {
         "status": "PASS", **metadata,
-        "tube": str(output_tube), "tube_sha256": file_sha256(output_tube),
+        "artifact": str(output_tube), "artifact_sha256": file_sha256(output_tube),
         "audited_states": len(labels), "safe_states": len(safe_rows),
         "boundary_states": len(boundary_rows), "boundary": boundary_rows,
         "branch_successes": sum(int(label["s"]) for label in labels.values()),

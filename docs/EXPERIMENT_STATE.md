@@ -26,12 +26,11 @@
   Results were 311/320 entries: six 32/32 exact-safe, three 30--31/32 and one
   27/32.  Failures were positive-pitch=6, pitch-limit=2 and wheelie=1; timeout
   and nonfinite were zero.
-- Frozen Takeoff expert-conditioned Tube v1 contains only the six 32/32 states:
-  `runs/safe_state_tube_rsi_seed0_20260729/takeoff/takeoff_tube_v1.pkl`,
-  SHA-256 `8533bcfc...e1106c`, version
-  `takeoff-expert-tube-b070f4ffb9d7`.  The other four remain boundary and are
-  not safe.  This is bootstrap support for final Tube-RSI, not formal shared-
-  policy JEL.
+- The first generated file named `takeoff_tube_v1.pkl` is preserved but its
+  role is superseded: local next-stage evidence cannot define a Tube.  The
+  corrected non-overwriting asset is `takeoff_entry_support_v2.pkl`, SHA-256
+  `87e38cf5...6471b8`, role `stage_entry_certified_proposal_support`, six
+  32/32 states and `certified_tube=false`.  The other four remain boundary.
 - Runtime gate is PASS/current for the authoritative 4 kg XML.  Next action is
   the same label/model/audit funnel for Ascent and Apex, followed by a
   phase-balanced union of Landing, Descent, Apex, Ascent and Takeoff Tubes for
@@ -46,12 +45,16 @@
   frozen per-state controllers, four states passed 8/8 and the other twelve
   were 0/8.  Fresh 32-branch audit of the four survivors produced
   `32/32, 32/32, 32/32, 31/32`; the sole failure was `roll_limit`.
-  Ascent Tube v1 therefore contains exactly three safe states, version
-  `ascent-expert-tube-adeb559121fb`, SHA-256
-  `7a6fb821...ce384d`; the 31/32 state remains boundary.  Next is Apex label
+  The first file named `ascent_tube_v1.pkl` is likewise preserved but
+  superseded as a Tube claim.  Corrected `ascent_entry_support_v2.pkl`,
+  SHA-256 `05a01410...6efca9`, contains three 32/32 local entry states with
+  `certified_tube=false`; the 31/32 state remains boundary.  Next is Apex label
   inventory/acquisition.  The previous physical-Descent bridge states are not
   silently safe because frozen downstream recovery was 0; Apex must obtain
-  fresh positive evidence or remain a declared support gap.
+  fresh positive evidence or remain a declared support gap.  Only a complete
+  immutable expert-stack Final-Recovery audit may promote an upstream state
+  to `expert_conditioned_provisional_envelope`; final JEL still requires the
+  frozen unified Actor's own recertification.
 
 ## Descent reachability-network construction labels v3 (2026-07-29)
 

@@ -1,4 +1,6 @@
-from cli.build_stage_tube_from_independent_audit import exact_safe
+from pathlib import Path
+
+from cli.build_stage_tube_from_independent_audit import exact_safe, final_safe
 
 
 def test_exact_safe_requires_all_preregistered_branches():
@@ -6,3 +8,15 @@ def test_exact_safe_requires_all_preregistered_branches():
     assert not exact_safe({"label": "positive", "s": 31, "n": 32}, 32)
     assert not exact_safe({"label": "boundary", "s": 32, "n": 32}, 32)
     assert not exact_safe({"label": "positive", "s": 8, "n": 8}, 32)
+
+
+def test_final_safe_requires_explicit_full_stack_outcomes():
+    assert final_safe({"branches": [{"final_recovery": True}] * 32}, 32)
+    assert not final_safe({"branches": [{"success": True}] * 32}, 32)
+    assert not final_safe({"branches": [{"final_recovery": True}] * 31}, 32)
+
+
+def test_local_entry_support_is_not_declared_a_tube():
+    text = Path("cli/build_stage_tube_from_independent_audit.py").read_text()
+    assert '"certified_tube": args.evidence_scope == "final_recovery"' in text
+    assert '"stage_entry_certified_proposal_support"' in text
