@@ -1,5 +1,42 @@
 # DVGC Experiment State
 
+## Safe-state network -> Tube -> RSI mainline (2026-07-29)
+
+- The active implementation is reduced to the requested causal chain: fresh
+  state branch outcomes -> phase-conditioned reachability probability ->
+  parent-diverse ranked proposals -> fresh 8-branch screen -> isolated
+  32-branch audit -> safe Tube -> Tube-RSI -> frozen unified-policy
+  Final-Recovery recertification.  Network scores rank candidates only and
+  never assign safety.
+- Existing Descent work already completes the first five links: 70 labelled
+  states/53 parents, parent-held-out MLP Brier `0.124705` versus prior
+  `0.153190`, and independently audited Tube v5 with 24 safe states
+  (`2034a596...503593`).  Its two 1,600-step RSI variants retained the Tube
+  but did not improve coverage, so neither checkpoint was promoted.
+- Takeoff now uses the corrected XML-key/reference-aligned reset bank and the
+  frozen 120-state reachability model (`82344724...0df3c`).  A parent-diverse
+  ranked pilot selected 16 states from 8 parents (canonical/reference 7/9,
+  at most 2 per parent).  Mixing all three controllers gave 241/384 entries
+  but incorrectly diluted state safety; the protocol now freezes one best
+  controller per state using construction-only evidence, then audits that
+  fixed assignment with fresh seeds.
+- The fixed-controller 8-branch screen produced 112/128 next-stage entries:
+  10 states were 8/8, three 7/8 and three lower.  The ten survivors received
+  isolated 32-branch audits with disjoint seed bases `9310000/9320000/9330000`.
+  Results were 311/320 entries: six 32/32 exact-safe, three 30--31/32 and one
+  27/32.  Failures were positive-pitch=6, pitch-limit=2 and wheelie=1; timeout
+  and nonfinite were zero.
+- Frozen Takeoff expert-conditioned Tube v1 contains only the six 32/32 states:
+  `runs/safe_state_tube_rsi_seed0_20260729/takeoff/takeoff_tube_v1.pkl`,
+  SHA-256 `8533bcfc...e1106c`, version
+  `takeoff-expert-tube-b070f4ffb9d7`.  The other four remain boundary and are
+  not safe.  This is bootstrap support for final Tube-RSI, not formal shared-
+  policy JEL.
+- Runtime gate is PASS/current for the authoritative 4 kg XML.  Next action is
+  the same label/model/audit funnel for Ascent and Apex, followed by a
+  phase-balanced union of Landing, Descent, Apex, Ascent and Takeoff Tubes for
+  the bounded final shared-policy RSI pilot.  No final PPO has started yet.
+
 ## Descent reachability-network construction labels v3 (2026-07-29)
 
 - The active mainline is now explicit: construction branch labels ->

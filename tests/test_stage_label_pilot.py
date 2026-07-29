@@ -15,3 +15,8 @@ def test_takeoff_entry_uses_geometry_derived_dual_wheel_event():
  text=Path("cli/stage_label_pilot.py").read_text()
  assert 'state.metrics["event/dual_wheel_liftoff"]' in text
  assert "nominal_base_z_ground)+float(env._config.imu_airborne_height_margin)" not in text
+
+def test_label_pilot_supports_disjoint_seed_namespaces():
+ text=Path("cli/stage_label_pilot.py").read_text()
+ assert "--seed-base" in text
+ assert "a.seed_base if a.seed_base is not None else STAGE_SEED[stage]" in text
