@@ -21,6 +21,21 @@
   a real certified feedback-sequence medoid rather than an averaged action.
   No teacher dataset, shared checkpoint or joint PPO has been created yet;
   these steps wait for the Apex 32-branch artifact and its input hashes.
+- The teacher extractor now evaluates every frozen expert with that expert's
+  own observation normalizer; shared architecture alone is not treated as a
+  shared-normalizer contract.  Apex support freezing additionally requires 32
+  explicit successful branches, globally unique seeds and complete action
+  evidence.  The bounded shared pilot uses identical fixed-evaluation seeds
+  before/after and permits no Descent or Landing fixed-state loss.
+- Two nonblocking follow-on controllers are active and waiting on atomic
+  prerequisites.  `dvgc-final-shared-policy-v1.service` performs teacher
+  extraction -> 500-step bounded distillation -> engineering preflight ->
+  5,120-effective-step joint RSI pilot.  A pilot is promoted only with
+  downstream retention and Final improvement.  On promotion,
+  `dvgc-final-shared-jel-audit-v1.service` runs one frozen shared Actor through
+  exact Final 4 -> 8 -> 32 construction and a disjoint independent 32-branch
+  audit.  Only states passing both 32/32 rounds can receive the
+  `final_shared_policy_jel` role.
 - The active implementation is reduced to the requested causal chain: fresh
   state branch outcomes -> phase-conditioned reachability probability ->
   parent-diverse ranked proposals -> fresh 8-branch screen -> isolated
