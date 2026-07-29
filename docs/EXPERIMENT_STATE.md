@@ -48,6 +48,17 @@
   an 8-branch screen under the frozen Tube-v4 compact Descent policy
   (`policy_identity_hash=d149961a...44b4ce99`); only survivors may enter a
   fresh 32-branch independent Tube-extension audit.
+- Frozen-policy screening retained all three network-proposed states at
+  Final=7/8, 8/8 and 8/8.  Fresh independent 32-branch audit then labelled
+  them unknown/safe/safe at Final=25/32, 32/32 and 30/32; Chain+Final was
+  21/32, 32/32 and 9/32.  Nine failed branches were all `roll_limit`, with no
+  timeout/nonfinite.  Only the two posterior-safe states were admitted.
+- Descent Tube v5 is frozen at 24 independently certified states, version
+  `descent-network-7e3a1f0765ce`, SHA-256
+  `2034a5963b30c934795d36872085f7157c3e022c8efde69281ebab7592503593`.
+  It supersedes v4 without overwriting it and remains an expert-conditioned
+  provisional envelope, not final shared-policy JEL.  The next action is a
+  short Tube-v5 RSI retention pilot; the 25/32 unknown state is excluded.
 
 ## Upstream Apex proposal acquisition moved to Takeoff-tail handoff (2026-07-29)
 
