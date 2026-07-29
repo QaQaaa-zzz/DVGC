@@ -2026,3 +2026,24 @@
   frozen pi_D. Matcher expansion, further Apex PPO and automatic policy
   replacement remain unauthorized. PPO authorization is false. Runtime gate
   is PASS/current; controller and workers are inactive, watchdog timer active.
+
+## Safe-state reachability → Tube-RSI mainline (2026-07-29)
+
+- Formal route is now fixed to branch-derived state labels, a 16-D physical
+  reachability probability network used only for ranking, fresh independent
+  branch audit, phase-wise support/Tube construction, then Tube-RSI for one
+  final unified PPO and frozen-policy Final-Recovery recertification.  Local
+  next-stage positives remain proposal support; only Final-Recovery evidence
+  may form a formal Tube/JEL.
+- Descent has a 24-state independently audited Final-safe Tube v5
+  (`2034a596...503593`). Takeoff has 10 local entry-safe states and Ascent has
+  four local entry-safe states after 32-branch audits; their corrected v2
+  artifacts are proposal support, not formal Tubes.
+- Apex construction now has nine distinct trajectory parents and 36 fresh
+  branches: 28 local stable-Descent successes, seven positive states and two
+  controller-bank negatives. The four newly acquired OOD-boundary parents are
+  16/16 local successes, but formal C_D and Final-Recovery remain 0/16.
+- Apex model v2 (`4ea35c...bd0ec`) has parent-LOO soft Brier `0.00645`, AUPRC
+  `1.0`, precision/recall `1.0/1.0` on this small construction set. Rescoring
+  the immutable 83-state pool yields 67 in-support unseen states across 17
+  parents; 16 one-per-parent proposals are frozen for fresh 4-branch audit.
