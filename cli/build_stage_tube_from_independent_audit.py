@@ -48,10 +48,14 @@ def main() -> None:
     labels = {}
     seed_bases = []
     reports = []
+    controller_descriptors = []
     for path in args.audit_report:
         report = json.loads(Path(path).read_text())
         reports.append(report)
         seed_bases.append(report.get("seed_base"))
+        descriptor = report.get("controller")
+        if descriptor is not None and descriptor not in controller_descriptors:
+            controller_descriptors.append(descriptor)
         for label in report["labels"]:
             candidate_id = str(label["candidate_id"])
             if candidate_id in labels:
@@ -84,6 +88,7 @@ def main() -> None:
                     "independent_branch_count": int(label["n"]),
                     "independent_seed_base": next(report["seed_base"] for report in reports
                                                   if any(x["candidate_id"] == row["id"] for x in report["labels"])),
+                    "certifying_controller_bank": list(label.get("controller_bank", [])),
                 })
                 safe_rows.append(item)
             else:
@@ -114,6 +119,7 @@ def main() -> None:
                             else "Final-Recovery under immutable expert stack on every isolated audit rollout"),
         "branch_count": args.branches,
         "seed_bases": seed_bases,
+        "controller_descriptors": controller_descriptors,
         "audit_bank_sha256s": [file_sha256(path) for path in args.audit_bank],
         "audit_report_sha256s": identity["audit_report_sha256s"],
     }

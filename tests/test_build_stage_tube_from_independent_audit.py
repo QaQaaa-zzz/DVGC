@@ -10,6 +10,12 @@ def test_exact_safe_requires_all_preregistered_branches():
     assert not exact_safe({"label": "positive", "s": 8, "n": 8}, 32)
 
 
+def test_frozen_support_source_preserves_controller_provenance_contract():
+    text = __import__("pathlib").Path("cli/build_stage_tube_from_independent_audit.py").read_text()
+    assert '"controller_descriptors"' in text
+    assert '"certifying_controller_bank"' in text
+
+
 def test_final_safe_requires_explicit_full_stack_outcomes():
     assert final_safe({"branches": [{"final_recovery": True}] * 32}, 32)
     assert not final_safe({"branches": [{"success": True}] * 32}, 32)
