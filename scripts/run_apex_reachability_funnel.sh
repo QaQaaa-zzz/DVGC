@@ -11,6 +11,7 @@ LEVEL8="$BASE/ranked_model_v2_feedback_8branch"
 LEVEL32_BANK="$BASE/ranked_model_v2_funnel_8_to_32/candidates.pkl"
 LEVEL32="$BASE/ranked_model_v2_feedback_32branch"
 FINAL="$BASE/apex_entry_support_v1"
+PHASE_RSI="runs/safe_state_tube_rsi_seed0_20260729/phase_balanced_tube_rsi_v1"
 SUPPORT="runs/stage_next_bootstrap_seed0_20260720/support_v2/descent_proposal_support_v1.pkl"
 TERMINAL="runs/stage_next_reset_v3_seed0_20260723/apex/feedback_bridge_v1/descent_terminal_proposals_current.pkl"
 PI_D="runs/stage_experts/descent_tube_seed0_20260716T2330/round_3/train/policy"
@@ -78,4 +79,15 @@ if [[ ! -s "$FINAL/apex_entry_support_v1.pkl" ]]; then
     --stage apex --branches 32 --evidence-scope local_next_stage
 fi
 
-echo "Apex reachability funnel complete: $FINAL/report.json"
+if [[ ! -s "$PHASE_RSI/bank.pkl" ]]; then
+  "$PY" -m cli.build_phase_balanced_tube_rsi_bank \
+    --takeoff-bank runs/safe_state_tube_rsi_seed0_20260729/takeoff/takeoff_entry_support_v2.pkl \
+    --ascent-bank runs/safe_state_tube_rsi_seed0_20260729/ascent/ascent_entry_support_v2.pkl \
+    --apex-bank "$FINAL/apex_entry_support_v1.pkl" \
+    --descent-bank runs/descent_reachability_network_v3/independent_tube_extension_3x32_20260729/descent_tube_v5.pkl \
+    --landing-bank artifacts/landing_tube.pkl \
+    --landing-completion-analysis runs/landing/landing_completion_analysis.json \
+    --output-bank "$PHASE_RSI/bank.pkl" --output-report "$PHASE_RSI/report.json"
+fi
+
+echo "Apex reachability funnel and phase-balanced Tube-RSI preparation complete: $PHASE_RSI/report.json"
