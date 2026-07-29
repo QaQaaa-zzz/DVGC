@@ -2,6 +2,7 @@ import copy
 
 from dvgc.bank import SnapshotBank
 from cli.run_descent_tube_v5_rsi_retention_pilot_v1 import (
+    FRONTIER,
     TUBE,
     acceptance,
     build_training_bank,
@@ -10,12 +11,18 @@ from cli.run_descent_tube_v5_rsi_retention_pilot_v1 import (
 
 def test_training_bank_uses_only_safe_tube_states_and_balances_regions():
     tube = SnapshotBank.load(TUBE)
-    bank = build_training_bank(tube, "hash")
-    assert len(bank.records) == len(tube.records) == 24
+    frontier = SnapshotBank.load(FRONTIER)
+    bank = build_training_bank(tube, "hash", frontier, "frontier-hash")
+    assert len(bank.records) == len(tube.records) + len(frontier.records) == 27
     assert abs(sum(row["reset_weight"] for row in bank.records) - 1.0) < 1e-7
     assert {row["descent_layer"] for row in bank.records} == {"early", "middle", "late"}
     assert all(row["artifact_role"] == "proposal_support_bank" for row in bank.records)
-    assert all("certified_safe" not in row and "safe_claim_allowed" not in row for row in bank.records)
+    safe = [row for row in bank.records if row["bootstrap_group"] == "provisional_safe"]
+    boundary = [row for row in bank.records if row["bootstrap_group"] == "boundary"]
+    assert abs(sum(row["reset_weight"] for row in safe) - .8) < 1e-7
+    assert abs(sum(row["reset_weight"] for row in boundary) - .2) < 1e-7
+    assert len(boundary) == 3 and all(row["construction_screen_only"] for row in boundary)
+    assert all("certified_safe" not in row and "safe_claim_allowed" not in row for row in safe)
 
 
 def test_acceptance_requires_retention_drift_and_improvement():

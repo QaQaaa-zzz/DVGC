@@ -32,7 +32,8 @@ from dvgc.runtime import (
 
 
 TUBE = Path("runs/descent_reachability_network_v3/independent_tube_extension_3x32_20260729/descent_tube_v5.pkl")
-DEFAULT_RUN = Path("runs/descent_reachability_network_v3/tube_v5_rsi_retention_pilot_1600_seed0_20260729")
+FRONTIER = Path("runs/descent_reachability_network_v3/frozen_policy_screen_3x8_20260729/frozen_policy_screen_survivors.pkl")
+DEFAULT_RUN = Path("runs/descent_reachability_network_v3/tube_v5_rsi_frontier_pilot_1600_seed0_20260729")
 STEPS = 1600
 LR = 1e-5
 EVAL_SEED = 4_180_000_000
@@ -42,7 +43,8 @@ def record_parent(record: dict) -> str:
     return str(record.get("candidate_id") or record.get("origin_parent") or record["id"])
 
 
-def build_training_bank(tube: SnapshotBank, source_hash: str) -> SnapshotBank:
+def build_training_bank(tube: SnapshotBank, source_hash: str,
+                        frontier: SnapshotBank | None = None, frontier_hash: str | None = None) -> SnapshotBank:
     regions: dict[str, dict[str, list[dict]]] = defaultdict(lambda: defaultdict(list))
     for record in tube.records:
         if record.get("final", {}).get("label") != "safe" or not record.get("certified_safe"):
@@ -54,7 +56,8 @@ def build_training_bank(tube: SnapshotBank, source_hash: str) -> SnapshotBank:
     if set(regions) != {"early", "middle", "late"}:
         raise ValueError(f"Tube-RSI requires all Descent regions, got {sorted(regions)}")
     rows = []
-    region_mass = 1.0 / len(regions)
+    safe_mass = 0.8 if frontier and frontier.records else 1.0
+    region_mass = safe_mass / len(regions)
     for region in sorted(regions):
         parents = regions[region]
         parent_mass = region_mass / len(parents)
@@ -71,6 +74,22 @@ def build_training_bank(tube: SnapshotBank, source_hash: str) -> SnapshotBank:
                     "original_bank_sha256": source_hash,
                 })
                 rows.append(item)
+    if frontier and frontier.records:
+        frontier_mass = 1.0 - safe_mass
+        for record in frontier.records:
+            item = copy.deepcopy(record)
+            original_id = item["id"]
+            item.update({
+                "id": f"frontier:{original_id}", "origin_record_id": original_id,
+                "artifact_role": "proposal_support_bank", "training_only": True,
+                "reset_source": "flight_curriculum", "bootstrap_group": "boundary",
+                "descent_layer": str(item.get("descent_region") or "middle"),
+                "reset_parent_id": f"frontier:{record_parent(item)}",
+                "reset_weight": frontier_mass / len(frontier.records),
+                "original_bank_sha256": frontier_hash,
+                "construction_screen_only": True,
+            })
+            rows.append(item)
     if not np.isclose(sum(row["reset_weight"] for row in rows), 1.0, atol=1e-7):
         raise ValueError("Tube-RSI reset weights do not sum to one")
     return SnapshotBank(rows, {
@@ -78,6 +97,8 @@ def build_training_bank(tube: SnapshotBank, source_hash: str) -> SnapshotBank:
         "reset_source_protocol": {"name": "tube_v5_safe_region_parent_balanced",
                                   "source_bank_sha256": source_hash},
         "source_bank_sha256": source_hash,
+        "frontier_bank_sha256": frontier_hash,
+        "reset_masses": {"certified_safe": safe_mass, "construction_frontier": 1.0 - safe_mass},
     })
 
 
@@ -149,8 +170,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run", default=str(DEFAULT_RUN))
     parser.add_argument("--tube", default=str(TUBE))
+    parser.add_argument("--frontier-bank", default=str(FRONTIER))
     args = parser.parse_args()
-    root, tube_path = Path(args.run), Path(args.tube)
+    root, tube_path, frontier_path = Path(args.run), Path(args.tube), Path(args.frontier_bank)
     if root.exists():
         raise SystemExit(f"refusing overwrite {root}")
     gate = json.loads(Path("docs/RUNTIME_GATE.json").read_text())
@@ -167,7 +189,11 @@ def main() -> None:
     if file_sha256(PI_D / "params.pkl") != EXPECTED["pi_D"] or file_sha256(PI_L / "params.pkl") != EXPECTED["pi_L"]:
         raise SystemExit("frozen policy identity mismatch")
     source_hash = file_sha256(tube_path)
-    training_bank = build_training_bank(tube, source_hash)
+    frontier = SnapshotBank.load(frontier_path)
+    if frontier.metadata.get("artifact_role") != "proposal_support_bank" or frontier.metadata.get("safe_claim_allowed") is not False:
+        raise SystemExit("frontier input is not construction-only proposal support")
+    frontier_hash = file_sha256(frontier_path)
+    training_bank = build_training_bank(tube, source_hash, frontier, frontier_hash)
     root.mkdir(parents=True)
     training_bank.save(root / "training_bank.pkl")
     cfg = load_config("configs/backward_descent_rsi_pilot_v1.json", {
@@ -183,6 +209,8 @@ def main() -> None:
         "longer_block_authorized": False})
     save_json(root / "manifest.json", {
         "status": "FROZEN_BEFORE_TRAINING", "tube_sha256": source_hash,
+        "frontier_bank_sha256": frontier_hash, "frontier_selection": "all 3 construction-screen survivors; no audit-label filtering",
+        "reset_masses": {"certified_safe": 0.8, "construction_frontier": 0.2},
         "pi_D": EXPECTED["pi_D"], "pi_L": EXPECTED["pi_L"], "C_L": EXPECTED["C_L"],
         "xml": EXPECTED["xml"], "seed": 0, "effective_steps": STEPS,
         "learning_rate": LR, "initial_policy": "frozen_pi_D_without_compact_adapter",
