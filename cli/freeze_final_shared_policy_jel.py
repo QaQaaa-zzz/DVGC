@@ -8,7 +8,7 @@ import math
 from collections import Counter
 from pathlib import Path
 
-from dvgc.bank import SnapshotBank
+from dvgc.bank import SnapshotBank, beta_posterior
 from dvgc.config import file_sha256
 from dvgc.runtime import save_json
 
@@ -45,6 +45,15 @@ def calibration_metrics(construction_by_id: dict, audit_by_id: dict, branches: i
         for group in bins if group
     )
     return {"brier": brier, "ece_10_bin": ece, "audit_branches": len(pairs)}
+
+
+def formal_final_outcome(branches_per_round: int) -> dict:
+    successes = 2 * int(branches_per_round)
+    return {
+        "successes": successes, "failures": 0, "branches": successes,
+        "posterior": beta_posterior(successes, 0), "label": "safe",
+        "semantics": "Final-Recovery under construction and disjoint independent audit",
+    }
 
 
 def main() -> None:
@@ -98,14 +107,32 @@ def main() -> None:
         if str(record["id"]) not in safe:
             continue
         item = copy.deepcopy(record)
+        construction_branches = [dict(branch, certification_round="construction")
+                                 for branch in construction_by_id[str(record["id"])]["branches"]]
+        independent_branches = [dict(branch, certification_round="independent_audit")
+                                for branch in audit_by_id[str(record["id"])]["branches"]]
+        all_branches = construction_branches + independent_branches
+        chain_successes = sum(bool(branch.get("chain_ever")) for branch in all_branches)
         item.update({
             "artifact_role": "final_shared_policy_jel", "training_only": False,
             "certified_safe": True, "safe_claim_allowed": True,
+            "tube_metrics_eligible": True,
             "formal_shared_policy_jel": True,
             "final_shared_policy_jel": True,
             "policy_params_sha256": construction["policy_params_sha256"],
-            "construction_final_branches": construction_by_id[str(record["id"])]["branches"],
-            "independent_audit_final_branches": audit_by_id[str(record["id"])]["branches"],
+            "policy_version": construction["policy_params_sha256"],
+            "final": formal_final_outcome(args.branches),
+            "chain": {
+                "successes": chain_successes, "failures": len(all_branches) - chain_successes,
+                "branches": len(all_branches),
+                "posterior": beta_posterior(chain_successes, len(all_branches) - chain_successes),
+                "label": "safe" if chain_successes == len(all_branches) else
+                         ("dead" if chain_successes == 0 else "boundary"),
+                "semantics": "C_L Chain observed separately from Final-Recovery",
+            },
+            "certification_branches": all_branches,
+            "construction_final_branches": construction_branches,
+            "independent_audit_final_branches": independent_branches,
         })
         rows.append(item)
     phase_counts = Counter(row["phase_rsi_stage"] for row in rows)
@@ -127,6 +154,7 @@ def main() -> None:
     recall = len(safe) / len(audit_safe) if audit_safe else math.nan
     metadata = {
         "artifact_role": "final_shared_policy_jel", "formal_shared_policy_jel": True,
+        "certified_tube": True,
         "independent_audit": True, "safe_definition": (
             "Final-Recovery under one frozen shared Actor on 32 construction and 32 disjoint audit branches"
         ),

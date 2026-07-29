@@ -1,5 +1,5 @@
 from cli.audit_final_shared_policy_candidates import exact_final_label
-from cli.freeze_final_shared_policy_jel import calibration_metrics, exact_ids
+from cli.freeze_final_shared_policy_jel import calibration_metrics, exact_ids, formal_final_outcome
 from pathlib import Path
 
 
@@ -51,3 +51,14 @@ def test_final_calibration_uses_independent_branch_outcomes():
     assert metrics["brier"] == 0.125
     assert metrics["ece_10_bin"] == 0.0
     assert metrics["audit_branches"] == 64
+
+
+def test_final_jel_rows_have_explicit_64_branch_safe_outcome():
+    outcome = formal_final_outcome(32)
+    assert outcome["successes"] == outcome["branches"] == 64
+    assert outcome["failures"] == 0
+    assert outcome["label"] == "safe"
+    assert outcome["posterior"]["lower"] > .9
+    text = Path("cli/freeze_final_shared_policy_jel.py").read_text()
+    assert '"certification_branches": all_branches' in text
+    assert '"C_L Chain observed separately from Final-Recovery"' in text
