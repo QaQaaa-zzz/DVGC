@@ -505,9 +505,11 @@ def concise(status: dict) -> str:
     completed = f"{progress.get('completed')}/{progress.get('total') or '?'}"
     worker = f"{status.get('worker_unit') or 'none'} pid={status.get('worker_pid', 0)}"
     terminal=status.get("terminal_state")
+    heartbeat = status.get("heartbeat_age_seconds")
+    heartbeat_text = "unknown" if heartbeat is None else f"{float(heartbeat):.1f}s"
     summary=(f"DVGC {status['current_stage']} | cycle={status.get('cycle')} progress={completed} range={progress.get('current_index_range')}\n"
             f"controller={status['controller_active_state']}/{status['controller_substate']} pid={status['controller_pid']} | worker={worker}\n"
-            f"heartbeat={status.get('heartbeat_age_seconds', 0):.1f}s | last={status.get('last_completed_action')} | next={status.get('next_automatic_action')}\n"
+            f"heartbeat={heartbeat_text} | last={status.get('last_completed_action')} | next={status.get('next_automatic_action')}\n"
             f"terminal={'yes' if terminal else 'no'} type={terminal or 'none'} gate_valid={status.get('research_gate_valid',False)} | status={STATUS_JSON}")
     if terminal:
         summary+=(f"\nexit_reason={status.get('last_error')} | failed_stage={status.get('failed_stage') or status.get('current_stage')}"

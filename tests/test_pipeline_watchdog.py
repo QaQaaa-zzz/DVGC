@@ -265,3 +265,13 @@ def test_concise_status_exposes_cycle_and_gate_validity():
         controller_substate="running",controller_pid=1,heartbeat_age_seconds=2)
     text=watchdog.concise(status)
     assert "cycle=5" in text and "gate_valid=False" in text
+
+
+def test_concise_status_handles_controller_without_heartbeat():
+    status = _status(
+        heartbeat_age_seconds=None, progress={
+            "completed": 0, "total": None, "current_index_range": None,
+        }, controller_active_state="active", controller_substate="running",
+        controller_pid=1,
+    )
+    assert "heartbeat=unknown" in watchdog.concise(status)
