@@ -40,6 +40,14 @@
   expected after adding hard boundary examples.  The only two remaining
   wholly unseen parents are preregistered for the next 2-state pilot.  No
   predicted label has entered a Tube and PPO remains unauthorized.
+- The final two wholly unseen parents both passed the Final-safe 4-branch
+  proposal gate: P0=2/2, Final-safe P1=2/2, micro Final=6/8 and Chain+Final=5/8.
+  Across all six prospective parents the network therefore discovered three
+  Final-safe and three boundary states without reading an independent audit.
+  These remain controller-suffix proposal support.  The next funnel step is
+  an 8-branch screen under the frozen Tube-v4 compact Descent policy
+  (`policy_identity_hash=d149961a...44b4ce99`); only survivors may enter a
+  fresh 32-branch independent Tube-extension audit.
 
 ## Upstream Apex proposal acquisition moved to Takeoff-tail handoff (2026-07-29)
 
