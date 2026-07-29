@@ -41,7 +41,7 @@ def select_parent_diverse(records: list[dict], per_stage: int = 3) -> list[dict]
 def acceptance(baseline: dict, final: dict, finite: bool) -> dict:
     before = baseline["by_stage"]; after = final["by_stage"]
     retention = {
-        stage: after[stage]["final_states"] >= max(0, before[stage]["final_states"] - 1)
+        stage: after[stage]["final_states"] >= before[stage]["final_states"]
         for stage in ("descent", "landing")
     }
     improvement = (after["takeoff"]["final_states"] + after["ascent"]["final_states"]
@@ -194,7 +194,9 @@ def main() -> None:
     )
     _, final_params, final_metrics = train(environment=env, progress_fn=progress, eval_env=eval_env)
     finite = all(np.isfinite(np.asarray(leaf)).all() for leaf in jax.tree.leaves(final_params))
-    final = evaluate(final_params, 10_910_000)
+    # Use exactly the baseline seed namespace so policy change is the only
+    # cause of an outcome change in the fixed pilot evaluation.
+    final = evaluate(final_params, 10_900_000)
     decision = acceptance(baseline, final, finite)
     save_bundle(
         root / "policy", params=final_params, config=cfg, xml_path=cfg.xml_path,

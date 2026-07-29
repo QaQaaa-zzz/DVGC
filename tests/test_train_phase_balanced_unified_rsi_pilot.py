@@ -24,7 +24,7 @@ def test_promotion_requires_downstream_retention_and_final_improvement():
     result = acceptance({"by_stage": before, "final_states": 5},
                         {"by_stage": after, "final_states": 6, "nonfinite": 0}, True)
     assert result["promote"] is True
-    after["landing"]["final_states"] = 1
+    after["landing"]["final_states"] = 2
     result = acceptance({"by_stage": before, "final_states": 5},
                         {"by_stage": after, "final_states": 4, "nonfinite": 0}, True)
     assert result["promote"] is False

@@ -1,7 +1,9 @@
 import numpy as np
 import pytest
 
-from cli.build_phase_balanced_teacher_dataset import build_examples, successful_sequence_medoid
+from cli.build_phase_balanced_teacher_dataset import (
+    build_examples, build_frozen_policy_actions, successful_sequence_medoid,
+)
 
 
 def test_medoid_is_an_observed_successful_sequence_not_mean():
@@ -60,3 +62,27 @@ def test_unaudited_policy_and_invalid_observation_are_rejected():
     row["policy_state"]["actor_observation"] = np.zeros(139)
     with pytest.raises(ValueError, match="140D"):
         build_examples([row], policy_actions={}, allowed_policy_paths=set())
+
+
+def test_each_frozen_expert_uses_its_own_normalizer():
+    rows = [
+        {"policy_path": "a", "stage": "landing", "params_sha256": "hash-a"},
+        {"policy_path": "b", "stage": "descent", "params_sha256": "hash-b"},
+    ]
+    bundles = {
+        "a": (("normalizer-a", "actor-a", "critic-a"), {}, {}),
+        "b": (("normalizer-b", "actor-b", "critic-b"), {}, {}),
+    }
+
+    def tools(_env, params):
+        normalizer = params[0]
+        value = 1.0 if normalizer == "normalizer-a" else 2.0
+        return None, lambda _actor, obs: np.full((len(obs), 4), value), None
+
+    actions, _ = build_frozen_policy_actions(
+        rows, object(), load_policy=lambda path: bundles[path], build_tools=tools,
+        hash_params=lambda path: f"hash-{path}",
+    )
+    obs = np.zeros((1, 140))
+    assert np.all(actions["a"](obs) == 1.0)
+    assert np.all(actions["b"](obs) == 2.0)

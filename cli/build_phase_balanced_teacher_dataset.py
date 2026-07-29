@@ -147,6 +147,27 @@ def _atomic_pickle(path: Path, payload: dict) -> None:
         raise
 
 
+def build_frozen_policy_actions(
+    policy_rows: list[dict], env, *, load_policy, build_tools, hash_params
+) -> tuple[dict[str, Callable[[np.ndarray], np.ndarray]], dict[str, str]]:
+    """Build one evaluator per complete expert bundle, including its normalizer."""
+    actions, hashes = {}, {}
+    for row in policy_rows:
+        path = str(row["policy_path"])
+        params, _, _ = load_policy(path)
+        actual_hash = hash_params(path)
+        if actual_hash != row["params_sha256"]:
+            raise ValueError(f"expert params changed after compatibility audit: {path}")
+        _, expert_action, _ = build_tools(env, params)
+        evaluator = lambda obs, action_fn=expert_action, actor=params[1]: np.asarray(
+            action_fn(actor, obs)
+        )
+        actions[path] = evaluator
+        actions[f"{path}::{row['stage']}"] = evaluator
+        hashes[path] = actual_hash
+    return actions, hashes
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--phase-bank", required=True)
@@ -176,23 +197,21 @@ def main() -> None:
     allowed_paths = {str(row["policy_path"]) for row in policy_rows}
     if not allowed_paths:
         raise SystemExit("compatibility audit contains no parameterized experts")
-    first_params, first_cfg, _ = load_bundle(policy_rows[0]["policy_path"], verify_files=True)
+    _first_params, first_cfg, _ = load_bundle(policy_rows[0]["policy_path"], verify_files=True)
     cfg = load_config(overrides={
         **first_cfg, "use_bank_resets": False, "domain_randomization": False,
         "obs_noise_enable": False,
     })
     env = OrangeBikeDVGC(cfg, snapshot_bank=SnapshotBank())
-    _, actor_action, _ = build_actor_tools(env, first_params)
-    policy_actions = {}
-    policy_hashes = {}
-    for row in policy_rows:
-        path = str(row["policy_path"])
-        params, _, manifest = load_bundle(path, verify_files=True)
-        if file_sha256(Path(path) / "params.pkl") != row["params_sha256"]:
-            raise SystemExit(f"expert params changed after compatibility audit: {path}")
-        policy_actions[path] = lambda obs, actor=params[1]: np.asarray(actor_action(actor, obs))
-        policy_actions[f"{path}::{row['stage']}"] = policy_actions[path]
-        policy_hashes[path] = row["params_sha256"]
+    try:
+        policy_actions, policy_hashes = build_frozen_policy_actions(
+            policy_rows, env,
+            load_policy=lambda path: load_bundle(path, verify_files=True),
+            build_tools=build_actor_tools,
+            hash_params=lambda path: file_sha256(Path(path) / "params.pkl"),
+        )
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
 
     examples, apex_audits = build_examples(
         bank.records, policy_actions=policy_actions, allowed_policy_paths=allowed_paths
