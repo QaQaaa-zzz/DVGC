@@ -120,7 +120,9 @@ def test_collect_status_honors_explicit_terminal_without_rewriting_stage(monkeyp
 
 def test_waiting_v2_status_exposes_apex_dependency_as_worker(monkeypatch, tmp_path):
     (tmp_path / "controller_state.json").write_text(
-        '{"current_stage":"waiting_for_apex","heartbeat":100,"history":[],"provenance":{}}'
+        '{"current_stage":"waiting_for_apex",'
+        '"next_automatic_action":"build_phase_balanced_tube_rsi_v2",'
+        '"heartbeat":100,"history":[],"provenance":{}}'
     )
 
     def properties(unit):
@@ -139,6 +141,27 @@ def test_waiting_v2_status_exposes_apex_dependency_as_worker(monkeypatch, tmp_pa
     assert status["worker_unit"] == "dvgc-apex-reachability-funnel-v3.service"
     assert status["worker_active"] is True
     assert status["worker_pid"] == 22
+    assert status["next_automatic_action"] == "build_phase_balanced_tube_rsi_v2"
+
+
+def test_v2_gate_pause_status_is_terminal_and_uses_new_field_names(monkeypatch, tmp_path):
+    (tmp_path / "controller_state.json").write_text(
+        '{"current_stage":"distillation_downstream_fidelity","status":"gate_pause",'
+        '"next_automatic_action":"repair_distillation_without_PPO",'
+        '"last_error":"DOWNSTREAM_FIDELITY_BLOCKER","history":[],"provenance":{}}'
+    )
+    monkeypatch.setattr(watchdog, "unit_properties", lambda unit: {
+        "unit": unit, "pid": 0, "active": False, "ActiveState": "inactive",
+        "SubState": "dead", "Result": "success", "ExecMainCode": "0",
+        "ExecMainStatus": "40",
+    })
+    monkeypatch.setattr(watchdog, "active_worker_units", lambda: [])
+    monkeypatch.setattr(watchdog, "process_count", lambda value: 0)
+    status = watchdog.collect_status(tmp_path, now=101, controller_unit="shared-v2.service")
+    assert status["terminal_state"] == "gate_pause"
+    assert status["last_error"] == "DOWNSTREAM_FIDELITY_BLOCKER"
+    assert status["next_automatic_action"] == "repair_distillation_without_PPO"
+    assert watchdog.recovery_decision(status, {}, now=101) == "none"
 
 
 def test_duplicate_notification_event_is_not_sent_twice(monkeypatch, tmp_path):

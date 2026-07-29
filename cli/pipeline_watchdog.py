@@ -245,8 +245,13 @@ def collect_status(run: Path, now: float | None = None, *, controller_unit: str 
         and controller_unit == CONTROLLER_UNIT and unit_properties(RESUME_UNIT).get("active")
     )
     declared_terminal = str(state.get("terminal_state") or "")
+    declared_status = str(state.get("status") or "")
     if declared_terminal in ("pipeline_complete", "gate_pause", "engineering_failure_after_retries"):
         terminal = declared_terminal
+    elif declared_status == "gate_pause":
+        terminal = "gate_pause"
+    elif declared_status == "engineering_failure":
+        terminal = "engineering_failure_after_retries"
     elif stage == "pipeline_complete":
         terminal = "pipeline_complete"
     elif stage == "gate_pause" and not transition_pending:
@@ -290,11 +295,11 @@ def collect_status(run: Path, now: float | None = None, *, controller_unit: str 
         "frozen_manifest": frozen.get("manifest"),
         "last_completed_action": state.get("last_completed_action"),
         "last_successful_artifact": state.get("last_successful_artifact") or (reports[-1] if reports else None),
-        "next_automatic_action": state.get("next_decision"),
+        "next_automatic_action": state.get("next_decision") or state.get("next_automatic_action"),
         "in_progress_action": state.get("in_progress_action"),
         "retry_count": int(state.get("retry_count", 0) or 0),
-        "last_error": state.get("stop_reason"),
-        "terminal_reason": state.get("stop_reason") if terminal else None,
+        "last_error": state.get("stop_reason") or state.get("last_error"),
+        "terminal_reason": (state.get("stop_reason") or state.get("last_error")) if terminal else None,
         "research_gate_valid": bool(state.get("research_gate_valid") or terminal=="gate_pause") if terminal else False,
         "failed_stage": (state.get("blocked_stage") or stage) if terminal else None,
         "last_valid_checkpoint": state.get("current_checkpoint"),
