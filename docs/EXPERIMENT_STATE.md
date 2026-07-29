@@ -1,5 +1,25 @@
 # DVGC Experiment State
 
+## Descent reachability-network construction labels v3 (2026-07-29)
+
+- The active mainline is now explicit: construction branch labels ->
+  phase-conditioned state-safety probability -> ranked acquisition -> fresh
+  branch certification -> independently recertified Tube -> Tube-RSI.  Network
+  predictions remain proposal scores and can never label a state safe.
+- A CPU-only deterministic 16-12-1 MLP merged the 63 existing construction
+  states with three later Source-A P1 labels.  The deduplicated dataset has 66
+  states, 49 trajectory-candidate parents and construction labels safe/boundary/
+  dead = 11/8/47.  Independent-audit paths and held-out labels are rejected.
+- Leave-one-parent-out performance is Brier `0.074801`, ECE `0.096731`,
+  any-success AUPRC `0.829955` and safe AP `0.498183`; the parent-prior Brier is
+  `0.151784` (50.7% relative improvement).  This passes the preregistered
+  proposal-guide gate, not a Tube gate.
+- The immutable Source-A pool contains 46 eligible states from six wholly
+  unseen parents after parent exclusion.  Four parent-disjoint middle-region
+  states are frozen for the 2--5% ranked branch-certification pilot.  No PPO,
+  Tube mutation, matcher change or independent audit has occurred.  Result:
+  `runs/descent_reachability_network_v3/construction_parent_cv_20260729/`.
+
 ## Upstream Apex proposal acquisition moved to Takeoff-tail handoff (2026-07-29)
 
 - Descent remains complete: Tube v4 contains 22 independently certified
