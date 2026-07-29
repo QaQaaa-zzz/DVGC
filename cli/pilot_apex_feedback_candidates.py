@@ -99,6 +99,8 @@ def main() -> None:
                 "failure_reason": None if success else result["termination_reason"],
                 "formal_descent_support_entry": bool(result["formal_descent_support_entry"]),
                 "final_recovery": bool(result["final_landing_recovery"]),
+                "first_action": result["trace"][0]["action"] if result["trace"] else None,
+                "action_sequence": [trace["action"] for trace in result["trace"]],
             }
             branches.append(branch_row)
             outcomes.append({"candidate_id": row["id"], "root_parent_id": parent_key(row),

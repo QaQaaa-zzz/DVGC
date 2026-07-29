@@ -14,6 +14,7 @@ def test_frozen_support_source_preserves_controller_provenance_contract():
     text = __import__("pathlib").Path("cli/build_stage_tube_from_independent_audit.py").read_text()
     assert '"controller_descriptors"' in text
     assert '"certifying_controller_bank"' in text
+    assert '"certified_teacher_action_evidence"' in text
 
 
 def test_final_safe_requires_explicit_full_stack_outcomes():

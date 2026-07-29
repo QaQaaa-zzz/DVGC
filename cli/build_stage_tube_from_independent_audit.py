@@ -90,6 +90,15 @@ def main() -> None:
                                                   if any(x["candidate_id"] == row["id"] for x in report["labels"])),
                     "certifying_controller_bank": list(label.get("controller_bank", [])),
                 })
+                teacher_evidence = [{
+                    "branch_index": branch.get("branch_index"),
+                    "seed": branch.get("seed"),
+                    "dynamics_variant": branch.get("dynamics_variant"),
+                    "first_action": branch.get("first_action"),
+                    "action_sequence": branch.get("action_sequence"),
+                } for branch in label.get("branches", []) if branch.get("first_action") is not None]
+                if teacher_evidence:
+                    item["certified_teacher_action_evidence"] = teacher_evidence
                 safe_rows.append(item)
             else:
                 boundary_rows.append({"id": row["id"], "s": int(label["s"]), "n": int(label["n"])})
