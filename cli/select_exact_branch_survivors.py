@@ -53,13 +53,16 @@ def main() -> None:
     if not rows:
         raise SystemExit("no exact-success states survived the current audit level")
     output_bank.parent.mkdir(parents=True, exist_ok=True)
+    root_source_hash = bank.metadata.get("root_source_bank_sha256", file_sha256(args.bank))
     SnapshotBank(rows, {
         "artifact_role": "independent_audit_candidate_bank",
         "safe_claim_allowed": False, "not_certified_tube": True,
         "passed_branch_level": args.required_branches,
         "requires_branch_level": args.next_branches,
         "source_bank_sha256": file_sha256(args.bank),
+        "root_source_bank_sha256": root_source_hash,
         "source_report_sha256": file_sha256(args.report),
+        "root_source_bank_sha256": root_source_hash,
     }).save(output_bank)
     payload = {
         "status": "PASS", "artifact_role": "stage_branch_audit_funnel",
