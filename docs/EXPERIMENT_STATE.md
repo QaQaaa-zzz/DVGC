@@ -70,6 +70,18 @@
   add 20% of the independently audited 25/32 `unknown` frontier as training-
   only proposal support.  It does not relabel or add that state to the Tube;
   budget, LR and fixed retention evaluation remain unchanged.
+- The repaired 80/20 safe/frontier 1,600-step pilot also remained unpromoted,
+  but passed every retention/integrity gate: P1 states 24/24 -> 24/24, Final
+  branches 94/96 -> 94/96, every region unchanged, action drift RMS
+  `0.000622` / max `0.001651`, and no NaN/OOM/timeout.  It failed only the
+  preregistered measurable-improvement check; no longer block is authorized.
+- Retention diagnosis is therefore closed: the sampler prevents forgetting,
+  while the already-saturated Descent fixed set supplies no short-block
+  expansion signal.  Frozen compact expert `d149961a...44b4ce99` and Tube v5
+  remain authoritative; neither rejected PPO checkpoint is promoted.  The
+  mainline resumes upstream by evaluating the four previously discovered real
+  Apex->physical-Descent bridge snapshots against the frozen Tube-v5 expert,
+  without requiring exact membership in the obsolete six-point C_D interface.
 
 ## Upstream Apex proposal acquisition moved to Takeoff-tail handoff (2026-07-29)
 
