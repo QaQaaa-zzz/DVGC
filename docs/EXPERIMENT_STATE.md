@@ -2,7 +2,31 @@
 
 ## Safe-state network -> Tube -> RSI mainline (2026-07-29)
 
-- HEAD `e2b8aea`; worktree clean after adding the phase-conditioned action
+- Base HEAD `a99d059` before this state-only update; worktree clean.  A
+  machine-executable audit found that the
+  24-state Descent Tube uses the preregistered Beta-posterior safe rule
+  (32 branches, 90% interval lower bound >= 0.70), not an exact 32/32 rule:
+  21 states are 32/32, two are 28/32 and one is 30/32.  All 768 branch seeds
+  are globally unique; the ten failed branches are `roll_limit`, with no
+  timeout/nonfinite.  This corrects earlier shorthand that called all 24
+  states exact-safe.
+- Tube v5 also carried two legacy schema inconsistencies: 22 inherited rows
+  encoded `independent_audit` as a dictionary/absent field, and one extension
+  row summarized Chain-and-Final rather than latched `chain_ever`.  Non-
+  overwriting Tube v6 (`descent-v6-5a15288c957f`, SHA-256
+  `9d0555f7...193037e`) normalizes those fields and passes independent
+  structural/provenance verification.  The 24 safe IDs, physical state hashes
+  and every Final outcome are unchanged; only one Chain summary and 22 schema
+  fields changed.  XML, C_L, adapter and policy hashes remain frozen.
+- The waiting unified-policy/JEL follow-ons now use new v2 run paths and build
+  their phase-balanced RSI bank from verified Tube v6 after Apex completes.
+  Old v1 waiting files are preserved.  The switch did not stop or restart the
+  Apex controller/8-branch worker (PIDs remained `2951687/2969090`), and no PPO
+  artifact existed in v1.  Active follow-ons are
+  `dvgc-final-shared-policy-v2.service` and
+  `dvgc-final-shared-jel-audit-v2.service`; PPO authorization is false while
+  both await their immutable prerequisites.
+- Commit `e2b8aea` added the phase-conditioned action
   retention gate to the bounded unified RSI pilot.  Promotion now requires
   both fixed Final-state retention and full-bank Descent/Landing action drift
   RMS <= 0.02 and max <= 0.05; the report records mean/p95/max drift for all
