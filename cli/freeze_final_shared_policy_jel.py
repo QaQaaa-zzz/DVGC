@@ -159,8 +159,11 @@ def main() -> None:
             "Final-Recovery under one frozen shared Actor on 32 construction and 32 disjoint audit branches"
         ),
         "policy_params_sha256": construction["policy_params_sha256"],
+        "xml_sha256": construction["xml_sha256"],
+        "action_mapping_version": construction["action_mapping_version"],
         "canonical_entry_bank_sha256": construction["canonical_entry_bank_sha256"],
         "source_candidate_bank_sha256": file_sha256(args.bank),
+        "root_source_candidate_bank_sha256": construction["root_candidate_bank_sha256"],
         "construction_report_sha256": file_sha256(args.construction_report),
         "independent_audit_report_sha256": file_sha256(args.independent_audit_report),
         "branches_per_state_per_round": args.branches,

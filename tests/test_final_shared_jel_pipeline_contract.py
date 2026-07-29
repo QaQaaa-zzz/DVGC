@@ -9,7 +9,10 @@ def test_final_jel_controller_uses_exact_disjoint_funnel_and_one_shared_policy()
     assert text.count("cli.audit_final_shared_policy_candidates") == 4
     assert "final-shared-construction-32" in text
     assert "final-shared-independent-32" in text
+    assert "--seed 1110000000" in text
+    assert "--seed 2110000000" in text
     assert "cli.freeze_final_shared_policy_jel" in text
+    assert "cli.verify_final_shared_policy_jel" in text
     assert "--policy \"$POLICY\"" in text
     assert "rm " not in text
 

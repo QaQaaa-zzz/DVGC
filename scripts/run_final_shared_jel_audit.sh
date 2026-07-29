@@ -17,6 +17,7 @@ LEVEL32="$AUDIT/final_32branch_construction.json"
 INDEPENDENT="$AUDIT/final_32branch_independent.json"
 JEL="$AUDIT/final_shared_policy_jel.pkl"
 REPORT="$AUDIT/report.json"
+VERIFY="$AUDIT/verification.json"
 STATE="$AUDIT/controller_state.json"
 
 cd "$ROOT"
@@ -63,7 +64,7 @@ if [[ ! -s "$LEVEL4" ]]; then
     "promoted shared Actor has nonzero parent-diverse Final-Recovery coverage"
   "$PY" -u -m cli.audit_final_shared_policy_candidates \
     --policy "$POLICY" --candidate-bank "$PHASE_BANK" --canonical-entry-bank "$C_L" \
-    --output "$LEVEL4" --branches 4 --seed 10900000 --namespace final-shared-construction-4
+    --output "$LEVEL4" --branches 4 --seed 1090000000 --namespace final-shared-construction-4
 fi
 if [[ ! -s "$LEVEL8_BANK" ]]; then
   if ! "$PY" -m cli.select_exact_branch_survivors --bank "$PHASE_BANK" --report "$LEVEL4" \
@@ -79,7 +80,7 @@ if [[ ! -s "$LEVEL8" ]]; then
     "exact 4/4 shared-policy Final states retain Final-Recovery over eight branches"
   "$PY" -u -m cli.audit_final_shared_policy_candidates \
     --policy "$POLICY" --candidate-bank "$LEVEL8_BANK" --canonical-entry-bank "$C_L" \
-    --output "$LEVEL8" --branches 8 --seed 11000000 --namespace final-shared-construction-8
+    --output "$LEVEL8" --branches 8 --seed 1100000000 --namespace final-shared-construction-8
 fi
 if [[ ! -s "$LEVEL32_BANK" ]]; then
   if ! "$PY" -m cli.select_exact_branch_survivors --bank "$LEVEL8_BANK" --report "$LEVEL8" \
@@ -95,7 +96,7 @@ if [[ ! -s "$LEVEL32" ]]; then
     "exact 8/8 shared-policy Final states pass 32-branch construction certification"
   "$PY" -u -m cli.audit_final_shared_policy_candidates \
     --policy "$POLICY" --candidate-bank "$LEVEL32_BANK" --canonical-entry-bank "$C_L" \
-    --output "$LEVEL32" --branches 32 --seed 11100000 --namespace final-shared-construction-32
+    --output "$LEVEL32" --branches 32 --seed 1110000000 --namespace final-shared-construction-32
 fi
 if [[ ! -s "$INDEPENDENT" ]]; then
   write_state final_32branch_independent_audit active freeze_final_shared_policy_jel
@@ -103,7 +104,7 @@ if [[ ! -s "$INDEPENDENT" ]]; then
     "construction-safe states retain Final-Recovery under a disjoint independent audit namespace"
   "$PY" -u -m cli.audit_final_shared_policy_candidates \
     --policy "$POLICY" --candidate-bank "$LEVEL32_BANK" --canonical-entry-bank "$C_L" \
-    --output "$INDEPENDENT" --branches 32 --seed 11200000 --namespace final-shared-independent-32
+    --output "$INDEPENDENT" --branches 32 --seed 2110000000 --namespace final-shared-independent-32
 fi
 if [[ ! -s "$JEL" && ! -s "$REPORT" ]]; then
   write_state freeze_final_shared_policy_jel active pipeline_complete
@@ -117,5 +118,12 @@ if [[ ! -s "$JEL" && ! -s "$REPORT" ]]; then
 elif [[ ! -s "$JEL" || ! -s "$REPORT" ]]; then
   write_state freeze_final_shared_policy_jel engineering_failure inspect_partial_jel "partial final JEL artifact; refusing overwrite"
   exit 2
+fi
+if [[ ! -s "$VERIFY" ]]; then
+  write_state verify_final_shared_policy_jel active pipeline_complete
+  "$PY" -m cli.verify_final_shared_policy_jel \
+    --jel-bank "$JEL" --jel-report "$REPORT" --policy "$POLICY" \
+    --root-candidate-bank "$PHASE_BANK" --canonical-entry-bank "$C_L" \
+    --output "$VERIFY"
 fi
 write_state pipeline_complete pipeline_complete none
