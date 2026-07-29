@@ -29,7 +29,11 @@ def test_acceptance_requires_retention_drift_and_improvement():
     baseline = {"P1_states": 10, "final_branches": 30,
                 "regions": {name: {"P1": 2} for name in ("early", "middle", "late")}}
     final = copy.deepcopy(baseline); final["final_branches"] = 31
-    checks = acceptance(baseline, final, {"rms": .01, "max": .04}, True)
+    frontier_before = {"P1_states": 0, "final_branches": 0}
+    frontier_after = {"P1_states": 1, "final_branches": 3}
+    checks = acceptance(baseline, final, {"rms": .01, "max": .04}, True,
+                        frontier_before, frontier_after)
     assert all(checks.values())
     final["final_branches"] = 29
-    assert not all(acceptance(baseline, final, {"rms": .01, "max": .04}, True).values())
+    assert not all(acceptance(baseline, final, {"rms": .01, "max": .04}, True,
+                              frontier_before, frontier_after).values())

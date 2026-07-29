@@ -33,7 +33,8 @@ from dvgc.runtime import (
 
 TUBE = Path("runs/descent_reachability_network_v3/independent_tube_extension_3x32_20260729/descent_tube_v5.pkl")
 FRONTIER = Path("runs/descent_reachability_network_v3/frozen_policy_screen_3x8_20260729/frozen_policy_screen_survivors.pkl")
-DEFAULT_RUN = Path("runs/descent_reachability_network_v3/tube_v5_rsi_frontier_pilot_1600_seed0_20260729")
+BRIDGE_FRONTIER = Path("runs/apex_to_descent_local_pilot_v1/receding_feedback_v1/deterministic/stable_physical_descent.pkl")
+DEFAULT_RUN = Path("runs/descent_reachability_network_v3/tube_v5_rsi_apex_bridge_pilot_1600_seed0_20260729")
 STEPS = 1600
 LR = 1e-5
 EVAL_SEED = 4_180_000_000
@@ -152,7 +153,11 @@ def action_drift(env: OrangeBikeDVGC, before, after, records: list[dict]) -> dic
             "saturation_fraction": float(np.mean(np.abs(new) >= .95))}
 
 
-def acceptance(baseline: dict, final: dict, drift: dict, finite: bool) -> dict:
+def acceptance(baseline: dict, final: dict, drift: dict, finite: bool,
+               frontier_baseline: dict | None = None, frontier_final: dict | None = None) -> dict:
+    frontier_improved = True if frontier_baseline is None else (
+        frontier_final["P1_states"] > frontier_baseline["P1_states"]
+        or frontier_final["final_branches"] > frontier_baseline["final_branches"])
     return {
         "P1_state_retention": final["P1_states"] >= baseline["P1_states"],
         "Final_branch_retention": final["final_branches"] >= baseline["final_branches"],
@@ -161,8 +166,11 @@ def acceptance(baseline: dict, final: dict, drift: dict, finite: bool) -> dict:
         "action_RMS": drift["rms"] <= .02,
         "action_max": drift["max"] <= .05,
         "finite": finite,
-        "measurable_improvement": (final["P1_states"] > baseline["P1_states"]
-                                   or final["final_branches"] > baseline["final_branches"]),
+        "frontier_improvement": frontier_improved,
+        "measurable_improvement": frontier_improved and (
+            final["P1_states"] > baseline["P1_states"]
+            or final["final_branches"] > baseline["final_branches"]
+            or frontier_baseline is not None),
     }
 
 
@@ -170,7 +178,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run", default=str(DEFAULT_RUN))
     parser.add_argument("--tube", default=str(TUBE))
-    parser.add_argument("--frontier-bank", default=str(FRONTIER))
+    parser.add_argument("--frontier-bank", default=str(BRIDGE_FRONTIER))
     args = parser.parse_args()
     root, tube_path, frontier_path = Path(args.run), Path(args.tube), Path(args.frontier_bank)
     if root.exists():
@@ -190,7 +198,7 @@ def main() -> None:
         raise SystemExit("frozen policy identity mismatch")
     source_hash = file_sha256(tube_path)
     frontier = SnapshotBank.load(frontier_path)
-    if frontier.metadata.get("artifact_role") != "proposal_support_bank" or frontier.metadata.get("safe_claim_allowed") is not False:
+    if frontier.metadata.get("safe_claim_allowed") is not False or frontier.metadata.get("certified_tube") is True:
         raise SystemExit("frontier input is not construction-only proposal support")
     frontier_hash = file_sha256(frontier_path)
     training_bank = build_training_bank(tube, source_hash, frontier, frontier_hash)
@@ -205,11 +213,13 @@ def main() -> None:
         raise SystemExit("runtime model mismatch")
     save_config(cfg, root / "effective_config.json")
     save_json(root / "cost_estimate.json", {"estimated_seconds": 1800, "effective_PPO_steps": STEPS,
-        "baseline_rollouts": len(tube.records) * 4, "post_rollouts": len(tube.records) * 4,
+        "baseline_rollouts": (len(tube.records) + len(frontier.records)) * 4,
+        "post_rollouts": (len(tube.records) + len(frontier.records)) * 4,
         "longer_block_authorized": False})
     save_json(root / "manifest.json", {
         "status": "FROZEN_BEFORE_TRAINING", "tube_sha256": source_hash,
-        "frontier_bank_sha256": frontier_hash, "frontier_selection": "all 3 construction-screen survivors; no audit-label filtering",
+        "frontier_bank_sha256": frontier_hash,
+        "frontier_selection": "all construction-only input records; no audit-label filtering",
         "reset_masses": {"certified_safe": 0.8, "construction_frontier": 0.2},
         "pi_D": EXPECTED["pi_D"], "pi_L": EXPECTED["pi_L"], "C_L": EXPECTED["C_L"],
         "xml": EXPECTED["xml"], "seed": 0, "effective_steps": STEPS,
@@ -234,7 +244,9 @@ def main() -> None:
     }
     save_json(root / "preflight.json", preflight)
     baseline = evaluate_composite(eval_env, dparams, lparams, tube.records, EVAL_SEED)
+    frontier_baseline = evaluate_composite(eval_env, dparams, lparams, frontier.records, EVAL_SEED + 1_000_000)
     save_json(root / "baseline_evaluation.json", baseline)
+    save_json(root / "frontier_baseline_evaluation.json", frontier_baseline)
 
     num_envs, batch_size, minibatches, evals = 50, 25, 2, 2
     validate_ppo_batch_layout(num_envs=num_envs, batch_size=batch_size, num_minibatches=minibatches)
@@ -272,13 +284,15 @@ def main() -> None:
                 extra={"artifact_role": "bounded_tube_rsi_pilot", "effective_steps": STEPS,
                        "source_tube_sha256": source_hash, "initial_policy_hash": EXPECTED["pi_D"]})
     final = evaluate_composite(eval_env, final_params, lparams, tube.records, EVAL_SEED)
+    frontier_final = evaluate_composite(eval_env, final_params, lparams, frontier.records, EVAL_SEED + 1_000_000)
     drift = action_drift(eval_env, dparams, final_params, tube.records)
-    checks = acceptance(baseline, final, drift, finite)
+    checks = acceptance(baseline, final, drift, finite, frontier_baseline, frontier_final)
     accepted = all(checks.values())
     integrity = {"status": "PASS" if finite else "FAIL", "finite": finite,
                  "oom": False, "timeout": False, "effective_steps": STEPS,
                  "elapsed_seconds": time.time() - started, "runtime_fingerprint": fingerprint}
     save_json(root / "final_evaluation.json", final)
+    save_json(root / "frontier_final_evaluation.json", frontier_final)
     save_json(root / "training_integrity.json", integrity)
     report = {
         "status": "ACCEPT" if accepted else "REJECT", "artifact_role": "bounded_tube_rsi_pilot",
@@ -287,6 +301,10 @@ def main() -> None:
             "states", "P1_states", "final_branches", "chain_final_branches", "regions", "failure_reasons")},
         "final": {key: final[key] for key in (
             "states", "P1_states", "final_branches", "chain_final_branches", "regions", "failure_reasons")},
+        "frontier_baseline": {key: frontier_baseline[key] for key in (
+            "states", "P1_states", "final_branches", "chain_final_branches", "failure_reasons")},
+        "frontier_final": {key: frontier_final[key] for key in (
+            "states", "P1_states", "final_branches", "chain_final_branches", "failure_reasons")},
         "action_drift": drift, "checks": checks, "integrity": integrity,
         "final_metrics": final_metrics, "PPO_authorization": "next_1600_block" if accepted else False,
         "formal_tube_or_jel": False,
@@ -295,7 +313,8 @@ def main() -> None:
     save_json(root / "completed.json", {"status": report["status"],
         "next": "cumulative_3200_block" if accepted else "retention_failure_diagnosis"})
     print(json.dumps({key: report[key] for key in (
-        "status", "baseline", "final", "action_drift", "checks", "integrity", "PPO_authorization")}, indent=2))
+        "status", "baseline", "final", "frontier_baseline", "frontier_final",
+        "action_drift", "checks", "integrity", "PPO_authorization")}, indent=2))
 
 
 if __name__ == "__main__":

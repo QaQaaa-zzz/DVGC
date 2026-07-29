@@ -82,6 +82,16 @@
   mainline resumes upstream by evaluating the four previously discovered real
   Apex->physical-Descent bridge snapshots against the frozen Tube-v5 expert,
   without requiring exact membership in the obsolete six-point C_D interface.
+- Tube-v5 screening of those four real, parent-disjoint bridge snapshots found
+  Final=0/32 and Chain+Final=0/32 under the frozen compact Descent expert;
+  failures split exactly roll/pitch=16/16, with no timeout/nonfinite.  Thus the
+  blocker is downstream policy support on the real upstream distribution, not
+  old C_D matching.
+- One final bounded local learnability probe is authorized: 80% Tube-v5 safe
+  retention plus 20% of all four construction-only bridge proposals, 1,600
+  steps at unchanged LR.  It must create nonzero bridge Final while retaining
+  all 24 fixed Tube states; otherwise this local PPO route stops without added
+  budget or policy promotion.
 
 ## Upstream Apex proposal acquisition moved to Takeoff-tail handoff (2026-07-29)
 
