@@ -28,4 +28,5 @@ def test_pipeline_preserves_atomic_nonoverwrite_outputs():
     assert "partial distillation artifact; refusing overwrite" in text
     assert "partial phase-balanced v2 bank/report; refusing overwrite" in text
     assert "repair_distillation_without_PPO" in text
+    assert "distillation_downstream_fidelity" in text
     assert "without_budget_increase" in text

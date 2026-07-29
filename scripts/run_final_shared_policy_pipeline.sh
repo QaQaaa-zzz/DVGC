@@ -101,6 +101,13 @@ elif [[ ! -d "$DISTILLED" || ! -s "$DISTILL_REPORT" ]]; then
   exit 2
 fi
 
+distill_status="$($PY -c 'import json,sys; print(json.load(open(sys.argv[1]))["status"])' "$DISTILL_REPORT")"
+if [[ "$distill_status" != "PASS" ]]; then
+  write_state distillation_downstream_fidelity gate_pause \
+    repair_distillation_without_PPO "$distill_status"
+  exit 40
+fi
+
 if [[ ! -s "$PREFLIGHT" ]]; then
   write_state unified_rsi_preflight active joint_rsi_pilot
   "$PY" -m cli.preflight_phase_balanced_unified_rsi \

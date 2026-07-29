@@ -56,6 +56,33 @@ def summarize_error(prediction: np.ndarray, target: np.ndarray, phases: list[str
     return result
 
 
+def summarize_fidelity(prediction: np.ndarray, target: np.ndarray,
+                       phases: list[str]) -> dict:
+    """Report coordinate and vector action error for each frozen expert phase."""
+    delta = np.asarray(prediction, np.float64) - np.asarray(target, np.float64)
+    result = {}
+    for phase in sorted(set(phases)):
+        values = delta[np.asarray(phases) == phase]
+        action_l2 = np.linalg.norm(values, axis=1)
+        result[phase] = {
+            "count": len(values),
+            "rms": float(np.sqrt(np.mean(values * values))),
+            "max": float(np.max(np.abs(values))),
+            "mean_action_l2": float(np.mean(action_l2)),
+            "p95_action_l2": float(np.percentile(action_l2, 95)),
+            "max_action_l2": float(np.max(action_l2)),
+        }
+    return result
+
+
+def downstream_fidelity_pass(fidelity: dict, *, rms_limit: float = .02,
+                             max_limit: float = .05) -> bool:
+    return all(
+        fidelity[phase]["rms"] <= rms_limit and fidelity[phase]["max"] <= max_limit
+        for phase in ("descent", "landing")
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--teacher-dataset", required=True)
@@ -112,23 +139,35 @@ def main() -> None:
 
     @jax.jit
     def update(value, state):
-        (loss, prediction), gradient = jax.value_and_grad(loss_fn, has_aux=True)(value)
+        (_, _), gradient = jax.value_and_grad(loss_fn, has_aux=True)(value)
         updates, state = optimizer.update(gradient, state, value)
-        return optax.apply_updates(value, updates), state, loss, prediction
+        value = optax.apply_updates(value, updates)
+        loss, prediction = loss_fn(value)
+        return value, state, loss, prediction
 
     initial_loss, initial_prediction = loss_fn(trainable)
     history = []
     best = copy.deepcopy(trainable); best_loss = float(initial_loss)
+    initial_fidelity = summarize_fidelity(np.asarray(initial_prediction), targets, phases)
+    best_eligible = copy.deepcopy(trainable) if downstream_fidelity_pass(initial_fidelity) else None
+    best_eligible_loss = float(initial_loss) if best_eligible is not None else float("inf")
     prediction = initial_prediction
     for step in range(1, int(args.steps) + 1):
         trainable, optimizer_state, loss, prediction = update(trainable, optimizer_state)
         value = float(loss)
         if value < best_loss:
             best, best_loss = copy.deepcopy(trainable), value
+        step_fidelity = summarize_fidelity(np.asarray(prediction), targets, phases)
+        if downstream_fidelity_pass(step_fidelity) and value < best_eligible_loss:
+            best_eligible, best_eligible_loss = copy.deepcopy(trainable), value
         if step % 25 == 0 or step == args.steps:
             history.append({"step": step, "weighted_mse": value})
-    distilled_actor = assemble(best)
+    selected = best_eligible if best_eligible is not None else best
+    selected_loss = best_eligible_loss if best_eligible is not None else best_loss
+    distilled_actor = assemble(selected)
     final_prediction = np.asarray(actor_action(distilled_actor, obs))
+    fidelity = summarize_fidelity(final_prediction, targets, phases)
+    fidelity_pass = downstream_fidelity_pass(fidelity)
     distilled = (params[0], distilled_actor, params[2])
     save_bundle(
         output_policy, params=distilled, config=cfg, xml_path=cfg.xml_path,
@@ -140,6 +179,9 @@ def main() -> None:
             "teacher_dataset_sha256": file_sha256(args.teacher_dataset),
             "teacher_phase_bank_sha256": payload["phase_bank_sha256"],
             "expert_controller_identities": payload["expert_controller_identities"],
+            "teacher_action_fidelity": fidelity,
+            "downstream_teacher_fidelity_pass": fidelity_pass,
+            "downstream_action_fidelity_limits": {"rms": .02, "max": .05},
             "base_policy_version": manifest["policy_version"],
             "frozen_assets": ["normalizer", "critic", "log_std"],
             "trainable_assets": ["actor_trunk", "actor_mean_head"],
@@ -149,12 +191,18 @@ def main() -> None:
     for row, phase in zip(np.asarray(final_prediction), phases):
         phase_history[phase].append(row)
     report = {
-        "status": "PASS", "artifact_role": "final_shared_policy_initialization",
+        "status": "PASS" if fidelity_pass else "DOWNSTREAM_FIDELITY_BLOCKER",
+        "artifact_role": "final_shared_policy_initialization",
         "formal_tube_or_jel": False, "PPO_authorization": False,
         "steps": int(args.steps), "learning_rate": float(args.learning_rate),
-        "weighted_mse_before": float(initial_loss), "weighted_mse_after": best_loss,
+        "weighted_mse_before": float(initial_loss), "weighted_mse_after": selected_loss,
         "action_error_before": summarize_error(np.asarray(initial_prediction), targets, phases),
         "action_error_after": summarize_error(final_prediction, targets, phases),
+        "teacher_action_fidelity": fidelity,
+        "downstream_teacher_fidelity_pass": fidelity_pass,
+        "downstream_action_fidelity_limits": {"rms": .02, "max": .05},
+        "checkpoint_selection": ("lowest_loss_with_downstream_fidelity"
+                                 if best_eligible is not None else "lowest_loss_diagnostic_only"),
         "history": history, "frozen_normalizer": True, "frozen_critic": True,
         "frozen_log_std": True, "output_policy": str(output_policy),
         "output_params_sha256": file_sha256(output_policy / "params.pkl"),

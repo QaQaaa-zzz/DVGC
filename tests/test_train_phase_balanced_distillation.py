@@ -1,7 +1,12 @@
 import numpy as np
 import pytest
 
-from cli.train_phase_balanced_distillation import summarize_error, validate_dataset
+from cli.train_phase_balanced_distillation import (
+    downstream_fidelity_pass,
+    summarize_error,
+    summarize_fidelity,
+    validate_dataset,
+)
 
 
 def _payload():
@@ -34,3 +39,16 @@ def test_error_summary_is_phase_conditioned():
     assert result["takeoff"]["mean_action_l2"] == pytest.approx(1.0)
     assert result["landing"]["mean_action_l2"] == pytest.approx(2.0)
     assert result["all"]["max_action_l2"] == pytest.approx(2.0)
+
+
+def test_downstream_teacher_fidelity_is_a_hard_gate():
+    phases = [stage for stage in
+              ("takeoff", "ascent", "apex", "descent", "landing") for _ in range(2)]
+    target = np.zeros((10, 4), np.float32)
+    prediction = target.copy()
+    fidelity = summarize_fidelity(prediction, target, phases)
+    assert downstream_fidelity_pass(fidelity)
+    prediction[6, 0] = .051
+    fidelity = summarize_fidelity(prediction, target, phases)
+    assert fidelity["descent"]["max"] > .05
+    assert not downstream_fidelity_pass(fidelity)

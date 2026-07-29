@@ -82,6 +82,19 @@ def main() -> None:
     static["policy_teacher_phase_bank_identity"] = (
         manifest.get("teacher_phase_bank_sha256") == file_sha256(args.phase_bank)
     )
+    fidelity = manifest.get("teacher_action_fidelity", {})
+    limits = manifest.get("downstream_action_fidelity_limits", {})
+    static["downstream_teacher_action_fidelity"] = (
+        manifest.get("downstream_teacher_fidelity_pass") is True
+        and float(limits.get("rms", np.inf)) <= .02
+        and float(limits.get("max", np.inf)) <= .05
+        and all(
+            stage in fidelity
+            and float(fidelity[stage].get("rms", np.inf)) <= .02
+            and float(fidelity[stage].get("max", np.inf)) <= .05
+            for stage in ("descent", "landing")
+        )
+    )
     controller_identities = manifest.get("expert_controller_identities", {})
     descent_identities = [identity for path, identity in controller_identities.items()
                           if "descent" in str(path).lower()]
