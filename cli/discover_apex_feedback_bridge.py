@@ -296,6 +296,7 @@ def main() -> None:
     p.add_argument("--branch-mode", choices=("deterministic", "fresh", "all"),
                    default="all")
     p.add_argument("--nominal-report", default="")
+    p.add_argument("--fresh-regardless-of-nominal", action="store_true")
     a = p.parse_args()
     root = Path(a.output_root); root.mkdir(parents=True, exist_ok=True)
     authority_bank = SnapshotBank.load(a.authority_bank)
@@ -398,7 +399,8 @@ def main() -> None:
             )
             branch_results.append(("deterministic", nominal_variant, 0, result))
             deterministic_stable = result["stable_physical_descent"]
-        if a.branch_mode in ("fresh", "all") and deterministic_stable:
+        if (a.branch_mode in ("fresh", "all")
+                and (deterministic_stable or a.fresh_regardless_of_nominal)):
             for fresh in range(4):
                 variant = DYNAMICS_VARIANTS[fresh % len(DYNAMICS_VARIANTS)]
                 if variant["id"] not in runtimes:
@@ -478,6 +480,7 @@ def main() -> None:
         "artifact_role": "apex_feedback_bridge_feasibility_pilot",
         "controller_type": "receding_horizon_bounded_shooting",
         "feedback_used": True, "replanning_interval_ticks": 1,
+        "fresh_regardless_of_nominal": a.fresh_regardless_of_nominal,
         "branch_mode": a.branch_mode,
         "lookahead_ticks": a.lookahead, "controller_horizon": a.horizon,
         "action_candidates": [np.asarray(x).tolist() for x in _actions()],
