@@ -81,6 +81,7 @@ def build_examples(
     policy_actions: dict[str, Callable[[np.ndarray], np.ndarray]],
     allowed_policy_paths: set[str],
     policy_identities: dict[str, str] | None = None,
+    apex_trajectories: dict[str, dict] | None = None,
 ) -> tuple[list[dict], list[dict]]:
     policy_identities = policy_identities or {}
     examples, apex_audits = [], []
@@ -91,6 +92,44 @@ def build_examples(
         observation = _actor_observation(record)
         teacher = {}
         if stage == "apex":
+            if apex_trajectories is not None:
+                trajectory = apex_trajectories.get(str(record["id"]))
+                if (trajectory is None
+                        or trajectory.get("local_entry_replay_verified") is not True
+                        or int(trajectory.get("exact_replay_count", 0)) < 2):
+                    raise ValueError(f"{record.get('id')} lacks exact-replay Apex trajectory evidence")
+                samples = list(trajectory.get("samples", []))
+                if not samples or [int(row.get("tick", -1)) for row in samples] != list(range(len(samples))):
+                    raise ValueError(f"{record.get('id')} has invalid Apex trajectory ticks")
+                weight = float(record["reset_weight"]) / len(samples)
+                for sample in samples:
+                    sample_observation = np.asarray(sample.get("observation"), np.float32)
+                    sample_action = np.asarray(sample.get("action"), np.float32)
+                    if (sample_observation.shape != (140,) or not np.isfinite(sample_observation).all()
+                            or sample_action.shape != (4,) or not np.isfinite(sample_action).all()
+                            or np.max(np.abs(sample_action)) > 1.000001):
+                        raise ValueError(f"invalid Apex trajectory sample for {record['id']}")
+                    examples.append({
+                        "record_id": f"{record['id']}:tick:{sample['tick']}",
+                        "origin_record_id": str(record.get("origin_record_id", record["id"])),
+                        "phase": stage, "parent_id": str(record["reset_parent_id"]),
+                        "source_bank_sha256": str(record["origin_artifact_sha256"]),
+                        "source_artifact_role": str(record["origin_artifact_role"]),
+                        "observation": sample_observation, "action": sample_action,
+                        "training_weight": weight,
+                        "teacher_type": "certified_feedback_trajectory_medoid",
+                        "teacher_branch_index": trajectory.get("branch_index"),
+                        "teacher_seed": trajectory.get("seed"),
+                        "teacher_dynamics_variant": trajectory.get("dynamics_variant"),
+                        "teacher_trajectory_tick": int(sample["tick"]),
+                        "teacher_entry_tick": int(trajectory["entry_tick"]),
+                    })
+                apex_audits.append({
+                    "record_id": record["id"], "trajectory_examples": len(samples),
+                    "entry_tick": int(trajectory["entry_tick"]),
+                    "exact_replay_count": int(trajectory["exact_replay_count"]),
+                })
+                continue
             evidence = list(record.get("certified_teacher_action_evidence", []))
             expected = int(record.get("independent_branch_count", 0))
             seeds = [row.get("seed") for row in evidence]
@@ -207,6 +246,7 @@ def main() -> None:
     parser.add_argument("--expert-compatibility", required=True)
     parser.add_argument("--output-dataset", required=True)
     parser.add_argument("--output-report", required=True)
+    parser.add_argument("--apex-trajectory-teacher", default="")
     args = parser.parse_args()
     output, report_path = Path(args.output_dataset), Path(args.output_report)
     if output.exists() or report_path.exists():
@@ -273,9 +313,28 @@ def main() -> None:
     except ValueError as exc:
         raise SystemExit(str(exc)) from exc
 
+    apex_trajectories = None
+    apex_trajectory_sha256 = None
+    if args.apex_trajectory_teacher:
+        trajectory_path = Path(args.apex_trajectory_teacher)
+        with trajectory_path.open("rb") as stream:
+            trajectory_payload = pickle.load(stream)
+        if (trajectory_payload.get("schema") != "dvgc_apex_feedback_trajectory_teacher_v1"
+                or trajectory_payload.get("artifact_role") != "certified_local_feedback_trajectory_teacher"
+                or trajectory_payload.get("formal_tube_or_jel") is not False
+                or trajectory_payload.get("phase_bank_sha256") != file_sha256(args.phase_bank)):
+            raise SystemExit("Apex trajectory teacher provenance/schema mismatch")
+        trajectories = list(trajectory_payload.get("trajectories", []))
+        apex_trajectories = {str(row["record_id"]): row for row in trajectories}
+        expected_apex_ids = {str(row["id"]) for row in bank.records
+                             if row.get("phase_rsi_stage") == "apex"}
+        if len(apex_trajectories) != len(trajectories) or set(apex_trajectories) != expected_apex_ids:
+            raise SystemExit("Apex trajectory teacher record IDs are incomplete or duplicated")
+        apex_trajectory_sha256 = file_sha256(trajectory_path)
+
     examples, apex_audits = build_examples(
         bank.records, policy_actions=policy_actions, allowed_policy_paths=allowed_paths,
-        policy_identities=policy_identities,
+        policy_identities=policy_identities, apex_trajectories=apex_trajectories,
     )
     masses = {stage: sum(row["training_weight"] for row in examples if row["phase"] == stage)
               for stage in STAGES}
@@ -289,6 +348,7 @@ def main() -> None:
         "expert_compatibility_sha256": file_sha256(args.expert_compatibility),
         "expert_params_sha256s": policy_hashes,
         "expert_controller_identities": policy_identities,
+        "apex_trajectory_teacher_sha256": apex_trajectory_sha256,
         "examples": examples,
     }
     _atomic_pickle(output, payload)
@@ -304,6 +364,7 @@ def main() -> None:
         "output_dataset": str(output), "output_dataset_sha256": file_sha256(output),
         "phase_bank_sha256": payload["phase_bank_sha256"],
         "expert_compatibility_sha256": payload["expert_compatibility_sha256"],
+        "apex_trajectory_teacher_sha256": apex_trajectory_sha256,
     }
     save_json(report_path, report)
     print(json.dumps({key: value for key, value in report.items()

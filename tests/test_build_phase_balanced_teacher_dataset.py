@@ -57,6 +57,45 @@ def test_examples_are_phase_balanced_and_apex_uses_feedback_evidence():
     assert len(audits) == 1
 
 
+def test_apex_exact_replay_trajectory_expands_ticks_without_changing_phase_mass():
+    records = [_record(stage) for stage in ("takeoff", "ascent", "apex", "descent", "landing")]
+    zero = lambda obs: np.zeros((len(obs), 4))
+    actions = {"policy": zero, "descent-policy": zero, "descent-policy::descent": zero,
+               "landing-policy": zero, "landing-policy::landing": zero}
+    apex_id = records[2]["id"]
+    trajectory = {
+        apex_id: {
+            "record_id": apex_id, "local_entry_replay_verified": True,
+            "exact_replay_count": 2, "branch_index": 3, "seed": 7,
+            "dynamics_variant": "nominal", "entry_tick": 4,
+            "samples": [
+                {"tick": tick, "observation": np.full(140, tick, np.float32),
+                 "action": np.full(4, tick / 10, np.float32)}
+                for tick in range(4)
+            ],
+        }
+    }
+    examples, audits = build_examples(
+        records, policy_actions=actions,
+        allowed_policy_paths={"policy", "descent-policy", "landing-policy"},
+        apex_trajectories=trajectory,
+    )
+    apex = [row for row in examples if row["phase"] == "apex"]
+    assert len(apex) == 4
+    assert sum(row["training_weight"] for row in apex) == pytest.approx(.2)
+    assert all(row["teacher_type"] == "certified_feedback_trajectory_medoid" for row in apex)
+    assert [row["teacher_trajectory_tick"] for row in apex] == [0, 1, 2, 3]
+    assert audits[0]["exact_replay_count"] == 2
+
+
+def test_apex_trajectory_requires_exact_replay_and_contiguous_ticks():
+    row = _record("apex")
+    trajectory = {row["id"]: {"local_entry_replay_verified": False, "samples": []}}
+    with pytest.raises(ValueError, match="exact-replay Apex trajectory"):
+        build_examples([row], policy_actions={}, allowed_policy_paths=set(),
+                       apex_trajectories=trajectory)
+
+
 def test_apex_requires_complete_unique_32_branch_teacher_evidence():
     row = _record("apex")
     row["certified_teacher_action_evidence"] = row["certified_teacher_action_evidence"][:-1]
