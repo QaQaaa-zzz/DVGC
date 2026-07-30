@@ -58,6 +58,7 @@ def evaluate_policy(env, params, records: list[dict], seed: int) -> dict:
             PHASE_RSI_OBJECTIVE[stage], jnp.int32
         )
         info["stage_entry_ever"] = jnp.zeros((), jnp.int32)
+        info["apex_descent_stable_count"] = jnp.zeros((), jnp.int32)
         state = state.replace(info=info)
         final_state, outcome = frozen_rollout(
             env, inference, state, key, horizon=200, step_fn=step

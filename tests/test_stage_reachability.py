@@ -3,7 +3,10 @@ import math
 import numpy as np
 
 from dvgc.config import default_config
-from dvgc.stage_reachability import CANONICAL_PHASE, evaluate_entry, next_branch_budget, protocol_payload, reachability_label
+from dvgc.stage_reachability import (
+    APEX_DESCENT_STABLE_TICKS, CANONICAL_PHASE, evaluate_entry,
+    next_branch_budget, protocol_payload, reachability_label,
+)
 
 
 def sample(**kw):
@@ -22,6 +25,9 @@ def support(row):
 
 def test_flight_substages_map_to_existing_canonical_phase():
     assert CANONICAL_PHASE["ascent"]==CANONICAL_PHASE["apex"]==CANONICAL_PHASE["descent"]=="flight"
+    protocol = protocol_payload(default_config())
+    assert protocol["apex_descent_stable_ticks"] == APEX_DESCENT_STABLE_TICKS == 4
+    assert "diagnostic and shaping signal" in protocol["rules"]["apex_to_descent"]
 
 
 def test_takeoff_ascent_requires_real_airborne_and_upward_motion():

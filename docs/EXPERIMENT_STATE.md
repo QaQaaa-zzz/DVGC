@@ -1,5 +1,41 @@
 # DVGC Experiment State
 
+## Apex local-entry contract repair and unified-policy continuation (2026-07-30)
+
+- HEAD `23bb08f` added a non-overwriting exact-replay Apex feedback-prefix
+  teacher path.  All 16 frozen Apex support states reproduced their selected
+  audited branch twice exactly and reached the recorded local event at tick 4;
+  the resulting artifact contains 64 pre-entry online observation/action
+  pairs.  It is training-only and does not change any Tube or JEL label.
+- The diagnostic exposed the actual blocker: Apex construction/audit defined
+  success as four consecutive stable physical-Descent ticks, while unified
+  RSI still gated `apex_to_descent` on the older formal C_D matcher.  The
+  authoritative 32-branch report is 512/512 local entries but 0 formal matcher
+  entries, so the old PPO/evaluation objective could never recognize the
+  evidence used to build its reset bank.
+- Runtime now latches an independent `apex_descent_stable_count` and fires the
+  Apex local event after four consecutive Flight ticks with the already frozen
+  audit pose/rate/descent conditions.  C_D features, radii, distance and
+  shaping remain unchanged diagnostics; XML, action mapping, physical-failure
+  and Final-Recovery contracts are unchanged.  Snapshot restore/capture
+  preserves the new counter while legacy banks start it at zero.
+- On the same fixed 12-state evaluation, the old distillation initializer now
+  scores Takeoff/Ascent/Apex/Descent `1/3,3/3,3/3,3/3` (10/12).  Existing v5
+  unified RSI scores `2/3,3/3,3/3,3/3` (11/12), proving that the previous Apex
+  0/3 was a gate mismatch rather than absent policy capability.  Its previously
+  measured fixed Final remains 6/15; no retrospective Tube/JEL promotion is
+  made.
+- A trajectory-distillation diagnostic is preserved separately.  It passed
+  all action-fidelity gates after 3,000 supervised steps but scored only 10/12
+  and lost one Ascent state, so it is not promoted.  No additional PPO has
+  been launched yet.
+- Full runtime gate is PASS/current at source fingerprint
+  `3dcbfff04d02b9b68e00f136e59b46e2a8afe3b1df80b7919b1f1f11756f3a76`;
+  full local preflight passes 551 tests.  Descent Tube v6 remains unchanged at
+  SHA-256 `9d0555f7...193037e`.  Next action is a single bounded corrected-
+  objective unified RSI pilot followed by fixed Final/retention evaluation;
+  no open-ended third block is authorized.
+
 ## Safe-state network -> Tube -> RSI mainline (2026-07-29)
 
 - Watchdog authority now points to `final_shared_policy_v2` instead of the

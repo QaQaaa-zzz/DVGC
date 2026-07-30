@@ -36,6 +36,7 @@ from .rewards import (
     compute_descent_local_reward, compute_descent_rsi_pilot_reward,
     compute_stage_next_entry_reward, compute_takeoff_reward_profile,
 )
+from .stage_reachability import APEX_DESCENT_STABLE_TICKS
 
 # Primary terminal/event codes.  They are integers because State.info must be a
 # JAX pytree; host tools map them back to readable V21-style strings.
@@ -324,6 +325,9 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
                 int(r.get("apex_seen", int(r.get("reference_index", r.get("source_index", -1))) >= 220))
                 for r in records
             ], jp.int32)
+            self._bank_apex_descent_stable_count = jp.asarray([
+                int(r.get("apex_descent_stable_count", 0)) for r in records
+            ], jp.int32)
             self._bank_last_action = jp.asarray(np.stack([np.asarray(ps(r).get("last_action", np.zeros(nu)), np.float32) for r in records]))
             default_history = np.zeros((self._actor_history_len, self._actor_frame_dim), np.float32)
             histories, valid = [], []
@@ -381,6 +385,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             self._bank_prelaunch_airborne_count = jp.zeros((1,), jp.int32); self._bank_invalid_wheel_count = jp.zeros((1,), jp.int32)
             self._bank_prev_acc_z = jp.full((1,), jp.nan, jp.float32); self._bank_prev_vz = jp.full((1,), jp.nan, jp.float32)
             self._bank_apex_seen = jp.zeros((1,), jp.int32)
+            self._bank_apex_descent_stable_count = jp.zeros((1,), jp.int32)
             self._bank_last_action = jp.zeros((1, nu), jp.float32)
             self._bank_obs_history = jp.zeros((1, self._actor_history_len, self._actor_frame_dim), jp.float32)
             self._bank_obs_history_valid = jp.zeros((1,), bool); self._bank_logw = jp.zeros((1,), jp.float32)
@@ -886,6 +891,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         dual_wheel_liftoff_seen: Optional[jax.Array] = None,
         stage_entry_ever: Optional[jax.Array] = None,
         apex_seen: Optional[jax.Array] = None,
+        apex_descent_stable_count: Optional[jax.Array] = None,
         jump_signal_latched: Optional[jax.Array] = None,
         jump_window_start_x: Optional[jax.Array] = None,
         jump_window_end_x: Optional[jax.Array] = None,
@@ -932,6 +938,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "recovery_success": jp.zeros((), jp.int32),
             "stage_entry_ever": _i(stage_entry_ever),
             "apex_seen": _i(apex_seen),
+            "apex_descent_stable_count": _i(apex_descent_stable_count),
             "jump_signal_latched": ((had_airborne>0) | (phase==STAGE_ID["takeoff"])) if jump_signal_latched is None else jp.asarray(jump_signal_latched,bool),
             "jump_window_start_x": qpos[self._qpos0+0] if jump_window_start_x is None else jp.asarray(jump_window_start_x,jp.float32),
             "jump_window_end_x": qpos[self._qpos0+0]+jump_window_length if jump_window_end_x is None else jp.asarray(jump_window_end_x,jp.float32),
@@ -1008,6 +1015,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         reachability_objective_id: Optional[jax.Array] = None,
         stage_entry_ever: Optional[jax.Array] = None,
         apex_seen: Optional[jax.Array] = None,
+        apex_descent_stable_count: Optional[jax.Array] = None,
         jump_signal_latched: Optional[jax.Array] = None,
         jump_window_start_x: Optional[jax.Array] = None,
         jump_window_end_x: Optional[jax.Array] = None,
@@ -1069,6 +1077,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             reachability_objective_id=reachability_objective_id,
             stage_entry_ever=stage_entry_ever,
             apex_seen=apex_seen,
+            apex_descent_stable_count=apex_descent_stable_count,
             jump_signal_latched=jump_signal_latched,
             jump_window_start_x=jump_window_start_x,
             jump_window_end_x=jump_window_end_x,
@@ -1159,6 +1168,9 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             prev_acc_z = jp.where(use_bank, self._bank_prev_acc_z[idx], jp.asarray(jp.nan, jp.float32))
             prev_vz = jp.where(use_bank, self._bank_prev_vz[idx], jp.asarray(jp.nan, jp.float32))
             apex_seen = jp.where(use_bank, self._bank_apex_seen[idx], jp.asarray(0, jp.int32))
+            apex_descent_stable_count = jp.where(
+                use_bank, self._bank_apex_descent_stable_count[idx], jp.asarray(0, jp.int32)
+            )
             last_action = jp.where(use_bank, self._bank_last_action[idx], self._neutral_action)
             obs_history = self._bank_obs_history[idx]
             obs_history_valid = use_bank & self._bank_obs_history_valid[idx]
@@ -1191,6 +1203,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
                 reset_parent=reset_parent,
                 reachability_objective_id=reachability_objective_id,
                 apex_seen=apex_seen,
+                apex_descent_stable_count=apex_descent_stable_count,
             )
         return self._state_from_values(qnat, vnat, cnat, rng, jp.asarray(STAGE_ID["approach"], jp.int32), jp.zeros((), jp.int32), jp.zeros((), jp.int32), jp.zeros((), jp.int32))
 
@@ -1226,6 +1239,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         reset_parent: Optional[jax.Array] = None,
         stage_entry_ever: Optional[jax.Array] = None,
         apex_seen: Optional[jax.Array] = None,
+        apex_descent_stable_count: Optional[jax.Array] = None,
         jump_signal_latched: Optional[jax.Array] = None,
         jump_window_start_x: Optional[jax.Array] = None,
         jump_window_end_x: Optional[jax.Array] = None,
@@ -1259,6 +1273,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             reset_parent=reset_parent,
             stage_entry_ever=stage_entry_ever,
             apex_seen=apex_seen,
+            apex_descent_stable_count=apex_descent_stable_count,
             jump_signal_latched=jump_signal_latched,
             jump_window_start_x=jump_window_start_x,
             jump_window_end_x=jump_window_end_x,
@@ -1348,6 +1363,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "recovery_count": int(info["recovery_count"]),
             "stage_entry_ever": int(info["stage_entry_ever"]),
             "apex_seen": int(info["apex_seen"]),
+            "apex_descent_stable_count": int(info["apex_descent_stable_count"]),
             "jump_signal_latched": bool(info["jump_signal_latched"]),
             "jump_window_start_x": float(info["jump_window_start_x"]),
             "jump_window_end_x": float(info["jump_window_end_x"]),
@@ -1399,6 +1415,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
                 "prev_acc_z", "prev_vz", "prev_front_tire_bottom_z",
                 "prev_rear_tire_bottom_z", "positive_pitch_count", "wheelie_count",
                 "dual_wheel_liftoff_seen", "stage_entry_ever", "apex_seen",
+                "apex_descent_stable_count",
                 "jump_signal_latched", "jump_window_start_x", "jump_window_end_x",
                 "chain_ever", "recovery_success", "episode_step", "end_code",
             )
@@ -1717,12 +1734,24 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         takeoff_to_ascent_entry = confirmed_airborne & (vz>=float(cfg.takeoff_liftoff_vz)) & entry_pose_ok
         ascent_to_apex_entry = ((phase1==STAGE_ID["flight"]) & (z>=0.4015475838251305)
                                & (z<=0.7015475838251305) & (jp.abs(vz)<=0.25) & entry_pose_ok)
-        apex_to_descent_entry = (phase1==STAGE_ID["flight"]) & apex_seen & raw_airborne & \
-                (vz>=self._stage_descent_vz_bounds[0]) & (vz<=self._stage_descent_vz_bounds[1]) & \
-                (x>=self._stage_support_x_bounds[0]) & (x<=self._stage_support_x_bounds[1]) & \
-                (z>=self._stage_support_z_bounds[0]) & (z<=self._stage_support_z_bounds[1]) & \
-                (jp.abs(gyro[0])<=self._stage_roll_rate_max) & (jp.abs(gyro[1])<=self._stage_pitch_rate_max) & \
-                stage_support_near & entry_pose_ok
+        # This event must match the already frozen Apex construction/audit
+        # contract.  The old C_D proximity remains available above for reward
+        # shaping and diagnostics, but was never reached by those 32/32 local
+        # branches and therefore cannot be the success gate used by RSI.
+        apex_stable_now = (
+            (phase1 == STAGE_ID["flight"]) & apex_seen
+            & (vz < -0.05)
+            & (jp.abs(roll) < _deg2rad(cfg.max_roll_deg))
+            & (jp.abs(pitch) < _deg2rad(cfg.max_pitch_deg))
+            & (gyro_norm < float(cfg.recovery_max_angvel))
+            & (~hard_failure)
+        )
+        apex_descent_stable_count = jp.where(
+            apex_stable_now, state.info["apex_descent_stable_count"] + 1, 0
+        )
+        apex_to_descent_entry = (
+            apex_descent_stable_count >= APEX_DESCENT_STABLE_TICKS
+        )
         descent_to_landing_entry = ((phase1==STAGE_ID["landing"]) & valid_landing & support
                                     & in_platform & (jp.abs(vz)<=0.75) & entry_pose_ok)
         stage_entry_raw = jp.where(
@@ -2156,6 +2185,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "chain_ever": chain_ever.astype(jp.int32),
             "stage_entry_ever": stage_entry_ever.astype(jp.int32),
             "apex_seen": apex_seen.astype(jp.int32),
+            "apex_descent_stable_count": apex_descent_stable_count.astype(jp.int32),
             "jump_signal_latched": jump_signal_latched.astype(bool),
             "jump_window_start_x": jump_window_start_x,
             "jump_window_end_x": jump_window_end_x,

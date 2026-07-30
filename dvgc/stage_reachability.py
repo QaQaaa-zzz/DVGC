@@ -20,8 +20,9 @@ CANONICAL_PHASE = {
     "takeoff": "takeoff", "ascent": "flight", "apex": "flight",
     "descent": "flight", "landing": "landing", "stable": "landing",
 }
-PROTOCOL_VERSION = "stage_next_entry_v2_support_aligned"
+PROTOCOL_VERSION = "stage_next_entry_v3_apex_stable_descent"
 LABEL_SCHEMA_VERSION = "stage_reachability_label_v2"
+APEX_DESCENT_STABLE_TICKS = 4
 
 
 @dataclass(frozen=True)
@@ -81,12 +82,16 @@ def protocol_payload(cfg: Any, support_metadata: Mapping[str, Any] | None = None
         "rules": {
             "takeoff_to_ascent": "confirmed dual-wheel airborne; upward velocity; bounded pose/rates; no illegal contact",
             "ascent_to_apex": "Flight; reference apex height window; |vz| near zero; bounded pose/rates; no illegal contact",
-            "apex_to_descent": "apex-passed latch; bounded negative vz; legal airborne pose/rates; frozen Descent-support proximity",
+            "apex_to_descent": (
+                "apex-passed latch; four consecutive Flight ticks with negative vz and bounded pose/rates; "
+                "frozen Descent-support proximity remains a diagnostic and shaping signal, not the local event"
+            ),
             "descent_to_landing": "first valid wheel landing/support in platform support region; no body/deep/invalid contact or immediate failure",
             "landing_to_stable": "existing Landing recovery gates held for recovery_hold_steps",
         },
         "success_definition": "reach valid next-stage entry before physical failure and within the stage horizon",
         "descent_support_matcher": matcher or None,
+        "apex_descent_stable_ticks": APEX_DESCENT_STABLE_TICKS,
     }
     canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
     payload["protocol_sha256"] = hashlib.sha256(canonical.encode()).hexdigest()

@@ -65,6 +65,9 @@ def _legacy_restore(env, record: dict[str, Any], rng, *, use_logged_observation:
         qacc_warmstart=jp.asarray(record["qacc_warmstart"]),
         stage_entry_ever=jp.asarray(int(record.get("stage_entry_ever", 0)), jp.int32),
         apex_seen=jp.asarray(inferred_apex_seen(record), jp.int32),
+        apex_descent_stable_count=jp.asarray(
+            int(record.get("apex_descent_stable_count", 0)), jp.int32
+        ),
         jump_signal_latched=jp.asarray(bool(record.get("jump_signal_latched", record.get("had_airborne", 0)))),
         jump_window_start_x=jp.asarray(float(record.get("jump_window_start_x", record["qpos"][0])), jp.float32),
         jump_window_end_x=jp.asarray(float(record.get("jump_window_end_x", record["qpos"][0] + 1.0)), jp.float32),
@@ -109,6 +112,9 @@ def _timing_explicit_restore(env, record: dict[str, Any], rng, *, logged: bool):
         qacc_warmstart=jp.asarray(physical["qacc_warmstart"]),
         stage_entry_ever=jp.asarray(int(estimator_pre["stage_entry_ever"]), jp.int32),
         apex_seen=jp.asarray(int(estimator_pre["apex_seen"]), jp.int32),
+        apex_descent_stable_count=jp.asarray(
+            int(estimator_pre.get("apex_descent_stable_count", 0)), jp.int32
+        ),
         jump_signal_latched=jp.asarray(bool(estimator_pre["jump_signal_latched"])),
         jump_window_start_x=jp.asarray(float(estimator_pre["jump_window_start_x"]), jp.float32),
         jump_window_end_x=jp.asarray(float(estimator_pre["jump_window_end_x"]), jp.float32),
