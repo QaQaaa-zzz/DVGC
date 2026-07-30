@@ -3,12 +3,13 @@ set -euo pipefail
 
 ROOT="${DVGC_ROOT:-/home/qy/DVGC}"
 PY="/home/qy/mujoco_playground/.venv/bin/python"
-BASE="runs/safe_state_tube_rsi_seed0_20260729/final_shared_policy_v2"
+BASE="${FINAL_SHARED_BASE:-runs/safe_state_tube_rsi_seed0_20260729/final_shared_policy_v2}"
 PHASE_BANK="runs/safe_state_tube_rsi_seed0_20260729/phase_balanced_tube_rsi_v2/bank.pkl"
-PILOT="$BASE/joint_rsi_pilot_8192_seed0_phase_objective_v5"
+PILOT="${FINAL_SHARED_PILOT:-$BASE/joint_rsi_pilot_8192_seed0_phase_objective_v5}"
 POLICY="$PILOT/policy"
 C_L="runs/stage_experts/flight_seed0_20260715T2045/bridge_recovery/entry_set_bridge.pkl"
-AUDIT="$BASE/final_jel_audit_v5"
+AUDIT="${FINAL_SHARED_AUDIT:-$BASE/final_jel_audit_v5}"
+POLICY_UNIT="${FINAL_SHARED_POLICY_UNIT:-dvgc-final-shared-policy-v2.service}"
 LEVEL4="$AUDIT/final_4branch.json"
 LEVEL8_BANK="$AUDIT/funnel_4_to_8/candidates.pkl"
 LEVEL8="$AUDIT/final_8branch.json"
@@ -46,7 +47,7 @@ write_cost() {
 
 write_state waiting_for_promoted_pilot active final_4branch_screen
 while [[ ! -s "$PILOT/report.json" ]]; do
-  if ! systemctl --user is-active --quiet dvgc-final-shared-policy-v2.service; then
+  if ! systemctl --user is-active --quiet "$POLICY_UNIT"; then
     write_state unified_pilot_missing gate_pause inspect_unified_pipeline "Unified controller ended before atomic pilot report"
     exit 40
   fi
