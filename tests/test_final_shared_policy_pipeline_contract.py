@@ -21,6 +21,7 @@ def test_follow_on_controller_is_bounded_and_does_not_touch_apex_worker():
     assert "--steps 2000 --learning-rate 3e-5" in text
     assert "distillation_all_phase_v2" in text
     assert "pilot_4096_seed0_all_phase_trust_region_v3" in text
+    assert "final_jel_audit_v3" in text
     assert "normalize_until_count=0" in Path(
         "cli/train_phase_balanced_unified_rsi_pilot.py"
     ).read_text()
@@ -36,6 +37,9 @@ def test_pipeline_preserves_atomic_nonoverwrite_outputs():
     assert "without_budget_increase" in text
     assert '"controller_unit": "dvgc-final-shared-jel-audit-v2.service"' in text
     assert '"run_path": sys.argv[1]' in text
+    audit = Path("scripts/run_final_shared_jel_audit.sh").read_text()
+    assert "pilot_4096_seed0_all_phase_trust_region_v3" in audit
+    assert "final_jel_audit_v3" in audit
 
 
 def test_v2_follow_on_start_is_nonblocking_and_updates_active_pointer():

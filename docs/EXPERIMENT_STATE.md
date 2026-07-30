@@ -2197,7 +2197,8 @@
   per batch, grad norm `0.25`, plus all-phase anchor drift gates. Old runs are
   preserved; formal outputs use `distillation_all_phase_v2`,
   `preflight_all_phase_v2`, and
-  `joint_rsi_pilot_4096_seed0_all_phase_trust_region_v3`.
+  `joint_rsi_pilot_4096_seed0_all_phase_trust_region_v3`; any promoted policy
+  proceeds only into the new `final_jel_audit_v3` provenance tree.
 - Targeted tests are 15/15; full local preflight is 546/546. Runtime gate is
   PASS/current in `runs/runtime_gate_all_phase_trust_region_v1_20260730`.
   Next automatic action is a fresh all-phase distillation/preflight followed
