@@ -19,7 +19,7 @@ TEACHER_REPORT="$RUN/distillation/teacher_report.json"
 DISTILLED="$RUN/distillation/policy"
 DISTILL_REPORT="$RUN/distillation/report.json"
 PREFLIGHT="$RUN/preflight/report.json"
-PILOT="$RUN/joint_rsi_pilot_4096_seed0"
+PILOT="$RUN/joint_rsi_pilot_4096_seed0_frozen_normalizer_v2"
 STATE="$RUN/controller_state.json"
 C_L="runs/stage_experts/flight_seed0_20260715T2045/bridge_recovery/entry_set_bridge.pkl"
 

@@ -19,7 +19,10 @@ def test_follow_on_controller_is_bounded_and_does_not_touch_apex_worker():
     assert "preflight_phase_balanced_unified_rsi" in text
     assert "train_phase_balanced_unified_rsi_pilot" in text
     assert "--steps 500 --learning-rate 3e-5" in text
-    assert "pilot_4096_seed0" in text
+    assert "pilot_4096_seed0_frozen_normalizer_v2" in text
+    assert "normalize_until_count=0" in Path(
+        "cli/train_phase_balanced_unified_rsi_pilot.py"
+    ).read_text()
 
 
 def test_pipeline_preserves_atomic_nonoverwrite_outputs():

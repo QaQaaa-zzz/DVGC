@@ -2142,3 +2142,36 @@
   `1.0`, precision/recall `1.0/1.0` on this small construction set. Rescoring
   the immutable 83-state pool yields 67 in-support unseen states across 17
   parents; 16 one-per-parent proposals are frozen for fresh 4-branch audit.
+
+### Descent Tube v6, Apex support and unified-RSI pilot (2026-07-30)
+
+- Descent Tube v6 is frozen at 24 independently audited Final-safe states
+  (`9d0555f7...3037e`): 768 unique branches, ten `roll_limit` failures and no
+  timeout/nonfinite. Its verifier is PASS; state IDs, physical hashes, policy
+  identity (`d149961a...4b4ce99`) and Final outcomes match v5. Landing remains
+  79 Final-safe states. XML/action/C_L/Final-Recovery contracts are unchanged.
+- Apex completed the 4 -> 8 -> 32 funnel. The 16-state 32-branch artifact was
+  consumed into phase-balanced RSI together with Takeoff 6, Ascent 3, Descent
+  24 and Landing 79 states. Local upstream artifacts remain proposal support;
+  only Descent/Landing are formal Final-safe Tube sources.
+- The original 4,096-step joint-RSI pilot is preserved as diagnostic evidence:
+  baseline/final were both 5/15 Final, downstream physical retention held, but
+  Descent action drift failed (`RMS=0.02971`, max `0.19743`). Decomposition on
+  all 128 bank observations showed actor-only Descent drift was within gate
+  (`0.00849/0.03033`), while the PPO-updated observation normalizer alone
+  caused `0.02844/0.18695`. Root cause is normalizer drift, not Descent actor
+  forgetting or reward/reset evidence.
+- A read-only hybrid diagnostic retained the PPO actor/critic and restored the
+  initial distilled normalizer: Final improved from 5/15 to 8/15 (Takeoff 1,
+  Ascent 1, Descent 3, Landing 3), with downstream action gates restored and no
+  timeout/nonfinite. The validated repair freezes the normalizer during PPO via
+  a zero-rate EMA training representation and republishes the exact initial
+  normalizer. The old pilot is not overwritten; the new run is
+  `joint_rsi_pilot_4096_seed0_frozen_normalizer_v2` with the same seed, reset
+  bank, hyperparameters and 4,096-step budget.
+- Targeted tests pass. Full preflight produced 543 passes plus the expected
+  stale-fingerprint failure; after rebuilding the non-overwriting runtime gate
+  in `runs/runtime_gate_frozen_normalizer_v1_20260730`, that test and check-only
+  both pass. Current next action: commit the frozen-normalizer contract, start
+  the v2 pilot, then promote only if fixed Final improvement, downstream
+  retention/action gates and normalizer freeze all pass.

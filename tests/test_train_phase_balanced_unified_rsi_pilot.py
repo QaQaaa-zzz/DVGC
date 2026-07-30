@@ -40,6 +40,21 @@ def test_promotion_requires_downstream_retention_and_final_improvement():
     assert result["promote"] is False
 
 
+def test_promotion_requires_frozen_normalizer_contract():
+    before = {stage: {"final_states": 1} for stage in
+              ("takeoff", "ascent", "apex", "descent", "landing")}
+    after = {stage: dict(value) for stage, value in before.items()}
+    after["apex"]["final_states"] = 2
+    drift = {"by_stage": {stage: {"rms": 0.0, "max": 0.0} for stage in before}}
+    result = acceptance(
+        {"by_stage": before, "final_states": 5},
+        {"by_stage": after, "final_states": 6, "nonfinite": 0},
+        True, drift, normalizer_frozen=False,
+    )
+    assert result["normalizer_frozen"] is False
+    assert result["promote"] is False
+
+
 def test_phase_action_drift_blocks_downstream_local_change():
     phases = [stage for stage in
               ("takeoff", "ascent", "apex", "descent", "landing") for _ in range(2)]

@@ -124,6 +124,38 @@ def test_policy_network_starts_neutral_and_low_variance():
     )
 
 
+@pytest.mark.skipif(not RUNTIME_READY, reason="The configured Brax runtime is required.")
+def test_frozen_normalizer_training_state_has_zero_mean_std_drift():
+    import jax.numpy as jp
+    import numpy as np
+    from brax.training.acme import running_statistics
+
+    from dvgc.runtime import (
+        frozen_normalizer_training_params,
+        normalizer_max_abs_difference,
+    )
+
+    state = running_statistics.init_state(jp.zeros((3,), jp.float32), std_eps=1e-6)
+    state = running_statistics.update(
+        state,
+        jp.asarray([[1.0, 2.0, 3.0], [2.0, 4.0, 8.0]], jp.float32),
+    )
+    actor, critic = {"actor": jp.ones((1,))}, {"critic": jp.ones((1,))}
+    frozen, returned_actor, returned_critic = frozen_normalizer_training_params(
+        (state, actor, critic)
+    )
+    updated = running_statistics.update(
+        frozen,
+        jp.asarray([[100.0, -200.0, 300.0]], jp.float32),
+        until_count=0,
+    )
+    drift = normalizer_max_abs_difference(state, updated)
+    assert drift["mean"] == 0.0
+    assert drift["std"] <= 1e-6
+    assert returned_actor is actor and returned_critic is critic
+    np.testing.assert_allclose(np.asarray(updated.mean), np.asarray(state.mean), atol=0.0)
+
+
 @pytest.mark.skipif(not RUNTIME_READY,reason="MuJoCo runtime required")
 def test_multisource_sampler_preserves_origin_phase_and_declared_mass():
     import copy

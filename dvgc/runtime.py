@@ -324,6 +324,50 @@ def validate_ppo_batch_layout(*, num_envs: int, batch_size: int, num_minibatches
         )
 
 
+def frozen_normalizer_training_params(params: Any) -> Any:
+    """Convert a restored normalizer into an update-free PPO training state.
+
+    The installed Brax release applies ``normalize_until_count`` only to its
+    EMA path.  With a restored Welford state that option silently continues to
+    change mean/std, which can move actions outside an immutable Tube retention
+    trust region even when the actor weights themselves remain inside it.
+
+    The conversion preserves mean/std and changes only the internal variance
+    representation.  It must be paired with ``normalize_until_count=0``.  The
+    exact original normalizer is restored in the published policy bundle after
+    PPO, so this training-only state never becomes an artifact identity.
+    """
+    try:
+        from brax.training.acme import running_statistics
+    except ImportError:  # pragma: no cover - older supported Brax layout
+        from brax.training import running_statistics
+
+    if not isinstance(params, tuple) or len(params) != 3:
+        raise ValueError("PPO params must be (normalizer, actor, critic)")
+    normalizer, actor, critic = params
+    variance = jax.tree_util.tree_map(
+        lambda std: jp.maximum(jp.square(std) - normalizer.std_eps, 0.0),
+        normalizer.std,
+    )
+    frozen = normalizer.replace(
+        summed_variance=variance,
+        mode=running_statistics.NormalizationMode.EMA,
+    )
+    return frozen, actor, critic
+
+
+def normalizer_max_abs_difference(left: Any, right: Any) -> Dict[str, float]:
+    """Return auditable mean/std differences between normalizer states."""
+    def maximum(a: Any, b: Any) -> float:
+        values = [
+            float(np.max(np.abs(np.asarray(x) - np.asarray(y))))
+            for x, y in zip(jax.tree_util.tree_leaves(a), jax.tree_util.tree_leaves(b))
+        ]
+        return max(values, default=0.0)
+
+    return {"mean": maximum(left.mean, right.mean), "std": maximum(left.std, right.std)}
+
+
 def make_ppo_train_fn(
     *,
     timesteps: int,
@@ -346,6 +390,7 @@ def make_ppo_train_fn(
     max_grad_norm: float = 0.75,
     log_training_metrics: bool = True,
     training_metrics_steps: Optional[int] = None,
+    normalize_until_count: Optional[int] = None,
     restore_params: Optional[Any] = None,
     restore_checkpoint_path: Optional[str | Path] = None,
     policy_params_fn: Optional[Callable[..., None]] = None,
@@ -366,6 +411,8 @@ def make_ppo_train_fn(
         normalize_observations=True,
         normalize_observations_std_eps=1e-6,
         normalize_observations_mode="welford",
+        normalize_until_count=(None if normalize_until_count is None
+                               else int(normalize_until_count)),
         action_repeat=1,
         unroll_length=int(unroll_length),
         num_minibatches=int(num_minibatches),

@@ -38,7 +38,8 @@ def select_parent_diverse(records: list[dict], per_stage: int = 3) -> list[dict]
     return selected
 
 
-def acceptance(baseline: dict, final: dict, finite: bool, drift: dict) -> dict:
+def acceptance(baseline: dict, final: dict, finite: bool, drift: dict,
+               normalizer_frozen: bool = True) -> dict:
     before = baseline["by_stage"]; after = final["by_stage"]
     retention = {
         stage: after[stage]["final_states"] >= before[stage]["final_states"]
@@ -60,8 +61,9 @@ def acceptance(baseline: dict, final: dict, finite: bool, drift: dict) -> dict:
         "landing_action_drift": downstream_drift["landing"],
         "upstream_final_improvement": improvement, "total_final_improvement": total_improvement,
         "finite_training": finite, "no_new_nonfinite": final["nonfinite"] == 0,
+        "normalizer_frozen": bool(normalizer_frozen),
         "promote": all(retention.values()) and all(downstream_drift.values())
-                   and finite and final["nonfinite"] == 0
+                   and finite and normalizer_frozen and final["nonfinite"] == 0
                    and (improvement or total_improvement),
     }
 
@@ -120,7 +122,8 @@ def main() -> None:
     from dvgc.policy import load_bundle, save_bundle
     from dvgc.rollout import frozen_rollout, restore_snapshot
     from dvgc.runtime import (
-        build_inference, make_ppo_train_fn, ppo_effective_timesteps,
+        build_inference, frozen_normalizer_training_params, make_ppo_train_fn,
+        normalizer_max_abs_difference, ppo_effective_timesteps,
         validate_ppo_batch_layout,
     )
 
@@ -223,15 +226,32 @@ def main() -> None:
         progress_rows.append(row); save_json(root / "training_metrics.json", {
             "status": "running", "effective_steps": EFFECTIVE_STEPS, "progress": progress_rows,
         })
+    # The installed Brax Welford path ignores normalize_until_count.  Convert
+    # the restored normalizer to the update-free EMA representation for the
+    # optimizer run, then publish the exact initial normalizer below.  This
+    # prevents a balanced reset distribution from changing the observation
+    # contract underneath the frozen Tube action-retention probes.
+    training_restore_params = frozen_normalizer_training_params(params)
     train = make_ppo_train_fn(
         timesteps=1600, episode_length=int(cfg.episode_length), num_envs=128,
         num_eval_envs=64, num_evals=2, seed=args.seed, learning_rate=1e-5,
         entropy_cost=1e-4, reward_scaling=.1, checkpoint_dir=root / "orbax",
         unroll_length=32, batch_size=32, num_minibatches=4, num_updates_per_batch=2,
         discounting=.995, gae_lambda=.97, clipping_epsilon=.10, max_grad_norm=.75,
-        restore_params=params,
+        restore_params=training_restore_params, normalize_until_count=0,
     )
-    _, final_params, final_metrics = train(environment=env, progress_fn=progress, eval_env=eval_env)
+    _, trained_params, final_metrics = train(
+        environment=env, progress_fn=progress, eval_env=eval_env
+    )
+    training_normalizer_drift = normalizer_max_abs_difference(params[0], trained_params[0])
+    normalizer_frozen = (
+        training_normalizer_drift["mean"] <= 1e-6
+        and training_normalizer_drift["std"] <= 1e-6
+    )
+    # Keep the output policy's normalizer byte-identical to the provenance-
+    # locked distillation initializer.  The EMA representation above is an
+    # optimizer implementation detail and must never leak into a policy hash.
+    final_params = (params[0], trained_params[1], trained_params[2])
     finite = all(np.isfinite(np.asarray(leaf)).all() for leaf in jax.tree.leaves(final_params))
     # Use exactly the baseline seed namespace so policy change is the only
     # cause of an outcome change in the fixed pilot evaluation.
@@ -245,7 +265,7 @@ def main() -> None:
     before_actions = np.asarray(before_actor(params[1], observations))
     after_actions = np.asarray(after_actor(final_params[1], observations))
     drift = phase_action_drift(before_actions, after_actions, phases)
-    decision = acceptance(baseline, final, finite, drift)
+    decision = acceptance(baseline, final, finite, drift, normalizer_frozen)
     save_bundle(
         root / "policy", params=final_params, config=cfg, xml_path=cfg.xml_path,
         candidate_bank=args.phase_bank, downstream_bank=args.canonical_entry_bank,
@@ -253,6 +273,7 @@ def main() -> None:
         extra={
             "artifact_role": "unified_rsi_pilot_checkpoint", "formal_tube_or_jel": False,
             "promoted": decision["promote"], "effective_steps": EFFECTIVE_STEPS,
+            "normalizer_contract": "frozen_initial_normalizer_v1",
             "initial_policy_params_sha256": file_sha256(Path(args.initial_policy) / "params.pkl"),
             "teacher_dataset_sha256": file_sha256(args.teacher_dataset),
         },
@@ -262,6 +283,14 @@ def main() -> None:
         "PPO_started": True, "effective_steps": EFFECTIVE_STEPS,
         "baseline": baseline, "final": final, "acceptance": decision,
         "phase_action_drift": drift,
+        "normalizer_contract": {
+            "mode": "frozen_initial_normalizer_v1",
+            "training_restore_mode": "ema_zero_rate",
+            "normalize_until_count": 0,
+            "training_mean_std_max_abs_drift": training_normalizer_drift,
+            "training_freeze_pass": normalizer_frozen,
+            "published_initial_normalizer_exact": True,
+        },
         "finite_parameters": finite, "final_metrics": final_metrics,
         "elapsed_seconds": time.time() - started,
         "policy_params_sha256": file_sha256(root / "policy" / "params.pkl"),
