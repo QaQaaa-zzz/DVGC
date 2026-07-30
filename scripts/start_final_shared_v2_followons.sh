@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="${DVGC_ROOT:-/home/qy/DVGC}"
 RUN="runs/safe_state_tube_rsi_seed0_20260729/final_shared_policy_v2"
-AUDIT="$RUN/final_jel_audit_v4"
+AUDIT="$RUN/final_jel_audit_v5"
 PY="/home/qy/mujoco_playground/.venv/bin/python"
 
 cd "$ROOT"

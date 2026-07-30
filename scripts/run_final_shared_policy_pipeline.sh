@@ -14,7 +14,7 @@ DESCENT_V6_VERIFY="runs/descent_reachability_network_v3/tube_v6_schema_normaliza
 DESCENT_ENTRY_SUPPORT="runs/stage_next_bootstrap_seed0_20260720/support_v2/descent_proposal_support_v1.pkl"
 COMPAT="runs/safe_state_tube_rsi_seed0_20260729/phase_expert_compatibility_v1/report.json"
 RUN="runs/safe_state_tube_rsi_seed0_20260729/final_shared_policy_v2"
-AUDIT_RUN="$RUN/final_jel_audit_v4"
+AUDIT_RUN="$RUN/final_jel_audit_v5"
 TEACHERS="$RUN/distillation/teacher_dataset.pkl"
 TEACHER_REPORT="$RUN/distillation/teacher_report.json"
 DISTILL_ROOT="$RUN/distillation_all_phase_v2"
@@ -22,6 +22,8 @@ DISTILLED="$DISTILL_ROOT/policy"
 DISTILL_REPORT="$DISTILL_ROOT/report.json"
 PREFLIGHT="$RUN/preflight_phase_objective_v3/report.json"
 PILOT="$RUN/joint_rsi_pilot_4096_seed0_phase_objective_v4"
+LOCAL_V4="$PILOT/local_objective_evaluation_v3.json"
+CONTINUATION="$RUN/joint_rsi_pilot_8192_seed0_phase_objective_v5"
 STATE="$RUN/controller_state.json"
 C_L="runs/stage_experts/flight_seed0_20260715T2045/bridge_recovery/entry_set_bridge.pkl"
 
@@ -32,7 +34,7 @@ flock -n 9 || { echo "Final shared-policy pipeline already active" >&2; exit 0; 
 
 write_state() {
   local stage="$1" status="$2" next="$3" error="${4:-}"
-  "$PY" -c 'import sys,time; from dvgc.runtime import save_json; save_json(sys.argv[1], {"updated_at":time.time(),"current_stage":sys.argv[2],"status":sys.argv[3],"next_automatic_action":sys.argv[4],"last_error":sys.argv[5],"PPO_authorization":sys.argv[2] in ("joint_rsi_pilot","pilot_complete")})' \
+  "$PY" -c 'import sys,time; from dvgc.runtime import save_json; save_json(sys.argv[1], {"updated_at":time.time(),"current_stage":sys.argv[2],"status":sys.argv[3],"next_automatic_action":sys.argv[4],"last_error":sys.argv[5],"PPO_authorization":sys.argv[2] in ("joint_rsi_pilot","joint_rsi_continuation","pilot_complete")})' \
     "$STATE" "$stage" "$status" "$next" "$error"
 }
 
@@ -125,6 +127,7 @@ if [[ ! -s "$PILOT/report.json" ]]; then
   set +e
   "$PY" -u -m cli.train_phase_balanced_unified_rsi_pilot \
     --phase-bank "$PHASE_BANK" --initial-policy "$DISTILLED" \
+    --anchor-policy "$DISTILLED" \
     --canonical-entry-bank "$C_L" --preflight "$PREFLIGHT" \
     --descent-tube "$DESCENT_V6" \
     --descent-entry-support-bank "$DESCENT_ENTRY_SUPPORT" \
@@ -141,6 +144,41 @@ if [[ ! -s "$PILOT/report.json" ]]; then
 fi
 
 status="$($PY -c 'import json,sys; print(json.load(open(sys.argv[1]))["status"])' "$PILOT/report.json")"
+if [[ "$status" != "PASS_PROMOTE" ]]; then
+  if [[ ! -s "$LOCAL_V4" ]]; then
+    write_state local_objective_diagnostic active bounded_continuation_decision
+    "$PY" -m cli.evaluate_phase_balanced_local_objectives \
+      --phase-bank "$PHASE_BANK" --canonical-entry-bank "$C_L" \
+      --descent-entry-support-bank "$DESCENT_ENTRY_SUPPORT" \
+      --baseline-policy "$DISTILLED" --final-policy "$PILOT/policy" \
+      --output "$LOCAL_V4" --states-per-stage 3 --seed 10950000
+  fi
+  local_improved="$($PY -c 'import json,sys; print(str(json.load(open(sys.argv[1])).get("local_entry_improvement",False)).lower())' "$LOCAL_V4")"
+  if [[ "$status" != "NO_PROMOTION" || "$local_improved" != "true" ]]; then
+    write_state pilot_no_promotion gate_pause diagnose_local_objective_support_without_budget_increase "$status local_improved=$local_improved"
+    exit 40
+  fi
+  if [[ ! -s "$CONTINUATION/report.json" ]]; then
+    write_state joint_rsi_continuation active fixed_phase_evaluation
+    set +e
+    "$PY" -u -m cli.train_phase_balanced_unified_rsi_pilot \
+      --phase-bank "$PHASE_BANK" --initial-policy "$PILOT/policy" \
+      --anchor-policy "$DISTILLED" \
+      --canonical-entry-bank "$C_L" --preflight "$PREFLIGHT" \
+      --descent-tube "$DESCENT_V6" \
+      --descent-entry-support-bank "$DESCENT_ENTRY_SUPPORT" \
+      --teacher-dataset "$TEACHERS" --run "$CONTINUATION" --seed 1 \
+      --continuation-report "$PILOT/report.json" \
+      --continuation-local-evaluation "$LOCAL_V4"
+    code=$?
+    set -e
+    if [[ $code -ne 0 ]]; then
+      write_state joint_rsi_continuation engineering_failure inspect_bounded_continuation "continuation exited with code $code"
+      exit "$code"
+    fi
+  fi
+  status="$($PY -c 'import json,sys; print(json.load(open(sys.argv[1]))["status"])' "$CONTINUATION/report.json")"
+fi
 if [[ "$status" == "PASS_PROMOTE" ]]; then
   write_state pilot_complete pass expanded_fixed_phase_evaluation
   "$PY" -c '

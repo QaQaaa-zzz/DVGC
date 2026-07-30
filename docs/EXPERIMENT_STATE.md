@@ -2229,3 +2229,25 @@
   claim. Both hashes plus XML/action identity are required by preflight. A new
   non-overwriting v4 pilot/audit path is reserved; runtime-gate renewal is
   required before it can start.
+
+### Phase-objective v4 evidence and bounded continuation (2026-07-30)
+
+- The 4,096-step v4 pilot completed without NaN, timeout or retention loss.
+  Fixed Final remained 6/15: Takeoff 0, Ascent 1, Apex 0, Descent 2 and
+  Landing 3. All phase action gates passed; worst max drift was `0.01415`,
+  normalizer drift remained within `4.77e-7`, and KL was `0.00445`.
+- A fresh-latch read-only local evaluation proves the repaired objective is
+  active and physically meaningful: fixed next-stage entries improved from
+  7/12 to 8/12 because Takeoff increased from 1/3 to 2/3. Ascent and Descent
+  retained 3/3; Apex stayed 0/3. Across all 16 Apex RSI states the minimum
+  formal support distance changed only from `6.71694` to `6.71630`, so Apex is
+  still the bottleneck and no Final promotion is claimed.
+- This is evidence for exactly one bounded continuation, not an open-ended
+  budget increase. The available Brax Orbax artifact contains
+  normalizer/actor/critic but not optimizer state or cumulative env steps, so
+  the next block truthfully starts from the v4 policy and critic with a fresh
+  optimizer and an independent seed namespace. It adds exactly 4,096 effective
+  steps (8,192 cumulative) under unchanged LR, clipping, reward, bank, XML,
+  matcher and Final-Recovery contracts. It must still pass downstream
+  retention and all phase action gates and improve fixed Final before any JEL
+  audit. A second continuation is not automated if the result is unchanged.

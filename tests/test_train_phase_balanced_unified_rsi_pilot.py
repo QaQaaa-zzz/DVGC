@@ -2,9 +2,34 @@ import numpy as np
 
 from cli.train_phase_balanced_unified_rsi_pilot import (
     acceptance,
+    continuation_evidence,
     phase_action_drift,
     select_parent_diverse,
 )
+
+
+def test_continuation_requires_local_improvement_and_all_retention_gates():
+    gates = {
+        key: True for key in (
+            "descent_retention", "landing_retention", "all_phase_action_trust_region",
+            "finite_training", "no_new_nonfinite", "normalizer_frozen",
+        )
+    }
+    report = {
+        "status": "NO_PROMOTION",
+        "objective_contract": "per_reset_phase_next_entry_v1",
+        "acceptance": gates,
+    }
+    local = {
+        "status": "PASS", "fresh_stage_entry_latch": True,
+        "local_entry_improvement": True,
+    }
+    assert continuation_evidence(report, local)
+    local["local_entry_improvement"] = False
+    assert not continuation_evidence(report, local)
+    local["local_entry_improvement"] = True
+    gates["landing_retention"] = False
+    assert not continuation_evidence(report, local)
 
 
 def _records():

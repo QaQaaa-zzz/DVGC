@@ -19,6 +19,21 @@ STAGES = ("takeoff", "ascent", "apex", "descent", "landing")
 EFFECTIVE_STEPS = 4096
 
 
+def continuation_evidence(report: dict, local: dict) -> bool:
+    acceptance_row = report.get("acceptance", {})
+    return (
+        report.get("status") == "NO_PROMOTION"
+        and report.get("objective_contract") == "per_reset_phase_next_entry_v1"
+        and all(acceptance_row.get(key) is True for key in (
+            "descent_retention", "landing_retention", "all_phase_action_trust_region",
+            "finite_training", "no_new_nonfinite", "normalizer_frozen",
+        ))
+        and local.get("status") == "PASS"
+        and local.get("fresh_stage_entry_latch") is True
+        and local.get("local_entry_improvement") is True
+    )
+
+
 def select_parent_diverse(records: list[dict], per_stage: int = 3) -> list[dict]:
     selected = []
     for stage in STAGES:
@@ -104,6 +119,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--phase-bank", required=True)
     parser.add_argument("--initial-policy", required=True)
+    parser.add_argument("--anchor-policy", required=True)
     parser.add_argument("--canonical-entry-bank", required=True)
     parser.add_argument("--descent-tube", required=True)
     parser.add_argument("--descent-entry-support-bank", required=True)
@@ -111,10 +127,18 @@ def main() -> None:
     parser.add_argument("--teacher-dataset", required=True)
     parser.add_argument("--run", required=True)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--continuation-report")
+    parser.add_argument("--continuation-local-evaluation")
     args = parser.parse_args()
     root = Path(args.run)
     if root.exists():
         raise SystemExit(f"refusing to overwrite {root}")
+    continuation_values = (
+        args.continuation_report, args.continuation_local_evaluation,
+    )
+    if any(continuation_values) and not all(continuation_values):
+        raise SystemExit("bounded continuation requires report and local evaluation")
+    continuation_mode = bool(args.continuation_report)
 
     import jax
     import jax.numpy as jnp
@@ -160,18 +184,50 @@ def main() -> None:
             != descent_entry_support_hash):
         raise SystemExit("preflight Descent Tube/matcher provenance mismatch")
     params, policy_cfg, manifest = load_bundle(args.initial_policy, verify_files=True)
-    if manifest.get("artifact_role") != "final_shared_policy_initialization":
-        raise SystemExit("initial policy is not the bounded distillation output")
-    if manifest.get("all_phase_teacher_fidelity_pass") is not True:
-        raise SystemExit("initial policy lacks all-phase teacher fidelity")
-    if preflight.get("policy_params_sha256") != file_sha256(Path(args.initial_policy) / "params.pkl"):
-        raise SystemExit("preflight policy provenance mismatch")
+    anchor_params, _, anchor_manifest = load_bundle(args.anchor_policy, verify_files=True)
+    anchor_policy_hash = file_sha256(Path(args.anchor_policy) / "params.pkl")
+    if (anchor_manifest.get("artifact_role") != "final_shared_policy_initialization"
+            or anchor_policy_hash != preflight.get("policy_params_sha256")):
+        raise SystemExit("all-phase anchor policy does not match preflight initialization")
+    initial_policy_hash = file_sha256(Path(args.initial_policy) / "params.pkl")
+    continuation_parent_hash = None
+    if continuation_mode:
+        continuation_report = json.loads(Path(args.continuation_report).read_text())
+        continuation_local = json.loads(Path(args.continuation_local_evaluation).read_text())
+        if (manifest.get("artifact_role") != "unified_rsi_pilot_checkpoint"
+                or manifest.get("promoted") is not False
+                or manifest.get("objective_contract") != "per_reset_phase_next_entry_v1"):
+            raise SystemExit("continuation parent is not a non-promoted unified RSI checkpoint")
+        if (continuation_report.get("policy_params_sha256") != initial_policy_hash
+                or continuation_local.get("final_policy_params_sha256") != initial_policy_hash
+                or continuation_local.get("phase_bank_sha256") != file_sha256(args.phase_bank)
+                or not continuation_evidence(continuation_report, continuation_local)):
+            raise SystemExit("bounded continuation evidence is invalid")
+        if (preflight.get("policy_params_sha256")
+                != manifest.get("initial_policy_params_sha256")):
+            raise SystemExit("continuation origin does not match preflight initialization")
+        if (manifest.get("candidate_bank_sha256") != file_sha256(args.phase_bank)
+                or manifest.get("descent_tube_sha256") != descent_tube_hash
+                or manifest.get("descent_entry_support_bank_sha256")
+                != descent_entry_support_hash):
+            raise SystemExit("continuation parent bank provenance mismatch")
+        continuation_parent_hash = initial_policy_hash
+    else:
+        if manifest.get("artifact_role") != "final_shared_policy_initialization":
+            raise SystemExit("initial policy is not the bounded distillation output")
+        if manifest.get("all_phase_teacher_fidelity_pass") is not True:
+            raise SystemExit("initial policy lacks all-phase teacher fidelity")
+        if preflight.get("policy_params_sha256") != initial_policy_hash:
+            raise SystemExit("preflight policy provenance mismatch")
     validate_ppo_batch_layout(num_envs=128, batch_size=32, num_minibatches=4)
-    effective = ppo_effective_timesteps(
-        1600, unroll_length=32, batch_size=32, num_minibatches=4, num_evals=2
+    requested_timesteps = 1600
+    block_effective = ppo_effective_timesteps(
+        requested_timesteps, unroll_length=32, batch_size=32,
+        num_minibatches=4, num_evals=2
     )
-    if effective != EFFECTIVE_STEPS:
-        raise SystemExit(f"unexpected effective pilot size {effective}")
+    if block_effective != EFFECTIVE_STEPS:
+        raise SystemExit(f"unexpected block pilot size {block_effective}")
+    cumulative_effective = EFFECTIVE_STEPS * (2 if continuation_mode else 1)
     cfg = load_config(overrides={
         **policy_cfg, "training_stage": "flight", "use_bank_resets": True,
         "expert_chain_termination": False,
@@ -192,6 +248,8 @@ def main() -> None:
     )
     eval_env = OrangeBikeDVGC(eval_cfg, snapshot_bank=SnapshotBank(), cert_bank=entry)
     fixed = select_parent_diverse(bank.records, 3)
+    from cli.evaluate_phase_balanced_local_objectives import evaluate_policy as evaluate_local
+    local_fixed = [row for row in fixed if row["phase_rsi_stage"] != "landing"]
 
     def evaluate(policy, seed):
         infer = build_inference(eval_env, policy, deterministic=True); step = jax.jit(eval_env.step)
@@ -231,11 +289,15 @@ def main() -> None:
 
     root.mkdir(parents=True); save_config(cfg, root / "effective_config.json")
     save_json(root / "cost_estimate.json", {
-        "effective_PPO_steps": EFFECTIVE_STEPS, "fixed_evaluation_states": len(fixed),
-        "estimated_upper_seconds": 7200, "pilot_fraction_of_100k": .04096,
+        "additional_effective_PPO_steps": EFFECTIVE_STEPS,
+        "cumulative_effective_PPO_steps": cumulative_effective,
+        "fixed_evaluation_states": len(fixed),
+        "estimated_upper_seconds": 7200,
+        "pilot_fraction_of_100k": cumulative_effective / 100000.0,
         "longer_training_authorized": False,
     })
     baseline = evaluate(params, 10_900_000)
+    baseline_local = evaluate_local(env, params, local_fixed, 10_950_000)
     # A shared initialization that already erased the frozen downstream skills
     # must be repaired at distillation, not hidden by PPO.
     downstream_start_ok = (baseline["by_stage"]["landing"]["final_states"] >= 2
@@ -255,7 +317,8 @@ def main() -> None:
         row = {"step": int(step), **{key: float(value) for key, value in metrics.items()
                                       if hasattr(value, "__float__") and math.isfinite(float(value))}}
         progress_rows.append(row); save_json(root / "training_metrics.json", {
-            "status": "running", "effective_steps": EFFECTIVE_STEPS, "progress": progress_rows,
+            "status": "running", "effective_steps": cumulative_effective,
+            "progress": progress_rows,
         })
     # The installed Brax Welford path ignores normalize_until_count.  Convert
     # the restored normalizer to the update-free EMA representation for the
@@ -264,12 +327,13 @@ def main() -> None:
     # contract underneath the frozen Tube action-retention probes.
     training_restore_params = frozen_normalizer_training_params(params)
     train = make_ppo_train_fn(
-        timesteps=1600, episode_length=int(cfg.episode_length), num_envs=128,
+        timesteps=requested_timesteps, episode_length=int(cfg.episode_length), num_envs=128,
         num_eval_envs=64, num_evals=2, seed=args.seed, learning_rate=1e-6,
         entropy_cost=1e-4, reward_scaling=.1, checkpoint_dir=root / "orbax",
         unroll_length=32, batch_size=32, num_minibatches=4, num_updates_per_batch=1,
         discounting=.995, gae_lambda=.97, clipping_epsilon=.02, max_grad_norm=.25,
-        restore_params=training_restore_params, normalize_until_count=0,
+        restore_params=training_restore_params,
+        normalize_until_count=0,
     )
     _, trained_params, final_metrics = train(
         environment=env, progress_fn=progress, eval_env=eval_env
@@ -287,27 +351,38 @@ def main() -> None:
     # Use exactly the baseline seed namespace so policy change is the only
     # cause of an outcome change in the fixed pilot evaluation.
     final = evaluate(final_params, 10_900_000)
+    final_local = evaluate_local(env, final_params, local_fixed, 10_950_000)
     observations = np.asarray([
         row["policy_state"]["actor_observation"] for row in bank.records
     ], dtype=np.float32)
     phases = [str(row["phase_rsi_stage"]) for row in bank.records]
-    _, before_actor, _ = build_actor_tools(env, params)
+    _, before_actor, _ = build_actor_tools(env, anchor_params)
     _, after_actor, _ = build_actor_tools(env, final_params)
-    before_actions = np.asarray(before_actor(params[1], observations))
+    before_actions = np.asarray(before_actor(anchor_params[1], observations))
     after_actions = np.asarray(after_actor(final_params[1], observations))
     drift = phase_action_drift(before_actions, after_actions, phases)
     decision = acceptance(baseline, final, finite, drift, normalizer_frozen)
     save_bundle(
         root / "policy", params=final_params, config=cfg, xml_path=cfg.xml_path,
         candidate_bank=args.phase_bank, downstream_bank=args.canonical_entry_bank,
-        policy_version="phase-balanced-unified-rsi-pilot-seed0-v3",
+        policy_version=(f"phase-balanced-unified-rsi-continuation-block2-seed{args.seed}-v1"
+                        if continuation_mode else f"phase-balanced-unified-rsi-pilot-seed{args.seed}-v3"),
         extra={
             "artifact_role": "unified_rsi_pilot_checkpoint", "formal_tube_or_jel": False,
-            "promoted": decision["promote"], "effective_steps": EFFECTIVE_STEPS,
+            "promoted": decision["promote"], "effective_steps": cumulative_effective,
             "normalizer_contract": "frozen_initial_normalizer_v1",
             "optimizer_trust_region": "lr1e-6_clip0.02_one_update_grad0.25_v1",
             "objective_contract": "per_reset_phase_next_entry_v1",
-            "initial_policy_params_sha256": file_sha256(Path(args.initial_policy) / "params.pkl"),
+            "initial_policy_params_sha256": (
+                manifest.get("initial_policy_params_sha256")
+                if continuation_mode else initial_policy_hash
+            ),
+            "continuation_parent_policy_params_sha256": continuation_parent_hash,
+            "all_phase_anchor_policy_params_sha256": anchor_policy_hash,
+            "optimizer_continuation_contract": (
+                "fresh_optimizer_from_parent_policy_and_critic_v1"
+                if continuation_mode else "initial_optimizer_v1"
+            ),
             "teacher_dataset_sha256": file_sha256(args.teacher_dataset),
             "descent_tube_sha256": descent_tube_hash,
             "descent_entry_support_bank_sha256": descent_entry_support_hash,
@@ -315,8 +390,19 @@ def main() -> None:
     )
     report = {
         "status": "PASS_PROMOTE" if decision["promote"] else "NO_PROMOTION",
-        "PPO_started": True, "effective_steps": EFFECTIVE_STEPS,
+        "PPO_started": True, "effective_steps": cumulative_effective,
+        "additional_effective_steps": EFFECTIVE_STEPS,
+        "continuation_mode": continuation_mode,
+        "block_seed": args.seed,
+        "optimizer_continuation_contract": (
+            "fresh_optimizer_from_parent_policy_and_critic_v1"
+            if continuation_mode else "initial_optimizer_v1"
+        ),
         "baseline": baseline, "final": final, "acceptance": decision,
+        "local_objective_evaluation": {
+            "baseline": baseline_local, "final": final_local,
+            "improved": final_local["entries"] > baseline_local["entries"],
+        },
         "phase_action_drift": drift,
         "normalizer_contract": {
             "mode": "frozen_initial_normalizer_v1",
@@ -343,7 +429,8 @@ def main() -> None:
     }
     save_json(root / "report.json", report)
     save_json(root / "training_metrics.json", {
-        "status": "completed", "effective_steps": EFFECTIVE_STEPS, "progress": progress_rows,
+        "status": "completed", "effective_steps": cumulative_effective,
+        "progress": progress_rows,
         "elapsed_seconds": report["elapsed_seconds"],
     })
     print(json.dumps({key: value for key, value in report.items()
