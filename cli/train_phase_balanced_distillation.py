@@ -14,6 +14,9 @@ from dvgc.config import file_sha256, load_config
 from dvgc.runtime import save_json
 
 
+STAGES = ("takeoff", "ascent", "apex", "descent", "landing")
+
+
 def validate_dataset(payload: dict) -> tuple[np.ndarray, np.ndarray, np.ndarray, list[str]]:
     if (payload.get("schema") != "dvgc_phase_balanced_distillation_teacher_v1"
             or payload.get("artifact_role") != "phase_balanced_distillation_teacher_dataset"
@@ -83,6 +86,17 @@ def downstream_fidelity_pass(fidelity: dict, *, rms_limit: float = .02,
     )
 
 
+def all_phase_fidelity_pass(fidelity: dict, *, rms_limit: float = .02,
+                            max_limit: float = .05) -> bool:
+    """Require the shared initializer to retain every frozen phase teacher."""
+    return all(
+        phase in fidelity
+        and fidelity[phase]["rms"] <= rms_limit
+        and fidelity[phase]["max"] <= max_limit
+        for phase in STAGES
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--teacher-dataset", required=True)
@@ -149,7 +163,7 @@ def main() -> None:
     history = []
     best = copy.deepcopy(trainable); best_loss = float(initial_loss)
     initial_fidelity = summarize_fidelity(np.asarray(initial_prediction), targets, phases)
-    best_eligible = copy.deepcopy(trainable) if downstream_fidelity_pass(initial_fidelity) else None
+    best_eligible = copy.deepcopy(trainable) if all_phase_fidelity_pass(initial_fidelity) else None
     best_eligible_loss = float(initial_loss) if best_eligible is not None else float("inf")
     prediction = initial_prediction
     for step in range(1, int(args.steps) + 1):
@@ -158,7 +172,7 @@ def main() -> None:
         if value < best_loss:
             best, best_loss = copy.deepcopy(trainable), value
         step_fidelity = summarize_fidelity(np.asarray(prediction), targets, phases)
-        if downstream_fidelity_pass(step_fidelity) and value < best_eligible_loss:
+        if all_phase_fidelity_pass(step_fidelity) and value < best_eligible_loss:
             best_eligible, best_eligible_loss = copy.deepcopy(trainable), value
         if step % 25 == 0 or step == args.steps:
             history.append({"step": step, "weighted_mse": value})
@@ -167,7 +181,8 @@ def main() -> None:
     distilled_actor = assemble(selected)
     final_prediction = np.asarray(actor_action(distilled_actor, obs))
     fidelity = summarize_fidelity(final_prediction, targets, phases)
-    fidelity_pass = downstream_fidelity_pass(fidelity)
+    downstream_pass = downstream_fidelity_pass(fidelity)
+    fidelity_pass = all_phase_fidelity_pass(fidelity)
     distilled = (params[0], distilled_actor, params[2])
     save_bundle(
         output_policy, params=distilled, config=cfg, xml_path=cfg.xml_path,
@@ -180,7 +195,9 @@ def main() -> None:
             "teacher_phase_bank_sha256": payload["phase_bank_sha256"],
             "expert_controller_identities": payload["expert_controller_identities"],
             "teacher_action_fidelity": fidelity,
-            "downstream_teacher_fidelity_pass": fidelity_pass,
+            "all_phase_teacher_fidelity_pass": fidelity_pass,
+            "downstream_teacher_fidelity_pass": downstream_pass,
+            "all_phase_action_fidelity_limits": {"rms": .02, "max": .05},
             "downstream_action_fidelity_limits": {"rms": .02, "max": .05},
             "base_policy_version": manifest["policy_version"],
             "frozen_assets": ["normalizer", "critic", "log_std"],
@@ -191,7 +208,7 @@ def main() -> None:
     for row, phase in zip(np.asarray(final_prediction), phases):
         phase_history[phase].append(row)
     report = {
-        "status": "PASS" if fidelity_pass else "DOWNSTREAM_FIDELITY_BLOCKER",
+        "status": "PASS" if fidelity_pass else "ALL_PHASE_FIDELITY_BLOCKER",
         "artifact_role": "final_shared_policy_initialization",
         "formal_tube_or_jel": False, "PPO_authorization": False,
         "steps": int(args.steps), "learning_rate": float(args.learning_rate),
@@ -199,9 +216,11 @@ def main() -> None:
         "action_error_before": summarize_error(np.asarray(initial_prediction), targets, phases),
         "action_error_after": summarize_error(final_prediction, targets, phases),
         "teacher_action_fidelity": fidelity,
-        "downstream_teacher_fidelity_pass": fidelity_pass,
+        "all_phase_teacher_fidelity_pass": fidelity_pass,
+        "downstream_teacher_fidelity_pass": downstream_pass,
+        "all_phase_action_fidelity_limits": {"rms": .02, "max": .05},
         "downstream_action_fidelity_limits": {"rms": .02, "max": .05},
-        "checkpoint_selection": ("lowest_loss_with_downstream_fidelity"
+        "checkpoint_selection": ("lowest_loss_with_all_phase_fidelity"
                                  if best_eligible is not None else "lowest_loss_diagnostic_only"),
         "history": history, "frozen_normalizer": True, "frozen_critic": True,
         "frozen_log_std": True, "output_policy": str(output_policy),

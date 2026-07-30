@@ -50,19 +50,21 @@ def acceptance(baseline: dict, final: dict, finite: bool, drift: dict,
                    > before["takeoff"]["final_states"] + before["ascent"]["final_states"]
                    + before["apex"]["final_states"])
     total_improvement = final["final_states"] > baseline["final_states"]
-    downstream_drift = {
+    phase_drift = {
         stage: drift["by_stage"][stage]["rms"] <= .02
         and drift["by_stage"][stage]["max"] <= .05
-        for stage in ("descent", "landing")
+        for stage in STAGES
     }
     return {
         "descent_retention": retention["descent"], "landing_retention": retention["landing"],
-        "descent_action_drift": downstream_drift["descent"],
-        "landing_action_drift": downstream_drift["landing"],
+        "descent_action_drift": phase_drift["descent"],
+        "landing_action_drift": phase_drift["landing"],
+        "all_phase_action_trust_region": all(phase_drift.values()),
+        "phase_action_trust_region": phase_drift,
         "upstream_final_improvement": improvement, "total_final_improvement": total_improvement,
         "finite_training": finite, "no_new_nonfinite": final["nonfinite"] == 0,
         "normalizer_frozen": bool(normalizer_frozen),
-        "promote": all(retention.values()) and all(downstream_drift.values())
+        "promote": all(retention.values()) and all(phase_drift.values())
                    and finite and normalizer_frozen and final["nonfinite"] == 0
                    and (improvement or total_improvement),
     }
@@ -141,6 +143,8 @@ def main() -> None:
     params, policy_cfg, manifest = load_bundle(args.initial_policy, verify_files=True)
     if manifest.get("artifact_role") != "final_shared_policy_initialization":
         raise SystemExit("initial policy is not the bounded distillation output")
+    if manifest.get("all_phase_teacher_fidelity_pass") is not True:
+        raise SystemExit("initial policy lacks all-phase teacher fidelity")
     if preflight.get("policy_params_sha256") != file_sha256(Path(args.initial_policy) / "params.pkl"):
         raise SystemExit("preflight policy provenance mismatch")
     validate_ppo_batch_layout(num_envs=128, batch_size=32, num_minibatches=4)
@@ -234,10 +238,10 @@ def main() -> None:
     training_restore_params = frozen_normalizer_training_params(params)
     train = make_ppo_train_fn(
         timesteps=1600, episode_length=int(cfg.episode_length), num_envs=128,
-        num_eval_envs=64, num_evals=2, seed=args.seed, learning_rate=1e-5,
+        num_eval_envs=64, num_evals=2, seed=args.seed, learning_rate=1e-6,
         entropy_cost=1e-4, reward_scaling=.1, checkpoint_dir=root / "orbax",
-        unroll_length=32, batch_size=32, num_minibatches=4, num_updates_per_batch=2,
-        discounting=.995, gae_lambda=.97, clipping_epsilon=.10, max_grad_norm=.75,
+        unroll_length=32, batch_size=32, num_minibatches=4, num_updates_per_batch=1,
+        discounting=.995, gae_lambda=.97, clipping_epsilon=.02, max_grad_norm=.25,
         restore_params=training_restore_params, normalize_until_count=0,
     )
     _, trained_params, final_metrics = train(
@@ -269,11 +273,12 @@ def main() -> None:
     save_bundle(
         root / "policy", params=final_params, config=cfg, xml_path=cfg.xml_path,
         candidate_bank=args.phase_bank, downstream_bank=args.canonical_entry_bank,
-        policy_version="phase-balanced-unified-rsi-pilot-seed0-v1",
+        policy_version="phase-balanced-unified-rsi-pilot-seed0-v2",
         extra={
             "artifact_role": "unified_rsi_pilot_checkpoint", "formal_tube_or_jel": False,
             "promoted": decision["promote"], "effective_steps": EFFECTIVE_STEPS,
             "normalizer_contract": "frozen_initial_normalizer_v1",
+            "optimizer_trust_region": "lr1e-6_clip0.02_one_update_grad0.25_v1",
             "initial_policy_params_sha256": file_sha256(Path(args.initial_policy) / "params.pkl"),
             "teacher_dataset_sha256": file_sha256(args.teacher_dataset),
         },
@@ -290,6 +295,11 @@ def main() -> None:
             "training_mean_std_max_abs_drift": training_normalizer_drift,
             "training_freeze_pass": normalizer_frozen,
             "published_initial_normalizer_exact": True,
+        },
+        "optimizer_trust_region": {
+            "learning_rate": 1e-6, "clipping_epsilon": .02,
+            "num_updates_per_batch": 1, "max_grad_norm": .25,
+            "all_phase_anchor_rms_limit": .02, "all_phase_anchor_max_limit": .05,
         },
         "finite_parameters": finite, "final_metrics": final_metrics,
         "elapsed_seconds": time.time() - started,

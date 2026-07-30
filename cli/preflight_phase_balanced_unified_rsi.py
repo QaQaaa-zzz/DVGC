@@ -95,6 +95,18 @@ def main() -> None:
             for stage in ("descent", "landing")
         )
     )
+    all_phase_limits = manifest.get("all_phase_action_fidelity_limits", {})
+    static["all_phase_teacher_action_fidelity"] = (
+        manifest.get("all_phase_teacher_fidelity_pass") is True
+        and float(all_phase_limits.get("rms", np.inf)) <= .02
+        and float(all_phase_limits.get("max", np.inf)) <= .05
+        and all(
+            stage in fidelity
+            and float(fidelity[stage].get("rms", np.inf)) <= .02
+            and float(fidelity[stage].get("max", np.inf)) <= .05
+            for stage in STAGES
+        )
+    )
     controller_identities = manifest.get("expert_controller_identities", {})
     descent_identities = [identity for path, identity in controller_identities.items()
                           if "descent" in str(path).lower()]

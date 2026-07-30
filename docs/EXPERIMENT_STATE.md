@@ -2175,3 +2175,30 @@
   both pass. Current next action: commit the frozen-normalizer contract, start
   the v2 pilot, then promote only if fixed Final improvement, downstream
   retention/action gates and normalizer freeze all pass.
+
+### All-phase consolidation repair (2026-07-30)
+
+- Frozen-normalizer pilot v2 completed `NO_PROMOTION`: baseline/final remained
+  5/15 Final, Descent 2/3 and Landing 3/3 were retained, normalizer drift was
+  `0/4.77e-7`, and Descent/Landing action drift passed. There were no
+  timeout/nonfinite events. The failure is upstream: Takeoff/Ascent/Apex stayed
+  0/3 Final, with Takeoff action drift `RMS=0.2840,max=0.4090`, Ascent
+  `0.2207/0.2808`, training KL `4.5378`, and value loss `2.125e5`.
+- The phase-balanced reset bank is correctly weighted at 0.20 per phase. The
+  earlier 500-step distillation was the first defective gate: it passed by
+  checking only Descent/Landing although Takeoff teacher fidelity was
+  `RMS=0.1130,max=0.5020`. A non-overwriting 2,000-step supervised diagnostic
+  found no conflicting near-neighbor labels and fit all five teachers while
+  preserving downstream fidelity: worst phase RMS `0.00502`, max `0.01695`,
+  weighted MSE `4.38e-6`; its engineering preflight passed.
+- The validated source repair makes all-phase teacher fidelity a hard
+  distillation/preflight gate, uses 2,000 supervised steps, and bounds the
+  4,096-step joint RSI update with LR `1e-6`, clip `0.02`, one optimizer update
+  per batch, grad norm `0.25`, plus all-phase anchor drift gates. Old runs are
+  preserved; formal outputs use `distillation_all_phase_v2`,
+  `preflight_all_phase_v2`, and
+  `joint_rsi_pilot_4096_seed0_all_phase_trust_region_v3`.
+- Targeted tests are 15/15; full local preflight is 546/546. Runtime gate is
+  PASS/current in `runs/runtime_gate_all_phase_trust_region_v1_20260730`.
+  Next automatic action is a fresh all-phase distillation/preflight followed
+  by the bounded v3 pilot; no larger PPO budget is authorized before promotion.

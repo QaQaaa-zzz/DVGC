@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 from cli.train_phase_balanced_distillation import (
+    all_phase_fidelity_pass,
     downstream_fidelity_pass,
     summarize_error,
     summarize_fidelity,
@@ -52,3 +53,16 @@ def test_downstream_teacher_fidelity_is_a_hard_gate():
     fidelity = summarize_fidelity(prediction, target, phases)
     assert fidelity["descent"]["max"] > .05
     assert not downstream_fidelity_pass(fidelity)
+
+
+def test_all_phase_teacher_fidelity_is_a_hard_gate():
+    phases = [stage for stage in
+              ("takeoff", "ascent", "apex", "descent", "landing") for _ in range(2)]
+    target = np.zeros((10, 4), np.float32)
+    prediction = target.copy()
+    fidelity = summarize_fidelity(prediction, target, phases)
+    assert all_phase_fidelity_pass(fidelity)
+    prediction[0, 0] = .051
+    fidelity = summarize_fidelity(prediction, target, phases)
+    assert downstream_fidelity_pass(fidelity)
+    assert not all_phase_fidelity_pass(fidelity)

@@ -16,10 +16,11 @@ RUN="runs/safe_state_tube_rsi_seed0_20260729/final_shared_policy_v2"
 AUDIT_RUN="$RUN/final_jel_audit_v2"
 TEACHERS="$RUN/distillation/teacher_dataset.pkl"
 TEACHER_REPORT="$RUN/distillation/teacher_report.json"
-DISTILLED="$RUN/distillation/policy"
-DISTILL_REPORT="$RUN/distillation/report.json"
-PREFLIGHT="$RUN/preflight/report.json"
-PILOT="$RUN/joint_rsi_pilot_4096_seed0_frozen_normalizer_v2"
+DISTILL_ROOT="$RUN/distillation_all_phase_v2"
+DISTILLED="$DISTILL_ROOT/policy"
+DISTILL_REPORT="$DISTILL_ROOT/report.json"
+PREFLIGHT="$RUN/preflight_all_phase_v2/report.json"
+PILOT="$RUN/joint_rsi_pilot_4096_seed0_all_phase_trust_region_v3"
 STATE="$RUN/controller_state.json"
 C_L="runs/stage_experts/flight_seed0_20260715T2045/bridge_recovery/entry_set_bridge.pkl"
 
@@ -96,7 +97,7 @@ if [[ ! -d "$DISTILLED" && ! -s "$DISTILL_REPORT" ]]; then
   "$PY" -m cli.train_phase_balanced_distillation \
     --teacher-dataset "$TEACHERS" --base-policy runs/landing/refinement_seed0/policy \
     --output-policy "$DISTILLED" --output-report "$DISTILL_REPORT" \
-    --steps 500 --learning-rate 3e-5
+    --steps 2000 --learning-rate 3e-5
 elif [[ ! -d "$DISTILLED" || ! -s "$DISTILL_REPORT" ]]; then
   write_state bounded_distillation engineering_failure inspect_partial_distillation "partial distillation artifact; refusing overwrite"
   exit 2
@@ -104,7 +105,7 @@ fi
 
 distill_status="$($PY -c 'import json,sys; print(json.load(open(sys.argv[1]))["status"])' "$DISTILL_REPORT")"
 if [[ "$distill_status" != "PASS" ]]; then
-  write_state distillation_downstream_fidelity gate_pause \
+  write_state distillation_all_phase_fidelity gate_pause \
     repair_distillation_without_PPO "$distill_status"
   exit 40
 fi
