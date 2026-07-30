@@ -45,6 +45,8 @@ def main() -> None:
     parser.add_argument("--phase-bank", required=True)
     parser.add_argument("--phase-bank-report", required=True)
     parser.add_argument("--policy", required=True)
+    parser.add_argument("--descent-tube", required=True)
+    parser.add_argument("--descent-entry-support-bank", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--reset-samples", type=int, default=256)
     parser.add_argument("--short-window", type=int, default=5)
@@ -67,8 +69,23 @@ def main() -> None:
     from dvgc.rollout import restore_snapshot
 
     bank = SnapshotBank.load(args.phase_bank)
+    descent_tube = SnapshotBank.load(args.descent_tube)
+    descent_entry_support = SnapshotBank.load(args.descent_entry_support_bank)
     bank_report = json.loads(Path(args.phase_bank_report).read_text())
     static = validate_static_contract(bank, bank_report)
+    static["descent_tube_is_certified"] = (
+        descent_tube.metadata.get("artifact_role") == "certified_tube"
+    )
+    static["descent_tube_matches_phase_bank"] = (
+        bank.metadata.get("source_bank_sha256s", {}).get("descent")
+        == file_sha256(args.descent_tube)
+    )
+    static["descent_entry_matcher_is_proposal_only"] = (
+        descent_entry_support.metadata.get("artifact_role") == "descent_proposal_support_v1"
+        and bool(descent_entry_support.metadata.get("stage_entry_matcher"))
+        and descent_entry_support.metadata.get("certified_tube") is False
+        and descent_entry_support.metadata.get("safe_claim_allowed") is False
+    )
     if bank_report.get("output_bank_sha256") != file_sha256(args.phase_bank):
         static["bank_report_identity"] = False
     else:
@@ -118,9 +135,17 @@ def main() -> None:
     cfg = load_config(overrides={
         **policy_cfg, "training_stage": "flight", "use_bank_resets": True,
         "domain_randomization": False, "obs_noise_enable": False,
-        "expert_chain_termination": False, "stage_reachability_objective": "",
+        "expert_chain_termination": False,
+        "stage_reachability_objective": "phase_balanced_rsi",
     })
-    env = OrangeBikeDVGC(cfg, snapshot_bank=bank)
+    static["descent_entry_matcher_runtime_identity"] = (
+        descent_entry_support.metadata.get("xml_sha256") == file_sha256(cfg.xml_path)
+        and descent_entry_support.metadata.get("action_mapping_version")
+        == cfg.action_mapping_version
+    )
+    env = OrangeBikeDVGC(
+        cfg, snapshot_bank=bank, stage_support_bank=descent_entry_support
+    )
     _, actor_action, _ = build_actor_tools(env, params)
     reset = jax.jit(env.reset); step = jax.jit(env.step)
 
@@ -194,6 +219,8 @@ def main() -> None:
         "reset_samples": args.reset_samples, "reset_source_counts": dict(reset_counts),
         "roundtrip_short_window": roundtrips,
         "phase_bank_sha256": file_sha256(args.phase_bank),
+        "descent_tube_sha256": file_sha256(args.descent_tube),
+        "descent_entry_support_bank_sha256": file_sha256(args.descent_entry_support_bank),
         "policy_params_sha256": file_sha256(Path(args.policy) / "params.pkl"),
         "expert_controller_identities": controller_identities,
         "runtime_source_fingerprint": source_fingerprint(Path.cwd()),

@@ -60,6 +60,70 @@ def test_stage_reachability_reward_step_and_snapshot_latches(stage,objective):
     assert np.isclose(float(restored.info["jump_window_end_x"]),float(next_state.info["jump_window_end_x"]))
 
 
+@pytest.mark.skipif(not RUNTIME_READY, reason="MuJoCo runtime required")
+def test_phase_balanced_rsi_selects_per_reset_objective_without_actor_leakage():
+    import copy
+    import jax
+    import jax.numpy as jp
+    import numpy as np
+
+    from dvgc.bank import SnapshotBank
+    from dvgc.config import load_config
+    from dvgc.env import OrangeBikeDVGC, PHASE_RSI_OBJECTIVE
+
+    base_cfg = load_config("configs/default.json", {
+        "training_stage": "flight", "use_bank_resets": False,
+        "obs_noise_enable": False, "domain_randomization": False,
+    })
+    base = OrangeBikeDVGC(base_cfg, snapshot_bank=SnapshotBank())
+    record = base.snapshot_record(base.reset(jax.random.PRNGKey(812)), "flight")
+
+    rows = []
+    for stage in ("takeoff", "ascent", "apex", "descent", "landing"):
+        row = copy.deepcopy(record)
+        row["id"] = f"phase-{stage}"
+        row["phase_rsi_stage"] = stage
+        row["reset_source"] = "flight_curriculum"
+        row["reset_weight"] = .2
+        rows.append(row)
+    bank = SnapshotBank(rows, {"reset_source_protocol": {"version": 1}})
+    cfg = load_config("configs/default.json", {
+        "training_stage": "flight", "stage_reachability_objective": "phase_balanced_rsi",
+        "use_bank_resets": True, "natural_prob_flight": 0.0,
+        "obs_noise_enable": False, "domain_randomization": False,
+    })
+    env = OrangeBikeDVGC(cfg, snapshot_bank=bank)
+    assert list(map(int, np.asarray(env._bank_reachability_objective))) == [
+        PHASE_RSI_OBJECTIVE[stage]
+        for stage in ("takeoff", "ascent", "apex", "descent", "landing")
+    ]
+
+    def one(stage):
+        row = copy.deepcopy(record)
+        row["phase_rsi_stage"] = stage
+        row["reset_source"] = "flight_curriculum"
+        row["reset_weight"] = 1.0
+        single = SnapshotBank([row], {"reset_source_protocol": {"version": 1}})
+        return OrangeBikeDVGC(cfg, snapshot_bank=single)
+
+    takeoff_env, landing_env = one("takeoff"), one("landing")
+    key = jax.random.PRNGKey(813)
+    takeoff_state, landing_state = takeoff_env.reset(key), landing_env.reset(key)
+    assert int(takeoff_state.info["reachability_objective_id"]) == PHASE_RSI_OBJECTIVE["takeoff"]
+    assert int(landing_state.info["reachability_objective_id"]) == PHASE_RSI_OBJECTIVE["landing"]
+    np.testing.assert_array_equal(takeoff_state.obs["state"], landing_state.obs["state"])
+
+    next_state = takeoff_env.step(
+        takeoff_state, jp.zeros(takeoff_env.action_size, jp.float32)
+    )
+    stage_total = float(np.asarray(next_state.metrics["reward/stage_entry_total"]))
+    assert np.isfinite(stage_total)
+    assert stage_total != 0.0
+    assert float(np.asarray(next_state.metrics[
+        "reset/transition/objective/takeoff_to_ascent"
+    ])) == 1.0
+
+
 @pytest.mark.skipif(
     not RUNTIME_READY,
     reason="MuJoCo Playground and the user's original STL mesh directory are required for the dynamic smoke test.",

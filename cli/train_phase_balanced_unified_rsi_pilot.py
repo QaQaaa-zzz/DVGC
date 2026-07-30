@@ -105,6 +105,8 @@ def main() -> None:
     parser.add_argument("--phase-bank", required=True)
     parser.add_argument("--initial-policy", required=True)
     parser.add_argument("--canonical-entry-bank", required=True)
+    parser.add_argument("--descent-tube", required=True)
+    parser.add_argument("--descent-entry-support-bank", required=True)
     parser.add_argument("--preflight", required=True)
     parser.add_argument("--teacher-dataset", required=True)
     parser.add_argument("--run", required=True)
@@ -138,8 +140,25 @@ def main() -> None:
     if preflight.get("phase_bank_sha256") != file_sha256(args.phase_bank):
         raise SystemExit("preflight phase-bank provenance mismatch")
     bank = SnapshotBank.load(args.phase_bank); entry = SnapshotBank.load(args.canonical_entry_bank)
+    descent_tube = SnapshotBank.load(args.descent_tube)
+    descent_entry_support = SnapshotBank.load(args.descent_entry_support_bank)
     if bank.metadata.get("artifact_role") != "phase_balanced_tube_rsi_reset_bank":
         raise SystemExit("invalid phase-balanced bank role")
+    descent_tube_hash = file_sha256(args.descent_tube)
+    descent_entry_support_hash = file_sha256(args.descent_entry_support_bank)
+    if (descent_tube.metadata.get("artifact_role") != "certified_tube"
+            or bank.metadata.get("source_bank_sha256s", {}).get("descent")
+            != descent_tube_hash):
+        raise SystemExit("Descent Tube is not the phase-bank certified Tube source")
+    if (descent_entry_support.metadata.get("artifact_role") != "descent_proposal_support_v1"
+            or not descent_entry_support.metadata.get("stage_entry_matcher")
+            or descent_entry_support.metadata.get("certified_tube") is not False
+            or descent_entry_support.metadata.get("safe_claim_allowed") is not False):
+        raise SystemExit("invalid proposal-only Descent entry matcher support")
+    if (preflight.get("descent_tube_sha256") != descent_tube_hash
+            or preflight.get("descent_entry_support_bank_sha256")
+            != descent_entry_support_hash):
+        raise SystemExit("preflight Descent Tube/matcher provenance mismatch")
     params, policy_cfg, manifest = load_bundle(args.initial_policy, verify_files=True)
     if manifest.get("artifact_role") != "final_shared_policy_initialization":
         raise SystemExit("initial policy is not the bounded distillation output")
@@ -155,14 +174,22 @@ def main() -> None:
         raise SystemExit(f"unexpected effective pilot size {effective}")
     cfg = load_config(overrides={
         **policy_cfg, "training_stage": "flight", "use_bank_resets": True,
-        "expert_chain_termination": False, "stage_reachability_objective": "",
+        "expert_chain_termination": False,
+        "stage_reachability_objective": "phase_balanced_rsi",
     })
+    if (descent_entry_support.metadata.get("xml_sha256") != file_sha256(cfg.xml_path)
+            or descent_entry_support.metadata.get("action_mapping_version")
+            != cfg.action_mapping_version):
+        raise SystemExit("Descent entry matcher runtime identity mismatch")
     eval_cfg = load_config(overrides={
         **policy_cfg, "training_stage": "flight", "use_bank_resets": False,
         "domain_randomization": False, "obs_noise_enable": False,
         "expert_chain_termination": False, "stage_reachability_objective": "",
     })
-    env = OrangeBikeDVGC(cfg, snapshot_bank=bank, cert_bank=entry)
+    env = OrangeBikeDVGC(
+        cfg, snapshot_bank=bank, cert_bank=entry,
+        stage_support_bank=descent_entry_support,
+    )
     eval_env = OrangeBikeDVGC(eval_cfg, snapshot_bank=SnapshotBank(), cert_bank=entry)
     fixed = select_parent_diverse(bank.records, 3)
 
@@ -273,14 +300,17 @@ def main() -> None:
     save_bundle(
         root / "policy", params=final_params, config=cfg, xml_path=cfg.xml_path,
         candidate_bank=args.phase_bank, downstream_bank=args.canonical_entry_bank,
-        policy_version="phase-balanced-unified-rsi-pilot-seed0-v2",
+        policy_version="phase-balanced-unified-rsi-pilot-seed0-v3",
         extra={
             "artifact_role": "unified_rsi_pilot_checkpoint", "formal_tube_or_jel": False,
             "promoted": decision["promote"], "effective_steps": EFFECTIVE_STEPS,
             "normalizer_contract": "frozen_initial_normalizer_v1",
             "optimizer_trust_region": "lr1e-6_clip0.02_one_update_grad0.25_v1",
+            "objective_contract": "per_reset_phase_next_entry_v1",
             "initial_policy_params_sha256": file_sha256(Path(args.initial_policy) / "params.pkl"),
             "teacher_dataset_sha256": file_sha256(args.teacher_dataset),
+            "descent_tube_sha256": descent_tube_hash,
+            "descent_entry_support_bank_sha256": descent_entry_support_hash,
         },
     )
     report = {
@@ -301,9 +331,12 @@ def main() -> None:
             "num_updates_per_batch": 1, "max_grad_norm": .25,
             "all_phase_anchor_rms_limit": .02, "all_phase_anchor_max_limit": .05,
         },
+        "objective_contract": "per_reset_phase_next_entry_v1",
         "finite_parameters": finite, "final_metrics": final_metrics,
         "elapsed_seconds": time.time() - started,
         "policy_params_sha256": file_sha256(root / "policy" / "params.pkl"),
+        "descent_tube_sha256": descent_tube_hash,
+        "descent_entry_support_bank_sha256": descent_entry_support_hash,
         "formal_tube_or_jel": False,
         "next_gate": ("expanded fixed evaluation before any larger block" if decision["promote"]
                       else "diagnose phase reward/reset/action drift; no blind budget increase"),

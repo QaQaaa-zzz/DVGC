@@ -86,6 +86,20 @@ RESET_SOURCE = {
 
 DESCENT_BOOTSTRAP_GROUP = {"provisional_safe": 0, "boundary": 1, "successful_anchor": 2}
 DESCENT_LAYER = {"late": 0, "middle": 1, "early": 2}
+REACHABILITY_OBJECTIVE = {
+    "": 0,
+    "takeoff_to_ascent": 1,
+    "ascent_to_apex": 2,
+    "apex_to_descent": 3,
+    "descent_to_landing": 4,
+}
+PHASE_RSI_OBJECTIVE = {
+    "takeoff": REACHABILITY_OBJECTIVE["takeoff_to_ascent"],
+    "ascent": REACHABILITY_OBJECTIVE["ascent_to_apex"],
+    "apex": REACHABILITY_OBJECTIVE["apex_to_descent"],
+    "descent": REACHABILITY_OBJECTIVE["descent_to_landing"],
+    "landing": REACHABILITY_OBJECTIVE[""],
+}
 
 
 def _deg2rad(x: float) -> float:
@@ -144,12 +158,19 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         if self._stage_name not in STAGE_ID and self._stage_name != "full":
             raise ValueError(f"Unsupported training_stage={self._stage_name!r}")
         self._reachability_objective = str(getattr(self._config,"stage_reachability_objective","")).lower()
-        allowed={"","takeoff_to_ascent","ascent_to_apex","apex_to_descent","descent_to_landing"}
+        allowed={*REACHABILITY_OBJECTIVE, "phase_balanced_rsi"}
         if self._reachability_objective not in allowed:
             raise ValueError(f"Unsupported stage_reachability_objective={self._reachability_objective!r}")
         expected={"takeoff_to_ascent":"takeoff","ascent_to_apex":"flight","apex_to_descent":"flight","descent_to_landing":"flight"}
-        if self._reachability_objective and self._stage_name!=expected[self._reachability_objective]:
+        if (self._reachability_objective in expected
+                and self._stage_name != expected[self._reachability_objective]):
             raise ValueError("Reachability objective and canonical training_stage disagree")
+        if self._reachability_objective == "phase_balanced_rsi" and self._stage_name != "flight":
+            raise ValueError("phase_balanced_rsi requires canonical training_stage='flight'")
+        self._phase_balanced_reachability = self._reachability_objective == "phase_balanced_rsi"
+        self._default_reachability_objective_id = REACHABILITY_OBJECTIVE.get(
+            self._reachability_objective, REACHABILITY_OBJECTIVE[""]
+        )
         self._stage_id = STAGE_ID.get(self._stage_name, STAGE_ID["approach"])
         self._contact_mode = str(self._config.contact_mode).lower()
         if self._contact_mode not in ("mjx", "imu_fallback", "imu", "imu_only"):
@@ -336,6 +357,17 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             self._bank_reset_parent = jp.asarray([
                 parent_index.get(str(r.get("reset_parent_id", "")), -1) for r in records
             ], jp.int32)
+            if self._phase_balanced_reachability:
+                invalid = sorted({str(r.get("phase_rsi_stage")) for r in records}
+                                 - set(PHASE_RSI_OBJECTIVE))
+                if invalid:
+                    raise ValueError(
+                        f"phase_balanced_rsi records have invalid phase_rsi_stage values: {invalid}"
+                    )
+                objective_ids = [PHASE_RSI_OBJECTIVE[str(r["phase_rsi_stage"])] for r in records]
+            else:
+                objective_ids = [self._default_reachability_objective_id] * len(records)
+            self._bank_reachability_objective = jp.asarray(objective_ids, jp.int32)
             self._bank_logw = jp.log(jp.asarray(weights) + 1e-12)
         else:
             self._bank_qpos = jp.zeros((1, nq), jp.float32); self._bank_qvel = jp.zeros((1, nv), jp.float32)
@@ -358,6 +390,9 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             self._bank_bootstrap_group = -jp.ones((1,), jp.int32)
             self._bank_descent_layer = -jp.ones((1,), jp.int32)
             self._bank_reset_parent = -jp.ones((1,), jp.int32)
+            self._bank_reachability_objective = jp.full(
+                (1,), self._default_reachability_objective_id, jp.int32
+            )
             self._reset_parent_ids = ()
 
         # Recursive bootstrap entry set comes from the next phase's independently
@@ -794,6 +829,16 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "reset/transition/group/boundary", "reset/transition/group/successful_anchor",
             "reset/episode/layer/late", "reset/episode/layer/middle", "reset/episode/layer/early",
             "reset/transition/layer/late", "reset/transition/layer/middle", "reset/transition/layer/early",
+            "reset/episode/objective/takeoff_to_ascent",
+            "reset/episode/objective/ascent_to_apex",
+            "reset/episode/objective/apex_to_descent",
+            "reset/episode/objective/descent_to_landing",
+            "reset/episode/objective/landing_recovery",
+            "reset/transition/objective/takeoff_to_ascent",
+            "reset/transition/objective/ascent_to_apex",
+            "reset/transition/objective/apex_to_descent",
+            "reset/transition/objective/descent_to_landing",
+            "reset/transition/objective/landing_recovery",
             "done/code",
             "end/recovery", "end/prohibited_contact", "end/invalid_wheel_step_contact",
             "end/roll_limit", "end/pitch_limit", "end/backward", "end/platform_back_edge_exit",
@@ -849,6 +894,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         bootstrap_group: Optional[jax.Array] = None,
         descent_layer: Optional[jax.Array] = None,
         reset_parent: Optional[jax.Array] = None,
+        reachability_objective_id: Optional[jax.Array] = None,
     ) -> Dict[str, jax.Array]:
         """Initialise physical state plus the IMU phase-filter state.
 
@@ -899,6 +945,11 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             "bootstrap_group": jp.asarray(-1 if bootstrap_group is None else bootstrap_group, jp.int32),
             "descent_layer": jp.asarray(-1 if descent_layer is None else descent_layer, jp.int32),
             "reset_parent": jp.asarray(-1 if reset_parent is None else reset_parent, jp.int32),
+            "reachability_objective_id": jp.asarray(
+                self._default_reachability_objective_id
+                if reachability_objective_id is None else reachability_objective_id,
+                jp.int32,
+            ),
             "descent_local_episode": (
                 jp.asarray(bool(self._config.descent_local_reward_enable))
                 & ((jp.asarray(-1 if bootstrap_group is None else bootstrap_group, jp.int32) >= 0)
@@ -954,6 +1005,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         bootstrap_group: Optional[jax.Array] = None,
         descent_layer: Optional[jax.Array] = None,
         reset_parent: Optional[jax.Array] = None,
+        reachability_objective_id: Optional[jax.Array] = None,
         stage_entry_ever: Optional[jax.Array] = None,
         apex_seen: Optional[jax.Array] = None,
         jump_signal_latched: Optional[jax.Array] = None,
@@ -1014,6 +1066,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             bootstrap_group=bootstrap_group,
             descent_layer=descent_layer,
             reset_parent=reset_parent,
+            reachability_objective_id=reachability_objective_id,
             stage_entry_ever=stage_entry_ever,
             apex_seen=apex_seen,
             jump_signal_latched=jump_signal_latched,
@@ -1117,6 +1170,11 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             bootstrap_group = jp.where(use_bank, self._bank_bootstrap_group[idx], jp.asarray(-1, jp.int32))
             descent_layer = jp.where(use_bank, self._bank_descent_layer[idx], jp.asarray(-1, jp.int32))
             reset_parent = jp.where(use_bank, self._bank_reset_parent[idx], jp.asarray(-1, jp.int32))
+            reachability_objective_id = jp.where(
+                use_bank,
+                self._bank_reachability_objective[idx],
+                jp.asarray(self._default_reachability_objective_id, jp.int32),
+            )
             return self._state_from_values(
                 qpos, qvel, ctrl, rng, phase, airborne, landed, age, last_action,
                 estimated_phase=estimated_phase, phase_probs=phase_probs,
@@ -1131,6 +1189,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
                 bootstrap_group=bootstrap_group,
                 descent_layer=descent_layer,
                 reset_parent=reset_parent,
+                reachability_objective_id=reachability_objective_id,
                 apex_seen=apex_seen,
             )
         return self._state_from_values(qnat, vnat, cnat, rng, jp.asarray(STAGE_ID["approach"], jp.int32), jp.zeros((), jp.int32), jp.zeros((), jp.int32), jp.zeros((), jp.int32))
@@ -1654,24 +1713,39 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         previous_stage_support_distance=jp.min(jp.linalg.norm(self._stage_support_features-previous_support_z[None,:],axis=1)/self._stage_support_radii)
         stage_support_near=jp.asarray(self._stage_support_enabled) & (current_stage_support_distance<=1.0)
         apex_seen=(state.info["apex_seen"]>0) | ((state.info["prev_vz"]>0.0)&(vz<=0.0))
-        stage_entry_raw=jp.asarray(False)
-        if self._reachability_objective=="takeoff_to_ascent":
-            stage_entry_raw=confirmed_airborne & (vz>=float(cfg.takeoff_liftoff_vz)) & entry_pose_ok
-        elif self._reachability_objective=="ascent_to_apex":
-            stage_entry_raw=(phase1==STAGE_ID["flight"]) & (z>=0.4015475838251305) & (z<=0.7015475838251305) & (jp.abs(vz)<=0.25) & entry_pose_ok
-        elif self._reachability_objective=="apex_to_descent":
-            stage_entry_raw=(phase1==STAGE_ID["flight"]) & apex_seen & raw_airborne & \
+        objective_id = state.info["reachability_objective_id"]
+        takeoff_to_ascent_entry = confirmed_airborne & (vz>=float(cfg.takeoff_liftoff_vz)) & entry_pose_ok
+        ascent_to_apex_entry = ((phase1==STAGE_ID["flight"]) & (z>=0.4015475838251305)
+                               & (z<=0.7015475838251305) & (jp.abs(vz)<=0.25) & entry_pose_ok)
+        apex_to_descent_entry = (phase1==STAGE_ID["flight"]) & apex_seen & raw_airborne & \
                 (vz>=self._stage_descent_vz_bounds[0]) & (vz<=self._stage_descent_vz_bounds[1]) & \
                 (x>=self._stage_support_x_bounds[0]) & (x<=self._stage_support_x_bounds[1]) & \
                 (z>=self._stage_support_z_bounds[0]) & (z<=self._stage_support_z_bounds[1]) & \
                 (jp.abs(gyro[0])<=self._stage_roll_rate_max) & (jp.abs(gyro[1])<=self._stage_pitch_rate_max) & \
                 stage_support_near & entry_pose_ok
-        elif self._reachability_objective=="descent_to_landing":
-            stage_entry_raw=(phase1==STAGE_ID["landing"]) & valid_landing & support & in_platform & (jp.abs(vz)<=0.75) & entry_pose_ok
+        descent_to_landing_entry = ((phase1==STAGE_ID["landing"]) & valid_landing & support
+                                    & in_platform & (jp.abs(vz)<=0.75) & entry_pose_ok)
+        stage_entry_raw = jp.where(
+            objective_id == REACHABILITY_OBJECTIVE["takeoff_to_ascent"],
+            takeoff_to_ascent_entry,
+            jp.where(
+                objective_id == REACHABILITY_OBJECTIVE["ascent_to_apex"],
+                ascent_to_apex_entry,
+                jp.where(
+                    objective_id == REACHABILITY_OBJECTIVE["apex_to_descent"],
+                    apex_to_descent_entry,
+                    jp.where(
+                        objective_id == REACHABILITY_OBJECTIVE["descent_to_landing"],
+                        descent_to_landing_entry,
+                        jp.asarray(False),
+                    ),
+                ),
+            ),
+        )
         stage_entry=stage_entry_raw & (~hard_failure)
         stage_entry_ever=(state.info["stage_entry_ever"]>0) | stage_entry
         chain_terminal = jp.asarray(bool(cfg.expert_chain_termination)) & chain & (self._stage_name != "landing")
-        stage_terminal=jp.asarray(bool(self._reachability_objective)) & stage_entry
+        stage_terminal=(objective_id > REACHABILITY_OBJECTIVE[""]) & stage_entry
         terminated = recovery | hard_failure | chain_terminal | stage_terminal
         truncated = timeout & (~terminated)
         done = terminated | truncated
@@ -1813,13 +1887,26 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
                       "joint_energy_penalty":zero,"action_smooth_penalty":zero,"action_magnitude_penalty":zero}
         if self._reachability_objective:
             joint_energy=(jp.abs(data.ctrl[2]*data.qvel[self._joint_qvel["hip_joint"]])+jp.abs(data.ctrl[3]*data.qvel[self._joint_qvel["knee_joint"]]))/100.0
-            stage_reward=compute_stage_next_entry_reward(
-                cfg=cfg,objective=self._reachability_objective,feature=current_physical,previous_feature=previous_physical,
-                action=action,previous_action=state.info["last_action"],next_entry=stage_entry,hard_failure=hard_failure,
-                jump_latched=jump_signal_latched,window_active=jump_window_active,joint_energy=joint_energy,
-                current_support_distance=current_stage_support_distance,
-                previous_support_distance=previous_stage_support_distance,
-            )
+            objective_names = tuple(name for name in REACHABILITY_OBJECTIVE if name)
+            computed = {
+                name: compute_stage_next_entry_reward(
+                    cfg=cfg, objective=name, feature=current_physical,
+                    previous_feature=previous_physical, action=action,
+                    previous_action=state.info["last_action"], next_entry=stage_entry,
+                    hard_failure=hard_failure, jump_latched=jump_signal_latched,
+                    window_active=jump_window_active, joint_energy=joint_energy,
+                    current_support_distance=current_stage_support_distance,
+                    previous_support_distance=previous_stage_support_distance,
+                )
+                for name in objective_names
+            }
+            stage_reward = {
+                key: sum(
+                    jp.where(objective_id == REACHABILITY_OBJECTIVE[name], values[key], zero)
+                    for name, values in computed.items()
+                )
+                for key in stage_reward
+            }
         landing_reward_active = phase1 == STAGE_ID["landing"]
         reward = jp.where(landing_reward_active, landing_reward, unified_reward)
         # Candidate-guided descent episodes retain the local C_L objective even
@@ -1839,7 +1926,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         takeoff_total = jp.where(takeoff_local, takeoff_profile["reward"], reward)
         reward = jp.where(self._stage_name == "takeoff", takeoff_total, reward)
         if self._reachability_objective:
-            reward=stage_reward["reward"]
+            reward=jp.where(objective_id > REACHABILITY_OBJECTIVE[""], stage_reward["reward"], reward)
         reward = jp.where(nonfinite, -jp.asarray(float(cfg.coeff_hard_failure), jp.float32), reward)
 
         metrics = self._empty_metrics()
@@ -1968,6 +2055,24 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
                     state.info["reset_source"] == source_id
                 ).astype(jp.float32)
                 for name, source_id in RESET_SOURCE.items()
+            },
+            **{
+                f"reset/episode/objective/{name}": (
+                    (objective_id == objective_value) & (step_no == 1)
+                ).astype(jp.float32)
+                for name, objective_value in {
+                    **{name: value for name, value in REACHABILITY_OBJECTIVE.items() if name},
+                    "landing_recovery": REACHABILITY_OBJECTIVE[""],
+                }.items()
+            },
+            **{
+                f"reset/transition/objective/{name}": (
+                    objective_id == objective_value
+                ).astype(jp.float32)
+                for name, objective_value in {
+                    **{name: value for name, value in REACHABILITY_OBJECTIVE.items() if name},
+                    "landing_recovery": REACHABILITY_OBJECTIVE[""],
+                }.items()
             },
             **{
                 f"reset/episode/group/{name}": (

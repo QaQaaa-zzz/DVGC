@@ -11,16 +11,17 @@ APEX_REPORT="runs/safe_state_tube_rsi_seed0_20260729/apex/apex_entry_support_v1/
 DESCENT_V6="runs/descent_reachability_network_v3/tube_v6_schema_normalization_20260729/descent_tube_v6.pkl"
 DESCENT_V6_REPORT="runs/descent_reachability_network_v3/tube_v6_schema_normalization_20260729/report.json"
 DESCENT_V6_VERIFY="runs/descent_reachability_network_v3/tube_v6_schema_normalization_20260729/verification_v2.json"
+DESCENT_ENTRY_SUPPORT="runs/stage_next_bootstrap_seed0_20260720/support_v2/descent_proposal_support_v1.pkl"
 COMPAT="runs/safe_state_tube_rsi_seed0_20260729/phase_expert_compatibility_v1/report.json"
 RUN="runs/safe_state_tube_rsi_seed0_20260729/final_shared_policy_v2"
-AUDIT_RUN="$RUN/final_jel_audit_v3"
+AUDIT_RUN="$RUN/final_jel_audit_v4"
 TEACHERS="$RUN/distillation/teacher_dataset.pkl"
 TEACHER_REPORT="$RUN/distillation/teacher_report.json"
 DISTILL_ROOT="$RUN/distillation_all_phase_v2"
 DISTILLED="$DISTILL_ROOT/policy"
 DISTILL_REPORT="$DISTILL_ROOT/report.json"
-PREFLIGHT="$RUN/preflight_all_phase_v2/report.json"
-PILOT="$RUN/joint_rsi_pilot_4096_seed0_all_phase_trust_region_v3"
+PREFLIGHT="$RUN/preflight_phase_objective_v3/report.json"
+PILOT="$RUN/joint_rsi_pilot_4096_seed0_phase_objective_v4"
 STATE="$RUN/controller_state.json"
 C_L="runs/stage_experts/flight_seed0_20260715T2045/bridge_recovery/entry_set_bridge.pkl"
 
@@ -114,7 +115,9 @@ if [[ ! -s "$PREFLIGHT" ]]; then
   write_state unified_rsi_preflight active joint_rsi_pilot
   "$PY" -m cli.preflight_phase_balanced_unified_rsi \
     --phase-bank "$PHASE_BANK" --phase-bank-report "$PHASE_REPORT" \
-    --policy "$DISTILLED" --output "$PREFLIGHT"
+    --policy "$DISTILLED" --descent-tube "$DESCENT_V6" \
+    --descent-entry-support-bank "$DESCENT_ENTRY_SUPPORT" \
+    --output "$PREFLIGHT"
 fi
 
 if [[ ! -s "$PILOT/report.json" ]]; then
@@ -123,6 +126,8 @@ if [[ ! -s "$PILOT/report.json" ]]; then
   "$PY" -u -m cli.train_phase_balanced_unified_rsi_pilot \
     --phase-bank "$PHASE_BANK" --initial-policy "$DISTILLED" \
     --canonical-entry-bank "$C_L" --preflight "$PREFLIGHT" \
+    --descent-tube "$DESCENT_V6" \
+    --descent-entry-support-bank "$DESCENT_ENTRY_SUPPORT" \
     --teacher-dataset "$TEACHERS" --run "$PILOT" --seed 0
   code=$?
   set -e

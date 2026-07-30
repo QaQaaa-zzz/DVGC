@@ -2203,3 +2203,29 @@
   PASS/current in `runs/runtime_gate_all_phase_trust_region_v1_20260730`.
   Next automatic action is a fresh all-phase distillation/preflight followed
   by the bounded v3 pilot; no larger PPO budget is authorized before promotion.
+
+### Per-reset phase objective repair (2026-07-30)
+
+- The all-phase trust-region v3 pilot is preserved as `NO_PROMOTION` evidence:
+  baseline/final were 6/15, with Takeoff/Apex 0, Ascent 1, Descent 2 and
+  Landing 3. All five action-drift gates passed (worst max `0.00999`), KL was
+  `0.00298`, and there were no timeout/nonfinite events. The optimizer repair
+  therefore preserved teacher actions but did not improve fixed Final.
+- Structured training metrics identify the missing learning signal:
+  `event/stage_entry=0` and every `reward/stage_entry_*` term was zero because
+  unified RSI hard-coded an empty reachability objective. Phase-balanced
+  resets were sampled, but Takeoff/Ascent/Apex/Descent episodes were trained
+  against the generic recovery profile rather than their local next-stage
+  event.
+- The bounded repair assigns a JAX integer objective to each reset from its
+  immutable `phase_rsi_stage`: Takeoff->Ascent, Ascent->Apex,
+  Apex->Descent, Descent->Landing, while Landing retains its existing recovery
+  objective. The objective is training metadata only and is not included in
+  actor observations or persisted physical snapshots. Episode and transition
+  objective-source metrics make the realized mixture auditable.
+- Formal Descent Tube v6 and the local Descent-entry matcher remain explicitly
+  separate: Tube v6 is the phase-bank certified reset source; the frozen
+  `descent_proposal_support_v1` matcher is proposal-only and cannot make a safe
+  claim. Both hashes plus XML/action identity are required by preflight. A new
+  non-overwriting v4 pilot/audit path is reserved; runtime-gate renewal is
+  required before it can start.
