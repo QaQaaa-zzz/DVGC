@@ -53,4 +53,5 @@ def test_v2_follow_on_start_is_nonblocking_and_updates_active_pointer():
     assert "runs/ACTIVE_PIPELINE.json" in text
     assert "run_final_shared_policy_pipeline.sh" in text
     assert "run_final_shared_jel_audit.sh" in text
+    assert "final_jel_audit_v4" in text
     assert "rm " not in text
