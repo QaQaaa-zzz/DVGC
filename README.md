@@ -1,103 +1,57 @@
-# OrangeBike DVGC Clean Project
+# OrangeBike DVGC
 
-这是删除历史过程脚本后保留的唯一正式工程。方法说明见 `PROJECT_SUMMARY.md`，旧文件处理见 `docs/REMOVED_FILES.md`。
+DVGC 当前主线面向精简的 IEEE RA-L 方法验证：独立阶段专家产生可追溯的阶段入口证据，随后进行 phase-balanced distillation、统一 Tube-RSI PPO，并对冻结后的最终共享 Actor 重新执行端到端 Final-Recovery 认证。
 
-## 1. 环境准备
+## 权威约束
 
-在已有 MuJoCo Playground GPU 环境中安装本项目：
+- 模型：`assets/orange_bike_4kg_horizontal.xml`
+- 负载：4 kg
+- hip/knee 力矩限幅：`±50 N·m`
+- 动作顺序：`[steer, rear-wheel drive, hip, knee]`
+- 运行环境：`/home/qy/mujoco_playground/.venv/bin/python`
+- 不重建或升级已有虚拟环境，不生成替代 XML，不扩大 Tube matcher 半径
+
+## 当前方法主线
+
+1. 分别训练和冻结 Landing、Descent、Apex、Ascent、Takeoff 等局部专家。
+2. 中间阶段仅以有效 next-stage entry 作为局部目标；只有 Landing/Descent 的独立 Final-Recovery 证据可形成正式 Tube。
+3. 将五阶段 snapshot 按阶段质量均衡组成 `phase_balanced_tube_rsi_reset_bank`。
+4. 使用各冻结专家生成 teacher action，先进行 phase-balanced distillation。
+5. 从均衡 reset bank 进行一次有界 joint RSI PPO；保持 normalizer 冻结，并约束各阶段动作漂移与 Landing/Descent retention。
+6. 仅当统一策略通过提升门槛后，才进行独立的 Final 4→8→32 分支认证；最终冻结共享 Actor 的复认证结果才可称为 JEL。
+
+当前入口：
 
 ```bash
-pip install -e .
-python -m cli.prepare_project
-python -m pytest -q
+bash scripts/start_corrected_apex_unified_rsi_followons.sh
 ```
 
-在已配置好的 Ubuntu MuJoCo Playground 环境中，不安装或升级依赖，直接运行：
+其内部依次调用：
+
+- `scripts/run_corrected_apex_unified_rsi_pipeline.sh`
+- `cli.preflight_phase_balanced_unified_rsi`
+- `cli.train_phase_balanced_unified_rsi_pilot`
+- `scripts/run_final_shared_jel_audit.sh`
+
+## 验证
+
+在已有 Ubuntu 训练环境中执行：
 
 ```bash
 bash scripts/local_preflight.sh
-```
-
-本项目只读取 `assets/orange_bike_4kg_horizontal.xml`，不生成 runtime XML，也不修改碰撞几何。正式模型使用 4 kg 负载和 hip/knee `±50 N·m` 限幅，默认使用 `impl="warp"`、`contact_mode="imu"`；Actor observation 不读取 oracle contact。请将你已有的 STL 保持在 XML 指定的 `assets/meshes/` 目录。
-
-模型与 knee 动作映射的完整说明见 `docs/XML_AND_KNEE_MAPPING.md`。
-
-## 2. 单阶段命令
-
-```bash
-python -m cli.build_candidates \
-  --phase landing \
-  --target 96 \
-  --bank artifacts/landing_candidates.pkl
-
-python -m cli.train \
-  --stage landing \
-  --bank artifacts/landing_candidates.pkl \
-  --run runs/landing
-
-python -m cli.certify \
-  --phase landing \
-  --policy runs/landing/policy \
-  --candidate-bank artifacts/landing_candidates.pkl \
-  --output-bank artifacts/landing_tube.pkl
-
-python -m cli.audit \
-  --phase landing \
-  --policy runs/landing/policy \
-  --bank artifacts/landing_tube.pkl \
-  --output runs/landing/audit.json
-```
-
-Flight、Takeoff 和 Approach 必须显式提供已认证下游 bank：
-
-```bash
-python -m cli.certify \
-  --phase takeoff \
-  --policy runs/takeoff/policy \
-  --candidate-bank artifacts/takeoff_candidates.pkl \
-  --downstream-bank artifacts/flight_tube.pkl \
-  --output-bank artifacts/takeoff_tube.pkl
-```
-
-## 3. 完整顺序
-
-```bash
-bash scripts/run_backward_bootstrap.sh
-```
-
-脚本按 Landing → Flight → Takeoff → Approach → natural-start 顺序执行。每个阶段先用几何候选完成 backward bootstrap，冻结策略并认证第一版 Tube；只有达到 Final-safe 激活门槛后，才从 Final-safe/Boundary Tube 继续 RSI refinement，然后再次冻结、重新认证并独立 audit。bootstrap/refinement 按 60%/40% 拆分原阶段 PPO 预算；中间认证的 branch rollout 是额外环境交互，必须单独计入并报告总交互成本。后续阶段通过 `--resume` 继承前一阶段共享 Actor，并混入单独计权的已认证下游 rehearsal。
-
-`scripts/local_preflight.sh` 只是本地基础预检；正式长训练仍须先满足 `docs/VERIFICATION_PROTOCOL.md` 中的完整训练 gates。
-
-首次长训练前运行完整 gate（会执行两个极短 PPO compile/run/resume probe），之后正式脚本会校验报告是否仍与源码、XML 和配置一致：
-
-```bash
 /home/qy/mujoco_playground/.venv/bin/python -m cli.runtime_gate
 ```
 
-## 4. 认证原则
+`runtime_gate` 必须与当前源码、配置和 XML fingerprint 一致。长 PPO 前必须通过模型加载、reset/step、snapshot round-trip、确定性推理和短 PPO compile/run/resume gate。
 
-- Candidate bank 与 downstream certified bank 是两个不同参数；
-- `training_only=True` 的 velocity seeds 和 rehearsal states 永不参与认证；
-- Chain 与 Final Recovery 分别统计；
-- Chain 事件锁存，不读取最后一步瞬时值；
-- Tube entry 使用下游 final-safe 状态的标准化距离；
-- build 与 audit 使用不同 seed namespace；
-- timeout 单独报告，不能写成物理 Failure；
-- policy manifest 校验 action mapping、原始 XML、config 和 bank 版本；
-- 全部入口直接读取 `orange_bike_4kg_horizontal.xml`，禁止 runtime XML 或替代几何。
+## 目录
 
-## 5. 参考轨迹的允许用途
+- `dvgc/`：环境、snapshot、策略、rollout、认证与当前主线公共实现
+- `cli/`：正式入口及仍需保留的研究构建工具
+- `scripts/`：当前流水线、状态检查和基础预检
+- `tests/`：源码合同、静态逻辑和运行时回归测试
+- `docs/EXPERIMENT_STATE.md`：当前实验状态与下一步
+- `docs/CURRENT_MAINLINE.md`：当前主线、RSI 和 snapshot 来源
+- `archive/pre-clean-20260731`：清理前完整仓库快照
 
-允许：候选范围、阶段姿态 envelope、动作方向/执行器诊断、消融参考。
-
-禁止：逐点 CoM/姿态轨迹跟踪 reward、用“接近参考”替代经验可恢复标签、用 velocity-seeded 辅助状态进行正式认证。
-
-## 6. 输出
-
-- `artifacts/*_tube.pkl`：带 Chain/Final Beta posterior 的版本化 Tube；
-- `runs/*/policy/`：不可变 policy bundle；
-- `runs/*/audit.json`：独立 Tube 质量报告；
-- `runs/natural_start_evaluation.json`：最终自然起点成功率；
-- `docs/reference_report.json`、`docs/reference_phase_envelopes.csv`：参考轨迹审计；
-- `docs/model_report.json`：模型结构审计。
+`runs/` 与 `artifacts/` 是本地训练资产，已由 `.gitignore` 排除，不应提交到源码历史。
