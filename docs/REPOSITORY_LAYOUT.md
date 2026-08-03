@@ -179,9 +179,9 @@ stable modules and tests.
 | `cli/stage_reachability_controller.py` | legacy controller | none | migration, paired start script/test | delete | superseded sequential reachability route | delete with migration cluster |
 | `cli/trajectory_mining_controller.py` | persistent legacy controller | none | paired scripts/tests | defer | its tests still carry reusable resume/bank preparation contracts | migrate those contracts first |
 | `cli/migrate_stage_reachability.py` | one-time migration | none | route-migration test | delete | completed migration; Git history preserves it | remove route-only test; compile |
-| `cli/normalize_descent_tube_v6.py` | one-time schema normalization | none | normalization test | delete | completed non-overwriting migration | preserve schema invariant test elsewhere if needed |
-| `cli/normalize_stage_entry_bank.py` | one-time schema normalization | none | normalization test | delete | completed entry-bank migration | retain shared entry-label contract test |
-| `cli/resume_roll_targeted_cycle5.py` | one-time resume entry | none | trajectory-controller test | delete | closed roll-targeted cycle | split route-only assertion |
+| `cli/normalize_descent_tube_v6.py` | one-time schema normalization | none | normalization test | defer | test still carries Final/Chain certification normalization semantics | extract stable invariant before deletion |
+| `cli/normalize_stage_entry_bank.py` | one-time schema normalization | none | normalization test | defer | test still carries entry provenance and physical-state preservation semantics | extract stable invariant before deletion |
+| `cli/resume_roll_targeted_cycle5.py` | one-time resume entry | none | deferred trajectory-controller test | defer | route test is retained with unresolved resume/bank contracts | resolve trajectory cluster first |
 | `cli/audit_descent_student_relabel_v2.py` | versioned one-off audit | none | none | delete | no reverse reference; closed Descent diagnostic | compile and targeted shared-module tests |
 | `cli/run_unified_descent_teacher_cv_v2.py` | versioned one-off run | none | none | delete | no reverse reference; completed diagnostic | compile and teacher-module tests |
 | `scripts/run_backward_bootstrap.sh` | old formal launcher | none | old README/summary and source-contract test | delete | superseded sequential shared-Actor route | switch docs; migrate shared source contracts |
@@ -193,7 +193,7 @@ stable modules and tests.
 | `scripts/start_descent_local_controller.sh` | systemd launcher | none | controller test | delete | closed local Descent route | external-unit check; split test |
 | `scripts/run_descent_tube_pipeline.sh` | controller runner | none | paired start script reached by active watchdog fallback | defer | enabled watchdog timer can transitively invoke it | migrate/disable external service first |
 | `scripts/start_descent_tube_controller.sh` | systemd launcher | none | active watchdog fallback | defer | enabled watchdog timer directly retains this fallback | migrate/disable external service first |
-| `scripts/resume_descent_tube_after_current_audit.sh` | one-time resume script | none | controller test | delete | completed audit continuation | split route-only assertion |
+| `scripts/resume_descent_tube_after_current_audit.sh` | one-time resume script | none | active-watchdog Descent-Tube controller test | defer | belongs to externally retained Descent-Tube cluster | migrate/disable external service first |
 | `scripts/run_jump_envelope_pipeline.sh` | controller runner | none | paired start script | delete | closed jump-envelope route | shell syntax and ref scan |
 | `scripts/start_jump_envelope_controller.sh` | systemd launcher | none | activator and route test | delete | closed jump-envelope route | external-unit check; split test |
 | `scripts/run_stage_reachability_pipeline.sh` | controller runner | none | paired start script | delete | superseded sequential reachability route | shell syntax and ref scan |
@@ -250,6 +250,12 @@ After deletion, the removed names occurred only in this decision ledger.
 `compileall dvgc cli` passed, and 60 focused watchdog, reachability,
 local-entry, bootstrap-preparation, lifecycle, seed, certification, repository,
 and project-state tests passed.
+
+The same host-service audit found no installed unit or live pointer for the
+old backward-bootstrap launcher, the Descent-local runner/launcher, the v2
+final-shared runner/launcher, or the Apex local funnel. Those six scripts and
+their route-only source assertions/tests were removed as a final launcher
+batch. No shared production API changed.
 
 ## 7. Explicit defer set
 
@@ -369,9 +375,9 @@ ledger classifies them as follows:
 | decision | count | interpretation |
 |---|---:|---|
 | keep | 56 | retained closure plus stable construction-lifecycle contracts |
-| delete | 30 | remaining closed-route candidates after moving unresolved clusters to defer |
+| delete | 26 | closed-route files approved and removed during implementation |
 | archive_summary | 1 | historical `PROJECT_SUMMARY.md` narrative only |
-| defer | 484 | every other baseline path, including active-watchdog and unresolved dependency clusters |
+| defer | 488 | every other baseline path, including active-watchdog and unresolved dependency clusters |
 
 These are design counts, not deletion results. A later fresh reference scan may
 move a `delete` row to `defer`; it may not move a deferred file to deletion
