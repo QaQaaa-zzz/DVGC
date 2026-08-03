@@ -86,6 +86,14 @@ The tracked systemd watchdog is **not** a retained two-phase root. It points to
 legacy `cli.pipeline_watchdog` and is deferred because external user-service
 state cannot be inferred from static imports alone.
 
+### Test root rule
+
+`pytest -q` is a verification entrypoint, but legacy route tests are not
+retained dependency roots. Only stable shared-contract tests retain production
+modules. A legacy test importing a closed-route controller does not by itself
+promote that controller into the retained closure. Shared assertions must be
+extracted before route-only tests are removed.
+
 ## 5. Retained Python closure
 
 The following 40 files are retained by a root, a runtime fingerprint, or a
@@ -148,6 +156,12 @@ file in this commit. Each row must satisfy its validation prerequisite during
 the later deletion phase. Reverse dependencies shown here are limited to the
 relevant closed-route cluster; the implementation pass must repeat the search
 immediately before deletion.
+
+Files with no references and no reusable helpers may enter deletion batch 1.
+Shared orchestration bases such as `cli/descent_local_controller.py` and
+`cli/descent_tube_controller.py` may be deleted only after shard, seed,
+OOM-backoff, failure-fuse, and certification contracts have been moved into
+stable modules and tests.
 
 | path | role | retained_root | reverse_dependencies | decision | reason | validation_required |
 |---|---|---|---|---|---|---|
@@ -257,6 +271,14 @@ shard completeness, OOM backoff, and certification seed rules. Shared portions
 must move into stable tests before route-only assertions are removed. No test is
 approved for deletion solely because its filename mentions a legacy route.
 
+### External systemd state rule
+
+No start script, watchdog helper, service, or timer may be deleted until the
+real Ubuntu host's user-service state has been inspected. An installed,
+enabled, loaded, or active service reference moves the target from `delete` to
+`defer` until the service is disabled or migrated. Inspection is read-only;
+this cleanup never stops a running user service without explicit permission.
+
 ## 8. Archive summary decision
 
 | path | role | retained_root | reverse_dependencies | decision | reason | validation_required |
@@ -289,9 +311,10 @@ After design review, implementation proceeds in focused commits:
 
 1. `docs: switch project truth to two-phase research direction`
 2. `cleanup: remove dependency-free legacy controllers and launchers`
-3. `cleanup: remove obsolete migrations and route-specific tests`
-4. `docs: archive legacy five-stage route summary`
-5. `test: validate retained repository entrypoints`
+3. `test: extract reusable legacy-route contracts`
+4. `cleanup: remove obsolete migrations and route-only tests`
+5. `docs: archive legacy five-stage route summary`
+6. `test: validate retained repository entrypoints`
 
 Before each deletion batch: repeat import/path/test/shell references. After each
 batch: run `compileall` and targeted tests with
