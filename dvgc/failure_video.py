@@ -63,6 +63,42 @@ FAILURE_SCENARIOS = {
     ),
 }
 
+FAILURE_SOURCE_HASH_FIELDS = {
+    "xml",
+    "config",
+    "reference",
+    "environment",
+    "rewards",
+    "failure_video",
+    "two_phase_runtime",
+    "two_phase_guideline",
+    "builder",
+}
+
+
+def _expected_action_indices(
+    *, scenario: str, stride: int, frame_count: int, reference_row_count: int
+) -> list[int]:
+    """Return the timing-explicit action schedule, including end clamping."""
+    contract = FAILURE_SCENARIOS[scenario]
+    if stride <= 0 or frame_count <= 0 or reference_row_count <= 0:
+        raise ValueError("Failure-video action schedule dimensions must be positive")
+    initial = (
+        contract.start_reference_index
+        + contract.initial_action_offset_ticks * stride
+    )
+    if initial < 0:
+        raise ValueError("Failure scenario cannot form its initial action history")
+    last = reference_row_count - 1
+    return [min(initial, last)] + [
+        min(
+            contract.start_reference_index
+            + (contract.first_step_action_offset_ticks + tick - 1) * stride,
+            last,
+        )
+        for tick in range(1, frame_count)
+    ]
+
 
 def _host_scalar(value: Any, cast):
     return cast(np.asarray(jax.device_get(value)))
@@ -134,9 +170,13 @@ def _capture_failure_scenario(
         wheel_roll_radius=float(env._config.wheel_roll_radius),
         nominal_base_z_ground=float(env._config.nominal_base_z_ground),
     )
-    initial_action_index = start + contract.initial_action_offset_ticks * stride
-    if initial_action_index < 0:
-        raise ValueError("Failure scenario cannot form its initial action history")
+    action_schedule = _expected_action_indices(
+        scenario=scenario,
+        stride=stride,
+        frame_count=contract.maximum_control_ticks + 1,
+        reference_row_count=len(reference.df),
+    )
+    initial_action_index = action_schedule[0]
     initial_action = jp.asarray(_reference_action(reference, initial_action_index))
     ctrl = env._action_to_ctrl(
         initial_action,
@@ -221,10 +261,7 @@ def _capture_failure_scenario(
     append(0, initial_action_index)
     executed = 0
     for tick in range(1, contract.maximum_control_ticks + 1):
-        action_index = min(
-            start + (contract.first_step_action_offset_ticks + tick - 1) * stride,
-            len(reference.df) - 1,
-        )
+        action_index = action_schedule[tick]
         state = step(state, jp.asarray(_reference_action(reference, action_index)))
         jax.block_until_ready(state)
         event = extract_two_phase_events(
@@ -262,6 +299,7 @@ def _capture_failure_scenario(
         "start_reference_index": start,
         "initial_action_reference_index": initial_action_index,
         "reference_rows_per_control_tick": stride,
+        "reference_row_count": len(reference.df),
         "environment_transitions": executed,
         "formal_training_transitions": 0,
         "terminal": terminal,
@@ -442,7 +480,11 @@ def write_failure_video_manifest(
     actual = {str(row.get("scenario", "")) for row in videos}
     if actual != expected or len(videos) != len(expected):
         raise ValueError("Failure-video manifest requires both named scenarios")
-    if set(source_hashes) != {"xml", "config", "reference"}:
+    if set(source_hashes) != FAILURE_SOURCE_HASH_FIELDS or any(
+        len(str(value)) != 64
+        or not set(str(value).lower()).issubset(set("0123456789abcdef"))
+        for value in source_hashes.values()
+    ):
         raise ValueError("Failure-video manifest source hashes are incomplete")
     required_report_fields = {
         "scenario",
@@ -468,6 +510,7 @@ def write_failure_video_manifest(
         "terminated",
         "truncated",
         "end_code",
+        "termination_reason",
         "events",
     }
     for row in videos:
@@ -516,19 +559,18 @@ def write_failure_video_manifest(
         ):
             raise ValueError("Failure-video scenario contract is incomplete")
         stride = int(summary.get("reference_rows_per_control_tick", -1))
-        initial_index = (
-            scenario.start_reference_index
-            + scenario.initial_action_offset_ticks * stride
+        reference_row_count = int(summary.get("reference_row_count", -1))
+        expected_actions = _expected_action_indices(
+            scenario=scenario.name,
+            stride=stride,
+            frame_count=len(telemetry),
+            reference_row_count=reference_row_count,
         )
-        expected_actions = [initial_index] + [
-            scenario.start_reference_index
-            + (scenario.first_step_action_offset_ticks + tick - 1) * stride
-            for tick in range(1, len(telemetry))
-        ]
         actual_actions = [int(item["action_reference_index"]) for item in telemetry]
         if (
             stride <= 0
-            or int(summary.get("initial_action_reference_index", -1)) != initial_index
+            or int(summary.get("initial_action_reference_index", -1))
+            != expected_actions[0]
             or actual_actions != expected_actions
         ):
             raise ValueError("Failure-video action schedule does not match the scenario")
@@ -549,14 +591,34 @@ def write_failure_video_manifest(
             raise ValueError("Failure-video first event ticks do not match telemetry")
         if int(summary.get("end_code", -1)) == END_PRETAKEOFF_AIRBORNE:
             raise ValueError("Retired prelaunch-airborne terminal was emitted")
+        final = telemetry[-1]
+        boolean_outcome_fields = ("terminal", "terminated", "truncated")
+        if any(
+            not isinstance(summary.get(name), bool)
+            for name in boolean_outcome_fields
+        ) or any(
+            not isinstance(final.get(name), bool)
+            for name in ("terminated", "truncated")
+        ):
+            raise ValueError("Failure-video observed outcome fields must be boolean")
+        observed_terminal = final["terminated"] or final["truncated"]
+        observed_end_code = int(final["end_code"])
+        observed_reason = END_REASON.get(
+            observed_end_code, f"unknown_{observed_end_code}"
+        )
+        if not (
+            summary["terminal"] == observed_terminal
+            and summary["terminated"] == final["terminated"]
+            and summary["truncated"] == final["truncated"]
+            and not (final["terminated"] and final["truncated"])
+            and int(summary.get("end_code", -1)) == observed_end_code
+            and summary.get("terminal_reason") == final["termination_reason"]
+            and final["termination_reason"] == observed_reason
+        ):
+            raise ValueError("Failure-video observed outcome does not match telemetry")
         if scenario.name == "full_guideline_continuation":
             if not (
-                int(summary.get("end_code", -1)) == int(telemetry[-1]["end_code"])
-                and summary.get("terminal_reason")
-                == telemetry[-1]["termination_reason"]
-                and summary.get("audit_outcome") == summary.get("terminal_reason")
-                and bool(summary.get("terminal"))
-                == bool(telemetry[-1]["terminated"] or telemetry[-1]["truncated"])
+                summary.get("audit_outcome") == summary.get("terminal_reason")
             ):
                 raise ValueError("Full-guideline observed outcome does not match")
         elif not (

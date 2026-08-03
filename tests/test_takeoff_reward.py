@@ -28,13 +28,21 @@ def _failure_signals():
     }
 
 
-def _profile(*, jump_latched, positive_pitch_count=0, wheelie_count=0):
+def _profile(
+    *,
+    jump_latched,
+    positive_pitch_count=0,
+    wheelie_count=0,
+    signal_overrides=None,
+):
     assert "jump_latched" in inspect.signature(
         compute_takeoff_reward_profile
     ).parameters
+    signals = _failure_signals()
+    signals.update(signal_overrides or {})
     return compute_takeoff_reward_profile(
         cfg=default_config(),
-        signals=_failure_signals(),
+        signals=signals,
         action=jp.zeros(4),
         phase0=jp.asarray(1),
         phase1=jp.asarray(1),
@@ -64,3 +72,13 @@ def test_takeoff_counters_and_deadlines_activate_after_latch():
     assert bool(result["positive_pitch_failure"]) is True
     assert bool(result["wheelie_failure"]) is True
     assert bool(result["missed_wheel_clearance_deadline"]) is True
+
+
+def test_missed_liftoff_deadline_activates_only_after_latch():
+    overrides = {"dual_wheel_liftoff": jp.asarray(False)}
+
+    before = _profile(jump_latched=False, signal_overrides=overrides)
+    after = _profile(jump_latched=True, signal_overrides=overrides)
+
+    assert bool(before["missed_liftoff_deadline"]) is False
+    assert bool(after["missed_liftoff_deadline"]) is True

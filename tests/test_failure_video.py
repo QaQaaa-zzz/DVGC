@@ -8,6 +8,7 @@ from dvgc.config import file_sha256, load_config
 from dvgc.env import END_PRETAKEOFF_AIRBORNE, END_ROLL_LIMIT, OrangeBikeDVGC
 from dvgc.failure_video import (
     _capture_failure_scenario,
+    _expected_action_indices,
     render_failure_archive,
     render_failure_trace,
     write_failure_video_manifest,
@@ -19,6 +20,26 @@ from dvgc.two_phase_semantics import ApexBandThresholds, RecoveryThresholds
 
 _CACHED_RUNTIME = None
 _CACHED_STEP = None
+
+
+def _source_hashes():
+    return {
+        name: character * 64
+        for name, character in zip(
+            (
+                "xml",
+                "config",
+                "reference",
+                "environment",
+                "rewards",
+                "failure_video",
+                "two_phase_runtime",
+                "two_phase_guideline",
+                "builder",
+            ),
+            "123456789",
+        )
+    }
 
 
 def _runtime():
@@ -214,11 +235,7 @@ def test_manifest_rejects_unclosed_fake_video_reports(tmp_path):
         write_failure_video_manifest(
             tmp_path / "failure_video_manifest.json",
             videos,
-            source_hashes={
-                "xml": "a" * 64,
-                "config": "b" * 64,
-                "reference": "c" * 64,
-            },
+            source_hashes=_source_hashes(),
         )
 
 
@@ -232,7 +249,7 @@ def test_archive_renders_both_real_failure_scenarios(tmp_path):
         thresholds,
         output_dir=tmp_path,
         seed=44_000,
-        source_hashes={"xml": "a" * 64, "config": "b" * 64, "reference": "c" * 64},
+        source_hashes=_source_hashes(),
         width=320,
         height=180,
         fps=20,
@@ -241,6 +258,7 @@ def test_archive_renders_both_real_failure_scenarios(tmp_path):
     assert manifest["status"] == "pass"
     assert sum(row["environment_transitions"] for row in manifest["videos"]) == 25
     assert manifest["environment_transitions"] == 25
+    assert set(manifest["source_hashes"]) == set(_source_hashes())
     for scenario in (
         "full_guideline_continuation",
         "launch_history_window_latch",
@@ -262,7 +280,7 @@ def test_manifest_rejects_action_schedule_tampering(tmp_path):
         thresholds,
         output_dir=tmp_path,
         seed=44_000,
-        source_hashes={"xml": "a" * 64, "config": "b" * 64, "reference": "c" * 64},
+        source_hashes=_source_hashes(),
         width=320,
         height=180,
         fps=20,
@@ -276,3 +294,52 @@ def test_manifest_rejects_action_schedule_tampering(tmp_path):
             videos,
             source_hashes=manifest["source_hashes"],
         )
+
+
+def test_manifest_rejects_launch_history_outcome_tampering(tmp_path):
+    _, env, reference, geometry, thresholds = _runtime()
+    manifest = render_failure_archive(
+        env,
+        reference,
+        geometry,
+        thresholds,
+        output_dir=tmp_path,
+        seed=44_000,
+        source_hashes=_source_hashes(),
+        width=320,
+        height=180,
+        fps=20,
+    )
+    videos = manifest["videos"]
+    launch = next(
+        row for row in videos if row["scenario"] == "launch_history_window_latch"
+    )
+    launch["summary"].update(
+        {
+            "terminal": True,
+            "terminated": True,
+            "truncated": False,
+            "end_code": END_ROLL_LIMIT,
+            "terminal_reason": "roll_limit",
+        }
+    )
+
+    with np.testing.assert_raises_regex(ValueError, "observed outcome"):
+        write_failure_video_manifest(
+            tmp_path / "tampered-outcome.json",
+            videos,
+            source_hashes=manifest["source_hashes"],
+        )
+
+
+def test_expected_action_schedule_clamps_at_reference_end():
+    indices = _expected_action_indices(
+        scenario="full_guideline_continuation",
+        stride=10,
+        frame_count=101,
+        reference_row_count=822,
+    )
+
+    assert indices[:3] == [0, 10, 20]
+    assert indices[82] == 820
+    assert indices[83:] == [821] * 18

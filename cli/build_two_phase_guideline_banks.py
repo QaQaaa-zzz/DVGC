@@ -222,10 +222,21 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         apex=ApexBandThresholds(**selected_thresholds["apex"]),
         recovery=RecoveryThresholds(**selected_thresholds["recovery"]),
     )
+    producer_sources = {
+        "environment": Path("dvgc/env.py"),
+        "rewards": Path("dvgc/rewards.py"),
+        "failure_video": Path("dvgc/failure_video.py"),
+        "two_phase_runtime": Path("dvgc/two_phase_runtime.py"),
+        "two_phase_guideline": Path("dvgc/two_phase_guideline.py"),
+        "builder": Path(__file__),
+    }
+    producer_hashes = {
+        name: file_sha256(path) for name, path in producer_sources.items()
+    }
     source_fingerprint = hashlib.sha256(
-        Path("dvgc/two_phase_runtime.py").read_bytes()
-        + Path("dvgc/two_phase_guideline.py").read_bytes()
-        + Path(__file__).read_bytes()
+        "".join(
+            f"{name}:{producer_hashes[name]}\n" for name in sorted(producer_hashes)
+        ).encode("ascii")
     ).hexdigest()
     env = OrangeBikeDVGC(cfg, snapshot_bank=SnapshotBank())
     event_report = run_guideline_event_trace(
@@ -250,6 +261,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                     "xml": file_sha256(cfg.xml_path),
                     "config": file_sha256(args.config),
                     "reference": file_sha256(args.reference),
+                    **producer_hashes,
                 },
             )
             video_status = {

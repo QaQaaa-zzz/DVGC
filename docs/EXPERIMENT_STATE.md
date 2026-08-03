@@ -24,6 +24,8 @@ experts, feasibility models, learned soft Tubes, or unified two-phase policy.
 - Gate B baseline: `5331896bee08a920321a9b39b496f66c7b9b0879`
 - Gate B implementation head: `387ae59`
 - Failure-video audit implementation head: `5b8fe73`
+- Prelaunch-continuation design: `bac2a93`, `691ad8e`, `ec90d6d`
+- Prelaunch-continuation implementation: `23a746e`, `6ed2cdc`, `0b86435`
 - Gate A implementation: `5e5da3b`
 - Cleanup baseline: `main@b7bb815`
 - Dependency design: `27f0aa3`
@@ -34,9 +36,9 @@ experts, feasibility models, learned soft Tubes, or unified two-phase policy.
 ## Last validated gate
 
 - Current reusable runtime gate: PASS at source fingerprint
-  `186dcfa5383632a4227bc0e56fe0d7df98350b46bec5d77c1f2e9567996e1345`.
+  `fb5839508d93696bc782c87ebf218c622c8fd8955a4da682e1bc228a88ce0fc7`.
 - It used the fresh ignored work directory
-  `runs/runtime_gate_failure_video_exact_closure_20260803/` and took 99.345
+  `runs/runtime_gate_prelaunch_final_20260803/` and took 95.976
   seconds.
 - The gate's 64+32 = 96 transitions are compile/update/resume smoke evidence
   only, not expert, pilot, or formal training.
@@ -44,7 +46,8 @@ experts, feasibility models, learned soft Tubes, or unified two-phase policy.
 ## Current active run
 
 None. Gate B stopped at its fixed guideline event gate. The authoritative
-event probe used 12 environment transitions; the runtime integrity gate used
+event probe used 17 environment transitions; its two outcome-video diagnostics
+used 25 transitions in total. The runtime integrity gate used
 96 smoke transitions. Expert, pilot, learnability, and formal training
 transitions remain exactly 0.
 
@@ -91,17 +94,20 @@ geometry manifest, representative host `mj_geomDistance` cross-audit passed,
 and the fixed threshold manifest was produced reproducibly at:
 
 ```text
-runs/two_phase/gate_b_20260803_authoritative_pause/threshold_manifest.json
-file SHA-256: c2a1cf6b17910d8912b5b9de282a4ddfe601467c77f267780d22b068451b0e8f
-canonical hash: f8b06896f46c3da68c861058e203fb25752b60a581539185f7012fd97bee493a
+runs/two_phase/gate_b_20260803_prelaunch_continuation/threshold_manifest.json
+file SHA-256: eb7b517e5fb0bd4d49f90fd93f9223d4056718f9329e07b5400c35aa49119387
+canonical hash: 2886802483c77a6d13817cbce889e9fec24807be2b536ba1429cdb7c6aeff900
 ```
 
 The real guideline event trace began from a MuJoCo-audited grounded state
-(wheel support present, no body-terrain contact), then terminated after 12
-control ticks with `end_code=9` (`prelaunch_airborne`). All ten required events
-were missing; Apex consecutive width and stable-recovery hold were both 0.
-The open-loop sequence becomes airborne before the legal jump-window entry, so
-the CLI stopped before bank admission. Consequently:
+(wheel support present, no body-terrain contact). Early airborne was retained
+as telemetry and did not terminate the rollout. The environment's monotonic
+jump latch became true on the terminal tick, but the rollout then triggered the
+unchanged roll safety limit after 17 control ticks with `end_code=4`
+(`roll_limit`). The external two-phase adapter does not admit an event on a
+physical-failure tick, so all ten required events remained missing; Apex
+consecutive width and stable-recovery hold were both 0. The CLI stopped before
+bank admission. Consequently:
 
 - no authoritative Phase U bank was written;
 - no authoritative Phase D bank was written;
@@ -120,19 +126,31 @@ the original physical failure.
 The current ignored audit directory is:
 
 ```text
-runs/two_phase/gate_b_20260803_failure_videos_exact_timing/
+runs/two_phase/gate_b_20260803_prelaunch_continuation/failure_videos/
 ```
 
-- `full_guideline_prelaunch_airborne.mp4`: 190,794 bytes, SHA-256
-  `81ef246869bb585c8ea00ef00aec30af1060d062c123cc16788234c3272c7b48`,
-  12 environment transitions, terminal `prelaunch_airborne`.
-- `full_guideline_prelaunch_airborne.states.npz`: SHA-256
-  `580153b43956eae2e2b4f43cad6a757b581e3cdd966e88befa3e308af5796aee`.
-- `launch_history_airborne_before_window.mp4`: 158,374 bytes, SHA-256
-  `dc18b0af241b320a811723a8fc366e74389f74106f70813b1dd5d5d6a6117954`,
-  8 environment transitions, nonterminal contract failure.
-- `launch_history_airborne_before_window.states.npz`: SHA-256
+- `full_guideline_continuation.mp4`: 238,955 bytes, SHA-256
+  `08df9e45f7c711ed63cade78dd8aa8d25e5da4e384a55cf9723b7951a45a0ce5`,
+  17 environment transitions, terminal `roll_limit` (`end_code=4`).
+- `full_guideline_continuation.states.npz`: SHA-256
+  `2109bacfbecdaabdf63d833e61a574be03ea0bf2e2347fd5641b9548ee267823`.
+- `launch_history_window_latch.mp4`: 157,826 bytes, SHA-256
+  `1ea9ebb58a438d922cf7f2c2144f9f8385ea2e03b25532f0965e9e1c3bb62e02`,
+  8 environment transitions, nonterminal outcome diagnostic.
+- `launch_history_window_latch.states.npz`: SHA-256
   `77d1a0dd70b3d07202f87c73e86a6c84a1f7b8ba1a758c8ab1851dbaf2a66a96`.
+- `failure_video_manifest.json`: SHA-256
+  `e8f4fc62f7370b165da4c56a4e895d6f8cb5e617aaaeac67940584ecef742e84`.
+
+The run was executed at producer HEAD
+`0b8643521797eac2d38ff52b8f108cda5fb6d283`. Because the pause-path manifest
+version used by that run recorded only input hashes, the ignored
+`producer_provenance.json` is an explicitly labeled post-run execution record
+that binds that HEAD's env, reward, failure-video, runtime, guideline, and
+builder hashes to the event-report, threshold-manifest, video-manifest, and
+video-status hashes. It is not presented as an in-run signed record. The
+current builder closes these producer hashes directly in all future pause
+manifests.
 
 The launch-history audit uses the formal timing contract exactly: state origin
 83, initial `ctrl`/`last_action` from reference index 73, then control actions
@@ -140,21 +158,28 @@ The launch-history audit uses the formal timing contract exactly: state origin
 one-action-shifted schedule and is superseded; it is not evidence.
 
 At the first root-position window sample (tick 6), the host contact audit still
-sees one wheel contact, but the deployable IMU/support estimator is false and
-the jump latch remains false. The frontmost-geometry event latch follows at
-tick 7 and liftoff is observed at tick 8. Both contact signals are shown
-independently in the overlay; the failure is not described as simple geometric
-loss of all contact.
+sees one wheel contact, but the deployable IMU/support estimator is false. The
+root-position window event enters the legal window and the environment jump
+latch becomes true without requiring wheel support; it remains true after the
+window.
+Liftoff is observed at tick 7. Both contact signals are shown independently in
+the overlay. This diagnostic is nonterminal and does not assert Phase U success.
 
 Final source validation on 2026-08-03:
 
 - `python -m compileall dvgc cli`: passed.
-- Gate A/B targeted files: 229 passed.
-- Failure-video/guideline/round-trip targeted files: 57 passed.
-- Full pytest: 791 passed, with one existing JAXopt deprecation warning.
-- `bash scripts/local_preflight.sh`: passed and repeated 791 tests.
+- Prelaunch semantics/reward/failure/guideline/round-trip targeted files:
+  115 passed.
+- Full pytest: 811 passed, with one existing JAXopt deprecation warning.
+- `bash scripts/local_preflight.sh`: passed and repeated 811 tests.
 - Fresh runtime gate: PASS, 96 smoke transitions.
-- Guideline event audit: 12 environment transitions, `gate_pause`.
+- Three source-fingerprint refreshes were required during review closure: 288
+  cumulative engineering smoke transitions this round, all excluded from the
+  formal-training total.
+- Guideline event audit: 17 environment transitions, `gate_pause` at retained
+  `roll_limit`.
+- Outcome-video diagnostics: 25 environment transitions, rendering PASS and
+  original Gate status still `gate_pause`.
 - Formal training transitions: 0.
 
 Legacy five-stage experimental outcomes are not evidence for the dynamic
@@ -162,11 +187,13 @@ two-phase method and must not be promoted retrospectively.
 
 ## Known blockers
 
-The Gate B physical blocker is the mismatch between the guideline open-loop
-sequence and the authoritative 4 kg, +/-50 N m model: the robot becomes
-airborne before the legal jump-window entry. The approved contract forbids
-lowering physical thresholds, substituting legacy phases, or searching rollout
-offsets until the trace passes.
+The Gate B physical blocker is now the retained roll safety limit: after early
+airborne continuation and legal-window latching, the fixed guideline open-loop
+sequence reaches `END_ROLL_LIMIT=4` before a complete Apex/recovery event
+sequence. Early airborne itself is no longer a terminal cause and does not
+grant Phase U success. The approved one-run contract forbids moving the jump
+window, changing actions/thresholds/seed/model, lowering Apex or recovery
+standards, or automatically searching alternatives after this pause.
 
 There are still no authoritative Gate B Phase U/Phase D banks, trained/frozen
 phase experts, continuation-labeled two-phase snapshots, `V_up`/`V_down`,
@@ -177,7 +204,7 @@ evaluation. The watchdog is disabled/inactive, its service is inactive, and
 ## Next permitted action
 
 Stop at Gate B `gate_pause`. The next permitted action is a separately reviewed
-decision about the non-expert guideline/controller mismatch. Gate C, expert
+decision about the fixed guideline's roll-limit outcome. Gate C, expert
 training, snapshot labeling, feasibility training, soft-Tube construction, and
 unified PPO are not authorized from this marker.
 
