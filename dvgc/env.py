@@ -1581,7 +1581,11 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         valid_landing = jp.where(jp.asarray(self._imu_only), imu_impact, contact["wheel_top"] | (jp.asarray(self._use_imu_fallback) & imu_impact))
         wheel_any = jp.where(jp.asarray(self._imu_only), ~imu_airborne, contact["wheel_any"])
 
-        takeoff_event = (phase0 == STAGE_ID["approach"]) & in_takeoff_window & wheel_any & (vx >= 0.90)
+        takeoff_event = (
+            (phase0 == STAGE_ID["approach"])
+            & in_takeoff_window
+            & (vx >= 0.90)
+        )
         jump_signal_latched=(state.info["jump_signal_latched"]>0) | takeoff_event
         jump_window_start_x=jp.where(takeoff_event,x,state.info["jump_window_start_x"])
         curriculum=jp.clip(float(cfg.stage_curriculum_scale),0.0,1.0)
@@ -1720,8 +1724,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         pitch_bad = jp.abs(pitch) > _deg2rad(cfg.max_pitch_deg)
         backward = x < state.info["start_x"] - cfg.max_backward_distance
         back_edge = (had_landing > 0) & (x >= cfg.step_back_x - cfg.platform_back_edge_diagnostic_margin)
-        prelaunch_fail = prelaunch_airborne >= int(cfg.pretakeoff_airborne_fail_steps)
-        hard_failure = contact["prohibited"] | invalid_fail | roll_bad | pitch_bad | backward | back_edge | prelaunch_fail | takeoff_task_failure | nonfinite
+        hard_failure = contact["prohibited"] | invalid_fail | roll_bad | pitch_bad | backward | back_edge | takeoff_task_failure | nonfinite
         entry_pose_ok=(jp.abs(roll)<=_deg2rad(cfg.max_roll_deg)) & (jp.abs(pitch)<=_deg2rad(min(float(cfg.max_pitch_deg),35.0))) & (gyro_norm<=float(cfg.recovery_max_angvel))
         current_physical=self._physical_feature(data);previous_physical=self._physical_feature(state.data)
         current_support_z=(current_physical-self._stage_support_center)/self._stage_support_scale
@@ -1786,7 +1789,6 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         code = jp.where(takeoff_profile["missed_liftoff_deadline"] & ~recovery, END_TAKEOFF_MISSED_LIFTOFF_DEADLINE, code)
         code = jp.where(takeoff_profile["wheelie_failure"] & ~recovery, END_TAKEOFF_WHEELIE_FAILURE, code)
         code = jp.where(takeoff_profile["positive_pitch_failure"] & ~recovery, END_TAKEOFF_POSITIVE_PITCH_FAILURE, code)
-        code = jp.where(prelaunch_fail & ~recovery, END_PRETAKEOFF_AIRBORNE, code)
         code = jp.where(back_edge & ~recovery, END_PLATFORM_BACK_EDGE, code)
         code = jp.where(backward & ~recovery, END_BACKWARD, code)
         code = jp.where(pitch_bad & ~recovery, END_PITCH_LIMIT, code)
