@@ -171,7 +171,7 @@ stable modules and tests.
 | `cli/activate_trajectory_mining_pipeline.py` | legacy activator | none | none | delete | closed trajectory-mining route | repeat refs; targeted tests |
 | `cli/decoupled_bootstrap_controller.py` | persistent legacy controller | none | paired start/run scripts | delete | superseded bootstrap controller | delete route cluster; targeted tests |
 | `cli/descent_envelope_controller.py` | persistent legacy controller | none | trajectory controller, paired scripts/tests | delete | closed Descent-envelope controller | extract seed-contract test first |
-| `cli/descent_local_controller.py` | shared base for old controllers | none | old controller cluster and tests | delete | only closed controller orchestration depends on it | extract shard/OOM utilities or tests first |
+| `cli/descent_local_controller.py` | shared base for old controllers | none | active-watchdog Descent-Tube path and old controller cluster | defer | stable helpers extracted, but enabled watchdog transitively imports this base | migrate/disable external service first |
 | `cli/descent_tube_controller.py` | persistent legacy controller | none | old controller cluster, tests, active-watchdog fallback | defer | active watchdog can reach its start/run route | migrate/disable external service, then re-audit contracts |
 | `cli/jump_envelope_controller.py` | persistent legacy controller | none | stage controller and route test | delete | closed jump-envelope route | delete cluster; targeted tests |
 | `cli/stage_next_bootstrap_controller.py` | legacy controller | none | paired start script/test | delete | superseded stage-next bootstrap | targeted route tests |
@@ -249,7 +249,7 @@ shared functions, internal imports, dynamic edges, or unresolved orchestration.
 | `dvgc/centroidal.py` | centroidal diagnostics | no | Apex audits and test | defer | possible reusable physics diagnostic | targeted test and method review |
 | `dvgc/certification_merge.py` | certification merge utility | no | merge CLI and pipeline test | defer | generic certification capability | decide stable evaluation boundary |
 | `dvgc/certifier_calibration.py` | calibration utility | no | calibration CLI/test | defer | generic evaluation capability | targeted calibration tests |
-| `dvgc/construction_lifecycle.py` | resumable construction state | no | controllers and test | defer | reusable lifecycle boundary unclear | migrate or fold only with API tests |
+| `dvgc/construction_lifecycle.py` | stable construction/orchestration contracts | shared-contract tests | controllers and lifecycle tests | keep | owns shard, OOM, failure-fuse, liveness, resume, and provenance contracts | lifecycle and affected-controller tests |
 | `dvgc/continuous.py` | continuous search/rollout utility | no | searches and test | defer | dynamic runtime behavior | targeted runtime review |
 | `dvgc/delay_probe.py` | snapshot-delay audit utility | no | timing audits | defer | snapshot semantics are protected | snapshot audit tests |
 | `dvgc/descent_balanced.py` | balanced training records | no | old pilot and test | defer | possible distillation reuse | data-contract review |
@@ -290,6 +290,29 @@ shard completeness, OOM backoff, and certification seed rules. Shared portions
 must move into stable tests before route-only assertions are removed. No test is
 approved for deletion solely because its filename mentions a legacy route.
 
+### Shared-contract extraction record
+
+On 2026-08-03, shard completeness, OOM backoff/detection, failure-fuse
+normalization, and lock-liveness behavior moved from legacy controller
+definitions into `dvgc.construction_lifecycle`. Stable lifecycle tests were
+written first and failed on the missing API before the behavior-preserving
+move. Legacy controllers now import those helpers from the stable module.
+
+The remaining requested contracts already have stable API-level coverage:
+
+- exact seed-set disjointness: `dvgc.seed_registry` and
+  `tests/test_seed_registry.py`;
+- certification seed separation: `dvgc.certification` and
+  `tests/test_certification.py`;
+- resume/provenance idempotence: `dvgc.construction_lifecycle` lifecycle tests;
+- non-overwrite policy ownership: `dvgc.experts`/`dvgc.policy` tests;
+- snapshot and bank provenance: `dvgc.snapshot_provenance`, `dvgc.bank`, and
+  their stable tests.
+
+Static compilation passed. The 66 affected lifecycle/controller, seed,
+certification, audit-manifest, expert, bank, and snapshot-provenance tests
+passed; the only warning was the existing third-party JAXopt deprecation.
+
 ### External systemd state rule
 
 No start script, watchdog helper, service, or timer may be deleted until the
@@ -324,8 +347,8 @@ ledger classifies them as follows:
 
 | decision | count | interpretation |
 |---|---:|---|
-| keep | 55 | 40-file Python closure, two package markers, stable preflight, packaging/runtime inputs, authoritative XML and meshes |
-| delete | 37 | first-round closed-route candidates listed individually above |
+| keep | 56 | retained closure plus stable construction-lifecycle contracts |
+| delete | 36 | closed-route candidates not retained by shared APIs or external service state |
 | archive_summary | 1 | historical `PROJECT_SUMMARY.md` narrative only |
 | defer | 478 | every other baseline path, including six routes retained by active watchdog state |
 
