@@ -170,14 +170,14 @@ stable modules and tests.
 | `cli/activate_jump_envelope_pipeline.py` | legacy activator | none | jump-envelope route test | delete | closed jump-envelope controller activation | remove/split route test; compile |
 | `cli/activate_trajectory_mining_pipeline.py` | legacy activator | none | none | delete | closed trajectory-mining route | repeat refs; targeted tests |
 | `cli/decoupled_bootstrap_controller.py` | persistent legacy controller | none | paired start/run scripts | delete | superseded bootstrap controller | delete route cluster; targeted tests |
-| `cli/descent_envelope_controller.py` | persistent legacy controller | none | trajectory controller, paired scripts/tests | delete | closed Descent-envelope controller | extract seed-contract test first |
+| `cli/descent_envelope_controller.py` | persistent legacy controller | none | deferred trajectory controller, paired scripts/tests | defer | still imported by deferred trajectory-mining route | resolve that route before deletion |
 | `cli/descent_local_controller.py` | shared base for old controllers | none | active-watchdog Descent-Tube path and old controller cluster | defer | stable helpers extracted, but enabled watchdog transitively imports this base | migrate/disable external service first |
 | `cli/descent_tube_controller.py` | persistent legacy controller | none | old controller cluster, tests, active-watchdog fallback | defer | active watchdog can reach its start/run route | migrate/disable external service, then re-audit contracts |
 | `cli/jump_envelope_controller.py` | persistent legacy controller | none | stage controller and route test | delete | closed jump-envelope route | delete cluster; targeted tests |
 | `cli/stage_next_bootstrap_controller.py` | legacy controller | none | paired start script/test | delete | superseded stage-next bootstrap | targeted route tests |
-| `cli/stage_next_v3_controller.py` | versioned legacy controller | none | paired start script/test | delete | superseded five-stage controller | remove/split route-only test |
+| `cli/stage_next_v3_controller.py` | versioned legacy controller | none | paired start script/test and dynamic helpers | defer | broad subprocess/test closure is not yet isolated | complete dependency migration first |
 | `cli/stage_reachability_controller.py` | legacy controller | none | migration, paired start script/test | delete | superseded sequential reachability route | delete with migration cluster |
-| `cli/trajectory_mining_controller.py` | persistent legacy controller | none | paired scripts/tests | delete | closed roll-targeted route | preserve generic bank checks if needed |
+| `cli/trajectory_mining_controller.py` | persistent legacy controller | none | paired scripts/tests | defer | its tests still carry reusable resume/bank preparation contracts | migrate those contracts first |
 | `cli/migrate_stage_reachability.py` | one-time migration | none | route-migration test | delete | completed migration; Git history preserves it | remove route-only test; compile |
 | `cli/normalize_descent_tube_v6.py` | one-time schema normalization | none | normalization test | delete | completed non-overwriting migration | preserve schema invariant test elsewhere if needed |
 | `cli/normalize_stage_entry_bank.py` | one-time schema normalization | none | normalization test | delete | completed entry-bank migration | retain shared entry-label contract test |
@@ -187,8 +187,8 @@ stable modules and tests.
 | `scripts/run_backward_bootstrap.sh` | old formal launcher | none | old README/summary and source-contract test | delete | superseded sequential shared-Actor route | switch docs; migrate shared source contracts |
 | `scripts/run_decoupled_bootstrap_pipeline.sh` | controller runner | none | paired start script | delete | closed decoupled bootstrap route | shell syntax and ref scan |
 | `scripts/start_decoupled_bootstrap_controller.sh` | systemd launcher | none | old controller metadata | delete | closed decoupled bootstrap route | external-unit check before implementation |
-| `scripts/run_descent_envelope_pipeline.sh` | controller runner | none | paired start script | delete | closed Descent-envelope route | shell syntax and ref scan |
-| `scripts/start_descent_envelope_controller.sh` | systemd launcher | none | activator and route test | delete | closed Descent-envelope route | external-unit check; split test |
+| `scripts/run_descent_envelope_pipeline.sh` | controller runner | none | deferred trajectory-mining controller | defer | retained transitively by deferred controller route | resolve that route first |
+| `scripts/start_descent_envelope_controller.sh` | systemd launcher | none | deferred controller/test closure | defer | kept with unresolved Descent-envelope cluster | resolve cluster first |
 | `scripts/run_descent_local_pipeline.sh` | controller runner | none | paired start script | delete | closed local Descent route | shell syntax and ref scan |
 | `scripts/start_descent_local_controller.sh` | systemd launcher | none | controller test | delete | closed local Descent route | external-unit check; split test |
 | `scripts/run_descent_tube_pipeline.sh` | controller runner | none | paired start script reached by active watchdog fallback | defer | enabled watchdog timer can transitively invoke it | migrate/disable external service first |
@@ -198,16 +198,18 @@ stable modules and tests.
 | `scripts/start_jump_envelope_controller.sh` | systemd launcher | none | activator and route test | delete | closed jump-envelope route | external-unit check; split test |
 | `scripts/run_stage_reachability_pipeline.sh` | controller runner | none | paired start script | delete | superseded sequential reachability route | shell syntax and ref scan |
 | `scripts/start_stage_reachability_controller.sh` | systemd launcher | none | migration/controller metadata | delete | superseded sequential reachability route | delete migration cluster |
-| `scripts/run_trajectory_mining_pipeline.sh` | controller runner | none | paired start script | delete | closed trajectory-mining route | shell syntax and ref scan |
-| `scripts/start_trajectory_mining_controller.sh` | systemd launcher | none | activator and route test | delete | closed trajectory-mining route | external-unit check; split test |
+| `scripts/run_trajectory_mining_pipeline.sh` | controller runner | none | paired start script | defer | controller contracts are not yet migrated | migrate contracts first |
+| `scripts/start_trajectory_mining_controller.sh` | systemd launcher | none | controller route test | defer | kept with unresolved trajectory-mining cluster | migrate contracts first |
 | `scripts/start_stage_next_bootstrap_controller.sh` | versioned controller launcher | none | old controller/test | delete | superseded stage-next route | external-unit check; targeted test |
-| `scripts/start_stage_next_v3_controller.sh` | versioned controller launcher | none | old controller/test | delete | superseded five-stage route | external-unit check; targeted test |
+| `scripts/start_stage_next_v3_controller.sh` | versioned controller launcher | none | old controller/test | defer | kept with unresolved Stage-Next-v3 controller closure | complete dependency migration first |
 | `scripts/start_final_shared_v2_followons.sh` | old final-shared launcher | none | old final pipeline/test | delete | superseded v2 follow-on; draft branch independently removed it | split route-only test; shell syntax |
 | `scripts/run_final_shared_policy_pipeline.sh` | five-stage consolidation runner | none | old launcher/tests | delete | superseded five-stage unified-RSI controller | retain reusable CLIs; remove route contract tests |
 | `scripts/run_final_shared_jel_audit.sh` | five-stage 4/8/32 audit runner | none | active-pointer launcher and tests | defer | enabled watchdog can invoke the active-pointer launcher that calls it | migrate/disable external service first |
 | `scripts/run_corrected_apex_unified_rsi_pipeline.sh` | corrected old pilot runner | none | active-pointer launcher/test | defer | enabled watchdog can invoke its launcher | migrate/disable external service first |
 | `scripts/start_corrected_apex_unified_rsi_followons.sh` | old pilot/JEL launcher | none | `runs/ACTIVE_PIPELINE.json`, enabled watchdog | defer | live external pointer names this launcher | migrate/disable external service first |
 | `scripts/run_apex_reachability_funnel.sh` | old 4/8/32 local funnel | none | route contract test | delete | hard funnel is not the universal soft-Tube requirement | retain reusable cost/selection code if independently used |
+| `tests/test_jump_envelope_controller.py` | jump-envelope route test | none | none | delete | asserts only removed controller assets and activator text | run shared policy/provenance tests |
+| `tests/test_stage_route_migration.py` | completed migration route test | none | none | delete | asserts only removed migration/controller route | run stable lifecycle and stage-reachability tests |
 
 The old draft branch `agent/streamline-current-mainline@fd2bf3f` was inspected,
 not merged. Its README/method text still describes the superseded five-stage
@@ -234,6 +236,20 @@ were bound to immutable one-off run paths and protocols. They were deleted as
 one dependency-free batch. `compileall dvgc cli` passed, and the 15 focused
 Descent probe/supervised/teacher plus repository/project contract tests passed.
 The only output was an existing third-party JAXopt deprecation warning.
+
+### Closed-route cluster deletion record
+
+On 2026-08-03, a fresh reference and installed-unit audit found no retained
+consumer for the Jump-Envelope/Stage-Reachability, Decoupled-Bootstrap, or
+Stage-Next-Bootstrap routes. The 13 controller, activator, migration, runner,
+and launcher files in those clusters were deleted together with their two
+route-only tests. One source-text assertion for the removed Stage-Next launcher
+was removed from the otherwise retained watchdog test.
+
+After deletion, the removed names occurred only in this decision ledger.
+`compileall dvgc cli` passed, and 60 focused watchdog, reachability,
+local-entry, bootstrap-preparation, lifecycle, seed, certification, repository,
+and project-state tests passed.
 
 ## 7. Explicit defer set
 
@@ -348,9 +364,9 @@ ledger classifies them as follows:
 | decision | count | interpretation |
 |---|---:|---|
 | keep | 56 | retained closure plus stable construction-lifecycle contracts |
-| delete | 36 | closed-route candidates not retained by shared APIs or external service state |
+| delete | 30 | remaining closed-route candidates after moving unresolved clusters to defer |
 | archive_summary | 1 | historical `PROJECT_SUMMARY.md` narrative only |
-| defer | 478 | every other baseline path, including six routes retained by active watchdog state |
+| defer | 484 | every other baseline path, including active-watchdog and unresolved dependency clusters |
 
 These are design counts, not deletion results. A later fresh reference scan may
 move a `delete` row to `defer`; it may not move a deferred file to deletion
