@@ -88,7 +88,9 @@ def source_fingerprint(root: Path) -> str:
         "dvgc/action_mapping.py", "dvgc/bank.py", "dvgc/config.py",
         "dvgc/env.py", "dvgc/experts.py", "dvgc/composite.py", "dvgc/expert_training.py", "dvgc/curriculum.py", "dvgc/model.py", "dvgc/policy.py",
         "dvgc/rewards.py", "dvgc/descent_local.py", "dvgc/rollout.py", "dvgc/runtime.py", "dvgc/wrappers.py",
+        "dvgc/two_phase_runtime.py", "dvgc/two_phase_guideline.py", "dvgc/two_phase_roundtrip.py",
         "dvgc/signals.py", "cli/train.py", "cli/train_expert.py", "cli/train_descent_local_block.py",
+        "cli/build_two_phase_guideline_banks.py",
         "cli/certify_descent_entries.py", "cli/evaluate_composite.py", "cli/runtime_gate.py",
         "pyproject.toml", "requirements.txt",
     )

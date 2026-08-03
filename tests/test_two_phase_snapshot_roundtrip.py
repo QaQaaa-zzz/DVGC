@@ -26,6 +26,7 @@ from dvgc.two_phase_roundtrip import (
 )
 from dvgc.two_phase_runtime import TwoPhaseThresholds, build_two_phase_geometry
 from dvgc.two_phase_semantics import ApexBandThresholds, RecoveryThresholds
+from cli.runtime_gate import source_fingerprint
 
 
 def _provenance(cfg):
@@ -154,6 +155,29 @@ def test_representative_selection_requires_apex_thickness_and_boundaries():
     selected = select_roundtrip_representatives(up, down)
 
     assert set(selected) == {"up_boundary_front", "up_boundary_back", "down_pre", "down_nearest", "down_post", "down_boundary"}
+
+
+@pytest.mark.parametrize(
+    "relative",
+    [
+        "dvgc/two_phase_runtime.py",
+        "dvgc/two_phase_guideline.py",
+        "dvgc/two_phase_roundtrip.py",
+        "cli/build_two_phase_guideline_banks.py",
+    ],
+)
+def test_runtime_fingerprint_binds_each_gate_b_dynamic_source(tmp_path, relative):
+    gate = tmp_path / "cli/runtime_gate.py"
+    gate.parent.mkdir(parents=True)
+    gate.write_text("gate", encoding="utf-8")
+    target = tmp_path / relative
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("before", encoding="utf-8")
+    before = source_fingerprint(tmp_path)
+
+    target.write_text("after", encoding="utf-8")
+
+    assert source_fingerprint(tmp_path) != before
 
 
 def test_real_roundtrip_uses_only_explicit_restore_and_compares_full_state(monkeypatch):

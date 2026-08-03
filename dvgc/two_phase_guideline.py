@@ -17,13 +17,17 @@ from .bank import SnapshotBank
 from .config import STAGE_ID
 from .feasibility import validate_phase_snapshot
 from .reference import ReferenceAnchors, ReferenceTrajectory
+from .reset_geometry import GroundSupportSolver
 from .two_phase_runtime import (
     EVENT_NAMES,
+    TwoPhaseThresholds,
     TwoPhaseGeometry,
     collision_geom_support_bounds,
     extract_apex_band_signals,
     extract_recovery_signals,
+    extract_two_phase_events,
     full_structure_metrics,
+    initial_two_phase_event_state,
 )
 from .two_phase_semantics import ApexBandThresholds, RecoveryThresholds
 
@@ -351,21 +355,30 @@ def reconstruct_guideline_state(
     reference_index: int,
     *,
     wheel_roll_radius: float,
+    nominal_base_z_ground: float,
 ) -> ReconstructedGuidelineState:
-    """Reconstruct one deterministic physical proposal from reference fields."""
+    """Reconstruct one deterministic proposal with an explicit vertical frame."""
     index = int(reference_index)
     if index < 0 or index >= len(reference.df):
         raise ValueError("Reference index is out of range")
     if not np.isfinite(wheel_roll_radius) or wheel_roll_radius <= 0.0:
         raise ValueError("Wheel roll radius must be finite and positive")
+    if not np.isfinite(nominal_base_z_ground):
+        raise ValueError("Nominal grounded base z must be finite")
     row = reference.df.iloc[index]
     qpos = np.asarray(model.qpos0, dtype=np.float64).copy()
     qvel = np.zeros(model.nv, dtype=np.float64)
     root = int(model.joint("floating_base_joint").id)
     root_qpos = int(model.jnt_qposadr[root])
     root_qvel = int(model.jnt_dofadr[root])
+    reference_z_delta = float(row["pos_z"] - reference.df.iloc[0]["pos_z"])
     qpos[root_qpos : root_qpos + 3] = np.asarray(
-        [row["pos_x"], row.get("pos_y", 0.0), row["pos_z"]], dtype=np.float64
+        [
+            row["pos_x"],
+            row.get("pos_y", 0.0),
+            float(nominal_base_z_ground) + reference_z_delta,
+        ],
+        dtype=np.float64,
     )
     angles = row[["roll_angle", "pitch_angle", "yaw_angle"]].to_numpy(float)
     if reference.angle_unit == "degree":
@@ -460,26 +473,48 @@ def capture_guideline_snapshot(
     if source_phase not in legacy_by_formal:
         raise ValueError(f"Unknown formal two-phase source: {source_phase}")
     target = int(target_index)
-    start = target - 3
-    if start < 1 or target >= len(reference.df):
+    stride = int(round(float(env.dt) / float(reference.dt_median)))
+    if stride <= 0 or not np.isclose(
+        stride * reference.dt_median, float(env.dt), atol=1e-9, rtol=0.0
+    ):
+        raise ValueError("Reference timing does not divide the environment control tick")
+    start = target - 3 * stride
+    if start < stride or target >= len(reference.df):
         raise ValueError("Target index cannot form a real three-tick history")
     proposal = reconstruct_guideline_state(
         env.mj_model,
         reference,
         start,
         wheel_roll_radius=float(env._config.wheel_roll_radius),
+        nominal_base_z_ground=float(env._config.nominal_base_z_ground),
     )
     proposal_qpos = proposal.qpos.copy()
     root_joint = int(env.mj_model.joint("floating_base_joint").id)
     root_qpos = int(env.mj_model.jnt_qposadr[root_joint])
     proposal_qpos[root_qpos] += perturbation.root_x_offset_m
     proposal_qpos[root_qpos + 2] += perturbation.root_z_offset_m
-    previous_action = jp.asarray(_reference_action(reference, start - 1))
+    previous_action = jp.asarray(_reference_action(reference, start - stride))
     ctrl = env._action_to_ctrl(
         previous_action,
         jp.asarray(proposal_qpos)[env._joint_qpos["knee_joint"]],
     )
     legacy_phase = legacy_by_formal[source_phase]
+    ground_support = None
+    if source_phase == "propulsion_ascent":
+        ground_support = GroundSupportSolver(env._config.xml_path).solve(
+            proposal_qpos,
+            proposal.qvel,
+            np.asarray(jax.device_get(ctrl)),
+        )
+        if not ground_support.accepted:
+            raise ValueError(
+                f"Guideline Phase U ground placement rejected: {ground_support.reason}"
+            )
+        proposal_qpos = ground_support.qpos
+        ctrl = env._action_to_ctrl(
+            previous_action,
+            jp.asarray(proposal_qpos)[env._joint_qpos["knee_joint"]],
+        )
     airborne = int(source_phase == "descent_recovery")
     state = env.reset_from_snapshot(
         jp.asarray(proposal_qpos, jp.float32),
@@ -498,7 +533,7 @@ def capture_guideline_snapshot(
         jump_signal_latched=jp.asarray(bool(airborne)),
     )
     advance = jax.jit(env.step) if step_fn is None else step_fn
-    for action_index in (start, start + 1, start + 2):
+    for action_index in (start, start + stride, start + 2 * stride):
         state = advance(state, jp.asarray(_reference_action(reference, action_index)))
         jax.block_until_ready(state)
     policy_action = jp.asarray(_reference_action(reference, target))
@@ -532,8 +567,19 @@ def capture_guideline_snapshot(
         "controller": "guideline_open_loop_action_sequence",
         "reference_rollout_source": "data/reference_jump.csv",
         "target_reference_index": target,
-        "history_reference_indices": [target - 2, target - 1, target],
+        "history_reference_indices": [
+            target - 2 * stride,
+            target - stride,
+            target,
+        ],
+        "reference_rows_per_control_tick": stride,
         "perturbation": asdict(perturbation),
+        "vertical_frame": {
+            "reference_origin_z_m": float(reference.df.iloc[0]["pos_z"]),
+            "nominal_base_z_ground_m": float(env._config.nominal_base_z_ground),
+            "mapping": "nominal_base_z_ground + (reference_z - reference_initial_z)",
+        },
+        "ground_support": None if ground_support is None else ground_support.summary(),
     }
     validation = validate_guideline_snapshot(
         record, expected_source_phase=source_phase
@@ -669,6 +715,7 @@ def extract_guideline_threshold_samples(
     geometry: TwoPhaseGeometry,
     *,
     wheel_roll_radius: float,
+    nominal_base_z_ground: float,
 ) -> tuple[list[dict[str, float]], list[dict[str, float]]]:
     """Extract threshold-only physical values from reconstructed host states."""
     data = mujoco.MjData(model)
@@ -679,6 +726,7 @@ def extract_guideline_threshold_samples(
             reference,
             index,
             wheel_roll_radius=wheel_roll_radius,
+            nominal_base_z_ground=nominal_base_z_ground,
         )
         data.qpos[:] = proposal.qpos
         data.qvel[:] = proposal.qvel
@@ -720,6 +768,109 @@ def extract_guideline_threshold_samples(
             }
         )
     return apex_samples, recovery_samples
+
+
+def run_guideline_event_trace(
+    env: Any,
+    reference: ReferenceTrajectory,
+    geometry: TwoPhaseGeometry,
+    thresholds: TwoPhaseThresholds,
+    *,
+    seed: int,
+    maximum_control_ticks: int,
+) -> dict[str, Any]:
+    """Run the fixed open-loop guideline once and close physical event order."""
+    stride = int(round(float(env.dt) / float(reference.dt_median)))
+    if stride <= 0 or not np.isclose(
+        stride * reference.dt_median, float(env.dt), atol=1e-9, rtol=0.0
+    ):
+        raise ValueError("Reference timing does not divide the environment control tick")
+    proposal = reconstruct_guideline_state(
+        env.mj_model,
+        reference,
+        0,
+        wheel_roll_radius=float(env._config.wheel_roll_radius),
+        nominal_base_z_ground=float(env._config.nominal_base_z_ground),
+    )
+    initial_action = jp.asarray(_reference_action(reference, 0))
+    ctrl = env._action_to_ctrl(
+        initial_action,
+        jp.asarray(proposal.qpos)[env._joint_qpos["knee_joint"]],
+    )
+    placement = GroundSupportSolver(env._config.xml_path).solve(
+        proposal.qpos,
+        proposal.qvel,
+        np.asarray(jax.device_get(ctrl)),
+    )
+    if not placement.accepted:
+        raise ValueError(
+            f"Guideline event initial ground placement rejected: {placement.reason}"
+        )
+    ctrl = env._action_to_ctrl(
+        initial_action,
+        jp.asarray(placement.qpos)[env._joint_qpos["knee_joint"]],
+    )
+    state = env.reset_from_snapshot(
+        jp.asarray(placement.qpos, jp.float32),
+        jp.asarray(proposal.qvel, jp.float32),
+        ctrl,
+        jax.random.PRNGKey(int(seed)),
+        jp.asarray(STAGE_ID["approach"], jp.int32),
+        jp.asarray(0, jp.int32),
+        jp.asarray(0, jp.int32),
+        jp.asarray(0, jp.int32),
+        last_action=initial_action,
+        estimated_phase=jp.asarray(STAGE_ID["approach"], jp.int32),
+        jump_signal_latched=jp.asarray(False),
+    )
+    step = jax.jit(env.step)
+    event = initial_two_phase_event_state()
+    executed = 0
+    terminal = False
+    for tick in range(1, int(maximum_control_ticks) + 1):
+        reference_index = min(tick * stride, len(reference.df) - 1)
+        state = step(state, jp.asarray(_reference_action(reference, reference_index)))
+        jax.block_until_ready(state)
+        event = extract_two_phase_events(
+            state,
+            geometry,
+            event,
+            thresholds,
+            tick=jp.asarray(tick, jp.int32),
+        )
+        executed = tick
+        terminal = bool(np.asarray(jax.device_get(state.done)))
+        if terminal or bool(np.asarray(jax.device_get(event.stable_recovery))):
+            break
+    first_ticks_values = np.asarray(jax.device_get(event.first_event_ticks), int)
+    first_ticks = {
+        name: int(first_ticks_values[index]) for index, name in enumerate(EVENT_NAMES)
+    }
+    validation = validate_guideline_event_order(
+        first_ticks,
+        apex_band_width=int(np.asarray(jax.device_get(event.max_apex_band_width))),
+        recovery_hold_ticks=int(np.asarray(jax.device_get(event.recovery_hold_count))),
+        required_apex_width=1,
+        required_recovery_hold=int(thresholds.recovery.required_hold_ticks),
+    )
+    end_code = int(np.asarray(jax.device_get(state.info["end_code"])))
+    return {
+        **validation,
+        "controller_provenance": "guideline_open_loop_action_sequence",
+        "reference_rows_per_control_tick": stride,
+        "environment_transitions": executed,
+        "formal_training_transitions": 0,
+        "maximum_control_ticks": int(maximum_control_ticks),
+        "terminal": terminal,
+        "end_code": end_code,
+        "pre_nearest_post_counts": {"pre": 1, "nearest": 1, "post": 1},
+        "initial_ground_support": placement.summary(),
+        "vertical_frame": {
+            "reference_origin_z_m": float(reference.df.iloc[0]["pos_z"]),
+            "nominal_base_z_ground_m": float(env._config.nominal_base_z_ground),
+            "mapping": "nominal_base_z_ground + (reference_z - reference_initial_z)",
+        },
+    }
 
 
 def validate_guideline_event_order(

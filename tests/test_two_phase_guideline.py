@@ -33,7 +33,8 @@ from dvgc.two_phase_guideline import (
     validate_guideline_event_order,
     validate_guideline_snapshot,
 )
-from dvgc.two_phase_runtime import build_two_phase_geometry
+from dvgc.reset_geometry import GroundSupportSolver
+from dvgc.two_phase_runtime import EVENT_NAMES, build_two_phase_geometry
 from cli.build_two_phase_guideline_banks import build as build_guideline_cli
 
 
@@ -348,7 +349,11 @@ def test_reconstruct_guideline_state_uses_reference_pose_velocity_and_action_ord
     model = mujoco.MjModel.from_xml_path(XML)
 
     state = reconstruct_guideline_state(
-        model, reference, 6, wheel_roll_radius=0.07
+        model,
+        reference,
+        6,
+        wheel_roll_radius=0.07,
+        nominal_base_z_ground=0.12,
     )
 
     root_joint = int(model.joint("floating_base_joint").id)
@@ -358,7 +363,13 @@ def test_reconstruct_guideline_state_uses_reference_pose_velocity_and_action_ord
     assert state.time == pytest.approx(float(reference.df.loc[6, "time"]))
     np.testing.assert_allclose(
         state.qpos[root_qpos : root_qpos + 3],
-        [reference.df.loc[6, "pos_x"], 0.0, reference.df.loc[6, "pos_z"]],
+        [
+            reference.df.loc[6, "pos_x"],
+            0.0,
+            0.12
+            + reference.df.loc[6, "pos_z"]
+            - reference.df.loc[0, "pos_z"],
+        ],
     )
     np.testing.assert_allclose(
         state.qvel[root_qvel : root_qvel + 3],
@@ -368,6 +379,26 @@ def test_reconstruct_guideline_state_uses_reference_pose_velocity_and_action_ord
         state.normalized_action,
         reference.df.loc[6, ["action_steering", "action_rearwheel", "action_hip", "action_knee"]].to_numpy(float),
     )
+
+
+def test_real_guideline_initial_vertical_frame_can_be_authoritatively_grounded():
+    cfg = load_config("configs/default.json")
+    reference = ReferenceTrajectory.load("data/reference_jump.csv")
+    model = mujoco.MjModel.from_xml_path(XML)
+    proposal = reconstruct_guideline_state(
+        model,
+        reference,
+        0,
+        wheel_roll_radius=cfg.wheel_roll_radius,
+        nominal_base_z_ground=cfg.nominal_base_z_ground,
+    )
+
+    placement = GroundSupportSolver(cfg.xml_path).solve(proposal.qpos, proposal.qvel)
+
+    assert placement.accepted is True
+    assert abs(placement.root_z_shift_m) < 0.005
+    assert placement.wheel_terrain_contacts >= 1
+    assert placement.body_terrain_contacts == 0
 
 
 def _real_snapshot_provenance(cfg):
@@ -423,6 +454,12 @@ def test_real_guideline_capture_builds_three_consecutive_ticks_and_v4_context(
     assert record["two_phase_context"]["truncated"] is False
     assert record["field_ticks"]["actor_packet_fifo_t"] == [1, 2, 3]
     assert record["actor_packet_fifo_valid"] == 3
+    assert record["guideline_controller_provenance"][
+        "reference_rows_per_control_tick"
+    ] == 10
+    assert record["guideline_controller_provenance"][
+        "history_reference_indices"
+    ] == [target_index - 20, target_index - 10, target_index]
     np.testing.assert_array_equal(
         np.asarray(jax.device_get(captured.original_state.data.qpos)),
         record["physical_state_t"]["qpos"],
@@ -432,7 +469,7 @@ def test_real_guideline_capture_builds_three_consecutive_ticks_and_v4_context(
     assert validate_guideline_snapshot(record, expected_source_phase=source_phase)["valid"] is True
     np.testing.assert_array_equal(
         record["last_normalized_command_t"],
-        reference.df.loc[target_index - 1, ["action_steering", "action_rearwheel", "action_hip", "action_knee"]].to_numpy(np.float32),
+        reference.df.loc[target_index - 10, ["action_steering", "action_rearwheel", "action_hip", "action_knee"]].to_numpy(np.float32),
     )
 
 
@@ -524,7 +561,7 @@ def test_real_bank_builder_covers_fixed_u_and_d_nominal_slices():
     assert report["formal_training_transitions"] == 0
 
 
-def test_guideline_cli_writes_reproducible_nominal_banks_and_cost_report(tmp_path):
+def test_guideline_cli_gate_pauses_before_banks_when_real_event_trace_fails(tmp_path):
     output = tmp_path / "gate_b_cli"
     args = Namespace(
         config="configs/default.json",
@@ -533,49 +570,35 @@ def test_guideline_cli_writes_reproducible_nominal_banks_and_cost_report(tmp_pat
         seed=4100,
         perturbations="nominal",
         geometry_tolerance=2e-4,
+        event_max_control_ticks=100,
     )
 
-    built = build_guideline_cli(args)
-    assert built["status"] == "build_and_roundtrip_complete_pending_event_gate"
+    with pytest.raises(ValueError, match="physical event trace entered gate_pause"):
+        build_guideline_cli(args)
     expected = {
         "run_manifest.json",
         "geometry_manifest.json",
         "threshold_manifest.json",
-        "phase_up_guideline_bank.pkl",
-        "phase_down_guideline_bank.pkl",
         "geometry_cross_audit.json",
-        "snapshot_roundtrip_report.json",
-        "gate_b_build_report.json",
+        "guideline_event_report.json",
     }
     assert {path.name for path in output.iterdir()} == expected
     run_manifest = json.loads((output / "run_manifest.json").read_text())
-    report = json.loads((output / "gate_b_build_report.json").read_text())
+    event = json.loads((output / "guideline_event_report.json").read_text())
     assert run_manifest["interaction_cost"] == {
         "formal_training_transitions": 0,
         "maximum_construction_environment_transitions": 21,
         "maximum_roundtrip_environment_transitions": 26,
+        "maximum_guideline_event_transitions": 100,
     }
-    assert report["construction_environment_transitions"] == 21
-    assert report["formal_training_transitions"] == 0
-    assert report["roundtrip_environment_transitions"] == 26
-    assert json.loads((output / "snapshot_roundtrip_report.json").read_text())[
-        "status"
-    ] == "pass"
-    assert len(SnapshotBank.load(output / "phase_up_guideline_bank.pkl").records) == 3
-    assert len(SnapshotBank.load(output / "phase_down_guideline_bank.pkl").records) == 4
-
-    second_output = tmp_path / "gate_b_cli_repeat"
-    second_args = Namespace(**(vars(args) | {"output": str(second_output)}))
-    build_guideline_cli(second_args)
-    assert file_sha256(output / "phase_up_guideline_bank.pkl") == file_sha256(
-        second_output / "phase_up_guideline_bank.pkl"
-    )
-    assert file_sha256(output / "phase_down_guideline_bank.pkl") == file_sha256(
-        second_output / "phase_down_guideline_bank.pkl"
-    )
-    assert (output / "threshold_manifest.json").read_bytes() == (
-        second_output / "threshold_manifest.json"
-    ).read_bytes()
+    assert event["status"] == "gate_pause"
+    assert event["end_code"] == 9
+    assert event["formal_training_transitions"] == 0
+    assert event["initial_ground_support"]["accepted"] is True
+    assert event["initial_ground_support"]["body_terrain_contacts"] == 0
+    assert event["missing_events"] == list(EVENT_NAMES)
+    assert not (output / "phase_up_guideline_bank.pkl").exists()
+    assert not (output / "phase_down_guideline_bank.pkl").exists()
 
     with pytest.raises(ValueError, match="absent or empty"):
         build_guideline_cli(args)

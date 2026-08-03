@@ -23,6 +23,7 @@ from dvgc.two_phase_guideline import (
     canonical_manifest_hash,
     extract_guideline_threshold_samples,
     reconstruct_guideline_state,
+    run_guideline_event_trace,
     select_guideline_indices,
 )
 from dvgc.two_phase_roundtrip import (
@@ -104,6 +105,9 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         "interaction_cost": {
             "maximum_construction_environment_transitions": max_transitions,
             "maximum_roundtrip_environment_transitions": max_roundtrip_transitions,
+            "maximum_guideline_event_transitions": int(
+                args.event_max_control_ticks
+            ),
             "formal_training_transitions": 0,
         },
         "stopping_condition": "stop on first geometry, threshold, snapshot, or output-contract failure",
@@ -142,6 +146,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         selection,
         geometry,
         wheel_roll_radius=float(cfg.wheel_roll_radius),
+        nominal_base_z_ground=float(cfg.nominal_base_z_ground),
     )
     source_paths = {
         "xml": str(cfg.xml_path),
@@ -182,6 +187,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
             reference,
             index,
             wheel_roll_radius=float(cfg.wheel_roll_radius),
+            nominal_base_z_ground=float(cfg.nominal_base_z_ground),
         )
         host_data.qpos[:] = proposal.qpos
         host_data.qpos[root] = geometry.obstacle_front_x + 0.5
@@ -208,12 +214,28 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
     if geometry_report["status"] != "pass":
         raise ValueError("Representative geometry cross-audit entered gate_pause")
 
+    selected_thresholds = threshold_manifest["selected_thresholds"]
+    runtime_thresholds = TwoPhaseThresholds(
+        apex=ApexBandThresholds(**selected_thresholds["apex"]),
+        recovery=RecoveryThresholds(**selected_thresholds["recovery"]),
+    )
     source_fingerprint = hashlib.sha256(
         Path("dvgc/two_phase_runtime.py").read_bytes()
         + Path("dvgc/two_phase_guideline.py").read_bytes()
         + Path(__file__).read_bytes()
     ).hexdigest()
     env = OrangeBikeDVGC(cfg, snapshot_bank=SnapshotBank())
+    event_report = run_guideline_event_trace(
+        env,
+        reference,
+        geometry,
+        runtime_thresholds,
+        seed=int(args.seed) + 40_000,
+        maximum_control_ticks=int(args.event_max_control_ticks),
+    )
+    _save_json(output / "guideline_event_report.json", event_report)
+    if event_report["status"] != "pass":
+        raise ValueError("Guideline physical event trace entered gate_pause")
     bank_build = build_guideline_banks(
         env,
         reference,
@@ -230,11 +252,6 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
     up.save(up_path)
     down.save(down_path)
 
-    selected_thresholds = threshold_manifest["selected_thresholds"]
-    runtime_thresholds = TwoPhaseThresholds(
-        apex=ApexBandThresholds(**selected_thresholds["apex"]),
-        recovery=RecoveryThresholds(**selected_thresholds["recovery"]),
-    )
     representatives = select_roundtrip_representatives(up, down)
     tick_counts = {
         "up_boundary_front": 1,
@@ -278,7 +295,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
 
     build_report = {
         "status": (
-            "build_and_roundtrip_complete_pending_event_gate"
+            "dynamic_contracts_pass"
             if geometry_report["status"] == "pass"
             else "gate_pause"
         ),
@@ -287,7 +304,10 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         "geometry_manifest_hash": canonical_manifest_hash(geom_manifest),
         "phase_up_bank_sha256": file_sha256(up_path),
         "phase_down_bank_sha256": file_sha256(down_path),
-        "guideline_event_validation": "pending_task_5_dynamic_trace",
+        "guideline_event_validation": event_report["status"],
+        "guideline_event_environment_transitions": event_report[
+            "environment_transitions"
+        ],
         "snapshot_roundtrip_validation": roundtrip_report["status"],
         "roundtrip_environment_transitions": roundtrip_report[
             "environment_transitions"
@@ -305,6 +325,7 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=20_260_803)
     parser.add_argument("--perturbations", choices=("nominal", "all"), default="all")
     parser.add_argument("--geometry-tolerance", type=float, default=2e-4)
+    parser.add_argument("--event-max-control-ticks", type=int, default=100)
     args = parser.parse_args()
     report = build(args)
     print(json.dumps(report, sort_keys=True))

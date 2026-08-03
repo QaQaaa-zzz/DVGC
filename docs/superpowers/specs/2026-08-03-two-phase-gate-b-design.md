@@ -153,6 +153,20 @@ Apex pre/nearest/post, early descent, first legal contact, and recovery hold.
 It does not use success labels, continuation labels, feasibility scores, soft
 Tube membership, final-policy results, or rollout-tuned acceptance.
 
+The guideline CSV vertical coordinate is an envelope-relative legacy frame,
+not the authoritative XML free-root coordinate. Reconstruction uses the one
+fixed mapping
+
+```text
+root_z = nominal_base_z_ground + (reference_z - reference_initial_z)
+```
+
+and records both origins and the formula. Ground Phase U proposals and the
+event-trace initial state then undergo MuJoCo-native vertical support placement
+without changing posture. Placement must remain inside the existing solver
+limit, provide wheel support, and produce no body-terrain contact. There is no
+rollout search over vertical offsets or alternative initial rows.
+
 Threshold selection is a deterministic function of raw reconstructed
 guideline extrema, immutable model geometry, existing fixed physical limits,
 and named engineering margins. Fixed slices and margins are part of the input
@@ -259,7 +273,9 @@ The guideline trace reports first control tick for every declared event, Apex
 band consecutive width, pre/nearest/post counts, stable-recovery hold, and all
 missing or inverted events. If the guideline cannot satisfy the approved Gate
 A physical contract, the result is `gate_pause`; thresholds are not weakened
-and legacy phase ids are not substituted.
+and legacy phase ids are not substituted. The CLI writes geometry, threshold,
+support, event, and interaction-cost evidence before stopping, and it does not
+create either bank after an event-trace failure.
 
 Required source verification is:
 
