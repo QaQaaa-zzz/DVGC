@@ -66,10 +66,15 @@ def _synthetic_geometry():
     )
 
 
-def _fake_state(*, geom_x=None, geom_z=None, x=4.5, y=0.0, z=0.5, vx=1.2, vz=0.0):
+def _fake_state(
+    *, geom_x=None, geom_y=None, geom_z=None, x=4.5, y=0.0, z=0.5, vx=1.2, vz=0.0
+):
     geom_x = [4.4, 4.6, 4.5] if geom_x is None else geom_x
+    geom_y = [y, y, y] if geom_y is None else geom_y
     geom_z = [0.26, 0.26, 0.40] if geom_z is None else geom_z
-    geom_xpos = jp.asarray([[gx, y, gz] for gx, gz in zip(geom_x, geom_z, strict=True)])
+    geom_xpos = jp.asarray(
+        [[gx, gy, gz] for gx, gy, gz in zip(geom_x, geom_y, geom_z, strict=True)]
+    )
     return FakeState(
         data=FakeData(
             qpos=jp.asarray([x, y, z, 1.0, 0.0, 0.0, 0.0]),
@@ -80,6 +85,8 @@ def _fake_state(*, geom_x=None, geom_z=None, x=4.5, y=0.0, z=0.5, vx=1.2, vz=0.0
         info={
             "airborne_count": jp.asarray(3, jp.int32),
             "terminated": jp.asarray(0, jp.int32),
+            "truncated": jp.asarray(0, jp.int32),
+            "end_code": jp.asarray(0, jp.int32),
             "jump_signal_latched": jp.asarray(True),
             "phase": jp.asarray(0, jp.int32),
             "reference_index": jp.asarray(999, jp.int32),
@@ -99,6 +106,9 @@ def test_authoritative_geometry_manifest_covers_every_collision_robot_geom():
 
     assert len(manifest["geoms"]) == model.ngeom
     assert validation["valid"] is True
+    assert manifest["authoritative_ngeom"] == model.ngeom
+    assert manifest["authoritative_geom_ids"] == list(range(model.ngeom))
+    assert len(manifest["model_identity_sha256"]) == 64
     collision_robot = [
         row
         for row in manifest["geoms"]
@@ -139,6 +149,8 @@ def test_box_cylinder_and_ellipsoid_support_bounds_are_hand_checkable():
 
     np.testing.assert_allclose(bounds.min_x, [0.5, -0.2, 1.6], atol=1e-6)
     np.testing.assert_allclose(bounds.max_x, [1.5, 0.2, 2.4], atol=1e-6)
+    np.testing.assert_allclose(bounds.min_y, [-0.25, -0.2, -0.3], atol=1e-6)
+    np.testing.assert_allclose(bounds.max_y, [0.25, 0.2, 0.3], atol=1e-6)
     np.testing.assert_allclose(bounds.min_z, [1.0, 0.5, 0.8], atol=1e-6)
     np.testing.assert_allclose(bounds.max_z, [3.0, 1.5, 1.2], atol=1e-6)
 
@@ -275,6 +287,42 @@ def test_recovery_signals_require_current_support_and_carry_only_previous_hold()
     assert int(signals.previous_recovery_hold_count) == 7
 
 
+@pytest.mark.parametrize(
+    ("axis", "wheel_index", "upper_edge"),
+    [
+        ("x", 0, False),
+        ("x", 1, True),
+        ("y", 0, True),
+        ("y", 1, False),
+    ],
+)
+def test_recovery_landing_region_contains_entire_wheel_support_volume(
+    axis, wheel_index, upper_edge
+):
+    geometry = _synthetic_geometry()
+    geom_x = [4.4, 4.6, 4.5]
+    geom_y = [0.0, 0.0, 0.0]
+    if axis == "x":
+        geom_x[wheel_index] = (
+            geometry.landing_x_max - 0.05
+            if upper_edge
+            else geometry.landing_x_min + 0.05
+        )
+    else:
+        geom_y[wheel_index] = (
+            geometry.landing_y_limit - 0.05
+            if upper_edge
+            else -geometry.landing_y_limit + 0.05
+        )
+    signals = extract_recovery_signals(
+        _fake_state(geom_x=geom_x, geom_y=geom_y),
+        geometry,
+        previous_recovery_hold_count=jp.asarray(0, jp.int32),
+    )
+
+    assert bool(signals.landing_region_valid) is False
+
+
 def test_signal_extractors_support_jit_and_vmap_over_batched_state():
     geometry = _synthetic_geometry()
     first = _fake_state(geom_x=[3.2, 3.3, 3.1], geom_z=[0.45, 0.46, 0.50])
@@ -296,9 +344,16 @@ def test_signal_extractors_support_jit_and_vmap_over_batched_state():
     np.testing.assert_array_equal(recovery.previous_recovery_hold_count, [2, 3])
 
 
-def test_physical_failure_is_extracted_without_reward_dependency():
+@pytest.mark.parametrize("end_code", [2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 15])
+def test_physical_failure_is_decoded_from_failure_end_codes(end_code):
     state = _fake_state()
-    failed = state._replace(info=state.info | {"terminated": jp.asarray(1, jp.int32)})
+    failed = state._replace(
+        info=state.info
+        | {
+            "terminated": jp.asarray(1, jp.int32),
+            "end_code": jp.asarray(end_code, jp.int32),
+        }
+    )
 
     apex = extract_apex_band_signals(failed, _synthetic_geometry())
     recovery = extract_recovery_signals(
@@ -309,6 +364,78 @@ def test_physical_failure_is_extracted_without_reward_dependency():
 
     assert bool(apex.physical_failure) is True
     assert bool(recovery.physical_failure) is True
+
+
+@pytest.mark.parametrize("end_code", [0, 1, 8, 14, 16])
+def test_nonfailure_terminal_outcomes_are_not_physical_failures(end_code):
+    state = _fake_state()
+    terminal = state._replace(
+        info=state.info
+        | {
+            "terminated": jp.asarray(end_code in (1, 14, 16), jp.int32),
+            "truncated": jp.asarray(end_code == 8, jp.int32),
+            "end_code": jp.asarray(end_code, jp.int32),
+        }
+    )
+
+    apex = extract_apex_band_signals(terminal, _synthetic_geometry())
+    recovery = extract_recovery_signals(
+        terminal,
+        _synthetic_geometry(),
+        previous_recovery_hold_count=jp.asarray(2, jp.int32),
+    )
+
+    assert bool(apex.physical_failure) is False
+    assert bool(recovery.physical_failure) is False
+
+
+def test_successful_recovery_terminal_can_complete_stable_recovery():
+    state = _fake_state()._replace(
+        info=_fake_state().info
+        | {
+            "terminated": jp.asarray(1, jp.int32),
+            "end_code": jp.asarray(1, jp.int32),
+        }
+    )
+    recovery = extract_recovery_signals(
+        state,
+        _synthetic_geometry(),
+        previous_recovery_hold_count=jp.asarray(2, jp.int32),
+    )
+    previous = initial_two_phase_event_state()._replace(
+        jump_window_entered=jp.asarray(True),
+        liftoff_seen=jp.asarray(True),
+        stable_airborne=jp.asarray(True),
+        ascending=jp.asarray(True),
+        apex_band_entered=jp.asarray(True),
+        descending=jp.asarray(True),
+        pre_landing=jp.asarray(True),
+        first_valid_contact=jp.asarray(True),
+        impact_absorbing=jp.asarray(True),
+        recovery_hold_count=jp.asarray(2, jp.int32),
+    )
+
+    result = advance_two_phase_events(
+        extract_apex_band_signals(state, _synthetic_geometry()),
+        recovery,
+        previous,
+        _event_thresholds(),
+        tick=jp.asarray(9, jp.int32),
+        jump_signal=jp.asarray(True),
+    )
+
+    assert bool(result.stable_recovery) is True
+
+
+def test_manifest_validation_rejects_missing_and_duplicate_geom_rows():
+    model = mujoco.MjModel.from_xml_path(XML)
+    manifest = geometry_manifest(model, build_two_phase_geometry(model, load_config("configs/default.json")))
+
+    missing = manifest | {"geoms": manifest["geoms"][:-1]}
+    duplicate = manifest | {"geoms": manifest["geoms"][:-1] + [manifest["geoms"][0]]}
+
+    assert "geom_identity" in validate_geometry_manifest(missing)["failed"]
+    assert "geom_identity" in validate_geometry_manifest(duplicate)["failed"]
 
 
 def _event_thresholds():

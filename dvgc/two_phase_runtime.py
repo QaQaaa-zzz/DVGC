@@ -12,6 +12,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from dataclasses import fields as dataclass_fields
+import hashlib
+import json
 from typing import Any, NamedTuple
 
 import jax
@@ -51,10 +53,16 @@ _GEOM_FORMULAS = {
 }
 EVENT_NAMES = INTERNAL_EVENTS
 
+# Stable dvgc.env terminal-code contract.  Successful recovery, timeout, and
+# legacy handoff terminals are deliberately excluded.
+_PHYSICAL_FAILURE_END_CODES = (2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 15)
+
 
 class CollisionSupportBounds(NamedTuple):
     min_x: Any
     max_x: Any
+    min_y: Any
+    max_y: Any
     min_z: Any
     max_z: Any
 
@@ -134,18 +142,22 @@ def collision_geom_support_bounds(
     geom_types: Any,
     geom_sizes: Any,
 ) -> CollisionSupportBounds:
-    """Compute world x/z support bounds for supported collision primitives."""
+    """Compute world x/y/z support bounds for supported collision primitives."""
     positions = jp.asarray(geom_xpos)
     rotations = jp.asarray(geom_xmat).reshape(positions.shape[:-1] + (3, 3))
     types = jp.asarray(geom_types)
     sizes = jp.asarray(geom_sizes)
     local_x = rotations[..., 0, :]
+    local_y = rotations[..., 1, :]
     local_z = rotations[..., 2, :]
     support_x = _support_radius(local_x, types, sizes)
+    support_y = _support_radius(local_y, types, sizes)
     support_z = _support_radius(local_z, types, sizes)
     return CollisionSupportBounds(
         min_x=positions[..., 0] - support_x,
         max_x=positions[..., 0] + support_x,
+        min_y=positions[..., 1] - support_y,
+        max_y=positions[..., 1] + support_y,
         min_z=positions[..., 2] - support_z,
         max_z=positions[..., 2] + support_z,
     )
@@ -233,6 +245,13 @@ def _physical_geometry_values(state: Any, geometry: TwoPhaseGeometry) -> dict[st
     }
 
 
+def _physical_failure(info: dict[str, Any]) -> Any:
+    """Decode physical failure without conflating successful terminals/timeouts."""
+    end_code = jp.asarray(info["end_code"])
+    codes = jp.asarray(_PHYSICAL_FAILURE_END_CODES, end_code.dtype)
+    return jp.any(end_code[..., None] == codes, axis=-1)
+
+
 def extract_apex_band_signals(
     state: Any, geometry: TwoPhaseGeometry
 ) -> ApexBandSignals:
@@ -243,7 +262,7 @@ def extract_apex_band_signals(
     illegal_penetration = jp.any(
         clearances < -geometry.body_penetration_tolerance, axis=-1
     )
-    physical_failure = jp.asarray(state.info["terminated"]) > 0
+    physical_failure = _physical_failure(state.info)
     return ApexBandSignals(
         stable_airborne=(
             jp.asarray(state.info["airborne_count"]) >= geometry.airborne_confirm_steps
@@ -270,7 +289,7 @@ def extract_recovery_signals(
     _, qvel, roll, pitch = _root_pose_velocity(state, geometry)
     physical = _physical_geometry_values(state, geometry)
     clearances = physical["terrain_clearances"]
-    geom_xpos = physical["geom_xpos"]
+    bounds = physical["bounds"]
     wheel_mask = jp.asarray(geometry.wheel_mask)
     body_mask = jp.asarray(geometry.body_mask)
     wheel_clearances = jp.where(wheel_mask, clearances, jp.nan)
@@ -285,9 +304,10 @@ def extract_recovery_signals(
     wheels_in_region = jp.all(
         jp.where(
             wheel_mask,
-            (geom_xpos[..., 0] >= geometry.landing_x_min)
-            & (geom_xpos[..., 0] <= geometry.landing_x_max)
-            & (jp.abs(geom_xpos[..., 1]) <= geometry.landing_y_limit),
+            (bounds.min_x >= geometry.landing_x_min)
+            & (bounds.max_x <= geometry.landing_x_max)
+            & (bounds.min_y >= -geometry.landing_y_limit)
+            & (bounds.max_y <= geometry.landing_y_limit),
             True,
         ),
         axis=-1,
@@ -309,7 +329,7 @@ def extract_recovery_signals(
         angular_speed=jp.linalg.norm(qvel[..., 3:6], axis=-1),
         forward_velocity=qvel[..., 0],
         previous_recovery_hold_count=jp.asarray(previous_recovery_hold_count),
-        physical_failure=jp.asarray(state.info["terminated"]) > 0,
+        physical_failure=_physical_failure(state.info),
     )
 
 
@@ -561,8 +581,14 @@ def geometry_manifest(
                 ),
             }
         )
+    model_identity = hashlib.sha256(
+        json.dumps(rows, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
     return {
         "contract_version": 1,
+        "authoritative_ngeom": int(model.ngeom),
+        "authoritative_geom_ids": list(range(model.ngeom)),
+        "model_identity_sha256": model_identity,
         "full_structure_clearance": True,
         "geoms": rows,
     }
@@ -582,9 +608,29 @@ def validate_geometry_manifest(manifest: dict[str, Any]) -> dict[str, Any]:
         if rows_valid
         else []
     )
+    authoritative_ngeom = manifest.get("authoritative_ngeom")
+    authoritative_ids = manifest.get("authoritative_geom_ids")
+    row_ids = [row.get("geom_id") for row in rows] if rows_valid else []
+    computed_identity = (
+        hashlib.sha256(
+            json.dumps(rows, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
+        if rows_valid
+        else None
+    )
+    geom_identity = (
+        isinstance(authoritative_ngeom, int)
+        and authoritative_ngeom > 0
+        and authoritative_ids == list(range(authoritative_ngeom))
+        and len(row_ids) == authoritative_ngeom
+        and row_ids == authoritative_ids
+        and len(set(row_ids)) == authoritative_ngeom
+        and manifest.get("model_identity_sha256") == computed_identity
+    )
     checks = {
         "contract_version": manifest.get("contract_version") == 1,
         "geom_rows": rows_valid,
+        "geom_identity": geom_identity,
         "collision_robot_geoms": bool(collision_robot),
         "formula_coverage": bool(collision_robot)
         and all(bool(row.get("supported_jax_geometry_formula")) for row in collision_robot),
