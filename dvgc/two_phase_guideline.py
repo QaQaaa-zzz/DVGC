@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 import hashlib
 import json
+from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 import mujoco
@@ -13,6 +14,7 @@ from .reference import ReferenceAnchors, ReferenceTrajectory
 from .two_phase_runtime import (
     EVENT_NAMES,
     TwoPhaseGeometry,
+    collision_geom_support_bounds,
     full_structure_metrics,
 )
 from .two_phase_semantics import ApexBandThresholds, RecoveryThresholds
@@ -36,7 +38,7 @@ _SOURCE_HASHES = frozenset(
     {"xml", "reference", "config", "code", "geometry_manifest"}
 )
 _SOURCE_PATHS = frozenset({"xml", "reference", "config", "code"})
-_FORBIDDEN_CONTROLLER_TERMS = ("expert", "pi_up", "pi_down", "trained policy")
+_FORBIDDEN_CONTROLLER_TERMS = ("expert", "pi up", "pi down", "trained policy")
 
 
 @dataclass(frozen=True)
@@ -67,6 +69,15 @@ class GuidelineSelection:
     recovery: tuple[int, int, int]
 
 
+@dataclass(frozen=True)
+class ReconstructedGuidelineState:
+    qpos: np.ndarray
+    qvel: np.ndarray
+    normalized_action: np.ndarray
+    reference_index: int
+    time: float
+
+
 def _three_indices(indices: Sequence[int]) -> tuple[int, int, int]:
     values = tuple(int(value) for value in indices)
     if not values:
@@ -89,19 +100,34 @@ def select_guideline_indices(
     launch_front, launch_middle, launch_back = _three_indices(launch_indices)
     flight_start = anchors.takeoff_end
     flight_stop = min(count, anchors.apex + 2)
-    flight_indices = np.arange(flight_start, flight_stop, dtype=np.int32)
-    flight_vz = np.abs(reference.df.iloc[flight_indices]["vel_z"].to_numpy(float))
-    nearest = int(flight_indices[int(np.argmin(flight_vz))])
-    if nearest <= flight_start or nearest >= flight_stop - 1:
+    velocity = reference.df["vel_z"].to_numpy(float)
+    transitions = [
+        index
+        for index in range(flight_start, flight_stop - 1)
+        if velocity[index] > 0.0 and velocity[index + 1] < 0.0
+    ]
+    if not transitions:
+        raise ValueError("Apex slice lacks a positive-to-negative sign transition")
+    transition = min(transitions, key=lambda index: abs(index - anchors.apex))
+    if abs(velocity[transition]) <= abs(velocity[transition + 1]):
+        nearest = transition
+        pre = nearest - 1
+        post = nearest + 1
+    else:
+        nearest = transition + 1
+        pre = nearest - 1
+        post = nearest + 1
+    if pre < flight_start or post >= flight_stop:
         raise ValueError("Apex nearest row lacks fixed pre/post neighbors")
-    post = nearest + 1
+    if not (velocity[pre] > 0.0 and velocity[post] < 0.0):
+        raise ValueError("Apex pre/post rows do not straddle the velocity sign transition")
     early_descent = post + 1
-    if early_descent > anchors.landing_start:
+    if early_descent >= anchors.landing_start or velocity[early_descent] >= 0.0:
         raise ValueError("Early-descent slice is unavailable")
     recovery = _three_indices(range(anchors.recovery_start, anchors.recovery_end + 1))
     return GuidelineSelection(
         launch={"front": launch_front, "middle": launch_middle, "back": launch_back},
-        apex={"pre": nearest - 1, "nearest": nearest, "post": post},
+        apex={"pre": pre, "nearest": nearest, "post": post},
         early_descent=early_descent,
         recovery=recovery,
     )
@@ -158,6 +184,13 @@ def canonical_manifest_hash(manifest: Mapping[str, Any]) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
+def _canonical_payload_hash(payload: Mapping[str, Any]) -> str:
+    encoded = json.dumps(
+        payload, sort_keys=True, separators=(",", ":"), allow_nan=False
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
 def build_threshold_manifest(
     *,
     selection: GuidelineSelection,
@@ -167,14 +200,17 @@ def build_threshold_manifest(
     required_recovery_hold_ticks: int,
     source_hashes: Mapping[str, str],
     source_paths: Mapping[str, str],
+    geometry_manifest: Mapping[str, Any],
     reference_anchors: ReferenceAnchors,
     extraction_code_version: str,
     controller_provenance: str,
     creation_seed: int,
 ) -> dict[str, Any]:
     """Build an auditable threshold contract from physical guideline extrema."""
-    lower_controller = controller_provenance.casefold()
-    if any(term in lower_controller for term in _FORBIDDEN_CONTROLLER_TERMS):
+    normalized_controller = " ".join(
+        controller_provenance.casefold().replace("_", " ").replace("-", " ").split()
+    )
+    if any(term in normalized_controller for term in _FORBIDDEN_CONTROLLER_TERMS):
         raise ValueError("Invalid controller provenance claim")
     if set(source_hashes) != _SOURCE_HASHES or not all(
         isinstance(value, str)
@@ -187,6 +223,16 @@ def build_threshold_manifest(
         isinstance(value, str) and value for value in source_paths.values()
     ):
         raise ValueError("Source paths must bind XML, reference, config, and code")
+    actual_hashes = {
+        name: hashlib.sha256(Path(source_paths[name]).read_bytes()).hexdigest()
+        for name in sorted(_SOURCE_PATHS)
+    }
+    actual_hashes["geometry_manifest"] = _canonical_payload_hash(geometry_manifest)
+    mismatched = sorted(
+        name for name in _SOURCE_HASHES if source_hashes[name] != actual_hashes[name]
+    )
+    if mismatched:
+        raise ValueError(f"Authoritative source hash mismatch: {mismatched}")
     if not isinstance(extraction_code_version, str) or not extraction_code_version:
         raise ValueError("Extraction code version must be nonempty")
     if required_recovery_hold_ticks <= 0:
@@ -238,6 +284,80 @@ def build_threshold_manifest(
     return manifest
 
 
+def _quaternion_from_euler(roll: float, pitch: float, yaw: float) -> np.ndarray:
+    cr, sr = np.cos(roll / 2.0), np.sin(roll / 2.0)
+    cp, sp = np.cos(pitch / 2.0), np.sin(pitch / 2.0)
+    cy, sy = np.cos(yaw / 2.0), np.sin(yaw / 2.0)
+    return np.asarray(
+        [
+            cr * cp * cy + sr * sp * sy,
+            sr * cp * cy - cr * sp * sy,
+            cr * sp * cy + sr * cp * sy,
+            cr * cp * sy - sr * sp * cy,
+        ],
+        dtype=np.float64,
+    )
+
+
+def reconstruct_guideline_state(
+    model: mujoco.MjModel,
+    reference: ReferenceTrajectory,
+    reference_index: int,
+    *,
+    wheel_roll_radius: float,
+) -> ReconstructedGuidelineState:
+    """Reconstruct one deterministic physical proposal from reference fields."""
+    index = int(reference_index)
+    if index < 0 or index >= len(reference.df):
+        raise ValueError("Reference index is out of range")
+    if not np.isfinite(wheel_roll_radius) or wheel_roll_radius <= 0.0:
+        raise ValueError("Wheel roll radius must be finite and positive")
+    row = reference.df.iloc[index]
+    qpos = np.asarray(model.qpos0, dtype=np.float64).copy()
+    qvel = np.zeros(model.nv, dtype=np.float64)
+    root = int(model.joint("floating_base_joint").id)
+    root_qpos = int(model.jnt_qposadr[root])
+    root_qvel = int(model.jnt_dofadr[root])
+    qpos[root_qpos : root_qpos + 3] = np.asarray(
+        [row["pos_x"], row.get("pos_y", 0.0), row["pos_z"]], dtype=np.float64
+    )
+    angles = row[["roll_angle", "pitch_angle", "yaw_angle"]].to_numpy(float)
+    if reference.angle_unit == "degree":
+        angles = np.deg2rad(angles)
+    qpos[root_qpos + 3 : root_qpos + 7] = _quaternion_from_euler(*angles)
+    qvel[root_qvel : root_qvel + 3] = np.asarray(
+        [row["vel_x"], row.get("vel_y", 0.0), row["vel_z"]], dtype=np.float64
+    )
+    angle_frame = reference.df[["roll_angle", "pitch_angle", "yaw_angle"]].to_numpy(float)
+    if reference.angle_unit == "degree":
+        angle_frame = np.deg2rad(angle_frame)
+    angular_velocity = np.gradient(
+        np.unwrap(angle_frame, axis=0), reference.df["time"].to_numpy(float), axis=0
+    )[index]
+    qvel[root_qvel + 3 : root_qvel + 6] = angular_velocity
+    for joint_name, position_field, velocity_field in (
+        ("hip_joint", "hip_position", "hip_velocity"),
+        ("knee_joint", "knee_position", "knee_velocity"),
+    ):
+        joint = int(model.joint(joint_name).id)
+        qpos[int(model.jnt_qposadr[joint])] = float(row[position_field])
+        qvel[int(model.jnt_dofadr[joint])] = float(row[velocity_field])
+    wheel_speed = float(row["vel_x"]) / float(wheel_roll_radius)
+    for joint_name in ("frontwheel_joint", "rearwheel_joint"):
+        joint = int(model.joint(joint_name).id)
+        qvel[int(model.jnt_dofadr[joint])] = wheel_speed
+    action = row[
+        ["action_steering", "action_rearwheel", "action_hip", "action_knee"]
+    ].to_numpy(float)
+    return ReconstructedGuidelineState(
+        qpos=qpos,
+        qvel=qvel,
+        normalized_action=np.clip(action, -1.0, 1.0).astype(np.float32),
+        reference_index=index,
+        time=float(row["time"]),
+    )
+
+
 def validate_guideline_event_order(
     first_event_ticks: Mapping[str, int],
     *,
@@ -274,12 +394,23 @@ def audit_geometry_clearance(
     geometry: TwoPhaseGeometry,
     *,
     representative: str,
+    tolerance: float,
 ) -> dict[str, Any]:
-    """Cross-audit one host state; never use this function in online JAX paths."""
+    """Cross-audit one comparable above-obstacle host state and close a gate."""
+    if not np.isfinite(tolerance) or tolerance <= 0.0:
+        raise ValueError("Geometry audit tolerance must be finite and positive")
     ids = np.asarray(geometry.robot_geom_ids, dtype=np.int32)
+    positions = np.asarray(data.geom_xpos)[ids]
+    rotations = np.asarray(data.geom_xmat)[ids]
+    bounds = collision_geom_support_bounds(
+        positions,
+        rotations,
+        geometry.robot_geom_types,
+        geometry.robot_geom_sizes,
+    )
     metrics = full_structure_metrics(
-        np.asarray(data.geom_xpos)[ids],
-        np.asarray(data.geom_xmat)[ids],
+        positions,
+        rotations,
         geometry.robot_geom_types,
         geometry.robot_geom_sizes,
         obstacle_front_x=geometry.obstacle_front_x,
@@ -297,12 +428,36 @@ def audit_geometry_clearance(
             nearest_distance = distance
             nearest_robot = int(robot)
     jax_clearance = float(metrics.full_structure_clearance)
+    comparable_projection = bool(
+        np.all(
+            (np.asarray(bounds.max_x) >= geometry.obstacle_front_x)
+            & (np.asarray(bounds.min_x) <= geometry.obstacle_back_x)
+            & (np.asarray(bounds.max_y) >= -geometry.obstacle_half_width)
+            & (np.asarray(bounds.min_y) <= geometry.obstacle_half_width)
+        )
+    )
+    absolute_difference = abs(jax_clearance - float(nearest_distance))
+    sign_agreement = bool(
+        np.sign(jax_clearance) == np.sign(float(nearest_distance))
+    )
+    checks = {
+        "comparable_projection": comparable_projection,
+        "finite": bool(np.isfinite(jax_clearance) and np.isfinite(nearest_distance)),
+        "sign_agreement": sign_agreement,
+        "absolute_difference": absolute_difference <= float(tolerance),
+    }
+    failed = sorted(name for name, passed in checks.items() if not passed)
     return {
         "representative": representative,
+        "status": "pass" if not failed else "gate_pause",
+        "checks": checks,
+        "failed": failed,
+        "comparable_projection": comparable_projection,
         "jax_clearance": jax_clearance,
         "mujoco_reference_distance": float(nearest_distance),
-        "absolute_difference": abs(jax_clearance - float(nearest_distance)),
-        "sign_agreement": bool(np.signbit(jax_clearance) == np.signbit(nearest_distance)),
+        "absolute_difference": absolute_difference,
+        "tolerance": float(tolerance),
+        "sign_agreement": sign_agreement,
         "nearest_geom_pair": {
             "robot": model.geom(nearest_robot).name,
             "obstacle": model.geom(int(geometry.obstacle_geom_id)).name,

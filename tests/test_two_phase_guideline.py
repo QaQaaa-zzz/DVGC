@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import asdict
+import hashlib
+import json
+from pathlib import Path
 
 import mujoco
 import numpy as np
@@ -14,6 +17,7 @@ from dvgc.two_phase_guideline import (
     audit_geometry_clearance,
     build_threshold_manifest,
     canonical_manifest_hash,
+    reconstruct_guideline_state,
     select_guideline_indices,
     validate_guideline_event_order,
 )
@@ -21,8 +25,23 @@ from dvgc.two_phase_runtime import build_two_phase_geometry
 
 
 XML = "assets/orange_bike_4kg_horizontal.xml"
-SOURCE_HASHES = {"xml": "a" * 64, "reference": "b" * 64, "config": "c" * 64, "code": "d" * 64, "geometry_manifest": "e" * 64}
-SOURCE_PATHS = {"xml": XML, "reference": "data/reference_jump.csv", "config": "configs/default.json", "code": "dvgc/two_phase_guideline.py"}
+
+
+def _source_contract(tmp_path: Path):
+    paths = {}
+    for name in ("xml", "reference", "config", "code"):
+        path = tmp_path / f"{name}.source"
+        path.write_text(f"authoritative-{name}\n", encoding="utf-8")
+        paths[name] = str(path)
+    geometry_manifest = {"contract_version": 1, "geoms": [{"geom_id": 0}]}
+    hashes = {
+        name: hashlib.sha256(Path(path).read_bytes()).hexdigest()
+        for name, path in paths.items()
+    }
+    hashes["geometry_manifest"] = hashlib.sha256(
+        json.dumps(geometry_manifest, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    return paths, hashes, geometry_manifest
 
 
 def _reference() -> tuple[ReferenceTrajectory, ReferenceAnchors]:
@@ -122,9 +141,18 @@ def test_apex_selection_does_not_drift_to_a_later_low_vertical_speed():
     assert select_guideline_indices(reference, anchors).apex["nearest"] == 11
 
 
-def test_thresholds_are_literal_extrema_plus_named_margins():
+def test_apex_selection_requires_positive_pre_negative_post_and_prelanding_descent():
+    reference, anchors = _reference()
+    reference.df.loc[8:12, "vel_z"] = 0.2
+
+    with pytest.raises(ValueError, match="sign transition"):
+        select_guideline_indices(reference, anchors)
+
+
+def test_thresholds_are_literal_extrema_plus_named_margins(tmp_path):
     reference, anchors = _reference()
     selection = select_guideline_indices(reference, anchors)
+    source_paths, source_hashes, geometry_manifest = _source_contract(tmp_path)
 
     manifest = build_threshold_manifest(
         selection=selection,
@@ -132,8 +160,9 @@ def test_thresholds_are_literal_extrema_plus_named_margins():
         recovery_samples=_recovery_samples(),
         margins=_margins(),
         required_recovery_hold_ticks=5,
-        source_hashes=SOURCE_HASHES,
-        source_paths=SOURCE_PATHS,
+        source_hashes=source_hashes,
+        source_paths=source_paths,
+        geometry_manifest=geometry_manifest,
         reference_anchors=anchors,
         extraction_code_version="two_phase_guideline_v1",
         controller_provenance="guideline open-loop action sequence",
@@ -162,8 +191,9 @@ def test_thresholds_are_literal_extrema_plus_named_margins():
 
 
 @pytest.mark.parametrize("forbidden", ["reward", "success", "continuation_label", "source_policy_hash"])
-def test_threshold_builder_rejects_nonphysical_result_or_metadata_fields(forbidden):
+def test_threshold_builder_rejects_nonphysical_result_or_metadata_fields(forbidden, tmp_path):
     sample = _apex_samples()[0] | {forbidden: 1}
+    source_paths, source_hashes, geometry_manifest = _source_contract(tmp_path)
 
     with pytest.raises(ValueError, match="unregistered fields"):
         build_threshold_manifest(
@@ -172,8 +202,9 @@ def test_threshold_builder_rejects_nonphysical_result_or_metadata_fields(forbidd
             recovery_samples=_recovery_samples(),
             margins=_margins(),
             required_recovery_hold_ticks=5,
-            source_hashes=SOURCE_HASHES,
-            source_paths=SOURCE_PATHS,
+            source_hashes=source_hashes,
+            source_paths=source_paths,
+            geometry_manifest=geometry_manifest,
             reference_anchors=_reference()[1],
             extraction_code_version="two_phase_guideline_v1",
             controller_provenance="guideline open-loop action sequence",
@@ -181,15 +212,17 @@ def test_threshold_builder_rejects_nonphysical_result_or_metadata_fields(forbidd
         )
 
 
-def test_manifest_hash_is_canonical_stable_and_binds_every_source():
+def test_manifest_hash_is_canonical_stable_and_binds_every_source(tmp_path):
+    source_paths, source_hashes, geometry_manifest = _source_contract(tmp_path)
     kwargs = dict(
         selection=select_guideline_indices(*_reference()),
         apex_samples=_apex_samples(),
         recovery_samples=_recovery_samples(),
         margins=_margins(),
         required_recovery_hold_ticks=5,
-        source_hashes=SOURCE_HASHES,
-        source_paths=SOURCE_PATHS,
+        source_hashes=source_hashes,
+        source_paths=source_paths,
+        geometry_manifest=geometry_manifest,
         reference_anchors=_reference()[1],
         extraction_code_version="two_phase_guideline_v1",
         controller_provenance="guideline open-loop action sequence",
@@ -202,17 +235,32 @@ def test_manifest_hash_is_canonical_stable_and_binds_every_source():
     assert first["canonical_manifest_hash"] == canonical_manifest_hash(first)
     assert first["feature_definitions"]["obstacle_relative_x"]["unit"] == "m"
     assert "controller_provenance" in first
-    assert first["source_paths"] == SOURCE_PATHS
+    assert first["source_paths"] == source_paths
     assert first["reference_anchors"] == _reference()[1].as_dict()
     assert first["extraction_code_version"] == "two_phase_guideline_v1"
-    for source in kwargs["source_hashes"]:
-        changed = dict(kwargs)
-        changed["source_hashes"] = kwargs["source_hashes"] | {source: "f" * 64}
-        assert build_threshold_manifest(**changed)["canonical_manifest_hash"] != first["canonical_manifest_hash"]
+    for source in ("xml", "reference", "config", "code"):
+        mismatch = dict(kwargs)
+        mismatch["source_hashes"] = source_hashes | {source: "f" * 64}
+        with pytest.raises(ValueError, match="hash mismatch"):
+            build_threshold_manifest(**mismatch)
+    mismatch = dict(kwargs)
+    mismatch["source_hashes"] = source_hashes | {"geometry_manifest": "f" * 64}
+    with pytest.raises(ValueError, match="hash mismatch"):
+        build_threshold_manifest(**mismatch)
+
+    Path(source_paths["xml"]).write_text("changed", encoding="utf-8")
+    changed_hashes = source_hashes | {
+        "xml": hashlib.sha256(Path(source_paths["xml"]).read_bytes()).hexdigest()
+    }
+    assert build_threshold_manifest(**(kwargs | {"source_hashes": changed_hashes}))["canonical_manifest_hash"] != first["canonical_manifest_hash"]
 
 
-@pytest.mark.parametrize("name", ["expert", "pi_up", "pi_down", "trained policy"])
-def test_controller_provenance_rejects_expert_or_trained_policy_claims(name):
+@pytest.mark.parametrize(
+    "name",
+    ["expert", "pi_up", "pi-down", "trained policy", "trained_policy"],
+)
+def test_controller_provenance_rejects_expert_or_trained_policy_claims(name, tmp_path):
+    source_paths, source_hashes, geometry_manifest = _source_contract(tmp_path)
     with pytest.raises(ValueError, match="controller provenance"):
         build_threshold_manifest(
             selection=select_guideline_indices(*_reference()),
@@ -220,8 +268,9 @@ def test_controller_provenance_rejects_expert_or_trained_policy_claims(name):
             recovery_samples=_recovery_samples(),
             margins=_margins(),
             required_recovery_hold_ticks=5,
-            source_hashes=SOURCE_HASHES,
-            source_paths=SOURCE_PATHS,
+            source_hashes=source_hashes,
+            source_paths=source_paths,
+            geometry_manifest=geometry_manifest,
             reference_anchors=_reference()[1],
             extraction_code_version="two_phase_guideline_v1",
             controller_provenance=name,
@@ -247,14 +296,62 @@ def test_event_order_report_closes_order_and_width_contracts():
 def test_host_geometry_audit_reports_reference_distance_and_nearest_pair():
     model = mujoco.MjModel.from_xml_path(XML)
     data = mujoco.MjData(model)
+    root = int(model.jnt_qposadr[int(model.joint("floating_base_joint").id)])
+    data.qpos[root] = 5.0
+    data.qpos[root + 2] += 1.0
     mujoco.mj_forward(model, data)
     geometry = build_two_phase_geometry(model, load_config("configs/default.json"))
 
-    row = audit_geometry_clearance(model, data, geometry, representative="initial")
+    row = audit_geometry_clearance(
+        model, data, geometry, representative="above_obstacle", tolerance=1e-5
+    )
 
-    assert row["representative"] == "initial"
+    assert row["representative"] == "above_obstacle"
+    assert row["status"] == "pass"
+    assert row["comparable_projection"] is True
     assert np.isfinite(row["jax_clearance"])
     assert np.isfinite(row["mujoco_reference_distance"])
     assert row["absolute_difference"] == pytest.approx(abs(row["jax_clearance"] - row["mujoco_reference_distance"]))
     assert isinstance(row["sign_agreement"], bool)
     assert set(row["nearest_geom_pair"]) == {"robot", "obstacle"}
+
+
+def test_host_geometry_audit_gate_pauses_outside_comparable_projection():
+    model = mujoco.MjModel.from_xml_path(XML)
+    data = mujoco.MjData(model)
+    mujoco.mj_forward(model, data)
+    geometry = build_two_phase_geometry(model, load_config("configs/default.json"))
+
+    row = audit_geometry_clearance(
+        model, data, geometry, representative="before_obstacle", tolerance=1e-5
+    )
+
+    assert row["status"] == "gate_pause"
+    assert "comparable_projection" in row["failed"]
+
+
+def test_reconstruct_guideline_state_uses_reference_pose_velocity_and_action_order():
+    reference, _ = _reference()
+    model = mujoco.MjModel.from_xml_path(XML)
+
+    state = reconstruct_guideline_state(
+        model, reference, 6, wheel_roll_radius=0.07
+    )
+
+    root_joint = int(model.joint("floating_base_joint").id)
+    root_qpos = int(model.jnt_qposadr[root_joint])
+    root_qvel = int(model.jnt_dofadr[root_joint])
+    assert state.reference_index == 6
+    assert state.time == pytest.approx(float(reference.df.loc[6, "time"]))
+    np.testing.assert_allclose(
+        state.qpos[root_qpos : root_qpos + 3],
+        [reference.df.loc[6, "pos_x"], 0.0, reference.df.loc[6, "pos_z"]],
+    )
+    np.testing.assert_allclose(
+        state.qvel[root_qvel : root_qvel + 3],
+        [reference.df.loc[6, "vel_x"], 0.0, reference.df.loc[6, "vel_z"]],
+    )
+    np.testing.assert_allclose(
+        state.normalized_action,
+        reference.df.loc[6, ["action_steering", "action_rearwheel", "action_hip", "action_knee"]].to_numpy(float),
+    )
