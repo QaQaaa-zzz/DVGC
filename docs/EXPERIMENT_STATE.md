@@ -33,6 +33,31 @@ legacy migration sources only.
 None authorized. Repository cleanup must not start formal PPO, a learnability
 pilot, or the two-phase pipeline.
 
+## Pipeline automation safety interlock
+
+On 2026-08-03 the live user-systemd state was inspected before any two-phase
+implementation work. `dvgc-pipeline-watchdog.timer` was still enabled and
+active, and `runs/ACTIVE_PIPELINE.json` still had status `ACTIVE` for
+`scripts/start_corrected_apex_unified_rsi_followons.sh`. The watchdog source
+also retains its legacy Descent-Tube fallback.
+
+The timer was stopped and disabled without changing or deleting its unit files,
+watchdog source, or referenced legacy scripts. The active pointer was preserved
+byte-for-byte as
+`runs/ACTIVE_PIPELINE.legacy-disabled-20260803T134842+0800.json` (SHA-256
+`6546dc01d7d2579d733fcbf39b3544942467232dfec2a25319e078a24b3bfae4`), and
+the default `runs/ACTIVE_PIPELINE.json` path is absent. The complete ignored
+operations record is under
+`runs/operations/watchdog_deactivation_20260803T134842+0800/`.
+
+Restoring the retired automation requires an explicit decision followed, from
+the repository root, by:
+
+```bash
+mv -- runs/ACTIVE_PIPELINE.legacy-disabled-20260803T134842+0800.json runs/ACTIVE_PIPELINE.json
+systemctl --user enable --now dvgc-pipeline-watchdog.timer
+```
+
 ## Current inputs and hashes
 
 - XML: `assets/orange_bike_4kg_horizontal.xml`
