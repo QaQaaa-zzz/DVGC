@@ -350,11 +350,16 @@ No unit was stopped, disabled, reloaded, or otherwise changed.
 
 | path | role | retained_root | reverse_dependencies | decision | reason | validation_required |
 |---|---|---|---|---|---|---|
-| `PROJECT_SUMMARY.md` | old clean-project/five-stage narrative | none | current README only | archive_summary | historically useful but must not remain current truth | replace README reference; summarize under `docs/archive/legacy_five_stage/` |
+| `PROJECT_SUMMARY.md` | old clean-project/five-stage narrative | none | none | archive_summary | useful method history condensed; root copy removed | archived as `docs/archive/legacy_five_stage/README.md` |
 
 No Python source, JSON artifact, log, checkpoint, policy, or raw report will be
 copied into `docs/archive/`. Git history and `archive/pre-clean-20260731` remain
 the source-level archive.
+
+On 2026-08-03, the useful route overview, replacement rationale, reusable
+baseline/ablation assets, recovery authority, and unsupported-claim boundary
+were condensed into `docs/archive/legacy_five_stage/README.md`. The stale root
+summary was then removed; no executable or run artifact was copied.
 
 ## 9. Initial decision counts
 

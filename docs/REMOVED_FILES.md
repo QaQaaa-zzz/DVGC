@@ -24,6 +24,6 @@
 | `clean_2m_video.py` | 删除，与 DVGC 方法无关。 |
 | `smoke_test_dvgc.py` | 由 `tests/` 取代。 |
 | `run_landing_v2.sh` | 删除，由 `scripts/run_backward_bootstrap.sh` 取代。 |
-| `AGENTS.md`、`CLAUDE.md` 等过程说明 | 未进入交付工程；方法和运行说明统一在 `README.md` 与 `PROJECT_SUMMARY.md`。 |
+| `AGENTS.md`、`CLAUDE.md` 等过程说明 | 未进入交付工程；当前方法和运行说明以根目录文档为准，旧五阶段摘要见 `docs/archive/legacy_five_stage/README.md`。 |
 
 旧实验结果如果要作为论文负消融，应放到工程外的只读归档目录，不应继续参与 import、配置或流水线。
