@@ -561,7 +561,7 @@ def test_real_bank_builder_covers_fixed_u_and_d_nominal_slices():
     assert report["formal_training_transitions"] == 0
 
 
-def test_guideline_cli_gate_pauses_before_banks_when_real_event_trace_fails(tmp_path):
+def test_guideline_cli_archives_videos_then_gate_pauses_before_banks(tmp_path):
     output = tmp_path / "gate_b_cli"
     args = Namespace(
         config="configs/default.json",
@@ -581,6 +581,8 @@ def test_guideline_cli_gate_pauses_before_banks_when_real_event_trace_fails(tmp_
         "threshold_manifest.json",
         "geometry_cross_audit.json",
         "guideline_event_report.json",
+        "failure_video_status.json",
+        "failure_videos",
     }
     assert {path.name for path in output.iterdir()} == expected
     run_manifest = json.loads((output / "run_manifest.json").read_text())
@@ -590,6 +592,8 @@ def test_guideline_cli_gate_pauses_before_banks_when_real_event_trace_fails(tmp_
         "maximum_construction_environment_transitions": 21,
         "maximum_roundtrip_environment_transitions": 26,
         "maximum_guideline_event_transitions": 100,
+        "maximum_failure_video_environment_transitions": 108,
+        "expected_current_failure_video_environment_transitions": 20,
     }
     assert event["status"] == "gate_pause"
     assert event["end_code"] == 9
@@ -597,6 +601,13 @@ def test_guideline_cli_gate_pauses_before_banks_when_real_event_trace_fails(tmp_
     assert event["initial_ground_support"]["accepted"] is True
     assert event["initial_ground_support"]["body_terrain_contacts"] == 0
     assert event["missing_events"] == list(EVENT_NAMES)
+    video_status = json.loads((output / "failure_video_status.json").read_text())
+    assert video_status["status"] == "pass"
+    for scenario in (
+        "full_guideline_prelaunch_airborne",
+        "launch_history_airborne_before_window",
+    ):
+        assert (output / "failure_videos" / f"{scenario}.mp4").stat().st_size > 1_000
     assert not (output / "phase_up_guideline_bank.pkl").exists()
     assert not (output / "phase_down_guideline_bank.pkl").exists()
 
@@ -615,3 +626,39 @@ def test_guideline_cli_gate_pauses_before_banks_when_real_event_trace_fails(tmp_
     assert (failed_output / "geometry_cross_audit.json").is_file()
     assert not (failed_output / "phase_up_guideline_bank.pkl").exists()
     assert not (failed_output / "phase_down_guideline_bank.pkl").exists()
+
+
+def test_guideline_cli_preserves_physical_gate_pause_when_video_render_fails(
+    tmp_path, monkeypatch
+):
+    output = tmp_path / "gate_b_video_failure"
+    args = Namespace(
+        config="configs/default.json",
+        reference="data/reference_jump.csv",
+        output=str(output),
+        seed=4100,
+        perturbations="nominal",
+        geometry_tolerance=2e-4,
+        event_max_control_ticks=100,
+    )
+
+    def fail_render(*_args, **_kwargs):
+        raise RuntimeError("synthetic video encoder failure")
+
+    monkeypatch.setattr(
+        "cli.build_two_phase_guideline_banks.render_failure_archive", fail_render
+    )
+
+    with pytest.raises(ValueError, match="physical event trace entered gate_pause"):
+        build_guideline_cli(args)
+
+    status = json.loads((output / "failure_video_status.json").read_text())
+    assert status == {
+        "error": "RuntimeError: synthetic video encoder failure",
+        "formal_training_transitions": 0,
+        "original_gate_status": "gate_pause",
+        "status": "render_failed",
+    }
+    assert json.loads((output / "guideline_event_report.json").read_text())[
+        "status"
+    ] == "gate_pause"

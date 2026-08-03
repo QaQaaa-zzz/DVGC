@@ -13,6 +13,7 @@ import mujoco
 from dvgc.bank import SnapshotBank
 from dvgc.config import ACTION_MAPPING_VERSION, config_hash, file_sha256, load_config
 from dvgc.env import OrangeBikeDVGC
+from dvgc.failure_video import render_failure_archive
 from dvgc.reference import ReferenceTrajectory
 from dvgc.two_phase_guideline import (
     DEFAULT_GUIDELINE_PERTURBATIONS,
@@ -108,6 +109,8 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
             "maximum_guideline_event_transitions": int(
                 args.event_max_control_ticks
             ),
+            "maximum_failure_video_environment_transitions": 108,
+            "expected_current_failure_video_environment_transitions": 20,
             "formal_training_transitions": 0,
         },
         "stopping_condition": "stop on first geometry, threshold, snapshot, or output-contract failure",
@@ -235,6 +238,41 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
     )
     _save_json(output / "guideline_event_report.json", event_report)
     if event_report["status"] != "pass":
+        try:
+            video_manifest = render_failure_archive(
+                env,
+                reference,
+                geometry,
+                runtime_thresholds,
+                output_dir=output / "failure_videos",
+                seed=int(args.seed) + 60_000,
+                source_hashes={
+                    "xml": file_sha256(cfg.xml_path),
+                    "config": file_sha256(args.config),
+                    "reference": file_sha256(args.reference),
+                },
+            )
+            video_status = {
+                "status": "pass",
+                "original_gate_status": event_report["status"],
+                "formal_training_transitions": 0,
+                "videos": [
+                    {
+                        key: value
+                        for key, value in row.items()
+                        if key != "telemetry"
+                    }
+                    for row in video_manifest["videos"]
+                ],
+            }
+        except Exception as error:  # preserve the original physical Gate pause
+            video_status = {
+                "status": "render_failed",
+                "original_gate_status": event_report["status"],
+                "formal_training_transitions": 0,
+                "error": f"{type(error).__name__}: {error}",
+            }
+        _save_json(output / "failure_video_status.json", video_status)
         raise ValueError("Guideline physical event trace entered gate_pause")
     bank_build = build_guideline_banks(
         env,

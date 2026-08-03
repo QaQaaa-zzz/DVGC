@@ -164,6 +164,8 @@ def test_representative_selection_requires_apex_thickness_and_boundaries():
         "dvgc/two_phase_guideline.py",
         "dvgc/two_phase_roundtrip.py",
         "cli/build_two_phase_guideline_banks.py",
+        "dvgc/failure_video.py",
+        "cli/render_two_phase_failures.py",
     ],
 )
 def test_runtime_fingerprint_binds_each_gate_b_dynamic_source(tmp_path, relative):
