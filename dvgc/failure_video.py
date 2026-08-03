@@ -2,11 +2,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
+import json
+from pathlib import Path
 from typing import Any
 
 import jax
 import jax.numpy as jp
+import mediapy as media
+import mujoco
 import numpy as np
+from PIL import Image, ImageDraw, ImageFont
 
 from .config import STAGE_ID
 from .env import END_REASON
@@ -224,4 +230,203 @@ def capture_failure_scenario(
         frames=tuple(frames),
         telemetry=tuple(telemetry),
         summary=summary,
+    )
+
+
+def _decorate_failure_frame(
+    frame: np.ndarray, telemetry: dict[str, Any], scenario: str
+) -> np.ndarray:
+    image = Image.fromarray(frame)
+    draw = ImageDraw.Draw(image, "RGBA")
+    width = image.size[0]
+    box_width = min(width - 16, 700)
+    draw.rounded_rectangle((8, 8, box_width, 160), radius=7, fill=(0, 0, 0, 185))
+    try:
+        font = ImageFont.load_default(size=max(11, min(18, width // 45)))
+    except TypeError:
+        font = ImageFont.load_default()
+    events = telemetry["events"]
+    active = [name for name in EVENT_NAMES if events[name]]
+    lines = [
+        f"FAILURE AUDIT | {scenario}",
+        (
+            f"tick={telemetry['tick']:02d} ref_action={telemetry['action_reference_index']} "
+            f"phase={telemetry['phase']} end={telemetry['end_code']}:{telemetry['termination_reason']}"
+        ),
+        (
+            f"x={telemetry['x']:.3f} z={telemetry['z']:.3f} "
+            f"vx={telemetry['vx']:+.3f} vz={telemetry['vz']:+.3f} m/s"
+        ),
+        (
+            f"jump window=[{telemetry['jump_window_min_x']:.3f},"
+            f" {telemetry['jump_window_max_x']:.3f}] inside={telemetry['inside_jump_window']}"
+        ),
+        (
+            f"host wheel/body contacts={telemetry['host_wheel_contacts']}/"
+            f"{telemetry['host_body_contacts']} deployable_support="
+            f"{telemetry['deployable_wheel_support']} jump_latch="
+            f"{telemetry['jump_signal_latched']}"
+        ),
+        f"two-phase events={','.join(active) if active else 'none'}",
+    ]
+    for index, line in enumerate(lines):
+        color = (255, 190, 80, 255) if index == 0 else (255, 255, 255, 255)
+        draw.text((18, 15 + 23 * index), line, font=font, fill=color)
+    if telemetry["terminated"] or telemetry["truncated"]:
+        draw.rounded_rectangle(
+            (max(8, width - 245), 8, width - 8, 48),
+            radius=7,
+            fill=(170, 0, 0, 220),
+        )
+        draw.text(
+            (max(16, width - 232), 18),
+            "TERMINAL FAILURE",
+            font=font,
+            fill=(255, 255, 255, 255),
+        )
+    return np.asarray(image)
+
+
+def render_failure_trace(
+    env: Any,
+    trace: FailureTrace,
+    output_path: str | Path,
+    *,
+    width: int = 960,
+    height: int = 540,
+    fps: int = 25,
+) -> dict[str, Any]:
+    """Render captured state values; this function never advances dynamics."""
+    if len(trace.frames) != len(trace.telemetry) or not trace.frames:
+        raise ValueError("Failure trace frames and telemetry must be nonempty and aligned")
+    if min(width, height, fps) <= 0:
+        raise ValueError("Video dimensions and fps must be positive")
+    path = Path(output_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    model = env.mj_model
+    data = mujoco.MjData(model)
+    root = int(model.jnt_qposadr[int(model.joint("floating_base_joint").id)])
+    renderer = mujoco.Renderer(model, height=int(height), width=int(width))
+    camera = mujoco.MjvCamera()
+    camera.type = mujoco.mjtCamera.mjCAMERA_FREE
+    camera.azimuth, camera.elevation, camera.distance = 90.0, -10.0, 2.4
+    rendered: list[np.ndarray] = []
+    try:
+        for values, telemetry in zip(trace.frames, trace.telemetry):
+            data.qpos[:] = values["qpos"]
+            data.qvel[:] = values["qvel"]
+            if model.nu:
+                data.ctrl[:] = values["ctrl"]
+            mujoco.mj_forward(model, data)
+            camera.lookat[:] = [
+                float(values["qpos"][root]) + 0.30,
+                float(values["qpos"][root + 1]),
+                0.24,
+            ]
+            renderer.update_scene(data, camera=camera)
+            rendered.append(
+                _decorate_failure_frame(
+                    renderer.render(), telemetry, trace.scenario.name
+                )
+            )
+    finally:
+        renderer.close()
+    playback = [rendered[0]] * 12
+    for frame in rendered:
+        playback.extend((frame, frame))
+    playback.extend([rendered[-1]] * 25)
+    media.write_video(path, playback, fps=int(fps), codec="h264", crf=18)
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    return {
+        "scenario": trace.scenario.name,
+        "video": str(path.resolve()),
+        "video_sha256": digest,
+        "video_bytes": path.stat().st_size,
+        "fps": int(fps),
+        "playback": "0.5x control-tick playback with initial/terminal holds",
+        "environment_transitions": trace.summary["environment_transitions"],
+        "formal_training_transitions": 0,
+        "summary": trace.summary,
+        "telemetry": list(trace.telemetry),
+    }
+
+
+def write_failure_video_manifest(
+    path: str | Path,
+    videos: list[dict[str, Any]],
+    *,
+    source_hashes: dict[str, str],
+) -> dict[str, Any]:
+    """Validate and write the closed two-scenario failure-video manifest."""
+    expected = set(FAILURE_SCENARIOS)
+    actual = {str(row.get("scenario", "")) for row in videos}
+    if actual != expected or len(videos) != len(expected):
+        raise ValueError("Failure-video manifest requires both named scenarios")
+    if set(source_hashes) != {"xml", "config", "reference"}:
+        raise ValueError("Failure-video manifest source hashes are incomplete")
+    for row in videos:
+        video_path = Path(row["video"])
+        if not video_path.is_file() or video_path.stat().st_size <= 0:
+            raise ValueError(f"Failure video is absent or empty: {video_path}")
+        actual_hash = hashlib.sha256(video_path.read_bytes()).hexdigest()
+        if row.get("video_sha256") != actual_hash:
+            raise ValueError(f"Failure video hash mismatch: {video_path}")
+        if int(row.get("formal_training_transitions", -1)) != 0:
+            raise ValueError("Failure video cannot report training transitions")
+    manifest = {
+        "contract_version": 1,
+        "status": "pass",
+        "artifact_role": "dynamic_failure_audit_only",
+        "source_hashes": dict(source_hashes),
+        "formal_training_transitions": 0,
+        "videos": videos,
+    }
+    output = Path(path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    return manifest
+
+
+def render_failure_archive(
+    env: Any,
+    reference: ReferenceTrajectory,
+    geometry: TwoPhaseGeometry,
+    thresholds: TwoPhaseThresholds,
+    *,
+    output_dir: str | Path,
+    seed: int,
+    source_hashes: dict[str, str],
+    width: int = 960,
+    height: int = 540,
+    fps: int = 25,
+) -> dict[str, Any]:
+    """Capture and render the closed pair of authoritative Gate B failures."""
+    output = Path(output_dir)
+    output.mkdir(parents=True, exist_ok=True)
+    videos = []
+    for offset, scenario in enumerate(FAILURE_SCENARIOS):
+        trace = capture_failure_scenario(
+            env,
+            reference,
+            geometry,
+            thresholds,
+            scenario=scenario,
+            seed=int(seed) + offset,
+        )
+        videos.append(
+            render_failure_trace(
+                env,
+                trace,
+                output / f"{scenario}.mp4",
+                width=width,
+                height=height,
+                fps=fps,
+            )
+        )
+    return write_failure_video_manifest(
+        output / "failure_video_manifest.json",
+        videos,
+        source_hashes=source_hashes,
     )
