@@ -245,7 +245,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                 geometry,
                 runtime_thresholds,
                 output_dir=output / "failure_videos",
-                seed=int(args.seed) + 60_000,
+                seed=int(args.seed) + 40_000,
                 source_hashes={
                     "xml": file_sha256(cfg.xml_path),
                     "config": file_sha256(args.config),

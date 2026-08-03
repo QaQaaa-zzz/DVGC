@@ -603,6 +603,12 @@ def test_guideline_cli_archives_videos_then_gate_pauses_before_banks(tmp_path):
     assert event["missing_events"] == list(EVENT_NAMES)
     video_status = json.loads((output / "failure_video_status.json").read_text())
     assert video_status["status"] == "pass"
+    full_video = next(
+        row
+        for row in video_status["videos"]
+        if row["scenario"] == "full_guideline_prelaunch_airborne"
+    )
+    assert full_video["summary"]["seed"] == args.seed + 40_000
     for scenario in (
         "full_guideline_prelaunch_airborne",
         "launch_history_airborne_before_window",
