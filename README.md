@@ -1,103 +1,91 @@
-# OrangeBike DVGC Clean Project
+# OrangeBike DVGC
 
-这是删除历史过程脚本后保留的唯一正式工程。方法说明见 `PROJECT_SUMMARY.md`，旧文件处理见 `docs/REMOVED_FILES.md`。
+DVGC studies how a single-track robot can learn a complete jump despite the
+early-failure bottleneck that makes later flight and recovery states difficult
+to reach from a natural start.
 
-## 1. 环境准备
+## Current research direction
 
-在已有 MuJoCo Playground GPU 环境中安装本项目：
+The approved concise RA-L method uses two experts:
+
+1. `Propulsion-Ascent` reaches an Apex transition band.
+2. `Descent-Recovery` continues from that band to landing and stable recovery.
+
+Frozen experts provide event-aligned snapshots and continuation labels for two
+feasibility models, `V_up` and `V_down`. Their learned soft feasibility Tubes
+guide one final Tube-RSI PPO. A soft Tube is not a certified safe set. The final
+empirical Jump Capability Envelope is measured only by independent evaluation
+of the frozen unified policy.
+
+The method is specified in `docs/METHOD_TWO_PHASE_SOFT_TUBE.md`.
+
+## Implementation status
+
+Implemented and reusable today: the authoritative model loader, action mapping,
+MJX environment, observations/history, snapshot round-trip, `SnapshotBank`, PPO
+training/resume/inference, policy bundles, rollout, rewards, reference parsing,
+provenance, seed tracking, runtime validation, and generic evaluation.
+
+Not yet implemented: final two-phase expert semantics, `V_up`/`V_down`, learned
+soft-Tube construction, two-phase unified Tube-RSI PPO, and a new two-phase
+pipeline CLI. Existing five-stage code is retained temporarily as a legacy
+migration source, not advertised as the active method.
+
+## Environment
+
+Use the existing configured interpreter without reinstalling or upgrading it:
 
 ```bash
-pip install -e .
-python -m cli.prepare_project
-python -m pytest -q
+/home/qy/mujoco_playground/.venv/bin/python -m cli.prepare_project \
+  --xml assets/orange_bike_4kg_horizontal.xml \
+  --reference data/reference_jump.csv
 ```
 
-在已配置好的 Ubuntu MuJoCo Playground 环境中，不安装或升级依赖，直接运行：
+The only authoritative model is
+`assets/orange_bike_4kg_horizontal.xml`: 4 kg payload, hip/knee force limits
+`+/-50 N m`, and action order `[steer, rear-wheel drive, hip, knee]`. Cleanup
+does not modify XML, meshes, collision geometry, obstacles, matcher radii, or
+the configured MuJoCo Playground environment.
+
+## Minimum preflight
 
 ```bash
 bash scripts/local_preflight.sh
 ```
 
-本项目只读取 `assets/orange_bike_4kg_horizontal.xml`，不生成 runtime XML，也不修改碰撞几何。正式模型使用 4 kg 负载和 hip/knee `±50 N·m` 限幅，默认使用 `impl="warp"`、`contact_mode="imu"`；Actor observation 不读取 oracle contact。请将你已有的 STL 保持在 XML 指定的 `assets/meshes/` 目录。
-
-模型与 knee 动作映射的完整说明见 `docs/XML_AND_KNEE_MAPPING.md`。
-
-## 2. 单阶段命令
-
-```bash
-python -m cli.build_candidates \
-  --phase landing \
-  --target 96 \
-  --bank artifacts/landing_candidates.pkl
-
-python -m cli.train \
-  --stage landing \
-  --bank artifacts/landing_candidates.pkl \
-  --run runs/landing
-
-python -m cli.certify \
-  --phase landing \
-  --policy runs/landing/policy \
-  --candidate-bank artifacts/landing_candidates.pkl \
-  --output-bank artifacts/landing_tube.pkl
-
-python -m cli.audit \
-  --phase landing \
-  --policy runs/landing/policy \
-  --bank artifacts/landing_tube.pkl \
-  --output runs/landing/audit.json
-```
-
-Flight、Takeoff 和 Approach 必须显式提供已认证下游 bank：
-
-```bash
-python -m cli.certify \
-  --phase takeoff \
-  --policy runs/takeoff/policy \
-  --candidate-bank artifacts/takeoff_candidates.pkl \
-  --downstream-bank artifacts/flight_tube.pkl \
-  --output-bank artifacts/takeoff_tube.pkl
-```
-
-## 3. 完整顺序
-
-```bash
-bash scripts/run_backward_bootstrap.sh
-```
-
-脚本按 Landing → Flight → Takeoff → Approach → natural-start 顺序执行。每个阶段先用几何候选完成 backward bootstrap，冻结策略并认证第一版 Tube；只有达到 Final-safe 激活门槛后，才从 Final-safe/Boundary Tube 继续 RSI refinement，然后再次冻结、重新认证并独立 audit。bootstrap/refinement 按 60%/40% 拆分原阶段 PPO 预算；中间认证的 branch rollout 是额外环境交互，必须单独计入并报告总交互成本。后续阶段通过 `--resume` 继承前一阶段共享 Actor，并混入单独计权的已认证下游 rehearsal。
-
-`scripts/local_preflight.sh` 只是本地基础预检；正式长训练仍须先满足 `docs/VERIFICATION_PROTOCOL.md` 中的完整训练 gates。
-
-首次长训练前运行完整 gate（会执行两个极短 PPO compile/run/resume probe），之后正式脚本会校验报告是否仍与源码、XML 和配置一致：
+For the complete runtime smoke gate:
 
 ```bash
 /home/qy/mujoco_playground/.venv/bin/python -m cli.runtime_gate
 ```
 
-## 4. 认证原则
+The gate includes only a 64+32 timestep PPO compile/update/resume smoke test;
+it is not formal training or a learnability pilot.
 
-- Candidate bank 与 downstream certified bank 是两个不同参数；
-- `training_only=True` 的 velocity seeds 和 rehearsal states 永不参与认证；
-- Chain 与 Final Recovery 分别统计；
-- Chain 事件锁存，不读取最后一步瞬时值；
-- Tube entry 使用下游 final-safe 状态的标准化距离；
-- build 与 audit 使用不同 seed namespace；
-- timeout 单独报告，不能写成物理 Failure；
-- policy manifest 校验 action mapping、原始 XML、config 和 bank 版本；
-- 全部入口直接读取 `orange_bike_4kg_horizontal.xml`，禁止 runtime XML 或替代几何。
+## Existing runnable entrypoints
 
-## 5. 参考轨迹的允许用途
+- `python -m cli.prepare_project`: audit configuration, XML, and reference data.
+- `python -m cli.runtime_gate`: validate model load, reset/step, snapshot,
+  checkpoint resume, deterministic inference, and bounded PPO plumbing.
+- `python -m cli.build_candidates`, `cli.train`, `cli.certify`, `cli.audit`, and
+  `cli.evaluate`: reusable generic infrastructure retained for migration.
+- `python -m pytest -q`: repository verification.
 
-允许：候选范围、阶段姿态 envelope、动作方向/执行器诊断、消融参考。
+There is currently no formal two-phase pipeline command. No placeholder command
+is provided.
 
-禁止：逐点 CoM/姿态轨迹跟踪 reward、用“接近参考”替代经验可恢复标签、用 velocity-seeded 辅助状态进行正式认证。
+## Repository layout
 
-## 6. 输出
+- `dvgc/`: reusable model, environment, snapshot, PPO, policy, rollout, and
+  evaluation infrastructure.
+- `cli/`: real runnable entrypoints plus legacy migration utilities under
+  dependency review.
+- `scripts/`: preflight and temporarily retained launchers under dependency
+  review.
+- `configs/`: default and legacy experiment configurations.
+- `tests/`: stable contracts plus legacy route tests pending safe extraction.
+- `docs/EXPERIMENT_STATE.md`: compact recoverable state.
+- `docs/REPOSITORY_LAYOUT.md`: cleanup dependency and deletion ledger.
 
-- `artifacts/*_tube.pkl`：带 Chain/Final Beta posterior 的版本化 Tube；
-- `runs/*/policy/`：不可变 policy bundle；
-- `runs/*/audit.json`：独立 Tube 质量报告；
-- `runs/natural_start_evaluation.json`：最终自然起点成功率；
-- `docs/reference_report.json`、`docs/reference_phase_envelopes.csv`：参考轨迹审计；
-- `docs/model_report.json`：模型结构审计。
+The cleanup branch does not start the future two-phase training pipeline. Its
+next permitted action is documented in `docs/EXPERIMENT_STATE.md`.
