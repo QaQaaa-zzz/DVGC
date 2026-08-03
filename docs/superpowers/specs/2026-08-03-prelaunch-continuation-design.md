@@ -57,6 +57,26 @@ airborne, phase/event logic may immediately recognize the corresponding
 airborne continuation; it must not reset or reject the rollout merely because
 wheel support was lost earlier.
 
+The latch is monotonic for an entire rollout:
+
+```text
+false before legal-window entry
+true on legal-window entry
+true after leaving the window
+```
+
+Early airborne motion before this latch is diagnostic only. It cannot set the
+formal liftoff-seen flag, satisfy Phase U, or substitute for full Apex-band
+membership. `propulsion_ascent_success` continues to require every Apex gate,
+including obstacle-relative position, clearance, kinematics, attitude, contact
+legality, and absence of physical failure.
+
+Legacy Takeoff counters and deadlines become active only after the formal jump
+latch. Before the latch, positive-pitch, wheelie, liftoff-deadline, and
+wheel-clearance-deadline failure conditions must remain false and their
+counters must not advance. An early liftoff must not set
+`dual_wheel_liftoff_seen`; legal liftoff accounting begins after the latch.
+
 This is reward and event gating, not a success claim. Apex membership,
 full-structure clearance, Descent-Recovery support, landing-region validity,
 contact legality, stable hold, and physical-failure exclusions remain governed
@@ -70,11 +90,13 @@ failure-audit semantics. No XML, geometry, action mapping, observation vector,
 reset contract, matcher, virtual environment, or PPO algorithm is changed.
 
 The old named `full_guideline_prelaunch_airborne` audit scenario is no longer
-an expected failure after this change. Failure-video code and tests must be
-updated so they never require or falsely certify the retired end condition.
-Any actual post-change Gate B failure must be archived under a name and reason
-derived from the newly observed physical/event outcome, with MP4, state NPZ,
-telemetry, and manifest closure.
+an expected failure after this change. The fixed diagnostic scenarios are
+`full_guideline_continuation` and `launch_history_window_latch`. They record
+the observed outcome and do not promise failure or success. Failure-video code
+and tests must never require or falsely certify the retired end condition.
+Any actual post-change Gate B pause is archived with MP4, state NPZ, telemetry,
+manifest closure, actual `audit_outcome`, end code, terminal reason, event
+ticks, and transition count. Rendering never decides Gate B status.
 
 ## Red-Green Tests
 
@@ -90,6 +112,14 @@ Tests must first demonstrate the old behavior and fail for the intended reason:
 5. retained non-posture physical failures and timeout behavior are unchanged;
 6. legacy snapshot fields remain round-trip compatible;
 7. failure-video validation no longer requires the retired prelaunch terminal.
+8. early airborne without window entry and valid Apex leaves
+   `propulsion_ascent_success` false;
+9. the jump latch follows false -> true -> true before/inside/after the window;
+10. Takeoff counters, legal liftoff, and all four Takeoff failure codes remain
+    inactive before the latch;
+11. `prelaunch_airborne_count` survives timing-explicit snapshot round trip;
+12. prohibited contact, invalid wheel contact, roll, pitch, backward motion,
+    platform back-edge exit, and nonfinite dynamics remain hard failures.
 
 ## Gate B Recheck
 

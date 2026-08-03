@@ -151,7 +151,45 @@ git commit -m "fix: continue early airborne rollouts"
 
 ---
 
-### Task 2: Replace retired prelaunch-failure audit assumptions
+### Task 2: Close latch, success, deadline, and compatibility semantics
+
+**Files:**
+- Modify: `dvgc/rewards.py`
+- Modify: `dvgc/env.py`
+- Modify: `tests/test_prelaunch_continuation.py`
+- Modify: `tests/test_takeoff_reward.py`
+- Modify: `tests/test_two_phase_semantics.py`
+- Modify: `tests/test_two_phase_snapshot_roundtrip.py`
+
+**Interfaces:**
+- `compute_takeoff_reward_profile(..., jump_latched: jp.ndarray) -> dict[str, jp.ndarray]`.
+- Preserves `prelaunch_airborne_count`, constant value 9, and legacy restore defaults.
+- Produces monotonic `jump_signal_latched` and post-latch-only Takeoff accounting.
+
+- [ ] Add an environment test that observes `jump_signal_latched` false before
+  the window, true inside it without wheel support, and still true after the
+  state moves beyond the window.
+- [ ] Add a Phase U semantics test with early-airborne-like signals but no
+  window-valid Apex state and require `propulsion_ascent_success == false`.
+- [ ] Add pure Takeoff-profile RED tests with phase `takeoff`, all failure
+  signals active, and `jump_latched=false`; require zero counters, false legal
+  liftoff, false deadline failures, and false pitch/wheelie failures.
+- [ ] Add the `jump_latched` input, gate Takeoff active state and legal liftoff
+  accumulation by it, pass the environment latch into the reward function, and
+  make the tests GREEN.
+- [ ] Extract the unchanged hard-failure OR into a pure `_hard_failure_flags`
+  helper used by `env.step`; parameterize every retained pre-window global
+  failure input and require it remains hard. Keep dynamic roll/pitch/nonfinite
+  tests as integration evidence.
+- [ ] Add a timing-explicit snapshot/restore assertion that a nonzero
+  `prelaunch_airborne_count` is preserved exactly; require old records lacking
+  the field still restore with zero.
+- [ ] Run the focused semantics, reward, environment, and round-trip tests.
+- [ ] Commit `fix: gate takeoff accounting after jump latch`.
+
+---
+
+### Task 3: Replace retired prelaunch-failure audit assumptions
 
 **Files:**
 - Modify: `dvgc/failure_video.py`
@@ -172,7 +210,7 @@ Replace assertions requiring scenario `full_guideline_prelaunch_airborne`, `end_
 ```python
 assert trace.summary["scenario"] == "full_guideline_continuation"
 assert trace.summary["end_code"] != END_PRETAKEOFF_AIRBORNE
-assert trace.summary["first_event_ticks"]["jump_window_entered"] >= 0
+assert trace.summary["audit_outcome"] == trace.telemetry[-1]["termination_reason"]
 assert trace.summary["formal_training_transitions"] == 0
 ```
 
@@ -198,7 +236,12 @@ FAILURE_SCENARIOS = {
 }
 ```
 
-Capture through the fixed audit horizon or an actual terminal/recovery event. Record `audit_outcome`, `end_code`, event ticks, and terminal reason from the observed rollout. Manifest validation must forbid `END_PRETAKEOFF_AIRBORNE`, recompute NPZ trace digests and first-event ticks, and retain strict action/frame/transition accounting. Do not require a fabricated failure when the diagnostic continues successfully.
+Capture through the fixed audit horizon or an actual terminal/recovery event.
+Record the observed `audit_outcome`, `end_code`, terminal reason, event ticks,
+and transition count. Manifest validation must forbid
+`END_PRETAKEOFF_AIRBORNE`, recompute NPZ trace digests and first-event ticks,
+and retain strict action/frame/transition accounting. It must not require the
+full trace to end in roll failure or fabricate any other failure.
 
 - [ ] **Step 4: Keep automatic archiving conditional on an actual Gate pause**
 
@@ -227,7 +270,7 @@ git commit -m "fix: audit post-prelaunch gate b outcomes"
 
 ---
 
-### Task 3: Rebuild and validate Gate B
+### Task 4: Rebuild and validate Gate B
 
 **Files:**
 - Modify: `docs/EXPERIMENT_STATE.md`
