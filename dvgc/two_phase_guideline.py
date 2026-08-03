@@ -6,15 +6,23 @@ import hashlib
 import json
 from pathlib import Path
 from typing import Any, Mapping, Sequence
+from types import SimpleNamespace
 
+import jax
+import jax.numpy as jp
 import mujoco
 import numpy as np
 
+from .bank import SnapshotBank
+from .config import STAGE_ID
+from .feasibility import validate_phase_snapshot
 from .reference import ReferenceAnchors, ReferenceTrajectory
 from .two_phase_runtime import (
     EVENT_NAMES,
     TwoPhaseGeometry,
     collision_geom_support_bounds,
+    extract_apex_band_signals,
+    extract_recovery_signals,
     full_structure_metrics,
 )
 from .two_phase_semantics import ApexBandThresholds, RecoveryThresholds
@@ -76,6 +84,29 @@ class ReconstructedGuidelineState:
     normalized_action: np.ndarray
     reference_index: int
     time: float
+
+
+@dataclass(frozen=True)
+class GuidelinePerturbation:
+    name: str
+    root_x_offset_m: float
+    root_z_offset_m: float
+
+    def __post_init__(self) -> None:
+        if not self.name:
+            raise ValueError("Guideline perturbation name must be nonempty")
+        values = np.asarray(
+            [self.root_x_offset_m, self.root_z_offset_m], dtype=np.float64
+        )
+        if not np.all(np.isfinite(values)) or np.max(np.abs(values)) > 0.01:
+            raise ValueError("Guideline perturbations must be finite and at most 1 cm")
+
+
+DEFAULT_GUIDELINE_PERTURBATIONS = (
+    GuidelinePerturbation("nominal", 0.0, 0.0),
+    GuidelinePerturbation("root_x_minus_5mm", -0.005, 0.0),
+    GuidelinePerturbation("root_x_plus_5mm", 0.005, 0.0),
+)
 
 
 def _three_indices(indices: Sequence[int]) -> tuple[int, int, int]:
@@ -356,6 +387,312 @@ def reconstruct_guideline_state(
         reference_index=index,
         time=float(row["time"]),
     )
+
+
+def _reference_action(reference: ReferenceTrajectory, index: int) -> np.ndarray:
+    row = reference.df.iloc[int(index)]
+    return np.clip(
+        row[
+            ["action_steering", "action_rearwheel", "action_hip", "action_knee"]
+        ].to_numpy(float),
+        -1.0,
+        1.0,
+    ).astype(np.float32)
+
+
+def validate_guideline_snapshot(
+    record: Mapping[str, Any], *, expected_source_phase: str
+) -> dict[str, Any]:
+    """Require an explicit formal phase; never infer it from legacy fields."""
+    context = record.get("two_phase_context")
+    explicit = isinstance(context, Mapping)
+    formal_match = explicit and context.get("source_phase") == expected_source_phase
+    phase_result = validate_phase_snapshot(record) if explicit else {"valid": False}
+    checks = {
+        "explicit_two_phase_context": explicit,
+        "formal_source_phase": formal_match,
+        "phase_snapshot_contract": bool(phase_result.get("valid", False)),
+    }
+    failed = sorted(name for name, passed in checks.items() if not passed)
+    return {
+        "valid": not failed,
+        "checks": checks,
+        "failed": failed,
+        "phase_snapshot": phase_result,
+    }
+
+
+def capture_guideline_snapshot(
+    env: Any,
+    reference: ReferenceTrajectory,
+    *,
+    target_index: int,
+    source_phase: str,
+    event_names: Sequence[str],
+    event_position: str,
+    parent_trajectory_id: str,
+    trajectory_id: str,
+    provenance: Mapping[str, Any],
+    rng: Any,
+    step_fn: Any | None = None,
+    perturbation: GuidelinePerturbation = DEFAULT_GUIDELINE_PERTURBATIONS[0],
+) -> tuple[dict[str, Any], dict[str, int]]:
+    """Capture v4 state t after real consecutive packets t-2, t-1, t."""
+    legacy_by_formal = {
+        "propulsion_ascent": "takeoff",
+        "descent_recovery": "flight",
+    }
+    if source_phase not in legacy_by_formal:
+        raise ValueError(f"Unknown formal two-phase source: {source_phase}")
+    target = int(target_index)
+    start = target - 3
+    if start < 1 or target >= len(reference.df):
+        raise ValueError("Target index cannot form a real three-tick history")
+    proposal = reconstruct_guideline_state(
+        env.mj_model,
+        reference,
+        start,
+        wheel_roll_radius=float(env._config.wheel_roll_radius),
+    )
+    proposal_qpos = proposal.qpos.copy()
+    root_joint = int(env.mj_model.joint("floating_base_joint").id)
+    root_qpos = int(env.mj_model.jnt_qposadr[root_joint])
+    proposal_qpos[root_qpos] += perturbation.root_x_offset_m
+    proposal_qpos[root_qpos + 2] += perturbation.root_z_offset_m
+    previous_action = jp.asarray(_reference_action(reference, start - 1))
+    ctrl = env._action_to_ctrl(
+        previous_action,
+        jp.asarray(proposal_qpos)[env._joint_qpos["knee_joint"]],
+    )
+    legacy_phase = legacy_by_formal[source_phase]
+    airborne = int(source_phase == "descent_recovery")
+    state = env.reset_from_snapshot(
+        jp.asarray(proposal_qpos, jp.float32),
+        jp.asarray(proposal.qvel, jp.float32),
+        ctrl,
+        rng,
+        jp.asarray(STAGE_ID[legacy_phase], jp.int32),
+        jp.asarray(airborne, jp.int32),
+        jp.asarray(0, jp.int32),
+        jp.asarray(0, jp.int32),
+        last_action=previous_action,
+        estimated_phase=jp.asarray(STAGE_ID[legacy_phase], jp.int32),
+        airborne_count=jp.asarray(
+            env._config.airborne_confirm_steps if airborne else 0, jp.int32
+        ),
+        jump_signal_latched=jp.asarray(bool(airborne)),
+    )
+    advance = jax.jit(env.step) if step_fn is None else step_fn
+    for action_index in (start, start + 1, start + 2):
+        state = advance(state, jp.asarray(_reference_action(reference, action_index)))
+        jax.block_until_ready(state)
+    policy_action = jp.asarray(_reference_action(reference, target))
+    record = env.snapshot_record_v4(
+        state, legacy_phase, policy_action, dict(provenance)
+    )
+    terminated = bool(np.asarray(jax.device_get(state.info["terminated"])))
+    truncated = bool(np.asarray(jax.device_get(state.info["truncated"])))
+    end_code = int(np.asarray(jax.device_get(state.info["end_code"])))
+    if terminated or truncated:
+        outcome = "physical_failure" if terminated else "timeout"
+        raise ValueError(
+            f"Terminal guideline snapshot rejected: {outcome}, end_code={end_code}"
+        )
+    record["two_phase_context"] = {
+        "contract_version": 1,
+        "source_phase": source_phase,
+        "parent_trajectory_id": str(parent_trajectory_id),
+        "trajectory_id": str(trajectory_id),
+        "time_index": target,
+        "event_names": list(event_names),
+        "event_position": str(event_position),
+        "terminated": terminated,
+        "truncated": truncated,
+        "termination_reason": "none" if not (terminated or truncated) else f"end_code_{end_code}",
+        "source_policy_hash": provenance["policy_params_sha256"],
+        "source_xml_hash": provenance["xml_sha256"],
+        "source_config_hash": provenance["config_sha256"],
+    }
+    record["guideline_controller_provenance"] = {
+        "controller": "guideline_open_loop_action_sequence",
+        "reference_rollout_source": "data/reference_jump.csv",
+        "target_reference_index": target,
+        "history_reference_indices": [target - 2, target - 1, target],
+        "perturbation": asdict(perturbation),
+    }
+    validation = validate_guideline_snapshot(
+        record, expected_source_phase=source_phase
+    )
+    if not validation["valid"]:
+        raise ValueError(f"Guideline snapshot contract failed: {validation['failed']}")
+    return record, {"environment_transitions": 3, "training_transitions": 0}
+
+
+def _stable_snapshot_id(record: Mapping[str, Any]) -> str:
+    digest = hashlib.sha256()
+    for name in ("qpos", "qvel", "ctrl", "qacc_warmstart"):
+        digest.update(np.ascontiguousarray(np.asarray(record[name], np.float32)).tobytes())
+    digest.update(
+        json.dumps(
+            record["two_phase_context"], sort_keys=True, separators=(",", ":")
+        ).encode("utf-8")
+    )
+    digest.update(
+        json.dumps(
+            record["guideline_controller_provenance"],
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    )
+    return digest.hexdigest()[:32]
+
+
+def build_guideline_banks(
+    env: Any,
+    reference: ReferenceTrajectory,
+    selection: GuidelineSelection,
+    *,
+    provenance: Mapping[str, Any],
+    seed: int,
+    perturbations: Sequence[GuidelinePerturbation] = DEFAULT_GUIDELINE_PERTURBATIONS,
+) -> tuple[SnapshotBank, SnapshotBank, dict[str, Any]]:
+    """Build small deterministic U/D banks from fixed guideline selections."""
+    if not perturbations:
+        raise ValueError("At least one declared guideline perturbation is required")
+    step_fn = jax.jit(env.step)
+    up_records: list[dict[str, Any]] = []
+    down_records: list[dict[str, Any]] = []
+    transitions = 0
+
+    specifications: list[tuple[str, str, int, list[str], str]] = []
+    for name, index in selection.launch.items():
+        specifications.append(
+            ("propulsion_ascent", name, index, ["jump_window_entered"], "event")
+        )
+    for name, index in selection.apex.items():
+        specifications.append(
+            ("descent_recovery", name, index, ["apex_band_entered"], name)
+        )
+    specifications.append(
+        (
+            "descent_recovery",
+            "early_descent",
+            selection.early_descent,
+            ["descending"],
+            "event",
+        )
+    )
+    for spec_index, (phase, selection_name, index, events, position) in enumerate(
+        specifications
+    ):
+        for perturbation_index, perturbation in enumerate(perturbations):
+            trajectory_id = (
+                f"guideline:{phase}:{selection_name}:{index}:{perturbation.name}"
+            )
+            record, cost = capture_guideline_snapshot(
+                env,
+                reference,
+                target_index=index,
+                source_phase=phase,
+                event_names=events,
+                event_position=position,
+                parent_trajectory_id="guideline:reference_jump",
+                trajectory_id=trajectory_id,
+                provenance=provenance,
+                rng=jax.random.PRNGKey(
+                    int(seed) + spec_index * 100 + perturbation_index
+                ),
+                step_fn=step_fn,
+                perturbation=perturbation,
+            )
+            record["guideline_selection"] = selection_name
+            record["guideline_perturbation"] = perturbation.name
+            record["id"] = _stable_snapshot_id(record)
+            transitions += cost["environment_transitions"]
+            (up_records if phase == "propulsion_ascent" else down_records).append(
+                record
+            )
+    metadata = {
+        "method": "two_phase_guideline",
+        "controller_provenance": "guideline_open_loop_action_sequence",
+        "formal_training_transitions": 0,
+        "construction_seed": int(seed),
+        "perturbations": [asdict(item) for item in perturbations],
+        "created_at": 0.0,
+        "reproducible_build": True,
+    }
+    up = SnapshotBank(up_records, metadata | {"formal_source_phase": "propulsion_ascent"})
+    down = SnapshotBank(
+        down_records, metadata | {"formal_source_phase": "descent_recovery"}
+    )
+    report = {
+        "phase_up_records": len(up.records),
+        "phase_down_records": len(down.records),
+        "construction_environment_transitions": transitions,
+        "formal_training_transitions": 0,
+        "perturbations": [asdict(item) for item in perturbations],
+    }
+    return up, down, report
+
+
+def extract_guideline_threshold_samples(
+    model: mujoco.MjModel,
+    reference: ReferenceTrajectory,
+    selection: GuidelineSelection,
+    geometry: TwoPhaseGeometry,
+    *,
+    wheel_roll_radius: float,
+) -> tuple[list[dict[str, float]], list[dict[str, float]]]:
+    """Extract threshold-only physical values from reconstructed host states."""
+    data = mujoco.MjData(model)
+
+    def state_at(index: int) -> Any:
+        proposal = reconstruct_guideline_state(
+            model,
+            reference,
+            index,
+            wheel_roll_radius=wheel_roll_radius,
+        )
+        data.qpos[:] = proposal.qpos
+        data.qvel[:] = proposal.qvel
+        mujoco.mj_forward(model, data)
+        runtime_data = SimpleNamespace(
+            qpos=jp.asarray(data.qpos),
+            qvel=jp.asarray(data.qvel),
+            geom_xpos=jp.asarray(data.geom_xpos),
+            geom_xmat=jp.asarray(data.geom_xmat),
+        )
+        return SimpleNamespace(
+            data=runtime_data,
+            info={
+                "airborne_count": jp.asarray(geometry.airborne_confirm_steps),
+                "terminated": jp.asarray(0),
+                "truncated": jp.asarray(0),
+                "end_code": jp.asarray(0),
+            },
+        )
+
+    apex_samples = []
+    for index in selection.apex.values():
+        signals = extract_apex_band_signals(state_at(index), geometry)
+        apex_samples.append(
+            {
+                name: float(np.asarray(getattr(signals, name)))
+                for name in sorted(_APEX_FIELDS)
+            }
+        )
+    recovery_samples = []
+    for index in selection.recovery:
+        signals = extract_recovery_signals(
+            state_at(index), geometry, previous_recovery_hold_count=0
+        )
+        recovery_samples.append(
+            {
+                name: float(np.asarray(getattr(signals, name)))
+                for name in sorted(_RECOVERY_FIELDS)
+            }
+        )
+    return apex_samples, recovery_samples
 
 
 def validate_guideline_event_order(

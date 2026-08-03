@@ -1,27 +1,40 @@
 from __future__ import annotations
 
 from dataclasses import asdict
+from argparse import Namespace
 import hashlib
 import json
 from pathlib import Path
 
 import mujoco
+import jax
+import jax.numpy as jp
 import numpy as np
 import pandas as pd
 import pytest
 
 from dvgc.config import load_config
+from dvgc.bank import SnapshotBank
+from dvgc.config import ACTION_MAPPING_VERSION, config_hash, file_sha256
+from dvgc.env import OrangeBikeDVGC
+from dvgc.feasibility import validate_phase_snapshot
 from dvgc.reference import ReferenceAnchors, ReferenceTrajectory
 from dvgc.two_phase_guideline import (
     GuidelineMargins,
+    GuidelinePerturbation,
+    DEFAULT_GUIDELINE_PERTURBATIONS,
     audit_geometry_clearance,
+    capture_guideline_snapshot,
     build_threshold_manifest,
+    build_guideline_banks,
     canonical_manifest_hash,
     reconstruct_guideline_state,
     select_guideline_indices,
     validate_guideline_event_order,
+    validate_guideline_snapshot,
 )
 from dvgc.two_phase_runtime import build_two_phase_geometry
+from cli.build_two_phase_guideline_banks import build as build_guideline_cli
 
 
 XML = "assets/orange_bike_4kg_horizontal.xml"
@@ -355,3 +368,215 @@ def test_reconstruct_guideline_state_uses_reference_pose_velocity_and_action_ord
         state.normalized_action,
         reference.df.loc[6, ["action_steering", "action_rearwheel", "action_hip", "action_knee"]].to_numpy(float),
     )
+
+
+def _real_snapshot_provenance(cfg):
+    no_policy = hashlib.sha256(b"guideline_open_loop_no_policy").hexdigest()
+    return {
+        "xml_sha256": file_sha256(cfg.xml_path),
+        "config_sha256": config_hash(cfg),
+        "action_mapping_version": ACTION_MAPPING_VERSION,
+        "policy_params_sha256": no_policy,
+        "policy_config_sha256": config_hash(cfg),
+        "policy_manifest_sha256": hashlib.sha256(b"guideline_controller_provenance").hexdigest(),
+        "normalizer_sha256": hashlib.sha256(b"no_policy_normalizer").hexdigest(),
+        "source_fingerprint": hashlib.sha256(b"gate_b_test_source").hexdigest(),
+    }
+
+
+@pytest.mark.parametrize(
+    ("source_phase", "target_index", "event_names", "event_position", "legacy_phase"),
+    [
+        ("propulsion_ascent", 113, ["jump_window_entered"], "event", "takeoff"),
+        ("descent_recovery", 220, ["apex_band_entered"], "nearest", "flight"),
+    ],
+)
+def test_real_guideline_capture_builds_three_consecutive_ticks_and_v4_context(
+    source_phase, target_index, event_names, event_position, legacy_phase
+):
+    cfg = load_config(
+        "configs/default.json",
+        {"domain_randomization": False, "obs_noise_enable": False, "use_bank_resets": False},
+    )
+    env = OrangeBikeDVGC(cfg, snapshot_bank=SnapshotBank())
+    reference = ReferenceTrajectory.load("data/reference_jump.csv")
+
+    record, cost = capture_guideline_snapshot(
+        env,
+        reference,
+        target_index=target_index,
+        source_phase=source_phase,
+        event_names=event_names,
+        event_position=event_position,
+        parent_trajectory_id="guideline:reference_jump",
+        trajectory_id=f"guideline:{source_phase}:{target_index}",
+        provenance=_real_snapshot_provenance(cfg),
+        rng=jax.random.PRNGKey(target_index),
+    )
+
+    assert cost == {"environment_transitions": 3, "training_transitions": 0}
+    assert record["source_phase"] == legacy_phase
+    assert record["two_phase_context"]["source_phase"] == source_phase
+    assert record["two_phase_context"]["time_index"] == target_index
+    assert record["two_phase_context"]["terminated"] is False
+    assert record["two_phase_context"]["truncated"] is False
+    assert record["field_ticks"]["actor_packet_fifo_t"] == [1, 2, 3]
+    assert record["actor_packet_fifo_valid"] == 3
+    validation = validate_phase_snapshot(record)
+    assert validation["valid"] is True, validation["failed"]
+    assert validate_guideline_snapshot(record, expected_source_phase=source_phase)["valid"] is True
+    np.testing.assert_array_equal(
+        record["last_normalized_command_t"],
+        reference.df.loc[target_index - 1, ["action_steering", "action_rearwheel", "action_hip", "action_knee"]].to_numpy(np.float32),
+    )
+
+
+def test_guideline_snapshot_never_infers_formal_phase_from_legacy_phase():
+    record = {"source_phase": "flight"}
+
+    result = validate_guideline_snapshot(
+        record, expected_source_phase="descent_recovery"
+    )
+
+    assert result["valid"] is False
+    assert "explicit_two_phase_context" in result["failed"]
+
+
+def test_terminal_guideline_capture_is_rejected_before_bank_admission():
+    cfg = load_config(
+        "configs/default.json",
+        {"domain_randomization": False, "obs_noise_enable": False, "use_bank_resets": False},
+    )
+    env = OrangeBikeDVGC(cfg, snapshot_bank=SnapshotBank())
+    reference = ReferenceTrajectory.load("data/reference_jump.csv")
+    real_step = jax.jit(env.step)
+
+    def forced_terminal(state, action):
+        next_state = real_step(state, action)
+        return next_state.replace(
+            info=next_state.info
+            | {
+                "terminated": jp.asarray(1, jp.int32),
+                "truncated": jp.asarray(0, jp.int32),
+                "end_code": jp.asarray(2, jp.int32),
+            }
+        )
+
+    with pytest.raises(ValueError, match="Terminal guideline snapshot rejected"):
+        capture_guideline_snapshot(
+            env,
+            reference,
+            target_index=113,
+            source_phase="propulsion_ascent",
+            event_names=["jump_window_entered"],
+            event_position="event",
+            parent_trajectory_id="guideline:reference_jump",
+            trajectory_id="guideline:terminal-test",
+            provenance=_real_snapshot_provenance(cfg),
+            rng=jax.random.PRNGKey(99),
+            step_fn=forced_terminal,
+        )
+
+
+def test_declared_guideline_perturbations_are_small_deterministic_and_named():
+    assert [item.name for item in DEFAULT_GUIDELINE_PERTURBATIONS] == [
+        "nominal",
+        "root_x_minus_5mm",
+        "root_x_plus_5mm",
+    ]
+    assert max(abs(item.root_x_offset_m) for item in DEFAULT_GUIDELINE_PERTURBATIONS) <= 0.005
+    assert all(item.root_z_offset_m == 0.0 for item in DEFAULT_GUIDELINE_PERTURBATIONS)
+
+
+def test_real_bank_builder_covers_fixed_u_and_d_nominal_slices():
+    cfg = load_config(
+        "configs/default.json",
+        {"domain_randomization": False, "obs_noise_enable": False, "use_bank_resets": False},
+    )
+    env = OrangeBikeDVGC(cfg, snapshot_bank=SnapshotBank())
+    reference = ReferenceTrajectory.load("data/reference_jump.csv")
+    selection = select_guideline_indices(reference, reference.anchors())
+
+    up, down, report = build_guideline_banks(
+        env,
+        reference,
+        selection,
+        provenance=_real_snapshot_provenance(cfg),
+        seed=3100,
+        perturbations=(GuidelinePerturbation("nominal", 0.0, 0.0),),
+    )
+
+    assert len(up.records) == 3
+    assert len(down.records) == 4
+    assert {row["guideline_selection"] for row in up.records} == {"front", "middle", "back"}
+    assert {row["two_phase_context"]["event_position"] for row in down.records if "apex_band_entered" in row["two_phase_context"]["event_names"]} == {"pre", "nearest", "post"}
+    assert all(row["two_phase_context"]["source_phase"] == "propulsion_ascent" for row in up.records)
+    assert all(row["two_phase_context"]["source_phase"] == "descent_recovery" for row in down.records)
+    assert all(validate_phase_snapshot(row)["valid"] for row in up.records + down.records)
+    assert len({row["id"] for row in up.records + down.records}) == 7
+    assert report["construction_environment_transitions"] == 21
+    assert report["formal_training_transitions"] == 0
+
+
+def test_guideline_cli_writes_reproducible_nominal_banks_and_cost_report(tmp_path):
+    output = tmp_path / "gate_b_cli"
+    args = Namespace(
+        config="configs/default.json",
+        reference="data/reference_jump.csv",
+        output=str(output),
+        seed=4100,
+        perturbations="nominal",
+        geometry_tolerance=2e-4,
+    )
+
+    built = build_guideline_cli(args)
+    assert built["status"] == "build_complete_pending_roundtrip_and_event_gate"
+    expected = {
+        "run_manifest.json",
+        "geometry_manifest.json",
+        "threshold_manifest.json",
+        "phase_up_guideline_bank.pkl",
+        "phase_down_guideline_bank.pkl",
+        "geometry_cross_audit.json",
+        "gate_b_build_report.json",
+    }
+    assert {path.name for path in output.iterdir()} == expected
+    run_manifest = json.loads((output / "run_manifest.json").read_text())
+    report = json.loads((output / "gate_b_build_report.json").read_text())
+    assert run_manifest["interaction_cost"] == {
+        "formal_training_transitions": 0,
+        "maximum_construction_environment_transitions": 21,
+    }
+    assert report["construction_environment_transitions"] == 21
+    assert report["formal_training_transitions"] == 0
+    assert len(SnapshotBank.load(output / "phase_up_guideline_bank.pkl").records) == 3
+    assert len(SnapshotBank.load(output / "phase_down_guideline_bank.pkl").records) == 4
+
+    second_output = tmp_path / "gate_b_cli_repeat"
+    second_args = Namespace(**(vars(args) | {"output": str(second_output)}))
+    build_guideline_cli(second_args)
+    assert file_sha256(output / "phase_up_guideline_bank.pkl") == file_sha256(
+        second_output / "phase_up_guideline_bank.pkl"
+    )
+    assert file_sha256(output / "phase_down_guideline_bank.pkl") == file_sha256(
+        second_output / "phase_down_guideline_bank.pkl"
+    )
+    assert (output / "threshold_manifest.json").read_bytes() == (
+        second_output / "threshold_manifest.json"
+    ).read_bytes()
+
+    with pytest.raises(ValueError, match="absent or empty"):
+        build_guideline_cli(args)
+
+    failed_output = tmp_path / "gate_b_cli_geometry_pause"
+    failed_args = Namespace(
+        **(
+            vars(args)
+            | {"output": str(failed_output), "geometry_tolerance": 1e-12}
+        )
+    )
+    with pytest.raises(ValueError, match="geometry cross-audit"):
+        build_guideline_cli(failed_args)
+    assert (failed_output / "geometry_cross_audit.json").is_file()
+    assert not (failed_output / "phase_up_guideline_bank.pkl").exists()
+    assert not (failed_output / "phase_down_guideline_bank.pkl").exists()
