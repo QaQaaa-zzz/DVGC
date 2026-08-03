@@ -172,7 +172,7 @@ stable modules and tests.
 | `cli/decoupled_bootstrap_controller.py` | persistent legacy controller | none | paired start/run scripts | delete | superseded bootstrap controller | delete route cluster; targeted tests |
 | `cli/descent_envelope_controller.py` | persistent legacy controller | none | trajectory controller, paired scripts/tests | delete | closed Descent-envelope controller | extract seed-contract test first |
 | `cli/descent_local_controller.py` | shared base for old controllers | none | old controller cluster and tests | delete | only closed controller orchestration depends on it | extract shard/OOM utilities or tests first |
-| `cli/descent_tube_controller.py` | persistent legacy controller | none | old controller cluster and tests | delete | closed Descent Tube controller | extract seed/failure-fuse contracts first |
+| `cli/descent_tube_controller.py` | persistent legacy controller | none | old controller cluster, tests, active-watchdog fallback | defer | active watchdog can reach its start/run route | migrate/disable external service, then re-audit contracts |
 | `cli/jump_envelope_controller.py` | persistent legacy controller | none | stage controller and route test | delete | closed jump-envelope route | delete cluster; targeted tests |
 | `cli/stage_next_bootstrap_controller.py` | legacy controller | none | paired start script/test | delete | superseded stage-next bootstrap | targeted route tests |
 | `cli/stage_next_v3_controller.py` | versioned legacy controller | none | paired start script/test | delete | superseded five-stage controller | remove/split route-only test |
@@ -191,8 +191,8 @@ stable modules and tests.
 | `scripts/start_descent_envelope_controller.sh` | systemd launcher | none | activator and route test | delete | closed Descent-envelope route | external-unit check; split test |
 | `scripts/run_descent_local_pipeline.sh` | controller runner | none | paired start script | delete | closed local Descent route | shell syntax and ref scan |
 | `scripts/start_descent_local_controller.sh` | systemd launcher | none | controller test | delete | closed local Descent route | external-unit check; split test |
-| `scripts/run_descent_tube_pipeline.sh` | controller runner | none | paired start script | delete | closed Descent Tube route | shell syntax and ref scan |
-| `scripts/start_descent_tube_controller.sh` | systemd launcher | none | legacy watchdog fallback | delete | closed Descent Tube route | decouple watchdog first or delete watchdog cluster |
+| `scripts/run_descent_tube_pipeline.sh` | controller runner | none | paired start script reached by active watchdog fallback | defer | enabled watchdog timer can transitively invoke it | migrate/disable external service first |
+| `scripts/start_descent_tube_controller.sh` | systemd launcher | none | active watchdog fallback | defer | enabled watchdog timer directly retains this fallback | migrate/disable external service first |
 | `scripts/resume_descent_tube_after_current_audit.sh` | one-time resume script | none | controller test | delete | completed audit continuation | split route-only assertion |
 | `scripts/run_jump_envelope_pipeline.sh` | controller runner | none | paired start script | delete | closed jump-envelope route | shell syntax and ref scan |
 | `scripts/start_jump_envelope_controller.sh` | systemd launcher | none | activator and route test | delete | closed jump-envelope route | external-unit check; split test |
@@ -204,9 +204,9 @@ stable modules and tests.
 | `scripts/start_stage_next_v3_controller.sh` | versioned controller launcher | none | old controller/test | delete | superseded five-stage route | external-unit check; targeted test |
 | `scripts/start_final_shared_v2_followons.sh` | old final-shared launcher | none | old final pipeline/test | delete | superseded v2 follow-on; draft branch independently removed it | split route-only test; shell syntax |
 | `scripts/run_final_shared_policy_pipeline.sh` | five-stage consolidation runner | none | old launcher/tests | delete | superseded five-stage unified-RSI controller | retain reusable CLIs; remove route contract tests |
-| `scripts/run_final_shared_jel_audit.sh` | five-stage 4/8/32 audit runner | none | old launchers/tests | delete | no longer the formal two-phase final pipeline | retain generic `cli.evaluate`; split test |
-| `scripts/run_corrected_apex_unified_rsi_pipeline.sh` | corrected old pilot runner | none | paired launcher/test | delete | completed bounded Apex diagnostic | remove route-only test; shell syntax |
-| `scripts/start_corrected_apex_unified_rsi_followons.sh` | old pilot/JEL launcher | none | paired runner/test | delete | completed old follow-on controller | external-unit check; route test |
+| `scripts/run_final_shared_jel_audit.sh` | five-stage 4/8/32 audit runner | none | active-pointer launcher and tests | defer | enabled watchdog can invoke the active-pointer launcher that calls it | migrate/disable external service first |
+| `scripts/run_corrected_apex_unified_rsi_pipeline.sh` | corrected old pilot runner | none | active-pointer launcher/test | defer | enabled watchdog can invoke its launcher | migrate/disable external service first |
+| `scripts/start_corrected_apex_unified_rsi_followons.sh` | old pilot/JEL launcher | none | `runs/ACTIVE_PIPELINE.json`, enabled watchdog | defer | live external pointer names this launcher | migrate/disable external service first |
 | `scripts/run_apex_reachability_funnel.sh` | old 4/8/32 local funnel | none | route contract test | delete | hard funnel is not the universal soft-Tube requirement | retain reusable cost/selection code if independently used |
 
 The old draft branch `agent/streamline-current-mainline@fd2bf3f` was inspected,
@@ -215,6 +215,25 @@ route and is not reusable as project truth. Its deletions of
 `scripts/run_backward_bootstrap.sh` and
 `scripts/start_final_shared_v2_followons.sh` agree with this ledger, but will
 be manually reproduced only after review and fresh validation.
+
+### Deletion batch 1 validation
+
+On 2026-08-03, fresh module/path and shell/systemd/docs/test scans found no
+reverse references outside this ledger for these five closed-route files:
+
+```text
+cli/activate_descent_envelope_pipeline.py
+cli/activate_fast_handoff_route.py
+cli/activate_trajectory_mining_pipeline.py
+cli/audit_descent_student_relabel_v2.py
+cli/run_unified_descent_teacher_cv_v2.py
+```
+
+Their helper functions were not imported elsewhere; the two larger diagnostics
+were bound to immutable one-off run paths and protocols. They were deleted as
+one dependency-free batch. `compileall dvgc cli` passed, and the 15 focused
+Descent probe/supervised/teacher plus repository/project contract tests passed.
+The only output was an existing third-party JAXopt deprecation warning.
 
 ## 7. Explicit defer set
 
@@ -279,6 +298,15 @@ enabled, loaded, or active service reference moves the target from `delete` to
 `defer` until the service is disabled or migrated. Inspection is read-only;
 this cleanup never stops a running user service without explicit permission.
 
+Read-only inspection on 2026-08-03 found
+`dvgc-pipeline-watchdog.timer` installed, enabled, loaded, and active. Its
+service is installed/loaded and currently inactive. The installed service runs
+`python3 -m cli.pipeline_watchdog` from `/home/qy/DVGC`; the active pointer
+names `scripts/start_corrected_apex_unified_rsi_followons.sh`, and the watchdog
+source retains `scripts/start_descent_tube_controller.sh` as a fallback. The
+two transitive runner clusters have therefore moved from `delete` to `defer`.
+No unit was stopped, disabled, reloaded, or otherwise changed.
+
 ## 8. Archive summary decision
 
 | path | role | retained_root | reverse_dependencies | decision | reason | validation_required |
@@ -297,9 +325,9 @@ ledger classifies them as follows:
 | decision | count | interpretation |
 |---|---:|---|
 | keep | 55 | 40-file Python closure, two package markers, stable preflight, packaging/runtime inputs, authoritative XML and meshes |
-| delete | 43 | first-round closed-route candidates listed individually above |
+| delete | 37 | first-round closed-route candidates listed individually above |
 | archive_summary | 1 | historical `PROJECT_SUMMARY.md` narrative only |
-| defer | 472 | every other tracked path, including 39 high-risk paths called out explicitly |
+| defer | 478 | every other baseline path, including six routes retained by active watchdog state |
 
 These are design counts, not deletion results. A later fresh reference scan may
 move a `delete` row to `defer`; it may not move a deferred file to deletion
