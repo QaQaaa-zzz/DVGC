@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import hashlib
+import json
+
 import jax
 import jax.numpy as jp
 import mujoco
@@ -102,7 +105,7 @@ def test_authoritative_geometry_manifest_covers_every_collision_robot_geom():
 
     geometry = build_two_phase_geometry(model, cfg)
     manifest = geometry_manifest(model, geometry)
-    validation = validate_geometry_manifest(manifest)
+    validation = validate_geometry_manifest(manifest, model=model, geometry=geometry)
 
     assert len(manifest["geoms"]) == model.ngeom
     assert validation["valid"] is True
@@ -429,13 +432,45 @@ def test_successful_recovery_terminal_can_complete_stable_recovery():
 
 def test_manifest_validation_rejects_missing_and_duplicate_geom_rows():
     model = mujoco.MjModel.from_xml_path(XML)
-    manifest = geometry_manifest(model, build_two_phase_geometry(model, load_config("configs/default.json")))
+    geometry = build_two_phase_geometry(model, load_config("configs/default.json"))
+    manifest = geometry_manifest(model, geometry)
 
     missing = manifest | {"geoms": manifest["geoms"][:-1]}
     duplicate = manifest | {"geoms": manifest["geoms"][:-1] + [manifest["geoms"][0]]}
 
-    assert "geom_identity" in validate_geometry_manifest(missing)["failed"]
-    assert "geom_identity" in validate_geometry_manifest(duplicate)["failed"]
+    assert "geom_identity" in validate_geometry_manifest(
+        missing, model=model, geometry=geometry
+    )["failed"]
+    assert "geom_identity" in validate_geometry_manifest(
+        duplicate, model=model, geometry=geometry
+    )["failed"]
+
+
+def test_manifest_validation_rejects_rehashed_collision_classification_tamper():
+    model = mujoco.MjModel.from_xml_path(XML)
+    geometry = build_two_phase_geometry(model, load_config("configs/default.json"))
+    manifest = geometry_manifest(model, geometry)
+    tampered_rows = [dict(row) for row in manifest["geoms"]]
+    collision_row = next(
+        row for row in tampered_rows if row["classification"] == "robot_body"
+    )
+    collision_row.update(
+        collision_participation=False,
+        classification="visual_only",
+        supported_jax_geometry_formula=None,
+        exclusion_reason="collision_disabled_visual_geom",
+    )
+    tampered = manifest | {
+        "geoms": tampered_rows,
+        "model_identity_sha256": hashlib.sha256(
+            json.dumps(tampered_rows, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest(),
+    }
+
+    validation = validate_geometry_manifest(tampered, model=model, geometry=geometry)
+
+    assert validation["valid"] is False
+    assert "authoritative_model_match" in validation["failed"]
 
 
 def _event_thresholds():

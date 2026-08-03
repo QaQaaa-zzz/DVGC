@@ -594,8 +594,13 @@ def geometry_manifest(
     }
 
 
-def validate_geometry_manifest(manifest: dict[str, Any]) -> dict[str, Any]:
-    """Require formula coverage before full-structure terminology is valid."""
+def validate_geometry_manifest(
+    manifest: dict[str, Any],
+    *,
+    model: mujoco.MjModel,
+    geometry: TwoPhaseGeometry,
+) -> dict[str, Any]:
+    """Validate against the model, never against manifest self-description alone."""
     rows = manifest.get("geoms")
     rows_valid = isinstance(rows, list) and bool(rows)
     collision_robot = (
@@ -627,10 +632,20 @@ def validate_geometry_manifest(manifest: dict[str, Any]) -> dict[str, Any]:
         and len(set(row_ids)) == authoritative_ngeom
         and manifest.get("model_identity_sha256") == computed_identity
     )
+    authoritative = geometry_manifest(model, geometry)
+    authoritative_model_match = (
+        manifest.get("authoritative_ngeom") == authoritative["authoritative_ngeom"]
+        and manifest.get("authoritative_geom_ids")
+        == authoritative["authoritative_geom_ids"]
+        and manifest.get("model_identity_sha256")
+        == authoritative["model_identity_sha256"]
+        and rows == authoritative["geoms"]
+    )
     checks = {
         "contract_version": manifest.get("contract_version") == 1,
         "geom_rows": rows_valid,
         "geom_identity": geom_identity,
+        "authoritative_model_match": authoritative_model_match,
         "collision_robot_geoms": bool(collision_robot),
         "formula_coverage": bool(collision_robot)
         and all(bool(row.get("supported_jax_geometry_formula")) for row in collision_robot),
