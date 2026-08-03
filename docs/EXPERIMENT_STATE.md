@@ -8,8 +8,9 @@ method defined in `PROJECT.md` and `docs/METHOD_TWO_PHASE_SOFT_TUBE.md`:
 `V_up`/`V_down`, soft-Tube guidance, one unified Tube-RSI PPO, and independent
 frozen-policy JCE/JEL evaluation.
 
-Gate A static contracts are implemented; the dynamic method is not. Existing
-five-stage code and results are legacy migration sources only.
+This method is not yet implemented dynamically. Gate A static contracts are
+implemented. Existing five-stage code and results are legacy migration sources
+only.
 
 ## Current branch and commit
 
