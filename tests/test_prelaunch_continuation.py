@@ -98,8 +98,13 @@ def test_upright_early_airborne_state_can_latch_jump_window_without_support():
         jump_signal_latched=jp.asarray(False),
     )
 
-    continued = env.step(state, jp.zeros(env.action_size, jp.float32))
+    assert bool(state.info["jump_signal_latched"]) is False
+    inside = env.step(state, jp.zeros(env.action_size, jp.float32))
+    after_qpos = inside.data.qpos.at[0].set(env._config.step_front_x + 0.5)
+    after_state = inside.replace(data=inside.data.replace(qpos=after_qpos))
+    continued = env.step(after_state, jp.zeros(env.action_size, jp.float32))
 
+    assert bool(inside.info["jump_signal_latched"]) is True
     assert bool(continued.info["jump_signal_latched"]) is True
     assert int(continued.info["end_code"]) != END_PRETAKEOFF_AIRBORNE
 

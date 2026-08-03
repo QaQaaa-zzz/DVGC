@@ -206,17 +206,33 @@ def test_real_roundtrip_uses_only_explicit_restore_and_compares_full_state(monke
         perturbations=(GuidelinePerturbation("nominal", 0.0, 0.0),),
     )
     up = built.phase_up
-    record = next(row for row in up.records if row["guideline_selection"] == "middle")
+    record = copy.deepcopy(
+        next(row for row in up.records if row["guideline_selection"] == "middle")
+    )
+    record["prelaunch_airborne_count"] = 7
+    record["estimator_state_pre_t"]["prelaunch_airborne_count"] = 7
+    record["estimator_state_post_t"]["prelaunch_airborne_count"] = 7
+    original_state = built.original_states[record["id"]]
+    original_info = dict(original_state.info)
+    original_info["prelaunch_airborne_count"] = jp.asarray(7, jp.int32)
+    original_state = original_state.replace(info=original_info)
     actions = [
         jp.asarray([0.0, 1.0, -0.1, 0.1], jp.float32),
         jp.asarray([0.1, 0.8, -0.2, 0.2], jp.float32),
         jp.asarray([-0.1, 0.6, -0.1, 0.0], jp.float32),
     ]
+    explicit = dvgc.rollout.restore_snapshot_mode(
+        env,
+        record,
+        jax.random.PRNGKey(5198),
+        observation_mode="timing_explicit_independent_reconstruction",
+    )
+    assert int(explicit.info["prelaunch_airborne_count"]) == 7
 
     report = compare_two_phase_roundtrip(
         env,
         record,
-        built.original_states[record["id"]],
+        original_state,
         build_two_phase_geometry(env.mj_model, cfg),
         _thresholds(),
         seed=5200,
@@ -231,6 +247,15 @@ def test_real_roundtrip_uses_only_explicit_restore_and_compares_full_state(monke
     assert all(row["valid"] for row in report["ticks"])
     assert report["restore_mode"] == "timing_explicit_independent_reconstruction"
     assert report["comparison"] == "capture_time_original_vs_independent_restore"
+    legacy_record = copy.deepcopy(record)
+    legacy_record.pop("prelaunch_airborne_count", None)
+    legacy = dvgc.rollout.restore_snapshot_mode(
+        env,
+        legacy_record,
+        jax.random.PRNGKey(5199),
+        observation_mode="legacy_logged_replay",
+    )
+    assert int(legacy.info["prelaunch_airborne_count"]) == 0
 
     corrupted = copy.deepcopy(record)
     corrupted["physical_state_t"]["qpos"] = (
@@ -239,7 +264,7 @@ def test_real_roundtrip_uses_only_explicit_restore_and_compares_full_state(monke
     failed = compare_two_phase_roundtrip(
         env,
         corrupted,
-        built.original_states[record["id"]],
+        original_state,
         build_two_phase_geometry(env.mj_model, cfg),
         _thresholds(),
         seed=5200,

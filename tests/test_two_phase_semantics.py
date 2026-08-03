@@ -41,6 +41,17 @@ def test_apex_membership_accepts_a_valid_obstacle_relative_state():
     assert bool(semantics.apex_band_membership(valid_apex_signals(), apex_thresholds())) is True
 
 
+def test_early_airborne_without_window_valid_apex_is_not_phase_up_success():
+    signals = replace(
+        valid_apex_signals(),
+        stable_airborne=True,
+        obstacle_relative_x=1.0,
+        clearance=0.0,
+    )
+
+    assert bool(semantics.propulsion_ascent_success(signals, apex_thresholds())) is False
+
+
 def test_phase_vocabulary_has_two_experts_and_no_apex_phase():
     assert semantics.PHASES == ("propulsion_ascent", "descent_recovery")
     assert "apex" not in semantics.PHASES

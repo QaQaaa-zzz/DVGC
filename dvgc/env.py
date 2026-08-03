@@ -107,6 +107,30 @@ def _deg2rad(x: float) -> float:
     return float(x) * jp.pi / 180.0
 
 
+def _hard_failure_flags(
+    *,
+    prohibited_contact: jax.Array,
+    invalid_wheel_contact: jax.Array,
+    roll_limit: jax.Array,
+    pitch_limit: jax.Array,
+    backward_motion: jax.Array,
+    platform_back_edge_exit: jax.Array,
+    takeoff_task_failure: jax.Array,
+    nonfinite: jax.Array,
+) -> jax.Array:
+    """Combine the retained global physical/task failure gates."""
+    return (
+        prohibited_contact
+        | invalid_wheel_contact
+        | roll_limit
+        | pitch_limit
+        | backward_motion
+        | platform_back_edge_exit
+        | takeoff_task_failure
+        | nonfinite
+    )
+
+
 def stable_task_distance_to_front(x: jax.Array, step_front_x: float) -> jax.Array:
     """Bit-stable float32 scaling shared by online and v4 reconstruction."""
     return (
@@ -1704,6 +1728,7 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
             action=action,
             phase0=phase0,
             phase1=phase1,
+            jump_latched=jump_signal_latched,
             dual_wheel_liftoff_seen=state.info["dual_wheel_liftoff_seen"],
             positive_pitch_count=state.info["positive_pitch_count"],
             wheelie_count=state.info["wheelie_count"],
@@ -1724,7 +1749,16 @@ class OrangeBikeDVGC(mjx_env.MjxEnv):
         pitch_bad = jp.abs(pitch) > _deg2rad(cfg.max_pitch_deg)
         backward = x < state.info["start_x"] - cfg.max_backward_distance
         back_edge = (had_landing > 0) & (x >= cfg.step_back_x - cfg.platform_back_edge_diagnostic_margin)
-        hard_failure = contact["prohibited"] | invalid_fail | roll_bad | pitch_bad | backward | back_edge | takeoff_task_failure | nonfinite
+        hard_failure = _hard_failure_flags(
+            prohibited_contact=contact["prohibited"],
+            invalid_wheel_contact=invalid_fail,
+            roll_limit=roll_bad,
+            pitch_limit=pitch_bad,
+            backward_motion=backward,
+            platform_back_edge_exit=back_edge,
+            takeoff_task_failure=takeoff_task_failure,
+            nonfinite=nonfinite,
+        )
         entry_pose_ok=(jp.abs(roll)<=_deg2rad(cfg.max_roll_deg)) & (jp.abs(pitch)<=_deg2rad(min(float(cfg.max_pitch_deg),35.0))) & (gyro_norm<=float(cfg.recovery_max_angvel))
         current_physical=self._physical_feature(data);previous_physical=self._physical_feature(state.data)
         current_support_z=(current_physical-self._stage_support_center)/self._stage_support_scale
