@@ -47,15 +47,15 @@ class FailureTrace:
 
 
 FAILURE_SCENARIOS = {
-    "full_guideline_prelaunch_airborne": FailureScenario(
-        name="full_guideline_prelaunch_airborne",
+    "full_guideline_continuation": FailureScenario(
+        name="full_guideline_continuation",
         start_reference_index=0,
         maximum_control_ticks=100,
         initial_action_offset_ticks=0,
         first_step_action_offset_ticks=1,
     ),
-    "launch_history_airborne_before_window": FailureScenario(
-        name="launch_history_airborne_before_window",
+    "launch_history_window_latch": FailureScenario(
+        name="launch_history_window_latch",
         start_reference_index=83,
         maximum_control_ticks=8,
         initial_action_offset_ticks=-1,
@@ -240,18 +240,18 @@ def _capture_failure_scenario(
             break
 
     terminal = bool(telemetry[-1]["terminated"] or telemetry[-1]["truncated"])
-    if scenario == "full_guideline_prelaunch_airborne":
-        failure_reason = telemetry[-1]["termination_reason"]
+    if scenario == "full_guideline_continuation":
+        audit_outcome = telemetry[-1]["termination_reason"]
     else:
-        invalid_entry = any(
+        valid_continuation = any(
             row["inside_jump_window"]
             and not row["deployable_wheel_support"]
-            and not row["jump_signal_latched"]
+            and row["jump_signal_latched"]
             for row in telemetry
         )
-        if not invalid_entry:
-            raise ValueError("Launch-history scenario did not reproduce lost support")
-        failure_reason = "airborne_before_jump_window_latch"
+        if not valid_continuation:
+            raise ValueError("Launch-history scenario did not latch after lost support")
+        audit_outcome = "window_latched_after_early_airborne"
     first_ticks_values = np.asarray(jax.device_get(event.first_event_ticks), int)
     first_event_ticks = {
         name: int(first_ticks_values[index]) for index, name in enumerate(EVENT_NAMES)
@@ -268,7 +268,8 @@ def _capture_failure_scenario(
         "terminated": bool(telemetry[-1]["terminated"]),
         "truncated": bool(telemetry[-1]["truncated"]),
         "end_code": int(telemetry[-1]["end_code"]),
-        "failure_reason": failure_reason,
+        "terminal_reason": telemetry[-1]["termination_reason"],
+        "audit_outcome": audit_outcome,
         "first_event_ticks": first_event_ticks,
         "initial_ground_support": placement.summary(),
     }
@@ -546,27 +547,32 @@ def write_failure_video_manifest(
         }
         if summary["first_event_ticks"] != derived_first_ticks:
             raise ValueError("Failure-video first event ticks do not match telemetry")
-        if scenario.name == "full_guideline_prelaunch_airborne":
+        if int(summary.get("end_code", -1)) == END_PRETAKEOFF_AIRBORNE:
+            raise ValueError("Retired prelaunch-airborne terminal was emitted")
+        if scenario.name == "full_guideline_continuation":
             if not (
-                bool(summary.get("terminal"))
-                and int(summary.get("end_code", -1)) == END_PRETAKEOFF_AIRBORNE
-                and summary.get("failure_reason") == "prelaunch_airborne"
+                int(summary.get("end_code", -1)) == int(telemetry[-1]["end_code"])
+                and summary.get("terminal_reason")
+                == telemetry[-1]["termination_reason"]
+                and summary.get("audit_outcome") == summary.get("terminal_reason")
+                and bool(summary.get("terminal"))
+                == bool(telemetry[-1]["terminated"] or telemetry[-1]["truncated"])
             ):
-                raise ValueError("Full-guideline failure end state does not match")
+                raise ValueError("Full-guideline observed outcome does not match")
         elif not (
-            summary.get("failure_reason") == "airborne_before_jump_window_latch"
+            summary.get("audit_outcome") == "window_latched_after_early_airborne"
             and any(
                 bool(item["inside_jump_window"])
                 and not bool(item["deployable_wheel_support"])
-                and not bool(item["jump_signal_latched"])
+                and bool(item["jump_signal_latched"])
                 for item in telemetry
             )
         ):
-            raise ValueError("Launch-history failure end state does not match")
+            raise ValueError("Launch-history continuation state does not match")
     manifest = {
         "contract_version": 2,
         "status": "pass",
-        "artifact_role": "dynamic_failure_audit_only",
+        "artifact_role": "dynamic_gate_b_outcome_audit_only",
         "source_hashes": dict(source_hashes),
         "formal_training_transitions": 0,
         "environment_transitions": sum(
@@ -595,7 +601,7 @@ def render_failure_archive(
     height: int = 540,
     fps: int = 25,
 ) -> dict[str, Any]:
-    """Capture and render the closed pair of authoritative Gate B failures."""
+    """Capture and render the closed pair of authoritative Gate B outcomes."""
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
     videos = []

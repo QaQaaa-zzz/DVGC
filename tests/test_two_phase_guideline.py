@@ -593,10 +593,10 @@ def test_guideline_cli_archives_videos_then_gate_pauses_before_banks(tmp_path):
         "maximum_roundtrip_environment_transitions": 26,
         "maximum_guideline_event_transitions": 100,
         "maximum_failure_video_environment_transitions": 108,
-        "expected_current_failure_video_environment_transitions": 20,
+        "expected_current_failure_video_environment_transitions": 25,
     }
     assert event["status"] == "gate_pause"
-    assert event["end_code"] == 9
+    assert event["end_code"] == 4
     assert event["formal_training_transitions"] == 0
     assert event["initial_ground_support"]["accepted"] is True
     assert event["initial_ground_support"]["body_terrain_contacts"] == 0
@@ -606,12 +606,12 @@ def test_guideline_cli_archives_videos_then_gate_pauses_before_banks(tmp_path):
     full_video = next(
         row
         for row in video_status["videos"]
-        if row["scenario"] == "full_guideline_prelaunch_airborne"
+        if row["scenario"] == "full_guideline_continuation"
     )
     assert full_video["summary"]["seed"] == args.seed + 40_000
     for scenario in (
-        "full_guideline_prelaunch_airborne",
-        "launch_history_airborne_before_window",
+        "full_guideline_continuation",
+        "launch_history_window_latch",
     ):
         assert (output / "failure_videos" / f"{scenario}.mp4").stat().st_size > 1_000
     assert not (output / "phase_up_guideline_bank.pkl").exists()

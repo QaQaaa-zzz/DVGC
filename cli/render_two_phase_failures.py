@@ -1,4 +1,4 @@
-"""Render the two fixed Gate B physical-failure audit videos."""
+"""Render the two fixed Gate B dynamic-outcome audit videos."""
 from __future__ import annotations
 
 import argparse
@@ -30,7 +30,7 @@ def build(args: argparse.Namespace) -> dict:
     output = Path(args.output)
     run_manifest = {
         "contract_version": 1,
-        "purpose": "Render exact Gate B dynamic failure audit videos",
+        "purpose": "Render exact Gate B dynamic outcome audit videos",
         "inputs": {
             "config": str(args.config),
             "reference": str(args.reference),
@@ -40,7 +40,7 @@ def build(args: argparse.Namespace) -> dict:
         },
         "interaction_cost": {
             "maximum_environment_transitions": 108,
-            "expected_current_environment_transitions": 20,
+            "expected_current_environment_transitions": 25,
             "formal_training_transitions": 0,
         },
         "stopping_condition": "stop after both named failure videos or first capture/render error",

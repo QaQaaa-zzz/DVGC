@@ -110,7 +110,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                 args.event_max_control_ticks
             ),
             "maximum_failure_video_environment_transitions": 108,
-            "expected_current_failure_video_environment_transitions": 20,
+            "expected_current_failure_video_environment_transitions": 25,
             "formal_training_transitions": 0,
         },
         "stopping_condition": "stop on first geometry, threshold, snapshot, or output-contract failure",

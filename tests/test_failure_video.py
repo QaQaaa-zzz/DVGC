@@ -5,7 +5,7 @@ import numpy as np
 
 from dvgc.bank import SnapshotBank
 from dvgc.config import file_sha256, load_config
-from dvgc.env import END_PRETAKEOFF_AIRBORNE, OrangeBikeDVGC
+from dvgc.env import END_PRETAKEOFF_AIRBORNE, END_ROLL_LIMIT, OrangeBikeDVGC
 from dvgc.failure_video import (
     _capture_failure_scenario,
     render_failure_archive,
@@ -72,7 +72,7 @@ def _capture(env, reference, geometry, thresholds, *, scenario, seed):
     )
 
 
-def test_full_guideline_failure_trace_reproduces_prelaunch_airborne():
+def test_full_guideline_trace_continues_then_reproduces_roll_limit():
     _, env, reference, geometry, thresholds = _runtime()
 
     trace = _capture(
@@ -80,21 +80,25 @@ def test_full_guideline_failure_trace_reproduces_prelaunch_airborne():
         reference,
         geometry,
         thresholds,
-        scenario="full_guideline_prelaunch_airborne",
+        scenario="full_guideline_continuation",
         seed=44_000,
     )
 
     assert trace.summary["start_reference_index"] == 0
-    assert trace.summary["environment_transitions"] == 12
+    assert trace.summary["environment_transitions"] == 17
     assert trace.summary["formal_training_transitions"] == 0
     assert trace.summary["terminal"] is True
-    assert trace.summary["end_code"] == END_PRETAKEOFF_AIRBORNE
-    assert trace.summary["failure_reason"] == "prelaunch_airborne"
+    assert trace.summary["end_code"] == END_ROLL_LIMIT
+    assert trace.summary["end_code"] != END_PRETAKEOFF_AIRBORNE
+    assert trace.summary["audit_outcome"] == "roll_limit"
+    assert trace.summary["terminal_reason"] == "roll_limit"
+    assert trace.telemetry[-1]["jump_signal_latched"] is True
+    assert trace.summary["first_event_ticks"]["jump_window_entered"] == -1
     assert [row["action_reference_index"] for row in trace.telemetry[1:4]] == [10, 20, 30]
-    assert len(trace.frames) == len(trace.telemetry) == 13
+    assert len(trace.frames) == len(trace.telemetry) == 18
 
 
-def test_launch_history_trace_shows_support_lost_before_window_entry():
+def test_launch_history_trace_latches_window_despite_lost_support():
     _, env, reference, geometry, thresholds = _runtime()
 
     trace = _capture(
@@ -102,7 +106,7 @@ def test_launch_history_trace_shows_support_lost_before_window_entry():
         reference,
         geometry,
         thresholds,
-        scenario="launch_history_airborne_before_window",
+        scenario="launch_history_window_latch",
         seed=44_000,
     )
 
@@ -110,12 +114,14 @@ def test_launch_history_trace_shows_support_lost_before_window_entry():
     assert trace.summary["initial_action_reference_index"] == 73
     assert trace.summary["environment_transitions"] == 8
     assert trace.summary["formal_training_transitions"] == 0
-    assert trace.summary["failure_reason"] == "airborne_before_jump_window_latch"
+    assert trace.summary["audit_outcome"] == "window_latched_after_early_airborne"
+    assert trace.summary["terminal_reason"] == "horizon"
     inside = next(row for row in trace.telemetry if row["inside_jump_window"])
     assert inside["tick"] == 6
     assert inside["host_wheel_contacts"] == 1
     assert inside["deployable_wheel_support"] is False
-    assert inside["jump_signal_latched"] is False
+    assert inside["jump_signal_latched"] is True
+    assert trace.summary["first_event_ticks"]["jump_window_entered"] == 6
     assert [row["action_reference_index"] for row in trace.telemetry[1:4]] == [83, 93, 103]
     assert len(trace.frames) == len(trace.telemetry) == 9
 
@@ -127,7 +133,7 @@ def test_failure_trace_is_exactly_reproducible_for_same_seed():
         reference=reference,
         geometry=geometry,
         thresholds=thresholds,
-        scenario="launch_history_airborne_before_window",
+        scenario="launch_history_window_latch",
         seed=44_000,
     )
 
@@ -149,7 +155,7 @@ def test_render_uses_captured_states_without_advancing_environment(tmp_path, mon
         reference,
         geometry,
         thresholds,
-        scenario="launch_history_airborne_before_window",
+        scenario="launch_history_window_latch",
         seed=44_000,
     )
     monkeypatch.setattr(
@@ -159,7 +165,7 @@ def test_render_uses_captured_states_without_advancing_environment(tmp_path, mon
             AssertionError("renderer must not call env.step")
         ),
     )
-    output = tmp_path / "launch_history_airborne_before_window.mp4"
+    output = tmp_path / "launch_history_window_latch.mp4"
 
     report = render_failure_trace(
         env,
@@ -189,8 +195,8 @@ def test_render_uses_captured_states_without_advancing_environment(tmp_path, mon
 def test_manifest_rejects_unclosed_fake_video_reports(tmp_path):
     videos = []
     for name, payload in (
-        ("full_guideline_prelaunch_airborne", b"full-video"),
-        ("launch_history_airborne_before_window", b"launch-video"),
+        ("full_guideline_continuation", b"full-video"),
+        ("launch_history_window_latch", b"launch-video"),
     ):
         path = tmp_path / f"{name}.mp4"
         path.write_bytes(payload)
@@ -233,11 +239,11 @@ def test_archive_renders_both_real_failure_scenarios(tmp_path):
     )
 
     assert manifest["status"] == "pass"
-    assert sum(row["environment_transitions"] for row in manifest["videos"]) == 20
-    assert manifest["environment_transitions"] == 20
+    assert sum(row["environment_transitions"] for row in manifest["videos"]) == 25
+    assert manifest["environment_transitions"] == 25
     for scenario in (
-        "full_guideline_prelaunch_airborne",
-        "launch_history_airborne_before_window",
+        "full_guideline_continuation",
+        "launch_history_window_latch",
     ):
         path = tmp_path / f"{scenario}.mp4"
         assert path.is_file() and path.stat().st_size > 1_000
