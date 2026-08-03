@@ -210,6 +210,8 @@ stable modules and tests.
 | `scripts/run_apex_reachability_funnel.sh` | old 4/8/32 local funnel | none | route contract test | delete | hard funnel is not the universal soft-Tube requirement | retain reusable cost/selection code if independently used |
 | `tests/test_jump_envelope_controller.py` | jump-envelope route test | none | none | delete | asserts only removed controller assets and activator text | run shared policy/provenance tests |
 | `tests/test_stage_route_migration.py` | completed migration route test | none | none | delete | asserts only removed migration/controller route | run stable lifecycle and stage-reachability tests |
+| `tests/test_final_shared_policy_pipeline_contract.py` | v2 final-shared route text test | none | none | delete | asserted only removed launcher text; no stable API contract | full pytest and repository contracts |
+| `tests/test_apex_reachability_funnel_contract.py` | Apex local-funnel route text test | none | none | delete | asserted only removed local funnel text | full pytest and repository contracts |
 
 The old draft branch `agent/streamline-current-mainline@fd2bf3f` was inspected,
 not merged. Its README/method text still describes the superseded five-stage
@@ -367,7 +369,7 @@ baseline/ablation assets, recovery authority, and unsupported-claim boundary
 were condensed into `docs/archive/legacy_five_stage/README.md`. The stale root
 summary was then removed; no executable or run artifact was copied.
 
-## 9. Initial decision counts
+## 9. Final decision counts
 
 The approved baseline contains 571 tracked paths. The current conservative
 ledger classifies them as follows:
@@ -375,24 +377,26 @@ ledger classifies them as follows:
 | decision | count | interpretation |
 |---|---:|---|
 | keep | 56 | retained closure plus stable construction-lifecycle contracts |
-| delete | 26 | closed-route files approved and removed during implementation |
+| delete | 28 | closed-route files approved and removed during implementation |
 | archive_summary | 1 | historical `PROJECT_SUMMARY.md` narrative only |
-| defer | 488 | every other baseline path, including active-watchdog and unresolved dependency clusters |
+| defer | 486 | every other baseline path, including active-watchdog and unresolved dependency clusters |
 
-These are design counts, not deletion results. A later fresh reference scan may
-move a `delete` row to `defer`; it may not move a deferred file to deletion
-without updating this ledger and reviewing the evidence.
+The implementation deleted all 28 files classified `delete` and replaced the
+one `archive_summary` root file with a concise documentation archive. Therefore
+29 tracked baseline paths were removed in total. Deferred files remain outside
+deletion authority without a new ledger update and evidence review.
 
 ## 10. Validation and commit sequence
 
-After design review, implementation proceeds in focused commits:
+Implementation used these focused commit subjects:
 
 1. `docs: switch project truth to two-phase research direction`
-2. `cleanup: remove dependency-free legacy controllers and launchers`
-3. `test: extract reusable legacy-route contracts`
-4. `cleanup: remove obsolete migrations and route-only tests`
+2. `cleanup: remove dependency-free legacy entrypoints`
+3. `test: extract reusable legacy controller contracts`
+4. `cleanup: remove closed legacy controller routes`
 5. `docs: archive legacy five-stage route summary`
-6. `test: validate retained repository entrypoints`
+6. `cleanup: remove closed legacy launchers`
+7. `test: validate retained repository entrypoints`
 
 Before each deletion batch: repeat import/path/test/shell references. After each
 batch: run `compileall` and targeted tests with
@@ -401,5 +405,11 @@ batch: run `compileall` and targeted tests with
 64+32 timestep PPO is only a compile/update/checkpoint-resume smoke test; it is
 not formal training or a learnability pilot.
 
-This design phase stops after committing this document. It does not execute any
-deletion or dynamic PPO validation.
+### Final implementation validation
+
+On 2026-08-03, the retained tree passed `compileall dvgc cli`, full pytest
+(`552 passed`, one existing JAXopt deprecation warning), and
+`scripts/local_preflight.sh` on the configured GPU runtime. The current runtime
+fingerprint exactly matched the existing PASS gate report, and
+`cli.runtime_gate --check-only` confirmed the report current. No new PPO block,
+learnability pilot, or formal training was run during cleanup.
