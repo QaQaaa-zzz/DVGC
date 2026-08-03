@@ -8,12 +8,13 @@ method defined in `PROJECT.md` and `docs/METHOD_TWO_PHASE_SOFT_TUBE.md`:
 `V_up`/`V_down`, soft-Tube guidance, one unified Tube-RSI PPO, and independent
 frozen-policy JCE/JEL evaluation.
 
-This method is not yet implemented. Existing five-stage code and results are
-legacy migration sources only.
+Gate A static contracts are implemented; the dynamic method is not. Existing
+five-stage code and results are legacy migration sources only.
 
 ## Current branch and commit
 
 - Branch: `agent/repo-cleanup-two-phase`
+- Gate A implementation: `5e5da3b`
 - Cleanup baseline: `main@b7bb815`
 - Dependency design: `27f0aa3`
 - Clarified design policy: `3cbd6c1`
@@ -30,8 +31,8 @@ legacy migration sources only.
 
 ## Current active run
 
-None authorized. Repository cleanup must not start formal PPO, a learnability
-pilot, or the two-phase pipeline.
+None. Gate A used zero training transitions and ran neither MuJoCo rollouts nor
+PPO smoke, pilot, or formal training.
 
 ## Pipeline automation safety interlock
 
@@ -69,32 +70,46 @@ systemctl --user enable --now dvgc-pipeline-watchdog.timer
 
 ## Latest result
 
-The dependency-closure cleanup is implemented. From the 571-path baseline, 28
-closed-route files were deleted and the root legacy summary was replaced by one
-concise archive note, for 29 net baseline-path removals. The final ledger keeps
-56 paths, deletes 28, archives one summary, and defers 486 paths. The retained
-tree has 547 tracked files after adding stable tests/contracts and current
-documentation.
+Gate A static contracts passed. The implementation adds two-phase success
+semantics, a deployable feasibility-feature and continuation-label schema, and
+unambiguous total-environment-transition PPO budget accounting. This does not
+create or train `pi_up`, `pi_down`, `V_up`, or `V_down`, does not construct a
+learned soft Tube, and does not create a unified policy or pipeline CLI.
 
-Final validation: `compileall dvgc cli` passed; full pytest reported 552 passed;
-`scripts/local_preflight.sh` passed on the configured GPU runtime; and the
-matching runtime-gate report was verified current without running a new PPO
-block.
+Final Gate A validation on 2026-08-03:
 
-Legacy five-stage experimental outcomes are not evidence for the unimplemented
+- `python -m compileall dvgc cli`: passed.
+- Three targeted Gate A test files: 140 passed.
+- Full pytest: 692 passed, with one existing JAXopt deprecation warning.
+- `bash scripts/local_preflight.sh`: passed on the configured GPU runtime and
+  repeated the 692-test result.
+- Total training transitions: 0.
+- MuJoCo rollouts and all PPO runs: not run.
+- Runtime PPO gate: not run because Gate A did not change PPO logic or the
+  existing runtime-fingerprint management scope, and the run was not authorized.
+
+Legacy five-stage experimental outcomes are not evidence for the dynamic
 two-phase method and must not be promoted retrospectively.
 
-## Known blocker
+## Known blockers
 
-The two expert objectives, Apex transition-band contract, snapshot label schema,
-`V_up`/`V_down`, learned soft Tubes, unified two-phase PPO, and final pipeline
-entrypoint still require a separate method-implementation task.
+There are still no trained/frozen phase experts, collected or continuation-
+labeled two-phase snapshots, `V_up`/`V_down`, learned soft Tubes, unified
+two-phase PPO, independent frozen-final-policy evaluation, or new pipeline CLI.
+
+Gate B dynamic MuJoCo/PPO work is blocked until the enabled legacy
+`dvgc-pipeline-watchdog.timer` is explicitly stopped and disabled, or migrated
+under separate authorization. The timer was recorded disabled and inactive
+before Gate A, but Gate B still requires a fresh read-only state recheck and
+separate authorization; the earlier safety action is not automatic Gate B
+approval.
 
 ## Next permitted action
 
-Stop after this cleanup. The only next permitted action is a separately
-authorized two-phase method-implementation task. Do not begin that work or any
-formal training from this marker.
+Stop after Gate A. The next permitted action is only a separately authorized
+Gate B review beginning with a fresh read-only watchdog check. Do not start
+dynamic MuJoCo/PPO work, expert training, snapshot collection, labeling,
+feasibility training, soft-Tube construction, or unified PPO from this marker.
 
 ## Closed routes
 
