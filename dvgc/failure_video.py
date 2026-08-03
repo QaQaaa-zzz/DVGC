@@ -15,7 +15,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 from .config import STAGE_ID
-from .env import END_REASON
+from .env import END_PRETAKEOFF_AIRBORNE, END_REASON
 from .reference import ReferenceTrajectory
 from .reset_geometry import GroundSupportSolver
 from .two_phase_guideline import _reference_action, reconstruct_guideline_state
@@ -34,6 +34,8 @@ class FailureScenario:
     name: str
     start_reference_index: int
     maximum_control_ticks: int
+    initial_action_offset_ticks: int
+    first_step_action_offset_ticks: int
 
 
 @dataclass(frozen=True)
@@ -49,11 +51,15 @@ FAILURE_SCENARIOS = {
         name="full_guideline_prelaunch_airborne",
         start_reference_index=0,
         maximum_control_ticks=100,
+        initial_action_offset_ticks=0,
+        first_step_action_offset_ticks=1,
     ),
     "launch_history_airborne_before_window": FailureScenario(
         name="launch_history_airborne_before_window",
         start_reference_index=83,
         maximum_control_ticks=8,
+        initial_action_offset_ticks=-1,
+        first_step_action_offset_ticks=0,
     ),
 }
 
@@ -73,13 +79,43 @@ def _frame(state: Any) -> dict[str, np.ndarray]:
     }
 
 
-def capture_failure_scenario(
+def _state_trace_sha256(frames: tuple[dict[str, np.ndarray], ...]) -> str:
+    digest = hashlib.sha256()
+    for tick, frame in enumerate(frames):
+        digest.update(int(tick).to_bytes(8, "little", signed=False))
+        for name in ("qpos", "qvel", "ctrl"):
+            values = np.ascontiguousarray(frame[name])
+            digest.update(name.encode("ascii") + b"\0")
+            digest.update(values.dtype.str.encode("ascii") + b"\0")
+            digest.update(np.asarray(values.shape, dtype=np.int64).tobytes())
+            digest.update(values.tobytes())
+    return digest.hexdigest()
+
+
+def _load_state_trace(path: Path) -> tuple[dict[str, np.ndarray], ...]:
+    with np.load(path, allow_pickle=False) as archive:
+        if set(archive.files) != {"qpos", "qvel", "ctrl"}:
+            raise ValueError("Failure-video state trace fields are incomplete")
+        arrays = {name: np.asarray(archive[name]) for name in archive.files}
+    counts = {values.shape[0] for values in arrays.values() if values.ndim >= 1}
+    if len(counts) != 1 or any(values.ndim < 2 for values in arrays.values()):
+        raise ValueError("Failure-video state trace arrays are not frame-aligned")
+    count = counts.pop()
+    return tuple(
+        {name: values[index] for name, values in arrays.items()}
+        for index in range(count)
+    )
+
+
+def _capture_failure_scenario(
     env: Any,
     reference: ReferenceTrajectory,
     geometry: TwoPhaseGeometry,
     thresholds: TwoPhaseThresholds,
     scenario: str,
     seed: int,
+    *,
+    step: Any,
 ) -> FailureTrace:
     """Capture one named Gate B failure without changing environment semantics."""
     if scenario not in FAILURE_SCENARIOS:
@@ -98,7 +134,10 @@ def capture_failure_scenario(
         wheel_roll_radius=float(env._config.wheel_roll_radius),
         nominal_base_z_ground=float(env._config.nominal_base_z_ground),
     )
-    initial_action = jp.asarray(_reference_action(reference, start))
+    initial_action_index = start + contract.initial_action_offset_ticks * stride
+    if initial_action_index < 0:
+        raise ValueError("Failure scenario cannot form its initial action history")
+    initial_action = jp.asarray(_reference_action(reference, initial_action_index))
     ctrl = env._action_to_ctrl(
         initial_action,
         jp.asarray(proposal.qpos)[env._joint_qpos["knee_joint"]],
@@ -128,7 +167,6 @@ def capture_failure_scenario(
         estimated_phase=jp.asarray(STAGE_ID["approach"], jp.int32),
         jump_signal_latched=jp.asarray(False),
     )
-    step = jax.jit(env.step)
     event = initial_two_phase_event_state()
     frames: list[dict[str, np.ndarray]] = []
     telemetry: list[dict[str, Any]] = []
@@ -180,10 +218,13 @@ def capture_failure_scenario(
         )
         frames.append(frame)
 
-    append(0, start)
+    append(0, initial_action_index)
     executed = 0
     for tick in range(1, contract.maximum_control_ticks + 1):
-        action_index = min(start + tick * stride, len(reference.df) - 1)
+        action_index = min(
+            start + (contract.first_step_action_offset_ticks + tick - 1) * stride,
+            len(reference.df) - 1,
+        )
         state = step(state, jp.asarray(_reference_action(reference, action_index)))
         jax.block_until_ready(state)
         event = extract_two_phase_events(
@@ -211,10 +252,15 @@ def capture_failure_scenario(
         if not invalid_entry:
             raise ValueError("Launch-history scenario did not reproduce lost support")
         failure_reason = "airborne_before_jump_window_latch"
+    first_ticks_values = np.asarray(jax.device_get(event.first_event_ticks), int)
+    first_event_ticks = {
+        name: int(first_ticks_values[index]) for index, name in enumerate(EVENT_NAMES)
+    }
     summary = {
         "scenario": scenario,
         "seed": int(seed),
         "start_reference_index": start,
+        "initial_action_reference_index": initial_action_index,
         "reference_rows_per_control_tick": stride,
         "environment_transitions": executed,
         "formal_training_transitions": 0,
@@ -223,6 +269,7 @@ def capture_failure_scenario(
         "truncated": bool(telemetry[-1]["truncated"]),
         "end_code": int(telemetry[-1]["end_code"]),
         "failure_reason": failure_reason,
+        "first_event_ticks": first_event_ticks,
         "initial_ground_support": placement.summary(),
     }
     return FailureTrace(
@@ -230,6 +277,26 @@ def capture_failure_scenario(
         frames=tuple(frames),
         telemetry=tuple(telemetry),
         summary=summary,
+    )
+
+
+def capture_failure_scenario(
+    env: Any,
+    reference: ReferenceTrajectory,
+    geometry: TwoPhaseGeometry,
+    thresholds: TwoPhaseThresholds,
+    scenario: str,
+    seed: int,
+) -> FailureTrace:
+    """Capture one named Gate B failure through the unchanged environment step."""
+    return _capture_failure_scenario(
+        env,
+        reference,
+        geometry,
+        thresholds,
+        scenario,
+        seed,
+        step=jax.jit(env.step),
     )
 
 
@@ -337,6 +404,14 @@ def render_failure_trace(
     playback.extend([rendered[-1]] * 25)
     media.write_video(path, playback, fps=int(fps), codec="h264", crf=18)
     digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    state_path = path.with_suffix(".states.npz")
+    np.savez_compressed(
+        state_path,
+        **{
+            name: np.stack([frame[name] for frame in trace.frames])
+            for name in ("qpos", "qvel", "ctrl")
+        },
+    )
     return {
         "scenario": trace.scenario.name,
         "video": str(path.resolve()),
@@ -346,6 +421,10 @@ def render_failure_trace(
         "playback": "0.5x control-tick playback with initial/terminal holds",
         "environment_transitions": trace.summary["environment_transitions"],
         "formal_training_transitions": 0,
+        "frame_count": len(trace.frames),
+        "state_trace_sha256": _state_trace_sha256(trace.frames),
+        "state_trace": str(state_path.resolve()),
+        "state_trace_file_sha256": hashlib.sha256(state_path.read_bytes()).hexdigest(),
         "summary": trace.summary,
         "telemetry": list(trace.telemetry),
     }
@@ -364,21 +443,135 @@ def write_failure_video_manifest(
         raise ValueError("Failure-video manifest requires both named scenarios")
     if set(source_hashes) != {"xml", "config", "reference"}:
         raise ValueError("Failure-video manifest source hashes are incomplete")
+    required_report_fields = {
+        "scenario",
+        "video",
+        "video_sha256",
+        "formal_training_transitions",
+        "environment_transitions",
+        "frame_count",
+        "state_trace_sha256",
+        "state_trace",
+        "state_trace_file_sha256",
+        "summary",
+        "telemetry",
+    }
+    required_telemetry_fields = {
+        "tick",
+        "action_reference_index",
+        "inside_jump_window",
+        "host_wheel_contacts",
+        "host_body_contacts",
+        "deployable_wheel_support",
+        "jump_signal_latched",
+        "terminated",
+        "truncated",
+        "end_code",
+        "events",
+    }
     for row in videos:
+        if not required_report_fields.issubset(row):
+            raise ValueError("Failure-video audit report is incomplete")
         video_path = Path(row["video"])
         if not video_path.is_file() or video_path.stat().st_size <= 0:
             raise ValueError(f"Failure video is absent or empty: {video_path}")
         actual_hash = hashlib.sha256(video_path.read_bytes()).hexdigest()
         if row.get("video_sha256") != actual_hash:
             raise ValueError(f"Failure video hash mismatch: {video_path}")
+        state_path = Path(row["state_trace"])
+        if not state_path.is_file() or state_path.stat().st_size <= 0:
+            raise ValueError(f"Failure-video state trace is absent: {state_path}")
+        state_file_hash = hashlib.sha256(state_path.read_bytes()).hexdigest()
+        if row.get("state_trace_file_sha256") != state_file_hash:
+            raise ValueError(f"Failure-video state trace file hash mismatch: {state_path}")
+        state_frames = _load_state_trace(state_path)
+        if row.get("state_trace_sha256") != _state_trace_sha256(state_frames):
+            raise ValueError("Failure-video state trace content hash mismatch")
         if int(row.get("formal_training_transitions", -1)) != 0:
             raise ValueError("Failure video cannot report training transitions")
+        scenario = FAILURE_SCENARIOS[str(row["scenario"])]
+        summary = row["summary"]
+        telemetry = row["telemetry"]
+        if not isinstance(summary, dict) or not isinstance(telemetry, list) or not telemetry:
+            raise ValueError("Failure-video audit report is incomplete")
+        if any(not required_telemetry_fields.issubset(item) for item in telemetry):
+            raise ValueError("Failure-video telemetry is incomplete")
+        transitions = int(summary.get("environment_transitions", -1))
+        if (
+            int(row["environment_transitions"]) != transitions
+            or int(row["frame_count"]) != len(telemetry)
+            or int(row["frame_count"]) != len(state_frames)
+            or len(telemetry) != transitions + 1
+            or [int(item["tick"]) for item in telemetry] != list(range(len(telemetry)))
+        ):
+            raise ValueError("Failure-video frame/transition accounting is inconsistent")
+        if (
+            summary.get("scenario") != scenario.name
+            or int(summary.get("start_reference_index", -1))
+            != scenario.start_reference_index
+            or int(summary.get("formal_training_transitions", -1)) != 0
+            or set(summary.get("first_event_ticks", {})) != set(EVENT_NAMES)
+            or len(str(row["state_trace_sha256"])) != 64
+        ):
+            raise ValueError("Failure-video scenario contract is incomplete")
+        stride = int(summary.get("reference_rows_per_control_tick", -1))
+        initial_index = (
+            scenario.start_reference_index
+            + scenario.initial_action_offset_ticks * stride
+        )
+        expected_actions = [initial_index] + [
+            scenario.start_reference_index
+            + (scenario.first_step_action_offset_ticks + tick - 1) * stride
+            for tick in range(1, len(telemetry))
+        ]
+        actual_actions = [int(item["action_reference_index"]) for item in telemetry]
+        if (
+            stride <= 0
+            or int(summary.get("initial_action_reference_index", -1)) != initial_index
+            or actual_actions != expected_actions
+        ):
+            raise ValueError("Failure-video action schedule does not match the scenario")
+        if any(set(item["events"]) != set(EVENT_NAMES) for item in telemetry):
+            raise ValueError("Failure-video event telemetry is incomplete")
+        derived_first_ticks = {
+            name: next(
+                (
+                    int(item["tick"])
+                    for item in telemetry
+                    if bool(item["events"][name])
+                ),
+                -1,
+            )
+            for name in EVENT_NAMES
+        }
+        if summary["first_event_ticks"] != derived_first_ticks:
+            raise ValueError("Failure-video first event ticks do not match telemetry")
+        if scenario.name == "full_guideline_prelaunch_airborne":
+            if not (
+                bool(summary.get("terminal"))
+                and int(summary.get("end_code", -1)) == END_PRETAKEOFF_AIRBORNE
+                and summary.get("failure_reason") == "prelaunch_airborne"
+            ):
+                raise ValueError("Full-guideline failure end state does not match")
+        elif not (
+            summary.get("failure_reason") == "airborne_before_jump_window_latch"
+            and any(
+                bool(item["inside_jump_window"])
+                and not bool(item["deployable_wheel_support"])
+                and not bool(item["jump_signal_latched"])
+                for item in telemetry
+            )
+        ):
+            raise ValueError("Launch-history failure end state does not match")
     manifest = {
-        "contract_version": 1,
+        "contract_version": 2,
         "status": "pass",
         "artifact_role": "dynamic_failure_audit_only",
         "source_hashes": dict(source_hashes),
         "formal_training_transitions": 0,
+        "environment_transitions": sum(
+            int(row["environment_transitions"]) for row in videos
+        ),
         "videos": videos,
     }
     output = Path(path)
@@ -406,14 +599,16 @@ def render_failure_archive(
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
     videos = []
+    step = jax.jit(env.step)
     for offset, scenario in enumerate(FAILURE_SCENARIOS):
-        trace = capture_failure_scenario(
+        trace = _capture_failure_scenario(
             env,
             reference,
             geometry,
             thresholds,
             scenario=scenario,
             seed=int(seed) + offset,
+            step=step,
         )
         videos.append(
             render_failure_trace(

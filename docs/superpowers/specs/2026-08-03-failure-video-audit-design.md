@@ -32,7 +32,9 @@ The CLI writes beneath an ignored run directory:
 
 ```text
 full_guideline_prelaunch_airborne.mp4
+full_guideline_prelaunch_airborne.states.npz
 launch_history_airborne_before_window.mp4
+launch_history_airborne_before_window.states.npz
 failure_video_manifest.json
 ```
 
@@ -57,10 +59,12 @@ formal training transitions = 0
 ```
 
 The initial vertical mapping and support placement are identical to the Gate B
-event code. The full trace starts at reference index 0. The launch-history
-trace starts at the already-fixed first Phase U history origin, three control
-ticks before launch-front index 113, which is reference index 83. Neither
-scenario searches for a favorable start, action, threshold, or seed.
+event code. The full trace starts at reference index 0 and applies actions
+`0 -> 10 -> 20 ...`. The launch-history trace starts at the already-fixed
+first Phase U history origin, three control ticks before launch-front index
+113, which is reference index 83: its initial `ctrl` and `last_action` are from
+index 73, followed by step actions `83 -> 93 -> 103`. Neither scenario searches
+for a favorable start, action, threshold, or seed.
 
 ## Rendering and Overlay
 
@@ -73,14 +77,17 @@ scenario and tick
 reference/action index
 x, z, vx, vz
 jump-window bounds and inside/outside state
-wheel support and body contact
+host wheel/body contact and deployable wheel-support estimate
 jump signal and two-phase event state
 phase, end_code, and termination reason
 ```
 
 The initial and terminal frames are held briefly and playback is slowed enough
-to make the premature liftoff visible. Every video receives a SHA-256 entry in
-the manifest.
+to make the premature liftoff visible. Every video and compressed state trace
+receives a file SHA-256 entry in the manifest. The manifest reloads each NPZ,
+recomputes the ordered qpos/qvel/ctrl trace digest, derives first-event ticks
+from telemetry, and validates frame, transition, action-schedule, and named
+failure-end-state accounting before reporting `status=pass`.
 
 ## Automatic Failure Archive
 
@@ -90,6 +97,11 @@ the CLI raises its existing Gate-pause exception. The original Gate-pause
 status and exception remain authoritative. If rendering itself fails, the CLI
 records `video_status=render_failed` and the rendering error, then still exits
 for the original physical failure; it must never convert failure into success.
+
+Host contact and deployable support are separate audit fields. In particular,
+the launch-history failure may retain one MuJoCo wheel contact while the
+deployment estimator is false; the overlay must never describe these as the
+same signal.
 
 Future dynamic CLIs may call the same explicit scenario interface. This design
 does not add a generic environment hook or write rendering logic into

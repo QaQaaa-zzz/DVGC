@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import jax
 import numpy as np
 
 from dvgc.bank import SnapshotBank
 from dvgc.config import file_sha256, load_config
 from dvgc.env import END_PRETAKEOFF_AIRBORNE, OrangeBikeDVGC
 from dvgc.failure_video import (
-    capture_failure_scenario,
+    _capture_failure_scenario,
     render_failure_archive,
     render_failure_trace,
     write_failure_video_manifest,
@@ -16,7 +17,14 @@ from dvgc.two_phase_runtime import TwoPhaseThresholds, build_two_phase_geometry
 from dvgc.two_phase_semantics import ApexBandThresholds, RecoveryThresholds
 
 
+_CACHED_RUNTIME = None
+_CACHED_STEP = None
+
+
 def _runtime():
+    global _CACHED_RUNTIME, _CACHED_STEP
+    if _CACHED_RUNTIME is not None:
+        return _CACHED_RUNTIME
     cfg = load_config(
         "configs/default.json",
         {
@@ -47,13 +55,27 @@ def _runtime():
             required_hold_ticks=25,
         ),
     )
-    return cfg, env, reference, geometry, thresholds
+    _CACHED_RUNTIME = (cfg, env, reference, geometry, thresholds)
+    _CACHED_STEP = jax.jit(env.step)
+    return _CACHED_RUNTIME
+
+
+def _capture(env, reference, geometry, thresholds, *, scenario, seed):
+    return _capture_failure_scenario(
+        env,
+        reference,
+        geometry,
+        thresholds,
+        scenario=scenario,
+        seed=seed,
+        step=_CACHED_STEP,
+    )
 
 
 def test_full_guideline_failure_trace_reproduces_prelaunch_airborne():
     _, env, reference, geometry, thresholds = _runtime()
 
-    trace = capture_failure_scenario(
+    trace = _capture(
         env,
         reference,
         geometry,
@@ -75,7 +97,7 @@ def test_full_guideline_failure_trace_reproduces_prelaunch_airborne():
 def test_launch_history_trace_shows_support_lost_before_window_entry():
     _, env, reference, geometry, thresholds = _runtime()
 
-    trace = capture_failure_scenario(
+    trace = _capture(
         env,
         reference,
         geometry,
@@ -85,6 +107,7 @@ def test_launch_history_trace_shows_support_lost_before_window_entry():
     )
 
     assert trace.summary["start_reference_index"] == 83
+    assert trace.summary["initial_action_reference_index"] == 73
     assert trace.summary["environment_transitions"] == 8
     assert trace.summary["formal_training_transitions"] == 0
     assert trace.summary["failure_reason"] == "airborne_before_jump_window_latch"
@@ -93,7 +116,7 @@ def test_launch_history_trace_shows_support_lost_before_window_entry():
     assert inside["host_wheel_contacts"] == 1
     assert inside["deployable_wheel_support"] is False
     assert inside["jump_signal_latched"] is False
-    assert [row["action_reference_index"] for row in trace.telemetry[1:4]] == [93, 103, 113]
+    assert [row["action_reference_index"] for row in trace.telemetry[1:4]] == [83, 93, 103]
     assert len(trace.frames) == len(trace.telemetry) == 9
 
 
@@ -108,8 +131,8 @@ def test_failure_trace_is_exactly_reproducible_for_same_seed():
         seed=44_000,
     )
 
-    first = capture_failure_scenario(**kwargs)
-    second = capture_failure_scenario(**kwargs)
+    first = _capture_failure_scenario(**kwargs, step=_CACHED_STEP)
+    second = _capture_failure_scenario(**kwargs, step=_CACHED_STEP)
 
     assert first.summary == second.summary
     assert first.telemetry == second.telemetry
@@ -121,7 +144,7 @@ def test_failure_trace_is_exactly_reproducible_for_same_seed():
 
 def test_render_uses_captured_states_without_advancing_environment(tmp_path, monkeypatch):
     _, env, reference, geometry, thresholds = _runtime()
-    trace = capture_failure_scenario(
+    trace = _capture(
         env,
         reference,
         geometry,
@@ -152,9 +175,18 @@ def test_render_uses_captured_states_without_advancing_environment(tmp_path, mon
     assert report["scenario"] == trace.scenario.name
     assert report["formal_training_transitions"] == 0
     assert report["telemetry"] == list(trace.telemetry)
+    assert report["frame_count"] == len(trace.frames)
+    assert len(report["state_trace_sha256"]) == 64
+    assert report["state_trace_file_sha256"] == file_sha256(report["state_trace"])
+    with np.load(report["state_trace"], allow_pickle=False) as states:
+        assert set(states.files) == {"qpos", "qvel", "ctrl"}
+        assert states["qpos"].shape[0] == len(trace.frames)
+    assert set(report["summary"]["first_event_ticks"]) == set(
+        trace.telemetry[0]["events"]
+    )
 
 
-def test_manifest_requires_both_named_nonempty_mp4_files(tmp_path):
+def test_manifest_rejects_unclosed_fake_video_reports(tmp_path):
     videos = []
     for name, payload in (
         ("full_guideline_prelaunch_airborne", b"full-video"),
@@ -172,19 +204,16 @@ def test_manifest_requires_both_named_nonempty_mp4_files(tmp_path):
             }
         )
 
-    manifest = write_failure_video_manifest(
-        tmp_path / "failure_video_manifest.json",
-        videos,
-        source_hashes={"xml": "a" * 64, "config": "b" * 64, "reference": "c" * 64},
-    )
-
-    assert manifest["status"] == "pass"
-    assert manifest["formal_training_transitions"] == 0
-    assert {row["scenario"] for row in manifest["videos"]} == {
-        "full_guideline_prelaunch_airborne",
-        "launch_history_airborne_before_window",
-    }
-    assert (tmp_path / "failure_video_manifest.json").is_file()
+    with np.testing.assert_raises_regex(ValueError, "audit report is incomplete"):
+        write_failure_video_manifest(
+            tmp_path / "failure_video_manifest.json",
+            videos,
+            source_hashes={
+                "xml": "a" * 64,
+                "config": "b" * 64,
+                "reference": "c" * 64,
+            },
+        )
 
 
 def test_archive_renders_both_real_failure_scenarios(tmp_path):
@@ -205,9 +234,39 @@ def test_archive_renders_both_real_failure_scenarios(tmp_path):
 
     assert manifest["status"] == "pass"
     assert sum(row["environment_transitions"] for row in manifest["videos"]) == 20
+    assert manifest["environment_transitions"] == 20
     for scenario in (
         "full_guideline_prelaunch_airborne",
         "launch_history_airborne_before_window",
     ):
         path = tmp_path / f"{scenario}.mp4"
         assert path.is_file() and path.stat().st_size > 1_000
+        row = next(item for item in manifest["videos"] if item["scenario"] == scenario)
+        assert row["frame_count"] == len(row["telemetry"])
+        assert len(row["state_trace_sha256"]) == 64
+        assert file_sha256(row["state_trace"]) == row["state_trace_file_sha256"]
+
+
+def test_manifest_rejects_action_schedule_tampering(tmp_path):
+    cfg, env, reference, geometry, thresholds = _runtime()
+    manifest = render_failure_archive(
+        env,
+        reference,
+        geometry,
+        thresholds,
+        output_dir=tmp_path,
+        seed=44_000,
+        source_hashes={"xml": "a" * 64, "config": "b" * 64, "reference": "c" * 64},
+        width=320,
+        height=180,
+        fps=20,
+    )
+    videos = manifest["videos"]
+    videos[1]["telemetry"][1]["action_reference_index"] += 10
+
+    with np.testing.assert_raises_regex(ValueError, "action schedule"):
+        write_failure_video_manifest(
+            tmp_path / "tampered.json",
+            videos,
+            source_hashes=manifest["source_hashes"],
+        )
