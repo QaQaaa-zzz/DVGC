@@ -187,9 +187,15 @@ def full_structure_metrics(
 
 def _robot_geom_state(state: Any, geometry: TwoPhaseGeometry) -> tuple[Any, Any]:
     ids = jp.asarray(geometry.robot_geom_ids, jp.int32)
+    rotation_axis = (
+        -3
+        if state.data.geom_xmat.ndim >= 3
+        and state.data.geom_xmat.shape[-2:] == (3, 3)
+        else -2
+    )
     return (
         jp.take(state.data.geom_xpos, ids, axis=-2),
-        jp.take(state.data.geom_xmat, ids, axis=-2),
+        jp.take(state.data.geom_xmat, ids, axis=rotation_axis),
     )
 
 

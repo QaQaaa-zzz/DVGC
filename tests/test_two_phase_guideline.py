@@ -401,7 +401,7 @@ def test_real_guideline_capture_builds_three_consecutive_ticks_and_v4_context(
     env = OrangeBikeDVGC(cfg, snapshot_bank=SnapshotBank())
     reference = ReferenceTrajectory.load("data/reference_jump.csv")
 
-    record, cost = capture_guideline_snapshot(
+    captured = capture_guideline_snapshot(
         env,
         reference,
         target_index=target_index,
@@ -413,6 +413,7 @@ def test_real_guideline_capture_builds_three_consecutive_ticks_and_v4_context(
         provenance=_real_snapshot_provenance(cfg),
         rng=jax.random.PRNGKey(target_index),
     )
+    record, cost = captured.record, captured.cost
 
     assert cost == {"environment_transitions": 3, "training_transitions": 0}
     assert record["source_phase"] == legacy_phase
@@ -422,6 +423,10 @@ def test_real_guideline_capture_builds_three_consecutive_ticks_and_v4_context(
     assert record["two_phase_context"]["truncated"] is False
     assert record["field_ticks"]["actor_packet_fifo_t"] == [1, 2, 3]
     assert record["actor_packet_fifo_valid"] == 3
+    np.testing.assert_array_equal(
+        np.asarray(jax.device_get(captured.original_state.data.qpos)),
+        record["physical_state_t"]["qpos"],
+    )
     validation = validate_phase_snapshot(record)
     assert validation["valid"] is True, validation["failed"]
     assert validate_guideline_snapshot(record, expected_source_phase=source_phase)["valid"] is True
@@ -497,7 +502,7 @@ def test_real_bank_builder_covers_fixed_u_and_d_nominal_slices():
     reference = ReferenceTrajectory.load("data/reference_jump.csv")
     selection = select_guideline_indices(reference, reference.anchors())
 
-    up, down, report = build_guideline_banks(
+    built = build_guideline_banks(
         env,
         reference,
         selection,
@@ -505,6 +510,7 @@ def test_real_bank_builder_covers_fixed_u_and_d_nominal_slices():
         seed=3100,
         perturbations=(GuidelinePerturbation("nominal", 0.0, 0.0),),
     )
+    up, down, report = built.phase_up, built.phase_down, built.report
 
     assert len(up.records) == 3
     assert len(down.records) == 4
@@ -530,7 +536,7 @@ def test_guideline_cli_writes_reproducible_nominal_banks_and_cost_report(tmp_pat
     )
 
     built = build_guideline_cli(args)
-    assert built["status"] == "build_complete_pending_roundtrip_and_event_gate"
+    assert built["status"] == "build_and_roundtrip_complete_pending_event_gate"
     expected = {
         "run_manifest.json",
         "geometry_manifest.json",
@@ -538,6 +544,7 @@ def test_guideline_cli_writes_reproducible_nominal_banks_and_cost_report(tmp_pat
         "phase_up_guideline_bank.pkl",
         "phase_down_guideline_bank.pkl",
         "geometry_cross_audit.json",
+        "snapshot_roundtrip_report.json",
         "gate_b_build_report.json",
     }
     assert {path.name for path in output.iterdir()} == expected
@@ -546,9 +553,14 @@ def test_guideline_cli_writes_reproducible_nominal_banks_and_cost_report(tmp_pat
     assert run_manifest["interaction_cost"] == {
         "formal_training_transitions": 0,
         "maximum_construction_environment_transitions": 21,
+        "maximum_roundtrip_environment_transitions": 26,
     }
     assert report["construction_environment_transitions"] == 21
     assert report["formal_training_transitions"] == 0
+    assert report["roundtrip_environment_transitions"] == 26
+    assert json.loads((output / "snapshot_roundtrip_report.json").read_text())[
+        "status"
+    ] == "pass"
     assert len(SnapshotBank.load(output / "phase_up_guideline_bank.pkl").records) == 3
     assert len(SnapshotBank.load(output / "phase_down_guideline_bank.pkl").records) == 4
 

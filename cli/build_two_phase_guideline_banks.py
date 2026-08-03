@@ -25,11 +25,17 @@ from dvgc.two_phase_guideline import (
     reconstruct_guideline_state,
     select_guideline_indices,
 )
+from dvgc.two_phase_roundtrip import (
+    compare_two_phase_roundtrip,
+    select_roundtrip_representatives,
+)
 from dvgc.two_phase_runtime import (
+    TwoPhaseThresholds,
     build_two_phase_geometry,
     geometry_manifest,
     validate_geometry_manifest,
 )
+from dvgc.two_phase_semantics import ApexBandThresholds, RecoveryThresholds
 
 
 DEFAULT_MARGINS = GuidelineMargins(
@@ -85,6 +91,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         else DEFAULT_GUIDELINE_PERTURBATIONS
     )
     max_transitions = 7 * len(perturbations) * 3
+    max_roundtrip_transitions = 26
     run_manifest = {
         "contract_version": 1,
         "purpose": "Gate B deterministic two-phase guideline threshold and initial-bank construction",
@@ -96,6 +103,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         },
         "interaction_cost": {
             "maximum_construction_environment_transitions": max_transitions,
+            "maximum_roundtrip_environment_transitions": max_roundtrip_transitions,
             "formal_training_transitions": 0,
         },
         "stopping_condition": "stop on first geometry, threshold, snapshot, or output-contract failure",
@@ -206,7 +214,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         + Path(__file__).read_bytes()
     ).hexdigest()
     env = OrangeBikeDVGC(cfg, snapshot_bank=SnapshotBank())
-    up, down, construction_report = build_guideline_banks(
+    bank_build = build_guideline_banks(
         env,
         reference,
         selection,
@@ -214,14 +222,63 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         seed=int(args.seed),
         perturbations=perturbations,
     )
+    up = bank_build.phase_up
+    down = bank_build.phase_down
+    construction_report = bank_build.report
     up_path = output / "phase_up_guideline_bank.pkl"
     down_path = output / "phase_down_guideline_bank.pkl"
     up.save(up_path)
     down.save(down_path)
 
+    selected_thresholds = threshold_manifest["selected_thresholds"]
+    runtime_thresholds = TwoPhaseThresholds(
+        apex=ApexBandThresholds(**selected_thresholds["apex"]),
+        recovery=RecoveryThresholds(**selected_thresholds["recovery"]),
+    )
+    representatives = select_roundtrip_representatives(up, down)
+    tick_counts = {
+        "up_boundary_front": 1,
+        "up_boundary_back": 3,
+        "down_pre": 1,
+        "down_nearest": 2,
+        "down_post": 3,
+        "down_boundary": 3,
+    }
+    roundtrip_rows = []
+    for offset, (label, record) in enumerate(representatives.items()):
+        action = record["policy_action_t"]
+        row = compare_two_phase_roundtrip(
+            env,
+            record,
+            bank_build.original_states[record["id"]],
+            geometry,
+            runtime_thresholds,
+            seed=int(args.seed) + 50_000 + offset,
+            actions=[action] * tick_counts[label],
+        )
+        row["representative"] = label
+        roundtrip_rows.append(row)
+    roundtrip_report = {
+        "status": (
+            "pass"
+            if all(row["status"] == "pass" for row in roundtrip_rows)
+            else "gate_pause"
+        ),
+        "restore_mode": "timing_explicit_independent_reconstruction",
+        "same_snapshot_seed_action": True,
+        "formal_training_transitions": 0,
+        "environment_transitions": sum(
+            2 * row["control_ticks"] for row in roundtrip_rows
+        ),
+        "rows": roundtrip_rows,
+    }
+    _save_json(output / "snapshot_roundtrip_report.json", roundtrip_report)
+    if roundtrip_report["status"] != "pass":
+        raise ValueError("Snapshot round-trip entered gate_pause")
+
     build_report = {
         "status": (
-            "build_complete_pending_roundtrip_and_event_gate"
+            "build_and_roundtrip_complete_pending_event_gate"
             if geometry_report["status"] == "pass"
             else "gate_pause"
         ),
@@ -231,7 +288,10 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         "phase_up_bank_sha256": file_sha256(up_path),
         "phase_down_bank_sha256": file_sha256(down_path),
         "guideline_event_validation": "pending_task_5_dynamic_trace",
-        "snapshot_roundtrip_validation": "pending_task_4",
+        "snapshot_roundtrip_validation": roundtrip_report["status"],
+        "roundtrip_environment_transitions": roundtrip_report[
+            "environment_transitions"
+        ],
     }
     _save_json(output / "gate_b_build_report.json", build_report)
     return build_report

@@ -24,6 +24,7 @@ from dvgc.two_phase_runtime import (
     geometry_manifest,
     validate_geometry_manifest,
     initial_two_phase_event_state,
+    _robot_geom_state,
 )
 from dvgc.two_phase_semantics import (
     ApexBandSignals,
@@ -345,6 +346,41 @@ def test_signal_extractors_support_jit_and_vmap_over_batched_state():
 
     np.testing.assert_allclose(apex.obstacle_relative_x, [0.2, -0.3], atol=1e-6)
     np.testing.assert_array_equal(recovery.previous_recovery_hold_count, [2, 3])
+
+
+def test_signal_extractors_accept_real_mjx_matrix_geom_rotations():
+    state = _fake_state()
+    geometry = replace(
+        _synthetic_geometry(),
+        robot_geom_ids=np.asarray([2, 0], np.int32),
+        robot_geom_types=jp.asarray([int(mujoco.mjtGeom.mjGEOM_BOX)] * 2, jp.int32),
+        robot_geom_sizes=jp.asarray([[0.1, 0.1, 0.1]] * 2),
+        robot_geom_body_ids=np.asarray([3, 1], np.int32),
+        wheel_mask=jp.asarray([False, True]),
+        body_mask=jp.asarray([True, False]),
+    )
+    matrix_state = state._replace(
+        data=state.data._replace(geom_xmat=state.data.geom_xmat.reshape((3, 3, 3)))
+    )
+
+    selected_positions, selected_rotations = _robot_geom_state(matrix_state, geometry)
+
+    np.testing.assert_array_equal(
+        selected_positions, np.asarray(matrix_state.data.geom_xpos)[[2, 0]]
+    )
+    np.testing.assert_array_equal(
+        selected_rotations, np.asarray(matrix_state.data.geom_xmat)[[2, 0]]
+    )
+
+    apex = extract_apex_band_signals(matrix_state, geometry)
+    recovery = extract_recovery_signals(
+        matrix_state,
+        geometry,
+        previous_recovery_hold_count=jp.asarray(0, jp.int32),
+    )
+
+    assert float(apex.obstacle_relative_x) == pytest.approx(-1.0)
+    assert bool(recovery.stable_wheel_support) is True
 
 
 @pytest.mark.parametrize("end_code", [2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 15])

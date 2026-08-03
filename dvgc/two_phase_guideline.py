@@ -109,6 +109,21 @@ DEFAULT_GUIDELINE_PERTURBATIONS = (
 )
 
 
+@dataclass(frozen=True)
+class CapturedGuidelineSnapshot:
+    record: dict[str, Any]
+    cost: dict[str, int]
+    original_state: Any
+
+
+@dataclass(frozen=True)
+class GuidelineBankBuild:
+    phase_up: SnapshotBank
+    phase_down: SnapshotBank
+    report: dict[str, Any]
+    original_states: dict[str, Any]
+
+
 def _three_indices(indices: Sequence[int]) -> tuple[int, int, int]:
     values = tuple(int(value) for value in indices)
     if not values:
@@ -436,7 +451,7 @@ def capture_guideline_snapshot(
     rng: Any,
     step_fn: Any | None = None,
     perturbation: GuidelinePerturbation = DEFAULT_GUIDELINE_PERTURBATIONS[0],
-) -> tuple[dict[str, Any], dict[str, int]]:
+) -> CapturedGuidelineSnapshot:
     """Capture v4 state t after real consecutive packets t-2, t-1, t."""
     legacy_by_formal = {
         "propulsion_ascent": "takeoff",
@@ -525,7 +540,11 @@ def capture_guideline_snapshot(
     )
     if not validation["valid"]:
         raise ValueError(f"Guideline snapshot contract failed: {validation['failed']}")
-    return record, {"environment_transitions": 3, "training_transitions": 0}
+    return CapturedGuidelineSnapshot(
+        record=record,
+        cost={"environment_transitions": 3, "training_transitions": 0},
+        original_state=state,
+    )
 
 
 def _stable_snapshot_id(record: Mapping[str, Any]) -> str:
@@ -555,13 +574,14 @@ def build_guideline_banks(
     provenance: Mapping[str, Any],
     seed: int,
     perturbations: Sequence[GuidelinePerturbation] = DEFAULT_GUIDELINE_PERTURBATIONS,
-) -> tuple[SnapshotBank, SnapshotBank, dict[str, Any]]:
+) -> GuidelineBankBuild:
     """Build small deterministic U/D banks from fixed guideline selections."""
     if not perturbations:
         raise ValueError("At least one declared guideline perturbation is required")
     step_fn = jax.jit(env.step)
     up_records: list[dict[str, Any]] = []
     down_records: list[dict[str, Any]] = []
+    original_states: dict[str, Any] = {}
     transitions = 0
 
     specifications: list[tuple[str, str, int, list[str], str]] = []
@@ -589,7 +609,7 @@ def build_guideline_banks(
             trajectory_id = (
                 f"guideline:{phase}:{selection_name}:{index}:{perturbation.name}"
             )
-            record, cost = capture_guideline_snapshot(
+            captured = capture_guideline_snapshot(
                 env,
                 reference,
                 target_index=index,
@@ -605,10 +625,12 @@ def build_guideline_banks(
                 step_fn=step_fn,
                 perturbation=perturbation,
             )
+            record = captured.record
             record["guideline_selection"] = selection_name
             record["guideline_perturbation"] = perturbation.name
             record["id"] = _stable_snapshot_id(record)
-            transitions += cost["environment_transitions"]
+            original_states[record["id"]] = captured.original_state
+            transitions += captured.cost["environment_transitions"]
             (up_records if phase == "propulsion_ascent" else down_records).append(
                 record
             )
@@ -632,7 +654,12 @@ def build_guideline_banks(
         "formal_training_transitions": 0,
         "perturbations": [asdict(item) for item in perturbations],
     }
-    return up, down, report
+    return GuidelineBankBuild(
+        phase_up=up,
+        phase_down=down,
+        report=report,
+        original_states=original_states,
+    )
 
 
 def extract_guideline_threshold_samples(
