@@ -8,13 +8,18 @@ method defined in `PROJECT.md` and `docs/METHOD_TWO_PHASE_SOFT_TUBE.md`:
 `V_up`/`V_down`, soft-Tube guidance, one unified Tube-RSI PPO, and independent
 frozen-policy JCE/JEL evaluation.
 
-This method is not yet implemented dynamically. Gate A static contracts are
-implemented. Existing five-stage code and results are legacy migration sources
-only.
+Gate A static contracts and the Gate B external pure-JAX runtime adapter,
+geometry manifest/audit, deterministic guideline threshold/bank builder, and
+timing-explicit round-trip verifier are implemented. Gate B is nevertheless
+frozen at `gate_pause` because the authoritative guideline open-loop sequence
+does not satisfy the required real-environment event order. Existing
+five-stage code and results remain legacy migration sources only.
 
 ## Current branch and commit
 
-- Branch: `agent/repo-cleanup-two-phase`
+- Branch: `agent/two-phase-soft-tube`
+- Gate B baseline: `5331896bee08a920321a9b39b496f66c7b9b0879`
+- Gate B implementation head: `387ae59`
 - Gate A implementation: `5e5da3b`
 - Cleanup baseline: `main@b7bb815`
 - Dependency design: `27f0aa3`
@@ -25,15 +30,18 @@ only.
 ## Last validated gate
 
 - Current reusable runtime gate: PASS at source fingerprint
-  `3dcbfff04d02b9b68e00f136e59b46e2a8afe3b1df80b7919b1f1f11756f3a76`.
-- `cli.runtime_gate --check-only` confirmed the current XML, config, and source
-  fingerprint on 2026-08-03.
-- The gate's 64+32 timestep PPO is compile/update/resume smoke evidence only.
+  `84f61c8fe3be360cc0982f2ec75de0e7a3e1b33721b49eed8262511900301ce6`.
+- It used the fresh ignored work directory
+  `runs/runtime_gate_gate_b_20260803/` and took 99.318 seconds.
+- The gate's 64+32 = 96 transitions are compile/update/resume smoke evidence
+  only, not expert, pilot, or formal training.
 
 ## Current active run
 
-None. Gate A used zero training transitions and ran neither MuJoCo rollouts nor
-PPO smoke, pilot, or formal training.
+None. Gate B stopped at its fixed guideline event gate. The authoritative
+event probe used 12 environment transitions; the runtime integrity gate used
+96 smoke transitions. Expert, pilot, learnability, and formal training
+transitions remain exactly 0.
 
 ## Pipeline automation safety interlock
 
@@ -71,46 +79,64 @@ systemctl --user enable --now dvgc-pipeline-watchdog.timer
 
 ## Latest result
 
-Gate A static contracts passed. The implementation adds two-phase success
-semantics, a deployable feasibility-feature and continuation-label schema, and
-unambiguous total-environment-transition PPO budget accounting. This does not
-create or train `pi_up`, `pi_down`, `V_up`, or `V_down`, does not construct a
-learned soft Tube, and does not create a unified policy or pipeline CLI.
+Gate B is `gate_pause`, not passed. The formal path is the external pure-JAX
+adapter over `state.data`/`state.info` plus immutable XML geometry; no latch was
+added to `env.step`. All collision-relevant robot geoms are covered by the
+geometry manifest, representative host `mj_geomDistance` cross-audit passed,
+and the fixed threshold manifest was produced reproducibly at:
 
-Final Gate A validation on 2026-08-03:
+```text
+runs/two_phase/gate_b_20260803_authoritative_pause/threshold_manifest.json
+file SHA-256: c2a1cf6b17910d8912b5b9de282a4ddfe601467c77f267780d22b068451b0e8f
+canonical hash: f8b06896f46c3da68c861058e203fb25752b60a581539185f7012fd97bee493a
+```
+
+The real guideline event trace began from a MuJoCo-audited grounded state
+(wheel support present, no body-terrain contact), then terminated after 12
+control ticks with `end_code=9` (`prelaunch_airborne`). All ten required events
+were missing; Apex consecutive width and stable-recovery hold were both 0.
+The open-loop sequence becomes airborne before the legal jump-window entry, so
+the CLI stopped before bank admission. Consequently:
+
+- no authoritative Phase U bank was written;
+- no authoritative Phase D bank was written;
+- no Gate B bank round-trip report was run or written;
+- the implemented builder and round-trip contracts remain covered by dynamic
+  tests but are not promotion evidence.
+
+Final source validation on 2026-08-03:
 
 - `python -m compileall dvgc cli`: passed.
-- Three targeted Gate A test files: 140 passed.
-- Full pytest: 692 passed, with one existing JAXopt deprecation warning.
-- `bash scripts/local_preflight.sh`: passed on the configured GPU runtime and
-  repeated the 692-test result.
-- Total training transitions: 0.
-- MuJoCo rollouts and all PPO runs: not run.
-- Runtime PPO gate: not run because Gate A did not change PPO logic or the
-  existing runtime-fingerprint management scope, and the run was not authorized.
+- Gate A/B targeted files: 229 passed.
+- Full pytest: 781 passed, with one existing JAXopt deprecation warning.
+- `bash scripts/local_preflight.sh`: passed and repeated 781 tests.
+- Fresh runtime gate: PASS, 96 smoke transitions.
+- Guideline event audit: 12 environment transitions, `gate_pause`.
+- Formal training transitions: 0.
 
 Legacy five-stage experimental outcomes are not evidence for the dynamic
 two-phase method and must not be promoted retrospectively.
 
 ## Known blockers
 
-There are still no trained/frozen phase experts, collected or continuation-
-labeled two-phase snapshots, `V_up`/`V_down`, learned soft Tubes, unified
-two-phase PPO, independent frozen-final-policy evaluation, or new pipeline CLI.
+The Gate B physical blocker is the mismatch between the guideline open-loop
+sequence and the authoritative 4 kg, +/-50 N m model: the robot becomes
+airborne before the legal jump-window entry. The approved contract forbids
+lowering physical thresholds, substituting legacy phases, or searching rollout
+offsets until the trace passes.
 
-Gate B dynamic MuJoCo/PPO work is blocked until the enabled legacy
-`dvgc-pipeline-watchdog.timer` is explicitly stopped and disabled, or migrated
-under separate authorization. The timer was recorded disabled and inactive
-before Gate A, but Gate B still requires a fresh read-only state recheck and
-separate authorization; the earlier safety action is not automatic Gate B
-approval.
+There are still no authoritative Gate B Phase U/Phase D banks, trained/frozen
+phase experts, continuation-labeled two-phase snapshots, `V_up`/`V_down`,
+learned soft Tubes, unified two-phase PPO, or independent frozen-final-policy
+evaluation. The watchdog is disabled/inactive, its service is inactive, and
+`runs/ACTIVE_PIPELINE.json` is absent.
 
 ## Next permitted action
 
-Stop after Gate A. The next permitted action is only a separately authorized
-Gate B review beginning with a fresh read-only watchdog check. Do not start
-dynamic MuJoCo/PPO work, expert training, snapshot collection, labeling,
-feasibility training, soft-Tube construction, or unified PPO from this marker.
+Stop at Gate B `gate_pause`. The next permitted action is a separately reviewed
+decision about the non-expert guideline/controller mismatch. Gate C, expert
+training, snapshot labeling, feasibility training, soft-Tube construction, and
+unified PPO are not authorized from this marker.
 
 ## Closed routes
 
