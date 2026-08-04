@@ -9,11 +9,12 @@ method defined in `PROJECT.md` and `docs/METHOD_TWO_PHASE_SOFT_TUBE.md`:
 frozen-policy JCE/JEL evaluation.
 
 Gate A static contracts and the Gate B external pure-JAX runtime adapter,
-geometry manifest/audit, deterministic guideline threshold/bank builder, and
-timing-explicit round-trip verifier are implemented. Gate B is nevertheless
-frozen at `gate_pause` because the authoritative guideline open-loop sequence
-does not satisfy the required real-environment event order. Existing
-five-stage code and results remain legacy migration sources only.
+geometry manifest/audit, deterministic guideline threshold builder, natural
+reset audit, and timing-explicit snapshot/round-trip contracts are implemented.
+The revised Gate B no longer requires a complete guideline open-loop event
+sequence or guideline-generated banks. `data/reference_jump.csv` is a
+kinematic guideline and weak prior, not an expert or authoritative controller.
+Existing five-stage code and results remain legacy migration sources only.
 
 This method is not yet implemented end-to-end: there are no trained phase
 experts, feasibility models, learned soft Tubes, or unified two-phase policy.
@@ -45,9 +46,10 @@ experts, feasibility models, learned soft Tubes, or unified two-phase policy.
 
 ## Current active run
 
-None. Gate B stopped at its fixed guideline event gate. The authoritative
-event probe used 17 environment transitions; its two outcome-video diagnostics
-used 25 transitions in total. The runtime integrity gate used
+None. The historical Gate B guideline event probe used 17 environment
+transitions; its two outcome-video diagnostics used 25 transitions in total.
+Those runs are retained provenance, not active work or a revised Gate B pass
+condition. The runtime integrity gate used
 96 smoke transitions. Expert, pilot, learnability, and formal training
 transitions remain exactly 0.
 
@@ -87,11 +89,12 @@ systemctl --user enable --now dvgc-pipeline-watchdog.timer
 
 ## Latest result
 
-Gate B is `gate_pause`, not passed. The formal path is the external pure-JAX
-adapter over `state.data`/`state.info` plus immutable XML geometry; no latch was
-added to `env.step`. All collision-relevant robot geoms are covered by the
-geometry manifest, representative host `mj_geomDistance` cross-audit passed,
-and the fixed threshold manifest was produced reproducibly at:
+Gate B has been revised and accepted as a runtime/state-foundation gate. The
+formal path is the external pure-JAX adapter over `state.data`/`state.info` plus
+immutable XML geometry; no latch was added to `env.step`. All
+collision-relevant robot geoms are covered by the geometry manifest,
+representative host `mj_geomDistance` cross-audit passed, the natural start is
+valid, and the fixed threshold manifest was produced reproducibly at:
 
 ```text
 runs/two_phase/gate_b_20260803_prelaunch_continuation/threshold_manifest.json
@@ -99,21 +102,22 @@ file SHA-256: eb7b517e5fb0bd4d49f90fd93f9223d4056718f9329e07b5400c35aa49119387
 canonical hash: 2886802483c77a6d13817cbce889e9fec24807be2b536ba1429cdb7c6aeff900
 ```
 
-The real guideline event trace began from a MuJoCo-audited grounded state
+The historical real guideline event trace began from a MuJoCo-audited grounded state
 (wheel support present, no body-terrain contact). Early airborne was retained
 as telemetry and did not terminate the rollout. The environment's monotonic
 jump latch became true on the terminal tick, but the rollout then triggered the
 unchanged roll safety limit after 17 control ticks with `end_code=4`
 (`roll_limit`). The external two-phase adapter does not admit an event on a
-physical-failure tick, so all ten required events remained missing; Apex
-consecutive width and stable-recovery hold were both 0. The CLI stopped before
-bank admission. Consequently:
+physical-failure tick, so no valid Apex or stable recovery occurred. This
+result proves that full open-loop dynamic compatibility with the current 4 kg,
++/-50 N m model was not demonstrated; it does not block expert training. The
+CLI stopped before bank admission. Consequently:
 
 - no authoritative Phase U bank was written;
 - no authoritative Phase D bank was written;
-- no Gate B bank round-trip report was run or written;
+- no real Gate B bank round-trip report was run or written;
 - the implemented builder and round-trip contracts remain covered by dynamic
-  tests but are not promotion evidence.
+  tests but are not claims that an expert bank exists.
 
 ## Dynamic failure video evidence
 
@@ -187,13 +191,10 @@ two-phase method and must not be promoted retrospectively.
 
 ## Known blockers
 
-The Gate B physical blocker is now the retained roll safety limit: after early
-airborne continuation and legal-window latching, the fixed guideline open-loop
-sequence reaches `END_ROLL_LIMIT=4` before a complete Apex/recovery event
-sequence. Early airborne itself is no longer a terminal cause and does not
-grant Phase U success. The approved one-run contract forbids moving the jump
-window, changing actions/thresholds/seed/model, lowering Apex or recovery
-standards, or automatically searching alternatives after this pause.
+The retained `END_ROLL_LIMIT=4` outcome is not a revised Gate B blocker. It
+shows only that the reference open-loop actions were not proven dynamically
+compatible with the current model. No further reference-action repair is
+planned, and roll/pitch/contact/nonfinite safety limits remain unchanged.
 
 There are still no authoritative Gate B Phase U/Phase D banks, trained/frozen
 phase experts, continuation-labeled two-phase snapshots, `V_up`/`V_down`,
@@ -201,12 +202,20 @@ learned soft Tubes, unified two-phase PPO, or independent frozen-final-policy
 evaluation. The watchdog is disabled/inactive, its service is inactive, and
 `runs/ACTIVE_PIPELINE.json` is absent.
 
+Phase U must train from audited natural starts and earn the complete Apex-band
+success contract. Phase D preliminary candidates require the physical seed
+validation protocol and cannot be called reachable or safe. Its formal reset
+distribution must be sourced primarily from real frozen-`pi_up` Apex and early
+descent rollouts. Neither phase-expert training entrypoint exists yet.
+
 ## Next permitted action
 
-Stop at Gate B `gate_pause`. The next permitted action is a separately reviewed
-decision about the fixed guideline's roll-limit outcome. Gate C, expert
-training, snapshot labeling, feasibility training, soft-Tube construction, and
-unified PPO are not authorized from this marker.
+Stop after the Gate B revision and Gate C expert-entry design commit. The next
+permitted action is review and implementation of Gate C1's stable Phase U CLI
+and PPO smoke capability. This marker does not authorize running smoke, a
+102,400-transition pilot, 500,000-transition formal training, Phase D training,
+snapshot labeling, feasibility training, Soft Tube construction, or unified
+PPO.
 
 ## Closed routes
 

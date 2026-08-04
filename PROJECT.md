@@ -18,6 +18,9 @@ guideline
 
 The Apex transition band connects the two phases. It is a band of admissible
 handoff states, not a separately owned expert and not a certified safe set.
+The input reference is a kinematic guideline and weak prior, not an expert or
+authoritative dynamic controller, and complete open-loop replay is not a
+prerequisite for training the phase experts.
 
 ## Method contract
 
@@ -59,9 +62,10 @@ method.
 
 ## Not implemented
 
-The following work remains for a separate, explicitly approved migration:
+The following work remains for separately gated implementation and experiments:
 
-- the final two-phase expert semantics and training objectives;
+- the stable phase-expert training entrypoint and trained/frozen `pi_up` and
+  `pi_down` checkpoints;
 - `V_up` and `V_down` dataset/training/calibration contracts;
 - learned soft feasibility Tube construction;
 - two-phase Tube-RSI unified PPO;

@@ -1,5 +1,11 @@
 # Two-Phase Gate B Implementation Plan
 
+> **Historical plan:** The complete reference replay and guideline-bank
+> promotion requirements in this plan are superseded by
+> `docs/superpowers/specs/2026-08-03-two-phase-gate-b-design.md`. Keep this file
+> only as implementation provenance; do not resume its replay-repair or bank
+> promotion tasks.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build a pure-JAX two-phase runtime adapter, reproducible guideline threshold and initial-bank builder, and authoritative timing-explicit round-trip validator without training any policy or model.

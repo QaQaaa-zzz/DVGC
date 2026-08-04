@@ -9,10 +9,17 @@ formal two-phase pipeline CLI.
 
 ## 1. Guideline
 
-A physically meaningful jump guideline defines broad phase timing, admissible
-state envelopes, and event anchors. It may initialize reset distributions and
-help interpret behavior, but it is not a pointwise trajectory-tracking target
-and cannot label a state feasible or safe by geometric proximity alone.
+`data/reference_jump.csv` is a kinematic guideline and weak prior. It may
+provide broad jump-space intervals, Apex/descent/recovery kinematic envelopes,
+hip/knee motion trends, initial threshold suggestions, physical seed proposals,
+and weak reward/evaluation priors. It is not a pointwise trajectory-tracking
+target, expert policy, trained policy, or authoritative dynamic controller for
+the current 4 kg, +/-50 N m model. Complete open-loop replay is not a Gate B
+requirement, and a reference state is not presumed reachable or safe.
+
+The retained prelaunch and roll-limit replay evidence records that full dynamic
+compatibility was not demonstrated. It is provenance for this method revision,
+not a reason to tune actions, windows, thresholds, posture limits, or the model.
 
 ## 2. Two experts
 
@@ -21,12 +28,22 @@ and cannot label a state feasible or safe by geometric proximity alone.
 The upstream expert owns ground propulsion, takeoff, and rising flight. Its
 local objective is to reach the Apex transition band with physically valid
 state, sufficient forward progress, and continuation-compatible motion.
+It trains directly from audited natural resets. Reference actions are never
+replayed to initialize or control Phase U.
 
 ### Descent-Recovery
 
 The downstream expert starts in the Apex transition band and owns descending
 flight, landing, and stable recovery. Its objective uses the actual terminal
 task reward and distinguishes physical failure from finite-horizon timeout.
+
+Its preliminary smoke/early-pilot seeds may begin as reference-derived
+kinematic proposals only after MuJoCo forward, finite-state, penetration,
+geometry, short-horizon dynamics, real three-frame FIFO, and timing-explicit
+snapshot validation. Such records are labeled only
+`physically_validated_descent_seed`, never reachable, expert, Tube, safe, or
+certified. After Phase U is frozen, real online `pi_up` rollouts at Apex
+pre/nearest/post and early descent become the primary formal Phase D source.
 
 Experts are trained without feasibility networks or learned Tubes. This keeps
 expert data generation causally prior to feasibility learning.
@@ -112,13 +129,19 @@ membership cannot themselves support the final JCE/JEL claim.
 
 ## 9. Required implementation order
 
-1. Specify and test the two expert and Apex-band contracts.
-2. Train and freeze the two experts.
-3. Collect provenance-complete snapshots and continuation labels.
-4. Train and validate `V_up` and `V_down`.
-5. Construct learned soft-Tube banks.
-6. Train one unified Tube-RSI PPO.
-7. Freeze it and run an independent empirical JCE/JEL evaluation.
+1. Gate A/B: specify and validate static semantics, pure-JAX runtime, geometry,
+   thresholds, natural reset, seed protocol, and timing-explicit snapshots.
+2. Gate C1: implement the unified phase-expert entrypoint and Phase U smoke
+   capability; run smoke only under its explicit authorization.
+3. Gates D1/D2: separately run the Phase U learnability pilot, then formal
+   training, and freeze `pi_up`.
+4. Gate E1: collect provenance-complete real `pi_up` Apex/early-descent
+   snapshots.
+5. Gate C2/D3: validate Phase D seed smoke, then separately run its pilot and
+   formal training and freeze `pi_down`.
+6. Collect continuation labels and train/validate `V_up` and `V_down`.
+7. Construct learned soft-Tube banks and train one unified Tube-RSI PPO.
+8. Freeze it and run an independent empirical JCE/JEL evaluation.
 
 No later step may be advertised as complete before its code, tests, inputs,
 hashes, and outputs have been validated.
