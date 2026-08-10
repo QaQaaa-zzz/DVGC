@@ -19,6 +19,15 @@ Existing five-stage code and results remain legacy migration sources only.
 This method is not yet implemented end-to-end: there are no trained phase
 experts, feasibility models, learned soft Tubes, or unified two-phase policy.
 
+Gate C1's stable Phase U smoke capability is now implemented at
+`cli/train_phase_expert.py` and `dvgc/phase_expert_training.py`. The first
+single-run smoke authorization was consumed on 2026-08-10 and entered
+`gate_pause` during Brax's trace-only initial evaluation because reset and step
+published different `state.done` dtypes. No PPO rollout, optimizer update,
+checkpoint, fixed evaluation, or failure trajectory was produced. The dtype
+contract is corrected at `87c3f4d`, but the failed authorization was not reused
+and no automatic retry was performed.
+
 ## Current branch and commit
 
 - Branch: `agent/two-phase-soft-tube`
@@ -28,6 +37,10 @@ experts, feasibility models, learned soft Tubes, or unified two-phase policy.
 - Prelaunch-continuation design: `bac2a93`, `691ad8e`, `ec90d6d`
 - Prelaunch-continuation implementation: `23a746e`, `6ed2cdc`, `0b86435`
 - Gate A implementation: `5e5da3b`
+- Gate C1 run contracts: `07a435c`, `24b6217`, `1221b9a`
+- Gate C1 Phase U adapter and smoke runtime: `0e4f718`, `b36cfec`
+- Gate C1 failure-video archive support: `74723a5`
+- Post-pause dtype correction: `87c3f4d`
 - Cleanup baseline: `main@b7bb815`
 - Dependency design: `27f0aa3`
 - Clarified design policy: `3cbd6c1`
@@ -37,21 +50,27 @@ experts, feasibility models, learned soft Tubes, or unified two-phase policy.
 ## Last validated gate
 
 - Current reusable runtime gate: PASS at source fingerprint
-  `fb5839508d93696bc782c87ebf218c622c8fd8955a4da682e1bc228a88ce0fc7`.
+  `568a5982ab698e42e7c6a976f5bdfe66ba64b5a5ecbfb0ee301674580a3c0e51`.
 - It used the fresh ignored work directory
-  `runs/runtime_gate_prelaunch_final_20260803/` and took 95.976
-  seconds.
+  `runs/runtime_gate_gate_c1_20260810/` and took 97.672 seconds.
 - The gate's 64+32 = 96 transitions are compile/update/resume smoke evidence
   only, not expert, pilot, or formal training.
 
 ## Current active run
 
-None. The historical Gate B guideline event probe used 17 environment
+None. The completed Gate C1 smoke attempt is retained at
+`runs/two_phase/phase_experts/gate_c1_phase_u_smoke_20260810_seed710001/`
+with status `gate_pause`. Its actual training, Brax evaluation, fixed
+evaluation, and combined environment-transition counts are all 0. The failure
+occurred during JAX type tracing, so no dynamic frames existed and a failure
+video was not applicable. The run was not retried.
+
+The historical Gate B guideline event probe used 17 environment
 transitions; its two outcome-video diagnostics used 25 transitions in total.
 Those runs are retained provenance, not active work or a revised Gate B pass
-condition. The runtime integrity gate used
-96 smoke transitions. Expert, pilot, learnability, and formal training
-transitions remain exactly 0.
+condition. This Gate C1 round used one adapter integration diagnostic transition
+and 96 runtime-integrity transitions. Expert, pilot, learnability, and formal
+training transitions remain exactly 0.
 
 ## Pipeline automation safety interlock
 
@@ -186,6 +205,23 @@ Final source validation on 2026-08-03:
   original Gate status still `gate_pause`.
 - Formal training transitions: 0.
 
+Gate C1 validation on 2026-08-10:
+
+- `python -m compileall dvgc cli`: passed.
+- Gate C1/two-phase/repository focused tests: passed.
+- Full pytest after the final runtime implementation: 845 passed, with the
+  existing JAXopt deprecation warning only.
+- `bash scripts/local_preflight.sh`: passed and repeated all 845 tests.
+- Fresh managed runtime gate: PASS, 96 engineering-integrity transitions.
+- Static threshold refresh used only kinematic reconstruction and immutable
+  geometry, with 0 environment and 0 training transitions; canonical hash
+  `603ce888e40dae0d15a9cc6c6bf0704af538a62183d343e639e73c430743a881`.
+- Real adapter integration probe: 1 environment transition, nonterminal, no
+  success, no physical failure.
+- Authorized Phase U PPO smoke attempt: `gate_pause` during trace-only initial
+  evaluation; actual environment transitions 0 and no checkpoint.
+- Automatic retry: none. Phase U pilot/formal authorization: none.
+
 Legacy five-stage experimental outcomes are not evidence for the dynamic
 two-phase method and must not be promoted retrospectively.
 
@@ -202,20 +238,22 @@ learned soft Tubes, unified two-phase PPO, or independent frozen-final-policy
 evaluation. The watchdog is disabled/inactive, its service is inactive, and
 `runs/ACTIVE_PIPELINE.json` is absent.
 
-Phase U must train from audited natural starts and earn the complete Apex-band
+The stable Gate C1 CLI and Phase U adapter exist, but the first smoke did not
+reach a PPO update and produced no `pi_up` checkpoint. Phase U must train from audited natural starts and earn the complete Apex-band
 success contract. Phase D preliminary candidates require the physical seed
 validation protocol and cannot be called reachable or safe. Its formal reset
 distribution must be sourced primarily from real frozen-`pi_up` Apex and early
-descent rollouts. Neither phase-expert training entrypoint exists yet.
+descent rollouts. Phase D execution remains blocked at Gate C1.
 
 ## Next permitted action
 
-Stop after the Gate B revision and Gate C expert-entry design commit. The next
-permitted action is review and implementation of Gate C1's stable Phase U CLI
-and PPO smoke capability. This marker does not authorize running smoke, a
-102,400-transition pilot, 500,000-transition formal training, Phase D training,
-snapshot labeling, feasibility training, Soft Tube construction, or unified
-PPO.
+Stop after recording the first Gate C1 smoke `gate_pause` and the verified
+dtype correction. The next permitted action is a separate review of the paused
+run and corrected trace contract; only after that review may a new run-bound
+replacement smoke be authorized. The consumed authorization cannot be reused.
+This marker does not authorize a 102,400-transition pilot, 500,000-transition
+formal training, Phase D training, snapshot labeling, feasibility training,
+Soft Tube construction, or unified PPO.
 
 ## Closed routes
 
