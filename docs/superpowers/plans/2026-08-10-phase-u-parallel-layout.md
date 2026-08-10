@@ -82,7 +82,7 @@ bash scripts/local_preflight.sh
 /home/qy/mujoco_playground/.venv/bin/python -m cli.runtime_gate --check-only
 ```
 
-- [ ] **Step 3: Commit and push explicit paths**
+- [x] **Step 3: Commit and push explicit paths**
 
 Stage only the stable config, its test, the design/plan, and experiment-state
 document; push `agent/two-phase-soft-tube` without force.
@@ -98,23 +98,23 @@ document; push `agent/two-phase-soft-tube` without force.
 - Consumes: committed HEAD, clean tracked tree, stable 512 config, seed 710004.
 - Produces: detached Phase U process, `status.json`, `metrics.jsonl`, checkpoints, and resume command.
 
-- [ ] **Step 1: Run formal preflight**
+- [x] **Step 1: Run formal preflight**
 
 Request exactly 998,400 training transitions and confirm all separate
 interaction ceilings.
 
-- [ ] **Step 2: Write a run-bound authorization**
+- [x] **Step 2: Write a run-bound authorization**
 
 Bind run ID, source tree, config/XML hashes, seed, budget, stopping conditions,
 and a previously absent output directory.
 
-- [ ] **Step 3: Launch once and perform one startup check**
+- [x] **Step 3: Launch once and perform one startup check**
 
 Start the stable CLI with `setsid`, redirect stdout/stderr to the persistent
 log, then check liveness, running status, transition-0 checkpoint, and fatal
 warning patterns once.
 
-- [ ] **Step 4: Stop interactive observation**
+- [x] **Step 4: Stop interactive observation**
 
 Record PID, paths, and resume command. Do not poll again; rely on the persistent
 goal to resume on completion or Gate Pause.

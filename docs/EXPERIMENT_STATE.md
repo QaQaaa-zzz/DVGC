@@ -92,6 +92,26 @@ validation, a fresh runtime gate, and a new bounded PPO smoke at `b4c7fb5`.
 
 ## Current active run
 
+The collision-qualified 512-environment Phase U formal rerun is active:
+
+```text
+run id: phase_u_formal_env512_998400_20260810_seed710004
+producer HEAD: 79fd4f39148ec77a586c60382067b576edb5ecaf
+training PID: 2626553
+status: runs/two_phase/phase_experts/phase_u_formal_env512_998400_20260810_seed710004/status.json
+metrics: runs/two_phase/phase_experts/phase_u_formal_env512_998400_20260810_seed710004/metrics.jsonl
+log: runs/two_phase/process_logs/phase_u_formal_env512_998400_20260810_seed710004.log
+resume record: runs/two_phase/process_logs/phase_u_formal_env512_998400_20260810_seed710004.control.txt
+```
+
+Its run-bound authorization caps training at 998,400 aligned transitions,
+fixed evaluation at 9,600, candidate acquisition at 76,800, continuation
+diagnostics at 76,800, and all environment interaction at 1,161,600. The one
+startup check observed `status=running`, an absolute transition-0 checkpoint,
+and no broadphase, OOM, NaN, Inf, traceback, error, or Gate Pause pattern. No
+further polling is performed by the launching interaction; the persistent goal
+resumes analysis only on completion or Gate Pause.
+
 The repaired 64-environment Phase U formal-expert run is now paused:
 
 ```text
@@ -466,9 +486,9 @@ completed. The subsequent 64-environment run is paused for a three-window
 physical plateau and will not be resumed. The explicitly requested
 1,024-environment layout failed collision-integrity qualification, so it must
 not be used unless the immutable runtime/model contract is separately changed
-and re-authorized. The 512-environment layout passed qualification and may
-receive a new run-bound authorization for 998,400 aligned training transitions,
-with requested milestones mapped to
+and re-authorized. The 512-environment layout passed qualification and has
+received a new run-bound authorization for 998,400 aligned training
+transitions, with requested milestones mapped to
 0/102,400/256,000/512,000/755,200/998,400. That run may automatically begin
 candidate acquisition and bounded policy-dependent continuation diagnostics
 only after their evidence gates pass.
