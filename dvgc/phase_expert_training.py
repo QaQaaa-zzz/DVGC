@@ -1165,29 +1165,32 @@ def _fixed_phase_u_evaluation(
     params: Any,
     seeds: tuple[int, ...],
     horizon: int,
+    failure_video_dir: str | Path,
 ) -> tuple[dict[str, Any], int]:
     from .runtime import build_inference
 
     inference = build_inference(environment, params, deterministic=True)
     step = jax.jit(environment.step)
     rows: list[dict[str, Any]] = []
+    videos: list[dict[str, Any]] = []
     transitions = 0
     for seed in seeds:
         key = jax.random.PRNGKey(seed)
         state = environment.reset(key)
+        frames = [_phase_expert_frame(state)]
         episode_return = 0.0
         for tick in range(horizon):
             key, action_key = jax.random.split(key)
             action, _ = inference(state.obs, action_key)
             state = step(state, action)
             jax.block_until_ready(state)
+            frames.append(_phase_expert_frame(state))
             transitions += 1
             episode_return += float(state.reward)
             if bool(state.done):
                 break
         info = jax.device_get(state.info)
-        rows.append(
-            {
+        row = {
                 "seed": seed,
                 "episode_length": tick + 1,
                 "episode_return": episode_return,
@@ -1199,11 +1202,119 @@ def _fixed_phase_u_evaluation(
                     info["phase_expert/event/first_event_ticks"]
                 ).tolist(),
             }
-        )
+        rows.append(row)
+        if not row["success"]:
+            outcome = (
+                "physical_failure"
+                if row["physical_failure"]
+                else "timeout"
+                if row["timeout"]
+                else "other_failure"
+            )
+            video_path = Path(failure_video_dir) / f"seed_{seed}_{outcome}.mp4"
+            try:
+                videos.append(
+                    _render_phase_expert_failure_video(
+                        environment._base_env,
+                        frames,
+                        video_path,
+                        seed=seed,
+                        outcome=outcome,
+                        end_code=row["end_code"],
+                    )
+                )
+            except Exception as exc:
+                videos.append(
+                    {
+                        "seed": seed,
+                        "outcome": outcome,
+                        "status": "render_failed",
+                        "error_type": type(exc).__name__,
+                        "error": str(exc),
+                    }
+                )
     report = summarize_phase_expert_evaluation(rows)
     report["rows"] = rows
+    report["failure_videos"] = videos
     report["actual_environment_transitions"] = transitions
     return report, transitions
+
+
+def _phase_expert_frame(state: Any) -> dict[str, np.ndarray]:
+    return {
+        name: np.asarray(jax.device_get(value)).copy()
+        for name, value in (
+            ("qpos", state.data.qpos),
+            ("qvel", state.data.qvel),
+            ("ctrl", state.data.ctrl),
+        )
+    }
+
+
+def _render_phase_expert_failure_video(
+    base_environment: Any,
+    frames: list[dict[str, np.ndarray]],
+    output_path: str | Path,
+    *,
+    seed: int,
+    outcome: str,
+    end_code: int,
+) -> dict[str, Any]:
+    """Render captured evaluation states only; never advance environment dynamics."""
+    import mediapy as media
+    import mujoco
+
+    if not frames:
+        raise ValueError("failure video requires captured states")
+    path = Path(output_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    model = base_environment.mj_model
+    data = mujoco.MjData(model)
+    root = int(model.jnt_qposadr[int(model.joint("floating_base_joint").id)])
+    renderer = mujoco.Renderer(model, height=540, width=960)
+    camera = mujoco.MjvCamera()
+    camera.type = mujoco.mjtCamera.mjCAMERA_FREE
+    camera.azimuth, camera.elevation, camera.distance = 90.0, -10.0, 2.4
+    images = []
+    try:
+        for frame in frames:
+            data.qpos[:] = frame["qpos"]
+            data.qvel[:] = frame["qvel"]
+            if model.nu:
+                data.ctrl[:] = frame["ctrl"]
+            mujoco.mj_forward(model, data)
+            camera.lookat[:] = [
+                float(frame["qpos"][root]) + 0.3,
+                float(frame["qpos"][root + 1]),
+                0.24,
+            ]
+            renderer.update_scene(data, camera=camera)
+            images.append(renderer.render().copy())
+    finally:
+        renderer.close()
+    playback = [images[0]] * 10 + [image for image in images for _ in range(2)]
+    playback += [images[-1]] * 20
+    media.write_video(path, playback, fps=25, codec="h264", crf=18)
+    state_path = path.with_suffix(".states.npz")
+    np.savez_compressed(
+        state_path,
+        **{
+            name: np.stack([frame[name] for frame in frames])
+            for name in ("qpos", "qvel", "ctrl")
+        },
+    )
+    return {
+        "seed": seed,
+        "outcome": outcome,
+        "end_code": end_code,
+        "status": "rendered",
+        "video": str(path.resolve()),
+        "video_sha256": _sha256_file(path),
+        "state_trace": str(state_path.resolve()),
+        "state_trace_sha256": _sha256_file(state_path),
+        "captured_control_ticks": len(frames) - 1,
+        "rendering_environment_transitions": 0,
+    }
 
 
 def _checkpoint_contract(
@@ -1344,6 +1455,7 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
             params,
             validated.seeds.evaluation_seeds,
             int(training_config["evaluation"]["episode_horizon"]),
+            root / "failure_videos",
         )
         _write_json_atomic(root / "fixed_evaluation.json", evaluation)
         checkpoints = [
