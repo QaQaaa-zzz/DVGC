@@ -92,8 +92,27 @@ validation, a fresh runtime gate, and a new bounded PPO smoke at `b4c7fb5`.
 
 ## Current active run
 
-No formal expert run is active at this documentation marker. The original Gate
-C1 smoke attempt is retained at
+The persistent Phase U formal-expert run was launched after the bounded smoke:
+
+```text
+run id: phase_u_formal_1m_20260810_seed710001
+producer HEAD: f20a433813b7a6a8827ef482fd29d803ac1ec86c
+startup PID: 2367646
+status: runs/two_phase/phase_experts/phase_u_formal_1m_20260810_seed710001/status.json
+metrics: runs/two_phase/phase_experts/phase_u_formal_1m_20260810_seed710001/metrics.jsonl
+log: runs/two_phase/process_logs/phase_u_formal_1m_20260810_seed710001.log
+resume record: runs/two_phase/process_logs/phase_u_formal_1m_20260810_seed710001.control.txt
+```
+
+The single startup health check observed `status=running`, a live process, no
+immediate log error, and zero consumed formal-training transitions while JAX
+was compiling/initializing. No later transition count or performance result is
+claimed by this tracked marker. The process is capped at 1,000,000 PPO training
+transitions and a separately accounted 1,163,200 total-interaction ceiling. It
+must pause on the recorded numerical, contract, provenance, state-corruption,
+degradation, saturation, or reward-hacking conditions.
+
+The original Gate C1 smoke attempt is retained at
 `runs/two_phase/phase_experts/gate_c1_phase_u_smoke_20260810_seed710001/`
 with status `gate_pause`. Its actual training, Brax evaluation, fixed
 evaluation, and combined environment-transition counts are all 0. The failure
@@ -137,8 +156,9 @@ transitions; its two outcome-video diagnostics used 25 transitions in total.
 Those runs are retained provenance, not active work or a revised Gate B pass
 condition. Gate C1 used one adapter integration diagnostic transition, 96
 runtime-integrity transitions, and 3,416 replacement-smoke interactions.
-Phase U formal-expert, Phase D, feasibility, Soft Tube, and unified-policy
-training transitions remain exactly 0 at this marker. The two completed Phase
+Phase D, feasibility, Soft Tube, and unified-policy training transitions remain
+exactly 0 at this marker. Phase U formal training was running but had consumed
+0 transitions at the one allowed startup observation. The two completed Phase
 U smoke runs are engineering integrity evidence and are excluded from formal
 expert-training totals.
 
@@ -356,11 +376,14 @@ candidate-harvesting hooks have passed final validation and the new bounded
 smoke. A warm start restores only normalizer/policy/value parameters, resets
 optimizer and rollout state, binds its parent checkpoint's cumulative
 transition count, runs only the separately authorized remaining rollout
-blocks, and never repeats an already written global milestone. Codex may now
-issue one run-bound authorization and launch one persistent Phase U process
-capped at 1,000,000 cumulative training transitions. The run may automatically
-begin real candidate acquisition and bounded policy-dependent continuation
-diagnostics only after their evidence gates pass.
+blocks, and never repeats an already written global milestone. The one-use
+run-bound authorization has been issued and the persistent Phase U process has
+started with a 1,000,000 cumulative training-transition cap. The run may
+automatically begin real candidate acquisition and bounded policy-dependent
+continuation diagnostics only after their evidence gates pass. A later session
+should inspect only a requested checkpoint, completion, or abnormal exit using
+this file plus the run's `status.json` and `metrics.jsonl`; it must not
+repeatedly poll the long-running process.
 
 This marker does not authorize formal `V_up`, a learned Soft Tube declaration,
 Phase D expert training, unified PPO, or JCE/JEL. Provisional acquisition aids
