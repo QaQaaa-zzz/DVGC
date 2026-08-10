@@ -735,6 +735,42 @@ def test_run_artifacts_are_immutable_atomic_and_metrics_are_finite(tmp_path):
         module.initialize_phase_expert_artifacts(run, manifest, {"status": "initialized"})
 
 
+def test_completed_run_accounting_reports_each_actual_interaction_category():
+    module = _module()
+    spec = module.PhaseExpertRunSpec(
+        phase=module.PHASE_PROPULSION_ASCENT,
+        experiment_level="smoke",
+        requested_total_transitions=1_600,
+        seed=17,
+        config_path="configs/default.json",
+        training_config_path="configs/phase_expert_smoke.json",
+        threshold_manifest_path="threshold.json",
+        authorization_manifest_path="authorization.json",
+        output_dir="runs/two_phase/phase_experts/accounting-test",
+        descent_seed_bank=None,
+        descent_seed_manifest=None,
+        resume_run=None,
+        restore_checkpoint=None,
+    )
+    config = json.loads(Path("configs/phase_expert_smoke.json").read_text())
+    budget = module.build_phase_expert_interaction_budget(spec, config)
+
+    accounting = module.completed_phase_expert_interaction_accounting(
+        budget, fixed_evaluation_transitions=216
+    )
+
+    assert accounting == {
+        "training_transitions": 1_600,
+        "brax_evaluation_transitions": 1_600,
+        "fixed_evaluation_transitions": 216,
+        "combined_environment_transitions": 3_416,
+    }
+    with pytest.raises(ValueError, match="fixed evaluation"):
+        module.completed_phase_expert_interaction_accounting(
+            budget, fixed_evaluation_transitions=1_601
+        )
+
+
 def test_checkpoint_sidecar_binds_recursive_identity_and_rejects_drift(tmp_path):
     module = _module()
     checkpoint = tmp_path / "orbax" / "1600"

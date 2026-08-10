@@ -975,6 +975,33 @@ def build_phase_expert_interaction_budget(
     )
 
 
+def completed_phase_expert_interaction_accounting(
+    interaction_budget: PhaseExpertInteractionBudget,
+    *,
+    fixed_evaluation_transitions: int,
+) -> dict[str, int]:
+    """Close actual interaction totals for a successfully completed smoke."""
+    if (
+        isinstance(fixed_evaluation_transitions, bool)
+        or not isinstance(fixed_evaluation_transitions, int)
+        or not 0
+        <= fixed_evaluation_transitions
+        <= interaction_budget.fixed_evaluation_transition_ceiling
+    ):
+        raise ValueError("fixed evaluation transitions exceed the authorized ceiling")
+    training = interaction_budget.training.effective_total_transitions
+    brax_evaluation = interaction_budget.brax_evaluation_transition_ceiling
+    combined = training + brax_evaluation + fixed_evaluation_transitions
+    if combined > interaction_budget.combined_transition_ceiling:
+        raise ValueError("combined actual transitions exceed the authorized ceiling")
+    return {
+        "training_transitions": training,
+        "brax_evaluation_transitions": brax_evaluation,
+        "fixed_evaluation_transitions": fixed_evaluation_transitions,
+        "combined_environment_transitions": combined,
+    }
+
+
 def _validate_descent_seed_inputs(spec: PhaseExpertRunSpec) -> Mapping[str, Any] | None:
     if spec.phase != PHASE_DESCENT_RECOVERY:
         return None
@@ -1474,13 +1501,16 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
         )
         for checkpoint in checkpoints:
             write_phase_expert_checkpoint_sidecar(checkpoint, checkpoint_contract)
+        actual_interactions = completed_phase_expert_interaction_accounting(
+            validated.interaction_budget,
+            fixed_evaluation_transitions=fixed_transitions,
+        )
         result = {
             "status": "completed",
             "evidence_level": "engineering_smoke_only",
-            "training_transitions": validated.interaction_budget.training.effective_total_transitions,
             "brax_evaluation_transition_ceiling": validated.interaction_budget.brax_evaluation_transition_ceiling,
-            "fixed_evaluation_transitions": fixed_transitions,
             "combined_interaction_ceiling": validated.interaction_budget.combined_transition_ceiling,
+            **actual_interactions,
             "final_metrics": _jsonable(final_metrics),
             "fixed_evaluation": evaluation,
             "promotion_authorized": False,
