@@ -179,7 +179,7 @@ def test_thresholds_are_literal_extrema_plus_named_margins(tmp_path):
         geometry_manifest=geometry_manifest,
         reference_anchors=anchors,
         extraction_code_version="two_phase_guideline_v1",
-        controller_provenance="guideline open-loop action sequence",
+        controller_provenance="kinematic guideline envelope",
         creation_seed=17,
     )
 
@@ -221,7 +221,7 @@ def test_threshold_builder_rejects_nonphysical_result_or_metadata_fields(forbidd
             geometry_manifest=geometry_manifest,
             reference_anchors=_reference()[1],
             extraction_code_version="two_phase_guideline_v1",
-            controller_provenance="guideline open-loop action sequence",
+            controller_provenance="kinematic guideline envelope",
             creation_seed=17,
         )
 
@@ -239,7 +239,7 @@ def test_manifest_hash_is_canonical_stable_and_binds_every_source(tmp_path):
         geometry_manifest=geometry_manifest,
         reference_anchors=_reference()[1],
         extraction_code_version="two_phase_guideline_v1",
-        controller_provenance="guideline open-loop action sequence",
+        controller_provenance="kinematic guideline envelope",
         creation_seed=17,
     )
     first = build_threshold_manifest(**kwargs)
@@ -290,6 +290,25 @@ def test_controller_provenance_rejects_expert_or_trained_policy_claims(name, tmp
             reference_anchors=_reference()[1],
             extraction_code_version="two_phase_guideline_v1",
             controller_provenance=name,
+            creation_seed=17,
+        )
+
+
+def test_threshold_builder_rejects_open_loop_controller_provenance(tmp_path):
+    source_paths, source_hashes, geometry_manifest = _source_contract(tmp_path)
+    with pytest.raises(ValueError, match="kinematic guideline envelope"):
+        build_threshold_manifest(
+            selection=select_guideline_indices(*_reference()),
+            apex_samples=_apex_samples(),
+            recovery_samples=_recovery_samples(),
+            margins=_margins(),
+            required_recovery_hold_ticks=5,
+            source_hashes=source_hashes,
+            source_paths=source_paths,
+            geometry_manifest=geometry_manifest,
+            reference_anchors=_reference()[1],
+            extraction_code_version="two_phase_guideline_v1",
+            controller_provenance="guideline open-loop action sequence",
             creation_seed=17,
         )
 

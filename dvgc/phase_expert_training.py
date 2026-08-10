@@ -39,6 +39,20 @@ _BASE_MODE = MappingProxyType(
     }
 )
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+_PHASE_EXPERT_SOURCE_PATHS = (
+    "configs/default.json",
+    "configs/phase_expert_smoke.json",
+    "dvgc/config.py",
+    "dvgc/env.py",
+    "dvgc/phase_expert_training.py",
+    "dvgc/rewards.py",
+    "dvgc/runtime.py",
+    "dvgc/training_budget.py",
+    "dvgc/two_phase_guideline.py",
+    "dvgc/two_phase_runtime.py",
+    "dvgc/two_phase_semantics.py",
+    "cli/train_phase_expert.py",
+)
 
 
 @dataclass(frozen=True)
@@ -139,6 +153,16 @@ def _canonical_payload_hash(payload: Mapping[str, Any]) -> str:
     ).hexdigest()
 
 
+def phase_expert_source_tree_sha256() -> str:
+    """Hash every Gate C1 managed source, including uncommitted file contents."""
+    rows = []
+    for relative in _PHASE_EXPERT_SOURCE_PATHS:
+        path = _REPOSITORY_ROOT / relative
+        digest = _sha256_file(path) if path.is_file() else "missing"
+        rows.append(f"{relative}:{digest}\n")
+    return hashlib.sha256("".join(rows).encode("ascii")).hexdigest()
+
+
 def _freeze(value: Any) -> Any:
     if isinstance(value, Mapping):
         return MappingProxyType({str(key): _freeze(item) for key, item in value.items()})
@@ -212,8 +236,18 @@ def load_phase_expert_threshold_manifest(path: str | Path) -> ResolvedThresholdM
     )
 
 
-def resolve_gate_c1_base_mode(_config: Mapping[str, Any]) -> dict[str, Any]:
+def resolve_gate_c1_base_mode(config: Mapping[str, Any]) -> dict[str, Any]:
     """Return the immutable physical base-mode overrides for the Gate C1 adapter."""
+    if not isinstance(config, Mapping) or dict(config.get("base_mode", {})) != dict(
+        _BASE_MODE
+    ):
+        raise ValueError("Gate C1 base mode does not match the frozen contract")
+    if config.get("adapter_ownership") != {
+        "reward": True,
+        "done": True,
+        "timeout": True,
+    }:
+        raise ValueError("Gate C1 adapter ownership contract is invalid")
     return dict(_BASE_MODE)
 
 
@@ -411,7 +445,6 @@ def _validate_authorization(
     spec: PhaseExpertRunSpec,
     thresholds: ResolvedThresholdManifest,
     interaction: PhaseExpertInteractionBudget,
-    training_config: Mapping[str, Any],
 ) -> Mapping[str, Any]:
     if not spec.authorization_manifest_path:
         raise ValueError("normal execution requires an authorization manifest")
@@ -422,6 +455,9 @@ def _validate_authorization(
         "phase": spec.phase,
         "experiment_level": spec.experiment_level,
         "source_head": _current_source_head(),
+        "source_tree_sha256": phase_expert_source_tree_sha256(),
+        "seed": spec.seed,
+        "output_directory": str(Path(spec.output_dir).resolve()),
         "xml_sha256": AUTHORITATIVE_XML_SHA256,
         "threshold_manifest_canonical_hash": thresholds.canonical_manifest_hash,
         "training_config_sha256": _sha256_file(spec.training_config_path),
@@ -457,6 +493,8 @@ def validate_phase_expert_run_spec(
         raise ValueError("seed must be an integer")
     if Path(spec.output_dir).exists():
         raise ValueError("output directory must not already exist")
+    if spec.resume_run is not None or spec.restore_checkpoint is not None:
+        raise ValueError("exact resume is unavailable until the Gate C1 resume contract is implemented")
     thresholds = load_phase_expert_threshold_manifest(spec.threshold_manifest_path)
     project_config_path = _resolve_repository_path(spec.config_path)
     threshold_config_path = _resolve_repository_path(
@@ -467,6 +505,7 @@ def validate_phase_expert_run_spec(
             "project config path must match the threshold manifest source config"
         )
     training_config = _read_json(spec.training_config_path, "phase expert training config")
+    resolve_gate_c1_base_mode(training_config)
     seeds = validate_phase_expert_seed_namespaces(spec, training_config)
     interaction = build_phase_expert_interaction_budget(spec, training_config)
     _validate_descent_seed_inputs(spec)
@@ -475,7 +514,7 @@ def validate_phase_expert_run_spec(
     authorization = (
         None
         if preflight_only
-        else _validate_authorization(spec, thresholds, interaction, training_config)
+        else _validate_authorization(spec, thresholds, interaction)
     )
     return ValidatedPhaseExpertRunSpec(
         spec=spec,

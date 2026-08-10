@@ -120,6 +120,9 @@ def _authorization(module, spec, config: dict) -> dict:
         "source_head": subprocess.check_output(
             ["git", "rev-parse", "HEAD"], text=True
         ).strip(),
+        "source_tree_sha256": module.phase_expert_source_tree_sha256(),
+        "seed": spec.seed,
+        "output_directory": str(Path(spec.output_dir).resolve()),
         "xml_sha256": hashlib.sha256(
             Path("assets/orange_bike_4kg_horizontal.xml").read_bytes()
         ).hexdigest(),
@@ -178,6 +181,21 @@ def test_normal_execution_requires_one_run_bound_authorization_but_preflight_req
             replace(spec, authorization_manifest_path=str(reused)), preflight_only=False
         )
 
+    for field, replacement, message in (
+        ("seed", spec.seed + 1, "seed"),
+        ("output_directory", str(tmp_path / "elsewhere" / Path(spec.output_dir).name), "output directory"),
+        ("source_tree_sha256", "0" * 64, "source tree"),
+    ):
+        drifted = _write_json(
+            tmp_path / f"drift-{field}.json",
+            _authorization(module, spec, config) | {field: replacement},
+        )
+        with pytest.raises(ValueError, match=message):
+            module.validate_phase_expert_run_spec(
+                replace(spec, authorization_manifest_path=str(drifted)),
+                preflight_only=False,
+            )
+
 
 def test_run_spec_rejects_independent_timesteps_promoted_levels_existing_output_and_incomplete_hashes(tmp_path):
     """Alternate budgets, promotion, overwrites, or missing provenance bypass Gate C1 controls."""
@@ -202,6 +220,20 @@ def test_run_spec_rejects_independent_timesteps_promoted_levels_existing_output_
             ),
             preflight_only=True,
         )
+
+    for resume_fields in (
+        {"resume_run": str(tmp_path / "parent")},
+        {"restore_checkpoint": str(tmp_path / "checkpoint")},
+        {
+            "resume_run": str(tmp_path / "parent"),
+            "restore_checkpoint": str(tmp_path / "checkpoint"),
+        },
+    ):
+        with pytest.raises(ValueError, match="resume"):
+            module.validate_phase_expert_run_spec(
+                replace(spec, output_dir=str(tmp_path / "resume-run"), **resume_fields),
+                preflight_only=True,
+            )
 
     manifest = json.loads(Path(spec.threshold_manifest_path).read_text(encoding="utf-8"))
     manifest["source_hashes"].pop("code")
@@ -294,7 +326,7 @@ def test_smoke_config_locks_base_mode_cost_stops_rewards_and_disjoint_determinis
     config = json.loads(Path("configs/phase_expert_smoke.json").read_text(encoding="utf-8"))
     spec = _spec(module, tmp_path)
 
-    base = module.resolve_gate_c1_base_mode({"domain_randomization": True, "training_stage": "landing"})
+    base = module.resolve_gate_c1_base_mode(config)
     assert base == {
         "training_stage": "full",
         "use_bank_resets": False,
@@ -310,6 +342,17 @@ def test_smoke_config_locks_base_mode_cost_stops_rewards_and_disjoint_determinis
     }
     assert config["stopping_conditions"] and config["reward_bounds"]["total_min"] < config["reward_bounds"]["total_max"]
     assert config["checkpoint_cadence_transitions"] == 1_600
+    assert config["adapter_ownership"] == {
+        "reward": True,
+        "done": True,
+        "timeout": True,
+    }
+    assert "stop_after_brax_evaluation_ceiling" in config["stopping_conditions"]
+    assert "stop_after_combined_interaction_ceiling" in config["stopping_conditions"]
+    with pytest.raises(ValueError, match="adapter ownership"):
+        module.resolve_gate_c1_base_mode(
+            config | {"adapter_ownership": config["adapter_ownership"] | {"done": False}}
+        )
     namespaces = module.validate_phase_expert_seed_namespaces(spec, config)
     assert len(namespaces.evaluation_seeds) == config["evaluation"]["environment_count"]
     assert set(namespaces.training_seeds).isdisjoint(namespaces.evaluation_seeds)

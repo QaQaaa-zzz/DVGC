@@ -260,6 +260,10 @@ def build_threshold_manifest(
     normalized_controller = " ".join(
         controller_provenance.casefold().replace("_", " ").replace("-", " ").split()
     )
+    if normalized_controller != "kinematic guideline envelope":
+        raise ValueError(
+            "controller provenance must be exactly 'kinematic guideline envelope'"
+        )
     if any(term in normalized_controller for term in _FORBIDDEN_CONTROLLER_TERMS):
         raise ValueError("Invalid controller provenance claim")
     if set(source_hashes) != _SOURCE_HASHES or not all(

@@ -172,7 +172,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         geometry_manifest=geom_manifest,
         reference_anchors=anchors,
         extraction_code_version="two_phase_runtime_guideline_v1",
-        controller_provenance="guideline open-loop action sequence",
+        controller_provenance="kinematic guideline envelope",
         creation_seed=int(args.seed),
     )
     threshold_manifest["resolved_config_sha256"] = config_hash(cfg)

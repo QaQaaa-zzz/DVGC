@@ -25,9 +25,23 @@
     "episodes": 1
   },
   "checkpoint_cadence_transitions": 1600,
+  "base_mode": {
+    "training_stage": "full",
+    "use_bank_resets": false,
+    "expert_chain_termination": false,
+    "stage_reachability_objective": "",
+    "domain_randomization": false
+  },
+  "adapter_ownership": {
+    "reward": true,
+    "done": true,
+    "timeout": true
+  },
   "stopping_conditions": [
     "stop_after_requested_training_transitions",
+    "stop_after_brax_evaluation_ceiling",
     "stop_after_fixed_evaluation_ceiling",
+    "stop_after_combined_interaction_ceiling",
     "stop_on_contract_or_runtime_failure"
   ],
   "reward_bounds": {
