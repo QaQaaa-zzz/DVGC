@@ -28,6 +28,15 @@ checkpoint, fixed evaluation, or failure trajectory was produced. The dtype
 contract is corrected at `87c3f4d`, but the failed authorization was not reused
 and no automatic retry was performed.
 
+After a real Brax-wrapper regression reproduced and closed that defect, one
+new run-bound replacement smoke completed at source HEAD `88d074d`. It executed
+exactly one 1,600-transition PPO rollout block, the fixed 1,600-transition Brax
+evaluation protocol, and 216 transitions across eight external fixed
+evaluations. All fixed evaluations ended as `other_failure` with
+`takeoff_missed_liftoff_deadline`; there were no successes, physical failures,
+or timeouts. This is engineering smoke evidence only and does not authorize a
+learnability pilot or establish `pi_up`.
+
 ## Current branch and commit
 
 - Branch: `agent/two-phase-soft-tube`
@@ -41,6 +50,8 @@ and no automatic retry was performed.
 - Gate C1 Phase U adapter and smoke runtime: `0e4f718`, `b36cfec`
 - Gate C1 failure-video archive support: `74723a5`
 - Post-pause dtype correction: `87c3f4d`
+- Brax-wrapper dtype regression: `88d074d`
+- Completed-interaction accounting closure: `55b47d1`
 - Cleanup baseline: `main@b7bb815`
 - Dependency design: `27f0aa3`
 - Clarified design policy: `3cbd6c1`
@@ -58,19 +69,31 @@ and no automatic retry was performed.
 
 ## Current active run
 
-None. The completed Gate C1 smoke attempt is retained at
+None. The original Gate C1 smoke attempt is retained at
 `runs/two_phase/phase_experts/gate_c1_phase_u_smoke_20260810_seed710001/`
 with status `gate_pause`. Its actual training, Brax evaluation, fixed
 evaluation, and combined environment-transition counts are all 0. The failure
 occurred during JAX type tracing, so no dynamic frames existed and a failure
 video was not applicable. The run was not retried.
 
+The separately authorized replacement run is complete at:
+
+```text
+runs/two_phase/phase_experts/gate_c1_phase_u_replacement_smoke_20260810_seed710001/
+```
+
+Its actual interaction accounting is 1,600 training + 1,600 Brax evaluation
++ 216 fixed evaluation = 3,416 environment transitions, within the authorized
+4,800 ceiling. The run wrote a full-state Orbax checkpoint at transition 1,600
+and a validated recursive-identity sidecar. It did not authorize promotion.
+
 The historical Gate B guideline event probe used 17 environment
 transitions; its two outcome-video diagnostics used 25 transitions in total.
 Those runs are retained provenance, not active work or a revised Gate B pass
-condition. This Gate C1 round used one adapter integration diagnostic transition
-and 96 runtime-integrity transitions. Expert, pilot, learnability, and formal
-training transitions remain exactly 0.
+condition. Gate C1 used one adapter integration diagnostic transition, 96
+runtime-integrity transitions, and 3,416 replacement-smoke interactions.
+Phase U learnability-pilot, formal expert, Phase D, feasibility, Soft Tube, and
+unified-policy training transitions remain exactly 0.
 
 ## Pipeline automation safety interlock
 
@@ -221,6 +244,23 @@ Gate C1 validation on 2026-08-10:
 - Authorized Phase U PPO smoke attempt: `gate_pause` during trace-only initial
   evaluation; actual environment transitions 0 and no checkpoint.
 - Automatic retry: none. Phase U pilot/formal authorization: none.
+- A real Brax training-wrapper regression was added after the first pause. It
+  reproduced the original `lax.scan` dtype error when the cast was removed and
+  passed with the corrected contract.
+- Replacement Phase U smoke: completed one 1,600-transition rollout block;
+  Brax evaluation used 1,600 transitions; external fixed evaluation used 216
+  transitions.
+- Fixed evaluation outcomes: success 0, physical failure 0, timeout 0,
+  other failure 8. All eight terminal reasons were
+  `takeoff_missed_liftoff_deadline` (`end_code=12`).
+- Jump-window entry occurred at tick 19 in every fixed rollout; no legal
+  liftoff, stable-airborne, ascending, or Apex event was observed.
+- Eight MP4 videos and eight timing-aligned state traces were saved under the
+  replacement run's `failure_videos/` directory.
+- Orbax transition-1600 checkpoint sidecar validation passed; recursive
+  checkpoint SHA-256:
+  `43adb2f97740c7a6348588df9b15f89eb461fe0c602f484c78a79d35d2a4d6b4`.
+- Promotion, pilot, and formal authorization remain false.
 
 Legacy five-stage experimental outcomes are not evidence for the dynamic
 two-phase method and must not be promoted retrospectively.
@@ -238,22 +278,23 @@ learned soft Tubes, unified two-phase PPO, or independent frozen-final-policy
 evaluation. The watchdog is disabled/inactive, its service is inactive, and
 `runs/ACTIVE_PIPELINE.json` is absent.
 
-The stable Gate C1 CLI and Phase U adapter exist, but the first smoke did not
-reach a PPO update and produced no `pi_up` checkpoint. Phase U must train from audited natural starts and earn the complete Apex-band
-success contract. Phase D preliminary candidates require the physical seed
+The stable Gate C1 CLI and Phase U adapter now complete an engineering PPO
+smoke, but the smoke checkpoint has zero fixed-evaluation success and is not a
+trained/frozen `pi_up`. Phase U must train from audited natural starts and earn
+the complete Apex-band success contract. Phase D preliminary candidates require the physical seed
 validation protocol and cannot be called reachable or safe. Its formal reset
 distribution must be sourced primarily from real frozen-`pi_up` Apex and early
 descent rollouts. Phase D execution remains blocked at Gate C1.
 
 ## Next permitted action
 
-Stop after recording the first Gate C1 smoke `gate_pause` and the verified
-dtype correction. The next permitted action is a separate review of the paused
-run and corrected trace contract; only after that review may a new run-bound
-replacement smoke be authorized. The consumed authorization cannot be reused.
-This marker does not authorize a 102,400-transition pilot, 500,000-transition
-formal training, Phase D training, snapshot labeling, feasibility training,
-Soft Tube construction, or unified PPO.
+Stop after recording the completed replacement Gate C1 smoke and its actual
+outcomes. The next permitted action is a separate Gate D1 review deciding
+whether the zero-success, missed-liftoff smoke evidence is sufficient to
+authorize the fixed 102,400-transition Phase U learnability pilot. No smoke
+authorization may be reused. This marker does not authorize that pilot,
+500,000-transition formal training, Phase D training, snapshot labeling,
+feasibility training, Soft Tube construction, or unified PPO.
 
 ## Closed routes
 

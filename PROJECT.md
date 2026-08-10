@@ -54,6 +54,9 @@ The repository currently provides reusable infrastructure for:
 - policy bundles, rollout, rewards, and reference-trajectory parsing;
 - seed/provenance manifests, certification utilities, runtime validation, and
   generic full-jump evaluation;
+- Gate A/B two-phase semantics/runtime contracts and the Gate C1 stable
+  phase-expert smoke entrypoint, including authorization, checkpoint, fixed
+  evaluation, and interaction accounting;
 - legacy stage/expert code that may supply utilities during migration.
 
 The existing five-stage implementation is a legacy migration source. Its
@@ -64,8 +67,7 @@ method.
 
 The following work remains for separately gated implementation and experiments:
 
-- the stable phase-expert training entrypoint and trained/frozen `pi_up` and
-  `pi_down` checkpoints;
+- trained/frozen `pi_up` and `pi_down` checkpoints beyond engineering smoke;
 - `V_up` and `V_down` dataset/training/calibration contracts;
 - learned soft feasibility Tube construction;
 - two-phase Tube-RSI unified PPO;
