@@ -115,6 +115,24 @@ therefore remained at 0. The operator pause record is stored beside
 fixed evaluation = 291,864. The old process was terminated after the pause and
 will not be resumed under its loaded gate implementation.
 
+Parallel-layout qualification then tested the requested 1,024 environments
+without changing reward, reset, network, optimizer, horizon, XML, or physical
+limits. That one-block run completed 25,600 training transitions at 1,782.60
+training transitions/s, but repeatedly reported MJX Warp broadphase overflow:
+the immutable runtime config provides `naconmax=1024`, while the largest
+reported requirement was 1,443. Because collision candidates may be truncated,
+the benchmark audit marks the run invalid and does not authorize 1,024 for
+formal training. The artifacts remain as negative qualification evidence.
+
+The 512-environment fallback completed one 12,800-transition block plus 216
+fixed-evaluation transitions. It measured 884.92 training transitions/s,
+14.46 seconds of training time, 57.21 seconds end to end, and 4,938,288 KiB
+maximum resident memory. Its persistent log contains no broadphase overflow,
+OOM, NaN, Inf, traceback, or contract warning. This is parallel-layout
+integrity evidence, not learnability evidence. The stable formal layout is
+therefore 512 environments with a 12,800-transition PPO block and an aligned
+998,400-transition maximum.
+
 The persistent Phase U formal-expert run was launched after the bounded smoke:
 
 ```text
@@ -403,6 +421,11 @@ Gate C1 validation on 2026-08-10:
   `gate_pause`, and terminated at checkpoint 291,200. The gate implementation
   previously detected only degradation, not the separately required
   three-window plateau; a red-green regression now closes that omission.
+- The requested 1,024-environment benchmark reached 1,782.60 training
+  transitions/s but is rejected because broadphase capacity overflowed, with a
+  reported requirement up to `naconmax=1443` against the immutable 1,024
+  capacity. The 512-environment benchmark reached 884.92 training
+  transitions/s without that warning and is the selected formal layout.
 
 Legacy five-stage experimental outcomes are not evidence for the dynamic
 two-phase method and must not be promoted retrospectively.
@@ -440,13 +463,15 @@ blocks, and never repeats an already written global milestone. The first 1M
 authorization was consumed by a zero-transition checkpoint-path pause and must
 not be reused. The newly authorized bounded formal-path checkpoint smoke has
 completed. The subsequent 64-environment run is paused for a three-window
-physical plateau and must not continue unchanged. Next benchmark the explicitly
-requested 1,024-environment layout with the same reward/reset/network/horizon
-and preserved minibatch size before issuing another long-run authorization.
-Because 1,024 environments with unroll length 25 make one 25,600-transition
-block, the largest aligned run below the 1,000,000 ceiling is 998,400. Any new
-run may automatically begin candidate acquisition and bounded policy-dependent
-continuation diagnostics only after their evidence gates pass.
+physical plateau and will not be resumed. The explicitly requested
+1,024-environment layout failed collision-integrity qualification, so it must
+not be used unless the immutable runtime/model contract is separately changed
+and re-authorized. The 512-environment layout passed qualification and may
+receive a new run-bound authorization for 998,400 aligned training transitions,
+with requested milestones mapped to
+0/102,400/256,000/512,000/755,200/998,400. That run may automatically begin
+candidate acquisition and bounded policy-dependent continuation diagnostics
+only after their evidence gates pass.
 
 This marker does not authorize formal `V_up`, a learned Soft Tube declaration,
 Phase D expert training, unified PPO, or JCE/JEL. Provisional acquisition aids

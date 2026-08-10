@@ -405,8 +405,8 @@ def test_phase_u_checkpoint_tracker_claims_each_aligned_milestone_once():
     assert tracker.claimed_effective == (0, 100_800, 251_200)
 
 
-def test_phase_u_training_level_uses_1m_cap_six_fixed_evaluations_and_no_hidden_brax_eval(tmp_path):
-    """Formal execution must account the authorized training and each checkpoint evaluation separately."""
+def test_phase_u_training_level_uses_aligned_cap_six_fixed_evaluations_and_no_hidden_brax_eval(tmp_path):
+    """The collision-valid 512-env layout must keep every interaction within the 1M authorization."""
     module = _module()
     config_path = "configs/phase_expert_phase_u.json"
     config = json.loads(Path(config_path).read_text(encoding="utf-8"))
@@ -414,25 +414,29 @@ def test_phase_u_training_level_uses_1m_cap_six_fixed_evaluations_and_no_hidden_
         module,
         tmp_path,
         experiment_level="formal_expert",
-        requested_total_transitions=1_000_000,
+        requested_total_transitions=998_400,
         training_config_path=config_path,
         output_dir=_run_output(tmp_path, "phase-u-1m"),
     )
     validated = module.validate_phase_expert_run_spec(spec, preflight_only=True)
     budget = validated.interaction_budget
-    assert budget.training.ppo_rollout_blocks == 625
-    assert budget.training.effective_total_transitions == 1_000_000
+    assert config["ppo_layout"]["num_parallel_envs"] == 512
+    assert config["ppo_layout"]["batch_size"] == 16
+    assert config["ppo_layout"]["num_minibatches"] == 32
+    assert budget.training.ppo_rollout_block_size == 12_800
+    assert budget.training.ppo_rollout_blocks == 78
+    assert budget.training.effective_total_transitions == 998_400
     assert budget.brax_evaluation_transition_ceiling == 0
     assert budget.fixed_evaluation_transition_ceiling == 9_600
-    assert budget.combined_transition_ceiling == 1_009_600
+    assert budget.combined_transition_ceiling == 1_008_000
     assert budget.candidate_acquisition_transition_ceiling == 76_800
     assert budget.continuation_labeling_transition_ceiling == 76_800
-    assert budget.total_environment_transition_ceiling == 1_163_200
+    assert budget.total_environment_transition_ceiling == 1_161_600
     with pytest.raises(ValueError, match="1,000,000|ceiling"):
         module.validate_phase_expert_run_spec(
             replace(
                 spec,
-                requested_total_transitions=1_001_600,
+                requested_total_transitions=1_011_200,
                 output_dir=_run_output(tmp_path, "over-cap"),
             ),
             preflight_only=True,
@@ -440,24 +444,24 @@ def test_phase_u_training_level_uses_1m_cap_six_fixed_evaluations_and_no_hidden_
 
 
 def test_formal_phase_u_warm_start_budget_uses_only_requested_remaining_blocks(tmp_path):
-    """A warm-start invocation must not silently expand a remaining budget back to 1M."""
+    """A warm-start invocation must preserve the aligned remaining budget."""
     module = _module()
     config = json.loads(Path("configs/phase_expert_phase_u.json").read_text())
     spec = _spec(
         module,
         tmp_path,
         experiment_level="formal_expert",
-        requested_total_transitions=748_800,
+        requested_total_transitions=742_400,
         training_config_path="configs/phase_expert_phase_u.json",
         output_dir=_run_output(tmp_path, "phase-u-remaining"),
     )
 
     budget = module.build_phase_expert_budget(spec, config["ppo_layout"])
 
-    assert budget.requested_total_transitions == 748_800
-    assert budget.effective_total_transitions == 748_800
-    assert budget.ppo_rollout_blocks == 468
-    assert budget.num_evals == 469
+    assert budget.requested_total_transitions == 742_400
+    assert budget.effective_total_transitions == 742_400
+    assert budget.ppo_rollout_blocks == 58
+    assert budget.num_evals == 59
 
 
 def test_phase_u_resume_milestones_are_cumulative_and_do_not_repeat_parent_checkpoint():
@@ -479,18 +483,18 @@ def test_phase_u_resume_milestones_are_cumulative_and_do_not_repeat_parent_check
 
 
 def test_formal_warm_start_binds_parent_offset_and_rejects_cumulative_overrun(tmp_path):
-    """A truthful checkpoint sidecar is the authority for the remaining 1M cap."""
+    """A truthful checkpoint sidecar is the authority for the aligned formal cap."""
     module = _module()
     config_path = "configs/phase_expert_phase_u.json"
     config = json.loads(Path(config_path).read_text())
     parent = tmp_path / "parent-run"
-    checkpoint = parent / "orbax" / "000000251200"
+    checkpoint = parent / "orbax" / "000000256000"
     checkpoint.mkdir(parents=True)
     (checkpoint / "state").write_bytes(b"normalizer policy value")
     _write_json(parent / "run_manifest.json", {"run_id": parent.name})
     contract = {
         "phase": "propulsion_ascent",
-        "cumulative_training_transitions": 251_200,
+        "cumulative_training_transitions": 256_000,
         "checkpoint_payload": "normalizer_policy_value",
         "optimizer_state_included": False,
         "environment_step_state_included": False,
@@ -519,7 +523,7 @@ def test_formal_warm_start_binds_parent_offset_and_rejects_cumulative_overrun(tm
         module,
         tmp_path,
         experiment_level="formal_expert",
-        requested_total_transitions=748_800,
+        requested_total_transitions=742_400,
         training_config_path=config_path,
         output_dir=_run_output(tmp_path, "phase-u-resume"),
         resume_run=str(parent),
@@ -528,20 +532,20 @@ def test_formal_warm_start_binds_parent_offset_and_rejects_cumulative_overrun(tm
 
     validated = module.validate_phase_expert_run_spec(spec, preflight_only=True)
 
-    assert validated.cumulative_training_start == 251_200
+    assert validated.cumulative_training_start == 256_000
     assert (
         validated.cumulative_training_start
         + validated.interaction_budget.training.effective_total_transitions
-        == 1_000_000
+        == 998_400
     )
-    later = parent / "orbax" / "000000500800"
+    later = parent / "orbax" / "000000512000"
     later.mkdir()
     (later / "state").write_bytes(b"later normalizer policy value")
     module.write_phase_expert_checkpoint_sidecar(
         later,
         contract
         | {
-            "cumulative_training_transitions": 500_800,
+            "cumulative_training_transitions": 512_000,
             "parent_checkpoint": str(checkpoint.resolve()),
         },
     )
@@ -554,7 +558,7 @@ def test_formal_warm_start_binds_parent_offset_and_rejects_cumulative_overrun(tm
         module.validate_phase_expert_run_spec(
             replace(
                 spec,
-                requested_total_transitions=500_800,
+                requested_total_transitions=499_200,
                 output_dir=_run_output(tmp_path, "phase-u-resume-overrun"),
                 restore_checkpoint=str(later),
             ),
