@@ -35,6 +35,14 @@ success, while the expert continues training. Formal feasibility labels are
 later normalized by re-labeling accumulated candidates under the selected
 frozen phase expert.
 
+Phase-expert checkpoints contain the observation normalizer and policy/value
+parameters used for inference. They do not contain optimizer or environment
+rollout state and therefore support an auditable warm start, not bitwise
+full-state continuation. A warm-start invocation is bound to the parent
+checkpoint's cumulative transition count, receives a separate remaining
+transition authorization, and may not exceed the 1,000,000 cumulative Phase U
+cap or repeat an already recorded global checkpoint milestone.
+
 ### Propulsion-Ascent
 
 The upstream expert owns ground propulsion, takeoff, and rising flight. Its

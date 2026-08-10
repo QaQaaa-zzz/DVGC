@@ -89,7 +89,10 @@ PID/process records, and a reproducible warm-start resume command. The installed
 Brax checkpoint contains observation normalizer plus policy/value parameters,
 not optimizer state. Sidecars must record this truth and must never claim
 `full_training_state=true`; restart is an auditable warm start, not bitwise
-continuation.
+continuation. The parent sidecar supplies the cumulative transition offset; a
+replacement invocation receives authorization only for the remaining
+rollout-block-aligned transitions. Callbacks use cumulative steps, skip the
+parent milestone, and reject any cumulative total above 1,000,000.
 
 ## Candidate acquisition
 

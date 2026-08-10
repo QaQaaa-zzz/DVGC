@@ -65,7 +65,8 @@ The repository currently provides reusable infrastructure for:
 - action mapping;
 - MuJoCo/MJX environment, observations, and history;
 - snapshot capture, restore, provenance, timing, and `SnapshotBank`;
-- PPO training, checkpoint resume, and deterministic inference;
+- PPO training, truthful normalizer/policy/value checkpoint warm starts, and
+  deterministic inference;
 - policy bundles, rollout, rewards, and reference-trajectory parsing;
 - seed/provenance manifests, certification utilities, runtime validation, and
   generic full-jump evaluation;

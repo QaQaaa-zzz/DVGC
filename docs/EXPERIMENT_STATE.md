@@ -101,8 +101,12 @@ runs/two_phase/phase_experts/gate_c1_phase_u_replacement_smoke_20260810_seed7100
 
 Its actual interaction accounting is 1,600 training + 1,600 Brax evaluation
 + 216 fixed evaluation = 3,416 environment transitions, within the authorized
-4,800 ceiling. The run wrote a full-state Orbax checkpoint at transition 1,600
-and a validated recursive-identity sidecar. It did not authorize promotion.
+4,800 ceiling. The run wrote an Orbax normalizer/policy/value checkpoint at
+transition 1,600 and a recursive-identity sidecar that was historically
+described as full-state. Inspection of the installed Brax payload proved that
+optimizer and environment-step state are not present. Current validation
+therefore rejects that old full-state claim and describes new checkpoints only
+as policy/normalizer/value warm starts. It did not authorize promotion.
 
 The historical Gate B guideline event probe used 17 environment
 transitions; its two outcome-video diagnostics used 25 transitions in total.
@@ -305,12 +309,16 @@ descent rollouts. Phase D execution remains blocked at Gate C1.
 
 ## Next permitted action
 
-Implement and verify the approved reward-only Phase U hypothesis plus
-per-checkpoint physical evaluation, aligned checkpoint, truthful warm-start
-resume, and candidate-harvesting hooks. Then execute one newly authorized
-bounded smoke. If smoke integrity passes, Codex may issue a new run-bound
-authorization and launch one persistent Phase U process capped at 1,000,000
-training transitions without waiting for another manual approval. The run may
+The approved reward-only Phase U hypothesis, per-checkpoint physical
+evaluation, aligned checkpoint, truthful warm-start accounting, and
+candidate-harvesting hooks are under final validation. A warm start restores
+only normalizer/policy/value parameters, resets optimizer and rollout state,
+binds its parent checkpoint's cumulative transition count, runs only the
+separately authorized remaining rollout blocks, and never repeats an already
+written global milestone. Next execute one newly authorized bounded smoke. If
+smoke integrity passes, Codex may issue a new run-bound authorization and
+launch one persistent Phase U process capped at 1,000,000 cumulative training
+transitions without waiting for another manual approval. The run may
 automatically begin real candidate acquisition and bounded policy-dependent
 continuation diagnostics only after their evidence gates pass.
 

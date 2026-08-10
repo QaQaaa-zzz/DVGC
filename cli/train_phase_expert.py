@@ -63,9 +63,17 @@ def _preflight_report(validated: Any) -> dict[str, Any]:
         "experiment_level": validated.spec.experiment_level,
         "requested_total_transitions": budget.training.requested_total_transitions,
         "effective_total_transitions": budget.training.effective_total_transitions,
+        "cumulative_training_start": validated.cumulative_training_start,
+        "cumulative_training_end": (
+            validated.cumulative_training_start
+            + budget.training.effective_total_transitions
+        ),
         "brax_evaluation_transition_ceiling": budget.brax_evaluation_transition_ceiling,
         "fixed_evaluation_transition_ceiling": budget.fixed_evaluation_transition_ceiling,
         "combined_transition_ceiling": budget.combined_transition_ceiling,
+        "candidate_acquisition_transition_ceiling": budget.candidate_acquisition_transition_ceiling,
+        "continuation_labeling_transition_ceiling": budget.continuation_labeling_transition_ceiling,
+        "total_environment_transition_ceiling": budget.total_environment_transition_ceiling,
         "threshold_manifest_canonical_hash": validated.thresholds.canonical_manifest_hash,
         "training_transitions_executed": 0,
         "evaluation_transitions_executed": 0,

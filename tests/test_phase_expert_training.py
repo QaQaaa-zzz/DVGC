@@ -144,9 +144,14 @@ def _authorization(module, spec, config: dict) -> dict:
         ).hexdigest(),
         "requested_training_transition_ceiling": report.requested_total_transitions,
         "effective_training_transition_ceiling": report.effective_total_transitions,
+        "cumulative_training_start": 0,
+        "cumulative_training_end": report.effective_total_transitions,
         "brax_evaluation_transition_ceiling": interaction.brax_evaluation_transition_ceiling,
         "fixed_evaluation_transition_ceiling": interaction.fixed_evaluation_transition_ceiling,
         "combined_interaction_transition_ceiling": interaction.combined_transition_ceiling,
+        "candidate_acquisition_transition_ceiling": interaction.candidate_acquisition_transition_ceiling,
+        "continuation_labeling_transition_ceiling": interaction.continuation_labeling_transition_ceiling,
+        "total_environment_transition_ceiling": interaction.total_environment_transition_ceiling,
         "issuer": "gate-c1-test",
         "issued_at": "2026-08-10T00:00:00Z",
     }
@@ -420,12 +425,112 @@ def test_phase_u_training_level_uses_1m_cap_six_fixed_evaluations_and_no_hidden_
     assert budget.brax_evaluation_transition_ceiling == 0
     assert budget.fixed_evaluation_transition_ceiling == 9_600
     assert budget.combined_transition_ceiling == 1_009_600
+    assert budget.candidate_acquisition_transition_ceiling == 76_800
+    assert budget.continuation_labeling_transition_ceiling == 76_800
+    assert budget.total_environment_transition_ceiling == 1_163_200
     with pytest.raises(ValueError, match="1,000,000|ceiling"):
         module.validate_phase_expert_run_spec(
             replace(
                 spec,
                 requested_total_transitions=1_001_600,
                 output_dir=_run_output(tmp_path, "over-cap"),
+            ),
+            preflight_only=True,
+        )
+
+
+def test_formal_phase_u_warm_start_budget_uses_only_requested_remaining_blocks(tmp_path):
+    """A warm-start invocation must not silently expand a remaining budget back to 1M."""
+    module = _module()
+    config = json.loads(Path("configs/phase_expert_phase_u.json").read_text())
+    spec = _spec(
+        module,
+        tmp_path,
+        experiment_level="formal_expert",
+        requested_total_transitions=748_800,
+        training_config_path="configs/phase_expert_phase_u.json",
+        output_dir=_run_output(tmp_path, "phase-u-remaining"),
+    )
+
+    budget = module.build_phase_expert_budget(spec, config["ppo_layout"])
+
+    assert budget.requested_total_transitions == 748_800
+    assert budget.effective_total_transitions == 748_800
+    assert budget.ppo_rollout_blocks == 468
+    assert budget.num_evals == 469
+
+
+def test_phase_u_resume_milestones_are_cumulative_and_do_not_repeat_parent_checkpoint():
+    """Warm-start callbacks use cumulative transitions and skip already-written milestones."""
+    module = _module()
+
+    milestones = module.phase_u_invocation_milestones(
+        (0, 100_000, 250_000, 500_000, 750_000, 1_000_000),
+        rollout_block_size=1_600,
+        cumulative_start=251_200,
+        invocation_transitions=748_800,
+    )
+
+    assert [(item.requested, item.effective) for item in milestones] == [
+        (500_000, 500_800),
+        (750_000, 750_400),
+        (1_000_000, 1_000_000),
+    ]
+
+
+def test_formal_warm_start_binds_parent_offset_and_rejects_cumulative_overrun(tmp_path):
+    """A truthful checkpoint sidecar is the authority for the remaining 1M cap."""
+    module = _module()
+    config_path = "configs/phase_expert_phase_u.json"
+    config = json.loads(Path(config_path).read_text())
+    parent = tmp_path / "parent-run"
+    checkpoint = parent / "orbax" / "000000251200"
+    checkpoint.mkdir(parents=True)
+    (checkpoint / "state").write_bytes(b"normalizer policy value")
+    _write_json(parent / "run_manifest.json", {"run_id": parent.name})
+    contract = {
+        "phase": "propulsion_ascent",
+        "cumulative_training_transitions": 251_200,
+        "checkpoint_payload": "normalizer_policy_value",
+        "optimizer_state_included": False,
+        "environment_step_state_included": False,
+        "resume_semantics": "policy_normalizer_value_warm_start",
+        "prng_lineage": "phase_u_train_v1:17",
+        "reset_contract_hash": "a" * 64,
+        "reward_contract_hash": module.phase_u_reward_contract_hash(config),
+        "evaluation_contract_hash": module._canonical_payload_hash(config["evaluation"]),
+        "xml_sha256": module.AUTHORITATIVE_XML_SHA256,
+        "action_schema_hash": "b" * 64,
+        "observation_schema_hash": "c" * 64,
+        "history_schema_hash": "d" * 64,
+        "parent_checkpoint": None,
+    }
+    module.write_phase_expert_checkpoint_sidecar(checkpoint, contract)
+    spec = _spec(
+        module,
+        tmp_path,
+        experiment_level="formal_expert",
+        requested_total_transitions=748_800,
+        training_config_path=config_path,
+        output_dir=_run_output(tmp_path, "phase-u-resume"),
+        resume_run=str(parent),
+        restore_checkpoint=str(checkpoint),
+    )
+
+    validated = module.validate_phase_expert_run_spec(spec, preflight_only=True)
+
+    assert validated.cumulative_training_start == 251_200
+    assert (
+        validated.cumulative_training_start
+        + validated.interaction_budget.training.effective_total_transitions
+        == 1_000_000
+    )
+    with pytest.raises(ValueError, match="cumulative.*1,000,000"):
+        module.validate_phase_expert_run_spec(
+            replace(
+                spec,
+                requested_total_transitions=750_400,
+                output_dir=_run_output(tmp_path, "phase-u-resume-overrun"),
             ),
             preflight_only=True,
         )
@@ -450,6 +555,7 @@ def test_phase_u_physical_evaluation_summary_reports_progress_safety_and_reward_
             "clearance_margin": 0.08,
             "minimum_post_window_forward_velocity": 3.8,
             "action_saturation_fraction": 0.125,
+            "episode_return": 12.0,
             "reward_component_sums": {"ascent_progress": 4.0},
         },
         {
@@ -467,6 +573,7 @@ def test_phase_u_physical_evaluation_summary_reports_progress_safety_and_reward_
             "clearance_margin": -0.03,
             "minimum_post_window_forward_velocity": 2.5,
             "action_saturation_fraction": 0.5,
+            "episode_return": -2.0,
             "reward_component_sums": {"ascent_progress": 0.0},
         },
     ]
@@ -482,7 +589,49 @@ def test_phase_u_physical_evaluation_summary_reports_progress_safety_and_reward_
     assert report["clearance_margin_distribution"] == [-0.03, 0.08]
     assert report["minimum_post_window_forward_velocity_distribution"] == [2.5, 3.8]
     assert report["mean_action_saturation_fraction"] == pytest.approx(0.3125)
+    assert report["mean_episode_return"] == pytest.approx(5.0)
     assert report["reward_component_mean_sums"] == {"ascent_progress": 2.0}
+
+
+def test_phase_u_checkpoint_gate_pauses_only_on_severe_saturation_or_repeated_degradation():
+    """Low early success is allowed, while explicit hacking/degradation evidence pauses."""
+    module = _module()
+
+    def report(score, episode_return, saturation=0.0):
+        return {
+            "fixed_evaluation": {
+                "physical_metrics": {
+                    "apex_band_success_rate": score,
+                    "jump_window_reach_rate": score,
+                    "liftoff_rate": score,
+                    "clearance_success_rate": score,
+                    "forward_velocity_retention_rate": score,
+                    "physical_failure_rate": 1.0 - score,
+                    "mean_action_saturation_fraction": saturation,
+                    "mean_episode_return": episode_return,
+                }
+            }
+        }
+
+    assert module.evaluate_phase_u_checkpoint_gate([report(0.0, -10.0)]) == {
+        "pause": False,
+        "reasons": [],
+    }
+    severe = module.evaluate_phase_u_checkpoint_gate(
+        [report(0.1, 0.0, saturation=0.99)]
+    )
+    assert severe["pause"] is True
+    assert "severe_action_saturation" in severe["reasons"]
+    degrading = module.evaluate_phase_u_checkpoint_gate(
+        [report(0.8, 1.0), report(0.6, 2.0), report(0.4, 3.0)]
+    )
+    assert degrading == {
+        "pause": True,
+        "reasons": [
+            "held_out_physical_performance_degradation",
+            "reward_hacking_return_up_physics_down",
+        ],
+    }
 
 
 def test_smoke_config_locks_base_mode_cost_stops_rewards_and_disjoint_deterministic_seeds(tmp_path):
@@ -1016,7 +1165,10 @@ def test_completed_run_accounting_reports_each_actual_interaction_category():
         "training_transitions": 1_600,
         "brax_evaluation_transitions": 1_600,
         "fixed_evaluation_transitions": 216,
+        "candidate_acquisition_transitions": 0,
+        "continuation_labeling_transitions": 0,
         "combined_environment_transitions": 3_416,
+        "total_environment_transitions": 3_416,
     }
     with pytest.raises(ValueError, match="fixed evaluation"):
         module.completed_phase_expert_interaction_accounting(
@@ -1028,11 +1180,14 @@ def test_checkpoint_sidecar_binds_recursive_identity_and_rejects_drift(tmp_path)
     module = _module()
     checkpoint = tmp_path / "orbax" / "1600"
     checkpoint.mkdir(parents=True)
-    (checkpoint / "state").write_bytes(b"full training state")
+    (checkpoint / "state").write_bytes(b"normalizer policy value")
     contract = {
         "phase": "propulsion_ascent",
         "cumulative_training_transitions": 1600,
-        "full_training_state": True,
+        "checkpoint_payload": "normalizer_policy_value",
+        "optimizer_state_included": False,
+        "environment_step_state_included": False,
+        "resume_semantics": "policy_normalizer_value_warm_start",
         "prng_lineage": "phase_u_train_v1:7",
         "reset_contract_hash": "a" * 64,
         "reward_contract_hash": "b" * 64,
@@ -1049,6 +1204,12 @@ def test_checkpoint_sidecar_binds_recursive_identity_and_rejects_drift(tmp_path)
     (checkpoint / "state").write_bytes(b"drift")
     with pytest.raises(ValueError, match="identity"):
         module.validate_phase_expert_checkpoint_sidecar(checkpoint, contract)
+
+    legacy_false_claim = dict(contract)
+    legacy_false_claim.pop("checkpoint_payload")
+    legacy_false_claim["full_training_state"] = True
+    with pytest.raises(ValueError, match="contract fields|full training"):
+        module.write_phase_expert_checkpoint_sidecar(checkpoint, legacy_false_claim)
 
 
 def test_descent_seed_manifest_requires_physical_evidence_and_rejects_claims(tmp_path):
