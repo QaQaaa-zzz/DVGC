@@ -1,14 +1,19 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
+
+import numpy as np
 import pytest
 
 from dvgc.phase_candidate_acquisition import (
     AcquisitionParentSummary,
+    build_continuation_branch_provenance,
     build_provisional_continuation_label,
     evaluate_candidate_acquisition_gate,
     require_candidate_acquisition_integrity,
 )
 from dvgc.feasibility import validate_continuation_label
+from dvgc.two_phase_runtime import TwoPhaseEventState, initial_two_phase_event_state
 
 
 def _parents(count: int, *, success: bool = True):
@@ -141,3 +146,152 @@ def test_provisional_continuation_label_uses_closed_outcomes_and_frozen_policy_i
         "continuation_label": label,
     }
     assert validate_continuation_label(record)["valid"]
+    assert build_continuation_branch_provenance(
+        seed=123,
+        seed_namespace="phase_u_checkpoint_continuation_v1",
+        source_policy_hash="a" * 64,
+        protocol_hash="b" * 64,
+    ) == {
+        "policy_mode": "stochastic",
+        "branch_seed_namespace": "phase_u_checkpoint_continuation_v1",
+        "branch_seeds": [123],
+        "source_policy_hash": "a" * 64,
+        "label_protocol_hash": "b" * 64,
+    }
+
+
+def test_online_acquisition_records_the_next_action_that_parent_actually_applies(monkeypatch):
+    """The v4 policy_action_t at tick t must be the parent's action at tick t+1."""
+    import dvgc.feasibility as feasibility
+    import dvgc.phase_candidate_acquisition as acquisition
+    import dvgc.runtime as runtime
+
+    monkeypatch.setattr(acquisition.jax, "jit", lambda function: function)
+    monkeypatch.setattr(acquisition.jax, "block_until_ready", lambda value: value)
+    monkeypatch.setattr(
+        feasibility, "validate_phase_snapshot", lambda record: {"valid": True}
+    )
+    inference_calls = []
+
+    def build_inference(_environment, _params, *, deterministic):
+        assert deterministic is False
+
+        def inference(_obs, _key):
+            value = float(len(inference_calls) + 1) / 10.0
+            action = np.full((4,), value, np.float32)
+            inference_calls.append(action.copy())
+            return action, {}
+
+        return inference
+
+    monkeypatch.setattr(runtime, "build_inference", build_inference)
+
+    class Base:
+        def snapshot_record_v4(self, state, _stage, policy_action, provenance):
+            return {
+                "provenance": dict(provenance),
+                "policy_action_t": np.asarray(policy_action).copy(),
+                "tick": state.tick,
+            }
+
+    class Environment:
+        def __init__(self):
+            self._base_env = Base()
+            self._geometry = object()
+            self._thresholds = SimpleNamespace(
+                apex=SimpleNamespace(
+                    max_abs_roll=0.5,
+                    min_clearance=0.1,
+                    min_forward_velocity=1.0,
+                    max_abs_com_vz=0.2,
+                )
+            )
+            self.applied = []
+
+        @staticmethod
+        def _state(tick, done=False):
+            event = initial_two_phase_event_state()
+            event_values = dict(zip(TwoPhaseEventState._fields, event))
+            event_values.update(
+                {
+                    "jump_window_entered": tick >= 1,
+                    "liftoff_seen": tick >= 2,
+                    "stable_airborne": tick >= 2,
+                    "ascending": tick >= 2,
+                    "apex_band_entered": tick >= 3,
+                }
+            )
+            info = {
+                "actor_packet_fifo_valid": 3,
+                "phase_expert/physical_failure": False,
+                "phase_expert/task_failure": False,
+                "phase_expert/timeout": False,
+                "end_code": 0,
+                **{
+                    f"phase_expert/event/{name}": value
+                    for name, value in event_values.items()
+                },
+            }
+            return SimpleNamespace(
+                tick=tick,
+                obs={"state": np.asarray([tick], np.float32)},
+                data=SimpleNamespace(
+                    qpos=np.asarray([tick], np.float32),
+                    qvel=np.asarray([tick], np.float32),
+                ),
+                info=info,
+                done=done,
+            )
+
+        def reset(self, _key):
+            return self._state(0)
+
+        def step(self, state, action):
+            self.applied.append(np.asarray(action).copy())
+            return self._state(state.tick + 1, done=state.tick + 1 >= 3)
+
+        def _extract_signals(self, state, _geometry, _hold):
+            return (
+                SimpleNamespace(
+                    roll=0.0,
+                    clearance=0.2,
+                    forward_velocity=2.0,
+                    com_vz=0.1,
+                ),
+                None,
+            )
+
+        def _window_active(self, _state):
+            return True
+
+    environment = Environment()
+    provenance = {
+        "xml_sha256": "a" * 64,
+        "config_sha256": "b" * 64,
+        "action_mapping_version": "mapping",
+        "policy_params_sha256": "c" * 64,
+        "policy_config_sha256": "d" * 64,
+        "policy_manifest_sha256": "e" * 64,
+        "normalizer_sha256": "f" * 64,
+        "source_fingerprint": "1" * 64,
+    }
+
+    result = acquisition.acquire_phase_u_candidate_parents(
+        environment,
+        params=object(),
+        fixed_evaluation={"physical_metrics": {"apex_band_success_rate": 1.0}},
+        seeds=(7,),
+        horizon=4,
+        provenance=provenance,
+        minimum_independent_successful_parents=1,
+    )
+
+    assert result.gate["eligible"] is True
+    window = next(
+        record
+        for record in result.records
+        if record["candidate_acquisition"]["stratum"] == "window_entry"
+    )
+    assert np.array_equal(window["policy_action_t"], environment.applied[1])
+    ids = [record["id"] for record in result.records]
+    assert len(ids) == len(set(ids))

@@ -254,6 +254,11 @@ def test_non_apex_event_uses_event_position_and_validation_does_not_mutate_input
     assert result["valid"] is True
     assert pickle.dumps(record) == before
 
+    record["two_phase_context"]["event_position"] = "pre"
+    assert feasibility.validate_phase_snapshot(
+        record, **_v4_validation_inputs(record)
+    )["valid"] is True
+
 
 def valid_labeled_snapshot():
     record = valid_phase_snapshot()

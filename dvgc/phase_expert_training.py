@@ -808,6 +808,7 @@ def summarize_phase_u_physical_evaluation(
         "minimum_post_window_forward_velocity_distribution": sorted(
             float(row["minimum_post_window_forward_velocity"]) for row in rows
         ),
+        "forward_velocity_retention_rate": rate("forward_velocity_retained"),
         "mean_action_saturation_fraction": (
             sum(saturation) / total if total else 0.0
         ),
@@ -1042,6 +1043,80 @@ def _load_and_validate_checkpoint_sidecar(checkpoint: str | Path) -> Mapping[str
     payload = _read_json(_checkpoint_sidecar_path(checkpoint), "checkpoint sidecar")
     contract = {field: payload.get(field) for field in _CHECKPOINT_CONTRACT_FIELDS}
     return validate_phase_expert_checkpoint_sidecar(checkpoint, contract)
+
+
+def _parent_resume_progress(parent: Path) -> tuple[int, Path]:
+    """Return latest valid checkpoint progress and reject hidden later consumption."""
+    checkpoints: list[tuple[int, Path]] = []
+    for sidecar_path in sorted(parent.rglob("*.phase_expert.json")):
+        checkpoint = sidecar_path.with_name(
+            sidecar_path.name.removesuffix(".phase_expert.json")
+        )
+        if not checkpoint.is_dir():
+            raise ValueError("parent checkpoint sidecar has no checkpoint directory")
+        sidecar = _load_and_validate_checkpoint_sidecar(checkpoint)
+        checkpoints.append(
+            (int(sidecar["cumulative_training_transitions"]), checkpoint.resolve())
+        )
+    if not checkpoints:
+        raise ValueError("resume run has no valid phase expert checkpoint")
+    latest_transition, latest_checkpoint = max(checkpoints, key=lambda item: item[0])
+
+    observed = [latest_transition]
+    status_path = parent / "status.json"
+    if status_path.is_file():
+        status = _read_json(status_path, "parent run status")
+        for field in (
+            "observed_training_progress",
+            "cumulative_training_transitions",
+            "training_transitions",
+        ):
+            value = status.get(field)
+            if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
+                observed.append(value)
+    metrics_path = parent / "metrics.jsonl"
+    if metrics_path.is_file():
+        for line_number, line in enumerate(
+            metrics_path.read_text(encoding="utf-8").splitlines(), start=1
+        ):
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError as exc:
+                raise ValueError(
+                    f"parent metrics line {line_number} is invalid JSON"
+                ) from exc
+            for field in ("cumulative_training_step", "training_step"):
+                value = row.get(field) if isinstance(row, Mapping) else None
+                if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
+                    observed.append(value)
+    if max(observed) > latest_transition:
+        raise ValueError(
+            "parent consumed training beyond its latest checkpoint; warm start would repeat transitions"
+        )
+    return latest_transition, latest_checkpoint
+
+
+def _load_parent_checkpoint_evaluations(parent: Path) -> list[dict[str, Any]]:
+    """Carry held-out degradation evidence across warm-start run boundaries."""
+    aggregate = parent / "checkpoint_evaluations.json"
+    if aggregate.is_file():
+        payload = _read_json(aggregate, "parent checkpoint evaluations")
+        reports = payload.get("checkpoints")
+        if not isinstance(reports, list) or not all(
+            isinstance(report, Mapping) for report in reports
+        ):
+            raise ValueError("parent checkpoint evaluation history is invalid")
+        return [dict(report) for report in reports]
+    reports = []
+    for path in sorted((parent / "evaluations").glob("*/fixed_evaluation.json")):
+        report = _read_json(path, "parent checkpoint evaluation")
+        if not isinstance(report.get("fixed_evaluation"), Mapping):
+            raise ValueError("parent checkpoint evaluation is incomplete")
+        reports.append(dict(report))
+    return sorted(
+        reports,
+        key=lambda report: int(report.get("effective_training_transitions", -1)),
+    )
 
 
 _DESCENT_EVIDENCE_FIELDS = (
@@ -1528,6 +1603,45 @@ def completed_phase_expert_interaction_accounting(
     }
 
 
+def partial_phase_expert_interaction_accounting(
+    *,
+    cumulative_training_start: int,
+    observed_training_progress: int,
+    fixed_evaluation_transitions: int,
+    candidate_acquisition_transitions: int,
+    continuation_labeling_transitions: int,
+) -> dict[str, int]:
+    """Report a pause-path lower bound without erasing callback-first work."""
+    values = (
+        cumulative_training_start,
+        observed_training_progress,
+        fixed_evaluation_transitions,
+        candidate_acquisition_transitions,
+        continuation_labeling_transitions,
+    )
+    if any(
+        isinstance(value, bool) or not isinstance(value, int) or value < 0
+        for value in values
+    ):
+        raise ValueError("partial interaction counters must be non-negative integers")
+    if observed_training_progress < cumulative_training_start:
+        raise ValueError("observed training progress precedes the invocation start")
+    training = observed_training_progress - cumulative_training_start
+    known_total = (
+        training
+        + fixed_evaluation_transitions
+        + candidate_acquisition_transitions
+        + continuation_labeling_transitions
+    )
+    return {
+        "training_transitions_consumed": training,
+        "fixed_evaluation_transitions_consumed": fixed_evaluation_transitions,
+        "candidate_acquisition_transitions_consumed": candidate_acquisition_transitions,
+        "continuation_labeling_transitions_consumed": continuation_labeling_transitions,
+        "known_environment_transitions_consumed_lower_bound": known_total,
+    }
+
+
 def _validate_descent_seed_inputs(spec: PhaseExpertRunSpec) -> Mapping[str, Any] | None:
     if spec.phase != PHASE_DESCENT_RECOVERY:
         return None
@@ -1640,6 +1754,11 @@ def validate_phase_expert_run_spec(
             raise ValueError("restore checkpoint must belong to resume run")
         parent_manifest = _read_json(parent / "run_manifest.json", "parent run manifest")
         sidecar = _load_and_validate_checkpoint_sidecar(checkpoint)
+        latest_transition, latest_checkpoint = _parent_resume_progress(parent)
+        if checkpoint != latest_checkpoint:
+            raise ValueError("restore checkpoint must be the latest parent checkpoint")
+        if int(sidecar["cumulative_training_transitions"]) != latest_transition:
+            raise ValueError("latest parent checkpoint transition identity mismatch")
         expected_resume = {
             "phase": spec.phase,
             "xml_sha256": AUTHORITATIVE_XML_SHA256,
@@ -1647,6 +1766,19 @@ def validate_phase_expert_run_spec(
             "evaluation_contract_hash": _canonical_payload_hash(
                 training_config.get("evaluation", {})
             ),
+            "reset_contract_hash": _canonical_payload_hash(dict(_BASE_MODE)),
+            "action_schema_hash": hashlib.sha256(
+                ACTION_MAPPING_VERSION.encode()
+            ).hexdigest(),
+            "observation_schema_hash": _canonical_payload_hash(
+                {
+                    "env": _sha256_file("dvgc/env.py"),
+                    "audit": _sha256_file("dvgc/observation_audit.py"),
+                }
+            ),
+            "history_schema_hash": hashlib.sha256(
+                b"actor_packet_fifo.three_frame.v4.t_minus_2_to_t"
+            ).hexdigest(),
         }
         for field, value in expected_resume.items():
             if sidecar.get(field) != value:
@@ -1740,6 +1872,7 @@ def _fixed_phase_u_evaluation(
     seeds: tuple[int, ...],
     horizon: int,
     failure_video_dir: str | Path,
+    transition_observer: Any | None = None,
 ) -> tuple[dict[str, Any], int]:
     from .runtime import build_inference
 
@@ -1773,6 +1906,8 @@ def _fixed_phase_u_evaluation(
             jax.block_until_ready(state)
             frames.append(_phase_expert_frame(state))
             transitions += 1
+            if transition_observer is not None:
+                transition_observer(1)
             episode_return += float(state.reward)
             action_host = np.asarray(jax.device_get(action))
             saturated_actions += int(np.count_nonzero(np.abs(action_host) >= 0.98))
@@ -2089,7 +2224,14 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
     _write_json_atomic(root / "resolved_training_config.json", training_config)
     observed_training_progress = validated.cumulative_training_start
     fixed_evaluation_transitions = 0
-    checkpoint_evaluations: list[dict[str, Any]] = []
+    inherited_checkpoint_evaluations = (
+        _load_parent_checkpoint_evaluations(Path(validated.spec.resume_run).resolve())
+        if validated.spec.resume_run
+        else []
+    )
+    checkpoint_evaluations: list[dict[str, Any]] = list(
+        inherited_checkpoint_evaluations
+    )
     candidate_acquisition_reports: list[dict[str, Any]] = []
     candidate_acquisition_transitions = 0
     continuation_labeling_transitions = 0
@@ -2141,36 +2283,67 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
             tracker = PhaseCheckpointTracker(milestones)
 
             def checkpoint_callback(step: int, _make_policy: Any, params: Any) -> None:
+                nonlocal observed_training_progress
                 nonlocal fixed_evaluation_transitions, last_checkpoint
                 nonlocal candidate_acquisition_transitions
                 nonlocal continuation_labeling_transitions
                 cumulative_step = validated.cumulative_training_start + int(step)
-                milestone = tracker.claim(cumulative_step)
-                if milestone is None:
+                observed_training_progress = max(
+                    observed_training_progress, cumulative_step
+                )
+                if int(step) == 0 and validated.cumulative_training_start > 0:
                     return
                 checkpoint = _save_phase_expert_inference_checkpoint(
-                    environment, params, root / "orbax", step=milestone.effective
+                    environment,
+                    params,
+                    root / "orbax",
+                    step=cumulative_step,
                 )
                 checkpoint_contract = _checkpoint_contract(
                     validated,
                     training_config,
-                    cumulative_transitions=milestone.effective,
+                    cumulative_transitions=cumulative_step,
                     parent_checkpoint=last_checkpoint,
                 )
                 sidecar = write_phase_expert_checkpoint_sidecar(
                     checkpoint, checkpoint_contract
                 )
+                last_checkpoint = str(checkpoint.resolve())
+                update_phase_expert_status(
+                    root,
+                    {
+                        "status": "running",
+                        "invocation_training_transitions": int(step),
+                        "cumulative_training_transitions": cumulative_step,
+                        "fixed_evaluation_transitions": fixed_evaluation_transitions,
+                        "candidate_acquisition_transitions": candidate_acquisition_transitions,
+                        "continuation_labeling_transitions": continuation_labeling_transitions,
+                        "last_checkpoint": last_checkpoint,
+                        "checkpoint_cadence_transitions": validated.interaction_budget.training.ppo_rollout_block_size,
+                    },
+                )
+                milestone = tracker.claim(cumulative_step)
+                if milestone is None:
+                    return
                 evaluation_root = (
                     root / "evaluations" / f"{milestone.effective:012d}"
                 )
+                fixed_before = fixed_evaluation_transitions
+
+                def observe_fixed(count: int) -> None:
+                    nonlocal fixed_evaluation_transitions
+                    fixed_evaluation_transitions += int(count)
+
                 evaluation, consumed = _fixed_phase_u_evaluation(
                     environment,
                     params,
                     validated.seeds.evaluation_seeds,
                     int(training_config["evaluation"]["episode_horizon"]),
                     evaluation_root / "failure_videos",
+                    transition_observer=observe_fixed,
                 )
-                fixed_evaluation_transitions += consumed
+                if fixed_evaluation_transitions - fixed_before != consumed:
+                    raise RuntimeError("fixed evaluation interaction accounting drift")
                 report = {
                     "requested_training_transitions": milestone.requested,
                     "effective_training_transitions": milestone.effective,
@@ -2227,6 +2400,12 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
                         "normalizer_sha256": pytree_sha256(params[0]),
                         "source_fingerprint": phase_expert_source_tree_sha256(),
                     }
+                    acquisition_before = candidate_acquisition_transitions
+
+                    def observe_acquisition(count: int) -> None:
+                        nonlocal candidate_acquisition_transitions
+                        candidate_acquisition_transitions += int(count)
+
                     acquisition = acquire_phase_u_candidate_parents(
                         environment,
                         params,
@@ -2239,7 +2418,13 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
                                 "minimum_independent_successful_parents"
                             ]
                         ),
+                        transition_observer=observe_acquisition,
                     )
+                    if (
+                        candidate_acquisition_transitions - acquisition_before
+                        != acquisition.environment_transitions
+                    ):
+                        raise RuntimeError("candidate acquisition interaction accounting drift")
                     require_candidate_acquisition_integrity(acquisition.gate)
                     ceiling = int(
                         acquisition_config["transition_ceiling_per_checkpoint"]
@@ -2248,9 +2433,6 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
                         raise RuntimeError(
                             "candidate acquisition exceeded its checkpoint transition ceiling"
                         )
-                    candidate_acquisition_transitions += (
-                        acquisition.environment_transitions
-                    )
                     acquisition_report = {
                         "requested_training_transitions": milestone.requested,
                         "effective_training_transitions": milestone.effective,
@@ -2296,11 +2478,20 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
                             "checkpoint_policy_hash": provenance[
                                 "policy_params_sha256"
                             ],
+                            "policy_mode": "stochastic",
+                            "branch_seed_namespace": "phase_u_checkpoint_continuation_v1",
+                            "branch_seed_derivation": "acquisition_seed_plus_2000000",
                         }
                         protocol_hash = _canonical_payload_hash(protocol_payload)
                         continuation_seeds = tuple(
                             int(seed + 2_000_000) for seed in acquisition_seeds
                         )[: len(selected_records)]
+                        continuation_before = continuation_labeling_transitions
+
+                        def observe_continuation(count: int) -> None:
+                            nonlocal continuation_labeling_transitions
+                            continuation_labeling_transitions += int(count)
+
                         labeled, continuation_consumed = probe_phase_u_continuations(
                             environment,
                             params,
@@ -2311,7 +2502,16 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
                                 "policy_params_sha256"
                             ],
                             protocol_hash=protocol_hash,
+                            seed_namespace=protocol_payload[
+                                "branch_seed_namespace"
+                            ],
+                            transition_observer=observe_continuation,
                         )
+                        if (
+                            continuation_labeling_transitions - continuation_before
+                            != continuation_consumed
+                        ):
+                            raise RuntimeError("continuation interaction accounting drift")
                         continuation_ceiling = int(
                             continuation_config[
                                 "transition_ceiling_per_checkpoint"
@@ -2321,7 +2521,6 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
                             raise RuntimeError(
                                 "continuation diagnostic exceeded its checkpoint transition ceiling"
                             )
-                        continuation_labeling_transitions += continuation_consumed
                         provisional_path = (
                             evaluation_root / "phase_u_provisional_continuations.bank"
                         )
@@ -2362,7 +2561,6 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
                         "checkpoint_evaluation": report,
                     },
                 )
-                last_checkpoint = str(checkpoint.resolve())
                 update_phase_expert_status(
                     root,
                     {
@@ -2418,13 +2616,22 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
                 {"checkpoints": checkpoint_evaluations},
             )
         else:
+            fixed_before = fixed_evaluation_transitions
+
+            def observe_smoke_fixed(count: int) -> None:
+                nonlocal fixed_evaluation_transitions
+                fixed_evaluation_transitions += int(count)
+
             evaluation, fixed_transitions = _fixed_phase_u_evaluation(
                 environment,
                 params,
                 validated.seeds.evaluation_seeds,
                 int(training_config["evaluation"]["episode_horizon"]),
                 root / "failure_videos",
+                transition_observer=observe_smoke_fixed,
             )
+            if fixed_evaluation_transitions - fixed_before != fixed_transitions:
+                raise RuntimeError("fixed evaluation interaction accounting drift")
             _write_json_atomic(root / "fixed_evaluation.json", evaluation)
         checkpoints = [
             path
@@ -2435,7 +2642,10 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
             checkpoint_contract = _checkpoint_contract(
                 validated,
                 training_config,
-                cumulative_transitions=validated.interaction_budget.training.effective_total_transitions,
+                cumulative_transitions=(
+                    validated.cumulative_training_start
+                    + validated.interaction_budget.training.effective_total_transitions
+                ),
                 parent_checkpoint=validated.spec.restore_checkpoint,
             )
             for checkpoint in checkpoints:
@@ -2457,6 +2667,9 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
             "final_metrics": _jsonable(final_metrics),
             "fixed_evaluation": evaluation,
             "checkpoint_evaluations": checkpoint_evaluations,
+            "inherited_checkpoint_evaluation_count": len(
+                inherited_checkpoint_evaluations
+            ),
             "candidate_acquisition": candidate_acquisition_reports,
             "candidate_acquisition_transitions": candidate_acquisition_transitions,
             "continuation_labeling_transitions": continuation_labeling_transitions,
@@ -2495,6 +2708,13 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
                 ),
                 "failure_videos": preserved_videos,
                 "promotion_authorized": False,
+                **partial_phase_expert_interaction_accounting(
+                    cumulative_training_start=validated.cumulative_training_start,
+                    observed_training_progress=observed_training_progress,
+                    fixed_evaluation_transitions=fixed_evaluation_transitions,
+                    candidate_acquisition_transitions=candidate_acquisition_transitions,
+                    continuation_labeling_transitions=continuation_labeling_transitions,
+                ),
             },
         )
         raise

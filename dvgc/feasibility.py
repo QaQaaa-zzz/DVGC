@@ -71,7 +71,9 @@ def validate_phase_snapshot(record: Mapping[str, Any], **v4_validation_inputs: A
     has_apex_event = valid_events and "apex_band_entered" in events
     position = context.get("event_position")
     position_valid = (
-        position in ("pre", "nearest", "post") if has_apex_event else position == "event"
+        position in ("pre", "nearest", "post")
+        if has_apex_event
+        else position in ("pre", "event", "nearest", "post")
     )
     time_index = context.get("time_index")
     time_index_valid = (

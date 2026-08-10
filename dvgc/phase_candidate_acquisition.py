@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import copy
 import hashlib
 import math
-from typing import Any, Mapping, Sequence
+from typing import Any, Callable, Mapping, Sequence
 
 import jax
 import numpy as np
@@ -154,6 +154,37 @@ def build_provisional_continuation_label(
     }
 
 
+def build_continuation_branch_provenance(
+    *,
+    seed: int,
+    seed_namespace: str,
+    source_policy_hash: str,
+    protocol_hash: str,
+) -> dict[str, Any]:
+    """Bind one stochastic continuation branch to reproducible authority."""
+    if isinstance(seed, bool) or not isinstance(seed, int):
+        raise ValueError("continuation branch seed must be an integer")
+    if not isinstance(seed_namespace, str) or not seed_namespace:
+        raise ValueError("continuation branch seed namespace is required")
+    for name, value in (
+        ("source_policy_hash", source_policy_hash),
+        ("protocol_hash", protocol_hash),
+    ):
+        if (
+            not isinstance(value, str)
+            or len(value) != 64
+            or any(character not in "0123456789abcdef" for character in value)
+        ):
+            raise ValueError(f"{name} must be lowercase SHA-256")
+    return {
+        "policy_mode": "stochastic",
+        "branch_seed_namespace": seed_namespace,
+        "branch_seeds": [seed],
+        "source_policy_hash": source_policy_hash,
+        "label_protocol_hash": protocol_hash,
+    }
+
+
 @dataclass(frozen=True)
 class PhaseUCandidateAcquisitionResult:
     gate: Mapping[str, Any]
@@ -192,6 +223,7 @@ def acquire_phase_u_candidate_parents(
     horizon: int,
     provenance: Mapping[str, Any],
     minimum_independent_successful_parents: int = 8,
+    transition_observer: Callable[[int], None] | None = None,
 ) -> PhaseUCandidateAcquisitionResult:
     """Run stochastic online parents and capture only real timing-explicit v4 states."""
     from .feasibility import validate_phase_snapshot
@@ -230,9 +262,11 @@ def acquire_phase_u_candidate_parents(
         previous_events = {
             "jump_window_entered": False,
             "liftoff_seen": False,
+            "stable_airborne": False,
             "ascending": False,
             "apex_band_entered": False,
         }
+        captured_strata: set[str] = set()
         ascent_age = 0
         success = False
         contract_valid = True
@@ -247,6 +281,9 @@ def acquire_phase_u_candidate_parents(
             stratum: str,
             event_name: str,
             event_position: str = "event",
+            terminated: bool = False,
+            truncated: bool = False,
+            termination_reason: str = "none",
         ) -> Mapping[str, Any] | None:
             nonlocal contract_valid
             if int(current_state.info["actor_packet_fifo_valid"]) != 3:
@@ -264,9 +301,9 @@ def acquire_phase_u_candidate_parents(
                     "time_index": int(tick),
                     "event_names": [event_name],
                     "event_position": event_position,
-                    "terminated": False,
-                    "truncated": False,
-                    "termination_reason": "none",
+                    "terminated": bool(terminated),
+                    "truncated": bool(truncated),
+                    "termination_reason": termination_reason,
                     "source_policy_hash": provenance["policy_params_sha256"],
                     "source_xml_hash": provenance["xml_sha256"],
                     "source_config_hash": provenance["config_sha256"],
@@ -296,12 +333,37 @@ def acquire_phase_u_candidate_parents(
                 contract_valid = False
                 return None
 
+        def append_stratum(
+            source: Mapping[str, Any] | None,
+            stratum: str,
+            *,
+            event_name: str | None = None,
+            event_position: str | None = None,
+        ) -> None:
+            if source is None or stratum in captured_strata:
+                return
+            record = copy.deepcopy(source)
+            record["id"] = (
+                f"{parent_id}-{record['two_phase_context']['time_index']}-{stratum}"
+            )
+            record["candidate_acquisition"] = dict(record["candidate_acquisition"]) | {
+                "stratum": stratum
+            }
+            if event_name is not None:
+                record["two_phase_context"]["event_names"] = [event_name]
+            if event_position is not None:
+                record["two_phase_context"]["event_position"] = event_position
+            records.append(record)
+            captured_strata.add(stratum)
+
+        key, action_key = jax.random.split(key)
+        action, _ = inference(state.obs, action_key)
         for tick in range(1, horizon + 1):
-            key, action_key = jax.random.split(key)
-            action, _ = inference(state.obs, action_key)
             state = step(state, action)
             jax.block_until_ready(state)
             transitions += 1
+            if transition_observer is not None:
+                transition_observer(1)
             qpos = np.asarray(jax.device_get(state.data.qpos), np.float32)
             qvel = np.asarray(jax.device_get(state.data.qvel), np.float32)
             trajectory_states.append((qpos.copy(), qvel.copy()))
@@ -311,20 +373,45 @@ def acquire_phase_u_candidate_parents(
                 name: bool(state.info[f"phase_expert/event/{name}"])
                 for name in previous_events
             }
+            physical_failure = bool(state.info["phase_expert/physical_failure"])
+            task_failure = bool(state.info["phase_expert/task_failure"])
+            timeout = bool(state.info["phase_expert/timeout"])
+            terminal_reason = (
+                f"end_code_{int(state.info['end_code'])}"
+                if physical_failure or task_failure
+                else "continuation_horizon"
+                if timeout
+                else "none"
+            )
+            anchor_event = (
+                "apex_band_entered"
+                if events["apex_band_entered"]
+                else "ascending"
+                if events["ascending"]
+                else "stable_airborne"
+                if events["stable_airborne"]
+                else "liftoff_seen"
+                if events["liftoff_seen"]
+                else "jump_window_entered"
+            )
+            anchor_position = (
+                "nearest"
+                if events["apex_band_entered"]
+                else "event"
+                if any(events.values())
+                else "pre"
+            )
             prior_valid_record = last_valid_record
             current_record = capture(
                 state,
                 next_action,
                 tick=tick,
                 stratum="online_tick",
-                event_name=(
-                    "apex_band_entered"
-                    if events["apex_band_entered"]
-                    else "jump_window_entered"
-                ),
-                event_position=(
-                    "nearest" if events["apex_band_entered"] else "event"
-                ),
+                event_name=anchor_event,
+                event_position=anchor_position,
+                terminated=physical_failure or task_failure,
+                truncated=timeout,
+                termination_reason=terminal_reason,
             )
             if current_record is not None:
                 last_valid_record = current_record
@@ -332,64 +419,115 @@ def acquire_phase_u_candidate_parents(
                     pre_window_record = current_record
             if events["jump_window_entered"] and not previous_events["jump_window_entered"]:
                 if pre_window_record is not None:
-                    pre = copy.deepcopy(pre_window_record)
-                    pre["candidate_acquisition"] = dict(pre["candidate_acquisition"]) | {
-                        "stratum": "pre_window_approach"
-                    }
-                    records.append(pre)
+                    append_stratum(
+                        pre_window_record,
+                        "pre_window_approach",
+                        event_name="jump_window_entered",
+                        event_position="pre",
+                    )
                 if current_record is not None:
-                    entered = copy.deepcopy(current_record)
-                    entered["candidate_acquisition"] = dict(entered["candidate_acquisition"]) | {
-                        "stratum": "window_entry"
-                    }
-                    records.append(entered)
+                    append_stratum(
+                        current_record,
+                        "window_entry",
+                        event_name="jump_window_entered",
+                        event_position="event",
+                    )
             if events["liftoff_seen"] and not previous_events["liftoff_seen"] and current_record is not None:
-                liftoff = copy.deepcopy(current_record)
-                liftoff["candidate_acquisition"] = dict(liftoff["candidate_acquisition"]) | {
-                    "stratum": "liftoff"
-                }
-                records.append(liftoff)
+                append_stratum(
+                    current_record,
+                    "liftoff",
+                    event_name="liftoff_seen",
+                    event_position="event",
+                )
             if events["ascending"]:
                 ascent_age += 1
                 stratum = {1: "early_ascent", 3: "middle_ascent", 5: "late_ascent"}.get(
                     ascent_age
                 )
                 if stratum is not None and current_record is not None:
-                    ascent = copy.deepcopy(current_record)
-                    ascent["candidate_acquisition"] = dict(ascent["candidate_acquisition"]) | {
-                        "stratum": stratum
-                    }
-                    records.append(ascent)
+                    append_stratum(
+                        current_record,
+                        stratum,
+                        event_name="ascending",
+                        event_position="event",
+                    )
+            event_now = environment._event_from_info(state.info) if hasattr(
+                environment, "_event_from_info"
+            ) else None
+            apex_signals, _ = environment._extract_signals(
+                state,
+                environment._geometry,
+                (
+                    event_now.recovery_hold_count
+                    if event_now is not None
+                    else state.info["phase_expert/event/recovery_hold_count"]
+                ),
+            )
+            apex_host = jax.device_get(apex_signals)
+            apex_thresholds = environment._thresholds.apex
+            if abs(float(apex_host.roll)) >= 0.8 * apex_thresholds.max_abs_roll:
+                append_stratum(current_record, "high_roll")
+            if events["jump_window_entered"] and float(apex_host.clearance) < apex_thresholds.min_clearance:
+                append_stratum(current_record, "low_clearance")
+            if events["jump_window_entered"] and float(apex_host.forward_velocity) < apex_thresholds.min_forward_velocity:
+                append_stratum(current_record, "low_forward_speed")
+            if events["ascending"] and not events["jump_window_entered"]:
+                append_stratum(current_record, "too_early_ascent")
+            if (
+                events["jump_window_entered"]
+                and not bool(environment._window_active(state))
+                and not events["ascending"]
+            ):
+                append_stratum(current_record, "too_late_ascent")
+            if (
+                events["stable_airborne"]
+                and events["ascending"]
+                and abs(float(apex_host.com_vz))
+                <= 1.5 * apex_thresholds.max_abs_com_vz
+                and not events["apex_band_entered"]
+            ):
+                append_stratum(
+                    current_record,
+                    "apex_band_boundary",
+                    event_name="apex_band_entered",
+                    event_position="pre",
+                )
+            if (
+                events["stable_airborne"]
+                and events["ascending"]
+                and float(apex_host.clearance) >= apex_thresholds.min_clearance
+                and float(apex_host.forward_velocity)
+                >= apex_thresholds.min_forward_velocity
+                and not events["apex_band_entered"]
+            ):
+                append_stratum(current_record, "near_success")
             if events["apex_band_entered"] and not previous_events["apex_band_entered"]:
                 success = True
-                if prior_valid_record is not None:
-                    pre_apex = copy.deepcopy(prior_valid_record)
-                    pre_apex["two_phase_context"]["event_names"] = [
-                        "apex_band_entered"
-                    ]
-                    pre_apex["two_phase_context"]["event_position"] = "pre"
-                    pre_apex["candidate_acquisition"]["stratum"] = "apex_pre"
-                    records.append(pre_apex)
-                if last_valid_record is not None:
-                    nearest = copy.deepcopy(last_valid_record)
-                    nearest["candidate_acquisition"] = dict(nearest["candidate_acquisition"]) | {
-                        "stratum": "apex_nearest"
-                    }
-                    records.append(nearest)
+                append_stratum(
+                    prior_valid_record,
+                    "apex_pre",
+                    event_name="apex_band_entered",
+                    event_position="pre",
+                )
+                append_stratum(
+                    last_valid_record,
+                    "apex_nearest",
+                    event_name="apex_band_entered",
+                    event_position="nearest",
+                )
                 post_success_ticks = 1
             elif post_success_ticks > 0:
-                if current_record is not None:
-                    post = copy.deepcopy(current_record)
-                    post["two_phase_context"]["event_names"] = [
-                        "apex_band_entered"
-                    ]
-                    post["two_phase_context"]["event_position"] = "post"
-                    post["candidate_acquisition"] = dict(post["candidate_acquisition"]) | {
-                        "stratum": "apex_post"
-                    }
-                    records.append(post)
+                append_stratum(
+                    current_record,
+                    "apex_post",
+                    event_name="apex_band_entered",
+                    event_position="post",
+                )
                 break
+            if bool(state.done) and not success:
+                append_stratum(current_record, "failure_terminal")
             previous_events = events
+            action = next_action
             if bool(state.done) and not success:
                 break
 
@@ -428,6 +566,8 @@ def probe_phase_u_continuations(
     horizon: int,
     source_policy_hash: str,
     protocol_hash: str,
+    seed_namespace: str,
+    transition_observer: Callable[[int], None] | None = None,
 ) -> tuple[tuple[Mapping[str, Any], ...], int]:
     """Run one bounded formal-restore continuation screen per candidate state."""
     from jax import numpy as jp
@@ -496,6 +636,8 @@ def probe_phase_u_continuations(
                 state = step(state, action)
                 jax.block_until_ready(state)
                 transitions += 1
+                if transition_observer is not None:
+                    transition_observer(1)
                 if bool(state.done):
                     info = jax.device_get(state.info)
                     if bool(info["phase_expert/success"]):
@@ -512,6 +654,12 @@ def probe_phase_u_continuations(
         record["continuation_label"] = build_provisional_continuation_label(
             ({"outcome": outcome, "termination_reason": reason},),
             phase="propulsion_ascent",
+            source_policy_hash=source_policy_hash,
+            protocol_hash=protocol_hash,
+        )
+        record["continuation_provenance"] = build_continuation_branch_provenance(
+            seed=int(seed),
+            seed_namespace=seed_namespace,
             source_policy_hash=source_policy_hash,
             protocol_hash=protocol_hash,
         )

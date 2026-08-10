@@ -496,13 +496,22 @@ def test_formal_warm_start_binds_parent_offset_and_rejects_cumulative_overrun(tm
         "environment_step_state_included": False,
         "resume_semantics": "policy_normalizer_value_warm_start",
         "prng_lineage": "phase_u_train_v1:17",
-        "reset_contract_hash": "a" * 64,
+        "reset_contract_hash": module._canonical_payload_hash(dict(module._BASE_MODE)),
         "reward_contract_hash": module.phase_u_reward_contract_hash(config),
         "evaluation_contract_hash": module._canonical_payload_hash(config["evaluation"]),
         "xml_sha256": module.AUTHORITATIVE_XML_SHA256,
-        "action_schema_hash": "b" * 64,
-        "observation_schema_hash": "c" * 64,
-        "history_schema_hash": "d" * 64,
+        "action_schema_hash": hashlib.sha256(
+            module.ACTION_MAPPING_VERSION.encode()
+        ).hexdigest(),
+        "observation_schema_hash": module._canonical_payload_hash(
+            {
+                "env": module._sha256_file("dvgc/env.py"),
+                "audit": module._sha256_file("dvgc/observation_audit.py"),
+            }
+        ),
+        "history_schema_hash": hashlib.sha256(
+            b"actor_packet_fifo.three_frame.v4.t_minus_2_to_t"
+        ).hexdigest(),
         "parent_checkpoint": None,
     }
     module.write_phase_expert_checkpoint_sidecar(checkpoint, contract)
@@ -525,12 +534,29 @@ def test_formal_warm_start_binds_parent_offset_and_rejects_cumulative_overrun(tm
         + validated.interaction_budget.training.effective_total_transitions
         == 1_000_000
     )
+    later = parent / "orbax" / "000000500800"
+    later.mkdir()
+    (later / "state").write_bytes(b"later normalizer policy value")
+    module.write_phase_expert_checkpoint_sidecar(
+        later,
+        contract
+        | {
+            "cumulative_training_transitions": 500_800,
+            "parent_checkpoint": str(checkpoint.resolve()),
+        },
+    )
+    with pytest.raises(ValueError, match="latest parent checkpoint"):
+        module.validate_phase_expert_run_spec(
+            replace(spec, output_dir=_run_output(tmp_path, "older-parent-checkpoint")),
+            preflight_only=True,
+        )
     with pytest.raises(ValueError, match="cumulative.*1,000,000"):
         module.validate_phase_expert_run_spec(
             replace(
                 spec,
-                requested_total_transitions=750_400,
+                requested_total_transitions=500_800,
                 output_dir=_run_output(tmp_path, "phase-u-resume-overrun"),
+                restore_checkpoint=str(later),
             ),
             preflight_only=True,
         )
@@ -554,6 +580,7 @@ def test_phase_u_physical_evaluation_summary_reports_progress_safety_and_reward_
             "illegal_contact": False,
             "clearance_margin": 0.08,
             "minimum_post_window_forward_velocity": 3.8,
+            "forward_velocity_retained": True,
             "action_saturation_fraction": 0.125,
             "episode_return": 12.0,
             "reward_component_sums": {"ascent_progress": 4.0},
@@ -572,6 +599,7 @@ def test_phase_u_physical_evaluation_summary_reports_progress_safety_and_reward_
             "illegal_contact": True,
             "clearance_margin": -0.03,
             "minimum_post_window_forward_velocity": 2.5,
+            "forward_velocity_retained": False,
             "action_saturation_fraction": 0.5,
             "episode_return": -2.0,
             "reward_component_sums": {"ascent_progress": 0.0},
@@ -588,6 +616,7 @@ def test_phase_u_physical_evaluation_summary_reports_progress_safety_and_reward_
     assert report["illegal_contact_rate"] == 0.5
     assert report["clearance_margin_distribution"] == [-0.03, 0.08]
     assert report["minimum_post_window_forward_velocity_distribution"] == [2.5, 3.8]
+    assert report["forward_velocity_retention_rate"] == 0.5
     assert report["mean_action_saturation_fraction"] == pytest.approx(0.3125)
     assert report["mean_episode_return"] == pytest.approx(5.0)
     assert report["reward_component_mean_sums"] == {"ascent_progress": 2.0}
@@ -632,6 +661,39 @@ def test_phase_u_checkpoint_gate_pauses_only_on_severe_saturation_or_repeated_de
             "reward_hacking_return_up_physics_down",
         ],
     }
+
+
+def test_warm_start_inherits_parent_checkpoint_degradation_history(tmp_path):
+    """Restarting after two bad windows must not erase the third-window pause evidence."""
+    module = _module()
+
+    def checkpoint(step, score, episode_return):
+        return {
+            "effective_training_transitions": step,
+            "fixed_evaluation": {
+                "physical_metrics": {
+                    "apex_band_success_rate": score,
+                    "jump_window_reach_rate": score,
+                    "liftoff_rate": score,
+                    "clearance_success_rate": score,
+                    "forward_velocity_retention_rate": score,
+                    "physical_failure_rate": 1.0 - score,
+                    "mean_action_saturation_fraction": 0.0,
+                    "mean_episode_return": episode_return,
+                }
+            },
+        }
+
+    parent = tmp_path / "parent"
+    parent.mkdir()
+    _write_json(
+        parent / "checkpoint_evaluations.json",
+        {"checkpoints": [checkpoint(100_800, 0.8, 1.0), checkpoint(251_200, 0.6, 2.0)]},
+    )
+    history = module._load_parent_checkpoint_evaluations(parent)
+    history.append(checkpoint(500_800, 0.4, 3.0))
+
+    assert module.evaluate_phase_u_checkpoint_gate(history)["pause"] is True
 
 
 def test_smoke_config_locks_base_mode_cost_stops_rewards_and_disjoint_deterministic_seeds(tmp_path):
@@ -1174,6 +1236,27 @@ def test_completed_run_accounting_reports_each_actual_interaction_category():
         module.completed_phase_expert_interaction_accounting(
             budget, fixed_evaluation_transitions=1_601
         )
+
+
+def test_pause_accounting_includes_callback_step_and_partial_diagnostics():
+    """Brax calls checkpoint callbacks before progress, so the callback step is consumed."""
+    module = _module()
+
+    accounting = module.partial_phase_expert_interaction_accounting(
+        cumulative_training_start=251_200,
+        observed_training_progress=500_800,
+        fixed_evaluation_transitions=37,
+        candidate_acquisition_transitions=11,
+        continuation_labeling_transitions=5,
+    )
+
+    assert accounting == {
+        "training_transitions_consumed": 249_600,
+        "fixed_evaluation_transitions_consumed": 37,
+        "candidate_acquisition_transitions_consumed": 11,
+        "continuation_labeling_transitions_consumed": 5,
+        "known_environment_transitions_consumed_lower_bound": 249_653,
+    }
 
 
 def test_checkpoint_sidecar_binds_recursive_identity_and_rejects_drift(tmp_path):
