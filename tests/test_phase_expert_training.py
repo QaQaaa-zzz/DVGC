@@ -6,8 +6,13 @@ import importlib
 import json
 from pathlib import Path
 import subprocess
+from types import SimpleNamespace
+from typing import NamedTuple
 
+import jax
+from jax import numpy as jp
 import pytest
+from mujoco_playground._src import mjx_env
 
 from dvgc.config import ACTION_MAPPING_VERSION
 from dvgc.reference import ReferenceAnchors
@@ -16,6 +21,8 @@ from dvgc.two_phase_guideline import (
     GuidelineSelection,
     build_threshold_manifest,
 )
+from dvgc.two_phase_runtime import TwoPhaseThresholds
+from dvgc.two_phase_semantics import ApexBandSignals, ApexBandThresholds, RecoverySignals, RecoveryThresholds
 
 
 def _write_json(path: Path, payload: dict) -> Path:
@@ -413,3 +420,232 @@ def test_threshold_loader_rejects_tampering_and_obsolete_action_or_guideline_pro
     _write_json(tmp_path / "geometry_manifest.json", geometry)
     with pytest.raises(ValueError, match="geometry"):
         module.load_phase_expert_threshold_manifest(manifest_path)
+
+
+class _FakeData(NamedTuple):
+    qpos: jax.Array
+    qvel: jax.Array
+    ctrl: jax.Array
+
+
+def _adapter_thresholds() -> TwoPhaseThresholds:
+    return TwoPhaseThresholds(
+        apex=ApexBandThresholds(
+            max_abs_com_vz=0.2,
+            min_clearance=0.1,
+            max_abs_roll=0.5,
+            max_abs_pitch=0.5,
+            max_angular_speed=1.0,
+            min_forward_velocity=1.0,
+            relative_x_min=-0.2,
+            relative_x_max=0.2,
+        ),
+        recovery=RecoveryThresholds(
+            max_abs_roll=0.5,
+            max_abs_pitch=0.5,
+            max_angular_speed=1.0,
+            min_forward_velocity=0.5,
+            required_hold_ticks=3,
+        ),
+    )
+
+
+def _fake_signals(state, _geometry, previous_hold_count):
+    info = state.info
+    apex = ApexBandSignals(
+        stable_airborne=info["fake/stable_airborne"],
+        com_vz=info["fake/com_vz"],
+        clearance=info["fake/clearance"],
+        roll=info["fake/roll"],
+        pitch=info["fake/pitch"],
+        angular_speed=info["fake/angular_speed"],
+        forward_velocity=info["fake/forward_velocity"],
+        obstacle_relative_x=info["fake/relative_x"],
+        illegal_contact=info["fake/illegal_contact"],
+        physical_failure=info["fake/physical_failure"],
+    )
+    recovery = RecoverySignals(
+        stable_wheel_support=info["fake/support"],
+        landing_region_valid=jp.asarray(False),
+        no_body_contact=info["fake/no_body_contact"],
+        roll=info["fake/roll"],
+        pitch=info["fake/pitch"],
+        angular_speed=info["fake/angular_speed"],
+        forward_velocity=info["fake/forward_velocity"],
+        previous_recovery_hold_count=previous_hold_count,
+        physical_failure=info["fake/physical_failure"],
+    )
+    return apex, recovery
+
+
+class _FakeBaseEnv:
+    action_size = 8
+    _neutral_action = jp.zeros((8,), jp.float32)
+    _config = SimpleNamespace(max_roll_deg=35.0, max_pitch_deg=75.0)
+
+    @staticmethod
+    def _info():
+        return {
+            "last_action": jp.zeros((8,), jp.float32),
+            "obs_history": jp.zeros((3, 4), jp.float32),
+            "actor_packet_fifo_valid": jp.asarray(1, jp.int32),
+            "jump_signal_latched": jp.asarray(False),
+            "jump_window_active": jp.asarray(False),
+            "end_code": jp.asarray(0, jp.int32),
+            "fake/stable_airborne": jp.asarray(False),
+            "fake/com_vz": jp.asarray(0.0, jp.float32),
+            "fake/clearance": jp.asarray(0.2, jp.float32),
+            "fake/roll": jp.asarray(0.0, jp.float32),
+            "fake/pitch": jp.asarray(0.0, jp.float32),
+            "fake/angular_speed": jp.asarray(0.0, jp.float32),
+            "fake/forward_velocity": jp.asarray(2.0, jp.float32),
+            "fake/relative_x": jp.asarray(0.0, jp.float32),
+            "fake/illegal_contact": jp.asarray(False),
+            "fake/physical_failure": jp.asarray(False),
+            "fake/support": jp.asarray(True),
+            "fake/no_body_contact": jp.asarray(True),
+        }
+
+    def reset(self, rng):
+        del rng
+        return mjx_env.State(
+            data=_FakeData(jp.zeros((7,)), jp.zeros((6,)), jp.zeros((8,))),
+            obs={"state": jp.zeros((12,)), "privileged_state": jp.zeros((6,))},
+            reward=jp.asarray(0.0),
+            done=jp.asarray(0.0),
+            metrics={"reward": jp.asarray(0.0)},
+            info=self._info(),
+        )
+
+    def step(self, state, action):
+        end_code = action[6].astype(jp.int32)
+        info = state.info | {
+            "last_action": action,
+            "jump_signal_latched": action[0] > 0.0,
+            "jump_window_active": action[1] > 0.0,
+            "end_code": end_code,
+            "fake/stable_airborne": action[2] > 0.0,
+            "fake/com_vz": action[3],
+            "fake/clearance": action[4],
+            "fake/relative_x": action[5],
+            "fake/support": action[7] > 0.0,
+            "fake/physical_failure": jp.isin(end_code, jp.asarray([2, 3, 4, 5, 6, 7, 15])),
+        }
+        return state.replace(
+            data=state.data._replace(qvel=state.data.qvel.at[0].set(2.0).at[2].set(action[3])),
+            reward=jp.asarray(999.0),
+            done=jp.asarray(1.0),
+            metrics={"reward": jp.asarray(999.0)},
+            info=info,
+        )
+
+
+def _adapter(module):
+    return module.PhaseExpertEnvAdapter(
+        _FakeBaseEnv(),
+        geometry=None,
+        thresholds=_adapter_thresholds(),
+        reward_config=module.PhaseURewardConfig(),
+        episode_horizon=20,
+        signal_extractor=_fake_signals,
+    )
+
+
+def test_phase_u_adapter_reset_is_natural_audited_and_jittable_without_reference_inputs():
+    module = _module()
+    adapter = _adapter(module)
+
+    state = jax.jit(adapter.reset)(jax.random.PRNGKey(1))
+
+    assert adapter.phase == module.PHASE_PROPULSION_ASCENT
+    assert bool(state.info["phase_expert/reset_valid"])
+    assert int(state.info["phase_expert/source_phase_id"]) == 0
+    assert not bool(state.done)
+    assert jp.all(state.info["last_action"] == 0.0)
+    assert state.info["obs_history"].shape == (3, 4)
+    batched = jax.vmap(adapter.reset)(jax.random.split(jax.random.PRNGKey(2), 2))
+    assert batched.done.shape == (2,)
+
+
+def test_early_airborne_cannot_succeed_but_later_ordered_apex_entry_does_and_latch_is_monotonic():
+    module = _module()
+    adapter = _adapter(module)
+    state = adapter.reset(jax.random.PRNGKey(3))
+
+    early_apex = jp.asarray([0, 0, 1, 0, 0.2, 0.0, 0, 0], jp.float32)
+    state = adapter.step(state, early_apex)
+    assert not bool(state.info["phase_expert/success"])
+    assert not bool(state.done)
+
+    sequence = (
+        jp.asarray([1, 1, 0, 0.5, 0.2, 0.0, 0, 1], jp.float32),
+        jp.asarray([0, 1, 0, 0.5, 0.2, 0.0, 0, 0], jp.float32),
+        jp.asarray([0, 1, 1, 0.5, 0.2, 0.0, 0, 0], jp.float32),
+        jp.asarray([0, 1, 1, 0.5, 0.2, 0.0, 0, 0], jp.float32),
+        jp.asarray([0, 0, 1, 0.0, 0.2, 0.0, 0, 0], jp.float32),
+    )
+    for action in sequence:
+        state = jax.jit(adapter.step)(state, action)
+    assert bool(state.info["phase_expert/event/jump_window_entered"])
+    assert bool(state.info["phase_expert/event/apex_band_entered"])
+    assert bool(state.info["phase_expert/success"])
+    assert bool(state.done)
+
+
+def test_pre_window_takeoff_and_apex_progress_rewards_are_zero_even_when_airborne_and_rising():
+    module = _module()
+    signals, _ = _fake_signals(
+        _FakeBaseEnv().reset(jax.random.PRNGKey(0)).replace(
+            info=_FakeBaseEnv._info()
+            | {"fake/stable_airborne": jp.asarray(True), "fake/com_vz": jp.asarray(1.0)}
+        ),
+        None,
+        jp.asarray(0),
+    )
+    components = jax.jit(module.phase_u_reward_components)(
+        signals,
+        _adapter_thresholds().apex,
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.zeros((8,)),
+        jp.zeros((8,)),
+        module.PhaseURewardConfig(),
+    )
+    assert float(components["takeoff_ascent_progress"]) == 0.0
+    assert float(components["apex_progress"]) == 0.0
+    assert float(components["forward_propulsion"]) > 0.0
+
+
+@pytest.mark.parametrize("end_code", [2, 3, 4, 5, 6, 7, 15])
+def test_phase_u_adapter_preserves_physical_failure_end_codes(end_code):
+    module = _module()
+    adapter = _adapter(module)
+    action = jp.asarray([0, 0, 0, 0, 0.2, 0, end_code, 1], jp.float32)
+    state = jax.jit(adapter.step)(adapter.reset(jax.random.PRNGKey(4)), action)
+    assert bool(state.done)
+    assert bool(state.info["phase_expert/physical_failure"])
+
+
+@pytest.mark.parametrize("end_code", [1, 8, 14, 16])
+def test_phase_u_adapter_ignores_legacy_success_timeout_and_chain_end_codes(end_code):
+    module = _module()
+    adapter = _adapter(module)
+    action = jp.asarray([0, 0, 0, 0, 0.2, 0, end_code, 1], jp.float32)
+    state = jax.jit(adapter.step)(adapter.reset(jax.random.PRNGKey(5)), action)
+    assert not bool(state.done)
+
+
+@pytest.mark.parametrize("end_code", [10, 11, 12, 13])
+def test_takeoff_task_failures_activate_only_after_legal_jump_latch(end_code):
+    module = _module()
+    adapter = _adapter(module)
+    failure = jp.asarray([0, 0, 0, 0, 0.2, 0, end_code, 1], jp.float32)
+    state = adapter.step(adapter.reset(jax.random.PRNGKey(6)), failure)
+    assert not bool(state.done)
+    latched = adapter.step(
+        adapter.reset(jax.random.PRNGKey(7)),
+        jp.asarray([1, 1, 0, 0, 0.2, 0, 0, 1], jp.float32),
+    )
+    state = adapter.step(latched, failure)
+    assert bool(state.done)
+    assert bool(state.info["phase_expert/task_failure"])

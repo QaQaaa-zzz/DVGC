@@ -1,13 +1,17 @@
 """Host-only Gate C1 contracts for auditable phase-expert smoke runs."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields as dataclass_fields
 import hashlib
 import json
+import math
 from pathlib import Path
 import subprocess
 from types import MappingProxyType
 from typing import Any, Mapping
+
+import jax
+from jax import numpy as jp
 
 from .config import (
     ACTION_MAPPING_VERSION,
@@ -16,12 +20,27 @@ from .config import (
 )
 from .training_budget import PPOBudgetReport, build_ppo_budget_report
 from .two_phase_guideline import canonical_manifest_hash
-from .two_phase_semantics import ApexBandThresholds, RecoveryThresholds
+from .two_phase_runtime import (
+    TwoPhaseEventState,
+    TwoPhaseThresholds,
+    advance_two_phase_events,
+    extract_apex_band_signals,
+    extract_recovery_signals,
+    initial_two_phase_event_state,
+)
+from .two_phase_semantics import (
+    ApexBandSignals,
+    ApexBandThresholds,
+    RecoveryThresholds,
+    apex_band_components,
+)
 
 
 PHASE_PROPULSION_ASCENT = "propulsion_ascent"
 PHASE_DESCENT_RECOVERY = "descent_recovery"
 PHASE_EXPERT_PHASES = (PHASE_PROPULSION_ASCENT, PHASE_DESCENT_RECOVERY)
+_PHASE_U_PHYSICAL_FAILURE_END_CODES = (2, 3, 4, 5, 6, 7, 15)
+_PHASE_U_POST_LATCH_TASK_FAILURE_END_CODES = (10, 11, 12, 13)
 _THRESHOLD_SOURCE_HASHES = frozenset(
     {"xml", "reference", "config", "code", "geometry_manifest"}
 )
@@ -113,6 +132,281 @@ class ValidatedPhaseExpertRunSpec:
     seeds: PhaseExpertSeedNamespaces
     interaction_budget: PhaseExpertInteractionBudget
     authorization: Mapping[str, Any] | None
+
+
+@dataclass(frozen=True)
+class PhaseURewardConfig:
+    """Bounded Phase U reward terms with task progress gated by the window."""
+
+    forward_propulsion_weight: float = 0.25
+    takeoff_ascent_weight: float = 1.0
+    apex_progress_weight: float = 1.0
+    action_smoothness_weight: float = 0.02
+    success_bonus: float = 30.0
+    failure_penalty: float = 20.0
+    target_forward_velocity: float = 2.0
+    target_vertical_velocity: float = 1.0
+    total_min: float = -50.0
+    total_max: float = 50.0
+
+    def __post_init__(self) -> None:
+        for name in (
+            "forward_propulsion_weight",
+            "takeoff_ascent_weight",
+            "apex_progress_weight",
+            "action_smoothness_weight",
+            "success_bonus",
+            "failure_penalty",
+            "target_forward_velocity",
+            "target_vertical_velocity",
+        ):
+            value = getattr(self, name)
+            if not math.isfinite(value) or value < 0.0:
+                raise ValueError(f"{name} must be finite and non-negative")
+        if not math.isfinite(self.total_min) or not math.isfinite(self.total_max):
+            raise ValueError("reward bounds must be finite")
+        if self.total_min >= self.total_max:
+            raise ValueError("total_min must be less than total_max")
+
+
+for _jax_dataclass in (ApexBandThresholds, PhaseURewardConfig):
+    try:
+        jax.tree_util.register_dataclass(
+            _jax_dataclass,
+            data_fields=[],
+            meta_fields=[field.name for field in dataclass_fields(_jax_dataclass)],
+        )
+    except ValueError:
+        pass
+
+
+def phase_u_reward_components(
+    signals: ApexBandSignals,
+    thresholds: ApexBandThresholds,
+    window_active: Any,
+    success_transition: Any,
+    action: Any,
+    last_action: Any,
+    config: PhaseURewardConfig,
+) -> dict[str, Any]:
+    """Return bounded Phase U terms; airborne progress is zero before the window."""
+    window = jp.asarray(window_active, dtype=bool)
+    forward_scale = jp.maximum(config.target_forward_velocity, 1.0e-6)
+    vertical_scale = jp.maximum(config.target_vertical_velocity, 1.0e-6)
+    forward = config.forward_propulsion_weight * jp.clip(
+        jp.asarray(signals.forward_velocity) / forward_scale, 0.0, 1.0
+    )
+    takeoff = config.takeoff_ascent_weight * jp.where(
+        window,
+        jp.clip(jp.asarray(signals.com_vz) / vertical_scale, 0.0, 1.0),
+        0.0,
+    )
+    components = apex_band_components(signals, thresholds)
+    apex_fraction = jp.mean(
+        jp.stack([jp.asarray(value, jp.float32) for value in components.values()])
+    )
+    apex_progress = config.apex_progress_weight * jp.where(
+        window, apex_fraction, 0.0
+    )
+    smoothness = -config.action_smoothness_weight * jp.mean(
+        jp.square(jp.asarray(action) - jp.asarray(last_action))
+    )
+    return {
+        "forward_propulsion": forward,
+        "takeoff_ascent_progress": takeoff,
+        "apex_progress": apex_progress,
+        "action_smoothness": smoothness,
+        "success_bonus": config.success_bonus
+        * jp.asarray(success_transition, jp.float32),
+    }
+
+
+def _contains_end_code(end_code: Any, values: tuple[int, ...]) -> Any:
+    code = jp.asarray(end_code)
+    return jp.any(code[..., None] == jp.asarray(values, dtype=code.dtype), axis=-1)
+
+
+def _event_info(event: TwoPhaseEventState) -> dict[str, Any]:
+    return {
+        f"phase_expert/event/{name}": value
+        for name, value in zip(TwoPhaseEventState._fields, event)
+    }
+
+
+def _event_from_info(info: Mapping[str, Any]) -> TwoPhaseEventState:
+    return TwoPhaseEventState(
+        *(info[f"phase_expert/event/{name}"] for name in TwoPhaseEventState._fields)
+    )
+
+
+def _finite_tree(value: Any) -> Any:
+    leaves = jax.tree_util.tree_leaves(value)
+    valid = jp.asarray(True)
+    for leaf in leaves:
+        valid = valid & jp.all(jp.isfinite(jp.asarray(leaf)))
+    return valid
+
+
+class PhaseExpertEnvAdapter:
+    """Pure-JAX Phase U ownership layer around the unchanged DVGC environment."""
+
+    phase = PHASE_PROPULSION_ASCENT
+
+    def __init__(
+        self,
+        base_env: Any,
+        *,
+        geometry: Any,
+        thresholds: TwoPhaseThresholds,
+        reward_config: PhaseURewardConfig,
+        episode_horizon: int,
+        signal_extractor: Any | None = None,
+    ) -> None:
+        if episode_horizon <= 0:
+            raise ValueError("episode_horizon must be positive")
+        self._base_env = base_env
+        self._geometry = geometry
+        self._thresholds = thresholds
+        self._reward_config = reward_config
+        self._episode_horizon = int(episode_horizon)
+        self._signal_extractor = signal_extractor or self._extract_signals
+        self.action_size = base_env.action_size
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._base_env, name)
+
+    def _extract_signals(
+        self, state: Any, geometry: Any, previous_hold_count: Any
+    ) -> tuple[Any, Any]:
+        return (
+            extract_apex_band_signals(state, geometry),
+            extract_recovery_signals(
+                state,
+                geometry,
+                previous_recovery_hold_count=previous_hold_count,
+            ),
+        )
+
+    @staticmethod
+    def _metrics(
+        *, reward: Any, success: Any, physical: Any, task: Any, timeout: Any
+    ) -> dict[str, Any]:
+        return {
+            "phase_expert/reward": jp.asarray(reward),
+            "phase_expert/success": jp.asarray(success, jp.float32),
+            "phase_expert/physical_failure": jp.asarray(physical, jp.float32),
+            "phase_expert/task_failure": jp.asarray(task, jp.float32),
+            "phase_expert/timeout": jp.asarray(timeout, jp.float32),
+        }
+
+    def reset(self, rng: Any) -> Any:
+        state = self._base_env.reset(rng)
+        event = initial_two_phase_event_state()
+        apex, recovery = self._signal_extractor(
+            state, self._geometry, event.recovery_hold_count
+        )
+        neutral = jp.asarray(self._base_env._neutral_action)
+        reset_valid = (
+            _finite_tree((state.data.qpos, state.data.qvel, state.data.ctrl, state.obs))
+            & _finite_tree((state.info["last_action"], state.info["obs_history"]))
+            & jp.all(jp.asarray(state.info["last_action"]) == neutral)
+            & (jp.asarray(state.info["actor_packet_fifo_valid"]) > 0)
+            & jp.asarray(recovery.stable_wheel_support, bool)
+            & jp.asarray(recovery.no_body_contact, bool)
+            & ~jp.asarray(apex.illegal_contact, bool)
+            & ~jp.asarray(apex.physical_failure, bool)
+        )
+        info = state.info | _event_info(event) | {
+            "phase_expert/source_phase_id": jp.asarray(0, jp.int32),
+            "phase_expert/reset_valid": reset_valid,
+            "phase_expert/episode_step": jp.asarray(0, jp.int32),
+            "phase_expert/success": jp.asarray(False),
+            "phase_expert/physical_failure": jp.asarray(False),
+            "phase_expert/task_failure": jp.asarray(False),
+            "phase_expert/timeout": jp.asarray(False),
+        }
+        zero = jp.asarray(0.0, jp.float32)
+        return state.replace(
+            reward=zero,
+            done=~reset_valid,
+            metrics=self._metrics(
+                reward=zero,
+                success=False,
+                physical=False,
+                task=False,
+                timeout=False,
+            ),
+            info=info,
+        )
+
+    def step(self, state: Any, action: Any) -> Any:
+        previous = _event_from_info(state.info)
+        previous_action = state.info["last_action"]
+        raw = self._base_env.step(
+            state.replace(reward=jp.zeros_like(state.reward), done=jp.zeros_like(state.done)),
+            action,
+        )
+        tick = jp.asarray(state.info["phase_expert/episode_step"], jp.int32) + 1
+        apex, recovery = self._signal_extractor(
+            raw, self._geometry, previous.recovery_hold_count
+        )
+        event = advance_two_phase_events(
+            apex,
+            recovery,
+            previous,
+            self._thresholds,
+            tick=tick,
+            jump_signal=raw.info["jump_signal_latched"],
+        )
+        success_transition = ~jp.asarray(previous.apex_band_entered) & jp.asarray(
+            event.apex_band_entered
+        )
+        success = jp.asarray(event.apex_band_entered)
+        physical = _contains_end_code(
+            raw.info["end_code"], _PHASE_U_PHYSICAL_FAILURE_END_CODES
+        )
+        task = jp.asarray(event.jump_window_entered) & _contains_end_code(
+            raw.info["end_code"], _PHASE_U_POST_LATCH_TASK_FAILURE_END_CODES
+        )
+        terminated = success | physical | task
+        timeout = (tick >= self._episode_horizon) & ~terminated
+        done = terminated | timeout
+        reward_terms = phase_u_reward_components(
+            apex,
+            self._thresholds.apex,
+            raw.info["jump_window_active"],
+            success_transition,
+            action,
+            previous_action,
+            self._reward_config,
+        )
+        reward = sum(reward_terms.values()) - self._reward_config.failure_penalty * (
+            physical | task
+        ).astype(jp.float32)
+        reward = jp.clip(
+            reward, self._reward_config.total_min, self._reward_config.total_max
+        )
+        info = raw.info | _event_info(event) | {
+            "phase_expert/source_phase_id": jp.asarray(0, jp.int32),
+            "phase_expert/reset_valid": state.info["phase_expert/reset_valid"],
+            "phase_expert/episode_step": tick,
+            "phase_expert/success": success,
+            "phase_expert/physical_failure": physical,
+            "phase_expert/task_failure": task,
+            "phase_expert/timeout": timeout,
+        }
+        return raw.replace(
+            reward=reward,
+            done=done.astype(raw.done.dtype),
+            metrics=self._metrics(
+                reward=reward,
+                success=success,
+                physical=physical,
+                task=task,
+                timeout=timeout,
+            ),
+            info=info,
+        )
 
 
 def _read_json(path: str | Path, label: str) -> dict[str, Any]:
