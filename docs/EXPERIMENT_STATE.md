@@ -92,6 +92,25 @@ validation, a fresh runtime gate, and a new bounded PPO smoke at `b4c7fb5`.
 
 ## Current active run
 
+The repaired persistent Phase U formal-expert run is active:
+
+```text
+run id: phase_u_formal_1m_20260810_seed710001_absckpt
+producer HEAD: 6dad8dbd3d917eacba6c2771e1751c184da013aa
+startup PID: 2477733
+status: runs/two_phase/phase_experts/phase_u_formal_1m_20260810_seed710001_absckpt/status.json
+metrics: runs/two_phase/phase_experts/phase_u_formal_1m_20260810_seed710001_absckpt/metrics.jsonl
+log: runs/two_phase/process_logs/phase_u_formal_1m_20260810_seed710001_absckpt.log
+resume record: runs/two_phase/process_logs/phase_u_formal_1m_20260810_seed710001_absckpt.control.txt
+```
+
+Its one allowed startup observation found a live process, `status=running`, no
+immediate log error, and an absolute transition-0 checkpoint recorded in
+`last_checkpoint`. Formal training, fixed evaluation, acquisition, and
+continuation counts were still 0 during compilation/initialization. No later
+transition count or physical result is claimed by this marker. The process is
+capped at 1,000,000 PPO training transitions and 1,163,200 total interactions.
+
 The persistent Phase U formal-expert run was launched after the bounded smoke:
 
 ```text
@@ -410,9 +429,9 @@ transition count, runs only the separately authorized remaining rollout
 blocks, and never repeats an already written global milestone. The first 1M
 authorization was consumed by a zero-transition checkpoint-path pause and must
 not be reused. The newly authorized bounded formal-path checkpoint smoke has
-completed. Next issue a new run ID and authorization for the unchanged
-1,000,000-transition cap. The run may automatically begin real candidate
-acquisition and bounded
+completed, and a new run ID and authorization are now active under the
+unchanged 1,000,000-transition cap. The run may automatically begin real
+candidate acquisition and bounded
 policy-dependent continuation diagnostics only after their evidence gates
 pass. A later session should inspect only a requested checkpoint, completion,
 or abnormal exit using this file plus the run's `status.json` and
