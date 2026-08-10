@@ -292,6 +292,16 @@ def test_phase_d_is_preflight_only_and_never_falls_back_to_natural_reset(tmp_pat
             "seed_tier": "physically_validated_descent_seed",
             "reset_mode": "bank",
             "source_hash": hashlib.sha256(bank.read_bytes()).hexdigest(),
+            "records": [{
+                "seed_role": "physically_validated_descent_seed",
+                "mujoco_forward_valid": True,
+                "finite_state_valid": True,
+                "no_penetration": True,
+                "legal_geometry": True,
+                "short_horizon_dynamic_valid": True,
+                "real_three_frame_fifo_valid": True,
+                "timing_explicit_snapshot_valid": True,
+            }],
         },
     )
     phase_d = replace(base, descent_seed_bank=str(bank), descent_seed_manifest=str(valid))
@@ -616,6 +626,26 @@ def test_pre_window_takeoff_and_apex_progress_rewards_are_zero_even_when_airborn
     assert float(components["forward_propulsion"]) > 0.0
 
 
+def test_adapter_reconstructs_runtime_window_from_latch_root_x_and_end_x():
+    module = _module()
+    adapter = module.PhaseExpertEnvAdapter(
+        _FakeBaseEnv(),
+        geometry=SimpleNamespace(root_qpos_adr=0),
+        thresholds=_adapter_thresholds(),
+        reward_config=module.PhaseURewardConfig(),
+        episode_horizon=20,
+        signal_extractor=_fake_signals,
+    )
+    base = _FakeBaseEnv().reset(jax.random.PRNGKey(0))
+    info = dict(base.info)
+    del info["jump_window_active"]
+    info |= {"jump_signal_latched": jp.asarray(True), "jump_window_end_x": jp.asarray(0.5)}
+    inside = base.replace(data=base.data._replace(qpos=base.data.qpos.at[0].set(0.4)), info=info)
+    outside = inside.replace(data=inside.data._replace(qpos=inside.data.qpos.at[0].set(0.6)))
+    assert bool(jax.jit(adapter._window_active)(inside))
+    assert not bool(jax.jit(adapter._window_active)(outside))
+
+
 @pytest.mark.parametrize("end_code", [2, 3, 4, 5, 6, 7, 15])
 def test_phase_u_adapter_preserves_physical_failure_end_codes(end_code):
     module = _module()
@@ -649,3 +679,98 @@ def test_takeoff_task_failures_activate_only_after_legal_jump_latch(end_code):
     state = adapter.step(latched, failure)
     assert bool(state.done)
     assert bool(state.info["phase_expert/task_failure"])
+
+
+def test_evaluation_outcomes_are_closed_and_mutually_exclusive():
+    module = _module()
+    rows = [
+        {"success": True, "physical_failure": False, "timeout": False, "end_code": 0},
+        {"success": False, "physical_failure": True, "timeout": False, "end_code": 4},
+        {"success": False, "physical_failure": False, "timeout": True, "end_code": 0},
+        {"success": False, "physical_failure": False, "timeout": False, "end_code": 11},
+    ]
+    report = module.summarize_phase_expert_evaluation(rows)
+    assert report["outcome_counts"] == {
+        "success": 1,
+        "physical_failure": 1,
+        "timeout": 1,
+        "other_failure": 1,
+    }
+    assert report["termination_reason_counts"] == {"none": 2, "roll_limit": 1, "takeoff_wheelie_failure": 1}
+    with pytest.raises(ValueError, match="mutually exclusive"):
+        module.summarize_phase_expert_evaluation(
+            [{"success": True, "physical_failure": True, "timeout": False, "end_code": 4}]
+        )
+
+
+def test_run_artifacts_are_immutable_atomic_and_metrics_are_finite(tmp_path):
+    module = _module()
+    run = tmp_path / "run"
+    manifest = {"run_id": "run", "phase": "propulsion_ascent", "source_hash": "a" * 64}
+    module.initialize_phase_expert_artifacts(run, manifest, {"status": "initialized"})
+    assert json.loads((run / "run_manifest.json").read_text()) == manifest
+    module.update_phase_expert_status(run, {"status": "running", "transitions": 0})
+    assert json.loads((run / "status.json").read_text())["status"] == "running"
+    module.append_phase_expert_metrics(run, {"step": 0, "loss": 1.25})
+    module.append_phase_expert_metrics(run, {"step": 1, "loss": 1.0})
+    assert len((run / "metrics.jsonl").read_text().splitlines()) == 2
+    with pytest.raises(ValueError, match="finite"):
+        module.append_phase_expert_metrics(run, {"loss": float("nan")})
+    with pytest.raises(FileExistsError):
+        module.initialize_phase_expert_artifacts(run, manifest, {"status": "initialized"})
+
+
+def test_checkpoint_sidecar_binds_recursive_identity_and_rejects_drift(tmp_path):
+    module = _module()
+    checkpoint = tmp_path / "orbax" / "1600"
+    checkpoint.mkdir(parents=True)
+    (checkpoint / "state").write_bytes(b"full training state")
+    contract = {
+        "phase": "propulsion_ascent",
+        "cumulative_training_transitions": 1600,
+        "full_training_state": True,
+        "prng_lineage": "phase_u_train_v1:7",
+        "reset_contract_hash": "a" * 64,
+        "reward_contract_hash": "b" * 64,
+        "evaluation_contract_hash": "c" * 64,
+        "xml_sha256": "d" * 64,
+        "action_schema_hash": "e" * 64,
+        "observation_schema_hash": "f" * 64,
+        "history_schema_hash": "1" * 64,
+        "parent_checkpoint": None,
+    }
+    sidecar = module.write_phase_expert_checkpoint_sidecar(checkpoint, contract)
+    assert sidecar["recursive_checkpoint_sha256"] == module.recursive_path_sha256(checkpoint)
+    module.validate_phase_expert_checkpoint_sidecar(checkpoint, contract)
+    (checkpoint / "state").write_bytes(b"drift")
+    with pytest.raises(ValueError, match="identity"):
+        module.validate_phase_expert_checkpoint_sidecar(checkpoint, contract)
+
+
+def test_descent_seed_manifest_requires_physical_evidence_and_rejects_claims(tmp_path):
+    module = _module()
+    bank = tmp_path / "seed.bank"
+    bank.write_bytes(b"seed")
+    manifest = {
+        "reset_mode": "bank",
+        "seed_tier": "physically_validated_descent_seed",
+        "source_hash": hashlib.sha256(b"seed").hexdigest(),
+        "records": [{
+            "seed_role": "physically_validated_descent_seed",
+            "mujoco_forward_valid": True,
+            "finite_state_valid": True,
+            "no_penetration": True,
+            "legal_geometry": True,
+            "short_horizon_dynamic_valid": True,
+            "real_three_frame_fifo_valid": True,
+            "timing_explicit_snapshot_valid": True,
+        }],
+    }
+    path = _write_json(tmp_path / "seed.json", manifest)
+    module.validate_descent_seed_manifest(bank, path)
+    for forbidden in ("reachable", "expert_snapshot", "Tube", "safe"):
+        bad = json.loads(json.dumps(manifest))
+        bad["records"][0][forbidden] = True
+        _write_json(path, bad)
+        with pytest.raises(ValueError, match="forbidden claim"):
+            module.validate_descent_seed_manifest(bank, path)

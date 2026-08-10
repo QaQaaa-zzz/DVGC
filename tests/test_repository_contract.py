@@ -31,9 +31,9 @@ def test_authoritative_assets_and_current_documents_exist():
 
 
 def test_future_two_phase_cli_placeholders_do_not_exist():
+    assert (ROOT / "cli" / "train_phase_expert.py").is_file()
     for name in (
         "build_guideline_banks",
-        "train_phase_expert",
         "collect_phase_snapshots",
         "label_phase_snapshots",
         "train_feasibility_model",
@@ -42,3 +42,7 @@ def test_future_two_phase_cli_placeholders_do_not_exist():
         "evaluate_jump_envelope",
     ):
         assert not (ROOT / "cli" / f"{name}.py").exists(), name
+
+
+def test_phase_expert_entrypoint_has_no_version_suffixed_variants():
+    assert list((ROOT / "cli").glob("train_phase_expert_v*.py")) == []

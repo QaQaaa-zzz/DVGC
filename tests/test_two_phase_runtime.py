@@ -383,7 +383,7 @@ def test_signal_extractors_accept_real_mjx_matrix_geom_rotations():
     assert bool(recovery.stable_wheel_support) is True
 
 
-@pytest.mark.parametrize("end_code", [2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 15])
+@pytest.mark.parametrize("end_code", [2, 3, 4, 5, 6, 7, 15])
 def test_physical_failure_is_decoded_from_failure_end_codes(end_code):
     state = _fake_state()
     failed = state._replace(
@@ -405,7 +405,7 @@ def test_physical_failure_is_decoded_from_failure_end_codes(end_code):
     assert bool(recovery.physical_failure) is True
 
 
-@pytest.mark.parametrize("end_code", [0, 1, 8, 14, 16])
+@pytest.mark.parametrize("end_code", [0, 1, 8, 9, 10, 11, 12, 13, 14, 16])
 def test_nonfailure_terminal_outcomes_are_not_physical_failures(end_code):
     state = _fake_state()
     terminal = state._replace(

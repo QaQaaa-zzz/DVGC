@@ -1,17 +1,21 @@
-"""Host-only Gate C1 contracts for auditable phase-expert smoke runs."""
+"""Auditable Gate C1 contracts and runtime for phase-expert smoke runs."""
 from __future__ import annotations
 
-from dataclasses import dataclass, fields as dataclass_fields
+from dataclasses import asdict, dataclass, fields as dataclass_fields, is_dataclass
+from datetime import datetime, timezone
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 import subprocess
+import tempfile
 from types import MappingProxyType
 from typing import Any, Mapping
 
 import jax
 from jax import numpy as jp
+import numpy as np
 
 from .config import (
     ACTION_MAPPING_VERSION,
@@ -287,11 +291,21 @@ class PhaseExpertEnvAdapter:
             ),
         )
 
+    def _window_active(self, state: Any) -> Any:
+        """Reconstruct the existing deployable latch/end-x window without env edits."""
+        if "jump_window_active" in state.info:  # test adapters may expose it directly
+            return jp.asarray(state.info["jump_window_active"], dtype=bool)
+        root_x = state.data.qpos[..., self._geometry.root_qpos_adr]
+        return jp.asarray(state.info["jump_signal_latched"], dtype=bool) & (
+            root_x <= jp.asarray(state.info["jump_window_end_x"])
+        )
+
     @staticmethod
     def _metrics(
         *, reward: Any, success: Any, physical: Any, task: Any, timeout: Any
     ) -> dict[str, Any]:
         return {
+            "reward": jp.asarray(reward),
             "phase_expert/reward": jp.asarray(reward),
             "phase_expert/success": jp.asarray(success, jp.float32),
             "phase_expert/physical_failure": jp.asarray(physical, jp.float32),
@@ -374,7 +388,7 @@ class PhaseExpertEnvAdapter:
         reward_terms = phase_u_reward_components(
             apex,
             self._thresholds.apex,
-            raw.info["jump_window_active"],
+            self._window_active(raw),
             success_transition,
             action,
             previous_action,
@@ -407,6 +421,252 @@ class PhaseExpertEnvAdapter:
             ),
             info=info,
         )
+
+
+_END_REASON = {
+    0: "none",
+    1: "recovery",
+    2: "prohibited_contact",
+    3: "invalid_wheel_step_contact",
+    4: "roll_limit",
+    5: "pitch_limit",
+    6: "backward",
+    7: "platform_back_edge_exit",
+    8: "stage_timeout",
+    9: "prelaunch_airborne",
+    10: "takeoff_positive_pitch_failure",
+    11: "takeoff_wheelie_failure",
+    12: "takeoff_missed_liftoff_deadline",
+    13: "takeoff_missed_wheel_clearance_deadline",
+    14: "chain_entry",
+    15: "nonfinite",
+    16: "next_stage_entry",
+}
+
+
+def summarize_phase_expert_evaluation(
+    rows: list[Mapping[str, Any]],
+) -> dict[str, Any]:
+    """Close fixed-evaluation outcome accounting without promotion semantics."""
+    counts = {
+        "success": 0,
+        "physical_failure": 0,
+        "timeout": 0,
+        "other_failure": 0,
+    }
+    reasons: dict[str, int] = {}
+    for row in rows:
+        flags = [
+            bool(row.get("success")),
+            bool(row.get("physical_failure")),
+            bool(row.get("timeout")),
+        ]
+        if sum(flags) > 1:
+            raise ValueError("evaluation outcomes must be mutually exclusive")
+        outcome = (
+            "success"
+            if flags[0]
+            else "physical_failure"
+            if flags[1]
+            else "timeout"
+            if flags[2]
+            else "other_failure"
+        )
+        counts[outcome] += 1
+        reason = _END_REASON.get(int(row.get("end_code", 0)), "unknown")
+        reasons[reason] = reasons.get(reason, 0) + 1
+    total = len(rows)
+    return {
+        "num_rollouts": total,
+        "outcome_counts": counts,
+        "termination_reason_counts": dict(sorted(reasons.items())),
+        "empirical_success_rate": counts["success"] / total if total else 0.0,
+        "physical_failure_rate": counts["physical_failure"] / total if total else 0.0,
+        "timeout_rate": counts["timeout"] / total if total else 0.0,
+        "evidence_level": "smoke_diagnostic_only",
+        "promotion_authorized": False,
+    }
+
+
+def _write_json_atomic(path: Path, payload: Mapping[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    encoded = json.dumps(
+        payload, sort_keys=True, indent=2, allow_nan=False
+    ) + "\n"
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=f".{path.name}.", dir=path.parent
+    )
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+            stream.write(encoded)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+
+
+def initialize_phase_expert_artifacts(
+    output_dir: str | Path,
+    manifest: Mapping[str, Any],
+    initial_status: Mapping[str, Any],
+) -> None:
+    """Create a collision-safe run root and its immutable initial records."""
+    root = Path(output_dir)
+    root.mkdir(parents=True, exist_ok=False)
+    _write_json_atomic(root / "run_manifest.json", manifest)
+    _write_json_atomic(root / "status.json", initial_status)
+
+
+def update_phase_expert_status(
+    output_dir: str | Path, status: Mapping[str, Any]
+) -> None:
+    if status.get("status") not in {
+        "initialized",
+        "running",
+        "completed",
+        "failed",
+        "gate_pause",
+    }:
+        raise ValueError("invalid phase expert status")
+    _write_json_atomic(Path(output_dir) / "status.json", status)
+
+
+def append_phase_expert_metrics(
+    output_dir: str | Path, metrics: Mapping[str, Any]
+) -> None:
+    try:
+        line = json.dumps(metrics, sort_keys=True, allow_nan=False)
+    except ValueError as exc:
+        raise ValueError("metrics must contain only finite JSON values") from exc
+    with (Path(output_dir) / "metrics.jsonl").open("a", encoding="utf-8") as stream:
+        stream.write(line + "\n")
+        stream.flush()
+        os.fsync(stream.fileno())
+
+
+def recursive_path_sha256(path: str | Path) -> str:
+    """Hash a checkpoint tree by relative path and bytes in stable order."""
+    root = Path(path)
+    if not root.is_dir():
+        raise ValueError("checkpoint path must be a directory")
+    digest = hashlib.sha256()
+    files = sorted(candidate for candidate in root.rglob("*") if candidate.is_file())
+    if not files:
+        raise ValueError("checkpoint directory is empty")
+    for candidate in files:
+        digest.update(candidate.relative_to(root).as_posix().encode())
+        digest.update(b"\0")
+        digest.update(candidate.read_bytes())
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+_CHECKPOINT_CONTRACT_FIELDS = frozenset(
+    {
+        "phase",
+        "cumulative_training_transitions",
+        "full_training_state",
+        "prng_lineage",
+        "reset_contract_hash",
+        "reward_contract_hash",
+        "evaluation_contract_hash",
+        "xml_sha256",
+        "action_schema_hash",
+        "observation_schema_hash",
+        "history_schema_hash",
+        "parent_checkpoint",
+    }
+)
+
+
+def _checkpoint_sidecar_path(checkpoint: str | Path) -> Path:
+    path = Path(checkpoint)
+    return path.with_name(path.name + ".phase_expert.json")
+
+
+def write_phase_expert_checkpoint_sidecar(
+    checkpoint: str | Path, contract: Mapping[str, Any]
+) -> dict[str, Any]:
+    if set(contract) != _CHECKPOINT_CONTRACT_FIELDS:
+        raise ValueError("checkpoint contract fields are incomplete")
+    if contract.get("full_training_state") is not True:
+        raise ValueError("checkpoint must assert full training state")
+    payload = dict(contract)
+    payload["recursive_checkpoint_sha256"] = recursive_path_sha256(checkpoint)
+    _write_json_atomic(_checkpoint_sidecar_path(checkpoint), payload)
+    return payload
+
+
+def validate_phase_expert_checkpoint_sidecar(
+    checkpoint: str | Path, expected_contract: Mapping[str, Any]
+) -> Mapping[str, Any]:
+    payload = _read_json(_checkpoint_sidecar_path(checkpoint), "checkpoint sidecar")
+    for field in _CHECKPOINT_CONTRACT_FIELDS:
+        if payload.get(field) != expected_contract.get(field):
+            raise ValueError(f"checkpoint contract drift: {field}")
+    if payload.get("recursive_checkpoint_sha256") != recursive_path_sha256(checkpoint):
+        raise ValueError("checkpoint recursive identity mismatch")
+    return _freeze(payload)
+
+
+def _load_and_validate_checkpoint_sidecar(checkpoint: str | Path) -> Mapping[str, Any]:
+    payload = _read_json(_checkpoint_sidecar_path(checkpoint), "checkpoint sidecar")
+    contract = {field: payload.get(field) for field in _CHECKPOINT_CONTRACT_FIELDS}
+    return validate_phase_expert_checkpoint_sidecar(checkpoint, contract)
+
+
+_DESCENT_EVIDENCE_FIELDS = (
+    "mujoco_forward_valid",
+    "finite_state_valid",
+    "no_penetration",
+    "legal_geometry",
+    "short_horizon_dynamic_valid",
+    "real_three_frame_fifo_valid",
+    "timing_explicit_snapshot_valid",
+)
+_FORBIDDEN_DESCENT_CLAIMS = ("reachable", "expert_snapshot", "Tube", "safe")
+
+
+def validate_descent_seed_manifest(
+    bank_path: str | Path, manifest_path: str | Path
+) -> Mapping[str, Any]:
+    bank = Path(bank_path)
+    if not bank.is_file():
+        raise ValueError("descent seed bank does not exist")
+    manifest = _read_json(manifest_path, "descent seed manifest")
+    if manifest.get("reset_mode") == "natural_start":
+        raise ValueError("Phase D natural reset fallback is forbidden")
+    if manifest.get("reset_mode") != "bank":
+        raise ValueError("Phase D descent seed manifest must use bank reset")
+    tier = manifest.get("seed_tier")
+    if tier not in _DESCENT_SEED_TIERS:
+        raise ValueError("Phase D descent seed manifest has an invalid seed tier")
+    if manifest.get("source_hash") != _sha256_file(bank):
+        raise ValueError("Phase D descent seed source hash mismatch")
+    records = manifest.get("records")
+    if not isinstance(records, list) or not records:
+        raise ValueError("descent seed manifest requires records")
+    for record in records:
+        if not isinstance(record, Mapping):
+            raise ValueError("descent seed record must be an object")
+        if any(name in record for name in _FORBIDDEN_DESCENT_CLAIMS):
+            raise ValueError("descent seed record contains a forbidden claim")
+        if not all(record.get(name) is True for name in _DESCENT_EVIDENCE_FIELDS):
+            raise ValueError("descent seed record lacks physical validation evidence")
+        if tier == "physically_validated_descent_seed" and record.get("seed_role") != tier:
+            raise ValueError("preliminary descent seed role is invalid")
+    if tier == "pi_up_online_apex_snapshot":
+        online = [row for row in records if row.get("seed_role") == tier]
+        mass = sum(float(row.get("sampling_mass", 0.0)) for row in online)
+        if len(online) * 2 <= len(records) or mass <= 0.5:
+            raise ValueError("formal Phase D seeds must be dominated by pi_up online snapshots")
+        required = {"apex_pre", "apex_nearest", "apex_post", "early_descent"}
+        if not required.issubset({row.get("event_position") for row in online}):
+            raise ValueError("formal Phase D seed event coverage is incomplete")
+    return _freeze(manifest)
 
 
 def _read_json(path: str | Path, label: str) -> dict[str, Any]:
@@ -720,19 +980,9 @@ def _validate_descent_seed_inputs(spec: PhaseExpertRunSpec) -> Mapping[str, Any]
         return None
     if not spec.descent_seed_bank or not spec.descent_seed_manifest:
         raise ValueError("descent seed bank and manifest are required")
-    bank = Path(spec.descent_seed_bank)
-    if not bank.is_file():
-        raise ValueError("descent seed bank does not exist")
-    manifest = _read_json(spec.descent_seed_manifest, "descent seed manifest")
-    if manifest.get("reset_mode") == "natural_start":
-        raise ValueError("Phase D natural reset fallback is forbidden")
-    if manifest.get("reset_mode") != "bank":
-        raise ValueError("Phase D descent seed manifest must use bank reset")
-    if manifest.get("seed_tier") not in _DESCENT_SEED_TIERS:
-        raise ValueError("Phase D descent seed manifest has an invalid seed tier")
-    if manifest.get("source_hash") != _sha256_file(bank):
-        raise ValueError("Phase D descent seed source hash mismatch")
-    return _freeze(manifest)
+    return validate_descent_seed_manifest(
+        spec.descent_seed_bank, spec.descent_seed_manifest
+    )
 
 
 def _current_source_head() -> str:
@@ -799,8 +1049,8 @@ def validate_phase_expert_run_spec(
         )
     if output_path.exists():
         raise ValueError("output directory must not already exist")
-    if spec.resume_run is not None or spec.restore_checkpoint is not None:
-        raise ValueError("exact resume is unavailable until the Gate C1 resume contract is implemented")
+    if bool(spec.resume_run) != bool(spec.restore_checkpoint):
+        raise ValueError("resume run and restore checkpoint must be paired")
     thresholds = load_phase_expert_threshold_manifest(spec.threshold_manifest_path)
     project_config_path = _resolve_repository_path(spec.config_path)
     threshold_config_path = _resolve_repository_path(
@@ -822,6 +1072,30 @@ def validate_phase_expert_run_spec(
         if preflight_only
         else _validate_authorization(spec, thresholds, interaction)
     )
+    if spec.resume_run and spec.restore_checkpoint:
+        parent = Path(spec.resume_run).resolve()
+        checkpoint = Path(spec.restore_checkpoint).resolve()
+        if not parent.is_dir() or not checkpoint.is_dir():
+            raise ValueError("resume run and checkpoint must exist")
+        if not checkpoint.is_relative_to(parent):
+            raise ValueError("restore checkpoint must belong to resume run")
+        parent_manifest = _read_json(parent / "run_manifest.json", "parent run manifest")
+        sidecar = _load_and_validate_checkpoint_sidecar(checkpoint)
+        expected_resume = {
+            "phase": spec.phase,
+            "xml_sha256": AUTHORITATIVE_XML_SHA256,
+            "reward_contract_hash": _canonical_payload_hash(
+                training_config.get("reward_bounds", {})
+            ),
+            "evaluation_contract_hash": _canonical_payload_hash(
+                training_config.get("evaluation", {})
+            ),
+        }
+        for field, value in expected_resume.items():
+            if sidecar.get(field) != value:
+                raise ValueError(f"resume contract drift: {field}")
+        if parent_manifest.get("run_id") != parent.name:
+            raise ValueError("parent run manifest identity mismatch")
     return ValidatedPhaseExpertRunSpec(
         spec=spec,
         thresholds=thresholds,
@@ -829,3 +1103,284 @@ def validate_phase_expert_run_spec(
         interaction_budget=interaction,
         authorization=authorization,
     )
+
+
+def _jsonable(value: Any) -> Any:
+    if is_dataclass(value):
+        return _jsonable(asdict(value))
+    if isinstance(value, Mapping):
+        return {str(key): _jsonable(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_jsonable(item) for item in value]
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    if hasattr(value, "shape"):
+        array = np.asarray(jax.device_get(value))
+        return float(array) if array.ndim == 0 else array.tolist()
+    if isinstance(value, (np.integer, np.floating)):
+        return value.item()
+    return value
+
+
+def build_phase_expert_environment(
+    validated: ValidatedPhaseExpertRunSpec,
+) -> PhaseExpertEnvAdapter:
+    """Construct the unchanged physical environment plus the external adapter."""
+    if validated.spec.phase != PHASE_PROPULSION_ASCENT:
+        raise ValueError("Phase D environment construction is blocked until Gate C2")
+    from .bank import SnapshotBank
+    from .config import load_config
+    from .env import OrangeBikeDVGC
+    from .two_phase_runtime import build_two_phase_geometry
+
+    training_config = _read_json(
+        validated.spec.training_config_path, "phase expert training config"
+    )
+    layout = training_config["ppo_layout"]
+    overrides = resolve_gate_c1_base_mode(training_config) | {
+        "episode_length": int(layout["episode_horizon"]),
+        "obs_noise_enable": False,
+    }
+    config = load_config(validated.spec.config_path, overrides)
+    base = OrangeBikeDVGC(config, snapshot_bank=SnapshotBank())
+    geometry = build_two_phase_geometry(base.mj_model, config)
+    bounds = training_config["reward_bounds"]
+    reward_config = PhaseURewardConfig(
+        total_min=float(bounds["total_min"]), total_max=float(bounds["total_max"])
+    )
+    return PhaseExpertEnvAdapter(
+        base,
+        geometry=geometry,
+        thresholds=TwoPhaseThresholds(
+            apex=validated.thresholds.apex_thresholds,
+            recovery=validated.thresholds.recovery_thresholds,
+        ),
+        reward_config=reward_config,
+        episode_horizon=int(layout["episode_horizon"]),
+    )
+
+
+def _fixed_phase_u_evaluation(
+    environment: PhaseExpertEnvAdapter,
+    params: Any,
+    seeds: tuple[int, ...],
+    horizon: int,
+) -> tuple[dict[str, Any], int]:
+    from .runtime import build_inference
+
+    inference = build_inference(environment, params, deterministic=True)
+    step = jax.jit(environment.step)
+    rows: list[dict[str, Any]] = []
+    transitions = 0
+    for seed in seeds:
+        key = jax.random.PRNGKey(seed)
+        state = environment.reset(key)
+        episode_return = 0.0
+        for tick in range(horizon):
+            key, action_key = jax.random.split(key)
+            action, _ = inference(state.obs, action_key)
+            state = step(state, action)
+            jax.block_until_ready(state)
+            transitions += 1
+            episode_return += float(state.reward)
+            if bool(state.done):
+                break
+        info = jax.device_get(state.info)
+        rows.append(
+            {
+                "seed": seed,
+                "episode_length": tick + 1,
+                "episode_return": episode_return,
+                "success": bool(info["phase_expert/success"]),
+                "physical_failure": bool(info["phase_expert/physical_failure"]),
+                "timeout": bool(info["phase_expert/timeout"]),
+                "end_code": int(info["end_code"]),
+                "first_event_ticks": np.asarray(
+                    info["phase_expert/event/first_event_ticks"]
+                ).tolist(),
+            }
+        )
+    report = summarize_phase_expert_evaluation(rows)
+    report["rows"] = rows
+    report["actual_environment_transitions"] = transitions
+    return report, transitions
+
+
+def _checkpoint_contract(
+    validated: ValidatedPhaseExpertRunSpec,
+    training_config: Mapping[str, Any],
+    *,
+    cumulative_transitions: int,
+    parent_checkpoint: str | None,
+) -> dict[str, Any]:
+    return {
+        "phase": validated.spec.phase,
+        "cumulative_training_transitions": cumulative_transitions,
+        "full_training_state": True,
+        "prng_lineage": f"{validated.seeds.training_namespace}:{validated.spec.seed}",
+        "reset_contract_hash": _canonical_payload_hash(dict(_BASE_MODE)),
+        "reward_contract_hash": _canonical_payload_hash(
+            training_config.get("reward_bounds", {})
+        ),
+        "evaluation_contract_hash": _canonical_payload_hash(
+            training_config.get("evaluation", {})
+        ),
+        "xml_sha256": AUTHORITATIVE_XML_SHA256,
+        "action_schema_hash": hashlib.sha256(ACTION_MAPPING_VERSION.encode()).hexdigest(),
+        "observation_schema_hash": _canonical_payload_hash(
+            {
+                "env": _sha256_file("dvgc/env.py"),
+                "audit": _sha256_file("dvgc/observation_audit.py"),
+            }
+        ),
+        "history_schema_hash": hashlib.sha256(
+            b"actor_packet_fifo.three_frame.v4.t_minus_2_to_t"
+        ).hexdigest(),
+        "parent_checkpoint": parent_checkpoint,
+    }
+
+
+def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
+    """Execute one already-authorized smoke and leave promotion disabled."""
+    if validated.authorization is None:
+        raise ValueError("normal execution requires validated authorization")
+    if validated.spec.phase != PHASE_PROPULSION_ASCENT:
+        raise ValueError("Phase D execution is blocked until Gate C2")
+    from .config import load_config
+    from .runtime import assert_brax_metric_contract, make_ppo_train_fn
+
+    root = Path(validated.spec.output_dir)
+    training_config = _read_json(
+        validated.spec.training_config_path, "phase expert training config"
+    )
+    layout = training_config["ppo_layout"]
+    optimization = training_config["optimization"]
+    reward_bounds = training_config["reward_bounds"]
+    reward_contract = asdict(
+        PhaseURewardConfig(
+            total_min=float(reward_bounds["total_min"]),
+            total_max=float(reward_bounds["total_max"]),
+        )
+    )
+    resolved_project_config = load_config(
+        validated.spec.config_path,
+        resolve_gate_c1_base_mode(training_config)
+        | {
+            "episode_length": int(layout["episode_horizon"]),
+            "obs_noise_enable": False,
+        },
+    ).to_dict()
+    manifest = {
+        "schema": "dvgc_phase_expert_run_v1",
+        "run_id": root.name,
+        "phase": validated.spec.phase,
+        "experiment_level": "smoke",
+        "source_head": _current_source_head(),
+        "source_tree_sha256": phase_expert_source_tree_sha256(),
+        "xml_sha256": AUTHORITATIVE_XML_SHA256,
+        "action_mapping_version": ACTION_MAPPING_VERSION,
+        "threshold_manifest_canonical_hash": validated.thresholds.canonical_manifest_hash,
+        "training_config_sha256": _sha256_file(validated.spec.training_config_path),
+        "authorization": _jsonable(validated.authorization),
+        "interaction_budget": _jsonable(validated.interaction_budget),
+        "seed_namespaces": _jsonable(validated.seeds),
+        "reward_contract": reward_contract,
+        "fixed_evaluation_contract": training_config["evaluation"],
+        "reference_role": "kinematic_guideline_and_weak_prior_only",
+        "promotion_authorized": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    initialize_phase_expert_artifacts(
+        root,
+        manifest,
+        {"status": "initialized", "training_transitions": 0, "evaluation_transitions": 0},
+    )
+    _write_json_atomic(root / "resolved_config.json", resolved_project_config)
+    _write_json_atomic(root / "resolved_training_config.json", training_config)
+    try:
+        environment = build_phase_expert_environment(validated)
+        reset_state = jax.jit(environment.reset)(jax.random.PRNGKey(validated.spec.seed))
+        jax.block_until_ready(reset_state)
+        if not bool(reset_state.info["phase_expert/reset_valid"]):
+            raise RuntimeError("audited natural reset is invalid")
+        assert_brax_metric_contract(environment)
+        update_phase_expert_status(
+            root,
+            {"status": "running", "training_transitions": 0, "evaluation_transitions": 0},
+        )
+
+        def progress(step: int, metrics: Mapping[str, Any]) -> None:
+            append_phase_expert_metrics(
+                root, {"training_step": int(step), "metrics": _jsonable(metrics)}
+            )
+
+        train_fn = make_ppo_train_fn(
+            timesteps=validated.interaction_budget.training.effective_total_transitions,
+            episode_length=int(layout["episode_horizon"]),
+            num_envs=int(layout["num_parallel_envs"]),
+            num_eval_envs=int(layout["num_eval_envs"]),
+            num_evals=int(layout["num_evals"]),
+            seed=validated.spec.seed,
+            learning_rate=float(optimization["learning_rate"]),
+            entropy_cost=float(optimization["entropy_cost"]),
+            reward_scaling=float(optimization["reward_scaling"]),
+            checkpoint_dir=root / "orbax",
+            unroll_length=int(layout["unroll_length"]),
+            batch_size=int(layout["batch_size"]),
+            num_minibatches=int(layout["num_minibatches"]),
+            num_updates_per_batch=int(layout["num_updates_per_batch"]),
+            discounting=float(optimization["discounting"]),
+            gae_lambda=float(optimization["gae_lambda"]),
+            clipping_epsilon=float(optimization["clipping_epsilon"]),
+            max_grad_norm=float(optimization["max_grad_norm"]),
+            restore_checkpoint_path=validated.spec.restore_checkpoint,
+            full_reset=True,
+        )
+        _, params, final_metrics = train_fn(
+            environment=environment, progress_fn=progress, eval_env=environment
+        )
+        evaluation, fixed_transitions = _fixed_phase_u_evaluation(
+            environment,
+            params,
+            validated.seeds.evaluation_seeds,
+            int(training_config["evaluation"]["episode_horizon"]),
+        )
+        _write_json_atomic(root / "fixed_evaluation.json", evaluation)
+        checkpoints = [
+            path
+            for path in (root / "orbax").iterdir()
+            if path.is_dir() and any(candidate.is_file() for candidate in path.rglob("*"))
+        ] if (root / "orbax").is_dir() else []
+        checkpoint_contract = _checkpoint_contract(
+            validated,
+            training_config,
+            cumulative_transitions=validated.interaction_budget.training.effective_total_transitions,
+            parent_checkpoint=validated.spec.restore_checkpoint,
+        )
+        for checkpoint in checkpoints:
+            write_phase_expert_checkpoint_sidecar(checkpoint, checkpoint_contract)
+        result = {
+            "status": "completed",
+            "evidence_level": "engineering_smoke_only",
+            "training_transitions": validated.interaction_budget.training.effective_total_transitions,
+            "brax_evaluation_transition_ceiling": validated.interaction_budget.brax_evaluation_transition_ceiling,
+            "fixed_evaluation_transitions": fixed_transitions,
+            "combined_interaction_ceiling": validated.interaction_budget.combined_transition_ceiling,
+            "final_metrics": _jsonable(final_metrics),
+            "fixed_evaluation": evaluation,
+            "promotion_authorized": False,
+            "next_gate_authorized": False,
+        }
+        update_phase_expert_status(root, result)
+        return result
+    except Exception as exc:
+        update_phase_expert_status(
+            root,
+            {
+                "status": "gate_pause",
+                "error_type": type(exc).__name__,
+                "error": str(exc),
+                "promotion_authorized": False,
+            },
+        )
+        raise

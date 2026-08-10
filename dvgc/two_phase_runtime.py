@@ -55,7 +55,10 @@ EVENT_NAMES = INTERNAL_EVENTS
 
 # Stable dvgc.env terminal-code contract.  Successful recovery, timeout, and
 # legacy handoff terminals are deliberately excluded.
-_PHYSICAL_FAILURE_END_CODES = (2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 15)
+# Prelaunch airborne (9) is telemetry only.  Takeoff task deadlines (10-13)
+# are adapter-owned failures after the legal jump latch, not global physical
+# failures.  Keep only immutable physical-safety terminals here.
+_PHYSICAL_FAILURE_END_CODES = (2, 3, 4, 5, 6, 7, 15)
 
 
 class CollisionSupportBounds(NamedTuple):
