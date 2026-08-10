@@ -92,7 +92,7 @@ validation, a fresh runtime gate, and a new bounded PPO smoke at `b4c7fb5`.
 
 ## Current active run
 
-The repaired persistent Phase U formal-expert run is active:
+The repaired 64-environment Phase U formal-expert run is now paused:
 
 ```text
 run id: phase_u_formal_1m_20260810_seed710001_absckpt
@@ -104,12 +104,16 @@ log: runs/two_phase/process_logs/phase_u_formal_1m_20260810_seed710001_absckpt.l
 resume record: runs/two_phase/process_logs/phase_u_formal_1m_20260810_seed710001_absckpt.control.txt
 ```
 
-Its one allowed startup observation found a live process, `status=running`, no
-immediate log error, and an absolute transition-0 checkpoint recorded in
-`last_checkpoint`. Formal training, fixed evaluation, acquisition, and
-continuation counts were still 0 during compilation/initialization. No later
-transition count or physical result is claimed by this marker. The process is
-capped at 1,000,000 PPO training transitions and 1,163,200 total interactions.
+The process was stopped at the last complete checkpoint, transition 291,200,
+after fixed held-out evaluations at 0, 100,800, and 251,200 all produced zero
+liftoff, clearance, and Apex successes. All three reached the jump window and
+had no physical failure, roll/pitch violation, illegal contact, or action
+saturation. This is a three-window physical-performance plateau even though
+mean held-out return improved. Candidate acquisition and continuation probing
+therefore remained at 0. The operator pause record is stored beside
+`status.json`; its known interaction lower bound is 291,200 training + 664
+fixed evaluation = 291,864. The old process was terminated after the pause and
+will not be resumed under its loaded gate implementation.
 
 The persistent Phase U formal-expert run was launched after the bounded smoke:
 
@@ -393,6 +397,12 @@ Gate C1 validation on 2026-08-10:
   at transition 0 and
   `0501c33fbf904009c418ee1bb09d7f245a3cf6310f6c278cd3bcd4dc29b95e56`
   at transition 1,600.
+- The 64-environment formal run reached checkpoints 0/100,800/251,200 with
+  fixed physical scores unchanged: jump-window reach 8/8, but liftoff,
+  clearance, and Apex success all 0/8. It was reversibly stopped, recorded as
+  `gate_pause`, and terminated at checkpoint 291,200. The gate implementation
+  previously detected only degradation, not the separately required
+  three-window plateau; a red-green regression now closes that omission.
 
 Legacy five-stage experimental outcomes are not evidence for the dynamic
 two-phase method and must not be promoted retrospectively.
@@ -429,13 +439,14 @@ transition count, runs only the separately authorized remaining rollout
 blocks, and never repeats an already written global milestone. The first 1M
 authorization was consumed by a zero-transition checkpoint-path pause and must
 not be reused. The newly authorized bounded formal-path checkpoint smoke has
-completed, and a new run ID and authorization are now active under the
-unchanged 1,000,000-transition cap. The run may automatically begin real
-candidate acquisition and bounded
-policy-dependent continuation diagnostics only after their evidence gates
-pass. A later session should inspect only a requested checkpoint, completion,
-or abnormal exit using this file plus the run's `status.json` and
-`metrics.jsonl`; it must not repeatedly poll the long-running process.
+completed. The subsequent 64-environment run is paused for a three-window
+physical plateau and must not continue unchanged. Next benchmark the explicitly
+requested 1,024-environment layout with the same reward/reset/network/horizon
+and preserved minibatch size before issuing another long-run authorization.
+Because 1,024 environments with unroll length 25 make one 25,600-transition
+block, the largest aligned run below the 1,000,000 ceiling is 998,400. Any new
+run may automatically begin candidate acquisition and bounded policy-dependent
+continuation diagnostics only after their evidence gates pass.
 
 This marker does not authorize formal `V_up`, a learned Soft Tube declaration,
 Phase D expert training, unified PPO, or JCE/JEL. Provisional acquisition aids

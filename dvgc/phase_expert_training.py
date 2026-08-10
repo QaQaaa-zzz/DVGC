@@ -880,6 +880,9 @@ def evaluate_phase_u_checkpoint_gate(
         finite = all(
             math.isfinite(item) for item in scores + failures + returns
         )
+        clearly_plateaued = finite and max(scores) - min(scores) <= 0.01
+        if clearly_plateaued:
+            reasons.append("held_out_physical_performance_plateau")
         clearly_degrading = finite and all(
             left - right >= 0.05 for left, right in zip(scores, scores[1:])
         ) and all(

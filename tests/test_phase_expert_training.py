@@ -622,8 +622,8 @@ def test_phase_u_physical_evaluation_summary_reports_progress_safety_and_reward_
     assert report["reward_component_mean_sums"] == {"ascent_progress": 2.0}
 
 
-def test_phase_u_checkpoint_gate_pauses_only_on_severe_saturation_or_repeated_degradation():
-    """Low early success is allowed, while explicit hacking/degradation evidence pauses."""
+def test_phase_u_checkpoint_gate_pauses_on_plateau_saturation_or_repeated_degradation():
+    """One low checkpoint is allowed, while three flat physical windows pause."""
     module = _module()
 
     def report(score, episode_return, saturation=0.0):
@@ -645,6 +645,16 @@ def test_phase_u_checkpoint_gate_pauses_only_on_severe_saturation_or_repeated_de
     assert module.evaluate_phase_u_checkpoint_gate([report(0.0, -10.0)]) == {
         "pause": False,
         "reasons": [],
+    }
+    assert module.evaluate_phase_u_checkpoint_gate(
+        [report(0.0, -4.0), report(0.0, -3.9)]
+    ) == {"pause": False, "reasons": []}
+    plateau = module.evaluate_phase_u_checkpoint_gate(
+        [report(0.0, -4.0), report(0.0, -3.9), report(0.0, -3.3)]
+    )
+    assert plateau == {
+        "pause": True,
+        "reasons": ["held_out_physical_performance_plateau"],
     }
     severe = module.evaluate_phase_u_checkpoint_gate(
         [report(0.1, 0.0, saturation=0.99)]
