@@ -9,6 +9,7 @@ from dvgc.phase_candidate_acquisition import (
     AcquisitionParentSummary,
     build_continuation_branch_provenance,
     build_provisional_continuation_label,
+    classify_phase_u_candidate_strata,
     evaluate_candidate_acquisition_gate,
     require_candidate_acquisition_integrity,
 )
@@ -201,6 +202,7 @@ def test_online_acquisition_records_the_next_action_that_parent_actually_applies
             self._thresholds = SimpleNamespace(
                 apex=SimpleNamespace(
                     max_abs_roll=0.5,
+                    max_abs_pitch=0.4,
                     min_clearance=0.1,
                     min_forward_velocity=1.0,
                     max_abs_com_vz=0.2,
@@ -254,6 +256,7 @@ def test_online_acquisition_records_the_next_action_that_parent_actually_applies
             return (
                 SimpleNamespace(
                     roll=0.0,
+                    pitch=0.0,
                     clearance=0.2,
                     forward_velocity=2.0,
                     com_vz=0.1,
@@ -295,3 +298,111 @@ def test_online_acquisition_records_the_next_action_that_parent_actually_applies
     assert np.array_equal(window["policy_action_t"], environment.applied[1])
     ids = [record["id"] for record in result.records]
     assert len(ids) == len(set(ids))
+
+
+def test_terminal_failure_candidate_is_labeled_without_illegal_forward_rollout(monkeypatch):
+    """An already failed physical state is continuation-infeasible at zero extra ticks."""
+    import dvgc.phase_candidate_acquisition as acquisition
+    import dvgc.runtime as runtime
+
+    monkeypatch.setattr(
+        runtime,
+        "build_inference",
+        lambda *_args, **_kwargs: (lambda *_inner: (_ for _ in ()).throw(
+            AssertionError("terminal candidate must not invoke policy")
+        )),
+    )
+    record = {
+        "candidate_acquisition": {
+            "terminal_outcome": "physical_failure",
+        },
+        "two_phase_context": {
+            "termination_reason": "end_code_4",
+        },
+    }
+
+    labeled, transitions = acquisition.probe_phase_u_continuations(
+        environment=object(),
+        params=object(),
+        records=(record,),
+        seeds=(99,),
+        horizon=10,
+        source_policy_hash="a" * 64,
+        protocol_hash="b" * 64,
+        seed_namespace="phase_u_checkpoint_continuation_v1",
+    )
+
+    assert transitions == 0
+    assert labeled[0]["continuation_label"]["outcome_counts"] == {
+        "success": 0,
+        "physical_failure": 1,
+        "timeout": 0,
+        "other_failure": 0,
+    }
+
+
+def test_physical_strata_cover_propulsion_mistiming_attitude_and_apex_boundaries():
+    thresholds = SimpleNamespace(
+        max_abs_roll=0.5,
+        max_abs_pitch=0.4,
+        min_clearance=0.1,
+        min_forward_velocity=1.0,
+        max_abs_com_vz=0.2,
+    )
+    signals = SimpleNamespace(
+        roll=0.0,
+        pitch=0.35,
+        clearance=0.05,
+        forward_velocity=0.5,
+        com_vz=0.1,
+    )
+    propulsion = classify_phase_u_candidate_strata(
+        events={
+            "jump_window_entered": True,
+            "liftoff_seen": False,
+            "stable_airborne": False,
+            "ascending": False,
+            "apex_band_entered": False,
+        },
+        signals=signals,
+        thresholds=thresholds,
+        window_active=True,
+    )
+    assert set(propulsion) >= {
+        "propulsion",
+        "high_attitude",
+        "low_clearance",
+        "low_forward_speed",
+    }
+    early = classify_phase_u_candidate_strata(
+        events={
+            "jump_window_entered": False,
+            "liftoff_seen": False,
+            "stable_airborne": False,
+            "ascending": False,
+            "apex_band_entered": False,
+        },
+        signals=signals,
+        thresholds=thresholds,
+        window_active=False,
+    )
+    assert "too_early_ascent" in early
+    boundary = classify_phase_u_candidate_strata(
+        events={
+            "jump_window_entered": True,
+            "liftoff_seen": True,
+            "stable_airborne": True,
+            "ascending": True,
+            "apex_band_entered": False,
+        },
+        signals=SimpleNamespace(
+            roll=0.0,
+            pitch=0.0,
+            clearance=0.2,
+            forward_velocity=2.0,
+            com_vz=0.1,
+        ),
+        thresholds=thresholds,
+        window_active=False,
+    )
+    assert set(boundary) >= {"apex_band_boundary", "near_success"}

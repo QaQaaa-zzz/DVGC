@@ -73,7 +73,7 @@ def validate_phase_snapshot(record: Mapping[str, Any], **v4_validation_inputs: A
     position_valid = (
         position in ("pre", "nearest", "post")
         if has_apex_event
-        else position in ("pre", "event", "nearest", "post")
+        else position in ("pre", "event")
     )
     time_index = context.get("time_index")
     time_index_valid = (

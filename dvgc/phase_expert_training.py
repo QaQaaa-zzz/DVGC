@@ -66,15 +66,21 @@ _PHASE_EXPERT_SOURCE_PATHS = (
     "configs/phase_expert_phase_u.json",
     "configs/phase_expert_smoke.json",
     "dvgc/config.py",
+    "dvgc/bank.py",
     "dvgc/env.py",
+    "dvgc/feasibility.py",
+    "dvgc/observation_audit.py",
     "dvgc/phase_expert_training.py",
     "dvgc/phase_candidate_acquisition.py",
     "dvgc/rewards.py",
+    "dvgc/rollout.py",
     "dvgc/runtime.py",
+    "dvgc/snapshot_timing.py",
     "dvgc/training_budget.py",
     "dvgc/two_phase_guideline.py",
     "dvgc/two_phase_runtime.py",
     "dvgc/two_phase_semantics.py",
+    "dvgc/wrappers.py",
     "cli/train_phase_expert.py",
 )
 
@@ -1789,10 +1795,7 @@ def validate_phase_expert_run_spec(
     cumulative_training_end = (
         cumulative_training_start + interaction.training.effective_total_transitions
     )
-    if (
-        spec.experiment_level == "formal_expert"
-        and cumulative_training_end > 1_000_000
-    ):
+    if cumulative_training_end > 1_000_000:
         raise ValueError("cumulative Phase U training exceeds 1,000,000 transitions")
     authorization = (
         None
@@ -2604,6 +2607,25 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
         _, params, final_metrics = train_fn(
             environment=environment, progress_fn=progress, eval_env=environment
         )
+        checkpoints = [
+            path
+            for path in (root / "orbax").iterdir()
+            if path.is_dir() and any(candidate.is_file() for candidate in path.rglob("*"))
+        ] if (root / "orbax").is_dir() else []
+        if not formal:
+            if not checkpoints:
+                raise RuntimeError("smoke training completed without a checkpoint")
+            checkpoint_contract = _checkpoint_contract(
+                validated,
+                training_config,
+                cumulative_transitions=(
+                    validated.cumulative_training_start
+                    + validated.interaction_budget.training.effective_total_transitions
+                ),
+                parent_checkpoint=validated.spec.restore_checkpoint,
+            )
+            for checkpoint in checkpoints:
+                write_phase_expert_checkpoint_sidecar(checkpoint, checkpoint_contract)
         if formal:
             if tracker.claimed_effective != tuple(
                 milestone.effective for milestone in milestones
@@ -2633,23 +2655,6 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
             if fixed_evaluation_transitions - fixed_before != fixed_transitions:
                 raise RuntimeError("fixed evaluation interaction accounting drift")
             _write_json_atomic(root / "fixed_evaluation.json", evaluation)
-        checkpoints = [
-            path
-            for path in (root / "orbax").iterdir()
-            if path.is_dir() and any(candidate.is_file() for candidate in path.rglob("*"))
-        ] if (root / "orbax").is_dir() else []
-        if not formal:
-            checkpoint_contract = _checkpoint_contract(
-                validated,
-                training_config,
-                cumulative_transitions=(
-                    validated.cumulative_training_start
-                    + validated.interaction_budget.training.effective_total_transitions
-                ),
-                parent_checkpoint=validated.spec.restore_checkpoint,
-            )
-            for checkpoint in checkpoints:
-                write_phase_expert_checkpoint_sidecar(checkpoint, checkpoint_contract)
         actual_interactions = completed_phase_expert_interaction_accounting(
             validated.interaction_budget,
             fixed_evaluation_transitions=fixed_transitions,

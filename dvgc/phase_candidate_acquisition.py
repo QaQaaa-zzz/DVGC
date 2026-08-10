@@ -204,6 +204,56 @@ def pytree_sha256(value: Any) -> str:
     return digest.hexdigest()
 
 
+def classify_phase_u_candidate_strata(
+    *,
+    events: Mapping[str, bool],
+    signals: Any,
+    thresholds: Any,
+    window_active: bool,
+) -> tuple[str, ...]:
+    """Classify explicit task, outcome-boundary, and mistiming strata."""
+    strata: list[str] = []
+    window_entered = bool(events.get("jump_window_entered"))
+    liftoff = bool(events.get("liftoff_seen"))
+    stable_airborne = bool(events.get("stable_airborne"))
+    ascending = bool(events.get("ascending"))
+    apex = bool(events.get("apex_band_entered"))
+    if window_entered and not liftoff:
+        strata.append("propulsion")
+    if (
+        abs(float(signals.roll)) >= 0.8 * thresholds.max_abs_roll
+        or abs(float(signals.pitch)) >= 0.8 * thresholds.max_abs_pitch
+    ):
+        strata.append("high_attitude")
+    if window_entered and float(signals.clearance) < thresholds.min_clearance:
+        strata.append("low_clearance")
+    if (
+        window_entered
+        and float(signals.forward_velocity) < thresholds.min_forward_velocity
+    ):
+        strata.append("low_forward_speed")
+    if not window_entered and float(signals.com_vz) > 0.0:
+        strata.append("too_early_ascent")
+    if window_entered and not window_active and not ascending:
+        strata.append("too_late_ascent")
+    if (
+        stable_airborne
+        and ascending
+        and abs(float(signals.com_vz)) <= 1.5 * thresholds.max_abs_com_vz
+        and not apex
+    ):
+        strata.append("apex_band_boundary")
+    if (
+        stable_airborne
+        and ascending
+        and float(signals.clearance) >= thresholds.min_clearance
+        and float(signals.forward_velocity) >= thresholds.min_forward_velocity
+        and not apex
+    ):
+        strata.append("near_success")
+    return tuple(strata)
+
+
 def _trajectory_hash(states: Sequence[tuple[np.ndarray, np.ndarray]]) -> str:
     digest = hashlib.sha256()
     for qpos, qvel in states:
@@ -311,6 +361,16 @@ def acquire_phase_u_candidate_parents(
                 record["candidate_acquisition"] = {
                     "status": "unlabeled_candidate",
                     "stratum": stratum,
+                    "terminal_outcome": (
+                        "physical_failure"
+                        if terminated and str(termination_reason).startswith("end_code_")
+                        and bool(current_state.info["phase_expert/physical_failure"])
+                        else "other_failure"
+                        if terminated
+                        else "timeout"
+                        if truncated
+                        else None
+                    ),
                     "policy_dependent_label": None,
                     "tube_membership": False,
                     "certified_safe": False,
@@ -465,42 +525,26 @@ def acquire_phase_u_candidate_parents(
             )
             apex_host = jax.device_get(apex_signals)
             apex_thresholds = environment._thresholds.apex
-            if abs(float(apex_host.roll)) >= 0.8 * apex_thresholds.max_abs_roll:
-                append_stratum(current_record, "high_roll")
-            if events["jump_window_entered"] and float(apex_host.clearance) < apex_thresholds.min_clearance:
-                append_stratum(current_record, "low_clearance")
-            if events["jump_window_entered"] and float(apex_host.forward_velocity) < apex_thresholds.min_forward_velocity:
-                append_stratum(current_record, "low_forward_speed")
-            if events["ascending"] and not events["jump_window_entered"]:
-                append_stratum(current_record, "too_early_ascent")
-            if (
-                events["jump_window_entered"]
-                and not bool(environment._window_active(state))
-                and not events["ascending"]
-            ):
-                append_stratum(current_record, "too_late_ascent")
-            if (
-                events["stable_airborne"]
-                and events["ascending"]
-                and abs(float(apex_host.com_vz))
-                <= 1.5 * apex_thresholds.max_abs_com_vz
-                and not events["apex_band_entered"]
+            for physical_stratum in classify_phase_u_candidate_strata(
+                events=events,
+                signals=apex_host,
+                thresholds=apex_thresholds,
+                window_active=bool(environment._window_active(state)),
             ):
                 append_stratum(
                     current_record,
-                    "apex_band_boundary",
-                    event_name="apex_band_entered",
-                    event_position="pre",
+                    physical_stratum,
+                    event_name=(
+                        "apex_band_entered"
+                        if physical_stratum == "apex_band_boundary"
+                        else None
+                    ),
+                    event_position=(
+                        "pre"
+                        if physical_stratum == "apex_band_boundary"
+                        else None
+                    ),
                 )
-            if (
-                events["stable_airborne"]
-                and events["ascending"]
-                and float(apex_host.clearance) >= apex_thresholds.min_clearance
-                and float(apex_host.forward_velocity)
-                >= apex_thresholds.min_forward_velocity
-                and not events["apex_band_entered"]
-            ):
-                append_stratum(current_record, "near_success")
             if events["apex_band_entered"] and not previous_events["apex_band_entered"]:
                 success = True
                 append_stratum(
@@ -581,12 +625,41 @@ def probe_phase_u_continuations(
         raise ValueError("continuation records and seeds must have equal length")
     if isinstance(horizon, bool) or not isinstance(horizon, int) or horizon <= 0:
         raise ValueError("continuation horizon must be positive")
-    inference = build_inference(environment, params, deterministic=False)
-    step = jax.jit(environment.step)
+    inference = None
+    step = None
     labeled: list[Mapping[str, Any]] = []
     transitions = 0
     for record_value, seed in zip(records, seeds, strict=True):
         record = copy.deepcopy(dict(record_value))
+        acquisition = record.get("candidate_acquisition")
+        terminal_outcome = (
+            acquisition.get("terminal_outcome")
+            if isinstance(acquisition, Mapping)
+            else None
+        )
+        if terminal_outcome in {"physical_failure", "timeout", "other_failure"}:
+            reason = str(
+                record.get("two_phase_context", {}).get(
+                    "termination_reason", "candidate_terminal_state"
+                )
+            )
+            record["continuation_label"] = build_provisional_continuation_label(
+                ({"outcome": terminal_outcome, "termination_reason": reason},),
+                phase="propulsion_ascent",
+                source_policy_hash=source_policy_hash,
+                protocol_hash=protocol_hash,
+            )
+            record["continuation_provenance"] = build_continuation_branch_provenance(
+                seed=int(seed),
+                seed_namespace=seed_namespace,
+                source_policy_hash=source_policy_hash,
+                protocol_hash=protocol_hash,
+            )
+            labeled.append(record)
+            continue
+        if inference is None or step is None:
+            inference = build_inference(environment, params, deterministic=False)
+            step = jax.jit(environment.step)
         saved_event = record.get("two_phase_event_state")
         if not isinstance(saved_event, Mapping) or set(saved_event) != set(
             TwoPhaseEventState._fields
