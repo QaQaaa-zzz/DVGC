@@ -381,6 +381,20 @@ def test_smoke_config_locks_base_mode_cost_stops_rewards_and_disjoint_determinis
     }
     assert "stop_after_brax_evaluation_ceiling" in config["stopping_conditions"]
     assert "stop_after_combined_interaction_ceiling" in config["stopping_conditions"]
+    reward_config = module.resolve_phase_u_reward_config(config)
+    assert reward_config == module.PhaseURewardConfig(
+        **config["phase_u_reward"], **config["reward_bounds"]
+    )
+    reward_hash = module.phase_u_reward_contract_hash(config)
+    changed = config | {
+        "phase_u_reward": config["phase_u_reward"]
+        | {"ascent_progress_weight": 3.5}
+    }
+    assert module.phase_u_reward_contract_hash(changed) != reward_hash
+    missing = config | {"phase_u_reward": dict(config["phase_u_reward"])}
+    missing["phase_u_reward"].pop("clearance_progress_weight")
+    with pytest.raises(ValueError, match="phase_u_reward"):
+        module.resolve_phase_u_reward_config(missing)
     with pytest.raises(ValueError, match="adapter ownership"):
         module.resolve_gate_c1_base_mode(
             config | {"adapter_ownership": config["adapter_ownership"] | {"done": False}}
@@ -632,13 +646,119 @@ def test_pre_window_takeoff_and_apex_progress_rewards_are_zero_even_when_airborn
         _adapter_thresholds().apex,
         jp.asarray(False),
         jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
         jp.zeros((8,)),
         jp.zeros((8,)),
         module.PhaseURewardConfig(),
     )
-    assert float(components["takeoff_ascent_progress"]) == 0.0
-    assert float(components["apex_progress"]) == 0.0
+    assert set(components) == {
+        "forward_propulsion",
+        "jump_window_progress",
+        "ascent_progress",
+        "clearance_progress",
+        "apex_approach",
+        "apex_success_bonus",
+        "attitude_penalty",
+        "angular_rate_penalty",
+        "illegal_contact_penalty",
+        "action_smoothness_penalty",
+        "action_magnitude_penalty",
+        "physical_failure_penalty",
+        "task_failure_penalty",
+    }
+    assert float(components["jump_window_progress"]) == 0.0
+    assert float(components["ascent_progress"]) == 0.0
+    assert float(components["clearance_progress"]) == 0.0
+    assert float(components["apex_approach"]) == 0.0
+    assert float(components["apex_success_bonus"]) == 0.0
     assert float(components["forward_propulsion"]) > 0.0
+
+
+def test_post_window_reward_has_bounded_physical_progress_and_independent_penalties():
+    """Removing any physical term or combining failure causes must break the reward audit."""
+    module = _module()
+    thresholds = _adapter_thresholds().apex
+    signals = ApexBandSignals(
+        stable_airborne=jp.asarray(True),
+        com_vz=jp.asarray(1.0),
+        clearance=jp.asarray(0.2),
+        roll=jp.asarray(0.0),
+        pitch=jp.asarray(0.0),
+        angular_speed=jp.asarray(0.0),
+        forward_velocity=jp.asarray(3.75),
+        obstacle_relative_x=jp.asarray(0.0),
+        illegal_contact=jp.asarray(False),
+        physical_failure=jp.asarray(False),
+    )
+    components = jax.jit(module.phase_u_reward_components)(
+        signals,
+        thresholds,
+        jp.asarray(True),
+        jp.asarray(True),
+        jp.asarray(True),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.ones((8,), jp.float32),
+        jp.zeros((8,), jp.float32),
+        module.PhaseURewardConfig(),
+    )
+    assert float(components["jump_window_progress"]) == pytest.approx(2.0)
+    assert float(components["ascent_progress"]) == pytest.approx(4.0)
+    assert float(components["clearance_progress"]) == pytest.approx(2.0)
+    assert 0.0 < float(components["apex_approach"]) <= 2.0
+    assert float(components["action_smoothness_penalty"]) == pytest.approx(-0.02)
+    assert float(components["action_magnitude_penalty"]) == pytest.approx(-0.005)
+    assert float(components["physical_failure_penalty"]) == 0.0
+    assert float(components["task_failure_penalty"]) == 0.0
+    assert all(bool(jp.isfinite(value)) for value in components.values())
+
+    unsafe = replace(
+        signals,
+        roll=jp.asarray(1.0),
+        pitch=jp.asarray(-1.0),
+        angular_speed=jp.asarray(2.0),
+        illegal_contact=jp.asarray(True),
+        physical_failure=jp.asarray(True),
+    )
+    penalties = module.phase_u_reward_components(
+        unsafe,
+        thresholds,
+        jp.asarray(True),
+        jp.asarray(False),
+        jp.asarray(True),
+        jp.asarray(False),
+        jp.asarray(True),
+        jp.asarray(True),
+        jp.zeros((8,), jp.float32),
+        jp.zeros((8,), jp.float32),
+        module.PhaseURewardConfig(),
+    )
+    assert float(penalties["attitude_penalty"]) == pytest.approx(-0.5)
+    assert float(penalties["angular_rate_penalty"]) == pytest.approx(-0.25)
+    assert float(penalties["illegal_contact_penalty"]) == pytest.approx(-20.0)
+    assert float(penalties["physical_failure_penalty"]) == pytest.approx(-20.0)
+    assert float(penalties["task_failure_penalty"]) == pytest.approx(-20.0)
+
+
+def test_reward_component_metrics_exist_at_reset_and_remain_static_through_step():
+    """Brax drops episode metrics if reset and step publish different component keys."""
+    adapter = _adapter(_module())
+    reset = jax.jit(adapter.reset)(jax.random.PRNGKey(31))
+    stepped = jax.jit(adapter.step)(
+        reset, jp.asarray([1, 1, 0, 0.5, 0.2, 0.0, 0, 1], jp.float32)
+    )
+    keys = {
+        key for key in reset.metrics if key.startswith("phase_expert/reward_component/")
+    }
+    assert len(keys) == 13
+    assert keys == {
+        key for key in stepped.metrics if key.startswith("phase_expert/reward_component/")
+    }
+    assert all(float(reset.metrics[key]) == 0.0 for key in keys)
 
 
 def test_adapter_reconstructs_runtime_window_from_latch_root_x_and_end_x():

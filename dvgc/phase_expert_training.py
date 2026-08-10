@@ -36,7 +36,6 @@ from .two_phase_semantics import (
     ApexBandSignals,
     ApexBandThresholds,
     RecoveryThresholds,
-    apex_band_components,
 )
 
 
@@ -64,6 +63,7 @@ _BASE_MODE = MappingProxyType(
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 _PHASE_EXPERT_SOURCE_PATHS = (
     "configs/default.json",
+    "configs/phase_expert_phase_u.json",
     "configs/phase_expert_smoke.json",
     "dvgc/config.py",
     "dvgc/env.py",
@@ -142,25 +142,40 @@ class ValidatedPhaseExpertRunSpec:
 class PhaseURewardConfig:
     """Bounded Phase U reward terms with task progress gated by the window."""
 
-    forward_propulsion_weight: float = 0.25
-    takeoff_ascent_weight: float = 1.0
-    apex_progress_weight: float = 1.0
+    forward_propulsion_weight: float = 0.5
+    jump_window_progress_weight: float = 2.0
+    ascent_progress_weight: float = 4.0
+    clearance_progress_weight: float = 2.0
+    apex_approach_weight: float = 2.0
+    attitude_penalty_weight: float = 0.5
+    angular_rate_penalty_weight: float = 0.25
+    illegal_contact_penalty_weight: float = 20.0
     action_smoothness_weight: float = 0.02
+    action_magnitude_weight: float = 0.005
     success_bonus: float = 30.0
-    failure_penalty: float = 20.0
-    target_forward_velocity: float = 2.0
+    physical_failure_penalty: float = 20.0
+    task_failure_penalty: float = 20.0
+    target_forward_velocity: float = 3.75
     target_vertical_velocity: float = 1.0
+    clearance_floor: float = -0.30
     total_min: float = -50.0
     total_max: float = 50.0
 
     def __post_init__(self) -> None:
         for name in (
             "forward_propulsion_weight",
-            "takeoff_ascent_weight",
-            "apex_progress_weight",
+            "jump_window_progress_weight",
+            "ascent_progress_weight",
+            "clearance_progress_weight",
+            "apex_approach_weight",
+            "attitude_penalty_weight",
+            "angular_rate_penalty_weight",
+            "illegal_contact_penalty_weight",
             "action_smoothness_weight",
+            "action_magnitude_weight",
             "success_bonus",
-            "failure_penalty",
+            "physical_failure_penalty",
+            "task_failure_penalty",
             "target_forward_velocity",
             "target_vertical_velocity",
         ):
@@ -169,6 +184,8 @@ class PhaseURewardConfig:
                 raise ValueError(f"{name} must be finite and non-negative")
         if not math.isfinite(self.total_min) or not math.isfinite(self.total_max):
             raise ValueError("reward bounds must be finite")
+        if not math.isfinite(self.clearance_floor):
+            raise ValueError("clearance_floor must be finite")
         if self.total_min >= self.total_max:
             raise ValueError("total_min must be less than total_max")
 
@@ -184,44 +201,164 @@ for _jax_dataclass in (ApexBandThresholds, PhaseURewardConfig):
         pass
 
 
+def resolve_phase_u_reward_config(
+    training_config: Mapping[str, Any],
+) -> PhaseURewardConfig:
+    payload = training_config.get("phase_u_reward")
+    bounds = training_config.get("reward_bounds")
+    if not isinstance(payload, Mapping) or not isinstance(bounds, Mapping):
+        raise ValueError("phase_u_reward and reward_bounds mappings are required")
+    expected = {
+        field.name
+        for field in dataclass_fields(PhaseURewardConfig)
+        if field.name not in {"total_min", "total_max"}
+    }
+    if set(payload) != expected:
+        raise ValueError(
+            "phase_u_reward must define exactly the approved reward fields"
+        )
+    if set(bounds) != {"total_min", "total_max"}:
+        raise ValueError("reward_bounds must define total_min and total_max")
+    return PhaseURewardConfig(**dict(payload), **dict(bounds))
+
+
+def phase_u_reward_contract_hash(training_config: Mapping[str, Any]) -> str:
+    return _canonical_payload_hash(asdict(resolve_phase_u_reward_config(training_config)))
+
+
+_PHASE_U_REWARD_COMPONENTS = (
+    "forward_propulsion",
+    "jump_window_progress",
+    "ascent_progress",
+    "clearance_progress",
+    "apex_approach",
+    "apex_success_bonus",
+    "attitude_penalty",
+    "angular_rate_penalty",
+    "illegal_contact_penalty",
+    "action_smoothness_penalty",
+    "action_magnitude_penalty",
+    "physical_failure_penalty",
+    "task_failure_penalty",
+)
+
+
+def _interval_proximity(value: Any, lower: float, upper: float) -> Any:
+    width = jp.maximum(jp.asarray(upper - lower), 1.0e-6)
+    distance = jp.maximum(lower - value, jp.maximum(value - upper, 0.0))
+    return jp.clip(1.0 - distance / width, 0.0, 1.0)
+
+
 def phase_u_reward_components(
     signals: ApexBandSignals,
     thresholds: ApexBandThresholds,
-    window_active: Any,
+    legal_window_entered: Any,
+    window_entry_transition: Any,
+    apex_eligible: Any,
     success_transition: Any,
+    physical_failure: Any,
+    task_failure: Any,
     action: Any,
     last_action: Any,
     config: PhaseURewardConfig,
 ) -> dict[str, Any]:
-    """Return bounded Phase U terms; airborne progress is zero before the window."""
-    window = jp.asarray(window_active, dtype=bool)
+    """Return bounded observable Phase U terms with monotonic legal-window gating."""
+    window = jp.asarray(legal_window_entered, dtype=bool)
     forward_scale = jp.maximum(config.target_forward_velocity, 1.0e-6)
     vertical_scale = jp.maximum(config.target_vertical_velocity, 1.0e-6)
     forward = config.forward_propulsion_weight * jp.clip(
         jp.asarray(signals.forward_velocity) / forward_scale, 0.0, 1.0
     )
-    takeoff = config.takeoff_ascent_weight * jp.where(
+    ascent = config.ascent_progress_weight * jp.where(
         window,
         jp.clip(jp.asarray(signals.com_vz) / vertical_scale, 0.0, 1.0),
         0.0,
     )
-    components = apex_band_components(signals, thresholds)
-    apex_fraction = jp.mean(
-        jp.stack([jp.asarray(value, jp.float32) for value in components.values()])
+    clearance_denominator = jp.maximum(
+        thresholds.min_clearance - config.clearance_floor, 1.0e-6
     )
-    apex_progress = config.apex_progress_weight * jp.where(
-        window, apex_fraction, 0.0
+    clearance = config.clearance_progress_weight * jp.where(
+        window,
+        jp.clip(
+            (jp.asarray(signals.clearance) - config.clearance_floor)
+            / clearance_denominator,
+            0.0,
+            1.0,
+        ),
+        0.0,
+    )
+    apex_scores = jp.stack(
+        [
+            jp.clip(
+                1.0
+                - jp.abs(jp.asarray(signals.com_vz))
+                / thresholds.max_abs_com_vz,
+                0.0,
+                1.0,
+            ),
+            jp.clip(
+                jp.asarray(signals.clearance) / thresholds.min_clearance,
+                0.0,
+                1.0,
+            ),
+            jp.clip(1.0 - jp.abs(signals.roll) / thresholds.max_abs_roll, 0.0, 1.0),
+            jp.clip(1.0 - jp.abs(signals.pitch) / thresholds.max_abs_pitch, 0.0, 1.0),
+            jp.clip(
+                1.0 - signals.angular_speed / thresholds.max_angular_speed,
+                0.0,
+                1.0,
+            ),
+            jp.clip(
+                signals.forward_velocity / thresholds.min_forward_velocity,
+                0.0,
+                1.0,
+            ),
+            _interval_proximity(
+                signals.obstacle_relative_x,
+                thresholds.relative_x_min,
+                thresholds.relative_x_max,
+            ),
+        ]
+    )
+    apex_approach = config.apex_approach_weight * jp.where(
+        window & jp.asarray(apex_eligible, dtype=bool), jp.mean(apex_scores), 0.0
+    )
+    attitude = -config.attitude_penalty_weight * jp.mean(
+        jp.stack(
+            [
+                jp.clip(jp.abs(signals.roll) / thresholds.max_abs_roll, 0.0, 1.0),
+                jp.clip(jp.abs(signals.pitch) / thresholds.max_abs_pitch, 0.0, 1.0),
+            ]
+        )
+    )
+    angular_rate = -config.angular_rate_penalty_weight * jp.clip(
+        signals.angular_speed / thresholds.max_angular_speed, 0.0, 1.0
     )
     smoothness = -config.action_smoothness_weight * jp.mean(
         jp.square(jp.asarray(action) - jp.asarray(last_action))
     )
+    magnitude = -config.action_magnitude_weight * jp.mean(
+        jp.square(jp.clip(jp.asarray(action), -1.0, 1.0))
+    )
     return {
         "forward_propulsion": forward,
-        "takeoff_ascent_progress": takeoff,
-        "apex_progress": apex_progress,
-        "action_smoothness": smoothness,
-        "success_bonus": config.success_bonus
+        "jump_window_progress": config.jump_window_progress_weight
+        * jp.asarray(window_entry_transition, jp.float32),
+        "ascent_progress": ascent,
+        "clearance_progress": clearance,
+        "apex_approach": apex_approach,
+        "apex_success_bonus": config.success_bonus
         * jp.asarray(success_transition, jp.float32),
+        "attitude_penalty": attitude,
+        "angular_rate_penalty": angular_rate,
+        "illegal_contact_penalty": -config.illegal_contact_penalty_weight
+        * jp.asarray(signals.illegal_contact, jp.float32),
+        "action_smoothness_penalty": smoothness,
+        "action_magnitude_penalty": magnitude,
+        "physical_failure_penalty": -config.physical_failure_penalty
+        * jp.asarray(physical_failure, jp.float32),
+        "task_failure_penalty": -config.task_failure_penalty
+        * jp.asarray(task_failure, jp.float32),
     }
 
 
@@ -302,8 +439,17 @@ class PhaseExpertEnvAdapter:
 
     @staticmethod
     def _metrics(
-        *, reward: Any, success: Any, physical: Any, task: Any, timeout: Any
+        *,
+        reward: Any,
+        success: Any,
+        physical: Any,
+        task: Any,
+        timeout: Any,
+        reward_components: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
+        components = reward_components or {
+            name: jp.asarray(0.0, jp.float32) for name in _PHASE_U_REWARD_COMPONENTS
+        }
         return {
             "reward": jp.asarray(reward),
             "phase_expert/reward": jp.asarray(reward),
@@ -311,6 +457,10 @@ class PhaseExpertEnvAdapter:
             "phase_expert/physical_failure": jp.asarray(physical, jp.float32),
             "phase_expert/task_failure": jp.asarray(task, jp.float32),
             "phase_expert/timeout": jp.asarray(timeout, jp.float32),
+            **{
+                f"phase_expert/reward_component/{name}": jp.asarray(value)
+                for name, value in components.items()
+            },
         }
 
     def reset(self, rng: Any) -> Any:
@@ -376,6 +526,9 @@ class PhaseExpertEnvAdapter:
             event.apex_band_entered
         )
         success = jp.asarray(event.apex_band_entered)
+        window_entry_transition = ~jp.asarray(previous.jump_window_entered) & jp.asarray(
+            event.jump_window_entered
+        )
         physical = _contains_end_code(
             raw.info["end_code"], _PHASE_U_PHYSICAL_FAILURE_END_CODES
         )
@@ -388,15 +541,17 @@ class PhaseExpertEnvAdapter:
         reward_terms = phase_u_reward_components(
             apex,
             self._thresholds.apex,
-            self._window_active(raw),
+            event.jump_window_entered,
+            window_entry_transition,
+            jp.asarray(event.stable_airborne) & jp.asarray(event.ascending),
             success_transition,
+            physical,
+            task,
             action,
             previous_action,
             self._reward_config,
         )
-        reward = sum(reward_terms.values()) - self._reward_config.failure_penalty * (
-            physical | task
-        ).astype(jp.float32)
+        reward = sum(reward_terms.values())
         reward = jp.clip(
             reward, self._reward_config.total_min, self._reward_config.total_max
         )
@@ -418,6 +573,7 @@ class PhaseExpertEnvAdapter:
                 physical=physical,
                 task=task,
                 timeout=timeout,
+                reward_components=reward_terms,
             ),
             info=info,
         )
@@ -1111,9 +1267,7 @@ def validate_phase_expert_run_spec(
         expected_resume = {
             "phase": spec.phase,
             "xml_sha256": AUTHORITATIVE_XML_SHA256,
-            "reward_contract_hash": _canonical_payload_hash(
-                training_config.get("reward_bounds", {})
-            ),
+            "reward_contract_hash": phase_u_reward_contract_hash(training_config),
             "evaluation_contract_hash": _canonical_payload_hash(
                 training_config.get("evaluation", {})
             ),
@@ -1171,10 +1325,7 @@ def build_phase_expert_environment(
     config = load_config(validated.spec.config_path, overrides)
     base = OrangeBikeDVGC(config, snapshot_bank=SnapshotBank())
     geometry = build_two_phase_geometry(base.mj_model, config)
-    bounds = training_config["reward_bounds"]
-    reward_config = PhaseURewardConfig(
-        total_min=float(bounds["total_min"]), total_max=float(bounds["total_max"])
-    )
+    reward_config = resolve_phase_u_reward_config(training_config)
     return PhaseExpertEnvAdapter(
         base,
         geometry=geometry,
@@ -1357,9 +1508,7 @@ def _checkpoint_contract(
         "full_training_state": True,
         "prng_lineage": f"{validated.seeds.training_namespace}:{validated.spec.seed}",
         "reset_contract_hash": _canonical_payload_hash(dict(_BASE_MODE)),
-        "reward_contract_hash": _canonical_payload_hash(
-            training_config.get("reward_bounds", {})
-        ),
+        "reward_contract_hash": phase_u_reward_contract_hash(training_config),
         "evaluation_contract_hash": _canonical_payload_hash(
             training_config.get("evaluation", {})
         ),
@@ -1393,13 +1542,7 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
     )
     layout = training_config["ppo_layout"]
     optimization = training_config["optimization"]
-    reward_bounds = training_config["reward_bounds"]
-    reward_contract = asdict(
-        PhaseURewardConfig(
-            total_min=float(reward_bounds["total_min"]),
-            total_max=float(reward_bounds["total_max"]),
-        )
-    )
+    reward_contract = asdict(resolve_phase_u_reward_config(training_config))
     resolved_project_config = load_config(
         validated.spec.config_path,
         resolve_gate_c1_base_mode(training_config)

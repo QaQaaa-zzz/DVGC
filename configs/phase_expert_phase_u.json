@@ -6,14 +6,14 @@
     "batch_size": 16,
     "num_minibatches": 4,
     "num_updates_per_batch": 1,
-    "num_evals": 2,
+    "num_evals": 626,
     "num_eval_envs": 4
   },
   "maximum_interaction_cost": {
-    "training_transitions": 6400,
-    "brax_evaluation_transitions": 1600,
-    "fixed_evaluation_transitions": 1600,
-    "combined_transitions": 9600
+    "training_transitions": 1000000,
+    "brax_evaluation_transitions": 0,
+    "fixed_evaluation_transitions": 8000,
+    "combined_transitions": 1008000
   },
   "training_seed_namespace": "phase_u_train_v1",
   "training_seed_count": 64,
@@ -22,8 +22,10 @@
     "seeds": [910001, 910002, 910003, 910004, 910005, 910006, 910007, 910008],
     "environment_count": 8,
     "episode_horizon": 200,
-    "episodes": 1
+    "episodes": 1,
+    "deterministic_policy": true
   },
+  "checkpoint_schedule_requested": [0, 100000, 250000, 500000, 750000, 1000000],
   "checkpoint_cadence_transitions": 1600,
   "optimization": {
     "learning_rate": 0.0001,
@@ -48,11 +50,28 @@
   },
   "stopping_conditions": [
     "stop_after_requested_training_transitions",
-    "stop_after_brax_evaluation_ceiling",
     "stop_after_fixed_evaluation_ceiling",
     "stop_after_combined_interaction_ceiling",
-    "stop_on_contract_or_runtime_failure"
+    "stop_on_contract_or_runtime_failure",
+    "pause_on_repeated_held_out_degradation",
+    "pause_on_reward_hacking_or_severe_action_saturation"
   ],
+  "candidate_acquisition": {
+    "minimum_fixed_apex_successes": 1,
+    "minimum_independent_successful_parents": 8,
+    "maximum_parent_rollouts_per_checkpoint": 64,
+    "episode_horizon": 200,
+    "transition_ceiling_per_checkpoint": 12800,
+    "policy_mode": "stochastic_online"
+  },
+  "continuation_diagnostic": {
+    "enabled_after_candidate_gate": true,
+    "default_screen_branches": 1,
+    "representative_branches": 4,
+    "boundary_branch_min": 4,
+    "boundary_branch_max": 8,
+    "key_boundary_branch_max": 32
+  },
   "reward_bounds": {
     "total_min": -50.0,
     "total_max": 50.0
