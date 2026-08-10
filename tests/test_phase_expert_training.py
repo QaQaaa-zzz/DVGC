@@ -27,6 +27,10 @@ def _module():
     return importlib.import_module("dvgc.phase_expert_training")
 
 
+def _run_output(tmp_path: Path, name: str = "phase-u-smoke-17") -> str:
+    return str(Path("runs/two_phase/phase_experts") / f"{tmp_path.name}-{name}")
+
+
 def _threshold_manifest(tmp_path: Path) -> Path:
     source_paths = {
         "xml": "assets/orange_bike_4kg_horizontal.xml",
@@ -99,7 +103,7 @@ def _spec(module, tmp_path: Path, **overrides):
         "training_config_path": "configs/phase_expert_smoke.json",
         "threshold_manifest_path": str(_threshold_manifest(tmp_path)),
         "authorization_manifest_path": None,
-        "output_dir": str(tmp_path / "phase-u-smoke-17"),
+        "output_dir": _run_output(tmp_path),
         "descent_seed_bank": None,
         "descent_seed_manifest": None,
         "resume_run": None,
@@ -207,15 +211,19 @@ def test_run_spec_rejects_independent_timesteps_promoted_levels_existing_output_
     for level in ("learnability_pilot", "formal_expert"):
         with pytest.raises(ValueError, match="smoke"):
             module.validate_phase_expert_run_spec(replace(spec, experiment_level=level), preflight_only=True)
-    Path(spec.output_dir).mkdir()
-    with pytest.raises(ValueError, match="output directory"):
-        module.validate_phase_expert_run_spec(spec, preflight_only=True)
+    output_path = Path(spec.output_dir)
+    output_path.mkdir(parents=True)
+    try:
+        with pytest.raises(ValueError, match="output directory"):
+            module.validate_phase_expert_run_spec(spec, preflight_only=True)
+    finally:
+        output_path.rmdir()
 
     with pytest.raises(ValueError, match="project config"):
         module.validate_phase_expert_run_spec(
             replace(
                 spec,
-                output_dir=str(tmp_path / "config-drift"),
+                output_dir=_run_output(tmp_path, "config-drift"),
                 config_path="configs/phase_expert_smoke.json",
             ),
             preflight_only=True,
@@ -231,7 +239,7 @@ def test_run_spec_rejects_independent_timesteps_promoted_levels_existing_output_
     ):
         with pytest.raises(ValueError, match="resume"):
             module.validate_phase_expert_run_spec(
-                replace(spec, output_dir=str(tmp_path / "resume-run"), **resume_fields),
+                replace(spec, output_dir=_run_output(tmp_path, "resume-run"), **resume_fields),
                 preflight_only=True,
             )
 
@@ -240,7 +248,13 @@ def test_run_spec_rejects_independent_timesteps_promoted_levels_existing_output_
     incomplete = _write_json(tmp_path / "incomplete.json", manifest)
     with pytest.raises(ValueError, match="canonical|source hashes"):
         module.validate_phase_expert_run_spec(
-            replace(spec, output_dir=str(tmp_path / "new-run"), threshold_manifest_path=str(incomplete)),
+            replace(spec, output_dir=_run_output(tmp_path, "new-run"), threshold_manifest_path=str(incomplete)),
+            preflight_only=True,
+        )
+
+    with pytest.raises(ValueError, match="runs/two_phase/phase_experts"):
+        module.validate_phase_expert_run_spec(
+            replace(spec, output_dir=str(tmp_path / "outside-runs")),
             preflight_only=True,
         )
 
@@ -373,6 +387,8 @@ def test_threshold_loader_rejects_tampering_and_obsolete_action_or_guideline_pro
     for field, value, message in (
         ("action_mapping_version", "legacy", "action mapping"),
         ("reference_rollout_source", "guideline_open_loop_actions", "reference rollout"),
+        ("controller_provenance", "guideline open-loop action sequence", "controller provenance"),
+        ("source_category", "dynamic_controller_rollout", "source category"),
     ):
         tampered = json.loads(manifest_path.read_text(encoding="utf-8"))
         tampered[field] = value

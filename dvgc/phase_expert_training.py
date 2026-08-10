@@ -218,6 +218,10 @@ def load_phase_expert_threshold_manifest(path: str | Path) -> ResolvedThresholdM
         raise ValueError("threshold manifest action mapping does not match current configuration")
     if manifest.get("reference_rollout_source") != "kinematic_guideline_envelope":
         raise ValueError("threshold manifest reference rollout provenance is invalid")
+    if manifest.get("controller_provenance") != "kinematic guideline envelope":
+        raise ValueError("threshold manifest controller provenance is invalid")
+    if manifest.get("source_category") != "guideline_physical_envelope":
+        raise ValueError("threshold manifest source category is invalid")
     selected = manifest.get("selected_thresholds")
     if not isinstance(selected, Mapping):
         raise ValueError("threshold manifest selected thresholds are missing")
@@ -491,7 +495,15 @@ def validate_phase_expert_run_spec(
     _positive_int("requested_total_transitions", spec.requested_total_transitions)
     if isinstance(spec.seed, bool) or not isinstance(spec.seed, int):
         raise ValueError("seed must be an integer")
-    if Path(spec.output_dir).exists():
+    output_path = _resolve_repository_path(spec.output_dir)
+    required_output_parent = (
+        _REPOSITORY_ROOT / "runs" / "two_phase" / "phase_experts"
+    ).resolve()
+    if output_path.parent != required_output_parent or not output_path.name:
+        raise ValueError(
+            "output directory must be runs/two_phase/phase_experts/<run_id>"
+        )
+    if output_path.exists():
         raise ValueError("output directory must not already exist")
     if spec.resume_run is not None or spec.restore_checkpoint is not None:
         raise ValueError("exact resume is unavailable until the Gate C1 resume contract is implemented")
