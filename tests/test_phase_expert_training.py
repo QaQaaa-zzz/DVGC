@@ -571,6 +571,7 @@ def test_phase_u_adapter_reset_is_natural_audited_and_jittable_without_reference
     assert bool(state.info["phase_expert/reset_valid"])
     assert int(state.info["phase_expert/source_phase_id"]) == 0
     assert not bool(state.done)
+    assert state.done.dtype == _FakeBaseEnv().reset(jax.random.PRNGKey(0)).done.dtype
     assert jp.all(state.info["last_action"] == 0.0)
     assert state.info["obs_history"].shape == (3, 4)
     batched = jax.vmap(adapter.reset)(jax.random.split(jax.random.PRNGKey(2), 2))

@@ -342,7 +342,7 @@ class PhaseExpertEnvAdapter:
         zero = jp.asarray(0.0, jp.float32)
         return state.replace(
             reward=zero,
-            done=~reset_valid,
+            done=(~reset_valid).astype(state.done.dtype),
             metrics=self._metrics(
                 reward=zero,
                 success=False,
@@ -1408,6 +1408,7 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
     )
     _write_json_atomic(root / "resolved_config.json", resolved_project_config)
     _write_json_atomic(root / "resolved_training_config.json", training_config)
+    observed_training_progress = 0
     try:
         environment = build_phase_expert_environment(validated)
         reset_state = jax.jit(environment.reset)(jax.random.PRNGKey(validated.spec.seed))
@@ -1421,6 +1422,8 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
         )
 
         def progress(step: int, metrics: Mapping[str, Any]) -> None:
+            nonlocal observed_training_progress
+            observed_training_progress = max(observed_training_progress, int(step))
             append_phase_expert_metrics(
                 root, {"training_step": int(step), "metrics": _jsonable(metrics)}
             )
@@ -1492,6 +1495,9 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
                 "status": "gate_pause",
                 "error_type": type(exc).__name__,
                 "error": str(exc),
+                "observed_training_progress": observed_training_progress,
+                "fixed_evaluation_transitions": 0,
+                "failure_video_status": "not_applicable_without_captured_dynamic_failure_frames",
                 "promotion_authorized": False,
             },
         )
