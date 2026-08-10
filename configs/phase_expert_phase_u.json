@@ -12,8 +12,8 @@
   "maximum_interaction_cost": {
     "training_transitions": 1000000,
     "brax_evaluation_transitions": 0,
-    "fixed_evaluation_transitions": 8000,
-    "combined_transitions": 1008000
+    "fixed_evaluation_transitions": 9600,
+    "combined_transitions": 1009600
   },
   "training_seed_namespace": "phase_u_train_v1",
   "training_seed_count": 64,
@@ -23,8 +23,10 @@
     "environment_count": 8,
     "episode_horizon": 200,
     "episodes": 1,
+    "checkpoint_evaluations": 6,
     "deterministic_policy": true
   },
+  "run_brax_evaluation": false,
   "checkpoint_schedule_requested": [0, 100000, 250000, 500000, 750000, 1000000],
   "checkpoint_cadence_transitions": 1600,
   "optimization": {

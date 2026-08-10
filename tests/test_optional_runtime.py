@@ -189,6 +189,28 @@ def test_policy_network_starts_neutral_and_low_variance():
 
 
 @pytest.mark.skipif(not RUNTIME_READY, reason="The configured Brax runtime is required.")
+def test_ppo_factory_can_disable_internal_eval_and_automatic_checkpoint_writes():
+    """Per-block policy callbacks must not force 625 hidden evals or checkpoints."""
+    from dvgc.runtime import make_ppo_train_fn
+
+    train_fn = make_ppo_train_fn(
+        timesteps=1_600,
+        episode_length=200,
+        num_envs=64,
+        num_eval_envs=4,
+        num_evals=2,
+        seed=17,
+        learning_rate=1.0e-4,
+        entropy_cost=1.0e-3,
+        reward_scaling=0.1,
+        checkpoint_dir=None,
+        run_evals=False,
+    )
+    assert train_fn.keywords["run_evals"] is False
+    assert train_fn.keywords["save_checkpoint_path"] is None
+
+
+@pytest.mark.skipif(not RUNTIME_READY, reason="The configured Brax runtime is required.")
 def test_frozen_normalizer_training_state_has_zero_mean_std_drift():
     import jax.numpy as jp
     import numpy as np

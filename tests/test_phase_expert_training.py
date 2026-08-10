@@ -216,7 +216,7 @@ def test_run_spec_rejects_independent_timesteps_promoted_levels_existing_output_
 
     with pytest.raises(TypeError, match="requested_timesteps"):
         module.PhaseExpertRunSpec(**(spec.__dict__ | {"requested_timesteps": 1_600}))
-    for level in ("learnability_pilot", "formal_expert"):
+    for level in ("learnability_pilot", "formal_unified"):
         with pytest.raises(ValueError, match="smoke"):
             module.validate_phase_expert_run_spec(replace(spec, experiment_level=level), preflight_only=True)
     output_path = Path(spec.output_dir)
@@ -350,6 +350,139 @@ def test_phase_budget_has_zero_alignment_one_to_four_blocks_and_separate_combine
                 | {"combined_transitions": 8_001}
             },
         )
+
+
+def test_phase_u_requested_checkpoints_align_once_to_rollout_blocks_without_exceeding_ceiling():
+    """A checkpoint must never under-report training or silently exceed the 1M authorization."""
+    module = _module()
+    milestones = module.align_phase_u_checkpoints(
+        (0, 100_000, 250_000, 500_000, 750_000, 1_000_000),
+        rollout_block_size=1_600,
+        transition_ceiling=1_000_000,
+    )
+    assert [(item.requested, item.effective) for item in milestones] == [
+        (0, 0),
+        (100_000, 100_800),
+        (250_000, 251_200),
+        (500_000, 500_800),
+        (750_000, 750_400),
+        (1_000_000, 1_000_000),
+    ]
+    with pytest.raises(ValueError, match="strictly increasing"):
+        module.align_phase_u_checkpoints(
+            (0, 100_000, 100_000),
+            rollout_block_size=1_600,
+            transition_ceiling=1_000_000,
+        )
+    with pytest.raises(ValueError, match="ceiling"):
+        module.align_phase_u_checkpoints(
+            (0, 1_000_001),
+            rollout_block_size=1_600,
+            transition_ceiling=1_000_000,
+        )
+
+
+def test_phase_u_checkpoint_tracker_claims_each_aligned_milestone_once():
+    """Repeated Brax callbacks must not duplicate evaluation transitions or checkpoint artifacts."""
+    module = _module()
+    milestones = module.align_phase_u_checkpoints(
+        (0, 100_000, 250_000),
+        rollout_block_size=1_600,
+        transition_ceiling=300_000,
+    )
+    tracker = module.PhaseCheckpointTracker(milestones)
+    assert tracker.claim(0).requested == 0
+    assert tracker.claim(0) is None
+    assert tracker.claim(1_600) is None
+    assert tracker.claim(100_800).requested == 100_000
+    assert tracker.claim(251_200).requested == 250_000
+    assert tracker.claim(251_200) is None
+    assert tracker.claimed_effective == (0, 100_800, 251_200)
+
+
+def test_phase_u_training_level_uses_1m_cap_six_fixed_evaluations_and_no_hidden_brax_eval(tmp_path):
+    """Formal execution must account the authorized training and each checkpoint evaluation separately."""
+    module = _module()
+    config_path = "configs/phase_expert_phase_u.json"
+    config = json.loads(Path(config_path).read_text(encoding="utf-8"))
+    spec = _spec(
+        module,
+        tmp_path,
+        experiment_level="formal_expert",
+        requested_total_transitions=1_000_000,
+        training_config_path=config_path,
+        output_dir=_run_output(tmp_path, "phase-u-1m"),
+    )
+    validated = module.validate_phase_expert_run_spec(spec, preflight_only=True)
+    budget = validated.interaction_budget
+    assert budget.training.ppo_rollout_blocks == 625
+    assert budget.training.effective_total_transitions == 1_000_000
+    assert budget.brax_evaluation_transition_ceiling == 0
+    assert budget.fixed_evaluation_transition_ceiling == 9_600
+    assert budget.combined_transition_ceiling == 1_009_600
+    with pytest.raises(ValueError, match="1,000,000|ceiling"):
+        module.validate_phase_expert_run_spec(
+            replace(
+                spec,
+                requested_total_transitions=1_001_600,
+                output_dir=_run_output(tmp_path, "over-cap"),
+            ),
+            preflight_only=True,
+        )
+
+
+def test_phase_u_physical_evaluation_summary_reports_progress_safety_and_reward_terms():
+    """Return alone must not hide a policy that never lifts off or violates posture."""
+    module = _module()
+    rows = [
+        {
+            "success": True,
+            "physical_failure": False,
+            "timeout": False,
+            "jump_window_reached": True,
+            "liftoff_reached": True,
+            "stable_airborne_reached": True,
+            "ascending_reached": True,
+            "clearance_success": True,
+            "roll_violation": False,
+            "pitch_violation": False,
+            "illegal_contact": False,
+            "clearance_margin": 0.08,
+            "minimum_post_window_forward_velocity": 3.8,
+            "action_saturation_fraction": 0.125,
+            "reward_component_sums": {"ascent_progress": 4.0},
+        },
+        {
+            "success": False,
+            "physical_failure": True,
+            "timeout": False,
+            "jump_window_reached": True,
+            "liftoff_reached": False,
+            "stable_airborne_reached": False,
+            "ascending_reached": False,
+            "clearance_success": False,
+            "roll_violation": True,
+            "pitch_violation": False,
+            "illegal_contact": True,
+            "clearance_margin": -0.03,
+            "minimum_post_window_forward_velocity": 2.5,
+            "action_saturation_fraction": 0.5,
+            "reward_component_sums": {"ascent_progress": 0.0},
+        },
+    ]
+    report = module.summarize_phase_u_physical_evaluation(rows)
+    assert report["jump_window_reach_rate"] == 1.0
+    assert report["liftoff_rate"] == 0.5
+    assert report["clearance_success_rate"] == 0.5
+    assert report["apex_band_success_rate"] == 0.5
+    assert report["physical_failure_rate"] == 0.5
+    assert report["roll_violation_rate"] == 0.5
+    assert report["pitch_violation_rate"] == 0.0
+    assert report["illegal_contact_rate"] == 0.5
+    assert report["clearance_margin_distribution"] == [-0.03, 0.08]
+    assert report["minimum_post_window_forward_velocity_distribution"] == [2.5, 3.8]
+    assert report["mean_action_saturation_fraction"] == pytest.approx(0.3125)
+    assert report["reward_component_mean_sums"] == {"ascent_progress": 2.0}
 
 
 def test_smoke_config_locks_base_mode_cost_stops_rewards_and_disjoint_deterministic_seeds(tmp_path):

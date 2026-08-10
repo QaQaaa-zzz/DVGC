@@ -379,7 +379,7 @@ def make_ppo_train_fn(
     learning_rate: float,
     entropy_cost: float,
     reward_scaling: float,
-    checkpoint_dir: str | Path,
+    checkpoint_dir: str | Path | None,
     unroll_length: int = 32,
     batch_size: int = 1024,
     num_minibatches: int = 32,
@@ -395,6 +395,7 @@ def make_ppo_train_fn(
     restore_checkpoint_path: Optional[str | Path] = None,
     policy_params_fn: Optional[Callable[..., None]] = None,
     full_reset: bool = False,
+    run_evals: bool = True,
 ) -> Callable[..., Tuple[Any, Any, Any]]:
     """Return a Brax PPO training callable with normalized observations."""
     _, ppo_train, wrapper = require_training_stack()
@@ -429,7 +430,11 @@ def make_ppo_train_fn(
         clipping_epsilon=float(clipping_epsilon),
         network_factory=build_network_factory(),
         seed=int(seed),
-        save_checkpoint_path=str(Path(checkpoint_dir).expanduser().resolve()),
+        save_checkpoint_path=(
+            None
+            if checkpoint_dir is None
+            else str(Path(checkpoint_dir).expanduser().resolve())
+        ),
         wrap_env_fn=wrap_env_fn,
         policy_params_fn=(policy_params_fn if policy_params_fn is not None else (lambda *_: None)),
     )
@@ -442,6 +447,10 @@ def make_ppo_train_fn(
     # This keeps it distinct from the stochastic on-policy data collection.
     if "deterministic_eval" in signature.parameters:
         kwargs["deterministic_eval"] = True
+    if "run_evals" in signature.parameters:
+        kwargs["run_evals"] = bool(run_evals)
+    elif not run_evals:
+        raise RuntimeError("Installed Brax PPO does not expose run_evals")
     if restore_checkpoint_path is not None:
         if "restore_checkpoint_path" not in signature.parameters:
             raise RuntimeError("Installed Brax PPO does not support restore_checkpoint_path.")

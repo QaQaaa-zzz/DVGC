@@ -130,6 +130,33 @@ class PhaseExpertInteractionBudget:
 
 
 @dataclass(frozen=True)
+class PhaseCheckpointMilestone:
+    requested: int
+    effective: int
+
+
+class PhaseCheckpointTracker:
+    """Claim configured host-side checkpoint callbacks exactly once."""
+
+    def __init__(self, milestones: tuple[PhaseCheckpointMilestone, ...]) -> None:
+        self._by_effective = {item.effective: item for item in milestones}
+        if len(self._by_effective) != len(milestones):
+            raise ValueError("checkpoint milestones must have unique effective steps")
+        self._claimed: set[int] = set()
+
+    def claim(self, effective_step: int) -> PhaseCheckpointMilestone | None:
+        milestone = self._by_effective.get(int(effective_step))
+        if milestone is None or milestone.effective in self._claimed:
+            return None
+        self._claimed.add(milestone.effective)
+        return milestone
+
+    @property
+    def claimed_effective(self) -> tuple[int, ...]:
+        return tuple(sorted(self._claimed))
+
+
+@dataclass(frozen=True)
 class ValidatedPhaseExpertRunSpec:
     spec: PhaseExpertRunSpec
     thresholds: ResolvedThresholdManifest
@@ -644,6 +671,103 @@ def summarize_phase_expert_evaluation(
     }
 
 
+def align_phase_u_checkpoints(
+    requested_checkpoints: tuple[int, ...],
+    *,
+    rollout_block_size: int,
+    transition_ceiling: int,
+) -> tuple[PhaseCheckpointMilestone, ...]:
+    """Align requested reporting milestones upward without crossing the ceiling."""
+    if (
+        isinstance(rollout_block_size, bool)
+        or not isinstance(rollout_block_size, int)
+        or rollout_block_size <= 0
+    ):
+        raise ValueError("rollout_block_size must be a positive integer")
+    if (
+        isinstance(transition_ceiling, bool)
+        or not isinstance(transition_ceiling, int)
+        or transition_ceiling <= 0
+    ):
+        raise ValueError("transition ceiling must be a positive integer")
+    if (
+        not requested_checkpoints
+        or any(
+            isinstance(value, bool) or not isinstance(value, int) or value < 0
+            for value in requested_checkpoints
+        )
+        or any(
+            right <= left
+            for left, right in zip(requested_checkpoints, requested_checkpoints[1:])
+        )
+    ):
+        raise ValueError("requested checkpoints must be strictly increasing integers")
+    milestones = tuple(
+        PhaseCheckpointMilestone(
+            requested=value,
+            effective=(
+                0
+                if value == 0
+                else int(math.ceil(value / rollout_block_size) * rollout_block_size)
+            ),
+        )
+        for value in requested_checkpoints
+    )
+    if any(item.effective > transition_ceiling for item in milestones):
+        raise ValueError("aligned checkpoint exceeds transition ceiling")
+    effective = [item.effective for item in milestones]
+    if len(set(effective)) != len(effective):
+        raise ValueError("aligned checkpoints must remain strictly increasing")
+    return milestones
+
+
+def summarize_phase_u_physical_evaluation(
+    rows: list[Mapping[str, Any]],
+) -> dict[str, Any]:
+    """Aggregate held-out physical progress separately from scalar return."""
+    total = len(rows)
+
+    def rate(field: str) -> float:
+        return sum(bool(row.get(field)) for row in rows) / total if total else 0.0
+
+    reward_keys = sorted(
+        {key for row in rows for key in row.get("reward_component_sums", {})}
+    )
+    reward_means = {
+        key: (
+            sum(float(row.get("reward_component_sums", {}).get(key, 0.0)) for row in rows)
+            / total
+            if total
+            else 0.0
+        )
+        for key in reward_keys
+    }
+    saturation = [float(row["action_saturation_fraction"]) for row in rows]
+    return {
+        "num_rollouts": total,
+        "jump_window_reach_rate": rate("jump_window_reached"),
+        "liftoff_rate": rate("liftoff_reached"),
+        "stable_airborne_rate": rate("stable_airborne_reached"),
+        "ascending_rate": rate("ascending_reached"),
+        "clearance_success_rate": rate("clearance_success"),
+        "apex_band_success_rate": rate("success"),
+        "physical_failure_rate": rate("physical_failure"),
+        "roll_violation_rate": rate("roll_violation"),
+        "pitch_violation_rate": rate("pitch_violation"),
+        "illegal_contact_rate": rate("illegal_contact"),
+        "clearance_margin_distribution": sorted(
+            float(row["clearance_margin"]) for row in rows
+        ),
+        "minimum_post_window_forward_velocity_distribution": sorted(
+            float(row["minimum_post_window_forward_velocity"]) for row in rows
+        ),
+        "mean_action_saturation_fraction": (
+            sum(saturation) / total if total else 0.0
+        ),
+        "reward_component_mean_sums": reward_means,
+    }
+
+
 def _write_json_atomic(path: Path, payload: Mapping[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     encoded = json.dumps(
@@ -887,6 +1011,12 @@ def _positive_int(name: str, value: Any) -> int:
     return value
 
 
+def _nonnegative_int(name: str, value: Any) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise ValueError(f"{name} must be a non-negative integer")
+    return value
+
+
 def load_phase_expert_threshold_manifest(path: str | Path) -> ResolvedThresholdManifest:
     """Load a current, provenance-complete threshold contract without mutation."""
     manifest_path = Path(path)
@@ -974,9 +1104,14 @@ def _layout_value(layout: Mapping[str, Any], name: str) -> Any:
 def build_phase_expert_budget(
     spec: PhaseExpertRunSpec, layout: Mapping[str, Any]
 ) -> PPOBudgetReport:
-    """Build a smoke budget without allowing Brax alignment to enlarge it."""
+    """Build an aligned Phase U budget under its experiment-level ceiling."""
     if not isinstance(layout, Mapping):
         raise ValueError("PPO layout must be a mapping")
+    if (
+        spec.experiment_level == "formal_expert"
+        and spec.requested_total_transitions > 1_000_000
+    ):
+        raise ValueError("formal Phase U budget exceeds the 1,000,000 transition ceiling")
     report = build_ppo_budget_report(
         requested_total_transitions=spec.requested_total_transitions,
         num_parallel_envs=_layout_value(layout, "num_parallel_envs"),
@@ -992,8 +1127,14 @@ def build_phase_expert_budget(
     assert report.effective_timesteps == report.effective_total_transitions
     if report.alignment_overhead != 0:
         raise ValueError("requested_total_transitions must be aligned to a PPO rollout block")
-    if not 1 <= report.ppo_rollout_blocks <= 4:
-        raise ValueError("smoke budget must use one through four PPO rollout blocks")
+    if spec.experiment_level == "smoke":
+        if not 1 <= report.ppo_rollout_blocks <= 4:
+            raise ValueError("smoke budget must use one through four PPO rollout blocks")
+    elif spec.experiment_level == "formal_expert":
+        if report.effective_total_transitions > 1_000_000:
+            raise ValueError("formal Phase U budget exceeds the 1,000,000 transition ceiling")
+    else:
+        raise ValueError("only smoke or formal_expert Phase U execution is authorized")
     return report
 
 
@@ -1065,7 +1206,7 @@ def build_phase_expert_interaction_budget(
     evaluation_ceiling = _positive_int(
         "fixed evaluation transition ceiling", maximum.get("fixed_evaluation_transitions")
     )
-    brax_evaluation_ceiling = _positive_int(
+    brax_evaluation_ceiling = _nonnegative_int(
         "Brax evaluation transition ceiling",
         maximum.get("brax_evaluation_transitions"),
     )
@@ -1075,10 +1216,13 @@ def build_phase_expert_interaction_budget(
     brax_evaluation_environments = _positive_int(
         "Brax evaluation environment count", layout.get("num_eval_envs")
     )
+    run_brax_evaluation = training_config.get("run_brax_evaluation", True)
+    if not isinstance(run_brax_evaluation, bool):
+        raise ValueError("run_brax_evaluation must be boolean")
     declared_brax_evaluation_cost = (
-        brax_evaluation_environments
-        * report.episode_horizon
-        * report.num_evals
+        brax_evaluation_environments * report.episode_horizon * report.num_evals
+        if run_brax_evaluation
+        else 0
     )
     if brax_evaluation_ceiling != declared_brax_evaluation_cost:
         raise ValueError(
@@ -1094,22 +1238,30 @@ def build_phase_expert_interaction_budget(
     evaluation_episodes = _positive_int(
         "fixed evaluation episode count", evaluation.get("episodes")
     )
+    checkpoint_evaluations = _positive_int(
+        "fixed checkpoint evaluation count",
+        evaluation.get("checkpoint_evaluations", 1),
+    )
     declared_evaluation_cost = (
-        evaluation_environments * evaluation_horizon * evaluation_episodes
+        evaluation_environments
+        * evaluation_horizon
+        * evaluation_episodes
+        * checkpoint_evaluations
     )
     if evaluation_ceiling != declared_evaluation_cost:
         raise ValueError(
             "fixed evaluation transition ceiling must equal environments times horizon times episodes"
         )
-    if (
-        training_ceiling % report.ppo_rollout_block_size != 0
-        or not 1
-        <= training_ceiling // report.ppo_rollout_block_size
-        <= 4
-    ):
+    if training_ceiling % report.ppo_rollout_block_size != 0:
+        raise ValueError("training transition ceiling must be PPO-rollout-block aligned")
+    if spec.experiment_level == "smoke" and not 1 <= (
+        training_ceiling // report.ppo_rollout_block_size
+    ) <= 4:
         raise ValueError(
             "training transition ceiling must be aligned to one through four PPO rollout blocks"
         )
+    if spec.experiment_level == "formal_expert" and training_ceiling > 1_000_000:
+        raise ValueError("formal training ceiling exceeds 1,000,000 transitions")
     if maximum_combined_ceiling != (
         training_ceiling + brax_evaluation_ceiling + evaluation_ceiling
     ):
@@ -1212,13 +1364,13 @@ def _validate_authorization(
 def validate_phase_expert_run_spec(
     spec: PhaseExpertRunSpec, *, preflight_only: bool
 ) -> ValidatedPhaseExpertRunSpec:
-    """Validate a no-overwrite, smoke-only run contract before any environment work."""
+    """Validate a no-overwrite Phase U run contract before environment work."""
     if not isinstance(spec, PhaseExpertRunSpec):
         raise TypeError("spec must be a PhaseExpertRunSpec")
     if spec.phase not in PHASE_EXPERT_PHASES:
         raise ValueError(f"phase must be one of {PHASE_EXPERT_PHASES}")
-    if spec.experiment_level != "smoke":
-        raise ValueError("only smoke is authorized at Gate C1")
+    if spec.experiment_level not in {"smoke", "formal_expert"}:
+        raise ValueError("only smoke or formal_expert Phase U execution is authorized")
     _positive_int("requested_total_transitions", spec.requested_total_transitions)
     if isinstance(spec.seed, bool) or not isinstance(spec.seed, int):
         raise ValueError("seed must be an integer")
@@ -1357,6 +1509,19 @@ def _fixed_phase_u_evaluation(
         state = environment.reset(key)
         frames = [_phase_expert_frame(state)]
         episode_return = 0.0
+        reward_component_sums = {
+            name: 0.0 for name in _PHASE_U_REWARD_COMPONENTS
+        }
+        maximum_clearance = -math.inf
+        maximum_forward_velocity = -math.inf
+        maximum_abs_roll = 0.0
+        maximum_abs_pitch = 0.0
+        maximum_angular_speed = 0.0
+        post_window_forward_velocities: list[float] = []
+        clearance_success = False
+        illegal_contact_seen = False
+        saturated_actions = 0
+        action_values = 0
         for tick in range(horizon):
             key, action_key = jax.random.split(key)
             action, _ = inference(state.obs, action_key)
@@ -1365,9 +1530,45 @@ def _fixed_phase_u_evaluation(
             frames.append(_phase_expert_frame(state))
             transitions += 1
             episode_return += float(state.reward)
+            action_host = np.asarray(jax.device_get(action))
+            saturated_actions += int(np.count_nonzero(np.abs(action_host) >= 0.98))
+            action_values += int(action_host.size)
+            event_now = _event_from_info(state.info)
+            apex_now, _ = environment._extract_signals(
+                state, environment._geometry, event_now.recovery_hold_count
+            )
+            apex_host = jax.device_get(apex_now)
+            clearance_value = float(apex_host.clearance)
+            forward_value = float(apex_host.forward_velocity)
+            maximum_clearance = max(maximum_clearance, clearance_value)
+            maximum_forward_velocity = max(maximum_forward_velocity, forward_value)
+            maximum_abs_roll = max(maximum_abs_roll, abs(float(apex_host.roll)))
+            maximum_abs_pitch = max(maximum_abs_pitch, abs(float(apex_host.pitch)))
+            maximum_angular_speed = max(
+                maximum_angular_speed, float(apex_host.angular_speed)
+            )
+            clearance_success = clearance_success or (
+                clearance_value >= environment._thresholds.apex.min_clearance
+            )
+            illegal_contact_seen = illegal_contact_seen or bool(
+                apex_host.illegal_contact
+            )
+            if bool(event_now.jump_window_entered):
+                post_window_forward_velocities.append(forward_value)
+            for name in _PHASE_U_REWARD_COMPONENTS:
+                reward_component_sums[name] += float(
+                    state.metrics[f"phase_expert/reward_component/{name}"]
+                )
             if bool(state.done):
                 break
         info = jax.device_get(state.info)
+        event = _event_from_info(info)
+        end_code = int(info["end_code"])
+        minimum_post_window_forward_velocity = (
+            min(post_window_forward_velocities)
+            if post_window_forward_velocities
+            else float(maximum_forward_velocity)
+        )
         row = {
                 "seed": seed,
                 "episode_length": tick + 1,
@@ -1375,10 +1576,32 @@ def _fixed_phase_u_evaluation(
                 "success": bool(info["phase_expert/success"]),
                 "physical_failure": bool(info["phase_expert/physical_failure"]),
                 "timeout": bool(info["phase_expert/timeout"]),
-                "end_code": int(info["end_code"]),
+                "end_code": end_code,
                 "first_event_ticks": np.asarray(
                     info["phase_expert/event/first_event_ticks"]
                 ).tolist(),
+                "jump_window_reached": bool(event.jump_window_entered),
+                "liftoff_reached": bool(event.liftoff_seen),
+                "stable_airborne_reached": bool(event.stable_airborne),
+                "ascending_reached": bool(event.ascending),
+                "clearance_success": clearance_success,
+                "roll_violation": end_code == 4,
+                "pitch_violation": end_code == 5,
+                "illegal_contact": illegal_contact_seen,
+                "maximum_clearance": maximum_clearance,
+                "clearance_margin": maximum_clearance
+                - environment._thresholds.apex.min_clearance,
+                "maximum_forward_velocity": maximum_forward_velocity,
+                "minimum_post_window_forward_velocity": minimum_post_window_forward_velocity,
+                "forward_velocity_retained": minimum_post_window_forward_velocity
+                >= environment._thresholds.apex.min_forward_velocity,
+                "maximum_abs_roll": maximum_abs_roll,
+                "maximum_abs_pitch": maximum_abs_pitch,
+                "maximum_angular_speed": maximum_angular_speed,
+                "action_saturation_fraction": (
+                    saturated_actions / action_values if action_values else 0.0
+                ),
+                "reward_component_sums": reward_component_sums,
             }
         rows.append(row)
         if not row["success"]:
@@ -1412,6 +1635,7 @@ def _fixed_phase_u_evaluation(
                     }
                 )
     report = summarize_phase_expert_evaluation(rows)
+    report["physical_metrics"] = summarize_phase_u_physical_evaluation(rows)
     report["rows"] = rows
     report["failure_videos"] = videos
     report["actual_environment_transitions"] = transitions
@@ -1527,8 +1751,36 @@ def _checkpoint_contract(
     }
 
 
+def _save_phase_expert_inference_checkpoint(
+    environment: PhaseExpertEnvAdapter,
+    params: Any,
+    checkpoint_root: str | Path,
+    *,
+    step: int,
+) -> Path:
+    """Save Brax normalizer/policy/value params at one claimed host milestone."""
+    from brax.training.agents.ppo import checkpoint as ppo_checkpoint
+
+    from .runtime import build_network_factory
+
+    sample = environment.reset(jax.random.PRNGKey(0))
+    observation_size = jax.tree_util.tree_map(lambda value: value.shape, sample.obs)
+    network_config = ppo_checkpoint.network_config(
+        observation_size=observation_size,
+        action_size=environment.action_size,
+        normalize_observations=True,
+        network_factory=build_network_factory(),
+    )
+    root = Path(checkpoint_root)
+    ppo_checkpoint.save(root, int(step), params, network_config)
+    checkpoint = root / f"{int(step):012d}"
+    if not checkpoint.is_dir():
+        raise RuntimeError("Brax checkpoint save did not create the expected directory")
+    return checkpoint
+
+
 def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
-    """Execute one already-authorized smoke and leave promotion disabled."""
+    """Execute one already-authorized Phase U run and leave promotion disabled."""
     if validated.authorization is None:
         raise ValueError("normal execution requires validated authorization")
     if validated.spec.phase != PHASE_PROPULSION_ASCENT:
@@ -1555,7 +1807,7 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
         "schema": "dvgc_phase_expert_run_v1",
         "run_id": root.name,
         "phase": validated.spec.phase,
-        "experiment_level": "smoke",
+        "experiment_level": validated.spec.experiment_level,
         "source_head": _current_source_head(),
         "source_tree_sha256": phase_expert_source_tree_sha256(),
         "xml_sha256": AUTHORITATIVE_XML_SHA256,
@@ -1579,6 +1831,9 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
     _write_json_atomic(root / "resolved_config.json", resolved_project_config)
     _write_json_atomic(root / "resolved_training_config.json", training_config)
     observed_training_progress = 0
+    fixed_evaluation_transitions = 0
+    checkpoint_evaluations: list[dict[str, Any]] = []
+    last_checkpoint: str | None = validated.spec.restore_checkpoint
     try:
         environment = build_phase_expert_environment(validated)
         reset_state = jax.jit(environment.reset)(jax.random.PRNGKey(validated.spec.seed))
@@ -1598,6 +1853,76 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
                 root, {"training_step": int(step), "metrics": _jsonable(metrics)}
             )
 
+        formal = validated.spec.experiment_level == "formal_expert"
+        checkpoint_callback = None
+        if formal:
+            requested_milestones = tuple(
+                int(value) for value in training_config["checkpoint_schedule_requested"]
+            )
+            milestones = align_phase_u_checkpoints(
+                requested_milestones,
+                rollout_block_size=validated.interaction_budget.training.ppo_rollout_block_size,
+                transition_ceiling=validated.interaction_budget.training.effective_total_transitions,
+            )
+            tracker = PhaseCheckpointTracker(milestones)
+
+            def checkpoint_callback(step: int, _make_policy: Any, params: Any) -> None:
+                nonlocal fixed_evaluation_transitions, last_checkpoint
+                milestone = tracker.claim(int(step))
+                if milestone is None:
+                    return
+                checkpoint = _save_phase_expert_inference_checkpoint(
+                    environment, params, root / "orbax", step=milestone.effective
+                )
+                checkpoint_contract = _checkpoint_contract(
+                    validated,
+                    training_config,
+                    cumulative_transitions=milestone.effective,
+                    parent_checkpoint=last_checkpoint,
+                )
+                sidecar = write_phase_expert_checkpoint_sidecar(
+                    checkpoint, checkpoint_contract
+                )
+                evaluation_root = (
+                    root / "evaluations" / f"{milestone.effective:012d}"
+                )
+                evaluation, consumed = _fixed_phase_u_evaluation(
+                    environment,
+                    params,
+                    validated.seeds.evaluation_seeds,
+                    int(training_config["evaluation"]["episode_horizon"]),
+                    evaluation_root / "failure_videos",
+                )
+                fixed_evaluation_transitions += consumed
+                report = {
+                    "requested_training_transitions": milestone.requested,
+                    "effective_training_transitions": milestone.effective,
+                    "checkpoint": str(checkpoint.resolve()),
+                    "checkpoint_sha256": sidecar["recursive_checkpoint_sha256"],
+                    "fixed_evaluation": evaluation,
+                    "fixed_evaluation_transitions": consumed,
+                }
+                checkpoint_evaluations.append(report)
+                _write_json_atomic(evaluation_root / "fixed_evaluation.json", report)
+                append_phase_expert_metrics(
+                    root,
+                    {
+                        "training_step": milestone.effective,
+                        "checkpoint_evaluation": report,
+                    },
+                )
+                last_checkpoint = str(checkpoint.resolve())
+                update_phase_expert_status(
+                    root,
+                    {
+                        "status": "running",
+                        "training_transitions": milestone.effective,
+                        "fixed_evaluation_transitions": fixed_evaluation_transitions,
+                        "last_checkpoint": last_checkpoint,
+                        "last_requested_checkpoint": milestone.requested,
+                    },
+                )
+
         train_fn = make_ppo_train_fn(
             timesteps=validated.interaction_budget.training.effective_total_transitions,
             episode_length=int(layout["episode_horizon"]),
@@ -1608,7 +1933,7 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
             learning_rate=float(optimization["learning_rate"]),
             entropy_cost=float(optimization["entropy_cost"]),
             reward_scaling=float(optimization["reward_scaling"]),
-            checkpoint_dir=root / "orbax",
+            checkpoint_dir=(None if formal else root / "orbax"),
             unroll_length=int(layout["unroll_length"]),
             batch_size=int(layout["batch_size"]),
             num_minibatches=int(layout["num_minibatches"]),
@@ -1618,44 +1943,62 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
             clipping_epsilon=float(optimization["clipping_epsilon"]),
             max_grad_norm=float(optimization["max_grad_norm"]),
             restore_checkpoint_path=validated.spec.restore_checkpoint,
+            policy_params_fn=checkpoint_callback,
             full_reset=True,
+            run_evals=bool(training_config.get("run_brax_evaluation", True)),
         )
         _, params, final_metrics = train_fn(
             environment=environment, progress_fn=progress, eval_env=environment
         )
-        evaluation, fixed_transitions = _fixed_phase_u_evaluation(
-            environment,
-            params,
-            validated.seeds.evaluation_seeds,
-            int(training_config["evaluation"]["episode_horizon"]),
-            root / "failure_videos",
-        )
-        _write_json_atomic(root / "fixed_evaluation.json", evaluation)
+        if formal:
+            if tracker.claimed_effective != tuple(
+                milestone.effective for milestone in milestones
+            ):
+                raise RuntimeError("formal Phase U run missed a fixed checkpoint callback")
+            evaluation = checkpoint_evaluations[-1]["fixed_evaluation"]
+            fixed_transitions = fixed_evaluation_transitions
+            _write_json_atomic(
+                root / "checkpoint_evaluations.json",
+                {"checkpoints": checkpoint_evaluations},
+            )
+        else:
+            evaluation, fixed_transitions = _fixed_phase_u_evaluation(
+                environment,
+                params,
+                validated.seeds.evaluation_seeds,
+                int(training_config["evaluation"]["episode_horizon"]),
+                root / "failure_videos",
+            )
+            _write_json_atomic(root / "fixed_evaluation.json", evaluation)
         checkpoints = [
             path
             for path in (root / "orbax").iterdir()
             if path.is_dir() and any(candidate.is_file() for candidate in path.rglob("*"))
         ] if (root / "orbax").is_dir() else []
-        checkpoint_contract = _checkpoint_contract(
-            validated,
-            training_config,
-            cumulative_transitions=validated.interaction_budget.training.effective_total_transitions,
-            parent_checkpoint=validated.spec.restore_checkpoint,
-        )
-        for checkpoint in checkpoints:
-            write_phase_expert_checkpoint_sidecar(checkpoint, checkpoint_contract)
+        if not formal:
+            checkpoint_contract = _checkpoint_contract(
+                validated,
+                training_config,
+                cumulative_transitions=validated.interaction_budget.training.effective_total_transitions,
+                parent_checkpoint=validated.spec.restore_checkpoint,
+            )
+            for checkpoint in checkpoints:
+                write_phase_expert_checkpoint_sidecar(checkpoint, checkpoint_contract)
         actual_interactions = completed_phase_expert_interaction_accounting(
             validated.interaction_budget,
             fixed_evaluation_transitions=fixed_transitions,
         )
         result = {
             "status": "completed",
-            "evidence_level": "engineering_smoke_only",
+            "evidence_level": (
+                "phase_u_checkpoint_training" if formal else "engineering_smoke_only"
+            ),
             "brax_evaluation_transition_ceiling": validated.interaction_budget.brax_evaluation_transition_ceiling,
             "combined_interaction_ceiling": validated.interaction_budget.combined_transition_ceiling,
             **actual_interactions,
             "final_metrics": _jsonable(final_metrics),
             "fixed_evaluation": evaluation,
+            "checkpoint_evaluations": checkpoint_evaluations,
             "promotion_authorized": False,
             "next_gate_authorized": False,
         }

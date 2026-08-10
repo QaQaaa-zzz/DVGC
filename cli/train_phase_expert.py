@@ -17,7 +17,9 @@ from dvgc.phase_expert_training import (
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--phase", required=True, choices=PHASE_EXPERT_PHASES)
-    parser.add_argument("--experiment-level", default="smoke", choices=("smoke",))
+    parser.add_argument(
+        "--experiment-level", default="smoke", choices=("smoke", "formal_expert")
+    )
     parser.add_argument("--requested-total-transitions", type=int, required=True)
     parser.add_argument("--seed", type=int, default=710001)
     parser.add_argument("--config", default="configs/default.json")
