@@ -49,10 +49,10 @@ The current task authorizes a new Phase U run with a maximum of 1,000,000 total
 training transitions, requested checkpoints at 0/100k/250k/500k/750k/1M, and
 separate evaluation/acquisition/continuation accounting. This is an upper
 bound, not permission to ignore gate-pause conditions or a requirement to wait
-until 1M before acquiring candidate states. The run has not started yet. First,
-the revised reward, physical evaluation, aligned checkpoint, truthful resume,
-and acquisition-hook contracts must pass red-green implementation and a fresh
-bounded smoke.
+until 1M before acquiring candidate states. The revised bounded reward,
+physical evaluation, aligned checkpoint, truthful warm-start resume, and
+evidence-gated acquisition hooks passed red-green implementation, full static
+validation, a fresh runtime gate, and a new bounded PPO smoke at `b4c7fb5`.
 
 ## Current branch and commit
 
@@ -69,6 +69,12 @@ bounded smoke.
 - Post-pause dtype correction: `87c3f4d`
 - Brax-wrapper dtype regression: `88d074d`
 - Completed-interaction accounting closure: `55b47d1`
+- Interleaved Phase U method contract: `5632962`
+- Bounded Phase U reward: `140ad02`
+- Checkpoint evaluation protocol: `567ebc0`
+- Candidate acquisition gate: `086bae5`
+- Checkpoint/acquisition provenance closure: `4b6449e`, `a25a31f`
+- Current runtime fingerprint refresh: `b4c7fb5`
 - Cleanup baseline: `main@b7bb815`
 - Dependency design: `27f0aa3`
 - Clarified design policy: `3cbd6c1`
@@ -78,15 +84,16 @@ bounded smoke.
 ## Last validated gate
 
 - Current reusable runtime gate: PASS at source fingerprint
-  `568a5982ab698e42e7c6a976f5bdfe66ba64b5a5ecbfb0ee301674580a3c0e51`.
+  `57d07a01ed8c3c9a2f9df0ba284733bf4bf1d8231f8a2fc8acda2296646e7b2e`.
 - It used the fresh ignored work directory
-  `runs/runtime_gate_gate_c1_20260810/` and took 97.672 seconds.
+  `runs/runtime_gate_phase_u_1m_20260810_v2/` and took 97.094 seconds.
 - The gate's 64+32 = 96 transitions are compile/update/resume smoke evidence
   only, not expert, pilot, or formal training.
 
 ## Current active run
 
-None. The original Gate C1 smoke attempt is retained at
+No formal expert run is active at this documentation marker. The original Gate
+C1 smoke attempt is retained at
 `runs/two_phase/phase_experts/gate_c1_phase_u_smoke_20260810_seed710001/`
 with status `gate_pause`. Its actual training, Brax evaluation, fixed
 evaluation, and combined environment-transition counts are all 0. The failure
@@ -108,13 +115,32 @@ optimizer and environment-step state are not present. Current validation
 therefore rejects that old full-state claim and describes new checkpoints only
 as policy/normalizer/value warm starts. It did not authorize promotion.
 
+The reward-contract smoke for the current 1M implementation is complete at:
+
+```text
+runs/two_phase/phase_experts/gate_c1_phase_u_reward_smoke_20260810_seed710001/
+```
+
+It consumed 1,600 PPO training transitions, 1,600 Brax evaluation transitions,
+and 216 fixed-evaluation transitions, for 3,416 total interactions under its
+4,800 ceiling. PPO update, finite reward components, checkpoint writing,
+warm-start sidecar identity, fixed evaluation, metrics, accounting, and eight
+failure-video captures all completed. The fixed evaluation produced zero Apex
+successes and eight `takeoff_missed_liftoff_deadline` outcomes after legal
+jump-window entry, with no physical failure, timeout, roll/pitch violation,
+illegal contact, action saturation, NaN, or contract failure. That is an
+expected non-learned smoke outcome, not evidence of expert ability and not a
+Gate pause.
+
 The historical Gate B guideline event probe used 17 environment
 transitions; its two outcome-video diagnostics used 25 transitions in total.
 Those runs are retained provenance, not active work or a revised Gate B pass
 condition. Gate C1 used one adapter integration diagnostic transition, 96
 runtime-integrity transitions, and 3,416 replacement-smoke interactions.
-Phase U learnability-pilot, formal expert, Phase D, feasibility, Soft Tube, and
-unified-policy training transitions remain exactly 0.
+Phase U formal-expert, Phase D, feasibility, Soft Tube, and unified-policy
+training transitions remain exactly 0 at this marker. The two completed Phase
+U smoke runs are engineering integrity evidence and are excluded from formal
+expert-training totals.
 
 ## Pipeline automation safety interlock
 
@@ -282,6 +308,21 @@ Gate C1 validation on 2026-08-10:
   checkpoint SHA-256:
   `43adb2f97740c7a6348588df9b15f89eb461fe0c602f484c78a79d35d2a4d6b4`.
 - Promotion, pilot, and formal authorization remain false.
+- The interleaved Phase U implementation then passed 141 directly affected
+  tests, full pytest with 867 passing tests, and `scripts/local_preflight.sh`
+  with the same 867 tests; the only warning was the existing JAXopt
+  deprecation warning.
+- Fresh managed runtime gate
+  `runs/runtime_gate_phase_u_1m_20260810_v2/` passed with 96 engineering
+  transitions in 97.094 seconds.
+- The current reward-contract smoke completed with 1,600 training + 1,600
+  Brax evaluation + 216 held-out fixed-evaluation transitions. All eight
+  held-out rollouts entered the jump window and then missed the legal liftoff
+  deadline; the run remained `completed`, not `gate_pause`.
+- Its checkpoint sidecar truthfully records a normalizer/policy/value warm
+  start, with no optimizer or environment-step state, and recursive checkpoint
+  SHA-256
+  `2f6e73e163b6ef09488614cc50524917b235a58af1854cf9f03df1bb0e16caa4`.
 
 Legacy five-stage experimental outcomes are not evidence for the dynamic
 two-phase method and must not be promoted retrospectively.
@@ -311,16 +352,15 @@ descent rollouts. Phase D execution remains blocked at Gate C1.
 
 The approved reward-only Phase U hypothesis, per-checkpoint physical
 evaluation, aligned checkpoint, truthful warm-start accounting, and
-candidate-harvesting hooks are under final validation. A warm start restores
-only normalizer/policy/value parameters, resets optimizer and rollout state,
-binds its parent checkpoint's cumulative transition count, runs only the
-separately authorized remaining rollout blocks, and never repeats an already
-written global milestone. Next execute one newly authorized bounded smoke. If
-smoke integrity passes, Codex may issue a new run-bound authorization and
-launch one persistent Phase U process capped at 1,000,000 cumulative training
-transitions without waiting for another manual approval. The run may
-automatically begin real candidate acquisition and bounded policy-dependent
-continuation diagnostics only after their evidence gates pass.
+candidate-harvesting hooks have passed final validation and the new bounded
+smoke. A warm start restores only normalizer/policy/value parameters, resets
+optimizer and rollout state, binds its parent checkpoint's cumulative
+transition count, runs only the separately authorized remaining rollout
+blocks, and never repeats an already written global milestone. Codex may now
+issue one run-bound authorization and launch one persistent Phase U process
+capped at 1,000,000 cumulative training transitions. The run may automatically
+begin real candidate acquisition and bounded policy-dependent continuation
+diagnostics only after their evidence gates pass.
 
 This marker does not authorize formal `V_up`, a learned Soft Tube declaration,
 Phase D expert training, unified PPO, or JCE/JEL. Provisional acquisition aids
