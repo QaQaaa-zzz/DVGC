@@ -14,7 +14,7 @@ import mujoco
 import numpy as np
 
 from .bank import SnapshotBank
-from .config import STAGE_ID
+from .config import ACTION_MAPPING_VERSION, STAGE_ID
 from .feasibility import validate_phase_snapshot
 from .reference import ReferenceAnchors, ReferenceTrajectory
 from .reset_geometry import GroundSupportSolver
@@ -312,7 +312,7 @@ def build_threshold_manifest(
         "source_category": "guideline_physical_envelope",
         "source_hashes": dict(sorted(source_hashes.items())),
         "source_paths": dict(sorted(source_paths.items())),
-        "action_mapping_version": "steer_rearwheel_hip_knee_v1",
+        "action_mapping_version": ACTION_MAPPING_VERSION,
         "extraction_code_version": extraction_code_version,
         "feature_definitions": _FEATURE_DEFINITIONS,
         "fixed_selection": asdict(selection),
@@ -327,7 +327,7 @@ def build_threshold_manifest(
             "recovery": asdict(recovery_thresholds),
         },
         "controller_provenance": controller_provenance,
-        "reference_rollout_source": "guideline_open_loop_actions",
+        "reference_rollout_source": "kinematic_guideline_envelope",
         "creation_seed": int(creation_seed),
     }
     manifest["canonical_manifest_hash"] = canonical_manifest_hash(manifest)

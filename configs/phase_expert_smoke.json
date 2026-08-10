@@ -1,0 +1,37 @@
+{
+  "ppo_layout": {
+    "num_parallel_envs": 64,
+    "episode_horizon": 200,
+    "unroll_length": 25,
+    "batch_size": 16,
+    "num_minibatches": 4,
+    "num_updates_per_batch": 1,
+    "num_evals": 2,
+    "num_eval_envs": 4
+  },
+  "maximum_interaction_cost": {
+    "training_transitions": 6400,
+    "brax_evaluation_transitions": 1600,
+    "fixed_evaluation_transitions": 1600,
+    "combined_transitions": 9600
+  },
+  "training_seed_namespace": "phase_u_train_v1",
+  "training_seed_count": 64,
+  "evaluation": {
+    "seed_namespace": "phase_u_fixed_evaluation_v1",
+    "seeds": [910001, 910002, 910003, 910004, 910005, 910006, 910007, 910008],
+    "environment_count": 8,
+    "episode_horizon": 200,
+    "episodes": 1
+  },
+  "checkpoint_cadence_transitions": 1600,
+  "stopping_conditions": [
+    "stop_after_requested_training_transitions",
+    "stop_after_fixed_evaluation_ceiling",
+    "stop_on_contract_or_runtime_failure"
+  ],
+  "reward_bounds": {
+    "total_min": -50.0,
+    "total_max": 50.0
+  }
+}

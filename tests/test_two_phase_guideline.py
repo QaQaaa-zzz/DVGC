@@ -249,6 +249,8 @@ def test_manifest_hash_is_canonical_stable_and_binds_every_source(tmp_path):
     assert first["canonical_manifest_hash"] == canonical_manifest_hash(first)
     assert first["feature_definitions"]["obstacle_relative_x"]["unit"] == "m"
     assert "controller_provenance" in first
+    assert first["action_mapping_version"] == ACTION_MAPPING_VERSION
+    assert first["reference_rollout_source"] == "kinematic_guideline_envelope"
     assert first["source_paths"] == source_paths
     assert first["reference_anchors"] == _reference()[1].as_dict()
     assert first["extraction_code_version"] == "two_phase_guideline_v1"
