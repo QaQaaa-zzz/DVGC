@@ -23,6 +23,7 @@ from dvgc.two_phase_guideline import (
 )
 from dvgc.two_phase_runtime import TwoPhaseThresholds
 from dvgc.two_phase_semantics import ApexBandSignals, ApexBandThresholds, RecoverySignals, RecoveryThresholds
+from dvgc.wrappers import wrap_for_training
 
 
 def _write_json(path: Path, payload: dict) -> Path:
@@ -576,6 +577,19 @@ def test_phase_u_adapter_reset_is_natural_audited_and_jittable_without_reference
     assert state.info["obs_history"].shape == (3, 4)
     batched = jax.vmap(adapter.reset)(jax.random.split(jax.random.PRNGKey(2), 2))
     assert batched.done.shape == (2,)
+
+
+def test_phase_u_adapter_preserves_done_dtype_through_real_brax_training_wrappers():
+    """Regression: reset/step dtype drift must fail before PPO evaluation executes."""
+    adapter = _adapter(_module())
+    wrapped = wrap_for_training(adapter, episode_length=20, action_repeat=1)
+    keys = jax.random.split(jax.random.PRNGKey(21), 4)
+    state = jax.jit(wrapped.reset)(keys)
+    next_state = jax.jit(wrapped.step)(state, jp.zeros((4, 8), jp.float32))
+
+    assert state.done.dtype == jp.float32
+    assert next_state.done.dtype == state.done.dtype
+    assert next_state.done.shape == (4,)
 
 
 def test_early_airborne_cannot_succeed_but_later_ordered_apex_entry_does_and_latch_is_monotonic():
