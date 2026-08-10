@@ -1295,6 +1295,42 @@ def test_checkpoint_sidecar_binds_recursive_identity_and_rejects_drift(tmp_path)
         module.write_phase_expert_checkpoint_sidecar(checkpoint, legacy_false_claim)
 
 
+def test_inference_checkpoint_resolves_relative_root_before_orbax_save(
+    tmp_path, monkeypatch
+):
+    """A repository-relative run path must not reach Orbax as a relative path."""
+    module = _module()
+    from brax.training.agents.ppo import checkpoint as ppo_checkpoint
+
+    captured = {}
+
+    def fake_network_config(**_kwargs):
+        return {"network": "test"}
+
+    def fake_save(root, step, _params, _network_config):
+        captured["root"] = Path(root)
+        (Path(root) / f"{int(step):012d}").mkdir(parents=True)
+
+    monkeypatch.setattr(ppo_checkpoint, "network_config", fake_network_config)
+    monkeypatch.setattr(ppo_checkpoint, "save", fake_save)
+    monkeypatch.setattr(module, "build_network_factory", lambda: None, raising=False)
+    monkeypatch.chdir(tmp_path)
+    environment = SimpleNamespace(
+        action_size=4,
+        reset=lambda _key: SimpleNamespace(obs=jp.zeros((140,), dtype=jp.float32)),
+    )
+
+    checkpoint = module._save_phase_expert_inference_checkpoint(
+        environment,
+        params=("normalizer", "policy", "value"),
+        checkpoint_root=Path("relative-run") / "orbax",
+        step=0,
+    )
+
+    assert captured["root"] == (tmp_path / "relative-run" / "orbax").resolve()
+    assert checkpoint == (tmp_path / "relative-run" / "orbax" / "000000000000").resolve()
+
+
 def test_descent_seed_manifest_requires_physical_evidence_and_rejects_claims(tmp_path):
     module = _module()
     bank = tmp_path / "seed.bank"

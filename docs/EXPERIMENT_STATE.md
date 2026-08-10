@@ -104,13 +104,15 @@ log: runs/two_phase/process_logs/phase_u_formal_1m_20260810_seed710001.log
 resume record: runs/two_phase/process_logs/phase_u_formal_1m_20260810_seed710001.control.txt
 ```
 
-The single startup health check observed `status=running`, a live process, no
-immediate log error, and zero consumed formal-training transitions while JAX
-was compiling/initializing. No later transition count or performance result is
-claimed by this tracked marker. The process is capped at 1,000,000 PPO training
-transitions and a separately accounted 1,163,200 total-interaction ceiling. It
-must pause on the recorded numerical, contract, provenance, state-corruption,
-degradation, saturation, or reward-hacking conditions.
+The startup health check initially observed `status=running`, but the process
+then correctly entered `gate_pause` before any PPO rollout when its transition-0
+formal checkpoint reached Orbax with a repository-relative path. Current Orbax
+requires an absolute checkpoint path. Actual training, evaluation, candidate,
+continuation, and total environment-transition counts are all 0. No dynamic
+failure frames existed, so failure video is not applicable. The consumed
+authorization and failed output directory are retained and will not be reused.
+The checkpoint boundary now resolves its root before invoking Orbax, with a
+red-green regression that reproduces the original relative-path failure.
 
 The original Gate C1 smoke attempt is retained at
 `runs/two_phase/phase_experts/gate_c1_phase_u_smoke_20260810_seed710001/`
@@ -156,9 +158,8 @@ transitions; its two outcome-video diagnostics used 25 transitions in total.
 Those runs are retained provenance, not active work or a revised Gate B pass
 condition. Gate C1 used one adapter integration diagnostic transition, 96
 runtime-integrity transitions, and 3,416 replacement-smoke interactions.
-Phase D, feasibility, Soft Tube, and unified-policy training transitions remain
-exactly 0 at this marker. Phase U formal training was running but had consumed
-0 transitions at the one allowed startup observation. The two completed Phase
+Phase U formal-expert, Phase D, feasibility, Soft Tube, and unified-policy
+training transitions remain exactly 0 at this marker. The two completed Phase
 U smoke runs are engineering integrity evidence and are excluded from formal
 expert-training totals.
 
@@ -343,6 +344,13 @@ Gate C1 validation on 2026-08-10:
   start, with no optimizer or environment-step state, and recursive checkpoint
   SHA-256
   `2f6e73e163b6ef09488614cc50524917b235a58af1854cf9f03df1bb0e16caa4`.
+- The first 1M formal invocation paused at transition 0 because the custom
+  formal checkpoint callback passed a relative root to Orbax. The regression
+  test failed on the old behavior and passed after resolving the root at the
+  checkpoint boundary. Fresh full pytest and local preflight each passed 868
+  tests; `cli.runtime_gate --check-only` confirmed the 96-transition runtime
+  report remains current because this checkpoint helper is outside that gate's
+  source fingerprint.
 
 Legacy five-stage experimental outcomes are not evidence for the dynamic
 two-phase method and must not be promoted retrospectively.
@@ -376,14 +384,16 @@ candidate-harvesting hooks have passed final validation and the new bounded
 smoke. A warm start restores only normalizer/policy/value parameters, resets
 optimizer and rollout state, binds its parent checkpoint's cumulative
 transition count, runs only the separately authorized remaining rollout
-blocks, and never repeats an already written global milestone. The one-use
-run-bound authorization has been issued and the persistent Phase U process has
-started with a 1,000,000 cumulative training-transition cap. The run may
-automatically begin real candidate acquisition and bounded policy-dependent
-continuation diagnostics only after their evidence gates pass. A later session
-should inspect only a requested checkpoint, completion, or abnormal exit using
-this file plus the run's `status.json` and `metrics.jsonl`; it must not
-repeatedly poll the long-running process.
+blocks, and never repeats an already written global milestone. The first 1M
+authorization was consumed by a zero-transition checkpoint-path pause and must
+not be reused. Next run one newly authorized, bounded formal-path checkpoint
+smoke to exercise the exact transition-0 callback. If it completes, issue a
+new run ID and authorization for the unchanged 1,000,000-transition cap. The
+run may automatically begin real candidate acquisition and bounded
+policy-dependent continuation diagnostics only after their evidence gates
+pass. A later session should inspect only a requested checkpoint, completion,
+or abnormal exit using this file plus the run's `status.json` and
+`metrics.jsonl`; it must not repeatedly poll the long-running process.
 
 This marker does not authorize formal `V_up`, a learned Soft Tube declaration,
 Phase D expert training, unified PPO, or JCE/JEL. Provisional acquisition aids

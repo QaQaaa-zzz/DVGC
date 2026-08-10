@@ -2156,7 +2156,7 @@ def _save_phase_expert_inference_checkpoint(
         normalize_observations=True,
         network_factory=build_network_factory(),
     )
-    root = Path(checkpoint_root)
+    root = Path(checkpoint_root).resolve()
     ppo_checkpoint.save(root, int(step), params, network_config)
     checkpoint = root / f"{int(step):012d}"
     if not checkpoint.is_dir():
