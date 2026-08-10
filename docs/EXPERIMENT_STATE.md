@@ -114,6 +114,21 @@ authorization and failed output directory are retained and will not be reused.
 The checkpoint boundary now resolves its root before invoking Orbax, with a
 red-green regression that reproduces the original relative-path failure.
 
+The separately authorized exact-formal-path regression smoke then completed:
+
+```text
+runs/two_phase/phase_experts/gate_c1_phase_u_formal_checkpoint_smoke_20260810_seed710001/
+```
+
+It wrote absolute transition-0 and transition-1,600 checkpoints with truthful
+normalizer/policy/value sidecars, consumed 1,600 PPO training + 216 fixed
+evaluation = 1,816 total interactions, and ended `completed`. Its transition-0
+held-out evaluation again had zero Apex success and eight post-window
+`takeoff_missed_liftoff_deadline` outcomes, with no physical failure, timeout,
+roll/pitch violation, illegal contact, saturation, NaN, or contract failure.
+This validates the repaired formal checkpoint path only; it is not expert or
+learnability evidence and is excluded from formal expert-training totals.
+
 The original Gate C1 smoke attempt is retained at
 `runs/two_phase/phase_experts/gate_c1_phase_u_smoke_20260810_seed710001/`
 with status `gate_pause`. Its actual training, Brax evaluation, fixed
@@ -351,6 +366,14 @@ Gate C1 validation on 2026-08-10:
   tests; `cli.runtime_gate --check-only` confirmed the 96-transition runtime
   report remains current because this checkpoint helper is outside that gate's
   source fingerprint.
+- A new one-block formal-path smoke then exercised the real transition-0 and
+  per-block callbacks. It completed 1,600 training and 216 fixed-evaluation
+  transitions, wrote both absolute checkpoints, and retained eight diagnostic
+  failure videos. Checkpoint recursive identities were
+  `0856c96e20227473988999476b2a9c71432150a4905e37d7943350b2dc8f4dcf`
+  at transition 0 and
+  `0501c33fbf904009c418ee1bb09d7f245a3cf6310f6c278cd3bcd4dc29b95e56`
+  at transition 1,600.
 
 Legacy five-stage experimental outcomes are not evidence for the dynamic
 two-phase method and must not be promoted retrospectively.
@@ -386,10 +409,10 @@ optimizer and rollout state, binds its parent checkpoint's cumulative
 transition count, runs only the separately authorized remaining rollout
 blocks, and never repeats an already written global milestone. The first 1M
 authorization was consumed by a zero-transition checkpoint-path pause and must
-not be reused. Next run one newly authorized, bounded formal-path checkpoint
-smoke to exercise the exact transition-0 callback. If it completes, issue a
-new run ID and authorization for the unchanged 1,000,000-transition cap. The
-run may automatically begin real candidate acquisition and bounded
+not be reused. The newly authorized bounded formal-path checkpoint smoke has
+completed. Next issue a new run ID and authorization for the unchanged
+1,000,000-transition cap. The run may automatically begin real candidate
+acquisition and bounded
 policy-dependent continuation diagnostics only after their evidence gates
 pass. A later session should inspect only a requested checkpoint, completion,
 or abnormal exit using this file plus the run's `status.json` and
