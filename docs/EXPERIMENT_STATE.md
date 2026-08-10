@@ -19,6 +19,14 @@ Existing five-stage code and results remain legacy migration sources only.
 This method is not yet implemented end-to-end: there are no trained phase
 experts, feasibility models, learned soft Tubes, or unified two-phase policy.
 
+The method contract was revised on 2026-08-10 to make the phase experts local
+continuation controllers and state-distribution generators rather than final
+deployment outputs. Expert training and feasibility-data acquisition now
+overlap: successful checkpoints may start real online candidate acquisition
+and policy-bound continuation diagnostics while expert training continues.
+Formal feasibility data later re-labels all accumulated candidates under the
+selected frozen phase expert. An expert trajectory is never itself a Tube.
+
 Gate C1's stable Phase U smoke capability is now implemented at
 `cli/train_phase_expert.py` and `dvgc/phase_expert_training.py`. The first
 single-run smoke authorization was consumed on 2026-08-10 and entered
@@ -36,6 +44,15 @@ evaluations. All fixed evaluations ended as `other_failure` with
 `takeoff_missed_liftoff_deadline`; there were no successes, physical failures,
 or timeouts. This is engineering smoke evidence only and does not authorize a
 learnability pilot or establish `pi_up`.
+
+The current task authorizes a new Phase U run with a maximum of 1,000,000 total
+training transitions, requested checkpoints at 0/100k/250k/500k/750k/1M, and
+separate evaluation/acquisition/continuation accounting. This is an upper
+bound, not permission to ignore gate-pause conditions or a requirement to wait
+until 1M before acquiring candidate states. The run has not started yet. First,
+the revised reward, physical evaluation, aligned checkpoint, truthful resume,
+and acquisition-hook contracts must pass red-green implementation and a fresh
+bounded smoke.
 
 ## Current branch and commit
 
@@ -288,13 +305,18 @@ descent rollouts. Phase D execution remains blocked at Gate C1.
 
 ## Next permitted action
 
-Stop after recording the completed replacement Gate C1 smoke and its actual
-outcomes. The next permitted action is a separate Gate D1 review deciding
-whether the zero-success, missed-liftoff smoke evidence is sufficient to
-authorize the fixed 102,400-transition Phase U learnability pilot. No smoke
-authorization may be reused. This marker does not authorize that pilot,
-500,000-transition formal training, Phase D training, snapshot labeling,
-feasibility training, Soft Tube construction, or unified PPO.
+Implement and verify the approved reward-only Phase U hypothesis plus
+per-checkpoint physical evaluation, aligned checkpoint, truthful warm-start
+resume, and candidate-harvesting hooks. Then execute one newly authorized
+bounded smoke. If smoke integrity passes, Codex may issue a new run-bound
+authorization and launch one persistent Phase U process capped at 1,000,000
+training transitions without waiting for another manual approval. The run may
+automatically begin real candidate acquisition and bounded policy-dependent
+continuation diagnostics only after their evidence gates pass.
+
+This marker does not authorize formal `V_up`, a learned Soft Tube declaration,
+Phase D expert training, unified PPO, or JCE/JEL. Provisional acquisition aids
+must remain clearly labeled and cannot shape Phase U reward or reset sampling.
 
 ## Closed routes
 

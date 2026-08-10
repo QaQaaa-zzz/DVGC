@@ -6,10 +6,11 @@ DVGC targets a concise IEEE RA-L method for learning a complete jump with two
 phase experts and learned soft feasibility guidance:
 
 ```text
-guideline
-  -> Propulsion-Ascent expert
-  -> Descent-Recovery expert
-  -> event-aligned snapshots and continuation labels
+kinematic guideline / natural physical states
+  -> local phase experts
+  -> expert rollout states and local perturbations
+  -> frozen-policy continuation rollouts
+  -> continuation feasibility labels
   -> V_up and V_down feasibility fields
   -> learned soft feasibility tubes
   -> unified Tube-RSI PPO
@@ -22,13 +23,25 @@ The input reference is a kinematic guideline and weak prior, not an expert or
 authoritative dynamic controller, and complete open-loop replay is not a
 prerequisite for training the phase experts.
 
+The local experts are not deployment outputs. They are continuation
+controllers and state-distribution generators used to identify where phase
+completion remains possible. Expert training and feasibility-data acquisition
+overlap in time; candidate states collected from early checkpoints are later
+re-labeled under the selected frozen phase expert before formal feasibility
+training. The only final deployment controller is `pi_unified`.
+
 ## Method contract
 
 - `Propulsion-Ascent` learns the launch and rising-flight behavior needed to
   reach the Apex transition band.
 - `Descent-Recovery` learns from the Apex transition band through landing and
   stable recovery.
-- Frozen experts generate snapshots and event-aligned continuation labels.
+- Phase-expert checkpoints generate real online candidate states throughout
+  training. Physically valid local perturbations give the candidate set
+  thickness; an expert trajectory itself is not a Tube.
+- Frozen checkpoint policies generate policy-dependent continuation labels.
+  Formal datasets re-label accumulated candidates under the selected
+  `pi_up_star` or `pi_down_star` to avoid mixing authorities.
 - Two learned feasibility models, `V_up` and `V_down`, estimate phase-specific
   continuation feasibility from those labels.
 - Thresholded/calibrated feasibility fields define soft training tubes. A soft
@@ -40,6 +53,8 @@ prerequisite for training the phase experts.
 
 The five-stage expert stack, sequential shared-Actor backward extension, and
 universal 4 -> 8 -> 16/32 branch funnel are not the current research method.
+Neither is a sequential "train both experts to convergence, then start Tube
+work" route.
 
 ## Implemented today
 

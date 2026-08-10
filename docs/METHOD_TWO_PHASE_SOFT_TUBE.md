@@ -21,15 +21,29 @@ The retained prelaunch and roll-limit replay evidence records that full dynamic
 compatibility was not demonstrated. It is provenance for this method revision,
 not a reason to tune actions, windows, thresholds, posture limits, or the model.
 
-## 2. Two experts
+## 2. Local phase experts
+
+The experts are not the final method output. Their primary roles are to explore
+states that occur under the authoritative dynamics, provide checkpoint-bound
+continuation controllers, and generate the distributions needed to learn
+phase-specific continuation feasibility. The only deployment controller is the
+later unified policy.
+
+Expert training and feasibility-data acquisition overlap in time. Candidate
+states may be collected as soon as a checkpoint has repeatable physical
+success, while the expert continues training. Formal feasibility labels are
+later normalized by re-labeling accumulated candidates under the selected
+frozen phase expert.
 
 ### Propulsion-Ascent
 
 The upstream expert owns ground propulsion, takeoff, and rising flight. Its
 local objective is to reach the Apex transition band with physically valid
 state, sufficient forward progress, and continuation-compatible motion.
-It trains directly from audited natural resets. Reference actions are never
-replayed to initialize or control Phase U.
+It trains directly from audited natural stable resets. Reference states and
+actions are never replayed to initialize or control Phase U, and the guideline
+is never used for behavior cloning, imitation learning, or pointwise
+time-indexed trajectory tracking.
 
 ### Descent-Recovery
 
@@ -45,8 +59,10 @@ snapshot validation. Such records are labeled only
 certified. After Phase U is frozen, real online `pi_up` rollouts at Apex
 pre/nearest/post and early descent become the primary formal Phase D source.
 
-Experts are trained without feasibility networks or learned Tubes. This keeps
-expert data generation causally prior to feasibility learning.
+An expert never trains from a learned Tube or provisional feasibility score.
+A provisional feasibility model may guide where the data-acquisition process
+adds continuation probes, but it must not shape expert reward, expert reset
+sampling, or expert training distribution.
 
 ## 3. Apex transition band
 
@@ -56,15 +72,26 @@ features, direction of travel, admissible rates, event timing, and provenance.
 Membership means the downstream expert may attempt continuation; it does not
 mean the state is certified safe or guaranteed recoverable.
 
-## 4. Snapshots and labels
+## 4. Candidate snapshots, perturbations, and labels
 
-Frozen experts generate snapshots at event-aligned states. A snapshot preserves
+Checkpoint experts generate real online snapshots at stratified locations from
+pre-window approach through Apex post. A snapshot preserves
 the physical state and online control context needed for consistent replay,
 including observation history, last action/control state, estimator/event
-state, delay/timing fields when applicable, and XML/config/policy provenance.
+state, delay/timing fields when applicable, parent trajectory identity, and
+XML/config/policy provenance. History must be a real consecutive three-frame
+FIFO; CSV reconstruction, copied frames, and offline kinematic states are not
+expert snapshots.
 
-Labels answer phase-specific continuation questions under a frozen data
-generation protocol:
+Successful, near-success, failure, high-attitude, low-clearance,
+low-forward-speed, mistimed-ascent, and Apex-boundary states are all required.
+Small approved physical perturbations provide thickness around real online
+states. Every perturbation must pass finite, joint-limit, geometry,
+non-penetration, timing, and snapshot validation. A short settle check is a
+physical-validity diagnostic, not proof that the perturbed state is reachable.
+
+Labels answer phase-specific downstream-completion questions under a frozen
+data-generation protocol:
 
 - upstream label: valid continuation from a Propulsion-Ascent snapshot into the
   Apex transition band;
@@ -76,27 +103,46 @@ of physical unreachability. Physical failures, timeouts, and invalid snapshots
 remain separate outcomes. Independent audit labels are never fed back into the
 training split that produced a model.
 
-## 5. Feasibility fields
+Continuation accounting records rollout count, success count, empirical rate,
+physical-failure rate, timeout rate, closed outcome counts, source-policy hash,
+and protocol hash. A one-branch screen may cover many nominal states; 4-branch
+probes cover representative states; 4–8 branches cover calibration strata;
+8–32 branches are reserved for key boundaries. "Alive for N ticks" is never a
+positive label: the corresponding Apex or stable-recovery completion must
+occur.
 
-Two phase-conditioned models are trained after expert data collection:
+## 5. Provisional and formal feasibility fields
+
+Two phase-conditioned models are learned from continuation data:
 
 - `V_up(s)`: estimated probability/score of valid upstream continuation;
 - `V_down(s)`: estimated probability/score of downstream recovery.
 
-Training must use provenance-safe splits such as parent/trajectory-disjoint
-validation. Calibration, coverage, uncertainty, and class balance must be
-reported. The model predicts empirical continuation feasibility under its data
-protocol; it does not certify safety.
+Labels are policy-dependent: `V_up(s | pi_up@100k)` and
+`V_up(s | pi_up@1M)` are not interchangeable. Early checkpoint data may train a
+provisional model for acquisition guidance only. It requires a deployable
+feature allowlist, parent-disjoint train/validation/test splits, leakage tests,
+class-imbalance handling, ranking evaluation, and calibration diagnostics.
+
+After selecting `pi_up_star` or `pi_down_star`, all accumulated candidates are
+re-labeled under that one frozen policy. Only this normalized dataset may train
+the corresponding formal feasibility field. Scores are continuation
+feasibility scores, not true or safety probabilities, unless calibration
+evidence supports a narrower claim.
 
 ## 6. Learned soft feasibility tubes
 
-A soft Tube is a weighted region induced by calibrated `V_up` or `V_down`
-scores and explicit physical validity filters. It supplies reset weights,
-curriculum support, and optional shaping for unified training.
+A soft Tube is a thick weighted region induced by a learned feasibility score,
+support confidence, and explicit physical-validity filters. An expert rollout
+is only a source of candidate centers and is never itself a Tube. The Tube may
+contain validation-selected core, boundary, and exploration strata; no fixed
+top-percent threshold is assumed before calibration.
 
 Soft-Tube records must identify the model, dataset, split, threshold/weighting
 rule, XML/config/action mapping, and source policy. They must not use
 `certified_safe`, `certified_tube`, or equivalent formal-safety language.
+They must explicitly record `certified_safe=false` and
+`training_guidance_only=true`.
 
 The previous 4 -> 8 -> 16/32 branch funnel is not a universal admission rule
 for a learned training Tube. Any final evaluation branch budget is defined
@@ -127,21 +173,50 @@ proof of safety.
 Expert-conditioned rollouts, learned feasibility scores, and soft-Tube training
 membership cannot themselves support the final JCE/JEL claim.
 
-## 9. Required implementation order
+## 9. Interleaved implementation order
 
 1. Gate A/B: specify and validate static semantics, pure-JAX runtime, geometry,
    thresholds, natural reset, seed protocol, and timing-explicit snapshots.
 2. Gate C1: implement the unified phase-expert entrypoint and Phase U smoke
    capability; run smoke only under its explicit authorization.
-3. Gates D1/D2: separately run the Phase U learnability pilot, then formal
-   training, and freeze `pi_up`.
-4. Gate E1: collect provenance-complete real `pi_up` Apex/early-descent
-   snapshots.
-5. Gate C2/D3: validate Phase D seed smoke, then separately run its pilot and
-   formal training and freeze `pi_down`.
-6. Collect continuation labels and train/validate `V_up` and `V_down`.
-7. Construct learned soft-Tube banks and train one unified Tube-RSI PPO.
-8. Freeze it and run an independent empirical JCE/JEL evaluation.
+3. Train Phase U from natural resets with checkpoints at requested 100k, 250k,
+   500k, 750k, and 1M total environment transitions. Aligned effective counts
+   are recorded separately when PPO rollout blocks cannot end at the requested
+   number exactly.
+4. As soon as fixed evaluation is nonzero and at least eight independent
+   successful online parents exist, collect provenance-complete Phase U
+   candidates and begin bounded checkpoint-specific continuation diagnostics.
+5. Continue Phase U while candidate coverage and boundary information improve;
+   a low 100k success rate alone is not a pause condition.
+6. Once real Apex coverage exists, collect real Apex/early-descent seeds and
+   begin the separately gated Phase D smoke/pilot without waiting for Tube-up.
+7. Use provisional feasibility models only to guide further data acquisition.
+   Select each formal phase expert, re-label all candidates under it, then train
+   the formal `V_up` or `V_down` and construct the learned soft Tube.
+8. Combine Tube-up and Tube-down in a separately validated Tube-RSI curriculum,
+   freeze the unified policy, and run independent empirical JCE/JEL evaluation.
 
 No later step may be advertised as complete before its code, tests, inputs,
 hashes, and outputs have been validated.
+
+## 10. Phase U reward and run discipline
+
+Phase U reward is bounded observable task progress: forward propulsion;
+one-time legal-window entry; post-entry ascent, clearance, and Apex-band
+approach; online Apex success; attitude/rate, illegal-contact, action magnitude
+and smoothness penalties; and physical/task failure penalties. Jump/ascent
+progress is exactly zero before the legal-window-entry event. Early airborne is
+diagnostic only: it neither fails nor succeeds and cannot unlock post-window
+reward.
+
+The guideline supplies broad engineering scales only. No reward term uses a
+reference time, index, action, future state, success dataset label, or pointwise
+reference distance. Every component is bounded and recorded independently.
+
+The current Phase U training authorization is capped at 1,000,000 training
+transitions, not a mandatory stopping target. Training, Brax evaluation, fixed
+evaluation, snapshot acquisition, continuation labeling, and runtime-smoke
+interactions are counted separately. Pause immediately on numerical or
+contract failure, state corruption, hash drift, clear reward hacking, severe
+action saturation, or repeated held-out degradation; do not rewrite reward
+merely because one early checkpoint has low success.
