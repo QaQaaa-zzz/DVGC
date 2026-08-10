@@ -15,7 +15,7 @@
 - Do not replay or tune `reference_jump.csv` actions.
 - Keep `OrangeBikeDVGC.step` unchanged unless a red test proves that a required read-only physical signal is unavailable; report such a finding before editing it.
 - Treat the reference only as a kinematic guideline and weak prior.
-- Gate C1 implements smoke capability for Phase U first. It does not authorize running PPO, pilot/formal training, Phase D training, feasibility learning, Soft Tubes, or unified PPO.
+- Gate C1 implements smoke capability for Phase U first. The user delegated a later single-smoke authorization decision to Codex; this does not authorize pilot/formal training, Phase D training, feasibility learning, Soft Tubes, or unified PPO.
 - Use total environment transitions as the public budget unit; legacy aliases must remain equal.
 - Preserve the watchdog interlock and do not operate systemd.
 
@@ -28,11 +28,17 @@
 - Create: `dvgc/phase_expert_training.py`
 - Create: `tests/test_phase_expert_training.py`
 - Create: `configs/phase_expert_smoke.json`
+- Modify: `dvgc/two_phase_guideline.py`
+- Modify: `tests/test_two_phase_guideline.py`
 
-- [ ] Write failing tests for the two phase names, `PhaseExpertRunSpec`, immutable threshold-manifest input, smoke-only authorization, unique output directory, and Phase D seed requirements.
+- [ ] Write failing tests for the two phase names, `PhaseExpertRunSpec`, immutable threshold-manifest input, single-run authorization manifest, unique output directory, and Phase D seed requirements.
 - [ ] Write failing tests that reject independent `requested_timesteps`, misaligned rollout-block budgets, pilot/formal levels, missing source hashes, and Phase D natural reset fallback.
-- [ ] Implement the smallest schema/validator using `PPOBudgetReport`; expose only `requested_total_transitions` and assert both legacy/effective aliases equal their total-transition fields.
-- [ ] Define the smoke config with one through four aligned PPO rollout blocks, explicit maximum interaction cost, fixed stop conditions, reward bounds, checkpoint cadence, and disjoint train/evaluation seeds.
+- [ ] Write failing tests for canonical threshold hash/source/action/geometry validation and for corrected `kinematic_guideline_envelope` threshold provenance.
+- [ ] Implement the smallest schema/validator using `PPOBudgetReport`; expose only `requested_total_transitions`, require zero alignment overhead and one through four blocks, and wrap training plus fixed-evaluation transitions in one combined interaction ceiling.
+- [ ] Define deterministic disjoint train/evaluation seed namespaces and reject collisions.
+- [ ] Define the frozen Gate C1 base mode: full stage, no bank reset, no chain/reachability terminal, no domain randomization, wrapper-owned reward/done/timeout.
+- [ ] Define a single-run authorization artifact binding run id, hashes, phase, level, and all interaction ceilings; normal execution fails closed without it while preflight emits zero transitions.
+- [ ] Define the smoke config with explicit maximum training/evaluation/combined interaction cost, fixed stop conditions, reward bounds, checkpoint cadence, and disjoint train/evaluation seeds.
 - [ ] Run:
 
 ```bash
@@ -53,7 +59,9 @@
 - [ ] Write failing tests that early airborne does not terminate or succeed, early airborne may later latch the legal window, the latch remains monotonic, and full Apex-band membership is required for success.
 - [ ] Write failing tests that pre-window takeoff/ascent progress reward is zero even when airborne, rising, or already latched; test bounded reward components after window entry.
 - [ ] Write failing tests that prohibited contact, invalid wheel contact, roll, pitch, backward motion, platform back-edge exit, and nonfinite states remain terminal.
-- [ ] Implement the minimal adapter by composing existing physical transitions and pure-JAX two-phase signals. Do not add latches to `env.step`.
+- [ ] Write failing tests that formal success is `apex_band_entered`, with instantaneous full Apex membership necessary but insufficient without the ordered legal-window/liftoff/airborne/ascending chain.
+- [ ] Write failing tests that base recovery, stage timeout, chain entry, and next-stage entry codes do not terminate Phase U; physical codes 2-7/15 remain terminal, and takeoff task codes 10-13 are active only after the legal jump latch.
+- [ ] Implement the minimal adapter by composing existing physical transitions and pure-JAX two-phase signals. Clear incoming legacy done, discard legacy reward/done/success/timeout, and do not add latches to `env.step`.
 - [ ] Run the targeted test file and inspect every failure cause before changing semantics.
 - [ ] Commit explicit paths with message `feat: add propulsion ascent training adapter`.
 
@@ -64,7 +72,7 @@
 - Modify: `dvgc/phase_expert_training.py`
 - Modify: `tests/test_phase_expert_training.py`
 
-- [ ] Write failing tests for immutable `run_manifest.json`, atomic `status.json`, append-only finite `metrics.jsonl`, resolved config, budget report, source hashes, and fixed evaluation protocol.
+- [ ] Write failing tests for immutable `run_manifest.json`, atomic `status.json`, append-only finite `metrics.jsonl`, resolved config, training/evaluation/combined budget report, source hashes, authorization identity, and fixed evaluation protocol.
 - [ ] Write failing tests for mutually exclusive `success`, `physical_failure`, `timeout`, and `other_failure` counts plus fine-grained terminal reasons and event ticks.
 - [ ] Write failing tests that evaluation seeds are disjoint from training, repeat deterministically, never tune thresholds, and never promote a checkpoint beyond smoke evidence.
 - [ ] Implement artifact initialization before environment construction and transitions `initialized -> running -> completed|failed|gate_pause`.
@@ -78,9 +86,9 @@
 - Modify: `dvgc/phase_expert_training.py`
 - Modify: `tests/test_phase_expert_training.py`
 
-- [ ] Write failing tests that checkpoints bind cumulative transitions, optimizer/normalizer state, PRNG lineage, phase, reset/reward/evaluation hashes, XML/action/observation/history hashes, and parent checkpoint.
+- [ ] Write failing tests that checkpoint sidecars bind a recursive Orbax file hash, cumulative transitions, full-training-state assertion, PRNG lineage, phase, reset/reward/evaluation hashes, XML/action/observation/history hashes, and parent checkpoint.
 - [ ] Write failing tests that exact resume requires matching `--resume-run` and `--restore-checkpoint`, writes a new output directory, preserves the parent, and rejects any contract drift.
-- [ ] Implement checkpoint sidecars and exact validation by composing the existing runtime checkpoint facilities.
+- [ ] Implement checkpoint sidecars and exact recursive identity validation before composing the existing runtime checkpoint restore facility.
 - [ ] Add an in-process tiny mocked update/resume test; do not run MuJoCo PPO in this task.
 - [ ] Run targeted tests and commit explicit paths with message `feat: validate phase expert resume`.
 
@@ -93,10 +101,10 @@
 - Modify: `tests/test_repository_contract.py`
 - Modify: `dvgc/phase_expert_training.py`
 
-- [ ] Write failing CLI tests for both phase choices, smoke-only execution, total-transition input, threshold manifest, Phase D seed inputs, exact resume pairing, collision-safe run creation, and structured pre-run errors.
+- [ ] Write failing CLI tests for both phase choices, authorization-manifest gating, smoke-only execution, total-transition input, threshold manifest, Phase D seed inputs, exact resume pairing, collision-safe run creation, and structured pre-run errors.
 - [ ] Replace the repository assertion that the future CLI is absent with assertions for the one stable entrypoint and no version-suffixed variants.
 - [ ] Implement argument parsing and a `--preflight-only` path that validates/hashes inputs and emits no environment transitions.
-- [ ] Wire the normal path to `run_phase_expert` without any automatic promotion or follow-on gate.
+- [ ] Wire Phase U normal execution to `run_phase_expert` without automatic promotion. Phase D remains preflight-only and any execution attempt fails closed until Gate C2.
 - [ ] Run:
 
 ```bash
@@ -121,7 +129,7 @@
 - [ ] Implement manifest admission/validation only. Do not construct candidate states, build a bank, collect snapshots, or run Phase D PPO.
 - [ ] Run targeted tests and commit explicit paths with message `feat: enforce descent seed provenance`.
 
-### Task 7: Validate Gate C1 implementation and stop before PPO
+### Task 7: Validate Gate C1 implementation and make the bounded smoke decision
 
 **Files:**
 
@@ -129,8 +137,10 @@
 
 - [ ] Run static compilation and all focused tests.
 - [ ] Run full pytest and `bash scripts/local_preflight.sh`.
-- [ ] Do not run the runtime PPO gate or phase-expert smoke; record that the implementation review does not authorize interactions.
+- [ ] Run the runtime PPO gate only if the implementation changes its managed source fingerprint; classify its 96 transitions as engineering integrity smoke, never expert training.
 - [ ] Confirm no files under `runs/`, checkpoints, logs, caches, or local service state are staged.
-- [ ] Update the experiment ledger with exact hashes, tests, zero new training transitions, remaining authorization boundary, and next permitted action.
+- [ ] Update the experiment ledger with exact hashes, tests, transitions by category, remaining authorization boundary, and next permitted action.
 - [ ] Use `verification-before-completion`, review the complete diff, and create a focused validation commit.
-- [ ] Stop for explicit smoke-run authorization; do not enter Gate D1.
+- [ ] Recheck watchdog/pointer, source cleanliness, threshold and authorization manifests, one-block budget, fixed evaluation ceiling, checkpoint/resume capability, and output path. If any check fails, record `gate_pause` with zero expert transitions.
+- [ ] If every check passes, Codex may issue one run-bound Phase U smoke authorization and execute exactly one 1,600-transition rollout block plus the fixed evaluation ceiling. Never retry with changed seed/actions/reward/threshold/model after failure.
+- [ ] Record the actual smoke outcome and stop. Do not enter Gate D1 or authorize pilot/formal training.

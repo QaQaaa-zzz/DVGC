@@ -1,5 +1,9 @@
 # Two-Phase Gate C Expert-Training Foundation Design
 
+Implementation marker: Gate C1 source capability is implemented through
+`b36cfec`; dynamic smoke evidence is recorded separately and never upgrades
+this design into a learnability or formal-training authorization.
+
 ## Status and scope
 
 This document defines the future stable two-phase expert-training interface:
@@ -10,10 +14,12 @@ dvgc/phase_expert_training.py
 ```
 
 It covers both `propulsion_ascent` and `descent_recovery` without creating
-version-suffixed scripts. The current authorized implementation target is Gate
-C1 smoke capability, with Phase U first. This design does not authorize or run
-PPO, a learnability pilot, formal expert training, snapshot collection,
-feasibility learning, Soft Tube construction, or unified PPO.
+version-suffixed scripts. The current implementation target is Gate C1 smoke
+capability, with Phase U first. After implementation review, the user's
+delegated decision permits Codex to authorize at most one run-bound Phase U
+smoke. It does not authorize a learnability pilot, formal expert training,
+Phase D execution, snapshot collection, feasibility learning, Soft Tube
+construction, or unified PPO.
 
 ## Architectural choice
 
@@ -49,6 +55,7 @@ class PhaseExpertRunSpec:
     config_path: str
     training_config_path: str
     threshold_manifest_path: str
+    authorization_manifest_path: str | None
     output_dir: str
     descent_seed_bank: str | None
     descent_seed_manifest: str | None
@@ -116,6 +123,20 @@ At the initial Gate C1 implementation, `--experiment-level smoke` is the only
 executable level. Pilot and formal values are rejected with a clear
 authorization error even though their budgets are documented below.
 
+Normal execution also requires `--authorization-manifest`. `--preflight-only`
+may omit it because that path constructs no environment and emits zero
+transitions. The authorization is a single-run JSON contract binding phase,
+experiment level, run id, source HEAD, XML hash, threshold-manifest canonical
+hash, training-config hash, requested/effective training-transition ceilings,
+fixed-evaluation and combined-interaction ceilings, issuer, issue time, and the
+literal decision `authorize`. Reuse for another run or any hash/budget drift is
+rejected. Authorization is evidence of permission, not evidence of safety or
+learnability.
+
+At Gate C1, `descent_recovery` is accepted only by `--preflight-only` for seed
+manifest validation. Any attempt to construct a Phase D environment or execute
+PPO fails closed until Gate C2 is separately released.
+
 ## Phase-specific reset contracts
 
 ### Propulsion-Ascent
@@ -159,8 +180,11 @@ a reason to fall back to natural reset.
 
 ## Success, failure, and timeout
 
-Phase U success is exactly `propulsion_ascent_success` over deployable
-`ApexBandSignals` and the frozen Gate B thresholds. It requires:
+`propulsion_ascent_success` is the instantaneous physical membership gate over
+deployable `ApexBandSignals` and the frozen Gate B thresholds. Formal Phase U
+terminal success is the first `TwoPhaseEventState.apex_band_entered` tick,
+which additionally closes the monotonic legal-window, liftoff, airborne, and
+ascending event order. It requires:
 
 ```text
 obstacle-relative x window
@@ -185,6 +209,25 @@ platform back-edge, and nonfinite failures remain hard. Expert-specific timeout
 is truncation. Fixed evaluation reports the mutually exclusive outcome
 categories `success`, `physical_failure`, `timeout`, and `other_failure`, plus
 fine-grained terminal reasons.
+
+For Gate C1 the base environment is resolved to `training_stage=full`,
+`use_bank_resets=false`, `expert_chain_termination=false`, an empty legacy
+reachability objective, and no domain randomization. Its raw step supplies only
+the immutable physical transition, observations/history, contacts, and failure
+telemetry. The adapter clears an incoming legacy `done`, discards legacy reward,
+success, recovery, chain-entry, stage-entry, and timeout decisions, and owns the
+published reward/done/metrics. Physical end codes 2-7 and 15 remain terminal;
+takeoff task codes 10-13 may terminate only after the legal jump latch and are
+reported as `other_failure`. Codes 1, 8, 14, and 16 cannot terminate a Phase U
+expert episode. The adapter horizon and Brax `episode_length` are identical, so
+there is one authoritative timeout.
+
+Natural-reset validation has two levels. A host preflight validates the bounded
+configured reset domain and fixed seed suite without changing root height or
+searching for a passing state. Every JAX reset also evaluates finite state,
+legal-support/contact, pose, nonterminal, neutral-action, and history predicates;
+an invalid reset fails closed. Gate C1 smoke disables domain randomization;
+enabling it later requires a separately reviewed reset-domain audit.
 
 ## Reward contracts
 
@@ -246,6 +289,14 @@ requested_timesteps == requested_total_transitions
 effective_timesteps == effective_total_transitions
 ```
 
+Gate C wraps this report in a phase interaction budget. A valid smoke request
+has zero alignment overhead and exactly one through four rollout blocks. The
+wrapper also records Brax-internal and fixed-evaluation environments, horizon,
+cadence/count, and their transition ceilings. Its combined ceiling is training
+plus both evaluation categories; Brax internal evaluation is never an
+unreported interaction channel. Run status reports training, evaluation, and
+combined actual totals separately.
+
 Smoke validates compilation, update, checkpoint, resume, metrics, and fixed
 evaluation only. It cannot establish learnability. The CLI never auto-promotes
 from smoke to pilot or formal training, and Phase U authorization does not
@@ -255,7 +306,9 @@ authorize Phase D.
 
 `configs/phase_expert_smoke.json` will declare the PPO layout, reward weights,
 episode horizon, checkpoint cadence, and fixed evaluation seed namespace. The
-evaluation protocol is hashed into every run.
+root seed deterministically derives a training namespace; fixed evaluation uses
+an explicit seed list under a different namespace. Validation rejects any
+collision. The evaluation protocol is hashed into every run.
 
 Phase U evaluation always uses a fixed set of natural resets disjoint from the
 training seed namespace. Phase D evaluation uses fixed validated seed IDs and
@@ -276,6 +329,14 @@ Exact resume requires both `--resume-run` and its matching
 observation/history, thresholds, reward, seed protocol, PPO layout, or source
 hash drift. A policy bundle alone may initialize a separately authorized new
 experiment but cannot be called an exact resume.
+
+Each Orbax directory has an immutable Gate C sidecar containing its recursive
+file manifest/hash, saved step, cumulative transitions, contract hash, phase,
+reset/reward/evaluation hashes, XML/action/observation/history hashes, PRNG
+lineage, parent run/checkpoint, and the assertion that the checkpoint was
+written by Brax's full-training-state checkpoint path. Exact resume validates
+the sidecar and recursive checkpoint identity before passing the path to Brax;
+it does not claim to reconstruct optimizer state from a policy bundle.
 
 The cumulative transition total is parent completed transitions plus the new
 effective budget. Parent artifacts remain immutable.
@@ -351,6 +412,15 @@ The manifest must state `formal_tube_or_jel=false`. An expert checkpoint is a
 phase-local policy proposal; it is not a Tube, feasibility model, unified
 policy, safe controller, or JCE/JEL result.
 
+Threshold loading is a host-only pre-run operation. It recomputes the canonical
+manifest hash, validates all authoritative source hashes and paths, checks the
+current XML/action/geometry identities, parses the selected threshold
+dataclasses, and returns an immutable resolved object consumed downstream.
+New threshold manifests use the repository `ACTION_MAPPING_VERSION` and record
+the reference role as `kinematic_guideline_envelope`. Historical Gate B
+manifests with obsolete action/controller terminology remain unchanged as
+provenance and are not valid inputs to a new expert run.
+
 ## Gate sequence
 
 The authorized sequence is:
@@ -369,11 +439,10 @@ depends on a valid Phase U checkpoint and real `pi_up` snapshots.
 
 ## Gate C1 implementation boundary
 
-Gate C1 may later create the stable module, CLI, smoke config, and focused
-tests. It may run only an explicitly authorized smoke after implementation
-review. It must not create `V_up`, `V_down`, a Soft Tube, unified PPO, or any
-pilot/formal training process. This design task stops before implementing or
-running Gate C1.
+Gate C1 may create the stable module, CLI, smoke config, and focused tests. It
+may run only a single explicitly authorized Phase U smoke after implementation
+review and authorization-manifest validation. It must not create `V_up`,
+`V_down`, a Soft Tube, unified PPO, or any pilot/formal training process.
 
 Before a future Gate C1 smoke can pass, tests and the bounded run must show:
 
