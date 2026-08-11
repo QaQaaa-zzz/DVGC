@@ -90,9 +90,9 @@ validation, a fresh runtime gate, and a new bounded PPO smoke at `b4c7fb5`.
 - The gate's 64+32 = 96 transitions are compile/update/resume smoke evidence
   only, not expert, pilot, or formal training.
 
-## Current active run
+## Current and most recent formal run
 
-The collision-qualified 512-environment Phase U formal rerun is active:
+The collision-qualified 512-environment Phase U formal rerun is paused:
 
 ```text
 run id: phase_u_formal_env512_998400_20260810_seed710004
@@ -104,13 +104,29 @@ log: runs/two_phase/process_logs/phase_u_formal_env512_998400_20260810_seed71000
 resume record: runs/two_phase/process_logs/phase_u_formal_env512_998400_20260810_seed710004.control.txt
 ```
 
-Its run-bound authorization caps training at 998,400 aligned transitions,
+Its run-bound authorization capped training at 998,400 aligned transitions,
 fixed evaluation at 9,600, candidate acquisition at 76,800, continuation
 diagnostics at 76,800, and all environment interaction at 1,161,600. The one
 startup check observed `status=running`, an absolute transition-0 checkpoint,
 and no broadphase, OOM, NaN, Inf, traceback, error, or Gate Pause pattern. No
-further polling is performed by the launching interaction; the persistent goal
-resumes analysis only on completion or Gate Pause.
+further polling was performed by the launching interaction. The process later
+entered `gate_pause` at 256,000 training transitions after fixed evaluations at
+0, 102,400, and 256,000 all reached the jump window but produced zero liftoff,
+clearance, or Apex success. All 24 outcomes were
+`takeoff_missed_liftoff_deadline`; physical failure, roll/pitch violation,
+illegal contact, action saturation, candidate acquisition, and continuation
+diagnostics remained zero. The process exited after writing the 256,000
+checkpoint and 656 fixed-evaluation transitions.
+
+A bounded natural-start action diagnostic then consumed 710 non-training
+environment transitions. Window-triggered hip action at or above 0.5 produced
+liftoff in 10/10 cases, while nonpositive hip action produced liftoff in 0/15.
+This proves current action authority can initiate liftoff but does not establish
+an Apex success. The failed policy kept its action standard deviation near the
+Landing-oriented 0.05 prior, making a useful hip action effectively
+unobservable during PPO exploration. The next single scientific hypothesis is
+a Phase-U-only initial exploration standard deviation of 0.25; reward, reset,
+optimizer, physics, action mapping, and evaluation stay fixed.
 
 The repaired 64-environment Phase U formal-expert run is now paused:
 
@@ -486,12 +502,15 @@ completed. The subsequent 64-environment run is paused for a three-window
 physical plateau and will not be resumed. The explicitly requested
 1,024-environment layout failed collision-integrity qualification, so it must
 not be used unless the immutable runtime/model contract is separately changed
-and re-authorized. The 512-environment layout passed qualification and has
-received a new run-bound authorization for 998,400 aligned training
-transitions, with requested milestones mapped to
-0/102,400/256,000/512,000/755,200/998,400. That run may automatically begin
-candidate acquisition and bounded policy-dependent continuation diagnostics
-only after their evidence gates pass.
+and re-authorized. The 512-environment layout passed qualification, but its
+formal run paused at 256,000 on a second no-liftoff physical plateau. Together
+with the earlier 291,200-transition formal run, cumulative Phase U expert
+training is 547,200 transitions. The selected next hypothesis changes only the
+Phase-U initial action standard deviation from 0.05 to 0.25. After red-green
+implementation and a bounded smoke, no more than 448,000 aligned formal
+training transitions remain under the one-million ceiling. Candidate
+acquisition and bounded policy-dependent continuation diagnostics may begin
+only after their unchanged evidence gates pass.
 
 This marker does not authorize formal `V_up`, a learned Soft Tube declaration,
 Phase D expert training, unified PPO, or JCE/JEL. Provisional acquisition aids
