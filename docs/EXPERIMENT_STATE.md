@@ -74,7 +74,8 @@ validation, a fresh runtime gate, and a new bounded PPO smoke at `b4c7fb5`.
 - Checkpoint evaluation protocol: `567ebc0`
 - Candidate acquisition gate: `086bae5`
 - Checkpoint/acquisition provenance closure: `4b6449e`, `a25a31f`
-- Current runtime fingerprint refresh: `b4c7fb5`
+- Phase U exploration diagnosis and implementation: `ddf774f`, `46c1084`
+- Current runtime fingerprint refresh: `46c1084`
 - Cleanup baseline: `main@b7bb815`
 - Dependency design: `27f0aa3`
 - Clarified design policy: `3cbd6c1`
@@ -84,9 +85,10 @@ validation, a fresh runtime gate, and a new bounded PPO smoke at `b4c7fb5`.
 ## Last validated gate
 
 - Current reusable runtime gate: PASS at source fingerprint
-  `57d07a01ed8c3c9a2f9df0ba284733bf4bf1d8231f8a2fc8acda2296646e7b2e`.
+  `14972405f8ba75e701fdd71364c7fa12ded9ac962e8f9ad440b88314568aba35`.
 - It used the fresh ignored work directory
-  `runs/runtime_gate_phase_u_1m_20260810_v2/` and took 97.094 seconds.
+  `runs/two_phase/runtime_gate/phase_u_std025_20260811/` and took 96.037
+  seconds.
 - The gate's 64+32 = 96 transitions are compile/update/resume smoke evidence
   only, not expert, pilot, or formal training.
 
@@ -127,6 +129,63 @@ Landing-oriented 0.05 prior, making a useful hip action effectively
 unobservable during PPO exploration. The next single scientific hypothesis is
 a Phase-U-only initial exploration standard deviation of 0.25; reward, reset,
 optimizer, physics, action mapping, and evaluation stay fixed.
+
+That hypothesis is implemented and frozen at producer HEAD `46c1084`. Fresh
+validation compiled `dvgc` and `cli`, passed 881 tests, passed the complete
+64+32-transition runtime gate, and passed `scripts/local_preflight.sh` (which
+repeated the same 881 tests). The default/Landing actor prior remains 0.05;
+only explicit Phase U configs select 0.25.
+
+The requested 1,024-environment one-block qualification was repeated with the
+new prior. It completed 25,600 smoke training transitions at 1,800.88
+transitions/s and preserved a mean policy standard deviation of 0.24994, but
+again emitted MJX Warp broadphase overflow warnings, with the reported
+`naconmax` requirement reaching at least 1,296. It is therefore invalid as a
+collision-complete training layout. The run and its eight failure videos are
+preserved at:
+
+```text
+runs/two_phase/phase_experts/gate_c1_phase_u_std025_env1024_smoke_20260811_seed710005/
+```
+
+The otherwise identical 512-environment qualification completed 12,800 smoke
+training transitions plus 1,600 Brax-evaluation and 216 fixed-evaluation
+transitions. It ran at 893.26 training transitions/s, preserved a mean policy
+standard deviation of 0.24996, wrote its transition-12,800 checkpoint, and had
+no broadphase overflow, NaN, Inf, OOM, traceback, accounting failure, or video
+failure. All eight deterministic fixed evaluations still ended in
+`takeoff_missed_liftoff_deadline`; one smoke block is engineering integrity
+evidence, not a learnability conclusion. Its eight failure videos are at:
+
+```text
+runs/two_phase/phase_experts/gate_c1_phase_u_std025_env512_smoke_20260811_seed710006/failure_videos/
+```
+
+The remaining collision-qualified formal Phase U run was launched once and is
+not being polled by the launching interaction:
+
+```text
+run id: phase_u_formal_std025_env512_448000_20260811_seed710007
+producer HEAD: 46c108492eb183f7e2a3f251bed849838e82616b
+training PID at startup: 557999
+status: runs/two_phase/phase_experts/phase_u_formal_std025_env512_448000_20260811_seed710007/status.json
+metrics: runs/two_phase/phase_experts/phase_u_formal_std025_env512_448000_20260811_seed710007/metrics.jsonl
+log: runs/two_phase/process_logs/phase_u_formal_std025_env512_448000_20260811_seed710007.log
+authorization: runs/two_phase/authorizations/phase_u_formal_std025_env512_448000_20260811_seed710007.json
+```
+
+Its one startup check observed a live process, `status=running`, zero consumed
+transitions, and the absolute transition-0 checkpoint. This invocation is
+bounded to 448,000 expert-training transitions, 6,400 fixed-evaluation
+transitions, 51,200 candidate-acquisition transitions, and 51,200 continuation
+diagnostic transitions. The prior formal runs consumed 547,200 expert-training
+transitions, so the program-level maximum after this invocation is 995,200,
+below the authorized 1,000,000 ceiling. Requested fixed checkpoints are
+0/100k/250k/448k and resolve to aligned 0/102,400/256,000/448,000 checkpoints.
+If the process exits abnormally, a new run-bound authorization and output ID
+must be created, then `--resume-run` must name this directory and
+`--restore-checkpoint` must name its latest complete `orbax/` checkpoint; the
+existing output directory and authorization must never be reused.
 
 The repaired 64-environment Phase U formal-expert run is now paused:
 

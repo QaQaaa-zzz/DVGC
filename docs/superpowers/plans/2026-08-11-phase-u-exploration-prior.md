@@ -107,7 +107,7 @@ full pytest suite.
 - Consumes: validated source/config/XML/threshold hashes.
 - Produces: one 12,800-transition smoke with fixed evaluation, checkpoint, metrics, accounting, and failure videos.
 
-- [ ] **Step 1: Run repository verification**
+- [x] **Step 1: Run repository verification**
 
 ```bash
 /home/qy/mujoco_playground/.venv/bin/python -m compileall dvgc cli
@@ -118,18 +118,18 @@ bash scripts/local_preflight.sh
 
 The full runtime gate is required because `dvgc/runtime.py` changes.
 
-- [ ] **Step 2: Commit and push explicit source paths**
+- [x] **Step 2: Commit and push explicit source paths**
 
 Commit the runtime, Phase U adapter, configurations, tests, plan, and experiment
 state on `agent/two-phase-soft-tube`; push without force.
 
-- [ ] **Step 3: Authorize and run one smoke block**
+- [x] **Step 3: Authorize and run one smoke block**
 
 Use a fresh run ID and seed, request 12,800 training transitions, and require
 finite PPO update, checkpoint/network metadata, fixed evaluation, closed
 accounting, and saved videos for every unsuccessful held-out rollout.
 
-- [ ] **Step 4: Gate the formal run**
+- [x] **Step 4: Gate the formal run**
 
 Authorize formal training only if smoke has no numerical, checkpoint,
 accounting, history, hash, broadphase, or rendering-contract failure. Smoke
@@ -145,19 +145,19 @@ liftoff or Apex success is not required.
 - Consumes: smoke-qualified committed HEAD and stable 448,000-transition config.
 - Produces: a detached, resumable formal run with fixed physical gates.
 
-- [ ] **Step 1: Run formal preflight and create a run-bound authorization**
+- [x] **Step 1: Run formal preflight and create a run-bound authorization**
 
 Bind 448,000 training transitions, four fixed evaluations, source/config/XML
 hashes, a fresh seed, cumulative Phase U accounting, and all existing Gate
 Pause reasons.
 
-- [ ] **Step 2: Launch and check startup once**
+- [x] **Step 2: Launch and check startup once**
 
 Launch with `setsid`; once only, verify process liveness, `status=running`, the
 absolute transition-0 checkpoint, and absence of broadphase/OOM/NaN/Inf/error
 patterns.
 
-- [ ] **Step 3: Record and stop polling**
+- [x] **Step 3: Record and stop polling**
 
 Commit/push the startup marker, preserve `.vscode/`, and leave the persistent
 goal paused until completion or Gate Pause.
