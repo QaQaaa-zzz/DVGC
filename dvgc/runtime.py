@@ -61,6 +61,8 @@ def make_dvgc_ppo_networks(
     observation_size: Any,
     action_size: int,
     preprocess_observations_fn: Callable,
+    *,
+    initial_action_std: float = POLICY_INITIAL_ACTION_STD,
 ) -> Any:
     """Build a bounded actor with a neutral, low-variance control prior.
 
@@ -71,12 +73,19 @@ def make_dvgc_ppo_networks(
     before PPO sees useful successes.  This head keeps tanh bounds while making
     the initial mode exactly zero and the initial scale explicitly auditable.
     """
+    initial_action_std = float(initial_action_std)
+    if (
+        not math.isfinite(initial_action_std)
+        or initial_action_std <= 0.001
+        or initial_action_std >= 1.0
+    ):
+        raise ValueError("initial_action_std must be finite and strictly between 0.001 and 1.0")
     ppo_networks, _, _ = require_training_stack()
     from brax.training import distribution
     from brax.training import networks as brax_networks
     from flax import linen
 
-    target_scale_parameter = math.log(math.expm1(POLICY_INITIAL_ACTION_STD - 0.001))
+    target_scale_parameter = math.log(math.expm1(initial_action_std - 0.001))
 
     class NeutralTanhActor(linen.Module):
         @linen.compact
@@ -138,9 +147,13 @@ def make_dvgc_ppo_networks(
     )
 
 
-def build_network_factory() -> Callable[..., Any]:
+def build_network_factory(
+    *, initial_action_std: float = POLICY_INITIAL_ACTION_STD
+) -> Callable[..., Any]:
     """Build asymmetric PPO networks for deployable actor / privileged critic."""
-    return make_dvgc_ppo_networks
+    return functools.partial(
+        make_dvgc_ppo_networks, initial_action_std=float(initial_action_std)
+    )
 
 
 def _atomic_pickle_dump(path: Path, payload: Any) -> None:
@@ -396,6 +409,7 @@ def make_ppo_train_fn(
     policy_params_fn: Optional[Callable[..., None]] = None,
     full_reset: bool = False,
     run_evals: bool = True,
+    initial_action_std: float = POLICY_INITIAL_ACTION_STD,
 ) -> Callable[..., Tuple[Any, Any, Any]]:
     """Return a Brax PPO training callable with normalized observations."""
     _, ppo_train, wrapper = require_training_stack()
@@ -428,7 +442,9 @@ def make_ppo_train_fn(
         training_metrics_steps=(None if training_metrics_steps is None else int(training_metrics_steps)),
         max_grad_norm=float(max_grad_norm),
         clipping_epsilon=float(clipping_epsilon),
-        network_factory=build_network_factory(),
+        network_factory=build_network_factory(
+            initial_action_std=float(initial_action_std)
+        ),
         seed=int(seed),
         save_checkpoint_path=(
             None

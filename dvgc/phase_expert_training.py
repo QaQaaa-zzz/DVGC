@@ -264,6 +264,19 @@ def phase_u_reward_contract_hash(training_config: Mapping[str, Any]) -> str:
     return _canonical_payload_hash(asdict(resolve_phase_u_reward_config(training_config)))
 
 
+def resolve_policy_initial_action_std(training_config: Mapping[str, Any]) -> float:
+    """Resolve the explicit phase-specific exploration prior."""
+    value = training_config.get("policy_initial_action_std")
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError("policy_initial_action_std must be a finite number")
+    result = float(value)
+    if not math.isfinite(result) or result <= 0.001 or result >= 1.0:
+        raise ValueError(
+            "policy_initial_action_std must be strictly between 0.001 and 1.0"
+        )
+    return result
+
+
 _PHASE_U_REWARD_COMPONENTS = (
     "forward_propulsion",
     "jump_window_progress",
@@ -1747,6 +1760,7 @@ def validate_phase_expert_run_spec(
             "project config path must match the threshold manifest source config"
         )
     training_config = _read_json(spec.training_config_path, "phase expert training config")
+    resolve_policy_initial_action_std(training_config)
     resolve_gate_c1_base_mode(training_config)
     seeds = validate_phase_expert_seed_namespaces(spec, training_config)
     interaction = build_phase_expert_interaction_budget(spec, training_config)
@@ -2145,6 +2159,7 @@ def _save_phase_expert_inference_checkpoint(
     checkpoint_root: str | Path,
     *,
     step: int,
+    initial_action_std: float,
 ) -> Path:
     """Save Brax normalizer/policy/value params at one claimed host milestone."""
     from brax.training.agents.ppo import checkpoint as ppo_checkpoint
@@ -2157,7 +2172,9 @@ def _save_phase_expert_inference_checkpoint(
         observation_size=observation_size,
         action_size=environment.action_size,
         normalize_observations=True,
-        network_factory=build_network_factory(),
+        network_factory=build_network_factory(
+            initial_action_std=initial_action_std
+        ),
     )
     root = Path(checkpoint_root).resolve()
     ppo_checkpoint.save(root, int(step), params, network_config)
@@ -2183,6 +2200,7 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
     layout = training_config["ppo_layout"]
     optimization = training_config["optimization"]
     reward_contract = asdict(resolve_phase_u_reward_config(training_config))
+    policy_initial_action_std = resolve_policy_initial_action_std(training_config)
     resolved_project_config = load_config(
         validated.spec.config_path,
         resolve_gate_c1_base_mode(training_config)
@@ -2211,6 +2229,7 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
         ),
         "seed_namespaces": _jsonable(validated.seeds),
         "reward_contract": reward_contract,
+        "policy_initial_action_std": policy_initial_action_std,
         "fixed_evaluation_contract": training_config["evaluation"],
         "reference_role": "kinematic_guideline_and_weak_prior_only",
         "promotion_authorized": False,
@@ -2304,6 +2323,7 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
                     params,
                     root / "orbax",
                     step=cumulative_step,
+                    initial_action_std=policy_initial_action_std,
                 )
                 checkpoint_contract = _checkpoint_contract(
                     validated,
@@ -2602,6 +2622,7 @@ def run_phase_expert(validated: ValidatedPhaseExpertRunSpec) -> dict[str, Any]:
             gae_lambda=float(optimization["gae_lambda"]),
             clipping_epsilon=float(optimization["clipping_epsilon"]),
             max_grad_norm=float(optimization["max_grad_norm"]),
+            initial_action_std=policy_initial_action_std,
             restore_checkpoint_path=validated.spec.restore_checkpoint,
             policy_params_fn=checkpoint_callback,
             full_reset=True,
