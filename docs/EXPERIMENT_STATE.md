@@ -153,6 +153,18 @@ fresh reward-contract hash, red-green tests, full validation, one new 512-env
 smoke, and a new run-bound formal authorization. It does not authorize
 resuming the paused run or declaring a Tube.
 
+The single-hypothesis implementation is now source-complete at `c7198ec` with
+reward-contract hash
+`18ac22843abaa66f97ac0aac85f4cc6577097040f7d5f3c0326a831b6db7b007`.
+Red-green contract tests, 94 targeted tests, the full 897-test suite, and local
+preflight pass. A fresh managed runtime gate at
+`runs/two_phase/runtime_gate/phase_u_2kg_angular_rate_20260812/` also passes in
+93.30 seconds, including its 64-transition update and 32-transition resume.
+This requalification consumed 96 runtime-smoke transitions and zero Phase U
+training transitions. The next permitted action is one fresh run-bound
+512-environment Phase U engineering smoke; no formal retry has yet been
+authorized or started for this hypothesis.
+
 The method contract was revised on 2026-08-10 to make the phase experts local
 continuation controllers and state-distribution generators rather than final
 deployment outputs. Expert training and feasibility-data acquisition now

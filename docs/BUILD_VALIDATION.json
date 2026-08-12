@@ -18,7 +18,7 @@
   "runtime_gate": {
     "status": "PASS",
     "report": "docs/RUNTIME_GATE.json",
-    "elapsed_seconds": 95.28360390663147,
+    "elapsed_seconds": 93.30181503295898,
     "zero_action_100": {
       "physical_failures": 3,
       "timeouts": 0,
