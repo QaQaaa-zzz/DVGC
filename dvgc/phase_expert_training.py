@@ -183,6 +183,7 @@ class PhaseURewardConfig:
     forward_propulsion_weight: float = 0.5
     jump_window_progress_weight: float = 2.0
     liftoff_bonus_weight: float = 0.0
+    stable_airborne_bonus_weight: float = 0.0
     ascent_progress_weight: float = 4.0
     clearance_progress_weight: float = 2.0
     apex_approach_weight: float = 2.0
@@ -206,6 +207,7 @@ class PhaseURewardConfig:
             "forward_propulsion_weight",
             "jump_window_progress_weight",
             "liftoff_bonus_weight",
+            "stable_airborne_bonus_weight",
             "ascent_progress_weight",
             "clearance_progress_weight",
             "apex_approach_weight",
@@ -304,6 +306,7 @@ _PHASE_U_REWARD_COMPONENTS = (
     "forward_propulsion",
     "jump_window_progress",
     "legal_liftoff_bonus",
+    "stable_airborne_bonus",
     "ascent_progress",
     "clearance_progress",
     "apex_approach",
@@ -330,6 +333,7 @@ def phase_u_reward_components(
     legal_window_entered: Any,
     window_entry_transition: Any,
     legal_liftoff_transition: Any,
+    stable_airborne_transition: Any,
     apex_eligible: Any,
     success_transition: Any,
     physical_failure: Any,
@@ -424,6 +428,8 @@ def phase_u_reward_components(
         * jp.asarray(window_entry_transition, jp.float32),
         "legal_liftoff_bonus": config.liftoff_bonus_weight
         * jp.asarray(legal_liftoff_transition, jp.float32),
+        "stable_airborne_bonus": config.stable_airborne_bonus_weight
+        * jp.asarray(stable_airborne_transition, jp.float32),
         "ascent_progress": ascent,
         "clearance_progress": clearance,
         "apex_approach": apex_approach,
@@ -618,6 +624,12 @@ class PhaseExpertEnvAdapter:
             & jp.asarray(event.jump_window_entered)
             & ~physical
         )
+        stable_airborne_transition = (
+            ~jp.asarray(previous.stable_airborne)
+            & jp.asarray(event.stable_airborne)
+            & jp.asarray(event.jump_window_entered)
+            & ~physical
+        )
         task = jp.asarray(event.jump_window_entered) & _contains_end_code(
             raw.info["end_code"], _PHASE_U_POST_LATCH_TASK_FAILURE_END_CODES
         )
@@ -630,6 +642,7 @@ class PhaseExpertEnvAdapter:
             event.jump_window_entered,
             window_entry_transition,
             legal_liftoff_transition,
+            stable_airborne_transition,
             jp.asarray(event.stable_airborne) & jp.asarray(event.ascending),
             success_transition,
             physical,

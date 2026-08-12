@@ -353,6 +353,17 @@ existing post-window `stable_airborne` transition. It retains liftoff +8 and
 cap 8 and does not imply ascending, Apex, success, or termination. Every other
 model, safety, PPO, reset, threshold, and reward contract remains fixed.
 
+The stable-airborne bridge implementation is source-complete with reward hash
+`0cc722a818239026a5094b1145637022fd348755257bba4805c9d2f98f00242c`.
+Default weight 0 preserves compatibility and stable Phase U configs select
+16.0. Red-green tests prove liftoff-only zero, exactly one post-window stable
+airborne +16 transition, repeat zero, and no success/done implication. Eight
+focused tests, 107 Phase U regressions, compileall, the full 910-test suite,
+and preflight pass. A fresh managed runtime gate at
+`runs/two_phase/runtime_gate/phase_u_2kg_stable_airborne_bonus16_20260813/`
+passes in 93.27 seconds including 64-transition update and 32-transition
+resume. The next permitted action is one fresh run-bound 512-env smoke.
+
 The method contract was revised on 2026-08-10 to make the phase experts local
 continuation controllers and state-distribution generators rather than final
 deployment outputs. Expert training and feasibility-data acquisition now

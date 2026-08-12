@@ -458,6 +458,7 @@ def test_phase_u_configs_select_explicit_exploration_and_angular_rate_penalty():
         assert reward.angular_rate_penalty_weight == 1.0
         assert reward.angular_rate_penalty_cap_ratio == 8.0
         assert reward.liftoff_bonus_weight == 8.0
+        assert reward.stable_airborne_bonus_weight == 16.0
 
 
 @pytest.mark.parametrize("cap", [0.0, -1.0, float("inf"), float("nan")])
@@ -472,6 +473,13 @@ def test_phase_u_liftoff_bonus_weight_must_be_finite_and_non_negative(weight):
     module = _module()
     with pytest.raises(ValueError, match="liftoff_bonus_weight"):
         module.PhaseURewardConfig(liftoff_bonus_weight=weight)
+
+
+@pytest.mark.parametrize("weight", [-1.0, float("inf"), float("nan")])
+def test_phase_u_stable_airborne_bonus_weight_must_be_finite_and_non_negative(weight):
+    module = _module()
+    with pytest.raises(ValueError, match="stable_airborne_bonus_weight"):
+        module.PhaseURewardConfig(stable_airborne_bonus_weight=weight)
 
 
 @pytest.mark.parametrize(
@@ -817,6 +825,11 @@ def test_smoke_config_locks_base_mode_cost_stops_rewards_and_disjoint_determinis
         | {"liftoff_bonus_weight": 4.0}
     }
     assert module.phase_u_reward_contract_hash(changed_liftoff) != reward_hash
+    changed_airborne = config | {
+        "phase_u_reward": config["phase_u_reward"]
+        | {"stable_airborne_bonus_weight": 12.0}
+    }
+    assert module.phase_u_reward_contract_hash(changed_airborne) != reward_hash
     missing = config | {"phase_u_reward": dict(config["phase_u_reward"])}
     missing["phase_u_reward"].pop("clearance_progress_weight")
     with pytest.raises(ValueError, match="phase_u_reward"):
@@ -1077,6 +1090,7 @@ def test_pre_window_takeoff_and_apex_progress_rewards_are_zero_even_when_airborn
         jp.asarray(False),
         jp.asarray(False),
         jp.asarray(False),
+        jp.asarray(False),
         jp.zeros((8,)),
         jp.zeros((8,)),
         module.PhaseURewardConfig(),
@@ -1085,6 +1099,7 @@ def test_pre_window_takeoff_and_apex_progress_rewards_are_zero_even_when_airborn
         "forward_propulsion",
         "jump_window_progress",
         "legal_liftoff_bonus",
+        "stable_airborne_bonus",
         "ascent_progress",
         "clearance_progress",
         "apex_approach",
@@ -1099,6 +1114,7 @@ def test_pre_window_takeoff_and_apex_progress_rewards_are_zero_even_when_airborn
     }
     assert float(components["jump_window_progress"]) == 0.0
     assert float(components["legal_liftoff_bonus"]) == 0.0
+    assert float(components["stable_airborne_bonus"]) == 0.0
     assert float(components["ascent_progress"]) == 0.0
     assert float(components["clearance_progress"]) == 0.0
     assert float(components["apex_approach"]) == 0.0
@@ -1130,6 +1146,7 @@ def test_post_window_reward_has_bounded_physical_progress_and_independent_penalt
         jp.asarray(True),
         jp.asarray(True),
         jp.asarray(False),
+        jp.asarray(False),
         jp.asarray(True),
         jp.asarray(False),
         jp.asarray(False),
@@ -1160,6 +1177,7 @@ def test_post_window_reward_has_bounded_physical_progress_and_independent_penalt
         unsafe,
         thresholds,
         jp.asarray(True),
+        jp.asarray(False),
         jp.asarray(False),
         jp.asarray(False),
         jp.asarray(True),
@@ -1200,6 +1218,7 @@ def test_angular_rate_penalty_preserves_severity_until_explicit_bounded_cap():
         signals,
         thresholds,
         jp.asarray(True),
+        jp.asarray(False),
         jp.asarray(False),
         jp.asarray(False),
         jp.asarray(True),
@@ -1255,6 +1274,43 @@ def test_legal_liftoff_bonus_is_post_window_one_shot_and_not_success():
     assert not bool(repeated.info["phase_expert/success"])
 
 
+def test_stable_airborne_bonus_requires_post_liftoff_transition_is_one_shot_and_not_success():
+    module = _module()
+    adapter = module.PhaseExpertEnvAdapter(
+        _FakeBaseEnv(),
+        geometry=None,
+        thresholds=_adapter_thresholds(),
+        reward_config=module.PhaseURewardConfig(stable_airborne_bonus_weight=16.0),
+        episode_horizon=20,
+        signal_extractor=_fake_signals,
+    )
+    state = adapter.reset(jax.random.PRNGKey(43))
+    window = jax.jit(adapter.step)(
+        state, jp.asarray([1, 1, 0, 0.1, 0.2, 0.0, 0, 1], jp.float32)
+    )
+    liftoff = jax.jit(adapter.step)(
+        window, jp.asarray([0, 1, 0, 0.1, 0.2, 0.0, 0, 0], jp.float32)
+    )
+    assert float(
+        liftoff.metrics["phase_expert/reward_component/stable_airborne_bonus"]
+    ) == 0.0
+    airborne = jax.jit(adapter.step)(
+        liftoff, jp.asarray([0, 1, 1, 0.1, 0.2, 0.0, 0, 0], jp.float32)
+    )
+    assert float(
+        airborne.metrics["phase_expert/reward_component/stable_airborne_bonus"]
+    ) == pytest.approx(16.0)
+    assert not bool(airborne.info["phase_expert/success"])
+    assert not bool(airborne.done)
+    repeated = jax.jit(adapter.step)(
+        airborne, jp.asarray([0, 1, 1, 0.1, 0.2, 0.0, 0, 0], jp.float32)
+    )
+    assert float(
+        repeated.metrics["phase_expert/reward_component/stable_airborne_bonus"]
+    ) == 0.0
+    assert not bool(repeated.info["phase_expert/success"])
+
+
 def test_reward_component_metrics_exist_at_reset_and_remain_static_through_step():
     """Brax drops episode metrics if reset and step publish different component keys."""
     adapter = _adapter(_module())
@@ -1265,7 +1321,7 @@ def test_reward_component_metrics_exist_at_reset_and_remain_static_through_step(
     keys = {
         key for key in reset.metrics if key.startswith("phase_expert/reward_component/")
     }
-    assert len(keys) == 14
+    assert len(keys) == 15
     assert keys == {
         key for key in stepped.metrics if key.startswith("phase_expert/reward_component/")
     }
