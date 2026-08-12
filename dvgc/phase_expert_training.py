@@ -182,6 +182,7 @@ class PhaseURewardConfig:
 
     forward_propulsion_weight: float = 0.5
     jump_window_progress_weight: float = 2.0
+    liftoff_bonus_weight: float = 0.0
     ascent_progress_weight: float = 4.0
     clearance_progress_weight: float = 2.0
     apex_approach_weight: float = 2.0
@@ -204,6 +205,7 @@ class PhaseURewardConfig:
         for name in (
             "forward_propulsion_weight",
             "jump_window_progress_weight",
+            "liftoff_bonus_weight",
             "ascent_progress_weight",
             "clearance_progress_weight",
             "apex_approach_weight",
@@ -301,6 +303,7 @@ def resolve_policy_initial_action_std(
 _PHASE_U_REWARD_COMPONENTS = (
     "forward_propulsion",
     "jump_window_progress",
+    "legal_liftoff_bonus",
     "ascent_progress",
     "clearance_progress",
     "apex_approach",
@@ -326,6 +329,7 @@ def phase_u_reward_components(
     thresholds: ApexBandThresholds,
     legal_window_entered: Any,
     window_entry_transition: Any,
+    legal_liftoff_transition: Any,
     apex_eligible: Any,
     success_transition: Any,
     physical_failure: Any,
@@ -418,6 +422,8 @@ def phase_u_reward_components(
         "forward_propulsion": forward,
         "jump_window_progress": config.jump_window_progress_weight
         * jp.asarray(window_entry_transition, jp.float32),
+        "legal_liftoff_bonus": config.liftoff_bonus_weight
+        * jp.asarray(legal_liftoff_transition, jp.float32),
         "ascent_progress": ascent,
         "clearance_progress": clearance,
         "apex_approach": apex_approach,
@@ -606,6 +612,12 @@ class PhaseExpertEnvAdapter:
         physical = _contains_end_code(
             raw.info["end_code"], _PHASE_U_PHYSICAL_FAILURE_END_CODES
         )
+        legal_liftoff_transition = (
+            ~jp.asarray(previous.liftoff_seen)
+            & jp.asarray(event.liftoff_seen)
+            & jp.asarray(event.jump_window_entered)
+            & ~physical
+        )
         task = jp.asarray(event.jump_window_entered) & _contains_end_code(
             raw.info["end_code"], _PHASE_U_POST_LATCH_TASK_FAILURE_END_CODES
         )
@@ -617,6 +629,7 @@ class PhaseExpertEnvAdapter:
             self._thresholds.apex,
             event.jump_window_entered,
             window_entry_transition,
+            legal_liftoff_transition,
             jp.asarray(event.stable_airborne) & jp.asarray(event.ascending),
             success_transition,
             physical,

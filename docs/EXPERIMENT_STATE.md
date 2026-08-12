@@ -294,6 +294,19 @@ post-window liftoff transition. It does not grant success or termination and
 does not reward early airborne. Cap 8 and every other model, safety, reward,
 reset, PPO, and evaluation contract remain fixed.
 
+The legal-liftoff implementation is now source-complete with reward-contract
+hash `4f1fd69237f1fa50c01416dbc65158a6590d09e71af26b04a59b0acf3680df75`.
+Default weight 0 preserves compatibility; stable Phase U configs explicitly
+select 8.0. Red-green tests prove zero pre-window/window-entry/repeated-tick
+bonus, exactly one +8 post-window liftoff transition, and no success or done
+implication. Eight focused tests, 103 Phase U regressions, compileall, the full
+906-test suite, and local preflight pass. A fresh managed runtime gate at
+`runs/two_phase/runtime_gate/phase_u_2kg_legal_liftoff_bonus8_20260813/`
+passes in 93.44 seconds, including the 64-transition update and 32-transition
+resume. This requalification consumes 96 runtime-smoke transitions and zero
+new Phase U training transitions. The next permitted action is one fresh
+run-bound 512-environment engineering smoke.
+
 The method contract was revised on 2026-08-10 to make the phase experts local
 continuation controllers and state-distribution generators rather than final
 deployment outputs. Expert training and feasibility-data acquisition now

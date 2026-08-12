@@ -61,6 +61,7 @@
   "phase_u_reward": {
     "forward_propulsion_weight": 0.5,
     "jump_window_progress_weight": 2.0,
+    "liftoff_bonus_weight": 8.0,
     "ascent_progress_weight": 4.0,
     "clearance_progress_weight": 2.0,
     "apex_approach_weight": 2.0,
