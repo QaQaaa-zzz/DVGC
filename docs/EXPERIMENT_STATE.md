@@ -411,6 +411,18 @@ thresholds, angular cap, bridge bonuses, and every other reward term remain
 fixed. This requires red-green validation, a fresh runtime gate, one new smoke,
 and a new run-bound authorization; no run has started for this hypothesis.
 
+The Apex-approach configuration iteration is now source-complete with reward-
+contract hash
+`ccedd915fd9532550ba84b3d26ee84c4afe3ce198c94e521aa19569eddcd36f2`.
+The red test failed against the old 2.0 value and passed after changing only
+the two stable configs to 8.0. Seventy-three phase-expert tests, compileall,
+the full 910-test suite, and local preflight pass. A fresh managed runtime gate
+at `runs/two_phase/runtime_gate/phase_u_2kg_apex_approach_weight8_20260813/`
+passes in 93.18 seconds, including its 64-transition PPO update and 32-
+transition resume. This consumes 96 engineering-integrity transitions and zero
+Phase U training transitions. The next permitted action is one fresh run-bound
+512-environment smoke; no formal retry is yet authorized or active.
+
 The method contract was revised on 2026-08-10 to make the phase experts local
 continuation controllers and state-distribution generators rather than final
 deployment outputs. Expert training and feasibility-data acquisition now

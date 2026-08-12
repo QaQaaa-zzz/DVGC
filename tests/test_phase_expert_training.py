@@ -443,8 +443,8 @@ def test_phase_u_training_level_uses_remaining_aligned_cap_and_three_fixed_evalu
         )
 
 
-def test_phase_u_configs_select_explicit_exploration_and_angular_rate_penalty():
-    """Stable Phase U configs bind the approved exploration and rate cost."""
+def test_phase_u_configs_select_explicit_exploration_and_reward_hypothesis():
+    """Stable Phase U configs bind the approved exploration and reward hypothesis."""
     module = _module()
     for path in (
         "configs/phase_expert_smoke.json",
@@ -459,6 +459,7 @@ def test_phase_u_configs_select_explicit_exploration_and_angular_rate_penalty():
         assert reward.angular_rate_penalty_cap_ratio == 8.0
         assert reward.liftoff_bonus_weight == 8.0
         assert reward.stable_airborne_bonus_weight == 16.0
+        assert reward.apex_approach_weight == 8.0
 
 
 @pytest.mark.parametrize("cap", [0.0, -1.0, float("inf"), float("nan")])
@@ -830,6 +831,11 @@ def test_smoke_config_locks_base_mode_cost_stops_rewards_and_disjoint_determinis
         | {"stable_airborne_bonus_weight": 12.0}
     }
     assert module.phase_u_reward_contract_hash(changed_airborne) != reward_hash
+    changed_apex_approach = config | {
+        "phase_u_reward": config["phase_u_reward"]
+        | {"apex_approach_weight": 4.0}
+    }
+    assert module.phase_u_reward_contract_hash(changed_apex_approach) != reward_hash
     missing = config | {"phase_u_reward": dict(config["phase_u_reward"])}
     missing["phase_u_reward"].pop("clearance_progress_weight")
     with pytest.raises(ValueError, match="phase_u_reward"):
