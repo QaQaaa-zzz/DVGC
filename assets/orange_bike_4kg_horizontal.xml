@@ -96,7 +96,7 @@
           <geom class="visual" type="mesh" rgba="0.647059 0.619608 0.588235 1" mesh="uparm"/>
           <geom name="uparm_collision" class="collision" type="box" size="0.025 0.03 0.125" pos="0.0 0.03 -0.125" contype="4" conaffinity="7"/>
           <geom class="inertial" name="uparm_inertial" mass="0.31" type="mesh" mesh="uparm"/>
-          <geom class="inertial" name="load" mass="4.0" type="box" size="0.04 0.0205 0.06" pos="0.0 0.035 -0.19" rgba="1.0 0.3 0.3 1"/>
+          <geom class="inertial" name="load" mass="2.0" type="box" size="0.04 0.0205 0.06" pos="0.0 0.035 -0.19" rgba="1.0 0.3 0.3 1"/>
         </body>
       </body> 
     </body>

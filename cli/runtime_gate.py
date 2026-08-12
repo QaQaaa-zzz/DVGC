@@ -17,6 +17,7 @@ import numpy as np
 from dvgc.bank import SnapshotBank
 from dvgc.config import (
     ACTION_MAPPING_VERSION,
+    AUTHORITATIVE_PAYLOAD_MASS_KG,
     AUTHORITATIVE_XML_PATH,
     AUTHORITATIVE_XML_SHA256,
     ID_STAGE,
@@ -532,8 +533,11 @@ def main() -> None:
         model = inspect_model(AUTHORITATIVE_XML_PATH)
         if model["xml_sha256"] != AUTHORITATIVE_XML_SHA256:
             raise RuntimeError("Authoritative XML hash mismatch")
-        if model["named_masses_kg"].get("load") != 4.0:
-            raise RuntimeError("Authoritative XML payload is not 4 kg")
+        if model["named_masses_kg"].get("load") != AUTHORITATIVE_PAYLOAD_MASS_KG:
+            raise RuntimeError(
+                "Authoritative XML payload is not "
+                f"{AUTHORITATIVE_PAYLOAD_MASS_KG:g} kg"
+            )
         actuator = {row["name"]: row for row in model["actuators"]}
         for name in ("cmd_hip_f", "cmd_knee_f"):
             if actuator[name]["forcerange"] != "-50 50":
