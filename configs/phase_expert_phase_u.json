@@ -6,16 +6,16 @@
     "batch_size": 16,
     "num_minibatches": 32,
     "num_updates_per_batch": 1,
-    "num_evals": 36,
+    "num_evals": 16,
     "num_eval_envs": 4
   },
   "maximum_interaction_cost": {
-    "training_transitions": 448000,
+    "training_transitions": 192000,
     "brax_evaluation_transitions": 0,
-    "fixed_evaluation_transitions": 6400,
-    "combined_transitions": 454400
+    "fixed_evaluation_transitions": 4800,
+    "combined_transitions": 196800
   },
-  "policy_initial_action_std": 0.25,
+  "policy_initial_action_std": [0.05, 0.05, 0.5, 0.05],
   "training_seed_namespace": "phase_u_train_v1",
   "training_seed_count": 512,
   "evaluation": {
@@ -24,11 +24,11 @@
     "environment_count": 8,
     "episode_horizon": 200,
     "episodes": 1,
-    "checkpoint_evaluations": 4,
+    "checkpoint_evaluations": 3,
     "deterministic_policy": true
   },
   "run_brax_evaluation": false,
-  "checkpoint_schedule_requested": [0, 100000, 250000, 448000],
+  "checkpoint_schedule_requested": [0, 100000, 192000],
   "checkpoint_cadence_transitions": 12800,
   "optimization": {
     "learning_rate": 0.0001,

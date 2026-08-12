@@ -264,17 +264,30 @@ def phase_u_reward_contract_hash(training_config: Mapping[str, Any]) -> str:
     return _canonical_payload_hash(asdict(resolve_phase_u_reward_config(training_config)))
 
 
-def resolve_policy_initial_action_std(training_config: Mapping[str, Any]) -> float:
-    """Resolve the explicit phase-specific exploration prior."""
+def resolve_policy_initial_action_std(
+    training_config: Mapping[str, Any],
+) -> tuple[float, float, float, float]:
+    """Resolve the explicit steer/drive/hip/knee exploration prior."""
     value = training_config.get("policy_initial_action_std")
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise ValueError("policy_initial_action_std must be a finite number")
-    result = float(value)
-    if not math.isfinite(result) or result <= 0.001 or result >= 1.0:
+    if not isinstance(value, list) or len(value) != 4:
         raise ValueError(
-            "policy_initial_action_std must be strictly between 0.001 and 1.0"
+            "policy_initial_action_std must be a four-value action-order list"
         )
-    return result
+    result: list[float] = []
+    for item in value:
+        if isinstance(item, bool) or not isinstance(item, (int, float)):
+            raise ValueError(
+                "policy_initial_action_std must contain finite numeric values"
+            )
+        result.append(float(item))
+    if any(
+        not math.isfinite(item) or item <= 0.001 or item >= 1.0
+        for item in result
+    ):
+        raise ValueError(
+            "policy_initial_action_std values must be strictly between 0.001 and 1.0"
+        )
+    return (result[0], result[1], result[2], result[3])
 
 
 _PHASE_U_REWARD_COMPONENTS = (
@@ -2159,7 +2172,7 @@ def _save_phase_expert_inference_checkpoint(
     checkpoint_root: str | Path,
     *,
     step: int,
-    initial_action_std: float,
+    initial_action_std: tuple[float, float, float, float],
 ) -> Path:
     """Save Brax normalizer/policy/value params at one claimed host milestone."""
     from brax.training.agents.ppo import checkpoint as ppo_checkpoint

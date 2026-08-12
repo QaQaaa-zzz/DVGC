@@ -405,8 +405,8 @@ def test_phase_u_checkpoint_tracker_claims_each_aligned_milestone_once():
     assert tracker.claimed_effective == (0, 100_800, 251_200)
 
 
-def test_phase_u_training_level_uses_remaining_aligned_cap_and_four_fixed_evaluations(tmp_path):
-    """The second hypothesis must keep cumulative formal training below one million."""
+def test_phase_u_training_level_uses_remaining_aligned_cap_and_three_fixed_evaluations(tmp_path):
+    """The third hypothesis must keep cumulative formal training below one million."""
     module = _module()
     config_path = "configs/phase_expert_phase_u.json"
     config = json.loads(Path(config_path).read_text(encoding="utf-8"))
@@ -414,7 +414,7 @@ def test_phase_u_training_level_uses_remaining_aligned_cap_and_four_fixed_evalua
         module,
         tmp_path,
         experiment_level="formal_expert",
-        requested_total_transitions=448_000,
+        requested_total_transitions=192_000,
         training_config_path=config_path,
         output_dir=_run_output(tmp_path, "phase-u-1m"),
     )
@@ -424,19 +424,19 @@ def test_phase_u_training_level_uses_remaining_aligned_cap_and_four_fixed_evalua
     assert config["ppo_layout"]["batch_size"] == 16
     assert config["ppo_layout"]["num_minibatches"] == 32
     assert budget.training.ppo_rollout_block_size == 12_800
-    assert budget.training.ppo_rollout_blocks == 35
-    assert budget.training.effective_total_transitions == 448_000
+    assert budget.training.ppo_rollout_blocks == 15
+    assert budget.training.effective_total_transitions == 192_000
     assert budget.brax_evaluation_transition_ceiling == 0
-    assert budget.fixed_evaluation_transition_ceiling == 6_400
-    assert budget.combined_transition_ceiling == 454_400
-    assert budget.candidate_acquisition_transition_ceiling == 51_200
-    assert budget.continuation_labeling_transition_ceiling == 51_200
-    assert budget.total_environment_transition_ceiling == 556_800
+    assert budget.fixed_evaluation_transition_ceiling == 4_800
+    assert budget.combined_transition_ceiling == 196_800
+    assert budget.candidate_acquisition_transition_ceiling == 38_400
+    assert budget.continuation_labeling_transition_ceiling == 38_400
+    assert budget.total_environment_transition_ceiling == 273_600
     with pytest.raises(ValueError, match="ceiling"):
         module.validate_phase_expert_run_spec(
             replace(
                 spec,
-                requested_total_transitions=460_800,
+                requested_total_transitions=204_800,
                 output_dir=_run_output(tmp_path, "over-cap"),
             ),
             preflight_only=True,
@@ -451,12 +451,27 @@ def test_phase_u_configs_select_explicit_exploration_without_changing_default_ru
         "configs/phase_expert_phase_u.json",
     ):
         config = json.loads(Path(path).read_text(encoding="utf-8"))
-        assert module.resolve_policy_initial_action_std(config) == 0.25
+        resolved = module.resolve_policy_initial_action_std(config)
+        assert resolved == (0.05, 0.05, 0.5, 0.05)
+        assert module._jsonable(resolved) == [0.05, 0.05, 0.5, 0.05]
 
 
 @pytest.mark.parametrize(
     "value",
-    [None, True, 0.001, 1.0, float("nan"), float("inf")],
+    [
+        None,
+        True,
+        0.25,
+        [],
+        [0.05, 0.05, 0.5],
+        [0.05, 0.05, 0.5, 0.05, 0.05],
+        [[0.05], 0.05, 0.5, 0.05],
+        [True, 0.05, 0.5, 0.05],
+        [0.001, 0.05, 0.5, 0.05],
+        [0.05, 0.05, 1.0, 0.05],
+        [0.05, float("nan"), 0.5, 0.05],
+        [0.05, 0.05, float("inf"), 0.05],
+    ],
 )
 def test_phase_u_config_rejects_missing_or_invalid_initial_action_std(value):
     """Malformed exploration metadata must fail before authorization or PPO construction."""
@@ -1370,11 +1385,11 @@ def test_inference_checkpoint_resolves_relative_root_before_orbax_save(
         params=("normalizer", "policy", "value"),
         checkpoint_root=Path("relative-run") / "orbax",
         step=0,
-        initial_action_std=0.25,
+        initial_action_std=(0.05, 0.05, 0.5, 0.05),
     )
 
     assert captured["root"] == (tmp_path / "relative-run" / "orbax").resolve()
-    assert captured["initial_action_std"] == 0.25
+    assert captured["initial_action_std"] == (0.05, 0.05, 0.5, 0.05)
     assert checkpoint == (tmp_path / "relative-run" / "orbax" / "000000000000").resolve()
 
 

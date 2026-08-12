@@ -9,7 +9,7 @@
     "num_evals": 2,
     "num_eval_envs": 4
   },
-  "policy_initial_action_std": 0.25,
+  "policy_initial_action_std": [0.05, 0.05, 0.5, 0.05],
   "maximum_interaction_cost": {
     "training_transitions": 6400,
     "brax_evaluation_transitions": 1600,
