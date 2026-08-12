@@ -444,7 +444,7 @@ def test_phase_u_training_level_uses_remaining_aligned_cap_and_three_fixed_evalu
 
 
 def test_phase_u_configs_select_explicit_exploration_without_changing_default_runtime_prior():
-    """Omitting the Phase U value would silently restore the Landing-oriented scale."""
+    """Stable Phase U configs use the approved timing-preserving hip scale."""
     module = _module()
     for path in (
         "configs/phase_expert_smoke.json",
@@ -452,8 +452,8 @@ def test_phase_u_configs_select_explicit_exploration_without_changing_default_ru
     ):
         config = json.loads(Path(path).read_text(encoding="utf-8"))
         resolved = module.resolve_policy_initial_action_std(config)
-        assert resolved == (0.05, 0.05, 0.5, 0.05)
-        assert module._jsonable(resolved) == [0.05, 0.05, 0.5, 0.05]
+        assert resolved == (0.05, 0.05, 0.25, 0.05)
+        assert module._jsonable(resolved) == [0.05, 0.05, 0.25, 0.05]
 
 
 @pytest.mark.parametrize(
@@ -1073,6 +1073,8 @@ def test_pre_window_takeoff_and_apex_progress_rewards_are_zero_even_when_airborn
     assert float(components["apex_approach"]) == 0.0
     assert float(components["apex_success_bonus"]) == 0.0
     assert float(components["forward_propulsion"]) > 0.0
+    assert float(components["physical_failure_penalty"]) == 0.0
+    assert float(components["task_failure_penalty"]) == 0.0
 
 
 def test_post_window_reward_has_bounded_physical_progress_and_independent_penalties():

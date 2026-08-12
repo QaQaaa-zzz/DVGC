@@ -676,6 +676,15 @@ change. Adding a geometry feature or changing normalization remains a fallback
 only if this distribution-preservation hypothesis is separately authorized,
 bounded, and falsified.
 
+The static configuration for this hypothesis is now implemented: both
+`configs/phase_expert_smoke.json` and `configs/phase_expert_phase_u.json` use
+the ordered vector `[0.05, 0.05, 0.25, 0.05]`. No reward code changed. In
+particular, early airborne remains nonterminal, earns no window/ascent/
+clearance/Apex progress before legal window entry, and receives no new
+early-airborne penalty. Forward-propulsion reward remains active so the vehicle
+can learn to reach the window. This is static implementation only: it consumed
+zero new environment transitions and has not passed a dynamic PPO smoke.
+
 Any future design must preserve the immutable XML, action mapping, 4 kg
 payload, 50 N m limits, natural reset, early-airborne nonterminal rule, and
 unchanged roll/pitch/contact/nonfinite safety gates. Implementation and another
