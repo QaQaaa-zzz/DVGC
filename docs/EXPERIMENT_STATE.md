@@ -263,11 +263,26 @@ The actor is not wholly missing a deployable timing signal. Each of its four
 35-value FIFO frames contains `task_distance_to_front =
 (step_front_x-root_x)/3` at dimension 18. It does not directly receive the
 formal `obstacle_relative_x` based on the robot's frontmost collision support,
-nor the internal `jump_signal_latched` telemetry. The present evidence therefore
-supports a failed timing policy that did not use its available root-distance
-signal, not a claim that the task was unobservable. Any observation-contract or
-reward change is a new scientific hypothesis and requires a new design and
-training authorization.
+nor the internal `jump_signal_latched` telemetry. A zero-interaction frozen-
+checkpoint sensitivity audit held every other actor and critic input fixed and
+changed this distance value in all four FIFO frames. At 102,400 transitions the
+hip action changed from +0.146 at the natural start to -0.062 near the window
+end; at 192,000 it changed from +0.413 to -0.215. The distance-gradient L1 norm
+grew from 0.349 to 1.051. The actor therefore did use the available signal, but
+learned the wrong timing direction: stronger positive hip far from the obstacle
+and negative hip near the legal window.
+
+The normalizer and stochastic rollout distribution explain how this failure
+formed. Across all 15 PPO blocks, the mean training physical-failure rate was
+97.1% and mean episode length was 17.34 ticks. At the final checkpoint, the
+four normalized window-start distance values were already 2.27--2.72 standard
+deviations below their running means; window-end values were 6.41--7.17
+standard deviations below. Thus the 0.50 hip exploration prior caused training
+to be dominated by early failures, leaving the legal timing region strongly
+out of distribution even though deterministic transition-0 evaluation could
+reach it. This evidence does not justify adding an event latch or changing the
+observation contract. Any reward, observation, or exploration change remains a
+new scientific hypothesis requiring a new design and training authorization.
 
 Across the three counted formal invocations, Phase U has now consumed 995,200
 of the authorized 1,000,000 expert-training transitions. The remaining 4,800
@@ -649,16 +664,23 @@ snapshot acquisition, or continuation probing is currently permitted: the
 remaining 4,800 transitions cannot form one valid 512-environment rollout
 block, and the acquisition gates have no successful parent trajectories.
 
-The next scientifically defensible action is a zero- or tightly bounded
-interaction design audit for one timing hypothesis. The leading question is
-whether Phase U should expose a deployable, geometry-consistent window-progress
-feature (without exposing internal event/result metadata), or instead change
-one reward/optimization assumption so the existing root-distance feature is
-used. This audit must preserve the immutable XML, action mapping, 4 kg payload,
-50 N m limits, natural reset, early-airborne nonterminal rule, and unchanged
-roll/pitch/contact/nonfinite safety gates. Implementation and another PPO budget
-require explicit new authorization after that single-hypothesis design is
-reviewed.
+The next scientifically defensible hypothesis is to reduce only the Phase U
+hip initial action standard deviation from 0.50 to 0.25. A 0.25 prior still
+samples a +0.50 hip action with finite frequency across 512 environments, while
+avoiding the 16% one-sided tail rate produced by a zero-mean 0.50 prior. Unlike
+the previous scalar-0.25 run, steer, drive, and knee remain at 0.05. The purpose
+is specifically to preserve stochastic trajectories long enough for the
+existing distance feature and running normalizer to cover the legal window;
+it is not a reward, reset, observation, network, optimizer, horizon, or physics
+change. Adding a geometry feature or changing normalization remains a fallback
+only if this distribution-preservation hypothesis is separately authorized,
+bounded, and falsified.
+
+Any future design must preserve the immutable XML, action mapping, 4 kg
+payload, 50 N m limits, natural reset, early-airborne nonterminal rule, and
+unchanged roll/pitch/contact/nonfinite safety gates. Implementation and another
+PPO budget require explicit new authorization; the current 4,800-transition
+remainder is still insufficient for one valid block.
 
 This marker does not authorize formal `V_up`, a learned Soft Tube declaration,
 Phase D expert training, unified PPO, or JCE/JEL. Provisional acquisition aids
