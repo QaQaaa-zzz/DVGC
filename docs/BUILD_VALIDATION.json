@@ -1,24 +1,24 @@
 {
   "date": "2026-08-12",
-  "validation_state": "STALE_PENDING_2KG_REVALIDATION",
+  "validation_state": "PASS_2KG_REVALIDATED",
   "configured_python": "/home/qy/mujoco_playground/.venv/bin/python",
   "environment_reconfigured": false,
   "python_compileall": "PASS",
   "pure_pytest": {
-    "status": "STALE",
-    "tests": 22
+    "status": "PASS",
+    "tests": 897
   },
   "local_preflight": {
-    "status": "STALE",
-    "tests": 24,
+    "status": "PASS",
+    "tests": 897,
     "jax_backend": "gpu",
     "device": "NVIDIA GeForce RTX 4090 D",
     "mujoco": "3.6.0"
   },
   "runtime_gate": {
-    "status": "STALE",
+    "status": "PASS",
     "report": "docs/RUNTIME_GATE.json",
-    "elapsed_seconds": 70.29655957221985,
+    "elapsed_seconds": 95.28360390663147,
     "zero_action_100": {
       "physical_failures": 3,
       "timeouts": 0,
@@ -27,14 +27,13 @@
       }
     },
     "random_action_100": {
-      "physical_failures": 15,
+      "physical_failures": 5,
       "timeouts": 0,
       "end_reasons": {
-        "prelaunch_airborne": 14,
-        "roll_limit": 1
+        "roll_limit": 5
       }
     },
-    "snapshot_roundtrip_step_max_abs": 5.878973752260208e-07,
+    "snapshot_roundtrip_step_max_abs": 0.0,
     "snapshot_roundtrip_tolerance": 1e-05,
     "short_ppo_requested_effective_steps": [
       64,
@@ -56,7 +55,6 @@
   "runtime_xml_absent": true,
   "action_mapping_version": "steer_drive_hip_knee.incremental_positive_flexion.v2",
   "warnings": [
-    "Counts, timings, and runtime details below the STALE statuses are retained prior-4kg evidence until Tasks 3-4 revalidate 2 kg.",
     "JAXopt is unmaintained (upstream deprecation warning).",
     "XLA autotuning fell back from filtered hints to the full hint set."
   ]

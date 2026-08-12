@@ -31,6 +31,27 @@ filename and now has SHA-256
 All old 4 kg checkpoints, banks, runtime reports, and authorizations remain
 immutable provenance and are incompatible inputs for the new run.
 
+The 2 kg static and runtime requalification is complete. Static compilation,
+the full 897-test suite, and `scripts/local_preflight.sh` pass. The fresh
+managed runtime gate at `runs/two_phase/runtime_gate/phase_u_2kg_20260812/`
+passes its model load, timing-explicit v4 snapshot/one-step round trip,
+determinism, 64-transition PPO update, and 32-transition resume contracts;
+`cli.runtime_gate --check-only` confirms its fingerprint is current. This gate
+consumed 96 engineering-integrity transitions and no Phase U training
+transitions.
+
+The fixed one-shot 2 kg Gate B audit is retained at
+`runs/two_phase/gate_b_2kg_20260812/`. Natural ground support and all three
+pure-JAX/host-MuJoCo geometry cross-audit states pass; the largest absolute
+clearance difference is `9.831815167560265e-09 m` with matching signs. The
+kinematic-guideline open-loop diagnostic reached the jump window, liftoff,
+stable-airborne, and ascending events, then ended at `roll_limit` after 22
+environment transitions without Apex or stable recovery. Its two MP4/state
+trace diagnostics are preserved. Under the revised Gate B contract this is
+reference-controller provenance, not a Phase U training blocker and not a
+bank or reachability claim. No retry, action repair, threshold move, or safety
+limit change was made.
+
 The method contract was revised on 2026-08-10 to make the phase experts local
 continuation controllers and state-distribution generators rather than final
 deployment outputs. Expert training and feasibility-data acquisition now

@@ -621,7 +621,15 @@ def test_guideline_cli_archives_videos_then_gate_pauses_before_banks(tmp_path):
     assert event["formal_training_transitions"] == 0
     assert event["initial_ground_support"]["accepted"] is True
     assert event["initial_ground_support"]["body_terrain_contacts"] == 0
-    assert event["missing_events"] == list(EVENT_NAMES)
+    # The authoritative payload changes physical timing, so a diagnostic replay
+    # may reach a prefix of the event sequence before the unchanged roll limit.
+    # Gate B requires closed accounting for whichever events actually occurred,
+    # not the historical 4 kg assumption that every event is absent.
+    assert event["missing_events"] == [
+        name for name in EVENT_NAMES if event["first_event_ticks"][name] < 0
+    ]
+    assert "apex_band_entered" in event["missing_events"]
+    assert "stable_recovery" in event["missing_events"]
     video_status = json.loads((output / "failure_video_status.json").read_text())
     assert video_status["status"] == "pass"
     full_video = next(
