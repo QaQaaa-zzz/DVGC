@@ -272,6 +272,28 @@ Monitoring remains sparse with an estimated 18--30 minute terminal window.
 Snapshot acquisition and continuation probing remain evidence-gated; formal
 `V_up`, Soft Tube, Phase D training, and unified PPO remain unauthorized.
 
+The cap-8 formal run subsequently entered `gate_pause` at 256,000 training
+transitions with `held_out_physical_performance_plateau`; its authorization is
+consumed and must not be resumed. It used 640 fixed-evaluation transitions and
+zero candidate/continuation transitions. All 21 checkpoint sidecars validate,
+and 24 MP4/NPZ failure pairs are retained. The 0/102.4k/256k fixed evaluations
+each reached the legal window in 8/8 rollouts and ended at
+`takeoff_missed_liftoff_deadline`, with no physical failure, pitch violation,
+illegal contact, saturation, numerical fault, or identity mismatch. Peak
+angular speed at 256k was 0.45 rad/s. Thus cap 8 fixed the prior high-rate
+failure but produced a safe no-liftoff policy.
+
+Training stochastic episodes nevertheless retained 4--8 units of ascent
+shaping per batch while physical failures fell from 100% to 20%; no Apex
+success occurred. The deterministic 256k trace holds hip near -1.23 rad and
+reaches only 0.062 m/s vertical speed. Existing fixed impulse evidence shows
+that one-tick hip actions 0.10--0.15 can produce post-window liftoff with about
+0.07--0.19 rad peak pitch and no physical failure. The next single hypothesis
+therefore adds an 8.0 one-shot `legal_liftoff_bonus` only on the monotonic
+post-window liftoff transition. It does not grant success or termination and
+does not reward early airborne. Cap 8 and every other model, safety, reward,
+reset, PPO, and evaluation contract remain fixed.
+
 The method contract was revised on 2026-08-10 to make the phase experts local
 continuation controllers and state-distribution generators rather than final
 deployment outputs. Expert training and feasibility-data acquisition now
