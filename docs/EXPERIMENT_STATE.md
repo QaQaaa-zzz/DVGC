@@ -493,6 +493,18 @@ resume. This consumed 96 engineering-integrity transitions and zero Phase U
 training transitions. The next permitted action is one fresh run-bound 512-
 environment smoke; no formal cap-4 run is authorized or active yet.
 
+That cap-4 smoke completed as
+`gate_c1_phase_u_2kg_apex8_stable16_liftoff8_cap4_env512_smoke_20260813_seed720601`.
+It consumed 12,800 PPO training, 1,600 Brax evaluation, and 216 fixed-
+evaluation transitions (14,616 total), with finite update throughput of 913.04
+training transitions/s. Its checkpoint validates recursively as
+`244f847d...0c55d8a`. All eight held-out rollouts reached the legal window and
+ended at the nonphysical missed-liftoff deadline; none lifted off or reached
+Apex. All eight MP4/NPZ pairs validate, with no numerical/runtime/identity,
+timing/history, saturation, illegal-contact, roll, or pitch fault. This is
+engineering qualification only and permits one fresh run-bound formal cap-4
+authorization.
+
 The method contract was revised on 2026-08-10 to make the phase experts local
 continuation controllers and state-distribution generators rather than final
 deployment outputs. Expert training and feasibility-data acquisition now
