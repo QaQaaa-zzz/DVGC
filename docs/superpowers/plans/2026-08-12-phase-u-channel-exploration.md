@@ -115,11 +115,11 @@ bash scripts/local_preflight.sh
 
 Explicitly stage `docs/RUNTIME_GATE.json` and any verified documentation change, commit, and push `agent/two-phase-soft-tube` without force.
 
-- [ ] **Step 3: Preflight and authorize one 512-environment block**
+- [x] **Step 3: Preflight and authorize one 512-environment block**
 
 Use a fresh run ID and seed, bind 12,800 training transitions plus the existing smoke evaluation ceilings, record purpose/inputs/stopping condition/output, and require source/config/XML/threshold hashes to match.
 
-- [ ] **Step 4: Execute and inspect smoke once**
+- [x] **Step 4: Execute and inspect smoke once**
 
 Require a finite update, policy mean std vector matching the configured channel order, checkpoint, closed accounting, eight held-out results, and videos for every failure. Reject broadphase overflow, NaN/Inf, OOM, traceback, timing/history mismatch, or hash drift. Liftoff/Apex success is not required from one block.
 
@@ -133,14 +133,14 @@ Require a finite update, policy mean std vector matching the configured channel 
 - Consumes: smoke-qualified committed HEAD and `configs/phase_expert_phase_u.json`.
 - Produces: one persistent 192,000-transition Phase U run with fixed checkpoints at effective 0/102,400/192,000.
 
-- [ ] **Step 1: Create run-bound formal authorization**
+- [x] **Step 1: Create run-bound formal authorization**
 
 Bind 192,000 training, 4,800 fixed evaluation, 38,400 candidate acquisition, 38,400 continuation diagnostics, source/config/XML/threshold hashes, fresh seed, and program cumulative range 803,200 to 995,200.
 
-- [ ] **Step 2: Launch persistently and check startup once**
+- [x] **Step 2: Launch persistently and check startup once**
 
 Use `setsid`; verify only process liveness, `status=running`, transition-0 checkpoint, and absence of broadphase/OOM/NaN/Inf/error patterns.
 
-- [ ] **Step 3: Record, commit, push, and stop polling**
+- [x] **Step 3: Record, commit, push, and stop polling**
 
 Record run ID, PID, status/metrics/log paths, budgets, checkpoints, resume contract, and current formal `V_up`/Tube status. Preserve `.vscode/`; do not inspect the process again until completion or Gate Pause.

@@ -75,7 +75,9 @@ validation, a fresh runtime gate, and a new bounded PPO smoke at `b4c7fb5`.
 - Candidate acquisition gate: `086bae5`
 - Checkpoint/acquisition provenance closure: `4b6449e`, `a25a31f`
 - Phase U exploration diagnosis and implementation: `ddf774f`, `46c1084`
-- Current runtime fingerprint refresh: `46c1084`
+- Phase U channel-exploration diagnosis and implementation: `e2bb067`,
+  `cb0e384`, `b1b4f25`, `c6f5443`
+- Current runtime fingerprint refresh: `c6f5443`
 - Cleanup baseline: `main@b7bb815`
 - Dependency design: `27f0aa3`
 - Clarified design policy: `3cbd6c1`
@@ -85,9 +87,9 @@ validation, a fresh runtime gate, and a new bounded PPO smoke at `b4c7fb5`.
 ## Last validated gate
 
 - Current reusable runtime gate: PASS at source fingerprint
-  `14972405f8ba75e701fdd71364c7fa12ded9ac962e8f9ad440b88314568aba35`.
+  `31e78390ee81c2c615b1cd77f4e95ea45cc427e7b60e2f477588b600cfe3ed29`.
 - It used the fresh ignored work directory
-  `runs/two_phase/runtime_gate/phase_u_std025_20260811/` and took 96.037
+  `runs/two_phase/runtime_gate/phase_u_channel_std_20260812/` and took 97.711
   seconds.
 - The gate's 64+32 = 96 transitions are compile/update/resume smoke evidence
   only, not expert, pilot, or formal training.
@@ -208,6 +210,52 @@ hypothesis is channel-specific initial exploration
 diagnostic in which hip action at or above 0.5 caused liftoff in 10/10 cases.
 No reward, reset, threshold, deadline, optimizer, network-layer, XML, actuator,
 or action-mapping change is included in that hypothesis.
+
+The channel-specific exploration implementation passed red-green tests, fresh
+static compilation, 897 full tests, `scripts/local_preflight.sh` (which repeated
+the same 897 tests), and the complete runtime gate at source HEAD `c6f5443`.
+The 512-environment one-block smoke then completed 12,800 training, 1,600 Brax
+evaluation, and 216 fixed-evaluation transitions with closed total accounting
+of 14,616. Its measured policy standard deviations ranged from 0.04997 to
+0.50012, matching the ordered manifest `[0.05, 0.05, 0.5, 0.05]`. The log had
+no broadphase overflow, NaN/Inf, OOM, traceback, timing/history mismatch, or
+hash mismatch. All eight deterministic fixed rollouts still ended in
+`takeoff_missed_liftoff_deadline`, and all eight failure videos are preserved:
+
+```text
+runs/two_phase/phase_experts/gate_c1_phase_u_channel_std_env512_smoke_20260812_seed710008/failure_videos/
+```
+
+This smoke is engineering integrity evidence only. It authorized the remaining
+formal invocation, not a learnability or Tube claim. The persistent run was
+launched and is not being polled by the launching interaction:
+
+```text
+run id: phase_u_formal_channel_std_env512_192000_20260812_seed710009
+producer HEAD: c6f5443d5107c106e17bea29bc4d4eaabd14bae4
+training PID at startup: 120899
+status: runs/two_phase/phase_experts/phase_u_formal_channel_std_env512_192000_20260812_seed710009/status.json
+metrics: runs/two_phase/phase_experts/phase_u_formal_channel_std_env512_192000_20260812_seed710009/metrics.jsonl
+log: runs/two_phase/process_logs/phase_u_formal_channel_std_env512_192000_20260812_seed710009.log
+authorization: runs/two_phase/authorizations/phase_u_formal_channel_std_env512_192000_20260812_seed710009.json
+```
+
+The completed startup check observed a live process, `status=running`, zero
+consumed transitions, the absolute transition-0 checkpoint, and no disallowed
+log pattern. This invocation is bounded to 192,000 expert-training, 4,800 fixed
+evaluation, 38,400 candidate-acquisition, and 38,400 continuation-diagnostic
+transitions. The program-level expert-training range is 803,200 to 995,200,
+below the 1,000,000 authorization. Requested fixed checkpoints are
+0/100k/192k and resolve to 0/102,400/192,000. No `pi_up_star`, formal `V_up`,
+or learned Soft Tube exists yet.
+
+If this process exits abnormally, do not reuse its authorization or output
+directory. Create a new run-bound authorization and output ID, then pair
+`--resume-run` with this run directory and `--restore-checkpoint` with its
+latest complete absolute `orbax/` checkpoint. If it completes or Gate Pauses,
+the next session must inspect fixed physical metrics, outcome accounting,
+candidate parents, continuation diagnostics, and saved failure videos before
+authorizing any further method stage.
 
 The repaired 64-environment Phase U formal-expert run is now paused:
 
