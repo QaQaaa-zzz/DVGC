@@ -240,6 +240,38 @@ This evidence consumes 96 runtime-smoke transitions and no new Phase U PPO
 training transitions. The next permitted action is one fresh run-bound
 512-environment engineering smoke for the cap-8 hypothesis.
 
+The cap-8 smoke completed as
+`gate_c1_phase_u_2kg_angrate_cap8_env512_smoke_20260812_seed720201`: 12,800
+training, 1,600 Brax evaluation, and 216 fixed-evaluation transitions (14,616
+total). The finite update ran at 903.30 training transitions/s. Its checkpoint
+sidecar passes recursive identity validation as `70b61950...adfba`; closed
+outcomes are 8 `other_failure`, all `takeoff_missed_liftoff_deadline`. All
+eight rollouts reached the legal window, none lifted off or reached Apex, and
+there was no physical failure, timeout, saturation, numerical/runtime fault,
+or identity mismatch. Eight MP4/NPZ pairs are retained. This is engineering
+qualification only.
+
+That qualification permitted one new fresh-initialization formal run:
+
+```text
+run id: phase_u_2kg_angrate_cap8_env512_998400_20260812_seed720202
+producer HEAD: ac514ec351e1267ef523f29c5fd3dc5b8e308305
+source-tree hash: ea4f83fef961e2e80cfafad3056aa02fb22939229a9e88a99897184cf91b9011
+worker PID: 885981
+authorized/effective training ceiling: 1,000,000 / 998,400
+effective checkpoints: 0/102,400/256,000/512,000/755,200/998,400
+status: runs/two_phase/phase_experts/phase_u_2kg_angrate_cap8_env512_998400_20260812_seed720202/status.json
+metrics: runs/two_phase/phase_experts/phase_u_2kg_angrate_cap8_env512_998400_20260812_seed720202/metrics.jsonl
+log: runs/two_phase/process_logs/phase_u_2kg_angrate_cap8_env512_998400_20260812_seed720202.log
+control/resume: runs/two_phase/process_logs/phase_u_2kg_angrate_cap8_env512_998400_20260812_seed720202.control.txt
+```
+
+The one startup audit found the worker live, `status=running`, and a complete
+transition-0 checkpoint with matching source/model/config/threshold identity.
+Monitoring remains sparse with an estimated 18--30 minute terminal window.
+Snapshot acquisition and continuation probing remain evidence-gated; formal
+`V_up`, Soft Tube, Phase D training, and unified PPO remain unauthorized.
+
 The method contract was revised on 2026-08-10 to make the phase experts local
 continuation controllers and state-distribution generators rather than final
 deployment outputs. Expert training and feasibility-data acquisition now
