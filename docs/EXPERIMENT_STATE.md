@@ -165,6 +165,44 @@ training transitions. The next permitted action is one fresh run-bound
 512-environment Phase U engineering smoke; no formal retry has yet been
 authorized or started for this hypothesis.
 
+That fresh smoke completed under run id
+`gate_c1_phase_u_2kg_angrate1_env512_smoke_20260812_seed720101`. It consumed
+12,800 PPO training, 1,600 Brax evaluation, and 208 fixed-evaluation
+transitions (14,608 total). The finite update ran at 910.84 training
+transitions/s; the 12,800 checkpoint passed recursive identity validation as
+`60787db9...84ef`. Outcome accounting closed at 8 `other_failure`, all due to
+`takeoff_missed_liftoff_deadline`: 8/8 reached the legal window, 0/8 lifted
+off, and 0/8 reached Apex. There was no physical failure, timeout, roll/pitch
+violation, illegal contact, action saturation, broadphase overflow, NaN/Inf,
+OOM, timing/history mismatch, or hash mismatch. Eight MP4 and eight aligned
+state traces are retained. This is engineering qualification only.
+
+After that qualification, the delegated PPO decision authorized and launched
+one new fresh-initialization formal run:
+
+```text
+run id: phase_u_2kg_angrate1_env512_998400_20260812_seed720102
+producer HEAD: 98e6de4ee492bc4c5e463214eadc51747d9d9197
+source-tree hash: e636e4f11b4de701158e9e90be10dd51642087287beebc6a01e707303774a6a8
+worker PID: 803812
+authorized/effective training ceiling: 1,000,000 / 998,400
+effective checkpoints: 0/102,400/256,000/512,000/755,200/998,400
+status: runs/two_phase/phase_experts/phase_u_2kg_angrate1_env512_998400_20260812_seed720102/status.json
+metrics: runs/two_phase/phase_experts/phase_u_2kg_angrate1_env512_998400_20260812_seed720102/metrics.jsonl
+log: runs/two_phase/process_logs/phase_u_2kg_angrate1_env512_998400_20260812_seed720102.log
+control/resume: runs/two_phase/process_logs/phase_u_2kg_angrate1_env512_998400_20260812_seed720102.control.txt
+```
+
+The single startup audit found the worker live with matching source, model,
+threshold, and training-config identities, a complete transition-0 checkpoint,
+and `status=running`. The initial fixed evaluation consumed 216 transitions.
+The estimated terminal/Gate-Pause window is approximately 18--30 minutes after
+startup. Monitoring is sparse: inspect only terminal state, an explicit
+checkpoint milestone, or abnormal exit. Candidate acquisition and bounded
+continuation probing remain automatically gated on real held-out Apex success
+and independent parent diversity; this run does not authorize a formal
+`V_up`, Soft Tube, Phase D training, or unified PPO.
+
 The method contract was revised on 2026-08-10 to make the phase experts local
 continuation controllers and state-distribution generators rather than final
 deployment outputs. Expert training and feasibility-data acquisition now
