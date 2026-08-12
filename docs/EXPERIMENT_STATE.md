@@ -505,6 +505,26 @@ timing/history, saturation, illegal-contact, roll, or pitch fault. This is
 engineering qualification only and permits one fresh run-bound formal cap-4
 authorization.
 
+That qualification authorized and launched one fresh cap-4 formal run:
+
+```text
+run id: phase_u_2kg_apex8_stable16_liftoff8_cap4_env512_998400_20260813_seed720602
+producer HEAD: d0e0eb65493c5e21bcfa102f016d4d1cd91b1fab
+source-tree hash: 9d590cfe2f2f1be0cfcac2a84673ff94ef5eccde0683e729c283761c104391bc
+worker PID: 1155781
+authorized/effective training ceiling: 1,000,000 / 998,400
+status: runs/two_phase/phase_experts/phase_u_2kg_apex8_stable16_liftoff8_cap4_env512_998400_20260813_seed720602/status.json
+metrics: runs/two_phase/phase_experts/phase_u_2kg_apex8_stable16_liftoff8_cap4_env512_998400_20260813_seed720602/metrics.jsonl
+log: runs/two_phase/process_logs/phase_u_2kg_apex8_stable16_liftoff8_cap4_env512_998400_20260813_seed720602.log
+```
+
+The single startup audit found the detached worker live with matching
+identities, a complete transition-0 checkpoint/sidecar, 216 initial fixed-
+evaluation transitions, and no numerical/runtime/hash/timing fault. Monitoring
+remains sparse, with the next inspection at the estimated 5--10 minute terminal
+or Gate-Pause window. Candidate/continuation work remains gated on real Apex
+success and independent parent diversity.
+
 The method contract was revised on 2026-08-10 to make the phase experts local
 continuation controllers and state-distribution generators rather than final
 deployment outputs. Expert training and feasibility-data acquisition now
