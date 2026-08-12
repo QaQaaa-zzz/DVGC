@@ -107,6 +107,64 @@ not been continuously polled. Candidate harvesting may start only after the
 existing held-out success and independent-parent gates pass; no formal
 `pi_up_star`, `V_up`, Soft Tube, Phase-D expert, or unified PPO is claimed.
 
+The process has now exited at the complete 755,200-transition checkpoint with
+`status=gate_pause` and
+`held_out_physical_performance_plateau`. This is the terminal result of the
+run-bound authorization; the unconsumed 243,200-transition difference to the
+998,400 ceiling must not be resumed automatically. The checkpoint audit is:
+
+| effective training transitions | held-out outcomes | window reach | liftoff | Apex success | mean return | mean episode ticks |
+| ---: | --- | ---: | ---: | ---: | ---: | ---: |
+| 0 | 8 `takeoff_missed_liftoff_deadline` | 8/8 | 0/8 | 0/8 | -3.299 | 27 |
+| 102,400 | 8 `takeoff_missed_liftoff_deadline` | 8/8 | 0/8 | 0/8 | -4.159 | 28 |
+| 256,000 | 8 `pitch_limit` | 0/8 | 0/8 | 0/8 | -48.583 | 26 |
+| 512,000 | 8 `pitch_limit` | 0/8 | 0/8 | 0/8 | -23.822 | 9 |
+| 755,200 | 8 `pitch_limit` | 0/8 | 0/8 | 0/8 | -23.464 | 8 |
+
+The apparent return recovery after 256,000 is not physical improvement. The
+policy terminates progressively earlier, so it accumulates fewer attitude and
+angular-rate penalties while window reach, liftoff, clearance, and Apex
+success remain zero. Training-time stochastic episodes also had zero success;
+mean physical failure rose from 74.5% over 0--102,400 to 97.1% over
+256,000--512,000 and 99.95% over 512,000--755,200. This is precisely the
+approved condition in which scalar reward and physical task performance have
+diverged.
+
+Timing-aligned state traces confirm the terminal failure occurs before the
+legal window. At 755,200, the deterministic policy moves the hip actuator
+control target from the natural -1.2 rad position to -0.067 and then +0.336 in
+the first two control ticks. Maximum angular speed reaches 22.34 rad/s and
+pitch reaches 1.333 rad; termination occurs after 8 control ticks with no event
+latch. This is a real `pitch_limit` physical failure, not the nonterminal
+early-airborne telemetry that the current method intentionally leaves
+unpunished.
+
+Interaction accounting is closed at a known lower bound of 755,984 environment
+transitions: 755,200 PPO training + 784 fixed evaluation + 0 candidate
+acquisition + 0 continuation labeling. All five checkpoint evaluations retain
+eight MP4 videos and eight timing-aligned state traces, for 40 of each. The log
+contains no broadphase overflow, NaN/Inf, OOM, timing/history mismatch, or hash
+mismatch; its only traceback is the deliberate Gate Pause exception. Producer
+HEAD, source-tree hash, XML hash, training-config hash, and run-bound
+authorization match the launch manifest.
+
+No candidate snapshot or continuation dataset was produced because the
+held-out Apex-success and independent-parent gates never opened. Therefore no
+checkpoint can be selected as `pi_up_star`, and there is still no provisional
+or formal `V_up`, learned Tube, or real Phase-D Apex seed. A canonical technical
+audit payload is retained at
+`runs/two_phase/phase_experts/phase_u_formal_hip025_env512_998400_20260812_seed710011/audit/artifact.json`.
+The portable HTML packaging step was not available because the host has no
+Node/npm; no package was installed or runtime environment changed.
+
+The next permitted activity under the current method is read-only diagnosis of
+the 256,000-transition onset of the pitch instability and design of one new
+scientific hypothesis. Any code/config change or further PPO invocation needs
+new red-green validation, a collision-qualified smoke, and a separate
+run-bound authorization. The current result does not authorize relaxing
+roll/pitch limits, changing the XML or action mapping, declaring a Tube, Phase-D
+training, or unified PPO.
+
 ## Current branch and commit
 
 - Branch: `agent/two-phase-soft-tube`
