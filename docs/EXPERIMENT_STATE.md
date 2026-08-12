@@ -307,6 +307,34 @@ resume. This requalification consumes 96 runtime-smoke transitions and zero
 new Phase U training transitions. The next permitted action is one fresh
 run-bound 512-environment engineering smoke.
 
+That smoke completed as
+`gate_c1_phase_u_2kg_liftoff8_cap8_env512_smoke_20260813_seed720301`: 12,800
+training, 1,600 Brax evaluation, and 208 fixed-evaluation transitions (14,608
+total). The finite checkpoint validates recursively as `47dd97af...558dfe`;
+closed outcomes are 8 `other_failure`, all
+`takeoff_missed_liftoff_deadline`, with no physical/numerical/runtime fault.
+All eight MP4/NPZ pairs are retained. This is engineering qualification only.
+
+A new fresh-initialization formal run is now active:
+
+```text
+run id: phase_u_2kg_liftoff8_cap8_env512_998400_20260813_seed720302
+producer HEAD: 6459978a7e92108f32729f8f72e4d2e3f888d13f
+source-tree hash: 0334c6b8c4894fcce5eb4466c72ea73c692797edc284bcbbb284ed7fd9f424d6
+worker PID: 956415
+authorized/effective training ceiling: 1,000,000 / 998,400
+effective checkpoints: 0/102,400/256,000/512,000/755,200/998,400
+status: runs/two_phase/phase_experts/phase_u_2kg_liftoff8_cap8_env512_998400_20260813_seed720302/status.json
+metrics: runs/two_phase/phase_experts/phase_u_2kg_liftoff8_cap8_env512_998400_20260813_seed720302/metrics.jsonl
+log: runs/two_phase/process_logs/phase_u_2kg_liftoff8_cap8_env512_998400_20260813_seed720302.log
+control: runs/two_phase/process_logs/phase_u_2kg_liftoff8_cap8_env512_998400_20260813_seed720302.control.txt
+```
+
+The one startup audit found the worker live, `status=running`, and a complete
+transition-0 checkpoint with matching identities. Monitoring remains sparse.
+Candidate/continuation work remains gated on real independent Apex successes;
+formal `V_up`, Soft Tube, Phase D, and unified PPO remain unauthorized.
+
 The method contract was revised on 2026-08-10 to make the phase experts local
 continuation controllers and state-distribution generators rather than final
 deployment outputs. Expert training and feasibility-data acquisition now
