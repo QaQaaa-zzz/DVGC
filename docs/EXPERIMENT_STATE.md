@@ -52,6 +52,30 @@ reference-controller provenance, not a Phase U training blocker and not a
 bank or reachability claim. No retry, action repair, threshold move, or safety
 limit change was made.
 
+The fresh run-bound 2 kg Phase U engineering smoke completed at producer HEAD
+`4db9f98ac700df851363f33b0baa4fab82a52820`:
+
+```text
+run id: gate_c1_phase_u_2kg_env512_smoke_20260812_seed720001
+parallel environments: 512
+training transitions: 12,800
+Brax evaluation transitions: 1,600
+fixed evaluation transitions: 216
+total environment transitions: 14,616
+status: completed
+```
+
+The PPO update ran at 890.07 training transitions/s with finite loss, KL, and
+policy-distribution statistics. The transition-12,800 checkpoint sidecar passed
+recursive identity validation (`843a1f25...ca82432`). Fixed outcome accounting
+closed at 8 `other_failure`, 0 physical failure, 0 timeout, and 0 success. All
+eight deterministic rollouts reached the legal jump window; none lifted off or
+reached Apex, and all ended at `takeoff_missed_liftoff_deadline`. Roll/pitch
+violations, illegal contact, action saturation, broadphase overflow, NaN/Inf,
+OOM, traceback, timing/history mismatch, and hash mismatch were absent. Eight
+MP4/state-trace pairs are retained under the run's `failure_videos/`. This is
+engineering qualification only and does not claim learnability or `pi_up`.
+
 The method contract was revised on 2026-08-10 to make the phase experts local
 continuation controllers and state-distribution generators rather than final
 deployment outputs. Expert training and feasibility-data acquisition now
