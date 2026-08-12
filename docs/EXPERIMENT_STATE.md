@@ -227,8 +227,8 @@ runs/two_phase/phase_experts/gate_c1_phase_u_channel_std_env512_smoke_20260812_s
 ```
 
 This smoke is engineering integrity evidence only. It authorized the remaining
-formal invocation, not a learnability or Tube claim. The persistent run was
-launched and is not being polled by the launching interaction:
+formal invocation, not a learnability or Tube claim. The persistent run has now
+completed:
 
 ```text
 run id: phase_u_formal_channel_std_env512_192000_20260812_seed710009
@@ -240,22 +240,40 @@ log: runs/two_phase/process_logs/phase_u_formal_channel_std_env512_192000_202608
 authorization: runs/two_phase/authorizations/phase_u_formal_channel_std_env512_192000_20260812_seed710009.json
 ```
 
-The completed startup check observed a live process, `status=running`, zero
-consumed transitions, the absolute transition-0 checkpoint, and no disallowed
-log pattern. This invocation is bounded to 192,000 expert-training, 4,800 fixed
-evaluation, 38,400 candidate-acquisition, and 38,400 continuation-diagnostic
-transitions. The program-level expert-training range is 803,200 to 995,200,
-below the 1,000,000 authorization. Requested fixed checkpoints are
-0/100k/192k and resolve to 0/102,400/192,000. No `pi_up_star`, formal `V_up`,
-or learned Soft Tube exists yet.
+It consumed exactly 192,000 expert-training and 552 fixed-evaluation
+transitions, wrote checkpoints/evaluations at 0/102,400/192,000, and closed with
+`status=completed`. Candidate acquisition and continuation diagnostics remained
+zero because no held-out Apex success existed. The log contains no broadphase
+overflow, OOM, NaN/Inf, traceback, timing/history mismatch, or hash mismatch.
+All 24 held-out failures have MP4 videos and timing-aligned state traces under
+the three `evaluations/<transition>/failure_videos/` directories.
 
-If this process exits abnormally, do not reuse its authorization or output
-directory. Create a new run-bound authorization and output ID, then pair
-`--resume-run` with this run directory and `--restore-checkpoint` with its
-latest complete absolute `orbax/` checkpoint. If it completes or Gate Pauses,
-the next session must inspect fixed physical metrics, outcome accounting,
-candidate parents, continuation diagnostics, and saved failure videos before
-authorizing any further method stage.
+The held-out outcome changed from eight
+`takeoff_missed_liftoff_deadline` failures at transitions 0 and 102,400 to eight
+`pitch_limit` physical failures at transition 192,000. Apex success, legal
+liftoff, stable airborne, and clearance success were zero at every checkpoint.
+At the final checkpoint the deterministic controller applied a strong hip
+command immediately from the natural start: root vertical velocity reached
+1.03 m/s by tick 2 while the root remained about 2.04 m before the obstacle
+front, and pitch reached 1.379 rad before termination at tick 12. This is early
+airborne diagnostic behavior only; the jump-window latch never fired and no
+Phase U success was credited.
+
+The actor is not wholly missing a deployable timing signal. Each of its four
+35-value FIFO frames contains `task_distance_to_front =
+(step_front_x-root_x)/3` at dimension 18. It does not directly receive the
+formal `obstacle_relative_x` based on the robot's frontmost collision support,
+nor the internal `jump_signal_latched` telemetry. The present evidence therefore
+supports a failed timing policy that did not use its available root-distance
+signal, not a claim that the task was unobservable. Any observation-contract or
+reward change is a new scientific hypothesis and requires a new design and
+training authorization.
+
+Across the three counted formal invocations, Phase U has now consumed 995,200
+of the authorized 1,000,000 expert-training transitions. The remaining 4,800
+is less than one collision-qualified 512-environment PPO block of 12,800, so no
+further expert-training invocation is authorized. No `pi_up_star`, formal
+`V_up`, learned Soft Tube, or real Phase-D Apex seed exists.
 
 The repaired 64-environment Phase U formal-expert run is now paused:
 
@@ -616,30 +634,31 @@ validation protocol and cannot be called reachable or safe. Its formal reset
 distribution must be sourced primarily from real frozen-`pi_up` Apex and early
 descent rollouts. Phase D execution remains blocked at Gate C1.
 
+The completed channel-exploration run exhausted the usable aligned Phase U
+budget without producing a legal liftoff or Apex trajectory. Its final policy
+learned enough hip authority to become airborne before the legal window, then
+failed the unchanged pitch safety limit. There are consequently no eligible
+parents for snapshot acquisition and no authority to repurpose the unused
+candidate/continuation interaction ceilings as PPO training.
+
 ## Next permitted action
 
-The approved reward-only Phase U hypothesis, per-checkpoint physical
-evaluation, aligned checkpoint, truthful warm-start accounting, and
-candidate-harvesting hooks have passed final validation and the new bounded
-smoke. A warm start restores only normalizer/policy/value parameters, resets
-optimizer and rollout state, binds its parent checkpoint's cumulative
-transition count, runs only the separately authorized remaining rollout
-blocks, and never repeats an already written global milestone. The first 1M
-authorization was consumed by a zero-transition checkpoint-path pause and must
-not be reused. The newly authorized bounded formal-path checkpoint smoke has
-completed. The subsequent 64-environment run is paused for a three-window
-physical plateau and will not be resumed. The explicitly requested
-1,024-environment layout failed collision-integrity qualification, so it must
-not be used unless the immutable runtime/model contract is separately changed
-and re-authorized. The 512-environment layout passed qualification, but its
-formal run paused at 256,000 on a second no-liftoff physical plateau. Together
-with the earlier 291,200-transition formal run, cumulative Phase U expert
-training is 547,200 transitions. The selected next hypothesis changes only the
-Phase-U initial action standard deviation from 0.05 to 0.25. After red-green
-implementation and a bounded smoke, no more than 448,000 aligned formal
-training transitions remain under the one-million ceiling. Candidate
-acquisition and bounded policy-dependent continuation diagnostics may begin
-only after their unchanged evidence gates pass.
+The one-million Phase U authorization is effectively exhausted at 995,200
+aligned expert-training transitions. No additional long PPO run, Phase U
+snapshot acquisition, or continuation probing is currently permitted: the
+remaining 4,800 transitions cannot form one valid 512-environment rollout
+block, and the acquisition gates have no successful parent trajectories.
+
+The next scientifically defensible action is a zero- or tightly bounded
+interaction design audit for one timing hypothesis. The leading question is
+whether Phase U should expose a deployable, geometry-consistent window-progress
+feature (without exposing internal event/result metadata), or instead change
+one reward/optimization assumption so the existing root-distance feature is
+used. This audit must preserve the immutable XML, action mapping, 4 kg payload,
+50 N m limits, natural reset, early-airborne nonterminal rule, and unchanged
+roll/pitch/contact/nonfinite safety gates. Implementation and another PPO budget
+require explicit new authorization after that single-hypothesis design is
+reviewed.
 
 This marker does not authorize formal `V_up`, a learned Soft Tube declaration,
 Phase D expert training, unified PPO, or JCE/JEL. Provisional acquisition aids
