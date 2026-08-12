@@ -389,6 +389,28 @@ The startup audit found the worker live, `status=running`, and a complete
 transition-0 checkpoint with matching identities. Monitoring remains sparse;
 candidate/continuation work still requires independent Apex successes.
 
+The stable-airborne formal run subsequently entered `gate_pause` at 256,000
+training transitions with `held_out_physical_performance_plateau`; it must not
+be resumed. It consumed 648 fixed-evaluation transitions and zero candidate or
+continuation transitions. All 21 checkpoint sidecars validate, and all 24
+held-out failures have MP4 and timing-aligned NPZ evidence. Every fixed rollout
+at 0/102.4k/256k reached the legal window but had zero liftoff, zero Apex, and
+zero physical failure, ending at `takeoff_missed_liftoff_deadline`. The
+intentional checkpoint-gate RuntimeError is the only traceback.
+
+At 256k, stochastic training still produced mean +5.36 legal-liftoff reward,
++1.76 stable-airborne reward (about 11% of episodes), and +0.283 bounded Apex-
+approach reward, but zero Apex success. It also incurred -33.52 angular-rate
+cost, -7.4 illegal-contact cost, and 14% physical failure. Increasing either
+bridge bonus would reward events that are still too weak. The next single
+hypothesis changes only the stable Phase U `apex_approach_weight` from 2.0 to
+8.0. That existing term activates only after legal-window entry, stable full-
+structure airborne, and ascending motion, and scores proximity to all seven
+deployable Apex physical conditions. Physics, safety, reset, PPO, exploration,
+thresholds, angular cap, bridge bonuses, and every other reward term remain
+fixed. This requires red-green validation, a fresh runtime gate, one new smoke,
+and a new run-bound authorization; no run has started for this hypothesis.
+
 The method contract was revised on 2026-08-10 to make the phase experts local
 continuation controllers and state-distribution generators rather than final
 deployment outputs. Expert training and feasibility-data acquisition now
