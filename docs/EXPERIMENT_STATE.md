@@ -102,6 +102,57 @@ and bounded continuation hooks remain gated on real held-out Apex success and
 independent parent diversity; nothing here declares `pi_up_star`, formal
 `V_up`, or a Soft Tube.
 
+The 2 kg formal retry subsequently stopped at its complete 755,200-transition
+checkpoint with `status=gate_pause` and
+`held_out_physical_performance_plateau`; it must not be resumed under the
+consumed authorization. Its closed checkpoint audit is:
+
+| training transitions | outcomes | window | liftoff | Apex | mean return | mean ticks |
+| ---: | --- | ---: | ---: | ---: | ---: | ---: |
+| 0 | 8 missed-liftoff | 8/8 | 0/8 | 0/8 | -3.353 | 27 |
+| 102,400 | 8 missed-liftoff | 8/8 | 0/8 | 0/8 | -3.751 | 27 |
+| 256,000 | 8 pitch-limit | 0/8 | 0/8 | 0/8 | -24.603 | 14 |
+| 512,000 | 8 pitch-limit | 0/8 | 0/8 | 0/8 | -23.821 | 10 |
+| 755,200 | 8 pitch-limit | 0/8 | 0/8 | 0/8 | -24.737 | 15 |
+
+Every checkpoint and recursive sidecar validates. All 40 held-out failures
+have MP4 and timing-aligned NPZ traces. The run consumed 755,200 PPO training
+and 744 fixed-evaluation transitions; candidate acquisition and continuation
+diagnostics remained zero. There was no broadphase overflow, NaN/Inf, OOM,
+hash mismatch, timing/history violation, illegal contact, or action saturation.
+The traceback in the log is the intentional checkpoint-gate control path, not
+an unhandled numerical failure.
+
+The state traces establish the failure mechanism. At 256k and 512k the
+deterministic policy moved the hip target from -1.2 toward approximately -0.52
+and -0.09 within two control ticks while the knee target remained near 2.5.
+Pitch rate then reached approximately -6 to +10 rad/s and the robot exceeded
+the unchanged pitch limit in 10--15 ticks, far before the legal window. The
+window/ascent/clearance/Apex reward components were exactly zero on these
+held-out failures, so there is no pre-window task-reward leakage. Training-time
+stochastic trajectories nevertheless obtained large ascent shaping without a
+single Apex completion; the bounded angular-rate cost is only 0.25 per tick
+against up to 4.0 ascent plus 2.0 clearance progress per tick.
+
+Two fixed, non-training physical diagnostics tested alternatives without
+adapting their grids. A 36-scenario hip/knee coordination grid consumed 1,000
+environment transitions: 33 scenarios lifted off and 14 reached stable
+airborne, but 23 hit pitch limit, 13 hit retained takeoff safety failures, and
+none reached Apex. Increasing knee exploration is therefore rejected. An
+18-scenario one-tick hip-impulse grid consumed 507 transitions: all scenarios
+lifted off, but only five reached stable airborne and those five later hit
+pitch limit; 0.10--0.15 impulses kept pitch around 0.07--0.19 rad but lacked
+height. This proves usable low-pitch impulse authority exists but the current
+objective does not sufficiently prefer it over high-angular-rate ascent.
+
+The next single hypothesis changes only Phase U
+`angular_rate_penalty_weight` from 0.25 to 1.0. It leaves the other reward
+terms, exploration prior, reset, threshold/deadline, XML, action mapping,
+network, optimizer, horizon, and evaluation unchanged. This change requires a
+fresh reward-contract hash, red-green tests, full validation, one new 512-env
+smoke, and a new run-bound formal authorization. It does not authorize
+resuming the paused run or declaring a Tube.
+
 The method contract was revised on 2026-08-10 to make the phase experts local
 continuation controllers and state-distribution generators rather than final
 deployment outputs. Expert training and feasibility-data acquisition now
