@@ -525,6 +525,31 @@ remains sparse, with the next inspection at the estimated 5--10 minute terminal
 or Gate-Pause window. Candidate/continuation work remains gated on real Apex
 success and independent parent diversity.
 
+The cap-4 formal run subsequently entered `gate_pause` at 256,000 training
+transitions with `held_out_physical_performance_plateau`; it must not be
+resumed. It consumed 632 fixed-evaluation transitions and zero candidate or
+continuation transitions. All 21 sidecars and 24 MP4/NPZ pairs validate. Every
+held-out rollout reached the legal window, but none lifted off or reached Apex;
+all ended at the nonphysical missed-liftoff deadline.
+
+The reward-cap bracket is now closed. Cap 4, like cap 8, produced a conservative
+mean, while cap 1 previously produced high-rate pitch failures. At 256k the
+cap-4 stochastic distribution still averaged +5.68 liftoff, +1.60 stable-
+airborne, +1.467 Apex approach, -32.53 angular-rate, -9.6 illegal-contact, 20%
+physical failure, and zero success. Maximum policy standard deviation remained
+0.2387 near its initial hip value 0.25, while the deterministic hip control
+stayed between -1.232 and -1.200 rad. The actor already observes deployable
+distance-to-obstacle-front plus three-frame joint/IMU/action history, so window
+observability is present.
+
+The next single hypothesis changes only hip initial action standard deviation
+from 0.25 to 0.10, retaining steer/drive/knee at 0.05. This still covers the
+physically validated low-pitch +0.10--+0.15 hip impulses across 512 environments
+but reduces destructive tails and requires useful behavior to move the policy
+mean rather than survive only as stochastic tail samples. Reward, reset,
+physics, safety, PPO, thresholds, and fixed evaluation remain unchanged. No run
+has started for this hypothesis.
+
 The method contract was revised on 2026-08-10 to make the phase experts local
 continuation controllers and state-distribution generators rather than final
 deployment outputs. Expert training and feasibility-data acquisition now
