@@ -54,6 +54,59 @@ physical evaluation, aligned checkpoint, truthful warm-start resume, and
 evidence-gated acquisition hooks passed red-green implementation, full static
 validation, a fresh runtime gate, and a new bounded PPO smoke at `b4c7fb5`.
 
+On 2026-08-12 the user authorized a fresh one-million-transition Phase U
+program after approving the single exploration change that reduces only the
+hip initial action standard deviation from 0.50 to 0.25. Early airborne remains
+nonterminal diagnostic telemetry: it receives neither a penalty nor Phase U
+success, and jump/ascent task progress remains gated by the legal jump window.
+The fixed 512-environment PPO block is 12,800 transitions, so the largest
+aligned formal budget not exceeding the authorization is 998,400 training
+transitions. This authorization is a new run-bound program and is not an
+extension or relabeling of the exhausted earlier 995,200-transition program.
+
+The qualifying smoke completed at producer HEAD `b5d564c`:
+
+```text
+run id: gate_c1_phase_u_hip025_env512_smoke_20260812_seed710010
+training transitions: 12,800
+Brax evaluation transitions: 1,600
+fixed evaluation transitions: 224
+total environment transitions: 14,624
+status: completed
+```
+
+It wrote a complete checkpoint, preserved the configured action standard
+deviation range 0.04998--0.24994, and had no broadphase overflow, NaN/Inf, OOM,
+traceback, timing/history mismatch, hash mismatch, roll/pitch violation,
+illegal contact, or physical failure. All eight deterministic fixed rollouts
+reached the legal window and ended in `takeoff_missed_liftoff_deadline` without
+liftoff. This is one-block engineering qualification only, not evidence that
+the controller has learned the task. Its eight MP4 diagnostics are retained
+under its `failure_videos/` directory.
+
+The collision-qualified persistent formal run was then launched once:
+
+```text
+run id: phase_u_formal_hip025_env512_998400_20260812_seed710011
+producer HEAD: b5d564c25da2be3d6f39901cf51f41b948f68431
+source-tree hash: 69239142c016d11e48e2556910ef5cd5c30c467db3ce6881f28a00374363447e
+training PID at startup: 453072
+status: runs/two_phase/phase_experts/phase_u_formal_hip025_env512_998400_20260812_seed710011/status.json
+metrics: runs/two_phase/phase_experts/phase_u_formal_hip025_env512_998400_20260812_seed710011/metrics.jsonl
+log: runs/two_phase/process_logs/phase_u_formal_hip025_env512_998400_20260812_seed710011.log
+control/resume: runs/two_phase/process_logs/phase_u_formal_hip025_env512_998400_20260812_seed710011.control.txt
+authorization: runs/two_phase/authorizations/phase_u_formal_hip025_env512_998400_20260812_seed710011.json
+```
+
+Its effective checkpoints are
+0/102,400/256,000/512,000/755,200/998,400. The run independently caps fixed
+evaluation, candidate acquisition, and continuation diagnostics and records
+those interactions separately. The one permitted startup inspection observed
+`status=running`, the correct phase/run/source hashes, and a clean log. It has
+not been continuously polled. Candidate harvesting may start only after the
+existing held-out success and independent-parent gates pass; no formal
+`pi_up_star`, `V_up`, Soft Tube, Phase-D expert, or unified PPO is claimed.
+
 ## Current branch and commit
 
 - Branch: `agent/two-phase-soft-tube`
@@ -77,6 +130,8 @@ validation, a fresh runtime gate, and a new bounded PPO smoke at `b4c7fb5`.
 - Phase U exploration diagnosis and implementation: `ddf774f`, `46c1084`
 - Phase U channel-exploration diagnosis and implementation: `e2bb067`,
   `cb0e384`, `b1b4f25`, `c6f5443`
+- Phase U bounded hip-exploration design and implementation: `2b24ed1`,
+  `1b19830`, `b5d564c`
 - Current runtime fingerprint refresh: `c6f5443`
 - Cleanup baseline: `main@b7bb815`
 - Dependency design: `27f0aa3`
