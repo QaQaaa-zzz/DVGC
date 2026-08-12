@@ -335,6 +335,24 @@ transition-0 checkpoint with matching identities. Monitoring remains sparse.
 Candidate/continuation work remains gated on real independent Apex successes;
 formal `V_up`, Soft Tube, Phase D, and unified PPO remain unauthorized.
 
+The liftoff-bridge formal run subsequently entered `gate_pause` at 256,000
+training transitions with `held_out_physical_performance_plateau`; it must not
+be resumed. It consumed 648 fixed-evaluation and zero candidate/continuation
+transitions. All 21 checkpoint sidecars validate and 24 MP4/NPZ pairs are
+retained. Every deterministic rollout at 0/102.4k/256k reached the window but
+had zero liftoff, zero Apex, and zero physical failure; the 256k peak angular
+speed was 0.51 rad/s.
+
+The training distribution did contain legal liftoff: after the first block,
+mean one-shot liftoff reward was 4.48--6.72, so roughly 56--84% of stochastic
+episodes triggered it. At 256k the mean +6 liftoff reward coexisted with -41.16
+angular-rate cost, -12 illegal-contact cost, 26% physical failure, and zero
+Apex. Increasing liftoff reward would therefore reinforce low-quality events.
+The next single hypothesis instead adds a one-shot +16 bridge only on the
+existing post-window `stable_airborne` transition. It retains liftoff +8 and
+cap 8 and does not imply ascending, Apex, success, or termination. Every other
+model, safety, PPO, reset, threshold, and reward contract remains fixed.
+
 The method contract was revised on 2026-08-10 to make the phase experts local
 continuation controllers and state-distribution generators rather than final
 deployment outputs. Expert training and feasibility-data acquisition now
