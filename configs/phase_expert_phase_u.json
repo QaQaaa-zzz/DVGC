@@ -90,7 +90,7 @@
     "clearance_progress_weight": 2.0,
     "apex_approach_weight": 2.0,
     "attitude_penalty_weight": 0.5,
-    "angular_rate_penalty_weight": 0.25,
+    "angular_rate_penalty_weight": 1.0,
     "illegal_contact_penalty_weight": 20.0,
     "action_smoothness_weight": 0.02,
     "action_magnitude_weight": 0.005,

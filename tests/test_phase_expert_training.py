@@ -443,8 +443,8 @@ def test_phase_u_training_level_uses_remaining_aligned_cap_and_three_fixed_evalu
         )
 
 
-def test_phase_u_configs_select_explicit_exploration_without_changing_default_runtime_prior():
-    """Stable Phase U configs use the approved timing-preserving hip scale."""
+def test_phase_u_configs_select_explicit_exploration_and_angular_rate_penalty():
+    """Stable Phase U configs bind the approved exploration and rate cost."""
     module = _module()
     for path in (
         "configs/phase_expert_smoke.json",
@@ -454,6 +454,12 @@ def test_phase_u_configs_select_explicit_exploration_without_changing_default_ru
         resolved = module.resolve_policy_initial_action_std(config)
         assert resolved == (0.05, 0.05, 0.25, 0.05)
         assert module._jsonable(resolved) == [0.05, 0.05, 0.25, 0.05]
+        assert (
+            module.resolve_phase_u_reward_config(
+                config
+            ).angular_rate_penalty_weight
+            == 1.0
+        )
 
 
 @pytest.mark.parametrize(
