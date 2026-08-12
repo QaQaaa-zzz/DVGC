@@ -76,6 +76,32 @@ OOM, traceback, timing/history mismatch, and hash mismatch were absent. Eight
 MP4/state-trace pairs are retained under the run's `failure_videos/`. This is
 engineering qualification only and does not claim learnability or `pi_up`.
 
+The smoke-qualified fresh formal retry has been launched once as a persistent,
+resumable process:
+
+```text
+run id: phase_u_2kg_env512_998400_20260812_seed720002
+producer HEAD: 7a61860ed26d430434ae6e168ac29b2b9b773065
+source-tree hash: a06aa44947783f79172d546f23c84f0906ccaa5ec71632b312ce50c9128a3a4e
+startup PID: 693476
+authorized/effective training ceiling: 1,000,000 / 998,400
+effective checkpoints: 0/102,400/256,000/512,000/755,200/998,400
+status: runs/two_phase/phase_experts/phase_u_2kg_env512_998400_20260812_seed720002/status.json
+metrics: runs/two_phase/phase_experts/phase_u_2kg_env512_998400_20260812_seed720002/metrics.jsonl
+log: runs/two_phase/process_logs/phase_u_2kg_env512_998400_20260812_seed720002.log
+control/resume: runs/two_phase/process_logs/phase_u_2kg_env512_998400_20260812_seed720002.control.txt
+```
+
+The single startup inspection found the PID live, `status=running`, a complete
+transition-0 checkpoint and sidecar, matching 2 kg/source/config/threshold
+identities, and no broadphase, numerical, timing/history, or hash fault. Based
+on the measured 890 transitions/s plus fixed-evaluation/video overhead, the
+next inspection is scheduled for an approximately 8--15 minute checkpoint or
+terminal window. No continuous log polling is authorized. Candidate snapshot
+and bounded continuation hooks remain gated on real held-out Apex success and
+independent parent diversity; nothing here declares `pi_up_star`, formal
+`V_up`, or a Soft Tube.
+
 The method contract was revised on 2026-08-10 to make the phase experts local
 continuation controllers and state-distribution generators rather than final
 deployment outputs. Expert training and feasibility-data acquisition now
