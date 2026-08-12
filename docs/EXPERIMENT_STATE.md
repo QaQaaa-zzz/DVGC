@@ -187,6 +187,28 @@ must be created, then `--resume-run` must name this directory and
 `--restore-checkpoint` must name its latest complete `orbax/` checkpoint; the
 existing output directory and authorization must never be reused.
 
+The process subsequently exited at the complete transition-256,000 checkpoint
+with `status=gate_pause` and
+`held_out_physical_performance_plateau`. Fixed evaluations at 0, 102,400, and
+256,000 all reached the legal jump window but produced zero liftoff, clearance,
+or Apex success. Their mean returns degraded from -3.299 to -6.212 to -12.000,
+while maximum held-out roll/pitch grew and all 24 outcomes remained
+`takeoff_missed_liftoff_deadline`. The final eight failure videos are preserved
+under `evaluations/000000256000/failure_videos/`. Training-time stochastic
+episodes had zero success and 81%--97% physical-failure rates, showing that the
+scalar 0.25 prior widened exploration but made most extra samples destructive.
+Candidate acquisition and continuation diagnostics remained at zero. This run
+consumed 256,000 expert-training and 680 fixed-evaluation transitions.
+
+Across formal Phase U invocations, consumed expert training is now 803,200
+transitions, leaving at most 196,800 under the 1,000,000 authorization. The
+largest 512-environment-aligned remainder is 192,000. The next single
+hypothesis is channel-specific initial exploration
+`[steer=0.05, drive=0.05, hip=0.50, knee=0.05]`, based on the prior controlled
+diagnostic in which hip action at or above 0.5 caused liftoff in 10/10 cases.
+No reward, reset, threshold, deadline, optimizer, network-layer, XML, actuator,
+or action-mapping change is included in that hypothesis.
+
 The repaired 64-environment Phase U formal-expert run is now paused:
 
 ```text
