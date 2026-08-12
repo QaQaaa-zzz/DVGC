@@ -481,6 +481,18 @@ disproven cap-1 high-rate/pitch-failure behavior and the repeatedly conservative
 cap-8 no-liftoff behavior while retaining weight 1.0 and every physical safety
 termination. No run has started for the cap-4 hypothesis.
 
+The cap-4 rebalance is now source-complete with reward-contract hash
+`1712e01841de0d44ae7816908072ab1ba4f25b0c773ec7b0c19fb17607a1503e`.
+The red stable-config test failed against cap 8 and passed after changing only
+the two stable configs to cap 4; the hash-drift regression uses cap 8 as its
+counterfactual. Seventy-three phase-expert tests, compileall, the full 910-test
+suite, and local preflight pass. A fresh managed runtime gate at
+`runs/two_phase/runtime_gate/phase_u_2kg_apex8_angrate_cap4_20260813/`
+passes in 93.36 seconds, including 64-transition update and 32-transition
+resume. This consumed 96 engineering-integrity transitions and zero Phase U
+training transitions. The next permitted action is one fresh run-bound 512-
+environment smoke; no formal cap-4 run is authorized or active yet.
+
 The method contract was revised on 2026-08-10 to make the phase experts local
 continuation controllers and state-distribution generators rather than final
 deployment outputs. Expert training and feasibility-data acquisition now

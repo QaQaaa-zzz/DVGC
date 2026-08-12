@@ -456,7 +456,7 @@ def test_phase_u_configs_select_explicit_exploration_and_reward_hypothesis():
         assert module._jsonable(resolved) == [0.05, 0.05, 0.25, 0.05]
         reward = module.resolve_phase_u_reward_config(config)
         assert reward.angular_rate_penalty_weight == 1.0
-        assert reward.angular_rate_penalty_cap_ratio == 8.0
+        assert reward.angular_rate_penalty_cap_ratio == 4.0
         assert reward.liftoff_bonus_weight == 8.0
         assert reward.stable_airborne_bonus_weight == 16.0
         assert reward.apex_approach_weight == 8.0
@@ -818,7 +818,7 @@ def test_smoke_config_locks_base_mode_cost_stops_rewards_and_disjoint_determinis
     assert module.phase_u_reward_contract_hash(changed) != reward_hash
     changed_cap = config | {
         "phase_u_reward": config["phase_u_reward"]
-        | {"angular_rate_penalty_cap_ratio": 4.0}
+        | {"angular_rate_penalty_cap_ratio": 8.0}
     }
     assert module.phase_u_reward_contract_hash(changed_cap) != reward_hash
     changed_liftoff = config | {

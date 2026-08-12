@@ -93,7 +93,7 @@
     "apex_approach_weight": 8.0,
     "attitude_penalty_weight": 0.5,
     "angular_rate_penalty_weight": 1.0,
-    "angular_rate_penalty_cap_ratio": 8.0,
+    "angular_rate_penalty_cap_ratio": 4.0,
     "illegal_contact_penalty_weight": 20.0,
     "action_smoothness_weight": 0.02,
     "action_magnitude_weight": 0.005,
