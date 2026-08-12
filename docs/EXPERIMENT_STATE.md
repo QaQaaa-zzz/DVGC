@@ -203,6 +203,31 @@ continuation probing remain automatically gated on real held-out Apex success
 and independent parent diversity; this run does not authorize a formal
 `V_up`, Soft Tube, Phase D training, or unified PPO.
 
+That formal run subsequently entered `gate_pause` at its complete 755,200
+checkpoint with `held_out_physical_performance_plateau`; it must not be resumed
+under the consumed authorization. It used 755,200 PPO training and 656 fixed
+evaluation transitions, with zero candidate-acquisition and continuation
+transitions. All 60 checkpoint sidecars pass recursive validation, and all 40
+fixed-evaluation failures have an MP4 and aligned NPZ trace. There was no
+NaN/Inf, overflow, OOM, identity mismatch, timing/history fault, illegal
+contact, or action saturation.
+
+The 0 and 102,400 checkpoints reached the legal window in 8/8 rollouts but did
+not lift off. The 256,000, 512,000, and 755,200 checkpoints each ended 8/8 at
+`pitch_limit`, with peak angular speeds 11.91, 24.66, and 24.25 rad/s. The
+755,200 trace moves the hip target from -1.2 to +0.43 rad in two ticks and then
+back near -1.21 rad. The current angular-rate term clips at one Apex threshold
+(1.2466 rad/s), so it assigns the same per-tick cost to modest and 19.45x
+threshold exceedance. Offline fixed-trace scoring shows that changing only the
+cap ratio from 1 to 8 leaves the stable 0/102.4k traces unchanged while adding
+approximately 49.86/51.49/52.23 cost to the three pitch-failure traces.
+
+The next single hypothesis therefore adds the bounded, hashed
+`angular_rate_penalty_cap_ratio` and sets it to 8.0 while retaining weight 1.0.
+No other reward, exploration, PPO, reset, threshold, model, or runtime contract
+changes. It requires red-green implementation, complete requalification, a
+fresh smoke, and a new run-bound authorization before another formal run.
+
 The method contract was revised on 2026-08-10 to make the phase experts local
 continuation controllers and state-distribution generators rather than final
 deployment outputs. Expert training and feasibility-data acquisition now
