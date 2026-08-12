@@ -461,6 +461,26 @@ poll. Candidate acquisition and continuation probing remain gated on real
 held-out Apex success and parent diversity; formal `V_up`, Soft Tube, Phase D,
 and unified PPO remain unauthorized.
 
+The Apex-weight-8 formal run subsequently entered `gate_pause` at 256,000
+training transitions with `held_out_physical_performance_plateau`; it must not
+be resumed. It consumed 640 fixed-evaluation transitions and zero candidate or
+continuation transitions. All 21 checkpoint sidecars and 24 MP4/timing-aligned
+NPZ pairs validate. At 0/102.4k/256k all 24 held-out rollouts reached the legal
+window, none lifted off or reached Apex, and all ended at the unchanged missed-
+liftoff deadline without physical failure. The only traceback is the intended
+checkpoint-gate control path.
+
+The weight change worked numerically but not behaviorally. At 256k stochastic
+mean Apex-approach contribution rose to 1.258 from 0.283 in the prior weight-2
+run, but success remained zero. The same batch had +4.24 liftoff, +1.28 stable-
+airborne, -34.03 angular-rate, -6.6 illegal-contact, and 22% physical failure.
+The deterministic hip control stayed between -1.234 and -1.200 rad and never
+lifted off. The next single hypothesis therefore changes only
+`angular_rate_penalty_cap_ratio` from 8.0 to 4.0. This brackets the previously
+disproven cap-1 high-rate/pitch-failure behavior and the repeatedly conservative
+cap-8 no-liftoff behavior while retaining weight 1.0 and every physical safety
+termination. No run has started for the cap-4 hypothesis.
+
 The method contract was revised on 2026-08-10 to make the phase experts local
 continuation controllers and state-distribution generators rather than final
 deployment outputs. Expert training and feasibility-data acquisition now
