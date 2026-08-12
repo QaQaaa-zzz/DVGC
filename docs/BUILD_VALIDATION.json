@@ -6,11 +6,11 @@
   "python_compileall": "PASS",
   "pure_pytest": {
     "status": "PASS",
-    "tests": 897
+    "tests": 902
   },
   "local_preflight": {
     "status": "PASS",
-    "tests": 897,
+    "tests": 902,
     "jax_backend": "gpu",
     "device": "NVIDIA GeForce RTX 4090 D",
     "mujoco": "3.6.0"
@@ -18,7 +18,7 @@
   "runtime_gate": {
     "status": "PASS",
     "report": "docs/RUNTIME_GATE.json",
-    "elapsed_seconds": 93.30181503295898,
+    "elapsed_seconds": 93.7017297744751,
     "zero_action_100": {
       "physical_failures": 3,
       "timeouts": 0,

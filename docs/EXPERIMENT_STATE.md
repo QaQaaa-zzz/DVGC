@@ -228,6 +228,18 @@ No other reward, exploration, PPO, reset, threshold, model, or runtime contract
 changes. It requires red-green implementation, complete requalification, a
 fresh smoke, and a new run-bound authorization before another formal run.
 
+The cap-ratio implementation is now source-complete with reward-contract hash
+`3802c068a068ddfffb27e52fa212fc1813977b03ab7e9de2964a2ef522de3782`.
+The default cap remains 1.0 for compatibility; the two stable Phase U configs
+explicitly select 8.0. Six focused red-green tests, 99 Phase U regressions,
+static compilation, the full 902-test suite, and local preflight pass. A fresh
+managed runtime gate at
+`runs/two_phase/runtime_gate/phase_u_2kg_angular_rate_cap8_20260812/` passes in
+93.70 seconds, including the 64-transition update and 32-transition resume.
+This evidence consumes 96 runtime-smoke transitions and no new Phase U PPO
+training transitions. The next permitted action is one fresh run-bound
+512-environment engineering smoke for the cap-8 hypothesis.
+
 The method contract was revised on 2026-08-10 to make the phase experts local
 continuation controllers and state-distribution generators rather than final
 deployment outputs. Expert training and feasibility-data acquisition now

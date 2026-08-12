@@ -187,6 +187,7 @@ class PhaseURewardConfig:
     apex_approach_weight: float = 2.0
     attitude_penalty_weight: float = 0.5
     angular_rate_penalty_weight: float = 0.25
+    angular_rate_penalty_cap_ratio: float = 1.0
     illegal_contact_penalty_weight: float = 20.0
     action_smoothness_weight: float = 0.02
     action_magnitude_weight: float = 0.005
@@ -224,6 +225,13 @@ class PhaseURewardConfig:
             raise ValueError("reward bounds must be finite")
         if not math.isfinite(self.clearance_floor):
             raise ValueError("clearance_floor must be finite")
+        if (
+            not math.isfinite(self.angular_rate_penalty_cap_ratio)
+            or self.angular_rate_penalty_cap_ratio <= 0.0
+        ):
+            raise ValueError(
+                "angular_rate_penalty_cap_ratio must be finite and positive"
+            )
         if self.total_min >= self.total_max:
             raise ValueError("total_min must be less than total_max")
 
@@ -396,7 +404,9 @@ def phase_u_reward_components(
         )
     )
     angular_rate = -config.angular_rate_penalty_weight * jp.clip(
-        signals.angular_speed / thresholds.max_angular_speed, 0.0, 1.0
+        signals.angular_speed / thresholds.max_angular_speed,
+        0.0,
+        config.angular_rate_penalty_cap_ratio,
     )
     smoothness = -config.action_smoothness_weight * jp.mean(
         jp.square(jp.asarray(action) - jp.asarray(last_action))

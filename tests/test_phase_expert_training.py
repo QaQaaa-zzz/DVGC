@@ -454,12 +454,16 @@ def test_phase_u_configs_select_explicit_exploration_and_angular_rate_penalty():
         resolved = module.resolve_policy_initial_action_std(config)
         assert resolved == (0.05, 0.05, 0.25, 0.05)
         assert module._jsonable(resolved) == [0.05, 0.05, 0.25, 0.05]
-        assert (
-            module.resolve_phase_u_reward_config(
-                config
-            ).angular_rate_penalty_weight
-            == 1.0
-        )
+        reward = module.resolve_phase_u_reward_config(config)
+        assert reward.angular_rate_penalty_weight == 1.0
+        assert reward.angular_rate_penalty_cap_ratio == 8.0
+
+
+@pytest.mark.parametrize("cap", [0.0, -1.0, float("inf"), float("nan")])
+def test_phase_u_angular_rate_penalty_cap_must_be_finite_and_positive(cap):
+    module = _module()
+    with pytest.raises(ValueError, match="angular_rate_penalty_cap_ratio"):
+        module.PhaseURewardConfig(angular_rate_penalty_cap_ratio=cap)
 
 
 @pytest.mark.parametrize(
@@ -795,6 +799,11 @@ def test_smoke_config_locks_base_mode_cost_stops_rewards_and_disjoint_determinis
         | {"ascent_progress_weight": 3.5}
     }
     assert module.phase_u_reward_contract_hash(changed) != reward_hash
+    changed_cap = config | {
+        "phase_u_reward": config["phase_u_reward"]
+        | {"angular_rate_penalty_cap_ratio": 4.0}
+    }
+    assert module.phase_u_reward_contract_hash(changed_cap) != reward_hash
     missing = config | {"phase_u_reward": dict(config["phase_u_reward"])}
     missing["phase_u_reward"].pop("clearance_progress_weight")
     with pytest.raises(ValueError, match="phase_u_reward"):
@@ -1148,6 +1157,41 @@ def test_post_window_reward_has_bounded_physical_progress_and_independent_penalt
     assert float(penalties["illegal_contact_penalty"]) == pytest.approx(-20.0)
     assert float(penalties["physical_failure_penalty"]) == pytest.approx(-20.0)
     assert float(penalties["task_failure_penalty"]) == pytest.approx(-20.0)
+
+
+def test_angular_rate_penalty_preserves_severity_until_explicit_bounded_cap():
+    module = _module()
+    thresholds = _adapter_thresholds().apex
+    signals = ApexBandSignals(
+        stable_airborne=jp.asarray(True),
+        com_vz=jp.asarray(1.0),
+        clearance=jp.asarray(0.2),
+        roll=jp.asarray(0.0),
+        pitch=jp.asarray(0.0),
+        angular_speed=jp.asarray(thresholds.max_angular_speed * 20.0),
+        forward_velocity=jp.asarray(3.75),
+        obstacle_relative_x=jp.asarray(0.0),
+        illegal_contact=jp.asarray(False),
+        physical_failure=jp.asarray(False),
+    )
+    config = module.PhaseURewardConfig(
+        angular_rate_penalty_weight=1.0,
+        angular_rate_penalty_cap_ratio=8.0,
+    )
+    components = module.phase_u_reward_components(
+        signals,
+        thresholds,
+        jp.asarray(True),
+        jp.asarray(False),
+        jp.asarray(True),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.zeros((8,), jp.float32),
+        jp.zeros((8,), jp.float32),
+        config,
+    )
+    assert float(components["angular_rate_penalty"]) == pytest.approx(-8.0)
 
 
 def test_reward_component_metrics_exist_at_reset_and_remain_static_through_step():
