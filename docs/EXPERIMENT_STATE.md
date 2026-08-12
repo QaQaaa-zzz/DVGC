@@ -19,6 +19,18 @@ Existing five-stage code and results remain legacy migration sources only.
 This method is not yet implemented end-to-end: there are no trained phase
 experts, feasibility models, learned soft Tubes, or unified two-phase policy.
 
+On 2026-08-12 the user explicitly changed the single authoritative payload
+contract from 4.0 kg to 2.0 kg and authorized one fresh Phase U retry up to
+1,000,000 training transitions after full validation and a bounded smoke. The
+only physical edit is `geom name="load" mass="4.0" -> mass="2.0"`; geometry,
+obstacle, +/-50 N m hip/knee limits, action mapping, reward, reset, observation,
+thresholds, PPO layout, and safety termination remain fixed. The configured
+path `assets/orange_bike_4kg_horizontal.xml` is retained as a historical
+filename and now has SHA-256
+`e2762bec49fdce61eff6ad01b6a67925934d8997b53929b0a67ace7f44109192`.
+All old 4 kg checkpoints, banks, runtime reports, and authorizations remain
+immutable provenance and are incompatible inputs for the new run.
+
 The method contract was revised on 2026-08-10 to make the phase experts local
 continuation controllers and state-distribution generators rather than final
 deployment outputs. Expert training and feasibility-data acquisition now
@@ -558,8 +570,9 @@ systemctl --user enable --now dvgc-pipeline-watchdog.timer
 ## Current inputs and hashes
 
 - XML: `assets/orange_bike_4kg_horizontal.xml`
-- XML SHA-256: `d7e9f43ff8fb9e4571203f81062ce9c828acfa38692ee8c71a3e5daa15ce794c`
-- Payload: 4.0 kg
+- Historical filename retained: yes
+- XML SHA-256: `e2762bec49fdce61eff6ad01b6a67925934d8997b53929b0a67ace7f44109192`
+- Payload: 2.0 kg
 - Hip/knee limits: +/-50 N m
 - Action order: `[steer, rear-wheel drive, hip, knee]`
 - Runtime: `/home/qy/mujoco_playground/.venv/bin/python`
@@ -586,8 +599,8 @@ jump latch became true on the terminal tick, but the rollout then triggered the
 unchanged roll safety limit after 17 control ticks with `end_code=4`
 (`roll_limit`). The external two-phase adapter does not admit an event on a
 physical-failure tick, so no valid Apex or stable recovery occurred. This
-result proves that full open-loop dynamic compatibility with the current 4 kg,
-+/-50 N m model was not demonstrated; it does not block expert training. The
+result proves that full open-loop dynamic compatibility with that historical
+4 kg, +/-50 N m model was not demonstrated; it does not block expert training. The
 CLI stopped before bank admission. Consequently:
 
 - no authoritative Phase U bank was written;
@@ -798,11 +811,11 @@ early-airborne penalty. Forward-propulsion reward remains active so the vehicle
 can learn to reach the window. This is static implementation only: it consumed
 zero new environment transitions and has not passed a dynamic PPO smoke.
 
-Any future design must preserve the immutable XML, action mapping, 4 kg
-payload, 50 N m limits, natural reset, early-airborne nonterminal rule, and
-unchanged roll/pitch/contact/nonfinite safety gates. Implementation and another
-PPO budget require explicit new authorization; the current 4,800-transition
-remainder is still insufficient for one valid block.
+That iteration required preserving the 4 kg payload and had no remaining
+aligned training block. It is now superseded only by the explicit 2 kg
+single-variable authorization recorded above. The action mapping, 50 N m
+limits, natural reset, early-airborne nonterminal rule, and unchanged
+roll/pitch/contact/nonfinite safety gates still remain mandatory.
 
 This marker does not authorize formal `V_up`, a learned Soft Tube declaration,
 Phase D expert training, unified PPO, or JCE/JEL. Provisional acquisition aids

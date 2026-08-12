@@ -14,7 +14,7 @@ provide broad jump-space intervals, Apex/descent/recovery kinematic envelopes,
 hip/knee motion trends, initial threshold suggestions, physical seed proposals,
 and weak reward/evaluation priors. It is not a pointwise trajectory-tracking
 target, expert policy, trained policy, or authoritative dynamic controller for
-the current 4 kg, +/-50 N m model. Complete open-loop replay is not a Gate B
+the current 2 kg, +/-50 N m model. Complete open-loop replay is not a Gate B
 requirement, and a reference state is not presumed reachable or safe.
 
 The retained prelaunch and roll-limit replay evidence records that full dynamic

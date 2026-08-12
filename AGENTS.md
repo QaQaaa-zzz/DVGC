@@ -25,9 +25,11 @@
   reinstall, upgrade, or reconfigure that environment without explicit user
   authorization.
 - The only authoritative model is
-  `assets/orange_bike_4kg_horizontal.xml` with a 4 kg payload, hip/knee force
+  `assets/orange_bike_4kg_horizontal.xml` with a 2 kg payload, hip/knee force
   limits of +/-50 N m, and action order
   `[steer, rear-wheel drive, hip, knee]`.
+- The `4kg` token in that single retained path is a historical filename, not
+  the current payload contract. Do not create a second XML to correct the name.
 - Do not change meshes, collision geometry, obstacle dimensions, matcher
   radii, environment physics, reward meaning, snapshot semantics, or action
   mapping during repository cleanup.

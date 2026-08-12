@@ -95,8 +95,9 @@ experiments validate them.
 ## Immutable physical contracts
 
 - Model: `assets/orange_bike_4kg_horizontal.xml`
-- Model SHA-256: `d7e9f43ff8fb9e4571203f81062ce9c828acfa38692ee8c71a3e5daa15ce794c`
-- Payload: 4.0 kg
+- Historical filename retained: yes; the `4kg` token is not the current mass
+- Model SHA-256: `e2762bec49fdce61eff6ad01b6a67925934d8997b53929b0a67ace7f44109192`
+- Payload: 2.0 kg
 - Hip/knee actuator force limits: +/-50 N m
 - Action order: `[steer, rear-wheel drive, hip, knee]`
 - Control rate: 50 Hz

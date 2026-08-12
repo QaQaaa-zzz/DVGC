@@ -1,21 +1,22 @@
 {
-  "date": "2026-07-14",
+  "date": "2026-08-12",
+  "validation_state": "STALE_PENDING_2KG_REVALIDATION",
   "configured_python": "/home/qy/mujoco_playground/.venv/bin/python",
   "environment_reconfigured": false,
   "python_compileall": "PASS",
   "pure_pytest": {
-    "status": "PASS",
+    "status": "STALE",
     "tests": 22
   },
   "local_preflight": {
-    "status": "PASS",
+    "status": "STALE",
     "tests": 24,
     "jax_backend": "gpu",
     "device": "NVIDIA GeForce RTX 4090 D",
     "mujoco": "3.6.0"
   },
   "runtime_gate": {
-    "status": "PASS",
+    "status": "STALE",
     "report": "docs/RUNTIME_GATE.json",
     "elapsed_seconds": 70.29655957221985,
     "zero_action_100": {
@@ -46,8 +47,8 @@
     "deterministic_action_max_abs": 0.0
   },
   "authoritative_xml": "assets/orange_bike_4kg_horizontal.xml",
-  "xml_sha256": "d7e9f43ff8fb9e4571203f81062ce9c828acfa38692ee8c71a3e5daa15ce794c",
-  "payload_mass_kg": 4.0,
+  "xml_sha256": "e2762bec49fdce61eff6ad01b6a67925934d8997b53929b0a67ace7f44109192",
+  "payload_mass_kg": 2.0,
   "hip_knee_force_range_nm": [
     -50.0,
     50.0
@@ -55,6 +56,7 @@
   "runtime_xml_absent": true,
   "action_mapping_version": "steer_drive_hip_knee.incremental_positive_flexion.v2",
   "warnings": [
+    "Counts, timings, and runtime details below the STALE statuses are retained prior-4kg evidence until Tasks 3-4 revalidate 2 kg.",
     "JAXopt is unmaintained (upstream deprecation warning).",
     "XLA autotuning fell back from filtered hints to the full hint set."
   ]
