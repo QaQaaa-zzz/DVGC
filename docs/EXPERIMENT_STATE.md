@@ -364,6 +364,31 @@ and preflight pass. A fresh managed runtime gate at
 passes in 93.27 seconds including 64-transition update and 32-transition
 resume. The next permitted action is one fresh run-bound 512-env smoke.
 
+The stable-airborne smoke
+`gate_c1_phase_u_2kg_stable16_liftoff8_cap8_env512_smoke_20260813_seed720401`
+completed with 12,800 training, 1,600 Brax evaluation, and 208 fixed-evaluation
+transitions (14,608 total). Its checkpoint validates recursively as
+`3c1284de...9e27c`; all eight outcomes were nonphysical missed-liftoff and all
+eight MP4/NPZ pairs are retained. No numerical, runtime, identity, saturation,
+or physical fault occurred. This is engineering qualification only.
+
+A fresh formal run is active:
+
+```text
+run id: phase_u_2kg_stable16_liftoff8_cap8_env512_998400_20260813_seed720402
+producer HEAD: 9313a79d1153f8a64882491156d5c43762e153ba
+source-tree hash: fa8620d925f117e3846b424bd983e707186927e914ccdd32454f11b0f58cd1ec
+worker PID: 1022132
+authorized/effective training ceiling: 1,000,000 / 998,400
+status: runs/two_phase/phase_experts/phase_u_2kg_stable16_liftoff8_cap8_env512_998400_20260813_seed720402/status.json
+metrics: runs/two_phase/phase_experts/phase_u_2kg_stable16_liftoff8_cap8_env512_998400_20260813_seed720402/metrics.jsonl
+log: runs/two_phase/process_logs/phase_u_2kg_stable16_liftoff8_cap8_env512_998400_20260813_seed720402.log
+```
+
+The startup audit found the worker live, `status=running`, and a complete
+transition-0 checkpoint with matching identities. Monitoring remains sparse;
+candidate/continuation work still requires independent Apex successes.
+
 The method contract was revised on 2026-08-10 to make the phase experts local
 continuation controllers and state-distribution generators rather than final
 deployment outputs. Expert training and feasibility-data acquisition now
