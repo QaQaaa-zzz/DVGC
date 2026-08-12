@@ -436,6 +436,31 @@ pitch fault. This is engineering qualification only. It permits one fresh
 run-bound formal authorization under the unchanged Gate Pause protocol; that
 formal run has not yet started.
 
+That qualification authorized and launched one fresh-initialization formal
+run:
+
+```text
+run id: phase_u_2kg_apex8_stable16_liftoff8_cap8_env512_998400_20260813_seed720502
+producer HEAD: 0d9e0cd1ac62d351c52a8f8fb2dce402393af129
+source-tree hash: 45759d98e593abf75ccb7a7968fac536eb9ab2df760c6a1aa7632c05aca9b0e4
+worker PID: 1095341
+authorized/effective training ceiling: 1,000,000 / 998,400
+effective checkpoints: 0/102,400/256,000/512,000/755,200/998,400
+status: runs/two_phase/phase_experts/phase_u_2kg_apex8_stable16_liftoff8_cap8_env512_998400_20260813_seed720502/status.json
+metrics: runs/two_phase/phase_experts/phase_u_2kg_apex8_stable16_liftoff8_cap8_env512_998400_20260813_seed720502/metrics.jsonl
+log: runs/two_phase/process_logs/phase_u_2kg_apex8_stable16_liftoff8_cap8_env512_998400_20260813_seed720502.log
+control: runs/two_phase/process_logs/phase_u_2kg_apex8_stable16_liftoff8_cap8_env512_998400_20260813_seed720502.control.txt
+```
+
+The single startup audit found the detached worker live and `status=running`;
+it had reached 64,000 training transitions with six complete checkpoint
+sidecars, 216 transition-0 fixed-evaluation transitions, matching identities,
+and no numerical/runtime/hash/timing fault. Monitoring is sparse: the next
+inspection is the estimated 5--10 minute terminal/Gate-Pause window, not a log
+poll. Candidate acquisition and continuation probing remain gated on real
+held-out Apex success and parent diversity; formal `V_up`, Soft Tube, Phase D,
+and unified PPO remain unauthorized.
+
 The method contract was revised on 2026-08-10 to make the phase experts local
 continuation controllers and state-distribution generators rather than final
 deployment outputs. Expert training and feasibility-data acquisition now
