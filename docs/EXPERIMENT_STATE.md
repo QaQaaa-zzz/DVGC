@@ -1647,6 +1647,36 @@ actual physical-performance evidence and immediate pause still required for
 numerical, provenance, state, severe reward-hacking, or sustained held-out
 physical degradation faults.
 
+That qualification has now authorized and launched one fresh persistent
+formal run:
+
+```text
+run id: phase_u_2kg_env256_confirmed_airborne_hipstd020_998400_20260813_seed721002
+producer HEAD: ebcc09e88d1a8edc9b957dc2018d77ce0b237110
+source-tree hash: 1499e789de2d4fd4db57b196f48031b9145b95e300bc6edf009241166890be47
+worker PID: 554549
+watcher PID: 558368
+parallel environments: 256
+authorized/effective training ceiling: 1,000,000 / 998,400
+effective checkpoints: 0/102,400/256,000/505,600/755,200/998,400
+status: runs/two_phase/phase_experts/phase_u_2kg_env256_confirmed_airborne_hipstd020_998400_20260813_seed721002/status.json
+metrics: runs/two_phase/phase_experts/phase_u_2kg_env256_confirmed_airborne_hipstd020_998400_20260813_seed721002/metrics.jsonl
+log: runs/two_phase/process_logs/phase_u_2kg_env256_confirmed_airborne_hipstd020_998400_20260813_seed721002.log
+completion marker: runs/two_phase/process_logs/phase_u_2kg_env256_confirmed_airborne_hipstd020_998400_20260813_seed721002.finished
+```
+
+The first launch attempt was killed by the command-session cleanup before it
+created a run directory and consumed zero transitions.  Preflight then passed,
+and the same exact authorization was launched once through a detached session;
+this is not a second experiment.  The startup audit found the real worker on
+the GPU with `status=running`, 216 transition-0 fixed-evaluation transitions,
+a recursively valid transition-0 sidecar, and matching producer/tree/XML/
+threshold/config identities including ordered action std
+`[0.05, 0.05, 0.20, 0.05]`.  No numerical, runtime, provenance, timing/history,
+or hash fault was present.  The corrected local watcher checks only process
+existence once per minute and writes the terminal marker; active log polling
+stops after this startup audit.
+
 The earlier 4 kg one-million Phase U authorization was effectively exhausted at 995,200
 aligned expert-training transitions. No additional long PPO run, Phase U
 snapshot acquisition, or continuation probing is currently permitted: the
