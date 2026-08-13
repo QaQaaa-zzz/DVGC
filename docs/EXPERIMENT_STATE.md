@@ -1779,6 +1779,36 @@ permitted action is a new exact run-bound authorization for at most 998,400
 PPO-training transitions with 256 environments and fixed checkpoints; it must
 use fresh initialization and must not resume the completed v3 reward run.
 
+That authorization has now launched one fresh persistent formal experiment:
+
+```text
+run id: phase_u_2kg_env256_window_ascent_998400_20260813_seed721102
+producer HEAD: 840aba3429bd7c6a813db0076eedeb4411775bc1
+source-tree hash: 832f77198459de3b361e365c2f1f6036310705261ace4ab0c3ab361458c9c348
+reward-contract hash: 82e02a55d1dcf7202af539922b16d881c39b3edd685189286f360c337844dcde
+worker PID: 741237
+watcher PID: 741239
+parallel environments: 256
+authorized/effective training ceiling: 1,000,000 / 998,400
+effective checkpoints: 0/102,400/256,000/505,600/755,200/998,400
+status: runs/two_phase/phase_experts/phase_u_2kg_env256_window_ascent_998400_20260813_seed721102/status.json
+metrics: runs/two_phase/phase_experts/phase_u_2kg_env256_window_ascent_998400_20260813_seed721102/metrics.jsonl
+log: runs/two_phase/process_logs/phase_u_2kg_env256_window_ascent_998400_20260813_seed721102.log
+completion marker: runs/two_phase/process_logs/phase_u_2kg_env256_window_ascent_998400_20260813_seed721102.finished
+```
+
+The preflight-only invocation executed zero transitions and closed the exact
+998,400 training, 9,600 fixed-evaluation, 38,400 candidate-acquisition,
+38,400 continuation-labeling, and 1,084,800 total ceilings. The detached
+startup audit found `status=running`, 216 transition-0 fixed-evaluation
+transitions, a recursively valid transition-0 sidecar, and matching producer,
+source tree, v4 reward, XML, training config, threshold, and ordered action-std
+identities. No numerical, runtime, provenance, snapshot, timing/history, or
+hash fault was present. The local watcher checks only worker existence once
+per minute and writes a compact terminal marker; active log polling stops
+after this startup audit. Candidate acquisition and continuation probing
+remain gated on real held-out Apex success and independent parent diversity.
+
 The earlier 4 kg one-million Phase U authorization was effectively exhausted at 995,200
 aligned expert-training transitions. No additional long PPO run, Phase U
 snapshot acquisition, or continuation probing is currently permitted: the
