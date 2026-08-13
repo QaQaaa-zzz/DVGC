@@ -1567,6 +1567,52 @@ run by themselves.  Candidate acquisition and bounded continuation probing
 remain automatically gated on real held-out Apex success and independent
 parent diversity.
 
+That run completed its full aligned budget:
+
+```text
+training transitions: 998,400
+fixed-evaluation transitions: 1,296
+total environment transitions: 999,696
+candidate-acquisition transitions: 0
+continuation-labeling transitions: 0
+status: completed
+```
+
+All 157 checkpoint sidecars validate recursively.  The six fixed panels at
+0/102,400/256,000/505,600/755,200/998,400 each close as eight
+`takeoff_missed_liftoff_deadline` outcomes.  Every rollout reached the legal
+jump window, but confirmed liftoff, stable airborne, ascent, clearance, and
+Apex remained 0/8 at every panel.  Physical failure, illegal contact,
+roll/pitch violation, action saturation, numerical/runtime failure, and
+identity mismatch were zero.  All 48 MP4 and 48 timing-aligned NPZ traces
+exist and match their recorded hashes.  No successful parent exists, so
+snapshot acquisition and continuation probing correctly remained disabled.
+
+The final deterministic trace moves hip from `-1.20` toward approximately
+`-1.23` radians, holds knee at `2.5`, and remains grounded.  More importantly,
+all 156 stochastic PPO rollout blocks recorded exactly zero
+`legal_liftoff_bonus`; the corrected confirmed-airborne event was never
+sampled, rather than sampled and rejected by an insufficient bonus.
+
+The old low-impulse report was not authoritative for this question because it
+predated the confirmed-airborne fix.  A fixed one-shot 18-case re-audit under
+current semantics is retained at
+`runs/two_phase/diagnostics/phase_u_2kg_confirmed_airborne_hip_impulse_20260813/`.
+It consumed 506 diagnostic environment transitions and zero PPO-training
+transitions.  Actions `+0.10`, `+0.15`, and `+0.20` did not produce confirmed
+liftoff.  Early one-tick `+0.25`, `+0.35`, and `+0.50` pulses produced confirmed
+liftoff/stable-airborne/ascent in six cases, but all later reached pitch limit;
+no case reached Apex.  This is local action-authority evidence only, not an
+expert, reachability, safety, or Tube claim.
+
+The next single hypothesis changes only the stable hip initial action standard
+deviation from `0.10` to `0.20`, retaining steer/drive/knee at `0.05`.  The
+smallest currently demonstrated confirmed-liftoff action (`+0.25`) changes
+from a 2.5-sigma to a 1.25-sigma event while remaining narrower than the prior
+destructive `0.25` exploration setting.  Reward, reset, XML, safety,
+threshold/deadline, observation/history, PPO layout, optimizer, horizon, and
+fixed evaluation remain unchanged.  No run for this hypothesis has started.
+
 The earlier 4 kg one-million Phase U authorization was effectively exhausted at 995,200
 aligned expert-training transitions. No additional long PPO run, Phase U
 snapshot acquisition, or continuation probing is currently permitted: the
