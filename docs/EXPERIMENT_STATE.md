@@ -2109,6 +2109,42 @@ experiment with 256 environments and at most 998,400 aligned PPO-training
 transitions. It does not authorize resuming v5, changing any other hypothesis,
 or declaring a phase expert, feasibility model, or Tube.
 
+That exact authorization has launched one persistent, resumable experiment:
+
+```text
+run id: phase_u_2kg_env256_dual_wheel_lift_v6_998400_20260813_seed721402
+producer HEAD: d61269a9c3beeeb76ae5546512bfb6d55f4d3bf7
+source-tree hash: d5cd81726b2d20070273cb6dc267cf98e27fa8f4a1e595bb341d83cfe98a5b2d
+reward-contract hash: 1a1b624e77408d765a3c46e0b91398f6440d667d34b2a4001742d98dc425b890
+threshold manifest hash: b3f77a45a39c2bfa951598bf81ea645e78d5999fa3fbcb413933561deb9ef59e
+worker PID: 1168770
+watcher PID: 1171355
+parallel environments: 256
+authorized/effective training ceiling: 1,000,000 / 998,400
+effective checkpoints: 0/102,400/256,000/505,600/755,200/998,400
+status: runs/two_phase/phase_experts/phase_u_2kg_env256_dual_wheel_lift_v6_998400_20260813_seed721402/status.json
+metrics: runs/two_phase/phase_experts/phase_u_2kg_env256_dual_wheel_lift_v6_998400_20260813_seed721402/metrics.jsonl
+log: runs/two_phase/process_logs/phase_u_2kg_env256_dual_wheel_lift_v6_998400_20260813_seed721402.log
+completion marker: runs/two_phase/process_logs/phase_u_2kg_env256_dual_wheel_lift_v6_998400_20260813_seed721402.finished
+```
+
+The preflight-only invocation consumed zero transitions and closed the exact
+998,400 training, 9,600 fixed-evaluation, 38,400 candidate-acquisition, 38,400
+continuation-labeling, and 1,084,800 total ceilings. One initial detached-shell
+launch exited before creating any run file or log and consumed zero
+transitions; its timestamp is retained as `failed_start_zero_transitions`.
+The same immutable authorization was then launched through an independent
+session. The one startup audit found `status=running`, 216 transition-0 fixed-
+evaluation transitions, a recursively valid transition-0 checkpoint
+(`1423a2c0...d65c25`), and matching HEAD, source-tree, XML, threshold, training-
+config, and reward identities. The worker is live on the GPU.
+
+Monitoring is sparse. The watcher checks only PID existence once per minute and
+writes a compact terminal marker; no active log polling is required. Candidate
+acquisition and bounded continuation probing remain automatically gated on real
+held-out Apex success and independent parent diversity. Nothing here declares
+`pi_up_star`, formal `V_up`, or a Soft Tube.
+
 - Landing -> Flight -> Takeoff -> Approach sequential shared-Actor bootstrap
 - exhaustive H1/C_L A/B
 - roll-targeted shared-Actor retention
