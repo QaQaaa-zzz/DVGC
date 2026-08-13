@@ -1625,6 +1625,28 @@ transitions and zero Phase U expert-training transitions.  The next permitted
 action is one fresh run-bound 256-environment engineering smoke; no formal
 retry for hip std `0.20` is yet authorized or active.
 
+That engineering smoke completed as
+`gate_c1_phase_u_2kg_env256_confirmed_airborne_hipstd020_smoke_20260813_seed721001`.
+It consumed 6,400 PPO-training and 432 fixed-evaluation transitions (6,832
+total), with zero candidate-acquisition and continuation-labeling transitions.
+Both checkpoint sidecars validate recursively, both fixed outcome accounts
+close, and all 16 MP4 plus 16 NPZ files exist with matching hashes.  The
+deterministic 0/6,400 panels each reached the legal window in 8/8 rollouts but
+had zero confirmed liftoff and Apex; all ended at the nonphysical missed-
+liftoff deadline with zero physical failure, illegal contact, saturation,
+roll/pitch violation, numerical fault, or identity mismatch.
+
+The single stochastic smoke block recorded 100% physical failure and zero
+confirmed-liftoff bonus at the initial 0.20 exploration prior.  This is
+important startup telemetry, but one block is not a learnability result and
+does not satisfy the approved stop condition for this difficult task.  The
+smoke establishes compile/reset/update/checkpoint/evaluation/accounting
+integrity only.  A fresh formal run may therefore proceed to the full aligned
+998,400-transition ceiling, with fixed held-out checkpoints providing the
+actual physical-performance evidence and immediate pause still required for
+numerical, provenance, state, severe reward-hacking, or sustained held-out
+physical degradation faults.
+
 The earlier 4 kg one-million Phase U authorization was effectively exhausted at 995,200
 aligned expert-training transitions. No additional long PPO run, Phase U
 snapshot acquisition, or continuation probing is currently permitted: the
