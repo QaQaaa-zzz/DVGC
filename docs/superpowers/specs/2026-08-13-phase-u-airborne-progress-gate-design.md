@@ -62,3 +62,17 @@ After targeted/full/static/preflight validation, run one bounded PPO smoke.
 Only if it passes may a fresh run-bound formal authorization be created. Do
 not resume the paused hip-std-0.10 run, change another hypothesis, or declare
 `pi_up_star`, formal `V_up`, or a Soft Tube.
+
+## Authorized hard-task budget revision
+
+The user subsequently clarified that this task is difficult enough that lack
+of improvement at three early checkpoints must not stop PPO before the full
+approximately one-million-transition budget. Plateau detection remains in
+each checkpoint report as diagnostic telemetry, but it sets `pause=false`.
+The next aligned formal run may therefore continue to 998,400 training
+transitions despite flat success metrics.
+
+Immediate Gate Pause remains active for nonfinite checkpoint metrics, severe
+action saturation, sustained held-out physical degradation, and reward hacking
+where return rises while physical performance declines. This stopping-policy
+revision changes neither the reward hypothesis nor the environment dynamics.

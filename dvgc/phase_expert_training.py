@@ -273,7 +273,12 @@ def resolve_phase_u_reward_config(
 
 
 def phase_u_reward_contract_hash(training_config: Mapping[str, Any]) -> str:
-    return _canonical_payload_hash(asdict(resolve_phase_u_reward_config(training_config)))
+    return _canonical_payload_hash(
+        {
+            "semantics": PHASE_U_REWARD_SEMANTICS,
+            "config": asdict(resolve_phase_u_reward_config(training_config)),
+        }
+    )
 
 
 def resolve_policy_initial_action_std(
@@ -320,6 +325,8 @@ _PHASE_U_REWARD_COMPONENTS = (
     "task_failure_penalty",
 )
 
+PHASE_U_REWARD_SEMANTICS = "phase_u.airborne_progress_requires_legal_liftoff.v2"
+
 
 def _interval_proximity(value: Any, lower: float, upper: float) -> Any:
     width = jp.maximum(jp.asarray(upper - lower), 1.0e-6)
@@ -331,6 +338,7 @@ def phase_u_reward_components(
     signals: ApexBandSignals,
     thresholds: ApexBandThresholds,
     legal_window_entered: Any,
+    airborne_progress_enabled: Any,
     window_entry_transition: Any,
     legal_liftoff_transition: Any,
     stable_airborne_transition: Any,
@@ -344,13 +352,14 @@ def phase_u_reward_components(
 ) -> dict[str, Any]:
     """Return bounded observable Phase U terms with monotonic legal-window gating."""
     window = jp.asarray(legal_window_entered, dtype=bool)
+    airborne_progress = jp.asarray(airborne_progress_enabled, dtype=bool)
     forward_scale = jp.maximum(config.target_forward_velocity, 1.0e-6)
     vertical_scale = jp.maximum(config.target_vertical_velocity, 1.0e-6)
     forward = config.forward_propulsion_weight * jp.clip(
         jp.asarray(signals.forward_velocity) / forward_scale, 0.0, 1.0
     )
     ascent = config.ascent_progress_weight * jp.where(
-        window,
+        airborne_progress,
         jp.clip(jp.asarray(signals.com_vz) / vertical_scale, 0.0, 1.0),
         0.0,
     )
@@ -358,7 +367,7 @@ def phase_u_reward_components(
         thresholds.min_clearance - config.clearance_floor, 1.0e-6
     )
     clearance = config.clearance_progress_weight * jp.where(
-        window,
+        airborne_progress,
         jp.clip(
             (jp.asarray(signals.clearance) - config.clearance_floor)
             / clearance_denominator,
@@ -401,7 +410,9 @@ def phase_u_reward_components(
         ]
     )
     apex_approach = config.apex_approach_weight * jp.where(
-        window & jp.asarray(apex_eligible, dtype=bool), jp.mean(apex_scores), 0.0
+        airborne_progress & jp.asarray(apex_eligible, dtype=bool),
+        jp.mean(apex_scores),
+        0.0,
     )
     attitude = -config.attitude_penalty_weight * jp.mean(
         jp.stack(
@@ -640,6 +651,7 @@ class PhaseExpertEnvAdapter:
             apex,
             self._thresholds.apex,
             event.jump_window_entered,
+            jp.asarray(event.jump_window_entered) & jp.asarray(event.liftoff_seen),
             window_entry_transition,
             legal_liftoff_transition,
             stable_airborne_transition,
@@ -956,7 +968,12 @@ def evaluate_phase_u_checkpoint_gate(
                 right > left for left, right in zip(returns, returns[1:])
             ):
                 reasons.append("reward_hacking_return_up_physics_down")
-    return {"pause": bool(reasons), "reasons": reasons}
+    pause_reasons = [
+        reason
+        for reason in reasons
+        if reason != "held_out_physical_performance_plateau"
+    ]
+    return {"pause": bool(pause_reasons), "reasons": reasons}
 
 
 def _write_json_atomic(path: Path, payload: Mapping[str, Any]) -> None:

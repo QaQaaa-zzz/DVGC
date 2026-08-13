@@ -57,7 +57,7 @@
     "stop_after_combined_interaction_ceiling",
     "stop_on_contract_or_runtime_failure",
     "pause_on_repeated_held_out_degradation",
-    "pause_on_three_window_held_out_plateau",
+    "record_three_window_held_out_plateau_without_pause",
     "pause_on_reward_hacking_or_severe_action_saturation"
   ],
   "candidate_acquisition": {

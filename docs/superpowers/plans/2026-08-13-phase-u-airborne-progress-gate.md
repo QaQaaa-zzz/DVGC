@@ -14,6 +14,8 @@
 - Do not modify reward weights, reset, thresholds, XML, action mapping, PPO layout, network, optimizer, or episode horizon.
 - Preserve early-airborne nontermination and all physical safety failures.
 - Do not resume the paused run; smoke and formal retries require new run-bound authorizations.
+- Record a three-window held-out plateau without pausing before the aligned
+  998,400-transition budget; retain immediate safety/numerical/degradation pauses.
 
 ---
 

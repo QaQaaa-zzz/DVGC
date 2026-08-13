@@ -410,6 +410,12 @@ def test_phase_u_training_level_uses_env256_safety_layout_and_three_fixed_evalua
     module = _module()
     config_path = "configs/phase_expert_phase_u.json"
     config = json.loads(Path(config_path).read_text(encoding="utf-8"))
+    assert "record_three_window_held_out_plateau_without_pause" in config[
+        "stopping_conditions"
+    ]
+    assert "pause_on_three_window_held_out_plateau" not in config[
+        "stopping_conditions"
+    ]
     spec = _spec(
         module,
         tmp_path,
@@ -694,8 +700,8 @@ def test_phase_u_physical_evaluation_summary_reports_progress_safety_and_reward_
     assert report["reward_component_mean_sums"] == {"ascent_progress": 2.0}
 
 
-def test_phase_u_checkpoint_gate_pauses_on_plateau_saturation_or_repeated_degradation():
-    """One low checkpoint is allowed, while three flat physical windows pause."""
+def test_phase_u_checkpoint_gate_records_plateau_but_only_pauses_on_safety_or_degradation():
+    """A hard task runs to budget despite a plateau; unsafe evidence still pauses."""
     module = _module()
 
     def report(score, episode_return, saturation=0.0):
@@ -725,7 +731,7 @@ def test_phase_u_checkpoint_gate_pauses_on_plateau_saturation_or_repeated_degrad
         [report(0.0, -4.0), report(0.0, -3.9), report(0.0, -3.3)]
     )
     assert plateau == {
-        "pause": True,
+        "pause": False,
         "reasons": ["held_out_physical_performance_plateau"],
     }
     severe = module.evaluate_phase_u_checkpoint_gate(
@@ -837,6 +843,12 @@ def test_smoke_config_locks_base_mode_cost_stops_rewards_and_disjoint_determinis
         | {"apex_approach_weight": 4.0}
     }
     assert module.phase_u_reward_contract_hash(changed_apex_approach) != reward_hash
+    original_semantics = module.PHASE_U_REWARD_SEMANTICS
+    module.PHASE_U_REWARD_SEMANTICS = original_semantics + ".test-drift"
+    try:
+        assert module.phase_u_reward_contract_hash(config) != reward_hash
+    finally:
+        module.PHASE_U_REWARD_SEMANTICS = original_semantics
     missing = config | {"phase_u_reward": dict(config["phase_u_reward"])}
     missing["phase_u_reward"].pop("clearance_progress_weight")
     with pytest.raises(ValueError, match="phase_u_reward"):
@@ -1098,6 +1110,7 @@ def test_pre_window_takeoff_and_apex_progress_rewards_are_zero_even_when_airborn
         jp.asarray(False),
         jp.asarray(False),
         jp.asarray(False),
+        jp.asarray(False),
         jp.zeros((8,)),
         jp.zeros((8,)),
         module.PhaseURewardConfig(),
@@ -1131,6 +1144,64 @@ def test_pre_window_takeoff_and_apex_progress_rewards_are_zero_even_when_airborn
     assert float(components["task_failure_penalty"]) == 0.0
 
 
+def test_airborne_progress_is_zero_inside_window_until_legal_liftoff():
+    """Ground-supported window entry must not unlock airborne task shaping."""
+    adapter = _adapter(_module())
+    state = adapter.reset(jax.random.PRNGKey(44))
+
+    supported_in_window = jax.jit(adapter.step)(
+        state,
+        jp.asarray([1, 1, 0, 1.0, 0.2, 0.0, 0, 1], jp.float32),
+    )
+
+    assert bool(supported_in_window.info["phase_expert/event/jump_window_entered"])
+    assert not bool(supported_in_window.info["phase_expert/event/liftoff_seen"])
+    assert float(
+        supported_in_window.metrics["phase_expert/reward_component/ascent_progress"]
+    ) == 0.0
+    assert float(
+        supported_in_window.metrics["phase_expert/reward_component/clearance_progress"]
+    ) == 0.0
+    assert float(
+        supported_in_window.metrics["phase_expert/reward_component/apex_approach"]
+    ) == 0.0
+
+
+def test_airborne_progress_requires_post_window_liftoff_after_early_airborne():
+    """Early airborne is diagnostic only and cannot unlock later progress."""
+    adapter = _adapter(_module())
+    state = adapter.reset(jax.random.PRNGKey(45))
+    early = jax.jit(adapter.step)(
+        state,
+        jp.asarray([0, 0, 1, 1.0, 0.2, 0.0, 0, 0], jp.float32),
+    )
+    assert not bool(early.info["phase_expert/event/jump_window_entered"])
+    assert not bool(early.info["phase_expert/event/liftoff_seen"])
+
+    supported_window = jax.jit(adapter.step)(
+        early,
+        jp.asarray([1, 1, 1, 1.0, 0.2, 0.0, 0, 1], jp.float32),
+    )
+    assert bool(supported_window.info["phase_expert/event/jump_window_entered"])
+    assert not bool(supported_window.info["phase_expert/event/liftoff_seen"])
+    for name in ("ascent_progress", "clearance_progress", "apex_approach"):
+        assert float(
+            supported_window.metrics[f"phase_expert/reward_component/{name}"]
+        ) == 0.0
+
+    legal_liftoff = jax.jit(adapter.step)(
+        supported_window,
+        jp.asarray([0, 1, 1, 1.0, 0.2, 0.0, 0, 0], jp.float32),
+    )
+    assert bool(legal_liftoff.info["phase_expert/event/liftoff_seen"])
+    assert float(
+        legal_liftoff.metrics["phase_expert/reward_component/ascent_progress"]
+    ) > 0.0
+    assert float(
+        legal_liftoff.metrics["phase_expert/reward_component/clearance_progress"]
+    ) > 0.0
+
+
 def test_post_window_reward_has_bounded_physical_progress_and_independent_penalties():
     """Removing any physical term or combining failure causes must break the reward audit."""
     module = _module()
@@ -1150,6 +1221,7 @@ def test_post_window_reward_has_bounded_physical_progress_and_independent_penalt
     components = jax.jit(module.phase_u_reward_components)(
         signals,
         thresholds,
+        jp.asarray(True),
         jp.asarray(True),
         jp.asarray(True),
         jp.asarray(False),
@@ -1183,6 +1255,7 @@ def test_post_window_reward_has_bounded_physical_progress_and_independent_penalt
     penalties = module.phase_u_reward_components(
         unsafe,
         thresholds,
+        jp.asarray(True),
         jp.asarray(True),
         jp.asarray(False),
         jp.asarray(False),
@@ -1224,6 +1297,7 @@ def test_angular_rate_penalty_preserves_severity_until_explicit_bounded_cap():
     components = module.phase_u_reward_components(
         signals,
         thresholds,
+        jp.asarray(True),
         jp.asarray(True),
         jp.asarray(False),
         jp.asarray(False),

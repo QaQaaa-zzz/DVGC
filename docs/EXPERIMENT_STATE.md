@@ -1363,6 +1363,64 @@ scientifically until fixed checkpoint evaluations exist; snapshot acquisition
 and continuation probing remain conditional on real Apex-success parent
 coverage.
 
+The fresh hip-std-0.10 formal run
+`phase_u_2kg_env256_hipstd010_apex8_cap4_998400_20260813_seed720703`
+stopped under its implemented checkpoint gate at 256,000 training transitions
+with `held_out_physical_performance_plateau`. This was a controlled Gate Pause,
+not an OOM, host crash, numerical failure, or uncontrolled exception. All 41
+transition-aligned checkpoint sidecars through 256,000 pass recursive identity
+validation. The run consumed 640 fixed-evaluation transitions and zero
+candidate-acquisition or continuation-labeling transitions. Twenty-four MP4
+failure videos and twenty-four timing-aligned NPZ traces are retained.
+
+| training transitions | outcomes | window | liftoff | Apex | mean return |
+| ---: | --- | ---: | ---: | ---: | ---: |
+| 0 | 8 missed-liftoff | 8/8 | 0/8 | 0/8 | -5.781 |
+| 102,400 | 8 missed-liftoff | 8/8 | 0/8 | 0/8 | -6.998 |
+| 256,000 | 8 missed-liftoff | 8/8 | 0/8 | 0/8 | -5.998 |
+
+All three evaluations had zero physical failure, roll/pitch violation, illegal
+contact, action saturation, clearance success, and Apex success. The decisive
+reward audit found that the entirely wheel-supported held-out rollouts still
+accumulated approximately 6.0--6.7 clearance-progress reward after entering
+the jump window. The existing reward code gated ascent and clearance only on
+`jump_window_entered`; it therefore allowed a ground-driving policy to collect
+nominally airborne shaping. This is a reproduced reward shortcut, not evidence
+that the legal-liftoff or Apex contracts are too strict.
+
+The next single hypothesis closes only that shortcut. Define
+`airborne_progress_enabled = jump_window_entered AND liftoff_seen` in the
+external pure-JAX Phase U adapter and require it for `ascent_progress`,
+`clearance_progress`, and `apex_approach`. Forward propulsion, jump-window
+entry, legal-liftoff/stable-airborne bonuses, all penalties, weights, reset,
+thresholds, PPO, XML, action mapping, and safety termination remain unchanged.
+Early airborne remains nonterminal and unpenalized but cannot unlock airborne
+progress. The reward-contract hash now binds an explicit semantics version so
+old and new checkpoints cannot be confused despite identical numeric weights.
+This implementation is source-complete under red-green tests but must pass the
+full static/runtime/preflight and bounded smoke gates before another formal
+authorization.
+
+The user then explicitly revised the hard-task stopping contract: three flat
+held-out checkpoints are diagnostic evidence only and may not terminate PPO
+before the full approximately one-million-transition budget. The gate continues
+to record `held_out_physical_performance_plateau`, but `pause=false` when that
+is the only reason. Nonfinite evaluation, severe action saturation, sustained
+physical degradation, and return-up/physics-down reward hacking remain active
+immediate Gate Pause conditions. The next formal run is aligned to 998,400
+training transitions and will be judged after that budget unless one of those
+retained true failure conditions occurs.
+
+The combined airborne-progress and hard-task stopping-policy implementation
+now passes its red-green regressions, all 73 Phase-U expert tests, static
+compilation, the full 912-test suite, and `scripts/local_preflight.sh`. A fresh
+managed GPU runtime gate at
+`runs/two_phase/runtime_gate/phase_u_2kg_airborne_progress_gate_20260813/`
+passes in 95.32 seconds, including the fixed 64-transition update and
+32-transition resume. It consumed 96 runtime-integrity transitions and zero
+Phase U expert-training transitions. The next permitted action is one new
+run-bound 256-environment, 6,400-training-transition formal-path smoke.
+
 The earlier 4 kg one-million Phase U authorization was effectively exhausted at 995,200
 aligned expert-training transitions. No additional long PPO run, Phase U
 snapshot acquisition, or continuation probing is currently permitted: the
