@@ -2404,6 +2404,64 @@ acquisition and bounded continuation probing remain gated on real Apex success
 and independent parent coverage; this smoke does not declare `pi_up_star`,
 formal `V_up`, a Soft Tube, Phase-D training, or unified PPO.
 
+That authorized v8 formal experiment has now completed its entire aligned
+budget:
+
+```text
+run id: phase_u_2kg_env256_coordinated_joint_v8_998400_20260813_seed721602
+producer HEAD: 9f9ffb816cef9ec9ce181ea81d0fd3ed602099da
+PPO training transitions: 998,400
+fixed evaluation transitions: 1,296
+candidate acquisition transitions: 0
+continuation labeling transitions: 0
+total environment transitions: 999,696
+status: completed
+```
+
+All 157 checkpoint sidecars validate recursively. The six fixed panels at 0,
+102,400, 256,000, 505,600, 755,200, and 998,400 each close as eight
+`takeoff_missed_liftoff_deadline` outcomes. Every rollout reaches the legal
+jump window, but liftoff, stable airborne, ascending, clearance, and Apex are
+0/8 at every panel. Physical failure, roll/pitch violation, illegal contact,
+timeout, and action saturation are zero. All 48 MP4 and 48 timing-aligned NPZ
+files exist under `evaluations/<transition>/failure_videos/` and match their
+declared hashes. JSON and metrics are finite; the log contains no traceback,
+NaN/Inf, OOM, broadphase overflow, identity drift, or timing/history fault.
+The CUDA module name containing `_nxn_broadphase_` is a normal loaded kernel,
+not an overflow diagnostic.
+
+The fixed deterministic policies earned exactly zero coordinated-joint credit.
+At the final panel the hip target remains between -1.264 and -1.200 rad and
+the knee target between 2.490 and 2.500 rad. The largest synchronized signed
+joint velocity is 0.1383 rad/s, still below the 0.15-rad/s deadband. The saved
+videos visually confirm the same grounded drive-through behavior at the first,
+middle, and final checkpoints.
+
+The training distribution shows that the v8 implementation was not a dead
+signal. Of 156 PPO rollout blocks, 155 recorded nonzero coordinated-joint
+credit; 53 recorded nonzero legal-liftoff and stable-airborne events, all at
+or before 499,200 transitions. None recorded Apex success. Mean coordinated
+credit fell from 0.299 over 0--100k to 0.018 over 500--750k and 0.046 over
+750k--1M, while liftoff disappeared entirely after 500k. Across blocks the
+credit correlates strongly with liftoff (0.944), but also with physical
+failure (0.769) and large angular-rate cost. Liftoff blocks average 0.143
+credit versus 0.028 without liftoff; physical-failure blocks average 0.129
+versus 0.029 for nonphysical blocks. Therefore simply increasing this
+component or lowering its deadband is not yet justified: it risks reinforcing
+the already observed high-rotation ejection mode rather than safe Apex
+progress.
+
+The v8 hypothesis is falsified by its predeclared criterion: a full-budget run
+remained grounded in every fixed evaluation and produced no Apex parent. The
+next evidence step is a fixed-budget, non-PPO, natural-start action-timing
+diagnostic under the unchanged 2 kg XML, +/-50 N m limits, two-phase runtime,
+thresholds, and safety termination. Its purpose is only to determine whether
+a low-angular-rate coordinated launch/Apex approach exists and which physical
+quantity distinguishes it. It must record every branch and transition, must
+not use the kinematic guideline as an action controller, and must not label any
+search trajectory an expert, reachable Tube, or safe state. No new formal PPO
+run is authorized until that diagnostic supports one new single hypothesis.
+
 - Landing -> Flight -> Takeoff -> Approach sequential shared-Actor bootstrap
 - exhaustive H1/C_L A/B
 - roll-targeted shared-Actor retention
