@@ -2069,6 +2069,46 @@ This qualification authorizes only one fresh 256-environment v6 engineering
 smoke. No v6 formal run, candidate acquisition, continuation probing, formal
 `pi_up`, `V_up`, or Soft Tube exists yet.
 
+The required static threshold provenance refresh is retained at
+`runs/two_phase/gate_c1_20260813_dual_wheel_lift_v6_threshold_refresh/`.
+It consumed zero environment transitions and preserves every selected Apex and
+Recovery threshold value byte-for-byte. Only the bound
+`dvgc/two_phase_runtime.py` identity and canonical hash changed; the formal
+loader validates the refreshed hash
+`b3f77a45a39c2bfa951598bf81ea645e78d5999fa3fbcb413933561deb9ef59e`.
+Two smoke launch attempts were rejected before execution because an
+authorization manifest was absent; they consumed zero transitions.
+
+The authorized v6 engineering smoke then completed:
+
+```text
+run id: gate_c1_phase_u_2kg_env256_dual_wheel_lift_v6_smoke_20260813_seed721401
+parallel environments: 256
+PPO training transitions: 6,400
+Brax evaluation transitions: 1,600
+fixed evaluation transitions: 208
+total environment transitions: 8,208
+status: completed
+```
+
+The GPU update was finite (loss, value loss, KL, entropy, and distribution
+statistics), and the transition-6,400 checkpoint sidecar validates recursively
+as `93df1b3b...c273c` with the v6 reward hash. All eight MP4 and eight aligned
+NPZ artifacts match their declared hashes. Fixed outcome accounting closes as
+eight `other_failure`, zero physical failure, zero timeout, and zero success;
+all eight reached the legal window and ended at the unchanged missed-liftoff
+deadline. There was no roll/pitch violation, illegal contact, action
+saturation, numerical/runtime fault, identity drift, or history/snapshot
+failure. The deterministic fixed policy earned zero dual-wheel lift credit;
+the stochastic Brax evaluation reported a small finite nonzero mean sum
+(0.0271), demonstrating that the new component is exercised without making a
+performance claim.
+
+This smoke qualifies one new fresh-initialization, exact run-bound v6 Phase U
+experiment with 256 environments and at most 998,400 aligned PPO-training
+transitions. It does not authorize resuming v5, changing any other hypothesis,
+or declaring a phase expert, feasibility model, or Tube.
+
 - Landing -> Flight -> Takeoff -> Approach sequential shared-Actor bootstrap
 - exhaustive H1/C_L A/B
 - roll-targeted shared-Actor retention
