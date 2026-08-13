@@ -1517,6 +1517,31 @@ passes in 95.60 seconds, including its fixed 64-transition update and
 256-environment, 6,400-training-transition formal-path smoke.  No further
 formal PPO is authorized until that smoke passes.
 
+The required static threshold provenance refresh is retained under
+`runs/two_phase/gate_c1_20260813_confirmed_airborne_threshold_refresh/`.
+It consumed zero environment transitions, preserves the selected Apex and
+Recovery threshold values byte-for-byte, and updates only the bound
+`two_phase_runtime.py` source identity.  The refreshed canonical threshold
+manifest hash is
+`66591b997a8dd1d9ef7698c210266074d1b4de83101edcce15095a7b955115ad`;
+the normal Gate C1 loader validates its authoritative XML, reference, config,
+code, geometry, action mapping, and canonical identity.
+
+The confirmed-airborne formal-path smoke then completed as
+`gate_c1_phase_u_2kg_env256_confirmed_airborne_smoke_20260813_seed720901`.
+It consumed 6,400 PPO training and 432 fixed-evaluation transitions (6,832
+total), with zero candidate-acquisition and continuation-labeling transitions.
+The transition-0 and transition-6,400 checkpoint sidecars validate recursively
+as `bafa707a...e74fe` and `ba877c2d...9580b`.  Both held-out panels closed as
+eight `takeoff_missed_liftoff_deadline` outcomes: 8/8 reached the legal window,
+0/8 had confirmed liftoff, and 0/8 reached Apex.  Legal-liftoff,
+stable-airborne, ascent, clearance, and Apex reward sums were exactly zero.
+There was no physical failure, numerical/runtime fault, identity drift,
+action saturation, or host instability.  Sixteen MP4/NPZ failure pairs are
+retained.  This smoke qualifies one fresh 256-environment formal run up to the
+aligned 998,400 training-transition ceiling; early flat checkpoints remain
+diagnostic only.
+
 The earlier 4 kg one-million Phase U authorization was effectively exhausted at 995,200
 aligned expert-training transitions. No additional long PPO run, Phase U
 snapshot acquisition, or continuation probing is currently permitted: the

@@ -85,7 +85,7 @@ changing numeric reward weights.
 Run targeted tests, compileall, full pytest, `scripts/local_preflight.sh`, and
 a fresh managed GPU runtime gate because the runtime fingerprint changes.
 
-- [ ] **Step 4: Commit and push the validated source round**
+- [x] **Step 4: Commit and push the validated source round**
 
 Stage only source, tests, design, plan, runtime-gate record, and experiment
 state.  Preserve ignored run evidence and user `.vscode/` files.
@@ -99,8 +99,8 @@ state.  Preserve ignored run evidence and user `.vscode/` files.
 **Interfaces:**
 - Produces: one 6,400-transition smoke, then at most one new 998,400-transition run
 
-- [ ] **Step 1: Preflight and run the exact 256-environment formal-path smoke**
-- [ ] **Step 2: Audit checkpoint identity, accounting, numerical state, physical outcomes, and videos**
+- [x] **Step 1: Preflight and run the exact 256-environment formal-path smoke**
+- [x] **Step 2: Audit checkpoint identity, accounting, numerical state, physical outcomes, and videos**
 - [ ] **Step 3: If smoke passes, create one exact run-bound formal authorization**
 - [ ] **Step 4: Launch persistent training with a detached exit marker and sparse supervision**
 - [ ] **Step 5: At completion, audit Apex parent coverage before any snapshot or continuation work**
