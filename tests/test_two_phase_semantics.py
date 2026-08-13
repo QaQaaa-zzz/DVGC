@@ -27,6 +27,7 @@ def valid_apex_signals():
         stable_airborne=True,
         com_vz=0.05,
         clearance=0.30,
+        minimum_wheel_terrain_clearance=0.10,
         roll=0.10,
         pitch=-0.08,
         angular_speed=0.20,

@@ -185,6 +185,8 @@ class PhaseURewardConfig:
     liftoff_bonus_weight: float = 0.0
     stable_airborne_bonus_weight: float = 0.0
     ascent_progress_weight: float = 4.0
+    dual_wheel_lift_progress_weight: float = 0.0
+    dual_wheel_lift_progress_target: float = 0.015
     clearance_progress_weight: float = 2.0
     apex_approach_weight: float = 2.0
     attitude_penalty_weight: float = 0.5
@@ -209,6 +211,7 @@ class PhaseURewardConfig:
             "liftoff_bonus_weight",
             "stable_airborne_bonus_weight",
             "ascent_progress_weight",
+            "dual_wheel_lift_progress_weight",
             "clearance_progress_weight",
             "apex_approach_weight",
             "attitude_penalty_weight",
@@ -235,6 +238,13 @@ class PhaseURewardConfig:
         ):
             raise ValueError(
                 "angular_rate_penalty_cap_ratio must be finite and positive"
+            )
+        if (
+            not math.isfinite(self.dual_wheel_lift_progress_target)
+            or self.dual_wheel_lift_progress_target <= 0.0
+        ):
+            raise ValueError(
+                "dual_wheel_lift_progress_target must be finite and positive"
             )
         if self.total_min >= self.total_max:
             raise ValueError("total_min must be less than total_max")
@@ -313,6 +323,7 @@ _PHASE_U_REWARD_COMPONENTS = (
     "legal_liftoff_bonus",
     "stable_airborne_bonus",
     "ascent_progress",
+    "dual_wheel_lift_progress",
     "clearance_progress",
     "apex_approach",
     "apex_success_bonus",
@@ -325,7 +336,7 @@ _PHASE_U_REWARD_COMPONENTS = (
     "task_failure_penalty",
 )
 
-PHASE_U_REWARD_SEMANTICS = "phase_u.rate_qualified_window_ascent_credit.v5"
+PHASE_U_REWARD_SEMANTICS = "phase_u.rate_qualified_dual_wheel_lift_credit.v6"
 
 
 def _interval_proximity(value: Any, lower: float, upper: float) -> Any:
@@ -370,6 +381,17 @@ def phase_u_reward_components(
     ascent = config.ascent_progress_weight * jp.where(
         window,
         jp.clip(jp.asarray(signals.com_vz) / vertical_scale, 0.0, 1.0)
+        * ascent_rate_quality,
+        0.0,
+    )
+    dual_wheel_lift = config.dual_wheel_lift_progress_weight * jp.where(
+        window,
+        jp.clip(
+            jp.asarray(signals.minimum_wheel_terrain_clearance)
+            / config.dual_wheel_lift_progress_target,
+            0.0,
+            1.0,
+        )
         * ascent_rate_quality,
         0.0,
     )
@@ -452,6 +474,7 @@ def phase_u_reward_components(
         "stable_airborne_bonus": config.stable_airborne_bonus_weight
         * jp.asarray(stable_airborne_transition, jp.float32),
         "ascent_progress": ascent,
+        "dual_wheel_lift_progress": dual_wheel_lift,
         "clearance_progress": clearance,
         "apex_approach": apex_approach,
         "apex_success_bonus": config.success_bonus

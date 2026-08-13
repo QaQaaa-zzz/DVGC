@@ -46,6 +46,7 @@ class ApexBandSignals:
     stable_airborne: Any
     com_vz: Any
     clearance: Any
+    minimum_wheel_terrain_clearance: Any
     roll: Any
     pitch: Any
     angular_speed: Any

@@ -89,6 +89,8 @@
     "liftoff_bonus_weight": 8.0,
     "stable_airborne_bonus_weight": 16.0,
     "ascent_progress_weight": 8.0,
+    "dual_wheel_lift_progress_weight": 4.0,
+    "dual_wheel_lift_progress_target": 0.015,
     "clearance_progress_weight": 2.0,
     "apex_approach_weight": 8.0,
     "attitude_penalty_weight": 0.5,

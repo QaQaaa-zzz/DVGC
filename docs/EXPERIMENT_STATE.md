@@ -1998,6 +1998,77 @@ liftoff/Apex/physical failure/pitch/contact/saturation were zero. PPO loss, KL,
 and distribution statistics are finite. This qualifies one fresh run-bound
 full-budget v5 experiment; it is not learnability or Tube evidence.
 
+The corresponding fresh v5 experiment
+`phase_u_2kg_env256_rate_ascent_998400_20260813_seed721302` then completed its
+full 998,400 PPO-training transitions and 1,288 fixed-evaluation transitions
+(999,688 total). It produced zero candidate-acquisition and continuation-
+labeling transitions. All 157 checkpoint sidecars validate, all six fixed
+panels close their outcome accounting, and all 48 MP4 plus 48 aligned NPZ
+artifacts match their declared hashes.
+
+Every fixed rollout at every checkpoint reached the legal jump window, but
+none reached confirmed liftoff, stable airborne, clearance, or Apex. All ended
+at the unchanged `takeoff_missed_liftoff_deadline` with zero physical failure,
+roll/pitch violation, illegal contact, or action saturation. The final policy's
+peak angular speed was approximately 0.4 rad/s, so v5 did eliminate the prior
+high-rotation reward exploit; it converged instead to safe grounded motion.
+
+Training-time stochastic aggregation recorded corrected liftoff/stable-
+airborne events in 55 of 156 rollout blocks, but the events were sparse and no
+Apex success occurred. Two frozen-policy audits used no PPO training and
+preserved every trajectory:
+
+```text
+runs/two_phase/diagnostics/phase_u_v5_stochastic_checkpoint505600_seed930000_64
+runs/two_phase/diagnostics/phase_u_v5_stochastic_checkpoint896000_seed930100_64
+```
+
+Each audit ran 64 independent stochastic continuations. All 128 outcomes were
+nonphysical missed-liftoff failures. At 896,000 transitions only three of 64
+rollouts reached root `vz >= 0.2 m/s`; the strongest excursion also reached
+6.37 rad/s angular speed. A separate 18-scenario negative-knee coordination
+diagnostic consumed 474 evaluation transitions and no training transitions.
+It produced no liftoff or Apex. Negative knee commands at the natural reset are
+correctly clipped by the immutable joint upper limit: the mapping itself is
+not broken, and it remains unchanged.
+
+The identified v5 credit gap is that the formal Phase U adapter observes root
+vertical speed and sparse confirmed-airborne events, but not synchronized
+wheel lift. The next single hypothesis adds deployable minimum-wheel terrain
+clearance to `ApexBandSignals` and a bounded, legal-window-only, angular-rate-
+qualified `dual_wheel_lift_progress` term. It uses the minimum across all
+collision-relevant wheel geoms, so one-wheel bounce is insufficient. It is
+exactly zero before window entry (including early airborne), at/below ground,
+and at the v5 angular-rate cap. It never implies liftoff, Apex success, done,
+or an outcome. XML, +/-50 N m limits, action mapping, reset, observations,
+termination, deadlines, thresholds, PPO layout, exploration, and every other
+reward coefficient remain unchanged.
+
+The v6 reward semantics are
+`phase_u.rate_qualified_dual_wheel_lift_credit.v6`; stable configs select a
+4.0 component bound and 0.015 m target. Its reward-contract hash is
+`1a1b624e77408d765a3c46e0b91398f6440d667d34b2a4001742d98dc425b890`.
+RED failed on the absent runtime/config/component contracts; GREEN and the
+complete targeted regression pass 196 tests, including `jax.jit`, batched
+`jax.vmap`, schema validation, window gating, rate qualification, and no-
+success/no-terminal implications. Compileall passes. Full pytest and local
+preflight each pass 936 tests on the GPU.
+
+A fresh managed runtime gate passes at
+`runs/two_phase/runtime_gate/phase_u_2kg_dual_wheel_lift_v6_retry_20260813.json`
+in 95.10 seconds. Its current fingerprint is
+`c67a3d94154dc0677c3c360310b57d3b9336e2a2b15818b07523641e9c792469`;
+the XML hash remains `e2762b...9192`. It completes the 64-transition PPO
+update and 32-transition resume contracts. Two earlier parameter invocations
+consumed zero transitions: the first encountered an existing default work
+directory, and the second rejected a directory-valued report path while
+writing the initial empty `RUNNING` record. Their small provenance directory
+and temporary JSON are retained rather than overwritten.
+
+This qualification authorizes only one fresh 256-environment v6 engineering
+smoke. No v6 formal run, candidate acquisition, continuation probing, formal
+`pi_up`, `V_up`, or Soft Tube exists yet.
+
 - Landing -> Flight -> Takeoff -> Approach sequential shared-Actor bootstrap
 - exhaustive H1/C_L A/B
 - roll-targeted shared-Actor retention

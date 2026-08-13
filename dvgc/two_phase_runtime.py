@@ -268,6 +268,10 @@ def extract_apex_band_signals(
     _, qvel, roll, pitch = _root_pose_velocity(state, geometry)
     physical = _physical_geometry_values(state, geometry)
     clearances = physical["terrain_clearances"]
+    wheel_mask = jp.asarray(geometry.wheel_mask)
+    minimum_wheel_terrain_clearance = jp.min(
+        jp.where(wheel_mask, clearances, jp.inf), axis=-1
+    )
     illegal_penetration = jp.any(
         clearances < -geometry.body_penetration_tolerance, axis=-1
     )
@@ -278,6 +282,7 @@ def extract_apex_band_signals(
         ),
         com_vz=qvel[..., 2],
         clearance=physical["structure"].full_structure_clearance,
+        minimum_wheel_terrain_clearance=minimum_wheel_terrain_clearance,
         roll=roll,
         pitch=pitch,
         angular_speed=jp.linalg.norm(qvel[..., 3:6], axis=-1),

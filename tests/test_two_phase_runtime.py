@@ -254,9 +254,39 @@ def test_apex_signal_extraction_uses_structure_geometry_and_not_metadata():
     assert bool(signals.stable_airborne) is True
     assert float(signals.com_vz) == pytest.approx(0.05)
     assert float(signals.clearance) == pytest.approx(0.19)
+    assert float(signals.minimum_wheel_terrain_clearance) == pytest.approx(0.35)
     assert float(signals.obstacle_relative_x) == pytest.approx(0.2)
     assert float(signals.angular_speed) == pytest.approx(0.3)
     np.testing.assert_array_equal(jax.tree.leaves(signals), jax.tree.leaves(changed))
+
+
+def test_minimum_wheel_clearance_signal_supports_jit_and_batched_vmap():
+    geometry = _synthetic_geometry()
+
+    def extract(geom_z):
+        state = _fake_state(
+            geom_x=[3.2, 3.3, 3.1],
+            geom_z=geom_z,
+            x=3.0,
+            vx=2.0,
+            vz=0.05,
+        )
+        return extract_apex_band_signals(
+            state, geometry
+        ).minimum_wheel_terrain_clearance
+
+    result = jax.jit(jax.vmap(extract))(
+        jp.asarray(
+            [
+                [0.10, 0.11, 0.50],
+                [0.115, 0.13, 0.50],
+                [0.14, 0.12, 0.50],
+            ],
+            jp.float32,
+        )
+    )
+
+    np.testing.assert_allclose(result, [0.0, 0.015, 0.02], atol=1e-6)
 
 
 @pytest.mark.parametrize(
@@ -536,6 +566,7 @@ def _event_apex(*, stable=False, vz=0.5, member=False):
         stable_airborne=stable,
         com_vz=vz,
         clearance=0.2 if member else 0.0,
+        minimum_wheel_terrain_clearance=0.1 if member else 0.0,
         roll=0.0,
         pitch=0.0,
         angular_speed=0.1,

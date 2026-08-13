@@ -468,6 +468,8 @@ def test_phase_u_configs_select_explicit_exploration_and_reward_hypothesis():
         assert reward.stable_airborne_bonus_weight == 16.0
         assert reward.ascent_progress_weight == 8.0
         assert reward.apex_approach_weight == 8.0
+        assert reward.dual_wheel_lift_progress_weight == 4.0
+        assert reward.dual_wheel_lift_progress_target == pytest.approx(0.015)
 
 
 @pytest.mark.parametrize("cap", [0.0, -1.0, float("inf"), float("nan")])
@@ -489,6 +491,20 @@ def test_phase_u_stable_airborne_bonus_weight_must_be_finite_and_non_negative(we
     module = _module()
     with pytest.raises(ValueError, match="stable_airborne_bonus_weight"):
         module.PhaseURewardConfig(stable_airborne_bonus_weight=weight)
+
+
+@pytest.mark.parametrize("weight", [-1.0, float("inf"), float("nan")])
+def test_phase_u_dual_wheel_lift_weight_must_be_finite_and_non_negative(weight):
+    module = _module()
+    with pytest.raises(ValueError, match="dual_wheel_lift_progress_weight"):
+        module.PhaseURewardConfig(dual_wheel_lift_progress_weight=weight)
+
+
+@pytest.mark.parametrize("target", [0.0, -0.01, float("inf"), float("nan")])
+def test_phase_u_dual_wheel_lift_target_must_be_finite_and_positive(target):
+    module = _module()
+    with pytest.raises(ValueError, match="dual_wheel_lift_progress_target"):
+        module.PhaseURewardConfig(dual_wheel_lift_progress_target=target)
 
 
 @pytest.mark.parametrize(
@@ -822,8 +838,9 @@ def test_smoke_config_locks_base_mode_cost_stops_rewards_and_disjoint_determinis
     reward_hash = module.phase_u_reward_contract_hash(config)
     assert (
         module.PHASE_U_REWARD_SEMANTICS
-        == "phase_u.rate_qualified_window_ascent_credit.v5"
+        == "phase_u.rate_qualified_dual_wheel_lift_credit.v6"
     )
+    assert reward_hash == "1a1b624e77408d765a3c46e0b91398f6440d667d34b2a4001742d98dc425b890"
     changed = config | {
         "phase_u_reward": config["phase_u_reward"]
         | {"ascent_progress_weight": 3.5}
@@ -945,6 +962,7 @@ def _fake_signals(state, _geometry, previous_hold_count):
         stable_airborne=info["fake/stable_airborne"],
         com_vz=info["fake/com_vz"],
         clearance=info["fake/clearance"],
+        minimum_wheel_terrain_clearance=info["fake/wheel_clearance"],
         roll=info["fake/roll"],
         pitch=info["fake/pitch"],
         angular_speed=info["fake/angular_speed"],
@@ -984,6 +1002,7 @@ class _FakeBaseEnv:
             "fake/stable_airborne": jp.asarray(False),
             "fake/com_vz": jp.asarray(0.0, jp.float32),
             "fake/clearance": jp.asarray(0.2, jp.float32),
+            "fake/wheel_clearance": jp.asarray(0.0, jp.float32),
             "fake/roll": jp.asarray(0.0, jp.float32),
             "fake/pitch": jp.asarray(0.0, jp.float32),
             "fake/angular_speed": jp.asarray(0.0, jp.float32),
@@ -1127,6 +1146,7 @@ def test_pre_window_takeoff_and_apex_progress_rewards_are_zero_even_when_airborn
         "legal_liftoff_bonus",
         "stable_airborne_bonus",
         "ascent_progress",
+        "dual_wheel_lift_progress",
         "clearance_progress",
         "apex_approach",
         "apex_success_bonus",
@@ -1142,6 +1162,7 @@ def test_pre_window_takeoff_and_apex_progress_rewards_are_zero_even_when_airborn
     assert float(components["legal_liftoff_bonus"]) == 0.0
     assert float(components["stable_airborne_bonus"]) == 0.0
     assert float(components["ascent_progress"]) == 0.0
+    assert float(components["dual_wheel_lift_progress"]) == 0.0
     assert float(components["clearance_progress"]) == 0.0
     assert float(components["apex_approach"]) == 0.0
     assert float(components["apex_success_bonus"]) == 0.0
@@ -1157,6 +1178,7 @@ def test_window_active_ascent_credit_precedes_confirmed_liftoff_but_not_clearanc
         stable_airborne=jp.asarray(False),
         com_vz=jp.asarray(0.5),
         clearance=jp.asarray(0.2),
+        minimum_wheel_terrain_clearance=jp.asarray(0.0),
         roll=jp.asarray(0.0),
         pitch=jp.asarray(0.0),
         angular_speed=jp.asarray(0.0),
@@ -1206,6 +1228,114 @@ def test_window_active_ascent_credit_precedes_confirmed_liftoff_but_not_clearanc
 
 
 @pytest.mark.parametrize(
+    ("window", "clearance", "angular_rate_ratio", "expected"),
+    [
+        (False, 0.015, 0.0, 0.0),
+        (True, -0.001, 0.0, 0.0),
+        (True, 0.0, 0.0, 0.0),
+        (True, 0.0075, 0.0, 2.0),
+        (True, 0.015, 0.0, 4.0),
+        (True, 0.030, 0.0, 4.0),
+        (True, 0.015, 2.0, 2.0),
+        (True, 0.015, 4.0, 0.0),
+    ],
+)
+def test_dual_wheel_lift_progress_is_window_gated_bounded_and_rate_qualified(
+    window, clearance, angular_rate_ratio, expected
+):
+    module = _module()
+    thresholds = _adapter_thresholds().apex
+    signals = ApexBandSignals(
+        stable_airborne=jp.asarray(False),
+        com_vz=jp.asarray(0.0),
+        clearance=jp.asarray(-0.2),
+        minimum_wheel_terrain_clearance=jp.asarray(clearance),
+        roll=jp.asarray(0.0),
+        pitch=jp.asarray(0.0),
+        angular_speed=jp.asarray(
+            angular_rate_ratio * thresholds.max_angular_speed
+        ),
+        forward_velocity=jp.asarray(3.0),
+        obstacle_relative_x=jp.asarray(0.3),
+        illegal_contact=jp.asarray(False),
+        physical_failure=jp.asarray(False),
+    )
+    components = jax.jit(module.phase_u_reward_components)(
+        signals,
+        thresholds,
+        jp.asarray(window),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.zeros((8,), jp.float32),
+        jp.zeros((8,), jp.float32),
+        module.PhaseURewardConfig(
+            dual_wheel_lift_progress_weight=4.0,
+            dual_wheel_lift_progress_target=0.015,
+            angular_rate_penalty_cap_ratio=4.0,
+        ),
+    )
+    assert float(components["dual_wheel_lift_progress"]) == pytest.approx(expected)
+
+
+def test_dual_wheel_lift_credit_does_not_imply_liftoff_success_or_done():
+    module = _module()
+    adapter = module.PhaseExpertEnvAdapter(
+        _FakeBaseEnv(),
+        geometry=None,
+        thresholds=_adapter_thresholds(),
+        reward_config=module.PhaseURewardConfig(
+            dual_wheel_lift_progress_weight=4.0,
+            dual_wheel_lift_progress_target=0.015,
+        ),
+        episode_horizon=20,
+        signal_extractor=_fake_signals,
+    )
+    state = adapter.reset(jax.random.PRNGKey(47))
+    state = state.replace(
+        info=state.info
+        | {"fake/wheel_clearance": jp.asarray(0.015, jp.float32)}
+    )
+
+    lifted_wheels_without_airborne_confirmation = jax.jit(adapter.step)(
+        state,
+        jp.asarray([1, 1, 0, 0.0, -0.2, 0.3, 0, 1], jp.float32),
+    )
+
+    assert float(
+        lifted_wheels_without_airborne_confirmation.metrics[
+            "phase_expert/reward_component/dual_wheel_lift_progress"
+        ]
+    ) == pytest.approx(4.0)
+    assert not bool(
+        lifted_wheels_without_airborne_confirmation.info[
+            "phase_expert/event/liftoff_seen"
+        ]
+    )
+    assert not bool(
+        lifted_wheels_without_airborne_confirmation.info[
+            "phase_expert/success"
+        ]
+    )
+    assert not bool(
+        lifted_wheels_without_airborne_confirmation.info[
+            "phase_expert/physical_failure"
+        ]
+    )
+    assert not bool(
+        lifted_wheels_without_airborne_confirmation.info[
+            "phase_expert/task_failure"
+        ]
+    )
+    assert not bool(lifted_wheels_without_airborne_confirmation.done)
+
+
+@pytest.mark.parametrize(
     ("angular_rate_ratio", "expected"),
     [(0.0, 4.0), (2.0, 2.0), (4.0, 0.0), (8.0, 0.0)],
 )
@@ -1218,6 +1348,7 @@ def test_window_ascent_credit_is_smoothly_qualified_by_angular_rate(
         stable_airborne=jp.asarray(False),
         com_vz=jp.asarray(0.5),
         clearance=jp.asarray(0.2),
+        minimum_wheel_terrain_clearance=jp.asarray(0.0),
         roll=jp.asarray(0.0),
         pitch=jp.asarray(0.0),
         angular_speed=jp.asarray(
@@ -1346,6 +1477,7 @@ def test_post_window_reward_has_bounded_physical_progress_and_independent_penalt
         stable_airborne=jp.asarray(True),
         com_vz=jp.asarray(1.0),
         clearance=jp.asarray(0.2),
+        minimum_wheel_terrain_clearance=jp.asarray(0.0),
         roll=jp.asarray(0.0),
         pitch=jp.asarray(0.0),
         angular_speed=jp.asarray(0.0),
@@ -1418,6 +1550,7 @@ def test_angular_rate_penalty_preserves_severity_until_explicit_bounded_cap():
         stable_airborne=jp.asarray(True),
         com_vz=jp.asarray(1.0),
         clearance=jp.asarray(0.2),
+        minimum_wheel_terrain_clearance=jp.asarray(0.0),
         roll=jp.asarray(0.0),
         pitch=jp.asarray(0.0),
         angular_speed=jp.asarray(thresholds.max_angular_speed * 20.0),
@@ -1538,7 +1671,7 @@ def test_reward_component_metrics_exist_at_reset_and_remain_static_through_step(
     keys = {
         key for key in reset.metrics if key.startswith("phase_expert/reward_component/")
     }
-    assert len(keys) == 15
+    assert len(keys) == 16
     assert keys == {
         key for key in stepped.metrics if key.startswith("phase_expert/reward_component/")
     }
