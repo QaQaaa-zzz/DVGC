@@ -403,7 +403,7 @@ def advance_two_phase_events(
     )
     liftoff_seen = previous.liftoff_seen | (
         previous.jump_window_entered
-        & ~jp.asarray(recovery.stable_wheel_support)
+        & jp.asarray(apex.stable_airborne)
         & no_failure
     )
     stable_airborne = previous.stable_airborne | (

@@ -325,7 +325,7 @@ _PHASE_U_REWARD_COMPONENTS = (
     "task_failure_penalty",
 )
 
-PHASE_U_REWARD_SEMANTICS = "phase_u.airborne_progress_requires_legal_liftoff.v2"
+PHASE_U_REWARD_SEMANTICS = "phase_u.confirmed_airborne_liftoff_required.v3"
 
 
 def _interval_proximity(value: Any, lower: float, upper: float) -> Any:

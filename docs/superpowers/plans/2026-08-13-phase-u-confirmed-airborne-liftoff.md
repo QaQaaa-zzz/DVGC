@@ -29,31 +29,31 @@
 - Consumes: `ApexBandSignals.stable_airborne`, `TwoPhaseEventState.jump_window_entered`
 - Produces: monotonic `TwoPhaseEventState.liftoff_seen`
 
-- [ ] **Step 1: Add failing runtime tests**
+- [x] **Step 1: Add failing runtime tests**
 
 Add a post-window transition with `stable_wheel_support=False` and
 `stable_airborne=False`; assert `liftoff_seen=False`.  Then provide
 `stable_airborne=True`; assert liftoff latches and remains true after the
 signal falls.
 
-- [ ] **Step 2: Add a failing adapter reward regression**
+- [x] **Step 2: Add a failing adapter reward regression**
 
 Use the existing fake adapter to show that one-wheel/support-loss telemetry
 without confirmed airborne earns zero `legal_liftoff_bonus`,
 `ascent_progress`, `clearance_progress`, and `apex_approach`.
 
-- [ ] **Step 3: Verify RED**
+- [x] **Step 3: Verify RED**
 
 Run the named tests and confirm they fail because support loss currently sets
 `liftoff_seen`.
 
-- [ ] **Step 4: Implement the minimum event predicate**
+- [x] **Step 4: Implement the minimum event predicate**
 
 In `advance_two_phase_events`, require
 `previous.jump_window_entered & apex.stable_airborne & no_failure` for new
 liftoff admission.  Preserve the monotonic OR with `previous.liftoff_seen`.
 
-- [ ] **Step 5: Update event-order fixtures and verify GREEN**
+- [x] **Step 5: Update event-order fixtures and verify GREEN**
 
 Make the first-occurrence sequence explicitly provide confirmed airborne
 before liftoff, then a following tick for stable-airborne and ascending
@@ -70,17 +70,17 @@ admission.  Run both affected test files.
 **Interfaces:**
 - Produces: a new reward/event contract identity incompatible with shortcut checkpoints
 
-- [ ] **Step 1: Add a failing identity regression**
+- [x] **Step 1: Add a failing identity regression**
 
 Assert that the Phase U contract identity includes a stable semantic version
 for confirmed-airborne liftoff.
 
-- [ ] **Step 2: Verify RED, add the version, and verify GREEN**
+- [x] **Step 2: Verify RED, add the version, and verify GREEN**
 
 Add the semantic version to the hashed reward/event contract payload without
 changing numeric reward weights.
 
-- [ ] **Step 3: Run complete verification**
+- [x] **Step 3: Run complete verification**
 
 Run targeted tests, compileall, full pytest, `scripts/local_preflight.sh`, and
 a fresh managed GPU runtime gate because the runtime fingerprint changes.

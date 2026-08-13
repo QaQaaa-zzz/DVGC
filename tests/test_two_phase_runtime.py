@@ -565,7 +565,7 @@ def test_event_state_enforces_declared_first_occurrence_order():
     state = initial_two_phase_event_state()
     sequence = [
         (_event_apex(), _event_recovery(), True),
-        (_event_apex(), _event_recovery(), True),
+        (_event_apex(stable=True), _event_recovery(), True),
         (_event_apex(stable=True), _event_recovery(), True),
         (_event_apex(stable=True, vz=0.5), _event_recovery(), True),
         (_event_apex(stable=True, vz=0.0, member=True), _event_recovery(), True),
@@ -632,6 +632,49 @@ def test_event_recovery_hold_resets_when_current_support_is_lost():
 
     assert int(next_state.recovery_hold_count) == 0
     assert bool(next_state.stable_recovery) is False
+
+
+def test_liftoff_requires_confirmed_airborne_not_momentary_support_loss_and_is_monotonic():
+    """A one-wheel bounce must not become legal Phase U liftoff."""
+    thresholds = _event_thresholds()
+    state = advance_two_phase_events(
+        _event_apex(stable=False),
+        _event_recovery(support=True),
+        initial_two_phase_event_state(),
+        thresholds,
+        tick=jp.asarray(0, jp.int32),
+        jump_signal=jp.asarray(True),
+    )
+
+    support_loss = advance_two_phase_events(
+        _event_apex(stable=False),
+        _event_recovery(support=False),
+        state,
+        thresholds,
+        tick=jp.asarray(1, jp.int32),
+        jump_signal=jp.asarray(True),
+    )
+    assert bool(support_loss.liftoff_seen) is False
+
+    confirmed = advance_two_phase_events(
+        _event_apex(stable=True),
+        _event_recovery(support=False),
+        support_loss,
+        thresholds,
+        tick=jp.asarray(2, jp.int32),
+        jump_signal=jp.asarray(True),
+    )
+    assert bool(confirmed.liftoff_seen) is True
+
+    landed = advance_two_phase_events(
+        _event_apex(stable=False),
+        _event_recovery(support=True),
+        confirmed,
+        thresholds,
+        tick=jp.asarray(3, jp.int32),
+        jump_signal=jp.asarray(True),
+    )
+    assert bool(landed.liftoff_seen) is True
 
 
 def test_event_transition_is_jittable_and_does_not_mutate_input():

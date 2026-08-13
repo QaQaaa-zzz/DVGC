@@ -1466,6 +1466,57 @@ run must continue through early zero-success or flat checkpoint panels.
 Candidate acquisition and bounded continuation probing remain automatically
 gated on real Apex-success parent coverage.
 
+That run completed the full aligned budget rather than stopping on its
+diagnostic plateau:
+
+```text
+training transitions: 998,400
+fixed-evaluation transitions: 1,304
+total environment transitions: 999,704
+candidate-acquisition transitions: 0
+continuation-labeling transitions: 0
+status: completed
+```
+
+All 157 checkpoint sidecars pass recursive identity validation.  Six fixed
+held-out panels at 0/102,400/256,000/505,600/755,200/998,400 close their
+outcome accounting, and all 48 failures have retained MP4 and timing-aligned
+NPZ traces.  No NaN/Inf, OOM, broadphase overflow, state/timing/history fault,
+identity mismatch, illegal contact, roll/pitch violation, or action saturation
+occurred.  Every panel reached the jump window in 8/8 rollouts.  The first
+three had 0/8 `liftoff_seen`; the last three had 8/8 apparent liftoff but 0/8
+stable-airborne, ascending, clearance, or Apex success.  All outcomes remained
+`takeoff_missed_liftoff_deadline`, so no candidate or continuation work was
+eligible.
+
+Offline reconstruction of the saved 505,600/755,200/998,400 traces against
+the authoritative XML identifies a second event/reward shortcut.  At the
+998,400 checkpoint's tick 22, the front tire bottom remained approximately
+`-0.0017 m` while the rear tire bottom was `+0.0127 m`; the physical dual-wheel
+liftoff predicate was false on every tick.  The other two apparent-liftoff
+checkpoints show the same one-wheel pattern.  The external runtime had treated
+loss of simultaneous stable support as `liftoff_seen`, thereby paying the +8
+legal-liftoff bonus and airborne shaping while the retained takeoff deadline
+correctly stayed armed.
+
+The next single hypothesis fixes only that admission error.  `liftoff_seen`
+now requires a previously latched legal window plus the existing deployable
+temporally confirmed `ApexBandSignals.stable_airborne` signal and no physical
+failure.  One-wheel, momentary, or early airborne remains nonterminal and
+unpenalized but cannot unlock liftoff or airborne progress.  XML, action
+mapping, thresholds, reward weights, PPO, reset, observation, horizon, and all
+safety failures remain unchanged.  The hashed semantic identity is now
+`phase_u.confirmed_airborne_liftoff_required.v3`.
+
+This change passed its two expected RED regressions, 116 affected runtime and
+Phase-U tests, static compilation, the full 914-test suite, and
+`scripts/local_preflight.sh`.  A fresh managed GPU runtime gate at
+`runs/two_phase/runtime_gate/phase_u_2kg_confirmed_airborne_liftoff_20260813/`
+passes in 95.60 seconds, including its fixed 64-transition update and
+32-transition resume.  The next permitted action is one fresh exact
+256-environment, 6,400-training-transition formal-path smoke.  No further
+formal PPO is authorized until that smoke passes.
+
 The earlier 4 kg one-million Phase U authorization was effectively exhausted at 995,200
 aligned expert-training transitions. No additional long PPO run, Phase U
 snapshot acquisition, or continuation probing is currently permitted: the

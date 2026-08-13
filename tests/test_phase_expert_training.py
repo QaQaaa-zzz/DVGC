@@ -818,6 +818,10 @@ def test_smoke_config_locks_base_mode_cost_stops_rewards_and_disjoint_determinis
         **config["phase_u_reward"], **config["reward_bounds"]
     )
     reward_hash = module.phase_u_reward_contract_hash(config)
+    assert (
+        module.PHASE_U_REWARD_SEMANTICS
+        == "phase_u.confirmed_airborne_liftoff_required.v3"
+    )
     changed = config | {
         "phase_u_reward": config["phase_u_reward"]
         | {"ascent_progress_weight": 3.5}
@@ -1076,7 +1080,7 @@ def test_early_airborne_cannot_succeed_but_later_ordered_apex_entry_does_and_lat
 
     sequence = (
         jp.asarray([1, 1, 0, 0.5, 0.2, 0.0, 0, 1], jp.float32),
-        jp.asarray([0, 1, 0, 0.5, 0.2, 0.0, 0, 0], jp.float32),
+        jp.asarray([0, 1, 1, 0.5, 0.2, 0.0, 0, 0], jp.float32),
         jp.asarray([0, 1, 1, 0.5, 0.2, 0.0, 0, 0], jp.float32),
         jp.asarray([0, 1, 1, 0.5, 0.2, 0.0, 0, 0], jp.float32),
         jp.asarray([0, 0, 1, 0.0, 0.2, 0.0, 0, 0], jp.float32),
@@ -1165,6 +1169,31 @@ def test_airborne_progress_is_zero_inside_window_until_legal_liftoff():
     assert float(
         supported_in_window.metrics["phase_expert/reward_component/apex_approach"]
     ) == 0.0
+
+
+def test_one_wheel_support_loss_without_confirmed_airborne_cannot_unlock_progress():
+    """The observed 998.4k one-wheel bounce is telemetry, not legal liftoff."""
+    adapter = _adapter(_module())
+    window = jax.jit(adapter.step)(
+        adapter.reset(jax.random.PRNGKey(46)),
+        jp.asarray([1, 1, 0, 0.2, 0.2, 0.0, 0, 1], jp.float32),
+    )
+    one_wheel_bounce = jax.jit(adapter.step)(
+        window,
+        jp.asarray([0, 1, 0, 0.5, 0.2, 0.0, 0, 0], jp.float32),
+    )
+
+    assert not bool(one_wheel_bounce.info["phase_expert/event/liftoff_seen"])
+    for name in (
+        "legal_liftoff_bonus",
+        "stable_airborne_bonus",
+        "ascent_progress",
+        "clearance_progress",
+        "apex_approach",
+    ):
+        assert float(
+            one_wheel_bounce.metrics[f"phase_expert/reward_component/{name}"]
+        ) == 0.0
 
 
 def test_airborne_progress_requires_post_window_liftoff_after_early_airborne():
@@ -1340,7 +1369,7 @@ def test_legal_liftoff_bonus_is_post_window_one_shot_and_not_success():
         window.metrics["phase_expert/reward_component/legal_liftoff_bonus"]
     ) == 0.0
     liftoff = jax.jit(adapter.step)(
-        window, jp.asarray([0, 1, 0, 0.1, 0.2, 0.0, 0, 0], jp.float32)
+        window, jp.asarray([0, 1, 1, 0.1, 0.2, 0.0, 0, 0], jp.float32)
     )
     assert float(
         liftoff.metrics["phase_expert/reward_component/legal_liftoff_bonus"]
@@ -1370,7 +1399,7 @@ def test_stable_airborne_bonus_requires_post_liftoff_transition_is_one_shot_and_
         state, jp.asarray([1, 1, 0, 0.1, 0.2, 0.0, 0, 1], jp.float32)
     )
     liftoff = jax.jit(adapter.step)(
-        window, jp.asarray([0, 1, 0, 0.1, 0.2, 0.0, 0, 0], jp.float32)
+        window, jp.asarray([0, 1, 1, 0.1, 0.2, 0.0, 0, 0], jp.float32)
     )
     assert float(
         liftoff.metrics["phase_expert/reward_component/stable_airborne_bonus"]
