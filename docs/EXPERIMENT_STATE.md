@@ -1848,6 +1848,49 @@ must remain clearly labeled and cannot shape Phase U reward or reset sampling.
 
 ## Closed routes
 
+### Phase U v4 full-budget result and next single hypothesis (2026-08-13)
+
+The v4 formal experiment
+`phase_u_2kg_env256_window_ascent_998400_20260813_seed721102` completed its
+full authorization:
+
+```text
+status: completed
+PPO training transitions: 998,400
+fixed held-out evaluation transitions: 1,296
+total environment transitions: 999,696
+candidate acquisition transitions: 0
+continuation labeling transitions: 0
+```
+
+All 157 recursive checkpoint sidecars validate. Outcome accounting closes for
+all six fixed panels, and all 48 MP4 plus 48 timing-aligned NPZ artifacts exist
+and match their declared SHA-256 hashes. Every held-out rollout reached the
+legal window, but confirmed liftoff, stable airborne, clearance, and Apex were
+0/8 at every checkpoint. All 48 ended at
+`takeoff_missed_liftoff_deadline`; physical failure, roll/pitch violation,
+illegal contact, and action saturation were zero.
+
+The new gate did operate as designed: held-out `ascent_progress` was nonzero
+(0.115--0.599 mean sum), and stochastic PPO produced confirmed-liftoff events
+in 46/156 rollout blocks. Event-bearing blocks nevertheless averaged only
++0.74 liftoff, +1.37 stable-airborne, and +3.93 ascent credit against -32.96
+angular-rate cost and -54.65 total return. No-liftoff blocks averaged -8.11
+angular-rate cost and -19.28 return. The final deterministic trace holds hip
+near -1.25 rad and knee near 2.50 rad and drives through the window on the
+ground. The final failure videos are retained under
+`evaluations/000000998400/failure_videos/` in the run directory.
+
+The next single hypothesis changes only stable Phase U
+`ascent_progress_weight` from 4.0 to 8.0. It does not reopen the already closed
+angular-rate cap bracket: cap 1 produced high-rate pitch failure, whereas cap
+4/8 prevented it. The +8 term remains legal-window gated, current-state,
+bounded, future-free, label-free, and unable to grant liftoff or Apex success.
+Every safety, physics, reset, PPO, exploration, threshold, deadline, and other
+reward contract remains fixed. Design and execution plan:
+`docs/superpowers/specs/2026-08-13-phase-u-window-ascent-weight8-design.md` and
+`docs/superpowers/plans/2026-08-13-phase-u-window-ascent-weight8.md`.
+
 - Landing -> Flight -> Takeoff -> Approach sequential shared-Actor bootstrap
 - exhaustive H1/C_L A/B
 - roll-targeted shared-Actor retention
