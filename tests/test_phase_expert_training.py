@@ -466,6 +466,7 @@ def test_phase_u_configs_select_explicit_exploration_and_reward_hypothesis():
         assert reward.angular_rate_penalty_cap_ratio == 4.0
         assert reward.liftoff_bonus_weight == 8.0
         assert reward.stable_airborne_bonus_weight == 16.0
+        assert reward.ascent_progress_weight == 8.0
         assert reward.apex_approach_weight == 8.0
 
 
@@ -817,6 +818,7 @@ def test_smoke_config_locks_base_mode_cost_stops_rewards_and_disjoint_determinis
     assert reward_config == module.PhaseURewardConfig(
         **config["phase_u_reward"], **config["reward_bounds"]
     )
+    assert reward_config.ascent_progress_weight == 8.0
     reward_hash = module.phase_u_reward_contract_hash(config)
     assert (
         module.PHASE_U_REWARD_SEMANTICS
@@ -1178,9 +1180,9 @@ def test_window_active_ascent_credit_precedes_confirmed_liftoff_but_not_clearanc
         jp.asarray(False),
         jp.zeros((8,), jp.float32),
         jp.zeros((8,), jp.float32),
-        module.PhaseURewardConfig(),
+        module.PhaseURewardConfig(ascent_progress_weight=8.0),
     )
-    assert float(in_window_before_liftoff["ascent_progress"]) == pytest.approx(2.0)
+    assert float(in_window_before_liftoff["ascent_progress"]) == pytest.approx(4.0)
     assert float(in_window_before_liftoff["clearance_progress"]) == 0.0
     assert float(in_window_before_liftoff["apex_approach"]) == 0.0
 
