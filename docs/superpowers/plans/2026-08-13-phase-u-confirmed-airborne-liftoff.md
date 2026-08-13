@@ -101,6 +101,6 @@ state.  Preserve ignored run evidence and user `.vscode/` files.
 
 - [x] **Step 1: Preflight and run the exact 256-environment formal-path smoke**
 - [x] **Step 2: Audit checkpoint identity, accounting, numerical state, physical outcomes, and videos**
-- [ ] **Step 3: If smoke passes, create one exact run-bound formal authorization**
-- [ ] **Step 4: Launch persistent training with a detached exit marker and sparse supervision**
+- [x] **Step 3: If smoke passes, create one exact run-bound formal authorization**
+- [x] **Step 4: Launch persistent training with a detached exit marker and sparse supervision**
 - [ ] **Step 5: At completion, audit Apex parent coverage before any snapshot or continuation work**

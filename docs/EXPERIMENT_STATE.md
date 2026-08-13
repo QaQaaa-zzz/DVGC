@@ -1542,6 +1542,31 @@ retained.  This smoke qualifies one fresh 256-environment formal run up to the
 aligned 998,400 training-transition ceiling; early flat checkpoints remain
 diagnostic only.
 
+That one-shot authorization has been created and the fresh confirmed-airborne
+formal run is active:
+
+```text
+run id: phase_u_2kg_env256_confirmed_airborne_998400_20260813_seed720902
+producer HEAD: 923927f6ebe88a3929b8155f0db9d3f3ff16afdd
+source-tree hash: 97b2f422c83bcebbcae7fae4c6f10e4d49a5ff39ac0201a9530a0866f97e535f
+worker PID: 420709
+parallel environments: 256
+authorized/effective training ceiling: 1,000,000 / 998,400
+effective checkpoints: 0/102,400/256,000/505,600/755,200/998,400
+status: runs/two_phase/phase_experts/phase_u_2kg_env256_confirmed_airborne_998400_20260813_seed720902/status.json
+metrics: runs/two_phase/phase_experts/phase_u_2kg_env256_confirmed_airborne_998400_20260813_seed720902/metrics.jsonl
+log: runs/two_phase/process_logs/phase_u_2kg_env256_confirmed_airborne_998400_20260813_seed720902.log
+completion marker: runs/two_phase/process_logs/phase_u_2kg_env256_confirmed_airborne_998400_20260813_seed720902.finished
+```
+
+The single startup audit found the worker on the GPU with `status=running`,
+matching run-bound authorization and no numerical, broadphase, timing/history,
+or identity fault.  A detached watcher writes the completion marker on process
+exit without reading metrics or logs.  Early flat checkpoints cannot pause the
+run by themselves.  Candidate acquisition and bounded continuation probing
+remain automatically gated on real held-out Apex success and independent
+parent diversity.
+
 The earlier 4 kg one-million Phase U authorization was effectively exhausted at 995,200
 aligned expert-training transitions. No additional long PPO run, Phase U
 snapshot acquisition, or continuation probing is currently permitted: the
