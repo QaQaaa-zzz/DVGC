@@ -30,7 +30,6 @@ from .two_phase_runtime import (
     advance_two_phase_events,
     extract_apex_band_signals,
     extract_recovery_signals,
-    wheel_terrain_clearances,
     initial_two_phase_event_state,
 )
 from .two_phase_semantics import (
@@ -186,9 +185,9 @@ class PhaseURewardConfig:
     liftoff_bonus_weight: float = 0.0
     stable_airborne_bonus_weight: float = 0.0
     ascent_progress_weight: float = 4.0
-    dual_wheel_lift_progress_weight: float = 0.0
-    dual_wheel_upward_velocity_deadband: float = 0.02
-    dual_wheel_upward_velocity_target: float = 0.20
+    coordinated_joint_propulsion_weight: float = 0.0
+    coordinated_joint_velocity_deadband: float = 0.15
+    coordinated_joint_velocity_target: float = 2.0
     clearance_progress_weight: float = 2.0
     apex_approach_weight: float = 2.0
     attitude_penalty_weight: float = 0.5
@@ -213,7 +212,7 @@ class PhaseURewardConfig:
             "liftoff_bonus_weight",
             "stable_airborne_bonus_weight",
             "ascent_progress_weight",
-            "dual_wheel_lift_progress_weight",
+            "coordinated_joint_propulsion_weight",
             "clearance_progress_weight",
             "apex_approach_weight",
             "attitude_penalty_weight",
@@ -241,24 +240,24 @@ class PhaseURewardConfig:
             raise ValueError(
                 "angular_rate_penalty_cap_ratio must be finite and positive"
             )
-        if not math.isfinite(self.dual_wheel_upward_velocity_deadband) or (
-            self.dual_wheel_upward_velocity_deadband < 0.0
+        if not math.isfinite(self.coordinated_joint_velocity_deadband) or (
+            self.coordinated_joint_velocity_deadband < 0.0
         ):
             raise ValueError(
-                "dual_wheel_upward_velocity_deadband must be finite and non-negative"
+                "coordinated_joint_velocity_deadband must be finite and non-negative"
             )
-        if not math.isfinite(self.dual_wheel_upward_velocity_target) or (
-            self.dual_wheel_upward_velocity_target <= 0.0
+        if not math.isfinite(self.coordinated_joint_velocity_target) or (
+            self.coordinated_joint_velocity_target <= 0.0
         ):
             raise ValueError(
-                "dual_wheel_upward_velocity_target must be finite and positive"
+                "coordinated_joint_velocity_target must be finite and positive"
             )
         if (
-            self.dual_wheel_upward_velocity_deadband
-            >= self.dual_wheel_upward_velocity_target
+            self.coordinated_joint_velocity_deadband
+            >= self.coordinated_joint_velocity_target
         ):
             raise ValueError(
-                "dual_wheel_upward_velocity_deadband must be less than target"
+                "coordinated_joint_velocity_deadband must be less than target"
             )
         if self.total_min >= self.total_max:
             raise ValueError("total_min must be less than total_max")
@@ -351,7 +350,7 @@ _PHASE_U_REWARD_COMPONENTS = (
 )
 
 PHASE_U_REWARD_SEMANTICS = (
-    "phase_u.synchronized_dual_wheel_upward_velocity_credit.v7"
+    "phase_u.coordinated_actual_joint_propulsion_credit.v8"
 )
 
 
@@ -377,7 +376,7 @@ def phase_u_reward_components(
     last_action: Any,
     config: PhaseURewardConfig,
     *,
-    minimum_wheel_upward_velocity: Any = 0.0,
+    coordinated_joint_velocity: Any = 0.0,
 ) -> dict[str, Any]:
     """Return bounded observable Phase U terms with monotonic legal-window gating."""
     window = jp.asarray(legal_window_entered, dtype=bool)
@@ -402,16 +401,16 @@ def phase_u_reward_components(
         * ascent_rate_quality,
         0.0,
     )
-    dual_wheel_lift = config.dual_wheel_lift_progress_weight * jp.where(
+    dual_wheel_lift = config.coordinated_joint_propulsion_weight * jp.where(
         window,
         jp.clip(
             (
-                jp.asarray(minimum_wheel_upward_velocity)
-                - config.dual_wheel_upward_velocity_deadband
+                jp.asarray(coordinated_joint_velocity)
+                - config.coordinated_joint_velocity_deadband
             )
             / (
-                config.dual_wheel_upward_velocity_target
-                - config.dual_wheel_upward_velocity_deadband
+                config.coordinated_joint_velocity_target
+                - config.coordinated_joint_velocity_deadband
             ),
             0.0,
             1.0,
@@ -556,7 +555,6 @@ class PhaseExpertEnvAdapter:
         reward_config: PhaseURewardConfig,
         episode_horizon: int,
         signal_extractor: Any | None = None,
-        wheel_clearance_extractor: Any | None = None,
     ) -> None:
         if episode_horizon <= 0:
             raise ValueError("episode_horizon must be positive")
@@ -566,9 +564,8 @@ class PhaseExpertEnvAdapter:
         self._reward_config = reward_config
         self._episode_horizon = int(episode_horizon)
         self._signal_extractor = signal_extractor or self._extract_signals
-        self._wheel_clearance_extractor = (
-            wheel_clearance_extractor or wheel_terrain_clearances
-        )
+        self._hip_qvel_adr = int(base_env._joint_qvel["hip_joint"])
+        self._knee_qvel_adr = int(base_env._joint_qvel["knee_joint"])
         self.action_size = base_env.action_size
 
     def __getattr__(self, name: str) -> Any:
@@ -628,7 +625,6 @@ class PhaseExpertEnvAdapter:
             state, self._geometry, event.recovery_hold_count
         )
         neutral = jp.asarray(self._base_env._neutral_action)
-        wheel_clearances = self._wheel_clearance_extractor(state, self._geometry)
         reset_valid = (
             _finite_tree((state.data.qpos, state.data.qvel, state.data.ctrl, state.obs))
             & _finite_tree((state.info["last_action"], state.info["obs_history"]))
@@ -647,7 +643,6 @@ class PhaseExpertEnvAdapter:
             "phase_expert/physical_failure": jp.asarray(False),
             "phase_expert/task_failure": jp.asarray(False),
             "phase_expert/timeout": jp.asarray(False),
-            "phase_expert/previous_wheel_terrain_clearances": wheel_clearances,
         }
         zero = jp.asarray(0.0, jp.float32)
         return state.replace(
@@ -674,17 +669,9 @@ class PhaseExpertEnvAdapter:
         apex, recovery = self._signal_extractor(
             raw, self._geometry, previous.recovery_hold_count
         )
-        current_wheel_clearances = self._wheel_clearance_extractor(
-            raw, self._geometry
-        )
-        previous_wheel_clearances = state.info[
-            "phase_expert/previous_wheel_terrain_clearances"
-        ]
-        wheel_upward_velocities = (
-            current_wheel_clearances - previous_wheel_clearances
-        ) / jp.asarray(float(self._base_env._config.ctrl_dt), jp.float32)
-        minimum_wheel_upward_velocity = jp.min(
-            wheel_upward_velocities, axis=-1
+        coordinated_joint_velocity = jp.minimum(
+            jp.maximum(raw.data.qvel[..., self._hip_qvel_adr], 0.0),
+            jp.maximum(-raw.data.qvel[..., self._knee_qvel_adr], 0.0),
         )
         event = advance_two_phase_events(
             apex,
@@ -737,7 +724,7 @@ class PhaseExpertEnvAdapter:
             action,
             previous_action,
             self._reward_config,
-            minimum_wheel_upward_velocity=minimum_wheel_upward_velocity,
+            coordinated_joint_velocity=coordinated_joint_velocity,
         )
         reward = sum(reward_terms.values())
         reward = jp.clip(
@@ -751,9 +738,6 @@ class PhaseExpertEnvAdapter:
             "phase_expert/physical_failure": physical,
             "phase_expert/task_failure": task,
             "phase_expert/timeout": timeout,
-            "phase_expert/previous_wheel_terrain_clearances": (
-                current_wheel_clearances
-            ),
         }
         return raw.replace(
             reward=reward,

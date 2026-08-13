@@ -469,9 +469,9 @@ def test_phase_u_configs_select_explicit_exploration_and_reward_hypothesis():
         assert reward.stable_airborne_bonus_weight == 16.0
         assert reward.ascent_progress_weight == 8.0
         assert reward.apex_approach_weight == 8.0
-        assert reward.dual_wheel_lift_progress_weight == 4.0
-        assert reward.dual_wheel_upward_velocity_deadband == pytest.approx(0.02)
-        assert reward.dual_wheel_upward_velocity_target == pytest.approx(0.20)
+        assert reward.coordinated_joint_propulsion_weight == 4.0
+        assert reward.coordinated_joint_velocity_deadband == pytest.approx(0.15)
+        assert reward.coordinated_joint_velocity_target == pytest.approx(2.0)
 
 
 @pytest.mark.parametrize("cap", [0.0, -1.0, float("inf"), float("nan")])
@@ -496,36 +496,36 @@ def test_phase_u_stable_airborne_bonus_weight_must_be_finite_and_non_negative(we
 
 
 @pytest.mark.parametrize("weight", [-1.0, float("inf"), float("nan")])
-def test_phase_u_dual_wheel_lift_weight_must_be_finite_and_non_negative(weight):
+def test_phase_u_coordinated_joint_weight_must_be_finite_and_non_negative(weight):
     module = _module()
-    with pytest.raises(ValueError, match="dual_wheel_lift_progress_weight"):
-        module.PhaseURewardConfig(dual_wheel_lift_progress_weight=weight)
+    with pytest.raises(ValueError, match="coordinated_joint_propulsion_weight"):
+        module.PhaseURewardConfig(coordinated_joint_propulsion_weight=weight)
 
 
 @pytest.mark.parametrize("deadband", [-0.01, float("inf"), float("nan")])
-def test_phase_u_dual_wheel_velocity_deadband_must_be_finite_and_non_negative(
+def test_phase_u_coordinated_joint_velocity_deadband_must_be_finite_and_non_negative(
     deadband,
 ):
     module = _module()
-    with pytest.raises(ValueError, match="dual_wheel_upward_velocity_deadband"):
+    with pytest.raises(ValueError, match="coordinated_joint_velocity_deadband"):
         module.PhaseURewardConfig(
-            dual_wheel_upward_velocity_deadband=deadband
+            coordinated_joint_velocity_deadband=deadband
         )
 
 
 @pytest.mark.parametrize("target", [0.0, -0.01, float("inf"), float("nan")])
-def test_phase_u_dual_wheel_velocity_target_must_be_finite_and_positive(target):
+def test_phase_u_coordinated_joint_velocity_target_must_be_finite_and_positive(target):
     module = _module()
-    with pytest.raises(ValueError, match="dual_wheel_upward_velocity_target"):
-        module.PhaseURewardConfig(dual_wheel_upward_velocity_target=target)
+    with pytest.raises(ValueError, match="coordinated_joint_velocity_target"):
+        module.PhaseURewardConfig(coordinated_joint_velocity_target=target)
 
 
-def test_phase_u_dual_wheel_velocity_deadband_must_be_below_target():
+def test_phase_u_coordinated_joint_velocity_deadband_must_be_below_target():
     module = _module()
     with pytest.raises(ValueError, match="less than"):
         module.PhaseURewardConfig(
-            dual_wheel_upward_velocity_deadband=0.20,
-            dual_wheel_upward_velocity_target=0.20,
+            coordinated_joint_velocity_deadband=2.0,
+            coordinated_joint_velocity_target=2.0,
         )
 
 
@@ -860,9 +860,9 @@ def test_smoke_config_locks_base_mode_cost_stops_rewards_and_disjoint_determinis
     reward_hash = module.phase_u_reward_contract_hash(config)
     assert (
         module.PHASE_U_REWARD_SEMANTICS
-        == "phase_u.synchronized_dual_wheel_upward_velocity_credit.v7"
+        == "phase_u.coordinated_actual_joint_propulsion_credit.v8"
     )
-    assert reward_hash == "07f74c323a250d9983272f4c45fa49ab9c62911e057031fa0bb334f442dbd31d"
+    assert reward_hash == "43c37e22a0e63d37405230281c6bf49186ae9d574c35d3e6aed267e530e0c866"
     changed = config | {
         "phase_u_reward": config["phase_u_reward"]
         | {"ascent_progress_weight": 3.5}
@@ -883,14 +883,19 @@ def test_smoke_config_locks_base_mode_cost_stops_rewards_and_disjoint_determinis
         | {"stable_airborne_bonus_weight": 12.0}
     }
     assert module.phase_u_reward_contract_hash(changed_airborne) != reward_hash
+    changed_lift_weight = config | {
+        "phase_u_reward": config["phase_u_reward"]
+        | {"coordinated_joint_propulsion_weight": 3.0}
+    }
+    assert module.phase_u_reward_contract_hash(changed_lift_weight) != reward_hash
     changed_lift_deadband = config | {
         "phase_u_reward": config["phase_u_reward"]
-        | {"dual_wheel_upward_velocity_deadband": 0.03}
+        | {"coordinated_joint_velocity_deadband": 0.2}
     }
     assert module.phase_u_reward_contract_hash(changed_lift_deadband) != reward_hash
     changed_lift_target = config | {
         "phase_u_reward": config["phase_u_reward"]
-        | {"dual_wheel_upward_velocity_target": 0.25}
+        | {"coordinated_joint_velocity_target": 2.5}
     }
     assert module.phase_u_reward_contract_hash(changed_lift_target) != reward_hash
     changed_apex_approach = config | {
@@ -1021,6 +1026,7 @@ class _FakeBaseEnv:
     action_size = 8
     _neutral_action = jp.zeros((8,), jp.float32)
     _config = SimpleNamespace(max_roll_deg=35.0, max_pitch_deg=75.0, ctrl_dt=0.02)
+    _joint_qvel = {"hip_joint": 4, "knee_joint": 5}
 
     @staticmethod
     def _info():
@@ -1074,7 +1080,16 @@ class _FakeBaseEnv:
         return state.replace(
             data=state.data._replace(
                 qpos=state.data.qpos.at[0].set(action[3]).at[1].set(action[4]),
-                qvel=state.data.qvel.at[0].set(2.0).at[2].set(action[3]),
+                qvel=(
+                    state.data.qvel.at[0]
+                    .set(2.0)
+                    .at[2]
+                    .set(action[3])
+                    .at[4]
+                    .set(action[3])
+                    .at[5]
+                    .set(action[4])
+                ),
             ),
             reward=jp.asarray(999.0),
             done=jp.asarray(1.0),
@@ -1083,8 +1098,24 @@ class _FakeBaseEnv:
         )
 
 
-def _fake_wheel_clearances(state, _geometry):
-    return state.data.qpos[:2]
+class _ScriptedJointVelocityEnv(_FakeBaseEnv):
+    def __init__(self, hip_velocity, knee_velocity):
+        self._hip_velocity = hip_velocity
+        self._knee_velocity = knee_velocity
+
+    def step(self, state, action):
+        raw = super().step(state, action)
+        return raw.replace(
+            data=raw.data._replace(
+                qvel=(
+                    raw.data.qvel.at[self._joint_qvel["hip_joint"]]
+                    .set(self._hip_velocity)
+                    .at[self._joint_qvel["knee_joint"]]
+                    .set(self._knee_velocity)
+                ),
+                ctrl=jp.arange(self.action_size, dtype=jp.float32) + action,
+            )
+        )
 
 
 def _adapter(module):
@@ -1095,7 +1126,6 @@ def _adapter(module):
         reward_config=module.PhaseURewardConfig(),
         episode_horizon=20,
         signal_extractor=_fake_signals,
-        wheel_clearance_extractor=_fake_wheel_clearances,
     )
 
 
@@ -1268,22 +1298,22 @@ def test_window_active_ascent_credit_precedes_confirmed_liftoff_but_not_clearanc
 
 
 @pytest.mark.parametrize(
-    ("window", "upward_velocity", "angular_rate_ratio", "expected"),
+    ("window", "joint_velocity", "angular_rate_ratio", "expected"),
     [
-        (False, 0.20, 0.0, 0.0),
+        (False, 2.0, 0.0, 0.0),
         (True, -0.01, 0.0, 0.0),
         (True, 0.0, 0.0, 0.0),
-        (True, 0.01, 0.0, 0.0),
-        (True, 0.02, 0.0, 0.0),
-        (True, 0.11, 0.0, 2.0),
-        (True, 0.20, 0.0, 4.0),
-        (True, 0.30, 0.0, 4.0),
-        (True, 0.20, 2.0, 2.0),
-        (True, 0.20, 4.0, 0.0),
+        (True, 0.14, 0.0, 0.0),
+        (True, 0.15, 0.0, 0.0),
+        (True, 1.075, 0.0, 2.0),
+        (True, 2.0, 0.0, 4.0),
+        (True, 3.0, 0.0, 4.0),
+        (True, 2.0, 2.0, 2.0),
+        (True, 2.0, 4.0, 0.0),
     ],
 )
-def test_dual_wheel_upward_velocity_progress_is_deadbanded_bounded_and_rate_qualified(
-    window, upward_velocity, angular_rate_ratio, expected
+def test_coordinated_joint_velocity_progress_is_deadbanded_bounded_and_rate_qualified(
+    window, joint_velocity, angular_rate_ratio, expected
 ):
     module = _module()
     thresholds = _adapter_thresholds().apex
@@ -1317,115 +1347,103 @@ def test_dual_wheel_upward_velocity_progress_is_deadbanded_bounded_and_rate_qual
         jp.zeros((8,), jp.float32),
         jp.zeros((8,), jp.float32),
         module.PhaseURewardConfig(
-            dual_wheel_lift_progress_weight=4.0,
-            dual_wheel_upward_velocity_deadband=0.02,
-            dual_wheel_upward_velocity_target=0.20,
+            coordinated_joint_propulsion_weight=4.0,
+            coordinated_joint_velocity_deadband=0.15,
+            coordinated_joint_velocity_target=2.0,
             angular_rate_penalty_cap_ratio=4.0,
         ),
-        minimum_wheel_upward_velocity=jp.asarray(upward_velocity),
+        coordinated_joint_velocity=jp.asarray(joint_velocity),
     )
     assert float(components["dual_wheel_lift_progress"]) == pytest.approx(expected)
 
 
-def test_dual_wheel_lift_credit_does_not_imply_liftoff_success_or_done():
+def test_coordinated_joint_credit_does_not_imply_liftoff_success_or_done():
     module = _module()
     adapter = module.PhaseExpertEnvAdapter(
-        _FakeBaseEnv(),
+        _ScriptedJointVelocityEnv(2.0, -2.0),
         geometry=None,
         thresholds=_adapter_thresholds(),
         reward_config=module.PhaseURewardConfig(
-            dual_wheel_lift_progress_weight=4.0,
-            dual_wheel_upward_velocity_deadband=0.02,
-            dual_wheel_upward_velocity_target=0.20,
+            coordinated_joint_propulsion_weight=4.0,
+            coordinated_joint_velocity_deadband=0.15,
+            coordinated_joint_velocity_target=2.0,
         ),
         episode_horizon=20,
         signal_extractor=_fake_signals,
-        wheel_clearance_extractor=_fake_wheel_clearances,
     )
     state = adapter.reset(jax.random.PRNGKey(47))
 
-    lifted_wheels_without_airborne_confirmation = jax.jit(adapter.step)(
+    coordinated_motion_without_airborne_confirmation = jax.jit(adapter.step)(
         state,
-        jp.asarray([1, 1, 0, 0.004, 0.004, 0.3, 0, 1], jp.float32),
+        jp.asarray([1, 1, 0, 2.0, -2.0, 0.3, 0, 1], jp.float32),
     )
 
     assert float(
-        lifted_wheels_without_airborne_confirmation.metrics[
+        coordinated_motion_without_airborne_confirmation.metrics[
             "phase_expert/reward_component/dual_wheel_lift_progress"
         ]
     ) == pytest.approx(4.0)
     assert not bool(
-        lifted_wheels_without_airborne_confirmation.info[
+        coordinated_motion_without_airborne_confirmation.info[
             "phase_expert/event/liftoff_seen"
         ]
     )
     assert not bool(
-        lifted_wheels_without_airborne_confirmation.info[
+        coordinated_motion_without_airborne_confirmation.info[
             "phase_expert/success"
         ]
     )
     assert not bool(
-        lifted_wheels_without_airborne_confirmation.info[
+        coordinated_motion_without_airborne_confirmation.info[
             "phase_expert/physical_failure"
         ]
     )
     assert not bool(
-        lifted_wheels_without_airborne_confirmation.info[
+        coordinated_motion_without_airborne_confirmation.info[
             "phase_expert/task_failure"
         ]
     )
-    assert not bool(lifted_wheels_without_airborne_confirmation.done)
+    assert not bool(coordinated_motion_without_airborne_confirmation.done)
 
 
-def test_dual_wheel_velocity_uses_consecutive_ticks_and_minimum_wheel():
+@pytest.mark.parametrize(
+    ("hip_velocity", "knee_velocity", "expected"),
+    [
+        (2.0, -2.0, 4.0),
+        (2.0, 0.0, 0.0),
+        (0.0, -2.0, 0.0),
+        (-2.0, -2.0, 0.0),
+        (2.0, 2.0, 0.0),
+    ],
+)
+def test_coordinated_joint_velocity_uses_real_post_step_physical_directions(
+    hip_velocity, knee_velocity, expected
+):
     module = _module()
     adapter = module.PhaseExpertEnvAdapter(
-        _FakeBaseEnv(),
+        _ScriptedJointVelocityEnv(hip_velocity, knee_velocity),
         geometry=None,
         thresholds=_adapter_thresholds(),
         reward_config=module.PhaseURewardConfig(
-            dual_wheel_lift_progress_weight=4.0,
-            dual_wheel_upward_velocity_deadband=0.02,
-            dual_wheel_upward_velocity_target=0.20,
+            coordinated_joint_propulsion_weight=4.0,
+            coordinated_joint_velocity_deadband=0.15,
+            coordinated_joint_velocity_target=2.0,
         ),
         episode_horizon=20,
         signal_extractor=_fake_signals,
-        wheel_clearance_extractor=_fake_wheel_clearances,
     )
 
     reset = jax.jit(adapter.reset)(jax.random.PRNGKey(48))
-    np.testing.assert_allclose(
-        reset.info["phase_expert/previous_wheel_terrain_clearances"],
-        [0.0, 0.0],
-    )
-
-    one_wheel_only = jax.jit(adapter.step)(
+    state = jax.jit(adapter.step)(
         reset,
-        jp.asarray([1, 1, 0, 0.004, 0.0, 0.3, 0, 1], jp.float32),
+        jp.asarray([1, 1, -1, 0.7, 0.4, 0.3, 0, 1], jp.float32),
     )
     assert float(
-        one_wheel_only.metrics[
+        state.metrics[
             "phase_expert/reward_component/dual_wheel_lift_progress"
         ]
-    ) == 0.0
-    np.testing.assert_allclose(
-        one_wheel_only.info["phase_expert/previous_wheel_terrain_clearances"],
-        [0.004, 0.0],
-    )
-
-    both_wheels = jax.jit(adapter.step)(
-        one_wheel_only,
-        jp.asarray([1, 1, 0, 0.008, 0.004, 0.3, 0, 1], jp.float32),
-    )
-    assert float(
-        both_wheels.metrics[
-            "phase_expert/reward_component/dual_wheel_lift_progress"
-        ]
-    ) == pytest.approx(4.0)
-    np.testing.assert_allclose(
-        both_wheels.info["phase_expert/previous_wheel_terrain_clearances"],
-        [0.008, 0.004],
-    )
+    ) == pytest.approx(expected)
+    assert "phase_expert/previous_wheel_terrain_clearances" not in state.info
 
 
 @pytest.mark.parametrize(
@@ -1684,7 +1702,6 @@ def test_legal_liftoff_bonus_is_post_window_one_shot_and_not_success():
         reward_config=module.PhaseURewardConfig(liftoff_bonus_weight=8.0),
         episode_horizon=20,
         signal_extractor=_fake_signals,
-        wheel_clearance_extractor=_fake_wheel_clearances,
     )
     early = jax.jit(adapter.step)(
         adapter.reset(jax.random.PRNGKey(41)),
@@ -1727,7 +1744,6 @@ def test_stable_airborne_bonus_requires_post_liftoff_transition_is_one_shot_and_
         reward_config=module.PhaseURewardConfig(stable_airborne_bonus_weight=16.0),
         episode_horizon=20,
         signal_extractor=_fake_signals,
-        wheel_clearance_extractor=_fake_wheel_clearances,
     )
     state = adapter.reset(jax.random.PRNGKey(43))
     window = jax.jit(adapter.step)(

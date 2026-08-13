@@ -2271,6 +2271,94 @@ environments and an effective ceiling of 998,400 PPO-training transitions.
 The formal authorization must bind the next committed HEAD and remains
 non-promoting; it does not declare `pi_up_star`, `V_up`, or a Soft Tube.
 
+That qualified smoke launched the one fresh v7 formal experiment under run id
+`phase_u_2kg_env256_dual_wheel_velocity_v7_998400_20260813_seed721502`.
+The run completed the entire authorized budget rather than pausing early:
+
+```text
+PPO training transitions: 998,400
+fixed evaluation transitions: 1,288
+candidate acquisition transitions: 0
+continuation labeling transitions: 0
+total environment transitions: 999,688
+status: completed
+```
+
+All six fixed panels at 0, 102,400, 256,000, 505,600, 755,200, and 998,400
+reached the legal jump window in 8/8 rollouts. All 48 rollouts nevertheless
+remained grounded and ended at `takeoff_missed_liftoff_deadline`; liftoff,
+stable airborne, ascending, clearance success, and Apex success were 0/8 at
+every panel. Physical failure, roll/pitch violation, illegal contact, timeout,
+and action saturation were also zero. Mean returns were respectively -12.16,
+-14.93, -11.82, -13.99, -12.67, and -12.14. Each outcome account closes.
+All 157 checkpoint sidecars validate recursively, and all 48 MP4 plus 48
+timing-aligned NPZ files exist and match their declared SHA-256 hashes.
+
+The synchronized-wheel velocity signal was physically correct but still too
+sparse. Every deterministic panel earned exactly zero of the component. The
+final stochastic episode aggregate earned only 0.00167. Representative saved
+states show knee control retained at its natural 2.5-rad limit while hip
+control stayed near -1.2 rad: the policy drove into the window but did not
+attempt a launch joint motion. Across the six grounded deterministic traces,
+the maximum post-window minimum of positive hip velocity and negative knee
+velocity was 0.1285 rad/s.
+
+Existing fixed diagnostics, without new environment interaction, establish
+the next single hypothesis. Positive hip impulses can cause confirmed
+liftoff, but hip-only launches later fail pitch. Adding positive knee action
+increases height but does not alone solve attitude; negative knee action is
+clipped at the natural upper joint limit. The v8 hypothesis therefore replaces
+only the unused wheel-velocity reward source with coordinated actual joint
+propulsion:
+
+```text
+hip progress: max(hip qvel, 0)
+knee progress: max(-knee qvel, 0)
+synchronized progress: minimum of the two
+deadband: 0.15 rad/s
+full target: 2.0 rad/s
+component bound: 4.0
+```
+
+It remains legal-window-only and multiplied by the unchanged angular-rate
+quality. It reads the post-step physical qvel values, not action, actuator
+target, reference time/index, success, or outcome metadata. One joint alone or
+either wrong direction earns zero. It does not imply liftoff, Apex, success,
+done, safety, or continuation feasibility. XML, 2 kg payload, +/-50 N m force
+limits, environment, reset, observation/history, action mapping, thresholds,
+deadlines, success/failure semantics, PPO layout, exploration, optimizer,
+horizon, and fixed seeds are unchanged. The retained public metric key is
+`dual_wheel_lift_progress` for logging compatibility, while the authoritative
+reward semantics are `phase_u.coordinated_actual_joint_propulsion_credit.v8`.
+
+The v8 reward-contract hash is
+`43c37e22a0e63d37405230281c6bf49186ae9d574c35d3e6aed267e530e0c866`.
+RED produced 27 expected missing-schema/API failures. GREEN passes those 27
+contracts and 202 focused Phase U/runtime/semantics/budget regressions. The
+adapter tests independently script post-step qvel while changing action and
+ctrl, proving the component uses actual state. Compileall passes; a fresh full
+suite and local preflight each pass 949 tests on the GPU.
+
+The fresh v8 managed runtime gate passes and is current at
+`runs/two_phase/runtime_gate/phase_u_2kg_coordinated_joint_v8_20260813.json`.
+It completed in 93.37 seconds and passed the fixed 64-transition update plus
+32-transition resume, model load, snapshot/restore, determinism, observation,
+and composite handoff checks. The XML hash remains
+`e2762bec...109192`. Its runtime fingerprint remains unchanged because that
+gate's managed source domain does not include the external phase-expert reward
+adapter; the separately bound phase-expert source-tree hash is
+`d5bf5ffa1011277ef7a0e6f3b3f2a50dae8adc089f5d990ce0ab73c0424a902b`.
+
+The v8 static threshold refresh is retained at
+`runs/two_phase/gate_c1_20260813_coordinated_joint_v8_threshold_refresh/`.
+Because neither `dvgc/two_phase_runtime.py` nor any threshold input changed,
+both manifests are byte-identical to v7 and retain canonical hash
+`46d1fd9c4bdf31b6ae7a853a4edafcb5ebe249fdde7f697c6bb275ae8ce88555`.
+The formal loader validates them; they consumed zero transitions. The next
+permitted action is one fresh run-bound 256-environment v8 engineering smoke.
+No v8 formal training, candidate snapshot, continuation label, formal expert,
+`V_up`, or Soft Tube exists yet.
+
 - Landing -> Flight -> Takeoff -> Approach sequential shared-Actor bootstrap
 - exhaustive H1/C_L A/B
 - roll-targeted shared-Actor retention
