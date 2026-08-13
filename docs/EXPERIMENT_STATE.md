@@ -1437,6 +1437,35 @@ qualifies one fresh 256-environment formal run up to the aligned 998,400
 training-transition ceiling; early flat checkpoints are diagnostic only and
 do not consume that authorization prematurely.
 
+That one-shot authorization has been created and the fresh formal run is now
+active:
+
+```text
+run id: phase_u_2kg_env256_airborne_gate_998400_20260813_seed720802
+producer HEAD: 6ea37be70926e4c2f371cb91d35b43c0503a999d
+source-tree hash: a95d5458a11cd172c452c86eb8bfc9f3df556945d08734a0f3840c2c0ecb84a3
+reward-contract hash: 1686e196eb27da2980b592a1ace354899d239b15d9487e04c3027daed450e114
+worker PID: 287484
+parallel environments: 256
+authorized/effective training ceiling: 1,000,000 / 998,400
+effective checkpoints: 0/102,400/256,000/499,200/748,800/998,400
+status: runs/two_phase/phase_experts/phase_u_2kg_env256_airborne_gate_998400_20260813_seed720802/status.json
+metrics: runs/two_phase/phase_experts/phase_u_2kg_env256_airborne_gate_998400_20260813_seed720802/metrics.jsonl
+log: runs/two_phase/process_logs/phase_u_2kg_env256_airborne_gate_998400_20260813_seed720802.log
+completion marker: runs/two_phase/process_logs/phase_u_2kg_env256_airborne_gate_998400_20260813_seed720802.finished
+```
+
+The single startup audit found `status=running`, the worker using the GPU, and
+a complete transition-0 checkpoint whose recursive identity is
+`ca5e6dd2...b2236`. Source, XML, threshold, reward, and reset identities all
+match the run authorization; no numerical, broadphase, timing/history, or hash
+fault was present. A detached local watcher checks only process existence once
+per minute and writes the completion marker on exit; it does not poll metrics
+or logs and consumes no model tokens. The approximately one-million-transition
+run must continue through early zero-success or flat checkpoint panels.
+Candidate acquisition and bounded continuation probing remain automatically
+gated on real Apex-success parent coverage.
+
 The earlier 4 kg one-million Phase U authorization was effectively exhausted at 995,200
 aligned expert-training transitions. No additional long PPO run, Phase U
 snapshot acquisition, or continuation probing is currently permitted: the

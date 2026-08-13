@@ -83,6 +83,6 @@ and experiment-state record.
 - [x] **Step 1: Re-run the managed GPU runtime gate if its source fingerprint changes**
 - [x] **Step 2: Preflight and run one 6,400-transition formal-path smoke**
 - [x] **Step 3: Audit checkpoint identity, accounting, numerical state, and videos**
-- [ ] **Step 4: If smoke passes, create a new exact run-bound authorization**
-- [ ] **Step 5: Launch persistent training and use a local PID watcher without model polling**
+- [x] **Step 4: If smoke passes, create a new exact run-bound authorization**
+- [x] **Step 5: Launch persistent training and use a local PID watcher without model polling**
 - [ ] **Step 6: At completion/Gate Pause, audit physical metrics and advance only if Apex parent coverage exists**
