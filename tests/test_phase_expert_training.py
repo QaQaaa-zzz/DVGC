@@ -459,8 +459,8 @@ def test_phase_u_configs_select_explicit_exploration_and_reward_hypothesis():
     ):
         config = json.loads(Path(path).read_text(encoding="utf-8"))
         resolved = module.resolve_policy_initial_action_std(config)
-        assert resolved == (0.05, 0.05, 0.10, 0.05)
-        assert module._jsonable(resolved) == [0.05, 0.05, 0.10, 0.05]
+        assert resolved == (0.05, 0.05, 0.20, 0.05)
+        assert module._jsonable(resolved) == [0.05, 0.05, 0.20, 0.05]
         reward = module.resolve_phase_u_reward_config(config)
         assert reward.angular_rate_penalty_weight == 1.0
         assert reward.angular_rate_penalty_cap_ratio == 4.0

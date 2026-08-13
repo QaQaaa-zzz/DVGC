@@ -1611,7 +1611,19 @@ smallest currently demonstrated confirmed-liftoff action (`+0.25`) changes
 from a 2.5-sigma to a 1.25-sigma event while remaining narrower than the prior
 destructive `0.25` exploration setting.  Reward, reset, XML, safety,
 threshold/deadline, observation/history, PPO layout, optimizer, horizon, and
-fixed evaluation remain unchanged.  No run for this hypothesis has started.
+fixed evaluation remain unchanged.
+
+That static change is now implemented in exactly the two stable Phase U
+configs.  The expected RED test reported actual hip std `0.10` versus expected
+`0.20`; after the two JSON edits it passed.  The 167-test targeted Phase U
+suite, compileall, and `scripts/local_preflight.sh` pass; preflight reports 914
+tests passing on the configured GPU.  A fresh managed runtime gate at
+`runs/two_phase/runtime_gate/phase_u_2kg_confirmed_airborne_hipstd020_20260813/`
+passes in 94.31 seconds, including its fixed 64-transition PPO update and
+32-transition resume.  This runtime requalification consumed 96 engineering
+transitions and zero Phase U expert-training transitions.  The next permitted
+action is one fresh run-bound 256-environment engineering smoke; no formal
+retry for hip std `0.20` is yet authorized or active.
 
 The earlier 4 kg one-million Phase U authorization was effectively exhausted at 995,200
 aligned expert-training transitions. No additional long PPO run, Phase U
