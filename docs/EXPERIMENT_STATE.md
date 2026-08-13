@@ -1677,6 +1677,55 @@ or hash fault was present.  The corrected local watcher checks only process
 existence once per minute and writes the terminal marker; active log polling
 stops after this startup audit.
 
+The run completed its full authorization without Gate Pause:
+
+```text
+status: completed
+PPO training transitions: 998,400
+fixed held-out evaluation transitions: 1,288
+total environment transitions: 999,688
+candidate acquisition transitions: 0
+continuation labeling transitions: 0
+promotion/next gate authorized: false/false
+```
+
+All 157 periodic checkpoint sidecars pass recursive identity validation. The
+six fixed held-out panels at 0/102,400/256,000/505,600/755,200/998,400 each
+close as eight `other_failure`, zero physical failure, zero timeout, and zero
+success. Every rollout reaches the legal jump window, but none reaches
+confirmed liftoff, stable airborne, ascent, clearance, or Apex; all 48 end at
+`takeoff_missed_liftoff_deadline`. Roll/pitch violations, illegal contact,
+action saturation, numerical failure, identity mismatch, and timing/history
+faults are zero. All 48 MP4 and 48 timing-aligned NPZ artifacts exist and
+match their declared SHA-256 hashes. The retained failure videos are under
+each checkpoint's `evaluations/<transition>/failure_videos/` directory. This
+run produced no Phase U candidate parent and no continuation label.
+
+The stochastic PPO metrics refine the diagnosis. Fifty-one of 156 rollout
+blocks received a nonzero corrected `legal_liftoff_bonus`, and stable-airborne
+events also occurred, but no block reached Apex. The last stochastic liftoff
+event occurred at 601,600 transitions and disappeared as the policy
+converged. Across the event-bearing blocks, mean physical-failure fraction was
+0.179 and mean angular-rate reward contribution was -30.11. Every held-out
+policy instead compresses the hip from the natural -1.20 rad position toward
+approximately -1.25 rad, holds the knee near 2.50 rad, and drives through the
+window on the ground. A six-checkpoint visual contact sheet is retained at
+`runs/two_phase/diagnostics/phase_u_hipstd020_audit_20260813/checkpoint_contact_sheet.png`.
+
+The identified reward-credit gap is that `ascent_progress` currently requires
+confirmed liftoff even after the legal window latch. Before that event, PPO
+has only a sparse one-shot liftoff bonus to learn the upward impulse. The
+fixed physical impulse audit shows that useful actions must begin around tick
+15--17, while tick-19 pulses are already too late; held-out rollouts enter the
+window around tick 18--19 and reach the retained spatial deadline around tick
+26--27. The next single hypothesis therefore changes only the bounded positive
+vertical-velocity `ascent_progress` gate from confirmed liftoff to the legal
+window latch. Window-before progress remains exactly zero, and clearance,
+Apex, success, deadline, safety, XML, action mapping, PPO, reset, and
+observation contracts remain unchanged. The design and execution plan are
+`docs/superpowers/specs/2026-08-13-phase-u-window-ascent-credit-design.md` and
+`docs/superpowers/plans/2026-08-13-phase-u-window-ascent-credit.md`.
+
 The earlier 4 kg one-million Phase U authorization was effectively exhausted at 995,200
 aligned expert-training transitions. No additional long PPO run, Phase U
 snapshot acquisition, or continuation probing is currently permitted: the
