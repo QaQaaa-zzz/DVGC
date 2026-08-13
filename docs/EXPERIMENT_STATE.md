@@ -1947,6 +1947,39 @@ polling is required. Candidate acquisition and bounded continuation probing
 remain automatically gated on real held-out Apex success and independent
 parent diversity.
 
+### Phase U weight-8 full-budget result and rate-qualified ascent (2026-08-13)
+
+The weight-8 run
+`phase_u_2kg_env256_window_ascent8_998400_20260813_seed721202` completed
+998,400 PPO-training and 1,312 fixed-evaluation transitions (999,712 total),
+with zero candidate-acquisition and continuation-labeling transitions. All 157
+sidecars validate; accounting closes for all six fixed panels; and all 48 MP4
+plus 48 NPZ artifacts match their declared hashes.
+
+No checkpoint produced liftoff, Apex, or a candidate parent. The first four
+panels ended 8/8 at the missed-liftoff deadline. At 755,200 and 998,400, all
+eight ended at `pitch_limit`, physical-failure rate was 1.0, peak angular speed
+was 24.39/23.37 rad/s, and mean summed ascent credit was +59.79/+59.92. Mean
+return became +12.06/+12.94 despite total physical failure. This is verified
+reward hacking and not progress toward a phase expert.
+
+Host MuJoCo forward audit of the final saved trace shows rear-wheel support at
+tick 22, dual-wheel separation at tick 23, and clear dual-wheel airborne state
+at tick 24. Angular speed is already about 23.4 rad/s, and pitch failure occurs
+before the required second safe airborne confirmation tick. The zero formal
+liftoff rate is therefore correct; the behavior is a high-rotation ejection.
+The representative failure video is
+`evaluations/000000998400/failure_videos/seed_910001_physical_failure.mp4`
+inside the run directory.
+
+The next single hypothesis preserves ascent weight 8 but multiplies it by a
+smooth bounded low-angular-rate quality that reaches zero at the already
+configured four-times-Apex-rate cap. It changes no coefficient, hard failure,
+physics, reset, observation, exploration, PPO setting, deadline, or success
+contract. Designs:
+`docs/superpowers/specs/2026-08-13-phase-u-rate-qualified-ascent-design.md` and
+`docs/superpowers/plans/2026-08-13-phase-u-rate-qualified-ascent.md`.
+
 - Landing -> Flight -> Takeoff -> Approach sequential shared-Actor bootstrap
 - exhaustive H1/C_L A/B
 - roll-targeted shared-Actor retention
