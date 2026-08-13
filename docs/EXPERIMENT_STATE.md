@@ -1726,6 +1726,39 @@ observation contracts remain unchanged. The design and execution plan are
 `docs/superpowers/specs/2026-08-13-phase-u-window-ascent-credit-design.md` and
 `docs/superpowers/plans/2026-08-13-phase-u-window-ascent-credit.md`.
 
+That hypothesis is now source-complete. Red-green evidence first failed because
+an in-window, pre-liftoff state with `com_vz=0.5 m/s` received zero ascent
+credit, then passed with exactly +2.0 after changing only the `ascent` gate
+from confirmed `airborne_progress` to the existing monotonic `window` latch.
+The `clearance_progress` and `apex_approach` terms remain zero in that state;
+pre-window positive vertical velocity remains zero; non-positive vertical
+velocity remains zero; and early airborne alone remains neither success nor
+termination. The hashed semantics is now
+`phase_u.window_active_ascent_credit.v4`, with reward-contract hash
+`82e02a55d1dcf7202af539922b16d881c39b3edd685189286f360c337844dcde`.
+
+Focused reward tests pass 5/5 and the Phase U/two-phase/deadline regression
+set passes 110/110. Static compilation succeeds. The first full-suite attempt
+reported 913 passes and two failure-video tests failing during CUDA graph
+creation because the just-completed PPO worker still retained GPU memory. The
+worker then exited and the completion watcher closed its terminal marker;
+GPU free memory returned to 23.2 GiB. Both exact failed tests passed 2/2 when
+rerun, and the complete suite then passed 915 tests with one pre-existing
+JAXopt deprecation warning. A separately exit-code-captured
+`scripts/local_preflight.sh` run also returned 0 with the same 915 passes and
+GPU backend confirmation. No source or test concession was made for the OOM.
+
+A fresh managed runtime gate at
+`runs/two_phase/runtime_gate/phase_u_2kg_window_ascent_credit_20260813/`
+passes in 94.50 seconds with current source fingerprint
+`f98830372982ea2438e02b84d521e89a58da1713bc2778633e28121238126a0c`,
+unchanged 2 kg XML hash, config hash, timing-explicit snapshot round trip,
+determinism, 64-transition PPO update, and 32-transition resume. This consumed
+96 runtime-integrity transitions and zero Phase U expert-training transitions.
+The next permitted action is one fresh run-bound 256-environment,
+6,400-training-transition engineering smoke. It is not yet a formal run,
+expert, Apex parent, continuation dataset, or Tube.
+
 The earlier 4 kg one-million Phase U authorization was effectively exhausted at 995,200
 aligned expert-training transitions. No additional long PPO run, Phase U
 snapshot acquisition, or continuation probing is currently permitted: the

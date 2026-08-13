@@ -820,7 +820,7 @@ def test_smoke_config_locks_base_mode_cost_stops_rewards_and_disjoint_determinis
     reward_hash = module.phase_u_reward_contract_hash(config)
     assert (
         module.PHASE_U_REWARD_SEMANTICS
-        == "phase_u.confirmed_airborne_liftoff_required.v3"
+        == "phase_u.window_active_ascent_credit.v4"
     )
     changed = config | {
         "phase_u_reward": config["phase_u_reward"]
@@ -1148,8 +1148,63 @@ def test_pre_window_takeoff_and_apex_progress_rewards_are_zero_even_when_airborn
     assert float(components["task_failure_penalty"]) == 0.0
 
 
-def test_airborne_progress_is_zero_inside_window_until_legal_liftoff():
-    """Ground-supported window entry must not unlock airborne task shaping."""
+def test_window_active_ascent_credit_precedes_confirmed_liftoff_but_not_clearance():
+    module = _module()
+    thresholds = _adapter_thresholds().apex
+    signals = ApexBandSignals(
+        stable_airborne=jp.asarray(False),
+        com_vz=jp.asarray(0.5),
+        clearance=jp.asarray(0.2),
+        roll=jp.asarray(0.0),
+        pitch=jp.asarray(0.0),
+        angular_speed=jp.asarray(0.0),
+        forward_velocity=jp.asarray(3.75),
+        obstacle_relative_x=jp.asarray(0.0),
+        illegal_contact=jp.asarray(False),
+        physical_failure=jp.asarray(False),
+    )
+
+    in_window_before_liftoff = jax.jit(module.phase_u_reward_components)(
+        signals,
+        thresholds,
+        jp.asarray(True),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.zeros((8,), jp.float32),
+        jp.zeros((8,), jp.float32),
+        module.PhaseURewardConfig(),
+    )
+    assert float(in_window_before_liftoff["ascent_progress"]) == pytest.approx(2.0)
+    assert float(in_window_before_liftoff["clearance_progress"]) == 0.0
+    assert float(in_window_before_liftoff["apex_approach"]) == 0.0
+
+    nonascending = module.phase_u_reward_components(
+        replace(signals, com_vz=jp.asarray(-0.1)),
+        thresholds,
+        jp.asarray(True),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.zeros((8,), jp.float32),
+        jp.zeros((8,), jp.float32),
+        module.PhaseURewardConfig(),
+    )
+    assert float(nonascending["ascent_progress"]) == 0.0
+
+
+def test_window_entry_unlocks_ascent_but_not_clearance_before_legal_liftoff():
+    """The legal window gives vertical credit without faking physical events."""
     adapter = _adapter(_module())
     state = adapter.reset(jax.random.PRNGKey(44))
 
@@ -1162,7 +1217,7 @@ def test_airborne_progress_is_zero_inside_window_until_legal_liftoff():
     assert not bool(supported_in_window.info["phase_expert/event/liftoff_seen"])
     assert float(
         supported_in_window.metrics["phase_expert/reward_component/ascent_progress"]
-    ) == 0.0
+    ) > 0.0
     assert float(
         supported_in_window.metrics["phase_expert/reward_component/clearance_progress"]
     ) == 0.0
@@ -1171,8 +1226,8 @@ def test_airborne_progress_is_zero_inside_window_until_legal_liftoff():
     ) == 0.0
 
 
-def test_one_wheel_support_loss_without_confirmed_airborne_cannot_unlock_progress():
-    """The observed 998.4k one-wheel bounce is telemetry, not legal liftoff."""
+def test_one_wheel_support_loss_without_confirmed_airborne_cannot_unlock_events():
+    """A one-wheel bounce may earn window ascent but is not legal liftoff."""
     adapter = _adapter(_module())
     window = jax.jit(adapter.step)(
         adapter.reset(jax.random.PRNGKey(46)),
@@ -1184,10 +1239,12 @@ def test_one_wheel_support_loss_without_confirmed_airborne_cannot_unlock_progres
     )
 
     assert not bool(one_wheel_bounce.info["phase_expert/event/liftoff_seen"])
+    assert float(
+        one_wheel_bounce.metrics["phase_expert/reward_component/ascent_progress"]
+    ) > 0.0
     for name in (
         "legal_liftoff_bonus",
         "stable_airborne_bonus",
-        "ascent_progress",
         "clearance_progress",
         "apex_approach",
     ):
@@ -1196,8 +1253,8 @@ def test_one_wheel_support_loss_without_confirmed_airborne_cannot_unlock_progres
         ) == 0.0
 
 
-def test_airborne_progress_requires_post_window_liftoff_after_early_airborne():
-    """Early airborne is diagnostic only and cannot unlock later progress."""
+def test_early_airborne_gets_no_progress_but_window_ascent_precedes_liftoff():
+    """Early airborne is diagnostic; legal-window positive vz earns ascent only."""
     adapter = _adapter(_module())
     state = adapter.reset(jax.random.PRNGKey(45))
     early = jax.jit(adapter.step)(
@@ -1213,7 +1270,10 @@ def test_airborne_progress_requires_post_window_liftoff_after_early_airborne():
     )
     assert bool(supported_window.info["phase_expert/event/jump_window_entered"])
     assert not bool(supported_window.info["phase_expert/event/liftoff_seen"])
-    for name in ("ascent_progress", "clearance_progress", "apex_approach"):
+    assert float(
+        supported_window.metrics["phase_expert/reward_component/ascent_progress"]
+    ) > 0.0
+    for name in ("clearance_progress", "apex_approach"):
         assert float(
             supported_window.metrics[f"phase_expert/reward_component/{name}"]
         ) == 0.0

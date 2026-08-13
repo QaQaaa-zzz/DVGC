@@ -325,7 +325,7 @@ _PHASE_U_REWARD_COMPONENTS = (
     "task_failure_penalty",
 )
 
-PHASE_U_REWARD_SEMANTICS = "phase_u.confirmed_airborne_liftoff_required.v3"
+PHASE_U_REWARD_SEMANTICS = "phase_u.window_active_ascent_credit.v4"
 
 
 def _interval_proximity(value: Any, lower: float, upper: float) -> Any:
@@ -359,7 +359,7 @@ def phase_u_reward_components(
         jp.asarray(signals.forward_velocity) / forward_scale, 0.0, 1.0
     )
     ascent = config.ascent_progress_weight * jp.where(
-        airborne_progress,
+        window,
         jp.clip(jp.asarray(signals.com_vz) / vertical_scale, 0.0, 1.0),
         0.0,
     )
