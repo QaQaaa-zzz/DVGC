@@ -1980,6 +1980,24 @@ contract. Designs:
 `docs/superpowers/specs/2026-08-13-phase-u-rate-qualified-ascent-design.md` and
 `docs/superpowers/plans/2026-08-13-phase-u-rate-qualified-ascent.md`.
 
+The v5 implementation is qualified with reward hash
+`e4df010a11403335e666029d3abba07702bff4cd396f2d1a9fee04d4dbb42a08`.
+RED proved the old code paid full +4 ascent credit at 2x/4x/8x the Apex rate;
+GREEN proves +4 at zero rate, +2 at 2x, and zero at/above the configured 4x
+cap. Focused regressions pass 118/118; compileall, full pytest, and preflight
+pass 919 tests. The managed runtime gate at
+`runs/two_phase/runtime_gate/phase_u_2kg_rate_qualified_ascent_20260813/`
+passes in 94.26 seconds with its 64+32 engineering transitions.
+
+The engineering smoke
+`gate_c1_phase_u_2kg_env256_rate_ascent_smoke_20260813_seed721301` completed
+6,400 training and 424 fixed-evaluation transitions (6,824 total). Both
+sidecars validate, both panels close at eight nonphysical missed-liftoff
+outcomes, and all 16 MP4/16 NPZ pairs match their hashes. Window reach was 8/8;
+liftoff/Apex/physical failure/pitch/contact/saturation were zero. PPO loss, KL,
+and distribution statistics are finite. This qualifies one fresh run-bound
+full-budget v5 experiment; it is not learnability or Tube evidence.
+
 - Landing -> Flight -> Takeoff -> Approach sequential shared-Actor bootstrap
 - exhaustive H1/C_L A/B
 - roll-targeted shared-Actor retention
