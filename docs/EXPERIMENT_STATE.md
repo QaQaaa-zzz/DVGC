@@ -1421,6 +1421,22 @@ passes in 95.32 seconds, including the fixed 64-transition update and
 Phase U expert-training transitions. The next permitted action is one new
 run-bound 256-environment, 6,400-training-transition formal-path smoke.
 
+That formal-path smoke has now completed as
+`gate_c1_phase_u_2kg_env256_airborne_gate_smoke_20260813_seed720801`. It
+consumed 6,400 PPO training and 424 fixed-evaluation transitions (6,824 total),
+with zero candidate-acquisition and continuation-labeling transitions. The
+transition-0 and transition-6,400 checkpoint sidecars pass recursive identity
+validation as `41727c68...55b3d` and `a63e63f5...af5d`. Both held-out panels
+closed as eight `takeoff_missed_liftoff_deadline` outcomes: 8/8 reached the
+legal window, 0/8 legally lifted off, and 0/8 reached Apex. Crucially,
+`ascent_progress`, `clearance_progress`, and `apex_approach` were exactly zero
+at both checkpoints. There was no physical failure, roll/pitch violation,
+illegal contact, action saturation, numerical/runtime fault, identity drift,
+or host instability. Sixteen MP4/NPZ failure pairs are retained. This smoke
+qualifies one fresh 256-environment formal run up to the aligned 998,400
+training-transition ceiling; early flat checkpoints are diagnostic only and
+do not consume that authorization prematurely.
+
 The earlier 4 kg one-million Phase U authorization was effectively exhausted at 995,200
 aligned expert-training transitions. No additional long PPO run, Phase U
 snapshot acquisition, or continuation probing is currently permitted: the

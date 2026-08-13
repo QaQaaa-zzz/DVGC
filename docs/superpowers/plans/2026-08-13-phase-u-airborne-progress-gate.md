@@ -29,13 +29,13 @@
 - Consumes: `TwoPhaseEventState.jump_window_entered`, `TwoPhaseEventState.liftoff_seen`
 - Produces: `phase_u_reward_components(..., airborne_progress_enabled, ...)`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Add direct component and adapter tests proving window-only and early-airborne
 states receive zero ascent/clearance/Apex shaping, while post-window legal
 liftoff enables it.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -47,7 +47,7 @@ Run:
 Expected: assertion failure because window entry alone currently enables
 ascent and clearance.
 
-- [ ] **Step 3: Implement the minimum gate**
+- [x] **Step 3: Implement the minimum gate**
 
 Add the explicit boolean argument to `phase_u_reward_components`; use it for
 ascent, clearance, and Apex approach. In `PhaseExpertEnvAdapter.step`, derive
@@ -59,12 +59,12 @@ airborne_progress_enabled = (
 )
 ```
 
-- [ ] **Step 4: Verify GREEN and regressions**
+- [x] **Step 4: Verify GREEN and regressions**
 
 Run the focused tests, the entire phase-expert test file, full pytest, static
 compile, and `scripts/local_preflight.sh`.
 
-- [ ] **Step 5: Commit the validated source round**
+- [x] **Step 5: Commit the validated source round**
 
 Explicitly stage only the design, plan, implementation, tests, runtime gate,
 and experiment-state record.
@@ -80,9 +80,9 @@ and experiment-state record.
 - Consumes: validated reward-contract hash and current source hashes
 - Produces: one bounded smoke and, only after it passes, one new 256-env formal run
 
-- [ ] **Step 1: Re-run the managed GPU runtime gate if its source fingerprint changes**
-- [ ] **Step 2: Preflight and run one 6,400-transition formal-path smoke**
-- [ ] **Step 3: Audit checkpoint identity, accounting, numerical state, and videos**
+- [x] **Step 1: Re-run the managed GPU runtime gate if its source fingerprint changes**
+- [x] **Step 2: Preflight and run one 6,400-transition formal-path smoke**
+- [x] **Step 3: Audit checkpoint identity, accounting, numerical state, and videos**
 - [ ] **Step 4: If smoke passes, create a new exact run-bound authorization**
 - [ ] **Step 5: Launch persistent training and use a local PID watcher without model polling**
 - [ ] **Step 6: At completion/Gate Pause, audit physical metrics and advance only if Apex parent coverage exists**
