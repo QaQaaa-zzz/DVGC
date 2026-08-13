@@ -2462,6 +2462,52 @@ not use the kinematic guideline as an action controller, and must not label any
 search trajectory an expert, reachable Tube, or safe state. No new formal PPO
 run is authorized until that diagnostic supports one new single hypothesis.
 
+That frozen feedback-braking diagnostic is now complete:
+
+```text
+run id: phase_u_2kg_feedback_braking_20260813_seed731000
+producer HEAD: 6a5f86a3d5bb0c5c77234850b399cd38533d2385
+branches: 384/384
+diagnostic environment transitions: 10,614 / 30,720 ceiling
+PPO training transitions: 0
+status: completed
+```
+
+The immutable manifest was written before outcomes and binds all 384 exact
+controller specs, the 2 kg XML, config, threshold, reward, and source hashes.
+Every branch identity and numeric field validates; the standard outcome
+account closes as 196 physical failures and 188 other failures, with zero
+success and zero timeout. Termination reasons are 196 `pitch_limit`, 131
+`takeoff_wheelie_failure`, 45 `takeoff_positive_pitch_failure`, and 12
+`takeoff_missed_liftoff_deadline`. Media selection was outcome-driven after
+the report closed. Four MP4/NPZ pairs cover the four observed reasons, and all
+hashes and trace/action timing lengths validate.
+
+Fifty branches reached liftoff, stable airborne, and ascending, but every one
+subsequently became a physical pitch-limit failure. No branch reached Apex
+membership, and no nonphysical stable-ascending branch existed. The best
+stable branch used launch bias 0.4, knee ratio 1.0, pitch gain 1.0, zero
+pitch-rate gain, and seven active ticks; it reached 0.295 m root height and
+1.061 m/s vertical speed but 12.40 rad/s angular speed and 1.38 rad pitch.
+The best nonphysical residual branch used bias 0.2 and stronger pose feedback;
+it reached 0.183 m and 0.619 m/s with 4.22 rad/s angular speed, but began too
+late to obtain confirmed liftoff and ended at the wheelie deadline. The four
+videos visually confirm the same separation: low bias produces a late modest
+rise, whereas high bias produces a rapid backward ejection.
+
+The diagnostic starts its first nonzero command one control tick after the
+formal latch becomes observable to the external adapter. In the retained
+natural trace, neutral ticks 15--18 move root x from 2.197 to 2.356 m; the
+first command is applied at tick 19. Existing fixed impulse evidence had found
+that useful launch preparation begins around ticks 15--17. The next single
+physical hypothesis is therefore timing, not coefficient magnitude: use the
+already deployable full-structure `obstacle_relative_x` to start the same
+bounded feedback launch two or three real control ticks before the latch, while
+retaining the rule that pre-window jump/ascent reward is zero and early
+airborne is neither failure nor success. This requires a second frozen
+non-PPO diagnostic before any reward or PPO change. The completed first grid
+will not be modified or retried.
+
 - Landing -> Flight -> Takeoff -> Approach sequential shared-Actor bootstrap
 - exhaustive H1/C_L A/B
 - roll-targeted shared-Actor retention
