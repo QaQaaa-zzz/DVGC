@@ -2234,6 +2234,43 @@ v7 engineering smoke; a clean smoke may authorize one new fresh-initialization
 formal v7 run capped at 998,400 aligned PPO-training transitions. No candidate
 snapshot, continuation label, formal expert, `V_up`, or Soft Tube exists yet.
 
+The fresh v7 engineering smoke has now completed under its exact run-bound
+authorization:
+
+```text
+run id: gate_c1_phase_u_2kg_env256_dual_wheel_velocity_v7_smoke_20260813_seed721501
+producer HEAD: bcbbebe9d47ccd2d3963839acc5376898c368286
+parallel environments: 256
+PPO training transitions: 6,400
+Brax evaluation transitions: 1,600
+fixed evaluation transitions: 216
+total environment transitions: 8,216
+status: completed
+```
+
+The authorization preflight executed zero transitions. The smoke then exited
+normally after one finite GPU PPO update at 301.22 training transitions/s;
+loss, value loss, entropy, KL, and policy-distribution metrics are finite. The
+transition-6,400 checkpoint sidecar validates recursively as
+`34386511...f5df` with the v7 reward identity. Closed fixed-evaluation
+accounting reports eight `other_failure`, zero physical failure, zero timeout,
+and zero success. All eight deterministic rollouts reached the legal window,
+none lifted off or reached Apex, and each ended at the unchanged
+`takeoff_missed_liftoff_deadline`. Roll/pitch violation, illegal contact,
+action saturation, NaN/Inf, OOM, provenance drift, and timing/history failure
+were absent. Each of the eight MP4 and eight aligned NPZ files matches its
+declared SHA-256 hash; they remain in the run's `failure_videos/` directory.
+
+The fixed policy received exactly zero synchronized dual-wheel upward-velocity
+credit. That is a performance observation, not a smoke failure: this run only
+qualifies reset, finite reward/update, checkpoint/warm-start contract, fixed
+evaluation, interaction accounting, and failure-media capture. Candidate
+acquisition and continuation labeling both remained zero. This clean smoke
+permits one new fresh-initialization v7 formal Phase U experiment with 256
+environments and an effective ceiling of 998,400 PPO-training transitions.
+The formal authorization must bind the next committed HEAD and remains
+non-promoting; it does not declare `pi_up_star`, `V_up`, or a Soft Tube.
+
 - Landing -> Flight -> Takeoff -> Approach sequential shared-Actor bootstrap
 - exhaustive H1/C_L A/B
 - roll-targeted shared-Actor retention
