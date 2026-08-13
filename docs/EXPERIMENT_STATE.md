@@ -1916,6 +1916,37 @@ This clean smoke permits one fresh-initialization, exact run-bound formal
 weight-8 authorization up to 998,400 aligned transitions; it does not permit
 checkpoint resume or a Tube claim.
 
+That authorization has launched one fresh persistent formal experiment:
+
+```text
+run id: phase_u_2kg_env256_window_ascent8_998400_20260813_seed721202
+producer HEAD: 9641c0e2c73238ef3681e0fc987fffcce4420883
+source-tree hash: 3b8b730f84a4c06d9ffcbdf9c725c786aef63d195d7639f160e3532ff753f7f7
+reward-contract hash: 353ef9bad2d3cdbb9cf8017b5267f84c8167d0ad072c4d51d040558a2ff153c7
+training-config hash: cc0bef63bf47f638a2864730c05e3e30e3a7df0959d4af399cdd16c75070b155
+worker PID: 856031
+watcher PID: 858229
+parallel environments: 256
+authorized/effective training ceiling: 1,000,000 / 998,400
+effective checkpoints: 0/102,400/256,000/505,600/755,200/998,400
+status: runs/two_phase/phase_experts/phase_u_2kg_env256_window_ascent8_998400_20260813_seed721202/status.json
+metrics: runs/two_phase/phase_experts/phase_u_2kg_env256_window_ascent8_998400_20260813_seed721202/metrics.jsonl
+log: runs/two_phase/process_logs/phase_u_2kg_env256_window_ascent8_998400_20260813_seed721202.log
+completion marker: runs/two_phase/process_logs/phase_u_2kg_env256_window_ascent8_998400_20260813_seed721202.finished
+```
+
+Preflight consumed zero transitions and closed the 998,400 training, 9,600
+fixed-evaluation, 38,400 candidate-acquisition, 38,400 continuation-labeling,
+and 1,084,800 total ceilings. The detached startup audit found the worker live
+on the GPU with `status=running`, 216 transition-0 fixed-evaluation
+transitions, a recursively valid sidecar, and matching source, reward, XML,
+threshold, config, and ordered action-std identities. The worker uses 256
+parallel environments to retain host stability. The watcher checks process
+existence once per minute and writes only a terminal marker; no repeated log
+polling is required. Candidate acquisition and bounded continuation probing
+remain automatically gated on real held-out Apex success and independent
+parent diversity.
+
 - Landing -> Flight -> Takeoff -> Approach sequential shared-Actor bootstrap
 - exhaustive H1/C_L A/B
 - roll-targeted shared-Actor retention
