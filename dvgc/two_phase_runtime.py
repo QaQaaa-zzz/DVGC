@@ -108,6 +108,7 @@ class TwoPhaseGeometry:
     robot_geom_sizes: Any
     robot_geom_body_ids: np.ndarray
     wheel_mask: Any
+    wheel_geom_positions: np.ndarray
     body_mask: Any
     obstacle_geom_id: int
     obstacle_front_x: float
@@ -268,9 +269,8 @@ def extract_apex_band_signals(
     _, qvel, roll, pitch = _root_pose_velocity(state, geometry)
     physical = _physical_geometry_values(state, geometry)
     clearances = physical["terrain_clearances"]
-    wheel_mask = jp.asarray(geometry.wheel_mask)
     minimum_wheel_terrain_clearance = jp.min(
-        jp.where(wheel_mask, clearances, jp.inf), axis=-1
+        wheel_terrain_clearances(state, geometry), axis=-1
     )
     illegal_penetration = jp.any(
         clearances < -geometry.body_penetration_tolerance, axis=-1
@@ -290,6 +290,16 @@ def extract_apex_band_signals(
         obstacle_relative_x=physical["structure"].obstacle_relative_x,
         illegal_contact=illegal_penetration,
         physical_failure=physical_failure,
+    )
+
+
+def wheel_terrain_clearances(state: Any, geometry: TwoPhaseGeometry) -> Any:
+    """Return both collision-wheel terrain clearances in manifest order."""
+    clearances = _physical_geometry_values(state, geometry)["terrain_clearances"]
+    return jp.take(
+        clearances,
+        jp.asarray(geometry.wheel_geom_positions, jp.int32),
+        axis=-1,
     )
 
 
@@ -526,6 +536,11 @@ def build_two_phase_geometry(model: mujoco.MjModel, cfg: Any) -> TwoPhaseGeometr
     wheel_mask = np.asarray(
         [int(body_id) in wheel_body_ids for body_id in robot_body_ids], dtype=bool
     )
+    wheel_geom_positions = np.flatnonzero(wheel_mask).astype(np.int32)
+    if wheel_geom_positions.shape != (2,):
+        raise ValueError(
+            "authoritative geometry must contain exactly two collision wheels"
+        )
     obstacle = int(model.geom("step").id)
     obstacle_pos = np.asarray(model.geom_pos[obstacle], dtype=np.float64)
     obstacle_size = np.asarray(model.geom_size[obstacle], dtype=np.float64)
@@ -536,6 +551,7 @@ def build_two_phase_geometry(model: mujoco.MjModel, cfg: Any) -> TwoPhaseGeometr
         robot_geom_sizes=jp.asarray(model.geom_size[robot_ids], jp.float32),
         robot_geom_body_ids=robot_body_ids,
         wheel_mask=jp.asarray(wheel_mask),
+        wheel_geom_positions=wheel_geom_positions,
         body_mask=jp.asarray(~wheel_mask),
         obstacle_geom_id=obstacle,
         obstacle_front_x=float(obstacle_pos[0] - obstacle_size[0]),

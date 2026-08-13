@@ -2145,6 +2145,95 @@ acquisition and bounded continuation probing remain automatically gated on real
 held-out Apex success and independent parent diversity. Nothing here declares
 `pi_up_star`, formal `V_up`, or a Soft Tube.
 
+The v6 formal experiment subsequently completed its entire authorized budget:
+
+```text
+status: completed
+PPO training transitions: 998,400
+fixed evaluation transitions: 1,296
+candidate acquisition transitions: 0
+continuation labeling transitions: 0
+fixed checkpoint panels: 6
+```
+
+Every fixed panel (0, 102,400, 256,000, 505,600, 755,200, and 998,400)
+reached the legal jump window in 8/8 rollouts, but all 48 rollouts remained
+grounded and ended at `takeoff_missed_liftoff_deadline`. Liftoff, stable
+airborne, ascending, clearance success, and Apex success were 0/8 at every
+panel. Physical failure, roll violation, pitch violation, illegal contact,
+timeout, and action saturation were also zero. All six outcome accounts close;
+157/157 checkpoint sidecars validate recursively; and all 48 MP4 plus 48
+timing-aligned NPZ failure artifacts exist and match their declared SHA-256
+hashes. Representative 0/505,600/998,400 videos visually show the same stable
+two-wheel-supported approach. The complete failure media remain under each
+`evaluations/<transition>/failure_videos/` directory in the run above.
+
+The v6 height component did not provide useful launch-direction credit. Fixed
+policies earned only about 0.0003--0.089 summed dual-wheel-height reward, and
+the final policy earned about 0.019. Host MuJoCo forward reconstruction of the
+saved qpos/qvel states found post-window minimum-wheel-clearance excursions of
+only about -0.00017 to +0.00018 m while both wheels remained visibly
+supported. Thus the small positive component was solver-scale contact jitter,
+not physical dual-wheel lift. Across those grounded traces, consecutive-tick
+minimum-of-two-wheel upward support-bound velocity had a maximum of only
+0.0106 m/s. The policy instead converged to about +9 forward reward, stable
+ground travel, and one -20 task deadline penalty. Training stochastic episodes
+had previously exposed sparse liftoff/stable-airborne events, so absence of all
+exploration was rejected as the root cause.
+
+The next single hypothesis is implemented as the v7 synchronized
+dual-wheel-upward-velocity component. The pure-JAX runtime now returns the two
+collision-wheel terrain clearances in immutable geometry-manifest order. The
+Phase U adapter stores the exact reset vector, differences the current and
+immediately previous real control tick, divides by `ctrl_dt`, and takes the
+minimum of the two wheel velocities. This timing state lives only under the
+adapter-owned `phase_expert/*` namespace; `dvgc/env.py`, environment reward,
+termination, observation/history, action mapping, XML, and event latches are
+unchanged.
+
+The stable v7 reward fields are:
+
+```text
+dual_wheel_lift_progress_weight: 4.0
+dual_wheel_upward_velocity_deadband: 0.02 m/s
+dual_wheel_upward_velocity_target: 0.20 m/s
+```
+
+The score is exactly zero at/below the 0.02 m/s evidence-bounded deadband,
+linear to full credit at the existing 0.20 m/s takeoff-liftoff velocity
+threshold, gated by the legal window, and multiplied by the unchanged angular-
+rate quality. One-wheel rise earns zero. The component does not imply liftoff,
+Apex membership, success, done, or continuation feasibility. Reward semantics
+are `phase_u.synchronized_dual_wheel_upward_velocity_credit.v7`, and the exact
+reward-contract hash is
+`07f74c323a250d9983272f4c45fa49ab9c62911e057031fa0bb334f442dbd31d`.
+
+RED produced 20 expected failures for the absent fields/reward/timing state.
+GREEN passes 198 focused Phase U/runtime/semantics/budget tests. Static
+compilation passes. A first monolithic full-suite attempt after the completed
+worker exited accumulated Warp CUDA graph cache and ended with 13 OOM failures
+after 932 passes; both affected files passed in clean GPU processes, and the
+authoritative clean local preflight then passed with exit code 0 and 945 tests
+on the GPU. No source workaround, CPU substitution, environment change, or
+test weakening was made.
+
+A fresh managed v7 runtime gate passes and is current at:
+
+```text
+runs/two_phase/runtime_gate/phase_u_2kg_dual_wheel_velocity_v7_20260813.json
+```
+
+It completed in 94.37 seconds with source fingerprint
+`a958a3818ceb6eb110f8e1e4bee81a477735fe72789d8d45eec034baa537d180`,
+the unchanged XML hash `e2762b...9192`, and PASS for model load, observation
+metrics, snapshot round-trip, policy determinism, composite handoff, and the
+fixed 64-transition update plus 32-transition resume smoke. This consumed 96
+runtime-integrity transitions and zero new formal Phase U training
+transitions. The next permitted action is one fresh run-bound 256-environment
+v7 engineering smoke; a clean smoke may authorize one new fresh-initialization
+formal v7 run capped at 998,400 aligned PPO-training transitions. No candidate
+snapshot, continuation label, formal expert, `V_up`, or Soft Tube exists yet.
+
 - Landing -> Flight -> Takeoff -> Approach sequential shared-Actor bootstrap
 - exhaustive H1/C_L A/B
 - roll-targeted shared-Actor retention

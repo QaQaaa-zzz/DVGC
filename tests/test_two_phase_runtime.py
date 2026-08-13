@@ -24,6 +24,7 @@ from dvgc.two_phase_runtime import (
     geometry_manifest,
     validate_geometry_manifest,
     initial_two_phase_event_state,
+    wheel_terrain_clearances,
     _robot_geom_state,
 )
 from dvgc.two_phase_semantics import (
@@ -61,6 +62,7 @@ def _synthetic_geometry():
         robot_geom_sizes=jp.asarray([[0.1, 0.1, 0.1]] * 3),
         robot_geom_body_ids=np.asarray([1, 2, 3], np.int32),
         wheel_mask=jp.asarray([True, True, False]),
+        wheel_geom_positions=np.asarray([0, 1], np.int32),
         body_mask=jp.asarray([False, False, True]),
         root_qpos_adr=0,
         root_dof_adr=0,
@@ -287,6 +289,57 @@ def test_minimum_wheel_clearance_signal_supports_jit_and_batched_vmap():
     )
 
     np.testing.assert_allclose(result, [0.0, 0.015, 0.02], atol=1e-6)
+
+
+def test_wheel_terrain_clearances_preserve_collision_manifest_order():
+    geometry = _synthetic_geometry()
+    state = _fake_state(
+        geom_x=[3.2, 3.3, 3.1],
+        geom_z=[0.115, 0.13, 0.50],
+        x=3.0,
+        vx=2.0,
+        vz=0.05,
+    )
+
+    clearances = wheel_terrain_clearances(state, geometry)
+
+    np.testing.assert_allclose(clearances, [0.015, 0.03], atol=1e-6)
+    assert float(extract_apex_band_signals(
+        state, geometry
+    ).minimum_wheel_terrain_clearance) == pytest.approx(0.015)
+
+
+def test_wheel_terrain_clearances_support_jit_and_batched_vmap():
+    geometry = _synthetic_geometry()
+
+    def extract(geom_z):
+        return wheel_terrain_clearances(
+            _fake_state(
+                geom_x=[3.2, 3.3, 3.1],
+                geom_z=geom_z,
+                x=3.0,
+                vx=2.0,
+                vz=0.05,
+            ),
+            geometry,
+        )
+
+    result = jax.jit(jax.vmap(extract))(
+        jp.asarray(
+            [
+                [0.10, 0.11, 0.50],
+                [0.115, 0.13, 0.50],
+                [0.14, 0.12, 0.50],
+            ],
+            jp.float32,
+        )
+    )
+
+    np.testing.assert_allclose(
+        result,
+        [[0.0, 0.01], [0.015, 0.03], [0.04, 0.02]],
+        atol=1e-6,
+    )
 
 
 @pytest.mark.parametrize(
