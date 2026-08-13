@@ -1891,6 +1891,31 @@ reward contract remains fixed. Design and execution plan:
 `docs/superpowers/specs/2026-08-13-phase-u-window-ascent-weight8-design.md` and
 `docs/superpowers/plans/2026-08-13-phase-u-window-ascent-weight8.md`.
 
+The weight-8 implementation is qualified at source HEAD `b61861a`, with reward
+contract hash
+`353ef9bad2d3cdbb9cf8017b5267f84c8167d0ad072c4d51d040558a2ff153c7`.
+The intended RED failed at the old value 4.0; GREEN passed after changing only
+the two stable Phase U config values. Focused regressions pass 114/114,
+compileall passes, full pytest passes 915 tests, and local preflight passes the
+same 915 tests on the GPU backend. A fresh managed runtime gate at
+`runs/two_phase/runtime_gate/phase_u_2kg_window_ascent_weight8_20260813/`
+passes in 94.49 seconds, including 64 update and 32 resume transitions.
+
+The run-bound engineering smoke
+`gate_c1_phase_u_2kg_env256_window_ascent8_smoke_20260813_seed721201`
+then completed 6,400 PPO-training and 440 fixed-evaluation transitions (6,840
+total). Both checkpoint sidecars validate; closed accounting covers both fixed
+panels; and all 16 MP4 plus 16 aligned NPZ artifacts match their declared
+hashes. Both panels reached the legal window in 8/8 rollouts and ended at the
+unchanged missed-liftoff deadline, with zero liftoff, Apex, physical failure,
+roll/pitch violation, illegal contact, or action saturation. PPO loss, KL, and
+policy-distribution statistics are finite. The one stochastic block had
+physical-failure fraction 1.0 before reaching the window, which is descriptive
+smoke performance rather than an integrity failure or a learnability result.
+This clean smoke permits one fresh-initialization, exact run-bound formal
+weight-8 authorization up to 998,400 aligned transitions; it does not permit
+checkpoint resume or a Tube claim.
+
 - Landing -> Flight -> Takeoff -> Approach sequential shared-Actor bootstrap
 - exhaustive H1/C_L A/B
 - roll-targeted shared-Actor retention
