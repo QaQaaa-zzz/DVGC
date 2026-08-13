@@ -1314,7 +1314,34 @@ candidate/continuation interaction ceilings as PPO training.
 
 ## Next permitted action
 
-The one-million Phase U authorization is effectively exhausted at 995,200
+On 2026-08-13, after two host crashes were reported, the formal Phase U PPO
+layout was conservatively reduced from 512 to 256 parallel environments. The
+batch/minibatch relationship remains fixed at 16/16, so each minibatch still
+contains 400 environment samples (`unroll_length=25`); the aligned rollout
+block is now 6,400 total environment transitions. Training seed count,
+checkpoint cadence, and per-checkpoint acquisition ceilings were reduced to
+the same 256-environment layout. The current exploration hypothesis changes
+only the hip initial action standard deviation from 0.25 to 0.10; reward,
+reset, optimizer, network, horizon, XML, action mapping, and safety limits are
+unchanged. No 512-environment formal run may be launched or resumed.
+
+The 256-environment static/runtime qualification passes: 73 targeted tests,
+910 full tests, `scripts/local_preflight.sh`, and the managed GPU runtime gate.
+The runtime gate selected `cuda:0` on the RTX 4090 D and passed its fixed
+64-transition update plus 32-transition resume in 96.46 seconds. An earlier
+sandbox-only attempt could see only the CPU backend and consumed no Phase U
+training transitions; its temporary failure report was replaced by the
+successful GPU evidence in `docs/RUNTIME_GATE.json`.
+
+The next permitted dynamic action is one 256-environment, one-block (6,400
+training-transition) Phase U engineering smoke. Only after its checkpoint,
+resume, fixed-evaluation, accounting, numerical, and host-stability audits pass
+may a fresh run-bound formal authorization be created, up to 998,400 aligned
+training transitions. This safety-layout change establishes a new baseline;
+it is not a strict single-variable performance comparison with prior 512-env
+runs.
+
+The earlier 4 kg one-million Phase U authorization was effectively exhausted at 995,200
 aligned expert-training transitions. No additional long PPO run, Phase U
 snapshot acquisition, or continuation probing is currently permitted: the
 remaining 4,800 transitions cannot form one valid 512-environment rollout

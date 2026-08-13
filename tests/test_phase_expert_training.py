@@ -405,8 +405,8 @@ def test_phase_u_checkpoint_tracker_claims_each_aligned_milestone_once():
     assert tracker.claimed_effective == (0, 100_800, 251_200)
 
 
-def test_phase_u_training_level_uses_remaining_aligned_cap_and_three_fixed_evaluations(tmp_path):
-    """The third hypothesis must keep cumulative formal training below one million."""
+def test_phase_u_training_level_uses_env256_safety_layout_and_three_fixed_evaluations(tmp_path):
+    """Formal Phase U preserves minibatch size while reducing host load to 256 envs."""
     module = _module()
     config_path = "configs/phase_expert_phase_u.json"
     config = json.loads(Path(config_path).read_text(encoding="utf-8"))
@@ -420,18 +420,19 @@ def test_phase_u_training_level_uses_remaining_aligned_cap_and_three_fixed_evalu
     )
     validated = module.validate_phase_expert_run_spec(spec, preflight_only=True)
     budget = validated.interaction_budget
-    assert config["ppo_layout"]["num_parallel_envs"] == 512
+    assert config["ppo_layout"]["num_parallel_envs"] == 256
     assert config["ppo_layout"]["batch_size"] == 16
-    assert config["ppo_layout"]["num_minibatches"] == 32
-    assert budget.training.ppo_rollout_block_size == 12_800
-    assert budget.training.ppo_rollout_blocks == 15
+    assert config["ppo_layout"]["num_minibatches"] == 16
+    assert config["training_seed_count"] == 256
+    assert budget.training.ppo_rollout_block_size == 6_400
+    assert budget.training.ppo_rollout_blocks == 30
     assert budget.training.effective_total_transitions == 192_000
     assert budget.brax_evaluation_transition_ceiling == 0
     assert budget.fixed_evaluation_transition_ceiling == 4_800
     assert budget.combined_transition_ceiling == 196_800
-    assert budget.candidate_acquisition_transition_ceiling == 38_400
-    assert budget.continuation_labeling_transition_ceiling == 38_400
-    assert budget.total_environment_transition_ceiling == 273_600
+    assert budget.candidate_acquisition_transition_ceiling == 19_200
+    assert budget.continuation_labeling_transition_ceiling == 19_200
+    assert budget.total_environment_transition_ceiling == 235_200
     with pytest.raises(ValueError, match="ceiling"):
         module.validate_phase_expert_run_spec(
             replace(
@@ -452,8 +453,8 @@ def test_phase_u_configs_select_explicit_exploration_and_reward_hypothesis():
     ):
         config = json.loads(Path(path).read_text(encoding="utf-8"))
         resolved = module.resolve_policy_initial_action_std(config)
-        assert resolved == (0.05, 0.05, 0.25, 0.05)
-        assert module._jsonable(resolved) == [0.05, 0.05, 0.25, 0.05]
+        assert resolved == (0.05, 0.05, 0.10, 0.05)
+        assert module._jsonable(resolved) == [0.05, 0.05, 0.10, 0.05]
         reward = module.resolve_phase_u_reward_config(config)
         assert reward.angular_rate_penalty_weight == 1.0
         assert reward.angular_rate_penalty_cap_ratio == 4.0
@@ -527,8 +528,8 @@ def test_formal_phase_u_warm_start_budget_uses_only_requested_remaining_blocks(t
 
     assert budget.requested_total_transitions == 742_400
     assert budget.effective_total_transitions == 742_400
-    assert budget.ppo_rollout_blocks == 58
-    assert budget.num_evals == 59
+    assert budget.ppo_rollout_blocks == 116
+    assert budget.num_evals == 117
 
 
 def test_phase_u_resume_milestones_are_cumulative_and_do_not_repeat_parent_checkpoint():
