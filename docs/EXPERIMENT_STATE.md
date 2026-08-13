@@ -1759,6 +1759,26 @@ The next permitted action is one fresh run-bound 256-environment,
 6,400-training-transition engineering smoke. It is not yet a formal run,
 expert, Apex parent, continuation dataset, or Tube.
 
+That engineering smoke completed as
+`gate_c1_phase_u_2kg_env256_window_ascent_smoke_20260813_seed721101`. It used
+6,400 PPO-training and 432 fixed-evaluation transitions, 6,832 total, with
+zero candidate and continuation transitions. Both checkpoint sidecars pass
+recursive validation and bind reward hash `82e02a55...44dcde`; both fixed
+panels close as eight `takeoff_missed_liftoff_deadline` other-failures with
+zero physical failure, timeout, success, roll/pitch violation, illegal
+contact, or action saturation. All 16 MP4 and 16 aligned NPZ artifacts exist
+and match their declared hashes. The single stochastic PPO block has finite
+loss, KL, policy distribution, and update statistics at 448.45 training
+transitions/s. It ended with physical-failure fraction 1.0 before reaching the
+window, so it did not exercise the new ascent term; one smoke block is
+engineering qualification, not a learnability conclusion. No numerical,
+optimizer, snapshot, accounting, media, identity, or timing/history failure
+occurred. Under the approved difficult-task rule, low one-block physical
+performance does not block one fresh full-budget experiment. The next
+permitted action is a new exact run-bound authorization for at most 998,400
+PPO-training transitions with 256 environments and fixed checkpoints; it must
+use fresh initialization and must not resume the completed v3 reward run.
+
 The earlier 4 kg one-million Phase U authorization was effectively exhausted at 995,200
 aligned expert-training transitions. No additional long PPO run, Phase U
 snapshot acquisition, or continuation probing is currently permitted: the
