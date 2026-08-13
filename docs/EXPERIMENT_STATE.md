@@ -1341,6 +1341,28 @@ training transitions. This safety-layout change establishes a new baseline;
 it is not a strict single-variable performance comparison with prior 512-env
 runs.
 
+That qualification is now complete. A low-load 64-environment smoke first
+consumed 6,400 training, 1,600 Brax-evaluation, and 224 fixed-evaluation
+transitions and passed the finite-update/checkpoint/video contracts. Because
+that stable smoke config did not exercise the formal 256-environment layout,
+it was not represented as doing so. A second run used the exact formal path
+with 256 parallel environments, 16 minibatches, and one 6,400-transition
+rollout block. It completed with 216 fixed-evaluation transitions; transition-0
+and transition-6,400 checkpoint sidecars passed recursive identity validation
+(`114352fd...cf87ad` and `8981fd8b...9b5f3`). The GPU returned to 956 MiB at
+38 C after completion. There was no OOM, broadphase overflow, NaN/Inf, timing
+or history mismatch, hash drift, physical failure, illegal contact, action
+saturation, or host crash. All held-out rollouts reached the legal jump window
+and ended at the retained missed-liftoff deadline; liftoff and Apex success were
+0/8, as expected for an engineering smoke. Failure MP4/NPZ pairs are retained
+under both ignored run directories.
+
+The 256-environment formal path is therefore engineering-qualified for one new
+run-bound Phase U authorization. The hip-std-0.10 hypothesis remains unproven
+scientifically until fixed checkpoint evaluations exist; snapshot acquisition
+and continuation probing remain conditional on real Apex-success parent
+coverage.
+
 The earlier 4 kg one-million Phase U authorization was effectively exhausted at 995,200
 aligned expert-training transitions. No additional long PPO run, Phase U
 snapshot acquisition, or continuation probing is currently permitted: the
