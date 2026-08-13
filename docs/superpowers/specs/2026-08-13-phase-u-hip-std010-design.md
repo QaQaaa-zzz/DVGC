@@ -39,7 +39,7 @@ deviation:
 [0.05, 0.05, 0.10, 0.05]
 ```
 
-Across 512 environments, a zero-mean 0.10 prior still samples +0.10 with about
+Across 256 environments, a zero-mean 0.10 prior still samples +0.10 with about
 one-sigma frequency and +0.15 with finite coverage. It sharply reduces the
 large-action tail and requires useful low-pitch departures to be represented
 by movement of the learned mean instead of persistent high variance.
@@ -61,6 +61,6 @@ by movement of the learned mean instead of persistent high variance.
 Red-green tests bind both stable configs to the ordered standard deviation
 vector and keep invalid-vector/hash/manifest checks active. Then run focused
 tests, compileall, full pytest, local preflight, and a fresh runtime gate. A
-clean 512-environment smoke may authorize one fresh 998,400-transition formal
+clean 256-environment smoke may authorize one fresh 998,400-transition formal
 run with unchanged sparse checkpoint monitoring and evidence-gated snapshot /
 continuation acquisition.

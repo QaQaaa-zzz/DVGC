@@ -550,6 +550,17 @@ mean rather than survive only as stochastic tail samples. Reward, reset,
 physics, safety, PPO, thresholds, and fixed evaluation remain unchanged. No run
 has started for this hypothesis.
 
+After two workstation crashes during the broader 512-environment program, the
+user explicitly requested a smaller parallel layout. No additional 512-env PPO
+run may be launched or resumed. The selected safety layout is 256 environments
+and 16 minibatches, preserving 400 samples per minibatch while changing the
+native rollout block from 12,800 to 6,400 transitions. This is an operational
+baseline revision, so the pending hip-std-0.10 run is not claimed as a strict
+single-variable comparison to the old 512-env runs. Reward, physics, reset,
+observations, optimizer hyperparameters, network, horizon, fixed evaluation,
+and safety gates remain fixed. A 256-env smoke and fresh run-bound authorization
+are required before formal training.
+
 The method contract was revised on 2026-08-10 to make the phase experts local
 continuation controllers and state-distribution generators rather than final
 deployment outputs. Expert training and feasibility-data acquisition now

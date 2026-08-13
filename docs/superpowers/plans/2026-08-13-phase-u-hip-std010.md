@@ -7,7 +7,7 @@
 4. Run focused tests, compileall, full pytest, local preflight, and a fresh
    managed runtime gate.
 5. Commit and push validated source/evidence without ignored run artifacts.
-6. Run one fresh 512-env 12,800-transition smoke and audit checkpoint,
+6. Run one fresh 256-env 6,400-transition smoke and audit checkpoint,
    accounting, failures, and videos.
 7. If clean, create a fresh run-bound authorization, launch up to 998,400
    transitions, and inspect only fixed milestones or terminal state.
