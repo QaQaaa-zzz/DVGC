@@ -325,7 +325,7 @@ _PHASE_U_REWARD_COMPONENTS = (
     "task_failure_penalty",
 )
 
-PHASE_U_REWARD_SEMANTICS = "phase_u.window_active_ascent_credit.v4"
+PHASE_U_REWARD_SEMANTICS = "phase_u.rate_qualified_window_ascent_credit.v5"
 
 
 def _interval_proximity(value: Any, lower: float, upper: float) -> Any:
@@ -358,9 +358,19 @@ def phase_u_reward_components(
     forward = config.forward_propulsion_weight * jp.clip(
         jp.asarray(signals.forward_velocity) / forward_scale, 0.0, 1.0
     )
+    ascent_rate_limit = jp.maximum(
+        thresholds.max_angular_speed * config.angular_rate_penalty_cap_ratio,
+        1.0e-6,
+    )
+    ascent_rate_quality = jp.clip(
+        1.0 - jp.asarray(signals.angular_speed) / ascent_rate_limit,
+        0.0,
+        1.0,
+    )
     ascent = config.ascent_progress_weight * jp.where(
         window,
-        jp.clip(jp.asarray(signals.com_vz) / vertical_scale, 0.0, 1.0),
+        jp.clip(jp.asarray(signals.com_vz) / vertical_scale, 0.0, 1.0)
+        * ascent_rate_quality,
         0.0,
     )
     clearance_denominator = jp.maximum(

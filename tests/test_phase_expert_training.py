@@ -822,7 +822,7 @@ def test_smoke_config_locks_base_mode_cost_stops_rewards_and_disjoint_determinis
     reward_hash = module.phase_u_reward_contract_hash(config)
     assert (
         module.PHASE_U_REWARD_SEMANTICS
-        == "phase_u.window_active_ascent_credit.v4"
+        == "phase_u.rate_qualified_window_ascent_credit.v5"
     )
     changed = config | {
         "phase_u_reward": config["phase_u_reward"]
@@ -1203,6 +1203,51 @@ def test_window_active_ascent_credit_precedes_confirmed_liftoff_but_not_clearanc
         module.PhaseURewardConfig(),
     )
     assert float(nonascending["ascent_progress"]) == 0.0
+
+
+@pytest.mark.parametrize(
+    ("angular_rate_ratio", "expected"),
+    [(0.0, 4.0), (2.0, 2.0), (4.0, 0.0), (8.0, 0.0)],
+)
+def test_window_ascent_credit_is_smoothly_qualified_by_angular_rate(
+    angular_rate_ratio, expected
+):
+    module = _module()
+    thresholds = _adapter_thresholds().apex
+    signals = ApexBandSignals(
+        stable_airborne=jp.asarray(False),
+        com_vz=jp.asarray(0.5),
+        clearance=jp.asarray(0.2),
+        roll=jp.asarray(0.0),
+        pitch=jp.asarray(0.0),
+        angular_speed=jp.asarray(
+            angular_rate_ratio * thresholds.max_angular_speed
+        ),
+        forward_velocity=jp.asarray(3.75),
+        obstacle_relative_x=jp.asarray(0.0),
+        illegal_contact=jp.asarray(False),
+        physical_failure=jp.asarray(False),
+    )
+    components = jax.jit(module.phase_u_reward_components)(
+        signals,
+        thresholds,
+        jp.asarray(True),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.asarray(False),
+        jp.zeros((8,), jp.float32),
+        jp.zeros((8,), jp.float32),
+        module.PhaseURewardConfig(
+            ascent_progress_weight=8.0,
+            angular_rate_penalty_cap_ratio=4.0,
+        ),
+    )
+    assert float(components["ascent_progress"]) == pytest.approx(expected)
 
 
 def test_window_entry_unlocks_ascent_but_not_clearance_before_legal_liftoff():
