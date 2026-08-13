@@ -2359,6 +2359,51 @@ permitted action is one fresh run-bound 256-environment v8 engineering smoke.
 No v8 formal training, candidate snapshot, continuation label, formal expert,
 `V_up`, or Soft Tube exists yet.
 
+That fresh v8 engineering smoke has now completed under its exact run-bound
+authorization:
+
+```text
+run id: gate_c1_phase_u_2kg_env256_coordinated_joint_v8_smoke_20260813_seed721601
+parallel environments: 256
+PPO training transitions: 6,400
+Brax evaluation transitions: 1,600
+fixed evaluation transitions: 216
+total environment transitions: 8,216
+status: completed
+```
+
+The one-block GPU update, reset, reward, checkpoint, and fixed evaluation all
+remained finite. The transition-6,400 checkpoint sidecar validates recursively
+as `74d38c57...a71d5a` and binds reward-contract hash
+`43c37e22...0c866`. Closed fixed-evaluation accounting reports eight
+`other_failure`, zero physical failure, zero timeout, and zero success. All
+eight deterministic rollouts reached the legal jump window; none lifted off,
+became stably airborne, ascended, cleared the obstacle, or reached Apex, and
+all ended at the unchanged `takeoff_missed_liftoff_deadline`. Roll/pitch
+violation, illegal contact, action saturation, NaN/Inf, provenance drift, and
+timing/history failure were absent. Each of the eight MP4 and eight aligned NPZ
+files exists under the run's `failure_videos/` directory and matches its
+declared SHA-256 hash.
+
+The fixed policy earned zero coordinated-joint propulsion credit and had mean
+return -11.812. The one-block Brax training metric `training/kl_mean` was a
+finite 1.144. Phase-U's approved automatic checkpoint gate has no standalone
+KL pause threshold; it pauses on nonfinite evaluation, severe action
+saturation, held-out physical degradation, or reward-hacking evidence, while
+a three-window plateau is recorded without early pause. The high smoke KL is
+therefore retained as an optimization diagnostic, not used to silently change
+learning rate, PPO layout, or the single v8 reward hypothesis.
+
+This is engineering qualification only. It authorizes one new
+fresh-initialization v8 formal run with 256 environments and an aligned
+998,400 PPO-training-transition ceiling, provided a new manifest is bound to
+the post-smoke-evidence committed HEAD and passes zero-transition preflight.
+The formal input may differ from v7 only by replacing the three v7 wheel
+velocity fields with the three v8 coordinated-joint fields. Candidate
+acquisition and bounded continuation probing remain gated on real Apex success
+and independent parent coverage; this smoke does not declare `pi_up_star`,
+formal `V_up`, a Soft Tube, Phase-D training, or unified PPO.
+
 - Landing -> Flight -> Takeoff -> Approach sequential shared-Actor bootstrap
 - exhaustive H1/C_L A/B
 - roll-targeted shared-Actor retention
