@@ -1,0 +1,85 @@
+{
+  "schema": "jit_phase_u_engineering_smoke_v1",
+  "phase": "propulsion_ascent",
+  "model": {
+    "xml_path": "assets/orange_bike_4kg_horizontal.xml",
+    "xml_sha256": "e2762bec49fdce61eff6ad01b6a67925934d8997b53929b0a67ace7f44109192",
+    "reference_path": "data/reference_jump.csv",
+    "reference_sha256": "612fe758eb1042481b9c7642cc9b92d3e9c14b4a75c9deaf5340183c928bc41f",
+    "mjx_impl": "warp",
+    "naconmax": 4096,
+    "njmax": 256
+  },
+  "action": {
+    "base_rear_speed": 12.0,
+    "rear_speed_delta": 12.0,
+    "knee_target_delta": 0.2
+  },
+  "reset": {
+    "keyframe": "initial_state",
+    "initial_forward_velocity": 2.0
+  },
+  "events": {
+    "window_relative_x_min": 0.18,
+    "window_relative_x_max": 1.25,
+    "airborne_confirm_ticks": 2,
+    "stable_airborne_min_clearance": 0.02,
+    "ascending_min_vertical_velocity": 0.05
+  },
+  "apex": {
+    "max_abs_vertical_velocity": 0.0693,
+    "min_clearance": 0.1176,
+    "max_abs_roll": 0.0744,
+    "max_abs_pitch": 0.0556,
+    "max_angular_speed": 1.2467,
+    "min_forward_velocity": 3.5741,
+    "relative_x_min": 0.1547,
+    "relative_x_max": 0.3697
+  },
+  "physical_limits": {
+    "max_abs_roll": 0.6108652381980153,
+    "max_abs_pitch": 1.3089969389957472,
+    "max_backward_distance": 1.0,
+    "platform_back_margin": 0.0
+  },
+  "reward": {
+    "drive_weight": 0.5,
+    "window_bonus": 2.0,
+    "liftoff_bonus": 4.0,
+    "stable_airborne_bonus": 8.0,
+    "ascent_weight": 6.0,
+    "clearance_weight": 6.0,
+    "apex_progress_weight": 10.0,
+    "apex_success_bonus": 50.0,
+    "attitude_penalty_weight": 1.0,
+    "rate_penalty_weight": 1.0,
+    "action_smoothness_weight": 0.02,
+    "action_magnitude_weight": 0.002,
+    "illegal_contact_penalty": 30.0,
+    "physical_failure_penalty": 30.0,
+    "timeout_penalty": 10.0,
+    "target_forward_velocity": 3.5741,
+    "total_min": -50.0,
+    "total_max": 50.0
+  },
+  "ppo": {
+    "num_parallel_envs": 1024,
+    "episode_horizon": 200,
+    "unroll_length": 25,
+    "batch_size": 128,
+    "num_minibatches": 8,
+    "num_updates_per_batch": 1,
+    "requested_transitions": 25600,
+    "num_eval_envs": 8,
+    "num_evals": 1,
+    "learning_rate": 0.0001,
+    "entropy_cost": 0.001,
+    "reward_scaling": 0.1,
+    "discounting": 0.995,
+    "gae_lambda": 0.97,
+    "clipping_epsilon": 0.1,
+    "max_grad_norm": 0.75,
+    "seed": 820001,
+    "held_out_seeds": [920001, 920002, 920003, 920004, 920005, 920006, 920007, 920008]
+  }
+}
