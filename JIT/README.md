@@ -48,17 +48,18 @@ predecessors of this persistent launch:
 
 ```bash
 mkdir -p JIT/runs/phase_u
-nohup setsid env XLA_PYTHON_CLIENT_PREALLOCATE=false PYTHONPATH=JIT/src \
+nohup setsid env XLA_PYTHON_CLIENT_PREALLOCATE=false MUJOCO_GL=egl \
+  PYTHONUNBUFFERED=1 PYTHONPATH=JIT/src \
   /home/qy/mujoco_playground/.venv/bin/python JIT/cli/train_phase_expert.py \
   --phase propulsion_ascent \
   --config JIT/configs/phase_u_formal.json \
-  --run-id phase_u_formal_998400_seed820101_20260824 \
+  --run-id phase_u_formal_998400_seed820101_20260824_retry1 \
   --formal \
-  > JIT/runs/phase_u/phase_u_formal_998400_seed820101_20260824.launch.log 2>&1 \
+  > JIT/runs/phase_u/phase_u_formal_998400_seed820101_20260824_retry1.launch.log 2>&1 \
   < /dev/null &
 JIT_FORMAL_PID=$!
 printf '%s\n' "${JIT_FORMAL_PID}" \
-  > JIT/runs/phase_u/phase_u_formal_998400_seed820101_20260824.pid
+  > JIT/runs/phase_u/phase_u_formal_998400_seed820101_20260824_retry1.pid
 ```
 
 Inspect startup once, then only the declared milestones, completion, or an

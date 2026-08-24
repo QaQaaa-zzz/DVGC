@@ -508,7 +508,10 @@ def run_phase_u_formal(
             num_evals=remaining // config.ppo.block_transitions + 1,
             num_eval_envs=config.ppo.num_eval_envs,
             deterministic_eval=True,
-            log_training_metrics=True,
+            # Brax routes its in-epoch EpisodeMetricsLogger through progress_fn
+            # before policy_params_fn.  Formal progress is deliberately one
+            # ordered callback per completed checkpointable PPO block.
+            log_training_metrics=False,
             progress_fn=controller.on_progress,
             policy_params_fn=controller.on_policy_params,
             restore_params=restore_params,

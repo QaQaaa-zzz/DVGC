@@ -67,6 +67,29 @@
     non-force retry succeeded.
 - No formal environment interactions or training transitions were consumed.
 
+### Phase 5: Formal launch and sparse monitoring
+
+- **Status:** in_progress
+- First launch:
+  - GitHub source gate passed at remote commit `fd534b9a39fa7af3d19ccd428492fb7a02a7fdd0`.
+  - Started fresh run `phase_u_formal_998400_seed820101_20260824` as PID 1491714.
+  - Startup inspection found an `engineering_error` after the first compiled
+    25,600-transition block: Brax's in-epoch `EpisodeMetricsLogger` called the
+    ordered block `progress_fn` before `policy_params_fn`.
+  - The original callback ledger recorded zero because the exception preceded
+    the policy callback. Source inspection proves one exact block was consumed;
+    `accounting_correction.json` records the correction to 25,600 transitions.
+  - Only transition-0 parameters were checkpointed, so the failed run is not a
+    valid warm-start parent and remains preserved under its original run id.
+- Fix:
+  - RED reproduced by requiring the injected formal trainer contract to set
+    `log_training_metrics=False`; the current runner passed `True`.
+  - GREEN after disabling only the in-epoch episode logger. Once-per-block PPO
+    loss/KL/SPS progress and milestone fixed evaluation remain enabled.
+  - The replacement run id is
+    `phase_u_formal_998400_seed820101_20260824_retry1` and must start fresh only
+    after the fix passes verification, commit, and GitHub push.
+
 ## Session: 2026-08-24
 
 ### Phase 1: Requirements and design

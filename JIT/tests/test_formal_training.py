@@ -268,6 +268,7 @@ def _fake_trainer(expected_steps, expected_evals):
         assert kwargs["num_updates_per_batch"] == 1
         assert kwargs["learning_rate"] == 0.0001
         assert kwargs["run_evals"] is False
+        assert kwargs["log_training_metrics"] is False
         params = ({"normalizer": 0}, {"actor": 1}, {"critic": 2})
         kwargs["policy_params_fn"](0, _fake_make_policy, params)
         for step in range(25_600, expected_steps + 1, 25_600):

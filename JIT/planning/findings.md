@@ -110,6 +110,7 @@
 | Root pytest collects both root and JIT tests with duplicate basenames | Mark JIT tests as a distinct package and insert only `JIT/src` during test collection. |
 | Root preflight retains one failure in user-modified launch-diagnostic files | Do not edit outside JIT; separately verify all other 1,030 tests and record the exact exclusion. |
 | Root compatibility initially deselected the older manifest test instead of the new user-modified relative-x test | Reproduced both focused tests: the older test passes and only `test_relative_x_manifest_binds_exact_onsets_and_ceiling` fails because the modified production signature lacks `mode`; leave both user paths untouched. |
+| First formal launch failed after its first 25,600-transition block because Brax `EpisodeMetricsLogger` invoked the shared `progress_fn` inside the compiled epoch before `policy_params_fn` | Corrected the failed run ledger with an explicit ignored audit artifact; disable only Brax's in-epoch episode logger for formal mode while retaining the once-per-block loss/KL/SPS callback and fixed held-out terminal analysis. The transition-0-only checkpoint cannot support warm resume, so use a new fresh run id. |
 
 ## Resources
 
