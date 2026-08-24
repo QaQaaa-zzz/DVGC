@@ -69,7 +69,7 @@
 
 ### Phase 5: Formal launch and sparse monitoring
 
-- **Status:** in_progress
+- **Status:** complete
 - First launch:
   - GitHub source gate passed at remote commit `fd534b9a39fa7af3d19ccd428492fb7a02a7fdd0`.
   - Started fresh run `phase_u_formal_998400_seed820101_20260824` as PID 1491714.
@@ -89,6 +89,31 @@
   - The replacement run id is
     `phase_u_formal_998400_seed820101_20260824_retry1` and must start fresh only
     after the fix passes verification, commit, and GitHub push.
+  - Fix commit `fd3372c1e1a7ffc6099ae366e8302e7552474773` passed JIT preflight,
+    was pushed to GitHub, and was the remote HEAD before the replacement launch.
+- Successful replacement:
+  - PID 1509891 started as a new session with `status=running`, GPU backend,
+    transition-0 identity, and no startup anomaly.
+  - Completed exactly 998,400 training transitions plus 904 fixed evaluation
+    transitions; Brax evaluation and diagnostic counts remained zero.
+  - Strict provenance verification closed all six checkpoint hashes, five panels,
+    40 traces, final checkpoint restore, and final video state/frame accounting.
+  - Every panel had zero Apex success and eight roll-limit physical failures;
+    the policy is not promoted or frozen as an expert.
+
+### Phase 6: Experiment analysis and handoff
+
+- **Status:** complete
+- Actions taken:
+  - Analyzed all 39 PPO block metrics and five fixed evaluation summaries.
+  - Inspected per-seed returns, lengths, terminal codes, reward components,
+    action saturation, and the final tick-by-tick action/attitude trace.
+  - Identified deterministic-reset seed redundancy: `env.reset(rng)` currently
+    does not consume `rng`, so eight labels do not create eight independent conditions.
+  - Wrote the full Chinese experiment and modification report at
+    `JIT/docs/experiments/phase_u_formal_998400_seed820101_20260824/REPORT.md`.
+  - Recommended no further PPO until frozen action intervention, gradient,
+    normalizer, reward-clamp, and reset-diversity audits are designed.
 
 ## Session: 2026-08-24
 

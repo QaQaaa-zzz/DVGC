@@ -1,4 +1,4 @@
-# JIT Phase U Engineering Verification
+# JIT Phase U Verification
 
 ## Verified delivery
 
@@ -106,3 +106,27 @@ additional environment transitions and encoded no duplicated tail frames.
 This delivery does not implement or claim a frozen Phase U expert, Phase D,
 continuation labels, `V_up`/`V_down`, learned soft Tubes, unified Tube-RSI PPO,
 or independent JCE/JEL certification.
+
+## Formal Phase U run
+
+Formal run `phase_u_formal_998400_seed820101_20260824_retry1` completed after
+the engineering delivery above. Its strict verifier closed:
+
+- 998,400 exact training transitions;
+- 904 fixed-evaluation transitions and zero Brax-evaluation/diagnostic transitions;
+- six identity-bound checkpoint payload hashes;
+- five eight-label fixed panels and every trace hash;
+- final checkpoint restore and deterministic finite inference;
+- 22 saved/encoded frames for the final 21-transition representative trace.
+
+All five panels returned 0 Apex successes and 8 `roll_limit` physical failures.
+The final policy also regressed from reaching the window at 102,400/256,000 to
+failing before the window at later milestones. It is not a trained expert and
+must not be promoted. The complete modification rationale, PPO trends,
+milestone tables, limitations, action diagnosis, interaction cost, and next-step
+decision are in
+`experiments/phase_u_formal_998400_seed820101_20260824/REPORT.md`.
+
+The latest JIT preflight reported 106 non-GPU tests plus 5 GPU tests passing.
+The fresh repository compatibility run reported 1,070 passed and only the
+specific user-dirty relative-x manifest case deselected.

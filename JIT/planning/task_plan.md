@@ -8,7 +8,7 @@ launch one persistent run without changing physics, reward, or observations.
 
 ## Next Step
 
-Persistently launch the declared formal run and perform one sparse startup inspection.
+Review and explicitly approve the proposed frozen-policy diagnostic before any further PPO.
 
 ## Current Phase
 
@@ -54,10 +54,18 @@ Phase 1: formal-training design
 
 ### Phase 5: Formal launch and sparse monitoring
 
-- [ ] Predeclare and persistently launch the 998,400-transition run.
-- [ ] Verify startup state and transition-0 checkpoint once.
-- [ ] Inspect only declared milestones, completion, or abnormal exit.
-- **Status:** in_progress
+- [x] Predeclare and persistently launch the 998,400-transition run.
+- [x] Verify startup state and transition-0 checkpoint once.
+- [x] Inspect declared milestones, completion, and the one abnormal startup.
+- **Status:** complete
+
+### Phase 6: Experiment analysis and handoff
+
+- [x] Strictly verify all checkpoint, evaluation, video, and interaction evidence.
+- [x] Analyze 39 PPO blocks, five panels, per-seed traces, and final actions.
+- [x] Document every modification and its reason.
+- [x] State the claim boundary, limitations, decision, and prioritized next steps.
+- **Status:** complete
 
 ## Completed Baseline Detail
 
