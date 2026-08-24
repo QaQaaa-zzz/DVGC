@@ -1,5 +1,20 @@
 # Progress Log
 
+## Session: 2026-08-24 Formal Phase U
+
+### Phase 1: Formal-training design
+
+- **Status:** complete
+- Actions taken:
+  - Confirmed the previous JIT commit is present on the GitHub branch before formal work.
+  - Inspected Brax PPO training callbacks, checkpoint content, and restore behavior.
+  - Selected one uninterrupted 39-block process with parameter-level warm resume.
+  - Defined formal checkpoints, five eight-seed evaluation panels, persistence, and stopping conditions.
+  - Wrote `JIT/docs/specs/2026-08-24-jit-phase-u-formal-training-design.md`.
+  - Self-reviewed the design for exact budget, run id, resume truthfulness,
+    evaluation accounting, and the no-training-before-push gate.
+- No environment interactions or training transitions were consumed in this phase.
+
 ## Session: 2026-08-24
 
 ### Phase 1: Requirements and design

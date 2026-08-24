@@ -1,29 +1,65 @@
-# Task Plan: Independent JIT Phase U Engineering Delivery
+# Task Plan: JIT Phase U Formal Training
 
 ## Goal
 
-Build and verify an independent `JIT/` implementation of the first Phase U
-engineering delivery: a 200 Hz / 50 Hz MJX-Warp environment, observable
-Propulsion-Ascent semantics and reward, truthful evaluation/video capture, and
-one 25,600-transition Brax PPO smoke with checkpoint restore.
+Extend the verified independent JIT engineering stack with an auditable formal
+998,400-transition Phase U runner, push the validated source to GitHub, and
+launch one persistent run without changing physics, reward, or observations.
 
 ## Next Step
 
-Delivery complete; preserve the current branch without merge or push.
+Commit and push the reviewed formal-training design, then write its TDD implementation plan.
 
 ## Current Phase
 
-Complete
+Phase 1: formal-training design
 
 ## Phases
 
-### Phase 1: Requirements and design
+### Phase 0: Engineering-smoke baseline
 
 - [x] Read the rebuild guide, current method boundary, experiment state, and reference CSV.
 - [x] Confirm an independent package that does not import `dvgc`.
 - [x] Limit delivery to the guide's first engineering stopping point.
 - [x] Define architecture, data flow, validation, and claim boundaries.
 - **Status:** complete
+
+### Phase 1: Formal-training design
+
+- [x] Inspect the installed Brax callback/checkpoint/restore boundary.
+- [x] Select one uninterrupted persistent run with parameter-level warm resume.
+- [x] Define aligned blocks, checkpoints, held-out evaluation, accounting, and stopping.
+- [x] Self-review the design document; commit and push this focused design round.
+- **Status:** complete
+
+### Phase 2: Formal-training implementation plan
+
+- [ ] Write a complete TDD plan with exact files, APIs, tests, and commands.
+- [ ] Review the plan for spec coverage, placeholders, and type consistency.
+- **Status:** pending
+
+### Phase 3: TDD implementation
+
+- [ ] Implement formal config and schedule validation.
+- [ ] Implement trace persistence and formal provenance contracts.
+- [ ] Implement formal runner, CLI mode separation, and warm resume.
+- **Status:** pending
+
+### Phase 4: Verification and GitHub delivery
+
+- [ ] Run focused, complete JIT, GPU, and repository compatibility checks.
+- [ ] Inspect staged JIT-only content and create a focused commit.
+- [ ] Push the formal-training source commit before launching training.
+- **Status:** pending
+
+### Phase 5: Formal launch and sparse monitoring
+
+- [ ] Predeclare and persistently launch the 998,400-transition run.
+- [ ] Verify startup state and transition-0 checkpoint once.
+- [ ] Inspect only declared milestones, completion, or abnormal exit.
+- **Status:** pending
+
+## Completed Baseline Detail
 
 ### Phase 2: Detailed implementation planning
 
@@ -98,5 +134,6 @@ Complete
 ## Notes
 
 - Existing modified/untracked paths outside `JIT/` belong to the user and must remain untouched.
-- Do not start the 998,400-transition formal Phase U run.
+- Start the 998,400-transition formal Phase U run only after its source passes
+  verification and the focused JIT commit is present on GitHub.
 - Do not add Phase D, continuation, feasibility, Soft Tube, unified PPO, or JCE/JEL placeholders.

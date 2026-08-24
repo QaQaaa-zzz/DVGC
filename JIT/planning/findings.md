@@ -17,6 +17,18 @@
 
 ## Research Findings
 
+- The installed Brax PPO callback exposes only observation normalizer, Actor,
+  and critic parameters. It does not expose optimizer state, minibatch RNG, or
+  the complete internal TrainingState.
+- `num_evals=40` yields one initial callback plus 39 post-block callbacks for
+  the exact `998,400 / 25,600 = 39` formal layout when Brax evaluation is
+  disabled.
+- Parameter-level warm resume is available through `restore_params`; it must be
+  declared as optimizer-reset warm start, not exact continuation.
+- The approved formal milestones are 0, 102,400, 256,000, 512,000, 742,400,
+  and 998,400 transitions. Every nonzero milestone receives the same eight
+  held-out deterministic seeds.
+
 - The working tree already contains user changes in
   `dvgc/phase_u_launch_diagnostic.py`,
   `tests/test_phase_u_launch_diagnostic.py`, `.vscode/`, and the untracked
@@ -83,6 +95,10 @@
 | `JIT/.gitignore` will ignore `runs/`, caches, and generated artifacts | Keeps runtime output inside JIT without committing it. |
 | Preserve all incoming environment `info` fields | Brax wrappers extend the pytree and require identical scan carry structure. |
 | Expose `time_out` as a float mirror of `truncated` | Enables Brax timeout bootstrapping without conflating truncation with physical termination. |
+| Keep formal orchestration in `formal_training.py` | Preserves the verified smoke runner and gives formal evaluation/resume one focused owner. |
+| Use one persistent 39-block process | Avoids resetting PPO optimizer between normal blocks while retaining warm recovery after abnormal exit. |
+| Record warm resume as optimizer reset | Matches the actual installed Brax API and prevents false exact-resume claims. |
+| Run eight held-out seeds at five nonzero milestones | Provides fixed evidence without using Brax's separate evaluation semantics. |
 
 ## Issues Encountered
 
