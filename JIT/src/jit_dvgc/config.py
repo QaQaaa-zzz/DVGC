@@ -61,6 +61,17 @@ class PPOConfig:
 
 
 @dataclass(frozen=True)
+class FormalTrainingConfig:
+    checkpoint_transitions: tuple[int, ...]
+    fixed_evaluation_transitions: tuple[int, ...]
+    resume_semantics: str
+
+    @property
+    def formal_blocks(self) -> int:
+        return 998_400 // 25_600
+
+
+@dataclass(frozen=True)
 class ApexConfig:
     max_abs_vertical_velocity: float
     min_clearance: float
@@ -132,6 +143,7 @@ class ResolvedConfig:
     physical_limits: PhysicalLimits
     reward: RewardConfig
     ppo: PPOConfig
+    formal: FormalTrainingConfig | None
 
 
 def _dataclass_from(cls: type, payload: Mapping[str, Any]):
@@ -178,8 +190,43 @@ def _validate_ppo(ppo: PPOConfig) -> None:
         _positive(f"ppo.{name}", getattr(ppo, name))
 
 
+def _validate_formal(ppo: PPOConfig, formal: FormalTrainingConfig) -> None:
+    if ppo.requested_transitions != 998_400:
+        raise ValueError("formal requested_transitions must equal 998400")
+    if ppo.block_transitions != 25_600:
+        raise ValueError("formal PPO block must equal 25600 transitions")
+    if ppo.num_evals != 40:
+        raise ValueError("formal num_evals must equal 40")
+    if ppo.seed != 820101:
+        raise ValueError("formal training seed must equal 820101")
+    if ppo.held_out_seeds != tuple(range(920001, 920009)):
+        raise ValueError("formal held-out seeds must equal 920001 through 920008")
+    checkpoints = formal.checkpoint_transitions
+    evaluations = formal.fixed_evaluation_transitions
+    if not checkpoints or checkpoints[0] != 0:
+        raise ValueError("formal checkpoints must start at zero")
+    if checkpoints[-1] != ppo.requested_transitions:
+        raise ValueError("formal checkpoints must end at 998400")
+    if tuple(sorted(set(checkpoints))) != checkpoints:
+        raise ValueError("formal checkpoints must be strictly increasing")
+    if any(step % ppo.block_transitions for step in checkpoints):
+        raise ValueError("formal checkpoints must be block-aligned")
+    expected_checkpoints = (0, 102_400, 256_000, 512_000, 742_400, 998_400)
+    if checkpoints != expected_checkpoints:
+        raise ValueError("formal config must use the exact checkpoint schedule")
+    if tuple(sorted(set(evaluations))) != evaluations:
+        raise ValueError("formal evaluations must be strictly increasing")
+    if evaluations != checkpoints[1:]:
+        raise ValueError("formal evaluation must run at every nonzero checkpoint")
+    if formal.resume_semantics != "parameter_warm_start_optimizer_reset":
+        raise ValueError("formal resume_semantics must declare optimizer reset")
+
+
 def load_config(path: Path) -> ResolvedConfig:
     payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    schema = str(payload.get("schema", ""))
+    if schema not in {"jit_phase_u_engineering_smoke_v1", "jit_phase_u_formal_v1"}:
+        raise ValueError("unsupported JIT config schema")
     if payload.get("phase") != "propulsion_ascent":
         raise ValueError("only propulsion_ascent is implemented")
     if not math.isclose(CTRL_DT / SIM_DT, N_SUBSTEPS, rel_tol=0.0, abs_tol=1e-12):
@@ -191,6 +238,15 @@ def load_config(path: Path) -> ResolvedConfig:
     ppo_payload["held_out_seeds"] = tuple(int(x) for x in ppo_payload["held_out_seeds"])
     ppo = _dataclass_from(PPOConfig, ppo_payload)
     _validate_ppo(ppo)
+    formal: FormalTrainingConfig | None = None
+    if schema == "jit_phase_u_formal_v1":
+        formal_payload = dict(payload.get("formal", {}))
+        for key in ("checkpoint_transitions", "fixed_evaluation_transitions"):
+            formal_payload[key] = tuple(int(x) for x in formal_payload.get(key, ()))
+        formal = _dataclass_from(FormalTrainingConfig, formal_payload)
+        _validate_formal(ppo, formal)
+    elif "formal" in payload:
+        raise ValueError("smoke config must not contain formal settings")
     events = _dataclass_from(EventConfig, payload["events"])
     apex = _dataclass_from(ApexConfig, payload["apex"])
     if events.window_relative_x_min >= events.window_relative_x_max:
@@ -201,7 +257,7 @@ def load_config(path: Path) -> ResolvedConfig:
         raise ValueError("airborne_confirm_ticks must be positive")
 
     return ResolvedConfig(
-        schema=str(payload["schema"]),
+        schema=schema,
         phase=str(payload["phase"]),
         raw=payload,
         config_sha256=canonical_sha256(payload),
@@ -213,4 +269,5 @@ def load_config(path: Path) -> ResolvedConfig:
         physical_limits=_dataclass_from(PhysicalLimits, payload["physical_limits"]),
         reward=_dataclass_from(RewardConfig, payload["reward"]),
         ppo=ppo,
+        formal=formal,
     )

@@ -4,6 +4,11 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass
+import hashlib
+import json
+import os
+from pathlib import Path
+import tempfile
 from typing import Any, Callable, Iterable
 
 import jax
@@ -34,6 +39,15 @@ class EpisodeTrace:
     seed: int
     frames: tuple[EpisodeFrame, ...]
     environment_transitions: int
+
+
+@dataclass(frozen=True)
+class TraceArtifact:
+    npz_path: Path
+    metadata_path: Path
+    npz_sha256: str
+    environment_transitions: int
+    captured_state_count: int
 
 
 def _array(value: Any) -> np.ndarray:
@@ -174,3 +188,91 @@ def summarize_phase_u(traces: tuple[EpisodeTrace, ...]) -> dict[str, Any]:
             np.mean(saturation_values) if saturation_values else 0.0
         ),
     }
+
+
+def _artifact_key(prefix: str, name: str) -> str:
+    return f"{prefix}__{name.replace('/', '__slash__')}"
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def save_episode_trace(trace: EpisodeTrace, path: Path) -> TraceArtifact:
+    """Saves every captured state and metric independently of video rendering."""
+
+    if len(trace.frames) != trace.environment_transitions + 1:
+        raise ValueError("captured state count must equal transitions plus one")
+    if not trace.frames:
+        raise ValueError("episode trace must contain the reset state")
+    base = Path(path)
+    base.parent.mkdir(parents=True, exist_ok=True)
+    npz_path = base.with_suffix(".npz")
+    metadata_path = base.with_suffix(".json")
+    if npz_path.exists() or metadata_path.exists():
+        raise FileExistsError(f"trace artifact already exists: {base}")
+
+    frames = trace.frames
+    metric_names = tuple(sorted({name for frame in frames for name in frame.metrics}))
+    arrays: dict[str, np.ndarray] = {
+        "qpos": np.stack([frame.qpos for frame in frames]),
+        "qvel": np.stack([frame.qvel for frame in frames]),
+        "ctrl": np.stack([frame.ctrl for frame in frames]),
+        "action": np.stack([frame.action for frame in frames]),
+        "reward": np.asarray([frame.reward for frame in frames], dtype=np.float64),
+        "terminated": np.asarray([frame.terminated for frame in frames]),
+        "truncated": np.asarray([frame.truncated for frame in frames]),
+        "end_code": np.asarray([frame.end_code for frame in frames], dtype=np.int32),
+        "success": np.asarray([frame.success for frame in frames]),
+        "physical_failure": np.asarray([frame.physical_failure for frame in frames]),
+        "timeout": np.asarray([frame.timeout for frame in frames]),
+    }
+    for key in REWARD_COMPONENT_KEYS:
+        arrays[_artifact_key("reward_component", key)] = np.asarray(
+            [frame.reward_components[key] for frame in frames], dtype=np.float64
+        )
+    for name in metric_names:
+        arrays[_artifact_key("metric", name)] = np.asarray(
+            [frame.metrics.get(name, np.nan) for frame in frames], dtype=np.float64
+        )
+
+    with tempfile.NamedTemporaryFile(dir=base.parent, suffix=".npz", delete=False) as stream:
+        temporary = Path(stream.name)
+        np.savez_compressed(stream, **arrays)
+    os.replace(temporary, npz_path)
+    digest = _sha256(npz_path)
+    terminal = frames[-1]
+    metadata = {
+        "seed": int(trace.seed),
+        "environment_transitions": int(trace.environment_transitions),
+        "captured_state_count": len(frames),
+        "npz_path": str(npz_path.resolve()),
+        "npz_sha256": digest,
+        "reward_component_keys": list(REWARD_COMPONENT_KEYS),
+        "metric_keys": {
+            name: _artifact_key("metric", name) for name in metric_names
+        },
+        "terminal": {
+            "terminated": terminal.terminated,
+            "truncated": terminal.truncated,
+            "end_code": terminal.end_code,
+            "success": terminal.success,
+            "physical_failure": terminal.physical_failure,
+            "timeout": terminal.timeout,
+        },
+    }
+    metadata_path.write_text(
+        json.dumps(metadata, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
+    return TraceArtifact(
+        npz_path=npz_path.resolve(),
+        metadata_path=metadata_path.resolve(),
+        npz_sha256=digest,
+        environment_transitions=trace.environment_transitions,
+        captured_state_count=len(frames),
+    )

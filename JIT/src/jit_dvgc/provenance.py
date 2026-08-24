@@ -6,6 +6,7 @@ import argparse
 from dataclasses import asdict, dataclass
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import tempfile
@@ -41,6 +42,10 @@ class RunDeclaration:
     training_transition_ceiling: int
     stopping_conditions: tuple[str, ...]
     resume_command: str
+    parent_checkpoint: str | None = None
+    starting_training_transition: int = 0
+    resume_semantics: str = "fresh"
+    segment_seed: int | None = None
 
 
 def _atomic_json(path: Path, payload: Mapping[str, Any]) -> None:
@@ -61,13 +66,29 @@ def predeclare_run(
         raise ValueError("run_id must be one safe path component")
     if declaration.training_transition_ceiling <= 0:
         raise ValueError("training_transition_ceiling must be positive")
+    if declaration.starting_training_transition < 0:
+        raise ValueError("starting training transition must be nonnegative")
+    if declaration.starting_training_transition == 0:
+        if declaration.parent_checkpoint is not None:
+            raise ValueError("fresh run must not declare a parent checkpoint")
+        if declaration.resume_semantics != "fresh":
+            raise ValueError("fresh run must declare fresh resume semantics")
+    else:
+        if not declaration.parent_checkpoint:
+            raise ValueError("warm start requires a parent checkpoint")
+        if declaration.resume_semantics != "parameter_warm_start_optimizer_reset":
+            raise ValueError("warm start resume semantics must declare optimizer reset")
+        if declaration.segment_seed is None:
+            raise ValueError("warm start requires a segment seed")
     run_dir = Path(declaration.output_dir)
     run_dir.mkdir(parents=True, exist_ok=False)
     manifest = asdict(declaration)
     manifest["output_dir"] = str(run_dir.resolve())
     manifest["stopping_conditions"] = list(declaration.stopping_conditions)
+    is_formal = declaration.purpose == "formal_propulsion_ascent_ppo"
     manifest["claim_boundary"] = {
-        "engineering_integrity_only": True,
+        "engineering_integrity_only": not is_formal,
+        "formal_training_evidence": is_formal,
         "learnability_claim": False,
         "trained_expert_claim": False,
         "tube_or_safety_claim": False,
@@ -79,6 +100,26 @@ def predeclare_run(
         declaration.resume_command.rstrip() + "\n", encoding="utf-8"
     )
     return run_dir
+
+
+def mark_run_running(
+    run_dir: Path,
+    *,
+    process_id: int,
+    metadata: Mapping[str, Any],
+) -> None:
+    if process_id <= 0:
+        raise ValueError("process_id must be positive")
+    if any(key in {"status", "process_id"} for key in metadata):
+        raise ValueError("running metadata contains a reserved field")
+    status_path = Path(run_dir) / "status.json"
+    current = json.loads(status_path.read_text(encoding="utf-8"))
+    if current != {"status": "predeclared"}:
+        raise ValueError("run is not predeclared")
+    _atomic_json(
+        status_path,
+        {"status": "running", "process_id": int(process_id), **dict(metadata)},
+    )
 
 
 def close_run(
@@ -113,6 +154,189 @@ def _payload_sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _verify_checkpoint_sidecar(
+    checkpoint: Path,
+    *,
+    transition: int,
+    config_sha256: str,
+    xml_sha256: str,
+) -> str:
+    identity_path = checkpoint / "identity.json"
+    payload_path = checkpoint / "payload.pkl"
+    if not identity_path.is_file() or not payload_path.is_file():
+        raise ValueError(f"formal checkpoint artifact is missing at {transition}")
+    identity = json.loads(identity_path.read_text(encoding="utf-8"))
+    if identity.get("config_sha256") != config_sha256:
+        raise ValueError("formal checkpoint config identity mismatch")
+    if identity.get("xml_sha256") != xml_sha256:
+        raise ValueError("formal checkpoint XML identity mismatch")
+    if identity.get("training_transitions") != transition:
+        raise ValueError("formal checkpoint transition mismatch")
+    digest = _payload_sha256(payload_path)
+    if identity.get("payload_sha256") != digest:
+        raise ValueError("formal checkpoint payload hash mismatch")
+    return digest
+
+
+def _verify_formal_run(
+    path: Path,
+    *,
+    manifest: Mapping[str, Any],
+    resolved: Mapping[str, Any],
+    status: Mapping[str, Any],
+    report: dict[str, Any],
+) -> dict[str, Any]:
+    if status["status"] != "completed":
+        return report
+    if resolved.get("schema") != "jit_phase_u_formal_v1":
+        raise ValueError("formal run does not use the formal config schema")
+    repository_root = Path(__file__).resolve().parents[3]
+    model = resolved["model"]
+    if model.get("xml_sha256") != manifest["xml_sha256"]:
+        raise ValueError("formal config/XML manifest identity mismatch")
+    if model.get("reference_sha256") != manifest["reference_sha256"]:
+        raise ValueError("formal config/reference manifest identity mismatch")
+    if file_sha256(repository_root / model["xml_path"]) != manifest["xml_sha256"]:
+        raise ValueError("authoritative XML identity drift")
+    if (
+        file_sha256(repository_root / model["reference_path"])
+        != manifest["reference_sha256"]
+    ):
+        raise ValueError("reference trajectory identity drift")
+
+    target = int(resolved["ppo"]["requested_transitions"])
+    if target != 998_400:
+        raise ValueError("formal target must equal 998400")
+    start = int(manifest.get("starting_training_transition", 0))
+    expected_segment = target - start
+    accounting = status["interaction_accounting"]
+    if accounting["training"] != expected_segment:
+        raise ValueError("formal segment training accounting mismatch")
+    if int(manifest["training_transition_ceiling"]) != expected_segment:
+        raise ValueError("formal segment training ceiling mismatch")
+    if accounting["brax_evaluation"] != 0 or accounting["diagnostic"] != 0:
+        raise ValueError("formal run contains undeclared evaluation or diagnostic transitions")
+
+    formal = resolved["formal"]
+    expected_checkpoints = tuple(
+        int(step)
+        for step in formal["checkpoint_transitions"]
+        if int(step) >= start
+    )
+    checkpoint_hashes = {}
+    for step in expected_checkpoints:
+        checkpoint_hashes[str(step)] = _verify_checkpoint_sidecar(
+            path / "checkpoints" / f"transition_{step}",
+            transition=step,
+            config_sha256=manifest["config_sha256"],
+            xml_sha256=manifest["xml_sha256"],
+        )
+
+    expected_seeds = tuple(int(seed) for seed in resolved["ppo"]["held_out_seeds"])
+    expected_evaluations = tuple(
+        int(step)
+        for step in formal["fixed_evaluation_transitions"]
+        if int(step) > start
+    )
+    fixed_total = 0
+    evaluation_summaries: dict[str, Any] = {}
+    for step in expected_evaluations:
+        panel_dir = path / "evaluations" / f"transition_{step}"
+        summary_path = panel_dir / "summary.json"
+        if not summary_path.is_file():
+            raise ValueError(f"formal evaluation summary is missing at {step}")
+        summary = json.loads(summary_path.read_text(encoding="utf-8"))
+        if summary.get("absolute_transition") != step:
+            raise ValueError("formal evaluation absolute transition mismatch")
+        if tuple(summary.get("held_out_seeds", ())) != expected_seeds:
+            raise ValueError("formal evaluation held-out seeds mismatch")
+        if summary.get("rollouts") != len(expected_seeds):
+            raise ValueError("formal evaluation rollout count mismatch")
+        panel_total = 0
+        for seed in expected_seeds:
+            metadata_path = panel_dir / f"seed_{seed}.json"
+            npz_path = panel_dir / f"seed_{seed}.npz"
+            if not metadata_path.is_file() or not npz_path.is_file():
+                raise ValueError(f"formal evaluation trace is missing for seed {seed}")
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+            if metadata.get("seed") != seed:
+                raise ValueError("formal trace seed mismatch")
+            transitions = metadata.get("environment_transitions")
+            if not isinstance(transitions, int) or not 1 <= transitions <= 200:
+                raise ValueError("formal trace transition count is invalid")
+            if metadata.get("captured_state_count") != transitions + 1:
+                raise ValueError("formal trace transition/state count mismatch")
+            digest = _payload_sha256(npz_path)
+            if metadata.get("npz_sha256") != digest:
+                raise ValueError("formal trace payload hash mismatch")
+            panel_total += transitions
+        if summary.get("environment_transitions") != panel_total:
+            raise ValueError("formal trace transition total mismatches panel summary")
+        fixed_total += panel_total
+        evaluation_summaries[str(step)] = {
+            "environment_transitions": panel_total,
+            "apex_success_rate": summary.get("apex_success_rate"),
+            "physical_failure_rate": summary.get("physical_failure_rate"),
+            "end_reason_counts": summary.get("end_reason_counts", {}),
+        }
+    if accounting["fixed_evaluation"] != fixed_total:
+        raise ValueError("formal fixed evaluation accounting mismatch")
+
+    final_panel = path / "evaluations" / f"transition_{target}"
+    video_report_path = final_panel / "video_report.json"
+    if not video_report_path.is_file():
+        raise ValueError("formal final representative video report is missing")
+    video_report = json.loads(video_report_path.read_text(encoding="utf-8"))
+    for artifact_key in ("video", "state_trace"):
+        artifact = Path(str(video_report.get(artifact_key, "")))
+        if not artifact.is_file() or artifact.resolve().parent != final_panel.resolve():
+            raise ValueError(f"formal final video artifact is invalid: {artifact_key}")
+    video_transitions = video_report.get("environment_transitions")
+    captured = video_report.get("captured_state_count")
+    encoded = video_report.get("encoded_frame_count")
+    if (
+        not isinstance(video_transitions, int)
+        or captured != video_transitions + 1
+        or encoded != captured
+    ):
+        raise ValueError("formal final video state/frame accounting mismatch")
+
+    formal_report_path = path / "formal_report.json"
+    if not formal_report_path.is_file():
+        raise ValueError("formal report is missing")
+    formal_report = json.loads(formal_report_path.read_text(encoding="utf-8"))
+    if formal_report.get("starting_training_transition") != start:
+        raise ValueError("formal report starting transition mismatch")
+    if formal_report.get("completed_training_transitions") != target:
+        raise ValueError("formal report target mismatch")
+    if formal_report.get("segment_training_transitions") != expected_segment:
+        raise ValueError("formal report segment count mismatch")
+    if formal_report.get("fixed_evaluation_transitions") != fixed_total:
+        raise ValueError("formal report fixed evaluation count mismatch")
+    if tuple(formal_report.get("checkpoint_transitions", ())) != expected_checkpoints:
+        raise ValueError("formal report checkpoint schedule mismatch")
+    if tuple(formal_report.get("evaluated_transitions", ())) != expected_evaluations:
+        raise ValueError("formal report evaluation schedule mismatch")
+    if formal_report.get("checkpoint_restored") is not True:
+        raise ValueError("formal report lacks final checkpoint restore evidence")
+    for value in formal_report.get("final_metrics", {}).values():
+        if not isinstance(value, (int, float)) or not math.isfinite(float(value)):
+            raise ValueError("formal report contains a nonfinite metric")
+
+    report.update(
+        {
+            "absolute_training_transition": target,
+            "formal_checkpoint_transitions": list(expected_checkpoints),
+            "formal_checkpoint_payload_sha256": checkpoint_hashes,
+            "formal_evaluated_transitions": list(expected_evaluations),
+            "fixed_evaluation_transitions": fixed_total,
+            "evaluation_summaries": evaluation_summaries,
+            "checkpoint_restored": True,
+        }
+    )
+    return report
+
+
 def verify_run(run_dir: Path) -> dict[str, Any]:
     """Verifies a terminal run's immutable identities and interaction ledger."""
 
@@ -144,7 +368,16 @@ def verify_run(run_dir: Path) -> dict[str, Any]:
         "total_environment_transitions": total,
         "config_sha256": actual_config_sha256,
     }
-    is_smoke = manifest.get("purpose") == "compile_update_checkpoint_restore_engineering_smoke"
+    purpose = manifest.get("purpose")
+    if purpose == "formal_propulsion_ascent_ppo":
+        return _verify_formal_run(
+            path,
+            manifest=manifest,
+            resolved=resolved,
+            status=status,
+            report=report,
+        )
+    is_smoke = purpose == "compile_update_checkpoint_restore_engineering_smoke"
     if not is_smoke:
         return report
     if status["status"] != "completed":

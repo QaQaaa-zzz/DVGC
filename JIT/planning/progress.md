@@ -15,6 +15,51 @@
     evaluation accounting, and the no-training-before-push gate.
 - No environment interactions or training transitions were consumed in this phase.
 
+### Phase 2: Formal-training implementation plan
+
+- **Status:** complete
+- Actions taken:
+  - Wrote `JIT/docs/plans/2026-08-24-jit-phase-u-formal-training.md`.
+  - Mapped formal config, provenance, trace artifacts, callback orchestration,
+    CLI, verification, GitHub delivery, persistence, and sparse monitoring.
+  - Checked spec coverage, placeholder patterns, type names, absolute/segment
+    transition semantics, and the source-push-before-interaction dependency.
+- No environment interactions or training transitions were consumed in this phase.
+
+### Phase 3: TDD implementation
+
+- **Status:** complete
+- Actions taken:
+  - Added strict formal schema, exact 39-block budget, six checkpoints, five
+    fixed evaluation panels, frozen seeds, and smoke/formal separation.
+  - Added one-way running provenance, truthful optimizer-reset warm-start
+    metadata, and complete per-seed NPZ/JSON trace persistence.
+  - Added the formal callback controller, real Brax runner, absolute transition
+    offsets, fixed evaluation/video, final checkpoint restore/inference, and
+    mutually exclusive CLI modes.
+  - Added strict formal verification for checkpoint payload hashes, panel seed
+    sets, trace hashes/counts, final video state/frame counts, and report ledger.
+  - Used injected trainer/environment/panel dependencies to execute all 39
+    orchestration callbacks without consuming real formal environment transitions.
+  - Self-review found and fixed a rejection gap: aligned alternate milestone
+    tuples are now rejected in favor of the exact approved schedule.
+- No formal environment interactions or training transitions were consumed.
+
+### Phase 4: Verification and GitHub delivery
+
+- **Status:** in_progress
+- Results:
+  - Complete JIT preflight: 106 non-GPU tests and 5 GPU tests passed; retained
+    reference analysis and closed smoke verification passed.
+  - Fresh repository compatibility with only the exact user-dirty relative-x
+    manifest case deselected: 1,070 passed, 1 deselected in 167.06 seconds.
+  - The sole remaining failure is the user's uncommitted relative-x diagnostic
+    test calling `frozen_manifest_payload(..., mode=...)` while its user-modified
+    production function does not yet accept `mode`; this is outside JIT and was
+    reproduced independently.
+  - No JIT test or formal-runner compatibility failure remains.
+- No formal environment interactions or training transitions were consumed.
+
 ## Session: 2026-08-24
 
 ### Phase 1: Requirements and design

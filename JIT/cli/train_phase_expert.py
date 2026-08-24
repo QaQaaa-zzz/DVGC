@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stable CLI for the implemented Phase U engineering smoke only."""
+"""Stable CLI for implemented Propulsion-Ascent smoke and formal training."""
 
 from __future__ import annotations
 
@@ -15,7 +15,10 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--phase", required=True)
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--run-id", required=True)
-    parser.add_argument("--smoke", action="store_true")
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--smoke", action="store_true")
+    mode.add_argument("--formal", action="store_true")
+    parser.add_argument("--restore-checkpoint", type=Path)
     return parser
 
 
@@ -24,9 +27,18 @@ def main() -> int:
     args = parser.parse_args()
     if args.phase != "propulsion_ascent":
         parser.error("only propulsion_ascent is implemented")
-    if not args.smoke:
-        parser.error("--smoke is required; formal training is not implemented")
-    report = run_phase_u_smoke(args.config, args.run_id)
+    if args.restore_checkpoint is not None and not args.formal:
+        parser.error("--restore-checkpoint is only valid with --formal")
+    if args.smoke:
+        report = run_phase_u_smoke(args.config, args.run_id)
+    else:
+        from jit_dvgc.formal_training import run_phase_u_formal
+
+        report = run_phase_u_formal(
+            args.config,
+            args.run_id,
+            restore_checkpoint=args.restore_checkpoint,
+        )
     print(json.dumps(report, indent=2, sort_keys=True))
     return 0
 

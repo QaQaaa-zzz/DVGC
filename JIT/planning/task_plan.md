@@ -8,7 +8,7 @@ launch one persistent run without changing physics, reward, or observations.
 
 ## Next Step
 
-Commit and push the reviewed formal-training design, then write its TDD implementation plan.
+Audit JIT-only staged content, run the final verification gate, commit, and push before launch.
 
 ## Current Phase
 
@@ -34,23 +34,23 @@ Phase 1: formal-training design
 
 ### Phase 2: Formal-training implementation plan
 
-- [ ] Write a complete TDD plan with exact files, APIs, tests, and commands.
-- [ ] Review the plan for spec coverage, placeholders, and type consistency.
-- **Status:** pending
+- [x] Write a complete TDD plan with exact files, APIs, tests, and commands.
+- [x] Review the plan for spec coverage, placeholders, and type consistency.
+- **Status:** complete
 
 ### Phase 3: TDD implementation
 
-- [ ] Implement formal config and schedule validation.
-- [ ] Implement trace persistence and formal provenance contracts.
-- [ ] Implement formal runner, CLI mode separation, and warm resume.
-- **Status:** pending
+- [x] Implement formal config and exact schedule validation.
+- [x] Implement trace persistence and formal provenance contracts.
+- [x] Implement formal runner, CLI mode separation, and warm resume.
+- **Status:** complete
 
 ### Phase 4: Verification and GitHub delivery
 
-- [ ] Run focused, complete JIT, GPU, and repository compatibility checks.
+- [x] Run focused, complete JIT, GPU, and repository compatibility checks.
 - [ ] Inspect staged JIT-only content and create a focused commit.
 - [ ] Push the formal-training source commit before launching training.
-- **Status:** pending
+- **Status:** in_progress
 
 ### Phase 5: Formal launch and sparse monitoring
 

@@ -109,6 +109,7 @@
 | A self-contained JIT tree conflicts with the prohibition on duplicating the XML | Keep code self-contained but load the one retained XML by resolved absolute path. |
 | Root pytest collects both root and JIT tests with duplicate basenames | Mark JIT tests as a distinct package and insert only `JIT/src` during test collection. |
 | Root preflight retains one failure in user-modified launch-diagnostic files | Do not edit outside JIT; separately verify all other 1,030 tests and record the exact exclusion. |
+| Root compatibility initially deselected the older manifest test instead of the new user-modified relative-x test | Reproduced both focused tests: the older test passes and only `test_relative_x_manifest_binds_exact_onsets_and_ceiling` fails because the modified production signature lacks `mode`; leave both user paths untouched. |
 
 ## Resources
 

@@ -1,13 +1,14 @@
-# JIT Phase U engineering stack
+# JIT Phase U training stack
 
 `JIT` is an independent implementation of the first Propulsion-Ascent
 engineering delivery described in the repository rebuild guide. It does not
 import the existing `dvgc` package and does not copy the authoritative XML.
 
-The current scope is limited to environment/runtime integrity, observable
-Phase U semantics and reward, deterministic evaluation/video contracts, and
-one aligned 25,600-transition PPO smoke. It does not claim a trained expert,
-learnability, a feasibility Tube, safety, or end-to-end two-phase capability.
+The implemented scope now includes environment/runtime integrity, observable
+Phase U semantics and reward, deterministic evaluation/video contracts, the
+aligned 25,600-transition PPO engineering smoke, and an auditable formal-only
+Phase U runner. It does not implement Phase D, continuation labels,
+`V_up`/`V_down`, learned soft Tubes, unified PPO, or JCE/JEL certification.
 
 Use the retained interpreter directly:
 
@@ -23,7 +24,7 @@ Run the complete local verification without launching training:
 bash JIT/scripts/local_preflight.sh
 ```
 
-The only implemented training entry is the explicitly bounded smoke command:
+The explicitly bounded smoke command remains available:
 
 ```bash
 XLA_PYTHON_CLIENT_PREALLOCATE=false PYTHONPATH=JIT/src \
@@ -33,3 +34,42 @@ XLA_PYTHON_CLIENT_PREALLOCATE=false PYTHONPATH=JIT/src \
   --run-id <unique-run-id> \
   --smoke
 ```
+
+## Formal Phase U training
+
+Formal mode is exactly 39 aligned blocks, or 998,400 training transitions,
+with seed `820101`. Identity-bound checkpoints are written at transitions 0,
+102,400, 256,000, 512,000, 742,400, and 998,400. The five nonzero milestones
+each run deterministic evaluation on held-out seeds 920001 through 920008.
+Brax evaluation is disabled and fixed evaluation is accounted separately.
+
+Source verification, a focused JIT-only commit, and its GitHub push are hard
+predecessors of this persistent launch:
+
+```bash
+mkdir -p JIT/runs/phase_u
+nohup setsid env XLA_PYTHON_CLIENT_PREALLOCATE=false PYTHONPATH=JIT/src \
+  /home/qy/mujoco_playground/.venv/bin/python JIT/cli/train_phase_expert.py \
+  --phase propulsion_ascent \
+  --config JIT/configs/phase_u_formal.json \
+  --run-id phase_u_formal_998400_seed820101_20260824 \
+  --formal \
+  > JIT/runs/phase_u/phase_u_formal_998400_seed820101_20260824.launch.log 2>&1 \
+  < /dev/null &
+JIT_FORMAL_PID=$!
+printf '%s\n' "${JIT_FORMAL_PID}" \
+  > JIT/runs/phase_u/phase_u_formal_998400_seed820101_20260824.pid
+```
+
+Inspect startup once, then only the declared milestones, completion, or an
+abnormal exit. A high but finite KL is evidence to inspect, not permission to
+change rewards or PPO hyperparameters during the run.
+
+If an abnormal exit requires recovery, `--restore-checkpoint PATH` starts a
+new run segment from the saved observation normalizer, Actor, and critic.
+Brax resets optimizer state and PPO RNG, so this is explicitly a parameter
+warm start and never a bit-exact continuation.
+
+Finishing the transition budget does not by itself establish a trained expert.
+Promotion requires multiple legal, low-rotation Apex successes across the
+frozen held-out seeds. It never establishes a safe Tube, JCE, or JEL.

@@ -11,6 +11,15 @@ export PYTHONPATH="${JIT_ROOT}/JIT/src"
 
 "${JIT_PYTHON}" -m compileall -q JIT/src JIT/cli
 "${JIT_PYTHON}" - <<'PY'
+from pathlib import Path
+
+from jit_dvgc.config import load_config
+
+config = load_config(Path("JIT/configs/phase_u_formal.json"))
+if config.formal is None or config.formal.formal_blocks != 39:
+    raise SystemExit("formal configuration contract is invalid")
+PY
+"${JIT_PYTHON}" - <<'PY'
 import ast
 from pathlib import Path
 
