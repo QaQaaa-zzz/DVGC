@@ -47,7 +47,7 @@
 
 ### Phase 4: Verification and GitHub delivery
 
-- **Status:** in_progress
+- **Status:** complete
 - Results:
   - Complete JIT preflight: 106 non-GPU tests and 5 GPU tests passed; retained
     reference analysis and closed smoke verification passed.
@@ -58,6 +58,13 @@
     production function does not yet accept `mode`; this is outside JIT and was
     reproduced independently.
   - No JIT test or formal-runner compatibility failure remains.
+  - Explicitly staged only 17 JIT source/config/test/document paths; the index
+    contained no run, checkpoint, video, log, cache, or outside-JIT path.
+  - Created implementation commit `30573f82a2ea20ce89943ccb0e3d5f952fefa9a5`.
+  - Pushed that exact commit to `origin/agent/two-phase-soft-tube` and verified
+    the remote ref matches. The first push attempt ended during TLS handshake;
+    a read-only remote check proved no partial update, then an ordinary
+    non-force retry succeeded.
 - No formal environment interactions or training transitions were consumed.
 
 ## Session: 2026-08-24

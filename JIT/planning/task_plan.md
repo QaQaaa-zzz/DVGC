@@ -8,7 +8,7 @@ launch one persistent run without changing physics, reward, or observations.
 
 ## Next Step
 
-Audit JIT-only staged content, run the final verification gate, commit, and push before launch.
+Persistently launch the declared formal run and perform one sparse startup inspection.
 
 ## Current Phase
 
@@ -48,16 +48,16 @@ Phase 1: formal-training design
 ### Phase 4: Verification and GitHub delivery
 
 - [x] Run focused, complete JIT, GPU, and repository compatibility checks.
-- [ ] Inspect staged JIT-only content and create a focused commit.
-- [ ] Push the formal-training source commit before launching training.
-- **Status:** in_progress
+- [x] Inspect staged JIT-only content and create a focused commit.
+- [x] Push the formal-training source commit before launching training.
+- **Status:** complete
 
 ### Phase 5: Formal launch and sparse monitoring
 
 - [ ] Predeclare and persistently launch the 998,400-transition run.
 - [ ] Verify startup state and transition-0 checkpoint once.
 - [ ] Inspect only declared milestones, completion, or abnormal exit.
-- **Status:** pending
+- **Status:** in_progress
 
 ## Completed Baseline Detail
 
