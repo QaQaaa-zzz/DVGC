@@ -365,3 +365,32 @@
 | What is the goal? | Deliver the independent Phase U engineering smoke stack under `JIT/`. |
 | What have I learned? | See `findings.md`. |
 | What have I done? | Independent implementation, TDD, GPU/PPO smoke, evidence closure, JIT preflight, and repository compatibility checks are complete. |
+# 2026-08-25 Absolute Joint Target and 5M Continuation
+
+- User approved hip-style absolute mapping for knee and a fresh approximately
+  five-million-step run with no old checkpoint initialization.
+- Inspected current action mapping, v2 exact config validator, model keyframe
+  construction, checkpoint identity, formal controller, provenance verifier,
+  CLI, tests, and working-tree state.
+- Confirmed unrelated dirty paths remain outside JIT and must be preserved.
+- Wrote and self-reviewed the JIT-local design and TDD implementation plan.
+- Selected aligned target 4,988,928, block 24,576, and exact translated PPO
+  batch layout 384/64/16/24/8.
+- Plan self-review removed the proposed read-only evaluation of old
+  checkpoints. The new workflow does not open them at all; RSI diagnostics use
+  only current-run milestone parameters.
+- The first fresh v3 smoke completed 24,576 transitions and restored its new
+  checkpoint, but fixed-rate KL was 341.1 and the natural diagnostic ended on
+  roll limit after 43 steps.
+- Source tracing identified Brax's pre-SGD normalizer update as a confounder in
+  that first KL. Two adaptive-KL comparisons (8 and 1 data passes) instead
+  delayed cold-start normalizer warm-up and exploded policy outputs/KL. Removed
+  the rejected experiment and retained the bounded fixed-rate smoke profile.
+- Independent review found and closed three audit gaps: preserve truthful v2
+  incremental runtime semantics, validate checkpoint sidecar identity before
+  pickle loading, and prove natural/RSI reset source directly from every v3
+  NPZ trace. Fresh local preflight: 151 non-GPU + 8 GPU tests, exit 0.
+- Final review then found two artifact-integrity bypasses and one representative
+  lineage gap. The verifier now checks every episode/diagnostic array length,
+  real MP4/PNG decoding, distinct typed paths, and exact seed/episode/reset
+  binding. Final re-review found no remaining Critical or Important issue.

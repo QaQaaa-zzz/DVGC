@@ -15,9 +15,17 @@ from pathlib import Path
 
 from jit_dvgc.config import load_config
 
-config = load_config(Path("JIT/configs/phase_u_formal.json"))
-if config.formal is None or config.formal.formal_blocks != 39:
-    raise SystemExit("formal configuration contract is invalid")
+legacy = load_config(Path("JIT/configs/phase_u_formal.json"))
+active = load_config(Path("JIT/configs/phase_u_absolute_5m.json"))
+smoke = load_config(Path("JIT/configs/phase_u_absolute_smoke.json"))
+if legacy.formal is None or legacy.formal.formal_blocks != 39:
+    raise SystemExit("retained v2 formal configuration contract is invalid")
+if active.formal is None or active.formal.formal_blocks != 203:
+    raise SystemExit("active v3 formal configuration contract is invalid")
+if active.ppo.requested_transitions != 4_988_928:
+    raise SystemExit("active v3 target is invalid")
+if smoke.ppo.requested_transitions != smoke.ppo.block_transitions:
+    raise SystemExit("active v3 smoke is not one exact PPO block")
 PY
 "${JIT_PYTHON}" - <<'PY'
 import ast

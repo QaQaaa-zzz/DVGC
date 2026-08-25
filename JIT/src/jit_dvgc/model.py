@@ -163,9 +163,11 @@ def load_host_model(config: ResolvedConfig) -> ModelBundle:
         ctrl_min=jp.asarray(model.actuator_ctrlrange[:, 0], dtype=jp.float32),
         ctrl_max=jp.asarray(model.actuator_ctrlrange[:, 1], dtype=jp.float32),
         hip_initial=float(model.key_qpos[index.keyframe_id, index.hip_qpos_address]),
+        knee_initial=float(model.key_qpos[index.keyframe_id, index.knee_qpos_address]),
         base_rear_speed=float(config.action.base_rear_speed),
         rear_speed_delta=float(config.action.rear_speed_delta),
-        knee_target_delta=float(config.action.knee_target_delta),
+        joint_target_semantics=config.action.joint_target_semantics,
+        knee_target_delta=float(config.action.knee_target_delta or 0.0),
     )
     return ModelBundle(
         xml_path=xml_path,

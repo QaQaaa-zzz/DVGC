@@ -51,6 +51,7 @@ class FormalReport:
     segment_training_transitions: int
     brax_evaluation_transitions: int
     fixed_evaluation_transitions: int
+    diagnostic_transitions: int
     checkpoint_transitions: tuple[int, ...]
     evaluated_transitions: tuple[int, ...]
     final_metrics: Mapping[str, float]
@@ -63,12 +64,29 @@ class FormalReport:
             self.segment_training_transitions
             + self.brax_evaluation_transitions
             + self.fixed_evaluation_transitions
+            + self.diagnostic_transitions
         )
 
 
-def validate_formal_report(report: FormalReport) -> FormalReport:
-    if report.requested_training_transitions != 998_400:
-        raise ValueError("formal requested target must equal 998400")
+def validate_formal_report(
+    report: FormalReport, *, config: ResolvedConfig | None = None
+) -> FormalReport:
+    if config is None:
+        expected_target = 998_400
+        full_checkpoints = (0, 102_400, 256_000, 512_000, 742_400, 998_400)
+        full_evaluations = full_checkpoints[1:]
+        num_eval_envs = 8
+        episode_horizon = 200
+    else:
+        if config.formal is None:
+            raise ValueError("formal report validation requires a formal config")
+        expected_target = config.ppo.requested_transitions
+        full_checkpoints = config.formal.checkpoint_transitions
+        full_evaluations = config.formal.fixed_evaluation_transitions
+        num_eval_envs = len(config.ppo.held_out_seeds)
+        episode_horizon = config.ppo.episode_horizon
+    if report.requested_training_transitions != expected_target:
+        raise ValueError(f"formal requested target must equal {expected_target}")
     if report.completed_training_transitions != report.requested_training_transitions:
         raise ValueError("formal run did not reach the absolute target")
     expected_segment = (
@@ -78,22 +96,25 @@ def validate_formal_report(report: FormalReport) -> FormalReport:
         raise ValueError("formal segment training count mismatch")
     if report.brax_evaluation_transitions != 0:
         raise ValueError("formal Brax evaluation transitions must remain zero")
-    full_checkpoints = (0, 102_400, 256_000, 512_000, 742_400, 998_400)
     expected_checkpoints = tuple(
         step for step in full_checkpoints if step >= report.starting_training_transition
     )
     if report.checkpoint_transitions != expected_checkpoints:
         raise ValueError("formal checkpoint schedule mismatch")
-    full_evaluations = full_checkpoints[1:]
     expected_evaluations = tuple(
         step for step in full_evaluations if step > report.starting_training_transition
     )
     if report.evaluated_transitions != expected_evaluations:
         raise ValueError("formal evaluation schedule mismatch")
-    minimum_fixed = 8 * len(expected_evaluations)
-    maximum_fixed = 8 * 200 * len(expected_evaluations)
+    minimum_fixed = num_eval_envs * len(expected_evaluations)
+    maximum_fixed = num_eval_envs * episode_horizon * len(expected_evaluations)
     if not minimum_fixed <= report.fixed_evaluation_transitions <= maximum_fixed:
         raise ValueError("formal fixed evaluation transition count is invalid")
+    if config is not None and config.schema == "jit_phase_u_formal_v3":
+        if not minimum_fixed <= report.diagnostic_transitions <= maximum_fixed:
+            raise ValueError("formal airborne RSI diagnostic count is invalid")
+    elif report.diagnostic_transitions != 0:
+        raise ValueError("legacy formal report must not contain diagnostics")
     for value in report.final_metrics.values():
         if not math.isfinite(float(value)):
             raise ValueError("formal report contains a nonfinite metric")
@@ -139,6 +160,7 @@ class FormalRunController:
         identity: CheckpointIdentity,
         starting_training_transition: int,
         evaluate_panel: Callable[[int, Any, Any], PanelResult],
+        evaluate_diagnostic_panel: Callable[[int, Any, Any], PanelResult] | None = None,
         checkpoint_saver: Callable[[Path, CheckpointPayload], None] = save_checkpoint,
         checkpoint_loader: Callable[..., CheckpointPayload] = load_checkpoint,
     ) -> None:
@@ -155,6 +177,7 @@ class FormalRunController:
         self.identity = identity
         self.starting_training_transition = int(starting_training_transition)
         self.evaluate_panel = evaluate_panel
+        self.evaluate_diagnostic_panel = evaluate_diagnostic_panel
         self.checkpoint_saver = checkpoint_saver
         self.checkpoint_loader = checkpoint_loader
         self._last_policy_relative: int | None = None
@@ -163,6 +186,7 @@ class FormalRunController:
         self._checkpoint_transitions: list[int] = []
         self._evaluated_transitions: list[int] = []
         self._fixed_evaluation_transitions = 0
+        self._diagnostic_transitions = 0
         self._last_metrics: dict[str, float] = {}
         self.run_dir.mkdir(parents=True, exist_ok=True)
 
@@ -185,6 +209,10 @@ class FormalRunController:
     @property
     def fixed_evaluation_transitions(self) -> int:
         return self._fixed_evaluation_transitions
+
+    @property
+    def diagnostic_transitions(self) -> int:
+        return self._diagnostic_transitions
 
     @property
     def final_metrics(self) -> Mapping[str, float]:
@@ -232,6 +260,17 @@ class FormalRunController:
                 raise ValueError("evaluation panel must consume positive transitions")
             self._evaluated_transitions.append(absolute)
             self._fixed_evaluation_transitions += result.environment_transitions
+            if self.evaluate_diagnostic_panel is not None:
+                diagnostic = self.evaluate_diagnostic_panel(
+                    absolute, make_policy, params
+                )
+                if diagnostic.absolute_transition != absolute:
+                    raise ValueError("diagnostic panel transition mismatch")
+                if diagnostic.environment_transitions <= 0:
+                    raise ValueError(
+                        "diagnostic panel must consume positive transitions"
+                    )
+                self._diagnostic_transitions += diagnostic.environment_transitions
 
     def on_progress(self, relative_step: int, metrics: Mapping[str, Any]) -> None:
         relative = int(relative_step)
@@ -278,20 +317,23 @@ def _checkpoint_identity(
     )
 
 
-def _evaluate_fixed_panel(
+def _evaluate_panel_from_reset(
     env: Any,
     run_dir: Path,
     config: ResolvedConfig,
     absolute_transition: int,
     make_policy: Any,
     params: Any,
+    *,
+    reset_method: str,
+    panel_root: str,
 ) -> PanelResult:
     deterministic_policy = make_policy(params, deterministic=True)
-    reset_fn = jax.jit(env.reset_natural)
+    reset_fn = jax.jit(getattr(env, reset_method))
     step_fn = jax.jit(env.step)
     traces = []
     artifacts = []
-    panel_dir = Path(run_dir) / "evaluations" / f"transition_{absolute_transition}"
+    panel_dir = Path(run_dir) / panel_root / f"transition_{absolute_transition}"
     panel_dir.mkdir(parents=True, exist_ok=False)
     for seed in config.ppo.held_out_seeds:
         policy_key = jax.random.PRNGKey(seed)
@@ -333,6 +375,11 @@ def _evaluate_fixed_panel(
         representative = next(
             (trace for trace in traces if trace.frames[-1].success), traces[0]
         )
+        representative_artifact = next(
+            artifact
+            for artifact in artifacts
+            if artifact["seed"] == representative.seed
+        )
         video_report = render_trace(
             env,
             representative,
@@ -340,11 +387,64 @@ def _evaluate_fixed_panel(
             fps=50,
             reward_scaling=config.ppo.reward_scaling,
         )
-        _write_json(panel_dir / "video_report.json", asdict(video_report))
+        video_payload = asdict(video_report)
+        video_payload.update(
+            {
+                "representative_seed": representative.seed,
+                "representative_episode_npz": representative_artifact["npz_path"],
+                "representative_episode_npz_sha256": representative_artifact[
+                    "npz_sha256"
+                ],
+                "reset_source_airborne_rsi": (
+                    reset_method == "reset_airborne_rsi"
+                ),
+            }
+        )
+        _write_json(panel_dir / "video_report.json", video_payload)
     return PanelResult(
         absolute_transition=absolute_transition,
         environment_transitions=int(summary["environment_transitions"]),
         summary=summary,
+    )
+
+
+def _evaluate_fixed_panel(
+    env: Any,
+    run_dir: Path,
+    config: ResolvedConfig,
+    absolute_transition: int,
+    make_policy: Any,
+    params: Any,
+) -> PanelResult:
+    return _evaluate_panel_from_reset(
+        env,
+        run_dir,
+        config,
+        absolute_transition,
+        make_policy,
+        params,
+        reset_method="reset_natural",
+        panel_root="evaluations",
+    )
+
+
+def _evaluate_airborne_rsi_panel(
+    env: Any,
+    run_dir: Path,
+    config: ResolvedConfig,
+    absolute_transition: int,
+    make_policy: Any,
+    params: Any,
+) -> PanelResult:
+    return _evaluate_panel_from_reset(
+        env,
+        run_dir,
+        config,
+        absolute_transition,
+        make_policy,
+        params,
+        reset_method="reset_airborne_rsi",
+        panel_root="diagnostics/airborne_rsi",
     )
 
 
@@ -372,9 +472,10 @@ def run_phase_u_formal(
     trainer: Callable[..., Any] = ppo_train.train,
     env_factory: Callable[[ResolvedConfig], Any] = TwoPhaseBikeEnv,
     panel_evaluator: Callable[..., PanelResult] | None = None,
+    diagnostic_panel_evaluator: Callable[..., PanelResult] | None = None,
     backend_name: Callable[[], str] = jax.default_backend,
 ) -> dict[str, Any]:
-    """Runs one formal segment; normal operation is a single 998,400-step segment."""
+    """Runs one formal segment to the exact target declared by its config."""
 
     config = load_config(Path(config_path))
     if config.formal is None:
@@ -425,7 +526,7 @@ def run_phase_u_formal(
         reference_sha256=str(config.model["reference_sha256"]),
         training_transition_ceiling=remaining,
         stopping_conditions=(
-            "stop_at_absolute_transition_998400",
+            f"stop_at_absolute_transition_{config.ppo.requested_transitions}",
             "stop_on_nonfinite_metric",
             "stop_on_cuda_or_oom_error",
             "stop_on_checkpoint_identity_or_restore_failure",
@@ -467,12 +568,27 @@ def run_phase_u_formal(
     def evaluate_panel(step: int, make_policy: Any, params: Any) -> PanelResult:
         return evaluator(env, run_dir, config, step, make_policy, params)
 
+    diagnostic_evaluator = None
+    if config.schema == "jit_phase_u_formal_v3":
+        diagnostic_evaluator = (
+            diagnostic_panel_evaluator or _evaluate_airborne_rsi_panel
+        )
+
+    def evaluate_diagnostic_panel(
+        step: int, make_policy: Any, params: Any
+    ) -> PanelResult:
+        assert diagnostic_evaluator is not None
+        return diagnostic_evaluator(env, run_dir, config, step, make_policy, params)
+
     controller = FormalRunController(
         config=config,
         run_dir=run_dir,
         identity=identity,
         starting_training_transition=starting_transition,
         evaluate_panel=evaluate_panel,
+        evaluate_diagnostic_panel=(
+            evaluate_diagnostic_panel if diagnostic_evaluator is not None else None
+        ),
     )
     restore_params = None
     if restored_payload is not None:
@@ -542,12 +658,14 @@ def run_phase_u_formal(
                 segment_training_transitions=controller.segment_training_transitions,
                 brax_evaluation_transitions=0,
                 fixed_evaluation_transitions=controller.fixed_evaluation_transitions,
+                diagnostic_transitions=controller.diagnostic_transitions,
                 checkpoint_transitions=controller.checkpoint_transitions,
                 evaluated_transitions=controller.evaluated_transitions,
                 final_metrics=flattened_final,
                 checkpoint_restored=True,
                 resume_semantics=resume_semantics,
-            )
+            ),
+            config=config,
         )
         _write_json(run_dir / "formal_report.json", asdict(report))
         close_run(
@@ -557,7 +675,7 @@ def run_phase_u_formal(
                 training=controller.segment_training_transitions,
                 brax_evaluation=0,
                 fixed_evaluation=controller.fixed_evaluation_transitions,
-                diagnostic=0,
+                diagnostic=controller.diagnostic_transitions,
             ),
             reason=(
                 "formal Phase U target and frozen held-out panels completed; "
@@ -576,7 +694,7 @@ def run_phase_u_formal(
                 training=controller.segment_training_transitions,
                 brax_evaluation=0,
                 fixed_evaluation=controller.fixed_evaluation_transitions,
-                diagnostic=0,
+                diagnostic=controller.diagnostic_transitions,
             ),
             reason=f"{type(exc).__name__}: {exc}",
         )

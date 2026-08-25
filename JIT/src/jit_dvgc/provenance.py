@@ -12,7 +12,11 @@ from pathlib import Path
 import tempfile
 from typing import Any, Mapping
 
+import mediapy as media
+import numpy as np
+
 from .config import canonical_sha256, file_sha256, resolve_config_payload
+from .constants import REWARD_COMPONENT_KEYS
 
 
 @dataclass(frozen=True)
@@ -154,6 +158,134 @@ def _payload_sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _verify_reset_source(
+    payload: Mapping[str, Any], *, expected_airborne_rsi: bool, context: str
+) -> None:
+    key = "metric__reset__slash__source_airborne_rsi"
+    if key not in payload:
+        raise ValueError(f"{context} reset source metric is missing")
+    values = np.asarray(payload[key], dtype=np.float64)
+    expected = 1.0 if expected_airborne_rsi else 0.0
+    if values.ndim != 1 or values.size == 0 or not np.all(values == expected):
+        raise ValueError(f"{context} reset source mismatch")
+
+
+def _verify_episode_npz(
+    npz_path: Path,
+    *,
+    captured_state_count: int,
+    expected_airborne_rsi: bool,
+    context: str,
+) -> None:
+    vector_widths = {"qpos": 12, "qvel": 11, "ctrl": 4, "action": 4}
+    scalar_names = (
+        "reward",
+        "terminated",
+        "truncated",
+        "end_code",
+        "success",
+        "physical_failure",
+        "timeout",
+    )
+    reward_names = tuple(
+        f"reward_component__{name}" for name in REWARD_COMPONENT_KEYS
+    )
+    with np.load(npz_path, allow_pickle=False) as payload:
+        for name, width in vector_widths.items():
+            if name not in payload.files:
+                raise ValueError(f"{context} required array is missing: {name}")
+            if payload[name].shape != (captured_state_count, width):
+                raise ValueError(f"{context} {name} sample count mismatch")
+            if not np.isfinite(payload[name]).all():
+                raise ValueError(f"{context} {name} contains nonfinite values")
+        for name in scalar_names + reward_names:
+            if name not in payload.files:
+                raise ValueError(f"{context} required array is missing: {name}")
+            if payload[name].shape != (captured_state_count,):
+                raise ValueError(f"{context} {name} sample count mismatch")
+        _verify_reset_source(
+            payload,
+            expected_airborne_rsi=expected_airborne_rsi,
+            context=context,
+        )
+        reset_key = "metric__reset__slash__source_airborne_rsi"
+        if payload[reset_key].shape != (captured_state_count,):
+            raise ValueError(f"{context} reset source sample count mismatch")
+
+
+def _verify_diagnostic_npz(
+    npz_path: Path,
+    *,
+    captured_state_count: int,
+    context: str,
+    expected_airborne_rsi: bool | None = None,
+    episode_npz_path: Path | None = None,
+) -> None:
+    vector_widths = {"qpos": 12, "qvel": 11, "ctrl": 4, "action": 4}
+    scalar_names = (
+        "time_seconds",
+        "reward_clipped",
+        "reward_unclipped",
+        "reward_scaled",
+        "terminal_terminated",
+        "terminal_truncated",
+        "terminal_end_code",
+        "terminal_success",
+        "terminal_physical_failure",
+        "terminal_timeout",
+    ) + tuple(f"reward_component__{name}" for name in REWARD_COMPONENT_KEYS)
+    with np.load(npz_path, allow_pickle=False) as payload:
+        for name, width in vector_widths.items():
+            if name not in payload.files or payload[name].shape != (
+                captured_state_count,
+                width,
+            ):
+                raise ValueError(f"{context} {name} sample count mismatch")
+        for name in scalar_names:
+            if name not in payload.files or payload[name].shape != (
+                captured_state_count,
+            ):
+                raise ValueError(f"{context} {name} sample count mismatch")
+        if expected_airborne_rsi is not None:
+            reset_key = "metric__reset__source_airborne_rsi"
+            if reset_key not in payload.files or payload[reset_key].shape != (
+                captured_state_count,
+            ):
+                raise ValueError(f"{context} reset source sample count mismatch")
+            expected = 1.0 if expected_airborne_rsi else 0.0
+            if not np.all(payload[reset_key] == expected):
+                raise ValueError(f"{context} reset source mismatch")
+        if episode_npz_path is not None:
+            pairs = {
+                "qpos": "qpos",
+                "qvel": "qvel",
+                "ctrl": "ctrl",
+                "action": "action",
+                "reward_clipped": "reward",
+                "terminal_terminated": "terminated",
+                "terminal_truncated": "truncated",
+                "terminal_end_code": "end_code",
+                "terminal_success": "success",
+                "terminal_physical_failure": "physical_failure",
+                "terminal_timeout": "timeout",
+            }
+            pairs.update(
+                {
+                    f"reward_component__{name}": f"reward_component__{name}"
+                    for name in REWARD_COMPONENT_KEYS
+                }
+            )
+            with np.load(episode_npz_path, allow_pickle=False) as episode:
+                for diagnostic_name, episode_name in pairs.items():
+                    if episode_name not in episode.files or not np.array_equal(
+                        payload[diagnostic_name], episode[episode_name]
+                    ):
+                        raise ValueError(
+                            f"{context} does not match representative episode: "
+                            f"{diagnostic_name}"
+                        )
+
+
 def _verify_checkpoint_sidecar(
     checkpoint: Path,
     *,
@@ -184,9 +316,11 @@ def _verify_video_artifacts(
     artifact_dir: Path,
     schema: str,
     context: str,
+    expected_airborne_rsi: bool | None = None,
+    expected_seeds: tuple[int, ...] = (),
 ) -> None:
     artifact_keys = ("video", "state_trace")
-    if schema.endswith("_v2"):
+    if schema.endswith(("_v2", "_v3")):
         artifact_keys = (
             "video",
             "state_trace",
@@ -194,16 +328,35 @@ def _verify_video_artifacts(
             "diagnostic_data",
         )
     resolved_paths: dict[str, Path] = {}
+    suffixes = {
+        "video": ".mp4",
+        "state_trace": ".npz",
+        "diagnostic_plot": ".png",
+        "diagnostic_data": ".npz",
+    }
     for artifact_key in artifact_keys:
         artifact = Path(str(video_report.get(artifact_key, "")))
         if not artifact.is_file() or artifact.resolve().parent != artifact_dir.resolve():
             raise ValueError(f"{context} artifact is invalid: {artifact_key}")
+        if artifact.suffix.lower() != suffixes[artifact_key]:
+            raise ValueError(f"{context} artifact type is invalid: {artifact_key}")
         resolved_paths[artifact_key] = artifact.resolve()
 
-    if not schema.endswith("_v2"):
+    if resolved_paths["video"] == resolved_paths["state_trace"]:
+        raise ValueError(f"{context} video and state trace must be distinct")
+
+    if not schema.endswith(("_v2", "_v3")):
         return
     if resolved_paths["state_trace"] != resolved_paths["diagnostic_data"]:
         raise ValueError(f"{context} state trace must equal diagnostic data")
+    if len(
+        {
+            resolved_paths["video"],
+            resolved_paths["diagnostic_plot"],
+            resolved_paths["diagnostic_data"],
+        }
+    ) != 3:
+        raise ValueError(f"{context} video, plot, and data must be distinct")
     for artifact_key, hash_key in (
         ("video", "video_sha256"),
         ("diagnostic_plot", "diagnostic_plot_sha256"),
@@ -213,6 +366,52 @@ def _verify_video_artifacts(
         actual = _payload_sha256(resolved_paths[artifact_key])
         if expected != actual:
             raise ValueError(f"{context} {artifact_key} hash mismatch")
+    captured = video_report.get("captured_state_count")
+    encoded = video_report.get("encoded_frame_count")
+    if not isinstance(captured, int) or not isinstance(encoded, int):
+        raise ValueError(f"{context} frame counts are invalid")
+    representative_episode: Path | None = None
+    if expected_airborne_rsi is not None:
+        representative_seed = video_report.get("representative_seed")
+        if representative_seed not in expected_seeds:
+            raise ValueError(f"{context} representative seed is invalid")
+        representative_episode = (
+            artifact_dir / f"seed_{representative_seed}.npz"
+        ).resolve()
+        declared_episode = Path(
+            str(video_report.get("representative_episode_npz", ""))
+        )
+        if (
+            not representative_episode.is_file()
+            or declared_episode.resolve() != representative_episode
+        ):
+            raise ValueError(f"{context} representative episode path is invalid")
+        expected_episode_hash = video_report.get(
+            "representative_episode_npz_sha256"
+        )
+        if expected_episode_hash != _payload_sha256(representative_episode):
+            raise ValueError(f"{context} representative episode hash mismatch")
+        if video_report.get("reset_source_airborne_rsi") is not expected_airborne_rsi:
+            raise ValueError(f"{context} reset source declaration mismatch")
+    _verify_diagnostic_npz(
+        resolved_paths["diagnostic_data"],
+        captured_state_count=captured,
+        context=f"{context} diagnostic data",
+        expected_airborne_rsi=expected_airborne_rsi,
+        episode_npz_path=representative_episode,
+    )
+    try:
+        decoded = media.read_video(resolved_paths["video"])
+    except Exception as exc:
+        raise ValueError(f"{context} video decode failed") from exc
+    if len(decoded) != encoded:
+        raise ValueError(f"{context} decoded video frame count mismatch")
+    try:
+        image = media.read_image(resolved_paths["diagnostic_plot"])
+    except Exception as exc:
+        raise ValueError(f"{context} diagnostic plot decode failed") from exc
+    if np.asarray(image).ndim not in {2, 3}:
+        raise ValueError(f"{context} diagnostic plot shape is invalid")
 
 
 def _verify_formal_run(
@@ -226,9 +425,13 @@ def _verify_formal_run(
     if status["status"] != "completed":
         return report
     schema = str(resolved.get("schema", ""))
-    if schema not in {"jit_phase_u_formal_v1", "jit_phase_u_formal_v2"}:
+    if schema not in {
+        "jit_phase_u_formal_v1",
+        "jit_phase_u_formal_v2",
+        "jit_phase_u_formal_v3",
+    }:
         raise ValueError("formal run does not use the formal config schema")
-    if schema == "jit_phase_u_formal_v2":
+    if schema in {"jit_phase_u_formal_v2", "jit_phase_u_formal_v3"}:
         resolve_config_payload(resolved)
     repository_root = Path(__file__).resolve().parents[3]
     model = resolved["model"]
@@ -245,7 +448,7 @@ def _verify_formal_run(
         raise ValueError("reference trajectory identity drift")
 
     target = int(resolved["ppo"]["requested_transitions"])
-    if target != 998_400:
+    if schema == "jit_phase_u_formal_v1" and target != 998_400:
         raise ValueError("formal target must equal 998400")
     start = int(manifest.get("starting_training_transition", 0))
     expected_segment = target - start
@@ -254,8 +457,10 @@ def _verify_formal_run(
         raise ValueError("formal segment training accounting mismatch")
     if int(manifest["training_transition_ceiling"]) != expected_segment:
         raise ValueError("formal segment training ceiling mismatch")
-    if accounting["brax_evaluation"] != 0 or accounting["diagnostic"] != 0:
-        raise ValueError("formal run contains undeclared evaluation or diagnostic transitions")
+    if accounting["brax_evaluation"] != 0:
+        raise ValueError("formal run contains undeclared Brax evaluation transitions")
+    if schema != "jit_phase_u_formal_v3" and accounting["diagnostic"] != 0:
+        raise ValueError("legacy formal run contains undeclared diagnostic transitions")
 
     formal = resolved["formal"]
     expected_checkpoints = tuple(
@@ -273,6 +478,7 @@ def _verify_formal_run(
         )
 
     expected_seeds = tuple(int(seed) for seed in resolved["ppo"]["held_out_seeds"])
+    episode_horizon = int(resolved["ppo"]["episode_horizon"])
     expected_evaluations = tuple(
         int(step)
         for step in formal["fixed_evaluation_transitions"]
@@ -302,13 +508,23 @@ def _verify_formal_run(
             if metadata.get("seed") != seed:
                 raise ValueError("formal trace seed mismatch")
             transitions = metadata.get("environment_transitions")
-            if not isinstance(transitions, int) or not 1 <= transitions <= 200:
+            if (
+                not isinstance(transitions, int)
+                or not 1 <= transitions <= episode_horizon
+            ):
                 raise ValueError("formal trace transition count is invalid")
             if metadata.get("captured_state_count") != transitions + 1:
                 raise ValueError("formal trace transition/state count mismatch")
             digest = _payload_sha256(npz_path)
             if metadata.get("npz_sha256") != digest:
                 raise ValueError("formal trace payload hash mismatch")
+            if schema == "jit_phase_u_formal_v3":
+                _verify_episode_npz(
+                    npz_path,
+                    captured_state_count=transitions + 1,
+                    expected_airborne_rsi=False,
+                    context="formal natural evaluation",
+                )
             panel_total += transitions
         if summary.get("environment_transitions") != panel_total:
             raise ValueError("formal trace transition total mismatches panel summary")
@@ -322,6 +538,94 @@ def _verify_formal_run(
     if accounting["fixed_evaluation"] != fixed_total:
         raise ValueError("formal fixed evaluation accounting mismatch")
 
+    diagnostic_total = 0
+    diagnostic_summaries: dict[str, Any] = {}
+    if schema == "jit_phase_u_formal_v3":
+        for step in expected_evaluations:
+            panel_dir = path / "diagnostics" / "airborne_rsi" / f"transition_{step}"
+            summary_path = panel_dir / "summary.json"
+            if not summary_path.is_file():
+                raise ValueError(
+                    f"formal airborne RSI diagnostic summary is missing at {step}"
+                )
+            summary = json.loads(summary_path.read_text(encoding="utf-8"))
+            if summary.get("absolute_transition") != step:
+                raise ValueError("formal RSI diagnostic transition mismatch")
+            if tuple(summary.get("held_out_seeds", ())) != expected_seeds:
+                raise ValueError("formal RSI diagnostic seeds mismatch")
+            if summary.get("rollouts") != len(expected_seeds):
+                raise ValueError("formal RSI diagnostic rollout count mismatch")
+            panel_total = 0
+            for seed in expected_seeds:
+                metadata_path = panel_dir / f"seed_{seed}.json"
+                npz_path = panel_dir / f"seed_{seed}.npz"
+                if not metadata_path.is_file() or not npz_path.is_file():
+                    raise ValueError(
+                        f"formal RSI diagnostic trace is missing for seed {seed}"
+                    )
+                metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+                transitions = metadata.get("environment_transitions")
+                if metadata.get("seed") != seed:
+                    raise ValueError("formal RSI diagnostic trace seed mismatch")
+                if (
+                    not isinstance(transitions, int)
+                    or not 1 <= transitions <= episode_horizon
+                ):
+                    raise ValueError("formal RSI diagnostic transition count is invalid")
+                if metadata.get("captured_state_count") != transitions + 1:
+                    raise ValueError("formal RSI diagnostic state count mismatch")
+                if metadata.get("npz_sha256") != _payload_sha256(npz_path):
+                    raise ValueError("formal RSI diagnostic trace hash mismatch")
+                _verify_episode_npz(
+                    npz_path,
+                    captured_state_count=transitions + 1,
+                    expected_airborne_rsi=True,
+                    context="formal RSI diagnostic",
+                )
+                panel_total += transitions
+            if summary.get("environment_transitions") != panel_total:
+                raise ValueError("formal RSI diagnostic panel total mismatch")
+            diagnostic_total += panel_total
+            diagnostic_summaries[str(step)] = {
+                "environment_transitions": panel_total,
+                "apex_success_rate": summary.get("apex_success_rate"),
+                "physical_failure_rate": summary.get("physical_failure_rate"),
+                "end_reason_counts": summary.get("end_reason_counts", {}),
+            }
+        if accounting["diagnostic"] != diagnostic_total:
+            raise ValueError("formal RSI diagnostic accounting mismatch")
+
+        final_diagnostic = (
+            path / "diagnostics" / "airborne_rsi" / f"transition_{target}"
+        )
+        diagnostic_video_path = final_diagnostic / "video_report.json"
+        if not diagnostic_video_path.is_file():
+            raise ValueError("formal final RSI diagnostic video report is missing")
+        diagnostic_video = json.loads(
+            diagnostic_video_path.read_text(encoding="utf-8")
+        )
+        _verify_video_artifacts(
+            diagnostic_video,
+            artifact_dir=final_diagnostic,
+            schema=schema,
+            context="formal final RSI diagnostic",
+            expected_airborne_rsi=True,
+            expected_seeds=expected_seeds,
+        )
+        diagnostic_video_transitions = diagnostic_video.get(
+            "environment_transitions"
+        )
+        diagnostic_captured = diagnostic_video.get("captured_state_count")
+        diagnostic_encoded = diagnostic_video.get("encoded_frame_count")
+        if (
+            not isinstance(diagnostic_video_transitions, int)
+            or diagnostic_captured != diagnostic_video_transitions + 1
+            or diagnostic_encoded != diagnostic_captured
+        ):
+            raise ValueError(
+                "formal final RSI diagnostic state/frame accounting mismatch"
+            )
+
     final_panel = path / "evaluations" / f"transition_{target}"
     video_report_path = final_panel / "video_report.json"
     if not video_report_path.is_file():
@@ -331,7 +635,13 @@ def _verify_formal_run(
         video_report,
         artifact_dir=final_panel,
         schema=schema,
-        context="formal final",
+        context=(
+            "formal final natural"
+            if schema == "jit_phase_u_formal_v3"
+            else "formal final"
+        ),
+        expected_airborne_rsi=(False if schema == "jit_phase_u_formal_v3" else None),
+        expected_seeds=expected_seeds,
     )
     video_transitions = video_report.get("environment_transitions")
     captured = video_report.get("captured_state_count")
@@ -355,6 +665,8 @@ def _verify_formal_run(
         raise ValueError("formal report segment count mismatch")
     if formal_report.get("fixed_evaluation_transitions") != fixed_total:
         raise ValueError("formal report fixed evaluation count mismatch")
+    if formal_report.get("diagnostic_transitions", 0) != diagnostic_total:
+        raise ValueError("formal report diagnostic count mismatch")
     if tuple(formal_report.get("checkpoint_transitions", ())) != expected_checkpoints:
         raise ValueError("formal report checkpoint schedule mismatch")
     if tuple(formal_report.get("evaluated_transitions", ())) != expected_evaluations:
@@ -372,7 +684,9 @@ def _verify_formal_run(
             "formal_checkpoint_payload_sha256": checkpoint_hashes,
             "formal_evaluated_transitions": list(expected_evaluations),
             "fixed_evaluation_transitions": fixed_total,
+            "diagnostic_transitions": diagnostic_total,
             "evaluation_summaries": evaluation_summaries,
+            "airborne_rsi_diagnostic_summaries": diagnostic_summaries,
             "checkpoint_restored": True,
         }
     )
@@ -427,9 +741,16 @@ def verify_run(run_dir: Path) -> dict[str, Any]:
     if accounting["training"] != ceiling:
         raise ValueError("completed engineering smoke did not use one exact declared block")
     schema = str(resolved.get("schema", ""))
-    if schema not in {"jit_phase_u_engineering_smoke_v1", "jit_phase_u_engineering_smoke_v2"}:
+    if schema not in {
+        "jit_phase_u_engineering_smoke_v1",
+        "jit_phase_u_engineering_smoke_v2",
+        "jit_phase_u_engineering_smoke_v3",
+    }:
         raise ValueError("engineering smoke does not use a supported config schema")
-    if schema == "jit_phase_u_engineering_smoke_v2":
+    if schema in {
+        "jit_phase_u_engineering_smoke_v2",
+        "jit_phase_u_engineering_smoke_v3",
+    }:
         resolve_config_payload(resolved)
 
     repository_root = Path(__file__).resolve().parents[3]

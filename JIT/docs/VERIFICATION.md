@@ -1,5 +1,51 @@
 # JIT Phase U Verification
 
+## Active v3 prelaunch contract — 2026-08-25
+
+The active source/config pair is `jit_phase_u_*_v3`. It changes only the joint
+target semantics and the approved PPO/training schedule: hip and knee both use
+keyframe-centered absolute targets; the formal run is a fresh 4,988,928-step
+run with seed 820201. Its manifest must have a null parent checkpoint,
+transition zero start, `fresh` resume semantics, and no restore argument.
+
+Natural held-out evaluation and forced-airborne RSI diagnostics are separate
+milestone panels. The provenance verifier independently checks both ledgers,
+all trace hashes, and both final MP4/PNG/NPZ groups. RSI results cannot be
+counted as natural-start success or promotion evidence.
+
+Fresh verification results and the v3 smoke identity are recorded below only
+after those commands finish successfully. Historical v1/v2 sections remain
+for auditability and do not authorize loading their checkpoints.
+
+Verified v3 identities and engineering smoke:
+
+| Evidence | Result |
+|---|---|
+| v3 smoke config SHA-256 | `5bc666658f335b0d394816d0d0b2ba117166c221682b9299dfa400e49302dd7e` |
+| v3 formal config SHA-256 | `58e0302c82de0e267f28679dbe680fb5ef4a1538ffbfcd6ac63904cf6c2bc210` |
+| Active fixed-rate smoke | 24,576 training + 43 diagnostic transitions |
+| Final checkpoint | restored; payload SHA-256 `b2af29d94bb53ee32f402dc17457bb3cfca1b1790ab04578af7f36c9d87ce1b4` |
+| Natural diagnostic | 44 states/frames; roll limit after 43 transitions |
+| Complete non-GPU suite | 151 passed, 8 GPU tests deselected |
+| Complete GPU suite | 8 passed |
+| `JIT/scripts/local_preflight.sh` | exit 0, including retained v1 verification |
+
+The first fixed-rate block reported KL 341.1 because Brax updates the cold
+observation normalizer before its fixed-rate SGD/KL calculation; policy means
+and standard deviations remained bounded. Two additional isolated smokes
+tested adaptive-KL with eight and one data pass. Both postponed cold-start
+normalizer warm-up and exploded policy outputs/KL, so that experiment was
+rejected and removed from the active code/config. These three ignored smoke
+directories are engineering evidence only and are never checkpoint inputs.
+The final audit additionally proves v2 incremental semantics remain truthful,
+checkpoint sidecar identity is checked before pickle deserialization, natural
+v3 traces contain reset-source zero, and forced-RSI traces contain reset-source
+one. Final representative reports bind a legal seed and exact episode-NPZ
+path/hash; diagnostic NPZ arrays are compared to that episode trace, MP4 frame
+counts are decoded, PNG files are decoded, and MP4/PNG/NPZ types and distinct
+paths are enforced. Independent review found no remaining Critical or
+Important issue.
+
 ## Active v2 reward/RSI/diagnostics rebuild — 2026-08-25
 
 The active configuration is now `jit_phase_u_*_v2`. This round changed reward,

@@ -9,14 +9,41 @@ evidence; then execute and audit the user-authorized 998,400-step fresh run.
 
 ## Next Step
 
-Commit and push the post-run analysis documents, verify remote equality, and
-hand off the final video/report with NO_PROMOTION and next-step guidance.
+Execute the approved absolute hip/knee target and fresh aligned 4,988,928-step
+training plan test-first. Do not load any existing checkpoint for the initial
+run.
 
 ## Current Phase
 
-Phase 12: v2 formal analysis and handoff
+Phase 14: verification and fresh launch
 
 ## Phases
+
+### Phase 13: Absolute joint target and 5M implementation
+
+- [x] Replace the active knee incremental command with a keyframe-centered
+  absolute target identical in form to hip.
+- [x] Add an exact identity-isolated 4,988,928-transition PPO config.
+- [x] Generalize formal scheduling/provenance without weakening retained v1/v2
+  verification.
+- [x] Add separately accounted forced-RSI diagnostics.
+- **Status:** complete
+
+### Phase 14: Verification and fresh launch
+
+- [x] Run focused, full non-GPU, GPU, local-preflight, and provenance checks.
+- [x] Review the complete JIT diff and resolve all important findings.
+- [ ] Commit and push one complete JIT-only source round.
+- [ ] Launch from random initialization with no old checkpoint.
+- **Status:** in progress
+
+### Phase 15: Sparse monitoring and final analysis
+
+- [ ] Inspect startup, declared milestones, completion, or abnormal exit only.
+- [ ] Strictly verify the completed run and all interaction accounting.
+- [ ] Analyze natural and forced-RSI outcomes, PPO dynamics, actions, and reward.
+- [ ] Write the complete report and promotion decision.
+- **Status:** pending
 
 ### Phase 7: Reward/RSI/diagnostics design
 
@@ -169,6 +196,9 @@ Phase 12: v2 formal analysis and handoff
 | Implement only Propulsion-Ascent in this delivery | Phase D requires real online Apex snapshots and is outside the approved first delivery. |
 | Treat GPU/PPO output as engineering integrity evidence only | A one-block smoke cannot establish learnability or a trained expert. |
 | Commit once after final verification | The user requested Git delivery only after checking the complete JIT work. |
+| Use absolute keyframe-centered targets for both hip and knee | Explicit user decision; removes the mixed absolute/incremental joint semantics. |
+| Start the new 4,988,928-step run fresh | Explicit user decision; old checkpoints have incompatible knee semantics. |
+| Translate the old PPO update density to 384x64 rollouts with 1,024-transition minibatches and eight passes | Preserves GPU throughput while matching the successful CPU regime more closely than the old 1,024x25/one-pass layout. |
 
 ## Errors Encountered
 

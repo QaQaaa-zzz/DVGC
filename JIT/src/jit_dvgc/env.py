@@ -230,6 +230,10 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
     def reset_natural(self, rng: jax.Array) -> mjx_env.State:
         return self._reset(rng, jp.asarray(False))
 
+    def reset_airborne_rsi(self, rng: jax.Array) -> mjx_env.State:
+        """Resets from the approved airborne distribution for diagnostics."""
+        return self._reset(rng, jp.asarray(True))
+
     def _reset(self, rng: jax.Array, use_airborne_rsi: jax.Array) -> mjx_env.State:
         model = self._require_runtime_model()
         index = self._bundle.model_index

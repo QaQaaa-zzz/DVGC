@@ -2,6 +2,14 @@
 
 ## Requirements
 
+- On 2026-08-25 the user explicitly rejected mixed hip/knee semantics. Both
+  joints must use the hip-style keyframe-centered piecewise absolute position
+  map. With the authoritative knee keyframe at its upper limit, knee maps
+  `-1 -> -1.5`, `0 -> 2.5`, and `+1 -> 2.5` radians.
+- After verified modification, the user authorized one fresh approximately
+  five-million-step run and prohibited loading any old checkpoint for its
+  initial launch.
+
 - On 2026-08-25 the user replaced the original Phase U reward/event contract:
   use the provided planar-jump reward as a formula reference, remove all target
   and deceleration semantics, use root-x jump zone `[2.5,3.1]`, and terminate at
@@ -30,6 +38,30 @@
 - After complete verification, explicitly stage and commit only `JIT/`.
 
 ## Research Findings
+
+- The prior JIT layout collected 25,600 transitions per block but performed
+  only eight optimizer steps. The user's 12-env, 2,048-step, 1,024-minibatch,
+  eight-epoch SB3 layout collected 24,576 transitions and performed 192
+  optimizer steps. Brax `384 env x 64 unroll`, `batch=16`, `24 minibatches`,
+  and `8 updates` reproduces the aggregate 24,576/1,024/192 layout.
+- The closest lower whole-block value to five million is 4,988,928 transitions
+  (`203 * 24,576`).
+- The previous v2 natural panels all failed by roll limit and the final policy
+  exploration scale collapsed. The new learning rate therefore remains
+  `1e-4` while entropy, clip, gamma, lambda, update count, and gradient clip
+  move toward the user's prior successful PPO contract.
+- The first v3 fixed-rate smoke completed all 24,576 transitions and kept
+  policy means/stds bounded, although KL 341.1 included a before/after
+  observation-normalizer coordinate change. Two isolated adaptive-KL smokes
+  (8 passes and 1 pass) delayed normalizer warm-up and instead exploded policy
+  outputs and KL to roughly 1.6-1.7 million. The rejected adaptive experiment
+  was removed; fixed `1e-4`, 8 passes is the validated active profile.
+- A new canonical config hash is sufficient to reject old checkpoints while
+  preserving the checkpoint serialization format. The initial manifest must
+  additionally prove `parent_checkpoint=null` and `starting_transition=0`.
+- The user prohibition is interpreted strictly for the initial workflow: do
+  not open old checkpoints even for diagnostics. Natural and forced-RSI panels
+  inspect only parameters produced by the new run at declared milestones.
 
 - Current MJX-Warp `Data` exposes `actuator_force` but no geom-paired `contact`
   field. Exact hip/knee mechanical power is available; exact wheel contact pairs

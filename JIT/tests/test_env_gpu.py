@@ -101,6 +101,20 @@ def test_forced_natural_reset_never_uses_airborne_rsi(jit_root):
     assert float(state.obs["state"][-1]) == 0.0
 
 
+def test_forced_airborne_reset_always_uses_rsi_and_jump_signal(jit_root):
+    env = _environment(str(jit_root / "configs" / "phase_u_absolute_smoke.json"))
+    state = jax.jit(env.reset_airborne_rsi)(jax.random.PRNGKey(103))
+    jax.block_until_ready(state)
+
+    assert 2.7 <= float(state.data.qpos[0]) <= 2.9
+    assert 1.8 <= float(state.data.qpos[2]) <= 2.2
+    assert 1.8 <= float(state.data.qvel[0]) <= 2.2
+    assert 0.8 <= float(state.data.qvel[2]) <= 1.2
+    assert float(state.metrics["reset/source_airborne_rsi"]) == 1.0
+    assert float(state.info["events"].jump_signal) == 1.0
+    assert float(state.obs["state"][-1]) == 1.0
+
+
 def test_mixed_reset_is_reproducible_and_airborne_samples_are_bounded(jit_root):
     env = _environment(str(jit_root / "configs" / "phase_u_smoke.json"))
     keys = jax.random.split(jax.random.PRNGKey(102), 1024)

@@ -1,5 +1,45 @@
 # JIT Phase U training stack
 
+## Active v3 absolute-joint 5M experiment
+
+The active experiment uses `phase_u_absolute_5m.json` and starts from newly
+initialized PPO parameters. It never restores a v1/v2 checkpoint. Hip and knee
+now share one keyframe-centered absolute-target rule: action zero commands the
+XML keyframe angle, while negative/positive actions interpolate to that joint's
+lower/upper limit. Consequently hip maps `[-1, 0, 1]` to
+`[-1.3, -1.2, 0.5]` radians and knee maps it to `[-1.5, 2.5, 2.5]` radians.
+Steering and rear-wheel mappings are unchanged.
+
+The exact target is 4,988,928 transitions: 203 aligned PPO blocks with 384
+parallel environments, 64-step unrolls, 16 chunks per minibatch, 24
+minibatches, and 8 optimizer passes. The fixed learning rate is `1e-4`;
+entropy is `0.01`; gamma/GAE/clip/max-gradient are `0.99/0.95/0.2/0.5`.
+The first-block KL includes observation-normalizer warm-up and is not treated
+as a pure policy-shift metric; later blocks use an established normalizer.
+
+At each declared milestone, natural-reset held-out evaluation and forced
+airborne-RSI diagnostics are stored separately. Only natural-reset panels can
+support promotion. Both routes save complete NPZ traces; their final
+representatives also save MP4 and aligned reward/state PNG diagnostics. RSI
+interactions are recorded only in the diagnostic ledger.
+
+Fresh formal launch (there is deliberately no `--restore-checkpoint`):
+
+```bash
+nohup setsid env XLA_PYTHON_CLIENT_PREALLOCATE=false MUJOCO_GL=egl \
+  PYTHONUNBUFFERED=1 PYTHONPATH=JIT/src \
+  /home/qy/mujoco_playground/.venv/bin/python JIT/cli/train_phase_expert.py \
+  --phase propulsion_ascent \
+  --config JIT/configs/phase_u_absolute_5m.json \
+  --run-id phase_u_absolute_4988928_seed820201_20260825 \
+  --formal \
+  > JIT/runs/phase_u/phase_u_absolute_4988928_seed820201_20260825.launch.log 2>&1 \
+  < /dev/null &
+```
+
+Everything below documents retained v1/v2 behavior and historical evidence;
+those checkpoints are audit artifacts, not inputs to the active v3 run.
+
 `JIT` is an independent implementation of the first Propulsion-Ascent
 engineering delivery described in the repository rebuild guide. It does not
 import the existing `dvgc` package and does not copy the authoritative XML.

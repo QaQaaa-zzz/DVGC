@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import hashlib
 import json
 import math
@@ -65,17 +65,20 @@ class FormalTrainingConfig:
     checkpoint_transitions: tuple[int, ...]
     fixed_evaluation_transitions: tuple[int, ...]
     resume_semantics: str
+    requested_transitions: int = 998_400
+    block_transitions: int = 25_600
 
     @property
     def formal_blocks(self) -> int:
-        return 998_400 // 25_600
+        return self.requested_transitions // self.block_transitions
 
 
 @dataclass(frozen=True)
 class ActionConfig:
     base_rear_speed: float
     rear_speed_delta: float
-    knee_target_delta: float
+    knee_target_delta: float | None = None
+    joint_target_semantics: str = "incremental_knee"
 
 
 @dataclass(frozen=True)
@@ -195,28 +198,58 @@ def _validate_ppo(ppo: PPOConfig) -> None:
         _positive(f"ppo.{name}", getattr(ppo, name))
 
 
-def _validate_formal(ppo: PPOConfig, formal: FormalTrainingConfig) -> None:
-    if ppo.requested_transitions != 998_400:
-        raise ValueError("formal requested_transitions must equal 998400")
-    if ppo.block_transitions != 25_600:
-        raise ValueError("formal PPO block must equal 25600 transitions")
-    if ppo.num_evals != 40:
-        raise ValueError("formal num_evals must equal 40")
-    if ppo.seed != 820101:
-        raise ValueError("formal training seed must equal 820101")
-    if ppo.held_out_seeds != tuple(range(920001, 920009)):
-        raise ValueError("formal held-out seeds must equal 920001 through 920008")
+def _validate_formal(
+    schema: str, ppo: PPOConfig, formal: FormalTrainingConfig
+) -> None:
     checkpoints = formal.checkpoint_transitions
     evaluations = formal.fixed_evaluation_transitions
     if not checkpoints or checkpoints[0] != 0:
         raise ValueError("formal checkpoints must start at zero")
     if checkpoints[-1] != ppo.requested_transitions:
-        raise ValueError("formal checkpoints must end at 998400")
+        approved_target = (
+            998_400
+            if schema == "jit_phase_u_formal_v2"
+            else 4_988_928
+        )
+        raise ValueError(
+            "formal checkpoints must end at requested transitions; "
+            f"approved target is {approved_target}"
+        )
     if tuple(sorted(set(checkpoints))) != checkpoints:
         raise ValueError("formal checkpoints must be strictly increasing")
     if any(step % ppo.block_transitions for step in checkpoints):
         raise ValueError("formal checkpoints must be block-aligned")
-    expected_checkpoints = (0, 102_400, 256_000, 512_000, 742_400, 998_400)
+    if schema == "jit_phase_u_formal_v2":
+        if ppo.requested_transitions != 998_400:
+            raise ValueError("formal requested_transitions must equal 998400")
+        if ppo.block_transitions != 25_600:
+            raise ValueError("formal PPO block must equal 25600 transitions")
+        if ppo.num_evals != 40:
+            raise ValueError("formal num_evals must equal 40")
+        if ppo.seed != 820101:
+            raise ValueError("formal training seed must equal 820101")
+        if ppo.held_out_seeds != tuple(range(920001, 920009)):
+            raise ValueError("formal held-out seeds must equal 920001 through 920008")
+        expected_checkpoints = (0, 102_400, 256_000, 512_000, 742_400, 998_400)
+    else:
+        if ppo.requested_transitions != 4_988_928:
+            raise ValueError("formal requested_transitions must equal 4988928")
+        if ppo.block_transitions != 24_576:
+            raise ValueError("formal PPO block must equal 24576 transitions")
+        if ppo.num_evals != 204:
+            raise ValueError("formal num_evals must equal 204")
+        if ppo.seed != 820201:
+            raise ValueError("formal training seed must equal 820201")
+        if ppo.held_out_seeds != tuple(range(930001, 930009)):
+            raise ValueError("formal held-out seeds must equal 930001 through 930008")
+        expected_checkpoints = (
+            0,
+            245_760,
+            983_040,
+            2_506_752,
+            3_981_312,
+            4_988_928,
+        )
     if checkpoints != expected_checkpoints:
         raise ValueError("formal config must use the exact checkpoint schedule")
     if tuple(sorted(set(evaluations))) != evaluations:
@@ -336,10 +369,129 @@ def _validate_approved_v2_method(
             raise ValueError(f"approved v2 {section} method contract drift")
 
 
+def _validate_approved_v3_method(
+    schema: str,
+    *,
+    model: Mapping[str, Any],
+    action: ActionConfig,
+    reset: ResetConfig,
+    events: EventConfig,
+    physical_limits: PhysicalLimits,
+    reward: RewardConfig,
+    ppo: PPOConfig,
+) -> None:
+    expected_model = {
+        "xml_path": "assets/orange_bike_4kg_horizontal.xml",
+        "xml_sha256": "e2762bec49fdce61eff6ad01b6a67925934d8997b53929b0a67ace7f44109192",
+        "reference_path": "data/reference_jump.csv",
+        "reference_sha256": "612fe758eb1042481b9c7642cc9b92d3e9c14b4a75c9deaf5340183c928bc41f",
+        "mjx_impl": "warp",
+        "naconmax": 4096,
+        "njmax": 256,
+    }
+    expected_action = ActionConfig(
+        base_rear_speed=12.0,
+        rear_speed_delta=12.0,
+        knee_target_delta=None,
+        joint_target_semantics="keyframe_centered_absolute",
+    )
+    expected_reset = ResetConfig(
+        keyframe="initial_state",
+        initial_forward_velocity=2.0,
+        airborne_rsi_probability=0.05,
+        airborne_rsi_x_min=2.7,
+        airborne_rsi_x_max=2.9,
+        airborne_rsi_z_min=1.8,
+        airborne_rsi_z_max=2.2,
+        airborne_rsi_vx_min=1.8,
+        airborne_rsi_vx_max=2.2,
+        airborne_rsi_vz_min=0.8,
+        airborne_rsi_vz_max=1.2,
+    )
+    expected_events = EventConfig(2.5, 3.1, 0.05, 0.5, 0.05)
+    expected_limits = PhysicalLimits(
+        max_abs_roll=0.6108652381980153,
+        max_abs_pitch=1.3089969389957472,
+        max_backward_distance=1.0,
+    )
+    expected_reward = RewardConfig(
+        roll_coeff=3.0,
+        pitch_coeff=1.0,
+        yaw_coeff=0.3,
+        speed_coeff=0.2,
+        survival_reward=1.5,
+        height_coeff=20.0,
+        desired_velocity=3.5,
+        speed_sigma=0.5,
+        jump_reward_min_height=0.35,
+        peak_reward_height=0.5,
+        max_beneficial_height=0.8,
+        action_smoothness_scale=0.0001,
+        action_magnitude_scale=0.1,
+        action_coeff=1.5,
+        pitch_angular_velocity_coeff=0.15,
+        joint_energy_penalty_coeff=2.0,
+        apex_success_bonus=50.0,
+        illegal_contact_penalty=30.0,
+        physical_failure_penalty=30.0,
+        timeout_penalty=10.0,
+        total_min=-50.0,
+        total_max=50.0,
+    )
+    common_ppo = dict(
+        num_parallel_envs=384,
+        episode_horizon=200,
+        unroll_length=64,
+        batch_size=16,
+        num_minibatches=24,
+        num_updates_per_batch=8,
+        num_eval_envs=8,
+        learning_rate=0.0001,
+        entropy_cost=0.01,
+        reward_scaling=0.1,
+        discounting=0.99,
+        gae_lambda=0.95,
+        clipping_epsilon=0.2,
+        max_grad_norm=0.5,
+        held_out_seeds=tuple(range(930001, 930009)),
+    )
+    if schema == "jit_phase_u_formal_v3":
+        expected_ppo = PPOConfig(
+            **common_ppo,
+            requested_transitions=4_988_928,
+            num_evals=204,
+            seed=820201,
+        )
+    else:
+        expected_ppo = PPOConfig(
+            **common_ppo,
+            requested_transitions=24_576,
+            num_evals=1,
+            seed=820200,
+        )
+    approved = {
+        "model": (dict(model), expected_model),
+        "action": (action, expected_action),
+        "reset": (reset, expected_reset),
+        "events": (events, expected_events),
+        "physical_limits": (physical_limits, expected_limits),
+        "reward": (reward, expected_reward),
+        "ppo": (ppo, expected_ppo),
+    }
+    for section, (actual, expected) in approved.items():
+        if actual != expected:
+            raise ValueError(f"approved v3 {section} method contract drift")
+
+
 def resolve_config_payload(payload: Mapping[str, Any]) -> ResolvedConfig:
     payload = dict(payload)
     schema = str(payload.get("schema", ""))
-    if schema not in {"jit_phase_u_engineering_smoke_v2", "jit_phase_u_formal_v2"}:
+    if schema not in {
+        "jit_phase_u_engineering_smoke_v2",
+        "jit_phase_u_formal_v2",
+        "jit_phase_u_engineering_smoke_v3",
+        "jit_phase_u_formal_v3",
+    }:
         raise ValueError("unsupported JIT config schema")
     if payload.get("phase") != "propulsion_ascent":
         raise ValueError("only propulsion_ascent is implemented")
@@ -353,12 +505,17 @@ def resolve_config_payload(payload: Mapping[str, Any]) -> ResolvedConfig:
     ppo = _dataclass_from(PPOConfig, ppo_payload)
     _validate_ppo(ppo)
     formal: FormalTrainingConfig | None = None
-    if schema == "jit_phase_u_formal_v2":
+    if schema in {"jit_phase_u_formal_v2", "jit_phase_u_formal_v3"}:
         formal_payload = dict(payload.get("formal", {}))
         for key in ("checkpoint_transitions", "fixed_evaluation_transitions"):
             formal_payload[key] = tuple(int(x) for x in formal_payload.get(key, ()))
         formal = _dataclass_from(FormalTrainingConfig, formal_payload)
-        _validate_formal(ppo, formal)
+        formal = replace(
+            formal,
+            requested_transitions=ppo.requested_transitions,
+            block_transitions=ppo.block_transitions,
+        )
+        _validate_formal(schema, ppo, formal)
     elif "formal" in payload:
         raise ValueError("smoke config must not contain formal settings")
     events = _dataclass_from(EventConfig, payload["events"])
@@ -389,7 +546,12 @@ def resolve_config_payload(payload: Mapping[str, Any]) -> ResolvedConfig:
 
     action = _dataclass_from(ActionConfig, payload["action"])
     physical_limits = _dataclass_from(PhysicalLimits, payload["physical_limits"])
-    _validate_approved_v2_method(
+    validator = (
+        _validate_approved_v3_method
+        if schema.endswith("_v3")
+        else _validate_approved_v2_method
+    )
+    validator(
         schema,
         model=payload["model"],
         action=action,

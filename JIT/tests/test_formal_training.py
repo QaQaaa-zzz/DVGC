@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import json
 import hashlib
+from pathlib import Path
 from types import SimpleNamespace
 
 import jax.numpy as jp
+import mediapy as media
 import numpy as np
 import pytest
 
@@ -20,6 +22,7 @@ from jit_dvgc.constants import (
     ACTOR_TASK_FIELDS,
     ACTOR_OBSERVATION_SIZE,
     PRIVILEGED_OBSERVATION_SIZE,
+    REWARD_COMPONENT_KEYS,
 )
 from jit_dvgc.formal_training import (
     FormalReport,
@@ -49,6 +52,7 @@ def _report(**overrides):
         segment_training_transitions=998_400,
         brax_evaluation_transitions=0,
         fixed_evaluation_transitions=40,
+        diagnostic_transitions=0,
         checkpoint_transitions=(0, 102_400, 256_000, 512_000, 742_400, 998_400),
         evaluated_transitions=(102_400, 256_000, 512_000, 742_400, 998_400),
         final_metrics={"training/sps": 1.0},
@@ -63,6 +67,39 @@ def test_formal_report_requires_exact_target_and_panels():
     report = validate_formal_report(_report())
     assert report.completed_training_transitions == 998_400
     assert report.segment_training_transitions == 998_400
+
+
+def test_absolute_5m_report_uses_resolved_schedule(jit_root):
+    config = load_config(jit_root / "configs" / "phase_u_absolute_5m.json")
+    report = FormalReport(
+        requested_training_transitions=4_988_928,
+        starting_training_transition=0,
+        completed_training_transitions=4_988_928,
+        segment_training_transitions=4_988_928,
+        brax_evaluation_transitions=0,
+        fixed_evaluation_transitions=40,
+        diagnostic_transitions=40,
+        checkpoint_transitions=(
+            0,
+            245_760,
+            983_040,
+            2_506_752,
+            3_981_312,
+            4_988_928,
+        ),
+        evaluated_transitions=(
+            245_760,
+            983_040,
+            2_506_752,
+            3_981_312,
+            4_988_928,
+        ),
+        final_metrics={"training/sps": 1.0},
+        checkpoint_restored=True,
+        resume_semantics="fresh",
+    )
+
+    assert validate_formal_report(report, config=config) == report
 
 
 @pytest.mark.parametrize(
@@ -197,13 +234,34 @@ def _fake_make_policy(_params, deterministic=False):
     return policy
 
 
-def _fake_panel(_env, run_dir, config, step, _make_policy, _params):
-    panel_dir = run_dir / "evaluations" / f"transition_{step}"
+def _fake_panel_in(
+    run_dir, config, step, *, panel_root: str
+):
+    panel_dir = run_dir / panel_root / f"transition_{step}"
     panel_dir.mkdir(parents=True)
     artifacts = []
     for seed in config.ppo.held_out_seeds:
         npz_path = panel_dir / f"seed_{seed}.npz"
-        np.savez_compressed(npz_path, qpos=np.zeros((2, 12)))
+        reset_source = float(panel_root.startswith("diagnostics/airborne_rsi"))
+        arrays = {
+            "qpos": np.zeros((2, 12)),
+            "qvel": np.zeros((2, 11)),
+            "ctrl": np.zeros((2, 4)),
+            "action": np.zeros((2, 4)),
+            "reward": np.zeros(2),
+            "terminated": np.array([False, True]),
+            "truncated": np.zeros(2, dtype=bool),
+            "end_code": np.array([0, 3]),
+            "success": np.zeros(2, dtype=bool),
+            "physical_failure": np.ones(2, dtype=bool),
+            "timeout": np.zeros(2, dtype=bool),
+            "metric__reset__slash__source_airborne_rsi": np.full(
+                2, reset_source
+            ),
+        }
+        for reward_key in REWARD_COMPONENT_KEYS:
+            arrays[f"reward_component__{reward_key}"] = np.zeros(2)
+        np.savez_compressed(npz_path, **arrays)
         digest = hashlib.sha256(npz_path.read_bytes()).hexdigest()
         metadata_path = panel_dir / f"seed_{seed}.json"
         metadata = {
@@ -246,9 +304,32 @@ def _fake_panel(_env, run_dir, config, step, _make_policy, _params):
         video_path = panel_dir / "representative.mp4"
         plot_path = panel_dir / "representative_diagnostic.png"
         state_path = panel_dir / "representative_diagnostic.npz"
-        video_path.write_bytes(b"unit-video")
-        plot_path.write_bytes(b"unit-plot")
-        np.savez_compressed(state_path, qpos=np.zeros((2, 12)))
+        media.write_video(
+            video_path,
+            np.zeros((2, 8, 8, 3), dtype=np.uint8),
+            fps=50,
+        )
+        media.write_image(plot_path, np.zeros((8, 8, 3), dtype=np.uint8))
+        diagnostic_arrays = {
+            "time_seconds": np.array([0.0, 0.02]),
+            "reward_clipped": np.zeros(2),
+            "reward_unclipped": np.zeros(2),
+            "reward_scaled": np.zeros(2),
+            "qpos": np.zeros((2, 12)),
+            "qvel": np.zeros((2, 11)),
+            "ctrl": np.zeros((2, 4)),
+            "action": np.zeros((2, 4)),
+            "terminal_terminated": np.array([False, True]),
+            "terminal_truncated": np.zeros(2, dtype=bool),
+            "terminal_end_code": np.array([0, 3]),
+            "terminal_success": np.zeros(2, dtype=bool),
+            "terminal_physical_failure": np.ones(2, dtype=bool),
+            "terminal_timeout": np.zeros(2, dtype=bool),
+            "metric__reset__source_airborne_rsi": np.full(2, reset_source),
+        }
+        for reward_key in REWARD_COMPONENT_KEYS:
+            diagnostic_arrays[f"reward_component__{reward_key}"] = np.zeros(2)
+        np.savez_compressed(state_path, **diagnostic_arrays)
         video_report = {
             "video": str(video_path.resolve()),
             "state_trace": str(state_path.resolve()),
@@ -265,11 +346,28 @@ def _fake_panel(_env, run_dir, config, step, _make_policy, _params):
             "encoded_frame_count": 2,
             "environment_transitions": 1,
             "fps": 50,
+            "representative_seed": config.ppo.held_out_seeds[0],
+            "representative_episode_npz": artifacts[0]["npz_path"],
+            "representative_episode_npz_sha256": artifacts[0]["npz_sha256"],
+            "reset_source_airborne_rsi": bool(reset_source),
         }
         (panel_dir / "video_report.json").write_text(
             json.dumps(video_report), encoding="utf-8"
         )
     return PanelResult(step, 8, summary)
+
+
+def _fake_panel(_env, run_dir, config, step, _make_policy, _params):
+    return _fake_panel_in(run_dir, config, step, panel_root="evaluations")
+
+
+def _fake_rsi_panel(_env, run_dir, config, step, _make_policy, _params):
+    return _fake_panel_in(
+        run_dir,
+        config,
+        step,
+        panel_root="diagnostics/airborne_rsi",
+    )
 
 
 def _fake_trainer(expected_steps, expected_evals):
@@ -292,6 +390,183 @@ def _fake_trainer(expected_steps, expected_evals):
         return _fake_make_policy, params, {"training/kl": 0.01}
 
     return train
+
+
+def _fake_absolute_trainer():
+    def train(**kwargs):
+        assert kwargs["num_timesteps"] == 4_988_928
+        assert kwargs["num_evals"] == 204
+        assert kwargs["num_envs"] == 384
+        assert kwargs["unroll_length"] == 64
+        assert kwargs["batch_size"] == 16
+        assert kwargs["num_minibatches"] == 24
+        assert kwargs["num_updates_per_batch"] == 8
+        assert kwargs["learning_rate"] == 0.0001
+        assert kwargs["entropy_cost"] == 0.01
+        assert kwargs["discounting"] == 0.99
+        assert kwargs["clipping_epsilon"] == 0.2
+        assert kwargs["max_grad_norm"] == 0.5
+        assert kwargs["restore_params"] is None
+        params = ({"normalizer": 0}, {"actor": 1}, {"critic": 2})
+        kwargs["policy_params_fn"](0, _fake_make_policy, params)
+        for step in range(24_576, 4_988_928 + 1, 24_576):
+            kwargs["policy_params_fn"](step, _fake_make_policy, params)
+            kwargs["progress_fn"](step, {"training/kl": 0.01})
+        return _fake_make_policy, params, {"training/kl": 0.01}
+
+    return train
+
+
+def test_absolute_5m_runner_is_fresh_and_uses_dynamic_target(jit_root, tmp_path):
+    run_phase_u_formal(
+        jit_root / "configs" / "phase_u_absolute_5m.json",
+        "absolute_5m_unit",
+        run_root=tmp_path,
+        trainer=_fake_absolute_trainer(),
+        env_factory=_FakeEnv,
+        panel_evaluator=_fake_panel,
+        diagnostic_panel_evaluator=_fake_rsi_panel,
+        backend_name=lambda: "gpu",
+    )
+
+    run_dir = tmp_path / "absolute_5m_unit"
+    manifest = json.loads(
+        (run_dir / "run_manifest.json").read_text(encoding="utf-8")
+    )
+    status = json.loads((run_dir / "status.json").read_text(encoding="utf-8"))
+    report = json.loads(
+        (run_dir / "formal_report.json").read_text(encoding="utf-8")
+    )
+    assert manifest["parent_checkpoint"] is None
+    assert manifest["starting_training_transition"] == 0
+    assert manifest["resume_semantics"] == "fresh"
+    assert manifest["training_transition_ceiling"] == 4_988_928
+    assert manifest["stopping_conditions"][0] == (
+        "stop_at_absolute_transition_4988928"
+    )
+    assert "--restore-checkpoint" not in manifest["resume_command"]
+    assert status["interaction_accounting"]["training"] == 4_988_928
+    assert status["interaction_accounting"]["fixed_evaluation"] == 40
+    assert status["interaction_accounting"]["diagnostic"] == 40
+    assert report["completed_training_transitions"] == 4_988_928
+    assert report["diagnostic_transitions"] == 40
+    assert report["checkpoint_transitions"][-1] == 4_988_928
+    verified = verify_run(run_dir)
+    assert verified["absolute_training_transition"] == 4_988_928
+    assert verified["formal_checkpoint_transitions"] == [
+        0,
+        245_760,
+        983_040,
+        2_506_752,
+        3_981_312,
+        4_988_928,
+    ]
+
+    diagnostic_summary_path = (
+        run_dir
+        / "diagnostics/airborne_rsi/transition_245760/summary.json"
+    )
+    original_summary = diagnostic_summary_path.read_text(encoding="utf-8")
+    diagnostic_summary = json.loads(original_summary)
+    diagnostic_summary["environment_transitions"] += 1
+    diagnostic_summary_path.write_text(
+        json.dumps(diagnostic_summary), encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match="RSI diagnostic panel total"):
+        verify_run(run_dir)
+    diagnostic_summary_path.write_text(original_summary, encoding="utf-8")
+
+    diagnostic_video_path = (
+        run_dir
+        / "diagnostics/airborne_rsi/transition_4988928/video_report.json"
+    )
+    original_video = diagnostic_video_path.read_text(encoding="utf-8")
+    diagnostic_video = json.loads(original_video)
+    diagnostic_video["captured_state_count"] += 1
+    diagnostic_video_path.write_text(
+        json.dumps(diagnostic_video), encoding="utf-8"
+    )
+    with pytest.raises(
+        ValueError, match="RSI diagnostic.*(frame accounting|sample count)"
+    ):
+        verify_run(run_dir)
+    diagnostic_video_path.write_text(original_video, encoding="utf-8")
+
+    rsi_trace_path = (
+        run_dir
+        / "diagnostics/airborne_rsi/transition_245760/seed_930001.npz"
+    )
+    rsi_metadata_path = rsi_trace_path.with_suffix(".json")
+    original_trace = rsi_trace_path.read_bytes()
+    original_metadata = rsi_metadata_path.read_text(encoding="utf-8")
+    with np.load(rsi_trace_path) as payload:
+        wrong_source_arrays = {
+            name: payload[name].copy() for name in payload.files
+        }
+    wrong_source_arrays[
+        "metric__reset__slash__source_airborne_rsi"
+    ] = np.zeros(2)
+    np.savez_compressed(rsi_trace_path, **wrong_source_arrays)
+    rsi_metadata = json.loads(original_metadata)
+    rsi_metadata["npz_sha256"] = hashlib.sha256(
+        rsi_trace_path.read_bytes()
+    ).hexdigest()
+    rsi_metadata_path.write_text(json.dumps(rsi_metadata), encoding="utf-8")
+    with pytest.raises(ValueError, match="RSI diagnostic reset source"):
+        verify_run(run_dir)
+    rsi_trace_path.write_bytes(original_trace)
+    rsi_metadata_path.write_text(original_metadata, encoding="utf-8")
+
+    with np.load(rsi_trace_path) as payload:
+        truncated_arrays = {name: payload[name][:1] for name in payload.files}
+    np.savez_compressed(rsi_trace_path, **truncated_arrays)
+    rsi_metadata = json.loads(original_metadata)
+    rsi_metadata["npz_sha256"] = hashlib.sha256(
+        rsi_trace_path.read_bytes()
+    ).hexdigest()
+    rsi_metadata_path.write_text(json.dumps(rsi_metadata), encoding="utf-8")
+    with pytest.raises(ValueError, match="RSI diagnostic.*sample count"):
+        verify_run(run_dir)
+    rsi_trace_path.write_bytes(original_trace)
+    rsi_metadata_path.write_text(original_metadata, encoding="utf-8")
+
+    final_video_report = (
+        run_dir / "evaluations/transition_4988928/video_report.json"
+    )
+    original_final_video = final_video_report.read_text(encoding="utf-8")
+    aliased = json.loads(original_final_video)
+    arbitrary_npz = aliased["diagnostic_data"]
+    arbitrary_hash = hashlib.sha256(Path(arbitrary_npz).read_bytes()).hexdigest()
+    aliased["video"] = arbitrary_npz
+    aliased["video_sha256"] = arbitrary_hash
+    aliased["diagnostic_plot"] = arbitrary_npz
+    aliased["diagnostic_plot_sha256"] = arbitrary_hash
+    final_video_report.write_text(json.dumps(aliased), encoding="utf-8")
+    with pytest.raises(ValueError, match="artifact type|distinct"):
+        verify_run(run_dir)
+    final_video_report.write_text(original_final_video, encoding="utf-8")
+
+    final_diagnostic_path = Path(
+        json.loads(original_final_video)["diagnostic_data"]
+    )
+    original_final_diagnostic = final_diagnostic_path.read_bytes()
+    with np.load(final_diagnostic_path) as payload:
+        wrong_final_source = {
+            name: payload[name].copy() for name in payload.files
+        }
+    wrong_final_source["metric__reset__source_airborne_rsi"] = np.ones(2)
+    np.savez_compressed(final_diagnostic_path, **wrong_final_source)
+    wrong_final_report = json.loads(original_final_video)
+    wrong_final_report["diagnostic_data_sha256"] = hashlib.sha256(
+        final_diagnostic_path.read_bytes()
+    ).hexdigest()
+    final_video_report.write_text(
+        json.dumps(wrong_final_report), encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match="natural.*reset source"):
+        verify_run(run_dir)
+    final_diagnostic_path.write_bytes(original_final_diagnostic)
+    final_video_report.write_text(original_final_video, encoding="utf-8")
 
 
 def test_formal_runner_closes_exact_fresh_segment_with_injected_trainer(

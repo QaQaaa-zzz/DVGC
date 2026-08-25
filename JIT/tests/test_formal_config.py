@@ -9,6 +9,15 @@ from jit_dvgc.config import load_config
 
 FORMAL_CHECKPOINTS = (0, 102_400, 256_000, 512_000, 742_400, 998_400)
 FORMAL_EVALUATIONS = FORMAL_CHECKPOINTS[1:]
+ABSOLUTE_5M_CHECKPOINTS = (
+    0,
+    245_760,
+    983_040,
+    2_506_752,
+    3_981_312,
+    4_988_928,
+)
+ABSOLUTE_5M_EVALUATIONS = ABSOLUTE_5M_CHECKPOINTS[1:]
 
 
 def test_formal_config_is_exactly_39_aligned_blocks(jit_root):
@@ -34,6 +43,81 @@ def test_smoke_config_has_no_formal_contract(jit_root):
     config = load_config(jit_root / "configs" / "phase_u_smoke.json")
     assert config.formal is None
     assert config.schema == "jit_phase_u_engineering_smoke_v2"
+
+
+def test_absolute_smoke_config_is_one_translated_ppo_block(jit_root):
+    config = load_config(jit_root / "configs" / "phase_u_absolute_smoke.json")
+
+    assert config.formal is None
+    assert config.schema == "jit_phase_u_engineering_smoke_v3"
+    assert config.action.joint_target_semantics == "keyframe_centered_absolute"
+    assert config.action.knee_target_delta is None
+    assert config.ppo.block_transitions == 24_576
+    assert config.ppo.requested_transitions == 24_576
+    assert config.ppo.num_parallel_envs == 384
+    assert config.ppo.unroll_length == 64
+    assert config.ppo.batch_size == 16
+    assert config.ppo.num_minibatches == 24
+    assert config.ppo.num_updates_per_batch == 8
+
+
+def test_absolute_5m_config_is_exactly_203_aligned_blocks(jit_root):
+    config = load_config(jit_root / "configs" / "phase_u_absolute_5m.json")
+
+    assert config.formal is not None
+    assert config.schema == "jit_phase_u_formal_v3"
+    assert config.action.joint_target_semantics == "keyframe_centered_absolute"
+    assert config.action.knee_target_delta is None
+    assert config.ppo.seed == 820201
+    assert config.ppo.held_out_seeds == tuple(range(930001, 930009))
+    assert config.ppo.block_transitions == 24_576
+    assert config.ppo.requested_transitions == 4_988_928
+    assert config.formal.formal_blocks == 203
+    assert config.ppo.num_evals == 204
+    assert config.ppo.num_parallel_envs == 384
+    assert config.ppo.unroll_length == 64
+    assert config.ppo.batch_size == 16
+    assert config.ppo.num_minibatches == 24
+    assert config.ppo.num_updates_per_batch == 8
+    assert config.ppo.learning_rate == pytest.approx(0.0001)
+    assert config.ppo.entropy_cost == pytest.approx(0.01)
+    assert config.ppo.discounting == pytest.approx(0.99)
+    assert config.ppo.gae_lambda == pytest.approx(0.95)
+    assert config.ppo.clipping_epsilon == pytest.approx(0.2)
+    assert config.ppo.max_grad_norm == pytest.approx(0.5)
+    assert config.formal.checkpoint_transitions == ABSOLUTE_5M_CHECKPOINTS
+    assert config.formal.fixed_evaluation_transitions == ABSOLUTE_5M_EVALUATIONS
+
+
+def _mutated_absolute_5m(jit_root, tmp_path, mutate):
+    source = jit_root / "configs" / "phase_u_absolute_5m.json"
+    payload = json.loads(source.read_text(encoding="utf-8"))
+    mutate(payload)
+    path = tmp_path / "mutated_absolute_5m.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    return path
+
+
+@pytest.mark.parametrize(
+    "mutate",
+    [
+        lambda p: p["action"].update(joint_target_semantics="incremental_knee"),
+        lambda p: p["ppo"].update(requested_transitions=4_964_352),
+        lambda p: p["ppo"].update(learning_rate=0.0003),
+        lambda p: p["ppo"].update(num_updates_per_batch=7),
+        lambda p: p["ppo"].update(seed=820202),
+        lambda p: p["model"].update(naconmax=1),
+        lambda p: p["reward"].update(height_coeff=21.0),
+        lambda p: p["reset"].update(airborne_rsi_probability=0.10),
+        lambda p: p["formal"]["checkpoint_transitions"].__setitem__(1, 270_336),
+    ],
+)
+def test_absolute_5m_rejects_any_approved_contract_drift(
+    jit_root, tmp_path, mutate
+):
+    path = _mutated_absolute_5m(jit_root, tmp_path, mutate)
+    with pytest.raises(ValueError, match="approved v3|formal|PPO"):
+        load_config(path)
 
 
 def _mutated_formal(jit_root, tmp_path, mutate):

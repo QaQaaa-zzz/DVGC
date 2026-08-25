@@ -64,6 +64,19 @@ def load_checkpoint(
 ) -> CheckpointPayload:
     directory = Path(path)
     sidecar = json.loads((directory / "identity.json").read_text(encoding="utf-8"))
+    for field in (
+        "config_sha256",
+        "xml_sha256",
+        "actor_frame_fields",
+        "actor_task_fields",
+        "action_order",
+    ):
+        declared = sidecar.get(field)
+        expected_value = getattr(expected, field)
+        if isinstance(expected_value, tuple):
+            declared = tuple(declared) if isinstance(declared, list) else declared
+        if declared != expected_value:
+            raise ValueError(f"checkpoint {field} mismatch")
     payload_path = directory / "payload.pkl"
     if _sha256(payload_path) != sidecar.get("payload_sha256"):
         raise ValueError("checkpoint payload_sha256 mismatch")
