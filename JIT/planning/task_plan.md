@@ -9,13 +9,13 @@ evidence; then execute and audit the user-authorized 998,400-step fresh run.
 
 ## Next Step
 
-Execute the approved absolute hip/knee target and fresh aligned 4,988,928-step
-training plan test-first. Do not load any existing checkpoint for the initial
-run.
+Do not extend or promote the failed v3 final checkpoint. Run the evidence-first
+natural-start action intervention and ground-retention diagnostics described in
+the final experiment report before approving another PPO budget.
 
 ## Current Phase
 
-Phase 14: verification and fresh launch
+Phase 15: sparse monitoring and final analysis complete
 
 ## Phases
 
@@ -33,17 +33,17 @@ Phase 14: verification and fresh launch
 
 - [x] Run focused, full non-GPU, GPU, local-preflight, and provenance checks.
 - [x] Review the complete JIT diff and resolve all important findings.
-- [ ] Commit and push one complete JIT-only source round.
-- [ ] Launch from random initialization with no old checkpoint.
-- **Status:** in progress
+- [x] Commit and push one complete JIT-only source round.
+- [x] Launch from random initialization with no old checkpoint.
+- **Status:** complete
 
 ### Phase 15: Sparse monitoring and final analysis
 
-- [ ] Inspect startup, declared milestones, completion, or abnormal exit only.
-- [ ] Strictly verify the completed run and all interaction accounting.
-- [ ] Analyze natural and forced-RSI outcomes, PPO dynamics, actions, and reward.
-- [ ] Write the complete report and promotion decision.
-- **Status:** pending
+- [x] Inspect startup, declared milestones, completion, or abnormal exit only.
+- [x] Strictly verify the completed run and all interaction accounting.
+- [x] Analyze natural and forced-RSI outcomes, PPO dynamics, actions, and reward.
+- [x] Write the complete report and promotion decision.
+- **Status:** complete; `NO_PROMOTION`
 
 ### Phase 7: Reward/RSI/diagnostics design
 

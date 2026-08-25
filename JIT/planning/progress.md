@@ -394,3 +394,23 @@
   lineage gap. The verifier now checks every episode/diagnostic array length,
   real MP4/PNG decoding, distinct typed paths, and exact seed/episode/reset
   binding. Final re-review found no remaining Critical or Important issue.
+- Created source commit `96cfd81c5bc2f462c6718e0ccd4313e0e62b40bd`,
+  pushed it, and verified the remote branch matched before training.
+- Launched fresh run `phase_u_absolute_4988928_seed820201_20260825` with no
+  restore argument, null parent checkpoint, transition-zero start, and seed
+  820201.
+- The run completed 4,988,928 training, 192 fixed natural-evaluation, and 88
+  forced-RSI diagnostic transitions. Strict completed-run provenance passed.
+- All five natural panels had 0 Apex, 0 jump-window reach, and 8/8 physical
+  failures. Final episodes terminated on illegal wheel contact after two ticks.
+- All five RSI panels had 8/8 Apex and no physical failure, but diagnostics show
+  this is an easy reset-provided height/upward-velocity subproblem with highly
+  energetic terminal control, not natural jump success.
+- Inspected both final 2240x2240 diagnostics and synchronized NPZ traces. The
+  natural final action jumps to approximately `[1,-1,1,-1]`, yields joint-energy
+  reward -47.56, illegal/physical penalties -30 each, and clips -103.607 to -50.
+- Wrote the complete modification, PPO, milestone, reward, artifact, limitation,
+  and next-step report at
+  `JIT/docs/experiments/phase_u_absolute_4988928_seed820201_20260825/REPORT.md`.
+- Final decision: `NO_PROMOTION`; do not resume this checkpoint or enlarge the
+  budget before natural-start action intervention and retention diagnostics.

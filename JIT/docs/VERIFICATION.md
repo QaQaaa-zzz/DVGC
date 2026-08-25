@@ -1,6 +1,6 @@
 # JIT Phase U Verification
 
-## Active v3 prelaunch contract — 2026-08-25
+## Completed v3 formal contract — 2026-08-25
 
 The active source/config pair is `jit_phase_u_*_v3`. It changes only the joint
 target semantics and the approved PPO/training schedule: hip and knee both use
@@ -17,6 +17,12 @@ Fresh verification results and the v3 smoke identity are recorded below only
 after those commands finish successfully. Historical v1/v2 sections remain
 for auditability and do not authorize loading their checkpoints.
 
+The v3 formal run completed 4,988,928 training, 192 natural-evaluation, and 88
+forced-RSI diagnostic transitions. All five natural panels failed 8/8 with
+zero Apex; the final panel terminated on illegal wheel contact after two
+transitions per rollout. All five forced-RSI panels reached Apex 8/8, but RSI
+is diagnostic-only and cannot support promotion. Decision: `NO_PROMOTION`.
+
 Verified v3 identities and engineering smoke:
 
 | Evidence | Result |
@@ -29,6 +35,8 @@ Verified v3 identities and engineering smoke:
 | Complete non-GPU suite | 151 passed, 8 GPU tests deselected |
 | Complete GPU suite | 8 passed |
 | `JIT/scripts/local_preflight.sh` | exit 0, including retained v1 verification |
+| v3 formal strict provenance | exit 0; 4,989,208 total interactions |
+| v3 final checkpoint | restored; payload SHA-256 `1125d9edbec3cd31ec08bbe5cf88777e84974044ba980e3531fdb938f34596fd` |
 
 The first fixed-rate block reported KL 341.1 because Brax updates the cold
 observation normalizer before its fixed-rate SGD/KL calculation; policy means
@@ -46,9 +54,13 @@ counts are decoded, PNG files are decoded, and MP4/PNG/NPZ types and distinct
 paths are enforced. Independent review found no remaining Critical or
 Important issue.
 
-## Active v2 reward/RSI/diagnostics rebuild — 2026-08-25
+The complete v3 result, PPO comparison, milestone tables, per-tick reward and
+action diagnosis, artifact hashes, limitations, and next-step decision are in
+`docs/experiments/phase_u_absolute_4988928_seed820201_20260825/REPORT.md`.
 
-The active configuration is now `jit_phase_u_*_v2`. This round changed reward,
+## Historical v2 reward/RSI/diagnostics rebuild — 2026-08-25
+
+The historical v2 configuration is `jit_phase_u_*_v2`. That round changed reward,
 event, reset, observation, checkpoint, evaluation, video, and provenance
 contracts without starting PPO training or consuming training/evaluation
 transitions.
@@ -91,7 +103,7 @@ No result in this section is learnability or promotion evidence. The user has
 authorized one fresh 998,400-transition v2 formal run after source delivery;
 its natural-start panels and RSI training metrics must remain separate.
 
-## Active v2 formal result
+## Historical v2 formal result
 
 Run `phase_u_v2_formal_998400_seed820101_20260825` completed and passed strict
 provenance verification:

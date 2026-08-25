@@ -33,7 +33,7 @@
 - Consumes: authoritative XML keyframe hip/knee positions and actuator control ranges.
 - Produces: `ActionMapping.joint_target_semantics`, `hip_initial`, `knee_initial`, and absolute controls from `map_action(action, knee_position, mapping) -> jax.Array[(4,)]`. The retained `knee_position` argument remains API-compatible but is ignored for the new semantics.
 
-- [ ] **Step 1: Write the failing absolute-knee tests**
+- [x] **Step 1: Write the failing absolute-knee tests**
 
 Replace incremental expectations with real endpoint and interior assertions:
 
@@ -55,7 +55,7 @@ def test_absolute_hip_and_knee_targets_are_centered_on_keyframe(mapping):
 Also assert that two different live knee positions produce the same knee
 target for the same normalized action.
 
-- [ ] **Step 2: Run the focused test and verify RED**
+- [x] **Step 2: Run the focused test and verify RED**
 
 Run:
 
@@ -66,7 +66,7 @@ PYTHONPATH=JIT/src /home/qy/mujoco_playground/.venv/bin/python \
 
 Expected: failure because the current knee target depends on live knee position.
 
-- [ ] **Step 3: Implement one shared piecewise absolute helper**
+- [x] **Step 3: Implement one shared piecewise absolute helper**
 
 Implement:
 
@@ -84,7 +84,7 @@ XML keyframe in `load_host_model`. Keep v2 incremental parsing and its retained
 JSON configs only for historical evidence. Require the new explicit semantics
 token in `phase_u_absolute_smoke.json` and every active absolute config.
 
-- [ ] **Step 4: Run focused mapping/model/config tests and verify GREEN**
+- [x] **Step 4: Run focused mapping/model/config tests and verify GREEN**
 
 Run:
 
@@ -108,7 +108,7 @@ semantics, and retained v2 configs still parse with their historical semantics.
 - Consumes: `PPOConfig.block_transitions` and the approved v3 action/reward/reset/model contracts.
 - Produces: one `ResolvedConfig` with target `4_988_928`, block size `24_576`, seed `820201`, held-out keys `930001..930008`, and six exact checkpoint milestones.
 
-- [ ] **Step 1: Write failing exact-config tests**
+- [x] **Step 1: Write failing exact-config tests**
 
 Assert all exact values:
 
@@ -129,7 +129,7 @@ Mutation tests must reject a changed action semantic, target, learning rate,
 update count, seed, model capacity, reward coefficient, reset bound, or
 milestone.
 
-- [ ] **Step 2: Run the new config tests and verify RED**
+- [x] **Step 2: Run the new config tests and verify RED**
 
 Run:
 
@@ -140,7 +140,7 @@ PYTHONPATH=JIT/src /home/qy/mujoco_playground/.venv/bin/python \
 
 Expected: failure because the new schema/config does not yet exist.
 
-- [ ] **Step 3: Add the exact config and schema validation**
+- [x] **Step 3: Add the exact config and schema validation**
 
 Create `phase_u_absolute_5m.json` with the approved values and generalize
 `FormalTrainingConfig.formal_blocks` to derive
@@ -148,7 +148,7 @@ Create `phase_u_absolute_5m.json` with the approved values and generalize
 than hard-coding 39. Preserve exact v2 validation and add a separate exact
 approved contract for the new schema.
 
-- [ ] **Step 4: Run config tests and verify GREEN**
+- [x] **Step 4: Run config tests and verify GREEN**
 
 Run the focused command from Step 2. Expected: all tests pass.
 
@@ -165,7 +165,7 @@ Run the focused command from Step 2. Expected: all tests pass.
 - Consumes: exact formal target, block, checkpoint, and evaluation schedules from `ResolvedConfig`.
 - Produces: one uninterrupted fresh formal segment, identity-bound checkpoint/evaluation evidence, strict completed-run verification, and same-config-only warm recovery after abnormal exit.
 
-- [ ] **Step 1: Write failing 5M controller/runner/provenance tests**
+- [x] **Step 1: Write failing 5M controller/runner/provenance tests**
 
 Use an injected fake trainer to assert:
 
@@ -183,7 +183,7 @@ Assert the manifest has no parent checkpoint, begins at zero, and closes only
 after the exact configured checkpoints/evaluations. Assert verifier acceptance
 for the new schema and continued acceptance of retained completed v1/v2 runs.
 
-- [ ] **Step 2: Run focused tests and verify RED**
+- [x] **Step 2: Run focused tests and verify RED**
 
 Run:
 
@@ -196,7 +196,7 @@ PYTHONPATH=JIT/src /home/qy/mujoco_playground/.venv/bin/python \
 Expected: failures from the hard-coded 998,400 target/schedules and unsupported
 new schema.
 
-- [ ] **Step 3: Generalize from exact validated config values**
+- [x] **Step 3: Generalize from exact validated config values**
 
 Remove hard-coded v2 target and milestone assumptions from report validation,
 run declarations, and completed-run provenance. Do not weaken validation:
@@ -205,7 +205,7 @@ approved contracts, after which the runner/verifier consume its frozen target
 and schedules. Keep `--restore-checkpoint` available only for an abnormal
 same-config recovery; the initial launch command omits it.
 
-- [ ] **Step 4: Run focused tests and verify GREEN**
+- [x] **Step 4: Run focused tests and verify GREEN**
 
 Run the command from Step 2. Expected: all selected tests pass, including old
 formal verification fixtures.
@@ -225,14 +225,14 @@ formal verification fixtures.
 - Consumes: new absolute action config and formal milestones.
 - Produces: forced-airborne-RSI reset for diagnostic panels, separately named natural/RSI summaries, and current preflight/documentation without changing promotion semantics.
 
-- [ ] **Step 1: Write failing forced-RSI and evidence-separation tests**
+- [x] **Step 1: Write failing forced-RSI and evidence-separation tests**
 
 Assert `reset_airborne_rsi(key)` always yields bounded configured RSI state,
 `jump_signal=1`, and `reset/source_airborne_rsi=1`. Assert every new-run
 milestone writes natural promotion summaries and forced-RSI diagnostic
 summaries to different paths and totals without opening an old checkpoint.
 
-- [ ] **Step 2: Run focused tests and verify RED**
+- [x] **Step 2: Run focused tests and verify RED**
 
 Run:
 
@@ -243,7 +243,7 @@ PYTHONPATH=JIT/src /home/qy/mujoco_playground/.venv/bin/python \
 
 Expected: failure because a public forced-RSI reset/panel does not yet exist.
 
-- [ ] **Step 3: Implement the minimum separated diagnostic path**
+- [x] **Step 3: Implement the minimum separated diagnostic path**
 
 Expose the existing bounded RSI reset as `reset_airborne_rsi`. Save forced-RSI
 diagnostics for the current callback parameters outside natural promotion panel
@@ -251,7 +251,7 @@ directories and account their transitions as diagnostics, never fixed
 evaluation. Update preflight to parse both active absolute configs and keep
 retained v1/v2 run verification.
 
-- [ ] **Step 4: Run focused tests and verify GREEN**
+- [x] **Step 4: Run focused tests and verify GREEN**
 
 Run the command from Step 2. Expected: all selected tests pass.
 
@@ -267,7 +267,7 @@ Run the command from Step 2. Expected: all selected tests pass.
 - Consumes: all validated source/config/tests/docs from Tasks 1-4.
 - Produces: one pushed JIT-only source commit, one predeclared fresh persistent run, strict evidence verification, and a complete experiment report.
 
-- [ ] **Step 1: Run static and complete non-GPU verification**
+- [x] **Step 1: Run static and complete non-GPU verification**
 
 ```bash
 /home/qy/mujoco_playground/.venv/bin/python -m compileall -q JIT/src JIT/cli
@@ -275,7 +275,7 @@ PYTHONPATH=JIT/src /home/qy/mujoco_playground/.venv/bin/python \
   -m pytest JIT/tests -q -m "not gpu"
 ```
 
-- [ ] **Step 2: Run GPU environment and one-block PPO verification**
+- [x] **Step 2: Run GPU environment and one-block PPO verification**
 
 ```bash
 PYTHONPATH=JIT/src /home/qy/mujoco_playground/.venv/bin/python \
@@ -283,12 +283,12 @@ PYTHONPATH=JIT/src /home/qy/mujoco_playground/.venv/bin/python \
 bash JIT/scripts/local_preflight.sh
 ```
 
-- [ ] **Step 3: Review the complete JIT diff and request code review**
+- [x] **Step 3: Review the complete JIT diff and request code review**
 
 Confirm no path outside `JIT/` is staged or modified by this task. Resolve all
 Critical and Important review findings, then rerun affected tests.
 
-- [ ] **Step 4: Create one explicit JIT-only commit and push**
+- [x] **Step 4: Create one explicit JIT-only commit and push**
 
 ```bash
 git add JIT/src JIT/tests JIT/configs JIT/cli JIT/scripts \
@@ -299,7 +299,7 @@ git commit -m "feat(jit): use absolute joint targets for fresh Phase U training"
 git push origin agent/two-phase-soft-tube
 ```
 
-- [ ] **Step 5: Predeclare and launch the fresh aligned run**
+- [x] **Step 5: Predeclare and launch the fresh aligned run**
 
 Use unique run ID `phase_u_absolute_4988928_seed820201_20260825` and no
 `--restore-checkpoint` argument:
@@ -319,7 +319,7 @@ nohup setsid env XLA_PYTHON_CLIENT_PREALLOCATE=false MUJOCO_GL=egl \
 Record the PID under the same run namespace. Inspect startup once, then only
 the declared milestones, completion, or abnormal exit.
 
-- [ ] **Step 6: Verify and analyze completed evidence**
+- [x] **Step 6: Verify and analyze completed evidence**
 
 Run strict provenance verification, inspect all natural and forced-RSI panels,
 plot/video/NPZ artifacts, KL/std/action trends, returns and terminal causes,

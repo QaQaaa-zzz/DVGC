@@ -1,10 +1,10 @@
 # JIT Phase U training stack
 
-## Active v3 absolute-joint 5M experiment
+## Completed v3 absolute-joint 5M experiment
 
-The active experiment uses `phase_u_absolute_5m.json` and starts from newly
-initialized PPO parameters. It never restores a v1/v2 checkpoint. Hip and knee
-now share one keyframe-centered absolute-target rule: action zero commands the
+The completed experiment used `phase_u_absolute_5m.json` and started from newly
+initialized PPO parameters. It never restored a v1/v2 checkpoint. Hip and knee
+share one keyframe-centered absolute-target rule: action zero commands the
 XML keyframe angle, while negative/positive actions interpolate to that joint's
 lower/upper limit. Consequently hip maps `[-1, 0, 1]` to
 `[-1.3, -1.2, 0.5]` radians and knee maps it to `[-1.5, 2.5, 2.5]` radians.
@@ -23,7 +23,7 @@ support promotion. Both routes save complete NPZ traces; their final
 representatives also save MP4 and aligned reward/state PNG diagnostics. RSI
 interactions are recorded only in the diagnostic ledger.
 
-Fresh formal launch (there is deliberately no `--restore-checkpoint`):
+The retained launch command had deliberately no `--restore-checkpoint`:
 
 ```bash
 nohup setsid env XLA_PYTHON_CLIENT_PREALLOCATE=false MUJOCO_GL=egl \
@@ -37,6 +37,15 @@ nohup setsid env XLA_PYTHON_CLIENT_PREALLOCATE=false MUJOCO_GL=egl \
   < /dev/null &
 ```
 
+The run completed 4,988,928 training transitions and passed strict provenance,
+but it is `NO_PROMOTION`. Every natural-start panel had 0/8 Apex and 8/8
+physical failures; the final policy caused illegal wheel contact after two
+control steps. Every forced-airborne RSI panel had 8/8 Apex, but those resets
+already supplied height and upward velocity and do not count as natural jump
+success. Do not resume or promote the final checkpoint. See the complete
+analysis in
+`docs/experiments/phase_u_absolute_4988928_seed820201_20260825/REPORT.md`.
+
 Everything below documents retained v1/v2 behavior and historical evidence;
 those checkpoints are audit artifacts, not inputs to the active v3 run.
 
@@ -44,7 +53,7 @@ those checkpoints are audit artifacts, not inputs to the active v3 run.
 engineering delivery described in the repository rebuild guide. It does not
 import the existing `dvgc` package and does not copy the authoritative XML.
 
-The active v2 scope now includes the target-free reference reward, a one-shot
+The retained v2 scope introduced the target-free reference reward, a one-shot
 root-x jump signal, 5% bounded airborne RSI for training resets, natural-only
 held-out evaluation, height/descent Apex termination, and synchronized
 numeric/PNG/video diagnostics. It also retains environment/runtime integrity,

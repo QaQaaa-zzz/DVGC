@@ -62,6 +62,26 @@
 - The user prohibition is interpreted strictly for the initial workflow: do
   not open old checkpoints even for diagnostics. Natural and forced-RSI panels
   inspect only parameters produced by the new run at declared milestones.
+- The fresh v3 run completed 4,988,928 training transitions plus 192 natural
+  evaluation and 88 forced-RSI diagnostic transitions. Strict provenance
+  verification passed, including final checkpoint restore and artifact lineage.
+- Every natural milestone was 0/8 Apex and 8/8 physical failure. The first
+  milestone ended on pitch limits; every later milestone ended on illegal wheel
+  contact. The final panel lasted exactly two transitions per rollout and had
+  50% deterministic action saturation.
+- Every forced-RSI milestone was 8/8 Apex, but the reset already supplied
+  height and upward velocity. The final successful RSI transition incurred
+  about 3,173 W joint power and an unclipped reward of -80.95, so the result is
+  event-chain evidence rather than a learned stable-jump claim.
+- The final natural terminal action saturated near `[+1,-1,+1,-1]`, commanding
+  controls near `[+0.8,0,+0.5,-1.5]`. Joint energy, illegal contact, and physical
+  failure summed to more than -107 before smaller positive terms; total reward
+  was clipped from -103.607 to -50.
+- The knee keyframe equals its +2.5 rad actuator upper limit. Hip and knee use
+  the same absolute formula, but the knee positive half-axis is consequently
+  degenerate while a negative action can request the full 4 rad span in one
+  control step. This is a candidate mechanism requiring frozen-policy action
+  intervention, not yet a proven sole cause.
 
 - Current MJX-Warp `Data` exposes `actuator_force` but no geom-paired `contact`
   field. Exact hip/knee mechanical power is available; exact wheel contact pairs
