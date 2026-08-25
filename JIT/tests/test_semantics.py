@@ -19,6 +19,11 @@ def config(jit_root):
     return load_config(jit_root / "configs" / "phase_u_smoke.json")
 
 
+@pytest.fixture
+def v4_config(jit_root):
+    return load_config(jit_root / "configs" / "phase_u_continuation_smoke.json")
+
+
 def _signals(**overrides) -> PhaseUSignals:
     values = dict(
         x=jp.array(2.0),
@@ -61,6 +66,23 @@ def test_jump_signal_is_inclusive_then_closes_permanently(config):
     assert bool(left.jump_zone_consumed)
     assert not bool(reentered.jump_signal)
     assert bool(reentered.jump_zone_consumed)
+
+
+def test_v4_jump_signal_stays_live_to_3_4_then_closes_permanently(v4_config):
+    event = initial_event_state(jp.array(2.4), v4_config)
+    signal_at_x_3_25 = advance_events(
+        event, _signals(x=jp.array(3.25)), v4_config
+    )
+    signal_after_x_3_41 = advance_events(
+        signal_at_x_3_25, _signals(x=jp.array(3.41)), v4_config
+    )
+    signal_after_return_to_x_3_0 = advance_events(
+        signal_after_x_3_41, _signals(x=jp.array(3.0)), v4_config
+    )
+
+    assert bool(signal_at_x_3_25.jump_signal) is True
+    assert bool(signal_after_x_3_41.jump_signal) is False
+    assert bool(signal_after_return_to_x_3_0.jump_signal) is False
 
 
 def test_apex_requires_legal_zone_height_prior_ascent_and_descent(config):

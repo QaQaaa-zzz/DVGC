@@ -526,6 +526,11 @@ def run_phase_u_formal(
     config = load_config(Path(config_path))
     if config.formal is None:
         raise ValueError("formal training requires the formal config schema")
+    if (
+        restore_checkpoint is not None
+        and config.formal.resume_semantics == "fresh_only"
+    ):
+        raise ValueError("fresh-only formal training does not accept a restore checkpoint")
     if backend_name() != "gpu":
         raise RuntimeError("formal Phase U training requires the visible JAX GPU backend")
 

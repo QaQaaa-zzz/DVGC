@@ -47,3 +47,18 @@ def test_invalid_ppo_layout_is_rejected_before_a_run_is_created(jit_root, tmp_pa
 
     with pytest.raises(ValueError, match="divisible by num_parallel_envs"):
         load_config(invalid)
+
+
+def test_active_v4_smoke_resolves_to_one_exact_384_environment_block(jit_root):
+    config = load_config(jit_root / "configs" / "phase_u_continuation_smoke.json")
+
+    assert config.ppo.num_parallel_envs == 384
+    assert config.ppo.block_transitions == 24_576
+    assert config.ppo.requested_transitions == 24_576
+    assert config.ppo.requested_transitions // config.ppo.block_transitions == 1
+    assert config.schema == "jit_phase_u_engineering_smoke_v4"
+    assert config.ppo.seed == 820400
+    assert config.reset.airborne_rsi_probability == pytest.approx(0.08)
+    assert config.events.jump_zone_x_max == pytest.approx(3.4)
+    assert config.reward.height_coeff == pytest.approx(40.0)
+    assert config.model["naccdmax"] == 256

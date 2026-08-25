@@ -296,6 +296,11 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
             ctrl=ctrl,
             impl=model.impl.value,
             naconmax=int(self._resolved_config.model["naconmax"]),
+            naccdmax=(
+                int(self._resolved_config.model["naccdmax"])
+                if self._resolved_config.schema.endswith("_v4")
+                else None
+            ),
             njmax=int(self._resolved_config.model["njmax"]),
         )
         data = mjx.forward(model, data)

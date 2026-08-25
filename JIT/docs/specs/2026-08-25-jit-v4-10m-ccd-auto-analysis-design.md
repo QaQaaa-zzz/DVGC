@@ -66,7 +66,7 @@ policy/value/total loss, policy standard deviation, and throughput.
 
 ## Event-triggered Codex analysis
 
-A generalized script under `JIT/scripts/` waits locally for one declared run.
+A generalized CLI under `JIT/cli/` waits locally for one declared run.
 Polling reads the PID and `status.json` only and does not call a model. Once the
 training process reaches a terminal state, the watcher invokes `codex exec`
 exactly once in read-only mode with a narrow prompt bound to the exact run
@@ -100,14 +100,15 @@ Before launch:
 2. all JIT non-GPU tests pass;
 3. all JIT GPU tests pass;
 4. `JIT/scripts/local_preflight.sh` passes;
-5. a bounded GPU smoke completes with finite PPO metrics and without the prior
-   large CCD overflow stream;
-6. the source/config/docs/tests/scripts are staged explicitly and committed in
+5. the source/config/docs/tests/scripts are staged explicitly and committed in
    one validated JIT commit;
-7. the committed revision is pushed and remote equality is confirmed.
+6. the committed revision is pushed and remote equality is confirmed;
+7. only then, a bounded GPU smoke completes with finite PPO metrics and without
+   the prior large CCD overflow stream.
 
-The fresh formal training and its watcher are launched only after that gate.
+No PPO interaction, including the bounded smoke, may occur before the validated
+commit and push. The fresh formal training and its watcher are launched only
+after that gate and the closed smoke.
 The current interactive Codex session reports the run ID, training PID, watcher
 PID, GPU, transition-zero checkpoint identity, and an ETA, then exits without
 supervising the run.
-

@@ -1,5 +1,33 @@
 # Findings and Decisions
 
+## 2026-08-25 v4 10M revision
+
+- The user chose to replace v4 compatibility in place; old v4 results no
+  longer constrain active config loading or provenance.
+- The prior run created Warp data with explicit `naconmax=4096` but implicit
+  `naccdmax=48`. Its log requested values up to 135. The approved practical
+  fix is explicit `naccdmax=256`, without making occasional residual warnings
+  an automatic formal abort.
+- The jump window remains anchored at `x_min=2.5` and extends only its trailing
+  edge from `3.1` to `3.4 m`.
+- Height reward stays one-shot-signal gated and its coefficient changes from
+  20 to 40. Airborne training RSI changes from 5% to 8%.
+- The exact whole-block target below ten million is 9,977,856 transitions
+  (`406 * 24,576`). The run must start without a parent checkpoint.
+- A detached local watcher consumes no model tokens while polling. It invokes
+  one read-only `codex exec` only after terminal run status and writes the
+  response under the ignored run directory.
+- Git discipline is now explicit: verify/commit the baseline before modifying,
+  then verify/commit/push the implementation again before any training launch.
+- Formal orchestration already consumes the resolved schedule dynamically; its
+  v4 integration fixture now exercises all 406 blocks and the six approved
+  checkpoints without changing retained v3 5M fixtures.
+- A matching recomputed raw-config hash is insufficient to pass completed-v4
+  provenance. The strict method validator independently rejects the previous
+  `naccdmax=48`, RSI 5%, window maximum 3.1, and height coefficient 20 values.
+- Local preflight only loads and validates the active 10M contract; it does not
+  invoke the training entrypoint or consume environment interactions.
+
 ## Requirements
 
 - On 2026-08-25 the user explicitly rejected mixed hip/knee semantics. Both

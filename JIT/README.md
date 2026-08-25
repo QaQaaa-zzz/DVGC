@@ -2,7 +2,7 @@
 
 ## Active v4 Apex-continuation run contract
 
-`phase_u_continuation_5m.json` is the active fresh-training contract. Ordinary
+`phase_u_continuation_10m.json` is the active fresh-training contract. Ordinary
 front/rear wheel contact with the terrain is support telemetry, not an illegal
 contact terminal or penalty. Prohibited chassis/body contact, roll, pitch,
 backward motion, and numerical failure remain physical terminals. The first
@@ -31,8 +31,37 @@ episode means, then produces synchronized `training_curves.png`,
 episode reward/length, airborne-RSI fraction, KL, policy/value/total loss,
 policy distribution standard deviation, and steps per second.
 
-The exact v4 target remains 4,988,928 transitions (203 blocks), now under the
-fresh seed namespace `820301` with frozen held-out seeds `940001..940008`.
+## One-shot post-run analysis watcher
+
+After launching one declared training run, start its independent local watcher
+with the same exact run directory, PID file, and launch log:
+
+```bash
+setsid nohup /home/qy/mujoco_playground/.venv/bin/python \
+  JIT/cli/watch_training_and_analyze.py \
+  --run-dir JIT/runs/phase_u/<run-id> \
+  --pid-file JIT/runs/phase_u/<run-id>.pid \
+  --launch-log JIT/runs/phase_u/<run-id>.launch.log \
+  --poll-seconds 30 \
+  > JIT/runs/phase_u/<run-id>.watcher.log 2>&1 < /dev/null &
+```
+
+The watcher only reads local process/status files while the run is active. A
+missing or dead training PID does not authorize analysis: the watcher waits
+until `status.json` says `completed`, `engineering_error`, or `aborted`. It then
+atomically creates `codex_analysis.started.json` and makes at most one
+ephemeral `codex exec` call with an explicit read-only sandbox. Restarts never
+repeat that call, including after a failed attempt.
+
+When Codex produces a final message, the CLI writes it to `AUTO_ANALYSIS.md` in
+the ignored run directory. Whether the attempt succeeds, fails, or times out,
+captured stdout/stderr and the return code remain there as `codex_exec.log` and
+`codex_analysis.completed.json`. For a completed training run, the analysis
+prompt also requires strict `verify-run` provenance checking before
+interpreting the natural-start and airborne-RSI evidence panels.
+
+The exact v4 target is 9,977,856 transitions (406 blocks), under the fresh seed
+namespace `820401` with frozen held-out seeds `950001..950008`.
 The first run must have a null parent checkpoint, start at transition zero, and
 omit `--restore-checkpoint`.
 

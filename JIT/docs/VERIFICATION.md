@@ -34,25 +34,32 @@ the reset boundary and re-exposes them to Brax while keeping all JIT state
 fresh. `preserve_episode_evidence=true` is independently config-bound and the
 GPU regression requires terminal length two followed by fresh length one.
 
-The new exact config uses seed `820301`, held-out seeds `940001..940008`, and
-4,988,928 transitions. It is identity-incompatible with the v3 checkpoint and
-must start fresh. Final command results and the launch commit are recorded only
-after the complete verification round succeeds; the validated command results
-are recorded below, while the launch commit is added after Git delivery.
+The active file is `JIT/configs/phase_u_continuation_10m.json`. It declares seed
+`820401`, held-out seeds `950001..950008`, and exactly 9,977,856 transitions:
+406 aligned blocks with checkpoints at 0, 491,520, 1,990,656, 4,988,928,
+7,987,200, and 9,977,856. It is identity-incompatible with every earlier v4
+checkpoint, declares `resume_semantics=fresh_only`, and rejects every restore
+option before backend, environment, checkpoint, or run-directory work.
 
-Validated pre-launch evidence:
+The active v4 method identity also fixes `naccdmax=256`, jump window
+`[2.5,3.4]`, height coefficient 40, and airborne RSI probability 8%.
+Completed-run provenance revalidates the raw resolved config instead of
+trusting its hash alone: evidence with a consistently recomputed config hash
+is still rejected if any of those values is changed back to 48, 3.1, 20, or
+5%, respectively.
 
-| Evidence | Result |
-|---|---|
-| v4 smoke config SHA-256 | `b178512e5f5555994c83dc4ecf8301d62f6c646afbc99b3cd1c9a08c97545a75` |
-| v4 formal config SHA-256 | `d6b9476fc3097b8a1e9f7c1ca889f3bf2b93c9527210dcedda9e889e95eb0f43` |
-| Complete non-GPU suite | 167 passed, 10 GPU tests deselected |
-| Complete GPU suite | 10 passed, 167 non-GPU tests deselected |
-| `JIT/scripts/local_preflight.sh` | exit 0 |
-| Retained v1/v2/v3 formal provenance | all exit 0 |
-| Repository compatibility | 1,136 passed; one pre-existing dirty-path failure outside JIT |
+Task 5 focused formal/provenance verification passed 24 non-GPU tests. The
+final source tree passed static compilation, 200 non-GPU tests, and 12 GPU
+tests. The non-launching local preflight repeated those 200 + 12 tests, exited
+zero, and revalidated retained reference/provenance evidence. The resolved v4
+smoke/formal config hashes are
+`711ac0709c819d6b2ca4172ec1d1421a21fd469351d8661f5b17b6d2594cc96f` and
+`a77c539c84318c48fa1c1f5ea0f87b468295fec633338e7a95a5b6eff5360e2f`.
+Independent final review found no remaining Critical or Important issue. The
+bounded v4 smoke and launch commit remain Task 6 gates and are not claimed
+complete here.
 
-The sole repository-level failure is unchanged user work in
+The previously recorded repository-level failure is unchanged user work in
 `tests/test_phase_u_launch_diagnostic.py`: it passes `mode=` to the separately
 modified `dvgc/phase_u_launch_diagnostic.py`, whose current
 `frozen_manifest_payload` does not accept that argument. Neither file is part
@@ -60,7 +67,7 @@ of this JIT change or commit.
 
 ## Completed v3 formal contract — 2026-08-25
 
-The active source/config pair is `jit_phase_u_*_v3`. It changes only the joint
+The retained v3 source/config pair is `jit_phase_u_*_v3`. It changed only the joint
 target semantics and the approved PPO/training schedule: hip and knee both use
 keyframe-centered absolute targets; the formal run is a fresh 4,988,928-step
 run with seed 820201. Its manifest must have a null parent checkpoint,

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 import numpy as np
 import pytest
 
@@ -35,4 +37,34 @@ def test_config_loader_rejects_a_wrong_declared_model_identity(jit_root, tmp_pat
     config_path = tmp_path / "wrong_identity.json"
     config_path.write_text(payload)
     with pytest.raises(ValueError, match="approved v2 model"):
+        load_config(config_path)
+
+
+def test_v4_config_rejects_aggregate_ccd_capacity_above_contact_capacity(
+    jit_root, tmp_path
+):
+    payload = json.loads(
+        (jit_root / "configs" / "phase_u_continuation_smoke.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    payload["model"]["naccdmax"] = payload["model"]["naconmax"] + 1
+    config_path = tmp_path / "naccdmax_above_naconmax.json"
+    config_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="naccdmax must not exceed naconmax"):
+        load_config(config_path)
+
+
+def test_v4_config_requires_an_explicit_aggregate_ccd_capacity(jit_root, tmp_path):
+    payload = json.loads(
+        (jit_root / "configs" / "phase_u_continuation_smoke.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    del payload["model"]["naccdmax"]
+    config_path = tmp_path / "missing_naccdmax.json"
+    config_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="approved v4 model"):
         load_config(config_path)

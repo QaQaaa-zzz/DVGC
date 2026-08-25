@@ -9,14 +9,35 @@ evidence; then execute and audit the user-authorized 998,400-step fresh run.
 
 ## Next Step
 
-Complete v4 validation, commit and push the entire JIT-only round, then launch
-the approved fresh 4,988,928-transition run without a parent checkpoint.
+Complete the approved v4 10M TDD plan and final verification, commit and push
+the validated JIT-only implementation, then run one bounded CCD-capacity smoke
+before launching the fresh 9,977,856-transition run and its one-shot Codex
+analysis watcher. No PPO interaction, including smoke, precedes remote equality.
 
 ## Current Phase
 
-Phase 16: Apex continuation and training diagnostics verification
+Phase 17: v4 CCD-capacity, reward/window/RSI, and automatic-analysis revision
 
 ## Phases
+
+### Phase 17: v4 10M revision
+
+- [x] Confirm the pre-modification Git baseline and commit the approved design.
+- [x] Approve exact values: `naccdmax=256`, window `[2.5,3.4]`, height
+  coefficient `40`, RSI `8%`, and 9,977,856 aligned transitions.
+- [x] Write and self-review the implementation plan.
+- [x] Execute strict RED/GREEN cycles for config, real Warp capacity, event/
+  reward/reset behavior, watcher single-shot behavior, and formal provenance.
+- [x] Integrate the 10M formal schedule with completed-evidence validation and
+  the non-launching local preflight.
+- [x] Run full JIT validation without PPO interaction.
+- [ ] Create and push one validated implementation commit before any PPO
+  interaction, including smoke.
+- [ ] Run the bounded fresh GPU smoke only after remote equality is confirmed.
+- [ ] Launch the fresh formal process and detached one-shot watcher, inspect
+  startup once, then end the interactive session.
+- **Status:** implementation and focused final-review fixes complete; full
+  revalidation, Git gate, smoke, and launch pending
 
 ### Phase 16: Apex continuation and training curves
 

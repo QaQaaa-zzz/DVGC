@@ -1,5 +1,93 @@
 # Progress Log
 
+## Session: 2026-08-25 v4 CCD/10M/automatic analysis
+
+### Final Important review corrections
+
+- **Status:** implementation and focused verification complete; full
+  revalidation, Git gate, and smoke remain pending.
+- RED: six completed-v4 adversarial provenance cases failed as intended. Five
+  mutated fields/artifacts were accepted outright; the nonzero start reached
+  only a generic segment-accounting failure rather than the required v4
+  fresh-start gate.
+- Completed-v4 verification now requires start 0, null parent, `fresh` resume
+  semantics, segment seed equal to the resolved PPO seed, no
+  `--restore-checkpoint` in the manifest command, and an exactly matching
+  `resume_command.txt`. Retained v1-v3 verification remains schema-separated.
+- GREEN: the focused formal/provenance suite reported 39 passed. Independent
+  strict verification also passed for the retained completed v1, v2, and v3
+  formal run directories.
+- The design, task plan, implementation plan, and this progress ledger now all
+  require the validated commit and confirmed push before any PPO interaction,
+  including the bounded smoke. The formal launch command retains the required
+  JAX/MuJoCo/unbuffered environment and explicitly sets `PYTHONPATH=JIT/src`.
+- No PPO interaction or GPU smoke was run during these corrections.
+
+### Design and implementation planning
+
+- **Status:** complete
+- Confirmed existing user-owned dirty paths outside JIT and left them untouched.
+- Wrote and user-approved
+  `JIT/docs/specs/2026-08-25-jit-v4-10m-ccd-auto-analysis-design.md`.
+- Committed the pre-implementation design baseline as `e383f54` before source
+  changes, following the user's new two-gate Git rule.
+- Selected direct v4 replacement, practical `naccdmax=256` handling, window
+  `[2.5,3.4]`, height coefficient 40, RSI 8%, and 9,977,856 transitions.
+- Wrote the complete RED/GREEN implementation and launch plan at
+  `JIT/docs/plans/2026-08-25-jit-v4-10m-ccd-auto-analysis.md`.
+- No PPO interaction or GPU smoke has been run in this session yet.
+
+### Task 5: formal evidence and preflight integration
+
+- **Status:** complete
+- RED: the focused formal/provenance command reported 1 failed and 21 passed;
+  the 10M config supplied 9,977,856 transitions while the stale v4 test double
+  still required 4,988,928.
+- GREEN: the same command reported 22 passed after the v4-only runner fixture
+  adopted 406 blocks and the approved six-checkpoint schedule.
+- Final focused verification reported 23 passed after separating the completed-
+  evidence method-drift proof into its own behavioral test.
+- Completed-v4 evidence now proves rejection of consistently rehashed raw
+  configs carrying any previous `naccdmax`, RSI, window, or height value.
+- Local preflight loads `phase_u_continuation_10m.json` and checks the exact
+  target, block count, schedules, seed, and held-out namespace without training.
+- Retained v3 absolute-5M fixtures and historical documentation remain intact.
+- `bash JIT/scripts/local_preflight.sh` exited zero: 188 non-GPU tests and 12
+  GPU tests passed, followed by retained reference and smoke provenance checks.
+- No PPO training, evaluation, diagnostic, or GPU-smoke transitions were run.
+
+### Tasks 1-4: active method and watcher implementation
+
+- **Status:** complete
+- RED/GREEN tests replaced only v4 with window `[2.5,3.4]`, height coefficient
+  40, airborne RSI 8%, explicit Warp `naccdmax=256`, fresh-only formal
+  semantics, and the exact 406-block training/checkpoint schedule.
+- The real GPU runtime reported aggregate CCD capacity 48 before the binding
+  fix and 256 afterward. v1-v3 keep their prior implicit runtime behavior.
+- A deterministic 4,096-reset GPU batch validated the 8% mixture and proved
+  every airborne-RSI sample starts with jump signal one.
+- The run-local watcher waits without model use, invokes at most one ephemeral
+  read-only `codex exec` after terminal status, and records launch, timeout, and
+  completion failures without retrying a paid call.
+- Review added a finite one-hour Codex timeout and closed a fresh-only gap that
+  previously allowed an explicit v4 restore argument.
+
+### Task 6: complete source verification
+
+- **Status:** final source verification complete; Git gate and smoke pending
+- Static compilation passed.
+- Complete JIT non-GPU suite: 200 passed, 12 deselected.
+- Complete JIT GPU suite: 12 passed, 200 deselected.
+- `bash JIT/scripts/local_preflight.sh` exited zero and repeated 200 non-GPU +
+  12 GPU passes plus retained reference/provenance checks.
+- Active resolved hashes: smoke
+  `711ac0709c819d6b2ca4172ec1d1421a21fd469351d8661f5b17b6d2594cc96f`;
+  formal `a77c539c84318c48fa1c1f5ea0f87b468295fec633338e7a95a5b6eff5360e2f`.
+- No PPO interaction has been started; the user-required commit/push gate still
+  precedes the bounded smoke.
+- Independent final review approved the tree with no remaining Critical or
+  Important finding after fresh-start provenance and launch-path corrections.
+
 ## Session: 2026-08-25 Reward/RSI/Diagnostics Rebuild
 
 ### Phase 7: Design

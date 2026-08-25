@@ -101,3 +101,33 @@ def test_cli_rejects_restore_checkpoint_in_smoke_mode(jit_root, tmp_path):
     assert result.returncode != 0
     assert "only valid with --formal" in result.stderr
     assert not (tmp_path / "mode_test").exists()
+
+
+def test_cli_rejects_v4_formal_restore_before_creating_a_run(jit_root, tmp_path):
+    environment = os.environ.copy()
+    environment["PYTHONPATH"] = str(jit_root / "src")
+    environment["JIT_RUN_ROOT"] = str(tmp_path)
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(jit_root / "cli/train_phase_expert.py"),
+            "--phase",
+            "propulsion_ascent",
+            "--config",
+            str(jit_root / "configs/phase_u_continuation_10m.json"),
+            "--run-id",
+            "v4_restore_forbidden",
+            "--formal",
+            "--restore-checkpoint",
+            str(tmp_path / "any_parent_checkpoint"),
+        ],
+        cwd=jit_root.parent,
+        env=environment,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode != 0
+    assert "fresh-only" in result.stderr
+    assert not (tmp_path / "v4_restore_forbidden").exists()

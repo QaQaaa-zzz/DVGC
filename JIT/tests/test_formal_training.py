@@ -35,6 +35,16 @@ from jit_dvgc.ppo import wrap_for_jit_training
 from jit_dvgc.provenance import verify_run
 
 
+V4_10M_CHECKPOINTS = (
+    0,
+    491_520,
+    1_990_656,
+    4_988_928,
+    7_987_200,
+    9_977_856,
+)
+
+
 def _identity():
     return CheckpointIdentity(
         config_sha256="1" * 64,
@@ -198,7 +208,7 @@ def test_controller_rejects_duplicate_out_of_order_and_nonfinite_callbacks(
 def test_v4_controller_records_episode_metrics_without_policy_order_dependency(
     jit_root, tmp_path
 ):
-    config = load_config(jit_root / "configs" / "phase_u_continuation_5m.json")
+    config = load_config(jit_root / "configs" / "phase_u_continuation_10m.json")
     controller = FormalRunController(
         config=config,
         run_dir=tmp_path,
@@ -484,22 +494,23 @@ def _fake_absolute_trainer():
     return train
 
 
-def _fake_continuation_trainer():
+def _fake_continuation_10m_trainer():
     def train(**kwargs):
-        assert kwargs["num_timesteps"] == 4_988_928
+        assert kwargs["num_timesteps"] == 9_977_856
+        assert kwargs["num_evals"] == 407
         assert kwargs["log_training_metrics"] is True
         assert kwargs["training_metrics_steps"] == 24_576
         assert kwargs["restore_params"] is None
         assert kwargs["wrap_env_fn"] is wrap_for_jit_training
         params = ({"normalizer": 0}, {"actor": 1}, {"critic": 2})
         kwargs["policy_params_fn"](0, _fake_make_policy, params)
-        for index, step in enumerate(range(24_576, 4_988_928 + 1, 24_576), 1):
+        for index, step in enumerate(range(24_576, 9_977_856 + 1, 24_576), 1):
             kwargs["progress_fn"](
                 step,
                 {
                     "episode/sum_reward": float(index),
                     "episode/length": 100.0,
-                    "episode/reset/source_airborne_rsi": 5.0,
+                    "episode/reset/source_airborne_rsi": 8.0,
                     "episode/sps": 1000.0,
                 },
             )
@@ -520,31 +531,141 @@ def _fake_continuation_trainer():
     return train
 
 
-def test_continuation_v4_runner_is_fresh_and_persists_learning_curves(
-    jit_root, tmp_path
-):
+def _run_continuation_v4_unit(jit_root, tmp_path, run_id):
     run_phase_u_formal(
-        jit_root / "configs" / "phase_u_continuation_5m.json",
-        "continuation_v4_unit",
+        jit_root / "configs" / "phase_u_continuation_10m.json",
+        run_id,
         run_root=tmp_path,
-        trainer=_fake_continuation_trainer(),
+        trainer=_fake_continuation_10m_trainer(),
         env_factory=_FakeEnv,
         panel_evaluator=_fake_panel,
         diagnostic_panel_evaluator=_fake_rsi_panel,
         backend_name=lambda: "gpu",
     )
+    return tmp_path / run_id
 
-    run_dir = tmp_path / "continuation_v4_unit"
+
+@pytest.fixture(scope="module")
+def completed_v4_run_for_manifest_mutation(tmp_path_factory):
+    jit_root = Path(__file__).resolve().parents[1]
+    run_root = tmp_path_factory.mktemp("completed_v4_manifest")
+    return _run_continuation_v4_unit(
+        jit_root, run_root, "completed_v4_manifest_mutation"
+    )
+
+
+@pytest.mark.parametrize(
+    ("artifact", "field", "mutated_value"),
+    [
+        pytest.param(
+            "manifest",
+            "parent_checkpoint",
+            "/tmp/adversarial_parent_checkpoint",
+            id="parent-checkpoint",
+        ),
+        pytest.param(
+            "manifest",
+            "starting_training_transition",
+            24_576,
+            id="starting-training-transition",
+        ),
+        pytest.param(
+            "manifest",
+            "resume_semantics",
+            "parameter_warm_start_optimizer_reset",
+            id="resume-semantics",
+        ),
+        pytest.param(
+            "manifest", "segment_seed", 820_402, id="segment-seed"
+        ),
+        pytest.param(
+            "manifest",
+            "resume_command",
+            (
+                "/home/qy/mujoco_playground/.venv/bin/python "
+                "JIT/cli/train_phase_expert.py --phase propulsion_ascent "
+                "--config JIT/configs/phase_u_continuation_10m.json "
+                "--run-id completed_v4_manifest_mutation --formal "
+                "--restore-checkpoint /tmp/adversarial_parent_checkpoint"
+            ),
+            id="restore-bearing-resume-command",
+        ),
+        pytest.param(
+            "resume_command.txt",
+            None,
+            "different persisted command\n",
+            id="persisted-resume-command-mismatch",
+        ),
+    ],
+)
+def test_completed_v4_provenance_rejects_nonfresh_manifest_or_command(
+    completed_v4_run_for_manifest_mutation,
+    artifact,
+    field,
+    mutated_value,
+):
+    run_dir = completed_v4_run_for_manifest_mutation
+    manifest_path = run_dir / "run_manifest.json"
+    resume_path = run_dir / "resume_command.txt"
+    original_manifest = manifest_path.read_text(encoding="utf-8")
+    original_resume = resume_path.read_text(encoding="utf-8")
+    try:
+        if artifact == "manifest":
+            manifest = json.loads(original_manifest)
+            manifest[field] = mutated_value
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        else:
+            resume_path.write_text(mutated_value, encoding="utf-8")
+
+        with pytest.raises(ValueError, match="formal v4 fresh-start provenance"):
+            verify_run(run_dir)
+    finally:
+        manifest_path.write_text(original_manifest, encoding="utf-8")
+        resume_path.write_text(original_resume, encoding="utf-8")
+
+
+def test_v4_formal_restore_is_rejected_before_runtime_or_run_creation(
+    jit_root, tmp_path
+):
+    def unexpected_backend():
+        raise AssertionError("backend must not be inspected for a fresh-only restore")
+
+    def unexpected_env(_config):
+        raise AssertionError("environment must not be created for a fresh-only restore")
+
+    run_id = "v4_restore_forbidden"
+    with pytest.raises(ValueError, match="fresh-only.*restore"):
+        run_phase_u_formal(
+            jit_root / "configs" / "phase_u_continuation_10m.json",
+            run_id,
+            restore_checkpoint=tmp_path / "any_parent_checkpoint",
+            run_root=tmp_path,
+            env_factory=unexpected_env,
+            backend_name=unexpected_backend,
+        )
+
+    assert not (tmp_path / run_id).exists()
+
+
+def test_continuation_v4_runner_is_fresh_and_persists_learning_curves(
+    jit_root, tmp_path
+):
+    run_dir = _run_continuation_v4_unit(
+        jit_root, tmp_path, "continuation_v4_unit"
+    )
+
     manifest = json.loads((run_dir / "run_manifest.json").read_text(encoding="utf-8"))
     assert manifest["parent_checkpoint"] is None
     assert manifest["starting_training_transition"] == 0
+    assert manifest["training_transition_ceiling"] == 9_977_856
     assert "--restore-checkpoint" not in manifest["resume_command"]
     assert (run_dir / "training_curves.png").is_file()
     assert (run_dir / "training_curves.npz").is_file()
     assert (run_dir / "training_curves.json").is_file()
     verified = verify_run(run_dir)
-    assert verified["absolute_training_transition"] == 4_988_928
-    assert verified["training_curves"]["ppo_sample_count"] == 203
+    assert verified["absolute_training_transition"] == 9_977_856
+    assert verified["formal_checkpoint_transitions"] == list(V4_10M_CHECKPOINTS)
+    assert verified["training_curves"]["ppo_sample_count"] == 406
 
     report_path = run_dir / "training_curves.json"
     report = json.loads(report_path.read_text(encoding="utf-8"))
@@ -555,7 +676,7 @@ def test_continuation_v4_runner_is_fresh_and_persists_learning_curves(
         verify_run(run_dir)
     report_path.write_text(original, encoding="utf-8")
 
-    video_path = run_dir / "evaluations/transition_4988928/video_report.json"
+    video_path = run_dir / "evaluations/transition_9977856/video_report.json"
     original_video = video_path.read_text(encoding="utf-8")
     video = json.loads(original_video)
     video["pre_apex_data"], video["post_apex_data"] = (
@@ -570,6 +691,35 @@ def test_continuation_v4_runner_is_fresh_and_persists_learning_curves(
     with pytest.raises(ValueError, match="Apex source indices|sample count"):
         verify_run(run_dir)
     video_path.write_text(original_video, encoding="utf-8")
+
+
+def test_completed_v4_provenance_rejects_previous_method_values(
+    jit_root, tmp_path
+):
+    run_dir = _run_continuation_v4_unit(
+        jit_root, tmp_path, "continuation_v4_method_drift_unit"
+    )
+    resolved_path = run_dir / "resolved_config.json"
+    manifest_path = run_dir / "run_manifest.json"
+    original_resolved = resolved_path.read_text(encoding="utf-8")
+    original_manifest = manifest_path.read_text(encoding="utf-8")
+    previous_v4_values = (
+        ("model", "naccdmax", 48),
+        ("reset", "airborne_rsi_probability", 0.05),
+        ("events", "jump_zone_x_max", 3.1),
+        ("reward", "height_coeff", 20.0),
+    )
+    for section, field, previous_value in previous_v4_values:
+        resolved = json.loads(original_resolved)
+        resolved[section][field] = previous_value
+        manifest = json.loads(original_manifest)
+        manifest["config_sha256"] = canonical_sha256(resolved)
+        resolved_path.write_text(json.dumps(resolved), encoding="utf-8")
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        with pytest.raises(ValueError, match="approved v4"):
+            verify_run(run_dir)
+    resolved_path.write_text(original_resolved, encoding="utf-8")
+    manifest_path.write_text(original_manifest, encoding="utf-8")
 
 
 def test_absolute_5m_runner_is_fresh_and_uses_dynamic_target(jit_root, tmp_path):

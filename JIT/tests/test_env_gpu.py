@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+import math
 
 import jax
 from jax import numpy as jp
@@ -39,6 +40,15 @@ def test_jitted_reset_and_step_preserve_pytree_and_advance_exact_control_time(ji
     assert set(state.info) == set(next_state.info)
     assert float(state.info["time_out"]) == 0.0
     assert float(next_state.info["time_out"]) == float(next_state.info["truncated"])
+
+
+def test_v4_reset_uses_configured_warp_aggregate_ccd_capacity(jit_root):
+    env = _environment(str(jit_root / "configs" / "phase_u_continuation_smoke.json"))
+    state = env.reset(jax.random.PRNGKey(0))
+    jax.block_until_ready(state)
+
+    capacity = int(state.data._impl.naccdmax)
+    assert capacity == 256
 
 
 def test_step_preserves_info_fields_added_by_training_wrappers(jit_root):
@@ -169,6 +179,35 @@ def test_mixed_reset_is_reproducible_and_airborne_samples_are_bounded(jit_root):
     np.testing.assert_array_equal(np.asarray(first.data.qpos), np.asarray(second.data.qpos))
     sources = np.asarray(first.metrics["reset/source_airborne_rsi"]) > 0.5
     assert 20 <= int(sources.sum()) <= 85
+    qpos = np.asarray(first.data.qpos)[sources]
+    qvel = np.asarray(first.data.qvel)[sources]
+    assert np.all((2.7 <= qpos[:, 0]) & (qpos[:, 0] <= 2.9))
+    assert np.all((1.8 <= qpos[:, 2]) & (qpos[:, 2] <= 2.2))
+    assert np.all((1.8 <= qvel[:, 0]) & (qvel[:, 0] <= 2.2))
+    assert np.all((0.8 <= qvel[:, 2]) & (qvel[:, 2] <= 1.2))
+    assert np.all(np.asarray(first.info["events"].jump_signal)[sources])
+    assert np.all(np.asarray(first.obs["state"])[sources, -1] == 1.0)
+
+
+def test_v4_4096_mixed_resets_preserve_rsi_rate_bounds_and_jump_signal(jit_root):
+    env = _environment(str(jit_root / "configs" / "phase_u_continuation_smoke.json"))
+    num_resets = 4_096
+    keys = jax.random.split(jax.random.PRNGKey(820400), num_resets)
+    reset_many = jax.jit(jax.vmap(env.reset))
+    first = reset_many(keys)
+    second = reset_many(keys)
+    jax.block_until_ready((first, second))
+
+    np.testing.assert_array_equal(np.asarray(first.data.qpos), np.asarray(second.data.qpos))
+    np.testing.assert_array_equal(np.asarray(first.data.qvel), np.asarray(second.data.qvel))
+    sources = np.asarray(first.metrics["reset/source_airborne_rsi"]) > 0.5
+    observed_rsi_fraction = float(sources.mean())
+    expected_rsi_fraction = 0.08
+    five_sigma_tolerance = 5.0 * math.sqrt(
+        expected_rsi_fraction * (1.0 - expected_rsi_fraction) / num_resets
+    )
+    assert abs(observed_rsi_fraction - expected_rsi_fraction) <= five_sigma_tolerance
+
     qpos = np.asarray(first.data.qpos)[sources]
     qvel = np.asarray(first.data.qvel)[sources]
     assert np.all((2.7 <= qpos[:, 0]) & (qpos[:, 0] <= 2.9))

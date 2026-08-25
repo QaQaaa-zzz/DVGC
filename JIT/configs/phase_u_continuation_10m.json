@@ -12,6 +12,7 @@
     "reference_sha256": "612fe758eb1042481b9c7642cc9b92d3e9c14b4a75c9deaf5340183c928bc41f",
     "mjx_impl": "warp",
     "naconmax": 4096,
+    "naccdmax": 256,
     "njmax": 256
   },
   "action": {
@@ -22,7 +23,7 @@
   "reset": {
     "keyframe": "initial_state",
     "initial_forward_velocity": 2.0,
-    "airborne_rsi_probability": 0.05,
+    "airborne_rsi_probability": 0.08,
     "airborne_rsi_x_min": 2.7,
     "airborne_rsi_x_max": 2.9,
     "airborne_rsi_z_min": 1.8,
@@ -34,7 +35,7 @@
   },
   "events": {
     "jump_zone_x_min": 2.5,
-    "jump_zone_x_max": 3.1,
+    "jump_zone_x_max": 3.4,
     "min_ascent_velocity": 0.05,
     "apex_height": 0.5,
     "min_descent_velocity": 0.05
@@ -50,7 +51,7 @@
     "yaw_coeff": 0.3,
     "speed_coeff": 0.2,
     "survival_reward": 1.5,
-    "height_coeff": 20.0,
+    "height_coeff": 40.0,
     "desired_velocity": 3.5,
     "speed_sigma": 0.5,
     "jump_reward_min_height": 0.35,
@@ -75,9 +76,9 @@
     "batch_size": 16,
     "num_minibatches": 24,
     "num_updates_per_batch": 8,
-    "requested_transitions": 4988928,
+    "requested_transitions": 9977856,
     "num_eval_envs": 8,
-    "num_evals": 204,
+    "num_evals": 407,
     "learning_rate": 0.0001,
     "entropy_cost": 0.01,
     "reward_scaling": 0.1,
@@ -85,12 +86,12 @@
     "gae_lambda": 0.95,
     "clipping_epsilon": 0.2,
     "max_grad_norm": 0.5,
-    "seed": 820301,
-    "held_out_seeds": [940001, 940002, 940003, 940004, 940005, 940006, 940007, 940008]
+    "seed": 820401,
+    "held_out_seeds": [950001, 950002, 950003, 950004, 950005, 950006, 950007, 950008]
   },
   "formal": {
-    "checkpoint_transitions": [0, 245760, 983040, 2506752, 3981312, 4988928],
-    "fixed_evaluation_transitions": [245760, 983040, 2506752, 3981312, 4988928],
-    "resume_semantics": "parameter_warm_start_optimizer_reset"
+    "checkpoint_transitions": [0, 491520, 1990656, 4988928, 7987200, 9977856],
+    "fixed_evaluation_transitions": [491520, 1990656, 4988928, 7987200, 9977856],
+    "resume_semantics": "fresh_only"
   }
 }

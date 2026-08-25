@@ -206,11 +206,11 @@ def _validate_formal(
     if not checkpoints or checkpoints[0] != 0:
         raise ValueError("formal checkpoints must start at zero")
     if checkpoints[-1] != ppo.requested_transitions:
-        approved_target = (
-            998_400
-            if schema == "jit_phase_u_formal_v2"
-            else 4_988_928
-        )
+        approved_target = {
+            "jit_phase_u_formal_v2": 998_400,
+            "jit_phase_u_formal_v3": 4_988_928,
+            "jit_phase_u_formal_v4": 9_977_856,
+        }[schema]
         raise ValueError(
             "formal checkpoints must end at requested transitions; "
             f"approved target is {approved_target}"
@@ -231,6 +231,25 @@ def _validate_formal(
         if ppo.held_out_seeds != tuple(range(920001, 920009)):
             raise ValueError("formal held-out seeds must equal 920001 through 920008")
         expected_checkpoints = (0, 102_400, 256_000, 512_000, 742_400, 998_400)
+    elif schema == "jit_phase_u_formal_v4":
+        if ppo.requested_transitions != 9_977_856:
+            raise ValueError("formal requested_transitions must equal 9977856")
+        if ppo.block_transitions != 24_576:
+            raise ValueError("formal PPO block must equal 24576 transitions")
+        if ppo.num_evals != 407:
+            raise ValueError("formal num_evals must equal 407")
+        if ppo.seed != 820401:
+            raise ValueError("formal training seed must equal 820401")
+        if ppo.held_out_seeds != tuple(range(950001, 950009)):
+            raise ValueError("formal held-out seeds do not match the approved namespace")
+        expected_checkpoints = (
+            0,
+            491_520,
+            1_990_656,
+            4_988_928,
+            7_987_200,
+            9_977_856,
+        )
     else:
         if ppo.requested_transitions != 4_988_928:
             raise ValueError("formal requested_transitions must equal 4988928")
@@ -238,15 +257,9 @@ def _validate_formal(
             raise ValueError("formal PPO block must equal 24576 transitions")
         if ppo.num_evals != 204:
             raise ValueError("formal num_evals must equal 204")
-        expected_seed = 820301 if schema == "jit_phase_u_formal_v4" else 820201
-        expected_held_out = (
-            tuple(range(940001, 940009))
-            if schema == "jit_phase_u_formal_v4"
-            else tuple(range(930001, 930009))
-        )
-        if ppo.seed != expected_seed:
-            raise ValueError(f"formal training seed must equal {expected_seed}")
-        if ppo.held_out_seeds != expected_held_out:
+        if ppo.seed != 820201:
+            raise ValueError("formal training seed must equal 820201")
+        if ppo.held_out_seeds != tuple(range(930001, 930009)):
             raise ValueError("formal held-out seeds do not match the approved namespace")
         expected_checkpoints = (
             0,
@@ -262,8 +275,15 @@ def _validate_formal(
         raise ValueError("formal evaluations must be strictly increasing")
     if evaluations != checkpoints[1:]:
         raise ValueError("formal evaluation must run at every nonzero checkpoint")
-    if formal.resume_semantics != "parameter_warm_start_optimizer_reset":
-        raise ValueError("formal resume_semantics must declare optimizer reset")
+    expected_resume_semantics = (
+        "fresh_only"
+        if schema == "jit_phase_u_formal_v4"
+        else "parameter_warm_start_optimizer_reset"
+    )
+    if formal.resume_semantics != expected_resume_semantics:
+        raise ValueError(
+            f"formal resume_semantics must declare {expected_resume_semantics}"
+        )
 
 
 def _validate_approved_v2_method(
@@ -386,6 +406,7 @@ def _validate_approved_absolute_method(
     reward: RewardConfig,
     ppo: PPOConfig,
 ) -> None:
+    is_v4 = schema.endswith("_v4")
     expected_model = {
         "xml_path": "assets/orange_bike_4kg_horizontal.xml",
         "xml_sha256": "e2762bec49fdce61eff6ad01b6a67925934d8997b53929b0a67ace7f44109192",
@@ -395,6 +416,12 @@ def _validate_approved_absolute_method(
         "naconmax": 4096,
         "njmax": 256,
     }
+    if is_v4:
+        expected_model["naccdmax"] = 256
+        if "naccdmax" not in model:
+            raise ValueError("approved v4 model must declare naccdmax")
+        if int(model["naccdmax"]) > int(model["naconmax"]):
+            raise ValueError("naccdmax must not exceed naconmax")
     expected_action = ActionConfig(
         base_rear_speed=12.0,
         rear_speed_delta=12.0,
@@ -404,7 +431,7 @@ def _validate_approved_absolute_method(
     expected_reset = ResetConfig(
         keyframe="initial_state",
         initial_forward_velocity=2.0,
-        airborne_rsi_probability=0.05,
+        airborne_rsi_probability=0.08 if is_v4 else 0.05,
         airborne_rsi_x_min=2.7,
         airborne_rsi_x_max=2.9,
         airborne_rsi_z_min=1.8,
@@ -414,7 +441,7 @@ def _validate_approved_absolute_method(
         airborne_rsi_vz_min=0.8,
         airborne_rsi_vz_max=1.2,
     )
-    expected_events = EventConfig(2.5, 3.1, 0.05, 0.5, 0.05)
+    expected_events = EventConfig(2.5, 3.4 if is_v4 else 3.1, 0.05, 0.5, 0.05)
     expected_limits = PhysicalLimits(
         max_abs_roll=0.6108652381980153,
         max_abs_pitch=1.3089969389957472,
@@ -426,7 +453,7 @@ def _validate_approved_absolute_method(
         yaw_coeff=0.3,
         speed_coeff=0.2,
         survival_reward=1.5,
-        height_coeff=20.0,
+        height_coeff=40.0 if is_v4 else 20.0,
         desired_velocity=3.5,
         speed_sigma=0.5,
         jump_reward_min_height=0.35,
@@ -444,9 +471,8 @@ def _validate_approved_absolute_method(
         total_min=-50.0,
         total_max=50.0,
     )
-    is_v4 = schema.endswith("_v4")
     held_out_seeds = (
-        tuple(range(940001, 940009))
+        tuple(range(950001, 950009))
         if is_v4
         else tuple(range(930001, 930009))
     )
@@ -467,19 +493,26 @@ def _validate_approved_absolute_method(
         max_grad_norm=0.5,
         held_out_seeds=held_out_seeds,
     )
-    if schema in {"jit_phase_u_formal_v3", "jit_phase_u_formal_v4"}:
+    if schema == "jit_phase_u_formal_v4":
+        expected_ppo = PPOConfig(
+            **common_ppo,
+            requested_transitions=9_977_856,
+            num_evals=407,
+            seed=820401,
+        )
+    elif schema == "jit_phase_u_formal_v3":
         expected_ppo = PPOConfig(
             **common_ppo,
             requested_transitions=4_988_928,
             num_evals=204,
-            seed=820301 if is_v4 else 820201,
+            seed=820201,
         )
     else:
         expected_ppo = PPOConfig(
             **common_ppo,
             requested_transitions=24_576,
             num_evals=1,
-            seed=820300 if is_v4 else 820200,
+            seed=820400 if is_v4 else 820200,
         )
     approved = {
         "model": (dict(model), expected_model),

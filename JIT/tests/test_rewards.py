@@ -16,6 +16,11 @@ def config(jit_root):
     return load_config(jit_root / "configs" / "phase_u_smoke.json")
 
 
+@pytest.fixture
+def v4_config(jit_root):
+    return load_config(jit_root / "configs" / "phase_u_continuation_smoke.json")
+
+
 def _state(**overrides) -> RewardState:
     values = dict(
         x=jp.array(2.8),
@@ -104,6 +109,18 @@ def test_height_is_exactly_zero_when_current_jump_signal_is_zero(config):
         config, current=_state(z=jp.array(0.5)), jump_signal=jp.array(False)
     )
     assert float(result.components.height) == 0.0
+
+
+def test_v4_height_component_uses_40x_raw_height_only_while_signaled(v4_config):
+    signaled = _reward(
+        v4_config, current=_state(z=jp.array(0.5)), jump_signal=jp.array(True)
+    )
+    unsignaled = _reward(
+        v4_config, current=_state(z=jp.array(0.5)), jump_signal=jp.array(False)
+    )
+
+    assert float(signaled.components.height) == pytest.approx(60.0)
+    assert float(unsignaled.components.height) == 0.0
 
 
 def test_action_rate_and_joint_energy_costs_match_reference(config):

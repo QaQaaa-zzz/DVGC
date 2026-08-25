@@ -654,6 +654,48 @@ def _verify_formal_run(
         "jit_phase_u_formal_v4",
     }:
         resolve_config_payload(resolved)
+    if schema == "jit_phase_u_formal_v4":
+        if (
+            type(manifest.get("starting_training_transition")) is not int
+            or manifest["starting_training_transition"] != 0
+        ):
+            raise ValueError(
+                "formal v4 fresh-start provenance requires starting transition 0"
+            )
+        if manifest.get("parent_checkpoint") is not None:
+            raise ValueError(
+                "formal v4 fresh-start provenance forbids a parent checkpoint"
+            )
+        if manifest.get("resume_semantics") != "fresh":
+            raise ValueError(
+                "formal v4 fresh-start provenance requires fresh resume semantics"
+            )
+        expected_seed = int(resolved["ppo"]["seed"])
+        if (
+            type(manifest.get("segment_seed")) is not int
+            or manifest["segment_seed"] != expected_seed
+        ):
+            raise ValueError(
+                "formal v4 fresh-start provenance segment seed mismatch"
+            )
+        resume_command = manifest.get("resume_command")
+        if (
+            not isinstance(resume_command, str)
+            or "--restore-checkpoint" in resume_command
+        ):
+            raise ValueError(
+                "formal v4 fresh-start provenance forbids restore-bearing resume commands"
+            )
+        resume_command_path = path / "resume_command.txt"
+        expected_persisted_command = resume_command + "\n"
+        if (
+            not resume_command_path.is_file()
+            or resume_command_path.read_text(encoding="utf-8")
+            != expected_persisted_command
+        ):
+            raise ValueError(
+                "formal v4 fresh-start provenance resume command artifact mismatch"
+            )
     repository_root = Path(__file__).resolve().parents[3]
     model = resolved["model"]
     if model.get("xml_sha256") != manifest["xml_sha256"]:
