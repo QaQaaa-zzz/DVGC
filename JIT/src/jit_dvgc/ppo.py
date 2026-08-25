@@ -87,6 +87,23 @@ def make_network_factory():
     )
 
 
+def wrap_for_jit_training(
+    env: Any,
+    episode_length: int = 1000,
+    action_repeat: int = 1,
+    randomization_fn: Any = None,
+):
+    """Uses real resets so JIT episode events/counters never leak across done."""
+
+    return wrapper.wrap_for_brax_training(
+        env,
+        episode_length=episode_length,
+        action_repeat=action_repeat,
+        randomization_fn=randomization_fn,
+        full_reset=True,
+    )
+
+
 def _json_safe(value: Any) -> Any:
     if isinstance(value, Mapping):
         return {str(key): _json_safe(item) for key, item in value.items()}
@@ -198,7 +215,7 @@ def run_phase_u_smoke(
             num_timesteps=config.ppo.requested_transitions,
             max_devices_per_host=1,
             wrap_env=True,
-            wrap_env_fn=wrapper.wrap_for_brax_training,
+            wrap_env_fn=wrap_for_jit_training,
             num_envs=config.ppo.num_parallel_envs,
             episode_length=config.ppo.episode_horizon,
             action_repeat=1,

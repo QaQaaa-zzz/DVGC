@@ -10,6 +10,12 @@ Apex event still pays its one-time configured bonus, but it no longer ends the
 episode; simulation continues until a retained physical failure or the exact
 200-control-tick horizon.
 
+Training uses full environment resets after every completed episode. This is a
+required runtime contract, not an optimization option: cached data/observation-
+only resets would leak `episode_step`, event, timeout, and RSI state into the
+next episode. The v4 config hash explicitly binds `full_reset=true`, making the
+aborted pre-fix checkpoint incompatible with the corrected run.
+
 Final natural and forced-RSI representatives encode the complete episode in
 MP4/PNG/NPZ. They additionally save independently hashed
 `representative_pre_apex.npz` and `representative_post_apex.npz` files with the

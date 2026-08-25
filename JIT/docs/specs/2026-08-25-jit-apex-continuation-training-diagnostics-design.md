@@ -147,6 +147,12 @@ v1-v3 checkpoints incompatible. The launch command contains no restore option,
 and the manifest must state a null parent checkpoint, transition-zero start,
 and fresh resume semantics.
 
+Startup inspection additionally found that the default cached auto-reset leaks
+JIT-owned episode/event info after done. The corrected v4 identity therefore
+binds `training_wrapper.full_reset=true`. The pre-fix run is aborted and none
+of its checkpoints may be loaded; a GPU regression must show a terminal episode
+followed by a fresh nonterminal episode before relaunch.
+
 ## Formal evidence and provenance
 
 The v4 completed-run verifier requires:

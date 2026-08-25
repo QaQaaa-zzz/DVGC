@@ -15,6 +15,16 @@ episode length, KL, PPO losses, policy standard deviation, and throughput.
 Completed-v4 provenance binds both Apex segments to the full trace and binds
 the plotted series to the raw callbacks.
 
+Startup inspection of the first v4 attempt exposed a wrapper defect before it
+could be accepted as a result: after the first 200-tick horizon, the default
+cached reset restored only data/observations and leaked JIT episode/event info,
+so subsequent logged episode lengths collapsed to one. That process was
+stopped, its run was closed as `aborted`, and its checkpoints are prohibited.
+The corrected training wrapper now requires a real reset and has a GPU
+regression proving a two-tick terminal is followed by a fresh nonterminal
+episode with event step one. `training_wrapper.full_reset=true` is part of the
+exact v4 config identity.
+
 The new exact config uses seed `820301`, held-out seeds `940001..940008`, and
 4,988,928 transitions. It is identity-incompatible with the v3 checkpoint and
 must start fresh. Final command results and the launch commit are recorded only
@@ -25,13 +35,13 @@ Validated pre-launch evidence:
 
 | Evidence | Result |
 |---|---|
-| v4 smoke config SHA-256 | `3b3d2b3ae46bcf17d67b6c7d2e2118f57a7a968f693791443fd8f41967d9be1c` |
-| v4 formal config SHA-256 | `296162c405ab77acfeb682c06ee3aa3733abce9f8bd5799c8e4825a18668f299` |
-| Complete non-GPU suite | 165 passed, 9 GPU tests deselected |
-| Complete GPU suite | 9 passed, 165 non-GPU tests deselected |
+| v4 smoke config SHA-256 | `683b412409a28db41427cb8cc70aaa91680b204c927f3095e788a26caf90a1b2` |
+| v4 formal config SHA-256 | `6129456320c3acb8c36ba0fe2d96a93ec6c553dfce3ffe4fcabb46559dbb666c` |
+| Complete non-GPU suite | 166 passed, 10 GPU tests deselected |
+| Complete GPU suite | 10 passed, 166 non-GPU tests deselected |
 | `JIT/scripts/local_preflight.sh` | exit 0 |
 | Retained v1/v2/v3 formal provenance | all exit 0 |
-| Repository compatibility | 1,133 passed; one pre-existing dirty-path failure outside JIT |
+| Repository compatibility | 1,135 passed; one pre-existing dirty-path failure outside JIT |
 
 The sole repository-level failure is unchanged user work in
 `tests/test_phase_u_launch_diagnostic.py`: it passes `mode=` to the separately

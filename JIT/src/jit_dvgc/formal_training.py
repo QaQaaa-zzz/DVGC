@@ -12,7 +12,6 @@ from typing import Any, Callable, Mapping
 
 from brax.training.agents.ppo import train as ppo_train
 import jax
-from mujoco_playground._src import wrapper
 import numpy as np
 
 from .checkpoint import (
@@ -30,7 +29,7 @@ from .evaluation import (
     select_representative_trace,
     summarize_phase_u,
 )
-from .ppo import make_network_factory
+from .ppo import make_network_factory, wrap_for_jit_training
 from .provenance import (
     InteractionAccounting,
     RunDeclaration,
@@ -659,7 +658,7 @@ def run_phase_u_formal(
             num_timesteps=remaining,
             max_devices_per_host=1,
             wrap_env=True,
-            wrap_env_fn=wrapper.wrap_for_brax_training,
+            wrap_env_fn=wrap_for_jit_training,
             num_envs=config.ppo.num_parallel_envs,
             episode_length=config.ppo.episode_horizon,
             action_repeat=1,

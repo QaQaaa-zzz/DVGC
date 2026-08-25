@@ -1,6 +1,9 @@
 {
   "schema": "jit_phase_u_formal_v4",
   "phase": "propulsion_ascent",
+  "training_wrapper": {
+    "full_reset": true
+  },
   "model": {
     "xml_path": "assets/orange_bike_4kg_horizontal.xml",
     "xml_sha256": "e2762bec49fdce61eff6ad01b6a67925934d8997b53929b0a67ace7f44109192",

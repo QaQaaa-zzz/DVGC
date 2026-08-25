@@ -230,3 +230,8 @@
 - Episode means are explicitly the rolling last 100 completed episodes. A
   block with no completed episode writes no episode row; later horizon/failure
   completions supply nonempty evidence before final plotting.
+- Real startup metrics exposed that the default cached auto-reset kept JIT
+  `episode_step/events/timeout` info after done. The first episode was valid but
+  later episodes collapsed to one step. Correct training requires
+  `full_reset=True`; this is now config-bound and GPU-tested, and the invalid
+  attempt was aborted without checkpoint reuse.

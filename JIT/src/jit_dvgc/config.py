@@ -510,6 +510,10 @@ def resolve_config_payload(payload: Mapping[str, Any]) -> ResolvedConfig:
         raise ValueError("unsupported JIT config schema")
     if payload.get("phase") != "propulsion_ascent":
         raise ValueError("only propulsion_ascent is implemented")
+    if schema.endswith("_v4") and payload.get("training_wrapper") != {
+        "full_reset": True
+    }:
+        raise ValueError("approved v4 training wrapper must use full_reset=true")
     if not math.isclose(CTRL_DT / SIM_DT, N_SUBSTEPS, rel_tol=0.0, abs_tol=1e-12):
         raise ValueError("timing constants do not produce exactly four substeps")
     if tuple(payload.get("action_order", ACTION_ORDER)) != ACTION_ORDER:

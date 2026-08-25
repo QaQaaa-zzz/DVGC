@@ -31,6 +31,7 @@ from jit_dvgc.formal_training import (
     run_phase_u_formal,
     validate_formal_report,
 )
+from jit_dvgc.ppo import wrap_for_jit_training
 from jit_dvgc.provenance import verify_run
 
 
@@ -489,6 +490,7 @@ def _fake_continuation_trainer():
         assert kwargs["log_training_metrics"] is True
         assert kwargs["training_metrics_steps"] == 24_576
         assert kwargs["restore_params"] is None
+        assert kwargs["wrap_env_fn"] is wrap_for_jit_training
         params = ({"normalizer": 0}, {"actor": 1}, {"critic": 2})
         kwargs["policy_params_fn"](0, _fake_make_policy, params)
         for index, step in enumerate(range(24_576, 4_988_928 + 1, 24_576), 1):

@@ -10,6 +10,7 @@ from mujoco_playground._src import wrapper
 
 from jit_dvgc.config import load_config
 from jit_dvgc.env import TwoPhaseBikeEnv
+from jit_dvgc.ppo import wrap_for_jit_training
 
 
 pytestmark = pytest.mark.gpu
@@ -69,6 +70,28 @@ def test_real_brax_wrapper_exposes_all_ppo_extra_fields(jit_root):
         "episode_done",
         "time_out",
     }.issubset(next_state.info)
+
+
+def test_training_wrapper_fully_resets_jit_episode_info_after_done(jit_root):
+    env = _environment(str(jit_root / "configs" / "phase_u_continuation_smoke.json"))
+    wrapped = wrap_for_jit_training(env, episode_length=2, action_repeat=1)
+    keys = jax.random.split(jax.random.PRNGKey(141), 4)
+    reset = jax.jit(wrapped.reset)
+    step = jax.jit(wrapped.step)
+    actions = jp.zeros((4, 4), dtype=jp.float32)
+
+    state = reset(keys)
+    state = step(state, actions)
+    terminal = step(state, actions)
+    jax.block_until_ready(terminal)
+    assert bool(jp.all(terminal.done))
+    assert bool(jp.all(terminal.info["events"].episode_step == 0))
+
+    restarted = step(terminal, actions)
+    jax.block_until_ready(restarted)
+    assert not bool(jp.any(restarted.done))
+    assert bool(jp.all(restarted.info["events"].episode_step == 1))
+    assert bool(jp.all(restarted.info["episode_metrics"]["length"] == 1))
 
 
 def test_fifty_control_ticks_equal_one_second(jit_root):

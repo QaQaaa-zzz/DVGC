@@ -426,6 +426,15 @@
   transition accounting, and v4 provenance binding.
 - Added block-aligned episode/PPO JSONL, PNG/NPZ/JSON training curves, raw-series
   binding, exact v4 configs, fresh seed namespace, and mutation tests.
-- Current verification marker: 164 non-GPU tests and 9 GPU tests passed; retained
+- Pre-launch verification marker: 165 non-GPU tests and 9 GPU tests passed; retained
   completed v1, v2, and v3 formal provenance all passed. Final preflight and
   staged review remain before commit/push/launch.
+- First v4 launch audit observed `episode/length=1` after the initial horizon.
+  Stopped PID 1475264, closed the ignored run as aborted at the last certified
+  4,325,376-transition callback, and prohibited all of its checkpoints.
+- Added a single full-reset training wrapper for smoke/formal PPO plus exact-v4
+  config identity and GPU reset-cycle regression. A new source commit/push and
+  a new fresh run ID are required before retrying.
+- Corrected-tree verification: 166 non-GPU and 10 GPU tests passed; the exact
+  v4 formal config hash is
+  `6129456320c3acb8c36ba0fe2d96a93ec6c553dfce3ffe4fcabb46559dbb666c`.
