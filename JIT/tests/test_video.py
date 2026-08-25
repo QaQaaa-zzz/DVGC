@@ -73,3 +73,13 @@ def test_video_encodes_each_captured_state_once_without_stepping(jit_root, tmp_p
     assert len(report.video_sha256) == 64
     assert len(report.diagnostic_plot_sha256) == 64
     assert len(report.diagnostic_data_sha256) == 64
+    assert report.apex_frame_index == -1
+    assert report.pre_apex_sample_count == 4
+    assert report.post_apex_sample_count == 0
+    assert report.pre_apex_environment_transitions == 3
+    assert report.post_apex_environment_transitions == 0
+    assert report.pre_apex_data.endswith("_pre_apex.npz")
+    assert report.post_apex_data.endswith("_post_apex.npz")
+    with np.load(report.pre_apex_data) as pre, np.load(report.post_apex_data) as post:
+        assert pre["qpos"].shape == (4, 12)
+        assert post["qpos"].shape == (0, 12)

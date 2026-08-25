@@ -115,6 +115,24 @@ def test_forced_airborne_reset_always_uses_rsi_and_jump_signal(jit_root):
     assert float(state.obs["state"][-1]) == 1.0
 
 
+def test_forced_airborne_rollout_continues_past_first_apex(jit_root):
+    env = _environment(str(jit_root / "configs" / "phase_u_absolute_smoke.json"))
+    state = jax.jit(env.reset_airborne_rsi)(jax.random.PRNGKey(104))
+    step = jax.jit(env.step)
+    saw_apex = False
+    for _ in range(20):
+        state = step(state, jp.zeros(4, dtype=jp.float32))
+        jax.block_until_ready(state)
+        if bool(state.info["events"].apex_seen):
+            saw_apex = True
+            assert not bool(state.info["terminated"])
+            assert not bool(state.done)
+            break
+        if bool(state.done):
+            break
+    assert saw_apex
+
+
 def test_mixed_reset_is_reproducible_and_airborne_samples_are_bounded(jit_root):
     env = _environment(str(jit_root / "configs" / "phase_u_smoke.json"))
     keys = jax.random.split(jax.random.PRNGKey(102), 1024)

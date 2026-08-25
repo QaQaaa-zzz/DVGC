@@ -320,7 +320,7 @@ def _verify_video_artifacts(
     expected_seeds: tuple[int, ...] = (),
 ) -> None:
     artifact_keys = ("video", "state_trace")
-    if schema.endswith(("_v2", "_v3")):
+    if schema.endswith(("_v2", "_v3", "_v4")):
         artifact_keys = (
             "video",
             "state_trace",
@@ -345,7 +345,7 @@ def _verify_video_artifacts(
     if resolved_paths["video"] == resolved_paths["state_trace"]:
         raise ValueError(f"{context} video and state trace must be distinct")
 
-    if not schema.endswith(("_v2", "_v3")):
+    if not schema.endswith(("_v2", "_v3", "_v4")):
         return
     if resolved_paths["state_trace"] != resolved_paths["diagnostic_data"]:
         raise ValueError(f"{context} state trace must equal diagnostic data")
@@ -414,6 +414,222 @@ def _verify_video_artifacts(
         raise ValueError(f"{context} diagnostic plot shape is invalid")
 
 
+def _verify_apex_split_artifacts(
+    video_report: Mapping[str, Any], *, artifact_dir: Path, context: str
+) -> None:
+    full_path = Path(str(video_report["diagnostic_data"])).resolve()
+    segment_paths = {
+        "pre": Path(str(video_report.get("pre_apex_data", ""))).resolve(),
+        "post": Path(str(video_report.get("post_apex_data", ""))).resolve(),
+    }
+    if len({full_path, *segment_paths.values()}) != 3:
+        raise ValueError(f"{context} Apex data paths must be distinct")
+    for name, segment in segment_paths.items():
+        if (
+            not segment.is_file()
+            or segment.parent != artifact_dir.resolve()
+            or segment.suffix.lower() != ".npz"
+        ):
+            raise ValueError(f"{context} {name}-Apex artifact is invalid")
+        if video_report.get(f"{name}_apex_data_sha256") != _payload_sha256(
+            segment
+        ):
+            raise ValueError(f"{context} {name}-Apex artifact hash mismatch")
+
+    captured = int(video_report["captured_state_count"])
+    apex_index = int(video_report.get("apex_frame_index", -2))
+    expected_pre = captured if apex_index == -1 else apex_index + 1
+    expected_post = 0 if apex_index == -1 else captured - apex_index
+    if not (-1 <= apex_index < captured):
+        raise ValueError(f"{context} Apex frame index is invalid")
+    if video_report.get("pre_apex_sample_count") != expected_pre:
+        raise ValueError(f"{context} pre-Apex sample count mismatch")
+    if video_report.get("post_apex_sample_count") != expected_post:
+        raise ValueError(f"{context} post-Apex sample count mismatch")
+    pre_transitions = int(video_report.get("pre_apex_environment_transitions", -1))
+    post_transitions = int(video_report.get("post_apex_environment_transitions", -1))
+    if pre_transitions + post_transitions != captured - 1:
+        raise ValueError(f"{context} Apex transition accounting mismatch")
+    expected_pre_transitions = captured - 1 if apex_index == -1 else apex_index
+    expected_post_transitions = 0 if apex_index == -1 else captured - apex_index - 1
+    if (pre_transitions, post_transitions) != (
+        expected_pre_transitions,
+        expected_post_transitions,
+    ):
+        raise ValueError(f"{context} Apex transition split mismatch")
+
+    with (
+        np.load(full_path, allow_pickle=False) as full,
+        np.load(segment_paths["pre"], allow_pickle=False) as pre,
+        np.load(segment_paths["post"], allow_pickle=False) as post,
+    ):
+        required_full = {"apex_frame_index", "segment_pre_apex", "segment_post_apex"}
+        if not required_full <= set(full.files):
+            raise ValueError(f"{context} Apex masks are missing")
+        if int(np.asarray(full["apex_frame_index"])[0]) != apex_index:
+            raise ValueError(f"{context} Apex index declaration mismatch")
+        expected_indices = {
+            "pre": np.arange(expected_pre, dtype=np.int32),
+            "post": (
+                np.empty(0, dtype=np.int32)
+                if apex_index == -1
+                else np.arange(apex_index, captured, dtype=np.int32)
+            ),
+        }
+        expected_pre_mask = np.zeros(captured, dtype=bool)
+        expected_pre_mask[expected_indices["pre"]] = True
+        expected_post_mask = np.zeros(captured, dtype=bool)
+        expected_post_mask[expected_indices["post"]] = True
+        if not np.array_equal(full["segment_pre_apex"], expected_pre_mask):
+            raise ValueError(f"{context} pre-Apex mask mismatch")
+        if not np.array_equal(full["segment_post_apex"], expected_post_mask):
+            raise ValueError(f"{context} post-Apex mask mismatch")
+        for name, segment, expected in (
+            ("pre", pre, expected_indices["pre"]),
+            ("post", post, expected_indices["post"]),
+        ):
+            if (
+                "apex_frame_index" not in segment.files
+                or segment["apex_frame_index"].shape != (1,)
+                or int(segment["apex_frame_index"][0]) != apex_index
+            ):
+                raise ValueError(f"{context} {name}-Apex index mismatch")
+            if "source_frame_index" not in segment.files or not np.array_equal(
+                segment["source_frame_index"], expected
+            ):
+                raise ValueError(f"{context} {name}-Apex source indices mismatch")
+            for key in full.files:
+                values = np.asarray(full[key])
+                if key in required_full or values.ndim < 1 or values.shape[0] != captured:
+                    continue
+                if key not in segment.files or not np.array_equal(
+                    segment[key], values[expected]
+                ):
+                    raise ValueError(f"{context} {name}-Apex {key} mismatch")
+        if apex_index >= 0 and not np.array_equal(pre["qpos"][-1], post["qpos"][0]):
+            raise ValueError(f"{context} Apex boundary state mismatch")
+
+
+def _verify_training_curves(path: Path, *, target: int) -> dict[str, Any]:
+    report_path = path / "training_curves.json"
+    if not report_path.is_file():
+        raise ValueError("formal v4 training curve report is missing")
+    payload = json.loads(report_path.read_text(encoding="utf-8"))
+    plot = Path(str(payload.get("plot_path", ""))).resolve()
+    data = Path(str(payload.get("data_path", ""))).resolve()
+    if (
+        not plot.is_file()
+        or plot.parent != path.resolve()
+        or plot.suffix.lower() != ".png"
+        or not data.is_file()
+        or data.parent != path.resolve()
+        or data.suffix.lower() != ".npz"
+        or plot == data
+    ):
+        raise ValueError("formal v4 training curve artifact is invalid")
+    if payload.get("plot_sha256") != _payload_sha256(plot):
+        raise ValueError("formal v4 training curve plot hash mismatch")
+    if payload.get("data_sha256") != _payload_sha256(data):
+        raise ValueError("formal v4 training curve data hash mismatch")
+    required = {
+        "episode_training_transitions",
+        "episode_mean_reward",
+        "episode_mean_length",
+        "episode_airborne_rsi_fraction",
+        "ppo_training_transitions",
+        "ppo_kl_mean",
+        "ppo_policy_loss",
+        "ppo_value_loss",
+        "ppo_total_loss",
+        "ppo_policy_mean_std",
+        "ppo_sps",
+    }
+    episode_jsonl = path / "episode_metrics.jsonl"
+    ppo_jsonl = path / "metrics.jsonl"
+    if not episode_jsonl.is_file() or not ppo_jsonl.is_file():
+        raise ValueError("formal v4 raw training metrics are missing")
+    episode_rows = [
+        json.loads(line)
+        for line in episode_jsonl.read_text(encoding="utf-8").splitlines()
+    ]
+    ppo_rows = [
+        json.loads(line)
+        for line in ppo_jsonl.read_text(encoding="utf-8").splitlines()
+    ]
+    with np.load(data, allow_pickle=False) as arrays:
+        if not required <= set(arrays.files):
+            raise ValueError("formal v4 training curve series are incomplete")
+        episode_count = int(payload.get("episode_sample_count", -1))
+        ppo_count = int(payload.get("ppo_sample_count", -1))
+        episode_steps = np.asarray(arrays["episode_training_transitions"])
+        ppo_steps = np.asarray(arrays["ppo_training_transitions"])
+        if episode_steps.shape != (episode_count,) or ppo_steps.shape != (ppo_count,):
+            raise ValueError("formal v4 training curve sample count mismatch")
+        if episode_count <= 0 or ppo_count <= 0:
+            raise ValueError("formal v4 training curves must be nonempty")
+        if len(episode_rows) != episode_count or len(ppo_rows) != ppo_count:
+            raise ValueError("formal v4 raw/curve sample count mismatch")
+        if np.any(np.diff(episode_steps) <= 0) or np.any(np.diff(ppo_steps) <= 0):
+            raise ValueError("formal v4 training curve steps are not increasing")
+        if int(ppo_steps[-1]) != target:
+            raise ValueError("formal v4 PPO curve does not reach target")
+        for key in required - {
+            "episode_training_transitions",
+            "ppo_training_transitions",
+        }:
+            values = np.asarray(arrays[key])
+            expected_count = episode_count if key.startswith("episode_") else ppo_count
+            if values.shape != (expected_count,) or not np.isfinite(values).all():
+                raise ValueError(f"formal v4 training curve is invalid: {key}")
+        raw_bindings = {
+            "episode_training_transitions": (
+                episode_rows,
+                "training_transitions",
+                False,
+            ),
+            "episode_mean_reward": (episode_rows, "episode/sum_reward", True),
+            "episode_mean_length": (episode_rows, "episode/length", True),
+            "ppo_training_transitions": (ppo_rows, "training_transitions", False),
+            "ppo_kl_mean": (ppo_rows, "training/kl_mean", True),
+            "ppo_policy_loss": (ppo_rows, "training/policy_loss", True),
+            "ppo_value_loss": (ppo_rows, "training/v_loss", True),
+            "ppo_total_loss": (ppo_rows, "training/total_loss", True),
+            "ppo_policy_mean_std": (
+                ppo_rows,
+                "training/policy_dist_mean_std",
+                True,
+            ),
+            "ppo_sps": (ppo_rows, "training/sps", True),
+        }
+        for array_name, (rows, key, nested) in raw_bindings.items():
+            try:
+                raw = np.asarray(
+                    [row["metrics"][key] if nested else row[key] for row in rows]
+                )
+            except (KeyError, TypeError) as exc:
+                raise ValueError(f"formal v4 raw metric is missing: {key}") from exc
+            if not np.array_equal(np.asarray(arrays[array_name]), raw):
+                raise ValueError(f"formal v4 raw metric mismatch: {key}")
+        reset_counts = np.asarray(
+            [row["metrics"]["episode/reset/source_airborne_rsi"] for row in episode_rows],
+            dtype=np.float64,
+        )
+        expected_fraction = reset_counts / np.asarray(arrays["episode_mean_length"])
+        if not np.allclose(
+            arrays["episode_airborne_rsi_fraction"], expected_fraction,
+            rtol=0.0,
+            atol=1e-12,
+        ):
+            raise ValueError("formal v4 raw RSI fraction mismatch")
+    try:
+        image = media.read_image(plot)
+    except Exception as exc:
+        raise ValueError("formal v4 training curve plot decode failed") from exc
+    if np.asarray(image).ndim not in {2, 3}:
+        raise ValueError("formal v4 training curve plot shape is invalid")
+    return payload
+
+
 def _verify_formal_run(
     path: Path,
     *,
@@ -429,9 +645,14 @@ def _verify_formal_run(
         "jit_phase_u_formal_v1",
         "jit_phase_u_formal_v2",
         "jit_phase_u_formal_v3",
+        "jit_phase_u_formal_v4",
     }:
         raise ValueError("formal run does not use the formal config schema")
-    if schema in {"jit_phase_u_formal_v2", "jit_phase_u_formal_v3"}:
+    if schema in {
+        "jit_phase_u_formal_v2",
+        "jit_phase_u_formal_v3",
+        "jit_phase_u_formal_v4",
+    }:
         resolve_config_payload(resolved)
     repository_root = Path(__file__).resolve().parents[3]
     model = resolved["model"]
@@ -459,7 +680,7 @@ def _verify_formal_run(
         raise ValueError("formal segment training ceiling mismatch")
     if accounting["brax_evaluation"] != 0:
         raise ValueError("formal run contains undeclared Brax evaluation transitions")
-    if schema != "jit_phase_u_formal_v3" and accounting["diagnostic"] != 0:
+    if schema not in {"jit_phase_u_formal_v3", "jit_phase_u_formal_v4"} and accounting["diagnostic"] != 0:
         raise ValueError("legacy formal run contains undeclared diagnostic transitions")
 
     formal = resolved["formal"]
@@ -518,7 +739,7 @@ def _verify_formal_run(
             digest = _payload_sha256(npz_path)
             if metadata.get("npz_sha256") != digest:
                 raise ValueError("formal trace payload hash mismatch")
-            if schema == "jit_phase_u_formal_v3":
+            if schema in {"jit_phase_u_formal_v3", "jit_phase_u_formal_v4"}:
                 _verify_episode_npz(
                     npz_path,
                     captured_state_count=transitions + 1,
@@ -540,7 +761,7 @@ def _verify_formal_run(
 
     diagnostic_total = 0
     diagnostic_summaries: dict[str, Any] = {}
-    if schema == "jit_phase_u_formal_v3":
+    if schema in {"jit_phase_u_formal_v3", "jit_phase_u_formal_v4"}:
         for step in expected_evaluations:
             panel_dir = path / "diagnostics" / "airborne_rsi" / f"transition_{step}"
             summary_path = panel_dir / "summary.json"
@@ -612,6 +833,12 @@ def _verify_formal_run(
             expected_airborne_rsi=True,
             expected_seeds=expected_seeds,
         )
+        if schema == "jit_phase_u_formal_v4":
+            _verify_apex_split_artifacts(
+                diagnostic_video,
+                artifact_dir=final_diagnostic,
+                context="formal final RSI diagnostic",
+            )
         diagnostic_video_transitions = diagnostic_video.get(
             "environment_transitions"
         )
@@ -637,12 +864,22 @@ def _verify_formal_run(
         schema=schema,
         context=(
             "formal final natural"
-            if schema == "jit_phase_u_formal_v3"
+            if schema in {"jit_phase_u_formal_v3", "jit_phase_u_formal_v4"}
             else "formal final"
         ),
-        expected_airborne_rsi=(False if schema == "jit_phase_u_formal_v3" else None),
+        expected_airborne_rsi=(
+            False
+            if schema in {"jit_phase_u_formal_v3", "jit_phase_u_formal_v4"}
+            else None
+        ),
         expected_seeds=expected_seeds,
     )
+    if schema == "jit_phase_u_formal_v4":
+        _verify_apex_split_artifacts(
+            video_report,
+            artifact_dir=final_panel,
+            context="formal final natural",
+        )
     video_transitions = video_report.get("environment_transitions")
     captured = video_report.get("captured_state_count")
     encoded = video_report.get("encoded_frame_count")
@@ -677,6 +914,10 @@ def _verify_formal_run(
         if not isinstance(value, (int, float)) or not math.isfinite(float(value)):
             raise ValueError("formal report contains a nonfinite metric")
 
+    training_curves: dict[str, Any] = {}
+    if schema == "jit_phase_u_formal_v4":
+        training_curves = _verify_training_curves(path, target=target)
+
     report.update(
         {
             "absolute_training_transition": target,
@@ -688,6 +929,7 @@ def _verify_formal_run(
             "evaluation_summaries": evaluation_summaries,
             "airborne_rsi_diagnostic_summaries": diagnostic_summaries,
             "checkpoint_restored": True,
+            "training_curves": training_curves,
         }
     )
     return report
@@ -745,11 +987,13 @@ def verify_run(run_dir: Path) -> dict[str, Any]:
         "jit_phase_u_engineering_smoke_v1",
         "jit_phase_u_engineering_smoke_v2",
         "jit_phase_u_engineering_smoke_v3",
+        "jit_phase_u_engineering_smoke_v4",
     }:
         raise ValueError("engineering smoke does not use a supported config schema")
     if schema in {
         "jit_phase_u_engineering_smoke_v2",
         "jit_phase_u_engineering_smoke_v3",
+        "jit_phase_u_engineering_smoke_v4",
     }:
         resolve_config_payload(resolved)
 

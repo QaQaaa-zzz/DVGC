@@ -89,6 +89,44 @@ def test_absolute_5m_config_is_exactly_203_aligned_blocks(jit_root):
     assert config.formal.fixed_evaluation_transitions == ABSOLUTE_5M_EVALUATIONS
 
 
+def test_continuation_v4_configs_use_fresh_seed_namespace(jit_root):
+    smoke = load_config(jit_root / "configs" / "phase_u_continuation_smoke.json")
+    formal = load_config(jit_root / "configs" / "phase_u_continuation_5m.json")
+
+    assert smoke.schema == "jit_phase_u_engineering_smoke_v4"
+    assert smoke.ppo.seed == 820300
+    assert formal.schema == "jit_phase_u_formal_v4"
+    assert formal.ppo.seed == 820301
+    assert formal.ppo.held_out_seeds == tuple(range(940001, 940009))
+    assert formal.ppo.requested_transitions == 4_988_928
+    assert formal.formal is not None
+    assert formal.formal.checkpoint_transitions == ABSOLUTE_5M_CHECKPOINTS
+    assert formal.formal.fixed_evaluation_transitions == ABSOLUTE_5M_EVALUATIONS
+
+
+@pytest.mark.parametrize(
+    "mutate",
+    [
+        lambda p: p["ppo"].update(seed=820201),
+        lambda p: p["ppo"].update(held_out_seeds=list(range(930001, 930009))),
+        lambda p: p["events"].update(apex_height=0.6),
+        lambda p: p["reward"].update(apex_success_bonus=49.0),
+        lambda p: p["model"].update(njmax=128),
+    ],
+)
+def test_continuation_v4_rejects_contract_drift(jit_root, tmp_path, mutate):
+    payload = json.loads(
+        (jit_root / "configs" / "phase_u_continuation_5m.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    mutate(payload)
+    path = tmp_path / "mutated_v4.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(ValueError, match="approved v4|formal"):
+        load_config(path)
+
+
 def _mutated_absolute_5m(jit_root, tmp_path, mutate):
     source = jit_root / "configs" / "phase_u_absolute_5m.json"
     payload = json.loads(source.read_text(encoding="utf-8"))

@@ -212,3 +212,21 @@
 ## Visual or Browser Findings
 
 - No browser or image inspection was used. The user declined the optional visual companion.
+# 2026-08-25 v4 Apex-continuation findings
+
+- Host MuJoCo replay of the previous final natural state identified the only
+  contact as the XML-authorized `floor/rearwheel_collision` pair at about
+  `-0.014175 m`. The analytic JIT threshold had incorrectly converted ordinary
+  compliant wheel support into an illegal-contact terminal and penalty.
+- Wheel/terrain clearance and penetration remain useful telemetry, but are not
+  trustworthy terminal classifiers. Prohibited chassis/body clearance remains
+  the illegal-contact source.
+- Apex must remain a one-shot reward/event boundary rather than a terminal so
+  post-Apex behavior can be observed. The full trace is split with the Apex
+  state shared by pre/post files, conserving transitions exactly.
+- Brax's episode logger calls `progress_fn` before the ordered policy callback.
+  v4 therefore routes `episode/*` statistics into an independent JSONL stream
+  and retains checkpoint-aligned PPO loss progress in the existing stream.
+- Episode means are explicitly the rolling last 100 completed episodes. A
+  block with no completed episode writes no episode row; later horizon/failure
+  completions supply nonempty evidence before final plotting.

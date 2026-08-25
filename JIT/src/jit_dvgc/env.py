@@ -112,7 +112,7 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
             roll=signals.roll,
             pitch=signals.pitch,
             yaw=signals.yaw,
-            illegal_contact=signals.prohibited_contact | signals.illegal_wheel_contact,
+            illegal_contact=signals.prohibited_contact,
         )
 
     def _reward_state(self, data, signals: GeometrySignals) -> RewardState:
@@ -165,6 +165,9 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
             "signal/yaw_rate",
             "signal/angular_speed",
             "signal/obstacle_relative_x",
+            "signal/front_wheel_terrain_clearance",
+            "signal/rear_wheel_terrain_clearance",
+            "signal/maximum_wheel_penetration",
             "signal/hip_velocity",
             "signal/knee_velocity",
             "signal/hip_force",
@@ -210,6 +213,13 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
                 + jp.square(reward_state.yaw_rate)
             ),
             "signal/obstacle_relative_x": geometry.obstacle_relative_x,
+            "signal/front_wheel_terrain_clearance": (
+                geometry.front_wheel_terrain_clearance
+            ),
+            "signal/rear_wheel_terrain_clearance": (
+                geometry.rear_wheel_terrain_clearance
+            ),
+            "signal/maximum_wheel_penetration": geometry.maximum_wheel_penetration,
             "signal/hip_velocity": reward_state.hip_velocity,
             "signal/knee_velocity": reward_state.knee_velocity,
             "signal/hip_force": reward_state.hip_force,
@@ -353,9 +363,7 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
             roll=geometry.roll,
             pitch=geometry.pitch,
             illegal_contact=geometry.prohibited_contact,
-            illegal_wheel_contact=geometry.illegal_wheel_contact,
             backward_exit=backward_exit,
-            apex_success=jp.asarray(False),
         )
         preliminary = classify_terminal(preliminary_inputs, self._resolved_config)
         previous_events = state.info["events"]
@@ -371,8 +379,7 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
         )
         first_apex = events.apex_seen & ~previous_events.apex_seen
         terminal: TerminalState = classify_terminal(
-            preliminary_inputs.replace(apex_success=first_apex),
-            self._resolved_config,
+            preliminary_inputs, self._resolved_config
         )
         reward_state = self._reward_state(data, geometry)
         reward_result: RewardResult = phase_u_reward(
@@ -382,8 +389,7 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
                 last_action=state.info["last_action"],
                 jump_signal=events.jump_signal,
                 first_apex_success=first_apex,
-                illegal_contact=geometry.prohibited_contact
-                | geometry.illegal_wheel_contact,
+                illegal_contact=geometry.prohibited_contact,
                 physical_failure_transition=terminal.physical_failure
                 & ~state.info["physical_failure"],
                 timeout_transition=terminal.timeout & ~state.info["timeout"],

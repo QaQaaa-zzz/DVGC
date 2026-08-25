@@ -1,5 +1,32 @@
 # JIT Phase U training stack
 
+## Active v4 Apex-continuation run contract
+
+`phase_u_continuation_5m.json` is the active fresh-training contract. Ordinary
+front/rear wheel contact with the terrain is support telemetry, not an illegal
+contact terminal or penalty. Prohibited chassis/body contact, roll, pitch,
+backward motion, and numerical failure remain physical terminals. The first
+Apex event still pays its one-time configured bonus, but it no longer ends the
+episode; simulation continues until a retained physical failure or the exact
+200-control-tick horizon.
+
+Final natural and forced-RSI representatives encode the complete episode in
+MP4/PNG/NPZ. They additionally save independently hashed
+`representative_pre_apex.npz` and `representative_post_apex.npz` files with the
+first Apex state shared as the segment boundary. A no-Apex rollout has a full
+pre-Apex file and an empty, shape-valid post-Apex file.
+
+Formal v4 training writes raw block PPO metrics and rolling last-100 completed-
+episode means, then produces synchronized `training_curves.png`,
+`training_curves.npz`, and `training_curves.json`. The curves include mean
+episode reward/length, airborne-RSI fraction, KL, policy/value/total loss,
+policy distribution standard deviation, and steps per second.
+
+The exact v4 target remains 4,988,928 transitions (203 blocks), now under the
+fresh seed namespace `820301` with frozen held-out seeds `940001..940008`.
+The first run must have a null parent checkpoint, start at transition zero, and
+omit `--restore-checkpoint`.
+
 ## Completed v3 absolute-joint 5M experiment
 
 The completed experiment used `phase_u_absolute_5m.json` and started from newly

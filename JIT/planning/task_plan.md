@@ -9,15 +9,25 @@ evidence; then execute and audit the user-authorized 998,400-step fresh run.
 
 ## Next Step
 
-Do not extend or promote the failed v3 final checkpoint. Run the evidence-first
-natural-start action intervention and ground-retention diagnostics described in
-the final experiment report before approving another PPO budget.
+Complete v4 validation, commit and push the entire JIT-only round, then launch
+the approved fresh 4,988,928-transition run without a parent checkpoint.
 
 ## Current Phase
 
-Phase 15: sparse monitoring and final analysis complete
+Phase 16: Apex continuation and training diagnostics verification
 
 ## Phases
+
+### Phase 16: Apex continuation and training curves
+
+- [x] Diagnose the v3 two-frame trace as normal wheel support falsely treated
+  as illegal contact.
+- [x] Make Apex nonterminal and preserve later failure/horizon evidence.
+- [x] Persist full, pre-Apex, and post-Apex aligned trace artifacts.
+- [x] Persist raw and plotted episode/PPO learning curves.
+- [x] Add an exact fresh v4 seed/config/provenance identity.
+- [ ] Complete preflight, one JIT-only commit/push, and fresh persistent launch.
+- **Status:** implementation complete; final verification in progress
 
 ### Phase 13: Absolute joint target and 5M implementation
 

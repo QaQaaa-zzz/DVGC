@@ -15,7 +15,7 @@ from matplotlib import pyplot as plt  # noqa: E402
 import numpy as np
 
 from .constants import REWARD_COMPONENT_KEYS
-from .evaluation import EpisodeFrame, EpisodeTrace
+from .evaluation import EpisodeFrame, EpisodeTrace, split_trace_at_apex
 
 
 @dataclass(frozen=True)
@@ -24,7 +24,16 @@ class DiagnosticReport:
     data: Path
     plot_sha256: str
     data_sha256: str
+    pre_apex_data: Path
+    post_apex_data: Path
+    pre_apex_data_sha256: str
+    post_apex_data_sha256: str
     sample_count: int
+    apex_frame_index: int
+    pre_apex_sample_count: int
+    post_apex_sample_count: int
+    pre_apex_environment_transitions: int
+    post_apex_environment_transitions: int
     reward_scaling: float
     fps: int
 
@@ -96,7 +105,38 @@ def trace_arrays(
             [frame.metrics.get(name, np.nan) for frame in frames],
             dtype=np.float64,
         )
+    split = split_trace_at_apex(trace)
+    indices = np.arange(len(frames), dtype=np.int32)
+    arrays["apex_frame_index"] = np.asarray(
+        [split.apex_frame_index], dtype=np.int32
+    )
+    arrays["segment_pre_apex"] = np.isin(indices, split.pre_frame_indices)
+    arrays["segment_post_apex"] = np.isin(indices, split.post_frame_indices)
     return arrays
+
+
+def _save_npz(path: Path, arrays: dict[str, np.ndarray]) -> None:
+    with tempfile.NamedTemporaryFile(dir=path.parent, suffix=".npz", delete=False) as stream:
+        temporary = Path(stream.name)
+        np.savez_compressed(stream, **arrays)
+    os.replace(temporary, path)
+
+
+def _segment_arrays(
+    arrays: dict[str, np.ndarray], indices: tuple[int, ...]
+) -> dict[str, np.ndarray]:
+    sample_count = int(arrays["qpos"].shape[0])
+    selected = np.asarray(indices, dtype=np.int32)
+    result = {
+        name: value[selected]
+        for name, value in arrays.items()
+        if name != "apex_frame_index"
+        and value.ndim >= 1
+        and value.shape[0] == sample_count
+    }
+    result["source_frame_index"] = selected
+    result["apex_frame_index"] = arrays["apex_frame_index"].copy()
+    return result
 
 
 def _series(
@@ -120,6 +160,18 @@ def _draw_dashboard(arrays: dict[str, np.ndarray], path: Path) -> None:
     axis.set_ylabel("reward")
     axis.legend(loc="best")
     axis.grid(alpha=0.25)
+
+    apex_index = int(arrays["apex_frame_index"][0])
+    if apex_index >= 0:
+        apex_time = float(time[apex_index])
+        for item in axes.flat:
+            item.axvline(
+                apex_time,
+                color="#8e44ad",
+                linestyle="--",
+                linewidth=1.1,
+                label="first Apex" if item is axes[0, 0] else None,
+            )
 
     component_matrix = np.stack(
         [arrays[_component_key(name)] for name in REWARD_COMPONENT_KEYS]
@@ -274,13 +326,14 @@ def save_trace_dashboard(
     output.parent.mkdir(parents=True, exist_ok=True)
     data_path = output.with_suffix(".npz")
     arrays = trace_arrays(trace, reward_scaling=reward_scaling, fps=fps)
+    split = split_trace_at_apex(trace)
+    base_stem = output.stem.removesuffix("_diagnostic")
+    pre_path = output.with_name(f"{base_stem}_pre_apex.npz")
+    post_path = output.with_name(f"{base_stem}_post_apex.npz")
 
-    with tempfile.NamedTemporaryFile(
-        dir=output.parent, suffix=".npz", delete=False
-    ) as stream:
-        temporary_data = Path(stream.name)
-        np.savez_compressed(stream, **arrays)
-    os.replace(temporary_data, data_path)
+    _save_npz(data_path, arrays)
+    _save_npz(pre_path, _segment_arrays(arrays, split.pre_frame_indices))
+    _save_npz(post_path, _segment_arrays(arrays, split.post_frame_indices))
 
     with tempfile.NamedTemporaryFile(
         dir=output.parent, suffix=".png", delete=False
@@ -298,7 +351,16 @@ def save_trace_dashboard(
         data=data_path.resolve(),
         plot_sha256=sha256_file(output),
         data_sha256=sha256_file(data_path),
+        pre_apex_data=pre_path.resolve(),
+        post_apex_data=post_path.resolve(),
+        pre_apex_data_sha256=sha256_file(pre_path),
+        post_apex_data_sha256=sha256_file(post_path),
         sample_count=len(trace.frames),
+        apex_frame_index=split.apex_frame_index,
+        pre_apex_sample_count=len(split.pre_frame_indices),
+        post_apex_sample_count=len(split.post_frame_indices),
+        pre_apex_environment_transitions=split.pre_environment_transitions,
+        post_apex_environment_transitions=split.post_environment_transitions,
         reward_scaling=float(reward_scaling),
         fps=int(fps),
     )
@@ -315,6 +377,7 @@ def telemetry_panel(
     height: int,
     tick: int,
     reward_scaling: float = 0.1,
+    apex_frame_index: int = -1,
 ) -> np.ndarray:
     """Renders synchronized reward/state telemetry beside one physical frame."""
 
@@ -331,6 +394,11 @@ def telemetry_panel(
     unclipped = _frame_metric(frame, "reward/unclipped", frame.reward)
     qpos = frame.qpos
     qvel = frame.qvel
+    phase = (
+        "pre-Apex"
+        if apex_frame_index < 0 or tick < apex_frame_index
+        else ("first Apex" if tick == apex_frame_index else "post-Apex")
+    )
     event_bits = " ".join(
         f"{label}:{int(_frame_metric(frame, metric) > 0.5)}"
         for label, metric in (
@@ -342,7 +410,7 @@ def telemetry_panel(
         )
     )
     lines = (
-        f"tick {tick}  end={frame.end_code}",
+        f"tick {tick}  {phase}  end={frame.end_code}",
         f"R raw {unclipped:+.3f}",
         f"R clip {clipped:+.3f}",
         f"R PPO  {clipped * reward_scaling:+.3f}",

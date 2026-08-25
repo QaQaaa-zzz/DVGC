@@ -23,9 +23,18 @@ class VideoReport:
     video_sha256: str
     diagnostic_plot_sha256: str
     diagnostic_data_sha256: str
+    pre_apex_data: str
+    post_apex_data: str
+    pre_apex_data_sha256: str
+    post_apex_data_sha256: str
     captured_state_count: int
     encoded_frame_count: int
     environment_transitions: int
+    apex_frame_index: int
+    pre_apex_sample_count: int
+    post_apex_sample_count: int
+    pre_apex_environment_transitions: int
+    post_apex_environment_transitions: int
     fps: int
 
 
@@ -48,6 +57,14 @@ def render_trace(
     data = mujoco.MjData(env.mj_model)
     renderer = mujoco.Renderer(env.mj_model, height=height, width=width)
     rendered: list[np.ndarray] = []
+    apex_frame_index = next(
+        (
+            index
+            for index, frame in enumerate(trace.frames)
+            if frame.metrics.get("event/apex_seen", 0.0) > 0.5
+        ),
+        -1,
+    )
     try:
         for tick, frame in enumerate(trace.frames):
             data.qpos[:] = frame.qpos
@@ -62,6 +79,7 @@ def render_trace(
                 height=height,
                 tick=tick,
                 reward_scaling=reward_scaling,
+                apex_frame_index=apex_frame_index,
             )
             rendered.append(np.concatenate((physical, telemetry), axis=1))
     finally:
@@ -81,9 +99,22 @@ def render_trace(
         video_sha256=sha256_file(output),
         diagnostic_plot_sha256=diagnostic.plot_sha256,
         diagnostic_data_sha256=diagnostic.data_sha256,
+        pre_apex_data=str(diagnostic.pre_apex_data),
+        post_apex_data=str(diagnostic.post_apex_data),
+        pre_apex_data_sha256=diagnostic.pre_apex_data_sha256,
+        post_apex_data_sha256=diagnostic.post_apex_data_sha256,
         captured_state_count=len(trace.frames),
         encoded_frame_count=len(rendered),
         environment_transitions=trace.environment_transitions,
+        apex_frame_index=diagnostic.apex_frame_index,
+        pre_apex_sample_count=diagnostic.pre_apex_sample_count,
+        post_apex_sample_count=diagnostic.post_apex_sample_count,
+        pre_apex_environment_transitions=(
+            diagnostic.pre_apex_environment_transitions
+        ),
+        post_apex_environment_transitions=(
+            diagnostic.post_apex_environment_transitions
+        ),
         fps=int(fps),
     )
     output.with_suffix(".json").write_text(

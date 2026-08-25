@@ -24,7 +24,12 @@ from .checkpoint import (
 from .config import ResolvedConfig, file_sha256, load_config
 from .constants import ACTION_ORDER, ACTOR_FRAME_FIELDS, ACTOR_TASK_FIELDS
 from .env import TwoPhaseBikeEnv
-from .evaluation import capture_episode, save_episode_trace, summarize_phase_u
+from .evaluation import (
+    capture_episode,
+    save_episode_trace,
+    select_representative_trace,
+    summarize_phase_u,
+)
 from .ppo import make_network_factory
 from .provenance import (
     InteractionAccounting,
@@ -33,6 +38,7 @@ from .provenance import (
     mark_run_running,
     predeclare_run,
 )
+from .training_curves import save_training_curves
 from .video import render_trace
 
 
@@ -110,7 +116,10 @@ def validate_formal_report(
     maximum_fixed = num_eval_envs * episode_horizon * len(expected_evaluations)
     if not minimum_fixed <= report.fixed_evaluation_transitions <= maximum_fixed:
         raise ValueError("formal fixed evaluation transition count is invalid")
-    if config is not None and config.schema == "jit_phase_u_formal_v3":
+    if config is not None and config.schema in {
+        "jit_phase_u_formal_v3",
+        "jit_phase_u_formal_v4",
+    }:
         if not minimum_fixed <= report.diagnostic_transitions <= maximum_fixed:
             raise ValueError("formal airborne RSI diagnostic count is invalid")
     elif report.diagnostic_transitions != 0:
@@ -182,6 +191,7 @@ class FormalRunController:
         self.checkpoint_loader = checkpoint_loader
         self._last_policy_relative: int | None = None
         self._last_progress_relative = 0
+        self._last_episode_relative = 0
         self._completed_segment = 0
         self._checkpoint_transitions: list[int] = []
         self._evaluated_transitions: list[int] = []
@@ -285,6 +295,42 @@ class FormalRunController:
         self._completed_segment = max(self._completed_segment, relative)
         self._last_metrics = flattened
 
+    def on_episode_progress(
+        self, relative_step: int, metrics: Mapping[str, Any]
+    ) -> None:
+        """Persists Brax's rolling last-100 completed-episode statistics."""
+
+        relative = int(relative_step)
+        if relative <= self._last_episode_relative:
+            raise ValueError("episode progress callbacks must be strictly increasing")
+        if relative % self.config.ppo.block_transitions:
+            raise ValueError("episode progress callback must be block-aligned")
+        if relative > (
+            self.config.ppo.requested_transitions
+            - self.starting_training_transition
+        ):
+            raise ValueError("episode progress callback exceeded the formal target")
+        flattened = _flatten_finite_metrics(metrics)
+        required = (
+            "episode/sum_reward",
+            "episode/length",
+            "episode/reset/source_airborne_rsi",
+        )
+        present = tuple(name in flattened for name in required)
+        if not any(present):
+            self._last_episode_relative = relative
+            return
+        for name in required:
+            if name not in flattened:
+                raise ValueError(f"episode progress is missing {name}")
+        absolute = self.starting_training_transition + relative
+        row = {"training_transitions": absolute, "metrics": flattened}
+        with (self.run_dir / "episode_metrics.jsonl").open(
+            "a", encoding="utf-8"
+        ) as stream:
+            stream.write(json.dumps(row, sort_keys=True, allow_nan=False) + "\n")
+        self._last_episode_relative = relative
+
     def restore_final_checkpoint(self) -> CheckpointPayload:
         target = self.config.ppo.requested_transitions
         return self.checkpoint_loader(
@@ -372,9 +418,7 @@ def _evaluate_panel_from_reset(
     )
     _write_json(panel_dir / "summary.json", summary)
     if absolute_transition == config.ppo.requested_transitions:
-        representative = next(
-            (trace for trace in traces if trace.frames[-1].success), traces[0]
-        )
+        representative = select_representative_trace(tuple(traces))
         representative_artifact = next(
             artifact
             for artifact in artifacts
@@ -397,6 +441,9 @@ def _evaluate_panel_from_reset(
                 ],
                 "reset_source_airborne_rsi": (
                     reset_method == "reset_airborne_rsi"
+                ),
+                "representative_selection": (
+                    "apex_first_then_highest_unclipped_episode_return"
                 ),
             }
         )
@@ -569,7 +616,7 @@ def run_phase_u_formal(
         return evaluator(env, run_dir, config, step, make_policy, params)
 
     diagnostic_evaluator = None
-    if config.schema == "jit_phase_u_formal_v3":
+    if config.schema in {"jit_phase_u_formal_v3", "jit_phase_u_formal_v4"}:
         diagnostic_evaluator = (
             diagnostic_panel_evaluator or _evaluate_airborne_rsi_panel
         )
@@ -599,6 +646,14 @@ def run_phase_u_formal(
         )
 
     try:
+        is_continuation_v4 = config.schema == "jit_phase_u_formal_v4"
+
+        def progress_router(step: int, metrics: Mapping[str, Any]) -> None:
+            if metrics and all(str(key).startswith("episode/") for key in metrics):
+                controller.on_episode_progress(step, metrics)
+            else:
+                controller.on_progress(step, metrics)
+
         make_policy, _params, final_metrics = trainer(
             environment=env,
             num_timesteps=remaining,
@@ -629,8 +684,11 @@ def run_phase_u_formal(
             # Brax routes its in-epoch EpisodeMetricsLogger through progress_fn
             # before policy_params_fn.  Formal progress is deliberately one
             # ordered callback per completed checkpointable PPO block.
-            log_training_metrics=False,
-            progress_fn=controller.on_progress,
+            log_training_metrics=is_continuation_v4,
+            training_metrics_steps=(
+                config.ppo.block_transitions if is_continuation_v4 else None
+            ),
+            progress_fn=(progress_router if is_continuation_v4 else controller.on_progress),
             policy_params_fn=controller.on_policy_params,
             restore_params=restore_params,
             run_evals=False,
@@ -667,6 +725,8 @@ def run_phase_u_formal(
             ),
             config=config,
         )
+        if is_continuation_v4:
+            save_training_curves(run_dir)
         _write_json(run_dir / "formal_report.json", asdict(report))
         close_run(
             run_dir,

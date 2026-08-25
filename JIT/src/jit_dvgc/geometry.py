@@ -42,7 +42,9 @@ class StructureMetrics:
 
 @struct.dataclass
 class ContactSignals:
-    illegal_wheel_contact: jax.Array
+    front_wheel_terrain_clearance: jax.Array
+    rear_wheel_terrain_clearance: jax.Array
+    maximum_wheel_penetration: jax.Array
     prohibited_contact: jax.Array
 
 
@@ -51,7 +53,9 @@ class GeometrySignals:
     robot_frontmost_x: jax.Array
     obstacle_relative_x: jax.Array
     structure_clearance: jax.Array
-    illegal_wheel_contact: jax.Array
+    front_wheel_terrain_clearance: jax.Array
+    rear_wheel_terrain_clearance: jax.Array
+    maximum_wheel_penetration: jax.Array
     prohibited_contact: jax.Array
     roll: jax.Array
     pitch: jax.Array
@@ -215,11 +219,12 @@ def geometric_penetration_signals(
     terrain_height = jp.where(overlaps_obstacle, contract.obstacle_top_z, 0.0)
     clearances = bounds.min_z - terrain_height
     wheel_clearances = jp.take(clearances, contract.wheel_geom_positions)
-    wheel_illegal = jp.any(wheel_clearances < -0.01)
     body_clearances = jp.take(clearances, contract.body_geom_positions)
     prohibited = jp.any(body_clearances < -0.002)
     return ContactSignals(
-        illegal_wheel_contact=wheel_illegal,
+        front_wheel_terrain_clearance=wheel_clearances[0],
+        rear_wheel_terrain_clearance=wheel_clearances[1],
+        maximum_wheel_penetration=jp.maximum(-jp.min(wheel_clearances), 0.0),
         prohibited_contact=prohibited,
     )
 
@@ -254,7 +259,9 @@ def extract_geometry(data, contract: GeometryContract) -> GeometrySignals:
         robot_frontmost_x=structure.robot_frontmost_x,
         obstacle_relative_x=structure.obstacle_relative_x,
         structure_clearance=structure.full_structure_clearance,
-        illegal_wheel_contact=contacts.illegal_wheel_contact,
+        front_wheel_terrain_clearance=contacts.front_wheel_terrain_clearance,
+        rear_wheel_terrain_clearance=contacts.rear_wheel_terrain_clearance,
+        maximum_wheel_penetration=contacts.maximum_wheel_penetration,
         prohibited_contact=contacts.prohibited_contact,
         roll=roll,
         pitch=pitch,

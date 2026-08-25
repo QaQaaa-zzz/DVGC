@@ -194,6 +194,38 @@ def test_controller_rejects_duplicate_out_of_order_and_nonfinite_callbacks(
         controller.on_progress(25_600, {"training/kl": float("inf")})
 
 
+def test_v4_controller_records_episode_metrics_without_policy_order_dependency(
+    jit_root, tmp_path
+):
+    config = load_config(jit_root / "configs" / "phase_u_continuation_5m.json")
+    controller = FormalRunController(
+        config=config,
+        run_dir=tmp_path,
+        identity=_identity(),
+        starting_training_transition=0,
+        evaluate_panel=lambda *_args: PanelResult(0, 1, {}),
+    )
+
+    controller.on_episode_progress(24_576, {"episode/sps": 1000.0})
+    assert not (tmp_path / "episode_metrics.jsonl").exists()
+    controller.on_episode_progress(
+        49_152,
+        {
+            "episode/sum_reward": 10.0,
+            "episode/length": 20.0,
+            "episode/reset/source_airborne_rsi": 1.0,
+            "episode/sps": 1000.0,
+        },
+    )
+    rows = [
+        json.loads(line)
+        for line in (tmp_path / "episode_metrics.jsonl").read_text(
+            encoding="utf-8"
+        ).splitlines()
+    ]
+    assert rows[0]["training_transitions"] == 49_152
+
+
 def test_warm_controller_uses_absolute_offsets_and_only_future_evaluations(
     jit_root, tmp_path
 ):
@@ -326,10 +358,31 @@ def _fake_panel_in(
             "terminal_physical_failure": np.ones(2, dtype=bool),
             "terminal_timeout": np.zeros(2, dtype=bool),
             "metric__reset__source_airborne_rsi": np.full(2, reset_source),
+            "apex_frame_index": np.array([-1], dtype=np.int32),
+            "segment_pre_apex": np.ones(2, dtype=bool),
+            "segment_post_apex": np.zeros(2, dtype=bool),
         }
         for reward_key in REWARD_COMPONENT_KEYS:
             diagnostic_arrays[f"reward_component__{reward_key}"] = np.zeros(2)
         np.savez_compressed(state_path, **diagnostic_arrays)
+        pre_path = panel_dir / "representative_pre_apex.npz"
+        post_path = panel_dir / "representative_post_apex.npz"
+        pre_arrays = {
+            name: value.copy()
+            for name, value in diagnostic_arrays.items()
+            if name != "apex_frame_index"
+        }
+        pre_arrays["source_frame_index"] = np.arange(2, dtype=np.int32)
+        pre_arrays["apex_frame_index"] = np.array([-1], dtype=np.int32)
+        post_arrays = {
+            name: value[:0].copy()
+            for name, value in diagnostic_arrays.items()
+            if name != "apex_frame_index" and value.shape[0] == 2
+        }
+        post_arrays["source_frame_index"] = np.empty(0, dtype=np.int32)
+        post_arrays["apex_frame_index"] = np.array([-1], dtype=np.int32)
+        np.savez_compressed(pre_path, **pre_arrays)
+        np.savez_compressed(post_path, **post_arrays)
         video_report = {
             "video": str(video_path.resolve()),
             "state_trace": str(state_path.resolve()),
@@ -342,9 +395,22 @@ def _fake_panel_in(
             "diagnostic_data_sha256": hashlib.sha256(
                 state_path.read_bytes()
             ).hexdigest(),
+            "pre_apex_data": str(pre_path.resolve()),
+            "post_apex_data": str(post_path.resolve()),
+            "pre_apex_data_sha256": hashlib.sha256(
+                pre_path.read_bytes()
+            ).hexdigest(),
+            "post_apex_data_sha256": hashlib.sha256(
+                post_path.read_bytes()
+            ).hexdigest(),
             "captured_state_count": 2,
             "encoded_frame_count": 2,
             "environment_transitions": 1,
+            "apex_frame_index": -1,
+            "pre_apex_sample_count": 2,
+            "post_apex_sample_count": 0,
+            "pre_apex_environment_transitions": 1,
+            "post_apex_environment_transitions": 0,
             "fps": 50,
             "representative_seed": config.ppo.held_out_seeds[0],
             "representative_episode_npz": artifacts[0]["npz_path"],
@@ -415,6 +481,93 @@ def _fake_absolute_trainer():
         return _fake_make_policy, params, {"training/kl": 0.01}
 
     return train
+
+
+def _fake_continuation_trainer():
+    def train(**kwargs):
+        assert kwargs["num_timesteps"] == 4_988_928
+        assert kwargs["log_training_metrics"] is True
+        assert kwargs["training_metrics_steps"] == 24_576
+        assert kwargs["restore_params"] is None
+        params = ({"normalizer": 0}, {"actor": 1}, {"critic": 2})
+        kwargs["policy_params_fn"](0, _fake_make_policy, params)
+        for index, step in enumerate(range(24_576, 4_988_928 + 1, 24_576), 1):
+            kwargs["progress_fn"](
+                step,
+                {
+                    "episode/sum_reward": float(index),
+                    "episode/length": 100.0,
+                    "episode/reset/source_airborne_rsi": 5.0,
+                    "episode/sps": 1000.0,
+                },
+            )
+            kwargs["policy_params_fn"](step, _fake_make_policy, params)
+            kwargs["progress_fn"](
+                step,
+                {
+                    "training/kl_mean": 0.01,
+                    "training/policy_loss": -0.2,
+                    "training/v_loss": 0.4,
+                    "training/total_loss": 0.0,
+                    "training/policy_dist_mean_std": 0.8,
+                    "training/sps": 1000.0,
+                },
+            )
+        return _fake_make_policy, params, {"training/kl_mean": 0.01}
+
+    return train
+
+
+def test_continuation_v4_runner_is_fresh_and_persists_learning_curves(
+    jit_root, tmp_path
+):
+    run_phase_u_formal(
+        jit_root / "configs" / "phase_u_continuation_5m.json",
+        "continuation_v4_unit",
+        run_root=tmp_path,
+        trainer=_fake_continuation_trainer(),
+        env_factory=_FakeEnv,
+        panel_evaluator=_fake_panel,
+        diagnostic_panel_evaluator=_fake_rsi_panel,
+        backend_name=lambda: "gpu",
+    )
+
+    run_dir = tmp_path / "continuation_v4_unit"
+    manifest = json.loads((run_dir / "run_manifest.json").read_text(encoding="utf-8"))
+    assert manifest["parent_checkpoint"] is None
+    assert manifest["starting_training_transition"] == 0
+    assert "--restore-checkpoint" not in manifest["resume_command"]
+    assert (run_dir / "training_curves.png").is_file()
+    assert (run_dir / "training_curves.npz").is_file()
+    assert (run_dir / "training_curves.json").is_file()
+    verified = verify_run(run_dir)
+    assert verified["absolute_training_transition"] == 4_988_928
+    assert verified["training_curves"]["ppo_sample_count"] == 203
+
+    report_path = run_dir / "training_curves.json"
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    original = report_path.read_text(encoding="utf-8")
+    report["data_sha256"] = "0" * 64
+    report_path.write_text(json.dumps(report), encoding="utf-8")
+    with pytest.raises(ValueError, match="curve data hash"):
+        verify_run(run_dir)
+    report_path.write_text(original, encoding="utf-8")
+
+    video_path = run_dir / "evaluations/transition_4988928/video_report.json"
+    original_video = video_path.read_text(encoding="utf-8")
+    video = json.loads(original_video)
+    video["pre_apex_data"], video["post_apex_data"] = (
+        video["post_apex_data"],
+        video["pre_apex_data"],
+    )
+    video["pre_apex_data_sha256"], video["post_apex_data_sha256"] = (
+        video["post_apex_data_sha256"],
+        video["pre_apex_data_sha256"],
+    )
+    video_path.write_text(json.dumps(video), encoding="utf-8")
+    with pytest.raises(ValueError, match="Apex source indices|sample count"):
+        verify_run(run_dir)
+    video_path.write_text(original_video, encoding="utf-8")
 
 
 def test_absolute_5m_runner_is_fresh_and_uses_dynamic_target(jit_root, tmp_path):

@@ -29,9 +29,21 @@ class WarpLikeData(NamedTuple):
 
 
 def test_runtime_geometry_contract_contains_no_wheel_support_booleans():
-    forbidden = {"front_wheel_support", "rear_wheel_support"}
+    forbidden = {
+        "front_wheel_support",
+        "rear_wheel_support",
+        "illegal_wheel_contact",
+    }
     assert forbidden.isdisjoint(ContactSignals.__dataclass_fields__)
     assert forbidden.isdisjoint(GeometrySignals.__dataclass_fields__)
+
+    required = {
+        "front_wheel_terrain_clearance",
+        "rear_wheel_terrain_clearance",
+        "maximum_wheel_penetration",
+    }
+    assert required.issubset(ContactSignals.__dataclass_fields__)
+    assert required.issubset(GeometrySignals.__dataclass_fields__)
 
 
 def test_box_support_bounds_are_hand_checkable():
@@ -124,4 +136,44 @@ def test_training_geometry_does_not_require_a_contact_array(jit_root):
 
     assert bool(jp.isfinite(signals.obstacle_relative_x))
     assert bool(jp.isfinite(signals.structure_clearance))
+    assert not bool(signals.prohibited_contact)
+
+
+def test_allowed_rear_wheel_floor_penetration_is_telemetry_not_prohibited(jit_root):
+    config = load_config(jit_root / "configs" / "phase_u_absolute_smoke.json")
+    bundle = load_host_model(config)
+    model = bundle.mj_model
+    data = mujoco.MjData(model)
+    data.qpos[:] = np.asarray(
+        [
+            1.57918704,
+            -0.00007853,
+            0.12418163,
+            0.99611777,
+            -0.00042487,
+            -0.08800633,
+            -0.00204265,
+            0.38547581,
+            0.72141844,
+            0.15588406,
+            -0.82346386,
+            2.38046241,
+        ]
+    )
+    mujoco.mj_forward(model, data)
+    pairs = {
+        frozenset(
+            mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_GEOM, int(geom))
+            for geom in data.contact[index].geom
+        )
+        for index in range(data.ncon)
+    }
+    assert frozenset(("floor", "rearwheel_collision")) in pairs
+
+    contract = build_geometry_contract(model)
+    signals = extract_geometry(data, contract)
+    assert float(signals.rear_wheel_terrain_clearance) == pytest.approx(
+        -0.0141754, abs=1e-5
+    )
+    assert float(signals.maximum_wheel_penetration) > 0.01
     assert not bool(signals.prohibited_contact)

@@ -238,10 +238,16 @@ def _validate_formal(
             raise ValueError("formal PPO block must equal 24576 transitions")
         if ppo.num_evals != 204:
             raise ValueError("formal num_evals must equal 204")
-        if ppo.seed != 820201:
-            raise ValueError("formal training seed must equal 820201")
-        if ppo.held_out_seeds != tuple(range(930001, 930009)):
-            raise ValueError("formal held-out seeds must equal 930001 through 930008")
+        expected_seed = 820301 if schema == "jit_phase_u_formal_v4" else 820201
+        expected_held_out = (
+            tuple(range(940001, 940009))
+            if schema == "jit_phase_u_formal_v4"
+            else tuple(range(930001, 930009))
+        )
+        if ppo.seed != expected_seed:
+            raise ValueError(f"formal training seed must equal {expected_seed}")
+        if ppo.held_out_seeds != expected_held_out:
+            raise ValueError("formal held-out seeds do not match the approved namespace")
         expected_checkpoints = (
             0,
             245_760,
@@ -369,7 +375,7 @@ def _validate_approved_v2_method(
             raise ValueError(f"approved v2 {section} method contract drift")
 
 
-def _validate_approved_v3_method(
+def _validate_approved_absolute_method(
     schema: str,
     *,
     model: Mapping[str, Any],
@@ -438,6 +444,12 @@ def _validate_approved_v3_method(
         total_min=-50.0,
         total_max=50.0,
     )
+    is_v4 = schema.endswith("_v4")
+    held_out_seeds = (
+        tuple(range(940001, 940009))
+        if is_v4
+        else tuple(range(930001, 930009))
+    )
     common_ppo = dict(
         num_parallel_envs=384,
         episode_horizon=200,
@@ -453,21 +465,21 @@ def _validate_approved_v3_method(
         gae_lambda=0.95,
         clipping_epsilon=0.2,
         max_grad_norm=0.5,
-        held_out_seeds=tuple(range(930001, 930009)),
+        held_out_seeds=held_out_seeds,
     )
-    if schema == "jit_phase_u_formal_v3":
+    if schema in {"jit_phase_u_formal_v3", "jit_phase_u_formal_v4"}:
         expected_ppo = PPOConfig(
             **common_ppo,
             requested_transitions=4_988_928,
             num_evals=204,
-            seed=820201,
+            seed=820301 if is_v4 else 820201,
         )
     else:
         expected_ppo = PPOConfig(
             **common_ppo,
             requested_transitions=24_576,
             num_evals=1,
-            seed=820200,
+            seed=820300 if is_v4 else 820200,
         )
     approved = {
         "model": (dict(model), expected_model),
@@ -480,7 +492,8 @@ def _validate_approved_v3_method(
     }
     for section, (actual, expected) in approved.items():
         if actual != expected:
-            raise ValueError(f"approved v3 {section} method contract drift")
+            version = "v4" if is_v4 else "v3"
+            raise ValueError(f"approved {version} {section} method contract drift")
 
 
 def resolve_config_payload(payload: Mapping[str, Any]) -> ResolvedConfig:
@@ -491,6 +504,8 @@ def resolve_config_payload(payload: Mapping[str, Any]) -> ResolvedConfig:
         "jit_phase_u_formal_v2",
         "jit_phase_u_engineering_smoke_v3",
         "jit_phase_u_formal_v3",
+        "jit_phase_u_engineering_smoke_v4",
+        "jit_phase_u_formal_v4",
     }:
         raise ValueError("unsupported JIT config schema")
     if payload.get("phase") != "propulsion_ascent":
@@ -505,7 +520,11 @@ def resolve_config_payload(payload: Mapping[str, Any]) -> ResolvedConfig:
     ppo = _dataclass_from(PPOConfig, ppo_payload)
     _validate_ppo(ppo)
     formal: FormalTrainingConfig | None = None
-    if schema in {"jit_phase_u_formal_v2", "jit_phase_u_formal_v3"}:
+    if schema in {
+        "jit_phase_u_formal_v2",
+        "jit_phase_u_formal_v3",
+        "jit_phase_u_formal_v4",
+    }:
         formal_payload = dict(payload.get("formal", {}))
         for key in ("checkpoint_transitions", "fixed_evaluation_transitions"):
             formal_payload[key] = tuple(int(x) for x in formal_payload.get(key, ()))
@@ -547,8 +566,8 @@ def resolve_config_payload(payload: Mapping[str, Any]) -> ResolvedConfig:
     action = _dataclass_from(ActionConfig, payload["action"])
     physical_limits = _dataclass_from(PhysicalLimits, payload["physical_limits"])
     validator = (
-        _validate_approved_v3_method
-        if schema.endswith("_v3")
+        _validate_approved_absolute_method
+        if schema.endswith(("_v3", "_v4"))
         else _validate_approved_v2_method
     )
     validator(

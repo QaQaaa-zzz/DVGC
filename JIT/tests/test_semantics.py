@@ -4,7 +4,7 @@ from jax import numpy as jp
 import pytest
 
 from jit_dvgc.config import load_config
-from jit_dvgc.constants import END_APEX_SUCCESS, END_ONGOING, END_PITCH_LIMIT, END_TIMEOUT
+from jit_dvgc.constants import END_ONGOING, END_PITCH_LIMIT, END_TIMEOUT
 from jit_dvgc.semantics import (
     PhaseUSignals,
     TerminalInputs,
@@ -132,9 +132,7 @@ def _terminal_inputs(**overrides) -> TerminalInputs:
         roll=jp.array(0.0),
         pitch=jp.array(0.0),
         illegal_contact=jp.array(False),
-        illegal_wheel_contact=jp.array(False),
         backward_exit=jp.array(False),
-        apex_success=jp.array(False),
     )
     values.update(overrides)
     return TerminalInputs(**values)
@@ -149,18 +147,29 @@ def test_horizon_is_truncated_not_terminated(config):
     assert int(terminal.end_code) == END_TIMEOUT
 
 
-def test_apex_success_terminates_without_timeout(config):
-    terminal = classify_terminal(_terminal_inputs(apex_success=jp.array(True)), config)
-    assert bool(terminal.terminated)
-    assert not bool(terminal.truncated)
-    assert bool(terminal.success)
-    assert int(terminal.end_code) == END_APEX_SUCCESS
-
-
-def test_physical_failure_has_precedence_over_apex_success(config):
-    terminal = classify_terminal(
-        _terminal_inputs(pitch=jp.array(2.0), apex_success=jp.array(True)), config
+def test_apex_event_does_not_terminate_or_report_terminal_success(config):
+    event = initial_event_state(jp.array(2.8), config)
+    ascending = advance_events(
+        event,
+        _signals(x=jp.array(2.9), z=jp.array(0.6), vertical_velocity=jp.array(0.2)),
+        config,
     )
+    apex = advance_events(
+        ascending,
+        _signals(x=jp.array(3.0), z=jp.array(0.6), vertical_velocity=jp.array(-0.2)),
+        config,
+    )
+    terminal = classify_terminal(_terminal_inputs(), config)
+
+    assert bool(apex.apex_seen)
+    assert not bool(terminal.terminated)
+    assert not bool(terminal.truncated)
+    assert not bool(terminal.success)
+    assert int(terminal.end_code) == END_ONGOING
+
+
+def test_physical_failure_still_terminates_after_an_apex_event(config):
+    terminal = classify_terminal(_terminal_inputs(pitch=jp.array(2.0)), config)
     assert bool(terminal.terminated)
     assert bool(terminal.physical_failure)
     assert not bool(terminal.success)

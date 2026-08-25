@@ -414,3 +414,18 @@
   `JIT/docs/experiments/phase_u_absolute_4988928_seed820201_20260825/REPORT.md`.
 - Final decision: `NO_PROMOTION`; do not resume this checkpoint or enlarge the
   budget before natural-start action intervention and retention diagnostics.
+# 2026-08-25 v4 Apex-continuation implementation
+
+- Confirmed Git was synchronized and JIT clean at
+  `27923d3eeb34273a5fe299b4a70df06bb11cb88d` before modification.
+- Added wheel-support regression coverage using the exact previous two-frame
+  failure state; geometry/semantics/reward/GPU tests are green.
+- Made Apex nonterminal and changed panel success accounting to event-based
+  Apex accounting; full rollouts now continue to failure or 200-tick horizon.
+- Added full/pre/post-Apex NPZ generation, dashboard/video Apex markers, hashes,
+  transition accounting, and v4 provenance binding.
+- Added block-aligned episode/PPO JSONL, PNG/NPZ/JSON training curves, raw-series
+  binding, exact v4 configs, fresh seed namespace, and mutation tests.
+- Current verification marker: 164 non-GPU tests and 9 GPU tests passed; retained
+  completed v1, v2, and v3 formal provenance all passed. Final preflight and
+  staged review remain before commit/push/launch.

@@ -1,5 +1,44 @@
 # JIT Phase U Verification
 
+## Active v4 pre-training verification — 2026-08-25
+
+The v4 contract fixes the v3 false failure diagnosis without changing XML
+physics: the observed `floor/rearwheel_collision` distance of approximately
+`-0.014175 m` is normal compliant wheel support and is now raw telemetry only.
+Prohibited body contact remains illegal. Apex is a monotonic nonterminal event;
+the rollout continues to retained physical failure or the 200-tick horizon.
+
+Final representative evidence contains the complete video plus separately
+hashed pre/post-Apex NPZ segments. Formal training also persists raw JSONL
+callbacks and synchronized PNG/NPZ/JSON learning curves for episode reward,
+episode length, KL, PPO losses, policy standard deviation, and throughput.
+Completed-v4 provenance binds both Apex segments to the full trace and binds
+the plotted series to the raw callbacks.
+
+The new exact config uses seed `820301`, held-out seeds `940001..940008`, and
+4,988,928 transitions. It is identity-incompatible with the v3 checkpoint and
+must start fresh. Final command results and the launch commit are recorded only
+after the complete verification round succeeds; the validated command results
+are recorded below, while the launch commit is added after Git delivery.
+
+Validated pre-launch evidence:
+
+| Evidence | Result |
+|---|---|
+| v4 smoke config SHA-256 | `3b3d2b3ae46bcf17d67b6c7d2e2118f57a7a968f693791443fd8f41967d9be1c` |
+| v4 formal config SHA-256 | `296162c405ab77acfeb682c06ee3aa3733abce9f8bd5799c8e4825a18668f299` |
+| Complete non-GPU suite | 165 passed, 9 GPU tests deselected |
+| Complete GPU suite | 9 passed, 165 non-GPU tests deselected |
+| `JIT/scripts/local_preflight.sh` | exit 0 |
+| Retained v1/v2/v3 formal provenance | all exit 0 |
+| Repository compatibility | 1,133 passed; one pre-existing dirty-path failure outside JIT |
+
+The sole repository-level failure is unchanged user work in
+`tests/test_phase_u_launch_diagnostic.py`: it passes `mode=` to the separately
+modified `dvgc/phase_u_launch_diagnostic.py`, whose current
+`frozen_manifest_payload` does not accept that argument. Neither file is part
+of this JIT change or commit.
+
 ## Completed v3 formal contract — 2026-08-25
 
 The active source/config pair is `jit_phase_u_*_v3`. It changes only the joint

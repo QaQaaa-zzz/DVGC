@@ -1,0 +1,87 @@
+{
+  "schema": "jit_phase_u_engineering_smoke_v4",
+  "phase": "propulsion_ascent",
+  "model": {
+    "xml_path": "assets/orange_bike_4kg_horizontal.xml",
+    "xml_sha256": "e2762bec49fdce61eff6ad01b6a67925934d8997b53929b0a67ace7f44109192",
+    "reference_path": "data/reference_jump.csv",
+    "reference_sha256": "612fe758eb1042481b9c7642cc9b92d3e9c14b4a75c9deaf5340183c928bc41f",
+    "mjx_impl": "warp",
+    "naconmax": 4096,
+    "njmax": 256
+  },
+  "action": {
+    "base_rear_speed": 12.0,
+    "rear_speed_delta": 12.0,
+    "joint_target_semantics": "keyframe_centered_absolute"
+  },
+  "reset": {
+    "keyframe": "initial_state",
+    "initial_forward_velocity": 2.0,
+    "airborne_rsi_probability": 0.05,
+    "airborne_rsi_x_min": 2.7,
+    "airborne_rsi_x_max": 2.9,
+    "airborne_rsi_z_min": 1.8,
+    "airborne_rsi_z_max": 2.2,
+    "airborne_rsi_vx_min": 1.8,
+    "airborne_rsi_vx_max": 2.2,
+    "airborne_rsi_vz_min": 0.8,
+    "airborne_rsi_vz_max": 1.2
+  },
+  "events": {
+    "jump_zone_x_min": 2.5,
+    "jump_zone_x_max": 3.1,
+    "min_ascent_velocity": 0.05,
+    "apex_height": 0.5,
+    "min_descent_velocity": 0.05
+  },
+  "physical_limits": {
+    "max_abs_roll": 0.6108652381980153,
+    "max_abs_pitch": 1.3089969389957472,
+    "max_backward_distance": 1.0
+  },
+  "reward": {
+    "roll_coeff": 3.0,
+    "pitch_coeff": 1.0,
+    "yaw_coeff": 0.3,
+    "speed_coeff": 0.2,
+    "survival_reward": 1.5,
+    "height_coeff": 20.0,
+    "desired_velocity": 3.5,
+    "speed_sigma": 0.5,
+    "jump_reward_min_height": 0.35,
+    "peak_reward_height": 0.5,
+    "max_beneficial_height": 0.8,
+    "action_smoothness_scale": 0.0001,
+    "action_magnitude_scale": 0.1,
+    "action_coeff": 1.5,
+    "pitch_angular_velocity_coeff": 0.15,
+    "joint_energy_penalty_coeff": 2.0,
+    "apex_success_bonus": 50.0,
+    "illegal_contact_penalty": 30.0,
+    "physical_failure_penalty": 30.0,
+    "timeout_penalty": 10.0,
+    "total_min": -50.0,
+    "total_max": 50.0
+  },
+  "ppo": {
+    "num_parallel_envs": 384,
+    "episode_horizon": 200,
+    "unroll_length": 64,
+    "batch_size": 16,
+    "num_minibatches": 24,
+    "num_updates_per_batch": 8,
+    "requested_transitions": 24576,
+    "num_eval_envs": 8,
+    "num_evals": 1,
+    "learning_rate": 0.0001,
+    "entropy_cost": 0.01,
+    "reward_scaling": 0.1,
+    "discounting": 0.99,
+    "gae_lambda": 0.95,
+    "clipping_epsilon": 0.2,
+    "max_grad_norm": 0.5,
+    "seed": 820300,
+    "held_out_seeds": [940001, 940002, 940003, 940004, 940005, 940006, 940007, 940008]
+  }
+}

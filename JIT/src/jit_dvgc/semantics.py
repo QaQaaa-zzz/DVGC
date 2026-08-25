@@ -8,9 +8,7 @@ from jax import numpy as jp
 
 from .config import ResolvedConfig
 from .constants import (
-    END_APEX_SUCCESS,
     END_BACKWARD_EXIT,
-    END_ILLEGAL_WHEEL_CONTACT,
     END_NONFINITE,
     END_ONGOING,
     END_PITCH_LIMIT,
@@ -46,9 +44,7 @@ class TerminalInputs:
     roll: jax.Array
     pitch: jax.Array
     illegal_contact: jax.Array
-    illegal_wheel_contact: jax.Array
     backward_exit: jax.Array
-    apex_success: jax.Array
 
 
 @struct.dataclass
@@ -128,7 +124,6 @@ def classify_terminal(inputs: TerminalInputs, config: ResolvedConfig) -> Termina
         roll_failure,
         pitch_failure,
         jp.asarray(inputs.illegal_contact, dtype=bool),
-        jp.asarray(inputs.illegal_wheel_contact, dtype=bool),
         jp.asarray(inputs.backward_exit, dtype=bool),
     )
     failure_codes = (
@@ -136,7 +131,6 @@ def classify_terminal(inputs: TerminalInputs, config: ResolvedConfig) -> Termina
         END_ROLL_LIMIT,
         END_PITCH_LIMIT,
         END_PROHIBITED_CONTACT,
-        END_ILLEGAL_WHEEL_CONTACT,
         END_BACKWARD_EXIT,
     )
     physical_failure = jp.asarray(False)
@@ -144,14 +138,13 @@ def classify_terminal(inputs: TerminalInputs, config: ResolvedConfig) -> Termina
     for condition, code in reversed(tuple(zip(failures, failure_codes, strict=True))):
         failure_code = jp.where(condition, jp.asarray(code, jp.int32), failure_code)
         physical_failure = physical_failure | condition
-    success = jp.asarray(inputs.apex_success, dtype=bool) & ~physical_failure
+    success = jp.asarray(False)
     horizon = inputs.episode_step >= config.ppo.episode_horizon - 1
-    timeout = horizon & ~physical_failure & ~success
-    end_code = jp.where(success, END_APEX_SUCCESS, END_ONGOING)
-    end_code = jp.where(timeout, END_TIMEOUT, end_code)
+    timeout = horizon & ~physical_failure
+    end_code = jp.where(timeout, END_TIMEOUT, END_ONGOING)
     end_code = jp.where(physical_failure, failure_code, end_code).astype(jp.int32)
     return TerminalState(
-        terminated=physical_failure | success,
+        terminated=physical_failure,
         truncated=timeout,
         success=success,
         physical_failure=physical_failure,

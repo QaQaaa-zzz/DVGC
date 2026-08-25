@@ -50,6 +50,64 @@ class TraceArtifact:
     captured_state_count: int
 
 
+@dataclass(frozen=True)
+class ApexTraceSplit:
+    apex_frame_index: int
+    pre_frame_indices: tuple[int, ...]
+    post_frame_indices: tuple[int, ...]
+    pre_environment_transitions: int
+    post_environment_transitions: int
+
+
+def split_trace_at_apex(trace: EpisodeTrace) -> ApexTraceSplit:
+    """Returns an exact first-Apex boundary with one shared handoff state."""
+
+    if len(trace.frames) != trace.environment_transitions + 1:
+        raise ValueError("captured state count must equal transitions plus one")
+    apex_index = next(
+        (
+            index
+            for index, frame in enumerate(trace.frames)
+            if frame.metrics.get("event/apex_seen", 0.0) > 0.5
+        ),
+        -1,
+    )
+    if apex_index < 0:
+        return ApexTraceSplit(
+            apex_frame_index=-1,
+            pre_frame_indices=tuple(range(len(trace.frames))),
+            post_frame_indices=(),
+            pre_environment_transitions=trace.environment_transitions,
+            post_environment_transitions=0,
+        )
+    pre = tuple(range(apex_index + 1))
+    post = tuple(range(apex_index, len(trace.frames)))
+    return ApexTraceSplit(
+        apex_frame_index=apex_index,
+        pre_frame_indices=pre,
+        post_frame_indices=post,
+        pre_environment_transitions=apex_index,
+        post_environment_transitions=trace.environment_transitions - apex_index,
+    )
+
+
+def select_representative_trace(traces: tuple[EpisodeTrace, ...]) -> EpisodeTrace:
+    """Selects an Apex trace first, then the highest unclipped episode return."""
+
+    if not traces:
+        raise ValueError("representative selection requires at least one trace")
+
+    def rank(trace: EpisodeTrace) -> tuple[bool, float, int]:
+        reached_apex = split_trace_at_apex(trace).apex_frame_index >= 0
+        episode_return = sum(
+            frame.metrics.get("reward/unclipped", frame.reward)
+            for frame in trace.frames
+        )
+        return reached_apex, float(episode_return), trace.environment_transitions
+
+    return max(traces, key=rank)
+
+
 def _array(value: Any) -> np.ndarray:
     return np.asarray(jax.device_get(value)).copy()
 
@@ -166,6 +224,12 @@ def summarize_phase_u(traces: tuple[EpisodeTrace, ...]) -> dict[str, Any]:
         END_REASONS.get(frame.end_code, f"unknown_{frame.end_code}")
         for frame in terminals
     )
+    splits = [split_trace_at_apex(trace) for trace in traces]
+    apex_pairs = [
+        (trace, split)
+        for trace, split in zip(traces, splits, strict=True)
+        if split.apex_frame_index >= 0
+    ]
     return {
         "rollouts": len(traces),
         "environment_transitions": sum(t.environment_transitions for t in traces),
@@ -174,7 +238,34 @@ def summarize_phase_u(traces: tuple[EpisodeTrace, ...]) -> dict[str, Any]:
         ),
         "height_reach_rate": _rate(_ever(t, "event/height_seen") for t in traces),
         "ascending_rate": _rate(_ever(t, "event/ascending_seen") for t in traces),
-        "apex_success_rate": _rate(frame.success for frame in terminals),
+        "apex_success_rate": _rate(
+            split.apex_frame_index >= 0 for split in splits
+        ),
+        "apex_rollouts": len(apex_pairs),
+        "pre_apex_environment_transitions": sum(
+            split.pre_environment_transitions for split in splits
+        ),
+        "post_apex_environment_transitions": sum(
+            split.post_environment_transitions for split in splits
+        ),
+        "mean_post_apex_environment_transitions": (
+            float(
+                np.mean(
+                    [
+                        split.post_environment_transitions
+                        for _, split in apex_pairs
+                    ]
+                )
+            )
+            if apex_pairs
+            else 0.0
+        ),
+        "post_apex_physical_failure_rate": _rate(
+            trace.frames[-1].physical_failure for trace, _ in apex_pairs
+        ),
+        "post_apex_horizon_survival_rate": _rate(
+            trace.frames[-1].timeout for trace, _ in apex_pairs
+        ),
         "maximum_root_height": float(max(root_heights)),
         "maximum_abs_roll": float(max(rolls)),
         "maximum_abs_pitch": float(max(pitches)),
