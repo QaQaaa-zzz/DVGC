@@ -5,16 +5,16 @@
 Replace the JIT Phase U reward, event, reset, observation, and diagnostic
 contracts with the approved target-free reference reward, one-shot jump signal,
 5% airborne RSI, root-height/descent Apex termination, and aligned PNG/video
-evidence without launching PPO training.
+evidence; then execute and audit the user-authorized 998,400-step fresh run.
 
 ## Next Step
 
-Finish repository-scope review and final verification evidence, then create at
-most one explicitly staged JIT-only commit. Do not start PPO training.
+Commit and push the post-run analysis documents, verify remote equality, and
+hand off the final video/report with NO_PROMOTION and next-step guidance.
 
 ## Current Phase
 
-Phase 10: verification and delivery
+Phase 12: v2 formal analysis and handoff
 
 ## Phases
 
@@ -43,10 +43,26 @@ Phase 10: verification and delivery
 ### Phase 10: Verification and delivery
 
 - [x] Run static, non-GPU, GPU, local-preflight, and retained old-run checks.
-- [ ] Complete repository-scope/staged-scope checks.
-- [ ] Record final evidence and perform final requirements review.
-- [ ] Create at most one JIT-only commit only after validated delivery authorization.
-- **Status:** pending
+- [x] Complete repository-scope/staged-scope checks.
+- [x] Record final evidence and perform final requirements review.
+- [x] Create one JIT-only source commit after validated delivery authorization.
+- **Status:** complete
+
+### Phase 11: Fresh v2 formal training
+
+- [x] Commit and push the exact validated source before interaction.
+- [x] Predeclare and persistently launch a fresh 998,400-transition run.
+- [x] Inspect startup once and monitor only declared milestones/completion.
+- [x] Strictly verify checkpoints, panels, accounting, and final artifacts.
+- **Status:** complete
+
+### Phase 12: v2 formal analysis and handoff
+
+- [x] Analyze PPO metrics, all five natural panels, and final trace rewards/actions.
+- [x] Decode and hash-check final MP4/PNG/NPZ evidence.
+- [x] Record NO_PROMOTION, limitations, and evidence-first next steps.
+- [x] Deliver the final report-only Git update and user handoff.
+- **Status:** complete
 
 ### Phase 0: Engineering-smoke baseline
 

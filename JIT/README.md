@@ -18,9 +18,17 @@ plus 30 privileged values, for 106 total. The signal is therefore available to
 both networks and is not repeated in the history. v1 checkpoints (`81/114`)
 are deliberately incompatible and must not be resumed into v2.
 
-No PPO training has been run with the v2 contract yet. The retained 2026-08-24
-smoke/formal artifacts are historical v1 evidence only; they remain
-provenance-verifiable but are not candidate v2 models.
+One fresh v2 formal run completed on 2026-08-25 with 998,400 training
+transitions. All five frozen natural-reset panels had zero Apex/height/ascent
+events and 100% roll-limit failures, so the result is `NO_PROMOTION` and no
+checkpoint is a trained expert. The retained 2026-08-24 smoke/formal artifacts
+remain historical v1 evidence only.
+
+The full v2 experiment analysis is in
+`docs/experiments/phase_u_reward_rsi_diagnostics_v2_20260825/REPORT.md`. The
+ignored final evidence is under
+`JIT/runs/phase_u/phase_u_v2_formal_998400_seed820101_20260825/`; do not reuse
+that run ID or extend its final checkpoint.
 
 Use the retained interpreter directly:
 

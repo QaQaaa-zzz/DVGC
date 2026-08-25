@@ -136,3 +136,109 @@ Actor/critic 输入和奖励全部有限。
 
 本轮未修改 XML、碰撞几何、动作顺序、仿真步长或 PPO 拓扑宽度，也未改动
 `JIT/` 外的用户文件。
+
+## 10. 998,400 步 v2 formal 实验结果
+
+用户在上述实现完成、测试和独立复审通过后，授权直接运行约 100 万步。实际
+使用严格配置的 998,400 步，fresh 启动且没有恢复任何旧 checkpoint。
+
+| 项目 | 结果 |
+|---|---|
+| source commit | `c55a5d0f7236ddc1217ac84743b149634f7629bf`，训练前已推送并与远端一致 |
+| run ID | `phase_u_v2_formal_998400_seed820101_20260825` |
+| training | 998,400 |
+| fixed natural evaluation | 1,160 |
+| Brax evaluation / diagnostic interactions | 0 / 0 |
+| total interactions | 999,560 |
+| final checkpoint restored | yes |
+| final checkpoint SHA-256 | `1aef0f09e77e5100aade31d0add281eb10e7f005540cb67681839f2ef4a07a78` |
+| strict provenance | exit 0 |
+| decision | **NO_PROMOTION；不是 trained expert** |
+
+六个 checkpoint、五个 panel、40 条逐状态 trace、最终 checkpoint restore、
+MP4/PNG/NPZ 路径和哈希全部通过 verifier。步数完成只证明账本闭合，不代表
+策略成功。
+
+### 10.1 自然起点 panel
+
+| checkpoint | 平均长度 tick | jump-zone | ascent | height | Apex | 物理失败 | 每回合 return | 最大 roll |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 102,400 | 30 | 8/8 | 0/8 | 0/8 | 0/8 | 8/8 | 9.286 | 36.62° |
+| 256,000 | 28 | 8/8 | 0/8 | 0/8 | 0/8 | 8/8 | -5.363 | 37.59° |
+| 512,000 | 32 | 8/8 | 0/8 | 0/8 | 0/8 | 8/8 | -59.94..-59.24 | 36.22° |
+| 742,400 | 33 | 8/8 | 0/8 | 0/8 | 0/8 | 8/8 | 11.186..11.191 | 37.45° |
+| 998,400 | 22 | 0/8 | 0/8 | 0/8 | 0/8 | 8/8 | -26.273..-26.267 | 38.72° |
+
+所有 panel 的最大 root z 都是 reset 值 0.15 m，说明策略从未把车体抬高到
+初始高度以上。早期四个 checkpoint 能进入 x=[2.5,3.1]，但进入窗口后已经没有
+`vz>=0.05` 的上升证据，因此 height reward 和 Apex bonus 始终为零。最终策略
+在 x=2.298 m 即触发 roll limit，发生了明显回退。
+
+742,400 checkpoint 只能称为“按 return 和存活长度最不差”，不能称为最好跳跃
+模型，因为它同样是 0 ascent、0 height、0 Apex、100% 物理失败。
+
+### 10.2 PPO 优化趋势
+
+- 39 个 block 全部记录；首个 KL 为 322.274，说明第一次更新非常激烈。
+- 排除首个 block 后，KL 最小/中位/最大为 0.0020/0.0429/0.1995。
+- value loss 全程最小/中位/最大为 0.000141/0.000741/13.362。
+- policy mean std 从 0.7205 持续缩到最终 0.1218，最终最小动作 std 仅 0.0303。
+- 最终 deterministic panel 的 action saturation fraction 为 0.1364；此前四个
+  panel 均为 0。
+
+优化 loss 变小并没有对应 natural task improvement。相反，最终策略的探索尺度
+明显收缩，且自然起点表现从“能到窗口但侧翻”退化为“到窗口前侧翻”。
+
+### 10.3 最终轨迹诊断
+
+最终 representative trace 有 22 次环境转移、23 个状态和 23 个复合视频帧，
+时长 0.44 s。数值 NPZ 含 77 个同步序列且全部有限。
+
+- root x：1.500 -> 2.298 m；root z：0.150 -> 0.100 m；
+- roll：最终 -38.72°，超过 35° 安全限制；yaw 最终约 -39.57°；
+- jump signal 和 jump-zone-seen 全程为 0；
+- 最终动作约 `[-0.291, 0.836, -1.000, 0.685]`；
+- 对应控制约 `[-0.233, 22.029, -1.300, 1.749]`；
+- 终止 tick 的未裁剪/裁剪奖励均为 -39.233，说明该 tick 没有被 [-50,50]
+  裁剪隐藏；PPO scaled reward 为 -3.923；
+- end code=3，即 `roll_limit`。
+
+最终每回合的主要累计贡献约为：survival +33.0、pitch +20.72、yaw +3.33，
+roll -34.15、joint energy -11.03、action magnitude -7.55、physical failure -30。
+普通姿态/生存正奖励没有形成稳定起跳，height 分项始终为零。
+
+最终证据：
+
+- MP4：`evaluations/transition_998400/representative.mp4`，SHA-256
+  `c87cfdb6d5b0e56d1af4f9cf64c37d5035d1a6da3bbceb989614308fe80b5a5e`；
+- PNG：`evaluations/transition_998400/representative_diagnostic.png`，SHA-256
+  `10587f1f3768bfbf56a7f556d6324bd1df65e5069a3344370a6ab65bc47e5f84`；
+- NPZ：`evaluations/transition_998400/representative_diagnostic.npz`，SHA-256
+  `356446907cd345a3723ba9bff3ee58f004bd1805d6f3098dd8f833ba4dafe188`。
+
+### 10.4 科学限制
+
+1. formal panel 强制自然 reset，因此没有 RSI 污染，但自然 reset 本身不使用
+   held-out seed 产生状态扰动。八条轨迹不是八种独立初始条件；少量差异来自底层
+   数值执行，不能当作稳健性覆盖。
+2. 为避免旧 Brax callback 顺序问题，formal 训练关闭了 in-epoch episode logger。
+   环境虽然记录 `reset/source_airborne_rsi`，本次 `metrics.jsonl` 只有 PPO loss/KL/
+   分布统计，无法回溯 5% RSI 回合的成功率或优势贡献。
+3. 因此本实验只能可靠下结论：所有 frozen natural panels 失败；不能从现有证据
+   判断策略是否在空中 RSI 分布上学会了某种控制。
+
+## 11. 下一步决策
+
+不要继续追加 PPO 步数，也不要选择 final 或 742,400 作为 Phase U expert。下一轮
+交互前优先完成两个只针对证据的设计：
+
+1. 建立单独预声明、固定预算的 natural-vs-forced-RSI checkpoint panel，分别报告
+   jump signal ticks、ascent/height/Apex、return 和终止原因；不得合并成功率。
+2. 对 742,400 与 final checkpoint 做逐 tick Actor 输出、value/advantage 和动作干预
+   对比，重点检查 hip 长期接近 -1、drive 接近高值、roll/yaw 发散的因果关系。
+3. 若 RSI panel 成功而 natural panel 失败，问题是从地面到窗口/起跳的 credit
+   assignment；若 RSI 同样失败，则先检查动作映射与奖励梯度，不应扩大预算。
+4. 在用户批准前不改变当前参考奖励。若之后需要方法修改，优先讨论“窗口前没有
+   可学习的起跳准备信号”和“policy std 过快塌缩”，并用独立小预算 A/B 验证。
+5. 如需真正的 held-out 稳健性，必须另行批准 natural 初始扰动协议；当前八个 seed
+   标签不能被描述为八种独立自然条件。

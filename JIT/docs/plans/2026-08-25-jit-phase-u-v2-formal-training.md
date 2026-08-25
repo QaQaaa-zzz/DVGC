@@ -78,3 +78,11 @@ nohup setsid env XLA_PYTHON_CLIENT_PREALLOCATE=false MUJOCO_GL=egl \
 Inspect startup once to confirm GPU backend, running status, and transition-0
 checkpoint. After that, inspect only declared milestones, completion, or an
 abnormal exit; do not poll full logs repeatedly.
+
+## Result
+
+The source gate passed at commit
+`c55a5d0f7236ddc1217ac84743b149634f7629bf`. The run completed 998,400 training
+plus 1,160 fixed natural-evaluation transitions and passed strict provenance.
+Every panel had 0 Apex and 8/8 roll-limit failures; final decision is
+`NO_PROMOTION`. See the v2 experiment report for full analysis.

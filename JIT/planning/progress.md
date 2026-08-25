@@ -75,6 +75,31 @@
 - User authorized a fresh approximately one-million-step run after successful
   source verification. The declared exact budget is 998,400 with no v1 restore.
 
+### Phase 11: Fresh v2 formal training
+
+- **Status:** complete
+- Created and pushed source commit
+  `c55a5d0f7236ddc1217ac84743b149634f7629bf`; remote ref equality passed before
+  interaction.
+- Fresh run `phase_u_v2_formal_998400_seed820101_20260825` started as PID 255182
+  on RTX 4090 D with transition-0 identity and no parent checkpoint.
+- Completed 998,400 training and 1,160 fixed natural-evaluation transitions;
+  total environment interactions 999,560.
+- Strict provenance verification passed all six checkpoint hashes, five panels,
+  40 trace hashes/counts, final restore, and MP4/PNG/NPZ hashes/counts.
+
+### Phase 12: v2 formal analysis and handoff
+
+- **Status:** complete
+- Every natural panel had 0 Apex, 0 height, 0 ascent, and 8/8 roll-limit
+  failures. Final policy failed before the jump zone after 22 ticks.
+- 742,400 was least-bad by return/length but had no successful task event and
+  is not an expert candidate. Final policy had 13.64% action saturation.
+- Final MP4 decoded as `(23,360,1280,3)`; NPZ had 23 aligned samples, 77 numeric
+  series, and all finite values. Diagnostic PNG is 2240x2240.
+- Wrote complete optimization, reward, action, artifact, limitation, and next
+  step analysis into the v2 experiment report. Decision is NO_PROMOTION.
+
 ## Session: 2026-08-24 Formal Phase U
 
 ### Phase 1: Formal-training design

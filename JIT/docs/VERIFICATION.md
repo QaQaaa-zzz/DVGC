@@ -45,6 +45,22 @@ No result in this section is learnability or promotion evidence. The user has
 authorized one fresh 998,400-transition v2 formal run after source delivery;
 its natural-start panels and RSI training metrics must remain separate.
 
+## Active v2 formal result
+
+Run `phase_u_v2_formal_998400_seed820101_20260825` completed and passed strict
+provenance verification:
+
+- 998,400 training + 1,160 fixed natural-evaluation transitions;
+- six checkpoint hashes and five eight-rollout panel ledgers closed;
+- final checkpoint restored; final MP4/PNG/NPZ hashes matched;
+- all five panels: 0 Apex, 0 height, 0 ascent, and 8/8 roll-limit failures;
+- final panel: 0/8 reached the jump zone and all failed after 22 ticks;
+- decision: `NO_PROMOTION`; no checkpoint is a trained Phase U expert.
+
+The final video has 23 frames at 50 fps and the aligned NPZ has 23 samples,
+77 numeric series, and no nonfinite value. See the complete analysis in
+`docs/experiments/phase_u_reward_rsi_diagnostics_v2_20260825/REPORT.md`.
+
 ## Verified delivery
 
 The historical v1 independent `JIT/` Propulsion-Ascent engineering stack passed its declared
