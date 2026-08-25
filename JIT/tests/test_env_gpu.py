@@ -86,6 +86,8 @@ def test_training_wrapper_fully_resets_jit_episode_info_after_done(jit_root):
     jax.block_until_ready(terminal)
     assert bool(jp.all(terminal.done))
     assert bool(jp.all(terminal.info["events"].episode_step == 0))
+    assert bool(jp.all(terminal.info["episode_done"] == 1))
+    assert bool(jp.all(terminal.info["episode_metrics"]["length"] == 2))
 
     restarted = step(terminal, actions)
     jax.block_until_ready(restarted)

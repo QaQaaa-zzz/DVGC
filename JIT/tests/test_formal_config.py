@@ -94,7 +94,10 @@ def test_continuation_v4_configs_use_fresh_seed_namespace(jit_root):
     formal = load_config(jit_root / "configs" / "phase_u_continuation_5m.json")
 
     assert smoke.schema == "jit_phase_u_engineering_smoke_v4"
-    assert smoke.raw["training_wrapper"] == {"full_reset": True}
+    assert smoke.raw["training_wrapper"] == {
+        "full_reset": True,
+        "preserve_episode_evidence": True,
+    }
     assert smoke.ppo.seed == 820300
     assert formal.schema == "jit_phase_u_formal_v4"
     assert formal.ppo.seed == 820301
@@ -114,6 +117,7 @@ def test_continuation_v4_configs_use_fresh_seed_namespace(jit_root):
         lambda p: p["reward"].update(apex_success_bonus=49.0),
         lambda p: p["model"].update(njmax=128),
         lambda p: p["training_wrapper"].update(full_reset=False),
+        lambda p: p["training_wrapper"].update(preserve_episode_evidence=False),
     ],
 )
 def test_continuation_v4_rejects_contract_drift(jit_root, tmp_path, mutate):

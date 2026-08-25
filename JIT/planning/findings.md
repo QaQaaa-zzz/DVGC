@@ -235,3 +235,8 @@
   later episodes collapsed to one step. Correct training requires
   `full_reset=True`; this is now config-bound and GPU-tested, and the invalid
   attempt was aborted without checkpoint reuse.
+- Playground's full reset also overwrote the just-finished
+  `episode_done/episode_metrics`, so physical reset correctness alone was not
+  enough for the requested reward/length curves. JIT now preserves exactly
+  those logging fields through reset and exposes them after reset; terminal
+  length two and restarted length one are both asserted on GPU.

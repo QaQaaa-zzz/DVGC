@@ -2,7 +2,8 @@
   "schema": "jit_phase_u_engineering_smoke_v4",
   "phase": "propulsion_ascent",
   "training_wrapper": {
-    "full_reset": true
+    "full_reset": true,
+    "preserve_episode_evidence": true
   },
   "model": {
     "xml_path": "assets/orange_bike_4kg_horizontal.xml",

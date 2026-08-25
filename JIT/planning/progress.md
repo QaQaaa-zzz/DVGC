@@ -438,3 +438,10 @@
 - Corrected-tree verification: 166 non-GPU and 10 GPU tests passed; the exact
   v4 formal config hash is
   `6129456320c3acb8c36ba0fe2d96a93ec6c553dfce3ffe4fcabb46559dbb666c`.
+- `_retry1` confirmed fresh JIT state but showed that terminal episode evidence
+  was replaced by reset zeros, leaving no episode JSONL. Stopped it at the last
+  certified 1,769,472-step callback and closed it as aborted.
+- Added preserve/expose wrappers for only `episode_done/episode_metrics` and
+  bound `preserve_episode_evidence=true`; the new formal config hash is
+  `d6b9476fc3097b8a1e9f7c1ca889f3bf2b93c9527210dcedda9e889e95eb0f43`.
+- Final corrected-tree verification: 167 non-GPU and 10 GPU tests passed.

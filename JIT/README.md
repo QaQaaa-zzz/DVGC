@@ -14,7 +14,10 @@ Training uses full environment resets after every completed episode. This is a
 required runtime contract, not an optimization option: cached data/observation-
 only resets would leak `episode_step`, event, timeout, and RSI state into the
 next episode. The v4 config hash explicitly binds `full_reset=true`, making the
-aborted pre-fix checkpoint incompatible with the corrected run.
+aborted pre-fix checkpoint incompatible with the corrected run. It also binds
+`preserve_episode_evidence=true`: terminal `episode_done` and accumulated
+episode metrics cross the reset boundary solely for Brax logging, while JIT
+physics/event state comes from the fresh reset.
 
 Final natural and forced-RSI representatives encode the complete episode in
 MP4/PNG/NPZ. They additionally save independently hashed

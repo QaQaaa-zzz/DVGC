@@ -25,6 +25,15 @@ regression proving a two-tick terminal is followed by a fresh nonterminal
 episode with event step one. `training_wrapper.full_reset=true` is part of the
 exact v4 config identity.
 
+The first full-reset retry then exposed a separate third-party reporting
+behavior: Playground replaced terminal `episode_done/episode_metrics` with the
+new reset's zero values. PPO state reset was correct, but episode curves could
+not be produced, so `_retry1` was also stopped and closed as `aborted` without
+checkpoint reuse. The final wrapper preserves those two logging fields across
+the reset boundary and re-exposes them to Brax while keeping all JIT state
+fresh. `preserve_episode_evidence=true` is independently config-bound and the
+GPU regression requires terminal length two followed by fresh length one.
+
 The new exact config uses seed `820301`, held-out seeds `940001..940008`, and
 4,988,928 transitions. It is identity-incompatible with the v3 checkpoint and
 must start fresh. Final command results and the launch commit are recorded only
@@ -35,13 +44,13 @@ Validated pre-launch evidence:
 
 | Evidence | Result |
 |---|---|
-| v4 smoke config SHA-256 | `683b412409a28db41427cb8cc70aaa91680b204c927f3095e788a26caf90a1b2` |
-| v4 formal config SHA-256 | `6129456320c3acb8c36ba0fe2d96a93ec6c553dfce3ffe4fcabb46559dbb666c` |
-| Complete non-GPU suite | 166 passed, 10 GPU tests deselected |
-| Complete GPU suite | 10 passed, 166 non-GPU tests deselected |
+| v4 smoke config SHA-256 | `b178512e5f5555994c83dc4ecf8301d62f6c646afbc99b3cd1c9a08c97545a75` |
+| v4 formal config SHA-256 | `d6b9476fc3097b8a1e9f7c1ca889f3bf2b93c9527210dcedda9e889e95eb0f43` |
+| Complete non-GPU suite | 167 passed, 10 GPU tests deselected |
+| Complete GPU suite | 10 passed, 167 non-GPU tests deselected |
 | `JIT/scripts/local_preflight.sh` | exit 0 |
 | Retained v1/v2/v3 formal provenance | all exit 0 |
-| Repository compatibility | 1,135 passed; one pre-existing dirty-path failure outside JIT |
+| Repository compatibility | 1,136 passed; one pre-existing dirty-path failure outside JIT |
 
 The sole repository-level failure is unchanged user work in
 `tests/test_phase_u_launch_diagnostic.py`: it passes `mode=` to the separately

@@ -149,9 +149,10 @@ and fresh resume semantics.
 
 Startup inspection additionally found that the default cached auto-reset leaks
 JIT-owned episode/event info after done. The corrected v4 identity therefore
-binds `training_wrapper.full_reset=true`. The pre-fix run is aborted and none
-of its checkpoints may be loaded; a GPU regression must show a terminal episode
-followed by a fresh nonterminal episode before relaunch.
+binds `training_wrapper.full_reset=true` and
+`preserve_episode_evidence=true`. The pre-fix runs are aborted and none of
+their checkpoints may be loaded; a GPU regression must show terminal episode
+statistics alongside a fresh nonterminal JIT state before relaunch.
 
 ## Formal evidence and provenance
 

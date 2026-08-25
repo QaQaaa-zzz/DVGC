@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 from typing import Any, Mapping
 
+from brax.envs.wrappers import training as brax_training
 from brax.training.agents.ppo import networks as ppo_networks
 from brax.training.agents.ppo import train as ppo_train
 import jax
@@ -87,6 +88,50 @@ def make_network_factory():
     )
 
 
+_EPISODE_EVIDENCE_KEY = "AutoResetWrapper_preserve_info"
+
+
+class _PreserveEpisodeEvidence(wrapper.Wrapper):
+    """Copies terminal episode statistics across Playground full resets."""
+
+    @staticmethod
+    def _preserve(state):
+        evidence = {
+            "episode_done": state.info["episode_done"],
+            "episode_metrics": state.info["episode_metrics"],
+        }
+        return state.replace(
+            info={**state.info, _EPISODE_EVIDENCE_KEY: evidence}
+        )
+
+    def reset(self, rng):
+        return self._preserve(self.env.reset(rng))
+
+    def step(self, state, action):
+        return self._preserve(self.env.step(state, action))
+
+
+class _ExposeEpisodeEvidence(wrapper.Wrapper):
+    """Restores the terminal statistics expected by Brax's metric logger."""
+
+    @staticmethod
+    def _expose(state):
+        evidence = state.info[_EPISODE_EVIDENCE_KEY]
+        return state.replace(
+            info={
+                **state.info,
+                "episode_done": evidence["episode_done"],
+                "episode_metrics": evidence["episode_metrics"],
+            }
+        )
+
+    def reset(self, rng):
+        return self._expose(self.env.reset(rng))
+
+    def step(self, state, action):
+        return self._expose(self.env.step(state, action))
+
+
 def wrap_for_jit_training(
     env: Any,
     episode_length: int = 1000,
@@ -95,13 +140,16 @@ def wrap_for_jit_training(
 ):
     """Uses real resets so JIT episode events/counters never leak across done."""
 
-    return wrapper.wrap_for_brax_training(
-        env,
-        episode_length=episode_length,
-        action_repeat=action_repeat,
-        randomization_fn=randomization_fn,
-        full_reset=True,
-    )
+    if randomization_fn is None:
+        env = brax_training.VmapWrapper(env)
+    else:
+        env = wrapper.BraxDomainRandomizationVmapWrapper(
+            env, randomization_fn
+        )
+    env = brax_training.EpisodeWrapper(env, episode_length, action_repeat)
+    env = _PreserveEpisodeEvidence(env)
+    env = wrapper.BraxAutoResetWrapper(env, full_reset=True)
+    return _ExposeEpisodeEvidence(env)
 
 
 def _json_safe(value: Any) -> Any:

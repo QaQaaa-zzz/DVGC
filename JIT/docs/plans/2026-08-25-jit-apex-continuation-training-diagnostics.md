@@ -245,7 +245,8 @@ fix.
 Startup audit additionally requires a real-wrapper regression showing that a
 done episode resets JIT counters/events and that the next episode continues
 beyond one tick. Bind `training_wrapper.full_reset=true` into the v4 config;
-abort and prohibit any checkpoint produced before this contract.
+preserve terminal `episode_done/episode_metrics` for logging, bind that evidence
+contract into the config, and prohibit checkpoints from either aborted attempt.
 
 - [ ] **Step 4: Create and push one explicit JIT-only commit**
 
@@ -255,7 +256,7 @@ path, and remote ref equality after push.
 
 - [ ] **Step 5: Launch a fresh persistent v4 run**
 
-Use run ID `phase_u_continuation_4988928_seed820301_20260825_retry1` and deliberately
+Use run ID `phase_u_continuation_4988928_seed820301_20260825_retry2` and deliberately
 omit `--restore-checkpoint`:
 
 ```bash
@@ -264,8 +265,8 @@ nohup setsid env XLA_PYTHON_CLIENT_PREALLOCATE=false MUJOCO_GL=egl \
   /home/qy/mujoco_playground/.venv/bin/python JIT/cli/train_phase_expert.py \
   --phase propulsion_ascent \
   --config JIT/configs/phase_u_continuation_5m.json \
-  --run-id phase_u_continuation_4988928_seed820301_20260825_retry1 --formal \
-  > JIT/runs/phase_u/phase_u_continuation_4988928_seed820301_20260825_retry1.launch.log 2>&1 \
+  --run-id phase_u_continuation_4988928_seed820301_20260825_retry2 --formal \
+  > JIT/runs/phase_u/phase_u_continuation_4988928_seed820301_20260825_retry2.launch.log 2>&1 \
   < /dev/null &
 ```
 
