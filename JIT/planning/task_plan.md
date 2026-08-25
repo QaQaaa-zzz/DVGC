@@ -1,20 +1,52 @@
-# Task Plan: JIT Phase U Formal Training
+# Task Plan: JIT Phase U Reward/RSI/Diagnostics Rebuild
 
 ## Goal
 
-Extend the verified independent JIT engineering stack with an auditable formal
-998,400-transition Phase U runner, push the validated source to GitHub, and
-launch one persistent run without changing physics, reward, or observations.
+Replace the JIT Phase U reward, event, reset, observation, and diagnostic
+contracts with the approved target-free reference reward, one-shot jump signal,
+5% airborne RSI, root-height/descent Apex termination, and aligned PNG/video
+evidence without launching PPO training.
 
 ## Next Step
 
-Review and explicitly approve the proposed frozen-policy diagnostic before any further PPO.
+Finish repository-scope review and final verification evidence, then create at
+most one explicitly staged JIT-only commit. Do not start PPO training.
 
 ## Current Phase
 
-Phase 1: formal-training design
+Phase 10: verification and delivery
 
 ## Phases
+
+### Phase 7: Reward/RSI/diagnostics design
+
+- [x] Audit the external reward reference as read-only input.
+- [x] Resolve one-shot jump signal, target removal, RSI, Apex, observation, and diagnostic semantics with the user.
+- [x] Write and self-review the JIT-local design document.
+- **Status:** complete
+
+### Phase 8: v2 implementation planning
+
+- [x] Map configuration, events, reward, reset, observations, diagnostics, provenance, and tests.
+- [x] Preserve retained v1 run verification while making v2 checkpoints incompatible.
+- [x] Write and self-review the TDD implementation plan.
+- **Status:** complete
+
+### Phase 9: TDD implementation
+
+- [x] Implement v2 config/event/reward contracts after expected RED tests.
+- [x] Implement mixed training reset, natural evaluation reset, and 76/106 observations.
+- [x] Implement aligned diagnostic data, PNG, and telemetry video.
+- [x] Preserve v1 provenance and document v2 claim boundaries.
+- **Status:** complete
+
+### Phase 10: Verification and delivery
+
+- [x] Run static, non-GPU, GPU, local-preflight, and retained old-run checks.
+- [ ] Complete repository-scope/staged-scope checks.
+- [ ] Record final evidence and perform final requirements review.
+- [ ] Create at most one JIT-only commit only after validated delivery authorization.
+- **Status:** pending
 
 ### Phase 0: Engineering-smoke baseline
 

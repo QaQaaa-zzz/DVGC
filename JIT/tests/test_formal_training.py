@@ -13,10 +13,11 @@ from jit_dvgc.checkpoint import (
     CheckpointPayload,
     save_checkpoint,
 )
-from jit_dvgc.config import load_config
+from jit_dvgc.config import canonical_sha256, load_config
 from jit_dvgc.constants import (
     ACTION_ORDER,
     ACTOR_FRAME_FIELDS,
+    ACTOR_TASK_FIELDS,
     ACTOR_OBSERVATION_SIZE,
     PRIVILEGED_OBSERVATION_SIZE,
 )
@@ -35,6 +36,7 @@ def _identity():
         config_sha256="1" * 64,
         xml_sha256="2" * 64,
         actor_frame_fields=ACTOR_FRAME_FIELDS,
+        actor_task_fields=ACTOR_TASK_FIELDS,
         action_order=ACTION_ORDER,
     )
 
@@ -183,6 +185,8 @@ class _FakeEnv:
             }
         )
 
+    reset_natural = reset
+
 
 def _fake_make_policy(_params, deterministic=False):
     assert deterministic
@@ -240,12 +244,23 @@ def _fake_panel(_env, run_dir, config, step, _make_policy, _params):
     (panel_dir / "summary.json").write_text(json.dumps(summary), encoding="utf-8")
     if step == config.ppo.requested_transitions:
         video_path = panel_dir / "representative.mp4"
-        state_path = panel_dir / "representative.npz"
+        plot_path = panel_dir / "representative_diagnostic.png"
+        state_path = panel_dir / "representative_diagnostic.npz"
         video_path.write_bytes(b"unit-video")
+        plot_path.write_bytes(b"unit-plot")
         np.savez_compressed(state_path, qpos=np.zeros((2, 12)))
         video_report = {
             "video": str(video_path.resolve()),
             "state_trace": str(state_path.resolve()),
+            "diagnostic_plot": str(plot_path.resolve()),
+            "diagnostic_data": str(state_path.resolve()),
+            "video_sha256": hashlib.sha256(video_path.read_bytes()).hexdigest(),
+            "diagnostic_plot_sha256": hashlib.sha256(
+                plot_path.read_bytes()
+            ).hexdigest(),
+            "diagnostic_data_sha256": hashlib.sha256(
+                state_path.read_bytes()
+            ).hexdigest(),
             "captured_state_count": 2,
             "encoded_frame_count": 2,
             "environment_transitions": 1,
@@ -322,6 +337,7 @@ def test_formal_runner_warm_start_records_optimizer_reset_and_absolute_offset(
         config_sha256=config.config_sha256,
         xml_sha256=config.model["xml_sha256"],
         actor_frame_fields=ACTOR_FRAME_FIELDS,
+        actor_task_fields=ACTOR_TASK_FIELDS,
         action_order=ACTION_ORDER,
     )
     parent = tmp_path / "parent" / "transition_256000"
@@ -409,6 +425,31 @@ def test_formal_verifier_rejects_checkpoint_panel_trace_and_report_drift(
     with pytest.raises(ValueError, match="video"):
         verify_run(run_dir)
     video_report_path.write_text(original_video_report, encoding="utf-8")
+
+    diagnostic_plot = (
+        run_dir
+        / "evaluations/transition_998400/representative_diagnostic.png"
+    )
+    original_plot = diagnostic_plot.read_bytes()
+    diagnostic_plot.write_bytes(original_plot + b"drift")
+    with pytest.raises(ValueError, match="diagnostic_plot.*hash"):
+        verify_run(run_dir)
+    diagnostic_plot.write_bytes(original_plot)
+
+    resolved_path = run_dir / "resolved_config.json"
+    manifest_path = run_dir / "run_manifest.json"
+    original_resolved = resolved_path.read_text(encoding="utf-8")
+    original_manifest = manifest_path.read_text(encoding="utf-8")
+    resolved = json.loads(original_resolved)
+    resolved["reset"]["airborne_rsi_probability"] = 0.5
+    manifest = json.loads(original_manifest)
+    manifest["config_sha256"] = canonical_sha256(resolved)
+    resolved_path.write_text(json.dumps(resolved), encoding="utf-8")
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    with pytest.raises(ValueError, match="approved v2"):
+        verify_run(run_dir)
+    resolved_path.write_text(original_resolved, encoding="utf-8")
+    manifest_path.write_text(original_manifest, encoding="utf-8")
 
     report_path = run_dir / "formal_report.json"
     report = json.loads(report_path.read_text(encoding="utf-8"))

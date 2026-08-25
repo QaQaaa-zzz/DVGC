@@ -127,8 +127,8 @@ def summarize_phase_u(traces: tuple[EpisodeTrace, ...]) -> dict[str, Any]:
     if not traces:
         raise ValueError("fixed evaluation requires at least one trace")
     terminals = [trace.frames[-1] for trace in traces]
-    clearances = [
-        frame.metrics.get("signal/structure_clearance", float("-inf"))
+    root_heights = [
+        frame.metrics.get("signal/root_z", float(frame.qpos[2]))
         for trace in traces
         for frame in trace.frames
     ]
@@ -169,14 +169,13 @@ def summarize_phase_u(traces: tuple[EpisodeTrace, ...]) -> dict[str, Any]:
     return {
         "rollouts": len(traces),
         "environment_transitions": sum(t.environment_transitions for t in traces),
-        "window_reach_rate": _rate(_ever(t, "event/window_latched") for t in traces),
-        "liftoff_rate": _rate(_ever(t, "event/liftoff_seen") for t in traces),
-        "stable_airborne_rate": _rate(
-            _ever(t, "event/stable_airborne_seen") for t in traces
+        "jump_zone_reach_rate": _rate(
+            _ever(t, "event/jump_zone_seen") for t in traces
         ),
+        "height_reach_rate": _rate(_ever(t, "event/height_seen") for t in traces),
         "ascending_rate": _rate(_ever(t, "event/ascending_seen") for t in traces),
         "apex_success_rate": _rate(frame.success for frame in terminals),
-        "maximum_clearance": float(max(clearances)),
+        "maximum_root_height": float(max(root_heights)),
         "maximum_abs_roll": float(max(rolls)),
         "maximum_abs_pitch": float(max(pitches)),
         "maximum_angular_speed": float(max(rates)),

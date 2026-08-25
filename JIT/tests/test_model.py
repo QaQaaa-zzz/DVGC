@@ -29,12 +29,10 @@ def test_authoritative_model_contract_is_audited_before_conversion(jit_root):
     assert bundle.model_index.knee_qpos_address == 11
 
 
-def test_model_loader_rejects_a_wrong_declared_identity(jit_root, tmp_path):
+def test_config_loader_rejects_a_wrong_declared_model_identity(jit_root, tmp_path):
     source = jit_root / "configs" / "phase_u_smoke.json"
     payload = source.read_text().replace(EXPECTED_XML_SHA256, "0" * 64)
     config_path = tmp_path / "wrong_identity.json"
     config_path.write_text(payload)
-    config = load_config(config_path)
-
-    with pytest.raises(ValueError, match="XML SHA-256"):
-        load_host_model(config)
+    with pytest.raises(ValueError, match="approved v2 model"):
+        load_config(config_path)

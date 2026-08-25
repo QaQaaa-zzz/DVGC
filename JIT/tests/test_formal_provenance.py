@@ -157,7 +157,7 @@ def test_episode_trace_artifact_contains_every_state_and_metric(tmp_path):
         assert payload["action"].shape == (4, 4)
         assert payload["reward"].tolist() == [0.0, 1.0, 2.0, 3.0]
         assert payload["terminated"].tolist() == [False, False, False, True]
-        assert "reward_component__drive" in payload.files
+        assert "reward_component__height" in payload.files
         assert "metric__signal__slash__roll" in payload.files
         assert "metric__event__slash__apex_seen" in payload.files
     metadata = json.loads(artifact.metadata_path.read_text(encoding="utf-8"))

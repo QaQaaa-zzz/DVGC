@@ -1,18 +1,14 @@
 from __future__ import annotations
 
-from dataclasses import replace
-
 from jax import numpy as jp
 import pytest
 
 from jit_dvgc.config import load_config
 from jit_dvgc.constants import END_APEX_SUCCESS, END_ONGOING, END_PITCH_LIMIT, END_TIMEOUT
 from jit_dvgc.semantics import (
-    APEX_GATE_FIELDS,
-    ApexSignals,
+    PhaseUSignals,
     TerminalInputs,
     advance_events,
-    apex_membership,
     classify_terminal,
     initial_event_state,
 )
@@ -23,60 +19,110 @@ def config(jit_root):
     return load_config(jit_root / "configs" / "phase_u_smoke.json")
 
 
-def _valid_apex(**overrides) -> ApexSignals:
+def _signals(**overrides) -> PhaseUSignals:
     values = dict(
-        stable_airborne=jp.array(True),
+        x=jp.array(2.0),
+        z=jp.array(0.15),
         vertical_velocity=jp.array(0.0),
-        clearance=jp.array(0.2),
-        roll=jp.array(0.0),
-        pitch=jp.array(0.0),
-        angular_speed=jp.array(0.1),
-        forward_velocity=jp.array(4.0),
-        obstacle_relative_x=jp.array(0.25),
-        illegal_contact=jp.array(False),
         physical_failure=jp.array(False),
     )
     values.update(overrides)
-    return ApexSignals(**values)
+    return PhaseUSignals(**values)
 
 
-def test_window_latch_is_monotonic(config):
-    event = advance_events(
-        initial_event_state(),
-        _valid_apex(obstacle_relative_x=jp.array(1.0), stable_airborne=jp.array(False)),
-        config,
-        supported=jp.array(True),
-    )
-    assert bool(event.window_latched)
+def test_reset_initializes_one_shot_jump_signal_from_position(config):
+    below = initial_event_state(jp.array(2.4), config)
+    inside = initial_event_state(jp.array(2.8), config)
+    above = initial_event_state(jp.array(3.2), config)
 
-    later = advance_events(
+    assert not bool(below.jump_signal)
+    assert not bool(below.jump_zone_seen)
+    assert not bool(below.jump_zone_consumed)
+    assert bool(inside.jump_signal)
+    assert bool(inside.jump_zone_seen)
+    assert not bool(inside.jump_zone_consumed)
+    assert not bool(inside.ascending_seen)
+    assert not bool(inside.height_seen)
+    assert not bool(above.jump_signal)
+    assert not bool(above.jump_zone_seen)
+    assert bool(above.jump_zone_consumed)
+
+
+def test_jump_signal_is_inclusive_then_closes_permanently(config):
+    event = initial_event_state(jp.array(2.4), config)
+    at_start = advance_events(event, _signals(x=jp.array(2.5)), config)
+    at_end = advance_events(at_start, _signals(x=jp.array(3.1)), config)
+    left = advance_events(at_end, _signals(x=jp.array(3.2)), config)
+    reentered = advance_events(left, _signals(x=jp.array(2.8)), config)
+
+    assert bool(at_start.jump_signal)
+    assert bool(at_end.jump_signal)
+    assert not bool(left.jump_signal)
+    assert bool(left.jump_zone_consumed)
+    assert not bool(reentered.jump_signal)
+    assert bool(reentered.jump_zone_consumed)
+
+
+def test_apex_requires_legal_zone_height_prior_ascent_and_descent(config):
+    event = initial_event_state(jp.array(2.4), config)
+    ascending = advance_events(
         event,
-        _valid_apex(obstacle_relative_x=jp.array(2.0), stable_airborne=jp.array(False)),
+        _signals(x=jp.array(2.8), z=jp.array(0.45), vertical_velocity=jp.array(0.05)),
         config,
-        supported=jp.array(True),
     )
-    assert bool(later.window_latched)
+    high = advance_events(
+        ascending,
+        _signals(x=jp.array(3.2), z=jp.array(0.5), vertical_velocity=jp.array(0.1)),
+        config,
+    )
+    noise = advance_events(
+        high,
+        _signals(x=jp.array(3.3), z=jp.array(0.51), vertical_velocity=jp.array(-0.049)),
+        config,
+    )
+    apex = advance_events(
+        noise,
+        _signals(x=jp.array(3.3), z=jp.array(0.51), vertical_velocity=jp.array(-0.05)),
+        config,
+    )
+
+    assert bool(ascending.ascending_seen)
+    assert not bool(ascending.height_seen)
+    assert bool(high.height_seen)
+    assert not bool(noise.apex_seen)
+    assert bool(apex.apex_seen)
 
 
-@pytest.mark.parametrize(
-    ("field", "value"),
-    [
-        ("stable_airborne", False),
-        ("vertical_velocity", 0.08),
-        ("clearance", 0.10),
-        ("roll", 0.08),
-        ("pitch", 0.06),
-        ("angular_speed", 1.3),
-        ("forward_velocity", 3.0),
-        ("obstacle_relative_x", 0.10),
-        ("illegal_contact", True),
-        ("physical_failure", True),
-    ],
-)
-def test_apex_requires_every_declared_gate(config, field, value):
-    assert bool(apex_membership(_valid_apex(), config.apex))
-    assert not bool(apex_membership(replace(_valid_apex(), **{field: jp.array(value)}), config.apex))
-    assert field in APEX_GATE_FIELDS
+def test_high_rsi_state_cannot_succeed_without_observed_ascent(config):
+    event = initial_event_state(jp.array(2.8), config)
+    falling = advance_events(
+        event,
+        _signals(x=jp.array(2.81), z=jp.array(2.0), vertical_velocity=jp.array(-0.2)),
+        config,
+    )
+    assert bool(falling.height_seen)
+    assert not bool(falling.ascending_seen)
+    assert not bool(falling.apex_seen)
+
+
+def test_physical_failure_blocks_apex(config):
+    event = initial_event_state(jp.array(2.8), config)
+    ascending = advance_events(
+        event,
+        _signals(x=jp.array(2.9), z=jp.array(0.6), vertical_velocity=jp.array(0.2)),
+        config,
+    )
+    failed = advance_events(
+        ascending,
+        _signals(
+            x=jp.array(3.0),
+            z=jp.array(0.6),
+            vertical_velocity=jp.array(-0.2),
+            physical_failure=jp.array(True),
+        ),
+        config,
+    )
+    assert not bool(failed.apex_seen)
 
 
 def _terminal_inputs(**overrides) -> TerminalInputs:
@@ -88,7 +134,6 @@ def _terminal_inputs(**overrides) -> TerminalInputs:
         illegal_contact=jp.array(False),
         illegal_wheel_contact=jp.array(False),
         backward_exit=jp.array(False),
-        platform_overrun=jp.array(False),
         apex_success=jp.array(False),
     )
     values.update(overrides)
@@ -97,8 +142,7 @@ def _terminal_inputs(**overrides) -> TerminalInputs:
 
 def test_horizon_is_truncated_not_terminated(config):
     terminal = classify_terminal(
-        _terminal_inputs(episode_step=jp.array(config.ppo.episode_horizon - 1)),
-        config,
+        _terminal_inputs(episode_step=jp.array(config.ppo.episode_horizon - 1)), config
     )
     assert not bool(terminal.terminated)
     assert bool(terminal.truncated)
@@ -115,8 +159,7 @@ def test_apex_success_terminates_without_timeout(config):
 
 def test_physical_failure_has_precedence_over_apex_success(config):
     terminal = classify_terminal(
-        _terminal_inputs(pitch=jp.array(2.0), apex_success=jp.array(True)),
-        config,
+        _terminal_inputs(pitch=jp.array(2.0), apex_success=jp.array(True)), config
     )
     assert bool(terminal.terminated)
     assert bool(terminal.physical_failure)
@@ -124,7 +167,7 @@ def test_physical_failure_has_precedence_over_apex_success(config):
     assert int(terminal.end_code) == END_PITCH_LIMIT
 
 
-def test_early_airborne_without_apex_is_ongoing(config):
+def test_ordinary_state_is_ongoing(config):
     terminal = classify_terminal(_terminal_inputs(), config)
     assert not bool(terminal.terminated)
     assert not bool(terminal.truncated)

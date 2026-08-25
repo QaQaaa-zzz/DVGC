@@ -22,5 +22,6 @@ def test_environment_observation_sizes_are_fixed_without_actor_leakage(jit_root)
     config = load_config(jit_root / "configs" / "phase_u_smoke.json")
     env = TwoPhaseBikeEnv(config, convert_model=False)
 
-    assert env.actor_observation_size == 81
-    assert env.privileged_observation_size == 114
+    assert env.actor_observation_size == 76
+    assert env.privileged_observation_size == 106
+    assert callable(env.reset_natural)

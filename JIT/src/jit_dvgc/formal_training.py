@@ -22,7 +22,7 @@ from .checkpoint import (
     save_checkpoint,
 )
 from .config import ResolvedConfig, file_sha256, load_config
-from .constants import ACTION_ORDER, ACTOR_FRAME_FIELDS
+from .constants import ACTION_ORDER, ACTOR_FRAME_FIELDS, ACTOR_TASK_FIELDS
 from .env import TwoPhaseBikeEnv
 from .evaluation import capture_episode, save_episode_trace, summarize_phase_u
 from .ppo import make_network_factory
@@ -273,6 +273,7 @@ def _checkpoint_identity(
         config_sha256=config.config_sha256,
         xml_sha256=xml_sha256,
         actor_frame_fields=ACTOR_FRAME_FIELDS,
+        actor_task_fields=ACTOR_TASK_FIELDS,
         action_order=ACTION_ORDER,
     )
 
@@ -286,7 +287,7 @@ def _evaluate_fixed_panel(
     params: Any,
 ) -> PanelResult:
     deterministic_policy = make_policy(params, deterministic=True)
-    reset_fn = jax.jit(env.reset)
+    reset_fn = jax.jit(env.reset_natural)
     step_fn = jax.jit(env.step)
     traces = []
     artifacts = []
@@ -337,6 +338,7 @@ def _evaluate_fixed_panel(
             representative,
             panel_dir / "representative.mp4",
             fps=50,
+            reward_scaling=config.ppo.reward_scaling,
         )
         _write_json(panel_dir / "video_report.json", asdict(video_report))
     return PanelResult(
@@ -353,7 +355,7 @@ def _verify_restored_inference(
     *,
     seed: int,
 ) -> None:
-    state = env.reset(jax.random.PRNGKey(seed))
+    state = env.reset_natural(jax.random.PRNGKey(seed))
     policy = make_policy(params, deterministic=True)
     action, _ = policy(state.obs, jax.random.PRNGKey(seed))
     array = np.asarray(jax.device_get(action))

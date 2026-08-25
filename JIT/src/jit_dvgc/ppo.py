@@ -23,7 +23,7 @@ from .checkpoint import (
     save_checkpoint,
 )
 from .config import ResolvedConfig, load_config
-from .constants import ACTION_ORDER, ACTOR_FRAME_FIELDS
+from .constants import ACTION_ORDER, ACTOR_FRAME_FIELDS, ACTOR_TASK_FIELDS
 from .env import TwoPhaseBikeEnv
 from .evaluation import capture_episode, summarize_phase_u
 from .provenance import (
@@ -114,6 +114,7 @@ def _identity(config: ResolvedConfig, xml_sha256: str) -> CheckpointIdentity:
         config_sha256=config.config_sha256,
         xml_sha256=xml_sha256,
         actor_frame_fields=ACTOR_FRAME_FIELDS,
+        actor_task_fields=ACTOR_TASK_FIELDS,
         action_order=ACTION_ORDER,
     )
 
@@ -254,13 +255,19 @@ def run_phase_u_smoke(
             diagnostic_policy,
             seed=config.ppo.held_out_seeds[0],
             horizon=config.ppo.episode_horizon,
-            reset_fn=jax.jit(env.reset),
+            reset_fn=jax.jit(env.reset_natural),
             step_fn=jax.jit(env.step),
         )
         diagnostic_transitions = trace.environment_transitions
         diagnostic_summary = summarize_phase_u((trace,))
         _write_json(run_dir / "diagnostic_summary.json", diagnostic_summary)
-        video_report = render_trace(env, trace, run_dir / "diagnostic.mp4", fps=50)
+        video_report = render_trace(
+            env,
+            trace,
+            run_dir / "diagnostic.mp4",
+            fps=50,
+            reward_scaling=config.ppo.reward_scaling,
+        )
         _write_json(run_dir / "video_report.json", asdict(video_report))
 
         flat_metrics = {

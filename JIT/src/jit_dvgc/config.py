@@ -72,18 +72,6 @@ class FormalTrainingConfig:
 
 
 @dataclass(frozen=True)
-class ApexConfig:
-    max_abs_vertical_velocity: float
-    min_clearance: float
-    max_abs_roll: float
-    max_abs_pitch: float
-    max_angular_speed: float
-    min_forward_velocity: float
-    relative_x_min: float
-    relative_x_max: float
-
-
-@dataclass(frozen=True)
 class ActionConfig:
     base_rear_speed: float
     rear_speed_delta: float
@@ -92,11 +80,26 @@ class ActionConfig:
 
 @dataclass(frozen=True)
 class EventConfig:
-    window_relative_x_min: float
-    window_relative_x_max: float
-    airborne_confirm_ticks: int
-    stable_airborne_min_clearance: float
-    ascending_min_vertical_velocity: float
+    jump_zone_x_min: float
+    jump_zone_x_max: float
+    min_ascent_velocity: float
+    apex_height: float
+    min_descent_velocity: float
+
+
+@dataclass(frozen=True)
+class ResetConfig:
+    keyframe: str
+    initial_forward_velocity: float
+    airborne_rsi_probability: float
+    airborne_rsi_x_min: float
+    airborne_rsi_x_max: float
+    airborne_rsi_z_min: float
+    airborne_rsi_z_max: float
+    airborne_rsi_vx_min: float
+    airborne_rsi_vx_max: float
+    airborne_rsi_vz_min: float
+    airborne_rsi_vz_max: float
 
 
 @dataclass(frozen=True)
@@ -104,27 +107,30 @@ class PhysicalLimits:
     max_abs_roll: float
     max_abs_pitch: float
     max_backward_distance: float
-    platform_back_margin: float
 
 
 @dataclass(frozen=True)
 class RewardConfig:
-    drive_weight: float
-    window_bonus: float
-    liftoff_bonus: float
-    stable_airborne_bonus: float
-    ascent_weight: float
-    clearance_weight: float
-    apex_progress_weight: float
+    roll_coeff: float
+    pitch_coeff: float
+    yaw_coeff: float
+    speed_coeff: float
+    survival_reward: float
+    height_coeff: float
+    desired_velocity: float
+    speed_sigma: float
+    jump_reward_min_height: float
+    peak_reward_height: float
+    max_beneficial_height: float
+    action_smoothness_scale: float
+    action_magnitude_scale: float
+    action_coeff: float
+    pitch_angular_velocity_coeff: float
+    joint_energy_penalty_coeff: float
     apex_success_bonus: float
-    attitude_penalty_weight: float
-    rate_penalty_weight: float
-    action_smoothness_weight: float
-    action_magnitude_weight: float
     illegal_contact_penalty: float
     physical_failure_penalty: float
     timeout_penalty: float
-    target_forward_velocity: float
     total_min: float
     total_max: float
 
@@ -137,9 +143,8 @@ class ResolvedConfig:
     config_sha256: str
     model: Mapping[str, Any]
     action: ActionConfig
-    reset: Mapping[str, Any]
+    reset: ResetConfig
     events: EventConfig
-    apex: ApexConfig
     physical_limits: PhysicalLimits
     reward: RewardConfig
     ppo: PPOConfig
@@ -222,10 +227,119 @@ def _validate_formal(ppo: PPOConfig, formal: FormalTrainingConfig) -> None:
         raise ValueError("formal resume_semantics must declare optimizer reset")
 
 
-def load_config(path: Path) -> ResolvedConfig:
-    payload = json.loads(Path(path).read_text(encoding="utf-8"))
+def _validate_approved_v2_method(
+    schema: str,
+    *,
+    model: Mapping[str, Any],
+    action: ActionConfig,
+    reset: ResetConfig,
+    events: EventConfig,
+    physical_limits: PhysicalLimits,
+    reward: RewardConfig,
+    ppo: PPOConfig,
+) -> None:
+    expected_model = {
+        "xml_path": "assets/orange_bike_4kg_horizontal.xml",
+        "xml_sha256": "e2762bec49fdce61eff6ad01b6a67925934d8997b53929b0a67ace7f44109192",
+        "reference_path": "data/reference_jump.csv",
+        "reference_sha256": "612fe758eb1042481b9c7642cc9b92d3e9c14b4a75c9deaf5340183c928bc41f",
+        "mjx_impl": "warp",
+        "naconmax": 4096,
+        "njmax": 256,
+    }
+    expected_action = ActionConfig(12.0, 12.0, 0.2)
+    expected_reset = ResetConfig(
+        keyframe="initial_state",
+        initial_forward_velocity=2.0,
+        airborne_rsi_probability=0.05,
+        airborne_rsi_x_min=2.7,
+        airborne_rsi_x_max=2.9,
+        airborne_rsi_z_min=1.8,
+        airborne_rsi_z_max=2.2,
+        airborne_rsi_vx_min=1.8,
+        airborne_rsi_vx_max=2.2,
+        airborne_rsi_vz_min=0.8,
+        airborne_rsi_vz_max=1.2,
+    )
+    expected_events = EventConfig(2.5, 3.1, 0.05, 0.5, 0.05)
+    expected_limits = PhysicalLimits(
+        max_abs_roll=0.6108652381980153,
+        max_abs_pitch=1.3089969389957472,
+        max_backward_distance=1.0,
+    )
+    expected_reward = RewardConfig(
+        roll_coeff=3.0,
+        pitch_coeff=1.0,
+        yaw_coeff=0.3,
+        speed_coeff=0.2,
+        survival_reward=1.5,
+        height_coeff=20.0,
+        desired_velocity=3.5,
+        speed_sigma=0.5,
+        jump_reward_min_height=0.35,
+        peak_reward_height=0.5,
+        max_beneficial_height=0.8,
+        action_smoothness_scale=0.0001,
+        action_magnitude_scale=0.1,
+        action_coeff=1.5,
+        pitch_angular_velocity_coeff=0.15,
+        joint_energy_penalty_coeff=2.0,
+        apex_success_bonus=50.0,
+        illegal_contact_penalty=30.0,
+        physical_failure_penalty=30.0,
+        timeout_penalty=10.0,
+        total_min=-50.0,
+        total_max=50.0,
+    )
+    common_ppo = dict(
+        num_parallel_envs=1024,
+        episode_horizon=200,
+        unroll_length=25,
+        batch_size=128,
+        num_minibatches=8,
+        num_updates_per_batch=1,
+        num_eval_envs=8,
+        learning_rate=0.0001,
+        entropy_cost=0.001,
+        reward_scaling=0.1,
+        discounting=0.995,
+        gae_lambda=0.97,
+        clipping_epsilon=0.1,
+        max_grad_norm=0.75,
+        held_out_seeds=tuple(range(920001, 920009)),
+    )
+    if schema == "jit_phase_u_formal_v2":
+        expected_ppo = PPOConfig(
+            **common_ppo,
+            requested_transitions=998_400,
+            num_evals=40,
+            seed=820101,
+        )
+    else:
+        expected_ppo = PPOConfig(
+            **common_ppo,
+            requested_transitions=25_600,
+            num_evals=1,
+            seed=820001,
+        )
+    approved = {
+        "model": (dict(model), expected_model),
+        "action": (action, expected_action),
+        "reset": (reset, expected_reset),
+        "events": (events, expected_events),
+        "physical_limits": (physical_limits, expected_limits),
+        "reward": (reward, expected_reward),
+        "ppo": (ppo, expected_ppo),
+    }
+    for section, (actual, expected) in approved.items():
+        if actual != expected:
+            raise ValueError(f"approved v2 {section} method contract drift")
+
+
+def resolve_config_payload(payload: Mapping[str, Any]) -> ResolvedConfig:
+    payload = dict(payload)
     schema = str(payload.get("schema", ""))
-    if schema not in {"jit_phase_u_engineering_smoke_v1", "jit_phase_u_formal_v1"}:
+    if schema not in {"jit_phase_u_engineering_smoke_v2", "jit_phase_u_formal_v2"}:
         raise ValueError("unsupported JIT config schema")
     if payload.get("phase") != "propulsion_ascent":
         raise ValueError("only propulsion_ascent is implemented")
@@ -239,7 +353,7 @@ def load_config(path: Path) -> ResolvedConfig:
     ppo = _dataclass_from(PPOConfig, ppo_payload)
     _validate_ppo(ppo)
     formal: FormalTrainingConfig | None = None
-    if schema == "jit_phase_u_formal_v1":
+    if schema == "jit_phase_u_formal_v2":
         formal_payload = dict(payload.get("formal", {}))
         for key in ("checkpoint_transitions", "fixed_evaluation_transitions"):
             formal_payload[key] = tuple(int(x) for x in formal_payload.get(key, ()))
@@ -248,26 +362,59 @@ def load_config(path: Path) -> ResolvedConfig:
     elif "formal" in payload:
         raise ValueError("smoke config must not contain formal settings")
     events = _dataclass_from(EventConfig, payload["events"])
-    apex = _dataclass_from(ApexConfig, payload["apex"])
-    if events.window_relative_x_min >= events.window_relative_x_max:
+    reset = _dataclass_from(ResetConfig, payload["reset"])
+    if events.jump_zone_x_min >= events.jump_zone_x_max:
         raise ValueError("jump-window bounds must be increasing")
-    if apex.relative_x_min >= apex.relative_x_max:
-        raise ValueError("Apex relative-x bounds must be increasing")
-    if int(events.airborne_confirm_ticks) <= 0:
-        raise ValueError("airborne_confirm_ticks must be positive")
+    for name in ("min_ascent_velocity", "apex_height", "min_descent_velocity"):
+        _positive(f"events.{name}", getattr(events, name))
+    if not 0.0 <= reset.airborne_rsi_probability <= 1.0:
+        raise ValueError("reset.airborne_rsi_probability must be in [0, 1]")
+    for lower, upper in (
+        ("airborne_rsi_x_min", "airborne_rsi_x_max"),
+        ("airborne_rsi_z_min", "airborne_rsi_z_max"),
+        ("airborne_rsi_vx_min", "airborne_rsi_vx_max"),
+        ("airborne_rsi_vz_min", "airborne_rsi_vz_max"),
+    ):
+        if getattr(reset, lower) >= getattr(reset, upper):
+            raise ValueError(f"reset.{lower}/{upper} bounds must be increasing")
+    reward = _dataclass_from(RewardConfig, payload["reward"])
+    if not reward.total_min < reward.total_max:
+        raise ValueError("reward total bounds must be increasing")
+    if not (
+        reward.jump_reward_min_height
+        < reward.peak_reward_height
+        < reward.max_beneficial_height
+    ):
+        raise ValueError("reward height thresholds must be increasing")
 
+    action = _dataclass_from(ActionConfig, payload["action"])
+    physical_limits = _dataclass_from(PhysicalLimits, payload["physical_limits"])
+    _validate_approved_v2_method(
+        schema,
+        model=payload["model"],
+        action=action,
+        reset=reset,
+        events=events,
+        physical_limits=physical_limits,
+        reward=reward,
+        ppo=ppo,
+    )
     return ResolvedConfig(
         schema=schema,
         phase=str(payload["phase"]),
         raw=payload,
         config_sha256=canonical_sha256(payload),
         model=dict(payload["model"]),
-        action=_dataclass_from(ActionConfig, payload["action"]),
-        reset=dict(payload["reset"]),
+        action=action,
+        reset=reset,
         events=events,
-        apex=apex,
-        physical_limits=_dataclass_from(PhysicalLimits, payload["physical_limits"]),
-        reward=_dataclass_from(RewardConfig, payload["reward"]),
+        physical_limits=physical_limits,
+        reward=reward,
         ppo=ppo,
         formal=formal,
     )
+
+
+def load_config(path: Path) -> ResolvedConfig:
+    payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    return resolve_config_payload(payload)

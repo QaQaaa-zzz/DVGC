@@ -1,8 +1,53 @@
 # JIT Phase U Verification
 
+## Active v2 reward/RSI/diagnostics rebuild — 2026-08-25
+
+The active configuration is now `jit_phase_u_*_v2`. This round changed reward,
+event, reset, observation, checkpoint, evaluation, video, and provenance
+contracts without starting PPO training or consuming training/evaluation
+transitions.
+
+Verified active identities:
+
+| Input | SHA-256 |
+|---|---|
+| v2 smoke resolved config | `6b0519344d8403d38556fb0a5fc4be8a6bd0cc70e0c077e4bca7f8a5c33fdc27` |
+| v2 formal resolved config | `df565a03c0c8f40531a5ac57bd6c2c2674d9249ca52c31df143484f4ad484112` |
+| authoritative XML | `e2762bec49fdce61eff6ad01b6a67925934d8997b53929b0a67ace7f44109192` |
+| reference CSV | `612fe758eb1042481b9c7642cc9b92d3e9c14b4a75c9deaf5340183c928bc41f` |
+
+Focused and complete evidence currently recorded:
+
+- reward/config and formal-method drift suites: 47 passed;
+- diagnostic/evaluation/video/formal/provenance focused suite: 33 passed;
+- complete non-GPU suite: 134 passed, 7 deselected;
+- complete GPU suite: 7 passed, 134 deselected;
+- `bash JIT/scripts/local_preflight.sh`: exit 0, including static compilation,
+  legacy-import scan, reference analysis, and retained v1 smoke verification;
+- retained formal v1 run verification: exit 0, 998,400 training plus 904 fixed
+  evaluation transitions, with all historical checkpoint/trace hashes intact.
+- complete repository compatibility: 1,100 passed, one exact pre-existing user
+  dirty-path test deselected, and one third-party deprecation warning.
+
+The GPU group verifies reproducible 5% mixture selection over 1,024 resets,
+exact RSI bounds, immediate reset-time jump signal, forced-natural evaluation,
+fixed `(76,)/(106,)` observation shapes, JIT pytree stability, and finite
+batched reset/steps. The diagnostic group verifies that one saved state becomes
+exactly one composite video frame and one numeric sample, while the renderer
+never calls `env.step`.
+
+v2 representative evidence is stricter than v1: the verifier requires the
+MP4, diagnostic PNG, aligned NPZ, matching paths, and SHA-256 hashes. v1
+verification remains supported only so old evidence is auditable. It does not
+make an old checkpoint compatible with the active v2 network/config identity.
+
+No result in this section is learnability or promotion evidence. The user has
+authorized one fresh 998,400-transition v2 formal run after source delivery;
+its natural-start panels and RSI training metrics must remain separate.
+
 ## Verified delivery
 
-The independent `JIT/` Propulsion-Ascent engineering stack passed its declared
+The historical v1 independent `JIT/` Propulsion-Ascent engineering stack passed its declared
 first-delivery gate on 2026-08-24. This establishes environment, PPO update,
 checkpoint, accounting, and saved-video integrity only. It does not establish
 Phase U learnability or a trained expert.

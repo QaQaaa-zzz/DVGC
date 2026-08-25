@@ -4,11 +4,23 @@
 engineering delivery described in the repository rebuild guide. It does not
 import the existing `dvgc` package and does not copy the authoritative XML.
 
-The implemented scope now includes environment/runtime integrity, observable
-Phase U semantics and reward, deterministic evaluation/video contracts, the
-aligned 25,600-transition PPO engineering smoke, and an auditable formal-only
-Phase U runner. It does not implement Phase D, continuation labels,
+The active v2 scope now includes the target-free reference reward, a one-shot
+root-x jump signal, 5% bounded airborne RSI for training resets, natural-only
+held-out evaluation, height/descent Apex termination, and synchronized
+numeric/PNG/video diagnostics. It also retains environment/runtime integrity,
+the aligned 25,600-transition PPO engineering-smoke entrypoint, and an
+auditable formal-only Phase U runner. It does not implement Phase D, continuation labels,
 `V_up`/`V_down`, learned soft Tubes, unified PPO, or JCE/JEL certification.
+
+The v2 Actor input is `3 x 25 + 1 = 76`: three real sensor-history frames plus
+one current `jump_signal`. The critic receives that complete 76-value input
+plus 30 privileged values, for 106 total. The signal is therefore available to
+both networks and is not repeated in the history. v1 checkpoints (`81/114`)
+are deliberately incompatible and must not be resumed into v2.
+
+No PPO training has been run with the v2 contract yet. The retained 2026-08-24
+smoke/formal artifacts are historical v1 evidence only; they remain
+provenance-verifiable but are not candidate v2 models.
 
 Use the retained interpreter directly:
 
@@ -17,6 +29,8 @@ PYTHONPATH=JIT/src /home/qy/mujoco_playground/.venv/bin/python -m pytest JIT/tes
 ```
 
 Generated run evidence belongs under `JIT/runs/` and is ignored by Git.
+Every new representative v2 video also produces a full-trajectory diagnostic
+PNG, an aligned compressed NPZ, and SHA-256 fields in its JSON report.
 
 Run the complete local verification without launching training:
 

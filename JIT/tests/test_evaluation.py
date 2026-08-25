@@ -35,17 +35,20 @@ class DoneAfterThree:
                 qvel=jp.zeros(11),
                 ctrl=jp.zeros(4),
             ),
-            obs={"state": jp.zeros(81), "privileged_state": jp.zeros(114)},
+            obs={"state": jp.zeros(76), "privileged_state": jp.zeros(106)},
             reward=jp.asarray(float(tick)),
             done=jp.asarray(float(terminal)),
             metrics={
                 "reward": jp.asarray(float(tick)),
-                "event/window_latched": jp.asarray(float(tick >= 1)),
-                "event/liftoff_seen": jp.asarray(float(tick >= 2)),
-                "event/stable_airborne_seen": jp.asarray(0.0),
-                "event/ascending_seen": jp.asarray(0.0),
+                "event/jump_signal": jp.asarray(float(tick == 1)),
+                "event/jump_zone_seen": jp.asarray(float(tick >= 1)),
+                "event/jump_zone_consumed": jp.asarray(float(tick >= 2)),
+                "event/ascending_seen": jp.asarray(float(tick >= 2)),
+                "event/height_seen": jp.asarray(float(tick >= 2)),
                 "event/apex_seen": jp.asarray(0.0),
-                "signal/structure_clearance": jp.asarray(0.01 * tick),
+                "signal/root_x": jp.asarray(1.5 + 0.5 * tick),
+                "signal/root_y": jp.asarray(0.0),
+                "signal/root_z": jp.asarray(0.15 + 0.2 * tick),
                 "signal/roll": jp.asarray(0.0),
                 "signal/pitch": jp.asarray(0.0),
                 "signal/angular_speed": jp.asarray(0.0),
@@ -117,9 +120,10 @@ def test_phase_u_summary_uses_saved_state_metrics_not_video():
     summary = summarize_phase_u((trace,))
 
     assert summary["rollouts"] == 1
-    assert summary["window_reach_rate"] == 1.0
-    assert summary["liftoff_rate"] == 1.0
+    assert summary["jump_zone_reach_rate"] == 1.0
+    assert summary["height_reach_rate"] == 1.0
+    assert summary["ascending_rate"] == 1.0
     assert summary["apex_success_rate"] == 0.0
     assert summary["physical_failure_rate"] == 1.0
     assert summary["end_reason_counts"] == {"pitch_limit": 1}
-    assert summary["maximum_clearance"] == pytest.approx(0.03, abs=1e-6)
+    assert summary["maximum_root_height"] == pytest.approx(0.75, abs=1e-6)

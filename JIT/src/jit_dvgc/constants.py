@@ -32,31 +32,31 @@ ACTOR_FRAME_FIELDS = (
     "last_action_knee",
     "estimated_forward_velocity",
     "obstacle_relative_x",
-    "estimated_structure_clearance",
-    "front_wheel_support",
-    "rear_wheel_support",
+    "root_height",
     "history_valid",
 )
 ACTOR_FRAME_SIZE = len(ACTOR_FRAME_FIELDS)
-ACTOR_OBSERVATION_SIZE = 3 * ACTOR_FRAME_SIZE
-PRIVILEGED_OBSERVATION_SIZE = 114
+ACTOR_TASK_FIELDS = ("jump_signal",)
+ACTOR_OBSERVATION_SIZE = 3 * ACTOR_FRAME_SIZE + len(ACTOR_TASK_FIELDS)
+PRIVILEGED_OBSERVATION_SIZE = 106
 
 EXPECTED_XML_SHA256 = "e2762bec49fdce61eff6ad01b6a67925934d8997b53929b0a67ace7f44109192"
 EXPECTED_REFERENCE_SHA256 = "612fe758eb1042481b9c7642cc9b92d3e9c14b4a75c9deaf5340183c928bc41f"
 
 REWARD_COMPONENT_KEYS = (
-    "drive",
-    "window",
-    "liftoff",
-    "stable_airborne",
-    "ascent",
-    "clearance",
-    "apex_progress",
-    "apex_success",
-    "attitude",
-    "rate",
-    "smoothness",
+    "roll",
+    "pitch",
+    "yaw",
+    "speed",
+    "survival",
+    "height",
+    "action_smoothness",
     "action_magnitude",
+    "roll_rate",
+    "pitch_rate",
+    "yaw_rate",
+    "joint_energy",
+    "apex_success",
     "illegal_contact",
     "physical_failure",
     "timeout",
@@ -70,7 +70,6 @@ END_PITCH_LIMIT = 4
 END_PROHIBITED_CONTACT = 5
 END_ILLEGAL_WHEEL_CONTACT = 6
 END_BACKWARD_EXIT = 7
-END_PLATFORM_OVERRUN = 8
 END_TIMEOUT = 9
 
 END_REASONS = {
@@ -82,6 +81,5 @@ END_REASONS = {
     END_PROHIBITED_CONTACT: "prohibited_contact",
     END_ILLEGAL_WHEEL_CONTACT: "illegal_wheel_contact",
     END_BACKWARD_EXIT: "backward_exit",
-    END_PLATFORM_OVERRUN: "platform_overrun",
     END_TIMEOUT: "timeout",
 }

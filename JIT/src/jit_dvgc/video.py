@@ -10,6 +10,7 @@ import mediapy as media
 import mujoco
 import numpy as np
 
+from .diagnostics import save_trace_dashboard, sha256_file, telemetry_panel
 from .evaluation import EpisodeTrace
 
 
@@ -17,6 +18,11 @@ from .evaluation import EpisodeTrace
 class VideoReport:
     video: str
     state_trace: str
+    diagnostic_plot: str
+    diagnostic_data: str
+    video_sha256: str
+    diagnostic_plot_sha256: str
+    diagnostic_data_sha256: str
     captured_state_count: int
     encoded_frame_count: int
     environment_transitions: int
@@ -31,6 +37,7 @@ def render_trace(
     fps: int = 50,
     width: int = 640,
     height: int = 360,
+    reward_scaling: float = 0.1,
 ) -> VideoReport:
     if len(trace.frames) != trace.environment_transitions + 1:
         raise ValueError("captured state count must equal transitions plus one")
@@ -42,30 +49,38 @@ def render_trace(
     renderer = mujoco.Renderer(env.mj_model, height=height, width=width)
     rendered: list[np.ndarray] = []
     try:
-        for frame in trace.frames:
+        for tick, frame in enumerate(trace.frames):
             data.qpos[:] = frame.qpos
             data.qvel[:] = frame.qvel
             data.ctrl[:] = frame.ctrl
             mujoco.mj_forward(env.mj_model, data)
             renderer.update_scene(data, camera="chasis_camera")
-            rendered.append(renderer.render().copy())
+            physical = renderer.render().copy()
+            telemetry = telemetry_panel(
+                frame,
+                width=width,
+                height=height,
+                tick=tick,
+                reward_scaling=reward_scaling,
+            )
+            rendered.append(np.concatenate((physical, telemetry), axis=1))
     finally:
         renderer.close()
     media.write_video(output, rendered, fps=fps)
-    state_path = output.with_suffix(".npz")
-    np.savez_compressed(
-        state_path,
-        qpos=np.stack([frame.qpos for frame in trace.frames]),
-        qvel=np.stack([frame.qvel for frame in trace.frames]),
-        ctrl=np.stack([frame.ctrl for frame in trace.frames]),
-        action=np.stack([frame.action for frame in trace.frames]),
-        terminated=np.asarray([frame.terminated for frame in trace.frames]),
-        truncated=np.asarray([frame.truncated for frame in trace.frames]),
-        end_code=np.asarray([frame.end_code for frame in trace.frames]),
+    diagnostic = save_trace_dashboard(
+        trace,
+        output.with_name(f"{output.stem}_diagnostic.png"),
+        reward_scaling=reward_scaling,
+        fps=fps,
     )
     report = VideoReport(
         video=str(output.resolve()),
-        state_trace=str(state_path.resolve()),
+        state_trace=str(diagnostic.data),
+        diagnostic_plot=str(diagnostic.plot),
+        diagnostic_data=str(diagnostic.data),
+        video_sha256=sha256_file(output),
+        diagnostic_plot_sha256=diagnostic.plot_sha256,
+        diagnostic_data_sha256=diagnostic.data_sha256,
         captured_state_count=len(trace.frames),
         encoded_frame_count=len(rendered),
         environment_transitions=trace.environment_transitions,

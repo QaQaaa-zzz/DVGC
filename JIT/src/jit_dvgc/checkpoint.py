@@ -17,6 +17,7 @@ class CheckpointIdentity:
     config_sha256: str
     xml_sha256: str
     actor_frame_fields: tuple[str, ...]
+    actor_task_fields: tuple[str, ...]
     action_order: tuple[str, ...]
 
 
@@ -49,6 +50,7 @@ def save_checkpoint(path: Path, payload: CheckpointPayload) -> None:
     os.replace(temporary, target)
     identity = asdict(payload.identity)
     identity["actor_frame_fields"] = list(payload.identity.actor_frame_fields)
+    identity["actor_task_fields"] = list(payload.identity.actor_task_fields)
     identity["action_order"] = list(payload.identity.action_order)
     identity["training_transitions"] = payload.training_transitions
     identity["payload_sha256"] = _sha256(target)
@@ -69,7 +71,13 @@ def load_checkpoint(
         payload = pickle.load(stream)
     if not isinstance(payload, CheckpointPayload):
         raise ValueError("checkpoint payload has the wrong type")
-    for field in ("config_sha256", "xml_sha256", "actor_frame_fields", "action_order"):
+    for field in (
+        "config_sha256",
+        "xml_sha256",
+        "actor_frame_fields",
+        "actor_task_fields",
+        "action_order",
+    ):
         if getattr(payload.identity, field) != getattr(expected, field):
             raise ValueError(f"checkpoint {field} mismatch")
     if int(sidecar.get("training_transitions", -1)) != payload.training_transitions:

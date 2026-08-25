@@ -1,4 +1,4 @@
-"""Bounded, component-wise Propulsion-Ascent reward."""
+"""Target-free reference reward for the Propulsion-Ascent task."""
 
 from __future__ import annotations
 
@@ -6,35 +6,36 @@ from flax import struct
 import jax
 from jax import numpy as jp
 
-from .config import ApexConfig, PhysicalLimits, RewardConfig
+from .config import PhysicalLimits, RewardConfig
 from .constants import CTRL_DT, REWARD_COMPONENT_KEYS
 
 
 @struct.dataclass
 class RewardState:
     x: jax.Array
+    y: jax.Array
     z: jax.Array
-    clearance: jax.Array
     roll: jax.Array
     pitch: jax.Array
-    angular_speed: jax.Array
-    vertical_velocity: jax.Array
+    yaw: jax.Array
     forward_velocity: jax.Array
-    obstacle_relative_x: jax.Array
+    lateral_velocity: jax.Array
+    vertical_velocity: jax.Array
+    roll_rate: jax.Array
+    pitch_rate: jax.Array
+    yaw_rate: jax.Array
+    hip_velocity: jax.Array
+    knee_velocity: jax.Array
+    hip_force: jax.Array
+    knee_force: jax.Array
 
 
 @struct.dataclass
 class RewardInputs:
-    previous: RewardState
     current: RewardState
     action: jax.Array
     last_action: jax.Array
-    window_latched: jax.Array
-    first_window_entry: jax.Array
-    first_liftoff: jax.Array
-    first_stable_airborne: jax.Array
-    stable_airborne: jax.Array
-    ascending_seen: jax.Array
+    jump_signal: jax.Array
     first_apex_success: jax.Array
     illegal_contact: jax.Array
     physical_failure_transition: jax.Array
@@ -43,18 +44,19 @@ class RewardInputs:
 
 @struct.dataclass
 class RewardComponents:
-    drive: jax.Array
-    window: jax.Array
-    liftoff: jax.Array
-    stable_airborne: jax.Array
-    ascent: jax.Array
-    clearance: jax.Array
-    apex_progress: jax.Array
-    apex_success: jax.Array
-    attitude: jax.Array
-    rate: jax.Array
-    smoothness: jax.Array
+    roll: jax.Array
+    pitch: jax.Array
+    yaw: jax.Array
+    speed: jax.Array
+    survival: jax.Array
+    height: jax.Array
+    action_smoothness: jax.Array
     action_magnitude: jax.Array
+    roll_rate: jax.Array
+    pitch_rate: jax.Array
+    yaw_rate: jax.Array
+    joint_energy: jax.Array
+    apex_success: jax.Array
     illegal_contact: jax.Array
     physical_failure: jax.Array
     timeout: jax.Array
@@ -77,113 +79,101 @@ class RewardComponents:
 @struct.dataclass
 class RewardResult:
     total: jax.Array
+    unclipped_total: jax.Array
     components: RewardComponents
 
 
-def _quality(state: RewardState) -> jax.Array:
-    pose = jp.exp(-jp.square(state.roll / 0.25) - jp.square(state.pitch / 0.35))
-    rate = jp.exp(-jp.square(state.angular_speed / 4.0))
-    return pose * rate
+def _roll_raw(degrees: jax.Array) -> jax.Array:
+    return jp.where(degrees <= 5.0, 1.0 - degrees / 5.0, -0.1 * (degrees - 5.0))
 
 
-def _apex_score(state: RewardState, apex: ApexConfig) -> jax.Array:
-    vertical = jp.clip(
-        1.0 - jp.abs(state.vertical_velocity) / apex.max_abs_vertical_velocity,
-        0.0,
-        1.0,
+def _pitch_raw(degrees: jax.Array) -> jax.Array:
+    below_three = 1.0 - (degrees / 3.0) * 0.1
+    below_eight = 0.9 - ((degrees - 3.0) / 5.0) * 0.4
+    below_ten = 0.5 - ((degrees - 8.0) / 2.0) * 0.5
+    above_ten = -0.1 * (degrees - 10.0)
+    return jp.where(
+        degrees <= 3.0,
+        below_three,
+        jp.where(degrees <= 8.0, below_eight, jp.where(degrees <= 10.0, below_ten, above_ten)),
     )
-    clearance = jp.clip(state.clearance / apex.min_clearance, 0.0, 1.0)
-    roll = jp.clip(1.0 - jp.abs(state.roll) / apex.max_abs_roll, 0.0, 1.0)
-    pitch = jp.clip(1.0 - jp.abs(state.pitch) / apex.max_abs_pitch, 0.0, 1.0)
-    angular = jp.clip(
-        1.0 - state.angular_speed / apex.max_angular_speed, 0.0, 1.0
+
+
+def _yaw_raw(degrees: jax.Array) -> jax.Array:
+    below_three = 1.0 - (degrees / 3.0) * 0.1
+    below_eight = 0.9 - ((degrees - 3.0) / 5.0) * 0.4
+    below_fifteen = 0.5 - ((degrees - 8.0) / 7.0) * 0.3
+    below_twenty_five = 0.2 - ((degrees - 15.0) / 10.0) * 0.15
+    above_twenty_five = jp.maximum(0.05 - (degrees - 25.0) * 0.002, 0.0)
+    return jp.where(
+        degrees <= 3.0,
+        below_three,
+        jp.where(
+            degrees <= 8.0,
+            below_eight,
+            jp.where(
+                degrees <= 15.0,
+                below_fifteen,
+                jp.where(degrees <= 25.0, below_twenty_five, above_twenty_five),
+            ),
+        ),
     )
-    forward = jp.clip(state.forward_velocity / apex.min_forward_velocity, 0.0, 1.0)
-    center = 0.5 * (apex.relative_x_min + apex.relative_x_max)
-    half_width = 0.5 * (apex.relative_x_max - apex.relative_x_min)
-    relative_x = jp.clip(
-        1.0 - jp.abs(state.obstacle_relative_x - center) / half_width,
-        0.0,
-        1.0,
+
+
+def _height_raw(z: jax.Array, config: RewardConfig) -> jax.Array:
+    rising = 1.0 + (
+        (z - config.jump_reward_min_height)
+        / (config.peak_reward_height - config.jump_reward_min_height)
+    ) * 0.5
+    excess_ratio = (z - config.peak_reward_height) / (
+        config.max_beneficial_height - config.peak_reward_height
     )
-    return jp.mean(
-        jp.stack((vertical, clearance, roll, pitch, angular, forward, relative_x))
+    descending = 1.5 * (1.0 - excess_ratio * 0.6)
+    shaped = jp.where(
+        z <= config.peak_reward_height,
+        rising,
+        jp.where(z <= config.max_beneficial_height, descending, 0.4),
     )
+    return jp.where(z >= config.jump_reward_min_height, shaped, 0.0)
 
 
 def phase_u_reward(
     inputs: RewardInputs,
     config: RewardConfig,
-    apex: ApexConfig,
     physical_limits: PhysicalLimits,
 ) -> RewardResult:
-    current = inputs.current
-    previous = inputs.previous
-    window = jp.asarray(inputs.window_latched, dtype=bool)
-    stable = window & jp.asarray(inputs.stable_airborne, dtype=bool)
-    motion_quality = _quality(current)
-
-    drive = config.drive_weight * jp.clip(
-        (current.x - previous.x) / (config.target_forward_velocity * CTRL_DT),
-        0.0,
-        1.0,
+    del physical_limits
+    state = inputs.current
+    radians_to_degrees = 180.0 / jp.pi
+    roll = config.roll_coeff * _roll_raw(jp.abs(state.roll) * radians_to_degrees)
+    pitch = config.pitch_coeff * _pitch_raw(jp.abs(state.pitch) * radians_to_degrees)
+    yaw = config.yaw_coeff * _yaw_raw(jp.abs(state.yaw) * radians_to_degrees)
+    speed = config.speed_coeff * jp.exp(
+        -0.5 * jp.square((state.forward_velocity - config.desired_velocity) / config.speed_sigma)
     )
-    window_reward = config.window_bonus * jp.asarray(
-        inputs.first_window_entry, dtype=jp.float32
+    survival = jp.asarray(config.survival_reward, jp.float32)
+    height = (
+        config.height_coeff
+        * _height_raw(state.z, config)
+        * jp.asarray(inputs.jump_signal, jp.float32)
     )
-    liftoff = (
-        config.liftoff_bonus
-        * jp.asarray(window & jp.asarray(inputs.first_liftoff, dtype=bool), jp.float32)
-        * motion_quality
-    )
-    stable_airborne = (
-        config.stable_airborne_bonus
-        * jp.asarray(
-            window & jp.asarray(inputs.first_stable_airborne, dtype=bool),
-            jp.float32,
-        )
-        * motion_quality
-    )
-    ascent = (
-        config.ascent_weight
-        * jp.asarray(stable, jp.float32)
-        * jp.clip((current.z - previous.z) / 0.02, 0.0, 1.0)
-        * motion_quality
-    )
-    clearance = (
-        config.clearance_weight
-        * jp.asarray(stable, jp.float32)
-        * jp.clip((current.clearance - previous.clearance) / 0.02, 0.0, 1.0)
-        * motion_quality
-    )
-    apex_progress = (
-        config.apex_progress_weight
-        * jp.asarray(
-            stable & jp.asarray(inputs.ascending_seen, dtype=bool), jp.float32
-        )
-        * jp.clip(_apex_score(current, apex) - _apex_score(previous, apex), 0.0, 1.0)
-    )
-    apex_success = (
-        config.apex_success_bonus
-        * jp.asarray(
-            window & jp.asarray(inputs.first_apex_success, dtype=bool), jp.float32
-        )
-    )
-
-    attitude = -config.attitude_penalty_weight * jp.clip(
-        jp.square(jp.abs(current.roll) / physical_limits.max_abs_roll)
-        + jp.square(jp.abs(current.pitch) / physical_limits.max_abs_pitch),
-        0.0,
-        8.0,
-    )
-    rate = -config.rate_penalty_weight * jp.clip(
-        jp.square(current.angular_speed / apex.max_angular_speed), 0.0, 16.0
-    )
-    smoothness = -config.action_smoothness_weight * jp.mean(
+    action_smoothness = -config.action_coeff * config.action_smoothness_scale * jp.sum(
         jp.square(inputs.action - inputs.last_action)
     )
-    action_magnitude = -config.action_magnitude_weight * jp.mean(
-        jp.square(inputs.action)
+    action_magnitude = -config.action_coeff * config.action_magnitude_scale * jp.sum(
+        jp.power(jp.abs(inputs.action), 1.5)
+    )
+    zero = jp.asarray(0.0, jp.float32)
+    pitch_rate = -config.pitch_angular_velocity_coeff * 0.125 * jp.square(
+        state.pitch_rate
+    )
+    mechanical_energy = CTRL_DT * (
+        jp.abs(state.hip_force * state.hip_velocity)
+        + jp.abs(state.knee_force * state.knee_velocity)
+    )
+    joint_energy = -config.joint_energy_penalty_coeff * mechanical_energy
+    apex_success = config.apex_success_bonus * jp.asarray(
+        inputs.first_apex_success, jp.float32
     )
     illegal_contact = -config.illegal_contact_penalty * jp.asarray(
         inputs.illegal_contact, jp.float32
@@ -191,30 +181,28 @@ def phase_u_reward(
     physical_failure = -config.physical_failure_penalty * jp.asarray(
         inputs.physical_failure_transition, jp.float32
     )
-    timeout = -config.timeout_penalty * jp.asarray(
-        inputs.timeout_transition, jp.float32
-    )
-
+    timeout = -config.timeout_penalty * jp.asarray(inputs.timeout_transition, jp.float32)
     components = RewardComponents(
-        drive=drive,
-        window=window_reward,
-        liftoff=liftoff,
-        stable_airborne=stable_airborne,
-        ascent=ascent,
-        clearance=clearance,
-        apex_progress=apex_progress,
-        apex_success=apex_success,
-        attitude=attitude,
-        rate=rate,
-        smoothness=smoothness,
+        roll=roll,
+        pitch=pitch,
+        yaw=yaw,
+        speed=speed,
+        survival=survival,
+        height=height,
+        action_smoothness=action_smoothness,
         action_magnitude=action_magnitude,
+        roll_rate=zero,
+        pitch_rate=pitch_rate,
+        yaw_rate=zero,
+        joint_energy=joint_energy,
+        apex_success=apex_success,
         illegal_contact=illegal_contact,
         physical_failure=physical_failure,
         timeout=timeout,
     )
-    total = jp.clip(
-        sum(components.values(), start=jp.asarray(0.0, jp.float32)),
-        config.total_min,
-        config.total_max,
+    unclipped = sum(components.values(), start=jp.asarray(0.0, jp.float32))
+    return RewardResult(
+        total=jp.clip(unclipped, config.total_min, config.total_max),
+        unclipped_total=unclipped,
+        components=components,
     )
-    return RewardResult(total=total, components=components)

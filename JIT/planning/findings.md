@@ -2,6 +2,20 @@
 
 ## Requirements
 
+- On 2026-08-25 the user replaced the original Phase U reward/event contract:
+  use the provided planar-jump reward as a formula reference, remove all target
+  and deceleration semantics, use root-x jump zone `[2.5,3.1]`, and terminate at
+  the first valid height/descent Apex.
+- `jump_signal` is one only during the first visit inside the jump zone; after
+  first exit it is zero permanently. It is one shared Actor/critic task scalar,
+  appended outside the three-frame history.
+- Remove approximate front/rear wheel-support booleans and platform-relative
+  structure clearance from policy observations and Apex logic.
+- Use 5% airborne training RSI centered at `x=2.8,z=2.0,vx=2.0`; add positive
+  `vz` so a high reset cannot receive immediate success by falling.
+- Held-out formal evaluation remains natural-reset only. No PPO training is
+  authorized by this implementation task.
+
 - Work only in `/home/qy/DVGC` and create a new top-level `JIT/` directory.
 - Keep every generated file and output under `JIT/`.
 - Build an independent implementation; existing `dvgc` code may be read for
@@ -16,6 +30,23 @@
 - After complete verification, explicitly stage and commit only `JIT/`.
 
 ## Research Findings
+
+- Current MJX-Warp `Data` exposes `actuator_force` but no geom-paired `contact`
+  field. Exact hip/knee mechanical power is available; exact wheel contact pairs
+  are not. The user rejected approximate support state, so no replacement
+  support observation is needed.
+- The authoritative root starts at `x=1.5,z=0.15`; the obstacle spans
+  `[3.6,7.6]` with top `z=0.16`. Root-x jump zone `[2.5,3.1]` is therefore a
+  0.6 m pre-platform trigger interval.
+- Existing `structure_clearance` is the lowest robot collision point minus the
+  platform top plane without horizontal-overlap gating. It is not general
+  ground clearance and will not remain a v2 Actor/Apex feature.
+- A reset at `z=2.0,vz=0` would satisfy height and begin descending under gravity
+  on the first step. The v2 RSI must start with positive vertical velocity and
+  Apex must require observed ascent before descent.
+- Existing formal v1 verification reads the saved raw resolved config rather
+  than calling `load_config`; schema-aware verification can therefore preserve
+  old evidence while active configs move to v2.
 
 - The installed Brax PPO callback exposes only observation normalizer, Actor,
   and critic parameters. It does not expose optimizer state, minibatch RNG, or

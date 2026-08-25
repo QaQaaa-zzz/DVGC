@@ -24,11 +24,16 @@ def test_formal_config_is_exactly_39_aligned_blocks(jit_root):
     assert config.formal.fixed_evaluation_transitions == FORMAL_EVALUATIONS
     assert config.ppo.held_out_seeds == tuple(range(920001, 920009))
     assert config.formal.resume_semantics == "parameter_warm_start_optimizer_reset"
+    assert config.schema == "jit_phase_u_formal_v2"
+    assert config.events.apex_height == pytest.approx(0.5)
+    assert config.events.min_ascent_velocity == pytest.approx(0.05)
+    assert config.events.min_descent_velocity == pytest.approx(0.05)
 
 
 def test_smoke_config_has_no_formal_contract(jit_root):
     config = load_config(jit_root / "configs" / "phase_u_smoke.json")
     assert config.formal is None
+    assert config.schema == "jit_phase_u_engineering_smoke_v2"
 
 
 def _mutated_formal(jit_root, tmp_path, mutate):
@@ -82,6 +87,28 @@ def test_invalid_formal_contract_is_rejected(jit_root, tmp_path, mutate, message
         load_config(path)
 
 
+@pytest.mark.parametrize(
+    "mutate",
+    [
+        lambda p: p["reset"].update(airborne_rsi_probability=0.50),
+        lambda p: p["reset"].update(airborne_rsi_vz_min=0.0),
+        lambda p: p["events"].update(jump_zone_x_max=3.2),
+        lambda p: p["events"].update(apex_height=0.6),
+        lambda p: p["reward"].update(height_coeff=21.0),
+        lambda p: p["reward"].update(peak_reward_height=0.6),
+        lambda p: p["ppo"].update(learning_rate=0.0002),
+        lambda p: p["model"].update(naconmax=1),
+        lambda p: p["model"].update(mjx_impl="jax"),
+    ],
+)
+def test_formal_rejects_approved_v2_method_constant_drift(
+    jit_root, tmp_path, mutate
+):
+    path = _mutated_formal(jit_root, tmp_path, mutate)
+    with pytest.raises(ValueError, match="approved v2"):
+        load_config(path)
+
+
 def test_smoke_schema_rejects_a_formal_section(jit_root, tmp_path):
     smoke = jit_root / "configs" / "phase_u_smoke.json"
     payload = json.loads(smoke.read_text(encoding="utf-8"))
@@ -109,3 +136,21 @@ def test_formal_changes_only_approved_budget_seed_and_schedule_fields(jit_root):
     for key in ("requested_transitions", "num_evals", "seed"):
         smoke["ppo"][key] = formal["ppo"][key]
     assert formal == smoke
+
+
+def test_active_v2_config_contains_no_target_or_deceleration_fields(jit_root):
+    for name in ("phase_u_smoke.json", "phase_u_formal.json"):
+        payload = json.loads((jit_root / "configs" / name).read_text(encoding="utf-8"))
+        encoded = json.dumps(payload, sort_keys=True)
+        for forbidden in (
+            "target_position",
+            "target_threshold",
+            "target_reach_reward",
+            "target_height",
+            "direction_coeff",
+            "position_coeff",
+            "platform_start",
+            "platform_back_margin",
+            "deceleration_zone",
+        ):
+            assert forbidden not in encoded

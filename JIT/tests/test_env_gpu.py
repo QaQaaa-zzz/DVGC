@@ -31,9 +31,9 @@ def test_jitted_reset_and_step_preserve_pytree_and_advance_exact_control_time(ji
 
     assert jax.tree.structure(state) == jax.tree.structure(next_state)
     assert float(next_state.data.time - state.data.time) == pytest.approx(0.020, abs=1e-6)
-    assert state.obs["state"].shape == (81,)
-    assert state.obs["privileged_state"].shape == (114,)
-    np.testing.assert_array_equal(np.asarray(state.obs["state"]), np.zeros(81))
+    assert state.obs["state"].shape == (76,)
+    assert state.obs["privileged_state"].shape == (106,)
+    np.testing.assert_array_equal(np.asarray(state.obs["state"]), np.zeros(76))
     assert set(state.metrics) == set(next_state.metrics)
     assert set(state.info) == set(next_state.info)
     assert float(state.info["time_out"]) == 0.0
@@ -87,6 +87,41 @@ def test_fifty_control_ticks_equal_one_second(jit_root):
     assert float(final.data.time - state.data.time) == pytest.approx(1.0, abs=2e-5)
 
 
+def test_forced_natural_reset_never_uses_airborne_rsi(jit_root):
+    env = _environment(str(jit_root / "configs" / "phase_u_smoke.json"))
+    state = jax.jit(env.reset_natural)(jax.random.PRNGKey(101))
+    jax.block_until_ready(state)
+
+    assert float(state.data.qpos[0]) == pytest.approx(1.5)
+    assert float(state.data.qpos[2]) == pytest.approx(0.15)
+    assert float(state.data.qvel[0]) == pytest.approx(2.0)
+    assert float(state.data.qvel[2]) == pytest.approx(0.0)
+    assert float(state.metrics["reset/source_airborne_rsi"]) == 0.0
+    assert float(state.info["events"].jump_signal) == 0.0
+    assert float(state.obs["state"][-1]) == 0.0
+
+
+def test_mixed_reset_is_reproducible_and_airborne_samples_are_bounded(jit_root):
+    env = _environment(str(jit_root / "configs" / "phase_u_smoke.json"))
+    keys = jax.random.split(jax.random.PRNGKey(102), 1024)
+    reset_many = jax.jit(jax.vmap(env.reset))
+    first = reset_many(keys)
+    second = reset_many(keys)
+    jax.block_until_ready((first, second))
+
+    np.testing.assert_array_equal(np.asarray(first.data.qpos), np.asarray(second.data.qpos))
+    sources = np.asarray(first.metrics["reset/source_airborne_rsi"]) > 0.5
+    assert 20 <= int(sources.sum()) <= 85
+    qpos = np.asarray(first.data.qpos)[sources]
+    qvel = np.asarray(first.data.qvel)[sources]
+    assert np.all((2.7 <= qpos[:, 0]) & (qpos[:, 0] <= 2.9))
+    assert np.all((1.8 <= qpos[:, 2]) & (qpos[:, 2] <= 2.2))
+    assert np.all((1.8 <= qvel[:, 0]) & (qvel[:, 0] <= 2.2))
+    assert np.all((0.8 <= qvel[:, 2]) & (qvel[:, 2] <= 1.2))
+    assert np.all(np.asarray(first.info["events"].jump_signal)[sources])
+    assert np.all(np.asarray(first.obs["state"])[sources, -1] == 1.0)
+
+
 def test_1024_environment_short_rollout_is_finite(jit_root):
     env = _environment(str(jit_root / "configs" / "phase_u_smoke.json"))
     keys = jax.random.split(jax.random.PRNGKey(12), 1024)
@@ -99,7 +134,8 @@ def test_1024_environment_short_rollout_is_finite(jit_root):
     jax.block_until_ready(state)
 
     assert state.data.qpos.shape == (1024, 12)
-    assert state.obs["state"].shape == (1024, 81)
+    assert state.obs["state"].shape == (1024, 76)
+    assert state.obs["privileged_state"].shape == (1024, 106)
     assert bool(jp.isfinite(state.data.qpos).all())
     assert bool(jp.isfinite(state.data.qvel).all())
     assert bool(jp.isfinite(state.obs["state"]).all())

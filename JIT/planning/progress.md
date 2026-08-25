@@ -1,5 +1,80 @@
 # Progress Log
 
+## Session: 2026-08-25 Reward/RSI/Diagnostics Rebuild
+
+### Phase 7: Design
+
+- **Status:** complete
+- Audited the external planar-jump reward without executing or importing it.
+- Mapped target-free reference formulas to Phase U and removed platform/deceleration scope.
+- Resolved one-shot jump signal reset/exit behavior, Actor/critic sharing, and no history duplication.
+- Removed approximate wheel-support observations and replaced complex Apex with root height/ascent/descent.
+- Added 5% bounded airborne RSI and natural-only formal evaluation.
+- Wrote and self-reviewed `JIT/docs/specs/2026-08-25-jit-phase-u-reference-reward-rsi-diagnostics-design.md`.
+- No environment interactions, PPO transitions, commits, or outside-JIT changes occurred.
+
+### Phase 8: Implementation planning
+
+- **Status:** complete
+- Mapped v2 config, pure JAX events/reward, mixed/natural reset paths, 76/106 observations, checkpoint identity, diagnostic artifacts, and schema-aware provenance.
+- Wrote `JIT/docs/plans/2026-08-25-jit-phase-u-reference-reward-rsi-diagnostics.md` with explicit RED/GREEN commands.
+- Preserved the user's single-final-commit preference; no implementation commit has been made.
+
+### Phase 9: TDD implementation
+
+- **Status:** complete
+- Task 1 first test-patch attempt was rejected atomically because one
+  `apply_patch` payload targeted the same test paths with both Delete and Add
+  operations. No test or production file changed. The retry uses separate
+  delete and add operations.
+- Task 1 RED confirmed: semantics collection failed on missing `PhaseUSignals`;
+  all 24 reference-reward cases failed on the old `RewardState`/formula.
+- Independent arithmetic review corrected one test fixture: success components
+  sum to `86 -> clipped 50`, while the selected failure fixture sums to
+  `-54 -> clipped -50`.
+- Task 1 GREEN: v2 config, one-shot signal/Apex semantics, fixed reward
+  components, reference piecewise values, energy/action costs, unclipped sum,
+  and total clipping passed 49 focused tests in 1.75 seconds.
+- Task 2 RED confirmed old observation signatures/shapes, missing natural reset,
+  and missing checkpoint task identity. Host GREEN passed 12 tests; GPU GREEN
+  passed 7 tests, including 1,024 reproducible mixed resets and bounded RSI.
+- Formal integration initially had 20 passes and 2 expected failures because
+  provenance accepted only formal v1. This was classified as the planned
+  schema-compatibility task rather than an environment failure.
+- Task 3 RED confirmed the diagnostics module/report fields were missing.
+  GREEN passed 6 evaluation/PNG/NPZ/video tests with exact state/frame counts.
+- Task 4 added v2 artifact path/hash enforcement while retaining v1 verification.
+  The formal/provenance group passed 27 tests; the broader focused group passed
+  33 tests after diagnostic integration.
+- Removed residual active names `target_height`, `platform_back_margin`, and
+  the Phase U platform-overrun end reason to eliminate target/platform ambiguity.
+
+### Phase 10: Verification and delivery
+
+- **Status:** in progress
+- Final complete non-GPU suite after review fixes: 134 passed, 7 deselected in
+  24.75 s.
+- Final complete GPU suite: 7 passed in 16.66 s.
+- JIT local preflight: exit 0; repeated 134 non-GPU and 7 GPU tests, static
+  compilation, legacy-import scan, reference analysis, and retained v1 smoke
+  verification.
+- Retained formal v1 run verified independently at 998,400 training plus 904
+  fixed evaluation transitions with all historical checkpoint/trace hashes.
+- Wrote the complete v2 modification and engineering-analysis report under
+  `JIT/docs/experiments/phase_u_reward_rsi_diagnostics_v2_20260825/REPORT.md`.
+- No PPO training or evaluation transitions were launched in this session.
+- Independent review found two formal-label gaps in sequence: approved
+  reset/event/reward/PPO constants, then model runtime-capacity metadata, were
+  not exact-validated. Added mutation tests and made active v2 loading plus
+  completed-v2 provenance enforce the complete model/action/reset/event/
+  limits/reward/PPO contract. Final independent re-review found no remaining
+  Critical or Important issue.
+- Complete repository compatibility after all review fixes: 1,100 passed, the
+  exact pre-existing user dirty-path test deselected, one third-party warning,
+  in 171.66 s.
+- User authorized a fresh approximately one-million-step run after successful
+  source verification. The declared exact budget is 998,400 with no v1 restore.
+
 ## Session: 2026-08-24 Formal Phase U
 
 ### Phase 1: Formal-training design

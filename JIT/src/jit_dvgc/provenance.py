@@ -12,7 +12,7 @@ from pathlib import Path
 import tempfile
 from typing import Any, Mapping
 
-from .config import canonical_sha256, file_sha256
+from .config import canonical_sha256, file_sha256, resolve_config_payload
 
 
 @dataclass(frozen=True)
@@ -178,6 +178,43 @@ def _verify_checkpoint_sidecar(
     return digest
 
 
+def _verify_video_artifacts(
+    video_report: Mapping[str, Any],
+    *,
+    artifact_dir: Path,
+    schema: str,
+    context: str,
+) -> None:
+    artifact_keys = ("video", "state_trace")
+    if schema.endswith("_v2"):
+        artifact_keys = (
+            "video",
+            "state_trace",
+            "diagnostic_plot",
+            "diagnostic_data",
+        )
+    resolved_paths: dict[str, Path] = {}
+    for artifact_key in artifact_keys:
+        artifact = Path(str(video_report.get(artifact_key, "")))
+        if not artifact.is_file() or artifact.resolve().parent != artifact_dir.resolve():
+            raise ValueError(f"{context} artifact is invalid: {artifact_key}")
+        resolved_paths[artifact_key] = artifact.resolve()
+
+    if not schema.endswith("_v2"):
+        return
+    if resolved_paths["state_trace"] != resolved_paths["diagnostic_data"]:
+        raise ValueError(f"{context} state trace must equal diagnostic data")
+    for artifact_key, hash_key in (
+        ("video", "video_sha256"),
+        ("diagnostic_plot", "diagnostic_plot_sha256"),
+        ("diagnostic_data", "diagnostic_data_sha256"),
+    ):
+        expected = video_report.get(hash_key)
+        actual = _payload_sha256(resolved_paths[artifact_key])
+        if expected != actual:
+            raise ValueError(f"{context} {artifact_key} hash mismatch")
+
+
 def _verify_formal_run(
     path: Path,
     *,
@@ -188,8 +225,11 @@ def _verify_formal_run(
 ) -> dict[str, Any]:
     if status["status"] != "completed":
         return report
-    if resolved.get("schema") != "jit_phase_u_formal_v1":
+    schema = str(resolved.get("schema", ""))
+    if schema not in {"jit_phase_u_formal_v1", "jit_phase_u_formal_v2"}:
         raise ValueError("formal run does not use the formal config schema")
+    if schema == "jit_phase_u_formal_v2":
+        resolve_config_payload(resolved)
     repository_root = Path(__file__).resolve().parents[3]
     model = resolved["model"]
     if model.get("xml_sha256") != manifest["xml_sha256"]:
@@ -287,10 +327,12 @@ def _verify_formal_run(
     if not video_report_path.is_file():
         raise ValueError("formal final representative video report is missing")
     video_report = json.loads(video_report_path.read_text(encoding="utf-8"))
-    for artifact_key in ("video", "state_trace"):
-        artifact = Path(str(video_report.get(artifact_key, "")))
-        if not artifact.is_file() or artifact.resolve().parent != final_panel.resolve():
-            raise ValueError(f"formal final video artifact is invalid: {artifact_key}")
+    _verify_video_artifacts(
+        video_report,
+        artifact_dir=final_panel,
+        schema=schema,
+        context="formal final",
+    )
     video_transitions = video_report.get("environment_transitions")
     captured = video_report.get("captured_state_count")
     encoded = video_report.get("encoded_frame_count")
@@ -384,6 +426,11 @@ def verify_run(run_dir: Path) -> dict[str, Any]:
         return report
     if accounting["training"] != ceiling:
         raise ValueError("completed engineering smoke did not use one exact declared block")
+    schema = str(resolved.get("schema", ""))
+    if schema not in {"jit_phase_u_engineering_smoke_v1", "jit_phase_u_engineering_smoke_v2"}:
+        raise ValueError("engineering smoke does not use a supported config schema")
+    if schema == "jit_phase_u_engineering_smoke_v2":
+        resolve_config_payload(resolved)
 
     repository_root = Path(__file__).resolve().parents[3]
     model_config = resolved["model"]
@@ -426,9 +473,12 @@ def verify_run(run_dir: Path) -> dict[str, Any]:
         raise ValueError("video captured state count mismatch")
     if video.get("encoded_frame_count") != video.get("captured_state_count"):
         raise ValueError("video encoded frame count mismatch")
-    for artifact_key in ("video", "state_trace"):
-        if not Path(video[artifact_key]).is_file():
-            raise ValueError(f"video artifact is missing: {artifact_key}")
+    _verify_video_artifacts(
+        video,
+        artifact_dir=path,
+        schema=schema,
+        context="smoke diagnostic",
+    )
     report.update(
         {
             "checkpoint_restored": True,

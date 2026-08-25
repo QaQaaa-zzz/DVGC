@@ -42,8 +42,6 @@ class StructureMetrics:
 
 @struct.dataclass
 class ContactSignals:
-    front_wheel_support: jax.Array
-    rear_wheel_support: jax.Array
     illegal_wheel_contact: jax.Array
     prohibited_contact: jax.Array
 
@@ -53,8 +51,6 @@ class GeometrySignals:
     robot_frontmost_x: jax.Array
     obstacle_relative_x: jax.Array
     structure_clearance: jax.Array
-    front_wheel_support: jax.Array
-    rear_wheel_support: jax.Array
     illegal_wheel_contact: jax.Array
     prohibited_contact: jax.Array
     roll: jax.Array
@@ -206,10 +202,9 @@ def build_geometry_contract(model: mujoco.MjModel) -> GeometryContract:
     )
 
 
-def geometric_support_signals(
+def geometric_penetration_signals(
     bounds: CollisionSupportBounds,
     contract: GeometryContract,
-    vertical_velocity: jax.Array,
 ) -> ContactSignals:
     overlaps_obstacle = (
         (bounds.max_x >= contract.obstacle_front_x)
@@ -220,15 +215,10 @@ def geometric_support_signals(
     terrain_height = jp.where(overlaps_obstacle, contract.obstacle_top_z, 0.0)
     clearances = bounds.min_z - terrain_height
     wheel_clearances = jp.take(clearances, contract.wheel_geom_positions)
-    wheel_support = (jp.abs(wheel_clearances) <= 0.015) & (
-        jp.abs(vertical_velocity) <= 1.2
-    )
     wheel_illegal = jp.any(wheel_clearances < -0.01)
     body_clearances = jp.take(clearances, contract.body_geom_positions)
     prohibited = jp.any(body_clearances < -0.002)
     return ContactSignals(
-        front_wheel_support=wheel_support[0],
-        rear_wheel_support=wheel_support[1],
         illegal_wheel_contact=wheel_illegal,
         prohibited_contact=prohibited,
     )
@@ -258,14 +248,12 @@ def extract_geometry(data, contract: GeometryContract) -> GeometrySignals:
         full_structure_clearance=jp.min(bounds.min_z, axis=-1)
         - contract.obstacle_top_z,
     )
-    contacts = geometric_support_signals(bounds, contract, data.qvel[2])
+    contacts = geometric_penetration_signals(bounds, contract)
     roll, pitch, yaw = quaternion_to_euler(data.qpos[3:7])
     return GeometrySignals(
         robot_frontmost_x=structure.robot_frontmost_x,
         obstacle_relative_x=structure.obstacle_relative_x,
         structure_clearance=structure.full_structure_clearance,
-        front_wheel_support=contacts.front_wheel_support,
-        rear_wheel_support=contacts.rear_wheel_support,
         illegal_wheel_contact=contacts.illegal_wheel_contact,
         prohibited_contact=contacts.prohibited_contact,
         roll=roll,

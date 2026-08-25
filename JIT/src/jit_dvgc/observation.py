@@ -23,9 +23,7 @@ class HistoryState:
 @struct.dataclass
 class ObservableGeometry:
     obstacle_relative_x: jax.Array
-    structure_clearance: jax.Array
-    front_wheel_support: jax.Array
-    rear_wheel_support: jax.Array
+    root_height: jax.Array
     roll: jax.Array
     pitch: jax.Array
     yaw: jax.Array
@@ -48,8 +46,16 @@ def advance_history(history: HistoryState, frame: jax.Array) -> HistoryState:
     return HistoryState(frames=frames, valid_count=valid_count)
 
 
-def actor_observation(history: HistoryState) -> jax.Array:
-    return history.frames.reshape((ACTOR_OBSERVATION_SIZE,))
+def actor_observation(history: HistoryState, jump_signal: jax.Array) -> jax.Array:
+    observation = jp.concatenate(
+        (
+            history.frames.reshape((-1,)),
+            jp.asarray((jump_signal,), dtype=jp.float32),
+        )
+    )
+    if observation.shape != (ACTOR_OBSERVATION_SIZE,):
+        raise ValueError(f"Actor observation shape drifted: {observation.shape}")
+    return observation
 
 
 def _gravity_in_body_frame(quaternion: jax.Array) -> jax.Array:
@@ -99,9 +105,7 @@ def observable_frame(
         (
             data.qvel[model_index.root_dof_address],
             geometry.obstacle_relative_x,
-            geometry.structure_clearance,
-            geometry.front_wheel_support,
-            geometry.rear_wheel_support,
+            geometry.root_height,
             history_valid,
         ),
         dtype=jp.float32,
@@ -132,15 +136,7 @@ def privileged_observation(
             jp.asarray(data.qvel, dtype=jp.float32),
             jp.asarray((geometry.roll, geometry.pitch, geometry.yaw), dtype=jp.float32),
             jp.asarray(data.qvel[:3], dtype=jp.float32),
-            jp.asarray((geometry.structure_clearance,), dtype=jp.float32),
-            jp.asarray(
-                (
-                    geometry.front_wheel_support,
-                    geometry.rear_wheel_support,
-                    geometry.illegal_contact,
-                ),
-                dtype=jp.float32,
-            ),
+            jp.asarray((geometry.illegal_contact,), dtype=jp.float32),
         )
     )
     if privileged.shape != (PRIVILEGED_OBSERVATION_SIZE,):

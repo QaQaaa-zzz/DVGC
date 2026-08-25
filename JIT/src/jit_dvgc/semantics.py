@@ -1,4 +1,4 @@
-"""Pure JAX Propulsion-Ascent events, Apex membership, and terminal outcomes."""
+"""Pure JAX one-shot jump signal, height/descent Apex, and terminal outcomes."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from flax import struct
 import jax
 from jax import numpy as jp
 
-from .config import ApexConfig, ResolvedConfig
+from .config import ResolvedConfig
 from .constants import (
     END_APEX_SUCCESS,
     END_BACKWARD_EXIT,
@@ -14,50 +14,28 @@ from .constants import (
     END_NONFINITE,
     END_ONGOING,
     END_PITCH_LIMIT,
-    END_PLATFORM_OVERRUN,
     END_PROHIBITED_CONTACT,
     END_ROLL_LIMIT,
     END_TIMEOUT,
 )
 
 
-APEX_GATE_FIELDS = (
-    "stable_airborne",
-    "vertical_velocity",
-    "clearance",
-    "roll",
-    "pitch",
-    "angular_speed",
-    "forward_velocity",
-    "obstacle_relative_x",
-    "illegal_contact",
-    "physical_failure",
-)
-
-
 @struct.dataclass
-class ApexSignals:
-    stable_airborne: jax.Array
+class PhaseUSignals:
+    x: jax.Array
+    z: jax.Array
     vertical_velocity: jax.Array
-    clearance: jax.Array
-    roll: jax.Array
-    pitch: jax.Array
-    angular_speed: jax.Array
-    forward_velocity: jax.Array
-    obstacle_relative_x: jax.Array
-    illegal_contact: jax.Array
     physical_failure: jax.Array
 
 
 @struct.dataclass
 class EventState:
-    window_latched: jax.Array
-    liftoff_seen: jax.Array
-    stable_airborne_seen: jax.Array
+    jump_signal: jax.Array
+    jump_zone_seen: jax.Array
+    jump_zone_consumed: jax.Array
     ascending_seen: jax.Array
+    height_seen: jax.Array
     apex_seen: jax.Array
-    stable_airborne_current: jax.Array
-    airborne_count: jax.Array
     episode_step: jax.Array
 
 
@@ -70,7 +48,6 @@ class TerminalInputs:
     illegal_contact: jax.Array
     illegal_wheel_contact: jax.Array
     backward_exit: jax.Array
-    platform_overrun: jax.Array
     apex_success: jax.Array
 
 
@@ -84,90 +61,66 @@ class TerminalState:
     end_code: jax.Array
 
 
-def initial_event_state() -> EventState:
+def _inside_jump_zone(root_x: jax.Array, config: ResolvedConfig) -> jax.Array:
+    return (root_x >= config.events.jump_zone_x_min) & (
+        root_x <= config.events.jump_zone_x_max
+    )
+
+
+def initial_event_state(root_x: jax.Array, config: ResolvedConfig) -> EventState:
+    inside = _inside_jump_zone(root_x, config)
+    passed = root_x > config.events.jump_zone_x_max
     false = jp.asarray(False)
     return EventState(
-        window_latched=false,
-        liftoff_seen=false,
-        stable_airborne_seen=false,
+        jump_signal=inside,
+        jump_zone_seen=inside,
+        jump_zone_consumed=passed,
         ascending_seen=false,
+        height_seen=false,
         apex_seen=false,
-        stable_airborne_current=false,
-        airborne_count=jp.asarray(0, jp.int32),
         episode_step=jp.asarray(0, jp.int32),
     )
 
 
-def apex_components(signals: ApexSignals, config: ApexConfig) -> dict[str, jax.Array]:
-    return {
-        "stable_airborne": jp.asarray(signals.stable_airborne, dtype=bool),
-        "vertical_velocity": jp.abs(signals.vertical_velocity)
-        <= config.max_abs_vertical_velocity,
-        "clearance": signals.clearance >= config.min_clearance,
-        "roll": jp.abs(signals.roll) <= config.max_abs_roll,
-        "pitch": jp.abs(signals.pitch) <= config.max_abs_pitch,
-        "angular_speed": (signals.angular_speed >= 0.0)
-        & (signals.angular_speed <= config.max_angular_speed),
-        "forward_velocity": signals.forward_velocity >= config.min_forward_velocity,
-        "obstacle_relative_x": (signals.obstacle_relative_x >= config.relative_x_min)
-        & (signals.obstacle_relative_x <= config.relative_x_max),
-        "illegal_contact": ~jp.asarray(signals.illegal_contact, dtype=bool),
-        "physical_failure": ~jp.asarray(signals.physical_failure, dtype=bool),
-    }
-
-
-def apex_membership(signals: ApexSignals, config: ApexConfig) -> jax.Array:
-    result = jp.asarray(True)
-    for value in apex_components(signals, config).values():
-        result = result & value
-    return result
-
-
 def advance_events(
     previous: EventState,
-    signals: ApexSignals,
+    signals: PhaseUSignals,
     config: ResolvedConfig,
-    *,
-    supported: jax.Array,
 ) -> EventState:
-    inside_window = (
-        signals.obstacle_relative_x >= config.events.window_relative_x_min
-    ) & (signals.obstacle_relative_x <= config.events.window_relative_x_max)
-    window_latched = previous.window_latched | inside_window
-    airborne_count = jp.where(
-        ~jp.asarray(supported, dtype=bool),
-        previous.airborne_count + 1,
-        jp.asarray(0, jp.int32),
+    inside = _inside_jump_zone(signals.x, config)
+    exited = jp.asarray(previous.jump_signal, dtype=bool) & ~inside
+    consumed = (
+        jp.asarray(previous.jump_zone_consumed, dtype=bool)
+        | exited
+        | (signals.x > config.events.jump_zone_x_max)
     )
-    confirmed_airborne = airborne_count >= config.events.airborne_confirm_ticks
-    stable_airborne = confirmed_airborne & (
-        signals.clearance >= config.events.stable_airborne_min_clearance
+    jump_signal = inside & ~jp.asarray(previous.jump_zone_consumed, dtype=bool)
+    zone_seen = jp.asarray(previous.jump_zone_seen, dtype=bool) | jump_signal
+    ascending_seen = jp.asarray(previous.ascending_seen, dtype=bool) | (
+        zone_seen & (signals.vertical_velocity >= config.events.min_ascent_velocity)
     )
-    liftoff_seen = previous.liftoff_seen | (window_latched & confirmed_airborne)
-    stable_seen = previous.stable_airborne_seen | (window_latched & stable_airborne)
-    ascending_seen = previous.ascending_seen | (
-        window_latched
-        & stable_airborne
-        & (signals.vertical_velocity >= config.events.ascending_min_vertical_velocity)
+    height_seen = jp.asarray(previous.height_seen, dtype=bool) | (
+        zone_seen & (signals.z >= config.events.apex_height)
     )
-    apex_now = apex_membership(
-        signals.replace(stable_airborne=stable_airborne), config.apex
+    apex_now = (
+        zone_seen
+        & ascending_seen
+        & height_seen
+        & (signals.vertical_velocity <= -config.events.min_descent_velocity)
+        & ~jp.asarray(signals.physical_failure, dtype=bool)
     )
     return EventState(
-        window_latched=window_latched,
-        liftoff_seen=liftoff_seen,
-        stable_airborne_seen=stable_seen,
+        jump_signal=jump_signal,
+        jump_zone_seen=zone_seen,
+        jump_zone_consumed=consumed,
         ascending_seen=ascending_seen,
-        apex_seen=previous.apex_seen | apex_now,
-        stable_airborne_current=stable_airborne,
-        airborne_count=airborne_count,
+        height_seen=height_seen,
+        apex_seen=jp.asarray(previous.apex_seen, dtype=bool) | apex_now,
         episode_step=previous.episode_step + 1,
     )
 
 
-def classify_terminal(
-    inputs: TerminalInputs, config: ResolvedConfig
-) -> TerminalState:
+def classify_terminal(inputs: TerminalInputs, config: ResolvedConfig) -> TerminalState:
     roll_failure = jp.abs(inputs.roll) > config.physical_limits.max_abs_roll
     pitch_failure = jp.abs(inputs.pitch) > config.physical_limits.max_abs_pitch
     failures = (
@@ -177,7 +130,6 @@ def classify_terminal(
         jp.asarray(inputs.illegal_contact, dtype=bool),
         jp.asarray(inputs.illegal_wheel_contact, dtype=bool),
         jp.asarray(inputs.backward_exit, dtype=bool),
-        jp.asarray(inputs.platform_overrun, dtype=bool),
     )
     failure_codes = (
         END_NONFINITE,
@@ -186,7 +138,6 @@ def classify_terminal(
         END_PROHIBITED_CONTACT,
         END_ILLEGAL_WHEEL_CONTACT,
         END_BACKWARD_EXIT,
-        END_PLATFORM_OVERRUN,
     )
     physical_failure = jp.asarray(False)
     failure_code = jp.asarray(END_ONGOING, jp.int32)

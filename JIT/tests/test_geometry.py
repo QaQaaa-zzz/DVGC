@@ -11,6 +11,8 @@ import pytest
 from jit_dvgc.config import load_config
 from jit_dvgc.geometry import (
     GEOM_BOX,
+    ContactSignals,
+    GeometrySignals,
     build_geometry_contract,
     collision_support_bounds,
     extract_geometry,
@@ -24,6 +26,12 @@ class WarpLikeData(NamedTuple):
     qvel: jax.Array
     geom_xpos: jax.Array
     geom_xmat: jax.Array
+
+
+def test_runtime_geometry_contract_contains_no_wheel_support_booleans():
+    forbidden = {"front_wheel_support", "rear_wheel_support"}
+    assert forbidden.isdisjoint(ContactSignals.__dataclass_fields__)
+    assert forbidden.isdisjoint(GeometrySignals.__dataclass_fields__)
 
 
 def test_box_support_bounds_are_hand_checkable():
