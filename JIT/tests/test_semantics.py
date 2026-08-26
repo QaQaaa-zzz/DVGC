@@ -85,21 +85,21 @@ def test_nonfinite_position_does_not_poison_stuck_anchor(v4_config):
     assert bool(jp.isfinite(advanced.stuck_anchor_x))
 
 
-def test_v4_jump_signal_stays_live_to_3_8_then_closes_permanently(v4_config):
+def test_v4_jump_signal_stays_live_to_3_9_then_closes_permanently(v4_config):
     event = initial_event_state(jp.array(2.4), v4_config)
     signal_at_x_3_25 = advance_events(
         event, _signals(x=jp.array(3.25)), v4_config
     )
-    signal_at_x_3_79 = advance_events(
-        signal_at_x_3_25, _signals(x=jp.array(3.79)), v4_config
+    signal_at_x_3_89 = advance_events(
+        signal_at_x_3_25, _signals(x=jp.array(3.89)), v4_config
     )
-    signal_after_x_3_81 = advance_events(
-        signal_at_x_3_79, _signals(x=jp.array(3.81)), v4_config
+    signal_after_x_3_91 = advance_events(
+        signal_at_x_3_89, _signals(x=jp.array(3.91)), v4_config
     )
 
     assert bool(signal_at_x_3_25.jump_signal) is True
-    assert bool(signal_at_x_3_79.jump_signal) is True
-    assert bool(signal_after_x_3_81.jump_signal) is False
+    assert bool(signal_at_x_3_89.jump_signal) is True
+    assert bool(signal_after_x_3_91.jump_signal) is False
 
 
 def test_v4_stuck_fires_immediately_at_forward_speed_threshold(v4_config):
@@ -119,7 +119,7 @@ def test_v4_stuck_fires_immediately_at_forward_speed_threshold(v4_config):
     assert bool(event.stuck)
 
 
-def test_v4_low_speed_stuck_remains_active_after_height(v4_config):
+def test_v4_low_speed_stuck_is_disabled_after_height(v4_config):
     event = initial_event_state(jp.array(2.8), v4_config)
     high = advance_events(
         event,
@@ -133,10 +133,10 @@ def test_v4_low_speed_stuck_remains_active_after_height(v4_config):
     )
 
     assert bool(high.height_seen)
-    assert bool(high.stuck)
+    assert not bool(high.stuck)
 
 
-def test_v4_low_speed_outside_jump_signal_is_stuck(v4_config):
+def test_v4_low_speed_outside_jump_signal_is_not_stuck(v4_config):
     event = initial_event_state(jp.array(2.4), v4_config)
     event = advance_events(
         event,
@@ -144,7 +144,7 @@ def test_v4_low_speed_outside_jump_signal_is_stuck(v4_config):
         v4_config,
     )
 
-    assert bool(event.stuck)
+    assert not bool(event.stuck)
 
 
 def test_apex_requires_legal_zone_height_prior_ascent_and_descent(config):

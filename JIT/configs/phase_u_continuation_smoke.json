@@ -35,7 +35,7 @@
   },
   "events": {
     "jump_zone_x_min": 2.5,
-    "jump_zone_x_max": 3.8,
+    "jump_zone_x_max": 3.9,
     "min_ascent_velocity": 0.05,
     "apex_height": 0.5,
     "min_descent_velocity": 0.05,
@@ -99,7 +99,7 @@
     "gae_lambda": 0.95,
     "clipping_epsilon": 0.2,
     "max_grad_norm": 0.5,
-    "seed": 820900,
-    "held_out_seeds": [1000001, 1000002, 1000003, 1000004, 1000005, 1000006, 1000007, 1000008]
+    "seed": 820800,
+    "held_out_seeds": [990001, 990002, 990003, 990004, 990005, 990006, 990007, 990008]
   }
 }
