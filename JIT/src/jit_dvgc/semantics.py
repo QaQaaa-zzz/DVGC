@@ -127,7 +127,7 @@ def advance_events(
         & ~jp.asarray(signals.physical_failure, dtype=bool)
     )
     if config.events.stuck_forward_velocity_threshold is not None:
-        monitor_stuck = jump_signal & ~height_seen
+        monitor_stuck = jp.ones_like(signals.forward_velocity, dtype=bool)
         stuck_anchor_x = safe_x
         stuck_ticks = jp.asarray(0, jp.int32)
         stuck = jp.asarray(previous.stuck, dtype=bool) | (

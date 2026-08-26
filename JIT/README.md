@@ -9,7 +9,7 @@ illegal-contact reward penalty. Roll, pitch, backward motion, and numerical
 failure remain physical terminals. Two task
 failures prevent the policy from exploiting the approach: while the jump
 signal is active and the 0.5 m height event has not occurred, forward speed at
-or below 0.3 m/s is immediately `stuck`; the active jump window ends at 4.0 m;
+or below 0.3 m/s is immediately `stuck` at any point in the episode; the active jump window ends at 3.8 m;
 world-frame root yaw beyond 45 degrees is
 `yaw_limit`. Each has its own `-100` reward component and end code and is not
 double-counted as a generic physical failure. On either terminal, the final
@@ -30,7 +30,7 @@ small corrections remain available.
 While the current one-shot jump signal is active below 0.35 m, v4 adds a dense
 low-height cost. It is `-8` at and below 0.15 m, decreases linearly to zero at
 0.35 m, and is zero whenever the jump signal is off. This makes remaining low
-in the 4.0 m jump window worse than the retained survival/posture reward.
+in the 3.8 m jump window worse than the retained survival/posture reward.
 
 Training uses full environment resets after every completed episode. This is a
 required runtime contract, not an optimization option: cached data/observation-
@@ -84,7 +84,7 @@ prompt also requires strict `verify-run` provenance checking before
 interpreting the natural-start and airborne-RSI evidence panels.
 
 The exact v4 target is 15,015,936 transitions (611 blocks), under the fresh seed
-namespace `820801` with frozen held-out seeds `990001..990008`.
+namespace `820901` with frozen held-out seeds `1000001..1000008`.
 The first run must have a null parent checkpoint, start at transition zero, and
 omit `--restore-checkpoint`.
 
