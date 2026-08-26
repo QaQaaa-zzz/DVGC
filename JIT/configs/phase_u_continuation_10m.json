@@ -87,9 +87,9 @@
     "batch_size": 16,
     "num_minibatches": 24,
     "num_updates_per_batch": 8,
-    "requested_transitions": 20004864,
+    "requested_transitions": 15015936,
     "num_eval_envs": 8,
-    "num_evals": 815,
+    "num_evals": 612,
     "learning_rate": 0.0001,
     "entropy_cost": 0.01,
     "reward_scaling": 0.1,
@@ -97,12 +97,12 @@
     "gae_lambda": 0.95,
     "clipping_epsilon": 0.2,
     "max_grad_norm": 0.5,
-    "seed": 820501,
-    "held_out_seeds": [960001, 960002, 960003, 960004, 960005, 960006, 960007, 960008]
+    "seed": 820601,
+    "held_out_seeds": [970001, 970002, 970003, 970004, 970005, 970006, 970007, 970008]
   },
   "formal": {
-    "checkpoint_transitions": [0, 983040, 3981312, 9977856, 15998976, 20004864],
-    "fixed_evaluation_transitions": [983040, 3981312, 9977856, 15998976, 20004864],
+    "checkpoint_transitions": [0, 737280, 2998272, 7495680, 11993088, 15015936],
+    "fixed_evaluation_transitions": [737280, 2998272, 7495680, 11993088, 15015936],
     "resume_semantics": "fresh_only"
   }
 }

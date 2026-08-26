@@ -222,7 +222,7 @@ def _validate_formal(
         approved_target = {
             "jit_phase_u_formal_v2": 998_400,
             "jit_phase_u_formal_v3": 4_988_928,
-            "jit_phase_u_formal_v4": 20_004_864,
+            "jit_phase_u_formal_v4": 15_015_936,
         }[schema]
         raise ValueError(
             "formal checkpoints must end at requested transitions; "
@@ -245,23 +245,23 @@ def _validate_formal(
             raise ValueError("formal held-out seeds must equal 920001 through 920008")
         expected_checkpoints = (0, 102_400, 256_000, 512_000, 742_400, 998_400)
     elif schema == "jit_phase_u_formal_v4":
-        if ppo.requested_transitions != 20_004_864:
-            raise ValueError("formal requested_transitions must equal 20004864")
+        if ppo.requested_transitions != 15_015_936:
+            raise ValueError("formal requested_transitions must equal 15015936")
         if ppo.block_transitions != 24_576:
             raise ValueError("formal PPO block must equal 24576 transitions")
-        if ppo.num_evals != 815:
-            raise ValueError("formal num_evals must equal 815")
-        if ppo.seed != 820501:
-            raise ValueError("formal training seed must equal 820501")
-        if ppo.held_out_seeds != tuple(range(960001, 960009)):
+        if ppo.num_evals != 612:
+            raise ValueError("formal num_evals must equal 612")
+        if ppo.seed != 820601:
+            raise ValueError("formal training seed must equal 820601")
+        if ppo.held_out_seeds != tuple(range(970001, 970009)):
             raise ValueError("formal held-out seeds do not match the approved namespace")
         expected_checkpoints = (
             0,
-            983_040,
-            3_981_312,
-            9_977_856,
-            15_998_976,
-            20_004_864,
+            737_280,
+            2_998_272,
+            7_495_680,
+            11_993_088,
+            15_015_936,
         )
     else:
         if ppo.requested_transitions != 4_988_928:
@@ -504,7 +504,7 @@ def _validate_approved_absolute_method(
         failed_episode_return=-100.0 if is_v4 else None,
     )
     held_out_seeds = (
-        tuple(range(960001, 960009))
+        tuple(range(970001, 970009))
         if is_v4
         else tuple(range(930001, 930009))
     )
@@ -528,9 +528,9 @@ def _validate_approved_absolute_method(
     if schema == "jit_phase_u_formal_v4":
         expected_ppo = PPOConfig(
             **common_ppo,
-            requested_transitions=20_004_864,
-            num_evals=815,
-            seed=820501,
+            requested_transitions=15_015_936,
+            num_evals=612,
+            seed=820601,
         )
     elif schema == "jit_phase_u_formal_v3":
         expected_ppo = PPOConfig(
@@ -544,7 +544,7 @@ def _validate_approved_absolute_method(
             **common_ppo,
             requested_transitions=24_576,
             num_evals=1,
-            seed=820500 if is_v4 else 820200,
+            seed=820600 if is_v4 else 820200,
         )
     approved = {
         "model": (dict(model), expected_model),

@@ -83,8 +83,8 @@ captured stdout/stderr and the return code remain there as `codex_exec.log` and
 prompt also requires strict `verify-run` provenance checking before
 interpreting the natural-start and airborne-RSI evidence panels.
 
-The exact v4 target is 20,004,864 transitions (814 blocks), under the fresh seed
-namespace `820501` with frozen held-out seeds `960001..960008`.
+The exact v4 target is 15,015,936 transitions (611 blocks), under the fresh seed
+namespace `820601` with frozen held-out seeds `970001..970008`.
 The first run must have a null parent checkpoint, start at transition zero, and
 omit `--restore-checkpoint`.
 

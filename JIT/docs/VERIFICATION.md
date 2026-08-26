@@ -36,9 +36,9 @@ fresh. `preserve_episode_evidence=true` is independently config-bound and the
 GPU regression requires terminal length two followed by fresh length one.
 
 The active file is `JIT/configs/phase_u_continuation_10m.json`. It declares seed
-`820501`, held-out seeds `960001..960008`, and exactly 20,004,864 transitions:
-814 aligned blocks with checkpoints at 0, 983,040, 3,981,312, 9,977,856,
-15,998,976, and 20,004,864. It is identity-incompatible with every earlier v4
+`820601`, held-out seeds `970001..970008`, and exactly 15,015,936 transitions:
+611 aligned blocks with checkpoints at 0, 737,280, 2,998,272, 7,495,680,
+11,993,088, and 15,015,936. It is identity-incompatible with every earlier v4
 checkpoint, declares `resume_semantics=fresh_only`, and rejects every restore
 option before backend, environment, checkpoint, or run-directory work.
 

@@ -19,15 +19,15 @@ ABSOLUTE_5M_CHECKPOINTS = (
     4_988_928,
 )
 ABSOLUTE_5M_EVALUATIONS = ABSOLUTE_5M_CHECKPOINTS[1:]
-V4_20M_CHECKPOINTS = (
+V4_15M_CHECKPOINTS = (
     0,
-    983_040,
-    3_981_312,
-    9_977_856,
-    15_998_976,
-    20_004_864,
+    737_280,
+    2_998_272,
+    7_495_680,
+    11_993_088,
+    15_015_936,
 )
-V4_20M_EVALUATIONS = V4_20M_CHECKPOINTS[1:]
+V4_15M_EVALUATIONS = V4_15M_CHECKPOINTS[1:]
 
 
 def test_formal_config_is_exactly_39_aligned_blocks(jit_root):
@@ -99,7 +99,7 @@ def test_absolute_5m_config_is_exactly_203_aligned_blocks(jit_root):
     assert config.formal.fixed_evaluation_transitions == ABSOLUTE_5M_EVALUATIONS
 
 
-def test_continuation_v4_configs_use_the_active_20m_contract(jit_root):
+def test_continuation_v4_configs_use_the_active_15m_contract(jit_root):
     smoke = load_config(jit_root / "configs" / "phase_u_continuation_smoke.json")
     formal = load_config(jit_root / "configs" / "phase_u_continuation_10m.json")
 
@@ -108,7 +108,7 @@ def test_continuation_v4_configs_use_the_active_20m_contract(jit_root):
         "full_reset": True,
         "preserve_episode_evidence": True,
     }
-    assert smoke.ppo.seed == 820500
+    assert smoke.ppo.seed == 820600
     assert smoke.reset.airborne_rsi_probability == pytest.approx(0.08)
     assert smoke.events.jump_zone_x_max == pytest.approx(4.0)
     assert smoke.events.stuck_window_steps is None
@@ -132,19 +132,19 @@ def test_continuation_v4_configs_use_the_active_20m_contract(jit_root):
     assert smoke.reset.airborne_rsi_vz_max == pytest.approx(3.6)
     assert smoke.model["naccdmax"] == 320
     assert formal.schema == "jit_phase_u_formal_v4"
-    assert formal.ppo.seed == 820501
-    assert formal.ppo.held_out_seeds == tuple(range(960001, 960009))
-    assert formal.ppo.requested_transitions == 20_004_864
+    assert formal.ppo.seed == 820601
+    assert formal.ppo.held_out_seeds == tuple(range(970001, 970009))
+    assert formal.ppo.requested_transitions == 15_015_936
     assert formal.ppo.episode_horizon == 400
     assert formal.formal is not None
-    assert formal.formal.formal_blocks == 814
-    assert formal.ppo.num_evals == 815
+    assert formal.formal.formal_blocks == 611
+    assert formal.ppo.num_evals == 612
     assert formal.events.jump_zone_x_max == pytest.approx(4.0)
     assert formal.reward.height_coeff == pytest.approx(40.0)
     assert formal.reset.airborne_rsi_probability == pytest.approx(0.08)
     assert formal.model["naccdmax"] == 320
-    assert formal.formal.checkpoint_transitions == V4_20M_CHECKPOINTS
-    assert formal.formal.fixed_evaluation_transitions == V4_20M_EVALUATIONS
+    assert formal.formal.checkpoint_transitions == V4_15M_CHECKPOINTS
+    assert formal.formal.fixed_evaluation_transitions == V4_15M_EVALUATIONS
     assert formal.formal.resume_semantics == "fresh_only"
 
 
