@@ -35,13 +35,13 @@ from jit_dvgc.ppo import wrap_for_jit_training
 from jit_dvgc.provenance import verify_run
 
 
-V4_15M_CHECKPOINTS = (
+V4_10M_CHECKPOINTS = (
     0,
-    737_280,
-    2_998_272,
-    7_495_680,
-    11_993_088,
-    15_015_936,
+    491_520,
+    1_990_656,
+    4_988_928,
+    7_987_200,
+    9_977_856,
 )
 
 
@@ -496,15 +496,15 @@ def _fake_absolute_trainer():
 
 def _fake_continuation_10m_trainer():
     def train(**kwargs):
-        assert kwargs["num_timesteps"] == 15_015_936
-        assert kwargs["num_evals"] == 612
+        assert kwargs["num_timesteps"] == 9_977_856
+        assert kwargs["num_evals"] == 407
         assert kwargs["log_training_metrics"] is True
         assert kwargs["training_metrics_steps"] == 24_576
         assert kwargs["restore_params"] is None
         assert kwargs["wrap_env_fn"] is wrap_for_jit_training
         params = ({"normalizer": 0}, {"actor": 1}, {"critic": 2})
         kwargs["policy_params_fn"](0, _fake_make_policy, params)
-        for index, step in enumerate(range(24_576, 15_015_936 + 1, 24_576), 1):
+        for index, step in enumerate(range(24_576, 9_977_856 + 1, 24_576), 1):
             kwargs["progress_fn"](
                 step,
                 {
@@ -657,15 +657,15 @@ def test_continuation_v4_runner_is_fresh_and_persists_learning_curves(
     manifest = json.loads((run_dir / "run_manifest.json").read_text(encoding="utf-8"))
     assert manifest["parent_checkpoint"] is None
     assert manifest["starting_training_transition"] == 0
-    assert manifest["training_transition_ceiling"] == 15_015_936
+    assert manifest["training_transition_ceiling"] == 9_977_856
     assert "--restore-checkpoint" not in manifest["resume_command"]
     assert (run_dir / "training_curves.png").is_file()
     assert (run_dir / "training_curves.npz").is_file()
     assert (run_dir / "training_curves.json").is_file()
     verified = verify_run(run_dir)
-    assert verified["absolute_training_transition"] == 15_015_936
-    assert verified["formal_checkpoint_transitions"] == list(V4_15M_CHECKPOINTS)
-    assert verified["training_curves"]["ppo_sample_count"] == 611
+    assert verified["absolute_training_transition"] == 9_977_856
+    assert verified["formal_checkpoint_transitions"] == list(V4_10M_CHECKPOINTS)
+    assert verified["training_curves"]["ppo_sample_count"] == 406
 
     report_path = run_dir / "training_curves.json"
     report = json.loads(report_path.read_text(encoding="utf-8"))
@@ -676,7 +676,7 @@ def test_continuation_v4_runner_is_fresh_and_persists_learning_curves(
         verify_run(run_dir)
     report_path.write_text(original, encoding="utf-8")
 
-    video_path = run_dir / "evaluations/transition_15015936/video_report.json"
+    video_path = run_dir / "evaluations/transition_9977856/video_report.json"
     original_video = video_path.read_text(encoding="utf-8")
     video = json.loads(original_video)
     video["pre_apex_data"], video["post_apex_data"] = (
