@@ -19,15 +19,15 @@ ABSOLUTE_5M_CHECKPOINTS = (
     4_988_928,
 )
 ABSOLUTE_5M_EVALUATIONS = ABSOLUTE_5M_CHECKPOINTS[1:]
-V4_10M_CHECKPOINTS = (
+V4_15M_CHECKPOINTS = (
     0,
-    491_520,
-    1_990_656,
-    4_988_928,
-    7_987_200,
-    9_977_856,
+    737_280,
+    2_998_272,
+    7_495_680,
+    11_993_088,
+    15_015_936,
 )
-V4_10M_EVALUATIONS = V4_10M_CHECKPOINTS[1:]
+V4_15M_EVALUATIONS = V4_15M_CHECKPOINTS[1:]
 
 
 def test_formal_config_is_exactly_39_aligned_blocks(jit_root):
@@ -99,7 +99,7 @@ def test_absolute_5m_config_is_exactly_203_aligned_blocks(jit_root):
     assert config.formal.fixed_evaluation_transitions == ABSOLUTE_5M_EVALUATIONS
 
 
-def test_continuation_v4_configs_use_the_active_10m_contract(jit_root):
+def test_continuation_v4_configs_use_the_active_15m_contract(jit_root):
     smoke = load_config(jit_root / "configs" / "phase_u_continuation_smoke.json")
     formal = load_config(jit_root / "configs" / "phase_u_continuation_10m.json")
 
@@ -108,7 +108,7 @@ def test_continuation_v4_configs_use_the_active_10m_contract(jit_root):
         "full_reset": True,
         "preserve_episode_evidence": True,
     }
-    assert smoke.ppo.seed == 820700
+    assert smoke.ppo.seed == 820800
     assert smoke.reset.airborne_rsi_probability == pytest.approx(0.08)
     assert smoke.events.jump_zone_x_max == pytest.approx(4.0)
     assert smoke.events.stuck_window_steps is None
@@ -135,15 +135,15 @@ def test_continuation_v4_configs_use_the_active_10m_contract(jit_root):
     assert smoke.reset.airborne_rsi_z_max == pytest.approx(0.45)
     assert smoke.reset.airborne_rsi_vz_min == pytest.approx(3.0)
     assert smoke.reset.airborne_rsi_vz_max == pytest.approx(3.6)
-    assert smoke.model["naccdmax"] == 320
+    assert smoke.model["naccdmax"] == 512
     assert formal.schema == "jit_phase_u_formal_v4"
-    assert formal.ppo.seed == 820701
-    assert formal.ppo.held_out_seeds == tuple(range(980001, 980009))
-    assert formal.ppo.requested_transitions == 9_977_856
+    assert formal.ppo.seed == 820801
+    assert formal.ppo.held_out_seeds == tuple(range(990001, 990009))
+    assert formal.ppo.requested_transitions == 15_015_936
     assert formal.ppo.episode_horizon == 400
     assert formal.formal is not None
-    assert formal.formal.formal_blocks == 406
-    assert formal.ppo.num_evals == 407
+    assert formal.formal.formal_blocks == 611
+    assert formal.ppo.num_evals == 612
     assert formal.events.jump_zone_x_max == pytest.approx(4.0)
     assert formal.reward.height_coeff == pytest.approx(40.0)
     assert formal.reward.speed_coeff == pytest.approx(1.0)
@@ -155,9 +155,9 @@ def test_continuation_v4_configs_use_the_active_10m_contract(jit_root):
     assert formal.reward.roll_pitch_failure_penalty == pytest.approx(400.0)
     assert formal.reward.jump_zone_missed_penalty == pytest.approx(200.0)
     assert formal.reset.airborne_rsi_probability == pytest.approx(0.08)
-    assert formal.model["naccdmax"] == 320
-    assert formal.formal.checkpoint_transitions == V4_10M_CHECKPOINTS
-    assert formal.formal.fixed_evaluation_transitions == V4_10M_EVALUATIONS
+    assert formal.model["naccdmax"] == 512
+    assert formal.formal.checkpoint_transitions == V4_15M_CHECKPOINTS
+    assert formal.formal.fixed_evaluation_transitions == V4_15M_EVALUATIONS
     assert formal.formal.resume_semantics == "fresh_only"
 
 

@@ -51,7 +51,7 @@ def test_v4_reset_uses_configured_warp_aggregate_ccd_capacity(jit_root):
     jax.block_until_ready(state)
 
     capacity = int(state.data._impl.naccdmax)
-    assert capacity == 320
+    assert capacity == 512
 
 
 def test_v4_environment_reports_stuck_terminal_and_distinct_penalty(jit_root):

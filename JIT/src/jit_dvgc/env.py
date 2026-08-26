@@ -41,6 +41,17 @@ from .semantics import (
 )
 
 
+def _finite_stuck_window_progress(
+    current_x: jax.Array, anchor_x: jax.Array
+) -> jax.Array:
+    progress = jp.asarray(current_x) - jp.asarray(anchor_x)
+    return jp.where(
+        jp.isfinite(progress),
+        progress,
+        jp.asarray(0.0, dtype=progress.dtype),
+    )
+
+
 class TwoPhaseBikeEnv(mjx_env.MjxEnv):
     """The JIT Propulsion-Ascent training environment."""
 
@@ -210,7 +221,9 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
             "event/apex_seen": events.apex_seen.astype(jp.float32),
             "event/stuck": events.stuck.astype(jp.float32),
             "event/stuck_ticks": events.stuck_ticks.astype(jp.float32),
-            "event/stuck_window_progress": reward_state.x - events.stuck_anchor_x,
+            "event/stuck_window_progress": _finite_stuck_window_progress(
+                reward_state.x, events.stuck_anchor_x
+            ),
             "reset/source_airborne_rsi": jp.asarray(reset_source, jp.float32),
             "signal/root_x": reward_state.x,
             "signal/root_y": reward_state.y,

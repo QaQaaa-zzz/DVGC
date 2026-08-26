@@ -27,37 +27,39 @@ if active.ppo.requested_transitions != 4_988_928:
     raise SystemExit("active v3 target is invalid")
 if smoke.ppo.requested_transitions != smoke.ppo.block_transitions:
     raise SystemExit("active v3 smoke is not one exact PPO block")
-if continuation.formal is None or continuation.formal.formal_blocks != 406:
+if continuation.formal is None or continuation.formal.formal_blocks != 611:
     raise SystemExit("active v4 formal configuration contract is invalid")
 if continuation.formal.resume_semantics != "fresh_only":
     raise SystemExit("active v4 formal configuration must be fresh-only")
-if continuation.ppo.requested_transitions != 9_977_856:
+if continuation.ppo.requested_transitions != 15_015_936:
     raise SystemExit("active v4 target is invalid")
-if continuation.ppo.num_evals != 407:
+if continuation.ppo.num_evals != 612:
     raise SystemExit("active v4 PPO evaluation schedule is invalid")
 if continuation.formal.checkpoint_transitions != (
     0,
-    491_520,
-    1_990_656,
-    4_988_928,
-    7_987_200,
-    9_977_856,
+    737_280,
+    2_998_272,
+    7_495_680,
+    11_993_088,
+    15_015_936,
 ):
     raise SystemExit("active v4 checkpoint schedule is invalid")
 if continuation.formal.fixed_evaluation_transitions != (
-    491_520,
-    1_990_656,
-    4_988_928,
-    7_987_200,
-    9_977_856,
+    737_280,
+    2_998_272,
+    7_495_680,
+    11_993_088,
+    15_015_936,
 ):
     raise SystemExit("active v4 evaluation schedule is invalid")
-if continuation.ppo.seed != 820701:
+if continuation.ppo.seed != 820801:
     raise SystemExit("active v4 training seed is invalid")
-if continuation.ppo.held_out_seeds != tuple(range(980001, 980009)):
+if continuation.ppo.held_out_seeds != tuple(range(990001, 990009)):
     raise SystemExit("active v4 held-out namespace is invalid")
 if continuation_smoke.ppo.requested_transitions != continuation_smoke.ppo.block_transitions:
     raise SystemExit("active v4 smoke is not one exact PPO block")
+if continuation.model["naccdmax"] != 512 or continuation_smoke.model["naccdmax"] != 512:
+    raise SystemExit("active v4 CCD capacity is invalid")
 PY
 "${JIT_PYTHON}" - <<'PY'
 import ast

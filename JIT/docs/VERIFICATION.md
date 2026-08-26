@@ -36,13 +36,13 @@ fresh. `preserve_episode_evidence=true` is independently config-bound and the
 GPU regression requires terminal length two followed by fresh length one.
 
 The active file is `JIT/configs/phase_u_continuation_10m.json`. It declares seed
-`820701`, held-out seeds `980001..980008`, and exactly 9,977,856 transitions:
-406 aligned blocks with checkpoints at 0, 491,520, 1,990,656, 4,988,928,
-7,987,200, and 9,977,856. It is identity-incompatible with every earlier v4
+`820801`, held-out seeds `990001..990008`, and exactly 15,015,936 transitions:
+611 aligned blocks with checkpoints at 0, 737,280, 2,998,272, 7,495,680,
+11,993,088, and 15,015,936. It is identity-incompatible with every earlier v4
 checkpoint, declares `resume_semantics=fresh_only`, and rejects every restore
 option before backend, environment, checkpoint, or run-directory work.
 
-The active v4 method identity also fixes `naccdmax=320`, jump window
+The active v4 method identity also fixes `naccdmax=512`, jump window
 `[2.5,4.0]`, height coefficient 40, desired speed 2 m/s, and airborne RSI
 probability 8%. It adds a jump-signaled low-height cost that is `-5` at 0.15 m
 and linearly reaches zero at 0.35 m; steering changes are softened with a

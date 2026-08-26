@@ -57,7 +57,7 @@ def test_active_v4_smoke_resolves_to_one_exact_384_environment_block(jit_root):
     assert config.ppo.requested_transitions == 24_576
     assert config.ppo.requested_transitions // config.ppo.block_transitions == 1
     assert config.schema == "jit_phase_u_engineering_smoke_v4"
-    assert config.ppo.seed == 820700
+    assert config.ppo.seed == 820800
     assert config.reset.airborne_rsi_probability == pytest.approx(0.08)
     assert config.events.jump_zone_x_max == pytest.approx(4.0)
     assert config.reward.height_coeff == pytest.approx(40.0)
@@ -78,4 +78,4 @@ def test_active_v4_smoke_resolves_to_one_exact_384_environment_block(jit_root):
     assert config.reward.illegal_contact_penalty == 0.0
     assert config.physical_limits.terminate_on_prohibited_contact is False
     assert config.ppo.episode_horizon == 400
-    assert config.model["naccdmax"] == 320
+    assert config.model["naccdmax"] == 512

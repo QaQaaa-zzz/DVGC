@@ -79,6 +79,12 @@ def test_jump_signal_is_inclusive_then_closes_permanently(config):
     assert bool(reentered.jump_zone_consumed)
 
 
+def test_nonfinite_position_does_not_poison_stuck_anchor(v4_config):
+    previous = initial_event_state(jp.array(2.8), v4_config)
+    advanced = advance_events(previous, _signals(x=jp.asarray(jp.nan)), v4_config)
+    assert bool(jp.isfinite(advanced.stuck_anchor_x))
+
+
 def test_v4_jump_signal_stays_live_to_4_0_then_closes_permanently(v4_config):
     event = initial_event_state(jp.array(2.4), v4_config)
     signal_at_x_3_25 = advance_events(

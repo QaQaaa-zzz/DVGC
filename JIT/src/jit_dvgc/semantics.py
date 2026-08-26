@@ -102,6 +102,9 @@ def advance_events(
     config: ResolvedConfig,
 ) -> EventState:
     inside = _inside_jump_zone(signals.x, config)
+    safe_x = jp.where(
+        jp.isfinite(signals.x), signals.x, previous.stuck_anchor_x
+    )
     exited = jp.asarray(previous.jump_signal, dtype=bool) & ~inside
     consumed = (
         jp.asarray(previous.jump_zone_consumed, dtype=bool)
@@ -125,7 +128,7 @@ def advance_events(
     )
     if config.events.stuck_forward_velocity_threshold is not None:
         monitor_stuck = jump_signal & ~height_seen
-        stuck_anchor_x = signals.x
+        stuck_anchor_x = safe_x
         stuck_ticks = jp.asarray(0, jp.int32)
         stuck = jp.asarray(previous.stuck, dtype=bool) | (
             monitor_stuck
@@ -135,7 +138,7 @@ def advance_events(
             )
         )
     elif config.events.stuck_window_steps is None:
-        stuck_anchor_x = signals.x
+        stuck_anchor_x = safe_x
         stuck_ticks = jp.asarray(0, jp.int32)
         stuck = jp.asarray(False)
     else:
@@ -148,7 +151,7 @@ def advance_events(
             signals.x - previous.stuck_anchor_x
         ) >= config.events.stuck_min_progress
         reset_window = ~monitor_stuck | made_progress
-        stuck_anchor_x = jp.where(reset_window, signals.x, previous.stuck_anchor_x)
+        stuck_anchor_x = jp.where(reset_window, safe_x, previous.stuck_anchor_x)
         stuck_ticks = jp.where(
             reset_window,
             jp.asarray(0, jp.int32),
