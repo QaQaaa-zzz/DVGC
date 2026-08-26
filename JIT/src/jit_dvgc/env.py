@@ -339,6 +339,9 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
             "end_code": jp.asarray(END_ONGOING, jp.int32),
             "success": false,
             "physical_failure": false,
+            "roll_limit": false,
+            "pitch_limit": false,
+            "jump_zone_missed": false,
             "stuck": false,
             "yaw_limit": false,
             "timeout": false,
@@ -389,6 +392,7 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
             backward_exit=backward_exit,
             stuck=previous_events.stuck,
             yaw=geometry.yaw,
+            jump_zone_seen=previous_events.jump_zone_seen,
         )
         preliminary = classify_terminal(preliminary_inputs, self._resolved_config)
         events = advance_events(
@@ -404,7 +408,10 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
         )
         first_apex = events.apex_seen & ~previous_events.apex_seen
         terminal: TerminalState = classify_terminal(
-            preliminary_inputs.replace(stuck=events.stuck), self._resolved_config
+            preliminary_inputs.replace(
+                stuck=events.stuck, jump_zone_seen=events.jump_zone_seen
+            ),
+            self._resolved_config,
         )
         reward_state = self._reward_state(data, geometry)
         reward_result: RewardResult = phase_u_reward(
@@ -417,6 +424,12 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
                 illegal_contact=geometry.prohibited_contact,
                 physical_failure_transition=terminal.physical_failure
                 & ~state.info["physical_failure"],
+                roll_pitch_failure_transition=(
+                    terminal.roll_limit | terminal.pitch_limit
+                )
+                & ~(state.info["roll_limit"] | state.info["pitch_limit"]),
+                jump_zone_missed_transition=terminal.jump_zone_missed
+                & ~state.info["jump_zone_missed"],
                 stuck_transition=terminal.stuck & ~state.info["stuck"],
                 yaw_limit_transition=terminal.yaw_limit & ~state.info["yaw_limit"],
                 timeout_transition=terminal.timeout & ~state.info["timeout"],
@@ -463,6 +476,9 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
             },
             **self._state_metrics(reward_state, geometry, events, reset_source),
             "terminal/physical_failure": terminal.physical_failure.astype(jp.float32),
+            "terminal/roll_limit": terminal.roll_limit.astype(jp.float32),
+            "terminal/pitch_limit": terminal.pitch_limit.astype(jp.float32),
+            "terminal/jump_zone_missed": terminal.jump_zone_missed.astype(jp.float32),
             "terminal/stuck": terminal.stuck.astype(jp.float32),
             "terminal/yaw_limit": terminal.yaw_limit.astype(jp.float32),
             "terminal/timeout": terminal.timeout.astype(jp.float32),
@@ -482,6 +498,9 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
             "end_code": terminal.end_code,
             "success": terminal.success,
             "physical_failure": terminal.physical_failure,
+            "roll_limit": terminal.roll_limit,
+            "pitch_limit": terminal.pitch_limit,
+            "jump_zone_missed": terminal.jump_zone_missed,
             "stuck": terminal.stuck,
             "yaw_limit": terminal.yaw_limit,
             "timeout": terminal.timeout,

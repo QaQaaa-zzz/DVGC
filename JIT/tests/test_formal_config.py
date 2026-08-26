@@ -19,15 +19,15 @@ ABSOLUTE_5M_CHECKPOINTS = (
     4_988_928,
 )
 ABSOLUTE_5M_EVALUATIONS = ABSOLUTE_5M_CHECKPOINTS[1:]
-V4_15M_CHECKPOINTS = (
+V4_10M_CHECKPOINTS = (
     0,
-    737_280,
-    2_998_272,
-    7_495_680,
-    11_993_088,
-    15_015_936,
+    491_520,
+    1_990_656,
+    4_988_928,
+    7_987_200,
+    9_977_856,
 )
-V4_15M_EVALUATIONS = V4_15M_CHECKPOINTS[1:]
+V4_10M_EVALUATIONS = V4_10M_CHECKPOINTS[1:]
 
 
 def test_formal_config_is_exactly_39_aligned_blocks(jit_root):
@@ -99,7 +99,7 @@ def test_absolute_5m_config_is_exactly_203_aligned_blocks(jit_root):
     assert config.formal.fixed_evaluation_transitions == ABSOLUTE_5M_EVALUATIONS
 
 
-def test_continuation_v4_configs_use_the_active_15m_contract(jit_root):
+def test_continuation_v4_configs_use_the_active_10m_contract(jit_root):
     smoke = load_config(jit_root / "configs" / "phase_u_continuation_smoke.json")
     formal = load_config(jit_root / "configs" / "phase_u_continuation_10m.json")
 
@@ -108,7 +108,7 @@ def test_continuation_v4_configs_use_the_active_15m_contract(jit_root):
         "full_reset": True,
         "preserve_episode_evidence": True,
     }
-    assert smoke.ppo.seed == 820600
+    assert smoke.ppo.seed == 820700
     assert smoke.reset.airborne_rsi_probability == pytest.approx(0.08)
     assert smoke.events.jump_zone_x_max == pytest.approx(4.0)
     assert smoke.events.stuck_window_steps is None
@@ -117,12 +117,17 @@ def test_continuation_v4_configs_use_the_active_15m_contract(jit_root):
     assert smoke.physical_limits.max_abs_yaw == pytest.approx(math.radians(45.0))
     assert smoke.physical_limits.terminate_on_prohibited_contact is False
     assert smoke.reward.height_coeff == pytest.approx(40.0)
-    assert smoke.reward.low_height_penalty == pytest.approx(8.0)
+    assert smoke.reward.low_height_penalty == pytest.approx(5.0)
     assert smoke.reward.stuck_penalty == pytest.approx(100.0)
     assert smoke.reward.yaw_limit_penalty == pytest.approx(100.0)
-    assert smoke.reward.steering_action_diff_penalty == pytest.approx(2.0)
-    assert smoke.reward.steering_magnitude_penalty == pytest.approx(0.5)
+    assert smoke.reward.steering_action_diff_penalty == pytest.approx(1.0)
+    assert smoke.reward.steering_magnitude_penalty == pytest.approx(0.25)
     assert smoke.reward.rear_wheel_action_diff_penalty == pytest.approx(2.0)
+    assert smoke.reward.speed_coeff == pytest.approx(1.0)
+    assert smoke.reward.desired_velocity == pytest.approx(2.0)
+    assert smoke.reward.total_min == pytest.approx(-400.0)
+    assert smoke.reward.roll_pitch_failure_penalty == pytest.approx(400.0)
+    assert smoke.reward.jump_zone_missed_penalty == pytest.approx(200.0)
     assert smoke.reward.failed_episode_return == pytest.approx(-100.0)
     assert smoke.reward.illegal_contact_penalty == 0.0
     assert smoke.ppo.episode_horizon == 400
@@ -132,19 +137,27 @@ def test_continuation_v4_configs_use_the_active_15m_contract(jit_root):
     assert smoke.reset.airborne_rsi_vz_max == pytest.approx(3.6)
     assert smoke.model["naccdmax"] == 320
     assert formal.schema == "jit_phase_u_formal_v4"
-    assert formal.ppo.seed == 820601
-    assert formal.ppo.held_out_seeds == tuple(range(970001, 970009))
-    assert formal.ppo.requested_transitions == 15_015_936
+    assert formal.ppo.seed == 820701
+    assert formal.ppo.held_out_seeds == tuple(range(980001, 980009))
+    assert formal.ppo.requested_transitions == 9_977_856
     assert formal.ppo.episode_horizon == 400
     assert formal.formal is not None
-    assert formal.formal.formal_blocks == 611
-    assert formal.ppo.num_evals == 612
+    assert formal.formal.formal_blocks == 406
+    assert formal.ppo.num_evals == 407
     assert formal.events.jump_zone_x_max == pytest.approx(4.0)
     assert formal.reward.height_coeff == pytest.approx(40.0)
+    assert formal.reward.speed_coeff == pytest.approx(1.0)
+    assert formal.reward.desired_velocity == pytest.approx(2.0)
+    assert formal.reward.total_min == pytest.approx(-400.0)
+    assert formal.reward.low_height_penalty == pytest.approx(5.0)
+    assert formal.reward.steering_action_diff_penalty == pytest.approx(1.0)
+    assert formal.reward.steering_magnitude_penalty == pytest.approx(0.25)
+    assert formal.reward.roll_pitch_failure_penalty == pytest.approx(400.0)
+    assert formal.reward.jump_zone_missed_penalty == pytest.approx(200.0)
     assert formal.reset.airborne_rsi_probability == pytest.approx(0.08)
     assert formal.model["naccdmax"] == 320
-    assert formal.formal.checkpoint_transitions == V4_15M_CHECKPOINTS
-    assert formal.formal.fixed_evaluation_transitions == V4_15M_EVALUATIONS
+    assert formal.formal.checkpoint_transitions == V4_10M_CHECKPOINTS
+    assert formal.formal.fixed_evaluation_transitions == V4_10M_EVALUATIONS
     assert formal.formal.resume_semantics == "fresh_only"
 
 
@@ -162,8 +175,10 @@ def test_continuation_v4_configs_use_the_active_15m_contract(jit_root):
         lambda p: p["reward"].update(low_height_penalty=2.0),
         lambda p: p["reward"].update(stuck_penalty=99.0),
         lambda p: p["reward"].update(yaw_limit_penalty=99.0),
-        lambda p: p["reward"].update(steering_action_diff_penalty=1.0),
-        lambda p: p["reward"].update(steering_magnitude_penalty=0.25),
+        lambda p: p["reward"].update(steering_action_diff_penalty=0.5),
+        lambda p: p["reward"].update(steering_magnitude_penalty=0.1),
+        lambda p: p["reward"].update(roll_pitch_failure_penalty=399.0),
+        lambda p: p["reward"].update(jump_zone_missed_penalty=199.0),
         lambda p: p["reward"].update(failed_episode_return=-90.0),
         lambda p: p["reward"].update(illegal_contact_penalty=30.0),
         lambda p: p["ppo"].update(episode_horizon=200),

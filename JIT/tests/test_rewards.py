@@ -53,6 +53,8 @@ def _inputs(**overrides) -> RewardInputs:
         first_apex_success=jp.array(False),
         illegal_contact=jp.array(False),
         physical_failure_transition=jp.array(False),
+        roll_pitch_failure_transition=jp.array(False),
+        jump_zone_missed_transition=jp.array(False),
         stuck_transition=jp.array(False),
         yaw_limit_transition=jp.array(False),
         timeout_transition=jp.array(False),
@@ -128,8 +130,8 @@ def test_v4_height_component_uses_40x_raw_height_only_while_signaled(v4_config):
 @pytest.mark.parametrize(
     ("z", "jump_signal", "expected"),
     [
-        (0.15, True, -8.0),
-        (0.25, True, -4.0),
+        (0.15, True, -5.0),
+        (0.25, True, -2.5),
         (0.35, True, 0.0),
         (0.15, False, 0.0),
     ],
@@ -174,8 +176,8 @@ def test_v4_steering_costs_suppress_full_scale_bang_bang(v4_config):
         last_action=jp.array([-1.0, 0.0, 0.0, 0.0]),
     )
 
-    assert float(result.components.action_smoothness) == pytest.approx(-8.0006)
-    assert float(result.components.action_magnitude) == pytest.approx(-0.65)
+    assert float(result.components.action_smoothness) == pytest.approx(-4.0006)
+    assert float(result.components.action_magnitude) == pytest.approx(-0.4)
 
 
 def test_v4_rear_wheel_costs_suppress_full_scale_switching(v4_config):
@@ -186,6 +188,15 @@ def test_v4_rear_wheel_costs_suppress_full_scale_switching(v4_config):
     )
 
     assert float(result.components.action_smoothness) == pytest.approx(-8.0006)
+
+
+def test_v4_roll_pitch_and_missed_zone_penalties_are_distinct(v4_config):
+    roll = _reward(v4_config, roll_pitch_failure_transition=jp.array(True))
+    missed = _reward(v4_config, jump_zone_missed_transition=jp.array(True))
+
+    assert float(roll.components.roll_pitch_failure) == pytest.approx(-400.0)
+    assert float(missed.components.jump_zone_missed) == pytest.approx(-200.0)
+    assert float(missed.components.roll_pitch_failure) == pytest.approx(0.0)
 
 
 def test_terminal_components_and_total_clipping_are_separate(config):

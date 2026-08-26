@@ -39,6 +39,8 @@ class RewardInputs:
     first_apex_success: jax.Array
     illegal_contact: jax.Array
     physical_failure_transition: jax.Array
+    roll_pitch_failure_transition: jax.Array
+    jump_zone_missed_transition: jax.Array
     stuck_transition: jax.Array
     yaw_limit_transition: jax.Array
     timeout_transition: jax.Array
@@ -62,6 +64,8 @@ class RewardComponents:
     apex_success: jax.Array
     illegal_contact: jax.Array
     physical_failure: jax.Array
+    roll_pitch_failure: jax.Array
+    jump_zone_missed: jax.Array
     stuck: jax.Array
     yaw_limit: jax.Array
     timeout: jax.Array
@@ -213,6 +217,19 @@ def phase_u_reward(
     physical_failure = -config.physical_failure_penalty * physical_transition.astype(
         jp.float32
     )
+    roll_pitch_transition = jp.asarray(
+        inputs.roll_pitch_failure_transition, dtype=bool
+    )
+    roll_pitch_failure = -config.roll_pitch_failure_penalty * roll_pitch_transition.astype(
+        jp.float32
+    )
+    jump_zone_missed_transition = (
+        jp.asarray(inputs.jump_zone_missed_transition, dtype=bool)
+        & ~roll_pitch_transition
+    )
+    jump_zone_missed = -config.jump_zone_missed_penalty * jump_zone_missed_transition.astype(
+        jp.float32
+    )
     stuck = -config.stuck_penalty * stuck_transition.astype(jp.float32)
     yaw_limit = -config.yaw_limit_penalty * jp.asarray(
         yaw_limit_transition, jp.float32
@@ -235,6 +252,8 @@ def phase_u_reward(
         apex_success=apex_success,
         illegal_contact=illegal_contact,
         physical_failure=physical_failure,
+        roll_pitch_failure=roll_pitch_failure,
+        jump_zone_missed=jump_zone_missed,
         stuck=stuck,
         yaw_limit=yaw_limit,
         timeout=timeout,

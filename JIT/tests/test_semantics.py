@@ -9,6 +9,8 @@ from jit_dvgc.config import load_config
 from jit_dvgc.constants import (
     END_ONGOING,
     END_PITCH_LIMIT,
+    END_JUMP_ZONE_MISSED,
+    END_ROLL_LIMIT,
     END_STUCK,
     END_TIMEOUT,
     END_YAW_LIMIT,
@@ -211,6 +213,7 @@ def _terminal_inputs(**overrides) -> TerminalInputs:
         backward_exit=jp.array(False),
         stuck=jp.array(False),
         yaw=jp.array(0.0),
+        jump_zone_seen=jp.array(True),
     )
     values.update(overrides)
     return TerminalInputs(**values)
@@ -291,6 +294,35 @@ def test_v4_stuck_is_a_distinct_nonphysical_terminal(v4_config):
     assert bool(terminal.stuck)
     assert not bool(terminal.physical_failure)
     assert int(terminal.end_code) == END_STUCK
+
+
+def test_v4_horizon_without_jump_zone_is_a_missed_zone_terminal(v4_config):
+    terminal = classify_terminal(
+        _terminal_inputs(
+            episode_step=jp.array(v4_config.ppo.episode_horizon - 1),
+            jump_zone_seen=jp.array(False),
+        ),
+        v4_config,
+    )
+
+    assert bool(terminal.terminated)
+    assert bool(terminal.jump_zone_missed)
+    assert not bool(terminal.truncated)
+    assert int(terminal.end_code) == END_JUMP_ZONE_MISSED
+
+
+def test_v4_roll_failure_before_jump_zone_keeps_roll_priority(v4_config):
+    terminal = classify_terminal(
+        _terminal_inputs(
+            roll=jp.array(2.0),
+            jump_zone_seen=jp.array(False),
+        ),
+        v4_config,
+    )
+
+    assert bool(terminal.roll_limit)
+    assert bool(terminal.jump_zone_missed)
+    assert int(terminal.end_code) == END_ROLL_LIMIT
 
 
 def test_v4_world_yaw_above_45_degrees_is_a_distinct_terminal(v4_config):

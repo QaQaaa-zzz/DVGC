@@ -11,6 +11,7 @@ from .constants import (
     END_BACKWARD_EXIT,
     END_NONFINITE,
     END_ONGOING,
+    END_JUMP_ZONE_MISSED,
     END_PITCH_LIMIT,
     END_PROHIBITED_CONTACT,
     END_ROLL_LIMIT,
@@ -53,6 +54,7 @@ class TerminalInputs:
     backward_exit: jax.Array
     stuck: jax.Array
     yaw: jax.Array
+    jump_zone_seen: jax.Array
 
 
 @struct.dataclass
@@ -61,6 +63,9 @@ class TerminalState:
     truncated: jax.Array
     success: jax.Array
     physical_failure: jax.Array
+    roll_limit: jax.Array
+    pitch_limit: jax.Array
+    jump_zone_missed: jax.Array
     stuck: jax.Array
     yaw_limit: jax.Array
     timeout: jax.Array
@@ -190,27 +195,31 @@ def classify_terminal(inputs: TerminalInputs, config: ResolvedConfig) -> Termina
         )
         else jp.asarray(inputs.stuck, dtype=bool)
     )
+    horizon = inputs.episode_step >= config.ppo.episode_horizon - 1
     physical_failure = jp.asarray(False)
     for condition in physical_failures:
         physical_failure = physical_failure | condition
+    jump_zone_missed = jp.asarray(config.schema.endswith("_v4"), dtype=bool) & (
+        ~jp.asarray(inputs.jump_zone_seen, dtype=bool) & (physical_failure | horizon)
+    )
     stuck = raw_stuck & ~physical_failure
     yaw_limit = raw_yaw_limit & ~physical_failure & ~stuck
-    failures = physical_failures + (stuck, yaw_limit)
+    failures = physical_failures + (jump_zone_missed, stuck, yaw_limit)
     failure_codes = (
         END_NONFINITE,
         END_ROLL_LIMIT,
         END_PITCH_LIMIT,
         END_PROHIBITED_CONTACT,
         END_BACKWARD_EXIT,
+        END_JUMP_ZONE_MISSED,
         END_STUCK,
         END_YAW_LIMIT,
     )
-    terminated = physical_failure | stuck | yaw_limit
+    terminated = physical_failure | jump_zone_missed | stuck | yaw_limit
     failure_code = jp.asarray(END_ONGOING, jp.int32)
     for condition, code in reversed(tuple(zip(failures, failure_codes, strict=True))):
         failure_code = jp.where(condition, jp.asarray(code, jp.int32), failure_code)
     success = jp.asarray(False)
-    horizon = inputs.episode_step >= config.ppo.episode_horizon - 1
     timeout = horizon & ~terminated
     end_code = jp.where(timeout, END_TIMEOUT, END_ONGOING)
     end_code = jp.where(terminated, failure_code, end_code).astype(jp.int32)
@@ -219,6 +228,9 @@ def classify_terminal(inputs: TerminalInputs, config: ResolvedConfig) -> Termina
         truncated=timeout,
         success=success,
         physical_failure=physical_failure,
+        roll_limit=roll_failure,
+        pitch_limit=pitch_failure,
+        jump_zone_missed=jump_zone_missed,
         stuck=stuck,
         yaw_limit=yaw_limit,
         timeout=timeout,

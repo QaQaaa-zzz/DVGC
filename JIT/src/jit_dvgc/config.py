@@ -148,6 +148,8 @@ class RewardConfig:
     steering_action_diff_penalty: float = 0.0
     steering_magnitude_penalty: float = 0.0
     rear_wheel_action_diff_penalty: float = 0.0
+    roll_pitch_failure_penalty: float = 0.0
+    jump_zone_missed_penalty: float = 0.0
     failed_episode_return: float | None = None
 
 
@@ -222,7 +224,7 @@ def _validate_formal(
         approved_target = {
             "jit_phase_u_formal_v2": 998_400,
             "jit_phase_u_formal_v3": 4_988_928,
-            "jit_phase_u_formal_v4": 15_015_936,
+            "jit_phase_u_formal_v4": 9_977_856,
         }[schema]
         raise ValueError(
             "formal checkpoints must end at requested transitions; "
@@ -245,23 +247,23 @@ def _validate_formal(
             raise ValueError("formal held-out seeds must equal 920001 through 920008")
         expected_checkpoints = (0, 102_400, 256_000, 512_000, 742_400, 998_400)
     elif schema == "jit_phase_u_formal_v4":
-        if ppo.requested_transitions != 15_015_936:
-            raise ValueError("formal requested_transitions must equal 15015936")
+        if ppo.requested_transitions != 9_977_856:
+            raise ValueError("formal requested_transitions must equal 9977856")
         if ppo.block_transitions != 24_576:
             raise ValueError("formal PPO block must equal 24576 transitions")
-        if ppo.num_evals != 612:
-            raise ValueError("formal num_evals must equal 612")
-        if ppo.seed != 820601:
-            raise ValueError("formal training seed must equal 820601")
-        if ppo.held_out_seeds != tuple(range(970001, 970009)):
+        if ppo.num_evals != 407:
+            raise ValueError("formal num_evals must equal 407")
+        if ppo.seed != 820701:
+            raise ValueError("formal training seed must equal 820701")
+        if ppo.held_out_seeds != tuple(range(980001, 980009)):
             raise ValueError("formal held-out seeds do not match the approved namespace")
         expected_checkpoints = (
             0,
-            737_280,
-            2_998_272,
-            7_495_680,
-            11_993_088,
-            15_015_936,
+            491_520,
+            1_990_656,
+            4_988_928,
+            7_987_200,
+            9_977_856,
         )
     else:
         if ppo.requested_transitions != 4_988_928:
@@ -475,10 +477,10 @@ def _validate_approved_absolute_method(
         roll_coeff=3.0,
         pitch_coeff=1.0,
         yaw_coeff=0.3,
-        speed_coeff=0.2,
+        speed_coeff=1.0 if is_v4 else 0.2,
         survival_reward=1.5,
         height_coeff=40.0 if is_v4 else 20.0,
-        desired_velocity=3.5,
+        desired_velocity=2.0 if is_v4 else 3.5,
         speed_sigma=0.5,
         jump_reward_min_height=0.35,
         peak_reward_height=0.5,
@@ -492,19 +494,21 @@ def _validate_approved_absolute_method(
         illegal_contact_penalty=0.0 if is_v4 else 30.0,
         physical_failure_penalty=30.0,
         timeout_penalty=10.0,
-        total_min=-100.0 if is_v4 else -50.0,
+        total_min=-400.0 if is_v4 else -50.0,
         total_max=50.0,
-        low_height_penalty=8.0 if is_v4 else 0.0,
+        low_height_penalty=5.0 if is_v4 else 0.0,
         low_height_penalty_full_at=0.15,
         stuck_penalty=100.0 if is_v4 else 0.0,
         yaw_limit_penalty=100.0 if is_v4 else 0.0,
-        steering_action_diff_penalty=2.0 if is_v4 else 0.0,
-        steering_magnitude_penalty=0.5 if is_v4 else 0.0,
+        steering_action_diff_penalty=1.0 if is_v4 else 0.0,
+        steering_magnitude_penalty=0.25 if is_v4 else 0.0,
         rear_wheel_action_diff_penalty=2.0 if is_v4 else 0.0,
+        roll_pitch_failure_penalty=400.0 if is_v4 else 0.0,
+        jump_zone_missed_penalty=200.0 if is_v4 else 0.0,
         failed_episode_return=-100.0 if is_v4 else None,
     )
     held_out_seeds = (
-        tuple(range(970001, 970009))
+        tuple(range(980001, 980009))
         if is_v4
         else tuple(range(930001, 930009))
     )
@@ -528,9 +532,9 @@ def _validate_approved_absolute_method(
     if schema == "jit_phase_u_formal_v4":
         expected_ppo = PPOConfig(
             **common_ppo,
-            requested_transitions=15_015_936,
-            num_evals=612,
-            seed=820601,
+            requested_transitions=9_977_856,
+            num_evals=407,
+            seed=820701,
         )
     elif schema == "jit_phase_u_formal_v3":
         expected_ppo = PPOConfig(
@@ -544,7 +548,7 @@ def _validate_approved_absolute_method(
             **common_ppo,
             requested_transitions=24_576,
             num_evals=1,
-            seed=820600 if is_v4 else 820200,
+            seed=820700 if is_v4 else 820200,
         )
     approved = {
         "model": (dict(model), expected_model),
@@ -652,6 +656,8 @@ def resolve_config_payload(payload: Mapping[str, Any]) -> ResolvedConfig:
         "steering_action_diff_penalty",
         "steering_magnitude_penalty",
         "rear_wheel_action_diff_penalty",
+        "roll_pitch_failure_penalty",
+        "jump_zone_missed_penalty",
     ):
         if getattr(reward, name) < 0.0:
             raise ValueError(f"reward.{name} must be nonnegative")

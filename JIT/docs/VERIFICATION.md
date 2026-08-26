@@ -36,19 +36,22 @@ fresh. `preserve_episode_evidence=true` is independently config-bound and the
 GPU regression requires terminal length two followed by fresh length one.
 
 The active file is `JIT/configs/phase_u_continuation_10m.json`. It declares seed
-`820601`, held-out seeds `970001..970008`, and exactly 15,015,936 transitions:
-611 aligned blocks with checkpoints at 0, 737,280, 2,998,272, 7,495,680,
-11,993,088, and 15,015,936. It is identity-incompatible with every earlier v4
+`820701`, held-out seeds `980001..980008`, and exactly 9,977,856 transitions:
+406 aligned blocks with checkpoints at 0, 491,520, 1,990,656, 4,988,928,
+7,987,200, and 9,977,856. It is identity-incompatible with every earlier v4
 checkpoint, declares `resume_semantics=fresh_only`, and rejects every restore
 option before backend, environment, checkpoint, or run-directory work.
 
 The active v4 method identity also fixes `naccdmax=320`, jump window
-`[2.5,4.0]`, height coefficient 40, and airborne RSI probability 8%. It now
-adds a jump-signaled low-height cost that is `-8` at 0.15 m and linearly reaches
-zero at 0.35 m; an immediate `vx <= 0.3 m/s` pre-height stuck terminal with `-100`; and a
-world-root-yaw limit of 45 degrees with `-100`. Both task failures override the
-complete episode return to exactly `-100`. Stuck and yaw have distinct end
-codes and are not double-counted as generic physical failures. The stuck
+`[2.5,4.0]`, height coefficient 40, desired speed 2 m/s, and airborne RSI
+probability 8%. It adds a jump-signaled low-height cost that is `-5` at 0.15 m
+and linearly reaches zero at 0.35 m; steering changes are softened with a
+1.0 action-difference and 0.25 magnitude cost; an immediate `vx <= 0.3 m/s`
+pre-height stuck terminal with `-100`; and a world-root-yaw limit of 45 degrees
+with `-100`. Roll/pitch termination costs `-400`, while terminating before ever
+seeing the jump zone costs `-200`; these task failures override the complete
+episode return to exactly `-100`. Stuck and yaw have distinct end codes and are
+not double-counted as generic physical failures. The stuck
 monitor disables after the retained 0.5 m height event, so post-Apex evidence
 continues normally.
 Completed-run provenance revalidates the raw resolved config instead of

@@ -52,10 +52,10 @@
     "roll_coeff": 3.0,
     "pitch_coeff": 1.0,
     "yaw_coeff": 0.3,
-    "speed_coeff": 0.2,
+    "speed_coeff": 1.0,
     "survival_reward": 1.5,
     "height_coeff": 40.0,
-    "desired_velocity": 3.5,
+    "desired_velocity": 2.0,
     "speed_sigma": 0.5,
     "jump_reward_min_height": 0.35,
     "peak_reward_height": 0.5,
@@ -69,15 +69,17 @@
     "illegal_contact_penalty": 0.0,
     "physical_failure_penalty": 30.0,
     "timeout_penalty": 10.0,
-    "total_min": -100.0,
+    "total_min": -400.0,
     "total_max": 50.0,
-    "low_height_penalty": 8.0,
+    "low_height_penalty": 5.0,
     "low_height_penalty_full_at": 0.15,
     "stuck_penalty": 100.0,
     "yaw_limit_penalty": 100.0,
-    "steering_action_diff_penalty": 2.0,
-    "steering_magnitude_penalty": 0.5,
+    "steering_action_diff_penalty": 1.0,
+    "steering_magnitude_penalty": 0.25,
     "rear_wheel_action_diff_penalty": 2.0,
+    "roll_pitch_failure_penalty": 400.0,
+    "jump_zone_missed_penalty": 200.0,
     "failed_episode_return": -100.0
   },
   "ppo": {
@@ -87,9 +89,9 @@
     "batch_size": 16,
     "num_minibatches": 24,
     "num_updates_per_batch": 8,
-    "requested_transitions": 15015936,
+    "requested_transitions": 9977856,
     "num_eval_envs": 8,
-    "num_evals": 612,
+    "num_evals": 407,
     "learning_rate": 0.0001,
     "entropy_cost": 0.01,
     "reward_scaling": 0.1,
@@ -97,12 +99,12 @@
     "gae_lambda": 0.95,
     "clipping_epsilon": 0.2,
     "max_grad_norm": 0.5,
-    "seed": 820601,
-    "held_out_seeds": [970001, 970002, 970003, 970004, 970005, 970006, 970007, 970008]
+    "seed": 820701,
+    "held_out_seeds": [980001, 980002, 980003, 980004, 980005, 980006, 980007, 980008]
   },
   "formal": {
-    "checkpoint_transitions": [0, 737280, 2998272, 7495680, 11993088, 15015936],
-    "fixed_evaluation_transitions": [737280, 2998272, 7495680, 11993088, 15015936],
+    "checkpoint_transitions": [0, 491520, 1990656, 4988928, 7987200, 9977856],
+    "fixed_evaluation_transitions": [491520, 1990656, 4988928, 7987200, 9977856],
     "resume_semantics": "fresh_only"
   }
 }
