@@ -36,6 +36,7 @@ def _signals(**overrides) -> PhaseUSignals:
     values = dict(
         x=jp.array(2.0),
         z=jp.array(0.15),
+        forward_velocity=jp.array(1.0),
         vertical_velocity=jp.array(0.0),
         physical_failure=jp.array(False),
     )
@@ -93,40 +94,49 @@ def test_v4_jump_signal_stays_live_to_3_4_then_closes_permanently(v4_config):
     assert bool(signal_after_return_to_x_3_0.jump_signal) is False
 
 
-def test_v4_stuck_fires_after_half_second_without_five_centimeters_progress(
-    v4_config,
-):
+def test_v4_stuck_fires_immediately_at_forward_speed_threshold(v4_config):
     event = initial_event_state(jp.array(2.8), v4_config)
-    for _ in range(24):
-        event = advance_events(event, _signals(x=jp.array(2.8)), v4_config)
-        assert not bool(event.stuck)
+    moving = advance_events(
+        event,
+        _signals(x=jp.array(2.8), forward_velocity=jp.array(0.3001)),
+        v4_config,
+    )
+    event = advance_events(
+        moving,
+        _signals(x=jp.array(2.8), forward_velocity=jp.array(0.3)),
+        v4_config,
+    )
 
-    event = advance_events(event, _signals(x=jp.array(2.8)), v4_config)
-
+    assert not bool(moving.stuck)
     assert bool(event.stuck)
 
 
-def test_v4_stuck_window_resets_on_progress_and_is_disabled_after_height(v4_config):
+def test_v4_low_speed_stuck_is_disabled_after_height(v4_config):
     event = initial_event_state(jp.array(2.8), v4_config)
-    for _ in range(24):
-        event = advance_events(event, _signals(x=jp.array(2.8)), v4_config)
-    progressed = advance_events(event, _signals(x=jp.array(2.86)), v4_config)
-    assert not bool(progressed.stuck)
-
     high = advance_events(
-        progressed,
-        _signals(x=jp.array(2.86), z=jp.array(0.5), vertical_velocity=jp.array(0.1)),
+        event,
+        _signals(
+            x=jp.array(2.86),
+            z=jp.array(0.5),
+            forward_velocity=jp.array(0.3),
+            vertical_velocity=jp.array(0.1),
+        ),
         v4_config,
     )
-    for _ in range(25):
-        high = advance_events(
-            high,
-            _signals(x=jp.array(2.86), z=jp.array(0.15)),
-            v4_config,
-        )
 
     assert bool(high.height_seen)
     assert not bool(high.stuck)
+
+
+def test_v4_low_speed_outside_jump_signal_is_not_stuck(v4_config):
+    event = initial_event_state(jp.array(2.4), v4_config)
+    event = advance_events(
+        event,
+        _signals(x=jp.array(2.4), forward_velocity=jp.array(0.0)),
+        v4_config,
+    )
+
+    assert not bool(event.stuck)
 
 
 def test_apex_requires_legal_zone_height_prior_ascent_and_descent(config):

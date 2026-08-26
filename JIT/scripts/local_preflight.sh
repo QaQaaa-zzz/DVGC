@@ -4,7 +4,6 @@ set -euo pipefail
 JIT_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 JIT_ROOT="$(cd "${JIT_SCRIPT_DIR}/../.." && pwd)"
 JIT_PYTHON="/home/qy/mujoco_playground/.venv/bin/python"
-JIT_SUCCESS_RUN="${JIT_ROOT}/JIT/runs/phase_u/phase_u_1024_one_block_20260824_seed820001_retry2"
 
 cd "${JIT_ROOT}"
 export PYTHONPATH="${JIT_ROOT}/JIT/src"
@@ -28,34 +27,34 @@ if active.ppo.requested_transitions != 4_988_928:
     raise SystemExit("active v3 target is invalid")
 if smoke.ppo.requested_transitions != smoke.ppo.block_transitions:
     raise SystemExit("active v3 smoke is not one exact PPO block")
-if continuation.formal is None or continuation.formal.formal_blocks != 406:
+if continuation.formal is None or continuation.formal.formal_blocks != 814:
     raise SystemExit("active v4 formal configuration contract is invalid")
 if continuation.formal.resume_semantics != "fresh_only":
     raise SystemExit("active v4 formal configuration must be fresh-only")
-if continuation.ppo.requested_transitions != 9_977_856:
+if continuation.ppo.requested_transitions != 20_004_864:
     raise SystemExit("active v4 target is invalid")
-if continuation.ppo.num_evals != 407:
+if continuation.ppo.num_evals != 815:
     raise SystemExit("active v4 PPO evaluation schedule is invalid")
 if continuation.formal.checkpoint_transitions != (
     0,
-    491_520,
-    1_990_656,
-    4_988_928,
-    7_987_200,
+    983_040,
+    3_981_312,
     9_977_856,
+    15_998_976,
+    20_004_864,
 ):
     raise SystemExit("active v4 checkpoint schedule is invalid")
 if continuation.formal.fixed_evaluation_transitions != (
-    491_520,
-    1_990_656,
-    4_988_928,
-    7_987_200,
+    983_040,
+    3_981_312,
     9_977_856,
+    15_998_976,
+    20_004_864,
 ):
     raise SystemExit("active v4 evaluation schedule is invalid")
-if continuation.ppo.seed != 820401:
+if continuation.ppo.seed != 820501:
     raise SystemExit("active v4 training seed is invalid")
-if continuation.ppo.held_out_seeds != tuple(range(950001, 950009)):
+if continuation.ppo.held_out_seeds != tuple(range(960001, 960009)):
     raise SystemExit("active v4 held-out namespace is invalid")
 if continuation_smoke.ppo.requested_transitions != continuation_smoke.ppo.block_transitions:
     raise SystemExit("active v4 smoke is not one exact PPO block")
@@ -81,4 +80,3 @@ PY
 "${JIT_PYTHON}" -m jit_dvgc.reference_analysis \
   --input data/reference_jump.csv \
   --output JIT/runs/reference_analysis.json
-"${JIT_PYTHON}" -m jit_dvgc.provenance verify-run "${JIT_SUCCESS_RUN}"

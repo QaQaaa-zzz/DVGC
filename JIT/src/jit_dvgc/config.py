@@ -90,6 +90,7 @@ class EventConfig:
     min_descent_velocity: float
     stuck_window_steps: int | None = None
     stuck_min_progress: float | None = None
+    stuck_forward_velocity_threshold: float | None = None
 
 
 @dataclass(frozen=True)
@@ -220,7 +221,7 @@ def _validate_formal(
         approved_target = {
             "jit_phase_u_formal_v2": 998_400,
             "jit_phase_u_formal_v3": 4_988_928,
-            "jit_phase_u_formal_v4": 9_977_856,
+            "jit_phase_u_formal_v4": 20_004_864,
         }[schema]
         raise ValueError(
             "formal checkpoints must end at requested transitions; "
@@ -243,23 +244,23 @@ def _validate_formal(
             raise ValueError("formal held-out seeds must equal 920001 through 920008")
         expected_checkpoints = (0, 102_400, 256_000, 512_000, 742_400, 998_400)
     elif schema == "jit_phase_u_formal_v4":
-        if ppo.requested_transitions != 9_977_856:
-            raise ValueError("formal requested_transitions must equal 9977856")
+        if ppo.requested_transitions != 20_004_864:
+            raise ValueError("formal requested_transitions must equal 20004864")
         if ppo.block_transitions != 24_576:
             raise ValueError("formal PPO block must equal 24576 transitions")
-        if ppo.num_evals != 407:
-            raise ValueError("formal num_evals must equal 407")
-        if ppo.seed != 820401:
-            raise ValueError("formal training seed must equal 820401")
-        if ppo.held_out_seeds != tuple(range(950001, 950009)):
+        if ppo.num_evals != 815:
+            raise ValueError("formal num_evals must equal 815")
+        if ppo.seed != 820501:
+            raise ValueError("formal training seed must equal 820501")
+        if ppo.held_out_seeds != tuple(range(960001, 960009)):
             raise ValueError("formal held-out seeds do not match the approved namespace")
         expected_checkpoints = (
             0,
-            491_520,
-            1_990_656,
-            4_988_928,
-            7_987_200,
+            983_040,
+            3_981_312,
             9_977_856,
+            15_998_976,
+            20_004_864,
         )
     else:
         if ppo.requested_transitions != 4_988_928:
@@ -310,7 +311,7 @@ def _validate_approved_v2_method(
 ) -> None:
     expected_model = {
         "xml_path": "assets/orange_bike_4kg_horizontal.xml",
-        "xml_sha256": "e2762bec49fdce61eff6ad01b6a67925934d8997b53929b0a67ace7f44109192",
+        "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
         "reference_path": "data/reference_jump.csv",
         "reference_sha256": "612fe758eb1042481b9c7642cc9b92d3e9c14b4a75c9deaf5340183c928bc41f",
         "mjx_impl": "warp",
@@ -420,7 +421,7 @@ def _validate_approved_absolute_method(
     is_v4 = schema.endswith("_v4")
     expected_model = {
         "xml_path": "assets/orange_bike_4kg_horizontal.xml",
-        "xml_sha256": "e2762bec49fdce61eff6ad01b6a67925934d8997b53929b0a67ace7f44109192",
+        "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
         "reference_path": "data/reference_jump.csv",
         "reference_sha256": "612fe758eb1042481b9c7642cc9b92d3e9c14b4a75c9deaf5340183c928bc41f",
         "mjx_impl": "warp",
@@ -428,7 +429,7 @@ def _validate_approved_absolute_method(
         "njmax": 256,
     }
     if is_v4:
-        expected_model["naccdmax"] = 256
+        expected_model["naccdmax"] = 320
         if "naccdmax" not in model:
             raise ValueError("approved v4 model must declare naccdmax")
         if int(model["naccdmax"]) > int(model["naconmax"]):
@@ -458,8 +459,9 @@ def _validate_approved_absolute_method(
         0.05,
         0.5,
         0.05,
-        stuck_window_steps=25 if is_v4 else None,
-        stuck_min_progress=0.05 if is_v4 else None,
+        stuck_window_steps=None,
+        stuck_min_progress=None,
+        stuck_forward_velocity_threshold=0.3 if is_v4 else None,
     )
     expected_limits = PhysicalLimits(
         max_abs_roll=0.6108652381980153,
@@ -500,7 +502,7 @@ def _validate_approved_absolute_method(
         failed_episode_return=-100.0 if is_v4 else None,
     )
     held_out_seeds = (
-        tuple(range(950001, 950009))
+        tuple(range(960001, 960009))
         if is_v4
         else tuple(range(930001, 930009))
     )
@@ -524,9 +526,9 @@ def _validate_approved_absolute_method(
     if schema == "jit_phase_u_formal_v4":
         expected_ppo = PPOConfig(
             **common_ppo,
-            requested_transitions=9_977_856,
-            num_evals=407,
-            seed=820401,
+            requested_transitions=20_004_864,
+            num_evals=815,
+            seed=820501,
         )
     elif schema == "jit_phase_u_formal_v3":
         expected_ppo = PPOConfig(
@@ -540,7 +542,7 @@ def _validate_approved_absolute_method(
             **common_ppo,
             requested_transitions=24_576,
             num_evals=1,
-            seed=820400 if is_v4 else 820200,
+            seed=820500 if is_v4 else 820200,
         )
     approved = {
         "model": (dict(model), expected_model),
@@ -615,6 +617,13 @@ def resolve_config_payload(payload: Mapping[str, Any]) -> ResolvedConfig:
         if int(events.stuck_window_steps) <= 0:
             raise ValueError("events.stuck_window_steps must be positive")
         _positive("events.stuck_min_progress", events.stuck_min_progress)
+    if events.stuck_forward_velocity_threshold is not None:
+        if events.stuck_window_steps is not None:
+            raise ValueError("stuck speed threshold and progress window are mutually exclusive")
+        _positive(
+            "events.stuck_forward_velocity_threshold",
+            events.stuck_forward_velocity_threshold,
+        )
     if not 0.0 <= reset.airborne_rsi_probability <= 1.0:
         raise ValueError("reset.airborne_rsi_probability must be in [0, 1]")
     for lower, upper in (

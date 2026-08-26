@@ -24,6 +24,7 @@ from .constants import (
 class PhaseUSignals:
     x: jax.Array
     z: jax.Array
+    forward_velocity: jax.Array
     vertical_velocity: jax.Array
     physical_failure: jax.Array
 
@@ -117,7 +118,18 @@ def advance_events(
         & (signals.vertical_velocity <= -config.events.min_descent_velocity)
         & ~jp.asarray(signals.physical_failure, dtype=bool)
     )
-    if config.events.stuck_window_steps is None:
+    if config.events.stuck_forward_velocity_threshold is not None:
+        monitor_stuck = jump_signal & ~height_seen
+        stuck_anchor_x = signals.x
+        stuck_ticks = jp.asarray(0, jp.int32)
+        stuck = jp.asarray(previous.stuck, dtype=bool) | (
+            monitor_stuck
+            & (
+                signals.forward_velocity
+                <= config.events.stuck_forward_velocity_threshold
+            )
+        )
+    elif config.events.stuck_window_steps is None:
         stuck_anchor_x = signals.x
         stuck_ticks = jp.asarray(0, jp.int32)
         stuck = jp.asarray(False)
@@ -172,7 +184,10 @@ def classify_terminal(inputs: TerminalInputs, config: ResolvedConfig) -> Termina
     )
     raw_stuck = (
         jp.asarray(False)
-        if config.events.stuck_window_steps is None
+        if (
+            config.events.stuck_window_steps is None
+            and config.events.stuck_forward_velocity_threshold is None
+        )
         else jp.asarray(inputs.stuck, dtype=bool)
     )
     physical_failure = jp.asarray(False)

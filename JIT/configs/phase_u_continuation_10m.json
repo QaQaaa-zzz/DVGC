@@ -7,12 +7,12 @@
   },
   "model": {
     "xml_path": "assets/orange_bike_4kg_horizontal.xml",
-    "xml_sha256": "e2762bec49fdce61eff6ad01b6a67925934d8997b53929b0a67ace7f44109192",
+    "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
     "reference_path": "data/reference_jump.csv",
     "reference_sha256": "612fe758eb1042481b9c7642cc9b92d3e9c14b4a75c9deaf5340183c928bc41f",
     "mjx_impl": "warp",
     "naconmax": 4096,
-    "naccdmax": 256,
+    "naccdmax": 320,
     "njmax": 256
   },
   "action": {
@@ -39,8 +39,7 @@
     "min_ascent_velocity": 0.05,
     "apex_height": 0.5,
     "min_descent_velocity": 0.05,
-    "stuck_window_steps": 25,
-    "stuck_min_progress": 0.05
+    "stuck_forward_velocity_threshold": 0.3
   },
   "physical_limits": {
     "max_abs_roll": 0.6108652381980153,
@@ -87,9 +86,9 @@
     "batch_size": 16,
     "num_minibatches": 24,
     "num_updates_per_batch": 8,
-    "requested_transitions": 9977856,
+    "requested_transitions": 20004864,
     "num_eval_envs": 8,
-    "num_evals": 407,
+    "num_evals": 815,
     "learning_rate": 0.0001,
     "entropy_cost": 0.01,
     "reward_scaling": 0.1,
@@ -97,12 +96,12 @@
     "gae_lambda": 0.95,
     "clipping_epsilon": 0.2,
     "max_grad_norm": 0.5,
-    "seed": 820401,
-    "held_out_seeds": [950001, 950002, 950003, 950004, 950005, 950006, 950007, 950008]
+    "seed": 820501,
+    "held_out_seeds": [960001, 960002, 960003, 960004, 960005, 960006, 960007, 960008]
   },
   "formal": {
-    "checkpoint_transitions": [0, 491520, 1990656, 4988928, 7987200, 9977856],
-    "fixed_evaluation_transitions": [491520, 1990656, 4988928, 7987200, 9977856],
+    "checkpoint_transitions": [0, 983040, 3981312, 9977856, 15998976, 20004864],
+    "fixed_evaluation_transitions": [983040, 3981312, 9977856, 15998976, 20004864],
     "resume_semantics": "fresh_only"
   }
 }

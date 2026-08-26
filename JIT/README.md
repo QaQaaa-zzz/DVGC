@@ -8,8 +8,8 @@ chassis/body contact is also telemetry only: it neither terminates nor adds an
 illegal-contact reward penalty. Roll, pitch, backward motion, and numerical
 failure remain physical terminals. Two task
 failures prevent the policy from exploiting the approach: while the jump
-signal is active, less than 0.05 m forward progress over 25 control ticks
-(0.5 s) below 0.35 m is `stuck`; world-frame root yaw beyond 45 degrees is
+signal is active and the 0.5 m height event has not occurred, forward speed at
+or below 0.3 m/s is immediately `stuck`; world-frame root yaw beyond 45 degrees is
 `yaw_limit`. Each has its own `-100` reward component and end code and is not
 double-counted as a generic physical failure. On either terminal, the final
 step reward offsets the reward already accumulated so the complete episode
@@ -81,8 +81,8 @@ captured stdout/stderr and the return code remain there as `codex_exec.log` and
 prompt also requires strict `verify-run` provenance checking before
 interpreting the natural-start and airborne-RSI evidence panels.
 
-The exact v4 target is 9,977,856 transitions (406 blocks), under the fresh seed
-namespace `820401` with frozen held-out seeds `950001..950008`.
+The exact v4 target is 20,004,864 transitions (814 blocks), under the fresh seed
+namespace `820501` with frozen held-out seeds `960001..960008`.
 The first run must have a null parent checkpoint, start at transition zero, and
 omit `--restore-checkpoint`.
 

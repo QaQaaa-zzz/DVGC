@@ -51,7 +51,7 @@ def test_v4_reset_uses_configured_warp_aggregate_ccd_capacity(jit_root):
     jax.block_until_ready(state)
 
     capacity = int(state.data._impl.naccdmax)
-    assert capacity == 256
+    assert capacity == 320
 
 
 def test_v4_environment_reports_stuck_terminal_and_distinct_penalty(jit_root):
@@ -60,9 +60,7 @@ def test_v4_environment_reports_stuck_terminal_and_distinct_penalty(jit_root):
     qpos = state.data.qpos.at[0].set(2.8)
     qvel = state.data.qvel.at[:3].set(jp.zeros(3, dtype=jp.float32))
     data = mjx.forward(env.mjx_model, state.data.replace(qpos=qpos, qvel=qvel))
-    events = initial_event_state(qpos[0], env.resolved_config).replace(
-        stuck_anchor_x=qpos[0], stuck_ticks=jp.asarray(24, jp.int32)
-    )
+    events = initial_event_state(qpos[0], env.resolved_config)
     state = state.replace(
         data=data,
         info={

@@ -36,16 +36,16 @@ fresh. `preserve_episode_evidence=true` is independently config-bound and the
 GPU regression requires terminal length two followed by fresh length one.
 
 The active file is `JIT/configs/phase_u_continuation_10m.json`. It declares seed
-`820401`, held-out seeds `950001..950008`, and exactly 9,977,856 transitions:
-406 aligned blocks with checkpoints at 0, 491,520, 1,990,656, 4,988,928,
-7,987,200, and 9,977,856. It is identity-incompatible with every earlier v4
+`820501`, held-out seeds `960001..960008`, and exactly 20,004,864 transitions:
+814 aligned blocks with checkpoints at 0, 983,040, 3,981,312, 9,977,856,
+15,998,976, and 20,004,864. It is identity-incompatible with every earlier v4
 checkpoint, declares `resume_semantics=fresh_only`, and rejects every restore
 option before backend, environment, checkpoint, or run-directory work.
 
-The active v4 method identity also fixes `naccdmax=256`, jump window
+The active v4 method identity also fixes `naccdmax=320`, jump window
 `[2.5,3.4]`, height coefficient 40, and airborne RSI probability 8%. It now
 adds a jump-signaled low-height cost that is `-3` at 0.15 m and linearly reaches
-zero at 0.35 m; a 25-tick/0.05 m low-height stuck terminal with `-100`; and a
+zero at 0.35 m; an immediate `vx <= 0.3 m/s` pre-height stuck terminal with `-100`; and a
 world-root-yaw limit of 45 degrees with `-100`. Both task failures override the
 complete episode return to exactly `-100`. Stuck and yaw have distinct end
 codes and are not double-counted as generic physical failures. The stuck
@@ -143,7 +143,7 @@ Verified active identities:
 |---|---|
 | v2 smoke resolved config | `6b0519344d8403d38556fb0a5fc4be8a6bd0cc70e0c077e4bca7f8a5c33fdc27` |
 | v2 formal resolved config | `df565a03c0c8f40531a5ac57bd6c2c2674d9249ca52c31df143484f4ad484112` |
-| authoritative XML | `e2762bec49fdce61eff6ad01b6a67925934d8997b53929b0a67ace7f44109192` |
+| authoritative XML | `0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a` |
 | reference CSV | `612fe758eb1042481b9c7642cc9b92d3e9c14b4a75c9deaf5340183c928bc41f` |
 
 Focused and complete evidence currently recorded:
@@ -202,12 +202,12 @@ Phase U learnability or a trained expert.
 
 | Input | Verified SHA-256 |
 |---|---|
-| `assets/orange_bike_4kg_horizontal.xml` | `e2762bec49fdce61eff6ad01b6a67925934d8997b53929b0a67ace7f44109192` |
+| `assets/orange_bike_4kg_horizontal.xml` | `0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a` |
 | `data/reference_jump.csv` | `612fe758eb1042481b9c7642cc9b92d3e9c14b4a75c9deaf5340183c928bc41f` |
 | Resolved smoke config | `e96f4f4e35df041ffdf1525ee13fc356598917f5a600db15f9284c3e1d9ebed3` |
 
 Host model tests additionally verified the 2 kg payload, hip/knee force limits
-of `[-50, 50]`, action order `[steer, rear-wheel drive, hip, knee]`, and the
+of `[-30, 30]`, action order `[steer, rear-wheel drive, hip, knee]`, and the
 in-memory `0.005 s` simulation timestep.
 
 ## Fresh JIT preflight evidence

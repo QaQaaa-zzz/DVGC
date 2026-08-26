@@ -19,15 +19,15 @@ ABSOLUTE_5M_CHECKPOINTS = (
     4_988_928,
 )
 ABSOLUTE_5M_EVALUATIONS = ABSOLUTE_5M_CHECKPOINTS[1:]
-V4_10M_CHECKPOINTS = (
+V4_20M_CHECKPOINTS = (
     0,
-    491_520,
-    1_990_656,
-    4_988_928,
-    7_987_200,
+    983_040,
+    3_981_312,
     9_977_856,
+    15_998_976,
+    20_004_864,
 )
-V4_10M_EVALUATIONS = V4_10M_CHECKPOINTS[1:]
+V4_20M_EVALUATIONS = V4_20M_CHECKPOINTS[1:]
 
 
 def test_formal_config_is_exactly_39_aligned_blocks(jit_root):
@@ -99,7 +99,7 @@ def test_absolute_5m_config_is_exactly_203_aligned_blocks(jit_root):
     assert config.formal.fixed_evaluation_transitions == ABSOLUTE_5M_EVALUATIONS
 
 
-def test_continuation_v4_configs_use_the_active_10m_contract(jit_root):
+def test_continuation_v4_configs_use_the_active_20m_contract(jit_root):
     smoke = load_config(jit_root / "configs" / "phase_u_continuation_smoke.json")
     formal = load_config(jit_root / "configs" / "phase_u_continuation_10m.json")
 
@@ -108,11 +108,12 @@ def test_continuation_v4_configs_use_the_active_10m_contract(jit_root):
         "full_reset": True,
         "preserve_episode_evidence": True,
     }
-    assert smoke.ppo.seed == 820400
+    assert smoke.ppo.seed == 820500
     assert smoke.reset.airborne_rsi_probability == pytest.approx(0.08)
     assert smoke.events.jump_zone_x_max == pytest.approx(3.4)
-    assert smoke.events.stuck_window_steps == 25
-    assert smoke.events.stuck_min_progress == pytest.approx(0.05)
+    assert smoke.events.stuck_window_steps is None
+    assert smoke.events.stuck_min_progress is None
+    assert smoke.events.stuck_forward_velocity_threshold == pytest.approx(0.3)
     assert smoke.physical_limits.max_abs_yaw == pytest.approx(math.radians(45.0))
     assert smoke.physical_limits.terminate_on_prohibited_contact is False
     assert smoke.reward.height_coeff == pytest.approx(40.0)
@@ -128,21 +129,21 @@ def test_continuation_v4_configs_use_the_active_10m_contract(jit_root):
     assert smoke.reset.airborne_rsi_z_max == pytest.approx(0.45)
     assert smoke.reset.airborne_rsi_vz_min == pytest.approx(3.0)
     assert smoke.reset.airborne_rsi_vz_max == pytest.approx(3.6)
-    assert smoke.model["naccdmax"] == 256
+    assert smoke.model["naccdmax"] == 320
     assert formal.schema == "jit_phase_u_formal_v4"
-    assert formal.ppo.seed == 820401
-    assert formal.ppo.held_out_seeds == tuple(range(950001, 950009))
-    assert formal.ppo.requested_transitions == 9_977_856
+    assert formal.ppo.seed == 820501
+    assert formal.ppo.held_out_seeds == tuple(range(960001, 960009))
+    assert formal.ppo.requested_transitions == 20_004_864
     assert formal.ppo.episode_horizon == 400
     assert formal.formal is not None
-    assert formal.formal.formal_blocks == 406
-    assert formal.ppo.num_evals == 407
+    assert formal.formal.formal_blocks == 814
+    assert formal.ppo.num_evals == 815
     assert formal.events.jump_zone_x_max == pytest.approx(3.4)
     assert formal.reward.height_coeff == pytest.approx(40.0)
     assert formal.reset.airborne_rsi_probability == pytest.approx(0.08)
-    assert formal.model["naccdmax"] == 256
-    assert formal.formal.checkpoint_transitions == V4_10M_CHECKPOINTS
-    assert formal.formal.fixed_evaluation_transitions == V4_10M_EVALUATIONS
+    assert formal.model["naccdmax"] == 320
+    assert formal.formal.checkpoint_transitions == V4_20M_CHECKPOINTS
+    assert formal.formal.fixed_evaluation_transitions == V4_20M_EVALUATIONS
     assert formal.formal.resume_semantics == "fresh_only"
 
 
@@ -153,8 +154,7 @@ def test_continuation_v4_configs_use_the_active_10m_contract(jit_root):
         lambda p: p["ppo"].update(held_out_seeds=list(range(930001, 930009))),
         lambda p: p["events"].update(apex_height=0.6),
         lambda p: p["events"].update(jump_zone_x_max=3.1),
-        lambda p: p["events"].update(stuck_window_steps=24),
-        lambda p: p["events"].update(stuck_min_progress=0.04),
+        lambda p: p["events"].update(stuck_forward_velocity_threshold=0.25),
         lambda p: p["physical_limits"].update(max_abs_yaw=0.8),
         lambda p: p["physical_limits"].update(terminate_on_prohibited_contact=True),
         lambda p: p["reward"].update(height_coeff=20.0),

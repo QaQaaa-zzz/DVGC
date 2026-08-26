@@ -396,6 +396,7 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
             PhaseUSignals(
                 x=data.qpos[index.root_qpos_address],
                 z=data.qpos[index.root_qpos_address + 2],
+                forward_velocity=data.qvel[index.root_dof_address],
                 vertical_velocity=data.qvel[index.root_dof_address + 2],
                 physical_failure=preliminary.terminated,
             ),

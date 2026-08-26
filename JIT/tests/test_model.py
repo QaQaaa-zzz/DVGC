@@ -24,7 +24,7 @@ def test_authoritative_model_contract_is_audited_before_conversion(jit_root):
     )
     np.testing.assert_array_equal(
         bundle.mj_model.actuator_forcerange[2:],
-        np.array([[-50.0, 50.0], [-50.0, 50.0]]),
+        np.array([[-30.0, 30.0], [-30.0, 30.0]]),
     )
     assert bundle.payload_mass == pytest.approx(2.0)
     assert bundle.model_index.keyframe_id == 0

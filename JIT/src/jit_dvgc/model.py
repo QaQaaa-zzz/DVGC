@@ -155,9 +155,9 @@ def load_host_model(config: ResolvedConfig) -> ModelBundle:
         raise ValueError(f"actuator order mismatch: {actuator_names}")
     if not np.array_equal(
         np.asarray(model.actuator_forcerange[2:], dtype=np.float64),
-        np.asarray([[-50.0, 50.0], [-50.0, 50.0]], dtype=np.float64),
+        np.asarray([[-30.0, 30.0], [-30.0, 30.0]], dtype=np.float64),
     ):
-        raise ValueError("hip/knee force ranges are not +/-50 N m")
+        raise ValueError("hip/knee force ranges are not +/-30 N m")
     index = _build_index(model)
     mapping = ActionMapping(
         ctrl_min=jp.asarray(model.actuator_ctrlrange[:, 0], dtype=jp.float32),
