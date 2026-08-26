@@ -7,11 +7,14 @@ import jax
 from jax import numpy as jp
 import numpy as np
 import pytest
+from mujoco import mjx
 from mujoco_playground._src import wrapper
 
 from jit_dvgc.config import load_config
+from jit_dvgc.constants import END_STUCK, END_YAW_LIMIT
 from jit_dvgc.env import TwoPhaseBikeEnv
 from jit_dvgc.ppo import wrap_for_jit_training
+from jit_dvgc.semantics import initial_event_state
 
 
 pytestmark = pytest.mark.gpu
@@ -49,6 +52,49 @@ def test_v4_reset_uses_configured_warp_aggregate_ccd_capacity(jit_root):
 
     capacity = int(state.data._impl.naccdmax)
     assert capacity == 256
+
+
+def test_v4_environment_reports_stuck_terminal_and_distinct_penalty(jit_root):
+    env = _environment(str(jit_root / "configs" / "phase_u_continuation_smoke.json"))
+    state = env.reset_natural(jax.random.PRNGKey(201))
+    qpos = state.data.qpos.at[0].set(2.8)
+    qvel = state.data.qvel.at[:3].set(jp.zeros(3, dtype=jp.float32))
+    data = mjx.forward(env.mjx_model, state.data.replace(qpos=qpos, qvel=qvel))
+    events = initial_event_state(qpos[0], env.resolved_config).replace(
+        stuck_anchor_x=qpos[0], stuck_ticks=jp.asarray(24, jp.int32)
+    )
+    state = state.replace(data=data, info={**state.info, "events": events})
+
+    terminal = jax.jit(env.step)(state, jp.zeros(4, dtype=jp.float32))
+    jax.block_until_ready(terminal)
+
+    assert bool(terminal.done)
+    assert int(terminal.info["end_code"]) == END_STUCK
+    assert float(terminal.metrics["reward/stuck"]) == -40.0
+    assert float(terminal.metrics["terminal/stuck"]) == 1.0
+    assert float(terminal.metrics["terminal/physical_failure"]) == 0.0
+
+
+def test_v4_environment_uses_world_root_yaw_not_steering_angle(jit_root):
+    env = _environment(str(jit_root / "configs" / "phase_u_continuation_smoke.json"))
+    state = env.reset_natural(jax.random.PRNGKey(202))
+    yaw = math.radians(46.0)
+    quaternion = jp.asarray(
+        (math.cos(yaw / 2.0), 0.0, 0.0, math.sin(yaw / 2.0)),
+        dtype=jp.float32,
+    )
+    qpos = state.data.qpos.at[3:7].set(quaternion)
+    qpos = qpos.at[7].set(0.0)
+    data = mjx.forward(env.mjx_model, state.data.replace(qpos=qpos))
+    state = state.replace(data=data)
+
+    terminal = jax.jit(env.step)(state, jp.zeros(4, dtype=jp.float32))
+    jax.block_until_ready(terminal)
+
+    assert abs(math.degrees(float(terminal.metrics["signal/yaw"]))) > 45.0
+    assert int(terminal.info["end_code"]) == END_YAW_LIMIT
+    assert float(terminal.metrics["reward/yaw_limit"]) == -40.0
+    assert float(terminal.metrics["terminal/yaw_limit"]) == 1.0
 
 
 def test_step_preserves_info_fields_added_by_training_wrappers(jit_root):

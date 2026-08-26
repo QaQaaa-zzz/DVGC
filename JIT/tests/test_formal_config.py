@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 
 import pytest
 
@@ -110,7 +111,13 @@ def test_continuation_v4_configs_use_the_active_10m_contract(jit_root):
     assert smoke.ppo.seed == 820400
     assert smoke.reset.airborne_rsi_probability == pytest.approx(0.08)
     assert smoke.events.jump_zone_x_max == pytest.approx(3.4)
+    assert smoke.events.stuck_window_steps == 25
+    assert smoke.events.stuck_min_progress == pytest.approx(0.05)
+    assert smoke.physical_limits.max_abs_yaw == pytest.approx(math.radians(45.0))
     assert smoke.reward.height_coeff == pytest.approx(40.0)
+    assert smoke.reward.low_height_penalty == pytest.approx(3.0)
+    assert smoke.reward.stuck_penalty == pytest.approx(40.0)
+    assert smoke.reward.yaw_limit_penalty == pytest.approx(40.0)
     assert smoke.model["naccdmax"] == 256
     assert formal.schema == "jit_phase_u_formal_v4"
     assert formal.ppo.seed == 820401
@@ -135,7 +142,13 @@ def test_continuation_v4_configs_use_the_active_10m_contract(jit_root):
         lambda p: p["ppo"].update(held_out_seeds=list(range(930001, 930009))),
         lambda p: p["events"].update(apex_height=0.6),
         lambda p: p["events"].update(jump_zone_x_max=3.1),
+        lambda p: p["events"].update(stuck_window_steps=24),
+        lambda p: p["events"].update(stuck_min_progress=0.04),
+        lambda p: p["physical_limits"].update(max_abs_yaw=0.8),
         lambda p: p["reward"].update(height_coeff=20.0),
+        lambda p: p["reward"].update(low_height_penalty=2.0),
+        lambda p: p["reward"].update(stuck_penalty=39.0),
+        lambda p: p["reward"].update(yaw_limit_penalty=39.0),
         lambda p: p["reset"].update(airborne_rsi_probability=0.05),
         lambda p: p["reward"].update(apex_success_bonus=49.0),
         lambda p: p["model"].update(naccdmax=48),

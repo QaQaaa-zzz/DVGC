@@ -1,6 +1,6 @@
 # JIT Phase U Verification
 
-## Active v4 pre-training verification — 2026-08-25
+## Active v4 pre-training verification — 2026-08-26
 
 The v4 contract fixes the v3 false failure diagnosis without changing XML
 physics: the observed `floor/rearwheel_collision` distance of approximately
@@ -42,22 +42,27 @@ checkpoint, declares `resume_semantics=fresh_only`, and rejects every restore
 option before backend, environment, checkpoint, or run-directory work.
 
 The active v4 method identity also fixes `naccdmax=256`, jump window
-`[2.5,3.4]`, height coefficient 40, and airborne RSI probability 8%.
+`[2.5,3.4]`, height coefficient 40, and airborne RSI probability 8%. It now
+adds a jump-signaled low-height cost that is `-3` at 0.15 m and linearly reaches
+zero at 0.35 m; a 25-tick/0.05 m low-height stuck terminal with `-40`; and a
+world-root-yaw limit of 45 degrees with `-40`. Stuck and yaw have distinct end
+codes and are not double-counted as generic physical failures. The stuck
+monitor disables after the retained 0.5 m height event, so post-Apex evidence
+continues normally.
 Completed-run provenance revalidates the raw resolved config instead of
 trusting its hash alone: evidence with a consistently recomputed config hash
 is still rejected if any of those values is changed back to 48, 3.1, 20, or
 5%, respectively.
 
-Task 5 focused formal/provenance verification passed 24 non-GPU tests. The
-final source tree passed static compilation, 200 non-GPU tests, and 12 GPU
-tests. The non-launching local preflight repeated those 200 + 12 tests, exited
-zero, and revalidated retained reference/provenance evidence. The resolved v4
-smoke/formal config hashes are
-`711ac0709c819d6b2ca4172ec1d1421a21fd469351d8661f5b17b6d2594cc96f` and
-`a77c539c84318c48fa1c1f5ea0f87b468295fec633338e7a95a5b6eff5360e2f`.
-Independent final review found no remaining Critical or Important issue. The
-bounded v4 smoke and launch commit remain Task 6 gates and are not claimed
-complete here.
+The revised source tree passed static compilation, 217 non-GPU tests, and 14
+GPU tests. Local preflight repeated those 217 + 14 tests, exited zero, and
+revalidated retained reference/provenance evidence. A fresh 24,576-step v4
+smoke then completed, restored its saved checkpoint for diagnostics, and
+passed strict provenance with 24,576 training plus 28 diagnostic transitions.
+The smoke launch log contained zero literal `CCD overflow` lines. The resolved
+v4 smoke/formal config hashes are
+`1d2c47784021100ba0ae5f1eed565a801dc0d6c1df94c63cdd9aa5156ae8061e` and
+`78829763173dad13baa9fb755b27d7bb442139a42579694a6758aeff245787d4`.
 
 The previously recorded repository-level failure is unchanged user work in
 `tests/test_phase_u_launch_diagnostic.py`: it passes `mode=` to the separately

@@ -50,6 +50,7 @@ REWARD_COMPONENT_KEYS = (
     "speed",
     "survival",
     "height",
+    "low_height",
     "action_smoothness",
     "action_magnitude",
     "roll_rate",
@@ -59,6 +60,8 @@ REWARD_COMPONENT_KEYS = (
     "apex_success",
     "illegal_contact",
     "physical_failure",
+    "stuck",
+    "yaw_limit",
     "timeout",
 )
 
@@ -70,7 +73,9 @@ END_PITCH_LIMIT = 4
 END_PROHIBITED_CONTACT = 5
 END_ILLEGAL_WHEEL_CONTACT = 6
 END_BACKWARD_EXIT = 7
+END_STUCK = 8
 END_TIMEOUT = 9
+END_YAW_LIMIT = 10
 
 END_REASONS = {
     END_ONGOING: "ongoing",
@@ -81,5 +86,7 @@ END_REASONS = {
     END_PROHIBITED_CONTACT: "prohibited_contact",
     END_ILLEGAL_WHEEL_CONTACT: "illegal_wheel_contact",
     END_BACKWARD_EXIT: "backward_exit",
+    END_STUCK: "stuck",
     END_TIMEOUT: "timeout",
+    END_YAW_LIMIT: "yaw_limit",
 }

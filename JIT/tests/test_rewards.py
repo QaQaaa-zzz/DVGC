@@ -53,6 +53,8 @@ def _inputs(**overrides) -> RewardInputs:
         first_apex_success=jp.array(False),
         illegal_contact=jp.array(False),
         physical_failure_transition=jp.array(False),
+        stuck_transition=jp.array(False),
+        yaw_limit_transition=jp.array(False),
         timeout_transition=jp.array(False),
     )
     values.update(overrides)
@@ -123,6 +125,27 @@ def test_v4_height_component_uses_40x_raw_height_only_while_signaled(v4_config):
     assert float(unsignaled.components.height) == 0.0
 
 
+@pytest.mark.parametrize(
+    ("z", "jump_signal", "expected"),
+    [
+        (0.15, True, -3.0),
+        (0.25, True, -1.5),
+        (0.35, True, 0.0),
+        (0.15, False, 0.0),
+    ],
+)
+def test_v4_low_height_penalty_provides_dense_progress_below_reward_threshold(
+    v4_config, z, jump_signal, expected
+):
+    result = _reward(
+        v4_config,
+        current=_state(z=jp.array(z)),
+        jump_signal=jp.array(jump_signal),
+    )
+
+    assert float(result.components.low_height) == pytest.approx(expected, abs=1e-5)
+
+
 def test_action_rate_and_joint_energy_costs_match_reference(config):
     result = _reward(
         config,
@@ -163,6 +186,41 @@ def test_terminal_components_and_total_clipping_are_separate(config):
     assert float(failure.components.physical_failure) == -30.0
     assert float(failure.unclipped_total) == pytest.approx(-54.0)
     assert float(failure.total) == pytest.approx(-50.0)
+
+
+def test_v4_task_terminal_penalties_are_large_distinct_and_not_double_counted(
+    v4_config,
+):
+    stuck = _reward(v4_config, stuck_transition=jp.array(True))
+    yaw = _reward(v4_config, yaw_limit_transition=jp.array(True))
+
+    assert float(stuck.components.stuck) == -40.0
+    assert float(stuck.components.physical_failure) == 0.0
+    assert float(yaw.components.yaw_limit) == -40.0
+    assert float(yaw.components.physical_failure) == 0.0
+
+
+def test_v4_overlapping_terminal_inputs_apply_only_the_highest_priority_penalty(
+    v4_config,
+):
+    physical = _reward(
+        v4_config,
+        physical_failure_transition=jp.array(True),
+        stuck_transition=jp.array(True),
+        yaw_limit_transition=jp.array(True),
+    )
+    stuck = _reward(
+        v4_config,
+        stuck_transition=jp.array(True),
+        yaw_limit_transition=jp.array(True),
+    )
+
+    assert float(physical.components.physical_failure) == -30.0
+    assert float(physical.components.stuck) == 0.0
+    assert float(physical.components.yaw_limit) == 0.0
+    assert float(stuck.components.physical_failure) == 0.0
+    assert float(stuck.components.stuck) == -40.0
+    assert float(stuck.components.yaw_limit) == 0.0
 
 
 def test_component_keys_exclude_old_shaping_and_target_terms(config):

@@ -38,12 +38,15 @@
     "jump_zone_x_max": 3.4,
     "min_ascent_velocity": 0.05,
     "apex_height": 0.5,
-    "min_descent_velocity": 0.05
+    "min_descent_velocity": 0.05,
+    "stuck_window_steps": 25,
+    "stuck_min_progress": 0.05
   },
   "physical_limits": {
     "max_abs_roll": 0.6108652381980153,
     "max_abs_pitch": 1.3089969389957472,
-    "max_backward_distance": 1.0
+    "max_backward_distance": 1.0,
+    "max_abs_yaw": 0.7853981633974483
   },
   "reward": {
     "roll_coeff": 3.0,
@@ -67,7 +70,11 @@
     "physical_failure_penalty": 30.0,
     "timeout_penalty": 10.0,
     "total_min": -50.0,
-    "total_max": 50.0
+    "total_max": 50.0,
+    "low_height_penalty": 3.0,
+    "low_height_penalty_full_at": 0.15,
+    "stuck_penalty": 40.0,
+    "yaw_limit_penalty": 40.0
   },
   "ppo": {
     "num_parallel_envs": 384,

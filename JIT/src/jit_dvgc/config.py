@@ -88,6 +88,8 @@ class EventConfig:
     min_ascent_velocity: float
     apex_height: float
     min_descent_velocity: float
+    stuck_window_steps: int | None = None
+    stuck_min_progress: float | None = None
 
 
 @dataclass(frozen=True)
@@ -110,6 +112,7 @@ class PhysicalLimits:
     max_abs_roll: float
     max_abs_pitch: float
     max_backward_distance: float
+    max_abs_yaw: float | None = None
 
 
 @dataclass(frozen=True)
@@ -136,6 +139,10 @@ class RewardConfig:
     timeout_penalty: float
     total_min: float
     total_max: float
+    low_height_penalty: float = 0.0
+    low_height_penalty_full_at: float = 0.15
+    stuck_penalty: float = 0.0
+    yaw_limit_penalty: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -441,11 +448,20 @@ def _validate_approved_absolute_method(
         airborne_rsi_vz_min=0.8,
         airborne_rsi_vz_max=1.2,
     )
-    expected_events = EventConfig(2.5, 3.4 if is_v4 else 3.1, 0.05, 0.5, 0.05)
+    expected_events = EventConfig(
+        2.5,
+        3.4 if is_v4 else 3.1,
+        0.05,
+        0.5,
+        0.05,
+        stuck_window_steps=25 if is_v4 else None,
+        stuck_min_progress=0.05 if is_v4 else None,
+    )
     expected_limits = PhysicalLimits(
         max_abs_roll=0.6108652381980153,
         max_abs_pitch=1.3089969389957472,
         max_backward_distance=1.0,
+        max_abs_yaw=0.7853981633974483 if is_v4 else None,
     )
     expected_reward = RewardConfig(
         roll_coeff=3.0,
@@ -470,6 +486,10 @@ def _validate_approved_absolute_method(
         timeout_penalty=10.0,
         total_min=-50.0,
         total_max=50.0,
+        low_height_penalty=3.0 if is_v4 else 0.0,
+        low_height_penalty_full_at=0.15,
+        stuck_penalty=40.0 if is_v4 else 0.0,
+        yaw_limit_penalty=40.0 if is_v4 else 0.0,
     )
     held_out_seeds = (
         tuple(range(950001, 950009))
@@ -581,6 +601,12 @@ def resolve_config_payload(payload: Mapping[str, Any]) -> ResolvedConfig:
         raise ValueError("jump-window bounds must be increasing")
     for name in ("min_ascent_velocity", "apex_height", "min_descent_velocity"):
         _positive(f"events.{name}", getattr(events, name))
+    if (events.stuck_window_steps is None) != (events.stuck_min_progress is None):
+        raise ValueError("stuck window steps and progress must be configured together")
+    if events.stuck_window_steps is not None:
+        if int(events.stuck_window_steps) <= 0:
+            raise ValueError("events.stuck_window_steps must be positive")
+        _positive("events.stuck_min_progress", events.stuck_min_progress)
     if not 0.0 <= reset.airborne_rsi_probability <= 1.0:
         raise ValueError("reset.airborne_rsi_probability must be in [0, 1]")
     for lower, upper in (
@@ -600,9 +626,22 @@ def resolve_config_payload(payload: Mapping[str, Any]) -> ResolvedConfig:
         < reward.max_beneficial_height
     ):
         raise ValueError("reward height thresholds must be increasing")
+    for name in (
+        "low_height_penalty",
+        "stuck_penalty",
+        "yaw_limit_penalty",
+    ):
+        if getattr(reward, name) < 0.0:
+            raise ValueError(f"reward.{name} must be nonnegative")
+    if reward.low_height_penalty_full_at >= reward.jump_reward_min_height:
+        raise ValueError(
+            "reward.low_height_penalty_full_at must be below jump_reward_min_height"
+        )
 
     action = _dataclass_from(ActionConfig, payload["action"])
     physical_limits = _dataclass_from(PhysicalLimits, payload["physical_limits"])
+    if physical_limits.max_abs_yaw is not None:
+        _positive("physical_limits.max_abs_yaw", physical_limits.max_abs_yaw)
     validator = (
         _validate_approved_absolute_method
         if schema.endswith(("_v3", "_v4"))

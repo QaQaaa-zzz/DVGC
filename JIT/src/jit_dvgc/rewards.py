@@ -39,6 +39,8 @@ class RewardInputs:
     first_apex_success: jax.Array
     illegal_contact: jax.Array
     physical_failure_transition: jax.Array
+    stuck_transition: jax.Array
+    yaw_limit_transition: jax.Array
     timeout_transition: jax.Array
 
 
@@ -50,6 +52,7 @@ class RewardComponents:
     speed: jax.Array
     survival: jax.Array
     height: jax.Array
+    low_height: jax.Array
     action_smoothness: jax.Array
     action_magnitude: jax.Array
     roll_rate: jax.Array
@@ -59,6 +62,8 @@ class RewardComponents:
     apex_success: jax.Array
     illegal_contact: jax.Array
     physical_failure: jax.Array
+    stuck: jax.Array
+    yaw_limit: jax.Array
     timeout: jax.Array
 
     def __getitem__(self, key: str) -> jax.Array:
@@ -157,6 +162,17 @@ def phase_u_reward(
         * _height_raw(state.z, config)
         * jp.asarray(inputs.jump_signal, jp.float32)
     )
+    low_height_ratio = jp.clip(
+        (config.jump_reward_min_height - state.z)
+        / (config.jump_reward_min_height - config.low_height_penalty_full_at),
+        0.0,
+        1.0,
+    )
+    low_height = (
+        -config.low_height_penalty
+        * low_height_ratio
+        * jp.asarray(inputs.jump_signal, jp.float32)
+    )
     action_smoothness = -config.action_coeff * config.action_smoothness_scale * jp.sum(
         jp.square(inputs.action - inputs.last_action)
     )
@@ -178,8 +194,19 @@ def phase_u_reward(
     illegal_contact = -config.illegal_contact_penalty * jp.asarray(
         inputs.illegal_contact, jp.float32
     )
-    physical_failure = -config.physical_failure_penalty * jp.asarray(
-        inputs.physical_failure_transition, jp.float32
+    physical_transition = jp.asarray(inputs.physical_failure_transition, dtype=bool)
+    stuck_transition = jp.asarray(inputs.stuck_transition, dtype=bool) & ~physical_transition
+    yaw_limit_transition = (
+        jp.asarray(inputs.yaw_limit_transition, dtype=bool)
+        & ~physical_transition
+        & ~stuck_transition
+    )
+    physical_failure = -config.physical_failure_penalty * physical_transition.astype(
+        jp.float32
+    )
+    stuck = -config.stuck_penalty * stuck_transition.astype(jp.float32)
+    yaw_limit = -config.yaw_limit_penalty * jp.asarray(
+        yaw_limit_transition, jp.float32
     )
     timeout = -config.timeout_penalty * jp.asarray(inputs.timeout_transition, jp.float32)
     components = RewardComponents(
@@ -189,6 +216,7 @@ def phase_u_reward(
         speed=speed,
         survival=survival,
         height=height,
+        low_height=low_height,
         action_smoothness=action_smoothness,
         action_magnitude=action_magnitude,
         roll_rate=zero,
@@ -198,6 +226,8 @@ def phase_u_reward(
         apex_success=apex_success,
         illegal_contact=illegal_contact,
         physical_failure=physical_failure,
+        stuck=stuck,
+        yaw_limit=yaw_limit,
         timeout=timeout,
     )
     unclipped = sum(components.values(), start=jp.asarray(0.0, jp.float32))

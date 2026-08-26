@@ -5,10 +5,21 @@
 `phase_u_continuation_10m.json` is the active fresh-training contract. Ordinary
 front/rear wheel contact with the terrain is support telemetry, not an illegal
 contact terminal or penalty. Prohibited chassis/body contact, roll, pitch,
-backward motion, and numerical failure remain physical terminals. The first
-Apex event still pays its one-time configured bonus, but it no longer ends the
-episode; simulation continues until a retained physical failure or the exact
-200-control-tick horizon.
+backward motion, and numerical failure remain physical terminals. Two task
+failures prevent the policy from exploiting the approach: while the jump
+signal is active, less than 0.05 m forward progress over 25 control ticks
+(0.5 s) below 0.35 m is `stuck`; world-frame root yaw beyond 45 degrees is
+`yaw_limit`. Each has its own `-40` reward component and end code and is not
+double-counted as a generic physical failure. The yaw comes from the root
+free-joint quaternion, not the steering joint. The first Apex event still pays
+its one-time configured bonus, but it no longer ends the episode; simulation
+continues until a retained terminal or the exact 200-control-tick horizon.
+
+While the current one-shot jump signal is active below 0.35 m, v4 adds a dense
+moderate low-height cost. It is `-3` at and below 0.15 m, decreases linearly to
+zero at 0.35 m, and is zero whenever the jump signal is off. This fills the
+previous reward gap without changing the positive height curve at or above
+0.35 m.
 
 Training uses full environment resets after every completed episode. This is a
 required runtime contract, not an optimization option: cached data/observation-

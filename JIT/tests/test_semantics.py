@@ -1,10 +1,18 @@
 from __future__ import annotations
 
+import math
+
 from jax import numpy as jp
 import pytest
 
 from jit_dvgc.config import load_config
-from jit_dvgc.constants import END_ONGOING, END_PITCH_LIMIT, END_TIMEOUT
+from jit_dvgc.constants import (
+    END_ONGOING,
+    END_PITCH_LIMIT,
+    END_STUCK,
+    END_TIMEOUT,
+    END_YAW_LIMIT,
+)
 from jit_dvgc.semantics import (
     PhaseUSignals,
     TerminalInputs,
@@ -85,6 +93,42 @@ def test_v4_jump_signal_stays_live_to_3_4_then_closes_permanently(v4_config):
     assert bool(signal_after_return_to_x_3_0.jump_signal) is False
 
 
+def test_v4_stuck_fires_after_half_second_without_five_centimeters_progress(
+    v4_config,
+):
+    event = initial_event_state(jp.array(2.8), v4_config)
+    for _ in range(24):
+        event = advance_events(event, _signals(x=jp.array(2.8)), v4_config)
+        assert not bool(event.stuck)
+
+    event = advance_events(event, _signals(x=jp.array(2.8)), v4_config)
+
+    assert bool(event.stuck)
+
+
+def test_v4_stuck_window_resets_on_progress_and_is_disabled_after_height(v4_config):
+    event = initial_event_state(jp.array(2.8), v4_config)
+    for _ in range(24):
+        event = advance_events(event, _signals(x=jp.array(2.8)), v4_config)
+    progressed = advance_events(event, _signals(x=jp.array(2.86)), v4_config)
+    assert not bool(progressed.stuck)
+
+    high = advance_events(
+        progressed,
+        _signals(x=jp.array(2.86), z=jp.array(0.5), vertical_velocity=jp.array(0.1)),
+        v4_config,
+    )
+    for _ in range(25):
+        high = advance_events(
+            high,
+            _signals(x=jp.array(2.86), z=jp.array(0.15)),
+            v4_config,
+        )
+
+    assert bool(high.height_seen)
+    assert not bool(high.stuck)
+
+
 def test_apex_requires_legal_zone_height_prior_ascent_and_descent(config):
     event = initial_event_state(jp.array(2.4), config)
     ascending = advance_events(
@@ -155,6 +199,8 @@ def _terminal_inputs(**overrides) -> TerminalInputs:
         pitch=jp.array(0.0),
         illegal_contact=jp.array(False),
         backward_exit=jp.array(False),
+        stuck=jp.array(False),
+        yaw=jp.array(0.0),
     )
     values.update(overrides)
     return TerminalInputs(**values)
@@ -203,3 +249,54 @@ def test_ordinary_state_is_ongoing(config):
     assert not bool(terminal.terminated)
     assert not bool(terminal.truncated)
     assert int(terminal.end_code) == END_ONGOING
+
+
+def test_v4_stuck_is_a_distinct_nonphysical_terminal(v4_config):
+    terminal = classify_terminal(_terminal_inputs(stuck=jp.array(True)), v4_config)
+
+    assert bool(terminal.terminated)
+    assert bool(terminal.stuck)
+    assert not bool(terminal.physical_failure)
+    assert int(terminal.end_code) == END_STUCK
+
+
+def test_v4_world_yaw_above_45_degrees_is_a_distinct_terminal(v4_config):
+    boundary = classify_terminal(
+        _terminal_inputs(yaw=jp.array(math.radians(45.0))), v4_config
+    )
+    exceeded = classify_terminal(
+        _terminal_inputs(yaw=jp.array(math.radians(45.01))), v4_config
+    )
+
+    assert not bool(boundary.terminated)
+    assert bool(exceeded.terminated)
+    assert bool(exceeded.yaw_limit)
+    assert not bool(exceeded.physical_failure)
+    assert int(exceeded.end_code) == END_YAW_LIMIT
+
+
+def test_v4_overlapping_terminal_conditions_select_one_cause(v4_config):
+    physical = classify_terminal(
+        _terminal_inputs(
+            pitch=jp.array(2.0),
+            stuck=jp.array(True),
+            yaw=jp.array(math.radians(50.0)),
+        ),
+        v4_config,
+    )
+    stuck = classify_terminal(
+        _terminal_inputs(
+            stuck=jp.array(True),
+            yaw=jp.array(math.radians(50.0)),
+        ),
+        v4_config,
+    )
+
+    assert bool(physical.physical_failure)
+    assert not bool(physical.stuck)
+    assert not bool(physical.yaw_limit)
+    assert int(physical.end_code) == END_PITCH_LIMIT
+    assert not bool(stuck.physical_failure)
+    assert bool(stuck.stuck)
+    assert not bool(stuck.yaw_limit)
+    assert int(stuck.end_code) == END_STUCK

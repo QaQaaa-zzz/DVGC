@@ -14,7 +14,9 @@ from .constants import (
     END_PITCH_LIMIT,
     END_PROHIBITED_CONTACT,
     END_ROLL_LIMIT,
+    END_STUCK,
     END_TIMEOUT,
+    END_YAW_LIMIT,
 )
 
 
@@ -34,6 +36,9 @@ class EventState:
     ascending_seen: jax.Array
     height_seen: jax.Array
     apex_seen: jax.Array
+    stuck_anchor_x: jax.Array
+    stuck_ticks: jax.Array
+    stuck: jax.Array
     episode_step: jax.Array
 
 
@@ -45,6 +50,8 @@ class TerminalInputs:
     pitch: jax.Array
     illegal_contact: jax.Array
     backward_exit: jax.Array
+    stuck: jax.Array
+    yaw: jax.Array
 
 
 @struct.dataclass
@@ -53,6 +60,8 @@ class TerminalState:
     truncated: jax.Array
     success: jax.Array
     physical_failure: jax.Array
+    stuck: jax.Array
+    yaw_limit: jax.Array
     timeout: jax.Array
     end_code: jax.Array
 
@@ -74,6 +83,9 @@ def initial_event_state(root_x: jax.Array, config: ResolvedConfig) -> EventState
         ascending_seen=false,
         height_seen=false,
         apex_seen=false,
+        stuck_anchor_x=jp.asarray(root_x),
+        stuck_ticks=jp.asarray(0, jp.int32),
+        stuck=false,
         episode_step=jp.asarray(0, jp.int32),
     )
 
@@ -105,6 +117,29 @@ def advance_events(
         & (signals.vertical_velocity <= -config.events.min_descent_velocity)
         & ~jp.asarray(signals.physical_failure, dtype=bool)
     )
+    if config.events.stuck_window_steps is None:
+        stuck_anchor_x = signals.x
+        stuck_ticks = jp.asarray(0, jp.int32)
+        stuck = jp.asarray(False)
+    else:
+        monitor_stuck = (
+            jump_signal
+            & ~height_seen
+            & (signals.z < config.reward.jump_reward_min_height)
+        )
+        made_progress = (
+            signals.x - previous.stuck_anchor_x
+        ) >= config.events.stuck_min_progress
+        reset_window = ~monitor_stuck | made_progress
+        stuck_anchor_x = jp.where(reset_window, signals.x, previous.stuck_anchor_x)
+        stuck_ticks = jp.where(
+            reset_window,
+            jp.asarray(0, jp.int32),
+            previous.stuck_ticks + 1,
+        )
+        stuck = jp.asarray(previous.stuck, dtype=bool) | (
+            monitor_stuck & (stuck_ticks >= config.events.stuck_window_steps)
+        )
     return EventState(
         jump_signal=jump_signal,
         jump_zone_seen=zone_seen,
@@ -112,6 +147,9 @@ def advance_events(
         ascending_seen=ascending_seen,
         height_seen=height_seen,
         apex_seen=jp.asarray(previous.apex_seen, dtype=bool) | apex_now,
+        stuck_anchor_x=stuck_anchor_x,
+        stuck_ticks=stuck_ticks,
+        stuck=stuck,
         episode_step=previous.episode_step + 1,
     )
 
@@ -119,35 +157,54 @@ def advance_events(
 def classify_terminal(inputs: TerminalInputs, config: ResolvedConfig) -> TerminalState:
     roll_failure = jp.abs(inputs.roll) > config.physical_limits.max_abs_roll
     pitch_failure = jp.abs(inputs.pitch) > config.physical_limits.max_abs_pitch
-    failures = (
+    physical_failures = (
         jp.asarray(inputs.nonfinite, dtype=bool),
         roll_failure,
         pitch_failure,
         jp.asarray(inputs.illegal_contact, dtype=bool),
         jp.asarray(inputs.backward_exit, dtype=bool),
     )
+    raw_yaw_limit = (
+        jp.asarray(False)
+        if config.physical_limits.max_abs_yaw is None
+        else jp.abs(inputs.yaw) > config.physical_limits.max_abs_yaw
+    )
+    raw_stuck = (
+        jp.asarray(False)
+        if config.events.stuck_window_steps is None
+        else jp.asarray(inputs.stuck, dtype=bool)
+    )
+    physical_failure = jp.asarray(False)
+    for condition in physical_failures:
+        physical_failure = physical_failure | condition
+    stuck = raw_stuck & ~physical_failure
+    yaw_limit = raw_yaw_limit & ~physical_failure & ~stuck
+    failures = physical_failures + (stuck, yaw_limit)
     failure_codes = (
         END_NONFINITE,
         END_ROLL_LIMIT,
         END_PITCH_LIMIT,
         END_PROHIBITED_CONTACT,
         END_BACKWARD_EXIT,
+        END_STUCK,
+        END_YAW_LIMIT,
     )
-    physical_failure = jp.asarray(False)
+    terminated = physical_failure | stuck | yaw_limit
     failure_code = jp.asarray(END_ONGOING, jp.int32)
     for condition, code in reversed(tuple(zip(failures, failure_codes, strict=True))):
         failure_code = jp.where(condition, jp.asarray(code, jp.int32), failure_code)
-        physical_failure = physical_failure | condition
     success = jp.asarray(False)
     horizon = inputs.episode_step >= config.ppo.episode_horizon - 1
-    timeout = horizon & ~physical_failure
+    timeout = horizon & ~terminated
     end_code = jp.where(timeout, END_TIMEOUT, END_ONGOING)
-    end_code = jp.where(physical_failure, failure_code, end_code).astype(jp.int32)
+    end_code = jp.where(terminated, failure_code, end_code).astype(jp.int32)
     return TerminalState(
-        terminated=physical_failure,
+        terminated=terminated,
         truncated=timeout,
         success=success,
         physical_failure=physical_failure,
+        stuck=stuck,
+        yaw_limit=yaw_limit,
         timeout=timeout,
         end_code=end_code,
     )
