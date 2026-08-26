@@ -44,8 +44,9 @@ option before backend, environment, checkpoint, or run-directory work.
 The active v4 method identity also fixes `naccdmax=256`, jump window
 `[2.5,3.4]`, height coefficient 40, and airborne RSI probability 8%. It now
 adds a jump-signaled low-height cost that is `-3` at 0.15 m and linearly reaches
-zero at 0.35 m; a 25-tick/0.05 m low-height stuck terminal with `-40`; and a
-world-root-yaw limit of 45 degrees with `-40`. Stuck and yaw have distinct end
+zero at 0.35 m; a 25-tick/0.05 m low-height stuck terminal with `-100`; and a
+world-root-yaw limit of 45 degrees with `-100`. Both task failures override the
+complete episode return to exactly `-100`. Stuck and yaw have distinct end
 codes and are not double-counted as generic physical failures. The stuck
 monitor disables after the retained 0.5 m height event, so post-Apex evidence
 continues normally.

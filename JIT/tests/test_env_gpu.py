@@ -63,14 +63,23 @@ def test_v4_environment_reports_stuck_terminal_and_distinct_penalty(jit_root):
     events = initial_event_state(qpos[0], env.resolved_config).replace(
         stuck_anchor_x=qpos[0], stuck_ticks=jp.asarray(24, jp.int32)
     )
-    state = state.replace(data=data, info={**state.info, "events": events})
+    state = state.replace(
+        data=data,
+        info={
+            **state.info,
+            "events": events,
+            "episode_return": jp.asarray(37.0, jp.float32),
+        },
+    )
 
     terminal = jax.jit(env.step)(state, jp.zeros(4, dtype=jp.float32))
     jax.block_until_ready(terminal)
 
     assert bool(terminal.done)
     assert int(terminal.info["end_code"]) == END_STUCK
-    assert float(terminal.metrics["reward/stuck"]) == -40.0
+    assert float(terminal.metrics["reward/stuck"]) == -100.0
+    assert float(terminal.reward) == pytest.approx(-137.0)
+    assert float(terminal.info["episode_return"]) == pytest.approx(-100.0)
     assert float(terminal.metrics["terminal/stuck"]) == 1.0
     assert float(terminal.metrics["terminal/physical_failure"]) == 0.0
 
@@ -86,14 +95,22 @@ def test_v4_environment_uses_world_root_yaw_not_steering_angle(jit_root):
     qpos = state.data.qpos.at[3:7].set(quaternion)
     qpos = qpos.at[7].set(0.0)
     data = mjx.forward(env.mjx_model, state.data.replace(qpos=qpos))
-    state = state.replace(data=data)
+    state = state.replace(
+        data=data,
+        info={
+            **state.info,
+            "episode_return": jp.asarray(37.0, jp.float32),
+        },
+    )
 
     terminal = jax.jit(env.step)(state, jp.zeros(4, dtype=jp.float32))
     jax.block_until_ready(terminal)
 
     assert abs(math.degrees(float(terminal.metrics["signal/yaw"]))) > 45.0
     assert int(terminal.info["end_code"]) == END_YAW_LIMIT
-    assert float(terminal.metrics["reward/yaw_limit"]) == -40.0
+    assert float(terminal.metrics["reward/yaw_limit"]) == -100.0
+    assert float(terminal.reward) == pytest.approx(-137.0)
+    assert float(terminal.info["episode_return"]) == pytest.approx(-100.0)
     assert float(terminal.metrics["terminal/yaw_limit"]) == 1.0
 
 
@@ -257,9 +274,9 @@ def test_v4_4096_mixed_resets_preserve_rsi_rate_bounds_and_jump_signal(jit_root)
     qpos = np.asarray(first.data.qpos)[sources]
     qvel = np.asarray(first.data.qvel)[sources]
     assert np.all((2.7 <= qpos[:, 0]) & (qpos[:, 0] <= 2.9))
-    assert np.all((1.8 <= qpos[:, 2]) & (qpos[:, 2] <= 2.2))
+    assert np.all((0.38 <= qpos[:, 2]) & (qpos[:, 2] <= 0.45))
     assert np.all((1.8 <= qvel[:, 0]) & (qvel[:, 0] <= 2.2))
-    assert np.all((0.8 <= qvel[:, 2]) & (qvel[:, 2] <= 1.2))
+    assert np.all((3.0 <= qvel[:, 2]) & (qvel[:, 2] <= 3.6))
     assert np.all(np.asarray(first.info["events"].jump_signal)[sources])
     assert np.all(np.asarray(first.obs["state"])[sources, -1] == 1.0)
 

@@ -26,12 +26,12 @@
     "airborne_rsi_probability": 0.08,
     "airborne_rsi_x_min": 2.7,
     "airborne_rsi_x_max": 2.9,
-    "airborne_rsi_z_min": 1.8,
-    "airborne_rsi_z_max": 2.2,
+    "airborne_rsi_z_min": 0.38,
+    "airborne_rsi_z_max": 0.45,
     "airborne_rsi_vx_min": 1.8,
     "airborne_rsi_vx_max": 2.2,
-    "airborne_rsi_vz_min": 0.8,
-    "airborne_rsi_vz_max": 1.2
+    "airborne_rsi_vz_min": 3.0,
+    "airborne_rsi_vz_max": 3.6
   },
   "events": {
     "jump_zone_x_min": 2.5,
@@ -69,12 +69,15 @@
     "illegal_contact_penalty": 30.0,
     "physical_failure_penalty": 30.0,
     "timeout_penalty": 10.0,
-    "total_min": -50.0,
+    "total_min": -100.0,
     "total_max": 50.0,
     "low_height_penalty": 3.0,
     "low_height_penalty_full_at": 0.15,
-    "stuck_penalty": 40.0,
-    "yaw_limit_penalty": 40.0
+    "stuck_penalty": 100.0,
+    "yaw_limit_penalty": 100.0,
+    "steering_action_diff_penalty": 2.0,
+    "steering_magnitude_penalty": 0.5,
+    "failed_episode_return": -100.0
   },
   "ppo": {
     "num_parallel_envs": 384,

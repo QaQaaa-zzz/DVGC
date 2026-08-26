@@ -173,11 +173,19 @@ def phase_u_reward(
         * low_height_ratio
         * jp.asarray(inputs.jump_signal, jp.float32)
     )
-    action_smoothness = -config.action_coeff * config.action_smoothness_scale * jp.sum(
-        jp.square(inputs.action - inputs.last_action)
+    action_delta = inputs.action - inputs.last_action
+    action_smoothness = (
+        -config.action_coeff
+        * config.action_smoothness_scale
+        * jp.sum(jp.square(action_delta))
+        - config.steering_action_diff_penalty * jp.square(action_delta[0])
     )
-    action_magnitude = -config.action_coeff * config.action_magnitude_scale * jp.sum(
-        jp.power(jp.abs(inputs.action), 1.5)
+    action_magnitude = (
+        -config.action_coeff
+        * config.action_magnitude_scale
+        * jp.sum(jp.power(jp.abs(inputs.action), 1.5))
+        - config.steering_magnitude_penalty
+        * jp.power(jp.abs(inputs.action[0]), 1.5)
     )
     zero = jp.asarray(0.0, jp.float32)
     pitch_rate = -config.pitch_angular_velocity_coeff * 0.125 * jp.square(

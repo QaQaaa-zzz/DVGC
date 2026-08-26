@@ -167,6 +167,17 @@ def test_action_rate_and_joint_energy_costs_match_reference(config):
     assert float(result.components.joint_energy) == pytest.approx(-2.0)
 
 
+def test_v4_steering_costs_suppress_full_scale_bang_bang(v4_config):
+    result = _reward(
+        v4_config,
+        action=jp.array([1.0, 0.0, 0.0, 0.0]),
+        last_action=jp.array([-1.0, 0.0, 0.0, 0.0]),
+    )
+
+    assert float(result.components.action_smoothness) == pytest.approx(-8.0006)
+    assert float(result.components.action_magnitude) == pytest.approx(-0.65)
+
+
 def test_terminal_components_and_total_clipping_are_separate(config):
     success = _reward(
         config,
@@ -194,9 +205,9 @@ def test_v4_task_terminal_penalties_are_large_distinct_and_not_double_counted(
     stuck = _reward(v4_config, stuck_transition=jp.array(True))
     yaw = _reward(v4_config, yaw_limit_transition=jp.array(True))
 
-    assert float(stuck.components.stuck) == -40.0
+    assert float(stuck.components.stuck) == -100.0
     assert float(stuck.components.physical_failure) == 0.0
-    assert float(yaw.components.yaw_limit) == -40.0
+    assert float(yaw.components.yaw_limit) == -100.0
     assert float(yaw.components.physical_failure) == 0.0
 
 
@@ -219,7 +230,7 @@ def test_v4_overlapping_terminal_inputs_apply_only_the_highest_priority_penalty(
     assert float(physical.components.stuck) == 0.0
     assert float(physical.components.yaw_limit) == 0.0
     assert float(stuck.components.physical_failure) == 0.0
-    assert float(stuck.components.stuck) == -40.0
+    assert float(stuck.components.stuck) == -100.0
     assert float(stuck.components.yaw_limit) == 0.0
 
 

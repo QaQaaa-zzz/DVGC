@@ -143,6 +143,9 @@ class RewardConfig:
     low_height_penalty_full_at: float = 0.15
     stuck_penalty: float = 0.0
     yaw_limit_penalty: float = 0.0
+    steering_action_diff_penalty: float = 0.0
+    steering_magnitude_penalty: float = 0.0
+    failed_episode_return: float | None = None
 
 
 @dataclass(frozen=True)
@@ -441,12 +444,12 @@ def _validate_approved_absolute_method(
         airborne_rsi_probability=0.08 if is_v4 else 0.05,
         airborne_rsi_x_min=2.7,
         airborne_rsi_x_max=2.9,
-        airborne_rsi_z_min=1.8,
-        airborne_rsi_z_max=2.2,
+        airborne_rsi_z_min=0.38 if is_v4 else 1.8,
+        airborne_rsi_z_max=0.45 if is_v4 else 2.2,
         airborne_rsi_vx_min=1.8,
         airborne_rsi_vx_max=2.2,
-        airborne_rsi_vz_min=0.8,
-        airborne_rsi_vz_max=1.2,
+        airborne_rsi_vz_min=3.0 if is_v4 else 0.8,
+        airborne_rsi_vz_max=3.6 if is_v4 else 1.2,
     )
     expected_events = EventConfig(
         2.5,
@@ -484,12 +487,15 @@ def _validate_approved_absolute_method(
         illegal_contact_penalty=30.0,
         physical_failure_penalty=30.0,
         timeout_penalty=10.0,
-        total_min=-50.0,
+        total_min=-100.0 if is_v4 else -50.0,
         total_max=50.0,
         low_height_penalty=3.0 if is_v4 else 0.0,
         low_height_penalty_full_at=0.15,
-        stuck_penalty=40.0 if is_v4 else 0.0,
-        yaw_limit_penalty=40.0 if is_v4 else 0.0,
+        stuck_penalty=100.0 if is_v4 else 0.0,
+        yaw_limit_penalty=100.0 if is_v4 else 0.0,
+        steering_action_diff_penalty=2.0 if is_v4 else 0.0,
+        steering_magnitude_penalty=0.5 if is_v4 else 0.0,
+        failed_episode_return=-100.0 if is_v4 else None,
     )
     held_out_seeds = (
         tuple(range(950001, 950009))
@@ -630,6 +636,8 @@ def resolve_config_payload(payload: Mapping[str, Any]) -> ResolvedConfig:
         "low_height_penalty",
         "stuck_penalty",
         "yaw_limit_penalty",
+        "steering_action_diff_penalty",
+        "steering_magnitude_penalty",
     ):
         if getattr(reward, name) < 0.0:
             raise ValueError(f"reward.{name} must be nonnegative")
@@ -637,6 +645,11 @@ def resolve_config_payload(payload: Mapping[str, Any]) -> ResolvedConfig:
         raise ValueError(
             "reward.low_height_penalty_full_at must be below jump_reward_min_height"
         )
+    if reward.failed_episode_return is not None:
+        if not math.isfinite(reward.failed_episode_return):
+            raise ValueError("reward.failed_episode_return must be finite")
+        if reward.failed_episode_return >= 0.0:
+            raise ValueError("reward.failed_episode_return must be negative")
 
     action = _dataclass_from(ActionConfig, payload["action"])
     physical_limits = _dataclass_from(PhysicalLimits, payload["physical_limits"])

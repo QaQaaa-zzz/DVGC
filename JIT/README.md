@@ -9,11 +9,20 @@ backward motion, and numerical failure remain physical terminals. Two task
 failures prevent the policy from exploiting the approach: while the jump
 signal is active, less than 0.05 m forward progress over 25 control ticks
 (0.5 s) below 0.35 m is `stuck`; world-frame root yaw beyond 45 degrees is
-`yaw_limit`. Each has its own `-40` reward component and end code and is not
-double-counted as a generic physical failure. The yaw comes from the root
-free-joint quaternion, not the steering joint. The first Apex event still pays
-its one-time configured bonus, but it no longer ends the episode; simulation
-continues until a retained terminal or the exact 200-control-tick horizon.
+`yaw_limit`. Each has its own `-100` reward component and end code and is not
+double-counted as a generic physical failure. On either terminal, the final
+step reward offsets the reward already accumulated so the complete episode
+return is exactly `-100`. The yaw comes from the root free-joint quaternion,
+not the steering joint. The first Apex event still pays its one-time configured
+bonus, but it no longer ends the episode; simulation continues until a retained
+terminal or the exact 200-control-tick horizon.
+
+The v4 airborne RSI is a low-height bridge rather than an already-completed
+jump: root height is sampled from `[0.38, 0.45] m` with upward velocity
+`[3.0, 3.6] m/s`. Steering adds `-2.0 * (steer_t-steer_(t-1))^2` and
+`-0.5 * |steer_t|^1.5` on top of the retained all-action costs. A full-scale
+steering reversal therefore costs about `-8.5`, while small corrections remain
+available.
 
 While the current one-shot jump signal is active below 0.35 m, v4 adds a dense
 moderate low-height cost. It is `-3` at and below 0.15 m, decreases linearly to

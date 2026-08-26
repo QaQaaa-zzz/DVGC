@@ -141,7 +141,13 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
     @staticmethod
     def _zero_metrics() -> dict[str, jax.Array]:
         zero = jp.asarray(0.0, jp.float32)
-        metrics = {"reward": zero, "reward/unclipped": zero}
+        metrics = {
+            "reward": zero,
+            "reward/unclipped": zero,
+            "reward/pre_episode_return_override": zero,
+            "reward/unclipped_pre_episode_return_override": zero,
+            "reward/episode_return_override": zero,
+        }
         metrics.update({f"reward/{key}": zero for key in REWARD_COMPONENT_KEYS})
         for key in (
             "event/jump_signal",
@@ -337,6 +343,7 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
             "yaw_limit": false,
             "timeout": false,
             "episode_step": jp.asarray(0, jp.int32),
+            "episode_return": jp.asarray(0.0, jp.float32),
         }
         metrics = self._zero_metrics()
         metrics.update(
@@ -416,6 +423,19 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
             self._resolved_config.reward,
             self._resolved_config.physical_limits,
         )
+        task_failure = terminal.stuck | terminal.yaw_limit
+        failed_episode_return = self._resolved_config.reward.failed_episode_return
+        if failed_episode_return is None:
+            reward = reward_result.total
+        else:
+            reward = jp.where(
+                task_failure,
+                jp.asarray(failed_episode_return, jp.float32)
+                - state.info["episode_return"],
+                reward_result.total,
+            )
+        episode_return = state.info["episode_return"] + reward
+        episode_return_override = reward - reward_result.total
         observable_geometry = self._observable_geometry(data, geometry)
         frame = observable_frame(
             data,
@@ -429,8 +449,13 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
         critic_obs = privileged_observation(data, actor_obs, observable_geometry)
         reset_source = state.info["reset_source_airborne_rsi"]
         metrics = {
-            "reward": reward_result.total,
-            "reward/unclipped": reward_result.unclipped_total,
+            "reward": reward,
+            "reward/unclipped": jp.where(
+                task_failure, reward, reward_result.unclipped_total
+            ),
+            "reward/pre_episode_return_override": reward_result.total,
+            "reward/unclipped_pre_episode_return_override": reward_result.unclipped_total,
+            "reward/episode_return_override": episode_return_override,
             **{
                 f"reward/{key}": value
                 for key, value in reward_result.components.as_dict().items()
@@ -460,11 +485,12 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
             "yaw_limit": terminal.yaw_limit,
             "timeout": terminal.timeout,
             "episode_step": events.episode_step,
+            "episode_return": episode_return,
         }
         return mjx_env.State(
             data=data,
             obs={"state": actor_obs, "privileged_state": critic_obs},
-            reward=reward_result.total,
+            reward=reward,
             done=(terminal.terminated | terminal.truncated).astype(jp.float32),
             metrics=metrics,
             info=info,
