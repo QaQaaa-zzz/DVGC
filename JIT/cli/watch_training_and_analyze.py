@@ -15,6 +15,7 @@ from typing import Any
 
 
 TERMINAL_STATUSES = frozenset({"completed", "engineering_error", "aborted"})
+CODEX_ANALYSIS_MODEL = "gpt-5.6-luna"
 
 
 def _positive_seconds(value: str) -> float:
@@ -179,6 +180,8 @@ def _run_codex_once(
         "codex",
         "exec",
         "--ephemeral",
+        "--model",
+        CODEX_ANALYSIS_MODEL,
         "--sandbox",
         "read-only",
         "--cd",

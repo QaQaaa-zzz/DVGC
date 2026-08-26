@@ -71,7 +71,8 @@ The watcher only reads local process/status files while the run is active. A
 missing or dead training PID does not authorize analysis: the watcher waits
 until `status.json` says `completed`, `engineering_error`, or `aborted`. It then
 atomically creates `codex_analysis.started.json` and makes at most one
-ephemeral `codex exec` call with an explicit read-only sandbox. Restarts never
+ephemeral `codex exec` call using `gpt-5.6-luna` with an explicit read-only
+sandbox. Restarts never
 repeat that call, including after a failed attempt.
 
 When Codex produces a final message, the CLI writes it to `AUTO_ANALYSIS.md` in
