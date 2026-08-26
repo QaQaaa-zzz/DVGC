@@ -59,7 +59,7 @@ def test_active_v4_smoke_resolves_to_one_exact_384_environment_block(jit_root):
     assert config.schema == "jit_phase_u_engineering_smoke_v4"
     assert config.ppo.seed == 820500
     assert config.reset.airborne_rsi_probability == pytest.approx(0.08)
-    assert config.events.jump_zone_x_max == pytest.approx(3.4)
+    assert config.events.jump_zone_x_max == pytest.approx(4.0)
     assert config.reward.height_coeff == pytest.approx(40.0)
     assert config.reset.airborne_rsi_z_min == pytest.approx(0.38)
     assert config.reset.airborne_rsi_z_max == pytest.approx(0.45)
@@ -67,6 +67,7 @@ def test_active_v4_smoke_resolves_to_one_exact_384_environment_block(jit_root):
     assert config.reset.airborne_rsi_vz_max == pytest.approx(3.6)
     assert config.reward.steering_action_diff_penalty == pytest.approx(2.0)
     assert config.reward.steering_magnitude_penalty == pytest.approx(0.5)
+    assert config.reward.rear_wheel_action_diff_penalty == pytest.approx(2.0)
     assert config.reward.failed_episode_return == pytest.approx(-100.0)
     assert config.reward.illegal_contact_penalty == 0.0
     assert config.physical_limits.terminate_on_prohibited_contact is False

@@ -128,8 +128,8 @@ def test_v4_height_component_uses_40x_raw_height_only_while_signaled(v4_config):
 @pytest.mark.parametrize(
     ("z", "jump_signal", "expected"),
     [
-        (0.15, True, -3.0),
-        (0.25, True, -1.5),
+        (0.15, True, -8.0),
+        (0.25, True, -4.0),
         (0.35, True, 0.0),
         (0.15, False, 0.0),
     ],
@@ -176,6 +176,16 @@ def test_v4_steering_costs_suppress_full_scale_bang_bang(v4_config):
 
     assert float(result.components.action_smoothness) == pytest.approx(-8.0006)
     assert float(result.components.action_magnitude) == pytest.approx(-0.65)
+
+
+def test_v4_rear_wheel_costs_suppress_full_scale_switching(v4_config):
+    result = _reward(
+        v4_config,
+        action=jp.array([0.0, 1.0, 0.0, 0.0]),
+        last_action=jp.array([0.0, -1.0, 0.0, 0.0]),
+    )
+
+    assert float(result.components.action_smoothness) == pytest.approx(-8.0006)
 
 
 def test_terminal_components_and_total_clipping_are_separate(config):

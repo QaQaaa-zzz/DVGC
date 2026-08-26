@@ -179,6 +179,7 @@ def phase_u_reward(
         * config.action_smoothness_scale
         * jp.sum(jp.square(action_delta))
         - config.steering_action_diff_penalty * jp.square(action_delta[0])
+        - config.rear_wheel_action_diff_penalty * jp.square(action_delta[1])
     )
     action_magnitude = (
         -config.action_coeff

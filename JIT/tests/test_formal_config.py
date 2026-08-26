@@ -110,18 +110,19 @@ def test_continuation_v4_configs_use_the_active_20m_contract(jit_root):
     }
     assert smoke.ppo.seed == 820500
     assert smoke.reset.airborne_rsi_probability == pytest.approx(0.08)
-    assert smoke.events.jump_zone_x_max == pytest.approx(3.4)
+    assert smoke.events.jump_zone_x_max == pytest.approx(4.0)
     assert smoke.events.stuck_window_steps is None
     assert smoke.events.stuck_min_progress is None
     assert smoke.events.stuck_forward_velocity_threshold == pytest.approx(0.3)
     assert smoke.physical_limits.max_abs_yaw == pytest.approx(math.radians(45.0))
     assert smoke.physical_limits.terminate_on_prohibited_contact is False
     assert smoke.reward.height_coeff == pytest.approx(40.0)
-    assert smoke.reward.low_height_penalty == pytest.approx(3.0)
+    assert smoke.reward.low_height_penalty == pytest.approx(8.0)
     assert smoke.reward.stuck_penalty == pytest.approx(100.0)
     assert smoke.reward.yaw_limit_penalty == pytest.approx(100.0)
     assert smoke.reward.steering_action_diff_penalty == pytest.approx(2.0)
     assert smoke.reward.steering_magnitude_penalty == pytest.approx(0.5)
+    assert smoke.reward.rear_wheel_action_diff_penalty == pytest.approx(2.0)
     assert smoke.reward.failed_episode_return == pytest.approx(-100.0)
     assert smoke.reward.illegal_contact_penalty == 0.0
     assert smoke.ppo.episode_horizon == 400
@@ -138,7 +139,7 @@ def test_continuation_v4_configs_use_the_active_20m_contract(jit_root):
     assert formal.formal is not None
     assert formal.formal.formal_blocks == 814
     assert formal.ppo.num_evals == 815
-    assert formal.events.jump_zone_x_max == pytest.approx(3.4)
+    assert formal.events.jump_zone_x_max == pytest.approx(4.0)
     assert formal.reward.height_coeff == pytest.approx(40.0)
     assert formal.reset.airborne_rsi_probability == pytest.approx(0.08)
     assert formal.model["naccdmax"] == 320

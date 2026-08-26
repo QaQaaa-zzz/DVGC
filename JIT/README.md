@@ -9,7 +9,8 @@ illegal-contact reward penalty. Roll, pitch, backward motion, and numerical
 failure remain physical terminals. Two task
 failures prevent the policy from exploiting the approach: while the jump
 signal is active and the 0.5 m height event has not occurred, forward speed at
-or below 0.3 m/s is immediately `stuck`; world-frame root yaw beyond 45 degrees is
+or below 0.3 m/s is immediately `stuck`; the active jump window ends at 4.0 m;
+world-frame root yaw beyond 45 degrees is
 `yaw_limit`. Each has its own `-100` reward component and end code and is not
 double-counted as a generic physical failure. On either terminal, the final
 step reward offsets the reward already accumulated so the complete episode
@@ -21,15 +22,15 @@ terminal or the exact 400-control-tick horizon (8 seconds).
 The v4 airborne RSI is a low-height bridge rather than an already-completed
 jump: root height is sampled from `[0.38, 0.45] m` with upward velocity
 `[3.0, 3.6] m/s`. Steering adds `-2.0 * (steer_t-steer_(t-1))^2` and
-`-0.5 * |steer_t|^1.5` on top of the retained all-action costs. A full-scale
-steering reversal therefore costs about `-8.5`, while small corrections remain
-available.
+`-0.5 * |steer_t|^1.5`; rear-wheel drive adds
+`-2.0 * (drive_t-drive_(t-1))^2` on top of the retained all-action costs. A
+full-scale steering or rear-wheel reversal therefore costs about `-8`, while
+small corrections remain available.
 
 While the current one-shot jump signal is active below 0.35 m, v4 adds a dense
-moderate low-height cost. It is `-3` at and below 0.15 m, decreases linearly to
-zero at 0.35 m, and is zero whenever the jump signal is off. This fills the
-previous reward gap without changing the positive height curve at or above
-0.35 m.
+low-height cost. It is `-8` at and below 0.15 m, decreases linearly to zero at
+0.35 m, and is zero whenever the jump signal is off. This makes remaining low
+in the 4.0 m jump window worse than the retained survival/posture reward.
 
 Training uses full environment resets after every completed episode. This is a
 required runtime contract, not an optimization option: cached data/observation-

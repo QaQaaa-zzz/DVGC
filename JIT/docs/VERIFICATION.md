@@ -43,8 +43,8 @@ checkpoint, declares `resume_semantics=fresh_only`, and rejects every restore
 option before backend, environment, checkpoint, or run-directory work.
 
 The active v4 method identity also fixes `naccdmax=320`, jump window
-`[2.5,3.4]`, height coefficient 40, and airborne RSI probability 8%. It now
-adds a jump-signaled low-height cost that is `-3` at 0.15 m and linearly reaches
+`[2.5,4.0]`, height coefficient 40, and airborne RSI probability 8%. It now
+adds a jump-signaled low-height cost that is `-8` at 0.15 m and linearly reaches
 zero at 0.35 m; an immediate `vx <= 0.3 m/s` pre-height stuck terminal with `-100`; and a
 world-root-yaw limit of 45 degrees with `-100`. Both task failures override the
 complete episode return to exactly `-100`. Stuck and yaw have distinct end

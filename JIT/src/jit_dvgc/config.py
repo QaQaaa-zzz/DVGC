@@ -147,6 +147,7 @@ class RewardConfig:
     yaw_limit_penalty: float = 0.0
     steering_action_diff_penalty: float = 0.0
     steering_magnitude_penalty: float = 0.0
+    rear_wheel_action_diff_penalty: float = 0.0
     failed_episode_return: float | None = None
 
 
@@ -455,7 +456,7 @@ def _validate_approved_absolute_method(
     )
     expected_events = EventConfig(
         2.5,
-        3.4 if is_v4 else 3.1,
+        4.0 if is_v4 else 3.1,
         0.05,
         0.5,
         0.05,
@@ -493,12 +494,13 @@ def _validate_approved_absolute_method(
         timeout_penalty=10.0,
         total_min=-100.0 if is_v4 else -50.0,
         total_max=50.0,
-        low_height_penalty=3.0 if is_v4 else 0.0,
+        low_height_penalty=8.0 if is_v4 else 0.0,
         low_height_penalty_full_at=0.15,
         stuck_penalty=100.0 if is_v4 else 0.0,
         yaw_limit_penalty=100.0 if is_v4 else 0.0,
         steering_action_diff_penalty=2.0 if is_v4 else 0.0,
         steering_magnitude_penalty=0.5 if is_v4 else 0.0,
+        rear_wheel_action_diff_penalty=2.0 if is_v4 else 0.0,
         failed_episode_return=-100.0 if is_v4 else None,
     )
     held_out_seeds = (
@@ -649,6 +651,7 @@ def resolve_config_payload(payload: Mapping[str, Any]) -> ResolvedConfig:
         "yaw_limit_penalty",
         "steering_action_diff_penalty",
         "steering_magnitude_penalty",
+        "rear_wheel_action_diff_penalty",
     ):
         if getattr(reward, name) < 0.0:
             raise ValueError(f"reward.{name} must be nonnegative")
