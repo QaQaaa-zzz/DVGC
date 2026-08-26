@@ -43,7 +43,7 @@
   },
   "physical_limits": {
     "max_abs_roll": 0.6108652381980153,
-    "max_abs_pitch": 1.3089969389957472,
+    "max_abs_pitch": 0.7853981633974483,
     "max_backward_distance": 1.0,
     "max_abs_yaw": 0.7853981633974483,
     "terminate_on_prohibited_contact": false

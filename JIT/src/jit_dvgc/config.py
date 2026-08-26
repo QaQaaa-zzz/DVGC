@@ -338,7 +338,7 @@ def _validate_approved_v2_method(
     expected_events = EventConfig(2.5, 3.1, 0.05, 0.5, 0.05)
     expected_limits = PhysicalLimits(
         max_abs_roll=0.6108652381980153,
-        max_abs_pitch=1.3089969389957472,
+        max_abs_pitch=0.7853981633974483,
         max_backward_distance=1.0,
     )
     expected_reward = RewardConfig(
@@ -468,7 +468,7 @@ def _validate_approved_absolute_method(
     )
     expected_limits = PhysicalLimits(
         max_abs_roll=0.6108652381980153,
-        max_abs_pitch=1.3089969389957472,
+        max_abs_pitch=0.7853981633974483,
         max_backward_distance=1.0,
         max_abs_yaw=0.7853981633974483 if is_v4 else None,
         terminate_on_prohibited_contact=not is_v4,
