@@ -5,8 +5,9 @@
 The v4 contract fixes the v3 false failure diagnosis without changing XML
 physics: the observed `floor/rearwheel_collision` distance of approximately
 `-0.014175 m` is normal compliant wheel support and is now raw telemetry only.
-Prohibited body contact remains illegal. Apex is a monotonic nonterminal event;
-the rollout continues to retained physical failure or the 200-tick horizon.
+Prohibited body contact is retained as telemetry but no longer terminates or
+adds an illegal-contact reward penalty. Apex is a monotonic nonterminal event;
+the rollout continues to another retained terminal or the 400-tick horizon.
 
 Final representative evidence contains the complete video plus separately
 hashed pre/post-Apex NPZ segments. Formal training also persists raw JSONL

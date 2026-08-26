@@ -211,6 +211,12 @@ def test_v4_task_terminal_penalties_are_large_distinct_and_not_double_counted(
     assert float(yaw.components.physical_failure) == 0.0
 
 
+def test_v4_prohibited_contact_has_no_reward_penalty(v4_config):
+    result = _reward(v4_config, illegal_contact=jp.array(True))
+
+    assert float(result.components.illegal_contact) == 0.0
+
+
 def test_v4_overlapping_terminal_inputs_apply_only_the_highest_priority_penalty(
     v4_config,
 ):

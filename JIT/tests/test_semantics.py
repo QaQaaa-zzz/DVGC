@@ -251,6 +251,29 @@ def test_ordinary_state_is_ongoing(config):
     assert int(terminal.end_code) == END_ONGOING
 
 
+def test_v4_prohibited_contact_is_telemetry_not_a_terminal(v4_config):
+    terminal = classify_terminal(
+        _terminal_inputs(illegal_contact=jp.array(True)), v4_config
+    )
+
+    assert not bool(terminal.terminated)
+    assert not bool(terminal.physical_failure)
+    assert int(terminal.end_code) == END_ONGOING
+
+
+def test_v4_timeout_occurs_at_400_control_steps(v4_config):
+    before = classify_terminal(
+        _terminal_inputs(episode_step=jp.array(398)), v4_config
+    )
+    horizon = classify_terminal(
+        _terminal_inputs(episode_step=jp.array(399)), v4_config
+    )
+
+    assert not bool(before.truncated)
+    assert bool(horizon.truncated)
+    assert int(horizon.end_code) == END_TIMEOUT
+
+
 def test_v4_stuck_is_a_distinct_nonphysical_terminal(v4_config):
     terminal = classify_terminal(_terminal_inputs(stuck=jp.array(True)), v4_config)
 

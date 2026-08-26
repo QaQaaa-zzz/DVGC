@@ -114,6 +114,7 @@ def test_continuation_v4_configs_use_the_active_10m_contract(jit_root):
     assert smoke.events.stuck_window_steps == 25
     assert smoke.events.stuck_min_progress == pytest.approx(0.05)
     assert smoke.physical_limits.max_abs_yaw == pytest.approx(math.radians(45.0))
+    assert smoke.physical_limits.terminate_on_prohibited_contact is False
     assert smoke.reward.height_coeff == pytest.approx(40.0)
     assert smoke.reward.low_height_penalty == pytest.approx(3.0)
     assert smoke.reward.stuck_penalty == pytest.approx(100.0)
@@ -121,6 +122,8 @@ def test_continuation_v4_configs_use_the_active_10m_contract(jit_root):
     assert smoke.reward.steering_action_diff_penalty == pytest.approx(2.0)
     assert smoke.reward.steering_magnitude_penalty == pytest.approx(0.5)
     assert smoke.reward.failed_episode_return == pytest.approx(-100.0)
+    assert smoke.reward.illegal_contact_penalty == 0.0
+    assert smoke.ppo.episode_horizon == 400
     assert smoke.reset.airborne_rsi_z_min == pytest.approx(0.38)
     assert smoke.reset.airborne_rsi_z_max == pytest.approx(0.45)
     assert smoke.reset.airborne_rsi_vz_min == pytest.approx(3.0)
@@ -130,6 +133,7 @@ def test_continuation_v4_configs_use_the_active_10m_contract(jit_root):
     assert formal.ppo.seed == 820401
     assert formal.ppo.held_out_seeds == tuple(range(950001, 950009))
     assert formal.ppo.requested_transitions == 9_977_856
+    assert formal.ppo.episode_horizon == 400
     assert formal.formal is not None
     assert formal.formal.formal_blocks == 406
     assert formal.ppo.num_evals == 407
@@ -152,6 +156,7 @@ def test_continuation_v4_configs_use_the_active_10m_contract(jit_root):
         lambda p: p["events"].update(stuck_window_steps=24),
         lambda p: p["events"].update(stuck_min_progress=0.04),
         lambda p: p["physical_limits"].update(max_abs_yaw=0.8),
+        lambda p: p["physical_limits"].update(terminate_on_prohibited_contact=True),
         lambda p: p["reward"].update(height_coeff=20.0),
         lambda p: p["reward"].update(low_height_penalty=2.0),
         lambda p: p["reward"].update(stuck_penalty=99.0),
@@ -159,6 +164,8 @@ def test_continuation_v4_configs_use_the_active_10m_contract(jit_root):
         lambda p: p["reward"].update(steering_action_diff_penalty=1.0),
         lambda p: p["reward"].update(steering_magnitude_penalty=0.25),
         lambda p: p["reward"].update(failed_episode_return=-90.0),
+        lambda p: p["reward"].update(illegal_contact_penalty=30.0),
+        lambda p: p["ppo"].update(episode_horizon=200),
         lambda p: p["reset"].update(airborne_rsi_z_min=0.4),
         lambda p: p["reset"].update(airborne_rsi_vz_max=3.5),
         lambda p: p["reset"].update(airborne_rsi_probability=0.05),

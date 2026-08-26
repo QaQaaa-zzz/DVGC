@@ -46,7 +46,8 @@
     "max_abs_roll": 0.6108652381980153,
     "max_abs_pitch": 1.3089969389957472,
     "max_backward_distance": 1.0,
-    "max_abs_yaw": 0.7853981633974483
+    "max_abs_yaw": 0.7853981633974483,
+    "terminate_on_prohibited_contact": false
   },
   "reward": {
     "roll_coeff": 3.0,
@@ -66,7 +67,7 @@
     "pitch_angular_velocity_coeff": 0.15,
     "joint_energy_penalty_coeff": 2.0,
     "apex_success_bonus": 50.0,
-    "illegal_contact_penalty": 30.0,
+    "illegal_contact_penalty": 0.0,
     "physical_failure_penalty": 30.0,
     "timeout_penalty": 10.0,
     "total_min": -100.0,
@@ -81,7 +82,7 @@
   },
   "ppo": {
     "num_parallel_envs": 384,
-    "episode_horizon": 200,
+    "episode_horizon": 400,
     "unroll_length": 64,
     "batch_size": 16,
     "num_minibatches": 24,

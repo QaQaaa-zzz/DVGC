@@ -3,9 +3,10 @@
 ## Active v4 Apex-continuation run contract
 
 `phase_u_continuation_10m.json` is the active fresh-training contract. Ordinary
-front/rear wheel contact with the terrain is support telemetry, not an illegal
-contact terminal or penalty. Prohibited chassis/body contact, roll, pitch,
-backward motion, and numerical failure remain physical terminals. Two task
+front/rear wheel contact with the terrain is support telemetry. Prohibited
+chassis/body contact is also telemetry only: it neither terminates nor adds an
+illegal-contact reward penalty. Roll, pitch, backward motion, and numerical
+failure remain physical terminals. Two task
 failures prevent the policy from exploiting the approach: while the jump
 signal is active, less than 0.05 m forward progress over 25 control ticks
 (0.5 s) below 0.35 m is `stuck`; world-frame root yaw beyond 45 degrees is
@@ -15,7 +16,7 @@ step reward offsets the reward already accumulated so the complete episode
 return is exactly `-100`. The yaw comes from the root free-joint quaternion,
 not the steering joint. The first Apex event still pays its one-time configured
 bonus, but it no longer ends the episode; simulation continues until a retained
-terminal or the exact 200-control-tick horizon.
+terminal or the exact 400-control-tick horizon (8 seconds).
 
 The v4 airborne RSI is a low-height bridge rather than an already-completed
 jump: root height is sampled from `[0.38, 0.45] m` with upward velocity

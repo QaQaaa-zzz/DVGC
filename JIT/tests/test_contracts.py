@@ -68,4 +68,7 @@ def test_active_v4_smoke_resolves_to_one_exact_384_environment_block(jit_root):
     assert config.reward.steering_action_diff_penalty == pytest.approx(2.0)
     assert config.reward.steering_magnitude_penalty == pytest.approx(0.5)
     assert config.reward.failed_episode_return == pytest.approx(-100.0)
+    assert config.reward.illegal_contact_penalty == 0.0
+    assert config.physical_limits.terminate_on_prohibited_contact is False
+    assert config.ppo.episode_horizon == 400
     assert config.model["naccdmax"] == 256

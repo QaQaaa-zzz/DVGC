@@ -161,7 +161,8 @@ def classify_terminal(inputs: TerminalInputs, config: ResolvedConfig) -> Termina
         jp.asarray(inputs.nonfinite, dtype=bool),
         roll_failure,
         pitch_failure,
-        jp.asarray(inputs.illegal_contact, dtype=bool),
+        jp.asarray(inputs.illegal_contact, dtype=bool)
+        & jp.asarray(config.physical_limits.terminate_on_prohibited_contact),
         jp.asarray(inputs.backward_exit, dtype=bool),
     )
     raw_yaw_limit = (

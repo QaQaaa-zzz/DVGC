@@ -113,6 +113,7 @@ class PhysicalLimits:
     max_abs_pitch: float
     max_backward_distance: float
     max_abs_yaw: float | None = None
+    terminate_on_prohibited_contact: bool = True
 
 
 @dataclass(frozen=True)
@@ -465,6 +466,7 @@ def _validate_approved_absolute_method(
         max_abs_pitch=1.3089969389957472,
         max_backward_distance=1.0,
         max_abs_yaw=0.7853981633974483 if is_v4 else None,
+        terminate_on_prohibited_contact=not is_v4,
     )
     expected_reward = RewardConfig(
         roll_coeff=3.0,
@@ -484,7 +486,7 @@ def _validate_approved_absolute_method(
         pitch_angular_velocity_coeff=0.15,
         joint_energy_penalty_coeff=2.0,
         apex_success_bonus=50.0,
-        illegal_contact_penalty=30.0,
+        illegal_contact_penalty=0.0 if is_v4 else 30.0,
         physical_failure_penalty=30.0,
         timeout_penalty=10.0,
         total_min=-100.0 if is_v4 else -50.0,
@@ -504,7 +506,7 @@ def _validate_approved_absolute_method(
     )
     common_ppo = dict(
         num_parallel_envs=384,
-        episode_horizon=200,
+        episode_horizon=400 if is_v4 else 200,
         unroll_length=64,
         batch_size=16,
         num_minibatches=24,
