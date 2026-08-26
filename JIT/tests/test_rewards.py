@@ -75,7 +75,7 @@ def test_roll_component_matches_reference_piecewise_values(config, degrees, expe
 
 @pytest.mark.parametrize(
     ("degrees", "expected"),
-    [(0.0, 1.0), (3.0, 0.9), (8.0, 0.5), (10.0, 0.0), (20.0, -1.0)],
+    [(0.0, 1.0), (3.0, 0.9), (8.0, 0.5), (10.0, 0.0), (15.0, -0.5), (20.0, -3.0)],
 )
 def test_pitch_component_matches_reference_piecewise_values(config, degrees, expected):
     result = _reward(config, current=_state(pitch=jp.array(math.radians(degrees))))

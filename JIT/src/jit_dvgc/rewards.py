@@ -100,11 +100,19 @@ def _pitch_raw(degrees: jax.Array) -> jax.Array:
     below_three = 1.0 - (degrees / 3.0) * 0.1
     below_eight = 0.9 - ((degrees - 3.0) / 5.0) * 0.4
     below_ten = 0.5 - ((degrees - 8.0) / 2.0) * 0.5
-    above_ten = -0.1 * (degrees - 10.0)
+    above_fifteen = -0.5 - 0.5 * (degrees - 15.0)
     return jp.where(
         degrees <= 3.0,
         below_three,
-        jp.where(degrees <= 8.0, below_eight, jp.where(degrees <= 10.0, below_ten, above_ten)),
+        jp.where(
+            degrees <= 8.0,
+            below_eight,
+            jp.where(
+                degrees <= 10.0,
+                below_ten,
+                jp.where(degrees <= 15.0, -0.1 * (degrees - 10.0), above_fifteen),
+            ),
+        ),
     )
 
 
