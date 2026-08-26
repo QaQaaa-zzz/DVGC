@@ -121,6 +121,7 @@ def test_completed_run_invokes_read_only_ephemeral_analysis_once(
     arguments = invocations[0]
     assert arguments[:2] == ["exec", "--ephemeral"]
     assert arguments[arguments.index("--model") + 1] == "gpt-5.6-luna"
+    assert arguments[arguments.index("--reasoning-effort") + 1] == "low"
     assert arguments[arguments.index("--sandbox") + 1] == "read-only"
     assert Path(arguments[arguments.index("--cd") + 1]) == repository_root
     assert Path(arguments[arguments.index("--output-last-message") + 1]) == (
