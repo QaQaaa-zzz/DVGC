@@ -87,6 +87,35 @@ def test_phase_d_smoke_rejects_formal_and_requires_input():
     from jit_dvgc.phase_d_smoke import validate_phase_d_smoke_args
 
     with pytest.raises(ValueError, match="formal"):
-        validate_phase_d_smoke_args(formal=True, snapshot_bank=None, snapshot_catalog=None, actor_init_checkpoint=None, actor_init_config=None)
+        validate_phase_d_smoke_args(formal=True, snapshot_bank=None, snapshot_catalog=None, actor_init_checkpoint=None, actor_init_config=None, eval_seeds=())
     with pytest.raises(ValueError, match="snapshot"):
-        validate_phase_d_smoke_args(formal=False, snapshot_bank=None, snapshot_catalog=None, actor_init_checkpoint="x", actor_init_config="y")
+        validate_phase_d_smoke_args(formal=False, snapshot_bank=None, snapshot_catalog=None, actor_init_checkpoint="x", actor_init_config="y", eval_seeds=(1,))
+
+
+def test_catalog_split_is_seed_global_and_rejects_unknown_or_empty(jit_root):
+    from jit_dvgc.phase_d_smoke import split_catalog_entries
+
+    catalog = jit_root / "runs/handoff_bank/catalog_20260827.json"
+    train, evaluation, metadata = split_catalog_entries(catalog, eval_seeds=(1000007, 1000008))
+    assert train and evaluation
+    assert {row["seed"] for row in train} == set(range(1000001, 1000007))
+    assert {row["seed"] for row in evaluation} == {1000007, 1000008}
+    assert {row["parent_group_id"] for row in train}.isdisjoint(
+        {row["parent_group_id"] for row in evaluation}
+    )
+    assert metadata["entry_count"] == 168
+    with pytest.raises(ValueError, match="unknown eval seed"):
+        split_catalog_entries(catalog, eval_seeds=(9999999,))
+    with pytest.raises(ValueError, match="train pool is empty"):
+        split_catalog_entries(catalog, eval_seeds=tuple(sorted({row["seed"] for row in __import__('json').loads(catalog.read_text())["entries"]})))
+
+
+def test_catalog_hash_changes_when_catalog_is_tampered(tmp_path, jit_root):
+    from jit_dvgc.phase_d_smoke import catalog_sha256
+
+    source = jit_root / "runs/handoff_bank/catalog_20260827.json"
+    copy = tmp_path / "catalog.json"
+    copy.write_bytes(source.read_bytes())
+    original = catalog_sha256(copy)
+    copy.write_bytes(copy.read_bytes() + b"\n")
+    assert catalog_sha256(copy) != original

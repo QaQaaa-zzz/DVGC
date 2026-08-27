@@ -23,6 +23,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--snapshot-catalog", type=Path)
     parser.add_argument("--actor-init-checkpoint", type=Path)
     parser.add_argument("--actor-init-config", type=Path)
+    parser.add_argument("--eval-seeds", type=int, nargs="+")
     return parser
 
 
@@ -39,6 +40,8 @@ def main() -> int:
                 parser.error("descent_recovery smoke requires --snapshot-bank or --snapshot-catalog")
             if args.actor_init_checkpoint is None or args.actor_init_config is None:
                 parser.error("descent_recovery smoke requires actor initialization arguments")
+            if not args.eval_seeds:
+                parser.error("descent_recovery smoke requires --eval-seeds")
             from jit_dvgc.phase_d_smoke import run_phase_d_smoke
 
             report = run_phase_d_smoke(
@@ -48,6 +51,7 @@ def main() -> int:
                 snapshot_catalog=args.snapshot_catalog,
                 actor_init_checkpoint=args.actor_init_checkpoint,
                 actor_init_config=args.actor_init_config,
+                eval_seeds=tuple(args.eval_seeds),
             )
         else:
             report = run_phase_u_smoke(args.config, args.run_id)
