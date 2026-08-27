@@ -79,3 +79,25 @@ def test_active_v4_smoke_resolves_to_one_exact_384_environment_block(jit_root):
     assert config.physical_limits.terminate_on_prohibited_contact is False
     assert config.ppo.episode_horizon == 400
     assert config.model["naccdmax"] == 512
+
+
+def test_descent_recovery_config_is_supported(jit_root):
+    config = load_config(jit_root / "configs" / "descent_recovery_smoke.json")
+    assert config.phase == "descent_recovery"
+    assert config.descent.recovery_ticks == 25
+    assert config.ppo.episode_horizon > config.descent.recovery_ticks
+
+
+def test_descent_recovery_rejects_invalid_threshold(jit_root, tmp_path):
+    payload = json.loads((jit_root / "configs" / "descent_recovery_smoke.json").read_text())
+    payload["descent"]["recovery_ticks"] = payload["ppo"]["episode_horizon"]
+    bad = tmp_path / "bad_descent.json"
+    bad.write_text(json.dumps(payload))
+    with pytest.raises(ValueError, match="recovery_ticks"):
+        load_config(bad)
+
+
+def test_phase_u_config_hash_is_unchanged(jit_root):
+    config = load_config(jit_root / "configs" / "phase_u_smoke.json")
+    assert config.phase == "propulsion_ascent"
+    assert config.config_sha256 == "b0e2f7cbbf061bde07d8cbcbc20db3d9a534a46610a57d92583fee5fd750cfe8"

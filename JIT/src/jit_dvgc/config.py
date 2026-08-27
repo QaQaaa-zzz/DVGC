@@ -116,6 +116,23 @@ class PhysicalLimits:
     max_abs_yaw: float | None = None
     terminate_on_prohibited_contact: bool = True
 
+@dataclass(frozen=True)
+class DescentConfig:
+    recovery_ticks: int
+    min_airborne_clearance: float
+    contact_clearance_threshold: float
+    max_wheel_penetration: float
+    min_post_contact_forward_progress: float
+    terminate_on_body_contact: bool
+    terminate_on_prohibited_contact: bool
+    reward_contact: float
+    reward_recovery_tick: float
+    penalty_bad_contact: float
+    penalty_failure: float
+    penalty_timeout: float
+    reward_forward_progress: float
+    reward_success: float
+
 
 @dataclass(frozen=True)
 class RewardConfig:
@@ -167,6 +184,7 @@ class ResolvedConfig:
     reward: RewardConfig
     ppo: PPOConfig
     formal: FormalTrainingConfig | None
+    descent: DescentConfig | None = None
 
 
 def _dataclass_from(cls: type, payload: Mapping[str, Any]):
@@ -574,11 +592,13 @@ def resolve_config_payload(payload: Mapping[str, Any]) -> ResolvedConfig:
         "jit_phase_u_engineering_smoke_v3",
         "jit_phase_u_formal_v3",
         "jit_phase_u_engineering_smoke_v4",
-        "jit_phase_u_formal_v4",
+        "jit_phase_u_formal_v4", "jit_descent_recovery_engineering_smoke_v1",
     }:
         raise ValueError("unsupported JIT config schema")
-    if payload.get("phase") != "propulsion_ascent":
-        raise ValueError("only propulsion_ascent is implemented")
+    if payload.get("phase") not in {"propulsion_ascent", "descent_recovery"}:
+        raise ValueError("unsupported JIT phase")
+    if payload.get("phase") == "descent_recovery" and schema != "jit_descent_recovery_engineering_smoke_v1":
+        raise ValueError("descent_recovery requires its engineering smoke schema")
     if schema.endswith("_v4") and payload.get("training_wrapper") != {
         "full_reset": True,
         "preserve_episode_evidence": True,
@@ -675,6 +695,16 @@ def resolve_config_payload(payload: Mapping[str, Any]) -> ResolvedConfig:
     physical_limits = _dataclass_from(PhysicalLimits, payload["physical_limits"])
     if physical_limits.max_abs_yaw is not None:
         _positive("physical_limits.max_abs_yaw", physical_limits.max_abs_yaw)
+    descent = None
+    if payload.get("phase") == "descent_recovery":
+        descent = _dataclass_from(DescentConfig, payload.get("descent", {}))
+        if descent.recovery_ticks <= 0 or descent.recovery_ticks >= ppo.episode_horizon:
+            raise ValueError("descent.recovery_ticks must be positive and less than episode horizon")
+        for name in ("min_airborne_clearance", "contact_clearance_threshold", "max_wheel_penetration", "min_post_contact_forward_progress", "reward_contact", "reward_recovery_tick", "penalty_bad_contact", "penalty_failure", "penalty_timeout", "reward_forward_progress", "reward_success"):
+            value = getattr(descent, name)
+            if not math.isfinite(value) or value < 0:
+                raise ValueError(f"descent.{name} must be finite and nonnegative")
+        return ResolvedConfig(schema=schema, phase=str(payload["phase"]), raw=payload, config_sha256=canonical_sha256(payload), model=dict(payload["model"]), action=action, reset=reset, events=events, physical_limits=physical_limits, reward=reward, ppo=ppo, formal=None, descent=descent)
     validator = (
         _validate_approved_absolute_method
         if schema.endswith(("_v3", "_v4"))
@@ -703,6 +733,7 @@ def resolve_config_payload(payload: Mapping[str, Any]) -> ResolvedConfig:
         reward=reward,
         ppo=ppo,
         formal=formal,
+        descent=descent,
     )
 
 

@@ -19,19 +19,41 @@ def _parser() -> argparse.ArgumentParser:
     mode.add_argument("--smoke", action="store_true")
     mode.add_argument("--formal", action="store_true")
     parser.add_argument("--restore-checkpoint", type=Path)
+    parser.add_argument("--snapshot-bank", type=Path)
+    parser.add_argument("--snapshot-catalog", type=Path)
+    parser.add_argument("--actor-init-checkpoint", type=Path)
+    parser.add_argument("--actor-init-config", type=Path)
     return parser
 
 
 def main() -> int:
     parser = _parser()
     args = parser.parse_args()
-    if args.phase != "propulsion_ascent":
-        parser.error("only propulsion_ascent is implemented")
+    if args.phase not in {"propulsion_ascent", "descent_recovery"}:
+        parser.error("unsupported phase")
     if args.restore_checkpoint is not None and not args.formal:
         parser.error("--restore-checkpoint is only valid with --formal")
     if args.smoke:
-        report = run_phase_u_smoke(args.config, args.run_id)
+        if args.phase == "descent_recovery":
+            if args.snapshot_bank is None and args.snapshot_catalog is None:
+                parser.error("descent_recovery smoke requires --snapshot-bank or --snapshot-catalog")
+            if args.actor_init_checkpoint is None or args.actor_init_config is None:
+                parser.error("descent_recovery smoke requires actor initialization arguments")
+            from jit_dvgc.phase_d_smoke import run_phase_d_smoke
+
+            report = run_phase_d_smoke(
+                args.config,
+                args.run_id,
+                snapshot_bank=args.snapshot_bank,
+                snapshot_catalog=args.snapshot_catalog,
+                actor_init_checkpoint=args.actor_init_checkpoint,
+                actor_init_config=args.actor_init_config,
+            )
+        else:
+            report = run_phase_u_smoke(args.config, args.run_id)
     else:
+        if args.phase != "propulsion_ascent":
+            parser.error("formal descent_recovery training is not implemented")
         from jit_dvgc.formal_training import run_phase_u_formal
 
         report = run_phase_u_formal(

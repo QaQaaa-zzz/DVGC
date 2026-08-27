@@ -79,6 +79,7 @@ END_STUCK = 8
 END_TIMEOUT = 9
 END_YAW_LIMIT = 10
 END_JUMP_ZONE_MISSED = 11
+END_RECOVERY_SUCCESS = 12
 
 END_REASONS = {
     END_ONGOING: "ongoing",
@@ -93,4 +94,5 @@ END_REASONS = {
     END_TIMEOUT: "timeout",
     END_YAW_LIMIT: "yaw_limit",
     END_JUMP_ZONE_MISSED: "jump_zone_missed",
+    END_RECOVERY_SUCCESS: "recovery_success",
 }

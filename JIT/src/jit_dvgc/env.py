@@ -23,6 +23,7 @@ from .constants import (
 from .geometry import GeometrySignals, build_geometry_contract, extract_geometry
 from .model import ModelBundle, load_host_model, put_warp_model
 from .observation import (
+    HistoryState,
     ObservableGeometry,
     actor_observation,
     advance_history,
@@ -40,6 +41,9 @@ from .semantics import (
     initial_event_state,
 )
 from .handoff_snapshot import HandoffSnapshot, capture_snapshot, compatibility_identity, restore_snapshot
+from .snapshot_pool import SnapshotPool
+from .descent_semantics import DescentSignals, initial_descent_events, advance_descent_events, classify_descent_terminal
+from .descent_rewards import DescentRewardInputs, descent_recovery_reward
 
 
 def _finite_stuck_window_progress(
@@ -56,7 +60,7 @@ def _finite_stuck_window_progress(
 class TwoPhaseBikeEnv(mjx_env.MjxEnv):
     """The JIT Propulsion-Ascent training environment."""
 
-    def __init__(self, config: ResolvedConfig, *, convert_model: bool = True):
+    def __init__(self, config: ResolvedConfig, *, convert_model: bool = True, snapshot_pool: SnapshotPool | None = None):
         runtime = config_dict.create(
             ctrl_dt=CTRL_DT,
             sim_dt=SIM_DT,
@@ -69,6 +73,9 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
         )
         super().__init__(runtime)
         self._resolved_config = config
+        self._snapshot_pool = snapshot_pool
+        if config.phase == "descent_recovery" and snapshot_pool is None:
+            raise ValueError("descent_recovery requires a snapshot pool")
         bundle = load_host_model(config)
         self._bundle: ModelBundle = put_warp_model(bundle) if convert_model else bundle
         self._geometry = build_geometry_contract(bundle.mj_model)
@@ -289,11 +296,54 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
         }
 
     def reset(self, rng: jax.Array) -> mjx_env.State:
+        if self._resolved_config.phase == "descent_recovery":
+            return self._reset_descent(rng)
         decision_key, state_key = jax.random.split(rng)
         use_airborne_rsi = jax.random.bernoulli(
             decision_key, self._resolved_config.reset.airborne_rsi_probability
         )
         return self._reset(state_key, use_airborne_rsi)
+
+    def _reset_descent(self, rng):
+        sample = self._snapshot_pool.sample(rng)
+        model = self._require_runtime_model(); data = mjx_env.make_data(self.mj_model, qpos=sample["qpos"], qvel=sample["qvel"], ctrl=sample["ctrl"], impl=model.impl.value, naconmax=int(self._resolved_config.model["naconmax"]), naccdmax=(int(self._resolved_config.model["naccdmax"]) if "naccdmax" in self._resolved_config.model else None), njmax=int(self._resolved_config.model["njmax"]))
+        data = mjx.forward(model, data); geometry = extract_geometry(data, self._geometry); og = self._observable_geometry(data, geometry)
+        history = HistoryState(frames=sample["observation_fifo"], valid_count=sample["history_valid_count"])
+        events = initial_descent_events(data.qpos[self._bundle.model_index.root_qpos_address])
+        actor_obs = actor_observation(history, sample["observation"][ -1])
+        critic_obs = privileged_observation(data, actor_obs, og); rs = self._reward_state(data, geometry); false=jp.asarray(False)
+        info={"rng":sample["rng"],"history":history,"events":events,"last_action":sample["last_action"],"reward_state":rs,"episode_step":jp.asarray(0,jp.int32),"source_tick":sample["tick"],"parent_group_index":sample["parent_group_index"],"reset_source_airborne_rsi":false,"terminated":false,"truncated":false,"time_out":jp.asarray(0.,jp.float32),"end_code":jp.asarray(0,jp.int32),"success":false,"physical_failure":false,"timeout":false,"episode_return":jp.asarray(0.,jp.float32)}
+        metrics=self._zero_metrics()
+        # Keep reset and step metric pytrees identical for Brax lax.scan/vmap.
+        metrics.update({
+            "reward": jp.asarray(0., jp.float32),
+            "reward/unclipped": jp.asarray(0., jp.float32),
+            "reward/pre_episode_return_override": jp.asarray(0., jp.float32),
+            "reward/unclipped_pre_episode_return_override": jp.asarray(0., jp.float32),
+            "reward/episode_return_override": jp.asarray(0., jp.float32),
+            "reward/descent_forward_progress": jp.asarray(0., jp.float32),
+            "reward/descent_contact": jp.asarray(0., jp.float32),
+            "reward/descent_recovery_tick": jp.asarray(0., jp.float32),
+            "reward/descent_success": jp.asarray(0., jp.float32),
+            "reward/descent_bad_contact": jp.asarray(0., jp.float32),
+            "reward/descent_failure": jp.asarray(0., jp.float32),
+            "reward/descent_timeout": jp.asarray(0., jp.float32),
+            "event/descent_airborne_seen": events.airborne_seen.astype(jp.float32),
+            "event/descent_valid_contact_seen": events.valid_contact_seen.astype(jp.float32),
+            "event/descent_post_contact_ticks": jp.asarray(0., jp.float32),
+            "terminal/descent_success": jp.asarray(0., jp.float32),
+            "terminal/descent_physical_failure": jp.asarray(0., jp.float32),
+            "terminal/descent_timeout": jp.asarray(0., jp.float32),
+            "terminal/physical_failure": jp.asarray(0., jp.float32),
+            "terminal/roll_limit": jp.asarray(0., jp.float32),
+            "terminal/pitch_limit": jp.asarray(0., jp.float32),
+            "terminal/jump_zone_missed": jp.asarray(0., jp.float32),
+            "terminal/stuck": jp.asarray(0., jp.float32),
+            "terminal/yaw_limit": jp.asarray(0., jp.float32),
+            "terminal/timeout": jp.asarray(0., jp.float32),
+            "terminal/success": jp.asarray(0., jp.float32),
+        })
+        return mjx_env.State(data=data,obs={"state":actor_obs,"privileged_state":critic_obs},reward=jp.asarray(0.,jp.float32),done=jp.asarray(0.,jp.float32),metrics=metrics,info=info)
 
     def reset_natural(self, rng: jax.Array) -> mjx_env.State:
         return self._reset(rng, jp.asarray(False))
@@ -406,6 +456,8 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
         )
 
     def step(self, state: mjx_env.State, action: jax.Array) -> mjx_env.State:
+        if self._resolved_config.phase == "descent_recovery":
+            return self._step_descent(state, action)
         model = self._require_runtime_model()
         index = self._bundle.model_index
         normalized_action = jp.clip(jp.asarray(action, jp.float32), -1.0, 1.0)
@@ -559,3 +611,9 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
             metrics=metrics,
             info=info,
         )
+
+    def _step_descent(self, state, action):
+        model=self._require_runtime_model(); index=self._bundle.model_index; a=jp.clip(jp.asarray(action,jp.float32),-1.,1.); ctrl=map_action(a,state.data.qpos[index.knee_qpos_address],self._bundle.action_mapping); data=mjx_env.step(model,state.data,ctrl,self.n_substeps); geometry=extract_geometry(data,self._geometry); rs=self._reward_state(data,geometry); prev=state.info["events"]
+        signals=DescentSignals(data.qpos[index.root_qpos_address],geometry.front_wheel_terrain_clearance,geometry.rear_wheel_terrain_clearance,geometry.maximum_wheel_penetration,geometry.prohibited_contact,jp.isfinite(data.qpos).all() & jp.isfinite(data.qvel).all() & jp.isfinite(a).all(),geometry.roll,geometry.pitch,data.qpos[index.root_qpos_address] < state.info["reward_state"].x-self._resolved_config.physical_limits.max_backward_distance)
+        events=advance_descent_events(prev,signals,self._resolved_config.descent); terminal=classify_descent_terminal(signals,events,self._resolved_config.descent,self._resolved_config.physical_limits, state.info["episode_step"]+1,self._resolved_config.ppo.episode_horizon); rr=descent_recovery_reward(DescentRewardInputs(rs.x-state.info["reward_state"].x,events.valid_contact_seen,prev.valid_contact_seen,events.valid_contact_seen,events.recovery_success,prev.recovery_success,signals.body_contact,terminal.physical_failure,terminal.truncated),self._resolved_config.descent); og=self._observable_geometry(data,geometry); frame=observable_frame(data,index,og,a,jp.asarray(True)); history=advance_history(state.info["history"],frame); actor=actor_observation(history,jp.asarray(False)); critic=privileged_observation(data,actor,og); info={**state.info,"history":history,"events":events,"last_action":a,"reward_state":rs,"terminated":terminal.terminated,"truncated":terminal.truncated,"time_out":terminal.truncated.astype(jp.float32),"end_code":terminal.end_code,"success":terminal.success,"physical_failure":terminal.physical_failure,"timeout":terminal.timeout,"episode_step":state.info["episode_step"]+1,"episode_return":state.info["episode_return"]+rr.total}; metrics={**self._zero_metrics(),"reward":rr.total,"reward/descent_forward_progress":rr.components.forward_progress,"reward/descent_contact":rr.components.contact,"reward/descent_recovery_tick":rr.components.recovery_tick,"reward/descent_success":rr.components.success,"reward/descent_bad_contact":rr.components.bad_contact,"reward/descent_failure":rr.components.failure,"reward/descent_timeout":rr.components.timeout,"event/descent_airborne_seen":events.airborne_seen.astype(jp.float32),"event/descent_valid_contact_seen":events.valid_contact_seen.astype(jp.float32),"event/descent_post_contact_ticks":events.post_contact_ticks.astype(jp.float32),"terminal/descent_success":terminal.success.astype(jp.float32),"terminal/descent_physical_failure":terminal.physical_failure.astype(jp.float32),"terminal/descent_timeout":terminal.truncated.astype(jp.float32)}
+        return mjx_env.State(data=data,obs={"state":actor,"privileged_state":critic},reward=rr.total,done=(terminal.terminated|terminal.truncated).astype(jp.float32),metrics=metrics,info=info)

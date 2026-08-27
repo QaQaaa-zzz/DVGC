@@ -6,7 +6,7 @@ import subprocess
 import sys
 
 
-def test_cli_rejects_unimplemented_phase_before_creating_run(jit_root, tmp_path):
+def test_cli_rejects_descent_smoke_without_snapshot_input(jit_root, tmp_path):
     environment = os.environ.copy()
     environment["PYTHONPATH"] = str(jit_root / "src")
     environment["JIT_RUN_ROOT"] = str(tmp_path)
@@ -29,7 +29,7 @@ def test_cli_rejects_unimplemented_phase_before_creating_run(jit_root, tmp_path)
         text=True,
     )
     assert result.returncode != 0
-    assert "only propulsion_ascent is implemented" in result.stderr
+    assert "requires --snapshot-bank or --snapshot-catalog" in result.stderr
     assert not (tmp_path / "forbidden").exists()
 
 
