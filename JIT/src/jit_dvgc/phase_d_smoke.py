@@ -22,7 +22,7 @@ from .constants import ACTION_ORDER, ACTOR_FRAME_FIELDS, ACTOR_TASK_FIELDS
 from .env import TwoPhaseBikeEnv
 from .handoff_snapshot import compatibility_identity
 from .phase_expert_init import build_actor_only_initialization, make_actor_only_policy
-from .ppo import make_network_factory
+from .ppo import make_network_factory, wrap_for_jit_training
 from .provenance import InteractionAccounting, RunDeclaration, close_run, mark_run_running, predeclare_run
 from .snapshot_pool import SnapshotPool
 
@@ -102,8 +102,33 @@ def validate_phase_d_smoke_args(*, formal: bool, snapshot_bank, snapshot_catalog
         raise ValueError("Phase D smoke requires actor initialization checkpoint and config")
 
 
-def build_phase_d_trainer_kwargs(initialization: Any, *, num_timesteps: int, **kwargs) -> dict[str, Any]:
-    result = dict(kwargs)
+def build_phase_d_trainer_kwargs(initialization: Any, *, num_timesteps: int,
+                                 config: Any = None, environment: Any = None,
+                                 **kwargs) -> dict[str, Any]:
+    result = {"wrap_env": True, "wrap_env_fn": wrap_for_jit_training}
+    if config is not None and environment is not None:
+        result.update({
+            "environment": environment, "max_devices_per_host": 1,
+            "num_envs": config.ppo.num_parallel_envs,
+            "episode_length": config.ppo.episode_horizon, "action_repeat": 1,
+            "learning_rate": config.ppo.learning_rate,
+            "entropy_cost": config.ppo.entropy_cost,
+            "discounting": config.ppo.discounting,
+            "unroll_length": config.ppo.unroll_length,
+            "batch_size": config.ppo.batch_size,
+            "num_minibatches": config.ppo.num_minibatches,
+            "num_updates_per_batch": config.ppo.num_updates_per_batch,
+            "normalize_observations": True,
+            "reward_scaling": config.ppo.reward_scaling,
+            "clipping_epsilon": config.ppo.clipping_epsilon,
+            "gae_lambda": config.ppo.gae_lambda,
+            "max_grad_norm": config.ppo.max_grad_norm,
+            "bootstrap_on_timeout": True,
+            "network_factory": make_network_factory(), "seed": config.ppo.seed,
+            "num_evals": 0, "num_eval_envs": config.ppo.num_eval_envs,
+            "deterministic_eval": True, "run_evals": False,
+        })
+    result.update(kwargs)
     result.update({
         "num_timesteps": int(num_timesteps),
         "restore_params": initialization.restore_params,
@@ -237,18 +262,7 @@ def run_phase_d_smoke(
         kwargs = build_phase_d_trainer_kwargs(
             initialization,
             num_timesteps=config.ppo.requested_transitions,
-            environment=env,
-            max_devices_per_host=1, wrap_env=True, num_envs=config.ppo.num_parallel_envs,
-            episode_length=config.ppo.episode_horizon, action_repeat=1,
-            learning_rate=config.ppo.learning_rate, entropy_cost=config.ppo.entropy_cost,
-            discounting=config.ppo.discounting, unroll_length=config.ppo.unroll_length,
-            batch_size=config.ppo.batch_size, num_minibatches=config.ppo.num_minibatches,
-            num_updates_per_batch=config.ppo.num_updates_per_batch, normalize_observations=True,
-            reward_scaling=config.ppo.reward_scaling, clipping_epsilon=config.ppo.clipping_epsilon,
-            gae_lambda=config.ppo.gae_lambda, max_grad_norm=config.ppo.max_grad_norm,
-            bootstrap_on_timeout=True, network_factory=make_network_factory(), seed=config.ppo.seed,
-            num_evals=0, num_eval_envs=config.ppo.num_eval_envs, deterministic_eval=True,
-            run_evals=False,
+            config=config, environment=env,
         )
         make_policy, params, metrics = trainer(**kwargs)
         normalizer, actor, critic = params

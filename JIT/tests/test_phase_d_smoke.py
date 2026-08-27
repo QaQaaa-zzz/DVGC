@@ -12,7 +12,6 @@ def test_phase_d_gpu_compile_update_uses_actor_only_restore(jit_root):
     from jit_dvgc.handoff_snapshot import compatibility_identity
     from jit_dvgc.phase_expert_init import build_actor_only_initialization
     from jit_dvgc.phase_d_smoke import build_phase_d_trainer_kwargs
-    from jit_dvgc.ppo import make_network_factory, wrap_for_jit_training
     from jit_dvgc.snapshot_pool import SnapshotPool
     from brax.training.agents.ppo import train as ppo_train
 
@@ -32,32 +31,13 @@ def test_phase_d_gpu_compile_update_uses_actor_only_restore(jit_root):
     kwargs = build_phase_d_trainer_kwargs(
         initialization,
         num_timesteps=64,
+        config=target_config,
         environment=env,
-        max_devices_per_host=1,
-        wrap_env=True,
-        wrap_env_fn=wrap_for_jit_training,
         num_envs=4,
-        episode_length=25,
-        action_repeat=1,
-        learning_rate=target_config.ppo.learning_rate,
-        entropy_cost=target_config.ppo.entropy_cost,
-        discounting=target_config.ppo.discounting,
         unroll_length=4,
         batch_size=4,
         num_minibatches=1,
-        num_updates_per_batch=1,
-        normalize_observations=True,
-        reward_scaling=target_config.ppo.reward_scaling,
-        clipping_epsilon=target_config.ppo.clipping_epsilon,
-        gae_lambda=target_config.ppo.gae_lambda,
-        max_grad_norm=target_config.ppo.max_grad_norm,
-        bootstrap_on_timeout=True,
-        network_factory=make_network_factory(),
-        seed=target_config.ppo.seed,
-        num_evals=0,
         num_eval_envs=4,
-        deterministic_eval=True,
-        run_evals=False,
     )
     _, params, _ = ppo_train.train(**kwargs)
     assert len(params) == 3
@@ -81,6 +61,19 @@ def test_phase_d_trainer_kwargs_are_actor_only():
     assert kwargs["restore_params"] == ("normalizer", "actor")
     assert kwargs["restore_value_fn"] is False
     assert kwargs["num_timesteps"] == 64
+
+
+def test_phase_d_trainer_kwargs_always_use_jit_wrapper():
+    from jit_dvgc.phase_d_smoke import build_phase_d_trainer_kwargs
+    from jit_dvgc.ppo import wrap_for_jit_training
+
+    class Init:
+        restore_params = ("normalizer", "actor")
+
+    kwargs = build_phase_d_trainer_kwargs(Init(), num_timesteps=64)
+    assert kwargs["wrap_env"] is True
+    assert kwargs["wrap_env_fn"] is wrap_for_jit_training
+    assert kwargs["restore_value_fn"] is False
 
 
 def test_phase_d_smoke_rejects_formal_and_requires_input():
