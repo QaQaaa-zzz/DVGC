@@ -88,10 +88,11 @@ run 校验通过。最终自然起点评估是 8/8 到达 Apex，之后才在更
 | --- | --- | --- |
 | Phase U 训练代码 | 已有 | JIT 已有稳定训练入口、检查点、评估、视频和 run 校验 |
 | Phase U 跳跃行为 | 可以进入下一步 | 最新 checkpoint 自然起点 8/8 到达 Apex |
-| 正式冻结 `pi_up` | 下一步要做 | 先登记候选，等 `pi_down` 出来后再决定最终用哪个 checkpoint |
-| Apex/下降状态库 | 未完成 | 现有 NPZ 可用于分析，但还需要在线重新采集完整 snapshot |
-| Phase D 训练 | 未实现 | 需要在现有稳定入口里增加 `descent_recovery` |
-| `pi_down` | 未训练 | 必须先有可恢复的下降策略 |
+| 正式冻结 `pi_up` | 候选已登记 | `transition_9977856` 为 `pi_up_candidate` |
+| Apex/下降状态库 | 已完成 | 168 snapshots、24 parent trajectories、3 checkpoints，按 parent seed 隔离 train/eval |
+| Phase D 工程栈 | 已完成 | snapshot reset、actor-only init、25,600 smoke、42-state fixed panel；结果 32 success/10 roll_limit/0 timeout |
+| Phase D 新 reward | 已实现待验证 | 代码已完成，尚未用新 reward 跑 smoke 或正式训练 |
+| `pi_down` | 未训练 | 下一步先跑新 reward smoke，再重复 42-state panel |
 | continuation labels | 未完成 | 需要冻结策略以后再做 |
 | `V_up` / `V_down` | 未实现 | 不能在没有正式 labels 时提前训练 |
 | soft Tube | 未实现 | 必须建立在评分网络和物理检查之上 |
@@ -153,7 +154,11 @@ run 校验通过。最终自然起点评估是 8/8 到达 Apex，之后才在更
 - checkpoint 能够恢复并重新跑出相同类型的 Apex 行为；
 - 后续代码不会覆盖或继续训练这些 checkpoint。
 
-## 6. 第二步：建立 Apex 和下降状态库
+## 6. 第二步：建立 Apex 和下降状态库（已完成）
+
+当前已完成 168 条 handoff snapshots，覆盖 24 个 parent trajectories 和
+三个 source checkpoints，并按 parent seed 保持 train/eval 隔离。以下内容保留
+为采集合同和历史执行说明。
 
 ### 目的
 
@@ -203,7 +208,13 @@ run 校验通过。最终自然起点评估是 8/8 到达 Apex，之后才在更
 - 状态库不只包含同一个 Apex 状态的重复副本；
 - 每条状态都能追溯到来源 checkpoint 或合法的小范围变化。
 
-## 7. 第三步：实现 Phase D 训练能力
+## 7. 第三步：实现 Phase D 训练能力（工程栈已完成）
+
+当前已实现 `descent_recovery` reset pool、统一 observation/history/action
+合同、actor-only 初始化、独立终止语义和稳定 reward 代码；critic 与 optimizer
+保持 fresh。25,600 smoke 和 42-state fixed panel 已验证，panel 结果为 32
+success、10 `roll_limit`、0 timeout，失败只来自 4,988,928 source bank。
+新 reward 尚未跑真实 smoke 或正式训练。
 
 ### 目的
 
@@ -256,7 +267,7 @@ run 校验通过。最终自然起点评估是 8/8 到达 Apex，之后才在更
 - 成功、物理失败和超时能够正确区分；
 - 视频在真实结束位置停止，不补重复帧。
 
-## 8. 第四步：先跑 Phase D smoke
+## 8. 第四步：先跑 Phase D 新 reward smoke（下一步）
 
 ### 目的
 
@@ -264,17 +275,19 @@ run 校验通过。最终自然起点评估是 8/8 到达 Apex，之后才在更
 
 ### 如何完成
 
-1. 先运行完整 JIT preflight：
+1. 使用现有 snapshot bank 和 actor-only Phase U 初始化，运行新的 25,600-transition
+   Phase D smoke；这一步尚未启动。
+2. 先运行完整 JIT preflight：
 
    ```bash
    bash JIT/scripts/local_preflight.sh
    ```
 
-2. 预先声明 Phase D smoke 的目的、输入 bank、随机种子、训练上限、停止条件和输出
+3. 预先声明 Phase D smoke 的目的、输入 bank、随机种子、训练上限、停止条件和输出
    目录。
-3. smoke 建议只跑一个 PPO block，也就是 25,600 个训练 transitions。
-4. smoke 后从没有参与训练的 snapshot 组做固定评估。
-5. 检查 loss、KL、动作分布、状态值、终止原因、snapshot 来源和 checkpoint hash。
+4. smoke 建议只跑一个 PPO block，也就是 25,600 个训练 transitions。
+5. smoke 后从没有参与训练的 snapshot 组做固定评估，并重复 42-state panel。
+6. 检查 loss、KL、动作分布、状态值、终止原因、snapshot 来源和 checkpoint hash。
 
 ### 这一轮不要求什么
 
@@ -557,29 +570,29 @@ soft Tube 不是一条固定轨迹，也不是安全证明。它只是一个带�
 
 不要一次同时实现所有后续模块。建议按下面三轮推进：
 
-### 第一轮：冻结 `pi_up` 并建立状态库
+### 第一轮：冻结 `pi_up` 并建立状态库（已完成）
 
-- [ ] 写清楚三个保留 checkpoint 及其 hash；
-- [ ] 实现在线 snapshot capture；
-- [ ] 完成 snapshot 保存/恢复测试；
-- [ ] 建立第一版 Apex/early-descent bank；
-- [ ] 检查状态分布并保留独立评估父轨迹。
+- [x] 写清楚三个保留 checkpoint 及其 hash；
+- [x] 实现在线 snapshot capture；
+- [x] 完成 snapshot 保存/恢复测试；
+- [x] 建立第一版 Apex/early-descent bank（168 snapshots）；
+- [x] 检查状态分布并保留独立评估父轨迹。
 
 这一轮结束后，应该有一批 Phase D 可以真实加载的起点，但还不启动长训练。
 
-### 第二轮：完成 Phase D smoke
+### 第二轮：完成 Phase D 新 reward smoke（下一步）
 
-- [ ] 在现有入口加入 `descent_recovery`；
-- [ ] 实现 reset、奖励、成功和终止逻辑；
-- [ ] 完成 Host/GPU/checkpoint/provenance 测试；
-- [ ] 运行 25,600-transition smoke；
-- [ ] 查看固定评估、视频和失败原因。
+- [x] 在现有入口加入 `descent_recovery`；
+- [x] 实现 reset、奖励、成功和终止逻辑；
+- [x] 完成 Host/GPU/checkpoint/provenance 测试；
+- [ ] 用新 reward 运行 25,600-transition smoke；
+- [ ] 重跑 42-state fixed panel，确认无 regression。
 
 这一轮结束后，只证明 Phase D 工程流程可以工作，不要求已经学会落地。
 
-### 第三轮：运行 Phase D pilot
+### 第三轮：运行约 10.24M Phase D training
 
-- [ ] 预先声明约 998,400 transitions 的 pilot；
+- [ ] 预先声明并对齐约 10.24M transitions 的正式训练；
 - [ ] 分里程碑评估不同 handoff 状态组；
 - [ ] 判断稳定恢复是否开始出现；
 - [ ] 选择并冻结 `pi_down_candidate`；

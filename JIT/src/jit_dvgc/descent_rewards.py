@@ -4,6 +4,7 @@ from flax import struct
 import jax
 from jax import numpy as jp
 from .config import DescentConfig
+from .rewards import roll_raw, pitch_raw
 
 @struct.dataclass
 class DescentRewardInputs:
@@ -16,9 +17,20 @@ class DescentRewardInputs:
     bad_contact: jax.Array
     physical_failure: jax.Array
     timeout: jax.Array
+    roll: jax.Array
+    pitch: jax.Array
+    roll_rate: jax.Array
+    pitch_rate: jax.Array
+    action: jax.Array
+    last_action: jax.Array
 
 @struct.dataclass
 class DescentRewardComponents:
+    roll_posture: jax.Array
+    pitch_posture: jax.Array
+    roll_rate: jax.Array
+    pitch_rate: jax.Array
+    action_smoothness: jax.Array
     forward_progress: jax.Array
     contact: jax.Array
     recovery_tick: jax.Array
@@ -41,6 +53,13 @@ def descent_recovery_reward(inputs: DescentRewardInputs, config: DescentConfig) 
     bad = jp.asarray(inputs.bad_contact, dtype).astype(dtype) * -config.penalty_bad_contact
     failure = jp.asarray(inputs.physical_failure, dtype).astype(dtype) * -config.penalty_failure
     timeout = jp.asarray(inputs.timeout & ~inputs.physical_failure, dtype).astype(dtype) * -config.penalty_timeout
-    components = DescentRewardComponents(progress, contact, tick, success, bad, failure, timeout)
-    total = sum((components.forward_progress, components.contact, components.recovery_tick, components.success, components.bad_contact, components.failure, components.timeout), jp.asarray(0., dtype))
-    return DescentRewardResult(total=jp.where(jp.isfinite(total), total, jp.asarray(0., dtype)), components=components)
+    radians_to_degrees = 180.0 / jp.pi
+    roll_posture = config.roll_posture_coeff * roll_raw(jp.abs(inputs.roll) * radians_to_degrees)
+    pitch_posture = config.pitch_posture_coeff * pitch_raw(jp.abs(inputs.pitch) * radians_to_degrees)
+    roll_rate = -config.roll_rate_penalty_coeff * 0.125 * jp.square(inputs.roll_rate)
+    pitch_rate = -config.pitch_rate_penalty_coeff * 0.125 * jp.square(inputs.pitch_rate)
+    action_smoothness = -config.action_smoothness_penalty_coeff * jp.sum(jp.square(inputs.action - inputs.last_action))
+    components = DescentRewardComponents(roll_posture, pitch_posture, roll_rate, pitch_rate, action_smoothness, progress, contact, tick, success, bad, failure, timeout)
+    total = sum(components.__dict__.values(), jp.asarray(0., dtype))
+    total = jp.where(jp.isfinite(total), total, jp.asarray(0., dtype))
+    return DescentRewardResult(total=jp.clip(total, config.total_min, config.total_max), components=components)

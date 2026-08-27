@@ -124,7 +124,6 @@ class DescentConfig:
     max_wheel_penetration: float
     min_post_contact_forward_progress: float
     terminate_on_body_contact: bool
-    terminate_on_prohibited_contact: bool
     reward_contact: float
     reward_recovery_tick: float
     penalty_bad_contact: float
@@ -132,6 +131,13 @@ class DescentConfig:
     penalty_timeout: float
     reward_forward_progress: float
     reward_success: float
+    total_min: float
+    total_max: float
+    roll_posture_coeff: float
+    pitch_posture_coeff: float
+    roll_rate_penalty_coeff: float
+    pitch_rate_penalty_coeff: float
+    action_smoothness_penalty_coeff: float
 
 
 @dataclass(frozen=True)
@@ -697,13 +703,34 @@ def resolve_config_payload(payload: Mapping[str, Any]) -> ResolvedConfig:
         _positive("physical_limits.max_abs_yaw", physical_limits.max_abs_yaw)
     descent = None
     if payload.get("phase") == "descent_recovery":
-        descent = _dataclass_from(DescentConfig, payload.get("descent", {}))
+        raw_descent = dict(payload.get("descent", {}))
+        legacy_descent = "terminate_on_prohibited_contact" in raw_descent
+        if legacy_descent:
+            dense_fields = {"total_min", "total_max", "roll_posture_coeff", "pitch_posture_coeff", "roll_rate_penalty_coeff", "pitch_rate_penalty_coeff", "action_smoothness_penalty_coeff"}
+            legacy_fields = {"recovery_ticks", "min_airborne_clearance", "contact_clearance_threshold", "max_wheel_penetration", "min_post_contact_forward_progress", "terminate_on_body_contact", "terminate_on_prohibited_contact", "reward_contact", "reward_recovery_tick", "penalty_bad_contact", "penalty_failure", "penalty_timeout", "reward_forward_progress", "reward_success"}
+            if dense_fields.intersection(raw_descent) or set(raw_descent) != legacy_fields:
+                raise ValueError("descent deprecated field is only accepted for the known legacy payload shape")
+            # Old resolved configs are provenance artifacts: preserve their raw
+            # hash and task rewards while adapting only the constructor shape.
+            raw_descent.pop("terminate_on_prohibited_contact", None)
+            raw_descent.setdefault("total_min", -1.0e9)
+            raw_descent.setdefault("total_max", 1.0e9)
+            for name in ("roll_posture_coeff", "pitch_posture_coeff", "roll_rate_penalty_coeff", "pitch_rate_penalty_coeff", "action_smoothness_penalty_coeff"):
+                raw_descent.setdefault(name, 0.0)
+        else:
+            required_dense = {"total_min", "total_max", "roll_posture_coeff", "pitch_posture_coeff", "roll_rate_penalty_coeff", "pitch_rate_penalty_coeff", "action_smoothness_penalty_coeff"}
+            missing_dense = sorted(required_dense.difference(raw_descent))
+            if missing_dense:
+                raise ValueError(f"descent missing required reward fields: {', '.join(missing_dense)}")
+        descent = _dataclass_from(DescentConfig, raw_descent)
         if descent.recovery_ticks <= 0 or descent.recovery_ticks >= ppo.episode_horizon:
             raise ValueError("descent.recovery_ticks must be positive and less than episode horizon")
-        for name in ("min_airborne_clearance", "contact_clearance_threshold", "max_wheel_penetration", "min_post_contact_forward_progress", "reward_contact", "reward_recovery_tick", "penalty_bad_contact", "penalty_failure", "penalty_timeout", "reward_forward_progress", "reward_success"):
+        for name in ("min_airborne_clearance", "contact_clearance_threshold", "max_wheel_penetration", "min_post_contact_forward_progress", "reward_contact", "reward_recovery_tick", "penalty_bad_contact", "penalty_failure", "penalty_timeout", "reward_forward_progress", "reward_success", "roll_posture_coeff", "pitch_posture_coeff", "roll_rate_penalty_coeff", "pitch_rate_penalty_coeff", "action_smoothness_penalty_coeff"):
             value = getattr(descent, name)
             if not math.isfinite(value) or value < 0:
                 raise ValueError(f"descent.{name} must be finite and nonnegative")
+        if not math.isfinite(descent.total_min) or not math.isfinite(descent.total_max) or descent.total_min >= descent.total_max:
+            raise ValueError("descent reward bounds must be finite with total_min < total_max")
         return ResolvedConfig(schema=schema, phase=str(payload["phase"]), raw=payload, config_sha256=canonical_sha256(payload), model=dict(payload["model"]), action=action, reset=reset, events=events, physical_limits=physical_limits, reward=reward, ppo=ppo, formal=None, descent=descent)
     validator = (
         _validate_approved_absolute_method

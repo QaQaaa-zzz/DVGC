@@ -1,4 +1,4 @@
-# JIT Phase U training stack
+# JIT two-phase training stack
 
 ## Current Plan B decision — 2026-08-27
 
@@ -16,14 +16,44 @@ eight independent initial conditions: the natural reset states are very
 similar.
 
 `transition_9977856` is the main `pi_up_candidate`, not final `pi_up_star`.
-Phase U training stops. The next work is freezing candidates and designing the
-handoff snapshot bank. Phase D, `pi_down`, continuation labels, `V_up`/`V_down`,
+Phase U training stops. The handoff snapshot bank is complete: 168 snapshots,
+24 parent trajectories, and three source checkpoints, split for train/eval by
+parent seed. The Phase D engineering stack is also complete: snapshot reset,
+actor-only initialization, the 25,600-transition smoke, and the 42-state fixed
+panel. The panel produced 32 successes, 10 `roll_limit` physical failures, and
+0 timeouts; all failures came from the 4,988,928 source bank.
+
+The new stable Phase D reward implementation is present but has not yet been
+run in a new smoke or formal training run. Continuation labels, `V_up`/`V_down`,
 learned soft Tubes, unified PPO, and final JCE/JEL remain unimplemented.
 
 The execution guide is
 [`JIT/docs/plans/2026-08-27-jit-plan-b-execution-guide.md`](docs/plans/2026-08-27-jit-plan-b-execution-guide.md).
-Everything below is retained v4/v3/v2 history; it does not override this
-current decision.
+Everything below is retained v4/v3/v2 history unless marked current; historical
+statements about handoff or Phase D do not override this status.
+
+## Current Plan B status
+
+| Capability | Verified status |
+| --- | --- |
+| Phase U | 9,977,856 transitions strictly verified; 8/8 held-out seeds reach Apex; `transition_9977856` is `pi_up_candidate` |
+| Handoff bank | 168 snapshots, 24 parents, 3 checkpoints; train/eval isolated by parent seed |
+| Phase D engineering | reset pool, actor-only init, 25,600 smoke, and 42-state fixed panel verified |
+| Phase D reward | stable code implemented; new-reward smoke/formal training not yet run |
+| Later stages | labels, `V_up`/`V_down`, soft Tube, unified PPO, JCE/JEL not implemented |
+
+Next: run a new 25,600-transition smoke with the new reward, then repeat the
+42-state panel. Only after no regression should approximately 10.24M Phase D
+training begin.
+
+### GitHub stage snapshot
+
+The GitHub stage snapshot includes the verified Phase U run directory with its
+configuration, manifests, checkpoints, evaluation traces, summaries, training
+curves, and representative video. This is enough for the repository's strict
+`verify-run` check. Unrelated failed runs, launcher PID/log files, handoff-bank
+snapshot payloads, and Phase D trace payloads remain local instead of being
+copied into Git.
 
 ## Historical v4 Apex-continuation run contract
 

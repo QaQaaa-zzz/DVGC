@@ -7,7 +7,7 @@ from jit_dvgc.config import DescentConfig, PhysicalLimits
 from jit_dvgc.constants import END_BACKWARD_EXIT, END_NONFINITE, END_PITCH_LIMIT, END_PROHIBITED_CONTACT, END_RECOVERY_SUCCESS, END_ROLL_LIMIT, END_TIMEOUT
 from jit_dvgc.descent_semantics import DescentEventState, DescentSignals, advance_descent_events, classify_descent_terminal, initial_descent_events
 
-CFG=DescentConfig(25,0.05,0.01,0.02,0.05,True,True,1.,1.,1.,1.,1.,1.,1.)
+CFG=DescentConfig(25,0.05,0.01,0.02,0.05,True,1.,1.,1.,1.,1.,1.,1.,-100.,50.,3.,.5,.5,.15,.01)
 LIM=PhysicalLimits(0.6,0.8,1.0)
 def sig(**kw):
  d=dict(x=1.,front_clearance=.1,rear_clearance=.1,maximum_wheel_penetration=0.,body_contact=False,finite=True,roll=0.,pitch=0.,backward_exit=False); d.update(kw); return DescentSignals(**{k:jp.asarray(v) for k,v in d.items()})

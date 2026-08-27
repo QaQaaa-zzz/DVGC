@@ -100,13 +100,19 @@
     "max_wheel_penetration": 0.01,
     "min_post_contact_forward_progress": 0.05,
     "terminate_on_body_contact": true,
-    "terminate_on_prohibited_contact": true,
     "reward_contact": 5.0,
     "reward_recovery_tick": 1.0,
     "penalty_bad_contact": 10.0,
     "penalty_failure": 30.0,
     "penalty_timeout": 5.0,
     "reward_forward_progress": 2.0,
-    "reward_success": 10.0
+    "reward_success": 30.0,
+    "total_min": -100.0,
+    "total_max": 50.0,
+    "roll_posture_coeff": 3.0,
+    "pitch_posture_coeff": 0.5,
+    "roll_rate_penalty_coeff": 0.5,
+    "pitch_rate_penalty_coeff": 0.15,
+    "action_smoothness_penalty_coeff": 0.01
   }
 }

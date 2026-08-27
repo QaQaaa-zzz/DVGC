@@ -101,7 +101,10 @@ def test_one_snapshot_frozen_phase_d_gpu_smoke(jit_root):
     target_config = load_config(jit_root / "configs/descent_recovery_smoke.json")
     env = TwoPhaseBikeEnv(target_config, snapshot_pool=pool)
     checkpoint = jit_root / "runs/phase_d/descent_recovery_smoke_25600_seed920001_20260827_wrapfix/checkpoints/transition_25600"
-    identity = CheckpointIdentity(target_config.config_sha256, env._bundle.xml_sha256, ACTOR_FRAME_FIELDS, ACTOR_TASK_FIELDS, ACTION_ORDER)
+    # The checkpoint is loaded under its own historical source identity.  The
+    # current target config is only used to construct the fresh Phase D env.
+    checkpoint_config = load_config(jit_root / "runs/phase_d/descent_recovery_smoke_25600_seed920001_20260827_wrapfix/resolved_config.json")
+    identity = CheckpointIdentity(checkpoint_config.config_sha256, env._bundle.xml_sha256, ACTOR_FRAME_FIELDS, ACTOR_TASK_FIELDS, ACTION_ORDER)
     payload = load_checkpoint(checkpoint, expected=identity)
     init = ActorOnlyInitialization(payload.observation_normalizer, payload.actor_params, payload.training_transitions, "", "", {})
     policy = make_actor_only_policy(env, init, deterministic=True)

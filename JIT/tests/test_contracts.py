@@ -96,6 +96,30 @@ def test_descent_recovery_rejects_invalid_threshold(jit_root, tmp_path):
     with pytest.raises(ValueError, match="recovery_ticks"):
         load_config(bad)
 
+def test_legacy_descent_resolved_config_remains_loadable(jit_root):
+    legacy = jit_root / "runs/phase_d/descent_recovery_smoke_25600_seed920001_20260827_wrapfix/resolved_config.json"
+    config = load_config(legacy)
+    assert config.config_sha256 == "3ba3031d162882df89f90ab3c4095f0fe9966de5f903355f24d1c118f5029017"
+    assert config.descent.reward_success == 10.0
+    assert config.descent.roll_posture_coeff == 0.0
+
+def test_new_descent_config_does_not_silently_fill_missing_dense_fields(jit_root, tmp_path):
+    payload = json.loads((jit_root / "configs/descent_recovery_smoke.json").read_text())
+    del payload["descent"]["roll_posture_coeff"]
+    bad = tmp_path / "missing_dense.json"
+    bad.write_text(json.dumps(payload))
+    with pytest.raises(ValueError, match="descent.*missing"):
+        load_config(bad)
+
+def test_deprecated_descent_flag_cannot_bypass_new_reward_contract(jit_root, tmp_path):
+    payload = json.loads((jit_root / "configs/descent_recovery_smoke.json").read_text())
+    payload["descent"]["terminate_on_prohibited_contact"] = True
+    del payload["descent"]["pitch_rate_penalty_coeff"]
+    bad = tmp_path / "mixed_legacy.json"
+    bad.write_text(json.dumps(payload))
+    with pytest.raises(ValueError, match="deprecated"):
+        load_config(bad)
+
 
 def test_phase_u_config_hash_is_unchanged(jit_root):
     config = load_config(jit_root / "configs" / "phase_u_smoke.json")

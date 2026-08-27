@@ -92,11 +92,11 @@ class RewardResult:
     components: RewardComponents
 
 
-def _roll_raw(degrees: jax.Array) -> jax.Array:
+def roll_raw(degrees: jax.Array) -> jax.Array:
     return jp.where(degrees <= 5.0, 1.0 - degrees / 5.0, -0.1 * (degrees - 5.0))
 
 
-def _pitch_raw(degrees: jax.Array) -> jax.Array:
+def pitch_raw(degrees: jax.Array) -> jax.Array:
     below_three = 1.0 - (degrees / 3.0) * 0.1
     below_eight = 0.9 - ((degrees - 3.0) / 5.0) * 0.4
     below_ten = 0.5 - ((degrees - 8.0) / 2.0) * 0.5
@@ -162,8 +162,8 @@ def phase_u_reward(
     del physical_limits
     state = inputs.current
     radians_to_degrees = 180.0 / jp.pi
-    roll = config.roll_coeff * _roll_raw(jp.abs(state.roll) * radians_to_degrees)
-    pitch = config.pitch_coeff * _pitch_raw(jp.abs(state.pitch) * radians_to_degrees)
+    roll = config.roll_coeff * roll_raw(jp.abs(state.roll) * radians_to_degrees)
+    pitch = config.pitch_coeff * pitch_raw(jp.abs(state.pitch) * radians_to_degrees)
     yaw = config.yaw_coeff * _yaw_raw(jp.abs(state.yaw) * radians_to_degrees)
     speed = config.speed_coeff * jp.exp(
         -0.5 * jp.square((state.forward_velocity - config.desired_velocity) / config.speed_sigma)
