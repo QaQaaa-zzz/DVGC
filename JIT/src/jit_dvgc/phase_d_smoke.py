@@ -21,7 +21,7 @@ from .config import load_config
 from .constants import ACTION_ORDER, ACTOR_FRAME_FIELDS, ACTOR_TASK_FIELDS
 from .env import TwoPhaseBikeEnv
 from .handoff_snapshot import compatibility_identity
-from .phase_expert_init import build_actor_only_initialization, make_actor_only_policy
+from .phase_expert_init import build_actor_only_initialization, make_actor_only_policy, ActorOnlyInitialization
 from .ppo import make_network_factory, wrap_for_jit_training
 from .provenance import InteractionAccounting, RunDeclaration, close_run, mark_run_running, predeclare_run
 from .snapshot_pool import SnapshotPool
@@ -272,7 +272,7 @@ def run_phase_d_smoke(
                                                       normalizer, actor, critic))
         restored = load_checkpoint(checkpoint, expected=identity)
         # Diagnostic starts from one fixed source item and stops on the first true terminal.
-        state = eval_env.restore_handoff_snapshot(eval_pool.snapshot(0))
+        state = eval_env.reset_descent_index(jax.numpy.asarray(0, dtype=jax.numpy.int32))
         policy = make_actor_only_policy(eval_env, initialization, deterministic=True)
         transitions = 0
         while transitions < config.ppo.episode_horizon and not bool(np.asarray(state.done)):
@@ -290,4 +290,80 @@ def run_phase_d_smoke(
         return report
     except Exception as exc:
         close_run(run_dir, status="engineering_error", accounting=InteractionAccounting(0, 0, 0, 0), reason=str(exc))
+        raise
+
+
+def run_phase_d_diagnostic(
+    config_path: Path,
+    run_id: str,
+    *,
+    checkpoint: Path,
+    parent_run: Path,
+    snapshot_catalog: Path,
+    eval_seeds: tuple[int, ...],
+    run_root: Path | None = None,
+    env_factory: Callable[..., Any] = TwoPhaseBikeEnv,
+) -> dict[str, Any]:
+    """Run only the post-training diagnostic from a completed Phase D run."""
+    config = load_config(Path(config_path))
+    if config.phase != "descent_recovery" or config.formal is not None:
+        raise ValueError("diagnostic requires a non-formal descent_recovery config")
+    provenance_path = Path(parent_run) / "phase_d_provenance.json"
+    provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
+    source_config = load_config(Path(provenance["actor_init_config"]))
+    source_env = TwoPhaseBikeEnv(source_config)
+    train_pool, eval_pool, split = split_input_pools(
+        Path(snapshot_catalog), eval_seeds=eval_seeds,
+        compatibility=compatibility_identity(source_env),
+    )
+    env = env_factory(config, snapshot_pool=eval_pool)
+    identity = _target_identity(config, env)
+    payload = load_checkpoint(Path(checkpoint), expected=identity)
+    checkpoint_sidecar = json.loads((Path(checkpoint) / "identity.json").read_text(encoding="utf-8"))
+    initialization = ActorOnlyInitialization(
+        payload.observation_normalizer, payload.actor_params,
+        payload.training_transitions,
+        checkpoint_sidecar["payload_sha256"],
+        provenance["parent_actor_sha256"],
+        {"actor_initialized": True, "critic_fresh": False, "optimizer_fresh": False},
+    )
+    root = Path(run_root) if run_root is not None else Path("JIT/runs/phase_d")
+    run_dir = root / run_id
+    run_dir.mkdir(parents=True, exist_ok=False)
+    manifest = {
+        "run_id": run_id, "purpose": "descent_recovery_diagnostic_only",
+        "config_sha256": config.config_sha256, "checkpoint": str(Path(checkpoint).resolve()),
+        "parent_training_run": str(Path(parent_run).resolve()),
+        "parent_checkpoint_payload_sha256": checkpoint_sidecar["payload_sha256"],
+        "catalog_sha256": split["catalog_sha256"], "eval_seeds": list(eval_seeds),
+        "training_transition_ceiling": 0,
+        "stopping_conditions": ["stop_on_terminal_diagnostic", "stop_on_nonfinite_metric"],
+        "interaction_accounting": {"training": 0, "diagnostic": 0},
+        "status": "running",
+    }
+    (run_dir / "run_manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+    try:
+        state = env.reset_descent_index(jax.numpy.asarray(0, dtype=jax.numpy.int32))
+        policy = make_actor_only_policy(env, initialization, deterministic=True)
+        transitions = 0
+        while transitions < config.ppo.episode_horizon and not bool(np.asarray(state.done)):
+            action, _ = policy(state.obs, jax.random.PRNGKey(1000000 + transitions))
+            state = env.step(state, action)
+            transitions += 1
+            if bool(np.asarray(state.info["terminated"])) or bool(np.asarray(state.info["truncated"])):
+                break
+        result = {"status": "completed", "training_transitions": 0,
+                  "diagnostic_transitions": transitions,
+                  "diagnostic_source": split["diagnostic_source"],
+                  "success": bool(np.asarray(state.info["success"])),
+                  "physical_failure": bool(np.asarray(state.info["physical_failure"])),
+                  "timeout": bool(np.asarray(state.info["timeout"])),
+                  "end_code": int(np.asarray(state.info["end_code"]))}
+        manifest.update(result, interaction_accounting={"training": 0, "diagnostic": transitions})
+        (run_dir / "smoke_report.json").write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
+        (run_dir / "run_manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+        return result
+    except Exception as exc:
+        manifest.update(status="engineering_error", reason=str(exc))
+        (run_dir / "run_manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
         raise

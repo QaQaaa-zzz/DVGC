@@ -304,8 +304,16 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
         )
         return self._reset(state_key, use_airborne_rsi)
 
+    def reset_descent_index(self, index: jax.Array) -> mjx_env.State:
+        """Reset Phase D from a fixed pool index without disk/Python sampling."""
+        if self._resolved_config.phase != "descent_recovery":
+            raise ValueError("fixed descent reset requires descent_recovery phase")
+        return self._reset_descent_from_sample(self._snapshot_pool.sample_at_index(index))
+
     def _reset_descent(self, rng):
-        sample = self._snapshot_pool.sample(rng)
+        return self._reset_descent_from_sample(self._snapshot_pool.sample(rng))
+
+    def _reset_descent_from_sample(self, sample):
         model = self._require_runtime_model(); data = mjx_env.make_data(self.mj_model, qpos=sample["qpos"], qvel=sample["qvel"], ctrl=sample["ctrl"], impl=model.impl.value, naconmax=int(self._resolved_config.model["naconmax"]), naccdmax=(int(self._resolved_config.model["naccdmax"]) if "naccdmax" in self._resolved_config.model else None), njmax=int(self._resolved_config.model["njmax"]))
         data = mjx.forward(model, data); geometry = extract_geometry(data, self._geometry); og = self._observable_geometry(data, geometry)
         history = HistoryState(frames=sample["observation_fifo"], valid_count=sample["history_valid_count"])

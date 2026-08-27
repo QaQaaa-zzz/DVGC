@@ -40,6 +40,10 @@ class SnapshotPool:
 
     def sample(self, rng: jax.Array) -> dict[str, Any]:
         index = jax.random.randint(rng, (), 0, len(self.snapshots))
+        return self.sample_at_index(index)
+
+    def sample_at_index(self, index: jax.Array) -> dict[str, Any]:
+        """Select a fixed item with a JAX scalar index (jit/vmap compatible)."""
         result = {name: self._stack(name)[index] for name in ("qpos", "qvel", "observation_fifo", "observation", "last_action", "ctrl", "rng")}
         result["history_valid_count"] = jnp.asarray([s.history_valid_count for s in self.snapshots], dtype=jnp.int32)[index]
         result["tick"] = jnp.asarray([s.tick for s in self.snapshots], dtype=jnp.int32)[index]

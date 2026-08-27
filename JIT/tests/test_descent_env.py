@@ -65,3 +65,28 @@ def test_descent_pool_vmap_reset_step_and_source_contract(jit_root):
     np.testing.assert_allclose(np.asarray(sampled.obs["state"]), source.observation, rtol=0.0, atol=1e-6)
     assert int(sampled.info["source_tick"]) == source.tick
     assert int(sampled.info["episode_step"]) == 0
+
+
+@pytest.mark.gpu
+def test_descent_index_reset_initializes_descent_events(jit_root):
+    import jax
+    from jit_dvgc.config import load_config
+    from jit_dvgc.env import TwoPhaseBikeEnv
+    from jit_dvgc.handoff_snapshot import compatibility_identity
+    from jit_dvgc.snapshot_pool import SnapshotPool
+
+    source_config = load_config(jit_root / "configs/phase_u_continuation_10m.json")
+    source_env = TwoPhaseBikeEnv(source_config)
+    pool = SnapshotPool.from_closed_bank(
+        jit_root / "runs/handoff_bank/handoff_bank_9977856_jit8",
+        compatibility=compatibility_identity(source_env),
+    )
+    env = TwoPhaseBikeEnv(
+        load_config(jit_root / "configs/descent_recovery_smoke.json"), snapshot_pool=pool
+    )
+    state = env.reset_descent_index(jax.numpy.asarray(0, dtype=jax.numpy.int32))
+    assert hasattr(state.info["events"], "airborne_seen")
+    assert int(state.info["episode_step"]) == 0
+    assert int(state.info["source_tick"]) == pool.snapshot(0).tick
+    next_state = env.step(state, jax.numpy.zeros((4,), dtype=jax.numpy.float32))
+    assert int(next_state.info["episode_step"]) == 1
