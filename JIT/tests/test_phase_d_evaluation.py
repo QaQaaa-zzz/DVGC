@@ -40,6 +40,21 @@ def test_policy_key_derivation_is_stable_and_sample_specific():
     assert not np.array_equal(a, derive_policy_key(1000007, "transition_9977856", 47))
 
 
+def test_artifact_relative_path_resolves_relative_run_root(tmp_path):
+    from jit_dvgc.phase_d_evaluation import artifact_relative_path
+
+    run_root = tmp_path / "runs"
+    run_dir = run_root / "panel"
+    artifact = run_dir / "traces" / "one.npz"
+    artifact.parent.mkdir(parents=True)
+    artifact.write_bytes(b"x")
+    assert artifact_relative_path(artifact, run_dir) == "traces/one.npz"
+    outside = tmp_path / "outside.npz"
+    outside.write_bytes(b"x")
+    with pytest.raises(ValueError, match="outside run directory"):
+        artifact_relative_path(outside, run_dir)
+
+
 def test_brax_style_policy_requires_key_sample():
     from jit_dvgc.evaluation import capture_episode
 

@@ -34,6 +34,15 @@ def derive_policy_key(eval_seed: int, source_checkpoint: str, source_tick: int) 
     return jax.random.fold_in(jax.random.PRNGKey(int(words[0])), int(words[1]))
 
 
+def artifact_relative_path(artifact: Path, run_dir: Path) -> str:
+    artifact_resolved = Path(artifact).resolve()
+    run_resolved = Path(run_dir).resolve()
+    try:
+        return str(artifact_resolved.relative_to(run_resolved))
+    except ValueError as exc:
+        raise ValueError("artifact is outside run directory") from exc
+
+
 def select_panel_entries(path: Path, *, eval_seeds: tuple[int, ...]) -> list[dict[str, Any]]:
     payload = json.loads(Path(path).read_text(encoding="utf-8"))
     entries = [row for row in payload.get("entries", []) if int(row["seed"]) in set(eval_seeds)]
@@ -109,7 +118,7 @@ def run_phase_d_panel(config_path: Path, checkpoint: Path, catalog: Path, *, eva
             trace_path = run_dir / "traces" / f"{row['source_bank']}_{row['parent_group_id']}_{row['role']}_{row['tick']}"
             artifact = save_episode_trace(trace, trace_path)
             terminal = trace.frames[-1]
-            summaries.append({**{key: row.get(key) for key in ("source_bank", "seed", "parent_group_id", "role", "tick")}, "policy_key_derivation": "sha256(eval_seed|source_checkpoint|source_tick)", "transitions": trace.environment_transitions, "success": terminal.success, "physical_failure": terminal.physical_failure, "timeout": terminal.timeout, "end_code": terminal.end_code, "reason": END_REASONS.get(terminal.end_code, f"unknown_{terminal.end_code}"), "finite": bool(np.isfinite(np.asarray(trace.frames[-1].qpos)).all() and np.isfinite(np.asarray(trace.frames[-1].qvel)).all()), "trace_npz": str(artifact.npz_path.relative_to(run_dir))})
+            summaries.append({**{key: row.get(key) for key in ("source_bank", "seed", "parent_group_id", "role", "tick")}, "policy_key_derivation": "sha256(eval_seed|source_checkpoint|source_tick)", "transitions": trace.environment_transitions, "success": terminal.success, "physical_failure": terminal.physical_failure, "timeout": terminal.timeout, "end_code": terminal.end_code, "reason": END_REASONS.get(terminal.end_code, f"unknown_{terminal.end_code}"), "finite": bool(np.isfinite(np.asarray(trace.frames[-1].qpos)).all() and np.isfinite(np.asarray(trace.frames[-1].qvel)).all()), "trace_npz": artifact_relative_path(artifact.npz_path, run_dir)})
         report = {"status": "completed", "training_transitions": 0, "diagnostic_transitions": sum(x["transitions"] for x in summaries), "sample_count": len(summaries), "summaries": summaries}
         (run_dir / "summary.json").write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
         manifest.update(report)
