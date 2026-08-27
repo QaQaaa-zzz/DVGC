@@ -39,6 +39,7 @@ from .semantics import (
     classify_terminal,
     initial_event_state,
 )
+from .handoff_snapshot import HandoffSnapshot, capture_snapshot, compatibility_identity, restore_snapshot
 
 
 def _finite_stuck_window_progress(
@@ -105,6 +106,33 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
     @property
     def resolved_config(self) -> ResolvedConfig:
         return self._resolved_config
+
+    def capture_handoff_snapshot(
+        self,
+        state: mjx_env.State,
+        *,
+        policy_sha256: str,
+        parent_trajectory: str,
+        parent_tick: int | None = None,
+        policy_identity: str | None = None,
+    ) -> HandoffSnapshot:
+        """Capture an online state with all context needed for continuation."""
+        return capture_snapshot(
+            state,
+            config_sha256=self._resolved_config.config_sha256,
+            xml_sha256=self._bundle.xml_sha256,
+            policy_sha256=policy_sha256,
+            parent_trajectory=parent_trajectory,
+            parent_tick=parent_tick,
+            policy_identity=policy_identity,
+            compatibility=compatibility_identity(self),
+        )
+
+    def restore_handoff_snapshot(self, snapshot: HandoffSnapshot) -> mjx_env.State:
+        """Restore a snapshot and rebuild derived observations for the next step."""
+        if snapshot.compatibility_identity != compatibility_identity(self):
+            raise ValueError("handoff snapshot runtime compatibility mismatch")
+        return restore_snapshot(snapshot, self)
 
     def _require_runtime_model(self):
         if self.mjx_model is None:

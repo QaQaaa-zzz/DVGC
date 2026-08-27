@@ -13,6 +13,7 @@ from typing import Any, Mapping
 from brax.envs.wrappers import training as brax_training
 from brax.training.agents.ppo import networks as ppo_networks
 from brax.training.agents.ppo import train as ppo_train
+from brax.training.acme import running_statistics
 import jax
 from mujoco_playground._src import wrapper
 import numpy as np
@@ -85,6 +86,19 @@ def make_network_factory():
         policy_obs_key="state",
         value_obs_key="privileged_state",
         distribution_type="tanh_normal",
+    )
+
+
+def make_checkpoint_policy(env: Any, payload: CheckpointPayload, *, deterministic: bool = True):
+    """Rebuild the exact fixed-evaluation Actor policy from a checkpoint."""
+    networks = make_network_factory()(
+        {"state": env.actor_observation_size, "privileged_state": env.privileged_observation_size},
+        env.action_size,
+        preprocess_observations_fn=running_statistics.normalize,
+    )
+    return ppo_networks.make_inference_fn(networks)(
+        (payload.observation_normalizer, payload.actor_params, payload.critic_params),
+        deterministic=deterministic,
     )
 
 
