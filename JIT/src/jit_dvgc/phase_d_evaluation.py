@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 from pathlib import Path
 from typing import Any
@@ -24,6 +25,13 @@ from .phase_d_smoke import _source_bank_hashes
 def _catalog_sha256(path: Path) -> str:
     import hashlib
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def derive_policy_key(eval_seed: int, source_checkpoint: str, source_tick: int) -> jax.Array:
+    """Stable key derivation independent of Python's process-randomized hash."""
+    digest = hashlib.sha256(f"{int(eval_seed)}|{source_checkpoint}|{int(source_tick)}".encode()).digest()
+    words = np.frombuffer(digest[:8], dtype=np.uint32)
+    return jax.random.fold_in(jax.random.PRNGKey(int(words[0])), int(words[1]))
 
 
 def select_panel_entries(path: Path, *, eval_seeds: tuple[int, ...]) -> list[dict[str, Any]]:
@@ -95,11 +103,13 @@ def run_phase_d_panel(config_path: Path, checkpoint: Path, catalog: Path, *, eva
     summaries = []
     try:
         for index, row in enumerate(entries):
-            trace = capture_episode(env, lambda obs: policy(obs), seed=int(row["seed"]), horizon=max_ticks, reset_fn=lambda _key, i=index: env.reset_descent_index(jax.numpy.asarray(i, dtype=jax.numpy.int32)), step_fn=jax.jit(env.step))
+            policy_key = derive_policy_key(row["seed"], row["source_bank"].split("_")[2], row["tick"])
+            sample_policy = lambda obs, key=policy_key: policy(obs, key)
+            trace = capture_episode(env, sample_policy, seed=int(row["seed"]), horizon=max_ticks, reset_fn=lambda _key, i=index: env.reset_descent_index(jax.numpy.asarray(i, dtype=jax.numpy.int32)), step_fn=jax.jit(env.step))
             trace_path = run_dir / "traces" / f"{row['source_bank']}_{row['parent_group_id']}_{row['role']}_{row['tick']}"
             artifact = save_episode_trace(trace, trace_path)
             terminal = trace.frames[-1]
-            summaries.append({**{key: row.get(key) for key in ("source_bank", "seed", "parent_group_id", "role", "tick")}, "transitions": trace.environment_transitions, "success": terminal.success, "physical_failure": terminal.physical_failure, "timeout": terminal.timeout, "end_code": terminal.end_code, "reason": END_REASONS.get(terminal.end_code, f"unknown_{terminal.end_code}"), "finite": bool(np.isfinite(np.asarray(trace.frames[-1].qpos)).all() and np.isfinite(np.asarray(trace.frames[-1].qvel)).all()), "trace_npz": str(artifact.npz_path.relative_to(run_dir))})
+            summaries.append({**{key: row.get(key) for key in ("source_bank", "seed", "parent_group_id", "role", "tick")}, "policy_key_derivation": "sha256(eval_seed|source_checkpoint|source_tick)", "transitions": trace.environment_transitions, "success": terminal.success, "physical_failure": terminal.physical_failure, "timeout": terminal.timeout, "end_code": terminal.end_code, "reason": END_REASONS.get(terminal.end_code, f"unknown_{terminal.end_code}"), "finite": bool(np.isfinite(np.asarray(trace.frames[-1].qpos)).all() and np.isfinite(np.asarray(trace.frames[-1].qvel)).all()), "trace_npz": str(artifact.npz_path.relative_to(run_dir))})
         report = {"status": "completed", "training_transitions": 0, "diagnostic_transitions": sum(x["transitions"] for x in summaries), "sample_count": len(summaries), "summaries": summaries}
         (run_dir / "summary.json").write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
         manifest.update(report)

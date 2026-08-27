@@ -31,6 +31,26 @@ def test_panel_terminal_summary_and_budget():
     assert terminal_summary({"terminated": True, "truncated": False, "success": True, "physical_failure": False, "timeout": False, "end_code": 12})["reason"] == "recovery_success"
 
 
+def test_policy_key_derivation_is_stable_and_sample_specific():
+    from jit_dvgc.phase_d_evaluation import derive_policy_key
+    import numpy as np
+
+    a = derive_policy_key(1000007, "transition_9977856", 46)
+    assert np.array_equal(a, derive_policy_key(1000007, "transition_9977856", 46))
+    assert not np.array_equal(a, derive_policy_key(1000007, "transition_9977856", 47))
+
+
+def test_brax_style_policy_requires_key_sample():
+    from jit_dvgc.evaluation import capture_episode
+
+    class FakeEnv:
+        def reset(self, _key): return type("State", (), {"obs": 0, "done": False, "info": {"terminated": False, "truncated": False, "success": False, "physical_failure": False, "timeout": False, "end_code": 0}, "data": type("Data", (), {"qpos": [0], "qvel": [0], "ctrl": [0]})(), "reward": 0, "metrics": {}})()
+        def step(self, state, _action): return state
+    def policy(_obs, key_sample): return (key_sample, None)
+    with pytest.raises(TypeError, match="key_sample"):
+        capture_episode(FakeEnv(), lambda obs: policy(obs), seed=1, horizon=1)
+
+
 @pytest.mark.gpu
 def test_one_snapshot_frozen_phase_d_gpu_smoke(jit_root):
     import jax
