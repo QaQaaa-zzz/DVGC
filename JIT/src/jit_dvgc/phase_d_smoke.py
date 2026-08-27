@@ -22,7 +22,7 @@ from .constants import ACTION_ORDER, ACTOR_FRAME_FIELDS, ACTOR_TASK_FIELDS
 from .env import TwoPhaseBikeEnv
 from .handoff_snapshot import compatibility_identity
 from .phase_expert_init import build_actor_only_initialization, make_actor_only_policy, ActorOnlyInitialization
-from .ppo import make_network_factory, wrap_for_jit_training
+from .ppo import make_checkpoint_policy, make_network_factory, wrap_for_jit_training
 from .provenance import InteractionAccounting, RunDeclaration, close_run, mark_run_running, predeclare_run
 from .snapshot_pool import SnapshotPool
 
@@ -273,7 +273,7 @@ def run_phase_d_smoke(
         restored = load_checkpoint(checkpoint, expected=identity)
         # Diagnostic starts from one fixed source item and stops on the first true terminal.
         state = eval_env.reset_descent_index(jax.numpy.asarray(0, dtype=jax.numpy.int32))
-        policy = make_actor_only_policy(eval_env, initialization, deterministic=True)
+        policy = make_checkpoint_policy(eval_env, restored, deterministic=True)
         transitions = 0
         while transitions < config.ppo.episode_horizon and not bool(np.asarray(state.done)):
             action, _ = policy(state.obs, jax.random.PRNGKey(1000000 + transitions))

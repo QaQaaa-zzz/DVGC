@@ -88,6 +88,77 @@ def test_descent_recovery_config_is_supported(jit_root):
     assert config.ppo.episode_horizon > config.descent.recovery_ticks
 
 
+def test_descent_recovery_reward_contract_reads_real_config(jit_root):
+    from jit_dvgc.descent_rewards import DescentRewardInputs, descent_recovery_reward
+    import jax.numpy as jp
+
+    config = load_config(jit_root / "configs/descent_recovery_smoke.json")
+    descent = config.descent
+    expected = {
+        "reward_contact": 5.0,
+        "reward_recovery_tick": 1.0,
+        "penalty_bad_contact": 10.0,
+        "penalty_failure": 30.0,
+        "penalty_timeout": 5.0,
+        "reward_forward_progress": 2.0,
+        "reward_success": 30.0,
+        "roll_posture_coeff": 3.0,
+        "pitch_posture_coeff": 0.5,
+        "roll_rate_penalty_coeff": 0.5,
+        "pitch_rate_penalty_coeff": 0.15,
+        "action_smoothness_penalty_coeff": 0.01,
+        "total_min": -100.0,
+        "total_max": 50.0,
+    }
+    for field, value in expected.items():
+        assert getattr(descent, field) == pytest.approx(value)
+    for field in expected:
+        if field not in {"total_min", "total_max"}:
+            assert getattr(descent, field) > 0.0
+
+    zeros = dict(
+        x_delta=0.0,
+        valid_contact=False,
+        previous_valid_contact=False,
+        post_contact=False,
+        recovery_success=False,
+        previous_recovery_success=False,
+        bad_contact=False,
+        physical_failure=False,
+        timeout=False,
+        roll=0.0,
+        pitch=0.0,
+        roll_rate=0.0,
+        pitch_rate=0.0,
+        action=jp.zeros(4),
+        last_action=jp.zeros(4),
+    )
+
+    def reward(**overrides):
+        values = {**zeros, **overrides}
+        return descent_recovery_reward(
+            DescentRewardInputs(**{key: jp.asarray(value) for key, value in values.items()}),
+            descent,
+        )
+
+    assert float(reward(bad_contact=True).components.bad_contact) == pytest.approx(-10.0)
+    assert float(reward(physical_failure=True).components.failure) == pytest.approx(-30.0)
+    assert float(reward(timeout=True).components.timeout) == pytest.approx(-5.0)
+    assert float(reward(valid_contact=True).components.contact) == pytest.approx(5.0)
+    assert float(reward(post_contact=True).components.recovery_tick) == pytest.approx(1.0)
+    assert float(reward(recovery_success=True).components.success) == pytest.approx(30.0)
+    assert float(reward(x_delta=1.0).components.forward_progress) == pytest.approx(2.0)
+    assert float(reward(x_delta=100.0, valid_contact=True, recovery_success=True).total) == pytest.approx(50.0)
+    assert float(
+        reward(
+            bad_contact=True,
+            roll_rate=100.0,
+            pitch_rate=100.0,
+            action=jp.ones(4) * 100.0,
+        ).total
+    ) == pytest.approx(-100.0)
+
+
 def test_descent_recovery_rejects_invalid_threshold(jit_root, tmp_path):
     payload = json.loads((jit_root / "configs" / "descent_recovery_smoke.json").read_text())
     payload["descent"]["recovery_ticks"] = payload["ppo"]["episode_horizon"]

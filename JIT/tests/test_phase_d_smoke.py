@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
+
+import jax.numpy as jp
 import pytest
 
 
@@ -74,6 +77,104 @@ def test_phase_d_trainer_kwargs_always_use_jit_wrapper():
     assert kwargs["wrap_env"] is True
     assert kwargs["wrap_env_fn"] is wrap_for_jit_training
     assert kwargs["restore_value_fn"] is False
+
+
+def test_phase_d_smoke_diagnostic_uses_restored_phase_d_checkpoint(jit_root, tmp_path, monkeypatch):
+    """The post-update diagnostic must not fall back to the Phase U parent actor."""
+    import jit_dvgc.phase_d_smoke as module
+    from jit_dvgc.phase_expert_init import ActorOnlyInitialization
+
+    target_config_path = jit_root / "configs/descent_recovery_smoke.json"
+    source_config_path = jit_root / "configs/phase_u_continuation_10m.json"
+    target_config = module.load_config(target_config_path)
+
+    class FakeEnv:
+        actor_observation_size = 76
+        privileged_observation_size = 106
+        action_size = 4
+
+        def __init__(self):
+            self._bundle = SimpleNamespace(xml_sha256="xml-hash")
+
+        def reset_descent_index(self, _index):
+            return SimpleNamespace(
+                obs={"state": jp.zeros(76), "privileged_state": jp.zeros(106)},
+                done=jp.asarray(False),
+                info={"terminated": jp.asarray(False), "truncated": jp.asarray(False)},
+            )
+
+        def step(self, state, _action):
+            return state.__class__(
+                obs=state.obs,
+                done=jp.asarray(True),
+                info={"terminated": jp.asarray(True), "truncated": jp.asarray(False)},
+            )
+
+    def fake_env_factory(_config, *, snapshot_pool):
+        assert snapshot_pool in {"train", "eval"}
+        return FakeEnv()
+
+    parent_initialization = ActorOnlyInitialization(
+        observation_normalizer="parent-normalizer",
+        actor_params="parent-actor",
+        parent_transition=9_977_856,
+        payload_sha256="parent-payload",
+        actor_sha256="parent-actor-hash",
+        provenance={"actor_initialized": True, "critic_fresh": True, "optimizer_fresh": True},
+    )
+    trained_params = ("trained-normalizer", "trained-actor", "trained-critic")
+    captured = {}
+
+    monkeypatch.setattr(module, "compatibility_identity", lambda _env: "compat")
+    monkeypatch.setattr(
+        module,
+        "split_input_pools",
+        lambda *_args, **_kwargs: (
+            "train",
+            "eval",
+            {"diagnostic_source": {"seed": 920007, "tick": 46}},
+        ),
+    )
+    monkeypatch.setattr(module, "build_actor_only_initialization", lambda *_args, **_kwargs: parent_initialization)
+    monkeypatch.setattr(module, "build_phase_d_trainer_kwargs", lambda *_args, **_kwargs: {})
+
+    def fake_trainer(**_kwargs):
+        return None, trained_params, {"training/total_loss": 0.0}
+
+    def restored_policy(_env, payload, *, deterministic):
+        captured["payload"] = payload
+        captured["deterministic"] = deterministic
+
+        def policy(_obs, _key):
+            return jp.zeros(4), {}
+
+        return policy
+
+    monkeypatch.setattr(module, "make_checkpoint_policy", restored_policy)
+    monkeypatch.setattr(
+        module,
+        "make_actor_only_policy",
+        lambda *_args, **_kwargs: pytest.fail("diagnostic reused Phase U actor-only initialization"),
+    )
+
+    report = module.run_phase_d_smoke(
+        target_config_path,
+        "restored-diagnostic-regression",
+        snapshot_catalog=tmp_path / "catalog.json",
+        actor_init_checkpoint=tmp_path / "phase_u_checkpoint",
+        actor_init_config=source_config_path,
+        eval_seeds=(920007,),
+        run_root=tmp_path,
+        trainer=fake_trainer,
+        env_factory=fake_env_factory,
+    )
+
+    assert report["restored"] is True
+    assert captured["deterministic"] is True
+    assert captured["payload"].training_transitions == target_config.ppo.requested_transitions
+    assert captured["payload"].observation_normalizer == trained_params[0]
+    assert captured["payload"].actor_params == trained_params[1]
+    assert captured["payload"].critic_params == trained_params[2]
 
 
 def test_phase_d_smoke_rejects_formal_and_requires_input():
