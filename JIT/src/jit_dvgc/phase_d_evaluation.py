@@ -87,6 +87,11 @@ def terminal_summary(info: dict[str, Any]) -> dict[str, Any]:
             "end_code": code, "reason": END_REASONS.get(code, f"unknown_{code}")}
 
 
+def make_panel_compiled_fns(env):
+    """Compile reusable reset/step callables once per panel."""
+    return jax.jit(env.reset_descent_index), jax.jit(env.step)
+
+
 def run_phase_d_panel(config_path: Path, checkpoint: Path, catalog: Path, *, eval_seeds: tuple[int, ...], max_ticks: int, run_id: str, run_root: Path | None = None) -> dict[str, Any]:
     config = load_config(Path(config_path))
     if config.phase != "descent_recovery" or config.formal is not None:
@@ -104,6 +109,7 @@ def run_phase_d_panel(config_path: Path, checkpoint: Path, catalog: Path, *, eva
     sidecar = json.loads((Path(checkpoint) / "identity.json").read_text())
     init = ActorOnlyInitialization(payload.observation_normalizer, payload.actor_params, payload.training_transitions, sidecar["payload_sha256"], pytree_sha256(payload.actor_params), {"actor_initialized": True, "critic_fresh": False, "optimizer_fresh": False})
     policy = make_actor_only_policy(env, init, deterministic=True)
+    reset_index_fn, step_fn = make_panel_compiled_fns(env)
     root = Path(run_root) if run_root is not None else Path("JIT/runs/phase_d_evaluation")
     run_dir = root / run_id
     run_dir.mkdir(parents=True, exist_ok=False)
@@ -114,7 +120,7 @@ def run_phase_d_panel(config_path: Path, checkpoint: Path, catalog: Path, *, eva
         for index, row in enumerate(entries):
             policy_key = derive_policy_key(row["seed"], row["source_bank"].split("_")[2], row["tick"])
             sample_policy = lambda obs, key=policy_key: policy(obs, key)
-            trace = capture_episode(env, sample_policy, seed=int(row["seed"]), horizon=max_ticks, reset_fn=lambda _key, i=index: env.reset_descent_index(jax.numpy.asarray(i, dtype=jax.numpy.int32)), step_fn=jax.jit(env.step))
+            trace = capture_episode(env, sample_policy, seed=int(row["seed"]), horizon=max_ticks, reset_fn=lambda _key, i=index: reset_index_fn(jax.numpy.asarray(i, dtype=jax.numpy.int32)), step_fn=step_fn)
             trace_path = run_dir / "traces" / f"{row['source_bank']}_{row['parent_group_id']}_{row['role']}_{row['tick']}"
             artifact = save_episode_trace(trace, trace_path)
             terminal = trace.frames[-1]

@@ -55,6 +55,20 @@ def test_artifact_relative_path_resolves_relative_run_root(tmp_path):
         artifact_relative_path(outside, run_dir)
 
 
+def test_panel_compiled_callables_are_created_once(monkeypatch):
+    import jit_dvgc.phase_d_evaluation as module
+
+    calls = []
+    monkeypatch.setattr(module.jax, "jit", lambda fn: calls.append(fn) or fn)
+    class FakeEnv:
+        def reset_descent_index(self, index): return index
+        def step(self, state, action): return state
+    reset_fn, step_fn = module.make_panel_compiled_fns(FakeEnv())
+    assert len(calls) == 2
+    assert reset_fn is calls[0]
+    assert step_fn is calls[1]
+
+
 def test_brax_style_policy_requires_key_sample():
     from jit_dvgc.evaluation import capture_episode
 
