@@ -1,5 +1,22 @@
 # DVGC Experiment State
 
+## JIT status — 2026-08-27
+
+The latest verified JIT run is
+`JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826`.
+Strict `verify-run` exits 0; it completed exactly `9,977,856` training
+transitions and restored its checkpoint successfully. Eight held-out-seed
+natural-reset rollouts all reach Apex and later end at `pitch_limit`, with mean
+post-Apex continuation of `182.125` environment transitions. The natural reset
+states are very similar, so these are not eight independent initial conditions.
+
+`transition_9977856` is the main `pi_up_candidate`, not final `pi_up_star`.
+Phase U training stops. The older root Phase U state below is superseded for
+current JIT planning by this latest verified run. The next step is freezing
+candidates and designing the handoff snapshot bank. Phase D, `pi_down`,
+continuation labels, `V_up`/`V_down`, learned soft Tubes, unified PPO, and final
+JCE/JEL remain unimplemented.
+
 ## Current method
 
 The approved research direction is the two-phase learned soft-feasibility-Tube

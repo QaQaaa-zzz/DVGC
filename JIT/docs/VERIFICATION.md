@@ -1,6 +1,32 @@
 # JIT Phase U Verification
 
-## Active v4 pre-training verification — 2026-08-26
+## Current verified Phase U run — 2026-08-27
+
+The current run was verified with:
+
+```bash
+PYTHONPATH=JIT/src /home/qy/mujoco_playground/.venv/bin/python \
+  -m jit_dvgc.provenance verify-run \
+  JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826
+```
+
+The strict `verify-run` exits 0. Training completed exactly `9,977,856`
+transitions and checkpoint restoration is true. All eight held-out-seed
+natural-reset rollouts reach Apex, then later end at `pitch_limit`; mean
+post-Apex continuation is `182.125` environment transitions. The natural
+reset states are very similar, so these are not eight independent initial
+conditions.
+
+`transition_9977856` is the main `pi_up_candidate`, not final `pi_up_star`.
+Phase U training stops. The next step is freezing candidates and designing the
+handoff snapshot bank. Phase D, `pi_down`, continuation labels, `V_up`/`V_down`,
+learned soft Tubes, unified PPO, and final JCE/JEL remain unimplemented. This
+evidence does not support a trained final policy, safe Tube, JCE, or JEL claim.
+
+The following v4, v3, v2, and earlier sections are retained historical
+verification instructions and evidence.
+
+## Historical v4 pre-training verification — 2026-08-26
 
 The v4 contract fixes the v3 false failure diagnosis without changing XML
 physics: the observed `floor/rearwheel_collision` distance of approximately
@@ -35,14 +61,14 @@ the reset boundary and re-exposes them to Brax while keeping all JIT state
 fresh. `preserve_episode_evidence=true` is independently config-bound and the
 GPU regression requires terminal length two followed by fresh length one.
 
-The active file is `JIT/configs/phase_u_continuation_10m.json`. It declares seed
+The retained v4 file is `JIT/configs/phase_u_continuation_10m.json`. It declared seed
 `820801`, held-out seeds `990001..990008`, and exactly 15,015,936 transitions:
 611 aligned blocks with checkpoints at 0, 737,280, 2,998,272, 7,495,680,
 11,993,088, and 15,015,936. It is identity-incompatible with every earlier v4
 checkpoint, declares `resume_semantics=fresh_only`, and rejects every restore
 option before backend, environment, checkpoint, or run-directory work.
 
-The active v4 method identity also fixes `naccdmax=512`, jump window
+The retained v4 method identity fixed `naccdmax=512`, jump window
 `[2.5,3.9]`, height coefficient 40, desired speed 2 m/s, and airborne RSI
 probability 8%. It adds a jump-signaled low-height cost that is `-5` at 0.15 m
 and linearly reaches zero at 0.35 m; steering changes are softened with a

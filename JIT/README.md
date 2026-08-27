@@ -1,8 +1,33 @@
 # JIT Phase U training stack
 
-## Active v4 Apex-continuation run contract
+## Current Plan B decision — 2026-08-27
 
-`phase_u_continuation_10m.json` is the active fresh-training contract. Ordinary
+The latest verified run is:
+
+```text
+JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826
+```
+
+Strict `verify-run` exits 0. Training completed exactly `9,977,856`
+transitions, and the checkpoint was restored successfully. All eight held-out-
+seed natural-reset rollouts reach Apex; they later end at `pitch_limit`. Mean
+post-Apex continuation is `182.125` environment transitions. These are not
+eight independent initial conditions: the natural reset states are very
+similar.
+
+`transition_9977856` is the main `pi_up_candidate`, not final `pi_up_star`.
+Phase U training stops. The next work is freezing candidates and designing the
+handoff snapshot bank. Phase D, `pi_down`, continuation labels, `V_up`/`V_down`,
+learned soft Tubes, unified PPO, and final JCE/JEL remain unimplemented.
+
+The execution guide is
+[`JIT/docs/plans/2026-08-27-jit-plan-b-execution-guide.md`](docs/plans/2026-08-27-jit-plan-b-execution-guide.md).
+Everything below is retained v4/v3/v2 history; it does not override this
+current decision.
+
+## Historical v4 Apex-continuation run contract
+
+`phase_u_continuation_10m.json` was the retained fresh-training contract. Ordinary
 front/rear wheel contact with the terrain is support telemetry. Prohibited
 chassis/body contact is also telemetry only: it neither terminates nor adds an
 illegal-contact reward penalty. Roll, pitch, backward motion, and numerical
@@ -53,7 +78,7 @@ episode means, then produces synchronized `training_curves.png`,
 episode reward/length, airborne-RSI fraction, KL, policy/value/total loss,
 policy distribution standard deviation, and steps per second.
 
-## One-shot post-run analysis watcher
+## Historical v4 one-shot post-run analysis watcher
 
 After launching one declared training run, start its independent local watcher
 with the same exact run directory, PID file, and launch log:
@@ -83,12 +108,12 @@ captured stdout/stderr and the return code remain there as `codex_exec.log` and
 prompt also requires strict `verify-run` provenance checking before
 interpreting the natural-start and airborne-RSI evidence panels.
 
-The exact v4 target is 15,015,936 transitions (611 blocks), under the fresh seed
+The retained v4 target was 15,015,936 transitions (611 blocks), under the fresh seed
 namespace `820801` with frozen held-out seeds `990001..990008`.
 The first run must have a null parent checkpoint, start at transition zero, and
 omit `--restore-checkpoint`.
 
-## Completed v3 absolute-joint 5M experiment
+## Historical v3 absolute-joint 5M experiment
 
 The completed experiment used `phase_u_absolute_5m.json` and started from newly
 initialized PPO parameters. It never restored a v1/v2 checkpoint. Hip and knee
@@ -194,7 +219,7 @@ XLA_PYTHON_CLIENT_PREALLOCATE=false PYTHONPATH=JIT/src \
   --smoke
 ```
 
-## Formal Phase U training
+## Historical formal Phase U training
 
 Formal mode is exactly 39 aligned blocks, or 998,400 training transitions,
 with seed `820101`. Identity-bound checkpoints are written at transitions 0,
