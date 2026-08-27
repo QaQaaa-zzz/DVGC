@@ -6,7 +6,12 @@ import argparse
 import json
 from pathlib import Path
 
-from jit_dvgc.continuation_labels import label_downstream_continuations
+from jit_dvgc.continuation_labels import (
+    DEFAULT_TEST_SEEDS,
+    DEFAULT_TRAIN_SEEDS,
+    DEFAULT_VALIDATION_SEEDS,
+    label_downstream_continuations,
+)
 
 
 def main() -> int:
@@ -18,7 +23,14 @@ def main() -> int:
     p.add_argument("--branches", type=int, default=1)
     p.add_argument("--max-ticks", type=int, default=100)
     p.add_argument("--protocol-seed", type=int, default=820301)
-    p.add_argument("--split-seed", type=int, default=820301)
+    p.add_argument("--train-seeds", type=int, nargs="+", default=list(DEFAULT_TRAIN_SEEDS))
+    p.add_argument(
+        "--validation-seeds",
+        type=int,
+        nargs="+",
+        default=list(DEFAULT_VALIDATION_SEEDS),
+    )
+    p.add_argument("--test-seeds", type=int, nargs="+", default=list(DEFAULT_TEST_SEEDS))
     p.add_argument("--stochastic-policy", action="store_true")
     args = p.parse_args()
     report = label_downstream_continuations(
@@ -29,7 +41,9 @@ def main() -> int:
         max_ticks=args.max_ticks,
         protocol_seed=args.protocol_seed,
         stochastic_policy=args.stochastic_policy,
-        split_seed=args.split_seed,
+        train_seeds=tuple(args.train_seeds),
+        validation_seeds=tuple(args.validation_seeds),
+        test_seeds=tuple(args.test_seeds),
     )
     print(json.dumps(report, indent=2, sort_keys=True))
     return 0

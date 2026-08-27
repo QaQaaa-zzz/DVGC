@@ -5,7 +5,7 @@ from collections import Counter
 import hashlib
 import json
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import Any, Iterable, Mapping, Sequence
 
 import jax
 import numpy as np
@@ -21,34 +21,43 @@ from .snapshot_pool import SnapshotPool
 
 
 CONTINUATION_LABEL_SCHEMA = "jit_continuation_labels_v1"
+DEFAULT_TRAIN_SEEDS = (1000001, 1000002, 1000003, 1000004, 1000005)
+DEFAULT_VALIDATION_SEEDS = (1000006,)
+DEFAULT_TEST_SEEDS = (1000007, 1000008)
 
 
-def assign_parent_splits(
-    parent_group_ids: Iterable[str], *, split_seed: int = 820301
-) -> dict[str, str]:
-    """Create guaranteed parent-disjoint 2/3, 1/6, 1/6 splits."""
-    groups = sorted(set(str(value) for value in parent_group_ids))
-    if len(groups) < 3:
-        raise ValueError("continuation labels require at least three parent groups")
-    ranked = sorted(
-        groups,
-        key=lambda value: hashlib.sha256(f"{split_seed}|{value}".encode()).hexdigest(),
-    )
-    n = len(ranked)
-    n_train = max(1, (2 * n) // 3)
-    n_validation = max(1, n // 6)
-    if n_train + n_validation >= n:
-        n_train = n - 2
-        n_validation = 1
-    result: dict[str, str] = {}
-    for value in ranked[:n_train]:
-        result[value] = "train"
-    for value in ranked[n_train : n_train + n_validation]:
-        result[value] = "validation"
-    for value in ranked[n_train + n_validation :]:
-        result[value] = "test"
-    if set(result) != set(groups) or set(result.values()) != {"train", "validation", "test"}:
-        raise ValueError("invalid parent split")
+def assign_global_seed_splits(
+    observed_seeds: Iterable[int],
+    *,
+    train_seeds: Sequence[int] = DEFAULT_TRAIN_SEEDS,
+    validation_seeds: Sequence[int] = DEFAULT_VALIDATION_SEEDS,
+    test_seeds: Sequence[int] = DEFAULT_TEST_SEEDS,
+) -> dict[int, str]:
+    """Assign every global rollout seed to exactly one dataset split."""
+    observed = {int(seed) for seed in observed_seeds}
+    declared = {
+        "train": tuple(int(seed) for seed in train_seeds),
+        "validation": tuple(int(seed) for seed in validation_seeds),
+        "test": tuple(int(seed) for seed in test_seeds),
+    }
+    if any(not seeds for seeds in declared.values()):
+        raise ValueError("train/validation/test seed lists must all be non-empty")
+
+    all_declared = [seed for seeds in declared.values() for seed in seeds]
+    if len(set(all_declared)) != len(all_declared):
+        raise ValueError("continuation split seed lists must be disjoint")
+    if observed != set(all_declared):
+        missing = sorted(observed.difference(all_declared))
+        extra = sorted(set(all_declared).difference(observed))
+        raise ValueError(
+            "continuation split seeds must exactly cover observed catalog seeds "
+            f"(missing={missing}, extra={extra})"
+        )
+
+    result: dict[int, str] = {}
+    for split, seeds in declared.items():
+        for seed in seeds:
+            result[seed] = split
     return result
 
 
@@ -98,7 +107,9 @@ def label_downstream_continuations(
     max_ticks: int = 100,
     protocol_seed: int = 820301,
     stochastic_policy: bool = False,
-    split_seed: int = 820301,
+    train_seeds: Sequence[int] = DEFAULT_TRAIN_SEEDS,
+    validation_seeds: Sequence[int] = DEFAULT_VALIDATION_SEEDS,
+    test_seeds: Sequence[int] = DEFAULT_TEST_SEEDS,
 ) -> dict[str, Any]:
     """Relabel every catalog candidate under one frozen pi_down_star."""
     if branches <= 0:
@@ -115,9 +126,20 @@ def label_downstream_continuations(
     down_config, down_payload = verify_frozen_record(down_record)
 
     rows = _load_catalog(catalog)
-    parent_splits = assign_parent_splits(
-        (row["parent_group_id"] for row in rows), split_seed=split_seed
+    seed_splits = assign_global_seed_splits(
+        (int(row["seed"]) for row in rows),
+        train_seeds=train_seeds,
+        validation_seeds=validation_seeds,
+        test_seeds=test_seeds,
     )
+    parent_splits: dict[str, str] = {}
+    for row in rows:
+        parent_group_id = str(row["parent_group_id"])
+        split = seed_splits[int(row["seed"])]
+        previous = parent_splits.setdefault(parent_group_id, split)
+        if previous != split:
+            raise ValueError("parent group maps to multiple global-seed splits")
+
     base = Path(catalog).parent
     paths = [base / row["source_bank"] / row["snapshot"] for row in rows]
     source_env = TwoPhaseBikeEnv(up_config)
@@ -143,7 +165,12 @@ def label_downstream_continuations(
         "max_ticks": int(max_ticks),
         "protocol_seed": int(protocol_seed),
         "policy_mode": "stochastic" if stochastic_policy else "deterministic",
-        "split_seed": int(split_seed),
+        "split_unit": "global_seed",
+        "train_seeds": sorted(seed for seed, split in seed_splits.items() if split == "train"),
+        "validation_seeds": sorted(
+            seed for seed, split in seed_splits.items() if split == "validation"
+        ),
+        "test_seeds": sorted(seed for seed, split in seed_splits.items() if split == "test"),
         "training_transitions": 0,
     }
     protocol_hash = _protocol_sha256(protocol)
@@ -214,7 +241,7 @@ def label_downstream_continuations(
             timeout_count = sum(int(branch["timeout"]) for branch in branch_rows)
             if success_count + physical_failure_count + timeout_count != branches:
                 raise ValueError("continuation outcomes did not close")
-            split = parent_splits[str(row["parent_group_id"])]
+            split = seed_splits[int(row["seed"])]
             split_candidate_counts[split] += 1
             split_success_counts[split] += int(success_count > 0)
             labeled.append(
@@ -255,6 +282,8 @@ def label_downstream_continuations(
             ),
             "timeout_rollouts": sum(row["timeout_count"] for row in labeled),
             "closed_outcome_counts": dict(sorted(closed_outcomes.items())),
+            "split_unit": "global_seed",
+            "seed_split": {str(seed): split for seed, split in sorted(seed_splits.items())},
             "split_parent_counts": {
                 split: len({group for group, value in parent_splits.items() if value == split})
                 for split in ("train", "validation", "test")
