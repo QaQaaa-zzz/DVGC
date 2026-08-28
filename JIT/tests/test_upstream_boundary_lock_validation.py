@@ -164,7 +164,7 @@ def test_validation_selector_rejects_nominal_identity_change(monkeypatch, tmp_pa
     payload[0]["tick"] = 999
     _write(labels, payload)
     monkeypatch.setattr(module, "load_snapshot", lambda _path: _snapshot())
-    with pytest.raises(ValueError, match="differs from the locked TRAIN identity"):
+    with pytest.raises(ValueError, match=r"differ(?:s)? from the locked TRAIN identity"):
         module.select_locked_validation_anchors(catalog, labels, lock_path)
 
 
