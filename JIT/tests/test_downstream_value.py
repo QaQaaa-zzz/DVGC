@@ -3,15 +3,13 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import numpy as np
-
 
 def _write(path: Path, payload) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def _row(index: int, split: str, success: int, *, actor: str) -> dict:
+def _row(index: int, split: str, success: int, *, actor: str, protocol="down-protocol") -> dict:
     seed = {"train": 1000001, "validation": 1000006, "test": 1000007}[split]
     base = -1.0 if success == 0 else 1.0
     return {
@@ -26,7 +24,7 @@ def _row(index: int, split: str, success: int, *, actor: str) -> dict:
         "success_count": int(success),
         "actor_observation": [base, base * 0.5, float(index) * 0.01],
         "expert_actor_sha256": actor,
-        "protocol_sha256": "down-protocol",
+        "protocol_sha256": protocol,
     }
 
 
@@ -43,7 +41,7 @@ def _fake_frozen(actor: str) -> dict:
     }
 
 
-def test_downstream_dataset_uses_train_validation_and_never_test(monkeypatch, tmp_path):
+def test_downstream_dataset_uses_train_validation_and_ignores_test(monkeypatch, tmp_path):
     import jit_dvgc.downstream_value as module
 
     actor = "d" * 64
@@ -55,8 +53,8 @@ def test_downstream_dataset_uses_train_validation_and_never_test(monkeypatch, tm
             _row(1, "train", 1, actor=actor),
             _row(2, "validation", 0, actor=actor),
             _row(3, "validation", 1, actor=actor),
-            _row(4, "test", 0, actor=actor),
-            _row(5, "test", 1, actor=actor),
+            _row(4, "test", 0, actor="wrong-actor", protocol="wrong-test-protocol"),
+            _row(5, "test", 1, actor="wrong-actor", protocol="wrong-test-protocol"),
         ],
     )
     monkeypatch.setattr(module, "load_frozen_manifest", lambda _path: _fake_frozen(actor))
@@ -65,8 +63,9 @@ def test_downstream_dataset_uses_train_validation_and_never_test(monkeypatch, tm
     )
     assert train.count == 2
     assert validation.count == 2
-    assert provenance["declared_test_count"] == 2
     assert provenance["test_data_used"] is False
+    assert "declared_test_count" not in provenance
+    assert provenance["continuation_protocol_sha256"] == "down-protocol"
     assert {row["split"] for row in train.metadata} == {"train"}
     assert {row["split"] for row in validation.metadata} == {"validation"}
     assert not any(row["seed"] == 1000007 for row in (*train.metadata, *validation.metadata))
