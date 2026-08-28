@@ -10,6 +10,7 @@ from pathlib import Path
 import jax
 import numpy as np
 
+from jit_dvgc.constants import ACTION_ORDER
 from jit_dvgc.continuation_labels import DEFAULT_TRAIN_SEEDS
 from jit_dvgc.env import TwoPhaseBikeEnv
 from jit_dvgc.expert_freeze import load_frozen_manifest, verify_frozen_record
@@ -57,6 +58,21 @@ def main() -> int:
         nargs="+",
         default=list(DEFAULT_BOUNDARY_DURATIONS),
     )
+    parser.add_argument(
+        "--action-names",
+        nargs="+",
+        choices=list(ACTION_ORDER),
+        default=list(ACTION_ORDER),
+        help="action axes to perturb; defaults to all axes",
+    )
+    parser.add_argument(
+        "--signs",
+        type=int,
+        nargs="+",
+        choices=(-1, 1),
+        default=[-1, 1],
+        help="perturbation signs to use; defaults to both -1 and +1",
+    )
     parser.add_argument("--protocol-seed", type=int, default=820401)
     parser.add_argument("--max-negative-anchors", type=int, default=1)
     parser.add_argument(
@@ -80,6 +96,10 @@ def main() -> int:
     train_seeds = tuple(int(seed) for seed in args.train_seeds)
     if not train_seeds or len(set(train_seeds)) != len(train_seeds):
         parser.error("--train-seeds must be non-empty and unique")
+    if len(set(args.action_names)) != len(args.action_names):
+        parser.error("--action-names must be unique")
+    if len(set(args.signs)) != len(args.signs):
+        parser.error("--signs must be unique")
 
     selected, audit = audit_and_select_train_anchors(
         args.catalog,
@@ -149,6 +169,8 @@ def main() -> int:
         "guard_roles": list(args.guard_roles),
         "train_seeds": sorted(train_seeds),
         "max_negative_anchors": int(args.max_negative_anchors),
+        "selected_action_names": list(args.action_names),
+        "selected_signs": list(args.signs),
         "near_duplicate_tolerances": {
             "qpos_atol": float(args.near_qpos_atol),
             "qvel_atol": float(args.near_qvel_atol),
@@ -156,8 +178,8 @@ def main() -> int:
         },
         "state_generation": (
             "restore real nominal snapshot; recompute deterministic pi_up_star action; "
-            "add one bounded action-basis perturbation for duration ticks; env.step; "
-            "exclude terminal/Apex; capture real resulting snapshot"
+            "add one bounded selected action-basis perturbation for duration ticks; "
+            "env.step; exclude terminal/Apex; capture real resulting snapshot"
         ),
     }
 
@@ -171,6 +193,8 @@ def main() -> int:
         protocol=protocol,
         strengths=tuple(args.strengths),
         durations=tuple(args.durations),
+        action_names=tuple(args.action_names),
+        signs=tuple(args.signs),
     )
     _write_json(Path(args.output_dir) / "audit.json", audit)
     print(
