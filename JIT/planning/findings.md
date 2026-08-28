@@ -312,3 +312,23 @@
   enough for the requested reward/length curves. JIT now preserves exactly
   those logging fields through reset and exposes them after reset; terminal
   length two and restarted length one are both asserted on GPU.
+# 2026-08-28 afternoon handoff archive
+
+- The current remote branch is behind local HEAD: local `48cb620`, remote
+  `53fc9cb`; the two local milestone commits are not yet pushed.
+- `JIT/runs/phase_u` is 774 MiB and must not be committed wholesale. The
+  handoff needs an explicit artifact closure instead.
+- Git LFS is not installed and the repository has no `.gitattributes`; every
+  individual Git object must remain below the remote hard limit.
+- All other JIT run groups together are modest in size. The exact Phase U
+  policy checkpoint and its identity/report evidence must be selected rather
+  than retaining unrelated historical videos and failed runs.
+- The locked Phase U run itself is only 18 MiB; its six aligned checkpoints,
+  metrics, final fixed-panel traces, report, and provenance can be retained as
+  a complete auditable unit without pulling in the 774 MiB historical group.
+- The completed unified Tube-RSI retry is 12 MiB and contains all six
+  checkpoints plus five fixed TRAIN panels, so retaining that whole run is
+  preferable to a lossy hand-picked subset.
+- The Soft Tube has 222 entries referencing eight existing candidate snapshot
+  parent groups. Retaining the continuation-candidate/label groups preserves
+  those absolute-path suffixes and the value-model provenance they bind.

@@ -1,0 +1,21 @@
+{
+  "claim_boundary": "discrete TRAIN support projection; not a certified or continuous Tube boundary",
+  "low_weight_count": 43,
+  "output": "/home/qy/DVGC/JIT/runs/soft_tube/soft_tube_train_v1_20260828/xz_projection.png",
+  "phase_counts": {
+    "downstream": 105,
+    "upstream": 117
+  },
+  "point_count": 222,
+  "schema": "jit_soft_tube_xz_projection_v1",
+  "source_manifest_sha256": "c1c1161ebafd16716f2566aaccfe89169fe9cb0c2b090266c0e2bf90165df28b",
+  "test_data_used": false,
+  "x_range": [
+    2.4693541526794434,
+    3.7995309829711914
+  ],
+  "z_range": [
+    0.11817681044340134,
+    0.7236495018005371
+  ]
+}

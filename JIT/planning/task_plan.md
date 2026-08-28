@@ -15,9 +15,21 @@ reserve independent evaluation for the frozen final policy.
 
 ## Current Phase
 
-Phase 20: formal 10M+ unified Tube-RSI PPO
+Phase 21: portable handoff, locked-artifact archive, and remote delivery
 
 ## Phases
+
+### Phase 21: portable handoff, locked-artifact archive, and remote delivery
+
+- [x] Resolve the minimal dependency closure for frozen `pi_up`, `pi_down`,
+  `V_up`, `V_down`, learned Soft Tube, and final `pi_unified`.
+- [x] Write a self-contained Chinese afternoon/handoff report with exact
+  results, open problems, claim boundary, and next commands.
+- [x] Archive required policies/results without bulk-committing unrelated
+  historical runs or user-owned dirty files.
+- [x] Verify hashes, checkpoint restore, tests, staged paths, and remote limits.
+- [x] Create one larger handoff commit and push the current branch to origin.
+- **Status:** completed
 
 ### Phase 20: formal 10M+ unified Tube-RSI PPO
 

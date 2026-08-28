@@ -1,5 +1,34 @@
 # Progress Log
 
+## Session: 2026-08-28 afternoon handoff and remote archive
+
+### Phase 21: handoff closure
+
+- **Status:** completed
+- User requested a detailed afternoon report and remote preservation of every
+  needed or locked policy/result for another AI to take over.
+- Confirmed branch `agent/two-phase-soft-tube`, local HEAD `48cb620`, remote
+  branch still at `53fc9cb`, and unrelated user-owned dirty paths remain
+  untouched.
+- Artifact sizing found `JIT/runs/phase_u` at 774 MiB while all later-stage
+  groups are much smaller. Git LFS is unavailable, so the archive will use an
+  explicit minimal dependency closure rather than the whole historical run.
+- Inspected the locked Phase U run and the successful unified retry: they are
+  18 MiB and 12 MiB respectively, with individual checkpoint payloads about
+  1.26 MiB.
+- Parsed all 222 Soft Tube entries and confirmed their snapshots resolve into
+  eight candidate-source parent groups; the handoff will retain those source
+  groups and labels rather than rewriting artifact paths.
+- Added the detailed Chinese handoff, current-state pointer, explicit artifact
+  root ledger, and a hash verifier. The generated closure contains 1,149 files
+  and 39,937,705 bytes; its largest file is 1,861,326 bytes.
+- Final JIT preflight passed 362 non-GPU and 14 GPU tests. The archive verifier
+  passed, strict Phase U provenance passed, and the 10,009,600-transition
+  unified checkpoint restored as 25 finite leaves with 313,134 parameters.
+- Staged-path audit found no unrelated user files, and `git diff --cached
+  --check` passed. Phase 21 closes with one handoff commit pushed to the current
+  remote branch; no merge to `main` is part of this phase.
+
 ## Session: 2026-08-28 continued unified-policy evidence
 
 ### Phase 20: active formal 10M+ unified Tube-RSI PPO

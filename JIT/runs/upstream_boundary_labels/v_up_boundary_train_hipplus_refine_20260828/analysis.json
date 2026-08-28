@@ -1,0 +1,463 @@
+{
+  "aggregate": {
+    "count": 22,
+    "failures": 13,
+    "mixed_outcomes": true,
+    "reasons": {
+      "apex_success": 9,
+      "pitch_limit": 12,
+      "roll_limit": 1
+    },
+    "success_rate": 0.4090909090909091,
+    "successes": 9
+  },
+  "boundary_evidence": true,
+  "candidate_count": 22,
+  "dataset_lock_gate": {
+    "min_local_minority_count": 4,
+    "min_local_minority_fraction": 0.15,
+    "note": "operational anti-sparsity gate, not a physical constant"
+  },
+  "dataset_lock_ready": true,
+  "decision": "BOUNDARY_FOUND",
+  "failure_anchor": {
+    "count": 22,
+    "failures": 13,
+    "mixed_outcomes": true,
+    "reasons": {
+      "apex_success": 9,
+      "pitch_limit": 12,
+      "roll_limit": 1
+    },
+    "success_rate": 0.4090909090909091,
+    "successes": 9
+  },
+  "failure_anchor_by_action_axis": [
+    {
+      "action_name": "hip",
+      "count": 22,
+      "failures": 13,
+      "mixed_outcomes": true,
+      "reasons": {
+        "apex_success": 9,
+        "pitch_limit": 12,
+        "roll_limit": 1
+      },
+      "success_rate": 0.4090909090909091,
+      "successes": 9
+    }
+  ],
+  "failure_anchor_by_direction": [
+    {
+      "action_name": "hip",
+      "count": 22,
+      "failures": 13,
+      "mixed_outcomes": true,
+      "reasons": {
+        "apex_success": 9,
+        "pitch_limit": 12,
+        "roll_limit": 1
+      },
+      "sign": 1,
+      "success_rate": 0.4090909090909091,
+      "successes": 9
+    }
+  ],
+  "failure_anchor_by_direction_duration": [
+    {
+      "action_name": "hip",
+      "count": 11,
+      "duration": 1,
+      "failures": 7,
+      "mixed_outcomes": true,
+      "reasons": {
+        "apex_success": 4,
+        "pitch_limit": 6,
+        "roll_limit": 1
+      },
+      "sign": 1,
+      "success_rate": 0.36363636363636365,
+      "successes": 4
+    },
+    {
+      "action_name": "hip",
+      "count": 11,
+      "duration": 2,
+      "failures": 6,
+      "mixed_outcomes": true,
+      "reasons": {
+        "apex_success": 5,
+        "pitch_limit": 6
+      },
+      "sign": 1,
+      "success_rate": 0.45454545454545453,
+      "successes": 5
+    }
+  ],
+  "failure_anchor_by_direction_strength": [
+    {
+      "action_name": "hip",
+      "count": 2,
+      "failures": 2,
+      "mixed_outcomes": false,
+      "reasons": {
+        "pitch_limit": 2
+      },
+      "sign": 1,
+      "strength": 0.05,
+      "success_rate": 0.0,
+      "successes": 0
+    },
+    {
+      "action_name": "hip",
+      "count": 2,
+      "failures": 1,
+      "mixed_outcomes": true,
+      "reasons": {
+        "apex_success": 1,
+        "roll_limit": 1
+      },
+      "sign": 1,
+      "strength": 0.055,
+      "success_rate": 0.5,
+      "successes": 1
+    },
+    {
+      "action_name": "hip",
+      "count": 2,
+      "failures": 0,
+      "mixed_outcomes": false,
+      "reasons": {
+        "apex_success": 2
+      },
+      "sign": 1,
+      "strength": 0.06,
+      "success_rate": 1.0,
+      "successes": 2
+    },
+    {
+      "action_name": "hip",
+      "count": 2,
+      "failures": 0,
+      "mixed_outcomes": false,
+      "reasons": {
+        "apex_success": 2
+      },
+      "sign": 1,
+      "strength": 0.065,
+      "success_rate": 1.0,
+      "successes": 2
+    },
+    {
+      "action_name": "hip",
+      "count": 2,
+      "failures": 0,
+      "mixed_outcomes": false,
+      "reasons": {
+        "apex_success": 2
+      },
+      "sign": 1,
+      "strength": 0.07,
+      "success_rate": 1.0,
+      "successes": 2
+    },
+    {
+      "action_name": "hip",
+      "count": 2,
+      "failures": 2,
+      "mixed_outcomes": false,
+      "reasons": {
+        "pitch_limit": 2
+      },
+      "sign": 1,
+      "strength": 0.075,
+      "success_rate": 0.0,
+      "successes": 0
+    },
+    {
+      "action_name": "hip",
+      "count": 2,
+      "failures": 2,
+      "mixed_outcomes": false,
+      "reasons": {
+        "pitch_limit": 2
+      },
+      "sign": 1,
+      "strength": 0.08,
+      "success_rate": 0.0,
+      "successes": 0
+    },
+    {
+      "action_name": "hip",
+      "count": 2,
+      "failures": 2,
+      "mixed_outcomes": false,
+      "reasons": {
+        "pitch_limit": 2
+      },
+      "sign": 1,
+      "strength": 0.085,
+      "success_rate": 0.0,
+      "successes": 0
+    },
+    {
+      "action_name": "hip",
+      "count": 2,
+      "failures": 2,
+      "mixed_outcomes": false,
+      "reasons": {
+        "pitch_limit": 2
+      },
+      "sign": 1,
+      "strength": 0.09,
+      "success_rate": 0.0,
+      "successes": 0
+    },
+    {
+      "action_name": "hip",
+      "count": 2,
+      "failures": 2,
+      "mixed_outcomes": false,
+      "reasons": {
+        "pitch_limit": 2
+      },
+      "sign": 1,
+      "strength": 0.095,
+      "success_rate": 0.0,
+      "successes": 0
+    },
+    {
+      "action_name": "hip",
+      "count": 2,
+      "failures": 0,
+      "mixed_outcomes": false,
+      "reasons": {
+        "apex_success": 2
+      },
+      "sign": 1,
+      "strength": 0.1,
+      "success_rate": 1.0,
+      "successes": 2
+    }
+  ],
+  "failure_anchor_by_duration": [
+    {
+      "count": 11,
+      "duration": 1,
+      "failures": 7,
+      "mixed_outcomes": true,
+      "reasons": {
+        "apex_success": 4,
+        "pitch_limit": 6,
+        "roll_limit": 1
+      },
+      "success_rate": 0.36363636363636365,
+      "successes": 4
+    },
+    {
+      "count": 11,
+      "duration": 2,
+      "failures": 6,
+      "mixed_outcomes": true,
+      "reasons": {
+        "apex_success": 5,
+        "pitch_limit": 6
+      },
+      "success_rate": 0.45454545454545453,
+      "successes": 5
+    }
+  ],
+  "failure_anchor_by_strength": [
+    {
+      "count": 2,
+      "failures": 2,
+      "mixed_outcomes": false,
+      "reasons": {
+        "pitch_limit": 2
+      },
+      "strength": 0.05,
+      "success_rate": 0.0,
+      "successes": 0
+    },
+    {
+      "count": 2,
+      "failures": 1,
+      "mixed_outcomes": true,
+      "reasons": {
+        "apex_success": 1,
+        "roll_limit": 1
+      },
+      "strength": 0.055,
+      "success_rate": 0.5,
+      "successes": 1
+    },
+    {
+      "count": 2,
+      "failures": 0,
+      "mixed_outcomes": false,
+      "reasons": {
+        "apex_success": 2
+      },
+      "strength": 0.06,
+      "success_rate": 1.0,
+      "successes": 2
+    },
+    {
+      "count": 2,
+      "failures": 0,
+      "mixed_outcomes": false,
+      "reasons": {
+        "apex_success": 2
+      },
+      "strength": 0.065,
+      "success_rate": 1.0,
+      "successes": 2
+    },
+    {
+      "count": 2,
+      "failures": 0,
+      "mixed_outcomes": false,
+      "reasons": {
+        "apex_success": 2
+      },
+      "strength": 0.07,
+      "success_rate": 1.0,
+      "successes": 2
+    },
+    {
+      "count": 2,
+      "failures": 2,
+      "mixed_outcomes": false,
+      "reasons": {
+        "pitch_limit": 2
+      },
+      "strength": 0.075,
+      "success_rate": 0.0,
+      "successes": 0
+    },
+    {
+      "count": 2,
+      "failures": 2,
+      "mixed_outcomes": false,
+      "reasons": {
+        "pitch_limit": 2
+      },
+      "strength": 0.08,
+      "success_rate": 0.0,
+      "successes": 0
+    },
+    {
+      "count": 2,
+      "failures": 2,
+      "mixed_outcomes": false,
+      "reasons": {
+        "pitch_limit": 2
+      },
+      "strength": 0.085,
+      "success_rate": 0.0,
+      "successes": 0
+    },
+    {
+      "count": 2,
+      "failures": 2,
+      "mixed_outcomes": false,
+      "reasons": {
+        "pitch_limit": 2
+      },
+      "strength": 0.09,
+      "success_rate": 0.0,
+      "successes": 0
+    },
+    {
+      "count": 2,
+      "failures": 2,
+      "mixed_outcomes": false,
+      "reasons": {
+        "pitch_limit": 2
+      },
+      "strength": 0.095,
+      "success_rate": 0.0,
+      "successes": 0
+    },
+    {
+      "count": 2,
+      "failures": 0,
+      "mixed_outcomes": false,
+      "reasons": {
+        "apex_success": 2
+      },
+      "strength": 0.1,
+      "success_rate": 1.0,
+      "successes": 2
+    }
+  ],
+  "failure_anchor_crossing_brackets": [
+    {
+      "action_name": "hip",
+      "lower_failure_strength": 0.05,
+      "sign": 1,
+      "upper_success_strength": 0.055,
+      "width": 0.0049999999999999975
+    }
+  ],
+  "failure_anchor_crossing_brackets_by_duration": [
+    {
+      "action_name": "hip",
+      "duration": 1,
+      "lower_failure_strength": 0.055,
+      "sign": 1,
+      "upper_success_strength": 0.06,
+      "width": 0.0049999999999999975
+    },
+    {
+      "action_name": "hip",
+      "duration": 2,
+      "lower_failure_strength": 0.05,
+      "sign": 1,
+      "upper_success_strength": 0.055,
+      "width": 0.0049999999999999975
+    }
+  ],
+  "failure_anchor_minority_side_count": 9,
+  "failure_anchor_minority_side_fraction": 0.4090909090909091,
+  "mixed_failure_direction_count": 1,
+  "mixed_failure_directions": [
+    {
+      "action_name": "hip",
+      "count": 22,
+      "sign": 1,
+      "success_rate": 0.4090909090909091
+    }
+  ],
+  "next_step": "lock_train_protocol_then_validate_without_retuning",
+  "positive_guards": {
+    "count": 0,
+    "failures": 0,
+    "mixed_outcomes": false,
+    "reasons": {},
+    "success_rate": null,
+    "successes": 0
+  },
+  "pseudo_diversity_audit": {
+    "all_pairs_practically_near_duplicate": true,
+    "exact_duplicate_pair_count": 0,
+    "interpretation": "seed-level pseudo-diversity remains physically concentrated",
+    "pair_count": 10,
+    "practical_near_duplicate_pair_count": 10,
+    "practical_profile": {
+      "observation_linf": 0.01,
+      "qpos_linf": 0.0005,
+      "qvel_linf": 0.002
+    },
+    "strict_near_duplicate_pair_count": 10,
+    "strict_tolerances": {
+      "observation_atol": 0.01,
+      "qpos_atol": 0.0005,
+      "qvel_atol": 0.002
+    }
+  },
+  "schema": "jit_upstream_boundary_analysis_v1",
+  "split": "train",
+  "status": "completed",
+  "target": "V_up"
+}

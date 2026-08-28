@@ -1,6 +1,27 @@
 # DVGC Experiment State
 
-## JIT status — 2026-08-27
+## JIT status — 2026-08-28 afternoon handoff
+
+The current JIT route has completed the TRAIN-side sequence through one fresh
+unified Tube-RSI PPO: `pi_up_star` and `pi_down_star` are frozen, first-pass
+`V_up` and `V_down` artifacts are locked, a 222-entry TRAIN-only learned Soft
+Tube is built, and a single-Actor unified policy completed exactly 10,009,600
+PPO training transitions. No expert switching, validation data, TEST data, or
+independent fixed evaluation was used by that formal unified run.
+
+The current frozen-evaluation candidate is
+`JIT/runs/pi_unified/pi_unified_formal_10009600_seed821101_20260828_retry1/checkpoints/transition_10009600`.
+It is not yet a deployment policy. The next stage is an independently
+predeclared frozen-final-policy Final-Recovery evaluation. JCE/JEL and safety
+claims remain unavailable until that evaluation passes. The complete current
+handoff, exact hashes, known issues, and next-step order are in
+`JIT/docs/handoffs/2026-08-28-afternoon-handoff.md`; the portable locked
+artifact ledger is in `JIT/handoff/2026-08-28/LOCKED_ARTIFACTS.json`.
+
+The older state below is retained as historical provenance and is superseded
+for current JIT execution.
+
+## Historical JIT status — 2026-08-27
 
 The latest verified JIT run is
 `JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826`.

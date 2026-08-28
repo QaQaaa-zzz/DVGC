@@ -74,6 +74,10 @@ The repository currently provides reusable infrastructure for:
   phase-expert smoke entrypoint, including authorization, checkpoint, fixed
   evaluation, and interaction accounting;
 - legacy stage/expert code that may supply utilities during migration.
+- the isolated JIT two-phase training path through frozen `pi_up_star` and
+  `pi_down_star`, locked first-pass `V_up`/`V_down`, a 222-entry TRAIN-only
+  learned Soft Tube, Tube-RSI engineering qualification, and one completed
+  10,009,600-transition single-Actor unified PPO run.
 
 The existing five-stage implementation is a legacy migration source. Its
 controllers, policies, banks, and results do not demonstrate the new two-phase
@@ -83,11 +87,13 @@ method.
 
 The following work remains for separately gated implementation and experiments:
 
-- trained/frozen `pi_up` and `pi_down` checkpoints beyond engineering smoke;
-- `V_up` and `V_down` dataset/training/calibration contracts;
-- learned soft feasibility Tube construction;
-- two-phase Tube-RSI unified PPO;
 - the new final two-phase pipeline CLI and independent JCE/JEL protocol.
+
+The existing first-pass feasibility fields and learned Soft Tube are training
+artifacts, not certified safety objects. The completed unified PPO checkpoint
+is a frozen-evaluation candidate, not a deployment result. Independent
+Final-Recovery evaluation remains required before freezing `pi_unified_star`
+or making any JCE/JEL claim.
 
 No current file may claim these capabilities exist until code, tests, and
 experiments validate them.
