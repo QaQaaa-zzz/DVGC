@@ -1,24 +1,37 @@
-# Task Plan: JIT Phase U Reward/RSI/Diagnostics Rebuild
+# Task Plan: JIT Two-Phase Soft Tube and Unified Tube-RSI
 
 ## Goal
 
-Replace the JIT Phase U reward, event, reset, observation, and diagnostic
-contracts with the approved target-free reference reward, one-shot jump signal,
-5% airborne RSI, root-height/descent Apex termination, and aligned PNG/video
-evidence; then execute and audit the user-authorized 998,400-step fresh run.
+Construct a provenance-complete TRAIN-only learned Soft Tube from the frozen
+phase experts and value models, validate a phase-balanced real-snapshot
+Tube-RSI reset path, then start one bounded single-policy `pi_unified`
+engineering pilot only if every preceding gate is GO.
 
 ## Next Step
 
-Complete the approved v4 10M TDD plan and final verification, commit and push
-the validated JIT-only implementation, then run one bounded CCD-capacity smoke
-before launching the fresh 9,977,856-transition run and its one-shot Codex
-analysis watcher. No PPO interaction, including smoke, precedes remote equality.
+Complete final artifact/Git index verification and create one larger JIT-only
+milestone commit without staging unrelated user-owned paths.
 
 ## Current Phase
 
-Phase 17: v4 CCD-capacity, reward/window/RSI, and automatic-analysis revision
+Phase 18: learned Soft Tube and unified Tube-RSI
 
 ## Phases
+
+### Phase 18: learned Soft Tube and unified Tube-RSI
+
+- [x] Read the approved handoff, branch state, current artifacts, relevant
+  JIT code, Git history, and split-isolation tests.
+- [x] Present one implementation outline and receive user approval.
+- [x] Write the JIT-local design and detailed TDD implementation plan.
+- [x] Implement and validate the TRAIN-only phase-aware Soft Tube artifact.
+- [x] Implement and validate deterministic 50/50 weighted Tube-RSI sampling.
+- [x] Run the bounded 16-interaction unified restore/step smoke.
+- [x] If both gates are GO, start one canonical 25,600-transition
+  `pi_unified` engineering pilot.
+- [x] Create one larger JIT-only commit after the milestone is validated and
+  the pilot has started; do not create atomic commits for substeps.
+- **Status:** complete
 
 ### Phase 17: v4 10M revision
 

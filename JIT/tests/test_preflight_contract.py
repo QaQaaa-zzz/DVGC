@@ -22,6 +22,13 @@ def test_preflight_statically_validates_the_formal_config(jit_root):
     assert "load_config" in script
 
 
+def test_preflight_statically_validates_the_unified_pilot_without_launching_it(jit_root):
+    script = (jit_root / "scripts/local_preflight.sh").read_text(encoding="utf-8")
+    assert "pi_unified_pilot.json" in script
+    assert "load_unified_pilot_config" in script
+    assert "run_unified_pilot" not in script
+
+
 def test_readme_documents_persistent_formal_launch_and_claim_boundary(jit_root):
     readme = (jit_root / "README.md").read_text(encoding="utf-8")
     assert "--formal" in readme

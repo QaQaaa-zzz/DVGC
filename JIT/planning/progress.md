@@ -1,5 +1,121 @@
 # Progress Log
 
+## Session: 2026-08-28
+
+### Phase 18: learned Soft Tube and unified Tube-RSI
+
+- **Status:** in_progress
+- Actions taken:
+  - Read the local branch, Git history, approved handoff, project method,
+    nested JIT instructions, relevant source/tests, and artifact manifests.
+  - Confirmed user approval for the implementation outline and larger
+    milestone commits rather than atomic commits.
+  - Selected inline TDD execution within the existing JIT subtree; no extra
+    worktree and no subagent delegation.
+  - Wrote the design and implementation plan before production changes.
+- Files created/modified:
+  - `JIT/planning/task_plan.md`
+  - `JIT/planning/findings.md`
+  - `JIT/planning/progress.md`
+  - `JIT/docs/plans/2026-08-28-soft-tube-tube-rsi-design.md`
+  - `JIT/docs/plans/2026-08-28-soft-tube-tube-rsi-implementation.md`
+- TDD evidence:
+  - Soft Tube RED: 4 expected failures because `jit_dvgc.soft_tube` was absent.
+  - First GREEN attempt: the hash-drift test passed; three tests exposed a
+    synthetic fixture parent-group mismatch before production behavior.
+  - Soft Tube GREEN: 5 focused tests passed, including the real CLI path.
+  - Regression group GREEN: 23 Soft Tube/value/snapshot tests passed.
+  - Tube-RSI RED: 7 expected failures because `jit_dvgc.tube_rsi` was absent.
+  - Tube-RSI GREEN: 7 focused deterministic/split/identity tests passed.
+  - Unified environment RED: 4 expected failures because the unified env and
+    smoke modules were absent.
+  - Unified environment GREEN: 4 host/GPU integration tests passed; the real
+    CLI restored/stepped both phases with one action path and zero expert use.
+  - Combined new-feature group GREEN: 17 tests passed.
+  - Predeclared formal Soft Tube construction:
+    - purpose: build the first TRAIN-only phase-aware learned Soft Tube;
+    - inputs: frozen expert manifest, exact V_up/V_down model artifacts,
+      hash-bound nominal/boundary/downstream catalogs, labels, and protocols;
+    - interaction cost: 0 environment interactions, 0 training transitions;
+    - stopping condition: close manifest/entries/diagnostics or fail closed;
+    - output: `JIT/runs/soft_tube/soft_tube_train_v1_20260828`.
+  - Formal Soft Tube construction completed with 222 TRAIN entries: 117
+    upstream and 105 downstream; zero interactions/transitions and no
+    validation/TEST use.
+  - Predeclared formal Tube-RSI smoke:
+    - purpose: prove unified restore and one-step execution from both phases;
+    - inputs: completed Soft Tube manifest plus existing Phase U/Phase D smoke
+      configs and the authoritative XML;
+    - interaction cost: exactly 16 environment interactions, 0 training;
+    - stopping condition: 8 fixed upstream and 8 fixed downstream entries each
+      restore and step once with finite state and no expert switching;
+    - output: `JIT/runs/tube_rsi/tube_rsi_smoke_train_v1_20260828`.
+  - Formal Tube-RSI smoke completed `GO`: 16/16 finite restore/step records,
+    split 8 upstream and 8 downstream, with zero expert switching and zero
+    training, validation, or TEST use.
+  - Artifact audit re-read the closed manifests/reports and their files. Soft
+    Tube identity is `c1c1161e...df28b`; the smoke binds that exact identity.
+  - Pre-unified local preflight exited zero: 351 non-GPU and 14 GPU tests
+    passed. This was before adding the unified PPO runner, so final preflight
+    must be repeated before launch.
+  - Unified PPO RED: four focused failures because
+    `jit_dvgc.unified_training` was absent.
+  - Unified PPO GREEN: four focused tests passed for the checked-in exact
+    25,600 contract, GO gates, fresh single-policy trainer arguments, saved
+    checkpoint, and strict restore.
+  - Unified preflight RED/GREEN: the new static-contract test first failed on
+    the missing preflight integration, then the focused unified/preflight
+    group passed 9 tests after adding non-launching config checks.
+  - Final updated local preflight exited zero: 356 non-GPU and 14 GPU tests
+    passed after static compilation and the no-legacy-import/config gates.
+  - Predeclared unified pilot launch contract:
+    - purpose: compile/update/save/restore the first fresh single-Actor
+      Tube-RSI PPO while making only an engineering-integrity claim;
+    - inputs: `pi_unified_pilot.json`, exact upstream/downstream configs, Soft
+      Tube manifest `c1c1161e...df28b`, Tube-RSI smoke report
+      `34f35b49...a0a2796`, and authoritative XML;
+    - interaction cost: exactly 25,600 training transitions; zero Brax/fixed
+      evaluation and zero diagnostic interactions;
+    - stopping conditions: one exact block, any nonfinite metric, or checkpoint
+      restore failure;
+    - output: `JIT/runs/pi_unified/pi_unified_pilot_25600_seed821001_20260828`.
+  - The first pilot completed 25,600 training transitions and restored its
+    checkpoint, but the launch log contained 1,385 CCD-capacity warnings with
+    a maximum request of 572 against inherited `naccdmax=512`. It is retained
+    as an engineering diagnosis and is not the capacity-clean GO artifact.
+  - Systematic root-cause evidence showed the warning came from aggregate
+    runtime capacity under the new mixed 1,024-environment batch. No frozen
+    model, physics, geometry, reward, snapshot, or action contract changed.
+  - CCD-capacity RED: the checked pilot had no runtime capacity field and the
+    unified environment rejected the proposed keyword. GREEN: 15 focused
+    unified/smoke/preflight tests passed with pilot-local `naccdmax=1024`.
+  - Post-fix local preflight exited zero: 356 non-GPU and 14 GPU tests passed.
+  - Predeclared replacement pilot:
+    - purpose/interaction/stopping contracts are identical to the first pilot;
+    - only runtime aggregate CCD capacity changes from inherited 512 to the
+      unified pilot's explicit 1024;
+    - config hash: `16b12ca1...cca47`;
+    - output: `JIT/runs/pi_unified/pi_unified_pilot_25600_seed821001_ccd1024_20260828`.
+  - Replacement pilot completed exactly 25,600 training transitions with zero
+    evaluation/diagnostic interactions, one fresh Actor, no expert switching,
+    successful final-checkpoint restore, and zero CCD overflow warnings.
+  - Brax returned an empty `final_metrics` mapping because evaluations were
+    disabled, while its one training callback contained the complete
+    transition-25,600 metric set and every numeric value was finite. The runner
+    now uses that final training callback when the return mapping is empty and
+    fails closed if neither source contains metrics; focused RED/GREEN passed.
+  - Final artifact audit independently restored the transition-25,600
+    checkpoint: 25 array leaves, 313,134 parameters, all finite. The single
+    training callback contains 104 finite metrics at exactly transition
+    25,600; all evaluation/diagnostic counts remain zero.
+  - Final local preflight after every source/documentation change exited zero:
+    356 non-GPU and 14 GPU tests passed. `git diff --check -- JIT` also exited
+    zero.
+  - Final Git delivery uses one explicit JIT-only milestone commit. The
+    user-owned `JIT/jit_continuation_labels_phase1.patch` and all dirty paths
+    outside JIT remain unstaged.
+- **Status:** complete
+
 ## Session: 2026-08-25 v4 CCD/10M/automatic analysis
 
 ### Final Important review corrections
@@ -429,6 +545,8 @@
 
 | Timestamp | Error | Attempt | Resolution |
 |---|---|---:|---|
+| 2026-08-28 | First unified GPU GREEN attempt rejected intentional Phase U/Phase D yaw, contact, and horizon differences | 1 | Validate only shared roll/pitch/backward limits and track a separate phase-local episode step that resets at Apex. |
+| 2026-08-28 | Soft Tube fixture used different parent-group strings in catalog and label rows | 1 | Corrected only the synthetic catalog identities; production validation remains strict. |
 | 2026-08-24 | `CUDA_ERROR_NO_DEVICE` in sandboxed JAX discovery | 1 | Read-only check outside device isolation confirmed the GPU backend. |
 | 2026-08-24 | Unmatched shell backtick in a plan self-review search | 1 | Used a simpler quoted search without repeating the fragile command. |
 | 2026-08-24 | Combined plan patch missed one exact context line | 1 | Reapplied as a smaller exact-context patch. |

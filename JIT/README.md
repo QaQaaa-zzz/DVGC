@@ -1,6 +1,57 @@
 # JIT two-phase training stack
 
-## Current Plan B decision — 2026-08-27
+## Current two-phase status — 2026-08-28
+
+The active chain is now:
+
+```text
+frozen pi_up / pi_down
+        -> frozen V_up / V_down
+        -> TRAIN-only learned Soft Tube
+        -> 50/50 phase-balanced Tube-RSI
+        -> one fresh pi_unified PPO
+```
+
+The learned Soft Tube is completed locally with 222 real TRAIN snapshots: 117
+upstream and 105 downstream. Its fixed sampling weight is
+`0.05 + 0.95 * value_score`; it used neither validation nor TEST data and is
+training guidance, not a certified safe Tube. The 16-interaction unified
+restore/step smoke is `GO` with 8 upstream and 8 downstream starts, no expert
+switching, and zero training transitions.
+
+The capacity-clean `pi_unified` pilot completed one fresh 25,600-transition
+Tube-RSI PPO block at
+`JIT/runs/pi_unified/pi_unified_pilot_25600_seed821001_ccd1024_20260828`.
+Its Actor, critic, and optimizer were fresh, no checkpoint was restored into
+training, the final checkpoint restored successfully, and all 25,600
+interactions were training interactions. The unified runtime used aggregate
+`naccdmax=1024`; the final log had zero CCD overflow warnings. This is not a
+trained-final-policy, learnability, safety, JCE, or JEL claim.
+
+| Capability | Current status |
+| --- | --- |
+| `pi_up`, `pi_down` | frozen; not retrained by this stage |
+| `V_up`, `V_down` | frozen and identity-bound; not retrained by this stage |
+| learned Soft Tube | `GO`; TRAIN-only, 222 real snapshots, non-certified guidance |
+| Tube-RSI | `GO`; deterministic weighted phase-local sampling and 16-step smoke |
+| `pi_unified` | one-block fresh engineering pilot `GO`; not a final policy claim |
+| TEST / final JCE/JEL | untouched / not claimed |
+
+Relevant commands:
+
+```bash
+bash JIT/scripts/local_preflight.sh
+
+XLA_PYTHON_CLIENT_PREALLOCATE=false MUJOCO_GL=egl PYTHONPATH=JIT/src \
+  /home/qy/mujoco_playground/.venv/bin/python JIT/cli/train_unified.py \
+  --config JIT/configs/pi_unified_pilot.json \
+  --run-id <unique-run-id>
+```
+
+Everything below is retained historical Phase U/Plan B context and does not
+override this status.
+
+## Historical Plan B decision — 2026-08-27
 
 The latest verified run is:
 
@@ -23,9 +74,8 @@ actor-only initialization, the 25,600-transition smoke, and the 42-state fixed
 panel. The panel produced 32 successes, 10 `roll_limit` physical failures, and
 0 timeouts; all failures came from the 4,988,928 source bank.
 
-The new stable Phase D reward implementation is present but has not yet been
-run in a new smoke or formal training run. Continuation labels, `V_up`/`V_down`,
-learned soft Tubes, unified PPO, and final JCE/JEL remain unimplemented.
+This was the status recorded before continuation labels, value models, the
+learned Soft Tube, and unified Tube-RSI were implemented.
 
 The execution guide is
 [`JIT/docs/plans/2026-08-27-jit-plan-b-execution-guide.md`](docs/plans/2026-08-27-jit-plan-b-execution-guide.md).
@@ -40,7 +90,7 @@ statements about handoff or Phase D do not override this status.
 | Handoff bank | 168 snapshots, 24 parents, 3 checkpoints; train/eval isolated by parent seed |
 | Phase D engineering | reset pool, actor-only init, 25,600 smoke, and 42-state fixed panel verified |
 | Phase D reward | stable code implemented; new-reward smoke/formal training not yet run |
-| Later stages | labels, `V_up`/`V_down`, soft Tube, unified PPO, JCE/JEL not implemented |
+| Later stages at that time | labels, `V_up`/`V_down`, soft Tube, unified PPO, JCE/JEL were not implemented |
 
 Next: run a new 25,600-transition smoke with the new reward, then repeat the
 42-state panel. Only after no regression should approximately 10.24M Phase D

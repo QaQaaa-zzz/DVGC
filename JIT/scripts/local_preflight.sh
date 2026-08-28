@@ -13,12 +13,14 @@ export PYTHONPATH="${JIT_ROOT}/JIT/src"
 from pathlib import Path
 
 from jit_dvgc.config import load_config
+from jit_dvgc.unified_training import load_unified_pilot_config
 
 legacy = load_config(Path("JIT/configs/phase_u_formal.json"))
 active = load_config(Path("JIT/configs/phase_u_absolute_5m.json"))
 smoke = load_config(Path("JIT/configs/phase_u_absolute_smoke.json"))
 continuation = load_config(Path("JIT/configs/phase_u_continuation_10m.json"))
 continuation_smoke = load_config(Path("JIT/configs/phase_u_continuation_smoke.json"))
+unified = load_unified_pilot_config(Path("JIT/configs/pi_unified_pilot.json"))
 if legacy.formal is None or legacy.formal.formal_blocks != 39:
     raise SystemExit("retained v2 formal configuration contract is invalid")
 if active.formal is None or active.formal.formal_blocks != 203:
@@ -60,6 +62,14 @@ if continuation_smoke.ppo.requested_transitions != continuation_smoke.ppo.block_
     raise SystemExit("active v4 smoke is not one exact PPO block")
 if continuation.model["naccdmax"] != 512 or continuation_smoke.model["naccdmax"] != 512:
     raise SystemExit("active v4 CCD capacity is invalid")
+if unified.ppo.requested_transitions != 25_600:
+    raise SystemExit("unified pilot target is invalid")
+if unified.ppo.block_transitions != 25_600:
+    raise SystemExit("unified pilot is not one exact PPO block")
+if unified.raw["initialization"]["restore_checkpoint"] is not None:
+    raise SystemExit("unified pilot is not fresh")
+if unified.runtime_naccdmax != 1024:
+    raise SystemExit("unified pilot CCD capacity is invalid")
 PY
 "${JIT_PYTHON}" - <<'PY'
 import ast

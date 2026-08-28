@@ -1,5 +1,49 @@
 # Findings and Decisions
 
+## 2026-08-28 learned Soft Tube and Tube-RSI
+
+- Current branch and cached remote-tracking ref both identify
+  `53fc9cba71bc3d7370ab55ab2d3f900a5eb15065`.
+- Unrelated dirty paths are `dvgc/phase_u_launch_diagnostic.py`,
+  `tests/test_phase_u_launch_diagnostic.py`, `.vscode/`,
+  `JIT/jit_continuation_labels_phase1.patch`, and
+  `docs/TWO_PHASE_REBUILD_GUIDE.md`; preserve all of them.
+- Frozen expert actor hashes match the corresponding value manifests:
+  `pi_up_star=f218775e...d9081` and `pi_down_star=7b25f54b...dd8be`.
+- The authoritative local XML hash is `0b56d367...e9c8a` and matches both
+  frozen experts plus the active JIT configs.
+- `V_up` and `V_down` artifacts are completed, bind params and normalization
+  hashes, record zero environment/training interactions, and declare
+  `test_data_used=false`.
+- JIT already provides strict handoff snapshot payload verification,
+  compatibility-checked `SnapshotPool`, and real MJX restore/step paths.
+- JIT has no learned Soft Tube or phase-balanced weighted sampler. The legacy
+  root `dvgc/feasibility.py` is reference-only and must not be imported.
+- Existing `TwoPhaseBikeEnv` selects Phase U versus Phase D statically from
+  config, so a unified mixed-reset environment must be added without expert
+  switching or synthetic qpos/qvel mutation.
+- Approved first weighting is `0.05 + 0.95 * value_score`; phase mass is
+  exactly 0.5 upstream and 0.5 downstream. Validation cannot tune either.
+- TEST rows remain excluded from selection, diagnostics, weighting, resets,
+  and PPO. Loaders may identify and discard their split before accessing
+  outcome/observation fields.
+- The completed Soft Tube contains 222 real TRAIN entries: 117 upstream and
+  105 downstream. Its manifest hash is `c1c1161e...df28b`; validation and TEST
+  use are both false and environment/training interaction counts are zero.
+- The completed Tube-RSI smoke is `GO`: exactly 8 upstream plus 8 downstream
+  restore/step interactions, all finite, no expert switching, and no training,
+  validation, or TEST use.
+- The fresh unified pilot uses one 25,600-transition block with 1,024 parallel
+  environments. Actor, critic, and optimizer all start fresh; Brax evaluation
+  is disabled and the only expected interaction count is training=25,600.
+- The first unified pilot completed its block and restored its checkpoint, but
+  its inherited aggregate `naccdmax=512` produced 1,385 overflow warnings and
+  requested capacity up to 572. That run is not the capacity-clean GO artifact.
+- Root cause is the unified 1,024-environment mixed-snapshot batch exceeding
+  the inherited v4 runtime capacity. The unified pilot now declares its own
+  `naccdmax=1024`; this changes no XML, collision geometry, reward, snapshot,
+  frozen expert, or frozen value-model identity.
+
 ## 2026-08-25 v4 10M revision
 
 - The user chose to replace v4 compatibility in place; old v4 results no
