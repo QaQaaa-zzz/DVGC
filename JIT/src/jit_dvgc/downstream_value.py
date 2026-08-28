@@ -92,20 +92,21 @@ def build_downstream_value_datasets(
     labels_path: Path,
     frozen_manifest: Path,
 ) -> tuple[ValueExamples, ValueExamples, dict[str, Any]]:
-    """Build TRAIN/validation V_down arrays while never selecting TEST rows."""
+    """Build TRAIN/validation V_down arrays while ignoring TEST rows entirely."""
     frozen = load_frozen_manifest(frozen_manifest)
     down_record = frozen["experts"]["pi_down_star"]
     actor_sha = str(down_record["actor_sha256"])
     rows = _load_rows(labels_path)
 
-    protocol_hashes = {str(row.get("protocol_sha256", "")) for row in rows}
-    if "" in protocol_hashes or len(protocol_hashes) != 1:
-        raise ValueError("V_down labels must share one continuation protocol")
     train_rows = [row for row in rows if str(row.get("split", "")) == "train"]
     validation_rows = [row for row in rows if str(row.get("split", "")) == "validation"]
-    test_rows = [row for row in rows if str(row.get("split", "")) == "test"]
-    if not train_rows or not validation_rows or not test_rows:
-        raise ValueError("V_down labels must contain train/validation/test splits")
+    if not train_rows or not validation_rows:
+        raise ValueError("V_down labels must contain TRAIN and validation rows")
+
+    selected_rows = [*train_rows, *validation_rows]
+    protocol_hashes = {str(row.get("protocol_sha256", "")) for row in selected_rows}
+    if "" in protocol_hashes or len(protocol_hashes) != 1:
+        raise ValueError("selected V_down TRAIN/validation labels must share one continuation protocol")
 
     train = _make_examples(train_rows, actor_sha256=actor_sha)
     validation = _make_examples(validation_rows, actor_sha256=actor_sha)
@@ -125,7 +126,6 @@ def build_downstream_value_datasets(
         "continuation_protocol_sha256": next(iter(protocol_hashes)),
         "train_count": train.count,
         "validation_count": validation.count,
-        "declared_test_count": len(test_rows),
         "observation_size": int(train.observations.shape[1]),
         "test_data_used": False,
     }
@@ -257,7 +257,7 @@ def train_downstream_value_model(
         "environment_interactions": 0,
         "training_transitions": 0,
         "test_data_used": False,
-        "model_selection_note": "first-pass fixed schedule; validation is reported and TEST remains untouched",
+        "model_selection_note": "first-pass fixed schedule; validation is reported and TEST rows are ignored",
     }
     manifest["manifest_sha256"] = canonical_sha256(manifest)
     (output_dir / "manifest.json").write_text(
