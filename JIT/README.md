@@ -28,13 +28,23 @@ interactions were training interactions. The unified runtime used aggregate
 `naccdmax=1024`; the final log had zero CCD overflow warnings. This is not a
 trained-final-policy, learnability, safety, JCE, or JEL claim.
 
+The formal unified run is now active at
+`JIT/runs/pi_unified/pi_unified_formal_10009600_seed821101_20260828_retry1`
+with an
+exact target of 10,009,600 transitions (391 blocks of 25,600), seed 821101,
+1,024 parallel environments, and `naccdmax=1024`. Checkpoints are scheduled at
+0, 1,024,000, 2,508,800, 5,017,600, 7,500,800, and 10,009,600. Each nonzero
+milestone runs a fixed TRAIN-only 8-up/8-down diagnostic panel and saves an
+x-z visitation plot. Brax evaluation, validation data, TEST data, and expert
+switching are disabled; milestone panels are not final-policy evaluation.
+
 | Capability | Current status |
 | --- | --- |
 | `pi_up`, `pi_down` | frozen; not retrained by this stage |
 | `V_up`, `V_down` | frozen and identity-bound; not retrained by this stage |
 | learned Soft Tube | `GO`; TRAIN-only, 222 real snapshots, non-certified guidance |
 | Tube-RSI | `GO`; deterministic weighted phase-local sampling and 16-step smoke |
-| `pi_unified` | one-block fresh engineering pilot `GO`; not a final policy claim |
+| `pi_unified` | fresh 10,009,600-transition training active; transition 0 verified |
 | TEST / final JCE/JEL | untouched / not claimed |
 
 Relevant commands:
@@ -44,9 +54,13 @@ bash JIT/scripts/local_preflight.sh
 
 XLA_PYTHON_CLIENT_PREALLOCATE=false MUJOCO_GL=egl PYTHONPATH=JIT/src \
   /home/qy/mujoco_playground/.venv/bin/python JIT/cli/train_unified.py \
-  --config JIT/configs/pi_unified_pilot.json \
+  --config JIT/configs/pi_unified_formal.json \
   --run-id <unique-run-id>
 ```
+
+The active persistent unit is
+`dvgc-jit-pi-unified-formal-10009600-retry1.service`. Inspect only declared
+milestones, completion, or abnormal exit.
 
 Everything below is retained historical Phase U/Plan B context and does not
 override this status.

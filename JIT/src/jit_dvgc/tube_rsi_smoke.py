@@ -12,14 +12,13 @@ import numpy as np
 from .unified_env import UnifiedTubeRSIEnv
 
 
-def _fixed_indices(count: int, requested: int) -> tuple[int, ...]:
+def fixed_indices(count: int, requested: int) -> tuple[int, ...]:
     if requested <= 0 or count < requested:
         raise ValueError("Tube-RSI smoke requires enough distinct entries per phase")
     if requested == 1:
         return (0,)
     return tuple(
-        int(index)
-        for index in np.linspace(0, count - 1, requested, dtype=np.int64)
+        int(index) for index in np.linspace(0, count - 1, requested, dtype=np.int64)
     )
 
 
@@ -60,7 +59,7 @@ def run_tube_rsi_smoke(
     records: list[dict[str, Any]] = []
     try:
         for phase_name, phase_index, count in phase_specs:
-            for entry_index in _fixed_indices(count, samples_per_phase):
+            for entry_index in fixed_indices(count, samples_per_phase):
                 state = reset(np.int32(phase_index), np.int32(entry_index))
                 next_state = step(state, action)
                 finite = bool(

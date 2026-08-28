@@ -9,14 +9,39 @@ engineering pilot only if every preceding gate is GO.
 
 ## Next Step
 
-Complete final artifact/Git index verification and create one larger JIT-only
-milestone commit without staging unrelated user-owned paths.
+Sparse-monitor the active fresh 10,009,600-transition unified Tube-RSI run at
+declared checkpoints. Treat its milestone panels as TRAIN diagnostics only;
+reserve independent evaluation for the frozen final policy.
 
 ## Current Phase
 
-Phase 18: learned Soft Tube and unified Tube-RSI
+Phase 20: formal 10M+ unified Tube-RSI PPO
 
 ## Phases
+
+### Phase 20: formal 10M+ unified Tube-RSI PPO
+
+- [x] Bind a fresh single-Actor config to 391 exact 25,600-transition blocks.
+- [x] Add ordered checkpoints and fixed 8-up/8-down TRAIN-only panels at five
+  nonzero milestones, with Brax evaluation disabled.
+- [x] Pass focused tests, full preflight, real artifact assembly, and GPU checks.
+- [x] Persistently launch and verify the fresh transition-0 checkpoint.
+- [ ] Inspect only declared milestones, completion, or abnormal exit.
+- [ ] After completion, freeze the final policy and define the independent
+  evaluation protocol before any JCE/JEL statement.
+- **Status:** active training
+
+### Phase 19: unified policy TRAIN-panel evidence and continued-training protocol
+
+- [x] Add RED tests for both-phase fixed selection, terminal-correct rollout,
+  TRAIN-only exclusion, interaction accounting, and literal XZ overlay.
+- [x] Implement the bounded frozen-checkpoint panel and diagnostic CLI.
+- [x] Run full JIT preflight and the predeclared 8-up/8-down real panel.
+- [x] Analyze coverage, phase transitions, terminal causes, and PPO evidence.
+- [x] Define the next persistent unified-training contract after the user
+  explicitly required at least 10M transitions.
+- [x] Deliver the diagnostic/formal-launch work as one larger JIT-only commit.
+- **Status:** complete
 
 ### Phase 18: learned Soft Tube and unified Tube-RSI
 

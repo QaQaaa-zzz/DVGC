@@ -1,5 +1,75 @@
 # Progress Log
 
+## Session: 2026-08-28 continued unified-policy evidence
+
+### Phase 20: active formal 10M+ unified Tube-RSI PPO
+
+- **Status:** active training
+- The user explicitly required a training scale of at least ten million steps.
+  The exact aligned target is 10,009,600 = 391 x 25,600 transitions.
+- Added the fresh-only `pi_unified_formal.json` contract with seed 821101,
+  1,024 parallel environments, `naccdmax=1024`, one Actor, and unchanged pilot
+  PPO hyperparameters. No expert switching, validation data, or TEST data is
+  used.
+- Added six identity-bound checkpoints at transitions 0, 1,024,000,
+  2,508,800, 5,017,600, 7,500,800, and 10,009,600. The five nonzero milestones
+  run fixed 8-up/8-down TRAIN panels and save literal x-z visitation plots;
+  these are diagnostics, not independent evaluation.
+- RED: three expected failures because the unified formal module/config did
+  not exist. GREEN: 10 combined formal/pilot/diagnostic tests passed; focused
+  Ruff passed.
+- Final pre-launch local preflight passed 362 non-GPU and 14 GPU tests. Real
+  assembly confirmed the GPU backend, 117 upstream + 105 downstream Tube
+  entries, exact config/Tube/XML identities, 391 blocks, and Brax evaluation
+  disabled.
+- The first persistent launch failed closed before a nonzero checkpoint when
+  Brax emitted its in-epoch episode callback before the shared ordered policy
+  callback. Its ledger certifies zero completed transitions; device execution
+  may have entered at most one 25,600-transition block, which is not counted as
+  formal completed training. The failed artifact remains retained.
+- Added a real-order regression: episode metrics now persist independently
+  before the checkpointable policy callback, while only the latter advances
+  the formal training ledger. Repeated full preflight passed 362 non-GPU and
+  14 GPU tests.
+- Persistent user service
+  `dvgc-jit-pi-unified-formal-10009600-retry1.service` launched the wholly
+  fresh run `pi_unified_formal_10009600_seed821101_20260828_retry1`; it did not
+  restore the failed transition-0 checkpoint.
+- Retry1 crossed the first declared checkpoint at transition 1,024,000 and
+  continued beyond 1,203,200 while remaining active. The milestone TRAIN panel
+  consumed 491 diagnostic interactions and reported 3/16 recovery successes,
+  9/16 physical failures, 11/16 Apex-seen, and 3/16 phase transitions. Exact
+  endings: recovery-success 3, roll-limit 8, pitch-limit 1, stuck 4.
+
+### Phase 19: frozen-pilot TRAIN panel and XZ visitation
+
+- **Status:** in_progress
+- User explicitly requested uninterrupted continuation after the Soft Tube,
+  Tube-RSI, and one-block pilot milestone.
+- The next safe evidence step is a frozen-checkpoint deterministic panel over
+  fixed TRAIN Tube starts. It does not choose a full PPO budget, train, inspect
+  validation/TEST, or invoke either expert.
+- RED: three focused failures because `jit_dvgc.unified_diagnostic` did not
+  exist. GREEN: 9 unified-diagnostic/Tube-smoke tests passed after adding
+  both-phase terminal-correct rollout, exact accounting, TRAIN-only validation,
+  and literal XZ trajectory plotting.
+- Pre-run verification passed: Ruff reported no findings; local preflight
+  passed 359 non-GPU and 14 GPU tests.
+- Predeclared fixed-panel diagnostic:
+  - purpose: measure deterministic frozen-pilot visitation and terminal causes
+    from fixed TRAIN-only Soft Tube starts;
+  - inputs: unified config `16b12ca1...cca47`, transition-25,600 checkpoint
+    payload `78d967dd...4d9aa`, and Soft Tube `c1c1161e...df28b`;
+  - interaction ceiling: 16 rollouts times 400 steps = 6,400 diagnostic
+    interactions; zero training/evaluation interactions;
+  - stopping condition: each rollout stops at its actual terminal or the
+    unchanged 400-step global ceiling;
+  - output: `JIT/runs/pi_unified_diagnostic/pi_unified_pilot_train_panel_8x2_20260828`.
+- The panel completed after 454 diagnostic interactions: 2/16 success, 11/16
+  physical failure, 12/16 Apex-seen, and 4/16 phase transitions. Exact endings
+  were upstream stuck 3, pitch-limit 2, roll-limit 3; downstream roll-limit 6
+  and recovery-success 2. This proves end-to-end execution, not convergence.
+
 ## Session: 2026-08-28
 
 ### Phase 18: learned Soft Tube and unified Tube-RSI

@@ -13,6 +13,7 @@ export PYTHONPATH="${JIT_ROOT}/JIT/src"
 from pathlib import Path
 
 from jit_dvgc.config import load_config
+from jit_dvgc.unified_formal import load_unified_formal_config
 from jit_dvgc.unified_training import load_unified_pilot_config
 
 legacy = load_config(Path("JIT/configs/phase_u_formal.json"))
@@ -21,6 +22,7 @@ smoke = load_config(Path("JIT/configs/phase_u_absolute_smoke.json"))
 continuation = load_config(Path("JIT/configs/phase_u_continuation_10m.json"))
 continuation_smoke = load_config(Path("JIT/configs/phase_u_continuation_smoke.json"))
 unified = load_unified_pilot_config(Path("JIT/configs/pi_unified_pilot.json"))
+unified_formal = load_unified_formal_config(Path("JIT/configs/pi_unified_formal.json"))
 if legacy.formal is None or legacy.formal.formal_blocks != 39:
     raise SystemExit("retained v2 formal configuration contract is invalid")
 if active.formal is None or active.formal.formal_blocks != 203:
@@ -70,6 +72,14 @@ if unified.raw["initialization"]["restore_checkpoint"] is not None:
     raise SystemExit("unified pilot is not fresh")
 if unified.runtime_naccdmax != 1024:
     raise SystemExit("unified pilot CCD capacity is invalid")
+if unified_formal.ppo.requested_transitions != 10_009_600:
+    raise SystemExit("formal unified target is not 10M+")
+if unified_formal.ppo.requested_transitions // unified_formal.ppo.block_transitions != 391:
+    raise SystemExit("formal unified block schedule is invalid")
+if unified_formal.raw["initialization"]["restore_checkpoint"] is not None:
+    raise SystemExit("formal unified run is not fresh")
+if unified_formal.raw["claim_boundary"]["test_data_used"] is not False:
+    raise SystemExit("formal unified run does not exclude TEST data")
 PY
 "${JIT_PYTHON}" - <<'PY'
 import ast
