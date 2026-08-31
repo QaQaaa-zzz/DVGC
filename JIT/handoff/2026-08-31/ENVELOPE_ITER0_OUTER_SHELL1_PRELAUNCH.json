@@ -80,12 +80,23 @@
     "positive_semantics": "upstream requires Apex phase transition followed by downstream stable-recovery terminal success; downstream requires stable-recovery terminal success",
     "alive_only_is_positive": false
   },
+  "transition_band_readiness": {
+    "evaluated_per_phase_on_accumulated_expansion_train_labels": true,
+    "minimum_positive_candidates": 20,
+    "minimum_negative_candidates": 20,
+    "minimum_parent_groups_with_positive": 3,
+    "minimum_parent_groups_with_negative": 3,
+    "reason": "A continuation field should not be fit or calibrated from a label-degenerate shell or from failures isolated to one trajectory family.",
+    "phasewise_stopping": true,
+    "resolved_phase_rule": "A phase satisfying all four minima stops outward TRAIN probing and is frozen for subsequent group-disjoint validation design.",
+    "unresolved_phase_rule": "Only a phase that fails the readiness criteria may continue a separately predeclared duration-only outer-shell search; policy, Tube_0, action axes, signs, strengths, physics, reward, and task semantics remain fixed."
+  },
   "decision_rule": {
     "do_not_train_continuation_field_if_labels_remain_degenerate": true,
     "purpose": "obtain both successful and failed real-dynamics states near the policy-conditioned continuation frontier before fitting C_up^0/C_down^0",
     "no_posthoc_axis_targeting_from_single_inner_shell_failure": true,
     "next_if_outer_shell_still_overwhelmingly_positive": "continue a separately predeclared duration-only outer shell rather than changing reward, physics, policy, Tube_0, action axes, or perturbation strengths",
-    "next_if_transition_band_observed": "freeze accumulated TRAIN labels and design group-disjoint expansion validation before continuation-field fitting/calibration"
+    "next_if_transition_band_observed": "freeze accumulated TRAIN labels for each phase that meets transition-band readiness and design group-disjoint expansion validation before continuation-field fitting/calibration"
   },
   "claim_boundary": {
     "training_only_search": true,
