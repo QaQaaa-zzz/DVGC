@@ -43,7 +43,8 @@ FORMAL_SCHEMA = "jit_pi_unified_formal_v1"
 FORMAL_TARGET = 10_009_600
 FORMAL_CHECKPOINTS = (0, 1_024_000, 2_508_800, 5_017_600, 7_500_800, FORMAL_TARGET)
 FORMAL_TRAIN_PANELS = FORMAL_CHECKPOINTS[1:]
-RESET_MIXTURE_SCHEMA = "jit_pi_unified_round1_reset_mix_v1"
+LEGACY_ROUND1_RESET_MIXTURE_SCHEMA = "jit_pi_unified_round1_reset_mix_v1"
+RESET_MIXTURE_SCHEMA = "jit_pi_unified_reset_mix_v1"
 ROUND1_NATURAL_RESET_PROBABILITY = 0.10
 ROUND1_SOFT_TUBE_PROBABILITY = 0.90
 ROUND0_FAILURE_EVIDENCE = "PI_UP_APEX_UNIFIED_PRE_JUMP_FAIL"
@@ -103,34 +104,70 @@ def _load_reset_mixture(payload: Mapping[str, Any]) -> UnifiedResetMixture:
             natural_reset_probability=0.0,
             soft_tube_probability=1.0,
         )
-    expected = {
-        "schema": RESET_MIXTURE_SCHEMA,
+    if not isinstance(raw, Mapping):
+        raise ValueError("unified reset mixture must be an object")
+
+    schema = raw.get("schema")
+    if schema == LEGACY_ROUND1_RESET_MIXTURE_SCHEMA:
+        expected = {
+            "schema": LEGACY_ROUND1_RESET_MIXTURE_SCHEMA,
+            "selection": "bernoulli_per_episode",
+            "natural_reset_probability": ROUND1_NATURAL_RESET_PROBABILITY,
+            "soft_tube_probability": ROUND1_SOFT_TUBE_PROBABILITY,
+            "natural_reset_semantics": "existing_phase_u_natural_reset",
+            "soft_tube_semantics": "existing_phase_balanced_value_weighted_tube_rsi",
+            "single_variable": "reset_distribution_only",
+        }
+        if raw != expected:
+            raise ValueError("unified reset mixture contract drift")
+        boundary = payload.get("claim_boundary", {})
+        if boundary.get("round1_single_variable_iteration") is not True:
+            raise ValueError(
+                "legacy Round-1 mixed reset requires the Round-1 single-variable boundary"
+            )
+        if boundary.get("round0_failure_evidence") != ROUND0_FAILURE_EVIDENCE:
+            raise ValueError(
+                "legacy Round-1 mixed reset is not bound to the locked Round-0 diagnosis"
+            )
+        return UnifiedResetMixture(
+            selection="bernoulli_per_episode",
+            natural_reset_probability=ROUND1_NATURAL_RESET_PROBABILITY,
+            soft_tube_probability=ROUND1_SOFT_TUBE_PROBABILITY,
+        )
+
+    if schema != RESET_MIXTURE_SCHEMA:
+        raise ValueError("unsupported unified reset mixture schema")
+    expected_keys = {
+        "schema",
+        "selection",
+        "natural_reset_probability",
+        "soft_tube_probability",
+        "natural_reset_semantics",
+        "soft_tube_semantics",
+        "single_variable",
+    }
+    if set(raw) != expected_keys:
+        raise ValueError("unified reset mixture fields drift")
+    expected_fixed = {
         "selection": "bernoulli_per_episode",
-        "natural_reset_probability": ROUND1_NATURAL_RESET_PROBABILITY,
-        "soft_tube_probability": ROUND1_SOFT_TUBE_PROBABILITY,
         "natural_reset_semantics": "existing_phase_u_natural_reset",
         "soft_tube_semantics": "existing_phase_balanced_value_weighted_tube_rsi",
         "single_variable": "reset_distribution_only",
     }
-    if raw != expected:
-        raise ValueError("unified reset mixture contract drift")
-    if not math.isclose(
-        float(raw["natural_reset_probability"])
-        + float(raw["soft_tube_probability"]),
-        1.0,
-        rel_tol=0.0,
-        abs_tol=1.0e-12,
-    ):
+    if any(raw.get(key) != value for key, value in expected_fixed.items()):
+        raise ValueError("unified reset mixture semantics drift")
+    natural = float(raw["natural_reset_probability"])
+    soft = float(raw["soft_tube_probability"])
+    if not math.isfinite(natural) or not math.isfinite(soft):
+        raise ValueError("unified reset probabilities must be finite")
+    if not (0.0 < natural < 1.0) or not (0.0 < soft < 1.0):
+        raise ValueError("unified mixed reset probabilities must be strictly between zero and one")
+    if not math.isclose(natural + soft, 1.0, rel_tol=0.0, abs_tol=1.0e-12):
         raise ValueError("unified reset probabilities must sum to one")
-    boundary = payload.get("claim_boundary", {})
-    if boundary.get("round1_single_variable_iteration") is not True:
-        raise ValueError("unified mixed reset requires the Round-1 single-variable boundary")
-    if boundary.get("round0_failure_evidence") != ROUND0_FAILURE_EVIDENCE:
-        raise ValueError("unified mixed reset is not bound to the locked Round-0 diagnosis")
     return UnifiedResetMixture(
         selection="bernoulli_per_episode",
-        natural_reset_probability=ROUND1_NATURAL_RESET_PROBABILITY,
-        soft_tube_probability=ROUND1_SOFT_TUBE_PROBABILITY,
+        natural_reset_probability=natural,
+        soft_tube_probability=soft,
     )
 
 
