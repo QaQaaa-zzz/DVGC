@@ -25,6 +25,7 @@ from .observation import (
     HistoryState,
     actor_observation,
     advance_history,
+    initial_history,
     observable_frame,
     privileged_observation,
 )
@@ -35,6 +36,7 @@ from .semantics import (
     TerminalInputs,
     advance_events,
     classify_terminal,
+    initial_event_state,
 )
 from .soft_tube import SoftTubeArtifact
 from .tube_rsi import PHASE_DOWNSTREAM, PHASE_UPSTREAM, TubeRSIPool
@@ -237,18 +239,64 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
             phase_state.replace(info=info, metrics=metrics), soft_tube=False
         )
 
-    @staticmethod
-    def _select_reset_state(
-        use_natural: jax.Array,
-        natural_state: mjx_env.State,
-        tube_state: mjx_env.State,
-    ) -> mjx_env.State:
-        """Select one reset without placing MJX/Warp forward inside batched cond."""
-        return jax.tree.map(
-            lambda natural, tube: jp.where(use_natural, natural, tube),
-            natural_state,
-            tube_state,
+    def _natural_reset_sample(self, rng: jax.Array, tube_sample) -> dict[str, Any]:
+        """Build the natural reset as pre-forward arrays matching the Tube sample."""
+        index = self._bundle.model_index
+        qpos = jp.asarray(
+            self.mj_model.key_qpos[index.keyframe_id], dtype=jp.float32
         )
+        qvel = jp.asarray(
+            self.mj_model.key_qvel[index.keyframe_id], dtype=jp.float32
+        )
+        qvel = qvel.at[index.root_dof_address].set(
+            jp.asarray(self._resolved_config.reset.initial_forward_velocity, jp.float32)
+        )
+        qvel = qvel.at[index.root_dof_address + 2].set(
+            jp.asarray(0.0, jp.float32)
+        )
+        last_action = jp.zeros((4,), dtype=jp.float32)
+        ctrl = map_action(
+            last_action,
+            qpos[index.knee_qpos_address],
+            self._bundle.action_mapping,
+        )
+        history = initial_history()
+        events = initial_event_state(qpos[index.root_qpos_address], self._resolved_config)
+        minus_one = jp.asarray(-1, jp.int32)
+        return {
+            "qpos": qpos,
+            "qvel": qvel,
+            "ctrl": ctrl,
+            "observation_fifo": history.frames,
+            "history_valid_count": history.valid_count,
+            "events": {
+                name: jp.asarray(getattr(events, name))
+                for name in tube_sample["events"]
+            },
+            "tube_phase": jp.asarray(PHASE_UPSTREAM, jp.int32),
+            "rng": rng,
+            "last_action": last_action,
+            "tick": minus_one,
+            "parent_group_index": minus_one,
+            "tube_entry_index": minus_one,
+            "tube_global_index": minus_one,
+        }
+
+    @staticmethod
+    def _select_reset_sample(
+        use_natural: jax.Array,
+        natural_sample: dict[str, Any],
+        tube_sample: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Choose pre-forward reset data so each vmapped reset runs one Warp forward."""
+        return {
+            key: jax.tree.map(
+                lambda natural, tube: jp.where(use_natural, natural, tube),
+                natural_sample[key],
+                tube_sample[key],
+            )
+            for key in natural_sample
+        }
 
     def reset(self, rng: jax.Array) -> mjx_env.State:
         if self._natural_reset_probability == 0.0:
@@ -257,13 +305,13 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
         use_natural = jax.random.bernoulli(
             decision_key, self._natural_reset_probability
         )
-        # A vmapped lax.cond batches its predicate and traces both MJX/Warp
-        # forward branches under control flow. Warp rejects that path. Execute
-        # the already contract-matched reset branches normally, then select
-        # their dynamic leaves; the chosen reset semantics and RNG are unchanged.
-        natural_state = self._reset_natural_unified(reset_key)
-        tube_state = self._reset_tube(reset_key)
-        return self._select_reset_state(use_natural, natural_state, tube_state)
+        tube_sample = self._tube_pool.sample(reset_key)
+        natural_sample = self._natural_reset_sample(reset_key, tube_sample)
+        selected_sample = self._select_reset_sample(
+            use_natural, natural_sample, tube_sample
+        )
+        state = self._reset_from_tube_sample(selected_sample)
+        return self._with_reset_source(state, soft_tube=~use_natural)
 
     def reset_tube_index(
         self, phase_index: jax.Array | int, entry_index: jax.Array | int
