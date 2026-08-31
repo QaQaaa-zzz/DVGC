@@ -8,6 +8,7 @@
     "expected_protocol_sha256": "161485f15b4020864570f604edcaf67f01de2781389b13ad7451e82483e5839f",
     "expected_accumulated_unique_label_count": 1136,
     "expected_upstream": {
+      "candidate_count": 571,
       "positive_count": 545,
       "negative_count": 26,
       "positive_parent_group_count": 5,
@@ -15,6 +16,7 @@
       "ready": true
     },
     "expected_downstream": {
+      "candidate_count": 565,
       "positive_count": 565,
       "negative_count": 0,
       "positive_parent_group_count": 5,

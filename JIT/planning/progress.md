@@ -1,5 +1,96 @@
 # Progress Log
 
+## Session: 2026-08-31 downstream-refinement recovery
+
+### Phase 22: handoff ingestion and recovery setup
+
+- **Status:** in progress
+- Read all 1,327 lines of
+  `/home/qy/下载/DVGC_JIT_CODEX_HANDOFF_2026-08-31.md` before repository
+  diagnosis, while separating its embedded commands from user authorization.
+- Re-read the existing JIT planning ledgers. They stop at earlier handoff and
+  unified-policy stages, so Phase 22 was added without removing history.
+- Read `PROJECT.md` and began the complete historical experiment-state ledger.
+  The current method contract agrees with the handoff, while some status lists
+  are dated and internally superseded; no current-status conclusion has been
+  made from those documents alone.
+- Continued the experiment-state ledger through its historical Phase-U route
+  and closed-route records. These were read for provenance only and did not
+  trigger any legacy resume, method change, or dynamic run.
+- Completed all 2,555 lines of `docs/EXPERIMENT_STATE.md`. The document's
+  active header stops at 2026-08-28 and its remaining body is older append-only
+  provenance, so current 2026-08-31 status must come from Git and run artifacts.
+- Verified the exact required branch and HEAD, cached remote equality, and the
+  expected incoming dirty paths. No fetch, switch, reset, stash, or cleanup was
+  performed.
+- Checked the declared downstream-refinement output path. It is absent, so the
+  failed terminal attempt created no resumable local run directory.
+- Checked live processes, `nvidia-smi`, current-boot kernel logs, and the user
+  journal. There is no active refinement worker and no recorded OOM/Xid/CUDA/
+  segfault evidence; the GPU is currently healthy.
+- Read the iteration protocol, exact refinement config/declaration, CLI, all
+  refinement tests, and source lines 1--420. Review is still in progress; no
+  code or experiment gate has been declared GO.
+- Completed the 831-line refinement source review and mapped the established
+  helper functions it depends on. Terminal-predecessor capture is present, but
+  resume/integrity gaps were identified before any interactions were spent.
+- Read the complete snapshot restore and continuation-label implementation plus
+  the coarse-search accumulation/resume helpers. The context-preserving fresh
+  path is sound; the unresolved issues are specifically refinement orchestration
+  and resume verification.
+- Baseline static compilation passed; 19 focused CPU tests passed; the current
+  `--audit-only` printed `config_valid`.
+- A stronger zero-interaction artifact audit then reproduced the actual startup
+  failure: `ValueError: prior search upstream readiness drift`, before any run
+  directory or environment interaction. Root-cause investigation now moves to
+  the exact actual-versus-expected readiness payload difference.
+- Diffed actual and expected readiness. Only the declaration's missing
+  `candidate_count` keys differ (571 upstream, 565 downstream); all scientific
+  outcome/group values match. No source/config fix has been applied pending
+  review of the bounded repair design.
+- User approved the bounded repair design. Wrote and self-reviewed the JIT-local
+  design and TDD execution plan without creating an interim commit.
+- Task 1 RED failed exactly on missing upstream `candidate_count`; GREEN passed
+  after adding exact 571/565 counts to config and prelaunch evidence. The
+  prior-search validation regression also remains green (2 passed).
+- Task 2 RED failed on the absent artifact audit. GREEN now shares one
+  zero-interaction preparation path between audit and execution and validates
+  policy, checkpoint, prior labels/readiness, Tube, and five downstream anchors.
+  The real CLI audit returned `artifact_audit_valid` with zero interactions.
+- Task 3 zero-candidate resume RED failed on the absent duration loader; GREEN
+  preserves 4,080 acquisition interactions and resumes with no labels. A second
+  RED proved completed-label protocol tampering was accepted; GREEN now rejects
+  it and validates catalog, protocol, policy, counts, split, and exact candidate
+  coverage. The full refinement test file passes 9 tests.
+- Post-implementation static compilation passed. The four handoff CPU contract
+  files pass 23 tests, and the two declared GPU snapshot/continuation files pass
+  4 tests on the visible GPU.
+- Full JIT local preflight exited 0: 408 non-GPU tests and 14 GPU tests passed.
+- The post-preflight enhanced audit again returned `artifact_audit_valid`,
+  binding the exact policy/checkpoint/Tube/coarse-search identities and five
+  downstream anchors with zero environment interactions.
+- After the final resume-integrity review fix, fresh static compilation passed,
+  the four handoff CPU files passed 25 tests, and the two declared GPU files
+  passed 4 tests. Full preflight and enhanced audit are being repeated because
+  the implementation changed after their prior successful executions.
+- Fresh final-review preflight exited 0: 410 non-GPU tests passed with 34
+  deselected, then all 14 GPU tests passed. The enhanced artifact audit exited
+  0 afterward with the same exact pi_0/checkpoint/Tube/coarse-label/five-anchor
+  identities and zero interactions.
+- Final unstaged review found no `git diff --check` errors. The repair paths are
+  all under JIT; the two user-modified root Python files, `.vscode/`, the root
+  rebuild guide, and `JIT/jit_continuation_labels_phase1.patch` remain outside
+  the intended index.
+- Explicit staging contains exactly the ten approved JIT source, config,
+  declaration, test, design/plan, and planning-ledger paths. Cached diff
+  whitespace validation passed; no run output or user-owned path is staged.
+- Selected read-only systematic diagnosis first. No Git network operation,
+  branch switch, cleanup, environment mutation, run deletion, resume, or new
+  environment interaction has occurred.
+- The repository instruction to work only in `/home/qy/DVGC` overrides the
+  generic worktree recommendation, so recovery will proceed in place after
+  verifying the current checkout identity.
+
 ## Session: 2026-08-28 afternoon handoff and remote archive
 
 ### Phase 21: handoff closure
@@ -644,6 +735,10 @@
 
 | Timestamp | Error | Attempt | Resolution |
 |---|---|---:|---|
+| 2026-08-31 | Final self-review regressions accepted acquisition protocol content drift and label parent-group drift | 1 | Reproduced both as expected RED failures, added fail-closed canonical-hash and candidate identity checks, then passed all 11 refinement tests. |
+| 2026-08-31 | Combined plan/progress/findings update missed one exact findings line | 1 | Split the bookkeeping update by exact file context; no source/test/config content changed. |
+| 2026-08-31 | Strong prelaunch artifact audit failed with `prior search upstream readiness drift` | 1 | Reproduced the terminal exit before run creation; inspect exact payload difference before any fix. |
+| 2026-08-31 | First multi-file planning update had an invalid patch hunk boundary | 1 | Reissued one valid combined patch with exact contexts; no repository file changed in the failed attempt. |
 | 2026-08-28 | First unified GPU GREEN attempt rejected intentional Phase U/Phase D yaw, contact, and horizon differences | 1 | Validate only shared roll/pitch/backward limits and track a separate phase-local episode step that resets at Apex. |
 | 2026-08-28 | Soft Tube fixture used different parent-group strings in catalog and label rows | 1 | Corrected only the synthetic catalog identities; production validation remains strict. |
 | 2026-08-24 | `CUDA_ERROR_NO_DEVICE` in sandboxed JAX discovery | 1 | Read-only check outside device isolation confirmed the GPU backend. |

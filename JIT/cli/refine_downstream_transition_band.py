@@ -9,7 +9,7 @@ from pathlib import Path
 import jax
 
 from jit_dvgc.downstream_transition_refinement import (
-    load_downstream_refinement_config,
+    audit_downstream_transition_refinement,
     search_downstream_transition_refinement,
 )
 
@@ -29,19 +29,10 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    config = load_downstream_refinement_config(args.config)
     if args.audit_only:
         print(
             json.dumps(
-                {
-                    "status": "config_valid",
-                    "schema": config["schema"],
-                    "iteration": config["iteration"],
-                    "output_dir": config["output_dir"],
-                    "duration_grid": config["fixed_acquisition"]["duration_grid"],
-                    "terminal_clipping": config["fixed_acquisition"]["terminal_clipping"],
-                    "readiness": config["readiness"],
-                },
+                audit_downstream_transition_refinement(args.config),
                 indent=2,
                 sort_keys=True,
             )

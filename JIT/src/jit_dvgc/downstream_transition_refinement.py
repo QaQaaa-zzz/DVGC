@@ -28,7 +28,10 @@ from .constants import ACTION_ORDER, END_REASONS
 from .ppo import make_checkpoint_policy
 from .soft_tube import load_soft_tube
 from .unified_boundary import TubeBoundaryAnchor, select_tube_boundary_anchors
-from .unified_continuation_labels import label_unified_continuations
+from .unified_continuation_labels import (
+    label_unified_continuations,
+    validate_unified_boundary_catalog,
+)
 from .unified_envelope_snapshot import (
     capture_unified_envelope_snapshot,
     physical_state_sha256,
@@ -239,6 +242,301 @@ def _validate_prior_search(
         "readiness": summary["readiness"],
     }
     return [dict(row) for row in rows], identity
+
+
+def _prepare_downstream_refinement(config_path: Path) -> dict[str, Any]:
+    """Validate every zero-interaction input shared by audit and execution."""
+    config_path = Path(config_path)
+    config = load_downstream_refinement_config(config_path)
+    frozen_path = Path(config["frozen_policy"])
+    frozen = load_frozen_unified_manifest(frozen_path)
+    policy_record = frozen["policy"]
+    if int(policy_record["iteration"]) != int(config["iteration"]):
+        raise ValueError("downstream refinement policy iteration drift")
+
+    prior_labels, prior_identity = _validate_prior_search(config, policy_record)
+    formal = load_unified_formal_config(Path(policy_record["formal_config"]))
+    if formal.config_sha256 != policy_record["formal_config_sha256"]:
+        raise ValueError("downstream refinement frozen policy/formal config drift")
+    artifact = load_soft_tube(Path(formal.soft_tube_path))
+    if artifact.manifest["manifest_sha256"] != formal.soft_tube_manifest_sha256:
+        raise ValueError("downstream refinement formal config/source Tube drift")
+    if artifact.manifest["manifest_sha256"] != config["source_tube_manifest_sha256"]:
+        raise ValueError("downstream refinement source Tube identity drift")
+
+    checkpoint_path = Path(policy_record["checkpoint"])
+    checkpoint_payload_sha256 = file_sha256(checkpoint_path / "payload.pkl")
+    if checkpoint_payload_sha256 != policy_record["payload_sha256"]:
+        raise ValueError("downstream refinement checkpoint payload drift")
+
+    anchors_all, anchor_audit = select_tube_boundary_anchors(
+        artifact,
+        max_per_phase=int(config["fixed_acquisition"]["anchors_per_phase"]),
+        frontier_score_ceiling=float(
+            config["fixed_acquisition"]["frontier_score_ceiling"]
+        ),
+    )
+    anchors = tuple(anchor for anchor in anchors_all if anchor.phase == "downstream")
+    if not anchors:
+        raise ValueError("downstream refinement selected no downstream anchors")
+
+    return {
+        "config_path": config_path,
+        "config": config,
+        "frozen_path": frozen_path,
+        "policy_record": policy_record,
+        "prior_labels": prior_labels,
+        "prior_identity": prior_identity,
+        "formal": formal,
+        "artifact": artifact,
+        "checkpoint_payload_sha256": checkpoint_payload_sha256,
+        "anchors": anchors,
+        "anchor_audit": anchor_audit,
+    }
+
+
+def audit_downstream_transition_refinement(config_path: Path) -> dict[str, Any]:
+    """Validate declared refinement inputs without MJX or environment interactions."""
+    prepared = _prepare_downstream_refinement(config_path)
+    config = prepared["config"]
+    policy_record = prepared["policy_record"]
+    artifact = prepared["artifact"]
+    anchors = prepared["anchors"]
+    return {
+        "schema": DOWNSTREAM_REFINEMENT_PROTOCOL_SCHEMA,
+        "status": "artifact_audit_valid",
+        "repository_head": _repository_head(),
+        "config_path": str(prepared["config_path"]),
+        "config_file_sha256": file_sha256(prepared["config_path"]),
+        "output_dir": str(config["output_dir"]),
+        "iteration": int(config["iteration"]),
+        "frozen_policy_path": str(prepared["frozen_path"]),
+        "frozen_policy_file_sha256": file_sha256(prepared["frozen_path"]),
+        "policy_name": str(policy_record["name"]),
+        "policy_actor_sha256": str(policy_record["actor_sha256"]),
+        "policy_payload_sha256": str(policy_record["payload_sha256"]),
+        "policy_formal_config_sha256": str(policy_record["formal_config_sha256"]),
+        "checkpoint_payload_sha256": prepared["checkpoint_payload_sha256"],
+        "source_tube_manifest_sha256": artifact.manifest["manifest_sha256"],
+        "prior_search": prepared["prior_identity"],
+        "downstream_anchor_count": len(anchors),
+        "downstream_anchor_identities": [
+            {
+                "entry_index": anchor.entry_index,
+                "global_index": anchor.global_index,
+                "parent_group_id": anchor.parent_group_id,
+                "state_sha256": anchor.state_sha256,
+                "bootstrap_value_score": anchor.value_score,
+            }
+            for anchor in anchors
+        ],
+        "training_transitions": 0,
+        "environment_interactions": 0,
+        "claim_boundary": config["claim_boundary"],
+    }
+
+
+def _load_completed_duration(
+    duration_root: Path,
+    *,
+    duration: int,
+    policy_record: Mapping[str, Any],
+    frozen_manifest_sha256: str,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Load one duration-level checkpoint or fail closed on partial evidence."""
+    duration_root = Path(duration_root)
+    duration_summary_path = duration_root / "duration_summary.json"
+    if not duration_summary_path.exists():
+        raise ValueError(f"cannot resume incomplete downstream duration {duration}")
+    duration_summary = _read_json(duration_summary_path)
+    if int(duration_summary.get("duration", -1)) != int(duration):
+        raise ValueError(f"downstream duration {duration} summary identity drift")
+
+    acquisition_root = duration_root / "acquisition"
+    acquisition_protocol = _read_json(acquisition_root / "protocol.json")
+    catalog = _read_json(acquisition_root / "catalog.json")
+    acquisition_summary = _read_json(acquisition_root / "summary.json")
+    if acquisition_protocol.get("schema") != BOUNDARY_PROTOCOL_SCHEMA:
+        raise ValueError(f"downstream duration {duration} acquisition protocol drift")
+    if acquisition_protocol.get("status") != "predeclared":
+        raise ValueError(f"downstream duration {duration} acquisition protocol status drift")
+    if acquisition_protocol.get("split") != "train":
+        raise ValueError(f"downstream duration {duration} acquisition split drift")
+    if tuple(int(value) for value in acquisition_protocol.get("durations", ())) != (
+        int(duration),
+    ):
+        raise ValueError(f"downstream duration {duration} acquisition duration drift")
+    for key, expected in (
+        ("iteration", int(policy_record["iteration"])),
+        ("policy_name", policy_record["name"]),
+        ("policy_actor_sha256", policy_record["actor_sha256"]),
+        ("policy_payload_sha256", policy_record["payload_sha256"]),
+        ("frozen_unified_manifest_sha256", frozen_manifest_sha256),
+    ):
+        if acquisition_protocol.get(key) != expected:
+            raise ValueError(f"downstream duration {duration} acquisition {key} drift")
+    protocol_sha = acquisition_protocol.get("protocol_sha256")
+    if not isinstance(protocol_sha, str) or len(protocol_sha) != 64:
+        raise ValueError(f"downstream duration {duration} acquisition protocol SHA drift")
+    acquisition_protocol_base = {
+        key: value
+        for key, value in acquisition_protocol.items()
+        if key != "protocol_sha256"
+    }
+    if _canonical_sha256(acquisition_protocol_base) != protocol_sha:
+        raise ValueError(f"downstream duration {duration} acquisition protocol SHA drift")
+    if catalog.get("protocol_sha256") != protocol_sha:
+        raise ValueError(f"downstream duration {duration} catalog protocol drift")
+    if acquisition_summary != {key: value for key, value in catalog.items() if key != "entries"}:
+        raise ValueError(f"downstream duration {duration} acquisition summary drift")
+    entries = catalog.get("entries")
+    if not isinstance(entries, list) or len(entries) != int(catalog.get("candidate_count", -1)):
+        raise ValueError(f"downstream duration {duration} acquisition count drift")
+    for key, expected in (
+        ("schema", "jit_unified_boundary_catalog_v1"),
+        ("status", "completed"),
+        ("artifact_role", "unlabeled_policy_conditioned_frontier_candidates"),
+        ("split", "train"),
+        ("iteration", int(policy_record["iteration"])),
+        ("policy_name", policy_record["name"]),
+        ("policy_actor_sha256", policy_record["actor_sha256"]),
+        ("policy_payload_sha256", policy_record["payload_sha256"]),
+        ("frozen_unified_manifest_sha256", frozen_manifest_sha256),
+        ("training_transitions", 0),
+        ("expert_switching_used", False),
+        ("test_data_used", False),
+        ("validation_data_used", False),
+        ("final_evaluation_data_used", False),
+    ):
+        if catalog.get(key) != expected:
+            raise ValueError(f"downstream duration {duration} acquisition catalog {key} drift")
+    if catalog.get("claim_boundary") != {
+        "unlabeled_acquisition_only": True,
+        "tube_expansion_claim": False,
+        "jce_jel_claim": False,
+        "certified_safe_set_claim": False,
+    }:
+        raise ValueError(f"downstream duration {duration} acquisition claim boundary drift")
+
+    status = duration_summary.get("status")
+    acquisition_interactions = int(acquisition_summary.get("environment_interactions", -1))
+    if acquisition_interactions < 0:
+        raise ValueError(f"downstream duration {duration} acquisition accounting drift")
+    if status == "no_candidates":
+        if entries or int(duration_summary.get("candidate_count", -1)) != 0:
+            raise ValueError(f"downstream duration {duration} zero-candidate drift")
+        if (duration_root / "labels").exists():
+            raise ValueError(f"downstream duration {duration} has unexpected zero-candidate labels")
+        return [], {
+            **duration_summary,
+            "resumed": True,
+            "acquisition_environment_interactions": acquisition_interactions,
+            "labeling_environment_interactions": 0,
+        }
+
+    if status != "completed":
+        raise ValueError(f"cannot resume non-completed downstream duration {duration}")
+    labels_path = duration_root / "labels" / "labels.json"
+    label_summary_path = duration_root / "labels" / "summary.json"
+    if not labels_path.exists() or not label_summary_path.exists():
+        raise ValueError(f"cannot resume incomplete downstream duration {duration}")
+    label_summary = _read_json(label_summary_path)
+    if label_summary.get("status") != "completed":
+        raise ValueError(f"cannot resume non-completed downstream duration {duration}")
+    label_protocol = _read_json(duration_root / "labels" / "protocol.json")
+    rows = json.loads(labels_path.read_text(encoding="utf-8"))
+    if not isinstance(rows, list) or len(rows) != int(label_summary.get("label_count", -1)):
+        raise ValueError(f"downstream duration {duration} label count drift")
+    validated_candidates = validate_unified_boundary_catalog(
+        catalog,
+        policy_record=policy_record,
+        frozen_manifest_sha256=frozen_manifest_sha256,
+    )
+    catalog_file_sha256 = file_sha256(acquisition_root / "catalog.json")
+    if label_protocol.get("schema") != "jit_unified_continuation_labels_v1":
+        raise ValueError(f"downstream duration {duration} label protocol schema drift")
+    if label_protocol.get("status") != "predeclared" or label_protocol.get("split") != "train":
+        raise ValueError(f"downstream duration {duration} label protocol status drift")
+    for key, expected in (
+        ("iteration", int(policy_record["iteration"])),
+        ("policy_name", policy_record["name"]),
+        ("policy_actor_sha256", policy_record["actor_sha256"]),
+        ("policy_payload_sha256", policy_record["payload_sha256"]),
+        ("frozen_unified_manifest_sha256", frozen_manifest_sha256),
+        ("candidate_catalog_file_sha256", catalog_file_sha256),
+        ("candidate_catalog_protocol_sha256", protocol_sha),
+        ("candidate_count", len(validated_candidates)),
+    ):
+        if label_protocol.get(key) != expected:
+            raise ValueError(f"downstream duration {duration} label protocol {key} drift")
+        if label_summary.get(key) != expected:
+            raise ValueError(f"downstream duration {duration} label summary {key} drift")
+    label_protocol_sha = label_protocol.get("protocol_sha256")
+    label_protocol_base = {
+        key: value for key, value in label_protocol.items() if key != "protocol_sha256"
+    }
+    if (
+        not isinstance(label_protocol_sha, str)
+        or len(label_protocol_sha) != 64
+        or _canonical_sha256(label_protocol_base) != label_protocol_sha
+    ):
+        raise ValueError(f"downstream duration {duration} label protocol SHA drift")
+    if label_summary.get("protocol_sha256") != label_protocol_sha:
+        raise ValueError(f"downstream duration {duration} label protocol SHA drift")
+    if int(label_summary.get("candidate_count", -1)) != len(validated_candidates):
+        raise ValueError(f"downstream duration {duration} label candidate count drift")
+    positive_count = sum(int(row.get("label", -1)) == 1 for row in rows)
+    negative_count = sum(int(row.get("label", -1)) == 0 for row in rows)
+    if positive_count + negative_count != len(rows):
+        raise ValueError(f"downstream duration {duration} label value drift")
+    if (
+        int(label_summary.get("positive_count", -1)) != positive_count
+        or int(label_summary.get("negative_count", -1)) != negative_count
+        or int(duration_summary.get("candidate_count", -1)) != len(rows)
+        or int(duration_summary.get("positive_count", -1)) != positive_count
+        or int(duration_summary.get("negative_count", -1)) != negative_count
+    ):
+        raise ValueError(f"downstream duration {duration} label summary count drift")
+    expected_candidates = {
+        str(row["candidate_id"]): (
+            str(row["state_sha256"]),
+            str(row["parent_group_id"]),
+        )
+        for row in validated_candidates
+    }
+    actual_candidates: set[str] = set()
+    for row in rows:
+        if (
+            row.get("split") != "train"
+            or row.get("phase") != "downstream"
+            or int(row.get("phase_index", -1)) != 1
+        ):
+            raise ValueError(f"downstream duration {duration} label split/phase drift")
+        for key, expected in (
+            ("policy_iteration", int(policy_record["iteration"])),
+            ("policy_actor_sha256", policy_record["actor_sha256"]),
+            ("policy_payload_sha256", policy_record["payload_sha256"]),
+            ("acquisition_protocol_sha256", protocol_sha),
+            ("label_protocol_sha256", label_protocol_sha),
+        ):
+            if row.get(key) != expected:
+                raise ValueError(f"downstream duration {duration} label row {key} drift")
+        candidate_id = str(row["candidate_id"])
+        expected_identity = expected_candidates.get(candidate_id)
+        actual_identity = (str(row["state_sha256"]), str(row["parent_group_id"]))
+        if expected_identity != actual_identity:
+            raise ValueError(f"downstream duration {duration} label candidate identity drift")
+        if candidate_id in actual_candidates:
+            raise ValueError(f"downstream duration {duration} duplicate label identity")
+        actual_candidates.add(candidate_id)
+    if actual_candidates != set(expected_candidates):
+        raise ValueError(f"downstream duration {duration} label candidate coverage drift")
+    return [dict(row) for row in rows], {
+        **duration_summary,
+        "resumed": True,
+        "acquisition_environment_interactions": acquisition_interactions,
+        "labeling_environment_interactions": int(label_summary["environment_interactions"]),
+    }
 
 
 def _collect_duration_candidates(
@@ -544,28 +842,18 @@ def search_downstream_transition_refinement(
     *,
     resume: bool = False,
 ) -> dict[str, Any]:
-    config_path = Path(config_path)
-    config = load_downstream_refinement_config(config_path)
+    prepared = _prepare_downstream_refinement(config_path)
+    config_path = prepared["config_path"]
+    config = prepared["config"]
     output = Path(config["output_dir"])
-    frozen_path = Path(config["frozen_policy"])
-    frozen = load_frozen_unified_manifest(frozen_path)
-    policy_record = frozen["policy"]
-    if int(policy_record["iteration"]) != int(config["iteration"]):
-        raise ValueError("downstream refinement policy iteration drift")
-
-    prior_labels, prior_identity = _validate_prior_search(config, policy_record)
-    formal = load_unified_formal_config(Path(policy_record["formal_config"]))
-    artifact = load_soft_tube(Path(formal.soft_tube_path))
-    if artifact.manifest["manifest_sha256"] != config["source_tube_manifest_sha256"]:
-        raise ValueError("downstream refinement source Tube identity drift")
-    anchors_all, anchor_audit = select_tube_boundary_anchors(
-        artifact,
-        max_per_phase=int(config["fixed_acquisition"]["anchors_per_phase"]),
-        frontier_score_ceiling=float(config["fixed_acquisition"]["frontier_score_ceiling"]),
-    )
-    anchors = tuple(anchor for anchor in anchors_all if anchor.phase == "downstream")
-    if not anchors:
-        raise ValueError("downstream refinement selected no downstream anchors")
+    frozen_path = prepared["frozen_path"]
+    policy_record = prepared["policy_record"]
+    prior_labels = prepared["prior_labels"]
+    prior_identity = prepared["prior_identity"]
+    formal = prepared["formal"]
+    artifact = prepared["artifact"]
+    anchors = prepared["anchors"]
+    anchor_audit = prepared["anchor_audit"]
 
     grid = tuple(int(x) for x in config["fixed_acquisition"]["duration_grid"])
     directions = len(config["fixed_acquisition"]["action_names"]) * len(
@@ -664,42 +952,26 @@ def search_downstream_transition_refinement(
     completed_duration_count = 0
     for duration in grid:
         duration_root = output / f"duration_{duration:02d}"
-        labels_path = duration_root / "labels" / "labels.json"
-        label_summary_path = duration_root / "labels" / "summary.json"
         if duration_root.exists():
-            if not labels_path.exists() or not label_summary_path.exists():
-                raise ValueError(f"cannot resume incomplete downstream duration {duration}")
-            label_summary = _read_json(label_summary_path)
-            if label_summary.get("status") != "completed":
-                raise ValueError(f"cannot resume non-completed downstream duration {duration}")
-            rows = json.loads(labels_path.read_text(encoding="utf-8"))
-            if not isinstance(rows, list) or len(rows) != int(label_summary["label_count"]):
-                raise ValueError(f"downstream duration {duration} label count drift")
-            catalog = _read_json(duration_root / "acquisition" / "catalog.json")
-            acquisition_summary = _read_json(duration_root / "acquisition" / "summary.json")
-            label_sets.append([dict(row) for row in rows])
+            rows, duration_report = _load_completed_duration(
+                duration_root,
+                duration=duration,
+                policy_record=policy_record,
+                frozen_manifest_sha256=file_sha256(frozen_path),
+            )
+            if rows:
+                label_sets.append(rows)
             excluded_state_hashes.update(str(row["state_sha256"]) for row in rows)
-            acquisition_interactions += int(acquisition_summary["environment_interactions"])
-            labeling_interactions += int(label_summary["environment_interactions"])
+            acquisition_interactions += int(
+                duration_report["acquisition_environment_interactions"]
+            )
+            labeling_interactions += int(
+                duration_report["labeling_environment_interactions"]
+            )
             accumulated = unique_label_rows(label_sets)
             readiness = phase_transition_band_readiness(accumulated, config["readiness"])
-            duration_reports.append(
-                {
-                    "duration": duration,
-                    "status": "completed",
-                    "resumed": True,
-                    "candidate_count": len(rows),
-                    "positive_count": int(label_summary["positive_count"]),
-                    "negative_count": int(label_summary["negative_count"]),
-                    "terminal_clipped_candidate_count": int(
-                        acquisition_summary.get("terminal_clipped_candidate_count", 0)
-                    ),
-                    "terminal_probe_outcomes": acquisition_summary.get(
-                        "terminal_probe_outcomes", {}
-                    ),
-                    "downstream_readiness_after_duration": readiness["downstream"],
-                }
-            )
+            duration_report["downstream_readiness_after_duration"] = readiness["downstream"]
+            duration_reports.append(duration_report)
             completed_duration_count += 1
             if readiness["downstream"]["ready"]:
                 break
@@ -743,6 +1015,18 @@ def search_downstream_transition_refinement(
                 }
                 duration_reports.append(duration_report)
                 _write_json(duration_root / "duration_summary.json", duration_report)
+                _write_json(
+                    output / "progress.json",
+                    {
+                        "schema": DOWNSTREAM_REFINEMENT_SUMMARY_SCHEMA,
+                        "status": "searching",
+                        "protocol_sha256": protocol_sha,
+                        "completed_duration_count": len(duration_reports),
+                        "readiness": readiness,
+                        "durations": duration_reports,
+                        "training_transitions": 0,
+                    },
+                )
                 continue
 
             labels_dir = duration_root / "labels"

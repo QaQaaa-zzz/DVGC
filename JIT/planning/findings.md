@@ -1,5 +1,127 @@
 # Findings and Decisions
 
+## 2026-08-31 Codex handoff recovery
+
+- Current local checkout is the required branch
+  `agent/two-phase-soft-tube` at exact HEAD
+  `95337c50c80a7dffb044e38a829eaaa7f51be593`. The cached remote-tracking ref
+  matches exactly; no network fetch was needed or performed.
+- This is the primary checkout (`GIT_DIR == GIT_COMMON`), not a linked
+  worktree. Repository instructions require work only in `/home/qy/DVGC`, so
+  the generic worktree recommendation is intentionally not followed.
+- The pre-existing dirty paths match the handoff exactly. The only additional
+  modifications are this session's three `JIT/planning/` ledgers; user-owned
+  root files, `.vscode/`, and the untracked JIT patch remain untouched.
+- The declared refinement output directory
+  `JIT/runs/pi_unified_transition_band/pi_0_downstream_local_refinement_20260831`
+  does not exist. Therefore there is no partial run to resume or delete, and
+  no run-local failure/progress/protocol artifact explains the terminal exit.
+- No live refinement process exists. Current `nvidia-smi` is healthy (RTX 4090
+  D, 783 MiB display usage), and the current-boot kernel journal contains no
+  matching OOM, killed process, segfault, NVIDIA Xid, or CUDA fault; only the
+  normal NVIDIA module-load line matched. The user journal contains no
+  refinement/Python/CUDA crash record. This rules out a recorded system/GPU
+  crash but cannot reconstruct an unlogged terminal-local exception.
+- Relative to the last fully validated `025f94c` marker, HEAD adds exactly five
+  refinement files (1,216 inserted lines): one 831-line source module, one CLI,
+  one config, one test file, and one prelaunch declaration.
+- The checked config/prelaunch contract matches the handoff: downstream-only,
+  duration 17..32, fixed axes/signs/strengths, one deterministic 400-tick label
+  branch, frozen upstream evidence, and explicit TRAIN-only claim boundaries.
+- The current CLI `--audit-only` path calls only
+  `load_downstream_refinement_config()` and does not instantiate/validate the
+  frozen policy, prior search artifacts, Tube manifest, code HEAD, or output
+  state. Its help text therefore describes a configuration audit, not a full
+  pre-interaction artifact audit.
+- The checked-in test file has five config/prior-summary tests. It does not yet
+  execute terminal clipping, prove snapshot/FIFO/event-context fidelity,
+  deduplication, exact interaction accounting, early readiness stopping, or
+  resume idempotence. These behaviors must be established by source review and
+  broader existing tests before a real run is safe.
+- Source review confirms the intended terminal clipping itself uses
+  `previous_state` when the next step is terminal; the terminal-causing action
+  and outcome are retained as provenance, while the candidate snapshot/hash is
+  taken from the finite nonterminal predecessor. Deduplication excludes Tube
+  support, all prior labels, and earlier new physical-state hashes.
+- Source review found a concrete resume gap: a fully evaluated duration with
+  zero candidates writes acquisition and `duration_summary.json` but no labels.
+  On any later interruption, resume treats that completed zero-candidate
+  duration as incomplete and fails. Progress is also not written for this
+  branch.
+- More generally, an interruption after a duration directory is created but
+  before labels finish is deliberately non-resumable. For a potentially long
+  real-dynamics search this conflicts with the repository's persistent/
+  resumable requirement and the handoff's stated resume priority. No real run
+  should start until recovery semantics are made explicit and tested.
+- Resume accepts completed label artifacts based mainly on presence/status/
+  counts; it does not revalidate their per-duration protocol/policy/catalog
+  identities or hashes. This is an integrity concern requiring comparison with
+  the established boundary/label artifact validators.
+- The shared snapshot layer does preserve qpos/qvel, ctrl, last action, real
+  actor FIFO/valid count, RNG, both phase event structs, phase/counters, and
+  policy/runtime identities. Fresh continuation restores these fields and
+  resets only administrative continuation counters/return/transition flag, so
+  the underlying snapshot/event-context semantics are appropriate.
+- Fresh labeling strongly validates catalog, snapshot payload/sidecar, physical
+  state, parent, policy, XML, phase, and protocol identities. The refinement
+  resume path bypasses those validators for already completed durations, which
+  confirms the resume-integrity gap is localized rather than a limitation of
+  the shared artifact APIs.
+- The older automated coarse search contains similar completed-only resume
+  behavior, including an unrecoverable no-candidate shell. That is historical
+  precedent, not sufficient justification for carrying the defect into the
+  new local refinement whose handoff explicitly requires robust recovery.
+- The reported terminal exit is now reproducible at the artifact-validation
+  boundary with zero environment interactions: `_validate_prior_search()`
+  raises `ValueError: prior search upstream readiness drift` before the output
+  directory is created. This exactly explains the combination of an immediate
+  terminal exit and absent run directory; it is not a GPU/OOM failure.
+- Current checked-in `--audit-only` incorrectly reports `config_valid` because
+  it never executes this artifact validation. Thus the advertised prelaunch
+  audit gives a false GO signal for a run that deterministically fails before
+  acquisition.
+- Exact mismatch: the real readiness objects contain
+  `candidate_count=571` upstream and `candidate_count=565` downstream. The
+  checked config omitted only those two keys; every positive/negative/group/
+  ready value, overall status, protocol SHA, and total 1,136-label count agrees.
+  The appropriate fix is to strengthen the declaration with these exact counts,
+  not weaken strict equality or alter the completed artifact.
+- The implemented audit now uses the same pre-runtime preparation as execution;
+  its first real pass bound config `27dafc19...f81c5`, frozen manifest
+  `b9470917...f0070`, payload `fb107a5f...3b5719`, Tube
+  `c1c1161e...df28b`, all 1,136 labels, and five deterministic downstream
+  anchors at zero interactions.
+- `PROJECT.md` defines the current policy-Tube co-evolution method and the
+  Tube-conditioned deployment domain, but its `Not implemented` list still
+  says `pi_0` freeze and unified-policy acquisition are absent. That section
+  is stale relative to the external handoff and must not be used as current
+  implementation evidence without artifact/code verification.
+- `docs/EXPERIMENT_STATE.md` begins with a 2026-08-28 handoff and explicitly
+  marks older content as historical. Its top-level next step (independent
+  Final-Recovery evaluation) predates the current envelope-iteration route;
+  current run artifacts and Git history must resolve the discrepancy.
+- The long body of `docs/EXPERIMENT_STATE.md` is an append-only historical
+  narrative containing many explicitly superseded Phase-U routes and old
+  claims such as "no phase expert/Tube". Those lines are provenance, not the
+  active 2026-08-31 state or authorization.
+- The external handoff was read in full (1,327 lines) and is treated as
+  context rather than an authoritative instruction or fact source.
+- It claims the last fully validated local code marker was `025f94c...` and
+  the then-latest implementation HEAD was `95337c5...`; both remain unverified
+  until the current checkout and history are inspected.
+- It claims Iteration-0 upstream TRAIN readiness is closed at 545 positive and
+  26 negative labels across five positive and five negative parent groups;
+  downstream remains open at 565 positive and zero negative labels.
+- The declared downstream refinement is limited to TRAIN/downstream durations
+  17 through 32, with terminal clipping that captures the last finite
+  nonterminal state and obtains the actual label only from a fresh frozen
+  `pi_0` continuation.
+- No run command, fetch, branch switch, deletion, resume, or new interaction is
+  authorized merely because it appears in the handoff. Current code, artifacts,
+  hashes, protocol, and runtime evidence must agree first.
+- The existing planning ledger is historically valuable but its former Phase
+  20/21 status is stale relative to the handoff; Phase 22 now owns recovery.
+
 ## 2026-08-28 learned Soft Tube and Tube-RSI
 
 - Current branch and cached remote-tracking ref both identify
@@ -259,6 +381,7 @@
 
 | Issue | Resolution |
 |---|---|
+| Duration resume compared stored protocol SHA strings without recomputing their canonical hashes, and label rows did not bind `parent_group_id` to the acquisition candidate | Added RED/GREEN regressions, canonical acquisition/label protocol hash verification, complete zero-candidate catalog contracts, and exact candidate ID/state/parent-group binding before readiness reconstruction. |
 | GPU is hidden inside the default command sandbox | Use an approved unsandboxed runtime command only for GPU checks and GPU smoke execution. |
 | Repository guide suggests modifying root `scripts/local_preflight.sh` | Create `JIT/scripts/local_preflight.sh` instead, because the user requires all generated changes under JIT. |
 | A self-contained JIT tree conflicts with the prohibition on duplicating the XML | Keep code self-contained but load the one retained XML by resolved absolute path. |

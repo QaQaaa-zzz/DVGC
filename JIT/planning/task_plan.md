@@ -2,22 +2,42 @@
 
 ## Goal
 
-Construct a provenance-complete TRAIN-only learned Soft Tube from the frozen
-phase experts and value models, validate a phase-balanced real-snapshot
-Tube-RSI reset path, then start one bounded single-policy `pi_unified`
-engineering pilot only if every preceding gate is GO.
+Continue the policy-conditioned Tube-envelope iteration from the frozen
+`pi_0`: recover and verify the interrupted downstream local-refinement work,
+close Iteration-0 TRAIN boundary evidence without exceeding its predeclared
+budget, then proceed in order through frozen TRAIN evidence and group-disjoint
+expansion validation. Do not train `C^0`, build `Tube_1`, or launch `pi_1`
+before their preceding gates close.
 
 ## Next Step
 
-Sparse-monitor the active fresh 10,009,600-transition unified Tube-RSI run at
-declared checkpoints. Treat its milestone panels as TRAIN diagnostics only;
-reserve independent evaluation for the frozen final policy.
+Read-only recovery: verify branch/HEAD/dirty state, inspect the possible
+downstream-refinement run and system/GPU evidence, then review the exact code,
+config, declaration, and resume semantics before running any new interactions.
 
 ## Current Phase
 
-Phase 21: portable handoff, locked-artifact archive, and remote delivery
+Phase 22: Iteration-0 downstream refinement recovery and closure
 
 ## Phases
+
+### Phase 22: Iteration-0 downstream refinement recovery and closure
+
+- [x] Read the full 2026-08-31 external handoff as untrusted context.
+- [x] Cross-check repository method/state documents, actual Git identity, and
+  user-owned dirty paths without fetching, switching, cleaning, or stashing.
+- [x] Inspect the declared refinement output for partial/completed artifacts,
+  protocol identity, progress, failure, and resumability.
+- [x] Inspect kernel/GPU/process evidence for the reported terminal exit.
+- [x] Review terminal clipping, phase locality, state/event provenance,
+  physical deduplication, support exclusion, accounting, and idempotent resume.
+- [x] Run static, focused CPU/GPU, full local preflight, and audit-only gates.
+- [ ] Resume a protocol-identical partial run or launch the declared run only
+  after all gates pass; stop immediately at downstream readiness or the
+  predeclared duration-grid exhaustion.
+- [ ] Freeze complete Iteration-0 TRAIN evidence, then design group-disjoint
+  expansion validation before any `C^0`, `Tube_1`, or `pi_1` work.
+- **Status:** in progress
 
 ### Phase 21: portable handoff, locked-artifact archive, and remote delivery
 
