@@ -1,10 +1,14 @@
 {
   "schema": "jit_envelope_iteration_outer_shell_prelaunch_v1",
-  "status": "predeclared",
+  "status": "superseded_before_launch",
   "date": "2026-08-31",
   "iteration": 0,
   "runtime_code_head": "14928b000fa1794c0ff592a25054f08164d79138",
   "scientific_role": "expansion_train_boundary_localization",
+  "superseded_by": {
+    "config": "JIT/configs/envelope_iter0_transition_band_search.json",
+    "reason": "The duration-only outer-shell decision rule and phase-wise readiness criteria are now executed by one predeclared automated search instead of manual shell-by-shell launches. No outer_shell1 interaction had been started from this declaration."
+  },
   "policy": {
     "name": "pi_0",
     "role": "envelope_expansion_authority",
