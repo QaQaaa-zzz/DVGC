@@ -8,6 +8,8 @@ import numpy as np
 from jit_dvgc.constants import END_PITCH_LIMIT, END_RECOVERY_SUCCESS
 from jit_dvgc.evaluation import EpisodeFrame, EpisodeTrace
 from jit_dvgc.unified_natural_evaluation import (
+    EVALUATION_SCHEMA,
+    _source_training_provenance,
     audit_natural_reset_diversity,
     summarize_canonical_natural_trace,
 )
@@ -22,6 +24,33 @@ def _fake_reset_state(x: float = 1.0):
         info={"expert_switching_used": False},
         metrics={"reset/source_soft_tube": 0.0},
     )
+
+
+def test_natural_evaluation_schema_is_round_agnostic():
+    assert EVALUATION_SCHEMA == "jit_pi_unified_canonical_natural_eval_v1"
+    assert "round0" not in EVALUATION_SCHEMA
+    assert "round1" not in EVALUATION_SCHEMA
+
+
+def test_round1_source_training_provenance_is_preserved():
+    reset_mixture = {
+        "selection": "bernoulli_per_episode",
+        "natural_reset_probability": 0.1,
+        "soft_tube_probability": 0.9,
+    }
+    config = SimpleNamespace(
+        raw={
+            "run_declaration": {
+                "run_id": "pi_unified_round1_natural10_10009600_seed821101_20260831"
+            }
+        },
+        reset_mixture=SimpleNamespace(as_dict=lambda: reset_mixture),
+    )
+    provenance = _source_training_provenance(config)
+    assert provenance["source_training_run_id"] == (
+        "pi_unified_round1_natural10_10009600_seed821101_20260831"
+    )
+    assert provenance["source_training_reset_mixture"] == reset_mixture
 
 
 def test_natural_reset_audit_does_not_count_seed_duplicates_as_independent():
