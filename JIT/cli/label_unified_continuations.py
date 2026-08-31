@@ -15,10 +15,20 @@ from jit_dvgc.unified_continuation_labels import (
     DEFAULT_UNIFIED_CONTINUATION_MAX_TICKS,
     DEFAULT_UNIFIED_CONTINUATION_PROTOCOL_SEED,
     label_unified_continuations,
+    validate_candidate_snapshot,
+    validate_unified_boundary_catalog,
 )
+from jit_dvgc.unified_envelope_snapshot import load_unified_envelope_snapshot
 from jit_dvgc.unified_formal import build_unified_formal_environment
 from jit_dvgc.unified_policy_freeze import load_frozen_unified_manifest
 from jit_dvgc.unified_training import checkpoint_identity
+
+
+def _read_json(path: Path):
+    payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError(f"JSON object required: {path}")
+    return payload
 
 
 def main() -> int:
@@ -47,6 +57,27 @@ def main() -> int:
     record = frozen["policy"]
     if record["policy_role"] != "envelope_expansion_authority":
         raise ValueError("frozen unified policy is not an expansion authority")
+    frozen_sha = file_sha256(args.frozen_policy)
+
+    # Close the entire disk/provenance bank before spending the first rollout
+    # interaction.  A late corrupt snapshot must not invalidate a partially
+    # consumed labeling budget.
+    catalog = _read_json(args.catalog)
+    rows = validate_unified_boundary_catalog(
+        catalog,
+        policy_record=record,
+        frozen_manifest_sha256=frozen_sha,
+    )
+    acquisition_protocol = _read_json(Path(args.catalog).parent / "protocol.json")
+    if acquisition_protocol.get("protocol_sha256") != catalog.get("protocol_sha256"):
+        raise ValueError("unified acquisition protocol/catalog SHA mismatch")
+    for row in rows:
+        snapshot_path = (
+            Path(args.catalog).parent / str(row["source_bank"]) / str(row["snapshot"])
+        )
+        snapshot = load_unified_envelope_snapshot(snapshot_path)
+        validate_candidate_snapshot(snapshot, row, policy_record=record)
+    print(f"snapshot_preflight=GO candidates={len(rows)}")
 
     if jax.default_backend() != "gpu":
         raise RuntimeError("unified continuation labeling requires the visible JAX GPU")
@@ -78,7 +109,7 @@ def main() -> int:
         env=env,
         policy=policy,
         policy_record=record,
-        frozen_manifest_sha256=file_sha256(args.frozen_policy),
+        frozen_manifest_sha256=frozen_sha,
         max_ticks=args.max_ticks,
         protocol_seed=args.protocol_seed,
     )
