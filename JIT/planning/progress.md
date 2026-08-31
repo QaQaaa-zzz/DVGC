@@ -226,6 +226,21 @@
   `27832237a85eccfa0ae2eaea7575dd2efda12535a3815fee0c6d0660f58921b8`;
   its copied label SHA remains the exact source SHA
   `32e45f021e05a96b3098354a927909869dcb8f1e71d4798481ae2edc0f4e0323`.
+- Implemented the group-disjoint validation protocol audit under TDD. It binds
+  five validation-seed snapshots (three upstream, two downstream), verifies
+  catalog/label/snapshot identities and legacy downstream parent naming,
+  confirms validation split without reading outcomes, and rejects TRAIN parent,
+  exact-state, or observation-near-duplicate leakage.
+- The locked compact panels recompute to 160 attempts, 696 maximum acquisition
+  interactions, 64,000 maximum labeling interactions, and zero training
+  transitions. The audit reports zero parent/exact/near-duplicate overlaps.
+- Generated the current experiment report at
+  `JIT/docs/experiments/envelope_iter0_transition_band_20260831/REPORT.md`.
+  Per user instruction, work pauses after final verification/commit; the
+  validation runtime is not launched and C0/Tube1/pi1 remain unimplemented.
+- Final source-tree preflight passed 428 non-GPU tests (34 deselected) and all
+  14 GPU tests. The final validation protocol audit remains `protocol_ready`
+  with zero new environment interactions.
 
 ## Session: 2026-08-28 afternoon handoff and remote archive
 

@@ -79,14 +79,16 @@ Phase 22: Iteration-0 downstream refinement recovery and closure
 ### Phase 27: group-disjoint expansion validation
 
 - [x] Freeze a compact validation recipe selected only from TRAIN evidence.
-- [ ] Use validation seed 1000006 parent groups absent from TRAIN; keep TEST
+- [x] Use validation seed 1000006 parent groups absent from TRAIN; keep TEST
   outcomes and final-evaluation data untouched.
-- [ ] Implement exact and near-duplicate leakage audits plus phase-aware frozen
-  `pi_0` validation acquisition/labeling under TDD.
-- [ ] Verify, commit, launch once, and delegate monitoring/result analysis to
-  Luna medium.
+- [x] Implement exact/near-duplicate leakage, source identity, split, and fixed
+  interaction-budget protocol audits under TDD.
+- [ ] Implement the phase-aware frozen-`pi_0` acquisition/labeling runtime in a
+  later session without changing this locked protocol.
+- [ ] Launch once only after that runtime passes verification; delegate all
+  monitoring/result analysis to Luna medium.
 - [ ] Permit `C_up^0`/`C_down^0` fitting only after validation closes.
-- **Status:** in progress
+- **Status:** protocol implementation complete; paused before runtime launch
 
 ### Phase 21: portable handoff, locked-artifact archive, and remote delivery
 

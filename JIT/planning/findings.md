@@ -134,6 +134,13 @@
   downstream snapshot cannot be substituted with a TRAIN group or upstream
   state. The compact validation protocol must declare asymmetric 3/2 group
   coverage rather than claim a nonexistent three-source downstream panel.
+- Downstream handoff snapshots preserve the legacy internal parent name
+  `seed-1000006`, while catalog/label rows use transition-qualified
+  `parent_group_id` values. Both identities are declared and checked; the audit
+  does not weaken group-disjointness by pretending the strings are equal.
+- Exact scheduled acquisition accounting is 696 interactions, not the looser
+  768 bound obtained by multiplying every upstream attempt by its maximum
+  duration. The protocol recomputes the exact sum over declared durations.
 
 ## 2026-08-28 learned Soft Tube and Tube-RSI
 
