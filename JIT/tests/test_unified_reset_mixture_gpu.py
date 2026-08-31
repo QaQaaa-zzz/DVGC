@@ -7,6 +7,7 @@ import pytest
 
 from jit_dvgc.ppo import wrap_for_jit_training
 from jit_dvgc.unified_formal import build_unified_formal_environment
+from jit_dvgc.unified_natural_evaluation import NaturalStartUnifiedEvalEnv
 
 
 pytestmark = pytest.mark.gpu
@@ -100,6 +101,32 @@ def test_pre_forward_natural_reset_matches_existing_natural_semantics(jit_root):
     assert float(pre_forward.metrics["reset/source_natural"]) == pytest.approx(1.0)
     assert float(pre_forward.metrics["reset/source_soft_tube"]) == pytest.approx(0.0)
     assert bool(np.asarray(pre_forward.info["expert_switching_used"])) is False
+
+
+def test_natural_evaluation_reset_can_enter_jitted_unified_step(jit_root):
+    assert jax.default_backend() == "gpu"
+    _config, _artifact, env = build_unified_formal_environment(
+        jit_root / "configs/pi_unified_round1_natural10.json",
+        env_factory=NaturalStartUnifiedEvalEnv,
+    )
+    reset = jax.jit(env.reset_natural)
+    step = jax.jit(env.step)
+    state = reset(jax.random.PRNGKey(9_400_001))
+    assert bool(np.asarray(state.info["reset_from_soft_tube"])) is False
+    assert float(state.metrics["reset/source_natural"]) == pytest.approx(1.0)
+    assert float(state.metrics["reset/source_soft_tube"]) == pytest.approx(0.0)
+
+    next_state = step(state, jp.zeros(4, dtype=jp.float32))
+    jax.block_until_ready(next_state)
+
+    assert jax.tree.structure(state) == jax.tree.structure(next_state)
+    assert bool(np.asarray(next_state.info["reset_from_soft_tube"])) is False
+    assert bool(np.asarray(next_state.info["expert_switching_used"])) is False
+    assert float(next_state.metrics["reset/source_natural"]) == pytest.approx(1.0)
+    assert float(next_state.metrics["reset/source_soft_tube"]) == pytest.approx(0.0)
+    assert _finite_tree(next_state.data.qpos)
+    assert _finite_tree(next_state.data.qvel)
+    assert _finite_tree(next_state.metrics)
 
 
 def test_jitted_mixed_reset_step_and_fixed_panel_contract(jit_root):
