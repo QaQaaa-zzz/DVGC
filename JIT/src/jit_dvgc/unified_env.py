@@ -237,6 +237,19 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
             phase_state.replace(info=info, metrics=metrics), soft_tube=False
         )
 
+    @staticmethod
+    def _select_reset_state(
+        use_natural: jax.Array,
+        natural_state: mjx_env.State,
+        tube_state: mjx_env.State,
+    ) -> mjx_env.State:
+        """Select one reset without placing MJX/Warp forward inside batched cond."""
+        return jax.tree.map(
+            lambda natural, tube: jp.where(use_natural, natural, tube),
+            natural_state,
+            tube_state,
+        )
+
     def reset(self, rng: jax.Array) -> mjx_env.State:
         if self._natural_reset_probability == 0.0:
             return self._reset_tube(rng)
@@ -244,12 +257,13 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
         use_natural = jax.random.bernoulli(
             decision_key, self._natural_reset_probability
         )
-        return jax.lax.cond(
-            use_natural,
-            self._reset_natural_unified,
-            self._reset_tube,
-            reset_key,
-        )
+        # A vmapped lax.cond batches its predicate and traces both MJX/Warp
+        # forward branches under control flow. Warp rejects that path. Execute
+        # the already contract-matched reset branches normally, then select
+        # their dynamic leaves; the chosen reset semantics and RNG are unchanged.
+        natural_state = self._reset_natural_unified(reset_key)
+        tube_state = self._reset_tube(reset_key)
+        return self._select_reset_state(use_natural, natural_state, tube_state)
 
     def reset_tube_index(
         self, phase_index: jax.Array | int, entry_index: jax.Array | int
