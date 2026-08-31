@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
-"""Evaluate the fixed unified 10M policy from the canonical natural start."""
+"""Evaluate a fixed completed unified policy from the canonical natural start."""
 from __future__ import annotations
 
 import argparse
 import json
 from pathlib import Path
 
-from jit_dvgc.unified_natural_evaluation import (
-    run_round0_canonical_natural_evaluation,
-)
+from jit_dvgc.unified_natural_evaluation import run_canonical_natural_evaluation
 
 
 def main() -> int:
@@ -17,7 +15,7 @@ def main() -> int:
     parser.add_argument("--checkpoint", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args()
-    report = run_round0_canonical_natural_evaluation(
+    report = run_canonical_natural_evaluation(
         args.config,
         args.checkpoint,
         args.output_dir,
