@@ -14,6 +14,17 @@ from jit_dvgc.unified_formal import (
 from jit_dvgc.unified_training import read_json
 
 
+ROUND1_CONFIG_SHA256 = "fba8ac1975727ea77ec271a6196cc998eb63b47960aba25935656927d69f2ae1"
+ROUND1_RUN_ID = "pi_unified_round1_natural10_10009600_seed821101_20260831"
+ROUND0_NATURAL_DIAGNOSTIC_SHA256 = (
+    "eb8ccb07e1d8229abd794283fc3c48c63943f9a0356cf313c89186458a939721"
+)
+ROUND0_PI_UP_UNIFIED_COMPARISON_SHA256 = (
+    "53c708fd33df66c53a1ab60098d033ebf1284df3fe0c16f999a3942630bbca8f"
+)
+HARDENING_VALIDATED_HEAD = "f9be2c6e4b5e5ef7e654bb7704e711177ffa89d6"
+
+
 def test_round0_formal_config_defaults_to_soft_tube_only(jit_root):
     config = load_unified_formal_config(jit_root / "configs/pi_unified_formal.json")
     assert config.reset_mixture.selection == "soft_tube_only"
@@ -54,6 +65,30 @@ def test_round1_config_changes_only_reset_distribution(jit_root):
     )
     assert round1["claim_boundary"]["test_data_used"] is False
     assert round1["claim_boundary"]["validation_data_used"] is False
+
+
+def test_round1_prelaunch_provenance_and_run_declaration_are_locked(jit_root):
+    path = jit_root / "configs/pi_unified_round1_natural10.json"
+    raw = read_json(path)
+    config = load_unified_formal_config(path)
+    boundary = raw["claim_boundary"]
+    declaration = raw["run_declaration"]
+
+    assert config.config_sha256 == ROUND1_CONFIG_SHA256
+    assert boundary["round0_natural_diagnostic_sha256"] == (
+        ROUND0_NATURAL_DIAGNOSTIC_SHA256
+    )
+    assert boundary["round0_pi_up_unified_comparison_sha256"] == (
+        ROUND0_PI_UP_UNIFIED_COMPARISON_SHA256
+    )
+    assert boundary["round0_diagnostic_artifacts_regenerated"] is False
+    assert boundary["prelaunch_hardening_validated_head"] == HARDENING_VALIDATED_HEAD
+    assert declaration == {
+        "run_id": ROUND1_RUN_ID,
+        "output_dir": f"JIT/runs/pi_unified/{ROUND1_RUN_ID}",
+        "purpose": "round1_single_variable_natural10_soft_tube90_unified_training",
+        "status": "predeclared_not_started",
+    }
 
 
 def test_round1_reset_probability_drift_is_rejected(jit_root, tmp_path):
