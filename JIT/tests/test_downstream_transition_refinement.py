@@ -50,6 +50,88 @@ def test_downstream_refinement_binds_exact_prior_candidate_counts(jit_root):
         )
 
 
+def test_strength_extrapolation_config_is_one_locked_symmetric_panel(jit_root):
+    path = jit_root / "configs/envelope_iter0_downstream_strength_refinement.json"
+    config = load_downstream_refinement_config(path)
+
+    acquisition = config["fixed_acquisition"]
+    assert acquisition["search_mode"] == "fixed_duration_strength_extrapolation"
+    assert acquisition["duration_grid"] == [30]
+    assert acquisition["strengths"] == [0.15, 0.2, 0.3]
+    assert acquisition["action_names"] == [
+        "steer",
+        "rear_wheel_drive",
+        "hip",
+        "knee",
+    ]
+    assert acquisition["signs"] == [-1, 1]
+    assert config["prior_search"]["expected_accumulated_unique_label_count"] == 3045
+    assert config["prior_search"]["expected_downstream"] == {
+        "candidate_count": 2474,
+        "positive_count": 2474,
+        "negative_count": 0,
+        "positive_parent_group_count": 5,
+        "negative_parent_group_count": 0,
+        "ready": False,
+    }
+
+
+def test_strength_extrapolation_rejects_near_miss_protocols(tmp_path, jit_root):
+    source = json.loads(
+        (
+            jit_root / "configs/envelope_iter0_downstream_strength_refinement.json"
+        ).read_text()
+    )
+    path = tmp_path / "strength.json"
+
+    source["fixed_acquisition"]["duration_grid"] = [31]
+    path.write_text(json.dumps(source))
+    with pytest.raises(ValueError, match="duration_grid"):
+        load_downstream_refinement_config(path)
+
+    source["fixed_acquisition"]["duration_grid"] = [30]
+    source["fixed_acquisition"]["strengths"] = [0.15, 0.2, 0.31]
+    path.write_text(json.dumps(source))
+    with pytest.raises(ValueError, match="strengths"):
+        load_downstream_refinement_config(path)
+
+
+def test_strength_extrapolation_prelaunch_matches_config(jit_root):
+    config = load_downstream_refinement_config(
+        jit_root / "configs/envelope_iter0_downstream_strength_refinement.json"
+    )
+    prelaunch = json.loads(
+        (
+            jit_root
+            / "handoff/2026-08-31/ENVELOPE_ITER0_DOWNSTREAM_STRENGTH_REFINEMENT_PRELAUNCH.json"
+        ).read_text()
+    )
+
+    decision = prelaunch["method_decision"]
+    acquisition = config["fixed_acquisition"]
+    assert decision["search_mode"] == acquisition["search_mode"]
+    assert [decision["duration"]] == acquisition["duration_grid"]
+    assert decision["strengths"] == acquisition["strengths"]
+    assert decision["action_names"] == acquisition["action_names"]
+    assert decision["signs"] == acquisition["signs"]
+    assert prelaunch["output_dir"] == config["output_dir"]
+    assert prelaunch["claim_boundary"] == config["claim_boundary"]
+
+def test_refinement_protocol_purposes_bind_search_mode():
+    assert refinement._refinement_protocol_purposes(
+        "contiguous_integer_local_refinement"
+    ) == (
+        "downstream_contiguous_terminal_clipped_transition_band_refinement",
+        "downstream_terminal_clipped_local_refinement",
+    )
+    assert refinement._refinement_protocol_purposes(
+        "fixed_duration_strength_extrapolation"
+    ) == (
+        "downstream_fixed_duration_strength_extrapolation",
+        "downstream_terminal_clipped_strength_extrapolation",
+    )
+
+
 def test_downstream_refinement_audit_validates_current_artifacts(jit_root):
     path = jit_root / "configs/envelope_iter0_downstream_refinement.json"
 

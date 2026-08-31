@@ -128,6 +128,50 @@
   and five downstream anchors.
 - After the final test-only import cleanup, the complete preflight was repeated
   from scratch and again exited 0: 414 non-GPU and 14 GPU tests passed.
+- Committed the repair as `84d77651f936d8bad7f025c6f10f948437111889`.
+  The post-commit enhanced audit passed and reported that exact HEAD with zero
+  interactions.
+- Launched the explicit source-bound repair from `ad416e8` to `84d7765` and
+  delegated all sparse monitoring/result analysis to Luna medium. The repair
+  reused duration-23 acquisition, wrote `labels_retry_01`, completed through
+  duration 32, and exited 0 with `search_exhausted`; no new CUDA error occurred.
+- Final downstream TRAIN readiness is 2,474 candidates, all 2,474 positive,
+  zero negative, five positive parent groups, zero negative parent groups, and
+  `ready=false`. Upstream remains ready at 571 candidates, 545 positive, 26
+  negative, and five parent groups on each side. Accumulated unique labels are
+  3,045.
+- Exact run accounting is 47,020 acquisition interactions and 15,227 labeling
+  interactions. Labeling comprises 14,229 successful interactions plus the
+  preserved 998-interaction aborted attempt; the 998 is already included in
+  15,227 and must not be counted twice.
+- Duration 31 produced 20 terminal-clipped candidates and duration 32 produced
+  109; all remained positive under fresh frozen-pi_0 continuation. The declared
+  grid is exhausted, so `C^0`, `Tube_1`, and `pi_1` remain blocked pending an
+  explicit new downstream acquisition-method decision.
+- Luna's read-only mechanism analysis confirmed that every duration-32 action,
+  sign, and strength combination remained recovery-success; the artifact gives
+  no evidence-based reason to choose one action axis. Rejected an arbitrary
+  30-attempt single-axis pilot and corrected the all-axis budget.
+- Selected one symmetric strength-extrapolation panel at duration 30 with all
+  four action axes, both signs, strengths 0.15/0.20/0.30, five anchors, maximum
+  3,600 acquisition interactions, and maximum 48,000 label interactions.
+- Strength-panel TDD RED failed on the absent config and protocol-purpose helper.
+  GREEN now supports exactly the old duration mode and the new locked strength
+  mode while rejecting near-miss durations/strengths; all three new tests pass.
+- The enhanced zero-interaction audit for the new config passed and bound the
+  exact 3,045-label prior (summary SHA
+  `042049293cd145df87494296fd70c478369947a23e35833f331eb94ac4195df4`,
+  labels SHA `13c5579fb2257b46eef66e19f62a0300e2676ad1159b0d7964d9df293454dfdd`),
+  frozen pi_0, source Tube, and five anchors.
+- Added config-to-prelaunch equality coverage after catching and correcting one
+  test patch placement error; the complete downstream-refinement file passes
+  all 18 tests.
+- Strength-panel static compilation passed; the four handoff CPU files pass 33
+  tests and the two declared GPU files pass all 4 tests.
+- Full strength-panel preflight exited 0 with 418 non-GPU tests (34 deselected)
+  and all 14 GPU tests passing. The post-preflight audit repeated the exact
+  zero-interaction input/anchor identities and config SHA
+  `2f7c70598d71b2d4d96217ddce91771d2c60bd070bf2709c7f35d9b775595872`.
 
 ## Session: 2026-08-28 afternoon handoff and remote archive
 
@@ -773,6 +817,7 @@
 
 | Timestamp | Error | Attempt | Resolution |
 |---|---|---:|---|
+| 2026-08-31 | Strength prelaunch test patch initially placed the second near-miss assertion inside the following test | 1 | Moved the assertion back to its fixture scope; production/config content was unaffected and all 18 tests passed. |
 | 2026-08-31 | Final self-review regressions accepted acquisition protocol content drift and label parent-group drift | 1 | Reproduced both as expected RED failures, added fail-closed canonical-hash and candidate identity checks, then passed all 11 refinement tests. |
 | 2026-08-31 | Combined plan/progress/findings update missed one exact findings line | 1 | Split the bookkeeping update by exact file context; no source/test/config content changed. |
 | 2026-08-31 | Strong prelaunch artifact audit failed with `prior search upstream readiness drift` | 1 | Reproduced the terminal exit before run creation; inspect exact payload difference before any fix. |

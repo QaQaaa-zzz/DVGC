@@ -54,6 +54,23 @@ BOUNDARY_PROTOCOL_SCHEMA = "jit_unified_boundary_protocol_v1"
 BOUNDARY_CATALOG_SCHEMA = "jit_unified_boundary_catalog_v1"
 
 
+def _refinement_protocol_purposes(search_mode: str) -> tuple[str, str]:
+    purposes = {
+        "contiguous_integer_local_refinement": (
+            "downstream_contiguous_terminal_clipped_transition_band_refinement",
+            "downstream_terminal_clipped_local_refinement",
+        ),
+        "fixed_duration_strength_extrapolation": (
+            "downstream_fixed_duration_strength_extrapolation",
+            "downstream_terminal_clipped_strength_extrapolation",
+        ),
+    }
+    try:
+        return purposes[str(search_mode)]
+    except KeyError as exc:
+        raise ValueError("unsupported downstream refinement search_mode") from exc
+
+
 def _read_json(path: Path) -> dict[str, Any]:
     payload = json.loads(Path(path).read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
@@ -147,11 +164,20 @@ def load_downstream_refinement_config(path: Path) -> dict[str, Any]:
         raise ValueError("downstream refinement must preserve canonical action order")
     if tuple(int(x) for x in acquisition.get("signs", ())) != (-1, 1):
         raise ValueError("downstream refinement signs must remain [-1, +1]")
-    if tuple(float(x) for x in acquisition.get("strengths", ())) != (0.025, 0.05, 0.10):
-        raise ValueError("downstream refinement strengths must remain fixed")
+    search_mode = str(acquisition.get("search_mode", ""))
+    _refinement_protocol_purposes(search_mode)
+    strengths = tuple(float(x) for x in acquisition.get("strengths", ()))
     grid = tuple(int(x) for x in acquisition.get("duration_grid", ()))
-    if grid != tuple(range(17, 33)):
-        raise ValueError("downstream refinement duration_grid must be contiguous 17..32")
+    if search_mode == "contiguous_integer_local_refinement":
+        if strengths != (0.025, 0.05, 0.10):
+            raise ValueError("downstream refinement strengths must remain fixed")
+        if grid != tuple(range(17, 33)):
+            raise ValueError("downstream refinement duration_grid must be contiguous 17..32")
+    elif search_mode == "fixed_duration_strength_extrapolation":
+        if strengths != (0.15, 0.20, 0.30):
+            raise ValueError("downstream strength-extrapolation strengths drift")
+        if grid != (30,):
+            raise ValueError("downstream strength-extrapolation duration_grid must be [30]")
     clipping = acquisition.get("terminal_clipping", {})
     if clipping != {
         "enabled": True,
@@ -740,6 +766,7 @@ def _collect_duration_candidates(
     policy: Callable[[Any, Any], Any],
     policy_record: Mapping[str, Any],
     frozen_manifest_sha256: str,
+    acquisition_purpose: str,
     protocol_seed: int,
     frontier_score_ceiling: float,
     strengths: Sequence[float],
@@ -776,7 +803,7 @@ def _collect_duration_candidates(
     protocol_base = {
         "schema": BOUNDARY_PROTOCOL_SCHEMA,
         "status": "predeclared",
-        "purpose": "downstream_terminal_clipped_local_refinement",
+        "purpose": str(acquisition_purpose),
         "split": "train",
         "iteration": int(policy_record["iteration"]),
         "policy_name": policy_record["name"],
@@ -1049,6 +1076,9 @@ def search_downstream_transition_refinement(
     artifact = prepared["artifact"]
     anchors = prepared["anchors"]
     anchor_audit = prepared["anchor_audit"]
+    search_purpose, acquisition_purpose = _refinement_protocol_purposes(
+        config["fixed_acquisition"]["search_mode"]
+    )
 
     grid = tuple(int(x) for x in config["fixed_acquisition"]["duration_grid"])
     directions = len(config["fixed_acquisition"]["action_names"]) * len(
@@ -1066,7 +1096,7 @@ def search_downstream_transition_refinement(
     protocol_base = {
         "schema": DOWNSTREAM_REFINEMENT_PROTOCOL_SCHEMA,
         "status": "predeclared",
-        "purpose": "downstream_contiguous_terminal_clipped_transition_band_refinement",
+        "purpose": search_purpose,
         "repository_head": _repository_head(),
         "config_path": str(config_path),
         "config_file_sha256": file_sha256(config_path),
@@ -1234,6 +1264,7 @@ def search_downstream_transition_refinement(
                     policy=policy,
                     policy_record=policy_record,
                     frozen_manifest_sha256=file_sha256(frozen_path),
+                    acquisition_purpose=acquisition_purpose,
                     protocol_seed=int(
                         config["fixed_acquisition"]["acquisition_protocol_seed_base"]
                     )

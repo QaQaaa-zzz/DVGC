@@ -32,7 +32,7 @@ Phase 22: Iteration-0 downstream refinement recovery and closure
 - [x] Review terminal clipping, phase locality, state/event provenance,
   physical deduplication, support exclusion, accounting, and idempotent resume.
 - [x] Run static, focused CPU/GPU, full local preflight, and audit-only gates.
-- [ ] Resume a protocol-identical partial run or launch the declared run only
+- [x] Resume a protocol-identical partial run or launch the declared run only
   after all gates pass; stop immediately at downstream readiness or the
   predeclared duration-grid exhaustion.
 - [ ] Freeze complete Iteration-0 TRAIN evidence, then design group-disjoint
@@ -43,9 +43,19 @@ Phase 22: Iteration-0 downstream refinement recovery and closure
 
 - [x] Delegate sparse monitoring and result analysis to Luna medium as directed.
 - [x] Preserve exact completed-duration and failed-attempt accounting.
-- [ ] Add source-bound repair resume and shared JIT-callable reuse under TDD.
-- [ ] Verify, commit, and resume without re-running duration-23 acquisition.
-- [ ] Delegate resumed-run monitoring and final evidence analysis to Luna medium.
+- [x] Add source-bound repair resume and shared JIT-callable reuse under TDD.
+- [x] Verify, commit, and resume without re-running duration-23 acquisition.
+- [x] Delegate resumed-run monitoring and final evidence analysis to Luna medium.
+- **Status:** completed; search exhausted without downstream negative labels
+
+### Phase 24: downstream strength-extrapolation panel
+
+- [x] Analyze the closed duration search and reject further duration extension.
+- [x] Select a symmetric four-axis fixed-duration strength panel with exact
+  interaction ceilings and unchanged scientific semantics.
+- [ ] Implement the locked config variant under TDD and the stable entrypoint.
+- [ ] Verify, commit, audit, and launch exactly one panel.
+- [ ] Delegate sparse monitoring and result analysis to Luna medium.
 - **Status:** in progress
 
 ### Phase 21: portable handoff, locked-artifact archive, and remote delivery

@@ -91,10 +91,10 @@
 - [x] Re-run `bash JIT/scripts/local_preflight.sh` after final review (410 CPU + 14 GPU passed).
 - [x] Re-run enhanced `--audit-only` after final review and verify exact policy, prior search, Tube, checkpoint, and five-anchor identities.
 - [x] Review `git diff --check`, changed paths, and user-owned dirty paths.
-- [ ] Explicitly stage only the validated JIT repair/docs/tests/planning paths and create one focused commit so `repository_head` truthfully identifies the code used for interactions.
-- [ ] Re-run enhanced audit at the committed HEAD.
-- [ ] Launch the absent declared refinement run without `--resume`, teeing its log and preserving the exact exit code.
-- [ ] Inspect only progress/completion/abnormal exit; stop immediately at downstream readiness or duration-32 exhaustion.
+- [x] Explicitly stage only the validated JIT repair/docs/tests/planning paths and create one focused commit so `repository_head` truthfully identifies the code used for interactions.
+- [x] Re-run enhanced audit at the committed HEAD.
+- [x] Launch the absent declared refinement run without `--resume`, teeing its log and preserving the exact exit code.
+- [x] Inspect only progress/completion/abnormal exit; the first process failed at duration 23 and the source-bound repair stopped normally at duration-32 exhaustion.
 
 ### Task 5: Recover the duration-23 GPU allocation failure
 
@@ -108,5 +108,5 @@
   failed-attempt artifact and includes both failed and successful label cost.
 - [x] Re-run focused/static/full preflight and artifact audit gates (29 focused
   CPU, 4 focused GPU, 414 full CPU, and 14 full GPU tests passed).
-- [ ] Commit the repair, invoke one explicit repair resume, and delegate sparse
+- [x] Commit the repair, invoke one explicit repair resume, and delegate sparse
   run monitoring/result analysis to Luna medium.
