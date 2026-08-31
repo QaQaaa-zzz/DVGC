@@ -1,7 +1,7 @@
 """TRAIN-only real-dynamics frontier acquisition for frozen unified policies.
 
-The source Tube is training guidance, not a certified set.  Low-score Tube
-entries are used only as auditable frontier-probe anchors.  New candidate states
+The source Tube is training guidance, not a certified set. Low-score Tube
+entries are used only as auditable frontier-probe anchors. New candidate states
 must be produced by the authoritative unified dynamics under bounded action
 perturbations; direct qpos/qvel dilation is intentionally unsupported.
 """
@@ -35,6 +35,7 @@ UNIFIED_BOUNDARY_PROTOCOL_SCHEMA = "jit_unified_boundary_protocol_v1"
 DEFAULT_UNIFIED_BOUNDARY_STRENGTHS = (0.025, 0.05, 0.10)
 DEFAULT_UNIFIED_BOUNDARY_DURATIONS = (1, 2)
 DEFAULT_ANCHORS_PER_PHASE = 8
+DEFAULT_FRONTIER_SCORE_CEILING = 0.5
 
 
 def _truth(value: Any) -> bool:
@@ -96,16 +97,21 @@ def select_tube_boundary_anchors(
     artifact: SoftTubeArtifact,
     *,
     max_per_phase: int = DEFAULT_ANCHORS_PER_PHASE,
+    frontier_score_ceiling: float = DEFAULT_FRONTIER_SCORE_CEILING,
 ) -> tuple[tuple[TubeBoundaryAnchor, ...], dict[str, Any]]:
-    """Select low-score, parent-group-diverse TRAIN frontier probes per phase.
+    """Select weak-score, parent-group-unique TRAIN frontier probes per phase.
 
-    These anchors are *not* asserted to lie on a mathematical boundary.  The
-    ordering only determines where the first real-dynamics acquisition budget is
-    spent before frozen-policy continuation labels exist.
+    The score ceiling is a fixed bootstrap continuation decision boundary, not a
+    fitted geometric Tube boundary. Anchors above the ceiling are core support
+    and are never pulled into frontier acquisition merely to fill a quota.
+    These anchors are not asserted to lie on a mathematical boundary.
     """
     _validate_source_tube(artifact)
     if int(max_per_phase) <= 0:
         raise ValueError("max_per_phase must be positive")
+    ceiling = float(frontier_score_ceiling)
+    if not np.isfinite(ceiling) or not 0.0 <= ceiling <= 1.0:
+        raise ValueError("frontier_score_ceiling must be finite and lie in [0, 1]")
 
     upstream_count = sum(row["phase"] == "upstream" for row in artifact.entries)
     selected: list[TubeBoundaryAnchor] = []
@@ -114,8 +120,11 @@ def select_tube_boundary_anchors(
         phase_rows = _phase_rows(artifact, phase)
         if not phase_rows:
             raise ValueError(f"source Tube has no {phase} support")
+        eligible = [
+            item for item in phase_rows if float(item[1]["value_score"]) <= ceiling
+        ]
         ordered = sorted(
-            phase_rows,
+            eligible,
             key=lambda item: (
                 float(item[1]["value_score"]),
                 str(item[1]["parent_group_id"]),
@@ -126,7 +135,8 @@ def select_tube_boundary_anchors(
         seen_states: set[str] = set()
         seen_groups: set[str] = set()
 
-        # First spend budget across distinct parent trajectories.
+        # One state per parent trajectory prevents pseudo-diverse frontier budget
+        # from being spent repeatedly on the same rollout family.
         for local_index, row in ordered:
             state_hash = str(row["state_sha256"])
             group = str(row["parent_group_id"])
@@ -137,18 +147,6 @@ def select_tube_boundary_anchors(
             seen_groups.add(group)
             if len(chosen) >= int(max_per_phase):
                 break
-
-        # If the Tube has fewer groups than the requested budget, fill only with
-        # physically distinct states; duplicate physical states never buy budget.
-        if len(chosen) < int(max_per_phase):
-            for local_index, row in ordered:
-                state_hash = str(row["state_sha256"])
-                if state_hash in seen_states:
-                    continue
-                chosen.append((local_index, row))
-                seen_states.add(state_hash)
-                if len(chosen) >= int(max_per_phase):
-                    break
 
         for local_index, row in chosen:
             global_index = local_index if phase_index == 0 else upstream_count + local_index
@@ -163,6 +161,11 @@ def select_tube_boundary_anchors(
             )
         phase_audit[phase] = {
             "support_count": len(phase_rows),
+            "eligible_support_count": len(eligible),
+            "eligible_parent_group_count": len(
+                {str(row["parent_group_id"]) for _index, row in eligible}
+            ),
+            "excluded_above_score_ceiling_count": len(phase_rows) - len(eligible),
             "selected_count": len(chosen),
             "selected": [
                 {
@@ -185,8 +188,9 @@ def select_tube_boundary_anchors(
         "schema": "jit_unified_boundary_anchor_audit_v1",
         "status": "completed",
         "split": "train",
-        "selection": "lowest_bootstrap_value_score_parent_group_diverse_then_state_unique",
-        "anchor_semantics": "frontier_probe_seed_not_certified_boundary",
+        "selection": "bootstrap_score_at_or_below_ceiling_parent_group_unique_state_unique",
+        "anchor_semantics": "weak_bootstrap_frontier_probe_not_certified_boundary",
+        "frontier_score_ceiling": ceiling,
         "max_per_phase": int(max_per_phase),
         "selected_anchor_count": len(selected),
         "source_tube_manifest_sha256": artifact.manifest["manifest_sha256"],
@@ -206,6 +210,7 @@ def collect_unified_boundary_candidates(
     policy_record: Mapping[str, Any],
     frozen_manifest_sha256: str,
     protocol_seed: int,
+    frontier_score_ceiling: float = DEFAULT_FRONTIER_SCORE_CEILING,
     strengths: Sequence[float] = DEFAULT_UNIFIED_BOUNDARY_STRENGTHS,
     durations: Sequence[int] = DEFAULT_UNIFIED_BOUNDARY_DURATIONS,
     action_names: Sequence[str] | None = None,
@@ -218,10 +223,21 @@ def collect_unified_boundary_candidates(
         action_names=action_names,
         signs=signs,
     )
+    ceiling = float(frontier_score_ceiling)
+    if not np.isfinite(ceiling) or not 0.0 <= ceiling <= 1.0:
+        raise ValueError("frontier_score_ceiling must be finite and lie in [0, 1]")
     if not anchors:
         raise ValueError("unified boundary acquisition requires anchors")
     if any(anchor.phase not in ("upstream", "downstream") for anchor in anchors):
         raise ValueError("unsupported unified boundary anchor phase")
+    if any(anchor.value_score > ceiling for anchor in anchors):
+        raise ValueError("unified boundary anchor exceeds frontier score ceiling")
+    parent_keys = [(anchor.phase, anchor.parent_group_id) for anchor in anchors]
+    if len(parent_keys) != len(set(parent_keys)):
+        raise ValueError("unified boundary anchors must be parent-group unique per phase")
+    state_hashes = [anchor.state_sha256 for anchor in anchors]
+    if len(state_hashes) != len(set(state_hashes)):
+        raise ValueError("unified boundary anchors must be physical-state unique")
     if int(policy_record.get("iteration", -1)) < 0:
         raise ValueError("frozen unified policy iteration is invalid")
     if policy_record.get("policy_role") != "envelope_expansion_authority":
@@ -241,6 +257,26 @@ def collect_unified_boundary_candidates(
         for _strength in strengths
         for _direction in directions
     )
+    anchor_identities = [
+        {
+            "phase": anchor.phase,
+            "phase_index": int(anchor.phase_index),
+            "entry_index": int(anchor.entry_index),
+            "global_index": int(anchor.global_index),
+            "parent_group_id": anchor.parent_group_id,
+            "state_sha256": anchor.state_sha256,
+            "bootstrap_value_score": anchor.value_score,
+        }
+        for anchor in sorted(
+            anchors,
+            key=lambda item: (
+                item.phase_index,
+                item.value_score,
+                item.parent_group_id,
+                item.state_sha256,
+            ),
+        )
+    ]
     protocol = {
         "schema": UNIFIED_BOUNDARY_PROTOCOL_SCHEMA,
         "status": "predeclared",
@@ -255,7 +291,14 @@ def collect_unified_boundary_candidates(
         "source_tube_manifest_sha256": str(artifact.manifest["manifest_sha256"]),
         "source_tube_entry_count": int(artifact.manifest["entry_count"]),
         "anchor_count": len(anchors),
-        "anchor_semantics": "low_score_group_diverse_frontier_probe_not_certified_boundary",
+        "anchor_selection": {
+            "rule": "bootstrap_score_at_or_below_ceiling_parent_group_unique_state_unique",
+            "frontier_score_ceiling": ceiling,
+            "parent_group_unique_per_phase": True,
+            "physical_state_unique": True,
+            "anchor_identities": anchor_identities,
+        },
+        "anchor_semantics": "weak_bootstrap_frontier_probe_not_certified_boundary",
         "protocol_seed": int(protocol_seed),
         "action_order": list(ACTION_ORDER),
         "direction_family": (
@@ -453,6 +496,7 @@ def collect_unified_boundary_candidates(
         "frozen_unified_manifest_sha256": str(frozen_manifest_sha256),
         "source_tube_manifest_sha256": str(artifact.manifest["manifest_sha256"]),
         "protocol_sha256": protocol_sha,
+        "frontier_score_ceiling": ceiling,
         "anchor_count": len(anchors),
         "attempted_candidate_count": attempted,
         "candidate_count": len(entries),
