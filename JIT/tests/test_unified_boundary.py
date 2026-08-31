@@ -44,18 +44,22 @@ def _artifact(entries, **manifest_overrides):
     return SimpleNamespace(manifest=manifest, entries=tuple(entries))
 
 
-def test_boundary_anchor_selection_is_low_score_group_diverse_and_phase_local():
+def test_boundary_anchor_selection_is_weak_score_group_unique_and_phase_local():
     entries = [
         _entry("upstream", 0, 0.10, "u0"),
         _entry("upstream", 1, 0.11, "u0"),
         _entry("upstream", 2, 0.20, "u1"),
-        _entry("upstream", 3, 0.30, "u2"),
+        _entry("upstream", 3, 0.99, "u2"),
         _entry("downstream", 0, 0.05, "d0"),
         _entry("downstream", 1, 0.06, "d0"),
         _entry("downstream", 2, 0.07, "d1"),
-        _entry("downstream", 3, 0.40, "d2"),
+        _entry("downstream", 3, 0.90, "d2"),
     ]
-    anchors, audit = select_tube_boundary_anchors(_artifact(entries), max_per_phase=2)
+    anchors, audit = select_tube_boundary_anchors(
+        _artifact(entries),
+        max_per_phase=8,
+        frontier_score_ceiling=0.5,
+    )
 
     assert [(a.phase, a.entry_index, a.parent_group_id) for a in anchors] == [
         ("upstream", 0, "u0"),
@@ -64,13 +68,48 @@ def test_boundary_anchor_selection_is_low_score_group_diverse_and_phase_local():
         ("downstream", 2, "d1"),
     ]
     assert [a.global_index for a in anchors] == [0, 2, 4, 6]
+    assert all(a.value_score <= 0.5 for a in anchors)
     assert audit["split"] == "train"
-    assert audit["anchor_semantics"] == "frontier_probe_seed_not_certified_boundary"
+    assert audit["selection"] == (
+        "bootstrap_score_at_or_below_ceiling_parent_group_unique_state_unique"
+    )
+    assert audit["anchor_semantics"] == "weak_bootstrap_frontier_probe_not_certified_boundary"
+    assert audit["frontier_score_ceiling"] == pytest.approx(0.5)
+    assert audit["selected_anchor_count"] == 4
+    assert audit["by_phase"]["upstream"]["eligible_support_count"] == 3
+    assert audit["by_phase"]["upstream"]["eligible_parent_group_count"] == 2
+    assert audit["by_phase"]["upstream"]["excluded_above_score_ceiling_count"] == 1
+    assert audit["by_phase"]["downstream"]["eligible_support_count"] == 3
+    assert audit["by_phase"]["downstream"]["eligible_parent_group_count"] == 2
+    assert audit["by_phase"]["downstream"]["excluded_above_score_ceiling_count"] == 1
     assert audit["test_data_used"] is False
     assert audit["validation_data_used"] is False
 
 
-def test_boundary_anchor_selection_rejects_nontrain_or_leaky_tube():
+def test_boundary_anchor_selection_never_fills_quota_with_core_or_same_parent_group():
+    entries = [
+        _entry("upstream", 0, 0.01, "u0"),
+        _entry("upstream", 1, 0.02, "u0"),
+        _entry("upstream", 2, 0.03, "u0"),
+        _entry("upstream", 3, 0.95, "u1"),
+        _entry("downstream", 0, 0.04, "d0"),
+        _entry("downstream", 1, 0.05, "d0"),
+        _entry("downstream", 2, 0.96, "d1"),
+    ]
+    anchors, audit = select_tube_boundary_anchors(
+        _artifact(entries), max_per_phase=8, frontier_score_ceiling=0.5
+    )
+
+    assert [(a.phase, a.parent_group_id, a.value_score) for a in anchors] == [
+        ("upstream", "u0", 0.01),
+        ("downstream", "d0", 0.04),
+    ]
+    assert audit["selected_anchor_count"] == 2
+    assert audit["by_phase"]["upstream"]["selected_count"] == 1
+    assert audit["by_phase"]["downstream"]["selected_count"] == 1
+
+
+def test_boundary_anchor_selection_rejects_nontrain_leaky_or_invalid_ceiling():
     entries = [
         _entry("upstream", 0, 0.2, "u0"),
         _entry("downstream", 0, 0.2, "d0", split="validation"),
@@ -86,6 +125,10 @@ def test_boundary_anchor_selection_rejects_nontrain_or_leaky_tube():
         select_tube_boundary_anchors(
             _artifact(clean, validation_data_used=True),
             max_per_phase=1,
+        )
+    with pytest.raises(ValueError, match="frontier_score_ceiling"):
+        select_tube_boundary_anchors(
+            _artifact(clean), max_per_phase=1, frontier_score_ceiling=1.1
         )
 
 
