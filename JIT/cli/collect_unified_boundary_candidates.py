@@ -12,6 +12,7 @@ from jit_dvgc.checkpoint import load_checkpoint
 from jit_dvgc.config import file_sha256
 from jit_dvgc.constants import ACTION_ORDER
 from jit_dvgc.ppo import make_checkpoint_policy
+from jit_dvgc.soft_tube import load_soft_tube
 from jit_dvgc.unified_boundary import (
     DEFAULT_ANCHORS_PER_PHASE,
     DEFAULT_UNIFIED_BOUNDARY_DURATIONS,
@@ -19,7 +20,10 @@ from jit_dvgc.unified_boundary import (
     collect_unified_boundary_candidates,
     select_tube_boundary_anchors,
 )
-from jit_dvgc.unified_formal import build_unified_formal_environment
+from jit_dvgc.unified_formal import (
+    build_unified_formal_environment,
+    load_unified_formal_config,
+)
 from jit_dvgc.unified_policy_freeze import load_frozen_unified_manifest
 from jit_dvgc.unified_training import checkpoint_identity
 
@@ -65,7 +69,7 @@ def main() -> int:
     parser.add_argument(
         "--audit-only",
         action="store_true",
-        help="select Tube frontier anchors without creating MJX or spending interactions",
+        help="select Tube frontier anchors without constructing MJX or spending interactions",
     )
     args = parser.parse_args()
 
@@ -78,13 +82,12 @@ def main() -> int:
 
     frozen = load_frozen_unified_manifest(args.frozen_policy)
     record = frozen["policy"]
-    config, artifact, env = build_unified_formal_environment(Path(record["formal_config"]))
+    config = load_unified_formal_config(Path(record["formal_config"]))
     if config.config_sha256 != record["formal_config_sha256"]:
         raise ValueError("frozen unified policy/formal config SHA-256 mismatch")
+    artifact = load_soft_tube(Path(config.soft_tube_path))
     if artifact.manifest["manifest_sha256"] != config.soft_tube_manifest_sha256:
         raise ValueError("formal config/source Tube SHA-256 mismatch")
-    if env._bundle.xml_sha256 != record["xml_sha256"]:
-        raise ValueError("frozen unified policy/runtime XML mismatch")
 
     anchors, audit = select_tube_boundary_anchors(
         artifact,
@@ -99,9 +102,19 @@ def main() -> int:
 
     if jax.default_backend() != "gpu":
         raise RuntimeError("unified boundary acquisition requires the visible JAX GPU")
+    runtime_config, runtime_artifact, env = build_unified_formal_environment(
+        Path(record["formal_config"])
+    )
+    if runtime_config.config_sha256 != config.config_sha256:
+        raise ValueError("unified boundary runtime formal config drift")
+    if runtime_artifact.manifest["manifest_sha256"] != artifact.manifest["manifest_sha256"]:
+        raise ValueError("unified boundary runtime source Tube drift")
+    if env._bundle.xml_sha256 != record["xml_sha256"]:
+        raise ValueError("frozen unified policy/runtime XML mismatch")
+
     payload = load_checkpoint(
         Path(record["checkpoint"]),
-        expected=checkpoint_identity(config, env),
+        expected=checkpoint_identity(runtime_config, env),
     )
     if int(payload.training_transitions) != int(record["source_training_transitions"]):
         raise ValueError("frozen unified policy checkpoint transition drift")
