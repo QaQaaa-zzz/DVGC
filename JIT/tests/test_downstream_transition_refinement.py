@@ -130,6 +130,51 @@ def test_refinement_protocol_purposes_bind_search_mode():
         "downstream_fixed_duration_strength_extrapolation",
         "downstream_terminal_clipped_strength_extrapolation",
     )
+    assert refinement._refinement_protocol_purposes(
+        "targeted_hip_positive_boundary_completion"
+    ) == (
+        "downstream_targeted_hip_positive_boundary_completion",
+        "downstream_terminal_clipped_hip_positive_boundary_completion",
+    )
+
+
+def test_hip_positive_completion_config_is_exact_and_bounded(jit_root):
+    path = jit_root / "configs/envelope_iter0_downstream_hip_completion.json"
+    config = load_downstream_refinement_config(path)
+
+    acquisition = config["fixed_acquisition"]
+    assert acquisition["search_mode"] == "targeted_hip_positive_boundary_completion"
+    assert acquisition["action_names"] == ["hip"]
+    assert acquisition["signs"] == [1]
+    assert acquisition["strengths"] == [0.32, 0.35, 0.4, 0.45, 0.5]
+    assert acquisition["duration_grid"] == [30]
+    assert config["prior_search"]["expected_accumulated_unique_label_count"] == 3165
+    assert config["prior_search"]["expected_downstream"] == {
+        "candidate_count": 2594,
+        "positive_count": 2589,
+        "negative_count": 5,
+        "positive_parent_group_count": 5,
+        "negative_parent_group_count": 5,
+        "ready": False,
+    }
+
+
+def test_hip_positive_completion_rejects_direction_or_strength_drift(tmp_path, jit_root):
+    source = json.loads(
+        (jit_root / "configs/envelope_iter0_downstream_hip_completion.json").read_text()
+    )
+    path = tmp_path / "hip_completion.json"
+
+    source["fixed_acquisition"]["signs"] = [-1, 1]
+    path.write_text(json.dumps(source))
+    with pytest.raises(ValueError, match="signs"):
+        load_downstream_refinement_config(path)
+
+    source["fixed_acquisition"]["signs"] = [1]
+    source["fixed_acquisition"]["strengths"][-1] = 0.55
+    path.write_text(json.dumps(source))
+    with pytest.raises(ValueError, match="strengths"):
+        load_downstream_refinement_config(path)
 
 
 def test_downstream_refinement_audit_validates_current_artifacts(jit_root):

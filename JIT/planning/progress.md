@@ -172,6 +172,31 @@
   and all 14 GPU tests passing. The post-preflight audit repeated the exact
   zero-interaction input/anchor identities and config SHA
   `2f7c70598d71b2d4d96217ddce91771d2c60bd070bf2709c7f35d9b775595872`.
+- Committed the symmetric panel as `ae51d7c`, re-audited the committed HEAD,
+  launched exactly one run, and delegated monitoring/analysis to Luna medium.
+  It exited 0 with `search_exhausted`: 120/120 candidates, 115 positive and 5
+  negative, 3,595 acquisition and 215 labeling interactions.
+- All five negatives were distinct `hip +1, strength 0.30` states across all
+  five parent groups, with pitch-limit terminal probes. Accumulated downstream
+  readiness is 2,589 positive, 5 negative, five parent groups per class, and
+  still false only because the minimum negative count is 20.
+- Selected one evidence-directed completion panel: hip +1, duration 30,
+  strengths 0.32/0.35/0.40/0.45/0.50, 25 attempts, 750 acquisition maximum,
+  and 10,000 labeling maximum. Physical deduplication remains authoritative.
+- Hip-completion TDD RED failed on the absent config and protocol mode. GREEN
+  passes the exact config, direction/strength drift rejection, and protocol
+  purpose tests while preserving both prior variants.
+- Enhanced zero-interaction audit passed for the targeted config, binding the
+  exact 3,165-label prior (summary SHA
+  `758aaea56a8be803ce323d85d66f1a1032227f9f9802f8615fbc314b29e54762`,
+  labels SHA `f4888fa17213eee5f7d5fe8b6539d99ced8fcf8f4404ae498cb0a7927c1897df`),
+  frozen pi_0, source Tube, and five anchors.
+- Targeted-panel static compilation passed; the four handoff CPU files pass 35
+  tests and the two declared GPU files pass all 4 tests.
+- Full targeted-panel preflight exited 0 with 420 non-GPU tests (34 deselected)
+  and all 14 GPU tests passing. The post-preflight enhanced audit repeated the
+  exact zero-interaction bindings and config SHA
+  `5bb22cd47ba0fd0ad1d443c7ebcfa00e7071e6251373716a3680f9f14b96cab7`.
 
 ## Session: 2026-08-28 afternoon handoff and remote archive
 

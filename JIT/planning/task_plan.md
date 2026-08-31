@@ -53,9 +53,18 @@ Phase 22: Iteration-0 downstream refinement recovery and closure
 - [x] Analyze the closed duration search and reject further duration extension.
 - [x] Select a symmetric four-axis fixed-duration strength panel with exact
   interaction ceilings and unchanged scientific semantics.
-- [ ] Implement the locked config variant under TDD and the stable entrypoint.
-- [ ] Verify, commit, audit, and launch exactly one panel.
-- [ ] Delegate sparse monitoring and result analysis to Luna medium.
+- [x] Implement the locked config variant under TDD and the stable entrypoint.
+- [x] Verify, commit, audit, and launch exactly one panel.
+- [x] Delegate sparse monitoring and result analysis to Luna medium.
+- **Status:** completed; first five downstream negatives found
+
+### Phase 25: evidence-directed hip-positive boundary completion
+
+- [x] Bind the only observed negative action/sign and quantify saturation risk.
+- [x] Select one 25-attempt targeted panel with exact ceilings and deduplication.
+- [ ] Implement the locked variant under TDD and the stable entrypoint.
+- [ ] Verify, commit, audit, launch, and delegate monitoring to Luna medium.
+- [ ] Freeze TRAIN evidence only if full downstream readiness closes.
 - **Status:** in progress
 
 ### Phase 21: portable handoff, locked-artifact archive, and remote delivery

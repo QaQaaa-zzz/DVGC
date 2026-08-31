@@ -64,6 +64,10 @@ def _refinement_protocol_purposes(search_mode: str) -> tuple[str, str]:
             "downstream_fixed_duration_strength_extrapolation",
             "downstream_terminal_clipped_strength_extrapolation",
         ),
+        "targeted_hip_positive_boundary_completion": (
+            "downstream_targeted_hip_positive_boundary_completion",
+            "downstream_terminal_clipped_hip_positive_boundary_completion",
+        ),
     }
     try:
         return purposes[str(search_mode)]
@@ -160,24 +164,39 @@ def load_downstream_refinement_config(path: Path) -> dict[str, Any]:
     ceiling = float(acquisition.get("frontier_score_ceiling", np.nan))
     if not np.isfinite(ceiling) or not 0.0 <= ceiling <= 1.0:
         raise ValueError("frontier_score_ceiling must lie in [0, 1]")
-    if tuple(acquisition.get("action_names", ())) != ACTION_ORDER:
-        raise ValueError("downstream refinement must preserve canonical action order")
-    if tuple(int(x) for x in acquisition.get("signs", ())) != (-1, 1):
-        raise ValueError("downstream refinement signs must remain [-1, +1]")
     search_mode = str(acquisition.get("search_mode", ""))
     _refinement_protocol_purposes(search_mode)
+    action_names = tuple(acquisition.get("action_names", ()))
+    signs = tuple(int(x) for x in acquisition.get("signs", ()))
     strengths = tuple(float(x) for x in acquisition.get("strengths", ()))
     grid = tuple(int(x) for x in acquisition.get("duration_grid", ()))
     if search_mode == "contiguous_integer_local_refinement":
+        if action_names != ACTION_ORDER:
+            raise ValueError("downstream refinement must preserve canonical action order")
+        if signs != (-1, 1):
+            raise ValueError("downstream refinement signs must remain [-1, +1]")
         if strengths != (0.025, 0.05, 0.10):
             raise ValueError("downstream refinement strengths must remain fixed")
         if grid != tuple(range(17, 33)):
             raise ValueError("downstream refinement duration_grid must be contiguous 17..32")
     elif search_mode == "fixed_duration_strength_extrapolation":
+        if action_names != ACTION_ORDER:
+            raise ValueError("downstream refinement must preserve canonical action order")
+        if signs != (-1, 1):
+            raise ValueError("downstream refinement signs must remain [-1, +1]")
         if strengths != (0.15, 0.20, 0.30):
             raise ValueError("downstream strength-extrapolation strengths drift")
         if grid != (30,):
             raise ValueError("downstream strength-extrapolation duration_grid must be [30]")
+    elif search_mode == "targeted_hip_positive_boundary_completion":
+        if action_names != ("hip",):
+            raise ValueError("downstream hip completion action_names must be [hip]")
+        if signs != (1,):
+            raise ValueError("downstream hip completion signs must be [+1]")
+        if strengths != (0.32, 0.35, 0.40, 0.45, 0.50):
+            raise ValueError("downstream hip completion strengths drift")
+        if grid != (30,):
+            raise ValueError("downstream hip completion duration_grid must be [30]")
     clipping = acquisition.get("terminal_clipping", {})
     if clipping != {
         "enabled": True,

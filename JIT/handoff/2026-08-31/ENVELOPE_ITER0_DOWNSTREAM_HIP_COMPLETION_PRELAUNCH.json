@@ -1,0 +1,43 @@
+{
+  "schema": "jit_envelope_iter0_downstream_hip_completion_prelaunch_v1",
+  "status": "predeclared",
+  "date": "2026-08-31",
+  "iteration": 0,
+  "scientific_role": "evidence_directed_downstream_negative_boundary_completion",
+  "prior_search": {
+    "root": "JIT/runs/pi_unified_transition_band/pi_0_downstream_strength_refinement_20260831",
+    "status": "search_exhausted",
+    "protocol_sha256": "dcd5c97a4bb07dd0a360045e8112c795d218110ff33273222df4de2fac689bf2",
+    "accumulated_unique_label_count": 3165,
+    "downstream_positive_count": 2589,
+    "downstream_negative_count": 5,
+    "positive_parent_group_count": 5,
+    "negative_parent_group_count": 5,
+    "ready": false
+  },
+  "method_decision": {
+    "reason": "The only observed downstream negatives are hip positive-sign strength-0.30 probes across all five parent groups.",
+    "search_mode": "targeted_hip_positive_boundary_completion",
+    "duration": 30,
+    "action_names": ["hip"],
+    "signs": [1],
+    "strengths": [0.32, 0.35, 0.4, 0.45, 0.5],
+    "expected_anchor_count": 5,
+    "maximum_attempts": 25,
+    "maximum_acquisition_environment_interactions": 750,
+    "maximum_labeling_environment_interactions": 10000,
+    "training_transitions": 0,
+    "deduplication": "distinct physical-state SHA-256 required; saturated duplicates do not count"
+  },
+  "config": "JIT/configs/envelope_iter0_downstream_hip_completion.json",
+  "output_dir": "JIT/runs/pi_unified_transition_band/pi_0_downstream_hip_completion_20260831",
+  "claim_boundary": {
+    "training_only_search": true,
+    "upstream_transition_band_frozen": true,
+    "continuation_field_trained": false,
+    "tube_1_constructed": false,
+    "pi_1_trained": false,
+    "jce_jel_claim": false,
+    "certified_safe_set_claim": false
+  }
+}
