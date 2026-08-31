@@ -11,13 +11,13 @@
     "certified_safe": false
   },
   "completed_inner_shell": {
-    "labels_path": "JIT/runs/pi_unified_continuation/pi_0_frontier_train_labels_20260831/labels.json",
-    "expected_label_protocol_sha256": "6b8d7b28ba57718facec6236ea95ee8e00181eaa71dc19d68f24eebfb7ae9521",
-    "expected_acquisition_protocol_sha256": "f649dc90a9cb574eb6de05b84eb512a02c3d834d8a208a54544a5592d4edc7ca",
-    "expected_candidate_count": 416,
-    "expected_positive_count": 415,
-    "expected_negative_count": 1,
-    "maximum_duration": 2
+    "labels_path": "JIT/runs/pi_unified_transition_band/pi_0_iter0_completed_baseline_20260831/labels.json",
+    "expected_label_protocol_sha256": "dab211deb8c60a3f7b1db2a8fafc06bc7c3ad3e85f7a1c51ecfe2cc0fbdb937a",
+    "expected_acquisition_protocol_sha256": "ac479d8f69ce10f82a33a647925befa473690381f79019e2f521a89cb1e53d5f",
+    "expected_candidate_count": 896,
+    "expected_positive_count": 883,
+    "expected_negative_count": 13,
+    "maximum_duration": 8
   },
   "fixed_acquisition": {
     "anchors_per_phase": 8,
@@ -51,12 +51,6 @@
     "phasewise_stopping": true
   },
   "outer_shells": [
-    {
-      "shell_id": "outer_shell1",
-      "durations": [4, 8],
-      "acquisition_protocol_seed": 9510001,
-      "label_protocol_seed": 9511002
-    },
     {
       "shell_id": "outer_shell2",
       "durations": [16, 32],
