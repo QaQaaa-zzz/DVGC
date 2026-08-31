@@ -1,13 +1,14 @@
 {
   "schema": "jit_envelope_iteration_outer_shell_prelaunch_v1",
-  "status": "superseded_before_launch",
+  "status": "completed_before_automation_handoff",
   "date": "2026-08-31",
   "iteration": 0,
   "runtime_code_head": "14928b000fa1794c0ff592a25054f08164d79138",
   "scientific_role": "expansion_train_boundary_localization",
-  "superseded_by": {
+  "automation_handoff": {
     "config": "JIT/configs/envelope_iter0_transition_band_search.json",
-    "reason": "The duration-only outer-shell decision rule and phase-wise readiness criteria are now executed by one predeclared automated search instead of manual shell-by-shell launches. No outer_shell1 interaction had been started from this declaration."
+    "baseline_config": "JIT/configs/envelope_iter0_completed_baseline.json",
+    "reason": "Outer shell 1 was completed under the predeclared manual protocol before the automated search handoff. Its completed evidence is retained, audited, and merged with the inner shell so automation starts at durations [16, 32] without repeating [4, 8]."
   },
   "policy": {
     "name": "pi_0",
@@ -53,9 +54,7 @@
   "outer_shell_1": {
     "single_acquisition_variable": "perturbation_duration_only",
     "frontier_score_ceiling": 0.5,
-    "max_anchors_per_phase": 8,
-    "expected_selected_anchors": 10,
-    "anchor_selection": "same deterministic Tube_0 weak-frontier selector used by inner shell",
+    "selected_anchor_count": 10,
     "protocol_seed": 9510001,
     "action_names": [
       "steer",
@@ -65,10 +64,36 @@
     ],
     "signs": [-1, 1],
     "strengths": [0.025, 0.05, 0.1],
-    "inner_shell_durations": [1, 2],
     "outer_shell_durations": [4, 8],
-    "attempted_variant_ceiling": 480,
-    "maximum_environment_interactions": 2880,
+    "attempted_candidate_count": 480,
+    "candidate_count": 480,
+    "acquisition_environment_interactions": 2880,
+    "acquisition_protocol_sha256": "58f2fef73c50de73e8ca8935e5235c037d4b311ed1fe73c2214d4563ab515a44",
+    "candidate_catalog_file_sha256": "90fbb3e4efbc58cd9d51f33c8eba2bf348901ba289215b129507513623587b87",
+    "label_protocol_sha256": "7974bbf6cefc9c1a8bed2a156e23d1ead6f9d9bb497f7a48535c7d60851afa58",
+    "label_environment_interactions": 18880,
+    "positive_count": 468,
+    "negative_count": 12,
+    "outcome_counts": {
+      "success": 468,
+      "physical_failure": 12
+    },
+    "by_phase": {
+      "upstream": {
+        "candidate_count": 240,
+        "positive_count": 228,
+        "negative_count": 12,
+        "positive_parent_group_count": 5,
+        "negative_parent_group_count": 5
+      },
+      "downstream": {
+        "candidate_count": 240,
+        "positive_count": 240,
+        "negative_count": 0,
+        "positive_parent_group_count": 5,
+        "negative_parent_group_count": 0
+      }
+    },
     "state_generation": "authoritative unified real dynamics only; no direct qpos/qvel dilation",
     "candidate_split": "train",
     "training_transitions": 0,
@@ -77,12 +102,24 @@
     "test_data_used": false,
     "final_evaluation_data_used": false
   },
-  "post_acquisition_labeling": {
-    "policy": "same frozen deterministic pi_0",
-    "fresh_continuation_horizon_ticks": 400,
-    "branches_per_exact_candidate": 1,
-    "positive_semantics": "upstream requires Apex phase transition followed by downstream stable-recovery terminal success; downstream requires stable-recovery terminal success",
-    "alive_only_is_positive": false
+  "accumulated_after_outer_shell_1": {
+    "candidate_count": 896,
+    "positive_count": 883,
+    "negative_count": 13,
+    "upstream": {
+      "positive_count": 438,
+      "negative_count": 13,
+      "positive_parent_group_count": 5,
+      "negative_parent_group_count": 5,
+      "transition_band_ready": false
+    },
+    "downstream": {
+      "positive_count": 445,
+      "negative_count": 0,
+      "positive_parent_group_count": 5,
+      "negative_parent_group_count": 0,
+      "transition_band_ready": false
+    }
   },
   "transition_band_readiness": {
     "evaluated_per_phase_on_accumulated_expansion_train_labels": true,
@@ -90,17 +127,14 @@
     "minimum_negative_candidates": 20,
     "minimum_parent_groups_with_positive": 3,
     "minimum_parent_groups_with_negative": 3,
-    "reason": "A continuation field should not be fit or calibrated from a label-degenerate shell or from failures isolated to one trajectory family.",
     "phasewise_stopping": true,
     "resolved_phase_rule": "A phase satisfying all four minima stops outward TRAIN probing and is frozen for subsequent group-disjoint validation design.",
-    "unresolved_phase_rule": "Only a phase that fails the readiness criteria may continue a separately predeclared duration-only outer-shell search; policy, Tube_0, action axes, signs, strengths, physics, reward, and task semantics remain fixed."
+    "unresolved_phase_rule": "Only a phase that fails the readiness criteria may continue the predeclared duration-only outer-shell search; policy, Tube_0, action axes, signs, strengths, physics, reward, and task semantics remain fixed."
   },
-  "decision_rule": {
-    "do_not_train_continuation_field_if_labels_remain_degenerate": true,
-    "purpose": "obtain both successful and failed real-dynamics states near the policy-conditioned continuation frontier before fitting C_up^0/C_down^0",
-    "no_posthoc_axis_targeting_from_single_inner_shell_failure": true,
-    "next_if_outer_shell_still_overwhelmingly_positive": "continue a separately predeclared duration-only outer shell rather than changing reward, physics, policy, Tube_0, action axes, or perturbation strengths",
-    "next_if_transition_band_observed": "freeze accumulated TRAIN labels for each phase that meets transition-band readiness and design group-disjoint expansion validation before continuation-field fitting/calibration"
+  "next_step": {
+    "build_accumulated_baseline": true,
+    "automated_search_starts_at_durations": [16, 32],
+    "no_repeat_of_completed_durations": [4, 8]
   },
   "claim_boundary": {
     "training_only_search": true,
