@@ -1,10 +1,10 @@
 """Independent canonical natural-start evaluation for a frozen unified policy.
 
-The current authoritative natural reset is intentionally deterministic.  This
+The current authoritative natural reset is intentionally deterministic. This
 module therefore audits reset diversity before taking any environment step and
 refuses to manufacture a statistical success rate from repeated copies of the
-same physical initial state.  Under the current contract it evaluates exactly
-one canonical full-chain rollout.  A later, separately declared reachable
+same physical initial state. Under the current contract it evaluates exactly
+one canonical full-chain rollout. A later, separately declared reachable
 initial-state bank is required for statistical Final-Recovery/JCE claims.
 """
 from __future__ import annotations
@@ -35,7 +35,7 @@ from .unified_formal import load_unified_formal_config
 from .unified_training import canonical_sha256, checkpoint_identity
 
 
-EVALUATION_SCHEMA = "jit_pi_unified_round0_canonical_natural_eval_v1"
+EVALUATION_SCHEMA = "jit_pi_unified_canonical_natural_eval_v1"
 RESET_AUDIT_SEED_START = 9_400_001
 RESET_AUDIT_COUNT = 64
 CANONICAL_ROLLOUT_SEED = 9_400_001
@@ -46,7 +46,7 @@ EXPECTED_UNIQUE_NATURAL_RESETS = 1
 class NaturalStartUnifiedEvalEnv(UnifiedTubeRSIEnv):
     """Unified runtime whose evaluation reset is the Phase-U natural reset.
 
-    Training semantics remain untouched in :class:`UnifiedTubeRSIEnv`.  This
+    Training semantics remain untouched in :class:`UnifiedTubeRSIEnv`. This
     subclass exists only for independent evaluation and converts the existing
     Phase-U natural-reset state into the unified single-Actor info/metric
     contract without changing qpos, qvel, controls, observations, or rewards.
@@ -82,7 +82,7 @@ class NaturalStartUnifiedEvalEnv(UnifiedTubeRSIEnv):
         )
 
         # Preserve all Phase-U natural-reset metrics while extending the pytree
-        # to exactly the unified step contract.  The reset is explicitly not a
+        # to exactly the unified step contract. The reset is explicitly not a
         # Soft-Tube sample.
         metrics = self._unified_zero_metrics()
         for key, value in phase_state.metrics.items():
@@ -121,9 +121,7 @@ def _write_json(path: Path, payload: Mapping[str, Any]) -> None:
 
 
 def _repo_head() -> str:
-    return subprocess.check_output(
-        ["git", "rev-parse", "HEAD"], text=True
-    ).strip()
+    return subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
 
 
 def _physical_reset_sha256(state: Any) -> str:
@@ -135,6 +133,17 @@ def _physical_reset_sha256(state: Any) -> str:
         digest.update(np.asarray(array.shape, dtype=np.int64).tobytes())
         digest.update(np.ascontiguousarray(array).tobytes())
     return digest.hexdigest()
+
+
+def _source_training_provenance(config: Any) -> dict[str, Any]:
+    declaration = config.raw.get("run_declaration")
+    run_id = None
+    if isinstance(declaration, Mapping):
+        run_id = declaration.get("run_id")
+    return {
+        "source_training_run_id": run_id,
+        "source_training_reset_mixture": config.reset_mixture.as_dict(),
+    }
 
 
 def audit_natural_reset_diversity(
@@ -246,7 +255,11 @@ def summarize_canonical_natural_trace(trace: EpisodeTrace) -> dict[str, Any]:
     angular_speed = [
         float(frame.metrics.get("signal/angular_speed", 0.0)) for frame in trace.frames
     ]
-    actions = np.stack([frame.action for frame in trace.frames[1:]]) if len(trace.frames) > 1 else np.zeros((0, 4))
+    actions = (
+        np.stack([frame.action for frame in trace.frames[1:]])
+        if len(trace.frames) > 1
+        else np.zeros((0, 4))
+    )
     action_abs = np.abs(actions)
 
     apex_index = _first_metric_frame(trace, "event/apex_seen")
@@ -280,13 +293,15 @@ def summarize_canonical_natural_trace(trace: EpisodeTrace) -> dict[str, Any]:
         "action_statistics": {
             "mean_abs": action_abs.mean(axis=0).tolist() if action_abs.size else [0.0] * 4,
             "max_abs": action_abs.max(axis=0).tolist() if action_abs.size else [0.0] * 4,
-            "saturation_fraction": float(np.mean(action_abs >= 0.999)) if action_abs.size else 0.0,
+            "saturation_fraction": float(np.mean(action_abs >= 0.999))
+            if action_abs.size
+            else 0.0,
         },
         "liftoff_metric_available": False,
     }
 
 
-def run_round0_canonical_natural_evaluation(
+def run_canonical_natural_evaluation(
     config_path: Path,
     checkpoint: Path,
     output_dir: Path,
@@ -294,7 +309,7 @@ def run_round0_canonical_natural_evaluation(
     env_factory: Callable[..., Any] = NaturalStartUnifiedEvalEnv,
     backend_name: Callable[[], str] = jax.default_backend,
 ) -> dict[str, Any]:
-    """Run the predeclared Round-0 canonical natural-start full-chain gate."""
+    """Run the canonical natural-start full-chain gate for a fixed policy."""
     config_path = Path(config_path)
     checkpoint_path = Path(checkpoint)
     output = Path(output_dir)
@@ -324,10 +339,11 @@ def run_round0_canonical_natural_evaluation(
     audit_seeds = tuple(
         range(RESET_AUDIT_SEED_START, RESET_AUDIT_SEED_START + RESET_AUDIT_COUNT)
     )
+    source_training = _source_training_provenance(config)
     declaration = {
         "schema": EVALUATION_SCHEMA,
         "status": "predeclared",
-        "purpose": "Round-0 canonical natural-start full-chain evaluation of the fixed 10M unified policy",
+        "purpose": "canonical natural-start full-chain evaluation of the fixed completed unified policy",
         "repository_head": _repo_head(),
         "formal_config": str(config_path.resolve()),
         "formal_config_sha256": config.config_sha256,
@@ -336,6 +352,7 @@ def run_round0_canonical_natural_evaluation(
         "checkpoint_training_transitions": int(payload.training_transitions),
         "xml_sha256": env._bundle.xml_sha256,
         "soft_tube_manifest_sha256": artifact.manifest["manifest_sha256"],
+        **source_training,
         "reset_protocol": "existing Phase-U natural reset converted to unified state without physical-state mutation",
         "reset_audit_seed_start": RESET_AUDIT_SEED_START,
         "reset_audit_count": RESET_AUDIT_COUNT,
@@ -388,6 +405,7 @@ def run_round0_canonical_natural_evaluation(
             "status": "completed",
             "protocol_sha256": declaration["protocol_sha256"],
             "checkpoint_payload_sha256": payload_sha,
+            **source_training,
             "reset_diversity": {
                 "seed_count": reset_audit["seed_count"],
                 "unique_physical_state_count": reset_audit[
@@ -407,7 +425,7 @@ def run_round0_canonical_natural_evaluation(
             "test_data_used": False,
             "statistical_success_rate_available": False,
             "statistical_success_rate_reason": "the authoritative natural reset has one unique physical initial state across the 64-seed audit",
-            "round0_gate": (
+            "canonical_gate": (
                 "CANONICAL_FULL_RECOVERY_GO"
                 if summary["full_recovery_success"]
                 else "CANONICAL_FULL_RECOVERY_FAIL"
@@ -428,3 +446,7 @@ def run_round0_canonical_natural_evaluation(
             },
         )
         raise
+
+
+# Compatibility alias for older callers; there is one implementation above.
+run_round0_canonical_natural_evaluation = run_canonical_natural_evaluation
