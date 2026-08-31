@@ -15,6 +15,7 @@ from jit_dvgc.ppo import make_checkpoint_policy
 from jit_dvgc.soft_tube import load_soft_tube
 from jit_dvgc.unified_boundary import (
     DEFAULT_ANCHORS_PER_PHASE,
+    DEFAULT_FRONTIER_SCORE_CEILING,
     DEFAULT_UNIFIED_BOUNDARY_DURATIONS,
     DEFAULT_UNIFIED_BOUNDARY_STRENGTHS,
     collect_unified_boundary_candidates,
@@ -40,6 +41,15 @@ def main() -> int:
     parser.add_argument("--frozen-policy", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--anchors-per-phase", type=int, default=DEFAULT_ANCHORS_PER_PHASE)
+    parser.add_argument(
+        "--frontier-score-ceiling",
+        type=float,
+        default=DEFAULT_FRONTIER_SCORE_CEILING,
+        help=(
+            "maximum bootstrap continuation score eligible for frontier probing; "
+            "default 0.5 is the fixed binary decision boundary"
+        ),
+    )
     parser.add_argument(
         "--strengths",
         type=float,
@@ -75,6 +85,8 @@ def main() -> int:
 
     if args.anchors_per_phase <= 0:
         parser.error("--anchors-per-phase must be positive")
+    if not 0.0 <= args.frontier_score_ceiling <= 1.0:
+        parser.error("--frontier-score-ceiling must lie in [0, 1]")
     if len(set(args.action_names)) != len(args.action_names):
         parser.error("--action-names must be unique")
     if len(set(args.signs)) != len(args.signs):
@@ -92,6 +104,7 @@ def main() -> int:
     anchors, audit = select_tube_boundary_anchors(
         artifact,
         max_per_phase=args.anchors_per_phase,
+        frontier_score_ceiling=args.frontier_score_ceiling,
     )
     if args.audit_only:
         output = Path(args.output_dir)
@@ -129,6 +142,7 @@ def main() -> int:
             policy_record=record,
             frozen_manifest_sha256=file_sha256(args.frozen_policy),
             protocol_seed=args.protocol_seed,
+            frontier_score_ceiling=args.frontier_score_ceiling,
             strengths=tuple(args.strengths),
             durations=tuple(args.durations),
             action_names=tuple(args.action_names),
@@ -160,6 +174,7 @@ def main() -> int:
                     "policy_iteration": int(record["iteration"]),
                     "policy_actor_sha256": str(record["actor_sha256"]),
                     "policy_payload_sha256": str(record["payload_sha256"]),
+                    "frontier_score_ceiling": float(args.frontier_score_ceiling),
                     "training_transitions": 0,
                     "test_data_used": False,
                     "validation_data_used": False,
