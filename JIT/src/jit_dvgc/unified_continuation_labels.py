@@ -273,6 +273,7 @@ def label_unified_continuations(
     frozen_manifest_sha256: str,
     max_ticks: int = DEFAULT_UNIFIED_CONTINUATION_MAX_TICKS,
     protocol_seed: int = DEFAULT_UNIFIED_CONTINUATION_PROTOCOL_SEED,
+    compiled_step_fn: Callable[[Any, Any], Any] | None = None,
 ) -> dict[str, Any]:
     """Label each exact frontier candidate under one deterministic frozen pi_k."""
     max_ticks = int(max_ticks)
@@ -367,7 +368,7 @@ def label_unified_continuations(
         encoding="utf-8",
     )
 
-    step_fn = jax.jit(env.step)
+    step_fn = compiled_step_fn if compiled_step_fn is not None else jax.jit(env.step)
     base_key = jax.random.PRNGKey(int(protocol_seed))
     labeled: list[dict[str, Any]] = []
     outcome_counts: Counter[str] = Counter()

@@ -392,6 +392,11 @@ def _completed_duration_fixture(tmp_path):
         "positive_count": 1,
         "negative_count": 0,
         "environment_interactions": 12,
+        "training_transitions": 0,
+        "expert_switching_used": False,
+        "test_data_used": False,
+        "validation_data_used": False,
+        "final_evaluation_data_used": False,
     }
     (labels_root / "summary.json").write_text(json.dumps(label_summary))
     (root / "duration_summary.json").write_text(
@@ -466,6 +471,134 @@ def test_resume_rejects_label_parent_group_drift(tmp_path):
     labels_path.write_text(json.dumps(rows))
 
     with pytest.raises(ValueError, match="candidate identity drift"):
+        refinement._load_completed_duration(
+            root,
+            duration=17,
+            policy_record=policy_record,
+            frozen_manifest_sha256=frozen_sha,
+        )
+
+
+def test_repair_resume_accepts_only_repository_head_change():
+    original = {
+        "schema": "jit_downstream_transition_refinement_protocol_v1",
+        "repository_head": "a" * 40,
+        "config_file_sha256": "b" * 64,
+        "protocol_sha256": "c" * 64,
+        "fixed_acquisition": {"duration_grid": [17, 18]},
+    }
+    repaired = {
+        **original,
+        "repository_head": "d" * 40,
+        "protocol_sha256": "e" * 64,
+    }
+
+    record = refinement._validate_repair_resume_protocol(
+        original,
+        repaired,
+        expected_source_head="a" * 40,
+    )
+
+    assert record["source_repository_head"] == "a" * 40
+    assert record["repair_repository_head"] == "d" * 40
+    drifted = {**repaired, "fixed_acquisition": {"duration_grid": [17, 19]}}
+    with pytest.raises(ValueError, match="non-source protocol drift"):
+        refinement._validate_repair_resume_protocol(
+            original,
+            drifted,
+            expected_source_head="a" * 40,
+        )
+
+
+def test_repair_resume_validates_failed_labels_and_preserves_cost(tmp_path):
+    root, policy_record, frozen_sha = _completed_duration_fixture(tmp_path)
+    (root / "duration_summary.json").unlink()
+    labels_root = root / "labels"
+    (labels_root / "labels.json").unlink()
+    failed = json.loads((labels_root / "summary.json").read_text())
+    failed.update(
+        status="engineering_error",
+        completed_candidate_count=1,
+        environment_interactions=12,
+        maximum_environment_interactions=400,
+        error=(
+            "ValueError: UNKNOWN: FFI callback error: RuntimeError: "
+            "Failed to allocate 32768 bytes on device 'cuda:0'"
+        ),
+    )
+    (labels_root / "summary.json").write_text(json.dumps(failed))
+
+    catalog, attempt = refinement._load_retryable_failed_duration(
+        root,
+        duration=17,
+        policy_record=policy_record,
+        frozen_manifest_sha256=frozen_sha,
+    )
+
+    assert len(catalog["entries"]) == 1
+    assert attempt["completed_candidate_count"] == 1
+    assert attempt["environment_interactions"] == 12
+    assert attempt["retry_labels_directory"] == "labels_retry_01"
+    assert len(attempt["failed_summary_file_sha256"]) == 64
+
+    failed["error"] = "ValueError: unrelated semantic failure"
+    (labels_root / "summary.json").write_text(json.dumps(failed))
+    with pytest.raises(ValueError, match="allocation failure"):
+        refinement._load_retryable_failed_duration(
+            root,
+            duration=17,
+            policy_record=policy_record,
+            frozen_manifest_sha256=frozen_sha,
+        )
+
+
+def test_completed_retry_binds_failed_attempt_and_total_cost(tmp_path):
+    root, policy_record, frozen_sha = _completed_duration_fixture(tmp_path)
+    retry_root = root / "labels_retry_01"
+    (root / "labels").rename(retry_root)
+    failed_root = root / "labels"
+    failed_root.mkdir()
+    failed_summary = {
+        "status": "engineering_error",
+        "completed_candidate_count": 1,
+        "environment_interactions": 998,
+        "error": "Failed to allocate 32768 bytes on device 'cuda:0'",
+    }
+    failed_summary_path = failed_root / "summary.json"
+    failed_summary_path.write_text(json.dumps(failed_summary))
+    duration_summary_path = root / "duration_summary.json"
+    duration_summary = json.loads(duration_summary_path.read_text())
+    duration_summary.update(
+        labels_directory="labels_retry_01",
+        successful_labeling_environment_interactions=12,
+        aborted_labeling_environment_interactions=998,
+        aborted_labeling_attempts=[
+            {
+                "failed_labels_directory": "labels",
+                "failed_summary_file_sha256": file_sha256(failed_summary_path),
+                "completed_candidate_count": 1,
+                "environment_interactions": 998,
+                "maximum_environment_interactions": 400,
+                "error": failed_summary["error"],
+                "retry_labels_directory": "labels_retry_01",
+            }
+        ],
+    )
+    duration_summary_path.write_text(json.dumps(duration_summary))
+
+    _, report = refinement._load_completed_duration(
+        root,
+        duration=17,
+        policy_record=policy_record,
+        frozen_manifest_sha256=frozen_sha,
+    )
+
+    assert report["successful_labeling_environment_interactions"] == 12
+    assert report["labeling_environment_interactions"] == 1010
+
+    failed_summary["environment_interactions"] = 997
+    failed_summary_path.write_text(json.dumps(failed_summary))
+    with pytest.raises(ValueError, match="failed summary SHA"):
         refinement._load_completed_duration(
             root,
             duration=17,

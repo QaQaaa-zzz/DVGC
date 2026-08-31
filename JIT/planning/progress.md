@@ -91,6 +91,44 @@
   generic worktree recommendation, so recovery will proceed in place after
   verifying the current checkout identity.
 
+### Phase 23: duration-23 allocation-failure recovery
+
+- Committed the validated startup/audit/resume repair as `ad416e8` and launched
+  the absent declared run without `--resume`.
+- At the user's direction, delegated all subsequent sparse simulation polling
+  and result analysis to Luna medium; the subagent made no file/process changes.
+- Durations 17--22 completed with 120 candidates and 120 positive/0 negative
+  labels each. Acquisition interactions were 2,040 through 2,640; labeling
+  interactions declined from 1,780 to 1,180. Downstream remained unready.
+- Duration 23 acquisition completed 120 candidates in 2,760 interactions.
+  Labeling stopped after 113 in-memory completions and 998 interactions with a
+  32,768-byte CUDA allocation failure. No label rows or duration/root summary
+  closed, so the 113 partial results are excluded from readiness.
+- Selected a source-bound retry-directory recovery that preserves and counts
+  the failed attempt, reuses acquisition, and shares compiled reset/step
+  callables across durations to avoid repeated executable accumulation.
+- Repair TDD RED produced three expected failures for absent source-repair,
+  failed-attempt, and shared-step interfaces. GREEN passed all three, followed
+  by static compilation and all 28 focused CPU refinement/boundary/label/search
+  tests.
+- The new validator accepted the exact real duration-23 failure only: 120
+  acquisition candidates, 2,760 acquisition interactions, 113 non-persisted
+  label completions, 998 failed-attempt labeling interactions, retry directory
+  `labels_retry_01`, and failed-summary SHA-256
+  `af81ce1510a87e7b31a58253c731f0296aef664aa29f8d187a14701852295a53`.
+- A second RED proved completed retry accounting did not revalidate the
+  preserved failed summary. GREEN now binds its file hash, directory relation,
+  engineering-error status, completed count, interaction count, and exact error;
+  the combined refinement/continuation test group passes 19 tests.
+- Repair static compilation passed; all four handoff CPU files now pass 29
+  tests, and the two declared GPU snapshot/continuation files pass all 4 tests.
+- Full repair preflight exited 0 with 414 non-GPU tests (34 deselected) and all
+  14 GPU tests passing. The enhanced zero-interaction artifact audit also
+  passed with the unchanged config, pi_0/checkpoint/Tube/coarse-label identities,
+  and five downstream anchors.
+- After the final test-only import cleanup, the complete preflight was repeated
+  from scratch and again exited 0: 414 non-GPU and 14 GPU tests passed.
+
 ## Session: 2026-08-28 afternoon handoff and remote archive
 
 ### Phase 21: handoff closure

@@ -336,23 +336,14 @@ def audit_downstream_transition_refinement(config_path: Path) -> dict[str, Any]:
     }
 
 
-def _load_completed_duration(
+def _load_validated_duration_acquisition(
     duration_root: Path,
     *,
     duration: int,
     policy_record: Mapping[str, Any],
     frozen_manifest_sha256: str,
-) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    """Load one duration-level checkpoint or fail closed on partial evidence."""
-    duration_root = Path(duration_root)
-    duration_summary_path = duration_root / "duration_summary.json"
-    if not duration_summary_path.exists():
-        raise ValueError(f"cannot resume incomplete downstream duration {duration}")
-    duration_summary = _read_json(duration_summary_path)
-    if int(duration_summary.get("duration", -1)) != int(duration):
-        raise ValueError(f"downstream duration {duration} summary identity drift")
-
-    acquisition_root = duration_root / "acquisition"
+) -> tuple[dict[str, Any], dict[str, Any], str, int]:
+    acquisition_root = Path(duration_root) / "acquisition"
     acquisition_protocol = _read_json(acquisition_root / "protocol.json")
     catalog = _read_json(acquisition_root / "catalog.json")
     acquisition_summary = _read_json(acquisition_root / "summary.json")
@@ -393,7 +384,7 @@ def _load_completed_duration(
     if not isinstance(entries, list) or len(entries) != int(catalog.get("candidate_count", -1)):
         raise ValueError(f"downstream duration {duration} acquisition count drift")
     for key, expected in (
-        ("schema", "jit_unified_boundary_catalog_v1"),
+        ("schema", BOUNDARY_CATALOG_SCHEMA),
         ("status", "completed"),
         ("artifact_role", "unlabeled_policy_conditioned_frontier_candidates"),
         ("split", "train"),
@@ -417,11 +408,166 @@ def _load_completed_duration(
         "certified_safe_set_claim": False,
     }:
         raise ValueError(f"downstream duration {duration} acquisition claim boundary drift")
-
-    status = duration_summary.get("status")
     acquisition_interactions = int(acquisition_summary.get("environment_interactions", -1))
     if acquisition_interactions < 0:
         raise ValueError(f"downstream duration {duration} acquisition accounting drift")
+    return catalog, acquisition_summary, protocol_sha, acquisition_interactions
+
+
+def _validate_repair_resume_protocol(
+    existing_protocol: Mapping[str, Any],
+    current_protocol: Mapping[str, Any],
+    *,
+    expected_source_head: str,
+) -> dict[str, Any]:
+    """Allow one explicit source repair while keeping every scientific field exact."""
+    source_head = str(existing_protocol.get("repository_head", ""))
+    repair_head = str(current_protocol.get("repository_head", ""))
+    if source_head != str(expected_source_head):
+        raise ValueError("repair resume source repository HEAD drift")
+    if len(source_head) != 40 or len(repair_head) != 40 or source_head == repair_head:
+        raise ValueError("repair resume requires distinct exact repository HEADs")
+    ignored = {"repository_head", "protocol_sha256"}
+    existing_stable = {
+        key: value for key, value in existing_protocol.items() if key not in ignored
+    }
+    current_stable = {
+        key: value for key, value in current_protocol.items() if key not in ignored
+    }
+    if existing_stable != current_stable:
+        raise ValueError("repair resume non-source protocol drift")
+    return {
+        "schema": "jit_downstream_refinement_repair_resume_v1",
+        "status": "predeclared",
+        "source_repository_head": source_head,
+        "repair_repository_head": repair_head,
+        "source_protocol_sha256": existing_protocol.get("protocol_sha256"),
+        "repair_protocol_sha256": current_protocol.get("protocol_sha256"),
+        "training_transitions": 0,
+    }
+
+
+def _load_retryable_failed_duration(
+    duration_root: Path,
+    *,
+    duration: int,
+    policy_record: Mapping[str, Any],
+    frozen_manifest_sha256: str,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Validate one allocation-failed label attempt without accepting partial rows."""
+    duration_root = Path(duration_root)
+    if (duration_root / "duration_summary.json").exists():
+        raise ValueError(f"downstream duration {duration} already has a duration summary")
+    catalog, _, acquisition_protocol_sha, _ = _load_validated_duration_acquisition(
+        duration_root,
+        duration=duration,
+        policy_record=policy_record,
+        frozen_manifest_sha256=frozen_manifest_sha256,
+    )
+    validated_candidates = validate_unified_boundary_catalog(
+        catalog,
+        policy_record=policy_record,
+        frozen_manifest_sha256=frozen_manifest_sha256,
+    )
+    labels_root = duration_root / "labels"
+    if (labels_root / "labels.json").exists():
+        raise ValueError(f"downstream duration {duration} partial labels must not exist")
+    label_protocol = _read_json(labels_root / "protocol.json")
+    failed_summary_path = labels_root / "summary.json"
+    failed_summary = _read_json(failed_summary_path)
+    catalog_file_sha256 = file_sha256(duration_root / "acquisition" / "catalog.json")
+    for key, expected in (
+        ("schema", "jit_unified_continuation_labels_v1"),
+        ("iteration", int(policy_record["iteration"])),
+        ("policy_actor_sha256", policy_record["actor_sha256"]),
+        ("policy_payload_sha256", policy_record["payload_sha256"]),
+        ("frozen_unified_manifest_sha256", frozen_manifest_sha256),
+        ("candidate_catalog_file_sha256", catalog_file_sha256),
+        ("candidate_catalog_protocol_sha256", acquisition_protocol_sha),
+        ("candidate_count", len(validated_candidates)),
+    ):
+        if label_protocol.get(key) != expected:
+            raise ValueError(f"downstream duration {duration} failed label protocol {key} drift")
+    if label_protocol.get("status") != "predeclared" or label_protocol.get("split") != "train":
+        raise ValueError(f"downstream duration {duration} failed label protocol status drift")
+    label_protocol_sha = label_protocol.get("protocol_sha256")
+    label_protocol_base = {
+        key: value for key, value in label_protocol.items() if key != "protocol_sha256"
+    }
+    if (
+        not isinstance(label_protocol_sha, str)
+        or len(label_protocol_sha) != 64
+        or _canonical_sha256(label_protocol_base) != label_protocol_sha
+    ):
+        raise ValueError(f"downstream duration {duration} failed label protocol SHA drift")
+    for key, expected in (
+        ("schema", "jit_unified_continuation_labels_v1"),
+        ("status", "engineering_error"),
+        ("iteration", int(policy_record["iteration"])),
+        ("policy_actor_sha256", policy_record["actor_sha256"]),
+        ("policy_payload_sha256", policy_record["payload_sha256"]),
+        ("protocol_sha256", label_protocol_sha),
+        ("training_transitions", 0),
+        ("expert_switching_used", False),
+        ("test_data_used", False),
+        ("validation_data_used", False),
+        ("final_evaluation_data_used", False),
+    ):
+        if failed_summary.get(key) != expected:
+            raise ValueError(f"downstream duration {duration} failed label summary {key} drift")
+    completed = int(failed_summary.get("completed_candidate_count", -1))
+    interactions = int(failed_summary.get("environment_interactions", -1))
+    maximum = int(failed_summary.get("maximum_environment_interactions", -1))
+    if not (0 <= completed <= len(validated_candidates)) or not (
+        0 <= interactions <= maximum
+    ):
+        raise ValueError(f"downstream duration {duration} failed label accounting drift")
+    error = str(failed_summary.get("error", ""))
+    if "Failed to allocate" not in error or "cuda:0" not in error:
+        raise ValueError(f"downstream duration {duration} is not the declared allocation failure")
+    retry_index = 1
+    while (duration_root / f"labels_retry_{retry_index:02d}").exists():
+        retry_index += 1
+    attempt = {
+        "failed_labels_directory": "labels",
+        "failed_summary_file_sha256": file_sha256(failed_summary_path),
+        "completed_candidate_count": completed,
+        "environment_interactions": interactions,
+        "maximum_environment_interactions": maximum,
+        "error": error,
+        "retry_labels_directory": f"labels_retry_{retry_index:02d}",
+    }
+    return catalog, attempt
+
+
+def _load_completed_duration(
+    duration_root: Path,
+    *,
+    duration: int,
+    policy_record: Mapping[str, Any],
+    frozen_manifest_sha256: str,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Load one duration-level checkpoint or fail closed on partial evidence."""
+    duration_root = Path(duration_root)
+    duration_summary_path = duration_root / "duration_summary.json"
+    if not duration_summary_path.exists():
+        raise ValueError(f"cannot resume incomplete downstream duration {duration}")
+    duration_summary = _read_json(duration_summary_path)
+    if int(duration_summary.get("duration", -1)) != int(duration):
+        raise ValueError(f"downstream duration {duration} summary identity drift")
+
+    catalog, acquisition_summary, protocol_sha, acquisition_interactions = (
+        _load_validated_duration_acquisition(
+            duration_root,
+            duration=duration,
+            policy_record=policy_record,
+            frozen_manifest_sha256=frozen_manifest_sha256,
+        )
+    )
+    acquisition_root = duration_root / "acquisition"
+    entries = catalog["entries"]
+
+    status = duration_summary.get("status")
     if status == "no_candidates":
         if entries or int(duration_summary.get("candidate_count", -1)) != 0:
             raise ValueError(f"downstream duration {duration} zero-candidate drift")
@@ -436,14 +582,20 @@ def _load_completed_duration(
 
     if status != "completed":
         raise ValueError(f"cannot resume non-completed downstream duration {duration}")
-    labels_path = duration_root / "labels" / "labels.json"
-    label_summary_path = duration_root / "labels" / "summary.json"
+    labels_directory = str(duration_summary.get("labels_directory", "labels"))
+    if Path(labels_directory).name != labels_directory or not labels_directory.startswith(
+        "labels"
+    ):
+        raise ValueError(f"downstream duration {duration} labels directory drift")
+    labels_root = duration_root / labels_directory
+    labels_path = labels_root / "labels.json"
+    label_summary_path = labels_root / "summary.json"
     if not labels_path.exists() or not label_summary_path.exists():
         raise ValueError(f"cannot resume incomplete downstream duration {duration}")
     label_summary = _read_json(label_summary_path)
     if label_summary.get("status") != "completed":
         raise ValueError(f"cannot resume non-completed downstream duration {duration}")
-    label_protocol = _read_json(duration_root / "labels" / "protocol.json")
+    label_protocol = _read_json(labels_root / "protocol.json")
     rows = json.loads(labels_path.read_text(encoding="utf-8"))
     if not isinstance(rows, list) or len(rows) != int(label_summary.get("label_count", -1)):
         raise ValueError(f"downstream duration {duration} label count drift")
@@ -531,11 +683,51 @@ def _load_completed_duration(
         actual_candidates.add(candidate_id)
     if actual_candidates != set(expected_candidates):
         raise ValueError(f"downstream duration {duration} label candidate coverage drift")
+    aborted_attempts = duration_summary.get("aborted_labeling_attempts", [])
+    if not isinstance(aborted_attempts, list):
+        raise ValueError(f"downstream duration {duration} aborted label attempts drift")
+    for attempt in aborted_attempts:
+        if not isinstance(attempt, Mapping):
+            raise ValueError(f"downstream duration {duration} aborted label attempt drift")
+        failed_directory = str(attempt.get("failed_labels_directory", ""))
+        if (
+            Path(failed_directory).name != failed_directory
+            or not failed_directory.startswith("labels")
+            or failed_directory == labels_directory
+            or attempt.get("retry_labels_directory") != labels_directory
+        ):
+            raise ValueError(f"downstream duration {duration} aborted label directory drift")
+        failed_summary_path = duration_root / failed_directory / "summary.json"
+        if file_sha256(failed_summary_path) != attempt.get("failed_summary_file_sha256"):
+            raise ValueError(f"downstream duration {duration} failed summary SHA drift")
+        failed_summary = _read_json(failed_summary_path)
+        for key in (
+            "completed_candidate_count",
+            "environment_interactions",
+            "error",
+        ):
+            if failed_summary.get(key) != attempt.get(key):
+                raise ValueError(
+                    f"downstream duration {duration} failed summary {key} drift"
+                )
+        if failed_summary.get("status") != "engineering_error":
+            raise ValueError(f"downstream duration {duration} failed summary status drift")
+    aborted_interactions = sum(
+        int(attempt.get("environment_interactions", -1)) for attempt in aborted_attempts
+    )
+    if aborted_interactions < 0 or int(
+        duration_summary.get("aborted_labeling_environment_interactions", 0)
+    ) != aborted_interactions:
+        raise ValueError(f"downstream duration {duration} aborted label accounting drift")
+    successful_labeling_interactions = int(label_summary["environment_interactions"])
     return [dict(row) for row in rows], {
         **duration_summary,
         "resumed": True,
         "acquisition_environment_interactions": acquisition_interactions,
-        "labeling_environment_interactions": int(label_summary["environment_interactions"]),
+        "successful_labeling_environment_interactions": successful_labeling_interactions,
+        "labeling_environment_interactions": (
+            successful_labeling_interactions + aborted_interactions
+        ),
     }
 
 
@@ -554,6 +746,8 @@ def _collect_duration_candidates(
     action_names: Sequence[str],
     signs: Sequence[int],
     excluded_state_hashes: set[str],
+    compiled_reset_fn: Callable[[Any, Any], Any] | None = None,
+    compiled_step_fn: Callable[[Any, Any], Any] | None = None,
 ) -> dict[str, Any]:
     strengths = validate_strengths(strengths)
     directions = action_basis_directions(action_names=action_names, signs=signs)
@@ -639,8 +833,8 @@ def _collect_duration_candidates(
     bank = output / "boundary_bank"
     (bank / "snapshots").mkdir(parents=True, exist_ok=False)
 
-    reset = jax.jit(env.reset_tube_index)
-    step = jax.jit(env.step)
+    reset = compiled_reset_fn if compiled_reset_fn is not None else jax.jit(env.reset_tube_index)
+    step = compiled_step_fn if compiled_step_fn is not None else jax.jit(env.step)
     base_key = jax.random.PRNGKey(int(protocol_seed))
     entries: list[dict[str, Any]] = []
     seen: set[str] = set()
@@ -841,6 +1035,7 @@ def search_downstream_transition_refinement(
     config_path: Path,
     *,
     resume: bool = False,
+    repair_source_head: str | None = None,
 ) -> dict[str, Any]:
     prepared = _prepare_downstream_refinement(config_path)
     config_path = prepared["config_path"]
@@ -909,17 +1104,29 @@ def search_downstream_transition_refinement(
     protocol_sha = _canonical_sha256(protocol_base)
     protocol = {**protocol_base, "protocol_sha256": protocol_sha}
 
+    repair_record: dict[str, Any] | None = None
     if output.exists():
         if not resume:
             raise FileExistsError(f"downstream refinement output already exists: {output}")
         existing = _read_json(output / "search_protocol.json")
         if existing != protocol:
-            raise ValueError("cannot resume downstream refinement under a different protocol")
+            if repair_source_head is None:
+                raise ValueError("cannot resume downstream refinement under a different protocol")
+            repair_record = _validate_repair_resume_protocol(
+                existing,
+                protocol,
+                expected_source_head=repair_source_head,
+            )
+            protocol_sha = str(existing["protocol_sha256"])
+        elif repair_source_head is not None:
+            raise ValueError("repair resume requires a changed repository HEAD")
         if (output / "summary.json").exists():
             done = _read_json(output / "summary.json")
             if done.get("status") in ("transition_band_ready", "search_exhausted"):
                 return done
     else:
+        if repair_source_head is not None:
+            raise ValueError("repair resume requires an existing failed run")
         output.mkdir(parents=True, exist_ok=False)
         _write_json(output / "search_protocol.json", protocol)
 
@@ -942,6 +1149,8 @@ def search_downstream_transition_refinement(
     ]:
         raise ValueError("downstream refinement checkpoint payload drift")
     policy = jax.jit(make_checkpoint_policy(env, payload, deterministic=True))
+    compiled_reset_fn = jax.jit(env.reset_tube_index)
+    compiled_step_fn = jax.jit(env.step)
 
     label_sets: list[list[dict[str, Any]]] = [prior_labels]
     excluded_state_hashes = {str(row["state_sha256"]) for row in prior_labels}
@@ -953,6 +1162,10 @@ def search_downstream_transition_refinement(
     for duration in grid:
         duration_root = output / f"duration_{duration:02d}"
         if duration_root.exists():
+            if not (duration_root / "duration_summary.json").exists():
+                if repair_record is not None:
+                    break
+                raise ValueError(f"cannot resume incomplete downstream duration {duration}")
             rows, duration_report = _load_completed_duration(
                 duration_root,
                 duration=duration,
@@ -984,25 +1197,59 @@ def search_downstream_transition_refinement(
     if not readiness["downstream"]["ready"]:
         for duration in grid[completed_duration_count:]:
             duration_root = output / f"duration_{duration:02d}"
+            failed_attempt: dict[str, Any] | None = None
             if duration_root.exists():
-                raise ValueError(f"unexpected incomplete duration directory: {duration_root}")
-            acquisition_dir = duration_root / "acquisition"
-            acquisition = _collect_duration_candidates(
-                anchors,
-                acquisition_dir,
-                duration=duration,
-                env=env,
-                policy=policy,
-                policy_record=policy_record,
-                frozen_manifest_sha256=file_sha256(frozen_path),
-                protocol_seed=int(config["fixed_acquisition"]["acquisition_protocol_seed_base"])
-                + duration,
-                frontier_score_ceiling=float(config["fixed_acquisition"]["frontier_score_ceiling"]),
-                strengths=tuple(float(x) for x in config["fixed_acquisition"]["strengths"]),
-                action_names=tuple(config["fixed_acquisition"]["action_names"]),
-                signs=tuple(int(x) for x in config["fixed_acquisition"]["signs"]),
-                excluded_state_hashes=excluded_state_hashes,
-            )
+                if repair_record is None:
+                    raise ValueError(f"unexpected incomplete duration directory: {duration_root}")
+                acquisition, failed_attempt = _load_retryable_failed_duration(
+                    duration_root,
+                    duration=duration,
+                    policy_record=policy_record,
+                    frozen_manifest_sha256=file_sha256(frozen_path),
+                )
+                excluded_state_hashes.update(
+                    str(row["state_sha256"]) for row in acquisition["entries"]
+                )
+                repair_evidence = {
+                    **repair_record,
+                    "failure_duration": duration,
+                    "failed_label_attempt": failed_attempt,
+                    "acquisition_protocol_sha256": acquisition["protocol_sha256"],
+                    "config_file_sha256": file_sha256(config_path),
+                }
+                repair_evidence_path = output / "resume_repair.json"
+                if repair_evidence_path.exists():
+                    if _read_json(repair_evidence_path) != repair_evidence:
+                        raise ValueError("downstream refinement repair evidence drift")
+                else:
+                    _write_json(repair_evidence_path, repair_evidence)
+            else:
+                if repair_record is not None:
+                    raise ValueError("repair resume did not find its declared failed duration")
+                acquisition = _collect_duration_candidates(
+                    anchors,
+                    duration_root / "acquisition",
+                    duration=duration,
+                    env=env,
+                    policy=policy,
+                    policy_record=policy_record,
+                    frozen_manifest_sha256=file_sha256(frozen_path),
+                    protocol_seed=int(
+                        config["fixed_acquisition"]["acquisition_protocol_seed_base"]
+                    )
+                    + duration,
+                    frontier_score_ceiling=float(
+                        config["fixed_acquisition"]["frontier_score_ceiling"]
+                    ),
+                    strengths=tuple(
+                        float(x) for x in config["fixed_acquisition"]["strengths"]
+                    ),
+                    action_names=tuple(config["fixed_acquisition"]["action_names"]),
+                    signs=tuple(int(x) for x in config["fixed_acquisition"]["signs"]),
+                    excluded_state_hashes=excluded_state_hashes,
+                    compiled_reset_fn=compiled_reset_fn,
+                    compiled_step_fn=compiled_step_fn,
+                )
             acquisition_interactions += int(acquisition["environment_interactions"])
             if int(acquisition["candidate_count"]) == 0:
                 duration_report = {
@@ -1029,9 +1276,14 @@ def search_downstream_transition_refinement(
                 )
                 continue
 
-            labels_dir = duration_root / "labels"
+            labels_directory = (
+                str(failed_attempt["retry_labels_directory"])
+                if failed_attempt is not None
+                else "labels"
+            )
+            labels_dir = duration_root / labels_directory
             label_report = label_unified_continuations(
-                acquisition_dir / "catalog.json",
+                duration_root / "acquisition" / "catalog.json",
                 labels_dir,
                 env=env,
                 policy=policy,
@@ -1040,8 +1292,17 @@ def search_downstream_transition_refinement(
                 max_ticks=int(config["continuation_labeling"]["max_ticks"]),
                 protocol_seed=int(config["fixed_acquisition"]["label_protocol_seed_base"])
                 + duration,
+                compiled_step_fn=compiled_step_fn,
             )
-            labeling_interactions += int(label_report["environment_interactions"])
+            failed_labeling_interactions = (
+                int(failed_attempt["environment_interactions"])
+                if failed_attempt is not None
+                else 0
+            )
+            successful_labeling_interactions = int(label_report["environment_interactions"])
+            labeling_interactions += (
+                failed_labeling_interactions + successful_labeling_interactions
+            )
             rows = json.loads((labels_dir / "labels.json").read_text(encoding="utf-8"))
             label_sets.append([dict(row) for row in rows])
             accumulated = unique_label_rows(label_sets)
@@ -1052,6 +1313,16 @@ def search_downstream_transition_refinement(
                 "candidate_count": int(label_report["candidate_count"]),
                 "positive_count": int(label_report["positive_count"]),
                 "negative_count": int(label_report["negative_count"]),
+                "labels_directory": labels_directory,
+                "successful_labeling_environment_interactions": (
+                    successful_labeling_interactions
+                ),
+                "aborted_labeling_environment_interactions": (
+                    failed_labeling_interactions
+                ),
+                "aborted_labeling_attempts": (
+                    [failed_attempt] if failed_attempt is not None else []
+                ),
                 "terminal_clipped_candidate_count": int(
                     acquisition.get("terminal_clipped_candidate_count", 0)
                 ),
@@ -1075,6 +1346,7 @@ def search_downstream_transition_refinement(
             )
             if readiness["downstream"]["ready"]:
                 break
+            repair_record = None
 
     accumulated = unique_label_rows(label_sets)
     readiness = phase_transition_band_readiness(accumulated, config["readiness"])
@@ -1098,6 +1370,11 @@ def search_downstream_transition_refinement(
         "durations": duration_reports,
         "acquisition_environment_interactions": acquisition_interactions,
         "labeling_environment_interactions": labeling_interactions,
+        "repair_resume": (
+            _read_json(output / "resume_repair.json")
+            if (output / "resume_repair.json").exists()
+            else None
+        ),
         "training_transitions": 0,
         "expert_switching_used": False,
         "validation_data_used": False,

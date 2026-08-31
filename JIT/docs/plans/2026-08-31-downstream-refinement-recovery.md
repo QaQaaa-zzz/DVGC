@@ -95,3 +95,18 @@
 - [ ] Re-run enhanced audit at the committed HEAD.
 - [ ] Launch the absent declared refinement run without `--resume`, teeing its log and preserving the exact exit code.
 - [ ] Inspect only progress/completion/abnormal exit; stop immediately at downstream readiness or duration-32 exhaustion.
+
+### Task 5: Recover the duration-23 GPU allocation failure
+
+- [x] Preserve Luna's read-only failure diagnosis and exact interaction counts.
+- [x] Add RED tests for a source-bound repair resume, failed-label evidence
+  validation/accounting, retry-directory selection, and shared compiled runtime
+  callables.
+- [x] Implement the smallest repair-resume path without accepting partial label
+  rows or re-running the completed duration-23 acquisition.
+- [x] Add RED/GREEN coverage that a completed retry revalidates its preserved
+  failed-attempt artifact and includes both failed and successful label cost.
+- [x] Re-run focused/static/full preflight and artifact audit gates (29 focused
+  CPU, 4 focused GPU, 414 full CPU, and 14 full GPU tests passed).
+- [ ] Commit the repair, invoke one explicit repair resume, and delegate sparse
+  run monitoring/result analysis to Luna medium.

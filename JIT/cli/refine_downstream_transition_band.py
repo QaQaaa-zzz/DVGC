@@ -27,7 +27,19 @@ def main() -> int:
         action="store_true",
         help="validate the declaration without constructing MJX or spending interactions",
     )
+    parser.add_argument(
+        "--repair-source-head",
+        help=(
+            "with --resume, allow only the declared failed run's repository HEAD "
+            "to advance to the current repair HEAD"
+        ),
+    )
     args = parser.parse_args()
+
+    if args.repair_source_head is not None and not args.resume:
+        parser.error("--repair-source-head requires --resume")
+    if args.audit_only and args.repair_source_head is not None:
+        parser.error("--audit-only does not perform repair resume")
 
     if args.audit_only:
         print(
@@ -41,7 +53,11 @@ def main() -> int:
 
     if jax.default_backend() != "gpu":
         raise RuntimeError("downstream transition-band refinement requires visible JAX GPU")
-    report = search_downstream_transition_refinement(args.config, resume=args.resume)
+    report = search_downstream_transition_refinement(
+        args.config,
+        resume=args.resume,
+        repair_source_head=args.repair_source_head,
+    )
     print(json.dumps(report, indent=2, sort_keys=True))
     return 0
 

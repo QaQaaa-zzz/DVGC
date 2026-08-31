@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import inspect
+
 import pytest
 
 from jit_dvgc.unified_continuation_labels import (
     classify_unified_continuation_outcome,
+    label_unified_continuations,
     validate_unified_boundary_catalog,
 )
 
@@ -174,3 +177,9 @@ def test_downstream_positive_requires_recovery_success():
         recovery_success=False,
         reached_rollout_horizon=False,
     ) == (False, "physical_failure")
+
+
+def test_labeling_accepts_one_search_lifetime_compiled_step():
+    parameters = inspect.signature(label_unified_continuations).parameters
+
+    assert "compiled_step_fn" in parameters

@@ -39,6 +39,15 @@ Phase 22: Iteration-0 downstream refinement recovery and closure
   expansion validation before any `C^0`, `Tube_1`, or `pi_1` work.
 - **Status:** in progress
 
+### Phase 23: duration-23 allocation-failure recovery
+
+- [x] Delegate sparse monitoring and result analysis to Luna medium as directed.
+- [x] Preserve exact completed-duration and failed-attempt accounting.
+- [ ] Add source-bound repair resume and shared JIT-callable reuse under TDD.
+- [ ] Verify, commit, and resume without re-running duration-23 acquisition.
+- [ ] Delegate resumed-run monitoring and final evidence analysis to Luna medium.
+- **Status:** in progress
+
 ### Phase 21: portable handoff, locked-artifact archive, and remote delivery
 
 - [x] Resolve the minimal dependency closure for frozen `pi_up`, `pi_down`,

@@ -99,3 +99,25 @@ refinement interactions.
 This repair provides engineering/provenance integrity only. It does not train a
 continuation field, construct `Tube_1`, train `pi_1`, establish JCE/JEL, or
 certify a safe set.
+
+## Post-launch repair extension
+
+The committed run at repository HEAD `ad416e836e0548494f8a6d96ce14a66508f936c5`
+completed durations 17 through 22, then failed while labeling duration 23 with
+`Failed to allocate 32768 bytes on device 'cuda:0'`. Duration 23 acquisition is
+complete (120 candidates, 2,760 interactions), but its label process persisted
+only an engineering-error summary (113 completed in memory, 998 interactions)
+and no label rows. Those 113 results cannot enter readiness.
+
+The bounded recovery therefore adds a one-time, explicitly source-bound repair
+resume. It preserves the original search protocol, records the old and repair
+repository heads plus the failed-summary hash, reuses the completed acquisition,
+and writes the replacement labels to `labels_retry_01/`. The failed 998
+interactions remain separately visible and are included in total labeling cost.
+No partial label is reconstructed or silently accepted.
+
+The search also constructs reset/step JIT callables once and reuses them across
+all acquisition and labeling durations. Previously each duration wrapped the
+same bound methods anew, retaining multiple compiled executables until GPU
+allocation failed. Shared callables preserve numerical semantics while bounding
+compilation/cache growth.
