@@ -146,6 +146,12 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
             raise RuntimeError("MJX model conversion was disabled for this Host-only environment")
         return self.mjx_model
 
+    def _reset_data_naccdmax(self) -> int | None:
+        """Return reset-data CCD capacity; unified runtimes may override it."""
+        if not self._resolved_config.schema.endswith("_v4"):
+            return None
+        return int(self._resolved_config.model["naccdmax"])
+
     @staticmethod
     def _sample_range(key: jax.Array, lower: float, upper: float) -> jax.Array:
         return jax.random.uniform(key, (), minval=lower, maxval=upper)
@@ -417,11 +423,7 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
             ctrl=ctrl,
             impl=model.impl.value,
             naconmax=int(self._resolved_config.model["naconmax"]),
-            naccdmax=(
-                int(self._resolved_config.model["naccdmax"])
-                if self._resolved_config.schema.endswith("_v4")
-                else None
-            ),
+            naccdmax=self._reset_data_naccdmax(),
             njmax=int(self._resolved_config.model["njmax"]),
         )
         data = mjx.forward(model, data)

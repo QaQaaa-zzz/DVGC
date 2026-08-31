@@ -78,7 +78,7 @@ def next_training_phase(
 
 
 class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
-    """One Actor runtime with per-state phase semantics and real snapshot RSI."""
+    """One Actor runtime with phase semantics and configurable reset coverage."""
 
     def __init__(
         self,
@@ -87,6 +87,7 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
         artifact: SoftTubeArtifact,
         *,
         runtime_naccdmax: int | None = None,
+        natural_reset_probability: float = 0.0,
     ):
         if up_config.phase != "propulsion_ascent":
             raise ValueError("unified environment requires a propulsion_ascent config")
@@ -111,6 +112,10 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
             raise ValueError("unified runtime naccdmax cannot reduce source capacity")
         if self._runtime_naccdmax > int(up_config.model["naconmax"]):
             raise ValueError("unified runtime naccdmax must not exceed naconmax")
+        probability = float(natural_reset_probability)
+        if not 0.0 <= probability <= 1.0:
+            raise ValueError("unified natural reset probability must be in [0, 1]")
+        self._natural_reset_probability = probability
         super().__init__(up_config)
         if self._bundle.xml_sha256 != down_config.model["xml_sha256"]:
             raise ValueError("unified environment runtime XML identity mismatch")
@@ -122,6 +127,14 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
     @property
     def tube_pool(self) -> TubeRSIPool:
         return self._tube_pool
+
+    @property
+    def natural_reset_probability(self) -> float:
+        return self._natural_reset_probability
+
+    def _reset_data_naccdmax(self) -> int | None:
+        """Use one runtime CCD capacity for every unified reset source."""
+        return self._runtime_naccdmax
 
     def _unified_zero_metrics(self) -> dict[str, jax.Array]:
         metrics = self._zero_metrics()
@@ -136,6 +149,7 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
             "terminal/descent_physical_failure",
             "terminal/descent_timeout",
             "reset/source_soft_tube",
+            "reset/source_natural",
             "reset/tube_phase_upstream",
             "reset/tube_phase_downstream",
             "event/tube_phase_transition",
@@ -144,15 +158,106 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
             metrics[key] = zero
         return metrics
 
+    @staticmethod
+    def _with_reset_source(state: mjx_env.State, *, soft_tube) -> mjx_env.State:
+        soft = jp.asarray(soft_tube, dtype=bool)
+        natural = ~soft
+        start_phase = jp.asarray(state.info["start_phase"], dtype=jp.int32)
+        info = {**state.info, "reset_from_soft_tube": soft}
+        metrics = {
+            **state.metrics,
+            "reset/source_soft_tube": soft.astype(jp.float32),
+            "reset/source_natural": natural.astype(jp.float32),
+            "reset/tube_phase_upstream": (
+                soft & (start_phase == PHASE_UPSTREAM)
+            ).astype(jp.float32),
+            "reset/tube_phase_downstream": (
+                soft & (start_phase == PHASE_DOWNSTREAM)
+            ).astype(jp.float32),
+        }
+        return state.replace(info=info, metrics=metrics)
+
+    def _reset_tube(self, rng: jax.Array) -> mjx_env.State:
+        state = self._reset_from_tube_sample(self._tube_pool.sample(rng))
+        return self._with_reset_source(state, soft_tube=True)
+
+    def _reset_natural_unified(self, rng: jax.Array) -> mjx_env.State:
+        """Reuse the Phase-U natural reset, adapting only unified metadata."""
+        phase_state = TwoPhaseBikeEnv.reset_natural(self, rng)
+        up_events = phase_state.info["events"]
+        active_phase = jp.asarray(PHASE_UPSTREAM, jp.int32)
+        false = jp.asarray(False)
+        root_x = phase_state.data.qpos[self._bundle.model_index.root_qpos_address]
+        info = {
+            "rng": phase_state.info["rng"],
+            "history": phase_state.info["history"],
+            "up_events": up_events,
+            "down_events": initial_descent_events(root_x),
+            "active_phase": active_phase,
+            "start_phase": active_phase,
+            "phase_transitioned": false,
+            "expert_switching_used": false,
+            "last_action": phase_state.info["last_action"],
+            "reward_state": phase_state.info["reward_state"],
+            "episode_step": phase_state.info["episode_step"],
+            "phase_episode_step": jp.asarray(0, jp.int32),
+            "source_tick": jp.asarray(-1, jp.int32),
+            "parent_group_index": jp.asarray(-1, jp.int32),
+            "tube_entry_index": jp.asarray(-1, jp.int32),
+            "tube_global_index": jp.asarray(-1, jp.int32),
+            "terminated": phase_state.info["terminated"],
+            "truncated": phase_state.info["truncated"],
+            "time_out": phase_state.info["time_out"],
+            "end_code": phase_state.info["end_code"],
+            "success": phase_state.info["success"],
+            "physical_failure": phase_state.info["physical_failure"],
+            "roll_limit": phase_state.info["roll_limit"],
+            "pitch_limit": phase_state.info["pitch_limit"],
+            "jump_zone_missed": phase_state.info["jump_zone_missed"],
+            "stuck": phase_state.info["stuck"],
+            "yaw_limit": phase_state.info["yaw_limit"],
+            "timeout": phase_state.info["timeout"],
+            "episode_return": phase_state.info["episode_return"],
+        }
+        metrics = self._unified_zero_metrics()
+        for key, value in phase_state.metrics.items():
+            if key in metrics:
+                metrics[key] = value
+        metrics.update(
+            {
+                "reset/source_soft_tube": jp.asarray(0.0, jp.float32),
+                "reset/source_natural": jp.asarray(1.0, jp.float32),
+                "reset/tube_phase_upstream": jp.asarray(0.0, jp.float32),
+                "reset/tube_phase_downstream": jp.asarray(0.0, jp.float32),
+                "event/tube_phase_transition": jp.asarray(0.0, jp.float32),
+                "state/active_phase": active_phase.astype(jp.float32),
+            }
+        )
+        return self._with_reset_source(
+            phase_state.replace(info=info, metrics=metrics), soft_tube=False
+        )
+
     def reset(self, rng: jax.Array) -> mjx_env.State:
-        return self._reset_from_tube_sample(self._tube_pool.sample(rng))
+        if self._natural_reset_probability == 0.0:
+            return self._reset_tube(rng)
+        decision_key, reset_key = jax.random.split(rng)
+        use_natural = jax.random.bernoulli(
+            decision_key, self._natural_reset_probability
+        )
+        return jax.lax.cond(
+            use_natural,
+            self._reset_natural_unified,
+            self._reset_tube,
+            reset_key,
+        )
 
     def reset_tube_index(
         self, phase_index: jax.Array | int, entry_index: jax.Array | int
     ) -> mjx_env.State:
-        return self._reset_from_tube_sample(
+        state = self._reset_from_tube_sample(
             self._tube_pool.sample_at(phase_index, entry_index)
         )
+        return self._with_reset_source(state, soft_tube=True)
 
     def _reset_from_tube_sample(self, sample) -> mjx_env.State:
         model = self._require_runtime_model()
@@ -163,7 +268,7 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
             ctrl=sample["ctrl"],
             impl=model.impl.value,
             naconmax=int(self._resolved_config.model["naconmax"]),
-            naccdmax=self._runtime_naccdmax,
+            naccdmax=self._reset_data_naccdmax(),
             njmax=int(self._resolved_config.model["njmax"]),
         )
         data = mjx.forward(model, data)
@@ -229,6 +334,7 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
         metrics.update(
             {
                 "reset/source_soft_tube": jp.asarray(1.0, jp.float32),
+                "reset/source_natural": jp.asarray(0.0, jp.float32),
                 "reset/tube_phase_upstream": (
                     active_phase == PHASE_UPSTREAM
                 ).astype(jp.float32),
@@ -479,6 +585,9 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
                 reward_state, geometry, up_events, jp.asarray(False)
             )
         )
+        soft_reset = jp.asarray(state.info["reset_from_soft_tube"], dtype=bool)
+        natural_reset = ~soft_reset
+        start_phase = jp.asarray(state.info["start_phase"], dtype=jp.int32)
         metrics.update(
             {
                 "reward": reward,
@@ -542,12 +651,13 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
                 "terminal/descent_timeout": jp.where(
                     active_up, jp.asarray(False), down_terminal.timeout
                 ).astype(jp.float32),
-                "reset/source_soft_tube": jp.asarray(1.0, jp.float32),
+                "reset/source_soft_tube": soft_reset.astype(jp.float32),
+                "reset/source_natural": natural_reset.astype(jp.float32),
                 "reset/tube_phase_upstream": (
-                    state.info["start_phase"] == PHASE_UPSTREAM
+                    soft_reset & (start_phase == PHASE_UPSTREAM)
                 ).astype(jp.float32),
                 "reset/tube_phase_downstream": (
-                    state.info["start_phase"] == PHASE_DOWNSTREAM
+                    soft_reset & (start_phase == PHASE_DOWNSTREAM)
                 ).astype(jp.float32),
                 "event/tube_phase_transition": transitioned.astype(jp.float32),
                 "state/active_phase": next_phase.astype(jp.float32),

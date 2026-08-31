@@ -43,6 +43,10 @@ FORMAL_SCHEMA = "jit_pi_unified_formal_v1"
 FORMAL_TARGET = 10_009_600
 FORMAL_CHECKPOINTS = (0, 1_024_000, 2_508_800, 5_017_600, 7_500_800, FORMAL_TARGET)
 FORMAL_TRAIN_PANELS = FORMAL_CHECKPOINTS[1:]
+RESET_MIXTURE_SCHEMA = "jit_pi_unified_round1_reset_mix_v1"
+ROUND1_NATURAL_RESET_PROBABILITY = 0.10
+ROUND1_SOFT_TUBE_PROBABILITY = 0.90
+ROUND0_FAILURE_EVIDENCE = "PI_UP_APEX_UNIFIED_PRE_JUMP_FAIL"
 
 
 @dataclass(frozen=True)
@@ -59,6 +63,20 @@ class UnifiedFormalSchedule:
 
 
 @dataclass(frozen=True)
+class UnifiedResetMixture:
+    selection: str
+    natural_reset_probability: float
+    soft_tube_probability: float
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "selection": self.selection,
+            "natural_reset_probability": self.natural_reset_probability,
+            "soft_tube_probability": self.soft_tube_probability,
+        }
+
+
+@dataclass(frozen=True)
 class UnifiedFormalConfig:
     schema: str
     raw: Mapping[str, Any]
@@ -72,8 +90,48 @@ class UnifiedFormalConfig:
     tube_rsi_smoke_report: str
     tube_rsi_smoke_report_sha256: str
     runtime_naccdmax: int
+    reset_mixture: UnifiedResetMixture
     ppo: UnifiedPPOConfig
     formal: UnifiedFormalSchedule
+
+
+def _load_reset_mixture(payload: Mapping[str, Any]) -> UnifiedResetMixture:
+    raw = payload.get("reset_mixture")
+    if raw is None:
+        return UnifiedResetMixture(
+            selection="soft_tube_only",
+            natural_reset_probability=0.0,
+            soft_tube_probability=1.0,
+        )
+    expected = {
+        "schema": RESET_MIXTURE_SCHEMA,
+        "selection": "bernoulli_per_episode",
+        "natural_reset_probability": ROUND1_NATURAL_RESET_PROBABILITY,
+        "soft_tube_probability": ROUND1_SOFT_TUBE_PROBABILITY,
+        "natural_reset_semantics": "existing_phase_u_natural_reset",
+        "soft_tube_semantics": "existing_phase_balanced_value_weighted_tube_rsi",
+        "single_variable": "reset_distribution_only",
+    }
+    if raw != expected:
+        raise ValueError("unified reset mixture contract drift")
+    if not math.isclose(
+        float(raw["natural_reset_probability"])
+        + float(raw["soft_tube_probability"]),
+        1.0,
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+    ):
+        raise ValueError("unified reset probabilities must sum to one")
+    boundary = payload.get("claim_boundary", {})
+    if boundary.get("round1_single_variable_iteration") is not True:
+        raise ValueError("unified mixed reset requires the Round-1 single-variable boundary")
+    if boundary.get("round0_failure_evidence") != ROUND0_FAILURE_EVIDENCE:
+        raise ValueError("unified mixed reset is not bound to the locked Round-0 diagnosis")
+    return UnifiedResetMixture(
+        selection="bernoulli_per_episode",
+        natural_reset_probability=ROUND1_NATURAL_RESET_PROBABILITY,
+        soft_tube_probability=ROUND1_SOFT_TUBE_PROBABILITY,
+    )
 
 
 def load_unified_formal_config(path: Path) -> UnifiedFormalConfig:
@@ -92,6 +150,7 @@ def load_unified_formal_config(path: Path) -> UnifiedFormalConfig:
             samples_per_phase=int(formal_raw["samples_per_phase"]),
             resume_semantics=str(formal_raw["resume_semantics"]),
         )
+        reset_mixture = _load_reset_mixture(payload)
     except (KeyError, TypeError, ValueError) as exc:
         raise ValueError(f"invalid unified formal contract: {exc}") from exc
     if payload.get("runtime") != {"naccdmax": 1024}:
@@ -156,10 +215,40 @@ def load_unified_formal_config(path: Path) -> UnifiedFormalConfig:
         raw=payload,
         config_sha256=canonical_sha256(payload),
         runtime_naccdmax=1024,
+        reset_mixture=reset_mixture,
         ppo=ppo,
         formal=formal,
         **{name: inputs[name] for name in required},
     )
+
+
+def _build_unified_formal_environment(
+    config: UnifiedFormalConfig,
+    *,
+    env_factory: Callable[..., Any] = UnifiedTubeRSIEnv,
+):
+    up_config, down_config, artifact, _ = _load_runtime(config)
+    env = env_factory(
+        up_config,
+        down_config,
+        artifact,
+        runtime_naccdmax=config.runtime_naccdmax,
+        natural_reset_probability=config.reset_mixture.natural_reset_probability,
+    )
+    if env._bundle.xml_sha256 != up_config.model["xml_sha256"]:
+        raise ValueError("unified formal runtime XML identity mismatch")
+    return artifact, env
+
+
+def build_unified_formal_environment(
+    config_path: Path,
+    *,
+    env_factory: Callable[..., Any] = UnifiedTubeRSIEnv,
+):
+    """Build the stable unified runtime without creating a run or training."""
+    config = load_unified_formal_config(config_path)
+    artifact, env = _build_unified_formal_environment(config, env_factory=env_factory)
+    return config, artifact, env
 
 
 class UnifiedFormalController(FormalRunController):
@@ -313,14 +402,9 @@ def run_unified_formal(
     backend_name: Callable[[], str] = jax.default_backend,
 ) -> dict[str, Any]:
     config = load_unified_formal_config(config_path)
-    up_config, down_config, artifact, _ = _load_runtime(config)
     if backend_name() != "gpu":
         raise RuntimeError("formal unified PPO requires the visible JAX GPU backend")
-    env = env_factory(
-        up_config, down_config, artifact, runtime_naccdmax=config.runtime_naccdmax
-    )
-    if env._bundle.xml_sha256 != up_config.model["xml_sha256"]:
-        raise ValueError("unified formal runtime XML identity mismatch")
+    artifact, env = _build_unified_formal_environment(config, env_factory=env_factory)
     root = (
         Path(run_root)
         if run_root is not None
@@ -333,7 +417,7 @@ def run_unified_formal(
         output_dir=run_dir,
         config_sha256=config.config_sha256,
         xml_sha256=env._bundle.xml_sha256,
-        reference_sha256=str(up_config.model["reference_sha256"]),
+        reference_sha256=str(env.resolved_config.model["reference_sha256"]),
         training_transition_ceiling=config.ppo.requested_transitions,
         stopping_conditions=(
             f"stop_at_exact_transition_{config.ppo.requested_transitions}",
@@ -360,6 +444,7 @@ def run_unified_formal(
             "initialization": config.raw["initialization"],
             "policy_count": 1,
             "expert_switching_used": False,
+            "reset_mixture": config.reset_mixture.as_dict(),
             "soft_tube_manifest_sha256": config.soft_tube_manifest_sha256,
             "tube_rsi_smoke_report_sha256": config.tube_rsi_smoke_report_sha256,
             "test_data_used": False,
@@ -424,6 +509,7 @@ def run_unified_formal(
             "train_panel_transitions": list(controller.train_panel_transitions),
             "train_panel_interactions": controller.train_panel_interactions,
             "brax_evaluation_transitions": 0,
+            "reset_mixture": config.reset_mixture.as_dict(),
             "test_data_used": False,
             "validation_data_used": False,
             "expert_switching_used": False,
