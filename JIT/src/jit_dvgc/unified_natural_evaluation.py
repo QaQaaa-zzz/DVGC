@@ -18,17 +18,13 @@ import subprocess
 from typing import Any, Callable, Mapping, Sequence
 
 import jax
-from jax import numpy as jp
 import numpy as np
 
 from .checkpoint import load_checkpoint
 from .config import file_sha256
 from .constants import END_REASONS
-from .descent_semantics import initial_descent_events
-from .env import TwoPhaseBikeEnv
 from .evaluation import EpisodeTrace, capture_episode, save_episode_trace
 from .ppo import make_checkpoint_policy
-from .tube_rsi import PHASE_UPSTREAM
 from .unified_diagnostic import _load_runtime
 from .unified_env import UnifiedTubeRSIEnv
 from .unified_formal import load_unified_formal_config
@@ -47,57 +43,17 @@ class NaturalStartUnifiedEvalEnv(UnifiedTubeRSIEnv):
     """Unified runtime whose evaluation reset is the Phase-U natural reset.
 
     Training semantics remain untouched in :class:`UnifiedTubeRSIEnv`. This
-    subclass exists only for independent evaluation and converts the existing
-    Phase-U natural-reset state into the unified single-Actor info/metric
-    contract without changing qpos, qvel, controls, observations, or rewards.
+    subclass exists only for independent evaluation and reuses the production
+    unified natural-reset adapter so evaluation cannot drift from the step
+    info/metric contract. The underlying physical reset remains the existing
+    Phase-U natural reset.
     """
 
     def reset(self, rng: jax.Array):
         return self.reset_natural(rng)
 
     def reset_natural(self, rng: jax.Array):
-        phase_state = TwoPhaseBikeEnv.reset_natural(self, rng)
-        up_events = phase_state.info["events"]
-        active_phase = jp.asarray(PHASE_UPSTREAM, jp.int32)
-        false = jp.asarray(False)
-        root_x = phase_state.data.qpos[self._bundle.model_index.root_qpos_address]
-
-        info = {
-            key: value for key, value in phase_state.info.items() if key != "events"
-        }
-        info.update(
-            {
-                "up_events": up_events,
-                "down_events": initial_descent_events(root_x),
-                "active_phase": active_phase,
-                "start_phase": active_phase,
-                "phase_transitioned": false,
-                "expert_switching_used": false,
-                "phase_episode_step": jp.asarray(0, jp.int32),
-                "source_tick": jp.asarray(-1, jp.int32),
-                "parent_group_index": jp.asarray(-1, jp.int32),
-                "tube_entry_index": jp.asarray(-1, jp.int32),
-                "tube_global_index": jp.asarray(-1, jp.int32),
-            }
-        )
-
-        # Preserve all Phase-U natural-reset metrics while extending the pytree
-        # to exactly the unified step contract. The reset is explicitly not a
-        # Soft-Tube sample.
-        metrics = self._unified_zero_metrics()
-        for key, value in phase_state.metrics.items():
-            if key in metrics:
-                metrics[key] = value
-        metrics.update(
-            {
-                "reset/source_soft_tube": jp.asarray(0.0, jp.float32),
-                "reset/tube_phase_upstream": jp.asarray(0.0, jp.float32),
-                "reset/tube_phase_downstream": jp.asarray(0.0, jp.float32),
-                "event/tube_phase_transition": jp.asarray(0.0, jp.float32),
-                "state/active_phase": active_phase.astype(jp.float32),
-            }
-        )
-        return phase_state.replace(info=info, metrics=metrics)
+        return self._reset_natural_unified(rng)
 
 
 def _json_safe(value: Any) -> Any:
