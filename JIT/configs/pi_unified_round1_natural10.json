@@ -51,10 +51,20 @@
     "samples_per_phase": 8,
     "resume_semantics": "fresh_only"
   },
+  "run_declaration": {
+    "run_id": "pi_unified_round1_natural10_10009600_seed821101_20260831",
+    "output_dir": "JIT/runs/pi_unified/pi_unified_round1_natural10_10009600_seed821101_20260831",
+    "purpose": "round1_single_variable_natural10_soft_tube90_unified_training",
+    "status": "predeclared_not_started"
+  },
   "claim_boundary": {
     "formal_method_stage_training": true,
     "round1_single_variable_iteration": true,
     "round0_failure_evidence": "PI_UP_APEX_UNIFIED_PRE_JUMP_FAIL",
+    "round0_natural_diagnostic_sha256": "eb8ccb07e1d8229abd794283fc3c48c63943f9a0356cf313c89186458a939721",
+    "round0_pi_up_unified_comparison_sha256": "53c708fd33df66c53a1ab60098d033ebf1284df3fe0c16f999a3942630bbca8f",
+    "round0_diagnostic_artifacts_regenerated": false,
+    "prelaunch_hardening_validated_head": "f9be2c6e4b5e5ef7e654bb7704e711177ffa89d6",
     "learnability_claim": false,
     "final_policy_claim": false,
     "certified_safe_tube_claim": false,
