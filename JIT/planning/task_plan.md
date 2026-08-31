@@ -62,9 +62,30 @@ Phase 22: Iteration-0 downstream refinement recovery and closure
 
 - [x] Bind the only observed negative action/sign and quantify saturation risk.
 - [x] Select one 25-attempt targeted panel with exact ceilings and deduplication.
-- [ ] Implement the locked variant under TDD and the stable entrypoint.
-- [ ] Verify, commit, audit, launch, and delegate monitoring to Luna medium.
-- [ ] Freeze TRAIN evidence only if full downstream readiness closes.
+- [x] Implement the locked variant under TDD and the stable entrypoint.
+- [x] Verify, commit, audit, launch, and delegate monitoring to Luna medium.
+- [x] Confirm full downstream readiness with 30 negatives across five groups.
+- **Status:** completed; both phase TRAIN transition bands are ready
+
+### Phase 26: freeze Iteration-0 TRAIN evidence
+
+- [x] Specify the immutable copied-label and provenance manifest contract.
+- [x] Add RED/GREEN tests for split, identity, readiness, deduplication, finite
+  observations, and tamper detection.
+- [x] Run full verification and write the exact zero-interaction frozen artifact.
+- [x] Independently audit the manifest, counts, hashes, and claim boundary.
+- **Status:** completed; 3,190-label TRAIN evidence frozen
+
+### Phase 27: group-disjoint expansion validation
+
+- [x] Freeze a compact validation recipe selected only from TRAIN evidence.
+- [ ] Use validation seed 1000006 parent groups absent from TRAIN; keep TEST
+  outcomes and final-evaluation data untouched.
+- [ ] Implement exact and near-duplicate leakage audits plus phase-aware frozen
+  `pi_0` validation acquisition/labeling under TDD.
+- [ ] Verify, commit, launch once, and delegate monitoring/result analysis to
+  Luna medium.
+- [ ] Permit `C_up^0`/`C_down^0` fitting only after validation closes.
 - **Status:** in progress
 
 ### Phase 21: portable handoff, locked-artifact archive, and remote delivery

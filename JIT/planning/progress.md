@@ -197,6 +197,35 @@
   and all 14 GPU tests passing. The post-preflight enhanced audit repeated the
   exact zero-interaction bindings and config SHA
   `5bb22cd47ba0fd0ad1d443c7ebcfa00e7071e6251373716a3680f9f14b96cab7`.
+- Committed the targeted panel as `5500cad`, launched exactly one run, and
+  delegated all polling/result analysis to Luna medium. The run exited 0 with
+  `transition_band_ready`: 25/25 unique terminal-clipped candidates were
+  negative (`pitch_limit=20`, `roll_limit=5`) using 616 acquisition and 25
+  labeling interactions.
+- Final accumulated TRAIN evidence is 3,190 unique states. Upstream is 545
+  positive/26 negative and downstream is 2,589 positive/30 negative; each
+  phase has five positive and five negative parent groups and is ready.
+- Added a TDD-backed zero-interaction freeze capability. It copies the exact
+  accumulated labels, recomputes readiness and parent-group identities, binds
+  pi_0/XML/Tube/source hashes, and rejects non-TRAIN, duplicate, non-finite,
+  identity-drifted, or tampered evidence. Five focused tests pass.
+- Luna's first provenance reverse-map used reused candidate IDs and incorrectly
+  reported a 4/6 split at strengths 0.30/0.35. Rechecking by
+  `(state_sha256, acquisition_protocol_sha256)` corrected this to exactly five
+  negatives at each strength 0.30/0.32/0.35/0.40/0.45/0.50.
+- A three-source validation design is feasible upstream, but downstream lacks
+  a seed-1000006 post-Apex snapshot for source transition 7,987,200. The
+  conservative compact design will use three group-disjoint upstream parent
+  trajectories and the two real available downstream parent trajectories
+  (4,988,928 and 9,977,856), never a fabricated or borrowed TRAIN anchor.
+- Full freeze-capability preflight passed 425 non-GPU tests (34 deselected) and
+  all 14 GPU tests. The exact zero-interaction freeze then completed and its
+  loader revalidated 3,190 labels, 76-dimensional observations, both readiness
+  records, and the five TRAIN parent groups.
+- Frozen Iteration-0 TRAIN evidence manifest SHA is
+  `27832237a85eccfa0ae2eaea7575dd2efda12535a3815fee0c6d0660f58921b8`;
+  its copied label SHA remains the exact source SHA
+  `32e45f021e05a96b3098354a927909869dcb8f1e71d4798481ae2edc0f4e0323`.
 
 ## Session: 2026-08-28 afternoon handoff and remote archive
 

@@ -121,6 +121,19 @@
   hashes, protocol, and runtime evidence must agree first.
 - The existing planning ledger is historically valuable but its former Phase
   20/21 status is stale relative to the handoff; Phase 22 now owns recovery.
+- The completed targeted hip panel closes downstream readiness without changing
+  physics or label semantics: 25 unique terminal-predecessor states all label
+  negative under frozen pi_0. Accumulated readiness is now closed in both
+  phases at 3,190 unique TRAIN labels.
+- Candidate IDs are local to acquisition runs and may be reused. Cross-run
+  provenance joins must use `(state_sha256, acquisition_protocol_sha256)`;
+  joining by candidate ID alone produced and then corrected a false strength
+  distribution.
+- Validation seed 1000006 supplies three upstream parent trajectories but only
+  two usable downstream post-Apex trajectories. The missing 7,987,200
+  downstream snapshot cannot be substituted with a TRAIN group or upstream
+  state. The compact validation protocol must declare asymmetric 3/2 group
+  coverage rather than claim a nonexistent three-source downstream panel.
 
 ## 2026-08-28 learned Soft Tube and Tube-RSI
 
