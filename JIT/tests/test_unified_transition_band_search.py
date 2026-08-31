@@ -22,11 +22,15 @@ def _row(*, state: str, phase: str, label: int, group: str):
     }
 
 
-def test_iter0_automated_search_config_is_predeclared_and_duration_only(jit_root):
+def test_iter0_automated_search_config_inherits_completed_shell_and_starts_at_16(jit_root):
     path = jit_root / "configs/envelope_iter0_transition_band_search.json"
     config = load_transition_band_search_config(path)
 
     assert config["iteration"] == 0
+    assert config["completed_inner_shell"]["expected_candidate_count"] == 896
+    assert config["completed_inner_shell"]["expected_positive_count"] == 883
+    assert config["completed_inner_shell"]["expected_negative_count"] == 13
+    assert config["completed_inner_shell"]["maximum_duration"] == 8
     assert config["fixed_acquisition"]["single_variable"] == "perturbation_duration_only"
     assert config["fixed_acquisition"]["strengths"] == [0.025, 0.05, 0.1]
     assert config["fixed_acquisition"]["action_names"] == [
@@ -36,7 +40,6 @@ def test_iter0_automated_search_config_is_predeclared_and_duration_only(jit_root
         "knee",
     ]
     assert [shell["durations"] for shell in config["outer_shells"]] == [
-        [4, 8],
         [16, 32],
         [64, 128],
     ]
@@ -120,8 +123,6 @@ def test_readiness_is_phasewise_and_requires_three_failure_groups():
     assert ready["upstream"]["ready"] is True
     assert ready["downstream"]["ready"] is True
 
-    # Collapse downstream failures to one parent trajectory family: count alone
-    # must not make the phase ready.
     for row in rows:
         if row["phase"] == "downstream" and row["label"] == 0:
             row["parent_group_id"] = "one_failure_group"
