@@ -31,6 +31,13 @@ def _assert_source_one_hot(state) -> None:
     assert np.isin(soft, [0.0, 1.0]).all()
 
 
+def _reset_from_pre_forward_natural(env, rng):
+    tube_sample = env.tube_pool.sample(rng)
+    natural_sample = env._natural_reset_sample(rng, tube_sample)
+    state = env._reset_from_tube_sample(natural_sample)
+    return env._with_reset_source(state, soft_tube=False)
+
+
 def test_unified_natural_and_tube_reset_share_runtime_capacity_and_pytree(jit_root):
     assert jax.default_backend() == "gpu"
     config, _artifact, env = build_unified_formal_environment(
@@ -57,6 +64,42 @@ def test_unified_natural_and_tube_reset_share_runtime_capacity_and_pytree(jit_ro
     assert _finite_tree(natural.data.qvel)
     assert _finite_tree(tube.data.qpos)
     assert _finite_tree(tube.data.qvel)
+
+
+def test_pre_forward_natural_reset_matches_existing_natural_semantics(jit_root):
+    assert jax.default_backend() == "gpu"
+    _config, _artifact, env = build_unified_formal_environment(
+        jit_root / "configs/pi_unified_round1_natural10.json"
+    )
+    key = jax.random.PRNGKey(9_500_017)
+    existing = jax.jit(env._reset_natural_unified)(key)
+    pre_forward = jax.jit(lambda rng: _reset_from_pre_forward_natural(env, rng))(key)
+    jax.block_until_ready(existing)
+    jax.block_until_ready(pre_forward)
+
+    assert jax.tree.structure(existing) == jax.tree.structure(pre_forward)
+    assert _datawarp_metadata(existing) == _datawarp_metadata(pre_forward)
+    for left, right in (
+        (existing.data.qpos, pre_forward.data.qpos),
+        (existing.data.qvel, pre_forward.data.qvel),
+        (existing.data.ctrl, pre_forward.data.ctrl),
+        (existing.obs["state"], pre_forward.obs["state"]),
+        (existing.obs["privileged_state"], pre_forward.obs["privileged_state"]),
+    ):
+        np.testing.assert_allclose(
+            np.asarray(jax.device_get(left)),
+            np.asarray(jax.device_get(right)),
+            rtol=0.0,
+            atol=0.0,
+        )
+    assert int(pre_forward.info["start_phase"]) == 0
+    assert int(pre_forward.info["source_tick"]) == -1
+    assert int(pre_forward.info["parent_group_index"]) == -1
+    assert int(pre_forward.info["tube_entry_index"]) == -1
+    assert int(pre_forward.info["tube_global_index"]) == -1
+    assert float(pre_forward.metrics["reset/source_natural"]) == pytest.approx(1.0)
+    assert float(pre_forward.metrics["reset/source_soft_tube"]) == pytest.approx(0.0)
+    assert bool(np.asarray(pre_forward.info["expert_switching_used"])) is False
 
 
 def test_jitted_mixed_reset_step_and_fixed_panel_contract(jit_root):
