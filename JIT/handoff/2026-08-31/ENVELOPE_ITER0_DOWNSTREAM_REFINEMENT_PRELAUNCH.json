@@ -1,0 +1,86 @@
+{
+  "schema": "jit_envelope_iter0_downstream_refinement_prelaunch_v1",
+  "status": "predeclared",
+  "date": "2026-08-31",
+  "iteration": 0,
+  "scientific_role": "downstream_transition_band_local_refinement_after_coarse_search_exhaustion",
+  "completed_coarse_search": {
+    "root": "JIT/runs/pi_unified_transition_band/pi_0_iter0_automated_20260831",
+    "status": "search_exhausted",
+    "protocol_sha256": "161485f15b4020864570f604edcaf67f01de2781389b13ad7451e82483e5839f",
+    "accumulated_unique_label_count": 1136,
+    "upstream": {
+      "positive_count": 545,
+      "negative_count": 26,
+      "positive_parent_group_count": 5,
+      "negative_parent_group_count": 5,
+      "ready": true
+    },
+    "downstream": {
+      "positive_count": 565,
+      "negative_count": 0,
+      "positive_parent_group_count": 5,
+      "negative_parent_group_count": 0,
+      "ready": false
+    },
+    "outer_shell2": {
+      "declared_durations": [16, 32],
+      "observed_candidates": 240,
+      "observed_candidate_duration": 16,
+      "downstream_duration16": {
+        "positive": 120,
+        "total": 120
+      },
+      "upstream_duration16": {
+        "positive": 107,
+        "negative": 13,
+        "total": 120
+      }
+    },
+    "outer_shell3": {
+      "declared_durations": [64, 128],
+      "active_phases": ["downstream"],
+      "candidate_count": 0,
+      "acquisition_environment_interactions": 7640
+    }
+  },
+  "method_decision": {
+    "reason": "The coarse duration coordinate is no longer an informative downstream distance parameter once long perturbation bursts reach episode terminal before a nonterminal candidate can be saved. Search exhaustion is therefore a candidate-generation limitation, not evidence that downstream has no capability boundary.",
+    "upstream_action": "freeze the existing upstream TRAIN transition band; spend no more upstream probing interactions",
+    "downstream_action": "refine the bracket immediately beyond duration 16 on every integer tick from 17 through 32",
+    "terminal_clipping": "if a perturbation reaches terminal, save the last finite nonterminal predecessor as the candidate; the perturbation terminal outcome is provenance only and never the continuation label",
+    "unchanged": [
+      "pi_0",
+      "Tube_0",
+      "physics",
+      "reward",
+      "task semantics",
+      "action axes",
+      "signs",
+      "strengths",
+      "400-tick continuation horizon"
+    ]
+  },
+  "refinement": {
+    "config": "JIT/configs/envelope_iter0_downstream_refinement.json",
+    "phase": "downstream",
+    "duration_grid": [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32],
+    "strengths": [0.025, 0.05, 0.1],
+    "action_names": ["steer", "rear_wheel_drive", "hip", "knee"],
+    "signs": [-1, 1],
+    "phasewise_stop": "stop as soon as accumulated downstream TRAIN evidence has at least 20 positives, 20 negatives, and each class spans at least 3 parent groups",
+    "training_transitions": 0,
+    "validation_data_used": false,
+    "test_data_used": false,
+    "final_evaluation_data_used": false
+  },
+  "claim_boundary": {
+    "training_only_search": true,
+    "upstream_transition_band_frozen": true,
+    "continuation_field_trained": false,
+    "tube_1_constructed": false,
+    "pi_1_trained": false,
+    "jce_jel_claim": false,
+    "certified_safe_set_claim": false
+  }
+}
