@@ -137,9 +137,15 @@ class SnapshotPool:
                 "observation",
                 "last_action",
                 "ctrl",
-                "rng",
             )
         }
+        # Snapshot payloads persist PRNG keys as raw uint32[2] key data for stable
+        # serialization. Runtime JAX state uses typed keys, matching natural resets
+        # and canonical snapshot restore, so mixed reset selection has one PyTree
+        # dtype contract under jit/vmap.
+        result["rng"] = jax.random.wrap_key_data(
+            jnp.asarray(self._common_stack("rng")[index], dtype=jnp.uint32)
+        )
         result["history_valid_count"] = jnp.asarray(
             [snapshot.history_valid_count for snapshot in self.snapshots], dtype=jnp.int32
         )[index]
