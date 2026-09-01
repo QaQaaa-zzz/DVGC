@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from types import SimpleNamespace
 
 import jax.numpy as jp
@@ -120,3 +121,51 @@ def test_formal_controller_checkpoints_and_diagnoses_only_declared_milestones(
     assert controller.train_panel_transitions == config.formal.train_panel_transitions
     assert controller.final_metrics["training/total_loss"] == 10_009_600.0
     assert len((tmp_path / "episode_metrics.jsonl").read_text().splitlines()) == 391
+
+
+def test_failed_train_panel_accounting_is_recovered_from_persisted_report(tmp_path):
+    from jit_dvgc.training.formal import _reconcile_failed_train_panel_accounting
+
+    status_path = tmp_path / "status.json"
+    status_path.write_text(
+        json.dumps(
+            {
+                "status": "engineering_error",
+                "reason": "ValueError: plotting failed after rollout",
+                "interaction_accounting": {
+                    "training": 1_024_000,
+                    "brax_evaluation": 0,
+                    "fixed_evaluation": 0,
+                    "diagnostic": 0,
+                },
+                "environment_transitions": 1_024_000,
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    panel_dir = tmp_path / "train_panels" / "transition_1024000"
+    panel_dir.mkdir(parents=True)
+    (panel_dir / "report.json").write_text(
+        json.dumps(
+            {
+                "training_checkpoint_transition": 1_024_000,
+                "environment_interactions": 449,
+                "training_transitions": 0,
+                "test_data_used": False,
+                "validation_data_used": False,
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    assert _reconcile_failed_train_panel_accounting(tmp_path) == 449
+    repaired = json.loads(status_path.read_text(encoding="utf-8"))
+    assert repaired["interaction_accounting"]["diagnostic"] == 449
+    assert repaired["environment_transitions"] == 1_024_449
+    assert repaired["accounting_reconciliation"] == {
+        "source": "persisted_train_panel_reports",
+        "previous_diagnostic_interactions": 0,
+        "reconciled_diagnostic_interactions": 449,
+    }
