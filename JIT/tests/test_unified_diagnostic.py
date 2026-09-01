@@ -211,3 +211,13 @@ def test_paired_policy_gate_rejects_core_regression_or_single_group_boundary_gai
     assert result["boundary"]["passed"] is False
     assert result["boundary"]["candidate_success_parent_group_count"] == 1
     assert result["accepted"] is False
+
+
+def test_paired_gate_rollout_requires_a_shared_step_function():
+    import inspect
+
+    from jit_dvgc.analysis.paired_policy_gate import _rollout
+
+    parameters = inspect.signature(_rollout).parameters
+    assert "step_fn" in parameters
+    assert parameters["step_fn"].kind is inspect.Parameter.KEYWORD_ONLY
