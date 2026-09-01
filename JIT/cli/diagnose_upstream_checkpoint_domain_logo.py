@@ -6,7 +6,7 @@ from pathlib import Path
 
 from jit_dvgc.upstream_checkpoint_domain_cv import run_upstream_checkpoint_domain_cv
 from jit_dvgc.upstream_matched_checkpoint_domain_cv import (
-    STATUS as MATCHED_STATUS,
+    MATCHED_STATUSES,
     run_matched_checkpoint_domain_cv,
 )
 
@@ -27,9 +27,10 @@ def main() -> None:
     )
     parser.add_argument("config", type=Path)
     args = parser.parse_args()
+    status = _status(args.config)
     result = (
         run_matched_checkpoint_domain_cv(args.config)
-        if _status(args.config) == MATCHED_STATUS
+        if status in MATCHED_STATUSES
         else run_upstream_checkpoint_domain_cv(args.config)
     )
     print(json.dumps(result, indent=2, sort_keys=True))
