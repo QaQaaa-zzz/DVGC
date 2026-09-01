@@ -14,6 +14,8 @@ def test_real_validation_freeze_config_locks_completed_run(jit_root):
         jit_root / "configs/envelope_iter0_validation_evidence_freeze.json"
     )
     p = config["protocol"]
+    assert p["source_repository_head"] == "df30d6b2a1658f8b70d82d415ea735f6747a3495"
+    assert len(p["source_repository_head"]) == 40
     assert p["scientific_protocol_sha256"] == (
         "9ec0a1e8c314cc5710688a3537fbd339f520d4db3c4268d20715bcde938586b0"
     )
@@ -27,6 +29,17 @@ def test_real_validation_freeze_config_locks_completed_run(jit_root):
         "upstream": 131,
         "downstream": 16,
     }
+
+
+def test_git_object_id_validation_is_distinct_from_sha256():
+    from jit_dvgc.iteration_validation_evidence import _git_object_id, _sha
+
+    commit = "a" * 40
+    assert _git_object_id(commit, field="head") == commit
+    with pytest.raises(ValueError, match="SHA-256"):
+        _sha(commit, field="artifact")
+    with pytest.raises(ValueError, match="Git object id"):
+        _git_object_id("xyz", field="head")
 
 
 def test_validation_row_audit_rejects_train_parent_overlap():
