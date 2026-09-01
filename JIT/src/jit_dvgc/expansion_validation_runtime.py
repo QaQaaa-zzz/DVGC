@@ -192,6 +192,29 @@ def load_validation_anchor_snapshots(
     return result
 
 
+def _expected_unified_actor_observation(
+    snapshot: HandoffSnapshot,
+    *,
+    phase: str,
+) -> np.ndarray:
+    """Rebuild the actor input that frozen pi_0 actually sees at validation reset."""
+    frames = np.asarray(snapshot.observation_fifo, dtype=np.float32)
+    if frames.shape != (3, 25) or not np.isfinite(frames).all():
+        raise ValueError("validation anchor FIFO is invalid")
+    if phase == "upstream":
+        task_signal = bool(np.asarray(snapshot.events["jump_signal"]))
+    elif phase == "downstream":
+        task_signal = False
+    else:
+        raise ValueError("unsupported validation phase")
+    expected = np.concatenate(
+        (frames.reshape(-1), np.asarray([float(task_signal)], dtype=np.float32))
+    )
+    if expected.shape != (76,) or not np.isfinite(expected).all():
+        raise ValueError("validation anchor unified actor observation is invalid")
+    return expected
+
+
 def restore_validation_anchor_as_unified(
     snapshot: HandoffSnapshot,
     *,
@@ -203,7 +226,9 @@ def restore_validation_anchor_as_unified(
 
     The real qpos/qvel/control, FIFO, last action and upstream event context are
     preserved.  Administrative counters start fresh, and downstream events are
-    initialized exactly as the existing unified Tube reset does.
+    initialized exactly as the existing unified Tube reset does.  The legacy
+    cached actor observation is provenance only; reset validation is against the
+    phase-aware unified observation reconstructed from the preserved FIFO.
     """
     if phase not in PHASE_INDEX:
         raise ValueError("unsupported validation phase")
@@ -212,8 +237,10 @@ def restore_validation_anchor_as_unified(
         raise ValueError("validation anchor runtime compatibility drift")
     if snapshot.xml_sha256 != env._bundle.xml_sha256:
         raise ValueError("validation anchor runtime XML drift")
-    if np.asarray(snapshot.observation).ndim != 1:
+    stored = np.asarray(snapshot.observation, dtype=np.float32)
+    if stored.shape != (76,) or not np.isfinite(stored).all():
         raise ValueError("validation anchor stored actor observation is invalid")
+    expected_actor = _expected_unified_actor_observation(snapshot, phase=phase)
 
     rng = jax.random.wrap_key_data(jp.asarray(snapshot.rng, dtype=jp.uint32))
     minus_one = jp.asarray(-1, jp.int32)
@@ -245,9 +272,10 @@ def restore_validation_anchor_as_unified(
     }
     state = state.replace(info=info, metrics=metrics)
     restored = np.asarray(jax.device_get(state.obs["state"]), dtype=np.float32)
-    stored = np.asarray(snapshot.observation, dtype=np.float32)
-    if restored.shape != stored.shape or not np.allclose(restored, stored, rtol=0.0, atol=1.0e-5):
-        raise ValueError("validation anchor actor observation reconstruction drift")
+    if restored.shape != expected_actor.shape or not np.allclose(
+        restored, expected_actor, rtol=0.0, atol=1.0e-5
+    ):
+        raise ValueError("validation anchor unified actor observation reconstruction drift")
     if _integer(state.info["active_phase"]) != int(PHASE_INDEX[phase]):
         raise ValueError("validation anchor active phase drift")
     if _integer(state.info["episode_step"]) != 0 or _integer(state.info["phase_episode_step"]) != 0:
