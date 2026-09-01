@@ -286,7 +286,17 @@ def plot_xz_visitation(
 def _tube_points(artifact: SoftTubeArtifact) -> tuple[dict[str, Any], ...]:
     points = []
     for row in artifact.entries:
-        snapshot = load_snapshot(Path(row["snapshot"]))
+        snapshot_path = Path(row["snapshot"])
+        identity = read_json(snapshot_path / "identity.json")
+        schema = str(identity.get("schema", ""))
+        if schema == "handoff_snapshot_v1":
+            snapshot = load_snapshot(snapshot_path)
+        elif schema == "jit_unified_envelope_snapshot_v1":
+            from .unified_envelope_snapshot import load_unified_envelope_snapshot
+
+            snapshot = load_unified_envelope_snapshot(snapshot_path)
+        else:
+            raise ValueError(f"unsupported Soft Tube snapshot schema: {schema}")
         points.append(
             {
                 "phase": row["phase"],
