@@ -167,7 +167,15 @@ def _validate_gate_summary(
             raise ValueError("upstream TRAIN support gate did not pass")
         if summary.get("shared_up_down_architecture_candidate_authorized") is not True:
             raise ValueError("upstream TRAIN gate did not authorize shared architecture candidate")
-        if summary.get("model_family") != "tiny_mlp_tanh" or int(summary.get("parameter_count", -1)) != 625:
+        folds = summary.get("folds")
+        if not isinstance(folds, list) or len(folds) != 5:
+            raise ValueError("upstream TRAIN gate fold provenance drift")
+        if any(
+            not isinstance(fold, Mapping)
+            or fold.get("model_family") != "tiny_mlp_tanh"
+            or int(fold.get("parameter_count", -1)) != 625
+            for fold in folds
+        ):
             raise ValueError("upstream TRAIN gate architecture drift")
     elif kind == "downstream":
         if summary.get("downstream_parent_generalization_supported") is not True:
