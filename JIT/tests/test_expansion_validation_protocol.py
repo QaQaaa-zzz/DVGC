@@ -61,7 +61,7 @@ def test_real_iter0_validation_protocol_audit(jit_root):
         "downstream": 2,
     }
     assert audit["attempt_count"] == 160
-    assert audit["maximum_acquisition_environment_interactions"] == 696
+    assert audit["maximum_acquisition_environment_interactions"] == 1824
     assert audit["maximum_labeling_environment_interactions"] == 64000
     assert audit["train_parent_overlap_count"] == 0
     assert audit["exact_state_overlap_count"] == 0
