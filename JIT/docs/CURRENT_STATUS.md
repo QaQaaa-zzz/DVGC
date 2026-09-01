@@ -31,6 +31,15 @@ Pre-run canonical config SHA-256:
 
 `987ef5d31661482fd0bc05cea566c177d83ecd00ae3028ff0e8bb2ed462b7901`
 
+Exact final artifact identities:
+
+- final checkpoint: `checkpoints/transition_10009600`
+- checkpoint payload SHA-256: `fb5c364057933d62c4e1b6ed49f3181cd36584c5b270f305eef18dff150e68e5`
+- checkpoint identity JSON SHA-256: `7053f5cd7acd00f75849d8eceea38f81daf78d6965875aa44baf52a68be953d0`
+- formal report SHA-256: `7ec696605244182357cfe2831eaa207e45968c9e382807ecbc8d2d710ce8714a`
+- terminal status SHA-256: `0d82971a868b6e48d8c62af815b6a19b4a7372cd67b9825817863c86fac63e45`
+- XML SHA-256: `0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a`
+
 Formal result:
 
 - requested/completed training transitions: 10,009,600 / 10,009,600
