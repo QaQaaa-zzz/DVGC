@@ -1,8 +1,11 @@
-"""Identity-only independence audit for completed fresh validation candidates.
+"""Identity-only overlap audit for completed fresh validation candidates.
 
-No consumed validation labels, scores, outcomes, or predictions are read.  A
-fresh bank is invalid if any generated candidate is an exact or observation-level
-near duplicate of the already-consumed validation candidate catalog.
+No consumed validation labels, scores, outcomes, or predictions are read.  The
+locked fresh-validation protocol says exact/near duplicates of the already-
+consumed validation bank are candidate exclusions with no replacement.  This
+module therefore identifies the exclusions before labeling; the caller applies
+them to the in-memory validation catalog and continues with the remaining fixed
+attempts.
 """
 from __future__ import annotations
 
@@ -46,11 +49,12 @@ def audit_fresh_candidate_vs_consumed_validation(
     fresh_rows = fresh.get("entries")
     if not isinstance(fresh_rows, list):
         raise ValueError("fresh validation candidate entries missing")
+
     old_states = {str(row.get("state_sha256", "")) for row in old_rows}
     old_obs = np.asarray([row["actor_observation"] for row in old_rows], dtype=np.float64)
     tolerance = float(protocol["near_duplicate_audit"]["actor_observation_atol"])
-    exact = []
-    near = []
+    exact: list[str] = []
+    near: list[str] = []
     for row in fresh_rows:
         state = str(row.get("state_sha256", ""))
         candidate_id = str(row.get("candidate_id", ""))
@@ -60,17 +64,22 @@ def audit_fresh_candidate_vs_consumed_validation(
         obs = np.asarray(row["actor_observation"], dtype=np.float64)
         if np.any(np.all(np.abs(old_obs - obs) <= tolerance, axis=1)):
             near.append(candidate_id)
-    passed = not exact and not near
+
+    excluded = set(exact) | set(near)
     report = {
         "schema": "jit_fresh_validation_consumed_identity_audit_v1",
-        "status": "independent" if passed else "overlap_detected",
-        "fresh_candidate_count": len(fresh_rows),
+        "status": "independent" if not excluded else "exclusions_required",
+        "raw_fresh_candidate_count": len(fresh_rows),
+        "accepted_candidate_count_after_exclusion": len(fresh_rows) - len(excluded),
         "consumed_candidate_count": len(old_rows),
+        "prefilter_exact_state_overlap_count": len(exact),
+        "prefilter_near_duplicate_observation_overlap_count": len(near),
         "exact_state_overlap_count": len(exact),
         "near_duplicate_observation_overlap_count": len(near),
         "actor_observation_atol": tolerance,
         "exact_overlap_candidate_ids": exact,
         "near_overlap_candidate_ids": near,
+        "no_replacement_after_exclusion": True,
         "consumed_validation_outcomes_read": False,
         "consumed_validation_predictions_read": False,
         "training_transitions": 0,
@@ -78,8 +87,4 @@ def audit_fresh_candidate_vs_consumed_validation(
         "final_evaluation_data_used": False,
     }
     _write(Path(output) / "consumed_validation_identity_audit.json", report)
-    if not passed:
-        raise ValueError(
-            "fresh validation candidate bank overlaps the consumed validation identity bank"
-        )
     return report
