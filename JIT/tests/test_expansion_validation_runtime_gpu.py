@@ -20,6 +20,7 @@ def test_real_validation_anchors_restore_into_unified_runtime_without_steps(
         load_expansion_validation_protocol_config,
     )
     from jit_dvgc.expansion_validation_runtime import (
+        _expected_unified_actor_observation,
         load_validation_anchor_snapshots,
         restore_validation_anchor_as_unified,
     )
@@ -40,16 +41,23 @@ def test_real_validation_anchors_restore_into_unified_runtime_without_steps(
     assert len(anchors) == 5
 
     restored = 0
+    cached_mismatch_by_phase = {"upstream": 0, "downstream": 0}
     for phase in ("upstream", "downstream"):
         for index, _anchor in enumerate(protocol["sources"][phase]["anchors"]):
+            snapshot = anchors[(phase, index)]
             state = restore_validation_anchor_as_unified(
-                anchors[(phase, index)],
+                snapshot,
                 phase=phase,
                 env=env,
                 parent_group_index=index,
             )
             jax.block_until_ready(state)
             actor = np.asarray(jax.device_get(state.obs["state"]), dtype=np.float32)
+            expected_actor = _expected_unified_actor_observation(snapshot, phase=phase)
+            np.testing.assert_allclose(actor, expected_actor, rtol=0.0, atol=1.0e-5)
+            cached = np.asarray(snapshot.observation, dtype=np.float32)
+            if not np.allclose(cached, expected_actor, rtol=0.0, atol=1.0e-5):
+                cached_mismatch_by_phase[phase] += 1
             assert actor.shape == (76,)
             assert np.isfinite(actor).all()
             assert int(np.asarray(jax.device_get(state.info["active_phase"]))) == (
@@ -65,3 +73,4 @@ def test_real_validation_anchors_restore_into_unified_runtime_without_steps(
             restored += 1
 
     assert restored == 5
+    assert cached_mismatch_by_phase == {"upstream": 0, "downstream": 2}
