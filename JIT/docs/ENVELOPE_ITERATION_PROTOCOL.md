@@ -3,11 +3,11 @@
 ## Status
 
 This document defines the active iterative research contract after the completed
-bootstrap, `pi_0`, policy-conditioned `C^0`, `Tube_1`, and formal `pi_1`
-training stages. It is both a method contract and an execution boundary: an
-envelope iteration is not accepted merely because training finishes. The next
-policy authority is accepted only after its declared core-preservation and
-boundary-gain gates pass.
+bootstrap, `pi_0`, policy-conditioned `C^0`, `Tube_1`, formal `pi_1` training,
+and immutable `pi_1` freeze. It is both a method contract and an execution
+boundary: an envelope iteration is not accepted merely because training or
+freezing finishes. The next policy authority is accepted only after its declared
+core-preservation and boundary-gain gates pass.
 
 ## 1. Research objective
 
@@ -173,23 +173,32 @@ held-out outcomes.
 The final deployment/evaluation controller remains one unified Actor. Local
 experts are bootstrap/data-generation tools and are never switched at runtime.
 
-## 8. Core-preservation gate
+## 8. Core-preservation and boundary-gain gate
 
 An expanded policy is not automatically better because its Tube is larger.
 Before accepting `pi_{k+1}` as the next iteration authority, it must demonstrate
-both:
+both core preservation and boundary gain under one locked paired-policy audit.
 
-1. **core preservation**: performance on a locked, non-final audit subset of the
-   previous Tube does not degrade beyond a predeclared tolerance;
-2. **boundary gain**: paired performance/coverage on a locked, non-final
-   boundary audit bank improves beyond a predeclared minimum.
+The current generic paired-gate contract is:
 
-The comparison must bind exact frozen `pi_k` and `pi_{k+1}` identities and use
-the same audited states/protocol for both policies. It may not use final TEST
-states. A Tube being numerically larger, a PPO reward being larger, or a
-continuation model giving larger scores is not by itself a boundary-gain proof.
+1. **core bank**: every declared `Tube_k` source-core state is evaluated under
+   frozen `pi_k` and frozen `pi_{k+1}` using the same deterministic continuation
+   runtime. Core preservation passes only when there are zero states for which
+   the baseline succeeds and the candidate fails. The baseline must have at
+   least one successful core state in each phase so the gate cannot pass
+   vacuously;
+2. **boundary bank**: use frozen TRAIN frontier states labeled continuation-
+   negative under `pi_k` and exclude any state already admitted to
+   `Tube_{k+1}`. The exact same locked state is evaluated under both policies.
+   The baseline-negative outcome must reproduce, and the candidate must convert
+   failures to successes in at least two distinct parent groups;
+3. the locked bank is written and self-hashed before either policy rollout;
+4. validation, final TEST/JCE/JEL data, expert switching, and policy training
+   are forbidden during this gate.
 
-These are iteration-selection diagnostics, not final JCE/JEL evidence.
+This audit is an iteration-selection diagnostic, not final JCE/JEL evidence.
+A Tube being numerically larger, PPO reward being larger, or a continuation
+model producing larger scores is not by itself a boundary-gain proof.
 
 ## 9. Convergence
 
@@ -226,7 +235,7 @@ The result is an **empirical, policy-conditioned jumping capability envelope**.
 It must not be described as a formal safe set, guaranteed viability kernel, or
 proof of reachability outside the measured distribution.
 
-## 11. Completed baseline through pi_1
+## 11. Completed baseline through frozen pi_1
 
 The current completed chain is:
 
@@ -240,28 +249,35 @@ frozen phase experts
   -> core-retaining Tube_1 (3,119 TRAIN entries)
   -> Tube_1 engineering gate GO
   -> pi_1 (10,009,600 PPO transitions, completed and restore-verified)
+  -> frozen pi_1 iteration authority
 ```
 
-`pi_1` final checkpoint payload SHA-256 is
-`fb5c364057933d62c4e1b6ed49f3181cd36584c5b270f305eef18dff150e68e5`.
-The exact checkpoint is
-`JIT/runs/pi_unified/pi_1_tube1_natural10_10009600_seed821101_20260901_retry01/checkpoints/transition_10009600`.
-The source formal run used no validation/TEST data and no expert switching.
+The frozen `pi_1` identities are:
 
-This completion does **not** yet establish envelope expansion. `pi_1` must first
-be frozen as the next comparison authority and pass both iteration gates.
+- checkpoint payload SHA-256: `fb5c364057933d62c4e1b6ed49f3181cd36584c5b270f305eef18dff150e68e5`
+- actor SHA-256: `cc8f202075479aa90c0451732773016dfa25ef8a0c849278b5917319070284f0`
+- critic SHA-256: `1519803788302a936d3129eb7010de5fe153ea65410a49c35c1328e22fdf8d8f`
+- normalizer SHA-256: `94ed2587601dbe187774f664a741f427d943148a0c5391cdf57a45939c50a191`
+- freeze protocol SHA-256: `242301b29f3510895a0f13934deac44c1b38c976bb9a8c8385a85f621613a1ed`
+
+The frozen manifest is:
+
+`JIT/runs/frozen_unified/pi_1_iter1_10009600_20260901/frozen_unified_policy.json`
+
+Freezing used zero environment interactions and zero training transitions. It
+does **not** establish envelope expansion. The paired core/boundary gate is now
+the active scientific blocker.
 
 ## 12. Immediate implementation order
 
-1. Freeze the exact completed `pi_1` final checkpoint as immutable iteration-1
-   envelope-comparison authority. Freezing uses zero environment interactions.
-2. Predeclare a paired, non-final core-preservation audit that evaluates frozen
-   `pi_0` and frozen `pi_1` on the same locked retained-core states.
-3. Predeclare a paired, non-final boundary-gain audit using the same locked
-   boundary states for both policies. Do not select the bank after seeing pi_1
+1. Validate the generic paired-policy gate implementation and its predeclared
+   `pi_0 -> pi_1` config without changing the frozen bank rule after seeing
    outcomes.
-4. Require both machine-readable gates to pass before recording
-   `pi_0 -> pi_1` empirical capability-envelope expansion.
+2. Execute the paired audit on frozen `pi_0` and frozen `pi_1`.
+3. Require both machine-readable gates to pass before recording empirical
+   `pi_0 -> pi_1` capability-envelope expansion.
+4. If either gate fails, preserve the result and stop the iteration; do not
+   automatically tune thresholds, reward, PPO, or the audit bank.
 5. Only after gate acceptance, use frozen `pi_1` for the next TRAIN acquisition
    and continuation-label stage, producing `C_up^1/C_down^1` under independent
    validation.
