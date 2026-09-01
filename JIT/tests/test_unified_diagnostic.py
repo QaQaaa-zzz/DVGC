@@ -125,3 +125,89 @@ def test_xz_overlay_writes_literal_trajectory_plot(tmp_path):
     assert result == output
     assert output.is_file()
     assert output.stat().st_size > 1000
+
+
+def test_paired_policy_gate_accepts_zero_core_regression_and_parent_diverse_gain():
+    from jit_dvgc.analysis import summarize_paired_gate_records
+
+    records = (
+        {
+            "bank_role": "core",
+            "phase": "upstream",
+            "parent_group_id": "core-up",
+            "baseline_success": True,
+            "candidate_success": True,
+        },
+        {
+            "bank_role": "core",
+            "phase": "downstream",
+            "parent_group_id": "core-down",
+            "baseline_success": True,
+            "candidate_success": True,
+        },
+        {
+            "bank_role": "boundary",
+            "phase": "upstream",
+            "parent_group_id": "boundary-a",
+            "baseline_success": False,
+            "candidate_success": True,
+        },
+        {
+            "bank_role": "boundary",
+            "phase": "downstream",
+            "parent_group_id": "boundary-b",
+            "baseline_success": False,
+            "candidate_success": True,
+        },
+    )
+    result = summarize_paired_gate_records(
+        records, minimum_candidate_success_parent_groups=2
+    )
+    assert result["core"]["passed"] is True
+    assert result["core"]["regression_count"] == 0
+    assert result["boundary"]["passed"] is True
+    assert result["boundary"]["candidate_success_parent_group_count"] == 2
+    assert result["accepted"] is True
+
+
+def test_paired_policy_gate_rejects_core_regression_or_single_group_boundary_gain():
+    from jit_dvgc.analysis import summarize_paired_gate_records
+
+    records = (
+        {
+            "bank_role": "core",
+            "phase": "upstream",
+            "parent_group_id": "core-up",
+            "baseline_success": True,
+            "candidate_success": False,
+        },
+        {
+            "bank_role": "core",
+            "phase": "downstream",
+            "parent_group_id": "core-down",
+            "baseline_success": True,
+            "candidate_success": True,
+        },
+        {
+            "bank_role": "boundary",
+            "phase": "upstream",
+            "parent_group_id": "boundary-a",
+            "baseline_success": False,
+            "candidate_success": True,
+        },
+        {
+            "bank_role": "boundary",
+            "phase": "downstream",
+            "parent_group_id": "boundary-a",
+            "baseline_success": False,
+            "candidate_success": True,
+        },
+    )
+    result = summarize_paired_gate_records(
+        records, minimum_candidate_success_parent_groups=2
+    )
+    assert result["core"]["passed"] is False
+    assert result["core"]["regression_count"] == 1
+    assert result["boundary"]["passed"] is False
+    assert result["boundary"]["candidate_success_parent_group_count"] == 1
+    assert result["accepted"] is False
