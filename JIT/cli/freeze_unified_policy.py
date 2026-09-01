@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from jit_dvgc.unified_policy_freeze import freeze_unified_policy
+from jit_dvgc.training.freeze import freeze_unified_policy
 
 
 def main() -> None:

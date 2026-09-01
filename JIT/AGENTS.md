@@ -11,28 +11,29 @@
 - Write run outputs under `JIT/runs/<capability>/<run_id>/`. Run outputs are
   ignored and are not committed.
 - Preserve frozen `pi_up_star`, `pi_down_star`, first-pass `V_up`/`V_down`, and
-  the existing 222-entry TRAIN-only learned Soft Tube as immutable bootstrap
+  the existing 222-entry TRAIN-only learned Tube_0 as immutable bootstrap
   provenance. Do not retrain or silently relabel those completed artifacts.
-- The completed Round-1 unified transition-10,009,600 checkpoint is the current
-  candidate `pi_0` for Tube-conditioned envelope-expansion work. It is not yet
-  `pi_unified_star` and does not support a final JCE/JEL claim.
-- The Round-1 canonical natural-start `yaw_limit` result is retained as a
-  cold-start diagnostic. Under the current research scope, ordinary locomotion
-  before Tube entry is not the final JIT deployment/evaluation domain.
-- The preflighted `pi_unified_round2_natural50.json` experiment was superseded
-  before launch. Preserve its config and handoff evidence; do not launch it
-  unless the research question is explicitly changed back to cold-start
-  locomotion.
-- The active next stage is policy–Tube envelope iteration as defined in
-  `JIT/docs/ENVELOPE_ITERATION_PROTOCOL.md`: freeze `pi_0`, acquire boundary
-  candidates through authoritative real dynamics, label continuation under the
-  frozen unified policy, learn policy-conditioned continuation fields, build an
-  expanded TRAIN-only Tube, and only then predeclare the next policy-improvement
-  run.
+- Tube_1 is completed with 3,119 TRAIN entries: the exact 222-entry Tube_0 core
+  plus 2,897 policy-conditioned expansion states. It is training guidance only,
+  not a certified safe Tube or viability kernel.
+- The fresh iteration-1 unified run
+  `pi_1_tube1_natural10_10009600_seed821101_20260901_retry01` completed exactly
+  10,009,600 training transitions with all declared TRAIN panels, no TEST or
+  validation data, no expert switching, and final-checkpoint restore verified.
+  This completion does not itself establish capability-envelope expansion.
+- Preserve the first pi_1 attempt as an `engineering_error` artifact. It reached
+  1,024,000 training transitions and its completed panel report records 449
+  diagnostic interactions even though terminal status accounting recorded zero
+  diagnostic interactions. Do not edit that historical run to make accounting
+  look cleaner.
+- The active next stage is: freeze the exact completed pi_1 checkpoint, then run
+  core-preservation and boundary-gain gates. Only both gates together can
+  authorize an empirical envelope-expansion claim or the next Tube/policy
+  iteration. Final TEST/JCE/JEL remains untouched.
 - Boundary expansion must not directly mutate `qpos`/`qvel` or widen coordinate
   bounds and call the result capability evidence. Reuse/generalize the existing
   real-dynamics boundary machinery and provenance-complete snapshots.
-- Expert-conditioned `V_up`/`V_down` are bootstrap `Tube_0` authorities only.
+- Expert-conditioned `V_up`/`V_down` are bootstrap Tube_0 authorities only.
   Later unified-policy continuation fields must bind the exact frozen unified
   policy checkpoint and protocol.
 - Keep expansion TRAIN, expansion validation, iteration audit, and final
@@ -41,5 +42,14 @@
   convergence stopping.
 - Every learned Tube remains training guidance only, never a certified safe
   Tube or formal viability set.
+- Importable implementation belongs under `JIT/src/jit_dvgc`; executable entry
+  points belong under `JIT/cli`; pytest coverage belongs under `JIT/tests`.
+- New production code must use the categorized namespaces documented in
+  `JIT/docs/CODE_ORGANIZATION.md` (`training`, `tube`, `snapshots`, `analysis`,
+  `continuation`, `acquisition`) instead of adding another experiment-stage
+  module at `JIT/src/jit_dvgc/` root. Legacy flat modules remain for import and
+  frozen-artifact compatibility until an explicit compatibility migration.
+- Keep CLI files thin: argument parsing and dispatch only. Put reusable
+  scientific/runtime logic in `src` packages and tests in `tests`.
 - Do not automatically launch PPO, delete files, clean the root repository, or
   claim unimplemented work.

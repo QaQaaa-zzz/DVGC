@@ -11,17 +11,17 @@ import jax
 from jit_dvgc.checkpoint import load_checkpoint
 from jit_dvgc.config import file_sha256
 from jit_dvgc.ppo import make_checkpoint_policy
-from jit_dvgc.unified_continuation_labels import (
+from jit_dvgc.continuation.labels import (
     DEFAULT_UNIFIED_CONTINUATION_MAX_TICKS,
     DEFAULT_UNIFIED_CONTINUATION_PROTOCOL_SEED,
     label_unified_continuations,
     validate_candidate_snapshot,
     validate_unified_boundary_catalog,
 )
-from jit_dvgc.unified_envelope_snapshot import load_unified_envelope_snapshot
-from jit_dvgc.unified_formal import build_unified_formal_environment
-from jit_dvgc.unified_policy_freeze import load_frozen_unified_manifest
-from jit_dvgc.unified_training import checkpoint_identity
+from jit_dvgc.snapshots.unified import load_unified_envelope_snapshot
+from jit_dvgc.training.formal import build_unified_formal_environment
+from jit_dvgc.training.freeze import load_frozen_unified_manifest
+from jit_dvgc.training.unified import checkpoint_identity
 
 
 def _read_json(path: Path):
@@ -60,7 +60,7 @@ def main() -> int:
     frozen_sha = file_sha256(args.frozen_policy)
 
     # Close the entire disk/provenance bank before spending the first rollout
-    # interaction.  A late corrupt snapshot must not invalidate a partially
+    # interaction. A late corrupt snapshot must not invalidate a partially
     # consumed labeling budget.
     catalog = _read_json(args.catalog)
     rows = validate_unified_boundary_catalog(

@@ -6,7 +6,7 @@ import argparse
 import json
 from pathlib import Path
 
-from jit_dvgc.soft_tube import SoftTubeInputs, build_soft_tube
+from jit_dvgc.tube.soft import SoftTubeInputs, build_soft_tube
 
 
 _LEGACY_OPTIONS = (
@@ -45,7 +45,7 @@ def main() -> int:
         ]
         if supplied_legacy:
             raise ValueError("--config mode cannot be mixed with legacy Soft-Tube inputs")
-        from jit_dvgc.core_retaining_tube_iteration import build_core_retaining_tube
+        from jit_dvgc.tube.iteration import build_core_retaining_tube
 
         artifact = build_core_retaining_tube(args.config)
     else:
