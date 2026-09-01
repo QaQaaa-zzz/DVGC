@@ -4,10 +4,13 @@
 
 This document defines the active iterative research contract after the completed
 bootstrap, `pi_0`, policy-conditioned `C^0`, `Tube_1`, formal `pi_1` training,
-and immutable `pi_1` freeze. It is both a method contract and an execution
-boundary: an envelope iteration is not accepted merely because training or
-freezing finishes. The next policy authority is accepted only after its declared
-core-preservation and boundary-gain gates pass.
+immutable `pi_1` freeze, and the first completed paired `pi_0 -> pi_1` gate.
+The first candidate iteration was **not accepted** because core preservation
+failed even though boundary gain passed.
+
+An envelope iteration is not accepted merely because training or freezing
+finishes. The next policy authority is accepted only after its declared
+core-preservation and boundary-gain gates both pass.
 
 ## 1. Research objective
 
@@ -37,7 +40,8 @@ phase experts
   -> unified policy pi_{k+1}
   -> freeze pi_{k+1}
   -> core-preservation + boundary-gain gates
-  -> repeat only after gate acceptance
+  -> if FAIL: stop, diagnose, predeclare a repaired method
+  -> if PASS: accept next authority and repeat
   -> independent frozen-policy empirical JCE/JEL after iteration stopping
 ```
 
@@ -140,6 +144,11 @@ The retained-core rule is structural:
 Tube_(k+1) = retained Tube_k core ∪ accepted TRAIN expansion_k
 ```
 
+Structural presence of the old core is necessary but not sufficient. The
+actual Tube-RSI sampling probability assigned to retained core states must also
+be audited, because a very large expansion can dilute replay enough to cause
+policy forgetting even when every old state remains present in the artifact.
+
 A thresholded `C^k` level set alone is not an acceptable replacement for the
 existing core. Expansion must be evidence-driven; coordinate dilation alone is
 not admissible evidence.
@@ -163,12 +172,11 @@ improvement experiment. The environment, reward semantics, action mapping,
 physical limits, control rate, and task definition remain fixed unless a new
 research question explicitly changes them.
 
-Initialization is a method variable. For the currently completed `pi_0` and
-`pi_1` comparison, the locked protocol uses fresh actor/critic/optimizer
-initialization with the same seed and PPO settings; `Tube_0 -> Tube_1` is the
-primary scientific variable. A future initialization-rule change requires a
-new explicit method declaration and cannot be introduced after inspecting final
-held-out outcomes.
+Initialization is a method variable. For the completed `pi_0` and `pi_1`
+comparison, the locked protocol used fresh actor/critic/optimizer initialization
+with the same seed and PPO settings; `Tube_0 -> Tube_1` was the primary
+scientific variable. A future initialization-rule change requires a new explicit
+method declaration and cannot be introduced after inspecting held-out outcomes.
 
 The final deployment/evaluation controller remains one unified Actor. Local
 experts are bootstrap/data-generation tools and are never switched at runtime.
@@ -199,6 +207,9 @@ The current generic paired-gate contract is:
 This audit is an iteration-selection diagnostic, not final JCE/JEL evidence.
 A Tube being numerically larger, PPO reward being larger, or a continuation
 model producing larger scores is not by itself a boundary-gain proof.
+
+A completed FAIL is immutable scientific evidence. It must not be converted to
+a PASS by changing the consumed audit bank, threshold, or acceptance rule.
 
 ## 9. Convergence
 
@@ -235,9 +246,9 @@ The result is an **empirical, policy-conditioned jumping capability envelope**.
 It must not be described as a formal safe set, guaranteed viability kernel, or
 proof of reachability outside the measured distribution.
 
-## 11. Completed baseline through frozen pi_1
+## 11. Completed baseline and rejected iteration-1 candidate
 
-The current completed chain is:
+Completed chain:
 
 ```text
 frozen phase experts
@@ -249,10 +260,11 @@ frozen phase experts
   -> core-retaining Tube_1 (3,119 TRAIN entries)
   -> Tube_1 engineering gate GO
   -> pi_1 (10,009,600 PPO transitions, completed and restore-verified)
-  -> frozen pi_1 iteration authority
+  -> frozen pi_1 comparison authority
+  -> paired pi_0 vs pi_1 gate
 ```
 
-The frozen `pi_1` identities are:
+Frozen `pi_1` identities:
 
 - checkpoint payload SHA-256: `fb5c364057933d62c4e1b6ed49f3181cd36584c5b270f305eef18dff150e68e5`
 - actor SHA-256: `cc8f202075479aa90c0451732773016dfa25ef8a0c849278b5917319070284f0`
@@ -260,36 +272,47 @@ The frozen `pi_1` identities are:
 - normalizer SHA-256: `94ed2587601dbe187774f664a741f427d943148a0c5391cdf57a45939c50a191`
 - freeze protocol SHA-256: `242301b29f3510895a0f13934deac44c1b38c976bb9a8c8385a85f621613a1ed`
 
-The frozen manifest is:
+Completed paired-gate protocol SHA-256:
 
-`JIT/runs/frozen_unified/pi_1_iter1_10009600_20260901/frozen_unified_policy.json`
+`24a126ee94472eebbcb59fff66618ae00dae41074a1d1cfee8bb816afaff410a`
 
-Freezing used zero environment interactions and zero training transitions. It
-does **not** establish envelope expansion. The paired core/boundary gate is now
-the active scientific blocker.
+Result:
+
+- core bank: 222 Tube_0 states;
+- pi_0 core success: 222 / 222;
+- pi_1 core success: 201 / 222;
+- core regressions: 21 = 16 upstream + 5 downstream;
+- **core preservation: FAIL**;
+- boundary challenge bank: 56 frozen pi_0-negative TRAIN states;
+- pi_0 failure reproduction errors: 0;
+- pi_1 new successes: 12 across 5 parent groups;
+- **boundary gain: PASS**;
+- **iteration accepted: false**;
+- **empirical pi_0 -> pi_1 envelope expansion accepted: false**.
+
+This result shows that Tube_1 training produced new upstream frontier capability
+but also lost established core competence. The rejected `pi_1` cannot be used
+as the accepted source authority for `C^1 -> Tube_2` merely because boundary
+gain passed.
 
 ## 12. Immediate implementation order
 
-1. Validate the generic paired-policy gate implementation and its predeclared
-   `pi_0 -> pi_1` config without changing the frozen bank rule after seeing
-   outcomes.
-2. Execute the paired audit on frozen `pi_0` and frozen `pi_1`.
-3. Require both machine-readable gates to pass before recording empirical
-   `pi_0 -> pi_1` capability-envelope expansion.
-4. If either gate fails, preserve the result and stop the iteration; do not
-   automatically tune thresholds, reward, PPO, or the audit bank.
-5. Only after gate acceptance, use frozen `pi_1` for the next TRAIN acquisition
-   and continuation-label stage, producing `C_up^1/C_down^1` under independent
-   validation.
-6. Generalize the existing Tube builder and continuation-refit path from the
-   current iteration-0 constants to config-driven `k -> k+1` semantics without
-   changing the already-completed Tube_1 artifact identity.
-7. Construct core-retaining `Tube_2`, run the mixed Tube-RSI engineering gate,
-   and train `pi_2` under the declared policy-improvement protocol.
-8. Wire all stable stages into the resumable workflow runner. A failed gate
-   stops automation; it must never trigger automatic threshold/reward/PPO
-   changes.
-9. Repeat only while the predeclared non-final convergence protocol authorizes
-   another iteration.
+1. Preserve the completed paired-gate FAIL artifact and all frozen policy/Tube
+   identities unchanged.
+2. Run zero-interaction diagnosis on the 21 core regressions.
+3. Audit actual Tube_1 retained-core sampling probability mass per phase, not
+   just the fact that all Tube_0 states are structurally present.
+4. Summarize regression terminal outcomes, parent/source concentration, and
+   sampling weights; distinguish replay/curriculum dilution from a deeper
+   runtime/phase failure.
+5. Only after diagnosis, predeclare a revised policy-improvement method.
+6. Train a repaired candidate under the new declared method with final TEST
+   still untouched.
+7. Run a newly predeclared comparable paired core/boundary gate on that repaired
+   candidate. A failure stops again; automation must not retune until PASS.
+8. Only after both gates pass may the accepted policy generate the next
+   policy-conditioned `C^1` evidence and core-retaining Tube_2.
+9. In parallel, keep engineering migration iteration-generic, but do not let
+   Tube_2/pi_2 automation bypass the current scientific blocker.
 10. Keep final TEST/JCE/JEL untouched until iteration stopping and final-policy
     selection are frozen.
