@@ -68,13 +68,20 @@ This rule is mandatory for future agent work:
    or artifact-loader requirement, remove it from the active tree. Git history
    is the code archive; do not duplicate obsolete Python files into an archive
    directory.
-5. Do not move configs, frozen manifests, handoff locks, or other path-bound
+5. **Deletion is a gated change, not a naming judgment.** Before deleting any
+   Python/CLI/test file, prove that no retained production import, package API,
+   active CLI, current test, artifact loader, config path, or frozen
+   reproducibility path depends on it. After each deletion batch, run
+   `compileall` plus the affected import/targeted tests before deleting anything
+   else. If the dependency closure is uncertain, keep the file until the
+   dependency is explicitly removed.
+6. Do not move configs, frozen manifests, handoff locks, or other path-bound
    provenance merely for aesthetics. Paths recorded by artifacts are part of
    reproducibility.
-6. Keep `JIT/cli/` thin: argument parsing + dispatch only. Reusable runtime,
+7. Keep `JIT/cli/` thin: argument parsing + dispatch only. Reusable runtime,
    scientific, fitting, gating, and provenance logic belongs under
    `JIT/src/jit_dvgc/`. Tests belong under `JIT/tests/`.
-7. Prefer one stable capability API over multiple stage-named CLIs. New envelope
+8. Prefer one stable capability API over multiple stage-named CLIs. New envelope
    iterations must reuse the same production code with iteration/config data.
 
 ## Active package boundaries
