@@ -101,6 +101,7 @@ def load_core_retaining_tube_config(path: Path) -> dict[str, Any]:
     }:
         raise ValueError("core-retaining Tube claim boundary drift")
     if protocol.get("snapshot_search_roots") != [
+        "JIT/runs/pi_unified_boundary",
         "JIT/runs/pi_unified_transition_band",
         "JIT/runs/pi_unified_upstream_parent_diversity",
     ]:
