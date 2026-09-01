@@ -58,6 +58,14 @@ def _validate_score_semantics(entry: Mapping[str, Any], phase: str) -> None:
         raise ValueError("Soft Tube expansion must retain only positive TRAIN labels")
 
 
+def _match_prng_key_representation(sampled_key: jax.Array, reference_key: jax.Array) -> jax.Array:
+    """Preserve sampled key data while matching the caller's JAX key representation."""
+    key_data = jax.random.key_data(sampled_key)
+    if jax.dtypes.issubdtype(reference_key.dtype, jax.dtypes.prng_key):
+        return jax.random.wrap_key_data(key_data)
+    return key_data
+
+
 @dataclass(frozen=True)
 class TubeRSIPool:
     artifact: SoftTubeArtifact
@@ -139,4 +147,9 @@ class TubeRSIPool:
     def sample(self, rng: jax.Array):
         phase_key, entry_key = jax.random.split(rng)
         phase = jax.random.bernoulli(phase_key, PHASE_MIXTURE["downstream"]).astype(jnp.int32)
-        return self.sample_phase(entry_key, phase)
+        sample = self.sample_phase(entry_key, phase)
+        # Natural/Tube reset selection uses one jitted PyTree.  Keep the immutable
+        # snapshot RNG value, but represent it the same way as the caller's reset
+        # key so jnp.where never mixes key<fry> with legacy uint32[2].
+        sample["rng"] = _match_prng_key_representation(sample["rng"], rng)
+        return sample
