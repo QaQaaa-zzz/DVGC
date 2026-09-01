@@ -102,6 +102,26 @@ class SnapshotPool:
             }
         return snapshot.down_events
 
+    @staticmethod
+    def _unified_metadata(snapshot: Any) -> Mapping[str, Any]:
+        if isinstance(snapshot, HandoffSnapshot):
+            return {
+                "start_phase": np.asarray(0, dtype=np.int32),
+                "phase_transitioned": np.asarray(False),
+                "episode_step": np.asarray(0, dtype=np.int32),
+                "phase_episode_step": np.asarray(0, dtype=np.int32),
+                "episode_return": np.asarray(0.0, dtype=np.float32),
+            }
+        return {
+            "start_phase": np.asarray(snapshot.start_phase, dtype=np.int32),
+            "phase_transitioned": np.asarray(snapshot.phase_transitioned),
+            "episode_step": np.asarray(snapshot.episode_step, dtype=np.int32),
+            "phase_episode_step": np.asarray(
+                snapshot.phase_episode_step, dtype=np.int32
+            ),
+            "episode_return": np.asarray(snapshot.episode_return, dtype=np.float32),
+        }
+
     def sample(self, rng: jax.Array) -> dict[str, Any]:
         index = jax.random.randint(rng, (), 0, len(self.snapshots))
         return self.sample_at_index(index)
@@ -124,20 +144,42 @@ class SnapshotPool:
             [snapshot.history_valid_count for snapshot in self.snapshots], dtype=jnp.int32
         )[index]
         result["tick"] = jnp.asarray(
-            [snapshot.tick if isinstance(snapshot, HandoffSnapshot) else snapshot.source_tick for snapshot in self.snapshots],
+            [
+                snapshot.tick
+                if isinstance(snapshot, HandoffSnapshot)
+                else snapshot.source_tick
+                for snapshot in self.snapshots
+            ],
             dtype=jnp.int32,
         )[index]
         up_keys = tuple(self._up_events(self.snapshots[0]))
         result["events"] = {
-            key: jnp.asarray([self._up_events(snapshot)[key] for snapshot in self.snapshots])[index]
+            key: jnp.asarray(
+                [self._up_events(snapshot)[key] for snapshot in self.snapshots]
+            )[index]
             for key in up_keys
         }
         result["down_events"] = {
-            key: jnp.asarray([self._down_events(snapshot)[key] for snapshot in self.snapshots])[index]
+            key: jnp.asarray(
+                [self._down_events(snapshot)[key] for snapshot in self.snapshots]
+            )[index]
             for key in DOWN_EVENT_FIELDS
         }
+        for key in (
+            "start_phase",
+            "phase_transitioned",
+            "episode_step",
+            "phase_episode_step",
+            "episode_return",
+        ):
+            result[key] = jnp.asarray(
+                [self._unified_metadata(snapshot)[key] for snapshot in self.snapshots]
+            )[index]
         result["preserve_unified_context"] = jnp.asarray(
-            [schema == "jit_unified_envelope_snapshot_v1" for schema in self.snapshot_schemas],
+            [
+                schema == "jit_unified_envelope_snapshot_v1"
+                for schema in self.snapshot_schemas
+            ],
             dtype=bool,
         )[index]
         result["parent_group_index"] = index
