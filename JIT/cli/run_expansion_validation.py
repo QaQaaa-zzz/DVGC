@@ -35,15 +35,12 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    preflight = audit_expansion_validation_runtime_preflight(args.config)
     if args.audit_only:
-        print(
-            json.dumps(
-                audit_expansion_validation_runtime_preflight(args.config),
-                indent=2,
-                sort_keys=True,
-            )
-        )
+        print(json.dumps(preflight, indent=2, sort_keys=True))
         return 0
+    if preflight.get("status") != "runtime_preflight_ready":
+        raise RuntimeError("expansion validation runtime preflight did not close")
 
     if jax.default_backend() != "gpu":
         raise RuntimeError("expansion validation runtime requires the visible JAX GPU")
