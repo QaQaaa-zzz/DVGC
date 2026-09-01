@@ -13,6 +13,7 @@ from .action_mapping import map_action
 from .config import ResolvedConfig
 from .descent_rewards import DescentRewardInputs, descent_recovery_reward
 from .descent_semantics import (
+    DescentEventState,
     DescentSignals,
     advance_descent_events,
     classify_descent_terminal,
@@ -262,7 +263,10 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
         )
         history = initial_history()
         events = initial_event_state(qpos[index.root_qpos_address], self._resolved_config)
+        down_events = initial_descent_events(qpos[index.root_qpos_address])
         minus_one = jp.asarray(-1, jp.int32)
+        zero_i = jp.asarray(0, jp.int32)
+        false = jp.asarray(False)
         return {
             "qpos": qpos,
             "qvel": qvel,
@@ -273,6 +277,16 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
                 name: jp.asarray(getattr(events, name))
                 for name in tube_sample["events"]
             },
+            "down_events": {
+                name: jp.asarray(getattr(down_events, name))
+                for name in tube_sample["down_events"]
+            },
+            "start_phase": jp.asarray(PHASE_UPSTREAM, jp.int32),
+            "phase_transitioned": false,
+            "episode_step": zero_i,
+            "phase_episode_step": zero_i,
+            "episode_return": jp.asarray(0.0, jp.float32),
+            "preserve_unified_context": false,
             "tube_phase": jp.asarray(PHASE_UPSTREAM, jp.int32),
             "rng": rng,
             "last_action": last_action,
@@ -340,13 +354,60 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
             frames=sample["observation_fifo"],
             valid_count=sample["history_valid_count"],
         )
-        up_events = EventState(
+        preserve = jp.asarray(sample["preserve_unified_context"], dtype=bool)
+        sampled_up_events = EventState(
             **{name: jp.asarray(value) for name, value in sample["events"].items()}
-        ).replace(episode_step=jp.asarray(0, jp.int32))
-        down_events = initial_descent_events(
+        )
+        legacy_up_events = sampled_up_events.replace(
+            episode_step=jp.asarray(0, jp.int32)
+        )
+        up_events = jax.tree.map(
+            lambda unified, legacy: jp.where(preserve, unified, legacy),
+            sampled_up_events,
+            legacy_up_events,
+        )
+        sampled_down_events = DescentEventState(
+            **{
+                name: jp.asarray(value)
+                for name, value in sample["down_events"].items()
+            }
+        )
+        legacy_down_events = initial_descent_events(
             data.qpos[self._bundle.model_index.root_qpos_address]
         )
+        down_events = jax.tree.map(
+            lambda unified, legacy: jp.where(preserve, unified, legacy),
+            sampled_down_events,
+            legacy_down_events,
+        )
         active_phase = jp.asarray(sample["tube_phase"], dtype=jp.int32)
+        false = jp.asarray(False)
+        zero_i = jp.asarray(0, jp.int32)
+        start_phase = jp.where(
+            preserve,
+            jp.asarray(sample["start_phase"], dtype=jp.int32),
+            active_phase,
+        )
+        phase_transitioned = jp.where(
+            preserve,
+            jp.asarray(sample["phase_transitioned"], dtype=bool),
+            false,
+        )
+        episode_step = jp.where(
+            preserve,
+            jp.asarray(sample["episode_step"], dtype=jp.int32),
+            zero_i,
+        )
+        phase_episode_step = jp.where(
+            preserve,
+            jp.asarray(sample["phase_episode_step"], dtype=jp.int32),
+            zero_i,
+        )
+        episode_return = jp.where(
+            preserve,
+            jp.asarray(sample["episode_return"], dtype=jp.float32),
+            jp.asarray(0.0, jp.float32),
+        )
         task_signal = jp.where(
             active_phase == PHASE_UPSTREAM,
             up_events.jump_signal,
@@ -357,20 +418,19 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
             data, actor_obs, observable_geometry
         )
         reward_state = self._reward_state(data, geometry)
-        false = jp.asarray(False)
         info: dict[str, Any] = {
             "rng": sample["rng"],
             "history": history,
             "up_events": up_events,
             "down_events": down_events,
             "active_phase": active_phase,
-            "start_phase": active_phase,
-            "phase_transitioned": false,
+            "start_phase": start_phase,
+            "phase_transitioned": phase_transitioned,
             "expert_switching_used": false,
             "last_action": sample["last_action"],
             "reward_state": reward_state,
-            "episode_step": jp.asarray(0, jp.int32),
-            "phase_episode_step": jp.asarray(0, jp.int32),
+            "episode_step": episode_step,
+            "phase_episode_step": phase_episode_step,
             "source_tick": sample["tick"],
             "parent_group_index": sample["parent_group_index"],
             "tube_entry_index": sample["tube_entry_index"],
@@ -387,7 +447,7 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
             "stuck": false,
             "yaw_limit": false,
             "timeout": false,
-            "episode_return": jp.asarray(0.0, jp.float32),
+            "episode_return": episode_return,
         }
         metrics = self._unified_zero_metrics()
         metrics.update(
@@ -395,13 +455,22 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
         )
         metrics.update(
             {
+                "event/descent_airborne_seen": down_events.airborne_seen.astype(
+                    jp.float32
+                ),
+                "event/descent_valid_contact_seen": down_events.valid_contact_seen.astype(
+                    jp.float32
+                ),
+                "event/descent_post_contact_ticks": down_events.post_contact_ticks.astype(
+                    jp.float32
+                ),
                 "reset/source_soft_tube": jp.asarray(1.0, jp.float32),
                 "reset/source_natural": jp.asarray(0.0, jp.float32),
                 "reset/tube_phase_upstream": (
-                    active_phase == PHASE_UPSTREAM
+                    start_phase == PHASE_UPSTREAM
                 ).astype(jp.float32),
                 "reset/tube_phase_downstream": (
-                    active_phase == PHASE_DOWNSTREAM
+                    start_phase == PHASE_DOWNSTREAM
                 ).astype(jp.float32),
                 "state/active_phase": active_phase.astype(jp.float32),
             }
