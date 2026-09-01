@@ -1,85 +1,88 @@
 # DVGC Repository Instructions
 
-## Research scope
+## Current research truth
 
-- The current research direction is the concise two-phase RA-L method defined
-  in `PROJECT.md` and `docs/METHOD_TWO_PHASE_SOFT_TUBE.md`.
-- The phases are `Propulsion-Ascent` and `Descent-Recovery`; the Apex
-  transition band connects them but is not a third expert.
-- Phase experts generate snapshots and continuation labels. They must not use
-  a learned feasibility network or Tube during expert training.
-- Train/freeze experts first, collect and label snapshots second, train
-  `V_up`/`V_down` third, construct learned soft Tubes fourth, then train one
-  unified Tube-RSI PPO.
-- A learned soft Tube is training guidance, not a certified safe Tube. Only an
-  independent frozen-final-policy evaluation may support a JCE/JEL claim.
-- Do not claim that two-phase expert semantics, `V_up`/`V_down`, learned soft
-  Tubes, two-phase unified PPO, or a new pipeline CLI is implemented until the
-  code and experiments exist and pass validation.
+DVGC/JIT is an iterative **single-policy empirical jumping-capability-envelope** project. The active method is:
 
-## Immutable runtime and model
+`experts -> Tube_0 -> pi_0 -> C^0 -> Tube_1 -> pi_1 -> gates -> C^1 -> Tube_2 -> pi_2 -> ...`
 
-- Work only in `/home/qy/DVGC`; do not create another Git repository or a
-  version-suffixed source tree.
-- Use `/home/qy/mujoco_playground/.venv/bin/python` directly. Never create,
-  reinstall, upgrade, or reconfigure that environment without explicit user
-  authorization.
-- The only authoritative model is
-  `assets/orange_bike_4kg_horizontal.xml` with a 2 kg payload, hip/knee force
-  limits of +/-50 N m, and action order
-  `[steer, rear-wheel drive, hip, knee]`.
-- The `4kg` token in that single retained path is a historical filename, not
-  the current payload contract. Do not create a second XML to correct the name.
-- Do not change meshes, collision geometry, obstacle dimensions, matcher
-  radii, environment physics, reward meaning, snapshot semantics, or action
-  mapping during repository cleanup.
+The phase experts are bootstrap/data-generation tools. The deployable controller is always one unified Actor. A learned Soft Tube is training guidance only; it is not a certified safe set, viability kernel, or invariant set.
 
-## Repository workflow
+Current validated state on `agent/two-phase-soft-tube`:
 
-- Never auto-resume an old five-stage controller, sequential shared-Actor
-  route, H1/C_L A/B route, roll-targeted retention route, or final-shared v1/v2
-  route. Existing code is legacy migration source only.
-- Do not impose 4 -> 8 -> 16/32 as a universal hard requirement for learned
-  training Tubes. Evaluation budgets belong to a separately approved protocol.
-- Maintain one stable entrypoint per capability. Put variants in config, run
-  metadata, and Git history; never create version-suffixed production source.
-- Put one-off diagnostics in `tools/diagnostics/` and remove them when the task
-  ends unless they are generalized and tested.
-- Before every run, record its purpose, inputs, interaction cost, stopping
-  condition, and output directory. Run outputs belong under
-  `runs/<method>/<run_id>/` and must remain ignored.
-- Long-running processes must be persistent and resumable. Inspect only sparse
-  milestones, completion, or abnormal exit; do not poll full logs repeatedly.
-- Do not change the approved method definition, artifact semantics, or claim
-  boundary without explicit user authorization.
+- frozen `pi_up_star` and `pi_down_star` exist;
+- bootstrap `V_up/V_down` and 222-entry Tube_0 exist;
+- frozen `pi_0` exists;
+- `C_up^0/C_down^0` passed fresh independent validation;
+- core-retaining Tube_1 is complete with 3,119 TRAIN entries;
+- `pi_1_tube1_natural10_10009600_seed821101_20260901_retry01` completed exactly 10,009,600 PPO training transitions with no validation/TEST usage and no expert switching;
+- the next scientific step is **freeze exact pi_1 -> core-preservation gate + boundary-gain gate**;
+- do not claim empirical envelope expansion until both gates pass;
+- TEST/JCE/JEL remains untouched until a final frozen policy is selected.
 
-## Git discipline
+Read `JIT/docs/CURRENT_STATUS.md` for exact current artifact identities.
 
-- Preserve user changes. Never reset, stash/restore, rebase, force-push, or
-  merge to `main` without explicit authorization.
-- Use focused commits after a logical phase passes validation. Explicitly
-  stage paths; never use `git add .` or `git add -A` in a mixed repository.
-- Do not commit `runs/`, `artifacts/`, checkpoints, policy parameters, large
-  pickle/JSON files, logs, profiling output, caches, or local service state.
-- Unvalidated source/config/script/research-document changes must not be
-  committed.
+## Immutable physical/task contracts
 
-## Cleanup and verification
+- Work on `agent/two-phase-soft-tube`; do not modify `main` unless explicitly authorized.
+- Authoritative XML: `assets/orange_bike_4kg_horizontal.xml`.
+- Current XML SHA-256: `0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a`.
+- Payload: 2 kg. The `4kg` token in the filename is historical only.
+- Control rate: 50 Hz.
+- Hip/knee torque limits: +/-50 Nm.
+- Action order: `[steer, rear-wheel drive, hip, knee]`.
+- Do not change physics, reward meaning, action semantics, snapshot semantics, task geometry, or TEST isolation during cleanup/iteration work.
+- Natural cold-start failure is an out-of-domain diagnostic for the current JCE scope; do not redesign reward/reset ratio because of it without a separate method decision.
 
-- `docs/REPOSITORY_LAYOUT.md` is the only dependency/deletion ledger. Build a
-  retained closure from stable roots before deleting anything.
-- Legacy route tests do not retain production modules by themselves. Extract
-  shared contracts into stable API tests before deleting route-only tests.
-- Inspect real user systemd state before deleting any launcher, watchdog,
-  service, or timer. Never stop an active service without permission.
-- Run static compilation and targeted tests after each deletion batch. Run the
-  full runtime gate only when its fingerprint changes or final verification
-  requires it.
-- The runtime gate's 64+32 timestep PPO is solely a compile/update/resume smoke
-  test. This cleanup must not start formal PPO training or describe gate output
-  as a learnability result.
-- Report physical failures and timeouts separately and never weaken a contract
-  merely to make tests pass.
+## Repository-maintenance policy
 
-After context recovery, read only `AGENTS.md`, `PROJECT.md`, and
-`docs/EXPERIMENT_STATE.md` before resuming from the last validated marker.
+The repository must become smaller and more reusable as iterations advance.
+
+1. **Modify or consolidate an existing production file first.** Do not create a new production file merely because the experiment number, retry, seed, checkpoint, `pi_k`, or `Tube_k` changed.
+2. New production Python files are allowed only for a genuinely new stable capability with a durable API.
+3. Iteration identity belongs in config/artifact/run metadata, not filenames such as `pi2_*`, `tube2_*`, `upstream_v7_*`, or `retry03_*` source modules.
+4. Keep CLI files thin: argument parsing and dispatch only. Reusable logic belongs in `JIT/src/jit_dvgc/`; tests belong in `JIT/tests/`.
+5. Prefer the stable capability packages `jit_dvgc.training`, `tube`, `snapshots`, `acquisition`, `continuation`, `analysis`, and `workflow`.
+6. Stage-specific research scaffolding that is superseded and no longer referenced should leave the active tree. Git history is the code archive; do not duplicate obsolete Python files into an archive directory.
+7. Do not move path-bound configs, frozen manifests, handoff locks, or run identities merely for aesthetics; recorded paths are reproducibility data.
+
+### Mandatory deletion gate
+
+Never delete a Python/CLI/test file because it only *looks old*.
+
+Before deletion, verify that no retained production import, package API, active CLI, current test, artifact loader, current config, or frozen reproducibility path still depends on it. After every deletion batch, run at least:
+
+- `python -m compileall -q JIT/src JIT/cli`
+- targeted import/tests for the affected capability
+
+If collection/import fails, stop cleanup and repair the dependency closure before deleting anything else.
+
+## Iteration automation
+
+The intended operator experience is one explicit workflow launch rather than repeated shell copy/paste:
+
+`python JIT/cli/run_iteration_workflow.py --config <workflow.json> --execute`
+
+The workflow runner may sequence and resume stages, but it may not make scientific decisions. It must stop on failed gates; it must not automatically change thresholds, PPO hyperparameters, rewards, networks, physics, reset semantics, or acceptance criteria. It must never include final TEST/JCE/JEL stages.
+
+Automatic `k -> k+1` execution is considered ready only after Tube construction, continuation fitting/validation, policy freezing, and capability gates are iteration-generic and covered by tests.
+
+## Git and local-work safety
+
+- Preserve unrelated user changes. Never reset, clean, stash, rebase, force-push, or overwrite them.
+- Known unrelated local work may exist under root `dvgc/`, root `tests/`, `.vscode/`, local patches, or draft docs; do not touch it unless explicitly requested.
+- Use `/home/qy/mujoco_playground/.venv/bin/python`; do not reinstall or reconfigure the environment.
+- Keep formal run outputs/checkpoints/logs out of Git.
+- Use focused commits and audit diffs after structural changes.
+
+## Context recovery
+
+For current work, read these in order:
+
+1. `AGENTS.md`
+2. `JIT/AGENTS.md`
+3. `JIT/docs/CURRENT_STATUS.md`
+4. `PROJECT.md`
+5. `JIT/docs/ENVELOPE_ITERATION_PROTOCOL.md`
+
+Do **not** reconstruct current state from old Phase-U reports, obsolete watchdog documents, or historical experiment narratives when the current-status files already supersede them.
