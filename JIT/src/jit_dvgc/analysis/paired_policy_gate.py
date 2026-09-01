@@ -397,11 +397,11 @@ def _rollout(
     policy: Any,
     state: Any,
     *,
+    step_fn: Any,
     start_phase: int,
     max_ticks: int,
     seed: int,
 ) -> dict[str, Any]:
-    step_fn = jax.jit(env.step)
     if bool(np.asarray(jax.device_get(state.done))):
         raise ValueError("paired policy gate start state is terminal")
     if bool(np.asarray(jax.device_get(state.info["expert_switching_used"]))):
@@ -494,6 +494,7 @@ def run_paired_policy_gate(config_path: Path) -> dict[str, Any]:
         max_ticks = int(protocol["runtime"]["max_ticks"])
         base_seed = int(protocol["runtime"]["protocol_seed"])
         reset_tube = jax.jit(env.reset_tube_index)
+        step_fn = jax.jit(env.step)
         records: list[dict[str, Any]] = []
 
         for index, row in enumerate([*core_bank, *boundary_bank]):
@@ -511,6 +512,7 @@ def run_paired_policy_gate(config_path: Path) -> dict[str, Any]:
                 env,
                 baseline_policy,
                 baseline_state,
+                step_fn=step_fn,
                 start_phase=int(row["phase_index"]),
                 max_ticks=max_ticks,
                 seed=state_seed,
@@ -520,6 +522,7 @@ def run_paired_policy_gate(config_path: Path) -> dict[str, Any]:
                 env,
                 candidate_policy,
                 candidate_state,
+                step_fn=step_fn,
                 start_phase=int(row["phase_index"]),
                 max_ticks=max_ticks,
                 seed=state_seed,
