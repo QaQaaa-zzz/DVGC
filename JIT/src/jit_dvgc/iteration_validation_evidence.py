@@ -44,6 +44,18 @@ def _sha(value: Any, *, field: str) -> str:
     return text
 
 
+def _git_object_id(value: Any, *, field: str) -> str:
+    """Validate a Git object id independently of artifact SHA-256 fields.
+
+    The current repository uses 40-hex SHA-1 object ids. Accept 64-hex ids as
+    well so the provenance contract remains valid for Git SHA-256 repositories.
+    """
+    text = str(value).lower()
+    if len(text) not in (40, 64) or any(ch not in "0123456789abcdef" for ch in text):
+        raise ValueError(f"{field} must be a Git object id")
+    return text
+
+
 def _audit_train_separation(
     train_rows: tuple[dict[str, Any], ...],
     validation_rows: list[dict[str, Any]],
@@ -102,10 +114,10 @@ def load_iteration_validation_evidence_config(path: Path) -> dict[str, Any]:
         "policy_payload_sha256",
         "scientific_protocol_sha256",
         "runtime_protocol_sha256",
-        "source_repository_head",
         "frozen_train_manifest_sha256",
     ):
         _sha(protocol.get(field), field=field)
+    _git_object_id(protocol.get("source_repository_head"), field="source_repository_head")
     expected = protocol.get("expected")
     required_expected = {
         "attempt_count",
