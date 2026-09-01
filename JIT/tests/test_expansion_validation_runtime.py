@@ -29,8 +29,8 @@ def test_locked_validation_attempt_schedule_is_exact(jit_root):
         "knee",
     }
     assert {row["sign"] for row in upstream} == {-1, 1}
-    assert {row["strength"] for row in upstream} == {0.025, 0.05, 0.1}
-    assert {row["duration"] for row in upstream} == {1, 2}
+    assert {row["strength"] for row in upstream} == {0.025, 0.1}
+    assert {row["duration"] for row in upstream} == {4, 8, 16}
     assert len({row["parent_group_id"] for row in upstream}) == 3
 
     downstream = [row for row in attempts if row["phase"] == "downstream"]
