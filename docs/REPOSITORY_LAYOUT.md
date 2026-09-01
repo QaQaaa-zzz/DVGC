@@ -1,415 +1,151 @@
-# Repository Cleanup Design and Dependency Layout
+# DVGC Repository Layout and Cleanup Rules
 
-Date: 2026-08-03
+Current for `agent/two-phase-soft-tube` as of 2026-09-01.
 
-Approved baseline: `main@b7bb815`
+This document replaces the old pre-JIT cleanup ledger. Historical deletion decisions and branch-specific migration notes remain available in Git history; they are no longer current execution guidance.
 
-Working branch: `agent/repo-cleanup-two-phase`
+## 1. Active project boundary
 
-Archive authority: `archive/pre-clean-20260731` (immutable)
+The current research implementation lives under `JIT/`.
 
-## 1. Scope and stop point
+Root `dvgc/`, root `cli/`, root `scripts/`, and root `tests/` contain older infrastructure and user work. They are not cleanup targets for the active JIT branch unless scope is explicitly expanded.
 
-This document is the single dependency inventory and deletion-decision ledger
-for the dependency-closure cleanup. The approved strategy is conservative:
-start from stable, runnable roots; follow imports and non-Python references;
-delete only closed-route files outside the retained closure; and use `defer`
-whenever a shared boundary is unclear.
-
-This design commit does not delete code, alter tests, implement the two-phase
-method, modify PPO/environment/reward/snapshot semantics, or run training. The
-next implementation phase requires a separate review of this document.
-
-## 2. Research truth boundary
-
-The approved research direction is:
+## 2. Active layout
 
 ```text
-guideline
-  -> Propulsion-Ascent expert
-  -> Descent-Recovery expert
-  -> expert snapshots and continuation labels
-  -> V_up and V_down feasibility models
-  -> learned soft feasibility tubes
-  -> unified Tube-RSI PPO
-  -> frozen-policy empirical Jump Capability Envelope
+JIT/
+├── AGENTS.md
+├── README.md
+├── cli/                  thin executable entry points
+├── configs/              scientific/run declarations and immutable identities
+├── docs/                 current method/status/verification documentation
+├── handoff/              path-bound locked provenance
+├── scripts/              local verification and maintenance entry points
+├── src/jit_dvgc/
+│   ├── training/         unified PPO and policy-freeze API
+│   ├── tube/             Soft-Tube and Tube-RSI API
+│   ├── snapshots/        handoff/unified snapshot and pool API
+│   ├── acquisition/      real-dynamics boundary acquisition API
+│   ├── continuation/     continuation labels/fields/refit API
+│   ├── analysis/         bounded TRAIN diagnostics
+│   └── workflow/         resumable stage orchestration
+└── tests/                active regression/scientific-contract tests
 ```
 
-The repository currently implements reusable environment, observation/history,
-snapshot, bank, PPO, policy-bundle, rollout, provenance, certification, and
-legacy stage infrastructure. It does **not** yet implement the approved
-two-phase expert semantics, `V_up`/`V_down` training, learned soft-tube
-construction, two-phase unified Tube-RSI PPO, or a new two-phase pipeline CLI.
-No placeholder entrypoints will be created during cleanup.
+Flat modules under `JIT/src/jit_dvgc/` are transitional. Keep them only while an active import, artifact loader, CLI, test, or path-bound reproducibility contract still needs them. New iteration-specific flat modules should not be added.
 
-The five-stage controllers and branch-funnel launchers are a legacy
-implementation retained temporarily for dependency-safe migration. They are
-not the current research mainline.
+## 3. Stable capability rule
 
-## 3. Dependency-closure method
+A production file should represent a reusable capability, not an experiment identity.
 
-The audit used the following edge types:
+Good boundaries:
 
-1. Static Python `import` and `from ... import ...` edges across tracked files.
-2. Python files named by `cli.runtime_gate.source_fingerprint`, even when they
-   are not imported during module initialization.
-3. Shell and systemd `python -m cli.*` calls and shell-to-shell calls.
-4. Config, XML, reference-data, test, and documentation path references.
-5. Targeted searches for dynamic imports and source-path contract tests.
+- train/freeze one unified policy;
+- collect real-dynamics boundary evidence;
+- label policy-conditioned continuation;
+- fit/validate continuation fields;
+- build one core-retaining next Tube;
+- run Tube-RSI engineering smoke;
+- evaluate core preservation and boundary gain;
+- orchestrate declared stages.
 
-The lower-bound AST closure was 35 Python files. Adding runtime-fingerprint
-dependencies and their imports raised it to 40 Python files. The scan found
-dynamic `dvgc.env` imports in two legacy CLIs; this is one reason closure-external
-`dvgc/` modules default to `defer`, not `delete`.
+Bad reasons for new production files:
 
-Dependency direction matters: a closed legacy launcher calling a retained CLI
-does not make the launcher a retained root. Conversely, a retained root importing
-a module, hashing its source, or requiring its data makes that dependency part
-of the retained closure.
+- `pi_2` instead of `pi_1`;
+- `Tube_2` instead of `Tube_1`;
+- a different seed/checkpoint/retry;
+- another upstream/downstream experiment variant;
+- a new threshold value that belongs in config.
 
-## 4. Retained roots
+Prefer modifying/generalizing an existing stable capability.
 
-| path | role | retained_root | reverse_dependencies | decision | reason | validation_required |
-|---|---|---|---|---|---|---|
-| `scripts/local_preflight.sh` | configured-runtime preflight | yes | README, verification protocol | keep | required stable environment entry | shell syntax, `prepare_project`, full pytest |
-| `cli/runtime_gate.py` | model/reset/step/snapshot/PPO-resume gate | yes | preflight contracts and training guards | keep | required runtime validation | source fingerprint and bounded gate |
-| `cli/prepare_project.py` | XML/reference/config audit | yes | local preflight and README | keep | required minimum preflight | targeted project-preparation tests |
-| `cli/build_candidates.py` | generic candidate construction | yes | current README, generic train flow | keep | runnable reusable capability | candidate/source-contract tests |
-| `cli/train.py` | generic PPO training/resume | yes | current README and runtime fingerprint | keep | PPO update and resume capability | runtime gate and training tests |
-| `cli/certify.py` | generic frozen-policy certification | yes | current README | keep | reusable evaluation infrastructure | certification tests |
-| `cli/audit.py` | generic independent audit | yes | current README | keep | reusable audit infrastructure | audit tests |
-| `cli/evaluate.py` | generic/full evaluation | yes | current README | keep | final end-to-end evaluation capability | evaluation tests |
-| `tests/` via `pytest -q` | repository contract entry | yes | local preflight | keep | formal test runner; individual route tests may later split | full pytest |
-| `pyproject.toml` | package registration | yes | build backend | keep | registers `dvgc` and `cli`; no console scripts are registered | package/import checks |
+## 4. CLI rule
 
-The tracked systemd watchdog is **not** a retained two-phase root. It points to
-legacy `cli.pipeline_watchdog` and is deferred because external user-service
-state cannot be inferred from static imports alone.
+`JIT/cli/` is for argument parsing and dispatch. Reusable implementation logic belongs under `JIT/src/jit_dvgc/`.
 
-### Test root rule
+One stable CLI per capability is preferred. Experiment variants belong in JSON config and run metadata.
 
-`pytest -q` is a verification entrypoint, but legacy route tests are not
-retained dependency roots. Only stable shared-contract tests retain production
-modules. A legacy test importing a closed-route controller does not by itself
-promote that controller into the retained closure. Shared assertions must be
-extracted before route-only tests are removed.
+## 5. Test rule
 
-## 5. Retained Python closure
+`JIT/tests/` verifies current retained capabilities and scientific contracts.
 
-The following 40 files are retained by a root, a runtime fingerprint, or a
-transitive import. Package markers `cli/__init__.py` and `dvgc/__init__.py` are
-also retained.
+A historical route test does not by itself justify keeping obsolete production code forever. Before deleting an old route, migrate any still-important generic invariant into the retained capability tests.
 
-```text
-cli/audit.py
-cli/build_candidates.py
-cli/certify.py
-cli/certify_descent_entries.py
-cli/evaluate.py
-cli/evaluate_composite.py
-cli/prepare_project.py
-cli/runtime_gate.py
-cli/train.py
-cli/train_descent_local_block.py
-cli/train_expert.py
-dvgc/action_mapping.py
-dvgc/audit.py
-dvgc/audit_manifest.py
-dvgc/bank.py
-dvgc/bounded.py
-dvgc/candidate_geometry.py
-dvgc/certification.py
-dvgc/composite.py
-dvgc/config.py
-dvgc/curriculum.py
-dvgc/descent_entry.py
-dvgc/descent_local.py
-dvgc/env.py
-dvgc/expert_training.py
-dvgc/experts.py
-dvgc/model.py
-dvgc/policy.py
-dvgc/ppo_integrity.py
-dvgc/reference.py
-dvgc/reference_joints.py
-dvgc/research_semantics.py
-dvgc/rewards.py
-dvgc/rollout.py
-dvgc/runtime.py
-dvgc/seed_registry.py
-dvgc/signals.py
-dvgc/snapshot_provenance.py
-dvgc/snapshot_timing.py
-dvgc/wrappers.py
+Do not create a new test file merely because the iteration number changed; extend the closest existing capability test when practical.
+
+## 6. Deletion policy
+
+Git history is the archive for obsolete code. Do not duplicate dead Python modules into an archive directory.
+
+A candidate file may be removed from the active tree only after checking all of these dependency classes:
+
+1. retained production Python imports;
+2. package-root exports;
+3. active CLI imports;
+4. current tests;
+5. dynamic/artifact loaders and pickle/module-path compatibility;
+6. current configs and protocol path references;
+7. frozen manifests/handoff/reproducibility references;
+8. maintenance scripts and current docs.
+
+A file that merely *looks old* is not a deletion candidate until these checks pass.
+
+### Required verification after each deletion batch
+
+```bash
+PY=/home/qy/mujoco_playground/.venv/bin/python
+export PYTHONPATH="$PWD/JIT/src"
+
+"$PY" -m compileall -q JIT/src JIT/cli
+"$PY" -m pytest -q <affected targeted tests>
 ```
 
-The retained non-Python closure includes `configs/default.json`,
-`assets/orange_bike_4kg_horizontal.xml`, every mesh referenced by that XML,
-`data/reference_jump.csv`, `requirements.txt`, and `pyproject.toml`. The model,
-mesh geometry, payload, actuator limits, action mapping, and matcher contracts
-are immutable in this cleanup.
+If import/test collection fails, cleanup stops immediately. Repair or restore the dependency before deleting anything else.
 
-## 6. First-round deletion candidates
+The 2026-09-01 removal of `upstream_boundary_lock.py` violated this rule: `soft_tube -> upstream_value -> upstream_boundary_lock` was still an active import chain. The file was restored and the deletion gate is now explicit in both root and JIT agent instructions.
 
-`delete` below is a reviewed design decision, not an instruction to remove the
-file in this commit. Each row must satisfy its validation prerequisite during
-the later deletion phase. Reverse dependencies shown here are limited to the
-relevant closed-route cluster; the implementation pass must repeat the search
-immediately before deletion.
+## 7. Path-bound provenance
 
-Files with no references and no reusable helpers may enter deletion batch 1.
-Shared orchestration bases such as `cli/descent_local_controller.py` and
-`cli/descent_tube_controller.py` may be deleted only after shard, seed,
-OOM-backoff, failure-fuse, and certification contracts have been moved into
-stable modules and tests.
+Do not move files solely for aesthetics when an immutable artifact records their path.
 
-| path | role | retained_root | reverse_dependencies | decision | reason | validation_required |
-|---|---|---|---|---|---|---|
-| `cli/activate_descent_envelope_pipeline.py` | legacy activator | none | none | delete | closed Descent-envelope route; outside closure | repeat refs; compile; controller tests migrated |
-| `cli/activate_fast_handoff_route.py` | legacy activator | none | none | delete | closed fast-handoff route; outside closure | repeat refs; targeted tests |
-| `cli/activate_jump_envelope_pipeline.py` | legacy activator | none | jump-envelope route test | delete | closed jump-envelope controller activation | remove/split route test; compile |
-| `cli/activate_trajectory_mining_pipeline.py` | legacy activator | none | none | delete | closed trajectory-mining route | repeat refs; targeted tests |
-| `cli/decoupled_bootstrap_controller.py` | persistent legacy controller | none | paired start/run scripts | delete | superseded bootstrap controller | delete route cluster; targeted tests |
-| `cli/descent_envelope_controller.py` | persistent legacy controller | none | deferred trajectory controller, paired scripts/tests | defer | still imported by deferred trajectory-mining route | resolve that route before deletion |
-| `cli/descent_local_controller.py` | shared base for old controllers | none | active-watchdog Descent-Tube path and old controller cluster | defer | stable helpers extracted, but enabled watchdog transitively imports this base | migrate/disable external service first |
-| `cli/descent_tube_controller.py` | persistent legacy controller | none | old controller cluster, tests, active-watchdog fallback | defer | active watchdog can reach its start/run route | migrate/disable external service, then re-audit contracts |
-| `cli/jump_envelope_controller.py` | persistent legacy controller | none | stage controller and route test | delete | closed jump-envelope route | delete cluster; targeted tests |
-| `cli/stage_next_bootstrap_controller.py` | legacy controller | none | paired start script/test | delete | superseded stage-next bootstrap | targeted route tests |
-| `cli/stage_next_v3_controller.py` | versioned legacy controller | none | paired start script/test and dynamic helpers | defer | broad subprocess/test closure is not yet isolated | complete dependency migration first |
-| `cli/stage_reachability_controller.py` | legacy controller | none | migration, paired start script/test | delete | superseded sequential reachability route | delete with migration cluster |
-| `cli/trajectory_mining_controller.py` | persistent legacy controller | none | paired scripts/tests | defer | its tests still carry reusable resume/bank preparation contracts | migrate those contracts first |
-| `cli/migrate_stage_reachability.py` | one-time migration | none | route-migration test | delete | completed migration; Git history preserves it | remove route-only test; compile |
-| `cli/normalize_descent_tube_v6.py` | one-time schema normalization | none | normalization test | defer | test still carries Final/Chain certification normalization semantics | extract stable invariant before deletion |
-| `cli/normalize_stage_entry_bank.py` | one-time schema normalization | none | normalization test | defer | test still carries entry provenance and physical-state preservation semantics | extract stable invariant before deletion |
-| `cli/resume_roll_targeted_cycle5.py` | one-time resume entry | none | deferred trajectory-controller test | defer | route test is retained with unresolved resume/bank contracts | resolve trajectory cluster first |
-| `cli/audit_descent_student_relabel_v2.py` | versioned one-off audit | none | none | delete | no reverse reference; closed Descent diagnostic | compile and targeted shared-module tests |
-| `cli/run_unified_descent_teacher_cv_v2.py` | versioned one-off run | none | none | delete | no reverse reference; completed diagnostic | compile and teacher-module tests |
-| `scripts/run_backward_bootstrap.sh` | old formal launcher | none | old README/summary and source-contract test | delete | superseded sequential shared-Actor route | switch docs; migrate shared source contracts |
-| `scripts/run_decoupled_bootstrap_pipeline.sh` | controller runner | none | paired start script | delete | closed decoupled bootstrap route | shell syntax and ref scan |
-| `scripts/start_decoupled_bootstrap_controller.sh` | systemd launcher | none | old controller metadata | delete | closed decoupled bootstrap route | external-unit check before implementation |
-| `scripts/run_descent_envelope_pipeline.sh` | controller runner | none | deferred trajectory-mining controller | defer | retained transitively by deferred controller route | resolve that route first |
-| `scripts/start_descent_envelope_controller.sh` | systemd launcher | none | deferred controller/test closure | defer | kept with unresolved Descent-envelope cluster | resolve cluster first |
-| `scripts/run_descent_local_pipeline.sh` | controller runner | none | paired start script | delete | closed local Descent route | shell syntax and ref scan |
-| `scripts/start_descent_local_controller.sh` | systemd launcher | none | controller test | delete | closed local Descent route | external-unit check; split test |
-| `scripts/run_descent_tube_pipeline.sh` | controller runner | none | paired start script reached by active watchdog fallback | defer | enabled watchdog timer can transitively invoke it | migrate/disable external service first |
-| `scripts/start_descent_tube_controller.sh` | systemd launcher | none | active watchdog fallback | defer | enabled watchdog timer directly retains this fallback | migrate/disable external service first |
-| `scripts/resume_descent_tube_after_current_audit.sh` | one-time resume script | none | active-watchdog Descent-Tube controller test | defer | belongs to externally retained Descent-Tube cluster | migrate/disable external service first |
-| `scripts/run_jump_envelope_pipeline.sh` | controller runner | none | paired start script | delete | closed jump-envelope route | shell syntax and ref scan |
-| `scripts/start_jump_envelope_controller.sh` | systemd launcher | none | activator and route test | delete | closed jump-envelope route | external-unit check; split test |
-| `scripts/run_stage_reachability_pipeline.sh` | controller runner | none | paired start script | delete | superseded sequential reachability route | shell syntax and ref scan |
-| `scripts/start_stage_reachability_controller.sh` | systemd launcher | none | migration/controller metadata | delete | superseded sequential reachability route | delete migration cluster |
-| `scripts/run_trajectory_mining_pipeline.sh` | controller runner | none | paired start script | defer | controller contracts are not yet migrated | migrate contracts first |
-| `scripts/start_trajectory_mining_controller.sh` | systemd launcher | none | controller route test | defer | kept with unresolved trajectory-mining cluster | migrate contracts first |
-| `scripts/start_stage_next_bootstrap_controller.sh` | versioned controller launcher | none | old controller/test | delete | superseded stage-next route | external-unit check; targeted test |
-| `scripts/start_stage_next_v3_controller.sh` | versioned controller launcher | none | old controller/test | defer | kept with unresolved Stage-Next-v3 controller closure | complete dependency migration first |
-| `scripts/start_final_shared_v2_followons.sh` | old final-shared launcher | none | old final pipeline/test | delete | superseded v2 follow-on; draft branch independently removed it | split route-only test; shell syntax |
-| `scripts/run_final_shared_policy_pipeline.sh` | five-stage consolidation runner | none | old launcher/tests | delete | superseded five-stage unified-RSI controller | retain reusable CLIs; remove route contract tests |
-| `scripts/run_final_shared_jel_audit.sh` | five-stage 4/8/32 audit runner | none | active-pointer launcher and tests | defer | enabled watchdog can invoke the active-pointer launcher that calls it | migrate/disable external service first |
-| `scripts/run_corrected_apex_unified_rsi_pipeline.sh` | corrected old pilot runner | none | active-pointer launcher/test | defer | enabled watchdog can invoke its launcher | migrate/disable external service first |
-| `scripts/start_corrected_apex_unified_rsi_followons.sh` | old pilot/JEL launcher | none | `runs/ACTIVE_PIPELINE.json`, enabled watchdog | defer | live external pointer names this launcher | migrate/disable external service first |
-| `scripts/run_apex_reachability_funnel.sh` | old 4/8/32 local funnel | none | route contract test | delete | hard funnel is not the universal soft-Tube requirement | retain reusable cost/selection code if independently used |
-| `tests/test_jump_envelope_controller.py` | jump-envelope route test | none | none | delete | asserts only removed controller assets and activator text | run shared policy/provenance tests |
-| `tests/test_stage_route_migration.py` | completed migration route test | none | none | delete | asserts only removed migration/controller route | run stable lifecycle and stage-reachability tests |
-| `tests/test_final_shared_policy_pipeline_contract.py` | v2 final-shared route text test | none | none | delete | asserted only removed launcher text; no stable API contract | full pytest and repository contracts |
-| `tests/test_apex_reachability_funnel_contract.py` | Apex local-funnel route text test | none | none | delete | asserted only removed local funnel text | full pytest and repository contracts |
+In particular, be conservative with:
 
-The old draft branch `agent/streamline-current-mainline@fd2bf3f` was inspected,
-not merged. Its README/method text still describes the superseded five-stage
-route and is not reusable as project truth. Its deletions of
-`scripts/run_backward_bootstrap.sh` and
-`scripts/start_final_shared_v2_followons.sh` agree with this ledger, but will
-be manually reproduced only after review and fresh validation.
+- `JIT/configs/` used by frozen runs;
+- `JIT/handoff/` locks/manifests;
+- run/checkpoint paths referenced by frozen manifests;
+- module paths embedded by pickle/serialization contracts.
 
-### Deletion batch 1 validation
+Cleanup should reduce active source complexity without invalidating reproducibility.
 
-On 2026-08-03, fresh module/path and shell/systemd/docs/test scans found no
-reverse references outside this ledger for these five closed-route files:
+## 8. Current retained legacy/bootstrap dependencies
 
-```text
-cli/activate_descent_envelope_pipeline.py
-cli/activate_fast_handoff_route.py
-cli/activate_trajectory_mining_pipeline.py
-cli/audit_descent_student_relabel_v2.py
-cli/run_unified_descent_teacher_cv_v2.py
-```
+Some upstream/downstream-named modules remain because the completed bootstrap artifacts and their loaders still depend on them. Examples include the first-pass V_up/V_down training/inference authority and boundary-lock contracts.
 
-Their helper functions were not imported elsewhere; the two larger diagnostics
-were bound to immutable one-off run paths and protocols. They were deleted as
-one dependency-free batch. `compileall dvgc cli` passed, and the 15 focused
-Descent probe/supervised/teacher plus repository/project contract tests passed.
-The only output was an existing third-party JAXopt deprecation warning.
+They should be removed only after their reusable inference/loading contracts are migrated into generic retained modules and regression-tested against existing artifacts.
 
-### Closed-route cluster deletion record
+Do not delete them simply because later iterations use unified-policy continuation fields.
 
-On 2026-08-03, a fresh reference and installed-unit audit found no retained
-consumer for the Jump-Envelope/Stage-Reachability, Decoupled-Bootstrap, or
-Stage-Next-Bootstrap routes. The 13 controller, activator, migration, runner,
-and launcher files in those clusters were deleted together with their two
-route-only tests. One source-text assertion for the removed Stage-Next launcher
-was removed from the otherwise retained watchdog test.
+## 9. Iteration-generalization debt
 
-After deletion, the removed names occurred only in this decision ledger.
-`compileall dvgc cli` passed, and 60 focused watchdog, reachability,
-local-entry, bootstrap-preparation, lifecycle, seed, certification, repository,
-and project-state tests passed.
+Before the workflow can run unattended beyond pi_1, the following must become iteration-generic:
 
-The same host-service audit found no installed unit or live pointer for the
-old backward-bootstrap launcher, the Descent-local runner/launcher, the v2
-final-shared runner/launcher, or the Apex local funnel. Those six scripts and
-their route-only source assertions/tests were removed as a final launcher
-batch. No shared production API changed.
+- core-retaining Tube construction (`Tube_k -> Tube_(k+1)` rather than Tube_1 constants);
+- continuation refit and fresh validation (`C^k` rather than iteration-0 helper assumptions);
+- policy freeze and capability gates as machine-readable workflow stages;
+- stable workflow configs/exports for `k -> k+1`.
 
-## 7. Explicit defer set
+The transition-band acquisition machinery is already substantially iteration-parameterized; downstream stages should consume its generic artifacts rather than recreating new iteration-named source modules.
 
-All unlisted tracked files default to `defer`. This prevents the audit from
-turning “not yet classified” into deletion authority. The following high-risk
-files are called out individually because they look legacy by name but contain
-shared functions, internal imports, dynamic edges, or unresolved orchestration.
+## 10. Current scientific stage
 
-| path | role | retained_root | reverse_dependencies | decision | reason | validation_required |
-|---|---|---|---|---|---|---|
-| `dvgc/backward_search.py` | proposal/search utilities | no | 29 legacy CLIs/tests | defer | broad utility surface | migrate callers and unit-test API first |
-| `dvgc/backward_tube.py` | tube proposal utilities | no | 11 legacy CLIs/tests | defer | possible reusable tube logic | semantic/API review |
-| `dvgc/centroidal.py` | centroidal diagnostics | no | Apex audits and test | defer | possible reusable physics diagnostic | targeted test and method review |
-| `dvgc/certification_merge.py` | certification merge utility | no | merge CLI and pipeline test | defer | generic certification capability | decide stable evaluation boundary |
-| `dvgc/certifier_calibration.py` | calibration utility | no | calibration CLI/test | defer | generic evaluation capability | targeted calibration tests |
-| `dvgc/construction_lifecycle.py` | stable construction/orchestration contracts | shared-contract tests | controllers and lifecycle tests | keep | owns shard, OOM, failure-fuse, liveness, resume, and provenance contracts | lifecycle and affected-controller tests |
-| `dvgc/continuous.py` | continuous search/rollout utility | no | searches and test | defer | dynamic runtime behavior | targeted runtime review |
-| `dvgc/delay_probe.py` | snapshot-delay audit utility | no | timing audits | defer | snapshot semantics are protected | snapshot audit tests |
-| `dvgc/descent_balanced.py` | balanced training records | no | old pilot and test | defer | possible distillation reuse | data-contract review |
-| `dvgc/descent_feedback.py` | feedback dataset logic | no | old probe and test | defer | teacher reuse unclear | targeted test |
-| `dvgc/descent_membership.py` | membership logic | no | discrete-tube test | defer | soft-tube migration relevance unknown | evaluation review |
-| `dvgc/descent_pilot.py` | bounded PPO pilot helpers | no | probes and `descent_probe` | defer | internal `dvgc` reverse dependency | untangle module boundary |
-| `dvgc/descent_predecessor.py` | predecessor utilities | no | teacher/search CLIs and test | defer | possible snapshot acquisition reuse | targeted test |
-| `dvgc/descent_probe.py` | restore/evaluate helpers | no | 7 CLIs, 3 `dvgc` modules, test | defer | explicitly shared internal dependency | migrate helpers before any deletion |
-| `dvgc/descent_supervised.py` | supervised/distillation helpers | no | 14 CLIs and test | defer | likely reusable for expert snapshots | API extraction review |
-| `dvgc/descent_teacher.py` | teacher dataset logic | no | old CLIs and test | defer | possible two-phase reuse | targeted test |
-| `dvgc/discrete_tube.py` | discrete Tube logic | no | analysis/freezing CLIs and test | defer | future soft-tube contrast/ablation value | method review |
-| `dvgc/entry.py` | stage entry/matcher utility | no | 22 CLIs and test | defer | broad shared stage contract | matcher semantics must not change |
-| `dvgc/flight_augmentation.py` | candidate augmentation | no | 5 CLIs and test | defer | possible guideline-bank reuse | targeted test |
-| `dvgc/local_entry.py` | local-entry utility | no | pilot CLI and test | defer | next-stage label reuse likely | two-phase label design review |
-| `dvgc/observation_audit.py` | observation/timing audit | no | timing CLIs and test | defer | protected observation contract | observation audit tests |
-| `dvgc/pipeline.py` | marker/gate utility | no | two CLIs and pipeline test | defer | reusable resumability logic | stable pipeline API decision |
-| `dvgc/provisional_descent.py` | provisional reset helpers | no | 6 CLIs, `descent_pilot`, test | defer | internal dependency and role semantics | artifact-role review |
-| `dvgc/reset_geometry.py` | reset geometry | no | 9 CLIs, `descent_pilot`, test | defer | proposed merge is not proven safe | geometry tests; no matcher change |
-| `dvgc/roll_controllability.py` | roll diagnostic | no | audit CLI/test | defer | possible failure-analysis value | targeted test |
-| `dvgc/stable_construction.py` | stable-state construction | no | controller CLIs/test | defer | lifecycle reuse unclear | targeted test |
-| `dvgc/stage_reachability.py` | labels/models/sampling | no | 21 CLIs and 2 tests | defer | explicitly protected; likely feasibility reuse | API and label-semantic migration |
-| `dvgc/support_diagnostic.py` | support geometry audit | no | timing/feedback CLIs and test | defer | protected snapshot/geometry diagnostics | targeted test |
-| `dvgc/trajectory_mining.py` | trajectory utilities | no | 12 CLIs and 2 tests | defer | reusable snapshot collection logic | API extraction review |
-| `dvgc/viability.py` | existing viability model | no | 3 CLIs | defer | must not be mislabeled as new `V_up/V_down` | model-semantics review |
-| `cli/pipeline_watchdog.py` | legacy external-state watchdog | no | systemd and status scripts/tests | defer | static audit cannot establish user-service state | explicit external-service check |
-| `scripts/dvgc_status.sh` | watchdog status | no | docs/watch/test | defer | coupled to deferred watchdog | watchdog decision |
-| `scripts/dvgc_watch.sh` | status loop | no | watchdog docs | defer | coupled to deferred watchdog | watchdog decision |
-| `scripts/dvgc_notification_helper.sh` | watchdog notification helper | no | external service possible | defer | external invocation cannot be ruled out | external-service check |
-| `scripts/install_pipeline_watchdog.sh` | watchdog installer | no | external service possible | defer | local service state unknown | external-service check |
-| `systemd/user/dvgc-pipeline-watchdog.service` | user service | no | timer | defer | external user service may be installed | inspect systemd state before deletion |
-| `systemd/user/dvgc-pipeline-watchdog.timer` | user timer | no | service | defer | external user service may be installed | inspect systemd state before deletion |
-| `scripts/run_remaining_pipeline.sh` | large old sequential runner | no | mixed source-contract test | defer | calls retained generic CLIs and embeds resumability contracts | split shared tests before deletion |
-| `scripts/run_stage_expert_pipeline.sh` | old multi-substage expert runner | no | mixed source-contract test | defer | expert CLI remains runtime-fingerprint dependency | replace formal expert semantics first |
+Completed:
 
-Route tests are also deferred by default. Direct inspection found reusable
-contracts embedded in controller-specific tests, including seed disjointness,
-shard completeness, OOM backoff, and certification seed rules. Shared portions
-must move into stable tests before route-only assertions are removed. No test is
-approved for deletion solely because its filename mentions a legacy route.
+`experts -> Tube_0 -> pi_0 -> C^0 -> Tube_1 -> pi_1`
 
-### Shared-contract extraction record
+Next:
 
-On 2026-08-03, shard completeness, OOM backoff/detection, failure-fuse
-normalization, and lock-liveness behavior moved from legacy controller
-definitions into `dvgc.construction_lifecycle`. Stable lifecycle tests were
-written first and failed on the missing API before the behavior-preserving
-move. Legacy controllers now import those helpers from the stable module.
+`freeze pi_1 -> core-preservation + boundary-gain gates`
 
-The remaining requested contracts already have stable API-level coverage:
+Only after both gates pass may the project proceed with an empirical expansion claim and `C^1 -> Tube_2 -> pi_2`.
 
-- exact seed-set disjointness: `dvgc.seed_registry` and
-  `tests/test_seed_registry.py`;
-- certification seed separation: `dvgc.certification` and
-  `tests/test_certification.py`;
-- resume/provenance idempotence: `dvgc.construction_lifecycle` lifecycle tests;
-- non-overwrite policy ownership: `dvgc.experts`/`dvgc.policy` tests;
-- snapshot and bank provenance: `dvgc.snapshot_provenance`, `dvgc.bank`, and
-  their stable tests.
-
-Static compilation passed. The 66 affected lifecycle/controller, seed,
-certification, audit-manifest, expert, bank, and snapshot-provenance tests
-passed; the only warning was the existing third-party JAXopt deprecation.
-
-### External systemd state rule
-
-No start script, watchdog helper, service, or timer may be deleted until the
-real Ubuntu host's user-service state has been inspected. An installed,
-enabled, loaded, or active service reference moves the target from `delete` to
-`defer` until the service is disabled or migrated. Inspection is read-only;
-this cleanup never stops a running user service without explicit permission.
-
-Read-only inspection on 2026-08-03 found
-`dvgc-pipeline-watchdog.timer` installed, enabled, loaded, and active. Its
-service is installed/loaded and currently inactive. The installed service runs
-`python3 -m cli.pipeline_watchdog` from `/home/qy/DVGC`; the active pointer
-names `scripts/start_corrected_apex_unified_rsi_followons.sh`, and the watchdog
-source retains `scripts/start_descent_tube_controller.sh` as a fallback. The
-two transitive runner clusters have therefore moved from `delete` to `defer`.
-No unit was stopped, disabled, reloaded, or otherwise changed.
-
-## 8. Archive summary decision
-
-| path | role | retained_root | reverse_dependencies | decision | reason | validation_required |
-|---|---|---|---|---|---|---|
-| `PROJECT_SUMMARY.md` | old clean-project/five-stage narrative | none | none | archive_summary | useful method history condensed; root copy removed | archived as `docs/archive/legacy_five_stage/README.md` |
-
-No Python source, JSON artifact, log, checkpoint, policy, or raw report will be
-copied into `docs/archive/`. Git history and `archive/pre-clean-20260731` remain
-the source-level archive.
-
-On 2026-08-03, the useful route overview, replacement rationale, reusable
-baseline/ablation assets, recovery authority, and unsupported-claim boundary
-were condensed into `docs/archive/legacy_five_stage/README.md`. The stale root
-summary was then removed; no executable or run artifact was copied.
-
-## 9. Final decision counts
-
-The approved baseline contains 571 tracked paths. The current conservative
-ledger classifies them as follows:
-
-| decision | count | interpretation |
-|---|---:|---|
-| keep | 56 | retained closure plus stable construction-lifecycle contracts |
-| delete | 28 | closed-route files approved and removed during implementation |
-| archive_summary | 1 | historical `PROJECT_SUMMARY.md` narrative only |
-| defer | 486 | every other baseline path, including active-watchdog and unresolved dependency clusters |
-
-The implementation deleted all 28 files classified `delete` and replaced the
-one `archive_summary` root file with a concise documentation archive. Therefore
-29 tracked baseline paths were removed in total. Deferred files remain outside
-deletion authority without a new ledger update and evidence review.
-
-## 10. Validation and commit sequence
-
-Implementation used these focused commit subjects:
-
-1. `docs: switch project truth to two-phase research direction`
-2. `cleanup: remove dependency-free legacy entrypoints`
-3. `test: extract reusable legacy controller contracts`
-4. `cleanup: remove closed legacy controller routes`
-5. `docs: archive legacy five-stage route summary`
-6. `cleanup: remove closed legacy launchers`
-7. `test: validate retained repository entrypoints`
-
-Before each deletion batch: repeat import/path/test/shell references. After each
-batch: run `compileall` and targeted tests with
-`/home/qy/mujoco_playground/.venv/bin/python`. Final validation is full pytest,
-`scripts/local_preflight.sh`, and the runtime gate. The runtime gate's existing
-64+32 timestep PPO is only a compile/update/checkpoint-resume smoke test; it is
-not formal training or a learnability pilot.
-
-### Final implementation validation
-
-On 2026-08-03, the retained tree passed `compileall dvgc cli`, full pytest
-(`552 passed`, one existing JAXopt deprecation warning), and
-`scripts/local_preflight.sh` on the configured GPU runtime. The current runtime
-fingerprint exactly matched the existing PASS gate report, and
-`cli.runtime_gate --check-only` confirmed the report current. No new PPO block,
-learnability pilot, or formal training was run during cleanup.
+Final TEST/JCE/JEL remains outside the automatic iteration loop.
