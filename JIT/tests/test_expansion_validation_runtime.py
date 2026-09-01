@@ -129,7 +129,14 @@ def test_real_runtime_preflight_is_zero_interaction_and_outcome_blind(jit_root):
         "9ec0a1e8c314cc5710688a3537fbd339f520d4db3c4268d20715bcde938586b0"
     )
     assert audit["validation_anchor_count"] == 5
-    assert audit["validation_anchor_unified_observation_match_count"] == 5
+    assert audit["validation_anchor_unified_observation_count"] == 5
+    assert (
+        audit["legacy_cached_observation_match_count"]
+        + audit["legacy_cached_observation_mismatch_count"]
+        == 5
+    )
+    assert audit["legacy_cached_observation_mismatch_count_by_phase"]["upstream"] >= 0
+    assert audit["legacy_cached_observation_mismatch_count_by_phase"]["downstream"] >= 0
     assert audit["validation_parent_group_count_by_phase"] == {
         "upstream": 3,
         "downstream": 2,
