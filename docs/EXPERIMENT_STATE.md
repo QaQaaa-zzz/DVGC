@@ -8,7 +8,9 @@ This file is intentionally compact. Historical experiment narratives remain reco
 
 The active method is the iterative single-policy envelope pipeline:
 
-`experts -> Tube_0 -> pi_0 -> C^0 -> Tube_1 -> pi_1 -> gates -> C^1 -> Tube_2 -> pi_2 -> ...`
+`experts -> Tube_0 -> pi_0 -> C^0 -> Tube_1 -> pi_1 -> paired gate -> repair/accept -> C^1 -> Tube_2 -> pi_2 -> ...`
+
+The first `pi_0 -> pi_1` paired scientific gate has now completed and **rejected pi_1 as the next accepted iteration authority because core preservation failed**, even though boundary gain passed.
 
 ### Completed bootstrap
 
@@ -18,7 +20,7 @@ The active method is the iterative single-policy envelope pipeline:
 - Tube_0: 222 TRAIN-only entries, 117 upstream + 105 downstream.
 - `pi_0`: unified Tube-RSI policy, frozen as iteration-0 expansion authority.
 
-### Completed iteration 0 -> 1
+### Completed Tube_0 -> Tube_1 construction
 
 Fresh independent validation authorized Tube_1 using frozen thresholds:
 
@@ -46,19 +48,13 @@ Authoritative completed run:
 
 `JIT/runs/pi_unified/pi_1_tube1_natural10_10009600_seed821101_20260901_retry01`
 
-Config:
-
-`JIT/configs/pi_unified_iter1_tube1_natural10_retry01.json`
-
 Config SHA-256 before launch:
 
 `987ef5d31661482fd0bc05cea566c177d83ecd00ae3028ff0e8bb2ed462b7901`
 
 Result:
 
-- requested PPO training transitions: 10,009,600
-- completed PPO training transitions: 10,009,600
-- checkpoints: 0 / 1,024,000 / 2,508,800 / 5,017,600 / 7,500,800 / 10,009,600
+- requested/completed PPO transitions: 10,009,600 / 10,009,600
 - completed TRAIN panels: 5
 - TRAIN-panel interactions: 2,838
 - Brax evaluation transitions: 0
@@ -70,59 +66,113 @@ Result:
 - TEST data used: false
 - final checkpoint restore: verified
 
-Optimization metrics are training diagnostics only and are not capability gates.
+The exact final checkpoint was frozen as `pi_1` iteration authority with zero environment interactions and zero training transitions.
 
-## Preserved engineering-error attempt
+## Completed paired pi_0 -> pi_1 gate
 
-The first pi_1 attempt:
+Completed retry artifact:
 
-`JIT/runs/pi_unified/pi_1_tube1_natural10_10009600_seed821101_20260901`
+`JIT/runs/pi_unified_gate/pi_0_to_pi_1_paired_core_boundary_20260901_retry01`
 
-is preserved unchanged as engineering-error provenance.
+Locked protocol SHA-256:
 
-It reached 1,024,000 training transitions. Its first TRAIN-panel `report.json` proves 449 environment interactions, while the terminal status recorded diagnostic interactions as 0 because plotting failed after rollout but before the callback returned.
+`24a126ee94472eebbcb59fff66618ae00dae41074a1d1cfee8bb816afaff410a`
 
-Do not rewrite that historical artifact. Production source now contains a failed-run reconciliation path for future runs, and formal training performs a zero-interaction full-Tube preflight before training.
+Run result:
 
-## Current scientific next step
+- status: completed
+- environment interactions: 23,695
+- training transitions: 0
+- validation data used: false
+- TEST data used: false
+- expert switching: false
 
-No new training should start before this sequence is closed:
+Core preservation:
 
-1. freeze exact `pi_1` final checkpoint as iteration-1 authority;
-2. predeclare comparable core-preservation and boundary-gain protocols;
-3. run core-preservation gate;
-4. run boundary-gain gate;
-5. only if both pass, record empirical `pi_0 -> pi_1` capability-envelope expansion;
-6. collect/freeze pi_1-conditioned TRAIN evidence;
-7. fit and independently validate `C_up^1/C_down^1`;
-8. construct core-retaining Tube_2;
-9. run Tube_2 engineering gate;
-10. train pi_2;
-11. repeat through the same generic production capabilities.
+- 222 Tube_0 core states
+- pi_0 success: 222
+- pi_1 success: 201
+- core regressions: 21
+- upstream regressions: 16 / 117
+- downstream regressions: 5 / 105
+- **CORE PASS = false**
 
-TEST/JCE/JEL stays untouched throughout the iteration loop.
+Boundary gain:
+
+- 56 locked pi_0-negative frontier states
+- pi_0 reproduction failures: 0
+- pi_1 successes: 12
+- successful parent groups: 5
+- upstream gains: 12 / 26
+- downstream gains: 0 / 30
+- **BOUNDARY PASS = true**
+
+Iteration decision:
+
+- `ITERATION ACCEPTED = false`
+- `EMPIRICAL ENVELOPE EXPANSION ACCEPTED = false`
+
+Artifact file SHAs:
+
+- summary: `cf63f59f4862c51351ceca80afa8796316592be515c28b572584e97e39d9f7fc`
+- bank: `97cb62727e12824abc2a5238e9187e47773c80b5f169f2f286c0f412a8e2a6bd`
+- records: `614d020198a38235f0a2bfddc6b087fdd5e3729c5fcff49f40c4fcf71683cae2`
+
+This is a scientific rejection. Do not alter the consumed bank, acceptance rule, thresholds, reward, or PPO configuration post hoc to convert it into a PASS.
+
+## Preserved engineering-error provenance
+
+Two engineering-error attempts remain immutable:
+
+1. first formal pi_1 attempt: plotting failed after 1,024,000 PPO transitions; first TRAIN panel had 449 real interactions;
+2. first paired-gate attempt: Warp/MJX CUDA OOM after 2,546 interactions because the runner created repeated `jax.jit(env.step)` wrappers.
+
+The gate runner was fixed to share one compiled `env.step`; retry01 then completed successfully under the unchanged scientific protocol.
+
+## Current scientific blocker
+
+No new training should start yet.
+
+The current question is why pi_1 gained new upstream frontier ability while losing 21 previously successful Tube_0 core states.
+
+Working hypothesis: retained-core replay may have been diluted by Tube_1 expansion. Tube_1 structurally retained all 222 core states, but contains 2,897 expansion states and sampling within each 50/50 phase is categorical by entry `sampling_weight`. This makes actual retained-core probability mass, not entry presence alone, the quantity that must be audited.
+
+The hypothesis is not accepted until the existing frozen artifacts show it.
+
+## Immediate next step
+
+Perform zero-interaction diagnosis from the completed gate `records.json` and Tube artifacts:
+
+1. list all 21 core regressions by phase/state/parent/source;
+2. summarize pi_1 terminal outcome classes for those regressions;
+3. compute Tube_1 retained-core sampling probability mass separately for upstream and downstream;
+4. compare regression-state weights with preserved-core weights;
+5. inspect whether regressions concentrate in particular parent/source groups or low-probability support;
+6. distinguish curriculum/replay dilution from a deeper phase/runtime issue.
+
+Only after this diagnosis may a revised policy-improvement method be predeclared. The rejected pi_1 is not allowed to generate the accepted `C^1 -> Tube_2` scientific chain.
+
+TEST/JCE/JEL remains untouched.
 
 ## Repository state
-
-Repository cleanup is active but must preserve dependency closure.
 
 Completed maintenance includes:
 
 - stable package-root APIs for training/tube/snapshots/acquisition/continuation/analysis/workflow;
-- removal of redundant facade modules;
-- retirement of a first batch of completed iteration-0 research scaffolding;
-- current JIT status/organization/verification docs;
-- resumable manifest-driven workflow infrastructure;
-- Tube-RSI acceptance of `C_up^k/C_down^k` rather than only `C^0`;
-- restoration of `upstream_boundary_lock.py` after a cleanup regression proved it remains in the active bootstrap import closure;
-- explicit deletion-gate rules requiring compile/import/test closure before further removals.
+- removal of redundant facade modules and a first batch of obsolete iteration-0 scaffolding;
+- current JIT/root context documentation;
+- resumable workflow infrastructure;
+- Tube-RSI support for phase-consistent `C^k` fields;
+- dependency-closure deletion rules;
+- generic paired-policy gate through the existing diagnostic CLI;
+- shared compiled `env.step` for long paired audits.
 
-Remaining migration debt before unattended pi_2+ execution:
+Remaining migration debt before unattended later iterations:
 
 - core-retaining Tube construction still contains Tube_1/iteration-0 constants;
 - continuation refit/fresh validation still use a small number of upstream-specific helpers;
-- freeze/gate stages need stable machine-readable iteration-generic APIs wired into the workflow;
-- cleanup must continue only from a green compile/test baseline.
+- workflow must stop and surface scientific-gate failure rather than proceeding;
+- generic k -> k+1 Tube/continuation contracts remain to be completed after the current scientific blocker is resolved.
 
 ## Immutable task identity
 
