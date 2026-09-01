@@ -22,6 +22,7 @@ from .expansion_validation_protocol import (
     load_expansion_validation_protocol_config,
 )
 from .expansion_validation_runtime import (
+    _expected_unified_actor_observation,
     enumerate_validation_attempts,
     load_validation_anchor_snapshots,
 )
@@ -29,22 +30,8 @@ from .iteration_train_evidence import load_frozen_iteration_train_evidence
 
 
 def unified_actor_observation_from_legacy_snapshot(snapshot: Any, *, phase: str) -> np.ndarray:
-    """Rebuild the exact actor input used by the unified runtime at reset."""
-    frames = np.asarray(snapshot.observation_fifo, dtype=np.float32)
-    if frames.shape != (3, 25) or not np.isfinite(frames).all():
-        raise ValueError("validation legacy snapshot FIFO is invalid")
-    if phase == "upstream":
-        jump_signal = bool(np.asarray(snapshot.events["jump_signal"]))
-    elif phase == "downstream":
-        jump_signal = False
-    else:
-        raise ValueError("unsupported validation phase")
-    observation = np.concatenate(
-        (frames.reshape(-1), np.asarray([float(jump_signal)], dtype=np.float32))
-    )
-    if observation.shape != (76,) or not np.isfinite(observation).all():
-        raise ValueError("validation unified actor observation is invalid")
-    return observation
+    """Compatibility wrapper around the single runtime observation authority."""
+    return _expected_unified_actor_observation(snapshot, phase=phase)
 
 
 def audit_expansion_validation_runtime_preflight(config_path: Path) -> dict[str, Any]:
