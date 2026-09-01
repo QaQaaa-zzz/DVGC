@@ -1,7 +1,7 @@
 {
   "schema": "jit_expansion_validation_protocol_config_v1",
   "output_dir": "JIT/runs/pi_unified_expansion_validation/pi_0_iter0_group_disjoint_20260831",
-  "expected_protocol_sha256": "16c944e2edd16d3ac57656f219506399d63256bd37e7760ee6938a95f225f2b7",
+  "expected_protocol_sha256": "9ec0a1e8c314cc5710688a3537fbd339f520d4db3c4268d20715bcde938586b0",
   "protocol": {
     "schema": "jit_expansion_validation_protocol_v1",
     "status": "predeclared",
@@ -82,8 +82,8 @@
       "upstream": {
         "action_names": ["steer", "rear_wheel_drive", "hip", "knee"],
         "signs": [-1, 1],
-        "strengths": [0.025, 0.05, 0.1],
-        "durations": [1, 2],
+        "strengths": [0.025, 0.1],
+        "durations": [4, 8, 16],
         "max_label_ticks": 400,
         "terminal_clipping": true
       },
@@ -103,7 +103,7 @@
     },
     "interaction_budget": {
       "attempt_count": 160,
-      "maximum_acquisition_environment_interactions": 696,
+      "maximum_acquisition_environment_interactions": 1824,
       "maximum_labeling_environment_interactions": 64000,
       "training_transitions": 0
     },
