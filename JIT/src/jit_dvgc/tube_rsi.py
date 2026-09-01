@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
 import json
 from pathlib import Path
 from typing import Any, Mapping
@@ -12,11 +13,25 @@ import numpy as np
 
 from .handoff_snapshot import load_snapshot
 from .snapshot_pool import SnapshotPool
-from .soft_tube import PHASE_MIXTURE, SOFT_TUBE_SCHEMA, WEIGHT_FLOOR, WEIGHT_SCALE, SoftTubeArtifact, load_soft_tube
-from .upstream_boundary import physical_state_sha256
+from .soft_tube import (
+    PHASE_MIXTURE,
+    SOFT_TUBE_SCHEMA,
+    WEIGHT_FLOOR,
+    WEIGHT_SCALE,
+    SoftTubeArtifact,
+    load_soft_tube,
+)
 
 PHASE_UPSTREAM = 0
 PHASE_DOWNSTREAM = 1
+
+
+def _legacy_physical_state_sha256(snapshot: Any) -> str:
+    """Hash legacy qpos/qvel without depending on old upstream acquisition code."""
+    digest = hashlib.sha256()
+    digest.update(np.asarray(snapshot.qpos).tobytes())
+    digest.update(np.asarray(snapshot.qvel).tobytes())
+    return digest.hexdigest()
 
 
 def _snapshot_state_sha(path: Path) -> tuple[str, str, int | None]:
@@ -24,9 +39,12 @@ def _snapshot_state_sha(path: Path) -> tuple[str, str, int | None]:
     schema = str(identity.get("schema", ""))
     if schema == "handoff_snapshot_v1":
         snapshot = load_snapshot(path)
-        return physical_state_sha256(snapshot), schema, None
+        return _legacy_physical_state_sha256(snapshot), schema, None
     if schema == "jit_unified_envelope_snapshot_v1":
-        from .unified_envelope_snapshot import load_unified_envelope_snapshot, physical_state_sha256 as unified_state_sha256
+        from .unified_envelope_snapshot import (
+            load_unified_envelope_snapshot,
+            physical_state_sha256 as unified_state_sha256,
+        )
 
         snapshot = load_unified_envelope_snapshot(path)
         return unified_state_sha256(snapshot), schema, int(snapshot.active_phase)
@@ -45,20 +63,33 @@ def _validate_score_semantics(entry: Mapping[str, Any], phase: str) -> None:
         raise ValueError("Soft Tube score_source must be an object")
     if score_source.get("kind") != "policy_conditioned_continuation_field":
         raise ValueError("Soft Tube expansion has unsupported score source")
-    expected = "C_up^0" if phase == "upstream" else "C_down^0"
-    if target != expected or score_source.get("field_name") != expected:
-        raise ValueError("Soft Tube expansion uses a cross-phase continuation field")
+
+    field_name = str(score_source.get("field_name", ""))
+    expected_prefix = "C_up^" if phase == "upstream" else "C_down^"
+    iteration_text = field_name.removeprefix(expected_prefix)
+    if (
+        target != field_name
+        or not field_name.startswith(expected_prefix)
+        or not iteration_text.isdigit()
+    ):
+        raise ValueError("Soft Tube expansion uses a cross-phase or invalid continuation field")
+
     threshold = float(score_source.get("acceptance_threshold_exclusive", np.nan))
     score = float(entry.get("value_score", np.nan))
     if not np.isfinite(threshold) or not score > threshold:
         raise ValueError("Soft Tube expansion does not satisfy its strict C threshold")
-    if score_source.get("selection_rule") != "TRAIN_label_positive_and_score_strictly_greater_than_threshold":
+    if (
+        score_source.get("selection_rule")
+        != "TRAIN_label_positive_and_score_strictly_greater_than_threshold"
+    ):
         raise ValueError("Soft Tube expansion selection rule drift")
     if int(entry.get("continuation_label", -1)) != 1:
         raise ValueError("Soft Tube expansion must retain only positive TRAIN labels")
 
 
-def _match_prng_key_representation(sampled_key: jax.Array, reference_key: jax.Array) -> jax.Array:
+def _match_prng_key_representation(
+    sampled_key: jax.Array, reference_key: jax.Array
+) -> jax.Array:
     """Preserve sampled key data while matching the caller's JAX key representation."""
     key_data = jax.random.key_data(sampled_key)
     if jax.dtypes.issubdtype(reference_key.dtype, jax.dtypes.prng_key):
@@ -76,8 +107,17 @@ class TubeRSIPool:
     downstream_count: int
 
     @classmethod
-    def from_artifact(cls, artifact: SoftTubeArtifact | Path, *, compatibility: Mapping[str, Any]) -> "TubeRSIPool":
-        loaded = load_soft_tube(artifact) if isinstance(artifact, (str, Path)) else artifact
+    def from_artifact(
+        cls,
+        artifact: SoftTubeArtifact | Path,
+        *,
+        compatibility: Mapping[str, Any],
+    ) -> "TubeRSIPool":
+        loaded = (
+            load_soft_tube(artifact)
+            if isinstance(artifact, (str, Path))
+            else artifact
+        )
         manifest = loaded.manifest
         if manifest.get("schema") != SOFT_TUBE_SCHEMA or manifest.get("status") != "completed":
             raise ValueError("unsupported or incomplete Soft Tube artifact")
@@ -86,7 +126,10 @@ class TubeRSIPool:
         if manifest.get("phase_mixture") != PHASE_MIXTURE:
             raise ValueError("Soft Tube phase mixture is not the fixed 50/50 contract")
 
-        by_phase: dict[str, list[dict[str, Any]]] = {"upstream": [], "downstream": []}
+        by_phase: dict[str, list[dict[str, Any]]] = {
+            "upstream": [],
+            "downstream": [],
+        }
         for original in loaded.entries:
             entry = dict(original)
             if entry.get("split") != "train":
@@ -114,7 +157,9 @@ class TubeRSIPool:
             if declared_schema is not None and declared_schema != schema:
                 raise ValueError("Soft Tube snapshot schema declaration mismatch")
             if active_phase is not None:
-                expected_phase = PHASE_UPSTREAM if phase == "upstream" else PHASE_DOWNSTREAM
+                expected_phase = (
+                    PHASE_UPSTREAM if phase == "upstream" else PHASE_DOWNSTREAM
+                )
                 if active_phase != expected_phase:
                     raise ValueError("Soft Tube unified snapshot phase mismatch")
             by_phase[phase].append(entry)
@@ -122,15 +167,39 @@ class TubeRSIPool:
         if not by_phase["upstream"] or not by_phase["downstream"]:
             raise ValueError("Tube-RSI requires nonempty upstream and downstream support")
         ordered = [*by_phase["upstream"], *by_phase["downstream"]]
-        pool = SnapshotPool.from_paths((Path(entry["snapshot"]) for entry in ordered), compatibility=compatibility)
-        up_weights = jnp.asarray([entry["sampling_weight"] for entry in by_phase["upstream"]], dtype=jnp.float32)
-        down_weights = jnp.asarray([entry["sampling_weight"] for entry in by_phase["downstream"]], dtype=jnp.float32)
-        return cls(loaded, pool, up_weights, down_weights, len(by_phase["upstream"]), len(by_phase["downstream"]))
+        pool = SnapshotPool.from_paths(
+            (Path(entry["snapshot"]) for entry in ordered),
+            compatibility=compatibility,
+        )
+        up_weights = jnp.asarray(
+            [entry["sampling_weight"] for entry in by_phase["upstream"]],
+            dtype=jnp.float32,
+        )
+        down_weights = jnp.asarray(
+            [entry["sampling_weight"] for entry in by_phase["downstream"]],
+            dtype=jnp.float32,
+        )
+        return cls(
+            loaded,
+            pool,
+            up_weights,
+            down_weights,
+            len(by_phase["upstream"]),
+            len(by_phase["downstream"]),
+        )
 
-    def sample_at(self, phase_index: jax.Array | int, entry_index: jax.Array | int):
+    def sample_at(
+        self,
+        phase_index: jax.Array | int,
+        entry_index: jax.Array | int,
+    ):
         phase = jnp.asarray(phase_index, dtype=jnp.int32)
         local = jnp.asarray(entry_index, dtype=jnp.int32)
-        global_index = jnp.where(phase == PHASE_UPSTREAM, local, jnp.asarray(self.upstream_count, dtype=jnp.int32) + local)
+        global_index = jnp.where(
+            phase == PHASE_UPSTREAM,
+            local,
+            jnp.asarray(self.upstream_count, dtype=jnp.int32) + local,
+        )
         sample = self.snapshot_pool.sample_at_index(global_index)
         sample["tube_phase"] = phase
         sample["tube_entry_index"] = local
@@ -146,10 +215,9 @@ class TubeRSIPool:
 
     def sample(self, rng: jax.Array):
         phase_key, entry_key = jax.random.split(rng)
-        phase = jax.random.bernoulli(phase_key, PHASE_MIXTURE["downstream"]).astype(jnp.int32)
+        phase = jax.random.bernoulli(
+            phase_key, PHASE_MIXTURE["downstream"]
+        ).astype(jnp.int32)
         sample = self.sample_phase(entry_key, phase)
-        # Natural/Tube reset selection uses one jitted PyTree.  Keep the immutable
-        # snapshot RNG value, but represent it the same way as the caller's reset
-        # key so jnp.where never mixes key<fry> with legacy uint32[2].
         sample["rng"] = _match_prng_key_representation(sample["rng"], rng)
         return sample

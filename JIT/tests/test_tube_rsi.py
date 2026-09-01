@@ -70,6 +70,37 @@ def test_fixed_index_sampling_restores_exact_saved_arrays_without_mutation(tmp_p
     )
 
 
+def test_sampler_accepts_policy_conditioned_fields_from_later_iterations(tmp_path):
+    from jit_dvgc.tube_rsi import TubeRSIPool
+
+    artifact = _artifact(tmp_path)
+    entries = [dict(entry) for entry in artifact.entries]
+    upstream = next(row for row in entries if row["phase"] == "upstream")
+    upstream["value_model_target"] = "C_up^1"
+    upstream["continuation_label"] = 1
+    upstream["score_source"] = {
+        "kind": "policy_conditioned_continuation_field",
+        "field_name": "C_up^1",
+        "acceptance_threshold_exclusive": float(upstream["value_score"]) - 1.0e-6,
+        "selection_rule": "TRAIN_label_positive_and_score_strictly_greater_than_threshold",
+    }
+    later = SoftTubeArtifact(
+        artifact.root, artifact.manifest, tuple(entries), artifact.diagnostics
+    )
+    TubeRSIPool.from_artifact(later, compatibility=COMPATIBILITY)
+
+    upstream["value_model_target"] = "C_down^1"
+    upstream["score_source"] = {
+        **upstream["score_source"],
+        "field_name": "C_down^1",
+    }
+    invalid = SoftTubeArtifact(
+        artifact.root, artifact.manifest, tuple(entries), artifact.diagnostics
+    )
+    with pytest.raises(ValueError, match="cross-phase or invalid continuation field"):
+        TubeRSIPool.from_artifact(invalid, compatibility=COMPATIBILITY)
+
+
 @pytest.mark.parametrize(
     ("mutation", "message"),
     [
