@@ -62,8 +62,6 @@ Authoritative path:
 
 `JIT/runs/frozen_unified/pi_1_iter1_10009600_20260901/frozen_unified_policy.json`
 
-The existing production freeze path verified the exact final checkpoint and generated the immutable iteration-1 comparison authority with zero environment interactions and zero training transitions.
-
 - policy name: `pi_1`
 - policy role: `envelope_expansion_authority`
 - checkpoint payload SHA-256: `fb5c364057933d62c4e1b6ed49f3181cd36584c5b270f305eef18dff150e68e5`
@@ -72,31 +70,20 @@ The existing production freeze path verified the exact final checkpoint and gene
 - normalizer SHA-256: `94ed2587601dbe187774f664a741f427d943148a0c5391cdf57a45939c50a191`
 - freeze protocol SHA-256: `242301b29f3510895a0f13934deac44c1b38c976bb9a8c8385a85f621613a1ed`
 - freeze manifest file SHA-256: `9401240b8b9600669cb9ef5f9edca79f38bee4b0c138966e7288f148a8993942`
+- zero environment interactions and zero training transitions during freeze
 - `pi_unified_star` claim: false
 - JCE/JEL claim: false
 - certified-safe-Tube claim: false
-
-Freezing alone does not establish capability-envelope expansion.
 
 ## Preserved engineering-error attempts
 
 ### formal pi_1 attempt
 
-`pi_1_tube1_natural10_10009600_seed821101_20260901` remains preserved.
-It reached 1,024,000 training transitions and wrote that checkpoint. Its first
-TRAIN panel actually used 449 environment interactions, while terminal status
-recorded zero diagnostic interactions because plotting failed after rollout but
-before the callback returned. Do not rewrite the historical status file.
+`JIT/runs/pi_unified/pi_1_tube1_natural10_10009600_seed821101_20260901`
 
-The mixed-snapshot plotting defect was fixed and the formal training API now
-performs a static all-Tube plotting/snapshot preflight before environment
-construction, so the same class of error fails at zero interactions.
+This run remains immutable engineering-error provenance. It reached 1,024,000 PPO transitions and its first TRAIN-panel report proves 449 environment interactions, while the terminal status recorded zero diagnostic interactions because plotting failed after rollout but before callback accounting returned.
 
-For future newly-created failed unified formal runs, the canonical training
-wrapper also reconciles terminal diagnostic accounting from already-persisted
-`train_panels/*/report.json` files. This closes the exact failure mode that
-caused the historical 449-interaction undercount while leaving old artifacts
-immutable.
+The plotting defect was fixed. Future formal runs perform zero-interaction all-Tube plotting/snapshot preflight and reconcile failed-run diagnostic accounting from persisted TRAIN-panel reports.
 
 ### first paired pi_0 -> pi_1 gate attempt
 
@@ -104,122 +91,107 @@ Preserved path:
 
 `JIT/runs/pi_unified_gate/pi_0_to_pi_1_paired_core_boundary_20260901`
 
-The pre-run code/regression and scientific-bank checks passed before any gate
-claim was evaluated:
+Preflight was valid, but the real audit ended with a Warp/MJX CUDA OOM after 2,546 environment interactions. This attempt has no scientific gate result. The runner was changed to reuse one compiled `env.step` across all paired rollouts; the scientific protocol remained unchanged.
 
-- 26 targeted tests passed;
-- paired-gate config/protocol identity passed;
-- core bank: all 222 Tube_0 states;
-- boundary challenge bank: 56 frozen pi_0 continuation-negative TRAIN states,
-  26 upstream + 30 downstream;
-- boundary/Tube_1 state overlap: zero;
-- validation data used: false;
-- TEST data used: false;
-- training transitions: zero.
+## Completed paired pi_0 -> pi_1 scientific gate
 
-The real paired execution then terminated with an engineering CUDA/Warp OOM
-after 2,546 environment interactions. The terminal error was an allocation
-failure for 32,768 bytes inside the MJX/Warp collision path. This is not a
-scientific core-preservation or boundary-gain result.
-
-Root cause in the runner: `_rollout()` constructed a new `jax.jit(env.step)`
-wrapper for every state/policy rollout. The long paired audit therefore created
-unnecessary repeated JIT executable/cache pressure. The runner now creates one
-compiled `env.step` for the whole gate and passes that shared callable into every
-rollout. The scientific protocol, bank, policies, horizon, seeds, and gate rules
-are unchanged.
-
-The failed output directory must remain immutable. Administrative retry config:
-
-`JIT/configs/envelope_iter1_paired_policy_gate_retry01.json`
-
-It changes only the output directory to:
+Authoritative completed retry path:
 
 `JIT/runs/pi_unified_gate/pi_0_to_pi_1_paired_core_boundary_20260901_retry01`
 
-The scientific protocol SHA remains:
+Config:
+
+`JIT/configs/envelope_iter1_paired_policy_gate_retry01.json`
+
+Scientific protocol SHA-256:
 
 `24a126ee94472eebbcb59fff66618ae00dae41074a1d1cfee8bb816afaff410a`
 
-## Active scientific blocker: paired pi_0 -> pi_1 gate
+Artifact identities from the completed local audit:
 
-The generic machine-readable gate implementation and its pi_0 -> pi_1
-predeclaration exist:
+- summary file SHA-256: `cf63f59f4862c51351ceca80afa8796316592be515c28b572584e97e39d9f7fc`
+- bank file SHA-256: `97cb62727e12824abc2a5238e9187e47773c80b5f169f2f286c0f412a8e2a6bd`
+- records file SHA-256: `614d020198a38235f0a2bfddc6b087fdd5e3729c5fcff49f40c4fcf71683cae2`
+- status: completed
+- environment interactions: 23,695
+- training transitions: 0
+- expert switching: false
+- validation data used: false
+- TEST data used: false
+- final evaluation data used: false
 
-- implementation: `JIT/src/jit_dvgc/analysis/paired_policy_gate.py`
-- stable CLI surface: `JIT/cli/diagnose_unified.py --gate-config ...`
-- original config: `JIT/configs/envelope_iter1_paired_policy_gate.json`
-- engineering retry config: `JIT/configs/envelope_iter1_paired_policy_gate_retry01.json`
-- predeclared protocol SHA-256: `24a126ee94472eebbcb59fff66618ae00dae41074a1d1cfee8bb816afaff410a`
+### Core-preservation result — FAIL
 
-The locked method is:
+Locked bank: all 222 Tube_0 core states.
 
-1. core bank = all 222 Tube_0 source-core states;
-2. boundary bank = frozen pi_0 TRAIN continuation-negative frontier states only;
-3. reject boundary states already present in Tube_1;
-4. write/self-hash the bank before any policy rollout;
-5. evaluate frozen pi_0 and frozen pi_1 on the exact same state, horizon,
-   deterministic policy mode, continuation semantics, XML, and runtime;
-6. core preservation requires zero baseline-success -> candidate-failure
-   regressions and at least one baseline core success in each phase;
-7. boundary gain requires baseline-negative reproduction plus candidate success
-   in at least two distinct parent groups;
-8. both gates must pass before empirical pi_0 -> pi_1 envelope expansion can be
-   accepted.
+- pi_0 successes: 222 / 222
+- pi_1 successes: 201 / 222
+- baseline-success -> candidate-failure regressions: 21
+- improvements on core: 0
+- upstream regressions: 16 / 117
+- downstream regressions: 5 / 105
+- non-vacuous baseline coverage: true
+- core gate: **FAIL**
 
-No scientific gate result exists yet because the first real execution ended in
-an engineering OOM before the bank was completed. The next action is to validate
-the shared-step runner change and execute retry01 without modifying the locked
-scientific protocol.
+### Boundary-gain result — PASS
 
-## Scientific next step
+Locked challenge bank: 56 frozen pi_0 TRAIN continuation-negative frontier states, excluded from Tube_1.
 
-1. Sync and regression-test the shared-step paired-gate runner.
-2. Execute `envelope_iter1_paired_policy_gate_retry01.json`.
-3. If the retry produces another engineering error, preserve it and fix only the
-   engineering/runtime defect; do not change the gate protocol to obtain a PASS.
-4. If either scientific gate fails after a completed run, preserve the result
-   and stop; do not automatically tune thresholds, reward, PPO, or the audit
-   bank.
-5. If both gates pass, record empirical pi_0 -> pi_1 capability-envelope
-   expansion.
-6. Only after acceptance, collect pi_1-conditioned TRAIN evidence, fit/validate
-   `C_up^1/C_down^1`, construct core-retaining Tube_2, and train pi_2.
-7. Keep final TEST/JCE/JEL untouched throughout the iteration loop.
+- pi_0 reproduced all 56 failures; reproduction failures: 0
+- pi_1 successes: 12 / 56
+- successful pi_1 parent groups: 5
+- required parent groups: 2
+- upstream gains: 12 / 26
+- downstream gains: 0 / 30
+- boundary gate: **PASS**
+
+### Iteration decision
+
+- iteration accepted: **false**
+- empirical pi_0 -> pi_1 envelope expansion accepted: **false**
+
+This is a scientific rejection under the predeclared protocol, not an engineering error. Do not change the gate threshold, audit bank, reward, PPO settings, or acceptance rule after seeing this result in order to convert it to a PASS.
+
+The result demonstrates a real tradeoff: pi_1 acquired measurable new upstream frontier capability while losing previously established core capability. The current working hypothesis is catastrophic forgetting / insufficient retained-core replay under Tube_1 sampling, but that mechanism is not yet established and must be diagnosed from the frozen gate and Tube artifacts before changing the method.
+
+## Active scientific blocker: explain and repair core regression
+
+No C^1 / Tube_2 / pi_2 stage is authorized yet.
+
+Next steps are:
+
+1. preserve the completed paired-gate artifact unchanged;
+2. perform zero-interaction diagnosis on the 21 core regressions, including phase, candidate terminal outcome, parent/source provenance, and Tube_1 sampling mass;
+3. test whether retained Tube_0 core replay was materially diluted inside Tube_1, especially per phase;
+4. distinguish a sampling/curriculum failure from a deeper policy/runtime/phase failure;
+5. predeclare the method repair only after diagnosis;
+6. train a new candidate only under that new declared method; do not reinterpret the rejected pi_1 as accepted;
+7. repeat a newly predeclared comparable core/boundary gate for the repaired candidate;
+8. only after both gates pass may the next accepted policy generate C^1 and Tube_2 evidence.
+
+Final TEST/JCE/JEL remains untouched.
 
 ## Repository-maintenance state
 
 Completed maintenance:
 
-- package-root APIs for training, Tube, snapshots, acquisition, continuation,
-  analysis, and workflow
-- removed the redundant three-line facade layer
-- retired a first batch of completed iteration-0 upstream/downstream research
-  scaffolding and tests
-- removed obsolete `JIT/planning/` working notes from the active tree
-- added explicit resumable manifest-driven workflow orchestration
-- added `run_iteration_workflow.py` as the single workflow entry point
-- generalized Tube-RSI continuation-field acceptance from only `C^0` to phase-
-  consistent `C^k`
-- restored `upstream_boundary_lock.py` after dependency-closure verification
-  proved it is still required by the retained bootstrap loader path
-- added a mandatory compile/import/test deletion gate to agent instructions
-- refreshed root AGENTS/README/PROJECT/experiment-state/repository-layout docs
-  so context recovery starts from Tube_1/pi_1 rather than old Phase-U state
-- implemented a generic paired-policy iteration-selection gate without adding a
-  pi1-specific CLI
-- changed the paired gate to reuse one compiled `env.step` across all paired
-  rollouts rather than creating a new JIT wrapper per rollout.
+- stable package-root APIs for training, Tube, snapshots, acquisition, continuation, analysis, and workflow;
+- redundant three-line facade layer removed;
+- first batch of completed iteration-0 research scaffolding retired;
+- obsolete `JIT/planning/` working notes removed from the active tree;
+- resumable manifest-driven workflow infrastructure added;
+- `run_iteration_workflow.py` is the single workflow entry point;
+- Tube-RSI generalized from only `C^0` to phase-consistent `C^k`;
+- dependency-closure deletion rules added after cleanup regression;
+- root/current project documentation refreshed;
+- generic paired-policy iteration gate added through existing `diagnose_unified.py` CLI;
+- paired gate runner reuses one compiled `env.step` and completed the retry without OOM.
 
-Remaining migration debt before unattended pi_2+ iteration:
+Remaining migration debt before unattended later iterations:
 
-- `core_retaining_tube_iteration.py` still encodes Tube_1/iteration-0 constants;
-- shared continuation refit/fresh validation still depend on a few upstream-
-  specific evidence/CV helpers;
-- those contracts must be made iteration-generic without changing the already
-  completed Tube_1/pi_1 artifact identities;
-- the completed paired gate must be wired into the workflow after its real
-  retry is resolved.
+- `core_retaining_tube_iteration.py` still contains Tube_1 / iteration-0 constants;
+- shared continuation refit/fresh validation still depend on some upstream-specific evidence/CV helpers;
+- the workflow must be extended to stop on scientific gate failure and surface diagnosis rather than automatically continuing;
+- generic k -> k+1 Tube/continuation contracts must be completed before a future accepted policy can proceed to Tube_2+.
 
-Until those items are closed, workflow automation may sequence existing stages
-but must not be advertised as a complete unattended `k -> k+1` scientific loop.
+Do not spend effort on those later-iteration migrations in a way that bypasses the current core-regression blocker. Scientific diagnosis comes first.
