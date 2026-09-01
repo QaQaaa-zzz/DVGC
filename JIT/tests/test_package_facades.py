@@ -1,6 +1,9 @@
-"""Compatibility tests for the categorized JIT package API."""
+"""Compatibility tests for the categorized JIT package API and workflow."""
 
 from __future__ import annotations
+
+import json
+import sys
 
 
 def test_package_roots_preserve_legacy_authorities():
@@ -43,3 +46,50 @@ def test_formal_api_adds_zero_interaction_preflight_without_redefining_contract(
     assert training.load_unified_formal_config is legacy_formal.load_unified_formal_config
     assert training.run_unified_formal is not legacy_formal.run_unified_formal
     assert callable(training.preflight_unified_formal_tube)
+
+
+def test_workflow_is_plan_first_and_resumable(tmp_path):
+    from jit_dvgc.workflow import run_workflow
+
+    config_path = tmp_path / "workflow.json"
+    done = tmp_path / "done.txt"
+    state_dir = tmp_path / "state"
+    config = {
+        "schema": "jit_iteration_workflow_v1",
+        "workflow_name": "unit",
+        "state_dir": str(state_dir),
+        "variables": {"ROOT": str(tmp_path)},
+        "environment": {},
+        "stages": [
+            {
+                "name": "one",
+                "command": [
+                    sys.executable,
+                    "-c",
+                    "from pathlib import Path; Path('done.txt').write_text('ok', encoding='utf-8')",
+                ],
+                "cwd": "{ROOT}",
+                "requires": [],
+                "completion": {
+                    "path": "{ROOT}/done.txt",
+                    "kind": "file",
+                    "assertions": [],
+                    "exports": {},
+                },
+            }
+        ],
+    }
+    config_path.write_text(json.dumps(config), encoding="utf-8")
+
+    plan = run_workflow(config_path, execute=False)
+    assert plan["plan"][0]["status"] == "pending"
+    assert not done.exists()
+
+    first = run_workflow(config_path, execute=True)
+    assert first["status"] == "completed"
+    assert done.read_text(encoding="utf-8") == "ok"
+
+    second = run_workflow(config_path, execute=True)
+    assert second["status"] == "completed"
+    state = json.loads((state_dir / "state.json").read_text(encoding="utf-8"))
+    assert state["completed_stages"] == ["one"]

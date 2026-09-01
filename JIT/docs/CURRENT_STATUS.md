@@ -1,65 +1,99 @@
 # Current JIT status — 2026-09-01
 
-## pi_1 formal Tube_1 PPO completed
+## Completed scientific artifacts
 
-The authoritative local completed run is:
+### Tube_1
+
+Authoritative path:
+
+`JIT/runs/soft_tube/soft_tube_iter1_pi0_conditioned_20260901`
+
+- manifest SHA-256: `817a980a5dd84f36507f762a913c21c1fc0913580d925ff9c68e982edfd82a80`
+- entries SHA-256: `61c6796aaf4c4b1e43624c5cf06bce0d39736a6d1743c5142c6c250d23155ec9`
+- 222 retained Tube_0 core entries
+- 2,897 expansion entries: 310 upstream + 2,587 downstream
+- total 3,119 entries: 427 upstream + 2,692 downstream
+- no validation/TEST rows embedded
+- zero environment interactions and zero training transitions during construction
+- training guidance only; not a certified safe set
+
+### pi_1 formal Tube_1 PPO
+
+Completed run:
 
 `JIT/runs/pi_unified/pi_1_tube1_natural10_10009600_seed821101_20260901_retry01`
 
-It used `JIT/configs/pi_unified_iter1_tube1_natural10_retry01.json`, whose
-pre-run canonical config SHA-256 was
-`987ef5d31661482fd0bc05cea566c177d83ecd00ae3028ff0e8bb2ed462b7901`.
-The training support was Tube_1 manifest
-`817a980a5dd84f36507f762a913c21c1fc0913580d925ff9c68e982edfd82a80`
-with 3,119 entries (222 retained Tube_0 core + 2,897 policy-conditioned
-expansion states).
+Config:
 
-The operator-reported formal report completed exactly 10,009,600 requested
-training transitions and restored the final checkpoint successfully. Scheduled
-checkpoints were written at 0, 1,024,000, 2,508,800, 5,017,600, 7,500,800, and
-10,009,600 transitions. All five nonzero TRAIN-only milestone panels completed,
-using 2,838 diagnostic environment interactions in total. Brax evaluation was
-disabled. TEST data, validation data, and expert-policy switching were not used.
-The reset mixture remained 0.1 natural / 0.9 Soft Tube, matching pi_0.
+`JIT/configs/pi_unified_iter1_tube1_natural10_retry01.json`
 
-Final reported optimization metrics include KL mean 0.1033896953, policy loss
-0.02139844, value loss 4.9664841, total loss 4.99119, approximately 54,058
-training steps/s, and 220.824 s reported training walltime. These metrics are
-training diagnostics only; they do not establish capability-envelope gain.
+Pre-run canonical config SHA-256:
 
-## Preserved failed attempt
+`987ef5d31661482fd0bc05cea566c177d83ecd00ae3028ff0e8bb2ed462b7901`
 
-The first pi_1 attempt
-`pi_1_tube1_natural10_10009600_seed821101_20260901` remains a preserved
-`engineering_error` artifact. It reached 1,024,000 training transitions and
-wrote that checkpoint. Its first TRAIN panel actually consumed 449 environment
-interactions, but the terminal `status.json` recorded diagnostic interactions
-as zero because the failure happened after rollout, while loading mixed Tube
-snapshots for plotting, before the panel callback returned. Do not rewrite or
-delete that historical artifact.
+Formal result:
 
-The plotting path now supports both `handoff_snapshot_v1` and
-`jit_unified_envelope_snapshot_v1`, and the production formal-training namespace
-adds a zero-interaction static Tube preflight.
+- requested/completed training transitions: 10,009,600 / 10,009,600
+- checkpoints: 0, 1,024,000, 2,508,800, 5,017,600, 7,500,800, 10,009,600
+- all five nonzero TRAIN panels completed
+- TRAIN-panel interactions: 2,838
+- Brax evaluation transitions: 0
+- reset mixture: 0.1 natural / 0.9 Soft Tube
+- fresh actor/critic/optimizer initialization, seed 821101
+- expert switching: false
+- validation data: false
+- TEST data: false
+- final checkpoint restore: verified
 
-## Scientific claim boundary
+Final optimization metrics are diagnostics only; they are not capability gates.
 
-pi_1 training completion does **not** by itself prove an expanded jumping
-capability envelope. pi_1 is not `pi_unified_star`, Tube_1 is not a certified
-safe set, and final JCE/JEL is not authorized yet.
+## Preserved engineering-error attempt
 
-The next authorized sequence is:
+`pi_1_tube1_natural10_10009600_seed821101_20260901` remains preserved.
+It reached 1,024,000 training transitions and wrote that checkpoint. Its first
+TRAIN panel actually used 449 environment interactions, while terminal status
+recorded zero diagnostic interactions because plotting failed after rollout but
+before the callback returned. Do not rewrite the historical status file.
 
-1. freeze the exact completed pi_1 checkpoint as the iteration-1 envelope
-   authority;
-2. run the core-preservation gate;
-3. run the boundary-gain gate on disjoint TRAIN/iteration evidence;
-4. only if both gates pass, claim empirical envelope expansion and decide
-   whether another Tube/policy iteration is justified;
-5. keep untouched TEST/final JCE/JEL evidence isolated until a final frozen
-   policy is selected.
+The mixed-snapshot plotting defect was fixed and the formal training API now
+performs a static all-Tube plotting/snapshot preflight before environment
+construction, so the same class of error fails at zero interactions.
 
-This file records the operator-reported terminal result. Exact actor, critic,
-normalizer, checkpoint-payload, and freeze-manifest SHA-256 identities must be
-derived from the local completed checkpoint by `freeze_unified_policy.py`; they
-are not guessed here.
+## Active scientific next step
+
+1. Freeze the exact completed pi_1 final checkpoint as `pi_1` iteration authority.
+2. Run core-preservation gate against retained prior-core evidence.
+3. Run boundary-gain gate using new/disjoint TRAIN iteration evidence.
+4. Only if both pass, record empirical envelope expansion.
+5. Then collect/freeze pi_1-conditioned continuation evidence, fit/validate
+   `C_up^1/C_down^1`, construct core-retaining Tube_2, and train pi_2.
+6. Keep final TEST/JCE/JEL untouched throughout the iteration loop.
+
+## Repository-maintenance state
+
+The active tree is being converted from experiment-stage scripts into reusable
+iteration capabilities.
+
+Completed maintenance:
+
+- package-root APIs for training, Tube, snapshots, acquisition, continuation,
+  analysis, and workflow
+- removed the redundant three-line facade layer
+- retired a first batch of completed iteration-0 upstream/downstream research
+  scaffolding and tests
+- removed obsolete `JIT/planning/` working notes from the active tree
+- added explicit resumable manifest-driven workflow orchestration
+- added `run_iteration_workflow.py` as the single workflow entry point
+
+Remaining migration debt before unattended pi_2+ iteration:
+
+- `core_retaining_tube_iteration.py` still encodes Tube_1/iteration-0 constants
+- shared continuation refit/fresh validation still depend on a few upstream-
+  specific evidence/CV helpers
+- those contracts must be made iteration-generic without changing the already
+  completed Tube_1/pi_1 artifact identities
+- core-preservation and boundary-gain need stable machine-readable production
+  gates wired into the workflow
+
+Until those items are closed, workflow automation may sequence existing stages
+but must not be advertised as a complete unattended `k -> k+1` scientific loop.

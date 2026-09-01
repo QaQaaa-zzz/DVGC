@@ -1,352 +1,121 @@
-# JIT Phase U Verification
+# JIT verification — current production checks
 
-## Current verified Phase U run — 2026-08-27
+This page contains current verification only. Historical Phase-U v2/v3/v4
+instructions were removed from the active tree and remain available in Git
+history.
 
-The current run was verified with:
-
-```bash
-PYTHONPATH=JIT/src /home/qy/mujoco_playground/.venv/bin/python \
-  -m jit_dvgc.provenance verify-run \
-  JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826
-```
-
-The strict `verify-run` exits 0. Training completed exactly `9,977,856`
-transitions and checkpoint restoration is true. All eight held-out-seed
-natural-reset rollouts reach Apex, then later end at `pitch_limit`; mean
-post-Apex continuation is `182.125` environment transitions. The natural
-reset states are very similar, so these are not eight independent initial
-conditions.
-
-`transition_9977856` is the main `pi_up_candidate`, not final `pi_up_star`.
-Phase U training stops. The next step is freezing candidates and designing the
-handoff snapshot bank. Phase D, `pi_down`, continuation labels, `V_up`/`V_down`,
-learned soft Tubes, unified PPO, and final JCE/JEL remain unimplemented. This
-evidence does not support a trained final policy, safe Tube, JCE, or JEL claim.
-
-The following v4, v3, v2, and earlier sections are retained historical
-verification instructions and evidence.
-
-## Historical v4 pre-training verification — 2026-08-26
-
-The v4 contract fixes the v3 false failure diagnosis without changing XML
-physics: the observed `floor/rearwheel_collision` distance of approximately
-`-0.014175 m` is normal compliant wheel support and is now raw telemetry only.
-Prohibited body contact is retained as telemetry but no longer terminates or
-adds an illegal-contact reward penalty. Apex is a monotonic nonterminal event;
-the rollout continues to another retained terminal or the 400-tick horizon.
-
-Final representative evidence contains the complete video plus separately
-hashed pre/post-Apex NPZ segments. Formal training also persists raw JSONL
-callbacks and synchronized PNG/NPZ/JSON learning curves for episode reward,
-episode length, KL, PPO losses, policy standard deviation, and throughput.
-Completed-v4 provenance binds both Apex segments to the full trace and binds
-the plotted series to the raw callbacks.
-
-Startup inspection of the first v4 attempt exposed a wrapper defect before it
-could be accepted as a result: after the first 200-tick horizon, the default
-cached reset restored only data/observations and leaked JIT episode/event info,
-so subsequent logged episode lengths collapsed to one. That process was
-stopped, its run was closed as `aborted`, and its checkpoints are prohibited.
-The corrected training wrapper now requires a real reset and has a GPU
-regression proving a two-tick terminal is followed by a fresh nonterminal
-episode with event step one. `training_wrapper.full_reset=true` is part of the
-exact v4 config identity.
-
-The first full-reset retry then exposed a separate third-party reporting
-behavior: Playground replaced terminal `episode_done/episode_metrics` with the
-new reset's zero values. PPO state reset was correct, but episode curves could
-not be produced, so `_retry1` was also stopped and closed as `aborted` without
-checkpoint reuse. The final wrapper preserves those two logging fields across
-the reset boundary and re-exposes them to Brax while keeping all JIT state
-fresh. `preserve_episode_evidence=true` is independently config-bound and the
-GPU regression requires terminal length two followed by fresh length one.
-
-The retained v4 file is `JIT/configs/phase_u_continuation_10m.json`. It declared seed
-`820801`, held-out seeds `990001..990008`, and exactly 15,015,936 transitions:
-611 aligned blocks with checkpoints at 0, 737,280, 2,998,272, 7,495,680,
-11,993,088, and 15,015,936. It is identity-incompatible with every earlier v4
-checkpoint, declares `resume_semantics=fresh_only`, and rejects every restore
-option before backend, environment, checkpoint, or run-directory work.
-
-The retained v4 method identity fixed `naccdmax=512`, jump window
-`[2.5,3.9]`, height coefficient 40, desired speed 2 m/s, and airborne RSI
-probability 8%. It adds a jump-signaled low-height cost that is `-5` at 0.15 m
-and linearly reaches zero at 0.35 m; steering changes are softened with a
-1.0 action-difference and 0.25 magnitude cost; an immediate `vx <= 0.3 m/s`
-pre-height stuck terminal with `-100`; and a world-root-yaw limit of 45 degrees
-with `-100`. Roll/pitch termination costs `-400`, while terminating before ever
-seeing the jump zone costs `-200`; these task failures override the complete
-episode return to exactly `-100`. Stuck and yaw have distinct end codes and are
-not double-counted as generic physical failures. The stuck
-monitor disables after the retained 0.5 m height event, so post-Apex evidence
-continues normally.
-Completed-run provenance revalidates the raw resolved config instead of
-trusting its hash alone: evidence with a consistently recomputed config hash
-is still rejected if any of those values is changed back to 48, 3.1, 20, or
-5%, respectively.
-
-The revised source tree passed static compilation, 217 non-GPU tests, and 14
-GPU tests. Local preflight repeated those 217 + 14 tests, exited zero, and
-revalidated retained reference/provenance evidence. A fresh 24,576-step v4
-smoke then completed, restored its saved checkpoint for diagnostics, and
-passed strict provenance with 24,576 training plus 28 diagnostic transitions.
-The smoke launch log contained zero literal `CCD overflow` lines. The resolved
-v4 smoke/formal config hashes are
-`1d2c47784021100ba0ae5f1eed565a801dc0d6c1df94c63cdd9aa5156ae8061e` and
-`78829763173dad13baa9fb755b27d7bb442139a42579694a6758aeff245787d4`.
-
-The previously recorded repository-level failure is unchanged user work in
-`tests/test_phase_u_launch_diagnostic.py`: it passes `mode=` to the separately
-modified `dvgc/phase_u_launch_diagnostic.py`, whose current
-`frozen_manifest_payload` does not accept that argument. Neither file is part
-of this JIT change or commit.
-
-## Completed v3 formal contract — 2026-08-25
-
-The retained v3 source/config pair is `jit_phase_u_*_v3`. It changed only the joint
-target semantics and the approved PPO/training schedule: hip and knee both use
-keyframe-centered absolute targets; the formal run is a fresh 4,988,928-step
-run with seed 820201. Its manifest must have a null parent checkpoint,
-transition zero start, `fresh` resume semantics, and no restore argument.
-
-Natural held-out evaluation and forced-airborne RSI diagnostics are separate
-milestone panels. The provenance verifier independently checks both ledgers,
-all trace hashes, and both final MP4/PNG/NPZ groups. RSI results cannot be
-counted as natural-start success or promotion evidence.
-
-Fresh verification results and the v3 smoke identity are recorded below only
-after those commands finish successfully. Historical v1/v2 sections remain
-for auditability and do not authorize loading their checkpoints.
-
-The v3 formal run completed 4,988,928 training, 192 natural-evaluation, and 88
-forced-RSI diagnostic transitions. All five natural panels failed 8/8 with
-zero Apex; the final panel terminated on illegal wheel contact after two
-transitions per rollout. All five forced-RSI panels reached Apex 8/8, but RSI
-is diagnostic-only and cannot support promotion. Decision: `NO_PROMOTION`.
-
-Verified v3 identities and engineering smoke:
-
-| Evidence | Result |
-|---|---|
-| v3 smoke config SHA-256 | `5bc666658f335b0d394816d0d0b2ba117166c221682b9299dfa400e49302dd7e` |
-| v3 formal config SHA-256 | `58e0302c82de0e267f28679dbe680fb5ef4a1538ffbfcd6ac63904cf6c2bc210` |
-| Active fixed-rate smoke | 24,576 training + 43 diagnostic transitions |
-| Final checkpoint | restored; payload SHA-256 `b2af29d94bb53ee32f402dc17457bb3cfca1b1790ab04578af7f36c9d87ce1b4` |
-| Natural diagnostic | 44 states/frames; roll limit after 43 transitions |
-| Complete non-GPU suite | 151 passed, 8 GPU tests deselected |
-| Complete GPU suite | 8 passed |
-| `JIT/scripts/local_preflight.sh` | exit 0, including retained v1 verification |
-| v3 formal strict provenance | exit 0; 4,989,208 total interactions |
-| v3 final checkpoint | restored; payload SHA-256 `1125d9edbec3cd31ec08bbe5cf88777e84974044ba980e3531fdb938f34596fd` |
-
-The first fixed-rate block reported KL 341.1 because Brax updates the cold
-observation normalizer before its fixed-rate SGD/KL calculation; policy means
-and standard deviations remained bounded. Two additional isolated smokes
-tested adaptive-KL with eight and one data pass. Both postponed cold-start
-normalizer warm-up and exploded policy outputs/KL, so that experiment was
-rejected and removed from the active code/config. These three ignored smoke
-directories are engineering evidence only and are never checkpoint inputs.
-The final audit additionally proves v2 incremental semantics remain truthful,
-checkpoint sidecar identity is checked before pickle deserialization, natural
-v3 traces contain reset-source zero, and forced-RSI traces contain reset-source
-one. Final representative reports bind a legal seed and exact episode-NPZ
-path/hash; diagnostic NPZ arrays are compared to that episode trace, MP4 frame
-counts are decoded, PNG files are decoded, and MP4/PNG/NPZ types and distinct
-paths are enforced. Independent review found no remaining Critical or
-Important issue.
-
-The complete v3 result, PPO comparison, milestone tables, per-tick reward and
-action diagnosis, artifact hashes, limitations, and next-step decision are in
-`docs/experiments/phase_u_absolute_4988928_seed820201_20260825/REPORT.md`.
-
-## Historical v2 reward/RSI/diagnostics rebuild — 2026-08-25
-
-The historical v2 configuration is `jit_phase_u_*_v2`. That round changed reward,
-event, reset, observation, checkpoint, evaluation, video, and provenance
-contracts without starting PPO training or consuming training/evaluation
-transitions.
-
-Verified active identities:
-
-| Input | SHA-256 |
-|---|---|
-| v2 smoke resolved config | `6b0519344d8403d38556fb0a5fc4be8a6bd0cc70e0c077e4bca7f8a5c33fdc27` |
-| v2 formal resolved config | `df565a03c0c8f40531a5ac57bd6c2c2674d9249ca52c31df143484f4ad484112` |
-| authoritative XML | `0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a` |
-| reference CSV | `612fe758eb1042481b9c7642cc9b92d3e9c14b4a75c9deaf5340183c928bc41f` |
-
-Focused and complete evidence currently recorded:
-
-- reward/config and formal-method drift suites: 47 passed;
-- diagnostic/evaluation/video/formal/provenance focused suite: 33 passed;
-- complete non-GPU suite: 134 passed, 7 deselected;
-- complete GPU suite: 7 passed, 134 deselected;
-- `bash JIT/scripts/local_preflight.sh`: exit 0, including static compilation,
-  legacy-import scan, reference analysis, and retained v1 smoke verification;
-- retained formal v1 run verification: exit 0, 998,400 training plus 904 fixed
-  evaluation transitions, with all historical checkpoint/trace hashes intact.
-- complete repository compatibility: 1,100 passed, one exact pre-existing user
-  dirty-path test deselected, and one third-party deprecation warning.
-
-The GPU group verifies reproducible 5% mixture selection over 1,024 resets,
-exact RSI bounds, immediate reset-time jump signal, forced-natural evaluation,
-fixed `(76,)/(106,)` observation shapes, JIT pytree stability, and finite
-batched reset/steps. The diagnostic group verifies that one saved state becomes
-exactly one composite video frame and one numeric sample, while the renderer
-never calls `env.step`.
-
-v2 representative evidence is stricter than v1: the verifier requires the
-MP4, diagnostic PNG, aligned NPZ, matching paths, and SHA-256 hashes. v1
-verification remains supported only so old evidence is auditable. It does not
-make an old checkpoint compatible with the active v2 network/config identity.
-
-No result in this section is learnability or promotion evidence. The user has
-authorized one fresh 998,400-transition v2 formal run after source delivery;
-its natural-start panels and RSI training metrics must remain separate.
-
-## Historical v2 formal result
-
-Run `phase_u_v2_formal_998400_seed820101_20260825` completed and passed strict
-provenance verification:
-
-- 998,400 training + 1,160 fixed natural-evaluation transitions;
-- six checkpoint hashes and five eight-rollout panel ledgers closed;
-- final checkpoint restored; final MP4/PNG/NPZ hashes matched;
-- all five panels: 0 Apex, 0 height, 0 ascent, and 8/8 roll-limit failures;
-- final panel: 0/8 reached the jump zone and all failed after 22 ticks;
-- decision: `NO_PROMOTION`; no checkpoint is a trained Phase U expert.
-
-The final video has 23 frames at 50 fps and the aligned NPZ has 23 samples,
-77 numeric series, and no nonfinite value. See the complete analysis in
-`docs/experiments/phase_u_reward_rsi_diagnostics_v2_20260825/REPORT.md`.
-
-## Verified delivery
-
-The historical v1 independent `JIT/` Propulsion-Ascent engineering stack passed its declared
-first-delivery gate on 2026-08-24. This establishes environment, PPO update,
-checkpoint, accounting, and saved-video integrity only. It does not establish
-Phase U learnability or a trained expert.
-
-## Immutable inputs
-
-| Input | Verified SHA-256 |
-|---|---|
-| `assets/orange_bike_4kg_horizontal.xml` | `0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a` |
-| `data/reference_jump.csv` | `612fe758eb1042481b9c7642cc9b92d3e9c14b4a75c9deaf5340183c928bc41f` |
-| Resolved smoke config | `e96f4f4e35df041ffdf1525ee13fc356598917f5a600db15f9284c3e1d9ebed3` |
-
-Host model tests additionally verified the 2 kg payload, hip/knee force limits
-of `[-30, 30]`, action order `[steer, rear-wheel drive, hip, knee]`, and the
-in-memory `0.005 s` simulation timestep.
-
-## Fresh JIT preflight evidence
-
-Command:
+## 1. Repository/static preflight
 
 ```bash
-bash JIT/scripts/local_preflight.sh
+cd ~/DVGC
+export PYTHONPATH="$PWD/JIT/src"
+export PYTHONUNBUFFERED=1
+export XLA_PYTHON_CLIENT_PREALLOCATE=false
+export MUJOCO_GL=egl
+PY=/home/qy/mujoco_playground/.venv/bin/python
+
+$PY -m compileall -q JIT/src JIT/cli
+$PY -m pytest JIT/tests -q -m "not gpu"
 ```
 
-Result: exit code 0.
+Or use:
 
-- Static compilation and AST legacy-import scan passed.
-- Non-GPU suite: `66 passed, 5 deselected in 15.87s`.
-- GPU suite: `5 passed in 13.04s`.
-- GPU coverage includes JIT reset/step, 50 ticks = 1 second, 1,024-environment
-  finite rollout, outer wrapper-field preservation, and the real Brax wrapper
-  extra-field contract.
-- Offline reference analysis revalidated the retained CSV boundary.
-- Successful run provenance verification passed.
+```bash
+JIT/scripts/local_preflight.sh
+```
 
-No `jit_dvgc` runtime or CLI source imports the existing `dvgc` package.
+GPU tests are explicit:
 
-## Repository compatibility
+```bash
+JIT_RUN_GPU_TESTS=1 JIT/scripts/local_preflight.sh
+```
 
-The repository-level preflight collected all 1,031 tests after JIT added an
-isolated test-package boundary. Its complete run reported `1029 passed, 2
-failed`; one JIT subprocess-path test was then fixed and passed independently.
-The remaining failure is in the user's pre-existing modified
-`tests/test_phase_u_launch_diagnostic.py`, where `frozen_manifest_payload()` is
-called with an unsupported `mode=` argument. That JIT-external user work was
-not changed.
+Do not interpret an XLA autotuning warning or the existing
+`ccd_iterations=35` warning as the cause of a run failure unless it is actually
+in the exception path. Do not change physics/solver settings during a pi_k vs
+pi_(k+1) single-variable comparison merely to silence a warning.
 
-A fresh repository suite with only that specific known user failure deselected
-then reported `1030 passed, 1 deselected, 1 warning in 158.15s`. Thus JIT has
-no remaining observed repository regression, while the unmodified full root
-preflight is accurately recorded as not green because of the pre-existing
-dirty-path mismatch.
+## 2. Current pi_1 completion evidence
 
-## PPO engineering smoke
+Completed run:
 
-Successful run ID:
-`phase_u_1024_one_block_20260824_seed820001_retry2`.
+`JIT/runs/pi_unified/pi_1_tube1_natural10_10009600_seed821101_20260901_retry01`
 
-| Evidence | Result |
-|---|---|
-| JAX backend | GPU, NVIDIA GeForce RTX 4090 D |
-| Parallel environments | 1,024 |
-| Training transitions | exactly 25,600 |
-| Brax evaluation transitions | 0 |
-| Fixed evaluation transitions | 0 |
-| Restored-policy diagnostic transitions | 31 |
-| Total environment transitions | 25,631 |
-| Final checkpoint restored | yes |
-| Final checkpoint payload SHA-256 | `b4edf62e9b47b311df3893d6327f606320d755ae08a7e72c68995e9e6e10cb0d` |
-| Captured states | 32 |
-| Encoded video frames | 32 |
-| Diagnostic terminal cause | `roll_limit` |
+Required local checks before freezing:
 
-The restored-policy diagnostic reached the legal jump window but did not
-liftoff, become stably airborne, ascend, or satisfy Apex. It ended on the roll
-limit after 31 transitions; Apex success rate was 0 and physical failure rate
-was 1. The final training KL was approximately 436.49. These values are
-recorded as engineering diagnostics and are not promotion or learnability
-evidence.
+- `formal_report.json` status is `completed`
+- completed transitions = 10,009,600
+- checkpoint list ends at `transition_10009600`
+- all five TRAIN panels are present
+- train-panel interactions = 2,838
+- Brax evaluation transitions = 0
+- validation/TEST flags are false
+- expert switching is false
+- checkpoint restoration is true
 
-## Abnormal-attempt evidence
+The first failed pi_1 run is not a scientific checkpoint source and must not be
+used for warm-start. It remains an engineering-error provenance record.
 
-Two earlier run directories are retained and closed rather than overwritten:
+## 3. Formal-training plotting hardening
 
-1. The original run closed as `engineering_error` with 0 transitions after a
-   Brax scan detected that wrapper-added `info` fields were not preserved.
-2. `_retry1` closed as `engineering_error` with 0 transitions because Brax
-   timeout bootstrapping required an explicit `time_out` adapter.
+`jit_dvgc.training.run_unified_formal` performs a full configured-Tube static
+snapshot/plot-point preflight before constructing the training environment. It
+must report zero environment interactions and zero training transitions.
 
-Both causes received focused regression tests before `_retry2`. No physics,
-reward, observation, parallelism, or PPO-budget parameter was weakened for the
-successful retry.
+The mixed-snapshot regression must cover both `handoff_snapshot_v1` and
+`jit_unified_envelope_snapshot_v1`.
 
-## Artifact and claim boundary
+## 4. Freeze then capability gates
 
-Run manifests, statuses, metrics, checkpoints, diagnostic states, and video
-are under ignored `JIT/runs/` paths and are not Git delivery content. Rendering
-replayed the 32 saved states without calling `env.step`, so it consumed zero
-additional environment transitions and encoded no duplicated tail frames.
+The next legal scientific sequence is:
 
-This delivery does not implement or claim a frozen Phase U expert, Phase D,
-continuation labels, `V_up`/`V_down`, learned soft Tubes, unified Tube-RSI PPO,
-or independent JCE/JEL certification.
+```text
+completed pi_1 final checkpoint
+        ↓
+freeze exact pi_1 identity
+        ↓
+core-preservation gate
+        ↓
+boundary-gain gate
+        ↓
+PASS + PASS ? allow empirical envelope expansion : stop / diagnose
+```
 
-## Formal Phase U run
+Neither training reward nor a larger Tube substitutes for these gates.
 
-Formal run `phase_u_formal_998400_seed820101_20260824_retry1` completed after
-the engineering delivery above. Its strict verifier closed:
+## 5. Iteration automation verification
 
-- 998,400 exact training transitions;
-- 904 fixed-evaluation transitions and zero Brax-evaluation/diagnostic transitions;
-- six identity-bound checkpoint payload hashes;
-- five eight-label fixed panels and every trace hash;
-- final checkpoint restore and deterministic finite inference;
-- 22 saved/encoded frames for the final 21-transition representative trace.
+Plan a workflow without executing it:
 
-All five panels returned 0 Apex successes and 8 `roll_limit` physical failures.
-The final policy also regressed from reaching the window at 102,400/256,000 to
-failing before the window at later milestones. It is not a trained expert and
-must not be promoted. The complete modification rationale, PPO trends,
-milestone tables, limitations, action diagnosis, interaction cost, and next-step
-decision are in
-`experiments/phase_u_formal_998400_seed820101_20260824/REPORT.md`.
+```bash
+$PY JIT/cli/run_iteration_workflow.py --config <workflow.json>
+```
 
-The latest JIT preflight reported 106 non-GPU tests plus 5 GPU tests passing.
-The fresh repository compatibility run reported 1,070 passed and only the
-specific user-dirty relative-x manifest case deselected.
+Execute/resume only with an explicit flag:
+
+```bash
+$PY JIT/cli/run_iteration_workflow.py --config <workflow.json> --execute
+```
+
+For every stage, verify that:
+
+- the declared completion artifact exists
+- JSON assertions pass before the next stage starts
+- exported SHA/path values come from that artifact, not from handwritten shell
+  variables
+- an engineering/scientific failure stops the workflow at that stage
+- restarting with the unchanged workflow config revalidates completed artifacts
+  and resumes rather than overwriting them
+- the workflow contains no final TEST/JCE/JEL stage
+
+## 6. Claims that remain prohibited
+
+Until core-preservation and boundary-gain both pass for frozen pi_1, do not
+claim:
+
+- empirical capability-envelope expansion from pi_0 to pi_1
+- pi_1 as final unified policy
+- Tube_1 as a certified safe/viable set
+- JCE/JEL final performance
+
+TEST remains untouched until a final frozen policy is selected.

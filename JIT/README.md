@@ -1,354 +1,151 @@
-# JIT two-phase training stack
+# JIT — policy-conditioned Soft-Tube envelope iteration
 
-## Current two-phase status — 2026-08-28
+`JIT/` is the active implementation of a single unified jumping policy trained
+through iteratively expanded, TRAIN-only Soft-Tube reset support.
 
-The active chain is now:
-
-```text
-frozen pi_up / pi_down
-        -> frozen V_up / V_down
-        -> TRAIN-only learned Soft Tube
-        -> 50/50 phase-balanced Tube-RSI
-        -> one fresh pi_unified PPO
-```
-
-The learned Soft Tube is completed locally with 222 real TRAIN snapshots: 117
-upstream and 105 downstream. Its fixed sampling weight is
-`0.05 + 0.95 * value_score`; it used neither validation nor TEST data and is
-training guidance, not a certified safe Tube. The 16-interaction unified
-restore/step smoke is `GO` with 8 upstream and 8 downstream starts, no expert
-switching, and zero training transitions.
-
-The capacity-clean `pi_unified` pilot completed one fresh 25,600-transition
-Tube-RSI PPO block at
-`JIT/runs/pi_unified/pi_unified_pilot_25600_seed821001_ccd1024_20260828`.
-Its Actor, critic, and optimizer were fresh, no checkpoint was restored into
-training, the final checkpoint restored successfully, and all 25,600
-interactions were training interactions. The unified runtime used aggregate
-`naccdmax=1024`; the final log had zero CCD overflow warnings. This is not a
-trained-final-policy, learnability, safety, JCE, or JEL claim.
-
-The formal unified run is now active at
-`JIT/runs/pi_unified/pi_unified_formal_10009600_seed821101_20260828_retry1`
-with an
-exact target of 10,009,600 transitions (391 blocks of 25,600), seed 821101,
-1,024 parallel environments, and `naccdmax=1024`. Checkpoints are scheduled at
-0, 1,024,000, 2,508,800, 5,017,600, 7,500,800, and 10,009,600. Each nonzero
-milestone runs a fixed TRAIN-only 8-up/8-down diagnostic panel and saves an
-x-z visitation plot. Brax evaluation, validation data, TEST data, and expert
-switching are disabled; milestone panels are not final-policy evaluation.
-
-| Capability | Current status |
-| --- | --- |
-| `pi_up`, `pi_down` | frozen; not retrained by this stage |
-| `V_up`, `V_down` | frozen and identity-bound; not retrained by this stage |
-| learned Soft Tube | `GO`; TRAIN-only, 222 real snapshots, non-certified guidance |
-| Tube-RSI | `GO`; deterministic weighted phase-local sampling and 16-step smoke |
-| `pi_unified` | fresh 10,009,600-transition training active; transition 0 verified |
-| TEST / final JCE/JEL | untouched / not claimed |
-
-Relevant commands:
-
-```bash
-bash JIT/scripts/local_preflight.sh
-
-XLA_PYTHON_CLIENT_PREALLOCATE=false MUJOCO_GL=egl PYTHONPATH=JIT/src \
-  /home/qy/mujoco_playground/.venv/bin/python JIT/cli/train_unified.py \
-  --config JIT/configs/pi_unified_formal.json \
-  --run-id <unique-run-id>
-```
-
-The active persistent unit is
-`dvgc-jit-pi-unified-formal-10009600-retry1.service`. Inspect only declared
-milestones, completion, or abnormal exit.
-
-Everything below is retained historical Phase U/Plan B context and does not
-override this status.
-
-## Historical Plan B decision — 2026-08-27
-
-The latest verified run is:
+The method is:
 
 ```text
-JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826
+pi_up + pi_down
+      ↓
+bootstrap V_up / V_down
+      ↓
+Tube_0
+      ↓
+pi_0
+      ↓
+TRAIN boundary evidence → C_up^0 / C_down^0 → fresh validation
+      ↓
+core-retaining Tube_1
+      ↓
+pi_1
+      ↓
+core-preservation + boundary-gain gates
+      ↓
+C^1 → Tube_2 → pi_2 → ...
 ```
 
-Strict `verify-run` exits 0. Training completed exactly `9,977,856`
-transitions, and the checkpoint was restored successfully. All eight held-out-
-seed natural-reset rollouts reach Apex; they later end at `pitch_limit`. Mean
-post-Apex continuation is `182.125` environment transitions. These are not
-eight independent initial conditions: the natural reset states are very
-similar.
+A Soft Tube is training guidance, not a certified safe set. A Tube expansion is
+not a capability claim; capability expansion requires a newly trained policy to
+preserve the prior core and gain on the boundary.
 
-`transition_9977856` is the main `pi_up_candidate`, not final `pi_up_star`.
-Phase U training stops. The handoff snapshot bank is complete: 168 snapshots,
-24 parent trajectories, and three source checkpoints, split for train/eval by
-parent seed. The Phase D engineering stack is also complete: snapshot reset,
-actor-only initialization, the 25,600-transition smoke, and the 42-state fixed
-panel. The panel produced 32 successes, 10 `roll_limit` physical failures, and
-0 timeouts; all failures came from the 4,988,928 source bank.
+## Current state
 
-This was the status recorded before continuation labels, value models, the
-learned Soft Tube, and unified Tube-RSI were implemented.
+As of 2026-09-01:
 
-The execution guide is
-[`JIT/docs/plans/2026-08-27-jit-plan-b-execution-guide.md`](docs/plans/2026-08-27-jit-plan-b-execution-guide.md).
-Everything below is retained v4/v3/v2 history unless marked current; historical
-statements about handoff or Phase D do not override this status.
+- frozen `pi_up_star`: 9,977,856 transitions
+- frozen `pi_down_star`: 25,600 transitions
+- Tube_0: 222 TRAIN entries
+- frozen `pi_0`: completed 10,009,600-transition unified policy
+- frozen shared continuation architecture: `76 -> 8 tanh -> 1`, phase-specific
+  weights and phase-specific calibration
+- Tube_1: 3,119 TRAIN entries, including the exact 222-entry Tube_0 core and
+  2,897 expansion states
+- `pi_1` retry01: completed exactly 10,009,600 fresh PPO transitions with the
+  same 0.1 natural / 0.9 Tube reset mixture used by pi_0
+- final TEST/JCE/JEL: untouched
 
-## Current Plan B status
+The first pi_1 attempt is intentionally retained as an engineering-error run.
+The retry is the completed pi_1 training result. Training completion alone does
+not establish envelope expansion.
 
-| Capability | Verified status |
-| --- | --- |
-| Phase U | 9,977,856 transitions strictly verified; 8/8 held-out seeds reach Apex; `transition_9977856` is `pi_up_candidate` |
-| Handoff bank | 168 snapshots, 24 parents, 3 checkpoints; train/eval isolated by parent seed |
-| Phase D engineering | reset pool, actor-only init, 25,600 smoke, and 42-state fixed panel verified |
-| Phase D reward | stable code implemented; new-reward smoke/formal training not yet run |
-| Later stages at that time | labels, `V_up`/`V_down`, soft Tube, unified PPO, JCE/JEL were not implemented |
+The next stage is **freeze pi_1 -> core-preservation gate -> boundary-gain
+gate**. Only after both pass may the project claim empirical envelope gain and
+advance to the next continuation/Tube iteration.
 
-Next: run a new 25,600-transition smoke with the new reward, then repeat the
-42-state panel. Only after no regression should approximately 10.24M Phase D
-training begin.
+## Repository layout
 
-### GitHub stage snapshot
+```text
+JIT/
+├── cli/                  thin executable entry points
+├── configs/              immutable run/protocol declarations
+├── docs/                 current method, status, organization, verification
+├── handoff/              path-bound locked provenance; do not casually move
+├── runs/                 ignored runtime evidence/artifacts
+├── scripts/              repository verification/preflight helpers
+├── src/jit_dvgc/
+│   ├── acquisition/      stable boundary/transition-band API
+│   ├── analysis/         bounded TRAIN diagnostics API
+│   ├── continuation/     continuation-label/field API
+│   ├── snapshots/        snapshot API
+│   ├── training/         unified training/freeze API
+│   ├── tube/             Tube/Tube-RSI API
+│   └── workflow/         resumable iteration orchestration
+└── tests/                active regression/contract tests
+```
 
-The GitHub stage snapshot includes the verified Phase U run directory with its
-configuration, manifests, checkpoints, evaluation traces, summaries, training
-curves, and representative video. This is enough for the repository's strict
-`verify-run` check. Unrelated failed runs, launcher PID/log files, handoff-bank
-snapshot payloads, and Phase D trace payloads remain local instead of being
-copied into Git.
+The package directories expose stable APIs from their `__init__.py`; we do not
+create a three-line facade file for every historical flat module. A small number
+of flat legacy modules remain while active loaders/builders still depend on
+them. They are migration debt, not a pattern for new code.
 
-## Historical v4 Apex-continuation run contract
+## Maintenance policy
 
-`phase_u_continuation_10m.json` was the retained fresh-training contract. Ordinary
-front/rear wheel contact with the terrain is support telemetry. Prohibited
-chassis/body contact is also telemetry only: it neither terminates nor adds an
-illegal-contact reward penalty. Roll, pitch, backward motion, and numerical
-failure remain physical terminals. Two task
-failures prevent the policy from exploiting the approach: while the jump
-signal is active and the 0.5 m height event has not occurred, forward speed at
-or below 0.3 m/s is immediately `stuck`; the active jump window ends at 3.9 m;
-world-frame root yaw beyond 45 degrees is
-`yaw_limit`. Each has its own `-100` reward component and end code and is not
-double-counted as a generic physical failure. On either terminal, the final
-step reward offsets the reward already accumulated so the complete episode
-return is exactly `-100`. The yaw comes from the root free-joint quaternion,
-not the steering joint. The first Apex event still pays its one-time configured
-bonus, but it no longer ends the episode; simulation continues until a retained
-terminal or the exact 400-control-tick horizon (8 seconds).
+- Modify/consolidate existing code before adding files.
+- Do not create `pi2_*.py`, `tube2_*.py`, retry-specific production modules, or
+  version-suffixed source trees.
+- Completed stage-specific research scaffolding is removed from the active tree
+  once superseded and unreferenced; Git history preserves it.
+- Configs/frozen manifests/handoff paths that are part of artifact identity stay
+  in place even when their producing research script has been retired.
+- CLI files stay thin. Scientific/runtime logic belongs in `src`.
 
-The v4 airborne RSI is a low-height bridge rather than an already-completed
-jump: root height is sampled from `[0.38, 0.45] m` with upward velocity
-`[3.0, 3.6] m/s`. Steering adds `-2.0 * (steer_t-steer_(t-1))^2` and
-`-0.5 * |steer_t|^1.5`; rear-wheel drive adds
-`-2.0 * (drive_t-drive_(t-1))^2` on top of the retained all-action costs. A
-full-scale steering or rear-wheel reversal therefore costs about `-8`, while
-small corrections remain available.
+See `JIT/AGENTS.md` for the enforced maintenance rules.
 
-While the current one-shot jump signal is active below 0.35 m, v4 adds a dense
-low-height cost. It is `-8` at and below 0.15 m, decreases linearly to zero at
-0.35 m, and is zero whenever the jump signal is off. This makes remaining low
-in the 3.9 m jump window worse than the retained survival/posture reward.
+## Verification
 
-Training uses full environment resets after every completed episode. This is a
-required runtime contract, not an optimization option: cached data/observation-
-only resets would leak `episode_step`, event, timeout, and RSI state into the
-next episode. The v4 config hash explicitly binds `full_reset=true`, making the
-aborted pre-fix checkpoint incompatible with the corrected run. It also binds
-`preserve_episode_evidence=true`: terminal `episode_done` and accumulated
-episode metrics cross the reset boundary solely for Brax logging, while JIT
-physics/event state comes from the fresh reset.
-
-Final natural and forced-RSI representatives encode the complete episode in
-MP4/PNG/NPZ. They additionally save independently hashed
-`representative_pre_apex.npz` and `representative_post_apex.npz` files with the
-first Apex state shared as the segment boundary. A no-Apex rollout has a full
-pre-Apex file and an empty, shape-valid post-Apex file.
-
-Formal v4 training writes raw block PPO metrics and rolling last-100 completed-
-episode means, then produces synchronized `training_curves.png`,
-`training_curves.npz`, and `training_curves.json`. The curves include mean
-episode reward/length, airborne-RSI fraction, KL, policy/value/total loss,
-policy distribution standard deviation, and steps per second.
-
-## Historical v4 one-shot post-run analysis watcher
-
-After launching one declared training run, start its independent local watcher
-with the same exact run directory, PID file, and launch log:
+Use the repository environment only:
 
 ```bash
-setsid nohup /home/qy/mujoco_playground/.venv/bin/python \
-  JIT/cli/watch_training_and_analyze.py \
-  --run-dir JIT/runs/phase_u/<run-id> \
-  --pid-file JIT/runs/phase_u/<run-id>.pid \
-  --launch-log JIT/runs/phase_u/<run-id>.launch.log \
-  --poll-seconds 30 \
-  > JIT/runs/phase_u/<run-id>.watcher.log 2>&1 < /dev/null &
+cd ~/DVGC
+export PYTHONPATH="$PWD/JIT/src"
+PY=/home/qy/mujoco_playground/.venv/bin/python
+
+$PY -m compileall -q JIT/src JIT/cli
+$PY -m pytest JIT/tests -q -m "not gpu"
 ```
 
-The watcher only reads local process/status files while the run is active. A
-missing or dead training PID does not authorize analysis: the watcher waits
-until `status.json` says `completed`, `engineering_error`, or `aborted`. It then
-atomically creates `codex_analysis.started.json` and makes at most one
-ephemeral `codex exec` call using `gpt-5.6-luna` with an explicit read-only
-sandbox. Restarts never
-repeat that call, including after a failed attempt.
-
-When Codex produces a final message, the CLI writes it to `AUTO_ANALYSIS.md` in
-the ignored run directory. Whether the attempt succeeds, fails, or times out,
-captured stdout/stderr and the return code remain there as `codex_exec.log` and
-`codex_analysis.completed.json`. For a completed training run, the analysis
-prompt also requires strict `verify-run` provenance checking before
-interpreting the natural-start and airborne-RSI evidence panels.
-
-The retained v4 target was 15,015,936 transitions (611 blocks), under the fresh seed
-namespace `820801` with frozen held-out seeds `990001..990008`.
-The first run must have a null parent checkpoint, start at transition zero, and
-omit `--restore-checkpoint`.
-
-## Historical v3 absolute-joint 5M experiment
-
-The completed experiment used `phase_u_absolute_5m.json` and started from newly
-initialized PPO parameters. It never restored a v1/v2 checkpoint. Hip and knee
-share one keyframe-centered absolute-target rule: action zero commands the
-XML keyframe angle, while negative/positive actions interpolate to that joint's
-lower/upper limit. Consequently hip maps `[-1, 0, 1]` to
-`[-1.3, -1.2, 0.5]` radians and knee maps it to `[-1.5, 2.5, 2.5]` radians.
-Steering and rear-wheel mappings are unchanged.
-
-The exact target is 4,988,928 transitions: 203 aligned PPO blocks with 384
-parallel environments, 64-step unrolls, 16 chunks per minibatch, 24
-minibatches, and 8 optimizer passes. The fixed learning rate is `1e-4`;
-entropy is `0.01`; gamma/GAE/clip/max-gradient are `0.99/0.95/0.2/0.5`.
-The first-block KL includes observation-normalizer warm-up and is not treated
-as a pure policy-shift metric; later blocks use an established normalizer.
-
-At each declared milestone, natural-reset held-out evaluation and forced
-airborne-RSI diagnostics are stored separately. Only natural-reset panels can
-support promotion. Both routes save complete NPZ traces; their final
-representatives also save MP4 and aligned reward/state PNG diagnostics. RSI
-interactions are recorded only in the diagnostic ledger.
-
-The retained launch command had deliberately no `--restore-checkpoint`:
+For the curated repository preflight:
 
 ```bash
-nohup setsid env XLA_PYTHON_CLIENT_PREALLOCATE=false MUJOCO_GL=egl \
-  PYTHONUNBUFFERED=1 PYTHONPATH=JIT/src \
-  /home/qy/mujoco_playground/.venv/bin/python JIT/cli/train_phase_expert.py \
-  --phase propulsion_ascent \
-  --config JIT/configs/phase_u_absolute_5m.json \
-  --run-id phase_u_absolute_4988928_seed820201_20260825 \
-  --formal \
-  > JIT/runs/phase_u/phase_u_absolute_4988928_seed820201_20260825.launch.log 2>&1 \
-  < /dev/null &
+JIT/scripts/local_preflight.sh
 ```
 
-The run completed 4,988,928 training transitions and passed strict provenance,
-but it is `NO_PROMOTION`. Every natural-start panel had 0/8 Apex and 8/8
-physical failures; the final policy caused illegal wheel contact after two
-control steps. Every forced-airborne RSI panel had 8/8 Apex, but those resets
-already supplied height and upward velocity and do not count as natural jump
-success. Do not resume or promote the final checkpoint. See the complete
-analysis in
-`docs/experiments/phase_u_absolute_4988928_seed820201_20260825/REPORT.md`.
-
-Everything below documents retained v1/v2 behavior and historical evidence;
-those checkpoints are audit artifacts, not inputs to the active v3 run.
-
-`JIT` is an independent implementation of the first Propulsion-Ascent
-engineering delivery described in the repository rebuild guide. It does not
-import the existing `dvgc` package and does not copy the authoritative XML.
-
-The retained v2 scope introduced the target-free reference reward, a one-shot
-root-x jump signal, 5% bounded airborne RSI for training resets, natural-only
-held-out evaluation, height/descent Apex termination, and synchronized
-numeric/PNG/video diagnostics. It also retains environment/runtime integrity,
-the aligned 25,600-transition PPO engineering-smoke entrypoint, and an
-auditable formal-only Phase U runner. It does not implement Phase D, continuation labels,
-`V_up`/`V_down`, learned soft Tubes, unified PPO, or JCE/JEL certification.
-
-The v2 Actor input is `3 x 25 + 1 = 76`: three real sensor-history frames plus
-one current `jump_signal`. The critic receives that complete 76-value input
-plus 30 privileged values, for 106 total. The signal is therefore available to
-both networks and is not repeated in the history. v1 checkpoints (`81/114`)
-are deliberately incompatible and must not be resumed into v2.
-
-One fresh v2 formal run completed on 2026-08-25 with 998,400 training
-transitions. All five frozen natural-reset panels had zero Apex/height/ascent
-events and 100% roll-limit failures, so the result is `NO_PROMOTION` and no
-checkpoint is a trained expert. The retained 2026-08-24 smoke/formal artifacts
-remain historical v1 evidence only.
-
-The full v2 experiment analysis is in
-`docs/experiments/phase_u_reward_rsi_diagnostics_v2_20260825/REPORT.md`. The
-ignored final evidence is under
-`JIT/runs/phase_u/phase_u_v2_formal_998400_seed820101_20260825/`; do not reuse
-that run ID or extend its final checkpoint.
-
-Use the retained interpreter directly:
+GPU regression is explicit:
 
 ```bash
-PYTHONPATH=JIT/src /home/qy/mujoco_playground/.venv/bin/python -m pytest JIT/tests -q
+JIT_RUN_GPU_TESTS=1 JIT/scripts/local_preflight.sh
 ```
 
-Generated run evidence belongs under `JIT/runs/` and is ignored by Git.
-Every new representative v2 video also produces a full-trajectory diagnostic
-PNG, an aligned compressed NPZ, and SHA-256 fields in its JSON report.
+## Iteration workflow
 
-Run the complete local verification without launching training:
+`jit_dvgc.workflow` sequences production CLIs and verifies machine-readable
+artifacts. It is deliberately scientifically ignorant: it does not invent
+thresholds or decide that a failed gate should pass.
+
+Plan only:
 
 ```bash
-bash JIT/scripts/local_preflight.sh
+$PY JIT/cli/run_iteration_workflow.py --config <workflow.json>
 ```
 
-The explicitly bounded smoke command remains available:
+Explicit execution/resume:
 
 ```bash
-XLA_PYTHON_CLIENT_PREALLOCATE=false PYTHONPATH=JIT/src \
-  /home/qy/mujoco_playground/.venv/bin/python JIT/cli/train_phase_expert.py \
-  --phase propulsion_ascent \
-  --config JIT/configs/phase_u_smoke.json \
-  --run-id <unique-run-id> \
-  --smoke
+$PY JIT/cli/run_iteration_workflow.py --config <workflow.json> --execute
 ```
 
-## Historical formal Phase U training
+The same workflow state is resumable after an engineering failure, provided the
+workflow config SHA is unchanged and completed artifacts still validate.
 
-Formal mode is exactly 39 aligned blocks, or 998,400 training transitions,
-with seed `820101`. Identity-bound checkpoints are written at transitions 0,
-102,400, 256,000, 512,000, 742,400, and 998,400. The five nonzero milestones
-each run deterministic evaluation on held-out seeds 920001 through 920008.
-Brax evaluation is disabled and fixed evaluation is accounted separately.
+The orchestration engine exists now, but the iteration-0-specific continuation
+and Tube construction contracts are still being generalized before unattended
+`pi_1 -> Tube_2 -> pi_2` execution is enabled. Do not mistake orchestration
+infrastructure for completed scientific generalization.
 
-Source verification, a focused JIT-only commit, and its GitHub push are hard
-predecessors of this persistent launch:
+## Historical material
 
-```bash
-mkdir -p JIT/runs/phase_u
-nohup setsid env XLA_PYTHON_CLIENT_PREALLOCATE=false MUJOCO_GL=egl \
-  PYTHONUNBUFFERED=1 PYTHONPATH=JIT/src \
-  /home/qy/mujoco_playground/.venv/bin/python JIT/cli/train_phase_expert.py \
-  --phase propulsion_ascent \
-  --config JIT/configs/phase_u_formal.json \
-  --run-id phase_u_formal_998400_seed820101_20260824_retry1 \
-  --formal \
-  > JIT/runs/phase_u/phase_u_formal_998400_seed820101_20260824_retry1.launch.log 2>&1 \
-  < /dev/null &
-JIT_FORMAL_PID=$!
-printf '%s\n' "${JIT_FORMAL_PID}" \
-  > JIT/runs/phase_u/phase_u_formal_998400_seed820101_20260824_retry1.pid
-```
-
-Inspect startup once, then only the declared milestones, completion, or an
-abnormal exit. A high but finite KL is evidence to inspect, not permission to
-change rewards or PPO hyperparameters during the run.
-
-If an abnormal exit requires recovery, `--restore-checkpoint PATH` starts a
-new run segment from the saved observation normalizer, Actor, and critic.
-Brax resets optimizer state and PPO RNG, so this is explicitly a parameter
-warm start and never a bit-exact continuation.
-
-Finishing the transition budget does not by itself establish a trained expert.
-Promotion requires multiple legal, low-rotation Apex successes across the
-frozen held-out seeds. It never establishes a safe Tube, JCE, or JEL.
+Old Phase-U plans, one-off CV/refinement scripts, and superseded research
+scaffolding are intentionally not kept in the active tree. They remain available
+through Git history. Path-bound frozen artifacts/configs/handoff records are not
+removed merely to make the repository look smaller.

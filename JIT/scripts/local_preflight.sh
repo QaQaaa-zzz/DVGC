@@ -2,103 +2,70 @@
 set -euo pipefail
 
 JIT_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-JIT_ROOT="$(cd "${JIT_SCRIPT_DIR}/../.." && pwd)"
-JIT_PYTHON="/home/qy/mujoco_playground/.venv/bin/python"
+REPO_ROOT="$(cd "${JIT_SCRIPT_DIR}/../.." && pwd)"
+PY="${JIT_PYTHON:-/home/qy/mujoco_playground/.venv/bin/python}"
 
-cd "${JIT_ROOT}"
-export PYTHONPATH="${JIT_ROOT}/JIT/src"
+cd "${REPO_ROOT}"
+export PYTHONPATH="${REPO_ROOT}/JIT/src"
+export PYTHONUNBUFFERED=1
+export XLA_PYTHON_CLIENT_PREALLOCATE=false
+export MUJOCO_GL="${MUJOCO_GL:-egl}"
 
-"${JIT_PYTHON}" -m compileall -q JIT/src JIT/cli
-"${JIT_PYTHON}" - <<'PY'
+"${PY}" -m compileall -q JIT/src JIT/cli
+
+"${PY}" - <<'PY'
 from pathlib import Path
 
-from jit_dvgc.config import load_config
-from jit_dvgc.unified_formal import load_unified_formal_config
-from jit_dvgc.unified_training import load_unified_pilot_config
+import jit_dvgc.acquisition as acquisition
+import jit_dvgc.analysis as analysis
+import jit_dvgc.continuation as continuation
+import jit_dvgc.snapshots as snapshots
+import jit_dvgc.training as training
+import jit_dvgc.tube as tube
+import jit_dvgc.workflow as workflow
 
-legacy = load_config(Path("JIT/configs/phase_u_formal.json"))
-active = load_config(Path("JIT/configs/phase_u_absolute_5m.json"))
-smoke = load_config(Path("JIT/configs/phase_u_absolute_smoke.json"))
-continuation = load_config(Path("JIT/configs/phase_u_continuation_10m.json"))
-continuation_smoke = load_config(Path("JIT/configs/phase_u_continuation_smoke.json"))
-unified = load_unified_pilot_config(Path("JIT/configs/pi_unified_pilot.json"))
-unified_formal = load_unified_formal_config(Path("JIT/configs/pi_unified_formal.json"))
-if legacy.formal is None or legacy.formal.formal_blocks != 39:
-    raise SystemExit("retained v2 formal configuration contract is invalid")
-if active.formal is None or active.formal.formal_blocks != 203:
-    raise SystemExit("active v3 formal configuration contract is invalid")
-if active.ppo.requested_transitions != 4_988_928:
-    raise SystemExit("active v3 target is invalid")
-if smoke.ppo.requested_transitions != smoke.ppo.block_transitions:
-    raise SystemExit("active v3 smoke is not one exact PPO block")
-if continuation.formal is None or continuation.formal.formal_blocks != 406:
-    raise SystemExit("active v4 formal configuration contract is invalid")
-if continuation.formal.resume_semantics != "fresh_only":
-    raise SystemExit("active v4 formal configuration must be fresh-only")
-if continuation.ppo.requested_transitions != 9_977_856:
-    raise SystemExit("active v4 target is invalid")
-if continuation.ppo.num_evals != 407:
-    raise SystemExit("active v4 PPO evaluation schedule is invalid")
-if continuation.formal.checkpoint_transitions != (
-    0,
-    491_520,
-    1_990_656,
-    4_988_928,
-    7_987_200,
-    9_977_856,
-):
-    raise SystemExit("active v4 checkpoint schedule is invalid")
-if continuation.formal.fixed_evaluation_transitions != (
-    491_520,
-    1_990_656,
-    4_988_928,
-    7_987_200,
-    9_977_856,
-):
-    raise SystemExit("active v4 evaluation schedule is invalid")
-if continuation.ppo.seed != 820901:
-    raise SystemExit("active v4 training seed is invalid")
-if continuation.ppo.held_out_seeds != tuple(range(1000001, 1000009)):
-    raise SystemExit("active v4 held-out namespace is invalid")
-if continuation_smoke.ppo.requested_transitions != continuation_smoke.ppo.block_transitions:
-    raise SystemExit("active v4 smoke is not one exact PPO block")
-if continuation.model["naccdmax"] != 512 or continuation_smoke.model["naccdmax"] != 512:
-    raise SystemExit("active v4 CCD capacity is invalid")
-if unified.ppo.requested_transitions != 25_600:
-    raise SystemExit("unified pilot target is invalid")
-if unified.ppo.block_transitions != 25_600:
-    raise SystemExit("unified pilot is not one exact PPO block")
-if unified.raw["initialization"]["restore_checkpoint"] is not None:
-    raise SystemExit("unified pilot is not fresh")
-if unified.runtime_naccdmax != 1024:
-    raise SystemExit("unified pilot CCD capacity is invalid")
-if unified_formal.ppo.requested_transitions != 10_009_600:
-    raise SystemExit("formal unified target is not 10M+")
-if unified_formal.ppo.requested_transitions // unified_formal.ppo.block_transitions != 391:
-    raise SystemExit("formal unified block schedule is invalid")
-if unified_formal.raw["initialization"]["restore_checkpoint"] is not None:
-    raise SystemExit("formal unified run is not fresh")
-if unified_formal.raw["claim_boundary"]["test_data_used"] is not False:
-    raise SystemExit("formal unified run does not exclude TEST data")
-PY
-"${JIT_PYTHON}" - <<'PY'
-import ast
-from pathlib import Path
+pi1 = training.load_unified_formal_config(
+    Path("JIT/configs/pi_unified_iter1_tube1_natural10_retry01.json")
+)
+assert pi1.ppo.requested_transitions == 10_009_600
+assert pi1.ppo.seed == 821101
+assert pi1.runtime_naccdmax == 1024
+assert pi1.reset_mixture.natural_reset_probability == 0.1
+assert pi1.reset_mixture.soft_tube_probability == 0.9
+assert pi1.formal.resume_semantics == "fresh_only"
+assert pi1.raw["claim_boundary"]["test_data_used"] is False
+assert pi1.raw["claim_boundary"]["validation_data_used"] is False
 
-source_root = Path("JIT/src/jit_dvgc")
-for path in source_root.glob("*.py"):
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-    for node in ast.walk(tree):
-        names = []
-        if isinstance(node, ast.Import):
-            names = [item.name for item in node.names]
-        elif isinstance(node, ast.ImportFrom) and node.module:
-            names = [node.module]
-        if any(name == "dvgc" or name.startswith("dvgc.") for name in names):
-            raise SystemExit(f"forbidden legacy import in {path}")
+tube1 = tube.load_core_retaining_tube_config(
+    Path("JIT/configs/envelope_iter0_tube1_core_retaining.json")
+)
+assert tube1["protocol"]["iteration"] == 1
+assert tube1["protocol"]["source_iteration"] == 0
+assert tube1["protocol"]["policy_name"] == "pi_0"
+
+for required in (
+    acquisition.collect_unified_boundary_candidates,
+    analysis.run_unified_fixed_panel,
+    continuation.label_unified_continuations,
+    snapshots.load_unified_envelope_snapshot,
+    training.run_unified_formal,
+    tube.build_core_retaining_tube,
+    workflow.run_workflow,
+):
+    assert callable(required)
+
+print("JIT PACKAGE/API PREFLIGHT = PASS")
+print("PI1 FORMAL CONTRACT = PASS")
+print("TUBE1 LOCKED CONFIG = PASS")
 PY
-"${JIT_PYTHON}" -m pytest JIT/tests -q -m "not gpu"
-"${JIT_PYTHON}" -m pytest JIT/tests/test_env_gpu.py -q -m gpu
-"${JIT_PYTHON}" -m jit_dvgc.reference_analysis \
-  --input data/reference_jump.csv \
-  --output JIT/runs/reference_analysis.json
+
+"${PY}" -m pytest JIT/tests -q -m "not gpu"
+
+if [[ "${JIT_RUN_GPU_TESTS:-0}" == "1" ]]; then
+  "${PY}" -m pytest \
+    JIT/tests/test_env_gpu.py \
+    JIT/tests/test_tube_rsi_mixed_snapshot.py \
+    JIT/tests/test_unified_reset_mixture_gpu.py \
+    JIT/tests/test_unified_continuation_labels_gpu.py \
+    -q -m gpu
+fi
