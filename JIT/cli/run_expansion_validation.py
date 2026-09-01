@@ -41,6 +41,13 @@ def _write_machine_json(path: Path | None, payload: Mapping[str, Any]) -> None:
     )
 
 
+def _read_json_object(path: Path) -> dict[str, Any]:
+    payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError(f"JSON object required: {path}")
+    return payload
+
+
 def _audit_fresh_anchor_independence_declared(
     protocol: Mapping[str, Any],
     *,
@@ -49,10 +56,10 @@ def _audit_fresh_anchor_independence_declared(
     """Apply exactly the predeclared source-anchor independence contract.
 
     Fresh anchors must be group/state/observation-disjoint from TRAIN and from
-    the already-consumed validation identity catalog.  Within the new fresh
+    the already-consumed validation identity catalog. Within the new fresh
     bank, the locked protocol rejects repeated *physical states* only; it does
     not declare near-equal actor observations from distinct fresh parents as an
-    exclusion criterion.  Such within-bank observation proximity is therefore
+    exclusion criterion. Such within-bank observation proximity is therefore
     recorded diagnostically, never used for seed replacement or outcome-aware
     selection.
     """
@@ -139,51 +146,209 @@ def _audit_fresh_anchor_independence_declared(
     }
 
 
+def _apply_consumed_identity_exclusions(
+    catalog: dict[str, Any],
+    audit: Mapping[str, Any],
+    *,
+    output: Path,
+) -> dict[str, Any]:
+    """Apply the locked consumed-bank overlap exclusions without replacement."""
+
+    entries = catalog.get("entries")
+    if not isinstance(entries, list):
+        raise ValueError("fresh candidate catalog entries missing")
+    if len(entries) != int(catalog.get("candidate_count", -1)):
+        raise ValueError("fresh candidate catalog count drift before identity filtering")
+
+    exact = {str(value) for value in audit.get("exact_overlap_candidate_ids", [])}
+    near = {str(value) for value in audit.get("near_overlap_candidate_ids", [])}
+    if exact & near:
+        raise ValueError("fresh identity exclusion classes overlap")
+    excluded = exact | near
+    candidate_ids = {str(row.get("candidate_id", "")) for row in entries}
+    if not excluded.issubset(candidate_ids):
+        raise ValueError("fresh identity exclusion references unknown candidate")
+
+    kept = [
+        dict(row)
+        for row in entries
+        if str(row.get("candidate_id", "")) not in excluded
+    ]
+    exclusion_counts = dict(catalog.get("exclusion_counts", {}))
+    exclusion_counts["consumed_validation_exact_state"] = (
+        int(exclusion_counts.get("consumed_validation_exact_state", 0)) + len(exact)
+    )
+    exclusion_counts["consumed_validation_near_duplicate_observation"] = (
+        int(exclusion_counts.get("consumed_validation_near_duplicate_observation", 0))
+        + len(near)
+    )
+
+    filtered = {
+        **catalog,
+        "prefilter_candidate_count": len(entries),
+        "candidate_count": len(kept),
+        "exclusion_counts": dict(sorted(exclusion_counts.items())),
+        "consumed_validation_identity_filter_applied": True,
+        "no_replacement_after_consumed_validation_exclusion": True,
+        "entries": kept,
+    }
+    catalog.clear()
+    catalog.update(filtered)
+    _write_machine_json(output / "candidate_catalog_independent.json", filtered)
+
+    closed = {
+        **dict(audit),
+        "status": "independent_after_exclusion" if excluded else "independent",
+        "accepted_candidate_count_after_exclusion": len(kept),
+        "excluded_exact_state_count": len(exact),
+        "excluded_near_duplicate_observation_count": len(near),
+        "exact_state_overlap_count": 0,
+        "near_duplicate_observation_overlap_count": 0,
+        "no_replacement_after_exclusion": True,
+    }
+    _write_machine_json(output / "consumed_validation_identity_audit.json", closed)
+    return closed
+
+
+def _runtime_protocol_with_engineering_resume(
+    original_runtime_protocol: Any,
+    config_path: Path,
+    config: Mapping[str, Any],
+    scientific: Mapping[str, Any],
+    *,
+    resume: bool,
+) -> dict[str, Any]:
+    """Preserve a pre-label runtime protocol across a guard-only repair commit.
+
+    A cross-HEAD resume is allowed only when every runtime field other than the
+    repository head and its derived protocol SHA is identical, and no fresh
+    continuation label/calibration artifact exists yet. The original runtime
+    protocol remains authoritative for the already-completed acquisition.
+    """
+
+    proposed = original_runtime_protocol(config_path, config, scientific)
+    if not resume:
+        return proposed
+
+    output = Path(str(config["output_dir"]))
+    runtime_path = output / "runtime_protocol.json"
+    if not runtime_path.exists():
+        return proposed
+    existing = _read_json_object(runtime_path)
+    if existing == proposed:
+        return existing
+
+    def comparable(value: Mapping[str, Any]) -> dict[str, Any]:
+        result = dict(value)
+        result.pop("repository_head", None)
+        result.pop("protocol_sha256", None)
+        return result
+
+    if comparable(existing) != comparable(proposed):
+        return proposed
+
+    label_artifacts = [
+        output / "labels.json",
+        output / "label_progress.json",
+        output / "label_failure.json",
+        output / "upstream" / "calibration.json",
+        output / "downstream" / "calibration.json",
+        output / "summary.json",
+    ]
+    existing_label_artifacts = [str(path) for path in label_artifacts if path.exists()]
+    if existing_label_artifacts:
+        raise ValueError(
+            "engineering cross-HEAD resume is forbidden after validation labeling/calibration"
+        )
+
+    existing_base = dict(existing)
+    existing_sha = str(existing_base.pop("protocol_sha256", ""))
+    if fresh_shared.canonical_sha256(existing_base) != existing_sha:
+        raise ValueError("existing fresh validation runtime protocol SHA drift")
+
+    repair = {
+        "schema": "jit_fresh_validation_engineering_resume_repair_v1",
+        "status": "authorized_prelabel_guard_repair",
+        "original_repository_head": existing.get("repository_head"),
+        "repair_repository_head": proposed.get("repository_head"),
+        "original_runtime_protocol_sha256": existing.get("protocol_sha256"),
+        "proposed_runtime_protocol_sha256": proposed.get("protocol_sha256"),
+        "scientific_protocol_sha256": existing.get("scientific_protocol_sha256"),
+        "scientific_protocol_unchanged": True,
+        "attempt_schedule_unchanged": True,
+        "policy_identity_unchanged": True,
+        "candidate_acquisition_reused": (output / "candidate_catalog.json").exists(),
+        "validation_labels_existed_before_repair": False,
+        "repair_scope": (
+            "apply already-predeclared consumed-validation candidate exclusions "
+            "before labeling; no seed/panel/model/threshold change"
+        ),
+    }
+    _write_machine_json(output / "engineering_resume_repair.json", repair)
+    return existing
+
+
 def _execute_fresh_with_identity_guard(
     config: Path,
     *,
     resume: bool,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-    """Run fresh validation with the locked independence guards before labels.
-
-    The scientific executor remains the single production implementation. This
-    CLI guard restores the source-anchor audit to the exact predeclared contract
-    and wraps the label entry point so the completed candidate catalog must pass
-    the consumed-bank identity-only audit before any continuation outcome is
-    generated. Old validation labels/outcomes/predictions are never read.
-    """
+    """Run fresh validation with the locked independence guards before labels."""
 
     original_anchor_audit = fresh_shared._audit_fresh_anchor_independence
     original_label_candidates = fresh_shared._label_candidates
+    original_runtime_protocol = fresh_shared._runtime_protocol
     audit_result: dict[str, Any] = {}
+
+    def guarded_runtime_protocol(
+        config_path: Path,
+        config_payload: Mapping[str, Any],
+        scientific: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        return _runtime_protocol_with_engineering_resume(
+            original_runtime_protocol,
+            config_path,
+            config_payload,
+            scientific,
+            resume=resume,
+        )
 
     def guarded_label_candidates(*args: Any, **kwargs: Any) -> dict[str, Any]:
         output = Path(kwargs["output"])
-        result = audit_fresh_candidate_vs_consumed_validation(config, output)
+        catalog = kwargs.get("catalog")
+        if not isinstance(catalog, dict):
+            raise ValueError("fresh label guard requires mutable candidate catalog")
+        raw_audit = audit_fresh_candidate_vs_consumed_validation(config, output)
+        closed_audit = _apply_consumed_identity_exclusions(
+            catalog, raw_audit, output=output
+        )
         audit_result.clear()
-        audit_result.update(result)
+        audit_result.update(closed_audit)
         return original_label_candidates(*args, **kwargs)
 
     fresh_shared._audit_fresh_anchor_independence = (
         _audit_fresh_anchor_independence_declared
     )
+    fresh_shared._runtime_protocol = guarded_runtime_protocol
     fresh_shared._label_candidates = guarded_label_candidates
     try:
         report = fresh_shared.execute_fresh_shared_validation(config, resume=resume)
     finally:
         fresh_shared._audit_fresh_anchor_independence = original_anchor_audit
+        fresh_shared._runtime_protocol = original_runtime_protocol
         fresh_shared._label_candidates = original_label_candidates
 
-    # A completed report returned from an already-completed resume does not call
-    # the label entry point again. Re-audit identity so the CLI still reports a
-    # closed independence record without inspecting any old outcomes.
     if not audit_result:
         output = Path(
             json.loads(config.read_text(encoding="utf-8"))["output_dir"]
         )
-        audit_result.update(
-            audit_fresh_candidate_vs_consumed_validation(config, output)
-        )
+        audit_path = output / "consumed_validation_identity_audit.json"
+        if audit_path.exists():
+            stored = _read_json_object(audit_path)
+            if stored.get("status") in {"independent", "independent_after_exclusion"}:
+                audit_result.update(stored)
+        if not audit_result:
+            raise ValueError("completed fresh validation is missing closed identity audit")
     return report, audit_result
 
 
@@ -198,7 +363,7 @@ def main() -> int:
     parser.add_argument(
         "--resume",
         action="store_true",
-        help="resume only under the exact already-written runtime protocol",
+        help="resume only under the exact scientific protocol and sanctioned prelabel repair",
     )
     parser.add_argument(
         "--json-output",
@@ -237,12 +402,21 @@ def main() -> int:
             **report,
             "consumed_validation_candidate_identity_audit": {
                 "status": identity_audit["status"],
+                "excluded_exact_state_count": identity_audit.get(
+                    "excluded_exact_state_count", 0
+                ),
+                "excluded_near_duplicate_observation_count": identity_audit.get(
+                    "excluded_near_duplicate_observation_count", 0
+                ),
                 "exact_state_overlap_count": identity_audit[
                     "exact_state_overlap_count"
                 ],
                 "near_duplicate_observation_overlap_count": identity_audit[
                     "near_duplicate_observation_overlap_count"
                 ],
+                "accepted_candidate_count_after_exclusion": identity_audit.get(
+                    "accepted_candidate_count_after_exclusion"
+                ),
                 "consumed_validation_outcomes_read": identity_audit[
                     "consumed_validation_outcomes_read"
                 ],
