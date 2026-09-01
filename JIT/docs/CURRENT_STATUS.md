@@ -56,6 +56,28 @@ Formal result:
 
 Final optimization metrics are diagnostics only; they are not capability gates.
 
+### frozen pi_1 iteration authority
+
+Authoritative path:
+
+`JIT/runs/frozen_unified/pi_1_iter1_10009600_20260901/frozen_unified_policy.json`
+
+The existing production freeze path verified the exact final checkpoint and generated the immutable iteration-1 comparison authority with zero environment interactions and zero training transitions.
+
+- policy name: `pi_1`
+- policy role: `envelope_expansion_authority`
+- checkpoint payload SHA-256: `fb5c364057933d62c4e1b6ed49f3181cd36584c5b270f305eef18dff150e68e5`
+- actor SHA-256: `cc8f202075479aa90c0451732773016dfa25ef8a0c849278b5917319070284f0`
+- critic SHA-256: `1519803788302a936d3129eb7010de5fe153ea65410a49c35c1328e22fdf8d8f`
+- normalizer SHA-256: `94ed2587601dbe187774f664a741f427d943148a0c5391cdf57a45939c50a191`
+- freeze protocol SHA-256: `242301b29f3510895a0f13934deac44c1b38c976bb9a8c8385a85f621613a1ed`
+- freeze manifest file SHA-256: `9401240b8b9600669cb9ef5f9edca79f38bee4b0c138966e7288f148a8993942`
+- `pi_unified_star` claim: false
+- JCE/JEL claim: false
+- certified-safe-Tube claim: false
+
+Freezing alone does not establish capability-envelope expansion.
+
 ## Preserved engineering-error attempt
 
 `pi_1_tube1_natural10_10009600_seed821101_20260901` remains preserved.
@@ -76,12 +98,11 @@ immutable.
 
 ## Active scientific next step
 
-1. Freeze the exact completed pi_1 final checkpoint as `pi_1` iteration authority.
-2. Run core-preservation gate against retained prior-core evidence.
-3. Run boundary-gain gate using new/disjoint TRAIN iteration evidence.
-4. Only if both pass, record empirical envelope expansion.
-5. Then collect/freeze pi_1-conditioned continuation evidence, fit/validate
-   `C_up^1/C_down^1`, construct core-retaining Tube_2, and train pi_2.
+1. Lock a non-final paired core-preservation audit on retained prior-core states.
+2. Lock a non-final paired boundary-gain audit on pi_0 TRAIN continuation-negative frontier states that were not admitted as Tube_1 expansion evidence.
+3. Evaluate frozen pi_0 and frozen pi_1 on exactly the same states, horizon, runtime, continuation semantics, and deterministic policy mode.
+4. Require core preservation and boundary gain to pass before recording empirical `pi_0 -> pi_1` capability-envelope expansion.
+5. Only after gate acceptance, collect pi_1-conditioned TRAIN evidence, fit/validate `C_up^1/C_down^1`, construct core-retaining Tube_2, and train pi_2.
 6. Keep final TEST/JCE/JEL untouched throughout the iteration loop.
 
 ## Repository-maintenance state
@@ -114,8 +135,7 @@ Remaining migration debt before unattended pi_2+ iteration:
   specific evidence/CV helpers
 - those contracts must be made iteration-generic without changing the already
   completed Tube_1/pi_1 artifact identities
-- core-preservation and boundary-gain need stable machine-readable production
-  gates wired into the workflow
+- paired core-preservation and boundary-gain need stable machine-readable production gates wired into the workflow
 
 Until those items are closed, workflow automation may sequence existing stages
 but must not be advertised as a complete unattended `k -> k+1` scientific loop.
