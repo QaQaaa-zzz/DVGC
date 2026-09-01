@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
+from types import SimpleNamespace
 
 import numpy as np
 
@@ -95,6 +96,55 @@ def test_train_near_duplicate_filter_uses_all_actor_features():
         train,
         atol=0.01,
     )
+
+
+def test_unified_actor_observation_uses_phase_task_signal():
+    from jit_dvgc.expansion_validation_runtime_preflight import (
+        unified_actor_observation_from_legacy_snapshot,
+    )
+
+    frames = np.arange(75, dtype=np.float32).reshape(3, 25)
+    snapshot = SimpleNamespace(
+        observation_fifo=frames,
+        events={"jump_signal": np.asarray(True)},
+    )
+    upstream = unified_actor_observation_from_legacy_snapshot(snapshot, phase="upstream")
+    downstream = unified_actor_observation_from_legacy_snapshot(snapshot, phase="downstream")
+    np.testing.assert_array_equal(upstream[:-1], frames.reshape(-1))
+    np.testing.assert_array_equal(downstream[:-1], frames.reshape(-1))
+    assert upstream[-1] == 1.0
+    assert downstream[-1] == 0.0
+
+
+def test_real_runtime_preflight_is_zero_interaction_and_outcome_blind(jit_root):
+    from jit_dvgc.expansion_validation_runtime_preflight import (
+        audit_expansion_validation_runtime_preflight,
+    )
+
+    audit = audit_expansion_validation_runtime_preflight(
+        jit_root / "configs/envelope_iter0_expansion_validation.json"
+    )
+    assert audit["status"] == "runtime_preflight_ready"
+    assert audit["scientific_protocol_sha256"] == (
+        "9ec0a1e8c314cc5710688a3537fbd339f520d4db3c4268d20715bcde938586b0"
+    )
+    assert audit["validation_anchor_count"] == 5
+    assert audit["validation_anchor_unified_observation_match_count"] == 5
+    assert audit["validation_parent_group_count_by_phase"] == {
+        "upstream": 3,
+        "downstream": 2,
+    }
+    assert audit["attempt_count"] == 160
+    assert audit["maximum_acquisition_environment_interactions"] == 1824
+    assert audit["maximum_labeling_environment_interactions"] == 64000
+    assert audit["train_parent_overlap_count"] == 0
+    assert audit["exact_state_overlap_count"] == 0
+    assert audit["near_duplicate_overlap_count"] == 0
+    assert audit["environment_interactions"] == 0
+    assert audit["training_transitions"] == 0
+    assert audit["validation_outcomes_inspected"] is False
+    assert audit["test_data_used"] is False
+    assert audit["final_evaluation_data_used"] is False
 
 
 def test_strict_continuation_semantics_remain_phase_aware():
