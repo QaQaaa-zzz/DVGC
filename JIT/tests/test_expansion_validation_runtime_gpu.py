@@ -8,7 +8,9 @@ import pytest
 pytestmark = pytest.mark.gpu
 
 
-def test_real_validation_anchors_restore_into_unified_runtime_without_steps(jit_root):
+def test_real_validation_anchors_restore_into_unified_runtime_without_steps(
+    jit_root, repository_root
+):
     """Restore all five held-out anchors without consuming validation rollout steps."""
     if jax.default_backend() != "gpu":
         pytest.skip("requires JAX GPU")
@@ -29,10 +31,10 @@ def test_real_validation_anchors_restore_into_unified_runtime_without_steps(jit_
     assert audit["status"] == "protocol_ready"
     config = load_expansion_validation_protocol_config(config_path)
     protocol = config["protocol"]
-    frozen = load_frozen_unified_manifest(jit_root / protocol["frozen_policy"])
+    frozen = load_frozen_unified_manifest(repository_root / protocol["frozen_policy"])
     policy_record = frozen["policy"]
     _formal, _artifact, env = build_unified_formal_environment(
-        jit_root / policy_record["formal_config"]
+        repository_root / policy_record["formal_config"]
     )
     anchors = load_validation_anchor_snapshots(protocol)
     assert len(anchors) == 5
