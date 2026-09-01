@@ -17,6 +17,9 @@ from jit_dvgc.fresh_shared_continuation_validation import (
     audit_fresh_shared_validation_preflight,
     execute_fresh_shared_validation,
 )
+from jit_dvgc.fresh_validation_identity_audit import (
+    audit_fresh_candidate_vs_consumed_validation,
+)
 
 
 def _schema(path: Path) -> str:
@@ -63,6 +66,25 @@ def main() -> int:
         if fresh
         else execute_expansion_validation(args.config, resume=args.resume)
     )
+    if fresh:
+        output = Path(
+            json.loads(args.config.read_text(encoding="utf-8"))["output_dir"]
+        )
+        identity_audit = audit_fresh_candidate_vs_consumed_validation(
+            args.config, output
+        )
+        report = {
+            **report,
+            "consumed_validation_candidate_identity_audit": {
+                "status": identity_audit["status"],
+                "exact_state_overlap_count": identity_audit[
+                    "exact_state_overlap_count"
+                ],
+                "near_duplicate_observation_overlap_count": identity_audit[
+                    "near_duplicate_observation_overlap_count"
+                ],
+            },
+        }
     print(json.dumps(report, indent=2, sort_keys=True))
     return 0
 
