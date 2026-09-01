@@ -15,7 +15,6 @@ from typing import Any, Mapping
 import numpy as np
 
 from .config import file_sha256
-from .expansion_validation_protocol import audit_group_disjointness
 from .iteration_train_evidence import canonical_sha256, load_frozen_iteration_train_evidence
 
 
@@ -43,6 +42,46 @@ def _sha(value: Any, *, field: str) -> str:
     if len(text) != 64 or any(ch not in "0123456789abcdef" for ch in text):
         raise ValueError(f"{field} must be SHA-256")
     return text
+
+
+def _audit_train_separation(
+    train_rows: tuple[dict[str, Any], ...],
+    validation_rows: list[dict[str, Any]],
+    *,
+    observation_atol: float,
+) -> dict[str, Any]:
+    """Recheck only validation-vs-TRAIN leakage locked by the runtime.
+
+    Validation descendants are allowed to be close to other validation
+    descendants; the formal runtime did not predeclare a validation-vs-
+    validation near-duplicate exclusion.
+    """
+    tolerance = float(observation_atol)
+    if not np.isfinite(tolerance) or tolerance <= 0.0:
+        raise ValueError("validation freeze near-duplicate tolerance invalid")
+    train_groups = {str(row["parent_group_id"]) for row in train_rows}
+    train_states = {str(row["state_sha256"]) for row in train_rows}
+    train_obs = np.asarray(
+        [row["actor_observation"] for row in train_rows], dtype=np.float64
+    )
+    if train_obs.ndim != 2 or not np.isfinite(train_obs).all():
+        raise ValueError("frozen TRAIN observations invalid during validation freeze")
+    for row in validation_rows:
+        if str(row["parent_group_id"]) in train_groups:
+            raise ValueError("expansion validation contains a TRAIN parent group")
+        if str(row["state_sha256"]) in train_states:
+            raise ValueError("expansion validation contains a TRAIN physical state")
+        obs = np.asarray(row["actor_observation"], dtype=np.float64).reshape(-1)
+        if obs.shape != (train_obs.shape[1],) or not np.isfinite(obs).all():
+            raise ValueError("validation observation invalid during TRAIN separation audit")
+        if np.any(np.all(np.abs(train_obs - obs) <= tolerance, axis=1)):
+            raise ValueError("expansion validation contains a near-duplicate TRAIN observation")
+    return {
+        "train_parent_overlap_count": 0,
+        "exact_state_overlap_count": 0,
+        "near_duplicate_overlap_count": 0,
+        "observation_near_duplicate_atol": tolerance,
+    }
 
 
 def load_iteration_validation_evidence_config(path: Path) -> dict[str, Any]:
@@ -239,7 +278,7 @@ def _validate_rows(
     if len(labels) - positive != int(expected["negative_count"]):
         raise ValueError("validation recomputed negative count drift")
 
-    leakage = audit_group_disjointness(
+    leakage = _audit_train_separation(
         train_rows,
         validation_rows_for_leakage,
         observation_atol=float(protocol["near_duplicate_audit"]["actor_observation_atol"]),
