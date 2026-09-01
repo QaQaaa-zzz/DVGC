@@ -1,0 +1,73 @@
+{
+  "expected_protocol_sha256": "329589b44112f2fca6bb10f5b81506bd05500114106e592cd103433faea94a27",
+  "output_dir": "JIT/runs/soft_tube/soft_tube_iter1_pi0_conditioned_20260901",
+  "protocol": {
+    "architecture_manifest_sha256": "9ba92bd51b124d992a82001d260c40dc435e6ed60f68f4dea16485149e2e097e",
+    "claim_boundary": {
+      "certified_safe_set_claim": false,
+      "jce_jel_claim": false,
+      "pi_1_trained": false,
+      "soft_tube_training_guidance_only": true,
+      "tube_1_constructed_after_run": true
+    },
+    "data_policy": {
+      "consumed_validation_rows_may_enter_tube": false,
+      "environment_interactions": 0,
+      "final_evaluation_data_used": false,
+      "fresh_validation_rows_may_enter_tube": false,
+      "fresh_validation_used_only_for_phase_threshold_calibration": true,
+      "test_data_used": false,
+      "training_transitions": 0,
+      "tube_entries_from_train_only": true
+    },
+    "downstream_field_file_sha256": "423f0584f7060c6b56480bd329d787f768a4877ef387f433091d7960e8644cc9",
+    "downstream_field_manifest_sha256": "de8bc0f69394432be788c8fcfcc6c536dace13f524743b295244407091e0cf71",
+    "downstream_train_evidence": "JIT/runs/pi_unified_transition_band/pi_0_iter0_train_evidence_frozen_20260831",
+    "downstream_train_manifest_sha256": "27832237a85eccfa0ae2eaea7575dd2efda12535a3815fee0c6d0660f58921b8",
+    "fresh_validation_declared_protocol_sha256": "6a30e6334672c6a404fbaac245d974c358cef9f4f0ea8767d7424b37bb9222ac",
+    "fresh_validation_root": "JIT/runs/pi_unified_fresh_continuation_validation/pi_0_iter0_shared_tiny_mlp_seeds7_8_20260901",
+    "fresh_validation_summary_sha256": "89a794979e8fb7932befbba5248cf85e7928bcff56dff3ec4040837cf98cdfab",
+    "iteration": 1,
+    "policy_name": "pi_0",
+    "sampling": {
+      "core_score_source": "preserve_existing_V_up_V_down_bootstrap_scores",
+      "expansion_score_source": "C_up^0_or_C_down^0_policy_conditioned_continuation_score",
+      "mapping": "sampling_weight = 0.05 + 0.95 * score",
+      "phase_mixture": {
+        "downstream": 0.5,
+        "upstream": 0.5
+      }
+    },
+    "schema": "jit_core_retaining_tube_iteration_protocol_v1",
+    "selection": {
+      "core_wins_on_physical_state_duplicate": true,
+      "deduplicate_expansion_physical_state": true,
+      "no_quota_or_replacement": true,
+      "require_positive_continuation_label": true,
+      "require_train_split": true,
+      "retain_all_source_tube_core_entries": true,
+      "strict_score_greater_than_phase_threshold": true
+    },
+    "shared_refit_root": "JIT/runs/pi_unified_continuation_field/pi_0_iter0_shared_tiny_mlp_refit_20260901",
+    "shared_refit_summary_sha256": "8abbbfbc205e42bb28ee422691eeaef9ab30bdc4c56ad9067a4d55f366a2d9ef",
+    "snapshot_search_roots": [
+      "JIT/runs/pi_unified_transition_band",
+      "JIT/runs/pi_unified_upstream_parent_diversity"
+    ],
+    "source_iteration": 0,
+    "source_tube": "JIT/runs/soft_tube/soft_tube_train_v1_20260828",
+    "source_tube_entry_count": 222,
+    "source_tube_manifest_sha256": "c1c1161ebafd16716f2566aaccfe89169fe9cb0c2b090266c0e2bf90165df28b",
+    "status": "predeclared_after_fresh_validation_pass_before_tube1",
+    "thresholds": {
+      "decision_rule": "TRAIN_label_positive_and_score_strictly_greater_than_fresh_validation_threshold",
+      "downstream": 0.8721734129976408,
+      "upstream": 0.9333483934566058
+    },
+    "upstream_field_file_sha256": "37ea10e9afa6048098af2ef1fd9e7a196feaeeef71e474a8ad7e345c94512f61",
+    "upstream_field_manifest_sha256": "8d9cc945fe92c3b5ff01202c0da56ca601a7328747b8c0543ac54244e8eec807",
+    "upstream_train_evidence": "JIT/runs/frozen_upstream_checkpoint_train/pi_0_iter0_three_checkpoint_matched_panel_20260901",
+    "upstream_train_manifest_sha256": "25160e1f198d710327b8390a53869bc72ec62afced5f3d86dcc45d1543793626"
+  },
+  "schema": "jit_core_retaining_tube_iteration_config_v1"
+}
