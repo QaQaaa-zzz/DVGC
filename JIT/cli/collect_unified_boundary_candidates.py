@@ -12,8 +12,8 @@ from jit_dvgc.checkpoint import load_checkpoint
 from jit_dvgc.config import file_sha256
 from jit_dvgc.constants import ACTION_ORDER
 from jit_dvgc.ppo import make_checkpoint_policy
-from jit_dvgc.tube.soft import load_soft_tube
-from jit_dvgc.acquisition.boundary import (
+from jit_dvgc.tube import load_soft_tube
+from jit_dvgc.acquisition import (
     DEFAULT_ANCHORS_PER_PHASE,
     DEFAULT_FRONTIER_SCORE_CEILING,
     DEFAULT_UNIFIED_BOUNDARY_DURATIONS,
@@ -21,12 +21,12 @@ from jit_dvgc.acquisition.boundary import (
     collect_unified_boundary_candidates,
     select_tube_boundary_anchors,
 )
-from jit_dvgc.training.formal import (
+from jit_dvgc.training import (
     build_unified_formal_environment,
+    checkpoint_identity,
+    load_frozen_unified_manifest,
     load_unified_formal_config,
 )
-from jit_dvgc.training.freeze import load_frozen_unified_manifest
-from jit_dvgc.training.unified import checkpoint_identity
 
 
 def _write_json(path: Path, payload) -> None:
