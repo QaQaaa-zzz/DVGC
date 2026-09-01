@@ -59,6 +59,12 @@ The mixed-snapshot plotting defect was fixed and the formal training API now
 performs a static all-Tube plotting/snapshot preflight before environment
 construction, so the same class of error fails at zero interactions.
 
+For future newly-created failed unified formal runs, the canonical training
+wrapper also reconciles terminal diagnostic accounting from already-persisted
+`train_panels/*/report.json` files. This closes the exact failure mode that
+caused the historical 449-interaction undercount while leaving old artifacts
+immutable.
+
 ## Active scientific next step
 
 1. Freeze the exact completed pi_1 final checkpoint as `pi_1` iteration authority.
@@ -84,6 +90,13 @@ Completed maintenance:
 - removed obsolete `JIT/planning/` working notes from the active tree
 - added explicit resumable manifest-driven workflow orchestration
 - added `run_iteration_workflow.py` as the single workflow entry point
+- generalized Tube-RSI continuation-field acceptance from only `C^0` to phase-
+  consistent `C^k`
+- restored `upstream_boundary_lock.py` after dependency-closure verification
+  proved it is still required by the retained bootstrap loader path
+- added a mandatory compile/import/test deletion gate to agent instructions
+- refreshed root AGENTS/README/PROJECT/experiment-state/repository-layout docs
+  so context recovery starts from Tube_1/pi_1 rather than old Phase-U state
 
 Remaining migration debt before unattended pi_2+ iteration:
 
