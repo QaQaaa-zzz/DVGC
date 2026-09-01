@@ -8,8 +8,7 @@ import json
 from pathlib import Path
 
 from jit_dvgc.config import load_config
-from jit_dvgc.tube.soft import load_soft_tube
-from jit_dvgc.tube.smoke import run_tube_rsi_smoke
+from jit_dvgc.tube import load_soft_tube, run_tube_rsi_smoke
 from jit_dvgc.unified_env import UnifiedTubeRSIEnv
 
 

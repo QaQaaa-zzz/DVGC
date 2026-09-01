@@ -4,9 +4,9 @@ import argparse
 import json
 from pathlib import Path
 
-from jit_dvgc.continuation.field import fit_policy_conditioned_continuation_fields
-from jit_dvgc.continuation.refit import (
-    CONFIG_SCHEMA as SHARED_REFIT_CONFIG_SCHEMA,
+from jit_dvgc.continuation import (
+    SHARED_REFIT_CONFIG_SCHEMA,
+    fit_policy_conditioned_continuation_fields,
     fit_shared_continuation_fields,
 )
 

@@ -1,1 +1,17 @@
-"""Canonical Soft-Tube and Tube-RSI namespace."""
+"""Stable Soft-Tube and Tube-RSI API."""
+
+from .iteration import build_core_retaining_tube, load_core_retaining_tube_config
+from ..soft_tube import SoftTubeArtifact, SoftTubeInputs, build_soft_tube, load_soft_tube
+from ..tube_rsi import TubeRSISampler
+from ..tube_rsi_smoke import run_tube_rsi_smoke
+
+__all__ = [
+    "build_core_retaining_tube",
+    "load_core_retaining_tube_config",
+    "SoftTubeArtifact",
+    "SoftTubeInputs",
+    "build_soft_tube",
+    "load_soft_tube",
+    "TubeRSISampler",
+    "run_tube_rsi_smoke",
+]

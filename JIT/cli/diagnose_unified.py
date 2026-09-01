@@ -7,7 +7,7 @@ import argparse
 import json
 from pathlib import Path
 
-from jit_dvgc.analysis.unified import run_unified_fixed_panel
+from jit_dvgc.analysis import run_unified_fixed_panel
 
 
 def main() -> int:

@@ -7,8 +7,13 @@ import argparse
 import json
 from pathlib import Path
 
-from jit_dvgc.training.formal import FORMAL_SCHEMA, run_unified_formal
-from jit_dvgc.training.unified import PILOT_SCHEMA, read_json, run_unified_pilot
+from jit_dvgc.training import (
+    FORMAL_SCHEMA,
+    PILOT_SCHEMA,
+    read_json,
+    run_unified_formal,
+    run_unified_pilot,
+)
 
 
 def main() -> int:

@@ -8,10 +8,7 @@ from pathlib import Path
 
 import jax
 
-from jit_dvgc.acquisition.transition_band import (
-    load_transition_band_search_config,
-    search_unified_transition_band,
-)
+from jit_dvgc.acquisition import load_transition_band_search_config, search_unified_transition_band
 
 
 def main() -> int:
