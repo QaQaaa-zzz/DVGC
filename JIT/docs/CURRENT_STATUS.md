@@ -96,19 +96,48 @@ wrapper also reconciles terminal diagnostic accounting from already-persisted
 caused the historical 449-interaction undercount while leaving old artifacts
 immutable.
 
-## Active scientific next step
+## Active scientific blocker: paired pi_0 -> pi_1 gate
 
-1. Lock a non-final paired core-preservation audit on retained prior-core states.
-2. Lock a non-final paired boundary-gain audit on pi_0 TRAIN continuation-negative frontier states that were not admitted as Tube_1 expansion evidence.
-3. Evaluate frozen pi_0 and frozen pi_1 on exactly the same states, horizon, runtime, continuation semantics, and deterministic policy mode.
-4. Require core preservation and boundary gain to pass before recording empirical `pi_0 -> pi_1` capability-envelope expansion.
-5. Only after gate acceptance, collect pi_1-conditioned TRAIN evidence, fit/validate `C_up^1/C_down^1`, construct core-retaining Tube_2, and train pi_2.
+The generic machine-readable gate implementation and its pi_0 -> pi_1
+predeclaration now exist:
+
+- implementation: `JIT/src/jit_dvgc/analysis/paired_policy_gate.py`
+- stable CLI surface: `JIT/cli/diagnose_unified.py --gate-config ...`
+- config: `JIT/configs/envelope_iter1_paired_policy_gate.json`
+- predeclared protocol SHA-256: `24a126ee94472eebbcb59fff66618ae00dae41074a1d1cfee8bb816afaff410a`
+
+The locked method is:
+
+1. core bank = all 222 Tube_0 source-core states;
+2. boundary bank = frozen pi_0 TRAIN continuation-negative frontier states only;
+3. reject boundary states already present in Tube_1;
+4. write/self-hash the bank before any policy rollout;
+5. evaluate frozen pi_0 and frozen pi_1 on the exact same state, horizon,
+   deterministic policy mode, continuation semantics, XML, and runtime;
+6. core preservation requires zero baseline-success -> candidate-failure
+   regressions and at least one baseline core success in each phase;
+7. boundary gain requires baseline-negative reproduction plus candidate success
+   in at least two distinct parent groups;
+8. both gates must pass before empirical pi_0 -> pi_1 envelope expansion can be
+   accepted.
+
+The implementation/predeclaration is complete, but it has not yet been locally
+compiled/regression-tested at the current HEAD or executed on the real frozen
+artifacts. Therefore no gate result or envelope-expansion claim exists yet.
+
+## Scientific next step
+
+1. Sync and regression-test the current paired-gate code/config.
+2. Execute the paired audit on frozen pi_0 and frozen pi_1.
+3. If either gate fails, preserve the result and stop; do not automatically tune
+   thresholds, reward, PPO, or the audit bank.
+4. If both gates pass, record empirical pi_0 -> pi_1 capability-envelope
+   expansion.
+5. Only after acceptance, collect pi_1-conditioned TRAIN evidence, fit/validate
+   `C_up^1/C_down^1`, construct core-retaining Tube_2, and train pi_2.
 6. Keep final TEST/JCE/JEL untouched throughout the iteration loop.
 
 ## Repository-maintenance state
-
-The active tree is being converted from experiment-stage scripts into reusable
-iteration capabilities.
 
 Completed maintenance:
 
@@ -127,15 +156,20 @@ Completed maintenance:
 - added a mandatory compile/import/test deletion gate to agent instructions
 - refreshed root AGENTS/README/PROJECT/experiment-state/repository-layout docs
   so context recovery starts from Tube_1/pi_1 rather than old Phase-U state
+- implemented a generic paired-policy iteration-selection gate without adding a
+  pi1-specific CLI.
 
 Remaining migration debt before unattended pi_2+ iteration:
 
-- `core_retaining_tube_iteration.py` still encodes Tube_1/iteration-0 constants
+- `core_retaining_tube_iteration.py` still encodes Tube_1/iteration-0 constants;
 - shared continuation refit/fresh validation still depend on a few upstream-
-  specific evidence/CV helpers
+  specific evidence/CV helpers;
 - those contracts must be made iteration-generic without changing the already
-  completed Tube_1/pi_1 artifact identities
-- paired core-preservation and boundary-gain need stable machine-readable production gates wired into the workflow
+  completed Tube_1/pi_1 artifact identities;
+- the paired gate must be validated/executed, then wired into the workflow;
+- the gate runner should reuse one compiled `env.step` across all paired
+  rollouts to avoid unnecessary JIT setup overhead. This is an engineering
+  optimization, not a scientific acceptance rule.
 
 Until those items are closed, workflow automation may sequence existing stages
 but must not be advertised as a complete unattended `k -> k+1` scientific loop.
