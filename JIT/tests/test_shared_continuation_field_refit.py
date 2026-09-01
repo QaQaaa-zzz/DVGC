@@ -90,3 +90,44 @@ def test_shared_refit_uses_phase_specific_weights_not_architectures(jit_root: Pa
     assert model["family"] == "tiny_mlp_tanh"
     assert model["hidden_units"] == 8
     assert model["parameter_count"] == 625
+
+
+def test_upstream_gate_architecture_is_verified_from_all_folds(tmp_path: Path):
+    from jit_dvgc.iteration_train_evidence import canonical_sha256
+    from jit_dvgc.shared_continuation_field_refit import _validate_gate_summary
+
+    summary = {
+        "status": "completed",
+        "support_stratified_parent_generalization_supported": True,
+        "shared_up_down_architecture_candidate_authorized": True,
+        "folds": [
+            {"model_family": "tiny_mlp_tanh", "parameter_count": 625}
+            for _ in range(5)
+        ],
+        "consumed_validation_rows_reused": False,
+        "consumed_validation_predictions_reused": False,
+        "test_data_used": False,
+        "final_evaluation_data_used": False,
+    }
+    summary["summary_sha256"] = canonical_sha256(summary)
+    path = tmp_path / "upstream_summary.json"
+    path.write_text(json.dumps(summary))
+
+    loaded = _validate_gate_summary(
+        path,
+        expected_sha=summary["summary_sha256"],
+        kind="upstream",
+    )
+    assert loaded["summary_sha256"] == summary["summary_sha256"]
+
+    summary["folds"][4]["parameter_count"] = 624
+    summary["summary_sha256"] = canonical_sha256(
+        {key: value for key, value in summary.items() if key != "summary_sha256"}
+    )
+    path.write_text(json.dumps(summary))
+    with pytest.raises(ValueError, match="architecture drift"):
+        _validate_gate_summary(
+            path,
+            expected_sha=summary["summary_sha256"],
+            kind="upstream",
+        )
