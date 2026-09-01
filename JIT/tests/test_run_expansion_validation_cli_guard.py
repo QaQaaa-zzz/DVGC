@@ -81,14 +81,62 @@ def test_declared_anchor_guard_allows_near_observations_but_not_duplicate_states
         )
 
 
-def test_consumed_identity_audit_runs_before_any_fresh_label(monkeypatch, tmp_path: Path) -> None:
+def test_consumed_identity_overlaps_are_excluded_without_replacement(tmp_path: Path) -> None:
+    cli = _load_cli_module()
+    catalog = {
+        "candidate_count": 3,
+        "exclusion_counts": {"train_near_duplicate_observation": 2},
+        "entries": [
+            {"candidate_id": "a", "phase": "upstream"},
+            {"candidate_id": "b", "phase": "upstream"},
+            {"candidate_id": "c", "phase": "downstream"},
+        ],
+    }
+    audit = {
+        "status": "exclusions_required",
+        "exact_overlap_candidate_ids": ["a"],
+        "near_overlap_candidate_ids": ["b"],
+        "exact_state_overlap_count": 1,
+        "near_duplicate_observation_overlap_count": 1,
+        "consumed_validation_outcomes_read": False,
+        "consumed_validation_predictions_read": False,
+    }
+
+    closed = cli._apply_consumed_identity_exclusions(
+        catalog, audit, output=tmp_path
+    )
+
+    assert catalog["prefilter_candidate_count"] == 3
+    assert catalog["candidate_count"] == 1
+    assert [row["candidate_id"] for row in catalog["entries"]] == ["c"]
+    assert catalog["exclusion_counts"]["train_near_duplicate_observation"] == 2
+    assert catalog["exclusion_counts"]["consumed_validation_exact_state"] == 1
+    assert (
+        catalog["exclusion_counts"]["consumed_validation_near_duplicate_observation"]
+        == 1
+    )
+    assert catalog["no_replacement_after_consumed_validation_exclusion"] is True
+    assert closed["status"] == "independent_after_exclusion"
+    assert closed["excluded_exact_state_count"] == 1
+    assert closed["excluded_near_duplicate_observation_count"] == 1
+    assert closed["exact_state_overlap_count"] == 0
+    assert closed["near_duplicate_observation_overlap_count"] == 0
+    assert (tmp_path / "candidate_catalog_independent.json").exists()
+
+
+def test_consumed_identity_audit_runs_and_filters_before_any_fresh_label(
+    monkeypatch, tmp_path: Path
+) -> None:
     cli = _load_cli_module()
     events: list[str] = []
 
     original_anchor_audit = cli.fresh_shared._audit_fresh_anchor_independence
+    original_runtime_protocol = cli.fresh_shared._runtime_protocol
 
     def original_label_candidates(*args, **kwargs):
         events.append("label")
+        assert kwargs["catalog"]["candidate_count"] == 1
+        assert kwargs["catalog"]["entries"][0]["candidate_id"] == "keep"
         return {"status": "labels_completed"}
 
     def fake_execute(config, *, resume):
@@ -97,17 +145,27 @@ def test_consumed_identity_audit_runs_before_any_fresh_label(monkeypatch, tmp_pa
             cli.fresh_shared._audit_fresh_anchor_independence
             is cli._audit_fresh_anchor_independence_declared
         )
-        cli.fresh_shared._label_candidates(output=tmp_path)
+        catalog = {
+            "candidate_count": 2,
+            "exclusion_counts": {},
+            "entries": [
+                {"candidate_id": "drop"},
+                {"candidate_id": "keep"},
+            ],
+        }
+        cli.fresh_shared._label_candidates(output=tmp_path, catalog=catalog)
         events.append("execute_return")
-        return {"status": "completed"}
+        return {"status": "completed", "candidate_count": catalog["candidate_count"]}
 
     def fake_audit(config, output):
         events.append("identity_audit")
         assert Path(output) == tmp_path
         return {
-            "status": "independent",
+            "status": "exclusions_required",
+            "exact_overlap_candidate_ids": [],
+            "near_overlap_candidate_ids": ["drop"],
             "exact_state_overlap_count": 0,
-            "near_duplicate_observation_overlap_count": 0,
+            "near_duplicate_observation_overlap_count": 1,
             "consumed_validation_outcomes_read": False,
             "consumed_validation_predictions_read": False,
         }
@@ -120,8 +178,74 @@ def test_consumed_identity_audit_runs_before_any_fresh_label(monkeypatch, tmp_pa
         tmp_path / "config.json", resume=False
     )
 
-    assert report == {"status": "completed"}
-    assert audit["status"] == "independent"
+    assert report == {"status": "completed", "candidate_count": 1}
+    assert audit["status"] == "independent_after_exclusion"
+    assert audit["excluded_near_duplicate_observation_count"] == 1
     assert events == ["execute", "identity_audit", "label", "execute_return"]
     assert cli.fresh_shared._label_candidates is original_label_candidates
     assert cli.fresh_shared._audit_fresh_anchor_independence is original_anchor_audit
+    assert cli.fresh_shared._runtime_protocol is original_runtime_protocol
+
+
+def _runtime_record(cli, *, head: str) -> dict:
+    base = {
+        "schema": "runtime-test",
+        "repository_head": head,
+        "scientific_protocol_sha256": "sci",
+        "attempt_schedule_sha256": "schedule",
+        "policy_actor_sha256": "actor",
+        "policy_payload_sha256": "payload",
+    }
+    return {**base, "protocol_sha256": cli.fresh_shared.canonical_sha256(base)}
+
+
+def test_prelabel_engineering_resume_reuses_existing_runtime_protocol(tmp_path: Path) -> None:
+    cli = _load_cli_module()
+    existing = _runtime_record(cli, head="old-head")
+    proposed = _runtime_record(cli, head="repair-head")
+    (tmp_path / "runtime_protocol.json").write_text(
+        json.dumps(existing), encoding="utf-8"
+    )
+
+    def original(config_path, config, scientific):
+        return proposed
+
+    result = cli._runtime_protocol_with_engineering_resume(
+        original,
+        tmp_path / "config.json",
+        {"output_dir": str(tmp_path)},
+        {},
+        resume=True,
+    )
+
+    assert result == existing
+    repair = json.loads(
+        (tmp_path / "engineering_resume_repair.json").read_text(encoding="utf-8")
+    )
+    assert repair["status"] == "authorized_prelabel_guard_repair"
+    assert repair["original_repository_head"] == "old-head"
+    assert repair["repair_repository_head"] == "repair-head"
+    assert repair["scientific_protocol_unchanged"] is True
+    assert repair["validation_labels_existed_before_repair"] is False
+
+
+def test_engineering_resume_refuses_cross_head_after_label_progress(tmp_path: Path) -> None:
+    cli = _load_cli_module()
+    existing = _runtime_record(cli, head="old-head")
+    proposed = _runtime_record(cli, head="repair-head")
+    (tmp_path / "runtime_protocol.json").write_text(
+        json.dumps(existing), encoding="utf-8"
+    )
+    (tmp_path / "label_progress.json").write_text("{}", encoding="utf-8")
+
+    def original(config_path, config, scientific):
+        return proposed
+
+    with pytest.raises(ValueError, match="forbidden after validation labeling"):
+        cli._runtime_protocol_with_engineering_resume(
+            original,
+            tmp_path / "config.json",
+            {"output_dir": str(tmp_path)},
+            {},
+            resume=True,
+        )
