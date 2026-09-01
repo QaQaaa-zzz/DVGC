@@ -78,7 +78,9 @@ The existing production freeze path verified the exact final checkpoint and gene
 
 Freezing alone does not establish capability-envelope expansion.
 
-## Preserved engineering-error attempt
+## Preserved engineering-error attempts
+
+### formal pi_1 attempt
 
 `pi_1_tube1_natural10_10009600_seed821101_20260901` remains preserved.
 It reached 1,024,000 training transitions and wrote that checkpoint. Its first
@@ -96,14 +98,58 @@ wrapper also reconciles terminal diagnostic accounting from already-persisted
 caused the historical 449-interaction undercount while leaving old artifacts
 immutable.
 
+### first paired pi_0 -> pi_1 gate attempt
+
+Preserved path:
+
+`JIT/runs/pi_unified_gate/pi_0_to_pi_1_paired_core_boundary_20260901`
+
+The pre-run code/regression and scientific-bank checks passed before any gate
+claim was evaluated:
+
+- 26 targeted tests passed;
+- paired-gate config/protocol identity passed;
+- core bank: all 222 Tube_0 states;
+- boundary challenge bank: 56 frozen pi_0 continuation-negative TRAIN states,
+  26 upstream + 30 downstream;
+- boundary/Tube_1 state overlap: zero;
+- validation data used: false;
+- TEST data used: false;
+- training transitions: zero.
+
+The real paired execution then terminated with an engineering CUDA/Warp OOM
+after 2,546 environment interactions. The terminal error was an allocation
+failure for 32,768 bytes inside the MJX/Warp collision path. This is not a
+scientific core-preservation or boundary-gain result.
+
+Root cause in the runner: `_rollout()` constructed a new `jax.jit(env.step)`
+wrapper for every state/policy rollout. The long paired audit therefore created
+unnecessary repeated JIT executable/cache pressure. The runner now creates one
+compiled `env.step` for the whole gate and passes that shared callable into every
+rollout. The scientific protocol, bank, policies, horizon, seeds, and gate rules
+are unchanged.
+
+The failed output directory must remain immutable. Administrative retry config:
+
+`JIT/configs/envelope_iter1_paired_policy_gate_retry01.json`
+
+It changes only the output directory to:
+
+`JIT/runs/pi_unified_gate/pi_0_to_pi_1_paired_core_boundary_20260901_retry01`
+
+The scientific protocol SHA remains:
+
+`24a126ee94472eebbcb59fff66618ae00dae41074a1d1cfee8bb816afaff410a`
+
 ## Active scientific blocker: paired pi_0 -> pi_1 gate
 
 The generic machine-readable gate implementation and its pi_0 -> pi_1
-predeclaration now exist:
+predeclaration exist:
 
 - implementation: `JIT/src/jit_dvgc/analysis/paired_policy_gate.py`
 - stable CLI surface: `JIT/cli/diagnose_unified.py --gate-config ...`
-- config: `JIT/configs/envelope_iter1_paired_policy_gate.json`
+- original config: `JIT/configs/envelope_iter1_paired_policy_gate.json`
+- engineering retry config: `JIT/configs/envelope_iter1_paired_policy_gate_retry01.json`
 - predeclared protocol SHA-256: `24a126ee94472eebbcb59fff66618ae00dae41074a1d1cfee8bb816afaff410a`
 
 The locked method is:
@@ -121,21 +167,25 @@ The locked method is:
 8. both gates must pass before empirical pi_0 -> pi_1 envelope expansion can be
    accepted.
 
-The implementation/predeclaration is complete, but it has not yet been locally
-compiled/regression-tested at the current HEAD or executed on the real frozen
-artifacts. Therefore no gate result or envelope-expansion claim exists yet.
+No scientific gate result exists yet because the first real execution ended in
+an engineering OOM before the bank was completed. The next action is to validate
+the shared-step runner change and execute retry01 without modifying the locked
+scientific protocol.
 
 ## Scientific next step
 
-1. Sync and regression-test the current paired-gate code/config.
-2. Execute the paired audit on frozen pi_0 and frozen pi_1.
-3. If either gate fails, preserve the result and stop; do not automatically tune
-   thresholds, reward, PPO, or the audit bank.
-4. If both gates pass, record empirical pi_0 -> pi_1 capability-envelope
+1. Sync and regression-test the shared-step paired-gate runner.
+2. Execute `envelope_iter1_paired_policy_gate_retry01.json`.
+3. If the retry produces another engineering error, preserve it and fix only the
+   engineering/runtime defect; do not change the gate protocol to obtain a PASS.
+4. If either scientific gate fails after a completed run, preserve the result
+   and stop; do not automatically tune thresholds, reward, PPO, or the audit
+   bank.
+5. If both gates pass, record empirical pi_0 -> pi_1 capability-envelope
    expansion.
-5. Only after acceptance, collect pi_1-conditioned TRAIN evidence, fit/validate
+6. Only after acceptance, collect pi_1-conditioned TRAIN evidence, fit/validate
    `C_up^1/C_down^1`, construct core-retaining Tube_2, and train pi_2.
-6. Keep final TEST/JCE/JEL untouched throughout the iteration loop.
+7. Keep final TEST/JCE/JEL untouched throughout the iteration loop.
 
 ## Repository-maintenance state
 
@@ -157,7 +207,9 @@ Completed maintenance:
 - refreshed root AGENTS/README/PROJECT/experiment-state/repository-layout docs
   so context recovery starts from Tube_1/pi_1 rather than old Phase-U state
 - implemented a generic paired-policy iteration-selection gate without adding a
-  pi1-specific CLI.
+  pi1-specific CLI
+- changed the paired gate to reuse one compiled `env.step` across all paired
+  rollouts rather than creating a new JIT wrapper per rollout.
 
 Remaining migration debt before unattended pi_2+ iteration:
 
@@ -166,10 +218,8 @@ Remaining migration debt before unattended pi_2+ iteration:
   specific evidence/CV helpers;
 - those contracts must be made iteration-generic without changing the already
   completed Tube_1/pi_1 artifact identities;
-- the paired gate must be validated/executed, then wired into the workflow;
-- the gate runner should reuse one compiled `env.step` across all paired
-  rollouts to avoid unnecessary JIT setup overhead. This is an engineering
-  optimization, not a scientific acceptance rule.
+- the completed paired gate must be wired into the workflow after its real
+  retry is resolved.
 
 Until those items are closed, workflow automation may sequence existing stages
 but must not be advertised as a complete unattended `k -> k+1` scientific loop.
