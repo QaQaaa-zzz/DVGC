@@ -1,5 +1,5 @@
 {
-  "expected_protocol_sha256": "329589b44112f2fca6bb10f5b81506bd05500114106e592cd103433faea94a27",
+  "expected_protocol_sha256": "1ca86fb7f56d0fec4d9695c07699f2bc1d547d5f90f4a094f09047942e4b445d",
   "output_dir": "JIT/runs/soft_tube/soft_tube_iter1_pi0_conditioned_20260901",
   "protocol": {
     "architecture_manifest_sha256": "9ba92bd51b124d992a82001d260c40dc435e6ed60f68f4dea16485149e2e097e",
@@ -51,6 +51,7 @@
     "shared_refit_root": "JIT/runs/pi_unified_continuation_field/pi_0_iter0_shared_tiny_mlp_refit_20260901",
     "shared_refit_summary_sha256": "8abbbfbc205e42bb28ee422691eeaef9ab30bdc4c56ad9067a4d55f366a2d9ef",
     "snapshot_search_roots": [
+      "JIT/runs/pi_unified_boundary",
       "JIT/runs/pi_unified_transition_band",
       "JIT/runs/pi_unified_upstream_parent_diversity"
     ],
