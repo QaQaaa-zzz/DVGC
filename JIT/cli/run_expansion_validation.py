@@ -8,8 +8,10 @@ from pathlib import Path
 
 import jax
 
-from jit_dvgc.expansion_validation_protocol import audit_expansion_validation_protocol
 from jit_dvgc.expansion_validation_runtime import execute_expansion_validation
+from jit_dvgc.expansion_validation_runtime_preflight import (
+    audit_expansion_validation_runtime_preflight,
+)
 
 
 def main() -> int:
@@ -18,7 +20,10 @@ def main() -> int:
     parser.add_argument(
         "--audit-only",
         action="store_true",
-        help="run the full zero-interaction artifact/leakage audit and exit",
+        help=(
+            "run the full zero-interaction artifact/leakage/unified-observation "
+            "runtime preflight and exit"
+        ),
     )
     parser.add_argument(
         "--resume",
@@ -31,7 +36,13 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.audit_only:
-        print(json.dumps(audit_expansion_validation_protocol(args.config), indent=2, sort_keys=True))
+        print(
+            json.dumps(
+                audit_expansion_validation_runtime_preflight(args.config),
+                indent=2,
+                sort_keys=True,
+            )
+        )
         return 0
 
     if jax.default_backend() != "gpu":
