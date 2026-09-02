@@ -12,7 +12,7 @@
 - The task XML is `assets/orange_bike_4kg_horizontal.xml` with SHA-256
   `0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a`.
   Preserve task physics, reward semantics, action semantics, snapshot semantics,
-  50 Hz control, 2 kg payload, hip/knee ±50 Nm limits, and TEST isolation.
+  50 Hz control, 2 kg payload, hip/knee +/-50 Nm limits, and TEST isolation.
 
 ## Scientific contract
 
@@ -37,20 +37,52 @@ runtime switch between two experts.
   been selected. It may not affect Tube construction, threshold selection,
   policy training, checkpoint selection, or iteration stopping.
 
-## Current authority — 2026-09-01
+## Current authority — 2026-09-02
 
-- Tube_1 completed: 3,119 TRAIN entries = exact 222-entry Tube_0 core + 2,897
-  policy-conditioned expansion states. Manifest SHA-256:
+The project is at **repaired iteration-1 acceptance**.
+
+Completed authoritative chain:
+
+- Tube_1: 3,119 TRAIN entries = exact 222-entry Tube_0 core + 2,897 expansion;
+  manifest SHA-256:
   `817a980a5dd84f36507f762a913c21c1fc0913580d925ff9c68e982edfd82a80`.
-- `pi_1_tube1_natural10_10009600_seed821101_20260901_retry01` completed exactly
-  10,009,600 fresh PPO training transitions, all five TRAIN panels, 2,838 panel
-  interactions, no Brax evaluation, no validation/TEST, no expert switching,
-  and final-checkpoint restoration.
-- Preserve the first pi_1 attempt as an `engineering_error`; do not rewrite its
-  historical undercounted diagnostic accounting.
-- The next scientific stage is: freeze the exact completed pi_1 final checkpoint,
-  then execute core-preservation and boundary-gain gates. Do not claim envelope
-  expansion before both pass.
+- The first completed Tube_1 `pi_1` candidate was frozen and scientifically
+  rejected: 21 core regressions, core FAIL, old 56-state boundary PASS.
+- Zero-interaction diagnosis established retained-core replay dilution as a
+  material mechanism.
+- The repaired method uses 50% retained core / 50% expansion inside each phase,
+  with the outer 90% Tube / 10% natural reset mixture unchanged.
+- Two baseline-only single-axis acceptance-bank readiness probes were consumed
+  as FAIL evidence; neither produced downstream negatives.
+- A systematic two-axis real-dynamics acquisition generated 3,720 fresh TRAIN
+  candidates with zero exact overlap against the two consumed readiness probes.
+- Frozen-`pi_0` labeling was completed as four sequential 930-candidate GPU
+  processes after long single-process labeling hit CUDA/Warp allocator OOM. The
+  execution shards were merged once in original catalog order without changing
+  candidates, seed, horizon, label semantics, physics, or acceptance criteria.
+- The resulting fresh acceptance bank contains 260 frozen-`pi_0` negatives:
+  246 upstream across 4 parent groups and 14 downstream across 5 parent groups;
+  pre-training readiness PASS.
+- Repaired `pi_1` completed exactly 10,009,600 PPO transitions and was frozen at:
+  `JIT/runs/frozen_unified/pi_1_core_replay50_10009600_20260902/frozen_unified_policy.json`.
+- Repaired final checkpoint payload SHA-256:
+  `ea93a534c2c6bb3bf145684cbea82df94fefa2df8099dcdcdd9492bd8007e205`.
+- Repaired frozen manifest file SHA-256:
+  `d5a1658530d475a67264aa5c621283d71c823200dbee6068f93413b93d06b7a8`.
+- final TEST/JCE/JEL remains untouched.
+
+The next scientific stage is exactly one paired repaired `pi_0 -> pi_1` gate:
+
+1. structural core bank = all 222 Tube_0 entries;
+2. fresh boundary bank = locked 260-state two-axis frozen-`pi_0` negatives;
+3. core PASS requires zero baseline-success -> candidate-failure regressions;
+4. all fresh baseline negatives must reproduce;
+5. boundary PASS requires candidate success in at least 2 distinct parent groups;
+6. no validation, TEST, expert switching, or training during the gate.
+
+**Do not start accepted `C^1`, Tube_2, or pi_2 until both gates pass.** If either
+gate fails, preserve and diagnose; do not tune the bank, replay ratio, reward,
+PPO settings, or acceptance threshold to force PASS.
 
 ## Modify-first repository policy
 
