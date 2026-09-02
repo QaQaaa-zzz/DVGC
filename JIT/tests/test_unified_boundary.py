@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
+from jit_dvgc.acquisition import select_disjoint_tube_boundary_anchors
 from jit_dvgc.unified_boundary import select_tube_boundary_anchors
 from jit_dvgc.unified_envelope_snapshot import (
     DOWN_EVENT_FIELDS,
@@ -84,6 +85,56 @@ def test_boundary_anchor_selection_is_weak_score_group_unique_and_phase_local():
     assert audit["by_phase"]["downstream"]["excluded_above_score_ceiling_count"] == 1
     assert audit["test_data_used"] is False
     assert audit["validation_data_used"] is False
+
+
+def test_disjoint_boundary_selection_excludes_consumed_states_and_parent_groups():
+    entries = [
+        _entry("upstream", 0, 0.01, "u0"),
+        _entry("upstream", 1, 0.02, "u1"),
+        _entry("upstream", 2, 0.03, "u2"),
+        _entry("upstream", 3, 0.04, "u3"),
+        _entry("downstream", 0, 0.01, "d0"),
+        _entry("downstream", 1, 0.02, "d1"),
+        _entry("downstream", 2, 0.03, "d2"),
+        _entry("downstream", 3, 0.04, "d3"),
+    ]
+    artifact = _artifact(entries)
+    anchors, audit = select_disjoint_tube_boundary_anchors(
+        artifact,
+        max_per_phase=2,
+        minimum_per_phase=2,
+        frontier_score_ceiling=0.5,
+        excluded_state_sha256=(entries[0]["state_sha256"],),
+        excluded_parent_groups={"upstream": ("u1",), "downstream": ("d0",)},
+    )
+
+    assert [(row.phase, row.parent_group_id) for row in anchors] == [
+        ("upstream", "u2"),
+        ("upstream", "u3"),
+        ("downstream", "d1"),
+        ("downstream", "d2"),
+    ]
+    assert audit["selected_phase_counts"] == {"downstream": 2, "upstream": 2}
+    assert audit["excluded_state_sha256_count"] == 1
+    assert audit["excluded_parent_group_counts"] == {"upstream": 1, "downstream": 1}
+    assert audit["by_phase"]["upstream"]["excluded_consumed_state_count"] == 1
+    assert audit["by_phase"]["upstream"]["excluded_consumed_parent_group_count"] == 1
+    assert audit["by_phase"]["downstream"]["excluded_consumed_parent_group_count"] == 1
+    assert audit["test_data_used"] is False
+    assert audit["validation_data_used"] is False
+    assert audit["final_evaluation_data_used"] is False
+
+    with pytest.raises(ValueError, match="disjoint frontier has only"):
+        select_disjoint_tube_boundary_anchors(
+            artifact,
+            max_per_phase=3,
+            minimum_per_phase=3,
+            frontier_score_ceiling=0.5,
+            excluded_parent_groups={
+                "upstream": ("u0", "u1"),
+                "downstream": ("d0", "d1"),
+            },
+        )
 
 
 def test_boundary_anchor_selection_never_fills_quota_with_core_or_same_parent_group():
