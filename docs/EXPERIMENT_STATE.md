@@ -1,178 +1,200 @@
 # DVGC Experiment State
 
-Current as of 2026-09-01 for branch `agent/two-phase-soft-tube`.
+Current as of 2026-09-02 for branch `agent/two-phase-soft-tube`.
 
-This file is intentionally compact. Historical experiment narratives remain recoverable from Git history and locked run/handoff artifacts; they are not active context for new work.
+This is the compact recovery marker. For detailed artifact history use
+`JIT/docs/CURRENT_STATUS.md`. For the scientific contract use
+`JIT/docs/ENVELOPE_ITERATION_PROTOCOL.md`.
 
-## Current scientific state
+## Current marker
 
-The active method is the iterative single-policy envelope pipeline:
+The active method is:
 
-`experts -> Tube_0 -> pi_0 -> C^0 -> Tube_1 -> pi_1 -> paired gate -> repair/accept -> C^1 -> Tube_2 -> pi_2 -> ...`
+`experts -> Tube_0 -> pi_0 -> C^0 -> Tube_1 -> pi_1 -> paired gate -> C^1 -> Tube_2 -> pi_2 -> ...`
 
-The first `pi_0 -> pi_1` paired scientific gate has now completed and **rejected pi_1 as the next accepted iteration authority because core preservation failed**, even though boundary gain passed.
+The project has completed the **repaired iteration-1 policy training and freeze**,
+but iteration 1 is **not accepted yet**.
 
-### Completed bootstrap
+Current state:
 
-- `pi_up_star`: frozen Propulsion-Ascent expert.
-- `pi_down_star`: frozen Descent-Recovery expert.
-- `V_up/V_down`: frozen bootstrap continuation models.
-- Tube_0: 222 TRAIN-only entries, 117 upstream + 105 downstream.
-- `pi_0`: unified Tube-RSI policy, frozen as iteration-0 expansion authority.
+```text
+first pi_1 candidate
+  -> core FAIL / boundary PASS
+  -> replay-dilution diagnosis
+  -> predeclared retained-core replay repair
+  -> fresh baseline-only acceptance-bank acquisition
+  -> two-axis fresh bank PASS
+  -> repaired pi_1 trained for 10,009,600 transitions
+  -> repaired pi_1 frozen
+  -> NEXT: formal paired core + fresh-boundary acceptance gate
+```
 
-### Completed Tube_0 -> Tube_1 construction
+Do not start accepted `C^1`, `Tube_2`, or `pi_2` before that gate passes.
+Final TEST/JCE/JEL remains untouched.
 
-Fresh independent validation authorized Tube_1 using frozen thresholds:
+## Stable authorities
 
-- upstream threshold: `0.9333483934566058`
-- downstream threshold: `0.8721734129976408`
+### Tube_0
 
-Tube_1:
+- 222 TRAIN entries = 117 upstream + 105 downstream
+- manifest SHA-256: `c1c1161ebafd16716f2566aaccfe89169fe9cb0c2b090266c0e2bf90165df28b`
+
+### pi_0
+
+Frozen manifest:
+
+`JIT/runs/frozen_unified/pi_0_round1_10009600_20260831/frozen_unified_policy.json`
+
+- 10,009,600 PPO transitions
+- actor SHA-256: `43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029`
+- payload SHA-256: `fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719`
+
+### Tube_1
 
 `JIT/runs/soft_tube/soft_tube_iter1_pi0_conditioned_20260901`
 
-- manifest SHA-256: `817a980a5dd84f36507f762a913c21c1fc0913580d925ff9c68e982edfd82a80`
+- 3,119 TRAIN entries
 - exact retained Tube_0 core: 222
 - expansion: 2,897 = 310 upstream + 2,587 downstream
-- total: 3,119 = 427 upstream + 2,692 downstream
-- validation rows embedded: 0
-- TEST rows embedded: 0
-- construction interactions: 0
-- construction training transitions: 0
+- manifest SHA-256: `817a980a5dd84f36507f762a913c21c1fc0913580d925ff9c68e982edfd82a80`
+- validation embedded: 0
+- TEST embedded: 0
 
-Tube_1 mixed-snapshot Tube-RSI engineering gate passed.
+## Rejected first pi_1 candidate
 
-### pi_1
+The first completed `pi_1` candidate remains immutable comparison provenance.
+Its paired `pi_0 -> pi_1` gate completed scientifically:
 
-Authoritative completed run:
-
-`JIT/runs/pi_unified/pi_1_tube1_natural10_10009600_seed821101_20260901_retry01`
-
-Config SHA-256 before launch:
-
-`987ef5d31661482fd0bc05cea566c177d83ecd00ae3028ff0e8bb2ed462b7901`
-
-Result:
-
-- requested/completed PPO transitions: 10,009,600 / 10,009,600
-- completed TRAIN panels: 5
-- TRAIN-panel interactions: 2,838
-- Brax evaluation transitions: 0
-- reset mixture: 0.1 natural / 0.9 Tube
-- actor/critic/optimizer: fresh initialization
-- seed: 821101
-- expert switching: false
-- validation data used: false
-- TEST data used: false
-- final checkpoint restore: verified
-
-The exact final checkpoint was frozen as `pi_1` iteration authority with zero environment interactions and zero training transitions.
-
-## Completed paired pi_0 -> pi_1 gate
-
-Completed retry artifact:
-
-`JIT/runs/pi_unified_gate/pi_0_to_pi_1_paired_core_boundary_20260901_retry01`
-
-Locked protocol SHA-256:
-
-`24a126ee94472eebbcb59fff66618ae00dae41074a1d1cfee8bb816afaff410a`
-
-Run result:
-
-- status: completed
-- environment interactions: 23,695
-- training transitions: 0
-- validation data used: false
-- TEST data used: false
-- expert switching: false
-
-Core preservation:
-
-- 222 Tube_0 core states
-- pi_0 success: 222
-- pi_1 success: 201
-- core regressions: 21
-- upstream regressions: 16 / 117
-- downstream regressions: 5 / 105
+- 222-state core: `pi_0` 222 successes, candidate 201 successes
+- core regressions: 21 = 16 upstream + 5 downstream
 - **CORE PASS = false**
-
-Boundary gain:
-
-- 56 locked pi_0-negative frontier states
-- pi_0 reproduction failures: 0
-- pi_1 successes: 12
-- successful parent groups: 5
-- upstream gains: 12 / 26
-- downstream gains: 0 / 30
+- old 56-state boundary bank: baseline reproduced all failures
+- candidate gains: 12 states across 5 parent groups
 - **BOUNDARY PASS = true**
+- **ITERATION ACCEPTED = false**
 
-Iteration decision:
+The completed 56-state boundary bank is consumed and cannot be the sole fresh
+acceptance evidence for the repaired candidate.
 
-- `ITERATION ACCEPTED = false`
-- `EMPIRICAL ENVELOPE EXPANSION ACCEPTED = false`
+## Repaired iteration-1 method
 
-Artifact file SHAs:
+Config:
 
-- summary: `cf63f59f4862c51351ceca80afa8796316592be515c28b572584e97e39d9f7fc`
-- bank: `97cb62727e12824abc2a5238e9187e47773c80b5f169f2f286c0f412a8e2a6bd`
-- records: `614d020198a38235f0a2bfddc6b087fdd5e3729c5fcff49f40c4fcf71683cae2`
+`JIT/configs/pi_unified_iter1_tube1_core_replay50_natural10.json`
 
-This is a scientific rejection. Do not alter the consumed bank, acceptance rule, thresholds, reward, or PPO configuration post hoc to convert it into a PASS.
+Only the within-Tube replay contract changed:
 
-## Preserved engineering-error provenance
+- phase: 50% upstream / 50% downstream
+- within each phase: 50% retained core / 50% expansion
+- retained core uniform; expansion keeps existing weighted sampling
+- with 90% Tube / 10% natural reset, effective episode mass is
+  45% retained core / 45% expansion / 10% natural
 
-Two engineering-error attempts remain immutable:
+PPO budget, seed 821101, fresh actor/critic/optimizer, Tube_1 support, physics,
+reward and action semantics remained fixed.
 
-1. first formal pi_1 attempt: plotting failed after 1,024,000 PPO transitions; first TRAIN panel had 449 real interactions;
-2. first paired-gate attempt: Warp/MJX CUDA OOM after 2,546 interactions because the runner created repeated `jax.jit(env.step)` wrappers.
+## Fresh acceptance evidence — completed
 
-The gate runner was fixed to share one compiled `env.step`; retry01 then completed successfully under the unchanged scientific protocol.
+Two baseline-only single-axis readiness probes were preserved as scientific
+pre-training FAIL evidence:
 
-## Current scientific blocker
+1. support-wide probe: 659 states, 12 negatives, all upstream, only 2 upstream
+   parent groups, downstream 0;
+2. stronger single-axis probe: 1,272 states, 58 negatives, all upstream, still
+   only 2 upstream parent groups, downstream 0.
 
-No new training should start yet.
+This showed that increasing single-axis strength/duration was not sufficient.
+The acquisition capability was then generalized to systematic sparse two-axis
+directions while keeping real dynamics and the same frozen `pi_0` baseline.
 
-The current question is why pi_1 gained new upstream frontier ability while losing 21 previously successful Tube_0 core states.
+Two-axis acquisition:
 
-Working hypothesis: retained-core replay may have been diluted by Tube_1 expansion. Tube_1 structurally retained all 222 core states, but contains 2,897 expansion states and sampling within each 50/50 phase is categorical by entry `sampling_weight`. This makes actual retained-core probability mass, not entry presence alone, the quantity that must be audited.
+`JIT/runs/pi_unified_gate_prelock/pi_0_repair_acceptance_two_axis_acquisition_20260902`
 
-The hypothesis is not accepted until the existing frozen artifacts show it.
+- 3,720 unique fresh TRAIN candidates
+- upstream 1,560 / downstream 2,160
+- 18,829 acquisition interactions
+- zero exact-state overlap with the two consumed readiness probes
+- no validation/TEST/training
+
+Long single-process labeling hit CUDA/Warp allocator OOM. The logical labeling
+job was therefore executed as four sequential independent GPU processes of 930
+candidates each, with the same candidate set, frozen policy, seed and 400-tick
+horizon, and then merged once in original catalog order.
+
+Merged root:
+
+`JIT/runs/pi_unified_gate_prelock/pi_0_repair_acceptance_two_axis_sharded_20260902/merged`
+
+Fresh locked-bank result:
+
+- 3,720 labels
+- 260 frozen-`pi_0` negatives
+- upstream: 246 negatives / 4 parent groups
+- downstream: 14 negatives / 5 parent groups
+- Tube_1 overlap: 0
+- **PRE-TRAINING FRESH ACCEPTANCE BANK = PASS**
+
+The sharding is execution-only; it did not change any scientific protocol field.
+`JIT/runs` remains local/ignored runtime evidence unless explicitly committed.
+
+## Repaired pi_1 — completed and frozen
+
+Formal run:
+
+`JIT/runs/pi_unified/pi_1_tube1_core_replay50_natural10_10009600_seed821101_20260902`
+
+Frozen candidate:
+
+`JIT/runs/frozen_unified/pi_1_core_replay50_10009600_20260902/frozen_unified_policy.json`
+
+- requested/completed transitions: 10,009,600 / 10,009,600
+- fresh actor/critic/optimizer
+- seed 821101
+- 45% retained-core / 45% expansion / 10% natural effective reset mass
+- validation: false
+- TEST: false
+- expert switching: false
+- checkpoint payload SHA-256: `ea93a534c2c6bb3bf145684cbea82df94fefa2df8099dcdcdd9492bd8007e205`
+- frozen manifest file SHA-256: `d5a1658530d475a67264aa5c621283d71c823200dbee6068f93413b93d06b7a8`
+
+This frozen policy is a **candidate comparison authority**, not yet the accepted
+iteration-1 authority.
 
 ## Immediate next step
 
-Perform zero-interaction diagnosis from the completed gate `records.json` and Tube artifacts:
+Run exactly one formal repaired `pi_0 -> pi_1` paired acceptance audit using:
 
-1. list all 21 core regressions by phase/state/parent/source;
-2. summarize pi_1 terminal outcome classes for those regressions;
-3. compute Tube_1 retained-core sampling probability mass separately for upstream and downstream;
-4. compare regression-state weights with preserved-core weights;
-5. inspect whether regressions concentrate in particular parent/source groups or low-probability support;
-6. distinguish curriculum/replay dilution from a deeper phase/runtime issue.
+- core bank: all 222 Tube_0 states;
+- boundary bank: the locked fresh 260-state two-axis frozen-`pi_0` negative bank;
+- baseline: frozen `pi_0`;
+- candidate: frozen repaired `pi_1`;
+- deterministic continuation, 400 ticks;
+- no expert switching, validation, TEST or training.
 
-Only after this diagnosis may a revised policy-improvement method be predeclared. The rejected pi_1 is not allowed to generate the accepted `C^1 -> Tube_2` scientific chain.
+Acceptance rules remain unchanged from the original gate:
 
-TEST/JCE/JEL remains untouched.
+- core preservation: zero baseline-success -> candidate-failure regressions;
+- baseline-negative reproduction: every locked fresh negative must reproduce;
+- boundary gain: candidate success in at least 2 distinct parent groups;
+- iteration accepted only if core and boundary both pass.
 
-## Repository state
+If PASS: accept iteration 1, then proceed to frozen-`pi_1`-conditioned `C^1`,
+fresh validation, core-retaining `Tube_2`, and `pi_2`.
 
-Completed maintenance includes:
+If FAIL: preserve and diagnose; do not retune the gate or replay ratio against the
+same consumed bank.
 
-- stable package-root APIs for training/tube/snapshots/acquisition/continuation/analysis/workflow;
-- removal of redundant facade modules and a first batch of obsolete iteration-0 scaffolding;
-- current JIT/root context documentation;
-- resumable workflow infrastructure;
-- Tube-RSI support for phase-consistent `C^k` fields;
-- dependency-closure deletion rules;
-- generic paired-policy gate through the existing diagnostic CLI;
-- shared compiled `env.step` for long paired audits.
+## Remaining implementation debt
 
-Remaining migration debt before unattended later iterations:
+Before unattended later iterations:
 
-- core-retaining Tube construction still contains Tube_1/iteration-0 constants;
-- continuation refit/fresh validation still use a small number of upstream-specific helpers;
-- workflow must stop and surface scientific-gate failure rather than proceeding;
-- generic k -> k+1 Tube/continuation contracts remain to be completed after the current scientific blocker is resolved.
+- paired gate input/provenance must be generalized to the new fresh-bank artifact;
+- `core_retaining_tube_iteration.py` still contains iteration-0/Tube_1 constants;
+- continuation refit/fresh validation still depend on some upstream-specific
+  helpers;
+- generic `C^k -> Tube_(k+1)` construction must be completed;
+- workflow must stop on scientific failure and never auto-tune.
 
 ## Immutable task identity
 
@@ -182,5 +204,3 @@ Remaining migration debt before unattended later iterations:
 - control: 50 Hz
 - hip/knee torque limits: +/-50 Nm
 - action order: `[steer, rear-wheel drive, hip, knee]`
-
-For exact JIT artifact identities, use `JIT/docs/CURRENT_STATUS.md` as the primary current-state ledger.
