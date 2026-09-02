@@ -8,6 +8,7 @@ perturbations; direct qpos/qvel dilation is intentionally unsupported.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from itertools import combinations, product
 import json
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
@@ -51,6 +52,75 @@ def _finite_state(state: Any, action: Any | None = None) -> bool:
     if action is not None:
         arrays = (*arrays, np.asarray(jax.device_get(action)))
     return all(np.isfinite(value).all() for value in arrays)
+
+
+def action_sparse_directions(
+    action_order: Sequence[str] = ACTION_ORDER,
+    *,
+    action_names: Sequence[str] | None = None,
+    signs: Sequence[int] | None = None,
+    active_action_dimensions: int = 1,
+) -> tuple[dict[str, Any], ...]:
+    """Return deterministic sparse perturbation directions in normalized action space.
+
+    ``active_action_dimensions=1`` delegates to the historical one-hot direction
+    generator and therefore preserves the exact legacy direction payload.  Wider
+    sparse directions enumerate every selected action combination and every
+    selected sign combination deterministically.  The generated vector is still
+    added to the frozen-policy action and clipped per action component to [-1, 1].
+    """
+    width = int(active_action_dimensions)
+    order = tuple(str(name) for name in action_order)
+    names = order if action_names is None else tuple(str(name) for name in action_names)
+    if not names or len(set(names)) != len(names):
+        raise ValueError("action_names must be non-empty and unique")
+    unknown = sorted(set(names).difference(order))
+    if unknown:
+        raise ValueError(f"unknown action_names: {unknown}")
+    if width <= 0 or width > len(names):
+        raise ValueError("active_action_dimensions must lie in [1, len(action_names)]")
+
+    selected_signs = (-1, 1) if signs is None else tuple(int(sign) for sign in signs)
+    if not selected_signs or len(set(selected_signs)) != len(selected_signs):
+        raise ValueError("signs must be non-empty and unique")
+    if any(sign not in (-1, 1) for sign in selected_signs):
+        raise ValueError("signs must contain only -1 or +1")
+
+    if width == 1:
+        return action_basis_directions(
+            action_order=order,
+            action_names=names,
+            signs=selected_signs,
+        )
+
+    name_set = set(names)
+    ordered_actions = tuple(
+        (dimension, name)
+        for dimension, name in enumerate(order)
+        if name in name_set
+    )
+    sign_set = set(selected_signs)
+    ordered_signs = tuple(sign for sign in (-1, 1) if sign in sign_set)
+
+    result: list[dict[str, Any]] = []
+    for active in combinations(ordered_actions, width):
+        for active_signs in product(ordered_signs, repeat=width):
+            vector = [0.0] * len(order)
+            dimensions: list[int] = []
+            active_names: list[str] = []
+            for (dimension, name), sign in zip(active, active_signs):
+                vector[dimension] = float(sign)
+                dimensions.append(int(dimension))
+                active_names.append(str(name))
+            result.append(
+                {
+                    "action_dimensions": dimensions,
+                    "action_names": active_names,
+                    "signs": [int(sign) for sign in active_signs],
+                    "basis_vector": vector,
+                }
+            )
+    return tuple(result)
 
 
 @dataclass(frozen=True)
@@ -135,8 +205,6 @@ def select_tube_boundary_anchors(
         seen_states: set[str] = set()
         seen_groups: set[str] = set()
 
-        # One state per parent trajectory prevents pseudo-diverse frontier budget
-        # from being spent repeatedly on the same rollout family.
         for local_index, row in ordered:
             state_hash = str(row["state_sha256"])
             group = str(row["parent_group_id"])
@@ -215,14 +283,17 @@ def collect_unified_boundary_candidates(
     durations: Sequence[int] = DEFAULT_UNIFIED_BOUNDARY_DURATIONS,
     action_names: Sequence[str] | None = None,
     signs: Sequence[int] | None = None,
+    active_action_dimensions: int = 1,
 ) -> dict[str, Any]:
     """Generate unlabeled phase-local reachable candidates under frozen pi_k."""
     strengths = validate_strengths(strengths)
     durations = validate_durations(durations)
-    directions = action_basis_directions(
+    directions = action_sparse_directions(
         action_names=action_names,
         signs=signs,
+        active_action_dimensions=active_action_dimensions,
     )
+    width = int(active_action_dimensions)
     ceiling = float(frontier_score_ceiling)
     if not np.isfinite(ceiling) or not 0.0 <= ceiling <= 1.0:
         raise ValueError("frontier_score_ceiling must be finite and lie in [0, 1]")
@@ -248,8 +319,44 @@ def collect_unified_boundary_candidates(
     artifact = env.tube_pool.artifact
     _validate_source_tube(artifact)
     support_hashes = {str(row["state_sha256"]) for row in artifact.entries}
-    selected_action_names = list(dict.fromkeys(row["action_name"] for row in directions))
-    selected_signs = sorted({int(row["sign"]) for row in directions})
+    if width == 1:
+        selected_action_names = list(dict.fromkeys(row["action_name"] for row in directions))
+        selected_signs = sorted({int(row["sign"]) for row in directions})
+        direction_family = (
+            "action_basis"
+            if len(directions) == 2 * len(ACTION_ORDER)
+            else "action_basis_subset"
+        )
+        direction_protocol: dict[str, Any] = {}
+        state_generation = (
+            "reset exact TRAIN Tube entry in authoritative unified runtime; compute deterministic "
+            "frozen unified-policy action; apply bounded selected action-basis perturbation; "
+            "advance only through env.step; reject terminal/nonfinite/phase-crossing states"
+        )
+    else:
+        selected_action_names = list(
+            dict.fromkeys(
+                name
+                for row in directions
+                for name in row["action_names"]
+            )
+        )
+        selected_signs = sorted(
+            {
+                int(sign)
+                for row in directions
+                for sign in row["signs"]
+            }
+        )
+        direction_family = f"action_sparse_{width}"
+        direction_protocol = {"active_action_dimensions": width}
+        state_generation = (
+            "reset exact TRAIN Tube entry in authoritative unified runtime; compute deterministic "
+            "frozen unified-policy action; apply bounded selected sparse multi-axis action "
+            "perturbation; advance only through env.step; reject terminal/nonfinite/phase-crossing "
+            "states"
+        )
+
     maximum_interactions = sum(
         int(duration)
         for _anchor in anchors
@@ -301,9 +408,8 @@ def collect_unified_boundary_candidates(
         "anchor_semantics": "weak_bootstrap_frontier_probe_not_certified_boundary",
         "protocol_seed": int(protocol_seed),
         "action_order": list(ACTION_ORDER),
-        "direction_family": (
-            "action_basis" if len(directions) == 2 * len(ACTION_ORDER) else "action_basis_subset"
-        ),
+        "direction_family": direction_family,
+        **direction_protocol,
         "selected_action_names": selected_action_names,
         "selected_signs": selected_signs,
         "strengths": list(strengths),
@@ -314,11 +420,7 @@ def collect_unified_boundary_candidates(
         "test_data_used": False,
         "validation_data_used": False,
         "final_evaluation_data_used": False,
-        "state_generation": (
-            "reset exact TRAIN Tube entry in authoritative unified runtime; compute deterministic "
-            "frozen unified-policy action; apply bounded selected action-basis perturbation; "
-            "advance only through env.step; reject terminal/nonfinite/phase-crossing states"
-        ),
+        "state_generation": state_generation,
         "claim_boundary": {
             "unlabeled_acquisition_only": True,
             "tube_expansion_claim": False,
