@@ -1,6 +1,6 @@
 {
   "schema": "jit_repair_acceptance_boundary_acquisition_v1",
-  "expected_protocol_sha256": "91bb64f3862f02af11a937ac988fca5cdef19db29b35a8a2595e3ff4e2f7439d",
+  "expected_protocol_sha256": "72a5be0eee7c3bef7dd6dd917c8a3790bd9e7d42374b98c7dee56d25d4c751ba",
   "protocol": {
     "schema": "jit_repair_acceptance_boundary_acquisition_protocol_v1",
     "status": "predeclared_before_repair_training",
@@ -29,6 +29,12 @@
       "action_names": ["steer", "rear_wheel_drive", "hip", "knee"],
       "signs": [-1, 1],
       "protocol_seed": 9511002
+    },
+    "labeling": {
+      "policy_mode": "deterministic",
+      "max_ticks": 400,
+      "protocol_seed": 9511003,
+      "baseline_policy_only": true
     },
     "isolation": {
       "exclude_consumed_boundary_states": true,
