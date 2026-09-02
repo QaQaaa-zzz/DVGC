@@ -29,6 +29,8 @@ from jit_dvgc.training import (
 
 
 REPAIR_ACCEPTANCE_SCHEMA = "jit_repair_acceptance_boundary_acquisition_v1"
+WARP_MEMORY_MAINTENANCE_STEP_INTERVAL = 64
+WARP_MEMORY_TELEMETRY_STEP_INTERVAL = 4096
 
 
 def _read_json(path: Path):
@@ -114,6 +116,63 @@ def _load_repair_predeclaration(path: Path) -> dict:
     if bank_lock.get("candidate_training_must_not_start_before_lock") is not True:
         raise ValueError("repair candidate training must be blocked until bank lock")
     return payload
+
+
+def _build_memory_stable_step(env, *, device: str = "cuda:0"):
+    """Reuse one compiled step while periodically releasing idle Warp pool memory.
+
+    MJX/Warp collision stepping allocates short-lived CUDA buffers. Long serial
+    continuation searches can otherwise exhaust the device allocator even when
+    the logical rollout state is small. This wrapper changes only allocator
+    maintenance: candidate order, actions, dynamics, horizon, and labels are
+    untouched.
+    """
+    try:
+        import warp as wp
+    except Exception as exc:  # pragma: no cover - deployment dependency guard
+        raise RuntimeError("Warp runtime is required for GPU continuation labeling") from exc
+
+    compiled_step = jax.jit(env.step)
+    mempool_supported = bool(wp.is_mempool_supported(device))
+    mempool_enabled = bool(wp.is_mempool_enabled(device)) if mempool_supported else False
+    if mempool_enabled:
+        # Warp documents threshold 0 as releasing returned pool memory on a
+        # subsequent synchronization. Set it explicitly so the retry is not
+        # dependent on process-global allocator state.
+        wp.set_mempool_release_threshold(device, 0)
+
+    print(
+        "warp_memory_maintenance=enabled "
+        f"device={device} step_interval={WARP_MEMORY_MAINTENANCE_STEP_INTERVAL} "
+        f"mempool_supported={mempool_supported} mempool_enabled={mempool_enabled}"
+    )
+
+    step_count = 0
+
+    def step_with_memory_maintenance(state, action):
+        nonlocal step_count
+        next_state = compiled_step(state, action)
+        step_count += 1
+        if step_count % WARP_MEMORY_MAINTENANCE_STEP_INTERVAL == 0:
+            # The caller also blocks each state. Blocking here before the Warp
+            # device sync ensures the FFI collision work has completed, after
+            # which the release-threshold policy can return idle pool memory.
+            jax.block_until_ready(next_state)
+            wp.synchronize_device(device)
+        if step_count % WARP_MEMORY_TELEMETRY_STEP_INTERVAL == 0:
+            fields = [f"steps={step_count}"]
+            if mempool_enabled:
+                fields.extend(
+                    [
+                        f"mempool_current={wp.get_mempool_used_mem_current(device)}",
+                        f"mempool_high={wp.get_mempool_used_mem_high(device)}",
+                    ]
+                )
+            fields.append(f"device_free={wp.get_device(device).free_memory}")
+            print("warp_memory " + " ".join(fields))
+        return next_state
+
+    return step_with_memory_maintenance
 
 
 def main() -> int:
@@ -219,6 +278,7 @@ def main() -> int:
     if file_sha256(Path(record["checkpoint"]) / "payload.pkl") != record["payload_sha256"]:
         raise ValueError("unified continuation checkpoint payload SHA-256 mismatch")
     policy = jax.jit(make_checkpoint_policy(env, payload, deterministic=True))
+    memory_stable_step = _build_memory_stable_step(env)
 
     report = label_unified_continuations(
         args.catalog,
@@ -229,6 +289,7 @@ def main() -> int:
         frozen_manifest_sha256=frozen_sha,
         max_ticks=args.max_ticks,
         protocol_seed=args.protocol_seed,
+        compiled_step_fn=memory_stable_step,
     )
 
     acceptance_bank = None
