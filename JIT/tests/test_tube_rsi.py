@@ -18,6 +18,43 @@ def _artifact(tmp_path):
     )
 
 
+def _core_replay_artifact(tmp_path):
+    artifact = _artifact(tmp_path)
+    upstream = [dict(row) for row in artifact.entries if row["phase"] == "upstream"]
+    downstream = [dict(row) for row in artifact.entries if row["phase"] == "downstream"]
+    assert len(upstream) == 2
+    assert len(downstream) == 1
+    entries = (
+        upstream[0],
+        downstream[0],
+        upstream[1],
+        dict(downstream[0]),
+    )
+    manifest = {
+        **artifact.manifest,
+        "artifact_role": "policy_conditioned_core_retaining_soft_tube_iteration",
+        "source_tube_entry_count": 2,
+        "core_retained_count": 2,
+        "expansion_count": 2,
+        "entry_count": 4,
+        "upstream_count": 2,
+        "downstream_count": 2,
+    }
+    return SoftTubeArtifact(artifact.root, manifest, entries, artifact.diagnostics)
+
+
+def _core_replay_contract():
+    return {
+        "schema": "jit_tube_rsi_core_replay_v1",
+        "selection": "phase_then_source_then_entry",
+        "core_probability": 0.5,
+        "expansion_probability": 0.5,
+        "core_within_source": "uniform",
+        "expansion_within_source": "value_weighted",
+        "source_core_definition": "first_core_retained_count_entries",
+    }
+
+
 def test_sampler_is_fixed_seed_deterministic_and_phase_balanced(tmp_path):
     from jit_dvgc.tube_rsi import TubeRSIPool
 
@@ -45,6 +82,28 @@ def test_within_phase_sampling_preserves_low_score_support_and_favors_high_score
     counts = np.bincount(indices, minlength=2)
     assert counts[0] > 0
     assert counts[1] > counts[0]
+
+
+def test_source_balanced_replay_guarantees_half_phase_mass_to_retained_core(tmp_path):
+    from jit_dvgc.tube_rsi import TubeRSIPool, describe_tube_sampling
+
+    artifact = _core_replay_artifact(tmp_path)
+    contract = _core_replay_contract()
+    summary = describe_tube_sampling(artifact, contract)
+    assert summary["phases"]["upstream"]["core_probability"] == pytest.approx(0.5)
+    assert summary["phases"]["downstream"]["core_probability"] == pytest.approx(0.5)
+
+    pool = TubeRSIPool.from_artifact(
+        artifact,
+        compatibility=COMPATIBILITY,
+        core_replay_contract=contract,
+    )
+    up_probs = np.asarray(jax.nn.softmax(pool.upstream_sampling_logits))
+    down_probs = np.asarray(jax.nn.softmax(pool.downstream_sampling_logits))
+    assert float(np.sum(up_probs[: pool.upstream_core_count])) == pytest.approx(0.5)
+    assert float(np.sum(down_probs[: pool.downstream_core_count])) == pytest.approx(0.5)
+    assert pool.upstream_core_count == 1
+    assert pool.downstream_core_count == 1
 
 
 def test_fixed_index_sampling_restores_exact_saved_arrays_without_mutation(tmp_path):
