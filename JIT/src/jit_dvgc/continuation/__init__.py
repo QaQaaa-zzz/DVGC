@@ -27,6 +27,21 @@ NEGATIVE_ACCEPTANCE_BANK_SCHEMA = "jit_repair_acceptance_negative_bank_v1"
 PHASES = ("upstream", "downstream")
 
 
+class AcceptanceBankReadinessError(ValueError):
+    """Raised when a fresh negative acceptance bank misses phasewise minima."""
+
+    def __init__(self, audit: Mapping[str, Any]) -> None:
+        self.audit = dict(audit)
+        details = ", ".join(
+            f"{phase}:states={row['negative_state_count']},parents={row['negative_parent_group_count']}"
+            for phase, row in self.audit["readiness"].items()
+        )
+        super().__init__(
+            "fresh negative acceptance bank is not phasewise ready before repair training: "
+            + details
+        )
+
+
 def _canonical_sha256(payload: Mapping[str, Any]) -> str:
     return hashlib.sha256(
         json.dumps(
@@ -103,16 +118,6 @@ def select_negative_acceptance_rows(
         }
         for phase in PHASES
     }
-    if not all(row["ready"] for row in readiness.values()):
-        details = ", ".join(
-            f"{phase}:states={row['negative_state_count']},parents={row['negative_parent_group_count']}"
-            for phase, row in readiness.items()
-        )
-        raise ValueError(
-            "fresh negative acceptance bank is not phasewise ready before repair training: "
-            + details
-        )
-
     audit = {
         "selection": "all_baseline_continuation_negative_candidates",
         "input_label_count": len(labels),
@@ -122,6 +127,8 @@ def select_negative_acceptance_rows(
         "locked_negative_count": len(selected),
         "readiness": readiness,
     }
+    if not all(row["ready"] for row in readiness.values()):
+        raise AcceptanceBankReadinessError(audit)
     return tuple(selected), audit
 
 
@@ -156,12 +163,31 @@ def lock_negative_acceptance_bank(
         raise ValueError("acceptance-bank target Tube manifest drift")
     target_states = {str(row["state_sha256"]) for row in target_tube.entries}
 
-    selected, selection_audit = select_negative_acceptance_rows(
-        labels,
-        excluded_state_sha256=tuple(sorted(target_states)),
-        minimum_negative_states_per_phase=minimum_negative_states_per_phase,
-        minimum_negative_parent_groups_per_phase=minimum_negative_parent_groups_per_phase,
-    )
+    try:
+        selected, selection_audit = select_negative_acceptance_rows(
+            labels,
+            excluded_state_sha256=tuple(sorted(target_states)),
+            minimum_negative_states_per_phase=minimum_negative_states_per_phase,
+            minimum_negative_parent_groups_per_phase=minimum_negative_parent_groups_per_phase,
+        )
+    except AcceptanceBankReadinessError as error:
+        readiness_path = output_path.with_name("acceptance_readiness.json")
+        readiness = {
+            "schema": "jit_repair_acceptance_readiness_v1",
+            "status": "not_ready_before_repair_training",
+            "selection": "all_baseline_continuation_negative_candidates",
+            **error.audit,
+            "training_transitions": 0,
+            "validation_data_used": False,
+            "test_data_used": False,
+            "final_evaluation_data_used": False,
+        }
+        readiness_path.parent.mkdir(parents=True, exist_ok=True)
+        readiness_path.write_text(
+            json.dumps(readiness, indent=2, sort_keys=True, allow_nan=False) + "\n",
+            encoding="utf-8",
+        )
+        raise
 
     actor_ids = {str(row["policy_actor_sha256"]) for row in selected}
     payload_ids = {str(row["policy_payload_sha256"]) for row in selected}
@@ -234,6 +260,7 @@ __all__ = [
     "validate_candidate_snapshot",
     "validate_unified_boundary_catalog",
     "NEGATIVE_ACCEPTANCE_BANK_SCHEMA",
+    "AcceptanceBankReadinessError",
     "select_negative_acceptance_rows",
     "lock_negative_acceptance_bank",
 ]
