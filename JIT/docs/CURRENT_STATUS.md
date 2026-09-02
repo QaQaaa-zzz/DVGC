@@ -1,4 +1,4 @@
-# Current JIT status — 2026-09-01
+# Current JIT status — 2026-09-02
 
 ## Completed scientific artifacts
 
@@ -17,7 +17,7 @@ Authoritative path:
 - zero environment interactions and zero training transitions during construction
 - training guidance only; not a certified safe set
 
-### pi_1 formal Tube_1 PPO
+### rejected pi_1 formal Tube_1 PPO candidate
 
 Completed run:
 
@@ -56,7 +56,7 @@ Formal result:
 
 Final optimization metrics are diagnostics only; they are not capability gates.
 
-### frozen pi_1 iteration authority
+### frozen rejected pi_1 comparison authority
 
 Authoritative path:
 
@@ -74,6 +74,8 @@ Authoritative path:
 - `pi_unified_star` claim: false
 - JCE/JEL claim: false
 - certified-safe-Tube claim: false
+
+This frozen policy remains immutable comparison provenance, but the completed paired gate rejected it as the next accepted iteration authority.
 
 ## Preserved engineering-error attempts
 
@@ -93,7 +95,7 @@ Preserved path:
 
 Preflight was valid, but the real audit ended with a Warp/MJX CUDA OOM after 2,546 environment interactions. This attempt has no scientific gate result. The runner was changed to reuse one compiled `env.step` across all paired rollouts; the scientific protocol remained unchanged.
 
-## Completed paired pi_0 -> pi_1 scientific gate
+## Completed paired pi_0 -> rejected-pi_1 scientific gate
 
 Authoritative completed retry path:
 
@@ -107,7 +109,7 @@ Scientific protocol SHA-256:
 
 `24a126ee94472eebbcb59fff66618ae00dae41074a1d1cfee8bb816afaff410a`
 
-Artifact identities from the completed local audit:
+Artifact identities:
 
 - summary file SHA-256: `cf63f59f4862c51351ceca80afa8796316592be515c28b572584e97e39d9f7fc`
 - bank file SHA-256: `97cb62727e12824abc2a5238e9187e47773c80b5f169f2f286c0f412a8e2a6bd`
@@ -125,12 +127,11 @@ Artifact identities from the completed local audit:
 Locked bank: all 222 Tube_0 core states.
 
 - pi_0 successes: 222 / 222
-- pi_1 successes: 201 / 222
+- rejected pi_1 successes: 201 / 222
 - baseline-success -> candidate-failure regressions: 21
 - improvements on core: 0
 - upstream regressions: 16 / 117
 - downstream regressions: 5 / 105
-- non-vacuous baseline coverage: true
 - core gate: **FAIL**
 
 ### Boundary-gain result — PASS
@@ -138,7 +139,7 @@ Locked bank: all 222 Tube_0 core states.
 Locked challenge bank: 56 frozen pi_0 TRAIN continuation-negative frontier states, excluded from Tube_1.
 
 - pi_0 reproduced all 56 failures; reproduction failures: 0
-- pi_1 successes: 12 / 56
+- rejected pi_1 successes: 12 / 56
 - successful pi_1 parent groups: 5
 - required parent groups: 2
 - upstream gains: 12 / 26
@@ -150,24 +151,100 @@ Locked challenge bank: 56 frozen pi_0 TRAIN continuation-negative frontier state
 - iteration accepted: **false**
 - empirical pi_0 -> pi_1 envelope expansion accepted: **false**
 
-This is a scientific rejection under the predeclared protocol, not an engineering error. Do not change the gate threshold, audit bank, reward, PPO settings, or acceptance rule after seeing this result in order to convert it to a PASS.
+This is a scientific rejection under the predeclared protocol, not an engineering error. Do not change the completed gate threshold, bank, reward, PPO settings, or acceptance rule to convert it to a PASS.
 
-The result demonstrates a real tradeoff: pi_1 acquired measurable new upstream frontier capability while losing previously established core capability. The current working hypothesis is catastrophic forgetting / insufficient retained-core replay under Tube_1 sampling, but that mechanism is not yet established and must be diagnosed from the frozen gate and Tube artifacts before changing the method.
+## Zero-interaction core-regression diagnosis — completed
 
-## Active scientific blocker: explain and repair core regression
+Diagnosis artifact:
 
-No C^1 / Tube_2 / pi_2 stage is authorized yet.
+`JIT/runs/pi_unified_gate_analysis/pi_0_to_pi_1_core_regression_20260901/diagnosis.json`
 
-Next steps are:
+Diagnosis SHA-256:
 
-1. preserve the completed paired-gate artifact unchanged;
-2. perform zero-interaction diagnosis on the 21 core regressions, including phase, candidate terminal outcome, parent/source provenance, and Tube_1 sampling mass;
-3. test whether retained Tube_0 core replay was materially diluted inside Tube_1, especially per phase;
-4. distinguish a sampling/curriculum failure from a deeper policy/runtime/phase failure;
-5. predeclare the method repair only after diagnosis;
-6. train a new candidate only under that new declared method; do not reinterpret the rejected pi_1 as accepted;
-7. repeat a newly predeclared comparable core/boundary gate for the repaired candidate;
-8. only after both gates pass may the next accepted policy generate C^1 and Tube_2 evidence.
+`61e12385ef0e77180b773a2e0de04b36e2a27f649c24d509b4f18345c00a7689`
+
+The diagnosis used zero environment interactions, zero training transitions, no validation, and no TEST.
+
+Observed Tube_1 sampling mass under the rejected candidate's original sampler:
+
+- upstream: 427 entries = 117 retained core + 310 expansion;
+- upstream retained-core count share: 27.40%; retained-core sampling-weight share: 24.87%;
+- downstream: 2,692 entries = 105 retained core + 2,587 expansion;
+- downstream retained-core count share: 3.90%; retained-core sampling-weight share: 3.10%;
+- Tube-conditional probability of selecting any old core state: 13.98%;
+- all-episode old-core reset probability after the 0.9 Tube reset mixture: 12.59%;
+- all-episode expansion reset probability: 77.41%;
+- natural reset probability: 10.00%.
+
+All 21 core regressions ended in physical failure. Regression provenance:
+
+- upstream: 16 regressions;
+- downstream: 5 regressions;
+- source names: 9 `up_nominal`, 7 `up_boundary`, 5 `down_nominal`;
+- all five downstream regressions had high per-entry weights near 1.0 but only about 0.000377 conditional probability inside the downstream phase because of expansion cardinality;
+- several upstream regressions had the minimum weight near 0.05 and about 0.000125 conditional probability inside the upstream phase.
+
+This establishes **retained-core replay dilution as a material mechanism**. Because pi_1 used fresh actor/critic/optimizer initialization, the precise description is core-support under-replay / capability regression under the expanded training distribution, not classical parameter forgetting from pi_0.
+
+The diagnosis does not prove that replay dilution is the only mechanism. Some high-weight upstream states also regressed, so policy interference may remain after the replay repair. The first repair therefore changes only the training sampling contract and must itself pass a new gate.
+
+## Predeclared iteration-1 replacement method
+
+A replacement candidate remains at **iteration 1**. The rejected pi_1 does not authorize progression to C^1, Tube_2, or pi_2.
+
+Predeclared config:
+
+`JIT/configs/pi_unified_iter1_tube1_core_replay50_natural10.json`
+
+The repair keeps fixed:
+
+- exact Tube_1 support and manifest;
+- 0.1 natural / 0.9 Soft-Tube reset probabilities;
+- 50/50 upstream/downstream phase mixture;
+- fresh actor/critic/optimizer initialization;
+- seed 821101;
+- PPO hyperparameters and exact 10,009,600-transition budget;
+- reward, physics, XML, action semantics, horizon, and task definition.
+
+The only method change versus the rejected candidate is the within-Tube sampling contract:
+
+1. choose phase with the existing 50/50 phase mixture;
+2. inside the selected phase, choose retained source core with probability 0.5 and current expansion with probability 0.5;
+3. sample retained core uniformly so low-V core states cannot be starved;
+4. sample expansion with the existing value/continuation-weighted categorical rule.
+
+Thus Tube-conditioned replay gives 50% mass to retained core and 50% to expansion in every phase. With the unchanged 0.9 Soft-Tube reset probability, the declared all-episode reset mass becomes 45% retained core, 45% expansion, and 10% natural reset.
+
+The implementation is generic and optional. Legacy configs that omit `tube_sampling` retain the historical value-weighted behavior, preserving old pi_0/pi_1 reproducibility.
+
+## Acceptance-data boundary for the replacement candidate
+
+The completed 56-state boundary bank has been consumed by the rejected-candidate decision and diagnosis. It may be reused only as descriptive regression evidence; it must not become the sole independent acceptance evidence for the repaired candidate.
+
+Before the replacement candidate can be accepted, a new non-final paired audit must be predeclared with:
+
+- the same complete 222-state Tube_0 core preservation bank as the structural core contract;
+- a fresh pi_0-negative boundary challenge bank generated/locked without inspecting replacement-candidate outcomes;
+- physical-state and parent/near-state exclusion against the consumed 56-state boundary bank, Tube_1 admitted states, validation, and TEST;
+- the same frozen pi_0 baseline, deterministic continuation semantics, horizon, XML, and no expert switching;
+- no final TEST/JCE/JEL use.
+
+The old gate may still be rerun on the repaired candidate as a diagnostic, but not as the only fresh boundary-gain acceptance evidence.
+
+## Active scientific blocker
+
+The immediate blocker is now engineering validation of the new replay contract followed by one predeclared replacement training run. Do not start C^1 / Tube_2 / pi_2.
+
+Required order:
+
+1. compile/regression-test the replay sampler and canonical formal wrapper;
+2. run a zero-interaction preflight on real Tube_1 and verify exact 50/50 core/expansion mass in both phases;
+3. lock a fresh replacement-candidate boundary audit protocol before inspecting replacement outcomes;
+4. run exactly one fresh replacement pi_1 candidate under the declared core replay repair;
+5. freeze the replacement final checkpoint;
+6. run core preservation plus a fresh boundary-gain audit;
+7. if either gate fails, preserve and diagnose again rather than retuning the same gate;
+8. only if both pass does iteration 1 become accepted and authorize pi_1-conditioned C^1 / Tube_2 work.
 
 Final TEST/JCE/JEL remains untouched.
 
@@ -185,13 +262,14 @@ Completed maintenance:
 - dependency-closure deletion rules added after cleanup regression;
 - root/current project documentation refreshed;
 - generic paired-policy iteration gate added through existing `diagnose_unified.py` CLI;
-- paired gate runner reuses one compiled `env.step` and completed the retry without OOM.
+- paired gate runner reuses one compiled `env.step`;
+- Tube-RSI now supports an optional config-bound retained-core replay contract without changing legacy behavior;
+- the canonical formal wrapper injects and records the declared replay contract rather than relying on environment variables or one-off scripts.
 
 Remaining migration debt before unattended later iterations:
 
+- fresh replacement boundary-audit acquisition/locking must be made workflow-addressable;
 - `core_retaining_tube_iteration.py` still contains Tube_1 / iteration-0 constants;
 - shared continuation refit/fresh validation still depend on some upstream-specific evidence/CV helpers;
-- the workflow must be extended to stop on scientific gate failure and surface diagnosis rather than automatically continuing;
-- generic k -> k+1 Tube/continuation contracts must be completed before a future accepted policy can proceed to Tube_2+.
-
-Do not spend effort on those later-iteration migrations in a way that bypasses the current core-regression blocker. Scientific diagnosis comes first.
+- generic k -> k+1 Tube/continuation contracts must be completed only after an iteration-1 policy is actually accepted;
+- workflow automation must stop on gate failure and surface diagnosis rather than automatically advancing.
