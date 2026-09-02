@@ -65,3 +65,60 @@ def test_branch_key_is_stable_and_branch_specific():
     seed1, _ = derive_branch_key(protocol_seed=7, candidate_id="abc", branch_index=1)
     assert seed0 == seed0_again
     assert seed0 != seed1
+
+
+def _acceptance_row(index: int, phase: str, label: int, parent: str):
+    return {
+        "candidate_id": f"c{index}",
+        "split": "train",
+        "phase": phase,
+        "state_sha256": f"{index:064x}",
+        "parent_group_id": parent,
+        "label": label,
+    }
+
+
+def test_negative_acceptance_selection_keeps_all_negatives_outside_target_support():
+    from jit_dvgc.continuation import select_negative_acceptance_rows
+
+    rows = [
+        _acceptance_row(1, "upstream", 0, "u0"),
+        _acceptance_row(2, "upstream", 0, "u1"),
+        _acceptance_row(3, "upstream", 0, "u2"),
+        _acceptance_row(4, "upstream", 1, "u3"),
+        _acceptance_row(5, "downstream", 0, "d0"),
+        _acceptance_row(6, "downstream", 0, "d1"),
+        _acceptance_row(7, "downstream", 0, "d2"),
+        _acceptance_row(8, "downstream", 1, "d3"),
+    ]
+    selected, audit = select_negative_acceptance_rows(
+        rows,
+        excluded_state_sha256=(f"{3:064x}", f"{7:064x}"),
+        minimum_negative_states_per_phase=2,
+        minimum_negative_parent_groups_per_phase=2,
+    )
+
+    assert [row["candidate_id"] for row in selected] == ["c1", "c2", "c5", "c6"]
+    assert audit["selection"] == "all_baseline_continuation_negative_candidates"
+    assert audit["input_negative_count"] == 6
+    assert audit["excluded_target_negative_count"] == 2
+    assert audit["locked_negative_count"] == 4
+    assert audit["readiness"]["upstream"]["ready"] is True
+    assert audit["readiness"]["downstream"]["ready"] is True
+
+
+def test_negative_acceptance_selection_stops_before_training_when_phase_not_ready():
+    from jit_dvgc.continuation import select_negative_acceptance_rows
+
+    rows = [
+        _acceptance_row(1, "upstream", 0, "u0"),
+        _acceptance_row(2, "upstream", 0, "u1"),
+        _acceptance_row(3, "downstream", 0, "d0"),
+        _acceptance_row(4, "downstream", 1, "d1"),
+    ]
+    with pytest.raises(ValueError, match="not phasewise ready before repair training"):
+        select_negative_acceptance_rows(
+            rows,
+            minimum_negative_states_per_phase=2,
+            minimum_negative_parent_groups_per_phase=2,
+        )
