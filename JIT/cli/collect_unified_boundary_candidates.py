@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 
@@ -19,6 +20,7 @@ from jit_dvgc.acquisition import (
     DEFAULT_UNIFIED_BOUNDARY_DURATIONS,
     DEFAULT_UNIFIED_BOUNDARY_STRENGTHS,
     collect_unified_boundary_candidates,
+    select_disjoint_tube_boundary_anchors,
     select_tube_boundary_anchors,
 )
 from jit_dvgc.training import (
@@ -29,6 +31,9 @@ from jit_dvgc.training import (
 )
 
 
+REPAIR_ACCEPTANCE_SCHEMA = "jit_repair_acceptance_boundary_acquisition_v1"
+
+
 def _write_json(path: Path, payload) -> None:
     path.write_text(
         json.dumps(payload, indent=2, sort_keys=True, allow_nan=False) + "\n",
@@ -36,10 +41,115 @@ def _write_json(path: Path, payload) -> None:
     )
 
 
+def _read_json(path: Path) -> dict:
+    payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError(f"JSON object required: {path}")
+    return payload
+
+
+def _canonical_sha256(payload) -> str:
+    return hashlib.sha256(
+        json.dumps(
+            payload, sort_keys=True, separators=(",", ":"), allow_nan=False
+        ).encode("utf-8")
+    ).hexdigest()
+
+
+def _load_repair_predeclaration(path: Path) -> dict:
+    payload = _read_json(path)
+    if payload.get("schema") != REPAIR_ACCEPTANCE_SCHEMA:
+        raise ValueError("unsupported repair acceptance acquisition schema")
+    protocol = payload.get("protocol")
+    if not isinstance(protocol, dict):
+        raise ValueError("repair acceptance acquisition protocol missing")
+    if protocol.get("status") != "predeclared_before_repair_training":
+        raise ValueError("repair acceptance bank must be predeclared before repair training")
+    if _canonical_sha256(protocol) != payload.get("expected_protocol_sha256"):
+        raise ValueError("repair acceptance acquisition protocol SHA-256 drift")
+    if protocol.get("source_iteration") != 0 or protocol.get("candidate_iteration") != 1:
+        raise ValueError("repair acceptance acquisition iteration drift")
+    acquisition = protocol.get("acquisition")
+    if not isinstance(acquisition, dict):
+        raise ValueError("repair acceptance acquisition settings missing")
+    if int(acquisition.get("anchors_per_phase", 0)) <= 0:
+        raise ValueError("repair acceptance anchors_per_phase invalid")
+    minimum = int(acquisition.get("minimum_anchors_per_phase", 0))
+    if minimum <= 0 or minimum > int(acquisition["anchors_per_phase"]):
+        raise ValueError("repair acceptance minimum anchor count invalid")
+    isolation = protocol.get("isolation")
+    if isolation != {
+        "exclude_consumed_boundary_states": True,
+        "exclude_consumed_boundary_parent_groups_by_phase": True,
+        "validation_data_used": False,
+        "test_data_used": False,
+        "final_evaluation_data_used": False,
+    }:
+        raise ValueError("repair acceptance isolation contract drift")
+    return payload
+
+
+def _consumed_gate_exclusions(protocol: dict) -> tuple[set[str], dict[str, set[str]], dict]:
+    consumed = protocol.get("consumed_gate")
+    if not isinstance(consumed, dict):
+        raise ValueError("repair acceptance consumed gate declaration missing")
+    gate_root = Path(str(consumed["root"]))
+    summary_path = gate_root / "summary.json"
+    bank_path = gate_root / "bank.json"
+    records_path = gate_root / "records.json"
+    expected = {
+        summary_path: str(consumed["summary_file_sha256"]),
+        bank_path: str(consumed["bank_file_sha256"]),
+        records_path: str(consumed["records_file_sha256"]),
+    }
+    for path, sha in expected.items():
+        if file_sha256(path) != sha:
+            raise ValueError(f"consumed gate file SHA-256 drift: {path}")
+    summary = _read_json(summary_path)
+    bank = _read_json(bank_path)
+    if summary.get("status") != "completed":
+        raise ValueError("consumed gate is not completed")
+    if summary.get("protocol_sha256") != consumed.get("protocol_sha256"):
+        raise ValueError("consumed gate protocol SHA-256 drift")
+    if bank.get("schema") != "jit_paired_policy_gate_bank_v1":
+        raise ValueError("consumed gate bank schema drift")
+    boundary = bank.get("boundary")
+    if not isinstance(boundary, list) or not boundary:
+        raise ValueError("consumed gate boundary bank missing")
+    if len(boundary) != int(consumed.get("boundary_state_count", -1)):
+        raise ValueError("consumed gate boundary count drift")
+    states = {str(row["state_sha256"]) for row in boundary}
+    groups = {"upstream": set(), "downstream": set()}
+    for row in boundary:
+        phase = str(row["phase"])
+        if phase not in groups:
+            raise ValueError("consumed gate boundary phase drift")
+        groups[phase].add(str(row["parent_group_id"]))
+    return states, groups, {
+        "root": str(gate_root),
+        "protocol_sha256": str(consumed["protocol_sha256"]),
+        "summary_file_sha256": expected[summary_path],
+        "bank_file_sha256": expected[bank_path],
+        "records_file_sha256": expected[records_path],
+        "boundary_state_count": len(states),
+        "boundary_parent_group_counts": {
+            phase: len(groups[phase]) for phase in ("upstream", "downstream")
+        },
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--frozen-policy", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument(
+        "--predeclaration",
+        type=Path,
+        help=(
+            "predeclared repair-acceptance acquisition contract; when supplied, "
+            "scientific acquisition knobs and consumed-gate exclusions come from it"
+        ),
+    )
     parser.add_argument("--anchors-per-phase", type=int, default=DEFAULT_ANCHORS_PER_PHASE)
     parser.add_argument(
         "--frontier-score-ceiling",
@@ -83,6 +193,31 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    predeclared = None
+    predeclared_sha = None
+    minimum_anchors_per_phase = 1
+    consumed_identity = None
+    consumed_states: set[str] = set()
+    consumed_groups: dict[str, set[str]] = {"upstream": set(), "downstream": set()}
+    if args.predeclaration is not None:
+        predeclared = _load_repair_predeclaration(args.predeclaration)
+        predeclared_sha = file_sha256(args.predeclaration)
+        protocol = predeclared["protocol"]
+        if str(args.frozen_policy) != str(protocol["baseline_frozen_policy"]):
+            raise ValueError("repair acceptance frozen-policy path drift")
+        acq = protocol["acquisition"]
+        args.anchors_per_phase = int(acq["anchors_per_phase"])
+        minimum_anchors_per_phase = int(acq["minimum_anchors_per_phase"])
+        args.frontier_score_ceiling = float(acq["frontier_score_ceiling"])
+        args.strengths = [float(x) for x in acq["strengths"]]
+        args.durations = [int(x) for x in acq["durations"]]
+        args.action_names = [str(x) for x in acq["action_names"]]
+        args.signs = [int(x) for x in acq["signs"]]
+        args.protocol_seed = int(acq["protocol_seed"])
+        consumed_states, consumed_groups, consumed_identity = _consumed_gate_exclusions(
+            protocol
+        )
+
     if args.anchors_per_phase <= 0:
         parser.error("--anchors-per-phase must be positive")
     if not 0.0 <= args.frontier_score_ceiling <= 1.0:
@@ -101,15 +236,54 @@ def main() -> int:
     if artifact.manifest["manifest_sha256"] != config.soft_tube_manifest_sha256:
         raise ValueError("formal config/source Tube SHA-256 mismatch")
 
-    anchors, audit = select_tube_boundary_anchors(
-        artifact,
-        max_per_phase=args.anchors_per_phase,
-        frontier_score_ceiling=args.frontier_score_ceiling,
-    )
+    if predeclared is not None:
+        protocol = predeclared["protocol"]
+        if record["name"] != protocol["baseline_policy_name"]:
+            raise ValueError("repair acceptance baseline policy name drift")
+        if record["actor_sha256"] != protocol["baseline_actor_sha256"]:
+            raise ValueError("repair acceptance baseline actor drift")
+        if record["payload_sha256"] != protocol["baseline_payload_sha256"]:
+            raise ValueError("repair acceptance baseline payload drift")
+        if artifact.manifest["manifest_sha256"] != protocol["source_tube_manifest_sha256"]:
+            raise ValueError("repair acceptance source Tube drift")
+        anchors, audit = select_disjoint_tube_boundary_anchors(
+            artifact,
+            max_per_phase=args.anchors_per_phase,
+            minimum_per_phase=minimum_anchors_per_phase,
+            frontier_score_ceiling=args.frontier_score_ceiling,
+            excluded_state_sha256=tuple(sorted(consumed_states)),
+            excluded_parent_groups={
+                phase: tuple(sorted(consumed_groups[phase]))
+                for phase in ("upstream", "downstream")
+            },
+        )
+        audit = {
+            **audit,
+            "predeclaration": str(args.predeclaration),
+            "predeclaration_file_sha256": predeclared_sha,
+            "predeclared_protocol_sha256": predeclared["expected_protocol_sha256"],
+            "consumed_gate": consumed_identity,
+            "claim_boundary": {
+                "fresh_nonfinal_acceptance_candidate_generation": True,
+                "repaired_candidate_not_yet_trained": True,
+                "not_model_training_data": True,
+                "not_tube_construction_data": True,
+                "jce_jel_claim": False,
+            },
+        }
+    else:
+        anchors, audit = select_tube_boundary_anchors(
+            artifact,
+            max_per_phase=args.anchors_per_phase,
+            frontier_score_ceiling=args.frontier_score_ceiling,
+        )
+
     if args.audit_only:
         output = Path(args.output_dir)
         output.mkdir(parents=True, exist_ok=False)
         _write_json(output / "anchor_audit.json", audit)
+        if predeclared is not None:
+            _write_json(output / "predeclaration.json", predeclared)
         print(json.dumps(audit, indent=2, sort_keys=True))
         return 0
 
@@ -130,7 +304,7 @@ def main() -> int:
         expected=checkpoint_identity(runtime_config, env),
     )
     if int(payload.training_transitions) != int(record["source_training_transitions"]):
-        raise ValueError("frozen unified policy checkpoint transition drift")
+        raise ValueError("unified boundary checkpoint transition drift")
     policy = make_checkpoint_policy(env, payload, deterministic=True)
 
     try:
@@ -149,6 +323,8 @@ def main() -> int:
             signs=tuple(args.signs),
         )
         _write_json(Path(args.output_dir) / "anchor_audit.json", audit)
+        if predeclared is not None:
+            _write_json(Path(args.output_dir) / "predeclaration.json", predeclared)
         print(
             json.dumps(
                 {
@@ -175,6 +351,8 @@ def main() -> int:
                     "policy_actor_sha256": str(record["actor_sha256"]),
                     "policy_payload_sha256": str(record["payload_sha256"]),
                     "frontier_score_ceiling": float(args.frontier_score_ceiling),
+                    "predeclaration": str(args.predeclaration) if args.predeclaration else None,
+                    "predeclaration_file_sha256": predeclared_sha,
                     "training_transitions": 0,
                     "test_data_used": False,
                     "validation_data_used": False,
