@@ -18,40 +18,76 @@ TRAIN boundary evidence → C_up^0 / C_down^0 → fresh validation
       ↓
 core-retaining Tube_1
       ↓
-pi_1
+pi_1 candidate
       ↓
 core-preservation + boundary-gain gates
       ↓
-C^1 → Tube_2 → pi_2 → ...
+accepted pi_1 → C^1 → Tube_2 → pi_2 → ...
 ```
 
 A Soft Tube is training guidance, not a certified safe set. A Tube expansion is
-not a capability claim; capability expansion requires a newly trained policy to
-preserve the prior core and gain on the boundary.
+not a capability claim; empirical envelope expansion requires the newly trained
+policy to preserve the prior core and gain on a locked boundary challenge bank.
 
-## Current state
+## Current state — 2026-09-02
 
-As of 2026-09-01:
+The project is at **repaired iteration-1 acceptance**.
+
+Completed:
 
 - frozen `pi_up_star`: 9,977,856 transitions
 - frozen `pi_down_star`: 25,600 transitions
 - Tube_0: 222 TRAIN entries
-- frozen `pi_0`: completed 10,009,600-transition unified policy
-- frozen shared continuation architecture: `76 -> 8 tanh -> 1`, phase-specific
-  weights and phase-specific calibration
-- Tube_1: 3,119 TRAIN entries, including the exact 222-entry Tube_0 core and
-  2,897 expansion states
-- `pi_1` retry01: completed exactly 10,009,600 fresh PPO transitions with the
-  same 0.1 natural / 0.9 Tube reset mixture used by pi_0
+- frozen `pi_0`: 10,009,600-transition unified iteration-0 authority
+- `C^0` continuation fields with independent fresh validation
+- Tube_1: 3,119 TRAIN entries = exact 222-entry Tube_0 core + 2,897 expansion
+- first Tube_1 `pi_1` candidate: completed, frozen, then scientifically rejected
+  because the paired gate found 21 core regressions while boundary gain passed
+- zero-interaction diagnosis: retained-core replay dilution was a material
+  mechanism
+- repaired Tube-RSI contract: 50% retained core / 50% expansion inside each
+  phase, giving 45% core / 45% expansion / 10% natural reset mass overall
+- two consumed single-axis fresh-bank readiness probes: both FAIL, especially
+  because downstream produced zero baseline negatives
+- acquisition generalized to iteration-generic sparse action directions
+- fresh two-axis acquisition: 3,720 unique TRAIN candidates
+- long frozen-policy labeling recovered from CUDA/Warp single-process OOM by
+  four sequential 930-candidate GPU processes with one merged logical label set
+- fresh locked acceptance bank: 260 frozen-`pi_0` negatives = 246 upstream
+  across 4 parent groups + 14 downstream across 5 parent groups; readiness PASS
+- repaired `pi_1`: completed exactly 10,009,600 fresh PPO transitions and frozen
 - final TEST/JCE/JEL: untouched
 
-The first pi_1 attempt is intentionally retained as an engineering-error run.
-The retry is the completed pi_1 training result. Training completion alone does
-not establish envelope expansion.
+Repaired formal run:
 
-The next stage is **freeze pi_1 -> core-preservation gate -> boundary-gain
-gate**. Only after both pass may the project claim empirical envelope gain and
-advance to the next continuation/Tube iteration.
+`JIT/runs/pi_unified/pi_1_tube1_core_replay50_natural10_10009600_seed821101_20260902`
+
+Frozen repaired candidate:
+
+`JIT/runs/frozen_unified/pi_1_core_replay50_10009600_20260902/frozen_unified_policy.json`
+
+Known local identities:
+
+- final checkpoint payload SHA-256: `ea93a534c2c6bb3bf145684cbea82df94fefa2df8099dcdcdd9492bd8007e205`
+- frozen manifest file SHA-256: `d5a1658530d475a67264aa5c621283d71c823200dbee6068f93413b93d06b7a8`
+
+**Training/freeze completion does not accept iteration 1.**
+
+The next stage is exactly one repaired `pi_0 -> pi_1` paired gate using:
+
+- all 222 Tube_0 core states;
+- the fresh locked 260-state two-axis frozen-`pi_0` negative bank;
+- zero baseline-success -> candidate-failure core regressions;
+- complete baseline-negative reproduction;
+- candidate gains in at least 2 distinct parent groups;
+- no validation, TEST, expert switching or training.
+
+Only if both core preservation and boundary gain pass may the project accept
+iteration 1 and advance to `C^1 -> Tube_2 -> pi_2`.
+
+For the authoritative ledger see `JIT/docs/CURRENT_STATUS.md`. For the compact
+resume marker see `docs/EXPERIMENT_STATE.md`. For today's execution history see
+`JIT/docs/experiments/2026-09-02-iteration1-repair-handoff.md`.
 
 ## Repository layout
 
@@ -59,12 +95,12 @@ advance to the next continuation/Tube iteration.
 JIT/
 ├── cli/                  thin executable entry points
 ├── configs/              immutable run/protocol declarations
-├── docs/                 current method, status, organization, verification
+├── docs/                 method, status, organization, verification, handoffs
 ├── handoff/              path-bound locked provenance; do not casually move
 ├── runs/                 ignored runtime evidence/artifacts
 ├── scripts/              repository verification/preflight helpers
 ├── src/jit_dvgc/
-│   ├── acquisition/      stable boundary/transition-band API
+│   ├── acquisition/      stable real-dynamics acquisition API
 │   ├── analysis/         bounded TRAIN diagnostics API
 │   ├── continuation/     continuation-label/field API
 │   ├── snapshots/        snapshot API
@@ -74,23 +110,22 @@ JIT/
 └── tests/                active regression/contract tests
 ```
 
-The package directories expose stable APIs from their `__init__.py`; we do not
-create a three-line facade file for every historical flat module. A small number
-of flat legacy modules remain while active loaders/builders still depend on
-them. They are migration debt, not a pattern for new code.
+Package directories expose stable APIs from `__init__.py`. Do not create
+iteration-named production modules such as `pi2.py`, `tube2.py`, retry-specific
+source trees, or one-off wrappers when the capability belongs in an existing API.
 
 ## Maintenance policy
 
-- Modify/consolidate existing code before adding files.
-- Do not create `pi2_*.py`, `tube2_*.py`, retry-specific production modules, or
-  version-suffixed source trees.
-- Completed stage-specific research scaffolding is removed from the active tree
-  once superseded and unreferenced; Git history preserves it.
-- Configs/frozen manifests/handoff paths that are part of artifact identity stay
-  in place even when their producing research script has been retired.
-- CLI files stay thin. Scientific/runtime logic belongs in `src`.
+- Modify/consolidate existing code before adding production files.
+- Experiment/iteration/retry identities belong in configs, data and run names.
+- Keep CLI files thin; reusable runtime/scientific logic belongs under
+  `JIT/src/jit_dvgc/`.
+- Do not move path-bound configs, frozen manifests or handoff provenance for
+  aesthetics.
+- Before deleting code, prove dependency closure and run compile/targeted tests.
+- Git history is the archive for superseded source code.
 
-See `JIT/AGENTS.md` for the enforced maintenance rules.
+See `JIT/AGENTS.md` for the enforced rules.
 
 ## Verification
 
@@ -105,13 +140,13 @@ $PY -m compileall -q JIT/src JIT/cli
 $PY -m pytest JIT/tests -q -m "not gpu"
 ```
 
-For the curated repository preflight:
+Curated repository preflight:
 
 ```bash
 JIT/scripts/local_preflight.sh
 ```
 
-GPU regression is explicit:
+Explicit GPU regression:
 
 ```bash
 JIT_RUN_GPU_TESTS=1 JIT/scripts/local_preflight.sh
@@ -119,9 +154,8 @@ JIT_RUN_GPU_TESTS=1 JIT/scripts/local_preflight.sh
 
 ## Iteration workflow
 
-`jit_dvgc.workflow` sequences production CLIs and verifies machine-readable
-artifacts. It is deliberately scientifically ignorant: it does not invent
-thresholds or decide that a failed gate should pass.
+`jit_dvgc.workflow` is an execution/resume orchestrator. It must not invent
+scientific thresholds or auto-convert a failed gate into a passing method.
 
 Plan only:
 
@@ -135,17 +169,10 @@ Explicit execution/resume:
 $PY JIT/cli/run_iteration_workflow.py --config <workflow.json> --execute
 ```
 
-The same workflow state is resumable after an engineering failure, provided the
-workflow config SHA is unchanged and completed artifacts still validate.
+The workflow config SHA is immutable after state creation. Completed artifacts
+may be reused only after identity revalidation. Scientific or engineering failure
+must stop the workflow.
 
-The orchestration engine exists now, but the iteration-0-specific continuation
-and Tube construction contracts are still being generalized before unattended
-`pi_1 -> Tube_2 -> pi_2` execution is enabled. Do not mistake orchestration
-infrastructure for completed scientific generalization.
-
-## Historical material
-
-Old Phase-U plans, one-off CV/refinement scripts, and superseded research
-scaffolding are intentionally not kept in the active tree. They remain available
-through Git history. Path-bound frozen artifacts/configs/handoff records are not
-removed merely to make the repository look smaller.
+Unattended later iterations are not authorized until the remaining
+iteration-0-specific continuation/Tube construction paths are generalized for
+`k -> k+1` and covered by tests.
