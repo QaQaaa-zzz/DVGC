@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 
@@ -26,10 +27,43 @@ from jit_dvgc.training import (
 )
 
 
+REPAIR_ACCEPTANCE_SCHEMA = "jit_repair_acceptance_boundary_acquisition_v1"
+
+
 def _read_json(path: Path):
     payload = json.loads(Path(path).read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
         raise ValueError(f"JSON object required: {path}")
+    return payload
+
+
+def _canonical_sha256(payload) -> str:
+    return hashlib.sha256(
+        json.dumps(
+            payload, sort_keys=True, separators=(",", ":"), allow_nan=False
+        ).encode("utf-8")
+    ).hexdigest()
+
+
+def _load_repair_predeclaration(path: Path) -> dict:
+    payload = _read_json(path)
+    if payload.get("schema") != REPAIR_ACCEPTANCE_SCHEMA:
+        raise ValueError("unsupported repair acceptance predeclaration schema")
+    protocol = payload.get("protocol")
+    if not isinstance(protocol, dict):
+        raise ValueError("repair acceptance predeclaration protocol missing")
+    if protocol.get("status") != "predeclared_before_repair_training":
+        raise ValueError("repair acceptance labeling was not predeclared before training")
+    if _canonical_sha256(protocol) != payload.get("expected_protocol_sha256"):
+        raise ValueError("repair acceptance predeclaration SHA-256 drift")
+    labeling = protocol.get("labeling")
+    if labeling != {
+        "policy_mode": "deterministic",
+        "max_ticks": 400,
+        "protocol_seed": 9511003,
+        "baseline_policy_only": True,
+    }:
+        raise ValueError("repair acceptance baseline labeling contract drift")
     return payload
 
 
@@ -38,6 +72,14 @@ def main() -> int:
     parser.add_argument("--frozen-policy", type=Path, required=True)
     parser.add_argument("--catalog", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument(
+        "--predeclaration",
+        type=Path,
+        help=(
+            "predeclared fresh repair-acceptance contract; when supplied, max-ticks "
+            "and protocol seed are taken from the locked baseline-labeling section"
+        ),
+    )
     parser.add_argument(
         "--max-ticks",
         type=int,
@@ -50,6 +92,27 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    predeclared = None
+    predeclared_sha = None
+    if args.predeclaration is not None:
+        predeclared = _load_repair_predeclaration(args.predeclaration)
+        predeclared_sha = file_sha256(args.predeclaration)
+        protocol = predeclared["protocol"]
+        if str(args.frozen_policy) != str(protocol["baseline_frozen_policy"]):
+            raise ValueError("repair acceptance labeling baseline frozen-policy path drift")
+        args.max_ticks = int(protocol["labeling"]["max_ticks"])
+        args.protocol_seed = int(protocol["labeling"]["protocol_seed"])
+        acquisition_root = Path(args.catalog).parent
+        copied = acquisition_root / "predeclaration.json"
+        audit_path = acquisition_root / "anchor_audit.json"
+        if file_sha256(copied) != predeclared_sha:
+            raise ValueError("repair acceptance acquisition/predeclaration identity drift")
+        audit = _read_json(audit_path)
+        if audit.get("predeclaration_file_sha256") != predeclared_sha:
+            raise ValueError("repair acceptance anchor audit/predeclaration drift")
+        if audit.get("predeclared_protocol_sha256") != predeclared["expected_protocol_sha256"]:
+            raise ValueError("repair acceptance anchor audit protocol drift")
+
     if args.max_ticks <= 0:
         parser.error("--max-ticks must be positive")
     if args.output_dir.exists():
@@ -60,6 +123,14 @@ def main() -> int:
     if record["policy_role"] != "envelope_expansion_authority":
         raise ValueError("frozen unified policy is not an expansion authority")
     frozen_sha = file_sha256(args.frozen_policy)
+    if predeclared is not None:
+        protocol = predeclared["protocol"]
+        if record["name"] != protocol["baseline_policy_name"]:
+            raise ValueError("repair acceptance labeling baseline policy-name drift")
+        if record["actor_sha256"] != protocol["baseline_actor_sha256"]:
+            raise ValueError("repair acceptance labeling baseline actor drift")
+        if record["payload_sha256"] != protocol["baseline_payload_sha256"]:
+            raise ValueError("repair acceptance labeling baseline payload drift")
 
     catalog = _read_json(args.catalog)
     rows = validate_unified_boundary_catalog(
@@ -112,6 +183,35 @@ def main() -> int:
         max_ticks=args.max_ticks,
         protocol_seed=args.protocol_seed,
     )
+    if predeclared is not None:
+        (Path(args.output_dir) / "acceptance_predeclaration.json").write_text(
+            json.dumps(predeclared, indent=2, sort_keys=True, allow_nan=False) + "\n",
+            encoding="utf-8",
+        )
+        (Path(args.output_dir) / "acceptance_predeclaration_identity.json").write_text(
+            json.dumps(
+                {
+                    "schema": "jit_repair_acceptance_label_binding_v1",
+                    "predeclaration": str(args.predeclaration),
+                    "predeclaration_file_sha256": predeclared_sha,
+                    "predeclared_protocol_sha256": predeclared["expected_protocol_sha256"],
+                    "baseline_policy_name": record["name"],
+                    "baseline_actor_sha256": record["actor_sha256"],
+                    "baseline_payload_sha256": record["payload_sha256"],
+                    "max_ticks": int(args.max_ticks),
+                    "protocol_seed": int(args.protocol_seed),
+                    "training_transitions": 0,
+                    "validation_data_used": False,
+                    "test_data_used": False,
+                    "final_evaluation_data_used": False,
+                },
+                indent=2,
+                sort_keys=True,
+                allow_nan=False,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
     print(json.dumps(report, indent=2, sort_keys=True))
     return 0
 
