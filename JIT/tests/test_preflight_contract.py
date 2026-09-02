@@ -122,6 +122,21 @@ def test_acceptance_predeclaration_supports_generic_k_to_kplus1(jit_root, tmp_pa
         module._load_repair_predeclaration(invalid_path)
 
 
+def test_label_cli_maintains_warp_pool_without_changing_scientific_budget(jit_root):
+    script = (jit_root / "cli/label_unified_continuations.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "compiled_step = jax.jit(env.step)" in script
+    assert "wp.set_mempool_release_threshold(device, 0)" in script
+    assert "wp.synchronize_device(device)" in script
+    assert "compiled_step_fn=memory_stable_step" in script
+    assert "WARP_MEMORY_MAINTENANCE_STEP_INTERVAL = 64" in script
+    assert "max_ticks=args.max_ticks" in script
+    assert "protocol_seed=args.protocol_seed" in script
+    assert "candidate" not in script.split("WARP_MEMORY_MAINTENANCE_STEP_INTERVAL = 64", 1)[0]
+
+
 def test_tube_package_exports_the_replay_contract_normalizer():
     from jit_dvgc import tube_rsi
     import jit_dvgc.tube as tube
