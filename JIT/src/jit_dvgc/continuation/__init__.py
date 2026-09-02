@@ -148,6 +148,11 @@ def lock_negative_acceptance_bank(
     labels_path = Path(labels_path)
     catalog_path = Path(catalog_path)
     output_path = Path(output_path)
+    readiness_path = output_path.with_name("acceptance_readiness.json")
+    if readiness_path.exists():
+        raise FileExistsError(
+            f"acceptance readiness already exists: {readiness_path}"
+        )
     if output_path.exists():
         raise FileExistsError(f"acceptance bank already exists: {output_path}")
 
@@ -171,7 +176,6 @@ def lock_negative_acceptance_bank(
             minimum_negative_parent_groups_per_phase=minimum_negative_parent_groups_per_phase,
         )
     except AcceptanceBankReadinessError as error:
-        readiness_path = output_path.with_name("acceptance_readiness.json")
         readiness = {
             "schema": "jit_repair_acceptance_readiness_v1",
             "status": "not_ready_before_repair_training",

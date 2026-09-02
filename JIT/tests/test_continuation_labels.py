@@ -266,7 +266,10 @@ def test_negative_acceptance_lock_persists_phasewise_readiness_before_repair_tra
         continuation,
         "load_soft_tube",
         lambda _path: SimpleNamespace(
-            entries=(), manifest={"manifest_sha256": "f" * 64}
+            entries=(
+                {"state_sha256": rows[0]["state_sha256"], "split": "train"},
+            ),
+            manifest={"manifest_sha256": "f" * 64},
         )
     )
 
@@ -284,16 +287,16 @@ def test_negative_acceptance_lock_persists_phasewise_readiness_before_repair_tra
     assert readiness["selection"] == "all_baseline_continuation_negative_candidates"
     assert readiness["input_label_count"] == 4
     assert readiness["input_negative_count"] == 3
-    assert readiness["excluded_target_state_count"] == 0
-    assert readiness["excluded_target_negative_count"] == 0
-    assert readiness["locked_negative_count"] == 3
+    assert readiness["excluded_target_state_count"] == 1
+    assert readiness["excluded_target_negative_count"] == 1
+    assert readiness["locked_negative_count"] == 2
     assert readiness["readiness"] == {
         "upstream": {
-            "negative_state_count": 2,
-            "negative_parent_group_count": 2,
+            "negative_state_count": 1,
+            "negative_parent_group_count": 1,
             "minimum_negative_states": 2,
             "minimum_negative_parent_groups": 2,
-            "ready": True,
+            "ready": False,
         },
         "downstream": {
             "negative_state_count": 1,
@@ -318,15 +321,20 @@ def test_negative_acceptance_lock_writes_locked_bank_when_both_phases_are_ready(
     rows = [
         _lockable_acceptance_row(1, "upstream", 0, "u0"),
         _lockable_acceptance_row(2, "upstream", 0, "u1"),
-        _lockable_acceptance_row(3, "downstream", 0, "d0"),
-        _lockable_acceptance_row(4, "downstream", 0, "d1"),
+        _lockable_acceptance_row(3, "upstream", 0, "u2"),
+        _lockable_acceptance_row(4, "downstream", 0, "d0"),
+        _lockable_acceptance_row(5, "downstream", 0, "d1"),
+        _lockable_acceptance_row(6, "downstream", 0, "d2"),
     ]
     labels_path, catalog_path = _write_acceptance_lock_inputs(tmp_path, rows)
     monkeypatch.setattr(
         continuation,
         "load_soft_tube",
         lambda _path: SimpleNamespace(
-            entries=(), manifest={"manifest_sha256": "f" * 64}
+            entries=(
+                {"state_sha256": rows[0]["state_sha256"], "split": "train"},
+            ),
+            manifest={"manifest_sha256": "f" * 64},
         ),
     )
 
@@ -338,14 +346,19 @@ def test_negative_acceptance_lock_writes_locked_bank_when_both_phases_are_ready(
     persisted_bank = json.loads(bank_path.read_text(encoding="utf-8"))
     assert persisted_bank == bank
     assert persisted_bank["status"] == "locked_before_repair_training"
-    assert persisted_bank["entry_count"] == 4
+    assert persisted_bank["target_tube_state_count"] == 1
+    assert persisted_bank["entry_count"] == 5
     assert [row["candidate_id"] for row in persisted_bank["entries"]] == [
-        "c1",
         "c2",
         "c3",
         "c4",
+        "c5",
+        "c6",
     ]
-    assert persisted_bank["selection_audit"]["locked_negative_count"] == 4
+    assert persisted_bank["selection_audit"]["input_negative_count"] == 6
+    assert persisted_bank["selection_audit"]["excluded_target_state_count"] == 1
+    assert persisted_bank["selection_audit"]["excluded_target_negative_count"] == 1
+    assert persisted_bank["selection_audit"]["locked_negative_count"] == 5
     assert persisted_bank["selection_audit"]["readiness"] == {
         "upstream": {
             "negative_state_count": 2,
@@ -355,10 +368,57 @@ def test_negative_acceptance_lock_writes_locked_bank_when_both_phases_are_ready(
             "ready": True,
         },
         "downstream": {
-            "negative_state_count": 2,
-            "negative_parent_group_count": 2,
+            "negative_state_count": 3,
+            "negative_parent_group_count": 3,
             "minimum_negative_states": 2,
             "minimum_negative_parent_groups": 2,
             "ready": True,
         },
     }
+
+
+def test_negative_acceptance_lock_preserves_existing_readiness_evidence(
+    tmp_path, monkeypatch
+):
+    import jit_dvgc.continuation as continuation
+
+    insufficient_rows = [
+        _lockable_acceptance_row(1, "upstream", 0, "u0"),
+        _lockable_acceptance_row(2, "upstream", 0, "u1"),
+        _lockable_acceptance_row(3, "downstream", 0, "d0"),
+    ]
+    labels_path, catalog_path = _write_acceptance_lock_inputs(tmp_path, insufficient_rows)
+    monkeypatch.setattr(
+        continuation,
+        "load_soft_tube",
+        lambda _path: SimpleNamespace(
+            entries=(
+                {
+                    "state_sha256": insufficient_rows[0]["state_sha256"],
+                    "split": "train",
+                },
+            ),
+            manifest={"manifest_sha256": "f" * 64},
+        ),
+    )
+
+    with pytest.raises(continuation.AcceptanceBankReadinessError):
+        _lock_acceptance_bank(labels_path, catalog_path)
+
+    readiness_path = tmp_path / "acceptance_readiness.json"
+    original_readiness = readiness_path.read_bytes()
+    ready_rows = [
+        _lockable_acceptance_row(1, "upstream", 0, "u0"),
+        _lockable_acceptance_row(2, "upstream", 0, "u1"),
+        _lockable_acceptance_row(3, "upstream", 0, "u2"),
+        _lockable_acceptance_row(4, "downstream", 0, "d0"),
+        _lockable_acceptance_row(5, "downstream", 0, "d1"),
+        _lockable_acceptance_row(6, "downstream", 0, "d2"),
+    ]
+    labels_path.write_text(json.dumps(ready_rows), encoding="utf-8")
+
+    with pytest.raises(FileExistsError, match="acceptance readiness already exists"):
+        _lock_acceptance_bank(labels_path, catalog_path)
+
+    assert readiness_path.read_bytes() == original_readiness
+    assert not (tmp_path / "acceptance_bank.json").exists()
