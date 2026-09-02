@@ -16,6 +16,7 @@ from jit_dvgc.continuation import (
     DEFAULT_UNIFIED_CONTINUATION_MAX_TICKS,
     DEFAULT_UNIFIED_CONTINUATION_PROTOCOL_SEED,
     label_unified_continuations,
+    lock_negative_acceptance_bank,
     validate_candidate_snapshot,
     validate_unified_boundary_catalog,
 )
@@ -56,14 +57,40 @@ def _load_repair_predeclaration(path: Path) -> dict:
         raise ValueError("repair acceptance labeling was not predeclared before training")
     if _canonical_sha256(protocol) != payload.get("expected_protocol_sha256"):
         raise ValueError("repair acceptance predeclaration SHA-256 drift")
+
     labeling = protocol.get("labeling")
-    if labeling != {
-        "policy_mode": "deterministic",
-        "max_ticks": 400,
-        "protocol_seed": 9511003,
-        "baseline_policy_only": True,
-    }:
-        raise ValueError("repair acceptance baseline labeling contract drift")
+    if not isinstance(labeling, dict):
+        raise ValueError("repair acceptance baseline labeling contract missing")
+    if labeling.get("policy_mode") != "deterministic":
+        raise ValueError("repair acceptance baseline labeling must be deterministic")
+    if int(labeling.get("max_ticks", 0)) != 400:
+        raise ValueError("repair acceptance baseline labeling horizon drift")
+    if int(labeling.get("protocol_seed", -1)) < 0:
+        raise ValueError("repair acceptance baseline labeling seed is invalid")
+    if labeling.get("baseline_policy_only") is not True:
+        raise ValueError("repair acceptance labeling must use baseline policy only")
+
+    bank_lock = protocol.get("bank_lock")
+    if not isinstance(bank_lock, dict):
+        raise ValueError("repair acceptance bank-lock contract missing")
+    if bank_lock.get("selection") != "all_baseline_continuation_negative_candidates":
+        raise ValueError("repair acceptance bank selection drift")
+    if bank_lock.get("exclude_target_tube_states") is not True:
+        raise ValueError("repair acceptance bank must exclude target Tube states")
+    if not str(bank_lock.get("target_tube", "")):
+        raise ValueError("repair acceptance target Tube path missing")
+    if len(str(bank_lock.get("target_tube_manifest_sha256", ""))) != 64:
+        raise ValueError("repair acceptance target Tube manifest SHA-256 invalid")
+    if bank_lock.get("physical_state_unique") is not True:
+        raise ValueError("repair acceptance bank must require physical-state uniqueness")
+    if bank_lock.get("require_both_phases") is not True:
+        raise ValueError("repair acceptance bank must require both phases")
+    if int(bank_lock.get("minimum_negative_states_per_phase", 0)) <= 0:
+        raise ValueError("repair acceptance negative-state minimum invalid")
+    if int(bank_lock.get("minimum_negative_parent_groups_per_phase", 0)) <= 0:
+        raise ValueError("repair acceptance negative-parent minimum invalid")
+    if bank_lock.get("candidate_training_must_not_start_before_lock") is not True:
+        raise ValueError("repair candidate training must be blocked until bank lock")
     return payload
 
 
@@ -183,12 +210,15 @@ def main() -> int:
         max_ticks=args.max_ticks,
         protocol_seed=args.protocol_seed,
     )
+
+    acceptance_bank = None
     if predeclared is not None:
-        (Path(args.output_dir) / "acceptance_predeclaration.json").write_text(
+        output = Path(args.output_dir)
+        (output / "acceptance_predeclaration.json").write_text(
             json.dumps(predeclared, indent=2, sort_keys=True, allow_nan=False) + "\n",
             encoding="utf-8",
         )
-        (Path(args.output_dir) / "acceptance_predeclaration_identity.json").write_text(
+        (output / "acceptance_predeclaration_identity.json").write_text(
             json.dumps(
                 {
                     "schema": "jit_repair_acceptance_label_binding_v1",
@@ -212,7 +242,31 @@ def main() -> int:
             + "\n",
             encoding="utf-8",
         )
-    print(json.dumps(report, indent=2, sort_keys=True))
+        bank_lock = predeclared["protocol"]["bank_lock"]
+        acceptance_bank = lock_negative_acceptance_bank(
+            output / "labels.json",
+            args.catalog,
+            output / "acceptance_bank.json",
+            target_tube_path=Path(bank_lock["target_tube"]),
+            expected_target_tube_manifest_sha256=str(
+                bank_lock["target_tube_manifest_sha256"]
+            ),
+            predeclaration_file_sha256=str(predeclared_sha),
+            predeclared_protocol_sha256=str(predeclared["expected_protocol_sha256"]),
+            minimum_negative_states_per_phase=int(
+                bank_lock["minimum_negative_states_per_phase"]
+            ),
+            minimum_negative_parent_groups_per_phase=int(
+                bank_lock["minimum_negative_parent_groups_per_phase"]
+            ),
+        )
+
+    payload_out = {"labeling": report}
+    if acceptance_bank is not None:
+        payload_out["acceptance_bank"] = {
+            key: value for key, value in acceptance_bank.items() if key != "entries"
+        }
+    print(json.dumps(payload_out, indent=2, sort_keys=True))
     return 0
 
 
