@@ -1,6 +1,6 @@
 {
   "schema": "jit_repair_acceptance_boundary_acquisition_v1",
-  "expected_protocol_sha256": "72a5be0eee7c3bef7dd6dd917c8a3790bd9e7d42374b98c7dee56d25d4c751ba",
+  "expected_protocol_sha256": "e3d15a0c689e3286ce240380db90e270af354ccc4371571c5ccc4a8c3db4c319",
   "protocol": {
     "schema": "jit_repair_acceptance_boundary_acquisition_protocol_v1",
     "status": "predeclared_before_repair_training",
@@ -35,6 +35,17 @@
       "max_ticks": 400,
       "protocol_seed": 9511003,
       "baseline_policy_only": true
+    },
+    "bank_lock": {
+      "selection": "all_baseline_continuation_negative_candidates",
+      "exclude_target_tube_states": true,
+      "target_tube": "JIT/runs/soft_tube/soft_tube_iter1_pi0_conditioned_20260901",
+      "target_tube_manifest_sha256": "817a980a5dd84f36507f762a913c21c1fc0913580d925ff9c68e982edfd82a80",
+      "physical_state_unique": true,
+      "require_both_phases": true,
+      "minimum_negative_states_per_phase": 10,
+      "minimum_negative_parent_groups_per_phase": 3,
+      "candidate_training_must_not_start_before_lock": true
     },
     "isolation": {
       "exclude_consumed_boundary_states": true,
