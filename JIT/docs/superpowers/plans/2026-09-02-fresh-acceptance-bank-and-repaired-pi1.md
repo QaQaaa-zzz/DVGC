@@ -454,3 +454,53 @@ git add JIT/scripts/local_preflight.sh JIT/src/jit_dvgc/tube/__init__.py \
   JIT/tests/test_preflight_contract.py
 git commit -m "Generalize unified formal preflight discovery"
 ```
+
+---
+
+### Task 8: Record the Readiness FAIL and GPT Handoff
+
+**Files:**
+- Modify: `AGENTS.md`
+- Modify: `JIT/AGENTS.md`
+- Modify: `PROJECT.md`
+- Modify: `JIT/README.md`
+- Modify: `JIT/docs/CURRENT_STATUS.md`
+- Modify: `JIT/docs/ENVELOPE_ITERATION_PROTOCOL.md`
+- Modify: `docs/EXPERIMENT_STATE.md`
+- Create: `JIT/docs/experiments/2026-09-02-fresh-acceptance-bank-readiness-report.md`
+
+**Interfaces:**
+- Consumes: the immutable acquisition, completed deterministic labels, and non-locked readiness artifact.
+- Produces: one consistent current-truth handoff for future GPT iterations without committing ignored run outputs.
+
+- [ ] **Step 1: Record exact observed acquisition and labeling evidence**
+
+Record 659 unique TRAIN candidates, 1,151/1,152 acquisition interactions,
+647 positives, 12 negatives, 26,606/263,600 labeling interactions, outcome
+counts 647 success and 12 physical failure, seed 9511005, horizon 400, and all
+observed file/protocol hashes.
+
+- [ ] **Step 2: Record the phasewise readiness FAIL**
+
+Record upstream 12 negative states across 2 parent groups versus minima 10/3,
+downstream 0/0 versus minima 10/3, Tube1 overlap zero, no locked bank, and
+`PRE-TRAINING FRESH ACCEPTANCE BANK = FAIL`.
+
+- [ ] **Step 3: Replace stale current-state text**
+
+Every current-truth entry must state that repaired pi1 was not launched and is
+not authorized. The mandatory next decision is a separately predeclared,
+frozen-pi0 baseline-only acquisition supplement; it may not use repaired-policy
+outcomes, validation, TEST, changed minima, or a changed training method.
+
+- [ ] **Step 4: Preserve iteration-generic direction**
+
+State that stable code/config paths must support `pi_k`, `Tube_k`, and
+`k -> k+1` without iteration-named production modules. Do not claim that the
+remaining Tube/continuation migration debt is complete.
+
+- [ ] **Step 5: Verify and commit the handoff**
+
+Run `git diff --check`, verify every recorded SHA against the local artifacts,
+and commit only the listed documentation/report files with message
+`Record fresh acceptance readiness failure`.
