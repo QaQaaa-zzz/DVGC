@@ -4,9 +4,14 @@
 
 This document defines the active iterative research contract after the completed
 bootstrap, `pi_0`, policy-conditioned `C^0`, `Tube_1`, formal `pi_1` training,
-immutable `pi_1` freeze, and the first completed paired `pi_0 -> pi_1` gate.
+immutable `pi_1` freeze, the first completed paired `pi_0 -> pi_1` gate, and the
+zero-interaction diagnosis of that rejected candidate.
+
 The first candidate iteration was **not accepted** because core preservation
-failed even though boundary gain passed.
+failed even though boundary gain passed. The diagnosis established material
+retained-core replay dilution under the original Tube_1 sampler. A repaired
+iteration-1 policy-improvement method is therefore predeclared before another
+candidate is trained.
 
 An envelope iteration is not accepted merely because training or freezing
 finishes. The next policy authority is accepted only after its declared
@@ -127,11 +132,11 @@ Branch counts are declared before labeling. Boundary states may receive more
 branches than high-confidence interior states. Branch budgets are an empirical
 measurement choice and never convert a learned Tube into a certified set.
 
-## 6. Constructing Tube_{k+1}
+## 6. Constructing and sampling Tube_{k+1}
 
 `Tube_{k+1}` is a TRAIN-only soft guidance distribution constructed from:
 
-- retained support from `Tube_k` needed to prevent catastrophic forgetting;
+- retained support from `Tube_k`;
 - newly accepted real-dynamics expansion states;
 - policy-conditioned continuation scores;
 - support/confidence information;
@@ -144,10 +149,34 @@ The retained-core rule is structural:
 Tube_(k+1) = retained Tube_k core ∪ accepted TRAIN expansion_k
 ```
 
-Structural presence of the old core is necessary but not sufficient. The
-actual Tube-RSI sampling probability assigned to retained core states must also
-be audited, because a very large expansion can dilute replay enough to cause
-policy forgetting even when every old state remains present in the artifact.
+Structural presence is necessary but not sufficient. The policy-improvement
+runtime must also declare how much probability mass is assigned to the retained
+source core versus the newly added expansion. Otherwise a rapidly growing Tube
+can make old support effectively disappear from training even though every old
+entry remains present in the artifact.
+
+After the rejected first Tube_1 candidate, the active repaired sampling
+principle is:
+
+```text
+phase selection
+  -> retained source core vs current expansion
+  -> entry within selected source
+```
+
+For the predeclared iteration-1 replacement candidate:
+
+- upstream/downstream phase mixture remains 0.5 / 0.5;
+- within each selected phase, retained source core receives probability 0.5 and
+  current expansion receives probability 0.5;
+- retained core is sampled uniformly so low historical V scores cannot starve a
+  state that is nevertheless part of the core-preservation contract;
+- expansion remains value/continuation-weighted using the existing Tube entry
+  sampling weights.
+
+The 0.5 / 0.5 source split is a single predeclared method repair, not a grid or
+post-hoc tuned gate threshold. A later change to that split is another method
+revision and cannot be silently tuned against a consumed acceptance bank.
 
 A thresholded `C^k` level set alone is not an acceptable replacement for the
 existing core. Expansion must be evidence-driven; coordinate dilation alone is
@@ -172,11 +201,17 @@ improvement experiment. The environment, reward semantics, action mapping,
 physical limits, control rate, and task definition remain fixed unless a new
 research question explicitly changes them.
 
-Initialization is a method variable. For the completed `pi_0` and `pi_1`
-comparison, the locked protocol used fresh actor/critic/optimizer initialization
-with the same seed and PPO settings; `Tube_0 -> Tube_1` was the primary
-scientific variable. A future initialization-rule change requires a new explicit
-method declaration and cannot be introduced after inspecting held-out outcomes.
+Initialization is a method variable. The rejected first Tube_1 candidate used
+fresh actor/critic/optimizer initialization with the same seed and PPO settings
+as pi_0. The repaired iteration-1 candidate keeps that fresh initialization,
+seed, PPO budget, Tube_1 support, physics, reward, action semantics, natural
+reset probability, and phase mixture fixed. Its only method change versus the
+rejected candidate is the declared within-Tube retained-core replay contract.
+
+Because the candidates are fresh-initialized, a loss of pi_0 core competence is
+best described as **core-support under-replay / capability regression under the
+expanded training distribution**, not classical parameter forgetting from a
+pi_0 warm start.
 
 The final deployment/evaluation controller remains one unified Actor. Local
 experts are bootstrap/data-generation tools and are never switched at runtime.
@@ -210,6 +245,12 @@ model producing larger scores is not by itself a boundary-gain proof.
 
 A completed FAIL is immutable scientific evidence. It must not be converted to
 a PASS by changing the consumed audit bank, threshold, or acceptance rule.
+After a method revision informed by a completed gate, the old boundary bank is
+consumed as selection/diagnostic evidence. The repaired candidate therefore
+requires a newly predeclared fresh non-final boundary challenge bank for its
+formal acceptance decision. The structural all-core bank may be repeated because
+it is the explicit support-preservation contract rather than held-out boundary
+selection evidence.
 
 ## 9. Convergence
 
@@ -246,7 +287,7 @@ The result is an **empirical, policy-conditioned jumping capability envelope**.
 It must not be described as a formal safe set, guaranteed viability kernel, or
 proof of reachability outside the measured distribution.
 
-## 11. Completed baseline and rejected iteration-1 candidate
+## 11. Completed baseline, rejected candidate, and diagnosis
 
 Completed chain:
 
@@ -259,60 +300,77 @@ frozen phase experts
   -> C_up^0 / C_down^0 with independent validation
   -> core-retaining Tube_1 (3,119 TRAIN entries)
   -> Tube_1 engineering gate GO
-  -> pi_1 (10,009,600 PPO transitions, completed and restore-verified)
-  -> frozen pi_1 comparison authority
+  -> first pi_1 candidate (10,009,600 PPO transitions)
+  -> frozen comparison authority
   -> paired pi_0 vs pi_1 gate
+  -> boundary PASS / core FAIL
+  -> zero-interaction replay diagnosis
 ```
 
-Frozen `pi_1` identities:
+Frozen rejected-candidate identities:
 
 - checkpoint payload SHA-256: `fb5c364057933d62c4e1b6ed49f3181cd36584c5b270f305eef18dff150e68e5`
 - actor SHA-256: `cc8f202075479aa90c0451732773016dfa25ef8a0c849278b5917319070284f0`
 - critic SHA-256: `1519803788302a936d3129eb7010de5fe153ea65410a49c35c1328e22fdf8d8f`
 - normalizer SHA-256: `94ed2587601dbe187774f664a741f427d943148a0c5391cdf57a45939c50a191`
-- freeze protocol SHA-256: `242301b29f3510895a0f13934deac44c1b38c976bb9a8c8385a85f621613a1ed`
 
 Completed paired-gate protocol SHA-256:
 
 `24a126ee94472eebbcb59fff66618ae00dae41074a1d1cfee8bb816afaff410a`
 
-Result:
+Gate result:
 
-- core bank: 222 Tube_0 states;
 - pi_0 core success: 222 / 222;
-- pi_1 core success: 201 / 222;
+- rejected pi_1 core success: 201 / 222;
 - core regressions: 21 = 16 upstream + 5 downstream;
 - **core preservation: FAIL**;
-- boundary challenge bank: 56 frozen pi_0-negative TRAIN states;
-- pi_0 failure reproduction errors: 0;
-- pi_1 new successes: 12 across 5 parent groups;
+- boundary bank: 56 frozen pi_0-negative TRAIN states;
+- rejected pi_1 new successes: 12 across 5 parent groups;
 - **boundary gain: PASS**;
-- **iteration accepted: false**;
-- **empirical pi_0 -> pi_1 envelope expansion accepted: false**.
+- **iteration accepted: false**.
 
-This result shows that Tube_1 training produced new upstream frontier capability
-but also lost established core competence. The rejected `pi_1` cannot be used
-as the accepted source authority for `C^1 -> Tube_2` merely because boundary
-gain passed.
+Core-regression diagnosis SHA-256:
+
+`61e12385ef0e77180b773a2e0de04b36e2a27f649c24d509b4f18345c00a7689`
+
+Sampling diagnosis under the rejected candidate:
+
+- upstream retained-core sampling-weight share: 24.87%;
+- downstream retained-core sampling-weight share: 3.10%;
+- Tube-conditional probability of any old-core reset: 13.98%;
+- all-episode old-core reset probability: 12.59%;
+- all-episode expansion reset probability: 77.41%;
+- all 21 regressions terminated as physical failures.
+
+This proves replay dilution was material, while not proving it was the only
+mechanism. The repaired candidate therefore changes the sampling contract once
+and must still pass a new scientific gate.
+
+Predeclared replacement config:
+
+`JIT/configs/pi_unified_iter1_tube1_core_replay50_natural10.json`
 
 ## 12. Immediate implementation order
 
-1. Preserve the completed paired-gate FAIL artifact and all frozen policy/Tube
-   identities unchanged.
-2. Run zero-interaction diagnosis on the 21 core regressions.
-3. Audit actual Tube_1 retained-core sampling probability mass per phase, not
-   just the fact that all Tube_0 states are structurally present.
-4. Summarize regression terminal outcomes, parent/source concentration, and
-   sampling weights; distinguish replay/curriculum dilution from a deeper
-   runtime/phase failure.
-5. Only after diagnosis, predeclare a revised policy-improvement method.
-6. Train a repaired candidate under the new declared method with final TEST
-   still untouched.
-7. Run a newly predeclared comparable paired core/boundary gate on that repaired
-   candidate. A failure stops again; automation must not retune until PASS.
-8. Only after both gates pass may the accepted policy generate the next
+1. Preserve the rejected candidate, completed FAIL gate, and diagnosis artifacts
+   unchanged.
+2. Compile/regression-test the generic retained-core replay sampler and canonical
+   formal wrapper.
+3. Run a zero-interaction real-Tube_1 preflight and verify exactly 0.5 retained
+   core / 0.5 expansion probability inside both phases.
+4. Before inspecting replacement-candidate outcomes, lock a fresh non-final
+   boundary-audit acquisition protocol that excludes the consumed 56-state bank,
+   its parent/near-state neighborhood, Tube_1 admitted states, validation, and
+   TEST.
+5. Train exactly one fresh iteration-1 replacement candidate from
+   `pi_unified_iter1_tube1_core_replay50_natural10.json`.
+6. Freeze its exact final checkpoint as a candidate comparison authority.
+7. Re-run the structural 222-state core-preservation contract and evaluate
+   boundary gain on the new fresh challenge bank. The old consumed boundary bank
+   may be reported only as descriptive regression evidence.
+8. If either gate fails, stop and preserve the result; do not sweep replay ratios
+   against the same gate.
+9. Only after both gates pass may iteration 1 be accepted and authorize
    policy-conditioned `C^1` evidence and core-retaining Tube_2.
-9. In parallel, keep engineering migration iteration-generic, but do not let
-   Tube_2/pi_2 automation bypass the current scientific blocker.
 10. Keep final TEST/JCE/JEL untouched until iteration stopping and final-policy
     selection are frozen.
