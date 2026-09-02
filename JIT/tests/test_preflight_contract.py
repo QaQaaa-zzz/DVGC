@@ -51,6 +51,13 @@ def test_preflight_statically_validates_every_unified_formal_config(jit_root):
     assert "if replay_contract_count < 1:\n    raise AssertionError" in script
 
 
+def test_tube_package_exports_the_replay_contract_normalizer():
+    from jit_dvgc import tube_rsi
+    import jit_dvgc.tube as tube
+
+    assert tube.normalize_core_replay_contract is tube_rsi.normalize_core_replay_contract
+
+
 def test_readme_documents_iteration_workflow_and_final_test_claim_boundary(jit_root):
     readme = (jit_root / "README.md").read_text(encoding="utf-8")
     assert "run_iteration_workflow.py --config <workflow.json> --execute" in readme
