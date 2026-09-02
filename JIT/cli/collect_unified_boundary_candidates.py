@@ -67,8 +67,12 @@ def _load_repair_predeclaration(path: Path) -> dict:
         raise ValueError("repair acceptance bank must be predeclared before repair training")
     if _canonical_sha256(protocol) != payload.get("expected_protocol_sha256"):
         raise ValueError("repair acceptance acquisition protocol SHA-256 drift")
-    if protocol.get("source_iteration") != 0 or protocol.get("candidate_iteration") != 1:
-        raise ValueError("repair acceptance acquisition iteration drift")
+
+    source_iteration = int(protocol.get("source_iteration", -1))
+    candidate_iteration = int(protocol.get("candidate_iteration", -1))
+    if source_iteration < 0 or candidate_iteration != source_iteration + 1:
+        raise ValueError("repair acceptance acquisition must declare k -> k+1 iteration progression")
+
     acquisition = protocol.get("acquisition")
     if not isinstance(acquisition, dict):
         raise ValueError("repair acceptance acquisition settings missing")
@@ -77,6 +81,11 @@ def _load_repair_predeclaration(path: Path) -> dict:
     minimum = int(acquisition.get("minimum_anchors_per_phase", 0))
     if minimum <= 0 or minimum > int(acquisition["anchors_per_phase"]):
         raise ValueError("repair acceptance minimum anchor count invalid")
+    active_dimensions = int(acquisition.get("active_action_dimensions", 1))
+    action_names = tuple(str(value) for value in acquisition.get("action_names", ()))
+    if active_dimensions <= 0 or active_dimensions > len(action_names):
+        raise ValueError("repair acceptance active_action_dimensions invalid")
+
     isolation = protocol.get("isolation")
     if isolation != {
         "exclude_consumed_boundary_states": True,
@@ -185,6 +194,15 @@ def main() -> int:
         choices=(-1, 1),
         default=[-1, 1],
     )
+    parser.add_argument(
+        "--active-action-dimensions",
+        type=int,
+        default=1,
+        help=(
+            "number of simultaneously perturbed action dimensions; 1 preserves the "
+            "historical one-axis action-basis protocol"
+        ),
+    )
     parser.add_argument("--protocol-seed", type=int, default=9_510_001)
     parser.add_argument(
         "--audit-only",
@@ -213,6 +231,7 @@ def main() -> int:
         args.durations = [int(x) for x in acq["durations"]]
         args.action_names = [str(x) for x in acq["action_names"]]
         args.signs = [int(x) for x in acq["signs"]]
+        args.active_action_dimensions = int(acq.get("active_action_dimensions", 1))
         args.protocol_seed = int(acq["protocol_seed"])
         consumed_states, consumed_groups, consumed_identity = _consumed_gate_exclusions(
             protocol
@@ -226,6 +245,8 @@ def main() -> int:
         parser.error("--action-names must be unique")
     if len(set(args.signs)) != len(args.signs):
         parser.error("--signs must be unique")
+    if not 1 <= args.active_action_dimensions <= len(args.action_names):
+        parser.error("--active-action-dimensions must lie in [1, len(action_names)]")
 
     frozen = load_frozen_unified_manifest(args.frozen_policy)
     record = frozen["policy"]
@@ -238,6 +259,8 @@ def main() -> int:
 
     if predeclared is not None:
         protocol = predeclared["protocol"]
+        if int(record["iteration"]) != int(protocol["source_iteration"]):
+            raise ValueError("repair acceptance baseline policy iteration drift")
         if record["name"] != protocol["baseline_policy_name"]:
             raise ValueError("repair acceptance baseline policy name drift")
         if record["actor_sha256"] != protocol["baseline_actor_sha256"]:
@@ -321,6 +344,7 @@ def main() -> int:
             durations=tuple(args.durations),
             action_names=tuple(args.action_names),
             signs=tuple(args.signs),
+            active_action_dimensions=args.active_action_dimensions,
         )
         _write_json(Path(args.output_dir) / "anchor_audit.json", audit)
         if predeclared is not None:
@@ -351,6 +375,7 @@ def main() -> int:
                     "policy_actor_sha256": str(record["actor_sha256"]),
                     "policy_payload_sha256": str(record["payload_sha256"]),
                     "frontier_score_ceiling": float(args.frontier_score_ceiling),
+                    "active_action_dimensions": int(args.active_action_dimensions),
                     "predeclaration": str(args.predeclaration) if args.predeclaration else None,
                     "predeclaration_file_sha256": predeclared_sha,
                     "training_transitions": 0,
