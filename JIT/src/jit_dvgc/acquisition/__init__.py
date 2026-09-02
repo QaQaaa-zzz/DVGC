@@ -10,6 +10,7 @@ from ..unified_boundary import (
     DEFAULT_UNIFIED_BOUNDARY_DURATIONS,
     DEFAULT_UNIFIED_BOUNDARY_STRENGTHS,
     TubeBoundaryAnchor,
+    action_sparse_directions,
     collect_unified_boundary_candidates,
     select_tube_boundary_anchors,
 )
@@ -31,8 +32,8 @@ def select_disjoint_tube_boundary_anchors(
     """Select frontier anchors after excluding consumed audit neighborhoods.
 
     Exclusion is phase-aware for parent groups and global for physical-state
-    hashes.  Selection remains deterministic and uses the existing weak-score,
-    parent-unique frontier ordering.  The complete eligible parent-unique pool
+    hashes. Selection remains deterministic and uses the existing weak-score,
+    parent-unique frontier ordering. The complete eligible parent-unique pool
     is materialized before exclusions so consumed groups cannot simply cause a
     quota shortfall when other disjoint frontier groups are available.
     """
@@ -137,6 +138,7 @@ __all__ = [
     "DEFAULT_FRONTIER_SCORE_CEILING",
     "DEFAULT_UNIFIED_BOUNDARY_DURATIONS",
     "DEFAULT_UNIFIED_BOUNDARY_STRENGTHS",
+    "action_sparse_directions",
     "collect_unified_boundary_candidates",
     "select_tube_boundary_anchors",
     "select_disjoint_tube_boundary_anchors",
