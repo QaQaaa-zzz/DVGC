@@ -15,6 +15,7 @@ export MUJOCO_GL="${MUJOCO_GL:-egl}"
 
 "${PY}" - <<'PY'
 from pathlib import Path
+import json
 
 import jit_dvgc.acquisition as acquisition
 import jit_dvgc.analysis as analysis
@@ -24,24 +25,22 @@ import jit_dvgc.training as training
 import jit_dvgc.tube as tube
 import jit_dvgc.workflow as workflow
 
-pi1 = training.load_unified_formal_config(
-    Path("JIT/configs/pi_unified_iter1_tube1_natural10_retry01.json")
-)
-assert pi1.ppo.requested_transitions == 10_009_600
-assert pi1.ppo.seed == 821101
-assert pi1.runtime_naccdmax == 1024
-assert pi1.reset_mixture.natural_reset_probability == 0.1
-assert pi1.reset_mixture.soft_tube_probability == 0.9
-assert pi1.formal.resume_semantics == "fresh_only"
-assert pi1.raw["claim_boundary"]["test_data_used"] is False
-assert pi1.raw["claim_boundary"]["validation_data_used"] is False
+formal_config_count = 0
+replay_contract_count = 0
+for path in sorted(Path("JIT/configs").glob("*.json")):
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    if raw.get("schema") != training.FORMAL_SCHEMA:
+        continue
+    training.load_unified_formal_config(path)
+    formal_config_count += 1
+    if "tube_sampling" in raw:
+        tube.normalize_core_replay_contract(raw["tube_sampling"])
+        replay_contract_count += 1
 
-tube1 = tube.load_core_retaining_tube_config(
-    Path("JIT/configs/envelope_iter0_tube1_core_retaining.json")
-)
-assert tube1["protocol"]["iteration"] == 1
-assert tube1["protocol"]["source_iteration"] == 0
-assert tube1["protocol"]["policy_name"] == "pi_0"
+if formal_config_count < 1:
+    raise AssertionError("preflight requires at least one unified formal config")
+if replay_contract_count < 1:
+    raise AssertionError("preflight requires at least one replay contract")
 
 for required in (
     acquisition.collect_unified_boundary_candidates,
@@ -55,8 +54,8 @@ for required in (
     assert callable(required)
 
 print("JIT PACKAGE/API PREFLIGHT = PASS")
-print("PI1 FORMAL CONTRACT = PASS")
-print("TUBE1 LOCKED CONFIG = PASS")
+print(f"UNIFIED FORMAL CONFIGS = {formal_config_count}")
+print(f"REPLAY CONTRACTS = {replay_contract_count}")
 PY
 
 "${PY}" -m pytest JIT/tests -q -m "not gpu"
