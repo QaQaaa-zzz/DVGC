@@ -18,6 +18,7 @@
 - Preserve Tube1, seed 821101, fresh initialization, PPO budget 10,009,600, reward, physics, XML, task, action semantics, 0.1/0.9 reset mixture, 0.5/0.5 phase mixture, 0.5/0.5 Tube core/expansion replay, validation isolation, and TEST isolation.
 - Stop before repaired-policy training on any integrity, compile, test, snapshot, GPU/runtime, interaction-accounting, readiness, or existing-output failure.
 - Do not begin `C^1`, Tube2, or pi2 during this plan.
+- Repository preflight must discover unified formal configs by schema; it must not hardcode pi1, pi2, Tube1, Tube2, retry, seed, or checkpoint names.
 
 ---
 
@@ -387,3 +388,69 @@ candidate scientifically.
 Report the required 18-point handoff. The mandatory next blocker is the full
 222-state core-preservation plus fresh-bank paired boundary-gain gate. Do not
 start `C^1`, Tube2, or pi2.
+
+---
+
+### Task 7: Repair the Iteration-Generic Preflight Contract
+
+**Files:**
+- Modify: `JIT/scripts/local_preflight.sh`
+- Modify: `JIT/src/jit_dvgc/tube/__init__.py`
+- Modify: `JIT/tests/test_preflight_contract.py`
+
+**Interfaces:**
+- Consumes: `training.FORMAL_SCHEMA`, `training.load_unified_formal_config`, and the existing `tube_rsi.normalize_core_replay_contract` implementation.
+- Produces: schema-driven static validation of every unified formal config and a stable `tube.normalize_core_replay_contract` package API.
+
+- [ ] **Step 1: Replace obsolete text assertions with iteration-generic RED tests**
+
+Assert the preflight discovers `JIT/configs/*.json`, selects configs through
+`training.FORMAL_SCHEMA`, validates them with
+`training.load_unified_formal_config`, and validates optional replay contracts
+through `tube.normalize_core_replay_contract`. Assert it does not hardcode the
+repaired pi1 config filename. Replace old README assertions with the stable
+iteration-workflow command and final TEST/JCE/JEL claim boundary already
+documented in `JIT/README.md`.
+
+- [ ] **Step 2: Run the contract tests and confirm RED**
+
+```bash
+export PYTHONPATH="$PWD/JIT/src"
+/home/qy/mujoco_playground/.venv/bin/python -m pytest -q \
+  JIT/tests/test_preflight_contract.py
+```
+
+Expected: FAIL because current preflight hardcodes one rejected pi1 config and
+does not expose/use the stable replay normalizer.
+
+- [ ] **Step 3: Export the existing replay normalizer from the stable Tube API**
+
+Import and add `normalize_core_replay_contract` to `jit_dvgc.tube.__all__`.
+Do not duplicate its implementation or add a module.
+
+- [ ] **Step 4: Make the preflight schema-driven**
+
+In the existing embedded Python preflight, iterate over sorted
+`Path("JIT/configs").glob("*.json")`, read each JSON object, select only
+`training.FORMAL_SCHEMA`, and call `training.load_unified_formal_config(path)`.
+For each optional `tube_sampling`, call
+`tube.normalize_core_replay_contract(raw["tube_sampling"])`. Require at least
+one unified formal config and at least one replay contract, but never name an
+iteration, Tube, retry, seed, or checkpoint in source.
+
+- [ ] **Step 5: Run GREEN and the affected package-facade test**
+
+```bash
+/home/qy/mujoco_playground/.venv/bin/python -m pytest -q \
+  JIT/tests/test_preflight_contract.py JIT/tests/test_package_facades.py
+```
+
+Expected: all tests PASS.
+
+- [ ] **Step 6: Commit the generic preflight repair**
+
+```bash
+git add JIT/scripts/local_preflight.sh JIT/src/jit_dvgc/tube/__init__.py \
+  JIT/tests/test_preflight_contract.py
+git commit -m "Generalize unified formal preflight discovery"
+```
