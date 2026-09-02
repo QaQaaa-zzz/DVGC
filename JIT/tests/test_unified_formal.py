@@ -123,6 +123,27 @@ def test_formal_controller_checkpoints_and_diagnoses_only_declared_milestones(
     assert len((tmp_path / "episode_metrics.jsonl").read_text().splitlines()) == 391
 
 
+def test_formal_wrapper_loads_explicit_core_replay_contract(tmp_path):
+    from jit_dvgc.training.formal import _load_core_replay_contract
+
+    contract = {
+        "schema": "jit_tube_rsi_core_replay_v1",
+        "selection": "phase_then_source_then_entry",
+        "core_probability": 0.5,
+        "expansion_probability": 0.5,
+        "core_within_source": "uniform",
+        "expansion_within_source": "value_weighted",
+        "source_core_definition": "first_core_retained_count_entries",
+    }
+    path = tmp_path / "config.json"
+    path.write_text(json.dumps({"tube_sampling": contract}) + "\n", encoding="utf-8")
+    assert _load_core_replay_contract(path) == contract
+
+    legacy = tmp_path / "legacy.json"
+    legacy.write_text("{}\n", encoding="utf-8")
+    assert _load_core_replay_contract(legacy) is None
+
+
 def test_failed_train_panel_accounting_is_recovered_from_persisted_report(tmp_path):
     from jit_dvgc.training.formal import _reconcile_failed_train_panel_accounting
 
