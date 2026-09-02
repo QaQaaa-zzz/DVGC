@@ -5,7 +5,10 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from jit_dvgc.acquisition import select_disjoint_tube_boundary_anchors
+from jit_dvgc.acquisition import (
+    action_sparse_directions,
+    select_disjoint_tube_boundary_anchors,
+)
 from jit_dvgc.unified_boundary import select_tube_boundary_anchors
 from jit_dvgc.unified_envelope_snapshot import (
     DOWN_EVENT_FIELDS,
@@ -180,6 +183,76 @@ def test_boundary_anchor_selection_rejects_nontrain_leaky_or_invalid_ceiling():
     with pytest.raises(ValueError, match="frontier_score_ceiling"):
         select_tube_boundary_anchors(
             _artifact(clean), max_per_phase=1, frontier_score_ceiling=1.1
+        )
+
+
+def test_sparse_direction_width_one_preserves_legacy_basis_payload():
+    directions = action_sparse_directions(
+        action_names=("steer", "hip"),
+        signs=(-1, 1),
+        active_action_dimensions=1,
+    )
+    assert directions == (
+        {
+            "action_dimension": 0,
+            "action_name": "steer",
+            "sign": -1,
+            "basis_vector": [-1.0, 0.0, 0.0, 0.0],
+        },
+        {
+            "action_dimension": 0,
+            "action_name": "steer",
+            "sign": 1,
+            "basis_vector": [1.0, 0.0, 0.0, 0.0],
+        },
+        {
+            "action_dimension": 2,
+            "action_name": "hip",
+            "sign": -1,
+            "basis_vector": [0.0, 0.0, -1.0, 0.0],
+        },
+        {
+            "action_dimension": 2,
+            "action_name": "hip",
+            "sign": 1,
+            "basis_vector": [0.0, 0.0, 1.0, 0.0],
+        },
+    )
+
+
+def test_sparse_direction_width_two_enumerates_all_pair_sign_combinations():
+    directions = action_sparse_directions(
+        action_names=("hip", "knee"),
+        signs=(-1, 1),
+        active_action_dimensions=2,
+    )
+    assert len(directions) == 4
+    assert [row["action_dimensions"] for row in directions] == [[2, 3]] * 4
+    assert [row["action_names"] for row in directions] == [["hip", "knee"]] * 4
+    assert [row["signs"] for row in directions] == [
+        [-1, -1],
+        [-1, 1],
+        [1, -1],
+        [1, 1],
+    ]
+    assert [row["basis_vector"] for row in directions] == [
+        [0.0, 0.0, -1.0, -1.0],
+        [0.0, 0.0, -1.0, 1.0],
+        [0.0, 0.0, 1.0, -1.0],
+        [0.0, 0.0, 1.0, 1.0],
+    ]
+
+
+def test_sparse_direction_width_validates_selected_action_support():
+    with pytest.raises(ValueError, match="active_action_dimensions"):
+        action_sparse_directions(
+            action_names=("hip",),
+            active_action_dimensions=2,
+        )
+    with pytest.raises(ValueError, match="unknown action_names"):
+        action_sparse_directions(
+            action_names=("unknown",),
+            active_action_dimensions=1,
         )
 
 
