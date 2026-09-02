@@ -11,6 +11,7 @@ def test_package_roots_preserve_legacy_authorities():
     from jit_dvgc import policy_conditioned_continuation_field as legacy_field
     from jit_dvgc import snapshot_pool as legacy_pool
     from jit_dvgc import soft_tube as legacy_soft
+    from jit_dvgc import tube_rsi as legacy_tube_rsi
     from jit_dvgc import tube_rsi_smoke as legacy_smoke
     from jit_dvgc import unified_boundary as legacy_boundary
     from jit_dvgc import unified_continuation_labels as legacy_labels
@@ -28,6 +29,7 @@ def test_package_roots_preserve_legacy_authorities():
     assert tube.load_soft_tube is legacy_soft.load_soft_tube
     assert tube.run_tube_rsi_smoke is legacy_smoke.run_tube_rsi_smoke
     assert tube.build_core_retaining_tube is legacy_iteration.build_core_retaining_tube
+    assert tube.normalize_core_replay_contract is legacy_tube_rsi.normalize_core_replay_contract
     assert snapshots.SnapshotPool is legacy_pool.SnapshotPool
     assert training.checkpoint_identity is legacy_training.checkpoint_identity
     assert training.freeze_unified_policy is legacy_freeze.freeze_unified_policy

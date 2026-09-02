@@ -34,8 +34,9 @@ for path in sorted(Path("JIT/configs").glob("*.json")):
     training.load_unified_formal_config(path)
     formal_config_count += 1
     if "tube_sampling" in raw:
-        tube.normalize_core_replay_contract(raw["tube_sampling"])
-        replay_contract_count += 1
+        normalized_contract = tube.normalize_core_replay_contract(raw["tube_sampling"])
+        if normalized_contract is not None:
+            replay_contract_count += 1
 
 if formal_config_count < 1:
     raise AssertionError("preflight requires at least one unified formal config")
