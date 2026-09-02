@@ -46,6 +46,28 @@ def _canonical_sha256(payload) -> str:
     ).hexdigest()
 
 
+def _validate_repair_predeclaration_binding(
+    predeclared: dict, predeclared_sha: str, copied_path: Path, audit_path: Path
+) -> dict:
+    audit = _read_json(audit_path)
+    if audit.get("predeclaration_file_sha256") != predeclared_sha:
+        raise ValueError(
+            "repair acceptance anchor audit/source predeclaration SHA-256 drift"
+        )
+    copied = _read_json(copied_path)
+    if copied != predeclared:
+        raise ValueError("repair acceptance acquisition/source predeclaration semantic drift")
+    expected = str(predeclared["expected_protocol_sha256"])
+    if str(copied.get("expected_protocol_sha256")) != expected:
+        raise ValueError("repair acceptance copied expected protocol SHA-256 drift")
+    for name, payload in (("source", predeclared), ("copied", copied)):
+        if _canonical_sha256(payload["protocol"]) != expected:
+            raise ValueError(
+                f"repair acceptance {name} canonical protocol SHA-256 drift"
+            )
+    return audit
+
+
 def _load_repair_predeclaration(path: Path) -> dict:
     payload = _read_json(path)
     if payload.get("schema") != REPAIR_ACCEPTANCE_SCHEMA:
@@ -132,11 +154,9 @@ def main() -> int:
         acquisition_root = Path(args.catalog).parent
         copied = acquisition_root / "predeclaration.json"
         audit_path = acquisition_root / "anchor_audit.json"
-        if file_sha256(copied) != predeclared_sha:
-            raise ValueError("repair acceptance acquisition/predeclaration identity drift")
-        audit = _read_json(audit_path)
-        if audit.get("predeclaration_file_sha256") != predeclared_sha:
-            raise ValueError("repair acceptance anchor audit/predeclaration drift")
+        audit = _validate_repair_predeclaration_binding(
+            predeclared, predeclared_sha, copied, audit_path
+        )
         if audit.get("predeclared_protocol_sha256") != predeclared["expected_protocol_sha256"]:
             raise ValueError("repair acceptance anchor audit protocol drift")
 

@@ -1,6 +1,110 @@
 from __future__ import annotations
 
+import hashlib
+import importlib.util
+import json
+from pathlib import Path
+
 import pytest
+
+
+def _load_label_unified_continuations():
+    cli_path = Path(__file__).parents[1] / "cli" / "label_unified_continuations.py"
+    spec = importlib.util.spec_from_file_location(
+        "label_unified_continuations_test", cli_path
+    )
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _repair_predeclaration_files(tmp_path: Path):
+    module = _load_label_unified_continuations()
+    protocol = {"contract": "fresh-repair", "version": 1}
+    payload = {
+        "expected_protocol_sha256": module._canonical_sha256(protocol),
+        "protocol": protocol,
+    }
+    source_path = tmp_path / "source-predeclaration.json"
+    copied_path = tmp_path / "predeclaration.json"
+    source_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    copied_path.write_text(
+        json.dumps(payload, separators=(",", ":"), sort_keys=False), encoding="utf-8"
+    )
+    audit_path = tmp_path / "anchor_audit.json"
+    source_sha = hashlib.sha256(source_path.read_bytes()).hexdigest()
+    audit_path.write_text(
+        json.dumps({"predeclaration_file_sha256": source_sha}), encoding="utf-8"
+    )
+    return module, payload, source_sha, copied_path, audit_path
+
+
+def test_repair_predeclaration_binding_accepts_semantically_equal_canonical_copy(
+    tmp_path,
+):
+    module, payload, source_sha, copied_path, audit_path = _repair_predeclaration_files(
+        tmp_path
+    )
+
+    assert copied_path.read_bytes() != (tmp_path / "source-predeclaration.json").read_bytes()
+    assert module._validate_repair_predeclaration_binding(
+        payload, source_sha, copied_path, audit_path
+    ) == {"predeclaration_file_sha256": source_sha}
+
+
+def test_repair_predeclaration_binding_rejects_semantic_copy_drift(tmp_path):
+    module, payload, source_sha, copied_path, audit_path = _repair_predeclaration_files(
+        tmp_path
+    )
+    changed = dict(payload)
+    changed["semantic_field"] = "changed"
+    copied_path.write_text(json.dumps(changed), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="semantic drift"):
+        module._validate_repair_predeclaration_binding(
+            payload, source_sha, copied_path, audit_path
+        )
+
+
+def test_repair_predeclaration_binding_rejects_incorrect_audit_source_sha(tmp_path):
+    module, payload, source_sha, copied_path, audit_path = _repair_predeclaration_files(
+        tmp_path
+    )
+    audit_path.write_text(
+        json.dumps({"predeclaration_file_sha256": "0" * 64}), encoding="utf-8"
+    )
+
+    with pytest.raises(ValueError, match="audit/source predeclaration SHA-256 drift"):
+        module._validate_repair_predeclaration_binding(
+            payload, source_sha, copied_path, audit_path
+        )
+
+
+def test_repair_predeclaration_binding_rejects_copied_protocol_hash_drift(tmp_path):
+    module, payload, source_sha, copied_path, audit_path = _repair_predeclaration_files(
+        tmp_path
+    )
+    changed = dict(payload, expected_protocol_sha256="f" * 64)
+    source_path = tmp_path / "source-predeclaration.json"
+    source_path.write_text(
+        json.dumps(changed, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    copied_path.write_text(
+        json.dumps(changed, separators=(",", ":"), sort_keys=False), encoding="utf-8"
+    )
+    source_sha = hashlib.sha256(source_path.read_bytes()).hexdigest()
+    audit_path.write_text(
+        json.dumps({"predeclaration_file_sha256": source_sha}), encoding="utf-8"
+    )
+
+    with pytest.raises(ValueError, match="canonical protocol SHA-256 drift"):
+        module._validate_repair_predeclaration_binding(
+            changed, source_sha, copied_path, audit_path
+        )
 
 
 def test_global_seed_splits_are_disjoint_complete_and_deterministic():
