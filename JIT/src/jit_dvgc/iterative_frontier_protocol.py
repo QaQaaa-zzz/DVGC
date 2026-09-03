@@ -375,6 +375,44 @@ def _completed_acquisition(
     return catalog
 
 
+def _acquisition_phase_support(
+    acquisition: Mapping[str, Any],
+    *,
+    role: str,
+) -> dict[str, dict[str, int]]:
+    """Reject structurally impossible roles before expensive continuation labeling.
+
+    This gate uses only unlabeled acquisition structure. It does not inspect
+    continuation outcomes. TRAIN ultimately requires >=20 positive and >=20
+    negative labels across >=3 parent groups, so <40 acquired candidates or <3
+    groups in either phase can never pass. CALIBRATION/ACCEPTANCE require both
+    label classes, so <2 candidates or no parent group can never pass either.
+    """
+    entries = acquisition.get("entries")
+    if not isinstance(entries, list):
+        raise ValueError("frontier acquisition entries must be a JSON array")
+    minimum_candidates = 40 if role == "train" else 2
+    minimum_groups = 3 if role == "train" else 1
+    support: dict[str, dict[str, int]] = {}
+    for phase in ("upstream", "downstream"):
+        rows = [row for row in entries if row.get("phase") == phase]
+        groups = {str(row.get("parent_group_id", "")) for row in rows}
+        counts = {
+            "candidate_count": len(rows),
+            "parent_group_count": len(groups),
+            "minimum_candidate_count_before_labeling": minimum_candidates,
+            "minimum_parent_group_count_before_labeling": minimum_groups,
+        }
+        support[phase] = counts
+        if len(rows) < minimum_candidates or len(groups) < minimum_groups:
+            raise ValueError(
+                f"{role.upper()} acquisition support not ready in {phase} before continuation labeling: "
+                f"{counts}; aggregate_exclusions={acquisition.get('exclusion_counts', {})}. "
+                "Stop before expensive labeling and open a new predeclared frontier/parent-generation decision."
+            )
+    return support
+
+
 def _completed_labeling(labels_dir: Path) -> dict[str, Any] | None:
     if not labels_dir.exists():
         return None
@@ -593,6 +631,11 @@ def run_frontier_role(
                 f"frontier {role} acquisition produced no candidates"
             )
 
+    acquisition_phase_support = _acquisition_phase_support(
+        acquisition,
+        role=role,
+    )
+
     if labeling is None:
         runtime_env, runtime_policy = ensure_runtime()
         labeling = label_unified_continuations(
@@ -630,6 +673,7 @@ def run_frontier_role(
         "source_tube_manifest_sha256": str(
             artifact.manifest["manifest_sha256"]
         ),
+        "acquisition_phase_support": acquisition_phase_support,
         "logical_labels": str(output_dir / "logical_labels.json"),
         "logical_labels_file_sha256": file_sha256(
             output_dir / "logical_labels.json"
