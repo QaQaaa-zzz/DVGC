@@ -14,7 +14,10 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import selectors
+import shlex
 import subprocess
+import sys
 from typing import Any, Mapping, Sequence
 
 
@@ -149,7 +152,10 @@ def load_workflow_config(path: Path) -> WorkflowConfig:
         command_raw = item["command"]
         if not isinstance(command_raw, list) or not command_raw:
             raise ValueError(f"stage {name} command must be a non-empty argv list")
-        command = tuple(_require_text(value, field=f"stage {name} command arg") for value in command_raw)
+        command = tuple(
+            _require_text(value, field=f"stage {name} command arg")
+            for value in command_raw
+        )
         requires_raw = item["requires"]
         if not isinstance(requires_raw, list):
             raise ValueError(f"stage {name} requires must be a list")
@@ -163,7 +169,9 @@ def load_workflow_config(path: Path) -> WorkflowConfig:
         completion = _parse_completion(item["completion"], stage_name=name)
         duplicate_exports = export_names.intersection(completion.exports)
         if duplicate_exports:
-            raise ValueError(f"workflow export names must be unique: {sorted(duplicate_exports)}")
+            raise ValueError(
+                f"workflow export names must be unique: {sorted(duplicate_exports)}"
+            )
         export_names.update(completion.exports)
         stages.append(
             WorkflowStage(
@@ -222,7 +230,7 @@ def _assert_value(actual: Any, assertion: Mapping[str, Any]) -> None:
         passed = actual <= expected
     elif op == "in":
         passed = actual in expected
-    else:  # validated on load
+    else:
         raise WorkflowError(f"unsupported assertion op: {op}")
     if not passed:
         raise WorkflowError(
@@ -235,7 +243,9 @@ def _format(text: str, values: Mapping[str, str], *, field: str) -> str:
     try:
         return text.format_map(values)
     except KeyError as exc:
-        raise WorkflowError(f"{field} references unknown variable {exc.args[0]!r}") from exc
+        raise WorkflowError(
+            f"{field} references unknown variable {exc.args[0]!r}"
+        ) from exc
 
 
 def _verify_path(path: Path, kind: str) -> Any:
@@ -257,11 +267,23 @@ def _verify_path(path: Path, kind: str) -> Any:
     raise WorkflowError(f"unsupported path kind: {kind}")
 
 
-def _verify_completion(stage: WorkflowStage, values: Mapping[str, str]) -> dict[str, str]:
-    path = Path(_format(stage.completion.path, values, field=f"stage {stage.name} completion"))
+def _verify_completion(
+    stage: WorkflowStage, values: Mapping[str, str]
+) -> dict[str, str]:
+    path = Path(
+        _format(
+            stage.completion.path,
+            values,
+            field=f"stage {stage.name} completion",
+        )
+    )
     payload = _verify_path(path, stage.completion.kind)
-    if stage.completion.kind != "json" and (stage.completion.assertions or stage.completion.exports):
-        raise WorkflowError(f"stage {stage.name} non-JSON completion cannot assert/export JSON values")
+    if stage.completion.kind != "json" and (
+        stage.completion.assertions or stage.completion.exports
+    ):
+        raise WorkflowError(
+            f"stage {stage.name} non-JSON completion cannot assert/export JSON values"
+        )
     if stage.completion.kind == "json":
         for assertion in stage.completion.assertions:
             actual = _json_pointer(payload, str(assertion["pointer"]))
@@ -303,26 +325,116 @@ def _load_state(config: WorkflowConfig, state_path: Path) -> dict[str, Any]:
     return dict(state)
 
 
-def plan_workflow(config: WorkflowConfig, state: Mapping[str, Any]) -> list[dict[str, Any]]:
+def plan_workflow(
+    config: WorkflowConfig, state: Mapping[str, Any]
+) -> list[dict[str, Any]]:
     values = {str(key): str(value) for key, value in state["exports"].items()}
     completed = set(str(name) for name in state["completed_stages"])
     plan: list[dict[str, Any]] = []
     for stage in config.stages:
-        command = [_format(arg, values, field=f"stage {stage.name} command") for arg in stage.command]
+        command = [
+            _format(arg, values, field=f"stage {stage.name} command")
+            for arg in stage.command
+        ]
         plan.append(
             {
                 "name": stage.name,
                 "status": "completed" if stage.name in completed else "pending",
-                "cwd": _format(stage.cwd, values, field=f"stage {stage.name} cwd"),
+                "cwd": _format(
+                    stage.cwd, values, field=f"stage {stage.name} cwd"
+                ),
                 "command": command,
                 "completion": _format(
-                    stage.completion.path, values, field=f"stage {stage.name} completion"
+                    stage.completion.path,
+                    values,
+                    field=f"stage {stage.name} completion",
                 ),
             }
         )
         if stage.name in completed:
             values.update(_verify_completion(stage, values))
     return plan
+
+
+def _tail_text(path: Path, *, max_lines: int = 40) -> str:
+    if not path.is_file():
+        return ""
+    try:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return ""
+    return "\n".join(lines[-max_lines:])
+
+
+def _stream_stage_command(
+    *,
+    stage_name: str,
+    command: Sequence[str],
+    cwd: Path,
+    env: Mapping[str, str],
+    logs: Path,
+) -> int:
+    """Run one stage while teeing stdout/stderr live and preserving log files."""
+    logs.mkdir(parents=True, exist_ok=True)
+    stdout_path = logs / f"{stage_name}.stdout.log"
+    stderr_path = logs / f"{stage_name}.stderr.log"
+    child_env = dict(env)
+    child_env.setdefault("PYTHONUNBUFFERED", "1")
+
+    print(
+        f"[workflow] START {stage_name}\n"
+        f"[workflow] cwd={cwd}\n"
+        f"[workflow] command={shlex.join(list(command))}",
+        flush=True,
+    )
+
+    with stdout_path.open("w", encoding="utf-8") as stdout_log, stderr_path.open(
+        "w", encoding="utf-8"
+    ) as stderr_log:
+        process = subprocess.Popen(
+            list(command),
+            cwd=cwd,
+            env=child_env,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            bufsize=1,
+        )
+        if process.stdout is None or process.stderr is None:
+            process.kill()
+            raise WorkflowError(
+                f"stage {stage_name} failed to create stdout/stderr pipes"
+            )
+
+        selector = selectors.DefaultSelector()
+        selector.register(process.stdout, selectors.EVENT_READ, ("stdout", stdout_log))
+        selector.register(process.stderr, selectors.EVENT_READ, ("stderr", stderr_log))
+
+        while selector.get_map():
+            for key, _mask in selector.select(timeout=1.0):
+                stream_name, log_file = key.data
+                line = key.fileobj.readline()
+                if line:
+                    log_file.write(line)
+                    log_file.flush()
+                    visible = sys.stdout if stream_name == "stdout" else sys.stderr
+                    visible.write(f"[{stage_name}] {line}")
+                    visible.flush()
+                else:
+                    selector.unregister(key.fileobj)
+                    key.fileobj.close()
+
+        return_code = process.wait()
+
+    if return_code == 0:
+        print(f"[workflow] DONE {stage_name}", flush=True)
+    else:
+        print(
+            f"[workflow] FAIL {stage_name} exit={return_code}",
+            file=sys.stderr,
+            flush=True,
+        )
+    return int(return_code)
 
 
 def run_workflow(config_path: Path, *, execute: bool = False) -> dict[str, Any]:
@@ -354,12 +466,20 @@ def run_workflow(config_path: Path, *, execute: bool = False) -> dict[str, Any]:
         try:
             for requirement in stage.requires:
                 req_path = Path(
-                    _format(str(requirement["path"]), values, field=f"stage {stage.name} requirement")
+                    _format(
+                        str(requirement["path"]),
+                        values,
+                        field=f"stage {stage.name} requirement",
+                    )
                 )
                 _verify_path(req_path, str(requirement["kind"]))
 
             completion_path = Path(
-                _format(stage.completion.path, values, field=f"stage {stage.name} completion")
+                _format(
+                    stage.completion.path,
+                    values,
+                    field=f"stage {stage.name} completion",
+                )
             )
             if completion_path.exists():
                 exports = _verify_completion(stage, values)
@@ -380,33 +500,42 @@ def run_workflow(config_path: Path, *, execute: bool = False) -> dict[str, Any]:
                 _format(arg, values, field=f"stage {stage.name} command")
                 for arg in stage.command
             ]
-            cwd = Path(_format(stage.cwd, values, field=f"stage {stage.name} cwd"))
+            cwd = Path(
+                _format(stage.cwd, values, field=f"stage {stage.name} cwd")
+            )
             if not cwd.is_dir():
                 raise WorkflowError(f"stage {stage.name} cwd missing: {cwd}")
             env = os.environ.copy()
             env.update(
                 {
-                    key: _format(value, values, field=f"workflow environment {key}")
+                    key: _format(
+                        value,
+                        values,
+                        field=f"workflow environment {key}",
+                    )
                     for key, value in config.environment.items()
                 }
             )
             logs = state_dir / "logs"
-            logs.mkdir(parents=True, exist_ok=True)
-            result = subprocess.run(
-                command,
+            return_code = _stream_stage_command(
+                stage_name=stage.name,
+                command=command,
                 cwd=cwd,
                 env=env,
-                text=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                check=False,
+                logs=logs,
             )
-            (logs / f"{stage.name}.stdout.log").write_text(result.stdout, encoding="utf-8")
-            (logs / f"{stage.name}.stderr.log").write_text(result.stderr, encoding="utf-8")
-            if result.returncode != 0:
+            if return_code != 0:
+                stderr_path = logs / f"{stage.name}.stderr.log"
+                stdout_path = logs / f"{stage.name}.stdout.log"
+                stderr_tail = _tail_text(stderr_path)
+                stdout_tail = _tail_text(stdout_path, max_lines=20)
+                detail = stderr_tail or stdout_tail or "(stage emitted no diagnostic output)"
                 raise WorkflowError(
-                    f"stage {stage.name} command exited {result.returncode}; see {logs}"
+                    f"stage {stage.name} command exited {return_code}.\n"
+                    f"Diagnostic tail:\n{detail}\n"
+                    f"Full logs: {logs}"
                 )
+
             exports = _verify_completion(stage, values)
             completed.append(stage.name)
             completed_set.add(stage.name)
