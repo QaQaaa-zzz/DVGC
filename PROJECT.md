@@ -4,9 +4,17 @@
 
 DVGC/JIT studies **Policy-Conditioned Soft-Tube Expansion for Empirical Jumping Capability Envelope Identification** on a single-track two-wheeled robot.
 
-The project is not a two-policy deployment system and not merely a natural-reset jumping-policy benchmark. The deployable controller is one unified Actor. Two phase experts bootstrap the state distribution and continuation labels; later envelope expansion is conditioned on the frozen unified policy that will actually execute the maneuver.
+The goal is to iteratively identify and enlarge an empirical state-space support from which **one unified policy** can complete the jumping maneuver, while preserving previously demonstrated capability.
+
+The project is not a two-policy deployment system and not merely a natural-reset jumping benchmark. Two phase experts bootstrap the initial support and continuation evidence; later iterations are conditioned on the exact frozen unified policy that will actually execute the maneuver.
+
+The final scientific output is an empirical, policy-conditioned jumping capability envelope/limit (JCE/JEL). It is not a proof of safety, viability, reachability, or invariance.
+
+---
 
 ## Method
+
+### Bootstrap phase
 
 ```text
 Propulsion-Ascent expert pi_up
@@ -15,7 +23,7 @@ Descent-Recovery expert pi_down
         ↓
 freeze experts
         ↓
-real handoff/continuation labels
+real handoff / continuation evidence
         ↓
 expert-conditioned V_up / V_down
         ↓
@@ -23,127 +31,399 @@ TRAIN-only Tube_0
         ↓
 unified Tube-RSI policy pi_0
         ↓
-freeze pi_k
+freeze pi_0
+```
+
+### Iterative phase
+
+```text
+selected/frozen pi_k + Tube_k
         ↓
-real-dynamics boundary acquisition
+outcome-blind newest-shell frontier plan
+        ↓
+TRAIN / CALIBRATION / ACCEPTANCE roles
+        ↓
+real-dynamics frontier acquisition under pi_k
         ↓
 pi_k-conditioned continuation labels
         ↓
-C_up^k / C_down^k
+fit C_up^k / C_down^k on TRAIN only
         ↓
-fresh independent validation/calibration
+calibrate thresholds on disjoint CALIBRATION only
         ↓
-Tube_(k+1) = retained core ∪ evidence-backed expansion
+Tube_(k+1)
+= every Tube_k entry retained exactly
++ evidence-backed logical-TRAIN expansion
         ↓
-unified Tube-RSI policy pi_(k+1)
+Tube-RSI smoke + role-isolation audit
         ↓
-core-preservation + boundary-gain gates
+lock pi_k core/boundary baseline before candidate training
         ↓
-accept only when both gates pass
+fresh unified pi_(k+1) training
         ↓
-repeat while the predeclared iteration protocol authorizes expansion
+freeze exact final checkpoint
         ↓
+strict locked-baseline core-preservation + boundary-gain gate
+        ↓
+PASS: select pi_(k+1) and repeat
+FAIL: preserve evidence, stop, diagnose
+        ↓
+after a declared stopping decision only:
 independent final frozen-policy empirical JCE/JEL
 ```
 
-### Phase meaning
+---
 
-- `Propulsion-Ascent`: launch and rising-flight behavior needed to reach the Apex transition band.
-- `Descent-Recovery`: descent, landing, and stable recovery from that band.
-- The Apex transition is a physical handoff band, not a third expert and not a certified safe set.
+## Phase meaning
 
-### Field meaning
+- `Propulsion-Ascent`: launch and rising-flight behavior needed to reach the Apex/transition region.
+- `Descent-Recovery`: descent, landing, and stable recovery from that region.
+- The Apex transition is a physical handoff band, not a third expert.
+
+The final unified Actor does not perform expert switching at runtime.
+
+---
+
+## Continuation-field meaning
 
 - `V_up/V_down` are bootstrap expert-conditioned continuation fields used to construct Tube_0.
-- `C_up^k/C_down^k` are policy-conditioned continuation fields tied to the exact frozen `pi_k` identity.
-- The same state may fail under `pi_k` and succeed under `pi_(k+1)`; later continuation fields cannot be silently replaced by the bootstrap expert fields.
+- `C_up^k/C_down^k` are policy-conditioned continuation fields tied to the exact selected/frozen `pi_k` identity.
+- The same state may fail under `pi_k` and succeed under `pi_(k+1)`.
+- Later continuation fields must not be silently replaced by the bootstrap expert fields.
+- PPO critic/value is not a JIT continuation field.
 
-### Tube meaning
+---
 
-Every learned Tube is training guidance/curriculum support only.
+## Tube meaning
 
-`Tube_(k+1)` is **core retaining** structurally: the established source Tube support is retained and qualifying new TRAIN states are added. Structural retention alone does not prove that policy training preserves competence on that core.
+Every learned Tube is empirical training/curriculum support only.
 
-A larger Tube does not establish capability expansion. Empirical expansion is recorded only after the newly trained policy passes both:
+For the iterative regime:
 
-1. core preservation;
-2. boundary gain.
+```text
+Tube_(k+1)
+  = all Tube_k entries retained exactly
+  + qualifying logical-TRAIN expansion states
+```
 
-The final empirical JCE/JEL is policy-conditioned evidence, not a proof of invariance, viability, or safety.
+A qualifying expansion row must be supported by the exact selected `pi_k`, have a positive continuation label, and pass the frozen `C^k` decision threshold calibrated on disjoint CALIBRATION evidence.
 
-## Current completed state — 2026-09-01
+CALIBRATION and ACCEPTANCE rows never enter a Tube.
 
-Completed and locked in the active JIT line:
+Structural retention alone does not prove policy retention. A newly trained policy must still pass a direct capability gate.
 
-- `pi_up_star` and `pi_down_star` phase experts;
-- bootstrap `V_up/V_down`;
-- Tube_0: 222 TRAIN entries;
-- unified `pi_0`, frozen as iteration-0 expansion authority;
-- pi_0 TRAIN boundary evidence;
-- frozen policy-conditioned `C_up^0/C_down^0` with fresh independent validation;
-- Tube_1: 3,119 TRAIN entries = 222 retained Tube_0 core + 2,897 expansion states;
-- Tube_1 mixed legacy/unified snapshot runtime gate;
-- `pi_1_tube1_natural10_10009600_seed821101_20260901_retry01`: fresh formal PPO completed exactly 10,009,600 training transitions, five TRAIN panels, no validation/TEST, no expert switching, and verified final checkpoint restore;
-- exact pi_1 frozen as iteration-1 comparison authority;
-- generic paired pi_0 -> pi_1 iteration gate completed under the predeclared protocol.
+A larger Tube, higher training return, or training completion does not establish capability expansion.
 
-### Paired pi_0 -> pi_1 gate result
+---
 
-Core preservation **failed**:
+## Data-role contract
 
-- Tube_0 core states: 222
-- pi_0 success: 222 / 222
-- pi_1 success: 201 / 222
-- regressions: 21 = 16 upstream + 5 downstream
+Later iterations use three predeclared development roles:
 
-Boundary gain **passed**:
+- `TRAIN`: may fit `C^k` and contribute qualifying Tube expansion;
+- `CALIBRATION`: threshold calibration only;
+- `ACCEPTANCE`: pre-candidate locked baseline and later candidate comparison only.
 
-- locked pi_0-negative frontier states: 56
-- pi_0 failure reproduction errors: 0
-- pi_1 new successes: 12
-- successful parent groups: 5
-- all observed boundary gains were upstream in this audit
+These roles must be parent-group disjoint before outcomes are observed. Seed disjointness alone is insufficient.
+
+A fourth role, final TEST/JCE/JEL, remains untouched until the final policy and stopping decision are fixed.
+
+---
+
+## Completed state — 2026-09-03
+
+### Frozen phase experts
+
+`pi_up_star`
+
+- 9,977,856 training transitions;
+- actor SHA-256: `f218775e3cf99555ce524f1357a800172904bc815b06c54a53db8965204d9081`.
+
+`pi_down_star`
+
+- 25,600 training transitions;
+- actor SHA-256: `7b25f54bb1df3b97f63a15d011d66c2440682efb10b0510a266a9066725dd8be`.
+
+Frozen manifest:
+
+```text
+JIT/runs/frozen_experts/pi_up9977856_pi_down25600_20260827/frozen_experts.json
+```
+
+### Tube_0
+
+```text
+JIT/runs/soft_tube/soft_tube_train_v1_20260828
+```
+
+Composition:
+
+```text
+222 TRAIN states
+= 117 upstream
++ 105 downstream
+```
+
+### pi_0
+
+Frozen authority:
+
+```text
+JIT/runs/frozen_unified/pi_0_round1_10009600_20260831/frozen_unified_policy.json
+```
+
+- 10,009,600 PPO training transitions;
+- actor SHA-256: `43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029`;
+- payload SHA-256: `fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719`.
+
+### C^0 and Tube_1
+
+`C_up^0/C_down^0` were fitted from frozen-pi_0 continuation evidence and passed fresh independent validation/calibration.
+
+Tube_1:
+
+```text
+JIT/runs/soft_tube/soft_tube_iter1_pi0_conditioned_20260901
+```
+
+Composition:
+
+```text
+retained Tube_0 = 222
+expansion       = 2897
+total           = 3119
+
+upstream   = 427  = 117 core + 310 expansion
+downstream = 2692 = 105 core + 2587 expansion
+```
+
+Tube_1 is a true core-retaining superset of Tube_0.
+
+---
+
+## Iteration-1 policy study — closed
+
+The first Tube_1 candidate failed core preservation, which motivated a retained-core replay repair and a bounded initialization/warm-start study.
+
+The final comparison is:
+
+| policy/checkpoint | Tube_0 core | regressions | upstream | downstream | boundary | groups |
+|---|---:|---:|---:|---:|---:|---:|
+| **repair02** | **222/222** | **0** | **117/117** | **105/105** | 26/260 | 4 |
+| B 1.024M | 217/222 | 5 | 112/117 | **105/105** | 33/260 | 3 |
+| B 2.5088M | 206/222 | 16 | 101/117 | **105/105** | 28/260 | 4 |
+| B 5.0176M | 214/222 | 8 | 109/117 | **105/105** | 25/260 | 4 |
+| **B 7.5008M** | **217/222** | **5** | **112/117** | **105/105** | **42/260** | **4** |
+| B 10.0096M | 212/222 | 10 | 107/117 | **105/105** | **46/260** | 4 |
+
+No B checkpoint achieved both:
+
+```text
+Tube_0 = 222/222
+and
+boundary > 26/260
+```
 
 Therefore:
 
-- iteration accepted: false
-- empirical pi_0 -> pi_1 capability-envelope expansion accepted: false
+- **repair02 is selected as the engineering pi_1 authority**;
+- warm-start A is discarded;
+- warm-start B is closed as an ablation/scientific diagnostic;
+- do not continue B checkpoint sweeping or reopen warm-start variants during the active mainline.
 
-This is a scientific rejection, not an engineering failure. The result must not be converted into a PASS by changing the already-consumed gate bank, acceptance threshold, reward, or PPO settings.
+### Scientific interpretation of B
 
-## Current blocker
+B core-regression counts were non-monotonic:
 
-The project is now diagnosing **core forgetting under Tube_1 training**.
+```text
+5 -> 16 -> 8 -> 5 -> 10
+```
 
-The main working hypothesis is that the 2,897 expansion states may have diluted replay of the retained 222 Tube_0 core states despite structural retention. That is not yet established. Before changing the training method, the existing frozen gate records and Tube sampling weights must be audited for:
+Every B checkpoint preserved downstream at `105/105`; all core regressions occurred upstream. Boundary gains were also overwhelmingly upstream.
 
-- regression outcome classes;
-- phase and parent/source concentration;
-- retained-core sampling probability mass within each 50/50 phase;
-- whether failed core states are unusually low-weight or concentrated near particular source groups;
-- whether the failure is better explained by curriculum/replay dilution or by a deeper phase/runtime issue.
+The supported interpretation is **upstream expansion/retention policy interference under naive full warm-start**, not simple monotonic overtraining and not a general descent/recovery failure.
 
-No `C^1`, Tube_2, or pi_2 stage is authorized while this blocker remains unresolved.
+Warm-start plus explicit retention constraints may become a later research extension, but it is not the current mainline.
 
-## Next scientific sequence
+---
 
-1. preserve the completed paired-gate FAIL artifact unchanged;
-2. run zero-interaction regression diagnosis on the 21 core failures;
-3. determine the mechanism before choosing a repair;
-4. predeclare a revised policy-improvement method only after diagnosis;
-5. train a repaired candidate without using TEST/final data;
-6. repeat a newly predeclared paired core/boundary audit;
-7. only if both gates pass may that accepted policy become the next expansion authority and generate `C^1` / Tube_2 evidence.
+## Selected pi_1 authority
 
-Final TEST/JCE/JEL remains untouched.
+Selected policy: **repair02**.
+
+Frozen policy:
+
+```text
+JIT/runs/frozen_unified/pi_1_core_replay75_10009600_20260903/frozen_unified_policy.json
+```
+
+Identity:
+
+- actor SHA-256: `85d6b4667364daf8e054af9bccbf155dda16a62518df19883057fcfcbbd6f86a`;
+- payload SHA-256: `3b9af512c7e389aade1c86ca76e9420a0bc687c499f2ff9cf7637701dd5d0cbc`.
+
+Engineering quickcheck:
+
+```text
+Tube_0 core = 222/222
+upstream    = 117/117
+downstream  = 105/105
+regressions = 0
+boundary    = 26/260
+successful parent groups = 4
+```
+
+### Historical formal-claim quarantine
+
+The historical repair02 quick gate contains 3 baseline-reproduction failures caused by the old continuation-label versus paired-gate PRNG hierarchy mismatch.
+
+Correct claim:
+
+- engineering continuation: **authorized**;
+- historical strict publication-level Iteration-1 PASS: **not claimed**.
+
+The mismatch is preserved as historical technical debt. Do not alter the old artifact to make it PASS.
+
+`JIT/cli/select_iteration_policy.py --allow-baseline-reproduction-mismatch` exists to encode this distinction explicitly.
+
+---
+
+## Current mainline
+
+The project is no longer diagnosing the original 21-regression candidate and is no longer choosing among A/B checkpoints.
+
+The active state is:
+
+```text
+Tube_0
+  -> pi_0
+  -> C^0
+  -> Tube_1
+  -> repair02 selected as pi_1
+  -> CURRENT
+  -> pi_1-conditioned frontier evidence
+  -> C^1
+  -> Tube_2
+  -> pi_2
+```
+
+Immediate objective:
+
+> Execute the generic `pi_1 -> pi_2` workflow, obtain `C_up^1/C_down^1`, construct a Tube_2 that retains all 3,119 Tube_1 states plus evidence-backed TRAIN expansion, train/freeze pi_2, and subject it to the new strict locked-baseline capability gate.
+
+---
+
+## Selected retained-core replay contract
+
+The current mainline policy-improvement method is:
+
+```text
+outer reset mixture:
+  90% Tube RSI
+  10% natural
+
+inside Tube RSI:
+  75% retained source Tube_k
+  25% newest expansion
+```
+
+For pi_2, the retained source core is the **entire Tube_1 support of 3,119 states**.
+
+Do not treat only the original 222 Tube_0 states as the retained core in later iterations.
+
+---
+
+## Code-control architecture
+
+The repository is organized around reusable production capabilities rather than iteration-specific scripts.
+
+Stable capability areas:
+
+- `jit_dvgc.training` — unified PPO/preflight/freezing;
+- `jit_dvgc.tube` — Soft Tube and Tube-RSI;
+- `jit_dvgc.snapshots` — snapshot/handoff structures;
+- `jit_dvgc.acquisition` — real-dynamics frontier acquisition;
+- `jit_dvgc.continuation` — policy-conditioned labels/fields;
+- `jit_dvgc.analysis` — bounded diagnostics/gates;
+- `jit_dvgc.workflow` — resumable orchestration.
+
+Iteration-generic implementations include:
+
+```text
+JIT/src/jit_dvgc/iterative_frontier_protocol.py
+JIT/src/jit_dvgc/iterative_continuation_fields.py
+JIT/src/jit_dvgc/iterative_tube.py
+JIT/src/jit_dvgc/iterative_acceptance_gate.py
+JIT/src/jit_dvgc/workflow/
+```
+
+The generic automatic workflow for `k >= 1` is prepared by:
+
+```text
+JIT/cli/prepare_iterative_envelope_workflow.py
+```
+
+and executed by:
+
+```text
+JIT/cli/run_iteration_workflow.py
+```
+
+The workflow is resumable, validates declared completion artifacts, and stops on failed scientific/engineering assertions. It does not auto-tune the method.
+
+Regression coverage for the generic iteration contracts is in:
+
+```text
+JIT/tests/test_iterative_envelope_automation.py
+```
+
+---
+
+## Future acceptance protocol
+
+For later rounds, the baseline is locked **before** candidate training.
+
+The new gate preserves exact pi_k core outcomes, boundary negatives, seeds, and labeling PRNG identity, and later evaluates the candidate against those locked outcomes.
+
+This prevents the historical failure mode in which a baseline negative was re-rolled under a different PRNG hierarchy after candidate training.
+
+Core PASS requires zero baseline-success -> candidate-failure regressions. Boundary PASS requires the predeclared successful-parent-group criterion.
+
+---
+
+## Immediate operator path
+
+Use the exact procedure documented in:
+
+```text
+JIT/docs/CURRENT_STATUS.md
+JIT/docs/CODEX_HANDOFF_20260903.md
+```
+
+The high-level operator sequence is:
+
+```text
+1. safely sync agent/two-phase-soft-tube
+2. verify/register repair02 selected_policy.json
+3. generate pi_1 -> pi_2 workflow.json
+4. dry-run the resolved DAG
+5. execute with --execute
+6. allow scientific failures to stop the workflow
+7. PASS -> select pi_2 and repeat
+8. FAIL -> preserve evidence and diagnose; do not auto-retune
+```
+
+---
 
 ## Leakage and claim boundary
 
-- TRAIN evidence may affect model fitting and Tube construction.
-- Fresh validation may calibrate/gate a frozen field, but validation rows never enter TRAIN or a Tube.
-- Consumed validation is not reused for later tuning.
-- TEST/final evaluation does not affect threshold selection, Tube construction, policy training, checkpoint selection, or iteration stopping.
-- Natural cold-start failure is retained as an out-of-domain diagnostic for the present declared JCE scope; it is not a reason to silently change reward, reset ratio, or task semantics.
+- TRAIN evidence may fit continuation models and contribute qualifying Tube expansion.
+- CALIBRATION evidence may set the frozen continuation threshold but never enters a Tube.
+- ACCEPTANCE evidence is reserved for the baseline/candidate capability gate and never enters a Tube.
+- Final TEST/JCE/JEL evidence does not affect threshold selection, Tube construction, policy training, checkpoint selection, method repair, or iteration stopping.
+- Natural cold-start failure remains an out-of-domain diagnostic for the present JCE scope and is not a reason to silently change reward/reset semantics.
+
+---
 
 ## Immutable task contract
 
@@ -154,16 +434,36 @@ Final TEST/JCE/JEL remains untouched.
 - hip/knee torque limits: +/-50 Nm
 - action order: `[steer, rear-wheel drive, hip, knee]`
 
-Do not create a replacement XML to fix the historical `4kg` filename. Envelope iteration must not silently alter physics, meshes, collision geometry, reward meaning, snapshot semantics, action semantics, or TEST isolation.
+Do not create a replacement XML to fix the historical filename. Envelope iteration must not silently alter physics, meshes, collision geometry, reward meaning, snapshot semantics, action semantics, or TEST isolation.
 
-## Engineering direction
+---
 
-The repository is moving from experiment-stage scripts toward reusable iteration capabilities. Iteration numbers belong in config/artifact/run metadata, not new production source modules.
+## Project completion
 
-The intended operator interface is one explicit resumable workflow launch. Automation may execute and verify declared stages, but a scientific gate failure must stop the workflow and surface diagnosis; automation may not retune thresholds/hyperparameters or bypass the gate.
+The generic loop may continue as:
 
-See:
+```text
+pi_2 -> C^2 -> Tube_3 -> pi_3 -> ...
+```
 
-- `JIT/docs/CURRENT_STATUS.md`
-- `JIT/docs/ENVELOPE_ITERATION_PROTOCOL.md`
-- `JIT/docs/CODE_ORGANIZATION.md`
+but the project must not iterate merely because another round is mechanically possible.
+
+A later project-level stopping decision should be based on declared evidence such as saturation/negligible Tube growth, repeated inability to expand without retention loss, reaching the intended physical envelope, or resource/diminishing-return limits.
+
+Only after the stopping rule is declared and the final policy is frozen should final TEST/JCE/JEL evaluation be performed.
+
+---
+
+## Authoritative documentation
+
+For takeover and current state, read:
+
+1. `AGENTS.md`
+2. `JIT/AGENTS.md`
+3. `JIT/docs/CURRENT_STATUS.md`
+4. `JIT/docs/CODEX_HANDOFF_20260903.md`
+5. `PROJECT.md`
+6. `JIT/docs/ENVELOPE_ITERATION_PROTOCOL.md`
+7. `JIT/docs/CODE_ORGANIZATION.md`
+
+Do not reconstruct current truth from obsolete Phase-U or pre-repair reports when these authority documents supersede them.
