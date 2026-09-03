@@ -84,10 +84,13 @@ def select(
         raise ValueError("selected-policy gate sections missing")
     if int(core.get("state_count", -1)) <= 0:
         raise ValueError("selected-policy core gate is empty")
-    if int(core.get("regression_count", -1)) != 0:
-        raise ValueError("selected policy has core regressions")
-    if int(core.get("candidate_success_count", -1)) != int(core["state_count"]):
-        raise ValueError("selected policy does not preserve the complete declared core")
+    if int(core.get("baseline_success_count", -1)) <= 0:
+        raise ValueError("selected-policy core gate has no baseline-success support")
+    if int(core.get("regression_count", -1)) != 0 or core.get("passed") is not True:
+        raise ValueError("selected policy regresses a baseline-success core state")
+    # Later iterations preserve the capability actually demonstrated by pi_k on
+    # Tube_k.  They do not require pi_k itself to solve every guidance state in
+    # Tube_k; unsuccessful baseline states are allowed to become improvements.
     boundary_success = int(boundary.get("candidate_success_count", 0))
     boundary_groups = int(boundary.get("candidate_success_parent_group_count", 0))
     minimum_groups = int(boundary.get("minimum_candidate_success_parent_groups", 1))
@@ -120,7 +123,8 @@ def select(
         "selection_gate": str(gate_summary),
         "selection_gate_file_sha256": file_sha256(gate_summary),
         "core_state_count": int(core["state_count"]),
-        "core_success_count": int(core["candidate_success_count"]),
+        "core_baseline_success_count": int(core["baseline_success_count"]),
+        "core_candidate_success_count": int(core["candidate_success_count"]),
         "core_regression_count": 0,
         "boundary_state_count": int(boundary["state_count"]),
         "boundary_success_count": boundary_success,
@@ -137,6 +141,7 @@ def select(
         "claim_boundary": {
             "selected_for_next_engineering_envelope_iteration": True,
             "historical_formal_gate_pass_claim": formal_acceptance,
+            "core_preservation_semantics": "zero_pi_k_success_to_pi_kplus1_failure_on_declared_source_core",
             "certified_safe_set_claim": False,
             "jce_jel_claim": False,
         },
