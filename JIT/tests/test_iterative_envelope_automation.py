@@ -40,7 +40,11 @@ def test_frontier_pool_uses_only_newest_expansion_shell() -> None:
 
     assert [row[2]["state_sha256"] for row in pool["upstream"]] == ["new-up-0", "new-up-1"]
     assert [row[2]["state_sha256"] for row in pool["downstream"]] == ["new-down-0", "new-down-1"]
-    assert all(row[2]["state_sha256"] not in {"core-up", "core-down"} for rows in pool.values() for row in rows)
+    assert all(
+        row[2]["state_sha256"] not in {"core-up", "core-down"}
+        for rows in pool.values()
+        for row in rows
+    )
 
 
 def test_frontier_pool_refuses_iteration_without_two_phase_new_shell() -> None:
@@ -133,16 +137,35 @@ def test_iterative_tube_retains_entire_source_tube_and_adds_train_only(
     (snapshot_root / "snap-down").mkdir(parents=True)
 
     monkeypatch.setattr(iterative_tube, "load_soft_tube", lambda _path: source)
-    monkeypatch.setattr(iterative_tube, "_load_train_role", lambda _root: (train_manifest, train_rows))
-    monkeypatch.setattr(iterative_tube, "_load_fields", lambda _root: (fields_summary, fields))
-    monkeypatch.setattr(iterative_tube, "_score", lambda _path, rows: np.full(len(rows), 0.9))
+    monkeypatch.setattr(
+        iterative_tube,
+        "_load_train_role",
+        lambda _root: (train_manifest, train_rows),
+    )
+    monkeypatch.setattr(
+        iterative_tube,
+        "_load_fields",
+        lambda _root: (fields_summary, fields),
+    )
+    monkeypatch.setattr(
+        iterative_tube,
+        "_score",
+        lambda _path, rows: np.full(len(rows), 0.9),
+    )
 
     def fake_snapshot(path: Path):
         is_up = Path(path).name == "snap-up"
-        return SimpleNamespace(active_phase=0 if is_up else 1, state_sha256="exp-up" if is_up else "exp-down")
+        return SimpleNamespace(
+            active_phase=0 if is_up else 1,
+            state_sha256="exp-up" if is_up else "exp-down",
+        )
 
     monkeypatch.setattr(iterative_tube, "load_unified_envelope_snapshot", fake_snapshot)
-    monkeypatch.setattr(iterative_tube, "physical_state_sha256", lambda snapshot: snapshot.state_sha256)
+    monkeypatch.setattr(
+        iterative_tube,
+        "physical_state_sha256",
+        lambda snapshot: snapshot.state_sha256,
+    )
 
     output = tmp_path / "tube2"
     result = iterative_tube.build_iterative_tube(
@@ -155,7 +178,10 @@ def test_iterative_tube_retains_entire_source_tube_and_adds_train_only(
     entries = json.loads((output / "entries.json").read_text(encoding="utf-8"))
     manifest = result["manifest"]
     assert entries[: len(source_entries)] == list(source_entries)
-    assert {row["state_sha256"] for row in entries[len(source_entries) :]} == {"exp-up", "exp-down"}
+    assert {row["state_sha256"] for row in entries[len(source_entries) :]} == {
+        "exp-up",
+        "exp-down",
+    }
     assert all(row["split"] == "train" for row in entries[len(source_entries) :])
     assert manifest["core_retained_count"] == len(source_entries)
     assert manifest["source_tube_entry_count"] == len(source_entries)
@@ -169,6 +195,7 @@ def test_workflow_stops_before_next_stage_when_scientific_gate_fails(tmp_path: P
     gate = tmp_path / "gate.json"
     should_not_run = tmp_path / "should_not_run.txt"
     config_path = tmp_path / "workflow.json"
+    gate_json = json.dumps({"status": "completed", "iteration_accepted": False}) + "\n"
     config = {
         "schema": "jit_iteration_workflow_v1",
         "workflow_name": "gate-stop-contract",
@@ -183,8 +210,7 @@ def test_workflow_stops_before_next_stage_when_scientific_gate_fails(tmp_path: P
                     "-c",
                     (
                         "from pathlib import Path; "
-                        f"Path({str(gate)!r}).write_text('\\n'.join(["
-                        "'{' + '\"status\": \"completed\", \"iteration_accepted\": false' + '}', ''"]), encoding='utf-8')"
+                        f"Path({str(gate)!r}).write_text({gate_json!r}, encoding='utf-8')"
                     ),
                 ],
                 "cwd": str(tmp_path),
@@ -204,7 +230,10 @@ def test_workflow_stops_before_next_stage_when_scientific_gate_fails(tmp_path: P
                 "command": [
                     sys.executable,
                     "-c",
-                    f"from pathlib import Path; Path({str(should_not_run)!r}).write_text('ran', encoding='utf-8')",
+                    (
+                        "from pathlib import Path; "
+                        f"Path({str(should_not_run)!r}).write_text('ran', encoding='utf-8')"
+                    ),
                 ],
                 "cwd": str(tmp_path),
                 "requires": [],
