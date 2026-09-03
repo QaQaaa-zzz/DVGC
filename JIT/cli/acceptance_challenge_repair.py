@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Prepare/run the v3c fresh acceptance challenge bank before pi2 training.
 
-The failed v3 acceptance bank is preserved as evidence. This revision creates a
+The failed v3 acceptance bank is preserved as evidence.  This revision creates a
 new acceptance-only bank on the already-locked ACCEPTANCE parent groups, using
-the historical sparse two-axis challenge family in both phases. The source
+the historical sparse two-axis challenge family in both phases.  The source
 frontier plan, role membership, frozen pi1, Tube1, continuation horizon, and
-acceptance labeling seed remain unchanged. The new bank must be completed and
+acceptance labeling seed remain unchanged.  The new bank must be completed and
 locked before any pi2 candidate training.
 """
 from __future__ import annotations
@@ -26,7 +26,10 @@ from jit_dvgc.iterative_frontier_protocol import (
     _source_tube,
     canonical_sha256,
 )
-from jit_dvgc.phase_specific_frontier import _completed_phase_acquisition, _runtime
+from jit_dvgc.phase_specific_frontier import (
+    _completed_phase_acquisition,
+    _runtime,
+)
 from jit_dvgc.unified_boundary import collect_unified_boundary_candidates
 from jit_dvgc.unified_continuation_labels import label_unified_continuations
 
@@ -43,7 +46,10 @@ TWO_AXIS_PANEL = {
 }
 MIN_POSITIVES_PER_PHASE = 1
 MIN_NEGATIVES_PER_PHASE = 5
-MIN_NEGATIVE_PARENT_GROUPS = {"upstream": 2, "downstream": 1}
+MIN_NEGATIVE_PARENT_GROUPS = {
+    "upstream": 2,
+    "downstream": 1,
+}
 MIN_TOTAL_NEGATIVE_PARENT_GROUPS = 3
 WORKFLOW_KEYS = {
     "schema",
@@ -173,11 +179,15 @@ def _prepare(
         raise ValueError("v3c requires observed upstream acceptance evidence")
     if failed_counts["upstream"]["negative_count"] != 0:
         raise ValueError(
-            "v3c is specifically for the upstream-all-positive acceptance failure: "
+            f"v3c is specifically for the upstream-all-positive acceptance failure: "
             f"{failed_counts['upstream']}"
         )
 
-    anchors = [dict(row) for row in plan.get("anchors", []) if row.get("role") == "acceptance"]
+    anchors = [
+        dict(row)
+        for row in plan.get("anchors", [])
+        if row.get("role") == "acceptance"
+    ]
     phase_anchor_counts = Counter(str(row["phase"]) for row in anchors)
     if phase_anchor_counts["upstream"] < 3 or phase_anchor_counts["downstream"] < 1:
         raise ValueError(
@@ -205,7 +215,10 @@ def _prepare(
         "locked_acceptance_anchors": anchors,
         "parent_role_membership_changed": False,
         "fresh_bank_replaces_failed_bank_for_future_gate_only": True,
-        "phase_probe_panels": {phase: dict(TWO_AXIS_PANEL) for phase in PHASES},
+        "phase_probe_panels": {
+            phase: dict(TWO_AXIS_PANEL)
+            for phase in PHASES
+        },
         "seeds": {
             "acquisition": int(seeds["acquisition"]),
             "labeling": int(seeds["labeling"]),
@@ -429,7 +442,7 @@ def _merge_phase_acquisitions(
     report = {
         "schema": "jit_unified_boundary_catalog_v1",
         "status": "completed",
-        "artifact_role": "candidate_blind_acceptance_challenge_candidates",
+        "artifact_role": "unlabeled_policy_conditioned_frontier_candidates",
         "split": "train",
         "iteration": int(first["iteration"]),
         "policy_name": str(first["policy_name"]),
@@ -454,11 +467,10 @@ def _merge_phase_acquisitions(
         "final_evaluation_data_used": False,
         "exclusion_counts": dict(sorted(exclusions.items())),
         "claim_boundary": {
-            "fresh_acceptance_bank_before_candidate_training": True,
-            "candidate_policy_outcomes_inspected": False,
+            "unlabeled_acquisition_only": True,
             "tube_expansion_claim": False,
-            "certified_safe_set_claim": False,
             "jce_jel_claim": False,
+            "certified_safe_set_claim": False,
         },
         "entries": entries,
     }
@@ -476,7 +488,10 @@ def _run(*, challenge_plan_path: Path, output_dir: Path) -> dict[str, Any]:
     challenge = _read(challenge_plan_path)
     if not isinstance(challenge, dict) or challenge.get("schema") != CHALLENGE_SCHEMA:
         raise ValueError("invalid v3c acceptance challenge plan")
-    if challenge.get("status") != "predeclared_before_candidate_training" or challenge.get("name") != CHALLENGE_NAME:
+    if (
+        challenge.get("status") != "predeclared_before_candidate_training"
+        or challenge.get("name") != CHALLENGE_NAME
+    ):
         raise ValueError("v3c acceptance challenge plan status/name drift")
     _verify_hash(challenge, "challenge_plan_sha256")
 
@@ -485,7 +500,9 @@ def _run(*, challenge_plan_path: Path, output_dir: Path) -> dict[str, Any]:
     if plan["plan_sha256"] != challenge["source_plan_sha256"]:
         raise ValueError("v3c source plan identity drift")
     failed_root = Path(str(challenge["source_failed_acceptance_root"]))
-    if file_sha256(failed_root / "logical_labels.json") != challenge["source_failed_logical_labels_file_sha256"]:
+    if file_sha256(failed_root / "logical_labels.json") != challenge[
+        "source_failed_logical_labels_file_sha256"
+    ]:
         raise ValueError("v3c failed acceptance evidence drift")
 
     output_dir = Path(output_dir)
@@ -610,7 +627,8 @@ def _run(*, challenge_plan_path: Path, output_dir: Path) -> dict[str, Any]:
         "policy_payload_sha256": str(record["payload_sha256"]),
         "source_tube_manifest_sha256": str(artifact.manifest["manifest_sha256"]),
         "phase_specific_probe_panels": {
-            phase: dict(challenge["phase_probe_panels"][phase]) for phase in PHASES
+            phase: dict(challenge["phase_probe_panels"][phase])
+            for phase in PHASES
         },
         "acceptance_challenge_plan": str(challenge_plan_path),
         "acceptance_challenge_plan_sha256": str(challenge["challenge_plan_sha256"]),
@@ -623,7 +641,9 @@ def _run(*, challenge_plan_path: Path, output_dir: Path) -> dict[str, Any]:
         "source_label_summary": str(labels_dir / "summary.json"),
         "source_label_summary_sha256": file_sha256(labels_dir / "summary.json"),
         "phase_counts": support["phase_counts"],
-        "total_negative_parent_group_count": support["total_negative_parent_group_count"],
+        "total_negative_parent_group_count": support[
+            "total_negative_parent_group_count"
+        ],
         "acceptance_challenge_gate": support["gate"],
         "environment_interactions": int(acquisition["environment_interactions"])
         + int(labeling["environment_interactions"]),
