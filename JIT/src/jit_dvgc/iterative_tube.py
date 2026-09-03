@@ -192,7 +192,8 @@ def build_iterative_tube(*, source_tube: Path, train_root: Path, fields_root: Pa
                 "acceptance_threshold_exclusive": float(
                     fields[phase]["calibration"]["acceptance_threshold_exclusive"]
                 ),
-                "selection_rule": "TRAIN_label_positive_and_score_strictly_greater_than_calibration_threshold",
+                "selection_rule": "TRAIN_label_positive_and_score_strictly_greater_than_threshold",
+                "threshold_source": "disjoint_calibration_role",
             },
             "source_train_role_manifest_sha256": train_manifest["role_manifest_sha256"],
             "policy_actor_sha256": str(row["policy_actor_sha256"]),
