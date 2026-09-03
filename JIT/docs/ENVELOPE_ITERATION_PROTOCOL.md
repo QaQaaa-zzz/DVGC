@@ -1,18 +1,33 @@
 # JIT Policy-Conditioned Soft-Tube Envelope Iteration Protocol
 
-## Status — 2026-09-02
+## Status — 2026-09-03
 
 This document defines the active scientific contract for iterative empirical
 jumping-capability-envelope expansion.
 
-The first Tube_1 policy candidate was rejected because core preservation failed.
-A retained-core replay repair was predeclared, fresh frozen-`pi_0` acceptance
-evidence was generated, and the repaired iteration-1 candidate has now completed
-training and freeze.
+Iteration-1 policy initialization/replay ablations are complete. `repair02` is
+selected as the **engineering pi_1 authority** because it is the only tested
+candidate that preserved all 222 Tube_0 core states while adding positive
+boundary capability.
 
-**The current stage is repaired iteration-1 acceptance.** Training completion or
-freezing does not accept an iteration. The repaired `pi_1` must still pass both
-core preservation and fresh boundary gain before it becomes the next authority.
+The historical repair02 quick gate is **not** a publication-level strict PASS:
+3 locked baseline-negative states changed outcome under the historical paired
+re-roll PRNG protocol. That mismatch is preserved as historical protocol debt;
+it is not rewritten away.
+
+The active mainline is now:
+
+```text
+selected pi_1
+  -> pi_1-conditioned frontier evidence
+  -> C^1
+  -> Tube_2
+  -> pi_2
+```
+
+For future rounds, a pre-candidate locked-baseline gate eliminates the historical
+negative-reproduction mismatch by never re-rolling a locked baseline boundary
+outcome under a different PRNG hierarchy.
 
 Final TEST/JCE/JEL remains untouched.
 
@@ -29,17 +44,20 @@ frozen phase experts
   -> bootstrap V_up / V_down
   -> Tube_0
   -> unified pi_0
-  -> freeze pi_k
-  -> real-dynamics TRAIN acquisition under pi_k
+  -> freeze/select pi_k
+  -> predeclare outcome-blind frontier roles
+  -> real-dynamics frontier acquisition under pi_k
   -> pi_k continuation labels
-  -> policy-conditioned C_up^k / C_down^k
-  -> independent fresh validation/calibration
+  -> fit C_up^k / C_down^k on TRAIN only
+  -> calibrate thresholds on disjoint CALIBRATION only
   -> core-retaining Tube_(k+1)
+  -> isolate/audit TRAIN vs CALIBRATION vs ACCEPTANCE
+  -> lock pi_k acceptance baseline before candidate training
   -> unified pi_(k+1)
   -> freeze pi_(k+1)
-  -> paired core-preservation + boundary-gain gate
-  -> FAIL: preserve, diagnose, predeclare repair
-  -> PASS: accept next authority and repeat
+  -> strict locked-baseline core-preservation + boundary-gain gate
+  -> FAIL: preserve and diagnose
+  -> PASS: select next authority and repeat
   -> only after iteration stopping: final frozen-policy JCE/JEL
 ```
 
@@ -62,7 +80,8 @@ Unless a new research question is explicitly opened, preserve:
 - reward semantics
 - snapshot semantics
 - no expert switching in unified policy operation
-- validation/TEST isolation
+- TRAIN/CALIBRATION/ACCEPTANCE role isolation
+- TEST/final isolation
 
 ## 3. Policy-conditioned continuation authority
 
@@ -70,13 +89,16 @@ Unless a new research question is explicitly opened, preserve:
 Tube_0. They must not be silently reused as continuation authority for later
 unified policies.
 
-For every frozen unified policy `pi_k`, continuation is policy-conditioned:
+For every selected frozen unified policy `pi_k`, continuation is
+policy-conditioned:
 
 `C(s | pi_k)`.
 
 Therefore the same state may fail under `pi_k` and succeed under `pi_(k+1)`.
-Every continuation dataset/model/report must bind the exact frozen policy identity
-and protocol identity.
+Every continuation dataset/model/report must bind the exact frozen policy actor,
+payload, XML, source Tube, and protocol identity.
+
+PPO critic/value is not `C^k`.
 
 ## 4. Real-dynamics acquisition only
 
@@ -90,248 +112,298 @@ Allowed acquisition mechanisms include:
 - bounded predeclared action perturbations from audited real snapshots;
 - other explicitly predeclared real-dynamics probes.
 
-The acquisition implementation may use configurable sparse action directions.
-`active_action_dimensions=1` preserves historical one-axis behavior; higher
-values may systematically enumerate coupled directions. The direction family is
-an experimental protocol field, not a new iteration-specific production module.
+The generic automatic frontier uses the **newest expansion shell of Tube_k** as
+its parent pool. It intentionally does not fall back to the full Tube when the
+newest shell is absent or lacks sufficient phase/group support. Such a failure
+requires a new parent-generation decision rather than silent protocol widening.
 
-The acquisition implementation must be iteration-generic: `source_iteration=k`
-and `candidate_iteration=k+1`.
+The current fixed automatic probe panel uses the stable real-dynamics boundary
+acquisition capability. Probe strengths/durations/seeds and role assignment are
+committed before outcomes are observed.
 
-## 5. Data-role isolation
+## 5. Outcome-blind data-role isolation
 
-Each iteration separates:
+For automatic k >= 1 iterations, every frontier parent is assigned before
+outcomes to one of three logical roles:
 
-- expansion TRAIN: may train `C^k` and contribute to `Tube_(k+1)`;
-- expansion validation: may calibrate/select declared continuation decisions but
-  must never enter a Tube;
-- final TEST/JCE/JEL: untouched until the final policy and stopping decision are
-  frozen.
+- `TRAIN`: the only role that may fit `C^k` and contribute expansion candidates
+  to `Tube_(k+1)`;
+- `CALIBRATION`: threshold calibration only; rows never enter TRAIN or a Tube;
+- `ACCEPTANCE`: candidate-blind pi_k boundary audit only; rows never train C^k,
+  calibrate C^k, or enter a Tube.
 
-Consumed validation or acceptance evidence is consumed for tuning/selection.
-Parent trajectories and near-duplicate states must be excluded across roles where
-required by the predeclared protocol. Seed disjointness alone is insufficient.
+Parent-group disjointness is required across roles. Seed disjointness alone is
+not sufficient. The role-isolation audit must report zero prohibited overlap
+before candidate-policy training starts.
 
-## 6. Fresh acceptance bank before repaired-candidate training
+Final TEST/JCE/JEL is a fourth, untouched role and is not part of the iteration
+workflow.
 
-When a completed candidate gate informs a method repair, the old boundary bank is
-consumed selection evidence. A repaired candidate requires new non-final boundary
-acceptance evidence generated without candidate-policy information.
+## 6. C^k fitting and calibration
 
-For the iteration-1 repair, fresh-bank readiness was predeclared as at least:
+Later iterations do not reopen continuation architecture search unless a new
+scientific question is explicitly declared.
 
-- 10 frozen-`pi_0` negative states per phase; and
-- 3 independent negative parent groups per phase.
+The generic continuation stage:
 
-These readiness rules were not changed after outcomes were seen.
+1. fits the frozen selected tiny/shared continuation architecture on logical
+   TRAIN rows only;
+2. requires both outcome classes where demanded by the implementation contract;
+3. calibrates one phase threshold from disjoint CALIBRATION evidence;
+4. records model, normalization, threshold, source-policy and source-Tube
+   identities;
+5. authorizes Tube construction only after its fixed calibration contract passes.
 
-The first two single-axis probes failed readiness:
+A calibration failure stops the workflow. Do not inspect the failure and then
+silently change architecture, AUC rule, threshold objective, role split, or data
+membership inside the same predeclared round.
 
-- 659-state support-wide probe: 12 negatives, all upstream, 2 upstream parent
-  groups, downstream 0;
-- 1,272-state stronger single-axis probe: 58 negatives, all upstream, still 2
-  upstream parent groups, downstream 0.
-
-Those results were preserved and used only to revise the baseline-only acquisition
-method. They were not used to inspect the repaired candidate.
-
-The final two-axis acquisition produced 3,720 fresh TRAIN candidates and, after
-frozen-`pi_0` labeling, a locked 260-state negative bank:
-
-- upstream: 246 negatives across 4 parent groups;
-- downstream: 14 negatives across 5 parent groups;
-- Tube_1 overlap: 0.
-
-Therefore pre-training fresh-bank readiness passed before repaired `pi_1` was
-trained.
-
-## 7. Labeling execution and engineering sharding
-
-Scientific labeling semantics are defined by the full candidate catalog, exact
-frozen policy, deterministic mode, protocol seed, continuation horizon and
-success/failure rule.
-
-Execution may be partitioned across multiple fresh processes **only as an
-engineering implementation detail** when all of the following remain unchanged:
-
-- exact candidate set and order;
-- exact frozen policy;
-- seed;
-- horizon;
-- snapshot semantics;
-- physics;
-- label rule;
-- acceptance criteria.
-
-All shards must be merged back into one logical label artifact in original
-catalog order before scientific readiness or bank locking is evaluated.
-
-This rule was required on 2026-09-02 because long single-process frozen-`pi_0`
-labeling exhausted CUDA/Warp allocator state. Four sequential processes of 930
-candidates completed the same 3,720-state logical job. Process sharding must not
-be used for adaptive candidate selection or post-hoc threshold tuning.
-
-## 8. Core-retaining Tube construction
+## 7. Core-retaining Tube construction
 
 The structural rule is:
 
 ```text
-Tube_(k+1) = retained Tube_k core union accepted TRAIN expansion_k
+Tube_(k+1)
+  = every Tube_k entry retained exactly
+  + qualifying logical-TRAIN expansion states
 ```
 
-Retaining entries structurally is not sufficient. The runtime must also declare
-sampling probability mass so expansion cardinality cannot starve the old core.
+A candidate expansion state is admitted only when:
 
-After the first iteration-1 rejection, the repaired Tube-RSI sampling contract is:
+- its pi_k continuation label is positive;
+- its frozen `C^k` phase score is strictly greater than the disjoint calibration
+  threshold;
+- it is not already present in Tube_k or an earlier accepted expansion row;
+- its snapshot/state hash and active phase reproduce exactly.
+
+CALIBRATION and ACCEPTANCE rows are never embedded.
+
+For Tube_2 specifically, **all 3,119 Tube_1 states become the retained source
+core**. Retention does not mean only the original 222 Tube_0 entries.
+
+## 8. Retained-core replay contract
+
+Structural retention alone is not sufficient because expansion cardinality can
+starve earlier support during PPO reset sampling.
+
+Iteration-1 experiments established the current mainline replay choice:
 
 ```text
-phase selection
-  -> retained source core vs current expansion
-  -> entry within selected source
+outer reset:
+  90% Tube RSI
+  10% natural
+
+inside Tube RSI:
+  75% retained source Tube_k
+  25% newest expansion
 ```
 
-For repaired iteration 1:
+For repair02 on Tube_1 this yielded approximately:
 
-- upstream/downstream phase mixture: 0.5 / 0.5;
-- inside each phase: retained core 0.5 / expansion 0.5;
-- retained core sampled uniformly;
-- expansion sampled by the existing value/continuation weighting;
-- outer reset mixture remains 0.9 Tube / 0.1 natural.
+```text
+67.5% retained Tube_0 core
+22.5% Tube_1 expansion
+10.0% natural
+```
 
-Thus all-episode reset mass is 45% retained core, 45% expansion and 10% natural.
-The 0.5/0.5 replay split is a predeclared method repair, not a hyperparameter sweep
-against acceptance outcomes.
+and achieved Tube_0 `222/222` with positive boundary gain.
 
-## 9. Policy improvement
+For pi_2, the same generic contract refers to the **entire Tube_1 support** as the
+retained source core. Do not hard-code the old 222-state Tube_0 subset.
 
-Training `pi_(k+1)` is a separate predeclared experiment.
+This 75/25 choice is the selected mainline method, not an invitation to sweep
+replay ratios against every new gate outcome.
 
-For the repaired iteration-1 candidate, the following stayed fixed relative to
-the rejected candidate:
+## 9. Iteration-1 initialization study — closed
 
-- Tube_1 support;
-- PPO hyperparameters and exact 10,009,600-transition budget;
-- seed 821101;
-- fresh actor/critic/optimizer initialization;
-- reward and physics;
-- action semantics;
-- natural reset probability;
-- phase mixture.
+The completed comparison is:
 
-Only the within-Tube retained-core replay contract changed.
+| policy/checkpoint | Tube_0 | regressions | upstream | downstream | boundary | groups |
+|---|---:|---:|---:|---:|---:|---:|
+| repair02 | **222/222** | **0** | **117/117** | **105/105** | 26/260 | 4 |
+| B 1.024M | 217/222 | 5 | 112/117 | **105/105** | 33/260 | 3 |
+| B 2.5088M | 206/222 | 16 | 101/117 | **105/105** | 28/260 | 4 |
+| B 5.0176M | 214/222 | 8 | 109/117 | **105/105** | 25/260 | 4 |
+| B 7.5008M | 217/222 | 5 | 112/117 | **105/105** | 42/260 | 4 |
+| B 10.0096M | 212/222 | 10 | 107/117 | **105/105** | 46/260 | 4 |
 
-Because the policies were fresh-initialized, the first candidate's loss of core
-competence is described as **core-support under-replay / capability regression
-under the expanded training distribution**, not classical forgetting from a
-warm-started `pi_0`.
+No B checkpoint achieved both `222/222` retention and boundary success greater
+than repair02's 26/260. Warm-start A was also inferior and is discarded.
 
-## 10. Paired acceptance gate
+All B core regressions were upstream while downstream remained 105/105. The
+supported interpretation is **upstream expansion/retention policy interference**.
+The nonmonotonic regression sequence rules out a simple monotonic "trained too
+long" explanation.
 
-A larger Tube or higher PPO reward does not prove envelope expansion.
+Warm-start + explicit retention constraints may become a future ablation/method
+extension. Do not reopen it during the current mainline pi_1 -> pi_2 round.
 
-Before `pi_(k+1)` becomes the accepted authority, one locked paired audit evaluates
-frozen `pi_k` and frozen `pi_(k+1)` on the exact same states.
+## 10. Historical Iteration-1 selection and claim boundary
 
-### Core preservation
+Selected engineering pi_1:
 
-- bank: every declared `Tube_k` source-core state;
-- baseline and candidate use the same deterministic continuation runtime;
-- PASS only when baseline-success -> candidate-failure regressions equal zero;
-- baseline must have successful states in each phase so the gate cannot pass
-  vacuously.
+`JIT/runs/frozen_unified/pi_1_core_replay75_10009600_20260903/frozen_unified_policy.json`
 
-For repaired iteration 1 the structural core bank is all 222 Tube_0 entries.
+Known identity:
 
-### Boundary reproduction and gain
+- actor SHA-256: `85d6b4667364daf8e054af9bccbf155dda16a62518df19883057fcfcbbd6f86a`
+- payload SHA-256: `3b9af512c7e389aade1c86ca76e9420a0bc687c499f2ff9cf7637701dd5d0cbc`
 
-- bank: a fresh locked frozen-`pi_k` continuation-negative TRAIN challenge bank;
-- no state admitted to `Tube_(k+1)` may appear in the boundary bank;
-- all baseline-negative outcomes must reproduce under the gate runtime;
-- candidate must convert failures to successes in at least 2 distinct parent
-  groups.
+Historical quickcheck:
 
-The `>=2 parent groups` rule is the original paired-gate rule. It must not be
-raised or lowered after repaired-candidate outcomes are observed.
+`JIT/runs/pi_unified_gate/pi_0_to_pi_1_repair02_quickcheck_20260903/summary.json`
 
-For repaired iteration 1 the formal boundary bank is the fresh 260-state two-axis
-bank, not the consumed old 56-state bank.
+Observed:
 
-### Gate isolation
+- core: 222/222, zero regression;
+- boundary candidate: 26/260 across 4 parent groups;
+- baseline reproduction failures: 3.
 
-During the paired gate:
+The 3 reproduction failures arise because historical continuation labeling and
+paired-gate rerolling did not use the same PRNG hierarchy. Therefore:
 
-- training transitions: 0;
-- expert switching: false;
-- validation data: false;
-- TEST/final JCE/JEL data: false.
+- repair02 is selected for **engineering continuation**;
+- the historical Iteration-1 gate is **not** claimed strict formal PASS;
+- `select_iteration_policy.py --allow-baseline-reproduction-mismatch` must encode
+  the quarantine explicitly;
+- no historical artifact may be edited to erase the mismatch.
 
-The locked bank must be written/bound before candidate outcomes are inspected.
-A completed FAIL is immutable scientific evidence and must never be converted to
-PASS by changing bank, threshold, replay ratio, reward, PPO or acceptance rules.
+## 11. Future locked-baseline acceptance gate
 
-## 11. Current completed chain
+For k >= 1, acceptance is precommitted before pi_(k+1) training.
+
+### 11.1 Core baseline lock
+
+Before candidate training:
+
+- evaluate every Tube_k retained-core state under selected pi_k;
+- bind exact state identity, phase/local index and deterministic core seed;
+- record pi_k success/outcome and interactions;
+- require non-vacuous successful baseline support in the paired summarizer.
+
+### 11.2 Boundary baseline lock
+
+The ACCEPTANCE role has already been labeled under pi_k. Before candidate
+training:
+
+- select only pi_k-negative ACCEPTANCE rows;
+- require boundary-negative support in both phases;
+- require the predeclared minimum number of independent parent groups;
+- bind exact snapshot/state, pi_k labeling seed and candidate index;
+- lock the negative outcome itself.
+
+The locked boundary baseline is **not re-run after pi_(k+1) is trained**.
+
+### 11.3 Candidate evaluation
+
+After pi_(k+1) freeze:
+
+- candidate core uses the exact locked core seeds;
+- candidate boundary starts from the exact locked snapshots;
+- candidate boundary reproduces the original pi_k labeling key hierarchy:
+  `labeling_seed -> candidate_index -> tick`;
+- core PASS requires zero baseline-success -> candidate-failure regressions;
+- boundary gain requires successes in at least the predeclared number of parent
+  groups;
+- no training, calibration, validation, TEST, final evidence or expert switching
+  is used.
+
+Because the baseline boundary is locked rather than re-rolled, the historical
+"baseline-negative but baseline rerun positive" failure mode is removed from
+future rounds by protocol design.
+
+## 12. Workflow automation contract
+
+The production operator entry point is:
+
+```bash
+python JIT/cli/run_iteration_workflow.py --config <workflow.json> --execute
+```
+
+A workflow is generated by:
+
+`JIT/cli/prepare_iterative_envelope_workflow.py`.
+
+The workflow is resumable but scientifically non-adaptive:
+
+- each stage declares immutable prerequisites and a completion artifact;
+- completion JSON assertions are checked before advancement;
+- already-completed stages are revalidated before reuse;
+- workflow config SHA drift after state creation is rejected;
+- any engineering or scientific stage failure stops execution;
+- the runner never changes reward, replay ratio, PPO settings, model architecture,
+  threshold rules, physics, acquisition panel or acceptance criteria in response
+  to a failure;
+- the workflow contains no final TEST/JCE/JEL stage.
+
+The current generic round stages are:
+
+```text
+prepare frontier plan
+  -> run TRAIN role
+  -> run CALIBRATION role
+  -> run ACCEPTANCE role
+  -> fit/calibrate C^k
+  -> build Tube_(k+1)
+  -> Tube-RSI smoke
+  -> role-isolation audit
+  -> lock pi_k acceptance baseline
+  -> prepare pi_(k+1) training
+  -> train pi_(k+1)
+  -> freeze pi_(k+1)
+  -> strict candidate gate
+  -> select pi_(k+1) only on PASS
+```
+
+## 13. Current completed chain
 
 ```text
 frozen experts
   -> Tube_0 (222)
   -> frozen pi_0
-  -> pi_0-conditioned C^0 with fresh validation
+  -> pi_0-conditioned C^0
+  -> fresh validation PASS
   -> Tube_1 (3,119 = 222 core + 2,897 expansion)
-  -> first pi_1 candidate
-  -> old paired gate: boundary PASS / core FAIL
-  -> zero-interaction replay diagnosis
-  -> retained-core replay repair predeclared
-  -> fresh readiness probe 1 FAIL
-  -> fresh readiness probe 2 FAIL
-  -> acquisition generalized to two-axis sparse directions
-  -> 3,720-state two-axis acquisition
-  -> single-process labeling engineering OOM
-  -> four-process equivalent labeling + merge
-  -> 260-state fresh acceptance bank PASS
-  -> repaired pi_1: 10,009,600 transitions
-  -> repaired pi_1 frozen
-  -> CURRENT: paired repaired-pi1 acceptance gate
+  -> first pi_1 / repair01 / repair02
+  -> warm-start A/B ablations
+  -> B intermediate checkpoint sweep complete
+  -> no B point beats repair02 under retention-first rule
+  -> repair02 selected as engineering pi_1
+  -> historical formal gate mismatch quarantined
+  -> CURRENT: automatic pi_1 -> C^1 -> Tube_2 -> pi_2
 ```
 
-Repaired formal run:
+## 14. Immediate order from here
 
-`JIT/runs/pi_unified/pi_1_tube1_core_replay50_natural10_10009600_seed821101_20260902`
-
-Frozen candidate:
-
-`JIT/runs/frozen_unified/pi_1_core_replay50_10009600_20260902/frozen_unified_policy.json`
-
-Known exact local identities:
-
-- final checkpoint payload SHA-256: `ea93a534c2c6bb3bf145684cbea82df94fefa2df8099dcdcdd9492bd8007e205`
-- frozen manifest file SHA-256: `d5a1658530d475a67264aa5c621283d71c823200dbee6068f93413b93d06b7a8`
-
-## 12. Immediate order from here
-
-1. Preserve all consumed readiness probes, OOM attempts, merged fresh bank and
-   repaired training/freeze artifacts.
-2. Bind the existing generic paired gate to:
-   - frozen baseline `pi_0`;
-   - frozen repaired `pi_1`;
-   - all 222 Tube_0 core states;
-   - the locked fresh 260-state two-axis negative bank;
-   - the correct acquisition snapshot provenance root.
-3. Run zero-interaction preflight/identity checks.
-4. Execute exactly one formal paired acceptance gate.
-5. If core PASS and boundary PASS: accept iteration 1 and authorize frozen-`pi_1`
-   continuation evidence, fresh validation and Tube_2 construction.
-6. If either gate FAILS: preserve and diagnose. Do not tune the same gate.
-7. Generalize remaining iteration-0-specific continuation/Tube code before
-   unattended `pi_1 -> pi_2` execution.
+1. Register repair02 as `jit_selected_iteration_policy_v1` with the explicit
+   baseline-reproduction quarantine flag.
+2. Generate one `pi_1 -> pi_2` workflow from selected repair02 + exact Tube_1.
+3. Dry-run the workflow plan before execution.
+4. Execute the same immutable workflow config.
+5. Let the runner stop if frontier support, C^1 calibration, Tube_2 isolation,
+   training/freeze, core retention or boundary gain fails.
+6. If the new strict pi_1 -> pi_2 gate PASSes, select pi_2 and continue with the
+   same generic k -> k+1 machinery.
+7. If it FAILs, preserve the artifact and diagnose before declaring any new
+   repair or experiment.
 8. Keep final TEST/JCE/JEL untouched until iteration stopping and final policy
    selection are frozen.
 
-## 13. Convergence and final empirical envelope
+Exact launch commands and current artifact paths are maintained in
+`JIT/docs/CURRENT_STATUS.md`.
+
+## 15. Convergence and final empirical envelope
 
 Iteration stopping criteria must be declared before the final stopping decision.
-Possible non-final audit quantities include support gain, boundary movement,
-continuation-success improvement and repeated no-material-gain rounds, always
-subject to core preservation.
+Candidate non-final criteria include:
+
+- boundary gain saturation;
+- negligible new Tube support;
+- repeated inability to expand without retained-core regression;
+- reaching a predeclared physical envelope target;
+- resource budget exhaustion.
+
+Do not continue merely because another round is mechanically possible.
 
 Only the final selected frozen unified policy may be evaluated on the untouched
 final envelope bank. The resulting claim is an **empirical policy-conditioned
