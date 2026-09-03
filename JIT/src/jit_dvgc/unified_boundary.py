@@ -7,6 +7,7 @@ perturbations; direct qpos/qvel dilation is intentionally unsupported.
 """
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass
 from itertools import combinations, product
 import json
@@ -449,12 +450,19 @@ def collect_unified_boundary_candidates(
     base_key = jax.random.PRNGKey(int(protocol_seed))
     entries: list[dict[str, Any]] = []
     seen: set[str] = set()
-    exclusions = {
-        "terminal": 0,
-        "nonfinite": 0,
-        "phase_transition": 0,
-        "existing_support": 0,
-        "duplicate": 0,
+    exclusion_names = (
+        "terminal",
+        "nonfinite",
+        "phase_transition",
+        "existing_support",
+        "duplicate",
+    )
+    exclusions = {name: 0 for name in exclusion_names}
+    phase_attempted: Counter[str] = Counter()
+    phase_accepted: Counter[str] = Counter()
+    phase_exclusions = {
+        phase: {name: 0 for name in exclusion_names}
+        for phase in ("upstream", "downstream")
     }
     attempted = 0
     interactions = 0
@@ -468,6 +476,7 @@ def collect_unified_boundary_candidates(
             for strength in strengths:
                 for direction in directions:
                     attempted += 1
+                    phase_attempted[anchor.phase] += 1
                     state = reset(np.int32(anchor.phase_index), np.int32(anchor.entry_index))
                     jax.block_until_ready(state)
                     if int(np.asarray(state.info["active_phase"])) != anchor.phase_index:
@@ -516,6 +525,7 @@ def collect_unified_boundary_candidates(
                             break
                     if rejected is not None:
                         exclusions[rejected] += 1
+                        phase_exclusions[anchor.phase][rejected] += 1
                         continue
 
                     snapshot = capture_unified_envelope_snapshot(
@@ -531,9 +541,11 @@ def collect_unified_boundary_candidates(
                     state_hash = physical_state_sha256(snapshot)
                     if state_hash in support_hashes:
                         exclusions["existing_support"] += 1
+                        phase_exclusions[anchor.phase]["existing_support"] += 1
                         continue
                     if state_hash in seen:
                         exclusions["duplicate"] += 1
+                        phase_exclusions[anchor.phase]["duplicate"] += 1
                         continue
                     seen.add(state_hash)
                     relative = Path("snapshots") / f"candidate_{len(entries):06d}"
@@ -583,6 +595,7 @@ def collect_unified_boundary_candidates(
                             "yaw": float(np.asarray(jax.device_get(metrics["signal/yaw"]))),
                         }
                     )
+                    phase_accepted[anchor.phase] += 1
 
     if interactions > maximum_interactions:
         raise ValueError("unified boundary acquisition exceeded its predeclared interaction ceiling")
@@ -602,6 +615,15 @@ def collect_unified_boundary_candidates(
         "anchor_count": len(anchors),
         "attempted_candidate_count": attempted,
         "candidate_count": len(entries),
+        "phase_attempted_candidate_counts": {
+            phase: int(phase_attempted[phase])
+            for phase in ("upstream", "downstream")
+        },
+        "phase_candidate_counts": {
+            phase: int(phase_accepted[phase])
+            for phase in ("upstream", "downstream")
+        },
+        "phase_exclusion_counts": phase_exclusions,
         "environment_interactions": interactions,
         "maximum_environment_interactions": maximum_interactions,
         "training_transitions": 0,
