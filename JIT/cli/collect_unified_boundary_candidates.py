@@ -23,15 +23,16 @@ from jit_dvgc.acquisition import (
     select_disjoint_tube_boundary_anchors,
     select_tube_boundary_anchors,
 )
+from jit_dvgc.repair_acceptance import (
+    REPAIR_ACCEPTANCE_SCHEMA,
+    consumed_gate_exclusions,
+)
 from jit_dvgc.training import (
     build_unified_formal_environment,
     checkpoint_identity,
     load_frozen_unified_manifest,
     load_unified_formal_config,
 )
-
-
-REPAIR_ACCEPTANCE_SCHEMA = "jit_repair_acceptance_boundary_acquisition_v1"
 
 
 def _write_json(path: Path, payload) -> None:
@@ -71,7 +72,9 @@ def _load_repair_predeclaration(path: Path) -> dict:
     source_iteration = int(protocol.get("source_iteration", -1))
     candidate_iteration = int(protocol.get("candidate_iteration", -1))
     if source_iteration < 0 or candidate_iteration != source_iteration + 1:
-        raise ValueError("repair acceptance acquisition must declare k -> k+1 iteration progression")
+        raise ValueError(
+            "repair acceptance acquisition must declare k -> k+1 iteration progression"
+        )
 
     acquisition = protocol.get("acquisition")
     if not isinstance(acquisition, dict):
@@ -95,56 +98,8 @@ def _load_repair_predeclaration(path: Path) -> dict:
         "final_evaluation_data_used": False,
     }:
         raise ValueError("repair acceptance isolation contract drift")
+    consumed_gate_exclusions(protocol)
     return payload
-
-
-def _consumed_gate_exclusions(protocol: dict) -> tuple[set[str], dict[str, set[str]], dict]:
-    consumed = protocol.get("consumed_gate")
-    if not isinstance(consumed, dict):
-        raise ValueError("repair acceptance consumed gate declaration missing")
-    gate_root = Path(str(consumed["root"]))
-    summary_path = gate_root / "summary.json"
-    bank_path = gate_root / "bank.json"
-    records_path = gate_root / "records.json"
-    expected = {
-        summary_path: str(consumed["summary_file_sha256"]),
-        bank_path: str(consumed["bank_file_sha256"]),
-        records_path: str(consumed["records_file_sha256"]),
-    }
-    for path, sha in expected.items():
-        if file_sha256(path) != sha:
-            raise ValueError(f"consumed gate file SHA-256 drift: {path}")
-    summary = _read_json(summary_path)
-    bank = _read_json(bank_path)
-    if summary.get("status") != "completed":
-        raise ValueError("consumed gate is not completed")
-    if summary.get("protocol_sha256") != consumed.get("protocol_sha256"):
-        raise ValueError("consumed gate protocol SHA-256 drift")
-    if bank.get("schema") != "jit_paired_policy_gate_bank_v1":
-        raise ValueError("consumed gate bank schema drift")
-    boundary = bank.get("boundary")
-    if not isinstance(boundary, list) or not boundary:
-        raise ValueError("consumed gate boundary bank missing")
-    if len(boundary) != int(consumed.get("boundary_state_count", -1)):
-        raise ValueError("consumed gate boundary count drift")
-    states = {str(row["state_sha256"]) for row in boundary}
-    groups = {"upstream": set(), "downstream": set()}
-    for row in boundary:
-        phase = str(row["phase"])
-        if phase not in groups:
-            raise ValueError("consumed gate boundary phase drift")
-        groups[phase].add(str(row["parent_group_id"]))
-    return states, groups, {
-        "root": str(gate_root),
-        "protocol_sha256": str(consumed["protocol_sha256"]),
-        "summary_file_sha256": expected[summary_path],
-        "bank_file_sha256": expected[bank_path],
-        "records_file_sha256": expected[records_path],
-        "boundary_state_count": len(states),
-        "boundary_parent_group_counts": {
-            phase: len(groups[phase]) for phase in ("upstream", "downstream")
-        },
-    }
 
 
 def main() -> int:
@@ -156,7 +111,7 @@ def main() -> int:
         type=Path,
         help=(
             "predeclared repair-acceptance acquisition contract; when supplied, "
-            "scientific acquisition knobs and consumed-gate exclusions come from it"
+            "scientific acquisition knobs and all consumed-gate exclusions come from it"
         ),
     )
     parser.add_argument("--anchors-per-phase", type=int, default=DEFAULT_ANCHORS_PER_PHASE)
@@ -233,7 +188,7 @@ def main() -> int:
         args.signs = [int(x) for x in acq["signs"]]
         args.active_action_dimensions = int(acq.get("active_action_dimensions", 1))
         args.protocol_seed = int(acq["protocol_seed"])
-        consumed_states, consumed_groups, consumed_identity = _consumed_gate_exclusions(
+        consumed_states, consumed_groups, consumed_identity = consumed_gate_exclusions(
             protocol
         )
 
@@ -285,10 +240,10 @@ def main() -> int:
             "predeclaration": str(args.predeclaration),
             "predeclaration_file_sha256": predeclared_sha,
             "predeclared_protocol_sha256": predeclared["expected_protocol_sha256"],
-            "consumed_gate": consumed_identity,
+            "consumed_gates": consumed_identity,
             "claim_boundary": {
                 "fresh_nonfinal_acceptance_candidate_generation": True,
-                "repaired_candidate_not_yet_trained": True,
+                "replacement_candidate_not_yet_trained": True,
                 "not_model_training_data": True,
                 "not_tube_construction_data": True,
                 "jce_jel_claim": False,
@@ -353,7 +308,9 @@ def main() -> int:
             json.dumps(
                 {
                     "anchor_audit": audit,
-                    "collection": {key: value for key, value in report.items() if key != "entries"},
+                    "collection": {
+                        key: value for key, value in report.items() if key != "entries"
+                    },
                 },
                 indent=2,
                 sort_keys=True,
@@ -376,7 +333,9 @@ def main() -> int:
                     "policy_payload_sha256": str(record["payload_sha256"]),
                     "frontier_score_ceiling": float(args.frontier_score_ceiling),
                     "active_action_dimensions": int(args.active_action_dimensions),
-                    "predeclaration": str(args.predeclaration) if args.predeclaration else None,
+                    "predeclaration": (
+                        str(args.predeclaration) if args.predeclaration else None
+                    ),
                     "predeclaration_file_sha256": predeclared_sha,
                     "training_transitions": 0,
                     "test_data_used": False,
