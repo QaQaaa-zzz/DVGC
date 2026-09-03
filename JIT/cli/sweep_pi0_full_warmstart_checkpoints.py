@@ -1,20 +1,26 @@
 #!/usr/bin/env python3
-"""Quick engineering check of one intermediate checkpoint from the pi0 full warm-start B run.
+"""Fast engineering check of one intermediate checkpoint from pi0 full warm-start B.
 
 No training is performed.  One process evaluates exactly one checkpoint on the
 same Tube0 core bank and locked 260-state boundary bank used by the B final
 quickcheck.  Baseline pi0 outcomes are reused from the already-completed B final
-gate, so this runner only rolls out the candidate checkpoint.  Running one
-checkpoint per Python process avoids JAX/Warp compiled-executable and allocator
-cache accumulation across checkpoints.
+gate.  Candidate rollouts are evaluated in GPU batches with ``vmap`` and a
+compiled ``while_loop`` rather than one state / one tick Python dispatches.
 """
 from __future__ import annotations
 
 import argparse
+import gc
 import json
+import os
 from pathlib import Path
 
+# Leave headroom for MuJoCo-Warp allocations instead of letting JAX reserve most
+# of the 24 GiB device before Warp requests its collision buffers.
+os.environ.setdefault("XLA_PYTHON_CLIENT_PREALLOCATE", "false")
+
 import jax
+import jax.numpy as jnp
 import numpy as np
 
 import jit_dvgc.analysis.paired_policy_gate as gate_mod
@@ -47,6 +53,7 @@ OUTPUT_ROOT = Path(
     "pi0_to_pi1_warmstart_B_checkpoint_sweep_20260903"
 )
 TRANSITIONS = (1_024_000, 2_508_800, 5_017_600, 7_500_800)
+DEFAULT_BATCH_SIZE = 64
 
 
 def _write_json(path: Path, payload) -> None:
@@ -139,11 +146,163 @@ def _baseline_by_state() -> dict[tuple[str, str], dict]:
     return result
 
 
+def _stack_states(states):
+    """Stack equally-shaped Brax/JAX state pytrees along a new batch axis."""
+
+    def stack_leaf(*values):
+        first = values[0]
+        if first is None:
+            return None
+        return jnp.stack([jnp.asarray(value) for value in values], axis=0)
+
+    return jax.tree_util.tree_map(
+        stack_leaf,
+        *states,
+        is_leaf=lambda value: value is None,
+    )
+
+
+def _make_batched_rollout(env, policy, max_ticks: int):
+    """Compile a many-environment candidate rollout with no per-tick host sync."""
+
+    max_ticks = int(max_ticks)
+
+    def rollout_one(initial_state, seed, start_phase):
+        del start_phase  # classification happens on host after rollout
+        apex_seen = jnp.asarray(initial_state.info["up_events"].apex_seen, dtype=bool)
+        phase_transitioned = jnp.asarray(
+            initial_state.info["phase_transitioned"], dtype=bool
+        )
+        recovery_success = jnp.asarray(
+            initial_state.info["down_events"].recovery_success, dtype=bool
+        )
+        expert_switching_seen = jnp.asarray(
+            initial_state.info["expert_switching_used"], dtype=bool
+        )
+
+        carry = (
+            jnp.asarray(0, dtype=jnp.int32),
+            initial_state,
+            apex_seen,
+            phase_transitioned,
+            recovery_success,
+            expert_switching_seen,
+        )
+
+        def cond_fn(value):
+            tick, state, *_ = value
+            return jnp.logical_and(
+                tick < max_ticks,
+                jnp.logical_not(jnp.asarray(state.done, dtype=bool)),
+            )
+
+        def body_fn(value):
+            (
+                tick,
+                state,
+                apex_seen,
+                phase_transitioned,
+                recovery_success,
+                expert_switching_seen,
+            ) = value
+            key = jax.random.fold_in(jax.random.PRNGKey(seed), tick)
+            result = policy(state.obs, key)
+            action = result[0] if isinstance(result, tuple) else result
+            state = env.step(state, action)
+            apex_seen = jnp.logical_or(
+                apex_seen,
+                jnp.asarray(state.info["up_events"].apex_seen, dtype=bool),
+            )
+            phase_transitioned = jnp.logical_or(
+                phase_transitioned,
+                jnp.asarray(state.info["phase_transitioned"], dtype=bool),
+            )
+            recovery_success = jnp.logical_or(
+                recovery_success,
+                jnp.asarray(state.info["down_events"].recovery_success, dtype=bool),
+            )
+            expert_switching_seen = jnp.logical_or(
+                expert_switching_seen,
+                jnp.asarray(state.info["expert_switching_used"], dtype=bool),
+            )
+            return (
+                tick + jnp.asarray(1, dtype=jnp.int32),
+                state,
+                apex_seen,
+                phase_transitioned,
+                recovery_success,
+                expert_switching_seen,
+            )
+
+        return jax.lax.while_loop(cond_fn, body_fn, carry)
+
+    return jax.jit(jax.vmap(rollout_one, in_axes=(0, 0, 0)))
+
+
+def _candidate_results_from_batch(
+    batched_output,
+    *,
+    start_phases: list[int],
+    real_count: int,
+    max_ticks: int,
+) -> list[dict]:
+    (
+        ticks,
+        final_state,
+        apex_seen,
+        phase_transitioned,
+        recovery_success,
+        expert_switching_seen,
+    ) = jax.device_get(batched_output)
+
+    ticks = np.asarray(ticks)[:real_count]
+    done = np.asarray(final_state.done).astype(bool)[:real_count]
+    terminal_success = np.asarray(final_state.info["success"]).astype(bool)[:real_count]
+    physical_failure = np.asarray(final_state.info["physical_failure"]).astype(bool)[
+        :real_count
+    ]
+    timeout = np.asarray(final_state.info["timeout"]).astype(bool)[:real_count]
+    apex_seen = np.asarray(apex_seen).astype(bool)[:real_count]
+    phase_transitioned = np.asarray(phase_transitioned).astype(bool)[:real_count]
+    recovery_success = np.asarray(recovery_success).astype(bool)[:real_count]
+    expert_switching_seen = np.asarray(expert_switching_seen).astype(bool)[:real_count]
+
+    if bool(np.any(expert_switching_seen)):
+        raise ValueError("batched checkpoint rollout unexpectedly used expert switching")
+
+    results: list[dict] = []
+    for index in range(real_count):
+        interactions = int(ticks[index])
+        positive, outcome = gate_mod.classify_unified_continuation_outcome(
+            start_phase=int(start_phases[index]),
+            terminal_success=bool(terminal_success[index]),
+            physical_failure=bool(physical_failure[index]),
+            timeout=bool(timeout[index]),
+            done=bool(done[index]),
+            apex_seen=bool(apex_seen[index]),
+            phase_transitioned=bool(phase_transitioned[index]),
+            recovery_success=bool(recovery_success[index]),
+            reached_rollout_horizon=(
+                interactions >= int(max_ticks) and not bool(done[index])
+            ),
+        )
+        results.append(
+            {
+                "success": bool(positive),
+                "outcome_class": str(outcome),
+                "environment_interactions": interactions,
+            }
+        )
+    return results
+
+
 def _evaluate_one(
     protocol: dict,
     baseline_record: dict,
     candidate_record: dict,
     baseline_rows: dict[tuple[str, str], dict],
+    *,
+    batch_size: int,
 ) -> dict:
     env, core_tube, target_tube = gate_mod._build_runtime(
         protocol, baseline_record, candidate_record
@@ -156,7 +315,7 @@ def _evaluate_one(
     max_ticks = int(protocol["runtime"]["max_ticks"])
     base_seed = int(protocol["runtime"]["protocol_seed"])
     reset_tube = jax.jit(env.reset_tube_index)
-    step_fn = jax.jit(env.step)
+    batched_rollout = _make_batched_rollout(env, candidate_policy, max_ticks)
     records = []
     candidate_interactions = 0
 
@@ -164,48 +323,90 @@ def _evaluate_one(
     if len(rows) != 482:
         raise ValueError("checkpoint quickcheck bank must contain exactly 482 states")
 
-    for index, row in enumerate(rows):
-        key = (str(row["bank_role"]), str(row["state_sha256"]))
-        baseline = baseline_rows.get(key)
-        if baseline is None:
-            raise ValueError(f"missing reused baseline row: {key}")
+    batch_size = int(batch_size)
+    if batch_size <= 0:
+        raise ValueError("batch-size must be positive")
+    batch_count = (len(rows) + batch_size - 1) // batch_size
 
-        if row["bank_role"] == "core":
-            candidate_state = reset_tube(
-                np.int32(row["phase_index"]), np.int32(row["entry_index"])
-            )
-            if gate_mod._sha256_state(candidate_state) != row["state_sha256"]:
-                raise ValueError("checkpoint quickcheck core reset state drift")
-        else:
-            snapshot = load_unified_envelope_snapshot(Path(str(row["snapshot"])))
-            candidate_state = fresh_unified_continuation_start(snapshot, env)
+    for batch_index, start in enumerate(range(0, len(rows), batch_size), start=1):
+        chunk = rows[start : start + batch_size]
+        states = []
+        seeds: list[int] = []
+        start_phases: list[int] = []
+        baselines: list[dict] = []
 
-        state_seed = base_seed + index * 10_000
-        candidate = gate_mod._rollout(
-            env,
-            candidate_policy,
-            candidate_state,
-            step_fn=step_fn,
-            start_phase=int(row["phase_index"]),
+        for local_index, row in enumerate(chunk):
+            global_index = start + local_index
+            key = (str(row["bank_role"]), str(row["state_sha256"]))
+            baseline = baseline_rows.get(key)
+            if baseline is None:
+                raise ValueError(f"missing reused baseline row: {key}")
+
+            if row["bank_role"] == "core":
+                state = reset_tube(
+                    np.int32(row["phase_index"]), np.int32(row["entry_index"])
+                )
+                if gate_mod._sha256_state(state) != row["state_sha256"]:
+                    raise ValueError("checkpoint quickcheck core reset state drift")
+            else:
+                snapshot = load_unified_envelope_snapshot(Path(str(row["snapshot"])))
+                state = fresh_unified_continuation_start(snapshot, env)
+
+            states.append(state)
+            seeds.append(base_seed + global_index * 10_000)
+            start_phases.append(int(row["phase_index"]))
+            baselines.append(baseline)
+
+        real_count = len(states)
+        # Pad only the final chunk so the compiled batch shape remains constant;
+        # padded results are discarded immediately after the rollout.
+        while len(states) < batch_size:
+            states.append(states[-1])
+            seeds.append(seeds[-1])
+            start_phases.append(start_phases[-1])
+
+        stacked_state = _stack_states(states)
+        output = batched_rollout(
+            stacked_state,
+            jnp.asarray(seeds, dtype=jnp.int32),
+            jnp.asarray(start_phases, dtype=jnp.int32),
+        )
+        candidate_results = _candidate_results_from_batch(
+            output,
+            start_phases=start_phases,
+            real_count=real_count,
             max_ticks=max_ticks,
-            seed=state_seed,
         )
-        candidate_interactions += int(candidate["environment_interactions"])
-        records.append(
-            {
-                **row,
-                "baseline_success": bool(baseline["baseline_success"]),
-                "candidate_success": bool(candidate["success"]),
-                "baseline_outcome_class": str(baseline["baseline_outcome_class"]),
-                "candidate_outcome_class": candidate["outcome_class"],
-                "baseline_environment_interactions": int(
-                    baseline["baseline_environment_interactions"]
-                ),
-                "candidate_environment_interactions": candidate[
-                    "environment_interactions"
-                ],
-            }
+
+        for local_index, candidate in enumerate(candidate_results):
+            row = chunk[local_index]
+            baseline = baselines[local_index]
+            candidate_interactions += int(candidate["environment_interactions"])
+            records.append(
+                {
+                    **row,
+                    "baseline_success": bool(baseline["baseline_success"]),
+                    "candidate_success": bool(candidate["success"]),
+                    "baseline_outcome_class": str(
+                        baseline["baseline_outcome_class"]
+                    ),
+                    "candidate_outcome_class": candidate["outcome_class"],
+                    "baseline_environment_interactions": int(
+                        baseline["baseline_environment_interactions"]
+                    ),
+                    "candidate_environment_interactions": int(
+                        candidate["environment_interactions"]
+                    ),
+                }
+            )
+
+        print(
+            f"batch {batch_index}/{batch_count}: "
+            f"states {start + 1}-{start + real_count}/{len(rows)}",
+            flush=True,
         )
+        del output, stacked_state, states
+        gc.collect()
 
     gates = gate_mod.summarize_paired_gate_records(
         records,
@@ -217,7 +418,7 @@ def _evaluate_one(
         ),
     )
     return {
-        "schema": "jit_pi0_full_warmstart_checkpoint_quickcheck_v2",
+        "schema": "jit_pi0_full_warmstart_checkpoint_quickcheck_v3",
         "status": "completed",
         "checkpoint_transitions": int(candidate_record["source_training_transitions"]),
         "candidate_actor_sha256": candidate_record["actor_sha256"],
@@ -228,6 +429,8 @@ def _evaluate_one(
         "boundary_source": boundary_source,
         "candidate_environment_interactions": candidate_interactions,
         "baseline_reused_from": str(BASE_GATE_RECORDS),
+        "rollout_mode": "gpu_vmap_while_loop",
+        "batch_size": batch_size,
         "engineering_quickcheck_only": True,
         "training_transitions": 0,
         "validation_data_used": False,
@@ -259,7 +462,7 @@ def _write_summary_if_complete() -> None:
         reports.append(report)
 
     summary = {
-        "schema": "jit_pi0_full_warmstart_checkpoint_sweep_v2",
+        "schema": "jit_pi0_full_warmstart_checkpoint_sweep_v3",
         "status": "completed",
         "source_run": str(B_RUN),
         "base_gate_config": str(BASE_GATE_CONFIG),
@@ -294,12 +497,20 @@ def main() -> int:
         help="evaluate exactly one B intermediate checkpoint in this process",
     )
     parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=DEFAULT_BATCH_SIZE,
+        help="parallel GPU rollout batch size; lower to 32 if device memory is tight",
+    )
+    parser.add_argument(
         "--force",
         action="store_true",
         help="overwrite an existing per-checkpoint report",
     )
     args = parser.parse_args()
 
+    if args.batch_size <= 0:
+        raise ValueError("batch-size must be positive")
     if jax.default_backend() != "gpu":
         raise RuntimeError("checkpoint quickcheck requires the visible JAX GPU backend")
     if not BASE_GATE_CONFIG.is_file():
@@ -337,7 +548,11 @@ def main() -> int:
     try:
         candidate_record = _candidate_record(args.transition, b_config)
         report = _evaluate_one(
-            protocol, baseline_record, candidate_record, baseline_rows
+            protocol,
+            baseline_record,
+            candidate_record,
+            baseline_rows,
+            batch_size=args.batch_size,
         )
         _write_json(out, report)
     finally:
