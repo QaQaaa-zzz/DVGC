@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -34,7 +35,10 @@ def _resolved_shard_count(plan: Path, role_root: Path) -> tuple[int, int, int]:
 
 def _run_child(args: list[str]) -> None:
     print("[frontier-shards] " + " ".join(args), flush=True)
-    subprocess.run(args, check=True)
+    env = os.environ.copy()
+    env["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
+    env["PYTHONUNBUFFERED"] = "1"
+    subprocess.run(args, check=True, env=env)
 
 
 def _run_all(plan: Path, role_root: Path, role: str) -> int:
@@ -121,13 +125,13 @@ def main() -> int:
 
     # Heavy imports are deliberately delayed so the run-all supervisor never
     # initializes a GPU runtime.
-    from jit_dvgc.phase_specific_frontier import (
-        merge_frontier_label_shards,
-        run_frontier_label_shard,
+    from jit_dvgc.phase_specific_frontier import merge_frontier_label_shards
+    from jit_dvgc.frontier_label_shard_runner import (
+        run_memory_stable_frontier_label_shard,
     )
 
     if args.command == "run-shard":
-        result = run_frontier_label_shard(
+        result = run_memory_stable_frontier_label_shard(
             plan_path=args.plan,
             role_root=args.role_root,
             role=args.role,
