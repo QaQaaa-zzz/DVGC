@@ -196,6 +196,7 @@ def test_workflow_stops_before_next_stage_when_scientific_gate_fails(tmp_path: P
     should_not_run = tmp_path / "should_not_run.txt"
     config_path = tmp_path / "workflow.json"
     gate_json = json.dumps({"status": "completed", "iteration_accepted": False}) + "\n"
+    gate_json_template = gate_json.replace("{", "{{").replace("}", "}}")
     config = {
         "schema": "jit_iteration_workflow_v1",
         "workflow_name": "gate-stop-contract",
@@ -210,7 +211,7 @@ def test_workflow_stops_before_next_stage_when_scientific_gate_fails(tmp_path: P
                     "-c",
                     (
                         "from pathlib import Path; "
-                        f"Path({str(gate)!r}).write_text({gate_json!r}, encoding='utf-8')"
+                        f"Path({str(gate)!r}).write_text({gate_json_template!r}, encoding='utf-8')"
                     ),
                 ],
                 "cwd": str(tmp_path),
