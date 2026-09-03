@@ -18,10 +18,8 @@ from jit_dvgc.checkpoint import CheckpointIdentity, load_checkpoint
 from jit_dvgc.config import file_sha256, load_config
 from jit_dvgc.constants import ACTION_ORDER, ACTOR_FRAME_FIELDS, ACTOR_TASK_FIELDS
 from jit_dvgc.handoff_bank import pytree_sha256
-from jit_dvgc.unified_continuation import (
-    fresh_unified_continuation_start,
-    load_unified_envelope_snapshot,
-)
+from jit_dvgc.unified_continuation_labels import fresh_unified_continuation_start
+from jit_dvgc.unified_envelope_snapshot import load_unified_envelope_snapshot
 
 import train_unified_from_pi0_full as full_warm
 
