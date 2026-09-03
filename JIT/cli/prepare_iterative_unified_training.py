@@ -8,6 +8,7 @@ from pathlib import Path
 
 from jit_dvgc.config import file_sha256
 from jit_dvgc.soft_tube import load_soft_tube
+from jit_dvgc.tube_rsi import describe_tube_sampling
 from jit_dvgc.unified_formal import load_unified_formal_config
 
 
@@ -33,10 +34,8 @@ def main() -> int:
     if args.output_config.exists():
         raise FileExistsError(f"training config already exists: {args.output_config}")
     template = _read(args.template)
-    # Prove that the source template still means the exact recipe we selected
-    # empirically today.  We intentionally do not inherit its Tube/run claims.
     loaded_template = load_unified_formal_config(args.template)
-    if template.get("tube_sampling") != {
+    expected_sampling = {
         "schema": "jit_tube_rsi_core_replay_v1",
         "selection": "phase_then_source_then_entry",
         "core_probability": 0.75,
@@ -44,7 +43,8 @@ def main() -> int:
         "core_within_source": "uniform",
         "expansion_within_source": "value_weighted",
         "source_core_definition": "first_core_retained_count_entries",
-    }:
+    }
+    if template.get("tube_sampling") != expected_sampling:
         raise ValueError("automatic iteration template lost the repair02 75/25 replay recipe")
     if loaded_template.reset_mixture.natural_reset_probability != 0.1:
         raise ValueError("automatic iteration template natural reset drift")
@@ -60,6 +60,15 @@ def main() -> int:
         raise ValueError("automatic training Tube core partition drift")
     if int(tube.manifest.get("expansion_count", 0)) <= 0:
         raise ValueError("automatic training Tube has no new expansion")
+    sampling_audit = describe_tube_sampling(tube, expected_sampling)
+    for phase in ("upstream", "downstream"):
+        row = sampling_audit["phases"][phase]
+        if int(row["core_count"]) <= 0 or int(row["expansion_count"]) <= 0:
+            raise ValueError(f"automatic training Tube lacks core/expansion support in {phase}")
+        if abs(float(row["core_probability"]) - 0.75) > 1.0e-6:
+            raise ValueError(f"automatic training Tube core probability drift in {phase}")
+        if abs(float(row["expansion_probability"]) - 0.25) > 1.0e-6:
+            raise ValueError(f"automatic training Tube expansion probability drift in {phase}")
 
     smoke = _read(args.tube_rsi_smoke_report)
     if smoke.get("schema") != "jit_tube_rsi_smoke_v1" or smoke.get("status") != "completed":
@@ -113,7 +122,6 @@ def main() -> int:
         json.dumps(payload, indent=2, sort_keys=True, allow_nan=False) + "\n",
         encoding="utf-8",
     )
-    # Validate the generated object through the canonical loader before returning.
     loaded = load_unified_formal_config(args.output_config)
     if loaded.soft_tube_manifest_sha256 != tube.manifest["manifest_sha256"]:
         raise ValueError("generated automatic training config failed identity roundtrip")
@@ -127,6 +135,7 @@ def main() -> int:
         "config_sha256": loaded.config_sha256,
         "soft_tube_manifest_sha256": tube.manifest["manifest_sha256"],
         "tube_rsi_smoke_report_sha256": file_sha256(args.tube_rsi_smoke_report),
+        "sampling_audit": sampling_audit,
         "training_transitions": 0,
         "test_data_used": False,
         "validation_data_used": False,
