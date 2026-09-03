@@ -44,7 +44,16 @@ def main() -> int:
     bank.add_argument("--acquisition-seed", type=int, required=True)
     bank.add_argument("--labeling-seed", type=int, required=True)
     bank.add_argument("--anchors-per-phase", type=int, default=10)
-    bank.add_argument("--minimum-anchors-per-phase", type=int, default=10)
+    bank.add_argument(
+        "--minimum-anchors-per-phase",
+        type=int,
+        default=None,
+        help=(
+            "minimum fresh parent-unique anchors required per phase; when omitted, "
+            "defaults to --minimum-negative-parent-groups-per-phase rather than "
+            "the negative-state count"
+        ),
+    )
     bank.add_argument("--frontier-score-ceiling", type=float, default=1.0)
     bank.add_argument("--strengths", type=float, nargs="+", default=[0.15, 0.30, 0.50])
     bank.add_argument("--durations", type=int, nargs="+", default=[2, 4, 8])
@@ -76,6 +85,14 @@ def main() -> int:
 
     args = parser.parse_args()
     if args.command == "prepare-bank":
+        minimum_anchors = args.minimum_anchors_per_phase
+        if minimum_anchors is None:
+            minimum_anchors = args.minimum_negative_parent_groups_per_phase
+        if minimum_anchors < args.minimum_negative_parent_groups_per_phase:
+            parser.error(
+                "--minimum-anchors-per-phase cannot be smaller than "
+                "--minimum-negative-parent-groups-per-phase"
+            )
         payload = prepare_repair_acceptance_predeclaration(
             baseline_frozen_policy=args.baseline_frozen_policy,
             target_tube=args.target_tube,
@@ -83,7 +100,7 @@ def main() -> int:
             acquisition_seed=args.acquisition_seed,
             labeling_seed=args.labeling_seed,
             anchors_per_phase=args.anchors_per_phase,
-            minimum_anchors_per_phase=args.minimum_anchors_per_phase,
+            minimum_anchors_per_phase=minimum_anchors,
             frontier_score_ceiling=args.frontier_score_ceiling,
             strengths=args.strengths,
             durations=args.durations,
