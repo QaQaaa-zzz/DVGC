@@ -234,8 +234,11 @@ def test_prepare_emits_strict_workflow_schema_and_new_state_dir(tmp_path: Path) 
     names = [stage["name"] for stage in revised["stages"]]
     assert "frontier_acceptance_v3c_challenge" in names
     lock = next(stage for stage in revised["stages"] if stage["name"] == "lock_acceptance_baseline")
-    assert str(challenge_root) in json.dumps(lock)
-    assert str(failed_root) not in json.dumps(lock)
+    assert str(challenge_root) in lock["command"]
+    assert str(failed_root) not in lock["command"]
+    required_paths = {str(requirement["path"]) for requirement in lock["requires"]}
+    assert str(challenge_root / "role_manifest.json") in required_paths
+    assert str(failed_root / "role_manifest.json") not in required_paths
 
     challenge = json.loads(challenge_plan.read_text(encoding="utf-8"))
     assert challenge["seeds"]["labeling"] == 5678
