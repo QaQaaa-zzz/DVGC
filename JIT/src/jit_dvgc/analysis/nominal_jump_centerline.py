@@ -1,15 +1,20 @@
-"""Build a real-rollout nominal jump centerline on a 0.1 m x grid.
+"""Build and lock one ground-connected nominal jump centerline.
 
-The centerline is a geometric scaffold for Jump-Tube identification, not a new
-controller target and not a reward modification.  It is extracted only from a
-completed successful canonical natural rollout.  No qpos/qvel interpolation is
-allowed: every centerline point is one real captured simulator frame.
+The centerline is a method scaffold for Jump-Tube identification, not a policy
+intent, tracking target, or reward change. It is extracted from one completed
+successful canonical natural-start rollout and then reused unchanged by later
+prospective JIT iterations unless a new method version is explicitly declared.
 
-The longitudinal corridor is nominally [2.5 m, 4.2 m].  The usable end is the
-first valid landing/contact if it occurs earlier.  Upstream points are selected
-before first Apex.  Downstream points are selected after Apex only when root
-vertical velocity is negative.  Post-landing recovery never enters the nominal
-Jump-Tube centerline.
+Every centerline point is a real simulator frame. No qpos/qvel interpolation is
+allowed. The longitudinal corridor is nominally [2.5 m, 4.2 m] and ends at the
+first valid landing if landing occurs earlier. Downstream centerline points must
+be post-Apex and descending. Post-landing recovery is excluded.
+
+Causal provenance is explicit: each selected frame records a physical-state
+SHA-256 over the raw saved qpos/qvel bytes and the number of real env.step
+transitions from the natural ground reset. This makes the centerline the first
+confirmed ground-reachable + continuation-success backbone of the later Jump
+Capability Tube.
 """
 from __future__ import annotations
 
@@ -21,7 +26,8 @@ from typing import Any, Mapping
 import numpy as np
 
 
-SCHEMA = "jit_nominal_jump_centerline_v1"
+SCHEMA = "jit_nominal_jump_centerline_v2"
+LEGACY_SCHEMA = "jit_nominal_jump_centerline_v1"
 X_MIN_M = 2.5
 X_MAX_M = 4.2
 DX_M = 0.1
@@ -41,12 +47,22 @@ def _file_sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def physical_state_sha256_from_arrays(qpos: np.ndarray, qvel: np.ndarray) -> str:
+    """Hash raw physical arrays using the same qpos/qvel byte contract as snapshots."""
+    digest = hashlib.sha256()
+    digest.update(np.ascontiguousarray(np.asarray(qpos)).tobytes())
+    digest.update(np.ascontiguousarray(np.asarray(qvel)).tobytes())
+    return digest.hexdigest()
+
+
 def _first_true(values: np.ndarray) -> int:
     indices = np.flatnonzero(np.asarray(values) > 0.5)
     return int(indices[0]) if indices.size else -1
 
 
-def _metric_array(data: Mapping[str, np.ndarray], metadata: Mapping[str, Any], name: str) -> np.ndarray:
+def _metric_array(
+    data: Mapping[str, np.ndarray], metadata: Mapping[str, Any], name: str
+) -> np.ndarray:
     key = metadata.get("metric_keys", {}).get(name)
     if not key or key not in data:
         raise ValueError(f"trace is missing required metric: {name}")
@@ -55,7 +71,7 @@ def _metric_array(data: Mapping[str, np.ndarray], metadata: Mapping[str, Any], n
 
 def _centers(last_x: float) -> list[float]:
     last = min(float(last_x), X_MAX_M)
-    values = []
+    values: list[float] = []
     index = 0
     while True:
         value = X_MIN_M + index * DX_M
@@ -89,12 +105,14 @@ def build_nominal_jump_centerline(
 
     loaded = np.load(npz_path, allow_pickle=False)
     data = {key: loaded[key] for key in loaded.files}
-    qpos = np.asarray(data["qpos"], dtype=np.float64)
-    qvel = np.asarray(data["qvel"], dtype=np.float64)
-    if qpos.ndim != 2 or qvel.ndim != 2 or len(qpos) != len(qvel):
+    qpos_raw = np.asarray(data["qpos"])
+    qvel_raw = np.asarray(data["qvel"])
+    if qpos_raw.ndim != 2 or qvel_raw.ndim != 2 or len(qpos_raw) != len(qvel_raw):
         raise ValueError("canonical trace physical arrays have invalid shape")
-    if not np.isfinite(qpos).all() or not np.isfinite(qvel).all():
+    if not np.isfinite(qpos_raw).all() or not np.isfinite(qvel_raw).all():
         raise ValueError("canonical trace contains nonfinite physical state")
+    qpos = np.asarray(qpos_raw, dtype=np.float64)
+    qvel = np.asarray(qvel_raw, dtype=np.float64)
 
     apex_seen = _metric_array(data, metadata, "event/apex_seen")
     contact_seen = _metric_array(data, metadata, "event/descent_valid_contact_seen")
@@ -115,6 +133,7 @@ def build_nominal_jump_centerline(
     targets = _centers(contact_x)
     if not targets:
         raise ValueError("no nominal x slices lie before first valid landing")
+
     points: list[dict[str, Any]] = []
     previous_index = -1
     for target in targets:
@@ -128,6 +147,7 @@ def build_nominal_jump_centerline(
         else:
             branch = "apex"
             eligible = np.asarray([apex_index], dtype=np.int64)
+
         eligible = eligible[eligible > previous_index]
         if eligible.size == 0:
             raise ValueError(f"no real trace frame available for nominal slice x={target:.1f}")
@@ -136,32 +156,52 @@ def build_nominal_jump_centerline(
         error = abs(float(x[best]) - target)
         if error > MAX_X_MATCH_ERROR_M:
             raise ValueError(
-                f"successful rollout does not resolve x={target:.1f} within 0.05 m; error={error:.6f}"
+                f"successful rollout does not resolve x={target:.1f} within 0.05 m; "
+                f"error={error:.6f}"
             )
         if branch == "downstream" and not float(vz[best]) < 0.0:
             raise ValueError("nominal downstream centerline selected a non-descending frame")
-        previous_index = best
-        points.append(
-            {
-                "x_target_m": float(target),
-                "frame_index": int(best),
-                "phase_semantics": branch,
-                "root_x_m": float(x[best]),
-                "root_z_m": float(z[best]),
-                "root_vx_mps": float(vx[best]),
-                "root_vz_mps": float(vz[best]),
-                "x_match_error_m": float(error),
-            }
+
+        transitions_from_previous = (
+            int(best) if previous_index < 0 else int(best - previous_index)
         )
+        point = {
+            "x_target_m": float(target),
+            "frame_index": int(best),
+            "phase_semantics": branch,
+            "physical_state_sha256": physical_state_sha256_from_arrays(
+                qpos_raw[best], qvel_raw[best]
+            ),
+            "root_x_m": float(x[best]),
+            "root_z_m": float(z[best]),
+            "root_vx_mps": float(vx[best]),
+            "root_vz_mps": float(vz[best]),
+            "x_match_error_m": float(error),
+            "environment_transitions_from_natural_start": int(best),
+            "environment_transitions_from_previous_centerline_point": transitions_from_previous,
+            "ground_reachable_by_saved_forward_rollout": True,
+        }
+        points.append(point)
+        previous_index = best
+
+    natural_start_sha = physical_state_sha256_from_arrays(qpos_raw[0], qvel_raw[0])
+    reference_payload_sha = str(report.get("checkpoint_payload_sha256", ""))
+    if reference_payload_sha and len(reference_payload_sha) != 64:
+        raise ValueError("canonical evaluation checkpoint payload SHA drift")
 
     payload = {
         "schema": SCHEMA,
-        "status": "completed",
-        "purpose": "real-rollout geometric centerline for trajectory-centered Jump-Tube widening",
+        "status": "completed_locked_method_reference",
+        "purpose": (
+            "ground-connected real-rollout centerline for causal trajectory-centered "
+            "Jump-Tube widening"
+        ),
         "canonical_evaluation_report": str(report_path),
         "canonical_evaluation_report_file_sha256": _file_sha256(report_path),
         "canonical_trace_npz": str(npz_path),
         "canonical_trace_npz_sha256": str(metadata["npz_sha256"]),
+        "reference_policy_checkpoint_payload_sha256": reference_payload_sha or None,
+        "natural_start_state_sha256": natural_start_sha,
         "x_min_m": X_MIN_M,
         "x_hard_max_m": X_MAX_M,
         "x_step_m": DX_M,
@@ -174,13 +214,19 @@ def build_nominal_jump_centerline(
         "points": points,
         "real_frames_only": True,
         "qpos_qvel_interpolation_used": False,
+        "natural_start_connected": True,
+        "rsi_used_to_establish_centerline_reachability": False,
         "post_landing_recovery_included": False,
+        "centerline_recomputed_each_iteration": False,
+        "centerline_is_policy_intent": False,
+        "centerline_is_reward_target": False,
         "reward_changed": False,
         "actor_observation_changed": False,
         "test_data_used": False,
         "final_evaluation_data_used": False,
     }
     payload["centerline_sha256"] = _canonical_sha256(payload)
+
     output = Path(output_dir)
     if output.exists():
         raise FileExistsError(f"centerline output already exists: {output}")
@@ -194,14 +240,35 @@ def build_nominal_jump_centerline(
 
 def load_nominal_jump_centerline(path: Path) -> dict[str, Any]:
     payload = json.loads(Path(path).read_text(encoding="utf-8"))
-    if payload.get("schema") != SCHEMA or payload.get("status") != "completed":
-        raise ValueError("invalid nominal jump centerline")
+    schema = payload.get("schema")
+    if schema == LEGACY_SCHEMA:
+        raise ValueError(
+            "legacy nominal centerline lacks causal ground-reachability hashes; "
+            "rebuild it under jit_nominal_jump_centerline_v2"
+        )
+    if schema != SCHEMA or payload.get("status") != "completed_locked_method_reference":
+        raise ValueError("invalid causal nominal jump centerline")
     declared = str(payload.get("centerline_sha256", ""))
     base = {key: value for key, value in payload.items() if key != "centerline_sha256"}
     if len(declared) != 64 or _canonical_sha256(base) != declared:
         raise ValueError("nominal jump centerline self-hash drift")
-    if payload.get("real_frames_only") is not True or payload.get("qpos_qvel_interpolation_used") is not False:
-        raise ValueError("nominal centerline provenance drift")
+    if payload.get("real_frames_only") is not True:
+        raise ValueError("nominal centerline is not real-frame-only")
+    if payload.get("qpos_qvel_interpolation_used") is not False:
+        raise ValueError("nominal centerline used qpos/qvel interpolation")
+    if payload.get("natural_start_connected") is not True:
+        raise ValueError("nominal centerline lacks ground reachability")
+    if payload.get("rsi_used_to_establish_centerline_reachability") is not False:
+        raise ValueError("nominal centerline reachability used RSI")
     if payload.get("post_landing_recovery_included") is not False:
         raise ValueError("nominal centerline contains post-landing recovery")
+    points = payload.get("points")
+    if not isinstance(points, list) or not points:
+        raise ValueError("nominal centerline has no points")
+    if any(
+        len(str(point.get("physical_state_sha256", ""))) != 64
+        or point.get("ground_reachable_by_saved_forward_rollout") is not True
+        for point in points
+    ):
+        raise ValueError("nominal centerline point reachability provenance drift")
     return payload
