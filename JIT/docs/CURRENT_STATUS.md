@@ -12,19 +12,6 @@ pi_up_star + pi_down_star
   -> raw Tube_1 = 3,119 snapshots
   -> pi_1 repair02 engineering authority
   -> C^1 engineering path
-  -> raw Tube_2 = 3,572? NO
-```
-
-Authoritative current chain:
-
-```text
-pi_up_star + pi_down_star
-  -> raw Tube_0 = 222 snapshots
-  -> pi_0
-  -> C^0
-  -> raw Tube_1 = 3,119 snapshots
-  -> pi_1 repair02 engineering authority
-  -> C^1 engineering path
   -> raw Tube_2 = 3,776 snapshots
   -> pi_2 trained/frozen
   -> locked pi_1 vs pi_2 evaluation
@@ -34,9 +21,7 @@ pi_up_star + pi_down_star
 
 Do not start pi_3 or a replay-ratio repair yet. Final TEST/JCE/JEL remains untouched.
 
-## Scientific meaning
-
-Keep these quantities separate:
+## Current scientific meaning
 
 ```text
 F*   conceptual physical/task feasibility under fixed dynamics
@@ -45,7 +30,7 @@ T_k  resolution-aware sparse occupied physical capability cells
 R_k  realization coverage of one unified policy over cumulative support
 ```
 
-The latest policy is not the definition of physical feasibility. A later policy failure does not erase earlier successful evidence. Conversely, many exact snapshots inside one resolved neighborhood do not constitute many independent capability states.
+The latest policy is not the definition of physical feasibility. A later policy failure does not erase earlier successful evidence. Conversely, multiple exact snapshots inside one resolved neighborhood do not constitute multiple independent capability regions.
 
 ## Intent decision
 
@@ -69,7 +54,7 @@ phase                           discrete
 Two cell profiles:
 
 - `full_physical_v1`: fine physical deduplication;
-- `root_geometry_v1`: root pose/twist only, used for Tube shape and frontier diversity.
+- `root_geometry_v1`: root pose/twist only, used for Tube geometry and frontier diversity.
 
 Actor FIFO/history/last-action fields do not define physical cell identity.
 
@@ -80,35 +65,7 @@ JIT/src/jit_dvgc/analysis/capability_tube.py
 JIT/cli/analyze_capability_tube.py
 ```
 
-## New Tube analysis outputs
-
-For each raw Soft Tube:
-
-```text
-raw_snapshot_count
-unique_root_geometry_cell_count
-unique_full_physical_cell_count
-duplicate fractions
-phase-specific cell counts
-0.10 m x-slices
-cross-section statistics by x
-projected_points.csv
-x-z / x-vx / x-pitch / x-z-vx visualizations
-```
-
-For Tube_k relative to Tube_(k-1):
-
-```text
-new_root_geometry_cell_count
-new_full_physical_cell_count
-new cells by phase
-new root cells per raw added snapshot
-nearest source-cell distance in resolution units
-```
-
-These are now the quantitative basis for Tube expansion.
-
-## Historical raw Tube artifacts
+## Raw Tube artifacts
 
 ### Tube_0
 
@@ -121,7 +78,6 @@ These are now the quantitative basis for Tube expansion.
 ```
 
 Manifest SHA:
-
 `c1c1161ebafd16716f2566aaccfe89169fe9cb0c2b090266c0e2bf90165df28b`
 
 ### Tube_1
@@ -138,7 +94,6 @@ downstream 2,692
 ```
 
 Manifest SHA:
-
 `817a980a5dd84f36507f762a913c21c1fc0913580d925ff9c68e982edfd82a80`
 
 ### Tube_2
@@ -155,18 +110,13 @@ downstream 2,874
 ```
 
 Manifest SHA:
-
 `135798c843a7acd9eb18cb44f9fd7a92ab39bf3df2d887b6c1fb8c629d480cff`
 
-Do not report the raw entry ratios as capability-envelope multipliers until physical-cell analysis is complete.
+These are replay/support counts only. Do not convert them directly into capability-envelope growth percentages.
 
-## pi_1 / C^1 / pi_2 evidence
+## pi_1, C^1 and pi_2 evidence
 
 Selected engineering pi_1:
-
-`JIT/runs/frozen_unified/pi_1_core_replay75_10058699` is not used.
-
-Authoritative frozen pi_1:
 
 `JIT/runs/frozen_unified/pi_1_core_replay75_10009600_20260903/frozen_unified_policy.json`
 
@@ -226,7 +176,35 @@ Interpretation:
 - pi_2 remains capability evidence;
 - pi_2 is not retrospectively selected as next authority.
 
-## Resolution-aware frontier parent selection
+## Resolution-aware Tube analysis
+
+Each Tube analysis reports:
+
+```text
+raw_snapshot_count
+unique_root_geometry_cell_count
+unique_full_physical_cell_count
+duplicate fractions
+phase-specific cell counts
+0.10 m x-slices
+cross-section statistics
+physical projection CSV
+x-z / x-vx / x-pitch / x-z-vx visualizations
+```
+
+Source-vs-target analysis additionally reports:
+
+```text
+new_root_geometry_cell_count
+new_full_physical_cell_count
+new cells by phase
+new root cells per raw added snapshot
+nearest source-cell distance in resolution units
+```
+
+These metrics replace raw snapshot growth as the primary quantitative Tube-expansion evidence.
+
+## Resolution-aware frontier parents
 
 Implementation:
 
@@ -244,25 +222,25 @@ newest raw Tube shell only
 + distinct root_geometry_v1 cell
 ```
 
-Default maximum: 25 distinct parent cells per phase. Minimum before frontier execution: 5 distinct newest-shell root-geometry cells per phase.
+Default maximum: 25 distinct parent cells per phase. Minimum: 5 distinct newest-shell root-geometry cells per phase.
 
-This revision is pre-outcome and preserves policy/Tube identity, role pattern, probe panel, seeds, physics, reward and TEST isolation.
+This revision is pre-outcome and preserves role assignment, policy/Tube identity, probe panel, seeds, physics, reward and TEST isolation.
 
 ## Automation maturity
 
 Already generic:
 
 ```text
-frontier role execution
-C^k fitting/calibration
-raw Tube construction
-Tube-RSI smoke
-role isolation
-locked baseline
-candidate train/freeze
-locked paired evaluation
-capability progression decision
-prospective policy selection
+frontier roles
+-> C^k fitting/calibration
+-> raw Tube construction
+-> Tube-RSI smoke
+-> role isolation
+-> locked baseline
+-> candidate train/freeze
+-> locked paired evaluation
+-> capability progression
+-> prospective policy selection
 ```
 
 Newly implemented but not yet exercised in a complete prospective automatic round:
@@ -287,9 +265,15 @@ Do not claim end-to-end automatic resolution-aware JIT until a workflow artifact
 
 ## Immediate local operator task
 
-After pulling the branch, run compile/tests and then analyze existing Tubes. No GPU training is required for this retrospective projection.
+After pulling the branch, run compile/tests and analyze:
 
-Recommended outputs:
+```text
+Tube_0
+Tube_1 versus Tube_0
+Tube_2 versus Tube_1
+```
+
+Recommended output roots:
 
 ```text
 JIT/runs/capability_geometry/tube0_resolution_v1
@@ -297,9 +281,9 @@ JIT/runs/capability_geometry/tube1_vs_tube0_resolution_v1
 JIT/runs/capability_geometry/tube2_vs_tube1_resolution_v1
 ```
 
-Exact commands are in `JIT/docs/JIT_CAPABILITY_TUBE_VNEXT_OUTLINE_20260904.md`.
+Exact commands and interpretation are in:
 
-The results should answer whether the 2,897 and 657 raw added snapshots correspond to broad physical coverage or mostly dense sampling of existing neighborhoods.
+`JIT/docs/JIT_CAPABILITY_TUBE_VNEXT_OUTLINE_20260904.md`
 
 ## Immutable task identity
 
@@ -308,7 +292,7 @@ The results should answer whether the 2,897 and 657 raw added snapshots correspo
 - local repo: `~/DVGC`
 - Python: `/home/qy/mujoco_playground/.venv/bin/python`
 - XML: `assets/orange_bike_4kg_horizontal.xml`
-- XML SHA: `0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a`
+- XML SHA: `0b56d3672773ef05a2b7f3f04a7a7941233d6e9c8a`
 - payload: 2 kg
 - simulation substep: 0.005 s
 - control interval: 0.020 s = 50 Hz
@@ -317,11 +301,14 @@ The results should answer whether the 2,897 and 657 raw added snapshots correspo
 - runtime expert switching: none
 - final TEST/JCE/JEL: untouched
 
-No physics file was modified by the resolution-aware analysis work.
-
 ## Authority read order
 
 1. `AGENTS.md`
 2. `JIT/AGENTS.md`
 3. `JIT/docs/CURRENT_STATUS.md`
-4. `JIT/docs/JIT_CAPABILITY_TUBE_VNEXT.md`
+4. `JIT/docs/JIT_CAPABILITY_TUBE_VNEXT_OUTLINE_20260904.md`
+5. `JIT/docs/JIT_CAPABILITY_PROGRESS_REPORT_20260904.md`
+6. `JIT/docs/CODEX_HANDOFF_20260904.md`
+7. `PROJECT.md`
+8. `JIT/docs/ENVELOPE_ITERATION_PROTOCOL.md`
+9. `JIT/docs/CODE_ORGANIZATION.md`
