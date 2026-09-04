@@ -39,6 +39,11 @@ from .fresh_parent import (
     planned_parent_groups,
     prepare_fresh_parent_acceptance_predeclaration,
 )
+from .resolution_frontier import (
+    DEFAULT_MAX_PARENT_CELLS_PER_PHASE,
+    revise_frontier_plan_for_resolution_cells,
+    select_resolution_distinct_anchors,
+)
 
 
 def select_disjoint_tube_boundary_anchors(
@@ -50,14 +55,7 @@ def select_disjoint_tube_boundary_anchors(
     excluded_state_sha256: Sequence[str] = (),
     excluded_parent_groups: Mapping[str, Sequence[str]] | None = None,
 ) -> tuple[tuple[TubeBoundaryAnchor, ...], dict[str, Any]]:
-    """Select frontier anchors after excluding consumed audit neighborhoods.
-
-    Exclusion is phase-aware for parent groups and global for physical-state
-    hashes. Selection remains deterministic and uses the existing weak-score,
-    parent-unique frontier ordering. The complete eligible parent-unique pool
-    is materialized before exclusions so consumed groups cannot simply cause a
-    quota shortfall when other disjoint frontier groups are available.
-    """
+    """Select frontier anchors after excluding consumed audit neighborhoods."""
     if int(max_per_phase) <= 0:
         raise ValueError("max_per_phase must be positive")
     if int(minimum_per_phase) <= 0 or int(minimum_per_phase) > int(max_per_phase):
@@ -184,4 +182,7 @@ __all__ = [
     "audit_fresh_parent_predeclaration",
     "collect_fresh_parent_anchors",
     "collect_snapshot_anchor_boundary_candidates",
+    "DEFAULT_MAX_PARENT_CELLS_PER_PHASE",
+    "revise_frontier_plan_for_resolution_cells",
+    "select_resolution_distinct_anchors",
 ]
