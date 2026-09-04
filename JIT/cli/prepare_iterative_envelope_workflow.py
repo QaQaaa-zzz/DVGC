@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """Generate one resumable automatic pi_k -> pi_(k+1) envelope workflow.
 
-The generated workflow executes only the fixed, already-decided method.  It
-never tunes hyperparameters or repairs a failed policy.  Any data-isolation,
-continuation-calibration, Tube, training, freeze, or acceptance-gate failure
-stops the workflow and requires a new scientific/engineering decision.
+The workflow separates two scientific outcomes after candidate evaluation:
+
+* empirical frontier/envelope progression; and
+* whether the candidate single policy retains enough phase-aware coverage to
+  become the sole authority for the next automatic iteration.
+
+The runner never tunes hyperparameters or repairs a failed policy.  Any data-
+isolation, continuation-calibration, Tube, training, freeze, frontier, or policy-
+realization failure stops the workflow and requires a new scientific decision.
 """
 from __future__ import annotations
 
@@ -70,6 +75,7 @@ def main() -> int:
     run_dir = Path("JIT/runs/pi_unified") / run_id
     frozen = Path(f"JIT/runs/frozen_unified/pi_{next_k}_auto_10009600_{args.tag}")
     gate = work_root / f"pi_{k}_to_pi_{next_k}_gate"
+    capability_decision = work_root / f"pi_{k}_to_pi_{next_k}_capability_progression.json"
     selected_next = Path(f"JIT/runs/iteration_selection/pi_{next_k}_auto_{args.tag}")
 
     def req(path, kind="file"):
@@ -153,18 +159,25 @@ def main() -> int:
             "completion": {"path": str(frozen / "frozen_unified_policy.json"), "kind": "json", "assertions": [assertion("/status", "eq", "frozen"), assertion("/policy/iteration", "eq", next_k), assertion("/policy/name", "eq", f"pi_{next_k}")], "exports": {}},
         },
         {
-            "name": f"gate_pi{k}_to_pi{next_k}",
+            "name": f"evaluate_pi{k}_to_pi{next_k}_locked_panel",
             "command": [PYTHON, "JIT/cli/run_iterative_acceptance_gate.py", "run-candidate", "--baseline-lock", str(baseline_lock / "baseline_lock.json"), "--candidate-frozen-policy", str(frozen / "frozen_unified_policy.json"), "--output-dir", str(gate)],
             "cwd": str(repo_root),
             "requires": [req(frozen / "frozen_unified_policy.json"), req(baseline_lock / "baseline_lock.json")],
-            "completion": {"path": str(gate / "summary.json"), "kind": "json", "assertions": [assertion("/status", "eq", "completed"), assertion("/iteration_accepted", "eq", True), assertion("/core_gate/regression_count", "eq", 0), assertion("/boundary_gate/baseline_reproduction_failure_count", "eq", 0), assertion("/boundary_gate/candidate_success_parent_group_count", "ge", 2)], "exports": {}},
+            "completion": {"path": str(gate / "summary.json"), "kind": "json", "assertions": [assertion("/status", "eq", "completed"), assertion("/boundary_gate/baseline_reproduction_failure_count", "eq", 0)], "exports": {}},
+        },
+        {
+            "name": f"analyze_pi{next_k}_capability_progression",
+            "command": [PYTHON, "JIT/cli/analyze_capability_progression.py", "--gate-summary", str(gate / "summary.json"), "--output", str(capability_decision)],
+            "cwd": str(repo_root),
+            "requires": [req(gate / "summary.json")],
+            "completion": {"path": str(capability_decision), "kind": "json", "assertions": [assertion("/status", "eq", "completed"), assertion("/retrospective_analysis", "eq", False), assertion("/empirical_envelope_expansion_observed", "eq", True), assertion("/candidate_policy_authority_eligible", "eq", True)], "exports": {}},
         },
         {
             "name": f"select_pi{next_k}",
-            "command": [PYTHON, "JIT/cli/select_iteration_policy.py", "--frozen-policy", str(frozen / "frozen_unified_policy.json"), "--gate-summary", str(gate / "summary.json"), "--output-dir", str(selected_next)],
+            "command": [PYTHON, "JIT/cli/select_iteration_policy.py", "--frozen-policy", str(frozen / "frozen_unified_policy.json"), "--gate-summary", str(gate / "summary.json"), "--capability-decision", str(capability_decision), "--output-dir", str(selected_next)],
             "cwd": str(repo_root),
-            "requires": [req(gate / "summary.json"), req(frozen / "frozen_unified_policy.json")],
-            "completion": {"path": str(selected_next / "selected_policy.json"), "kind": "json", "assertions": [assertion("/status", "eq", "selected"), assertion("/iteration", "eq", next_k), assertion("/formal_acceptance_claim", "eq", True)], "exports": {}},
+            "requires": [req(gate / "summary.json"), req(capability_decision), req(frozen / "frozen_unified_policy.json")],
+            "completion": {"path": str(selected_next / "selected_policy.json"), "kind": "json", "assertions": [assertion("/status", "eq", "selected"), assertion("/iteration", "eq", next_k), assertion("/selection_semantics", "eq", "prospective_capability_progression_v1"), assertion("/formal_acceptance_claim", "eq", True)], "exports": {}},
         },
     ]
 
@@ -198,6 +211,7 @@ def main() -> int:
         "candidate_run_id": run_id,
         "candidate_frozen_policy": str(frozen / "frozen_unified_policy.json"),
         "candidate_gate": str(gate / "summary.json"),
+        "candidate_capability_decision": str(capability_decision),
         "candidate_selected_policy": str(selected_next / "selected_policy.json"),
         "automatic_repair_on_gate_failure": False,
         "test_data_used": False,
