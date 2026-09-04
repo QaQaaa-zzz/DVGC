@@ -1,15 +1,19 @@
-# JIT Resolution-Aware Capability-Tube Iteration Protocol
+# JIT Trajectory-Centered Jump-Tube Iteration Protocol
 
 ## Status — 2026-09-04
 
-This document defines the active scientific contract after the completed engineering `pi_1 -> C^1 -> raw Tube_2 -> pi_2` round.
+This is the active protocol after the completed engineering `pi_1 -> C^1 -> raw Tube_2 -> pi_2` round and the subsequent physical Tube visualization review.
 
-The current method is **target-free** and **resolution-aware**.
+The current method is:
 
-Two previous assumptions are retired:
+> **trajectory-centered, resolution-aware, real-dynamics Jump-Tube identification with just-in-time curriculum generation.**
 
-1. raw Tube entry growth is not a capability-volume metric;
-2. exact state SHA uniqueness is not sufficient geometric diversity.
+Retired assumptions:
+
+1. raw Tube entry growth is not capability-volume growth;
+2. exact state SHA uniqueness is not geometric diversity;
+3. a global low-score newest-shell pool is not a sufficient jump-frontier definition;
+4. all states labelled `downstream` are not automatically valid descending Jump-Tube states.
 
 Final TEST/JCE/JEL remains untouched.
 
@@ -17,36 +21,30 @@ Final TEST/JCE/JEL remains untouched.
 
 ## 1. Scientific objects
 
-Use four distinct objects:
-
 ```text
-F*  conceptual physical/task feasible set under the fixed robot/task
-E_k cumulative empirical successful real-dynamics evidence
-T_k resolution-aware sparse occupied capability cells
-R(pi_k, T_k) single-policy realization coverage over cumulative support
+F*  conceptual physical/task feasible set under fixed robot/task
+E_k cumulative successful real-dynamics evidence
+J_k trajectory-centered empirical Jump-Tube support
+R(pi_k, J_k) single-policy realization coverage
 ```
 
 JIT does not prove `F*`.
 
-A Soft Tube artifact is still an exact replayable TRAIN dataset. The physical capability Tube is an analysis/coverage representation projected from those snapshots.
+A raw Soft Tube is an exact replayable TRAIN artifact. A Jump-Tube view is a task-semantic capability representation projected from those snapshots.
 
-A later policy failure does not erase earlier successful capability evidence. A new exact snapshot does not automatically create a new capability cell.
+A later policy failure does not erase prior successful capability evidence. A new exact snapshot does not automatically create a new physical cell or a new Jump-Tube region.
 
 ---
 
-## 2. Target-free method authority
+## 2. No goal intent in the current mainline
 
-Do not add jump intent to the current method.
+Do not add desired jump distance/apex intent to the current Actor.
 
-The present research question is:
+The centerline introduced below is **not** a goal input and does not alter reward/task semantics. It is a geometric scaffold used to index the state-space Tube longitudinally.
 
-> Under fixed XML/task semantics, what state-space Tube of different physically meaningful jump states can be empirically supported and progressively explored?
+At a fixed x slice, multiple physically different successful continuation states may coexist. The Tube therefore keeps nonzero cross-section.
 
-At a fixed longitudinal `x`, multiple heights, velocities, attitudes and internal configurations may be valid. The Tube therefore has a cross-section.
-
-A fixed desired jump distance/apex target would change the task and reward toward a goal-conditioned trajectory-family problem. That may be a later JIT version, but it is not part of this protocol.
-
-Reward, Actor observation and success semantics remain unchanged in the current revision.
+Goal-conditioned JIT remains a possible later method version only.
 
 ---
 
@@ -59,49 +57,87 @@ Reward, Actor observation and success semantics remain unchanged in the current 
 - control interval: 0.020 s = 50 Hz
 - hip/knee actuator range: +/-30 N m
 - action order: `[steer, rear-wheel drive, hip, knee]`
+- one unified runtime Actor
 - no runtime expert switching
-- no silent reward/action/snapshot/task-geometry changes
-- no TEST/final evidence in development iterations
-
-Older text that said +/-50 N m was documentation drift; the authoritative XML/runtime validator uses +/-30 N m.
+- no silent reward/action/XML/task-geometry changes
+- no final TEST/JCE/JEL use during development iterations
 
 ---
 
-## 4. Capability coordinate system
+## 4. Nominal centerline authority
+
+Every prospective trajectory-centered iteration must lock one successful full-chain real rollout before frontier outcomes.
+
+Centerline v1:
+
+```text
+x nominal start = 2.5 m
+x hard maximum  = 4.2 m
+x step          = 0.1 m
+actual terminal = first valid landing if earlier
+```
+
+Construction rules:
+
+```text
+real captured simulator frames only
+nearest real frame per target x slice
+maximum x mismatch <= 0.05 m
+no qpos/qvel interpolation
+```
+
+Branch semantics:
+
+```text
+pre-Apex            upstream
+Apex-near           apex marker
+post-Apex + vz < 0  downstream
+first valid landing terminal
+post-landing         excluded from Jump-Tube frontier
+```
+
+Implementation:
+
+```text
+jit_dvgc.analysis.nominal_jump_centerline
+JIT/cli/build_nominal_jump_centerline.py
+```
+
+If the canonical natural rollout is not full-recovery successful, the centerline builder must stop. Another successful real rollout may only be substituted through a new predeclared source; never fabricate or interpolate a path.
+
+---
+
+## 5. Physical capability coordinate system
 
 Actor observation space is not the physical capability metric space.
 
-Controller-only history/action variables may influence policy decisions but do not define whether two physical robot states occupy a new capability region.
+Capability coordinates are derived from authoritative snapshot `qpos/qvel` and model indices.
 
-Capability coordinates v1 are derived from snapshot `qpos/qvel` and the authoritative model indices.
-
-### 4.1 Root geometry coordinates
+### Root geometry profile
 
 ```text
-root x, y, z
-root vx, vy, vz
-roll, pitch, yaw
-root wx, wy, wz
+root x/y/z
+root vx/vy/vz
+roll/pitch/yaw
+root wx/wy/wz
 phase
 ```
 
-This profile is the primary geometry/frontier-diversity space.
-
-### 4.2 Full physical coordinates
+### Full physical profile
 
 Root geometry plus:
 
 ```text
-steering, hip, knee angles
-steering, hip, knee rates
-rear/front wheel tangential speeds
+steering/hip/knee angles
+steering/hip/knee rates
+front/rear wheel tangential speeds
 ```
 
-Wheel rotational angle/phase is intentionally excluded from cell identity; tangential speed is retained.
+Wheel angle phase itself is excluded from cell identity.
 
 ---
 
-## 5. Resolution contract v1
+## 6. Resolution contract v1
 
 ```text
 position                     0.10 m
@@ -114,71 +150,59 @@ wheel tangential velocity    0.10 m/s
 phase                        discrete
 ```
 
-Quantization method:
+Quantization:
 
 ```text
 nearest grid
 round half away from zero
 ```
 
-The 2 deg/s angular-velocity resolution is intentional. Do not revert to the earlier 5 deg/s proposal without a new method decision.
+The 2 deg/s angular-velocity resolution is deliberate.
 
-Resolution identities are self-hashed in analysis artifacts.
+Implementation:
+
+```text
+jit_dvgc.analysis.capability_tube
+JIT/cli/analyze_capability_tube.py
+```
 
 ---
 
-## 6. Raw Soft Tube versus physical capability Tube
+## 7. Raw/Control Tube versus Jump-Tube view
 
 Raw Soft Tube:
 
 ```text
-exact snapshot
-exact state SHA
-exact provenance
-sampling weight
+exact restartable snapshot
+state SHA
+provenance
 continuation score
+sampling weight
 ```
 
-Physical Tube:
+Jump-Tube view:
 
 ```text
-snapshot -> physical coordinates -> quantized cell
+raw Tube
+-> physical projection
+-> centerline corridor filter
+-> downstream descending filter
+-> post-landing exclusion
+-> quantized occupied cells
 ```
 
-Report both:
+Implementation:
 
 ```text
-raw_snapshot_count
-unique_full_physical_cell_count
-unique_root_geometry_cell_count
+jit_dvgc.analysis.jump_tube_view
+JIT/cli/analyze_jump_tube_view.py
 ```
 
-A Tube generation is allowed to contain multiple raw snapshots in one physical cell because replay density can still be useful for policy learning. But these duplicates do not count as independent capability expansion.
+Historical late recovery states are retained in raw replay/provenance but cannot contribute to Jump-Tube capability growth or frontier-parent eligibility.
 
 ---
 
-## 7. Expansion metric
-
-For `Tube_(k+1)` relative to `Tube_k`, distinguish:
-
-```text
-raw snapshot growth
-new full physical cells
-new root geometry cells
-new x slices
-x-slice cross-section growth
-nearest source-cell distance in resolution units
-```
-
-The primary macroscopic expansion measure is **new root-geometry cells**, not raw entries.
-
-A new full-physical cell with no new root-geometry cell may represent useful internal posture diversity but must not be presented as macroscopic jumping-envelope growth.
-
-No cell-count metric is a proof of continuous physical volume or viability.
-
----
-
-## 8. Tube geometry and x slices
+## 8. Jump-Tube geometry
 
 Longitudinal coordinate:
 
@@ -192,37 +216,36 @@ Slice width:
 0.10 m
 ```
 
-For each x slice, summarize unique root-geometry cells over:
+For every centerline-supported x slice, summarize the unique root-geometry-cell cross-section over:
 
 ```text
-y, z
-vx, vy, vz
-roll, pitch, yaw
-wx, wy, wz
+y/z
+vx/vy/vz
+roll/pitch/yaw
+wx/wy/wz
 ```
 
-Required outputs:
+The Tube is not forced into a cylinder. Narrowing, widening, branches, lobes and gaps are valid evidence.
 
-- occupied cell count;
-- raw snapshot density;
-- phase composition;
-- min/q25/median/q75/max for cross-section coordinates;
-- visual x-z, x-vx, x-pitch projections;
-- visual x-z-vx 3D projection.
+Primary progression question:
 
-Do not force a smooth Tube shape. Branches, gaps, lobes and bottlenecks are valid evidence.
+> At which x slices did successful physically resolved cross-section support widen?
 
 ---
 
 ## 9. Frontier parent selection
 
-Future parent diversity requires all of:
+Future parent eligibility requires all of:
 
 ```text
-newest source-Tube shell
+newest source raw-Tube shell
 unique parent group
 unique exact state SHA
 unique root_geometry_v1 cell
+x slice supported by the locked nominal centerline
+inside the actual jump corridor
+downstream root_vz < 0
+no post-landing / late-recovery state
 ```
 
 Implementation:
@@ -232,70 +255,97 @@ jit_dvgc.acquisition.resolution_frontier
 JIT/cli/prepare_resolution_aware_frontier_plan.py
 ```
 
+The CLI requires `--nominal-centerline`.
+
 Default maximum:
 
 ```text
 25 distinct parent cells per phase
 ```
 
-Minimum support before frontier execution:
+Minimum after all semantic filters:
 
 ```text
 5 distinct newest-shell root-geometry cells per phase
 ```
 
-Role pattern remains pre-outcome and deterministic:
+### Local x-balanced selection
+
+Do not globally rank an entire phase and take the lowest scores.
+
+New rule:
+
+```text
+partition eligible parents by x slice
+rank weak continuation frontier cells locally in each slice
+round-robin across slices
+only after every occupied slice gets an opportunity may a slice contribute again
+```
+
+This prevents a dense downstream/recovery region from monopolizing acquisition budget.
+
+Role pattern remains deterministic and pre-outcome:
 
 ```text
 TRAIN, TRAIN, TRAIN, CALIBRATION, ACCEPTANCE, repeat
 ```
 
-Resolution-aware parent selection is not allowed to inspect continuation outcomes.
-
 ---
 
 ## 10. Frontier candidate acquisition
 
-Candidates must still be generated only by authoritative real dynamics from valid parent snapshots.
+Candidates remain real-dynamics only.
 
-No direct coordinate dilation or hand-edited qpos/qvel is allowed.
+Allowed:
 
-Resolution-aware parent diversity reduces redundant starting neighborhoods. Future acquisition should additionally report candidate-cell occupancy so the project can decide whether more trajectories are adding coverage or only density.
+```text
+reset exact valid replay state
+compute deterministic frozen pi_k action
+apply bounded declared action perturbation
+advance only through authoritative env.step
+```
 
-A future optimization may filter candidate duplicates before expensive labeling, but that optimization must preserve deterministic candidate/PRNG provenance and must be predeclared before outcomes.
+Forbidden:
+
+```text
+hand-edited qpos/qvel
+direct coordinate dilation
+outcome-dependent parent reselection
+TEST-informed acquisition
+```
+
+Existing sparse single-/two-axis action perturbation machinery may be reused, but all generated candidates must remain compatible with the trajectory-centered task semantics before they contribute to Jump-Tube claims.
 
 ---
 
 ## 11. Data-role isolation
 
-Logical roles remain:
+Logical roles:
 
-- `TRAIN`: continuation fitting and candidate Tube replay support;
+- `TRAIN`: continuation fitting and qualifying replay support;
 - `CALIBRATION`: threshold calibration only;
 - `ACCEPTANCE`: locked development frontier comparison only;
 - final TEST/JCE/JEL: untouched.
 
 Parent-group disjointness remains mandatory.
 
-Resolution-aware geometric cell separation is an additional diversity requirement; it does not replace logical-role isolation.
-
-Historical Iteration-1 -> 2 near-observation engineering evidence remains historical and does not relax the prospective protocol.
+Physical cell / x-slice diversity supplements provenance isolation; it does not replace it.
 
 ---
 
 ## 12. Continuation authority
 
 - `V_up/V_down`: bootstrap expert-conditioned continuation evidence.
-- `C_up^k/C_down^k`: exact-policy-conditioned continuation evidence tied to frozen `pi_k`.
+- `C_up^k/C_down^k`: frozen-policy-conditioned continuation evidence.
 - PPO critic/value is not a JIT continuation field.
 
-`C^k` is useful for proposal/filtering and empirical continuation ranking. It is not a proof that no other admissible controller could succeed.
+`C^k` is an empirical proposal/filtering model, not proof of existential controllability.
 
-Current C^1 remains mixed-claim:
+Current C^1 historical truth remains:
 
 ```text
-upstream AUC 0.6903137789904502 < 0.70 formal gate
-engineering-selected
+upstream AUC 0.6903137789904502 < original 0.70 gate
+engineering-selected only
 
 downstream AUC 1.0
 formal calibration PASS
@@ -305,7 +355,7 @@ formal calibration PASS
 
 ## 13. Raw Tube construction
 
-The replay artifact remains structurally core-retaining:
+Raw replay artifact remains core-retaining:
 
 ```text
 raw Tube_(k+1)
@@ -313,17 +363,24 @@ raw Tube_(k+1)
 + qualifying logical-TRAIN replay snapshots
 ```
 
-This is a reproducibility/training contract, not the capability metric.
+This preserves training/provenance continuity but is not the Jump-Tube expansion metric.
 
-After construction, the next mandatory scientific analysis is physical-cell projection and source-vs-target comparison.
+After construction, two analyses are mandatory **before candidate policy training**:
+
+```text
+1. physical capability geometry of raw Tube_(k+1)
+2. filtered Jump-Tube_(k+1) view relative to source Jump-Tube_k
+```
+
+If filtered Jump-Tube root-cell growth is zero, the automatic workflow must stop rather than training merely because raw rows increased.
 
 ---
 
-## 14. Policy training and realization
+## 14. Policy training
 
-Unified policy training remains one Actor, no expert switching.
+Unified policy training remains one Actor with no expert switching.
 
-Current mainline training configuration used:
+Historical/current reset mixture:
 
 ```text
 90% Tube reset
@@ -333,9 +390,9 @@ inside Tube:
 25% newest raw expansion
 ```
 
-This is historical/current training evidence, not a permanent solution to all future realization problems.
+This remains an engineering training configuration, not a permanent theorem or automatic repair rule.
 
-Do not automatically sweep replay ratios after a failed policy-realization result.
+Do not sweep replay ratios automatically after realization failure.
 
 ---
 
@@ -343,32 +400,66 @@ Do not automatically sweep replay ratios after a failed policy-realization resul
 
 Prospective evaluation separates:
 
-### A. Frontier progression
+### A. Empirical frontier progression
 
 Require:
 
 - locked baseline identity;
-- no boundary baseline-reproduction mismatch;
+- zero boundary baseline-reproduction mismatch;
 - nonzero new frontier successes;
 - sufficient independent parent groups;
-- successes in both phases.
+- phase-aware support.
 
-### B. Policy realization retention
+### B. Single-policy realization
 
-Current prospective engineering non-inferiority margins:
+Current prospective engineering non-inferiority margins remain:
 
 ```text
 max global locked-panel coverage drop = 5 percentage points
 max per-phase coverage drop           = 10 percentage points
 ```
 
-Zero strict paired regressions are not required.
+Zero strict paired regressions are no longer the sole method objective.
 
-These margins evaluate the next single-policy authority; they do not define physical feasibility.
+These margins govern promotion of the next single-policy authority, not physical feasibility.
 
 ---
 
-## 16. Current pi_2 interpretation
+## 16. Automatic workflow vNext
+
+`JIT/cli/prepare_iterative_envelope_workflow.py` now requires:
+
+```text
+--canonical-evaluation-report
+```
+
+The generated DAG includes:
+
+```text
+lock nominal centerline
+-> analyze source physical geometry
+-> build source Jump-Tube view
+-> prepare ordinary outcome-blind frontier plan
+-> revise to trajectory-centered x-balanced plan
+-> frontier TRAIN/CALIBRATION/ACCEPTANCE
+-> C^k
+-> raw Tube_(k+1)
+-> analyze target physical geometry
+-> build target Jump-Tube view
+-> REQUIRE new filtered Jump-Tube root cells > 0
+-> smoke/isolation
+-> baseline lock
+-> candidate train/freeze
+-> locked evaluation
+-> capability progression
+-> prospective policy selection
+```
+
+This is the intended prospective automatic method. It is implemented but not yet validated by a complete new run.
+
+---
+
+## 17. Current pi_2 historical interpretation
 
 Locked source panel:
 
@@ -394,77 +485,42 @@ Therefore:
 ```text
 local frontier progression: strong
 upstream single-policy realization: degraded
-pi_2 as empirical capability evidence: retained
-pi_2 as retrospectively selected next authority: no
+pi_2 as capability evidence: retained
+pi_2 as next authority: no
 ```
 
-Before interpreting how large the discovered envelope became, remeasure Tube_0/1/2 in physical cell space.
+Historical all-state Tube counts must now be filtered into Jump-Tube views before they are used for capability-size claims.
 
 ---
 
-## 17. Automatic workflow maturity
+## 18. Current operator sequence
 
-Existing generic orchestration already supports:
-
-```text
-frontier roles
--> continuation fields
--> raw Tube construction
--> smoke/isolation
--> baseline lock
--> train/freeze candidate
--> locked paired evaluation
--> capability progression
--> prospective selection
-```
-
-New resolution-aware capabilities are implemented but not yet demonstrated in a complete prospective automatic run.
-
-Required pre-frontier vNext operator sequence:
+Before any new candidate policy:
 
 ```text
-analyze source Tube physical geometry
--> prepare ordinary outcome-blind frontier plan
--> revise parent set by distinct root-geometry cells
--> run frontier roles
+1. obtain successful canonical pi_1 natural rollout
+2. lock nominal centerline
+3. rebuild Jump-Tube_0/1/2 semantic views
+4. inspect removed late downstream/recovery support
+5. inspect per-x cross-sections and gaps
+6. only then prepare/run the next prospective trajectory-centered workflow
 ```
 
-Only after a workflow artifact contains these stages may the project claim fully integrated resolution-aware automation.
-
----
-
-## 18. Immediate retrospective analysis
-
-Without new simulation, analyze:
-
-```text
-Tube_0
-Tube_1 versus Tube_0
-Tube_2 versus Tube_1
-```
-
-Primary questions:
-
-1. How many raw snapshots collapse into the same physical cells?
-2. How many genuinely new root-geometry cells were gained per round?
-3. At what x slices did the Tube widen or extend?
-4. Is upstream support continuous, narrow, branched or multi-lobed?
-5. Are current upstream realization regressions concentrated around one branch or region?
-
-No pi_3 training starts before this evidence is reviewed.
+No pi_3-like training starts before this evidence is reviewed.
 
 ---
 
 ## 19. Stopping and final JCE/JEL
 
-Future stopping criteria should eventually use resolution-aware evidence, for example:
+Future stopping should use trajectory-centered evidence, including:
 
-- negligible new root-geometry cells;
-- no new x-slice extension;
+- negligible new Jump-Tube root cells;
+- no new x-slice support;
 - cross-section saturation;
-- repeated inability to extend geometry without unacceptable realization loss;
+- repeated inability to widen sparse slices;
+- unacceptable realization loss;
 - resource budget.
 
-Only after method/stopping policy and final policy are frozen should untouched final TEST/JCE/JEL be used.
+Only after method, stopping rule and final policy are frozen may untouched final TEST/JCE/JEL be used.
 
-The final claim remains empirical, not a formal reachability/safety certificate.
+Final claims remain empirical rather than formal reachability/safety certification.
