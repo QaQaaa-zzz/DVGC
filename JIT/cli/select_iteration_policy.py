@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Register one already-frozen unified policy as the selected pi_k handoff.
 
-This command does not freeze, train, evaluate, or mutate a policy.  It binds an
-existing frozen policy to an already-completed paired gate and writes a small,
-self-hashed selection artifact that downstream iteration automation can trust.
+Historical selections may still use the original strict paired-gate semantics.
+Future automatic iterations should additionally provide a prospective
+``jit_capability_progression_decision_v1`` artifact.  That decision separates
+cumulative envelope progression from single-policy realization coverage.
 
-A baseline-reproduction mismatch may be explicitly quarantined for engineering
-selection.  In that case the artifact records ``formal_acceptance_claim=false``
-and may not be used as evidence that the historical formal gate passed.
+A retrospective capability reinterpretation may describe an already-observed
+candidate, but it is intentionally forbidden from retroactively selecting that
+candidate as a formal next-iteration authority.
 """
 from __future__ import annotations
 
@@ -17,6 +18,7 @@ import json
 from pathlib import Path
 from typing import Any, Mapping
 
+from jit_dvgc.analysis.capability_progression import SCHEMA as CAPABILITY_DECISION_SCHEMA
 from jit_dvgc.config import file_sha256
 from jit_dvgc.unified_policy_freeze import load_frozen_unified_manifest
 
@@ -47,12 +49,50 @@ def _write(path: Path, value: Mapping[str, Any]) -> None:
     )
 
 
+def _verify_capability_decision(
+    path: Path,
+    *,
+    gate_summary: Path,
+    gate: Mapping[str, Any],
+    record: Mapping[str, Any],
+) -> dict[str, Any]:
+    decision = _read(path)
+    if decision.get("schema") != CAPABILITY_DECISION_SCHEMA or decision.get("status") != "completed":
+        raise ValueError("selected-policy capability decision schema/status drift")
+    declared = str(decision.get("decision_sha256", ""))
+    base = {key: value for key, value in decision.items() if key != "decision_sha256"}
+    if len(declared) != 64 or _canonical(base) != declared:
+        raise ValueError("selected-policy capability decision self-hash drift")
+    if decision.get("source_gate_file_sha256") != file_sha256(gate_summary):
+        raise ValueError("selected-policy capability decision gate identity drift")
+    if int(decision.get("candidate_iteration", -1)) != int(record["iteration"]):
+        raise ValueError("selected-policy capability candidate iteration drift")
+    if decision.get("candidate_policy_name") != record["name"]:
+        raise ValueError("selected-policy capability candidate name drift")
+    if decision.get("candidate_actor_sha256") != record["actor_sha256"]:
+        raise ValueError("selected-policy capability actor drift")
+    if decision.get("candidate_payload_sha256") != record["payload_sha256"]:
+        raise ValueError("selected-policy capability payload drift")
+    if decision.get("retrospective_analysis") is not False:
+        raise ValueError("retrospective capability analysis cannot formally select a policy")
+    if decision.get("empirical_envelope_expansion_observed") is not True:
+        raise ValueError("selected policy has no accepted frontier progression")
+    if decision.get("candidate_policy_authority_eligible") is not True:
+        raise ValueError("selected policy does not retain enough phase-aware Tube coverage")
+    if decision.get("formal_prospective_selection_claim") is not True:
+        raise ValueError("capability decision is not prospective selection evidence")
+    if int(gate.get("candidate_iteration", -1)) != int(decision["candidate_iteration"]):
+        raise ValueError("selected-policy gate/capability iteration mismatch")
+    return decision
+
+
 def select(
     *,
     frozen_policy: Path,
     gate_summary: Path,
     output_dir: Path,
     allow_baseline_reproduction_mismatch: bool,
+    capability_decision: Path | None = None,
 ) -> dict[str, Any]:
     frozen_policy = Path(frozen_policy)
     gate_summary = Path(gate_summary)
@@ -86,25 +126,41 @@ def select(
         raise ValueError("selected-policy core gate is empty")
     if int(core.get("baseline_success_count", -1)) <= 0:
         raise ValueError("selected-policy core gate has no baseline-success support")
-    if int(core.get("regression_count", -1)) != 0 or core.get("passed") is not True:
-        raise ValueError("selected policy regresses a baseline-success core state")
-    # Later iterations preserve the capability actually demonstrated by pi_k on
-    # Tube_k.  They do not require pi_k itself to solve every guidance state in
-    # Tube_k; unsuccessful baseline states are allowed to become improvements.
+
     boundary_success = int(boundary.get("candidate_success_count", 0))
     boundary_groups = int(boundary.get("candidate_success_parent_group_count", 0))
     minimum_groups = int(boundary.get("minimum_candidate_success_parent_groups", 1))
+    reproduction_failures = int(boundary.get("baseline_reproduction_failure_count", 0))
     if boundary_success <= 0 or boundary_groups < minimum_groups:
         raise ValueError("selected policy has no sufficient empirical boundary gain")
-
-    reproduction_failures = int(boundary.get("baseline_reproduction_failure_count", 0))
     if reproduction_failures and not allow_baseline_reproduction_mismatch:
         raise ValueError(
             "historical gate has baseline-reproduction failures; rerun with the explicit "
             "engineering quarantine flag or repair the gate protocol"
         )
 
-    formal_acceptance = bool(gate.get("iteration_accepted")) and reproduction_failures == 0
+    decision: dict[str, Any] | None = None
+    if capability_decision is not None:
+        decision = _verify_capability_decision(
+            Path(capability_decision),
+            gate_summary=gate_summary,
+            gate=gate,
+            record=record,
+        )
+        selection_semantics = "prospective_capability_progression_v1"
+        formal_acceptance = reproduction_failures == 0
+    else:
+        # Backward-compatible historical selection path.  This is retained so
+        # repair02/pi_1 provenance remains reproducible and is not rewritten by
+        # the later method revision.
+        if int(core.get("regression_count", -1)) != 0 or core.get("passed") is not True:
+            raise ValueError("historical strict selection regresses a baseline-success core state")
+        selection_semantics = "historical_strict_zero_regression"
+        formal_acceptance = bool(gate.get("iteration_accepted")) and reproduction_failures == 0
+
+    policy_realization = decision.get("policy_realization") if decision is not None else None
+    frontier_progression = decision.get("frontier_progression") if decision is not None else None
+    core_regressions = int(core.get("regression_count", 0))
     artifact = {
         "schema": SCHEMA,
         "status": "selected",
@@ -122,14 +178,27 @@ def select(
         "source_training_transitions": int(record["source_training_transitions"]),
         "selection_gate": str(gate_summary),
         "selection_gate_file_sha256": file_sha256(gate_summary),
+        "selection_semantics": selection_semantics,
+        "capability_decision": str(capability_decision) if capability_decision is not None else None,
+        "capability_decision_file_sha256": (
+            file_sha256(capability_decision) if capability_decision is not None else None
+        ),
         "core_state_count": int(core["state_count"]),
         "core_baseline_success_count": int(core["baseline_success_count"]),
         "core_candidate_success_count": int(core["candidate_success_count"]),
-        "core_regression_count": 0,
+        "core_regression_count": core_regressions,
+        "strict_zero_regression_diagnostic_passed": core_regressions == 0,
         "boundary_state_count": int(boundary["state_count"]),
         "boundary_success_count": boundary_success,
         "boundary_success_parent_group_count": boundary_groups,
         "baseline_reproduction_failure_count": reproduction_failures,
+        "empirical_envelope_expansion_observed": (
+            bool(decision["empirical_envelope_expansion_observed"])
+            if decision is not None
+            else boundary_success > 0 and boundary_groups >= minimum_groups
+        ),
+        "policy_realization": policy_realization,
+        "frontier_progression": frontier_progression,
         "engineering_selection": True,
         "formal_acceptance_claim": formal_acceptance,
         "baseline_reproduction_mismatch_quarantined": bool(reproduction_failures),
@@ -141,7 +210,9 @@ def select(
         "claim_boundary": {
             "selected_for_next_engineering_envelope_iteration": True,
             "historical_formal_gate_pass_claim": formal_acceptance,
-            "core_preservation_semantics": "zero_pi_k_success_to_pi_kplus1_failure_on_declared_source_core",
+            "selection_semantics": selection_semantics,
+            "cumulative_envelope_not_defined_by_latest_policy_only": decision is not None,
+            "zero_single_state_regression_required": decision is None,
             "certified_safe_set_claim": False,
             "jce_jel_claim": False,
         },
@@ -158,9 +229,14 @@ def main() -> int:
     parser.add_argument("--gate-summary", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument(
+        "--capability-decision",
+        type=Path,
+        help="prospective jit_capability_progression_decision_v1 artifact for future iterations",
+    )
+    parser.add_argument(
         "--allow-baseline-reproduction-mismatch",
         action="store_true",
-        help="engineering quarantine only; never converts the historical formal gate to PASS",
+        help="historical engineering quarantine only; never converts an old formal gate to PASS",
     )
     args = parser.parse_args()
     result = select(
@@ -168,6 +244,7 @@ def main() -> int:
         gate_summary=args.gate_summary,
         output_dir=args.output_dir,
         allow_baseline_reproduction_mismatch=args.allow_baseline_reproduction_mismatch,
+        capability_decision=args.capability_decision,
     )
     print(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))
     return 0
