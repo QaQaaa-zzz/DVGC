@@ -2,13 +2,13 @@
 """Register one already-frozen unified policy as the selected pi_k handoff.
 
 Historical selections may still use the original strict paired-gate semantics.
-Future automatic iterations should additionally provide a prospective
-``jit_capability_progression_decision_v1`` artifact.  That decision separates
+Future automatic iterations additionally provide a prospective
+``jit_capability_progression_decision_v1`` artifact. That decision separates
 cumulative envelope progression from single-policy realization coverage.
 
 A retrospective capability reinterpretation may describe an already-observed
-candidate, but it is intentionally forbidden from retroactively selecting that
-candidate as a formal next-iteration authority.
+candidate, but it is forbidden from retroactively selecting that candidate as a
+formal next-iteration authority.
 """
 from __future__ import annotations
 
@@ -139,6 +139,7 @@ def select(
             "engineering quarantine flag or repair the gate protocol"
         )
 
+    strict_gate_accepted = bool(gate.get("iteration_accepted")) and reproduction_failures == 0
     decision: dict[str, Any] | None = None
     if capability_decision is not None:
         decision = _verify_capability_decision(
@@ -148,15 +149,17 @@ def select(
             record=record,
         )
         selection_semantics = "prospective_capability_progression_v1"
-        formal_acceptance = reproduction_failures == 0
+        prospective_capability_selection = True
+        formal_acceptance = True
     else:
-        # Backward-compatible historical selection path.  This is retained so
+        # Backward-compatible historical selection path. This is retained so
         # repair02/pi_1 provenance remains reproducible and is not rewritten by
         # the later method revision.
         if int(core.get("regression_count", -1)) != 0 or core.get("passed") is not True:
             raise ValueError("historical strict selection regresses a baseline-success core state")
         selection_semantics = "historical_strict_zero_regression"
-        formal_acceptance = bool(gate.get("iteration_accepted")) and reproduction_failures == 0
+        prospective_capability_selection = False
+        formal_acceptance = strict_gate_accepted
 
     policy_realization = decision.get("policy_realization") if decision is not None else None
     frontier_progression = decision.get("frontier_progression") if decision is not None else None
@@ -188,6 +191,7 @@ def select(
         "core_candidate_success_count": int(core["candidate_success_count"]),
         "core_regression_count": core_regressions,
         "strict_zero_regression_diagnostic_passed": core_regressions == 0,
+        "strict_historical_gate_accepted": strict_gate_accepted,
         "boundary_state_count": int(boundary["state_count"]),
         "boundary_success_count": boundary_success,
         "boundary_success_parent_group_count": boundary_groups,
@@ -201,6 +205,7 @@ def select(
         "frontier_progression": frontier_progression,
         "engineering_selection": True,
         "formal_acceptance_claim": formal_acceptance,
+        "prospective_capability_selection_claim": prospective_capability_selection,
         "baseline_reproduction_mismatch_quarantined": bool(reproduction_failures),
         "training_transitions": 0,
         "environment_interactions": 0,
@@ -209,7 +214,8 @@ def select(
         "final_evaluation_data_used": False,
         "claim_boundary": {
             "selected_for_next_engineering_envelope_iteration": True,
-            "historical_formal_gate_pass_claim": formal_acceptance,
+            "historical_strict_gate_pass_claim": strict_gate_accepted,
+            "prospective_capability_progression_selection_claim": prospective_capability_selection,
             "selection_semantics": selection_semantics,
             "cumulative_envelope_not_defined_by_latest_policy_only": decision is not None,
             "zero_single_state_regression_required": decision is None,
