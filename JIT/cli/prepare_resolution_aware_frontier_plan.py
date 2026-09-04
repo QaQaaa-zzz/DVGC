@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
-"""Revise one still-outcome-blind frontier plan using physical capability cells."""
+"""Revise an outcome-blind frontier plan around one nominal jump centerline."""
 from __future__ import annotations
 
 import argparse
 import json
 from pathlib import Path
 
-from jit_dvgc.acquisition.resolution_frontier import (
-    revise_frontier_plan_for_resolution_cells,
-)
+from jit_dvgc.acquisition.resolution_frontier import revise_frontier_plan_for_resolution_cells
 
 
 def main() -> int:
@@ -16,6 +14,7 @@ def main() -> int:
     parser.add_argument("--source-plan", type=Path, required=True)
     parser.add_argument("--source-tube", type=Path, required=True)
     parser.add_argument("--capability-geometry-summary", type=Path, required=True)
+    parser.add_argument("--nominal-centerline", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--max-parent-cells-per-phase", type=int, default=25)
     args = parser.parse_args()
@@ -23,6 +22,7 @@ def main() -> int:
         source_plan=args.source_plan,
         source_tube=args.source_tube,
         capability_geometry_summary=args.capability_geometry_summary,
+        nominal_centerline=args.nominal_centerline,
         output=args.output,
         max_parent_cells_per_phase=args.max_parent_cells_per_phase,
     )
