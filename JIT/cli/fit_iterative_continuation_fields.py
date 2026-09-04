@@ -21,8 +21,10 @@ def main() -> int:
         choices=tuple(sorted(MODEL_PROFILES)),
         default="legacy_tiny_tanh",
         help=(
-            "Network profile. legacy_tiny_tanh reproduces the historical 76->8->1 model; "
-            "standard_mlp_64x64_tanh uses 76->64->64->1 with all other fit/calibration settings unchanged."
+            "Network profile. legacy_tiny_tanh reproduces 76->8->1; "
+            "standard_mlp_64x64_tanh uses 76->64->64->1; "
+            "standard_mlp_128x128_tanh is the final same-data capacity escalation "
+            "using 76->128->128->1. All other fit/calibration settings are unchanged."
         ),
     )
     args = parser.parse_args()
