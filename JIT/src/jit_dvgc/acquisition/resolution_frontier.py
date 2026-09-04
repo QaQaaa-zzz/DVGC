@@ -1,18 +1,24 @@
-"""Trajectory-centered, resolution-aware JIT frontier parent selection.
+"""Trajectory-centered frontier-plan revision for causal JIT.
 
-Prospective Jump-Tube expansion is no longer defined by a global low-score shell.
-Parents must lie on the longitudinal support of one successful nominal jump and
-must represent distinct physical root-geometry cells. Selection is balanced over
-0.1 m x slices. Downstream support must be post-apex/descending and late recovery
-is excluded by the centerline terminal at first valid landing (never beyond 4.2 m).
+The historical frontier used low-score states from the newest Soft-Tube shell as
+physical RSI reset anchors. That is no longer the prospective Jump-Capability
+method. A continuation-successful RSI state does not prove that the robot can
+reach that state from the ground.
 
-The source Soft Tube remains immutable replay/provenance. This module only
-revises still-outcome-blind frontier plans and never changes reward, physics,
-policy, probe outcomes, or TEST.
+The active revision uses the locked successful nominal centerline as a complete
+0.1 m longitudinal scaffold. Every centerline slice is predeclared before
+outcomes. Five deterministic proposal families are created per slice following
+TRAIN/TRAIN/TRAIN/CALIBRATION/ACCEPTANCE. These proposal anchors are geometric
+identities only; they are never used as physical reset states. The causal role
+runner starts every acquisition attempt at the authoritative natural ground
+reset and reaches the target slice only through env.step.
+
+The source Soft Tube and its resolution-aware geometry remain useful as replay
+support and occupancy context, but they do not establish forward reachability.
 """
 from __future__ import annotations
 
-from collections import Counter, defaultdict
+from collections import Counter
 import hashlib
 import json
 from pathlib import Path
@@ -27,13 +33,13 @@ from ..config import file_sha256
 from ..soft_tube import load_soft_tube
 
 
-SCHEMA = "jit_trajectory_centered_frontier_plan_revision_v1"
+SCHEMA = "jit_causal_trajectory_frontier_plan_revision_v2"
 ROLE_PATTERN = ("train", "train", "train", "calibration", "acceptance")
 ROLES = ("train", "calibration", "acceptance")
-DEFAULT_MAX_PARENT_CELLS_PER_PHASE = 25
-JUMP_X_MIN_M = 2.5
-JUMP_X_HARD_MAX_M = 4.2
 JUMP_X_STEP_M = 0.1
+CAUSAL_LOOKBACKS_M = (0.1, 0.2, 0.3)
+CAUSAL_FORWARD_MAX_TICKS = 400
+VARIANT_PARTITION_MODULUS = len(ROLE_PATTERN)
 
 
 def _canonical_sha256(value: Any) -> str:
@@ -48,39 +54,125 @@ def _verify_hash(payload: Mapping[str, Any], field: str) -> None:
         raise ValueError(f"{field} self-hash drift")
 
 
-def _centerline_bins(centerline: Mapping[str, Any] | None) -> dict[str, set[int]]:
-    if centerline is None:
-        lo = int(round(JUMP_X_MIN_M / JUMP_X_STEP_M))
-        hi = int(round(JUMP_X_HARD_MAX_M / JUMP_X_STEP_M))
-        all_bins = set(range(lo, hi + 1))
-        return {"upstream": set(all_bins), "downstream": set(all_bins)}
-    result = {"upstream": set(), "downstream": set()}
-    for point in centerline["points"]:
-        x_bin = int(round(float(point["x_target_m"]) / JUMP_X_STEP_M))
-        semantics = str(point["phase_semantics"])
-        if semantics in {"upstream", "apex"}:
-            result["upstream"].add(x_bin)
-        if semantics in {"downstream", "apex"}:
-            result["downstream"].add(x_bin)
+def _x_bin(value: float) -> int:
+    return int(round(float(value) / JUMP_X_STEP_M))
+
+
+def _phase_for_centerline_point(point: Mapping[str, Any]) -> str | None:
+    semantics = str(point["phase_semantics"])
+    if semantics == "upstream":
+        return "upstream"
+    if semantics == "downstream":
+        return "downstream"
+    if semantics == "apex":
+        # The exact Apex scaffold point is treated as the terminal upstream
+        # slice. The first strictly post-Apex descending slice begins downstream.
+        return "upstream"
+    return None
+
+
+def _source_slice_context(
+    projected: Sequence[Mapping[str, Any]],
+) -> dict[tuple[str, int], dict[str, int]]:
+    raw = Counter((str(row["phase"]), int(row["x_bin"])) for row in projected)
+    cells: dict[tuple[str, int], set[str]] = {}
+    for row in projected:
+        key = (str(row["phase"]), int(row["x_bin"]))
+        cells.setdefault(key, set()).add(str(row["root_geometry_cell_id"]))
+    result: dict[tuple[str, int], dict[str, int]] = {}
+    for key, count in raw.items():
+        result[key] = {
+            "source_raw_snapshot_count": int(count),
+            "source_unique_root_geometry_cell_count": len(cells.get(key, set())),
+        }
     return result
 
 
-def _semantic_eligible(
-    phase: str,
-    projection: Mapping[str, Any],
+def build_centerline_slice_anchors(
     *,
-    allowed_bins: Mapping[str, set[int]],
-    x_max_m: float,
-) -> bool:
-    coords = projection["coordinates"]
-    x = float(coords["root_x_m"])
-    if x < JUMP_X_MIN_M - 1.0e-9 or x > float(x_max_m) + 0.05 + 1.0e-9:
-        return False
-    if int(projection["x_bin"]) not in allowed_bins[phase]:
-        return False
-    if phase == "downstream" and not float(coords["root_vz_mps"]) < 0.0:
-        return False
-    return True
+    centerline: Mapping[str, Any],
+    projected_entries: Sequence[Mapping[str, Any]],
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Create five pre-outcome proposal families for every usable centerline slice."""
+    context = _source_slice_context(projected_entries)
+    anchors: list[dict[str, Any]] = []
+    by_phase = {
+        "upstream": Counter(),
+        "downstream": Counter(),
+    }
+    slice_counts = Counter()
+
+    for point in centerline["points"]:
+        phase = _phase_for_centerline_point(point)
+        if phase is None:
+            continue
+        if phase == "downstream" and float(point["root_vz_mps"]) >= 0.0:
+            raise ValueError("locked downstream centerline contains a non-descending point")
+        phase_index = 0 if phase == "upstream" else 1
+        x_target = float(point["x_target_m"])
+        x_bin = _x_bin(x_target)
+        slice_counts[phase] += 1
+        source_context = context.get(
+            (phase, x_bin),
+            {
+                "source_raw_snapshot_count": 0,
+                "source_unique_root_geometry_cell_count": 0,
+            },
+        )
+        for family, role in enumerate(ROLE_PATTERN):
+            group = (
+                f"causal_centerline_{phase}_x{x_bin:04d}_family{family}_{role}"
+            )
+            anchors.append(
+                {
+                    "role": role,
+                    "phase": phase,
+                    "phase_index": phase_index,
+                    # These indices are deliberately sentinel values: causal
+                    # acquisition MUST NOT reset a Soft-Tube entry.
+                    "entry_index": -1,
+                    "global_index": -1,
+                    "state_sha256": str(point["physical_state_sha256"]),
+                    "parent_group_id": group,
+                    "value_score": 0.0,
+                    "sampling_weight": 1.0,
+                    "proposal_family_index": int(family),
+                    "x_target_m": x_target,
+                    "x_bin": int(x_bin),
+                    "x_center_m": x_target,
+                    "centerline_frame_index": int(point["frame_index"]),
+                    "centerline_phase_semantics": str(point["phase_semantics"]),
+                    "centerline_state_sha256": str(point["physical_state_sha256"]),
+                    "proposal_anchor_is_physical_reset": False,
+                    **source_context,
+                }
+            )
+            by_phase[phase][role] += 1
+
+    for phase in ("upstream", "downstream"):
+        if int(slice_counts[phase]) <= 0:
+            raise ValueError(f"locked centerline has no {phase} slices")
+        if by_phase[phase]["train"] < 3:
+            raise ValueError(f"causal centerline role split has insufficient TRAIN support in {phase}")
+        if by_phase[phase]["calibration"] < 1 or by_phase[phase]["acceptance"] < 1:
+            raise ValueError(f"causal centerline role split missing holdout roles in {phase}")
+
+    audit = {
+        "selection": "every_locked_centerline_x_slice_times_five_disjoint_proposal_families",
+        "all_centerline_slices_probed": True,
+        "proposal_families_per_slice": len(ROLE_PATTERN),
+        "role_pattern": list(ROLE_PATTERN),
+        "source_tube_states_used_as_physical_resets": False,
+        "centerline_slice_counts": {
+            phase: int(slice_counts[phase]) for phase in ("upstream", "downstream")
+        },
+        "role_counts": {
+            phase: {role: int(by_phase[phase][role]) for role in ROLES}
+            for phase in ("upstream", "downstream")
+        },
+        "anchor_count": len(anchors),
+    }
+    return anchors, audit
 
 
 def select_resolution_distinct_anchors(
@@ -88,170 +180,28 @@ def select_resolution_distinct_anchors(
     tube_entries: Sequence[Mapping[str, Any]],
     projected_entries: Sequence[Mapping[str, Any]],
     core_retained_count: int,
-    max_parent_cells_per_phase: int = DEFAULT_MAX_PARENT_CELLS_PER_PHASE,
+    max_parent_cells_per_phase: int = 25,
     nominal_centerline: Mapping[str, Any] | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    """Select x-balanced physically distinct newest-shell Jump-Tube parents."""
+    """Compatibility wrapper retained for tests and old callers.
+
+    Under the active method a locked centerline is mandatory and source-Tube
+    entries are not physical acquisition anchors. The legacy arguments are
+    validated only for identity/shape compatibility, then ignored as reset
+    sources.
+    """
+    if nominal_centerline is None:
+        raise ValueError("causal trajectory-centered frontier requires a locked centerline")
     if len(tube_entries) != len(projected_entries):
         raise ValueError("Tube and capability projection entry counts differ")
-    if int(core_retained_count) <= 0 or int(core_retained_count) >= len(tube_entries):
-        raise ValueError("trajectory-centered frontier requires a nonempty newest Tube shell")
-    projected_by_index = {int(row["global_index"]): row for row in projected_entries}
-    if set(projected_by_index) != set(range(len(tube_entries))):
-        raise ValueError("capability projection global-index coverage drift")
-
-    allowed_bins = _centerline_bins(nominal_centerline)
-    x_max_m = (
-        float(nominal_centerline["effective_centerline_max_x_m"])
-        if nominal_centerline is not None
-        else JUMP_X_HARD_MAX_M
+    if int(core_retained_count) <= 0 or int(core_retained_count) > len(tube_entries):
+        raise ValueError("invalid source Tube core-retained count")
+    if int(max_parent_cells_per_phase) <= 0:
+        raise ValueError("max_parent_cells_per_phase must be positive")
+    return build_centerline_slice_anchors(
+        centerline=nominal_centerline,
+        projected_entries=projected_entries,
     )
-    selected: list[dict[str, Any]] = []
-    audit: dict[str, Any] = {}
-
-    for phase, phase_index in (("upstream", 0), ("downstream", 1)):
-        candidates = []
-        local_index = 0
-        newest_shell_count = 0
-        semantic_rejected = 0
-        for global_index, row in enumerate(tube_entries):
-            row_phase = str(row["phase"])
-            current_local = local_index if row_phase == phase else None
-            if row_phase == phase:
-                local_index += 1
-            if row_phase != phase or global_index < int(core_retained_count):
-                continue
-            newest_shell_count += 1
-            projection = projected_by_index[global_index]
-            if projection["phase"] != phase or projection["state_sha256"] != row["state_sha256"]:
-                raise ValueError("capability projection identity drift during parent selection")
-            if not _semantic_eligible(
-                phase,
-                projection,
-                allowed_bins=allowed_bins,
-                x_max_m=x_max_m,
-            ):
-                semantic_rejected += 1
-                continue
-            candidates.append((global_index, int(current_local), row, projection))
-
-        # One weakest-score representative per resolved root cell.
-        best_by_cell: dict[str, tuple[int, int, Mapping[str, Any], Mapping[str, Any]]] = {}
-        duplicate_cell_count = 0
-        for item in candidates:
-            cell = str(item[3]["root_geometry_cell_id"])
-            current = best_by_cell.get(cell)
-            if current is None:
-                best_by_cell[cell] = item
-                continue
-            duplicate_cell_count += 1
-            row, crow = item[2], current[2]
-            key = (float(row["value_score"]), str(row["parent_group_id"]), str(row["state_sha256"]))
-            ckey = (float(crow["value_score"]), str(crow["parent_group_id"]), str(crow["state_sha256"]))
-            if key < ckey:
-                best_by_cell[cell] = item
-
-        # Rank locally, then round-robin x slices so dense regions cannot monopolize budget.
-        by_x: dict[int, list[tuple[int, int, Mapping[str, Any], Mapping[str, Any]]]] = defaultdict(list)
-        for item in best_by_cell.values():
-            by_x[int(item[3]["x_bin"])].append(item)
-        for x_bin in by_x:
-            by_x[x_bin].sort(
-                key=lambda item: (
-                    float(item[2]["value_score"]),
-                    str(item[2]["parent_group_id"]),
-                    str(item[3]["root_geometry_cell_id"]),
-                    str(item[2]["state_sha256"]),
-                )
-            )
-
-        chosen = []
-        seen_groups: set[str] = set()
-        seen_states: set[str] = set()
-        seen_cells: set[str] = set()
-        excluded_same_group = 0
-        cursors = {x_bin: 0 for x_bin in by_x}
-        active_bins = sorted(by_x)
-        while active_bins and len(chosen) < int(max_parent_cells_per_phase):
-            next_active = []
-            added = False
-            for x_bin in active_bins:
-                rows = by_x[x_bin]
-                while cursors[x_bin] < len(rows):
-                    item = rows[cursors[x_bin]]
-                    cursors[x_bin] += 1
-                    _global, _local, row, projection = item
-                    group = str(row["parent_group_id"])
-                    state = str(row["state_sha256"])
-                    cell = str(projection["root_geometry_cell_id"])
-                    if group in seen_groups:
-                        excluded_same_group += 1
-                        continue
-                    if state in seen_states or cell in seen_cells:
-                        continue
-                    seen_groups.add(group)
-                    seen_states.add(state)
-                    seen_cells.add(cell)
-                    chosen.append(item)
-                    added = True
-                    break
-                if cursors[x_bin] < len(rows):
-                    next_active.append(x_bin)
-                if len(chosen) >= int(max_parent_cells_per_phase):
-                    break
-            if not added:
-                break
-            active_bins = next_active
-
-        if len(chosen) < 5:
-            raise ValueError(
-                f"trajectory-centered frontier needs >=5 distinct newest-shell root geometry cells "
-                f"in {phase}; found {len(chosen)} after centerline/corridor filtering"
-            )
-
-        counts = Counter()
-        selected_x_bins = Counter()
-        for index, (global_index, local, row, projection) in enumerate(chosen):
-            role = ROLE_PATTERN[index % len(ROLE_PATTERN)]
-            counts[role] += 1
-            selected_x_bins[int(projection["x_bin"])] += 1
-            selected.append(
-                {
-                    "role": role,
-                    "phase": phase,
-                    "phase_index": phase_index,
-                    "entry_index": int(local),
-                    "global_index": int(global_index),
-                    "state_sha256": str(row["state_sha256"]),
-                    "parent_group_id": str(row["parent_group_id"]),
-                    "value_score": float(row["value_score"]),
-                    "sampling_weight": float(row["sampling_weight"]),
-                    "root_geometry_cell_id": str(projection["root_geometry_cell_id"]),
-                    "root_geometry_bins": dict(projection["root_geometry_bins"]),
-                    "x_bin": int(projection["x_bin"]),
-                    "x_center_m": float(projection["x_center_m"]),
-                    "root_vz_mps": float(projection["coordinates"]["root_vz_mps"]),
-                    "jump_frontier_semantics": (
-                        "pre_apex_centerline_slice" if phase == "upstream"
-                        else "post_apex_descending_centerline_slice"
-                    ),
-                }
-            )
-        if counts["train"] < 3 or counts["calibration"] < 1 or counts["acceptance"] < 1:
-            raise ValueError(f"trajectory-centered role split insufficient in {phase}")
-        audit[phase] = {
-            "newest_shell_raw_candidate_count": int(newest_shell_count),
-            "semantic_rejected_count": int(semantic_rejected),
-            "eligible_jump_corridor_candidate_count": len(candidates),
-            "eligible_distinct_root_geometry_cell_count": len(best_by_cell),
-            "distinct_selected_root_geometry_cell_count": len(chosen),
-            "selected_x_bin_count": len(selected_x_bins),
-            "selected_x_bins": {str(k): int(v) for k, v in sorted(selected_x_bins.items())},
-            "excluded_same_root_geometry_cell_count": int(duplicate_cell_count),
-            "excluded_same_parent_group_count": int(excluded_same_group),
-            "role_counts": {role: int(counts[role]) for role in ROLES},
-        }
-    return selected, audit
 
 
 def revise_frontier_plan_for_resolution_cells(
@@ -261,81 +211,103 @@ def revise_frontier_plan_for_resolution_cells(
     capability_geometry_summary: Path,
     nominal_centerline: Path,
     output: Path,
-    max_parent_cells_per_phase: int = DEFAULT_MAX_PARENT_CELLS_PER_PHASE,
+    max_parent_cells_per_phase: int = 25,
 ) -> dict[str, Any]:
+    """Replace an unrevised iterative plan with the causal centerline plan."""
     output = Path(output)
     if output.exists():
-        raise FileExistsError(f"trajectory-centered frontier plan already exists: {output}")
+        raise FileExistsError(f"causal trajectory frontier plan already exists: {output}")
+
     plan = json.loads(Path(source_plan).read_text(encoding="utf-8"))
     if not isinstance(plan, dict) or plan.get("schema") != "jit_iterative_frontier_plan_v1":
-        raise ValueError("trajectory-centered revision requires an iterative frontier plan")
+        raise ValueError("causal revision requires an iterative frontier plan")
     if plan.get("status") != "predeclared_before_frontier_outcomes":
         raise ValueError("frontier plan is no longer outcome-blind/predeclared")
     _verify_hash(plan, "plan_sha256")
     if tuple(plan.get("role_pattern", ())) != ROLE_PATTERN:
-        raise ValueError("frontier role pattern drift before trajectory-centered revision")
+        raise ValueError("frontier role pattern drift before causal revision")
 
     tube = load_soft_tube(Path(source_tube))
     if str(tube.manifest["manifest_sha256"]) != str(plan["source_tube_manifest_sha256"]):
-        raise ValueError("trajectory-centered revision source Tube identity drift")
+        raise ValueError("causal revision source Tube identity drift")
     if len(tube.entries) != int(plan["source_tube_entry_count"]):
-        raise ValueError("trajectory-centered revision source Tube entry-count drift")
+        raise ValueError("causal revision source Tube entry-count drift")
 
-    geometry_summary, projected = load_projected_capability_entries(Path(capability_geometry_summary))
+    geometry_summary, projected = load_projected_capability_entries(
+        Path(capability_geometry_summary)
+    )
     if geometry_summary.get("schema") != CAPABILITY_TUBE_SCHEMA:
         raise ValueError("capability geometry schema drift")
     if geometry_summary.get("tube_manifest_sha256") != tube.manifest["manifest_sha256"]:
         raise ValueError("capability geometry was not built from the frontier source Tube")
-    if abs(float(geometry_summary["resolution_contract"]["x_slice_width_m"]) - JUMP_X_STEP_M) > 1.0e-12:
-        raise ValueError("trajectory-centered frontier requires 0.1 m x slices")
+    if abs(
+        float(geometry_summary["resolution_contract"]["x_slice_width_m"])
+        - JUMP_X_STEP_M
+    ) > 1.0e-12:
+        raise ValueError("causal trajectory frontier requires 0.1 m x slices")
 
     centerline = load_nominal_jump_centerline(Path(nominal_centerline))
-    anchors, audit = select_resolution_distinct_anchors(
-        tube_entries=tube.entries,
+    anchors, audit = build_centerline_slice_anchors(
+        centerline=centerline,
         projected_entries=projected,
-        core_retained_count=int(plan["source_tube_core_retained_count"]),
-        max_parent_cells_per_phase=int(max_parent_cells_per_phase),
-        nominal_centerline=centerline,
     )
 
     revised = {key: value for key, value in plan.items() if key != "plan_sha256"}
     revised["anchors"] = anchors
     revised["role_parent_group_counts"] = {
-        phase: dict(audit[phase]["role_counts"])
+        phase: dict(audit["role_counts"][phase])
         for phase in ("upstream", "downstream")
     }
     revised["frontier_definition"] = (
-        "nominal_trajectory_x_slice_local_frontier_root_cell_unique_v1"
+        "locked_centerline_every_0p1m_slice_ground_connected_causal_forward_expansion_v2"
     )
+    panel = dict(revised["fixed_probe_panel"])
+    panel["acquisition_mode"] = "ground_connected_causal_rollout_v1"
+    panel["causal_lookbacks_m"] = list(CAUSAL_LOOKBACKS_M)
+    panel["causal_forward_max_ticks"] = CAUSAL_FORWARD_MAX_TICKS
+    panel["variant_partition_modulus"] = VARIANT_PARTITION_MODULUS
+    panel["legacy_duration_field_used_by_causal_acquisition"] = False
+    revised["fixed_probe_panel"] = panel
     revised["jump_tube_contract"] = {
-        "profile": "trajectory_centered_jump_tube_v1",
+        "profile": "causal_trajectory_centered_jump_tube_v2",
         "nominal_centerline": str(nominal_centerline),
         "nominal_centerline_sha256": str(centerline["centerline_sha256"]),
+        "natural_start_state_sha256": str(centerline["natural_start_state_sha256"]),
         "x_min_m": float(centerline["x_min_m"]),
         "x_hard_max_m": float(centerline["x_hard_max_m"]),
         "effective_x_max_m": float(centerline["effective_centerline_max_x_m"]),
         "x_step_m": float(centerline["x_step_m"]),
         "centerline_point_count": int(centerline["point_count"]),
-        "upstream_semantics": "pre-apex centerline-supported x slices",
-        "downstream_semantics": "post-apex centerline-supported x slices AND root_vz_mps < 0",
+        "centerline_recomputed_each_iteration": False,
+        "all_centerline_slices_probed": True,
+        "source_tube_states_used_as_physical_resets": False,
+        "acquisition_mode": "ground_connected_causal_rollout_v1",
+        "reachability_requirement": "natural_start_connected_forward_env_step_only",
+        "rsi_may_establish_forward_reachability": False,
+        "rsi_role": "continuation_evaluation_only_after_candidate_is_forward_reached",
+        "upstream_semantics": "pre-Apex target slice reached from ground",
+        "downstream_semantics": (
+            "post-Apex target slice reached from ground AND root_vz_mps < 0 AND pre-contact"
+        ),
         "post_landing_recovery_frontier_eligible": False,
-        "selection_scope": "local_cross_section_per_x_slice_not_global_lowest_score",
+        "selection_scope": "every_locked_centerline_slice_not_global_lowest_score",
     }
     revised["capability_geometry"] = {
         "summary": str(capability_geometry_summary),
         "summary_file_sha256": file_sha256(capability_geometry_summary),
         "summary_sha256": str(geometry_summary["summary_sha256"]),
-        "resolution_sha256": str(geometry_summary["resolution_contract"]["resolution_sha256"]),
-        "parent_diversity_profile": "root_geometry_v1",
-        "max_parent_cells_per_phase": int(max_parent_cells_per_phase),
+        "resolution_sha256": str(
+            geometry_summary["resolution_contract"]["resolution_sha256"]
+        ),
+        "source_control_tube_is_reachability_proof": False,
         "selection_audit": audit,
     }
     revised["protocol_revision"] = {
-        "name": "trajectory_centered_x_balanced_frontier_v1",
+        "name": "causal_trajectory_centered_frontier_v2",
         "purpose": (
-            "widen one successful real jump trajectory slice-by-slice; replace global low-score "
-            "newest-shell expansion and exclude post-landing/late downstream states before any "
-            "new frontier outcomes are observed"
+            "identify Jump capability as ground-forward-reachable AND continuation-viable; "
+            "probe every locked 0.1 m centerline slice with disjoint pre-outcome proposal "
+            "families; never use RSI to manufacture reachability"
         ),
         "supersedes_plan": str(source_plan),
         "supersedes_plan_sha256": str(plan["plan_sha256"]),
@@ -343,16 +315,14 @@ def revise_frontier_plan_for_resolution_cells(
             "anchors",
             "role_parent_group_counts",
             "frontier_definition",
+            "fixed_probe_panel",
             "jump_tube_contract",
             "capability_geometry",
         ],
         "unchanged_contracts": [
             "selected_policy_identity",
             "source_tube_identity",
-            "newest_shell_only_parent_pool",
             "outcome_blind_role_assignment",
-            "real_dynamics_only",
-            "probe_panel",
             "role_seeds",
             "reward_physics_action_semantics",
             "test_isolation",
@@ -361,7 +331,10 @@ def revise_frontier_plan_for_resolution_cells(
     }
     revised["plan_sha256"] = _canonical_sha256(revised)
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(revised, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
+    output.write_text(
+        json.dumps(revised, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
 
     report = {
         "schema": SCHEMA,
@@ -372,15 +345,22 @@ def revise_frontier_plan_for_resolution_cells(
         "revised_plan_sha256": str(revised["plan_sha256"]),
         "source_tube_manifest_sha256": str(tube.manifest["manifest_sha256"]),
         "capability_geometry_summary": str(capability_geometry_summary),
-        "capability_resolution_sha256": str(geometry_summary["resolution_contract"]["resolution_sha256"]),
+        "capability_resolution_sha256": str(
+            geometry_summary["resolution_contract"]["resolution_sha256"]
+        ),
         "nominal_centerline": str(nominal_centerline),
         "nominal_centerline_sha256": str(centerline["centerline_sha256"]),
         "jump_tube_contract": dict(revised["jump_tube_contract"]),
         "selection_audit": audit,
+        "legacy_max_parent_cells_per_phase_argument": int(max_parent_cells_per_phase),
+        "legacy_max_parent_cells_per_phase_controls_causal_slice_count": False,
         "test_data_used": False,
         "final_evaluation_data_used": False,
     }
     report["report_sha256"] = _canonical_sha256(report)
     sidecar = output.with_suffix(output.suffix + ".resolution.json")
-    sidecar.write_text(json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
+    sidecar.write_text(
+        json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
     return report
