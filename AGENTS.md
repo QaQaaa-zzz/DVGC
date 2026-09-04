@@ -1,234 +1,393 @@
 # DVGC Repository Instructions
 
-## Current research truth — 2026-09-03
+## Current research truth — 2026-09-04
 
-DVGC/JIT is an iterative **single-policy empirical jumping-capability-envelope** project. The active method is:
+DVGC/JIT is an iterative **real-dynamics capability-discovery and just-in-time
+curriculum** project for a fixed single-track two-wheeled robot task.
 
-```text
-experts
-  -> Tube_0
-  -> pi_0
-  -> C^0
-  -> Tube_1
-  -> selected pi_1
-  -> C^1
-  -> Tube_2
-  -> pi_2
-  -> strict gate
-  -> repeat
-```
+The project no longer defines the empirical jumping envelope as “the set that the
+latest policy reproduces perfectly.”  Keep three layers separate:
 
-The phase experts are bootstrap/data-generation tools. The deployable controller is always one unified Actor. A learned Soft Tube is empirical training/curriculum guidance only; it is not a certified safe set, viability kernel, reachability proof, or invariant set.
+1. **physical/task feasibility `F*`** — states from which some admissible control
+   behavior could complete the fixed task; JIT does not prove this set;
+2. **cumulative empirical capability evidence `E_k`** — successful real-dynamics
+   evidence accumulated across frozen experts/policies and represented by
+   provenance-bound Tube/frontier artifacts;
+3. **single-policy realization coverage** — how much of that cumulative support a
+   particular unified policy realizes on a locked evaluation panel.
 
-### Current authority
+The phase experts and later frozen unified policies are capability probes.  The
+runtime/deployment target remains **one unified Actor** with no expert switching.
+A learned Soft Tube is empirical TRAIN support/curriculum guidance, not a
+certified safe set, viability kernel, reachability proof, invariant set, or
+physical limit certificate.
 
-The Iteration-1 initialization/replay study is closed.
+Read the full scientific report first when taking over current work:
 
-- frozen `pi_up_star` and `pi_down_star` exist;
-- bootstrap `V_up/V_down` and 222-entry Tube_0 exist;
-- frozen `pi_0` exists;
-- `C_up^0/C_down^0` passed fresh independent validation/calibration;
-- core-retaining Tube_1 is complete with 3,119 TRAIN entries = 222 retained Tube_0 + 2,897 expansion;
-- the first Tube_1 policy failed core preservation and was scientifically rejected;
-- retained-core replay repair was investigated;
-- warm-start A is discarded;
-- warm-start B checkpoint sweep is complete and must not be continued;
-- **repair02 is selected as the engineering `pi_1` authority**;
-- repair02 preserves Tube_0 at `222/222`, upstream `117/117`, downstream `105/105`, with historical boundary quickcheck `26/260` across 4 parent groups;
-- no B checkpoint achieved both `Tube_0 = 222/222` and boundary success `> 26/260`;
-- best B tradeoff was 7.5008M at `217/222 + 42/260`; B final was `212/222 + 46/260`;
-- all B core regressions were upstream while downstream remained `105/105`, supporting upstream expansion/retention interference rather than simple monotonic overtraining;
-- final TEST/JCE/JEL remains untouched.
+`JIT/docs/JIT_CAPABILITY_PROGRESS_REPORT_20260904.md`
 
-Selected repair02 frozen policy:
+## Current completed chain
 
 ```text
-JIT/runs/frozen_unified/pi_1_core_replay75_10009600_20260903/frozen_unified_policy.json
+pi_up_star + pi_down_star
+  -> bootstrap V_up / V_down
+  -> Tube_0 = 222
+  -> unified pi_0
+  -> pi_0-conditioned C^0
+  -> Tube_1 = 3,119
+  -> pi_1 repair02 selected as engineering authority
+  -> phase-specific frontier v3 / calibration v3b / acceptance v3c
+  -> C^1 64x64 engineering selection
+  -> Tube_2 = 3,776
+  -> Tube_2 RSI smoke GO
+  -> engineering role-isolation record
+  -> pi_1 baseline locked before candidate training
+  -> pi_2 trained/frozen at 10,009,600 transitions
+  -> locked pi_1 vs pi_2 comparison complete
+  -> capability-progression semantics revised in code
+  -> CURRENT: pi_2 is frontier-progress evidence but not retrospectively selected
+              as the next formal policy authority
 ```
 
-Actor SHA-256:
+Final TEST/JCE/JEL remains untouched.
+
+## Key current evidence
+
+### Experts
+
+- `pi_up_star`: 9,977,856 transitions, actor
+  `f218775e3cf99555ce524f1357a800172904bc815b06c54a53db8965204d9081`.
+- `pi_down_star`: 25,600 transitions, actor
+  `7b25f54bb1df3b97f63a15d011d66c2440682efb10b0510a266a9066725dd8be`.
+
+### Tube_0
+
+`JIT/runs/soft_tube/soft_tube_train_v1_20260828`
+
+- 222 TRAIN states = 117 upstream + 105 downstream.
+
+### pi_0
+
+`JIT/runs/frozen_unified/pi_0_round1_10009600_20260831/frozen_unified_policy.json`
+
+- 10,009,600 transitions;
+- actor `43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029`;
+- payload `fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719`.
+
+### Tube_1
+
+`JIT/runs/soft_tube/soft_tube_iter1_pi0_conditioned_20260901`
+
+- retained Tube_0: 222;
+- expansion: 2,897;
+- total: 3,119;
+- upstream: 427 = 117 + 310;
+- downstream: 2,692 = 105 + 2,587;
+- manifest
+  `817a980a5dd84f36507f762a913c21c1fc0913580d925ff9c68e982edfd82a80`.
+
+### pi_1
+
+Engineering-selected repair02:
+
+`JIT/runs/frozen_unified/pi_1_core_replay75_10009600_20260903/frozen_unified_policy.json`
+
+- actor `85d6b4667364daf8e054158?` — do not use a partial value; authoritative actor:
+  `85d6b4667364daf8e054af9bccbf155dda16a62518df19883057fcfcbbd6f86a`;
+- payload
+  `3b9af512c7e389aade1c86ca76e9420a0bc687c499f2ff9cf7637701dd5d0cbc`;
+- historical quickcheck Tube_0 222/222 and boundary 26/260 across 4 groups;
+- historical formal PASS is not claimed because the old quickcheck retained 3
+  baseline-reproduction mismatches from the old PRNG protocol.
+
+### C^1
+
+The Iteration-1 continuation stage is engineering-qualified, not a clean
+all-phase formal pass.
+
+`C_up^1` selected profile:
+
+- `76 -> 64 tanh -> 64 tanh -> 1`;
+- AUC `0.6903137789904502`;
+- recall `0.5934515688949522`;
+- original AUC >= 0.70 rule remains false;
+- explicit engineering selection/override only.
+
+`C_down^1`:
+
+- same 64x64 profile;
+- AUC 1.0;
+- recall 1.0;
+- formal calibration PASS.
+
+Do not rewrite `C_up^1` as a formal AUC pass.
+
+### Tube_2
+
+`JIT/runs/soft_tube/soft_tube_iter2_pi1_c1_64x64_engineering_20260904`
+
+- source Tube_1 retained exactly: 3,119;
+- new expansion: 657;
+- total: 3,776;
+- upstream: 902 = 427 + 475;
+- downstream: 2,874 = 2,692 + 182;
+- manifest
+  `135798c843a7acd9eb18cb44f9fd7a92ab39bf3df2d887b6c1fb8c629d480cff`;
+- no CALIBRATION, ACCEPTANCE, TEST, or final rows embedded.
+
+Tube_2 RSI smoke is GO.
+
+### Current pi_2 result
+
+Training run id:
+
+`pi_2_tube2_c1_64x64_engineering_core75_natural10_10009600_seed821101_20260904`
+
+Training completed at 10,009,600 transitions with:
+
+- 90% Tube / 10% natural reset;
+- inside Tube, 75% retained Tube_1 / 25% Tube_2 newest expansion;
+- no expert switching;
+- no TEST/validation.
+
+Locked pi_1 -> pi_2 comparison:
 
 ```text
-85d6b4667364daf8e054af9bccbf155dda16a62518df19883057fcfcbbd6f86a
+source Tube_1 states:        3,119
+pi_1 baseline successes:     3,115
+pi_2 candidate successes:    3,002
+strict regressions:            115
+strict improvements:             2
 ```
 
-Payload SHA-256:
+Phase split:
 
 ```text
-3b9af512c7e389aade1c86ca76e9420a0bc687c499f2ff9cf7637701dd5d0cbc
+upstream:
+  pi_1 423/427 = 99.06%
+  pi_2 312/427 = 73.07%
+  strict regressions = 113
+
+downstream:
+  pi_1 2692/2692 = 100.00%
+  pi_2 2690/2692 = 99.93%
+  strict regressions = 2
 ```
 
-### Historical Iteration-1 claim boundary
-
-repair02 is selected for **engineering continuation** of the JIT loop, but do **not** claim that the historical Iteration-1 strict paired gate formally PASSed.
-
-The historical quickcheck has 3 baseline-reproduction failures caused by the old continuation-label vs paired-gate PRNG hierarchy mismatch. These are preserved as historical protocol debt.
-
-Use `JIT/cli/select_iteration_policy.py --allow-baseline-reproduction-mismatch` so the selected artifact records the distinction rather than rewriting history.
-
-Required meaning:
+Locked boundary/frontier:
 
 ```text
-engineering_selection = true
-formal_acceptance_claim = false
-baseline_reproduction_mismatch_quarantined = true
+pi_1-negative challenge states = 14
+pi_2 successes                 = 13
+successful parent groups       = 3
+upstream                       = 4/5
+downstream                     = 9/9
+baseline reproduction failures = 0
 ```
 
-### Active mainline
+Interpretation:
 
-The only active scientific path now is:
+- **empirical frontier progression is strong**;
+- **current pi_2 upstream policy realization is substantially degraded**;
+- do not describe pi_2 as “no capability improvement”;
+- do not describe pi_2 as the next formally selected authority either.
+
+## Revised iteration decision semantics
+
+The historical strict zero-regression gate remains valid as a diagnostic and as
+reproducibility evidence for old selections.  Future automatic iterations use a
+separate capability-progression decision:
+
+`JIT/src/jit_dvgc/analysis/capability_progression.py`
+
+CLI:
+
+`JIT/cli/analyze_capability_progression.py`
+
+Future prospective policy selection asks two questions.
+
+### A. Empirical frontier progression
+
+Require:
+
+- zero baseline-reproduction mismatch;
+- nonzero candidate boundary success;
+- required independent parent-group support;
+- candidate success in both phases.
+
+This is evidence that the local empirical frontier moved.  It does not require
+zero single-state core regressions.
+
+### B. Candidate policy realization
+
+The v1 engineering proxy is fixed locked-panel coverage.  Prospective automatic
+selection uses method-level non-inferiority margins:
 
 ```text
-selected repair02 pi_1
-  -> outcome-blind newest-shell TRAIN/CALIBRATION/ACCEPTANCE frontier roles
-  -> pi_1-conditioned continuation evidence
-  -> C_up^1 / C_down^1 fit + disjoint calibration
-  -> core-retaining Tube_2
-  -> Tube_2-RSI smoke + role-isolation audit
-  -> lock pi_1 acceptance baseline before candidate training
-  -> fresh pi_2 training
-  -> freeze pi_2
-  -> strict locked-baseline pi_1 -> pi_2 gate
-  -> select pi_2 only if the gate PASSes
+maximum global Tube coverage drop: 5 percentage points
+maximum per-phase Tube coverage drop: 10 percentage points
 ```
 
-Do **not** reopen A/B, continue B checkpoint sweeping, or launch new warm-start experiments before this mainline produces new evidence that requires a scientific decision.
+These margins are fixed method values, not candidate-specific tuning.
 
-Read `JIT/docs/CURRENT_STATUS.md` for exact current artifact identities and `JIT/docs/CODEX_HANDOFF_20260903.md` for the full takeover procedure.
+A candidate becomes the sole next automatic policy authority only when both A and
+B pass.
+
+This prevents a large phase collapse from being hidden by Tube cardinality
+imbalance while no longer demanding exact reproduction of every stochastic
+single rollout.
+
+### Current pi_2 under the revised semantics
+
+The current result is a **retrospective** method reinterpretation because the new
+criterion was defined after observing pi_2.
+
+Expected classification:
+
+```text
+empirical_envelope_expansion_observed = true
+global policy-realization margin      = pass
+downstream phase margin               = pass
+upstream phase margin                 = fail
+candidate_policy_authority_eligible   = false
+```
+
+A retrospective decision artifact may document this evidence but may not select
+pi_2 formally.  `select_iteration_policy.py` enforces that rule.
+
+## Automatic workflow semantics
+
+`JIT/cli/prepare_iterative_envelope_workflow.py` now generates the future generic
+DAG as:
+
+```text
+selected pi_k + Tube_k
+  -> newest-shell TRAIN/CALIBRATION/ACCEPTANCE
+  -> C^k
+  -> Tube_(k+1)
+  -> Tube-RSI smoke
+  -> strict role isolation
+  -> lock pi_k baseline before candidate training
+  -> train/freeze pi_(k+1)
+  -> locked paired panel evaluation
+  -> capability-progression analysis
+       A frontier progression
+       B phase-aware policy realization
+  -> select pi_(k+1) only if A + B pass prospectively
+```
+
+The workflow still never auto-tunes a failed candidate.  A failed policy
+realization decision stops and returns control to a scientific method decision.
+
+The current pi_1 -> pi_2 round was **not** a clean end-to-end automatic run:
+
+- frontier acquisition required v3/v3b scientific repairs;
+- C_up^1 required an explicit engineering 64x64 selection despite AUC < 0.70;
+- all-role near-observation isolation required an explicit engineering
+  continuation record after TRAIN <-> ACCEPTANCE near-overlap was confirmed zero.
+
+Do not claim full prospective automation for this completed round.
+
+## What JIT means going forward
+
+Use this one-sentence definition:
+
+> JIT is an iterative real-dynamics capability-discovery and just-in-time
+> curriculum framework that accumulates empirical jump-capability evidence under
+> fixed robot dynamics, uses the frontier to train a single unified policy, and
+> separately measures frontier progression and how much of the cumulative
+> capability that policy can realize.
+
+Important consequences:
+
+- earlier successful capability evidence is not erased because a later policy
+  fails one paired rollout;
+- the latest policy is not the definition of physical feasibility;
+- C^k remains policy-conditioned and is a proposal/filter tool, not a proof of
+  existential controllability;
+- a future policy archive may be used for **discovery only** without changing the
+  single-policy runtime requirement;
+- final physical-envelope/JCE/JEL claims still require an untouched final
+  evaluation after method and stopping decisions are frozen.
+
+## Next scientific work
+
+Do **not** automatically run a 90/10 replay repair merely because pi_2 has core
+regressions.
+
+The next method decision should address the deeper representation problem exposed
+by pi_2:
+
+1. generate the retrospective capability-progression artifact for pi_2;
+2. preserve pi_2 as frontier/capability evidence but keep pi_1 as the currently
+   selected engineering authority until a prospective next-authority decision is
+   made;
+3. evaluate a goal-/intent-conditioned unified policy so one Actor can express
+   different desired jump behaviors explicitly;
+4. upgrade future policy coverage from one rollout per state to a predeclared
+   multi-seed success-probability/confidence evaluation;
+5. consider a frozen policy archive for discovery-time frontier probing while
+   keeping deployment single-policy;
+6. only after the next method version is predeclared should another candidate or
+   pi_3 iteration begin.
 
 ## Immutable physical/task contracts
 
 - Work on `agent/two-phase-soft-tube`; do not modify `main` unless explicitly authorized.
-- Authoritative XML: `assets/orange_bike_4kg_horizontal.xml`.
+- XML: `assets/orange_bike_4kg_horizontal.xml`.
 - XML SHA-256: `0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a`.
-- Payload: 2 kg. The `4kg` token in the filename is historical only.
+- Actual payload: 2 kg.
 - Control rate: 50 Hz.
 - Hip/knee torque limits: +/-50 Nm.
 - Action order: `[steer, rear-wheel drive, hip, knee]`.
-- Unified policies never switch between the phase experts at runtime.
-- Do not change physics, reward meaning, action semantics, snapshot semantics, task geometry, collision geometry, or TEST isolation during an iteration.
-- Natural cold-start failure remains an out-of-domain diagnostic for the current declared JCE scope; do not redesign reward/reset ratio because of it without a separate method decision.
+- Unified runtime never switches experts.
+- Do not silently change physics, reward semantics, action semantics, snapshot
+  semantics, task geometry, collision geometry, or final TEST isolation.
 
 ## Data-role and claim isolation
 
-For the generic iterative regime:
+- `TRAIN`: may fit `C^k` and contribute qualifying Tube expansion.
+- `CALIBRATION`: threshold calibration only; never enters TRAIN/Tube.
+- `ACCEPTANCE`: candidate-blind development comparison only; never trains C^k or
+  enters a Tube.
+- final TEST/JCE/JEL: untouched until method, final policy, and stopping decision
+  are frozen.
 
-- `TRAIN`: may fit `C^k` and may contribute qualifying expansion to `Tube_(k+1)`;
-- `CALIBRATION`: threshold calibration only; never enters TRAIN or a Tube;
-- `ACCEPTANCE`: pre-candidate baseline/candidate gate only; never trains/calibrates C^k and never enters a Tube;
-- final TEST/JCE/JEL: untouched until the final policy and stopping decision are frozen.
-
-Parent-group disjointness is required across TRAIN/CALIBRATION/ACCEPTANCE. Seed disjointness alone is not enough.
-
-A larger Tube or higher PPO reward does not prove envelope expansion. A new policy becomes the next authority only after the declared capability gate passes.
-
-## Iteration automation and code-control logic
-
-The generic automatic `k -> k+1` path is implemented for `k >= 1`.
-
-Prepare the workflow with:
-
-```text
-JIT/cli/prepare_iterative_envelope_workflow.py
-```
-
-Run it with:
-
-```text
-JIT/cli/run_iteration_workflow.py
-```
-
-Operator form:
-
-```bash
-python JIT/cli/run_iteration_workflow.py --config <workflow.json> --execute
-```
-
-Without `--execute`, the runner must only resolve/print the plan.
-
-The generated DAG is:
-
-```text
-selected pi_k + Tube_k
-  -> prepare newest-shell frontier plan
-  -> TRAIN frontier
-  -> CALIBRATION frontier
-  -> ACCEPTANCE frontier
-  -> fit/calibrate C^k
-  -> build Tube_(k+1)
-  -> Tube-RSI smoke
-  -> role-isolation audit
-  -> lock exact pi_k acceptance baseline
-  -> prepare/train pi_(k+1)
-  -> freeze exact final checkpoint
-  -> strict locked-baseline gate
-  -> select pi_(k+1) only on PASS
-```
-
-Automation rules:
-
-- workflow config SHA is immutable after state creation;
-- every stage declares prerequisites and a machine-readable completion artifact;
-- existing completion artifacts are revalidated before reuse;
-- completed stages are not silently rerun;
-- failed scientific/engineering assertions stop the workflow;
-- automation may not change thresholds, rewards, replay ratios, PPO settings, network architecture, physics, reset semantics, or acceptance criteria to force PASS;
-- final TEST/JCE/JEL stages must never appear in the iteration workflow;
-- automatic frontier generation uses only the newest Tube_k expansion shell and must not silently fall back to the full Tube;
-- `Tube_(k+1)` retains **every Tube_k entry exactly** and may add only qualifying logical-TRAIN expansion;
-- for pi_2, retained core means all 3,119 Tube_1 states, not only the original 222 Tube_0 states;
-- the selected mainline replay contract is outer 90% Tube / 10% natural, with 75% retained source Tube_k / 25% newest expansion inside Tube sampling;
-- future acceptance uses the pre-candidate locked-baseline protocol so historical PRNG reproduction debt is not repeated.
-
-Regression coverage for these contracts is in:
-
-```text
-JIT/tests/test_iterative_envelope_automation.py
-```
+Parent-group disjointness remains the primary role-separation contract.  Current
+round engineering near-observation overlap is historical evidence, not a reason
+to silently relax future automatic isolation.
 
 ## Repository-maintenance policy
 
-The repository must become smaller and more reusable as iterations advance.
-
-1. **Modify or consolidate an existing production file first.** Do not create a new production file merely because the experiment number, retry, seed, checkpoint, `pi_k`, or `Tube_k` changed.
-2. New production Python files are allowed only for a genuinely new stable capability with a durable API.
-3. Iteration identity belongs in config/artifact/run metadata, not filenames such as `pi2_*`, `tube2_*`, `upstream_v7_*`, or `retry03_*` source modules.
-4. Keep CLI files thin: argument parsing and dispatch only. Reusable logic belongs in `JIT/src/jit_dvgc/`; tests belong in `JIT/tests/`.
-5. Prefer the stable capability packages `jit_dvgc.training`, `tube`, `snapshots`, `acquisition`, `continuation`, `analysis`, and `workflow`.
-6. Stage-specific research scaffolding that is superseded and no longer referenced should leave the active tree. Git history is the code archive; do not duplicate obsolete Python files into an archive directory.
-7. Do not move path-bound configs, frozen manifests, handoff locks, or run identities merely for aesthetics; recorded paths are reproducibility data.
-
-### Mandatory deletion gate
-
-Never delete a Python/CLI/test file because it only *looks old*.
-
-Before deletion, verify that no retained production import, package API, active CLI, current test, artifact loader, current config, or frozen reproducibility path still depends on it. After every deletion batch, run at least:
-
-- `python -m compileall -q JIT/src JIT/cli`
-- targeted import/tests for the affected capability
-
-If collection/import fails, stop cleanup and repair the dependency closure before deleting anything else.
+1. Modify/consolidate existing production code first.
+2. New production files require a genuinely new durable capability.  The new
+   capability-progression analyzer qualifies because it changes stable decision
+   semantics, not because it is called `pi_2`.
+3. Iteration/run identity belongs in config/artifact metadata, not source-module
+   names.
+4. Keep `JIT/cli/` thin; reusable logic belongs under `JIT/src/jit_dvgc/`.
+5. Preserve path-bound configs/frozen manifests/provenance.
+6. Never delete Python/CLI/tests without proving dependency closure and running
+   compile/import/targeted tests.
 
 ## Git and local-work safety
 
-- Preserve unrelated user changes. Never reset, clean, stash, rebase, force-push, or overwrite them.
-- Known unrelated local work may exist under root `dvgc/`, root `tests/`, `.vscode/`, local patches, or draft docs; do not touch it unless explicitly requested.
-- Use `/home/qy/mujoco_playground/.venv/bin/python`; do not reinstall or reconfigure the environment.
-- Keep formal run outputs/checkpoints/logs out of Git.
-- Use focused commits and audit diffs after structural changes.
+- Preserve unrelated user changes.
+- Never reset, clean, stash, rebase, force-push, or overwrite unrelated work.
+- Use `/home/qy/mujoco_playground/.venv/bin/python`.
+- Keep formal runs/checkpoints/logs out of Git.
+- Use focused commits.
 
-## Context recovery for Codex/agents
-
-Read these in order before changing scientific flow:
+## Current authority read order
 
 1. `AGENTS.md`
 2. `JIT/AGENTS.md`
 3. `JIT/docs/CURRENT_STATUS.md`
-4. `JIT/docs/CODEX_HANDOFF_20260903.md`
-5. `PROJECT.md`
-6. `JIT/docs/ENVELOPE_ITERATION_PROTOCOL.md`
-7. `JIT/docs/CODE_ORGANIZATION.md`
+4. `JIT/docs/JIT_CAPABILITY_PROGRESS_REPORT_20260904.md`
+5. `JIT/docs/CODEX_HANDOFF_20260904.md`
+6. `PROJECT.md`
+7. `JIT/docs/ENVELOPE_ITERATION_PROTOCOL.md`
+8. `JIT/docs/CODE_ORGANIZATION.md`
 
-Then inspect the actual runtime artifacts referenced by the current status before launching or resuming the workflow.
-
-Do **not** reconstruct current state from old Phase-U reports, obsolete watchdog documents, or historical experiment narratives when the current authority documents supersede them.
+`JIT/docs/CODEX_HANDOFF_20260903.md` is historical/superseded and must not be used
+as current operational truth.
