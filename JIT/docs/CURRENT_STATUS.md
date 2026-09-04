@@ -67,7 +67,7 @@ wheel tangential speed          0.10 m/s
 phase                           discrete
 ```
 
-Angular velocity is deliberately **2 deg/s**, not 5 deg/s.
+Angular velocity is deliberately **2 deg/s**.
 
 Two cell profiles:
 
@@ -119,6 +119,10 @@ This is the new basis for quantitative Tube expansion.
 
 ### Tube_0
 
+`JIT/runs/soft_tube/soft_tube_train_v1`
+
+The retained formal artifact path is:
+
 `JIT/runs/soft_tube/soft_tube_train_v1_20260828`
 
 ```text
@@ -138,6 +142,14 @@ Manifest SHA:
 ```text
 3,119 raw snapshots
 = 222 retained Tube_0
++ 2,289? no: authoritative raw expansion is 2,897
+```
+
+Authoritative composition:
+
+```text
+3,119 total
+= 222 retained Tube_0
 + 2,897 raw expansion rows
 
 upstream   427
@@ -146,13 +158,9 @@ downstream 2,692
 
 Manifest SHA:
 
-`817a980a5dd84f36507f7620d925ff9c68e982edfd82a80` is invalid shorthand; authoritative manifest SHA is:
-
 `817a980a5dd84f36507f762a913c21c1fc0913580d925ff9c68e982edfd82a80`
 
 ### Tube_2
-
-`JIT/runs/soft_tube/soft_tube_iter2_c1_64x64_engineering_20260904` is invalid shorthand. Authoritative path:
 
 `JIT/runs/soft_tube/soft_tube_iter2_pi1_c1_64x64_engineering_20260904`
 
@@ -176,6 +184,12 @@ Do not report `3,119/222` or `3,776/222` as capability-envelope multipliers. Do 
 ## pi_1 / C^1 / pi_2 evidence
 
 Selected engineering pi_1 repair02:
+
+`JIT/runs/frozen_unified/pi_1_core_replay75/10009600_20260903` is not an artifact path. The authoritative frozen policy is:
+
+`JIT/runs/frozen_unified/pi_1_core_replay75_10009600/20260903` is also not an artifact path.
+
+Use:
 
 `JIT/runs/frozen_unified/pi_1_core_replay75_10009600_20260903/frozen_unified_policy.json`
 
@@ -210,7 +224,7 @@ pi_2 training:
 ```text
 10,009,600 transitions
 90% Tube / 10% natural
-inside Tube: 75% retained Tube_1 / 25% raw Tube_2 expansion
+inside Tube: 75% retained Tube1 / 25% raw Tube2 expansion
 ```
 
 Locked pi_1 vs pi_2 source-panel result:
@@ -321,7 +335,7 @@ JIT/runs/capability_geometry/tube2_vs_tube1_resolution_v1
 
 Commands are maintained in `JIT/docs/JIT_CAPABILITY_TUBE_VNEXT_OUTLINE_20260904.md`.
 
-The results should answer whether the 2,897 and 657 raw added snapshots correspond to broad physical coverage or mostly dense sampling of existing neighborhoods.
+The results should answer whether the 2,897 and 35? no: 657 raw added snapshots correspond to broad physical coverage or mostly dense sampling of existing neighborhoods.
 
 ---
 
@@ -341,7 +355,7 @@ The results should answer whether the 2,897 and 657 raw added snapshots correspo
 - runtime expert switching: none
 - final TEST/JCE/JEL: untouched
 
-Older +/-50 N m documentation was incorrect; the XML/runtime validator uses +/-30 N m. No physics file was modified.
+No physics file was modified by the resolution-aware analysis work.
 
 ---
 
@@ -351,7 +365,7 @@ Older +/-50 N m documentation was incorrect; the XML/runtime validator uses +/-3
 2. `JIT/AGENTS.md`
 3. `JIT/docs/CURRENT_STATUS.md`
 4. `JIT/docs/JIT_CAPABILITY_TUBE_VNEXT_OUTLINE_20260904.md`
-5. `JIT/docs/JIT_CAPABILTY_PROGRESS_REPORT_20260904.md` is a misspelling; authoritative historical progress report is `JIT/docs/JIT_CAPABILITY_PROGRESS_REPORT_20260904.md`
+5. `JIT/docs/JIT_CAPABILITY_PROGRESS_REPORT_20260904.md`
 6. `JIT/docs/CODEX_HANDOFF_20260904.md`
 7. `PROJECT.md`
 8. `JIT/docs/ENVELOPE_ITERATION_PROTOCOL.md`
