@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
-"""Generate one resumable automatic pi_k -> pi_(k+1) envelope workflow.
+"""Generate one resumable trajectory-centered automatic pi_k -> pi_(k+1) workflow.
 
-The workflow separates two scientific outcomes after candidate evaluation:
-
-* empirical frontier/envelope progression; and
-* whether the candidate single policy retains enough phase-aware coverage to
-  become the sole authority for the next automatic iteration.
-
-The runner never tunes hyperparameters or repairs a failed policy.  Any data-
-isolation, continuation-calibration, Tube, training, freeze, frontier, or policy-
-realization failure stops the workflow and requires a new scientific decision.
+The prospective workflow now locks one successful nominal jump centerline before
+frontier outcomes, reconstructs source/target physical Jump-Tube views, and
+requires actual filtered Jump-Tube cell growth before candidate policy training.
+The runner never auto-tunes or repairs a failed candidate.
 """
 from __future__ import annotations
 
@@ -36,6 +31,12 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--selected-policy", type=Path, required=True)
     parser.add_argument("--source-tube", type=Path, required=True)
+    parser.add_argument(
+        "--canonical-evaluation-report",
+        type=Path,
+        required=True,
+        help="completed successful canonical natural evaluation used to lock the nominal centerline",
+    )
     parser.add_argument("--tag", default="auto")
     parser.add_argument("--config-out", type=Path, required=True)
     parser.add_argument("--work-root", type=Path)
@@ -53,6 +54,11 @@ def main() -> int:
     tube = load_soft_tube(args.source_tube)
     if int(tube.manifest.get("iteration", -1)) != k:
         raise ValueError("source Tube iteration must equal selected policy iteration")
+    canonical = read(args.canonical_evaluation_report)
+    if canonical.get("schema") != "jit_pi_unified_canonical_natural_eval_v1" or canonical.get("status") != "completed":
+        raise ValueError("trajectory-centered workflow requires completed canonical evaluation")
+    if canonical.get("canonical_rollout", {}).get("full_recovery_success") is not True:
+        raise ValueError("trajectory-centered workflow requires a successful full-recovery nominal rollout")
 
     next_k = k + 1
     repo_root = args.repo_root.resolve()
@@ -61,12 +67,19 @@ def main() -> int:
         if args.work_root is not None
         else Path(f"JIT/runs/iteration_auto/pi_{k}_to_pi_{next_k}_{args.tag}")
     )
+    centerline_dir = work_root / "nominal_centerline"
+    centerline = centerline_dir / "centerline.json"
+    source_geometry = work_root / "source_capability_geometry"
+    source_jump_view = work_root / "source_jump_tube_view"
+    raw_plan = work_root / "frontier_plan_unrevised.json"
     plan = work_root / "frontier_plan.json"
     train = work_root / "frontier_train"
     calibration = work_root / "frontier_calibration"
     acceptance = work_root / "frontier_acceptance"
-    fields = work_root / f"continuation_C{str(k)}"
+    fields = work_root / f"continuation_C{k}"
     tube_next = Path(f"JIT/runs/soft_tube/soft_tube_iter{next_k}_pi{k}_conditioned_{args.tag}")
+    target_geometry = work_root / f"tube{next_k}_capability_geometry"
+    target_jump_view = work_root / f"tube{next_k}_jump_tube_view"
     smoke = work_root / f"tube{next_k}_smoke"
     isolation = work_root / "role_isolation.json"
     baseline_lock = work_root / "acceptance_baseline_lock"
@@ -86,11 +99,39 @@ def main() -> int:
 
     stages = [
         {
-            "name": "prepare_frontier_plan",
-            "command": [PYTHON, "JIT/cli/run_iterative_frontier_protocol.py", "prepare-plan", "--selected-policy", str(args.selected_policy), "--source-tube", str(args.source_tube), "--output", str(plan)],
+            "name": "lock_nominal_jump_centerline",
+            "command": [PYTHON, "JIT/cli/build_nominal_jump_centerline.py", "--canonical-evaluation-report", str(args.canonical_evaluation_report), "--output-dir", str(centerline_dir)],
+            "cwd": str(repo_root),
+            "requires": [req(args.canonical_evaluation_report)],
+            "completion": {"path": str(centerline), "kind": "json", "assertions": [assertion("/status", "eq", "completed"), assertion("/x_step_m", "eq", 0.1), assertion("/real_frames_only", "eq", True), assertion("/qpos_qvel_interpolation_used", "eq", False), assertion("/post_landing_recovery_included", "eq", False)], "exports": {}},
+        },
+        {
+            "name": "analyze_source_capability_geometry",
+            "command": [PYTHON, "JIT/cli/analyze_capability_tube.py", "--tube", str(args.source_tube), "--output-dir", str(source_geometry)],
+            "cwd": str(repo_root),
+            "requires": [req(Path(args.source_tube) / "manifest.json"), req(centerline)],
+            "completion": {"path": str(source_geometry / "summary.json"), "kind": "json", "assertions": [assertion("/status", "eq", "completed"), assertion("/resolution_contract/x_slice_width_m", "eq", 0.1)], "exports": {}},
+        },
+        {
+            "name": "build_source_jump_tube_view",
+            "command": [PYTHON, "JIT/cli/analyze_jump_tube_view.py", "--capability-geometry-summary", str(source_geometry / "summary.json"), "--nominal-centerline", str(centerline), "--output-dir", str(source_jump_view)],
+            "cwd": str(repo_root),
+            "requires": [req(source_geometry / "summary.json"), req(centerline)],
+            "completion": {"path": str(source_jump_view / "summary.json"), "kind": "json", "assertions": [assertion("/status", "eq", "completed"), assertion("/semantic_filter/post_landing_recovery_included", "eq", False)], "exports": {}},
+        },
+        {
+            "name": "prepare_unrevised_frontier_plan",
+            "command": [PYTHON, "JIT/cli/run_iterative_frontier_protocol.py", "prepare-plan", "--selected-policy", str(args.selected_policy), "--source-tube", str(args.source_tube), "--output", str(raw_plan)],
             "cwd": str(repo_root),
             "requires": [req(args.selected_policy), req(Path(args.source_tube) / "manifest.json")],
-            "completion": {"path": str(plan), "kind": "json", "assertions": [assertion("/status", "eq", "predeclared_before_frontier_outcomes"), assertion("/iteration", "eq", k)], "exports": {}},
+            "completion": {"path": str(raw_plan), "kind": "json", "assertions": [assertion("/status", "eq", "predeclared_before_frontier_outcomes"), assertion("/iteration", "eq", k)], "exports": {}},
+        },
+        {
+            "name": "revise_frontier_plan_trajectory_centered",
+            "command": [PYTHON, "JIT/cli/prepare_resolution_aware_frontier_plan.py", "--source-plan", str(raw_plan), "--source-tube", str(args.source_tube), "--capability-geometry-summary", str(source_geometry / "summary.json"), "--nominal-centerline", str(centerline), "--output", str(plan)],
+            "cwd": str(repo_root),
+            "requires": [req(raw_plan), req(source_geometry / "summary.json"), req(centerline)],
+            "completion": {"path": str(plan), "kind": "json", "assertions": [assertion("/status", "eq", "predeclared_before_frontier_outcomes"), assertion("/iteration", "eq", k), assertion("/protocol_revision/name", "eq", "trajectory_centered_x_balanced_frontier_v1"), assertion("/jump_tube_contract/x_step_m", "eq", 0.1), assertion("/jump_tube_contract/post_landing_recovery_frontier_eligible", "eq", False)], "exports": {}},
         },
         *[
             {
@@ -117,10 +158,24 @@ def main() -> int:
             "completion": {"path": str(tube_next / "manifest.json"), "kind": "json", "assertions": [assertion("/status", "eq", "completed"), assertion("/iteration", "eq", next_k), assertion("/source_iteration", "eq", k), assertion("/core_retained_count", "eq", len(tube.entries)), assertion("/expansion_count", "gt", 0)], "exports": {}},
         },
         {
+            "name": f"analyze_Tube{next_k}_capability_geometry",
+            "command": [PYTHON, "JIT/cli/analyze_capability_tube.py", "--tube", str(tube_next), "--source-tube", str(args.source_tube), "--output-dir", str(target_geometry)],
+            "cwd": str(repo_root),
+            "requires": [req(tube_next / "manifest.json"), req(source_geometry / "summary.json")],
+            "completion": {"path": str(target_geometry / "summary.json"), "kind": "json", "assertions": [assertion("/status", "eq", "completed"), assertion("/resolution_contract/x_slice_width_m", "eq", 0.1)], "exports": {}},
+        },
+        {
+            "name": f"build_Tube{next_k}_jump_tube_view",
+            "command": [PYTHON, "JIT/cli/analyze_jump_tube_view.py", "--capability-geometry-summary", str(target_geometry / "summary.json"), "--source-capability-geometry-summary", str(source_geometry / "summary.json"), "--nominal-centerline", str(centerline), "--output-dir", str(target_jump_view)],
+            "cwd": str(repo_root),
+            "requires": [req(target_geometry / "summary.json"), req(source_geometry / "summary.json"), req(centerline)],
+            "completion": {"path": str(target_jump_view / "summary.json"), "kind": "json", "assertions": [assertion("/status", "eq", "completed"), assertion("/semantic_filter/post_landing_recovery_included", "eq", False), assertion("/expansion_vs_source/new_jump_tube_root_geometry_cell_count", "gt", 0)], "exports": {}},
+        },
+        {
             "name": f"smoke_Tube{next_k}",
             "command": [PYTHON, "JIT/cli/smoke_tube_rsi.py", "--up-config", UP_CONFIG, "--down-config", DOWN_CONFIG, "--soft-tube", str(tube_next), "--output-dir", str(smoke), "--samples-per-phase", "8"],
             "cwd": str(repo_root),
-            "requires": [req(tube_next / "manifest.json")],
+            "requires": [req(tube_next / "manifest.json"), req(target_jump_view / "summary.json")],
             "completion": {"path": str(smoke / "report.json"), "kind": "json", "assertions": [assertion("/status", "eq", "completed"), assertion("/tube_rsi_smoke", "eq", "GO"), assertion("/test_data_used", "eq", False)], "exports": {}},
         },
         {
@@ -141,7 +196,7 @@ def main() -> int:
             "name": f"prepare_pi{next_k}_training",
             "command": [PYTHON, "JIT/cli/prepare_iterative_unified_training.py", "--soft-tube", str(tube_next), "--tube-rsi-smoke-report", str(smoke / "report.json"), "--output-config", str(training_config), "--run-id", run_id],
             "cwd": str(repo_root),
-            "requires": [req(baseline_lock / "baseline_lock.json"), req(smoke / "report.json")],
+            "requires": [req(baseline_lock / "baseline_lock.json"), req(smoke / "report.json"), req(target_jump_view / "summary.json")],
             "completion": {"path": str(training_config) + ".prepared.json", "kind": "json", "assertions": [assertion("/status", "eq", "completed"), assertion("/iteration", "eq", next_k)], "exports": {}},
         },
         {
@@ -169,7 +224,7 @@ def main() -> int:
             "name": f"analyze_pi{next_k}_capability_progression",
             "command": [PYTHON, "JIT/cli/analyze_capability_progression.py", "--gate-summary", str(gate / "summary.json"), "--output", str(capability_decision)],
             "cwd": str(repo_root),
-            "requires": [req(gate / "summary.json")],
+            "requires": [req(gate / "summary.json"), req(target_jump_view / "summary.json")],
             "completion": {"path": str(capability_decision), "kind": "json", "assertions": [assertion("/status", "eq", "completed"), assertion("/retrospective_analysis", "eq", False), assertion("/empirical_envelope_expansion_observed", "eq", True), assertion("/candidate_policy_authority_eligible", "eq", True)], "exports": {}},
         },
         {
@@ -183,12 +238,19 @@ def main() -> int:
 
     config = {
         "schema": "jit_iteration_workflow_v1",
-        "workflow_name": f"automatic_pi_{k}_to_pi_{next_k}_{args.tag}",
+        "workflow_name": f"trajectory_centered_pi_{k}_to_pi_{next_k}_{args.tag}",
         "state_dir": str(work_root / "workflow_state"),
         "variables": {},
         "environment": {
             "PYTHONPATH": str(repo_root / "JIT/src"),
             "XLA_PYTHON_CLIENT_PREALLOCATE": "false",
+        },
+        "method_contract": {
+            "trajectory_centered_jump_tube": True,
+            "nominal_centerline_source": str(args.canonical_evaluation_report),
+            "x_step_m": 0.1,
+            "post_landing_recovery_frontier_eligible": False,
+            "target_jump_tube_growth_required_before_training": True,
         },
         "stages": stages,
     }
@@ -204,9 +266,16 @@ def main() -> int:
         "candidate_iteration": next_k,
         "selected_policy": str(args.selected_policy),
         "source_tube": str(args.source_tube),
+        "canonical_evaluation_report": str(args.canonical_evaluation_report),
+        "nominal_centerline": str(centerline),
+        "source_capability_geometry": str(source_geometry / "summary.json"),
+        "source_jump_tube_view": str(source_jump_view / "summary.json"),
+        "trajectory_centered_frontier_plan": str(plan),
         "workflow_config": str(args.config_out),
         "work_root": str(work_root),
         "target_tube": str(tube_next),
+        "target_capability_geometry": str(target_geometry / "summary.json"),
+        "target_jump_tube_view": str(target_jump_view / "summary.json"),
         "candidate_training_config": str(training_config),
         "candidate_run_id": run_id,
         "candidate_frozen_policy": str(frozen / "frozen_unified_policy.json"),
