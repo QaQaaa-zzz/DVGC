@@ -17,7 +17,7 @@ from .paired_policy_gate import (
     run_paired_policy_gate,
     summarize_paired_gate_records,
 )
-from ..unified_diagnostics import run_unified_fixed_panel
+from ..unified_diagnostic import run_unified_fixed_panel
 from ..unified_natural_evaluation import run_canonical_natural_evaluation
 
 __all__ = [
