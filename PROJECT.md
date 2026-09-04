@@ -4,45 +4,58 @@
 
 DVGC/JIT studies **iterative real-dynamics jump-capability discovery with just-in-time curriculum generation** for one fixed single-track two-wheeled robot task.
 
-The project separates three scientific objects:
+The project separates four scientific objects:
 
 1. **Physical/task feasibility `F*`** — the unknown set of states from which some admissible control behavior could complete the fixed task. JIT does not prove or exactly compute this set.
 2. **Cumulative empirical capability evidence `E_k`** — successful real-dynamics evidence accumulated across frozen experts and unified policies.
-3. **Single-policy realization coverage** — how much of the cumulative support a particular unified Actor realizes on a locked evaluation panel.
+3. **Resolution-aware capability Tube `T_k`** — sparse occupied physical cells summarizing where empirical capability evidence/support exists.
+4. **Single-policy realization coverage** — how much of cumulative support one unified Actor realizes on a locked evaluation panel.
 
-The final runtime target remains **one unified policy**. Phase experts and frozen intermediate policies are capability probes/data sources, not a runtime switching architecture.
+The final runtime target remains **one unified policy**. Phase experts and frozen intermediate policies are discovery probes/data sources, not a runtime switching architecture.
 
-A Soft Tube is empirical TRAIN support/curriculum guidance. It is not a certified safe set, viability kernel, reachability proof, invariant set, or proof of the physical jump limit.
+A Soft Tube is empirical TRAIN/curriculum support. It is not a certified safe set, viability kernel, reachability proof, invariant set, or proof of the physical jump limit.
 
 ---
 
-## 2. Core JIT loop
+## 2. Why the Tube is target-free
+
+The current JIT mainline intentionally does **not** add a desired jump-distance/apex intent to the Actor.
+
+The research object is not one fixed target trajectory. At the same longitudinal location `x`, multiple combinations of height, velocity, attitude and internal configuration may all be valid continuation states. The desired object is therefore a **state-space capability Tube with nonzero cross-section**, not a narrow goal-conditioned trajectory family.
+
+Adding intent now would require changing reward/task semantics and would open a different research question. Goal-conditioned JIT remains a possible later method version, but it is not part of the current resolution-aware reconstruction.
+
+---
+
+## 3. Core JIT loop
 
 ```text
 frozen capability probe(s)
         ↓
 real-dynamics frontier acquisition
         ↓
-continuation evidence near the success/failure transition
+continuation evidence near success/failure transition
         ↓
-cumulative empirical capability support
+cumulative empirical support
         ↓
-just-in-time Tube curriculum
+resolution-aware physical Tube
+        ↓
+just-in-time replay curriculum
         ↓
 train one unified policy
         ↓
 locked evaluation
   A. did the empirical frontier move?
-  B. does the unified policy still realize enough prior support?
+  B. does the unified policy retain enough prior coverage?
         ↓
 repeat or open a new method decision
 ```
 
-The curriculum is generated from the current frontier rather than prescribed as a fixed easy-to-hard schedule.
+The curriculum is produced from the current frontier rather than a manually fixed easy-to-hard schedule.
 
 ---
 
-## 3. Bootstrap and iterative method
+## 4. Bootstrap and iterative chain
 
 Bootstrap:
 
@@ -55,103 +68,173 @@ freeze experts
         ↓
 expert-conditioned V_up / V_down
         ↓
-TRAIN-only Tube_0
+raw TRAIN Tube_0 snapshots
         ↓
 unified pi_0
 ```
 
-Later iterations:
+Iterative regime:
 
 ```text
-selected pi_k + Tube_k
+selected pi_k + raw Tube_k
         ↓
-outcome-blind TRAIN / CALIBRATION / ACCEPTANCE frontier roles
+physical projection + resolution-aware occupied cells
         ↓
-real-dynamics frontier acquisition under pi_k
+outcome-blind newest-shell frontier plan
+        ↓
+resolution-aware distinct-cell parent revision
+        ↓
+TRAIN / CALIBRATION / ACCEPTANCE acquisition
         ↓
 pi_k-conditioned continuation labels
         ↓
-fit C_up^k / C_down^k on TRAIN
+C_up^k / C_down^k
         ↓
-calibrate on disjoint CALIBRATION
+raw Tube_(k+1) replay support
         ↓
-Tube_(k+1)
-= every Tube_k entry retained exactly
-+ qualifying TRAIN expansion
+physical Tube_(k+1) cell reconstruction
         ↓
-Tube-RSI smoke + role isolation
-        ↓
-lock pi_k evaluation baseline before candidate training
-        ↓
-train/freeze unified pi_(k+1)
+train/freeze pi_(k+1)
         ↓
 locked paired evaluation
         ↓
-capability-progression analysis
-  A. frontier progression
-  B. phase-aware policy realization
-        ↓
-prospectively select pi_(k+1) only when A + B pass
+frontier progression + policy realization decision
 ```
 
 Historical engineering overrides remain explicit and are never rewritten to look prospective.
 
 ---
 
-## 4. Why zero single-state regression is not the envelope definition
+## 5. Physical capability coordinate system
 
-The current unified policy is reward-guided and does not receive an explicit requested jump target such as desired distance, apex height, or landing position. The same state can therefore admit multiple reasonable control responses.
+The Actor observation is **not** the capability metric space. FIFO history, last action, acceleration and history-valid flags are controller inputs, but do not define whether two physical states are meaningfully distinct.
 
-A failed rollout by a later stochastic policy does not erase earlier successful capability evidence. Strict paired regressions remain useful behavioral diagnostics, but JIT now evaluates current-policy quality through phase-aware coverage over cumulative support.
+Resolution contract v1:
 
-Future prospective capability-progression v1 selection uses fixed engineering non-inferiority margins:
+| Quantity | Resolution |
+|---|---:|
+| root x/y/z | 0.10 m |
+| root vx/vy/vz | 0.10 m/s |
+| roll/pitch/yaw | 0.50 deg |
+| root angular velocity | 2.0 deg/s |
+| steering/hip/knee angle | 0.50 deg |
+| steering/hip/knee rate | 2.0 deg/s |
+| wheel tangential speed | 0.10 m/s |
+| phase | upstream/downstream discrete |
+
+Two complementary sparse-cell profiles are used:
+
+- **full physical cell**: root pose/twist + steering/hip/knee pose/rates + wheel tangential speeds;
+- **root geometry cell**: root pose/twist only, used for macroscopic Tube geometry and frontier diversity.
+
+This means two exact snapshots can have different SHA-256 values but still belong to the same physically resolved Tube cell.
+
+---
+
+## 6. Tube geometry
+
+The longitudinal progress coordinate is root `x`, discretized in 0.10 m slices.
+
+For each `x` slice, the empirical Tube cross-section is described from unique root-geometry cells over:
 
 ```text
-maximum global Tube-panel coverage drop = 5 percentage points
-maximum per-phase coverage drop         = 10 percentage points
+y, z
+vx, vy, vz
+roll, pitch, yaw
+wx, wy, wz
 ```
 
-These are policy-realization criteria, not physical safety or feasibility thresholds.
+The result should be inspectable as a real spatial/dynamical Tube rather than only an unstructured list of snapshots.
+
+The data are not forced into a cylindrical shape. A valid Tube may narrow, widen, branch, split into lobes or contain gaps.
+
+Production implementation:
+
+```text
+JIT/src/jit_dvgc/analysis/capability_tube.py
+JIT/cli/analyze_capability_tube.py
+```
+
+Outputs include cell maps, x-slice statistics, CSV projection and visualization plots.
 
 ---
 
-## 5. Data-role contract
+## 7. Raw snapshot count is no longer the expansion metric
 
-- `TRAIN`: may fit `C^k` and contribute qualifying Tube expansion.
-- `CALIBRATION`: continuation-threshold calibration only.
-- `ACCEPTANCE`: candidate-blind development frontier comparison only.
-- final TEST/JCE/JEL: untouched until method, stopping rule, and final policy are frozen.
+Historical artifact cardinalities remain exact:
 
-CALIBRATION and ACCEPTANCE rows never enter a Tube. Parent-group disjointness remains mandatory.
+```text
+Tube_0 raw snapshots =   222
+Tube_1 raw snapshots = 3,119
+Tube_2 raw snapshots = 3,776
+```
+
+These numbers describe replay/support cardinality only.
+
+The previous statements such as “Tube_1 is 14.05x Tube_0” or “Tube_2 adds 21.06% capability” are no longer accepted as capability-envelope claims.
+
+The correct retrospective quantities are:
+
+```text
+unique root geometry cells
+unique full physical cells
+new cells relative to source Tube
+duplicate fraction
+new cells by phase
+new cells by x slice
+nearest source-cell distance in resolution units
+```
+
+Tube_0/1/2 must now be reprocessed before the project claims quantitative state-space expansion.
 
 ---
 
-## 6. Completed evidence chain — 2026-09-04
+## 8. Resolution-aware frontier acquisition
 
-### Frozen phase experts
+A future frontier parent is not considered independent merely because its state SHA differs.
+
+Before outcomes are generated, the parent plan can be revised by:
+
+```text
+JIT/src/jit_dvgc/acquisition/resolution_frontier.py
+JIT/cli/prepare_resolution_aware_frontier_plan.py
+```
+
+Required parent uniqueness:
+
+```text
+newest Tube shell only
++ unique parent group
++ unique exact state
++ unique root_geometry_v1 cell
+```
+
+Default maximum: 25 distinct parent cells per phase. Minimum: 5 distinct newest-shell root-geometry cells per phase.
+
+This increases the chance that additional simulation budget explores genuinely different regions instead of repeatedly sampling one small neighborhood.
+
+---
+
+## 9. Completed evidence chain
+
+### Experts
 
 `pi_up_star`
 
 - 9,977,856 transitions
-- actor SHA-256: `f218775e3cf99555ce524f1357a800172904bc815b06c54a53db8965204d9081`
+- actor `f218775e3cf99555ce524f1357a800172904bc815b06c54a53db8965204d9081`
 
 `pi_down_star`
 
 - 25,600 transitions
-- actor SHA-256: `7b25f54bb1df3b97f63a15d011d66c2440682efb10b0510a266a9066725dd8be`
+- actor `7b25f54bb1df3b97f63a15d011d66c2440682efb10b0510a266a9066725dd8be`
 
-Frozen manifest:
-
-`JIT/runs/frozen_experts/pi_up9977856_pi_down25600_20260827/frozen_experts.json`
-
-### Tube_0
+### Raw Tube_0
 
 `JIT/runs/soft_tube/soft_tube_train_v1_20260828`
 
 ```text
-222 TRAIN states
-= 117 upstream
-+ 105 downstream
+222 snapshots = 117 upstream + 105 downstream
 ```
 
 ### pi_0
@@ -159,38 +242,23 @@ Frozen manifest:
 `JIT/runs/frozen_unified/pi_0_round1_10009600_20260831/frozen_unified_policy.json`
 
 - 10,009,600 transitions
-- actor SHA-256: `43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029`
-- payload SHA-256: `fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719`
+- actor `43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029`
 
-### C^0 and Tube_1
-
-`C_up^0/C_down^0` were fitted from frozen-pi_0 continuation evidence and passed the then-declared independent calibration path.
-
-Tube_1:
+### Raw Tube_1
 
 `JIT/runs/soft_tube/soft_tube_iter1_pi0_conditioned_20260901`
 
 ```text
-retained Tube_0 = 222
-new expansion   = 2,897
-total           = 3,119
-
-upstream   =   427 = 117 + 310
-downstream = 2,692 = 105 + 2,587
+3,119 snapshots
+= 222 retained Tube_0
++ 2,897 raw expansion snapshots
 ```
-
-Tube_1 contains about 14.05 times as many support entries as Tube_0. This is a cardinality ratio, not a state-space volume ratio.
 
 ### pi_1 repair02
 
-Frozen engineering authority:
-
 `JIT/runs/frozen_unified/pi_1_core_replay75_10009600_20260903/frozen_unified_policy.json`
 
-- actor SHA-256: `85d6b4667364daf8e054af9bccbf155dda16a62518df19883057fcfcbbd6f86a`
-- payload SHA-256: `3b9af512c7e389aade1c86ca76e9420a0bc687c499f2ff9cf7637701dd5d0cbc`
-
-Historical quickcheck:
+Historical engineering quickcheck:
 
 ```text
 Tube_0 222/222
@@ -199,197 +267,147 @@ downstream 105/105
 boundary 26/260 across 4 parent groups
 ```
 
-Historical formal Iteration-1 PASS is not claimed because the old gate contains 3 baseline-reproduction mismatches from the historical PRNG hierarchy.
-
-### Iteration-1 frontier evidence
-
-v3 TRAIN:
-
-```text
-1,031 total
-upstream   821 = 785 positive + 36 negative, 9 parent groups
-downstream 210 = 182 positive + 28 negative, 3 parent groups
-```
-
-v3b upstream CALIBRATION:
-
-```text
-739 = 733 positive + 6 negative, 3 parent groups
-```
-
-Downstream CALIBRATION:
-
-```text
-70 = 61 positive + 9 negative
-```
-
-v3c ACCEPTANCE:
-
-```text
-upstream   516 = 511 positive + 5 negative
-downstream  70 =  61 positive + 9 negative
-```
+Historical formal PASS is not claimed because the old gate retained 3 baseline-reproduction mismatches.
 
 ### C^1
 
-64x64 tanh was explicitly selected for engineering continuation.
+Upstream 64x64:
 
-Upstream:
+```text
+AUC = 0.6903137789904502
+recall = 0.5934515688949522
+formal AUC>=0.70 = FAIL
+engineering selection = YES
+```
 
-- AUC `0.6903137789904502`
-- recall `0.5934515688949522`
-- original AUC >= 0.70 gate remains false
-- engineering selection only
+Downstream 64x64:
 
-Downstream:
+```text
+AUC = 1.0
+recall = 1.0
+formal calibration = PASS
+```
 
-- AUC 1.0
-- recall 1.0
-- formal calibration PASS
-
-### Tube_2
+### Raw Tube_2
 
 `JIT/runs/soft_tube/soft_tube_iter2_pi1_c1_64x64_engineering_20260904`
 
 ```text
-retained Tube_1 = 3,119
-new expansion   =   657
-total           = 3,776
-
-upstream   =   902 = 427 + 475
-downstream = 2,874 = 2,692 + 182
+3,776 snapshots
+= 3,119 retained Tube_1
++ 657 raw expansion snapshots
 ```
 
-Manifest SHA-256:
-
-`135798c843a7acd9eb18cb44f9fd7a92ab39bf3df2d887b6c1fb8c629d480cff`
-
-Tube_1 -> Tube_2 entry growth is 21.06%. Tube_2 contains about 17.01 times as many entries as Tube_0. Tube_2 RSI smoke is GO.
+These 657 rows must now be measured for unique physical-cell novelty before being described as 657 meaningful expansion states.
 
 ### pi_2
 
-Training run id:
+Training completed at 10,009,600 transitions.
 
-`pi_2_tube2_c1_64x64_engineering_core75_natural10_10009600_seed821101_20260904`
-
-Training completed at 10,009,600 transitions using:
+Locked source-panel comparison:
 
 ```text
-outer reset: 90% Tube / 10% natural
-inside Tube: 75% retained Tube_1 / 25% newest Tube_2 expansion
+pi_1 = 3115/3119
+pi_2 = 3002/3119
+
+upstream:   423/427 -> 312/427
+downstream: 2692/2692 -> 2690/2692
 ```
 
-No expert switching, TEST, or validation data were used.
-
-Locked comparison:
+Locked pi_1-negative frontier:
 
 ```text
-Tube_1 source panel = 3,119 states
-pi_1 success        = 3,115
-pi_2 success        = 3,002
-strict regressions  = 115
-strict improvements = 2
-```
-
-Phase split:
-
-```text
-upstream:   423/427 -> 312/427  (99.06% -> 73.07%)
-downstream: 2692/2692 -> 2690/2692 (100.00% -> 99.93%)
-```
-
-Locked pi_1-negative frontier challenge:
-
-```text
-pi_2 success = 13/14
-parent groups = 3
+pi_2 = 13/14
 upstream = 4/5
 downstream = 9/9
+successful parent groups = 3
 baseline reproduction failures = 0
 ```
 
-Current interpretation:
+Interpretation: clear local frontier progression evidence, but strong upstream single-policy realization degradation.
 
-- empirical frontier progression: **strong**
-- pi_2 upstream single-policy realization: **degraded**
-- pi_2 is retained as capability evidence
-- pi_2 is **not retrospectively selected** under the newly revised prospective criterion
+pi_2 is capability evidence; it is not retrospectively selected as the next formal authority.
 
 ---
 
-## 7. What the task has gained
+## 10. Automatic iteration state
 
-1. Two phase-specific skills were converted into one unified JIT learning pipeline.
-2. Empirical TRAIN support expanded from 222 to 3,776 entries while preserving prior Tube provenance structurally.
-3. Two-phase frontier acquisition became informative, with both positive and negative continuation evidence.
-4. `pi_2` demonstrated substantial new local frontier capability: 13/14 successes on states locked as `pi_1` failures, with success in both phases.
-5. The pre-candidate locked-baseline protocol removed the old boundary PRNG reproduction mismatch in the current round.
-6. The project identified a central research distinction: cumulative capability and latest-policy coverage are different quantities.
-
----
-
-## 8. Automatic iteration state
-
-Future generic automation now contains:
+The existing generic workflow already automates:
 
 ```text
-frontier plan
--> TRAIN
--> CALIBRATION
--> ACCEPTANCE
--> C^k
--> Tube_(k+1)
--> smoke
--> role isolation
--> lock baseline
--> train/freeze candidate
--> locked paired evaluation
--> capability-progression analysis
--> prospective selection only if frontier + policy realization pass
+frontier roles
+-> continuation fields
+-> raw Tube construction
+-> smoke/isolation
+-> baseline lock
+-> candidate training/freeze
+-> locked evaluation
+-> capability progression
+-> prospective selection
 ```
 
-The completed pi_1 -> pi_2 round was not a pristine automatic round because it required explicit interventions at frontier acquisition, C_up^1 architecture/calibration, and near-observation isolation.
+The new resolution-aware Tube and frontier-parent capabilities are implemented but have not yet been exercised in a complete new prospective automatic iteration.
+
+Before another iteration:
+
+```text
+analyze source Tube physical geometry
+-> prepare ordinary pre-outcome frontier plan
+-> revise parent set by root-geometry cells
+-> execute frontier roles
+```
+
+Do not launch pi_3 until this resolution-aware retrospective analysis is complete and the next prospective workflow is explicitly declared.
 
 ---
 
-## 9. Next scientific direction
+## 11. Immediate scientific task
 
-Do not automatically treat 75/25 -> 90/10 replay as the answer.
+Reprocess all existing Tubes without new simulation:
 
-The deeper representation problem is that the unified policy is not told what jump behavior is desired. Before another candidate or pi_3 round, the next method version should consider:
+```text
+Tube_0 -> physical cells / x slices
+Tube_1 vs Tube_0 -> genuinely new cells
+Tube_2 vs Tube_1 -> genuinely new cells
+```
 
-1. **goal-/intent-conditioned unified policy** — one runtime Actor, but with a low-dimensional requested jump outcome/behavior code;
-2. **multi-seed probability-style policy coverage** — estimate success rates or confidence rather than one rollout per state;
-3. **discovery-time frozen policy archive** — accumulate capability evidence using older successful probes without runtime policy switching;
-4. only then decide whether a replay-only candidate remains scientifically useful.
+Then answer:
 
-No pi_3 work should begin until the next method version is explicitly declared.
+1. How much of the 2,897 Tube_1 raw expansion is physically independent at the declared resolution?
+2. How much of the 657 Tube_2 raw expansion is physically independent?
+3. Which x slices actually gained cross-section coverage?
+4. Is the upstream Tube one connected band, a narrow manifold, or multiple branches/lobes?
+5. Does the pi_2 upstream realization loss coincide with a newly explored branch of the Tube?
+
+Only after those questions are answered should the project decide whether it needs more frontier acquisition, different policy representation, or a new iteration.
 
 ---
 
-## 10. Immutable task contract
+## 12. Immutable task contract
 
 - branch: `agent/two-phase-soft-tube`
 - XML: `assets/orange_bike_4kg_horizontal.xml`
 - XML SHA-256: `0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a`
 - payload: 2 kg
-- control: 50 Hz
-- hip/knee torque: +/-50 Nm
+- control interval: 0.020 s = 50 Hz
+- runtime simulation substep: 0.005 s
+- hip/knee actuator range: +/-30 N m
 - action order: `[steer, rear-wheel drive, hip, knee]`
-- unified runtime: no expert switching
-- final TEST/JCE/JEL: untouched until final method/policy/stopping decision
+- no runtime expert switching
+- final TEST/JCE/JEL untouched
+
+Older documentation that stated +/-50 N m was inconsistent with the authoritative XML and runtime model validation. The model itself has not been changed.
 
 ---
 
-## 11. Authority documents
+## 13. Authority documents
 
 1. `AGENTS.md`
 2. `JIT/AGENTS.md`
 3. `JIT/docs/CURRENT_STATUS.md`
-4. `JIT/docs/JIT_CAPABILITY_PROGRESS_REPORT_20260904.md`
-5. `JIT/docs/CODEX_HANDOFF_20260904.md`
-6. `PROJECT.md`
-7. `JIT/docs/ENVELOPE_ITERATION_PROTOCOL.md`
-8. `JIT/docs/CODE_ORGANIZATION.md`
-
-The 2026-09-03 handoff is superseded historical context only.
+4. `JIT/docs/JIT_CAPABILITY_TUBE_VNEXT_OUTLINE_20260904.md`
+5. `JIT/docs/JIT_CAPABILITY_PROGRESS_REPORT_20260904.md`
+6. `JIT/docs/CODEX_HANDOFF_20260904.md`
+7. `PROJECT.md`
+8. `JIT/docs/ENVELOPE_ITERATION_PROTOCOL.md`
+9. `JIT/docs/CODE_ORGANIZATION.md`
