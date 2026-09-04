@@ -1,4 +1,13 @@
-"""Build Tube_(k+1) from Tube_k and calibrated C^k for k >= 1."""
+"""Build raw replay Tube_(k+1) from Tube_k and calibrated C^k for k >= 1.
+
+The raw Soft Tube remains a training/replay artifact, not the scientific Jump
+Capability set. Historical source rows are retained exactly for reproducibility.
+For prospective causal JIT roles, however, every *new* expansion row must be
+traceable to a ground-connected acquisition catalog: natural start -> env.step
+only -> exact candidate -> continuation-positive TRAIN label. The reachability
+provenance is copied into the Tube entry so the causal evidence chain is not
+lost when the state becomes replay support.
+"""
 from __future__ import annotations
 
 from collections import Counter
@@ -11,11 +20,24 @@ from typing import Any, Mapping
 
 import numpy as np
 
+from .acquisition.causal_jump import (
+    ACQUISITION_MODE,
+    validate_ground_reachability_payload,
+)
 from .config import file_sha256
 from .iterative_continuation_fields import _score
 from .iterative_frontier_protocol import ROLE_SCHEMA, canonical_sha256
-from .soft_tube import PHASE_MIXTURE, SOFT_TUBE_SCHEMA, WEIGHT_FLOOR, WEIGHT_SCALE, load_soft_tube
-from .unified_envelope_snapshot import load_unified_envelope_snapshot, physical_state_sha256
+from .soft_tube import (
+    PHASE_MIXTURE,
+    SOFT_TUBE_SCHEMA,
+    WEIGHT_FLOOR,
+    WEIGHT_SCALE,
+    load_soft_tube,
+)
+from .unified_envelope_snapshot import (
+    load_unified_envelope_snapshot,
+    physical_state_sha256,
+)
 
 
 SCHEMA = "jit_iterative_core_retaining_tube_v1"
@@ -91,10 +113,57 @@ def _load_fields(root: Path):
     return summary, phases
 
 
-def build_iterative_tube(*, source_tube: Path, train_root: Path, fields_root: Path, output_dir: Path):
+def _causal_catalog_rows(train_manifest: Mapping[str, Any]) -> dict[str, Mapping[str, Any]] | None:
+    """Return causal acquisition rows by candidate id, or None for historical roles."""
+    mode = train_manifest.get("acquisition_mode")
+    if mode is None:
+        return None
+    if mode != ACQUISITION_MODE:
+        raise ValueError(f"unsupported prospective TRAIN acquisition mode: {mode}")
+    if train_manifest.get("ground_reachability_proven") is not True:
+        raise ValueError("causal TRAIN manifest lacks ground reachability proof")
+    if train_manifest.get("rsi_used_for_reachability") is not False:
+        raise ValueError("causal TRAIN manifest used RSI for reachability")
+
+    catalog_path = Path(str(train_manifest["source_acquisition_catalog"]))
+    if file_sha256(catalog_path) != train_manifest["source_acquisition_catalog_sha256"]:
+        raise ValueError("causal TRAIN acquisition catalog file drift")
+    catalog = _read(catalog_path)
+    if catalog.get("schema") != "jit_unified_boundary_catalog_v1" or catalog.get("status") != "completed":
+        raise ValueError("causal TRAIN acquisition catalog schema/status drift")
+    if catalog.get("acquisition_mode") != ACQUISITION_MODE:
+        raise ValueError("TRAIN catalog is not ground-connected causal acquisition")
+    if catalog.get("ground_reachability_proven") is not True:
+        raise ValueError("TRAIN catalog lacks ground reachability proof")
+    if catalog.get("rsi_used_for_reachability") is not False:
+        raise ValueError("TRAIN catalog used RSI for reachability")
+    rows = catalog.get("entries")
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("causal TRAIN acquisition catalog has no entries")
+    by_id: dict[str, Mapping[str, Any]] = {}
+    for row in rows:
+        candidate_id = str(row["candidate_id"])
+        if candidate_id in by_id:
+            raise ValueError("duplicate causal acquisition candidate id")
+        provenance = row.get("ground_reachability")
+        if not isinstance(provenance, dict):
+            raise ValueError("causal acquisition row lacks ground_reachability")
+        declared = str(provenance.get("reachability_sha256", ""))
+        base = {key: value for key, value in provenance.items() if key != "reachability_sha256"}
+        if len(declared) != 64 or canonical_sha256(base) != declared:
+            raise ValueError("causal ground-reachability self-hash drift")
+        validate_ground_reachability_payload(provenance)
+        by_id[candidate_id] = row
+    return by_id
+
+
+def build_iterative_tube(
+    *, source_tube: Path, train_root: Path, fields_root: Path, output_dir: Path
+):
     source = load_soft_tube(Path(source_tube))
     train_manifest, train_rows = _load_train_role(Path(train_root))
     fields_summary, fields = _load_fields(Path(fields_root))
+    causal_catalog = _causal_catalog_rows(train_manifest)
     source_iteration = int(source.manifest.get("iteration", 0))
     iteration = source_iteration + 1
     if source_iteration < 1:
@@ -134,6 +203,13 @@ def build_iterative_tube(*, source_tube: Path, train_root: Path, fields_root: Pa
             if not float(score) > threshold:
                 counts["positive_below_or_equal_threshold"] += 1
                 continue
+            if causal_catalog is not None:
+                candidate_id = str(row["candidate_id"])
+                source_row = causal_catalog.get(candidate_id)
+                if source_row is None:
+                    raise ValueError("causal TRAIN label has no acquisition provenance")
+                if str(source_row["state_sha256"]) != str(row["state_sha256"]):
+                    raise ValueError("causal TRAIN label/acquisition physical state drift")
             selected.append((dict(row), float(score)))
             counts["positive_above_threshold"] += 1
         selection_counts[phase] = dict(sorted(counts.items()))
@@ -167,6 +243,13 @@ def build_iterative_tube(*, source_tube: Path, train_root: Path, fields_root: Pa
         if int(snapshot.active_phase) != phase_index:
             raise ValueError("iterative Tube snapshot active-phase drift")
         field_name = f"C_{'up' if phase == 'upstream' else 'down'}^{source_iteration}"
+
+        causal_provenance = None
+        if causal_catalog is not None:
+            source_row = causal_catalog[str(row["candidate_id"])]
+            causal_provenance = dict(source_row["ground_reachability"])
+            validate_ground_reachability_payload(causal_provenance)
+
         expansion_row = {
             "candidate_id": f"tube{iteration}_{phase}_{state}",
             "source_candidate_id": str(row["candidate_id"]),
@@ -198,6 +281,11 @@ def build_iterative_tube(*, source_tube: Path, train_root: Path, fields_root: Pa
             "source_train_role_manifest_sha256": train_manifest["role_manifest_sha256"],
             "policy_actor_sha256": str(row["policy_actor_sha256"]),
             "policy_payload_sha256": str(row["policy_payload_sha256"]),
+            "acquisition_mode": (
+                ACQUISITION_MODE if causal_provenance is not None else "historical_rsi_anchor_mode"
+            ),
+            "ground_reachability": causal_provenance,
+            "ground_reachability_proven": causal_provenance is not None,
         }
         expansion.append(expansion_row)
         entries.append(expansion_row)
@@ -209,15 +297,21 @@ def build_iterative_tube(*, source_tube: Path, train_root: Path, fields_root: Pa
     expansion_phase_counts = Counter(str(row["phase"]) for row in expansion)
     if set(phase_counts) != {"upstream", "downstream"}:
         raise ValueError("iterative Tube lost phase support")
+    causal_expansion_count = sum(
+        row.get("ground_reachability_proven") is True for row in expansion
+    )
     diagnostics = {
         "schema": "jit_iterative_tube_diagnostics_v1",
         "status": "completed",
         "source_tube_entry_count": len(source.entries),
-        "source_tube_phase_counts": dict(sorted(Counter(str(row["phase"]) for row in source.entries).items())),
+        "source_tube_phase_counts": dict(
+            sorted(Counter(str(row["phase"]) for row in source.entries).items())
+        ),
         "selection_counts": selection_counts,
         "selected_before_dedup_count": len(selected),
         "dedup_counts": dict(sorted(dedup.items())),
         "expansion_count": len(expansion),
+        "causal_ground_reachable_expansion_count": int(causal_expansion_count),
         "expansion_phase_counts": dict(sorted(expansion_phase_counts.items())),
         "entry_count": len(entries),
         "phase_counts": dict(sorted(phase_counts.items())),
@@ -245,6 +339,8 @@ def build_iterative_tube(*, source_tube: Path, train_root: Path, fields_root: Pa
         "core_retained_count": len(source.entries),
         "newest_expansion_count": len(expansion),
         "expansion_count": len(expansion),
+        "causal_ground_reachable_expansion_count": int(causal_expansion_count),
+        "newest_expansion_requires_ground_reachability": causal_catalog is not None,
         "entry_count": len(entries),
         "upstream_count": int(phase_counts["upstream"]),
         "downstream_count": int(phase_counts["downstream"]),
@@ -263,14 +359,18 @@ def build_iterative_tube(*, source_tube: Path, train_root: Path, fields_root: Pa
         "train_role_manifest_sha256": train_manifest["role_manifest_sha256"],
         "calibration_role_manifest_sha256": fields_summary["calibration_role_manifest_sha256"],
         "selection_rule": (
-            "retain every Tube_k entry exactly; add only logical-TRAIN continuation-positive "
+            "retain every Tube_k replay entry exactly; add only logical-TRAIN continuation-positive "
             "states whose frozen C^k score is strictly above its disjoint calibration threshold; "
-            "source Tube wins duplicates; no quota/replacement"
+            "for causal acquisition modes each new expansion state must additionally carry verified "
+            "natural-start env.step-only reachability provenance; source Tube wins duplicates"
         ),
         "score_semantics": "policy-conditioned empirical continuation score; not certified probability",
         "claim_boundary": {
             "soft_tube_training_guidance_only": True,
             "core_retaining": True,
+            "new_causal_expansion_reachability_verified": causal_catalog is not None,
+            "historical_core_may_include_noncausal_rsi_support": True,
+            "raw_soft_tube_is_jump_capability_proof": False,
             "certified_safe_set_claim": False,
             "jce_jel_claim": False,
         },
@@ -292,4 +392,10 @@ def build_iterative_tube(*, source_tube: Path, train_root: Path, fields_root: Pa
     except BaseException:
         shutil.rmtree(temporary, ignore_errors=True)
         raise
-    return {"schema": SCHEMA, "status": "completed", "output_dir": str(output), "manifest": manifest, "diagnostics": diagnostics}
+    return {
+        "schema": SCHEMA,
+        "status": "completed",
+        "output_dir": str(output),
+        "manifest": manifest,
+        "diagnostics": diagnostics,
+    }
