@@ -4,9 +4,9 @@
 
 DVGC/JIT has progressed from two phase-specific bootstrap experts to a complete second empirical Tube and a trained/frozen `pi_2` candidate under one fixed robot XML and one unchanged task definition.
 
-The central result is not “pi_2 is a perfect controller.” The stronger and more accurate result is:
+The central result is not that `pi_2` is a perfect controller. The stronger and more accurate result is:
 
-> JIT has accumulated substantially broader empirical evidence of jump-capable states under fixed dynamics, and `pi_2` demonstrates strong new frontier capability while exposing a large gap between cumulative capability evidence and what one reward-guided unified policy can realize consistently in the upstream phase.
+> JIT has accumulated substantially broader empirical evidence of jump-capable states under fixed dynamics, and `pi_2` demonstrates strong new frontier capability while exposing a major gap between cumulative capability evidence and what one reward-guided unified policy can realize consistently in the upstream phase.
 
 The old interpretation treated every paired core regression as if it invalidated capability-envelope progression. That conflates two different scientific questions:
 
@@ -47,8 +47,7 @@ Final TEST/JCE/JEL evidence remains untouched.
 The authoritative task remains fixed:
 
 - XML: `assets/orange_bike_4kg_horizontal.xml`
-- XML SHA-256: `0b56d3672773ef05a2b7f?` is not valid; authoritative SHA is
-  `0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a`
+- XML SHA-256: `0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a`
 - actual payload: 2 kg
 - control rate: 50 Hz
 - hip/knee torque limits: +/-50 Nm
@@ -62,17 +61,13 @@ JIT does **not** currently prove `F*`. It is not a reachability solver, viabilit
 
 #### A. Physical/task feasibility `F*`
 
-Conceptual meaning:
-
-> states from which at least one admissible control behavior could complete the fixed task.
+States from which at least one admissible control behavior could complete the fixed task.
 
 This is the ultimate physical question, but it is not directly observed by the current method.
 
 #### B. Cumulative empirical capability evidence `E_k`
 
-Meaning:
-
-> states/regions for which the project has accumulated successful real-dynamics continuation evidence from frozen experts or unified policies.
+States/regions for which the project has accumulated successful real-dynamics continuation evidence from frozen experts or unified policies.
 
 This is what JIT attempts to grow iteratively.
 
@@ -80,9 +75,7 @@ This is what JIT attempts to grow iteratively.
 
 #### C. Single-policy realization `R(pi_k, E_k)`
 
-Meaning:
-
-> how much of the cumulative demonstrated support one particular unified policy can realize on a locked evaluation panel.
+How much of the cumulative demonstrated support one particular unified policy can realize on a locked evaluation panel.
 
 A later policy can forget some earlier behaviors without erasing the historical fact that those behaviors were previously demonstrated by another frozen policy.
 
@@ -90,7 +83,7 @@ This distinction is central to the revised JIT story.
 
 ---
 
-## 3. Why the previous zero-regression rule was too much in this task
+## 3. Why zero single-state regression is not the envelope definition
 
 The current unified policy observation does not explicitly specify:
 
@@ -100,9 +93,9 @@ The current unified policy observation does not explicitly specify:
 - desired recovery state;
 - another explicit jump-intent variable.
 
-The policy is reward-guided toward a successful jump behavior. Therefore a single state can admit multiple reasonable control responses, and a stochastic/reward-guided policy is not expected to reproduce one unique successful action sequence for every previously successful state.
+The policy is reward-guided toward successful jump behavior. Therefore a single state can admit multiple reasonable control responses, and a stochastic/reward-guided policy is not expected to reproduce one unique successful action sequence for every previously successful state.
 
-The old decision rule was effectively:
+The previous decision rule was effectively:
 
 ```text
 if any baseline-success state becomes candidate-failure
@@ -134,7 +127,7 @@ Purpose:
 
 Training:
 
-- 9,518? is not authoritative; exact transitions: **9,977,856**.
+- **9,977,856 transitions**.
 
 Actor SHA-256:
 
@@ -161,7 +154,7 @@ Frozen expert manifest:
 
 ### 4.3 Scientific role of the experts
 
-The experts are not the final runtime solution. They are best interpreted as **capability probes and bootstrap data sources**.
+The experts are not the final runtime solution. They are capability probes and bootstrap data sources.
 
 Their value is that they reveal portions of the fixed system's achievable behavior and provide reliable two-phase continuation evidence from which a single unified policy can later be trained.
 
@@ -187,14 +180,13 @@ Composition:
 
 Manifest SHA-256:
 
-`c1c1161ebafd16716f2566aaccfe89169fe9cb0c2b090266c0e2bf28?` is not valid; authoritative manifest SHA is
 `c1c1161ebafd16716f2566aaccfe89169fe9cb0c2b090266c0e2bf90165df28b`
 
 Task-level meaning:
 
 - Tube_0 is the first compact empirical training/curriculum support extracted from two-phase capability evidence;
 - it is not a certified safe set;
-- it gives one unified policy an initial state support from which to learn the complete maneuver.
+- it gives one unified policy an initial support from which to learn the complete maneuver.
 
 ---
 
@@ -231,19 +223,11 @@ Composition:
 
 ```text
 retained Tube_0 =   222
-new expansion   = 2,688? no — authoritative expansion = 2,897
+new expansion   = 2,897
 total           = 3,119
 
 upstream   =   427 = 117 retained + 310 expansion
 downstream = 2,692 = 105 retained + 2,587 expansion
-```
-
-Authoritative totals:
-
-```text
-retained Tube_0 = 222
-expansion       = 2,897
-total           = 3,119
 ```
 
 Cardinality changes relative to Tube_0:
@@ -280,7 +264,7 @@ Final comparison:
 |---|---:|---:|---:|---:|---:|---:|
 | repair02 | **222/222** | **0** | **117/117** | **105/105** | 26/260 | 4 |
 | B 1.024M | 217/222 | 5 | 112/117 | 105/105 | 33/260 | 3 |
-| B 2.508M | 206/222 | 16 | 101/117 | 105/105 | 28/260 | 4 |
+| B 2.5088M | 206/222 | 16 | 101/117 | 105/105 | 28/260 | 4 |
 | B 5.0176M | 214/222 | 8 | 109/117 | 105/105 | 25/260 | 4 |
 | B 7.5008M | 217/222 | 5 | 112/117 | 105/105 | 42/260 | 4 |
 | B 10.0096M | 212/222 | 10 | 107/117 | 105/105 | 46/260 | 4 |
@@ -316,7 +300,7 @@ All B core regressions were upstream while downstream remained 105/105. Boundary
 
 This was early evidence that **frontier learning and old-behavior retention can interfere inside one reward-guided policy**, especially in the upstream phase.
 
-The later `pi_2` result confirms that this is a recurring phenomenon, not an isolated one-off artifact.
+The later `pi_2` result confirms that this is a recurring phenomenon.
 
 ---
 
@@ -324,15 +308,11 @@ The later `pi_2` result confirms that this is a recurring phenomenon, not an iso
 
 The Iteration-1 frontier stage showed that continuation evidence cannot be assumed to contain useful success/failure structure merely because many candidates are sampled.
 
-### 9.1 v1
+### 9.1 v1 and v2
 
-The first frontier design failed to produce useful downstream mixed-outcome support. This was a frontier-design limitation, not proof that `pi_1` itself was incapable.
+The first frontier designs failed to produce useful mixed-outcome downstream support. This was a frontier-design limitation, not proof that `pi_1` itself was incapable.
 
-### 9.2 v2
-
-A stronger local single-axis probe still produced downstream all-positive support.
-
-### 9.3 v3 TRAIN
+### 9.2 v3 TRAIN
 
 The acquisition was changed to phase-specific perturbation strength:
 
@@ -349,9 +329,7 @@ downstream   210 = 182 positive + 28 negative, 3 parent groups
 
 This was the first usable two-phase Iteration-1 TRAIN frontier.
 
-### 9.4 v3b CALIBRATION
-
-Original upstream calibration was all positive, so it could not support the fixed threshold contract.
+### 9.3 v3b CALIBRATION
 
 A stronger two-axis upstream CALIBRATION probe using the same already-declared three calibration parents produced:
 
@@ -370,7 +348,7 @@ Downstream calibration remained:
 9 negative
 ```
 
-### 9.5 v3c ACCEPTANCE
+### 9.4 v3c ACCEPTANCE
 
 Fresh acceptance evidence:
 
@@ -399,7 +377,7 @@ Upstream calibration:
 - ROC AUC: 0.66348;
 - positive recall: 0.23465;
 - zero accepted negatives;
-- failed the original AUC >= 0.70 gate and failed accepted-positive support in every parent.
+- failed the original AUC >= 0.70 gate and accepted-positive support requirement in every parent.
 
 ### 10.2 Standard 64x64 MLP
 
@@ -437,7 +415,7 @@ Upstream performance degraded strongly:
 - positive recall: 0.05593;
 - score gap became negative.
 
-Widening further was therefore rejected.
+Widening further was rejected.
 
 ### 10.4 Engineering-selected C^1
 
@@ -493,7 +471,7 @@ Cardinality changes:
 
 - Tube_1 -> Tube_2 total: **+21.06%**;
 - upstream: 427 -> 902, **+111.24%**;
-- downstream: 2,692 -> 2,456? no — authoritative total is 2,874, **+6.76%**;
+- downstream: 2,692 -> 2,874, **+6.76%**;
 - Tube_2 contains about **17.01x** as many support entries as Tube_0.
 
 These are support-entry counts, not geometric envelope volumes.
@@ -533,7 +511,7 @@ candidate_training_acceptance_isolation_passed = true
 formal_all_role_geometric_isolation_passed = false
 ```
 
-This means the current round should be described as an engineering mainline round, not an immaculate all-formal prospective round.
+This means the current round should be described as an engineering mainline round, not an all-formal prospective round.
 
 ---
 
@@ -605,7 +583,7 @@ The historical strict summary reports:
 iteration_accepted = false
 ```
 
-That old Boolean alone is no longer a sufficient scientific summary.
+That Boolean alone is no longer a sufficient scientific summary.
 
 ### 14.1 Source Tube_1 panel
 
@@ -654,8 +632,6 @@ The global number therefore hides a severe upstream policy-realization collapse 
 
 ### 14.2 Locked frontier/boundary comparison
 
-The boundary result is very different:
-
 ```text
 14 locked pi_1-negative challenge states
 pi_2 success = 13/14
@@ -683,13 +659,13 @@ It is:
 
 > Tube_2 training produced a policy with strong local frontier progression in both phases, but the same policy lost substantial upstream realization coverage over previously demonstrated support.
 
-This distinction is the reason envelope evidence and policy realization are now reported separately.
+This distinction is why envelope evidence and policy realization are now reported separately.
 
 ---
 
 ## 15. Revised capability-progression decision implemented in code
 
-New stable analysis capability:
+Stable analysis capability:
 
 `JIT/src/jit_dvgc/analysis/capability_progression.py`
 
@@ -736,7 +712,7 @@ candidate_policy_authority_eligible    = false
 decision = envelope_progressed_but_candidate_policy_coverage_degraded
 ```
 
-Because this method interpretation was revised **after** the current `pi_2` result had been observed, the candidate is not retroactively promoted to a formal prospective PASS.
+Because this interpretation was revised **after** the current `pi_2` result had been observed, the candidate is not retroactively promoted to a formal prospective PASS.
 
 The evidence is preserved; formal selection is not rewritten.
 
@@ -754,13 +730,13 @@ Tube_2 3,776
 
 Tube_2 contains about 17.01 times as many retained/qualified TRAIN support entries as Tube_0.
 
-This is not “17x physical jump range,” but it is a large increase in the diversity and quantity of empirically supported training/continuation states.
+This is not “17x physical jump range,” but it is a large increase in the quantity and breadth of empirically supported training/continuation states.
 
 ### Improvement 2 — usable two-phase frontier evidence
 
 The frontier pipeline evolved from all-positive/uninformative banks to mixed success/failure evidence in both phases.
 
-This matters because a capability boundary cannot be identified from an all-success sample cloud.
+A capability boundary cannot be identified from an all-success sample cloud; the v3/v3b/v3c sequence made the boundary informative.
 
 ### Improvement 3 — direct new unified-policy frontier capability
 
@@ -821,7 +797,7 @@ A concise research narrative is:
 
 > JIT couples empirical capability identification with just-in-time curriculum generation. Under fixed robot dynamics, frozen experts and unified policies act as capability probes. Successful real-dynamics continuation evidence accumulates into monotonic empirical support, while states near the current success/failure transition generate the next curriculum. Newly trained unified policies are evaluated both for frontier progression and for how much cumulative capability support they can realize. The latest policy is therefore an implementation candidate for the discovered capability, not the definition of the physical capability itself.
 
-The loop is better written as:
+The loop is:
 
 ```text
 capability probe policy / archive
@@ -867,7 +843,7 @@ The branch now contains reusable automation for future `k -> k+1` rounds:
 
 ### 19.2 Why the current pi_1 -> pi_2 round was not fully automatic
 
-The generic workflow existed, but this round required explicit engineering/scientific interventions:
+This round required explicit engineering/scientific interventions:
 
 - initial frontier panels did not produce informative downstream support;
 - upstream calibration needed stronger v3b acquisition;
@@ -889,22 +865,22 @@ The correct statement is:
 Completed:
 
 ```text
-phase experts                    DONE
-Tube_0                           DONE
-pi_0                             DONE
-C^0                              DONE
-Tube_1                           DONE
-pi_1 engineering authority       DONE
-pi_1 frontier roles              DONE
-C^1 engineering selection        DONE
-Tube_2                           DONE
-Tube_2 smoke                     GO
+phase experts                     DONE
+Tube_0                            DONE
+pi_0                              DONE
+C^0                               DONE
+Tube_1                            DONE
+pi_1 engineering authority        DONE
+pi_1 frontier roles               DONE
+C^1 engineering selection         DONE
+Tube_2                            DONE
+Tube_2 smoke                      GO
 role-isolation engineering record DONE
-pi_1 baseline lock               DONE
-pi_2 training                    DONE
-pi_2 freeze                      DONE
-pi_1 vs pi_2 locked comparison   DONE
-capability-semantics revision    CODED
+pi_1 baseline lock                DONE
+pi_2 training                     DONE
+pi_2 freeze                       DONE
+pi_1 vs pi_2 locked comparison    DONE
+capability-semantics revision     CODED
 ```
 
 Current scientific position:
@@ -936,7 +912,7 @@ retrospective_analysis = true
 
 This records the new interpretation without rewriting history or selecting `pi_2`.
 
-### Step 2 — stop treating replay-ratio tuning as the automatic answer
+### Step 2 — do not make replay-ratio tuning the automatic answer
 
 The current result should not automatically trigger 75/25 -> 90/10 replay. The deeper issue is that the upstream policy is being asked to realize many behaviors without an explicit desired jump target.
 
@@ -978,7 +954,7 @@ Before launching another automatic iteration, decide whether the next method ver
 2. goal-conditioned unified policy;
 3. archive-assisted capability discovery + separate unified realization.
 
-The recommended scientific focus is options 2 and 3, because they directly address the conceptual gap exposed by `pi_2`.
+The recommended scientific focus is options 2 and 3 because they directly address the conceptual gap exposed by `pi_2`.
 
 ---
 
@@ -1025,8 +1001,6 @@ Not supported:
 `JIT/runs/soft_tube/soft_tube_iter1_pi0_conditioned_20260901`
 
 ### pi_1
-
-`JIT/runs/frozen_unified/pi_1_core_replay75_10009600/frozen?` is not authoritative; use:
 
 `JIT/runs/frozen_unified/pi_1_core_replay75_10009600_20260903/frozen_unified_policy.json`
 
