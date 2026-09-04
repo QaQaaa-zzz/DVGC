@@ -2,20 +2,28 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 import json
 import math
 import os
 from pathlib import Path
+import tempfile
 from typing import Any, Callable, Mapping
 
 from brax.training.agents.ppo import train as ppo_train
 import jax
 import numpy as np
 
-from .checkpoint import CheckpointIdentity, CheckpointPayload, save_checkpoint
+from .checkpoint import (
+    CheckpointIdentity,
+    CheckpointPayload,
+    load_checkpoint,
+    save_checkpoint,
+)
+from .constants import ACTION_ORDER, ACTOR_FRAME_FIELDS, ACTOR_TASK_FIELDS
 from .formal_training import FormalRunController, PanelResult, _flatten_finite_metrics
+from .handoff_bank import pytree_sha256
 from .ppo import make_network_factory, wrap_for_jit_training
 from .provenance import (
     InteractionAccounting,
@@ -259,6 +267,138 @@ def load_unified_formal_config(path: Path) -> UnifiedFormalConfig:
     )
 
 
+_LOAD_FRESH_UNIFIED_FORMAL_CONFIG = load_unified_formal_config
+
+
+def actor_only_warm_start_initialization(source_frozen_policy: str | Path) -> dict[str, Any]:
+    source = str(source_frozen_policy)
+    if not source:
+        raise ValueError("actor-only warm-start frozen policy path is missing")
+    return {
+        "actor": "warm_start_frozen_unified",
+        "critic": "fresh",
+        "optimizer": "fresh",
+        "source_frozen_policy": source,
+    }
+
+
+def load_unified_actor_warm_start_config(path: Path) -> UnifiedFormalConfig:
+    """Validate a formal config whose only restored training state is an Actor.
+
+    ``warm_start_pi_0`` remains accepted for the two historical comparison runs.
+    New iterations use ``warm_start_frozen_unified`` so this path is not tied to
+    a particular policy generation.
+    """
+    path = Path(path)
+    payload = read_json(path)
+    initialization = payload.get("initialization")
+    if not isinstance(initialization, Mapping):
+        raise ValueError("actor-only warm-start initialization is missing")
+    if set(initialization) != {
+        "actor",
+        "critic",
+        "optimizer",
+        "source_frozen_policy",
+    }:
+        raise ValueError("actor-only warm-start initialization fields drift")
+    if initialization.get("actor") not in {
+        "warm_start_frozen_unified",
+        "warm_start_pi_0",
+    }:
+        raise ValueError("unsupported actor-only warm-start source mode")
+    if (
+        initialization.get("critic") != "fresh"
+        or initialization.get("optimizer") != "fresh"
+    ):
+        raise ValueError("actor-only warm-start initialization must keep critic and optimizer fresh")
+    if not isinstance(initialization.get("source_frozen_policy"), str) or not str(
+        initialization["source_frozen_policy"]
+    ):
+        raise ValueError("actor-only warm-start frozen policy path is missing")
+
+    sanitized = dict(payload)
+    sanitized["initialization"] = {
+        "actor": "fresh",
+        "critic": "fresh",
+        "optimizer": "fresh",
+        "restore_checkpoint": None,
+    }
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".json", encoding="utf-8", delete=False
+    ) as stream:
+        temporary = Path(stream.name)
+        json.dump(sanitized, stream, sort_keys=True, allow_nan=False)
+        stream.write("\n")
+    try:
+        parsed = _LOAD_FRESH_UNIFIED_FORMAL_CONFIG(temporary)
+    finally:
+        temporary.unlink(missing_ok=True)
+    return replace(
+        parsed,
+        raw=payload,
+        config_sha256=canonical_sha256(payload),
+    )
+
+
+def load_frozen_actor_restore_params(config_path: Path):
+    """Load and verify the immediately preceding frozen unified Actor."""
+    config = load_unified_actor_warm_start_config(config_path)
+    frozen_path = Path(config.raw["initialization"]["source_frozen_policy"])
+    frozen = read_json(frozen_path)
+    if (
+        frozen.get("schema") != "jit_frozen_unified_policy_v1"
+        or frozen.get("status") != "frozen"
+    ):
+        raise ValueError("warm-start source is not a frozen unified policy")
+    policy = frozen.get("policy")
+    if not isinstance(policy, Mapping):
+        raise ValueError("frozen warm-start policy record is missing")
+
+    boundary = config.raw.get("claim_boundary", {})
+    target_iteration = int(boundary.get("iteration", -1))
+    source_iteration = int(policy.get("iteration", -1))
+    if target_iteration < 1 or source_iteration != target_iteration - 1:
+        raise ValueError("warm-start source must be the immediately preceding iteration")
+    if policy.get("name") != f"pi_{source_iteration}":
+        raise ValueError("warm-start source policy name/iteration drift")
+    declared_source_name = boundary.get("source_policy_name")
+    if declared_source_name is not None and declared_source_name != policy.get("name"):
+        raise ValueError("warm-start source differs from the declared source policy")
+
+    source_config_path = Path(str(policy["formal_config"]))
+    source_raw = read_json(source_config_path)
+    if source_raw.get("initialization", {}).get("actor") in {
+        "warm_start_frozen_unified",
+        "warm_start_pi_0",
+    }:
+        source_config = load_unified_actor_warm_start_config(source_config_path)
+    else:
+        source_config = _LOAD_FRESH_UNIFIED_FORMAL_CONFIG(source_config_path)
+    expected = CheckpointIdentity(
+        config_sha256=source_config.config_sha256,
+        xml_sha256=str(policy["xml_sha256"]),
+        actor_frame_fields=ACTOR_FRAME_FIELDS,
+        actor_task_fields=ACTOR_TASK_FIELDS,
+        action_order=ACTION_ORDER,
+    )
+    checkpoint = load_checkpoint(Path(str(policy["checkpoint"])), expected=expected)
+    if int(checkpoint.training_transitions) != int(policy["source_training_transitions"]):
+        raise ValueError("warm-start checkpoint transition drift")
+    identities = {
+        "normalizer_sha256": pytree_sha256(checkpoint.observation_normalizer),
+        "actor_sha256": pytree_sha256(checkpoint.actor_params),
+        "critic_sha256": pytree_sha256(checkpoint.critic_params),
+    }
+    for field, observed in identities.items():
+        if observed != str(policy.get(field)):
+            raise ValueError(f"warm-start {field.removesuffix('_sha256')} payload drift")
+    return (
+        checkpoint.observation_normalizer,
+        checkpoint.actor_params,
+        checkpoint.critic_params,
+    )
+
+
 def _build_unified_formal_environment(
     config: UnifiedFormalConfig,
     *,
@@ -464,8 +604,13 @@ def run_unified_formal(
         ),
         resume_command=(
             "PYTHONPATH=JIT/src /home/qy/mujoco_playground/.venv/bin/python "
-            "JIT/cli/train_unified.py "
-            f"--config {Path(config_path)} --run-id {run_id}"
+            + (
+                "JIT/cli/train_unified_from_pi0.py "
+                if config.raw.get("initialization", {}).get("actor")
+                in {"warm_start_frozen_unified", "warm_start_pi_0"}
+                else "JIT/cli/train_unified.py "
+            )
+            + f"--config {Path(config_path)} --run-id {run_id}"
         ),
         segment_seed=config.ppo.seed,
     )

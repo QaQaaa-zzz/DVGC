@@ -19,6 +19,7 @@ def main() -> int:
     lock.add_argument("--source-tube", type=Path, required=True)
     lock.add_argument("--acceptance-root", type=Path, required=True)
     lock.add_argument("--output-dir", type=Path, required=True)
+    lock.add_argument("--reusable-core-baseline", type=Path)
 
     gate = subs.add_parser("run-candidate")
     gate.add_argument("--baseline-lock", type=Path, required=True)
@@ -34,6 +35,7 @@ def main() -> int:
             source_tube=args.source_tube,
             acceptance_root=args.acceptance_root,
             output_dir=args.output_dir,
+            reusable_core_baseline=args.reusable_core_baseline,
         )
     else:
         result = run_candidate_gate(

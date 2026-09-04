@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Freeze a completed pi0-warm-start unified policy.
+"""Freeze a completed unified-policy warm-start run.
 
 This is only a compatibility wrapper for the two warm-start experiment configs.
 It does not retrain or evaluate anything.  The standard freeze implementation is
@@ -38,11 +38,11 @@ def main() -> int:
     initialization = raw.get("initialization", {})
     actor_mode = initialization.get("actor")
     critic_mode = initialization.get("critic")
-    if actor_mode != "warm_start_pi_0":
-        raise ValueError("this wrapper only freezes pi0 warm-start runs")
+    if actor_mode not in {"warm_start_pi_0", "warm_start_frozen_unified"}:
+        raise ValueError("this wrapper only freezes unified Actor warm-start runs")
     if critic_mode == "fresh":
         loader = actor_only._load_warm_target_config
-    elif critic_mode == "warm_start_pi_0":
+    elif actor_mode == "warm_start_pi_0" and critic_mode == "warm_start_pi_0":
         loader = full_warm._load_warm_target_config
     else:
         raise ValueError("unsupported warm-start critic mode")

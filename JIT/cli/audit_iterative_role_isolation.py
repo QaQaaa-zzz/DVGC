@@ -20,7 +20,10 @@ from pathlib import Path
 import numpy as np
 
 from jit_dvgc.config import file_sha256
-from jit_dvgc.iterative_frontier_protocol import canonical_sha256
+from jit_dvgc.iterative_frontier_protocol import (
+    canonical_sha256,
+    exact_state_disjoint_role_rows,
+)
 from jit_dvgc.soft_tube import load_soft_tube
 
 
@@ -70,6 +73,68 @@ def role(root: Path, expected: str):
     if any(r.get("split") != expected or r.get("logical_role") != expected for r in rows):
         raise ValueError(f"{expected} logical split drift")
     return manifest, [dict(r) for r in rows]
+
+
+def write_disjoint_role_view(
+    source_root: Path,
+    output_root: Path,
+    *,
+    role_name: str,
+    kept_rows: list[dict],
+    excluded_states: list[str],
+) -> None:
+    """Write a derived logical view; raw acquisition and labels stay immutable."""
+    source_root = Path(source_root)
+    output_root = Path(output_root)
+    if output_root.exists():
+        raise FileExistsError(f"disjoint role view already exists: {output_root}")
+    source_manifest = read(source_root / "role_manifest.json")
+    source_labels = read(source_root / "logical_labels.json")
+    output_root.mkdir(parents=True, exist_ok=False)
+
+    logical = {
+        **{key: value for key, value in source_labels.items() if key != "labels_sha256"},
+        "entries": kept_rows,
+        "entry_count": len(kept_rows),
+        "derived_from_logical_labels": str(source_root / "logical_labels.json"),
+        "exact_state_excluded_count": len(excluded_states),
+        "exact_state_partition_outcome_blind": True,
+    }
+    logical["labels_sha256"] = canonical_sha256(logical)
+    logical_path = output_root / "logical_labels.json"
+    write(logical_path, logical)
+
+    phase_counts = {}
+    for phase in ("upstream", "downstream"):
+        rows = [row for row in kept_rows if row["phase"] == phase]
+        positives = sum(int(row["label"]) for row in rows)
+        phase_counts[phase] = {
+            "candidate_count": len(rows),
+            "positive_count": positives,
+            "negative_count": len(rows) - positives,
+            "parent_group_count": len({str(row["parent_group_id"]) for row in rows}),
+        }
+    manifest = {
+        **{
+            key: value
+            for key, value in source_manifest.items()
+            if key != "role_manifest_sha256"
+        },
+        "logical_labels": str(logical_path),
+        "logical_labels_file_sha256": file_sha256(logical_path),
+        "phase_counts": phase_counts,
+        "source_role_manifest_sha256": source_manifest["role_manifest_sha256"],
+        "exact_state_partition": {
+            "priority": ["train", "calibration", "acceptance"],
+            "role": role_name,
+            "outcome_fields_used_for_partition": False,
+            "excluded_state_count": len(excluded_states),
+            "excluded_state_sha256": sorted(excluded_states),
+            "new_environment_interactions": 0,
+        },
+    }
+    manifest["role_manifest_sha256"] = canonical_sha256(manifest)
+    write(output_root / "role_manifest.json", manifest)
 
 
 def near_pairs(left, right, atol: float, *, left_role: str, right_role: str):
@@ -236,6 +301,14 @@ def main() -> int:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--observation-atol", type=float, default=0.01)
     parser.add_argument(
+        "--exact-state-disjoint-view-root",
+        type=Path,
+        help=(
+            "derive outcome-blind CALIBRATION/ACCEPTANCE logical views using "
+            "TRAIN > CALIBRATION > ACCEPTANCE physical-state priority"
+        ),
+    )
+    parser.add_argument(
         "--near-duplicate-diagnostics",
         type=Path,
         help=(
@@ -291,7 +364,69 @@ def main() -> int:
     exact_ta = sets["train"] & sets["acceptance"]
     exact_ca = sets["calibration"] & sets["acceptance"]
     if exact_tc or exact_ta or exact_ca:
-        raise ValueError("logical roles contain exact duplicate physical states")
+        if args.exact_state_disjoint_view_root is None:
+            raise ValueError("logical roles contain exact duplicate physical states")
+        partitioned, exclusion_counts = exact_state_disjoint_role_rows(
+            train=train,
+            calibration=calibration,
+            acceptance=acceptance,
+        )
+        view_root = Path(args.exact_state_disjoint_view_root)
+        if view_root.exists():
+            raise FileExistsError(f"exact-state disjoint view root exists: {view_root}")
+        calibration_excluded = sorted(
+            sets["calibration"]
+            - {str(row["state_sha256"]) for row in partitioned["calibration"]}
+        )
+        acceptance_excluded = sorted(
+            sets["acceptance"]
+            - {str(row["state_sha256"]) for row in partitioned["acceptance"]}
+        )
+        write_disjoint_role_view(
+            args.calibration_root,
+            view_root / "calibration",
+            role_name="calibration",
+            kept_rows=partitioned["calibration"],
+            excluded_states=calibration_excluded,
+        )
+        write_disjoint_role_view(
+            args.acceptance_root,
+            view_root / "acceptance",
+            role_name="acceptance",
+            kept_rows=partitioned["acceptance"],
+            excluded_states=acceptance_excluded,
+        )
+        cm, calibration = role(view_root / "calibration", "calibration")
+        am, acceptance = role(view_root / "acceptance", "acceptance")
+        sets = {
+            "train": {str(r["state_sha256"]) for r in train},
+            "calibration": {str(r["state_sha256"]) for r in calibration},
+            "acceptance": {str(r["state_sha256"]) for r in acceptance},
+        }
+        exact_tc = sets["train"] & sets["calibration"]
+        exact_ta = sets["train"] & sets["acceptance"]
+        exact_ca = sets["calibration"] & sets["acceptance"]
+        if exact_tc or exact_ta or exact_ca:
+            raise ValueError("derived logical roles remain exact-state overlapping")
+        write(
+            view_root / "summary.json",
+            {
+                "schema": "jit_exact_state_disjoint_role_views_v1",
+                "status": "completed",
+                "priority": ["train", "calibration", "acceptance"],
+                "outcome_fields_used_for_partition": False,
+                "source_train_root": str(args.train_root),
+                "source_calibration_root": str(args.calibration_root),
+                "source_acceptance_root": str(args.acceptance_root),
+                "effective_train_root": str(args.train_root),
+                "effective_calibration_root": str(view_root / "calibration"),
+                "effective_acceptance_root": str(view_root / "acceptance"),
+                "exclusion_counts": exclusion_counts,
+                "training_transitions": 0,
+                "environment_interactions": 0,
+                "test_data_used": False,
+            },
+        )
     exact_counts = {
         "train_calibration": len(exact_tc),
         "train_acceptance": len(exact_ta),

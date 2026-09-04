@@ -160,6 +160,34 @@ def test_sampler_accepts_policy_conditioned_fields_from_later_iterations(tmp_pat
         TubeRSIPool.from_artifact(invalid, compatibility=COMPATIBILITY)
 
 
+def test_sampler_accepts_verified_policy_family_landing_train_support(tmp_path):
+    from jit_dvgc.tube_rsi import TubeRSIPool
+
+    artifact = _artifact(tmp_path)
+    entries = [dict(entry) for entry in artifact.entries]
+    expansion = next(row for row in entries if row["phase"] == "upstream")
+    expansion.update(
+        value_model_target="policy_family_first_valid_landing",
+        value_score=1.0,
+        sampling_weight=1.0,
+        continuation_label=1,
+        jump_start_reachability_proven=True,
+        source_train_role_manifest_sha256="b" * 64,
+        score_source={
+            "kind": "observed_policy_family_first_valid_landing_label",
+            "policy_family_sha256": "a" * 64,
+            "selection_rule": "TRAIN_label_positive",
+            "threshold_source": None,
+            "fitted_classifier_used": False,
+        },
+    )
+    landing = SoftTubeArtifact(
+        artifact.root, artifact.manifest, tuple(entries), artifact.diagnostics
+    )
+
+    TubeRSIPool.from_artifact(landing, compatibility=COMPATIBILITY)
+
+
 @pytest.mark.parametrize(
     ("mutation", "message"),
     [

@@ -63,7 +63,27 @@ def _validate_score_semantics(entry: Mapping[str, Any], phase: str) -> None:
         return
     if not isinstance(score_source, Mapping):
         raise ValueError("Soft Tube score_source must be an object")
-    if score_source.get("kind") != "policy_conditioned_continuation_field":
+    source_kind = score_source.get("kind")
+    if source_kind == "observed_policy_family_first_valid_landing_label":
+        policy_family_sha = str(score_source.get("policy_family_sha256", ""))
+        train_manifest_sha = str(entry.get("source_train_role_manifest_sha256", ""))
+        score = float(entry.get("value_score", np.nan))
+        if target != "policy_family_first_valid_landing":
+            raise ValueError("policy-family landing Tube target drift")
+        if len(policy_family_sha) != 64 or len(train_manifest_sha) != 64:
+            raise ValueError("policy-family landing Tube provenance identity missing")
+        if score_source.get("selection_rule") != "TRAIN_label_positive":
+            raise ValueError("policy-family landing Tube selection rule drift")
+        if score_source.get("threshold_source") is not None:
+            raise ValueError("policy-family landing Tube may not claim a fitted threshold")
+        if score_source.get("fitted_classifier_used") is not False:
+            raise ValueError("policy-family landing Tube may not claim a fitted classifier")
+        if int(entry.get("continuation_label", -1)) != 1 or score != 1.0:
+            raise ValueError("policy-family landing Tube must retain a positive binary label")
+        if entry.get("jump_start_reachability_proven") is not True:
+            raise ValueError("policy-family landing Tube lacks jump-start reachability")
+        return
+    if source_kind != "policy_conditioned_continuation_field":
         raise ValueError("Soft Tube expansion has unsupported score source")
 
     field_name = str(score_source.get("field_name", ""))

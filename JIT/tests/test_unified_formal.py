@@ -4,6 +4,7 @@ import json
 from types import SimpleNamespace
 
 import jax.numpy as jp
+import pytest
 
 
 def test_checked_in_formal_contract_is_exact_10m_plus(jit_root):
@@ -40,6 +41,84 @@ def test_checked_in_formal_contract_is_exact_10m_plus(jit_root):
     }
     assert config.raw["claim_boundary"]["test_data_used"] is False
     assert config.raw["claim_boundary"]["validation_data_used"] is False
+
+
+def test_actor_only_warm_start_accepts_frozen_unified_source(jit_root, tmp_path):
+    from jit_dvgc.unified_formal import (
+        load_unified_actor_warm_start_config,
+        load_unified_formal_config,
+    )
+
+    payload = json.loads(
+        (jit_root / "configs/pi_unified_iter1_tube1_core_replay75_natural10.json").read_text()
+    )
+    payload["initialization"] = {
+        "actor": "warm_start_frozen_unified",
+        "critic": "fresh",
+        "optimizer": "fresh",
+        "source_frozen_policy": "frozen/pi_1/frozen_unified_policy.json",
+    }
+    path = tmp_path / "warm.json"
+    path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="start wholly fresh"):
+        load_unified_formal_config(path)
+    config = load_unified_actor_warm_start_config(path)
+    assert config.raw["initialization"] == payload["initialization"]
+    assert len(config.config_sha256) == 64
+
+
+def test_actor_only_warm_start_rejects_critic_or_optimizer_restore(jit_root, tmp_path):
+    from jit_dvgc.unified_formal import load_unified_actor_warm_start_config
+
+    payload = json.loads(
+        (jit_root / "configs/pi_unified_iter1_tube1_core_replay75_natural10.json").read_text()
+    )
+    payload["initialization"] = {
+        "actor": "warm_start_frozen_unified",
+        "critic": "warm_start_frozen_unified",
+        "optimizer": "fresh",
+        "source_frozen_policy": "frozen/pi_1/frozen_unified_policy.json",
+    }
+    path = tmp_path / "warm.json"
+    path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="actor-only warm-start initialization"):
+        load_unified_actor_warm_start_config(path)
+
+
+def test_actor_only_warm_start_initialization_declares_fresh_learning_state():
+    from jit_dvgc.unified_formal import actor_only_warm_start_initialization
+
+    assert actor_only_warm_start_initialization("frozen/pi_1/policy.json") == {
+        "actor": "warm_start_frozen_unified",
+        "critic": "fresh",
+        "optimizer": "fresh",
+        "source_frozen_policy": "frozen/pi_1/policy.json",
+    }
+
+    with pytest.raises(ValueError, match="path is missing"):
+        actor_only_warm_start_initialization("")
+
+
+def test_actor_warm_loader_is_stable_when_runtime_entry_is_monkeypatched(
+    jit_root, tmp_path, monkeypatch
+):
+    import jit_dvgc.unified_formal as formal
+
+    payload = json.loads(
+        (jit_root / "configs/pi_unified_iter1_tube1_core_replay75_natural10.json").read_text()
+    )
+    payload["initialization"] = formal.actor_only_warm_start_initialization(
+        "frozen/pi_1/policy.json"
+    )
+    path = tmp_path / "warm.json"
+    path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+
+    monkeypatch.setattr(
+        formal, "load_unified_formal_config", formal.load_unified_actor_warm_start_config
+    )
+    assert formal.load_unified_actor_warm_start_config(path).raw == payload
 
 
 def test_formal_trainer_kwargs_cover_every_exact_block(jit_root):

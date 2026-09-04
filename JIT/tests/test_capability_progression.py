@@ -136,6 +136,30 @@ def test_frontier_progression_requires_both_phases() -> None:
     assert result["candidate_policy_authority_eligible"] is False
 
 
+def test_frontier_progression_does_not_require_success_in_empty_phase() -> None:
+    gate = _gate(
+        up_baseline=100,
+        up_candidate=100,
+        up_states=100,
+        down_baseline=100,
+        down_candidate=100,
+        down_states=100,
+        boundary_up=2,
+        boundary_down=0,
+        boundary_groups=2,
+    )
+    gate["boundary_gate"]["phase_counts"]["downstream"]["state_count"] = 0
+
+    result = analyze_capability_progression(gate)
+
+    assert result["frontier_progression"]["phase_required"] == {
+        "upstream": True,
+        "downstream": False,
+    }
+    assert result["empirical_envelope_expansion_observed"] is True
+    assert result["candidate_policy_authority_eligible"] is True
+
+
 def test_current_pi2_pattern_is_expansion_with_upstream_policy_coverage_collapse() -> None:
     result = analyze_capability_progression(
         _gate(

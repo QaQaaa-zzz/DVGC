@@ -9,7 +9,10 @@ import numpy as np
 import pytest
 
 import jit_dvgc.iterative_tube as iterative_tube
-from jit_dvgc.iterative_frontier_protocol import _frontier_pool
+from jit_dvgc.iterative_frontier_protocol import (
+    _frontier_pool,
+    exact_state_disjoint_role_rows,
+)
 from jit_dvgc.soft_tube import SoftTubeArtifact
 from jit_dvgc.workflow.iteration_loop import WorkflowError, run_workflow
 
@@ -55,6 +58,38 @@ def test_frontier_pool_refuses_iteration_without_two_phase_new_shell() -> None:
     )
     with pytest.raises(ValueError, match="newest Tube shell has no downstream support"):
         _frontier_pool(_source_tube(entries, core_retained_count=2))
+
+
+def test_exact_state_role_partition_keeps_train_then_calibration_priority() -> None:
+    def row(role: str, state: str) -> dict:
+        return {"logical_role": role, "split": role, "state_sha256": state}
+
+    partitioned, exclusions = exact_state_disjoint_role_rows(
+        train=[row("train", "shared-train"), row("train", "train-only")],
+        calibration=[
+            row("calibration", "shared-train"),
+            row("calibration", "shared-holdout"),
+            row("calibration", "calibration-only"),
+        ],
+        acceptance=[
+            row("acceptance", "shared-train"),
+            row("acceptance", "shared-holdout"),
+            row("acceptance", "acceptance-only"),
+        ],
+    )
+
+    assert [row["state_sha256"] for row in partitioned["train"]] == [
+        "shared-train",
+        "train-only",
+    ]
+    assert [row["state_sha256"] for row in partitioned["calibration"]] == [
+        "shared-holdout",
+        "calibration-only",
+    ]
+    assert [row["state_sha256"] for row in partitioned["acceptance"]] == [
+        "acceptance-only"
+    ]
+    assert exclusions == {"train": 0, "calibration": 1, "acceptance": 2}
 
 
 def test_iterative_tube_retains_entire_source_tube_and_adds_train_only(

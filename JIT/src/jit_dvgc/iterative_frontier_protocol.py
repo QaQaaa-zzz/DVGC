@@ -49,6 +49,51 @@ DEFAULT_SEEDS = {
 }
 
 
+def exact_state_disjoint_role_rows(
+    *,
+    train: list[Mapping[str, Any]],
+    calibration: list[Mapping[str, Any]],
+    acceptance: list[Mapping[str, Any]],
+) -> tuple[dict[str, list[dict[str, Any]]], dict[str, int]]:
+    """Assign duplicate physical states by TRAIN > CALIBRATION > ACCEPTANCE.
+
+    The assignment depends only on the locked physical-state identity, never on
+    a continuation outcome.  This preserves all TRAIN support while producing
+    exact-state-disjoint holdout views without new environment interactions.
+    """
+    result: dict[str, list[dict[str, Any]]] = {}
+    exclusions: dict[str, int] = {}
+    claimed: set[str] = set()
+    for role, rows in (
+        ("train", train),
+        ("calibration", calibration),
+        ("acceptance", acceptance),
+    ):
+        kept: list[dict[str, Any]] = []
+        local: set[str] = set()
+        excluded = 0
+        for source in rows:
+            row = dict(source)
+            if row.get("logical_role") != role or row.get("split") != role:
+                raise ValueError(f"{role} logical role drift during exact-state partition")
+            state = str(row.get("state_sha256", ""))
+            if not state:
+                raise ValueError(f"{role} state identity missing during exact-state partition")
+            if state in local:
+                raise ValueError(f"{role} contains duplicate physical states")
+            local.add(state)
+            if state in claimed:
+                excluded += 1
+                continue
+            kept.append(row)
+        if not kept:
+            raise ValueError(f"exact-state partition emptied {role}")
+        result[role] = kept
+        exclusions[role] = excluded
+        claimed.update(str(row["state_sha256"]) for row in kept)
+    return result, exclusions
+
+
 def canonical_sha256(value: Any) -> str:
     return hashlib.sha256(
         json.dumps(

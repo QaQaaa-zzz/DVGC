@@ -15,10 +15,37 @@ ACCEPTANCE:  181/184 positive; 135 unique positive root-geometry cells
 replay Tube: 3119 retained + 525 TRAIN positives = 3644 rows
 ```
 
-No new policy has been trained.  The old class-balanced C^1 fitting step is
-intentionally bypassed because the family labels contain only two TRAIN
-negatives and zero downstream negatives.  The next decision is the identity
-and warm start of the new unified Actor; final TEST/JCE/JEL remains untouched.
+The new unified `pi_2_landing_replay` policy has now completed exactly
+10,009,600 training transitions.  Only its Actor/observation normalizer was
+initialized from selected frozen `pi_1`; critic and optimizer started fresh.
+It is selected as the next engineering iteration authority under the prospective
+landing-capability gate:
+
+```text
+locked source core:  pi_1 3115/3119 stable-recovery successes
+candidate landing:   3119/3119 first-valid-landing successes
+core regressions:    0 under the active landing criterion
+locked boundary:     4/6 new landings across 2 independent parent groups
+selection:           ACCEPTED / selected pi_2_landing_replay
+```
+
+The initial post-training diagnostic that incorrectly retained stable recovery
+for the candidate core reported 10 upstream regressions and remains preserved
+as a rejected criterion-mismatch report.  It is not the active selection result.
+The corrected report changes no policy, seed, state bank, or data role; it only
+applies the first-valid-landing criterion declared before training.  Final
+TEST/JCE/JEL remains untouched.
+
+Deferred predictor work for a later acquisition round:
+
+- predeclare a wider causal lookback/action-perturbation range before observing outcomes;
+- collect more difficult TRAIN failures while retaining exact and near state-disjoint CALIBRATION/ACCEPTANCE roles;
+- only after both classes and independent parent groups are adequate, fit an optional predictor of whether any frozen evaluator reaches first valid landing;
+- fit on TRAIN, calibrate its threshold on CALIBRATION, report once on ACCEPTANCE, and compare against a no-predictor acquisition ablation;
+- use the predictor only to improve proposal/sample efficiency; authoritative labels remain real `env.step` rollouts and first-valid-landing events.
+
+This predictor is deliberately not fitted on the current almost-all-positive
+round and is not part of the current training gate.
 
 Natural-start, `pi_1` centerline, stable-recovery, and “artifact not yet
 generated” statements below are superseded history.
@@ -359,11 +386,11 @@ causal capability analyzer                     IMPLEMENTED
 raw-Tube causal provenance guard               IMPLEMENTED
 causal workflow preparation                    IMPLEMENTED
 
-local compile / targeted pytest                NEXT
-real locked centerline artifact                NEXT
-first causal TRAIN/CALIBRATION/ACCEPTANCE       NOT RUN
-first measured causal Jump Capability growth   NOT RUN
-next policy under causal method                 NOT AUTHORIZED
+local compile / targeted pytest                DONE for active landing round
+real locked pi_0 centerline artifact            DONE
+fixed-jump TRAIN/CALIBRATION/ACCEPTANCE          DONE
+measured landing-capability growth              DONE: 382 TRAIN root cells
+next unified policy                             SELECTED: pi_2_landing_replay
 final TEST/JCE/JEL                              UNTOUCHED
 ```
 
@@ -398,16 +425,10 @@ The code is integrated for prospective use but no complete causal round has been
 
 ## Immediate next tasks
 
-1. Pull current branch and run compile + targeted tests.
-2. Materialize/verify one successful natural-start `pi_1` centerline v2.
-3. Generate the first causal every-x frontier plan.
-4. Inspect x-slice coverage and role/family partition before collecting outcomes.
-5. Run causal TRAIN/CALIBRATION/ACCEPTANCE forward acquisition and continuation evaluation.
-6. Build the first causal Jump Capability summary.
-7. Inspect new root cells by x slice and phase.
-8. Only then decide whether C^k/raw Tube construction and a new policy are justified.
-
-No pi_3-like training before this review.
+1. Treat `pi_2_landing_replay` as the selected engineering authority, not a final policy.
+2. Keep final TEST/JCE/JEL sealed.
+3. Before another acquisition round, predeclare the wider perturbation family and predictor/no-predictor ablation described in the superseding live status.
+4. Do not fit a predictor until harder TRAIN failures and both-class parent-group support exist.
 
 ---
 

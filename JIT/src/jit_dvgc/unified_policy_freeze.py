@@ -17,7 +17,10 @@ from .checkpoint import CheckpointIdentity, load_checkpoint
 from .config import file_sha256, load_config
 from .constants import ACTION_ORDER, ACTOR_FRAME_FIELDS, ACTOR_TASK_FIELDS
 from .handoff_bank import pytree_sha256
-from .unified_formal import load_unified_formal_config
+from .unified_formal import (
+    load_unified_actor_warm_start_config,
+    load_unified_formal_config,
+)
 
 
 FROZEN_UNIFIED_POLICY_SCHEMA = "jit_frozen_unified_policy_v1"
@@ -49,6 +52,13 @@ def _read_json(path: Path) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise ValueError(f"JSON object required: {path}")
     return payload
+
+
+def _load_policy_formal_config(path: Path):
+    raw = _read_json(Path(path))
+    if raw.get("initialization", {}).get("actor") == "warm_start_frozen_unified":
+        return load_unified_actor_warm_start_config(Path(path))
+    return load_unified_formal_config(Path(path))
 
 
 def _canonical_sha256(payload: Mapping[str, Any]) -> str:
@@ -125,7 +135,7 @@ def inspect_unified_policy(
         raise ValueError("unified envelope iteration must be nonnegative")
     config_path = Path(config_path)
     checkpoint = Path(checkpoint)
-    config = load_unified_formal_config(config_path)
+    config = _load_policy_formal_config(config_path)
     source_run_id = _source_run_id(config)
 
     if checkpoint.name != f"transition_{config.ppo.requested_transitions}":

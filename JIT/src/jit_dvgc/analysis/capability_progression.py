@@ -123,6 +123,10 @@ def analyze_capability_progression(
         phase: int(boundary_phase_counts.get(phase, {}).get("candidate_success_count", 0)) > 0
         for phase in ("upstream", "downstream")
     }
+    boundary_phase_required = {
+        phase: int(boundary_phase_counts.get(phase, {}).get("state_count", 0)) > 0
+        for phase in ("upstream", "downstream")
+    }
     boundary_success_count = int(boundary.get("candidate_success_count", 0))
     boundary_groups = int(boundary.get("candidate_success_parent_group_count", 0))
     minimum_groups = int(boundary.get("minimum_candidate_success_parent_groups", 1))
@@ -132,7 +136,11 @@ def analyze_capability_progression(
         and boundary_success_count > 0
         and boundary_groups >= minimum_groups
         and (
-            all(boundary_success_each_phase.values())
+            all(
+                boundary_success_each_phase[phase]
+                for phase, required in boundary_phase_required.items()
+                if required
+            )
             if REQUIRE_BOUNDARY_SUCCESS_EACH_PHASE
             else True
         )
@@ -196,6 +204,7 @@ def analyze_capability_progression(
             "minimum_candidate_success_parent_groups": minimum_groups,
             "baseline_reproduction_failure_count": reproduction_failures,
             "candidate_success_each_phase": boundary_success_each_phase,
+            "phase_required": boundary_phase_required,
             "require_candidate_success_each_phase": REQUIRE_BOUNDARY_SUCCESS_EACH_PHASE,
             "passed": frontier_progression,
         },
@@ -204,7 +213,9 @@ def analyze_capability_progression(
             "candidate_policy_semantics": "candidate_is_a_capability_probe_and_single_policy_realization_candidate_not_the_definition_of_physical_feasibility",
             "global_core_noninferiority_margin": MAX_GLOBAL_CORE_COVERAGE_DROP,
             "phase_core_noninferiority_margin": MAX_PHASE_CORE_COVERAGE_DROP,
-            "frontier_requires_success_in_both_phases": REQUIRE_BOUNDARY_SUCCESS_EACH_PHASE,
+            "frontier_requires_success_in_each_represented_phase": (
+                REQUIRE_BOUNDARY_SUCCESS_EACH_PHASE
+            ),
             "zero_regression_required_for_envelope_progression": False,
             "zero_regression_required_for_policy_authority": False,
             "panel_coverage_is_calibrated_per_state_success_probability": False,

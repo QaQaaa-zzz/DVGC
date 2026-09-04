@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prepare or run the paired gate for fresh or pi0-warm-start candidates.
+"""Prepare or run the paired gate for fresh or unified warm-start candidates.
 
 This wrapper changes only config verification.  Rollout/evaluation logic is the
 existing paired-policy gate unchanged.
@@ -33,7 +33,7 @@ def _load_for_gate(path: Path):
     initialization = raw.get("initialization", {})
     actor = initialization.get("actor")
     critic = initialization.get("critic")
-    if actor == "warm_start_pi_0" and critic == "fresh":
+    if actor in {"warm_start_pi_0", "warm_start_frozen_unified"} and critic == "fresh":
         return actor_only._load_warm_target_config(Path(path))
     if actor == "warm_start_pi_0" and critic == "warm_start_pi_0":
         return full_warm._load_warm_target_config(Path(path))

@@ -109,6 +109,16 @@ JIT/runs/iteration_auto/pi_1_to_pi_2_pi0_centerline_family_landing_20260904/
 | ACCEPTANCE role | `frontier_acceptance/role_manifest.json` | Disjoint holdout: 181/184 family positives; never embedded in replay. |
 | Physical capability evidence | `causal_jump_capability/summary.json` | Resolution-aware result: 382 unique TRAIN-positive root cells beyond the 14-cell centerline; holdouts have 134/135 positive root cells. |
 | TRAIN replay Tube | `tube_2_policy_family_landing/manifest.json` | Retains 3119 Tube_1 rows and adds 525 verified TRAIN landing positives, for 3644 rows total. No fitted C-field or recovery label is used. |
+| Tube-RSI smoke | `tube2_landing_replay_smoke/report.json` | GPU-backed 16-interaction smoke over both phases; GO before training. |
+| State-disjoint role views | `disjoint_role_views/summary.json` | TRAIN-priority exact-state partition; CALIBRATION excludes 31 duplicate states and ACCEPTANCE excludes 40, with exact/near overlap zero. |
+| Role isolation audit | `role_isolation.json` | Confirms exact and 0.01-tolerance near-state isolation across the derived role views. |
+| Pre-training baseline lock | `acceptance_baseline_lock/baseline_lock.json` | Reuses the locked 3119-state pi_1 core and fixes six pi_1 landing failures from three parent groups before candidate training. |
+| Formal candidate run | `../../pi_unified/pi_2_landing_replay_pi1_actor_warmstart_core75_natural10_10009600_seed821101_20260904/formal_report.json` | Exact 10,009,600-transition unified training; pi_1 Actor/normalizer warm start with fresh critic and optimizer. |
+| Frozen candidate | `../../frozen_unified/pi_2_landing_replay_pi1_actor_warmstart_10009600_20260904/frozen_unified_policy.json` | Immutable pi_2 landing-replay candidate used by the locked gate. |
+| Rejected recovery-mismatch diagnostic | `pi2_landing_replay_acceptance_gate/summary.json` | Preserved audit result: boundary passed but old recovery-based core criterion reported 10 upstream regressions; not used for selection. |
+| Active landing gate | `pi2_landing_replay_acceptance_gate_landing_contract/summary.json` | Active contract result: 3119/3119 core landings, zero regressions, and 4/6 boundary gains across two parent groups. |
+| Capability/realization decision | `pi2_landing_replay_capability_progression_represented_phases.json` | Prospective decision: envelope progressed and candidate authority eligible; only phases represented by locked negative states are required for boundary gain. |
+| Selected policy | `../../iteration_selection/pi_2_landing_replay_20260904/selected_policy.json` | Selected next engineering iteration authority; not a final Actor, certified safe set, JCE, or JEL claim. |
 
 Engineering failures are preserved beside the successful data with explicit
 `engineering_error` names.  They document the rejected Warp stacked-state

@@ -9,7 +9,11 @@ from pathlib import Path
 from jit_dvgc.config import file_sha256
 from jit_dvgc.soft_tube import load_soft_tube
 from jit_dvgc.tube_rsi import describe_tube_sampling
-from jit_dvgc.unified_formal import load_unified_formal_config
+from jit_dvgc.unified_formal import (
+    actor_only_warm_start_initialization,
+    load_unified_actor_warm_start_config,
+    load_unified_formal_config,
+)
 
 
 DEFAULT_TEMPLATE = Path("JIT/configs/pi_unified_iter1_tube1_core_replay75_natural10.json")
@@ -29,6 +33,7 @@ def main() -> int:
     parser.add_argument("--output-config", type=Path, required=True)
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--template", type=Path, default=DEFAULT_TEMPLATE)
+    parser.add_argument("--actor-warm-start-frozen-policy", type=Path)
     args = parser.parse_args()
 
     if args.output_config.exists():
@@ -94,6 +99,11 @@ def main() -> int:
         "purpose": "automatic_core_retaining_envelope_iteration_fixed_repair02_recipe",
         "status": "predeclared_not_started",
     }
+    actor_warm_start = args.actor_warm_start_frozen_policy is not None
+    if actor_warm_start:
+        payload["initialization"] = actor_only_warm_start_initialization(
+            args.actor_warm_start_frozen_policy
+        )
     payload["claim_boundary"] = {
         "formal_method_stage_training": True,
         "iteration": iteration,
@@ -101,9 +111,18 @@ def main() -> int:
         "source_policy_name": f"pi_{source_iteration}",
         "source_tube_iteration": iteration,
         "candidate_revision": "automatic_fixed_repair02_recipe",
-        "fixed_training_recipe": "fresh_actor_critic_optimizer; Tube90/natural10; within_Tube old_core75/new_expansion25",
+        "fixed_training_recipe": (
+            "preceding_frozen_actor_warm_start_fresh_critic_optimizer; "
+            "Tube90/natural10; within_Tube old_core75/new_expansion25"
+            if actor_warm_start
+            else "fresh_actor_critic_optimizer; Tube90/natural10; "
+            "within_Tube old_core75/new_expansion25"
+        ),
         "soft_tube_support_predeclared": True,
-        "fresh_initialization_unchanged": True,
+        "fresh_initialization_unchanged": not actor_warm_start,
+        "actor_only_warm_start": actor_warm_start,
+        "critic_initialization": "fresh",
+        "optimizer_initialization": "fresh",
         "ppo_hyperparameters_unchanged": True,
         "reward_physics_action_semantics_unchanged": True,
         "reset_probabilities_unchanged": True,
@@ -122,7 +141,11 @@ def main() -> int:
         json.dumps(payload, indent=2, sort_keys=True, allow_nan=False) + "\n",
         encoding="utf-8",
     )
-    loaded = load_unified_formal_config(args.output_config)
+    loaded = (
+        load_unified_actor_warm_start_config(args.output_config)
+        if actor_warm_start
+        else load_unified_formal_config(args.output_config)
+    )
     if loaded.soft_tube_manifest_sha256 != tube.manifest["manifest_sha256"]:
         raise ValueError("generated automatic training config failed identity roundtrip")
     result = {

@@ -2,13 +2,17 @@
 
 ## Superseding current handoff
 
-The fixed-jump-start policy-family landing round is complete through replay
-construction.  Use the locked real-frame `pi_0` centerline and `pi_0` proposal
-rollouts.  A reached state is positive if any frozen `pi_0/pi_1/pi_2` evaluator
-reaches first valid landing; do not require recovery.  Results are TRAIN
-525/527, CALIBRATION 181/184, ACCEPTANCE 181/184, 382 new TRAIN root cells, and
-a 3644-row TRAIN replay Tube.  No new policy has been trained.  Older
-natural-start/`pi_1`-centerline instructions below are superseded.
+The fixed-jump-start policy-family landing round is complete through training
+and prospective selection.  Use the locked real-frame `pi_0` centerline and
+`pi_0` proposal rollouts.  A reached state is positive if any frozen
+`pi_0/pi_1/pi_2` evaluator reaches first valid landing; recovery is not required.
+Results are TRAIN 525/527, CALIBRATION 181/184, ACCEPTANCE 181/184, 382 new
+TRAIN root cells, and a 3644-row TRAIN replay Tube.  `pi_2_landing_replay` was
+Actor-only warm-started from frozen `pi_1`, trained for exactly 10,009,600
+transitions, retained 3119/3119 source-core landings, and landed 4/6 locked
+baseline-negative ACCEPTANCE states across two parent groups.  It is selected
+as the next engineering iteration authority.  Final TEST/JCE/JEL is untouched.
+Older natural-start/`pi_1`-centerline instructions below are superseded.
 
 ## Purpose
 
@@ -388,11 +392,11 @@ causal capability analyzer                     IMPLEMENTED
 raw-Tube causal provenance guard               IMPLEMENTED
 causal workflow preparation                    IMPLEMENTED
 
-local compile / targeted pytest                NEXT
-real locked centerline artifact                NEXT
-first causal TRAIN/CALIBRATION/ACCEPTANCE       NOT RUN
-first measured causal Jump Capability growth   NOT RUN
-next policy under causal method                 NOT AUTHORIZED
+local compile / targeted pytest                DONE for active landing round
+real locked pi_0 centerline artifact            DONE
+fixed-jump TRAIN/CALIBRATION/ACCEPTANCE          DONE
+measured landing-capability growth              DONE: 382 TRAIN root cells
+next unified policy                             SELECTED: pi_2_landing_replay
 final TEST/JCE/JEL                              UNTOUCHED
 ```
 
