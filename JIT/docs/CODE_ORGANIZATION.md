@@ -1,18 +1,13 @@
 # JIT code organization and lifecycle
 
-## The problem being corrected
+## Principle
 
-The historical tree accumulated one Python module per experiment stage:
-`upstream_*`, `downstream_*`, `unified_*`, CV repairs, parent-diversity passes,
-and temporary diagnostics. The issue was not that implementation lived under
-`src`; the issue was that experiment identity became source-code structure.
+The active tree must represent **stable capabilities**, while configs, artifacts,
+run directories, and manifests represent iterations/experiments.
 
-Envelope iteration must invert that relationship: **code represents stable
-capabilities; configs and artifacts represent iterations.**
+Do not turn experiment identity into source-code structure.
 
 ## Stable package APIs
-
-Production CLIs should import from package roots:
 
 | Capability | Package API |
 | --- | --- |
@@ -21,87 +16,147 @@ Production CLIs should import from package roots:
 | snapshot formats / pools | `jit_dvgc.snapshots` |
 | boundary / transition-band acquisition | `jit_dvgc.acquisition` |
 | continuation labels / fields | `jit_dvgc.continuation` |
-| TRAIN diagnostics | `jit_dvgc.analysis` |
+| paired evaluation / capability progression | `jit_dvgc.analysis` |
 | resumable iteration orchestration | `jit_dvgc.workflow` |
 
-Each package root exposes the stable public API. We intentionally removed the
-previous three-line-per-module facade layer; categorization must reduce cognitive
-load, not multiply files.
+The capability-progression revision introduced one new durable analysis module:
+
+`JIT/src/jit_dvgc/analysis/capability_progression.py`
+
+This is justified as a stable capability because it changes the reusable
+scientific decision semantics for all future iterations.  It is not a `pi_2`
+experiment-specific module.
+
+CLI:
+
+`JIT/cli/analyze_capability_progression.py`
+
+The CLI remains thin and delegates scientific logic to the package module.
+
+## Current decision architecture
+
+The code now separates:
+
+```text
+locked paired policy evaluation
+        ↓
+strict behavioral diagnostic fields
+        ↓
+capability_progression analysis
+  A. frontier progression
+  B. phase-aware policy realization
+        ↓
+selection only for prospective A+B pass
+```
+
+Historical strict gate reports remain readable and are not rewritten.
+
+`select_iteration_policy.py` supports:
+
+- historical strict selection for old reproducibility paths;
+- future prospective selection with a non-retrospective
+  `jit_capability_progression_decision_v1` artifact.
+
+Retrospective decisions cannot select a candidate.
 
 ## Modify-first rule
 
-Before creating a production file, answer these questions in order:
+Before creating a production file, answer in order:
 
-1. Can the existing implementation file be modified?
+1. Can an existing implementation file be modified?
 2. Can an existing package API expose the capability?
-3. Can an existing CLI accept another schema/config instead of creating another
-   CLI?
+3. Can an existing CLI accept another schema/config?
 4. Can an existing test file cover the behavior?
-5. Is this really a new durable capability, or just a new iteration/run?
+5. Is this genuinely a new durable scientific/runtime capability?
 
 Only the final case normally justifies a new production file.
 
 Iteration numbers, retry numbers, checkpoint counts, model seeds, and Tube IDs
-belong in configs/manifests/run paths. They must not generate `pi2_*.py`,
-`tube2_*.py`, `*_retry02.py`, or new source trees.
+belong in configs/manifests/run paths.  Do not create `pi3_*.py`, `tube3_*.py`, or
+`retry04_*.py` merely because the next experiment exists.
 
 ## Active vs historical files
 
-A file belongs in the active tree only if it is one of:
+A file belongs in the active tree when it is one of:
 
-- reusable production implementation
-- current stable CLI
-- current contract/regression test
-- current method/status/verification documentation
-- path-bound provenance/configuration required to reproduce retained artifacts
+- reusable production implementation;
+- current stable CLI;
+- current contract/regression test;
+- current method/status/verification documentation;
+- path-bound provenance/configuration required by retained artifacts.
 
-When stage-specific code has been superseded and no current implementation or
-loader imports it, delete it from the active branch. Git history is the source
-archive. Do not copy obsolete Python into `archive/` and keep both versions.
+Superseded narrative documents should either be replaced by current authority or
+clearly marked historical.  Do not keep two conflicting “current status” stories.
 
-Exception: configs, frozen manifests, handoff locks, and other paths recorded by
-artifact identity should remain at their original paths unless a dedicated
-compatibility migration proves relocation safe.
+Git history is the source archive for removed source code.  Do not duplicate
+obsolete Python into an `archive/` directory.
+
+Path-bound configs, frozen manifests, handoff locks, and artifact references may
+need to remain at original paths for reproducibility.
 
 ## Current compatibility debt
 
-Three iteration-0/upstream-named modules cannot yet be removed because current
-production code still uses parts of them:
+Some historical flat/upstream modules remain because active loaders or artifact
+reproduction still depend on them.  Do not delete based on naming alone.
 
-- `upstream_boundary.py` — legacy physical-state/hash helpers are still consumed
-  by bootstrap/fresh-validation code
-- `upstream_checkpoint_train_evidence.py` — current shared refit/Tube builder
-  still reads the frozen upstream evidence through this loader
-- `upstream_matched_checkpoint_domain_cv.py` (and its lower-level checkpoint-CV
-  dependency) — generic code still imports sigmoid/tiny-MLP/CV helpers from it
+Before deleting any Python/CLI/test file:
 
-The correct cleanup is to move those generic responsibilities into existing
-iteration/continuation/snapshot authorities, then retire or reduce the upstream
-modules. Do not delete them first and repair import failures afterward.
+1. prove no production import/package API/current CLI/current test/artifact loader/
+   config/frozen reproducibility path depends on it;
+2. run at least:
+   - `python -m compileall -q JIT/src JIT/cli`
+   - targeted imports/tests for the affected capability;
+3. stop if dependency closure is uncertain.
 
 ## Iteration-generic requirement
 
-Reusable scientific code must accept `iteration=k` from locked protocol data.
-It must not encode `pi_0`, `Tube_1`, `C_up^0`, exact iteration-0 candidate
-counts, exact validation thresholds, or iteration-0 snapshot roots as Python
-constants unless those values define a genuinely immutable method invariant.
+Reusable scientific code must obtain iteration identity from locked protocol data
+and artifacts, not from hard-coded `pi_2`, `Tube_2`, or exact current counts.
 
-Existing Tube_1 artifacts remain immutable. Generalization must be backward
-compatible with their locked schemas and SHA-bound config semantics.
+Current run-specific values belong in reports/config/artifact metadata.
+
+Existing Tube/frozen artifacts remain immutable.  Generalization must be backward
+compatible with locked schemas and SHA-bound provenance unless an explicit
+migration is introduced.
 
 ## CLI and tests
 
-`JIT/cli/` files parse arguments, dispatch one production capability, print a
-machine-readable result, and exit. They should not contain fitting algorithms,
-physics logic, or scientific gate definitions.
+`JIT/cli/` files should:
 
-Tests should protect current production contracts. When a retired research
-module is removed, its experiment-specific tests should leave the active suite
-with it; durable behavior should already be covered by the generic replacement.
+- parse arguments;
+- call one production capability;
+- write/print machine-readable results;
+- avoid containing fitting algorithms, physics, or complex scientific decision
+  logic.
+
+Tests should protect durable contracts.
+
+Current capability-progression regression coverage:
+
+`JIT/tests/test_capability_progression.py`
+
+Generic workflow/Tube regression coverage:
+
+`JIT/tests/test_iterative_envelope_automation.py`
 
 ## Workflow boundary
 
-`jit_dvgc.workflow` is orchestration, not science. It may sequence commands,
-verify files/JSON assertions, export artifact identities, persist state, and
-resume. It may not reinterpret a failed gate, tune thresholds, alter PPO/reward
-settings, or touch final TEST evidence.
+`jit_dvgc.workflow` is orchestration, not science.
+
+It may:
+
+- sequence commands;
+- validate files/JSON assertions;
+- persist/resume state;
+- stop when a declared scientific artifact fails its prospective contract.
+
+It may not:
+
+- reinterpret a failed candidate itself;
+- tune capability margins;
+- change reward/replay/PPO/model/physics settings;
+- turn a retrospective decision into a formal selection;
+- touch final TEST evidence.
+
+The current future DAG includes a separate capability-progression stage after the
+locked paired evaluation and before policy selection.
