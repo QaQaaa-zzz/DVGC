@@ -1,21 +1,21 @@
 # DVGC/JIT Capability Progression Report — 2026-09-04
 
-## Status of this report
+## Purpose
 
 This document preserves the completed expert -> pi_2 progression evidence.
 
-For the **current** method definition and next operator steps, use:
+For the current method definition and next operator steps, use:
 
 ```text
-JIT/docs/JIT_CAPABILITY_TUBE_VNEXT_OUTLINE_20260904.md
 JIT/docs/CURRENT_STATUS.md
+JIT/docs/JIT_CAPABILITY_TUBE_VNEXT_OUTLINE_20260904.md
 ```
 
-The key correction made after the original progress analysis is:
+The key later correction is:
 
 > Tube entry count is raw replay-support cardinality, not physical capability-volume growth.
 
-Therefore `222 -> 3,119 -> 3,776` remains an exact artifact history, but no longer supports a 14x/17x physical-envelope interpretation. Tube_0/1/2 must be re-measured using the declared resolution-aware physical cells.
+Therefore the exact history `222 -> 3,119 -> 3,776` remains valid, but it must not be interpreted as a physical-envelope multiplier.
 
 ---
 
@@ -62,7 +62,7 @@ Frozen expert manifest:
 JIT/runs/frozen_experts/pi_up9977856_pi_down25600_20260827/frozen_experts.json
 ```
 
-The experts are capability probes/bootstrap data sources, not runtime switching controllers.
+The experts are bootstrap capability probes/data sources, not runtime switching controllers.
 
 ---
 
@@ -71,40 +71,30 @@ The experts are capability probes/bootstrap data sources, not runtime switching 
 Tube_0:
 
 ```text
-JIT/runs/soft_tube/soft_tube_train_v1_202608276
-```
-
-The path above is not used. Authoritative Tube_0:
-
-```text
 JIT/runs/soft_tube/soft_tube_train_v1_20260828
+222 raw snapshots = 117 upstream + 105 downstream
 ```
 
-Composition:
+Manifest SHA:
 
 ```text
-222 raw snapshots
-117 upstream
-105 downstream
+c1c1161ebafd16716f2566aaccfe89169fe9cb0c2b090266c0e2bf90165df28b
 ```
 
 pi_0:
 
 ```text
 JIT/runs/frozen_unified/pi_0_round1_10009600_20260831/frozen_unified_policy.json
+10,009,600 training transitions
 ```
+
+Actor SHA:
 
 ```text
-10,059,600? no
+43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029
 ```
 
-Authoritative pi_0 training transitions:
-
-```text
-10,009,600
-```
-
-pi_0 showed that one unified Actor could be trained from the two-phase bootstrap support.
+pi_0 established that one unified Actor could be trained from the two-phase bootstrap support.
 
 ---
 
@@ -125,13 +115,19 @@ upstream   427
 downstream 2,692
 ```
 
+Manifest SHA:
+
+```text
+817a980a5dd84f36507f762a913c21c1fc0913580d925ff9c68e982edfd82a80
+```
+
 Selected pi_1 repair02:
 
 ```text
 JIT/runs/frozen_unified/pi_1_core_replay75_10009600_20260903/frozen_unified_policy.json
 ```
 
-Historical engineering quickcheck:
+Engineering quickcheck:
 
 ```text
 Tube_0 222/222
@@ -141,9 +137,9 @@ boundary 26/260
 successful parent groups 4
 ```
 
-The old strict formal Iteration-1 PASS remains unclaimed because the old gate contains 3 baseline-reproduction mismatches from the historical PRNG hierarchy.
+Historical strict formal Iteration-1 PASS remains unclaimed because the old gate contains 3 baseline-reproduction mismatches from the historical PRNG hierarchy.
 
-The warm-start A/B study remains closed historical evidence.
+Warm-start A/B studies remain closed historical evidence.
 
 ---
 
@@ -153,27 +149,27 @@ v3 TRAIN:
 
 ```text
 1,031 total
-upstream   821 = 785+ / 36-, 9 parent groups
-downstream 210 = 182+ / 28-, 3 parent groups
+upstream   821 = 785 positive + 36 negative, 9 parent groups
+downstream 210 = 182 positive + 28 negative, 3 parent groups
 ```
 
 v3b upstream CALIBRATION:
 
 ```text
-739 = 733+ / 6-, 3 parent groups
+739 = 733 positive + 6 negative, 3 parent groups
 ```
 
 Downstream CALIBRATION:
 
 ```text
-70 = 61+ / 9-
+70 = 61 positive + 9 negative
 ```
 
 v3c ACCEPTANCE:
 
 ```text
-upstream   516 = 511+ / 5-
-downstream  70 =  61+ / 9-
+upstream   516 = 511 positive + 5 negative
+downstream  70 =  61 positive + 9 negative
 ```
 
 C^1 64x64:
@@ -186,15 +182,9 @@ upstream:
   engineering-selected
 
 downstream:
-  A 1.0? no
-```
-
-Authoritative downstream result:
-
-```text
-AUC 1.0
-recall 1.0
-formal calibration PASS
+  AUC 1.0
+  recall 1.0
+  formal calibration PASS
 ```
 
 Do not state that all-phase C^1 formally passed.
@@ -278,7 +268,7 @@ local frontier progression = strong
 upstream single-policy realization = degraded
 ```
 
-pi_2 remains useful capability evidence but is not retrospectively promoted as the next formal authority.
+pi_2 remains capability evidence but is not retrospectively promoted as the next formal authority.
 
 ---
 
@@ -292,7 +282,7 @@ from
 single-policy realization retention
 ```
 
-The current prospective engineering non-inferiority margins are:
+Prospective engineering non-inferiority margins:
 
 ```text
 max global locked-panel coverage drop = 5 percentage points
@@ -305,9 +295,9 @@ Because this semantic revision followed the observed pi_2 result, current pi_2 c
 
 ---
 
-## 9. Resolution-aware correction to the expansion story
+## 9. Resolution-aware correction
 
-The next method version distinguishes:
+The current method distinguishes:
 
 ```text
 raw snapshots
@@ -328,9 +318,9 @@ wheel tangential speed       0.10 m/s
 phase                        discrete
 ```
 
-The new physical Tube is sliced along root `x` at 0.10 m intervals.
+The physical Tube is sliced along root `x` at 0.10 m intervals.
 
-Until this analysis is executed, the project does **not** know the exact physical-cell expansion from Tube_0 to Tube_1 or Tube_1 to Tube_2.
+Until the retrospective analysis is executed, the project does **not** know the exact physical-cell expansion from Tube_0 to Tube_1 or Tube_1 to Tube_2.
 
 ---
 
@@ -343,10 +333,10 @@ Run:
 ```text
 Tube_0 physical-cell reconstruction
 Tube_1 versus Tube_0 cell comparison
-Tube_2 versus Tube1 cell comparison
+Tube_2 versus Tube_1 cell comparison
 ```
 
-Exact commands and interpretation are maintained in:
+Exact commands and interpretation:
 
 ```text
 JIT/docs/JIT_CAPABILITY_TUBE_VNEXT_OUTLINE_20260904.md
