@@ -72,7 +72,7 @@ The code emits two cell profiles:
 - `full_physical_v1`: root pose/twist + joint pose/rates + wheel tangential speeds; used for fine physical deduplication;
 - `root_geometry_v1`: root pose/twist only; used as the primary geometric Tube/frontier diversity space so a joint-only difference cannot masquerade as macroscopic envelope expansion.
 
-Quantization is nearest-grid, half away from zero. Angular velocity resolution is **2 deg/s**, not the earlier proposed 5 deg/s.
+Quantization is nearest-grid, half away from zero. Angular velocity resolution is **2 deg/s**.
 
 ## Tube geometry contract
 
@@ -184,8 +184,8 @@ Do not describe the automatic workflow as fully resolution-aware until a future 
 
 ## Immutable physical/task contracts
 
-- branch: `agent/two_phase-soft-tube` is invalid; use only `agent/two-phase-soft-tube`;
-- XML: `assets/orange_better_4kg_horizontal.xml` is invalid; authoritative XML is `assets/orange_bike_4kg_horizontal.xml`;
+- branch: `agent/two-phase-soft-tube`;
+- XML: `assets/orange_bike_4kg_horizontal.xml`;
 - XML SHA-256: `0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a`;
 - actual payload: 2 kg;
 - simulation runtime: 0.005 s substep, 0.020 s control interval = 50 Hz;
@@ -194,7 +194,7 @@ Do not describe the automatic workflow as fully resolution-aware until a future 
 - no runtime expert switching;
 - no silent physics/reward/action/snapshot/task-geometry/TEST changes.
 
-The historical `+/-50 N m` text in older authority documents was incorrect. The XML and `model.py` both enforce +/-30 N m; correcting documentation does not modify the robot model.
+The XML and runtime model validator both enforce +/-30 N m. Documentation corrections do not modify the robot model.
 
 ## Data-role contract
 
