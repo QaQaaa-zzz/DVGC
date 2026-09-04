@@ -1,15 +1,15 @@
 """Iteration-only compatibility for sparse parent-label TRAIN cells.
 
 Bootstrap C0 refit evidence was curated so every parent group contained both
-continuation labels.  Later automatic frontier iterations only predeclare and
+continuation labels. Later automatic frontier iterations only predeclare and
 gate class support at the phase level; a valid TRAIN role may therefore contain
-an outcome-pure parent group.  Requiring both labels inside every parent at fit
+an outcome-pure parent group. Requiring both labels inside every parent at fit
 time is an inherited bootstrap assumption, not part of the k>=1 frontier role
 contract.
 
 This module preserves every predeclared TRAIN row and extends the existing
 cell-balancing rule to the cells that actually exist: every observed
-``(parent_group_id, label)`` cell receives equal total loss mass.  No missing
+``(parent_group_id, label)`` cell receives equal total loss mass. No missing
 cell is fabricated, no row is resampled, and CALIBRATION/ACCEPTANCE/TEST data are
 never used for parameter fitting.
 """
@@ -34,13 +34,7 @@ ARCHIVE_SCHEMA = "jit_iterative_prefit_failure_archive_v1"
 def observed_cell_balanced_weights(
     groups: Sequence[str], targets: np.ndarray
 ) -> np.ndarray:
-    """Equalize total mass across every observed parent/label cell.
-
-    When all parents contain both labels this is exactly the historical
-    ``equal_parent_label_cell_mass`` calculation.  If a parent is outcome-pure,
-    its one observed cell is retained rather than rejecting the whole TRAIN
-    role.  Global two-class support remains enforced by the iterative fitter.
-    """
+    """Equalize total mass across every observed parent/label cell."""
     if len(groups) != len(targets) or len(groups) <= 0:
         raise ValueError("iterative TRAIN weighting requires nonempty aligned rows")
     normalized_targets = np.asarray(targets, dtype=np.float32).reshape(-1)
@@ -131,7 +125,7 @@ def _archive_empty_prefit_failure(output_dir: Path) -> Path | None:
     if any(output.iterdir()):
         raise FileExistsError(
             "nonempty incomplete iterative continuation output must be preserved and "
-            f"diagnosed explicitly before retry: {output}"
+            f"diagnosed explicitly before retrying: {output}"
         )
     archive = output.with_name(output.name + "_failed_prefit_parent_cell_contract")
     if archive.exists():
@@ -162,11 +156,18 @@ def _archive_empty_prefit_failure(output_dir: Path) -> Path | None:
 
 
 def fit_and_calibrate_observed_cells(
-    *, train_root: Path, calibration_root: Path, output_dir: Path
+    *,
+    train_root: Path,
+    calibration_root: Path,
+    output_dir: Path,
+    model_profile: str = iterative.DEFAULT_MODEL_PROFILE,
 ) -> dict[str, Any]:
-    """Run the existing k>=1 fitter with the iteration-compatible cell rule."""
+    """Run the k>=1 fitter with observed-cell weighting and a selected model profile."""
+    if model_profile not in iterative.MODEL_PROFILES:
+        raise ValueError(f"unsupported iterative continuation model profile: {model_profile}")
     output = Path(output_dir)
     support = _train_cell_support(Path(train_root))
+    revised = bool(iterative.MODEL_PROFILES[model_profile]["post_failure_architecture_revision"])
     contract_path = output.with_name(output.name + "_weighting_contract.json")
     contract = {
         "schema": CONTRACT_SCHEMA,
@@ -175,16 +176,18 @@ def fit_and_calibrate_observed_cells(
         "train_root": str(train_root),
         "calibration_root": str(calibration_root),
         "output_dir": str(output),
+        "model_profile": model_profile,
         "weighting_rule": "equal_total_mass_for_each_observed_parent_group_label_cell",
         "historical_mixed_cell_behavior_preserved": True,
         "missing_parent_label_cells_fabricated": False,
         "train_rows_resampled": False,
         "train_role_membership_changed": False,
         "calibration_rows_used_for_parameter_fit": False,
+        "calibration_rows_reused_for_architecture_comparison": revised,
         "acceptance_rows_used_for_parameter_fit": False,
         "test_data_used": False,
         "bootstrap_c0_strict_parent_two_class_validator_changed": False,
-        "model_architecture_changed": False,
+        "model_architecture_changed": revised,
         "optimizer_changed": False,
         "calibration_contract_changed": False,
         "train_support": support,
@@ -200,6 +203,7 @@ def fit_and_calibrate_observed_cells(
             train_root=Path(train_root),
             calibration_root=Path(calibration_root),
             output_dir=output,
+            model_profile=model_profile,
         )
     finally:
         shared._cell_balanced_weights = original
