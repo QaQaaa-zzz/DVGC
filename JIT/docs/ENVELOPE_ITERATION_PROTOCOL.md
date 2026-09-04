@@ -1,192 +1,209 @@
-# JIT Policy-Conditioned Soft-Tube Envelope Iteration Protocol
+# JIT Capability-Progression Iteration Protocol
 
-## Status — 2026-09-03
+## Status — 2026-09-04
 
-This document defines the active scientific contract for iterative empirical
-jumping-capability-envelope expansion.
+This document defines the active scientific contract for future iterative JIT
+rounds after the completed engineering `pi_1 -> Tube_2 -> pi_2` study.
 
-Iteration-1 policy initialization/replay ablations are complete. `repair02` is
-selected as the **engineering pi_1 authority** because it is the only tested
-candidate that preserved all 222 Tube_0 core states while adding positive
-boundary capability.
+The central revision is:
 
-The historical repair02 quick gate is **not** a publication-level strict PASS:
-3 locked baseline-negative states changed outcome under the historical paired
-re-roll PRNG protocol. That mismatch is preserved as historical protocol debt;
-it is not rewritten away.
+> cumulative empirical capability progression and latest-policy behavioral
+> retention are related but distinct quantities.
 
-The active mainline is now:
-
-```text
-selected pi_1
-  -> pi_1-conditioned frontier evidence
-  -> C^1
-  -> Tube_2
-  -> pi_2
-```
-
-For future rounds, a pre-candidate locked-baseline gate eliminates the historical
-negative-reproduction mismatch by never re-rolling a locked baseline boundary
-outcome under a different PRNG hierarchy.
+The historical zero-regression gate remains valid as a strict diagnostic and as
+reproducibility evidence for old selections.  It is no longer the sole definition
+of envelope expansion.
 
 Final TEST/JCE/JEL remains untouched.
 
+---
+
 ## 1. Research objective
 
-The target is one unified policy whose empirically demonstrated jumping
-capability envelope expands across iterations under fixed task physics and action
-semantics.
+For one fixed robot XML/task, JIT aims to discover increasingly broad empirical
+jump-capability evidence through real dynamics and to use the current frontier to
+generate just-in-time training curricula for one unified runtime policy.
 
-The scientific chain is:
+Keep three objects separate:
+
+### 1.1 Physical/task feasibility `F*`
+
+Conceptual set of states from which there exists at least one admissible control
+behavior that can complete the fixed task.
+
+JIT does not prove or exactly compute `F*`.
+
+### 1.2 Cumulative empirical capability evidence `E_k`
+
+States/regions supported by successful real-dynamics continuation evidence from
+frozen experts or unified policies up to iteration k.
+
+A Tube is a structured TRAIN support/curriculum artifact derived from this
+empirical evidence.  Tube cardinality is not geometric state-space volume.
+
+### 1.3 Single-policy realization `R(pi_k, E_k)`
+
+How much of the cumulative support the current unified policy realizes on a
+locked fixed evaluation panel.
+
+A later policy failing an earlier single rollout does not erase historical
+capability provenance.  However a large phase-specific coverage collapse can
+make that policy unsuitable as the sole authority for the next automatic round.
+
+---
+
+## 2. Scientific chain
 
 ```text
 frozen phase experts
   -> bootstrap V_up / V_down
   -> Tube_0
   -> unified pi_0
-  -> freeze/select pi_k
-  -> predeclare outcome-blind frontier roles
-  -> real-dynamics frontier acquisition under pi_k
-  -> pi_k continuation labels
-  -> fit C_up^k / C_down^k on TRAIN only
-  -> calibrate thresholds on disjoint CALIBRATION only
+  -> frozen/select policy probe pi_k
+  -> predeclare frontier roles
+  -> real-dynamics frontier acquisition
+  -> pi_k-conditioned continuation evidence
+  -> C_up^k / C_down^k
   -> core-retaining Tube_(k+1)
-  -> isolate/audit TRAIN vs CALIBRATION vs ACCEPTANCE
-  -> lock pi_k acceptance baseline before candidate training
-  -> unified pi_(k+1)
-  -> freeze pi_(k+1)
-  -> strict locked-baseline core-preservation + boundary-gain gate
-  -> FAIL: preserve and diagnose
-  -> PASS: select next authority and repeat
-  -> only after iteration stopping: final frozen-policy JCE/JEL
+  -> lock pi_k evaluation baseline
+  -> train/freeze unified pi_(k+1)
+  -> locked paired evaluation
+  -> capability-progression decision
+       A. empirical frontier progression
+       B. phase-aware policy realization retention
+  -> if A+B pass prospectively: select pi_(k+1)
+  -> otherwise: preserve evidence and stop for a method decision
+  -> after declared iteration stopping only: final JCE/JEL evaluation
 ```
 
-The Soft Tube is training guidance/support/curriculum. It is not a certified safe
-set, viability kernel, invariant-set proof, or formal reachability certificate.
+The newest unified policy is a capability probe and realization candidate.  It is
+not the definition of physical feasibility.
 
-Natural cold-start failure outside the declared jump-capability state domain is a
-diagnostic, not the central capability gate.
+---
 
-## 2. Immutable task contract
+## 3. Immutable task contract
 
-Unless a new research question is explicitly opened, preserve:
+Unless a new research question explicitly changes the task, preserve:
 
-- XML: `assets/orange_bike_4kg_horizontal.xml`
-- XML SHA-256: `0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a`
-- payload: 2 kg
-- control: 50 Hz
-- hip/knee torque limits: +/-50 Nm
-- action order: steer / rear-wheel drive / hip / knee
-- reward semantics
-- snapshot semantics
-- no expert switching in unified policy operation
-- TRAIN/CALIBRATION/ACCEPTANCE role isolation
-- TEST/final isolation
+- XML: `assets/orange_bike_4db?` is not authoritative;
+- authoritative XML: `assets/orange_bike_4kg_horizontal.xml`;
+- XML SHA-256:
+  `0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a`;
+- payload: 2 kg;
+- control: 50 Hz;
+- hip/knee torque limits: +/-50 Nm;
+- action order: `[steer, rear-wheel drive, hip, knee]`;
+- reward semantics;
+- snapshot semantics;
+- no expert switching in unified runtime;
+- development-role isolation;
+- final TEST/JCE/JEL isolation.
 
-## 3. Policy-conditioned continuation authority
+Do not create a new XML merely to rename the historical filename.
 
-`V_up/V_down` are bootstrap expert-conditioned authorities used to construct
-Tube_0. They must not be silently reused as continuation authority for later
-unified policies.
+---
 
-For every selected frozen unified policy `pi_k`, continuation is
+## 4. Bootstrap expert semantics
+
+`pi_up_star` and `pi_down_star` are capability probes/data sources for the
+bootstrap stage.  They are not final runtime controllers.
+
+`V_up/V_down` are expert-conditioned continuation authorities for Tube_0 only.
+They must not be silently reused as later unified-policy continuation fields.
+
+---
+
+## 5. Policy-conditioned continuation fields
+
+For a frozen unified policy `pi_k`, later continuation evidence remains
 policy-conditioned:
 
-`C(s | pi_k)`.
+```text
+C^k(s) = empirical continuation score under frozen pi_k
+```
 
-Therefore the same state may fail under `pi_k` and succeed under `pi_(k+1)`.
-Every continuation dataset/model/report must bind the exact frozen policy actor,
-payload, XML, source Tube, and protocol identity.
+This is a proposal/filtering tool for frontier and Tube construction.  It is not
+an existential statement that no other controller can solve a state when `pi_k`
+fails.
 
-PPO critic/value is not `C^k`.
+Consequently:
 
-## 4. Real-dynamics acquisition only
+- the same state may fail under `pi_k` and succeed under another frozen policy;
+- PPO critic/value is not `C^k`;
+- cumulative capability evidence must not be collapsed into latest-policy
+  continuation alone.
 
-Expansion evidence must come from authoritative dynamics. Do not directly widen
-coordinate ranges or manually mutate `qpos/qvel` to manufacture favorable states.
+---
 
-Allowed acquisition mechanisms include:
+## 6. Real-dynamics acquisition
+
+Expansion/frontier evidence must be reached through authoritative dynamics.
+Do not manufacture favorable states by directly widening qpos/qvel coordinate
+ranges.
+
+Allowed mechanisms include:
 
 - successful frozen-policy trajectories;
-- states reached just outside current Tube support under real dynamics;
-- bounded predeclared action perturbations from audited real snapshots;
+- states reached just outside current support;
+- bounded predeclared action perturbations from audited snapshots;
 - other explicitly predeclared real-dynamics probes.
 
-The generic automatic frontier uses the **newest expansion shell of Tube_k** as
-its parent pool. It intentionally does not fall back to the full Tube when the
-newest shell is absent or lacks sufficient phase/group support. Such a failure
-requires a new parent-generation decision rather than silent protocol widening.
+The current generic automatic frontier uses the newest Tube expansion shell as
+its parent pool and does not silently fall back to the full Tube.
 
-The current fixed automatic probe panel uses the stable real-dynamics boundary
-acquisition capability. Probe strengths/durations/seeds and role assignment are
-committed before outcomes are observed.
+A future archive-assisted discovery method may choose among frozen probe policies,
+but that would be a new declared method version. It would be discovery-time only,
+not runtime expert switching.
 
-## 5. Outcome-blind data-role isolation
+---
 
-For automatic k >= 1 iterations, every frontier parent is assigned before
-outcomes to one of three logical roles:
+## 7. Outcome-blind data roles
 
-- `TRAIN`: the only role that may fit `C^k` and contribute expansion candidates
-  to `Tube_(k+1)`;
-- `CALIBRATION`: threshold calibration only; rows never enter TRAIN or a Tube;
-- `ACCEPTANCE`: candidate-blind pi_k boundary audit only; rows never train C^k,
-  calibrate C^k, or enter a Tube.
+For prospective automatic iterations:
 
-Parent-group disjointness is required across roles. Seed disjointness alone is
-not sufficient. The role-isolation audit must report zero prohibited overlap
-before candidate-policy training starts.
+- `TRAIN`: may fit `C^k` and contribute qualifying Tube expansion;
+- `CALIBRATION`: threshold calibration only;
+- `ACCEPTANCE`: candidate-blind development frontier comparison only;
+- final TEST/JCE/JEL: untouched.
 
-Final TEST/JCE/JEL is a fourth, untouched role and is not part of the iteration
-workflow.
+Role assignment must be outcome-blind and parent-group disjoint before outcomes
+are observed.
 
-## 6. C^k fitting and calibration
+CALIBRATION and ACCEPTANCE rows never enter a Tube.
 
-Later iterations do not reopen continuation architecture search unless a new
-scientific question is explicitly declared.
+The current Iteration-1 -> 2 round contains an explicit engineering
+near-observation-isolation exception.  That artifact remains historical evidence
+and does not silently weaken the prospective generic rule.
 
-The generic continuation stage:
+---
 
-1. fits the frozen selected tiny/shared continuation architecture on logical
-   TRAIN rows only;
-2. requires both outcome classes where demanded by the implementation contract;
-3. calibrates one phase threshold from disjoint CALIBRATION evidence;
-4. records model, normalization, threshold, source-policy and source-Tube
-   identities;
-5. authorizes Tube construction only after its fixed calibration contract passes.
+## 8. Tube construction
 
-A calibration failure stops the workflow. Do not inspect the failure and then
-silently change architecture, AUC rule, threshold objective, role split, or data
-membership inside the same predeclared round.
-
-## 7. Core-retaining Tube construction
-
-The structural rule is:
+Structural rule:
 
 ```text
 Tube_(k+1)
   = every Tube_k entry retained exactly
-  + qualifying logical-TRAIN expansion states
+  + qualifying logical-TRAIN expansion
 ```
 
-A candidate expansion state is admitted only when:
+An expansion row must:
 
-- its pi_k continuation label is positive;
-- its frozen `C^k` phase score is strictly greater than the disjoint calibration
-  threshold;
-- it is not already present in Tube_k or an earlier accepted expansion row;
-- its snapshot/state hash and active phase reproduce exactly.
+- have positive continuation evidence under the declared policy probe;
+- pass the frozen phase continuation threshold;
+- reproduce its state/snapshot identity;
+- not duplicate existing Tube support;
+- originate from TRAIN, never CALIBRATION/ACCEPTANCE/TEST.
 
-CALIBRATION and ACCEPTANCE rows are never embedded.
+Structural retention means cumulative evidence/provenance is not discarded.
+It does **not** require the newest policy to reproduce every old state in one
+rollout.
 
-For Tube_2 specifically, **all 3,119 Tube_1 states become the retained source
-core**. Retention does not mean only the original 222 Tube_0 entries.
+---
 
-## 8. Retained-core replay contract
+## 9. Policy training contract
 
-Structural retention alone is not sufficient because expansion cardinality can
-starve earlier support during PPO reset sampling.
-
-Iteration-1 experiments established the current mainline replay choice:
+Current selected training recipe remains available as the generic baseline:
 
 ```text
 outer reset:
@@ -198,213 +215,274 @@ inside Tube RSI:
   25% newest expansion
 ```
 
-For repair02 on Tube_1 this yielded approximately:
+For pi_2 this correctly treated all 3,119 Tube_1 states as retained source
+support.
+
+Important revision:
+
+> the 75/25 replay choice is a training recipe, not an acceptance definition.
+
+A candidate failure must not automatically trigger replay-ratio tuning.  Method
+changes require an explicit scientific decision.
+
+---
+
+## 10. Locked evaluation baseline
+
+Before prospective candidate training:
+
+- lock the source-Tube panel under selected `pi_k`;
+- bind exact states, phases, and deterministic evaluation seeds;
+- lock acceptance/frontier challenge identity and baseline evidence;
+- do not reroll a previously locked baseline boundary under another PRNG hierarchy
+  after candidate training.
+
+The current pi_1 -> pi_2 round confirmed this fixes the historical baseline
+reproduction debt: boundary reproduction failures were zero.
+
+---
+
+## 11. Capability-progression decision v1
+
+Implementation:
+
+`JIT/src/jit_dvgc/analysis/capability_progression.py`
+
+CLI:
+
+`JIT/cli/analyze_capability_progression.py`
+
+This stage consumes the completed locked paired gate report and emits a separate
+machine-readable decision.
+
+### 11.1 Empirical frontier progression
+
+Prospective frontier progression PASS requires:
+
+1. zero baseline boundary reproduction mismatch;
+2. nonzero candidate frontier success;
+3. candidate successes across at least the predeclared minimum number of parent
+   groups;
+4. at least one candidate success in both upstream and downstream.
+
+This supports an **empirical local frontier progression** claim only.
+
+It does not prove the physical feasibility limit and does not require zero strict
+core regressions.
+
+### 11.2 Policy realization retention
+
+The v1 engineering proxy is success coverage on the locked full source-Tube panel.
+
+Method-level non-inferiority margins:
 
 ```text
-67.5% retained Tube_0 core
-22.5% Tube_1 expansion
-10.0% natural
+maximum global coverage drop = 0.05
+maximum per-phase coverage drop = 0.10
 ```
 
-and achieved Tube_0 `222/222` with positive boundary gain.
+Both must pass.
 
-For pi_2, the same generic contract refers to the **entire Tube_1 support** as the
-retained source core. Do not hard-code the old 222-state Tube_0 subset.
+The phase rule is essential because the Tube can be highly imbalanced.  A large
+upstream collapse must not be hidden by many downstream states.
 
-This 75/25 choice is the selected mainline method, not an invitation to sweep
-replay ratios against every new gate outcome.
+### 11.3 Authority eligibility
 
-## 9. Iteration-1 initialization study — closed
+A candidate may become the sole automatic `pi_(k+1)` authority only when:
 
-The completed comparison is:
-
-| policy/checkpoint | Tube_0 | regressions | upstream | downstream | boundary | groups |
-|---|---:|---:|---:|---:|---:|---:|
-| repair02 | **222/222** | **0** | **117/117** | **105/105** | 26/260 | 4 |
-| B 1.024M | 217/222 | 5 | 112/117 | **105/105** | 33/260 | 3 |
-| B 2.5088M | 206/222 | 16 | 101/117 | **105/105** | 28/260 | 4 |
-| B 5.0176M | 214/222 | 8 | 109/117 | **105/105** | 25/260 | 4 |
-| B 7.5008M | 217/222 | 5 | 112/117 | **105/105** | 42/260 | 4 |
-| B 10.0096M | 212/222 | 10 | 107/117 | **105/105** | 46/260 | 4 |
-
-No B checkpoint achieved both `222/222` retention and boundary success greater
-than repair02's 26/260. Warm-start A was also inferior and is discarded.
-
-All B core regressions were upstream while downstream remained 105/105. The
-supported interpretation is **upstream expansion/retention policy interference**.
-The nonmonotonic regression sequence rules out a simple monotonic "trained too
-long" explanation.
-
-Warm-start + explicit retention constraints may become a future ablation/method
-extension. Do not reopen it during the current mainline pi_1 -> pi_2 round.
-
-## 10. Historical Iteration-1 selection and claim boundary
-
-Selected engineering pi_1:
-
-`JIT/runs/frozen_unified/pi_1_core_replay75_10009600_20260903/frozen_unified_policy.json`
-
-Known identity:
-
-- actor SHA-256: `85d6b4667364daf8e054af9bccbf155dda16a62518df19883057fcfcbbd6f86a`
-- payload SHA-256: `3b9af512c7e389aade1c86ca76e9420a0bc687c499f2ff9cf7637701dd5d0cbc`
-
-Historical quickcheck:
-
-`JIT/runs/pi_unified_gate/pi_0_to_pi_1_repair02_quickcheck_20260903/summary.json`
-
-Observed:
-
-- core: 222/222, zero regression;
-- boundary candidate: 26/260 across 4 parent groups;
-- baseline reproduction failures: 3.
-
-The 3 reproduction failures arise because historical continuation labeling and
-paired-gate rerolling did not use the same PRNG hierarchy. Therefore:
-
-- repair02 is selected for **engineering continuation**;
-- the historical Iteration-1 gate is **not** claimed strict formal PASS;
-- `select_iteration_policy.py --allow-baseline-reproduction-mismatch` must encode
-  the quarantine explicitly;
-- no historical artifact may be edited to erase the mismatch.
-
-## 11. Future locked-baseline acceptance gate
-
-For k >= 1, acceptance is precommitted before pi_(k+1) training.
-
-### 11.1 Core baseline lock
-
-Before candidate training:
-
-- evaluate every Tube_k retained-core state under selected pi_k;
-- bind exact state identity, phase/local index and deterministic core seed;
-- record pi_k success/outcome and interactions;
-- require non-vacuous successful baseline support in the paired summarizer.
-
-### 11.2 Boundary baseline lock
-
-The ACCEPTANCE role has already been labeled under pi_k. Before candidate
-training:
-
-- select only pi_k-negative ACCEPTANCE rows;
-- require boundary-negative support in both phases;
-- require the predeclared minimum number of independent parent groups;
-- bind exact snapshot/state, pi_k labeling seed and candidate index;
-- lock the negative outcome itself.
-
-The locked boundary baseline is **not re-run after pi_(k+1) is trained**.
-
-### 11.3 Candidate evaluation
-
-After pi_(k+1) freeze:
-
-- candidate core uses the exact locked core seeds;
-- candidate boundary starts from the exact locked snapshots;
-- candidate boundary reproduces the original pi_k labeling key hierarchy:
-  `labeling_seed -> candidate_index -> tick`;
-- core PASS requires zero baseline-success -> candidate-failure regressions;
-- boundary gain requires successes in at least the predeclared number of parent
-  groups;
-- no training, calibration, validation, TEST, final evidence or expert switching
-  is used.
-
-Because the baseline boundary is locked rather than re-rolled, the historical
-"baseline-negative but baseline rerun positive" failure mode is removed from
-future rounds by protocol design.
-
-## 12. Workflow automation contract
-
-The production operator entry point is:
-
-```bash
-python JIT/cli/run_iteration_workflow.py --config <workflow.json> --execute
+```text
+frontier progression PASS
+AND
+policy realization retention PASS
 ```
 
-A workflow is generated by:
+Zero paired regressions are not required.
 
-`JIT/cli/prepare_iterative_envelope_workflow.py`.
+The strict old core regression count remains reported as a diagnostic.
 
-The workflow is resumable but scientifically non-adaptive:
+### 11.4 Retrospective decisions cannot select policies
 
-- each stage declares immutable prerequisites and a completion artifact;
-- completion JSON assertions are checked before advancement;
-- already-completed stages are revalidated before reuse;
-- workflow config SHA drift after state creation is rejected;
-- any engineering or scientific stage failure stops execution;
-- the runner never changes reward, replay ratio, PPO settings, model architecture,
-  threshold rules, physics, acquisition panel or acceptance criteria in response
-  to a failure;
-- the workflow contains no final TEST/JCE/JEL stage.
+If capability semantics are revised after a candidate result is observed, analyze
+that result with `--retrospectived` is invalid spelling; use:
 
-The current generic round stages are:
+```text
+--retrospective
+```
+
+A retrospective artifact may describe evidence but may not formally select the
+candidate. `select_iteration_policy.py` rejects retrospective capability decisions.
+
+This prevents post-hoc criterion changes from becoming fake prospective evidence.
+
+---
+
+## 12. Current pi_2 as the motivating example
+
+Current locked pi_1 -> pi_2 evidence:
+
+### Source Tube_1 panel
+
+```text
+pi_1 baseline: 3115/3119 = 99.87%
+pi_2:          3002/3119 = 96.25%
+```
+
+Global drop is about 3.62 percentage points and would pass the v1 global margin.
+
+Phase split:
+
+```text
+upstream:
+  pi_1 423/427 = 99.06%
+  pi_2 312/427 = 73.07%
+  drop ≈ 25.995 percentage points -> FAIL phase margin
+
+downstream:
+  pi_1 2692/2692 = 100.00%
+  pi_2 2690/2692 = 99.93%
+  drop ≈ 0.074 percentage points -> PASS phase margin
+```
+
+### Frontier challenge
+
+```text
+pi_2 13/14
+3 parent groups
+upstream 4/5
+downstream 9/9
+baseline reproduction failure 0
+```
+
+Therefore the revised retrospective interpretation is:
+
+```text
+frontier progression = PASS
+policy realization = FAIL because upstream collapsed
+candidate authority eligible = false
+```
+
+This result should be preserved as evidence that JIT can expand local capability
+while a single reward-guided policy still suffers representation/interference
+limits.
+
+---
+
+## 13. Current C^1 engineering claim boundary
+
+The completed current round is not a clean all-formal prospective round.
+
+64x64 `C_up^1`:
+
+- AUC 0.6903137789904502;
+- recall 0.5934515688949522;
+- original AUC >= 0.70 rule remains false;
+- explicit engineering selection.
+
+64x64 `C_down^1`:
+
+- AUC 1.0;
+- recall 1.0;
+- formal calibration PASS.
+
+Tube_2 was therefore constructed under an explicit engineering C^1 override.
+Do not describe C^1 as a clean all-phase formal pass.
+
+---
+
+## 14. Automatic workflow contract
+
+Future prospective workflow:
 
 ```text
 prepare frontier plan
-  -> run TRAIN role
-  -> run CALIBRATION role
-  -> run ACCEPTANCE role
+  -> TRAIN role
+  -> CALIBRATION role
+  -> ACCEPTANCE role
   -> fit/calibrate C^k
-  -> build Tube_(k+1)
+  -> Tube_(k+1)
   -> Tube-RSI smoke
-  -> role-isolation audit
-  -> lock pi_k acceptance baseline
-  -> prepare pi_(k+1) training
+  -> role isolation
+  -> lock pi_k evaluation baseline
   -> train pi_(k+1)
   -> freeze pi_(k+1)
-  -> strict candidate gate
-  -> select pi_(k+1) only on PASS
+  -> locked paired evaluation
+  -> capability-progression analysis
+  -> select pi_(k+1) only if frontier + realization pass
 ```
 
-## 13. Current completed chain
+The runner remains scientifically non-adaptive:
+
+- workflow config SHA is immutable after state creation;
+- completed stages are revalidated before reuse;
+- failures stop the workflow;
+- the runner never changes reward, replay ratio, PPO hyperparameters, network
+  architecture, physics, frontier panel, continuation threshold, or capability
+  margins to force progress;
+- final TEST/JCE/JEL is never part of the iteration workflow.
+
+Current pi_1 -> pi_2 history required explicit engineering interventions and is
+not evidence of fully hands-off automation.
+
+---
+
+## 15. Selection semantics and backward compatibility
+
+Historical `pi_1` repair02 selection remains reproducible through the strict
+zero-regression path.  Do not rewrite it using the new criterion.
+
+Future selection should provide:
 
 ```text
-frozen experts
-  -> Tube_0 (222)
-  -> frozen pi_0
-  -> pi_0-conditioned C^0
-  -> fresh validation PASS
-  -> Tube_1 (3,119 = 222 core + 2,897 expansion)
-  -> first pi_1 / repair01 / repair02
-  -> warm-start A/B ablations
-  -> B intermediate checkpoint sweep complete
-  -> no B point beats repair02 under retention-first rule
-  -> repair02 selected as engineering pi_1
-  -> historical formal gate mismatch quarantined
-  -> CURRENT: automatic pi_1 -> C^1 -> Tube_2 -> pi_2
+--gate-summary <locked paired summary>
+--capability-decision <prospective capability progression decision>
 ```
 
-## 14. Immediate order from here
+Selection must fail if the capability decision is retrospective or candidate
+policy authority eligibility is false.
 
-1. Register repair02 as `jit_selected_iteration_policy_v1` with the explicit
-   baseline-reproduction quarantine flag.
-2. Generate one `pi_1 -> pi_2` workflow from selected repair02 + exact Tube_1.
-3. Dry-run the workflow plan before execution.
-4. Execute the same immutable workflow config.
-5. Let the runner stop if frontier support, C^1 calibration, Tube_2 isolation,
-   training/freeze, core retention or boundary gain fails.
-6. If the new strict pi_1 -> pi_2 gate PASSes, select pi_2 and continue with the
-   same generic k -> k+1 machinery.
-7. If it FAILs, preserve the artifact and diagnose before declaring any new
-   repair or experiment.
-8. Keep final TEST/JCE/JEL untouched until iteration stopping and final policy
-   selection are frozen.
+---
 
-Exact launch commands and current artifact paths are maintained in
-`JIT/docs/CURRENT_STATUS.md`.
+## 16. Next method question
 
-## 15. Convergence and final empirical envelope
+Do not launch pi_3 automatically.
 
-Iteration stopping criteria must be declared before the final stopping decision.
-Candidate non-final criteria include:
+The pi_2 result suggests the main bottleneck is deeper than replay quantity: the
+unified policy is not explicitly conditioned on which jump behavior it should
+realize.
 
-- boundary gain saturation;
-- negligible new Tube support;
-- repeated inability to expand without retained-core regression;
-- reaching a predeclared physical envelope target;
-- resource budget exhaustion.
+Priority next method decisions:
 
-Do not continue merely because another round is mechanically possible.
+1. **goal-/intent-conditioned unified policy** while retaining one runtime Actor;
+2. **multi-seed success probability / confidence evaluation** instead of one
+   rollout per state;
+3. **discovery-time frozen policy archive** to approximate system capability using
+   cumulative successful probes without runtime policy switching;
+4. only then decide whether a same-representation replay repair is worth another
+   formal candidate.
 
-Only the final selected frozen unified policy may be evaluated on the untouched
-final envelope bank. The resulting claim is an **empirical policy-conditioned
-jumping capability envelope**, not a formal safety or viability proof.
+Any of these is a method revision and must be predeclared before new candidate
+outcomes are inspected.
+
+---
+
+## 17. Stopping and final JCE/JEL
+
+Possible project-level stopping signals include:
+
+- frontier progression saturation;
+- negligible new evidence support;
+- repeated inability of any unified realization to cover the accumulated
+  capability without phase collapse;
+- reaching a declared physical/task target;
+- resource/diminishing-return limits.
+
+Only after method/stopping decisions are frozen should the final selected policy
+and/or final capability-discovery output be evaluated on untouched final
+TEST/JCE/JEL evidence.
+
+Final claims must distinguish:
+
+- empirical capability evidence;
+- policy realization coverage;
+- any final policy-conditioned JCE/JEL;
+- the unproven physical feasibility limit `F*`.
