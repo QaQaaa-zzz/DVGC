@@ -1,11 +1,10 @@
 """Iteration-generic C_up^k/C_down^k fitting and calibration for k >= 1.
 
 The historical automatic loop used a frozen 76->8 tanh->1 tiny MLP inherited
-from the bootstrap study.  Iteration-1 now also supports one explicit
-post-failure architecture revision: a standard 76->64->64->1 tanh MLP.  TRAIN
-and CALIBRATION role membership, optimizer schedule, weighting, seeds, and
-calibration gates remain unchanged so the two profiles can be compared on the
-same evidence.
+from the bootstrap study. Iteration-1 also supports explicit same-data
+post-failure architecture comparisons with standard two-hidden-layer tanh MLPs.
+TRAIN and CALIBRATION role membership, optimizer schedule, weighting, seeds,
+and calibration gates remain unchanged across these profiles.
 """
 from __future__ import annotations
 
@@ -55,6 +54,22 @@ MODEL_PROFILES = {
         "hidden_sizes": [64, 64],
         "activation": "tanh",
         "parameter_count": 9153,
+        "normalization": "train_only_zscore_clip10",
+        "sample_weighting": "equal_parent_label_cell_mass",
+        "l2_weight": 0.01,
+        "optimizer": "adam_full_batch_fixed_schedule",
+        "steps": 4000,
+        "learning_rate": 0.01,
+        "post_failure_architecture_revision": True,
+    },
+    "standard_mlp_128x128_tanh": {
+        "family": "mlp_tanh",
+        "architecture": "76->128_tanh->128_tanh->1",
+        "input": "unified_actor_observation",
+        "observation_size": 76,
+        "hidden_sizes": [128, 128],
+        "activation": "tanh",
+        "parameter_count": 26497,
         "normalization": "train_only_zscore_clip10",
         "sample_weighting": "equal_parent_label_cell_mass",
         "l2_weight": 0.01,
@@ -169,8 +184,8 @@ def _fit_standard_mlp_phase(rows, *, phase: str, model_cfg: Mapping[str, Any], o
 
     input_size = int(model_cfg["observation_size"])
     hidden_sizes = tuple(int(v) for v in model_cfg["hidden_sizes"])
-    if hidden_sizes != (64, 64):
-        raise ValueError("standard iterative continuation profile requires hidden_sizes=(64,64)")
+    if len(hidden_sizes) != 2 or any(width <= 0 for width in hidden_sizes):
+        raise ValueError("standard iterative continuation profile requires exactly two positive hidden widths")
     expected_parameters = (
         input_size * hidden_sizes[0] + hidden_sizes[0]
         + hidden_sizes[0] * hidden_sizes[1] + hidden_sizes[1]
@@ -389,7 +404,7 @@ def fit_and_calibrate(
             raise ValueError(f"{phase} TRAIN support insufficient: {train_counts}")
         if model_profile == "legacy_tiny_tanh":
             shared._fit_phase(phase_train, phase=phase, model_cfg=model, output=output)
-        elif model_profile == "standard_mlp_64x64_tanh":
+        elif model_profile in {"standard_mlp_64x64_tanh", "standard_mlp_128x128_tanh"}:
             _fit_standard_mlp_phase(phase_train, phase=phase, model_cfg=model, output=output)
         else:
             raise ValueError(f"unsupported iterative continuation model profile: {model_profile}")
