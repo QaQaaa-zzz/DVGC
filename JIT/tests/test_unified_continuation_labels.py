@@ -5,6 +5,7 @@ import inspect
 import pytest
 
 from jit_dvgc.unified_continuation_labels import (
+    classify_first_valid_landing_outcome,
     classify_unified_continuation_outcome,
     label_unified_continuations,
     validate_unified_boundary_catalog,
@@ -179,7 +180,35 @@ def test_downstream_positive_requires_recovery_success():
     ) == (False, "physical_failure")
 
 
+def test_first_valid_landing_is_positive_without_post_landing_recovery():
+    assert classify_first_valid_landing_outcome(
+        valid_contact_seen=True,
+        physical_failure_before_landing=False,
+        timeout=False,
+        done=False,
+        reached_rollout_horizon=False,
+    ) == (True, "first_valid_landing")
+
+
+def test_airborne_physical_failure_is_negative_before_landing():
+    assert classify_first_valid_landing_outcome(
+        valid_contact_seen=False,
+        physical_failure_before_landing=True,
+        timeout=False,
+        done=True,
+        reached_rollout_horizon=False,
+    ) == (False, "airborne_physical_failure")
+
+
 def test_labeling_accepts_one_search_lifetime_compiled_step():
     parameters = inspect.signature(label_unified_continuations).parameters
 
     assert "compiled_step_fn" in parameters
+
+
+def test_labeling_separates_acquisition_policy_from_landing_evaluator():
+    parameters = inspect.signature(label_unified_continuations).parameters
+
+    assert "acquisition_policy_record" in parameters
+    assert "acquisition_frozen_manifest_sha256" in parameters
+    assert "success_criterion" in parameters

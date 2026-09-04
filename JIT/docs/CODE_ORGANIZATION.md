@@ -1,5 +1,14 @@
 # JIT code organization and lifecycle
 
+## Active fixed-jump-start family path
+
+`policy_family_landing.py` evaluates exact `pi_0`-acquired candidates under
+frozen `pi_0/pi_1/pi_2`, stops at first valid landing, and ORs their outcomes.
+`iterative_tube.py` supports this TRAIN-only family mode without requiring a
+class-balanced fitted continuation field.  Historical single-policy field
+fitting remains available and must not be silently relabeled as the family
+method.
+
 ## Principle
 
 The active tree represents durable scientific/runtime capabilities. Configs, manifests and run directories represent experiment identities and iteration state.

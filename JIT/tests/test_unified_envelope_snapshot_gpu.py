@@ -90,6 +90,8 @@ def test_unified_envelope_snapshot_roundtrip_can_enter_jitted_step(
     )
     assert bool(np.asarray(restored.info["expert_switching_used"])) is False
     assert bool(np.asarray(restored.info["reset_from_soft_tube"])) is True
+    assert bool(np.asarray(restored.info["reset_from_jump_start"])) is False
+    assert bool(np.asarray(restored.info["reset_from_continuation"])) is True
 
     next_state = step(restored, jp.zeros(4, dtype=jp.float32))
     jax.block_until_ready(next_state)

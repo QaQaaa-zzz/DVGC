@@ -3,7 +3,7 @@
 The raw Soft Tube remains a training/replay artifact, not the scientific Jump
 Capability set. Historical source rows are retained exactly for reproducibility.
 For prospective causal JIT roles, however, every *new* expansion row must be
-traceable to a ground-connected acquisition catalog: natural start -> env.step
+traceable to a fixed-jump-start-connected acquisition catalog: jump start -> env.step
 only -> exact candidate -> continuation-positive TRAIN label. The reachability
 provenance is copied into the Tube entry so the causal evidence chain is not
 lost when the state becomes replay support.
@@ -22,7 +22,7 @@ import numpy as np
 
 from .acquisition.causal_jump import (
     ACQUISITION_MODE,
-    validate_ground_reachability_payload,
+    validate_jump_start_reachability_payload,
 )
 from .config import file_sha256
 from .iterative_continuation_fields import _score
@@ -120,8 +120,8 @@ def _causal_catalog_rows(train_manifest: Mapping[str, Any]) -> dict[str, Mapping
         return None
     if mode != ACQUISITION_MODE:
         raise ValueError(f"unsupported prospective TRAIN acquisition mode: {mode}")
-    if train_manifest.get("ground_reachability_proven") is not True:
-        raise ValueError("causal TRAIN manifest lacks ground reachability proof")
+    if train_manifest.get("jump_start_reachability_proven") is not True:
+        raise ValueError("causal TRAIN manifest lacks jump-start reachability proof")
     if train_manifest.get("rsi_used_for_reachability") is not False:
         raise ValueError("causal TRAIN manifest used RSI for reachability")
 
@@ -132,9 +132,9 @@ def _causal_catalog_rows(train_manifest: Mapping[str, Any]) -> dict[str, Mapping
     if catalog.get("schema") != "jit_unified_boundary_catalog_v1" or catalog.get("status") != "completed":
         raise ValueError("causal TRAIN acquisition catalog schema/status drift")
     if catalog.get("acquisition_mode") != ACQUISITION_MODE:
-        raise ValueError("TRAIN catalog is not ground-connected causal acquisition")
-    if catalog.get("ground_reachability_proven") is not True:
-        raise ValueError("TRAIN catalog lacks ground reachability proof")
+        raise ValueError("TRAIN catalog is not jump-start-connected causal acquisition")
+    if catalog.get("jump_start_reachability_proven") is not True:
+        raise ValueError("TRAIN catalog lacks jump-start reachability proof")
     if catalog.get("rsi_used_for_reachability") is not False:
         raise ValueError("TRAIN catalog used RSI for reachability")
     rows = catalog.get("entries")
@@ -145,41 +145,59 @@ def _causal_catalog_rows(train_manifest: Mapping[str, Any]) -> dict[str, Mapping
         candidate_id = str(row["candidate_id"])
         if candidate_id in by_id:
             raise ValueError("duplicate causal acquisition candidate id")
-        provenance = row.get("ground_reachability")
+        provenance = row.get("jump_start_reachability")
         if not isinstance(provenance, dict):
-            raise ValueError("causal acquisition row lacks ground_reachability")
+            raise ValueError("causal acquisition row lacks jump_start_reachability")
         declared = str(provenance.get("reachability_sha256", ""))
         base = {key: value for key, value in provenance.items() if key != "reachability_sha256"}
         if len(declared) != 64 or canonical_sha256(base) != declared:
-            raise ValueError("causal ground-reachability self-hash drift")
-        validate_ground_reachability_payload(provenance)
+            raise ValueError("causal jump-start-reachability self-hash drift")
+        validate_jump_start_reachability_payload(provenance)
         by_id[candidate_id] = row
     return by_id
 
 
 def build_iterative_tube(
-    *, source_tube: Path, train_root: Path, fields_root: Path, output_dir: Path
+    *,
+    source_tube: Path,
+    train_root: Path,
+    fields_root: Path | None,
+    output_dir: Path,
 ):
     source = load_soft_tube(Path(source_tube))
     train_manifest, train_rows = _load_train_role(Path(train_root))
-    fields_summary, fields = _load_fields(Path(fields_root))
+    family_landing_mode = train_manifest.get("policy_identity_kind") == "frozen_policy_family"
+    if family_landing_mode:
+        if fields_root is not None:
+            raise ValueError("policy-family landing Tube must not use a fitted continuation field")
+        if train_manifest.get("continuation_success_criterion") != (
+            "first_valid_landing_before_physical_failure"
+        ):
+            raise ValueError("policy-family landing TRAIN criterion drift")
+        fields_summary = None
+        fields = None
+    else:
+        if fields_root is None:
+            raise ValueError("single-policy iterative Tube requires continuation fields")
+        fields_summary, fields = _load_fields(Path(fields_root))
     causal_catalog = _causal_catalog_rows(train_manifest)
     source_iteration = int(source.manifest.get("iteration", 0))
     iteration = source_iteration + 1
     if source_iteration < 1:
         raise ValueError("generic iterative Tube builder is for Tube_k with k>=1")
-    for name, value in (
-        ("train iteration", int(train_manifest["iteration"])),
-        ("field iteration", int(fields_summary["iteration"])),
-    ):
+    identities = [("train iteration", int(train_manifest["iteration"]))]
+    if fields_summary is not None:
+        identities.append(("field iteration", int(fields_summary["iteration"])))
+    for name, value in identities:
         if value != source_iteration:
             raise ValueError(f"{name} must equal source Tube iteration")
     if train_manifest["source_tube_manifest_sha256"] != source.manifest["manifest_sha256"]:
         raise ValueError("iterative Tube TRAIN/source Tube identity drift")
-    if fields_summary["source_tube_manifest_sha256"] != source.manifest["manifest_sha256"]:
-        raise ValueError("iterative Tube fields/source Tube identity drift")
-    if fields_summary["train_role_manifest_sha256"] != train_manifest["role_manifest_sha256"]:
-        raise ValueError("iterative Tube field TRAIN role drift")
+    if fields_summary is not None:
+        if fields_summary["source_tube_manifest_sha256"] != source.manifest["manifest_sha256"]:
+            raise ValueError("iterative Tube fields/source Tube identity drift")
+        if fields_summary["train_role_manifest_sha256"] != train_manifest["role_manifest_sha256"]:
+            raise ValueError("iterative Tube field TRAIN role drift")
 
     source_states = {str(row["state_sha256"]) for row in source.entries}
     if len(source_states) != len(source.entries):
@@ -193,14 +211,20 @@ def build_iterative_tube(
         rows = [row for row in train_rows if row.get("phase") == phase]
         if not rows:
             raise ValueError(f"iterative Tube has no {phase} TRAIN rows")
-        scores = _score(fields[phase]["field_path"], rows)
-        threshold = float(fields[phase]["calibration"]["acceptance_threshold_exclusive"])
+        scores = (
+            np.ones(len(rows), dtype=np.float64)
+            if family_landing_mode
+            else _score(fields[phase]["field_path"], rows)
+        )
+        threshold = None if family_landing_mode else float(
+            fields[phase]["calibration"]["acceptance_threshold_exclusive"]
+        )
         counts = Counter()
         for row, score in zip(rows, scores, strict=True):
             if int(row["label"]) != 1:
                 counts["negative_label"] += 1
                 continue
-            if not float(score) > threshold:
+            if threshold is not None and not float(score) > threshold:
                 counts["positive_below_or_equal_threshold"] += 1
                 continue
             if causal_catalog is not None:
@@ -211,7 +235,11 @@ def build_iterative_tube(
                 if str(source_row["state_sha256"]) != str(row["state_sha256"]):
                     raise ValueError("causal TRAIN label/acquisition physical state drift")
             selected.append((dict(row), float(score)))
-            counts["positive_above_threshold"] += 1
+            counts[
+                "positive_policy_family_landing"
+                if family_landing_mode
+                else "positive_above_threshold"
+            ] += 1
         selection_counts[phase] = dict(sorted(counts.items()))
     if not selected:
         raise ValueError("iterative Tube produced no expansion states")
@@ -242,13 +270,17 @@ def build_iterative_tube(
         phase_index = 0 if phase == "upstream" else 1
         if int(snapshot.active_phase) != phase_index:
             raise ValueError("iterative Tube snapshot active-phase drift")
-        field_name = f"C_{'up' if phase == 'upstream' else 'down'}^{source_iteration}"
+        field_name = (
+            "policy_family_first_valid_landing"
+            if family_landing_mode
+            else f"C_{'up' if phase == 'upstream' else 'down'}^{source_iteration}"
+        )
 
         causal_provenance = None
         if causal_catalog is not None:
             source_row = causal_catalog[str(row["candidate_id"])]
-            causal_provenance = dict(source_row["ground_reachability"])
-            validate_ground_reachability_payload(causal_provenance)
+            causal_provenance = dict(source_row["jump_start_reachability"])
+            validate_jump_start_reachability_payload(causal_provenance)
 
         expansion_row = {
             "candidate_id": f"tube{iteration}_{phase}_{state}",
@@ -267,25 +299,40 @@ def build_iterative_tube(
             "value_score": score,
             "sampling_weight": WEIGHT_FLOOR + WEIGHT_SCALE * score,
             "value_model_target": field_name,
-            "score_source": {
-                "kind": "policy_conditioned_continuation_field",
-                "field_name": field_name,
-                "field_manifest_sha256": fields[phase]["manifest"]["manifest_sha256"],
-                "field_file_sha256": fields[phase]["manifest"]["field_file_sha256"],
-                "acceptance_threshold_exclusive": float(
-                    fields[phase]["calibration"]["acceptance_threshold_exclusive"]
-                ),
-                "selection_rule": "TRAIN_label_positive_and_score_strictly_greater_than_threshold",
-                "threshold_source": "disjoint_calibration_role",
-            },
+            "score_source": (
+                {
+                    "kind": "observed_policy_family_first_valid_landing_label",
+                    "policy_family_sha256": str(
+                        train_manifest["continuation_policy_family"][
+                            "policy_family_sha256"
+                        ]
+                    ),
+                    "selection_rule": "TRAIN_label_positive",
+                    "threshold_source": None,
+                    "fitted_classifier_used": False,
+                }
+                if family_landing_mode
+                else {
+                    "kind": "policy_conditioned_continuation_field",
+                    "field_name": field_name,
+                    "field_manifest_sha256": fields[phase]["manifest"]["manifest_sha256"],
+                    "field_file_sha256": fields[phase]["manifest"]["field_file_sha256"],
+                    "acceptance_threshold_exclusive": float(
+                        fields[phase]["calibration"]["acceptance_threshold_exclusive"]
+                    ),
+                    "selection_rule": "TRAIN_label_positive_and_score_strictly_greater_than_threshold",
+                    "threshold_source": "disjoint_calibration_role",
+                }
+            ),
             "source_train_role_manifest_sha256": train_manifest["role_manifest_sha256"],
             "policy_actor_sha256": str(row["policy_actor_sha256"]),
             "policy_payload_sha256": str(row["policy_payload_sha256"]),
             "acquisition_mode": (
                 ACQUISITION_MODE if causal_provenance is not None else "historical_rsi_anchor_mode"
             ),
-            "ground_reachability": causal_provenance,
-            "ground_reachability_proven": causal_provenance is not None,
+            "jump_start_reachability": causal_provenance,
+            "jump_start_reachability_proven": causal_provenance is not None,
+            "natural_start_connected": False if causal_provenance is not None else None,
         }
         expansion.append(expansion_row)
         entries.append(expansion_row)
@@ -298,7 +345,7 @@ def build_iterative_tube(
     if set(phase_counts) != {"upstream", "downstream"}:
         raise ValueError("iterative Tube lost phase support")
     causal_expansion_count = sum(
-        row.get("ground_reachability_proven") is True for row in expansion
+        row.get("jump_start_reachability_proven") is True for row in expansion
     )
     diagnostics = {
         "schema": "jit_iterative_tube_diagnostics_v1",
@@ -311,7 +358,7 @@ def build_iterative_tube(
         "selected_before_dedup_count": len(selected),
         "dedup_counts": dict(sorted(dedup.items())),
         "expansion_count": len(expansion),
-        "causal_ground_reachable_expansion_count": int(causal_expansion_count),
+        "causal_jump_start_reachable_expansion_count": int(causal_expansion_count),
         "expansion_phase_counts": dict(sorted(expansion_phase_counts.items())),
         "entry_count": len(entries),
         "phase_counts": dict(sorted(phase_counts.items())),
@@ -322,14 +369,18 @@ def build_iterative_tube(
     manifest = {
         "schema": SOFT_TUBE_SCHEMA,
         "status": "completed",
-        "artifact_role": "policy_conditioned_core_retaining_soft_tube_iteration",
+        "artifact_role": (
+            "policy_family_landing_core_retaining_soft_tube_iteration"
+            if family_landing_mode
+            else "policy_conditioned_core_retaining_soft_tube_iteration"
+        ),
         "iteration": iteration,
         "source_iteration": source_iteration,
         "training_guidance_only": True,
         "certified_safe": False,
         "test_data_used": False,
         "validation_data_used": False,
-        "calibration_data_used": True,
+        "calibration_data_used": not family_landing_mode,
         "calibration_rows_embedded": False,
         "acceptance_rows_embedded": False,
         "training_transitions": 0,
@@ -339,8 +390,8 @@ def build_iterative_tube(
         "core_retained_count": len(source.entries),
         "newest_expansion_count": len(expansion),
         "expansion_count": len(expansion),
-        "causal_ground_reachable_expansion_count": int(causal_expansion_count),
-        "newest_expansion_requires_ground_reachability": causal_catalog is not None,
+        "causal_jump_start_reachable_expansion_count": int(causal_expansion_count),
+        "newest_expansion_requires_jump_start_reachability": causal_catalog is not None,
         "entry_count": len(entries),
         "upstream_count": int(phase_counts["upstream"]),
         "downstream_count": int(phase_counts["downstream"]),
@@ -352,19 +403,41 @@ def build_iterative_tube(
             "monotonic": True,
             "nonzero_support": True,
             "core_score_source": "preserve_every_source_Tube score/weight exactly",
-            "expansion_score_source": f"frozen C_up^{source_iteration}/C_down^{source_iteration} score",
+            "expansion_score_source": (
+                "observed TRAIN policy-family first-valid-landing label; positive rows score 1.0"
+                if family_landing_mode
+                else f"frozen C_up^{source_iteration}/C_down^{source_iteration} score"
+            ),
             "calibration_tuned_model_parameters": False,
         },
-        "continuation_fields_summary_sha256": fields_summary["summary_sha256"],
-        "train_role_manifest_sha256": train_manifest["role_manifest_sha256"],
-        "calibration_role_manifest_sha256": fields_summary["calibration_role_manifest_sha256"],
-        "selection_rule": (
-            "retain every Tube_k replay entry exactly; add only logical-TRAIN continuation-positive "
-            "states whose frozen C^k score is strictly above its disjoint calibration threshold; "
-            "for causal acquisition modes each new expansion state must additionally carry verified "
-            "natural-start env.step-only reachability provenance; source Tube wins duplicates"
+        "continuation_fields_summary_sha256": (
+            None if fields_summary is None else fields_summary["summary_sha256"]
         ),
-        "score_semantics": "policy-conditioned empirical continuation score; not certified probability",
+        "train_role_manifest_sha256": train_manifest["role_manifest_sha256"],
+        "calibration_role_manifest_sha256": (
+            None
+            if fields_summary is None
+            else fields_summary["calibration_role_manifest_sha256"]
+        ),
+        "selection_rule": (
+            (
+                "retain every Tube_k replay entry exactly; add logical-TRAIN states with an observed "
+                "first valid landing under any frozen pi_0/pi_1/pi_2 evaluator; each new state carries "
+                "verified fixed-jump-start env.step-only reachability provenance; source Tube wins duplicates"
+            )
+            if family_landing_mode
+            else (
+                "retain every Tube_k replay entry exactly; add only logical-TRAIN continuation-positive "
+                "states whose frozen C^k score is strictly above its disjoint calibration threshold; "
+                "for causal acquisition modes each new expansion state must additionally carry verified "
+                "fixed-jump-start env.step-only reachability provenance; source Tube wins duplicates"
+            )
+        ),
+        "score_semantics": (
+            "binary observed policy-family landing support; 1.0 is not a calibrated probability"
+            if family_landing_mode
+            else "policy-conditioned empirical continuation score; not certified probability"
+        ),
         "claim_boundary": {
             "soft_tube_training_guidance_only": True,
             "core_retaining": True,

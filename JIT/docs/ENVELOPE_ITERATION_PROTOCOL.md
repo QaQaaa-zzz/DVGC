@@ -1,5 +1,16 @@
 # JIT Causal Reachable Jump-Capability Iteration Protocol
 
+## Superseding execution rule — 2026-09-04
+
+For the active round, replace “natural ground start” with the fixed ground jump
+start at `x=2.5 m`.  The locked real-frame centerline and acquisition proposal
+controller are `pi_0`.  Evaluate each reached candidate with frozen
+`pi_0/pi_1/pi_2`; OR the first-valid-landing outcomes.  Recovery after landing
+is not evaluated.  TRAIN positives enter replay directly, while CALIBRATION and
+ACCEPTANCE remain holdout evidence.  Do not require 20 negatives or fit a
+binary continuation field when the observed family support is nearly all
+positive.
+
 ## Status — 2026-09-04
 
 This is the active protocol after the historical `pi_1 -> C^1 -> raw Tube_2 -> pi_2` round, physical Tube visualization review, and the subsequent causal-reachability correction.

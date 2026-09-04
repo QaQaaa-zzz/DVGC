@@ -58,6 +58,8 @@ DESCENT_REWARD_KEYS = (
     "timeout",
 )
 
+JUMP_START_X_M = 2.5
+
 
 def next_training_phase(
     active_phase: jax.Array | int,
@@ -153,6 +155,8 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
             "terminal/descent_timeout",
             "reset/source_soft_tube",
             "reset/source_natural",
+            "reset/source_jump_start",
+            "reset/source_continuation",
             "reset/tube_phase_upstream",
             "reset/tube_phase_downstream",
             "event/tube_phase_transition",
@@ -162,15 +166,25 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
         return metrics
 
     @staticmethod
-    def _with_reset_source(state: mjx_env.State, *, soft_tube) -> mjx_env.State:
+    def _with_reset_source(
+        state: mjx_env.State, *, soft_tube, jump_start=False
+    ) -> mjx_env.State:
         soft = jp.asarray(soft_tube, dtype=bool)
-        natural = ~soft
+        jump = jp.asarray(jump_start, dtype=bool)
+        natural = ~(soft | jump)
         start_phase = jp.asarray(state.info["start_phase"], dtype=jp.int32)
-        info = {**state.info, "reset_from_soft_tube": soft}
+        info = {
+            **state.info,
+            "reset_from_soft_tube": soft,
+            "reset_from_jump_start": jump,
+            "reset_from_continuation": jp.asarray(False),
+        }
         metrics = {
             **state.metrics,
             "reset/source_soft_tube": soft.astype(jp.float32),
             "reset/source_natural": natural.astype(jp.float32),
+            "reset/source_jump_start": jump.astype(jp.float32),
+            "reset/source_continuation": jp.asarray(0.0, jp.float32),
             "reset/tube_phase_upstream": (
                 soft & (start_phase == PHASE_UPSTREAM)
             ).astype(jp.float32),
@@ -238,6 +252,32 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
         )
         return self._with_reset_source(
             phase_state.replace(info=info, metrics=metrics), soft_tube=False
+        )
+
+    def _reset_jump_start_unified(self, rng: jax.Array) -> mjx_env.State:
+        """Reset at the fixed ground jump start without using a Tube snapshot."""
+        tube_sample = self._tube_pool.sample(rng)
+        sample = self._natural_reset_sample(rng, tube_sample)
+        index = self._bundle.model_index
+        root_x = jp.asarray(JUMP_START_X_M, jp.float32)
+        qpos = sample["qpos"].at[index.root_qpos_address].set(root_x)
+        up_events = initial_event_state(root_x, self._resolved_config)
+        down_events = initial_descent_events(root_x)
+        sample = {
+            **sample,
+            "qpos": qpos,
+            "events": {
+                name: jp.asarray(getattr(up_events, name))
+                for name in sample["events"]
+            },
+            "down_events": {
+                name: jp.asarray(getattr(down_events, name))
+                for name in sample["down_events"]
+            },
+        }
+        state = self._reset_from_tube_sample(sample)
+        return self._with_reset_source(
+            state, soft_tube=False, jump_start=True
         )
 
     def _natural_reset_sample(self, rng: jax.Array, tube_sample) -> dict[str, Any]:
@@ -717,7 +757,13 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
             )
         )
         soft_reset = jp.asarray(state.info["reset_from_soft_tube"], dtype=bool)
-        natural_reset = ~soft_reset
+        jump_start_reset = jp.asarray(
+            state.info["reset_from_jump_start"], dtype=bool
+        )
+        continuation_reset = jp.asarray(
+            state.info["reset_from_continuation"], dtype=bool
+        )
+        natural_reset = ~(soft_reset | jump_start_reset | continuation_reset)
         start_phase = jp.asarray(state.info["start_phase"], dtype=jp.int32)
         metrics.update(
             {
@@ -784,6 +830,8 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
                 ).astype(jp.float32),
                 "reset/source_soft_tube": soft_reset.astype(jp.float32),
                 "reset/source_natural": natural_reset.astype(jp.float32),
+                "reset/source_jump_start": jump_start_reset.astype(jp.float32),
+                "reset/source_continuation": continuation_reset.astype(jp.float32),
                 "reset/tube_phase_upstream": (
                     soft_reset & (start_phase == PHASE_UPSTREAM)
                 ).astype(jp.float32),

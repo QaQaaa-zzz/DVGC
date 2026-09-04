@@ -12,7 +12,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source-tube", type=Path, required=True)
     parser.add_argument("--train-root", type=Path, required=True)
-    parser.add_argument("--fields-root", type=Path, required=True)
+    parser.add_argument("--fields-root", type=Path)
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args()
     result = build_iterative_tube(

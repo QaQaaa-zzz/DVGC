@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import inspect
 from types import SimpleNamespace
 
 import jax
 import numpy as np
 
+import jit_dvgc.unified_natural_evaluation as unified_evaluation
 from jit_dvgc.constants import END_PITCH_LIMIT, END_RECOVERY_SUCCESS
 from jit_dvgc.evaluation import EpisodeFrame, EpisodeTrace
 from jit_dvgc.unified_natural_evaluation import (
@@ -30,6 +32,31 @@ def test_natural_evaluation_schema_is_round_agnostic():
     assert EVALUATION_SCHEMA == "jit_pi_unified_canonical_natural_eval_v1"
     assert "round0" not in EVALUATION_SCHEMA
     assert "round1" not in EVALUATION_SCHEMA
+
+
+def test_jump_start_evaluation_contract_does_not_claim_natural_connection():
+    assert hasattr(unified_evaluation, "jump_start_evaluation_contract"), (
+        "canonical evaluation must expose a jump-start-specific scientific contract"
+    )
+    contract = unified_evaluation.jump_start_evaluation_contract()
+    assert contract == {
+        "schema": "jit_pi_unified_canonical_jump_start_eval_v1",
+        "start_kind": "fixed_ground_jump_start",
+        "jump_start_x_m": 2.5,
+        "natural_start_connected": False,
+        "tube_or_rsi_reset_used": False,
+    }
+
+
+def test_jump_start_evaluation_accepts_an_explicit_rollout_seed():
+    signature = inspect.signature(
+        unified_evaluation.run_canonical_jump_start_evaluation
+    )
+    assert "rollout_seed" in signature.parameters
+    assert (
+        signature.parameters["rollout_seed"].default
+        == unified_evaluation.CANONICAL_ROLLOUT_SEED
+    )
 
 
 def test_round1_source_training_provenance_is_preserved():
@@ -180,4 +207,47 @@ def test_apex_without_recovery_is_not_full_success():
     report = summarize_canonical_natural_trace(trace)
     assert report["apex_seen"] is True
     assert report["full_recovery_success"] is False
+    assert report["terminal_reason"] == "pitch_limit"
+
+
+def test_valid_landing_before_later_failure_is_jump_trajectory_success():
+    trace = EpisodeTrace(
+        seed=9400001,
+        frames=(
+            _frame(x=2.5, z=0.15),
+            _frame(
+                x=3.2,
+                z=0.45,
+                metrics={
+                    "event/jump_zone_seen": 1.0,
+                    "event/ascending_seen": 1.0,
+                    "event/height_seen": 1.0,
+                },
+            ),
+            _frame(
+                x=3.7,
+                z=0.65,
+                metrics={
+                    "event/apex_seen": 1.0,
+                    "event/tube_phase_transition": 1.0,
+                },
+            ),
+            _frame(
+                x=4.1,
+                z=0.28,
+                metrics={"event/descent_valid_contact_seen": 1.0},
+            ),
+            _frame(
+                x=4.3,
+                z=0.25,
+                physical_failure=True,
+                end_code=END_PITCH_LIMIT,
+            ),
+        ),
+        environment_transitions=4,
+    )
+    report = summarize_canonical_natural_trace(trace)
+    assert report["jump_trajectory_success"] is True
+    assert report["full_recovery_success"] is False
+    assert report["first_valid_landing_state"]["frame_index"] == 3
     assert report["terminal_reason"] == "pitch_limit"

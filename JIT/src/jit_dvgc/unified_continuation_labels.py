@@ -263,6 +263,33 @@ def classify_unified_continuation_outcome(
     return False, "open_nonterminal"
 
 
+def classify_first_valid_landing_outcome(
+    *,
+    valid_contact_seen: bool,
+    physical_failure_before_landing: bool,
+    timeout: bool,
+    done: bool,
+    reached_rollout_horizon: bool,
+) -> tuple[bool, str]:
+    """Classify jump continuation only through the first valid landing.
+
+    Recovery after contact is intentionally outside this criterion.  The
+    rollout must stop as soon as valid contact or an earlier terminal event is
+    observed so a post-landing failure cannot rewrite a successful landing.
+    """
+    if valid_contact_seen:
+        return True, "first_valid_landing"
+    if physical_failure_before_landing:
+        return False, "airborne_physical_failure"
+    if timeout:
+        return False, "timeout_before_landing"
+    if done:
+        return False, "task_failure_before_landing"
+    if reached_rollout_horizon:
+        return False, "horizon_exhausted_before_landing"
+    return False, "open_nonterminal_before_landing"
+
+
 def label_unified_continuations(
     catalog_path: Path,
     output_dir: Path,
@@ -274,6 +301,9 @@ def label_unified_continuations(
     max_ticks: int = DEFAULT_UNIFIED_CONTINUATION_MAX_TICKS,
     protocol_seed: int = DEFAULT_UNIFIED_CONTINUATION_PROTOCOL_SEED,
     compiled_step_fn: Callable[[Any, Any], Any] | None = None,
+    acquisition_policy_record: Mapping[str, Any] | None = None,
+    acquisition_frozen_manifest_sha256: str | None = None,
+    success_criterion: str = "stable_recovery",
 ) -> dict[str, Any]:
     """Label each exact frontier candidate under one deterministic frozen pi_k."""
     max_ticks = int(max_ticks)
@@ -285,13 +315,28 @@ def label_unified_continuations(
         raise ValueError("frozen unified policy is not an expansion authority")
     if policy_record.get("xml_sha256") != env._bundle.xml_sha256:
         raise ValueError("unified continuation policy/runtime XML mismatch")
+    if success_criterion not in {"stable_recovery", "first_valid_landing"}:
+        raise ValueError("unsupported unified continuation success criterion")
+
+    acquisition_record = (
+        policy_record
+        if acquisition_policy_record is None
+        else acquisition_policy_record
+    )
+    acquisition_frozen_sha = (
+        frozen_manifest_sha256
+        if acquisition_frozen_manifest_sha256 is None
+        else str(acquisition_frozen_manifest_sha256)
+    )
+    if acquisition_record.get("xml_sha256") != env._bundle.xml_sha256:
+        raise ValueError("acquisition/evaluation policy XML mismatch")
 
     catalog_path = Path(catalog_path)
     catalog = _read_json(catalog_path)
     rows = validate_unified_boundary_catalog(
         catalog,
-        policy_record=policy_record,
-        frozen_manifest_sha256=frozen_manifest_sha256,
+        policy_record=acquisition_record,
+        frozen_manifest_sha256=acquisition_frozen_sha,
     )
     acquisition_protocol_path = catalog_path.parent / "protocol.json"
     acquisition_protocol = _read_json(acquisition_protocol_path)
@@ -322,25 +367,41 @@ def label_unified_continuations(
         "candidate_count": len(rows),
         "branches_per_candidate": 1,
         "policy_mode": "deterministic",
+        "success_criterion": success_criterion,
+        "acquisition_policy_name": str(acquisition_record["name"]),
+        "acquisition_policy_actor_sha256": str(acquisition_record["actor_sha256"]),
+        "acquisition_policy_payload_sha256": str(acquisition_record["payload_sha256"]),
         "protocol_seed": int(protocol_seed),
         "max_ticks_per_candidate": max_ticks,
+        "execution_mode": "single_gpu_serial_jitted_step_early_stop_v1",
         "maximum_environment_interactions": maximum_interactions,
         "candidate_start_semantics": (
             "preserve exact qpos/qvel/control, actor FIFO, last action, and phase event context; "
             "reset episode_step, phase_episode_step, up-event episode_step, phase-transition flag, "
             "and accumulated return; evaluate as a fresh continuation start"
         ),
-        "positive_label_semantics": {
-            "upstream": (
-                "frozen pi_k reaches Apex phase transition and then downstream stable-recovery "
-                "terminal success within the declared horizon"
-            ),
-            "downstream": (
-                "frozen pi_k reaches downstream stable-recovery terminal success within the "
-                "declared horizon"
-            ),
-            "alive_only_is_positive": False,
-        },
+        "positive_label_semantics": (
+            {
+                "all_phases": (
+                    "the evaluator reaches the first valid landing before physical failure; "
+                    "post-landing recovery and post-landing failure are outside the label"
+                ),
+                "alive_only_is_positive": False,
+                "post_landing_recovery_required": False,
+            }
+            if success_criterion == "first_valid_landing"
+            else {
+                "upstream": (
+                    "frozen pi_k reaches Apex phase transition and then downstream stable-recovery "
+                    "terminal success within the declared horizon"
+                ),
+                "downstream": (
+                    "frozen pi_k reaches downstream stable-recovery terminal success within the "
+                    "declared horizon"
+                ),
+                "alive_only_is_positive": False,
+            }
+        ),
         "training_transitions": 0,
         "expert_switching_used": False,
         "test_data_used": False,
@@ -380,7 +441,7 @@ def label_unified_continuations(
         for candidate_index, row in enumerate(rows):
             snapshot_path = _candidate_snapshot_path(catalog_path, row)
             snapshot = load_unified_envelope_snapshot(snapshot_path)
-            validate_candidate_snapshot(snapshot, row, policy_record=policy_record)
+            validate_candidate_snapshot(snapshot, row, policy_record=acquisition_record)
             state = fresh_unified_continuation_start(snapshot, env)
             if not _finite_state(state):
                 raise ValueError("unified continuation candidate start is nonfinite")
@@ -395,7 +456,6 @@ def label_unified_continuations(
             recovery_success = _truth(state.info["down_events"].recovery_success)
             valid_contact_seen = _truth(state.info["down_events"].valid_contact_seen)
             rollout_interactions = 0
-
             candidate_key = jax.random.fold_in(base_key, int(candidate_index))
             for tick in range(max_ticks):
                 action_key = jax.random.fold_in(candidate_key, int(tick))
@@ -416,7 +476,9 @@ def label_unified_continuations(
                 phase_transitioned |= _truth(state.info["phase_transitioned"])
                 recovery_success |= _truth(state.info["down_events"].recovery_success)
                 valid_contact_seen |= _truth(state.info["down_events"].valid_contact_seen)
-                if _truth(state.done):
+                if _truth(state.done) or (
+                    success_criterion == "first_valid_landing" and valid_contact_seen
+                ):
                     break
 
             done = _truth(state.done)
@@ -424,17 +486,28 @@ def label_unified_continuations(
             physical_failure = _truth(state.info["physical_failure"])
             timeout = _truth(state.info["timeout"])
             reached_horizon = rollout_interactions >= max_ticks and not done
-            positive, outcome_class = classify_unified_continuation_outcome(
-                start_phase=start_phase,
-                terminal_success=terminal_success,
-                physical_failure=physical_failure,
-                timeout=timeout,
-                done=done,
-                apex_seen=apex_seen,
-                phase_transitioned=phase_transitioned,
-                recovery_success=recovery_success,
-                reached_rollout_horizon=reached_horizon,
-            )
+            if success_criterion == "first_valid_landing":
+                positive, outcome_class = classify_first_valid_landing_outcome(
+                    valid_contact_seen=valid_contact_seen,
+                    physical_failure_before_landing=(
+                        physical_failure and not valid_contact_seen
+                    ),
+                    timeout=timeout,
+                    done=done,
+                    reached_rollout_horizon=reached_horizon,
+                )
+            else:
+                positive, outcome_class = classify_unified_continuation_outcome(
+                    start_phase=start_phase,
+                    terminal_success=terminal_success,
+                    physical_failure=physical_failure,
+                    timeout=timeout,
+                    done=done,
+                    apex_seen=apex_seen,
+                    phase_transitioned=phase_transitioned,
+                    recovery_success=recovery_success,
+                    reached_rollout_horizon=reached_horizon,
+                )
             end_code = _integer(state.info["end_code"])
             end_reason = END_REASONS.get(end_code, f"unknown_{end_code}")
             phase_name = str(row["phase"])
@@ -474,6 +547,10 @@ def label_unified_continuations(
                     "policy_iteration": int(policy_record["iteration"]),
                     "policy_actor_sha256": str(policy_record["actor_sha256"]),
                     "policy_payload_sha256": str(policy_record["payload_sha256"]),
+                    "evaluator_policy_name": str(policy_record["name"]),
+                    "evaluator_actor_sha256": str(policy_record["actor_sha256"]),
+                    "evaluator_payload_sha256": str(policy_record["payload_sha256"]),
+                    "success_criterion": success_criterion,
                     "acquisition_protocol_sha256": str(catalog["protocol_sha256"]),
                     "label_protocol_sha256": protocol_sha,
                 }
@@ -494,6 +571,11 @@ def label_unified_continuations(
             "policy_name": str(policy_record["name"]),
             "policy_actor_sha256": str(policy_record["actor_sha256"]),
             "policy_payload_sha256": str(policy_record["payload_sha256"]),
+            "evaluator_policy_name": str(policy_record["name"]),
+            "success_criterion": success_criterion,
+            "acquisition_policy_name": str(acquisition_record["name"]),
+            "acquisition_policy_actor_sha256": str(acquisition_record["actor_sha256"]),
+            "acquisition_policy_payload_sha256": str(acquisition_record["payload_sha256"]),
             "frozen_unified_manifest_sha256": str(frozen_manifest_sha256),
             "candidate_catalog_file_sha256": file_sha256(catalog_path),
             "candidate_catalog_protocol_sha256": str(catalog["protocol_sha256"]),

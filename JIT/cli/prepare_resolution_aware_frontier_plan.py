@@ -17,6 +17,10 @@ def main() -> int:
     parser.add_argument("--nominal-centerline", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--max-parent-cells-per-phase", type=int, default=25)
+    parser.add_argument("--proposal-frozen-policy", type=Path)
+    parser.add_argument(
+        "--continuation-frozen-policy", type=Path, action="append", default=[]
+    )
     args = parser.parse_args()
     result = revise_frontier_plan_for_resolution_cells(
         source_plan=args.source_plan,
@@ -25,6 +29,8 @@ def main() -> int:
         nominal_centerline=args.nominal_centerline,
         output=args.output,
         max_parent_cells_per_phase=args.max_parent_cells_per_phase,
+        proposal_frozen_policy=args.proposal_frozen_policy,
+        continuation_frozen_policies=tuple(args.continuation_frozen_policy),
     )
     print(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))
     return 0

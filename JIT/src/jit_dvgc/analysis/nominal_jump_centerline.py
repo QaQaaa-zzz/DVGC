@@ -1,8 +1,8 @@
-"""Build and lock one ground-connected nominal jump centerline.
+"""Build and lock one fixed-jump-start nominal jump centerline.
 
 The centerline is a method scaffold for Jump-Tube identification, not a policy
 intent, tracking target, or reward change. It is extracted from one completed
-successful canonical natural-start rollout and then reused unchanged by later
+successful canonical fixed-jump-start rollout and then reused unchanged by later
 prospective JIT iterations unless a new method version is explicitly declared.
 
 Every centerline point is a real simulator frame. No qpos/qvel interpolation is
@@ -10,11 +10,10 @@ allowed. The longitudinal corridor is nominally [2.5 m, 4.2 m] and ends at the
 first valid landing if landing occurs earlier. Downstream centerline points must
 be post-Apex and descending. Post-landing recovery is excluded.
 
-Causal provenance is explicit: each selected frame records a physical-state
+Conditional provenance is explicit: each selected frame records a physical-state
 SHA-256 over the raw saved qpos/qvel bytes and the number of real env.step
-transitions from the natural ground reset. This makes the centerline the first
-confirmed ground-reachable + continuation-success backbone of the later Jump
-Capability Tube.
+transitions from the fixed ground jump start. It does not claim reachability from
+the earlier natural reset.
 """
 from __future__ import annotations
 
@@ -26,8 +25,11 @@ from typing import Any, Mapping
 import numpy as np
 
 
-SCHEMA = "jit_nominal_jump_centerline_v2"
-LEGACY_SCHEMA = "jit_nominal_jump_centerline_v1"
+SCHEMA = "jit_nominal_jump_centerline_v3"
+LEGACY_SCHEMAS = {
+    "jit_nominal_jump_centerline_v1",
+    "jit_nominal_jump_centerline_v2",
+}
 X_MIN_M = 2.5
 X_MAX_M = 4.2
 DX_M = 0.1
@@ -89,13 +91,24 @@ def build_nominal_jump_centerline(
 ) -> dict[str, Any]:
     report_path = Path(canonical_evaluation_report)
     report = json.loads(report_path.read_text(encoding="utf-8"))
-    if report.get("schema") != "jit_pi_unified_canonical_natural_eval_v1":
-        raise ValueError("nominal centerline requires canonical unified natural evaluation")
+    if report.get("schema") != "jit_pi_unified_canonical_jump_start_eval_v1":
+        raise ValueError("nominal centerline requires canonical jump-start evaluation")
     if report.get("status") != "completed":
         raise ValueError("canonical evaluation is not completed")
+    start_contract = report.get("start_contract")
+    if not isinstance(start_contract, dict):
+        raise ValueError("canonical evaluation lacks jump-start contract")
+    if start_contract.get("start_kind") != "fixed_ground_jump_start":
+        raise ValueError("canonical evaluation did not use the fixed ground jump start")
+    if float(start_contract.get("jump_start_x_m", float("nan"))) != X_MIN_M:
+        raise ValueError("canonical evaluation jump-start x drift")
+    if start_contract.get("natural_start_connected") is not False:
+        raise ValueError("jump-start centerline must not claim natural-start connection")
+    if start_contract.get("tube_or_rsi_reset_used") is not False:
+        raise ValueError("jump-start centerline cannot use a Tube or RSI reset")
     rollout = report.get("canonical_rollout")
-    if not isinstance(rollout, dict) or rollout.get("full_recovery_success") is not True:
-        raise ValueError("nominal centerline requires one successful full-recovery rollout")
+    if not isinstance(rollout, dict) or rollout.get("jump_trajectory_success") is not True:
+        raise ValueError("nominal centerline requires one successful jump-to-landing trajectory")
 
     npz_path = Path(str(report["canonical_trace_npz"]))
     metadata_path = Path(str(report["canonical_trace_metadata"]))
@@ -113,6 +126,8 @@ def build_nominal_jump_centerline(
         raise ValueError("canonical trace contains nonfinite physical state")
     qpos = np.asarray(qpos_raw, dtype=np.float64)
     qvel = np.asarray(qvel_raw, dtype=np.float64)
+    if abs(float(qpos[0, 0]) - X_MIN_M) > 1.0e-6:
+        raise ValueError("canonical trace does not begin at the fixed jump start")
 
     apex_seen = _metric_array(data, metadata, "event/apex_seen")
     contact_seen = _metric_array(data, metadata, "event/descent_valid_contact_seen")
@@ -177,14 +192,14 @@ def build_nominal_jump_centerline(
             "root_vx_mps": float(vx[best]),
             "root_vz_mps": float(vz[best]),
             "x_match_error_m": float(error),
-            "environment_transitions_from_natural_start": int(best),
+            "environment_transitions_from_jump_start": int(best),
             "environment_transitions_from_previous_centerline_point": transitions_from_previous,
-            "ground_reachable_by_saved_forward_rollout": True,
+            "jump_start_reachable_by_saved_forward_rollout": True,
         }
         points.append(point)
         previous_index = best
 
-    natural_start_sha = physical_state_sha256_from_arrays(qpos_raw[0], qvel_raw[0])
+    jump_start_sha = physical_state_sha256_from_arrays(qpos_raw[0], qvel_raw[0])
     reference_payload_sha = str(report.get("checkpoint_payload_sha256", ""))
     if reference_payload_sha and len(reference_payload_sha) != 64:
         raise ValueError("canonical evaluation checkpoint payload SHA drift")
@@ -193,7 +208,7 @@ def build_nominal_jump_centerline(
         "schema": SCHEMA,
         "status": "completed_locked_method_reference",
         "purpose": (
-            "ground-connected real-rollout centerline for causal trajectory-centered "
+            "fixed-jump-start real-rollout centerline for conditional trajectory-centered "
             "Jump-Tube widening"
         ),
         "canonical_evaluation_report": str(report_path),
@@ -201,7 +216,7 @@ def build_nominal_jump_centerline(
         "canonical_trace_npz": str(npz_path),
         "canonical_trace_npz_sha256": str(metadata["npz_sha256"]),
         "reference_policy_checkpoint_payload_sha256": reference_payload_sha or None,
-        "natural_start_state_sha256": natural_start_sha,
+        "jump_start_state_sha256": jump_start_sha,
         "x_min_m": X_MIN_M,
         "x_hard_max_m": X_MAX_M,
         "x_step_m": DX_M,
@@ -214,7 +229,8 @@ def build_nominal_jump_centerline(
         "points": points,
         "real_frames_only": True,
         "qpos_qvel_interpolation_used": False,
-        "natural_start_connected": True,
+        "jump_start_connected": True,
+        "natural_start_connected": False,
         "rsi_used_to_establish_centerline_reachability": False,
         "post_landing_recovery_included": False,
         "centerline_recomputed_each_iteration": False,
@@ -241,10 +257,10 @@ def build_nominal_jump_centerline(
 def load_nominal_jump_centerline(path: Path) -> dict[str, Any]:
     payload = json.loads(Path(path).read_text(encoding="utf-8"))
     schema = payload.get("schema")
-    if schema == LEGACY_SCHEMA:
+    if schema in LEGACY_SCHEMAS:
         raise ValueError(
-            "legacy nominal centerline lacks causal ground-reachability hashes; "
-            "rebuild it under jit_nominal_jump_centerline_v2"
+            "legacy nominal centerline uses the superseded start contract; "
+            "rebuild it under jit_nominal_jump_centerline_v3"
         )
     if schema != SCHEMA or payload.get("status") != "completed_locked_method_reference":
         raise ValueError("invalid causal nominal jump centerline")
@@ -256,8 +272,10 @@ def load_nominal_jump_centerline(path: Path) -> dict[str, Any]:
         raise ValueError("nominal centerline is not real-frame-only")
     if payload.get("qpos_qvel_interpolation_used") is not False:
         raise ValueError("nominal centerline used qpos/qvel interpolation")
-    if payload.get("natural_start_connected") is not True:
-        raise ValueError("nominal centerline lacks ground reachability")
+    if payload.get("jump_start_connected") is not True:
+        raise ValueError("nominal centerline lacks fixed jump-start reachability")
+    if payload.get("natural_start_connected") is not False:
+        raise ValueError("jump-start centerline improperly claims natural-start connection")
     if payload.get("rsi_used_to_establish_centerline_reachability") is not False:
         raise ValueError("nominal centerline reachability used RSI")
     if payload.get("post_landing_recovery_included") is not False:
@@ -267,7 +285,7 @@ def load_nominal_jump_centerline(path: Path) -> dict[str, Any]:
         raise ValueError("nominal centerline has no points")
     if any(
         len(str(point.get("physical_state_sha256", ""))) != 64
-        or point.get("ground_reachable_by_saved_forward_rollout") is not True
+        or point.get("jump_start_reachable_by_saved_forward_rollout") is not True
         for point in points
     ):
         raise ValueError("nominal centerline point reachability provenance drift")

@@ -1,5 +1,17 @@
 # JIT agent and maintenance rules
 
+## Superseding active contract — fixed jump start and policy-family landing
+
+The active experiment is conditioned on the fixed ground jump start at
+`root x = 2.5 m`, not on the historical natural reset.  Lock the real-frame
+`pi_0` centerline; use `pi_0` for forward proposal acquisition; evaluate each
+exact reached candidate under frozen `pi_0`, `pi_1`, and `pi_2`; label it
+positive if any evaluator reaches the first valid landing before physical
+failure.  Post-landing recovery is ignored.  TRAIN positives may expand replay
+without fitting a class-balanced continuation classifier.  CALIBRATION and
+ACCEPTANCE remain holdout-only.  Contradictory natural-start/`pi_1`/stable-
+recovery requirements later in this file are historical and superseded.
+
 ## Scope and safety
 
 - `JIT/` is the active implementation area.

@@ -129,6 +129,41 @@ def test_natural_evaluation_reset_can_enter_jitted_unified_step(jit_root):
     assert _finite_tree(next_state.metrics)
 
 
+def test_fixed_jump_start_reset_is_distinct_ground_source_and_enters_step(jit_root):
+    assert jax.default_backend() == "gpu"
+    _config, _artifact, env = build_unified_formal_environment(
+        jit_root / "configs/pi_unified_round1_natural10.json"
+    )
+    assert hasattr(env, "_reset_jump_start_unified"), (
+        "unified runtime must expose the fixed jump-start reset"
+    )
+
+    reset = jax.jit(env._reset_jump_start_unified)
+    step = jax.jit(env.step)
+    state = reset(jax.random.PRNGKey(9_400_001))
+    jax.block_until_ready(state)
+
+    assert float(state.data.qpos[0]) == pytest.approx(2.5)
+    assert float(state.data.qpos[2]) == pytest.approx(0.15)
+    assert bool(np.asarray(state.info["reset_from_soft_tube"])) is False
+    assert bool(np.asarray(state.info["reset_from_jump_start"])) is True
+    assert float(state.metrics["reset/source_natural"]) == pytest.approx(0.0)
+    assert float(state.metrics["reset/source_soft_tube"]) == pytest.approx(0.0)
+    assert float(state.metrics["reset/source_jump_start"]) == pytest.approx(1.0)
+
+    next_state = step(state, jp.zeros(4, dtype=jp.float32))
+    jax.block_until_ready(next_state)
+
+    assert jax.tree.structure(state) == jax.tree.structure(next_state)
+    assert bool(np.asarray(next_state.info["reset_from_jump_start"])) is True
+    assert float(next_state.metrics["reset/source_natural"]) == pytest.approx(0.0)
+    assert float(next_state.metrics["reset/source_soft_tube"]) == pytest.approx(0.0)
+    assert float(next_state.metrics["reset/source_jump_start"]) == pytest.approx(1.0)
+    assert _finite_tree(next_state.data.qpos)
+    assert _finite_tree(next_state.data.qvel)
+    assert _finite_tree(next_state.metrics)
+
+
 def test_jitted_mixed_reset_step_and_fixed_panel_contract(jit_root):
     assert jax.default_backend() == "gpu"
     _config, _artifact, env = build_unified_formal_environment(

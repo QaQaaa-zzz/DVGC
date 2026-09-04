@@ -10,8 +10,8 @@ The active revision uses the locked successful nominal centerline as a complete
 outcomes. Five deterministic proposal families are created per slice following
 TRAIN/TRAIN/TRAIN/CALIBRATION/ACCEPTANCE. These proposal anchors are geometric
 identities only; they are never used as physical reset states. The causal role
-runner starts every acquisition attempt at the authoritative natural ground
-reset and reaches the target slice only through env.step.
+runner starts every acquisition attempt at the authoritative fixed ground
+jump-start reset and reaches the target slice only through env.step.
 
 The source Soft Tube and its resolution-aware geometry remain useful as replay
 support and occupancy context, but they do not establish forward reachability.
@@ -33,7 +33,7 @@ from ..config import file_sha256
 from ..soft_tube import load_soft_tube
 
 
-SCHEMA = "jit_causal_trajectory_frontier_plan_revision_v2"
+SCHEMA = "jit_jump_start_trajectory_frontier_plan_revision_v3"
 ROLE_PATTERN = ("train", "train", "train", "calibration", "acceptance")
 ROLES = ("train", "calibration", "acceptance")
 JUMP_X_STEP_M = 0.1
@@ -212,6 +212,8 @@ def revise_frontier_plan_for_resolution_cells(
     nominal_centerline: Path,
     output: Path,
     max_parent_cells_per_phase: int = 25,
+    proposal_frozen_policy: Path | None = None,
+    continuation_frozen_policies: Sequence[Path] = (),
 ) -> dict[str, Any]:
     """Replace an unrevised iterative plan with the causal centerline plan."""
     output = Path(output)
@@ -259,20 +261,21 @@ def revise_frontier_plan_for_resolution_cells(
         for phase in ("upstream", "downstream")
     }
     revised["frontier_definition"] = (
-        "locked_centerline_every_0p1m_slice_ground_connected_causal_forward_expansion_v2"
+        "locked_centerline_every_0p1m_slice_jump_start_connected_causal_forward_expansion_v3"
     )
     panel = dict(revised["fixed_probe_panel"])
-    panel["acquisition_mode"] = "ground_connected_causal_rollout_v1"
+    panel["acquisition_mode"] = "jump_start_connected_causal_rollout_v1"
     panel["causal_lookbacks_m"] = list(CAUSAL_LOOKBACKS_M)
     panel["causal_forward_max_ticks"] = CAUSAL_FORWARD_MAX_TICKS
     panel["variant_partition_modulus"] = VARIANT_PARTITION_MODULUS
     panel["legacy_duration_field_used_by_causal_acquisition"] = False
     revised["fixed_probe_panel"] = panel
     revised["jump_tube_contract"] = {
-        "profile": "causal_trajectory_centered_jump_tube_v2",
+        "profile": "conditional_jump_start_trajectory_tube_v3",
         "nominal_centerline": str(nominal_centerline),
         "nominal_centerline_sha256": str(centerline["centerline_sha256"]),
-        "natural_start_state_sha256": str(centerline["natural_start_state_sha256"]),
+        "jump_start_state_sha256": str(centerline["jump_start_state_sha256"]),
+        "natural_start_connected": False,
         "x_min_m": float(centerline["x_min_m"]),
         "x_hard_max_m": float(centerline["x_hard_max_m"]),
         "effective_x_max_m": float(centerline["effective_centerline_max_x_m"]),
@@ -281,17 +284,35 @@ def revise_frontier_plan_for_resolution_cells(
         "centerline_recomputed_each_iteration": False,
         "all_centerline_slices_probed": True,
         "source_tube_states_used_as_physical_resets": False,
-        "acquisition_mode": "ground_connected_causal_rollout_v1",
-        "reachability_requirement": "natural_start_connected_forward_env_step_only",
+        "acquisition_mode": "jump_start_connected_causal_rollout_v1",
+        "reachability_requirement": "fixed_jump_start_connected_forward_env_step_only",
         "rsi_may_establish_forward_reachability": False,
         "rsi_role": "continuation_evaluation_only_after_candidate_is_forward_reached",
-        "upstream_semantics": "pre-Apex target slice reached from ground",
+        "upstream_semantics": "pre-Apex target slice reached from the fixed jump start",
         "downstream_semantics": (
-            "post-Apex target slice reached from ground AND root_vz_mps < 0 AND pre-contact"
+            "post-Apex target slice reached from the fixed jump start AND root_vz_mps < 0 AND pre-contact"
         ),
         "post_landing_recovery_frontier_eligible": False,
         "selection_scope": "every_locked_centerline_slice_not_global_lowest_score",
     }
+    if proposal_frozen_policy is not None or continuation_frozen_policies:
+        if proposal_frozen_policy is None:
+            raise ValueError("policy-family frontier requires a proposal policy")
+        if len(continuation_frozen_policies) != 3:
+            raise ValueError("policy-family frontier requires pi_0/pi_1/pi_2 evaluators")
+        revised["jump_tube_contract"].update(
+            {
+                "proposal_frozen_policy": str(proposal_frozen_policy),
+                "continuation_frozen_policies": [
+                    str(path) for path in continuation_frozen_policies
+                ],
+                "continuation_success_criterion": (
+                    "first_valid_landing_before_physical_failure"
+                ),
+                "post_landing_recovery_required": False,
+                "continuation_policy_aggregation": "positive_if_any_policy_succeeds",
+            }
+        )
     revised["capability_geometry"] = {
         "summary": str(capability_geometry_summary),
         "summary_file_sha256": file_sha256(capability_geometry_summary),
@@ -303,9 +324,9 @@ def revise_frontier_plan_for_resolution_cells(
         "selection_audit": audit,
     }
     revised["protocol_revision"] = {
-        "name": "causal_trajectory_centered_frontier_v2",
+        "name": "conditional_jump_start_trajectory_centered_frontier_v3",
         "purpose": (
-            "identify Jump capability as ground-forward-reachable AND continuation-viable; "
+            "identify conditional Jump capability as fixed-jump-start-forward-reachable AND continuation-viable; "
             "probe every locked 0.1 m centerline slice with disjoint pre-outcome proposal "
             "families; never use RSI to manufacture reachability"
         ),
@@ -329,6 +350,16 @@ def revise_frontier_plan_for_resolution_cells(
         ],
         "outcomes_observed_before_revision": False,
     }
+    if proposal_frozen_policy is not None:
+        revised["protocol_revision"]["proposal_controller"] = "pi_0"
+        revised["protocol_revision"]["continuation_controller_family"] = [
+            "pi_0",
+            "pi_1",
+            "pi_2",
+        ]
+        revised["protocol_revision"]["continuation_success"] = (
+            "first_valid_landing_by_any_controller"
+        )
     revised["plan_sha256"] = _canonical_sha256(revised)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(

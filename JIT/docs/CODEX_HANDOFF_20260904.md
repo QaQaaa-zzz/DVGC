@@ -1,5 +1,15 @@
 # DVGC/JIT Technical Handoff — 2026-09-04
 
+## Superseding current handoff
+
+The fixed-jump-start policy-family landing round is complete through replay
+construction.  Use the locked real-frame `pi_0` centerline and `pi_0` proposal
+rollouts.  A reached state is positive if any frozen `pi_0/pi_1/pi_2` evaluator
+reaches first valid landing; do not require recovery.  Results are TRAIN
+525/527, CALIBRATION 181/184, ACCEPTANCE 181/184, 382 new TRAIN root cells, and
+a 3644-row TRAIN replay Tube.  No new policy has been trained.  Older
+natural-start/`pi_1`-centerline instructions below are superseded.
+
 ## Purpose
 
 This is the active takeover guide after the historical `pi_1 -> C^1 -> raw Tube_2 -> pi_2` engineering round, physical Tube visualization review, trajectory-centered redesign, and the later **causal reachability correction**.

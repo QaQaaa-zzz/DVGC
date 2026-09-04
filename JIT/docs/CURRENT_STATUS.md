@@ -1,5 +1,28 @@
 # Current JIT status — 2026-09-04
 
+## Superseding live status — fixed-jump-start family landing round
+
+The active round has completed acquisition, three-policy landing labels, role
+separation, physical-cell analysis, and TRAIN-only replay construction.
+
+```text
+centerline: pi_0 real frames, 14 slices/cells, x=2.5..3.8 m
+proposal acquisition: pi_0 from the fixed jump start, env.step only
+label: first valid landing under any of pi_0/pi_1/pi_2; no recovery requirement
+TRAIN:       525/527 positive; 382 unique positive root-geometry cells
+CALIBRATION: 181/184 positive; 134 unique positive root-geometry cells
+ACCEPTANCE:  181/184 positive; 135 unique positive root-geometry cells
+replay Tube: 3119 retained + 525 TRAIN positives = 3644 rows
+```
+
+No new policy has been trained.  The old class-balanced C^1 fitting step is
+intentionally bypassed because the family labels contain only two TRAIN
+negatives and zero downstream negatives.  The next decision is the identity
+and warm start of the new unified Actor; final TEST/JCE/JEL remains untouched.
+
+Natural-start, `pi_1` centerline, stable-recovery, and “artifact not yet
+generated” statements below are superseded history.
+
 ## Executive state
 
 The historical engineering chain through `pi_2` is complete. The project is **paused before any pi_3-like training** because two previous interpretations were too weak for a publishable jump-capability claim:

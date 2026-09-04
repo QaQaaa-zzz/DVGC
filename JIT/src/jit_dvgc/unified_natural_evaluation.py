@@ -26,12 +26,13 @@ from .constants import END_REASONS
 from .evaluation import EpisodeTrace, capture_episode, save_episode_trace
 from .ppo import make_checkpoint_policy
 from .unified_diagnostic import _load_runtime
-from .unified_env import UnifiedTubeRSIEnv
+from .unified_env import JUMP_START_X_M, UnifiedTubeRSIEnv
 from .unified_formal import load_unified_formal_config
 from .unified_training import canonical_sha256, checkpoint_identity
 
 
 EVALUATION_SCHEMA = "jit_pi_unified_canonical_natural_eval_v1"
+JUMP_START_EVALUATION_SCHEMA = "jit_pi_unified_canonical_jump_start_eval_v1"
 RESET_AUDIT_SEED_START = 9_400_001
 RESET_AUDIT_COUNT = 64
 CANONICAL_ROLLOUT_SEED = 9_400_001
@@ -54,6 +55,27 @@ class NaturalStartUnifiedEvalEnv(UnifiedTubeRSIEnv):
 
     def reset_natural(self, rng: jax.Array):
         return self._reset_natural_unified(rng)
+
+
+class JumpStartUnifiedEvalEnv(UnifiedTubeRSIEnv):
+    """Unified runtime evaluated from the fixed ground jump-start reset."""
+
+    def reset(self, rng: jax.Array):
+        return self.reset_jump_start(rng)
+
+    def reset_jump_start(self, rng: jax.Array):
+        return self._reset_jump_start_unified(rng)
+
+
+def jump_start_evaluation_contract() -> dict[str, Any]:
+    """Declare the conditional start semantics without natural-start claims."""
+    return {
+        "schema": JUMP_START_EVALUATION_SCHEMA,
+        "start_kind": "fixed_ground_jump_start",
+        "jump_start_x_m": JUMP_START_X_M,
+        "natural_start_connected": False,
+        "tube_or_rsi_reset_used": False,
+    }
 
 
 def _json_safe(value: Any) -> Any:
@@ -191,10 +213,27 @@ def summarize_canonical_natural_trace(trace: EpisodeTrace) -> dict[str, Any]:
     phase_transition = _ever(trace, "event/tube_phase_transition")
     valid_contact = _ever(trace, "event/descent_valid_contact_seen")
     descent_success = _ever(trace, "terminal/descent_success")
-    full_recovery = bool(
-        apex
+    apex_index = _first_metric_frame(trace, "event/apex_seen")
+    contact_index = _first_metric_frame(trace, "event/descent_valid_contact_seen")
+    pre_landing_physical_failure = (
+        True
+        if contact_index is None
+        else any(frame.physical_failure for frame in trace.frames[: contact_index + 1])
+    )
+    jump_trajectory_success = bool(
+        jump_zone
+        and ascending
+        and height
+        and apex
         and phase_transition
         and valid_contact
+        and apex_index is not None
+        and contact_index is not None
+        and apex_index < contact_index
+        and not pre_landing_physical_failure
+    )
+    full_recovery = bool(
+        jump_trajectory_success
         and descent_success
         and terminal.success
     )
@@ -218,8 +257,6 @@ def summarize_canonical_natural_trace(trace: EpisodeTrace) -> dict[str, Any]:
     )
     action_abs = np.abs(actions)
 
-    apex_index = _first_metric_frame(trace, "event/apex_seen")
-    contact_index = _first_metric_frame(trace, "event/descent_valid_contact_seen")
     return {
         "seed": int(trace.seed),
         "environment_interactions": int(trace.environment_transitions),
@@ -230,6 +267,8 @@ def summarize_canonical_natural_trace(trace: EpisodeTrace) -> dict[str, Any]:
         "apex_seen": bool(apex),
         "phase_transitioned": bool(phase_transition),
         "valid_landing_contact_seen": bool(valid_contact),
+        "jump_trajectory_success": jump_trajectory_success,
+        "pre_landing_physical_failure": bool(pre_landing_physical_failure),
         "stable_recovery_success": bool(descent_success),
         "full_recovery_success": full_recovery,
         "terminal_success": bool(terminal.success),
@@ -257,15 +296,18 @@ def summarize_canonical_natural_trace(trace: EpisodeTrace) -> dict[str, Any]:
     }
 
 
-def run_canonical_natural_evaluation(
+def _run_canonical_fixed_start_evaluation(
     config_path: Path,
     checkpoint: Path,
     output_dir: Path,
     *,
-    env_factory: Callable[..., Any] = NaturalStartUnifiedEvalEnv,
-    backend_name: Callable[[], str] = jax.default_backend,
+    contract: Mapping[str, Any],
+    env_factory: Callable[..., Any],
+    reset_method_name: str,
+    backend_name: Callable[[], str],
+    rollout_seed: int = CANONICAL_ROLLOUT_SEED,
 ) -> dict[str, Any]:
-    """Run the canonical natural-start full-chain gate for a fixed policy."""
+    """Run one fixed-start full-chain gate for a frozen unified policy."""
     config_path = Path(config_path)
     checkpoint_path = Path(checkpoint)
     output = Path(output_dir)
@@ -275,7 +317,7 @@ def run_canonical_natural_evaluation(
     config = load_unified_formal_config(config_path)
     up_config, down_config, artifact, _ = _load_runtime(config)
     if backend_name() != "gpu":
-        raise RuntimeError("canonical natural evaluation requires the visible JAX GPU")
+        raise RuntimeError("canonical fixed-start evaluation requires the visible JAX GPU")
     env = env_factory(
         up_config,
         down_config,
@@ -284,22 +326,37 @@ def run_canonical_natural_evaluation(
     )
     payload = load_checkpoint(checkpoint_path, expected=checkpoint_identity(config, env))
     if payload.training_transitions != config.ppo.requested_transitions:
-        raise ValueError("canonical natural evaluation requires the completed formal checkpoint")
+        raise ValueError("canonical evaluation requires the completed formal checkpoint")
 
     payload_sha = file_sha256(checkpoint_path / "payload.pkl")
     identity = json.loads((checkpoint_path / "identity.json").read_text(encoding="utf-8"))
     if identity.get("payload_sha256") != payload_sha:
-        raise ValueError("canonical natural evaluation checkpoint payload identity drift")
+        raise ValueError("canonical evaluation checkpoint payload identity drift")
 
     output.mkdir(parents=True, exist_ok=False)
     audit_seeds = tuple(
         range(RESET_AUDIT_SEED_START, RESET_AUDIT_SEED_START + RESET_AUDIT_COUNT)
     )
     source_training = _source_training_provenance(config)
+    start_kind = str(contract["start_kind"])
+    natural_start = bool(contract["natural_start_connected"])
+    jump_start = start_kind == "fixed_ground_jump_start"
+    reset_protocol = (
+        "existing Phase-U natural reset converted to unified state without physical-state mutation"
+        if natural_start
+        else (
+            "fixed ground jump-start reset at x=2.5 m; default keyframe pose and declared "
+            "initial velocity; no Tube or RSI restoration"
+        )
+    )
     declaration = {
-        "schema": EVALUATION_SCHEMA,
+        "schema": str(contract["schema"]),
         "status": "predeclared",
-        "purpose": "canonical natural-start full-chain evaluation of the fixed completed unified policy",
+        "purpose": (
+            "canonical natural-start full-chain evaluation of the fixed completed unified policy"
+            if natural_start
+            else "canonical fixed jump-start full-chain evaluation of the frozen unified policy"
+        ),
         "repository_head": _repo_head(),
         "formal_config": str(config_path.resolve()),
         "formal_config_sha256": config.config_sha256,
@@ -309,18 +366,30 @@ def run_canonical_natural_evaluation(
         "xml_sha256": env._bundle.xml_sha256,
         "soft_tube_manifest_sha256": artifact.manifest["manifest_sha256"],
         **source_training,
-        "reset_protocol": "existing Phase-U natural reset converted to unified state without physical-state mutation",
+        "start_contract": dict(contract),
+        "reset_protocol": reset_protocol,
         "reset_audit_seed_start": RESET_AUDIT_SEED_START,
         "reset_audit_count": RESET_AUDIT_COUNT,
-        "expected_unique_natural_resets": EXPECTED_UNIQUE_NATURAL_RESETS,
-        "canonical_rollout_seed": CANONICAL_ROLLOUT_SEED,
+        "expected_unique_fixed_resets": EXPECTED_UNIQUE_NATURAL_RESETS,
+        **(
+            {"expected_unique_natural_resets": EXPECTED_UNIQUE_NATURAL_RESETS}
+            if natural_start
+            else {"expected_unique_jump_start_resets": EXPECTED_UNIQUE_NATURAL_RESETS}
+        ),
+        "canonical_rollout_seed": int(rollout_seed),
         "episode_horizon": int(config.ppo.episode_horizon),
+        "jump_trajectory_definition": (
+            "jump zone seen AND ascent/height/Apex seen AND unified phase transition "
+            "AND first valid landing reached before any physical failure"
+        ),
         "full_recovery_definition": "Apex seen AND unified phase transition AND valid descent contact AND descent stable-recovery terminal success",
         "selection_policy": "transition_10009600 fixed before evaluation; no checkpoint selection after TRAIN-panel inspection",
         "statistical_success_rate_claim": False,
         "training_transitions": 0,
         "expert_switching_used": False,
         "soft_tube_reset_used": False,
+        "natural_reset_used": natural_start,
+        "jump_start_reset_used": jump_start,
         "validation_data_used": False,
         "test_data_used": False,
     }
@@ -328,12 +397,20 @@ def run_canonical_natural_evaluation(
     _write_json(output / "declaration.json", declaration)
 
     try:
-        reset_audit = audit_natural_reset_diversity(env, audit_seeds)
+        reset_fn = jax.jit(getattr(env, reset_method_name))
+        reset_audit = audit_natural_reset_diversity(
+            env, audit_seeds, reset_fn=reset_fn
+        )
         _write_json(output / "reset_diversity.json", reset_audit)
         if reset_audit["unique_physical_state_count"] != EXPECTED_UNIQUE_NATURAL_RESETS:
             raise ValueError(
-                "natural reset diversity contract changed; stop and predeclare a new evaluation protocol"
+                "fixed reset diversity contract changed; stop and predeclare a new evaluation protocol"
             )
+        if jump_start and any(
+            abs(float(record["root_x"]) - JUMP_START_X_M) > 1.0e-6
+            for record in reset_audit["records"]
+        ):
+            raise ValueError("jump-start reset x drift")
 
         checkpoint_policy = make_checkpoint_policy(env, payload, deterministic=True)
 
@@ -346,18 +423,18 @@ def run_canonical_natural_evaluation(
         trace = capture_episode(
             env,
             deterministic_policy,
-            seed=CANONICAL_ROLLOUT_SEED,
+            seed=int(rollout_seed),
             horizon=config.ppo.episode_horizon,
-            reset_fn=jax.jit(env.reset_natural),
+            reset_fn=reset_fn,
             step_fn=jax.jit(env.step),
         )
         trace_artifact = save_episode_trace(trace, output / "canonical_trace")
         summary = summarize_canonical_natural_trace(trace)
         if not math.isfinite(float(summary["forward_displacement"])):
-            raise ValueError("canonical natural evaluation produced nonfinite summary")
+            raise ValueError("canonical evaluation produced nonfinite summary")
 
         report = {
-            "schema": EVALUATION_SCHEMA,
+            "schema": str(contract["schema"]),
             "status": "completed",
             "protocol_sha256": declaration["protocol_sha256"],
             "checkpoint_payload_sha256": payload_sha,
@@ -377,17 +454,44 @@ def run_canonical_natural_evaluation(
             "training_transitions": 0,
             "expert_switching_used": False,
             "soft_tube_reset_used": False,
+            "natural_reset_used": natural_start,
+            "jump_start_reset_used": jump_start,
+            "start_contract": dict(contract),
             "validation_data_used": False,
             "test_data_used": False,
             "statistical_success_rate_available": False,
-            "statistical_success_rate_reason": "the authoritative natural reset has one unique physical initial state across the 64-seed audit",
+            "statistical_success_rate_reason": (
+                "the authoritative natural reset has one unique physical initial state across the 64-seed audit"
+                if natural_start
+                else "the fixed jump-start reset has one unique physical initial state across the 64-seed audit"
+            ),
             "canonical_gate": (
-                "CANONICAL_FULL_RECOVERY_GO"
-                if summary["full_recovery_success"]
-                else "CANONICAL_FULL_RECOVERY_FAIL"
+                (
+                    "CANONICAL_FULL_RECOVERY_GO"
+                    if natural_start
+                    else "CANONICAL_JUMP_START_TRAJECTORY_GO"
+                )
+                if (
+                    summary["full_recovery_success"]
+                    if natural_start
+                    else summary["jump_trajectory_success"]
+                )
+                else (
+                    "CANONICAL_FULL_RECOVERY_FAIL"
+                    if natural_start
+                    else "CANONICAL_JUMP_START_TRAJECTORY_FAIL"
+                )
             ),
             "pi_unified_star_freeze_ready": False,
-            "next_scientific_gate": "build a separately predeclared real-dynamics reachable initial-state evaluation bank before any statistical Final-Recovery/JCE claim",
+            "next_scientific_gate": (
+                "build a separately predeclared real-dynamics reachable initial-state evaluation bank before any statistical Final-Recovery/JCE claim"
+                if natural_start
+                else (
+                    "lock the real-frame jump-start centerline before conditional capability acquisition"
+                    if summary["jump_trajectory_success"]
+                    else "stop: frozen policy did not complete the fixed jump-start task"
+                )
+            ),
         }
         _write_json(output / "report.json", report)
         return report
@@ -402,6 +506,53 @@ def run_canonical_natural_evaluation(
             },
         )
         raise
+
+
+def run_canonical_natural_evaluation(
+    config_path: Path,
+    checkpoint: Path,
+    output_dir: Path,
+    *,
+    env_factory: Callable[..., Any] = NaturalStartUnifiedEvalEnv,
+    backend_name: Callable[[], str] = jax.default_backend,
+) -> dict[str, Any]:
+    """Run the canonical natural-start full-chain gate for a fixed policy."""
+    return _run_canonical_fixed_start_evaluation(
+        config_path,
+        checkpoint,
+        output_dir,
+        contract={
+            "schema": EVALUATION_SCHEMA,
+            "start_kind": "canonical_natural_ground_start",
+            "natural_start_connected": True,
+            "tube_or_rsi_reset_used": False,
+        },
+        env_factory=env_factory,
+        reset_method_name="reset_natural",
+        backend_name=backend_name,
+    )
+
+
+def run_canonical_jump_start_evaluation(
+    config_path: Path,
+    checkpoint: Path,
+    output_dir: Path,
+    *,
+    env_factory: Callable[..., Any] = JumpStartUnifiedEvalEnv,
+    backend_name: Callable[[], str] = jax.default_backend,
+    rollout_seed: int = CANONICAL_ROLLOUT_SEED,
+) -> dict[str, Any]:
+    """Run the canonical fixed-ground jump-start full-chain gate."""
+    return _run_canonical_fixed_start_evaluation(
+        config_path,
+        checkpoint,
+        output_dir,
+        contract=jump_start_evaluation_contract(),
+        env_factory=env_factory,
+        reset_method_name="reset_jump_start",
+        backend_name=backend_name,
+        rollout_seed=rollout_seed,
+    )
 
 
 # Compatibility alias for older callers; there is one implementation above.

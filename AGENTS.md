@@ -2,6 +2,30 @@
 
 ## Current research truth — 2026-09-04
 
+### Superseding fixed-jump-start policy-family landing contract
+
+The user-approved active experiment now conditions reachability on the fixed
+ground jump start at `root x = 2.5 m`; a natural-start connection is not
+required.  The one locked scaffold is the real-frame `pi_0` trajectory.  `pi_0`
+also generates every acquisition candidate through authoritative `env.step`
+with bounded lookback perturbations.  Each exact reached candidate is restored
+only for evaluation under the frozen `{pi_0, pi_1, pi_2}` family.  A candidate
+is positive when **any** family member reaches the first valid landing before
+physical failure.  Post-landing recovery is outside the label.
+
+Thus the active object is empirical, conditional jump-start landing capability:
+
+```text
+J_family = R_jump-start,pi0^forward
+           INTERSECT (L_pi0 OR L_pi1 OR L_pi2)
+```
+
+TRAIN positives may enter replay directly; class balance and a fitted binary
+continuation field are not prerequisites.  CALIBRATION and ACCEPTANCE remain
+disjoint holdout evidence and never enter replay.  Any natural-start, `pi_1`
+centerline, or stable-recovery requirements below are superseded historical
+text, not the active experiment contract.
+
 DVGC/JIT now studies **causal, trajectory-centered, resolution-aware Jump-Capability-Tube identification with just-in-time curriculum generation** for one fixed single-track two-wheeled robot task.
 
 The central correction is mandatory:
@@ -299,6 +323,8 @@ Code integration exists. A complete prospective causal run has **not yet been ex
 - preserve unrelated work;
 - never reset, clean, stash, rebase or force-push;
 - use `/home/qy/mujoco_playground/.venv/bin/python`;
+- do not repeatedly recalculate SHA-256 values that are already locked in authority documents, manifests, or frozen artifacts; reuse those recorded identities during routine work and avoid redundant manual `sha256sum` checks;
+- retain protocol-required automatic provenance/self-hash validation for newly generated artifacts and only perform an explicit manual hash calculation when diagnosing concrete identity drift;
 - keep CLIs thin and scientific logic in `JIT/src/jit_dvgc/`;
 - compile and run targeted tests after structural changes before cleanup;
 - never turn a retrospective method correction into a fabricated historical PASS.

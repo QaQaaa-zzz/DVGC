@@ -341,6 +341,8 @@ def restore_unified_envelope_snapshot(snapshot: UnifiedEnvelopeSnapshot, env: An
         "tube_entry_index": jp.asarray(snapshot.tube_entry_index, jp.int32),
         "tube_global_index": jp.asarray(snapshot.tube_global_index, jp.int32),
         "reset_from_soft_tube": soft,
+        "reset_from_jump_start": false,
+        "reset_from_continuation": jp.asarray(True),
         "terminated": false,
         "truncated": false,
         "time_out": jp.asarray(0.0, jp.float32),
@@ -363,7 +365,9 @@ def restore_unified_envelope_snapshot(snapshot: UnifiedEnvelopeSnapshot, env: An
             "event/descent_valid_contact_seen": down_events.valid_contact_seen.astype(jp.float32),
             "event/descent_post_contact_ticks": down_events.post_contact_ticks.astype(jp.float32),
             "reset/source_soft_tube": soft.astype(jp.float32),
-            "reset/source_natural": (~soft).astype(jp.float32),
+            "reset/source_natural": jp.asarray(0.0, jp.float32),
+            "reset/source_jump_start": jp.asarray(0.0, jp.float32),
+            "reset/source_continuation": jp.asarray(1.0, jp.float32),
             "reset/tube_phase_upstream": (
                 soft & (start_phase == jp.asarray(0, jp.int32))
             ).astype(jp.float32),

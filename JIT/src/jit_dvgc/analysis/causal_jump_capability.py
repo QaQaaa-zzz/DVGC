@@ -2,12 +2,12 @@
 
 The raw Soft Tube is training/replay support and may contain historical RSI-only
 states. The causal Jump Capability Tube is stricter: a state contributes only
-when (1) it was reached from the locked natural ground start using env.step
+when (1) it was reached from the locked fixed ground jump start using env.step
 only, and (2) continuation evaluation from that exact state succeeded.
 
 This module joins each causal acquisition catalog with its continuation labels,
 projects the reached states into the declared physical resolution, and keeps
-TRAIN/CALIBRATION/ACCEPTANCE roles separate. The centerline is the ground-
+TRAIN/CALIBRATION/ACCEPTANCE roles separate. The centerline is the jump-start-
 reachable successful backbone. Only TRAIN-positive cells may extend curriculum
 support. CALIBRATION/ACCEPTANCE positive cells remain holdout evidence.
 """
@@ -23,7 +23,7 @@ import numpy as np
 
 from ..acquisition.causal_jump import (
     ACQUISITION_MODE,
-    validate_ground_reachability_payload,
+    validate_jump_start_reachability_payload,
 )
 from ..config import load_config
 from ..model import load_host_model
@@ -41,8 +41,8 @@ from .capability_tube import (
 from .nominal_jump_centerline import load_nominal_jump_centerline
 
 
-SCHEMA = "jit_causal_jump_capability_evidence_v1"
-CELLS_SCHEMA = "jit_causal_jump_capability_cells_v1"
+SCHEMA = "jit_conditional_jump_start_capability_evidence_v2"
+CELLS_SCHEMA = "jit_conditional_jump_start_capability_cells_v2"
 ROLES = ("train", "calibration", "acceptance")
 
 
@@ -94,7 +94,8 @@ def _centerline_cells(centerline: Mapping[str, Any], bundle: Any) -> list[dict[s
                 "x_bin": int(bins["root_x_m"]),
                 "x_center_m": int(bins["root_x_m"])
                 * float(RESOLUTIONS["root_x_m"]["resolution"]),
-                "ground_reachability_proven": True,
+                "jump_start_reachability_proven": True,
+                "natural_start_connected": False,
                 "continuation_viability_proven": True,
                 "source": str(centerline["canonical_trace_npz"]),
             }
@@ -111,9 +112,9 @@ def _role_evidence(role_root: Path, role: str, bundle: Any) -> list[dict[str, An
     if catalog.get("schema") != "jit_unified_boundary_catalog_v1" or catalog.get("status") != "completed":
         raise ValueError(f"{role} causal acquisition catalog schema/status drift")
     if catalog.get("acquisition_mode") != ACQUISITION_MODE:
-        raise ValueError(f"{role} acquisition is not ground-connected causal mode")
-    if catalog.get("ground_reachability_proven") is not True:
-        raise ValueError(f"{role} acquisition lacks reachability proof")
+        raise ValueError(f"{role} acquisition is not jump-start-connected causal mode")
+    if catalog.get("jump_start_reachability_proven") is not True:
+        raise ValueError(f"{role} acquisition lacks jump-start reachability proof")
     if catalog.get("rsi_used_for_reachability") is not False:
         raise ValueError(f"{role} acquisition used RSI to establish reachability")
     if not isinstance(labels, list):
@@ -128,14 +129,14 @@ def _role_evidence(role_root: Path, role: str, bundle: Any) -> list[dict[str, An
 
     result: list[dict[str, Any]] = []
     for row in entries:
-        provenance = row.get("ground_reachability")
+        provenance = row.get("jump_start_reachability")
         if not isinstance(provenance, dict):
-            raise ValueError("causal candidate missing ground_reachability object")
+            raise ValueError("causal candidate missing jump_start_reachability object")
         declared_reachability_sha = str(provenance.get("reachability_sha256", ""))
         base = {k: v for k, v in provenance.items() if k != "reachability_sha256"}
         if len(declared_reachability_sha) != 64 or _canonical_sha256(base) != declared_reachability_sha:
             raise ValueError("causal reachability provenance self-hash drift")
-        validate_ground_reachability_payload(provenance)
+        validate_jump_start_reachability_payload(provenance)
 
         label = labels_by_id[str(row["candidate_id"])]
         snapshot_path = catalog_path.parent / str(row["source_bank"]) / str(row["snapshot"])
@@ -152,7 +153,7 @@ def _role_evidence(role_root: Path, role: str, bundle: Any) -> list[dict[str, An
         bins = quantize_coordinates(coords, ROOT_GEOMETRY_FIELDS)
         result.append(
             {
-                "evidence_kind": "ground_connected_causal_probe",
+                "evidence_kind": "jump_start_connected_causal_probe",
                 "role": role,
                 "label": int(label["label"]),
                 "continuation_success": bool(label["continuation_success"]),
@@ -165,9 +166,10 @@ def _role_evidence(role_root: Path, role: str, bundle: Any) -> list[dict[str, An
                 "x_bin": int(bins["root_x_m"]),
                 "x_center_m": int(bins["root_x_m"])
                 * float(RESOLUTIONS["root_x_m"]["resolution"]),
-                "ground_reachability_proven": True,
+                "jump_start_reachability_proven": True,
+                "natural_start_connected": False,
                 "continuation_viability_proven": bool(label["label"]),
-                "ground_reachability": provenance,
+                "jump_start_reachability": provenance,
                 "source_catalog": str(catalog_path),
                 "source_snapshot": str(snapshot_path),
             }
@@ -281,12 +283,13 @@ def build_causal_jump_capability_evidence(
         "schema": SCHEMA,
         "status": "completed",
         "scientific_definition": (
-            "Jump capability evidence = natural-ground-forward-reachable state AND successful "
+            "Conditional Jump capability evidence = fixed-jump-start-forward-reachable state AND successful "
             "continuation from that exact state"
         ),
         "nominal_centerline": str(nominal_centerline),
         "nominal_centerline_sha256": str(centerline["centerline_sha256"]),
-        "natural_start_state_sha256": str(centerline["natural_start_state_sha256"]),
+        "jump_start_state_sha256": str(centerline["jump_start_state_sha256"]),
+        "natural_start_connected": False,
         "model_config": str(model_config),
         "model_config_sha256": str(resolved.config_sha256),
         "xml_sha256": str(bundle.xml_sha256),
@@ -295,7 +298,7 @@ def build_causal_jump_capability_evidence(
         "centerline_unique_root_geometry_cell_count": len(centerline_cells),
         "roles": {role: _role_summary(rows) for role, rows in role_rows.items()},
         "curriculum_capability": {
-            "definition": "locked centerline cells UNION TRAIN-positive ground-connected causal cells",
+            "definition": "locked centerline cells UNION TRAIN-positive jump-start-connected causal cells",
             "root_geometry_cell_count": len(curriculum_cells),
             "new_train_root_geometry_cell_count_vs_source_or_centerline": len(new_train_cells),
             "source_comparison": str(source_causal_summary) if source_causal_summary is not None else "locked_centerline_baseline",
@@ -306,7 +309,7 @@ def build_causal_jump_capability_evidence(
             "calibration_positive_root_geometry_cell_count": len(calibration_positive_cells),
             "acceptance_positive_root_geometry_cell_count": len(acceptance_positive_cells),
         },
-        "ground_reachability_verified": True,
+        "jump_start_reachability_verified": True,
         "rsi_used_to_establish_reachability": False,
         "continuation_rsi_used_after_forward_reachability": True,
         "raw_soft_tube_is_capability_proof": False,
@@ -317,7 +320,8 @@ def build_causal_jump_capability_evidence(
         "test_data_used": False,
         "final_evaluation_data_used": False,
         "claim_boundary": {
-            "empirical_ground_connected_capability_evidence": True,
+            "empirical_jump_start_connected_capability_evidence": True,
+            "natural_start_connected_capability_claim": False,
             "formal_reachability_proof": False,
             "viability_kernel_claim": False,
             "certified_safe_set_claim": False,

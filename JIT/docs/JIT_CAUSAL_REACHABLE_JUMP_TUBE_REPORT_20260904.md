@@ -3,6 +3,18 @@
 Date: 2026-09-04  
 Branch: `agent/two-phase-soft-tube`
 
+## Superseding experiment addendum
+
+The executed round is conditional on the fixed ground jump start (`x=2.5 m`).
+It locks the real-frame `pi_0` centerline, uses `pi_0` for forward proposal
+acquisition, and ORs first-valid-landing outcomes from frozen
+`pi_0/pi_1/pi_2`.  Post-landing recovery is excluded.  The completed evidence
+is TRAIN 525/527, CALIBRATION 181/184, ACCEPTANCE 181/184, with 382 new TRAIN
+root-geometry cells beyond the 14-cell centerline.  A TRAIN-only replay Tube of
+3644 rows was built (3119 retained + 525 causal additions).  No new Actor has
+been trained.  Conflicting natural-start or stable-recovery text later in this
+report is superseded method history.
+
 ## 0. Executive conclusion
 
 The project has completed the historical engineering chain from phase experts through `Tube_2` and `pi_2`. That work established a functioning two-phase-to-unified-policy pipeline, continuation-field machinery, Tube-RSI training, paired evaluation, and automated iteration infrastructure. It also exposed two methodological weaknesses in the old capability interpretation:

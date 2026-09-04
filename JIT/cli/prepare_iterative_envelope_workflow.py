@@ -4,12 +4,12 @@
 The active JIT method separates three things that older workflows mixed:
 
 1. raw Soft-Tube replay support;
-2. ground-connected forward reachability;
+2. fixed-jump-start-connected forward reachability;
 3. continuation viability after a reached state.
 
 A locked nominal centerline is supplied as a method reference and is NOT
 recomputed each iteration. Frontier roles probe every 0.1 m centerline slice by
-rolling from the natural ground reset. RSI is used only after a candidate has
+rolling from the fixed ground jump-start reset. RSI is used only after a candidate has
 already been reached by env.step. Candidate policy training is authorized only
 when the causal TRAIN evidence adds new resolution-aware Jump-Capability cells.
 """
@@ -43,7 +43,7 @@ def main() -> int:
         "--nominal-centerline",
         type=Path,
         required=True,
-        help="locked jit_nominal_jump_centerline_v2 method reference; reused across iterations",
+        help="locked jit_nominal_jump_centerline_v3 jump-start method reference; reused across iterations",
     )
     parser.add_argument(
         "--source-causal-summary",
@@ -71,13 +71,15 @@ def main() -> int:
     centerline = load_nominal_jump_centerline(args.nominal_centerline)
     if centerline.get("centerline_recomputed_each_iteration") is not False:
         raise ValueError("workflow requires one locked non-drifting nominal centerline")
-    if centerline.get("natural_start_connected") is not True:
-        raise ValueError("workflow centerline is not ground-connected")
+    if centerline.get("jump_start_connected") is not True:
+        raise ValueError("workflow centerline is not fixed-jump-start-connected")
+    if centerline.get("natural_start_connected") is not False:
+        raise ValueError("jump-start workflow centerline improperly claims natural-start connection")
     if args.source_causal_summary is not None:
         source_causal = read(args.source_causal_summary)
-        if source_causal.get("schema") != "jit_causal_jump_capability_evidence_v1":
+        if source_causal.get("schema") != "jit_conditional_jump_start_capability_evidence_v2":
             raise ValueError("source causal capability summary schema drift")
-        if source_causal.get("ground_reachability_verified") is not True:
+        if source_causal.get("jump_start_reachability_verified") is not True:
             raise ValueError("source causal capability summary lacks reachability proof")
 
     next_k = k + 1
@@ -229,7 +231,11 @@ def main() -> int:
                 "assertions": [
                     assertion("/status", "eq", "predeclared_before_frontier_outcomes"),
                     assertion("/iteration", "eq", k),
-                    assertion("/protocol_revision/name", "eq", "causal_trajectory_centered_frontier_v2"),
+                    assertion(
+                        "/protocol_revision/name",
+                        "eq",
+                        "conditional_jump_start_trajectory_centered_frontier_v3",
+                    ),
                     assertion("/jump_tube_contract/x_step_m", "eq", 0.1),
                     assertion("/jump_tube_contract/all_centerline_slices_probed", "eq", True),
                     assertion("/jump_tube_contract/source_tube_states_used_as_physical_resets", "eq", False),
@@ -260,8 +266,8 @@ def main() -> int:
                         assertion("/status", "eq", "completed"),
                         assertion("/role", "eq", role_name),
                         assertion("/iteration", "eq", k),
-                        assertion("/acquisition_mode", "eq", "ground_connected_causal_rollout_v1"),
-                        assertion("/ground_reachability_proven", "eq", True),
+                        assertion("/acquisition_mode", "eq", "jump_start_connected_causal_rollout_v1"),
+                        assertion("/jump_start_reachability_proven", "eq", True),
                         assertion("/rsi_used_for_reachability", "eq", False),
                     ],
                     "exports": {},
@@ -288,7 +294,7 @@ def main() -> int:
                 "kind": "json",
                 "assertions": [
                     assertion("/status", "eq", "completed"),
-                    assertion("/ground_reachability_verified", "eq", True),
+                    assertion("/jump_start_reachability_verified", "eq", True),
                     assertion("/rsi_used_to_establish_reachability", "eq", False),
                     assertion(
                         "/curriculum_capability/new_train_root_geometry_cell_count_vs_source_or_centerline",
@@ -657,7 +663,8 @@ def main() -> int:
             "x_step_m": 0.1,
             "source_tube_is_forward_reachability_proof": False,
             "source_tube_states_used_as_frontier_resets": False,
-            "forward_reachability": "natural_start_connected_env_step_only",
+            "forward_reachability": "fixed_jump_start_connected_env_step_only",
+            "natural_start_connected": False,
             "rsi_establishes_forward_reachability": False,
             "rsi_role": "continuation_evaluation_after_reachability",
             "post_landing_recovery_frontier_eligible": False,

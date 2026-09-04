@@ -1,5 +1,15 @@
 # DVGC / JIT Project
 
+## Active experiment correction — 2026-09-04
+
+The current experiment is a **conditional fixed-jump-start landing-capability**
+study.  Reachability begins at the locked ground jump start (`x=2.5 m`), the
+locked centerline and proposal rollouts use `pi_0`, and exact reached candidates
+are evaluated by frozen `pi_0/pi_1/pi_2`.  Any evaluator reaching first valid
+landing makes the candidate positive; recovery after landing is excluded.
+Natural-start and stable-recovery language below describes the superseded
+protocol.
+
 ## 1. Scientific objective
 
 DVGC/JIT studies **causal, trajectory-centered, resolution-aware jump-capability discovery with just-in-time curriculum generation** for one fixed single-track two-wheeled robot.
