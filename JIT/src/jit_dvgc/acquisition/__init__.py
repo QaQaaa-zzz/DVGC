@@ -40,10 +40,15 @@ from .fresh_parent import (
     prepare_fresh_parent_acceptance_predeclaration,
 )
 from .resolution_frontier import (
-    DEFAULT_MAX_PARENT_CELLS_PER_PHASE,
     revise_frontier_plan_for_resolution_cells,
     select_resolution_distinct_anchors,
 )
+
+# Historical public-API compatibility. The pre-causal resolution-aware frontier
+# exported this default from ``resolution_frontier``. The active causal planner
+# probes every locked centerline slice, so this value is retained only for old
+# callers/config identities and does not control causal slice coverage.
+DEFAULT_MAX_PARENT_CELLS_PER_PHASE = 25
 
 
 def select_disjoint_tube_boundary_anchors(
