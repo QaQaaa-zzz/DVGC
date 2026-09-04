@@ -2,41 +2,76 @@
 
 ## Executive state
 
-The engineering `pi_1 -> C^1 -> raw Tube_2 -> pi_2` round is complete. The project is **paused before pi_3** while Tube_0/1/2 are re-measured in a resolution-aware physical capability space.
+The historical engineering chain through `pi_2` is complete. The project is **paused before any pi_3-like training** because the old global Tube definition mixed the actual jump trajectory with late downstream/recovery states.
+
+Current mainline:
 
 ```text
 pi_up_star + pi_down_star
-  -> raw Tube_0 = 222 snapshots
-  -> pi_0
-  -> C^0
-  -> raw Tube_1 = 3,119 snapshots
-  -> pi_1 repair02 engineering authority
+  -> Tube_0 / pi_0 / C^0
+  -> Tube_1 / pi_1 repair02
   -> C^1 engineering path
-  -> raw Tube_2 = 3,776 snapshots
-  -> pi_2 trained/frozen
+  -> Tube_2 / pi_2
   -> locked pi_1 vs pi_2 evaluation
-  -> capability-progression reinterpretation
-  -> CURRENT: physical-cell Tube reconstruction + resolution-aware frontier redesign
+  -> physical resolution analysis
+  -> trajectory-centered Jump-Tube redesign
+  -> CURRENT: build one successful nominal centerline and re-audit Tube_0/1/2 as Jump-Tube views
 ```
 
-Do not start pi_3 or a replay-ratio repair yet. Final TEST/JCE/JEL remains untouched.
+Do not start pi_3, do not run a replay-ratio sweep, and do not touch final TEST/JCE/JEL.
 
-## Current scientific meaning
+## Scientific object
+
+JIT now distinguishes:
 
 ```text
-F*   conceptual physical/task feasibility under fixed dynamics
-E_k  cumulative empirical successful real-dynamics evidence
-T_k  resolution-aware sparse occupied physical capability cells
-R_k  realization coverage of one unified policy over cumulative support
+F*   unknown physical/task feasibility under fixed dynamics
+E_k  cumulative successful real-dynamics evidence
+J_k  trajectory-centered empirical Jump-Tube support
+R_k  realization coverage of one unified policy
 ```
 
-The latest policy is not the definition of physical feasibility. A later policy failure does not erase earlier successful evidence. Conversely, multiple exact snapshots inside one resolved neighborhood do not constitute multiple independent capability regions.
+The runtime target remains one unified Actor with no expert switching.
 
-## Intent decision
+A raw Soft Tube is replay/training support. A Jump-Tube view is the task-semantic subset used for capability accounting. Neither is a certified safe set or exact viability kernel.
 
-No goal/jump intent is added to the current mainline. Reward and Actor observation remain unchanged.
+## Why the method changed
 
-The current research object is a target-free state-space Tube with nonzero cross-section: at one longitudinal `x`, multiple heights, velocities and attitudes may all be valid continuation states. Goal-conditioned JIT is deferred as a separate future method version.
+Resolution-aware visualization showed that many historical downstream-labelled states sit far beyond the useful jump interval and form a dense late-recovery cloud. The old parent selector had no requirement that downstream remain descending and no longitudinal x-slice balancing.
+
+Therefore the project no longer uses global low-score newest-shell expansion as the scientific Jump-Tube definition.
+
+## New trajectory-centered contract
+
+One successful full-chain real rollout defines a nominal geometric centerline:
+
+```text
+x nominal start = 2.5 m
+x hard maximum  = 4.2 m
+x spacing       = 0.1 m
+actual end      = first valid landing if earlier
+```
+
+Every centerline point is a real captured simulator frame. No qpos/qvel interpolation is allowed.
+
+Branch semantics:
+
+```text
+pre-Apex            upstream
+Apex-near           apex marker
+post-Apex + vz < 0  downstream
+first valid landing terminal of Jump-Tube centerline
+post-landing         excluded from Jump-Tube frontier
+```
+
+No goal/intent variable is added. Reward and Actor observation remain unchanged.
+
+Implementation:
+
+```text
+JIT/src/jit_dvgc/analysis/nominal_jump_centerline.py
+JIT/cli/build_nominal_jump_centerline.py
+```
 
 ## Physical capability resolution v1
 
@@ -51,104 +86,99 @@ wheel tangential speed          0.10 m/s
 phase                           discrete
 ```
 
-Two cell profiles:
+Profiles:
 
-- `full_physical_v1`: fine physical deduplication;
-- `root_geometry_v1`: root pose/twist only, used for Tube geometry and frontier diversity.
+- `root_geometry_v1`: macroscopic Tube geometry/frontier diversity;
+- `full_physical_v1`: finer physical deduplication.
 
-Actor FIFO/history/last-action fields do not define physical cell identity.
+Actor FIFO/history/last-action fields do not define capability cells.
+
+## Historical raw Tubes
+
+```text
+Tube_0 =   222 raw snapshots
+Tube_1 = 3,119 raw snapshots
+Tube_2 = 3,776 raw snapshots
+```
+
+These remain immutable replay/provenance artifacts and must not be converted directly into capability-growth percentages.
+
+Already measured all-state physical occupancy:
+
+```text
+Tube_0
+  root cells 100
+  full cells 112
+  x slices 13
+
+Tube_1
+  root cells 2142
+  full cells 2404
+  new root vs Tube_0 2042
+  new full vs Tube_0 2292
+  x slices 24
+
+Tube_2
+  root cells 2446
+  full cells 2871
+  new root vs Tube_1 304
+  new full vs Tube_1 467
+  x slices 24
+```
+
+These are all-state physical Tube counts, not yet filtered Jump-Tube counts. Historical downstream counts are explicitly under re-audit.
+
+## Jump-Tube semantic view
 
 Implementation:
 
 ```text
-JIT/src/jit_dvgc/analysis/capability_tube.py
-JIT/cli/analyze_capability_tube.py
+JIT/src/jit_dvgc/analysis/jump_tube_view.py
+JIT/cli/analyze_jump_tube_view.py
 ```
 
-## Raw Tube artifacts
-
-### Tube_0
-
-`JIT/runs/soft_tube/soft_tube_train_v1_20260828`
+The view retains only:
 
 ```text
-222 raw snapshots
-117 upstream
-105 downstream
+x on nominal centerline support
+upstream inside corridor
+downstream inside corridor AND root_vz < 0
+no post-landing recovery
 ```
 
-Manifest SHA:
-`c1c1161ebafd16716f2566aaccfe89169fe9cb0c2b090266c0e2bf90165df28b`
+Late recovery can remain in raw replay but cannot contribute to Jump-Tube expansion claims or future frontier-parent eligibility.
 
-### Tube_1
+## New frontier parent rule
 
-`JIT/runs/soft_tube/soft_tube_iter1_pi0_conditioned_20260901`
+Implementation:
 
 ```text
-3,119 raw snapshots
-= 222 retained Tube_0
-+ 2,897 raw expansion rows
-
-upstream   427
-downstream 2,692
+JIT/src/jit_dvgc/acquisition/resolution_frontier.py
+JIT/cli/prepare_resolution_aware_frontier_plan.py
 ```
 
-Manifest SHA:
-`817a980a5dd84f36507f762a913c21c1fc0913580d925ff9c68e982edfd82a80`
+The CLI now requires `--nominal-centerline`.
 
-### Tube_2
-
-`JIT/runs/soft_tube/soft_tube_iter2_pi1_c1_64x64_engineering_20260904`
+Prospective parent requirements:
 
 ```text
-3,776 raw snapshots
-= 3,119 retained Tube_1
-+ 657 raw expansion rows
-
-upstream   902
-downstream 2,874
+newest raw Tube shell
++ distinct parent group
++ distinct exact state
++ distinct root_geometry_v1 cell
++ x slice supported by nominal centerline
++ inside actual jump corridor
++ downstream root_vz < 0
++ no post-landing / late recovery
 ```
 
-Manifest SHA:
-`135798c843a7acd9eb18cb44f9fd7a92ab39bf3df2d887b6c1fb8c629d480cff`
+Selection is x-balanced: candidates are ranked locally inside each x slice and selected round-robin across slices instead of globally taking the lowest scores.
 
-These are replay/support counts only. Do not convert them directly into capability-envelope growth percentages.
+## Current pi_2 evidence
 
-## pi_1, C^1 and pi_2 evidence
+Training completed at 10,009,600 transitions.
 
-Selected engineering pi_1:
-
-`JIT/runs/frozen_unified/pi_1_core_replay75_10009600_20260903/frozen_unified_policy.json`
-
-Historical engineering quickcheck:
-
-```text
-Tube_0 222/222
-upstream 117/117
-downstream 105/105
-boundary 26/260 across 4 parent groups
-```
-
-Historical strict formal Iteration-1 PASS is not claimed because 3 old boundary baseline-reproduction mismatches remain quarantined.
-
-C^1:
-
-```text
-upstream 64x64:
-  AUC 0.6903137789904502
-  recall 0.5934515688949522
-  original AUC>=0.70 formal gate FAIL
-  engineering-selected only
-
-downstream 64x64:
-  AUC 1.0
-  recall 1.0
-  formal calibration PASS
-```
-
-pi_2 training completed at 10,009,600 transitions using 90% Tube / 10% natural reset and 75% retained Tube_1 / 25% raw Tube_2 expansion inside Tube sampling.
-
-Locked source-panel result:
+Locked source panel:
 
 ```text
 pi_1 3115/3119
@@ -159,7 +189,7 @@ upstream:   423/427 -> 312/427
 downstream: 2692/2692 -> 2690/2692
 ```
 
-Locked pi_1-negative frontier challenge:
+Locked pi_1-negative challenge:
 
 ```text
 pi_2 13/14
@@ -169,133 +199,51 @@ successful parent groups 3
 baseline reproduction failures 0
 ```
 
-Interpretation:
+Interpretation: clear local capability progression plus substantial upstream single-policy realization loss. `pi_2` remains capability evidence but is not retrospectively selected as the next policy authority.
 
-- local frontier progression evidence: strong;
-- upstream single-policy realization: substantially degraded;
-- pi_2 remains capability evidence;
-- pi_2 is not retrospectively selected as next authority.
-
-## Resolution-aware Tube analysis
-
-Each Tube analysis reports:
+## Immediate next tasks
 
 ```text
-raw_snapshot_count
-unique_root_geometry_cell_count
-unique_full_physical_cell_count
-duplicate fractions
-phase-specific cell counts
-0.10 m x-slices
-cross-section statistics
-physical projection CSV
-x-z / x-vx / x-pitch / x-z-vx visualizations
+1. obtain one successful canonical pi_1 natural rollout
+2. build nominal centerline from real trace frames
+3. rebuild Jump-Tube_0/1/2 semantic views
+4. quantify how much historical downstream support disappears after vz/x/landing filtering
+5. inspect per-0.1m cross-sections and gaps
+6. only then predeclare the next trajectory-centered frontier plan
 ```
 
-Source-vs-target analysis additionally reports:
+Full commands and rationale:
 
-```text
-new_root_geometry_cell_count
-new_full_physical_cell_count
-new cells by phase
-new root cells per raw added snapshot
-nearest source-cell distance in resolution units
-```
-
-These metrics replace raw snapshot growth as the primary quantitative Tube-expansion evidence.
-
-## Resolution-aware frontier parents
-
-Implementation:
-
-```text
-JIT/src/jit_dvgc/acquisition/resolution_frontier.py
-JIT/cli/prepare_resolution_aware_frontier_plan.py
-```
-
-Future parent rule:
-
-```text
-newest raw Tube shell only
-+ distinct parent group
-+ distinct exact state
-+ distinct root_geometry_v1 cell
-```
-
-Default maximum: 25 distinct parent cells per phase. Minimum: 5 distinct newest-shell root-geometry cells per phase.
-
-This revision is pre-outcome and preserves role assignment, policy/Tube identity, probe panel, seeds, physics, reward and TEST isolation.
+`JIT/docs/JIT_TRAJECTORY_CENTERED_JUMP_TUBE_REPORT_20260904.md`
 
 ## Automation maturity
 
-Already generic:
+Existing generic automation still covers:
 
 ```text
-frontier roles
--> C^k fitting/calibration
--> raw Tube construction
--> Tube-RSI smoke
--> role isolation
--> locked baseline
--> candidate train/freeze
--> locked paired evaluation
--> capability progression
--> prospective policy selection
+frontier roles -> C^k -> raw Tube -> smoke/isolation -> baseline lock
+-> candidate train/freeze -> locked evaluation -> capability progression -> selection
 ```
 
-Newly implemented but not yet exercised in a complete prospective automatic round:
+New trajectory-centered production capabilities now exist for:
 
 ```text
-physical Tube projection
-resolution-aware cell accounting
-x-slice geometry/plots
-resolution-aware distinct-cell frontier-parent revision
+successful rollout -> nominal centerline
+physical Tube -> Jump-Tube view
+centerline + geometry -> x-balanced frontier plan revision
 ```
 
-Before another prospective iteration:
-
-```text
-analyze source Tube capability geometry
--> prepare ordinary outcome-blind frontier plan
--> revise plan by distinct root-geometry cells
--> run frontier roles
-```
-
-Do not claim end-to-end automatic resolution-aware JIT until a workflow artifact records these stages.
-
-## Immediate local operator task
-
-After pulling the branch, run compile/tests and analyze:
-
-```text
-Tube_0
-Tube_1 versus Tube_0
-Tube_2 versus Tube_1
-```
-
-Recommended output roots:
-
-```text
-JIT/runs/capability_geometry/tube0_resolution_v1
-JIT/runs/capability_geometry/tube1_vs_tube0_resolution_v1
-JIT/runs/capability_geometry/tube2_vs_tube1_resolution_v1
-```
-
-Exact commands and interpretation are in:
-
-`JIT/docs/JIT_CAPABILITY_TUBE_VNEXT_OUTLINE_20260904.md`
+A complete prospective automatic round has not yet exercised these new stages. Do not claim end-to-end trajectory-centered automation until a recorded workflow DAG contains them.
 
 ## Immutable task identity
 
 - repository: `QaQaaa-zzz/DVGC`
 - branch: `agent/two-phase-soft-tube`
-- local repo: `~/DVGC`
 - Python: `/home/qy/mujoco_playground/.venv/bin/python`
 - XML: `assets/orange_bike_4kg_horizontal.xml`
 - XML SHA: `0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a`
 - payload: 2 kg
-- simulation substep: 0.005 s
-- control interval: 0.020 s = 50 Hz
+- control: 50 Hz
 - hip/knee actuator range: +/-30 N m
 - actions: `[steer, rear-wheel drive, hip, knee]`
 - runtime expert switching: none
@@ -306,7 +254,7 @@ Exact commands and interpretation are in:
 1. `AGENTS.md`
 2. `JIT/AGENTS.md`
 3. `JIT/docs/CURRENT_STATUS.md`
-4. `JIT/docs/JIT_CAPABILITY_TUBE_VNEXT_OUTLINE_20260904.md`
+4. `JIT/docs/JIT_TRAJECTORY_CENTERED_JUMP_TUBE_REPORT_20260904.md`
 5. `JIT/docs/JIT_CAPABILITY_PROGRESS_REPORT_20260904.md`
 6. `JIT/docs/CODEX_HANDOFF_20260904.md`
 7. `PROJECT.md`
