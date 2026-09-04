@@ -292,7 +292,7 @@ Exact commands and interpretation are in:
 - local repo: `~/DVGC`
 - Python: `/home/qy/mujoco_playground/.venv/bin/python`
 - XML: `assets/orange_bike_4kg_horizontal.xml`
-- XML SHA: `0b56d3672773ef05a2b7f3f04a7a7941233d6e9c8a`
+- XML SHA: `0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a`
 - payload: 2 kg
 - simulation substep: 0.005 s
 - control interval: 0.020 s = 50 Hz
