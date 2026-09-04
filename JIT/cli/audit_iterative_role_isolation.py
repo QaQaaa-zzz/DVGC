@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-"""Audit TRAIN/calibration/acceptance isolation before pi_(k+1) training."""
+"""Audit TRAIN/calibration/acceptance isolation before pi_(k+1) training.
+
+The default contract is strict: exact state overlap, parent-group overlap, or any
+near-observation overlap stops the automatic iteration.  After such a failure,
+an operator may explicitly authorize an engineering-only continuation from the
+preserved diagnostic artifact.  That narrower continuation never rewrites the
+strict result and is allowed only when candidate-training isolation remains
+clean: TRAIN and ACCEPTANCE must have no exact or near-observation overlap, all
+roles must remain parent-disjoint, and CALIBRATION/ACCEPTANCE rows must remain
+outside the target Tube.
+"""
 from __future__ import annotations
 
 from collections import Counter
@@ -31,6 +41,13 @@ def write(path: Path, value) -> None:
         json.dumps(value, indent=2, sort_keys=True, allow_nan=False) + "\n",
         encoding="utf-8",
     )
+
+
+def verify_self_hash(payload, field: str) -> None:
+    declared = str(payload.get(field, ""))
+    base = {k: v for k, v in payload.items() if k != field}
+    if len(declared) != 64 or canonical_sha256(base) != declared:
+        raise ValueError(f"{field} self-hash drift")
 
 
 def role(root: Path, expected: str):
@@ -122,6 +139,94 @@ def summarize_near_pairs(pairs, *, example_limit: int = 12):
     }
 
 
+def concise_summaries(summaries):
+    return {
+        name: {
+            "pair_count": value["pair_count"],
+            "same_phase_pair_count": value["same_phase_pair_count"],
+            "cross_phase_pair_count": value["cross_phase_pair_count"],
+            "same_parent_group_pair_count": value["same_parent_group_pair_count"],
+            "minimum_max_abs_diff": value["minimum_max_abs_diff"],
+        }
+        for name, value in summaries.items()
+    }
+
+
+def validate_engineering_override(
+    diagnostic_path: Path,
+    *,
+    tm,
+    cm,
+    am,
+    atol: float,
+    summaries,
+    exact_counts,
+) -> dict:
+    diagnostic = read(diagnostic_path)
+    if diagnostic.get("schema") != NEAR_DIAGNOSTIC_SCHEMA:
+        raise ValueError("engineering override requires a near-overlap diagnostic")
+    if diagnostic.get("status") != "completed_read_only_failure_diagnostic":
+        raise ValueError("engineering override diagnostic status drift")
+    verify_self_hash(diagnostic, "diagnostic_sha256")
+    expected_identity = {
+        "iteration": int(tm["iteration"]),
+        "plan_sha256": tm["plan_sha256"],
+        "train_role_manifest_sha256": tm["role_manifest_sha256"],
+        "calibration_role_manifest_sha256": cm["role_manifest_sha256"],
+        "acceptance_role_manifest_sha256": am["role_manifest_sha256"],
+    }
+    for field, expected in expected_identity.items():
+        if diagnostic.get(field) != expected:
+            raise ValueError(f"engineering override diagnostic {field} drift")
+    if abs(float(diagnostic.get("actor_observation_atol", -1.0)) - float(atol)) > 1e-12:
+        raise ValueError("engineering override observation atol drift")
+    if diagnostic.get("exact_overlap_counts") != exact_counts:
+        raise ValueError("engineering override exact-overlap evidence drift")
+
+    observed = diagnostic.get("near_overlap")
+    if not isinstance(observed, dict):
+        raise ValueError("engineering override near-overlap evidence missing")
+    for name, summary in summaries.items():
+        prior = observed.get(name)
+        if not isinstance(prior, dict):
+            raise ValueError(f"engineering override missing {name} evidence")
+        for field in (
+            "pair_count",
+            "same_phase_pair_count",
+            "cross_phase_pair_count",
+            "same_parent_group_pair_count",
+        ):
+            if int(prior.get(field, -1)) != int(summary[field]):
+                raise ValueError(f"engineering override {name} {field} drift")
+
+    # Candidate-training independence is the non-negotiable requirement for this
+    # narrower continuation.  pi_(k+1) trains from TRAIN-derived Tube support and
+    # is later judged on ACCEPTANCE; therefore those two roles must remain both
+    # exactly and geometrically isolated under the declared audit tolerance.
+    if exact_counts["train_acceptance"] != 0:
+        raise ValueError("engineering override forbids TRAIN/ACCEPTANCE exact overlap")
+    if int(summaries["train_acceptance"]["pair_count"]) != 0:
+        raise ValueError("engineering override forbids TRAIN/ACCEPTANCE near overlap")
+    if any(
+        int(summary["same_parent_group_pair_count"]) != 0
+        for summary in summaries.values()
+    ):
+        raise ValueError("engineering override forbids near pairs sharing a parent group")
+
+    claim = diagnostic.get("claim_boundary")
+    if not isinstance(claim, dict):
+        raise ValueError("engineering override diagnostic claim boundary missing")
+    if claim.get("diagnostic_only") is not True:
+        raise ValueError("engineering override diagnostic was not read-only")
+    if claim.get("isolation_gate_relaxed") is not False:
+        raise ValueError("engineering override diagnostic already relaxed the gate")
+    if claim.get("new_environment_interactions") is not False:
+        raise ValueError("engineering override diagnostic touched environment")
+    if claim.get("test_or_final_data_used") is not False:
+        raise ValueError("engineering override diagnostic touched TEST/final data")
+    return diagnostic
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--train-root", type=Path, required=True)
@@ -134,22 +239,46 @@ def main() -> int:
         "--near-duplicate-diagnostics",
         type=Path,
         help=(
-            "optional read-only diagnostic artifact written before the audit stops "
-            "on near-observation overlap; this never relaxes the isolation gate"
+            "optional read-only diagnostic artifact written before the strict audit "
+            "stops on near-observation overlap; this never relaxes the isolation gate"
+        ),
+    )
+    parser.add_argument(
+        "--engineering-near-overlap-override-from",
+        type=Path,
+        help=(
+            "explicitly continue after a preserved strict near-overlap failure. "
+            "Requires the exact diagnostic artifact and zero TRAIN/ACCEPTANCE "
+            "exact+near overlap. Produces an engineering-only isolation report, "
+            "not a formal all-role geometric-isolation PASS."
         ),
     )
     args = parser.parse_args()
     if args.output.exists():
         raise FileExistsError(f"isolation audit already exists: {args.output}")
-    if args.near_duplicate_diagnostics is not None and args.near_duplicate_diagnostics.exists():
+    if (
+        args.near_duplicate_diagnostics is not None
+        and args.near_duplicate_diagnostics.exists()
+    ):
         raise FileExistsError(
             f"near-duplicate diagnostic already exists: {args.near_duplicate_diagnostics}"
         )
+    if (
+        args.near_duplicate_diagnostics is not None
+        and args.engineering_near_overlap_override_from is not None
+    ):
+        raise ValueError("diagnostic creation and engineering override are separate steps")
 
     tm, train = role(args.train_root, "train")
     cm, calibration = role(args.calibration_root, "calibration")
     am, acceptance = role(args.acceptance_root, "acceptance")
-    for field in ("iteration", "policy_actor_sha256", "policy_payload_sha256", "source_tube_manifest_sha256", "plan_sha256"):
+    for field in (
+        "iteration",
+        "policy_actor_sha256",
+        "policy_payload_sha256",
+        "source_tube_manifest_sha256",
+        "plan_sha256",
+    ):
         if not (tm.get(field) == cm.get(field) == am.get(field)):
             raise ValueError(f"role {field} mismatch")
 
@@ -163,14 +292,27 @@ def main() -> int:
     exact_ca = sets["calibration"] & sets["acceptance"]
     if exact_tc or exact_ta or exact_ca:
         raise ValueError("logical roles contain exact duplicate physical states")
+    exact_counts = {
+        "train_calibration": len(exact_tc),
+        "train_acceptance": len(exact_ta),
+        "calibration_acceptance": len(exact_ca),
+    }
 
     parent_audit = {}
     for phase in ("upstream", "downstream"):
         groups = {
             name: {str(r["parent_group_id"]) for r in rows if r["phase"] == phase}
-            for name, rows in (("train", train), ("calibration", calibration), ("acceptance", acceptance))
+            for name, rows in (
+                ("train", train),
+                ("calibration", calibration),
+                ("acceptance", acceptance),
+            )
         }
-        if groups["train"] & groups["calibration"] or groups["train"] & groups["acceptance"] or groups["calibration"] & groups["acceptance"]:
+        if (
+            groups["train"] & groups["calibration"]
+            or groups["train"] & groups["acceptance"]
+            or groups["calibration"] & groups["acceptance"]
+        ):
             raise ValueError(f"{phase} logical roles share a parent group")
         parent_audit[phase] = {name: len(value) for name, value in groups.items()}
 
@@ -198,12 +340,16 @@ def main() -> int:
         left_role="acceptance",
         right_role="calibration",
     )
-    if near_tc or near_ta or near_ca:
-        summaries = {
-            "train_calibration": summarize_near_pairs(near_tc),
-            "train_acceptance": summarize_near_pairs(near_ta),
-            "calibration_acceptance": summarize_near_pairs(near_ca),
-        }
+    summaries = {
+        "train_calibration": summarize_near_pairs(near_tc),
+        "train_acceptance": summarize_near_pairs(near_ta),
+        "calibration_acceptance": summarize_near_pairs(near_ca),
+    }
+    has_near_overlap = bool(near_tc or near_ta or near_ca)
+
+    diagnostic = None
+    engineering_override = args.engineering_near_overlap_override_from is not None
+    if has_near_overlap and not engineering_override:
         diagnostic = {
             "schema": NEAR_DIAGNOSTIC_SCHEMA,
             "status": "completed_read_only_failure_diagnostic",
@@ -214,11 +360,7 @@ def main() -> int:
             "acceptance_role_manifest_sha256": am["role_manifest_sha256"],
             "actor_observation_atol": atol,
             "parent_group_counts": parent_audit,
-            "exact_overlap_counts": {
-                "train_calibration": len(exact_tc),
-                "train_acceptance": len(exact_ta),
-                "calibration_acceptance": len(exact_ca),
-            },
+            "exact_overlap_counts": exact_counts,
             "near_overlap": summaries,
             "decision": "automatic_iteration_remains_stopped",
             "claim_boundary": {
@@ -237,19 +379,23 @@ def main() -> int:
         diagnostic["diagnostic_sha256"] = canonical_sha256(diagnostic)
         if args.near_duplicate_diagnostics is not None:
             write(args.near_duplicate_diagnostics, diagnostic)
-        concise = {
-            name: {
-                "pair_count": value["pair_count"],
-                "same_phase_pair_count": value["same_phase_pair_count"],
-                "cross_phase_pair_count": value["cross_phase_pair_count"],
-                "minimum_max_abs_diff": value["minimum_max_abs_diff"],
-            }
-            for name, value in summaries.items()
-        }
         raise ValueError(
             "logical roles contain near-duplicate actor observations; automatic "
             "iteration stops without replacement. diagnostic="
-            + json.dumps(concise, sort_keys=True, allow_nan=False)
+            + json.dumps(concise_summaries(summaries), sort_keys=True, allow_nan=False)
+        )
+
+    if engineering_override:
+        if not has_near_overlap:
+            raise ValueError("engineering near-overlap override requested but no overlap exists")
+        diagnostic = validate_engineering_override(
+            args.engineering_near_overlap_override_from,
+            tm=tm,
+            cm=cm,
+            am=am,
+            atol=atol,
+            summaries=summaries,
+            exact_counts=exact_counts,
         )
 
     tube = load_soft_tube(args.target_tube)
@@ -261,32 +407,83 @@ def main() -> int:
     if calibration_overlap or acceptance_overlap:
         raise ValueError("calibration/acceptance state entered the target Tube")
 
-    report = {
-        "schema": SCHEMA,
-        "status": "independent",
-        "iteration": int(tm["iteration"]),
-        "target_tube_iteration": int(tube.manifest["iteration"]),
-        "plan_sha256": tm["plan_sha256"],
-        "train_role_manifest_sha256": tm["role_manifest_sha256"],
-        "calibration_role_manifest_sha256": cm["role_manifest_sha256"],
-        "acceptance_role_manifest_sha256": am["role_manifest_sha256"],
-        "target_tube_manifest_sha256": tube.manifest["manifest_sha256"],
-        "parent_group_counts": parent_audit,
-        "actor_observation_atol": atol,
-        "train_calibration_exact_overlap_count": 0,
-        "train_acceptance_exact_overlap_count": 0,
-        "calibration_acceptance_exact_overlap_count": 0,
-        "train_calibration_near_overlap_count": 0,
-        "train_acceptance_near_overlap_count": 0,
-        "calibration_acceptance_near_overlap_count": 0,
-        "calibration_target_tube_overlap_count": 0,
-        "acceptance_target_tube_overlap_count": 0,
-        "no_replacement_after_exclusion": True,
-        "training_transitions": 0,
-        "environment_interactions": 0,
-        "test_data_used": False,
-        "final_evaluation_data_used": False,
-    }
+    if engineering_override:
+        report = {
+            "schema": SCHEMA,
+            "status": "independent_for_candidate_training_engineering",
+            "iteration": int(tm["iteration"]),
+            "target_tube_iteration": int(tube.manifest["iteration"]),
+            "plan_sha256": tm["plan_sha256"],
+            "train_role_manifest_sha256": tm["role_manifest_sha256"],
+            "calibration_role_manifest_sha256": cm["role_manifest_sha256"],
+            "acceptance_role_manifest_sha256": am["role_manifest_sha256"],
+            "target_tube_manifest_sha256": tube.manifest["manifest_sha256"],
+            "parent_group_counts": parent_audit,
+            "actor_observation_atol": atol,
+            "train_calibration_exact_overlap_count": 0,
+            "train_acceptance_exact_overlap_count": 0,
+            "calibration_acceptance_exact_overlap_count": 0,
+            "train_calibration_near_overlap_count": int(summaries["train_calibration"]["pair_count"]),
+            "train_acceptance_near_overlap_count": 0,
+            "calibration_acceptance_near_overlap_count": int(summaries["calibration_acceptance"]["pair_count"]),
+            "calibration_target_tube_overlap_count": 0,
+            "acceptance_target_tube_overlap_count": 0,
+            "candidate_training_acceptance_isolation_passed": True,
+            "formal_all_role_geometric_isolation_passed": False,
+            "engineering_near_overlap_override_used": True,
+            "strict_failure_diagnostic": str(args.engineering_near_overlap_override_from),
+            "strict_failure_diagnostic_sha256": diagnostic["diagnostic_sha256"],
+            "strict_failure_diagnostic_file_sha256": file_sha256(
+                args.engineering_near_overlap_override_from
+            ),
+            "near_overlap_summary": concise_summaries(summaries),
+            "claim_boundary": {
+                "engineering_mainline_only": True,
+                "formal_strict_role_isolation_pass_claim": False,
+                "parent_group_disjointness_preserved": True,
+                "exact_state_disjointness_preserved": True,
+                "train_acceptance_geometric_isolation_preserved": True,
+                "calibration_geometric_isolation_claim": False,
+                "rows_removed_or_reassigned": False,
+                "observation_atol_changed": False,
+                "test_or_final_data_used": False,
+            },
+            "no_replacement_after_exclusion": True,
+            "training_transitions": 0,
+            "environment_interactions": 0,
+            "test_data_used": False,
+            "final_evaluation_data_used": False,
+        }
+    else:
+        report = {
+            "schema": SCHEMA,
+            "status": "independent",
+            "iteration": int(tm["iteration"]),
+            "target_tube_iteration": int(tube.manifest["iteration"]),
+            "plan_sha256": tm["plan_sha256"],
+            "train_role_manifest_sha256": tm["role_manifest_sha256"],
+            "calibration_role_manifest_sha256": cm["role_manifest_sha256"],
+            "acceptance_role_manifest_sha256": am["role_manifest_sha256"],
+            "target_tube_manifest_sha256": tube.manifest["manifest_sha256"],
+            "parent_group_counts": parent_audit,
+            "actor_observation_atol": atol,
+            "train_calibration_exact_overlap_count": 0,
+            "train_acceptance_exact_overlap_count": 0,
+            "calibration_acceptance_exact_overlap_count": 0,
+            "train_calibration_near_overlap_count": 0,
+            "train_acceptance_near_overlap_count": 0,
+            "calibration_acceptance_near_overlap_count": 0,
+            "calibration_target_tube_overlap_count": 0,
+            "acceptance_target_tube_overlap_count": 0,
+            "candidate_training_acceptance_isolation_passed": True,
+            "formal_all_role_geometric_isolation_passed": True,
+            "engineering_near_overlap_override_used": False,
+            "no_replacement_after_exclusion": True,
+            "training_transitions": 0,
+            "environment_interactions": 0,
+            "test_data_used": False,
+            "final_evaluation_data_used": False,
+        }
     report["audit_sha256"] = canonical_sha256(report)
     write(args.output, report)
     print(json.dumps(report, indent=2, sort_keys=True, allow_nan=False))
