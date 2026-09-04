@@ -1,41 +1,70 @@
-"""Fixed-architecture C_up^k/C_down^k fitting and calibration for k >= 1.
+"""Iteration-generic C_up^k/C_down^k fitting and calibration for k >= 1.
 
-Architecture selection is a bootstrap/Iteration-0 scientific decision and must
-not be repeated inside the automatic envelope loop.  Later iterations fit the
-same 76->8 tanh->1 architecture on the predeclared TRAIN role only, then choose
-phase thresholds from the disjoint calibration role without refitting weights.
+The historical automatic loop used a frozen 76->8 tanh->1 tiny MLP inherited
+from the bootstrap study.  Iteration-1 now also supports one explicit
+post-failure architecture revision: a standard 76->64->64->1 tanh MLP.  TRAIN
+and CALIBRATION role membership, optimizer schedule, weighting, seeds, and
+calibration gates remain unchanged so the two profiles can be compared on the
+same evidence.
 """
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 from typing import Any, Mapping
 
+import jax
+import jax.numpy as jnp
 import numpy as np
+import optax
 
 from .config import file_sha256
 from .iterative_frontier_protocol import ROLE_SCHEMA, canonical_sha256
 from .policy_conditioned_continuation_field import _metrics
-from .shared_continuation_field_refit import _fit_phase
+from . import shared_continuation_field_refit as shared
 from .upstream_matched_checkpoint_domain_cv import _sigmoid
 
 
 SUMMARY_SCHEMA = "jit_iterative_continuation_fields_v1"
 FIELD_SCHEMA = "jit_shared_continuation_field_v1"
-MODEL_BASE = {
-    "family": "tiny_mlp_tanh",
-    "input": "unified_actor_observation",
-    "observation_size": 76,
-    "hidden_units": 8,
-    "activation": "tanh",
-    "parameter_count": 625,
-    "normalization": "train_only_zscore_clip10",
-    "sample_weighting": "equal_parent_label_cell_mass",
-    "l2_weight": 0.01,
-    "optimizer": "adam_full_batch_fixed_schedule",
-    "steps": 4000,
-    "learning_rate": 0.01,
+DEFAULT_MODEL_PROFILE = "legacy_tiny_tanh"
+MODEL_PROFILES = {
+    "legacy_tiny_tanh": {
+        "family": "tiny_mlp_tanh",
+        "architecture": "76->8_tanh->1",
+        "input": "unified_actor_observation",
+        "observation_size": 76,
+        "hidden_sizes": [8],
+        "hidden_units": 8,
+        "activation": "tanh",
+        "parameter_count": 625,
+        "normalization": "train_only_zscore_clip10",
+        "sample_weighting": "equal_parent_label_cell_mass",
+        "l2_weight": 0.01,
+        "optimizer": "adam_full_batch_fixed_schedule",
+        "steps": 4000,
+        "learning_rate": 0.01,
+        "post_failure_architecture_revision": False,
+    },
+    "standard_mlp_64x64_tanh": {
+        "family": "mlp_tanh",
+        "architecture": "76->64_tanh->64_tanh->1",
+        "input": "unified_actor_observation",
+        "observation_size": 76,
+        "hidden_sizes": [64, 64],
+        "activation": "tanh",
+        "parameter_count": 9153,
+        "normalization": "train_only_zscore_clip10",
+        "sample_weighting": "equal_parent_label_cell_mass",
+        "l2_weight": 0.01,
+        "optimizer": "adam_full_batch_fixed_schedule",
+        "steps": 4000,
+        "learning_rate": 0.01,
+        "post_failure_architecture_revision": True,
+    },
 }
+MODEL_BASE = MODEL_PROFILES[DEFAULT_MODEL_PROFILE]
 CALIBRATION_CONTRACT = {
     "decision_rule": "accept_if_score_strictly_greater_than_max_calibration_negative_score",
     "minimum_roc_auc": 0.70,
@@ -116,6 +145,141 @@ def _rows_for_phase(rows, phase: str):
     }
 
 
+def _model_config(profile: str, iteration: int) -> dict[str, Any]:
+    if profile not in MODEL_PROFILES:
+        raise ValueError(f"unsupported iterative continuation model profile: {profile}")
+    return {
+        **MODEL_PROFILES[profile],
+        "model_profile": profile,
+        "phase_specific_seeds": {
+            "upstream": 850001 + 100 * iteration,
+            "downstream": 850002 + 100 * iteration,
+        },
+    }
+
+
+def _fit_standard_mlp_phase(rows, *, phase: str, model_cfg: Mapping[str, Any], output: Path) -> dict[str, Any]:
+    x, y, groups, _states = shared._dataset(rows)
+    sample_weights = shared._cell_balanced_weights(groups, y)
+    mean, std = shared._normalization(x)
+    x_train = shared._transform(x, mean, std)
+    jx = jnp.asarray(x_train)
+    jy = jnp.asarray(y)
+    jw = jnp.asarray(sample_weights)
+
+    input_size = int(model_cfg["observation_size"])
+    hidden_sizes = tuple(int(v) for v in model_cfg["hidden_sizes"])
+    if hidden_sizes != (64, 64):
+        raise ValueError("standard iterative continuation profile requires hidden_sizes=(64,64)")
+    expected_parameters = (
+        input_size * hidden_sizes[0] + hidden_sizes[0]
+        + hidden_sizes[0] * hidden_sizes[1] + hidden_sizes[1]
+        + hidden_sizes[1] + 1
+    )
+    if expected_parameters != int(model_cfg["parameter_count"]):
+        raise ValueError("standard iterative continuation parameter-count drift")
+
+    seed = int(model_cfg["phase_specific_seeds"][phase])
+    key1, key2, key3 = jax.random.split(jax.random.PRNGKey(seed), 3)
+
+    def glorot(key, fan_in: int, fan_out: int):
+        scale = math.sqrt(2.0 / float(fan_in + fan_out))
+        return jax.random.normal(key, (fan_in, fan_out), dtype=jnp.float32) * scale
+
+    params = {
+        "w1": glorot(key1, input_size, hidden_sizes[0]),
+        "b1": jnp.zeros((hidden_sizes[0],), dtype=jnp.float32),
+        "w2": glorot(key2, hidden_sizes[0], hidden_sizes[1]),
+        "b2": jnp.zeros((hidden_sizes[1],), dtype=jnp.float32),
+        "w3": glorot(key3, hidden_sizes[1], 1).reshape((hidden_sizes[1],)),
+        "b3": jnp.asarray(0.0, dtype=jnp.float32),
+    }
+    l2 = float(model_cfg["l2_weight"])
+    optimizer = optax.adam(float(model_cfg["learning_rate"]))
+    opt_state = optimizer.init(params)
+
+    def logits(current, values):
+        h1 = jnp.tanh(values @ current["w1"] + current["b1"])
+        h2 = jnp.tanh(h1 @ current["w2"] + current["b2"])
+        return h2 @ current["w3"] + current["b3"]
+
+    def loss_fn(current):
+        raw = logits(current, jx)
+        bce = optax.sigmoid_binary_cross_entropy(raw, jy)
+        data_loss = jnp.sum(jw * bce) / jnp.sum(jw)
+        penalty = 0.5 * l2 * (
+            jnp.sum(jnp.square(current["w1"]))
+            + jnp.sum(jnp.square(current["w2"]))
+            + jnp.sum(jnp.square(current["w3"]))
+        )
+        return data_loss + penalty
+
+    @jax.jit
+    def step(current, state):
+        loss, grads = jax.value_and_grad(loss_fn)(current)
+        updates, next_state = optimizer.update(grads, state, current)
+        return optax.apply_updates(current, updates), next_state, loss
+
+    initial_loss = float(jax.device_get(loss_fn(params)))
+    final_loss = initial_loss
+    for _ in range(int(model_cfg["steps"])):
+        params, opt_state, loss = step(params, opt_state)
+        final_loss = float(jax.device_get(loss))
+    if not math.isfinite(final_loss):
+        raise ValueError(f"{phase} standard continuation refit became nonfinite")
+
+    train_logits = np.asarray(jax.device_get(logits(params, jnp.asarray(x_train))), dtype=np.float64)
+    train_score = _sigmoid(train_logits)
+    train_metrics = _metrics(y, train_score)
+
+    phase_output = Path(output) / phase
+    phase_output.mkdir(parents=True, exist_ok=False)
+    arrays = {
+        "w1": np.asarray(jax.device_get(params["w1"]), dtype=np.float32),
+        "b1": np.asarray(jax.device_get(params["b1"]), dtype=np.float32),
+        "w2": np.asarray(jax.device_get(params["w2"]), dtype=np.float32),
+        "b2": np.asarray(jax.device_get(params["b2"]), dtype=np.float32),
+        "w3": np.asarray(jax.device_get(params["w3"]), dtype=np.float32),
+        "b3": np.asarray(jax.device_get(params["b3"]), dtype=np.float32),
+        "mean": mean,
+        "std": std,
+    }
+    field_path = phase_output / "field.npz"
+    np.savez(field_path, **arrays)
+    manifest = {
+        "schema": FIELD_SCHEMA,
+        "status": "completed_uncalibrated",
+        "phase": phase,
+        "field_name": "C_up^0" if phase == "upstream" else "C_down^0",
+        "architecture": str(model_cfg["architecture"]),
+        "model_family": str(model_cfg["family"]),
+        "model_profile": str(model_cfg["model_profile"]),
+        "parameter_count": int(model_cfg["parameter_count"]),
+        "hidden_sizes": list(hidden_sizes),
+        "input": "unified_actor_observation",
+        "observation_size": input_size,
+        "phase_specific_weights": True,
+        "phase_specific_calibration_required": True,
+        "score_semantics": "regularized policy-conditioned empirical continuation score; not a certified probability or safe-set certificate",
+        "normalization": "TRAIN-only z-score with std floor 1e-6 and clip +/-10",
+        "sample_weighting": "equal total mass for every observed TRAIN (parent_group_id,label) cell under k>=1 compatibility",
+        "l2_weight": l2,
+        "optimizer": str(model_cfg["optimizer"]),
+        "optimizer_steps": int(model_cfg["steps"]),
+        "learning_rate": float(model_cfg["learning_rate"]),
+        "seed": seed,
+        "initial_objective": initial_loss,
+        "final_objective": final_loss,
+        "train_metrics": train_metrics,
+        "field_file_sha256": file_sha256(field_path),
+        "test_data_used": False,
+        "final_evaluation_data_used": False,
+    }
+    manifest["manifest_sha256"] = canonical_sha256(manifest)
+    _write(phase_output / "manifest.json", manifest)
+    return manifest
+
+
 def _score(field_path: Path, rows) -> np.ndarray:
     observations = np.asarray([row["actor_observation"] for row in rows], dtype=np.float32)
     with np.load(field_path) as payload:
@@ -124,10 +288,22 @@ def _score(field_path: Path, rows) -> np.ndarray:
         w1 = np.asarray(payload["w1"], dtype=np.float32)
         b1 = np.asarray(payload["b1"], dtype=np.float32)
         w2 = np.asarray(payload["w2"], dtype=np.float32)
-        b2 = float(np.asarray(payload["b2"]))
+        files = set(payload.files)
+        if "w3" in files:
+            b2 = np.asarray(payload["b2"], dtype=np.float32)
+            w3 = np.asarray(payload["w3"], dtype=np.float32)
+            b3 = float(np.asarray(payload["b3"]))
+        else:
+            b2 = float(np.asarray(payload["b2"]))
+            w3 = None
+            b3 = None
     x = np.clip((observations - mean) / std, -10.0, 10.0).astype(np.float32)
-    hidden = np.tanh(x @ w1 + b1)
-    logits = hidden @ w2 + b2
+    h1 = np.tanh(x @ w1 + b1)
+    if w3 is None:
+        logits = h1 @ w2 + b2
+    else:
+        h2 = np.tanh(h1 @ w2 + b2)
+        logits = h2 @ w3 + b3
     return _sigmoid(np.asarray(logits, dtype=np.float64))
 
 
@@ -184,7 +360,13 @@ def _calibrate(phase: str, rows, scores: np.ndarray) -> dict[str, Any]:
     }
 
 
-def fit_and_calibrate(*, train_root: Path, calibration_root: Path, output_dir: Path) -> dict[str, Any]:
+def fit_and_calibrate(
+    *,
+    train_root: Path,
+    calibration_root: Path,
+    output_dir: Path,
+    model_profile: str = DEFAULT_MODEL_PROFILE,
+) -> dict[str, Any]:
     train_manifest, train_rows = _load_role(Path(train_root), "train")
     calibration_manifest, calibration_rows = _load_role(Path(calibration_root), "calibration")
     for field in ("iteration", "policy_actor_sha256", "policy_payload_sha256", "source_tube_manifest_sha256", "plan_sha256"):
@@ -192,26 +374,26 @@ def fit_and_calibrate(*, train_root: Path, calibration_root: Path, output_dir: P
             raise ValueError(f"TRAIN/calibration {field} mismatch")
     iteration = int(train_manifest["iteration"])
     if iteration < 1:
-        raise ValueError("automatic fixed-architecture continuation fitting is for k>=1")
+        raise ValueError("automatic continuation fitting is for k>=1")
 
+    model = _model_config(model_profile, iteration)
     output = Path(output_dir)
     if output.exists():
         raise FileExistsError(f"iterative continuation output already exists: {output}")
     output.mkdir(parents=True, exist_ok=False)
-    model = {
-        **MODEL_BASE,
-        "phase_specific_seeds": {
-            "upstream": 850001 + 100 * iteration,
-            "downstream": 850002 + 100 * iteration,
-        },
-    }
 
     phase_results = {}
     for phase in ("upstream", "downstream"):
         phase_train, train_counts = _rows_for_phase(train_rows, phase)
         if train_counts["positive_count"] < 20 or train_counts["negative_count"] < 20 or train_counts["parent_group_count"] < 3:
             raise ValueError(f"{phase} TRAIN support insufficient: {train_counts}")
-        raw_manifest = _fit_phase(phase_train, phase=phase, model_cfg=model, output=output)
+        if model_profile == "legacy_tiny_tanh":
+            shared._fit_phase(phase_train, phase=phase, model_cfg=model, output=output)
+        elif model_profile == "standard_mlp_64x64_tanh":
+            _fit_standard_mlp_phase(phase_train, phase=phase, model_cfg=model, output=output)
+        else:
+            raise ValueError(f"unsupported iterative continuation model profile: {model_profile}")
+
         manifest_path = output / phase / "manifest.json"
         manifest = _read(manifest_path)
         manifest.update(
@@ -223,6 +405,8 @@ def fit_and_calibrate(*, train_root: Path, calibration_root: Path, output_dir: P
                 "policy_payload_sha256": train_manifest["policy_payload_sha256"],
                 "source_train_role_manifest_sha256": train_manifest["role_manifest_sha256"],
                 "train_counts": train_counts,
+                "model_profile": model_profile,
+                "post_failure_architecture_revision": bool(model["post_failure_architecture_revision"]),
             }
         )
         manifest.pop("manifest_sha256", None)
@@ -240,8 +424,11 @@ def fit_and_calibrate(*, train_root: Path, calibration_root: Path, output_dir: P
                 "field_file_sha256": manifest["field_file_sha256"],
                 "calibration_role_manifest_sha256": calibration_manifest["role_manifest_sha256"],
                 "calibration_counts": calibration_counts,
+                "model_profile": model_profile,
                 "model_parameters_refit_on_calibration": False,
                 "calibration_rows_may_enter_tube": False,
+                "calibration_reused_after_architecture_revision": bool(model["post_failure_architecture_revision"]),
+                "independent_architecture_selection_claim": not bool(model["post_failure_architecture_revision"]),
                 "test_data_used": False,
                 "final_evaluation_data_used": False,
             }
@@ -260,6 +447,7 @@ def fit_and_calibrate(*, train_root: Path, calibration_root: Path, output_dir: P
             "calibration_positive_recall": calibration["positive_recall_at_threshold"],
         }
 
+    revised = bool(model["post_failure_architecture_revision"])
     summary = {
         "schema": SUMMARY_SCHEMA,
         "status": "completed_calibrated",
@@ -268,11 +456,17 @@ def fit_and_calibrate(*, train_root: Path, calibration_root: Path, output_dir: P
         "policy_actor_sha256": train_manifest["policy_actor_sha256"],
         "policy_payload_sha256": train_manifest["policy_payload_sha256"],
         "source_tube_manifest_sha256": train_manifest["source_tube_manifest_sha256"],
-        "architecture": "76->8_tanh->1",
-        "model_family": "tiny_mlp_tanh",
-        "parameter_count_per_phase": 625,
-        "architecture_selection_repeated": False,
-        "architecture_frozen_from_bootstrap_iteration": True,
+        "model_profile": model_profile,
+        "architecture": model["architecture"],
+        "model_family": model["family"],
+        "parameter_count_per_phase": int(model["parameter_count"]),
+        "architecture_selection_repeated": revised,
+        "architecture_frozen_from_bootstrap_iteration": not revised,
+        "post_failure_architecture_revision": revised,
+        "same_train_rows_as_prior_c1": revised,
+        "same_calibration_rows_as_prior_c1": revised,
+        "calibration_reused_for_architecture_comparison": revised,
+        "independent_architecture_selection_claim": not revised,
         "model_contract": model,
         "train_role_manifest_sha256": train_manifest["role_manifest_sha256"],
         "calibration_role_manifest_sha256": calibration_manifest["role_manifest_sha256"],
@@ -286,6 +480,8 @@ def fit_and_calibrate(*, train_root: Path, calibration_root: Path, output_dir: P
         "next_tube_construction_authorized": True,
         "claim_boundary": {
             "policy_conditioned_empirical_continuation_fields": True,
+            "same_data_architecture_comparison": revised,
+            "fresh_independent_calibration_after_architecture_selection": False if revised else True,
             "certified_probability_claim": False,
             "certified_safe_set_claim": False,
             "jce_jel_claim": False,
