@@ -76,33 +76,47 @@ def test_prefit_archive_refuses_nonempty_partial_fit(tmp_path: Path) -> None:
     assert (output / "partial.txt").read_text() == "preserve me"
 
 
-def test_standard_iterative_profile_is_76x64x64x1_and_legacy_is_unchanged() -> None:
+def test_standard_iterative_profiles_and_legacy_contract() -> None:
     from jit_dvgc.iterative_continuation_fields import MODEL_PROFILES
 
     legacy = MODEL_PROFILES["legacy_tiny_tanh"]
-    standard = MODEL_PROFILES["standard_mlp_64x64_tanh"]
+    mlp64 = MODEL_PROFILES["standard_mlp_64x64_tanh"]
+    mlp128 = MODEL_PROFILES["standard_mlp_128x128_tanh"]
+
     assert legacy["hidden_sizes"] == [8]
     assert legacy["parameter_count"] == 625
     assert legacy["architecture"] == "76->8_tanh->1"
-    assert standard["hidden_sizes"] == [64, 64]
-    assert standard["parameter_count"] == 9153
-    assert standard["architecture"] == "76->64_tanh->64_tanh->1"
-    assert standard["post_failure_architecture_revision"] is True
+    assert legacy["post_failure_architecture_revision"] is False
+
+    assert mlp64["hidden_sizes"] == [64, 64]
+    assert mlp64["parameter_count"] == 9153
+    assert mlp64["architecture"] == "76->64_tanh->64_tanh->1"
+    assert mlp64["post_failure_architecture_revision"] is True
+
+    assert mlp128["hidden_sizes"] == [128, 128]
+    assert mlp128["parameter_count"] == 26497
+    assert mlp128["architecture"] == "76->128_tanh->128_tanh->1"
+    assert mlp128["post_failure_architecture_revision"] is True
+
+    for field in ("l2_weight", "optimizer", "steps", "learning_rate", "normalization"):
+        assert mlp64[field] == legacy[field]
+        assert mlp128[field] == legacy[field]
 
 
-def test_iterative_score_supports_standard_two_hidden_layer_field(tmp_path: Path) -> None:
+@pytest.mark.parametrize("width", [64, 128])
+def test_iterative_score_supports_standard_two_hidden_layer_field(tmp_path: Path, width: int) -> None:
     from jit_dvgc.iterative_continuation_fields import _score
 
-    field = tmp_path / "field.npz"
+    field = tmp_path / f"field_{width}.npz"
     np.savez(
         field,
         mean=np.zeros((76,), dtype=np.float32),
         std=np.ones((76,), dtype=np.float32),
-        w1=np.zeros((76, 64), dtype=np.float32),
-        b1=np.zeros((64,), dtype=np.float32),
-        w2=np.zeros((64, 64), dtype=np.float32),
-        b2=np.zeros((64,), dtype=np.float32),
-        w3=np.zeros((64,), dtype=np.float32),
+        w1=np.zeros((76, width), dtype=np.float32),
+        b1=np.zeros((width,), dtype=np.float32),
+        w2=np.zeros((width, width), dtype=np.float32),
+        b2=np.zeros((width,), dtype=np.float32),
+        w3=np.zeros((width,), dtype=np.float32),
         b3=np.asarray(0.0, dtype=np.float32),
     )
     rows = [{"actor_observation": [0.0] * 76}]
