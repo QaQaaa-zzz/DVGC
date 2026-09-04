@@ -5,7 +5,7 @@ import argparse
 import json
 from pathlib import Path
 
-from jit_dvgc.iterative_continuation_fields import fit_and_calibrate
+from jit_dvgc.iterative_weighting_compat import fit_and_calibrate_observed_cells
 
 
 def main() -> int:
@@ -16,7 +16,7 @@ def main() -> int:
     parser.add_argument("--calibration-root", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args()
-    result = fit_and_calibrate(
+    result = fit_and_calibrate_observed_cells(
         train_root=args.train_root,
         calibration_root=args.calibration_root,
         output_dir=args.output_dir,
