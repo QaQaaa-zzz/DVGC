@@ -1,43 +1,45 @@
-# SUPERSEDED — Resolution-Aware Capability-Tube vNext Outline — 2026-09-04
+# SUPERSEDED — Resolution-Aware Capability-Tube vNext Outline
 
-This document captured the intermediate **target-free physical-cell reconstruction** decision before the historical Tube visualizations revealed late downstream/recovery contamination.
+Date: 2026-09-04
 
-It is retained only as provenance for why physical resolution and root/full cell profiles were introduced.
+This file is retained only as method-history provenance for the introduction of physical-state resolutions and root/full capability-cell profiles.
 
-Its active method authority has been superseded by:
-
-```text
-JIT/docs/JIT_TRAJECTORY_CENTERED_JUMP_TUBE_REPORT_20260904.md
-```
-
-Current correction:
+It has been superseded twice:
 
 ```text
-physical resolution remains valid
-BUT
-global target-free frontier expansion is retired
+target-free physical-cell Tube
+        ↓
+trajectory-centered Jump Tube
+        ↓
+CURRENT: causal reachable Jump Capability Tube
 ```
 
-The active JIT mainline is now:
+Current authority:
 
 ```text
-successful real full-chain rollout
--> real-frame nominal centerline
--> 0.1 m longitudinal x slices
--> task-semantic Jump-Tube view
--> local x-balanced frontier widening
--> real-dynamics continuation evidence
--> one unified Actor
+JIT/docs/JIT_CAUSAL_REACHABLE_JUMP_TUBE_REPORT_20260904.md
 ```
 
-Key active constraints:
+The physical-resolution contribution from this intermediate version remains active:
 
 ```text
-x nominal start = 2.5 m
-x hard max = 4.2 m
-actual end = first valid landing if earlier
-post-Apex downstream requires root_vz < 0
-post-landing recovery is not Jump-Tube frontier support
+position                     0.10 m
+linear velocity              0.10 m/s
+orientation                  0.50 deg
+root angular velocity        2.0 deg/s
+joint angle                  0.50 deg
+joint angular velocity       2.0 deg/s
+wheel tangential velocity    0.10 m/s
 ```
 
-Do not use this superseded document as the current workflow or frontier authority.
+But the old scientific implication is retired. Neither target-free global Tube occupancy nor trajectory-centered RSI continuation support is sufficient to establish Jump Capability.
+
+The current rule is:
+
+```text
+J_k = R_k^forward ∩ V_k^continuation
+```
+
+A state must first be physically reached from the natural ground reset using real `env.step` dynamics. Only then may RSI be used to evaluate continuation from that exact reached state.
+
+Do not use this document for current workflow, frontier, paper, or capability claims.
