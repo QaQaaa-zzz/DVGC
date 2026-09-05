@@ -32,6 +32,7 @@ from ..unified_boundary import action_sparse_directions
 from ..unified_envelope_snapshot import (
     capture_unified_envelope_snapshot,
     physical_state_sha256,
+    snapshot_context_sha256,
     save_unified_envelope_snapshot,
 )
 from ..analysis.nominal_jump_centerline import load_nominal_jump_centerline
@@ -180,8 +181,17 @@ def collect_jump_start_connected_candidates(
     signs: Sequence[int],
     lookbacks_m: Sequence[float] = DEFAULT_LOOKBACKS_M,
     max_forward_ticks: int = DEFAULT_MAX_FORWARD_TICKS,
+    evidence_mode: str = "legacy_training_support_novelty_v1",
+    probe_bank_sha256: str | None = None,
+    logical_role: str | None = None,
+    start_contract_sha256: str | None = None,
+    acquisition_interaction_ceiling: int | None = None,
 ) -> dict[str, Any]:
     """Generate unlabeled jump-start-connected candidates around centerline x slices."""
+    if evidence_mode not in {"legacy_training_support_novelty_v1", "probe_bank_arrivals_v1"}:
+        raise ValueError("unknown causal evidence mode")
+    if evidence_mode == "probe_bank_arrivals_v1" and (not probe_bank_sha256 or len(probe_bank_sha256) != 64):
+        raise ValueError("new arrival mode requires an immutable probe bank identity")
     if not declared_anchors:
         raise ValueError("causal Jump acquisition requires declared centerline-slice anchors")
     if int(max_forward_ticks) <= 0:
@@ -222,6 +232,10 @@ def collect_jump_start_connected_candidates(
         * max(1, (len(variants) + VARIANT_PARTITION_MODULUS - 1) // VARIANT_PARTITION_MODULUS)
         * int(max_forward_ticks)
     )
+    if acquisition_interaction_ceiling is not None and maximum_interactions > acquisition_interaction_ceiling:
+        raise ValueError("acquisition exceeds declared interaction ceiling before rollout")
+    if evidence_mode == "probe_bank_arrivals_v1" and (logical_role not in {"train", "calibration", "acceptance"} or not start_contract_sha256):
+        raise ValueError("bank acquisition requires logical role and declared start contract")
     protocol = {
         "schema": PROTOCOL_SCHEMA,
         "status": "predeclared",
@@ -268,6 +282,11 @@ def collect_jump_start_connected_candidates(
             "certified_safe_set_claim": False,
         },
     }
+    if evidence_mode == "probe_bank_arrivals_v1":
+        protocol.update(evidence_mode=evidence_mode, probe_bank_sha256=probe_bank_sha256,
+                        logical_role=logical_role, start_contract_sha256=start_contract_sha256,
+                        training_support_membership_excludes_arrival=False,
+                        candidate_deduplication="snapshot_context_sha256")
     protocol_sha = _canonical_sha256(protocol)
 
     output = Path(output_dir)
@@ -416,7 +435,8 @@ def collect_jump_start_connected_candidates(
                 exclusions["target_reached_before_perturbation_window"] += 1
                 continue
 
-            normalized_state = _normalize_snapshot_context(candidate_state, phase)
+            normalized_state = (candidate_state if evidence_mode == "probe_bank_arrivals_v1"
+                                else _normalize_snapshot_context(candidate_state, phase))
             jump_start_reachability = {
                 "schema": "jit_jump_start_reachability_provenance_v1",
                 "jump_start_connected": True,
@@ -457,13 +477,15 @@ def collect_jump_start_connected_candidates(
                 policy_iteration=int(policy_record["iteration"]),
             )
             state_hash = physical_state_sha256(snapshot)
-            if state_hash in support_hashes:
+            context_hash = snapshot_context_sha256(snapshot)
+            if evidence_mode == "legacy_training_support_novelty_v1" and state_hash in support_hashes:
                 exclusions["existing_control_tube_state"] += 1
                 continue
-            if state_hash in seen_states:
+            evidence_key = context_hash if evidence_mode == "probe_bank_arrivals_v1" else state_hash
+            if evidence_key in seen_states:
                 exclusions["duplicate_candidate_state"] += 1
                 continue
-            seen_states.add(state_hash)
+            seen_states.add(evidence_key)
 
             relative = Path("snapshots") / f"candidate_{len(entries):06d}"
             save_unified_envelope_snapshot(bank / relative, snapshot)
@@ -485,6 +507,10 @@ def collect_jump_start_connected_candidates(
                     "snapshot": str(relative),
                     "source_bank": "boundary_bank",
                     "state_sha256": state_hash,
+                    **({"snapshot_context_sha256": context_hash,
+                        "probe_bank_sha256": probe_bank_sha256,
+                        "already_in_training_support": state_hash in support_hashes}
+                       if evidence_mode == "probe_bank_arrivals_v1" else {}),
                     "parent_group_id": str(anchor["parent_group_id"]),
                     "parent_state_sha256": perturbation_start_sha,
                     "proposal_anchor_state_sha256": str(anchor["state_sha256"]),

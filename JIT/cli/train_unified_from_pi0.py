@@ -11,9 +11,6 @@ import argparse
 import json
 from pathlib import Path
 
-from brax.training.agents.ppo import train as ppo_train
-
-import jit_dvgc.unified_formal as flat_formal
 import jit_dvgc.training.formal as canonical_formal
 from jit_dvgc.unified_formal import (
     load_frozen_actor_restore_params,
@@ -48,31 +45,8 @@ def main() -> int:
     if declared_run != args.run_id:
         raise ValueError("run-id must match the warm-start config declaration")
 
-    restore_params = load_frozen_actor_restore_params(args.config)
-
-    def warm_trainer(**kwargs):
-        if kwargs.get("restore_params") is not None:
-            raise ValueError("unexpected pre-existing PPO restore_params")
-        if kwargs.get("restore_value_fn") is not False:
-            raise ValueError("actor-only warm-start requires a fresh critic")
-        call = dict(kwargs)
-        call["restore_params"] = restore_params
-        call["restore_value_fn"] = False
-        return ppo_train.train(**call)
-
-    previous_flat = flat_formal.load_unified_formal_config
-    previous_canonical = canonical_formal.load_unified_formal_config
-    flat_formal.load_unified_formal_config = _load_warm_target_config
-    canonical_formal.load_unified_formal_config = _load_warm_target_config
-    try:
-        result = canonical_formal.run_unified_formal(
-            args.config,
-            args.run_id,
-            trainer=warm_trainer,
-        )
-    finally:
-        flat_formal.load_unified_formal_config = previous_flat
-        canonical_formal.load_unified_formal_config = previous_canonical
+    load_unified_actor_warm_start_config(args.config)
+    result = canonical_formal.run_unified_formal(args.config, args.run_id)
 
     print(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))
     return 0

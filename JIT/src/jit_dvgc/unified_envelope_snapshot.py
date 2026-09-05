@@ -165,6 +165,33 @@ def physical_state_sha256(snapshot: UnifiedEnvelopeSnapshot) -> str:
     return digest.hexdigest()
 
 
+def snapshot_context_sha256(snapshot: UnifiedEnvelopeSnapshot) -> str:
+    """Identity of stored physical/controller/event/time context, independent of proposer.
+
+    This hashes the snapshot representation; it does not prove simulator replay
+    equivalence (contact solver/integrator state still needs a runtime check).
+    """
+    from .evidence_integrity import canonical_sha256
+
+    def encode(value):
+        if isinstance(value, Mapping):
+            return {str(k): encode(v) for k, v in value.items()}
+        if isinstance(value, np.ndarray):
+            array = np.ascontiguousarray(value)
+            return {"dtype": array.dtype.str, "shape": list(array.shape),
+                    "bytes": array.tobytes().hex()}
+        return value
+
+    fields = ("qpos", "qvel", "ctrl", "observation_fifo", "history_valid_count",
+              "observation", "last_action", "rng", "up_events", "down_events",
+              "active_phase", "start_phase", "phase_transitioned", "episode_step",
+              "phase_episode_step", "episode_return", "reset_from_soft_tube", "source_tick",
+              "parent_group_index", "tube_entry_index", "tube_global_index",
+              "xml_sha256", "compatibility_identity")
+    return canonical_sha256({"schema": "jit_snapshot_context_identity_v1",
+                             **{field: encode(getattr(snapshot, field)) for field in fields}})
+
+
 def capture_unified_envelope_snapshot(
     state: Any,
     *,

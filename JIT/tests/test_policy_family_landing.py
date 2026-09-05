@@ -35,6 +35,7 @@ def _row(policy: str, candidate: str, state: str, label: int) -> dict:
         "actor_observation": [0.0] * 76,
         "label": label,
         "continuation_success": bool(label),
+        "success_criterion": "first_valid_landing",
         "outcome_class": "first_valid_landing" if label else "airborne_physical_failure",
         "environment_interactions": 5,
         "evaluator_policy_name": policy,
@@ -72,32 +73,61 @@ def test_any_policy_merge_rejects_candidate_identity_drift():
         )
 
 
-def test_completed_evaluator_can_be_reused_after_family_run_interruption(tmp_path):
-    evaluator = {
-        "name": "pi_0",
-        "actor_sha256": "a" * 64,
-        "payload_sha256": "b" * 64,
-    }
+def _completed_cache(tmp_path):
+    from jit_dvgc.evidence_integrity import canonical_sha256
+    from jit_dvgc.policy_family_landing import _requested_contract
+    evaluator = {"name": "pi_0", "actor_sha256": "a" * 64,
+                 "payload_sha256": "b" * 64, "formal_config_sha256": "c" * 64}
     rows = [_row("pi_0", "c0", "c" * 64, 1)]
-    (tmp_path / "summary.json").write_text(
-        json.dumps(
-            {
-                "status": "completed",
-                "evaluator_policy_name": "pi_0",
-                "policy_actor_sha256": "a" * 64,
-                "policy_payload_sha256": "b" * 64,
-                "success_criterion": "first_valid_landing",
-                "label_count": 1,
-            }
-        ),
-        encoding="utf-8",
-    )
-    (tmp_path / "labels.json").write_text(json.dumps(rows), encoding="utf-8")
+    rows[0].update(evaluator_actor_sha256=evaluator["actor_sha256"],
+                   evaluator_payload_sha256=evaluator["payload_sha256"],
+                   acquisition_protocol_sha256="acquisition")
+    catalog = tmp_path / "catalog.json"
+    catalog.write_text(json.dumps({"status": "completed", "candidate_count": 1,
+                                  "protocol_sha256": "acquisition", "entries": rows}))
+    contract = _requested_contract(catalog, evaluator, evaluator, "f" * 64, 400, 7)
+    protocol = {**contract, "protocol_sha256": canonical_sha256(contract)}
+    rows[0]["label_protocol_sha256"] = protocol["protocol_sha256"]
+    (tmp_path / "protocol.json").write_text(json.dumps(protocol))
+    (tmp_path / "summary.json").write_text(json.dumps({
+        **contract, "status": "completed", "evaluator_policy_name": "pi_0",
+        "label_count": 1, "protocol_sha256": protocol["protocol_sha256"]}))
+    (tmp_path / "labels.json").write_text(json.dumps(rows))
+    return evaluator, rows, catalog, contract
 
-    report, loaded = _load_completed_evaluator(tmp_path, evaluator=evaluator)
 
+def test_completed_evaluator_can_be_reused_after_family_run_interruption(tmp_path):
+    evaluator, rows, catalog, contract = _completed_cache(tmp_path)
+    report, loaded = _load_completed_evaluator(tmp_path, evaluator=evaluator,
+        catalog_path=catalog, expected_contract=contract)
     assert report["status"] == "completed"
     assert loaded == rows
+
+
+@pytest.mark.parametrize("field,value", [("protocol_seed", 8), ("max_ticks_per_candidate", 399),
+    ("candidate_catalog_file_sha256", "different"), ("policy_payload_sha256", "different")])
+def test_completed_cache_rejects_changed_request(tmp_path, field, value):
+    evaluator, _, catalog, contract = _completed_cache(tmp_path)
+    with pytest.raises(ValueError, match="requested"):
+        _load_completed_evaluator(tmp_path, evaluator=evaluator, catalog_path=catalog,
+                                  expected_contract={**contract, field: value})
+
+
+@pytest.mark.parametrize("field,value", [("evaluator_actor_sha256", "changed"),
+    ("evaluator_payload_sha256", "changed"), ("success_criterion", "stable_recovery"),
+    ("label", 2), ("environment_interactions", -1), ("outcome_class", "engineering_error")])
+def test_family_rejects_second_row_identity_or_outcome_drift(field, value):
+    rows = [_row("pi_0", "c0", "a" * 64, 1), _row("pi_0", "c1", "b" * 64, 0)]
+    rows[1][field] = value
+    with pytest.raises(ValueError):
+        merge_any_policy_landing_labels({"pi_0": rows})
+
+
+def test_completed_result_cannot_be_archived_as_incomplete(tmp_path):
+    _completed_cache(tmp_path)
+    with pytest.raises(ValueError, match="completed"):
+        _archive_incomplete_evaluator(tmp_path, evaluator_name="pi_0")
+    assert (tmp_path / "labels.json").exists()
 
 
 def test_incomplete_evaluator_is_preserved_before_retry(tmp_path):
@@ -275,3 +305,31 @@ def test_acceptance_runtime_accepts_actor_warm_start_policy(monkeypatch) -> None
     assert loaded is formal
     assert loaded_artifact is artifact
     assert loaded_env is env
+
+
+def test_invalid_merge_preserves_existing_completed_output(tmp_path, monkeypatch):
+    import jit_dvgc.policy_family_landing as landing
+    output = tmp_path / "completed"
+    output.mkdir()
+    evaluator, _, catalog, _ = _completed_cache(output)
+    before = {p.name: p.read_bytes() for p in output.iterdir()}
+    monkeypatch.setattr(landing, "_load_frozen", lambda _: (evaluator, "f" * 64))
+    shard = tmp_path / "bad-shard"
+    shard.mkdir()
+    (shard / "protocol.json").write_text('{"protocol_sha256":"invalid"}')
+    with pytest.raises(ValueError, match="self-hash"):
+        landing.merge_policy_family_evaluator_shards(catalog_path=catalog, shard_dirs=[shard],
+            output_dir=output, evaluator_name="pi_0", acquisition_frozen_policy=tmp_path / "a",
+            evaluator_frozen_policy=tmp_path / "e", max_ticks=400, protocol_seed=7)
+    assert {p.name: p.read_bytes() for p in output.iterdir()} == before
+    assert not list(tmp_path.glob("completed_incomplete*"))
+
+
+def test_summary_only_shard_cannot_bypass_request_validation(tmp_path):
+    from jit_dvgc.policy_family_landing import run_policy_family_evaluator_shard
+    (tmp_path / "summary.json").write_text('{"status":"completed_shard"}')
+    with pytest.raises(FileNotFoundError):
+        run_policy_family_evaluator_shard(catalog_path=tmp_path / "missing-catalog",
+            acquisition_frozen_policy=tmp_path / "missing-acquisition",
+            evaluator_frozen_policy=tmp_path / "missing-evaluator", output_dir=tmp_path,
+            shard_index=99, shard_count=1)

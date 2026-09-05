@@ -24,7 +24,7 @@ Durable scientific behavior belongs in `JIT/src/jit_dvgc/`; CLIs in `JIT/cli/` p
 | Legacy selection | `analysis/capability_progression.py`, `iterative_acceptance_gate.py`, selection CLI | Close invalid historical evidence route; preserve legacy Actor comparisons as diagnostics |
 | Workflow | `workflow/iteration_loop.py`, `cli/prepare_iterative_envelope_workflow.py` | Migrate new protocol to bank/registry/declared-budget decisions rather than single selected successor |
 
-A bank/witness ledger may justify a new durable module because it represents a genuinely new capability. Prefer a small schema-driven implementation and reusing existing acquisition/evaluator primitives. Do not invent new modules merely to encode pi_4 or a retry.
+`probe_bank.py` now owns the new bank, multi-catalog label plan, fresh-process supervisor, attempt reservations and observation index. `evidence_integrity.py` supplies shared CPU-only endpoint/row/protocol checks. `cli/probe_bank.py` is the new entry point. Cumulative physical cells and complementary PPO remain future work; see [implementation status](JIT_PROBE_BANK_IMPLEMENTATION_20260905.md).
 
 ## New lifecycle requirements
 

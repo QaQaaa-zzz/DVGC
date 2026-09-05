@@ -17,7 +17,7 @@ At reviewed `bfc22f2`, multi-probe lifecycle and bank scheduling are not complet
 
 ## Validation on the production host
 
-Production interpreter: `/home/qy/mujoco_playground/.venv/bin/python`. From the repository root, after implementing fixes:
+Production interpreter: `/home/qy/mujoco_playground/.venv/bin/python`. From the repository root (correctness fixes are implemented; real GPU equivalence is pending):
 
 ```bash
 PYTHONPATH=JIT/src /home/qy/mujoco_playground/.venv/bin/python -m pytest JIT/tests/test_policy_family_landing.py JIT/tests/test_family_landing_predictor.py JIT/tests/test_capability_progression.py JIT/tests/test_causal_jump_reachability_contract.py JIT/tests/test_unified_continuation_shards.py -q
@@ -30,3 +30,5 @@ Existing tests need new refusal cases from the review; their prior passing resul
 Keep source under `src/jit_dvgc`, thin entry points under `cli`, tests under `tests`, and guidance under `docs`. Preserve raw run identities, partial GPU failures and bootstrap history. Current old expanded scans must close under their original proposer/family/seed/endpoint; start new multi-probe experiments with new identities.
 
 TRAIN may guide learning/discovery. Development holdouts cannot enter TRAIN. Final TEST/JCE/JEL remains isolated; historical bootstrap splits named test are already-used evidence and are not the untouched final distribution.
+
+New complementary-bank entry point: `JIT/cli/probe_bank.py`. See [implementation guide](docs/JIT_PROBE_BANK_IMPLEMENTATION_20260905.md) before production smoke or new training.

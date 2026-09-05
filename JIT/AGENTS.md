@@ -1,6 +1,6 @@
 # JIT agent instructions — active empirical-envelope direction
 
-The root [AGENTS.md](../AGENTS.md) and user-confirmed [paper outline](docs/JIT_PAPER_OUTLINE.md) govern this work. Audited baseline: `bfc22f2`. Requirements below distinguish desired behavior from current implementation.
+The root [AGENTS.md](../AGENTS.md) and user-confirmed [paper outline](docs/JIT_PAPER_OUTLINE.md) govern this work. Audited baseline: `bfc22f2`. The first implementation update is documented in [implementation status](docs/JIT_PROBE_BANK_IMPLEMENTATION_20260905.md); remaining requirements are not runtime success claims.
 
 ## Objective and objects
 
@@ -23,7 +23,7 @@ Keep forward arrivals, exact landing witnesses, empirical support, projected cel
 
 The already locked wide/expanded scans retain pi_0 proposer and pi_0/pi_1/pi_2 evaluators. Resume under their exact catalog, seed, horizon and endpoint. Do not rename or retrofit those runs as multi-probe discovery.
 
-The old `prepare_iterative_envelope_workflow.py` selects one successor and requires coverage eligibility. It is legacy automation, not the new discovery scheduler. Do not launch a new experiment through that chain without changing and validating its contracts.
+Use `cli/probe_bank.py` for new bank pilots after production smoke. It emits observations with replay/physical-envelope claims explicitly unverified; it does not authorize automatic PPO or certify physical cells. The old `prepare_iterative_envelope_workflow.py` selects one successor and requires coverage eligibility. It is legacy automation, not the new discovery scheduler. Do not launch a new experiment through that chain without changing and validating its contracts.
 
 pi_3 remains a frozen trained candidate. Its mixed-endpoint gate is quarantined as comparison evidence, not a blanket rejection of every pi_3 witness. Assess technical probe eligibility and complementary witnesses under a new protocol. Do not automatically promote the old selected manifest.
 
@@ -31,18 +31,18 @@ pi_3 remains a frozen trained candidate. Its mixed-endpoint gate is quarantined 
 
 See issue IDs and evidence in [review](docs/JIT_EMPIRICAL_ENVELOPE_REVIEW_20260905.md).
 
-1. Close evaluator/cache identity checks, per-row endpoint checks and atomic merge publishing.
-2. Prevent mixed-endpoint historical reports from becoming new eligibility evidence.
+1. Preserve the implemented evaluator/cache identity checks, per-row endpoint checks and staged merge publishing; validate them against production artifacts.
+2. Preserve endpoint validation in both legacy analysis and selector; mixed/missing endpoint evidence now refuses.
 3. Separate training-support membership, exact witness identity and physical novelty.
 4. Validate public warm-start routing; preserve Actor/normalizer only, with fresh critic/optimizer unless explicitly declared.
 5. Validate serial versus sharded labels on a small identical catalog using the production runtime.
-6. Implement versioned banks, witness attribution and a cost ledger before new formal discovery training.
+6. Extend the first versioned bank/observation index and suffix-attempt ledger to validated cumulative physical support and full end-to-end cost before formal discovery training.
 
 Shards must preserve catalog/global index/seed/horizon/endpoint/full policy identity. The historical operational suggestion is at most 600 candidates per fresh GPU process; it is not an enforced code limit or measured universal safe capacity. Start small, end the process between shards, and avoid concurrent evaluators without measured capacity. Completed cache entries need full requested-contract verification; preserve failures.
 
 ## Predictor
 
-Optional, advisory, never proof of arrival or a Tube admission label. Fix score self-hash and target-bank/catalog binding before fresh-label audit. Equal-score AP must be order invariant. Do not use ACCEPTANCE labels to decide whether TRAIN fitting is authorized. Unsupported/single-class outcomes need explicit metrics availability, not fabricated negatives. A predictor-free discovery experiment does not wait for predictor quality.
+Optional, advisory, never proof of arrival or a Tube admission label. Preserve repaired score self-hash, target-family/catalog binding and tie-invariant AP. Historical locks lacking target identity must remain explicitly marked. Do not use ACCEPTANCE labels to decide whether TRAIN fitting is authorized. Unsupported/single-class outcomes need explicit metrics availability, not fabricated negatives. A predictor-free discovery experiment does not wait for predictor quality.
 
 ## Training and evidence roles
 
@@ -59,7 +59,7 @@ Reuse `analysis/capability_tube.py` resolution contracts. Root geometry includes
 
 ## Runtime and maintenance
 
-Use `/home/qy/mujoco_playground/.venv/bin/python` for production. The review environment has no JAX/MuJoCo/Brax/pytest; syntax/isolated-function checks do not replace a GPU smoke or real label equivalence.
+Use `/home/qy/mujoco_playground/.venv/bin/python` for production. A temporary CPU test stack was installed for this code change. Its tests do not replace production GPU smoke, actual checkpoint restore, PPO or serial/sharded rollout equivalence.
 
 Keep durable logic in `src/jit_dvgc`, CLIs thin, tests in `tests`, and guidance in `docs`. Preserve history and unrelated work; never reset/clean/stash/rebase/force-push. Do not remove identity checks to make a run pass. No large training is triggered by editing documentation.
 

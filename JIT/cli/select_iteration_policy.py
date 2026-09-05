@@ -49,6 +49,9 @@ def _write(path: Path, value: Mapping[str, Any]) -> None:
     )
 
 
+from jit_dvgc.evidence_integrity import validate_gate_endpoints
+
+
 def _verify_capability_decision(
     path: Path,
     *,
@@ -56,6 +59,7 @@ def _verify_capability_decision(
     gate: Mapping[str, Any],
     record: Mapping[str, Any],
 ) -> dict[str, Any]:
+    validate_gate_endpoints(gate)
     decision = _read(path)
     if decision.get("schema") != CAPABILITY_DECISION_SCHEMA or decision.get("status") != "completed":
         raise ValueError("selected-policy capability decision schema/status drift")
@@ -118,6 +122,7 @@ def select(
     if int(gate.get("source_iteration", -1)) + 1 != int(record["iteration"]):
         raise ValueError("selected-policy source/candidate iteration drift")
 
+    validate_gate_endpoints(gate)
     core = gate.get("core_gate")
     boundary = gate.get("boundary_gate")
     if not isinstance(core, Mapping) or not isinstance(boundary, Mapping):

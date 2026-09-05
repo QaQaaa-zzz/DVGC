@@ -52,18 +52,18 @@ If all declared evaluators fail, record no witness under that bank and budget. K
 
 ## Current implementation and evidence
 
-Audited commit: `bfc22f2e32cb78cb269b0e522c3bdd7c6e7a8d42`.
+Original audit: `bfc22f2e32cb78cb269b0e522c3bdd7c6e7a8d42`. Follow-up code changes implement identity fixes and a first complementary-probe workflow; see [implementation and production gates](JIT/docs/JIT_PROBE_BANK_IMPLEMENTATION_20260905.md).
 
 | Item | Current evidence | Practical limit |
 | --- | --- | --- |
 | up/down and handoff bootstrap | Frozen expert manifest, 56-snapshot handoff bank, continuation data, value-weighted Tube0 | Does not establish bootstrap superiority or all-success Tube0 |
 | Unified seed | Completed early unified run and later Round1 pi_0 identity referenced by causal scans | Exact Round1 freeze/trace/checkpoint chain must be materialized on the runtime host |
-| Fixed-start causal scanning | pi_0 prefix plus real dynamics and family landing reports | Single proposer per role; no validated multi-proposer supervisor |
+| Fixed-start causal scanning | pi_0 prefix plus real dynamics and family landing reports | New per-proposer catalog/bank supervisor passes CPU fixtures; real GPU acquisition and replay still pending |
 | Wide family round | 1,230/1,258 TRAIN witnesses; 713 reported new causal root cells | Summary-level evidence; raw catalogs/snapshots not all in Git |
 | Training Tube3 | 4,803 rows, +1,159 over Tube2 | Training rows are not all capability evidence |
 | pi_3 | 10,009,600 training transitions; 1,130/1,258 source-state landings | Old core comparison mixed endpoints; complementary contribution not yet established |
 | Expanded audit round | 1,754 TRAIN, 583 CALIBRATION, 574 ACCEPTANCE arrivals, saved scores | Missing family labels after GPU failures |
-| New paper loop | User-confirmed direction | Bank/registry, complementarity recipe, same-budget results still missing |
+| New paper loop | First versioned bank, suffix supervisor, observation index and retry ledger implemented | GPU equivalence, cumulative physical/cost registry, complementarity recipe and matched-budget results remain missing |
 
 Full evidence paths and issue IDs are in [the review](JIT/docs/JIT_EMPIRICAL_ENVELOPE_REVIEW_20260905.md). Runtime state is in [CURRENT_STATUS](JIT/docs/CURRENT_STATUS.md).
 

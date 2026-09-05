@@ -15,6 +15,7 @@ from typing import Any, Callable, Mapping, Sequence
 import jax
 import numpy as np
 
+from .evidence_integrity import validate_label_row
 from .config import file_sha256
 from .constants import END_REASONS
 from .unified_continuation_labels import (
@@ -379,6 +380,8 @@ def label_unified_continuation_shard(
                     "snapshot": str(row["snapshot"]),
                     "source_bank": str(row["source_bank"]),
                     "state_sha256": str(row["state_sha256"]),
+                    **({"snapshot_context_sha256": row["snapshot_context_sha256"]}
+                       if "snapshot_context_sha256" in row else {}),
                     "parent_group_id": str(row["parent_group_id"]),
                     "parent_state_sha256": str(row["parent_state_sha256"]),
                     "actor_observation": np.asarray(
@@ -443,6 +446,7 @@ def label_unified_continuation_shard(
             "final_evaluation_data_used": False,
         }
         _write_json(output / "labels.json", labeled)
+        report["labels_file_sha256"] = file_sha256(output / "labels.json")
         _write_json(output / "summary.json", report)
         _write_json(output / "execution.json", {**execution, "status": "completed"})
         return report
@@ -496,6 +500,8 @@ def merge_unified_continuation_shards(
         execution = _read_json_object(shard_dir / "execution.json")
         summary = _read_json_object(shard_dir / "summary.json")
         labels = _read_json_list(shard_dir / "labels.json")
+        if summary.get("labels_file_sha256") is not None and summary["labels_file_sha256"] != file_sha256(shard_dir / "labels.json"):
+            raise ValueError("shard label file hash drift")
         protocol_sha = str(protocol.get("protocol_sha256", ""))
         protocol_base = {k: v for k, v in protocol.items() if k != "protocol_sha256"}
         if _canonical_sha256(protocol_base) != protocol_sha:
@@ -525,6 +531,10 @@ def merge_unified_continuation_shards(
         if len(labels) != stop - start or int(summary["candidate_count"]) != len(labels):
             raise ValueError("shard label count drift")
         for row in labels:
+            validate_label_row(row, name=protocol["policy_name"], actor=protocol["policy_actor_sha256"],
+                               payload=protocol["policy_payload_sha256"], criterion=protocol["success_criterion"])
+            if row["environment_interactions"] > protocol["max_ticks_per_candidate"]:
+                raise ValueError("shard per-candidate horizon exceeded")
             candidate_index = int(row.get("candidate_index", -1))
             if candidate_index < start or candidate_index >= stop:
                 raise ValueError("shard label lies outside declared range")
@@ -540,6 +550,7 @@ def merge_unified_continuation_shards(
                 "parent_state_sha256",
                 "source_bank",
                 "snapshot",
+                "snapshot_context_sha256",
             ):
                 if row.get(field) != catalog_row.get(field):
                     raise ValueError(f"shard label/catalog {field} drift")
@@ -657,6 +668,7 @@ def merge_unified_continuation_shards(
             "certified_safe_set_claim": False,
         },
     }
+    report["labels_file_sha256"] = file_sha256(output / "labels.json")
     _write_json(output / "summary.json", report)
     merge_audit = {
         "schema": MERGE_SCHEMA,

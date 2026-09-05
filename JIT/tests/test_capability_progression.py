@@ -26,6 +26,8 @@ def _gate(
         "candidate_policy_name": "pi_2",
         "candidate_actor_sha256": "a" * 64,
         "candidate_payload_sha256": "b" * 64,
+        "core_source": {"baseline_success_criterion": "first_valid_landing", "candidate_success_criterion": "first_valid_landing"},
+        "boundary_source": {"success_criterion": "first_valid_landing"},
         "core_gate": {
             "state_count": up_states + down_states,
             "baseline_success_count": baseline_total,
@@ -181,3 +183,11 @@ def test_current_pi2_pattern_is_expansion_with_upstream_policy_coverage_collapse
     assert result["formal_prospective_selection_claim"] is False
     assert result["policy_realization"]["phase_retention_passed"]["upstream"] is False
     assert result["policy_realization"]["phase_retention_passed"]["downstream"] is True
+
+
+def test_historical_mixed_endpoint_gate_cannot_become_authority(repository_root):
+    import json
+    import pytest
+    path = repository_root / "JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/pi3_landing_replay_acceptance_gate/summary.json"
+    with pytest.raises(ValueError, match="mixes"):
+        analyze_capability_progression(json.loads(path.read_text()))

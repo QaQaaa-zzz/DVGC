@@ -39,6 +39,8 @@ def _gate() -> dict:
         "candidate_actor_sha256": "a" * 64,
         "candidate_payload_sha256": "b" * 64,
         "iteration_accepted": False,
+        "core_source": {"baseline_success_criterion": "first_valid_landing", "candidate_success_criterion": "first_valid_landing"},
+        "boundary_source": {"success_criterion": "first_valid_landing"},
         "core_gate": {
             "state_count": 100,
             "baseline_success_count": 98,

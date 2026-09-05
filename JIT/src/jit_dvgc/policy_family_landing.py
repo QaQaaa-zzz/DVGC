@@ -5,16 +5,19 @@ import gc
 import hashlib
 import json
 import math
+import tempfile
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 import jax
 
+from .evidence_integrity import read_verified_protocol, validate_label_row
 from .checkpoint import load_checkpoint
 from .config import file_sha256
 from .ppo import make_checkpoint_policy
 from .unified_continuation_labels import label_unified_continuations
 from .unified_continuation_shards import (
+    contiguous_shard_bounds,
     label_unified_continuation_shard,
     merge_unified_continuation_shards,
 )
@@ -83,17 +86,25 @@ def merge_any_policy_landing_labels(
         "parent_state_sha256",
         "snapshot",
         "source_bank",
+        "snapshot_context_sha256",
     )
+    seen_candidates = set()
     for index in range(count):
         rows = {name: row_sets[name][index] for name in policy_names}
         base = rows[policy_names[0]]
+        key = (base.get("candidate_id"), base.get("state_sha256"))
+        if key in seen_candidates:
+            raise ValueError("duplicate policy-family candidate")
+        seen_candidates.add(key)
         for name, row in rows.items():
             if any(row.get(field) != base.get(field) for field in identity_fields):
                 raise ValueError(
                     f"policy-family candidate identity drift at index {index}: {name}"
                 )
-            if str(row.get("evaluator_policy_name")) != name:
-                raise ValueError("policy-family evaluator name drift")
+            first = row_sets[name][0]
+            validate_label_row(row, name=name, actor=first["evaluator_actor_sha256"],
+                               payload=first["evaluator_payload_sha256"],
+                               criterion="first_valid_landing")
         successful = [name for name, row in rows.items() if int(row["label"]) == 1]
         per_policy = {
             name: {
@@ -147,6 +158,9 @@ def _archive_incomplete_evaluator(
         return None
     if not output.is_dir():
         raise FileExistsError(f"landing evaluator output is not a directory: {output}")
+    summary_path = output / "summary.json"
+    if summary_path.is_file() and json.loads(summary_path.read_text()).get("status") in {"completed", "completed_shard"}:
+        raise ValueError("refusing to archive a completed evaluator; verify or use a new output")
     attempt = 1
     while True:
         archive = output.with_name(
@@ -197,11 +211,6 @@ def run_policy_family_evaluator_shard(
 ) -> dict[str, Any]:
     """Run one bounded first-landing evaluator shard in one GPU process."""
     output = Path(output_dir)
-    if (output / "summary.json").is_file():
-        existing = json.loads((output / "summary.json").read_text(encoding="utf-8"))
-        if existing.get("status") == "completed_shard":
-            return existing
-        raise RuntimeError(f"existing evaluator shard is incomplete: {output}")
     acquisition_record, acquisition_frozen_sha = _load_frozen(
         Path(acquisition_frozen_policy)
     )
@@ -210,6 +219,34 @@ def run_policy_family_evaluator_shard(
     )
     if acquisition_record["xml_sha256"] != evaluator_record["xml_sha256"]:
         raise ValueError("policy-family shard acquisition/evaluator XML mismatch")
+    contract = _requested_contract(catalog_path, acquisition_record, evaluator_record,
+                                   evaluator_frozen_sha, max_ticks, protocol_seed)
+    catalog = json.loads(Path(catalog_path).read_text())
+    start, stop = contiguous_shard_bounds(int(catalog["candidate_count"]), shard_index, shard_count)
+    if (output / "summary.json").is_file():
+        report = json.loads((output / "summary.json").read_text())
+        if report.get("status") != "completed_shard":
+            raise RuntimeError(f"existing evaluator shard is incomplete: {output}")
+        protocol = _verify_cached_contract(output, contract)
+        execution = json.loads((output / "execution.json").read_text())
+        for obj in (report, execution):
+            for key, value in {"shard_index": shard_index, "shard_count": shard_count,
+                               "candidate_start_index": start, "candidate_stop_index_exclusive": stop,
+                               "logical_protocol_sha256": protocol["protocol_sha256"]}.items():
+                if obj.get(key) != value:
+                    raise ValueError(f"cached shard {key} drift")
+        if execution.get("status") != "completed":
+            raise ValueError("cached shard execution incomplete")
+        if report.get("labels_file_sha256") is not None and report["labels_file_sha256"] != file_sha256(output / "labels.json"):
+            raise ValueError("cached shard label file hash drift")
+        labels = json.loads((output / "labels.json").read_text())
+        _verify_cached_rows(labels, catalog["entries"][start:stop], protocol)
+        if report.get("candidate_count") != len(labels):
+            raise ValueError("cached shard count drift")
+        for index, row in enumerate(labels, start):
+            if row.get("candidate_index") != index or row.get("policy_key_candidate_index") != index:
+                raise ValueError("cached shard global candidate index drift")
+        return report
     config, _artifact, env = build_unified_formal_environment(
         Path(str(evaluator_record["formal_config"]))
     )
@@ -239,22 +276,82 @@ def run_policy_family_evaluator_shard(
     )
 
 
+def _requested_contract(catalog_path, acquisition, evaluator, frozen_sha, max_ticks, seed):
+    catalog = json.loads(Path(catalog_path).read_text())
+    if catalog.get("status") != "completed" or catalog.get("candidate_count") != len(catalog.get("entries", [])):
+        raise ValueError("requested catalog is not completed/aligned")
+    return {
+        "candidate_catalog_file_sha256": file_sha256(Path(catalog_path)),
+        "candidate_catalog_protocol_sha256": catalog["protocol_sha256"],
+        "candidate_count": catalog["candidate_count"],
+        "policy_name": evaluator["name"],
+        "policy_actor_sha256": evaluator["actor_sha256"],
+        "policy_payload_sha256": evaluator["payload_sha256"],
+        "policy_formal_config_sha256": evaluator["formal_config_sha256"],
+        "frozen_unified_manifest_sha256": frozen_sha,
+        "acquisition_policy_name": acquisition["name"],
+        "acquisition_policy_actor_sha256": acquisition["actor_sha256"],
+        "acquisition_policy_payload_sha256": acquisition["payload_sha256"],
+        "success_criterion": "first_valid_landing",
+        "protocol_seed": int(seed), "max_ticks_per_candidate": int(max_ticks),
+    }
+
+
+def _verify_cached_contract(output, expected):
+    protocol = read_verified_protocol(Path(output) / "protocol.json")
+    for key, value in expected.items():
+        if protocol.get(key) != value:
+            raise ValueError(f"cached evaluator requested {key} drift")
+    return protocol
+
+
+def _verify_cached_rows(labels, candidates, protocol):
+    if not isinstance(labels, list) or len(labels) != len(candidates):
+        raise ValueError("cached evaluator label coverage drift")
+    for row, candidate in zip(labels, candidates, strict=True):
+        for field in ("candidate_id", "state_sha256", "phase", "phase_index", "parent_group_id",
+                      "parent_state_sha256", "source_bank", "snapshot", "snapshot_context_sha256"):
+            if row.get(field) != candidate.get(field):
+                raise ValueError(f"cached evaluator candidate {field} drift")
+        validate_label_row(row, name=protocol["policy_name"], actor=protocol["policy_actor_sha256"],
+                           payload=protocol["policy_payload_sha256"], criterion=protocol["success_criterion"])
+        if row.get("label_protocol_sha256") != protocol["protocol_sha256"]:
+            raise ValueError("cached evaluator row protocol drift")
+        if row.get("acquisition_protocol_sha256") != protocol["candidate_catalog_protocol_sha256"]:
+            raise ValueError("cached evaluator acquisition protocol drift")
+        if row["environment_interactions"] > protocol["max_ticks_per_candidate"]:
+            raise ValueError("cached evaluator horizon exceeded")
+
+
 def merge_policy_family_evaluator_shards(
-    *,
-    catalog_path: Path,
-    shard_dirs: Sequence[Path],
-    output_dir: Path,
-    evaluator_name: str,
+    *, catalog_path: Path, shard_dirs: Sequence[Path], output_dir: Path,
+    evaluator_name: str, acquisition_frozen_policy: Path,
+    evaluator_frozen_policy: Path, max_ticks: int = 400, protocol_seed: int = 9_521_201,
 ) -> dict[str, Any]:
-    """Merge one evaluator's independent shards into its canonical cache."""
-    _archive_incomplete_evaluator(Path(output_dir), evaluator_name=evaluator_name)
-    report = merge_unified_continuation_shards(
-        Path(catalog_path), tuple(Path(path) for path in shard_dirs), Path(output_dir)
-    )
-    if report.get("evaluator_policy_name") != evaluator_name:
-        raise ValueError("merged evaluator shard identity drift")
-    if report.get("success_criterion") != "first_valid_landing":
-        raise ValueError("merged evaluator shard success criterion drift")
+    """Validate in a temporary directory; publish only a complete requested result."""
+    acquisition, _ = _load_frozen(acquisition_frozen_policy)
+    evaluator, frozen_sha = _load_frozen(evaluator_frozen_policy)
+    if evaluator["name"] != evaluator_name:
+        raise ValueError("requested evaluator name drift")
+    contract = _requested_contract(catalog_path, acquisition, evaluator, frozen_sha, max_ticks, protocol_seed)
+    # Validate even when a canonical cache exists: supplied shards must match the request.
+    for directory in shard_dirs:
+        _verify_cached_contract(directory, contract)
+    output = Path(output_dir)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=".landing-merge-", dir=output.parent) as temporary:
+        staged = Path(temporary) / "result"
+        report = merge_unified_continuation_shards(Path(catalog_path), shard_dirs, staged)
+        _load_completed_evaluator(staged, evaluator=evaluator, catalog_path=catalog_path,
+                                  expected_contract=contract)
+        existing = _load_completed_evaluator(output, evaluator=evaluator, catalog_path=catalog_path,
+                                              expected_contract=contract)
+        if existing is not None:
+            if json.loads((staged / "labels.json").read_text()) != existing[1]:
+                raise ValueError("completed evaluator differs from supplied shards")
+            return existing[0]
+        _archive_incomplete_evaluator(output, evaluator_name=evaluator_name)
+        staged.rename(output)
     return report
 
 
@@ -262,16 +359,25 @@ def _load_completed_evaluator(
     output_dir: Path,
     *,
     evaluator: Mapping[str, Any],
+    catalog_path: Path,
+    expected_contract: Mapping[str, Any],
 ) -> tuple[dict[str, Any], list[dict[str, Any]]] | None:
     """Load one closed evaluator result so an interrupted family run can resume."""
     summary_path = Path(output_dir) / "summary.json"
     labels_path = Path(output_dir) / "labels.json"
-    if not summary_path.is_file() or not labels_path.is_file():
+    if not summary_path.is_file():
         return None
     report = json.loads(summary_path.read_text(encoding="utf-8"))
-    labels = json.loads(labels_path.read_text(encoding="utf-8"))
-    if report.get("status") != "completed" or not isinstance(labels, list):
+    if report.get("status") != "completed":
         return None
+    labels = json.loads(labels_path.read_text(encoding="utf-8"))
+    if report.get("labels_file_sha256") is not None and report["labels_file_sha256"] != file_sha256(labels_path):
+        raise ValueError("completed label file hash drift")
+    protocol = _verify_cached_contract(output_dir, expected_contract)
+    if report.get("protocol_sha256") != protocol["protocol_sha256"]:
+        raise ValueError("completed evaluator summary/protocol drift")
+    catalog = json.loads(Path(catalog_path).read_text())
+    _verify_cached_rows(labels, catalog["entries"], protocol)
     if report.get("evaluator_policy_name") != evaluator.get("name"):
         raise ValueError("completed landing evaluator name drift")
     if report.get("policy_actor_sha256") != evaluator.get("actor_sha256"):
@@ -328,6 +434,8 @@ def label_policy_family_first_landing(
             completed = _load_completed_evaluator(
                 policy_output,
                 evaluator=record,
+                catalog_path=catalog_path,
+                expected_contract=_requested_contract(catalog_path, acquisition_record, record, frozen_sha, max_ticks, protocol_seed),
             )
             if completed is not None:
                 reports[name], labels_by_policy[name] = completed

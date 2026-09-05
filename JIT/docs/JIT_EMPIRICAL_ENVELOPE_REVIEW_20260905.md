@@ -1,5 +1,7 @@
 # JIT 论文大纲对照代码与证据审查
 
+> Historical audit findings below describe `bfc22f2`. Follow-up code fixes, CPU tests, new bank entry points and remaining production gates are tracked in [implementation status](JIT_PROBE_BANK_IMPLEMENTATION_20260905.md). Do not reinterpret this historical defect list as the current code status.
+
 审查日期：2026-09-05。远端目标：`agent/two-phase-soft-tube`。只读 fetch 核实的基线：`bfc22f2e32cb78cb269b0e522c3bdd7c6e7a8d42`。
 
 本次变更重写研究与运行指导文档，**没有修复运行源码、重算历史标签或启动 GPU 训练**。缺陷复现与源代码审查用于明确下一阶段工作，不能把文档中列出的验收条件当作已通过测试。

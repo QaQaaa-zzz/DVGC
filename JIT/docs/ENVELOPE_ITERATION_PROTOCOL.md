@@ -1,6 +1,6 @@
 # JIT empirical jumping-envelope iteration protocol
 
-Version: user-confirmed envelope direction, 2026-09-05. Read [root authority](../../AGENTS.md), [status](CURRENT_STATUS.md), and [review](JIT_EMPIRICAL_ENVELOPE_REVIEW_20260905.md). This is a target contract; the new bank/registry/scheduler is not implemented at audited `bfc22f2`.
+Version: user-confirmed envelope direction, 2026-09-05. Read [root authority](../../AGENTS.md), [status](CURRENT_STATUS.md), and [review](JIT_EMPIRICAL_ENVELOPE_REVIEW_20260905.md). The first bank/suffix scheduler and integrity fixes now exist; [implementation status](JIT_PROBE_BANK_IMPLEMENTATION_20260905.md) identifies unverified GPU replay and the still-pending cumulative physical/training loop.
 
 ## 1. Objective and legacy boundary
 

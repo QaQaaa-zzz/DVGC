@@ -39,6 +39,9 @@ def main() -> int:
             shard_dirs=args.merge_shard_dir,
             output_dir=args.output_dir,
             evaluator_name=str(evaluator["name"]),
+            acquisition_frozen_policy=args.acquisition_frozen_policy,
+            evaluator_frozen_policy=args.evaluator_frozen_policy[0],
+            max_ticks=args.max_ticks, protocol_seed=args.protocol_seed,
         )
         print(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))
         return 0

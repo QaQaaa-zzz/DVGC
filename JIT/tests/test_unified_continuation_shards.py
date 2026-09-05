@@ -101,6 +101,8 @@ def _make_merge_fixture(tmp_path: Path, *, shard_count: int = 2):
         "candidate_catalog_protocol_sha256": "d" * 64,
         "candidate_count": len(rows),
         "maximum_environment_interactions": len(rows) * 400,
+        "max_ticks_per_candidate": 400,
+        "success_criterion": "stable_recovery",
     }
     protocol_sha = _sha(protocol_base)
     protocol = {**protocol_base, "protocol_sha256": protocol_sha}
@@ -120,6 +122,11 @@ def _make_merge_fixture(tmp_path: Path, *, shard_count: int = 2):
                     "policy_key_scheme": POLICY_KEY_SCHEME,
                     "label_protocol_sha256": protocol_sha,
                     "label": int(index % 2 == 0),
+                    "continuation_success": bool(index % 2 == 0),
+                    "evaluator_policy_name": "pi_0",
+                    "evaluator_actor_sha256": "a" * 64,
+                    "evaluator_payload_sha256": "b" * 64,
+                    "success_criterion": "stable_recovery",
                     "outcome_class": "success" if index % 2 == 0 else "physical_failure",
                     "environment_interactions": 10 + index,
                 }

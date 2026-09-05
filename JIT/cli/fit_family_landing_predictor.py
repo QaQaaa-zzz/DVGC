@@ -22,6 +22,7 @@ def main() -> int:
     parser.add_argument("--role", choices=("train", "calibration", "acceptance"))
     parser.add_argument("--field", type=Path)
     parser.add_argument("--field-manifest", type=Path)
+    parser.add_argument("--target-family-sha256")
     parser.add_argument("--calibration", type=Path)
     parser.add_argument("--output-file", type=Path)
     parser.add_argument("--audit-locked-scores", type=Path)
@@ -56,6 +57,7 @@ def main() -> int:
         if missing:
             parser.error("forward scoring requires: " + ", ".join(missing))
         result = lock_forward_predictor_scores(
+            target_family_sha256=args.target_family_sha256,
             catalog_path=args.lock_forward_catalog,
             role=args.role,
             field_path=args.field,

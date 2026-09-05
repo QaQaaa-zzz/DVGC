@@ -28,6 +28,7 @@ from .unified_envelope_snapshot import (
     UnifiedEnvelopeSnapshot,
     load_unified_envelope_snapshot,
     physical_state_sha256,
+    snapshot_context_sha256,
     restore_unified_envelope_snapshot,
 )
 
@@ -180,6 +181,8 @@ def validate_candidate_snapshot(
     *,
     policy_record: Mapping[str, Any],
 ) -> None:
+    if "snapshot_context_sha256" in row and snapshot_context_sha256(snapshot) != row["snapshot_context_sha256"]:
+        raise ValueError("candidate snapshot controller/event/time context drift")
     if physical_state_sha256(snapshot) != row["state_sha256"]:
         raise ValueError("candidate snapshot physical-state SHA-256 mismatch")
     if snapshot.parent_trajectory != row["parent_group_id"]:
@@ -198,7 +201,7 @@ def validate_candidate_snapshot(
         raise ValueError("candidate snapshot XML SHA-256 mismatch")
     if snapshot.active_phase != int(row["phase_index"]):
         raise ValueError("candidate snapshot active phase mismatch")
-    if snapshot.phase_transitioned:
+    if snapshot.phase_transitioned and "snapshot_context_sha256" not in row:
         raise ValueError("boundary acquisition candidate unexpectedly crossed phase")
 
 
@@ -524,6 +527,8 @@ def label_unified_continuations(
                     "snapshot": str(row["snapshot"]),
                     "source_bank": str(row["source_bank"]),
                     "state_sha256": str(row["state_sha256"]),
+                    **({"snapshot_context_sha256": row["snapshot_context_sha256"]}
+                       if "snapshot_context_sha256" in row else {}),
                     "parent_group_id": str(row["parent_group_id"]),
                     "parent_state_sha256": str(row["parent_state_sha256"]),
                     "actor_observation": np.asarray(
@@ -606,6 +611,7 @@ def label_unified_continuations(
             json.dumps(labeled, indent=2, sort_keys=True, allow_nan=False) + "\n",
             encoding="utf-8",
         )
+        report["labels_file_sha256"] = file_sha256(output / "labels.json")
         (output / "summary.json").write_text(
             json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n",
             encoding="utf-8",

@@ -1,6 +1,6 @@
 # DVGC repository authority — empirical jumping envelope
 
-Updated 2026-09-05 after the user's paper-outline decisions. This is the active research direction. The audited implementation baseline is `bfc22f2e32cb78cb269b0e522c3bdd7c6e7a8d42`; new requirements below are not claims that the code already implements them.
+Updated 2026-09-05 after the user's paper-outline decisions. This is the active research direction. The original audit baseline was `bfc22f2e32cb78cb269b0e522c3bdd7c6e7a8d42`. Correctness fixes and a first probe-bank path now exist; [implementation status](JIT/docs/JIT_PROBE_BANK_IMPLEMENTATION_20260905.md) distinguishes CPU verification from pending production gates.
 
 ## Research objective
 
@@ -47,11 +47,11 @@ Do not change physics, reward, endpoint, reset semantics or action order silentl
 
 The locked 2026-09-04/05 scans used pi_0 as proposer and exactly pi_0/pi_1/pi_2 as evaluators. Finish their missing labels under those identities; do not retrofit a larger bank or new seed into their outputs.
 
-The current source still hard-codes the three-policy family and a single selected-policy workflow. General probe-bank orchestration, bank admission, and training-for-complementarity rules are **not implemented/validated**. Changing this document does not enable them.
+Legacy family and selected-policy workflows retain their original contracts. New `JIT/cli/probe_bank.py` supports versioned proposer/evaluator banks, separate causal catalogs, bounded fresh-process suffix jobs, attempt accounting and an observation index. CPU fixture tests pass; GPU equivalence, cumulative physical-cell accounting, cross-version isolation, probe admission and complementary training are still pending.
 
 The historical pi_3 mixed-endpoint gate remains invalid as a fair comparison. Keep the trained checkpoint and valid underlying outcomes. pi_3 may be assessed as a prospective probe under a new identity/endpoint contract without requiring old full-Tube retention, but never reuse its old selected manifest as automatic authority.
 
-New formal probe training is not ready at the audited baseline: first repair witness/cache/selection integrity, validate serial-vs-sharded equivalence, establish the new bank/registry path, and lock the experiment recipe and budget. Existing frozen-probe pilots should precede additional large PPO runs. A predictor is optional and must not block a predictor-free discovery experiment once essential gates pass.
+New formal probe training is not ready: correctness guards and the first bank path are implemented, but production serial/shard and prefix/suffix equivalence, a full cost/coverage ledger, and the training recipe/budget must close first. Existing frozen-probe pilots should precede additional large PPO runs. A predictor is optional and must not block a predictor-free discovery experiment once essential gates pass.
 
 ## Data roles and evidence integrity
 
@@ -74,7 +74,7 @@ The existing Tube0 is value-weighted training support, not an all-success capabi
 
 ## Repository work
 
-Preserve unrelated changes; never reset/clean/stash/rebase/force-push. Keep durable logic in `JIT/src/jit_dvgc/`, thin CLIs in `JIT/cli/`, tests in `JIT/tests/`, and research guidance in `JIT/docs/`. Extend existing capabilities rather than adding iteration-specific duplicate modules. Retain provenance checks; do not repeatedly recalculate locked hashes without a concrete identity question.
+The user explicitly authorized subsequent routine commits and pushes to `agent/two-phase-soft-tube` within this project scope; do not repeatedly request permission. Preserve unrelated changes; never reset/clean/stash/rebase/force-push. Keep durable logic in `JIT/src/jit_dvgc/`, thin CLIs in `JIT/cli/`, tests in `JIT/tests/`, and research guidance in `JIT/docs/`. Extend existing capabilities rather than adding iteration-specific duplicate modules. Retain provenance checks; do not repeatedly recalculate locked hashes without a concrete identity question.
 
 ## Read order
 

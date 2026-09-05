@@ -25,6 +25,7 @@ from typing import Any, Mapping
 import json
 
 from jit_dvgc.config import file_sha256
+from jit_dvgc.evidence_integrity import validate_gate_endpoints
 from jit_dvgc.iterative_frontier_protocol import canonical_sha256
 
 
@@ -91,6 +92,7 @@ def analyze_capability_progression(
     if gate.get("test_data_used") is not False or gate.get("final_evaluation_data_used") is not False:
         raise ValueError("capability progression cannot consume TEST/final evidence")
 
+    validate_gate_endpoints(gate)
     core = gate.get("core_gate")
     boundary = gate.get("boundary_gate")
     if not isinstance(core, Mapping) or not isinstance(boundary, Mapping):

@@ -591,7 +591,7 @@ def run_unified_formal(
     env_factory: Callable[..., Any] = UnifiedTubeRSIEnv,
     backend_name: Callable[[], str] = jax.default_backend,
 ) -> dict[str, Any]:
-    config = load_unified_formal_config(config_path)
+    config = load_unified_policy_formal_config(config_path)
     if backend_name() != "gpu":
         raise RuntimeError("formal unified PPO requires the visible JAX GPU backend")
     artifact, env = _build_unified_formal_environment(config, env_factory=env_factory)
@@ -671,9 +671,13 @@ def run_unified_formal(
         evaluate_train_panel=evaluate,
     )
     try:
-        make_policy, _params, final_metrics = trainer(
-            **build_unified_formal_trainer_kwargs(config, env, controller)
-        )
+        trainer_kwargs = build_unified_formal_trainer_kwargs(config, env, controller)
+        if config.raw.get("initialization", {}).get("actor") in {
+            "warm_start_frozen_unified", "warm_start_pi_0"
+        }:
+            trainer_kwargs["restore_params"] = load_frozen_actor_restore_params(config_path)
+            trainer_kwargs["restore_value_fn"] = False
+        make_policy, _params, final_metrics = trainer(**trainer_kwargs)
         if (
             controller.completed_training_transitions
             != config.ppo.requested_transitions

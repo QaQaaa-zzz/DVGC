@@ -18,7 +18,7 @@ from .config import file_sha256
 from .iterative_frontier_protocol import canonical_sha256
 from .iterative_weighting_compat import observed_cell_balanced_weights
 from .policy_conditioned_continuation_field import _metrics
-from .unified_envelope_snapshot import load_unified_envelope_snapshot
+from .unified_envelope_snapshot import (load_unified_envelope_snapshot, physical_state_sha256, snapshot_context_sha256)
 
 
 SCHEMA = "jit_policy_family_landing_predictor_v1"
@@ -56,17 +56,28 @@ def _phase_counts(rows: tuple[dict[str, Any], ...]) -> dict[str, dict[str, int]]
 def _ranking_metrics(targets: np.ndarray, scores: np.ndarray) -> dict[str, Any]:
     targets = np.asarray(targets, dtype=np.int32).reshape(-1)
     scores = np.asarray(scores, dtype=np.float64).reshape(-1)
-    base = _metrics(targets.astype(np.float64), scores)
+    if len(targets) != len(scores) or not len(targets) or not np.isfinite(scores).all():
+        raise ValueError("ranking metrics require aligned finite nonempty scores")
+    if not np.isin(targets, [0, 1]).all():
+        raise ValueError("ranking targets must be binary")
+    both = len(np.unique(targets)) == 2
+    base = _metrics(targets.astype(np.float64), scores) if both else {
+        "count": len(targets), "positive_count": int(np.sum(targets == 1)),
+        "negative_count": int(np.sum(targets == 0)), "roc_auc": None,
+        "positive_mean_score": float(np.mean(scores[targets == 1])) if np.any(targets == 1) else None,
+        "negative_mean_score": float(np.mean(scores[targets == 0])) if np.any(targets == 0) else None,
+        "score_gap": None, "ranking_discrimination_available": False,
+    }
     positive_count = int(np.sum(targets == 1))
     if positive_count <= 0:
         average_precision = None
     else:
         order = np.argsort(-scores, kind="stable")
         ranked_positive = targets[order] == 1
-        precision = np.cumsum(ranked_positive) / np.arange(1, len(targets) + 1)
-        average_precision = float(
-            np.sum(precision * ranked_positive) / positive_count
-        )
+        ends = np.r_[np.flatnonzero(np.diff(scores[order]) != 0), len(scores) - 1]
+        cumulative = np.cumsum(ranked_positive)[ends]
+        precision = cumulative / (ends + 1)
+        average_precision = float(np.sum(precision * np.diff(np.r_[0, cumulative])) / positive_count)
     return {**base, "average_precision": average_precision}
 
 
@@ -78,7 +89,6 @@ def assess_phase_support(
     for phase in ("upstream", "downstream"):
         train = counts["train"][phase]
         calibration = counts["calibration"][phase]
-        acceptance = counts["acceptance"][phase]
         if int(train["negative_count"]) == 0:
             result[phase] = {
                 "fit_authorized": False,
@@ -92,8 +102,6 @@ def assess_phase_support(
             "train_parent_groups_at_least_3": int(train["parent_group_count"]) >= 3,
             "calibration_has_both_labels": int(calibration["positive_count"]) > 0
             and int(calibration["negative_count"]) > 0,
-            "acceptance_has_both_labels": int(acceptance["positive_count"]) > 0
-            and int(acceptance["negative_count"]) > 0,
         }
         ready = all(requirements.values())
         result[phase] = {
@@ -112,6 +120,7 @@ def lock_forward_predictor_scores(
     field_manifest_path: Path,
     calibration_path: Path,
     output_path: Path,
+    target_family_sha256: str | None = None,
 ) -> dict[str, Any]:
     """Score a new unlabeled catalog without consulting continuation outcomes."""
     if role not in {"train", "calibration", "acceptance"}:
@@ -136,6 +145,11 @@ def lock_forward_predictor_scores(
         "manifest_sha256"
     ):
         raise ValueError("landing predictor calibration/field identity drift")
+    target_family_sha256 = target_family_sha256 or field_manifest.get("target_policy_family_sha256")
+    if not target_family_sha256 or len(target_family_sha256) != 64:
+        raise ValueError("new score locks require an explicit target policy-family identity")
+    if field_manifest.get("target_policy_family_sha256") not in (None, target_family_sha256):
+        raise ValueError("predictor target family differs from training target")
     threshold = float(calibration["acceptance_threshold_exclusive"])
     upstream_rows = []
     downstream_count = 0
@@ -150,6 +164,10 @@ def lock_forward_predictor_scores(
             catalog_path.parent / str(row["source_bank"]) / str(row["snapshot"])
         )
         snapshot = load_unified_envelope_snapshot(snapshot_path)
+        if physical_state_sha256(snapshot) != row["state_sha256"]:
+            raise ValueError("predictor snapshot physical identity drift")
+        if "snapshot_context_sha256" in row and snapshot_context_sha256(snapshot) != row["snapshot_context_sha256"]:
+            raise ValueError("predictor snapshot context identity drift")
         observation = np.asarray(snapshot.observation, dtype=np.float32).reshape(-1)
         if observation.shape != (76,) or not np.isfinite(observation).all():
             raise ValueError("forward scoring requires finite 76-D actor observations")
@@ -171,6 +189,7 @@ def lock_forward_predictor_scores(
         "schema": "jit_policy_family_landing_forward_scores_v1",
         "status": "locked_before_outcome_analysis",
         "role": role,
+        "target_policy_family_sha256": target_family_sha256,
         "catalog_path": str(catalog_path),
         "catalog_file_sha256": file_sha256(catalog_path),
         "catalog_protocol_sha256": str(catalog["protocol_sha256"]),
@@ -214,7 +233,15 @@ def evaluate_locked_forward_scores(
         raise ValueError("forward scores consulted outcome labels")
     if locked.get("role") != role:
         raise ValueError("forward score role mismatch")
+    _verify_self_hash(locked, "scores_sha256")
     role_manifest, rows = iterative._load_role(Path(role_root), role)
+    if not locked.get("catalog_file_sha256") or role_manifest.get("source_acquisition_catalog_sha256") != locked.get("catalog_file_sha256"):
+        raise ValueError("forward audit catalog identity drift")
+    if any(row.get("acquisition_protocol_sha256") != locked.get("catalog_protocol_sha256") for row in rows):
+        raise ValueError("forward audit acquisition protocol drift")
+    target = locked.get("target_policy_family_sha256")
+    if target is not None and role_manifest.get("continuation_policy_family", {}).get("policy_family_sha256") != target:
+        raise ValueError("forward audit target policy family drift")
     upstream = {
         (str(row["candidate_id"]), str(row["state_sha256"])): dict(row)
         for row in rows
@@ -238,8 +265,6 @@ def evaluate_locked_forward_scores(
     accepted = score_values > threshold
     positive_count = int(np.sum(targets == 1))
     negative_count = int(np.sum(targets == 0))
-    if positive_count <= 0 or negative_count <= 0:
-        raise ValueError("fresh forward audit requires both upstream labels")
     report = {
         "schema": "jit_policy_family_landing_forward_audit_v1",
         "status": "completed_fresh_forward_audit",
@@ -249,6 +274,8 @@ def evaluate_locked_forward_scores(
         "source_role_manifest_sha256": str(
             role_manifest["role_manifest_sha256"]
         ),
+        "target_family_identity_bound_before_labels": target is not None,
+        "legacy_missing_target_identity": target is None,
         "fresh_labeled_upstream_count": len(ordered_rows),
         "positive_count": positive_count,
         "negative_count": negative_count,
@@ -270,13 +297,13 @@ def evaluate_locked_forward_scores(
         "locked_threshold_exclusive": threshold,
         "positive_recall_at_locked_threshold": float(
             np.sum(accepted & (targets == 1)) / positive_count
-        ),
+        ) if positive_count else None,
         "accepted_negative_count_at_locked_threshold": int(
             np.sum(accepted & (targets == 0))
         ),
         "false_positive_rate_at_locked_threshold": float(
             np.sum(accepted & (targets == 0)) / negative_count
-        ),
+        ) if negative_count else None,
         "threshold_selected_on_fresh_labels": False,
         "model_refit_on_fresh_labels": False,
         "outcome_labels_loaded_only_after_scores_locked": True,
@@ -309,13 +336,13 @@ def _acceptance_report(
         "metrics": _ranking_metrics(targets, scores),
         "positive_recall_at_calibration_threshold": float(
             np.sum(accepted & (targets == 1)) / np.sum(targets == 1)
-        ),
+        ) if np.any(targets == 1) else None,
         "accepted_negative_count_at_calibration_threshold": int(
             np.sum(accepted & (targets == 0))
         ),
         "false_positive_rate_at_calibration_threshold": float(
             np.sum(accepted & (targets == 0)) / np.sum(targets == 0)
-        ),
+        ) if np.any(targets == 0) else None,
         "threshold_selected_on_acceptance": False,
     }
 
@@ -396,6 +423,7 @@ def fit_family_landing_predictor(
             "source_train_role_manifest_sha256": manifests["train"][
                 "role_manifest_sha256"
             ],
+            "target_policy_family_sha256": manifests["train"]["continuation_policy_family"]["policy_family_sha256"],
             "architecture_predeclared_before_observing_this_batch": False,
             "formal_independent_architecture_selection_claim": False,
         }

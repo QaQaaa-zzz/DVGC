@@ -320,3 +320,35 @@ def test_failed_train_panel_accounting_is_recovered_from_persisted_report(tmp_pa
         "previous_diagnostic_interactions": 0,
         "reconciled_diagnostic_interactions": 449,
     }
+
+
+@pytest.mark.parametrize("warm", [False, True])
+def test_public_formal_entry_routes_actor_restore_without_cli_patching(jit_root, tmp_path, monkeypatch, warm):
+    import jit_dvgc.unified_formal as formal
+    config = formal.load_unified_formal_config(jit_root / "configs/pi_unified_formal.json")
+    if warm:
+        config.raw["initialization"] = formal.actor_only_warm_start_initialization("source.json")
+    loaded = []
+    monkeypatch.setattr(formal, "load_unified_policy_formal_config", lambda path: loaded.append(path) or config)
+    env = SimpleNamespace(_bundle=SimpleNamespace(xml_sha256="a" * 64),
+                          resolved_config=SimpleNamespace(model={"reference_sha256": "b" * 64}))
+    monkeypatch.setattr(formal, "_build_unified_formal_environment", lambda *a, **k: (object(), env))
+    for name in ("predeclare_run", "_write_json", "mark_run_running", "close_run"):
+        monkeypatch.setattr(formal, name, lambda *a, **k: None)
+    monkeypatch.setattr(formal, "checkpoint_identity", lambda *args: object())
+    controller = SimpleNamespace(on_progress=lambda *args: None, on_policy_params=lambda *args: None,
+                                 segment_training_transitions=0, train_panel_interactions=0)
+    monkeypatch.setattr(formal, "UnifiedFormalController", lambda **kwargs: controller)
+    restore = (object(), object(), object())
+    restore_calls = []
+    monkeypatch.setattr(formal, "load_frozen_actor_restore_params", lambda path: restore_calls.append(path) or restore)
+    def trainer(**kwargs):
+        assert kwargs["restore_params"] is (restore if warm else None)
+        assert kwargs["restore_value_fn"] is False
+        raise RuntimeError("stop before any PPO interactions")
+    path = tmp_path / "config.json"
+    with pytest.raises(RuntimeError, match="stop before any PPO"):
+        formal.run_unified_formal(path, "fixture", run_root=tmp_path,
+                                  backend_name=lambda: "gpu", trainer=trainer)
+    assert loaded == [path]
+    assert restore_calls == ([path] if warm else [])
