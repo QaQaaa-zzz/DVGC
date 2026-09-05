@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -13,6 +15,7 @@ from jit_dvgc.iterative_acceptance_gate import (
     _selected_family_outcome,
 )
 from jit_dvgc.policy_family_landing import (
+    _archive_incomplete_evaluator,
     _load_completed_evaluator,
     merge_any_policy_landing_labels,
 )
@@ -94,6 +97,22 @@ def test_completed_evaluator_can_be_reused_after_family_run_interruption(tmp_pat
 
     assert report["status"] == "completed"
     assert loaded == rows
+
+
+def test_incomplete_evaluator_is_preserved_before_retry(tmp_path):
+    output = tmp_path / "per_policy" / "pi_1"
+    output.mkdir(parents=True)
+    (output / "protocol.json").write_text('{"status":"declared"}', encoding="utf-8")
+
+    archived = _archive_incomplete_evaluator(output, evaluator_name="pi_1")
+
+    assert archived == output.with_name("pi_1_incomplete_attempt_001")
+    assert not output.exists()
+    assert (archived / "protocol.json").is_file()
+    marker = json.loads((archived / "incomplete_attempt.json").read_text(encoding="utf-8"))
+    assert marker["status"] == "preserved_before_evaluator_retry"
+    assert marker["evaluator_policy_name"] == "pi_1"
+    assert marker["preserved_files"] == ["protocol.json"]
 
 
 def test_policy_family_capability_support_does_not_require_artificial_negatives():
@@ -203,3 +222,32 @@ def test_active_family_landing_gate_uses_landing_for_core_preservation():
     assert _candidate_core_success_criterion(
         {"acceptance_success_criterion": "stable_recovery"}
     ) == "stable_recovery"
+
+
+def test_acceptance_runtime_accepts_actor_warm_start_policy(monkeypatch) -> None:
+    import jit_dvgc.iterative_acceptance_gate as gate
+
+    formal = SimpleNamespace(
+        config_sha256="config-id",
+        soft_tube_manifest_sha256="tube-id",
+        up_config_path=Path("up.json"),
+        down_config_path=Path("down.json"),
+        runtime_naccdmax=1024,
+    )
+    artifact = SimpleNamespace(manifest={"manifest_sha256": "tube-id"})
+    env = SimpleNamespace(_bundle=SimpleNamespace(xml_sha256="xml-id"))
+    monkeypatch.setattr(
+        gate, "load_unified_policy_formal_config", lambda _path: formal, raising=False
+    )
+    monkeypatch.setattr(gate, "load_soft_tube", lambda _path: artifact)
+    monkeypatch.setattr(gate, "load_config", lambda path: path)
+    monkeypatch.setattr(gate, "UnifiedTubeRSIEnv", lambda *_args, **_kwargs: env)
+
+    loaded, loaded_artifact, loaded_env = gate._runtime(
+        {"formal_config": "warm.json", "formal_config_sha256": "config-id", "xml_sha256": "xml-id"},
+        Path("tube"),
+    )
+
+    assert loaded is formal
+    assert loaded_artifact is artifact
+    assert loaded_env is env

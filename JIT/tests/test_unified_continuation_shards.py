@@ -8,6 +8,7 @@ import pytest
 
 from jit_dvgc.unified_continuation_shards import (
     POLICY_KEY_SCHEME,
+    build_logical_label_protocol,
     contiguous_shard_bounds,
     merge_unified_continuation_shards,
 )
@@ -31,6 +32,42 @@ def test_balanced_shard_bounds_1901_four() -> None:
         (951, 1426),
         (1426, 1901),
     ]
+
+
+def test_shard_protocol_supports_distinct_acquisition_policy_and_first_landing(
+    tmp_path: Path,
+) -> None:
+    catalog_path = tmp_path / "catalog.json"
+    _write(catalog_path, {"candidate_count": 2, "protocol_sha256": "catalog"})
+    evaluator = {
+        "iteration": 2,
+        "name": "pi_2",
+        "actor_sha256": "a" * 64,
+        "payload_sha256": "b" * 64,
+        "formal_config_sha256": "c" * 64,
+    }
+    acquisition = {
+        "iteration": 0,
+        "name": "pi_0",
+        "actor_sha256": "d" * 64,
+        "payload_sha256": "e" * 64,
+    }
+    protocol = build_logical_label_protocol(
+        catalog_path=catalog_path,
+        catalog={"candidate_count": 2, "protocol_sha256": "catalog"},
+        policy_record=evaluator,
+        frozen_manifest_sha256="f" * 64,
+        max_ticks=400,
+        protocol_seed=7,
+        acquisition_policy_record=acquisition,
+        acquisition_frozen_manifest_sha256="1" * 64,
+        success_criterion="first_valid_landing",
+    )
+
+    assert protocol["evaluator_policy_name"] == "pi_2"
+    assert protocol["acquisition_policy_name"] == "pi_0"
+    assert protocol["success_criterion"] == "first_valid_landing"
+    assert protocol["post_landing_recovery_required"] is False
 
 
 def _make_merge_fixture(tmp_path: Path, *, shard_count: int = 2):

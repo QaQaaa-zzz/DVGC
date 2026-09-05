@@ -12,6 +12,7 @@ import jit_dvgc.iterative_tube as iterative_tube
 from jit_dvgc.iterative_frontier_protocol import (
     _frontier_pool,
     exact_state_disjoint_role_rows,
+    holdout_rows_outside_training_tube,
 )
 from jit_dvgc.soft_tube import SoftTubeArtifact
 from jit_dvgc.workflow.iteration_loop import WorkflowError, run_workflow
@@ -90,6 +91,42 @@ def test_exact_state_role_partition_keeps_train_then_calibration_priority() -> N
         "acceptance-only"
     ]
     assert exclusions == {"train": 0, "calibration": 1, "acceptance": 2}
+
+
+def test_holdout_partition_excludes_inherited_training_tube_states_outcome_blind() -> None:
+    def row(role: str, state: str, label: int) -> dict:
+        return {
+            "logical_role": role,
+            "split": role,
+            "state_sha256": state,
+            "label": label,
+        }
+
+    partitioned, exclusions = holdout_rows_outside_training_tube(
+        {
+            "train": [row("train", "train-positive", 1)],
+            "calibration": [
+                row("calibration", "inherited-core", 0),
+                row("calibration", "calibration-only", 1),
+            ],
+            "acceptance": [
+                row("acceptance", "inherited-core-2", 1),
+                row("acceptance", "acceptance-only", 0),
+            ],
+        },
+        target_tube_states={"train-positive", "inherited-core", "inherited-core-2"},
+    )
+
+    assert [row["state_sha256"] for row in partitioned["train"]] == [
+        "train-positive"
+    ]
+    assert [row["state_sha256"] for row in partitioned["calibration"]] == [
+        "calibration-only"
+    ]
+    assert [row["state_sha256"] for row in partitioned["acceptance"]] == [
+        "acceptance-only"
+    ]
+    assert exclusions == {"calibration": 1, "acceptance": 1}
 
 
 def test_iterative_tube_retains_entire_source_tube_and_adds_train_only(

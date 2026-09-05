@@ -4,13 +4,16 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+from types import SimpleNamespace
 
 import pytest
 
 from jit_dvgc.iterative_frontier_protocol import (
     _acquisition_phase_support,
     canonical_sha256,
+    iteration_role_seeds,
 )
+from jit_dvgc.acquisition.resolution_frontier import configure_causal_probe_panel
 
 
 def _catalog(up_count: int, down_count: int, *, groups_per_phase: int = 3):
@@ -45,6 +48,62 @@ def test_train_acquisition_preflight_accepts_structurally_possible_two_phase_ban
     assert support["downstream"]["candidate_count"] == 80
     assert support["upstream"]["parent_group_count"] == 3
     assert support["downstream"]["parent_group_count"] == 3
+
+
+def test_causal_probe_panel_can_predeclare_a_larger_bounded_batch() -> None:
+    panel = configure_causal_probe_panel(
+        {
+            "action_names": ["steer", "rear_wheel_drive", "hip", "knee"],
+            "signs": [-1, 1],
+            "strengths": [0.025, 0.05, 0.1],
+            "durations": [4, 8, 16, 32],
+            "max_label_ticks": 400,
+        },
+        causal_lookbacks_m=(0.1, 0.2, 0.3, 0.4, 0.5),
+        strengths=(0.025, 0.05, 0.1, 0.15, 0.2),
+    )
+
+    assert panel["causal_lookbacks_m"] == [0.1, 0.2, 0.3, 0.4, 0.5]
+    assert panel["strengths"] == [0.025, 0.05, 0.1, 0.15, 0.2]
+    assert panel["variant_count"] == 200
+    assert panel["variants_per_role_family"] == 40
+
+
+def test_each_iteration_predeclares_distinct_role_seeds() -> None:
+    first = iteration_role_seeds(1)
+    second = iteration_role_seeds(2)
+
+    assert first["train"] == {"acquisition": 9_521_101, "labeling": 9_521_201}
+    assert second["train"] != first["train"]
+    assert len(
+        {
+            value
+            for role in second.values()
+            for value in role.values()
+        }
+    ) == 6
+
+
+def test_source_tube_accepts_selected_policy_with_actor_warm_start(monkeypatch) -> None:
+    import jit_dvgc.iterative_frontier_protocol as protocol
+
+    config = SimpleNamespace(
+        config_sha256="config-id",
+        soft_tube_manifest_sha256="tube-id",
+    )
+    artifact = SimpleNamespace(
+        manifest={"manifest_sha256": "tube-id", "iteration": 2}
+    )
+    monkeypatch.setattr(
+        protocol, "load_unified_policy_formal_config", lambda _path: config
+    )
+    monkeypatch.setattr(protocol, "load_soft_tube", lambda _path: artifact)
+
+    assert protocol._source_tube(
+        {"iteration": 2},
+        {"formal_config": "warm.json", "formal_config_sha256": "config-id"},
+        Path("tube2"),
+    ) is artifact
 
 
 def test_local_horizon_v2_revision_preserves_identity_and_changes_only_probe_time(tmp_path: Path) -> None:

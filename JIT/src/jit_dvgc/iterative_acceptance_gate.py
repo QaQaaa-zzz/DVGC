@@ -32,7 +32,7 @@ from .unified_continuation_labels import (
     fresh_unified_continuation_start,
 )
 from .unified_envelope_snapshot import load_unified_envelope_snapshot
-from .unified_formal import load_unified_formal_config
+from .unified_formal import load_unified_policy_formal_config
 from .unified_policy_freeze import load_frozen_unified_manifest
 from .unified_env import UnifiedTubeRSIEnv
 
@@ -194,7 +194,7 @@ def _load_acceptance_role(root: Path, selected: Mapping[str, Any], source_tube_s
 
 
 def _runtime(record: Mapping[str, Any], source_tube: Path):
-    formal = load_unified_formal_config(Path(str(record["formal_config"])))
+    formal = load_unified_policy_formal_config(Path(str(record["formal_config"])))
     if formal.config_sha256 != record["formal_config_sha256"]:
         raise ValueError("acceptance baseline formal config drift")
     artifact = load_soft_tube(Path(source_tube))

@@ -103,12 +103,69 @@ def _centerline_cells(centerline: Mapping[str, Any], bundle: Any) -> list[dict[s
     return result
 
 
-def _role_evidence(role_root: Path, role: str, bundle: Any) -> list[dict[str, Any]]:
+def _load_logical_role_sources(
+    role_root: Path,
+    role: str,
+) -> tuple[Path, list[tuple[dict[str, Any], dict[str, Any]]]]:
+    """Join a raw causal catalog to the effective logical role membership."""
     root = Path(role_root)
-    catalog_path = root / "acquisition" / "catalog.json"
-    labels_path = root / "labels" / "labels.json"
+    manifest_path = root / "role_manifest.json"
+    logical_path = root / "logical_labels.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    logical = json.loads(logical_path.read_text(encoding="utf-8"))
+    if manifest.get("status") != "completed" or manifest.get("role") != role:
+        raise ValueError(f"{role} role manifest schema/status drift")
+    declared_manifest = str(manifest.get("role_manifest_sha256", ""))
+    manifest_base = {
+        key: value for key, value in manifest.items() if key != "role_manifest_sha256"
+    }
+    if len(declared_manifest) != 64 or _canonical_sha256(manifest_base) != declared_manifest:
+        raise ValueError(f"{role} role manifest self-hash drift")
+    if _file_sha256(logical_path) != manifest.get("logical_labels_file_sha256"):
+        raise ValueError(f"{role} logical role file drift")
+    declared_labels = str(logical.get("labels_sha256", ""))
+    logical_base = {
+        key: value for key, value in logical.items() if key != "labels_sha256"
+    }
+    if len(declared_labels) != 64 or _canonical_sha256(logical_base) != declared_labels:
+        raise ValueError(f"{role} logical labels self-hash drift")
+    labels = logical.get("entries")
+    if not isinstance(labels, list) or not labels:
+        raise ValueError(f"{role} logical labels empty")
+    if any(
+        row.get("logical_role") != role or row.get("split") != role
+        for row in labels
+    ):
+        raise ValueError(f"{role} logical membership drift")
+
+    catalog_path = Path(str(manifest.get("source_acquisition_catalog", "")))
+    if not catalog_path.is_file():
+        raise FileNotFoundError(f"{role} source acquisition catalog missing: {catalog_path}")
+    if _file_sha256(catalog_path) != manifest.get("source_acquisition_catalog_sha256"):
+        raise ValueError(f"{role} source acquisition catalog file drift")
     catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
-    labels = json.loads(labels_path.read_text(encoding="utf-8"))
+    entries = catalog.get("entries")
+    if not isinstance(entries, list) or not entries:
+        raise ValueError(f"{role} causal catalog has no entries")
+    catalog_by_id = {str(row["candidate_id"]): dict(row) for row in entries}
+    if len(catalog_by_id) != len(entries):
+        raise ValueError(f"{role} causal catalog contains duplicate candidate ids")
+    pairs: list[tuple[dict[str, Any], dict[str, Any]]] = []
+    for source_label in labels:
+        label = dict(source_label)
+        candidate_id = str(label["candidate_id"])
+        row = catalog_by_id.get(candidate_id)
+        if row is None:
+            raise ValueError(f"{role} logical label missing from causal catalog")
+        if str(row["state_sha256"]) != str(label["state_sha256"]):
+            raise ValueError(f"{role} causal catalog/logical state identity drift")
+        pairs.append((row, label))
+    return catalog_path, pairs
+
+
+def _role_evidence(role_root: Path, role: str, bundle: Any) -> list[dict[str, Any]]:
+    catalog_path, selected_pairs = _load_logical_role_sources(role_root, role)
+    catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
     if catalog.get("schema") != "jit_unified_boundary_catalog_v1" or catalog.get("status") != "completed":
         raise ValueError(f"{role} causal acquisition catalog schema/status drift")
     if catalog.get("acquisition_mode") != ACQUISITION_MODE:
@@ -117,18 +174,8 @@ def _role_evidence(role_root: Path, role: str, bundle: Any) -> list[dict[str, An
         raise ValueError(f"{role} acquisition lacks jump-start reachability proof")
     if catalog.get("rsi_used_for_reachability") is not False:
         raise ValueError(f"{role} acquisition used RSI to establish reachability")
-    if not isinstance(labels, list):
-        raise ValueError(f"{role} labels must be a list")
-
-    labels_by_id = {str(row["candidate_id"]): row for row in labels}
-    entries = catalog.get("entries")
-    if not isinstance(entries, list) or not entries:
-        raise ValueError(f"{role} causal catalog has no entries")
-    if set(labels_by_id) != {str(row["candidate_id"]) for row in entries}:
-        raise ValueError(f"{role} causal catalog/label candidate identity mismatch")
-
     result: list[dict[str, Any]] = []
-    for row in entries:
+    for row, label in selected_pairs:
         provenance = row.get("jump_start_reachability")
         if not isinstance(provenance, dict):
             raise ValueError("causal candidate missing jump_start_reachability object")
@@ -138,7 +185,6 @@ def _role_evidence(role_root: Path, role: str, bundle: Any) -> list[dict[str, An
             raise ValueError("causal reachability provenance self-hash drift")
         validate_jump_start_reachability_payload(provenance)
 
-        label = labels_by_id[str(row["candidate_id"])]
         snapshot_path = catalog_path.parent / str(row["source_bank"]) / str(row["snapshot"])
         snapshot = load_unified_envelope_snapshot(snapshot_path)
         if physical_state_sha256(snapshot) != str(row["state_sha256"]):

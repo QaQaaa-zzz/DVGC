@@ -121,6 +121,32 @@ def test_actor_warm_loader_is_stable_when_runtime_entry_is_monkeypatched(
     assert formal.load_unified_actor_warm_start_config(path).raw == payload
 
 
+def test_environment_builder_accepts_generic_actor_warm_start(
+    jit_root, tmp_path, monkeypatch
+):
+    import jit_dvgc.unified_formal as formal
+
+    payload = json.loads(
+        (jit_root / "configs/pi_unified_iter1_tube1_core_replay75_natural10.json").read_text()
+    )
+    payload["initialization"] = formal.actor_only_warm_start_initialization(
+        "frozen/pi_1/policy.json"
+    )
+    path = tmp_path / "warm.json"
+    path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+    monkeypatch.setattr(
+        formal,
+        "_build_unified_formal_environment",
+        lambda config, env_factory=None: ("tube", config.raw["initialization"]),
+    )
+
+    config, artifact, env = formal.build_unified_formal_environment(path)
+
+    assert config.raw["initialization"]["actor"] == "warm_start_frozen_unified"
+    assert artifact == "tube"
+    assert env["critic"] == "fresh"
+
+
 def test_formal_trainer_kwargs_cover_every_exact_block(jit_root):
     from jit_dvgc.unified_formal import (
         build_unified_formal_trainer_kwargs,
@@ -221,6 +247,31 @@ def test_formal_wrapper_loads_explicit_core_replay_contract(tmp_path):
     legacy = tmp_path / "legacy.json"
     legacy.write_text("{}\n", encoding="utf-8")
     assert _load_core_replay_contract(legacy) is None
+
+
+def test_training_preflight_accepts_actor_warm_start_config(monkeypatch):
+    import jit_dvgc.training.formal as formal
+
+    config = SimpleNamespace(
+        soft_tube_path="tube",
+        soft_tube_manifest_sha256="tube-id",
+    )
+    artifact = SimpleNamespace(
+        manifest={"manifest_sha256": "tube-id"},
+        entries=({"state_sha256": "state"},),
+    )
+    monkeypatch.setattr(
+        formal, "load_unified_policy_formal_config", lambda _path: config
+    )
+    monkeypatch.setattr(formal, "load_soft_tube", lambda _path: artifact)
+    monkeypatch.setattr(formal, "_tube_points", lambda _artifact: [(0.0, 0.0)])
+    monkeypatch.setattr(formal, "_load_core_replay_contract", lambda _path: None)
+    monkeypatch.setattr(formal, "describe_tube_sampling", lambda *_args: {"ok": True})
+
+    result = formal.preflight_unified_formal_tube("warm.json")
+
+    assert result["soft_tube_manifest_sha256"] == "tube-id"
+    assert result["entry_count"] == 1
 
 
 def test_failed_train_panel_accounting_is_recovered_from_persisted_report(tmp_path):

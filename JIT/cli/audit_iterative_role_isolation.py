@@ -23,6 +23,7 @@ from jit_dvgc.config import file_sha256
 from jit_dvgc.iterative_frontier_protocol import (
     canonical_sha256,
     exact_state_disjoint_role_rows,
+    holdout_rows_outside_training_tube,
 )
 from jit_dvgc.soft_tube import load_soft_tube
 
@@ -82,6 +83,8 @@ def write_disjoint_role_view(
     role_name: str,
     kept_rows: list[dict],
     excluded_states: list[str],
+    target_tube_excluded_states: list[str] | None = None,
+    target_tube_manifest_sha256: str | None = None,
 ) -> None:
     """Write a derived logical view; raw acquisition and labels stay immutable."""
     source_root = Path(source_root)
@@ -90,6 +93,7 @@ def write_disjoint_role_view(
         raise FileExistsError(f"disjoint role view already exists: {output_root}")
     source_manifest = read(source_root / "role_manifest.json")
     source_labels = read(source_root / "logical_labels.json")
+    target_excluded = sorted(target_tube_excluded_states or [])
     output_root.mkdir(parents=True, exist_ok=False)
 
     logical = {
@@ -99,6 +103,8 @@ def write_disjoint_role_view(
         "derived_from_logical_labels": str(source_root / "logical_labels.json"),
         "exact_state_excluded_count": len(excluded_states),
         "exact_state_partition_outcome_blind": True,
+        "target_tube_state_excluded_count": len(target_excluded),
+        "target_tube_partition_outcome_blind": True,
     }
     logical["labels_sha256"] = canonical_sha256(logical)
     logical_path = output_root / "logical_labels.json"
@@ -130,6 +136,9 @@ def write_disjoint_role_view(
             "outcome_fields_used_for_partition": False,
             "excluded_state_count": len(excluded_states),
             "excluded_state_sha256": sorted(excluded_states),
+            "target_tube_excluded_state_count": len(target_excluded),
+            "target_tube_excluded_state_sha256": target_excluded,
+            "target_tube_manifest_sha256": target_tube_manifest_sha256,
             "new_environment_interactions": 0,
         },
     }
@@ -355,6 +364,11 @@ def main() -> int:
         if not (tm.get(field) == cm.get(field) == am.get(field)):
             raise ValueError(f"role {field} mismatch")
 
+    tube = load_soft_tube(args.target_tube)
+    if int(tube.manifest.get("iteration", -1)) != int(tm["iteration"]) + 1:
+        raise ValueError("target Tube iteration drift")
+    target_states = {str(row["state_sha256"]) for row in tube.entries}
+
     sets = {
         "train": {str(r["state_sha256"]) for r in train},
         "calibration": {str(r["state_sha256"]) for r in calibration},
@@ -363,13 +377,27 @@ def main() -> int:
     exact_tc = sets["train"] & sets["calibration"]
     exact_ta = sets["train"] & sets["acceptance"]
     exact_ca = sets["calibration"] & sets["acceptance"]
-    if exact_tc or exact_ta or exact_ca:
+    calibration_target_overlap = sets["calibration"] & target_states
+    acceptance_target_overlap = sets["acceptance"] & target_states
+    if (
+        exact_tc
+        or exact_ta
+        or exact_ca
+        or calibration_target_overlap
+        or acceptance_target_overlap
+    ):
         if args.exact_state_disjoint_view_root is None:
-            raise ValueError("logical roles contain exact duplicate physical states")
-        partitioned, exclusion_counts = exact_state_disjoint_role_rows(
+            raise ValueError(
+                "logical holdouts overlap another role or the candidate-training Tube"
+            )
+        role_partitioned, role_exclusion_counts = exact_state_disjoint_role_rows(
             train=train,
             calibration=calibration,
             acceptance=acceptance,
+        )
+        partitioned, target_exclusion_counts = holdout_rows_outside_training_tube(
+            role_partitioned,
+            target_tube_states=target_states,
         )
         view_root = Path(args.exact_state_disjoint_view_root)
         if view_root.exists():
@@ -382,12 +410,28 @@ def main() -> int:
             sets["acceptance"]
             - {str(row["state_sha256"]) for row in partitioned["acceptance"]}
         )
+        calibration_target_excluded = sorted(
+            {
+                str(row["state_sha256"])
+                for row in role_partitioned["calibration"]
+            }
+            & target_states
+        )
+        acceptance_target_excluded = sorted(
+            {
+                str(row["state_sha256"])
+                for row in role_partitioned["acceptance"]
+            }
+            & target_states
+        )
         write_disjoint_role_view(
             args.calibration_root,
             view_root / "calibration",
             role_name="calibration",
             kept_rows=partitioned["calibration"],
             excluded_states=calibration_excluded,
+            target_tube_excluded_states=calibration_target_excluded,
+            target_tube_manifest_sha256=tube.manifest["manifest_sha256"],
         )
         write_disjoint_role_view(
             args.acceptance_root,
@@ -395,6 +439,8 @@ def main() -> int:
             role_name="acceptance",
             kept_rows=partitioned["acceptance"],
             excluded_states=acceptance_excluded,
+            target_tube_excluded_states=acceptance_target_excluded,
+            target_tube_manifest_sha256=tube.manifest["manifest_sha256"],
         )
         cm, calibration = role(view_root / "calibration", "calibration")
         am, acceptance = role(view_root / "acceptance", "acceptance")
@@ -413,7 +459,11 @@ def main() -> int:
             {
                 "schema": "jit_exact_state_disjoint_role_views_v1",
                 "status": "completed",
-                "priority": ["train", "calibration", "acceptance"],
+                "priority": [
+                    "target_tube_and_train",
+                    "calibration",
+                    "acceptance",
+                ],
                 "outcome_fields_used_for_partition": False,
                 "source_train_root": str(args.train_root),
                 "source_calibration_root": str(args.calibration_root),
@@ -421,7 +471,9 @@ def main() -> int:
                 "effective_train_root": str(args.train_root),
                 "effective_calibration_root": str(view_root / "calibration"),
                 "effective_acceptance_root": str(view_root / "acceptance"),
-                "exclusion_counts": exclusion_counts,
+                "role_overlap_exclusion_counts": role_exclusion_counts,
+                "target_tube_exclusion_counts": target_exclusion_counts,
+                "target_tube_manifest_sha256": tube.manifest["manifest_sha256"],
                 "training_transitions": 0,
                 "environment_interactions": 0,
                 "test_data_used": False,
@@ -533,10 +585,6 @@ def main() -> int:
             exact_counts=exact_counts,
         )
 
-    tube = load_soft_tube(args.target_tube)
-    if int(tube.manifest.get("iteration", -1)) != int(tm["iteration"]) + 1:
-        raise ValueError("target Tube iteration drift")
-    target_states = {str(r["state_sha256"]) for r in tube.entries}
     calibration_overlap = target_states & sets["calibration"]
     acceptance_overlap = target_states & sets["acceptance"]
     if calibration_overlap or acceptance_overlap:

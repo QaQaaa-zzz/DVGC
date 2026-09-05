@@ -19,6 +19,7 @@ from .config import file_sha256
 from .constants import END_REASONS
 from .unified_continuation_labels import (
     UNIFIED_CONTINUATION_LABEL_SCHEMA,
+    classify_first_valid_landing_outcome,
     classify_unified_continuation_outcome,
     fresh_unified_continuation_start,
     validate_candidate_snapshot,
@@ -111,7 +112,22 @@ def build_logical_label_protocol(
     frozen_manifest_sha256: str,
     max_ticks: int,
     protocol_seed: int,
+    acquisition_policy_record: Mapping[str, Any] | None = None,
+    acquisition_frozen_manifest_sha256: str | None = None,
+    success_criterion: str = "stable_recovery",
 ) -> dict[str, Any]:
+    if success_criterion not in {"stable_recovery", "first_valid_landing"}:
+        raise ValueError("unsupported sharded continuation success criterion")
+    acquisition_record = (
+        policy_record
+        if acquisition_policy_record is None
+        else acquisition_policy_record
+    )
+    acquisition_frozen_sha = (
+        frozen_manifest_sha256
+        if acquisition_frozen_manifest_sha256 is None
+        else str(acquisition_frozen_manifest_sha256)
+    )
     count = int(catalog["candidate_count"])
     maximum_interactions = count * int(max_ticks)
     return {
@@ -123,14 +139,21 @@ def build_logical_label_protocol(
         "policy_name": str(policy_record["name"]),
         "policy_actor_sha256": str(policy_record["actor_sha256"]),
         "policy_payload_sha256": str(policy_record["payload_sha256"]),
+        "evaluator_policy_name": str(policy_record["name"]),
         "policy_formal_config_sha256": str(policy_record["formal_config_sha256"]),
         "frozen_unified_manifest_sha256": str(frozen_manifest_sha256),
+        "acquisition_policy_name": str(acquisition_record["name"]),
+        "acquisition_policy_actor_sha256": str(acquisition_record["actor_sha256"]),
+        "acquisition_policy_payload_sha256": str(acquisition_record["payload_sha256"]),
+        "acquisition_frozen_unified_manifest_sha256": acquisition_frozen_sha,
         "candidate_catalog": str(Path(catalog_path)),
         "candidate_catalog_file_sha256": file_sha256(Path(catalog_path)),
         "candidate_catalog_protocol_sha256": str(catalog["protocol_sha256"]),
         "candidate_count": count,
         "branches_per_candidate": 1,
         "policy_mode": "deterministic",
+        "success_criterion": success_criterion,
+        "post_landing_recovery_required": success_criterion != "first_valid_landing",
         "protocol_seed": int(protocol_seed),
         "max_ticks_per_candidate": int(max_ticks),
         "maximum_environment_interactions": maximum_interactions,
@@ -139,17 +162,25 @@ def build_logical_label_protocol(
             "reset episode_step, phase_episode_step, up-event episode_step, phase-transition flag, "
             "and accumulated return; evaluate as a fresh continuation start"
         ),
-        "positive_label_semantics": {
-            "upstream": (
-                "frozen pi_k reaches Apex phase transition and then downstream stable-recovery "
-                "terminal success within the declared horizon"
-            ),
-            "downstream": (
-                "frozen pi_k reaches downstream stable-recovery terminal success within the "
-                "declared horizon"
-            ),
-            "alive_only_is_positive": False,
-        },
+        "positive_label_semantics": (
+            {
+                "all_phases": "first valid landing before physical failure",
+                "post_landing_recovery_required": False,
+                "alive_only_is_positive": False,
+            }
+            if success_criterion == "first_valid_landing"
+            else {
+                "upstream": (
+                    "frozen pi_k reaches Apex phase transition and then downstream stable-recovery "
+                    "terminal success within the declared horizon"
+                ),
+                "downstream": (
+                    "frozen pi_k reaches downstream stable-recovery terminal success within the "
+                    "declared horizon"
+                ),
+                "alive_only_is_positive": False,
+            }
+        ),
         "training_transitions": 0,
         "expert_switching_used": False,
         "test_data_used": False,
@@ -182,13 +213,26 @@ def label_unified_continuation_shard(
     max_ticks: int,
     protocol_seed: int,
     compiled_step_fn: Callable[[Any, Any], Any] | None = None,
+    acquisition_policy_record: Mapping[str, Any] | None = None,
+    acquisition_frozen_manifest_sha256: str | None = None,
+    success_criterion: str = "stable_recovery",
 ) -> dict[str, Any]:
+    acquisition_record = (
+        policy_record
+        if acquisition_policy_record is None
+        else acquisition_policy_record
+    )
+    acquisition_frozen_sha = (
+        frozen_manifest_sha256
+        if acquisition_frozen_manifest_sha256 is None
+        else str(acquisition_frozen_manifest_sha256)
+    )
     catalog_path = Path(catalog_path)
     catalog = _read_json_object(catalog_path)
     rows = validate_unified_boundary_catalog(
         catalog,
-        policy_record=policy_record,
-        frozen_manifest_sha256=frozen_manifest_sha256,
+        policy_record=acquisition_record,
+        frozen_manifest_sha256=acquisition_frozen_sha,
     )
     acquisition_protocol = _read_json_object(catalog_path.parent / "protocol.json")
     if acquisition_protocol.get("protocol_sha256") != catalog.get("protocol_sha256"):
@@ -211,6 +255,9 @@ def label_unified_continuation_shard(
         frozen_manifest_sha256=frozen_manifest_sha256,
         max_ticks=max_ticks,
         protocol_seed=protocol_seed,
+        acquisition_policy_record=acquisition_record,
+        acquisition_frozen_manifest_sha256=acquisition_frozen_sha,
+        success_criterion=success_criterion,
     )
     protocol_sha = _canonical_sha256(protocol)
     output = Path(output_dir)
@@ -245,7 +292,7 @@ def label_unified_continuation_shard(
             row = rows[candidate_index]
             snapshot_path = _candidate_snapshot_path(catalog_path, row)
             snapshot = load_unified_envelope_snapshot(snapshot_path)
-            validate_candidate_snapshot(snapshot, row, policy_record=policy_record)
+            validate_candidate_snapshot(snapshot, row, policy_record=acquisition_record)
             state = fresh_unified_continuation_start(snapshot, env)
             if not _finite_state(state):
                 raise ValueError("sharded continuation candidate start is nonfinite")
@@ -283,6 +330,8 @@ def label_unified_continuation_shard(
                 phase_transitioned |= _truth(state.info["phase_transitioned"])
                 recovery_success |= _truth(state.info["down_events"].recovery_success)
                 valid_contact_seen |= _truth(state.info["down_events"].valid_contact_seen)
+                if success_criterion == "first_valid_landing" and valid_contact_seen:
+                    break
                 if _truth(state.done):
                     break
 
@@ -291,17 +340,28 @@ def label_unified_continuation_shard(
             physical_failure = _truth(state.info["physical_failure"])
             timeout = _truth(state.info["timeout"])
             reached_horizon = rollout_interactions >= max_ticks and not done
-            positive, outcome_class = classify_unified_continuation_outcome(
-                start_phase=start_phase,
-                terminal_success=terminal_success,
-                physical_failure=physical_failure,
-                timeout=timeout,
-                done=done,
-                apex_seen=apex_seen,
-                phase_transitioned=phase_transitioned,
-                recovery_success=recovery_success,
-                reached_rollout_horizon=reached_horizon,
-            )
+            if success_criterion == "first_valid_landing":
+                positive, outcome_class = classify_first_valid_landing_outcome(
+                    valid_contact_seen=valid_contact_seen,
+                    physical_failure_before_landing=(
+                        physical_failure and not valid_contact_seen
+                    ),
+                    timeout=timeout,
+                    done=done,
+                    reached_rollout_horizon=reached_horizon,
+                )
+            else:
+                positive, outcome_class = classify_unified_continuation_outcome(
+                    start_phase=start_phase,
+                    terminal_success=terminal_success,
+                    physical_failure=physical_failure,
+                    timeout=timeout,
+                    done=done,
+                    apex_seen=apex_seen,
+                    phase_transitioned=phase_transitioned,
+                    recovery_success=recovery_success,
+                    reached_rollout_horizon=reached_horizon,
+                )
             end_code = _integer(state.info["end_code"])
             end_reason = END_REASONS.get(end_code, f"unknown_{end_code}")
             phase_name = str(row["phase"])
@@ -342,6 +402,10 @@ def label_unified_continuation_shard(
                     "policy_iteration": int(policy_record["iteration"]),
                     "policy_actor_sha256": str(policy_record["actor_sha256"]),
                     "policy_payload_sha256": str(policy_record["payload_sha256"]),
+                    "evaluator_policy_name": str(policy_record["name"]),
+                    "evaluator_actor_sha256": str(policy_record["actor_sha256"]),
+                    "evaluator_payload_sha256": str(policy_record["payload_sha256"]),
+                    "success_criterion": success_criterion,
                     "acquisition_protocol_sha256": str(catalog["protocol_sha256"]),
                     "label_protocol_sha256": protocol_sha,
                     "label_protocol_seed": int(protocol_seed),

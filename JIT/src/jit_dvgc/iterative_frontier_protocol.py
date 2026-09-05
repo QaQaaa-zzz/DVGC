@@ -31,7 +31,10 @@ from .unified_continuation_labels import (
     label_unified_continuations,
     validate_unified_boundary_catalog,
 )
-from .unified_formal import build_unified_formal_environment, load_unified_formal_config
+from .unified_formal import (
+    build_unified_formal_environment,
+    load_unified_policy_formal_config,
+)
 from .unified_policy_freeze import load_frozen_unified_manifest
 from .unified_training import checkpoint_identity
 
@@ -47,6 +50,21 @@ DEFAULT_SEEDS = {
     "calibration": (9_522_101, 9_522_201),
     "acceptance": (9_523_101, 9_523_201),
 }
+
+
+def iteration_role_seeds(iteration: int) -> dict[str, dict[str, int]]:
+    """Keep historical iteration-1 seeds and allocate disjoint later streams."""
+    iteration = int(iteration)
+    if iteration < 1:
+        raise ValueError("iterative frontier seed allocation requires k >= 1")
+    offset = (iteration - 1) * 100_000
+    return {
+        role: {
+            "acquisition": int(values[0] + offset),
+            "labeling": int(values[1] + offset),
+        }
+        for role, values in DEFAULT_SEEDS.items()
+    }
 
 
 def exact_state_disjoint_role_rows(
@@ -91,6 +109,38 @@ def exact_state_disjoint_role_rows(
         result[role] = kept
         exclusions[role] = excluded
         claimed.update(str(row["state_sha256"]) for row in kept)
+    return result, exclusions
+
+
+def holdout_rows_outside_training_tube(
+    roles: Mapping[str, list[Mapping[str, Any]]],
+    *,
+    target_tube_states: set[str],
+) -> tuple[dict[str, list[dict[str, Any]]], dict[str, int]]:
+    """Remove already-trained physical states from holdout views without outcomes.
+
+    The target Tube is exactly the support available to the next policy.  A
+    CALIBRATION or ACCEPTANCE row with the same physical-state identity is not
+    a holdout even when it was reacquired independently, so it must be excluded
+    before candidate training.  TRAIN membership is preserved unchanged.
+    """
+    if set(roles) != set(ROLES):
+        raise ValueError("training-Tube holdout partition requires all logical roles")
+    blocked = {str(state) for state in target_tube_states}
+    if not blocked:
+        raise ValueError("training-Tube holdout partition requires target states")
+    result = {"train": [dict(row) for row in roles["train"]]}
+    exclusions: dict[str, int] = {}
+    for role in ("calibration", "acceptance"):
+        kept = [
+            dict(row)
+            for row in roles[role]
+            if str(row.get("state_sha256", "")) not in blocked
+        ]
+        if not kept:
+            raise ValueError(f"training-Tube partition emptied {role}")
+        result[role] = kept
+        exclusions[role] = len(roles[role]) - len(kept)
     return result, exclusions
 
 
@@ -161,7 +211,7 @@ def _source_tube(
     record: Mapping[str, Any],
     source_tube: Path,
 ) -> SoftTubeArtifact:
-    formal = load_unified_formal_config(Path(str(record["formal_config"])))
+    formal = load_unified_policy_formal_config(Path(str(record["formal_config"])))
     if formal.config_sha256 != record["formal_config_sha256"]:
         raise ValueError("selected formal config drift")
     artifact = load_soft_tube(Path(source_tube))
@@ -312,13 +362,7 @@ def prepare_frontier_plan(
             "durations": list(DEFAULT_DURATIONS),
             "max_label_ticks": 400,
         },
-        "seeds": {
-            role: {
-                "acquisition": DEFAULT_SEEDS[role][0],
-                "labeling": DEFAULT_SEEDS[role][1],
-            }
-            for role in ROLES
-        },
+        "seeds": iteration_role_seeds(int(selected["iteration"])),
         "anchors": anchors,
         "training_transitions": 0,
         "expert_switching_used": False,

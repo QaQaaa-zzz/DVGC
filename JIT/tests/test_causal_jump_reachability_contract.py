@@ -1,10 +1,17 @@
 from __future__ import annotations
 
 import importlib
+import json
+from pathlib import Path
 
 import pytest
 
 import jit_dvgc.acquisition.causal_jump as causal_jump
+from jit_dvgc.analysis.causal_jump_capability import (
+    _canonical_sha256,
+    _file_sha256,
+    _load_logical_role_sources,
+)
 
 
 validate_jump_start_reachability_payload = getattr(
@@ -77,3 +84,57 @@ def test_jump_start_reachability_contract_is_used_by_all_prospective_consumers()
             module.validate_jump_start_reachability_payload
             is validate_jump_start_reachability_payload
         )
+
+
+def test_capability_analysis_resolves_derived_role_to_original_catalog(
+    tmp_path: Path,
+) -> None:
+    catalog_path = tmp_path / "raw" / "acquisition" / "catalog.json"
+    catalog_path.parent.mkdir(parents=True)
+    catalog = {
+        "schema": "jit_unified_boundary_catalog_v1",
+        "status": "completed",
+        "entries": [
+            {"candidate_id": "excluded", "state_sha256": "a" * 64},
+            {"candidate_id": "kept", "state_sha256": "b" * 64},
+        ],
+    }
+    catalog_path.write_text(json.dumps(catalog), encoding="utf-8")
+
+    role_root = tmp_path / "derived" / "calibration"
+    role_root.mkdir(parents=True)
+    logical = {
+        "role": "calibration",
+        "entries": [
+            {
+                "candidate_id": "kept",
+                "state_sha256": "b" * 64,
+                "logical_role": "calibration",
+                "split": "calibration",
+                "label": 1,
+            }
+        ],
+    }
+    logical["labels_sha256"] = _canonical_sha256(logical)
+    logical_path = role_root / "logical_labels.json"
+    logical_path.write_text(json.dumps(logical), encoding="utf-8")
+    manifest = {
+        "status": "completed",
+        "role": "calibration",
+        "source_acquisition_catalog": str(catalog_path),
+        "source_acquisition_catalog_sha256": _file_sha256(catalog_path),
+        "logical_labels_file_sha256": _file_sha256(logical_path),
+    }
+    manifest["role_manifest_sha256"] = _canonical_sha256(manifest)
+    (role_root / "role_manifest.json").write_text(
+        json.dumps(manifest), encoding="utf-8"
+    )
+
+    resolved_path, pairs = _load_logical_role_sources(
+        role_root, "calibration"
+    )
+
+    assert resolved_path == catalog_path
+    assert [(row["candidate_id"], label["candidate_id"]) for row, label in pairs] == [
+        ("kept", "kept")
+    ]

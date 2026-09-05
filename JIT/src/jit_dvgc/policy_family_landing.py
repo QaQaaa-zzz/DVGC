@@ -121,6 +121,48 @@ def _write_json(path: Path, value: Any) -> None:
     )
 
 
+def _archive_incomplete_evaluator(
+    output_dir: Path,
+    *,
+    evaluator_name: str,
+) -> Path | None:
+    """Preserve a partial evaluator directory and free its canonical retry path."""
+    output = Path(output_dir)
+    if not output.exists():
+        return None
+    if not output.is_dir():
+        raise FileExistsError(f"landing evaluator output is not a directory: {output}")
+    attempt = 1
+    while True:
+        archive = output.with_name(
+            f"{output.name}_incomplete_attempt_{attempt:03d}"
+        )
+        if not archive.exists():
+            break
+        attempt += 1
+    preserved_files = sorted(
+        str(path.relative_to(output)) for path in output.rglob("*") if path.is_file()
+    )
+    output.rename(archive)
+    _write_json(
+        archive / "incomplete_attempt.json",
+        {
+            "schema": "jit_policy_family_incomplete_evaluator_attempt_v1",
+            "status": "preserved_before_evaluator_retry",
+            "evaluator_policy_name": str(evaluator_name),
+            "original_output_dir": str(output),
+            "archived_output_dir": str(archive),
+            "preserved_files": preserved_files,
+            "completed_result_reused": False,
+            "retry_may_write_canonical_output_dir": True,
+            "training_transitions": 0,
+            "test_data_used": False,
+            "final_evaluation_data_used": False,
+        },
+    )
+    return archive
+
+
 def _load_frozen(path: Path) -> tuple[dict[str, Any], str]:
     frozen_path = Path(path)
     frozen = load_frozen_unified_manifest(frozen_path)
@@ -201,6 +243,10 @@ def label_policy_family_first_landing(
             if completed is not None:
                 reports[name], labels_by_policy[name] = completed
                 continue
+            _archive_incomplete_evaluator(
+                policy_output,
+                evaluator_name=name,
+            )
             config, _artifact, env = build_unified_formal_environment(
                 Path(str(record["formal_config"]))
             )

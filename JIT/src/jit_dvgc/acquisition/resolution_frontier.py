@@ -47,6 +47,52 @@ def _canonical_sha256(value: Any) -> str:
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
+def configure_causal_probe_panel(
+    source_panel: Mapping[str, Any],
+    *,
+    causal_lookbacks_m: Sequence[float] = CAUSAL_LOOKBACKS_M,
+    strengths: Sequence[float] | None = None,
+) -> dict[str, Any]:
+    """Lock a bounded perturbation grid and its per-role batch size."""
+    lookbacks = tuple(float(value) for value in causal_lookbacks_m)
+    strength_values = tuple(
+        float(value)
+        for value in (
+            source_panel.get("strengths", ()) if strengths is None else strengths
+        )
+    )
+    if (
+        not lookbacks
+        or len(set(lookbacks)) != len(lookbacks)
+        or any(value <= 0.0 or value > 1.0 for value in lookbacks)
+    ):
+        raise ValueError("causal lookbacks must be unique and within (0, 1] m")
+    if (
+        not strength_values
+        or len(set(strength_values)) != len(strength_values)
+        or any(value <= 0.0 or value > 1.0 for value in strength_values)
+    ):
+        raise ValueError("causal action strengths must be unique and within (0, 1]")
+    action_names = tuple(str(value) for value in source_panel.get("action_names", ()))
+    signs = tuple(int(value) for value in source_panel.get("signs", ()))
+    if not action_names or not signs:
+        raise ValueError("causal perturbation action directions are missing")
+    variant_count = len(lookbacks) * len(strength_values) * len(action_names) * len(signs)
+    if variant_count % VARIANT_PARTITION_MODULUS:
+        raise ValueError("causal variant grid must partition equally across role families")
+
+    panel = dict(source_panel)
+    panel["acquisition_mode"] = "jump_start_connected_causal_rollout_v1"
+    panel["causal_lookbacks_m"] = list(lookbacks)
+    panel["strengths"] = list(strength_values)
+    panel["causal_forward_max_ticks"] = CAUSAL_FORWARD_MAX_TICKS
+    panel["variant_partition_modulus"] = VARIANT_PARTITION_MODULUS
+    panel["variant_count"] = variant_count
+    panel["variants_per_role_family"] = variant_count // VARIANT_PARTITION_MODULUS
+    panel["legacy_duration_field_used_by_causal_acquisition"] = False
+    return panel
+
+
 def _verify_hash(payload: Mapping[str, Any], field: str) -> None:
     declared = str(payload.get(field, ""))
     base = {key: value for key, value in payload.items() if key != field}
@@ -214,6 +260,8 @@ def revise_frontier_plan_for_resolution_cells(
     max_parent_cells_per_phase: int = 25,
     proposal_frozen_policy: Path | None = None,
     continuation_frozen_policies: Sequence[Path] = (),
+    causal_lookbacks_m: Sequence[float] = CAUSAL_LOOKBACKS_M,
+    strengths: Sequence[float] | None = None,
 ) -> dict[str, Any]:
     """Replace an unrevised iterative plan with the causal centerline plan."""
     output = Path(output)
@@ -263,12 +311,11 @@ def revise_frontier_plan_for_resolution_cells(
     revised["frontier_definition"] = (
         "locked_centerline_every_0p1m_slice_jump_start_connected_causal_forward_expansion_v3"
     )
-    panel = dict(revised["fixed_probe_panel"])
-    panel["acquisition_mode"] = "jump_start_connected_causal_rollout_v1"
-    panel["causal_lookbacks_m"] = list(CAUSAL_LOOKBACKS_M)
-    panel["causal_forward_max_ticks"] = CAUSAL_FORWARD_MAX_TICKS
-    panel["variant_partition_modulus"] = VARIANT_PARTITION_MODULUS
-    panel["legacy_duration_field_used_by_causal_acquisition"] = False
+    panel = configure_causal_probe_panel(
+        revised["fixed_probe_panel"],
+        causal_lookbacks_m=causal_lookbacks_m,
+        strengths=strengths,
+    )
     revised["fixed_probe_panel"] = panel
     revised["jump_tube_contract"] = {
         "profile": "conditional_jump_start_trajectory_tube_v3",

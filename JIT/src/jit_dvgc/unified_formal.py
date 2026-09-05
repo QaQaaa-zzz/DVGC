@@ -399,6 +399,19 @@ def load_frozen_actor_restore_params(config_path: Path):
     )
 
 
+def load_unified_policy_formal_config(path: Path) -> UnifiedFormalConfig:
+    """Load either a fresh or Actor-only-warm-start unified policy config."""
+    raw = read_json(Path(path))
+    initialization = raw.get("initialization", {})
+    if (
+        initialization.get("actor")
+        in {"warm_start_frozen_unified", "warm_start_pi_0"}
+        and initialization.get("critic") == "fresh"
+    ):
+        return load_unified_actor_warm_start_config(Path(path))
+    return load_unified_formal_config(Path(path))
+
+
 def _build_unified_formal_environment(
     config: UnifiedFormalConfig,
     *,
@@ -423,7 +436,7 @@ def build_unified_formal_environment(
     env_factory: Callable[..., Any] = UnifiedTubeRSIEnv,
 ):
     """Build the stable unified runtime without creating a run or training."""
-    config = load_unified_formal_config(config_path)
+    config = load_unified_policy_formal_config(config_path)
     artifact, env = _build_unified_formal_environment(config, env_factory=env_factory)
     return config, artifact, env
 

@@ -19,6 +19,12 @@ class FeedbackLaunchSpec:
     action_limit: float = 0.8
 
 
+@dataclass(frozen=True)
+class RelativeXLaunchSpec:
+    obstacle_relative_x_onset: float
+    feedback: FeedbackLaunchSpec
+
+
 def feedback_launch_specs() -> tuple[FeedbackLaunchSpec, ...]:
     """Return the predeclared 384-branch Cartesian grid in stable order."""
     return tuple(
@@ -30,6 +36,15 @@ def feedback_launch_specs() -> tuple[FeedbackLaunchSpec, ...]:
             (0.0, 0.03, 0.06, 0.1),
             (4, 7),
         )
+    )
+
+
+def relative_x_launch_specs() -> tuple[RelativeXLaunchSpec, ...]:
+    """Cross every unchanged feedback spec with the three frozen onsets."""
+    return tuple(
+        RelativeXLaunchSpec(onset, feedback)
+        for onset in (1.17, 1.12, 1.07)
+        for feedback in feedback_launch_specs()
     )
 
 
@@ -57,6 +72,27 @@ def feedback_launch_action(
     )
     command = jp.asarray([0.0, 0.0, hip, knee], jp.float32)
     return jp.where(active, command, jp.zeros((4,), jp.float32))
+
+
+def relative_x_launch_action(
+    spec: RelativeXLaunchSpec,
+    *,
+    obstacle_relative_x: Any,
+    pitch: Any,
+    pitch_rate: Any,
+    active_age: Any,
+) -> Any:
+    """Activate the unchanged feedback law at the full-structure x onset."""
+    onset_reached = (
+        jp.asarray(obstacle_relative_x) <= spec.obstacle_relative_x_onset
+    )
+    return feedback_launch_action(
+        spec.feedback,
+        pitch=pitch,
+        pitch_rate=pitch_rate,
+        window_latched=onset_reached,
+        active_age=active_age,
+    )
 
 
 def close_diagnostic_outcomes(

@@ -12,6 +12,8 @@ from dvgc.phase_u_launch_diagnostic import (
     close_diagnostic_outcomes,
     feedback_launch_action,
     feedback_launch_specs,
+    relative_x_launch_action,
+    relative_x_launch_specs,
     rank_diagnostic_row,
     select_representative_rows,
 )
@@ -32,6 +34,20 @@ def test_feedback_launch_grid_is_exact_frozen_cartesian_product():
     assert {spec.pitch_rate_gain for spec in specs} == {0.0, 0.03, 0.06, 0.1}
     assert {spec.active_ticks for spec in specs} == {4, 7}
     assert {spec.action_limit for spec in specs} == {0.8}
+
+
+def test_relative_x_launch_grid_is_exact_unfiltered_product():
+    base = feedback_launch_specs()
+    specs = relative_x_launch_specs()
+    assert len(specs) == 1152
+    assert {spec.obstacle_relative_x_onset for spec in specs} == {1.17, 1.12, 1.07}
+    pairs = {
+        (spec.obstacle_relative_x_onset, tuple(sorted(asdict(spec.feedback).items())))
+        for spec in specs
+    }
+    assert len(pairs) == 1152
+    for onset in (1.17, 1.12, 1.07):
+        assert [spec.feedback for spec in specs if spec.obstacle_relative_x_onset == onset] == list(base)
 
 
 def test_feedback_launch_action_is_neutral_before_window_and_after_duration():
@@ -72,6 +88,26 @@ def test_feedback_launch_action_brakes_positive_pitch_and_rate_and_clips():
     assert nominal.tolist() == pytest.approx([0.0, 0.0, 0.5, 0.75])
     assert braked.tolist() == pytest.approx([0.0, 0.0, 0.2, 0.3])
     assert reversed_action.tolist() == pytest.approx([0.0, 0.0, -0.8, 0.0])
+
+
+def test_relative_x_action_is_neutral_before_onset_and_active_at_equality():
+    spec = relative_x_launch_specs()[0]
+    before = relative_x_launch_action(
+        spec, obstacle_relative_x=1.170001, pitch=0.0, pitch_rate=0.0, active_age=0
+    )
+    equal = relative_x_launch_action(
+        spec, obstacle_relative_x=1.17, pitch=0.0, pitch_rate=0.0, active_age=0
+    )
+    after_duration = relative_x_launch_action(
+        spec,
+        obstacle_relative_x=1.0,
+        pitch=0.0,
+        pitch_rate=0.0,
+        active_age=spec.feedback.active_ticks,
+    )
+    np.testing.assert_array_equal(before, jp.zeros((4,), jp.float32))
+    assert equal.tolist() == pytest.approx([0.0, 0.0, 0.2, 0.0])
+    np.testing.assert_array_equal(after_duration, jp.zeros((4,), jp.float32))
 
 
 def test_close_diagnostic_outcomes_is_standard_and_closed():
@@ -179,6 +215,30 @@ def test_frozen_manifest_binds_budget_hashes_and_claim_boundaries():
         "threshold_manifest": "threshold",
         "reward_contract": "reward",
     }
+
+
+def test_relative_x_manifest_binds_exact_onsets_and_ceiling():
+    specs = relative_x_launch_specs()
+    payload = frozen_manifest_payload(
+        run_id="relative_x",
+        seed=731100,
+        horizon=80,
+        source_head="head",
+        source_tree_sha256="source",
+        xml_sha256="xml",
+        config_sha256="config",
+        training_config_sha256="training",
+        threshold_manifest_canonical_hash="threshold",
+        reward_contract_hash="reward",
+        mode="relative_x_onset",
+        specs=specs,
+    )
+    assert payload["mode"] == "relative_x_onset"
+    assert payload["branch_count"] == 1152
+    assert payload["maximum_diagnostic_environment_transitions"] == 92_160
+    assert payload["ppo_training_transitions"] == 0
+    assert payload["obstacle_relative_x_onsets"] == [1.17, 1.12, 1.07]
+    assert payload["controller_grid"] == [asdict(spec) for spec in specs]
 
 
 def test_write_diagnostic_run_freezes_before_outcomes_and_closes_accounting(tmp_path):

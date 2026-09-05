@@ -73,7 +73,7 @@ def _core_replay_env_factory(base_factory, contract: Mapping[str, Any] | None):
 
 def preflight_unified_formal_tube(config_path: Path) -> dict[str, Any]:
     """Validate the full configured Tube support without constructing an env."""
-    config = load_unified_formal_config(Path(config_path))
+    config = load_unified_policy_formal_config(Path(config_path))
     artifact = load_soft_tube(Path(config.soft_tube_path))
     actual_manifest = artifact.manifest.get("manifest_sha256")
     if actual_manifest != config.soft_tube_manifest_sha256:
