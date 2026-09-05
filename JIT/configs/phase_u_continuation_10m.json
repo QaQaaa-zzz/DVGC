@@ -1,0 +1,110 @@
+{
+  "schema": "jit_phase_u_formal_v4",
+  "phase": "propulsion_ascent",
+  "training_wrapper": {
+    "full_reset": true,
+    "preserve_episode_evidence": true
+  },
+  "model": {
+    "xml_path": "assets/orange_bike_4kg_horizontal.xml",
+    "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+    "reference_path": "data/reference_jump.csv",
+    "reference_sha256": "612fe758eb1042481b9c7642cc9b92d3e9c14b4a75c9deaf5340183c928bc41f",
+    "mjx_impl": "warp",
+    "naconmax": 4096,
+    "naccdmax": 512,
+    "njmax": 256
+  },
+  "action": {
+    "base_rear_speed": 12.0,
+    "rear_speed_delta": 12.0,
+    "joint_target_semantics": "keyframe_centered_absolute"
+  },
+  "reset": {
+    "keyframe": "initial_state",
+    "initial_forward_velocity": 2.0,
+    "airborne_rsi_probability": 0.08,
+    "airborne_rsi_x_min": 2.7,
+    "airborne_rsi_x_max": 2.9,
+    "airborne_rsi_z_min": 0.38,
+    "airborne_rsi_z_max": 0.45,
+    "airborne_rsi_vx_min": 1.8,
+    "airborne_rsi_vx_max": 2.2,
+    "airborne_rsi_vz_min": 3.0,
+    "airborne_rsi_vz_max": 3.6
+  },
+  "events": {
+    "jump_zone_x_min": 2.5,
+    "jump_zone_x_max": 3.9,
+    "min_ascent_velocity": 0.05,
+    "apex_height": 0.5,
+    "min_descent_velocity": 0.05,
+    "stuck_forward_velocity_threshold": 0.3
+  },
+  "physical_limits": {
+    "max_abs_roll": 0.6108652381980153,
+    "max_abs_pitch": 0.7853981633974483,
+    "max_backward_distance": 1.0,
+    "max_abs_yaw": 0.7853981633974483,
+    "terminate_on_prohibited_contact": false
+  },
+  "reward": {
+    "roll_coeff": 3.0,
+    "pitch_coeff": 1.0,
+    "yaw_coeff": 0.3,
+    "speed_coeff": 1.0,
+    "survival_reward": 1.5,
+    "height_coeff": 40.0,
+    "desired_velocity": 2.0,
+    "speed_sigma": 0.5,
+    "jump_reward_min_height": 0.35,
+    "peak_reward_height": 0.5,
+    "max_beneficial_height": 0.8,
+    "action_smoothness_scale": 0.0001,
+    "action_magnitude_scale": 0.1,
+    "action_coeff": 1.5,
+    "pitch_angular_velocity_coeff": 0.15,
+    "joint_energy_penalty_coeff": 2.0,
+    "apex_success_bonus": 50.0,
+    "illegal_contact_penalty": 0.0,
+    "physical_failure_penalty": 30.0,
+    "timeout_penalty": 10.0,
+    "total_min": -400.0,
+    "total_max": 50.0,
+    "low_height_penalty": 5.0,
+    "low_height_penalty_full_at": 0.15,
+    "stuck_penalty": 100.0,
+    "yaw_limit_penalty": 100.0,
+    "steering_action_diff_penalty": 1.0,
+    "steering_magnitude_penalty": 0.25,
+    "rear_wheel_action_diff_penalty": 2.0,
+    "roll_pitch_failure_penalty": 400.0,
+    "jump_zone_missed_penalty": 200.0,
+    "failed_episode_return": -100.0
+  },
+  "ppo": {
+    "num_parallel_envs": 384,
+    "episode_horizon": 400,
+    "unroll_length": 64,
+    "batch_size": 16,
+    "num_minibatches": 24,
+    "num_updates_per_batch": 8,
+    "requested_transitions": 9977856,
+    "num_eval_envs": 8,
+    "num_evals": 407,
+    "learning_rate": 0.0001,
+    "entropy_cost": 0.01,
+    "reward_scaling": 0.1,
+    "discounting": 0.99,
+    "gae_lambda": 0.95,
+    "clipping_epsilon": 0.2,
+    "max_grad_norm": 0.5,
+    "seed": 820901,
+    "held_out_seeds": [1000001, 1000002, 1000003, 1000004, 1000005, 1000006, 1000007, 1000008]
+  },
+  "formal": {
+    "checkpoint_transitions": [0, 491520, 1990656, 4988928, 7987200, 9977856],
+    "fixed_evaluation_transitions": [491520, 1990656, 4988928, 7987200, 9977856],
+    "resume_semantics": "fresh_only"
+  }
+}

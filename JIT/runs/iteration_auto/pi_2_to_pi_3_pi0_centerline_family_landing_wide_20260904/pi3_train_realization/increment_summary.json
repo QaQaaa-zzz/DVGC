@@ -1,0 +1,43 @@
+{
+  "schema": "jit_policy_train_increment_realization_v1",
+  "status": "completed",
+  "candidate_policy_name": "pi_3",
+  "success_criterion": "first_valid_landing",
+  "source_train_candidate_count": 1258,
+  "source_train_success_count": 1130,
+  "source_train_failure_count": 128,
+  "source_train_success_rate": 0.8982511923688394,
+  "tube_increment_state_count": 1159,
+  "tube_increment_success_count": 1061,
+  "tube_increment_failure_count": 98,
+  "tube_increment_success_rate": 0.9154443485763589,
+  "phase_counts": {
+    "downstream": {
+      "state_count": 504,
+      "success_count": 504,
+      "failure_count": 0
+    },
+    "upstream": {
+      "state_count": 655,
+      "success_count": 557,
+      "failure_count": 98
+    }
+  },
+  "failure_parent_group_count": 16,
+  "outcome_counts": {
+    "airborne_physical_failure": 64,
+    "first_valid_landing": 1061,
+    "task_failure_before_landing": 34
+  },
+  "comparison_on_source_train_candidates": {
+    "pi_0_success_count": 1130,
+    "pi_1_success_count": 1184,
+    "pi_2_success_count": 1222,
+    "pi_3_success_count": 1130,
+    "policy_family_positive_count": 1230
+  },
+  "selection_consequence": "pi_3_not_selected; pi_2_remains_current_authority",
+  "test_data_used": false,
+  "validation_data_used": false,
+  "final_evaluation_data_used": false
+}

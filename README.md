@@ -1,103 +1,32 @@
-# OrangeBike DVGC Clean Project
+# OrangeBike DVGC / JIT
 
-这是删除历史过程脚本后保留的唯一正式工程。方法说明见 `PROJECT_SUMMARY.md`，旧文件处理见 `docs/REMOVED_FILES.md`。
+JIT studies **bootstrapping and budget-controlled discovery of empirical jumping envelopes** for a fixed bicycle–pendulum robot. A growing bank of complementary frozen policies supplies forward proposals and successful landing continuations. A single Actor need not realize the entire cumulative Tube.
 
-## 1. 环境准备
+## Research scope
 
-在已有 MuJoCo Playground GPU 环境中安装本项目：
+The task begins at the complete declared ground preparation state at x=2.5 m. Exact states enter empirical support only after real forward dynamics and a successful first-valid-landing continuation from the same state/context. Training resets do not create arrival evidence. Physical cells describe sampled support, not a continuous safe region or a complete physical limit.
 
-```bash
-pip install -e .
-python -m cli.prepare_project
-python -m pytest -q
-```
+Phase-specific up/down learning supplies initial value-weighted training support, followed by unified seed development. The frozen pi_0 real trajectory is a longitudinal exploration coordinate. The new direction permits multiple frozen proposers/evaluators and retains valid historical witnesses independently of later Actor regressions.
 
-在已配置好的 Ubuntu MuJoCo Playground 环境中，不安装或升级依赖，直接运行：
+## Current implementation boundary
 
-```bash
-bash scripts/local_preflight.sh
-```
+Reviewed remote baseline: `bfc22f2`. It still uses a fixed pi_0/pi_1/pi_2 family and single-successor workflow. The new bank/registry/training recipe requires implementation and validation. Documentation alignment does not fix the runtime defects recorded in the review.
 
-本项目只读取 `assets/orange_bike_4kg_horizontal.xml`，不生成 runtime XML，也不修改碰撞几何。正式模型使用 4 kg 负载和 hip/knee `±50 N·m` 限幅，默认使用 `impl="warp"`、`contact_mode="imu"`；Actor observation 不读取 oracle contact。请将你已有的 STL 保持在 XML 指定的 `assets/meshes/` 目录。
+Recorded evidence includes initial 222-row weighted Tube0 (42 historical negative labels), a later Round1 pi_0 identity, 1,230/1,258 TRAIN family witnesses in the wide scan, 713 reported new causal root cells, and completed pi_3 training. The pi_3 historical core comparison mixed success endpoints and cannot serve as a fair comparison. Larger locked catalogs/scores exist, but family labels are incomplete after GPU failures.
 
-模型与 knee 动作映射的完整说明见 `docs/XML_AND_KNEE_MAPPING.md`。
+Start with integrity fixes, small runtime replay/shard checks, and a matched-budget pilot using existing probes before another large PPO run. Full-Tube Actor mastery and predictor quality are not prerequisites for empirical support discovery. Final TEST/JCE/JEL stays unopened for this work.
 
-## 2. 单阶段命令
+## Read order
 
-```bash
-python -m cli.build_candidates \
-  --phase landing \
-  --target 96 \
-  --bank artifacts/landing_candidates.pkl
+1. [AGENTS.md](AGENTS.md) and [JIT/AGENTS.md](JIT/AGENTS.md).
+2. [Project definition](PROJECT.md) and [current status](JIT/docs/CURRENT_STATUS.md).
+3. [Paper outline](JIT/docs/JIT_PAPER_OUTLINE.md).
+4. [Code and evidence review](JIT/docs/JIT_EMPIRICAL_ENVELOPE_REVIEW_20260905.md).
+5. [Iteration protocol](JIT/docs/ENVELOPE_ITERATION_PROTOCOL.md) and [training roadmap](JIT/docs/JIT_TRAINING_ROADMAP.md).
+6. [Handoff](JIT/docs/CODEX_HANDOFF_20260904.md) and [code organization](JIT/docs/CODE_ORGANIZATION.md).
 
-python -m cli.train \
-  --stage landing \
-  --bank artifacts/landing_candidates.pkl \
-  --run runs/landing
+## Runtime and repository
 
-python -m cli.certify \
-  --phase landing \
-  --policy runs/landing/policy \
-  --candidate-bank artifacts/landing_candidates.pkl \
-  --output-bank artifacts/landing_tube.pkl
+Fixed XML: `assets/orange_bike_4kg_horizontal.xml`; 2 kg payload; 0.005 s simulation step; 0.020 s control; actions steering/rear-wheel drive/hip/knee; hip/knee +/-30 N m. Do not change task/physics/reward/reset semantics silently.
 
-python -m cli.audit \
-  --phase landing \
-  --policy runs/landing/policy \
-  --bank artifacts/landing_tube.pkl \
-  --output runs/landing/audit.json
-```
-
-Flight、Takeoff 和 Approach 必须显式提供已认证下游 bank：
-
-```bash
-python -m cli.certify \
-  --phase takeoff \
-  --policy runs/takeoff/policy \
-  --candidate-bank artifacts/takeoff_candidates.pkl \
-  --downstream-bank artifacts/flight_tube.pkl \
-  --output-bank artifacts/takeoff_tube.pkl
-```
-
-## 3. 完整顺序
-
-```bash
-bash scripts/run_backward_bootstrap.sh
-```
-
-脚本按 Landing → Flight → Takeoff → Approach → natural-start 顺序执行。每个阶段先用几何候选完成 backward bootstrap，冻结策略并认证第一版 Tube；只有达到 Final-safe 激活门槛后，才从 Final-safe/Boundary Tube 继续 RSI refinement，然后再次冻结、重新认证并独立 audit。bootstrap/refinement 按 60%/40% 拆分原阶段 PPO 预算；中间认证的 branch rollout 是额外环境交互，必须单独计入并报告总交互成本。后续阶段通过 `--resume` 继承前一阶段共享 Actor，并混入单独计权的已认证下游 rehearsal。
-
-`scripts/local_preflight.sh` 只是本地基础预检；正式长训练仍须先满足 `docs/VERIFICATION_PROTOCOL.md` 中的完整训练 gates。
-
-首次长训练前运行完整 gate（会执行两个极短 PPO compile/run/resume probe），之后正式脚本会校验报告是否仍与源码、XML 和配置一致：
-
-```bash
-/home/qy/mujoco_playground/.venv/bin/python -m cli.runtime_gate
-```
-
-## 4. 认证原则
-
-- Candidate bank 与 downstream certified bank 是两个不同参数；
-- `training_only=True` 的 velocity seeds 和 rehearsal states 永不参与认证；
-- Chain 与 Final Recovery 分别统计；
-- Chain 事件锁存，不读取最后一步瞬时值；
-- Tube entry 使用下游 final-safe 状态的标准化距离；
-- build 与 audit 使用不同 seed namespace；
-- timeout 单独报告，不能写成物理 Failure；
-- policy manifest 校验 action mapping、原始 XML、config 和 bank 版本；
-- 全部入口直接读取 `orange_bike_4kg_horizontal.xml`，禁止 runtime XML 或替代几何。
-
-## 5. 参考轨迹的允许用途
-
-允许：候选范围、阶段姿态 envelope、动作方向/执行器诊断、消融参考。
-
-禁止：逐点 CoM/姿态轨迹跟踪 reward、用“接近参考”替代经验可恢复标签、用 velocity-seeded 辅助状态进行正式认证。
-
-## 6. 输出
-
-- `artifacts/*_tube.pkl`：带 Chain/Final Beta posterior 的版本化 Tube；
-- `runs/*/policy/`：不可变 policy bundle；
-- `runs/*/audit.json`：独立 Tube 质量报告；
-- `runs/natural_start_evaluation.json`：最终自然起点成功率；
-- `docs/reference_report.json`、`docs/reference_phase_envelopes.csv`：参考轨迹审计；
-- `docs/model_report.json`：模型结构审计。
+Scientific logic is in `JIT/src/jit_dvgc/`, thin CLIs in `JIT/cli/`, tests in `JIT/tests/`, configs in `JIT/configs/`, guidance in `JIT/docs/`, and lightweight evidence in `JIT/runs/`. Large artifacts need a resolvable external index and preserved identities.

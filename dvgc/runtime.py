@@ -19,7 +19,7 @@ import os
 import pickle
 import tempfile
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Any, Callable, Dict, Optional, Sequence, Tuple
 
 import jax
 import jax.numpy as jp
@@ -35,6 +35,43 @@ VALUE_HIDDEN_LAYER_SIZES = (256, 256, 256)
 POLICY_OBS_KEY = "state"
 VALUE_OBS_KEY = "privileged_state"
 POLICY_INITIAL_ACTION_STD = 0.05
+
+
+def _normalize_initial_action_std(
+    initial_action_std: float | Sequence[float], action_size: int
+) -> tuple[float, ...]:
+    """Return one validated initial standard deviation per action channel."""
+    if isinstance(initial_action_std, bool):
+        raise ValueError("initial_action_std must contain finite numeric values")
+    if isinstance(initial_action_std, (int, float, np.integer, np.floating)):
+        values = (float(initial_action_std),) * int(action_size)
+    elif isinstance(initial_action_std, Sequence) and not isinstance(
+        initial_action_std, (str, bytes)
+    ):
+        if len(initial_action_std) != int(action_size):
+            raise ValueError("initial_action_std vector length must equal action_size")
+        values_list: list[float] = []
+        for value in initial_action_std:
+            if isinstance(value, bool) or not isinstance(
+                value, (int, float, np.integer, np.floating)
+            ):
+                raise ValueError(
+                    "initial_action_std must contain finite numeric values"
+                )
+            values_list.append(float(value))
+        values = tuple(values_list)
+    else:
+        raise ValueError(
+            "initial_action_std must be a scalar or one-dimensional sequence"
+        )
+    if any(
+        not math.isfinite(value) or value <= 0.001 or value >= 1.0
+        for value in values
+    ):
+        raise ValueError(
+            "initial_action_std values must be finite and strictly between 0.001 and 1.0"
+        )
+    return values
 
 
 def require_training_stack() -> Tuple[Any, Any, Any]:
@@ -61,6 +98,8 @@ def make_dvgc_ppo_networks(
     observation_size: Any,
     action_size: int,
     preprocess_observations_fn: Callable,
+    *,
+    initial_action_std: float | Sequence[float] = POLICY_INITIAL_ACTION_STD,
 ) -> Any:
     """Build a bounded actor with a neutral, low-variance control prior.
 
@@ -71,12 +110,15 @@ def make_dvgc_ppo_networks(
     before PPO sees useful successes.  This head keeps tanh bounds while making
     the initial mode exactly zero and the initial scale explicitly auditable.
     """
+    initial_action_std = _normalize_initial_action_std(initial_action_std, action_size)
     ppo_networks, _, _ = require_training_stack()
     from brax.training import distribution
     from brax.training import networks as brax_networks
     from flax import linen
 
-    target_scale_parameter = math.log(math.expm1(POLICY_INITIAL_ACTION_STD - 0.001))
+    target_scale_parameter = tuple(
+        math.log(math.expm1(value - 0.001)) for value in initial_action_std
+    )
 
     class NeutralTanhActor(linen.Module):
         @linen.compact
@@ -95,7 +137,7 @@ def make_dvgc_ppo_networks(
             )(hidden)
             scale_parameter = self.param(
                 "scale_parameter",
-                lambda _key, shape: jp.full(shape, target_scale_parameter, jp.float32),
+                lambda _key, _shape: jp.asarray(target_scale_parameter, jp.float32),
                 (int(action_size),),
             )
             scale_parameter = jp.broadcast_to(scale_parameter, loc.shape)
@@ -138,9 +180,13 @@ def make_dvgc_ppo_networks(
     )
 
 
-def build_network_factory() -> Callable[..., Any]:
+def build_network_factory(
+    *, initial_action_std: float | Sequence[float] = POLICY_INITIAL_ACTION_STD
+) -> Callable[..., Any]:
     """Build asymmetric PPO networks for deployable actor / privileged critic."""
-    return make_dvgc_ppo_networks
+    return functools.partial(
+        make_dvgc_ppo_networks, initial_action_std=initial_action_std
+    )
 
 
 def _atomic_pickle_dump(path: Path, payload: Any) -> None:
@@ -379,7 +425,7 @@ def make_ppo_train_fn(
     learning_rate: float,
     entropy_cost: float,
     reward_scaling: float,
-    checkpoint_dir: str | Path,
+    checkpoint_dir: str | Path | None,
     unroll_length: int = 32,
     batch_size: int = 1024,
     num_minibatches: int = 32,
@@ -395,6 +441,8 @@ def make_ppo_train_fn(
     restore_checkpoint_path: Optional[str | Path] = None,
     policy_params_fn: Optional[Callable[..., None]] = None,
     full_reset: bool = False,
+    run_evals: bool = True,
+    initial_action_std: float | Sequence[float] = POLICY_INITIAL_ACTION_STD,
 ) -> Callable[..., Tuple[Any, Any, Any]]:
     """Return a Brax PPO training callable with normalized observations."""
     _, ppo_train, wrapper = require_training_stack()
@@ -427,9 +475,15 @@ def make_ppo_train_fn(
         training_metrics_steps=(None if training_metrics_steps is None else int(training_metrics_steps)),
         max_grad_norm=float(max_grad_norm),
         clipping_epsilon=float(clipping_epsilon),
-        network_factory=build_network_factory(),
+        network_factory=build_network_factory(
+            initial_action_std=initial_action_std
+        ),
         seed=int(seed),
-        save_checkpoint_path=str(Path(checkpoint_dir).expanduser().resolve()),
+        save_checkpoint_path=(
+            None
+            if checkpoint_dir is None
+            else str(Path(checkpoint_dir).expanduser().resolve())
+        ),
         wrap_env_fn=wrap_env_fn,
         policy_params_fn=(policy_params_fn if policy_params_fn is not None else (lambda *_: None)),
     )
@@ -442,6 +496,10 @@ def make_ppo_train_fn(
     # This keeps it distinct from the stochastic on-policy data collection.
     if "deterministic_eval" in signature.parameters:
         kwargs["deterministic_eval"] = True
+    if "run_evals" in signature.parameters:
+        kwargs["run_evals"] = bool(run_evals)
+    elif not run_evals:
+        raise RuntimeError("Installed Brax PPO does not expose run_evals")
     if restore_checkpoint_path is not None:
         if "restore_checkpoint_path" not in signature.parameters:
             raise RuntimeError("Installed Brax PPO does not support restore_checkpoint_path.")

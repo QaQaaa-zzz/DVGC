@@ -1,0 +1,177 @@
+{
+  "environment_interactions": 16,
+  "expert_switching_used": false,
+  "phase_interactions": {
+    "downstream": 8,
+    "upstream": 8
+  },
+  "records": [
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 0,
+      "finite": true,
+      "global_index": 0,
+      "phase": "upstream",
+      "phase_index": 0,
+      "reward": 0.22429592907428741
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 16,
+      "finite": true,
+      "global_index": 16,
+      "phase": "upstream",
+      "phase_index": 0,
+      "reward": -5.338170051574707
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 33,
+      "finite": true,
+      "global_index": 33,
+      "phase": "upstream",
+      "phase_index": 0,
+      "reward": 34.18346405029297
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 49,
+      "finite": true,
+      "global_index": 49,
+      "phase": "upstream",
+      "phase_index": 0,
+      "reward": 0.00984104722738266
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 66,
+      "finite": true,
+      "global_index": 66,
+      "phase": "upstream",
+      "phase_index": 0,
+      "reward": 0.4085538685321808
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 82,
+      "finite": true,
+      "global_index": 82,
+      "phase": "upstream",
+      "phase_index": 0,
+      "reward": 28.34023094177246
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 99,
+      "finite": true,
+      "global_index": 99,
+      "phase": "upstream",
+      "phase_index": 0,
+      "reward": -9.47902774810791
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 116,
+      "finite": true,
+      "global_index": 116,
+      "phase": "upstream",
+      "phase_index": 0,
+      "reward": -12.553926467895508
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 0,
+      "finite": true,
+      "global_index": 117,
+      "phase": "downstream",
+      "phase_index": 1,
+      "reward": 0.9957343935966492
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 14,
+      "finite": true,
+      "global_index": 131,
+      "phase": "downstream",
+      "phase_index": 1,
+      "reward": 0.9959186911582947
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 29,
+      "finite": true,
+      "global_index": 146,
+      "phase": "downstream",
+      "phase_index": 1,
+      "reward": 0.4759056568145752
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 44,
+      "finite": true,
+      "global_index": 161,
+      "phase": "downstream",
+      "phase_index": 1,
+      "reward": 2.927736759185791
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 59,
+      "finite": true,
+      "global_index": 176,
+      "phase": "downstream",
+      "phase_index": 1,
+      "reward": 2.831305742263794
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 74,
+      "finite": true,
+      "global_index": 191,
+      "phase": "downstream",
+      "phase_index": 1,
+      "reward": 1.1722480058670044
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 89,
+      "finite": true,
+      "global_index": 206,
+      "phase": "downstream",
+      "phase_index": 1,
+      "reward": -0.14564970135688782
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 104,
+      "finite": true,
+      "global_index": 221,
+      "phase": "downstream",
+      "phase_index": 1,
+      "reward": -0.7517616748809814
+    }
+  ],
+  "schema": "jit_tube_rsi_smoke_v1",
+  "soft_tube_manifest_sha256": "c1c1161ebafd16716f2566aaccfe89169fe9cb0c2b090266c0e2bf90165df28b",
+  "status": "completed",
+  "test_data_used": false,
+  "training_transitions": 0,
+  "tube_rsi_smoke": "GO",
+  "validation_data_used": false
+}

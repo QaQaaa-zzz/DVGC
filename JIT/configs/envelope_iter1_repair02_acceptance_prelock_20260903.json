@@ -1,0 +1,122 @@
+{
+  "expected_protocol_sha256": "8ea29a7afd87a75a3f435095d4ed2097d44077352088a854e8128fdb756227d9",
+  "protocol": {
+    "acquisition": {
+      "action_names": [
+        "steer",
+        "rear_wheel_drive",
+        "hip",
+        "knee"
+      ],
+      "active_action_dimensions": 2,
+      "anchors_per_phase": 10,
+      "durations": [
+        2,
+        4,
+        8
+      ],
+      "frontier_score_ceiling": 1.0,
+      "minimum_anchors_per_phase": 10,
+      "protocol_seed": 9511010,
+      "signs": [
+        -1,
+        1
+      ],
+      "strengths": [
+        0.15,
+        0.3,
+        0.5
+      ]
+    },
+    "bank_lock": {
+      "candidate_training_must_not_start_before_lock": true,
+      "exclude_target_tube_states": true,
+      "minimum_negative_parent_groups_per_phase": 3,
+      "minimum_negative_states_per_phase": 10,
+      "physical_state_unique": true,
+      "require_both_phases": true,
+      "selection": "all_baseline_continuation_negative_candidates",
+      "target_tube": "JIT/runs/soft_tube/soft_tube_iter1_pi0_conditioned_20260901",
+      "target_tube_manifest_sha256": "817a980a5dd84f36507f762a913c21c1fc0913580d925ff9c68e982edfd82a80"
+    },
+    "baseline_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+    "baseline_frozen_policy": "JIT/runs/frozen_unified/pi_0_round1_10009600_20260831/frozen_unified_policy.json",
+    "baseline_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+    "baseline_policy_name": "pi_0",
+    "candidate_iteration": 1,
+    "claim_boundary": {
+      "candidate_policy_outcomes_inspected": false,
+      "certified_safe_set_claim": false,
+      "jce_jel_claim": false,
+      "nonfinal_iteration_acceptance_audit_only": true
+    },
+    "consumed_gates": [
+      {
+        "bank_file_sha256": "97cb62727e12824abc2a5238e9187e47773c80b5f169f2f286c0f412a8e2a6bd",
+        "bank_schema": "jit_paired_policy_gate_bank_v1",
+        "baseline_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+        "baseline_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+        "boundary_parent_group_counts": {
+          "downstream": 5,
+          "upstream": 5
+        },
+        "boundary_state_count": 56,
+        "candidate_iteration": 1,
+        "protocol_sha256": "24a126ee94472eebbcb59fff66618ae00dae41074a1d1cfee8bb816afaff410a",
+        "records_file_sha256": "614d020198a38235f0a2bfddc6b087fdd5e3729c5fcff49f40c4fcf71683cae2",
+        "root": "JIT/runs/pi_unified_gate/pi_0_to_pi_1_paired_core_boundary_20260901_retry01",
+        "source_iteration": 0,
+        "summary_file_sha256": "cf63f59f4862c51351ceca80afa8796316592be515c28b572584e97e39d9f7fc"
+      },
+      {
+        "bank_file_sha256": "4b7ea288ca641537f2faa66d7905be6d427089e55ab61efe58fc03b0f6361856",
+        "bank_schema": "jit_paired_policy_gate_bank_v2",
+        "baseline_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+        "baseline_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+        "boundary_parent_group_counts": {
+          "downstream": 5,
+          "upstream": 4
+        },
+        "boundary_state_count": 260,
+        "candidate_iteration": 1,
+        "protocol_sha256": "d771e54aa9c4c90d89223100ac955cf32d14c5b41ca577a25f7078e924912ece",
+        "records_file_sha256": "265d62697e7083021d40fe46bd91113f4ff4137f7b99bcdc08156d18754b89d8",
+        "root": "JIT/runs/pi_unified_gate/pi_0_to_pi_1_repaired_locked260_20260903",
+        "source_iteration": 0,
+        "summary_file_sha256": "9c1dbff4b4f0540edf99c6f6606a85037188f22d5ebcbf796b2a6657ebfc914c"
+      }
+    ],
+    "design_diagnosis": {
+      "candidate_policy_outcomes_inspected_on_consumed_gates": true,
+      "fresh_acceptance_bank_required_before_next_candidate_training": true,
+      "next_candidate_training_started": false
+    },
+    "future_use": {
+      "baseline_label_before_repair_training": true,
+      "candidate_generation_before_repair_training": true,
+      "forbid_continuation_field_fit_use": true,
+      "forbid_repair_training_use": true,
+      "forbid_tube_construction_use": true,
+      "lock_bank_before_repair_training": true
+    },
+    "isolation": {
+      "exclude_consumed_boundary_parent_groups_by_phase": true,
+      "exclude_consumed_boundary_states": true,
+      "final_evaluation_data_used": false,
+      "test_data_used": false,
+      "validation_data_used": false
+    },
+    "labeling": {
+      "baseline_policy_only": true,
+      "max_ticks": 400,
+      "policy_mode": "deterministic",
+      "protocol_seed": 9511011
+    },
+    "purpose": "fresh_nonfinal_acceptance_bank_for_next_replacement_candidate_with_cumulative_consumed_gate_exclusion",
+    "schema": "jit_repair_acceptance_boundary_acquisition_protocol_v1",
+    "source_iteration": 0,
+    "source_tube_manifest_sha256": "c1c1161ebafd16716f2566aaccfe89169fe9cb0c2b090266c0e2bf90165df28b",
+    "status": "predeclared_before_repair_training"
+  },
+  "schema": "jit_repair_acceptance_boundary_acquisition_v1"
+}

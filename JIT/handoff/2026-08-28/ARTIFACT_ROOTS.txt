@@ -1,0 +1,30 @@
+# Locked expert policies and their direct evidence
+JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826
+JIT/runs/phase_d/phase_d_new_reward_smoke_25600_seed820001_20260827
+JIT/runs/phase_d_evaluation/phase_d_fixed_panel_25600_eval2_20260827_graphfix
+JIT/runs/frozen_experts/pi_up9977856_pi_down25600_20260827
+
+# Continuation sources and labels used by V_up/V_down and the learned Soft Tube
+JIT/runs/continuation_candidates/v_up_nominal_piup9977856_sources3_20260827
+JIT/runs/continuation_labels/v_up_piup9977856_nominal1_20260827
+JIT/runs/continuation_labels/v_down_pi_down25600_nominal1_global_seed_v2_20260827
+JIT/runs/handoff_bank/catalog_20260827.json
+JIT/runs/handoff_bank/handoff_bank_4988928
+JIT/runs/handoff_bank/handoff_bank_7987200_jit2
+JIT/runs/handoff_bank/handoff_bank_7987200_seeds1000003_8
+JIT/runs/handoff_bank/handoff_bank_9977856_jit8
+JIT/runs/upstream_boundary/v_up_boundary_train_hipplus_refine_20260828
+JIT/runs/upstream_boundary/v_up_boundary_validation_locked_20260828
+JIT/runs/upstream_boundary_labels/v_up_boundary_train_hipplus_refine_20260828
+JIT/runs/upstream_boundary_labels/v_up_boundary_validation_locked_20260828
+JIT/runs/upstream_boundary_lock
+JIT/runs/value_models/v_up_first_pass_20260828
+JIT/runs/value_models/v_down_first_pass_20260828
+JIT/runs/soft_tube/soft_tube_train_v1_20260828
+JIT/runs/tube_rsi/tube_rsi_smoke_train_v1_20260828
+
+# Unified-policy qualification, the failed first formal attempt, and completed retry
+JIT/runs/pi_unified/pi_unified_pilot_25600_seed821001_ccd1024_20260828
+JIT/runs/pi_unified_diagnostic/pi_unified_pilot_train_panel_8x2_20260828
+JIT/runs/pi_unified/pi_unified_formal_10009600_seed821101_20260828
+JIT/runs/pi_unified/pi_unified_formal_10009600_seed821101_20260828_retry1

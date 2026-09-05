@@ -1,0 +1,92 @@
+{
+  "schema": "jit_experiment_runtime_prelaunch_v1",
+  "status": "implementation_ready_local_validation_required",
+  "date": "2026-09-01",
+  "iteration": 0,
+  "purpose": "execute group-disjoint expansion validation for frozen pi_0 before C_up^0/C_down^0 fitting or calibration",
+  "scientific_protocol": {
+    "config": "JIT/configs/envelope_iter0_expansion_validation.json",
+    "protocol_sha256": "9ec0a1e8c314cc5710688a3537fbd339f520d4db3c4268d20715bcde938586b0",
+    "supersedes_unlaunched_protocol_sha256": "16c944e2edd16d3ac57656f219506399d63256bd37e7760ee6938a95f225f2b7",
+    "revision_timing": "before_any_validation_rollout_or_outcome_inspection",
+    "revision_reason": "the original upstream 1/2-tick panel predominantly sampled the already-known easy interior; the revised upstream panel uses only frozen TRAIN evidence to probe the observed pi_0 transition region"
+  },
+  "frozen_authorities": {
+    "policy_name": "pi_0",
+    "policy_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+    "policy_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+    "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+    "frozen_train_manifest_sha256": "27832237a85eccfa0ae2eaea7575dd2efda12535a3815fee0c6d0660f58921b8",
+    "frozen_train_label_count": 3190
+  },
+  "validation_parent_groups": {
+    "upstream": [
+      "transition_4988928__1000006",
+      "transition_7987200__1000006",
+      "transition_9977856__1000006"
+    ],
+    "downstream": [
+      "transition_4988928__1000006",
+      "transition_9977856__1000006"
+    ]
+  },
+  "panels": {
+    "upstream": {
+      "action_names": ["steer", "rear_wheel_drive", "hip", "knee"],
+      "signs": [-1, 1],
+      "strengths": [0.025, 0.1],
+      "durations": [4, 8, 16],
+      "attempt_count": 144
+    },
+    "downstream": {
+      "action_names": ["hip"],
+      "signs": [1],
+      "strengths": [0.15, 0.2, 0.3, 0.32, 0.35, 0.4, 0.45, 0.5],
+      "durations": [30],
+      "attempt_count": 16
+    }
+  },
+  "interaction_budget": {
+    "attempt_count": 160,
+    "maximum_acquisition_environment_interactions": 1824,
+    "maximum_successful_labeling_environment_interactions": 64000,
+    "training_transitions": 0
+  },
+  "runtime_semantics": {
+    "real_dynamics_only": true,
+    "terminal_clipping": "last_finite_nonterminal_phase_local_predecessor",
+    "terminal_probe_outcome_is_continuation_label": false,
+    "fresh_continuation_horizon_ticks": 400,
+    "policy_mode": "deterministic",
+    "expert_switching_used": false,
+    "validation_candidate_replacement_after_exclusion": false,
+    "validation_rows_may_enter_train_or_tube": false
+  },
+  "prelaunch_gates": [
+    "focused_cpu_tests",
+    "zero_interaction_runtime_preflight",
+    "gpu_held_out_anchor_restore_contract",
+    "full_JIT_preflight",
+    "visible_JAX_GPU",
+    "validation_output_directory_absent"
+  ],
+  "runtime_files": {
+    "source": "JIT/src/jit_dvgc/expansion_validation_runtime.py",
+    "preflight": "JIT/src/jit_dvgc/expansion_validation_runtime_preflight.py",
+    "cli": "JIT/cli/run_expansion_validation.py",
+    "cpu_test": "JIT/tests/test_expansion_validation_runtime.py",
+    "gpu_test": "JIT/tests/test_expansion_validation_runtime_gpu.py"
+  },
+  "output_dir": "JIT/runs/pi_unified_expansion_validation/pi_0_iter0_group_disjoint_20260831",
+  "validation_outcomes_inspected": false,
+  "test_data_used": false,
+  "final_evaluation_data_used": false,
+  "continuation_field_trained": false,
+  "tube_1_constructed": false,
+  "pi_1_trained": false,
+  "claim_boundary": {
+    "expansion_validation_only": true,
+    "jce_jel_claim": false,
+    "certified_safe_set_claim": false
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "schema": "jit_round2_supersession_v1",
+  "status": "superseded_before_launch",
+  "superseded_experiment": {
+    "config": "JIT/configs/pi_unified_round2_natural50.json",
+    "config_sha256": "ddb3f407a1c8a7d426d6c1296d94a31f6a3748bae4c5814fe0caf15211b8e94e",
+    "run_id": "pi_unified_round2_natural50_10009600_seed821101_20260831",
+    "training_started": false,
+    "run_directory_existed_at_final_prelaunch_check": false
+  },
+  "validated_prelaunch_evidence": {
+    "producer_head": "ee8c8a84b860c888690dce503c7e182501c54c7c",
+    "round1_round2_contract_tests": "11 passed in 3.59s",
+    "zero_interaction_reset_smoke_samples": 256,
+    "zero_interaction_natural_count": 123,
+    "zero_interaction_soft_tube_count": 133,
+    "zero_interaction_environment_interactions": 0,
+    "zero_interaction_training_transitions": 0,
+    "gpu_mixed_reset_tests": "5 passed in 17.10s",
+    "full_preflight_cpu": "380 passed, 30 deselected in 51.74s",
+    "full_preflight_gpu": "14 passed in 31.96s"
+  },
+  "reason": {
+    "type": "research_scope_correction",
+    "summary": "The JIT deployment and scientific evaluation domain is the Tube-conditioned jump maneuver and its expandable neighborhood, not the ordinary natural locomotion prefix before Tube entry.",
+    "round1_natural_failure_reinterpreted_as": "out_of_domain_cold_start_diagnostic",
+    "natural50_training_needed": false
+  },
+  "new_authoritative_direction": {
+    "protocol": "JIT/docs/ENVELOPE_ITERATION_PROTOCOL.md",
+    "bootstrap_tube": "existing 222-entry TRAIN-only learned Soft Tube",
+    "bootstrap_policy": "completed Round-1 unified transition_10009600 checkpoint candidate",
+    "next_stage": "freeze pi_0 for Tube-conditioned real-dynamics boundary acquisition and policy-conditioned continuation labeling",
+    "final_target": "empirical policy-conditioned Jump Capability Envelope after policy-Tube iterations converge"
+  },
+  "claim_boundary": {
+    "round2_natural50_completed": false,
+    "pi_unified_star_claim": false,
+    "jce_jel_claim": false,
+    "certified_safe_tube_claim": false,
+    "final_evaluation_data_used": false
+  }
+}

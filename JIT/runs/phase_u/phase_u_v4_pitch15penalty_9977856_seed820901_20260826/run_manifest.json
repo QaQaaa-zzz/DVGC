@@ -1,0 +1,28 @@
+{
+  "claim_boundary": {
+    "engineering_integrity_only": false,
+    "formal_training_evidence": true,
+    "learnability_claim": false,
+    "trained_expert_claim": false,
+    "tube_or_safety_claim": false
+  },
+  "config_sha256": "a45e70438c2b5cc005ddd415bbb4920c8e07e7504feae7e630a94b473d91f3a6",
+  "output_dir": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826",
+  "parent_checkpoint": null,
+  "purpose": "formal_propulsion_ascent_ppo",
+  "reference_sha256": "612fe758eb1042481b9c7642cc9b92d3e9c14b4a75c9deaf5340183c928bc41f",
+  "resume_command": "/home/qy/mujoco_playground/.venv/bin/python JIT/cli/train_phase_expert.py --phase propulsion_ascent --config JIT/configs/phase_u_continuation_10m.json --run-id phase_u_v4_pitch15penalty_9977856_seed820901_20260826 --formal",
+  "resume_semantics": "fresh",
+  "run_id": "phase_u_v4_pitch15penalty_9977856_seed820901_20260826",
+  "segment_seed": 820901,
+  "starting_training_transition": 0,
+  "stopping_conditions": [
+    "stop_at_absolute_transition_9977856",
+    "stop_on_nonfinite_metric",
+    "stop_on_cuda_or_oom_error",
+    "stop_on_checkpoint_identity_or_restore_failure",
+    "stop_on_trace_persistence_failure"
+  ],
+  "training_transition_ceiling": 9977856,
+  "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+}

@@ -1,0 +1,79 @@
+{
+  "schema": "jit_downstream_transition_refinement_config_v1",
+  "iteration": 0,
+  "frozen_policy": "JIT/runs/frozen_unified/pi_0_round1_10009600_20260831/frozen_unified_policy.json",
+  "prior_search": {
+    "root": "JIT/runs/pi_unified_transition_band/pi_0_iter0_automated_20260831",
+    "expected_status": "search_exhausted",
+    "expected_protocol_sha256": "161485f15b4020864570f604edcaf67f01de2781389b13ad7451e82483e5839f",
+    "expected_accumulated_unique_label_count": 1136,
+    "expected_upstream": {
+      "candidate_count": 571,
+      "positive_count": 545,
+      "negative_count": 26,
+      "positive_parent_group_count": 5,
+      "negative_parent_group_count": 5,
+      "ready": true
+    },
+    "expected_downstream": {
+      "candidate_count": 565,
+      "positive_count": 565,
+      "negative_count": 0,
+      "positive_parent_group_count": 5,
+      "negative_parent_group_count": 0,
+      "ready": false
+    }
+  },
+  "output_dir": "JIT/runs/pi_unified_transition_band/pi_0_downstream_local_refinement_20260831",
+  "source_tube_manifest_sha256": "c1c1161ebafd16716f2566aaccfe89169fe9cb0c2b090266c0e2bf90165df28b",
+  "fixed_acquisition": {
+    "phase": "downstream",
+    "anchors_per_phase": 8,
+    "frontier_score_ceiling": 0.5,
+    "action_names": [
+      "steer",
+      "rear_wheel_drive",
+      "hip",
+      "knee"
+    ],
+    "signs": [-1, 1],
+    "strengths": [0.025, 0.05, 0.1],
+    "duration_grid": [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32],
+    "acquisition_protocol_seed_base": 9513000,
+    "label_protocol_seed_base": 9514000,
+    "search_mode": "contiguous_integer_local_refinement",
+    "terminal_clipping": {
+      "enabled": true,
+      "capture": "last_finite_nonterminal_state_before_terminal",
+      "terminal_outcome_is_not_the_continuation_label": true
+    },
+    "state_generation": "authoritative unified real dynamics only; no direct qpos/qvel dilation"
+  },
+  "continuation_labeling": {
+    "policy_mode": "deterministic",
+    "branches_per_candidate": 1,
+    "max_ticks": 400,
+    "positive_semantics": "downstream stable-recovery terminal success",
+    "alive_only_is_positive": false
+  },
+  "readiness": {
+    "minimum_positive_candidates": 20,
+    "minimum_negative_candidates": 20,
+    "minimum_parent_groups_with_positive": 3,
+    "minimum_parent_groups_with_negative": 3
+  },
+  "stop_rule": {
+    "success": "stop immediately after accumulated downstream TRAIN labels satisfy all readiness minima",
+    "exhausted": "stop after duration 32 if readiness is still false and require a new explicit method decision",
+    "upstream_frozen": true
+  },
+  "claim_boundary": {
+    "training_only_search": true,
+    "upstream_transition_band_frozen": true,
+    "continuation_field_trained": false,
+    "tube_1_constructed": false,
+    "pi_1_trained": false,
+    "jce_jel_claim": false,
+    "certified_safe_set_claim": false
+  }
+}

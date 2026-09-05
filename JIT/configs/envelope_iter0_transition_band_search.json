@@ -1,0 +1,89 @@
+{
+  "schema": "jit_unified_transition_band_search_config_v1",
+  "iteration": 0,
+  "frozen_policy": "JIT/runs/frozen_unified/pi_0_round1_10009600_20260831/frozen_unified_policy.json",
+  "output_dir": "JIT/runs/pi_unified_transition_band/pi_0_iter0_automated_20260831",
+  "source_tube": {
+    "name": "Tube_0",
+    "entry_count": 222,
+    "manifest_sha256": "c1c1161ebafd16716f2566aaccfe89169fe9cb0c2b090266c0e2bf90165df28b",
+    "training_guidance_only": true,
+    "certified_safe": false
+  },
+  "completed_inner_shell": {
+    "labels_path": "JIT/runs/pi_unified_transition_band/pi_0_iter0_completed_baseline_20260831/labels.json",
+    "expected_label_protocol_sha256": "dab211deb8c60a3f7b1db2a8fafc06bc7c3ad3e85f7a1c51ecfe2cc0fbdb937a",
+    "expected_acquisition_protocol_sha256": "ac479d8f69ce10f82a33a647925befa473690381f79019e2f521a89cb1e53d5f",
+    "expected_candidate_count": 896,
+    "expected_positive_count": 883,
+    "expected_negative_count": 13,
+    "maximum_duration": 8
+  },
+  "fixed_acquisition": {
+    "anchors_per_phase": 8,
+    "frontier_score_ceiling": 0.5,
+    "action_names": [
+      "steer",
+      "rear_wheel_drive",
+      "hip",
+      "knee"
+    ],
+    "signs": [-1, 1],
+    "strengths": [0.025, 0.05, 0.1],
+    "single_variable": "perturbation_duration_only",
+    "state_generation": "authoritative unified real dynamics only; no direct qpos/qvel dilation"
+  },
+  "continuation_labeling": {
+    "policy_mode": "deterministic",
+    "branches_per_candidate": 1,
+    "max_ticks": 400,
+    "positive_semantics": {
+      "upstream": "Apex phase transition followed by downstream stable-recovery terminal success",
+      "downstream": "downstream stable-recovery terminal success",
+      "alive_only_is_positive": false
+    }
+  },
+  "readiness": {
+    "minimum_positive_candidates": 20,
+    "minimum_negative_candidates": 20,
+    "minimum_parent_groups_with_positive": 3,
+    "minimum_parent_groups_with_negative": 3,
+    "phasewise_stopping": true
+  },
+  "outer_shells": [
+    {
+      "shell_id": "outer_shell2",
+      "durations": [16, 32],
+      "acquisition_protocol_seed": 9510001,
+      "label_protocol_seed": 9511003
+    },
+    {
+      "shell_id": "outer_shell3",
+      "durations": [64, 128],
+      "acquisition_protocol_seed": 9510001,
+      "label_protocol_seed": 9511004
+    }
+  ],
+  "stop_rule": {
+    "success": "stop each phase immediately after its accumulated TRAIN labels satisfy all readiness minima",
+    "exhausted": "if the declared duration schedule is exhausted before readiness, stop and require a new explicit method decision",
+    "forbidden_posthoc_changes": [
+      "policy",
+      "Tube_0",
+      "action_axes",
+      "signs",
+      "strengths",
+      "reward",
+      "physics",
+      "task_semantics"
+    ]
+  },
+  "claim_boundary": {
+    "training_only_search": true,
+    "continuation_field_trained": false,
+    "tube_1_constructed": false,
+    "pi_1_trained": false,
+    "jce_jel_claim": false,
+    "certified_safe_set_claim": false
+  }
+}

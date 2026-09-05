@@ -1,0 +1,124 @@
+{
+  "absolute_transition": 1990656,
+  "action_saturation_fraction": 0.0,
+  "apex_rollouts": 0,
+  "apex_success_rate": 0.0,
+  "ascending_rate": 1.0,
+  "end_reason_counts": {
+    "stuck": 8
+  },
+  "environment_transitions": 472,
+  "height_reach_rate": 0.0,
+  "held_out_seeds": [
+    1000001,
+    1000002,
+    1000003,
+    1000004,
+    1000005,
+    1000006,
+    1000007,
+    1000008
+  ],
+  "jump_zone_reach_rate": 1.0,
+  "maximum_abs_pitch": 0.02847296930849552,
+  "maximum_abs_roll": 0.016314085572957993,
+  "maximum_angular_speed": 2.96001935005188,
+  "maximum_root_height": 0.15000000596046448,
+  "mean_post_apex_environment_transitions": 0.0,
+  "physical_failure_rate": 0.0,
+  "post_apex_environment_transitions": 0,
+  "post_apex_horizon_survival_rate": 0.0,
+  "post_apex_physical_failure_rate": 0.0,
+  "pre_apex_environment_transitions": 472,
+  "reward_component_sums": {
+    "action_magnitude": -115.0633984953165,
+    "action_smoothness": -16.750370968660718,
+    "apex_success": 0.0,
+    "height": 0.0,
+    "illegal_contact": 0.0,
+    "joint_energy": -116.50966139044613,
+    "jump_zone_missed": 0.0,
+    "low_height": -1200.0,
+    "physical_failure": 0.0,
+    "pitch": 469.78979778289795,
+    "pitch_rate": -20.017267122377234,
+    "roll": 1283.4822537899017,
+    "roll_pitch_failure": 0.0,
+    "roll_rate": 0.0,
+    "speed": 318.77183750848053,
+    "stuck": -800.0,
+    "survival": 708.0,
+    "timeout": 0.0,
+    "yaw": 122.99262396991253,
+    "yaw_limit": 0.0,
+    "yaw_rate": 0.0
+  },
+  "rollouts": 8,
+  "timeout_rate": 0.0,
+  "trace_artifacts": [
+    {
+      "captured_state_count": 60,
+      "environment_transitions": 59,
+      "metadata_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/evaluations/transition_1990656/seed_1000001.json",
+      "npz_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/evaluations/transition_1990656/seed_1000001.npz",
+      "npz_sha256": "495968ed844422eee2b9c978d566afcb1e2cf0e6fbdd2a18671839be86c270d1",
+      "seed": 1000001
+    },
+    {
+      "captured_state_count": 60,
+      "environment_transitions": 59,
+      "metadata_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/evaluations/transition_1990656/seed_1000002.json",
+      "npz_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/evaluations/transition_1990656/seed_1000002.npz",
+      "npz_sha256": "f5792ec771bd68810ae619736b0827d2b6e6abf6c1ad0caa4d82135f67ccff97",
+      "seed": 1000002
+    },
+    {
+      "captured_state_count": 60,
+      "environment_transitions": 59,
+      "metadata_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/evaluations/transition_1990656/seed_1000003.json",
+      "npz_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/evaluations/transition_1990656/seed_1000003.npz",
+      "npz_sha256": "07367f61968621ff07b5625a3a3337cb698109290620635cd5354d9754a4b091",
+      "seed": 1000003
+    },
+    {
+      "captured_state_count": 60,
+      "environment_transitions": 59,
+      "metadata_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/evaluations/transition_1990656/seed_1000004.json",
+      "npz_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/evaluations/transition_1990656/seed_1000004.npz",
+      "npz_sha256": "c3734b6002b585848036f940349c845bbadc11c197563300c132992266c70cab",
+      "seed": 1000004
+    },
+    {
+      "captured_state_count": 60,
+      "environment_transitions": 59,
+      "metadata_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/evaluations/transition_1990656/seed_1000005.json",
+      "npz_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/evaluations/transition_1990656/seed_1000005.npz",
+      "npz_sha256": "7c693a3e57652785eb53140232c778ef5fb359ca1f235b95d48df1ca0cd1ead7",
+      "seed": 1000005
+    },
+    {
+      "captured_state_count": 60,
+      "environment_transitions": 59,
+      "metadata_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/evaluations/transition_1990656/seed_1000006.json",
+      "npz_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/evaluations/transition_1990656/seed_1000006.npz",
+      "npz_sha256": "a0beffef443d25426434f865638420e2fbed35714b9bceefd8e9c47744c2a69d",
+      "seed": 1000006
+    },
+    {
+      "captured_state_count": 60,
+      "environment_transitions": 59,
+      "metadata_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/evaluations/transition_1990656/seed_1000007.json",
+      "npz_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/evaluations/transition_1990656/seed_1000007.npz",
+      "npz_sha256": "ee42875a8d0ffc8681aa0de0af0a27d2baaaebf52543989e7898ec7a3021d7c7",
+      "seed": 1000007
+    },
+    {
+      "captured_state_count": 60,
+      "environment_transitions": 59,
+      "metadata_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/evaluations/transition_1990656/seed_1000008.json",
+      "npz_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/evaluations/transition_1990656/seed_1000008.npz",
+      "npz_sha256": "a9587d02eafb2c03dcb46808ff53c04b2aec3bd55fcea4960ad9fb723d664495",
+      "seed": 1000008
+    }
+  ]
+}

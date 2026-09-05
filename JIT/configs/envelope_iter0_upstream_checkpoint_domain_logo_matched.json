@@ -1,0 +1,66 @@
+{
+  "schema": "jit_upstream_checkpoint_domain_logo_config_v1",
+  "output_dir": "JIT/runs/pi_unified_continuation_field_diagnostic/pi_0_iter0_upstream_checkpoint_domain_logo_matched_20260901",
+  "expected_protocol_sha256": "908e5b3c0e235b666dfe6368504e75343eae5a9d95dd3cab85daa1803981573d",
+  "protocol": {
+    "schema": "jit_upstream_checkpoint_domain_logo_protocol_v1",
+    "status": "predeclared_after_matched_panel_freeze_before_checkpoint_cv",
+    "iteration": 0,
+    "policy_name": "pi_0",
+    "policy_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+    "policy_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+    "frozen_upstream_train_evidence": "JIT/runs/frozen_upstream_checkpoint_train/pi_0_iter0_three_checkpoint_matched_panel_20260901",
+    "frozen_upstream_train_freeze_protocol_sha256": "2df65325660ac54c914b14fca98d1d5e2f0f52a3da74bf941b4979edbc32bf1d",
+    "expected_combined": {
+      "candidate_count": 720,
+      "positive_count": 639,
+      "negative_count": 81,
+      "parent_group_count": 15,
+      "checkpoint_domain_count": 3
+    },
+    "required_domains": [
+      "transition_4988928",
+      "transition_7987200",
+      "transition_9977856"
+    ],
+    "model": {
+      "family": "linear_logistic",
+      "input": "unified_actor_observation",
+      "observation_size": 76,
+      "normalization": "fold_train_only_zscore_clip10",
+      "sample_weighting": "equal_parent_label_cell_mass",
+      "l2_weight": 0.01,
+      "optimizer": "adam_full_batch_fixed_schedule",
+      "steps": 4000,
+      "learning_rate": 0.01,
+      "seed_base": 846000
+    },
+    "diagnostic_gate": {
+      "minimum_mean_logo_roc_auc": 0.7,
+      "minimum_worst_logo_roc_auc": 0.6,
+      "require_positive_score_gap_in_every_fold": true
+    },
+    "data_policy": {
+      "train_rows_only": true,
+      "consumed_validation_rows_reused": false,
+      "consumed_validation_predictions_reused": false,
+      "test_data_used": false,
+      "final_evaluation_data_used": false
+    },
+    "interpretation": {
+      "checkpoint_domain_is_parent_group_transition_prefix": true,
+      "all_three_domains_use_same_locked_matched_panel": true,
+      "acquisition_family_confound_removed": true,
+      "failure_can_be_interpreted_as_checkpoint_domain_or_representation_generalization_limit": true
+    },
+    "claim_boundary": {
+      "diagnostic_only": true,
+      "continuation_field_reselected": false,
+      "fresh_validation_bank_predeclared": false,
+      "tube_1_constructed": false,
+      "pi_1_trained": false,
+      "jce_jel_claim": false,
+      "certified_safe_set_claim": false
+    }
+  }
+}

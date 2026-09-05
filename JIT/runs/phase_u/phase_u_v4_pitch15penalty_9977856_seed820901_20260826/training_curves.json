@@ -1,0 +1,23 @@
+{
+  "data_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/training_curves.npz",
+  "data_sha256": "6eb05d852078828c487f01fde73045dec28aeece96d7b30017a65f0edbfd1051",
+  "episode_metric_semantics": "rolling_last_100_completed_episodes",
+  "episode_sample_count": 406,
+  "plot_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/training_curves.png",
+  "plot_sha256": "649d748570609c83d496d9dbf1a9c5ba4bb738cbf7e2f2436b179dd49c41cd1f",
+  "ppo_sample_count": 406,
+  "report_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/training_curves.json",
+  "required_series": [
+    "episode_airborne_rsi_fraction",
+    "episode_mean_length",
+    "episode_mean_reward",
+    "episode_training_transitions",
+    "ppo_kl_mean",
+    "ppo_policy_loss",
+    "ppo_policy_mean_std",
+    "ppo_sps",
+    "ppo_total_loss",
+    "ppo_training_transitions",
+    "ppo_value_loss"
+  ]
+}

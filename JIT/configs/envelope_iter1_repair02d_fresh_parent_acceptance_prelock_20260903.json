@@ -1,0 +1,228 @@
+{
+  "expected_protocol_sha256": "f346f9f6fb19f00f079c56cff56be992f92e71f3f89a259f31932bf531937159",
+  "protocol": {
+    "acquisition": {
+      "anchor_source": {
+        "action_names": [
+          "steer",
+          "rear_wheel_drive",
+          "hip",
+          "knee"
+        ],
+        "active_action_dimensions": 1,
+        "downstream_apex_offset": 10,
+        "duration": 2,
+        "excitation_start_tick": 0,
+        "minimum_parent_groups": 4,
+        "near_duplicate_atol": 1e-05,
+        "parent_group_semantics": "one canonical action-axis/sign excitation direction",
+        "physical_diversity_source": "bounded_action_excitation_then_frozen_pi_k",
+        "policy_key_scheme": "trajectory_key=fold_in(PRNGKey(protocol_seed),trajectory_index);action_key=fold_in(trajectory_key,tick)",
+        "require_terminal_full_recovery_success": true,
+        "reset": "canonical_deterministic_natural_task_start",
+        "signs": [
+          -1,
+          1
+        ],
+        "strength": 0.1,
+        "type": "natural_action_excitation_handoff_v1",
+        "upstream_apex_offset": -10
+      },
+      "boundary_probe": {
+        "action_names": [
+          "steer",
+          "rear_wheel_drive",
+          "hip",
+          "knee"
+        ],
+        "active_action_dimensions": 2,
+        "durations": [
+          2,
+          4,
+          8
+        ],
+        "reject_phase_crossing": true,
+        "signs": [
+          -1,
+          1
+        ],
+        "strengths": [
+          0.15,
+          0.3,
+          0.5
+        ]
+      },
+      "protocol_seed": 9513010
+    },
+    "bank_lock": {
+      "candidate_training_must_not_start_before_lock": true,
+      "exclude_target_tube_states": true,
+      "minimum_negative_parent_groups_per_phase": 3,
+      "minimum_negative_states_per_phase": 10,
+      "physical_state_unique": true,
+      "require_both_phases": true,
+      "selection": "all_baseline_continuation_negative_candidates",
+      "target_tube": "JIT/runs/soft_tube/soft_tube_iter1_pi0_conditioned_20260901",
+      "target_tube_manifest_sha256": "817a980a5dd84f36507f762a913c21c1fc0913580d925ff9c68e982edfd82a80"
+    },
+    "baseline_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+    "baseline_frozen_policy": "JIT/runs/frozen_unified/pi_0_round1_10009600_20260831/frozen_unified_policy.json",
+    "baseline_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+    "baseline_policy_name": "pi_0",
+    "candidate_iteration": 1,
+    "claim_boundary": {
+      "candidate_policy_outcomes_inspected": false,
+      "certified_safe_set_claim": false,
+      "jce_jel_claim": false,
+      "nonfinal_iteration_acceptance_audit_only": true
+    },
+    "consumed_baseline_probes": [
+      {
+        "baseline_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+        "baseline_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+        "candidate_policy_outcomes_inspected": false,
+        "final_evaluation_data_used": false,
+        "label_protocol_sha256": "1b7c050aefa2c22570fc63b4ea97e32901eaaea81ccf9341ccb72e7203a1ff9d",
+        "labels_file_sha256": "4a20e782237931f4f4a254626de7a81100d2db4d1fdc4999eb180af651fb0599",
+        "negative_count": 12,
+        "phase_parent_group_counts": {
+          "downstream": 8,
+          "upstream": 8
+        },
+        "phase_state_counts": {
+          "downstream": 323,
+          "upstream": 336
+        },
+        "positive_count": 647,
+        "root": "JIT/runs/pi_unified_gate_prelock/pi_0_repair_acceptance_supportwide_labels_20260902",
+        "state_count": 659,
+        "summary_file_sha256": "4873aef11c298e611712c15ac5b104313b78e950e6bfc041ae02083b6da64976",
+        "test_data_used": false,
+        "training_transitions": 0,
+        "validation_data_used": false
+      },
+      {
+        "baseline_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+        "baseline_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+        "candidate_policy_outcomes_inspected": false,
+        "final_evaluation_data_used": false,
+        "label_protocol_sha256": "185781cca44d8b0dd5fc3afb512e2bd065c8837ccaceec149349f654eb71ab3a",
+        "labels_file_sha256": "5dd292b799dfb73c5017dc8c9083a4230a29af0141c6aeb217c667bb5cfe32e0",
+        "negative_count": 58,
+        "phase_parent_group_counts": {
+          "downstream": 10,
+          "upstream": 10
+        },
+        "phase_state_counts": {
+          "downstream": 716,
+          "upstream": 556
+        },
+        "positive_count": 1214,
+        "root": "JIT/runs/pi_unified_gate_prelock/pi_0_repair_acceptance_extended_shell_labels_20260902",
+        "state_count": 1272,
+        "summary_file_sha256": "05cdc4fce774be04982986a3bcfa74e5b4567015b45e514c000d5aef31a54a61",
+        "test_data_used": false,
+        "training_transitions": 0,
+        "validation_data_used": false
+      },
+      {
+        "baseline_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+        "baseline_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+        "candidate_policy_outcomes_inspected": false,
+        "final_evaluation_data_used": false,
+        "label_protocol_sha256": "5285b27622d2ba952657ca168bf300d2cad902b4e3450ba2d39852b0c6542265",
+        "labels_file_sha256": "e0692551532d6272aaae348f4f15fd2e681fa0b9cf6fca4ebd2d7290666bea23",
+        "negative_count": 0,
+        "phase_parent_group_counts": {
+          "downstream": 5,
+          "upstream": 6
+        },
+        "phase_state_counts": {
+          "downstream": 1080,
+          "upstream": 821
+        },
+        "positive_count": 1901,
+        "root": "JIT/runs/pi_unified_gate_prelock/pi_0_repair02b_acceptance_two_axis_labels_sharded_20260903/merged",
+        "state_count": 1901,
+        "summary_file_sha256": "5805e58b889d050394357e29eb1f59374b1943de1d0376cd6640038db03d3fae",
+        "test_data_used": false,
+        "training_transitions": 0,
+        "validation_data_used": false
+      }
+    ],
+    "consumed_gates": [
+      {
+        "bank_file_sha256": "97cb62727e12824abc2a5238e9187e47773c80b5f169f2f286c0f412a8e2a6bd",
+        "bank_schema": "jit_paired_policy_gate_bank_v1",
+        "baseline_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+        "baseline_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+        "boundary_parent_group_counts": {
+          "downstream": 5,
+          "upstream": 5
+        },
+        "boundary_state_count": 56,
+        "candidate_iteration": 1,
+        "protocol_sha256": "24a126ee94472eebbcb59fff66618ae00dae41074a1d1cfee8bb816afaff410a",
+        "records_file_sha256": "614d020198a38235f0a2bfddc6b087fdd5e3729c5fcff49f40c4fcf71683cae2",
+        "root": "JIT/runs/pi_unified_gate/pi_0_to_pi_1_paired_core_boundary_20260901_retry01",
+        "source_iteration": 0,
+        "summary_file_sha256": "cf63f59f4862c51351ceca80afa8796316592be515c28b572584e97e39d9f7fc"
+      },
+      {
+        "bank_file_sha256": "4b7ea288ca641537f2faa66d7905be6d427089e55ab61efe58fc03b0f6361856",
+        "bank_schema": "jit_paired_policy_gate_bank_v2",
+        "baseline_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+        "baseline_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+        "boundary_parent_group_counts": {
+          "downstream": 5,
+          "upstream": 4
+        },
+        "boundary_state_count": 260,
+        "candidate_iteration": 1,
+        "protocol_sha256": "d771e54aa9c4c90d89223100ac955cf32d14c5b41ca577a25f7078e924912ece",
+        "records_file_sha256": "265d62697e7083021d40fe46bd91113f4ff4137f7b99bcdc08156d18754b89d8",
+        "root": "JIT/runs/pi_unified_gate/pi_0_to_pi_1_repaired_locked260_20260903",
+        "source_iteration": 0,
+        "summary_file_sha256": "9c1dbff4b4f0540edf99c6f6606a85037188f22d5ebcbf796b2a6657ebfc914c"
+      }
+    ],
+    "design_diagnosis": {
+      "candidate_policy_outcomes_inspected_on_consumed_gates": true,
+      "fresh_acceptance_bank_required_before_next_candidate_training": true,
+      "new_parent_source_selected_without_candidate_policy_information": true,
+      "next_candidate_training_started": false,
+      "parent_group_exhaustion_in_tube_frontier_source": true,
+      "prior_baseline_only_readiness_evidence_inspected": true
+    },
+    "future_use": {
+      "baseline_label_before_repair_training": true,
+      "candidate_generation_before_repair_training": true,
+      "forbid_continuation_field_fit_use": true,
+      "forbid_repair_training_use": true,
+      "forbid_tube_construction_use": true,
+      "lock_bank_before_repair_training": true
+    },
+    "isolation": {
+      "exclude_consumed_baseline_probe_exact_states": true,
+      "exclude_consumed_boundary_parent_groups_by_phase": true,
+      "exclude_consumed_boundary_states": true,
+      "exclude_target_tube_states_during_acquisition": true,
+      "final_evaluation_data_used": false,
+      "parent_groups_derive_from_physical_excitation_not_rng_seed": true,
+      "test_data_used": false,
+      "validation_data_used": false
+    },
+    "labeling": {
+      "baseline_policy_only": true,
+      "max_ticks": 400,
+      "policy_mode": "deterministic",
+      "protocol_seed": 9513011
+    },
+    "purpose": "fresh_nonfinal_acceptance_bank_from_candidate_blind_real_dynamics_natural_excitation_handoff_parents",
+    "schema": "jit_repair_acceptance_boundary_acquisition_protocol_v1",
+    "source_iteration": 0,
+    "source_tube_manifest_sha256": "c1c1161ebafd16716f2566aaccfe89169fe9cb0c2b090266c0e2bf90165df28b",
+    "status": "predeclared_before_repair_training"
+  },
+  "schema": "jit_repair_acceptance_boundary_acquisition_v1"
+}

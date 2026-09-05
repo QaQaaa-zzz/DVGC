@@ -1,0 +1,18 @@
+{
+  "checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_9977856",
+  "config_sha256": "a45e70438c2b5cc005ddd415bbb4920c8e07e7504feae7e630a94b473d91f3a6",
+  "failure": null,
+  "interaction_accounting": {
+    "actual_transitions": 1876,
+    "budget": 6666,
+    "max_ticks": 1250,
+    "max_transitions": 6666,
+    "snapshots": 56
+  },
+  "policy_sha256": "514493f3fa1d5a2137b6f6cfb402509b748b48c590e88c688017e17145e71da6",
+  "purpose": "bounded online handoff snapshot collection",
+  "schema": "handoff_bank_v1",
+  "snapshot_count": 56,
+  "status": "closed",
+  "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+}

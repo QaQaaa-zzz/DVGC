@@ -1,0 +1,77 @@
+{
+  "schema": "jit_upstream_checkpoint_domain_cv_prelaunch_handoff_v1",
+  "status": "prelaunch",
+  "date": "2026-09-01",
+  "iteration": 0,
+  "policy_name": "pi_0",
+  "trigger": {
+    "prior_seed_logo_completed": true,
+    "prior_seed_logo_mean_auc": 0.8399165442101222,
+    "prior_seed_logo_worst_auc": 0.7222222222222222,
+    "prior_seed_logo_all_fold_score_gaps_positive": true,
+    "prior_independent_validation_upstream_auc": 0.4252704031465093,
+    "diagnosis": "existing linear model generalizes across seeds inside transition_4988928 but failed independent validation, motivating checkpoint-domain TRAIN diversity"
+  },
+  "completed_parent_domain_expansion": {
+    "scientific_protocol_sha256": "b4c5a491fa57b0f181e1c7c2eceac56b80f9d9a8209d93d0317bfc2f4e67b040",
+    "acquisition_protocol_sha256": "cf732c7b55fb54cc2b41c1fca5cdc6dc8174453777d27a414377a6110babc470",
+    "attempt_count": 480,
+    "candidate_count": 480,
+    "positive_count": 418,
+    "negative_count": 62,
+    "acquisition_environment_interactions": 4480,
+    "successful_labeling_environment_interactions": 24515,
+    "failed_labeling_environment_interactions": 0,
+    "checkpoint_domains": {
+      "transition_7987200": {
+        "candidate_count": 240,
+        "positive_count": 217,
+        "negative_count": 23,
+        "positive_parent_group_count": 5,
+        "negative_parent_group_count": 5
+      },
+      "transition_9977856": {
+        "candidate_count": 240,
+        "positive_count": 201,
+        "negative_count": 39,
+        "positive_parent_group_count": 5,
+        "negative_parent_group_count": 5
+      }
+    },
+    "consumed_validation_rows_read": false,
+    "consumed_validation_predictions_read": false,
+    "validation_data_used": false,
+    "test_data_used": false,
+    "final_evaluation_data_used": false,
+    "ppo_training_transitions": 0
+  },
+  "next_gate": {
+    "first": "freeze merged upstream TRAIN evidence across transition_4988928, transition_7987200, transition_9977856",
+    "combined_candidate_count": 1051,
+    "combined_positive_count": 963,
+    "combined_negative_count": 88,
+    "combined_parent_group_count": 15,
+    "freeze_protocol_sha256": "e584d09165bd281cd9763bc06ccf615594ddf485c6e6713fa6cd87a362e9b4ea",
+    "second": "run TRAIN-only leave-one-checkpoint-domain-out using unchanged 76-D linear logistic model",
+    "checkpoint_cv_protocol_sha256": "e7a2e48ca1664fd0858cc2b32cf5da7f9d95e4d668980e3e26fec910cdff8766",
+    "checkpoint_cv_gate": {
+      "minimum_mean_logo_roc_auc": 0.7,
+      "minimum_worst_logo_roc_auc": 0.6,
+      "require_positive_score_gap_in_every_fold": true
+    }
+  },
+  "interpretation_guard": {
+    "legacy_transition_4988928_acquisition_family_is_heterogeneous": true,
+    "new_transition_7987200_and_9977856_domains_use_the_same_locked_panel": true,
+    "a_failed_checkpoint_cv_must_not_be_attributed_to_checkpoint_shift_alone": true,
+    "consumed_seed_1000006_validation_must_not_be_reused_for_model_selection": true
+  },
+  "claims": {
+    "fresh_validation_bank_predeclared": false,
+    "continuation_field_reselected": false,
+    "tube_1_constructed": false,
+    "pi_1_trained": false,
+    "jce_jel_claim": false,
+    "certified_safe_set_claim": false
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "branch_rollout_count": 22,
+  "candidate_count": 22,
+  "closed_outcome_counts": {
+    "apex_success": 9,
+    "pitch_limit": 11,
+    "roll_limit": 2
+  },
+  "labeling_transitions": 2265,
+  "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+  "physical_failure_rollouts": 13,
+  "protocol_sha256": "073cbf1710127c536447809fd1de076e1467d371ce90c347e6ce12b8de864010",
+  "schema": "jit_upstream_boundary_validation_labels_v1",
+  "split": "validation",
+  "status": "completed",
+  "success_rollouts": 9,
+  "target": "V_up",
+  "task_failure_rollouts": 0,
+  "test_interaction_count": 0,
+  "timeout_rollouts": 0,
+  "training_transitions": 0
+}

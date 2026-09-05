@@ -1,0 +1,43 @@
+{
+  "schema": "jit_upstream_matched_panel_audit_prelaunch_v1",
+  "status": "prelaunch_zero_interaction_diagnostic",
+  "scientific_state": {
+    "frozen_three_checkpoint_upstream_train_manifest_sha256": "bf0df10890585aea579efbc6e4100cb712b90359b2488c844e1b6311c89935da",
+    "frozen_three_checkpoint_upstream_train_labels_sha256": "4117aa6d5c74d69db9b8506e8390701d7cf9aeab92a1bc711bf6561f0e31cd56",
+    "checkpoint_domain_cv_summary_sha256": "8c91a3247a8b6be08c05eaf9ef3bbca171fcd158d39edf7ec517bd435814a7de",
+    "checkpoint_domain_cv_mean_auc": 0.6625978052454596,
+    "checkpoint_domain_cv_worst_auc": 0.4663860186248246,
+    "checkpoint_domain_generalization_supported": false,
+    "fresh_validation_predeclaration_authorized": false,
+    "tube_1_authorized": false
+  },
+  "reason_for_next_gate": "The legacy transition_4988928 TRAIN domain is acquisition-family heterogeneous, while transition_7987200 and transition_9977856 were collected under one matched panel. Before spending more interactions or changing the field family, reconstruct whether an exact matched transition_4988928 subset already exists in historical TRAIN catalogs.",
+  "matched_panel": {
+    "action_names": ["steer", "rear_wheel_drive", "hip", "knee"],
+    "signs": [-1, 1],
+    "strengths": [0.025, 0.1],
+    "durations": [4, 8, 16],
+    "expected_cells_per_parent": 48,
+    "expected_total_cells": 240
+  },
+  "protocol_sha256": "7ed71a260e631b42c26a090691b67c20f09310a342dc98b66599452fb99b024c",
+  "data_policy": {
+    "environment_interactions": 0,
+    "training_transitions": 0,
+    "consumed_validation_rows_read": false,
+    "consumed_validation_predictions_read": false,
+    "test_data_used": false,
+    "final_evaluation_data_used": false
+  },
+  "decision_rule": {
+    "if_complete_matched_subset_exists": "freeze matched 4988928 subset together with matched 7987200/9977856 rows and rerun leave-one-checkpoint-domain-out before any model change",
+    "if_incomplete": "collect only missing 4988928 panel cells under frozen pi_0 real dynamics, then freeze a matched three-domain dataset and rerun checkpoint-domain CV",
+    "forbidden": [
+      "reuse consumed validation for model selection",
+      "change C_up model before resolving acquisition-family confounding",
+      "predeclare fresh validation before matched-domain TRAIN CV",
+      "construct Tube_1",
+      "train pi_1"
+    ]
+  }
+}

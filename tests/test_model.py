@@ -1,14 +1,18 @@
-from dvgc.config import AUTHORITATIVE_XML_SHA256
+from dvgc.config import AUTHORITATIVE_PAYLOAD_MASS_KG, AUTHORITATIVE_XML_SHA256
 from dvgc.model import inspect_model
 
 
 def test_original_model_contract():
     model = inspect_model("assets/orange_bike_4kg_horizontal.xml")
+    assert model["xml_sha256"] == (
+        "e2762bec49fdce61eff6ad01b6a67925934d8997b53929b0a67ace7f44109192"
+    )
     assert model["xml_sha256"] == AUTHORITATIVE_XML_SHA256
+    assert AUTHORITATIVE_PAYLOAD_MASS_KG == 2.0
     assert model["xml_path"].endswith("orange_bike_4kg_horizontal.xml")
     assert abs(model["step"]["front_x"] - 3.6) < 1e-9
     assert abs(model["step"]["top_z"] - 0.16) < 1e-9
-    assert model["named_masses_kg"]["load"] == 4.0
+    assert model["named_masses_kg"]["load"] == AUTHORITATIVE_PAYLOAD_MASS_KG
     assert all(asset["exists_in_current_copy"] for asset in model["mesh_assets"])
     names = [a["name"] for a in model["actuators"]]
     assert names == ["cmd_steering_v", "cmd_rearwheel_f", "cmd_hip_f", "cmd_knee_f"]

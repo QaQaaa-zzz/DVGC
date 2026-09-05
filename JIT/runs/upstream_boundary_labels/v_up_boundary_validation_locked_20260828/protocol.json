@@ -1,0 +1,24 @@
+{
+  "branches": 1,
+  "catalog_sha256": "9a5fab577f47cebcbd2f1bb231ad4c388b6023b9635c42db1976e36db2b2ebc6",
+  "expert_actor_sha256": "f218775e3cf99555ce524f1357a800172904bc815b06c54a53db8965204d9081",
+  "expert_config_sha256": "a45e70438c2b5cc005ddd415bbb4920c8e07e7504feae7e630a94b473d91f3a6",
+  "expert_payload_sha256": "965b2f141d5cff17f7cef943004fe4e4f62f0fecfe88b47353dc78b14ced723a",
+  "frozen_manifest_sha256": "505a94fa732badbd319eb286497e4f50b06b407c90acf4defb417619f0b1f584",
+  "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+  "max_ticks": 400,
+  "policy_mode": "deterministic",
+  "protocol_seed": 820405,
+  "protocol_sha256": "073cbf1710127c536447809fd1de076e1467d371ce90c347e6ce12b8de864010",
+  "question": "frozen pi_up_star reaches Apex before a retained terminal",
+  "schema": "jit_upstream_boundary_validation_labels_v1",
+  "split": "validation",
+  "target": "V_up",
+  "test_interaction_count": 0,
+  "train_protocol_sha256": "1e269bf62d9661126f9290f490390f9fad46d2c1abb8f9e96b65eb123773ae0a",
+  "training_transitions": 0,
+  "validation_seeds": [
+    1000006
+  ],
+  "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+}

@@ -1,0 +1,68 @@
+{
+  "schema": "jit_iter0_validation_complete_c0_prelaunch_v1",
+  "status": "validation_frozen_next_c0_fit",
+  "date": "2026-09-01",
+  "iteration": 0,
+  "policy_name": "pi_0",
+  "validation_source_head": "df30d6b2a1658f8b70d82d415ea735f6747a3495",
+  "policy_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+  "policy_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+  "validation_scientific_protocol_sha256": "9ec0a1e8c314cc5710688a3537fbd339f520d4db3c4268d20715bcde938586b0",
+  "validation_runtime_protocol_sha256": "9cda2c58c5918db4c5791ce9d18e7689d49a50336638c2caac43ddb02e88eda3",
+  "validation_result": {
+    "attempt_count": 160,
+    "candidate_count": 147,
+    "excluded_train_near_duplicate_observation": 13,
+    "positive_count": 117,
+    "negative_count": 30,
+    "outcomes": {
+      "success": 117,
+      "physical_failure": 30
+    },
+    "upstream": {
+      "candidate_count": 131,
+      "positive_count": 113,
+      "negative_count": 18
+    },
+    "downstream": {
+      "candidate_count": 16,
+      "positive_count": 4,
+      "negative_count": 12
+    },
+    "acquisition_environment_interactions": 1793,
+    "labeling_environment_interactions": 6638,
+    "total_environment_interactions": 8431,
+    "training_transitions": 0,
+    "test_data_used": false,
+    "final_evaluation_data_used": false
+  },
+  "validation_panel_policy_after_outcomes": {
+    "panel_is_consumed": true,
+    "panel_may_be_modified": false,
+    "validation_rows_may_enter_train_or_tube": false,
+    "validation_hyperparameter_search_permitted": false
+  },
+  "validation_freeze": {
+    "config": "JIT/configs/envelope_iter0_validation_evidence_freeze.json",
+    "protocol_sha256": "bfa1b4333047d2bb999afc6101cd8587e6267b29bb8c4b3ab6fedc72f4f96bb9",
+    "output_dir": "JIT/runs/frozen_expansion_validation/pi_0_iter0_group_disjoint_20260831",
+    "new_environment_interactions": 0,
+    "new_training_transitions": 0
+  },
+  "continuation_field_protocol": {
+    "config": "JIT/configs/envelope_iter0_continuation_field.json",
+    "protocol_sha256": "8ee93ece342ee23365aa4adc4f904476e26d99edb69efb341fd12cee3020ad58",
+    "model_family": "phase_specific_linear_logistic",
+    "parameter_count_per_phase": 77,
+    "input": "76-D unified actor observation",
+    "train_weighting": "equal mass per (parent_group_id,label) cell",
+    "validation_role": "single-use threshold calibration and gate only",
+    "threshold_rule": "accept iff score is strictly greater than the maximum held-out negative score",
+    "minimum_validation_roc_auc": 0.7,
+    "minimum_validation_positive_recall": 0.2,
+    "require_accepted_positive_in_every_validation_parent": true,
+    "probability_claim": false,
+    "safe_set_claim": false
+  },
+  "next_gate": "freeze validation evidence, run focused/full preflight, fit C_up^0 and C_down^0 once; construct Tube_1 only if both calibration gates pass"
+}
