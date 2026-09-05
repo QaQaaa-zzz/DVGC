@@ -1,5 +1,7 @@
 # DVGC/JIT scientific review response — 2026-09-05
 
+> Historical response from commit bfc22f2. The user has since confirmed empirical-envelope discovery with complementary proposer/evaluator probes. Engineering completion claims below are historical and narrowed by the new [code/evidence review](JIT_EMPIRICAL_ENVELOPE_REVIEW_20260905.md); current authority is [CURRENT_STATUS](CURRENT_STATUS.md). Do not treat this response as proof that full warm-start, cache or row identity migration is complete.
+
 ## Decision
 
 The review changes the project stop boundary. The repository no longer treats

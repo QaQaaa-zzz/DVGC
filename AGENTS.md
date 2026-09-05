@@ -1,164 +1,89 @@
-# DVGC repository authority
+# DVGC repository authority — empirical jumping envelope
 
-## Current research truth — 2026-09-05
+Updated 2026-09-05 after the user's paper-outline decisions. This is the active research direction. The audited implementation baseline is `bfc22f2e32cb78cb269b0e522c3bdd7c6e7a8d42`; new requirements below are not claims that the code already implements them.
 
-DVGC/JIT studies an empirical, trajectory-centered reset curriculum for one
-fixed single-track two-wheeled robot jump. The active experiment is conditioned
-on the locked ground jump start at `root x = 2.5 m`; it does not currently claim
-reachability from the natural episode reset.
+## Research objective
 
-The five objects below must remain separate:
+JIT studies **bootstrapping and budget-controlled discovery of an empirical jumping capability envelope** for the fixed bicycle–pendulum robot and operating condition. Phase-specific up/down learning supplies initial reset support; a successful frozen unified policy supplies a seed trajectory; complementary frozen probes discover additional forward-arrived states with successful landing continuations.
 
-```text
-A  forward arrival evidence
-   pi_0 + bounded lookback action perturbation reaches an exact state by env.step
+The primary result is valid new physical support versus total environment interactions. One Actor's realization is a separate diagnostic/application result. **Do not require a new Actor to cover the whole cumulative Tube or replace all previous policies.** A regression by a later policy does not erase a valid historical witness.
 
-E  policy-family landing witness
-   from that exact state, any frozen member of {pi_0, pi_1, pi_2} reaches the
-   first valid landing before physical failure
+## User-confirmed scientific contract
 
-J  physical capability occupancy
-   positive A intersect E states projected into predeclared physical cells
+- Task begins at the declared complete ground jump-start state at `x = 2.5 m`, including pose, velocities, controller/event history and time semantics. Earlier natural-reset approach is outside scope.
+- A state enters empirical support only with real forward dynamics from that start (or a fully verified ancestor chain) and a successful continuation from the **same exact state and required context**.
+- Success is `first_valid_landing` before declared failure/horizon; recovery is not required. One observed success is a witness, not a calibrated success probability or safety guarantee.
+- Multiple frozen policies may provide forward proposals and continuation evaluations. Membership and roles are versioned; one forward rollout uses its declared frozen proposer plus bounded perturbations. Different prefix/suffix policies are allowed as offline witnesses, not claimed as one-Actor execution.
+- Keep the real-frame pi_0 centerline fixed as longitudinal coordinates. It is not an Actor command, reward target, tracking trajectory or interpolated reachable corridor.
+- All tried policies failing means `no_success_witness_under_declared_bank`, not physical infeasibility. Untested and incomplete engineering attempts are separate states.
+- Never infer formal reachability, viability, safe invariance, continuous feasible volume, the complete physical limit, or universal Actor impossibility.
 
-S  raw/control Soft Tube
-   reset/replay snapshots, including retained historical core rows
+## Objects that must stay separate
 
-r  single-Actor realization
-   one frozen Actor's measured success on a common locked state panel
-```
+| Object | Meaning |
+| --- | --- |
+| `R_hat` / arrival evidence | Exact states reached with auditable prefix provenance |
+| landing witness | A declared frozen evaluator succeeded from that exact state |
+| `T_hat` / empirical support | Exact arrival states with at least one valid landing witness |
+| physical cells | Declared projection of witnessed states; a cell does not certify every state inside |
+| `S` / training Tube | Reset/replay support, including historical rows without current arrival/landing evidence |
+| `Pi` / probe bank | Immutable policy records with explicit proposer/evaluator roles and version |
+| Actor realization | A single policy's results on a declared common panel |
 
-An `A` state is conditional on the declared jump start and proposer. An `E`
-witness may concatenate a `pi_0` prefix with another family's suffix, so it is
-not evidence that one Actor executes the full chain. A physical cell is an
-occupancy statistic, not a continuous feasible region. A raw Tube is not a
-causal reachable set. The final runtime target remains one unified Actor with no
-expert switching.
+Deduplicate physical coverage separately from storing witnesses. A row already in `S` may still need its first arrival or continuation witness. Equal qpos/qvel does not establish equal FIFO, event state, controller context or remaining time.
 
-JIT does not claim a formal reachability set, viability kernel, invariant or
-certified safe set, complete physical jump limit, or final RA-L evidence.
+## Fixed runtime
 
-## Active fixed experiment contract
+- Repository target branch: `agent/two-phase-soft-tube`; isolated review branches/worktrees may be used to preserve concurrent work.
+- XML: `assets/orange_bike_4kg_horizontal.xml`.
+- Recorded XML identity: `0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a`.
+- Payload: 2 kg; simulation step: 0.005 s; control interval: 0.020 s.
+- Actions: `[steer, rear-wheel drive, hip, knee]`; hip/knee limits: +/-30 N m.
+- Production Python: `/home/qy/mujoco_playground/.venv/bin/python`.
 
-- branch: `agent/two-phase-soft-tube`
-- XML: `assets/orange_bike_4kg_horizontal.xml`
-- locked XML identity:
-  `0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a`
-- payload: 2 kg
-- simulation substep: 0.005 s
-- control interval: 0.020 s = 50 Hz
-- hip/knee actuator range: +/-30 N m
-- action order: `[steer, rear-wheel drive, hip, knee]`
-- centerline: locked real-frame `pi_0` jump-start trajectory
-- proposer: frozen `pi_0`
-- evaluator family: frozen `{pi_0, pi_1, pi_2}`
-- positive label: any evaluator reaches first valid landing before physical
-  failure
-- post-landing recovery: outside the active label
-- final TEST/JCE/JEL: untouched
+Do not change physics, reward, endpoint, reset semantics or action order silently. If the production runtime is unavailable, report the limit; source/fixture checks are not GPU rollout validation.
 
-The centerline is a longitudinal exploration scaffold only. It is not an Actor
-intent, tracking reference, reward target, interpolated trajectory, or proof of
-reachability between samples. Its nominal range is `x = 2.5..4.2 m` at 0.1 m
-spacing, ending earlier at the first valid landing. Only captured simulator
-frames are allowed.
+## Historical evidence and migration boundary
 
-Prospective candidates must be created by authoritative `env.step` transitions
-from the locked jump-start snapshot using the declared `pi_0` prefix and bounded
-lookback perturbation. Restoring an RSI/Tube state cannot establish `A`.
-Restoration is permitted only after arrival, to evaluate the exact state's
-landing outcome.
+The locked 2026-09-04/05 scans used pi_0 as proposer and exactly pi_0/pi_1/pi_2 as evaluators. Finish their missing labels under those identities; do not retrofit a larger bank or new seed into their outputs.
 
-## Data roles
+The current source still hard-codes the three-policy family and a single selected-policy workflow. General probe-bank orchestration, bank admission, and training-for-complementarity rules are **not implemented/validated**. Changing this document does not enable them.
 
-- `TRAIN`: may contribute observed family-positive states to replay.
-- `CALIBRATION`: threshold calibration and diagnostics only.
-- `ACCEPTANCE`: locked development comparison only; once used for selection or
-  method decisions it remains development data.
-- final `TEST/JCE/JEL`: untouched until the method, policy and stopping rule are
-  frozen.
+The historical pi_3 mixed-endpoint gate remains invalid as a fair comparison. Keep the trained checkpoint and valid underlying outcomes. pi_3 may be assessed as a prospective probe under a new identity/endpoint contract without requiring old full-Tube retention, but never reuse its old selected manifest as automatic authority.
 
-Role assignment and removal of exact TRAIN/Tube overlaps must be outcome blind.
-Report excluded counts and reasons. Adjacent states from one trajectory or
-perturbation family are correlated; candidate count is not an independent
-sample count.
+New formal probe training is not ready at the audited baseline: first repair witness/cache/selection integrity, validate serial-vs-sharded equivalence, establish the new bank/registry path, and lock the experiment recipe and budget. Existing frozen-probe pilots should precede additional large PPO runs. A predictor is optional and must not block a predictor-free discovery experiment once essential gates pass.
 
-## Current evidence boundary
+## Data roles and evidence integrity
 
-The first fixed-jump-start family round is complete:
+- TRAIN may guide exploration, train probes and supply reset support.
+- CALIBRATION calibrates optional predictors; ACCEPTANCE is development evidence when used for decisions.
+- Final TEST/JCE/JEL remains unopened for this work. Historical bootstrap files have their own splits named `test`; do not present those already-used splits as untouched final tests.
+- Re-audit role isolation across every proposer, bank version, ancestor and training Tube. Shared ancestors/proposal groups imply correlated samples.
+- Lock task, complete start/context, catalog, proposer/evaluator identities, endpoint, seed, horizon, remaining-time rule, role, cell resolution and budget before execution.
+- A hash proves content identity, not when it was frozen. Preserve pre-outcome/pre-training records and history.
+- Cache reuse and merges must verify the full requested contract before publishing; engineering failures never become physical negative labels.
+- Keep raw runs immutable. Add new derived views and machine-readable eligibility records; never relabel historical results to manufacture a pass.
 
-```text
-family-positive TRAIN candidates                 1230 / 1258
-Tube_2 -> Tube_3 raw increment                  1159 rows
-new causal TRAIN root cells                      713
-Tube_3 control root-cell increment               714
-pi_3 training                                    completed, 10,009,600 transitions
-```
+## Paper evidence and cost
 
-`pi_3` was historically registered as an engineering selection, but its core
-comparison is not a fair prospective policy-selection result: the stored gate
-compares a `stable_recovery` baseline core against a `first_valid_landing`
-candidate core. Preserve all artifacts and the 30 regressions/89 improvements,
-but do not treat that selection as current scientific authority. A same-endpoint
-reevaluation is retrospective diagnostic evidence only.
+Report raw candidates, witnessed exact states, novel physical cells, failed attempts, individual-probe contributions and single-Actor realization separately. Distinguish new arrival discovery from a new suffix witness on an old arrival.
 
-The fitted upstream landing predictor is advisory. Its old ACCEPTANCE AUC was
-about 0.8925, but it accepted 6 of 9 observed negatives at the locked threshold.
-It cannot establish arrival, label a state, filter Tube admission, or support a
-safety claim. Downstream was single-class all-positive and was not fit.
+Count expert/bootstrap training, proposal prefixes, all evaluator rollouts, unsuccessful/excluded acquisitions, PPO, development evaluations and failed retries. Shared bootstrap can be reported separately but belongs in the end-to-end total. Use matched-budget comparisons and independent seeds/group-aware uncertainty.
 
-The expanded next-round catalogs and pre-outcome predictor scores are locked,
-but family labeling is incomplete after GPU allocation failures. No `pi_4`
-training is authorized. Complete memory-bounded evaluator shards, audit the
-fresh predictions, repair the same-endpoint comparison protocol, and decide the
-controlled experiment before further policy training.
+The existing Tube0 is value-weighted training support, not an all-success capability set: 222 rows include 42 historical negative labels. The successful pi_0 identity used by current scans is the later Round1 artifact; do not equate it with the first completed unified PPO run.
 
-## Paper claim direction
+## Repository work
 
-The strongest defensible thesis to test is:
+Preserve unrelated changes; never reset/clean/stash/rebase/force-push. Keep durable logic in `JIT/src/jit_dvgc/`, thin CLIs in `JIT/cli/`, tests in `JIT/tests/`, and research guidance in `JIT/docs/`. Extend existing capabilities rather than adding iteration-specific duplicate modules. Retain provenance checks; do not repeatedly recalculate locked hashes without a concrete identity question.
 
-> Reachability-filtered reset curricula can improve one unified jumping policy
-> at controlled total interaction cost.
+## Read order
 
-This is a hypothesis, not a demonstrated conclusion. Required comparisons
-include continued PPO/fixed curriculum, static successful Tube-RSI,
-fixed-grid forward acquisition, an RSI-only candidate baseline, and the active
-iterative method. Report all acquisition, family-labeling, training, selection
-and failed-retry interactions. Use independent training seeds (three for pilot,
-five preferred for the main result), group-aware intervals and a frozen final
-distribution. Tube growth alone is not the primary result.
+1. This `AGENTS.md` and [JIT/AGENTS.md](JIT/AGENTS.md).
+2. [PROJECT.md](PROJECT.md) and [CURRENT_STATUS.md](JIT/docs/CURRENT_STATUS.md).
+3. [Paper outline](JIT/docs/JIT_PAPER_OUTLINE.md).
+4. [Code/evidence review](JIT/docs/JIT_EMPIRICAL_ENVELOPE_REVIEW_20260905.md).
+5. [Iteration protocol](JIT/docs/ENVELOPE_ITERATION_PROTOCOL.md).
+6. [Training roadmap](JIT/docs/JIT_TRAINING_ROADMAP.md).
+7. [Handoff](JIT/docs/CODEX_HANDOFF_20260904.md) and [code organization](JIT/docs/CODE_ORGANIZATION.md).
 
-## Implementation ownership
-
-- scientific logic belongs in `JIT/src/jit_dvgc/`;
-- command-line entry points stay thin in `JIT/cli/`;
-- tests belong in `JIT/tests/`;
-- durable reports and authority belong in `JIT/docs/`;
-- modify the existing implementation for an existing capability instead of
-  creating iteration-numbered duplicate source files;
-- schemas/configs drive iteration identity; do not hard-code policy numbers,
-  seeds, retries or checkpoint paths into reusable scientific logic.
-
-## Repository and Git safety
-
-- preserve unrelated user work;
-- never reset, clean, stash, rebase, force-push or silently overwrite files;
-- use `/home/qy/mujoco_playground/.venv/bin/python`;
-- compile and run targeted tests after structural changes;
-- never rewrite an immutable historical artifact to manufacture a pass;
-- do not repeatedly recalculate SHA-256 values already locked in manifests or
-  authority documents; routine code should reuse recorded identities;
-- retain automatic artifact provenance and self-hash checks, and calculate a
-  hash manually only to diagnose a concrete identity problem.
-
-## Authority read order
-
-1. `AGENTS.md`
-2. `JIT/AGENTS.md`
-3. `JIT/docs/CURRENT_STATUS.md`
-4. `PROJECT.md`
-5. `JIT/docs/ENVELOPE_ITERATION_PROTOCOL.md`
-6. `JIT/docs/CODEX_HANDOFF_20260904.md`
-7. `JIT/docs/CODE_ORGANIZATION.md`
-8. `JIT/docs/JIT_SCIENTIFIC_REVIEW_RESPONSE_20260905.md`
-9. `JIT/docs/JIT_CAUSAL_REACHABLE_JUMP_TUBE_REPORT_20260904.md` (historical
-   redesign record)
+Dated older reports and run manifests remain historical evidence, not overrides of this user-confirmed direction.

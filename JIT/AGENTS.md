@@ -1,129 +1,72 @@
-# JIT agent and maintenance rules
+# JIT agent instructions — active empirical-envelope direction
 
-The root `AGENTS.md` is primary authority. This file narrows it for `JIT/`.
+The root [AGENTS.md](../AGENTS.md) and user-confirmed [paper outline](docs/JIT_PAPER_OUTLINE.md) govern this work. Audited baseline: `bfc22f2`. Requirements below distinguish desired behavior from current implementation.
 
-## Active scientific contract
+## Objective and objects
 
-The active experiment is conditioned on the fixed jump start at `x = 2.5 m`:
+Bootstrap with up/down phase support and a successful unified seed, then discover empirical jumping support using complementary frozen probes. Do not require one Actor to retain/realize the entire cumulative Tube.
 
-```text
-pi_0 jump-start prefix + bounded perturbation + env.step
--> exact arrived state A
--> frozen pi_0/pi_1/pi_2 first-landing rollouts
--> family witness E
--> observed positive physical cells J
--> TRAIN-only replay support S
--> one unified Actor realization r
-```
+Keep forward arrivals, exact landing witnesses, empirical support, projected cells, training Tube and individual-Actor realization distinct. Historical Tube0 is value-weighted (222 rows, including 42 negative phase labels), not an all-positive capability set. Original unified training completion and later Round1 pi_0 identity are distinct records.
 
-Never collapse `A`, `E`, `J`, `S` and `r`:
+## Arrival and continuation
 
-- family OR is an offline witness, not one-Actor full-chain execution;
-- Actor observation space is not the physical capability metric space;
-- raw Tube rows are not automatically causally reached states;
-- first valid landing is the active endpoint; recovery is not required;
-- no natural-reset connectivity claim is active;
-- no formal reachability, viability or safety claim is allowed.
+- Begin at the complete declared ground jump-start state, x=2.5 m. Do not demand or claim the earlier natural approach.
+- Keep pi_0 centerline coordinates fixed; all centerline frames are captured, not interpolated.
+- New protocols may use multiple frozen proposers and evaluators. Lock membership before each round and record bank versions.
+- Each candidate needs exact prefix/suffix context, action history, events, start/remaining time and source identities. qpos/qvel identity alone is insufficient for policy-conditioned continuation.
+- RSI may restore a verified ancestor or candidate, but cannot invent a prefix. Current source only restarts from the fixed start; general ancestor reuse needs implementation and replay checks.
+- A first-valid-landing witness is sufficient. Negative means no success under the declared evaluators/horizon, not physical infeasibility.
+- Do not discard evidence just because physical coordinates already occur in the training Tube. Deduplicate coverage separately.
+- Keep incomplete/error/untested outcomes separate from completed failed rollouts.
 
-The centerline and proposer remain frozen `pi_0`. The evaluator family remains
-exactly `{pi_0, pi_1, pi_2}` unless a new protocol explicitly changes it. Final
-runtime expert switching is forbidden.
+## Legacy execution versus new method
 
-## Current stop boundary
+The already locked wide/expanded scans retain pi_0 proposer and pi_0/pi_1/pi_2 evaluators. Resume under their exact catalog, seed, horizon and endpoint. Do not rename or retrofit those runs as multi-probe discovery.
 
-The first family round produced Tube3 and trained `pi_3`. The stored π3 core
-gate mixed `stable_recovery` baseline labels with `first_valid_landing`
-candidate labels. Therefore π3 is trained historical evidence, not valid
-prospective selection authority. Do not train π4 from the historical selection.
+The old `prepare_iterative_envelope_workflow.py` selects one successor and requires coverage eligibility. It is legacy automation, not the new discovery scheduler. Do not launch a new experiment through that chain without changing and validating its contracts.
 
-The expanded predictor-audit round has completed acquisition and locked
-pre-outcome scores for TRAIN/CALIBRATION/ACCEPTANCE. Family labeling is
-incomplete because large single-process evaluators exhausted GPU allocation.
-The next executable task is evaluator-by-evaluator independent-process
-sharding, followed by strict merge and fresh predictor audit. No final
-TEST/JCE/JEL interaction is permitted.
+pi_3 remains a frozen trained candidate. Its mixed-endpoint gate is quarantined as comparison evidence, not a blanket rejection of every pi_3 witness. Assess technical probe eligibility and complementary witnesses under a new protocol. Do not automatically promote the old selected manifest.
 
-## Centerline and acquisition
+## Immediate correctness gates
 
-- use `jit_dvgc.analysis.nominal_jump_centerline`;
-- use only real captured frames, with no qpos/qvel interpolation;
-- use the locked π0 artifact; do not recompute it per iteration;
-- use 0.1 m x slices from 2.5 m through landing or 4.2 m;
-- reach candidates only by `env.step` from the locked jump-start state;
-- proposal anchors identify targets and are never reset states;
-- record that RSI/injection/reset anchors were not used for arrival.
+See issue IDs and evidence in [review](docs/JIT_EMPIRICAL_ENVELOPE_REVIEW_20260905.md).
 
-Changing a seed does not by itself prove a distinct physical trajectory.
+1. Close evaluator/cache identity checks, per-row endpoint checks and atomic merge publishing.
+2. Prevent mixed-endpoint historical reports from becoming new eligibility evidence.
+3. Separate training-support membership, exact witness identity and physical novelty.
+4. Validate public warm-start routing; preserve Actor/normalizer only, with fresh critic/optimizer unless explicitly declared.
+5. Validate serial versus sharded labels on a small identical catalog using the production runtime.
+6. Implement versioned banks, witness attribution and a cost ledger before new formal discovery training.
 
-## Labeling and predictor rules
+Shards must preserve catalog/global index/seed/horizon/endpoint/full policy identity. The historical operational suggestion is at most 600 candidates per fresh GPU process; it is not an enforced code limit or measured universal safe capacity. Start small, end the process between shards, and avoid concurrent evaluators without measured capacity. Completed cache entries need full requested-contract verification; preserve failures.
 
-Every exact candidate receives real rollouts from all three frozen evaluators.
-The family label is the OR of first-valid-landing results. Sharding may change
-only execution lifetime; preserve catalog ordering, global candidate index,
-seed, horizon, evaluator identity and endpoint.
+## Predictor
 
-The predictor:
+Optional, advisory, never proof of arrival or a Tube admission label. Fix score self-hash and target-bank/catalog binding before fresh-label audit. Equal-score AP must be order invariant. Do not use ACCEPTANCE labels to decide whether TRAIN fitting is authorized. Unsupported/single-class outcomes need explicit metrics availability, not fabricated negatives. A predictor-free discovery experiment does not wait for predictor quality.
 
-- is fit on TRAIN and calibrated on CALIBRATION;
-- must lock model, normalization, threshold, candidate order and scores before
-  reading fresh outcomes;
-- reports ROC-AUC, PR-AUC where defined, recall, FPR/accepted negatives,
-  class/group counts and uncertainty when supporting a claim;
-- cannot establish arrival, create labels, filter Tube admission or support a
-  safety claim;
-- requires a controlled same-budget ablation before any sample-efficiency use.
+## Training and evidence roles
 
-## Physical resolution
+- Predeclare training support, frozen initializer, normalizer handling, reset distribution, reward, steps, seed, probe admission rule and stopping rule.
+- Existing configs say `natural_reset_probability` and `existing_phase_u_natural_reset`; these are historical training semantics, not automatically the x=2.5 task reset. Lock a deliberate training mixture and adapt code before using a new reset meaning.
+- TRAIN only supplies adaptive acquisition/training support. Preserve CALIBRATION/ACCEPTANCE isolation across bank versions and ancestor chains.
+- Final TEST/JCE/JEL stays unopened. Old bootstrap `test` labels are already historical development/evaluation evidence and cannot be advertised as untouched final tests.
+- Keep phase-specific successes/failures and individual-probe contributions, not only family totals. A weak Actor may still add unique witnesses; no full-Tube retention gate for witness validity.
+- Account all bootstrap, acquisition, labels, retries, PPO and development evaluation; independent seeds are not checkpoints from one seed.
 
-Primary `root_geometry_v1` cells use 0.10 m root position and 0.10 m/s root
-velocity bins. `full_physical_v1` additionally uses 0.50 degree joint/orientation
-and 2 degree/s angular/joint-rate bins, 0.10 m/s wheel tangential speed and
-discrete phase. Raw rows, causal root cells, control cells and semantic corridor
-cells are different quantities and must be reported separately.
+## Physical metrics
 
-## Training and evaluation
+Reuse `analysis/capability_tube.py` resolution contracts. Root geometry includes position/velocity **and** orientation/angular rate; full physical adds joints/rates and wheel tangential velocity. Existing bins are 0.10 m, 0.10 m/s, 0.50 degrees and 2 degrees/s as applicable, with discrete phase. Report resolution sensitivity and physical support separately from all-state replay projections.
 
-- Actor-only warm start imports Actor and observation normalizer only;
-- critic and optimizer remain fresh unless explicitly predeclared;
-- compare baseline and candidate with the same endpoint, panel, horizon and
-  remaining-time convention;
-- retain every regression and improvement, not only net coverage;
-- training-support realization is not final forward-task generalization;
-- ACCEPTANCE used for a decision remains development data;
-- use independent training seeds, not checkpoints from one seed.
+## Runtime and maintenance
 
-## Code placement
+Use `/home/qy/mujoco_playground/.venv/bin/python` for production. The review environment has no JAX/MuJoCo/Brax/pytest; syntax/isolated-function checks do not replace a GPU smoke or real label equivalence.
 
-- durable logic: `JIT/src/jit_dvgc/`;
-- thin CLIs: `JIT/cli/`;
-- tests: `JIT/tests/`;
-- configurations: `JIT/configs/`;
-- reports and handoffs: `JIT/docs/`;
-- run evidence: `JIT/runs/`, with lightweight summaries indexed in Git and
-  large checkpoints kept out of normal commits.
-
-Modify existing modules for existing behavior. New modules require a genuinely
-new durable capability. Never encode one iteration's names, seeds or paths as
-general logic.
-
-## Fixed runtime and safety
-
-- branch `agent/two-phase-soft-tube`;
-- XML `assets/orange_bike_4kg_horizontal.xml`, 2 kg payload;
-- 0.005 s simulation step, 0.020 s control interval;
-- actions `[steer, rear-wheel drive, hip, knee]`, hip/knee +/-30 N m;
-- use `/home/qy/mujoco_playground/.venv/bin/python`;
-- preserve unrelated work; never reset/clean/stash/rebase/force-push;
-- never alter historical artifacts to change their meaning;
-- do not repeatedly recompute locked hashes; retain automatic provenance checks.
+Keep durable logic in `src/jit_dvgc`, CLIs thin, tests in `tests`, and guidance in `docs`. Preserve history and unrelated work; never reset/clean/stash/rebase/force-push. Do not remove identity checks to make a run pass. No large training is triggered by editing documentation.
 
 ## Read order
 
-1. root `AGENTS.md`
-2. `JIT/AGENTS.md`
-3. `JIT/docs/CURRENT_STATUS.md`
-4. root `PROJECT.md`
-5. `JIT/docs/ENVELOPE_ITERATION_PROTOCOL.md`
-6. `JIT/docs/CODEX_HANDOFF_20260904.md`
-7. `JIT/docs/CODE_ORGANIZATION.md`
-8. `JIT/docs/JIT_SCIENTIFIC_REVIEW_RESPONSE_20260905.md`
+1. Root AGENTS and PROJECT.
+2. [CURRENT_STATUS](docs/CURRENT_STATUS.md).
+3. [Paper outline](docs/JIT_PAPER_OUTLINE.md) and [review](docs/JIT_EMPIRICAL_ENVELOPE_REVIEW_20260905.md).
+4. [Protocol](docs/ENVELOPE_ITERATION_PROTOCOL.md) and [training roadmap](docs/JIT_TRAINING_ROADMAP.md).
+5. [Handoff](docs/CODEX_HANDOFF_20260904.md), [code organization](docs/CODE_ORGANIZATION.md), and relevant immutable run records.

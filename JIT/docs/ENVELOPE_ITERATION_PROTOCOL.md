@@ -1,229 +1,124 @@
-# JIT fixed-jump-start capability iteration protocol
+# JIT empirical jumping-envelope iteration protocol
 
-Version: 2026-09-05. This protocol supersedes natural-start and stable-recovery
-requirements in older JIT iteration notes for the active experiment.
+Version: user-confirmed envelope direction, 2026-09-05. Read [root authority](../../AGENTS.md), [status](CURRENT_STATUS.md), and [review](JIT_EMPIRICAL_ENVELOPE_REVIEW_20260905.md). This is a target contract; the new bank/registry/scheduler is not implemented at audited `bfc22f2`.
 
-## Claim boundary
+## 1. Objective and legacy boundary
 
-The method constructs empirical, proposer-conditioned arrival and landing
-evidence for one fixed robot task. It does not estimate a formal reachable set,
-viability kernel, invariant set, certified safe set or complete physical limit.
-The final deployable object is one unified Actor.
+Optimize discovery of exact forward-arrived states with successful first-landing witnesses, and report novel physical support versus total interactions. A single successor Actor and full-Tube retention are not acceptance requirements for empirical witnesses.
 
-## Locked identities
+Already locked 2026-09-04/05 experiments retain their original pi_0 proposer, pi_0/pi_1/pi_2 evaluators, catalogs, endpoints, seeds, horizons and roles. Finish them as legacy experiments. New multi-probe work uses a new protocol/run identity and must not overwrite old outputs or reinterpret historical negative labels.
 
-Before acquisition, lock:
+## 2. Lock task, bank and budget
 
-- task XML/physics/control identity;
-- jump-start snapshot at `x = 2.5 m`;
-- real-frame π0 centerline and 0.1 m slice targets;
-- π0 proposal Actor and action perturbation family;
-- frozen π0/π1/π2 evaluator family;
-- TRAIN/CALIBRATION/ACCEPTANCE role assignment;
-- first-valid-landing endpoint and horizon;
-- physical cell resolution;
-- candidate and labeling seeds;
-- acquisition and total-interaction ceilings;
-- optional predictor model, normalization and threshold;
-- policy selection endpoint, panel, margins and stopping rule.
+Before a new experiment, declare:
 
-An artifact hash locks content identity but does not by itself prove creation
-time. Preserve the pre-training/pre-outcome protocol artifact and its repository
-history.
+- XML, physics, actuator and observation-schema identities;
+- complete x=2.5 m ground state/context and task/phase time rules;
+- fixed real-frame pi_0 centerline, 0.1 m slices, phase assignment and corridor cap;
+- frozen policy records and normalizer/Actor/payload identities;
+- explicit proposer and evaluator membership, bank version and predecessor;
+- per-role allocation, seeds, perturbation windows/actions/strengths and horizons;
+- first-valid-landing and physical/task failure semantics;
+- exact snapshot/context identity and separate physical cell resolution;
+- per-attempt/per-role/total interaction budgets and stopping rules;
+- data role/ancestor grouping and holdout exclusion rules;
+- optional predictor identity and target bank, if used;
+- training recipe and admission decision, if a new probe is trained.
 
-## Stage 1: centerline
+Proposed bank lifecycle must distinguish technically compatible, admitted-for-experiment, resource-inactive and retired probes. Retiring a probe from execution does not delete its prior witnesses. Names such as pi_3 are display labels, not complete identity.
 
-Use the locked π0 trajectory. Keep only real simulator frames from the jump
-start through first valid landing or `x = 4.2 m`. Do not interpolate qpos/qvel.
-The centerline defines exploration slices only; it does not define desired
-actions, rewards or continuous reachability.
+## 3. Bootstrap provenance
 
-## Stage 2: causal forward acquisition
+Preserve up/down training, handoff capture, phase labels, value models, initial weighted support and unified development history. The committed Tube0 includes negative phase labels with nonzero sampling weights; it is `S_0`, not automatically `T_hat_0`.
 
-For each declared slice and role family:
+Materialize the exact later Round1 pi_0 freeze/checkpoint/normalizer/config and fixed-start centerline trace. Do not substitute the first completed unified checkpoint because its run has the same transition count. A bootstrap comparison must include actual phase-expert and seed development cost.
 
-1. restore the one locked jump-start snapshot;
-2. execute the deterministic frozen π0 prefix;
-3. begin a bounded predeclared action perturbation inside the lookback window;
-4. advance only through authoritative `env.step`;
-5. capture the exact state that physically enters the target slice;
-6. store qpos/qvel, Actor FIFO, last action, control and phase event context.
+## 4. Forward discovery
 
-Required arrival flags include:
+Run the declared frozen proposer from the complete fixed start, with bounded perturbations at declared ancestors/windows. Capture only states reached by actual env.step. Multiple proposers may generate separate catalogs; a supervisor must preserve stable attempt IDs and a global role/ancestor namespace.
 
-```text
-jump_start_connected = true
-generated_by_env_step_only = true
-rsi_used_to_establish_reachability = false
-qpos_qvel_injection_used = false
-proposal_anchor_used_as_reset = false
-```
+General ancestor restoration is permitted only after a verified prefix and full-context replay contract exist. Current code does not implement that general path; starting each attempt from the fixed start is a valid initial implementation.
 
-`natural_start_connected` is false for the active experiment and must not be
-silently promoted to true.
+Retain successful and unsuccessful attempts and their interactions. A state already present in training support must not be excluded from witness acquisition solely for that reason. Preserve distinct controller/time contexts; deduplicate physical coverage only in the metric view. Repeated physical states under different probes can have useful attribution.
 
-## Stage 3: optional pre-outcome predictor lock
+## 5. Exact continuation witnesses
 
-If auditing the advisory predictor, load only the frozen candidate catalog and
-snapshot Actor observations. Before reading any new evaluator outcomes, write:
+Restore the candidate's physical and controller/event context for each declared evaluator. Stop at first valid landing, declared failure or horizon. Define explicitly whether horizon is suffix-local or remaining full-task time. If administrative counters are reset, show that the restoration still corresponds to the stated task contract; do not claim unconditional concatenation equivalence without a smoke test.
 
-- exact candidate ordering and state identity;
-- model/normalization/threshold identity;
-- score and threshold decision per upstream candidate;
-- an explicit statement that outcome labels were not read;
-- no-score/no-model status for unsupported single-class phases.
+Every completed outcome binds:
 
-All candidates still receive real evaluator rollouts. The predictor does not
-filter arrival evidence, create positive labels or admit Tube rows.
+- attempt/candidate and exact snapshot/context identity;
+- arrival provenance, proposer, role and bank version;
+- evaluator Actor/payload/config identity;
+- endpoint, horizon, remaining-time rule and seed;
+- label, outcome class, interaction count and execution status.
 
-## Stage 4: policy-family first-landing labels
+The OR label means at least one declared evaluator succeeded. Completed failure, not-yet-evaluated and engineering error remain distinct. Downstream all-positive is a valid observed sample distribution; it does not require synthetic negatives or block envelope construction.
 
-For each exact candidate, independently restore its full snapshot under frozen
-π0, π1 and π2. Each evaluator starts with the same candidate physics and context
-and stops at first valid landing, physical failure or the declared horizon.
+## 6. Process isolation and merge
 
-```text
-family_positive(z) = landing(pi_0,z) OR landing(pi_1,z) OR landing(pi_2,z)
-```
+Use fresh evaluator processes. The historical 600-candidate suggestion is an operational starting limit, not a validated guarantee. Validate small banks first and adjust downward if required. Do not run multiple long-lived GPU evaluators concurrently without a measured resource budget.
 
-Post-landing recovery is not required. Preserve each member's binary label,
-outcome class, interactions and Actor/payload identity. The OR merge must verify
-candidate order and identity row by row.
+Cache reuse must compare the complete requested contract before returning. Merge must validate all files, exact requested catalog, non-overlapping complete global indices, consistent per-row identities/endpoint, seed scheme and labels before atomically publishing. Never archive a completed valid result as an incomplete attempt. Preserve failed/partial directories and link retries in the cost ledger.
 
-### Memory-bounded execution
+Exit check: same small catalog serially and in two or more processes yields the same ordered state/evaluator/seed/endpoint/label outcomes under the declared numeric tolerance. CPU fixture tests are insufficient for this exit check.
 
-Large evaluators run as independent contiguous candidate shards. Each shard is a
-fresh process so CUDA/Warp/JAX allocations are released. Sharding changes only
-process lifetime and must preserve:
+## 7. Witness registry and metric views
 
-- original catalog and global candidate index;
-- global candidate-index PRNG folding;
-- policy, seed, horizon and endpoint;
-- complete non-overlapping coverage;
-- exact catalog order after merge.
+Store exact witnesses independently of training support. A new registry version adds verified observations with source bank/attempt/evaluator IDs. Historical valid witnesses remain intact; invalidated evidence needs an explicit derived exclusion reason rather than silent deletion.
 
-Current maximum is 600 candidates per evaluator process. Run different
-evaluators serially on one GPU unless a measured resource budget authorizes
-concurrency. Preserve failed partial attempts; never relabel them as complete.
+Build separate role-aware views for:
 
-The canonical CLI supports one evaluator shard and strict shard merge through
-`JIT/cli/label_policy_family_first_landing.py` using `--shard-index`,
-`--shard-count` or repeated `--merge-shard-dir`.
+1. exact forward arrivals;
+2. exact states with a landing witness;
+3. root/full physical cells and longitudinal/phase sections;
+4. TRAIN reset support;
+5. each policy's realization and unique contribution;
+6. attempted-without-witness and untested coverage.
 
-Before relying on a new shard path, compare serial and sharded labels on the same
-small catalog, checking every candidate index, state identity, seed and label.
+Report both cumulative union and per-round gain. Attribute gains to new arrivals, new suffix successes on old arrivals, and overlapping contributions. Do not credit each probe with the entire union or sum overlapping cell counts. Fixed resolution/corridor and a stable comparison population are required for curves.
 
-## Stage 5: logical roles and isolation
+Existing physical metrics can be reused, but existing `continuation_viability_proven` fields are historical names for observed outcomes, not certificates. New schemas should use witness terminology and retain old readers without rewriting raw results.
 
-- TRAIN rows may fit models and supply observed positives to replay.
-- CALIBRATION selects thresholds only.
-- ACCEPTANCE supports locked development comparisons only.
-- final TEST/JCE/JEL remains untouched.
+## 8. Data-role isolation
 
-Remove exact cross-role states and holdout states already present in the target
-training Tube using outcome-blind identity rules. Preserve raw roles and write
-derived views with excluded counts/reasons. Require exact and declared-near
-TRAIN/holdout isolation. Parent IDs are not sufficient evidence of physical
-independence; report proposal groups and trajectory correlation.
+Only TRAIN can drive adaptive discovery and train new probes. CALIBRATION is for optional threshold calibration; decision-used ACCEPTANCE remains development data. Final TEST/JCE/JEL remains sealed for this work.
 
-## Stage 6: capability and Tube accounting
+Audit exact/context and declared-near overlap across all bank members, existing training supports, ancestor families and versions. Separate parent IDs alone do not prove independence. Preserve excluded counts and immutable raw roles. Historical bootstrap `test` labels have already been evaluated; reserve and audit the final distribution independently.
 
-Report separately:
+## 9. Probe training and admission
 
-1. raw family-positive candidates before deduplication;
-2. duplicates against the source Tube;
-3. raw Tube increment and total rows;
-4. new causal TRAIN root cells;
-5. all-state control root/full cells;
-6. semantic jump-corridor cells with recovery excluded.
+Before training, freeze support/weighting, initializer and normalizer rules, reset mixture, reward, phase balance, PPO transitions, seeds, exploration/labeling budget, comparison arms and stop rule.
 
-Only observed TRAIN positives can expand replay. CALIBRATION and ACCEPTANCE never
-enter TRAIN support. Historical core rows retain their historical provenance and
-must not be rewritten as newly causal.
+Legacy `natural_reset_probability` implements `existing_phase_u_natural_reset`. It is not a synonym for the selected x=2.5 start. A new fixed-start training mixture requires explicit configuration/runtime support. Actor-only warm start must import Actor/normalizer and reset critic/optimizer as declared through the public entry point; historical CLI monkey-patching is not a completed public API migration.
 
-## Stage 7: predictor audit
+Admission has separate stages:
 
-After fresh family labels close, join them to the locked scores by exact
-candidate and state identity. Report at minimum:
+- technical compatibility/freeze/smoke check;
+- predeclared bounded evaluation as a new probe;
+- valid witness retention independent of aggregate Actor coverage;
+- optional active-bank scheduling based on incremental contribution and cost.
 
-- positive/negative candidates and independent proposal groups;
-- ROC-AUC and PR-AUC when both classes exist;
-- recall and false-positive rate at the locked threshold;
-- accepted negative count;
-- probability calibration diagnostics;
-- group-aware bootstrap interval when supporting a scientific claim.
+A candidate may add useful support despite lower old-panel coverage. Report that diagnostic; do not use it as a universal witness veto. Conversely, training completion alone does not prove discovery gain. Use existing pi_0/pi_1/pi_2 and a verified pi_3 pilot before spending another large PPO run.
 
-Do not refit before producing the locked forward audit. A predictor/no-predictor
-same-budget experiment is required before claiming sample-efficiency benefit.
+No default sampling ratio, diversity loss or numerical admission threshold has been accepted as the method yet. The roadmap lists a controlled recipe to specify; do not invent a predeclared result after seeing outcomes.
 
-## Stage 8: policy training
+## 10. Optional predictor
 
-Training requires all previous stages to pass and a predeclared comparison.
-Actor-only warm start imports Actor and observation normalizer; critic and
-optimizer are fresh. Record exact PPO transitions and all environment
-interactions outside PPO.
+Predictors rank/diagnose only unless a separate controlled allocation study is declared. They never create arrivals, positive labels or Tube admission. A predictor trained for one bank must not silently change its target when the bank grows.
 
-No candidate policy is authorized solely by positive Tube growth. For the next
-main experiment, use at least three independent pilot seeds and preferably five
-main-result seeds.
+Before fresh labels, lock score order, exact candidate/context identity, catalog/protocol, model/normalizer, threshold and target bank. At audit time verify self-hash and every link before joining outcomes. Record the pre-outcome history; hashes alone do not establish chronology.
 
-## Stage 9: endpoint-identical evaluation
+Compute tied-score-correct AP, explicitly distinguish AP from trapezoidal PR-AUC, report recall/FPR/class/group counts, and flag undefined metrics for single-class samples. Do not require ACCEPTANCE class balance to authorize TRAIN fitting. Predictor quality is not a prerequisite for predictor-free discovery.
 
-Before candidate training, lock one common panel and one success endpoint for
-both baseline and candidate. The lock must explicitly contain:
+## 11. Cost, comparisons and stop
 
-```text
-core_success_criterion = first_valid_landing
-boundary_success_criterion = first_valid_landing
-same horizon and remaining-time convention
-same state identities and role provenance
-selection margins and stopping rule
-```
+A cumulative ledger links physical attempts and retries to consumed interactions, with no double counting of cached evidence. Charge bootstrap, acquisition prefixes/exclusions, all evaluators, PPO and development decisions; report wall time/hardware separately. Summaries of completed evaluators alone omit failed-run cost.
 
-Never compare a stable-recovery baseline count to a first-landing candidate
-count as policy improvement. If a mismatch is discovered after training,
-preserve the artifact and mark any corrected rerun retrospective.
+Predeclare matched-budget pi_0-only, fixed-bank uniform and iterative/growing-bank arms. Attribute benefit of probe growth separately from changed perturbation grids. If claiming a curriculum schedule effect, compare the same TRAIN support pooled once versus incrementally supplied.
 
-Report:
+Stop on the declared budget or predeclared marginal-gain rule, not when one Actor realizes the whole Tube. Coverage plateau under a finite bank/budget is not a physical boundary proof.
 
-- common core success and coverage;
-- old-success regressions and old-failure improvements;
-- upstream/downstream results;
-- new-boundary success and independent groups;
-- TRAIN-support realization;
-- forward-task performance on the declared distribution;
-- total interaction cost.
+## 12. Current execution boundary
 
-Capability evidence and one-Actor realization remain separate decisions.
-
-## Stage 10: selection or stop
-
-A prospective selection may occur only under the pre-training endpoint-identical
-contract. ACCEPTANCE is then consumed as development data. If the candidate does
-not improve the declared primary outcome at controlled cost, stop or change the
-method under a new protocol; do not hide the result with family OR or Tube size.
-
-No π4 training is currently authorized.
-
-## Required controlled comparisons
-
-- continued PPO/fixed curriculum;
-- static successful Tube-RSI;
-- uniform fixed-grid forward acquisition;
-- RSI-only candidates with matched label/training budget;
-- reachable-filtered iterative TRAIN replay;
-- predictor removed if predictor-guided allocation is enabled.
-
-## Cost accounting
-
-Count proposal-prefix steps, excluded candidates, all evaluator interactions,
-failed attempts/retries, PPO transitions and development evaluation. Report
-shared bootstrap cost separately and also include it in an end-to-end total.
-Wall time and hardware are additional operational measurements, not substitutes
-for environment interactions.
-
-## Current resumption point
-
-The expanded catalogs and pre-outcome scores are complete. Resume at Stage 4
-with independent evaluator shards. Do not reacquire candidates, change seeds,
-refit the predictor or start π4.
+Correctness blockers and the missing new lifecycle prevent starting a formal new-probe run from the old selected-policy workflow. Follow [training roadmap](JIT_TRAINING_ROADMAP.md). Finish historical labels under their locked contract, then run an existing-probe discovery pilot under a new versioned protocol. Documentation editing itself executes no GPU work and does not change old manifests.

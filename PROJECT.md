@@ -1,166 +1,95 @@
-# DVGC / JIT project
+# DVGC / JIT project — bootstrap and empirical envelope discovery
 
 ## Objective
 
-Test whether a physically reached, empirically landing-capable reset curriculum
-improves one unified robotic jumping policy at controlled total interaction
-cost. The project is an empirical learning and capability-measurement study, not
-a reachability proof or safety certificate.
+**Discover broader empirically witnessed jumping support at controlled total interaction cost for a fixed bicycle–pendulum robot and operating condition.** A single Actor is a seed/probe and optional application object; it need not realize the entire cumulative Tube.
 
-Suggested working title:
+Working title: **JIT: Bootstrapping and Exploring Empirical Jumping Envelopes for a Bicycle–Pendulum Robot**.
 
-> JIT: Reachability-Filtered Reset Curricula for Single-Policy Robotic Jumping
+This direction follows the user's confirmed paper outline. It supersedes the former main objective of selecting one successor Actor that retains the whole replay support. It does not retroactively validate historical results or implement a new workflow.
 
-This is a paper direction, not an achieved result.
+## Why this task and why two stages
 
-## Fixed task
+Dynamic balance, wheel–ground interaction, pendulum actuation and takeoff/landing transitions make successful jump experience difficult to obtain. The proposed motivation is that early failures reduce visits to useful airborne/landing stages. Measure this using phase-entry counts and matched learning curves; short task duration alone is not evidence of poor learning efficiency.
 
-The current task uses one single-track two-wheeled model, 2 kg payload, 0.005 s
-MuJoCo simulation substep and 0.020 s control interval. Actions are steering,
-rear-wheel drive, hip and knee; hip/knee torque ranges are +/-30 N m. The final
-runtime is one Actor without expert switching. Physics, reward, actuator order
-and task geometry cannot change silently.
+The method has two connected stages:
 
-The active experiment begins from the locked ground jump-start state at
-`x = 2.5 m`. It does not currently claim connection to the natural episode
-reset. Final TEST/JCE/JEL is untouched.
+1. **Bootstrap:** phase-specific up/down policies and their observed state/continuation data produce value-weighted initial training support; unified-policy training and subsequent development produce a successful frozen seed pi_0.
+2. **Discovery:** pi_0's real trajectory supplies fixed longitudinal coordinates; complementary frozen probes generate real forward arrivals and landing continuations; exact witnesses accumulate into an empirical Tube and support training of new probes.
 
-## Scientific objects
+The historical bootstrap is not an idealized all-positive filter. The committed initial Soft Tube has **222 rows: 117 upstream (99 positive, 18 negative) and 105 downstream (81 positive, 24 negative)**, with nonzero value-based sampling weights. These historical phase labels are not automatically current first-landing labels. Later pi_0 references point to the **Round1** checkpoint, not merely the first completed 2026-08-28 unified run. The bootstrap benefit still needs controlled evidence.
 
-### Forward arrival evidence A
+## Scope and definitions
 
-Frozen π0 executes from the jump-start snapshot. A bounded predeclared action
-perturbation is applied inside a lookback window. A candidate exists only if the
-exact state is entered through authoritative `env.step` dynamics.
+Task starts at the declared full ground preparation state at `x=2.5 m`. Earlier natural approach is out of scope. Fixed runtime: `assets/orange_bike_4kg_horizontal.xml`, 2 kg payload, 0.005 s simulation step, 0.020 s control, actions `[steer, rear-wheel drive, hip, knee]`, hip/knee +/-30 N m.
 
-### Policy-family landing witness E
+Let `R_hat_k` be exact states reached from the declared start, `Pi_k` the versioned frozen probe bank, and `S_k` training/reset support. Define empirical support by:
 
-The reached snapshot is restored separately under frozen π0, π1 and π2. The
-candidate is positive if any evaluator reaches the first valid landing before
-physical failure. Recovery after landing is outside this label.
+$$
+\widehat T_k = \{s\in\widehat R_k : \exists\pi\in\Pi_k,\;\operatorname{LandingWitness}(s,\pi)=1\}.
+$$
 
-This family OR is an offline composition witness. It does not show that one
-Actor can execute the π0 prefix and the successful suffix as one rollout.
+The witness must use the same accurate state, controller/event history, endpoint and declared remaining-time semantics. First valid landing is sufficient; post-landing recovery is outside the active endpoint. One success is an observed witness, not a success probability estimate.
 
-### Physical capability occupancy J
+Only after matching exact evidence do we project to physical cells. Keep original state/context records: physical deduplication is a coverage statistic, not permission to erase additional witnesses. `S_k` can contain historical reset rows without valid current arrival evidence; those rows do not enter `T_hat_k` automatically.
 
-Positive `A intersect E` states are projected into fixed physical-resolution
-cells. The primary geometry uses 0.10 m position and 0.10 m/s velocity bins.
-Cell occupancy does not make every state inside a cell feasible and is not a
-continuous volume or safety guarantee.
+The centerline stays fixed: real pi_0 frames, 0.1 m x slices from 2.5 m to first landing or the existing 4.2 m cap. It is an exploration coordinate, not an Actor goal or reward. Changing the corridor requires a new comparable protocol.
 
-### Raw/control Tube S
+## Probe-bank design
 
-The Soft Tube is a replay/reset artifact. It retains historical core rows and
-observed new positive states. Its row count and all-state physical occupancy are
-not causal Jump-Capability counts.
+Multiple frozen policies may both propose forward paths and evaluate continuations. A new probe may add useful witnesses despite reduced realization of old support. Retain previous frozen policies and evidence; no universal-Actor assumption is required.
 
-### Single-Actor realization r
+Keep four separate decisions:
 
-Each frozen Actor is evaluated on common locked panels. Realization measures
-whether curriculum support transfers to one policy. It must be reported beside,
-not replaced by, family capability growth.
+1. Is a checkpoint technically compatible and reproducibly frozen?
+2. Is an individual arrival/landing witness valid?
+3. Does this probe add unique states/cells or improve discovery per unit cost?
+4. How well does this Actor realize a common panel? (diagnostic/application)
 
-## Centerline
+A versioned bank and witness registry must track roles, exact Actor/payload identities, predecessor version, tasks, outcomes and exclusions. Prior `selected_policy.json` files do not define this bank. Phase experts need explicit runtime/context compatibility before they can serve as unified probes; their bootstrap role is already established.
 
-The centerline is a locked real-frame π0 trajectory sampled at 0.1 m x slices
-from 2.5 m to the first valid landing or 4.2 m. It is an exploration scaffold,
-not a reference-tracking objective, action command, reward target or
-interpolated physical trajectory.
+If all declared evaluators fail, record no witness under that bank and budget. Keep untested, partially evaluated and engineering-error candidates distinct. A newly successful suffix does not rewrite the old failed experiment.
 
-## Data roles
+## Current implementation and evidence
 
-- TRAIN can fit models and contribute observed positives to replay.
-- CALIBRATION selects thresholds only.
-- ACCEPTANCE is locked development evidence; using it for a decision consumes
-  it as development data.
-- final TEST/JCE/JEL stays isolated until the complete method is frozen.
+Audited commit: `bfc22f2e32cb78cb269b0e522c3bdd7c6e7a8d42`.
 
-Role assignment, cross-role deduplication and target-Tube exclusion are outcome
-blind. Statistics must respect shared trajectory/perturbation groups rather than
-treating adjacent states as independent trials.
+| Item | Current evidence | Practical limit |
+| --- | --- | --- |
+| up/down and handoff bootstrap | Frozen expert manifest, 56-snapshot handoff bank, continuation data, value-weighted Tube0 | Does not establish bootstrap superiority or all-success Tube0 |
+| Unified seed | Completed early unified run and later Round1 pi_0 identity referenced by causal scans | Exact Round1 freeze/trace/checkpoint chain must be materialized on the runtime host |
+| Fixed-start causal scanning | pi_0 prefix plus real dynamics and family landing reports | Single proposer per role; no validated multi-proposer supervisor |
+| Wide family round | 1,230/1,258 TRAIN witnesses; 713 reported new causal root cells | Summary-level evidence; raw catalogs/snapshots not all in Git |
+| Training Tube3 | 4,803 rows, +1,159 over Tube2 | Training rows are not all capability evidence |
+| pi_3 | 10,009,600 training transitions; 1,130/1,258 source-state landings | Old core comparison mixed endpoints; complementary contribution not yet established |
+| Expanded audit round | 1,754 TRAIN, 583 CALIBRATION, 574 ACCEPTANCE arrivals, saved scores | Missing family labels after GPU failures |
+| New paper loop | User-confirmed direction | Bank/registry, complementarity recipe, same-budget results still missing |
 
-## Current empirical state
+Full evidence paths and issue IDs are in [the review](JIT/docs/JIT_EMPIRICAL_ENVELOPE_REVIEW_20260905.md). Runtime state is in [CURRENT_STATUS](JIT/docs/CURRENT_STATUS.md).
 
-The first fixed-jump-start family round acquired 1,258 TRAIN candidates and
-observed 1,230 family first-landing positives. After deduplication against
-Tube2, Tube3 added 1,159 rows and reached 4,803 total rows. Causal TRAIN root
-occupancy added 713 cells; all-state Tube control root occupancy added 714.
+## Primary outcomes and paper experiments
 
-π3 was trained for 10,009,600 transitions from a π2 Actor/normalizer warm start.
-Its historical stored panel diagnostic reported 3,598 successes versus 3,539
-for the baseline, with 89 improvements and 30 regressions. That comparison is
-not a fair prospective selection result because the baseline core used
-`stable_recovery` and the candidate used `first_valid_landing`. The historical
-selection artifact is retained but quarantined from current authority.
+Primary: valid novel physical support versus total interactions, per-slice/per-phase support, and marginal probe contributions. Auxiliary: bootstrap learning, single-Actor realization, forward-task application performance, failure modes and optional predictor quality.
 
-On the 1,258 source TRAIN states, first-landing successes were π0 1,130, π1
-1,184, π2 1,222 and π3 1,130. This is support realization, not final task
-performance. It shows why Tube growth and policy learning must be measured
-separately.
+Minimum comparisons:
 
-An upstream family-landing predictor reached old ACCEPTANCE ROC-AUC 0.89249 and
-positive recall 0.98611, but accepted 6/9 negatives at its locked threshold.
-It is advisory only. Downstream was all-positive and was not fit.
+- End-to-end complete-task learning versus phase-support bootstrap, counting bootstrap cost.
+- Frozen pi_0 exploration versus a fixed multi-probe bank with uniform exploration versus the proposed iterative discovery method.
+- Fixed versus growing probe bank; attribute new-arrival and new-continuation gains separately.
+- Same acquired TRAIN support pooled once versus iteratively supplied, if claiming benefit from the curriculum schedule.
 
-The expanded follow-up round acquired 1,754 TRAIN, 583 CALIBRATION and 574
-ACCEPTANCE candidates and locked pre-outcome predictor scores. Family labeling
-is incomplete due GPU allocation failures in long-lived evaluator processes.
-Independent-process candidate sharding is the active repair. No π4 training is
-authorized.
+Use declared resolution, budget and stopping rules, independent seeds and parent-group-aware uncertainty. No claim of a complete physical envelope, a continuous safe region or superiority based on raw Tube size.
 
-## Prospective loop
+## Data and cost
 
-```text
-lock task, centerline, proposer, evaluator family and roles
--> acquire exact jump-start-connected candidates
--> lock predictor scores without reading outcomes, if auditing a predictor
--> run memory-bounded real evaluator rollouts
--> form family landing labels
--> audit role isolation and physical novelty
--> build TRAIN-only replay expansion
--> lock endpoint-identical baseline and selection contract
--> train one unified candidate
--> evaluate capability growth and single-policy realization separately
--> select or stop
-```
+TRAIN may guide/train probes. CALIBRATION and decision-used ACCEPTANCE are development data and cannot enter TRAIN. Re-run global isolation when the bank/ancestor structure changes. Final TEST/JCE/JEL stays unopened; historical bootstrap splits named `test` are not the untouched final distribution.
 
-No future training begins merely because the Tube grew.
+Charge expert/seed acquisition, prefixes, all suffix evaluations, excluded/failed attempts, retries, PPO and development evaluations. Count reused evidence once in a cumulative ledger while reporting each attempt and any shared bootstrap separately. Wall time does not replace environment interaction accounting.
 
-## Paper experiment matrix
+## Next implementation and training sequence
 
-The minimum controlled comparisons are:
+Follow [JIT_TRAINING_ROADMAP](JIT/docs/JIT_TRAINING_ROADMAP.md): repair correctness first; close the legacy locked audit without changing its family; materialize and verify existing probes; introduce a new versioned multi-probe experiment; compare existing probes before spending another large PPO budget; then lock a complementarity training recipe.
 
-1. continued PPO/fixed curriculum under matched initialization and budget;
-2. static successful Tube-RSI;
-3. fixed-grid forward acquisition with uniform budget;
-4. RSI-only candidates under matched labeling/training budget;
-5. the active reachable-filtered iterative replay method;
-6. predictor removed, if the predictor is later allowed to allocate budget.
+Predictor completion and full-Tube Actor retention are not universal prerequisites for discovery. Identity, exact witness semantics, data roles and declared costs remain mandatory.
 
-Primary outcomes are frozen forward-task first-landing success and total
-environment interactions required to reach a declared development level.
-Secondary outcomes include old/new support realization, regression count,
-novel physical cells per million interactions, near-duplicate rate and
-resolution sensitivity.
-
-Interaction accounting includes shared bootstrap, acquisition prefixes,
-successful and failed family labels, training, development selection and failed
-retries. Wall time and hardware are separate operational metrics.
-
-Use at least three independent training seeds for the pilot and preferably five
-for the main comparison. Multiple checkpoints from one seed are not repeats.
-Freeze the final perturbation distribution and stopping rule before final tests.
-
-## Immediate work
-
-1. Finish evaluator-specific shards and strict merge for the expanded catalogs.
-2. Audit the already locked predictor scores on fresh results.
-3. Produce a retrospective same-first-landing π2/π3 diagnostic without
-   reinterpreting it as prospective.
-4. Freeze method variants, budgets, metrics, group resampling and stopping rule.
-5. Run the minimal controlled pilot before deciding whether another policy
-   iteration is scientifically justified.
-
-The key next result is a same-standard, same-budget, reproducible comparison,
-not a larger π index.
+The detailed paper structure is in [JIT_PAPER_OUTLINE](JIT/docs/JIT_PAPER_OUTLINE.md).

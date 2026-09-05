@@ -1,155 +1,56 @@
-# JIT code organization and lifecycle
+# JIT code organization and migration map
 
-## Rule
+Active objective: [empirical-envelope project](../../PROJECT.md). Current implementation gaps: [review](JIT_EMPIRICAL_ENVELOPE_REVIEW_20260905.md). New schemas below are design requirements, not shipped capabilities.
 
-Scientific behavior lives in reusable modules under `JIT/src/jit_dvgc/`.
-`JIT/cli/` parses arguments and calls those modules. Tests belong in
-`JIT/tests/`; configs in `JIT/configs/`; durable status and method descriptions
-in `JIT/docs/`; run artifacts in `JIT/runs/`.
+## Placement
 
-Modify an existing module when changing an existing capability. Do not create
-an iteration-numbered source file for each policy, retry or experiment. New
-modules are justified only by a genuinely new durable capability.
+Durable scientific behavior belongs in `JIT/src/jit_dvgc/`; CLIs in `JIT/cli/` parse arguments and call modules; tests in `JIT/tests/`; configs in `JIT/configs/`; guidance in `JIT/docs/`. Extend existing capabilities instead of iteration-specific source copies.
 
-## Stable areas
+## Existing components and next responsibility
 
-### Environment and policy runtime
+| Area | Existing owner | Current role / required change |
+| --- | --- | --- |
+| Bootstrap/reset support | `soft_tube.py`, phase environments and value modules | Preserve value-weighted historical S0; do not label all rows as witnessed capability |
+| Unified training | `unified_formal.py`, `training/formal.py`, `cli/train_unified_from_pi0.py` | Consolidate warm-start in public implementation; explicit fixed-start versus legacy natural reset |
+| Frozen policy identity | `unified_policy_freeze.py`, `unified_training.py`, `checkpoint.py` | Reuse for technical probe eligibility; do not equate freeze with scientific selection |
+| Exact snapshot | `unified_envelope_snapshot.py`, `unified_continuation_labels.py` | Separate physical/context identities; verify restoration/time semantics |
+| Centerline | `analysis/nominal_jump_centerline.py` | Fixed real pi_0 trajectory as coordinates |
+| Causal arrival | `acquisition/causal_jump.py`, `causal_frontier_protocol.py` | Reuse per-proposer primitive; remove training-support membership as witness veto in new mode; add supervisor/namespace |
+| Family outcomes | `policy_family_landing.py`, `unified_continuation_shards.py` | Versioned members, exact requested identity, row checks and safe publishing |
+| Empirical geometry | `analysis/causal_jump_capability.py`, `analysis/capability_tube.py`, `analysis/jump_tube_view.py` | Separate exact witnesses, cumulative cells, roles, physical projections and marginal attribution |
+| Training Tube updates | `iterative_tube.py`, `tube_rsi.py` | Keep training sampling independent of evidence admission and coverage deduplication |
+| Role isolation | `iterative_frontier_protocol.py`, isolation CLI | Extend cross-proposer/ancestor/bank-version isolation |
+| Optional predictor | `family_landing_predictor.py` | Verify score lock and target bank; tied AP; no admission labels |
+| Legacy selection | `analysis/capability_progression.py`, `iterative_acceptance_gate.py`, selection CLI | Close invalid historical evidence route; preserve legacy Actor comparisons as diagnostics |
+| Workflow | `workflow/iteration_loop.py`, `cli/prepare_iterative_envelope_workflow.py` | Migrate new protocol to bank/registry/declared-budget decisions rather than single selected successor |
 
-- `config.py`, `unified_formal.py`, `unified_env.py`
-- `checkpoint.py`, `ppo.py`, `unified_training.py`
-- `unified_policy_freeze.py`
+A bank/witness ledger may justify a new durable module because it represents a genuinely new capability. Prefer a small schema-driven implementation and reusing existing acquisition/evaluator primitives. Do not invent new modules merely to encode pi_4 or a retry.
 
-These own task/runtime identity, Actor observations, checkpoint compatibility,
-training and frozen-policy loading. Actor-only warm start imports Actor and
-normalizer through the shared loader; critic/optimizer reset is explicit.
+## New lifecycle requirements
 
-### Exact state capture and restoration
+1. Freeze task/start/centerline/roles/budget and bank membership.
+2. Capture per-proposer arrivals with complete provenance.
+3. Evaluate exact suffix outcomes with immutable attempted/completed/error status.
+4. Publish validated witness registry and separate role/physical/Actor views.
+5. Account attempts and retries once in the cumulative ledger.
+6. Train/admit new probes under a declared recipe; technical eligibility, evidence validity and marginal utility are separate decisions.
 
-- `unified_envelope_snapshot.py`
-- `unified_continuation_labels.py`
-- `unified_continuation_shards.py`
+Old selected-policy artifacts remain readable; they do not automatically authorize new discovery. Legacy scans retain their fixed family and signatures.
 
-Snapshots preserve physics, Actor FIFO, action/control and event context.
-Sharding is execution-only: catalog order, global candidate index, PRNG scheme,
-horizon, endpoint and identities remain invariant.
+## Required verification
 
-### Fixed-jump-start acquisition
+- Wrong catalog/Actor/payload/seed/horizon/endpoint/cache request must refuse.
+- Mixed identity rows, duplicate/missing shard indices and incomplete files must refuse before publication.
+- Existing S states can gain missing witnesses without inflating physical counts.
+- Equal physical coordinates with distinct required contexts remain distinguishable.
+- Prefix/capture/restore/suffix and serial/sharded paths agree on a small real runtime bank.
+- Public warm-start actually routes Actor/normalizer and resets critic/optimizer as declared.
+- Role isolation spans all sources and versions.
+- Predictor score drift and target-bank drift are rejected; tied AP is order invariant.
+- Old mixed-endpoint gates cannot become fresh scientific eligibility evidence.
 
-- `analysis/nominal_jump_centerline.py`
-- `acquisition/resolution_frontier.py`
-- `acquisition/causal_jump.py`
-- `causal_frontier_protocol.py`
+Fixture/CPU/source checks do not replace real checkpoint/GPU/rollout checks. Document validation scope accurately.
 
-These own the locked π0 centerline, every-slice role plan, π0 proposal prefix and
-real `env.step` arrival provenance. They do not establish natural-reset
-connectivity or formal reachability.
+## Evidence storage
 
-### Family landing labels
-
-- `policy_family_landing.py`
-- `cli/label_policy_family_first_landing.py`
-
-This capability evaluates π0/π1/π2 to first valid landing, validates each
-evaluator identity, ORs aligned rows and supports independent evaluator shards.
-Incomplete evaluator attempts are archived, never overwritten.
-
-### Capability and Tube analysis
-
-- `analysis/causal_jump_capability.py`
-- `analysis/capability_tube.py`
-- `analysis/jump_tube_view.py`
-- `iterative_tube.py`
-- `soft_tube.py`
-
-Causal positive cells, all-state control occupancy, semantic jump corridor and
-raw Tube rows are distinct outputs. Do not merge their counts or claims.
-
-### Role isolation
-
-- `iterative_frontier_protocol.py`
-- `cli/audit_iterative_role_isolation.py`
-
-Derived holdout views remove cross-role and target-Tube exact states using
-outcome-blind identities and preserve excluded counts/reasons. The raw role
-artifacts remain immutable.
-
-### Predictor
-
-- `family_landing_predictor.py`
-- `cli/fit_family_landing_predictor.py`
-
-The module owns upstream fit/calibration, pre-outcome score locking and the
-post-label exact join. It is advisory and has no path to arrival proof or Tube
-admission. Extend this module for PR-AUC, group-aware intervals and calibration;
-do not create iteration-specific predictor files.
-
-### Baseline, gate and selection
-
-- `iterative_acceptance_gate.py`
-- `analysis/capability_progression.py`
-- selection CLIs under `JIT/cli/`
-
-Baseline and candidate must use the same endpoint, state panel, horizon and
-remaining-time semantics. Current code rejects/records endpoint identity, but
-historical mixed-endpoint artifacts remain historical and are not repaired by
-new code.
-
-### Workflow
-
-- `cli/prepare_iterative_envelope_workflow.py`
-- `cli/run_causal_jump_frontier_role.py`
-
-Workflow preparation records a DAG and commands; readiness is not execution
-authorization. The workflow must stop at failed acquisition, isolation,
-endpoint, support, training or selection gates.
-
-## CLI policy
-
-CLIs should:
-
-- use `argparse` and explicit paths;
-- print machine-readable JSON summaries;
-- avoid implementing scientific logic;
-- preserve existing invocation compatibility when adding a mode;
-- fail closed on identity or endpoint drift;
-- never silently choose a checkpoint, seed or retry.
-
-## Test policy
-
-Targeted tests should cover:
-
-- candidate/snapshot and policy identity binding;
-- first-valid-landing versus stable-recovery separation;
-- family OR row alignment and evaluator identities;
-- shard coverage/order/seed equivalence;
-- role isolation and outcome-blind exclusions;
-- Actor-only warm-start parameter routing;
-- predictor score locking before label joins;
-- historical artifact refusal when required identity fields are missing.
-
-CPU contract tests do not replace a real GPU compile/one-step test or a real
-shard equivalence smoke.
-
-## Artifact lifecycle
-
-1. predeclare protocol/config;
-2. write raw acquisition without outcome labels;
-3. lock optional scores;
-4. write immutable evaluator outputs or preserved failure attempts;
-5. strictly merge logical labels;
-6. derive holdout views without mutating raw data;
-7. construct Tube/analysis artifacts;
-8. freeze policy and evaluation contracts;
-9. index lightweight evidence in Git; keep large checkpoints externally or
-   ignored with auditable manifests.
-
-Never edit a historical result to change its endpoint, pass/fail meaning or
-creation time.
-
-## Current structural gap
-
-The family CLI can run and merge evaluator shards, but the expanded round still
-needs real GPU shard execution and a small-bank serial-equivalence check. A
-higher-level family supervisor may be added to the same CLI only after this path
-is validated; it must launch fresh child processes and avoid initializing JAX in
-the parent.
+Keep lightweight run summaries and reproducible source/config identities in Git. Large checkpoints and catalogs may remain external with a resolvable artifact index. Preserve old absolute paths as historical records and add a materialization map rather than rewriting provenance. Raw historical JSON must not be edited to retrofit the new protocol.

@@ -1,5 +1,7 @@
 # JIT Fixed Jump-Start Trajectory Index — 2026-09-04
 
+> New direction: [paper outline](JIT_PAPER_OUTLINE.md) and [review](JIT_EMPIRICAL_ENVELOPE_REVIEW_20260905.md). This index preserves original experiment and selection wording. Historical actor-selection statements do not define the new probe bank. The new workflow and correctness repairs remain pending; no new training was performed by the documentation review.
+
 > Updated 2026-09-05. Older entries below retain their historical wording.
 > Current authority is `JIT/docs/CURRENT_STATUS.md`: π3 is trained but its
 > historical mixed-endpoint selection is quarantined, and no π4 is authorized.
