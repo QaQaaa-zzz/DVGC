@@ -1,0 +1,86 @@
+{
+  "acquisition_policy": {
+    "actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+    "frozen_manifest": "JIT/runs/frozen_unified/pi_0_round1_10009600_20260831/frozen_unified_policy.json",
+    "frozen_manifest_sha256": "b94709172dfe4734760b567e5acde172172e853a9c5265b471c1272c7e9f0070",
+    "name": "pi_0",
+    "payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719"
+  },
+  "candidate_catalog": "JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/frontier_train/acquisition/catalog.json",
+  "candidate_catalog_file_sha256": "9d90a797372bdd9dc55f169488e5d8230902ff7b4e94653a720e0afdf87ee80f",
+  "candidate_count": 1258,
+  "continuation_policy_family": {
+    "actor_family_sha256": "cfb2eb23cfaacdfc359a17b774bc2eb55fab4012a3ecee629770d3cf795bc91a",
+    "aggregation": "positive_if_any_policy_reaches_first_valid_landing",
+    "members": [
+      {
+        "actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+        "name": "pi_0",
+        "payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719"
+      },
+      {
+        "actor_sha256": "85d6b4667364daf8e054af9bccbf155dda16a62518df19883057fcfcbbd6f86a",
+        "name": "pi_1",
+        "payload_sha256": "3b9af512c7e389aade1c86ca76e9420a0bc687c499f2ff9cf7637701dd5d0cbc"
+      },
+      {
+        "actor_sha256": "d0753cb3be742743c82a68fbb00bb30d914a4c25873e864e77ac298ea5cca4ff",
+        "name": "pi_2",
+        "payload_sha256": "f17b2361ae897de876a35955fd3bdcc86cfbdcf4368c24b6cf3d41fcde59181c"
+      }
+    ],
+    "payload_family_sha256": "80acec509d7a1c2f7d92f7a83faba0f75bb416a13e97a84fb7406d9d6fd5f54f",
+    "policy_family_sha256": "11580df841b188001c22d4a5132402541161627fab30d9e3eed1a5958c9488dd",
+    "policy_names": [
+      "pi_0",
+      "pi_1",
+      "pi_2"
+    ]
+  },
+  "environment_interactions": 70839,
+  "execution_mode": "one_gpu_serial_per_policy_with_first_landing_early_stop",
+  "expert_switching_used": false,
+  "final_evaluation_data_used": false,
+  "negative_count": 28,
+  "per_policy_reports": {
+    "pi_0": {
+      "environment_interactions": 24030,
+      "negative_count": 128,
+      "path": "/home/qy/DVGC/JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/frontier_train/labels/per_policy/pi_0/summary.json",
+      "positive_count": 1130
+    },
+    "pi_1": {
+      "environment_interactions": 23820,
+      "negative_count": 74,
+      "path": "/home/qy/DVGC/JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/frontier_train/labels/per_policy/pi_1/summary.json",
+      "positive_count": 1184
+    },
+    "pi_2": {
+      "environment_interactions": 22989,
+      "negative_count": 36,
+      "path": "/home/qy/DVGC/JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/frontier_train/labels/per_policy/pi_2/summary.json",
+      "positive_count": 1222
+    }
+  },
+  "phase_counts": {
+    "downstream": {
+      "candidate_count": 516,
+      "negative_count": 0,
+      "parent_group_count": 15,
+      "positive_count": 516
+    },
+    "upstream": {
+      "candidate_count": 742,
+      "negative_count": 28,
+      "parent_group_count": 27,
+      "positive_count": 714
+    }
+  },
+  "positive_count": 1230,
+  "post_landing_recovery_required": false,
+  "schema": "jit_policy_family_first_landing_labels_v1",
+  "status": "completed",
+  "success_criterion": "first_valid_landing_before_physical_failure",
+  "test_data_used": false,
+  "training_transitions": 0
+}

@@ -1,0 +1,115 @@
+{
+  "actor_sha256": "0e8ede7cc72122793345339de294abb46ed00b6740d16aafad0c230257be0014",
+  "baseline_reproduction_failure_count": 0,
+  "baseline_reproduction_mismatch_quarantined": false,
+  "boundary_state_count": 12,
+  "boundary_success_count": 4,
+  "boundary_success_parent_group_count": 3,
+  "capability_decision": "JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/pi2_to_pi3_capability_progression.json",
+  "capability_decision_file_sha256": "b60e9deb02de434954843bcd70a1da7914a5464e7f59b307d10d888aae7de556",
+  "claim_boundary": {
+    "certified_safe_set_claim": false,
+    "cumulative_envelope_not_defined_by_latest_policy_only": true,
+    "historical_strict_gate_pass_claim": false,
+    "jce_jel_claim": false,
+    "prospective_capability_progression_selection_claim": true,
+    "selected_for_next_engineering_envelope_iteration": true,
+    "selection_semantics": "prospective_capability_progression_v1",
+    "zero_single_state_regression_required": false
+  },
+  "core_baseline_success_count": 3539,
+  "core_candidate_success_count": 3598,
+  "core_regression_count": 30,
+  "core_state_count": 3644,
+  "critic_sha256": "0a59a72b140ddd9a468e71941745c7bd53ca0749a9cec2b07b656be231a0ef2b",
+  "empirical_envelope_expansion_observed": true,
+  "engineering_selection": true,
+  "environment_interactions": 0,
+  "final_evaluation_data_used": false,
+  "formal_acceptance_claim": true,
+  "formal_config": "JIT/configs/pi_unified_iter3_landing_replay_pi2_actor_warmstart_core75_natural10_20260905.json",
+  "formal_config_sha256": "6210768153b7fee949a1fb5f550efc1838c742145bca5da73d8ba206c3760d87",
+  "frontier_progression": {
+    "baseline_reproduction_failure_count": 0,
+    "boundary_state_count": 12,
+    "candidate_success_count": 4,
+    "candidate_success_each_phase": {
+      "downstream": false,
+      "upstream": true
+    },
+    "candidate_success_parent_group_count": 3,
+    "minimum_candidate_success_parent_groups": 2,
+    "passed": true,
+    "phase_required": {
+      "downstream": false,
+      "upstream": true
+    },
+    "require_candidate_success_each_phase": true
+  },
+  "frozen_policy": "JIT/runs/frozen_unified/pi_3_landing_replay_pi2_actor_warmstart_10009600_20260905/frozen_unified_policy.json",
+  "frozen_policy_file_sha256": "6b3935984b1056fda1cb3dda439cda9c2d0bccec20da6f9ecd0feb219200d618",
+  "iteration": 3,
+  "normalizer_sha256": "6690bf0c39a159de87eadeab769157416182cb0d616ee637557a25fa1482775f",
+  "payload_sha256": "1b14547812c9dc199628d85561d731df591cbc5e59eda6dc3be12ffa41a01bcf",
+  "policy_name": "pi_3",
+  "policy_realization": {
+    "global": {
+      "baseline_panel_coverage": 0.971185510428101,
+      "baseline_success_count": 3539,
+      "candidate_panel_coverage": 0.9873765093304061,
+      "candidate_success_count": 3598,
+      "coverage_delta": 0.01619099890230513,
+      "coverage_drop": 0.0,
+      "maximum_allowed_coverage_drop": 0.05,
+      "passed": true,
+      "state_count": 3644
+    },
+    "maximum_allowed_phase_coverage_drop": 0.1,
+    "metric": "fixed_locked_panel_success_coverage",
+    "passed": true,
+    "phase_retention_passed": {
+      "downstream": true,
+      "upstream": true
+    },
+    "phases": {
+      "downstream": {
+        "baseline_panel_coverage": 1.0,
+        "baseline_success_count": 2895,
+        "candidate_panel_coverage": 1.0,
+        "candidate_success_count": 2895,
+        "coverage_delta": 0.0,
+        "coverage_drop": 0.0,
+        "improvement_count": 0,
+        "regression_count": 0,
+        "state_count": 2895
+      },
+      "upstream": {
+        "baseline_panel_coverage": 0.8598130841121495,
+        "baseline_success_count": 644,
+        "candidate_panel_coverage": 0.9385847797062751,
+        "candidate_success_count": 703,
+        "coverage_delta": 0.07877169559412556,
+        "coverage_drop": 0.0,
+        "improvement_count": 89,
+        "regression_count": 30,
+        "state_count": 749
+      }
+    },
+    "strict_improvement_count": 89,
+    "strict_regression_count": 30
+  },
+  "prospective_capability_selection_claim": true,
+  "schema": "jit_selected_iteration_policy_v1",
+  "selection_gate": "JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/pi3_landing_replay_acceptance_gate/summary.json",
+  "selection_gate_file_sha256": "7f609443a6a6a363fed56fd3cbed0ebb23e71499ec4b48ba5e929211325dde0c",
+  "selection_semantics": "prospective_capability_progression_v1",
+  "selection_sha256": "5eb21d30628296da82c5dc54f4a6a979796299677c8448becd0659e6786c32bc",
+  "source_training_transitions": 10009600,
+  "status": "selected",
+  "strict_historical_gate_accepted": false,
+  "strict_zero_regression_diagnostic_passed": false,
+  "test_data_used": false,
+  "training_transitions": 0,
+  "validation_data_used": false,
+  "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+}

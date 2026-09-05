@@ -1,0 +1,200 @@
+{
+  "acquisition_guidance_authorized": true,
+  "architecture_predeclared_before_observing_this_batch": false,
+  "claim_boundary": {
+    "advisory_acquisition_ranking_only": true,
+    "certified_probability": false,
+    "certified_safe_set_claim": false,
+    "forward_reachability_estimator": false
+  },
+  "downstream": {
+    "fit_authorized": false,
+    "reason": "TRAIN has no observed policy-family landing failures",
+    "status": "not_fitted_single_class_all_positive"
+  },
+  "environment_interactions": 0,
+  "final_evaluation_data_used": false,
+  "formal_independent_architecture_selection_claim": false,
+  "iteration": 2,
+  "model_profile": "standard_mlp_64x64_tanh",
+  "observed_rollout_labels_remain_authoritative": true,
+  "phase_support": {
+    "downstream": {
+      "fit_authorized": false,
+      "reason": "TRAIN has no observed policy-family landing failures",
+      "status": "not_fitted_single_class_all_positive"
+    },
+    "upstream": {
+      "fit_authorized": true,
+      "requirements": {
+        "acceptance_has_both_labels": true,
+        "calibration_has_both_labels": true,
+        "train_negative_at_least_20": true,
+        "train_parent_groups_at_least_3": true,
+        "train_positive_at_least_20": true
+      },
+      "status": "fit_authorized"
+    }
+  },
+  "role_counts": {
+    "acceptance": {
+      "downstream": {
+        "negative_count": 0,
+        "parent_group_count": 5,
+        "positive_count": 171
+      },
+      "upstream": {
+        "negative_count": 9,
+        "parent_group_count": 9,
+        "positive_count": 216
+      }
+    },
+    "calibration": {
+      "downstream": {
+        "negative_count": 0,
+        "parent_group_count": 5,
+        "positive_count": 177
+      },
+      "upstream": {
+        "negative_count": 4,
+        "parent_group_count": 9,
+        "positive_count": 227
+      }
+    },
+    "train": {
+      "downstream": {
+        "negative_count": 0,
+        "parent_group_count": 15,
+        "positive_count": 516
+      },
+      "upstream": {
+        "negative_count": 28,
+        "parent_group_count": 27,
+        "positive_count": 714
+      }
+    }
+  },
+  "schema": "jit_policy_family_landing_predictor_v1",
+  "status": "completed_engineering_predictor",
+  "summary_sha256": "638c9a7f505b23af762d7dcd4bbdcd48bf494b774942a4c80ac0265a31d1ab42",
+  "target": "positive_if_any_pi0_pi1_pi2_reaches_first_valid_landing",
+  "test_data_used": false,
+  "training_transitions": 0,
+  "tube_admission_authorized_from_prediction": false,
+  "upstream": {
+    "acceptance": {
+      "acceptance_sha256": "65a880b7029246cf065433a62b5372b9fd36304db7e34df0254231fd87c642dc",
+      "accepted_negative_count_at_calibration_threshold": 6,
+      "candidate_count": 225,
+      "metrics": {
+        "count": 225,
+        "negative_count": 9,
+        "negative_mean_score": 0.39006451560021194,
+        "positive_count": 216,
+        "positive_mean_score": 0.9650493421697836,
+        "roc_auc": 0.8924897119341564,
+        "score_gap": 0.5749848265695716
+      },
+      "negative_count": 9,
+      "positive_count": 216,
+      "positive_recall_at_calibration_threshold": 0.9861111111111112,
+      "source_acceptance_role_manifest_sha256": "c9e10ad138001c3b909c670be2408843c1688bb9a95c8249a3cc7f345b21e68b",
+      "threshold_selected_on_acceptance": false
+    },
+    "calibration": {
+      "acceptance_threshold_exclusive": 0.2567880342884696,
+      "accepted_negative_count": 0,
+      "calibration_passed": true,
+      "calibration_sha256": "5701f217e1da12349fb659bc03c399503265d399ec98f8a02c5e2fabc57bb221",
+      "candidate_count": 231,
+      "contract": {
+        "accepted_negative_count_must_be_zero": true,
+        "decision_rule": "accept_if_score_strictly_greater_than_max_calibration_negative_score",
+        "minimum_positive_recall": 0.2,
+        "minimum_roc_auc": 0.7,
+        "model_parameters_refit_on_calibration": false,
+        "require_accepted_positive_in_every_parent": true,
+        "require_positive_support_in_every_parent": true,
+        "threshold_is_safety_certificate": false
+      },
+      "decision_rule": "accept_if_score_strictly_greater_than_max_calibration_negative_score",
+      "field_manifest_sha256": "23026c7e75161e3c352b06b0ce889d30d0d78ac95ae131bc7218e52a6e3c91d2",
+      "metrics": {
+        "count": 231,
+        "negative_count": 4,
+        "negative_mean_score": 0.10135239759782162,
+        "positive_count": 227,
+        "positive_mean_score": 0.9582607409649861,
+        "roc_auc": 0.998898678414097,
+        "score_gap": 0.8569083433671645
+      },
+      "model_parameters_refit_on_calibration": false,
+      "negative_count": 4,
+      "parent_group_count": 9,
+      "parent_support": {
+        "causal_centerline_upstream_x0025_family3_calibration": {
+          "accepted_positive_count": 2,
+          "candidate_count": 2,
+          "negative_count": 0,
+          "positive_count": 2
+        },
+        "causal_centerline_upstream_x0026_family3_calibration": {
+          "accepted_positive_count": 3,
+          "candidate_count": 3,
+          "negative_count": 0,
+          "positive_count": 3
+        },
+        "causal_centerline_upstream_x0027_family3_calibration": {
+          "accepted_positive_count": 7,
+          "candidate_count": 7,
+          "negative_count": 0,
+          "positive_count": 7
+        },
+        "causal_centerline_upstream_x0028_family3_calibration": {
+          "accepted_positive_count": 32,
+          "candidate_count": 32,
+          "negative_count": 0,
+          "positive_count": 32
+        },
+        "causal_centerline_upstream_x0029_family3_calibration": {
+          "accepted_positive_count": 37,
+          "candidate_count": 37,
+          "negative_count": 0,
+          "positive_count": 37
+        },
+        "causal_centerline_upstream_x0030_family3_calibration": {
+          "accepted_positive_count": 33,
+          "candidate_count": 36,
+          "negative_count": 3,
+          "positive_count": 33
+        },
+        "causal_centerline_upstream_x0031_family3_calibration": {
+          "accepted_positive_count": 37,
+          "candidate_count": 38,
+          "negative_count": 0,
+          "positive_count": 38
+        },
+        "causal_centerline_upstream_x0032_family3_calibration": {
+          "accepted_positive_count": 38,
+          "candidate_count": 38,
+          "negative_count": 0,
+          "positive_count": 38
+        },
+        "causal_centerline_upstream_x0033_family3_calibration": {
+          "accepted_positive_count": 37,
+          "candidate_count": 38,
+          "negative_count": 1,
+          "positive_count": 37
+        }
+      },
+      "phase": "upstream",
+      "positive_count": 227,
+      "positive_recall_at_threshold": 0.9955947136563876,
+      "schema": "jit_iterative_continuation_calibration_v1",
+      "source_calibration_role_manifest_sha256": "5630f4d229ca843b1b78bfd183859d73639877c6460a70830476ba198f700cea",
+      "status": "completed",
+      "threshold_is_safety_certificate": false
+    },
+    "field_manifest_sha256": "23026c7e75161e3c352b06b0ce889d30d0d78ac95ae131bc7218e52a6e3c91d2"
+  }
+}

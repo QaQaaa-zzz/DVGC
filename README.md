@@ -1,128 +1,81 @@
-# OrangeBike DVGC
+# OrangeBike DVGC / JIT
 
-DVGC studies policy-conditioned jumping capability for a single-track two-wheeled robot. The active JIT method builds and iteratively expands an empirical jumping-capability envelope while keeping deployment as **one unified Actor**.
+DVGC/JIT is an empirical reset-curriculum and capability-measurement project for
+a fixed single-track two-wheeled robot jump. The final controller target is one
+unified Actor without runtime expert switching.
 
 ## Current method
 
+The active experiment starts from a locked ground jump state at `x = 2.5 m`.
+Frozen π0 supplies a real-frame centerline and proposal prefix. Bounded action
+perturbations reach exact candidate states through `env.step`. Frozen π0, π1 and
+π2 then continue from each state; a candidate is positive if any evaluator
+reaches the first valid landing before physical failure.
+
+The project distinguishes:
+
+- forward arrival evidence;
+- policy-family landing witnesses;
+- physical-resolution cell occupancy;
+- raw reset/replay Tube rows;
+- one-Actor realization.
+
+These are not interchangeable. The method does not claim formal reachability,
+a viability kernel, certified safety or a complete physical jump limit.
+
+## Current status — 2026-09-05
+
+The first family round produced 1,230/1,258 positive TRAIN candidates and a
+1,159-row Tube3 increment. π3 was trained for 10,009,600 transitions, but its
+stored selection gate mixed a stable-recovery baseline with a first-landing
+candidate endpoint. π3 therefore remains trained historical evidence, not valid
+prospective authority for π4.
+
+An upstream advisory predictor has been fit. A larger fresh round acquired
+TRAIN/CALIBRATION/ACCEPTANCE catalogs and locked pre-outcome scores, but family
+labels are incomplete after GPU allocation failures in long-lived evaluators.
+The active repair is independent-process evaluator sharding. No π4 training is
+authorized, and final TEST/JCE/JEL remains untouched.
+
+See [CURRENT_STATUS](JIT/docs/CURRENT_STATUS.md) for exact counts and next steps.
+
+## Repository layout
+
 ```text
-Propulsion-Ascent expert
-        +
-Descent-Recovery expert
-        ↓
-expert-conditioned continuation labels
-        ↓
-V_up / V_down
-        ↓
-Tube_0
-        ↓
-pi_0
-        ↓
-freeze pi_k
-        ↓
-real-dynamics boundary evidence
-        ↓
-C_up^k / C_down^k
-        ↓
-core-retaining Tube_(k+1)
-        ↓
-pi_(k+1)
-        ↓
-core-preservation + boundary-gain gates
-        ↓
-repeat until a predeclared stopping condition
-        ↓
-independent final frozen-policy JCE/JEL evaluation
+JIT/src/jit_dvgc/   scientific and runtime logic
+JIT/cli/            thin command-line entry points
+JIT/tests/          contract and regression tests
+JIT/configs/        declared experiment configurations
+JIT/docs/           current authority, protocol, reports and handoffs
+JIT/runs/           run artifacts; lightweight evidence is indexed in Git
+assets/             fixed MuJoCo task assets
 ```
 
-The Apex region is a physical transition band between the two bootstrap phases, not a third runtime expert. Phase experts are data-generation/bootstrap tools only. Final and iterative unified policies never switch experts at runtime.
-
-A learned Soft Tube is **training guidance**, not a certified safe set or viability kernel. A larger Tube alone is not evidence of improved capability.
-
-## Current implementation status — 2026-09-01
-
-Completed:
-
-- frozen `pi_up_star` and `pi_down_star`;
-- bootstrap `V_up/V_down`;
-- 222-entry TRAIN-only Tube_0;
-- unified `pi_0`, frozen as expansion authority;
-- pi_0-conditioned boundary evidence and continuation fields `C_up^0/C_down^0`;
-- fresh independent continuation validation/calibration;
-- core-retaining Tube_1 with 3,119 TRAIN entries;
-- Tube_1 mixed-snapshot Tube-RSI engineering gate;
-- fresh `pi_1` formal PPO at exactly 10,009,600 training transitions.
-
-The authoritative completed pi_1 run is:
-
-`JIT/runs/pi_unified/pi_1_tube1_natural10_10009600_seed821101_20260901_retry01`
-
-The next scientific action is **freeze exact pi_1 -> core-preservation gate + boundary-gain gate**. Only if both pass may the project record empirical envelope expansion and proceed to `C^1 -> Tube_2 -> pi_2`.
-
-See `JIT/docs/CURRENT_STATUS.md` for exact hashes and artifact identities.
-
-## Authoritative physical contract
+## Fixed task
 
 - XML: `assets/orange_bike_4kg_horizontal.xml`
-- XML SHA-256: `0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a`
-- payload: 2 kg (`4kg` in the filename is historical)
-- control: 50 Hz
-- hip/knee torque limits: +/-50 Nm
-- action order: `[steer, rear-wheel drive, hip, knee]`
+- payload: 2 kg
+- simulation substep: 0.005 s
+- control interval: 0.020 s
+- action order: steer, rear-wheel drive, hip, knee
+- hip/knee limits: +/-30 N m
 
-Repository cleanup and envelope iteration must not silently change physics, reward semantics, action semantics, snapshot semantics, or TEST isolation.
+Do not silently modify physics, task geometry, reward or actuator order.
 
-## Runtime
+## Paper direction
 
-Use the configured environment directly:
+The working hypothesis is that reachability-filtered reset curricula improve a
+single unified jumping policy at controlled total interaction cost. This has not
+yet been demonstrated. Required evidence includes same-budget baselines,
+independent training seeds, group-aware uncertainty, full interaction accounting
+and a frozen independent final distribution.
 
-```bash
-export PYTHONPATH="$PWD/JIT/src"
-PY=/home/qy/mujoco_playground/.venv/bin/python
-```
+## Read order
 
-Current lightweight verification:
-
-```bash
-"$PY" -m compileall -q JIT/src JIT/cli
-JIT/scripts/local_preflight.sh
-```
-
-Formal GPU work is launched only after artifact/config gates pass.
-
-## Active JIT layout
-
-```text
-JIT/
-├── cli/                  thin executable entry points
-├── configs/              run/protocol declarations
-├── docs/                 current method, status and verification contracts
-├── handoff/              path-bound locked provenance
-├── scripts/              local verification/maintenance entry points
-├── src/jit_dvgc/
-│   ├── training/         unified PPO + freezing API
-│   ├── tube/             Tube construction / Tube-RSI API
-│   ├── snapshots/        snapshot/pool API
-│   ├── acquisition/      real-dynamics boundary acquisition API
-│   ├── continuation/     continuation labels/fields API
-│   ├── analysis/         bounded TRAIN diagnostics
-│   └── workflow/         resumable stage orchestration
-└── tests/                current regression and scientific-contract tests
-```
-
-Historical flat modules may remain temporarily when current artifacts/imports still require them. New iteration-specific production modules should not be added; iteration numbers belong in configs and artifacts.
-
-## Automation direction
-
-`JIT/cli/run_iteration_workflow.py` is the stable orchestration entry point. The intended end state is one explicit launch that can sequence and resume:
-
-`freeze pi_k -> gates -> TRAIN evidence -> C^k -> fresh validation -> Tube_(k+1) -> Tube-RSI smoke -> pi_(k+1)`.
-
-The runner may automate execution and artifact verification, but it may not retune the method or bypass a failed scientific gate. Final TEST/JCE/JEL is intentionally outside this loop.
-
-## Where to read next
-
-- `AGENTS.md` — repository-wide execution and cleanup rules
-- `JIT/AGENTS.md` — active JIT implementation rules
-- `PROJECT.md` — scientific method/claim boundary
-- `JIT/docs/CURRENT_STATUS.md` — exact current state
-- `JIT/docs/ENVELOPE_ITERATION_PROTOCOL.md` — iteration/leakage contract
+1. [AGENTS.md](AGENTS.md)
+2. [JIT/AGENTS.md](JIT/AGENTS.md)
+3. [Current status](JIT/docs/CURRENT_STATUS.md)
+4. [Project definition](PROJECT.md)
+5. [Iteration protocol](JIT/docs/ENVELOPE_ITERATION_PROTOCOL.md)
+6. [Technical handoff](JIT/docs/CODEX_HANDOFF_20260904.md)
+7. [Scientific review response](JIT/docs/JIT_SCIENTIFIC_REVIEW_RESPONSE_20260905.md)

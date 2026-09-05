@@ -18,6 +18,7 @@ from jit_dvgc.policy_family_landing import (
     _archive_incomplete_evaluator,
     _load_completed_evaluator,
     merge_any_policy_landing_labels,
+    required_policy_family_label_shards,
 )
 
 
@@ -115,6 +116,11 @@ def test_incomplete_evaluator_is_preserved_before_retry(tmp_path):
     assert marker["preserved_files"] == ["protocol.json"]
 
 
+def test_policy_family_shards_bound_each_gpu_process():
+    assert required_policy_family_label_shards(1754, 600) == 3
+    assert required_policy_family_label_shards(583, 600) == 1
+
+
 def test_policy_family_capability_support_does_not_require_artificial_negatives():
     rows = [
         {"phase": phase, "label": 1, "parent_group_id": f"{phase}-group"}
@@ -174,6 +180,8 @@ def test_acceptance_gate_reuses_locked_core_without_new_rollouts():
         "baseline_actor_sha256": "a" * 64,
         "baseline_payload_sha256": "b" * 64,
         "source_tube_manifest_sha256": "c" * 64,
+        "acceptance_success_criterion": "stable_recovery",
+        "core_success_criterion": "stable_recovery",
         "core_state_count": 1,
         "core": [{"state_sha256": "state-1", "baseline_success": True}],
     }
@@ -184,6 +192,7 @@ def test_acceptance_gate_reuses_locked_core_without_new_rollouts():
         policy_record={"actor_sha256": "a" * 64, "payload_sha256": "b" * 64},
         source_tube_manifest_sha256="c" * 64,
         source_state_sha256=["state-1"],
+        expected_core_success_criterion="stable_recovery",
     )
 
     assert rows == lock["core"]
@@ -217,11 +226,26 @@ def test_candidate_boundary_uses_first_valid_landing_not_recovery():
 
 def test_active_family_landing_gate_uses_landing_for_core_preservation():
     assert _candidate_core_success_criterion(
-        {"acceptance_success_criterion": "first_valid_landing"}
+        {
+            "acceptance_success_criterion": "first_valid_landing",
+            "core_success_criterion": "first_valid_landing",
+        }
     ) == "first_valid_landing"
     assert _candidate_core_success_criterion(
-        {"acceptance_success_criterion": "stable_recovery"}
+        {
+            "acceptance_success_criterion": "stable_recovery",
+            "core_success_criterion": "stable_recovery",
+        }
     ) == "stable_recovery"
+
+
+def test_landing_gate_rejects_historical_core_without_endpoint_identity():
+    with pytest.raises(ValueError, match="core success criterion missing"):
+        _candidate_core_success_criterion(
+            {"acceptance_success_criterion": "first_valid_landing"}
+        )
+
+    assert _candidate_core_success_criterion({}) == "stable_recovery"
 
 
 def test_acceptance_runtime_accepts_actor_warm_start_policy(monkeypatch) -> None:

@@ -1,533 +1,229 @@
-# JIT Causal Reachable Jump-Capability Iteration Protocol
+# JIT fixed-jump-start capability iteration protocol
 
-## Superseding execution rule — 2026-09-04
+Version: 2026-09-05. This protocol supersedes natural-start and stable-recovery
+requirements in older JIT iteration notes for the active experiment.
 
-For the active round, replace “natural ground start” with the fixed ground jump
-start at `x=2.5 m`.  The locked real-frame centerline and acquisition proposal
-controller are `pi_0`.  Evaluate each reached candidate with frozen
-`pi_0/pi_1/pi_2`; OR the first-valid-landing outcomes.  Recovery after landing
-is not evaluated.  TRAIN positives enter replay directly, while CALIBRATION and
-ACCEPTANCE remain holdout evidence.  Do not require 20 negatives or fit a
-binary continuation field when the observed family support is nearly all
-positive.
+## Claim boundary
 
-## Status — 2026-09-04
+The method constructs empirical, proposer-conditioned arrival and landing
+evidence for one fixed robot task. It does not estimate a formal reachable set,
+viability kernel, invariant set, certified safe set or complete physical limit.
+The final deployable object is one unified Actor.
 
-This is the active protocol after the historical `pi_1 -> C^1 -> raw Tube_2 -> pi_2` round, physical Tube visualization review, and the subsequent causal-reachability correction.
+## Locked identities
 
-The active method is:
+Before acquisition, lock:
 
-> **causal, trajectory-centered, resolution-aware Jump-Capability-Tube identification with just-in-time curriculum generation.**
+- task XML/physics/control identity;
+- jump-start snapshot at `x = 2.5 m`;
+- real-frame π0 centerline and 0.1 m slice targets;
+- π0 proposal Actor and action perturbation family;
+- frozen π0/π1/π2 evaluator family;
+- TRAIN/CALIBRATION/ACCEPTANCE role assignment;
+- first-valid-landing endpoint and horizon;
+- physical cell resolution;
+- candidate and labeling seeds;
+- acquisition and total-interaction ceilings;
+- optional predictor model, normalization and threshold;
+- policy selection endpoint, panel, margins and stopping rule.
 
-The key scientific rule is:
+An artifact hash locks content identity but does not by itself prove creation
+time. Preserve the pre-training/pre-outcome protocol artifact and its repository
+history.
 
-```text
-RSI continuation success != forward reachability from the natural ground start
-```
+## Stage 1: centerline
 
-The empirical capability object is
+Use the locked π0 trajectory. Keep only real simulator frames from the jump
+start through first valid landing or `x = 4.2 m`. Do not interpolate qpos/qvel.
+The centerline defines exploration slices only; it does not define desired
+actions, rewards or continuous reachability.
 
-```text
-J_k = R_k^forward ∩ V_k^continuation
-```
+## Stage 2: causal forward acquisition
 
-Final TEST/JCE/JEL remains untouched.
+For each declared slice and role family:
 
----
+1. restore the one locked jump-start snapshot;
+2. execute the deterministic frozen π0 prefix;
+3. begin a bounded predeclared action perturbation inside the lookback window;
+4. advance only through authoritative `env.step`;
+5. capture the exact state that physically enters the target slice;
+6. store qpos/qvel, Actor FIFO, last action, control and phase event context.
 
-## 1. Scientific claim boundary
-
-JIT distinguishes:
-
-```text
-F*    conceptual physical/task feasible set; not proved
-R_k   empirical natural-start-connected forward-reachability evidence
-V_k   empirical continuation-viability evidence
-J_k   empirical causal Jump Capability Tube = R_k ∩ V_k
-S_k   raw/control Soft Tube for replay and RSI
-P_k   one-policy realization coverage
-```
-
-The method does not prove an exact reachable set, viability kernel, invariant set, certified safe set, or the physical maximum jump envelope.
-
-All claims are empirical and conditioned on the declared policy/proposal family, action perturbations, horizon and fixed robot/task.
-
----
-
-## 2. Immutable physical/task contract
-
-- XML: `assets/orange_bike_4kg_horizontal.xml`
-- XML SHA-256: `0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a`
-- payload: 2 kg
-- simulation substep: 0.005 s
-- control interval: 0.020 s = 50 Hz
-- hip/knee actuator range: +/-30 N m
-- action order: `[steer, rear-wheel drive, hip, knee]`
-- one unified runtime Actor
-- no runtime expert switching
-- no silent reward/action/XML/task-geometry changes
-- no final TEST/JCE/JEL use during development
-
----
-
-## 3. No goal intent in the current method
-
-Do not add desired distance/apex intent to the Actor in the current mainline.
-
-The nominal trajectory is a **method coordinate scaffold**, not a controller target or reward reference. At a fixed x slice, many physically different successful states may belong to the Tube.
-
-Goal-conditioned or multi-intent JIT may be studied later only if prospective causal evidence shows that one target-free Actor cannot represent distinct real trajectory branches.
-
----
-
-## 4. Locked centerline v2
-
-Every causal study must lock one successful natural-start full-chain jump before frontier outcomes.
+Required arrival flags include:
 
 ```text
-x nominal start = 2.5 m
-x hard maximum  = 4.2 m
-x step          = 0.1 m
-actual terminal = first valid landing if earlier
-```
-
-Construction rules:
-
-```text
-real captured simulator frames only
-nearest real frame per target x slice
-maximum x mismatch <= 0.05 m
-no qpos/qvel interpolation
-natural-start connected
-physical-state SHA per point
-real environment-transition count from ground per point
-```
-
-Branch semantics:
-
-```text
-pre-Apex                      upstream
-Apex neighbourhood            handoff marker
-post-Apex + root_vz < 0       downstream
-first valid landing            Jump-Capability terminal
-post-contact / late recovery   excluded from capability frontier
-```
-
-The centerline is locked across iterations. Recomputing it every iteration would move the coordinate frame and invalidate direct cross-iteration Tube comparisons.
-
-Implementation:
-
-```text
-jit_dvgc.analysis.nominal_jump_centerline
-JIT/cli/build_nominal_jump_centerline.py
-```
-
-Schema: `jit_nominal_jump_centerline_v2`.
-
----
-
-## 5. Physical capability state and resolution
-
-Actor observation is not the physical capability metric space.
-
-Primary `root_geometry_v1` coordinates:
-
-```text
-root x/y/z
-root vx/vy/vz
-roll/pitch/yaw
-root wx/wy/wz
-phase
-```
-
-`full_physical_v1` adds:
-
-```text
-steering/hip/knee angles
-steering/hip/knee rates
-front/rear wheel tangential speeds
-```
-
-Resolution v1:
-
-```text
-position                     0.10 m
-linear velocity              0.10 m/s
-orientation                  0.50 deg
-root angular velocity        2.0 deg/s
-joint angle                  0.50 deg
-joint angular velocity       2.0 deg/s
-wheel tangential velocity    0.10 m/s
-phase                        discrete
-```
-
-Implementation:
-
-```text
-jit_dvgc.analysis.capability_tube
-JIT/cli/analyze_capability_tube.py
-```
-
-Raw snapshot count is not a capability-volume measure.
-
----
-
-## 6. Causal frontier planning
-
-The old global-lowest-score newest-shell reset-anchor frontier is historical only.
-
-Prospective planning uses every usable 0.1 m centerline slice as an exploration target. Each slice receives five deterministic pre-outcome proposal families:
-
-```text
-TRAIN
-TRAIN
-TRAIN
-CALIBRATION
-ACCEPTANCE
-```
-
-These proposal anchors are identifiers, not physical states. They must not carry a valid Tube reset index and may never be used to establish reachability by RSI.
-
-Implementation:
-
-```text
-jit_dvgc.acquisition.resolution_frontier
-JIT/cli/prepare_resolution_aware_frontier_plan.py
-```
-
-Active revision schema: `jit_causal_trajectory_frontier_plan_revision_v2`.
-
-Planning must occur before outcomes are observed.
-
----
-
-## 7. Causal forward acquisition
-
-Forward reachability is established only by a rollout connected to the natural ground reset.
-
-Allowed sequence:
-
-```text
-natural ground reset
--> frozen-policy prefix
--> enter declared look-back window before target x
--> bounded declared action perturbation
--> authoritative env.step only
--> capture first semantically valid state in target slice
-```
-
-Initial look-back family:
-
-```text
-0.1 m
-0.2 m
-0.3 m
-```
-
-These values are an engineering probe family, not a theorem. Changing them after outcomes requires a new explicit pre-outcome method decision.
-
-Forbidden as reachability evidence:
-
-```text
-Tube/RSI reset to proposal state
-manual qpos/qvel editing
-coordinate dilation
-interpolated state injection
-post-outcome target reselection
-TEST-informed acquisition
-```
-
-Every accepted candidate must carry `jit_ground_reachability_provenance_v1` with hard flags:
-
-```text
-natural_start_connected = true
+jump_start_connected = true
 generated_by_env_step_only = true
 rsi_used_to_establish_reachability = false
 qpos_qvel_injection_used = false
 proposal_anchor_used_as_reset = false
 ```
 
-Implementation:
+`natural_start_connected` is false for the active experiment and must not be
+silently promoted to true.
+
+## Stage 3: optional pre-outcome predictor lock
+
+If auditing the advisory predictor, load only the frozen candidate catalog and
+snapshot Actor observations. Before reading any new evaluator outcomes, write:
+
+- exact candidate ordering and state identity;
+- model/normalization/threshold identity;
+- score and threshold decision per upstream candidate;
+- an explicit statement that outcome labels were not read;
+- no-score/no-model status for unsupported single-class phases.
+
+All candidates still receive real evaluator rollouts. The predictor does not
+filter arrival evidence, create positive labels or admit Tube rows.
+
+## Stage 4: policy-family first-landing labels
+
+For each exact candidate, independently restore its full snapshot under frozen
+π0, π1 and π2. Each evaluator starts with the same candidate physics and context
+and stops at first valid landing, physical failure or the declared horizon.
 
 ```text
-jit_dvgc.acquisition.causal_jump
+family_positive(z) = landing(pi_0,z) OR landing(pi_1,z) OR landing(pi_2,z)
 ```
 
-Downstream candidates must be post-Apex, `root_vz < 0`, and pre-contact.
+Post-landing recovery is not required. Preserve each member's binary label,
+outcome class, interactions and Actor/payload identity. The OR merge must verify
+candidate order and identity row by row.
 
----
+### Memory-bounded execution
 
-## 8. Reachability before continuation
+Large evaluators run as independent contiguous candidate shards. Each shard is a
+fresh process so CUDA/Warp/JAX allocations are released. Sharding changes only
+process lifetime and must preserve:
 
-The order is mandatory:
+- original catalog and global candidate index;
+- global candidate-index PRNG folding;
+- policy, seed, horizon and endpoint;
+- complete non-overlapping coverage;
+- exact catalog order after merge.
+
+Current maximum is 600 candidates per evaluator process. Run different
+evaluators serially on one GPU unless a measured resource budget authorizes
+concurrency. Preserve failed partial attempts; never relabel them as complete.
+
+The canonical CLI supports one evaluator shard and strict shard merge through
+`JIT/cli/label_policy_family_first_landing.py` using `--shard-index`,
+`--shard-count` or repeated `--merge-shard-dir`.
+
+Before relying on a new shard path, compare serial and sharded labels on the same
+small catalog, checking every candidate index, state identity, seed and label.
+
+## Stage 5: logical roles and isolation
+
+- TRAIN rows may fit models and supply observed positives to replay.
+- CALIBRATION selects thresholds only.
+- ACCEPTANCE supports locked development comparisons only.
+- final TEST/JCE/JEL remains untouched.
+
+Remove exact cross-role states and holdout states already present in the target
+training Tube using outcome-blind identity rules. Preserve raw roles and write
+derived views with excluded counts/reasons. Require exact and declared-near
+TRAIN/holdout isolation. Parent IDs are not sufficient evidence of physical
+independence; report proposal groups and trajectory correlation.
+
+## Stage 6: capability and Tube accounting
+
+Report separately:
+
+1. raw family-positive candidates before deduplication;
+2. duplicates against the source Tube;
+3. raw Tube increment and total rows;
+4. new causal TRAIN root cells;
+5. all-state control root/full cells;
+6. semantic jump-corridor cells with recovery excluded.
+
+Only observed TRAIN positives can expand replay. CALIBRATION and ACCEPTANCE never
+enter TRAIN support. Historical core rows retain their historical provenance and
+must not be rewritten as newly causal.
+
+## Stage 7: predictor audit
+
+After fresh family labels close, join them to the locked scores by exact
+candidate and state identity. Report at minimum:
+
+- positive/negative candidates and independent proposal groups;
+- ROC-AUC and PR-AUC when both classes exist;
+- recall and false-positive rate at the locked threshold;
+- accepted negative count;
+- probability calibration diagnostics;
+- group-aware bootstrap interval when supporting a scientific claim.
+
+Do not refit before producing the locked forward audit. A predictor/no-predictor
+same-budget experiment is required before claiming sample-efficiency benefit.
+
+## Stage 8: policy training
+
+Training requires all previous stages to pass and a predeclared comparison.
+Actor-only warm start imports Actor and observation normalizer; critic and
+optimizer are fresh. Record exact PPO transitions and all environment
+interactions outside PPO.
+
+No candidate policy is authorized solely by positive Tube growth. For the next
+main experiment, use at least three independent pilot seeds and preferably five
+main-result seeds.
+
+## Stage 9: endpoint-identical evaluation
+
+Before candidate training, lock one common panel and one success endpoint for
+both baseline and candidate. The lock must explicitly contain:
 
 ```text
-forward acquisition
-        ↓
-lock reachability provenance
-        ↓
-restore exact already-reached state
-        ↓
-continuation evaluation
+core_success_criterion = first_valid_landing
+boundary_success_criterion = first_valid_landing
+same horizon and remaining-time convention
+same state identities and role provenance
+selection margins and stopping rule
 ```
 
-RSI is allowed only at the continuation-evaluation stage and later for training curriculum.
+Never compare a stable-recovery baseline count to a first-landing candidate
+count as policy improvement. If a mismatch is discovered after training,
+preserve the artifact and mark any corrected rerun retrospective.
 
-A continuation-positive state with no natural-start-connected provenance is **not** causal Jump-Capability evidence.
+Report:
 
-Causal role implementation:
+- common core success and coverage;
+- old-success regressions and old-failure improvements;
+- upstream/downstream results;
+- new-boundary success and independent groups;
+- TRAIN-support realization;
+- forward-task performance on the declared distribution;
+- total interaction cost.
 
-```text
-jit_dvgc.causal_frontier_protocol
-JIT/cli/run_causal_jump_frontier_role.py
-```
+Capability evidence and one-Actor realization remain separate decisions.
 
----
+## Stage 10: selection or stop
 
-## 9. Logical data roles
+A prospective selection may occur only under the pre-training endpoint-identical
+contract. ACCEPTANCE is then consumed as development data. If the candidate does
+not improve the declared primary outcome at controlled cost, stop or change the
+method under a new protocol; do not hide the result with family OR or Tube size.
 
-### TRAIN
+No π4 training is currently authorized.
 
-May:
+## Required controlled comparisons
 
-- fit `C_up^k/C_down^k`;
-- contribute qualifying new causal replay support;
-- appear in the primary curriculum-capability set after positive continuation evidence.
+- continued PPO/fixed curriculum;
+- static successful Tube-RSI;
+- uniform fixed-grid forward acquisition;
+- RSI-only candidates with matched label/training budget;
+- reachable-filtered iterative TRAIN replay;
+- predictor removed if predictor-guided allocation is enabled.
 
-### CALIBRATION
+## Cost accounting
 
-May calibrate thresholds only. Positive causal states remain holdout evidence and must not enter TRAIN curriculum.
+Count proposal-prefix steps, excluded candidates, all evaluator interactions,
+failed attempts/retries, PPO transitions and development evaluation. Report
+shared bootstrap cost separately and also include it in an end-to-end total.
+Wall time and hardware are additional operational measurements, not substitutes
+for environment interactions.
 
-### ACCEPTANCE
+## Current resumption point
 
-Locked development comparison only. Positive causal states must not enter training.
-
-### Final TEST/JCE/JEL
-
-Untouched until the method, stopping rule and final policy are frozen.
-
-Parent/proposal family isolation and deterministic role assignment remain mandatory.
-
----
-
-## 10. Causal Jump Capability construction
-
-Implementation:
-
-```text
-jit_dvgc.analysis.causal_jump_capability
-JIT/cli/analyze_causal_jump_capability.py
-```
-
-The analyzer verifies:
-
-```text
-causal acquisition mode
-ground-provenance self-hash
-natural-start connection
-env.step-only generation
-exact candidate/snapshot identity
-correct jump phase/downstream semantics
-matching continuation label
-```
-
-Primary TRAIN curriculum capability:
-
-```text
-locked centerline cells
-UNION
-TRAIN-positive causal root cells
-```
-
-CALIBRATION/ACCEPTANCE positives are reported separately.
-
-If a previous causal summary exists, cross-iteration growth is measured against the previous causal set. Historical noncausal Soft-Tube occupancy is never used as the causal baseline.
-
----
-
-## 11. Raw/control Soft Tube construction
-
-Raw Soft Tube remains a core-retaining replay/provenance artifact:
-
-```text
-S_(k+1)
-= every S_k row retained exactly
-+ qualifying logical-TRAIN replay snapshots
-```
-
-Future causal TRAIN expansion rows must pass the causal acquisition-catalog provenance check before admission. Ground-reachability provenance is copied into each new expansion row.
-
-Historical core rows are retained for reproducibility and may include RSI-only/late-recovery support. Their presence must be declared and must not be converted into causal capability claims.
-
-`build_iterative_tube.py` is responsible for this gate.
-
----
-
-## 12. Continuation models
-
-- `V_up/V_down`: bootstrap expert-conditioned continuation evidence;
-- `C_up^k/C_down^k`: frozen-policy-conditioned continuation evidence;
-- PPO critic is not a JIT continuation field;
-- continuation models do not estimate forward reachability.
-
-Current historical C^1 truth remains:
-
-```text
-upstream 64x64 AUC 0.6903137789904502 < 0.70 formal gate
-  -> engineering-selected only
-
-downstream 64x64 AUC 1.0 / recall 1.0
-  -> formal calibration PASS
-```
-
-Do not rewrite upstream as formal PASS.
-
----
-
-## 13. Policy training
-
-The final deployment target remains one unified Actor.
-
-Historical/current replay configuration:
-
-```text
-90% Tube reset
-10% natural reset
-inside Tube:
-75% retained source support
-25% newest expansion
-```
-
-This is an engineering configuration, not part of the scientific definition of reachability.
-
-Do not automatically sweep replay ratios after candidate failure.
-
-A new policy may be trained only after:
-
-```text
-causal roles completed
-causal capability summary completed
-new TRAIN causal root cells > 0
-role isolation accepted
-raw next Tube provenance checks pass
-```
-
----
-
-## 14. Candidate evaluation
-
-Evaluation separates two questions.
-
-### Capability progression
-
-Did the causal `Reachable ∩ Viable` support expand?
-
-Report at minimum:
-
-```text
-new causal root cells
-new causal full cells
-new cells by x slice
-new cells by phase
-holdout CALIBRATION/ACCEPTANCE positives separately
-```
-
-### Single-policy realization
-
-How much locked prior support does one unified candidate still realize?
-
-Policy realization is distinct from cumulative capability evidence. A later policy may lose realization of previously demonstrated states without erasing the historical capability evidence.
-
-Do not use strict zero-regression as the sole scientific definition of capability progression.
-
----
-
-## 15. Historical pi_2 interpretation
-
-Locked source panel:
-
-```text
-pi_1 3115/3119
-pi_2 3002/3119
-upstream   423/427 -> 312/427
-downstream 2692/2692 -> 2690/2692
-```
-
-Old pi_1-negative challenge:
-
-```text
-pi_2 13/14
-upstream 4/5
-downstream 9/9
-3 successful parent groups
-0 baseline reproduction failures
-```
-
-Current interpretation:
-
-```text
-source-panel loss -> valid single-policy realization degradation evidence
-13/14 -> valid historical RSI-anchored continuation/frontier evidence
-13/14 -> NOT natural-start-connected capability proof
-pi_2 -> not selected as next authority
-```
-
----
-
-## 16. Automatic causal workflow
-
-`JIT/cli/prepare_iterative_envelope_workflow.py` prepares the prospective causal DAG around a locked centerline.
-
-Intended sequence:
-
-```text
-locked centerline
--> source diagnostics
--> causal every-x pre-outcome plan
--> causal TRAIN/CALIBRATION/ACCEPTANCE acquisition
--> continuation labels
--> causal capability analysis
--> REQUIRE new TRAIN causal root cells > 0
--> fit/calibrate C^k
--> raw Tube_(k+1) with causal provenance on new rows
--> smoke / role isolation / baseline lock
--> train / freeze candidate
--> locked evaluation
--> capability progression + policy realization
--> select or stop
-```
-
-Code integration exists. No complete prospective causal round has yet validated the entire DAG.
-
----
-
-## 17. Stopping rule direction
-
-Future stopping should be based on causal evidence, including:
-
-- negligible new causal root/full cells;
-- repeated inability to widen under-covered x slices;
-- no meaningful new cross-section support;
-- repeated proposal-family saturation;
-- unacceptable single-policy realization loss;
-- resource budget.
-
-Only after the method and stopping rule are frozen may untouched final TEST/JCE/JEL be used.
-
----
-
-## 18. Immediate operator sequence
-
-```text
-1. pull current branch
-2. compile + targeted pytest
-3. materialize/verify locked natural-start centerline v2
-4. generate first causal every-x frontier plan
-5. inspect plan before outcomes
-6. run causal TRAIN/CALIBRATION/ACCEPTANCE
-7. build first causal Jump Capability summary
-8. inspect per-x expansion
-9. only then decide whether to construct the next training Tube and train a new policy
-```
-
-No pi_3-like training before steps 1–8 are accepted.
+The expanded catalogs and pre-outcome scores are complete. Resume at Stage 4
+with independent evaluator shards. Do not reacquire candidates, change seeds,
+refit the predictor or start π4.

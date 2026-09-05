@@ -1,5 +1,15 @@
 # JIT Causal-Reachable Jump Capability Tube — Current Method and Task Report
 
+> Historical redesign record. This document preserves the 2026-09-04
+> natural-start causal proposal and is no longer current execution authority.
+> The user-approved active experiment now conditions arrival on the fixed
+> `x = 2.5 m` jump start and frozen π0 proposer. The subsequent π3 comparison
+> also exposed a mixed success-endpoint problem. Read `AGENTS.md`,
+> `JIT/docs/CURRENT_STATUS.md` and
+> `JIT/docs/JIT_SCIENTIFIC_REVIEW_RESPONSE_20260905.md` for current truth. Any
+> later wording in this report that calls the natural-start design or π3-like
+> progression “current” is historical, not operational authority.
+
 Date: 2026-09-04  
 Branch: `agent/two-phase-soft-tube`
 

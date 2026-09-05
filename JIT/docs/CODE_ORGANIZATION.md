@@ -1,366 +1,155 @@
 # JIT code organization and lifecycle
 
-## Active fixed-jump-start family path
+## Rule
 
-`policy_family_landing.py` evaluates exact `pi_0`-acquired candidates under
-frozen `pi_0/pi_1/pi_2`, stops at first valid landing, and ORs their outcomes.
-`iterative_tube.py` supports this TRAIN-only family mode without requiring a
-class-balanced fitted continuation field.  Historical single-policy field
-fitting remains available and must not be silently relabeled as the family
-method.
+Scientific behavior lives in reusable modules under `JIT/src/jit_dvgc/`.
+`JIT/cli/` parses arguments and calls those modules. Tests belong in
+`JIT/tests/`; configs in `JIT/configs/`; durable status and method descriptions
+in `JIT/docs/`; run artifacts in `JIT/runs/`.
 
-## Principle
+Modify an existing module when changing an existing capability. Do not create
+an iteration-numbered source file for each policy, retry or experiment. New
+modules are justified only by a genuinely new durable capability.
 
-The active tree represents durable scientific/runtime capabilities. Configs, manifests and run directories represent experiment identities and iteration state.
+## Stable areas
 
-Do not encode experiment numbers into production module structure.
+### Environment and policy runtime
 
-The current scientific architecture is **causal, trajectory-centered, resolution-aware Jump-Capability identification**. Code organization must preserve the distinction between:
+- `config.py`, `unified_formal.py`, `unified_env.py`
+- `checkpoint.py`, `ppo.py`, `unified_training.py`
+- `unified_policy_freeze.py`
 
-```text
-forward reachability
-continuation viability
-raw/control replay support
-causal capability evidence
-single-policy realization
-```
+These own task/runtime identity, Actor observations, checkpoint compatibility,
+training and frozen-policy loading. Actor-only warm start imports Actor and
+normalizer through the shared loader; critic/optimizer reset is explicit.
 
----
+### Exact state capture and restoration
 
-## Stable package areas
+- `unified_envelope_snapshot.py`
+- `unified_continuation_labels.py`
+- `unified_continuation_shards.py`
 
-| Capability | Package area |
-|---|---|
-| unified PPO / formal training / freeze | unified training modules under `jit_dvgc` |
-| raw Soft Tube / Tube-RSI / iterative replay | Tube modules under `jit_dvgc` |
-| exact snapshot formats | snapshot modules under `jit_dvgc` |
-| frontier / reachability acquisition | `jit_dvgc.acquisition` |
-| continuation labels / fields | continuation modules under `jit_dvgc` |
-| causal role orchestration | `jit_dvgc.causal_frontier_protocol` |
-| physical / capability analysis | `jit_dvgc.analysis` |
-| resumable orchestration | `jit_dvgc.workflow` + workflow CLIs |
+Snapshots preserve physics, Actor FIFO, action/control and event context.
+Sharding is execution-only: catalog order, global candidate index, PRNG scheme,
+horizon, endpoint and identities remain invariant.
 
----
+### Fixed-jump-start acquisition
 
-## Durable analysis capabilities
+- `analysis/nominal_jump_centerline.py`
+- `acquisition/resolution_frontier.py`
+- `acquisition/causal_jump.py`
+- `causal_frontier_protocol.py`
 
-### Physical capability projection
+These own the locked π0 centerline, every-slice role plan, π0 proposal prefix and
+real `env.step` arrival provenance. They do not establish natural-reset
+connectivity or formal reachability.
 
-```text
-JIT/src/jit_dvgc/analysis/capability_tube.py
-JIT/cli/analyze_capability_tube.py
-```
+### Family landing labels
 
-Responsibilities:
+- `policy_family_landing.py`
+- `cli/label_policy_family_first_landing.py`
 
-- project exact snapshot qpos/qvel into physical coordinates;
-- build `root_geometry_v1` and `full_physical_v1` cells;
-- apply declared physical resolutions;
-- build 0.10 m x slices;
-- quantify raw-to-cell duplication;
-- compare all-state control-support geometry across historical Tubes.
+This capability evaluates π0/π1/π2 to first valid landing, validates each
+evaluator identity, ORs aligned rows and supports independent evaluator shards.
+Incomplete evaluator attempts are archived, never overwritten.
 
-This module does **not** establish natural-start reachability.
+### Capability and Tube analysis
 
-### Nominal jump centerline v2
+- `analysis/causal_jump_capability.py`
+- `analysis/capability_tube.py`
+- `analysis/jump_tube_view.py`
+- `iterative_tube.py`
+- `soft_tube.py`
 
-```text
-JIT/src/jit_dvgc/analysis/nominal_jump_centerline.py
-JIT/cli/build_nominal_jump_centerline.py
-```
+Causal positive cells, all-state control occupancy, semantic jump corridor and
+raw Tube rows are distinct outputs. Do not merge their counts or claims.
 
-Responsibilities:
+### Role isolation
 
-- consume one completed successful natural-start canonical evaluation;
-- select real trace frames at 0.1 m x spacing;
-- stop at first valid landing or 4.2 m;
-- forbid qpos/qvel interpolation;
-- record physical-state SHA and transitions-from-ground per point;
-- provide one fixed cross-iteration geometric scaffold.
+- `iterative_frontier_protocol.py`
+- `cli/audit_iterative_role_isolation.py`
 
-The centerline is not an Actor goal/intent interface.
+Derived holdout views remove cross-role and target-Tube exact states using
+outcome-blind identities and preserve excluded counts/reasons. The raw role
+artifacts remain immutable.
 
-### Historical semantic Jump-Tube view
+### Predictor
 
-```text
-JIT/src/jit_dvgc/analysis/jump_tube_view.py
-JIT/cli/analyze_jump_tube_view.py
-```
+- `family_landing_predictor.py`
+- `cli/fit_family_landing_predictor.py`
 
-Responsibilities:
+The module owns upstream fit/calibration, pre-outcome score locking and the
+post-label exact join. It is advisory and has no path to arrival proof or Tube
+admission. Extend this module for PR-AUC, group-aware intervals and calibration;
+do not create iteration-specific predictor files.
 
-- diagnose historical raw/control Tube contamination;
-- filter by centerline corridor;
-- require descending downstream;
-- exclude late recovery from jump-geometry accounting.
+### Baseline, gate and selection
 
-This is a retrospective semantic diagnostic and **not** a reachability proof.
+- `iterative_acceptance_gate.py`
+- `analysis/capability_progression.py`
+- selection CLIs under `JIT/cli/`
 
-### Causal Jump Capability analysis
+Baseline and candidate must use the same endpoint, state panel, horizon and
+remaining-time semantics. Current code rejects/records endpoint identity, but
+historical mixed-endpoint artifacts remain historical and are not repaired by
+new code.
 
-```text
-JIT/src/jit_dvgc/analysis/causal_jump_capability.py
-JIT/cli/analyze_causal_jump_capability.py
-```
+### Workflow
 
-Responsibilities:
+- `cli/prepare_iterative_envelope_workflow.py`
+- `cli/run_causal_jump_frontier_role.py`
 
-- validate causal acquisition catalogs;
-- validate `jit_ground_reachability_provenance_v1`;
-- match exact reached snapshots to continuation labels;
-- enforce phase/descending/pre-contact semantics;
-- build resolution-aware `Reachable ∩ Viable` capability cells;
-- report TRAIN/CALIBRATION/ACCEPTANCE evidence separately;
-- compare current causal capability against an optional previous causal summary.
-
-This is the primary scientific capability artifact for future rounds.
-
-### Capability progression / realization
-
-```text
-JIT/src/jit_dvgc/analysis/capability_progression.py
-JIT/cli/analyze_capability_progression.py
-```
-
-Responsibilities:
-
-- separate frontier/capability progression from one-policy realization;
-- never erase prior capability evidence merely because a later Actor regresses.
-
-Historical gate evidence must retain the method version under which it was acquired.
-
----
-
-## Durable acquisition capabilities
-
-### Causal ground-connected acquisition
-
-```text
-JIT/src/jit_dvgc/acquisition/causal_jump.py
-```
-
-Responsibilities:
-
-```text
-natural ground reset
--> frozen-policy prefix
--> enter declared look-back window
--> bounded action perturbation
--> env.step only
--> capture valid target-slice candidate
-```
-
-Hard provenance requirements:
-
-```text
-natural_start_connected = true
-generated_by_env_step_only = true
-rsi_used_to_establish_reachability = false
-qpos_qvel_injection_used = false
-proposal_anchor_used_as_reset = false
-```
-
-Initial look-back family is 0.1/0.2/0.3 m.
-
-### Every-slice causal frontier planning
-
-```text
-JIT/src/jit_dvgc/acquisition/resolution_frontier.py
-JIT/cli/prepare_resolution_aware_frontier_plan.py
-```
-
-Responsibilities:
-
-- use locked centerline slices as proposal targets;
-- create deterministic pre-outcome TRAIN/TRAIN/TRAIN/CALIBRATION/ACCEPTANCE proposal families per usable slice;
-- treat proposal anchors as identifiers, never physical reset states;
-- preserve role isolation before outcomes.
-
-Active revision schema: `jit_causal_trajectory_frontier_plan_revision_v2`.
-
----
-
-## Causal role protocol
-
-```text
-JIT/src/jit_dvgc/causal_frontier_protocol.py
-JIT/cli/run_causal_jump_frontier_role.py
-```
-
-Responsibilities:
-
-```text
-run ground-connected forward acquisition
--> validate reachability provenance
--> restore exact already-reached state
--> run continuation evaluation
--> emit logical role artifacts
-```
-
-The sequence is intentionally asymmetric:
-
-```text
-reachability first
-continuation second
-```
-
-RSI must never be used to establish reachability.
-
----
-
-## Raw/control Soft Tube lifecycle
-
-Historical Soft Tubes remain immutable exact replay artifacts.
-
-```text
-raw/control Tube
-  replay / Tube-RSI / provenance
-  may contain historical RSI-only or late-recovery rows
-
-causal Jump Capability Tube
-  natural-start forward reachable
-  continuation positive
-  physical-resolution cell support
-```
-
-`JIT/src/jit_dvgc/iterative_tube.py` retains source core exactly for historical reproducibility. For future causal TRAIN expansion it must:
-
-- verify causal acquisition identity/provenance;
-- reject expansion that lacks natural-start-connected evidence;
-- copy ground-reachability provenance into new expansion rows.
-
-Do not mutate historical core rows to pretend they were causal.
-
----
-
-## Current decision architecture
-
-```text
-locked successful natural-start centerline
-        ↓
-pre-outcome every-x causal frontier plan
-        ↓
-causal TRAIN/CALIBRATION/ACCEPTANCE acquisition
-        ↓
-reachability provenance
-        ↓
-continuation evaluation
-        ↓
-causal capability analysis
-        ↓
-require new TRAIN causal root cells > 0
-        ↓
-C^k
-        ↓
-raw/control Tube_(k+1) with provenance on new causal rows
-        ↓
-policy training
-        ↓
-locked evaluation
-        ↓
-capability progression + policy realization
-        ↓
-selection or STOP
-```
-
-`JIT/cli/prepare_iterative_envelope_workflow.py` prepares the prospective causal workflow around a locked centerline.
-
----
-
-## Modify-first rule
-
-Before creating a production file:
-
-1. Can an existing implementation be extended safely?
-2. Can an existing package API expose the capability?
-3. Can an existing CLI accept the new schema/config?
-4. Can an existing regression test cover it?
-5. Is this genuinely a durable scientific/runtime capability?
-
-New modules are justified only when they represent a durable method distinction, such as causal reachability versus continuation evaluation.
-
-Do not create `pi3_*.py`, `tube3_*.py`, retry-number production modules, or experiment-specific package branches.
-
----
-
-## Active versus historical files
-
-Current authority code/docs describe the causal method.
-
-Older trajectory-centered-but-noncausal reports may remain only as explicitly superseded historical records. They must not appear ahead of the causal report in any authority read order.
-
-Git history is the source archive for removed code; do not create obsolete Python archive folders.
-
----
-
-## Compatibility and deletion gate
-
-Before deleting any Python/CLI/test file:
-
-1. prove no production import, package API, current CLI, current test, artifact loader, config or frozen reproducibility path depends on it;
-2. run `python -m compileall -q JIT/src JIT/cli` plus targeted tests/imports;
-3. stop if dependency closure is uncertain.
-
-Never delete historical run artifacts merely because their scientific interpretation changed.
-
----
-
-## Iteration-generic requirement
-
-Reusable code must obtain iteration identity from artifacts/protocols rather than hard-coded current policy numbers or row counts.
-
-Current task/method constants such as `2.5 m`, `4.2 m`, `0.1 m` x spacing and the initial causal look-back family belong to declared method contracts. Changing them requires an explicit method revision, not an experiment-specific hidden patch.
-
----
-
-## CLI rules
-
-`JIT/cli/` files should:
-
-- parse arguments;
-- call reusable production logic;
-- print/write machine-readable results;
-- avoid embedding fitting algorithms or physics logic;
-- fail loudly on provenance or method-contract drift.
-
----
-
-## Regression-test focus
-
-Causal-method tests should cover at minimum:
-
-```text
-centerline uses natural-start real frames only
-centerline does not interpolate qpos/qvel
-centerline stores ground-connected state identity
-proposal anchors cannot be used as physical resets
-causal acquisition starts from natural reset
-reachability provenance forbids RSI/qpos injection
-non-descending or post-contact downstream candidates are rejected
-role acquisition precedes continuation labeling
-causal capability analyzer joins matching acquisition/labels only
-raw Tube causal expansion requires verified provenance
-workflow requires causal capability growth before new policy training
-```
-
-Current targeted tests include the existing centerline/frontier/capability/workflow suites plus causal reachability contract coverage.
-
----
-
-## Workflow boundary
-
-Orchestration may:
-
-- sequence declared commands;
-- validate JSON/file assertions;
-- persist/resume state;
-- stop when a scientific artifact fails.
-
-It may not:
-
-- fabricate a successful centerline;
-- use RSI to claim reachability;
-- edit qpos/qvel to populate capability cells;
-- tune proposal families/replay/PPO/physics after seeing outcomes without a new decision;
-- turn historical RSI evidence into causal evidence;
-- touch final TEST data during development.
+Workflow preparation records a DAG and commands; readiness is not execution
+authorization. The workflow must stop at failed acquisition, isolation,
+endpoint, support, training or selection gates.
+
+## CLI policy
+
+CLIs should:
+
+- use `argparse` and explicit paths;
+- print machine-readable JSON summaries;
+- avoid implementing scientific logic;
+- preserve existing invocation compatibility when adding a mode;
+- fail closed on identity or endpoint drift;
+- never silently choose a checkpoint, seed or retry.
+
+## Test policy
+
+Targeted tests should cover:
+
+- candidate/snapshot and policy identity binding;
+- first-valid-landing versus stable-recovery separation;
+- family OR row alignment and evaluator identities;
+- shard coverage/order/seed equivalence;
+- role isolation and outcome-blind exclusions;
+- Actor-only warm-start parameter routing;
+- predictor score locking before label joins;
+- historical artifact refusal when required identity fields are missing.
+
+CPU contract tests do not replace a real GPU compile/one-step test or a real
+shard equivalence smoke.
+
+## Artifact lifecycle
+
+1. predeclare protocol/config;
+2. write raw acquisition without outcome labels;
+3. lock optional scores;
+4. write immutable evaluator outputs or preserved failure attempts;
+5. strictly merge logical labels;
+6. derive holdout views without mutating raw data;
+7. construct Tube/analysis artifacts;
+8. freeze policy and evaluation contracts;
+9. index lightweight evidence in Git; keep large checkpoints externally or
+   ignored with auditable manifests.
+
+Never edit a historical result to change its endpoint, pass/fail meaning or
+creation time.
+
+## Current structural gap
+
+The family CLI can run and merge evaluator shards, but the expanded round still
+needs real GPU shard execution and a small-bank serial-equivalence check. A
+higher-level family supervisor may be added to the same CLI only after this path
+is validated; it must launch fresh child processes and avoid initializing JAX in
+the parent.

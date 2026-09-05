@@ -605,6 +605,30 @@ def merge_unified_continuation_shards(
         "policy_name": str(protocol["policy_name"]),
         "policy_actor_sha256": str(protocol["policy_actor_sha256"]),
         "policy_payload_sha256": str(protocol["policy_payload_sha256"]),
+        "evaluator_policy_name": str(
+            protocol.get("evaluator_policy_name", protocol["policy_name"])
+        ),
+        "success_criterion": str(
+            protocol.get("success_criterion", "stable_recovery")
+        ),
+        "post_landing_recovery_required": bool(
+            protocol.get("post_landing_recovery_required", True)
+        ),
+        "acquisition_policy_name": str(
+            protocol.get("acquisition_policy_name", protocol["policy_name"])
+        ),
+        "acquisition_policy_actor_sha256": str(
+            protocol.get(
+                "acquisition_policy_actor_sha256",
+                protocol["policy_actor_sha256"],
+            )
+        ),
+        "acquisition_policy_payload_sha256": str(
+            protocol.get(
+                "acquisition_policy_payload_sha256",
+                protocol["policy_payload_sha256"],
+            )
+        ),
         "frozen_unified_manifest_sha256": str(protocol["frozen_unified_manifest_sha256"]),
         "candidate_catalog_file_sha256": str(protocol["candidate_catalog_file_sha256"]),
         "candidate_catalog_protocol_sha256": str(

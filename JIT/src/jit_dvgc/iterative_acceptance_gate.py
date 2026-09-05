@@ -107,9 +107,19 @@ def _selected_family_outcome(
 
 def _candidate_core_success_criterion(lock: Mapping[str, Any]) -> str:
     """Keep the candidate preservation metric aligned with the active method."""
-    criterion = str(lock.get("acceptance_success_criterion", "stable_recovery"))
+    acceptance_criterion = str(
+        lock.get("acceptance_success_criterion", "stable_recovery")
+    )
+    if "core_success_criterion" not in lock:
+        if acceptance_criterion == "first_valid_landing":
+            raise ValueError("baseline core success criterion missing")
+        criterion = "stable_recovery"
+    else:
+        criterion = str(lock["core_success_criterion"])
     if criterion not in {"stable_recovery", "first_valid_landing"}:
         raise ValueError("candidate core success criterion drift")
+    if criterion != acceptance_criterion:
+        raise ValueError("baseline core/boundary success criterion mismatch")
     return criterion
 
 
@@ -120,6 +130,7 @@ def _reuse_core_baseline(
     policy_record: Mapping[str, Any],
     source_tube_manifest_sha256: str,
     source_state_sha256: list[str],
+    expected_core_success_criterion: str,
 ) -> list[dict[str, Any]]:
     """Validate and reuse a previously locked baseline over the same source Tube."""
     if lock.get("schema") != LOCK_SCHEMA or lock.get("status") != (
@@ -134,6 +145,8 @@ def _reuse_core_baseline(
         raise ValueError("reusable core baseline payload drift")
     if lock.get("source_tube_manifest_sha256") != source_tube_manifest_sha256:
         raise ValueError("reusable core baseline Tube drift")
+    if lock.get("core_success_criterion") != expected_core_success_criterion:
+        raise ValueError("reusable core baseline success criterion drift")
     rows = lock.get("core")
     if not isinstance(rows, list) or len(rows) != int(lock.get("core_state_count", -1)):
         raise ValueError("reusable core baseline rows drift")
@@ -399,10 +412,16 @@ def lock_baseline(
             policy_record=record,
             source_tube_manifest_sha256=str(artifact.manifest["manifest_sha256"]),
             source_state_sha256=[str(row["state_sha256"]) for row in artifact.entries],
+            expected_core_success_criterion=acceptance_criterion,
         )
     else:
         baseline_policy = paired._checkpoint_policy(env, record)
-        rollout = _make_compiled_rollout(env, baseline_policy, formal.ppo.episode_horizon)
+        rollout = _make_compiled_rollout(
+            env,
+            baseline_policy,
+            formal.ppo.episode_horizon,
+            success_criterion=acceptance_criterion,
+        )
         reset = jax.jit(env.reset_tube_index)
         phase_local = Counter()
         core_rows = []
@@ -419,6 +438,7 @@ def lock_baseline(
                 rollout(state, jax.random.PRNGKey(seed)),
                 start_phase=phase_index,
                 max_ticks=formal.ppo.episode_horizon,
+                success_criterion=acceptance_criterion,
             )
             interactions += int(result["environment_interactions"])
             core_rows.append(
@@ -497,6 +517,7 @@ def lock_baseline(
         "source_tube_entry_count": len(artifact.entries),
         "acceptance_role_manifest_sha256": str(acceptance_manifest["role_manifest_sha256"]),
         "acceptance_success_criterion": acceptance_criterion,
+        "core_success_criterion": acceptance_criterion,
         "core_state_count": len(core_rows),
         "core_baseline_success_count": baseline_success,
         "core_baseline_reused": reused_core_lock is not None,
@@ -644,7 +665,7 @@ def run_candidate_gate(*, baseline_lock: Path, candidate_frozen_policy: Path, ou
         },
         "core_gate": gates["core"],
         "core_source": {
-            "baseline_success_criterion": "stable_recovery",
+            "baseline_success_criterion": core_criterion,
             "candidate_success_criterion": core_criterion,
             "preservation_population": "locked_baseline_successes_only",
         },

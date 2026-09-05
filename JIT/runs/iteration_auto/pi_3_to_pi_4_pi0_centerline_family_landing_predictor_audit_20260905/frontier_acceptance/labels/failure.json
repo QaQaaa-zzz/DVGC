@@ -1,0 +1,10 @@
+{
+  "completed_policy_names": [
+    "pi_0",
+    "pi_1"
+  ],
+  "error": "ValueError: UNKNOWN: FFI callback error: RuntimeError: Failed to allocate 32768 bytes on device 'cuda:0'",
+  "schema": "jit_policy_family_first_landing_labels_v1",
+  "status": "engineering_error",
+  "training_transitions": 0
+}

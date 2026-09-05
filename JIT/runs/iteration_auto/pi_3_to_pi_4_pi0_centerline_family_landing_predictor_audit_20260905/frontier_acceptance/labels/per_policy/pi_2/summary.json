@@ -1,0 +1,17 @@
+{
+  "completed_candidate_count": 197,
+  "environment_interactions": 6308,
+  "error": "ValueError: UNKNOWN: FFI callback error: RuntimeError: Failed to allocate 32768 bytes on device 'cuda:0'",
+  "expert_switching_used": false,
+  "final_evaluation_data_used": false,
+  "iteration": 2,
+  "maximum_environment_interactions": 229600,
+  "policy_actor_sha256": "d0753cb3be742743c82a68fbb00bb30d914a4c25873e864e77ac298ea5cca4ff",
+  "policy_payload_sha256": "f17b2361ae897de876a35955fd3bdcc86cfbdcf4368c24b6cf3d41fcde59181c",
+  "protocol_sha256": "c65a520081cb41e1c934e97b598e0ec0f147a26e6e8f1f8ae54a1cc6a392996b",
+  "schema": "jit_unified_continuation_labels_v1",
+  "status": "engineering_error",
+  "test_data_used": false,
+  "training_transitions": 0,
+  "validation_data_used": false
+}

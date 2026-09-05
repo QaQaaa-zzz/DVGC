@@ -4,6 +4,7 @@ from __future__ import annotations
 import gc
 import hashlib
 import json
+import math
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -13,6 +14,10 @@ from .checkpoint import load_checkpoint
 from .config import file_sha256
 from .ppo import make_checkpoint_policy
 from .unified_continuation_labels import label_unified_continuations
+from .unified_continuation_shards import (
+    label_unified_continuation_shard,
+    merge_unified_continuation_shards,
+)
 from .unified_formal import build_unified_formal_environment
 from .unified_policy_freeze import load_frozen_unified_manifest
 from .unified_training import checkpoint_identity
@@ -21,6 +26,16 @@ from .unified_training import checkpoint_identity
 def _canonical_sha256(value: Any) -> str:
     raw = json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
+def required_policy_family_label_shards(
+    candidate_count: int, max_candidates_per_process: int = 600
+) -> int:
+    candidate_count = int(candidate_count)
+    maximum = int(max_candidates_per_process)
+    if candidate_count <= 0 or maximum <= 0:
+        raise ValueError("policy-family shard sizes must be positive")
+    return int(math.ceil(candidate_count / maximum))
 
 
 def merge_any_policy_landing_labels(
@@ -167,6 +182,80 @@ def _load_frozen(path: Path) -> tuple[dict[str, Any], str]:
     frozen_path = Path(path)
     frozen = load_frozen_unified_manifest(frozen_path)
     return dict(frozen["policy"]), file_sha256(frozen_path)
+
+
+def run_policy_family_evaluator_shard(
+    *,
+    catalog_path: Path,
+    acquisition_frozen_policy: Path,
+    evaluator_frozen_policy: Path,
+    output_dir: Path,
+    shard_index: int,
+    shard_count: int,
+    max_ticks: int = 400,
+    protocol_seed: int = 9_521_201,
+) -> dict[str, Any]:
+    """Run one bounded first-landing evaluator shard in one GPU process."""
+    output = Path(output_dir)
+    if (output / "summary.json").is_file():
+        existing = json.loads((output / "summary.json").read_text(encoding="utf-8"))
+        if existing.get("status") == "completed_shard":
+            return existing
+        raise RuntimeError(f"existing evaluator shard is incomplete: {output}")
+    acquisition_record, acquisition_frozen_sha = _load_frozen(
+        Path(acquisition_frozen_policy)
+    )
+    evaluator_record, evaluator_frozen_sha = _load_frozen(
+        Path(evaluator_frozen_policy)
+    )
+    if acquisition_record["xml_sha256"] != evaluator_record["xml_sha256"]:
+        raise ValueError("policy-family shard acquisition/evaluator XML mismatch")
+    config, _artifact, env = build_unified_formal_environment(
+        Path(str(evaluator_record["formal_config"]))
+    )
+    payload = load_checkpoint(
+        Path(str(evaluator_record["checkpoint"])),
+        expected=checkpoint_identity(config, env),
+    )
+    policy = make_checkpoint_policy(env, payload, deterministic=True)
+    from .frontier_label_shard_runner import _build_memory_stable_step
+
+    step_fn = _build_memory_stable_step(env)
+    return label_unified_continuation_shard(
+        Path(catalog_path),
+        output,
+        env=env,
+        policy=policy,
+        policy_record=evaluator_record,
+        frozen_manifest_sha256=evaluator_frozen_sha,
+        shard_index=int(shard_index),
+        shard_count=int(shard_count),
+        max_ticks=int(max_ticks),
+        protocol_seed=int(protocol_seed),
+        compiled_step_fn=step_fn,
+        acquisition_policy_record=acquisition_record,
+        acquisition_frozen_manifest_sha256=acquisition_frozen_sha,
+        success_criterion="first_valid_landing",
+    )
+
+
+def merge_policy_family_evaluator_shards(
+    *,
+    catalog_path: Path,
+    shard_dirs: Sequence[Path],
+    output_dir: Path,
+    evaluator_name: str,
+) -> dict[str, Any]:
+    """Merge one evaluator's independent shards into its canonical cache."""
+    _archive_incomplete_evaluator(Path(output_dir), evaluator_name=evaluator_name)
+    report = merge_unified_continuation_shards(
+        Path(catalog_path), tuple(Path(path) for path in shard_dirs), Path(output_dir)
+    )
+    if report.get("evaluator_policy_name") != evaluator_name:
+        raise ValueError("merged evaluator shard identity drift")
+    if report.get("success_criterion") != "first_valid_landing":
+        raise ValueError("merged evaluator shard success criterion drift")
+    return report
 
 
 def _load_completed_evaluator(

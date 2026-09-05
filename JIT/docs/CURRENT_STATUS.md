@@ -1,461 +1,202 @@
-# Current JIT status — 2026-09-04
+# Current JIT status — 2026-09-05
 
-## Superseding live status — fixed-jump-start family landing round
+## One-line status
 
-The active round has completed acquisition, three-policy landing labels, role
-separation, physical-cell analysis, and TRAIN-only replay construction.
+The first fixed-jump-start family-landing round produced Tube3 and trained π3,
+but π3's stored selection comparison mixed success endpoints and is quarantined
+as historical engineering evidence. The next expanded catalogs and predictor
+scores are locked; family labels are incomplete after GPU allocation failures.
+No π4 training is authorized.
 
-```text
-centerline: pi_0 real frames, 14 slices/cells, x=2.5..3.8 m
-proposal acquisition: pi_0 from the fixed jump start, env.step only
-label: first valid landing under any of pi_0/pi_1/pi_2; no recovery requirement
-TRAIN:       525/527 positive; 382 unique positive root-geometry cells
-CALIBRATION: 181/184 positive; 134 unique positive root-geometry cells
-ACCEPTANCE:  181/184 positive; 135 unique positive root-geometry cells
-replay Tube: 3119 retained + 525 TRAIN positives = 3644 rows
-```
+## Current scientific definition
 
-The new unified `pi_2_landing_replay` policy has now completed exactly
-10,009,600 training transitions.  Only its Actor/observation normalizer was
-initialized from selected frozen `pi_1`; critic and optimizer started fresh.
-It is selected as the next engineering iteration authority under the prospective
-landing-capability gate:
+The active experiment is conditional on the locked `x = 2.5 m` jump start. It
+does not currently begin at the natural episode reset.
 
 ```text
-locked source core:  pi_1 3115/3119 stable-recovery successes
-candidate landing:   3119/3119 first-valid-landing successes
-core regressions:    0 under the active landing criterion
-locked boundary:     4/6 new landings across 2 independent parent groups
-selection:           ACCEPTED / selected pi_2_landing_replay
+A = exact states reached by pi_0 + bounded causal action perturbation + env.step
+E = exact A states where any frozen pi_0/pi_1/pi_2 evaluator reaches first landing
+J = positive A intersect E states projected to fixed physical-resolution cells
+S = raw reset/replay Tube, including retained historical rows
+r = one frozen Actor's success on a common locked panel
 ```
 
-The initial post-training diagnostic that incorrectly retained stable recovery
-for the candidate core reported 10 upstream regressions and remains preserved
-as a rejected criterion-mismatch report.  It is not the active selection result.
-The corrected report changes no policy, seed, state bank, or data role; it only
-applies the first-valid-landing criterion declared before training.  Final
-TEST/JCE/JEL remains untouched.
+These objects answer different questions. A family witness may use π0 for the
+prefix and π1 or π2 for the suffix, so it is not a one-Actor rollout. Tube rows
+and physical cells are not formal reachable/safe sets. The final target remains
+one unified Actor.
 
-Deferred predictor work for a later acquisition round:
+## Completed fixed-jump-start family round
 
-- predeclare a wider causal lookback/action-perturbation range before observing outcomes;
-- collect more difficult TRAIN failures while retaining exact and near state-disjoint CALIBRATION/ACCEPTANCE roles;
-- only after both classes and independent parent groups are adequate, fit an optional predictor of whether any frozen evaluator reaches first valid landing;
-- fit on TRAIN, calibrate its threshold on CALIBRATION, report once on ACCEPTANCE, and compare against a no-predictor acquisition ablation;
-- use the predictor only to improve proposal/sample efficiency; authoritative labels remain real `env.step` rollouts and first-valid-landing events.
+Root:
 
-This predictor is deliberately not fitted on the current almost-all-positive
-round and is not part of the current training gate.
+`JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904`
 
-Natural-start, `pi_1` centerline, stable-recovery, and “artifact not yet
-generated” statements below are superseded history.
+The locked π0 real-frame centerline was sampled with π0 proposals. Every reached
+candidate was evaluated by frozen π0, π1 and π2. Positive means at least one
+member reached the first valid landing before physical failure; recovery was not
+required.
 
-## Executive state
+| Quantity | Result |
+|---|---:|
+| TRAIN candidates | 1,258 |
+| family-positive TRAIN | 1,230 |
+| family-negative TRAIN | 28 |
+| upstream positive | 714 / 742 |
+| downstream positive | 516 / 516 |
+| Tube2 source rows | 3,644 |
+| positive rows before Tube dedup | 1,230 |
+| duplicates against Tube2 | 71 |
+| Tube3 raw increment | 1,159 |
+| Tube3 total rows | 4,803 |
+| new causal TRAIN root cells | 713 |
+| control root-cell increment | 714 |
+| control full-physical increment | 897 |
 
-The historical engineering chain through `pi_2` is complete. The project is **paused before any pi_3-like training** because two previous interpretations were too weak for a publishable jump-capability claim:
+The strict role-isolation audit passed after outcome-blindly removing holdout
+states already present in the target training Tube. The derived CALIBRATION and
+ACCEPTANCE views record their exclusions and have zero exact or near TRAIN
+overlap under the declared tolerance.
 
-1. raw/replay Tube growth was being confused with independent physical capability growth;
-2. RSI continuation success was being confused with forward reachability from the real ground start.
+These counts are not interchangeable: raw increment counts rows; causal root
+cells deduplicate positive TRAIN evidence; control cells project all Tube rows;
+semantic corridor cells additionally exclude post-landing recovery.
 
-The active method is now:
+## π3 training and the selection quarantine
 
-> **causal, trajectory-centered, resolution-aware Jump Capability Tube identification with just-in-time curriculum generation.**
+π3 was Actor-only warm-started from π2 and trained for exactly 10,009,600 PPO
+transitions. Actor and observation normalizer were imported; critic and optimizer
+were fresh. Training completed and the checkpoint was frozen.
 
-The central empirical capability object is
+Historical stored diagnostic:
 
 ```text
-J_k = R_k^forward ∩ V_k^continuation
+source panel states                 3644
+stored baseline successes           3539
+stored pi_3 successes               3598
+old failures improved                 89
+old successes regressed               30
+boundary gains                       4 / 12 across 3 groups
+downstream                         2895 / 2895 for both
 ```
 
-A state is capability evidence only if the robot first reaches it from the natural ground reset by real dynamics and then the exact reached state passes continuation evaluation.
-
-RSI is retained for continuation evaluation and training, but can never establish reachability.
-
----
-
-## Current chain
+This diagnostic cannot support a fair prospective policy selection. The gate's
+own `core_source` records:
 
 ```text
-pi_up_star + pi_down_star
-  -> raw Tube_0 / pi_0 / C^0
-  -> raw Tube_1 / pi_1 repair02
-  -> C^1 engineering path
-  -> raw Tube_2 / pi_2
-  -> locked pi_1 vs pi_2 evaluation
-  -> physical resolution analysis
-  -> trajectory-centered redesign
-  -> causal reachability redesign
-  -> CURRENT: local verification + first real causal centerline/frontier artifacts
+baseline_success_criterion  = stable_recovery
+candidate_success_criterion = first_valid_landing
 ```
 
-Do not start pi_3, do not run replay-ratio sweeps, and do not touch final TEST/JCE/JEL.
+The historical `selected_policy.json` and capability decision remain immutable
+records of the engineering decision made at the time. They are no longer active
+scientific authority. The 30 regressions and 89 improvements remain useful, but
+a same-endpoint rerun is retrospective because π3 has already been trained and
+observed. A new prospective selection requires an endpoint-identical baseline
+lock made before training.
 
----
-
-## Scientific objects
+On the 1,258 source TRAIN candidates, stored first-landing realization was:
 
 ```text
-F*    conceptual physical/task feasibility; not proved
-R_k   natural-start-connected forward-reachability evidence
-V_k   continuation-viability evidence
-J_k   causal Jump Capability Tube = R_k ∩ V_k
-S_k   raw/control Soft Tube used for replay/RSI
-P_k   realization coverage of one unified Actor
+pi_0  1130
+pi_1  1184
+pi_2  1222
+pi_3  1130
 ```
 
-The runtime target remains one unified Actor with no expert switching.
-
-A later policy failing on an old state does not erase prior capability evidence. Conversely, a continuation-positive RSI state is not capability evidence unless it has ground-connected forward provenance.
-
----
-
-## Nominal centerline v2
-
-One successful natural-start full-chain rollout defines the fixed geometric scaffold used across causal iterations.
-
-```text
-x nominal start = 2.5 m
-x hard maximum  = 4.2 m
-x spacing       = 0.1 m
-actual end      = first valid landing if earlier
-```
-
-Rules:
-
-```text
-real captured simulator frames only
-no qpos/qvel interpolation
-physical-state SHA per point
-real transition count from natural start per point
-centerline locked across iterations
-```
-
-Branch semantics:
-
-```text
-pre-Apex                      upstream
-Apex neighbourhood            handoff marker
-post-Apex + root_vz < 0       downstream
-first valid landing            Jump-Tube terminal
-post-contact / late recovery   excluded from capability frontier
-```
-
-No goal/intent variable is added. Reward and Actor observation remain unchanged.
-
-Implementation:
-
-```text
-JIT/src/jit_dvgc/analysis/nominal_jump_centerline.py
-JIT/cli/build_nominal_jump_centerline.py
-```
-
-Schema: `jit_nominal_jump_centerline_v2`.
-
----
-
-## Physical resolution contract
-
-```text
-root x/y/z                      0.10 m
-root vx/vy/vz                   0.10 m/s
-roll/pitch/yaw                  0.50 deg
-root angular velocity wx/wy/wz  2.0 deg/s
-steering/hip/knee angle         0.50 deg
-steering/hip/knee rate          2.0 deg/s
-wheel tangential speed          0.10 m/s
-phase                           discrete
-```
-
-Profiles:
-
-- `root_geometry_v1`: primary macroscopic capability geometry;
-- `full_physical_v1`: finer physical-state diversity.
-
-Actor FIFO/history/last-action fields do not define capability cells.
-
----
-
-## Why the old downstream cloud is not causal Jump Capability
-
-Historical resolution-aware plots showed a large downstream-labelled cloud extending into late x positions such as around 4.5 m. That happened because old phase semantics remained downstream after Apex through landing/recovery, and the old frontier definition did not require negative vertical velocity or stop capability accounting at landing.
-
-Those rows may still be useful replay states. They are not valid Jump-Capability frontier evidence.
-
-The old semantic `Jump-Tube view` remains a retrospective diagnostic only. It filters corridor/descending/post-landing states but does **not** prove natural-start reachability.
-
----
-
-## Causal forward acquisition
-
-The active acquisition rule is:
-
-```text
-natural ground reset
-        ↓
-frozen-policy prefix
-        ↓
-enter predeclared look-back window before target x
-        ↓
-apply bounded action perturbation
-        ↓
-advance only through env.step
-        ↓
-capture a semantically valid state in the target x slice
-```
-
-Initial look-back family:
-
-```text
-0.1 m
-0.2 m
-0.3 m
-```
-
-Every accepted candidate carries `jit_ground_reachability_provenance_v1` and must declare:
-
-```text
-natural_start_connected = true
-generated_by_env_step_only = true
-rsi_used_to_establish_reachability = false
-qpos_qvel_injection_used = false
-proposal_anchor_used_as_reset = false
-```
-
-Implementation:
-
-```text
-JIT/src/jit_dvgc/acquisition/causal_jump.py
-```
-
-For downstream causal acquisition, the candidate must remain post-Apex, descending (`root_vz < 0`) and pre-contact.
-
----
-
-## Every-x frontier plan
-
-The old global-lowest-score newest-shell selector is retired for prospective causal JIT.
-
-Every usable 0.1 m centerline slice receives pre-outcome proposal families:
-
-```text
-TRAIN
-TRAIN
-TRAIN
-CALIBRATION
-ACCEPTANCE
-```
-
-These are exploration identities only and are never used as physical reset states.
-
-Implementation:
-
-```text
-JIT/src/jit_dvgc/acquisition/resolution_frontier.py
-JIT/cli/prepare_resolution_aware_frontier_plan.py
-```
-
-Active plan revision schema: `jit_causal_trajectory_frontier_plan_revision_v2`.
-
----
-
-## Reachability must precede continuation
-
-Correct order:
-
-```text
-forward acquisition from natural start
-        ↓
-lock reachability provenance
-        ↓
-restore exact already-reached state
-        ↓
-continuation label
-```
-
-Causal role runner:
-
-```text
-JIT/src/jit_dvgc/causal_frontier_protocol.py
-JIT/cli/run_causal_jump_frontier_role.py
-```
-
-Logical roles:
-
-- `TRAIN`: may fit continuation fields and contribute qualifying curriculum support;
-- `CALIBRATION`: threshold calibration only;
-- `ACCEPTANCE`: locked development comparison only;
-- final TEST/JCE/JEL: untouched.
-
----
-
-## Causal capability analyzer
-
-Implementation:
-
-```text
-JIT/src/jit_dvgc/analysis/causal_jump_capability.py
-JIT/cli/analyze_causal_jump_capability.py
-```
-
-Primary curriculum-capability support is:
-
-```text
-locked centerline cells
-UNION
-TRAIN-positive natural-start-connected causal cells
-```
-
-CALIBRATION and ACCEPTANCE positives are reported separately and never merged into TRAIN support.
-
-This is the first artifact that should be used to make a causal Jump-Capability growth claim.
-
----
-
-## Historical raw Tubes
-
-```text
-Tube_0 =   222 raw snapshots
-Tube_1 = 3,119 raw snapshots
-Tube_2 = 3,776 raw snapshots
-```
-
-These remain immutable replay/provenance artifacts.
-
-Retrospective all-state physical occupancy:
-
-```text
-Tube_0 root/full = 100 / 112
-Tube_1 root/full = 2142 / 2404
-Tube_2 root/full = 2446 / 2871
-```
-
-These are control-support occupancy counts, not causal Jump-Capability sizes.
-
-Future causal TRAIN expansion rows admitted into a raw Tube must carry verified ground-reachability provenance. Historical core rows remain unchanged for reproducibility.
-
----
-
-## Current pi_2 evidence
-
-Training completed at 10,009,600 transitions.
-
-Locked source panel:
-
-```text
-pi_1 3115/3119
-pi_2 3002/3119
-upstream   423/427 -> 312/427
-downstream 2692/2692 -> 2690/2692
-```
-
-Historical pi_1-negative challenge:
-
-```text
-pi_2 13/14
-upstream 4/5
-downstream 9/9
-successful parent groups 3
-baseline reproduction failures 0
-```
-
-Interpretation under the current method:
-
-- the source-panel drop remains valid evidence of substantial upstream single-policy realization loss;
-- the old `13/14` remains valid historical continuation/frontier evidence;
-- `13/14` is **not** retroactively called natural-start-connected capability expansion because the old acquisition began from RSI Tube anchors.
-
-`pi_2` is not the selected next authority.
-
----
+On the actual 1,159-row Tube3 increment, π3 realized 1,061 first landings
+(91.54%). This is curriculum-support realization, not final forward-task
+generalization. It shows that Tube growth did not automatically transfer to
+π3 and motivates controlled forgetting/core-retention studies.
+
+## Advisory landing predictor
+
+An upstream 64x64 tanh predictor was fit from observed family-landing labels.
+The downstream phase remained all-positive and was not fit.
+
+Old held-out development result:
+
+| Split/metric | Result |
+|---|---:|
+| TRAIN upstream | 714 positive / 28 negative |
+| CALIBRATION upstream | 227 positive / 4 negative |
+| ACCEPTANCE upstream | 216 positive / 9 negative |
+| ACCEPTANCE ROC-AUC | 0.89249 |
+| positive recall at locked threshold | 0.98611 |
+| accepted negatives at locked threshold | 6 / 9 |
+
+High recall on a strongly positive-skewed set does not imply reliable failure
+detection. The predictor is advisory only: it cannot establish arrival, create
+labels, admit Tube rows or claim safety. Future reports must add PR-AUC, FPR,
+group counts and group-aware uncertainty. A same-budget predictor/no-predictor
+acquisition comparison is still missing.
+
+## Expanded forward predictor-audit round
+
+Root:
+
+`JIT/runs/iteration_auto/pi_3_to_pi_4_pi0_centerline_family_landing_predictor_audit_20260905`
+
+This name is historical directory identity; it does not authorize π4 training.
+The frozen experiment retains π0 as proposer and π0/π1/π2 as evaluator family.
+The declared scan expanded lookbacks to 0.1–0.7 m with strengths
+0.025/0.05/0.10/0.15/0.20.
+
+Acquisition completed:
+
+| Role | Candidates | Upstream | Downstream | predicted upstream above threshold |
+|---|---:|---:|---:|---:|
+| TRAIN | 1,754 | 1,038 | 716 | 975 |
+| CALIBRATION | 583 | 342 | 241 | 326 |
+| ACCEPTANCE | 574 | 333 | 241 | 317 |
+
+Model, normalization, threshold, catalog order and per-candidate scores were
+locked before outcome analysis. Scoring read snapshot observations only and did
+not read success/failure labels.
+
+Family labeling is not complete. Role-parallel evaluation preserved completed
+π0/π1 results for CALIBRATION and ACCEPTANCE, but concurrent π2 evaluators failed
+after GPU 32 KB allocation errors. TRAIN π0 later failed after 1,409/1,754
+candidates. Partial attempts and failure records are preserved.
 
 ## Current code state
 
-```text
-historical experts / Tube_0 / pi_0 / C^0       DONE
-Tube_1 / pi_1                                  DONE
-C^1 engineering path                           DONE
-Tube_2 / pi_2                                  DONE
-locked pi_1 vs pi_2                            DONE
-physical resolution analysis                   DONE
-causal capability definition                   IMPLEMENTED
-centerline v2                                  IMPLEMENTED
-causal forward acquisition                     IMPLEMENTED
-causal every-x frontier plan                   IMPLEMENTED
-causal role protocol                           IMPLEMENTED
-causal capability analyzer                     IMPLEMENTED
-raw-Tube causal provenance guard               IMPLEMENTED
-causal workflow preparation                    IMPLEMENTED
+Implemented:
 
-local compile / targeted pytest                DONE for active landing round
-real locked pi_0 centerline artifact            DONE
-fixed-jump TRAIN/CALIBRATION/ACCEPTANCE          DONE
-measured landing-capability growth              DONE: 382 TRAIN root cells
-next unified policy                             SELECTED: pi_2_landing_replay
-final TEST/JCE/JEL                              UNTOUCHED
-```
+- exact fixed-jump-start acquisition and family first-landing labels;
+- resolution-aware causal and control occupancy analysis;
+- outcome-blind holdout isolation against TRAIN and target Tube;
+- Actor-only warm-start compatibility through the common policy loader;
+- same-endpoint support in the current baseline/gate implementation;
+- completed-evaluator reuse and preservation of incomplete attempts;
+- first-landing-aware independent evaluator shards with strict global-index merge;
+- advisory predictor fit, pre-outcome score lock and post-label audit join.
 
----
+The same-endpoint code fix does not repair old results retroactively.
 
-## Automatic workflow vNext
+## Exact next actions
 
-Prospective causal DAG:
+1. Run π0, π1 and π2 evaluator shards in separate GPU processes, with no more
+   than 600 candidates per process, for each incomplete role.
+2. Merge shards by global catalog index and verify equality on a small bank
+   against the existing serial labeler before relying on the large merge.
+3. Rebuild family OR labels and logical role manifests without changing catalog,
+   seed, horizon or first-landing endpoint.
+4. Join the locked predictor scores to fresh labels and report ROC-AUC, PR-AUC,
+   recall, FPR, accepted negatives and group-aware uncertainty.
+5. Run a retrospective π2-vs-π3 same-first-landing core diagnostic, explicitly
+   labeled retrospective.
+6. Freeze the controlled comparison matrix and total interaction accounting.
+7. Do not train π4 until the comparison design, baseline endpoint, budget and
+   stopping rule are predeclared.
 
-```text
-locked centerline
--> source raw/control geometry diagnostic
--> retrospective semantic Jump view diagnostic
--> predeclare causal every-x frontier plan
--> causal TRAIN/CALIBRATION/ACCEPTANCE forward acquisition
--> continuation evaluation
--> causal capability analysis
--> REQUIRE new TRAIN causal root cells > 0
--> C^k
--> raw/control Tube_(k+1) with causal provenance on new rows
--> smoke/isolation
--> baseline lock
--> candidate train/freeze
--> locked evaluation
--> capability progression + policy realization
--> select or stop
-```
+## Paper readiness
 
-The code is integrated for prospective use but no complete causal round has been executed yet. Do not claim end-to-end causal JIT experimental validation until a recorded run closes this DAG.
+The working hypothesis is that reachability-filtered reset curricula improve a
+single unified jumping policy at controlled total interaction cost. Current
+evidence does not yet establish that claim or RA-L readiness. Minimum remaining
+evidence includes controlled baselines, at least three independent pilot seeds
+(five preferred for the main result), group-aware intervals, interaction-cost
+accounting and an untouched final distribution.
 
----
-
-## Immediate next tasks
-
-1. Treat `pi_2_landing_replay` as the selected engineering authority, not a final policy.
-2. Keep final TEST/JCE/JEL sealed.
-3. Before another acquisition round, predeclare the wider perturbation family and predictor/no-predictor ablation described in the superseding live status.
-4. Do not fit a predictor until harder TRAIN failures and both-class parent-group support exist.
-
----
-
-## Immutable task identity
-
-- repository: `QaQaaa-zzz/DVGC`
-- branch: `agent/two-phase-soft-tube`
-- Python: `/home/qy/mujoco_playground/.venv/bin/python`
-- XML: `assets/orange_bike_4kg_horizontal.xml`
-- XML SHA: `0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a`
-- payload: 2 kg
-- control: 50 Hz
-- hip/knee actuator range: +/-30 N m
-- actions: `[steer, rear-wheel drive, hip, knee]`
-- runtime expert switching: none
-- final TEST/JCE/JEL: untouched
-
----
-
-## Authority read order
-
-1. `AGENTS.md`
-2. `JIT/AGENTS.md`
-3. `JIT/docs/CURRENT_STATUS.md`
-4. `JIT/docs/JIT_CAUSAL_REACHABLE_JUMP_TUBE_REPORT_20260904.md`
-5. `PROJECT.md`
-6. `JIT/docs/ENVELOPE_ITERATION_PROTOCOL.md`
-7. `JIT/docs/CODEX_HANDOFF_20260904.md`
-8. `JIT/docs/CODE_ORGANIZATION.md`
-9. `JIT/docs/JIT_CAPABILITY_PROGRESS_REPORT_20260904.md` — historical evidence only
+Final TEST/JCE/JEL remains untouched.
