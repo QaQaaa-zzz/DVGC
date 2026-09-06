@@ -1,0 +1,42 @@
+{
+  "base_commit": "08b1b0e3404c1ea96fa600900465fe079db746f2",
+  "date": "2026-09-06",
+  "dependencies": {
+    "brax": "0.14.2",
+    "jax": "0.11.1",
+    "jaxlib": "0.11.1",
+    "mujoco": "3.12.0",
+    "numpy": "2.5.2",
+    "pytest": "9.1.1"
+  },
+  "errors": 0,
+  "failures": 0,
+  "final_test_used": false,
+  "playground_source_commit": "8a4b4642d8eba8a80ac99ed125cb62c16e1457ad",
+  "production_gpu_validated": false,
+  "production_ppo_run": false,
+  "python": "3.12.13",
+  "schema": "jit_jump_evidence_cpu_verification_v1",
+  "scope": "Five focused CPU test files: diagnostic planning/comparisons/endpoint stops/packaging/mocked GPU orchestration; continuation labels/shards, family and bank regressions. Actual production GPU rollout and checkpoint loading not executed.",
+  "skipped": 0,
+  "snapshot_replay_equivalence_validated": false,
+  "source_file_sha256": {
+    "JIT/cli/validate_jump_evidence.py": "f842358a2045ddd2b5612fb006ceb4a5ebf8fb833bd37c93be5de1a96e689172",
+    "JIT/src/jit_dvgc/jump_evidence_runtime.py": "d5621e48ca42311970680b361bf4c0706ac362805d4e20ce01f836c2134e5918",
+    "JIT/src/jit_dvgc/jump_evidence_validation.py": "b908daebbfea3b69efd4fb16e46b3933c68cd2cff8c912a6eecb5cc0ca3bef50",
+    "JIT/src/jit_dvgc/unified_continuation_labels.py": "8672eee8bdf2d199520c5e6833842733d2decad1534b90553aa8bfa2be4edb15",
+    "JIT/tests/test_jump_evidence_validation.py": "56134dbe23e7a0cfd8ec5ce58430adcbf23de1c993c2cf5c3c10fb418a1c4d23",
+    "JIT/tests/test_policy_family_landing.py": "fd7653a359adad5bdd4b87779ac9435ecd78bbb33b66a1e3d7d6feada47ad37a",
+    "JIT/tests/test_probe_bank.py": "97c0c1b19492e928d6fd689175a30b14ba07fa94e1dcb0e896248e0255832a2e",
+    "JIT/tests/test_unified_continuation_labels.py": "5a275f455fe416d44d4a1921281d533bee4ff628902c1e58d7362c4c93323465",
+    "JIT/tests/test_unified_continuation_shards.py": "164fc80516955cd2e6ee48fe1e7716e543cc2514e7bf74fe72adb3483cedd9d4"
+  },
+  "test_files": [
+    "JIT/tests/test_jump_evidence_validation.py",
+    "JIT/tests/test_unified_continuation_labels.py",
+    "JIT/tests/test_unified_continuation_shards.py",
+    "JIT/tests/test_policy_family_landing.py",
+    "JIT/tests/test_probe_bank.py"
+  ],
+  "tests": 59
+}

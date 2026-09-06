@@ -1,4 +1,12 @@
-# Current JIT status — empirical-envelope implementation, 2026-09-05
+# Current JIT status — empirical-envelope implementation, 2026-09-06
+
+## Latest executable step: GPU evidence validation
+
+`JIT/cli/validate_jump_evidence.py` is ready for the production host. See the [exact command and ZIP return guide](JIT_GPU_EVIDENCE_VALIDATION_20260906.md). Default: unique Round1 pi_0, one real x=2.5 ground prefix, up to six reached states, four continuation controls per state, serial versus fresh-process shards, and at most 17,200 env.step calls for horizon 400. No PPO, old-run mutation, Tube admission or final TEST is involved.
+
+**59 focused CPU tests passed** for the new diagnostic plus continuation labels/shards, policy-family integrity and probe-bank regressions ([verification record](verification/jump_evidence_cpu_20260906.json)). Compilation, CLI preflight failure packaging and changed-document links were checked. These are different test scopes from the earlier 72-test implementation record; neither is production GPU evidence.
+
+**Pending:** actual checkpoint loading, seed-prefix first landing and phase coverage, exact-context prefix replay, snapshot restoration, effects of fresh administrative counters, and serial/sharded label equivalence. The new script reports these separately and leaves global replay/formal-envelope flags unverified. The user should run it and return `results_to_send.zip`, including failures, before deciding the next experiment.
 
 ## Current research and implementation boundary
 

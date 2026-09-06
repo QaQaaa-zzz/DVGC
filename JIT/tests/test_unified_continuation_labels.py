@@ -212,3 +212,16 @@ def test_labeling_separates_acquisition_policy_from_landing_evaluator():
     assert "acquisition_policy_record" in parameters
     assert "acquisition_frozen_manifest_sha256" in parameters
     assert "success_criterion" in parameters
+
+
+def test_same_physics_different_contexts_are_separate_candidates_in_new_catalog():
+    rows = [{**_row("u0", "a" * 64, "upstream", 0), "snapshot_context_sha256": "b" * 64},
+            {**_row("u1", "a" * 64, "upstream", 0), "snapshot_context_sha256": "c" * 64}]
+    assert len(validate_unified_boundary_catalog(_catalog(rows), policy_record=_record(),
+                                                frozen_manifest_sha256="7" * 64)) == 2
+    rows[1]["snapshot_context_sha256"] = rows[0]["snapshot_context_sha256"]
+    with pytest.raises(ValueError, match="duplicate unified boundary snapshot context"):
+        validate_unified_boundary_catalog(_catalog(rows), policy_record=_record(), frozen_manifest_sha256="7" * 64)
+    rows[1].pop("snapshot_context_sha256")
+    with pytest.raises(ValueError, match="mixed or missing"):
+        validate_unified_boundary_catalog(_catalog(rows), policy_record=_record(), frozen_manifest_sha256="7" * 64)

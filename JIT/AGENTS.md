@@ -29,6 +29,8 @@ pi_3 remains a frozen trained candidate. Its mixed-endpoint gate is quarantined 
 
 ## Immediate correctness gates
 
+The first production check is now executable: `cli/validate_jump_evidence.py --gpu 0`, using the production interpreter and `PYTHONPATH=JIT/src` from repository root. Follow the [run/return guide](docs/JIT_GPU_EVIDENCE_VALIDATION_20260906.md). It locks source and policy identities, captures a real ground prefix, compares live/preserved/fresh-counter continuations, and runs serial plus fresh-process shards. Preserve the generated ZIP even on failure. Its legacy `split=train` catalog marker is accompanied by `logical_role=engineering_validation` and no training/admission authorization. Never use this panel for adaptive training or silently promote replay-verification flags.
+
 See issue IDs and evidence in [review](docs/JIT_EMPIRICAL_ENVELOPE_REVIEW_20260905.md).
 
 1. Preserve the implemented evaluator/cache identity checks, per-row endpoint checks and staged merge publishing; validate them against production artifacts.

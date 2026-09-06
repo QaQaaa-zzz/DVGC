@@ -88,6 +88,8 @@ Charge expert/seed acquisition, prefixes, all suffix evaluations, excluded/faile
 
 ## Next implementation and training sequence
 
+The next server action is the implemented [small GPU evidence validation](JIT/docs/JIT_GPU_EVIDENCE_VALIDATION_20260906.md), not another training round. Run the single CLI and return its ZIP. CPU regression verifies orchestration, comparison guards and failure packaging; the actual frozen-checkpoint prefix, restore/time semantics and serial/shard behavior still require production results. Passing this sampled check leads to broader diagnostics and the existing-policy pilot, not a complete-envelope claim.
+
 Follow [JIT_TRAINING_ROADMAP](JIT/docs/JIT_TRAINING_ROADMAP.md): repair correctness first; close the legacy locked audit without changing its family; materialize and verify existing probes; introduce a new versioned multi-probe experiment; compare existing probes before spending another large PPO budget; then lock a complementarity training recipe.
 
 Predictor completion and full-Tube Actor retention are not universal prerequisites for discovery. Identity, exact witness semantics, data roles and declared costs remain mandatory.

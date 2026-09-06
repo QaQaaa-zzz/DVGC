@@ -16,6 +16,8 @@
 
 当前进展：身份、终点、缓存、合并、预测器和公共 warm-start 修复及 CPU 回归已完成；新 bank 采集模式已拆分训练支持去重与到达证据。生产 GPU 采集、snapshot 重放/时间语义和 serial/shard 等价性仍待验收。阶段 0 的物理有效性部分尚未退出。
 
+2026-09-06 已补好单命令验收入口：[运行与回传说明](JIT_GPU_EVIDENCE_VALIDATION_20260906.md)。先运行 `validate_jump_evidence.py` 并回传 ZIP。默认只用既有 π0 和最多 6 个真实到达状态，分别检查真实前缀、保留计数恢复、fresh-counter 恢复、计数转换的行为影响及 serial/shard。CPU 通过不替代这些 GPU gates；小样本全部通过也不自动启动训练。
+
 ## 阶段 1：闭合旧实验，保留其真实含义
 
 沿用旧 expanded predictor-audit 目录的 pi_0 proposer 和 pi_0/pi_1/pi_2 evaluator，保持候选、seed、horizon、终点和角色不变。

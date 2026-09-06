@@ -142,6 +142,10 @@ def validate_unified_boundary_catalog(
         "policy_payload_sha256",
         "protocol_sha256",
     }
+    context_mode = any("snapshot_context_sha256" in row for row in rows)
+    if context_mode and not all(isinstance(row.get("snapshot_context_sha256"), str) and
+                                len(row["snapshot_context_sha256"]) == 64 for row in rows):
+        raise ValueError("mixed or missing candidate snapshot context identities")
     seen_ids: set[str] = set()
     seen_states: set[str] = set()
     for row in rows:
@@ -168,10 +172,12 @@ def validate_unified_boundary_catalog(
         state_sha = str(row["state_sha256"])
         if candidate_id in seen_ids:
             raise ValueError("duplicate unified boundary candidate_id")
-        if state_sha in seen_states:
-            raise ValueError("duplicate unified boundary physical state")
+        evidence_key = row["snapshot_context_sha256"] if context_mode else state_sha
+        if evidence_key in seen_states:
+            raise ValueError("duplicate unified boundary snapshot context" if context_mode
+                             else "duplicate unified boundary physical state")
         seen_ids.add(candidate_id)
-        seen_states.add(state_sha)
+        seen_states.add(evidence_key)
     return rows
 
 
@@ -207,7 +213,15 @@ def validate_candidate_snapshot(
 
 def fresh_unified_continuation_start(snapshot: UnifiedEnvelopeSnapshot, env: Any) -> Any:
     """Restore candidate physics/history while starting a fresh continuation budget."""
-    state = restore_unified_envelope_snapshot(snapshot, env)
+    return fresh_unified_continuation_state(restore_unified_envelope_snapshot(snapshot, env))
+
+
+def fresh_unified_continuation_state(state: Any) -> Any:
+    """Apply the existing counter reset separately from physical reconstruction.
+
+    Shared by production labeling and the diagnostic raw-state control arm.
+    This extraction intentionally preserves the historical reset semantics.
+    """
     if _truth(state.done):
         raise ValueError("unified continuation candidate restored terminal")
     active_phase = jp.asarray(state.info["active_phase"], jp.int32)

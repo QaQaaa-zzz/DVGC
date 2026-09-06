@@ -1,4 +1,8 @@
-# DVGC/JIT handoff — updated for empirical envelope, 2026-09-05
+# DVGC/JIT handoff — updated for empirical envelope, 2026-09-06
+
+## Current handoff: user runs the prepared diagnostic
+
+The [GPU evidence validation entry](JIT_GPU_EVIDENCE_VALIDATION_20260906.md) is implemented. Ask for its `results_to_send.zip` after the user runs the documented command; analyze per-gate differences and logs before scheduling training. Default maximum is 17,200 env.step calls, six real reached states, one frozen Round1 pi_0. Missing assets and runtime errors produce a diagnostic bundle, not negative physics labels. This change passed 59 focused CPU tests ([record](verification/jump_evidence_cpu_20260906.json)); real GPU/checkpoint results remain pending. Continue preserving the original locked pi_0/pi_1/pi_2 scan and unverified bank flags.
 
 ## Start here
 

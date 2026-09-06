@@ -14,6 +14,7 @@ Durable scientific behavior belongs in `JIT/src/jit_dvgc/`; CLIs in `JIT/cli/` p
 | Unified training | `unified_formal.py`, `training/formal.py`, `cli/train_unified_from_pi0.py` | Consolidate warm-start in public implementation; explicit fixed-start versus legacy natural reset |
 | Frozen policy identity | `unified_policy_freeze.py`, `unified_training.py`, `checkpoint.py` | Reuse for technical probe eligibility; do not equate freeze with scientific selection |
 | Exact snapshot | `unified_envelope_snapshot.py`, `unified_continuation_labels.py` | Separate physical/context identities; verify restoration/time semantics |
+| Production evidence validation | `jump_evidence_validation.py`, `jump_evidence_runtime.py`, `cli/validate_jump_evidence.py` | CPU-only coordinator; fresh GPU workers for real prefix, four continuation controls and serial/shard comparison; diagnostic ZIP, no admission/training |
 | Centerline | `analysis/nominal_jump_centerline.py` | Fixed real pi_0 trajectory as coordinates |
 | Causal arrival | `acquisition/causal_jump.py`, `causal_frontier_protocol.py` | Reuse per-proposer primitive; remove training-support membership as witness veto in new mode; add supervisor/namespace |
 | Family outcomes | `policy_family_landing.py`, `unified_continuation_shards.py` | Versioned members, exact requested identity, row checks and safe publishing |
@@ -50,6 +51,8 @@ Old selected-policy artifacts remain readable; they do not automatically authori
 - Old mixed-endpoint gates cannot become fresh scientific eligibility evidence.
 
 Fixture/CPU/source checks do not replace real checkpoint/GPU/rollout checks. Document validation scope accurately.
+
+The small production validation path is implemented; [run it and return the ZIP](JIT_GPU_EVIDENCE_VALIDATION_20260906.md). Its CPU-tested orchestration does not establish the pending runtime gates.
 
 ## Evidence storage
 

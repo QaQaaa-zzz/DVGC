@@ -34,6 +34,8 @@ Deduplicate physical coverage separately from storing witnesses. A row already i
 
 ## Fixed runtime
 
+Immediate production action (2026-09-06): run `JIT/cli/validate_jump_evidence.py` as described in the [GPU evidence validation guide](JIT/docs/JIT_GPU_EVIDENCE_VALIDATION_20260906.md), then review `results_to_send.zip`. The default unique Round1 pi_0 panel has at most six real reached states and a 17,200-step ceiling at horizon 400. The executable diagnostic is implemented and CPU-tested; actual GPU replay, clock and serial/shard results remain pending. A sampled pass does not authorize automatic PPO or formal Tube admission.
+
 - Repository target branch: `agent/two-phase-soft-tube`; isolated review branches/worktrees may be used to preserve concurrent work.
 - XML: `assets/orange_bike_4kg_horizontal.xml`.
 - Recorded XML identity: `0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a`.
