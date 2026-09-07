@@ -1,5 +1,8 @@
 # JIT agent instructions — active empirical-envelope direction
 
+Latest action (2026-09-07): the four-policy comparison completed in production (48 shards, 197,604 new interactions). The user authorized 5 cm real-frame multi-state acquisition and measured label acceleration, with all four legal action channels allowed. Run [the bounded dense Tube pilot](docs/JIT_DENSE_TUBE_PILOT_20260907.md) next; it automatically compares serial/device execution and falls back to serial if needed. Preserve the original centerline and physical-grid resolution, all old evidence, and the accepted replay limitation. No new PPO or additional snapshot replay investigation. This is a 16-trajectory TRAIN pilot, not a completed matched-budget multi-proposer experiment. Earlier run instructions below are historical.
+
+
 Current user decision (2026-09-07): no additional numerical replay validation. About 3.1 cm initial wheel clearance is accepted as the declared near-ground reset. Run [the four-policy comparison](docs/JIT_POLICY_ENVELOPE_COMPARISON_20260907.md), preserve the original three-member family, and plot each policy plus union on identical reached-state panels. This is continuation support conditioned on pi_0 arrivals, not each policy's own forward exploration envelope.
 
 The root [AGENTS.md](../AGENTS.md) and user-confirmed [paper outline](docs/JIT_PAPER_OUTLINE.md) govern this work. Audited baseline: `bfc22f2`. The first implementation update is documented in [implementation status](docs/JIT_PROBE_BANK_IMPLEMENTATION_20260905.md); remaining requirements are not runtime success claims.

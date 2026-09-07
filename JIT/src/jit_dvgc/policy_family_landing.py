@@ -208,6 +208,8 @@ def run_policy_family_evaluator_shard(
     shard_count: int,
     max_ticks: int = 400,
     protocol_seed: int = 9_521_201,
+    execution_backend: str = "serial",
+    batch_size: int = 1,
 ) -> dict[str, Any]:
     """Run one bounded first-landing evaluator shard in one GPU process."""
     output = Path(output_dir)
@@ -229,6 +231,8 @@ def run_policy_family_evaluator_shard(
             raise RuntimeError(f"existing evaluator shard is incomplete: {output}")
         protocol = _verify_cached_contract(output, contract)
         execution = json.loads((output / "execution.json").read_text())
+        if execution.get("execution_backend", "serial") != execution_backend or execution.get("batch_size", 1) != batch_size:
+            raise ValueError("cached shard execution backend/batch drift")
         for obj in (report, execution):
             for key, value in {"shard_index": shard_index, "shard_count": shard_count,
                                "candidate_start_index": start, "candidate_stop_index_exclusive": stop,
@@ -257,7 +261,7 @@ def run_policy_family_evaluator_shard(
     policy = make_checkpoint_policy(env, payload, deterministic=True)
     from .frontier_label_shard_runner import _build_memory_stable_step
 
-    step_fn = _build_memory_stable_step(env)
+    step_fn = _build_memory_stable_step(env) if execution_backend == "serial" else None
     return label_unified_continuation_shard(
         Path(catalog_path),
         output,
@@ -273,6 +277,7 @@ def run_policy_family_evaluator_shard(
         acquisition_policy_record=acquisition_record,
         acquisition_frozen_manifest_sha256=acquisition_frozen_sha,
         success_criterion="first_valid_landing",
+        execution_backend=execution_backend, batch_size=batch_size,
     )
 
 

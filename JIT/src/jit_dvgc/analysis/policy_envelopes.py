@@ -15,17 +15,18 @@ from .capability_tube import (ROOT_GEOMETRY_FIELDS, FULL_PHYSICAL_FIELDS,
     RESOLUTIONS, quantize_coordinates, resolution_contract, _cell_id)
 
 
-def project_row(row, coordinates, context_sha):
+def project_row(row, coordinates, context_sha, *, x_slice_width_m=0.1):
     root = quantize_coordinates(coordinates, ROOT_GEOMETRY_FIELDS)
     full = quantize_coordinates(coordinates, FULL_PHYSICAL_FIELDS)
     return {"candidate_id": row["candidate_id"], "state_sha256": row["state_sha256"],
             "snapshot_context_sha256": context_sha, "parent_group_id": row["parent_group_id"],
-            "phase": row["phase"], "coordinates": coordinates, "x_bin": root["root_x_m"],
+            "phase": row["phase"], "coordinates": coordinates, "x_bin": (root["root_x_m"] if x_slice_width_m == RESOLUTIONS["root_x_m"]["resolution"]
+                else int(np.floor(coordinates["root_x_m"] / x_slice_width_m + 0.5))),
             "root_cell": _cell_id(row["phase"], "root_geometry_v1", root),
             "full_cell": _cell_id(row["phase"], "full_physical_v1", full)}
 
 
-def summarize(projected, labels, *, role):
+def summarize(projected, labels, *, role, x_slice_width_m=0.1):
     """Pure set arithmetic; a missing policy/candidate never becomes a failure."""
     if role not in {"train", "calibration", "acceptance"} or not projected or not labels:
         raise ValueError("nonempty common panel and declared development role required")
@@ -70,7 +71,7 @@ def summarize(projected, labels, *, role):
             indices = [i for i, r in enumerate(projected) if r["phase"] == phase and r["x_bin"] == x]
             for n, mask in masks.items():
                 selected = [projected[i] for i in indices if mask[i]]
-                entry = {"phase": phase, "x_bin": x, "x_m": x * RESOLUTIONS["root_x_m"]["resolution"],
+                entry = {"phase": phase, "x_bin": x, "x_m": x * x_slice_width_m,
                          "policy": n, "reached_candidates": len(indices), "successful_candidates": len(selected),
                          "reached_root_cells": len({projected[i]["root_cell"] for i in indices}),
                          "root_cells": len({r["root_cell"] for r in selected}),
@@ -94,7 +95,7 @@ def summarize(projected, labels, *, role):
     return {"schema": "jit_common_panel_policy_envelopes_v1", "status": "completed", "role": role,
             "policy_names": names, "metrics": metrics, "x_slices": slices, "jaccard": overlap,
             "resolution_sensitivity": sensitivity, "resolution": resolution_contract(),
-            "common_candidate_count": len(projected), "parent_group_count": len({r["parent_group_id"] for r in projected}),
+            "x_slice_width_m": x_slice_width_m, "common_candidate_count": len(projected), "parent_group_count": len({r["parent_group_id"] for r in projected}),
             "masks": masks, "projection_interpolation_used": False, "continuous_volume_claim": False,
             "single_actor_full_prefix_suffix_claim": False, "end_to_end_cost_comparison": False,
             "interpretation": "continuation support on a shared proposer-conditioned reached panel; not each policy's own forward envelope"}
@@ -213,7 +214,9 @@ def render_comparison(projected, report, output, *, centerline=(), title_prefix=
     write_csv(output / "resolution_sensitivity.csv", report["resolution_sensitivity"])
     rows = [{"candidate_id": r["candidate_id"], "phase": r["phase"], "state_sha256": r["state_sha256"],
              "snapshot_context_sha256": r["snapshot_context_sha256"], "parent_group_id": r["parent_group_id"],
-             "root_cell": r["root_cell"], "full_cell": r["full_cell"], **r["coordinates"],
+             "root_cell": r["root_cell"], "full_cell": r["full_cell"],
+             **({"trajectory_id": r["trajectory_id"], "trajectory_step": r["trajectory_step"]} if "trajectory_id" in r else {}),
+             **r["coordinates"],
              **{n: int(masks[n][i]) for n in names}} for i, r in enumerate(projected)]
     write_csv(output / "candidate_outcomes.csv", rows)
     report["report_sha256"] = canonical_sha256({k:v for k,v in report.items() if k != "report_sha256"})

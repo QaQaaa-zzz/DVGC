@@ -351,4 +351,7 @@ def acquire_probe_catalog(spec_path: Path, output: Path) -> dict:
         lookbacks_m=spec["lookbacks_m"], max_forward_ticks=int(spec["max_forward_ticks"]),
         evidence_mode="probe_bank_arrivals_v1", probe_bank_sha256=bank["bank_sha256"],
         logical_role=spec["role"], start_contract_sha256=bank["task"]["start_contract_sha256"],
-        acquisition_interaction_ceiling=int(spec["interaction_ceiling"]))
+        acquisition_interaction_ceiling=int(spec["interaction_ceiling"]),
+        sampling_mode=spec.get("sampling_mode", "single_target_v1"),
+        slice_spacing_m=float(spec.get("slice_spacing_m", 0.05)),
+        max_candidates_per_attempt=int(spec.get("max_candidates_per_attempt", 64)))

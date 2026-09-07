@@ -1,5 +1,8 @@
 # JIT 后续实现与训练路线
 
+Latest action (2026-09-07): the four-policy comparison completed in production (48 shards, 197,604 new interactions). The user authorized 5 cm real-frame multi-state acquisition and measured label acceleration, with all four legal action channels allowed. Run [the bounded dense Tube pilot](JIT_DENSE_TUBE_PILOT_20260907.md) next; it automatically compares serial/device execution and falls back to serial if needed. Preserve the original centerline and physical-grid resolution, all old evidence, and the accepted replay limitation. No new PPO or additional snapshot replay investigation. This is a 16-trajectory TRAIN pilot, not a completed matched-budget multi-proposer experiment. Earlier run instructions below are historical.
+
+
 2026-09-07 用户决定：接受约 3.1 cm 初始轮胎间隙和本批数值轨迹差异，不再追加重放验证。六状态 GPU 运行已完成，落地结果与步数一致，serial/shard 一致；逐状态重放未全部通过，保留原记录。当前直接运行[四策略包线比较](JIT_POLICY_ENVELOPE_COMPARISON_20260907.md)，补标签、分角色画图与统计独有物理贡献，再进入现有策略同预算探索对照。下文早期重放验收要求由此决定替代。
 
 依据：[论文大纲](JIT_PAPER_OUTLINE.md)、[代码审查](JIT_EMPIRICAL_ENVELOPE_REVIEW_20260905.md)。原审查基线为 `bfc22f2`；代码后续实现见[实施说明](JIT_PROBE_BANK_IMPLEMENTATION_20260905.md)。目标是经验包线发现，不再要求一个新 Actor 接管整个 Tube。

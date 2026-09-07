@@ -9,6 +9,7 @@ from __future__ import annotations
 from collections import Counter
 import hashlib
 import json
+import time
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
@@ -217,7 +218,14 @@ def label_unified_continuation_shard(
     acquisition_policy_record: Mapping[str, Any] | None = None,
     acquisition_frozen_manifest_sha256: str | None = None,
     success_criterion: str = "stable_recovery",
+    execution_backend: str = "serial",
+    batch_size: int = 1,
 ) -> dict[str, Any]:
+    started = time.perf_counter()
+    if execution_backend not in {"serial", "device"} or not 1 <= batch_size <= 32:
+        raise ValueError("invalid execution backend/batch size")
+    if execution_backend == "device" and success_criterion != "first_valid_landing":
+        raise ValueError("device rollout supports first landing only")
     acquisition_record = (
         policy_record
         if acquisition_policy_record is None
@@ -277,6 +285,7 @@ def label_unified_continuation_shard(
         "policy_key_scheme": POLICY_KEY_SCHEME,
         "maximum_environment_interactions": (stop - start) * max_ticks,
     }
+    execution.update(execution_backend=execution_backend, batch_size=batch_size)
     _write_json(output / "execution.json", execution)
 
     step_fn = compiled_step_fn if compiled_step_fn is not None else jax.jit(env.step)
@@ -288,8 +297,37 @@ def label_unified_continuation_shard(
     interactions = 0
     maximum_interactions = (stop - start) * max_ticks
 
+    padded_interactions = 0
+    batch_results = {}
+    batch_times = []
+    if execution_backend == "device":
+        from .continuation.device_rollout import make_device_rollout
+        device_run = make_device_rollout(policy, env.step, max_ticks)
     try:
         for candidate_index in range(start, stop):
+            if execution_backend == "device" and (candidate_index - start) % batch_size == 0:
+                indices = list(range(candidate_index, min(candidate_index + batch_size, stop)))
+                states = []
+                for index in indices:
+                    source = load_unified_envelope_snapshot(_candidate_snapshot_path(catalog_path, rows[index]))
+                    validate_candidate_snapshot(source, rows[index], policy_record=acquisition_record)
+                    state0 = fresh_unified_continuation_start(source, env)
+                    if not _finite_state(state0) or _integer(state0.info["active_phase"]) != int(rows[index]["phase_index"]) or _truth(state0.info["expert_switching_used"]):
+                        raise ValueError("invalid batch start")
+                    states.append(state0)
+                stacked = jax.tree_util.tree_map(lambda *xs: jax.numpy.stack(xs), *states)
+                keys = jax.numpy.stack([jax.random.fold_in(base_key, i) for i in indices])
+                before = time.perf_counter()
+                final, counts, bad, flags, slots = device_run(stacked, keys)
+                jax.block_until_ready(final)
+                counts, bad, flags, slots = jax.device_get((counts, bad, flags, slots))
+                interactions += int(slots)
+                padded_interactions += int(slots) - int(sum(counts))
+                if np.any(bad):
+                    raise ValueError("device continuation returned nonfinite state/action or switching")
+                batch_times.append(time.perf_counter() - before)
+                batch_results = {i: (jax.tree_util.tree_map(lambda x: x[j], final), int(counts[j]), flags[j]) for j, i in enumerate(indices)}
+                print(f"[labels] device batch {indices[0]}:{indices[-1]+1} seconds={batch_times[-1]:.3f} slots={int(slots)} useful_steps={int(sum(counts))}", flush=True)
             row = rows[candidate_index]
             snapshot_path = _candidate_snapshot_path(catalog_path, row)
             snapshot = load_unified_envelope_snapshot(snapshot_path)
@@ -310,31 +348,35 @@ def label_unified_continuation_shard(
             rollout_interactions = 0
 
             candidate_key = jax.random.fold_in(base_key, int(candidate_index))
-            for tick in range(max_ticks):
-                action_key = jax.random.fold_in(candidate_key, int(tick))
-                result = policy(state.obs, action_key)
-                action = result[0] if isinstance(result, tuple) else result
-                action_array = np.asarray(
-                    jax.device_get(action), dtype=np.float32
-                ).reshape(-1)
-                if action_array.shape != (4,) or not np.isfinite(action_array).all():
-                    raise ValueError("frozen unified policy returned an invalid action")
-                state = step_fn(state, action)
-                jax.block_until_ready(state)
-                interactions += 1
-                rollout_interactions += 1
-                if not _finite_state(state, action):
-                    raise ValueError("sharded continuation rollout became nonfinite")
-                if _truth(state.info["expert_switching_used"]):
-                    raise ValueError("sharded continuation rollout used expert switching")
-                apex_seen |= _truth(state.info["up_events"].apex_seen)
-                phase_transitioned |= _truth(state.info["phase_transitioned"])
-                recovery_success |= _truth(state.info["down_events"].recovery_success)
-                valid_contact_seen |= _truth(state.info["down_events"].valid_contact_seen)
-                if success_criterion == "first_valid_landing" and valid_contact_seen:
-                    break
-                if _truth(state.done):
-                    break
+            if execution_backend == "device":
+                state, rollout_interactions, flags = batch_results.pop(candidate_index)
+                apex_seen, phase_transitioned, recovery_success, valid_contact_seen = map(bool, flags)
+            else:
+                for tick in range(max_ticks):
+                    action_key = jax.random.fold_in(candidate_key, int(tick))
+                    result = policy(state.obs, action_key)
+                    action = result[0] if isinstance(result, tuple) else result
+                    action_array = np.asarray(
+                        jax.device_get(action), dtype=np.float32
+                    ).reshape(-1)
+                    if action_array.shape != (4,) or not np.isfinite(action_array).all():
+                        raise ValueError("frozen unified policy returned an invalid action")
+                    state = step_fn(state, action)
+                    jax.block_until_ready(state)
+                    interactions += 1
+                    rollout_interactions += 1
+                    if not _finite_state(state, action):
+                        raise ValueError("sharded continuation rollout became nonfinite")
+                    if _truth(state.info["expert_switching_used"]):
+                        raise ValueError("sharded continuation rollout used expert switching")
+                    apex_seen |= _truth(state.info["up_events"].apex_seen)
+                    phase_transitioned |= _truth(state.info["phase_transitioned"])
+                    recovery_success |= _truth(state.info["down_events"].recovery_success)
+                    valid_contact_seen |= _truth(state.info["down_events"].valid_contact_seen)
+                    if success_criterion == "first_valid_landing" and valid_contact_seen:
+                        break
+                    if _truth(state.done):
+                        break
 
             done = _truth(state.done)
             terminal_success = _truth(state.info["success"])
@@ -369,6 +411,8 @@ def label_unified_continuation_shard(
             phase_candidate_counts[phase_name] += 1
             phase_positive_counts[phase_name] += int(positive)
             outcome_counts[outcome_class] += 1
+            if (candidate_index-start) % 25 == 0:
+                print(f"[labels] completed={candidate_index-start}/{stop-start} elapsed={time.perf_counter()-started:.1f}s backend={execution_backend}", flush=True)
             labeled.append(
                 {
                     "candidate_index": int(candidate_index),
@@ -445,6 +489,11 @@ def label_unified_continuation_shard(
             "validation_data_used": False,
             "final_evaluation_data_used": False,
         }
+        report.update(execution_backend=execution_backend, batch_size=batch_size,
+                      inactive_lane_interactions=padded_interactions,
+                      useful_label_interactions=interactions-padded_interactions,
+                      elapsed_seconds=time.perf_counter()-started,
+                      device_batch_seconds=batch_times)
         _write_json(output / "labels.json", labeled)
         report["labels_file_sha256"] = file_sha256(output / "labels.json")
         _write_json(output / "summary.json", report)

@@ -1,5 +1,8 @@
 # DVGC/JIT handoff — updated for empirical envelope, 2026-09-06
 
+Latest action (2026-09-07): the four-policy comparison completed in production (48 shards, 197,604 new interactions). The user authorized 5 cm real-frame multi-state acquisition and measured label acceleration, with all four legal action channels allowed. Run [the bounded dense Tube pilot](JIT_DENSE_TUBE_PILOT_20260907.md) next; it automatically compares serial/device execution and falls back to serial if needed. Preserve the original centerline and physical-grid resolution, all old evidence, and the accepted replay limitation. No new PPO or additional snapshot replay investigation. This is a 16-trajectory TRAIN pilot, not a completed matched-budget multi-proposer experiment. Earlier run instructions below are historical.
+
+
 Latest handoff (2026-09-07): the user has returned the GPU diagnostic and accepted the numerical trajectory differences and near-ground reset. Do not ask for more replay validation. The next executable task is [four-policy envelope comparison](JIT_POLICY_ENVELOPE_COMPARISON_20260907.md); return its ZIP. The previous diagnostic entry below is historical, not a remaining mandatory gate.
 
 ## Historical 2026-09-06 handoff: prepared diagnostic

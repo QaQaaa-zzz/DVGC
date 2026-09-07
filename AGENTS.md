@@ -1,5 +1,8 @@
 # DVGC repository authority — empirical jumping envelope
 
+Latest action (2026-09-07): the four-policy comparison completed in production (48 shards, 197,604 new interactions). The user authorized 5 cm real-frame multi-state acquisition and measured label acceleration, with all four legal action channels allowed. Run [the bounded dense Tube pilot](JIT/docs/JIT_DENSE_TUBE_PILOT_20260907.md) next; it automatically compares serial/device execution and falls back to serial if needed. Preserve the original centerline and physical-grid resolution, all old evidence, and the accepted replay limitation. No new PPO or additional snapshot replay investigation. This is a 16-trajectory TRAIN pilot, not a completed matched-budget multi-proposer experiment. Earlier run instructions below are historical.
+
+
 Updated 2026-09-05 after the user's paper-outline decisions. This is the active research direction. The original audit baseline was `bfc22f2e32cb78cb269b0e522c3bdd7c6e7a8d42`. Correctness fixes and a first probe-bank path now exist; [implementation status](JIT/docs/JIT_PROBE_BANK_IMPLEMENTATION_20260905.md) distinguishes CPU verification from pending production gates.
 
 ## Research objective

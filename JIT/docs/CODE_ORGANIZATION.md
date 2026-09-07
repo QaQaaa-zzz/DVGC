@@ -59,3 +59,7 @@ The small production validation path is implemented; [run it and return the ZIP]
 ## Evidence storage
 
 Keep lightweight run summaries and reproducible source/config identities in Git. Large checkpoints and catalogs may remain external with a resolvable artifact index. Preserve old absolute paths as historical records and add a materialization map rather than rewriting provenance. Raw historical JSON must not be edited to retrofit the new protocol.
+
+## Dense real-frame pilot
+
+`cli/run_dense_tube.py` → `dense_tube.py` (CPU supervisor, receipts, backend decision) → `dense_tube_runtime.py` (isolated workers). Extend `acquisition/causal_jump.py` via `trajectory_slices_v2`; `acquisition/trajectory_sampling.py` selects real frames. `continuation/device_rollout.py` adds bounded device-side first-landing evaluation; `analysis/dense_coverage.py` compares old/new support without changing the physical grid. See [run guide](JIT_DENSE_TUBE_PILOT_20260907.md).

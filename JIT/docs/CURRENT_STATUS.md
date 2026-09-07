@@ -1,5 +1,8 @@
 # Current JIT status — empirical-envelope implementation, 2026-09-07
 
+Latest action (2026-09-07): the four-policy comparison completed in production (48 shards, 197,604 new interactions). The user authorized 5 cm real-frame multi-state acquisition and measured label acceleration, with all four legal action channels allowed. Run [the bounded dense Tube pilot](JIT_DENSE_TUBE_PILOT_20260907.md) next; it automatically compares serial/device execution and falls back to serial if needed. Preserve the original centerline and physical-grid resolution, all old evidence, and the accepted replay limitation. No new PPO or additional snapshot replay investigation. This is a 16-trajectory TRAIN pilot, not a completed matched-budget multi-proposer experiment. Earlier run instructions below are historical.
+
+
 Latest action (2026-09-07): run [the four-policy envelope comparison](JIT_POLICY_ENVELOPE_COMPARISON_20260907.md). The production diagnostic completed in 792 interactions: six states, all four continuation arms landed with matched per-state landing steps; serial/shard labels matched. Exact prefix replay passed 1/6, preserved/fresh restore 0/6, counter behavior 5/6. The user accepted these numerical differences and the 3.1 cm initial wheel clearance, and explicitly declined further replay validation. [Original result and user decision](verification/jump_evidence_user_run_20260907.json) preserve the failed numerical gates. They do not block the authorized shared-panel labeling and plots. The new CLI reuses validated old labels, completes missing pi_0/pi_1/pi_2 labels, evaluates pi_3 under the same endpoint on a separate comparison plan, and exports role-separated figures and physical contributions. No new PPO or replay validation is scheduled.
 
 ## Historical 2026-09-06 preparation: GPU evidence validation
@@ -74,9 +77,9 @@ See [detailed review](JIT_EMPIRICAL_ENVELOPE_REVIEW_20260905.md) for locations a
 
 ## Exact next actions
 
-1. Run `compare_policy_envelopes.py --gpu 0`; preflight checks production identities and preserves the completed six-state diagnostic. No additional replay validation is requested.
-2. Close the old expanded audit under its locked pi_0 / pi_0-pi_1-pi_2 protocol using independently bounded evaluator processes. Preserve attempts and count their costs.
-3. Evaluate pi_3 on that same panel under the new comparison plan; export role-separated per-policy/union projections, physical occupancy, overlap and exclusive contributions.
+1. The four-policy comparison has completed. Run `run_dense_tube.py --gpu 0` for the bounded 5 cm real-frame pilot and measured label execution choice. No additional snapshot replay validation is requested.
+2. Preserve the completed derived old-family labels, original failed attempts, and this comparison cost record; do not repeat the old full comparison.
+3. Inspect dense per-policy/union plots and old-versus-new physical occupancy, with unchanged physical grid and explicit benchmark/acquisition/padding/retry costs.
 4. Use the new bank path for a fixed-budget pilot with existing frozen policies after compatibility checks. Extend observation indexes to cumulative physical coverage, cross-role isolation and end-to-end costs; retain the accepted numerical-replay limitation.
 5. Lock a complementary-probe training recipe and controlled comparison before another large PPO run. Do not wait for full-Tube Actor mastery or predictor performance.
 

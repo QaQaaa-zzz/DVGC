@@ -186,8 +186,17 @@ def collect_jump_start_connected_candidates(
     logical_role: str | None = None,
     start_contract_sha256: str | None = None,
     acquisition_interaction_ceiling: int | None = None,
+    sampling_mode: str = "single_target_v1",
+    slice_spacing_m: float = 0.05,
+    max_candidates_per_attempt: int = 64,
 ) -> dict[str, Any]:
     """Generate unlabeled jump-start-connected candidates around centerline x slices."""
+    if sampling_mode not in {"single_target_v1", "trajectory_slices_v2"}:
+        raise ValueError("unknown trajectory sampling mode")
+    dense = sampling_mode == "trajectory_slices_v2"
+    if dense and (evidence_mode != "probe_bank_arrivals_v1" or not 0.01 <= slice_spacing_m <= 0.1
+                  or not 1 <= max_candidates_per_attempt <= 128):
+        raise ValueError("dense sampling needs bank context, spacing 0.01..0.1 and bounded candidates")
     if evidence_mode not in {"legacy_training_support_novelty_v1", "probe_bank_arrivals_v1"}:
         raise ValueError("unknown causal evidence mode")
     if evidence_mode == "probe_bank_arrivals_v1" and (not probe_bank_sha256 or len(probe_bank_sha256) != 64):
@@ -287,6 +296,14 @@ def collect_jump_start_connected_candidates(
                         logical_role=logical_role, start_contract_sha256=start_contract_sha256,
                         training_support_membership_excludes_arrival=False,
                         candidate_deduplication="snapshot_context_sha256")
+    if dense:
+        protocol.update(sampling_mode=sampling_mode, slice_spacing_m=slice_spacing_m,
+                        target_x_half_width_m=slice_spacing_m / 2,
+                        max_candidates_per_attempt=max_candidates_per_attempt,
+                        state_generation="fixed-start env.step trajectory; first actual prelanding frame per phase/nearest x bin after perturbation onset; no interpolation",
+                        perturbation_end="first x at or beyond anchor target; normal policy thereafter",
+                        skipped_bins_are_not_filled=True,
+                        shared_trajectory_frames_are_independent_samples=False)
     protocol_sha = _canonical_sha256(protocol)
 
     output = Path(output_dir)
@@ -305,7 +322,11 @@ def collect_jump_start_connected_candidates(
     (bank / "snapshots").mkdir(parents=True, exist_ok=False)
 
     reset_jump_start = jax.jit(env._reset_jump_start_unified)
-    step = jax.jit(env.step)
+    if dense:
+        from ..frontier_label_shard_runner import _build_memory_stable_step
+        step = _build_memory_stable_step(env)
+    else:
+        step = jax.jit(env.step)
     base_key = jax.random.PRNGKey(int(protocol_seed))
     entries: list[dict[str, Any]] = []
     seen_states: set[str] = set()
@@ -361,22 +382,143 @@ def collect_jump_start_connected_candidates(
             strength = float(spec["strength"])
             perturb_start_x = target_x - lookback
             perturbation_started = False
+            perturbation_ended = False
             perturbation_start_sha = ""
             perturbation_start_actual_x = None
             nominal_prefix_ticks = 0
             perturbed_ticks = 0
+            perturbation_start_tick = 0
             candidate_state = None
             rejected = None
             nominal_actions: list[list[float]] = []
             perturbed_actions: list[list[float]] = []
             effective_deltas: list[list[float]] = []
 
+            trajectory_id = f"{anchor['parent_group_id']}/variant_{spec['ordinal']}"
+            captured_bins = set()
+            saved_this_attempt = 0
+
+            def store_candidate(candidate_state, phase, target_x):
+                phase_index = 0 if phase == "upstream" else 1
+                normalized_state = (candidate_state if evidence_mode == "probe_bank_arrivals_v1"
+                                    else _normalize_snapshot_context(candidate_state, phase))
+                jump_start_reachability = {
+                    "schema": "jit_jump_start_reachability_provenance_v1",
+                    "jump_start_connected": True,
+                    "natural_start_connected": False,
+                    "jump_start_state_sha256": jump_start_sha,
+                    "generated_by_env_step_only": True,
+                    "rsi_used_to_establish_reachability": False,
+                    "qpos_qvel_injection_used": False,
+                    "proposal_anchor_used_as_reset": False,
+                    "proposal_anchor_state_sha256": str(anchor["state_sha256"]),
+                    "proposal_parent_group_id": str(anchor["parent_group_id"]),
+                    "target_x_m": target_x,
+                    "lookback_m": lookback,
+                    "perturbation_start_target_x_m": perturb_start_x,
+                    "perturbation_start_actual_x_m": float(perturbation_start_actual_x),
+                    "perturbation_start_state_sha256": perturbation_start_sha,
+                    "environment_transitions_before_perturbation": int(perturbation_start_tick if dense else nominal_prefix_ticks),
+                    "perturbed_environment_transitions": int(perturbed_ticks),
+                    "environment_transitions_from_jump_start": int(
+                        nominal_prefix_ticks + perturbed_ticks
+                    ),
+                    "proposal_family_index": family,
+                    "variant_ordinal": int(spec["ordinal"]),
+                }
+                if dense:
+                    jump_start_reachability.update(trajectory_id=trajectory_id,
+                        perturbation_anchor_x_m=float(anchor["x_target_m"]),
+                        unperturbed_suffix_transitions=tick + 1 - perturbation_start_tick - perturbed_ticks)
+                validate_jump_start_reachability_payload(jump_start_reachability)
+                jump_start_reachability["reachability_sha256"] = _canonical_sha256(
+                    jump_start_reachability
+                )
+
+                snapshot = capture_unified_envelope_snapshot(
+                    normalized_state,
+                    env=env,
+                    parent_trajectory=str(anchor["parent_group_id"]),
+                    parent_state_sha256=perturbation_start_sha,
+                    config_sha256=str(policy_record["formal_config_sha256"]),
+                    policy_actor_sha256=str(policy_record["actor_sha256"]),
+                    policy_payload_sha256=str(policy_record["payload_sha256"]),
+                    policy_iteration=int(policy_record["iteration"]),
+                )
+                state_hash = physical_state_sha256(snapshot)
+                context_hash = snapshot_context_sha256(snapshot)
+                if evidence_mode == "legacy_training_support_novelty_v1" and state_hash in support_hashes:
+                    exclusions["existing_control_tube_state"] += 1
+                    return False
+                evidence_key = context_hash if evidence_mode == "probe_bank_arrivals_v1" else state_hash
+                if evidence_key in seen_states:
+                    exclusions["duplicate_candidate_state"] += 1
+                    return False
+                seen_states.add(evidence_key)
+
+                relative = Path("snapshots") / f"candidate_{len(entries):06d}"
+                save_unified_envelope_snapshot(bank / relative, snapshot)
+                qpos = np.asarray(snapshot.qpos)
+                qvel = np.asarray(snapshot.qvel)
+                entries.append(
+                    {
+                        "candidate_id": (
+                            f"pi{policy_record['iteration']}_causal_{phase}_{len(entries):06d}"
+                        ),
+                        # Keep the historical candidate kind so the frozen continuation
+                        # labeler remains backward-compatible. Jump-start reachability is
+                        # carried by the explicit provenance object below.
+                        "candidate_kind": "reachable_unified_frontier_probe",
+                        "acquisition_mode": ACQUISITION_MODE,
+                        "split": "train",
+                        "phase": phase,
+                        "phase_index": phase_index,
+                        "snapshot": str(relative),
+                        "source_bank": "boundary_bank",
+                        "state_sha256": state_hash,
+                        **({"snapshot_context_sha256": context_hash,
+                            "probe_bank_sha256": probe_bank_sha256,
+                            "already_in_training_support": state_hash in support_hashes}
+                           if evidence_mode == "probe_bank_arrivals_v1" else {}),
+                        "parent_group_id": str(anchor["parent_group_id"]),
+                        "parent_state_sha256": perturbation_start_sha,
+                        "proposal_anchor_state_sha256": str(anchor["state_sha256"]),
+                        "proposal_family_index": family,
+                        "x_target_m": target_x,
+                        "policy_iteration": int(policy_record["iteration"]),
+                        "policy_actor_sha256": str(policy_record["actor_sha256"]),
+                        "policy_payload_sha256": str(policy_record["payload_sha256"]),
+                        "protocol_sha256": protocol_sha,
+                        "jump_start_reachability": jump_start_reachability,
+                        "perturbation": {
+                            **direction,
+                            "strength": strength,
+                            "lookback_m": lookback,
+                            "variant_ordinal": int(spec["ordinal"]),
+                            "nominal_actions": list(nominal_actions),
+                            "perturbed_actions": list(perturbed_actions),
+                            "effective_deltas": list(effective_deltas),
+                        },
+                        "episode_step": snapshot.episode_step,
+                        "phase_episode_step": snapshot.phase_episode_step,
+                        "x": float(qpos[0]),
+                        "z": float(qpos[2]),
+                        "vx": float(qvel[0]),
+                        "vz": float(qvel[2]),
+                    }
+                )
+                phase_accepted[phase] += 1
+                if dense:
+                    entries[-1].update(trajectory_id=trajectory_id, trajectory_step=tick + 1,
+                                       x_slice_spacing_m=slice_spacing_m, sampling_mode=sampling_mode)
+                return True
+
             for tick in range(int(max_forward_ticks)):
                 if _truth(state.done):
                     rejected = "terminal_before_target"
                     break
                 x_before = _float(state.data.qpos[0])
-                if x_before > target_x + TARGET_HALF_WIDTH_M:
+                if not dense and x_before > target_x + TARGET_HALF_WIDTH_M:
                     rejected = "missed_target_slice"
                     break
 
@@ -391,11 +533,14 @@ def collect_jump_start_connected_candidates(
                 ).all():
                     raise ValueError("frozen unified policy returned an invalid action")
 
-                use_perturbation = x_before >= perturb_start_x - 1.0e-9
+                if dense and perturbation_started and x_before >= target_x:
+                    perturbation_ended = True
+                use_perturbation = x_before >= perturb_start_x - 1.0e-9 and (not dense or (x_before < target_x and not perturbation_ended))
                 if use_perturbation and not perturbation_started:
                     perturbation_started = True
                     perturbation_start_sha = physical_state_sha256_from_state(state)
                     perturbation_start_actual_x = x_before
+                    perturbation_start_tick = tick
                 if use_perturbation:
                     requested = nominal_array + np.asarray(
                         direction["basis_vector"], dtype=np.float32
@@ -420,6 +565,22 @@ def collect_jump_start_connected_candidates(
                     raise ValueError("causal Jump acquisition used expert switching")
 
                 x_after = _float(state.data.qpos[0])
+                if dense:
+                    if _truth(state.done) or _truth(state.info["down_events"].valid_contact_seen):
+                        break
+                    if x_after > float(centerline["effective_centerline_max_x_m"]):
+                        break
+                    capture_phase = next((p for p in ("upstream", "downstream") if _semantic_candidate(state, p)), None)
+                    from .trajectory_sampling import observed_slice
+                    selected = observed_slice(x_after, capture_phase, captured_bins,
+                        spacing=slice_spacing_m, x_min=float(centerline["x_min_m"]),
+                        x_max=float(centerline["effective_centerline_max_x_m"]))
+                    if perturbation_started and selected is not None:
+                        captured_bins.add((capture_phase, selected[0]))
+                        saved_this_attempt += int(store_candidate(state, capture_phase, selected[1]))
+                    if saved_this_attempt >= max_candidates_per_attempt:
+                        break
+                    continue
                 inside = abs(x_after - target_x) <= TARGET_HALF_WIDTH_M
                 if inside and _semantic_candidate(state, phase):
                     candidate_state = state
@@ -428,6 +589,9 @@ def collect_jump_start_connected_candidates(
                     rejected = "semantic_mismatch_or_slice_crossed"
                     break
 
+            if dense:
+                print(f"[causal] trajectory={trajectory_id} saved={saved_this_attempt} total_candidates={len(entries)} interactions={interactions}", flush=True)
+                continue
             if candidate_state is None:
                 exclusions[rejected or "forward_horizon_exhausted"] += 1
                 continue
@@ -435,110 +599,8 @@ def collect_jump_start_connected_candidates(
                 exclusions["target_reached_before_perturbation_window"] += 1
                 continue
 
-            normalized_state = (candidate_state if evidence_mode == "probe_bank_arrivals_v1"
-                                else _normalize_snapshot_context(candidate_state, phase))
-            jump_start_reachability = {
-                "schema": "jit_jump_start_reachability_provenance_v1",
-                "jump_start_connected": True,
-                "natural_start_connected": False,
-                "jump_start_state_sha256": jump_start_sha,
-                "generated_by_env_step_only": True,
-                "rsi_used_to_establish_reachability": False,
-                "qpos_qvel_injection_used": False,
-                "proposal_anchor_used_as_reset": False,
-                "proposal_anchor_state_sha256": str(anchor["state_sha256"]),
-                "proposal_parent_group_id": str(anchor["parent_group_id"]),
-                "target_x_m": target_x,
-                "lookback_m": lookback,
-                "perturbation_start_target_x_m": perturb_start_x,
-                "perturbation_start_actual_x_m": float(perturbation_start_actual_x),
-                "perturbation_start_state_sha256": perturbation_start_sha,
-                "environment_transitions_before_perturbation": int(nominal_prefix_ticks),
-                "perturbed_environment_transitions": int(perturbed_ticks),
-                "environment_transitions_from_jump_start": int(
-                    nominal_prefix_ticks + perturbed_ticks
-                ),
-                "proposal_family_index": family,
-                "variant_ordinal": int(spec["ordinal"]),
-            }
-            validate_jump_start_reachability_payload(jump_start_reachability)
-            jump_start_reachability["reachability_sha256"] = _canonical_sha256(
-                jump_start_reachability
-            )
-
-            snapshot = capture_unified_envelope_snapshot(
-                normalized_state,
-                env=env,
-                parent_trajectory=str(anchor["parent_group_id"]),
-                parent_state_sha256=perturbation_start_sha,
-                config_sha256=str(policy_record["formal_config_sha256"]),
-                policy_actor_sha256=str(policy_record["actor_sha256"]),
-                policy_payload_sha256=str(policy_record["payload_sha256"]),
-                policy_iteration=int(policy_record["iteration"]),
-            )
-            state_hash = physical_state_sha256(snapshot)
-            context_hash = snapshot_context_sha256(snapshot)
-            if evidence_mode == "legacy_training_support_novelty_v1" and state_hash in support_hashes:
-                exclusions["existing_control_tube_state"] += 1
-                continue
-            evidence_key = context_hash if evidence_mode == "probe_bank_arrivals_v1" else state_hash
-            if evidence_key in seen_states:
-                exclusions["duplicate_candidate_state"] += 1
-                continue
-            seen_states.add(evidence_key)
-
-            relative = Path("snapshots") / f"candidate_{len(entries):06d}"
-            save_unified_envelope_snapshot(bank / relative, snapshot)
-            qpos = np.asarray(snapshot.qpos)
-            qvel = np.asarray(snapshot.qvel)
-            entries.append(
-                {
-                    "candidate_id": (
-                        f"pi{policy_record['iteration']}_causal_{phase}_{len(entries):06d}"
-                    ),
-                    # Keep the historical candidate kind so the frozen continuation
-                    # labeler remains backward-compatible. Jump-start reachability is
-                    # carried by the explicit provenance object below.
-                    "candidate_kind": "reachable_unified_frontier_probe",
-                    "acquisition_mode": ACQUISITION_MODE,
-                    "split": "train",
-                    "phase": phase,
-                    "phase_index": phase_index,
-                    "snapshot": str(relative),
-                    "source_bank": "boundary_bank",
-                    "state_sha256": state_hash,
-                    **({"snapshot_context_sha256": context_hash,
-                        "probe_bank_sha256": probe_bank_sha256,
-                        "already_in_training_support": state_hash in support_hashes}
-                       if evidence_mode == "probe_bank_arrivals_v1" else {}),
-                    "parent_group_id": str(anchor["parent_group_id"]),
-                    "parent_state_sha256": perturbation_start_sha,
-                    "proposal_anchor_state_sha256": str(anchor["state_sha256"]),
-                    "proposal_family_index": family,
-                    "x_target_m": target_x,
-                    "policy_iteration": int(policy_record["iteration"]),
-                    "policy_actor_sha256": str(policy_record["actor_sha256"]),
-                    "policy_payload_sha256": str(policy_record["payload_sha256"]),
-                    "protocol_sha256": protocol_sha,
-                    "jump_start_reachability": jump_start_reachability,
-                    "perturbation": {
-                        **direction,
-                        "strength": strength,
-                        "lookback_m": lookback,
-                        "variant_ordinal": int(spec["ordinal"]),
-                        "nominal_actions": nominal_actions,
-                        "perturbed_actions": perturbed_actions,
-                        "effective_deltas": effective_deltas,
-                    },
-                    "episode_step": snapshot.episode_step,
-                    "phase_episode_step": snapshot.phase_episode_step,
-                    "x": float(qpos[0]),
-                    "z": float(qpos[2]),
-                    "vx": float(qvel[0]),
-                    "vz": float(qvel[2]),
-                }
-            )
-            phase_accepted[phase] += 1
+            if not dense:
+                store_candidate(candidate_state, phase, target_x)
 
     if interactions > maximum_interactions:
         raise ValueError("causal Jump acquisition exceeded predeclared interaction ceiling")
