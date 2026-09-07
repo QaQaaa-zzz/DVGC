@@ -1,5 +1,7 @@
 # JIT empirical jumping-envelope iteration protocol
 
+2026-09-07 user decision supersedes earlier replay gates: accept the declared near-ground reset (about 3.1 cm wheel clearance) and observed numerical replay differences; no additional replay validation requested. Keep raw numerical failures recorded. Proceed with [shared-panel policy comparisons](JIT_POLICY_ENVELOPE_COMPARISON_20260907.md), keeping roles, frozen identities, endpoint and costs explicit. Do not mark exact replay verified or modify historical resets.
+
 Version: user-confirmed envelope direction, 2026-09-05. Read [root authority](../../AGENTS.md), [status](CURRENT_STATUS.md), and [review](JIT_EMPIRICAL_ENVELOPE_REVIEW_20260905.md). The first bank/suffix scheduler and integrity fixes now exist; [implementation status](JIT_PROBE_BANK_IMPLEMENTATION_20260905.md) identifies unverified GPU replay and the still-pending cumulative physical/training loop.
 
 ## 1. Objective and legacy boundary

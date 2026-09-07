@@ -1,12 +1,16 @@
-# Current JIT status — empirical-envelope implementation, 2026-09-06
+# Current JIT status — empirical-envelope implementation, 2026-09-07
 
-## Latest executable step: GPU evidence validation
+Latest action (2026-09-07): run [the four-policy envelope comparison](JIT_POLICY_ENVELOPE_COMPARISON_20260907.md). The production diagnostic completed in 792 interactions: six states, all four continuation arms landed with matched per-state landing steps; serial/shard labels matched. Exact prefix replay passed 1/6, preserved/fresh restore 0/6, counter behavior 5/6. The user accepted these numerical differences and the 3.1 cm initial wheel clearance, and explicitly declined further replay validation. [Original result and user decision](verification/jump_evidence_user_run_20260907.json) preserve the failed numerical gates. They do not block the authorized shared-panel labeling and plots. The new CLI reuses validated old labels, completes missing pi_0/pi_1/pi_2 labels, evaluates pi_3 under the same endpoint on a separate comparison plan, and exports role-separated figures and physical contributions. No new PPO or replay validation is scheduled.
+
+## Historical 2026-09-06 preparation: GPU evidence validation
+
+The current comparison implementation passed **46 focused CPU tests** for the supervisor, preflight, common-panel metrics/plots, family labels and shards ([verification record](verification/policy_comparison_cpu_20260907.json)). Actual production comparison results are pending the user's server run.
 
 `JIT/cli/validate_jump_evidence.py` is ready for the production host. See the [exact command and ZIP return guide](JIT_GPU_EVIDENCE_VALIDATION_20260906.md). Default: unique Round1 pi_0, one real x=2.5 ground prefix, up to six reached states, four continuation controls per state, serial versus fresh-process shards, and at most 17,200 env.step calls for horizon 400. No PPO, old-run mutation, Tube admission or final TEST is involved.
 
 **59 focused CPU tests passed** for the new diagnostic plus continuation labels/shards, policy-family integrity and probe-bank regressions ([verification record](verification/jump_evidence_cpu_20260906.json)). Compilation, CLI preflight failure packaging and changed-document links were checked. These are different test scopes from the earlier 72-test implementation record; neither is production GPU evidence.
 
-**Pending:** actual checkpoint loading, seed-prefix first landing and phase coverage, exact-context prefix replay, snapshot restoration, effects of fresh administrative counters, and serial/sharded label equivalence. The new script reports these separately and leaves global replay/formal-envelope flags unverified. The user should run it and return `results_to_send.zip`, including failures, before deciding the next experiment.
+These checks were pending when the diagnostic was prepared. The 2026-09-07 user result and decision above now govern execution: no additional replay checks, proceed to common-panel comparison; failed numerical checks remain recorded.
 
 ## Current research and implementation boundary
 
@@ -70,10 +74,10 @@ See [detailed review](JIT_EMPIRICAL_ENVELOPE_REVIEW_20260905.md) for locations a
 
 ## Exact next actions
 
-1. Validate the implemented correctness guards on production artifacts, with a small serial/shard and prefix/suffix smoke before scaling.
-2. Close the old expanded audit under its already locked pi_0 / pi_0-pi_1-pi_2 protocol using independently bounded evaluator processes. Preserve attempts and count their costs.
-3. Materialize the seed/probe chain, complete start and centerline, and a small replayable catalog; validate serial/sharded and prefix/suffix equality.
-4. Use the new bank path for a fixed-budget pilot with existing frozen policies after compatibility/replay checks. Extend observation indexes to cumulative physical coverage, cross-role isolation and end-to-end costs.
+1. Run `compare_policy_envelopes.py --gpu 0`; preflight checks production identities and preserves the completed six-state diagnostic. No additional replay validation is requested.
+2. Close the old expanded audit under its locked pi_0 / pi_0-pi_1-pi_2 protocol using independently bounded evaluator processes. Preserve attempts and count their costs.
+3. Evaluate pi_3 on that same panel under the new comparison plan; export role-separated per-policy/union projections, physical occupancy, overlap and exclusive contributions.
+4. Use the new bank path for a fixed-budget pilot with existing frozen policies after compatibility checks. Extend observation indexes to cumulative physical coverage, cross-role isolation and end-to-end costs; retain the accepted numerical-replay limitation.
 5. Lock a complementary-probe training recipe and controlled comparison before another large PPO run. Do not wait for full-Tube Actor mastery or predictor performance.
 
 The [training roadmap](JIT_TRAINING_ROADMAP.md) defines phase exits and deliverables. The [historical index](JIT_JUMP_START_TRAJECTORY_INDEX_20260904.md) locates older reports; its old selection wording is not current authority.

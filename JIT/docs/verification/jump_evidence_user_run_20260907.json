@@ -1,0 +1,185 @@
+{
+  "capture_report": {
+    "apex_transition_observed": true,
+    "candidate_count": 6,
+    "catalog_file_sha256": "75d7fa31dfb030b78f6d35c9e97f4dc0c7ffb8666e9edabfa678265ef4d07e2e",
+    "coverage_complete": true,
+    "eligible_phase_counts": {
+      "0": 27,
+      "1": 10
+    },
+    "engineering_panel_only": true,
+    "environment_interactions": 41,
+    "includes_dispatched_step_that_raised": true,
+    "maximum_environment_interactions": 400,
+    "prefix_end_code": 0,
+    "prefix_valid_landing_observed": true,
+    "runtime": {
+      "devices": [
+        "cuda:0"
+      ],
+      "jax_backend": "gpu",
+      "versions": {
+        "brax": "0.14.2",
+        "jax": "0.6.2",
+        "mujoco": "3.6.0",
+        "numpy": "2.4.0"
+      }
+    },
+    "schema": "jit_jump_evidence_validation_v1",
+    "selected_prefix_ticks": [
+      1,
+      14,
+      27,
+      28,
+      35,
+      40
+    ],
+    "status": "completed",
+    "training_transitions": 0,
+    "worker": "capture"
+  },
+  "date": "2026-09-07",
+  "original_summary": {
+    "formal_envelope_claim_authorized": false,
+    "gates": {
+      "counter_reset_behavior_equivalence": false,
+      "fresh_context_restore": false,
+      "phase_and_apex_coverage": true,
+      "prefix_replay_context": false,
+      "preserved_context_restore": false,
+      "seed_prefix_first_valid_landing": true,
+      "serial_shard_equivalence": true
+    },
+    "interaction_accounting_complete": true,
+    "known_environment_interactions": 792,
+    "label_comparisons": [
+      {
+        "candidate_count": 6,
+        "different_serial_and_shard_protocol_hashes_expected": true,
+        "mismatches": [],
+        "passed": true,
+        "semantic_fields_compared": [
+          "candidate_id",
+          "state_sha256",
+          "snapshot_context_sha256",
+          "phase",
+          "phase_index",
+          "parent_group_id",
+          "parent_state_sha256",
+          "evaluator_policy_name",
+          "evaluator_actor_sha256",
+          "evaluator_payload_sha256",
+          "success_criterion",
+          "label",
+          "continuation_success",
+          "outcome_class",
+          "environment_interactions",
+          "terminal_done",
+          "terminal_success",
+          "physical_failure",
+          "timeout",
+          "end_code",
+          "end_reason",
+          "apex_seen",
+          "phase_transitioned",
+          "valid_contact_seen",
+          "recovery_success",
+          "final_active_phase",
+          "acquisition_protocol_sha256"
+        ]
+      }
+    ],
+    "maximum_environment_interactions": 17200,
+    "plan_sha256": "242c1e2d7e4da9d15f18a45e4d906694cdc17b5a561c7cab8dc388c01ce11d8e",
+    "production_validation_completed": true,
+    "schema": "jit_jump_evidence_validation_v1",
+    "scope": "only this frozen-policy set, prefix, sampled states and tolerances; not a global proof",
+    "stages": [
+      {
+        "environment_interactions": 41,
+        "name": "capture",
+        "returncode": 0,
+        "status": "completed"
+      },
+      {
+        "environment_interactions": 161,
+        "name": "evaluator_0/replay_000",
+        "returncode": 0,
+        "status": "completed"
+      },
+      {
+        "environment_interactions": 122,
+        "name": "evaluator_0/replay_001",
+        "returncode": 0,
+        "status": "completed"
+      },
+      {
+        "environment_interactions": 83,
+        "name": "evaluator_0/replay_002",
+        "returncode": 0,
+        "status": "completed"
+      },
+      {
+        "environment_interactions": 80,
+        "name": "evaluator_0/replay_003",
+        "returncode": 0,
+        "status": "completed"
+      },
+      {
+        "environment_interactions": 59,
+        "name": "evaluator_0/replay_004",
+        "returncode": 0,
+        "status": "completed"
+      },
+      {
+        "environment_interactions": 44,
+        "name": "evaluator_0/replay_005",
+        "returncode": 0,
+        "status": "completed"
+      },
+      {
+        "environment_interactions": 101,
+        "name": "evaluator_0/serial",
+        "returncode": 0,
+        "status": "completed"
+      },
+      {
+        "environment_interactions": 67,
+        "name": "evaluator_0/shard_000",
+        "returncode": 0,
+        "status": "completed"
+      },
+      {
+        "environment_interactions": 27,
+        "name": "evaluator_0/shard_001",
+        "returncode": 0,
+        "status": "completed"
+      },
+      {
+        "environment_interactions": 7,
+        "name": "evaluator_0/shard_002",
+        "returncode": 0,
+        "status": "completed"
+      },
+      {
+        "environment_interactions": 0,
+        "name": "evaluator_0/merge",
+        "returncode": 0,
+        "status": "completed"
+      }
+    ],
+    "status": "diagnostic_mismatch",
+    "test_data_used": false,
+    "training_transitions": 0
+  },
+  "schema": "jit_user_gpu_evidence_review_v1",
+  "source_bundle_sha256": "0e849c1d022b2257a8978d3686cd8e5f8104ef87443fd9efa2217ffc545e018f",
+  "user_decision": {
+    "additional_replay_validation_requested": false,
+    "exact_replay_pass_claim": false,
+    "initial_wheel_clearance_about_0p031_m_accepted": true,
+    "next_task": "complete shared-panel labels and compare all four policies",
+    "numerical_trajectory_mismatch_accepted_for_continuation_of_work": true
+  }
+}

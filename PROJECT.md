@@ -21,7 +21,7 @@ The historical bootstrap is not an idealized all-positive filter. The committed 
 
 ## Scope and definitions
 
-Task starts at the declared full ground preparation state at `x=2.5 m`. Earlier natural approach is out of scope. Fixed runtime: `assets/orange_bike_4kg_horizontal.xml`, 2 kg payload, 0.005 s simulation step, 0.020 s control, actions `[steer, rear-wheel drive, hip, knee]`, hip/knee +/-30 N m.
+Task starts at the declared full near-ground preparation state at `x=2.5 m`. Earlier natural approach is out of scope. Fixed runtime: `assets/orange_bike_4kg_horizontal.xml`, 2 kg payload, 0.005 s simulation step, 0.020 s control, actions `[steer, rear-wheel drive, hip, knee]`, hip/knee +/-30 N m.
 
 Let `R_hat_k` be exact states reached from the declared start, `Pi_k` the versioned frozen probe bank, and `S_k` training/reset support. Define empirical support by:
 
@@ -88,7 +88,7 @@ Charge expert/seed acquisition, prefixes, all suffix evaluations, excluded/faile
 
 ## Next implementation and training sequence
 
-The next server action is the implemented [small GPU evidence validation](JIT/docs/JIT_GPU_EVIDENCE_VALIDATION_20260906.md), not another training round. Run the single CLI and return its ZIP. CPU regression verifies orchestration, comparison guards and failure packaging; the actual frozen-checkpoint prefix, restore/time semantics and serial/shard behavior still require production results. Passing this sampled check leads to broader diagnostics and the existing-policy pilot, not a complete-envelope claim.
+The next server action is [complete labels and compare pi_0 through pi_3](JIT/docs/JIT_POLICY_ENVELOPE_COMPARISON_20260907.md). The user accepted the near-ground reset (about 0.031 m initial wheel clearance) and observed numerical replay differences on 2026-09-07, and declined additional replay validation. The six-state GPU run had consistent first-landing outcomes and serial/shard labels; exact trajectory equivalence remains unverified. Use the shared pi_0-arrival panel for per-evaluator continuation support, physical occupancy and exclusive contributions. Keep each data role separate; these plots do not represent each policy's own forward exploration envelope.
 
 Follow [JIT_TRAINING_ROADMAP](JIT/docs/JIT_TRAINING_ROADMAP.md): repair correctness first; close the legacy locked audit without changing its family; materialize and verify existing probes; introduce a new versioned multi-probe experiment; compare existing probes before spending another large PPO budget; then lock a complementarity training recipe.
 

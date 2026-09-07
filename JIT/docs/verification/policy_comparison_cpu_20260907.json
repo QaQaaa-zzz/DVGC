@@ -1,0 +1,45 @@
+{
+  "schema": "jit_policy_comparison_cpu_verification_v1",
+  "date": "2026-09-07",
+  "base_commit": "83ed2f4debf39e679514d601f27ec500f43daa52",
+  "tests": 46,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "test_files": [
+    "JIT/tests/test_policy_comparison.py",
+    "JIT/tests/test_policy_envelopes.py",
+    "JIT/tests/test_policy_family_landing.py",
+    "JIT/tests/test_unified_continuation_shards.py"
+  ],
+  "python": "3.12.13",
+  "dependencies": {
+    "pytest": "9.1.1",
+    "numpy": "2.3.5",
+    "matplotlib": "3.10.8",
+    "jax": "0.6.2",
+    "mujoco": "3.6.0",
+    "brax": "0.14.2"
+  },
+  "playground_source_commit": "8a4b4642d8eba8a80ac99ed125cb62c16e1457ad",
+  "source_file_sha256": {
+    "JIT/cli/compare_policy_envelopes.py": "47de84ff60944b00fa9efd825f014efc9e07d09135382784a7094f23956d73e3",
+    "JIT/src/jit_dvgc/policy_comparison.py": "c55cc61003e5e1514acabf339fa29a0ad299036965a4fc0fc7245b1f65ded640",
+    "JIT/src/jit_dvgc/policy_comparison_runtime.py": "ea1e475b9d47d747408e138cbf7863624689c8ca40dd0d578d9ac51a51cdcb83",
+    "JIT/src/jit_dvgc/analysis/policy_envelopes.py": "1b6c1ce4eae0f9f8868ee89cf0522bfdd0d54672e33a6fd61434afbf96095269",
+    "JIT/tests/test_policy_comparison.py": "c4b5c68d915e0735718135e5ca46457fe6be236c10dc77d8fc378840e57315c6",
+    "JIT/tests/test_policy_envelopes.py": "0586124038b14558c1f6f05f0cd177b085aa19345cbb78942079794834a7db65"
+  },
+  "python_files_parsed": 6,
+  "changed_document_local_links_checked": 70,
+  "figure_exports": [
+    "png_300dpi",
+    "pdf",
+    "svg"
+  ],
+  "synthetic_figure_visual_inspection": true,
+  "production_gpu_validated_for_comparison": false,
+  "training_transitions": 0,
+  "final_test_used": false,
+  "scope": "CPU set arithmetic, identity refusal, real preflight orchestration with fake external assets, mocked subprocess resume/budget/failure packaging, family/shard regression, and synthetic plot exports. No actual production comparison or new replay validation."
+}

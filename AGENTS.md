@@ -10,7 +10,7 @@ The primary result is valid new physical support versus total environment intera
 
 ## User-confirmed scientific contract
 
-- Task begins at the declared complete ground jump-start state at `x = 2.5 m`, including pose, velocities, controller/event history and time semantics. Earlier natural-reset approach is outside scope.
+- Task begins at the declared complete near-ground jump-start state at `x = 2.5 m`, including pose, velocities, controller/event history and time semantics. Earlier natural-reset approach is outside scope.
 - A state enters empirical support only with real forward dynamics from that start (or a fully verified ancestor chain) and a successful continuation from the **same exact state and required context**.
 - Success is `first_valid_landing` before declared failure/horizon; recovery is not required. One observed success is a witness, not a calibrated success probability or safety guarantee.
 - Multiple frozen policies may provide forward proposals and continuation evaluations. Membership and roles are versioned; one forward rollout uses its declared frozen proposer plus bounded perturbations. Different prefix/suffix policies are allowed as offline witnesses, not claimed as one-Actor execution.
@@ -34,7 +34,7 @@ Deduplicate physical coverage separately from storing witnesses. A row already i
 
 ## Fixed runtime
 
-Immediate production action (2026-09-06): run `JIT/cli/validate_jump_evidence.py` as described in the [GPU evidence validation guide](JIT/docs/JIT_GPU_EVIDENCE_VALIDATION_20260906.md), then review `results_to_send.zip`. The default unique Round1 pi_0 panel has at most six real reached states and a 17,200-step ceiling at horizon 400. The executable diagnostic is implemented and CPU-tested; actual GPU replay, clock and serial/shard results remain pending. A sampled pass does not authorize automatic PPO or formal Tube admission.
+Current action (2026-09-07): run `JIT/cli/compare_policy_envelopes.py --gpu 0` following the [comparison guide](JIT/docs/JIT_POLICY_ENVELOPE_COMPARISON_20260907.md). The user accepted approximately 0.031 m initial wheel clearance and the observed numerical replay differences, and explicitly declined further replay validation. The production six-state panel completed with consistent landing outcomes and serial/shard labels; exact trajectory equivalence did not pass. Preserve that record, but do not block the authorized labeling/plotting work on additional replay gates. Do not change reset physics or falsely mark exact replay verified.
 
 - Repository target branch: `agent/two-phase-soft-tube`; isolated review branches/worktrees may be used to preserve concurrent work.
 - XML: `assets/orange_bike_4kg_horizontal.xml`.
@@ -53,7 +53,7 @@ Legacy family and selected-policy workflows retain their original contracts. New
 
 The historical pi_3 mixed-endpoint gate remains invalid as a fair comparison. Keep the trained checkpoint and valid underlying outcomes. pi_3 may be assessed as a prospective probe under a new identity/endpoint contract without requiring old full-Tube retention, but never reuse its old selected manifest as automatic authority.
 
-New formal probe training is not ready: correctness guards and the first bank path are implemented, but production serial/shard and prefix/suffix equivalence, a full cost/coverage ledger, and the training recipe/budget must close first. Existing frozen-probe pilots should precede additional large PPO runs. A predictor is optional and must not block a predictor-free discovery experiment once essential gates pass.
+New formal probe training is not ready: correctness guards and the first bank path are implemented, but a full cost/coverage ledger and the training recipe/budget remain to close. The user has accepted the numerical replay limitations; further replay validation is not a prerequisite for the authorized comparisons. Existing frozen-probe pilots should precede additional large PPO runs. A predictor is optional and must not block a predictor-free discovery experiment once essential gates pass.
 
 ## Data roles and evidence integrity
 

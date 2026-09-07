@@ -1,5 +1,7 @@
 # JIT agent instructions — active empirical-envelope direction
 
+Current user decision (2026-09-07): no additional numerical replay validation. About 3.1 cm initial wheel clearance is accepted as the declared near-ground reset. Run [the four-policy comparison](docs/JIT_POLICY_ENVELOPE_COMPARISON_20260907.md), preserve the original three-member family, and plot each policy plus union on identical reached-state panels. This is continuation support conditioned on pi_0 arrivals, not each policy's own forward exploration envelope.
+
 The root [AGENTS.md](../AGENTS.md) and user-confirmed [paper outline](docs/JIT_PAPER_OUTLINE.md) govern this work. Audited baseline: `bfc22f2`. The first implementation update is documented in [implementation status](docs/JIT_PROBE_BANK_IMPLEMENTATION_20260905.md); remaining requirements are not runtime success claims.
 
 ## Objective and objects
@@ -10,7 +12,7 @@ Keep forward arrivals, exact landing witnesses, empirical support, projected cel
 
 ## Arrival and continuation
 
-- Begin at the complete declared ground jump-start state, x=2.5 m. Do not demand or claim the earlier natural approach.
+- Begin at the complete declared near-ground jump-start state, x=2.5 m. Do not demand or claim the earlier natural approach.
 - Keep pi_0 centerline coordinates fixed; all centerline frames are captured, not interpolated.
 - New protocols may use multiple frozen proposers and evaluators. Lock membership before each round and record bank versions.
 - Each candidate needs exact prefix/suffix context, action history, events, start/remaining time and source identities. qpos/qvel identity alone is insufficient for policy-conditioned continuation.
@@ -23,13 +25,13 @@ Keep forward arrivals, exact landing witnesses, empirical support, projected cel
 
 The already locked wide/expanded scans retain pi_0 proposer and pi_0/pi_1/pi_2 evaluators. Resume under their exact catalog, seed, horizon and endpoint. Do not rename or retrofit those runs as multi-probe discovery.
 
-Use `cli/probe_bank.py` for new bank pilots after production smoke. It emits observations with replay/physical-envelope claims explicitly unverified; it does not authorize automatic PPO or certify physical cells. The old `prepare_iterative_envelope_workflow.py` selects one successor and requires coverage eligibility. It is legacy automation, not the new discovery scheduler. Do not launch a new experiment through that chain without changing and validating its contracts.
+Use `cli/probe_bank.py` for new bank pilots. The six-state production smoke has completed; the user accepted observed numerical differences and declined more replay validation. It emits observations with replay/physical-envelope claims explicitly unverified; it does not authorize automatic PPO or certify physical cells. The old `prepare_iterative_envelope_workflow.py` selects one successor and requires coverage eligibility. It is legacy automation, not the new discovery scheduler. Do not launch a new experiment through that chain without changing and validating its contracts.
 
 pi_3 remains a frozen trained candidate. Its mixed-endpoint gate is quarantined as comparison evidence, not a blanket rejection of every pi_3 witness. Assess technical probe eligibility and complementary witnesses under a new protocol. Do not automatically promote the old selected manifest.
 
 ## Immediate correctness gates
 
-The first production check is now executable: `cli/validate_jump_evidence.py --gpu 0`, using the production interpreter and `PYTHONPATH=JIT/src` from repository root. Follow the [run/return guide](docs/JIT_GPU_EVIDENCE_VALIDATION_20260906.md). It locks source and policy identities, captures a real ground prefix, compares live/preserved/fresh-counter continuations, and runs serial plus fresh-process shards. Preserve the generated ZIP even on failure. Its legacy `split=train` catalog marker is accompanied by `logical_role=engineering_validation` and no training/admission authorization. Never use this panel for adaptive training or silently promote replay-verification flags.
+Historical 2026-09-06 diagnostic entry: `cli/validate_jump_evidence.py --gpu 0`, using the production interpreter and `PYTHONPATH=JIT/src` from repository root. Follow the [run/return guide](docs/JIT_GPU_EVIDENCE_VALIDATION_20260906.md). It locks source and policy identities, captures a real ground prefix, compares live/preserved/fresh-counter continuations, and runs serial plus fresh-process shards. Preserve the generated ZIP even on failure. Its legacy `split=train` catalog marker is accompanied by `logical_role=engineering_validation` and no training/admission authorization. Never use this panel for adaptive training or silently promote replay-verification flags.
 
 See issue IDs and evidence in [review](docs/JIT_EMPIRICAL_ENVELOPE_REVIEW_20260905.md).
 
@@ -37,7 +39,7 @@ See issue IDs and evidence in [review](docs/JIT_EMPIRICAL_ENVELOPE_REVIEW_202609
 2. Preserve endpoint validation in both legacy analysis and selector; mixed/missing endpoint evidence now refuses.
 3. Separate training-support membership, exact witness identity and physical novelty.
 4. Validate public warm-start routing; preserve Actor/normalizer only, with fresh critic/optimizer unless explicitly declared.
-5. Validate serial versus sharded labels on a small identical catalog using the production runtime.
+5. Preserve the completed six-state serial/shard production check. Numerical replay differences are accepted for continuing work; do not schedule additional replay validation without a new user request.
 6. Extend the first versioned bank/observation index and suffix-attempt ledger to validated cumulative physical support and full end-to-end cost before formal discovery training.
 
 Shards must preserve catalog/global index/seed/horizon/endpoint/full policy identity. The historical operational suggestion is at most 600 candidates per fresh GPU process; it is not an enforced code limit or measured universal safe capacity. Start small, end the process between shards, and avoid concurrent evaluators without measured capacity. Completed cache entries need full requested-contract verification; preserve failures.

@@ -1,5 +1,7 @@
 # JIT code organization and migration map
 
+`policy_comparison.py` owns the CPU-only resumable supervisor; `policy_comparison_runtime.py` reuses strict legacy label/shard/merge interfaces and validates/project snapshots; `analysis/policy_envelopes.py` owns common-panel physical metrics and PNG/PDF/SVG exports. `cli/compare_policy_envelopes.py` is the thin entry. See [run guide](JIT_POLICY_ENVELOPE_COMPARISON_20260907.md).
+
 Active objective: [empirical-envelope project](../../PROJECT.md). Current implementation gaps: [review](JIT_EMPIRICAL_ENVELOPE_REVIEW_20260905.md). New schemas below are design requirements, not shipped capabilities.
 
 ## Placement
