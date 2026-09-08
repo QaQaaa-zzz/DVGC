@@ -189,6 +189,7 @@ def collect_jump_start_connected_candidates(
     sampling_mode: str = "single_target_v1",
     slice_spacing_m: float = 0.05,
     max_candidates_per_attempt: int = 64,
+    sampling_max_x_m: float | None = None,
 ) -> dict[str, Any]:
     """Generate unlabeled jump-start-connected candidates around centerline x slices."""
     if sampling_mode not in {"single_target_v1", "trajectory_slices_v2"}:
@@ -213,6 +214,10 @@ def collect_jump_start_connected_candidates(
         raise ValueError("causal Jump policy/runtime XML mismatch")
 
     centerline = load_nominal_jump_centerline(Path(nominal_centerline))
+    original_x_max = float(centerline["effective_centerline_max_x_m"])
+    sample_x_max = original_x_max if sampling_max_x_m is None else float(sampling_max_x_m)
+    if sampling_max_x_m is not None and (not dense or not np.isfinite(sample_x_max) or not original_x_max <= sample_x_max <= 8.):
+        raise ValueError("extended sampling requires dense mode and a finite declared guard up to 8 m")
     jump_start_expected = str(centerline["jump_start_state_sha256"])
     directions = action_sparse_directions(
         action_names=tuple(action_names),
@@ -304,6 +309,9 @@ def collect_jump_start_connected_candidates(
                         perturbation_end="first x at or beyond anchor target; normal policy thereafter",
                         skipped_bins_are_not_filled=True,
                         shared_trajectory_frames_are_independent_samples=False)
+    if sampling_max_x_m is not None:
+        protocol.update(sampling_max_x_m=sample_x_max, original_centerline_max_x_m=original_x_max,
+                        sampling_scope="real rollout until first landing/failure or declared guard; original reference unchanged")
     protocol_sha = _canonical_sha256(protocol)
 
     output = Path(output_dir)
@@ -335,6 +343,7 @@ def collect_jump_start_connected_candidates(
     phase_accepted = Counter()
     interactions = 0
     attempt_index = 0
+    trajectory_receipts = []
 
     ordered_anchors = sorted(
         (dict(row) for row in declared_anchors),
@@ -397,6 +406,8 @@ def collect_jump_start_connected_candidates(
             trajectory_id = f"{anchor['parent_group_id']}/variant_{spec['ordinal']}"
             captured_bins = set()
             saved_this_attempt = 0
+            attempt_start_interactions = interactions
+            stop_reason = "forward_horizon_exhausted"
 
             def store_candidate(candidate_state, phase, target_x):
                 phase_index = 0 if phase == "upstream" else 1
@@ -516,6 +527,7 @@ def collect_jump_start_connected_candidates(
             for tick in range(int(max_forward_ticks)):
                 if _truth(state.done):
                     rejected = "terminal_before_target"
+                    stop_reason = rejected
                     break
                 x_before = _float(state.data.qpos[0])
                 if not dense and x_before > target_x + TARGET_HALF_WIDTH_M:
@@ -560,25 +572,32 @@ def collect_jump_start_connected_candidates(
 
                 if not _finite_state(state, action):
                     rejected = "nonfinite"
+                    if dense: raise ValueError("nonfinite acquisition is an engineering error, not a boundary failure")
                     break
                 if _truth(state.info["expert_switching_used"]):
                     raise ValueError("causal Jump acquisition used expert switching")
 
                 x_after = _float(state.data.qpos[0])
                 if dense:
-                    if _truth(state.done) or _truth(state.info["down_events"].valid_contact_seen):
+                    if _truth(state.info["down_events"].valid_contact_seen):
+                        stop_reason = "first_valid_landing"
                         break
-                    if x_after > float(centerline["effective_centerline_max_x_m"]):
+                    if _truth(state.done):
+                        stop_reason = "task_terminated_before_landing"
+                        break
+                    if x_after > sample_x_max:
+                        stop_reason = "sampling_x_guard"
                         break
                     capture_phase = next((p for p in ("upstream", "downstream") if _semantic_candidate(state, p)), None)
                     from .trajectory_sampling import observed_slice
                     selected = observed_slice(x_after, capture_phase, captured_bins,
                         spacing=slice_spacing_m, x_min=float(centerline["x_min_m"]),
-                        x_max=float(centerline["effective_centerline_max_x_m"]))
+                        x_max=sample_x_max)
                     if perturbation_started and selected is not None:
                         captured_bins.add((capture_phase, selected[0]))
                         saved_this_attempt += int(store_candidate(state, capture_phase, selected[1]))
                     if saved_this_attempt >= max_candidates_per_attempt:
+                        stop_reason = "candidate_cap"
                         break
                     continue
                 inside = abs(x_after - target_x) <= TARGET_HALF_WIDTH_M
@@ -590,6 +609,16 @@ def collect_jump_start_connected_candidates(
                     break
 
             if dense:
+                trajectory_receipts.append({"trajectory_id":trajectory_id,"proposer":str(policy_record["name"]),
+                    "anchor_x_m":float(anchor["x_target_m"]),"strength":strength,"direction":direction,
+                    "environment_interactions":interactions-attempt_start_interactions,
+                    "candidate_count":saved_this_attempt,"stop_reason":stop_reason,
+                    "perturbation_started":perturbation_started,
+                    "final_x_m":_float(state.data.qpos[0]),
+                    "physical_failure":_truth(state.info.get("physical_failure",False)),
+                    "timeout":_truth(state.info.get("timeout",False)),
+                    "valid_landing":stop_reason=="first_valid_landing",
+                    "truncated":stop_reason in {"sampling_x_guard","candidate_cap","forward_horizon_exhausted"}})
                 print(f"[causal] trajectory={trajectory_id} saved={saved_this_attempt} total_candidates={len(entries)} interactions={interactions}", flush=True)
                 continue
             if candidate_state is None:
@@ -647,6 +676,11 @@ def collect_jump_start_connected_candidates(
         },
         "entries": entries,
     }
+    if dense:
+        if sum(r["environment_interactions"] for r in trajectory_receipts) != interactions:
+            raise ValueError("trajectory interaction ledger mismatch")
+        report["trajectory_receipts"] = trajectory_receipts
+        report["trajectory_stop_counts"] = dict(Counter(r["stop_reason"] for r in trajectory_receipts))
     (output / "catalog.json").write_text(
         json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n",
         encoding="utf-8",

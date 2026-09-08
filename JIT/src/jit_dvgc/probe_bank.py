@@ -354,4 +354,5 @@ def acquire_probe_catalog(spec_path: Path, output: Path) -> dict:
         acquisition_interaction_ceiling=int(spec["interaction_ceiling"]),
         sampling_mode=spec.get("sampling_mode", "single_target_v1"),
         slice_spacing_m=float(spec.get("slice_spacing_m", 0.05)),
-        max_candidates_per_attempt=int(spec.get("max_candidates_per_attempt", 64)))
+        max_candidates_per_attempt=int(spec.get("max_candidates_per_attempt", 64)),
+        sampling_max_x_m=spec.get("sampling_max_x_m"))

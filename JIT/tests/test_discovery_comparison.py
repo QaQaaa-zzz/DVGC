@@ -92,14 +92,14 @@ def test_non_pi0_worker_uses_own_proposer_but_pi0_benchmark(tmp_path,monkeypatch
     import jit_dvgc.dense_tube_runtime as runtime
     import jit_dvgc.policy_family_landing as family
     plan={'members':[{'path':n,'policy':{'name':n}} for n in NAMES],
-          'proposer':'pi_2','benchmark_catalog':str(tmp_path/'bench.json')}
+          'proposer':'pi_2','label_seed':9842201,'benchmark_catalog':str(tmp_path/'bench.json')}
     write(tmp_path/'bench.json',{})
     monkeypatch.setattr(runtime,'verify_plan',lambda p:plan)
     monkeypatch.setattr(jax,'default_backend',lambda:'gpu')
     monkeypatch.setattr(jax,'local_devices',lambda:[1])
     observed=[]
     def shard(**kwargs):
-        observed.append(str(kwargs['acquisition_frozen_policy']))
+        observed.append((str(kwargs['acquisition_frozen_policy']),kwargs['protocol_seed']))
         write(kwargs['output_dir']/'labels.json',[])
         return {'environment_interactions':0,'elapsed_seconds':1}
     monkeypatch.setattr(family,'run_policy_family_evaluator_shard',shard)
@@ -107,7 +107,7 @@ def test_non_pi0_worker_uses_own_proposer_but_pi0_benchmark(tmp_path,monkeypatch
         args=SimpleNamespace(output_dir=tmp_path,destination=tmp_path/kind,worker=kind,
              policy='pi_3',catalog=tmp_path/'new.json',shard_index=0,shard_count=1,backend='serial')
         assert runtime.worker(args)==0
-    assert observed==['pi_0','pi_2']
+    assert observed==[('pi_0',9840201),('pi_2',9842201)]
 
 
 def test_empty_arrivals_still_validate_actor_identity():

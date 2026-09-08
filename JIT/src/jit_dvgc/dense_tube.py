@@ -31,19 +31,22 @@ def choose_backend(serial, device):
             'measured_speedup': serial['seconds']/max(device['seconds'],1.e-9)}
 
 
-def run(repo, output, *, baseline=None, gpu='0', budget=2_000_000, proposer='pi_0'):
+def run(repo, output, *, baseline=None, gpu='0', budget=2_000_000, proposer='pi_0', profile=None):
     repo,output=Path(repo).resolve(),Path(output).resolve()
     output.mkdir(parents=True,exist_ok=True)
     with (output/'execution.lock').open('a') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-        return _run(repo,output,baseline=baseline,gpu=gpu,budget=budget,proposer=proposer)
+        return _run(repo,output,baseline=baseline,gpu=gpu,budget=budget,proposer=proposer,profile=profile)
 
 
-def _run(repo,output,*,baseline,gpu,budget,proposer='pi_0'):
+def _run(repo,output,*,baseline,gpu,budget,proposer='pi_0', profile=None):
     if proposer not in {'pi_0','pi_1','pi_2','pi_3'}: raise ValueError('unknown proposer')
+    from .frontier_exploration import validate_profile
+    validate_profile(profile)
     request={'repo':str(repo),'baseline':str(Path(baseline or repo/DEFAULT_BASELINE).resolve()),
              'budget':int(budget),'batch_size':8,'shard_size':128,'spacing_m':0.05,
              'sampling_profile':'16_trajectories_train_v2','proposer':proposer}
+    if profile is not None: request['frontier_profile']=profile
     if (output/'request.json').exists() and read(output/'request.json') != request:
         raise ValueError('request changed; use a new output directory')
     write(output/'request.json',request)
@@ -113,6 +116,10 @@ def _run(repo,output,*,baseline,gpu,budget,proposer='pi_0'):
         task('prepare','prepare')
         plan=verify_plan(output/'plan.json')
         decision_path=output/'backend_decision.json'
+        if profile and profile['serial_only'] and not decision_path.exists():
+            from .evidence_integrity import canonical_sha256
+            decision={'plan_sha256':plan['plan_sha256'],'policies':{n:{'backend':'serial','reason':'locked production serial; no repeated device benchmark'} for n in plan['names']}}
+            decision['decision_sha256']=canonical_sha256(decision);write(decision_path,decision)
         if not decision_path.exists():
             decisions={}
             for name in plan['names']:
@@ -127,8 +134,9 @@ def _run(repo,output,*,baseline,gpu,budget,proposer='pi_0'):
             verify_hash(read(decision_path),'decision_sha256')
             if read(decision_path)['plan_sha256']!=plan['plan_sha256']:raise ValueError('backend decision plan drift')
         decisions=read(decision_path)['policies']
+        if profile and any(d['backend']!='serial' for d in decisions.values()): raise ValueError('frontier requires locked serial backend')
         print('[dense] backends='+str(decisions),flush=True)
-        acquired=task('acquire','acquire',maximum=8000,gpu_job=True)
+        acquired=task('acquire','acquire',maximum=plan.get('acquisition_ceiling',8000),gpu_job=True)
         catalog=acquired/'result/catalog.json'
         prepared=task('project','project',['--catalog',str(catalog)])
         panel=read(prepared/'worker_report.json')

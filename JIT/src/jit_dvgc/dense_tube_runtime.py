@@ -19,6 +19,9 @@ def prepare(output):
         p=verify_plan(output/'plan.json')
         if p['request']!=request:raise ValueError('dense request/plan drift')
         return {'status':'completed','environment_interactions':0}
+    profile=request.get('frontier_profile')
+    from .frontier_exploration import validate_profile
+    validate_profile(profile)
     old=read(baseline/'plan.json');verify_hash(old,'plan_sha256')
     summary=read(baseline/'summary.json')
     if summary['status']!='completed' or summary['plan_sha256']!=old['plan_sha256']:
@@ -56,7 +59,7 @@ def prepare(output):
     start=output/'start_contract.json'
     write(start,{'jump_start_state_sha256':center['jump_start_state_sha256'],'xml_sha256':members[0]['policy']['xml_sha256'],
                  'continuation_start_semantics':'fresh_continuation_v1','initial_clearance_accepted':True,'extra_replay_validation':False})
-    bank_spec={'version':'dense_5cm_discovery_v2','task':{'xml_sha256':members[0]['policy']['xml_sha256'],
+    bank_spec={'version':profile['version'] if profile else 'dense_5cm_discovery_v2','task':{'xml_sha256':members[0]['policy']['xml_sha256'],
         'start_contract_sha256':file_sha(start),'centerline_sha256':center['centerline_sha256'],
         'resolution_sha256':resolution_contract()['resolution_sha256'],'success_criterion':'first_valid_landing',
         'continuation_start_semantics':'fresh_continuation_v1'},'max_ticks':old['horizon'],
@@ -71,7 +74,7 @@ def prepare(output):
     lock(start);lock(output/'bank.json')
     anchors=[]
     # New action windows differ from the historical scan; all four channels/signs.
-    for target in (2.9,3.1):
+    for target in (profile['targets'] if profile else (2.9,3.1)):
         for family in range(5):
             anchors.append({'phase':'upstream','x_target_m':target,'proposal_family_index':family,
                 'state_sha256':center['jump_start_state_sha256'],
@@ -82,6 +85,10 @@ def prepare(output):
           'strengths':[0.075],'action_names':['steer','rear_wheel_drive','hip','knee'],'signs':[-1,1],
           'lookbacks_m':[0.15],'max_forward_ticks':400,'interaction_ceiling':8000,
           'sampling_mode':'trajectory_slices_v2','slice_spacing_m':0.05,'max_candidates_per_attempt':32}
+    if profile:
+        spec.update(seed=profile['acquisition_seed'],strengths=profile['strengths'],
+                    max_candidates_per_attempt=profile['max_candidates'],sampling_max_x_m=profile['sampling_max_x_m'],
+                    interaction_ceiling=profile['acquisition_ceiling'])
     write(output/'acquisition_spec.json',spec);lock(output/'acquisition_spec.json')
     if old['horizon']!=400:raise ValueError('pilot budget is declared for horizon 400')
     p={'schema':'jit_dense_tube_pilot_v2','proposer':request.get('proposer','pi_0'),'repo':str(repo),'request':request,'members':members,'names':[m['policy']['name'] for m in members],
@@ -92,6 +99,11 @@ def prepare(output):
        'max_trajectories':16,'max_candidates_per_trajectory':32,'first_attempt_interaction_ceiling':878400,
        'training_admission_authorized':False,'role':'train','new_replay_validation':False,
        'snapshot_replay_equivalence_verified':False,'matched_budget_discovery_claim':False}
+    if profile:
+        p.update(frontier_profile=profile,label_seed=profile['label_seed'],
+                 acquisition_ceiling=profile['acquisition_ceiling'],
+                 max_trajectories=profile['max_trajectories'],max_candidates_per_trajectory=profile['max_candidates'],
+                 first_attempt_interaction_ceiling=profile['acquisition_ceiling']+profile['max_trajectories']*profile['max_candidates']*4*400)
     if p['first_attempt_interaction_ceiling']>request['budget']:raise ValueError('budget below declared first-attempt ceiling')
     p['plan_sha256']=canonical_sha256(p);write(output/'plan.json',p)
     return {'status':'completed','environment_interactions':0,'plan_sha256':p['plan_sha256']}
@@ -135,11 +147,11 @@ def analyze(plan,output,destination):
     from .analysis.dense_coverage import compare_coverage
     manifest=read(output/'analysis_inputs.json');points=read(manifest['projected']);labels={}
     for member in plan['members']:
-        name=member['policy']['name'];result=complete_output(manifest['merged'][name],manifest['catalog'],next(m for m in plan['members'] if m['policy']['name']==plan.get('proposer','pi_0')),member,400,9841201)
+        name=member['policy']['name'];result=complete_output(manifest['merged'][name],manifest['catalog'],next(m for m in plan['members'] if m['policy']['name']==plan.get('proposer','pi_0')),member,400,plan.get('label_seed',9841201))
         if result is None:raise ValueError('missing dense labels')
         labels[name]=result[1]
     summary=summarize(points,labels,role='train',x_slice_width_m=0.05)
-    summary.update(plan_sha256=plan['plan_sha256'],scope=f"{plan.get('proposer','pi_0')} 16-trajectory TRAIN pilot; not full physical envelope",
+    summary.update(plan_sha256=plan['plan_sha256'],scope=f"{plan.get('proposer','pi_0')} bounded TRAIN pilot; not full physical envelope",
                    training_admission_authorized=False,trajectory_count=len({p['trajectory_id'] for p in points}))
     figures=output/'figures';render_comparison(points,summary,figures,centerline=read(plan['centerline'])['points'])
     baseline=Path(plan['baseline']);old=read(baseline/'plan.json')
@@ -169,7 +181,7 @@ def worker(args):
                 result=run_policy_family_evaluator_shard(catalog_path=Path(plan['benchmark_catalog']) if args.worker=='benchmark' else args.catalog,
                     acquisition_frozen_policy=Path((plan['members'][0] if args.worker=='benchmark' else next(m for m in plan['members'] if m['policy']['name']==plan.get('proposer','pi_0')))['path']),evaluator_frozen_policy=Path(member['path']),
                     output_dir=destination/'result',shard_index=args.shard_index,shard_count=args.shard_count,max_ticks=400,
-                    protocol_seed=9840201 if args.worker=='benchmark' else 9841201,
+                    protocol_seed=9840201 if args.worker=='benchmark' else plan.get('label_seed',9841201),
                     execution_backend=args.backend,batch_size=8 if args.backend=='device' else 1)
                 rows=read(destination/'result/labels.json')
                 if result['environment_interactions']!=sum(r['environment_interactions'] for r in rows)+result.get('inactive_lane_interactions',0):
@@ -184,7 +196,7 @@ def worker(args):
                 merged=merge_policy_family_evaluator_shards(catalog_path=args.catalog,
                     shard_dirs=[Path(p) for p in read(output/f'{args.policy}_shards.json')],output_dir=destination/'result',
                     evaluator_name=args.policy,acquisition_frozen_policy=Path(next(m for m in plan['members'] if m['policy']['name']==plan.get('proposer','pi_0'))['path']),
-                    evaluator_frozen_policy=Path(member['path']),max_ticks=400,protocol_seed=9841201)
+                    evaluator_frozen_policy=Path(member['path']),max_ticks=400,protocol_seed=plan.get('label_seed',9841201))
                 result={'status':'completed','environment_interactions':0,'merged_useful_label_interactions':merged['environment_interactions']}
             elif args.worker=='analyze':result=analyze(plan,output,destination)
             else:raise ValueError('unknown dense worker')

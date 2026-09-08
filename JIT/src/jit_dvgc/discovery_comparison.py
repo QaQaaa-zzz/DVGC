@@ -44,7 +44,7 @@ def previous_cells(pilot, resolution):
     labels={}
     for member in plan['members']:
         name=member['policy']['name']
-        result=complete_output(manifest['merged'][name],manifest['catalog'],plan['members'][0],member,400,9841201)
+        result=complete_output(manifest['merged'][name],manifest['catalog'],next(m for m in plan['members'] if m['policy']['name']==plan.get('proposer','pi_0')),member,400,plan.get('label_seed',9841201))
         if result is None:raise ValueError('previous pilot labels incomplete')
         labels[name]=result[1]
     _,events=coverage_events(points,labels,sum(sum(r['environment_interactions'] for r in rows) for rows in labels.values()))
@@ -93,7 +93,7 @@ def at_budget(rows, budget):
     return allowed[-1] if allowed else {'interactions': budget, 'root_cells': 0, 'full_cells': 0, 'novel_root_cells': 0}
 
 
-def analyze(output, previous_pilot=None):
+def analyze(output, previous_pilot=None, previous_discovery=None):
     from .policy_comparison_runtime import complete_output
     from .analysis.policy_envelopes import write_csv
     panels, metrics, matrix, all_labels = {}, [], [], {}
@@ -117,7 +117,7 @@ def analyze(output, previous_pilot=None):
                 labels[evaluator] = []
                 continue
             completed = complete_output(manifest['merged'][evaluator], manifest['catalog'],
-                                        acquisition, member, 400, 9841201)
+                                        acquisition, member, 400, plan.get('label_seed',9841201))
             if completed is None:
                 raise ValueError('invalid completed evaluator labels')
             labels[evaluator] = completed[1]
@@ -149,6 +149,9 @@ def analyze(output, previous_pilot=None):
         old_root = baseline_cells
     if previous_pilot is not None:
         old_root |= previous_cells(previous_pilot, resolution)
+    if previous_discovery is not None:
+        for name in NAMES:
+            old_root |= previous_cells(Path(previous_discovery)/name, resolution)
     curves = {n: curve(events[n], overheads[n], old_root) for n in NAMES}
     # Locked round-robin by candidate index; never sort by success or novelty.
     pooled = [events[n][i] for i in range(max(map(len, events.values()))) for n in NAMES if i < len(events[n])]
@@ -178,9 +181,17 @@ def analyze(output, previous_pilot=None):
     figures = output/'figures';figures.mkdir(exist_ok=True)
     write_csv(figures/'proposer_metrics.csv', metrics)
     write_csv(figures/'proposer_evaluator_matrix.csv', matrix)
-    write_csv(figures/'matched_budget.csv', matched)
+    write_csv(figures/('descriptive_budget.csv' if previous_discovery is not None else 'matched_budget.csv'), matched)
     write_csv(figures/'coverage_cost.csv', [{'schedule':n,**r} for n,rs in curves.items() for r in rs])
     render(panels, all_labels, curves, figures)
+    if previous_discovery is not None:
+        from .analysis.frontier_evidence import summarize_frontier
+        frontier = summarize_frontier(output, panels, all_labels, old_root, figures)
+        report['descriptive_budget']=report.pop('matched_budget')
+        report.update(frontier=frontier,scope='TRAIN-informed landing/frontier discovery',
+                      baseline_scope='previous shared panel + pi0 dense pilot + four-proposer discovery',
+                      comparison_scope='unequal TRAIN-informed perturbation profiles; descriptive costs, not a fair policy ranking',
+                      matched_budget_is_formal_comparison=False)
     report['report_sha256'] = canonical_sha256(report)
     write(figures/'summary.json', report)
     return report
@@ -226,7 +237,7 @@ def render(panels, labels, curves, output):
     plt.close(fig)
 
 
-def run(repo, output, *, baseline=None, gpu='0', budget_per_proposer=2_000_000, previous_pilot=None):
+def run(repo, output, *, baseline=None, gpu='0', budget_per_proposer=2_000_000, previous_pilot=None, previous_discovery=None):
     repo, output = Path(repo).resolve(), Path(output).resolve()
     output.mkdir(parents=True, exist_ok=True)
     with (output/'execution.lock').open('a') as lock:
@@ -236,6 +247,8 @@ def run(repo, output, *, baseline=None, gpu='0', budget_per_proposer=2_000_000, 
                  'budget_per_proposer':budget_per_proposer,'proposers':NAMES,
                  'schedule':'catalog-order round-robin v1',
                  'sources':{str(p.relative_to(repo)):file_sha(p) for p in (repo/'JIT').rglob('*.py') if 'runs' not in p.parts}}
+        if previous_discovery is not None:
+            request['previous_discovery']=str(Path(previous_discovery).resolve())
         baseline_plan=Path(request['baseline'])/'plan.json'
         request['baseline_plan_file_sha256']=file_sha(baseline_plan) if baseline_plan.exists() else None
         if (output/'request.json').exists() and read(output/'request.json')!=request:
@@ -247,15 +260,33 @@ def run(repo, output, *, baseline=None, gpu='0', budget_per_proposer=2_000_000, 
             frozen=output/'previous_pilot_files.json'
             if frozen.exists() and read(frozen)!=locked:raise ValueError('previous pilot input drift')
             write(frozen,locked)
+            profiles={}
+            discovery_locked={}
+            if previous_discovery is not None:
+                from .frontier_exploration import allocate
+                prior=Path(request['previous_discovery'])
+                allocation=allocate(read(prior/'summary.json'))
+                if (output/'allocation.json').exists() and read(output/'allocation.json')!=allocation:
+                    raise ValueError('allocation changed after locking')
+                write(output/'allocation.json',allocation)
+                profiles=allocation['profiles']
+                if any(p['acquisition_ceiling']+p['max_trajectories']*p['max_candidates']*4*400 > budget_per_proposer for p in profiles.values()):
+                    raise ValueError('budget below predeclared frontier ceiling; no GPU work started')
+                discovery_locked={str(prior/'summary.json'):file_sha(prior/'summary.json')}
+                for name in NAMES: discovery_locked.update(lock_previous(prior/name))
+                path=output/'previous_discovery_files.json'
+                if path.exists() and read(path)!=discovery_locked:raise ValueError('previous discovery drift')
+                write(path,discovery_locked)
             for name in NAMES:
+                if any(file_sha(p)!=sha for p,sha in discovery_locked.items()):raise ValueError('previous discovery changed during run')
                 if any(file_sha(repo/p)!=sha for p,sha in request['sources'].items()):
                     raise ValueError('source changed during multi-proposer run')
                 if lock_previous(request['previous_pilot'])!=locked:raise ValueError('previous pilot changed during run')
                 child=run_dense(repo,output/name,baseline=request['baseline'],gpu=gpu,
-                                budget=budget_per_proposer,proposer=name)
+                                budget=budget_per_proposer,proposer=name,**({'profile':profiles[name]} if profiles else {}))
                 if child['status'] not in {'completed','completed_empty'}:
                     raise RuntimeError(f'{name} incomplete; inspect preserved child logs')
-            result=analyze(output,request['previous_pilot'])
+            result=analyze(output,request['previous_pilot'],request.get('previous_discovery'))
         except BaseException as exc:
             result={'status':'engineering_error','error':str(exc),'traceback':traceback.format_exc()}
         finally:
