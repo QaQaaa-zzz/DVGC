@@ -29,6 +29,9 @@ def prepare(output):
     inputs={}
     def lock(path):
         path=Path(path).resolve();inputs[str(path)]=file_sha(path);return path
+    for source, sha in (profile or {}).get('source_files', {}).items():
+        if file_sha(source) != sha: raise ValueError('boundary source evidence changed')
+        lock(source)
     lock(baseline/'plan.json');lock(baseline/'summary.json')
     members=old['members']
     if [m['policy']['name'] for m in members]!=['pi_0','pi_1','pi_2','pi_3']:raise ValueError('baseline bank mismatch')
@@ -89,6 +92,9 @@ def prepare(output):
         spec.update(seed=profile['acquisition_seed'],strengths=profile['strengths'],
                     max_candidates_per_attempt=profile['max_candidates'],sampling_max_x_m=profile['sampling_max_x_m'],
                     interaction_ceiling=profile['acquisition_ceiling'])
+    if profile and profile['version'] == 'knee_boundary_v1':
+        if request.get('proposer') != 'pi_1': raise ValueError('boundary proposer drift')
+        spec.update(action_names=profile['action_names'], signs=profile['signs'])
     write(output/'acquisition_spec.json',spec);lock(output/'acquisition_spec.json')
     if old['horizon']!=400:raise ValueError('pilot budget is declared for horizon 400')
     p={'schema':'jit_dense_tube_pilot_v2','proposer':request.get('proposer','pi_0'),'repo':str(repo),'request':request,'members':members,'names':[m['policy']['name'] for m in members],

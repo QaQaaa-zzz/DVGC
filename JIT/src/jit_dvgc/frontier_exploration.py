@@ -43,6 +43,10 @@ def allocate(previous_report):
 
 def validate_profile(profile):
     if profile is None:return
+    if profile.get('version') == 'knee_boundary_v1':
+        from .boundary_refinement import validate_refinement
+        validate_refinement(profile)
+        return
     if profile.get('version')!='landing_frontier_v1' or profile.get('targets')!=[2.9]:
         raise ValueError('unknown frontier profile')
     if profile.get('strengths') not in ([.10,.20],[.15]):
