@@ -22,7 +22,7 @@ def test_profile_locks_nine_legal_action_variants_and_source(tmp_path):
     profile=b.select_profile(source(tmp_path))
     b.validate_refinement(profile)
     assert len(profile['targets'])*len(profile['strengths'])*len(profile['signs'])*len(profile['action_names'])==9
-    assert b.CEILING==1_847_700
+    assert b.CEILING==1_849_200
     changed=copy.deepcopy(profile);changed['signs']=[-1]
     with pytest.raises(ValueError):b.validate_refinement(changed)
     path=next(iter(profile['source_files']))

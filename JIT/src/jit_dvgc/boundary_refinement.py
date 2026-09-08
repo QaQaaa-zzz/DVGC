@@ -11,13 +11,13 @@ from .dense_tube import run as run_dense
 from .result_bundle import bundle
 
 DEFAULT_PREVIOUS = 'JIT/runs/discovery/landing_frontier_v1'
-DEFAULT_OUTPUT = 'JIT/runs/discovery/knee_boundary_v1'
+DEFAULT_OUTPUT = 'JIT/runs/discovery/knee_boundary_v1_budgetfix'
 SETTINGS = dict(version='knee_boundary_v1', targets=[2.85, 2.9, 2.95],
     strengths=[.15, .175, .2], action_names=['knee'], signs=[1],
     max_trajectories=9, max_candidates=128, sampling_max_x_m=8.,
-    acquisition_ceiling=4500, acquisition_seed=9843101, label_seed=9843201,
+    acquisition_ceiling=6000, acquisition_seed=9843101, label_seed=9843201,
     serial_only=True)
-CEILING = 4500 + 9 * 128 * 4 * 400
+CEILING = 6000 + 9 * 128 * 4 * 400
 
 
 def validate_refinement(profile):

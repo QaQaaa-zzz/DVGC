@@ -18,7 +18,16 @@ Requires the existing `JIT/runs/discovery/landing_frontier_v1` and
 `JIT/runs/policy_comparison/expanded_pi0_pi3_20260907`, including their referenced
 checkpoint and source files. `--previous` and `--baseline` override those paths;
 they do not rewrite absolute paths embedded in historical manifests.
-Default output: `JIT/runs/discovery/knee_boundary_v1`.
+Default output: `JIT/runs/discovery/knee_boundary_v1_budgetfix`.
+
+The first production attempt stopped before rollout: the collector conservatively
+counts all 15 family anchors at 400 ticks (6,000), including empty partitions.
+The corrected profile reserves 6,000 acquisition interactions instead of 4,500;
+the action schedule still executes nine trajectories. The failed directory stays
+untouched, including its conservative 4,500 charge. When reporting total research
+cost across attempts, include that prior charge separately; it is not measured
+rollout work. The new directory avoids old source/recipe locks. Do not resume the
+old directory with this changed profile. Total new-run budget remains 2,000,000.
 
 ## Locked experiment
 
@@ -31,7 +40,7 @@ Default output: `JIT/runs/discovery/knee_boundary_v1`.
 - Fixed complete near-ground start x=2.5 m; retain the original centerline.
   Capture real frames at 5 cm slices through landing/termination or x=8 m guard.
 - At most 128 candidates per trajectory, 400 steps per forward/suffix rollout.
-  First-attempt ceiling 1,847,700 interactions; default total budget 2,000,000,
+  First-attempt ceiling 1,849,200 interactions; default total budget 2,000,000,
   including retries and conservative charges for missing attempt costs.
 - Frozen acquisition seed 9843101 and label seed 9843201. Different windows are
   local proposal groups, not independent experimental repetitions. The repeated

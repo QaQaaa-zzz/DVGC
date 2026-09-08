@@ -20,12 +20,13 @@ def test_backend_selection_requires_matching_endpoints_before_speed():
     assert choose_backend(serial,device)['backend']=='serial'
 
 
+@pytest.mark.parametrize('boundary_profile',[False,True])
 @pytest.mark.parametrize('extended,cap,expected_steps,reason',[
     (False,32,9,'task_terminated_before_landing'),
     (True,32,12,'first_valid_landing'),
     (True,2,4,'candidate_cap'),
 ])
-def test_dense_collector_saves_multiple_real_frames_and_exact_action_prefixes(tmp_path,monkeypatch,extended,cap,expected_steps,reason):
+def test_dense_collector_saves_multiple_real_frames_and_exact_action_prefixes(tmp_path,monkeypatch,extended,cap,expected_steps,reason,boundary_profile):
     from jit_dvgc.acquisition import causal_jump as c
     import jit_dvgc.frontier_label_shard_runner as runner
     def state(tick):
@@ -54,13 +55,29 @@ def test_dense_collector_saves_multiple_real_frames_and_exact_action_prefixes(tm
     monkeypatch.setattr(c,'save_unified_envelope_snapshot',save)
     policy={'iteration':0,'name':'pi_0','policy_role':'envelope_expansion_authority','xml_sha256':'x',
             'actor_sha256':'a'*64,'payload_sha256':'b'*64,'formal_config_sha256':'c'*64}
-    result=c.collect_jump_start_connected_candidates([{'phase':'upstream','x_target_m':2.8,'proposal_family_index':0,
-        'state_sha256':start,'parent_group_id':'train_trajectory'}],tmp_path/'dense',env=env,policy=lambda obs,key:jp.zeros(4),
+    from jit_dvgc.boundary_refinement import SETTINGS
+    anchors=[{'phase':'upstream','x_target_m':2.8,'proposal_family_index':0,
+        'state_sha256':start,'parent_group_id':'train_trajectory'}]
+    if boundary_profile:
+        anchors=[dict(anchors[0],x_target_m=x,proposal_family_index=f,
+                      parent_group_id=f'train_x{x}_family{f}')
+                 for x in (2.85,2.9,2.95) for f in range(5)]
+    result=c.collect_jump_start_connected_candidates(anchors,tmp_path/'dense',env=env,policy=lambda obs,key:jp.zeros(4),
         policy_record=policy,frozen_manifest_sha256='d'*64,nominal_centerline=tmp_path/'center.json',protocol_seed=1,
-        strengths=[.1],action_names=['hip'],signs=[1],lookbacks_m=[.2],max_forward_ticks=20,
+        strengths=[.15,.175,.2] if boundary_profile else [.1],
+        action_names=['knee'] if boundary_profile else ['hip'],signs=[1],
+        lookbacks_m=[.15] if boundary_profile else [.2],
+        max_forward_ticks=400 if boundary_profile else 20,
+        acquisition_interaction_ceiling=SETTINGS["acquisition_ceiling"] if boundary_profile else None,
         evidence_mode='probe_bank_arrivals_v1',probe_bank_sha256='e'*64,logical_role='train',start_contract_sha256='f'*64,
         sampling_mode='trajectory_slices_v2',slice_spacing_m=.05,max_candidates_per_attempt=cap,sampling_max_x_m=8. if extended else None)
     rows=result['entries']
+    if boundary_profile:
+        assert len(result['trajectory_receipts'])==9
+        assert result['attempted_candidate_count']==9
+        assert sum(r['environment_interactions'] for r in result['trajectory_receipts'])==result['environment_interactions']
+        assert result['environment_interactions']<=6000
+        return
     if cap>2: assert len(rows)>3 and {r['phase'] for r in rows}=={'upstream','downstream'}
     assert result['environment_interactions']==expected_steps
     receipt=result['trajectory_receipts'][0]
@@ -157,3 +174,11 @@ def test_supervisor_falls_back_preserves_cost_and_resumes(tmp_path,monkeypatch,s
     write(output/'figures/figure_metadata.json',{'changed':True})
     assert d.run(tmp_path,output,profile=profile)['status']=='engineering_error'
     assert len(calls)==count
+
+
+def test_boundary_previous_reservation_reproduces_production_refusal(tmp_path, monkeypatch):
+    from jit_dvgc.boundary_refinement import SETTINGS
+    monkeypatch.setitem(SETTINGS, 'acquisition_ceiling', 4500)
+    with pytest.raises(ValueError, match='exceeds declared interaction ceiling before rollout'):
+        test_dense_collector_saves_multiple_real_frames_and_exact_action_prefixes(
+            tmp_path, monkeypatch, True, 32, 12, 'first_valid_landing', True)
