@@ -56,12 +56,12 @@ def prepare(output):
     start=output/'start_contract.json'
     write(start,{'jump_start_state_sha256':center['jump_start_state_sha256'],'xml_sha256':members[0]['policy']['xml_sha256'],
                  'continuation_start_semantics':'fresh_continuation_v1','initial_clearance_accepted':True,'extra_replay_validation':False})
-    bank_spec={'version':'dense_5cm_pilot_v1','task':{'xml_sha256':members[0]['policy']['xml_sha256'],
+    bank_spec={'version':'dense_5cm_discovery_v2','task':{'xml_sha256':members[0]['policy']['xml_sha256'],
         'start_contract_sha256':file_sha(start),'centerline_sha256':center['centerline_sha256'],
         'resolution_sha256':resolution_contract()['resolution_sha256'],'success_criterion':'first_valid_landing',
         'continuation_start_semantics':'fresh_continuation_v1'},'max_ticks':old['horizon'],
         'label_interaction_budget':request['budget'],'max_candidates_per_process':128,
-        'members':[{'frozen_policy':m['path'],'roles':['proposer','evaluator'] if i==0 else ['evaluator']} for i,m in enumerate(members)]}
+        'members':[{'frozen_policy':m['path'],'roles':['proposer','evaluator']} for i,m in enumerate(members)]}
     if (output/'bank.json').exists():
         bank=load_probe_bank(output/'bank.json')
         if any(bank[k]!=bank_spec[k] for k in ('version','task','max_ticks','label_interaction_budget','max_candidates_per_process')) or [m['frozen_policy'] for m in bank['members']] != [m['frozen_policy'] for m in bank_spec['members']]:
@@ -77,14 +77,14 @@ def prepare(output):
                 'state_sha256':center['jump_start_state_sha256'],
                 'parent_group_id':f'dense_v1_train_x{target:.2f}_family{family}'})
     write(output/'anchors.json',anchors);lock(output/'anchors.json')
-    spec={'bank':str(output/'bank.json'),'proposer':'pi_0','role':'train','start_contract':str(start),
+    spec={'bank':str(output/'bank.json'),'proposer':request.get('proposer','pi_0'),'role':'train','start_contract':str(start),
           'nominal_centerline':old['centerline'],'anchors':str(output/'anchors.json'),'seed':9841101,
           'strengths':[0.075],'action_names':['steer','rear_wheel_drive','hip','knee'],'signs':[-1,1],
           'lookbacks_m':[0.15],'max_forward_ticks':400,'interaction_ceiling':8000,
           'sampling_mode':'trajectory_slices_v2','slice_spacing_m':0.05,'max_candidates_per_attempt':32}
     write(output/'acquisition_spec.json',spec);lock(output/'acquisition_spec.json')
     if old['horizon']!=400:raise ValueError('pilot budget is declared for horizon 400')
-    p={'schema':'jit_dense_tube_pilot_v1','repo':str(repo),'request':request,'members':members,'names':[m['policy']['name'] for m in members],
+    p={'schema':'jit_dense_tube_pilot_v2','proposer':request.get('proposer','pi_0'),'repo':str(repo),'request':request,'members':members,'names':[m['policy']['name'] for m in members],
        'bank_sha256':bank['bank_sha256'],'horizon':400,'centerline':old['centerline'],'baseline':str(baseline),'benchmark_catalog':str(bench),
        'baseline_plan_sha256':old['plan_sha256'],'input_files':inputs,
        'sources':{str(f.relative_to(repo)):file_sha(f) for f in (repo/'JIT').rglob('*.py') if 'runs' not in f.parts},
@@ -106,12 +106,12 @@ def project(plan,catalog_path,destination):
     from .model import load_host_model
     from .config import load_config
     catalog=read(catalog_path);protocol=read(catalog_path.parent/'protocol.json');verify_hash(protocol,'protocol_sha256')
-    m=plan['members'][0]
+    m=next(m for m in plan['members'] if m['policy']['name']==plan.get('proposer','pi_0'))
     if catalog['status']!='completed' or catalog['protocol_sha256']!=protocol['protocol_sha256'] or protocol.get('sampling_mode')!='trajectory_slices_v2':
         raise ValueError('dense acquisition incomplete or protocol drift')
     if protocol.get("probe_bank_sha256") != plan["bank_sha256"] or protocol.get("logical_role") != "train":
         raise ValueError("dense bank/role drift")
-    rows=validate_unified_boundary_catalog(catalog,policy_record=m['policy'],frozen_manifest_sha256=m['file_sha256'])
+    rows=validate_unified_boundary_catalog(catalog,policy_record=m['policy'],frozen_manifest_sha256=m['file_sha256'],allow_empty=True)
     validate_probe_arrivals(catalog_path,rows,m['policy'])
     config=read(m['policy']['formal_config']);bundle=load_host_model(load_config(Path(config['inputs']['up_config_path'])))
     if bundle.xml_sha256!=m['policy']['xml_sha256']:raise ValueError('projection XML mismatch')
@@ -121,7 +121,6 @@ def project(plan,catalog_path,destination):
         coordinates=physical_coordinates_from_arrays(snap.qpos,snap.qvel,bundle=bundle)
         point=project_row(row,coordinates,snapshot_context_sha256(snap),x_slice_width_m=0.05)
         point.update(trajectory_id=row['trajectory_id'],trajectory_step=row['trajectory_step']);points.append(point)
-    if not points:raise ValueError('no dense candidates; inspect acquisition exclusions')
     write(destination/'projected.json',points)
     old=read(Path(plan['baseline'])/'plan.json')
     overlap={r:len({p['state_sha256'] for p in points}&{p['state_sha256'] for p in read(old['panels'][r]['projected'])}) for r in ('calibration','acceptance')}
@@ -136,11 +135,11 @@ def analyze(plan,output,destination):
     from .analysis.dense_coverage import compare_coverage
     manifest=read(output/'analysis_inputs.json');points=read(manifest['projected']);labels={}
     for member in plan['members']:
-        name=member['policy']['name'];result=complete_output(manifest['merged'][name],manifest['catalog'],plan['members'][0],member,400,9841201)
+        name=member['policy']['name'];result=complete_output(manifest['merged'][name],manifest['catalog'],next(m for m in plan['members'] if m['policy']['name']==plan.get('proposer','pi_0')),member,400,9841201)
         if result is None:raise ValueError('missing dense labels')
         labels[name]=result[1]
     summary=summarize(points,labels,role='train',x_slice_width_m=0.05)
-    summary.update(plan_sha256=plan['plan_sha256'],scope='pi0 16-trajectory TRAIN pilot; not full physical envelope',
+    summary.update(plan_sha256=plan['plan_sha256'],scope=f"{plan.get('proposer','pi_0')} 16-trajectory TRAIN pilot; not full physical envelope",
                    training_admission_authorized=False,trajectory_count=len({p['trajectory_id'] for p in points}))
     figures=output/'figures';render_comparison(points,summary,figures,centerline=read(plan['centerline'])['points'])
     baseline=Path(plan['baseline']);old=read(baseline/'plan.json')
@@ -168,7 +167,7 @@ def worker(args):
                 from .policy_family_landing import run_policy_family_evaluator_shard
                 member=next(m for m in plan['members'] if m['policy']['name']==args.policy)
                 result=run_policy_family_evaluator_shard(catalog_path=Path(plan['benchmark_catalog']) if args.worker=='benchmark' else args.catalog,
-                    acquisition_frozen_policy=Path(plan['members'][0]['path']),evaluator_frozen_policy=Path(member['path']),
+                    acquisition_frozen_policy=Path((plan['members'][0] if args.worker=='benchmark' else next(m for m in plan['members'] if m['policy']['name']==plan.get('proposer','pi_0')))['path']),evaluator_frozen_policy=Path(member['path']),
                     output_dir=destination/'result',shard_index=args.shard_index,shard_count=args.shard_count,max_ticks=400,
                     protocol_seed=9840201 if args.worker=='benchmark' else 9841201,
                     execution_backend=args.backend,batch_size=8 if args.backend=='device' else 1)
@@ -184,7 +183,7 @@ def worker(args):
                 member=next(m for m in plan['members'] if m['policy']['name']==args.policy)
                 merged=merge_policy_family_evaluator_shards(catalog_path=args.catalog,
                     shard_dirs=[Path(p) for p in read(output/f'{args.policy}_shards.json')],output_dir=destination/'result',
-                    evaluator_name=args.policy,acquisition_frozen_policy=Path(plan['members'][0]['path']),
+                    evaluator_name=args.policy,acquisition_frozen_policy=Path(next(m for m in plan['members'] if m['policy']['name']==plan.get('proposer','pi_0'))['path']),
                     evaluator_frozen_policy=Path(member['path']),max_ticks=400,protocol_seed=9841201)
                 result={'status':'completed','environment_interactions':0,'merged_useful_label_interactions':merged['environment_interactions']}
             elif args.worker=='analyze':result=analyze(plan,output,destination)

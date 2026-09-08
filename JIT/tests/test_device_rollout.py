@@ -88,3 +88,22 @@ def test_device_labeler_matches_serial_rows_and_accounts_padding(tmp_path,monkey
     assert reports[0]['environment_interactions']==9
     assert reports[1]['environment_interactions']==11
     assert reports[1]['inactive_lane_interactions']==2
+
+
+def test_warp_like_step_refuses_vmap_but_device_loop_uses_single_world():
+    # Models the backend's non-vmapped contact buffers: a vmap transform of
+    # this step must fail, while an ordinary step inside lax.map is supported.
+    from jax.custom_batching import custom_vmap
+    single_world = custom_vmap(step)
+
+    @single_world.def_vmap
+    def reject_batch(axis_size, in_batched, *args):
+        raise AssertionError('contact__dim must not acquire a vmap axis')
+
+    states=jax.tree_util.tree_map(lambda *a:jp.stack(a),initial(2.),initial(4.))
+    keys=jax.random.split(jax.random.PRNGKey(1),2)
+    with pytest.raises(AssertionError,match='contact__dim'):
+        jax.vmap(single_world)(states,jp.ones((2,4)))
+    out,counts,bad,flags,cost=make_device_rollout(policy,single_world,10)(states,keys)
+    assert list(counts)==[2,4] and not np.any(bad)
+    np.testing.assert_array_equal(out.data.qpos[:,0],[2,4])

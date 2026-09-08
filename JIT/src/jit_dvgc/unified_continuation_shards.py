@@ -285,7 +285,8 @@ def label_unified_continuation_shard(
         "policy_key_scheme": POLICY_KEY_SCHEME,
         "maximum_environment_interactions": (stop - start) * max_ticks,
     }
-    execution.update(execution_backend=execution_backend, batch_size=batch_size)
+    execution.update(execution_backend=execution_backend, batch_size=batch_size,
+                     device_step_schedule='lax_map_single_world_v2' if execution_backend=='device' else None)
     _write_json(output / "execution.json", execution)
 
     step_fn = compiled_step_fn if compiled_step_fn is not None else jax.jit(env.step)

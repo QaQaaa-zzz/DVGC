@@ -25,7 +25,7 @@ def finite(state, action):
 def make_device_rollout(policy, step, max_ticks):
     """One compiled call per batch; terminate each lane at its first endpoint.
 
-    vmap may execute the step for inactive lanes. Their returned state is frozen,
+    The device map may execute the step for inactive lanes. Their returned state is frozen,
     but n_lanes * loop_ticks is conservatively counted as simulator work.
     """
     if max_ticks <= 0:
@@ -51,7 +51,12 @@ def make_device_rollout(policy, step, max_ticks):
                 raise ValueError('policy must return four actions per lane')
             action_ok = jp.all(jp.isfinite(actions), axis=1)
             safe_actions = jp.where((live & action_ok)[:, None], actions, 0.)
-            next_state = jax.vmap(step)(state, safe_actions)
+            # Warp contact/constraint buffers are explicitly non-vmapped.
+            # lax.map traces an ordinary single-world step and never adds a
+            # vmap batch axis to those buffers. This is device-side sequential
+            # execution, not eight simultaneous MuJoCo worlds.
+            next_state = jax.lax.map(lambda pair: step(pair[0], pair[1]),
+                                     (state, safe_actions))
             good = jax.vmap(finite)(next_state, actions) & ~next_state.info['expert_switching_used']
             bad = bad | (live & ~good)
             next_flags = jax.vmap(event_flags)(next_state)

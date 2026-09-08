@@ -7,6 +7,7 @@ from pathlib import Path
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--gpu',default='0')
+    p.add_argument('--proposer',default='pi_0',choices=['pi_0','pi_1','pi_2','pi_3'])
     p.add_argument('--baseline',type=Path)
     p.add_argument('--output-dir',type=Path)
     p.add_argument('--budget',type=int,default=2_000_000)
@@ -23,7 +24,7 @@ def main():
         return worker(a)
     from jit_dvgc.dense_tube import run,DEFAULT_OUTPUT
     repo=Path(__file__).resolve().parents[2]
-    result=run(repo,a.output_dir or repo/DEFAULT_OUTPUT,baseline=a.baseline,gpu=a.gpu,budget=a.budget)
-    return 0 if result['status']=='completed' else 2
+    result=run(repo,a.output_dir or repo/DEFAULT_OUTPUT,baseline=a.baseline,gpu=a.gpu,budget=a.budget,proposer=a.proposer)
+    return 0 if result['status'] in {'completed','completed_empty'} else 2
 
 if __name__=='__main__':raise SystemExit(main())

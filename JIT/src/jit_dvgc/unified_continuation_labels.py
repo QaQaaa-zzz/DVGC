@@ -81,6 +81,7 @@ def validate_unified_boundary_catalog(
     *,
     policy_record: Mapping[str, Any],
     frozen_manifest_sha256: str,
+    allow_empty: bool = False,
 ) -> tuple[Mapping[str, Any], ...]:
     """Validate one completed TRAIN-only candidate bank before policy rollout."""
     if catalog.get("schema") != "jit_unified_boundary_catalog_v1":
@@ -121,7 +122,7 @@ def validate_unified_boundary_catalog(
         raise ValueError("unified boundary catalog claim boundary drift")
 
     rows = tuple(catalog.get("entries", ()))
-    if not rows:
+    if not rows and not allow_empty:
         raise ValueError("unified boundary catalog has no candidates")
     if int(catalog.get("candidate_count", -1)) != len(rows):
         raise ValueError("unified boundary catalog candidate count mismatch")

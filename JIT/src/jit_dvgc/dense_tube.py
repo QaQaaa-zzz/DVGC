@@ -10,7 +10,7 @@ import traceback
 from .jump_evidence_validation import read, write, file_sha
 from .policy_comparison import bundle, verify_plan
 
-DEFAULT_OUTPUT = 'JIT/runs/dense_tube/pi0_5cm_pilot_v1'
+DEFAULT_OUTPUT = 'JIT/runs/dense_tube/pi0_5cm_pilot_v2'
 DEFAULT_BASELINE = 'JIT/runs/policy_comparison/expanded_pi0_pi3_20260907'
 
 
@@ -18,8 +18,10 @@ def choose_backend(serial, device):
     """Endpoint/step equality is mandatory; speed never overrides it."""
     keys = ('candidate_id', 'state_sha256', 'label', 'outcome_class',
             'environment_interactions', 'final_active_phase', 'physical_failure', 'timeout')
-    if not device or serial['identities'] != device['identities']:
-        return {'backend': 'serial', 'reason': 'device unavailable or policy identity mismatch'}
+    if not device:
+        return {'backend': 'serial', 'reason': 'device process failed; see benchmark process.log and worker_failure.json'}
+    if serial['identities'] != device['identities']:
+        return {'backend': 'serial', 'reason': 'benchmark policy/catalog identity mismatch'}
     if len(serial['labels']) != len(device['labels']) or any(
         any(a.get(k) != b.get(k) for k in keys) for a,b in zip(serial['labels'],device['labels'])):
         return {'backend': 'serial', 'reason': 'execution comparison differed; no new snapshot replay investigation'}
@@ -29,18 +31,19 @@ def choose_backend(serial, device):
             'measured_speedup': serial['seconds']/max(device['seconds'],1.e-9)}
 
 
-def run(repo, output, *, baseline=None, gpu='0', budget=2_000_000):
+def run(repo, output, *, baseline=None, gpu='0', budget=2_000_000, proposer='pi_0'):
     repo,output=Path(repo).resolve(),Path(output).resolve()
     output.mkdir(parents=True,exist_ok=True)
     with (output/'execution.lock').open('a') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-        return _run(repo,output,baseline=baseline,gpu=gpu,budget=budget)
+        return _run(repo,output,baseline=baseline,gpu=gpu,budget=budget,proposer=proposer)
 
 
-def _run(repo,output,*,baseline,gpu,budget):
+def _run(repo,output,*,baseline,gpu,budget,proposer='pi_0'):
+    if proposer not in {'pi_0','pi_1','pi_2','pi_3'}: raise ValueError('unknown proposer')
     request={'repo':str(repo),'baseline':str(Path(baseline or repo/DEFAULT_BASELINE).resolve()),
              'budget':int(budget),'batch_size':8,'shard_size':128,'spacing_m':0.05,
-             'sampling_profile':'16_trajectories_pi0_train_v1'}
+             'sampling_profile':'16_trajectories_train_v2','proposer':proposer}
     if (output/'request.json').exists() and read(output/'request.json') != request:
         raise ValueError('request changed; use a new output directory')
     write(output/'request.json',request)
@@ -130,6 +133,17 @@ def _run(repo,output,*,baseline,gpu,budget):
         prepared=task('project','project',['--catalog',str(catalog)])
         panel=read(prepared/'worker_report.json')
         n=panel['candidate_count'];shards=(n+127)//128
+        if n == 0:
+            from .evidence_integrity import canonical_sha256
+            empty={'resolution':plan['physical_resolution'],'candidate_count':0,
+                   'status':'completed_empty','no_success_witness_under_declared_bank':True}
+            empty['report_sha256']=canonical_sha256(empty)
+            write(output/'figures/summary.json',empty)
+            write(output/'analysis_inputs.json',{'projected':str(prepared/'projected.json'),
+                  'merged':{},'catalog':str(catalog)})
+            report.update(status='completed_empty',candidate_count=0,proposer=proposer,
+                          backend_decisions=decisions,scope='no retained arrivals under declared acquisition')
+            return report
         selected={}
         for name in plan['names']:
             directories=[]
@@ -153,7 +167,7 @@ def _run(repo,output,*,baseline,gpu,budget):
         task('figures','analyze')
         report.update(status='completed',candidate_count=n,backend_decisions=decisions,
                       figures=str(output/'figures'),sampling_spacing_m=0.05,
-                      scope='TRAIN pi0 dense pilot, not a matched-budget multi-proposer experiment')
+                      scope=f'TRAIN {proposer} dense pilot; compare with discovery supervisor',proposer=proposer)
     except BaseException as exc:
         report.update(status='engineering_error',error=f'{type(exc).__name__}: {exc}',traceback=traceback.format_exc())
     finally:
