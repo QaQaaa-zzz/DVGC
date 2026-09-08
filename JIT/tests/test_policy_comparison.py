@@ -45,12 +45,16 @@ def test_sources_and_inputs_cannot_change_on_resume(tmp_path):
     with pytest.raises(ValueError,match="source changed"): workflow.verify_plan(tmp_path / "plan.json")
 
 
-def test_bundle_contains_paper_figures_but_no_checkpoints(tmp_path):
+def test_compact_bundle_keeps_review_data_and_full_option_keeps_vectors(tmp_path):
     for name in ("a.png","a.svg","a.pdf","a.csv","a.json","a.pkl","a.npz"):
         (tmp_path / name).write_text("data")
     with zipfile.ZipFile(workflow.bundle(tmp_path)) as z:
-        assert {"a.png","a.svg","a.pdf","a.csv","a.json"} <= set(z.namelist())
+        assert {"a.png","a.csv","a.json"} <= set(z.namelist())
+        assert "a.svg" not in z.namelist() and "a.pdf" not in z.namelist()
         assert "a.pkl" not in z.namelist() and "a.npz" not in z.namelist()
+
+    with zipfile.ZipFile(workflow.bundle(tmp_path, full=True)) as z:
+        assert {"a.svg", "a.pdf"} <= set(z.namelist())
 
 
 def test_supervisor_resumes_completed_shards_and_skips_old_caches(tmp_path, monkeypatch):

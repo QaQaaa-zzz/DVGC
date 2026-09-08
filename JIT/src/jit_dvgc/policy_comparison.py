@@ -7,7 +7,6 @@ from pathlib import Path
 import subprocess
 import sys
 import traceback
-import zipfile
 
 from .jump_evidence_validation import read, write, file_sha, verify_hash
 
@@ -56,24 +55,7 @@ def ledger(output, plan):
             "budget": plan["request"]["interaction_budget"], "end_to_end_training_and_acquisition_total": None}
 
 
-def bundle(output):
-    destination = Path(output) / "results_to_send.zip"
-    included, omitted = [], []
-    for path in sorted(Path(output).rglob("*")):
-        if not path.is_file() or path.is_symlink() or path.suffix not in {".json", ".csv", ".md", ".log", ".png", ".svg", ".pdf"}:
-            continue
-        if path.name == "bundle_inventory.json":
-            continue
-        if path.stat().st_size > 20_000_000:
-            omitted.append(str(path.relative_to(output)))
-        else:
-            included.append(path)
-    inventory = Path(output) / "bundle_inventory.json"
-    write(inventory, {"included": [str(p.relative_to(output)) for p in included], "omitted_over_20MB": omitted})
-    with zipfile.ZipFile(destination, "w", zipfile.ZIP_DEFLATED) as archive:
-        for path in [*included, inventory]:
-            archive.write(path, str(path.relative_to(output)))
-    return destination
+from .result_bundle import bundle
 
 
 def run_comparison(repo, output, *, scan_root=None, gpu="0", shard_size=200,
