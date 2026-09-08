@@ -1,0 +1,19 @@
+{
+  "tests_passed": 13,
+  "tests_failed": 0,
+  "production_snapshot_validation_run": false,
+  "ppo_started": false,
+  "checks": [
+    "missing/changed endpoint/order/nonbinary label rejection",
+    "unwitnessed state exclusion from witnessed support",
+    "group-balanced conditional weights",
+    "TRAIN initializer selection",
+    "missing source failure ZIP",
+    "boundary and bundle regressions"
+  ],
+  "remaining": [
+    "validate server-resident source snapshots via CLI",
+    "training reset adapter and full PPO recipe",
+    "controlled learning experiments"
+  ]
+}
