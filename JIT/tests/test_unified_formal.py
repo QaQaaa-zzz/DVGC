@@ -253,6 +253,7 @@ def test_training_preflight_accepts_actor_warm_start_config(monkeypatch):
     import jit_dvgc.training.formal as formal
 
     config = SimpleNamespace(
+        schema="jit_pi_unified_formal_v1",
         soft_tube_path="tube",
         soft_tube_manifest_sha256="tube-id",
     )

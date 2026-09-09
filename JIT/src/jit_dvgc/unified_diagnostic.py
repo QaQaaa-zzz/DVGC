@@ -29,7 +29,7 @@ from .unified_training import (
 
 def validate_panel_artifact(manifest: Mapping[str, Any]) -> None:
     if (
-        manifest.get("schema") != "jit_soft_tube_v1"
+        manifest.get("schema") not in {"jit_soft_tube_v1", "jit_iterative_witnessed_support_v1"}
         or manifest.get("status") != "completed"
         or manifest.get("training_guidance_only") is not True
     ):

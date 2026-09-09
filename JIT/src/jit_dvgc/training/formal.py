@@ -74,6 +74,18 @@ def _core_replay_env_factory(base_factory, contract: Mapping[str, Any] | None):
 def preflight_unified_formal_tube(config_path: Path) -> dict[str, Any]:
     """Validate the full configured Tube support without constructing an env."""
     config = load_unified_policy_formal_config(Path(config_path))
+    if config.schema == "jit_iterative_probe_training_v1":
+        from types import SimpleNamespace
+        support = _read_json_object(Path(config.soft_tube_path))
+        points = _tube_points(SimpleNamespace(entries=support["entries"]))
+        if len(points) != len(support["entries"]):
+            raise ValueError("iterative support projection count mismatch")
+        return {"soft_tube_manifest_sha256": config.soft_tube_manifest_sha256,
+                "entry_count": len(points), "environment_interactions": 0,
+                "training_transitions": 0,
+                "tube_sampling": {"selection": support["selection"],
+                                  "jump_start_probability": config.raw["jump_start_probability"]},
+                "production_training_smoke_verified": False}
     artifact = load_soft_tube(Path(config.soft_tube_path))
     actual_manifest = artifact.manifest.get("manifest_sha256")
     if actual_manifest != config.soft_tube_manifest_sha256:

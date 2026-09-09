@@ -40,7 +40,7 @@ def run(repo, output, *, baseline=None, gpu='0', budget=2_000_000, proposer='pi_
 
 
 def _run(repo,output,*,baseline,gpu,budget,proposer='pi_0', profile=None):
-    if proposer not in {'pi_0','pi_1','pi_2','pi_3'}: raise ValueError('unknown proposer')
+    if proposer not in {'pi_0','pi_1','pi_2','pi_3'} and (profile or {}).get('version')!='iterative_discovery_v1': raise ValueError('unknown proposer')
     from .frontier_exploration import validate_profile
     validate_profile(profile)
     request={'repo':str(repo),'baseline':str(Path(baseline or repo/DEFAULT_BASELINE).resolve()),

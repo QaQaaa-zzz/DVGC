@@ -118,7 +118,9 @@ def render_comparison(projected, report, output, *, centerline=(), title_prefix=
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
     names = report["policy_names"] + ["union"]
-    colors = dict(zip(names, ["#0072B2", "#D55E00", "#009E73", "#CC79A7", "#222222"]))
+    palette=["#0072B2", "#D55E00", "#009E73", "#CC79A7", "#E69F00", "#56B4E9", "#882255", "#44AA99"]
+    colors={n:palette[i%len(palette)] for i,n in enumerate(names[:-1])}
+    colors["union"]="#222222"
     pairs = [("root_x_m", "root_z_m", "x (m)", "z (m)"),
              ("root_x_m", "root_vx_mps", "x (m)", "vx (m/s)"),
              ("root_x_m", "root_vz_mps", "x (m)", "vz (m/s)"),

@@ -35,6 +35,11 @@ def prepare(output):
     lock(baseline/'plan.json');lock(baseline/'summary.json')
     members=old['members']
     if [m['policy']['name'] for m in members]!=['pi_0','pi_1','pi_2','pi_3']:raise ValueError('baseline bank mismatch')
+    if profile and profile['version']=='iterative_discovery_v1':
+        for path in profile['extra_policies']:
+            policy=load_frozen_unified_manifest(Path(path))['policy']
+            members=[*members,{'path':str(Path(path).resolve()),'file_sha256':file_sha(path),'policy':policy}]
+        if len({m['policy']['name'] for m in members})!=len(members): raise ValueError('duplicate bank member')
     for m in members:
         if file_sha(m['path'])!=m['file_sha256'] or load_frozen_unified_manifest(Path(m['path']))['policy']!=m['policy']:
             raise ValueError('baseline frozen policy drift')
@@ -115,7 +120,7 @@ def prepare(output):
         p.update(frontier_profile=profile,label_seed=profile['label_seed'],
                  acquisition_ceiling=profile['acquisition_ceiling'],
                  max_trajectories=profile['max_trajectories'],max_candidates_per_trajectory=profile['max_candidates'],
-                 first_attempt_interaction_ceiling=profile['acquisition_ceiling']+profile['max_trajectories']*profile['max_candidates']*4*400)
+                 first_attempt_interaction_ceiling=profile['acquisition_ceiling']+profile['max_trajectories']*profile['max_candidates']*len(members)*400)
     if p['first_attempt_interaction_ceiling']>request['budget']:raise ValueError('budget below declared first-attempt ceiling')
     p['plan_sha256']=canonical_sha256(p);write(output/'plan.json',p)
     return {'status':'completed','environment_interactions':0,'plan_sha256':p['plan_sha256']}

@@ -181,6 +181,9 @@ def _load_reset_mixture(payload: Mapping[str, Any]) -> UnifiedResetMixture:
 
 def load_unified_formal_config(path: Path) -> UnifiedFormalConfig:
     payload = read_json(Path(path))
+    if payload.get("schema") == "jit_iterative_probe_training_v1":
+        from .iterative_probe_training import load_config
+        return load_config(path)
     if payload.get("schema") != FORMAL_SCHEMA:
         raise ValueError("unsupported unified formal schema")
     inputs = payload.get("inputs")
@@ -291,6 +294,9 @@ def load_unified_actor_warm_start_config(path: Path) -> UnifiedFormalConfig:
     """
     path = Path(path)
     payload = read_json(path)
+    if payload.get("schema") == "jit_iterative_probe_training_v1":
+        from .iterative_probe_training import load_config
+        return load_config(path)
     initialization = payload.get("initialization")
     if not isinstance(initialization, Mapping):
         raise ValueError("actor-only warm-start initialization is missing")
@@ -342,6 +348,9 @@ def load_unified_actor_warm_start_config(path: Path) -> UnifiedFormalConfig:
 
 def load_frozen_actor_restore_params(config_path: Path):
     """Load and verify the immediately preceding frozen unified Actor."""
+    if read_json(config_path).get("schema") == "jit_iterative_probe_training_v1":
+        from .iterative_probe_training import restore_params
+        return restore_params(config_path)
     config = load_unified_actor_warm_start_config(config_path)
     frozen_path = Path(config.raw["initialization"]["source_frozen_policy"])
     frozen = read_json(frozen_path)
@@ -417,6 +426,9 @@ def _build_unified_formal_environment(
     *,
     env_factory: Callable[..., Any] = UnifiedTubeRSIEnv,
 ):
+    if config.schema == "jit_iterative_probe_training_v1":
+        from .iterative_probe_training import build_environment
+        return build_environment(config)
     up_config, down_config, artifact, _ = _load_runtime(config)
     env = env_factory(
         up_config,
@@ -641,7 +653,10 @@ def run_unified_formal(
             "expert_switching_used": False,
             "reset_mixture": config.reset_mixture.as_dict(),
             "soft_tube_manifest_sha256": config.soft_tube_manifest_sha256,
-            "tube_rsi_smoke_report_sha256": config.tube_rsi_smoke_report_sha256,
+            "tube_rsi_smoke_report_sha256": (None if config.schema == "jit_iterative_probe_training_v1"
+                else config.tube_rsi_smoke_report_sha256),
+            "iterative_training_support_sha256": (config.soft_tube_manifest_sha256
+                if config.schema == "jit_iterative_probe_training_v1" else None),
             "test_data_used": False,
             "validation_data_used": False,
         },

@@ -82,6 +82,8 @@ def auto_publish(output):
     # Only final top-level production run bundles; avoid recursive child uploads
     # and network access from tests or arbitrary temporary review directories.
     if not output.is_relative_to(repo/'JIT/runs'):return
-    if output.name in {'pi_0','pi_1','pi_2','pi_3'} and (output.parent/'execution.lock').exists():return
+    if output.name.startswith('pi_') and (output.parent/'execution.lock').exists():return
+    if any((parent/'execution.lock').exists() and (parent/'seed_inputs.json').exists()
+           for parent in output.parents if parent.is_relative_to(repo/'JIT/runs')):return
     if os.environ.get('JIT_AUTO_PUBLISH','1')=='0':return
     publish_safely(repo,output)
