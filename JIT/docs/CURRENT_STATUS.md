@@ -1,5 +1,8 @@
 # Current JIT status — empirical-envelope implementation, 2026-09-07
 
+Production fix (2026-09-09): the first campaign smoke failed inside PPO because `JAX_PLATFORMS=cuda` hid the CPU device required by `jax.debug.callback`. Training children now use `cuda,cpu`: GPU stays the default, CPU is available for callbacks. No completed pi_4 or discovery round was reported. The 27,200 charged interactions are the failed attempt reservation, not a measured completed-transition count. Preserve the original directory and retry under `JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1`; code-identity locks intentionally reject in-place continuation after source changes. Both runs' costs must be included in total experiment accounting. See JIT/docs/JIT_AUTONOMOUS_ENVELOPE_20260909.md.
+
+
 Latest authorized action (2026-09-09): run a bounded autonomous exploration/learning campaign via `JIT/cli/run_envelope_campaign.py`. This supersedes historical no-PPO/stop-scan next-run notes below. New full-context TRAIN support adapter uses 20% fixed x=2.5 starts and 80% witnessed snapshots, Actor+normalizer warm start, fresh critic/optimizer, first-valid-landing termination and growing frozen probe banks. Keep historical results immutable. Stop on budget, round cap, or consecutive low novel-cell gains; never label finite search stagnation as a proven physical boundary. CPU tests do not establish GPU training success. First production command and complete method are in JIT/docs/JIT_AUTONOMOUS_ENVELOPE_20260909.md (path from repository root). Compact reports auto-publish to agent/jit-run-reports; no more manual ZIP upload unless publication fails.
 
 

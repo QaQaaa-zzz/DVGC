@@ -203,8 +203,9 @@ def run(repo,output,*,gpu='0',max_rounds=3,budget=40_000_000,ppo_steps=512_000,p
                     config_path=attempt/'config.json'
                     make_config(support_path,initializer,bootstrap,config_path,run_id,iteration,ppo_steps,9860001+index)
                     write(attempt/'reservation.json',{'maximum_interactions':training_maximum,'config_sha256':file_sha(config_path)})
+                    # GPU remains first/default; Brax debug callbacks require a CPU backend.
                     env=dict(os.environ,PYTHONPATH=str(repo/'JIT/src')+os.pathsep+os.environ.get('PYTHONPATH',''),
-                        CUDA_VISIBLE_DEVICES=str(gpu),JAX_PLATFORMS='cuda',XLA_PYTHON_CLIENT_PREALLOCATE='false',
+                        CUDA_VISIBLE_DEVICES=str(gpu),JAX_PLATFORMS='cuda,cpu',XLA_PYTHON_CLIENT_PREALLOCATE='false',
                         JIT_RUN_ROOT=str(attempt/'training'),JIT_AUTO_PUBLISH='0',PYTHONUNBUFFERED='1')
                     command=[sys.executable,str(repo/'JIT/cli/train_unified.py'),'--config',str(config_path),'--run-id',run_id]
                     with (attempt/'process.log').open('w') as log:

@@ -91,7 +91,8 @@ def campaign(tmp_path,monkeypatch):
     class Process:
         def __init__(self,command,**kwargs):
             config=read(command[command.index('--config')+1]);train_calls.append(config)
-            assert kwargs['env']['JAX_PLATFORMS']=='cuda'
+            assert kwargs['env']['JAX_PLATFORMS']=='cuda,cpu'
+            assert kwargs['env']['CUDA_VISIBLE_DEVICES']=='0'
             root=Path(kwargs['env']['JIT_RUN_ROOT'])/config['run_declaration']['run_id']
             steps=config['ppo']['requested_transitions']
             write(root/'formal_report.json',{'status':'completed','completed_training_transitions':steps,'train_panel_interactions':20})

@@ -1,5 +1,8 @@
 # Autonomous empirical-envelope campaign — 2026-09-09
 
+Production fix (2026-09-09): the first campaign smoke failed inside PPO because `JAX_PLATFORMS=cuda` hid the CPU device required by `jax.debug.callback`. Training children now use `cuda,cpu`: GPU stays the default, CPU is available for callbacks. No completed pi_4 or discovery round was reported. The 27,200 charged interactions are the failed attempt reservation, not a measured completed-transition count. Preserve the original directory and retry under `JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1`; code-identity locks intentionally reject in-place continuation after source changes. Both runs' costs must be included in total experiment accounting. See JIT/docs/JIT_AUTONOMOUS_ENVELOPE_20260909.md.
+
+
 The user authorized automatic learning and discovery. Historical instructions to stop before PPO are superseded for this versioned entry point. No simulator training was run in the development environment.
 
 ## Latest production evidence
@@ -45,7 +48,7 @@ git switch agent/two-phase-soft-tube
 git pull --ff-only origin agent/two-phase-soft-tube
 PYTHONPATH=JIT/src /home/qy/mujoco_playground/.venv/bin/python \
   JIT/cli/run_envelope_campaign.py --gpu 0 \
-  --output-dir JIT/runs/campaign/empirical_envelope_smoke_v1 \
+  --output-dir JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1 \
   --max-rounds 1 --ppo-steps 25600 --budget 12000000
 ```
 
