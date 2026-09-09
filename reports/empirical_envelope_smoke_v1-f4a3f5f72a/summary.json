@@ -1,0 +1,8 @@
+{
+  "charged_interactions": 27200,
+  "error": "training failed; see /home/qy/DVGC/JIT/runs/campaign/empirical_envelope_smoke_v1/round_000/training_attempt_000",
+  "physical_boundary_proven": false,
+  "rounds": [],
+  "status": "engineering_error",
+  "traceback": "Traceback (most recent call last):\n  File \"/home/qy/DVGC/JIT/src/jit_dvgc/envelope_campaign.py\", line 222, in run\n    if code:raise RuntimeError(f'training failed; see {attempt}')\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: training failed; see /home/qy/DVGC/JIT/runs/campaign/empirical_envelope_smoke_v1/round_000/training_attempt_000\n"
+}

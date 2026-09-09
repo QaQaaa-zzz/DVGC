@@ -1,0 +1,17 @@
+{
+  "run_id": "empirical_envelope_smoke_v1-f4a3f5f72a",
+  "local_run": "/home/qy/DVGC/JIT/runs/campaign/empirical_envelope_smoke_v1",
+  "archive_sha256": "4e5f9d749e4e5a4fbdcc47ce11a802ac0619e300e1b0dcd39ec97f44128824ee",
+  "files": {
+    "request.json": "b558553067fbb6a07ee6eca1ecba6f94a4238598f1c36dc9bb184c1aa5fb2f69",
+    "round_000/support.json": "3f319e6bca5f87a5fe75f9509bfafe0b274984df4cd4df1a52979e2866116737",
+    "round_000/training_attempt_000/exit.json": "b9f87d4ceb14f54a8787da14c5985aa499e13197fe39c8f0f4ecf87e7a01957e",
+    "round_000/training_attempt_000/process.log": "d89785fb8868e3c343487e936503a8834bef520868dad91b10ef380a48df593a",
+    "round_000/training_attempt_000/reservation.json": "affafe71bf8d6287b584abd3c6cb5caea212dd004e04826883ea8ad9237cf053",
+    "seed_inputs.json": "742f7993948f427017afb1e3d3f2dc3ec35002df2be60e8c7296a0c9efdcbb9d",
+    "sources.json": "cd4ba0256ecb0551d7bc2449bb4ec44fedc7554b5a02f863f4922c7a48c83771",
+    "summary.json": "94c5965c956e8940f35bbfe8019b45f8df62f236e0400b32bb23f62019ae6259",
+    "bundle_inventory.json": "89fc0c7f1e73728b13d16c0a9ecdaef487c9116a4593a7478a6aee2c773a4de7"
+  },
+  "scope": "compact text review; raw snapshots, checkpoints and images stay on server"
+}

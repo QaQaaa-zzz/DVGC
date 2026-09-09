@@ -1,0 +1,91 @@
+{
+  "schema": "jit_review_bundle_v2",
+  "mode": "compact",
+  "raw_files_deleted": false,
+  "standalone_replay_archive": false,
+  "files": [
+    {
+      "path": "request.json",
+      "source_bytes": 100,
+      "source_sha256": "b558553067fbb6a07ee6eca1ecba6f94a4238598f1c36dc9bb184c1aa5fb2f69",
+      "disposition": "included"
+    },
+    {
+      "path": "round_000/support.json",
+      "source_bytes": 1117566,
+      "source_sha256": "3f319e6bca5f87a5fe75f9509bfafe0b274984df4cd4df1a52979e2866116737",
+      "disposition": "included"
+    },
+    {
+      "path": "round_000/training_attempt_000/config.json",
+      "source_bytes": 2386,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/training_attempt_000/exit.json",
+      "source_bytes": 22,
+      "source_sha256": "b9f87d4ceb14f54a8787da14c5985aa499e13197fe39c8f0f4ecf87e7a01957e",
+      "disposition": "included"
+    },
+    {
+      "path": "round_000/training_attempt_000/process.log",
+      "source_bytes": 9256,
+      "source_sha256": "d89785fb8868e3c343487e936503a8834bef520868dad91b10ef380a48df593a",
+      "disposition": "included"
+    },
+    {
+      "path": "round_000/training_attempt_000/reservation.json",
+      "source_bytes": 123,
+      "source_sha256": "affafe71bf8d6287b584abd3c6cb5caea212dd004e04826883ea8ad9237cf053",
+      "disposition": "included"
+    },
+    {
+      "path": "round_000/training_attempt_000/training/pi_4_campaign_r0_attempt000/backend.json",
+      "source_bytes": 60,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/training_attempt_000/training/pi_4_campaign_r0_attempt000/checkpoints/transition_0/identity.json",
+      "source_bytes": 1044,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/training_attempt_000/training/pi_4_campaign_r0_attempt000/formal_provenance.json",
+      "source_bytes": 847,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/training_attempt_000/training/pi_4_campaign_r0_attempt000/resolved_config.json",
+      "source_bytes": 2386,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/training_attempt_000/training/pi_4_campaign_r0_attempt000/run_manifest.json",
+      "source_bytes": 1337,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/training_attempt_000/training/pi_4_campaign_r0_attempt000/status.json",
+      "source_bytes": 1982,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "seed_inputs.json",
+      "source_bytes": 256559,
+      "source_sha256": "742f7993948f427017afb1e3d3f2dc3ec35002df2be60e8c7296a0c9efdcbb9d",
+      "disposition": "included"
+    },
+    {
+      "path": "sources.json",
+      "source_bytes": 34308,
+      "source_sha256": "cd4ba0256ecb0551d7bc2449bb4ec44fedc7554b5a02f863f4922c7a48c83771",
+      "disposition": "included"
+    },
+    {
+      "path": "summary.json",
+      "source_bytes": 646,
+      "source_sha256": "94c5965c956e8940f35bbfe8019b45f8df62f236e0400b32bb23f62019ae6259",
+      "disposition": "included"
+    }
+  ]
+}

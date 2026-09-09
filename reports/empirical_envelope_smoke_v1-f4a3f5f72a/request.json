@@ -1,0 +1,7 @@
+{
+  "budget": 12000000,
+  "max_rounds": 1,
+  "min_gain": 5,
+  "patience": 2,
+  "ppo_steps": 25600
+}

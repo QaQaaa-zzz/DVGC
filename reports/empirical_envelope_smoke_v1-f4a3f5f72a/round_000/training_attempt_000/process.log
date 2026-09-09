@@ -1,0 +1,85 @@
+Warp 1.11.0 initialized:
+   CUDA Toolkit 12.9, Driver 13.0
+   Devices:
+     "cpu"      : "x86_64"
+     "cuda:0"   : "NVIDIA GeForce RTX 4090 D" (24 GiB, sm_89, mempool enabled)
+   Kernel cache:
+     /home/qy/.cache/warp/1.11.0
+Warp DeprecationWarning: The symbol `warp.types.warp_type_to_np_dtype` will soon be removed from the public API. It can still be accessed from `warp._src.types.warp_type_to_np_dtype` but might be changed or removed without notice.
+Module mujoco.mjx.warp.ffi edde159 load on device 'cuda:0' took 0.35 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.smooth 9d8c26b load on device 'cuda:0' took 6.27 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.collision_driver de6dc98 load on device 'cuda:0' took 0.24 ms  (cached)
+Module _nxn_broadphase__locals__kernel_36c68517 36c6851 load on device 'cuda:0' took 0.26 ms  (cached)
+Module ccd_kernel_builder__locals__ccd_kernel_30387cff 30387cf load on device 'cuda:0' took 0.81 ms  (cached)
+Module ccd_kernel_builder__locals__ccd_kernel_9855f04a 9855f04 load on device 'cuda:0' took 0.89 ms  (cached)
+Module ccd_kernel_builder__locals__ccd_kernel_927e4d05 927e4d0 load on device 'cuda:0' took 0.83 ms  (cached)
+Module ccd_kernel_builder__locals__ccd_kernel_2b578852 2b57885 load on device 'cuda:0' took 1.10 ms  (cached)
+Module _primitive_narrowphase__locals__primitive_narrowphase_1bf02ad9 91f16af load on device 'cuda:0' took 0.75 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.constraint 2aca1f5 load on device 'cuda:0' took 1.31 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.sensor a2c5a56 load on device 'cuda:0' took 1.39 ms  (cached)
+Module _actuator_velocity__locals__actuator_velocity_12383059 73552e7 load on device 'cuda:0' took 0.28 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.passive 45a1f12 load on device 'cuda:0' took 0.54 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.forward 3875c24 load on device 'cuda:0' took 0.54 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.support b7a7a89 load on device 'cuda:0' took 0.27 ms  (cached)
+Module _tile_cholesky_factorize_solve__locals__cholesky_factorize_solve_be145701 4a8f693 load on device 'cuda:0' took 15.75 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.solver 8800eae load on device 'cuda:0' took 0.82 ms  (cached)
+Module solve_init_jaref__locals__kernel_0e441fb9 0e441fb load on device 'cuda:0' took 0.22 ms  (cached)
+Module mul_m_dense__locals___mul_m_dense_a919c505 a919c50 load on device 'cuda:0' took 0.27 ms  (cached)
+Module update_constraint_gauss_cost__locals__kernel_9283aa6c 9283aa6 load on device 'cuda:0' took 0.24 ms  (cached)
+Module update_gradient_JTDAJ_dense_tiled__locals__kernel_926cd55c 4b2efd1 load on device 'cuda:0' took 27.38 ms  (cached)
+Module update_gradient_cholesky__locals__kernel_0282940c df4c2e1 load on device 'cuda:0' took 16.64 ms  (cached)
+Module linesearch_iterative__locals__kernel_d5d90354 cc0622d load on device 'cuda:0' took 0.49 ms  (cached)
+2026-09-09 14:48:09.744724: W external/xla/xla/service/gpu/autotuning/dot_search_space.cc:200] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs?Working around this by using the full hints set instead.
+2026-09-09 14:48:09.744787: W external/xla/xla/service/gpu/autotuning/dot_search_space.cc:200] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs?Working around this by using the full hints set instead.
+2026-09-09 14:48:09.744908: W external/xla/xla/service/gpu/autotuning/dot_search_space.cc:200] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs?Working around this by using the full hints set instead.
+2026-09-09 14:48:09.744928: W external/xla/xla/service/gpu/autotuning/dot_search_space.cc:200] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs?Working around this by using the full hints set instead.
+E0909 14:48:16.989447  964270 pjrt_stream_executor_client.cc:2916] Execution of replica 0 failed: INTERNAL: CpuCallback error calling callback: Traceback (most recent call last):
+  File "/home/qy/DVGC/JIT/cli/train_unified.py", line 36, in <module>
+  File "/home/qy/DVGC/JIT/cli/train_unified.py", line 28, in main
+  File "/home/qy/DVGC/JIT/src/jit_dvgc/training/formal.py", line 216, in run_unified_formal
+  File "/home/qy/DVGC/JIT/src/jit_dvgc/unified_formal.py", line 695, in run_unified_formal
+  File "/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/brax/training/agents/ppo/train.py", line 814, in train
+  File "/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/brax/training/agents/ppo/train.py", line 685, in training_epoch_with_timing
+  File "/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/jax/_src/traceback_util.py", line 182, in reraise_with_filtered_traceback
+  File "/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/jax/_src/api.py", line 1709, in cache_miss
+  File "/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/jax/_src/profiler.py", line 354, in wrapper
+  File "/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/jax/_src/interpreters/pxla.py", line 1297, in __call__
+  File "/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/jax/_src/callback.py", line 782, in _wrapped_callback
+  File "/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/jax/_src/debugging.py", line 202, in _callback
+  File "/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/jax/_src/debugging.py", line 88, in debug_callback_impl
+RuntimeError: jax.debug.callback failed to find a local CPU device to place the inputs on. Make sure "cpu" is listed in --jax_platforms or the JAX_PLATFORMS environment variable.
+Traceback (most recent call last):
+  File "/home/qy/DVGC/JIT/cli/train_unified.py", line 36, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/home/qy/DVGC/JIT/cli/train_unified.py", line 28, in main
+    result = run_unified_formal(args.config, args.run_id)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qy/DVGC/JIT/src/jit_dvgc/training/formal.py", line 216, in run_unified_formal
+    result = _run_unified_formal(config_path, run_id, **call_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qy/DVGC/JIT/src/jit_dvgc/unified_formal.py", line 695, in run_unified_formal
+    make_policy, _params, final_metrics = trainer(**trainer_kwargs)
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/brax/training/agents/ppo/train.py", line 814, in train
+    training_epoch_with_timing(training_state, env_state, epoch_keys)
+  File "/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/brax/training/agents/ppo/train.py", line 685, in training_epoch_with_timing
+    result = training_epoch(training_state, env_state, key)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+jaxlib._jax.XlaRuntimeError: INTERNAL: CpuCallback error calling callback: Traceback (most recent call last):
+  File "/home/qy/DVGC/JIT/cli/train_unified.py", line 36, in <module>
+  File "/home/qy/DVGC/JIT/cli/train_unified.py", line 28, in main
+  File "/home/qy/DVGC/JIT/src/jit_dvgc/training/formal.py", line 216, in run_unified_formal
+  File "/home/qy/DVGC/JIT/src/jit_dvgc/unified_formal.py", line 695, in run_unified_formal
+  File "/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/brax/training/agents/ppo/train.py", line 814, in train
+  File "/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/brax/training/agents/ppo/train.py", line 685, in training_epoch_with_timing
+  File "/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/jax/_src/traceback_util.py", line 182, in reraise_with_filtered_traceback
+  File "/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/jax/_src/api.py", line 1709, in cache_miss
+  File "/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/jax/_src/profiler.py", line 354, in wrapper
+  File "/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/jax/_src/interpreters/pxla.py", line 1297, in __call__
+  File "/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/jax/_src/callback.py", line 782, in _wrapped_callback
+  File "/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/jax/_src/debugging.py", line 202, in _callback
+  File "/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/jax/_src/debugging.py", line 88, in debug_callback_impl
+RuntimeError: jax.debug.callback failed to find a local CPU device to place the inputs on. Make sure "cpu" is listed in --jax_platforms or the JAX_PLATFORMS environment variable.
+--------------------
+For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
