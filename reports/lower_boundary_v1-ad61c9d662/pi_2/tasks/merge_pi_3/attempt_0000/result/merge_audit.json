@@ -1,0 +1,49 @@
+{
+  "candidate_count": 260,
+  "coverage": [
+    0,
+    260
+  ],
+  "final_evaluation_data_used": false,
+  "logical_protocol_sha256": "1bea8f69c79d67eb3273e9b49584d800072a52986dd4f03cf0937c99674deb61",
+  "merged_labels_file_sha256": "84939a7ec5230fcb9a0d9a41039f74d6c4d5dd05d9288da66918e3afb57db99e",
+  "policy_key_scheme": "candidate_key=fold_in(PRNGKey(protocol_seed),global_candidate_index);action_key=fold_in(candidate_key,tick)",
+  "schema": "jit_unified_continuation_label_merge_v1",
+  "shard_count": 3,
+  "shards": [
+    {
+      "candidate_count": 87,
+      "candidate_start_index": 0,
+      "candidate_stop_index_exclusive": 87,
+      "labels_file_sha256": "45160100d12de89847fb1c53ca4d15c1fdda59b124ceecea5aa7363442bbbf4d",
+      "shard_count": 3,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/label_pi_3_000/attempt_0000/result",
+      "shard_index": 0,
+      "summary_file_sha256": "fabe6407490ef10400346b24fae08ee687e591e78b62db1a50c187822d9f14bc"
+    },
+    {
+      "candidate_count": 87,
+      "candidate_start_index": 87,
+      "candidate_stop_index_exclusive": 174,
+      "labels_file_sha256": "c1564c813a1fe5383b7b5b68210456f71c0eb40e6f8cfeaf70a260dbd5a33e1e",
+      "shard_count": 3,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/label_pi_3_001/attempt_0000/result",
+      "shard_index": 1,
+      "summary_file_sha256": "682f06993f4470a52fa49a36a98eca3a88853bef740f3a41a80f4b5bbc850a91"
+    },
+    {
+      "candidate_count": 86,
+      "candidate_start_index": 174,
+      "candidate_stop_index_exclusive": 260,
+      "labels_file_sha256": "311cd0c8525175d3df0d5a6556f9fb3b53a9891bea54fa239a657940efd3be3a",
+      "shard_count": 3,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/label_pi_3_002/attempt_0000/result",
+      "shard_index": 2,
+      "summary_file_sha256": "222c8baa56f28dbaedd22bbdf5ee4dce77d125e4aa872092c1b3fbe8c98e92cd"
+    }
+  ],
+  "status": "completed",
+  "test_data_used": false,
+  "training_transitions": 0,
+  "validation_data_used": false
+}

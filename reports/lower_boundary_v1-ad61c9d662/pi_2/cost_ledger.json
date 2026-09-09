@@ -1,0 +1,108 @@
+{
+  "attempts": [
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/acquire/attempt_0000",
+      "charged": 500,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/figures/attempt_0000",
+      "charged": 0,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/label_pi_0_000/attempt_0000",
+      "charged": 1795,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/label_pi_0_001/attempt_0000",
+      "charged": 1743,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/label_pi_0_002/attempt_0000",
+      "charged": 1350,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/label_pi_1_000/attempt_0000",
+      "charged": 1777,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/label_pi_1_001/attempt_0000",
+      "charged": 1794,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/label_pi_1_002/attempt_0000",
+      "charged": 1348,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/label_pi_2_000/attempt_0000",
+      "charged": 1674,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/label_pi_2_001/attempt_0000",
+      "charged": 1674,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/label_pi_2_002/attempt_0000",
+      "charged": 1332,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/label_pi_3_000/attempt_0000",
+      "charged": 2235,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/label_pi_3_001/attempt_0000",
+      "charged": 2050,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/label_pi_3_002/attempt_0000",
+      "charged": 1463,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/merge_pi_0/attempt_0000",
+      "charged": 0,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/merge_pi_1/attempt_0000",
+      "charged": 0,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/merge_pi_2/attempt_0000",
+      "charged": 0,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/merge_pi_3/attempt_0000",
+      "charged": 0,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/prepare/attempt_0000",
+      "charged": 0,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/project/attempt_0000",
+      "charged": 0,
+      "measured": true
+    }
+  ],
+  "budget": 3500000,
+  "charged_interactions": 20735,
+  "historical_bootstrap_training_cost_included": false,
+  "includes_benchmarks_acquisition_padding_retries": true
+}

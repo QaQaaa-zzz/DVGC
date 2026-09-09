@@ -1,0 +1,51 @@
+{
+  "acquisition_policy_actor_sha256": "d0753cb3be742743c82a68fbb00bb30d914a4c25873e864e77ac298ea5cca4ff",
+  "acquisition_policy_name": "pi_2",
+  "acquisition_policy_payload_sha256": "f17b2361ae897de876a35955fd3bdcc86cfbdcf4368c24b6cf3d41fcde59181c",
+  "artifact_role": "pi_k_conditioned_expansion_train_labels",
+  "candidate_catalog_file_sha256": "818f61cab2d572252cf5ffe0400ee6f79615bc44510732ae505c47e360be70f0",
+  "candidate_catalog_protocol_sha256": "dad237bcfb0961ff518bc551623c3470ae26b789258b08c2b70cfdef0a8a7eff",
+  "candidate_count": 260,
+  "claim_boundary": {
+    "certified_safe_set_claim": false,
+    "continuation_field_trained": false,
+    "expansion_train_labels_only": true,
+    "jce_jel_claim": false,
+    "tube_expansion_claim": false
+  },
+  "environment_interactions": 4680,
+  "evaluator_policy_name": "pi_2",
+  "expert_switching_used": false,
+  "final_evaluation_data_used": false,
+  "frozen_unified_manifest_sha256": "f69e0ca354c47c531a71adfce4236f6cd5518016d082bb4404eda9835a369a4d",
+  "iteration": 2,
+  "label_count": 260,
+  "labels_file_sha256": "ced16d4bee84c07bf76b690ef72667a9851c160d3f8fca1f9a3b3b06a7efd7e2",
+  "maximum_environment_interactions": 104000,
+  "negative_count": 5,
+  "outcome_counts": {
+    "first_valid_landing": 255,
+    "task_failure_before_landing": 5
+  },
+  "phase_candidate_counts": {
+    "downstream": 81,
+    "upstream": 179
+  },
+  "phase_positive_counts": {
+    "downstream": 81,
+    "upstream": 174
+  },
+  "policy_actor_sha256": "d0753cb3be742743c82a68fbb00bb30d914a4c25873e864e77ac298ea5cca4ff",
+  "policy_name": "pi_2",
+  "policy_payload_sha256": "f17b2361ae897de876a35955fd3bdcc86cfbdcf4368c24b6cf3d41fcde59181c",
+  "positive_count": 255,
+  "post_landing_recovery_required": false,
+  "protocol_sha256": "da39d69b7ec0bcded9020e332475beda4c3e16cb0689e7cb7af8b82cbbaf03fc",
+  "schema": "jit_unified_continuation_labels_v1",
+  "split": "train",
+  "status": "completed",
+  "success_criterion": "first_valid_landing",
+  "test_data_used": false,
+  "training_transitions": 0,
+  "validation_data_used": false
+}

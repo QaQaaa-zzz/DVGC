@@ -1,0 +1,56 @@
+{
+  "args": [
+    "--policy",
+    "pi_3",
+    "--backend",
+    "serial",
+    "--catalog",
+    "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/acquire/attempt_0000/result/catalog.json",
+    "--shard-index",
+    "0",
+    "--shard-count",
+    "3"
+  ],
+  "kind": "label",
+  "maximum_interactions": 34800,
+  "request": {
+    "baseline": "/home/qy/DVGC/JIT/runs/policy_comparison/expanded_pi0_pi3_20260907",
+    "batch_size": 8,
+    "budget": 3500000,
+    "frontier_profile": {
+      "acquisition_ceiling": 8000,
+      "acquisition_seed": 9844101,
+      "action_names": [
+        "hip",
+        "knee"
+      ],
+      "label_seed": 9844201,
+      "max_candidates": 128,
+      "max_trajectories": 16,
+      "sampling_max_x_m": 8.0,
+      "serial_only": true,
+      "signs": [
+        -1,
+        1
+      ],
+      "source_files": {
+        "/home/qy/DVGC/JIT/runs/training_support/complementary_boundary_v1/summary.json": "47d2497819aef4393895f7c84cff45d44e6c2cfaabe0adb234aec2d22f03c5c3",
+        "/home/qy/DVGC/JIT/runs/training_support/complementary_boundary_v1/support.json": "48c4d7ea9fede92652271369e076d1c58ff8b2d56b290f9629713bd3a4210272"
+      },
+      "strengths": [
+        0.1,
+        0.2
+      ],
+      "targets": [
+        2.85,
+        2.95
+      ],
+      "version": "lower_boundary_v1"
+    },
+    "proposer": "pi_2",
+    "repo": "/home/qy/DVGC",
+    "sampling_profile": "16_trajectories_train_v2",
+    "shard_size": 128,
+    "spacing_m": 0.05
+  }
+}

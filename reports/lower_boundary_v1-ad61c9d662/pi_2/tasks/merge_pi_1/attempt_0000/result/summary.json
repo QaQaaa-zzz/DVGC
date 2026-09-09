@@ -1,0 +1,50 @@
+{
+  "acquisition_policy_actor_sha256": "d0753cb3be742743c82a68fbb00bb30d914a4c25873e864e77ac298ea5cca4ff",
+  "acquisition_policy_name": "pi_2",
+  "acquisition_policy_payload_sha256": "f17b2361ae897de876a35955fd3bdcc86cfbdcf4368c24b6cf3d41fcde59181c",
+  "artifact_role": "pi_k_conditioned_expansion_train_labels",
+  "candidate_catalog_file_sha256": "818f61cab2d572252cf5ffe0400ee6f79615bc44510732ae505c47e360be70f0",
+  "candidate_catalog_protocol_sha256": "dad237bcfb0961ff518bc551623c3470ae26b789258b08c2b70cfdef0a8a7eff",
+  "candidate_count": 260,
+  "claim_boundary": {
+    "certified_safe_set_claim": false,
+    "continuation_field_trained": false,
+    "expansion_train_labels_only": true,
+    "jce_jel_claim": false,
+    "tube_expansion_claim": false
+  },
+  "environment_interactions": 4919,
+  "evaluator_policy_name": "pi_1",
+  "expert_switching_used": false,
+  "final_evaluation_data_used": false,
+  "frozen_unified_manifest_sha256": "a3ed7fddcc813e688bea044b0bda76c1cd425123746d474ca6e93eb5516543a3",
+  "iteration": 1,
+  "label_count": 260,
+  "labels_file_sha256": "84f2787e9a6afbe398845f53e880142d3938cf279d0e8864860e67e394467b35",
+  "maximum_environment_interactions": 104000,
+  "negative_count": 0,
+  "outcome_counts": {
+    "first_valid_landing": 260
+  },
+  "phase_candidate_counts": {
+    "downstream": 81,
+    "upstream": 179
+  },
+  "phase_positive_counts": {
+    "downstream": 81,
+    "upstream": 179
+  },
+  "policy_actor_sha256": "85d6b4667364daf8e054af9bccbf155dda16a62518df19883057fcfcbbd6f86a",
+  "policy_name": "pi_1",
+  "policy_payload_sha256": "3b9af512c7e389aade1c86ca76e9420a0bc687c499f2ff9cf7637701dd5d0cbc",
+  "positive_count": 260,
+  "post_landing_recovery_required": false,
+  "protocol_sha256": "e432897d8c906b56cc0c21a5a96d52fb4462ceb1963559ede9c1871f774f65c1",
+  "schema": "jit_unified_continuation_labels_v1",
+  "split": "train",
+  "status": "completed",
+  "success_criterion": "first_valid_landing",
+  "test_data_used": false,
+  "training_transitions": 0,
+  "validation_data_used": false
+}

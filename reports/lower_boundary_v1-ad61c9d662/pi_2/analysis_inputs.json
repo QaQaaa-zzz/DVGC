@@ -1,0 +1,10 @@
+{
+  "catalog": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/acquire/attempt_0000/result/catalog.json",
+  "merged": {
+    "pi_0": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/merge_pi_0/attempt_0000/result",
+    "pi_1": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/merge_pi_1/attempt_0000/result",
+    "pi_2": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/merge_pi_2/attempt_0000/result",
+    "pi_3": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/merge_pi_3/attempt_0000/result"
+  },
+  "projected": "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2/tasks/project/attempt_0000/projected.json"
+}

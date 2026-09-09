@@ -1,0 +1,17 @@
+anchor_x_m,candidate_count,environment_interactions,final_x_m,peak_root_z_m,peak_sampling,perturbation_started,physical_failure,proposer,stop_reason,strength,timeout,trajectory_id,truncated,valid_landing,action,sign
+2.85,27,44,4.058653831481934,0.6533711552619934,control_step_states_including_reset,True,False,pi_2,first_valid_landing,0.1,False,dense_v1_train_x2.85_family0/variant_0,False,True,hip,-1
+2.85,2,9,2.794099807739258,0.15000000596046448,control_step_states_including_reset,True,False,pi_2,task_terminated_before_landing,0.2,False,dense_v1_train_x2.85_family0/variant_5,False,False,hip,1
+2.85,2,10,2.8055524826049805,0.15000000596046448,control_step_states_including_reset,True,False,pi_2,task_terminated_before_landing,0.1,False,dense_v1_train_x2.85_family1/variant_1,False,False,hip,1
+2.85,2,9,2.819044351577759,0.15000000596046448,control_step_states_including_reset,True,False,pi_2,task_terminated_before_landing,0.2,False,dense_v1_train_x2.85_family1/variant_6,False,False,knee,-1
+2.85,29,48,4.1801934242248535,0.7790011167526245,control_step_states_including_reset,True,False,pi_2,first_valid_landing,0.1,False,dense_v1_train_x2.85_family2/variant_2,False,True,knee,-1
+2.85,25,42,3.9293272495269775,0.6108724474906921,control_step_states_including_reset,True,False,pi_2,first_valid_landing,0.2,False,dense_v1_train_x2.85_family2/variant_7,False,True,knee,1
+2.85,3,10,2.8371825218200684,0.15000000596046448,control_step_states_including_reset,True,False,pi_2,task_terminated_before_landing,0.1,False,dense_v1_train_x2.85_family3/variant_3,False,False,knee,1
+2.85,25,47,4.004454135894775,0.714188814163208,control_step_states_including_reset,True,False,pi_2,first_valid_landing,0.2,False,dense_v1_train_x2.85_family4/variant_4,False,True,hip,-1
+2.95,25,42,4.030308723449707,0.6544346809387207,control_step_states_including_reset,True,False,pi_2,first_valid_landing,0.1,False,dense_v1_train_x2.95_family0/variant_0,False,True,hip,-1
+2.95,1,10,2.8482913970947266,0.15000000596046448,control_step_states_including_reset,True,False,pi_2,task_terminated_before_landing,0.2,False,dense_v1_train_x2.95_family0/variant_5,False,False,hip,1
+2.95,1,10,2.8484086990356445,0.15000000596046448,control_step_states_including_reset,True,False,pi_2,task_terminated_before_landing,0.1,False,dense_v1_train_x2.95_family1/variant_1,False,False,hip,1
+2.95,27,49,4.206535816192627,0.7630321383476257,control_step_states_including_reset,True,False,pi_2,first_valid_landing,0.2,False,dense_v1_train_x2.95_family1/variant_6,False,True,knee,-1
+2.95,23,45,3.97031307220459,0.747968316078186,control_step_states_including_reset,True,False,pi_2,first_valid_landing,0.1,False,dense_v1_train_x2.95_family2/variant_2,False,True,knee,-1
+2.95,22,43,3.9294931888580322,0.6351343989372253,control_step_states_including_reset,True,False,pi_2,first_valid_landing,0.2,False,dense_v1_train_x2.95_family2/variant_7,False,True,knee,1
+2.95,21,42,3.849175453186035,0.7014890313148499,control_step_states_including_reset,True,False,pi_2,first_valid_landing,0.1,False,dense_v1_train_x2.95_family3/variant_3,False,True,knee,1
+2.95,25,40,4.151662826538086,0.6810527443885803,control_step_states_including_reset,True,False,pi_2,first_valid_landing,0.2,False,dense_v1_train_x2.95_family4/variant_4,False,True,hip,-1
