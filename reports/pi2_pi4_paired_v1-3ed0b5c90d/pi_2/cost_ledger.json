@@ -1,0 +1,203 @@
+{
+  "attempts": [
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/acquire/attempt_0000",
+      "charged": 1263,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/figures/attempt_0000",
+      "charged": 0,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_0_000/attempt_0000",
+      "charged": 2378,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_0_001/attempt_0000",
+      "charged": 2297,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_0_002/attempt_0000",
+      "charged": 2199,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_0_003/attempt_0000",
+      "charged": 1919,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_0_004/attempt_0000",
+      "charged": 2086,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_0_005/attempt_0000",
+      "charged": 1938,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_1_000/attempt_0000",
+      "charged": 2402,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_1_001/attempt_0000",
+      "charged": 2348,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_1_002/attempt_0000",
+      "charged": 2241,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_1_003/attempt_0000",
+      "charged": 1930,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_1_004/attempt_0000",
+      "charged": 2097,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_1_005/attempt_0000",
+      "charged": 1977,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_2_000/attempt_0000",
+      "charged": 2419,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_2_001/attempt_0000",
+      "charged": 2282,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_2_002/attempt_0000",
+      "charged": 2273,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_2_003/attempt_0000",
+      "charged": 1953,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_2_004/attempt_0000",
+      "charged": 2083,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_2_005/attempt_0000",
+      "charged": 2065,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_3_000/attempt_0000",
+      "charged": 2983,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_3_001/attempt_0000",
+      "charged": 2944,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_3_002/attempt_0000",
+      "charged": 2715,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_3_003/attempt_0000",
+      "charged": 2274,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_3_004/attempt_0000",
+      "charged": 2442,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_3_005/attempt_0000",
+      "charged": 2260,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_4_000/attempt_0000",
+      "charged": 2466,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_4_001/attempt_0000",
+      "charged": 2421,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_4_002/attempt_0000",
+      "charged": 2346,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_4_003/attempt_0000",
+      "charged": 1930,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_4_004/attempt_0000",
+      "charged": 2104,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/label_pi_4_005/attempt_0000",
+      "charged": 2043,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/merge_pi_0/attempt_0000",
+      "charged": 0,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/merge_pi_1/attempt_0000",
+      "charged": 0,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/merge_pi_2/attempt_0000",
+      "charged": 0,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/merge_pi_3/attempt_0000",
+      "charged": 0,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/merge_pi_4/attempt_0000",
+      "charged": 0,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/prepare/attempt_0000",
+      "charged": 0,
+      "measured": true
+    },
+    {
+      "attempt": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/project/attempt_0000",
+      "charged": 0,
+      "measured": true
+    }
+  ],
+  "budget": 11974339,
+  "charged_interactions": 69078,
+  "historical_bootstrap_training_cost_included": false,
+  "includes_benchmarks_acquisition_padding_retries": true
+}

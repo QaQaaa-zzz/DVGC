@@ -1,0 +1,112 @@
+{
+  "baseline_root_cells": 442,
+  "baseline_scope": "two pre-training campaign seed panels; not all historical Tube",
+  "cost_semantics": "catalog-order replay, all acquisition and retries upfront, complete five-evaluator candidate events",
+  "final_test_used": false,
+  "global_physical_boundary_claim": false,
+  "historical_bootstrap_cost_included": false,
+  "known_failed_smoke_charge": 27200,
+  "matched_budget": [
+    {
+      "common_budget": 69078,
+      "evaluator_count": 5,
+      "full_cells": 683,
+      "novel_root_cells": 513,
+      "proposer": "pi_2",
+      "root_cells": 683,
+      "scenario": "exploration_only",
+      "training_surcharge": 0
+    },
+    {
+      "common_budget": 69078,
+      "evaluator_count": 5,
+      "full_cells": 685,
+      "novel_root_cells": 685,
+      "proposer": "pi_4",
+      "root_cells": 685,
+      "scenario": "exploration_only",
+      "training_surcharge": 0
+    },
+    {
+      "common_budget": 55768,
+      "evaluator_count": 4,
+      "full_cells": 683,
+      "novel_root_cells": 513,
+      "proposer": "pi_2",
+      "root_cells": 683,
+      "scenario": "plus_completed_probe_training",
+      "training_surcharge": 0
+    },
+    {
+      "common_budget": 55768,
+      "evaluator_count": 5,
+      "full_cells": 272,
+      "novel_root_cells": 272,
+      "proposer": "pi_4",
+      "root_cells": 272,
+      "scenario": "plus_completed_probe_training",
+      "training_surcharge": 25661
+    },
+    {
+      "common_budget": 55768,
+      "evaluator_count": 4,
+      "full_cells": 683,
+      "novel_root_cells": 513,
+      "proposer": "pi_2",
+      "root_cells": 683,
+      "scenario": "plus_recorded_failed_smoke",
+      "training_surcharge": 0
+    },
+    {
+      "common_budget": 55768,
+      "evaluator_count": 5,
+      "full_cells": 11,
+      "novel_root_cells": 11,
+      "proposer": "pi_4",
+      "root_cells": 11,
+      "scenario": "plus_recorded_failed_smoke",
+      "training_surcharge": 52861
+    }
+  ],
+  "metrics": [
+    {
+      "bank_witnesses": 691,
+      "candidates": 691,
+      "discovery_interactions": 69078,
+      "exclusive_novel_root_cells": 513,
+      "exclusive_root_cells": 683,
+      "forward_landings": 26,
+      "lowest_successful_peak_root_z_m": 0.6068131327629089,
+      "novel_root_cells": 513,
+      "own_root_cells": 679,
+      "proposer": "pi_2",
+      "root_cells": 683,
+      "trajectories": 32,
+      "truncated_trajectories": 0
+    },
+    {
+      "bank_witnesses": 743,
+      "candidates": 753,
+      "discovery_interactions": 73612,
+      "exclusive_novel_root_cells": 734,
+      "exclusive_root_cells": 734,
+      "forward_landings": 27,
+      "lowest_successful_peak_root_z_m": 0.5160818099975586,
+      "novel_root_cells": 734,
+      "own_root_cells": 723,
+      "proposer": "pi_4",
+      "root_cells": 734,
+      "trajectories": 32,
+      "truncated_trajectories": 0
+    }
+  ],
+  "new_interactions": 69078,
+  "physical_boundary_proven": false,
+  "proposer_union_novel_root_cells": 1247,
+  "proposer_union_root_cells": 1417,
+  "reused_pi4_discovery_interactions": 73612,
+  "scope": "retrospective matched-schedule TRAIN proposer control; not independent repeated training",
+  "source_completed_training_charge": 25661,
+  "status": "completed",
+  "training_transitions": 0
+}

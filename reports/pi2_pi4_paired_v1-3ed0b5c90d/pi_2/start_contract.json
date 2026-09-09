@@ -1,0 +1,7 @@
+{
+  "continuation_start_semantics": "fresh_continuation_v1",
+  "extra_replay_validation": false,
+  "initial_clearance_accepted": true,
+  "jump_start_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+  "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+}

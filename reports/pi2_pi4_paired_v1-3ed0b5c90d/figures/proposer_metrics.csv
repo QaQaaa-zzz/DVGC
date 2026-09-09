@@ -1,0 +1,3 @@
+proposer,candidates,bank_witnesses,root_cells,novel_root_cells,own_root_cells,discovery_interactions,trajectories,forward_landings,truncated_trajectories,lowest_successful_peak_root_z_m,exclusive_root_cells,exclusive_novel_root_cells
+pi_2,691,691,683,513,679,69078,32,26,0,0.6068131327629089,683,513
+pi_4,753,743,734,734,723,73612,32,27,0,0.5160818099975586,734,734
