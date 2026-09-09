@@ -1,0 +1,19 @@
+{
+  "run_id": "empirical_envelope_smoke_callbackfix_v1_analysis_v1-89f2d1ac6b",
+  "local_run": "/home/qy/DVGC/JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1_analysis_v1",
+  "archive_sha256": "8d81720f6e4dd970e4f43242002f7ec22756622fd55a055b1f0cf3ca0088c64c",
+  "files": {
+    "figures/coverage_cost.csv": "d218530d42134876f0458a436b347a96661a175b2d4c9ac2092698f907df590e",
+    "request.json": "dbb9140960c293e89d945d4276475c7566023333e0dc52704b1ccfce40484ba6",
+    "round_000/figures/candidate_outcomes.csv": "0b345bf79404c8729473e26849da7aa12650e05bbf24f64f04b41c7dee2787ed",
+    "round_000/figures/old_new_coverage.csv": "ae916542dc1b1526fb5362f167556e059b3cd3791a067363c5a0c386b640ba58",
+    "round_000/figures/policy_metrics.csv": "d0ab60efd481cbced4dd962dc18a4900d38cca17204e7d4fa3f9138d54e29b4c",
+    "round_000/figures/resolution_sensitivity.csv": "a1189c31b907f901e0e96e4145786bfd7e3633095c8565afcba278d4f04ef47f",
+    "round_000/figures/summary.json": "8dcd4264ac449696f6e530cb620e7ac974f087e200bf1eb62deb76a2ae131042",
+    "round_000/figures/x_slices.csv": "a3854fa8021289b85693d8282566f22381c82eb966e783578ef39b3340825ea4",
+    "summary.json": "37f6fad01f8e0d4d966a609eede68f7793908ceeb5962200fc5951fbca25e0e1",
+    "verified_inputs.json": "ad362149990562d3edd4f1196ffb5f20644125c788ad7afe4583a1837af71358",
+    "bundle_inventory.json": "28ae23da86ec9239751dedb603f777a5b83819e73fc5c0777bf14feb513841bd"
+  },
+  "scope": "compact text review; raw snapshots, checkpoints and images stay on server"
+}

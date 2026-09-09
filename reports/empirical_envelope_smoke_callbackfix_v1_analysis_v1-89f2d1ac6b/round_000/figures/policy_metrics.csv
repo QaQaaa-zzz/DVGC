@@ -1,0 +1,7 @@
+policy,candidate_count,successful_candidates,failed_candidates,observed_contexts,root_cells,full_cells,unique_contexts,unique_root_cells,unique_full_cells,suffix_interactions
+pi_0,753,718,35,718,711,711,6,6,6,14136
+pi_1,753,729,24,729,721,721,0,0,0,14513
+pi_2,753,710,43,710,706,706,0,0,0,13355
+pi_3,753,732,21,732,723,723,4,4,4,15799
+pi_4,753,732,21,732,723,723,0,0,0,14453
+union,753,743,10,743,734,734,,,,72256

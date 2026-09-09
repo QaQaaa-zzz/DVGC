@@ -1,0 +1,26 @@
+{
+  "baseline_scope": "campaign seed panels plus these rounds; not all historical Tube versions",
+  "campaign_union_root_cells": 1176,
+  "environment_interactions": 0,
+  "final_test_used": false,
+  "original_supervisor_status": "engineering_error",
+  "physical_boundary_proven": false,
+  "rounds": [
+    {
+      "bank_size": 5,
+      "campaign_union_root_cells": 1176,
+      "candidate_count": 753,
+      "charged_interactions": 99273,
+      "novel_root_cells": 734,
+      "policy": "pi_4",
+      "round": 0
+    }
+  ],
+  "seed_root_cells": 442,
+  "source_charged_interactions": 99273,
+  "source_completed_training_transitions": 25600,
+  "source_run": "/home/qy/DVGC/JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1",
+  "source_run_modified": false,
+  "status": "analysis_completed",
+  "training_transitions": 0
+}

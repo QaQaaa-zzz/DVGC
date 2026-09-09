@@ -1,0 +1,269 @@
+{
+  "schema": "jit_review_bundle_v2",
+  "mode": "compact",
+  "raw_files_deleted": false,
+  "standalone_replay_archive": false,
+  "files": [
+    {
+      "path": "figures/campaign_progress.pdf",
+      "source_bytes": 38657,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "figures/campaign_progress.png",
+      "source_bytes": 205304,
+      "source_sha256": "7e27c1913ff1ffafb93ca60e66cf1319b726aa07fbf1da13d2723bc3c6a37259",
+      "disposition": "included"
+    },
+    {
+      "path": "figures/campaign_progress.svg",
+      "source_bytes": 240666,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "figures/coverage_cost.csv",
+      "source_bytes": 133,
+      "source_sha256": "d218530d42134876f0458a436b347a96661a175b2d4c9ac2092698f907df590e",
+      "disposition": "included"
+    },
+    {
+      "path": "request.json",
+      "source_bytes": 131,
+      "source_sha256": "dbb9140960c293e89d945d4276475c7566023333e0dc52704b1ccfce40484ba6",
+      "disposition": "included"
+    },
+    {
+      "path": "round_000/figures/all_policy_projections.pdf",
+      "source_bytes": 1190866,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/all_policy_projections.png",
+      "source_bytes": 2331672,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/all_policy_projections.svg",
+      "source_bytes": 2462045,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/candidate_outcomes.csv",
+      "source_bytes": 574853,
+      "source_sha256": "0b345bf79404c8729473e26849da7aa12650e05bbf24f64f04b41c7dee2787ed",
+      "disposition": "included"
+    },
+    {
+      "path": "round_000/figures/cross_section_occupancy.pdf",
+      "source_bytes": 22374,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/cross_section_occupancy.png",
+      "source_bytes": 190340,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/cross_section_occupancy.svg",
+      "source_bytes": 85353,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/cross_section_spans.pdf",
+      "source_bytes": 52294,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/cross_section_spans.png",
+      "source_bytes": 301151,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/cross_section_spans.svg",
+      "source_bytes": 361917,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/old_new_coverage.csv",
+      "source_bytes": 432,
+      "source_sha256": "ae916542dc1b1526fb5362f167556e059b3cd3791a067363c5a0c386b640ba58",
+      "disposition": "included"
+    },
+    {
+      "path": "round_000/figures/old_new_coverage.json",
+      "source_bytes": 2229,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/old_new_support.pdf",
+      "source_bytes": 406771,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/old_new_support.png",
+      "source_bytes": 1071950,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/old_new_support.svg",
+      "source_bytes": 942420,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/pi_0_projections.pdf",
+      "source_bytes": 162868,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/pi_0_projections.png",
+      "source_bytes": 363578,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/pi_0_projections.svg",
+      "source_bytes": 333940,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/pi_1_projections.pdf",
+      "source_bytes": 161965,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/pi_1_projections.png",
+      "source_bytes": 353741,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/pi_1_projections.svg",
+      "source_bytes": 331699,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/pi_2_projections.pdf",
+      "source_bytes": 161749,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/pi_2_projections.png",
+      "source_bytes": 366418,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/pi_2_projections.svg",
+      "source_bytes": 332298,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/pi_3_projections.pdf",
+      "source_bytes": 163599,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/pi_3_projections.png",
+      "source_bytes": 330754,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/pi_3_projections.svg",
+      "source_bytes": 336975,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/pi_4_projections.pdf",
+      "source_bytes": 162091,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/pi_4_projections.png",
+      "source_bytes": 354011,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/pi_4_projections.svg",
+      "source_bytes": 331962,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/policy_contributions.pdf",
+      "source_bytes": 16430,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/policy_contributions.png",
+      "source_bytes": 103664,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/policy_contributions.svg",
+      "source_bytes": 51871,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/policy_metrics.csv",
+      "source_bytes": 420,
+      "source_sha256": "d0ab60efd481cbced4dd962dc18a4900d38cca17204e7d4fa3f9138d54e29b4c",
+      "disposition": "included"
+    },
+    {
+      "path": "round_000/figures/policy_overlap.pdf",
+      "source_bytes": 23685,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/policy_overlap.png",
+      "source_bytes": 132863,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/policy_overlap.svg",
+      "source_bytes": 78361,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/resolution_sensitivity.csv",
+      "source_bytes": 384,
+      "source_sha256": "a1189c31b907f901e0e96e4145786bfd7e3633095c8565afcba278d4f04ef47f",
+      "disposition": "included"
+    },
+    {
+      "path": "round_000/figures/summary.json",
+      "source_bytes": 205049,
+      "source_sha256": "8dcd4264ac449696f6e530cb620e7ac974f087e200bf1eb62deb76a2ae131042",
+      "disposition": "included"
+    },
+    {
+      "path": "round_000/figures/union_projections.pdf",
+      "source_bytes": 164560,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/union_projections.png",
+      "source_bytes": 333737,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/union_projections.svg",
+      "source_bytes": 337132,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "round_000/figures/x_slices.csv",
+      "source_bytes": 45537,
+      "source_sha256": "a3854fa8021289b85693d8282566f22381c82eb966e783578ef39b3340825ea4",
+      "disposition": "included"
+    },
+    {
+      "path": "summary.json",
+      "source_bytes": 822,
+      "source_sha256": "37f6fad01f8e0d4d966a609eede68f7793908ceeb5962200fc5951fbca25e0e1",
+      "disposition": "included"
+    },
+    {
+      "path": "verified_inputs.json",
+      "source_bytes": 645136,
+      "source_sha256": "ad362149990562d3edd4f1196ffb5f20644125c788ad7afe4583a1837af71358",
+      "disposition": "included"
+    }
+  ]
+}
