@@ -30,9 +30,11 @@ def panel(child,recovery=False):
                 catalog=catalog,charged=charged)
 
 
-def events(data):
+def events(data,evaluators=None):
     result=[];points=data['points'];labels=data['labels']
     if set(labels)!={f'pi_{i}' for i in range(5)}:raise ValueError('five common evaluators required')
+    selected_names=set(labels) if evaluators is None else set(evaluators)
+    if not selected_names or not selected_names<=set(labels):raise ValueError('invalid evaluator subset')
     if any(len(v)!=len(points) for v in labels.values()):raise ValueError('incomplete panel')
     for i,point in enumerate(points):
         evidence=[v[i] for v in labels.values()]
@@ -41,10 +43,11 @@ def events(data):
             if row['success_criterion']!='first_valid_landing' or type(row['label']) is not int or row['label'] not in (0,1):
                 raise ValueError('invalid outcome')
             if type(row['environment_interactions']) is not int or row['environment_interactions']<0:raise ValueError('invalid cost')
-        ok=any(r['label'] for r in evidence)
-        result.append(dict(cost=sum(r['environment_interactions'] for r in evidence),
+        selected=[labels[n][i] for n in sorted(selected_names)]
+        ok=any(r['label'] for r in selected)
+        result.append(dict(cost=sum(r['environment_interactions'] for r in selected),
                            root_cell=point['root_cell'] if ok else None,full_cell=point['full_cell'] if ok else None))
-    overhead=data['charged']-sum(r['cost'] for r in result)
+    overhead=data['charged']-sum(r['environment_interactions'] for rows in labels.values() for r in rows)
     if overhead<0:raise ValueError('ledger undercounts labels')
     return overhead,result
 
@@ -84,11 +87,14 @@ def summarize(panels,old_root,training_cost,failed_smoke_cost):
     comparisons=[]
     scenarios={'exploration_only':0,'plus_completed_probe_training':training_cost}
     if failed_smoke_cost is not None:scenarios['plus_recorded_failed_smoke']=training_cost+failed_smoke_cost
+    old_overhead,old_events=events(panels['pi_2'],[f'pi_{i}' for i in range(4)])
+    old_control=curve(old_events,old_overhead,old_root)
     for mode,surcharge in scenarios.items():
-        adjusted={n:[{**r,'interactions':r['interactions']+(surcharge if n=='pi_4' else 0)} for r in curves[n]] for n in NAMES}
+        schedules={**curves,'pi_2':curves['pi_2'] if mode=='exploration_only' else old_control}
+        adjusted={n:[{**r,'interactions':r['interactions']+(surcharge if n=='pi_4' else 0)} for r in schedules[n]] for n in NAMES}
         budget=min(rs[-1]['interactions'] for rs in adjusted.values())
         for n in NAMES:
-            comparisons.append(dict(scenario=mode,proposer=n,common_budget=budget,training_surcharge=surcharge if n=='pi_4' else 0,
+            comparisons.append(dict(scenario=mode,proposer=n,evaluator_count=4 if n=='pi_2' and mode!='exploration_only' else 5,common_budget=budget,training_surcharge=surcharge if n=='pi_4' else 0,
                 **{k:v for k,v in at_budget(adjusted[n],budget).items() if k!='interactions'}))
     return metrics,curves,comparisons
 

@@ -33,8 +33,10 @@ The preflight checks unchanged hashes of the acquisition, environment, training-
 `figures/matched_budget.csv`: same-cost comparisons under three accounting views:
 
 1. Exploration alone (both sides' acquisition, all suffix labels and retries).
-2. Above plus pi_4's completed training/diagnostic cost (25,661 in this source run).
-3. Above plus the earlier recorded failed smoke reservation, when its report is present (27,200 in the known history). If absent, that view is omitted, not silently charged as zero. This extra view is an explicit historical-cost sensitivity check.
+2. A reconstructed no-new-PPO control uses pi_2 with only pi_0–pi_3 suffix evaluators, versus pi_4 with all five evaluators plus its completed training/diagnostic cost (25,661 in this source run). This compares the introduction of pi_4 as both proposer and evaluator, not solely proposer quality.
+3. The same four-versus-five evaluator reconstruction plus the earlier recorded failed smoke reservation, when its report is present (27,200 in the known history). If absent, that view is omitted, not silently charged as zero. This extra view is an explicit historical-cost sensitivity check.
+
+For the four-evaluator reconstruction, remove pi_4's measured completed label-job interactions and its success witnesses from the pi_2 curve; retain all unallocated acquisition/retry overhead conservatively. No rollout is rerun. This prevents the no-new-PPO control from receiving a free pi_4 evaluator. The primary proposer-only comparison always uses the same five-evaluator bank.
 
 The common budget is the smaller of the two completed cost endpoints in each view. Curves replay the original catalog order; all acquisition/engineering/retry overhead is charged upfront and a candidate only contributes after all five labels are paid. These are conservative offline budget reconstructions, not a newly run online budget-stopping experiment. The third view is not a complete lifecycle-cost estimate: earlier bootstrap and old-policy training remain excluded and must be reported separately in a paper.
 

@@ -31,6 +31,8 @@ def test_cost_events_are_atomic_and_training_is_not_free():
     assert rows['plus_completed_probe_training','pi_4']['novel_root_cells']==0
     assert rows['plus_recorded_failed_smoke','pi_4']['training_surcharge']==35
     assert rows['plus_recorded_failed_smoke','pi_2']['training_surcharge']==0
+    assert rows['plus_completed_probe_training','pi_2']['evaluator_count']==4
+    assert rows['plus_completed_probe_training','pi_2']['common_budget']==48
 
 
 @pytest.mark.parametrize('change',['labels','endpoint','cost','identity'])
@@ -95,3 +97,13 @@ def test_physics_drift_is_rejected_and_figures_export(tmp_path):
     _,curves,_=p.summarize(panels,{'0'},30,None)
     p.render(panels,curves,tmp_path)
     for ext in ('png','pdf','svg'):assert (tmp_path/f'paired_discovery.{ext}').stat().st_size>500
+
+
+def test_no_new_ppo_view_does_not_get_free_pi4_witnesses():
+    d=data('pi_2')
+    for n in range(4):
+        for row in d['labels'][f'pi_{n}']:row['label']=0
+    overhead,ev=p.events(d,[f'pi_{n}' for n in range(4)])
+    assert overhead==32 and sum(r['cost'] for r in ev)==16
+    assert all(r['root_cell'] is None for r in ev)
+    assert all(r['root_cell'] is not None for r in p.events(d)[1])
