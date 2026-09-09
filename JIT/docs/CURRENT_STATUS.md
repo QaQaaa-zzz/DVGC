@@ -1,5 +1,8 @@
 # Current JIT status — empirical-envelope implementation, 2026-09-07
 
+Current action (2026-09-09): callback-fixed smoke completed pi_4 PPO (25,600 steps), freeze, 753 arrivals and all five evaluator panels. Final plotting failed with KeyError pi_4 because the old panel has only four policies. Use JIT/cli/analyze_envelope_campaign.py --source JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1 to recover reports with zero new simulation/PPO. It verifies source artifacts and labels, writes a separate sibling analysis directory, and preserves the original failure. Untested old-policy coverage is null, not zero. New panel union = 743 witnessed contexts / 734 root cells; historical novelty still needs this analysis. Do not retrain this smoke or run the old campaign command after source changes.
+
+
 Production fix (2026-09-09): the first campaign smoke failed inside PPO because `JAX_PLATFORMS=cuda` hid the CPU device required by `jax.debug.callback`. Training children now use `cuda,cpu`: GPU stays the default, CPU is available for callbacks. No completed pi_4 or discovery round was reported. The 27,200 charged interactions are the failed attempt reservation, not a measured completed-transition count. Preserve the original directory and retry under `JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1`; code-identity locks intentionally reject in-place continuation after source changes. Both runs' costs must be included in total experiment accounting. See JIT/docs/JIT_AUTONOMOUS_ENVELOPE_20260909.md.
 
 

@@ -35,14 +35,18 @@ def validate_profile(profile):
         if file_sha(path)!=sha:raise ValueError('campaign evidence changed')
 
 
-def read_child(child):
+def read_child(child,*,recover_figures_failure=False):
     """Verify completed historical data without requiring old source-code hashes."""
     from .policy_comparison_runtime import complete_output
     from .unified_continuation_labels import validate_unified_boundary_catalog
     from .probe_bank import validate_probe_arrivals
     child=Path(child).resolve();plan=read(child/'plan.json');verify_hash(plan,'plan_sha256')
     summary=read(child/'summary.json')
-    if summary.get('status') not in ('completed','completed_empty') or plan.get('role')!='train':raise ValueError('completed TRAIN source required')
+    completed=summary.get('status') in ('completed','completed_empty')
+    recoverable=(recover_figures_failure and summary.get('status')=='engineering_error'
+                 and summary.get('error','').startswith('RuntimeError: figures failed; preserved '))
+    if not (completed or recoverable) or plan.get('role')!='train':raise ValueError('completed TRAIN source required')
+    # Recovery still validates every catalog, arrival and complete evaluator below.
     inputs={}
     def lock(p):inputs[str(Path(p).resolve())]=file_sha(p)
     for p in (child/'plan.json',child/'summary.json',child/'analysis_inputs.json'):lock(p)

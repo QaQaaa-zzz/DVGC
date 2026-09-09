@@ -1,5 +1,8 @@
 # Autonomous empirical-envelope campaign — 2026-09-09
 
+Current action (2026-09-09): callback-fixed smoke completed pi_4 PPO (25,600 steps), freeze, 753 arrivals and all five evaluator panels. Final plotting failed with KeyError pi_4 because the old panel has only four policies. Use JIT/cli/analyze_envelope_campaign.py --source JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1 to recover reports with zero new simulation/PPO. It verifies source artifacts and labels, writes a separate sibling analysis directory, and preserves the original failure. Untested old-policy coverage is null, not zero. New panel union = 743 witnessed contexts / 734 root cells; historical novelty still needs this analysis. Do not retrain this smoke or run the old campaign command after source changes.
+
+
 Production fix (2026-09-09): the first campaign smoke failed inside PPO because `JAX_PLATFORMS=cuda` hid the CPU device required by `jax.debug.callback`. Training children now use `cuda,cpu`: GPU stays the default, CPU is available for callbacks. No completed pi_4 or discovery round was reported. The 27,200 charged interactions are the failed attempt reservation, not a measured completed-transition count. Preserve the original directory and retry under `JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1`; code-identity locks intentionally reject in-place continuation after source changes. Both runs' costs must be included in total experiment accounting. See JIT/docs/JIT_AUTONOMOUS_ENVELOPE_20260909.md.
 
 
@@ -70,3 +73,20 @@ Outputs: root `summary.json`, `progress.json`, `figures/coverage_cost.csv`, `fig
 This implements a runnable bounded iteration mechanism; CPU mocks do not establish learning benefit. Required production evidence still includes: successful new-adapter training, at least one measured learning→discovery closure, matched-budget frozen-bank/no-new-PPO control, independent repetitions, resolution sensitivity, total-cost accounting including failures and historical bootstrap, and final held-out evaluation after protocol lock. Include bootstrap ablation if making an efficiency claim about the phased bootstrap. Stop wording must remain empirical stagnation under this model/search/budget, not certified physical-boundary convergence.
 
 CPU verification: 58 unique targeted tests passed across the combined run and focused reruns after fixes. Includes two-round mocked orchestration, actual local-git report publication, JAX terminal/reset helpers, growing-bank figure export and canonical training preflight. No production GPU training or learning-benefit claim. See `JIT/review_evidence/autonomous_campaign_cpu_20260909.json`.
+
+## Recover the completed callback-fixed smoke (no GPU work)
+
+```bash
+cd /home/qy/DVGC
+git switch agent/two-phase-soft-tube
+git pull --ff-only origin agent/two-phase-soft-tube
+PYTHONPATH=JIT/src /home/qy/mujoco_playground/.venv/bin/python \
+  JIT/cli/analyze_envelope_campaign.py \
+  --source JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1
+```
+
+This writes to `JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1_analysis_v1` and auto-publishes compact evidence. It does not change locked source hashes, old status, checkpoints or labels. Missing/invalid labels still fail. Recovery only permits a completed discovery or a final-figures engineering failure; it does not promote arbitrary incomplete runs. New report status is `analysis_completed`; the original supervisor status remains recorded as `engineering_error`. The entry cannot launch PPO or rollout workers.
+
+Outputs include per-policy/common-panel projections, old-versus-new shared TRAIN panel coverage, and campaign-seed-versus-new cumulative coverage. These two baseline scopes are explicitly different and neither is the full historical 3,463-cell union. pi_4 old-panel success/novelty/cumulative values are null because pi_4 was never evaluated there; its current-panel support is shown, not mislabeled entirely novel. Set-union novelty can still be computed between the old bank's witnessed support and the enlarged bank's new support.
+
+The next experimental decision follows this recovered analysis: compare pi_2 versus pi_4 forward exploration with fixed perturbation/seeds and a common evaluator bank, account the new training cost separately, then decide on larger PPO/multiple rounds. Do not infer absence of proposer value from pi_4's zero unique suffix contribution on its own reached panel.

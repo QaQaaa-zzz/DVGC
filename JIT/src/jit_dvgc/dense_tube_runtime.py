@@ -158,7 +158,7 @@ def project(plan,catalog_path,destination):
             'training_admission_authorized':False,'correlated_frames_not_independent_trials':True}
 
 
-def analyze(plan,output,destination):
+def analyze(plan,output,destination,*,figures_dir=None):
     from .analysis.policy_envelopes import summarize,render_comparison,write_csv
     from .policy_comparison_runtime import complete_output
     from .analysis.dense_coverage import compare_coverage
@@ -170,7 +170,7 @@ def analyze(plan,output,destination):
     summary=summarize(points,labels,role='train',x_slice_width_m=0.05)
     summary.update(plan_sha256=plan['plan_sha256'],scope=f"{plan.get('proposer','pi_0')} bounded TRAIN pilot; not full physical envelope",
                    training_admission_authorized=False,trajectory_count=len({p['trajectory_id'] for p in points}))
-    figures=output/'figures';render_comparison(points,summary,figures,centerline=read(plan['centerline'])['points'])
+    figures=Path(figures_dir) if figures_dir is not None else output/'figures';render_comparison(points,summary,figures,centerline=read(plan['centerline'])['points'])
     baseline=Path(plan['baseline']);old=read(baseline/'plan.json')
     oldpoints=read(old['panels']['train']['projected']);oldsummary=read(baseline/'figures/train/summary.json')
     delta=compare_coverage(oldpoints,oldsummary,points,summary,figures)
