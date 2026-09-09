@@ -1,5 +1,8 @@
 # JIT 后续实现与训练路线
 
+Next action (2026-09-09): recovery succeeded (442 seed + 734 novel = 1,176 campaign cells; not all historical Tube). Run `JIT/cli/compare_pi2_pi4_discovery.py --gpu 0`: reuse verified pi_4 evidence, run only pi_2 under the same 32-trajectory profile and identical five-evaluator bank, no new PPO. Report equal-cost discovery plus marginal training/known failure cost views and exclusive proposer contributions. This is a retrospective TRAIN control, not independent repetitions. CPU launchers no longer actively hide CUDA devices while selecting CPU. See JIT/docs/JIT_PI2_PI4_PAIRED_DISCOVERY_20260909.md (repository-root path).
+
+
 Latest authorized action (2026-09-09): run a bounded autonomous exploration/learning campaign via `JIT/cli/run_envelope_campaign.py`. This supersedes historical no-PPO/stop-scan next-run notes below. New full-context TRAIN support adapter uses 20% fixed x=2.5 starts and 80% witnessed snapshots, Actor+normalizer warm start, fresh critic/optimizer, first-valid-landing termination and growing frozen probe banks. Keep historical results immutable. Stop on budget, round cap, or consecutive low novel-cell gains; never label finite search stagnation as a proven physical boundary. CPU tests do not establish GPU training success. First production command and complete method are in JIT/docs/JIT_AUTONOMOUS_ENVELOPE_20260909.md (path from repository root). Compact reports auto-publish to agent/jit-run-reports; no more manual ZIP upload unless publication fails.
 
 

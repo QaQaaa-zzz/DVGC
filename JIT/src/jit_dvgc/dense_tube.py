@@ -82,7 +82,7 @@ def _run(repo,output,*,baseline,gpu,budget,proposer='pi_0', profile=None):
         p=root/f'attempt_{len(list(root.glob("attempt_*"))):04d}'
         write(p/'reservation.json',reservation)
         env=dict(os.environ,PYTHONPATH=str(repo/'JIT/src')+os.pathsep+os.environ.get('PYTHONPATH',''),
-                 CUDA_VISIBLE_DEVICES=str(gpu) if gpu_job else '',JAX_PLATFORMS='cuda' if gpu_job else 'cpu',
+                 CUDA_VISIBLE_DEVICES=str(gpu),JAX_PLATFORMS='cuda,cpu' if gpu_job else 'cpu',
                  XLA_PYTHON_CLIENT_PREALLOCATE='false',PYTHONUNBUFFERED='1',
                  JAX_COMPILATION_CACHE_DIR=str(output/'compilation_cache'))
         command=[sys.executable,str(cli),'--worker',kind,'--output-dir',str(output),'--destination',str(p),*args]

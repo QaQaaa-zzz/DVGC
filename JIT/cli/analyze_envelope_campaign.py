@@ -4,7 +4,6 @@ import argparse
 import os
 from pathlib import Path
 os.environ['JAX_PLATFORMS']='cpu'
-os.environ['CUDA_VISIBLE_DEVICES']=''
 from jit_dvgc.campaign_analysis import run
 
 if __name__=='__main__':

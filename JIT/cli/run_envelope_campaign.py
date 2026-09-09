@@ -3,7 +3,6 @@
 import argparse
 import os
 os.environ["JAX_PLATFORMS"]="cpu"
-os.environ["CUDA_VISIBLE_DEVICES"]=""
 from pathlib import Path
 from jit_dvgc.envelope_campaign import run,DEFAULT_OUTPUT
 

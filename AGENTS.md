@@ -1,5 +1,8 @@
 # DVGC repository authority — empirical jumping envelope
 
+Next action (2026-09-09): recovery succeeded (442 seed + 734 novel = 1,176 campaign cells; not all historical Tube). Run `JIT/cli/compare_pi2_pi4_discovery.py --gpu 0`: reuse verified pi_4 evidence, run only pi_2 under the same 32-trajectory profile and identical five-evaluator bank, no new PPO. Report equal-cost discovery plus marginal training/known failure cost views and exclusive proposer contributions. This is a retrospective TRAIN control, not independent repetitions. CPU launchers no longer actively hide CUDA devices while selecting CPU. See JIT/docs/JIT_PI2_PI4_PAIRED_DISCOVERY_20260909.md (repository-root path).
+
+
 Current action (2026-09-09): callback-fixed smoke completed pi_4 PPO (25,600 steps), freeze, 753 arrivals and all five evaluator panels. Final plotting failed with KeyError pi_4 because the old panel has only four policies. Use JIT/cli/analyze_envelope_campaign.py --source JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1 to recover reports with zero new simulation/PPO. It verifies source artifacts and labels, writes a separate sibling analysis directory, and preserves the original failure. Untested old-policy coverage is null, not zero. New panel union = 743 witnessed contexts / 734 root cells; historical novelty still needs this analysis. Do not retrain this smoke or run the old campaign command after source changes.
 
 

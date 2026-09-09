@@ -1,0 +1,18 @@
+{
+  "date": "2026-09-09",
+  "change": "reused pi4 vs pi2 matched-schedule discovery control",
+  "targeted_tests_passed": 25,
+  "new_gpu_experiments_run": false,
+  "new_training_run": false,
+  "coverage": [
+    "five-evaluator atomic cost events",
+    "training and failed-attempt surcharges",
+    "paired schedule and physics identity",
+    "reuse pi4 and launch only pi2",
+    "exclusive novel proposer contribution",
+    "unknown old pi4 coverage recovery",
+    "CPU launcher visibility",
+    "figure PNG PDF SVG exports"
+  ],
+  "production_comparison_pending": true
+}
