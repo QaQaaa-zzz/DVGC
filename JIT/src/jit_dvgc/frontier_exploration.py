@@ -43,6 +43,10 @@ def allocate(previous_report):
 
 def validate_profile(profile):
     if profile is None:return
+    if profile.get('version') == 'lower_boundary_v1':
+        from .lower_boundary import validate_profile as validate_lower
+        validate_lower(profile)
+        return
     if profile.get('version') == 'knee_boundary_v1':
         from .boundary_refinement import validate_refinement
         validate_refinement(profile)

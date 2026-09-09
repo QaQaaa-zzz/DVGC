@@ -21,7 +21,7 @@ def bundle(output, *, full=False):
                 relative = path.relative_to(root)
                 if not path.is_file() or any(p.is_symlink() for p in (path, *path.parents)):
                     continue
-                if path.name == "bundle_inventory.json" or path.suffix not in {
+                if path.name in {"bundle_inventory.json", "publish_status.json"} or path.suffix not in {
                     ".json", ".csv", ".md", ".log", ".png", ".pdf", ".svg"
                 }:
                     continue
@@ -61,4 +61,7 @@ def bundle(output, *, full=False):
     finally:
         if os.path.exists(temporary):
             os.unlink(temporary)
+    if not full:
+        from .result_publishing import auto_publish
+        auto_publish(root)
     return destination

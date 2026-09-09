@@ -81,6 +81,8 @@ def test_dense_collector_saves_multiple_real_frames_and_exact_action_prefixes(tm
     if cap>2: assert len(rows)>3 and {r['phase'] for r in rows}=={'upstream','downstream'}
     assert result['environment_interactions']==expected_steps
     receipt=result['trajectory_receipts'][0]
+    assert receipt['peak_root_z_m']==pytest.approx(.2)
+    assert receipt['peak_sampling']=='control_step_states_including_reset'
     assert receipt['stop_reason']==reason
     assert receipt['environment_interactions']==expected_steps
     assert receipt['truncated']==(reason=='candidate_cap')

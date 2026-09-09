@@ -382,6 +382,7 @@ def collect_jump_start_connected_candidates(
                 raise ValueError("causal Jump acquisition did not use the fixed jump start")
             if _truth(state.info["expert_switching_used"]):
                 raise ValueError("causal Jump acquisition used expert switching")
+            peak_root_z_m = _float(state.data.qpos[2])
             jump_start_sha = physical_state_sha256_from_state(state)
             if jump_start_sha != jump_start_expected:
                 raise ValueError("causal jump start differs from the locked centerline start")
@@ -566,6 +567,7 @@ def collect_jump_start_connected_candidates(
                 state = step(state, action)
                 jax.block_until_ready(state)
                 interactions += 1
+                peak_root_z_m = max(peak_root_z_m, _float(state.data.qpos[2]))
                 nominal_actions.append(nominal_array.tolist())
                 perturbed_actions.append(np.asarray(action, dtype=np.float32).tolist())
                 effective_deltas.append((np.asarray(action) - nominal_array).tolist())
@@ -615,6 +617,8 @@ def collect_jump_start_connected_candidates(
                     "candidate_count":saved_this_attempt,"stop_reason":stop_reason,
                     "perturbation_started":perturbation_started,
                     "final_x_m":_float(state.data.qpos[0]),
+                    "peak_root_z_m":peak_root_z_m,
+                    "peak_sampling":"control_step_states_including_reset",
                     "physical_failure":_truth(state.info.get("physical_failure",False)),
                     "timeout":_truth(state.info.get("timeout",False)),
                     "valid_landing":stop_reason=="first_valid_landing",

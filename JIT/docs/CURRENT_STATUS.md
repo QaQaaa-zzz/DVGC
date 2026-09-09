@@ -1,5 +1,10 @@
 # Current JIT status — empirical-envelope implementation, 2026-09-07
 
+User-authorized result publication (2026-09-09): top-level compact bundles under JIT/runs automatically publish JSON/CSV/Markdown/log evidence to the isolated agent/jit-run-reports branch using origin and existing server credentials. No checkpoint/snapshot/image upload. Publish failure preserves local results; retry via JIT/cli/publish_results.py --output-dir <run>. Read this results branch when the user reports completion instead of requiring ZIP upload. JIT_AUTO_PUBLISH=0 disables automatic publication.
+
+Current user-directed next run (2026-09-09): support validation completed (195 witnessed, 95 unwitnessed; pi_2 initializer). Run JIT/cli/explore_lower_boundary.py --gpu 0 to explore lower successful support through real signed hip/knee action perturbations. Sixteen pi_2 trajectories; four evaluators; no PPO or state-height injection. Report observed 5 cm phase-separated slice minima and the lowest control-step peak among complete successful forward trajectories separately. Neither is a global physical minimum; slice minima need not form one trajectory. See JIT/docs/JIT_LOWER_BOUNDARY_20260909.md. This user request supersedes the earlier pause on further scanning.
+
+
 Current result/action (2026-09-08): corrected local boundary completed nine trajectories, 290 arrivals, 195 bank witnesses, 95 no-witness states and 27,954 interactions. All three x=2.85 window endpoints landed; all six x=2.90/2.95 ended with physical_failure. This is one development repetition, not nine independent repeats. Stop broad/local resweeps now. Run JIT/cli/prepare_complementary_support.py (CPU only) to validate exact source snapshots/labels and emit witnessed support plus separate unwitnessed targets. pi_2 leads this TRAIN panel (172 successes). Support construction is not a runnable PPO recipe: reset adapter, mixture, budget/control and training smoke remain explicit work. See JIT/docs/JIT_PAPER_EXPERIMENT_GAPS_20260908.md.
 
 

@@ -92,8 +92,14 @@ def prepare(output):
         spec.update(seed=profile['acquisition_seed'],strengths=profile['strengths'],
                     max_candidates_per_attempt=profile['max_candidates'],sampling_max_x_m=profile['sampling_max_x_m'],
                     interaction_ceiling=profile['acquisition_ceiling'])
-    if profile and profile['version'] == 'knee_boundary_v1':
-        if request.get('proposer') != 'pi_1': raise ValueError('boundary proposer drift')
+    if profile and profile['version'] in ('knee_boundary_v1','lower_boundary_v1'):
+        expected_proposer = 'pi_2' if profile['version']=='lower_boundary_v1' else 'pi_1'
+        if request.get('proposer') != expected_proposer: raise ValueError('boundary proposer drift')
+        if profile['version']=='lower_boundary_v1':
+            support_path=next(Path(p) for p in profile['source_files'] if Path(p).name=='support.json')
+            initializer=read(support_path)['initializer']
+            if initializer != next(m for m in members if m['policy']['name']=='pi_2'):
+                raise ValueError('lower-search initializer differs from frozen baseline')
         spec.update(action_names=profile['action_names'], signs=profile['signs'])
     write(output/'acquisition_spec.json',spec);lock(output/'acquisition_spec.json')
     if old['horizon']!=400:raise ValueError('pilot budget is declared for horizon 400')
