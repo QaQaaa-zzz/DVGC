@@ -1,0 +1,64 @@
+Warp 1.11.0 initialized:
+   CUDA Toolkit 12.9, Driver 13.0
+   Devices:
+     "cpu"      : "x86_64"
+     "cuda:0"   : "NVIDIA GeForce RTX 4090 D" (24 GiB, sm_89, mempool enabled)
+   Kernel cache:
+     /home/qy/.cache/warp/1.11.0
+Warp DeprecationWarning: The symbol `warp.types.warp_type_to_np_dtype` will soon be removed from the public API. It can still be accessed from `warp._src.types.warp_type_to_np_dtype` but might be changed or removed without notice.
+[frontier-shard] warp_memory_maintenance=enabled device=cuda:0 step_interval=64 mempool_supported=True mempool_enabled=True
+Module mujoco.mjx.warp.ffi edde159 load on device 'cuda:0' took 0.38 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.smooth 9d8c26b load on device 'cuda:0' took 6.19 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.collision_driver de6dc98 load on device 'cuda:0' took 0.23 ms  (cached)
+Module _nxn_broadphase__locals__kernel_36c68517 36c6851 load on device 'cuda:0' took 0.24 ms  (cached)
+Module ccd_kernel_builder__locals__ccd_kernel_30387cff 30387cf load on device 'cuda:0' took 0.76 ms  (cached)
+Module ccd_kernel_builder__locals__ccd_kernel_9855f04a 9855f04 load on device 'cuda:0' took 0.77 ms  (cached)
+Module ccd_kernel_builder__locals__ccd_kernel_927e4d05 927e4d0 load on device 'cuda:0' took 0.75 ms  (cached)
+Module ccd_kernel_builder__locals__ccd_kernel_2b578852 2b57885 load on device 'cuda:0' took 1.09 ms  (cached)
+Module _primitive_narrowphase__locals__primitive_narrowphase_1bf02ad9 91f16af load on device 'cuda:0' took 0.44 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.constraint 2aca1f5 load on device 'cuda:0' took 1.26 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.sensor a2c5a56 load on device 'cuda:0' took 1.33 ms  (cached)
+Module _actuator_velocity__locals__actuator_velocity_12383059 73552e7 load on device 'cuda:0' took 0.24 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.passive 45a1f12 load on device 'cuda:0' took 0.49 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.forward 3875c24 load on device 'cuda:0' took 0.54 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.support b7a7a89 load on device 'cuda:0' took 0.23 ms  (cached)
+Module _tile_cholesky_factorize_solve__locals__cholesky_factorize_solve_be145701 4a8f693 load on device 'cuda:0' took 15.84 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.solver 8800eae load on device 'cuda:0' took 0.77 ms  (cached)
+Module solve_init_jaref__locals__kernel_0e441fb9 0e441fb load on device 'cuda:0' took 0.20 ms  (cached)
+Module mul_m_dense__locals___mul_m_dense_a919c505 a919c50 load on device 'cuda:0' took 0.25 ms  (cached)
+Module update_constraint_gauss_cost__locals__kernel_9283aa6c 9283aa6 load on device 'cuda:0' took 0.20 ms  (cached)
+Module update_gradient_JTDAJ_dense_tiled__locals__kernel_926cd55c 4b2efd1 load on device 'cuda:0' took 28.55 ms  (cached)
+Module update_gradient_cholesky__locals__kernel_0282940c df4c2e1 load on device 'cuda:0' took 18.28 ms  (cached)
+Module linesearch_iterative__locals__kernel_d5d90354 cc0622d load on device 'cuda:0' took 0.50 ms  (cached)
+[causal] trajectory=dense_v1_train_x2.85_family0/variant_0 saved=24 total_candidates=24 interactions=45
+[causal] trajectory=dense_v1_train_x2.85_family0/variant_5 saved=2 total_candidates=26 interactions=55
+[causal] trajectory=dense_v1_train_x2.85_family0/variant_10 saved=29 total_candidates=55 interactions=104
+[causal] trajectory=dense_v1_train_x2.85_family0/variant_15 saved=31 total_candidates=86 interactions=149
+[causal] trajectory=dense_v1_train_x2.85_family1/variant_1 saved=30 total_candidates=116 interactions=197
+[causal] trajectory=dense_v1_train_x2.85_family1/variant_6 saved=28 total_candidates=144 interactions=244
+[causal] trajectory=dense_v1_train_x2.85_family1/variant_11 saved=24 total_candidates=168 interactions=286
+[causal] trajectory=dense_v1_train_x2.85_family2/variant_2 saved=27 total_candidates=195 interactions=334
+[causal] trajectory=dense_v1_train_x2.85_family2/variant_7 saved=26 total_candidates=221 interactions=378
+[causal] trajectory=dense_v1_train_x2.85_family2/variant_12 saved=26 total_candidates=247 interactions=428
+[causal] trajectory=dense_v1_train_x2.85_family3/variant_3 saved=29 total_candidates=276 interactions=476
+[causal] trajectory=dense_v1_train_x2.85_family3/variant_8 saved=31 total_candidates=307 interactions=525
+[causal] trajectory=dense_v1_train_x2.85_family3/variant_13 saved=2 total_candidates=309 interactions=534
+[causal] trajectory=dense_v1_train_x2.85_family4/variant_4 saved=31 total_candidates=340 interactions=585
+[causal] trajectory=dense_v1_train_x2.85_family4/variant_9 saved=24 total_candidates=364 interactions=628
+[causal] trajectory=dense_v1_train_x2.85_family4/variant_14 saved=25 total_candidates=389 interactions=673
+[causal] trajectory=dense_v1_train_x2.95_family0/variant_0 saved=27 total_candidates=416 interactions=721
+[causal] trajectory=dense_v1_train_x2.95_family0/variant_5 saved=1 total_candidates=417 interactions=731
+[causal] trajectory=dense_v1_train_x2.95_family0/variant_10 saved=25 total_candidates=442 interactions=778
+[causal] trajectory=dense_v1_train_x2.95_family0/variant_15 saved=21 total_candidates=463 interactions=820
+[causal] trajectory=dense_v1_train_x2.95_family1/variant_1 saved=25 total_candidates=488 interactions=867
+[causal] trajectory=dense_v1_train_x2.95_family1/variant_6 saved=28 total_candidates=516 interactions=917
+[causal] trajectory=dense_v1_train_x2.95_family1/variant_11 saved=28 total_candidates=544 interactions=966
+[causal] trajectory=dense_v1_train_x2.95_family2/variant_2 saved=26 total_candidates=570 interactions=1014
+[causal] trajectory=dense_v1_train_x2.95_family2/variant_7 saved=25 total_candidates=595 interactions=1059
+[causal] trajectory=dense_v1_train_x2.95_family2/variant_12 saved=29 total_candidates=624 interactions=1110
+[causal] trajectory=dense_v1_train_x2.95_family3/variant_3 saved=23 total_candidates=647 interactions=1155
+[causal] trajectory=dense_v1_train_x2.95_family3/variant_8 saved=27 total_candidates=674 interactions=1202
+[causal] trajectory=dense_v1_train_x2.95_family3/variant_13 saved=1 total_candidates=675 interactions=1212
+[causal] trajectory=dense_v1_train_x2.95_family4/variant_4 saved=27 total_candidates=702 interactions=1259
+[causal] trajectory=dense_v1_train_x2.95_family4/variant_9 saved=22 total_candidates=724 interactions=1303
+[causal] trajectory=dense_v1_train_x2.95_family4/variant_14 saved=29 total_candidates=753 interactions=1356

@@ -1,0 +1,15 @@
+Traceback (most recent call last):
+  File "/home/qy/DVGC/JIT/src/jit_dvgc/dense_tube_runtime.py", line 218, in worker
+    elif args.worker=='analyze':result=analyze(plan,output,destination)
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qy/DVGC/JIT/src/jit_dvgc/dense_tube_runtime.py", line 176, in analyze
+    delta=compare_coverage(oldpoints,oldsummary,points,summary,figures)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qy/DVGC/JIT/src/jit_dvgc/analysis/dense_coverage.py", line 26, in compare_coverage
+    rows=coverage_rows(old_points,old_report,new_points,new_report)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qy/DVGC/JIT/src/jit_dvgc/analysis/dense_coverage.py", line 14, in coverage_rows
+    before={p[field] for p,ok in zip(old_points,old_report['masks'][name],strict=True) if ok}
+                                                ~~~~~~~~~~~~~~~~~~~^^^^^^
+KeyError: 'pi_4'
+

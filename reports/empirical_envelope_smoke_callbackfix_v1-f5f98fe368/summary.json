@@ -1,0 +1,8 @@
+{
+  "charged_interactions": 99273,
+  "error": "discovery failed; missing labels are not negative evidence",
+  "physical_boundary_proven": false,
+  "rounds": [],
+  "status": "engineering_error",
+  "traceback": "Traceback (most recent call last):\n  File \"/home/qy/DVGC/JIT/src/jit_dvgc/envelope_campaign.py\", line 250, in run\n    if outcome['status'] not in ('completed','completed_empty'):raise RuntimeError('discovery failed; missing labels are not negative evidence')\n                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: discovery failed; missing labels are not negative evidence\n"
+}

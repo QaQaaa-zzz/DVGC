@@ -1,0 +1,11 @@
+{
+  "artifacts": {
+    "/home/qy/DVGC/JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1/round_000/training_attempt_000/config.json": "01fa85eb16b8e5ffbc25b3d29ebd7b42441afd100e7b4e1d8b895dadd4d071a8",
+    "/home/qy/DVGC/JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1/round_000/training_attempt_000/frozen/frozen_unified_policy.json": "7761c3526bab460e75f04e045803462620fe2ae7faac865166382185c0bd0180",
+    "/home/qy/DVGC/JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1/round_000/training_attempt_000/training/pi_4_campaign_r0_attempt000/checkpoints/transition_25600/identity.json": "925ff2e8d4cee4022f071820a13ada64cf9109af79599319bf10cf5e1c4197ef",
+    "/home/qy/DVGC/JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1/round_000/training_attempt_000/training/pi_4_campaign_r0_attempt000/checkpoints/transition_25600/payload.pkl": "27e2f0f28eb9ba7e70e0e5433b7e0c26791eea67b0a61bdb44e3becdf211496b",
+    "/home/qy/DVGC/JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1/round_000/training_attempt_000/training/pi_4_campaign_r0_attempt000/formal_report.json": "d5991b504eea3aa80dcb9634fbaef98f500b40f147e833035e4d678a201e9f0c"
+  },
+  "charged_interactions": 25661,
+  "policy": "/home/qy/DVGC/JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1/round_000/training_attempt_000/frozen/frozen_unified_policy.json"
+}

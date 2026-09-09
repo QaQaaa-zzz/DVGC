@@ -1,0 +1,46 @@
+{
+  "args": [
+    "--policy",
+    "pi_1",
+    "--catalog",
+    "/home/qy/DVGC/JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1/round_000/discovery/tasks/acquire/attempt_0000/result/catalog.json"
+  ],
+  "kind": "merge",
+  "maximum_interactions": 0,
+  "request": {
+    "baseline": "/home/qy/DVGC/JIT/runs/policy_comparison/expanded_pi0_pi3_20260907",
+    "batch_size": 8,
+    "budget": 11974339,
+    "frontier_profile": {
+      "acquisition_ceiling": 16000,
+      "acquisition_seed": 9850001,
+      "extra_policies": [
+        "/home/qy/DVGC/JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1/round_000/training_attempt_000/frozen/frozen_unified_policy.json"
+      ],
+      "label_seed": 9850501,
+      "max_candidates": 128,
+      "max_trajectories": 32,
+      "round_index": 0,
+      "sampling_max_x_m": 8.0,
+      "serial_only": true,
+      "source_files": {
+        "/home/qy/DVGC/JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1/round_000/support.json": "3f319e6bca5f87a5fe75f9509bfafe0b274984df4cd4df1a52979e2866116737",
+        "/home/qy/DVGC/JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1/round_000/training_attempt_000/frozen/frozen_unified_policy.json": "7761c3526bab460e75f04e045803462620fe2ae7faac865166382185c0bd0180"
+      },
+      "strengths": [
+        0.1,
+        0.2
+      ],
+      "targets": [
+        2.85,
+        2.95
+      ],
+      "version": "iterative_discovery_v1"
+    },
+    "proposer": "pi_4",
+    "repo": "/home/qy/DVGC",
+    "sampling_profile": "16_trajectories_train_v2",
+    "shard_size": 128,
+    "spacing_m": 0.05
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "charged_interactions": 73612,
+  "error": "RuntimeError: figures failed; preserved /home/qy/DVGC/JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1/round_000/discovery/tasks/figures/attempt_0000",
+  "final_test_used": false,
+  "status": "engineering_error",
+  "traceback": "Traceback (most recent call last):\n  File \"/home/qy/DVGC/JIT/src/jit_dvgc/dense_tube.py\", line 175, in _run\n    task('figures','analyze')\n  File \"/home/qy/DVGC/JIT/src/jit_dvgc/dense_tube.py\", line 105, in task\n    raise RuntimeError(f'{name} failed; preserved {p}')\nRuntimeError: figures failed; preserved /home/qy/DVGC/JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1/round_000/discovery/tasks/figures/attempt_0000\n",
+  "training_transitions": 0
+}
