@@ -1,7 +1,7 @@
 {
   "run_id": "empirical_envelope_smoke_callbackfix_v1_analysis_v1-89f2d1ac6b",
   "local_run": "/home/qy/DVGC/JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1_analysis_v1",
-  "archive_sha256": "8d81720f6e4dd970e4f43242002f7ec22756622fd55a055b1f0cf3ca0088c64c",
+  "archive_sha256": "f0d201119138ba4a6c6edb46414ca35844d07b142f2c8022b53bd81d4b4b047b",
   "files": {
     "figures/coverage_cost.csv": "d218530d42134876f0458a436b347a96661a175b2d4c9ac2092698f907df590e",
     "request.json": "dbb9140960c293e89d945d4276475c7566023333e0dc52704b1ccfce40484ba6",
