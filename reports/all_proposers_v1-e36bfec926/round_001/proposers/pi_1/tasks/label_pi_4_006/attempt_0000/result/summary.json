@@ -1,0 +1,40 @@
+{
+  "batch_size": 1,
+  "candidate_count": 113,
+  "candidate_start_index": 679,
+  "candidate_stop_index_exclusive": 792,
+  "device_batch_seconds": [],
+  "elapsed_seconds": 82.16749052399246,
+  "environment_interactions": 1824,
+  "execution_backend": "serial",
+  "expert_switching_used": false,
+  "final_evaluation_data_used": false,
+  "inactive_lane_interactions": 0,
+  "labels_file_sha256": "768ff8d41ee75b57550c0954b8971eb3d067adf1a1298962458a72dc3a1b75aa",
+  "logical_candidate_count": 792,
+  "logical_protocol_sha256": "205982e1ef2773c0bf9c682a8aab1ff5979503c4b10a23a740625cdd210260d4",
+  "maximum_environment_interactions": 45200,
+  "negative_count": 1,
+  "outcome_counts": {
+    "airborne_physical_failure": 1,
+    "first_valid_landing": 112
+  },
+  "phase_candidate_counts": {
+    "downstream": 39,
+    "upstream": 74
+  },
+  "phase_positive_counts": {
+    "downstream": 39,
+    "upstream": 73
+  },
+  "policy_key_scheme": "candidate_key=fold_in(PRNGKey(protocol_seed),global_candidate_index);action_key=fold_in(candidate_key,tick)",
+  "positive_count": 112,
+  "schema": "jit_unified_continuation_label_shard_v1",
+  "shard_count": 7,
+  "shard_index": 6,
+  "status": "completed_shard",
+  "test_data_used": false,
+  "training_transitions": 0,
+  "useful_label_interactions": 1824,
+  "validation_data_used": false
+}

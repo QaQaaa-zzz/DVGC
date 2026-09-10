@@ -9,6 +9,15 @@
       "novel_root_cells": 2940,
       "policy": "pi_5",
       "round": 0
+    },
+    {
+      "bank_size": 7,
+      "campaign_union_root_cells": 9296,
+      "candidate_count": 5323,
+      "charged_interactions": 1275465,
+      "novel_root_cells": 4667,
+      "policy": "pi_6",
+      "round": 1
     }
   ]
 }

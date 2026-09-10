@@ -1,0 +1,89 @@
+{
+  "candidate_count": 868,
+  "coverage": [
+    0,
+    868
+  ],
+  "final_evaluation_data_used": false,
+  "logical_protocol_sha256": "2e6f3dcd9626e41c125a8c2515d412b528235413d97e07993138b78496154073",
+  "merged_labels_file_sha256": "64d991548135e1afe6057011f1e835352749bd18ad5e42cb64a4e8fb57754a1a",
+  "policy_key_scheme": "candidate_key=fold_in(PRNGKey(protocol_seed),global_candidate_index);action_key=fold_in(candidate_key,tick)",
+  "schema": "jit_unified_continuation_label_merge_v1",
+  "shard_count": 7,
+  "shards": [
+    {
+      "candidate_count": 124,
+      "candidate_start_index": 0,
+      "candidate_stop_index_exclusive": 124,
+      "labels_file_sha256": "efe988bf6e2af26c8f9fe80b4c6dca803145cef6b130a1f87de851bd2f9e8a61",
+      "shard_count": 7,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_3/tasks/label_pi_5_000/attempt_0000/result",
+      "shard_index": 0,
+      "summary_file_sha256": "e53c878e121de776858109398d6932fa10d1eb4c579cf4f16de5d5cf5add03c9"
+    },
+    {
+      "candidate_count": 124,
+      "candidate_start_index": 124,
+      "candidate_stop_index_exclusive": 248,
+      "labels_file_sha256": "fda006f0535b269e15c1e3d230d3cb853809da4eaacd159cf186fd0a1f353b64",
+      "shard_count": 7,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_3/tasks/label_pi_5_001/attempt_0000/result",
+      "shard_index": 1,
+      "summary_file_sha256": "209433c12ed5cbcb4e4431897c878b4fb9327a91352c129e3726735662ef2606"
+    },
+    {
+      "candidate_count": 124,
+      "candidate_start_index": 248,
+      "candidate_stop_index_exclusive": 372,
+      "labels_file_sha256": "65db35335f43c19a99c5e52a82a758902caab412bb14f47749a5a09706e0f368",
+      "shard_count": 7,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_3/tasks/label_pi_5_002/attempt_0000/result",
+      "shard_index": 2,
+      "summary_file_sha256": "09e93d20fec960099834b233cd70e85b6708667de255e567b653d9131d168956"
+    },
+    {
+      "candidate_count": 124,
+      "candidate_start_index": 372,
+      "candidate_stop_index_exclusive": 496,
+      "labels_file_sha256": "d7836d6354949759a826f979fbc39128a463998bebd735000209615c1531204b",
+      "shard_count": 7,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_3/tasks/label_pi_5_003/attempt_0000/result",
+      "shard_index": 3,
+      "summary_file_sha256": "e462ba1316cd4f21cb5eb3407862febee5557b660e2edde7c05a0baa92d794e7"
+    },
+    {
+      "candidate_count": 124,
+      "candidate_start_index": 496,
+      "candidate_stop_index_exclusive": 620,
+      "labels_file_sha256": "6540356cbb641b05b5dd1c145bd9a3ed4c037206ac92cfa33bb2145d4640c685",
+      "shard_count": 7,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_3/tasks/label_pi_5_004/attempt_0000/result",
+      "shard_index": 4,
+      "summary_file_sha256": "fe12db839a47bfe276880a270c3f5053a506f0b977a8c96abed441c88dedf8ef"
+    },
+    {
+      "candidate_count": 124,
+      "candidate_start_index": 620,
+      "candidate_stop_index_exclusive": 744,
+      "labels_file_sha256": "31e4941734ba0eda58cb91b4371ca8efedea2a8a234ef5a02d5bfa16cf770b39",
+      "shard_count": 7,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_3/tasks/label_pi_5_005/attempt_0000/result",
+      "shard_index": 5,
+      "summary_file_sha256": "efe214d99060ed2470f1b2a9fa006f508a409b6c026dc74a3ac71d95e534574d"
+    },
+    {
+      "candidate_count": 124,
+      "candidate_start_index": 744,
+      "candidate_stop_index_exclusive": 868,
+      "labels_file_sha256": "2f857b2f18e299a07256678e4c420974f74790d6ad480b6258457fa0daa3401b",
+      "shard_count": 7,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_3/tasks/label_pi_5_006/attempt_0000/result",
+      "shard_index": 6,
+      "summary_file_sha256": "9abefff0608655889ea5450d12048bae12e4fe9ada9f9d68fdedc9f6cdbf815c"
+    }
+  ],
+  "status": "completed",
+  "test_data_used": false,
+  "training_transitions": 0,
+  "validation_data_used": false
+}

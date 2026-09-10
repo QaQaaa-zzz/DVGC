@@ -1,0 +1,37 @@
+{
+  "backend_decisions": {
+    "pi_0": {
+      "backend": "serial",
+      "reason": "locked production serial; no repeated device benchmark"
+    },
+    "pi_1": {
+      "backend": "serial",
+      "reason": "locked production serial; no repeated device benchmark"
+    },
+    "pi_2": {
+      "backend": "serial",
+      "reason": "locked production serial; no repeated device benchmark"
+    },
+    "pi_3": {
+      "backend": "serial",
+      "reason": "locked production serial; no repeated device benchmark"
+    },
+    "pi_4": {
+      "backend": "serial",
+      "reason": "locked production serial; no repeated device benchmark"
+    },
+    "pi_5": {
+      "backend": "serial",
+      "reason": "locked production serial; no repeated device benchmark"
+    }
+  },
+  "candidate_count": 792,
+  "charged_interactions": 92408,
+  "figures": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_1/figures",
+  "final_test_used": false,
+  "proposer": "pi_1",
+  "sampling_spacing_m": 0.05,
+  "scope": "TRAIN pi_1 dense pilot; compare with discovery supervisor",
+  "status": "completed",
+  "training_transitions": 0
+}

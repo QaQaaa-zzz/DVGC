@@ -1,0 +1,16 @@
+{
+  "batch_size": 1,
+  "candidate_start_index": 248,
+  "candidate_stop_index_exclusive": 372,
+  "device_step_schedule": null,
+  "execution_backend": "serial",
+  "logical_candidate_count": 868,
+  "logical_protocol_sha256": "e300d0c752a4df60aabf62596813b5ff2e8716d2b7cff6289d5fb460f5d9bdfe",
+  "maximum_environment_interactions": 49600,
+  "policy_key_scheme": "candidate_key=fold_in(PRNGKey(protocol_seed),global_candidate_index);action_key=fold_in(candidate_key,tick)",
+  "schema": "jit_unified_continuation_label_shard_v1",
+  "selected_candidate_count": 124,
+  "shard_count": 7,
+  "shard_index": 2,
+  "status": "completed"
+}

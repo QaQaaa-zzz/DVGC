@@ -1,0 +1,89 @@
+{
+  "candidate_count": 868,
+  "coverage": [
+    0,
+    868
+  ],
+  "final_evaluation_data_used": false,
+  "logical_protocol_sha256": "bc906c35cb656b6d9118f24c60329eae4b495883bd342544a070ea38954c68bd",
+  "merged_labels_file_sha256": "f90904f05d69afbdf4daeb549b02e2e0ff55fcec8e41a53c9a7ea90ce77c435d",
+  "policy_key_scheme": "candidate_key=fold_in(PRNGKey(protocol_seed),global_candidate_index);action_key=fold_in(candidate_key,tick)",
+  "schema": "jit_unified_continuation_label_merge_v1",
+  "shard_count": 7,
+  "shards": [
+    {
+      "candidate_count": 124,
+      "candidate_start_index": 0,
+      "candidate_stop_index_exclusive": 124,
+      "labels_file_sha256": "c30c43938acf62b4aa8505d997d2f327ec6d593f3cb6a0ca802aa9a1d935f0c2",
+      "shard_count": 7,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_3/tasks/label_pi_4_000/attempt_0000/result",
+      "shard_index": 0,
+      "summary_file_sha256": "0f7974a12f9449e1c8fef71be4ea75169fe9f338b66149101e8538c2c0135227"
+    },
+    {
+      "candidate_count": 124,
+      "candidate_start_index": 124,
+      "candidate_stop_index_exclusive": 248,
+      "labels_file_sha256": "f03a4ec43af76c363f6de0a878bf0209c48f92dac80359597a73490015df6a3d",
+      "shard_count": 7,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_3/tasks/label_pi_4_001/attempt_0000/result",
+      "shard_index": 1,
+      "summary_file_sha256": "c8af4f2a30bebe5f26727814ed5f428ba26d1a70ecf946686744d1df537b6e2b"
+    },
+    {
+      "candidate_count": 124,
+      "candidate_start_index": 248,
+      "candidate_stop_index_exclusive": 372,
+      "labels_file_sha256": "289b8a7176057b52a770c22f005a92ad4f85920986950f88b751a3c6adb1c665",
+      "shard_count": 7,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_3/tasks/label_pi_4_002/attempt_0000/result",
+      "shard_index": 2,
+      "summary_file_sha256": "10cc5ff21992ae09849dcc00d44adb9ca29a0c8561264f7e0b05961e21c60b3b"
+    },
+    {
+      "candidate_count": 124,
+      "candidate_start_index": 372,
+      "candidate_stop_index_exclusive": 496,
+      "labels_file_sha256": "c665e553a191eb96ba4c78aa8520cd97a4c04e717e9e369f09e06d5e53842fa3",
+      "shard_count": 7,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_3/tasks/label_pi_4_003/attempt_0000/result",
+      "shard_index": 3,
+      "summary_file_sha256": "962f0359d5de5317bd26b93ad6d0e36b7ccabbfbdf86dbb2f4d116d4a77800f8"
+    },
+    {
+      "candidate_count": 124,
+      "candidate_start_index": 496,
+      "candidate_stop_index_exclusive": 620,
+      "labels_file_sha256": "5afbee3eb3e68437a1d6aae56208e3589249ef918b701a34de2cabfb500fa297",
+      "shard_count": 7,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_3/tasks/label_pi_4_004/attempt_0000/result",
+      "shard_index": 4,
+      "summary_file_sha256": "024ff30340628f3d8f6f228acdc82d9aa23835bd3d73cf311766c8941f5c5ba8"
+    },
+    {
+      "candidate_count": 124,
+      "candidate_start_index": 620,
+      "candidate_stop_index_exclusive": 744,
+      "labels_file_sha256": "e20dddfaddcd1b9c486359f39a65dbeed68bce789960629a51c2f459049a7f60",
+      "shard_count": 7,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_3/tasks/label_pi_4_005/attempt_0000/result",
+      "shard_index": 5,
+      "summary_file_sha256": "8d692571ccffec31c3ed46e94ed89c6172b79fb8c1f8b155b193060bca80f3de"
+    },
+    {
+      "candidate_count": 124,
+      "candidate_start_index": 744,
+      "candidate_stop_index_exclusive": 868,
+      "labels_file_sha256": "ad008bdc9a70a7a479a84d55722bce2bd669fea1f555660c00e29d43d011bd9e",
+      "shard_count": 7,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_3/tasks/label_pi_4_006/attempt_0000/result",
+      "shard_index": 6,
+      "summary_file_sha256": "d30c9195701bf900899738d9b514ed842037af7c19a6c1cf98b2c82690d4bff9"
+    }
+  ],
+  "status": "completed",
+  "test_data_used": false,
+  "training_transitions": 0,
+  "validation_data_used": false
+}

@@ -1,0 +1,9 @@
+policy,old_panel_evaluated,root_cell_old,root_cell_new_panel,root_cell_novel,root_cell_cumulative,full_cell_old,full_cell_new_panel,full_cell_novel,full_cell_cumulative
+pi_0,True,1125,691,691,1816,1350,692,692,2042
+pi_1,True,1163,694,694,1857,1396,695,695,2091
+pi_2,True,1218,692,692,1910,1449,693,693,2142
+pi_3,True,1104,714,714,1818,1332,715,715,2047
+pi_4,False,,701,,,,702,,
+pi_5,False,,711,,,,712,,
+pi_6,False,,727,,,,728,,
+union,True,1225,729,729,1954,1458,730,730,2188

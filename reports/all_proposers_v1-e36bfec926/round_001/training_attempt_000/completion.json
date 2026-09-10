@@ -1,0 +1,11 @@
+{
+  "artifacts": {
+    "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/training_attempt_000/config.json": "b98f63f73f6bfc573c04aea400e4a2b102b64cdbcef79b1b971eb47dc4179d85",
+    "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/training_attempt_000/frozen/frozen_unified_policy.json": "de2c90a70a2342f891f1445e2bad6690813e35f7aafc142dd90ffcdc50a3a414",
+    "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/training_attempt_000/training/pi_6_campaign_r1_attempt000/checkpoints/transition_128000/identity.json": "8c3b57d1b6a20fda8d610e9d970ccb529bedf809a9730443f500545ccdcf6041",
+    "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/training_attempt_000/training/pi_6_campaign_r1_attempt000/checkpoints/transition_128000/payload.pkl": "5550494092b73b57cd9adec0aa632a15342fd7fb23af68355f4ab741e49d920d",
+    "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/training_attempt_000/training/pi_6_campaign_r1_attempt000/formal_report.json": "7504d06261eb596ff6ab36960cbb921f72234aaca3c330514323bc98f9207d8f"
+  },
+  "charged_interactions": 128079,
+  "policy": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/training_attempt_000/frozen/frozen_unified_policy.json"
+}

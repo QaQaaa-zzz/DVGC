@@ -1,0 +1,48 @@
+{
+  "args": [
+    "--policy",
+    "pi_2",
+    "--catalog",
+    "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/discovery/tasks/acquire/attempt_0000/result/catalog.json"
+  ],
+  "kind": "merge",
+  "maximum_interactions": 0,
+  "request": {
+    "baseline": "/home/qy/DVGC/JIT/runs/policy_comparison/expanded_pi0_pi3_20260907",
+    "batch_size": 8,
+    "budget": 38824037,
+    "frontier_profile": {
+      "acquisition_ceiling": 16000,
+      "acquisition_seed": 9852001,
+      "extra_policies": [
+        "/home/qy/DVGC/JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1/round_000/training_attempt_000/frozen/frozen_unified_policy.json",
+        "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_000/training_attempt_000/frozen/frozen_unified_policy.json",
+        "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/training_attempt_000/frozen/frozen_unified_policy.json"
+      ],
+      "label_seed": 9852501,
+      "max_candidates": 128,
+      "max_trajectories": 32,
+      "round_index": 2,
+      "sampling_max_x_m": 8.0,
+      "serial_only": true,
+      "source_files": {
+        "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/support.json": "cab8625ea2ee5f73ec11cb787caec2ebf6e0533d7cb91573292da4d3225cc3f6",
+        "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/training_attempt_000/frozen/frozen_unified_policy.json": "de2c90a70a2342f891f1445e2bad6690813e35f7aafc142dd90ffcdc50a3a414"
+      },
+      "strengths": [
+        0.15000000000000002,
+        0.25
+      ],
+      "targets": [
+        2.9,
+        3.0
+      ],
+      "version": "iterative_discovery_v1"
+    },
+    "proposer": "pi_6",
+    "repo": "/home/qy/DVGC",
+    "sampling_profile": "16_trajectories_train_v2",
+    "shard_size": 128,
+    "spacing_m": 0.05
+  }
+}

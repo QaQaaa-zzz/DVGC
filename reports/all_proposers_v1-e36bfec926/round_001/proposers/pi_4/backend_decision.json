@@ -1,0 +1,30 @@
+{
+  "decision_sha256": "6aebec2f9d9e0dd9188bf2124b2522160c055ca5a855a2b315244ba36d8e53b8",
+  "plan_sha256": "6d80b8d83d70689d1ad3d3b08b62f7cb7cfc9a8e9ab0db5cece0c428f384d0fa",
+  "policies": {
+    "pi_0": {
+      "backend": "serial",
+      "reason": "locked production serial; no repeated device benchmark"
+    },
+    "pi_1": {
+      "backend": "serial",
+      "reason": "locked production serial; no repeated device benchmark"
+    },
+    "pi_2": {
+      "backend": "serial",
+      "reason": "locked production serial; no repeated device benchmark"
+    },
+    "pi_3": {
+      "backend": "serial",
+      "reason": "locked production serial; no repeated device benchmark"
+    },
+    "pi_4": {
+      "backend": "serial",
+      "reason": "locked production serial; no repeated device benchmark"
+    },
+    "pi_5": {
+      "backend": "serial",
+      "reason": "locked production serial; no repeated device benchmark"
+    }
+  }
+}
