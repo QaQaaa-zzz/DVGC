@@ -1,0 +1,8 @@
+{
+  "artifacts": {
+    "exit.json": "3214a287703b9d1e31cf33848121e1446ab3043210c69d92d1269544e14c5542",
+    "reservation.json": "d315f8416abf0e1de89232f819b9b62281687fe416e561129e38050627baeb40",
+    "worker_report.json": "96a789cb7f887ffb682666aa718e04f5db34dacf2f8fa0e3f21764bbdd46dd51"
+  },
+  "environment_interactions": 0
+}

@@ -1,0 +1,6 @@
+proposer,candidates,witnessed,root_cells,novel_vs_round_start,exclusive_observed_cells
+pi_0,567,498,487,487,487
+pi_1,1105,992,935,747,935
+pi_2,951,951,767,0,767
+pi_3,830,828,819,819,819
+pi_4,753,743,734,0,734

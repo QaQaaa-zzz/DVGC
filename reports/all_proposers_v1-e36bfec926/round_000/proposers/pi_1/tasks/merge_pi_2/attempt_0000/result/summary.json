@@ -1,0 +1,52 @@
+{
+  "acquisition_policy_actor_sha256": "85d6b4667364daf8e054af9bccbf155dda16a62518df19883057fcfcbbd6f86a",
+  "acquisition_policy_name": "pi_1",
+  "acquisition_policy_payload_sha256": "3b9af512c7e389aade1c86ca76e9420a0bc687c499f2ff9cf7637701dd5d0cbc",
+  "artifact_role": "pi_k_conditioned_expansion_train_labels",
+  "candidate_catalog_file_sha256": "54fb81642e43f79d983e70222cdc3aab69820e65415bf5070e6f332765ed7717",
+  "candidate_catalog_protocol_sha256": "a317a8730d24b99c3269ae77edac06208cfb8aca668c89e1fe811e1af5d6cbd4",
+  "candidate_count": 815,
+  "claim_boundary": {
+    "certified_safe_set_claim": false,
+    "continuation_field_trained": false,
+    "expansion_train_labels_only": true,
+    "jce_jel_claim": false,
+    "tube_expansion_claim": false
+  },
+  "environment_interactions": 15321,
+  "evaluator_policy_name": "pi_2",
+  "expert_switching_used": false,
+  "final_evaluation_data_used": false,
+  "frozen_unified_manifest_sha256": "f69e0ca354c47c531a71adfce4236f6cd5518016d082bb4404eda9835a369a4d",
+  "iteration": 2,
+  "label_count": 815,
+  "labels_file_sha256": "7736ed0f83d88d686eba5c86fbec36e26069038864817e8671fc20ef0bd1718c",
+  "maximum_environment_interactions": 326000,
+  "negative_count": 28,
+  "outcome_counts": {
+    "airborne_physical_failure": 24,
+    "first_valid_landing": 787,
+    "task_failure_before_landing": 4
+  },
+  "phase_candidate_counts": {
+    "downstream": 222,
+    "upstream": 593
+  },
+  "phase_positive_counts": {
+    "downstream": 222,
+    "upstream": 565
+  },
+  "policy_actor_sha256": "d0753cb3be742743c82a68fbb00bb30d914a4c25873e864e77ac298ea5cca4ff",
+  "policy_name": "pi_2",
+  "policy_payload_sha256": "f17b2361ae897de876a35955fd3bdcc86cfbdcf4368c24b6cf3d41fcde59181c",
+  "positive_count": 787,
+  "post_landing_recovery_required": false,
+  "protocol_sha256": "539e1a46a7afae7505e720a1f0bada42ff114e8f4b5bb1d709bcaedf758c4aaa",
+  "schema": "jit_unified_continuation_labels_v1",
+  "split": "train",
+  "status": "completed",
+  "success_criterion": "first_valid_landing",
+  "test_data_used": false,
+  "training_transitions": 0,
+  "validation_data_used": false
+}

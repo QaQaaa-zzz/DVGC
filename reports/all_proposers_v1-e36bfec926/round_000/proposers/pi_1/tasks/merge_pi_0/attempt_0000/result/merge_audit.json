@@ -1,0 +1,89 @@
+{
+  "candidate_count": 815,
+  "coverage": [
+    0,
+    815
+  ],
+  "final_evaluation_data_used": false,
+  "logical_protocol_sha256": "7c2d6826efb6a3e2de4659692986d8d4b55691fcd3358b33d7ce453666c3e3f6",
+  "merged_labels_file_sha256": "4e4ce2c67d67a79ea0cd3800e0279d124b9c543dfaa14a946ae6d9859eef8750",
+  "policy_key_scheme": "candidate_key=fold_in(PRNGKey(protocol_seed),global_candidate_index);action_key=fold_in(candidate_key,tick)",
+  "schema": "jit_unified_continuation_label_merge_v1",
+  "shard_count": 7,
+  "shards": [
+    {
+      "candidate_count": 117,
+      "candidate_start_index": 0,
+      "candidate_stop_index_exclusive": 117,
+      "labels_file_sha256": "0b7800c2f97888d0220b5ef3a97b9f37c91091aead201ab44d2eda8a28dbbd9a",
+      "shard_count": 7,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_000/proposers/pi_1/tasks/label_pi_0_000/attempt_0000/result",
+      "shard_index": 0,
+      "summary_file_sha256": "59ce90affcfe505224d1ae6653961fcd04eb03f3dc32f49a95339487fd7ee2ee"
+    },
+    {
+      "candidate_count": 117,
+      "candidate_start_index": 117,
+      "candidate_stop_index_exclusive": 234,
+      "labels_file_sha256": "88450620016e1c7d6b93437dfea5ec8b2c75ce9f2b7858710959c44971ee3f23",
+      "shard_count": 7,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_000/proposers/pi_1/tasks/label_pi_0_001/attempt_0000/result",
+      "shard_index": 1,
+      "summary_file_sha256": "99c585cc0c11047a329f1805bd51002e71fd8c891638c17b48809eea28070615"
+    },
+    {
+      "candidate_count": 117,
+      "candidate_start_index": 234,
+      "candidate_stop_index_exclusive": 351,
+      "labels_file_sha256": "316bfe5bd4435377afc8b39820c7ee95486396355771ed496601aa032b2342c9",
+      "shard_count": 7,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_000/proposers/pi_1/tasks/label_pi_0_002/attempt_0000/result",
+      "shard_index": 2,
+      "summary_file_sha256": "531fa3ee510f64afd838adef5846d8476958dc0aecbe3b48bd469603cbc0370b"
+    },
+    {
+      "candidate_count": 116,
+      "candidate_start_index": 351,
+      "candidate_stop_index_exclusive": 467,
+      "labels_file_sha256": "82fe120ee668b576e1beb9711d72504b121564c40840847494e37125f94bda5b",
+      "shard_count": 7,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_000/proposers/pi_1/tasks/label_pi_0_003/attempt_0000/result",
+      "shard_index": 3,
+      "summary_file_sha256": "4326712bc538b54f0871c5ba8b82c134a6e8f912ab9efe3c89c0643d09db5eac"
+    },
+    {
+      "candidate_count": 116,
+      "candidate_start_index": 467,
+      "candidate_stop_index_exclusive": 583,
+      "labels_file_sha256": "c9d582e82f2441b16459e86757293b7aaee90b476923dc57245976ea22156055",
+      "shard_count": 7,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_000/proposers/pi_1/tasks/label_pi_0_004/attempt_0000/result",
+      "shard_index": 4,
+      "summary_file_sha256": "59127ec1b09ac009cfcbca7daeba50604cb6c1f3e491d34dd4c36dba06750201"
+    },
+    {
+      "candidate_count": 116,
+      "candidate_start_index": 583,
+      "candidate_stop_index_exclusive": 699,
+      "labels_file_sha256": "5a4a49da20ee639ea576b366f19c0d49dd197c3aad0d016b72d9b7df7dd96ad8",
+      "shard_count": 7,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_000/proposers/pi_1/tasks/label_pi_0_005/attempt_0000/result",
+      "shard_index": 5,
+      "summary_file_sha256": "9a961220c3e1d551a95a3f741fdce26c154b0ac1f8bfcd44d989918a3de7f3f0"
+    },
+    {
+      "candidate_count": 116,
+      "candidate_start_index": 699,
+      "candidate_stop_index_exclusive": 815,
+      "labels_file_sha256": "d98258ba9f4b8ee6056300a2204d3c4c814495a8ce43fa18d8b673a57edb63d3",
+      "shard_count": 7,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_000/proposers/pi_1/tasks/label_pi_0_006/attempt_0000/result",
+      "shard_index": 6,
+      "summary_file_sha256": "519be6a2ea03d11536acb9c2dd06f64b0ac5672a9545c7d322455cabffd14d34"
+    }
+  ],
+  "status": "completed",
+  "test_data_used": false,
+  "training_transitions": 0,
+  "validation_data_used": false
+}

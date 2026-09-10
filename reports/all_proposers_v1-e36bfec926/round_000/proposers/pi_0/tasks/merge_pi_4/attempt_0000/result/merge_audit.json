@@ -1,0 +1,69 @@
+{
+  "candidate_count": 567,
+  "coverage": [
+    0,
+    567
+  ],
+  "final_evaluation_data_used": false,
+  "logical_protocol_sha256": "7738b50ef1c4aaa1878f4278317c8a89588357f86710313c255cbd317aee15c7",
+  "merged_labels_file_sha256": "2982393b55486b2c571994781c0d0fcf6d02313efc0dd226d606e5b2d342caef",
+  "policy_key_scheme": "candidate_key=fold_in(PRNGKey(protocol_seed),global_candidate_index);action_key=fold_in(candidate_key,tick)",
+  "schema": "jit_unified_continuation_label_merge_v1",
+  "shard_count": 5,
+  "shards": [
+    {
+      "candidate_count": 114,
+      "candidate_start_index": 0,
+      "candidate_stop_index_exclusive": 114,
+      "labels_file_sha256": "bab43a881a9de6b5d91a9fbae650ce266cecf9002ece1b9d5fa2552ef8c81c12",
+      "shard_count": 5,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_000/proposers/pi_0/tasks/label_pi_4_000/attempt_0000/result",
+      "shard_index": 0,
+      "summary_file_sha256": "c8390cc95112b0dd037cb037591d114a60f4e115d8ead943259e9ecd4699d194"
+    },
+    {
+      "candidate_count": 114,
+      "candidate_start_index": 114,
+      "candidate_stop_index_exclusive": 228,
+      "labels_file_sha256": "441199dec95c79476b9d731ef9d9be014354e7c4f263a1ba551db4ea184eff07",
+      "shard_count": 5,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_000/proposers/pi_0/tasks/label_pi_4_001/attempt_0000/result",
+      "shard_index": 1,
+      "summary_file_sha256": "687a0993df92d62f42e43ec9b8655c2438ba1640008253e43603c933e0411dd3"
+    },
+    {
+      "candidate_count": 113,
+      "candidate_start_index": 228,
+      "candidate_stop_index_exclusive": 341,
+      "labels_file_sha256": "0e9c909c76b6d697420a690a7f33680e73a8f45e2167eee35d365e5c39fb850f",
+      "shard_count": 5,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_000/proposers/pi_0/tasks/label_pi_4_002/attempt_0000/result",
+      "shard_index": 2,
+      "summary_file_sha256": "74502881d9ae319458b71a5b80569e5e7251b140880a20a57a5ec32b60e2c539"
+    },
+    {
+      "candidate_count": 113,
+      "candidate_start_index": 341,
+      "candidate_stop_index_exclusive": 454,
+      "labels_file_sha256": "35adf007b14f4380361dee81788c29fee8ad4010bba131cebdbe013d411b0d8d",
+      "shard_count": 5,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_000/proposers/pi_0/tasks/label_pi_4_003/attempt_0000/result",
+      "shard_index": 3,
+      "summary_file_sha256": "20fee9dc0beddb9afc877ee55c17660ce61143f92a8ffe5114b5fd361831cf1a"
+    },
+    {
+      "candidate_count": 113,
+      "candidate_start_index": 454,
+      "candidate_stop_index_exclusive": 567,
+      "labels_file_sha256": "13bb50dd894a67a0250521e465ecb9bd64e636f3146d241b582c3a95d88664f3",
+      "shard_count": 5,
+      "shard_dir": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_000/proposers/pi_0/tasks/label_pi_4_004/attempt_0000/result",
+      "shard_index": 4,
+      "summary_file_sha256": "fb84704df917e634d48bb6a28a7357345ebbe8a32b56d9afe3678a1756bbc52c"
+    }
+  ],
+  "status": "completed",
+  "test_data_used": false,
+  "training_transitions": 0,
+  "validation_data_used": false
+}

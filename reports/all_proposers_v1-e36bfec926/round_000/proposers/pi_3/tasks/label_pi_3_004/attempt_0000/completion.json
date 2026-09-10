@@ -1,0 +1,12 @@
+{
+  "artifacts": {
+    "exit.json": "340b684e6a25a86512eb60e6a8cbbf2bc7081a85d7f74f7da1b561bbd0384dc1",
+    "reservation.json": "b22d359acadd318cf9c42351b17a57666c810e809dbf209d642e7a105d1f47ff",
+    "result/execution.json": "b68f235456f4d627b259a6c7581007d36ba87ba4534dc100b7297d675b0fcfe0",
+    "result/labels.json": "b131785eca709adccd643788b6f8a3bafca1a14e0b24f4049a35ba715f888ab3",
+    "result/protocol.json": "4496f553569f106ab01bd4e407505ef5c2f9db83ced5bfbc64df4727300fe8e0",
+    "result/summary.json": "161445256b3036cb2039a376342eb1c91a0f8827e1febe8fc5c745eaf582c3a5",
+    "worker_report.json": "e89541e862a1a954a1b8cb8f2daf2e836d2b6270dce1ade983f13ada1efa6489"
+  },
+  "environment_interactions": 2481
+}
