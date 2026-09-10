@@ -1,7 +1,7 @@
 {
   "run_id": "all_proposers_v1-e36bfec926",
   "local_run": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1",
-  "archive_sha256": "4b133979c7ce3050eee699044501a692c0d52025ccd6ad3f0d6227c500935f3f",
+  "archive_sha256": "d25f83005532362c746dfe85131128c8cfc488b29e601dbd611829c073d4a984",
   "files": {
     "figures/coverage_cost.csv": "e384a95b8e2f3b515b82aca8c5927e9a9160121b3f6cd1cc75e8786cd4f3882f",
     "inherited_inputs.json": "f15e7000fb0fd9951173aa96445937bfb6cb3f1e61763ba9e7b79d720cd0b3f4",
@@ -3695,8 +3695,8 @@
     "round_001/training_attempt_000/reservation.json": "9711db88ea2380ead4bb754c0b14d2de3cdf7e3ac3b3b027af6fb22b9783e3f8",
     "seed_inputs.json": "742f7993948f427017afb1e3d3f2dc3ec35002df2be60e8c7296a0c9efdcbb9d",
     "sources.json": "bff957c3ce71e23c392f89c70f7d070da68be5d73e6ca8abb8c5133d66671a8d",
-    "summary.json": "9b1223cb9e417a4b46825fce9abc5c13ed16b0752cee8b61c8a7d3940fd3121e",
-    "bundle_inventory.json": "3510a9e6f6b37230631286af5a5d043fc44ab5f44ef6f58bee6c5a42f17c486b"
+    "summary.json": "d2356372444ebfb8cfc66ab7660ad36338e31693f1834582d22f8d62b12abd38",
+    "bundle_inventory.json": "b8d28a87924662439363691b1defa04bc8cc8acc000b285aa02cb998e3203273"
   },
   "scope": "compact text review; raw snapshots, checkpoints and images stay on server"
 }
