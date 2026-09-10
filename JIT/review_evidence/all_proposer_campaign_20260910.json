@@ -1,0 +1,15 @@
+{
+  "status": "cpu_verified_production_pending",
+  "targeted_cpu_tests_passed": 29,
+  "production_gpu_run_performed_here": false,
+  "source_report": "https://github.com/QaQaaa-zzz/DVGC/blob/agent/jit-run-reports/reports/pi2_pi4_paired_v1-3ed0b5c90d/summary.json",
+  "source_status": "completed",
+  "source_new_interactions": 69078,
+  "source_pi2_matched_exploration_novel_cells": 513,
+  "source_pi4_matched_exploration_novel_cells": 685,
+  "inherited_recorded_cost": 195551,
+  "changes": ["all-policy acquisition before new PPO", "verified pi2/pi4 reuse", "pi5 onward bank growth", "round-wide cumulative novelty", "per-proposer figures and reusable tables", "resume preserves stage figure cost"],
+  "adaptive_budget_allocation_implemented": false,
+  "final_test_used": false,
+  "physical_boundary_proven": false
+}

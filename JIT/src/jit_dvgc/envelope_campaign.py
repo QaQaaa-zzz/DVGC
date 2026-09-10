@@ -107,7 +107,7 @@ def support_view(rows,inputs,recent_source):
             if len(picked)>=512:break
         picked=picked[:512];counts=Counter(r['trajectory_id'] for r in picked)
         for row in picked:
-            selected.append({**row,'sampling_weight':(2. if row['source']==recent_source else 1.)/counts[row['trajectory_id']]})
+            selected.append({**row,'sampling_weight':(2. if row['source'] in ([recent_source] if isinstance(recent_source,str) else recent_source) else 1.)/counts[row['trajectory_id']]})
     result=dict(schema='jit_iterative_witnessed_support_v1',status='completed',role='train',
         final_test_used=False,entries=selected,inputs=inputs,
         selection='phase 50/50, round-robin trajectory cap 512 per phase, recent source weight multiplier 2',
@@ -137,7 +137,7 @@ def render_progress(output,rows,rounds,seed_cells):
         if selected:
             axes[0].scatter([r['coordinates']['root_x_m'] for r in selected],
                 [r['coordinates']['root_z_m'] for r in selected],s=5,alpha=.6,
-                label=Path(source).parent.name if Path(source).name=='discovery' else 'seed '+Path(source).name)
+                label='/'.join(Path(source).parts[-3:]))
     if axes[0].get_legend_handles_labels()[0]:axes[0].legend(fontsize=7)
     axes[0].set(xlabel='x (m)',ylabel='Root z (m)',title='Witnessed arrivals: observed x-z projection')
     axes[1].plot([0]+[r['charged_interactions'] for r in rounds],
@@ -149,14 +149,15 @@ def render_progress(output,rows,rounds,seed_cells):
     plt.close(fig)
 
 
-def run(repo,output,*,gpu='0',max_rounds=3,budget=40_000_000,ppo_steps=512_000,patience=2,min_gain=5):
+def run(repo,output,*,gpu='0',max_rounds=3,budget=40_000_000,ppo_steps=512_000,patience=2,min_gain=5,all_proposers=False):
     repo,output=Path(repo).resolve(),Path(output).resolve();output.mkdir(parents=True,exist_ok=True)
     with (output/'execution.lock').open('a') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         result={'status':'engineering_error','physical_boundary_proven':False}
         request=dict(max_rounds=max_rounds,budget=budget,ppo_steps=ppo_steps,patience=patience,min_gain=min_gain)
+        if all_proposers:request['mode']='all_proposers_v1'
         try:
-            if not (1<=max_rounds<=20 and patience>=1 and min_gain>=1 and ppo_steps>0 and ppo_steps%3200==0):raise ValueError('invalid campaign limits')
+            if not (1<=max_rounds<=(19 if all_proposers else 20) and patience>=1 and min_gain>=1 and ppo_steps>0 and ppo_steps%3200==0):raise ValueError('invalid campaign limits')
             if (output/'request.json').exists() and read(output/'request.json')!=request:raise ValueError('campaign limits changed; use new directory')
             write(output/'request.json',request)
             seed_paths=[repo/'JIT/runs/discovery/knee_boundary_v1_budgetfix/pi_1',repo/'JIT/runs/discovery/lower_boundary_v1/pi_2']
@@ -171,24 +172,46 @@ def run(repo,output,*,gpu='0',max_rounds=3,budget=40_000_000,ppo_steps=512_000,p
             sources={str(p.relative_to(repo)):file_sha(p) for p in (repo/'JIT').rglob('*.py') if 'runs' not in p.parts}
             if (output/'sources.json').exists() and read(output/'sources.json')!=sources:raise ValueError('campaign code changed; use a new campaign directory')
             write(output/'sources.json',sources)
+            inherited_cost=0;inherited_extra=[]
+            if all_proposers:
+                from .campaign_bank import inherited_bank
+                inherited,locked,inherited_extra,inherited_cost=inherited_bank(repo)
+                rows+=inherited;inputs.update(locked);initializer=Path(inherited_extra[-1])
+                if (output/'inherited_inputs.json').exists() and read(output/'inherited_inputs.json')!=inputs:raise ValueError('inherited evidence changed')
+                write(output/'inherited_inputs.json',inputs)
             initial_cells={r['root_cell'] for r in rows if r['witnessed']};cells=set(initial_cells)
-            extra=[];gains=[];rounds=[];recent=str(seed_paths[-1].resolve())
+            extra=list(inherited_extra);gains=[];rounds=[];recent=str(seed_paths[-1].resolve())
 
             def cost():
                 total=0
                 for p in output.glob('round_*/training_attempt_*/reservation.json'):
                     reservation=read(p);done=p.parent/'completion.json'
                     total+=read(done)['charged_interactions'] if done.exists() else reservation['maximum_interactions']
-                for p in output.glob('round_*/discovery/cost_ledger.json'):total+=read(p)['charged_interactions']
+                for p in output.glob('round_*/**/cost_ledger.json'):total+=read(p)['charged_interactions']
                 return total
 
             for index in range(max_rounds):
                 round_dir=output/f'round_{index:03d}';round_dir.mkdir(exist_ok=True)
+                round_start_cells=set(cells);round_start_count=len(rows)
+                if all_proposers:
+                    from .campaign_bank import explore_bank
+                    # First round reuses the completed matched pi_2/pi_4 schedule.
+                    targets=[f'pi_{i}' for i in range(4+len(extra)) if not (index==0 and i in (2,4))]
+                    completed_bank=explore_bank(repo,round_dir,targets,extra,inputs,baseline,gpu,budget,cost)
+                    if completed_bank is None:
+                        result['status']='budget_exhausted';break
+                    recent=[]
+                    for new,locked,source in completed_bank:
+                        rows+=new;inputs.update(locked);recent.append(source)
+                        cells|={r['root_cell'] for r in new if r['witnessed']}
+                if all_proposers:
+                    from .campaign_bank import export_round
+                    export_round(round_dir/'before_training',rows,round_start_cells,cost(),inherited_cost)
                 support=support_view(rows,inputs,recent)
                 support_path=round_dir/'support.json'
                 if support_path.exists() and read(support_path)!=support:raise ValueError('round support changed')
                 write(support_path,support)
-                iteration=4+index
+                iteration=4+len(extra)
                 # All failed attempts are reserved; fresh retry directories retain evidence.
                 training_maximum=ppo_steps+4*400
                 completed=None
@@ -238,7 +261,7 @@ def run(repo,output,*,gpu='0',max_rounds=3,budget=40_000_000,ppo_steps=512_000,p
                         'policy':str(policy_path),'artifacts':artifacts})
                     completed=attempt
                 initializer=Path(read(completed/'completion.json')['policy']);extra.append(str(initializer))
-                profile=profile_for(index,list(extra),{str(support_path):file_sha(support_path),str(initializer):file_sha(initializer)})
+                profile=profile_for(len(extra)-1,list(extra),{str(support_path):file_sha(support_path),str(initializer):file_sha(initializer)})
                 discovery=round_dir/'discovery'
                 # Existing charged discovery work is counted once, not subtracted twice.
                 used=read(discovery/'cost_ledger.json')['charged_interactions'] if (discovery/'cost_ledger.json').exists() else 0
@@ -254,11 +277,11 @@ def run(repo,output,*,gpu='0',max_rounds=3,budget=40_000_000,ppo_steps=512_000,p
                 if outcome['status'] not in ('completed','completed_empty'):raise RuntimeError('discovery failed; missing labels are not negative evidence')
                 new,locked,_=read_child(discovery)
                 new_cells={r['root_cell'] for r in new if r['witnessed']}
-                gain=len(new_cells-cells);gains.append(gain);cells|=new_cells
+                cells|=new_cells;gain=len(cells-round_start_cells);gains.append(gain)
                 rows+=new;inputs.update(locked);recent=str(discovery.resolve())
                 round_record=dict(round=index,policy=f'pi_{iteration}',novel_root_cells=gain,
                     campaign_union_root_cells=len(cells),charged_interactions=cost(),
-                    bank_size=4+len(extra),candidate_count=len(new))
+                    bank_size=4+len(extra),candidate_count=len(rows)-round_start_count)
                 if (round_dir/'summary.json').exists():
                     prior=read(round_dir/'summary.json')
                     if any(prior[k]!=v for k,v in round_record.items() if k!='charged_interactions'):
@@ -267,6 +290,9 @@ def run(repo,output,*,gpu='0',max_rounds=3,budget=40_000_000,ppo_steps=512_000,p
                 rounds.append(round_record)
                 write(round_dir/'summary.json',rounds[-1])
                 render_progress(output,rows,rounds,len(initial_cells))
+                if all_proposers:
+                    from .campaign_bank import export_round
+                    export_round(round_dir,rows,round_start_cells,cost(),inherited_cost)
                 write(output/'progress.json',{'rounds':rounds,'physical_boundary_proven':False})
                 write(output/'summary.json',{'status':'running','rounds':rounds,
                     'charged_interactions':cost(),'physical_boundary_proven':False,'final_test_used':False})
@@ -274,9 +300,11 @@ def run(repo,output,*,gpu='0',max_rounds=3,budget=40_000_000,ppo_steps=512_000,p
                 if should_stop(gains,patience,min_gain):result['status']='empirical_stagnation';break
             else:result['status']='round_limit_reached'
             result.update(rounds=rounds,charged_interactions=cost(),seed_root_cells=len(initial_cells),
-                campaign_union_root_cells=len(cells),baseline_scope='completed knee refinement and lower-boundary TRAIN panels only',
+                campaign_union_root_cells=len(cells),baseline_scope=('knee, lower-boundary, and inherited pi_2/pi_4 panels' if all_proposers else 'completed knee refinement and lower-boundary TRAIN panels only'),
                 physical_boundary_proven=False,final_test_used=False,
-                completed_training_transitions=ppo_steps*len(extra),frozen_new_policies=extra)
+                completed_training_transitions=ppo_steps*(len(extra)-len(inherited_extra)),frozen_new_policies=extra[len(inherited_extra):],
+                inherited_policy_paths=inherited_extra,inherited_recorded_charge=inherited_cost,
+                total_including_inherited_recorded_charge=cost()+inherited_cost)
         except Exception as exc:
             result.update(error=str(exc),traceback=traceback.format_exc())
             if 'rounds' in locals():

@@ -213,3 +213,69 @@ def test_production_training_wrapper_accepts_new_support_preflight(campaign,monk
     assert not result['production_training_smoke_verified']
     assert formal.run_unified_formal(config,'test')['status']=='mock_trained'
     assert len(called)==1
+
+
+def test_all_proposers_reuse_then_grow_and_resume(campaign,monkeypatch):
+    from jit_dvgc import campaign_bank as bank
+    repo,out,trains,discoveries=campaign
+    monkeypatch.setattr(bank,'inherited_bank',lambda repo:(rows('inherited','i'),{},[str(repo/'pi_2.json')],195_551))
+    exports=[];monkeypatch.setattr(bank,'export_round',lambda *args:exports.append(args))
+    result=c.run(repo,out,max_rounds=2,ppo_steps=3200,all_proposers=True)
+    assert result['status'] in ('round_limit_reached','empirical_stagnation'),result
+    assert [d['proposer'] for d in discoveries]==['pi_0','pi_1','pi_3','pi_5',
+        'pi_0','pi_1','pi_2','pi_3','pi_4','pi_5','pi_6']
+    assert len(trains)==2 and len(exports)==4
+    assert result['completed_training_transitions']==6400
+    assert result['charged_interactions']==2*3220+1100
+    assert result['inherited_recorded_charge']==195_551
+    assert result['total_including_inherited_recorded_charge']==203_091
+    assert len(result['frozen_new_policies'])==2
+    assert c.run(repo,out,max_rounds=2,ppo_steps=3200,all_proposers=True)==result
+    assert len(trains)==2
+
+
+def test_all_proposer_budget_stops_before_training(campaign,monkeypatch):
+    from jit_dvgc import campaign_bank as bank
+    repo,out,trains,discoveries=campaign
+    monkeypatch.setattr(bank,'inherited_bank',lambda repo:(rows('inherited','i'),{},[str(repo/'pi_2.json')],100))
+    result=c.run(repo,out,max_rounds=1,budget=8000,ppo_steps=3200,all_proposers=True)
+    assert result['status']=='budget_exhausted',result
+    assert not trains and not discoveries
+
+
+def test_round_exports_replot_data_and_untested_labels(tmp_path):
+    from jit_dvgc.campaign_bank import export_round
+    a=tmp_path/'pi_2';b=tmp_path/'pi_4'
+    data=[]
+    for path,name,label in ((a,'pi_2','pi_0'),(b,'pi_4','pi_4')):
+        write(path/'plan.json',dict(proposer=name,plan_sha256='plan',bank_sha256='bank',physical_resolution={'x':.1}))
+        write(path/'analysis_inputs.json',{'catalog':str(path/'catalog.json')})
+        write(path/'catalog.json',{'trajectory_receipts':[]})
+        rs=rows(str(path),name)
+        for r in rs:r.update(coordinates={'root_x_m':2.85,'root_z_m':.5,'root_vz_mps':1.},labels={label:1})
+        data+=rs
+    export_round(tmp_path/'round',data,set(),120,30)
+    import csv
+    points=list(csv.DictReader((tmp_path/'round/figures/all_points.csv').open()))
+    assert points[0]['evaluator_pi_4']==''
+    assert points[-1]['evaluator_pi_0']==''
+    assert len(points)==4
+    for name in ('pi_2_envelope','pi_4_envelope','all_proposers'):
+        for ext in ('png','pdf','svg'):assert (tmp_path/f'round/figures/{name}.{ext}').stat().st_size>500
+    manifest=read(tmp_path/'round/figures/figure_manifest.json')
+    assert manifest['slice_width_m']==.05 and not manifest['hulls_filled']
+    export_round(tmp_path/'round',data,set(),9999,30)
+    assert read(tmp_path/'round/figures/figure_manifest.json')['charged_new_interactions']==120
+
+
+def test_all_proposer_failed_labels_never_train(campaign,monkeypatch):
+    from jit_dvgc import campaign_bank as bank,dense_tube
+    repo,out,trains,_=campaign
+    monkeypatch.setattr(bank,'inherited_bank',lambda repo:(rows('inherited','i'),{},[str(repo/'pi_2.json')],100))
+    def fail(repo,out,**kwargs):
+        write(out/'cost_ledger.json',{'charged_interactions':400})
+        return {'status':'engineering_error'}
+    monkeypatch.setattr(dense_tube,'run',fail)
+    result=c.run(repo,out,max_rounds=1,ppo_steps=3200,all_proposers=True)
+    assert result['status']=='engineering_error' and result['charged_interactions']==400
+    assert not trains
