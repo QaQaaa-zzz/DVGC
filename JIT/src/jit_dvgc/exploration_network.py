@@ -1,7 +1,8 @@
-"""Privileged PPO explorer with an actor-only frozen-policy warm start.
+"""Privileged PPO networks and frozen-policy residual action composition.
 
-The explorer consumes the existing critic observation, whose prefix is the full
-three-frame actor observation. No critic or optimizer state crosses this helper.
+The residual actor is fresh with a zero mean head and uses the existing critic
+observation. The historical full-action widening helper remains available for
+reproducing prior experiments; it is not the residual initialization contract.
 """
 from __future__ import annotations
 
@@ -79,3 +80,59 @@ def widen_actor_warm_start(
         tree["privileged_state"] = jp.concatenate((prefix, jp.full((extra,), fill, dtype=prefix.dtype)))
         updates[field] = freeze(tree) if isinstance(original, FrozenDict) else tree
     return stats.replace(**updates), params
+
+
+def initialize_residual_actor(networks: Any, key: Any) -> Any:
+    """Initialize a fresh privileged delta actor with zero deterministic output.
+
+    The canonical tanh-normal output is four means followed by four scale
+    parameters. Only the mean head is zeroed; hidden layers and stochastic scale
+    retain their fresh canonical initialization. No frozen actor is copied.
+    Pass the frozen checkpoint's existing 106-feature privileged normalizer
+    alongside this result; do not call ``widen_actor_warm_start`` for residuals.
+    """
+    original = networks.policy_network.init(key)
+    params = unfreeze(original) if isinstance(original, FrozenDict) else jax.tree.map(lambda x: x, original)
+    try:
+        first = params['params']['hidden_0']['kernel']
+        head = params['params']['hidden_3']
+        kernel, bias = head['kernel'], head['bias']
+    except (KeyError, TypeError) as exc:
+        raise ValueError('residual actor requires canonical privileged 256x3 network') from exc
+    if first.shape != (PRIVILEGED_OBSERVATION_SIZE, 256) or kernel.shape != (256, 8) or bias.shape != (8,):
+        raise ValueError('residual actor requires canonical privileged 256x3 four-action network')
+    head['kernel'] = kernel.at[:, :4].set(0)
+    head['bias'] = bias.at[:4].set(0)
+    return freeze(params) if isinstance(original, FrozenDict) else params
+
+
+def validate_residual_delta_limit(delta_limit: Any) -> tuple[float, float, float, float]:
+    """Validate explicit per-channel normalized-action bounds on the host."""
+    import numpy as np
+
+    try:
+        limit = np.asarray(delta_limit, dtype=float)
+    except (TypeError, ValueError) as exc:
+        raise ValueError('delta_limit requires four finite values in (0, 2]') from exc
+    if limit.shape != (4,) or not np.isfinite(limit).all() or np.any(limit <= 0) or np.any(limit > 2):
+        raise ValueError('delta_limit requires four finite values in (0, 2]')
+    return tuple(float(x) for x in limit)
+
+
+def compose_residual_action(base_action: Any, normalized_delta: Any, delta_limit: Any) -> tuple[Any, Any, Any]:
+    """Compose frozen pi and bounded four-channel delta, including saturation.
+
+    Validate limits once with ``validate_residual_delta_limit`` before tracing.
+    Inputs are normalized action coordinates; arbitrary leading batch dimensions
+    are supported. The returned requested delta precedes actuator clipping, and
+    effective delta is the actual change after clipping. Base-policy gradients
+    are stopped explicitly; PPO optimizes only its normalized delta distribution.
+    """
+    base = jax.lax.stop_gradient(jp.asarray(base_action))
+    delta = jp.asarray(normalized_delta)
+    limit = jp.asarray(delta_limit)
+    if base.ndim < 1 or base.shape[-1] != 4 or delta.shape != base.shape or limit.shape != (4,):
+        raise ValueError('residual action requires matching (..., 4) actions and delta_limit shape (4,)')
+    requested = jp.clip(delta, -1., 1.) * limit
+    executed = jp.clip(base + requested, -1., 1.)
+    return executed, requested, executed - base

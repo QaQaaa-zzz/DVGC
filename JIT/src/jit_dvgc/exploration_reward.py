@@ -1,8 +1,8 @@
-"""Host-side, policy-scoped novelty credit for completed explorer episodes.
+"""Host-side, source-policy-scoped novelty credit.
 
-Cells are exact canonical physical-cell strings. Each new cell contributes one
-unit across all clean successful episodes in this batch, shared equally. The
-returned rewards belong at terminal transitions, before the PPO update.
+``continuation_reward_batch`` pays at candidate ticks using witnessed frozen-bank
+suffixes. ``reward_batch`` preserves historical clean-episode terminal rewards.
+Cells are exact canonical physical-cell strings; each new cell pays one unit.
 """
 
 from collections import Counter
@@ -76,4 +76,84 @@ def reward_batch(ledger, episodes, *, expected_policy_sha256):
                     reward_assignment='terminal_transition', episodes=records,
                     novel_cells=sorted(counts), novel_cell_count=len(counts),
                     total_reward=float(rewards.sum()))
+    return rewards, updated, evidence
+
+
+def continuation_reward_batch(ledger, candidates, *, shape, expected_policy_sha256):
+    """Pay candidate-time novelty after SAME-context frozen-bank validation.
+
+    ``shape`` is (num_steps, num_episodes); ``tick`` is the zero-based transition
+    receiving credit. Source-policy identity scopes the novelty ledger. Its
+    initial cells are the declared frozen source baseline, not a bank union.
+    A bank policy supplies a continuation witness, not a source-baseline cell.
+    Parent episode outcome is irrelevant: the perturbed trajectory may fail
+    after proposing a state from which a frozen evaluator succeeds.
+
+    The caller must validate the actual continuation receipt and its complete
+    state/context identities before calling. This function validates metadata,
+    not simulator evidence. Label None remains unknown; neither None nor zero
+    consumes a cell. Persist the returned ledger with optimizer state. Exact
+    duplicate candidate identities are rejected; distinct sampled occurrences
+    share one credit per new physical cell, independent of batch order.
+    """
+    if not isinstance(ledger, dict) or set(ledger) != {'policy_sha256', 'cells'}:
+        raise ValueError('ledger requires exactly policy_sha256 and cells')
+    policy = ledger['policy_sha256']
+    if (not isinstance(policy, str) or re.fullmatch('[0-9a-f]{64}', policy) is None
+            or policy != expected_policy_sha256):
+        raise ValueError('source policy identity mismatch or invalid SHA256')
+    seen = _cells(ledger['cells'])
+    if (not isinstance(shape, (tuple, list)) or len(shape) != 2
+            or any(type(size) is not int or size <= 0 for size in shape)):
+        raise ValueError('shape must contain positive num_steps and num_episodes')
+    if not isinstance(candidates, list):
+        raise ValueError('candidates must be a list')
+    identities = set()
+    records = []
+    for candidate in candidates:
+        if not isinstance(candidate, dict):
+            raise ValueError('candidate must be a mapping')
+        index, tick = candidate.get('episode_index'), candidate.get('tick')
+        if (type(index) is not int or not 0 <= index < shape[1]
+                or type(tick) is not int or not 0 <= tick < shape[0]):
+            raise ValueError('candidate episode_index or tick outside shape')
+        cell = candidate.get('cell')
+        _cells([cell])
+        label = candidate.get('label')
+        if 'label' not in candidate or (label is not None and
+                                      (type(label) is not int or label not in (0, 1))):
+            raise ValueError('candidate label must be explicit 1, 0 or None')
+        for field in ('state_sha256', 'context_sha256', 'receipt_sha256'):
+            value = candidate.get(field)
+            if not isinstance(value, str) or re.fullmatch('[0-9a-f]{64}', value) is None:
+                raise ValueError(f'candidate {field} must be a SHA256')
+        witness = candidate.get('witness')
+        if label == 1 and (not isinstance(witness, str) or not witness.strip()
+                           or witness != witness.strip()):
+            raise ValueError('successful continuation requires an evaluator witness')
+        identity = (index, tick, candidate['state_sha256'], candidate['context_sha256'])
+        if identity in identities:
+            raise ValueError('duplicate candidate identity')
+        identities.add(identity)
+        records.append(dict(episode_index=index, tick=tick, cell=cell, label=label,
+                            state_sha256=candidate['state_sha256'],
+                            context_sha256=candidate['context_sha256'],
+                            receipt_sha256=candidate['receipt_sha256'], witness=witness,
+                            eligible=label == 1, credit=0.))
+    counts = Counter(row['cell'] for row in records
+                     if row['eligible'] and row['cell'] not in seen)
+    rewards = np.zeros(shape, dtype=np.float64)
+    for row in records:
+        if row['eligible'] and row['cell'] in counts:
+            row['credit'] = 1. / counts[row['cell']]
+            rewards[row['tick'], row['episode_index']] += row['credit']
+    before = dict(policy_sha256=policy, cells=sorted(seen))
+    updated = dict(policy_sha256=policy, cells=sorted(seen | set(counts)))
+    evidence = dict(schema='jit_continuation_exploration_reward_v1',
+                    policy_sha256=policy, ledger_before_sha256=_hash(before),
+                    ledger_after_sha256=_hash(updated),
+                    novelty_credit='one_per_new_cell_shared_across_witnessed_candidates',
+                    reward_assignment='candidate_tick', parent_episode_success_required=False,
+                    candidates=records, novel_cells=sorted(counts),
+                    novel_cell_count=len(counts), total_reward=float(rewards.sum()))
     return rewards, updated, evidence

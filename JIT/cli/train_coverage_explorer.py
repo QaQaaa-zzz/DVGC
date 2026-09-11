@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run one bounded privileged PPO explorer against its own frozen-pi coverage."""
+"""Train bounded residual disturbances on frozen pi using candidate suffix novelty."""
 from pathlib import Path
 import argparse
 from jit_dvgc.exploration_training import run

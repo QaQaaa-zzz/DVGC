@@ -92,3 +92,7 @@ Residual warm-start completed:500 supervised updates,543 fit rows,zero interacti
 ## Per-policy privileged coverage PPO redesign
 
 User replaced supervised residual imitation with106-input256×3 full-action PPO explorer, novelty relative to frozen currentpi only. First bounded TRAIN pilot completed; initial32/32→final0/32 clean landings, no promotion.1,576 cumulative new cells includes1,403 from the pre-update stochastic actor. Excessive first-update displacement observed. Cost291,200 including failed preflight reservation; pilot15,917 valid training steps versus256,000 scheduled training slots. Full evidence in `../runs/experiments/per_policy_coverage_ppo_20260911/INDEX.md`; source0917c65. Existing historical warm-start results remain valid for their original scope.
+
+## Corrected residual explorer (latest)
+
+User clarified explorer perturbs frozenpi, not replaces it. Canonical trainer now requires jit_frozen_policy_residual_ppo_v1, composes frozenpi+bounded4delta, and pays own-pi novelty at candidate action ticks only after same-context frozen-bank suffix success; parent trajectory landing is not required.184 CPU tests and real one-update GPU chain passed,2,564 interactions including padding/suffix. Full-action pilot above is off-target historical engineering evidence. No long corrected training or performance claim yet. See `../runs/engineering/residual_suffix_ppo_20260911/INDEX.md`.

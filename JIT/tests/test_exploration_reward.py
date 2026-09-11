@@ -72,3 +72,83 @@ def test_boolean_flags_are_strict_and_finite_defaults_true():
     ep['completed'] = 1
     with pytest.raises(ValueError):
         reward_batch(dict(policy_sha256=POLICY, cells=[]), [ep], expected_policy_sha256=POLICY)
+
+
+def candidate(cell='new', **updates):
+    return dict(dict(episode_index=0, tick=1, cell=cell, state_sha256='b' * 64,
+                     context_sha256='c' * 64, label=1, witness='frozen-bank/pi_0',
+                     receipt_sha256='d' * 64), **updates)
+
+
+def continuation(ledger, candidates, shape=(4, 2)):
+    from jit_dvgc import exploration_reward
+    assert hasattr(exploration_reward, 'continuation_reward_batch')
+    return exploration_reward.continuation_reward_batch(
+        ledger, candidates, shape=shape, expected_policy_sha256=POLICY)
+
+
+def test_continuation_rewards_exact_tick_even_if_parent_episode_failed():
+    ledger = dict(policy_sha256=POLICY, cells=['baseline'])
+    rows = [candidate(success=False, physical_failure=True, completed=False),
+            candidate('baseline', episode_index=1, tick=3)]
+    before = copy.deepcopy((ledger, rows))
+    rewards, updated, evidence = continuation(ledger, rows)
+    expected = np.zeros((4, 2)); expected[1, 0] = 1
+    np.testing.assert_array_equal(rewards, expected)
+    assert updated['cells'] == ['baseline', 'new']
+    assert evidence['total_reward'] == 1
+    assert (ledger, rows) == before
+    again, unchanged, _ = continuation(updated, rows)
+    assert not again.any()
+    assert unchanged == updated
+
+
+def test_continuation_unknown_and_failure_do_not_consume_cells():
+    ledger = dict(policy_sha256=POLICY, cells=[])
+    rows = [candidate(label=None, witness=None), candidate('other', label=0, tick=2, witness=None)]
+    rewards, updated, evidence = continuation(ledger, rows)
+    assert not rewards.any()
+    assert updated == ledger
+    assert [row['label'] for row in evidence['candidates']] == [None, 0]
+    later, updated, _ = continuation(updated, [candidate()])
+    assert later.sum() == 1
+    assert updated['cells'] == ['new']
+
+
+def test_continuation_duplicate_cell_credit_conservation_and_permutation():
+    rows = [candidate(), candidate(tick=2), candidate(episode_index=1),
+            candidate('other', tick=3, episode_index=1)]
+    ledger = dict(policy_sha256=POLICY, cells=[])
+    rewards, updated, evidence = continuation(ledger, rows)
+    assert rewards[1, 0] == pytest.approx(1 / 3)
+    assert rewards[2, 0] == pytest.approx(1 / 3)
+    assert rewards[1, 1] == pytest.approx(1 / 3)
+    assert rewards[3, 1] == 1
+    assert rewards.sum() == 2
+    reverse, other, _ = continuation(ledger, rows[::-1])
+    np.testing.assert_array_equal(rewards, reverse)
+    assert updated == other
+    assert evidence['novel_cell_count'] == 2
+    with pytest.raises(ValueError, match='duplicate'):
+        continuation(ledger, [rows[0], rows[0]])
+
+
+@pytest.mark.parametrize('updates', [
+    dict(state_sha256='invalid'), dict(context_sha256=None), dict(receipt_sha256=''),
+    dict(witness=None), dict(witness=' '), dict(cell=''), dict(label=True), dict(label=2),
+    dict(tick=-1), dict(tick=4), dict(tick=True), dict(episode_index=2),
+])
+def test_continuation_invalid_candidate_identity_rejected(updates):
+    with pytest.raises(ValueError):
+        continuation(dict(policy_sha256=POLICY, cells=[]), [candidate(**updates)])
+
+
+@pytest.mark.parametrize('shape', [(0, 2), (4,), (4, -1), (4, True)])
+def test_continuation_invalid_shape_rejected(shape):
+    with pytest.raises(ValueError):
+        continuation(dict(policy_sha256=POLICY, cells=[]), [], shape=shape)
+
+
+def test_continuation_source_policy_identity_required():
+    with pytest.raises(ValueError, match='policy'):
+        continuation(dict(policy_sha256='f' * 64, cells=[]), [])

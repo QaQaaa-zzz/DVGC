@@ -1,4 +1,4 @@
-"""Per-frozen-policy coverage PPO with complete episodes and auditable host credit.
+"""Frozen-base residual PPO with reached-state continuation credit.
 
 This privileged exploration policy is a simulation instrument, not a deployable
 replacement Actor. No mutable novelty callbacks occur inside transformed JAX.
@@ -36,8 +36,12 @@ def run(spec_path,output):
     import brax,flax,mujoco_playground
     from .handoff_bank import pytree_sha256
     from flax import serialization
-    from .exploration_network import make_exploration_network_factory,widen_actor_warm_start
-    from .exploration_reward import reward_batch
+    from .exploration_network import make_exploration_network_factory,initialize_residual_actor,compose_residual_action,validate_residual_delta_limit
+    from .exploration_reward import continuation_reward_batch
+    from .exploration_continuation import snapshot_arrays,snapshot_from_arrays,FrozenSuffixEvaluator
+    from .unified_envelope_snapshot import physical_state_sha256,snapshot_context_sha256
+    from .evidence_integrity import canonical_sha256
+    from .ppo import make_checkpoint_policy
     from .probe_bank import load_probe_bank
     from .unified_formal import build_unified_formal_environment
     from .checkpoint import load_checkpoint
@@ -49,6 +53,11 @@ def run(spec_path,output):
     output=Path(output).resolve();output.mkdir(parents=True,exist_ok=False)
     spec=json.loads(Path(spec_path).read_text());start=time.monotonic()
     required=('bank','proposer','num_envs','horizon','batches','epochs','minibatch_size','seed','learning_rate','clip','gamma','gae_lambda','value_coefficient','entropy_coefficient','max_grad_norm','evaluation_episodes','baseline_cells','jump_start_state_sha256')
+    if spec.get('schema')!='jit_frozen_policy_residual_ppo_v1':raise ValueError('explicit frozen-policy residual PPO schema required; legacy full-action trial is not residual exploration')
+    for k in ['delta_limit','max_candidates_per_episode','candidate_min_x','candidate_max_x','candidate_spacing','evaluator_order','suffix_horizon','suffix_budget']:
+        if k not in spec:raise ValueError('missing residual/suffix contract: '+k)
+    limits=validate_residual_delta_limit(spec['delta_limit'])
+    if type(spec['max_candidates_per_episode']) is not int or spec['max_candidates_per_episode']<=0 or not 0.01<=spec['candidate_spacing']<=0.1 or not 2.5<=spec['candidate_min_x']<spec['candidate_max_x']<=8.:raise ValueError('invalid candidate sampling budget')
     if any(k not in spec for k in required):raise ValueError('incomplete declared training configuration')
     if spec['horizon']!=400 or any(type(spec[k]) is not int or spec[k]<=0 for k in ['num_envs','batches','epochs','minibatch_size','evaluation_episodes']):raise ValueError('invalid budget/full episode horizon')
     if spec['evaluation_episodes']!=spec['num_envs']:raise ValueError('matched batch evaluation required for shared compiled collector')
@@ -64,13 +73,16 @@ def run(spec_path,output):
         for file in folder.rglob('*'):
             if file.is_file():sources[str(file.resolve())]=_sha(file)
     inputs={str(Path(p).resolve()):_sha(p) for p in [spec_path,spec['bank'],spec['baseline_cells'],member['frozen_policy'],record['formal_config'],Path(record['checkpoint'])/'payload.pkl',Path(record['checkpoint'])/'identity.json']}
+    for bank_member in bank['members']:
+        policy_record=bank_member['policy']
+        for file in [bank_member['frozen_policy'],policy_record['formal_config'],str(Path(policy_record['checkpoint'])/'payload.pkl'),str(Path(policy_record['checkpoint'])/'identity.json')]:inputs[str(Path(file).resolve())]=_sha(file)
     scheduled=spec['num_envs']*spec['horizon']*(spec['batches']+2)
-    _write(output/'declaration.json',dict(spec=spec,input_files=inputs,source_files=sources,maximum_interactions=scheduled,maximum_attempts=1,role='train',final_test_used=False,resolution=resolution_contract(),normalizer='frozen_for_pilot',padding_charged=True,coverage_scope='per frozen pi; successful complete explorer trajectories',reward='one per newly credited root cell, batch duplicates shared',base_actor_sha256=record['actor_sha256']))
+    _write(output/'declaration.json',dict(spec=spec,input_files=inputs,source_files=sources,maximum_interactions=scheduled+spec['suffix_budget'],maximum_forward_interactions=scheduled,maximum_suffix_interactions=spec['suffix_budget'],maximum_attempts=1,role='train',final_test_used=False,resolution=resolution_contract(),normalizer='frozen_for_pilot',padding_charged=True,coverage_scope='per frozen pi; reached candidate with same-context frozen-bank suffix witness',reward='one per newly witnessed root cell at causal action tick; parent trajectory landing not required',controller='frozen pi plus bounded learned residual',base_actor_sha256=record['actor_sha256']))
     def verify():
         for p,sha in {**sources,**inputs}.items():
             if _sha(p)!=sha:raise ValueError('training source/input drift: '+p)
     def status(phase,**kw):_write(output/'status.json',dict(phase=phase,wall_seconds=time.monotonic()-start,**kw))
-    charged=0;active_total=0;history=[]
+    charged=0;active_total=0;history=[];suffix=None
     try:
         status('building_runtime')
         if jax.default_backend()!='gpu':raise RuntimeError('GPU backend required for declared simulation stage')
@@ -79,10 +91,16 @@ def run(spec_path,output):
         for name,value in [('actor_sha256',payload.actor_params),('normalizer_sha256',payload.observation_normalizer),('critic_sha256',payload.critic_params)]:
             if pytree_sha256(value)!=record[name]:raise ValueError('frozen policy payload identity drift: '+name)
         if env._bundle.xml_sha256!=record['xml_sha256']:raise ValueError('model identity drift')
-        normalizer,actor=widen_actor_warm_start(payload.observation_normalizer,payload.actor_params)
+        normalizer=payload.observation_normalizer
+        base_policy=make_checkpoint_policy(env,payload,deterministic=True)
         net=make_exploration_network_factory()({'state':76,'privileged_state':106},4,preprocess_observations_fn=running_statistics.normalize)
         rng=jax.random.PRNGKey(spec['seed']);rng,vkey=jax.random.split(rng)
-        params={'policy':actor,'value':net.value_network.init(vkey)}
+        rng,akey=jax.random.split(rng)
+        params={'policy':initialize_residual_actor(net,akey),'value':net.value_network.init(vkey)}
+        frozen_base_sha=pytree_sha256(payload.actor_params)
+        suffix=FrozenSuffixEvaluator(spec['bank'],spec['evaluator_order'],spec['suffix_horizon'],output/'suffixes',spec['suffix_budget'])
+        suffix_cache={}
+        current_residual_checkpoint=None
         optimizer=optax.chain(optax.clip_by_global_norm(spec['max_grad_norm']),optax.adam(spec['learning_rate']));optstate=optimizer.init(params)
         distribution=net.parametric_action_distribution
         reset=jax.vmap(env._reset_jump_start_unified)
@@ -96,13 +114,16 @@ def run(spec_path,output):
                 logits=net.policy_network.apply(normalizer,params['policy'],state.obs)
                 raw=distribution.sample_no_postprocessing(logits,akey)
                 sampled=distribution.postprocess(raw)
-                action=jp.where(deterministic,distribution.mode(logits),sampled)
+                normalized_delta=jp.where(deterministic,distribution.mode(logits),sampled)
+                base_action=base_policy(state.obs,akey)[0]
+                action,requested_delta,effective_delta=compose_residual_action(base_action,normalized_delta,jp.asarray(limits))
                 value=net.value_network.apply(normalizer,params['value'],state.obs)
                 nxt=step(state,action)
                 finite=jp.all(jp.isfinite(nxt.data.qpos),-1)&jp.all(jp.isfinite(nxt.data.qvel),-1)&jp.all(jp.isfinite(nxt.obs['privileged_state']),-1)&jp.all(jp.isfinite(action),-1)
                 finite=finite&~nxt.info['parallel_capacity_exceeded']
                 terminal=nxt.done.astype(bool)|~finite
-                observed=dict(observation=state.obs['privileged_state'],action=action,raw_action=raw,log_prob=distribution.log_prob(logits,raw),value=value,mask=alive,qpos=nxt.data.qpos,qvel=nxt.data.qvel,phase=nxt.info['active_phase'],success=nxt.info['success'],physical_failure=nxt.info['physical_failure'],finite=finite,terminal=terminal,end_code=nxt.info['end_code'])
+                observed=dict(observation=state.obs['privileged_state'],base_action=base_action,normalized_delta=normalized_delta,requested_delta=requested_delta,effective_delta=effective_delta,action=action,raw_action=raw,log_prob=distribution.log_prob(logits,raw),value=value,mask=alive,qpos=nxt.data.qpos,qvel=nxt.data.qvel,phase=nxt.info['active_phase'],success=nxt.info['success'],physical_failure=nxt.info['physical_failure'],finite=finite,terminal=terminal,end_code=nxt.info['end_code'])
+                observed.update({'snap/'+k:v for k,v in snapshot_arrays(nxt).items()})
                 # Reset inactive worlds to the fixed start before their next padded
                 # simulator slot; padding never contributes gradients or coverage.
                 keep=alive&~terminal
@@ -128,7 +149,7 @@ def run(spec_path,output):
             return optax.apply_updates(params,updates),optstate,jp.concatenate([jp.array([lossval]),parts])
         def rollout(label,deterministic):
             nonlocal rng,charged,active_total
-            verify();status('rollout_'+label,charged_interactions=charged)
+            verify();status('rollout_'+label,charged_interactions=charged+suffix.charged_interactions,forward_interactions=charged,suffix_interactions=suffix.charged_interactions)
             reserve=count*horizon;charged+=reserve
             _write(output/(label+'_reservation.json'),dict(maximum_interactions=reserve,charged_interactions=reserve))
             rng,key=jax.random.split(rng);t=time.monotonic()
@@ -150,20 +171,61 @@ def run(spec_path,output):
             receipt=dict(episodes=episodes,active_interactions=active,scheduled_interactions=reserve,padding_interactions=reserve-active,wall_seconds=time.monotonic()-t)
             _write(output/(label+'_episodes.json'),receipt)
             return data,episodes,receipt
+        def candidate_rewards(label,data,episodes,ledger):
+            verify()
+            candidates=[];max_count=spec['max_candidates_per_episode']
+            controller=dict(base_actor_sha256=frozen_base_sha,residual_actor_sha256=pytree_sha256(params['policy']),normalizer_sha256=pytree_sha256(normalizer),action_composition='clip(base+delta_limit*tanh_sample,-1,1)',delta_limit=list(limits))
+            controller['residual_checkpoint']=str(current_residual_checkpoint)
+            controller['residual_checkpoint_sha256']=_sha(current_residual_checkpoint)
+            controller['controller_sha256']=canonical_sha256(controller)
+            generator_record={**record,'actor_sha256':controller['controller_sha256'],'payload_sha256':controller['residual_checkpoint_sha256']}
+            prefix_path=output/(label+'_trajectories.npz');prefix_sha=_sha(prefix_path)
+            for e,episode in enumerate(episodes):
+                used_bins=set();selected=0
+                for tick in np.flatnonzero(data['mask'][:,e]):
+                    x=float(data['qpos'][tick,e,0]);phase=int(data['phase'][tick,e])
+                    semantic=(phase==0 and not bool(data['snap/up/apex_seen'][tick,e])) or (phase==1 and data['qvel'][tick,e,2]<0 and not bool(data['snap/down/valid_contact_seen'][tick,e]))
+                    if data['terminal'][tick,e] or not data['finite'][tick,e] or not semantic or not spec['candidate_min_x']<=x<=spec['candidate_max_x']:continue
+                    cell=episode['cells'][tick]
+                    if cell in ledger['cells']:continue
+                    bin_index=int(np.floor(x/spec['candidate_spacing']))
+                    if bin_index in used_bins:continue
+                    used_bins.add(bin_index)
+                    arrays={k[5:]:v[tick,e] for k,v in data.items() if k.startswith('snap/')}
+                    snapshot=snapshot_from_arrays(arrays,env=env,record=generator_record,parent_trajectory=f'{label}/episode_{e}',parent_state_sha256=spec['jump_start_state_sha256'])
+                    context=snapshot_context_sha256(snapshot)
+                    status('suffix_'+label,charged_interactions=charged+suffix.charged_interactions,candidate_episode=e,candidate_tick=int(tick))
+                    result=suffix_cache.get(context)
+                    if result is None:
+                        result=suffix.evaluate(snapshot);suffix_cache[context]=result
+                    if result['snapshot_context_sha256']!=context or result['state_sha256']!=physical_state_sha256(snapshot) or result['bank_sha256']!=bank['bank_sha256']:raise ValueError('suffix receipt candidate or bank identity mismatch')
+                    if canonical_sha256({k:v for k,v in result.items() if k!='receipt_sha256'})!=result['receipt_sha256']:raise ValueError('suffix receipt hash mismatch')
+                    provenance=dict(episode_index=e,tick=int(tick),cell=cell,state_sha256=physical_state_sha256(snapshot),context_sha256=context,label=result['label'],witness=result['witness'],suffix_receipt_sha256=result['receipt_sha256'],prefix_file=str(prefix_path),prefix_file_sha256=prefix_sha,controller=controller,generated_by_env_step_only=True,jump_start_state_sha256=spec['jump_start_state_sha256'])
+                    provenance['receipt_sha256']=canonical_sha256(provenance)
+                    candidates.append(provenance);selected+=1
+                    _write(output/(label+'_candidates.json'),candidates)
+                    if result['label'] is None:raise RuntimeError('unknown suffix result retained; no negative conversion or PPO update')
+                    if selected>=max_count:break
+            _write(output/(label+'_candidates.json'),candidates)
+            return continuation_reward_batch(ledger,candidates,shape=data['mask'].shape,expected_policy_sha256=record['actor_sha256'])
         def checkpoint(label):
-            verify();p=output/'checkpoints'/label;p.mkdir(parents=True,exist_ok=False)
+            nonlocal current_residual_checkpoint
+            verify()
+            if pytree_sha256(payload.actor_params)!=frozen_base_sha or pytree_sha256(normalizer)!=record['normalizer_sha256']:raise ValueError('frozen base policy/normalizer changed')
+            p=output/'checkpoints'/label;p.mkdir(parents=True,exist_ok=False)
             state=dict(params=params,optimizer=optstate,normalizer=normalizer,rng=rng)
             (p/'state.msgpack').write_bytes(serialization.to_bytes(state))
-            _write(p/'identity.json',dict(schema='jit_privileged_coverage_ppo_checkpoint_v1',state_sha256=_sha(p/'state.msgpack'),base_actor_sha256=record['actor_sha256'],actor_input='privileged_state106',action_order=['steer','rear_wheel_drive','hip','knee'],ledger=ledger,charged_interactions=charged,active_interactions=active_total,spec=spec))
+            current_residual_checkpoint=p/'state.msgpack'
+            _write(p/'identity.json',dict(schema='jit_frozen_policy_residual_ppo_checkpoint_v1',state_sha256=_sha(p/'state.msgpack'),base_actor_sha256=record['actor_sha256'],actor_input='privileged_state106',output_kind='bounded_delta_added_to_frozen_pi',delta_limit=list(limits),action_order=['steer','rear_wheel_drive','hip','knee'],ledger=ledger,charged_interactions=charged+suffix.charged_interactions,suffix_interactions=suffix.charged_interactions,active_interactions=active_total,spec=spec))
         data,episodes,receipt=rollout('initial',True)
         ledger={'policy_sha256':record['actor_sha256'],'cells':sorted(set(baseline['cells']).union(*(set(e['cells']) for e in episodes if e['success'] and not e['physical_failure'] and e['completed'])))}
+        if not np.array_equal(data['action'],data['base_action']):raise ValueError('initial zero-mean residual does not reproduce frozen base action')
         _write(output/'baseline.json',ledger);checkpoint('initial')
         for iteration in range(1,spec['batches']+1):
             label=f'batch_{iteration:04d}';data,episodes,receipt=rollout(label,False)
-            credits,ledger,evidence=reward_batch(ledger,episodes,expected_policy_sha256=record['actor_sha256'])
+            rewards,ledger,evidence=candidate_rewards(label,data,episodes,ledger)
             _write(output/(label+'_reward.json'),evidence)
-            rewards=np.zeros_like(data['value'])
-            for e,credit in enumerate(credits):rewards[np.flatnonzero(data['mask'][:,e])[-1],e]=credit
+            rewards=rewards.astype(np.float32)
             adv,returns=episode_advantages(rewards,data['value'],data['mask'],gamma=spec['gamma'],lam=spec['gae_lambda'])
             mask=data['mask'].astype(bool);a=adv[mask];a=(a-a.mean())/(a.std()+1e-8)
             batch=dict(observation=data['observation'][mask],raw_action=data['raw_action'][mask],log_prob=data['log_prob'][mask],advantage=a,**{'return':returns[mask]})
@@ -178,13 +240,13 @@ def run(spec_path,output):
                     rng,key=jax.random.split(rng);params,optstate,loss=update(params,optstate,mini,key)
                     losses.append(np.asarray(loss))
             if not np.isfinite(losses).all() or not all(np.isfinite(np.asarray(x)).all() for x in jax.tree.leaves(params)):raise ValueError('nonfinite PPO update')
-            row=dict(batch=iteration,new_cells=float(np.sum(credits)),cumulative_cells=len(ledger['cells']),successes=sum(e['success'] and not e['physical_failure'] and e['completed'] and e['finite'] for e in episodes),episodes=count,active_interactions=receipt['active_interactions'],charged_interactions=charged,mean_losses=np.mean(losses,axis=0).tolist(),optimizer_updates=len(losses),wall_seconds=time.monotonic()-start)
+            row=dict(batch=iteration,new_cells=float(np.sum(rewards)),cumulative_cells=len(ledger['cells']),successes=sum(e['success'] and not e['physical_failure'] and e['completed'] and e['finite'] for e in episodes),episodes=count,active_interactions=receipt['active_interactions'],charged_interactions=charged+suffix.charged_interactions,suffix_interactions=suffix.charged_interactions,mean_losses=np.mean(losses,axis=0).tolist(),optimizer_updates=len(losses),wall_seconds=time.monotonic()-start)
             history.append(row);_write(output/'training_metrics.json',history);print(json.dumps(row),flush=True)
             checkpoint(label)
         data,episodes,receipt=rollout('final',True)
-        diagnostic_credits,_,evidence=reward_batch(ledger,episodes,expected_policy_sha256=record['actor_sha256'])
+        diagnostic_credits,_,evidence=candidate_rewards('final',data,episodes,ledger)
         _write(output/'final_diagnostic_reward.json',evidence)
-        verify();status('completed',charged_interactions=charged,active_interactions=active_total,padding_interactions=charged-active_total,training_scheduled_interactions=count*horizon*spec['batches'],final_successes=sum(e['success'] and not e['physical_failure'] and e['completed'] and e['finite'] for e in episodes),initial_baseline_cells=len(json.loads((output/'baseline.json').read_text())['cells']),training_new_cells=sum(x['new_cells'] for x in history),final_diagnostic_new_cells=float(sum(diagnostic_credits)),independent_repetitions=False,final_test_used=False)
+        verify();status('completed',charged_interactions=charged+suffix.charged_interactions,forward_interactions=charged,suffix_interactions=suffix.charged_interactions,base_actor_unchanged=pytree_sha256(payload.actor_params)==frozen_base_sha,active_interactions=active_total,padding_interactions=charged-active_total,training_scheduled_interactions=count*horizon*spec['batches'],final_successes=sum(e['success'] and not e['physical_failure'] and e['completed'] and e['finite'] for e in episodes),initial_baseline_cells=len(json.loads((output/'baseline.json').read_text())['cells']),training_new_cells=sum(x['new_cells'] for x in history),final_diagnostic_new_cells=float(np.sum(diagnostic_credits)),independent_repetitions=False,final_test_used=False)
     except BaseException as exc:
-        status('error',error=f'{type(exc).__name__}: {exc}',charged_interactions=charged,active_interactions=active_total,no_automatic_retry=True)
+        status('error',error=f'{type(exc).__name__}: {exc}',charged_interactions=charged+(suffix.charged_interactions if suffix is not None else 0),forward_interactions=charged,suffix_interactions=suffix.charged_interactions if suffix is not None else 0,active_interactions=active_total,no_automatic_retry=True)
         raise
