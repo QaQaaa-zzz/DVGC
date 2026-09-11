@@ -1,0 +1,25 @@
+{
+  "hypothetical_useful_interactions": 15388,
+  "hypothetical_evaluator_calls": 844,
+  "new_environment_interactions": 0,
+  "scope": "offline scheduling; excludes padding/process/failed attempts; not measured wall-clock savings",
+  "candidate_count": 738,
+  "full_evaluator_calls": 5166,
+  "full_useful_interactions": 98093,
+  "evaluator_order": [
+    "pi_0",
+    "pi_1",
+    "pi_2",
+    "pi_3",
+    "pi_4",
+    "pi_5",
+    "pi_6"
+  ],
+  "useful_interaction_reduction_fraction": 0.8431284597269938,
+  "conflicts": 64,
+  "positive_count": 735,
+  "unknown_count": 3,
+  "full_matrix_existence_agreement": true,
+  "engineering_panel_selection": "existing TRAIN panel; not held out"
+}
+engineering_indices [0, 1, 2, 3, 4, 5, 6, 7, 77, 78, 79, 80, 81, 82, 83, 84]

@@ -1,0 +1,39 @@
+{
+  "attempts": [
+    {
+      "charged_interactions": 527,
+      "path": "/home/qy/DVGC/JIT/runs/engineering/existence_checkpoint_residual_20260911/gpu/evaluator_000/chunk_4d79b3d6e02b214f19b44104cebc68eb232c96733d145bb00b539f4c4e98be80/attempt_0000",
+      "status": "completed"
+    },
+    {
+      "charged_interactions": 288,
+      "path": "/home/qy/DVGC/JIT/runs/engineering/existence_checkpoint_residual_20260911/gpu/evaluator_001/chunk_d0e1e052c4ee7ef9ba2faf3439f5f00c349cd99fd7fc30ab54a1d1fe04903f04/attempt_0000",
+      "status": "completed"
+    },
+    {
+      "charged_interactions": 395,
+      "path": "/home/qy/DVGC/JIT/runs/engineering/existence_checkpoint_residual_20260911/gpu/evaluator_002/chunk_d0e1e052c4ee7ef9ba2faf3439f5f00c349cd99fd7fc30ab54a1d1fe04903f04/attempt_0000",
+      "status": "completed"
+    },
+    {
+      "charged_interactions": 423,
+      "path": "/home/qy/DVGC/JIT/runs/engineering/existence_checkpoint_residual_20260911/gpu/evaluator_003/chunk_d0e1e052c4ee7ef9ba2faf3439f5f00c349cd99fd7fc30ab54a1d1fe04903f04/attempt_0000",
+      "status": "completed"
+    }
+  ],
+  "bank_sha256": "ca0d36b2b2faaafa2f31f4256f4dc39065f436569059bcb0d3471a6a60f6c7bd",
+  "budget_exhausted": false,
+  "charged_interactions": 1633,
+  "complete_evaluator_matrix": false,
+  "execution_identity_error": null,
+  "final_test_used": false,
+  "index_sha256": "5dbde4a52d9fe32f9b28be2fa24481c1c26772dcf25b957a14e501fe4c2e868e",
+  "negative_count": 0,
+  "plan_sha256": "19ef58fa9c1988ca4747cb9ba8feb0663809af3229280ada336ed9b379cb4cf4",
+  "positive_count": 16,
+  "schema": "jit_first_success_witness_index_v1",
+  "status": "completed",
+  "training_transitions": 0,
+  "unknown_count": 0,
+  "wall_seconds": 104.59629281899925
+}

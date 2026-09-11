@@ -1,0 +1,25 @@
+{
+  "attempts": [
+    {
+      "charged_interactions": 527,
+      "path": "/home/qy/DVGC/JIT/runs/engineering/existence_checkpoint_residual_20260911/gpu/evaluator_000/chunk_4d79b3d6e02b214f19b44104cebc68eb232c96733d145bb00b539f4c4e98be80/attempt_0000",
+      "status": "completed"
+    },
+    {
+      "charged_interactions": 288,
+      "path": "/home/qy/DVGC/JIT/runs/engineering/existence_checkpoint_residual_20260911/gpu/evaluator_001/chunk_d0e1e052c4ee7ef9ba2faf3439f5f00c349cd99fd7fc30ab54a1d1fe04903f04/attempt_0000",
+      "status": "completed"
+    },
+    {
+      "charged_interactions": 395,
+      "path": "/home/qy/DVGC/JIT/runs/engineering/existence_checkpoint_residual_20260911/gpu/evaluator_002/chunk_d0e1e052c4ee7ef9ba2faf3439f5f00c349cd99fd7fc30ab54a1d1fe04903f04/attempt_0000",
+      "status": "completed"
+    },
+    {
+      "charged_interactions": 423,
+      "path": "/home/qy/DVGC/JIT/runs/engineering/existence_checkpoint_residual_20260911/gpu/evaluator_003/chunk_d0e1e052c4ee7ef9ba2faf3439f5f00c349cd99fd7fc30ab54a1d1fe04903f04/attempt_0000",
+      "status": "completed"
+    }
+  ],
+  "charged_interactions": 1633
+}

@@ -1,0 +1,6669 @@
+{
+  "attempts": [
+    {
+      "charged_interactions": 527,
+      "path": "/home/qy/DVGC/JIT/runs/engineering/existence_checkpoint_residual_20260911/gpu/evaluator_000/chunk_4d79b3d6e02b214f19b44104cebc68eb232c96733d145bb00b539f4c4e98be80/attempt_0000",
+      "status": "completed"
+    },
+    {
+      "charged_interactions": 288,
+      "path": "/home/qy/DVGC/JIT/runs/engineering/existence_checkpoint_residual_20260911/gpu/evaluator_001/chunk_d0e1e052c4ee7ef9ba2faf3439f5f00c349cd99fd7fc30ab54a1d1fe04903f04/attempt_0000",
+      "status": "completed"
+    },
+    {
+      "charged_interactions": 395,
+      "path": "/home/qy/DVGC/JIT/runs/engineering/existence_checkpoint_residual_20260911/gpu/evaluator_002/chunk_d0e1e052c4ee7ef9ba2faf3439f5f00c349cd99fd7fc30ab54a1d1fe04903f04/attempt_0000",
+      "status": "completed"
+    },
+    {
+      "charged_interactions": 423,
+      "path": "/home/qy/DVGC/JIT/runs/engineering/existence_checkpoint_residual_20260911/gpu/evaluator_003/chunk_d0e1e052c4ee7ef9ba2faf3439f5f00c349cd99fd7fc30ab54a1d1fe04903f04/attempt_0000",
+      "status": "completed"
+    }
+  ],
+  "bank_sha256": "ca0d36b2b2faaafa2f31f4256f4dc39065f436569059bcb0d3471a6a60f6c7bd",
+  "budget_exhausted": false,
+  "charged_interactions": 1633,
+  "complete_evaluator_matrix": false,
+  "entries": [
+    {
+      "acquisition_mode": "jump_start_connected_causal_rollout_v1",
+      "already_in_training_support": false,
+      "candidate_id": "pi6_causal_upstream_000000",
+      "candidate_index": 0,
+      "candidate_kind": "reachable_unified_frontier_probe",
+      "episode_step": 8,
+      "jump_start_reachability": {
+        "environment_transitions_before_perturbation": 7,
+        "environment_transitions_from_jump_start": 8,
+        "generated_by_env_step_only": true,
+        "jump_start_connected": true,
+        "jump_start_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "lookback_m": 0.15,
+        "natural_start_connected": false,
+        "perturbation_anchor_x_m": 2.9,
+        "perturbation_start_actual_x_m": 2.7717809677124023,
+        "perturbation_start_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+        "perturbation_start_target_x_m": 2.75,
+        "perturbed_environment_transitions": 1,
+        "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "proposal_anchor_used_as_reset": false,
+        "proposal_family_index": 0,
+        "proposal_parent_group_id": "dense_v1_train_x2.90_family0",
+        "qpos_qvel_injection_used": false,
+        "reachability_sha256": "aeaabcefcc258d16d9d7bf2e1a0e6a78ff83e56128f983b4e9264def87c7e05d",
+        "rsi_used_to_establish_reachability": false,
+        "schema": "jit_jump_start_reachability_provenance_v1",
+        "target_x_m": 2.8000000000000003,
+        "trajectory_id": "dense_v1_train_x2.90_family0/variant_0",
+        "unperturbed_suffix_transitions": 0,
+        "variant_ordinal": 0
+      },
+      "label": 1,
+      "parent_group_id": "dense_v1_train_x2.90_family0",
+      "parent_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+      "per_policy_outcomes": {
+        "pi_0": {
+          "label": 1,
+          "status": "success"
+        },
+        "pi_1": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_2": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_3": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_4": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_5": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_6": {
+          "label": null,
+          "status": "untested"
+        }
+      },
+      "perturbation": {
+        "action_dimension": 0,
+        "action_name": "steer",
+        "basis_vector": [
+          -1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "lookback_m": 0.15,
+        "nominal_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            0.12773123383522034,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.4855732321739197
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            -0.02226877212524414,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.4855732321739197
+          ]
+        ],
+        "sign": -1,
+        "strength": 0.15000000000000002,
+        "variant_ordinal": 0
+      },
+      "phase": "upstream",
+      "phase_episode_step": 8,
+      "phase_index": 0,
+      "policy_actor_sha256": "946c23d5199f1d30e4fef799fd7a4b54d271c626a305877a0fa3e45430d3c5b1",
+      "policy_iteration": 6,
+      "policy_payload_sha256": "5550494092b73b57cd9adec0aa632a15342fd7fb23af68355f4ab741e49d920d",
+      "probe_bank_sha256": "ca0d36b2b2faaafa2f31f4256f4dc39065f436569059bcb0d3471a6a60f6c7bd",
+      "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+      "proposal_family_index": 0,
+      "protocol_sha256": "f0dcd30fab43ca221647a19998cf0a30efc96a22183f2b3b5cb487f274e87029",
+      "sampling_mode": "trajectory_slices_v2",
+      "snapshot": "snapshots/candidate_000000",
+      "snapshot_context_sha256": "2a27f62186dc5e0e5d41f2f63a0e574a2babaec8cb349e9665ee15ae3759fb2f",
+      "source_bank": "boundary_bank",
+      "split": "train",
+      "state_sha256": "2420850c1afe4891dd677521f5df07e665269f2b7804b2e98102328cc4897434",
+      "successful_policy_names": [
+        "pi_0"
+      ],
+      "trajectory_id": "dense_v1_train_x2.90_family0/variant_0",
+      "trajectory_step": 8,
+      "vx": 1.0292772054672241,
+      "vz": 0.10544423013925552,
+      "witness_status": "observed_landing",
+      "x": 2.8001387119293213,
+      "x_slice_spacing_m": 0.05,
+      "x_target_m": 2.8000000000000003,
+      "z": 0.11781153082847595
+    },
+    {
+      "acquisition_mode": "jump_start_connected_causal_rollout_v1",
+      "already_in_training_support": false,
+      "candidate_id": "pi6_causal_upstream_000001",
+      "candidate_index": 1,
+      "candidate_kind": "reachable_unified_frontier_probe",
+      "episode_step": 10,
+      "jump_start_reachability": {
+        "environment_transitions_before_perturbation": 7,
+        "environment_transitions_from_jump_start": 10,
+        "generated_by_env_step_only": true,
+        "jump_start_connected": true,
+        "jump_start_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "lookback_m": 0.15,
+        "natural_start_connected": false,
+        "perturbation_anchor_x_m": 2.9,
+        "perturbation_start_actual_x_m": 2.7717809677124023,
+        "perturbation_start_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+        "perturbation_start_target_x_m": 2.75,
+        "perturbed_environment_transitions": 3,
+        "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "proposal_anchor_used_as_reset": false,
+        "proposal_family_index": 0,
+        "proposal_parent_group_id": "dense_v1_train_x2.90_family0",
+        "qpos_qvel_injection_used": false,
+        "reachability_sha256": "7151796f6850ee2a3b431eb21ba342b8c303bf8044c242c68e1447e672e51815",
+        "rsi_used_to_establish_reachability": false,
+        "schema": "jit_jump_start_reachability_provenance_v1",
+        "target_x_m": 2.85,
+        "trajectory_id": "dense_v1_train_x2.90_family0/variant_0",
+        "unperturbed_suffix_transitions": 0,
+        "variant_ordinal": 0
+      },
+      "label": 1,
+      "parent_group_id": "dense_v1_train_x2.90_family0",
+      "parent_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+      "per_policy_outcomes": {
+        "pi_0": {
+          "label": 1,
+          "status": "success"
+        },
+        "pi_1": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_2": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_3": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_4": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_5": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_6": {
+          "label": null,
+          "status": "untested"
+        }
+      },
+      "perturbation": {
+        "action_dimension": 0,
+        "action_name": "steer",
+        "basis_vector": [
+          -1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "lookback_m": 0.15,
+        "nominal_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            0.12773123383522034,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.4855732321739197
+          ],
+          [
+            -0.020630236715078354,
+            -0.5443698763847351,
+            0.46097350120544434,
+            -0.7050827145576477
+          ],
+          [
+            -0.2169947326183319,
+            -0.20843416452407837,
+            0.49214261770248413,
+            -0.847678542137146
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            -0.02226877212524414,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.4855732321739197
+          ],
+          [
+            -0.17063024640083313,
+            -0.5443698763847351,
+            0.46097350120544434,
+            -0.7050827145576477
+          ],
+          [
+            -0.3669947385787964,
+            -0.20843416452407837,
+            0.49214261770248413,
+            -0.847678542137146
+          ]
+        ],
+        "sign": -1,
+        "strength": 0.15000000000000002,
+        "variant_ordinal": 0
+      },
+      "phase": "upstream",
+      "phase_episode_step": 10,
+      "phase_index": 0,
+      "policy_actor_sha256": "946c23d5199f1d30e4fef799fd7a4b54d271c626a305877a0fa3e45430d3c5b1",
+      "policy_iteration": 6,
+      "policy_payload_sha256": "5550494092b73b57cd9adec0aa632a15342fd7fb23af68355f4ab741e49d920d",
+      "probe_bank_sha256": "ca0d36b2b2faaafa2f31f4256f4dc39065f436569059bcb0d3471a6a60f6c7bd",
+      "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+      "proposal_family_index": 0,
+      "protocol_sha256": "f0dcd30fab43ca221647a19998cf0a30efc96a22183f2b3b5cb487f274e87029",
+      "sampling_mode": "trajectory_slices_v2",
+      "snapshot": "snapshots/candidate_000001",
+      "snapshot_context_sha256": "ea7178b0bb3ef0279014678669db296f1f0b1fd08303050591cab2b6af26f148",
+      "source_bank": "boundary_bank",
+      "split": "train",
+      "state_sha256": "41a05fe9ba9a2e07c2a27ee63cb5c475f0c407b490bb3bf45ac99e76892374ad",
+      "successful_policy_names": [
+        "pi_0"
+      ],
+      "trajectory_id": "dense_v1_train_x2.90_family0/variant_0",
+      "trajectory_step": 10,
+      "vx": 0.6206238865852356,
+      "vz": 0.04314245656132698,
+      "witness_status": "observed_landing",
+      "x": 2.826860189437866,
+      "x_slice_spacing_m": 0.05,
+      "x_target_m": 2.85,
+      "z": 0.11937041580677032
+    },
+    {
+      "acquisition_mode": "jump_start_connected_causal_rollout_v1",
+      "already_in_training_support": false,
+      "candidate_id": "pi6_causal_upstream_000002",
+      "candidate_index": 2,
+      "candidate_kind": "reachable_unified_frontier_probe",
+      "episode_step": 13,
+      "jump_start_reachability": {
+        "environment_transitions_before_perturbation": 7,
+        "environment_transitions_from_jump_start": 13,
+        "generated_by_env_step_only": true,
+        "jump_start_connected": true,
+        "jump_start_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "lookback_m": 0.15,
+        "natural_start_connected": false,
+        "perturbation_anchor_x_m": 2.9,
+        "perturbation_start_actual_x_m": 2.7717809677124023,
+        "perturbation_start_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+        "perturbation_start_target_x_m": 2.75,
+        "perturbed_environment_transitions": 6,
+        "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "proposal_anchor_used_as_reset": false,
+        "proposal_family_index": 0,
+        "proposal_parent_group_id": "dense_v1_train_x2.90_family0",
+        "qpos_qvel_injection_used": false,
+        "reachability_sha256": "6b0e62379c45674932e9d6ff74967e5cd6dedea1ffc803e26c970928c85de525",
+        "rsi_used_to_establish_reachability": false,
+        "schema": "jit_jump_start_reachability_provenance_v1",
+        "target_x_m": 2.9000000000000004,
+        "trajectory_id": "dense_v1_train_x2.90_family0/variant_0",
+        "unperturbed_suffix_transitions": 0,
+        "variant_ordinal": 0
+      },
+      "label": 1,
+      "parent_group_id": "dense_v1_train_x2.90_family0",
+      "parent_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+      "per_policy_outcomes": {
+        "pi_0": {
+          "label": 1,
+          "status": "success"
+        },
+        "pi_1": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_2": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_3": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_4": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_5": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_6": {
+          "label": null,
+          "status": "untested"
+        }
+      },
+      "perturbation": {
+        "action_dimension": 0,
+        "action_name": "steer",
+        "basis_vector": [
+          -1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000002086162567,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "lookback_m": 0.15,
+        "nominal_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            0.12773123383522034,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.4855732321739197
+          ],
+          [
+            -0.020630236715078354,
+            -0.5443698763847351,
+            0.46097350120544434,
+            -0.7050827145576477
+          ],
+          [
+            -0.2169947326183319,
+            -0.20843416452407837,
+            0.49214261770248413,
+            -0.847678542137146
+          ],
+          [
+            -0.16737057268619537,
+            -0.037910573184490204,
+            0.2931376099586487,
+            -0.8899003267288208
+          ],
+          [
+            -0.08245199918746948,
+            -0.11931934207677841,
+            0.12110645323991776,
+            -0.787915825843811
+          ],
+          [
+            0.12740197777748108,
+            -0.23738333582878113,
+            -0.059685006737709045,
+            -0.5798242688179016
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            -0.02226877212524414,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.4855732321739197
+          ],
+          [
+            -0.17063024640083313,
+            -0.5443698763847351,
+            0.46097350120544434,
+            -0.7050827145576477
+          ],
+          [
+            -0.3669947385787964,
+            -0.20843416452407837,
+            0.49214261770248413,
+            -0.847678542137146
+          ],
+          [
+            -0.31737059354782104,
+            -0.037910573184490204,
+            0.2931376099586487,
+            -0.8899003267288208
+          ],
+          [
+            -0.23245200514793396,
+            -0.11931934207677841,
+            0.12110645323991776,
+            -0.787915825843811
+          ],
+          [
+            -0.0225980281829834,
+            -0.23738333582878113,
+            -0.059685006737709045,
+            -0.5798242688179016
+          ]
+        ],
+        "sign": -1,
+        "strength": 0.15000000000000002,
+        "variant_ordinal": 0
+      },
+      "phase": "upstream",
+      "phase_episode_step": 13,
+      "phase_index": 0,
+      "policy_actor_sha256": "946c23d5199f1d30e4fef799fd7a4b54d271c626a305877a0fa3e45430d3c5b1",
+      "policy_iteration": 6,
+      "policy_payload_sha256": "5550494092b73b57cd9adec0aa632a15342fd7fb23af68355f4ab741e49d920d",
+      "probe_bank_sha256": "ca0d36b2b2faaafa2f31f4256f4dc39065f436569059bcb0d3471a6a60f6c7bd",
+      "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+      "proposal_family_index": 0,
+      "protocol_sha256": "f0dcd30fab43ca221647a19998cf0a30efc96a22183f2b3b5cb487f274e87029",
+      "sampling_mode": "trajectory_slices_v2",
+      "snapshot": "snapshots/candidate_000002",
+      "snapshot_context_sha256": "b3c5d0fa82b3cf34137e272c0734629f32b02a5e4d61dcde8c2747b4f651e80e",
+      "source_bank": "boundary_bank",
+      "split": "train",
+      "state_sha256": "ce1d999fffa23f906765ab19268ba73f4c5c6f3aacd40f8d518aa74445eac96b",
+      "successful_policy_names": [
+        "pi_0"
+      ],
+      "trajectory_id": "dense_v1_train_x2.90_family0/variant_0",
+      "trajectory_step": 13,
+      "vx": 1.3854929208755493,
+      "vz": 2.60603928565979,
+      "witness_status": "observed_landing",
+      "x": 2.8827626705169678,
+      "x_slice_spacing_m": 0.05,
+      "x_target_m": 2.9000000000000004,
+      "z": 0.198433056473732
+    },
+    {
+      "acquisition_mode": "jump_start_connected_causal_rollout_v1",
+      "already_in_training_support": false,
+      "candidate_id": "pi6_causal_upstream_000003",
+      "candidate_index": 3,
+      "candidate_kind": "reachable_unified_frontier_probe",
+      "episode_step": 15,
+      "jump_start_reachability": {
+        "environment_transitions_before_perturbation": 7,
+        "environment_transitions_from_jump_start": 15,
+        "generated_by_env_step_only": true,
+        "jump_start_connected": true,
+        "jump_start_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "lookback_m": 0.15,
+        "natural_start_connected": false,
+        "perturbation_anchor_x_m": 2.9,
+        "perturbation_start_actual_x_m": 2.7717809677124023,
+        "perturbation_start_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+        "perturbation_start_target_x_m": 2.75,
+        "perturbed_environment_transitions": 7,
+        "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "proposal_anchor_used_as_reset": false,
+        "proposal_family_index": 0,
+        "proposal_parent_group_id": "dense_v1_train_x2.90_family0",
+        "qpos_qvel_injection_used": false,
+        "reachability_sha256": "7f364c2427b24a180e5106a1028c7224c1922973b89eddd0ad00ffcc4c553c11",
+        "rsi_used_to_establish_reachability": false,
+        "schema": "jit_jump_start_reachability_provenance_v1",
+        "target_x_m": 2.95,
+        "trajectory_id": "dense_v1_train_x2.90_family0/variant_0",
+        "unperturbed_suffix_transitions": 1,
+        "variant_ordinal": 0
+      },
+      "label": 1,
+      "parent_group_id": "dense_v1_train_x2.90_family0",
+      "parent_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+      "per_policy_outcomes": {
+        "pi_0": {
+          "label": 1,
+          "status": "success"
+        },
+        "pi_1": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_2": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_3": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_4": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_5": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_6": {
+          "label": null,
+          "status": "untested"
+        }
+      },
+      "perturbation": {
+        "action_dimension": 0,
+        "action_name": "steer",
+        "basis_vector": [
+          -1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000002086162567,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "lookback_m": 0.15,
+        "nominal_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            0.12773123383522034,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.4855732321739197
+          ],
+          [
+            -0.020630236715078354,
+            -0.5443698763847351,
+            0.46097350120544434,
+            -0.7050827145576477
+          ],
+          [
+            -0.2169947326183319,
+            -0.20843416452407837,
+            0.49214261770248413,
+            -0.847678542137146
+          ],
+          [
+            -0.16737057268619537,
+            -0.037910573184490204,
+            0.2931376099586487,
+            -0.8899003267288208
+          ],
+          [
+            -0.08245199918746948,
+            -0.11931934207677841,
+            0.12110645323991776,
+            -0.787915825843811
+          ],
+          [
+            0.12740197777748108,
+            -0.23738333582878113,
+            -0.059685006737709045,
+            -0.5798242688179016
+          ],
+          [
+            0.2950194776058197,
+            -0.5239683985710144,
+            -0.1218913123011589,
+            -0.27545052766799927
+          ],
+          [
+            0.6372384428977966,
+            -0.8398531675338745,
+            -0.09318259358406067,
+            -0.07705408334732056
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            -0.02226877212524414,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.4855732321739197
+          ],
+          [
+            -0.17063024640083313,
+            -0.5443698763847351,
+            0.46097350120544434,
+            -0.7050827145576477
+          ],
+          [
+            -0.3669947385787964,
+            -0.20843416452407837,
+            0.49214261770248413,
+            -0.847678542137146
+          ],
+          [
+            -0.31737059354782104,
+            -0.037910573184490204,
+            0.2931376099586487,
+            -0.8899003267288208
+          ],
+          [
+            -0.23245200514793396,
+            -0.11931934207677841,
+            0.12110645323991776,
+            -0.787915825843811
+          ],
+          [
+            -0.0225980281829834,
+            -0.23738333582878113,
+            -0.059685006737709045,
+            -0.5798242688179016
+          ],
+          [
+            0.14501947164535522,
+            -0.5239683985710144,
+            -0.1218913123011589,
+            -0.27545052766799927
+          ],
+          [
+            0.6372384428977966,
+            -0.8398531675338745,
+            -0.09318259358406067,
+            -0.07705408334732056
+          ]
+        ],
+        "sign": -1,
+        "strength": 0.15000000000000002,
+        "variant_ordinal": 0
+      },
+      "phase": "upstream",
+      "phase_episode_step": 15,
+      "phase_index": 0,
+      "policy_actor_sha256": "946c23d5199f1d30e4fef799fd7a4b54d271c626a305877a0fa3e45430d3c5b1",
+      "policy_iteration": 6,
+      "policy_payload_sha256": "5550494092b73b57cd9adec0aa632a15342fd7fb23af68355f4ab741e49d920d",
+      "probe_bank_sha256": "ca0d36b2b2faaafa2f31f4256f4dc39065f436569059bcb0d3471a6a60f6c7bd",
+      "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+      "proposal_family_index": 0,
+      "protocol_sha256": "f0dcd30fab43ca221647a19998cf0a30efc96a22183f2b3b5cb487f274e87029",
+      "sampling_mode": "trajectory_slices_v2",
+      "snapshot": "snapshots/candidate_000003",
+      "snapshot_context_sha256": "d1a8ed72be68a1e2e4f30d71d50757d27818e873adc042c49c9e1d21910fc879",
+      "source_bank": "boundary_bank",
+      "split": "train",
+      "state_sha256": "96544fa5e2a5f611532e7f2eea08eebce8e46acd188b79c2eb904f6033d1d717",
+      "successful_policy_names": [
+        "pi_0"
+      ],
+      "trajectory_id": "dense_v1_train_x2.90_family0/variant_0",
+      "trajectory_step": 15,
+      "vx": 2.238856315612793,
+      "vz": 3.058767557144165,
+      "witness_status": "observed_landing",
+      "x": 2.9593875408172607,
+      "x_slice_spacing_m": 0.05,
+      "x_target_m": 2.95,
+      "z": 0.3159020245075226
+    },
+    {
+      "acquisition_mode": "jump_start_connected_causal_rollout_v1",
+      "already_in_training_support": false,
+      "candidate_id": "pi6_causal_upstream_000004",
+      "candidate_index": 4,
+      "candidate_kind": "reachable_unified_frontier_probe",
+      "episode_step": 16,
+      "jump_start_reachability": {
+        "environment_transitions_before_perturbation": 7,
+        "environment_transitions_from_jump_start": 16,
+        "generated_by_env_step_only": true,
+        "jump_start_connected": true,
+        "jump_start_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "lookback_m": 0.15,
+        "natural_start_connected": false,
+        "perturbation_anchor_x_m": 2.9,
+        "perturbation_start_actual_x_m": 2.7717809677124023,
+        "perturbation_start_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+        "perturbation_start_target_x_m": 2.75,
+        "perturbed_environment_transitions": 7,
+        "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "proposal_anchor_used_as_reset": false,
+        "proposal_family_index": 0,
+        "proposal_parent_group_id": "dense_v1_train_x2.90_family0",
+        "qpos_qvel_injection_used": false,
+        "reachability_sha256": "aa1602327b77710121cc969020bdae43a79fdc477aed6562f78e1046396a35a7",
+        "rsi_used_to_establish_reachability": false,
+        "schema": "jit_jump_start_reachability_provenance_v1",
+        "target_x_m": 3.0,
+        "trajectory_id": "dense_v1_train_x2.90_family0/variant_0",
+        "unperturbed_suffix_transitions": 2,
+        "variant_ordinal": 0
+      },
+      "label": 1,
+      "parent_group_id": "dense_v1_train_x2.90_family0",
+      "parent_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+      "per_policy_outcomes": {
+        "pi_0": {
+          "label": 1,
+          "status": "success"
+        },
+        "pi_1": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_2": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_3": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_4": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_5": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_6": {
+          "label": null,
+          "status": "untested"
+        }
+      },
+      "perturbation": {
+        "action_dimension": 0,
+        "action_name": "steer",
+        "basis_vector": [
+          -1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000002086162567,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "lookback_m": 0.15,
+        "nominal_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            0.12773123383522034,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.4855732321739197
+          ],
+          [
+            -0.020630236715078354,
+            -0.5443698763847351,
+            0.46097350120544434,
+            -0.7050827145576477
+          ],
+          [
+            -0.2169947326183319,
+            -0.20843416452407837,
+            0.49214261770248413,
+            -0.847678542137146
+          ],
+          [
+            -0.16737057268619537,
+            -0.037910573184490204,
+            0.2931376099586487,
+            -0.8899003267288208
+          ],
+          [
+            -0.08245199918746948,
+            -0.11931934207677841,
+            0.12110645323991776,
+            -0.787915825843811
+          ],
+          [
+            0.12740197777748108,
+            -0.23738333582878113,
+            -0.059685006737709045,
+            -0.5798242688179016
+          ],
+          [
+            0.2950194776058197,
+            -0.5239683985710144,
+            -0.1218913123011589,
+            -0.27545052766799927
+          ],
+          [
+            0.6372384428977966,
+            -0.8398531675338745,
+            -0.09318259358406067,
+            -0.07705408334732056
+          ],
+          [
+            0.8402493000030518,
+            -0.9101472496986389,
+            -0.10531746596097946,
+            -0.1532905101776123
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            -0.02226877212524414,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.4855732321739197
+          ],
+          [
+            -0.17063024640083313,
+            -0.5443698763847351,
+            0.46097350120544434,
+            -0.7050827145576477
+          ],
+          [
+            -0.3669947385787964,
+            -0.20843416452407837,
+            0.49214261770248413,
+            -0.847678542137146
+          ],
+          [
+            -0.31737059354782104,
+            -0.037910573184490204,
+            0.2931376099586487,
+            -0.8899003267288208
+          ],
+          [
+            -0.23245200514793396,
+            -0.11931934207677841,
+            0.12110645323991776,
+            -0.787915825843811
+          ],
+          [
+            -0.0225980281829834,
+            -0.23738333582878113,
+            -0.059685006737709045,
+            -0.5798242688179016
+          ],
+          [
+            0.14501947164535522,
+            -0.5239683985710144,
+            -0.1218913123011589,
+            -0.27545052766799927
+          ],
+          [
+            0.6372384428977966,
+            -0.8398531675338745,
+            -0.09318259358406067,
+            -0.07705408334732056
+          ],
+          [
+            0.8402493000030518,
+            -0.9101472496986389,
+            -0.10531746596097946,
+            -0.1532905101776123
+          ]
+        ],
+        "sign": -1,
+        "strength": 0.15000000000000002,
+        "variant_ordinal": 0
+      },
+      "phase": "upstream",
+      "phase_episode_step": 16,
+      "phase_index": 0,
+      "policy_actor_sha256": "946c23d5199f1d30e4fef799fd7a4b54d271c626a305877a0fa3e45430d3c5b1",
+      "policy_iteration": 6,
+      "policy_payload_sha256": "5550494092b73b57cd9adec0aa632a15342fd7fb23af68355f4ab741e49d920d",
+      "probe_bank_sha256": "ca0d36b2b2faaafa2f31f4256f4dc39065f436569059bcb0d3471a6a60f6c7bd",
+      "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+      "proposal_family_index": 0,
+      "protocol_sha256": "f0dcd30fab43ca221647a19998cf0a30efc96a22183f2b3b5cb487f274e87029",
+      "sampling_mode": "trajectory_slices_v2",
+      "snapshot": "snapshots/candidate_000004",
+      "snapshot_context_sha256": "7a8b8837af3c2c31af43a8b54ee043622de3a4b7e0814f6ec336a493544ce81e",
+      "source_bank": "boundary_bank",
+      "split": "train",
+      "state_sha256": "2f0ab1e9ebbce51a0cf555ab557a185747d2a3f25db1c266596c40d307802596",
+      "successful_policy_names": [
+        "pi_0"
+      ],
+      "trajectory_id": "dense_v1_train_x2.90_family0/variant_0",
+      "trajectory_step": 16,
+      "vx": 2.056586503982544,
+      "vz": 2.673492908477783,
+      "witness_status": "observed_landing",
+      "x": 3.001737594604492,
+      "x_slice_spacing_m": 0.05,
+      "x_target_m": 3.0,
+      "z": 0.3728538155555725
+    },
+    {
+      "acquisition_mode": "jump_start_connected_causal_rollout_v1",
+      "already_in_training_support": false,
+      "candidate_id": "pi6_causal_upstream_000005",
+      "candidate_index": 5,
+      "candidate_kind": "reachable_unified_frontier_probe",
+      "episode_step": 17,
+      "jump_start_reachability": {
+        "environment_transitions_before_perturbation": 7,
+        "environment_transitions_from_jump_start": 17,
+        "generated_by_env_step_only": true,
+        "jump_start_connected": true,
+        "jump_start_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "lookback_m": 0.15,
+        "natural_start_connected": false,
+        "perturbation_anchor_x_m": 2.9,
+        "perturbation_start_actual_x_m": 2.7717809677124023,
+        "perturbation_start_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+        "perturbation_start_target_x_m": 2.75,
+        "perturbed_environment_transitions": 7,
+        "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "proposal_anchor_used_as_reset": false,
+        "proposal_family_index": 0,
+        "proposal_parent_group_id": "dense_v1_train_x2.90_family0",
+        "qpos_qvel_injection_used": false,
+        "reachability_sha256": "cfbf8d6eaec0990f6d323e17fc5b2771767bbef0ea7cc6884df66462198d5716",
+        "rsi_used_to_establish_reachability": false,
+        "schema": "jit_jump_start_reachability_provenance_v1",
+        "target_x_m": 3.0500000000000003,
+        "trajectory_id": "dense_v1_train_x2.90_family0/variant_0",
+        "unperturbed_suffix_transitions": 3,
+        "variant_ordinal": 0
+      },
+      "label": 1,
+      "parent_group_id": "dense_v1_train_x2.90_family0",
+      "parent_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+      "per_policy_outcomes": {
+        "pi_0": {
+          "label": 1,
+          "status": "success"
+        },
+        "pi_1": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_2": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_3": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_4": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_5": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_6": {
+          "label": null,
+          "status": "untested"
+        }
+      },
+      "perturbation": {
+        "action_dimension": 0,
+        "action_name": "steer",
+        "basis_vector": [
+          -1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000002086162567,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "lookback_m": 0.15,
+        "nominal_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            0.12773123383522034,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.4855732321739197
+          ],
+          [
+            -0.020630236715078354,
+            -0.5443698763847351,
+            0.46097350120544434,
+            -0.7050827145576477
+          ],
+          [
+            -0.2169947326183319,
+            -0.20843416452407837,
+            0.49214261770248413,
+            -0.847678542137146
+          ],
+          [
+            -0.16737057268619537,
+            -0.037910573184490204,
+            0.2931376099586487,
+            -0.8899003267288208
+          ],
+          [
+            -0.08245199918746948,
+            -0.11931934207677841,
+            0.12110645323991776,
+            -0.787915825843811
+          ],
+          [
+            0.12740197777748108,
+            -0.23738333582878113,
+            -0.059685006737709045,
+            -0.5798242688179016
+          ],
+          [
+            0.2950194776058197,
+            -0.5239683985710144,
+            -0.1218913123011589,
+            -0.27545052766799927
+          ],
+          [
+            0.6372384428977966,
+            -0.8398531675338745,
+            -0.09318259358406067,
+            -0.07705408334732056
+          ],
+          [
+            0.8402493000030518,
+            -0.9101472496986389,
+            -0.10531746596097946,
+            -0.1532905101776123
+          ],
+          [
+            0.884333610534668,
+            -0.8891286849975586,
+            -0.18871469795703888,
+            -0.35886865854263306
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            -0.02226877212524414,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.4855732321739197
+          ],
+          [
+            -0.17063024640083313,
+            -0.5443698763847351,
+            0.46097350120544434,
+            -0.7050827145576477
+          ],
+          [
+            -0.3669947385787964,
+            -0.20843416452407837,
+            0.49214261770248413,
+            -0.847678542137146
+          ],
+          [
+            -0.31737059354782104,
+            -0.037910573184490204,
+            0.2931376099586487,
+            -0.8899003267288208
+          ],
+          [
+            -0.23245200514793396,
+            -0.11931934207677841,
+            0.12110645323991776,
+            -0.787915825843811
+          ],
+          [
+            -0.0225980281829834,
+            -0.23738333582878113,
+            -0.059685006737709045,
+            -0.5798242688179016
+          ],
+          [
+            0.14501947164535522,
+            -0.5239683985710144,
+            -0.1218913123011589,
+            -0.27545052766799927
+          ],
+          [
+            0.6372384428977966,
+            -0.8398531675338745,
+            -0.09318259358406067,
+            -0.07705408334732056
+          ],
+          [
+            0.8402493000030518,
+            -0.9101472496986389,
+            -0.10531746596097946,
+            -0.1532905101776123
+          ],
+          [
+            0.884333610534668,
+            -0.8891286849975586,
+            -0.18871469795703888,
+            -0.35886865854263306
+          ]
+        ],
+        "sign": -1,
+        "strength": 0.15000000000000002,
+        "variant_ordinal": 0
+      },
+      "phase": "upstream",
+      "phase_episode_step": 17,
+      "phase_index": 0,
+      "policy_actor_sha256": "946c23d5199f1d30e4fef799fd7a4b54d271c626a305877a0fa3e45430d3c5b1",
+      "policy_iteration": 6,
+      "policy_payload_sha256": "5550494092b73b57cd9adec0aa632a15342fd7fb23af68355f4ab741e49d920d",
+      "probe_bank_sha256": "ca0d36b2b2faaafa2f31f4256f4dc39065f436569059bcb0d3471a6a60f6c7bd",
+      "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+      "proposal_family_index": 0,
+      "protocol_sha256": "f0dcd30fab43ca221647a19998cf0a30efc96a22183f2b3b5cb487f274e87029",
+      "sampling_mode": "trajectory_slices_v2",
+      "snapshot": "snapshots/candidate_000005",
+      "snapshot_context_sha256": "16d0f9747aa8014c2335487a2c8946b7bfe3cb84a032b0fec1b1788347fbc909",
+      "source_bank": "boundary_bank",
+      "split": "train",
+      "state_sha256": "ba965d81e4bf9737335308e7402944b7ccad94d81db2623b162cb13576476fe1",
+      "successful_policy_names": [
+        "pi_0"
+      ],
+      "trajectory_id": "dense_v1_train_x2.90_family0/variant_0",
+      "trajectory_step": 17,
+      "vx": 1.729327917098999,
+      "vz": 1.6518104076385498,
+      "witness_status": "observed_landing",
+      "x": 3.0393075942993164,
+      "x_slice_spacing_m": 0.05,
+      "x_target_m": 3.0500000000000003,
+      "z": 0.416355162858963
+    },
+    {
+      "acquisition_mode": "jump_start_connected_causal_rollout_v1",
+      "already_in_training_support": false,
+      "candidate_id": "pi6_causal_upstream_000006",
+      "candidate_index": 6,
+      "candidate_kind": "reachable_unified_frontier_probe",
+      "episode_step": 19,
+      "jump_start_reachability": {
+        "environment_transitions_before_perturbation": 7,
+        "environment_transitions_from_jump_start": 19,
+        "generated_by_env_step_only": true,
+        "jump_start_connected": true,
+        "jump_start_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "lookback_m": 0.15,
+        "natural_start_connected": false,
+        "perturbation_anchor_x_m": 2.9,
+        "perturbation_start_actual_x_m": 2.7717809677124023,
+        "perturbation_start_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+        "perturbation_start_target_x_m": 2.75,
+        "perturbed_environment_transitions": 7,
+        "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "proposal_anchor_used_as_reset": false,
+        "proposal_family_index": 0,
+        "proposal_parent_group_id": "dense_v1_train_x2.90_family0",
+        "qpos_qvel_injection_used": false,
+        "reachability_sha256": "482f967d476c414baec49d295e1669dc17d4fce481ae53006176a364795aa280",
+        "rsi_used_to_establish_reachability": false,
+        "schema": "jit_jump_start_reachability_provenance_v1",
+        "target_x_m": 3.1,
+        "trajectory_id": "dense_v1_train_x2.90_family0/variant_0",
+        "unperturbed_suffix_transitions": 5,
+        "variant_ordinal": 0
+      },
+      "label": 1,
+      "parent_group_id": "dense_v1_train_x2.90_family0",
+      "parent_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+      "per_policy_outcomes": {
+        "pi_0": {
+          "label": 1,
+          "status": "success"
+        },
+        "pi_1": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_2": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_3": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_4": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_5": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_6": {
+          "label": null,
+          "status": "untested"
+        }
+      },
+      "perturbation": {
+        "action_dimension": 0,
+        "action_name": "steer",
+        "basis_vector": [
+          -1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000002086162567,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "lookback_m": 0.15,
+        "nominal_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            0.12773123383522034,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.4855732321739197
+          ],
+          [
+            -0.020630236715078354,
+            -0.5443698763847351,
+            0.46097350120544434,
+            -0.7050827145576477
+          ],
+          [
+            -0.2169947326183319,
+            -0.20843416452407837,
+            0.49214261770248413,
+            -0.847678542137146
+          ],
+          [
+            -0.16737057268619537,
+            -0.037910573184490204,
+            0.2931376099586487,
+            -0.8899003267288208
+          ],
+          [
+            -0.08245199918746948,
+            -0.11931934207677841,
+            0.12110645323991776,
+            -0.787915825843811
+          ],
+          [
+            0.12740197777748108,
+            -0.23738333582878113,
+            -0.059685006737709045,
+            -0.5798242688179016
+          ],
+          [
+            0.2950194776058197,
+            -0.5239683985710144,
+            -0.1218913123011589,
+            -0.27545052766799927
+          ],
+          [
+            0.6372384428977966,
+            -0.8398531675338745,
+            -0.09318259358406067,
+            -0.07705408334732056
+          ],
+          [
+            0.8402493000030518,
+            -0.9101472496986389,
+            -0.10531746596097946,
+            -0.1532905101776123
+          ],
+          [
+            0.884333610534668,
+            -0.8891286849975586,
+            -0.18871469795703888,
+            -0.35886865854263306
+          ],
+          [
+            0.8605823516845703,
+            -0.8590136170387268,
+            0.1659582108259201,
+            -0.4000582993030548
+          ],
+          [
+            0.8373238444328308,
+            -0.8291565775871277,
+            0.4035666286945343,
+            -0.479857861995697
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            -0.02226877212524414,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.4855732321739197
+          ],
+          [
+            -0.17063024640083313,
+            -0.5443698763847351,
+            0.46097350120544434,
+            -0.7050827145576477
+          ],
+          [
+            -0.3669947385787964,
+            -0.20843416452407837,
+            0.49214261770248413,
+            -0.847678542137146
+          ],
+          [
+            -0.31737059354782104,
+            -0.037910573184490204,
+            0.2931376099586487,
+            -0.8899003267288208
+          ],
+          [
+            -0.23245200514793396,
+            -0.11931934207677841,
+            0.12110645323991776,
+            -0.787915825843811
+          ],
+          [
+            -0.0225980281829834,
+            -0.23738333582878113,
+            -0.059685006737709045,
+            -0.5798242688179016
+          ],
+          [
+            0.14501947164535522,
+            -0.5239683985710144,
+            -0.1218913123011589,
+            -0.27545052766799927
+          ],
+          [
+            0.6372384428977966,
+            -0.8398531675338745,
+            -0.09318259358406067,
+            -0.07705408334732056
+          ],
+          [
+            0.8402493000030518,
+            -0.9101472496986389,
+            -0.10531746596097946,
+            -0.1532905101776123
+          ],
+          [
+            0.884333610534668,
+            -0.8891286849975586,
+            -0.18871469795703888,
+            -0.35886865854263306
+          ],
+          [
+            0.8605823516845703,
+            -0.8590136170387268,
+            0.1659582108259201,
+            -0.4000582993030548
+          ],
+          [
+            0.8373238444328308,
+            -0.8291565775871277,
+            0.4035666286945343,
+            -0.479857861995697
+          ]
+        ],
+        "sign": -1,
+        "strength": 0.15000000000000002,
+        "variant_ordinal": 0
+      },
+      "phase": "upstream",
+      "phase_episode_step": 19,
+      "phase_index": 0,
+      "policy_actor_sha256": "946c23d5199f1d30e4fef799fd7a4b54d271c626a305877a0fa3e45430d3c5b1",
+      "policy_iteration": 6,
+      "policy_payload_sha256": "5550494092b73b57cd9adec0aa632a15342fd7fb23af68355f4ab741e49d920d",
+      "probe_bank_sha256": "ca0d36b2b2faaafa2f31f4256f4dc39065f436569059bcb0d3471a6a60f6c7bd",
+      "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+      "proposal_family_index": 0,
+      "protocol_sha256": "f0dcd30fab43ca221647a19998cf0a30efc96a22183f2b3b5cb487f274e87029",
+      "sampling_mode": "trajectory_slices_v2",
+      "snapshot": "snapshots/candidate_000006",
+      "snapshot_context_sha256": "153f35d707802c1b7f697b2c496d2c527f9991bc79bfc05c196dc5fc1a68b13f",
+      "source_bank": "boundary_bank",
+      "split": "train",
+      "state_sha256": "46c8e1a5224bd454aa54f8dd78b3111d12ed0a8cddbb344357dbaf974b2e73c9",
+      "successful_policy_names": [
+        "pi_0"
+      ],
+      "trajectory_id": "dense_v1_train_x2.90_family0/variant_0",
+      "trajectory_step": 19,
+      "vx": 1.6393060684204102,
+      "vz": 0.45462507009506226,
+      "witness_status": "observed_landing",
+      "x": 3.1051290035247803,
+      "x_slice_spacing_m": 0.05,
+      "x_target_m": 3.1,
+      "z": 0.4487854540348053
+    },
+    {
+      "acquisition_mode": "jump_start_connected_causal_rollout_v1",
+      "already_in_training_support": false,
+      "candidate_id": "pi6_causal_upstream_000007",
+      "candidate_index": 7,
+      "candidate_kind": "reachable_unified_frontier_probe",
+      "episode_step": 20,
+      "jump_start_reachability": {
+        "environment_transitions_before_perturbation": 7,
+        "environment_transitions_from_jump_start": 20,
+        "generated_by_env_step_only": true,
+        "jump_start_connected": true,
+        "jump_start_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "lookback_m": 0.15,
+        "natural_start_connected": false,
+        "perturbation_anchor_x_m": 2.9,
+        "perturbation_start_actual_x_m": 2.7717809677124023,
+        "perturbation_start_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+        "perturbation_start_target_x_m": 2.75,
+        "perturbed_environment_transitions": 7,
+        "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "proposal_anchor_used_as_reset": false,
+        "proposal_family_index": 0,
+        "proposal_parent_group_id": "dense_v1_train_x2.90_family0",
+        "qpos_qvel_injection_used": false,
+        "reachability_sha256": "0adfb23f234a78318ab17e04d74584a3e6b3e3af4fc13aca827cbbd5f533a3ea",
+        "rsi_used_to_establish_reachability": false,
+        "schema": "jit_jump_start_reachability_provenance_v1",
+        "target_x_m": 3.1500000000000004,
+        "trajectory_id": "dense_v1_train_x2.90_family0/variant_0",
+        "unperturbed_suffix_transitions": 6,
+        "variant_ordinal": 0
+      },
+      "label": 1,
+      "parent_group_id": "dense_v1_train_x2.90_family0",
+      "parent_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+      "per_policy_outcomes": {
+        "pi_0": {
+          "label": 1,
+          "status": "success"
+        },
+        "pi_1": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_2": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_3": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_4": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_5": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_6": {
+          "label": null,
+          "status": "untested"
+        }
+      },
+      "perturbation": {
+        "action_dimension": 0,
+        "action_name": "steer",
+        "basis_vector": [
+          -1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000002086162567,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.15000000596046448,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "lookback_m": 0.15,
+        "nominal_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            0.12773123383522034,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.4855732321739197
+          ],
+          [
+            -0.020630236715078354,
+            -0.5443698763847351,
+            0.46097350120544434,
+            -0.7050827145576477
+          ],
+          [
+            -0.2169947326183319,
+            -0.20843416452407837,
+            0.49214261770248413,
+            -0.847678542137146
+          ],
+          [
+            -0.16737057268619537,
+            -0.037910573184490204,
+            0.2931376099586487,
+            -0.8899003267288208
+          ],
+          [
+            -0.08245199918746948,
+            -0.11931934207677841,
+            0.12110645323991776,
+            -0.787915825843811
+          ],
+          [
+            0.12740197777748108,
+            -0.23738333582878113,
+            -0.059685006737709045,
+            -0.5798242688179016
+          ],
+          [
+            0.2950194776058197,
+            -0.5239683985710144,
+            -0.1218913123011589,
+            -0.27545052766799927
+          ],
+          [
+            0.6372384428977966,
+            -0.8398531675338745,
+            -0.09318259358406067,
+            -0.07705408334732056
+          ],
+          [
+            0.8402493000030518,
+            -0.9101472496986389,
+            -0.10531746596097946,
+            -0.1532905101776123
+          ],
+          [
+            0.884333610534668,
+            -0.8891286849975586,
+            -0.18871469795703888,
+            -0.35886865854263306
+          ],
+          [
+            0.8605823516845703,
+            -0.8590136170387268,
+            0.1659582108259201,
+            -0.4000582993030548
+          ],
+          [
+            0.8373238444328308,
+            -0.8291565775871277,
+            0.4035666286945343,
+            -0.479857861995697
+          ],
+          [
+            0.8162398934364319,
+            -0.8076064586639404,
+            0.5161294341087341,
+            -0.5721672177314758
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            -0.02226877212524414,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.4855732321739197
+          ],
+          [
+            -0.17063024640083313,
+            -0.5443698763847351,
+            0.46097350120544434,
+            -0.7050827145576477
+          ],
+          [
+            -0.3669947385787964,
+            -0.20843416452407837,
+            0.49214261770248413,
+            -0.847678542137146
+          ],
+          [
+            -0.31737059354782104,
+            -0.037910573184490204,
+            0.2931376099586487,
+            -0.8899003267288208
+          ],
+          [
+            -0.23245200514793396,
+            -0.11931934207677841,
+            0.12110645323991776,
+            -0.787915825843811
+          ],
+          [
+            -0.0225980281829834,
+            -0.23738333582878113,
+            -0.059685006737709045,
+            -0.5798242688179016
+          ],
+          [
+            0.14501947164535522,
+            -0.5239683985710144,
+            -0.1218913123011589,
+            -0.27545052766799927
+          ],
+          [
+            0.6372384428977966,
+            -0.8398531675338745,
+            -0.09318259358406067,
+            -0.07705408334732056
+          ],
+          [
+            0.8402493000030518,
+            -0.9101472496986389,
+            -0.10531746596097946,
+            -0.1532905101776123
+          ],
+          [
+            0.884333610534668,
+            -0.8891286849975586,
+            -0.18871469795703888,
+            -0.35886865854263306
+          ],
+          [
+            0.8605823516845703,
+            -0.8590136170387268,
+            0.1659582108259201,
+            -0.4000582993030548
+          ],
+          [
+            0.8373238444328308,
+            -0.8291565775871277,
+            0.4035666286945343,
+            -0.479857861995697
+          ],
+          [
+            0.8162398934364319,
+            -0.8076064586639404,
+            0.5161294341087341,
+            -0.5721672177314758
+          ]
+        ],
+        "sign": -1,
+        "strength": 0.15000000000000002,
+        "variant_ordinal": 0
+      },
+      "phase": "upstream",
+      "phase_episode_step": 20,
+      "phase_index": 0,
+      "policy_actor_sha256": "946c23d5199f1d30e4fef799fd7a4b54d271c626a305877a0fa3e45430d3c5b1",
+      "policy_iteration": 6,
+      "policy_payload_sha256": "5550494092b73b57cd9adec0aa632a15342fd7fb23af68355f4ab741e49d920d",
+      "probe_bank_sha256": "ca0d36b2b2faaafa2f31f4256f4dc39065f436569059bcb0d3471a6a60f6c7bd",
+      "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+      "proposal_family_index": 0,
+      "protocol_sha256": "f0dcd30fab43ca221647a19998cf0a30efc96a22183f2b3b5cb487f274e87029",
+      "sampling_mode": "trajectory_slices_v2",
+      "snapshot": "snapshots/candidate_000007",
+      "snapshot_context_sha256": "d3088eae373d1fc78f3ca836100520571cb5dffe89276c7c9afd74a18ac5154d",
+      "source_bank": "boundary_bank",
+      "split": "train",
+      "state_sha256": "5abf24be144ec4dcd12a5139c65fd60efe051244f6bce5015723390e1d6aa222",
+      "successful_policy_names": [
+        "pi_0"
+      ],
+      "trajectory_id": "dense_v1_train_x2.90_family0/variant_0",
+      "trajectory_step": 20,
+      "vx": 1.5876960754394531,
+      "vz": 0.331956684589386,
+      "witness_status": "observed_landing",
+      "x": 3.136720895767212,
+      "x_slice_spacing_m": 0.05,
+      "x_target_m": 3.1500000000000004,
+      "z": 0.45395487546920776
+    },
+    {
+      "acquisition_mode": "jump_start_connected_causal_rollout_v1",
+      "already_in_training_support": false,
+      "candidate_id": "pi6_causal_upstream_000077",
+      "candidate_index": 77,
+      "candidate_kind": "reachable_unified_frontier_probe",
+      "episode_step": 13,
+      "jump_start_reachability": {
+        "environment_transitions_before_perturbation": 7,
+        "environment_transitions_from_jump_start": 13,
+        "generated_by_env_step_only": true,
+        "jump_start_connected": true,
+        "jump_start_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "lookback_m": 0.15,
+        "natural_start_connected": false,
+        "perturbation_anchor_x_m": 2.9,
+        "perturbation_start_actual_x_m": 2.7717809677124023,
+        "perturbation_start_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+        "perturbation_start_target_x_m": 2.75,
+        "perturbed_environment_transitions": 6,
+        "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "proposal_anchor_used_as_reset": false,
+        "proposal_family_index": 0,
+        "proposal_parent_group_id": "dense_v1_train_x2.90_family0",
+        "qpos_qvel_injection_used": false,
+        "reachability_sha256": "a6dded5fce20725a3abd457f50b08fb4f20b62c18117ad6a6cfe9152f33ece1d",
+        "rsi_used_to_establish_reachability": false,
+        "schema": "jit_jump_start_reachability_provenance_v1",
+        "target_x_m": 2.9000000000000004,
+        "trajectory_id": "dense_v1_train_x2.90_family0/variant_15",
+        "unperturbed_suffix_transitions": 0,
+        "variant_ordinal": 15
+      },
+      "label": 1,
+      "parent_group_id": "dense_v1_train_x2.90_family0",
+      "parent_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+      "per_policy_outcomes": {
+        "pi_0": {
+          "label": 0,
+          "status": "failure"
+        },
+        "pi_1": {
+          "label": 0,
+          "status": "failure"
+        },
+        "pi_2": {
+          "label": 0,
+          "status": "failure"
+        },
+        "pi_3": {
+          "label": 1,
+          "status": "success"
+        },
+        "pi_4": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_5": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_6": {
+          "label": null,
+          "status": "untested"
+        }
+      },
+      "perturbation": {
+        "action_dimension": 3,
+        "action_name": "knee",
+        "basis_vector": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ]
+        ],
+        "lookback_m": 0.15,
+        "nominal_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            0.12773123383522034,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.4855732321739197
+          ],
+          [
+            -0.03225410357117653,
+            -0.5679869055747986,
+            0.4260086417198181,
+            -0.6864134669303894
+          ],
+          [
+            -0.1914496123790741,
+            -0.24449904263019562,
+            0.4539554715156555,
+            -0.811129629611969
+          ],
+          [
+            -0.14744932949543,
+            -0.18115317821502686,
+            0.36675187945365906,
+            -0.8457575440406799
+          ],
+          [
+            -0.07381302118301392,
+            -0.26067054271698,
+            0.2478807419538498,
+            -0.7805788516998291
+          ],
+          [
+            0.07246631383895874,
+            -0.34371453523635864,
+            0.10845991969108582,
+            -0.5992968678474426
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            0.12773123383522034,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.23557323217391968
+          ],
+          [
+            -0.03225410357117653,
+            -0.5679869055747986,
+            0.4260086417198181,
+            -0.4364134669303894
+          ],
+          [
+            -0.1914496123790741,
+            -0.24449904263019562,
+            0.4539554715156555,
+            -0.561129629611969
+          ],
+          [
+            -0.14744932949543,
+            -0.18115317821502686,
+            0.36675187945365906,
+            -0.5957575440406799
+          ],
+          [
+            -0.07381302118301392,
+            -0.26067054271698,
+            0.2478807419538498,
+            -0.5305788516998291
+          ],
+          [
+            0.07246631383895874,
+            -0.34371453523635864,
+            0.10845991969108582,
+            -0.3492968678474426
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.25,
+        "variant_ordinal": 15
+      },
+      "phase": "upstream",
+      "phase_episode_step": 13,
+      "phase_index": 0,
+      "policy_actor_sha256": "946c23d5199f1d30e4fef799fd7a4b54d271c626a305877a0fa3e45430d3c5b1",
+      "policy_iteration": 6,
+      "policy_payload_sha256": "5550494092b73b57cd9adec0aa632a15342fd7fb23af68355f4ab741e49d920d",
+      "probe_bank_sha256": "ca0d36b2b2faaafa2f31f4256f4dc39065f436569059bcb0d3471a6a60f6c7bd",
+      "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+      "proposal_family_index": 0,
+      "protocol_sha256": "f0dcd30fab43ca221647a19998cf0a30efc96a22183f2b3b5cb487f274e87029",
+      "sampling_mode": "trajectory_slices_v2",
+      "snapshot": "snapshots/candidate_000077",
+      "snapshot_context_sha256": "65cc5952155da9827d73eb610d7359e825a1f944cd580aa5e34f468646dcddda",
+      "source_bank": "boundary_bank",
+      "split": "train",
+      "state_sha256": "ac872690c0544616ecfecc3d1263488236e5c1b1ff59c35243014a95757deb5b",
+      "successful_policy_names": [
+        "pi_3"
+      ],
+      "trajectory_id": "dense_v1_train_x2.90_family0/variant_15",
+      "trajectory_step": 13,
+      "vx": 1.5040391683578491,
+      "vz": 2.2096033096313477,
+      "witness_status": "observed_landing",
+      "x": 2.8896961212158203,
+      "x_slice_spacing_m": 0.05,
+      "x_target_m": 2.9000000000000004,
+      "z": 0.18528246879577637
+    },
+    {
+      "acquisition_mode": "jump_start_connected_causal_rollout_v1",
+      "already_in_training_support": false,
+      "candidate_id": "pi6_causal_upstream_000078",
+      "candidate_index": 78,
+      "candidate_kind": "reachable_unified_frontier_probe",
+      "episode_step": 15,
+      "jump_start_reachability": {
+        "environment_transitions_before_perturbation": 7,
+        "environment_transitions_from_jump_start": 15,
+        "generated_by_env_step_only": true,
+        "jump_start_connected": true,
+        "jump_start_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "lookback_m": 0.15,
+        "natural_start_connected": false,
+        "perturbation_anchor_x_m": 2.9,
+        "perturbation_start_actual_x_m": 2.7717809677124023,
+        "perturbation_start_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+        "perturbation_start_target_x_m": 2.75,
+        "perturbed_environment_transitions": 7,
+        "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "proposal_anchor_used_as_reset": false,
+        "proposal_family_index": 0,
+        "proposal_parent_group_id": "dense_v1_train_x2.90_family0",
+        "qpos_qvel_injection_used": false,
+        "reachability_sha256": "50c6f262031f7066599c239f2b568508a125650db68aac40639cd9c49601385f",
+        "rsi_used_to_establish_reachability": false,
+        "schema": "jit_jump_start_reachability_provenance_v1",
+        "target_x_m": 2.95,
+        "trajectory_id": "dense_v1_train_x2.90_family0/variant_15",
+        "unperturbed_suffix_transitions": 1,
+        "variant_ordinal": 15
+      },
+      "label": 1,
+      "parent_group_id": "dense_v1_train_x2.90_family0",
+      "parent_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+      "per_policy_outcomes": {
+        "pi_0": {
+          "label": 0,
+          "status": "failure"
+        },
+        "pi_1": {
+          "label": 0,
+          "status": "failure"
+        },
+        "pi_2": {
+          "label": 0,
+          "status": "failure"
+        },
+        "pi_3": {
+          "label": 1,
+          "status": "success"
+        },
+        "pi_4": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_5": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_6": {
+          "label": null,
+          "status": "untested"
+        }
+      },
+      "perturbation": {
+        "action_dimension": 3,
+        "action_name": "knee",
+        "basis_vector": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "lookback_m": 0.15,
+        "nominal_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            0.12773123383522034,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.4855732321739197
+          ],
+          [
+            -0.03225410357117653,
+            -0.5679869055747986,
+            0.4260086417198181,
+            -0.6864134669303894
+          ],
+          [
+            -0.1914496123790741,
+            -0.24449904263019562,
+            0.4539554715156555,
+            -0.811129629611969
+          ],
+          [
+            -0.14744932949543,
+            -0.18115317821502686,
+            0.36675187945365906,
+            -0.8457575440406799
+          ],
+          [
+            -0.07381302118301392,
+            -0.26067054271698,
+            0.2478807419538498,
+            -0.7805788516998291
+          ],
+          [
+            0.07246631383895874,
+            -0.34371453523635864,
+            0.10845991969108582,
+            -0.5992968678474426
+          ],
+          [
+            0.25993454456329346,
+            -0.5840829610824585,
+            0.13832157850265503,
+            -0.333456426858902
+          ],
+          [
+            0.5161545276641846,
+            -0.7773054242134094,
+            0.0438983179628849,
+            -0.18825028836727142
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            0.12773123383522034,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.23557323217391968
+          ],
+          [
+            -0.03225410357117653,
+            -0.5679869055747986,
+            0.4260086417198181,
+            -0.4364134669303894
+          ],
+          [
+            -0.1914496123790741,
+            -0.24449904263019562,
+            0.4539554715156555,
+            -0.561129629611969
+          ],
+          [
+            -0.14744932949543,
+            -0.18115317821502686,
+            0.36675187945365906,
+            -0.5957575440406799
+          ],
+          [
+            -0.07381302118301392,
+            -0.26067054271698,
+            0.2478807419538498,
+            -0.5305788516998291
+          ],
+          [
+            0.07246631383895874,
+            -0.34371453523635864,
+            0.10845991969108582,
+            -0.3492968678474426
+          ],
+          [
+            0.25993454456329346,
+            -0.5840829610824585,
+            0.13832157850265503,
+            -0.08345642685890198
+          ],
+          [
+            0.5161545276641846,
+            -0.7773054242134094,
+            0.0438983179628849,
+            -0.18825028836727142
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.25,
+        "variant_ordinal": 15
+      },
+      "phase": "upstream",
+      "phase_episode_step": 15,
+      "phase_index": 0,
+      "policy_actor_sha256": "946c23d5199f1d30e4fef799fd7a4b54d271c626a305877a0fa3e45430d3c5b1",
+      "policy_iteration": 6,
+      "policy_payload_sha256": "5550494092b73b57cd9adec0aa632a15342fd7fb23af68355f4ab741e49d920d",
+      "probe_bank_sha256": "ca0d36b2b2faaafa2f31f4256f4dc39065f436569059bcb0d3471a6a60f6c7bd",
+      "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+      "proposal_family_index": 0,
+      "protocol_sha256": "f0dcd30fab43ca221647a19998cf0a30efc96a22183f2b3b5cb487f274e87029",
+      "sampling_mode": "trajectory_slices_v2",
+      "snapshot": "snapshots/candidate_000078",
+      "snapshot_context_sha256": "4b344b01a3159e2747abec51ff73a5715b9ed439fac78168458370e0e41459b7",
+      "source_bank": "boundary_bank",
+      "split": "train",
+      "state_sha256": "df3c734861c8d80624f630f7f7b713cd835d75fc8ef27c3ef74bc8e930774f2e",
+      "successful_policy_names": [
+        "pi_3"
+      ],
+      "trajectory_id": "dense_v1_train_x2.90_family0/variant_15",
+      "trajectory_step": 15,
+      "vx": 1.8343989849090576,
+      "vz": 2.3298099040985107,
+      "witness_status": "observed_landing",
+      "x": 2.9624242782592773,
+      "x_slice_spacing_m": 0.05,
+      "x_target_m": 2.95,
+      "z": 0.28507232666015625
+    },
+    {
+      "acquisition_mode": "jump_start_connected_causal_rollout_v1",
+      "already_in_training_support": false,
+      "candidate_id": "pi6_causal_upstream_000079",
+      "candidate_index": 79,
+      "candidate_kind": "reachable_unified_frontier_probe",
+      "episode_step": 16,
+      "jump_start_reachability": {
+        "environment_transitions_before_perturbation": 7,
+        "environment_transitions_from_jump_start": 16,
+        "generated_by_env_step_only": true,
+        "jump_start_connected": true,
+        "jump_start_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "lookback_m": 0.15,
+        "natural_start_connected": false,
+        "perturbation_anchor_x_m": 2.9,
+        "perturbation_start_actual_x_m": 2.7717809677124023,
+        "perturbation_start_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+        "perturbation_start_target_x_m": 2.75,
+        "perturbed_environment_transitions": 7,
+        "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "proposal_anchor_used_as_reset": false,
+        "proposal_family_index": 0,
+        "proposal_parent_group_id": "dense_v1_train_x2.90_family0",
+        "qpos_qvel_injection_used": false,
+        "reachability_sha256": "1e40b4707e4668463c9a49d81fb33457af1f1c9a9a28d6bd561f45d3b02108ea",
+        "rsi_used_to_establish_reachability": false,
+        "schema": "jit_jump_start_reachability_provenance_v1",
+        "target_x_m": 3.0,
+        "trajectory_id": "dense_v1_train_x2.90_family0/variant_15",
+        "unperturbed_suffix_transitions": 2,
+        "variant_ordinal": 15
+      },
+      "label": 1,
+      "parent_group_id": "dense_v1_train_x2.90_family0",
+      "parent_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+      "per_policy_outcomes": {
+        "pi_0": {
+          "label": 0,
+          "status": "failure"
+        },
+        "pi_1": {
+          "label": 0,
+          "status": "failure"
+        },
+        "pi_2": {
+          "label": 0,
+          "status": "failure"
+        },
+        "pi_3": {
+          "label": 1,
+          "status": "success"
+        },
+        "pi_4": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_5": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_6": {
+          "label": null,
+          "status": "untested"
+        }
+      },
+      "perturbation": {
+        "action_dimension": 3,
+        "action_name": "knee",
+        "basis_vector": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "lookback_m": 0.15,
+        "nominal_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            0.12773123383522034,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.4855732321739197
+          ],
+          [
+            -0.03225410357117653,
+            -0.5679869055747986,
+            0.4260086417198181,
+            -0.6864134669303894
+          ],
+          [
+            -0.1914496123790741,
+            -0.24449904263019562,
+            0.4539554715156555,
+            -0.811129629611969
+          ],
+          [
+            -0.14744932949543,
+            -0.18115317821502686,
+            0.36675187945365906,
+            -0.8457575440406799
+          ],
+          [
+            -0.07381302118301392,
+            -0.26067054271698,
+            0.2478807419538498,
+            -0.7805788516998291
+          ],
+          [
+            0.07246631383895874,
+            -0.34371453523635864,
+            0.10845991969108582,
+            -0.5992968678474426
+          ],
+          [
+            0.25993454456329346,
+            -0.5840829610824585,
+            0.13832157850265503,
+            -0.333456426858902
+          ],
+          [
+            0.5161545276641846,
+            -0.7773054242134094,
+            0.0438983179628849,
+            -0.18825028836727142
+          ],
+          [
+            0.7098193168640137,
+            -0.8405613899230957,
+            0.08614292740821838,
+            -0.32020291686058044
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            0.12773123383522034,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.23557323217391968
+          ],
+          [
+            -0.03225410357117653,
+            -0.5679869055747986,
+            0.4260086417198181,
+            -0.4364134669303894
+          ],
+          [
+            -0.1914496123790741,
+            -0.24449904263019562,
+            0.4539554715156555,
+            -0.561129629611969
+          ],
+          [
+            -0.14744932949543,
+            -0.18115317821502686,
+            0.36675187945365906,
+            -0.5957575440406799
+          ],
+          [
+            -0.07381302118301392,
+            -0.26067054271698,
+            0.2478807419538498,
+            -0.5305788516998291
+          ],
+          [
+            0.07246631383895874,
+            -0.34371453523635864,
+            0.10845991969108582,
+            -0.3492968678474426
+          ],
+          [
+            0.25993454456329346,
+            -0.5840829610824585,
+            0.13832157850265503,
+            -0.08345642685890198
+          ],
+          [
+            0.5161545276641846,
+            -0.7773054242134094,
+            0.0438983179628849,
+            -0.18825028836727142
+          ],
+          [
+            0.7098193168640137,
+            -0.8405613899230957,
+            0.08614292740821838,
+            -0.32020291686058044
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.25,
+        "variant_ordinal": 15
+      },
+      "phase": "upstream",
+      "phase_episode_step": 16,
+      "phase_index": 0,
+      "policy_actor_sha256": "946c23d5199f1d30e4fef799fd7a4b54d271c626a305877a0fa3e45430d3c5b1",
+      "policy_iteration": 6,
+      "policy_payload_sha256": "5550494092b73b57cd9adec0aa632a15342fd7fb23af68355f4ab741e49d920d",
+      "probe_bank_sha256": "ca0d36b2b2faaafa2f31f4256f4dc39065f436569059bcb0d3471a6a60f6c7bd",
+      "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+      "proposal_family_index": 0,
+      "protocol_sha256": "f0dcd30fab43ca221647a19998cf0a30efc96a22183f2b3b5cb487f274e87029",
+      "sampling_mode": "trajectory_slices_v2",
+      "snapshot": "snapshots/candidate_000079",
+      "snapshot_context_sha256": "8ed6fb7be27d43dbc6601a67921c4f16ef46591a9b31b86f88cdbb0cc54e3c20",
+      "source_bank": "boundary_bank",
+      "split": "train",
+      "state_sha256": "765c80511ae029cbfd0c255e120b3c6cc901e8c4ae8b8842a221ba04407f2815",
+      "successful_policy_names": [
+        "pi_3"
+      ],
+      "trajectory_id": "dense_v1_train_x2.90_family0/variant_15",
+      "trajectory_step": 16,
+      "vx": 1.5702214241027832,
+      "vz": 1.4156469106674194,
+      "witness_status": "observed_landing",
+      "x": 2.9957571029663086,
+      "x_slice_spacing_m": 0.05,
+      "x_target_m": 3.0,
+      "z": 0.3208070695400238
+    },
+    {
+      "acquisition_mode": "jump_start_connected_causal_rollout_v1",
+      "already_in_training_support": false,
+      "candidate_id": "pi6_causal_upstream_000080",
+      "candidate_index": 80,
+      "candidate_kind": "reachable_unified_frontier_probe",
+      "episode_step": 17,
+      "jump_start_reachability": {
+        "environment_transitions_before_perturbation": 7,
+        "environment_transitions_from_jump_start": 17,
+        "generated_by_env_step_only": true,
+        "jump_start_connected": true,
+        "jump_start_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "lookback_m": 0.15,
+        "natural_start_connected": false,
+        "perturbation_anchor_x_m": 2.9,
+        "perturbation_start_actual_x_m": 2.7717809677124023,
+        "perturbation_start_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+        "perturbation_start_target_x_m": 2.75,
+        "perturbed_environment_transitions": 7,
+        "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "proposal_anchor_used_as_reset": false,
+        "proposal_family_index": 0,
+        "proposal_parent_group_id": "dense_v1_train_x2.90_family0",
+        "qpos_qvel_injection_used": false,
+        "reachability_sha256": "7325fb88cc5a87c50575ff7aa1e46de5282f3054483ce90708eb48d5112ab386",
+        "rsi_used_to_establish_reachability": false,
+        "schema": "jit_jump_start_reachability_provenance_v1",
+        "target_x_m": 3.0500000000000003,
+        "trajectory_id": "dense_v1_train_x2.90_family0/variant_15",
+        "unperturbed_suffix_transitions": 3,
+        "variant_ordinal": 15
+      },
+      "label": 1,
+      "parent_group_id": "dense_v1_train_x2.90_family0",
+      "parent_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+      "per_policy_outcomes": {
+        "pi_0": {
+          "label": 0,
+          "status": "failure"
+        },
+        "pi_1": {
+          "label": 0,
+          "status": "failure"
+        },
+        "pi_2": {
+          "label": 0,
+          "status": "failure"
+        },
+        "pi_3": {
+          "label": 1,
+          "status": "success"
+        },
+        "pi_4": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_5": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_6": {
+          "label": null,
+          "status": "untested"
+        }
+      },
+      "perturbation": {
+        "action_dimension": 3,
+        "action_name": "knee",
+        "basis_vector": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "lookback_m": 0.15,
+        "nominal_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            0.12773123383522034,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.4855732321739197
+          ],
+          [
+            -0.03225410357117653,
+            -0.5679869055747986,
+            0.4260086417198181,
+            -0.6864134669303894
+          ],
+          [
+            -0.1914496123790741,
+            -0.24449904263019562,
+            0.4539554715156555,
+            -0.811129629611969
+          ],
+          [
+            -0.14744932949543,
+            -0.18115317821502686,
+            0.36675187945365906,
+            -0.8457575440406799
+          ],
+          [
+            -0.07381302118301392,
+            -0.26067054271698,
+            0.2478807419538498,
+            -0.7805788516998291
+          ],
+          [
+            0.07246631383895874,
+            -0.34371453523635864,
+            0.10845991969108582,
+            -0.5992968678474426
+          ],
+          [
+            0.25993454456329346,
+            -0.5840829610824585,
+            0.13832157850265503,
+            -0.333456426858902
+          ],
+          [
+            0.5161545276641846,
+            -0.7773054242134094,
+            0.0438983179628849,
+            -0.18825028836727142
+          ],
+          [
+            0.7098193168640137,
+            -0.8405613899230957,
+            0.08614292740821838,
+            -0.32020291686058044
+          ],
+          [
+            0.6721490621566772,
+            -0.8174800276756287,
+            0.26250800490379333,
+            -0.3788944184780121
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            0.12773123383522034,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.23557323217391968
+          ],
+          [
+            -0.03225410357117653,
+            -0.5679869055747986,
+            0.4260086417198181,
+            -0.4364134669303894
+          ],
+          [
+            -0.1914496123790741,
+            -0.24449904263019562,
+            0.4539554715156555,
+            -0.561129629611969
+          ],
+          [
+            -0.14744932949543,
+            -0.18115317821502686,
+            0.36675187945365906,
+            -0.5957575440406799
+          ],
+          [
+            -0.07381302118301392,
+            -0.26067054271698,
+            0.2478807419538498,
+            -0.5305788516998291
+          ],
+          [
+            0.07246631383895874,
+            -0.34371453523635864,
+            0.10845991969108582,
+            -0.3492968678474426
+          ],
+          [
+            0.25993454456329346,
+            -0.5840829610824585,
+            0.13832157850265503,
+            -0.08345642685890198
+          ],
+          [
+            0.5161545276641846,
+            -0.7773054242134094,
+            0.0438983179628849,
+            -0.18825028836727142
+          ],
+          [
+            0.7098193168640137,
+            -0.8405613899230957,
+            0.08614292740821838,
+            -0.32020291686058044
+          ],
+          [
+            0.6721490621566772,
+            -0.8174800276756287,
+            0.26250800490379333,
+            -0.3788944184780121
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.25,
+        "variant_ordinal": 15
+      },
+      "phase": "upstream",
+      "phase_episode_step": 17,
+      "phase_index": 0,
+      "policy_actor_sha256": "946c23d5199f1d30e4fef799fd7a4b54d271c626a305877a0fa3e45430d3c5b1",
+      "policy_iteration": 6,
+      "policy_payload_sha256": "5550494092b73b57cd9adec0aa632a15342fd7fb23af68355f4ab741e49d920d",
+      "probe_bank_sha256": "ca0d36b2b2faaafa2f31f4256f4dc39065f436569059bcb0d3471a6a60f6c7bd",
+      "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+      "proposal_family_index": 0,
+      "protocol_sha256": "f0dcd30fab43ca221647a19998cf0a30efc96a22183f2b3b5cb487f274e87029",
+      "sampling_mode": "trajectory_slices_v2",
+      "snapshot": "snapshots/candidate_000080",
+      "snapshot_context_sha256": "bc1c5a381abaffb8e155b43aaf0d6a19743a2842db36f53936371e8ff5195cc6",
+      "source_bank": "boundary_bank",
+      "split": "train",
+      "state_sha256": "f80dcddd59b9b09ed061a4d31155238a0aa4e145e7a31de1d825da95fd78c689",
+      "successful_policy_names": [
+        "pi_3"
+      ],
+      "trajectory_id": "dense_v1_train_x2.90_family0/variant_15",
+      "trajectory_step": 17,
+      "vx": 1.5061653852462769,
+      "vz": 0.7692173719406128,
+      "witness_status": "observed_landing",
+      "x": 3.0260369777679443,
+      "x_slice_spacing_m": 0.05,
+      "x_target_m": 3.0500000000000003,
+      "z": 0.3394777774810791
+    },
+    {
+      "acquisition_mode": "jump_start_connected_causal_rollout_v1",
+      "already_in_training_support": false,
+      "candidate_id": "pi6_causal_upstream_000081",
+      "candidate_index": 81,
+      "candidate_kind": "reachable_unified_frontier_probe",
+      "episode_step": 19,
+      "jump_start_reachability": {
+        "environment_transitions_before_perturbation": 7,
+        "environment_transitions_from_jump_start": 19,
+        "generated_by_env_step_only": true,
+        "jump_start_connected": true,
+        "jump_start_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "lookback_m": 0.15,
+        "natural_start_connected": false,
+        "perturbation_anchor_x_m": 2.9,
+        "perturbation_start_actual_x_m": 2.7717809677124023,
+        "perturbation_start_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+        "perturbation_start_target_x_m": 2.75,
+        "perturbed_environment_transitions": 7,
+        "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "proposal_anchor_used_as_reset": false,
+        "proposal_family_index": 0,
+        "proposal_parent_group_id": "dense_v1_train_x2.90_family0",
+        "qpos_qvel_injection_used": false,
+        "reachability_sha256": "c2baa19aead9388555bc8b614d1369b9c50b10b879b1603d6e3864a28ca8de0c",
+        "rsi_used_to_establish_reachability": false,
+        "schema": "jit_jump_start_reachability_provenance_v1",
+        "target_x_m": 3.1,
+        "trajectory_id": "dense_v1_train_x2.90_family0/variant_15",
+        "unperturbed_suffix_transitions": 5,
+        "variant_ordinal": 15
+      },
+      "label": 1,
+      "parent_group_id": "dense_v1_train_x2.90_family0",
+      "parent_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+      "per_policy_outcomes": {
+        "pi_0": {
+          "label": 0,
+          "status": "failure"
+        },
+        "pi_1": {
+          "label": 0,
+          "status": "failure"
+        },
+        "pi_2": {
+          "label": 0,
+          "status": "failure"
+        },
+        "pi_3": {
+          "label": 1,
+          "status": "success"
+        },
+        "pi_4": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_5": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_6": {
+          "label": null,
+          "status": "untested"
+        }
+      },
+      "perturbation": {
+        "action_dimension": 3,
+        "action_name": "knee",
+        "basis_vector": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "lookback_m": 0.15,
+        "nominal_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            0.12773123383522034,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.4855732321739197
+          ],
+          [
+            -0.03225410357117653,
+            -0.5679869055747986,
+            0.4260086417198181,
+            -0.6864134669303894
+          ],
+          [
+            -0.1914496123790741,
+            -0.24449904263019562,
+            0.4539554715156555,
+            -0.811129629611969
+          ],
+          [
+            -0.14744932949543,
+            -0.18115317821502686,
+            0.36675187945365906,
+            -0.8457575440406799
+          ],
+          [
+            -0.07381302118301392,
+            -0.26067054271698,
+            0.2478807419538498,
+            -0.7805788516998291
+          ],
+          [
+            0.07246631383895874,
+            -0.34371453523635864,
+            0.10845991969108582,
+            -0.5992968678474426
+          ],
+          [
+            0.25993454456329346,
+            -0.5840829610824585,
+            0.13832157850265503,
+            -0.333456426858902
+          ],
+          [
+            0.5161545276641846,
+            -0.7773054242134094,
+            0.0438983179628849,
+            -0.18825028836727142
+          ],
+          [
+            0.7098193168640137,
+            -0.8405613899230957,
+            0.08614292740821838,
+            -0.32020291686058044
+          ],
+          [
+            0.6721490621566772,
+            -0.8174800276756287,
+            0.26250800490379333,
+            -0.3788944184780121
+          ],
+          [
+            0.7018698453903198,
+            -0.8152512907981873,
+            0.3849954605102539,
+            -0.4399344325065613
+          ],
+          [
+            0.6730293035507202,
+            -0.7849085927009583,
+            0.5026785135269165,
+            -0.5489290952682495
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            0.12773123383522034,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.23557323217391968
+          ],
+          [
+            -0.03225410357117653,
+            -0.5679869055747986,
+            0.4260086417198181,
+            -0.4364134669303894
+          ],
+          [
+            -0.1914496123790741,
+            -0.24449904263019562,
+            0.4539554715156555,
+            -0.561129629611969
+          ],
+          [
+            -0.14744932949543,
+            -0.18115317821502686,
+            0.36675187945365906,
+            -0.5957575440406799
+          ],
+          [
+            -0.07381302118301392,
+            -0.26067054271698,
+            0.2478807419538498,
+            -0.5305788516998291
+          ],
+          [
+            0.07246631383895874,
+            -0.34371453523635864,
+            0.10845991969108582,
+            -0.3492968678474426
+          ],
+          [
+            0.25993454456329346,
+            -0.5840829610824585,
+            0.13832157850265503,
+            -0.08345642685890198
+          ],
+          [
+            0.5161545276641846,
+            -0.7773054242134094,
+            0.0438983179628849,
+            -0.18825028836727142
+          ],
+          [
+            0.7098193168640137,
+            -0.8405613899230957,
+            0.08614292740821838,
+            -0.32020291686058044
+          ],
+          [
+            0.6721490621566772,
+            -0.8174800276756287,
+            0.26250800490379333,
+            -0.3788944184780121
+          ],
+          [
+            0.7018698453903198,
+            -0.8152512907981873,
+            0.3849954605102539,
+            -0.4399344325065613
+          ],
+          [
+            0.6730293035507202,
+            -0.7849085927009583,
+            0.5026785135269165,
+            -0.5489290952682495
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.25,
+        "variant_ordinal": 15
+      },
+      "phase": "upstream",
+      "phase_episode_step": 19,
+      "phase_index": 0,
+      "policy_actor_sha256": "946c23d5199f1d30e4fef799fd7a4b54d271c626a305877a0fa3e45430d3c5b1",
+      "policy_iteration": 6,
+      "policy_payload_sha256": "5550494092b73b57cd9adec0aa632a15342fd7fb23af68355f4ab741e49d920d",
+      "probe_bank_sha256": "ca0d36b2b2faaafa2f31f4256f4dc39065f436569059bcb0d3471a6a60f6c7bd",
+      "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+      "proposal_family_index": 0,
+      "protocol_sha256": "f0dcd30fab43ca221647a19998cf0a30efc96a22183f2b3b5cb487f274e87029",
+      "sampling_mode": "trajectory_slices_v2",
+      "snapshot": "snapshots/candidate_000081",
+      "snapshot_context_sha256": "6f8d3253da5128c5e1ca5d2f0fa94bcd5fabe753d5768ccea4a63174290cde91",
+      "source_bank": "boundary_bank",
+      "split": "train",
+      "state_sha256": "c6b98d643ff4b0d312aaf4bc4f3667568fc8d3904ac037fd04cbc77851d4fb41",
+      "successful_policy_names": [
+        "pi_3"
+      ],
+      "trajectory_id": "dense_v1_train_x2.90_family0/variant_15",
+      "trajectory_step": 19,
+      "vx": 1.379414439201355,
+      "vz": 0.11049730330705643,
+      "witness_status": "observed_landing",
+      "x": 3.083012580871582,
+      "x_slice_spacing_m": 0.05,
+      "x_target_m": 3.1,
+      "z": 0.35125526785850525
+    },
+    {
+      "acquisition_mode": "jump_start_connected_causal_rollout_v1",
+      "already_in_training_support": false,
+      "candidate_id": "pi6_causal_upstream_000082",
+      "candidate_index": 82,
+      "candidate_kind": "reachable_unified_frontier_probe",
+      "episode_step": 21,
+      "jump_start_reachability": {
+        "environment_transitions_before_perturbation": 7,
+        "environment_transitions_from_jump_start": 21,
+        "generated_by_env_step_only": true,
+        "jump_start_connected": true,
+        "jump_start_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "lookback_m": 0.15,
+        "natural_start_connected": false,
+        "perturbation_anchor_x_m": 2.9,
+        "perturbation_start_actual_x_m": 2.7717809677124023,
+        "perturbation_start_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+        "perturbation_start_target_x_m": 2.75,
+        "perturbed_environment_transitions": 7,
+        "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "proposal_anchor_used_as_reset": false,
+        "proposal_family_index": 0,
+        "proposal_parent_group_id": "dense_v1_train_x2.90_family0",
+        "qpos_qvel_injection_used": false,
+        "reachability_sha256": "c3b2434138eb2a76a5b781f644421003f1822bcd67e519227b3de60b787ec277",
+        "rsi_used_to_establish_reachability": false,
+        "schema": "jit_jump_start_reachability_provenance_v1",
+        "target_x_m": 3.1500000000000004,
+        "trajectory_id": "dense_v1_train_x2.90_family0/variant_15",
+        "unperturbed_suffix_transitions": 7,
+        "variant_ordinal": 15
+      },
+      "label": 1,
+      "parent_group_id": "dense_v1_train_x2.90_family0",
+      "parent_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+      "per_policy_outcomes": {
+        "pi_0": {
+          "label": 0,
+          "status": "failure"
+        },
+        "pi_1": {
+          "label": 0,
+          "status": "failure"
+        },
+        "pi_2": {
+          "label": 0,
+          "status": "failure"
+        },
+        "pi_3": {
+          "label": 1,
+          "status": "success"
+        },
+        "pi_4": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_5": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_6": {
+          "label": null,
+          "status": "untested"
+        }
+      },
+      "perturbation": {
+        "action_dimension": 3,
+        "action_name": "knee",
+        "basis_vector": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "lookback_m": 0.15,
+        "nominal_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            0.12773123383522034,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.4855732321739197
+          ],
+          [
+            -0.03225410357117653,
+            -0.5679869055747986,
+            0.4260086417198181,
+            -0.6864134669303894
+          ],
+          [
+            -0.1914496123790741,
+            -0.24449904263019562,
+            0.4539554715156555,
+            -0.811129629611969
+          ],
+          [
+            -0.14744932949543,
+            -0.18115317821502686,
+            0.36675187945365906,
+            -0.8457575440406799
+          ],
+          [
+            -0.07381302118301392,
+            -0.26067054271698,
+            0.2478807419538498,
+            -0.7805788516998291
+          ],
+          [
+            0.07246631383895874,
+            -0.34371453523635864,
+            0.10845991969108582,
+            -0.5992968678474426
+          ],
+          [
+            0.25993454456329346,
+            -0.5840829610824585,
+            0.13832157850265503,
+            -0.333456426858902
+          ],
+          [
+            0.5161545276641846,
+            -0.7773054242134094,
+            0.0438983179628849,
+            -0.18825028836727142
+          ],
+          [
+            0.7098193168640137,
+            -0.8405613899230957,
+            0.08614292740821838,
+            -0.32020291686058044
+          ],
+          [
+            0.6721490621566772,
+            -0.8174800276756287,
+            0.26250800490379333,
+            -0.3788944184780121
+          ],
+          [
+            0.7018698453903198,
+            -0.8152512907981873,
+            0.3849954605102539,
+            -0.4399344325065613
+          ],
+          [
+            0.6730293035507202,
+            -0.7849085927009583,
+            0.5026785135269165,
+            -0.5489290952682495
+          ],
+          [
+            0.6526070833206177,
+            -0.7503056526184082,
+            0.5790985822677612,
+            -0.6089842319488525
+          ],
+          [
+            0.635225772857666,
+            -0.7161040902137756,
+            0.6056419014930725,
+            -0.6166200637817383
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            0.12773123383522034,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.23557323217391968
+          ],
+          [
+            -0.03225410357117653,
+            -0.5679869055747986,
+            0.4260086417198181,
+            -0.4364134669303894
+          ],
+          [
+            -0.1914496123790741,
+            -0.24449904263019562,
+            0.4539554715156555,
+            -0.561129629611969
+          ],
+          [
+            -0.14744932949543,
+            -0.18115317821502686,
+            0.36675187945365906,
+            -0.5957575440406799
+          ],
+          [
+            -0.07381302118301392,
+            -0.26067054271698,
+            0.2478807419538498,
+            -0.5305788516998291
+          ],
+          [
+            0.07246631383895874,
+            -0.34371453523635864,
+            0.10845991969108582,
+            -0.3492968678474426
+          ],
+          [
+            0.25993454456329346,
+            -0.5840829610824585,
+            0.13832157850265503,
+            -0.08345642685890198
+          ],
+          [
+            0.5161545276641846,
+            -0.7773054242134094,
+            0.0438983179628849,
+            -0.18825028836727142
+          ],
+          [
+            0.7098193168640137,
+            -0.8405613899230957,
+            0.08614292740821838,
+            -0.32020291686058044
+          ],
+          [
+            0.6721490621566772,
+            -0.8174800276756287,
+            0.26250800490379333,
+            -0.3788944184780121
+          ],
+          [
+            0.7018698453903198,
+            -0.8152512907981873,
+            0.3849954605102539,
+            -0.4399344325065613
+          ],
+          [
+            0.6730293035507202,
+            -0.7849085927009583,
+            0.5026785135269165,
+            -0.5489290952682495
+          ],
+          [
+            0.6526070833206177,
+            -0.7503056526184082,
+            0.5790985822677612,
+            -0.6089842319488525
+          ],
+          [
+            0.635225772857666,
+            -0.7161040902137756,
+            0.6056419014930725,
+            -0.6166200637817383
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.25,
+        "variant_ordinal": 15
+      },
+      "phase": "upstream",
+      "phase_episode_step": 21,
+      "phase_index": 0,
+      "policy_actor_sha256": "946c23d5199f1d30e4fef799fd7a4b54d271c626a305877a0fa3e45430d3c5b1",
+      "policy_iteration": 6,
+      "policy_payload_sha256": "5550494092b73b57cd9adec0aa632a15342fd7fb23af68355f4ab741e49d920d",
+      "probe_bank_sha256": "ca0d36b2b2faaafa2f31f4256f4dc39065f436569059bcb0d3471a6a60f6c7bd",
+      "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+      "proposal_family_index": 0,
+      "protocol_sha256": "f0dcd30fab43ca221647a19998cf0a30efc96a22183f2b3b5cb487f274e87029",
+      "sampling_mode": "trajectory_slices_v2",
+      "snapshot": "snapshots/candidate_000082",
+      "snapshot_context_sha256": "b1609fcc09c6a46be21b8d7c62aeb4c0f63e26d7efb28a1254a79c62d74e18a6",
+      "source_bank": "boundary_bank",
+      "split": "train",
+      "state_sha256": "b9b0631a99099ff97efec99018fa118801c09c52b2ced1f0d40dc377c9f981ee",
+      "successful_policy_names": [
+        "pi_3"
+      ],
+      "trajectory_id": "dense_v1_train_x2.90_family0/variant_15",
+      "trajectory_step": 21,
+      "vx": 1.449048399925232,
+      "vz": 0.12345080822706223,
+      "witness_status": "observed_landing",
+      "x": 3.138436794281006,
+      "x_slice_spacing_m": 0.05,
+      "x_target_m": 3.1500000000000004,
+      "z": 0.35607075691223145
+    },
+    {
+      "acquisition_mode": "jump_start_connected_causal_rollout_v1",
+      "already_in_training_support": false,
+      "candidate_id": "pi6_causal_upstream_000083",
+      "candidate_index": 83,
+      "candidate_kind": "reachable_unified_frontier_probe",
+      "episode_step": 23,
+      "jump_start_reachability": {
+        "environment_transitions_before_perturbation": 7,
+        "environment_transitions_from_jump_start": 23,
+        "generated_by_env_step_only": true,
+        "jump_start_connected": true,
+        "jump_start_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "lookback_m": 0.15,
+        "natural_start_connected": false,
+        "perturbation_anchor_x_m": 2.9,
+        "perturbation_start_actual_x_m": 2.7717809677124023,
+        "perturbation_start_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+        "perturbation_start_target_x_m": 2.75,
+        "perturbed_environment_transitions": 7,
+        "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "proposal_anchor_used_as_reset": false,
+        "proposal_family_index": 0,
+        "proposal_parent_group_id": "dense_v1_train_x2.90_family0",
+        "qpos_qvel_injection_used": false,
+        "reachability_sha256": "8cdc1358964eb73307dbd856802ce500588f3d4fcf7467e63ab8e8becc4ad7e9",
+        "rsi_used_to_establish_reachability": false,
+        "schema": "jit_jump_start_reachability_provenance_v1",
+        "target_x_m": 3.2,
+        "trajectory_id": "dense_v1_train_x2.90_family0/variant_15",
+        "unperturbed_suffix_transitions": 9,
+        "variant_ordinal": 15
+      },
+      "label": 1,
+      "parent_group_id": "dense_v1_train_x2.90_family0",
+      "parent_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+      "per_policy_outcomes": {
+        "pi_0": {
+          "label": 0,
+          "status": "failure"
+        },
+        "pi_1": {
+          "label": 0,
+          "status": "failure"
+        },
+        "pi_2": {
+          "label": 0,
+          "status": "failure"
+        },
+        "pi_3": {
+          "label": 1,
+          "status": "success"
+        },
+        "pi_4": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_5": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_6": {
+          "label": null,
+          "status": "untested"
+        }
+      },
+      "perturbation": {
+        "action_dimension": 3,
+        "action_name": "knee",
+        "basis_vector": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "lookback_m": 0.15,
+        "nominal_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            0.12773123383522034,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.4855732321739197
+          ],
+          [
+            -0.03225410357117653,
+            -0.5679869055747986,
+            0.4260086417198181,
+            -0.6864134669303894
+          ],
+          [
+            -0.1914496123790741,
+            -0.24449904263019562,
+            0.4539554715156555,
+            -0.811129629611969
+          ],
+          [
+            -0.14744932949543,
+            -0.18115317821502686,
+            0.36675187945365906,
+            -0.8457575440406799
+          ],
+          [
+            -0.07381302118301392,
+            -0.26067054271698,
+            0.2478807419538498,
+            -0.7805788516998291
+          ],
+          [
+            0.07246631383895874,
+            -0.34371453523635864,
+            0.10845991969108582,
+            -0.5992968678474426
+          ],
+          [
+            0.25993454456329346,
+            -0.5840829610824585,
+            0.13832157850265503,
+            -0.333456426858902
+          ],
+          [
+            0.5161545276641846,
+            -0.7773054242134094,
+            0.0438983179628849,
+            -0.18825028836727142
+          ],
+          [
+            0.7098193168640137,
+            -0.8405613899230957,
+            0.08614292740821838,
+            -0.32020291686058044
+          ],
+          [
+            0.6721490621566772,
+            -0.8174800276756287,
+            0.26250800490379333,
+            -0.3788944184780121
+          ],
+          [
+            0.7018698453903198,
+            -0.8152512907981873,
+            0.3849954605102539,
+            -0.4399344325065613
+          ],
+          [
+            0.6730293035507202,
+            -0.7849085927009583,
+            0.5026785135269165,
+            -0.5489290952682495
+          ],
+          [
+            0.6526070833206177,
+            -0.7503056526184082,
+            0.5790985822677612,
+            -0.6089842319488525
+          ],
+          [
+            0.635225772857666,
+            -0.7161040902137756,
+            0.6056419014930725,
+            -0.6166200637817383
+          ],
+          [
+            0.6434245705604553,
+            -0.6836751699447632,
+            0.6398363709449768,
+            -0.5828700065612793
+          ],
+          [
+            0.6639937162399292,
+            -0.6651647686958313,
+            0.6461242437362671,
+            -0.5328237414360046
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            0.12773123383522034,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.23557323217391968
+          ],
+          [
+            -0.03225410357117653,
+            -0.5679869055747986,
+            0.4260086417198181,
+            -0.4364134669303894
+          ],
+          [
+            -0.1914496123790741,
+            -0.24449904263019562,
+            0.4539554715156555,
+            -0.561129629611969
+          ],
+          [
+            -0.14744932949543,
+            -0.18115317821502686,
+            0.36675187945365906,
+            -0.5957575440406799
+          ],
+          [
+            -0.07381302118301392,
+            -0.26067054271698,
+            0.2478807419538498,
+            -0.5305788516998291
+          ],
+          [
+            0.07246631383895874,
+            -0.34371453523635864,
+            0.10845991969108582,
+            -0.3492968678474426
+          ],
+          [
+            0.25993454456329346,
+            -0.5840829610824585,
+            0.13832157850265503,
+            -0.08345642685890198
+          ],
+          [
+            0.5161545276641846,
+            -0.7773054242134094,
+            0.0438983179628849,
+            -0.18825028836727142
+          ],
+          [
+            0.7098193168640137,
+            -0.8405613899230957,
+            0.08614292740821838,
+            -0.32020291686058044
+          ],
+          [
+            0.6721490621566772,
+            -0.8174800276756287,
+            0.26250800490379333,
+            -0.3788944184780121
+          ],
+          [
+            0.7018698453903198,
+            -0.8152512907981873,
+            0.3849954605102539,
+            -0.4399344325065613
+          ],
+          [
+            0.6730293035507202,
+            -0.7849085927009583,
+            0.5026785135269165,
+            -0.5489290952682495
+          ],
+          [
+            0.6526070833206177,
+            -0.7503056526184082,
+            0.5790985822677612,
+            -0.6089842319488525
+          ],
+          [
+            0.635225772857666,
+            -0.7161040902137756,
+            0.6056419014930725,
+            -0.6166200637817383
+          ],
+          [
+            0.6434245705604553,
+            -0.6836751699447632,
+            0.6398363709449768,
+            -0.5828700065612793
+          ],
+          [
+            0.6639937162399292,
+            -0.6651647686958313,
+            0.6461242437362671,
+            -0.5328237414360046
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.25,
+        "variant_ordinal": 15
+      },
+      "phase": "upstream",
+      "phase_episode_step": 23,
+      "phase_index": 0,
+      "policy_actor_sha256": "946c23d5199f1d30e4fef799fd7a4b54d271c626a305877a0fa3e45430d3c5b1",
+      "policy_iteration": 6,
+      "policy_payload_sha256": "5550494092b73b57cd9adec0aa632a15342fd7fb23af68355f4ab741e49d920d",
+      "probe_bank_sha256": "ca0d36b2b2faaafa2f31f4256f4dc39065f436569059bcb0d3471a6a60f6c7bd",
+      "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+      "proposal_family_index": 0,
+      "protocol_sha256": "f0dcd30fab43ca221647a19998cf0a30efc96a22183f2b3b5cb487f274e87029",
+      "sampling_mode": "trajectory_slices_v2",
+      "snapshot": "snapshots/candidate_000083",
+      "snapshot_context_sha256": "ad294bf8dad6003f47b7d4e7aa807e258b7fee5c0d0895dc8538f0dfa07cd3a3",
+      "source_bank": "boundary_bank",
+      "split": "train",
+      "state_sha256": "ea7e766c9d58d21c3f24faa7bea7625528db0974b5747d0f6d4967f1fa1229fd",
+      "successful_policy_names": [
+        "pi_3"
+      ],
+      "trajectory_id": "dense_v1_train_x2.90_family0/variant_15",
+      "trajectory_step": 23,
+      "vx": 1.6686090230941772,
+      "vz": 0.039470650255680084,
+      "witness_status": "observed_landing",
+      "x": 3.202223777770996,
+      "x_slice_spacing_m": 0.05,
+      "x_target_m": 3.2,
+      "z": 0.36412954330444336
+    },
+    {
+      "acquisition_mode": "jump_start_connected_causal_rollout_v1",
+      "already_in_training_support": false,
+      "candidate_id": "pi6_causal_upstream_000084",
+      "candidate_index": 84,
+      "candidate_kind": "reachable_unified_frontier_probe",
+      "episode_step": 24,
+      "jump_start_reachability": {
+        "environment_transitions_before_perturbation": 7,
+        "environment_transitions_from_jump_start": 24,
+        "generated_by_env_step_only": true,
+        "jump_start_connected": true,
+        "jump_start_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "lookback_m": 0.15,
+        "natural_start_connected": false,
+        "perturbation_anchor_x_m": 2.9,
+        "perturbation_start_actual_x_m": 2.7717809677124023,
+        "perturbation_start_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+        "perturbation_start_target_x_m": 2.75,
+        "perturbed_environment_transitions": 7,
+        "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+        "proposal_anchor_used_as_reset": false,
+        "proposal_family_index": 0,
+        "proposal_parent_group_id": "dense_v1_train_x2.90_family0",
+        "qpos_qvel_injection_used": false,
+        "reachability_sha256": "a3ab504aa3bc0fe654742b1d9f6b5d4846a9a494add6e3fec01f7f64fe0224fe",
+        "rsi_used_to_establish_reachability": false,
+        "schema": "jit_jump_start_reachability_provenance_v1",
+        "target_x_m": 3.25,
+        "trajectory_id": "dense_v1_train_x2.90_family0/variant_15",
+        "unperturbed_suffix_transitions": 10,
+        "variant_ordinal": 15
+      },
+      "label": 1,
+      "parent_group_id": "dense_v1_train_x2.90_family0",
+      "parent_state_sha256": "d653871afa9c8308bed096b9e8f16b791f7325f976cdc735d3ccb84aa6ee284c",
+      "per_policy_outcomes": {
+        "pi_0": {
+          "label": 0,
+          "status": "failure"
+        },
+        "pi_1": {
+          "label": 0,
+          "status": "failure"
+        },
+        "pi_2": {
+          "label": 0,
+          "status": "failure"
+        },
+        "pi_3": {
+          "label": 1,
+          "status": "success"
+        },
+        "pi_4": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_5": {
+          "label": null,
+          "status": "untested"
+        },
+        "pi_6": {
+          "label": null,
+          "status": "untested"
+        }
+      },
+      "perturbation": {
+        "action_dimension": 3,
+        "action_name": "knee",
+        "basis_vector": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.25
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "lookback_m": 0.15,
+        "nominal_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            0.12773123383522034,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.4855732321739197
+          ],
+          [
+            -0.03225410357117653,
+            -0.5679869055747986,
+            0.4260086417198181,
+            -0.6864134669303894
+          ],
+          [
+            -0.1914496123790741,
+            -0.24449904263019562,
+            0.4539554715156555,
+            -0.811129629611969
+          ],
+          [
+            -0.14744932949543,
+            -0.18115317821502686,
+            0.36675187945365906,
+            -0.8457575440406799
+          ],
+          [
+            -0.07381302118301392,
+            -0.26067054271698,
+            0.2478807419538498,
+            -0.7805788516998291
+          ],
+          [
+            0.07246631383895874,
+            -0.34371453523635864,
+            0.10845991969108582,
+            -0.5992968678474426
+          ],
+          [
+            0.25993454456329346,
+            -0.5840829610824585,
+            0.13832157850265503,
+            -0.333456426858902
+          ],
+          [
+            0.5161545276641846,
+            -0.7773054242134094,
+            0.0438983179628849,
+            -0.18825028836727142
+          ],
+          [
+            0.7098193168640137,
+            -0.8405613899230957,
+            0.08614292740821838,
+            -0.32020291686058044
+          ],
+          [
+            0.6721490621566772,
+            -0.8174800276756287,
+            0.26250800490379333,
+            -0.3788944184780121
+          ],
+          [
+            0.7018698453903198,
+            -0.8152512907981873,
+            0.3849954605102539,
+            -0.4399344325065613
+          ],
+          [
+            0.6730293035507202,
+            -0.7849085927009583,
+            0.5026785135269165,
+            -0.5489290952682495
+          ],
+          [
+            0.6526070833206177,
+            -0.7503056526184082,
+            0.5790985822677612,
+            -0.6089842319488525
+          ],
+          [
+            0.635225772857666,
+            -0.7161040902137756,
+            0.6056419014930725,
+            -0.6166200637817383
+          ],
+          [
+            0.6434245705604553,
+            -0.6836751699447632,
+            0.6398363709449768,
+            -0.5828700065612793
+          ],
+          [
+            0.6639937162399292,
+            -0.6651647686958313,
+            0.6461242437362671,
+            -0.5328237414360046
+          ],
+          [
+            0.713258683681488,
+            -0.6740400195121765,
+            0.613002359867096,
+            -0.4952008128166199
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.8976393938064575,
+            -0.41725072264671326,
+            -0.568895697593689,
+            0.9490668177604675
+          ],
+          [
+            -0.6553932428359985,
+            -0.914827823638916,
+            -0.14915527403354645,
+            0.9595310688018799
+          ],
+          [
+            -0.697116494178772,
+            -0.9649506211280823,
+            -0.29517215490341187,
+            0.8804613947868347
+          ],
+          [
+            -0.3185440003871918,
+            -0.891348659992218,
+            -0.6209945678710938,
+            -0.029951464384794235
+          ],
+          [
+            -0.07460719347000122,
+            -0.9257643222808838,
+            -0.3181236684322357,
+            0.1644933968782425
+          ],
+          [
+            0.05607889965176582,
+            -0.7637318968772888,
+            -0.2703315019607544,
+            -0.24049827456474304
+          ],
+          [
+            0.25530171394348145,
+            -0.7819489240646362,
+            0.018360532820224762,
+            -0.31841230392456055
+          ],
+          [
+            0.12773123383522034,
+            -0.7201513648033142,
+            0.3127528131008148,
+            -0.23557323217391968
+          ],
+          [
+            -0.03225410357117653,
+            -0.5679869055747986,
+            0.4260086417198181,
+            -0.4364134669303894
+          ],
+          [
+            -0.1914496123790741,
+            -0.24449904263019562,
+            0.4539554715156555,
+            -0.561129629611969
+          ],
+          [
+            -0.14744932949543,
+            -0.18115317821502686,
+            0.36675187945365906,
+            -0.5957575440406799
+          ],
+          [
+            -0.07381302118301392,
+            -0.26067054271698,
+            0.2478807419538498,
+            -0.5305788516998291
+          ],
+          [
+            0.07246631383895874,
+            -0.34371453523635864,
+            0.10845991969108582,
+            -0.3492968678474426
+          ],
+          [
+            0.25993454456329346,
+            -0.5840829610824585,
+            0.13832157850265503,
+            -0.08345642685890198
+          ],
+          [
+            0.5161545276641846,
+            -0.7773054242134094,
+            0.0438983179628849,
+            -0.18825028836727142
+          ],
+          [
+            0.7098193168640137,
+            -0.8405613899230957,
+            0.08614292740821838,
+            -0.32020291686058044
+          ],
+          [
+            0.6721490621566772,
+            -0.8174800276756287,
+            0.26250800490379333,
+            -0.3788944184780121
+          ],
+          [
+            0.7018698453903198,
+            -0.8152512907981873,
+            0.3849954605102539,
+            -0.4399344325065613
+          ],
+          [
+            0.6730293035507202,
+            -0.7849085927009583,
+            0.5026785135269165,
+            -0.5489290952682495
+          ],
+          [
+            0.6526070833206177,
+            -0.7503056526184082,
+            0.5790985822677612,
+            -0.6089842319488525
+          ],
+          [
+            0.635225772857666,
+            -0.7161040902137756,
+            0.6056419014930725,
+            -0.6166200637817383
+          ],
+          [
+            0.6434245705604553,
+            -0.6836751699447632,
+            0.6398363709449768,
+            -0.5828700065612793
+          ],
+          [
+            0.6639937162399292,
+            -0.6651647686958313,
+            0.6461242437362671,
+            -0.5328237414360046
+          ],
+          [
+            0.713258683681488,
+            -0.6740400195121765,
+            0.613002359867096,
+            -0.4952008128166199
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.25,
+        "variant_ordinal": 15
+      },
+      "phase": "upstream",
+      "phase_episode_step": 24,
+      "phase_index": 0,
+      "policy_actor_sha256": "946c23d5199f1d30e4fef799fd7a4b54d271c626a305877a0fa3e45430d3c5b1",
+      "policy_iteration": 6,
+      "policy_payload_sha256": "5550494092b73b57cd9adec0aa632a15342fd7fb23af68355f4ab741e49d920d",
+      "probe_bank_sha256": "ca0d36b2b2faaafa2f31f4256f4dc39065f436569059bcb0d3471a6a60f6c7bd",
+      "proposal_anchor_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+      "proposal_family_index": 0,
+      "protocol_sha256": "f0dcd30fab43ca221647a19998cf0a30efc96a22183f2b3b5cb487f274e87029",
+      "sampling_mode": "trajectory_slices_v2",
+      "snapshot": "snapshots/candidate_000084",
+      "snapshot_context_sha256": "1365c20c910b50d1bff0b08ecb6ce10643a753a1101bbf21a760e7e94e4aee2a",
+      "source_bank": "boundary_bank",
+      "split": "train",
+      "state_sha256": "353a1ef2512f33a2df68b2188a56789d993c6123468feeb40c06152a25516bb9",
+      "successful_policy_names": [
+        "pi_3"
+      ],
+      "trajectory_id": "dense_v1_train_x2.90_family0/variant_15",
+      "trajectory_step": 24,
+      "vx": 1.714290738105774,
+      "vz": 0.0018073987448588014,
+      "witness_status": "observed_landing",
+      "x": 3.2366104125976562,
+      "x_slice_spacing_m": 0.05,
+      "x_target_m": 3.25,
+      "z": 0.36707159876823425
+    }
+  ],
+  "execution_identity_error": null,
+  "final_test_used": false,
+  "index_sha256": "5dbde4a52d9fe32f9b28be2fa24481c1c26772dcf25b957a14e501fe4c2e868e",
+  "negative_count": 0,
+  "plan_sha256": "19ef58fa9c1988ca4747cb9ba8feb0663809af3229280ada336ed9b379cb4cf4",
+  "positive_count": 16,
+  "schema": "jit_first_success_witness_index_v1",
+  "status": "completed",
+  "training_transitions": 0,
+  "unknown_count": 0,
+  "wall_seconds": 104.59629281899925
+}

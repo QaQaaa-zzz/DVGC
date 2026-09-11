@@ -1,0 +1,116 @@
+{
+  "candidate_count": 16,
+  "cpu_tests_passed": 126,
+  "evaluator_calls": 40,
+  "final_test_used": false,
+  "full_matrix_existence_agreement": true,
+  "limitations": [
+    "16 selected existing TRAIN states; not held out",
+    "No paired full-bank wall-time run; no wall-time speedup claim",
+    "No multi-checkpoint GPU training or intermediate exploration",
+    "Residual tests are synthetic supervised warm starts; no production fit or acquisition integration"
+  ],
+  "measured_run_wall_seconds": 104.59629281899925,
+  "new_acquisition_interactions": 0,
+  "new_environment_interactions": 1633,
+  "offline_analysis": {
+    "candidate_count": 738,
+    "conflicts": 64,
+    "engineering_panel_selection": "existing TRAIN panel; not held out",
+    "evaluator_order": [
+      "pi_0",
+      "pi_1",
+      "pi_2",
+      "pi_3",
+      "pi_4",
+      "pi_5",
+      "pi_6"
+    ],
+    "full_evaluator_calls": 5166,
+    "full_matrix_existence_agreement": true,
+    "full_useful_interactions": 98093,
+    "hypothetical_evaluator_calls": 844,
+    "hypothetical_useful_interactions": 15388,
+    "new_environment_interactions": 0,
+    "positive_count": 735,
+    "scope": "offline scheduling; excludes padding/process/failed attempts; not measured wall-clock savings",
+    "source_hashes": {
+      "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/discovery/bank.json": "836aabaf07e4b80de29f5895d52002231607ac0534995a147ee47c7d0fa61081",
+      "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/discovery/tasks/acquire/attempt_0000/result/catalog.json": "0d90bd1eabac0fc81bd2bef2ce6dcd3dde3938fbfa64a2ce21393730478153af",
+      "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/discovery/tasks/acquire/attempt_0000/result/protocol.json": "1077444c4f344bce0c28dae2fc47c5c2fda245fdbb9f5f1157565a223333c8c5",
+      "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/discovery/tasks/merge_pi_0/attempt_0000/result/labels.json": "a6ce0a4a73f533d0cde6415c434219139f5936ccdee87d1b7b15fe8023d258c3",
+      "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/discovery/tasks/merge_pi_0/attempt_0000/result/protocol.json": "90099834544dc2e7c83a40a8e823fa057f65b90a8c0fbf3240cfe1d446229327",
+      "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/discovery/tasks/merge_pi_0/attempt_0000/result/summary.json": "9bb5e0b90ea6cd292bf3763be6da3924235a2a5dfdf591f6dbe6d40f9b6f5628",
+      "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/discovery/tasks/merge_pi_1/attempt_0000/result/labels.json": "f3de802274eec32edec522e4dc14e86f4b3334f993760f8d9e86f45d9e410201",
+      "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/discovery/tasks/merge_pi_1/attempt_0000/result/protocol.json": "360e80f2cb71303da9345c4c3938d953f7bd36aed37bd7858906686796b408c9",
+      "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/discovery/tasks/merge_pi_1/attempt_0000/result/summary.json": "706550fc1adaebec1d4262525dc03abd5b3919ce9905723590d7e5dff5ee7f73",
+      "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/discovery/tasks/merge_pi_2/attempt_0000/result/labels.json": "ce05221d0cd7acb66876f238295fe5c5917562e7063393bde8ef57d3a075542f",
+      "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/discovery/tasks/merge_pi_2/attempt_0000/result/protocol.json": "99530f2aa975eb183a6f80daff640b7f5a5fb1fddab43d5c98de7f443f64a7c9",
+      "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/discovery/tasks/merge_pi_2/attempt_0000/result/summary.json": "9c79ae1ff4672f62ec2fe3e355303d2830f901a49c6f10169260e6daac172ffc",
+      "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/discovery/tasks/merge_pi_3/attempt_0000/result/labels.json": "776c2501e8dbcd1ebb34bed7eb96482e8db466dfccc210681ff4326c069f06af",
+      "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/discovery/tasks/merge_pi_3/attempt_0000/result/protocol.json": "b7a1e78efc193cc247c28fecc5e9eef794f3ac83a2ece633d260d402ec56c386",
+      "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/discovery/tasks/merge_pi_3/attempt_0000/result/summary.json": "63d75ee95e6232e7b525f3367cd1efd725fe766b7227c0e12a7a151757b40d42",
+      "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/discovery/tasks/merge_pi_4/attempt_0000/result/labels.json": "1cb31139cd06a233530b7e22a1e43caca27e020bed1d220798ac1bd645b55f4a",
+      "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/discovery/tasks/merge_pi_4/attempt_0000/result/protocol.json": "89919c06aa100797a2e1a10b63b7b1ae1b3e4fd16f4c3116cc69c51b7a5de53f",
+      "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/discovery/tasks/merge_pi_4/attempt_0000/result/summary.json": "80aa3123fceb165ed267781ba1a5527f3acef08e2cfe088a663fcf123a49f103",
+      "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/discovery/tasks/merge_pi_5/attempt_0000/result/labels.json": "aaa030a2d7e8ea796c5a6338ce0dd9077fe4652d89396b9ae889946f0f2b9ce9",
+      "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/discovery/tasks/merge_pi_5/attempt_0000/result/protocol.json": "e7c4e11421cc0a8bd340d467c9504cd4d867de31815130bed251fa80406f0fcf",
+      "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/discovery/tasks/merge_pi_5/attempt_0000/result/summary.json": "b4db907a66ad57b4c75d79564e72b0f4cb0f816f7537f2bd5cdcab9e9ebe9585",
+      "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/discovery/tasks/merge_pi_6/attempt_0000/result/labels.json": "3e42d6c15628114db8d41b3fb1acd4698f560c74fe2c12f84c9a6a6e9aa146f7",
+      "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/discovery/tasks/merge_pi_6/attempt_0000/result/protocol.json": "1575b8d214bfd107254362e3f818ee4aa51d2bc4f0f68c9c9e0c69b24fffb8bb",
+      "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/discovery/tasks/merge_pi_6/attempt_0000/result/summary.json": "fb92c6d0a1a291bb3636ed980678fbb6efc1693873979b81dc5106a94a846647",
+      "/home/qy/DVGC/JIT/runs/engineering/existence_checkpoint_residual_20260911/analyze.py": "aca8ef3febd4df9a977b6f067b4c0fc149066ba508200ebab0d936e11a7e4765",
+      "/home/qy/DVGC/JIT/src/jit_dvgc/continuation/existence.py": "2d2fc6e3f582faa9efe38dce07bb43dc7ff0ff2a3b8d411c1213391dc0462845",
+      "/home/qy/DVGC/JIT/src/jit_dvgc/policy_family_landing.py": "e41fdde85a329b72ad837bc2f36b85b6a2ab2b2e32444f75f99d4bdc0752483a"
+    },
+    "unknown_count": 3,
+    "useful_interaction_reduction_fraction": 0.8431284597269938
+  },
+  "ppo_transitions": 0,
+  "processes": [
+    {
+      "candidates": 16,
+      "charged_interactions": 527,
+      "end_utc": "2026-09-11T02:50:18.100777+00:00",
+      "evaluator": "pi_0",
+      "returncode": 0,
+      "start_utc": "2026-09-11T02:49:47.869408+00:00",
+      "wall_seconds": 30.23138350299996
+    },
+    {
+      "candidates": 8,
+      "charged_interactions": 288,
+      "end_utc": "2026-09-11T02:50:40.698946+00:00",
+      "evaluator": "pi_1",
+      "returncode": 0,
+      "start_utc": "2026-09-11T02:50:18.101330+00:00",
+      "wall_seconds": 22.597629433999828
+    },
+    {
+      "candidates": 8,
+      "charged_interactions": 395,
+      "end_utc": "2026-09-11T02:51:06.057775+00:00",
+      "evaluator": "pi_2",
+      "returncode": 0,
+      "start_utc": "2026-09-11T02:50:40.699501+00:00",
+      "wall_seconds": 25.35828632799985
+    },
+    {
+      "candidates": 8,
+      "charged_interactions": 423,
+      "end_utc": "2026-09-11T02:51:32.425642+00:00",
+      "evaluator": "pi_3",
+      "returncode": 0,
+      "start_utc": "2026-09-11T02:51:06.058325+00:00",
+      "wall_seconds": 26.367329859000165
+    }
+  ],
+  "schema": "jit_roadmap_engineering_result_v1",
+  "source_files": {
+    "/home/qy/DVGC/JIT/runs/engineering/existence_checkpoint_residual_20260911/compare.py": "3b67985418636956c7ce455663d2720f1649222a21a742154cce266f2bd93e5c",
+    "/home/qy/DVGC/JIT/runs/engineering/existence_checkpoint_residual_20260911/gpu/witness_index.json": "67df01c0ace11a63576b7efff465c7181804ee923fc48ea392c2d76ba678132e",
+    "/home/qy/DVGC/JIT/runs/engineering/existence_checkpoint_residual_20260911/reviewed_plan.json": "f5bc5eeca99d278435f453765312719d0f8b0c5b8b7f6b80b117a2ad94111974",
+    "/home/qy/DVGC/JIT/runs/engineering/existence_checkpoint_residual_20260911/tests.log": "f05bd8b2e385101b5d99d1d91ca6fdd145cf5ca4fb8a8da6b4835ef3dbdc6fa7"
+  },
+  "status": "completed"
+}

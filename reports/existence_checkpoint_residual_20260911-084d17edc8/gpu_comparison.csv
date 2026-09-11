@@ -1,0 +1,17 @@
+candidate_index,observed_label,full_matrix_label,agreement,observed_witnesses,expected_witnesses
+0,1,1,True,pi_0,pi_0
+1,1,1,True,pi_0,pi_0
+2,1,1,True,pi_0,pi_0
+3,1,1,True,pi_0,pi_0
+4,1,1,True,pi_0,pi_0
+5,1,1,True,pi_0,pi_0
+6,1,1,True,pi_0,pi_0
+7,1,1,True,pi_0,pi_0
+77,1,1,True,pi_3,pi_3
+78,1,1,True,pi_3,pi_3
+79,1,1,True,pi_3,pi_3
+80,1,1,True,pi_3,pi_3
+81,1,1,True,pi_3,pi_3
+82,1,1,True,pi_3,pi_3
+83,1,1,True,pi_3,pi_3
+84,1,1,True,pi_3,pi_3
