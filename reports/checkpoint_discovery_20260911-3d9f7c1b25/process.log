@@ -1,0 +1,12 @@
+[comparison] acquire pi_6
+[comparison] acquire checkpoint_32000
+[comparison] acquire checkpoint_64000
+[comparison] acquire checkpoint_128000
+{
+  "status": "completed",
+  "charged_interactions": 20733,
+  "wall_seconds": 1127.340636257999,
+  "plan_sha256": "acca6861467f894ee9cb0d909616c5a291a7d78c5f21469722d1fb41d11a105a",
+  "training_transitions": 0,
+  "final_test_used": false
+}

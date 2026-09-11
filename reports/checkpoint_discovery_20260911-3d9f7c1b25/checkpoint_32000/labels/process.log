@@ -1,0 +1,43 @@
+[existence] pi_0 candidates=128 log=/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911/checkpoint_32000/labels/result/evaluator_000/chunk_4497d32c822ad4ae57132a3462f6a0630d5d4a7863915c4ee08634841c4fee9f/attempt_0000/process.log
+[existence] pi_0 candidates=59 log=/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911/checkpoint_32000/labels/result/evaluator_000/chunk_96f24a03d789c2b0da34a21df38ce040a98b506d3c1a2908e886258aeb29497a/attempt_0000/process.log
+[existence] pi_1 candidates=7 log=/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911/checkpoint_32000/labels/result/evaluator_001/chunk_438f0053d7ab4e3a8690ab67ee348c2a4ad63fb5797c058546541276c0b4f517/attempt_0000/process.log
+[existence] pi_2 candidates=2 log=/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911/checkpoint_32000/labels/result/evaluator_002/chunk_db5f710b57a41e20ed952b110b2e1a8802f0e94ad4937fd59f877f2e4444f5c2/attempt_0000/process.log
+{
+  "schema": "jit_first_success_witness_index_v1",
+  "plan_sha256": "593d492c6ec7daced73c1fa399122abd7a0ac5aac434b359e8ab46a9e03ecbbd",
+  "bank_sha256": "5e9cc2b396ca265b64fc523e79177d2baed230763f20dfa45b34456d45e05936",
+  "status": "completed",
+  "charged_interactions": 3724,
+  "attempts": [
+    {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911/checkpoint_32000/labels/result/evaluator_000/chunk_4497d32c822ad4ae57132a3462f6a0630d5d4a7863915c4ee08634841c4fee9f/attempt_0000",
+      "charged_interactions": 2531,
+      "status": "completed"
+    },
+    {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911/checkpoint_32000/labels/result/evaluator_000/chunk_96f24a03d789c2b0da34a21df38ce040a98b506d3c1a2908e886258aeb29497a/attempt_0000",
+      "charged_interactions": 976,
+      "status": "completed"
+    },
+    {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911/checkpoint_32000/labels/result/evaluator_001/chunk_438f0053d7ab4e3a8690ab67ee348c2a4ad63fb5797c058546541276c0b4f517/attempt_0000",
+      "charged_interactions": 182,
+      "status": "completed"
+    },
+    {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911/checkpoint_32000/labels/result/evaluator_002/chunk_db5f710b57a41e20ed952b110b2e1a8802f0e94ad4937fd59f877f2e4444f5c2/attempt_0000",
+      "charged_interactions": 35,
+      "status": "completed"
+    }
+  ],
+  "wall_seconds": 184.92724257900045,
+  "budget_exhausted": false,
+  "execution_identity_error": null,
+  "complete_evaluator_matrix": false,
+  "positive_count": 187,
+  "negative_count": 0,
+  "unknown_count": 0,
+  "final_test_used": false,
+  "training_transitions": 0,
+  "index_sha256": "4ff1e3bb56d817f8f9e9f178941d3612a00c0dc3ddc3e9b79934fcee90cc65f8"
+}

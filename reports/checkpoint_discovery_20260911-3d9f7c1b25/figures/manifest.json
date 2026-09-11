@@ -1,0 +1,18 @@
+{
+  "schema": "jit_checkpoint_discovery_figures_v1",
+  "point_count": 809,
+  "files": [
+    "all_cost_curves.csv",
+    "all_points.csv",
+    "coverage_cost.pdf",
+    "coverage_cost.png",
+    "coverage_cost.svg",
+    "equal_budget.csv",
+    "geometry.pdf",
+    "geometry.png",
+    "geometry.svg",
+    "metrics.csv",
+    "summary.json"
+  ],
+  "baseline_name": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/figures/all_points.csv"
+}

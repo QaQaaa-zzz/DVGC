@@ -1,0 +1,67 @@
+{
+  "acquisition_mode": "jump_start_connected_causal_rollout_v1",
+  "candidate_deduplication": "snapshot_context_sha256",
+  "causal_lookbacks_m": [
+    0.15
+  ],
+  "claim_boundary": {
+    "certified_safe_set_claim": false,
+    "jce_jel_claim": false,
+    "tube_expansion_claim": false,
+    "unlabeled_acquisition_only": true
+  },
+  "evidence_mode": "probe_bank_arrivals_v1",
+  "expert_switching_used": false,
+  "final_evaluation_data_used": false,
+  "frozen_unified_manifest_sha256": "1e801fcd088f9c99b135f565fa2c77e7c48774d659a3e154d0e1b90d1558e925",
+  "iteration": 7,
+  "jump_start_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+  "logical_role": "train",
+  "max_candidates_per_attempt": 64,
+  "max_forward_ticks_per_attempt": 400,
+  "maximum_environment_interactions": 4000,
+  "natural_start_connected": false,
+  "nominal_centerline": "/home/qy/DVGC/JIT/runs/nominal_centerline/pi_0_jump_start_centerline_v3_20260904/centerline.json",
+  "nominal_centerline_sha256": "8976da1103f5b48372655cc9404b64fa31cec10ab12e785f4b128a3af0535523",
+  "original_centerline_max_x_m": 3.8,
+  "perturbation_end": "first x at or beyond anchor target; normal policy thereafter",
+  "policy_actor_sha256": "ff56c9b56de2fd2be13969ebed4521f54ed60fcbbb082aa2b340112acf7fb0e4",
+  "policy_formal_config_sha256": "4a9fc4f35a4862581226240d169f52719f4a66f490683d55d5195f11c7ea7a55",
+  "policy_name": "checkpoint_32000",
+  "policy_payload_sha256": "80c991bc371ae1319f2952e4af3cfbeabe6dbd6c0f6f81467ffe848280edf2d3",
+  "probe_bank_sha256": "5e9cc2b396ca265b64fc523e79177d2baed230763f20dfa45b34456d45e05936",
+  "protocol_sha256": "f08a0005f62a28d067e836be0f5e6510b49816b792eba3872eeeef15da120112",
+  "purpose": "jump_start_connected_forward_reachability_then_continuation_candidate_acquisition",
+  "reachability_definition": "candidate is forward-reachable iff the saved acquisition trace began at the locked fixed jump-start state and reached the candidate using env.step only",
+  "rsi_role": "continuation_evaluation_only_after_forward_reachability_is_established",
+  "sampling_max_x_m": 8.0,
+  "sampling_mode": "trajectory_slices_v2",
+  "sampling_scope": "real rollout until first landing/failure or declared guard; original reference unchanged",
+  "schema": "jit_jump_start_connected_causal_jump_acquisition_v1",
+  "selected_action_names": [
+    "steer",
+    "rear_wheel_drive",
+    "hip",
+    "knee"
+  ],
+  "selected_signs": [
+    -1,
+    1
+  ],
+  "shared_trajectory_frames_are_independent_samples": false,
+  "skipped_bins_are_not_filled": true,
+  "slice_spacing_m": 0.05,
+  "source_tube_manifest_sha256": "0220342253aae21aaa63bdef7f75c73f3480dbc971851e87156e0af01b57aa11",
+  "start_contract_sha256": "52e21c8ed034edf7e9944ee69c991c4c00feb185ca60ac4bef46006952287acc",
+  "state_generation": "fixed-start env.step trajectory; first actual prelanding frame per phase/nearest x bin after perturbation onset; no interpolation",
+  "status": "predeclared",
+  "strengths": [
+    0.15
+  ],
+  "target_x_half_width_m": 0.025,
+  "test_data_used": false,
+  "training_support_membership_excludes_arrival": false,
+  "training_transitions": 0,
+  "validation_data_used": false,
+  "variant_partition_modulus": 5
+}

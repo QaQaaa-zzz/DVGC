@@ -1,0 +1,67 @@
+[existence] pi_0 candidates=128 log=/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911/checkpoint_128000/labels/result/evaluator_000/chunk_4497d32c822ad4ae57132a3462f6a0630d5d4a7863915c4ee08634841c4fee9f/attempt_0000/process.log
+[existence] pi_0 candidates=88 log=/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911/checkpoint_128000/labels/result/evaluator_000/chunk_9a8388fe09be4431b3bffa67614353d45a3a51cb84dbb002b054dfda2fbfc8f5/attempt_0000/process.log
+[existence] pi_1 candidates=24 log=/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911/checkpoint_128000/labels/result/evaluator_001/chunk_c2420b1bb64c890eec2cb24a9d42705bd0464b97e98d30462c265dc718beed92/attempt_0000/process.log
+[existence] pi_2 candidates=16 log=/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911/checkpoint_128000/labels/result/evaluator_002/chunk_889ae6eda3e3717e3fc0f34f2dfa01e41d29774509d49f0e6af2a5e2951f7666/attempt_0000/process.log
+[existence] pi_3 candidates=11 log=/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911/checkpoint_128000/labels/result/evaluator_003/chunk_71fb6d67af5b9284f759916ac419ce28adc58f208859260f0eb6cf5d79814be1/attempt_0000/process.log
+[existence] pi_4 candidates=11 log=/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911/checkpoint_128000/labels/result/evaluator_004/chunk_71fb6d67af5b9284f759916ac419ce28adc58f208859260f0eb6cf5d79814be1/attempt_0000/process.log
+[existence] pi_5 candidates=10 log=/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911/checkpoint_128000/labels/result/evaluator_005/chunk_54ff5d48a2e16c83dced662ac61edeac32a2d98b1a1aaeb4bae9cb28105dbc08/attempt_0000/process.log
+[existence] pi_6 candidates=10 log=/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911/checkpoint_128000/labels/result/evaluator_006/chunk_54ff5d48a2e16c83dced662ac61edeac32a2d98b1a1aaeb4bae9cb28105dbc08/attempt_0000/process.log
+{
+  "schema": "jit_first_success_witness_index_v1",
+  "plan_sha256": "d8b8c6d7dfcda8997789aaf9013fb497e24151f02ea3e47ba17449776e2d4c06",
+  "bank_sha256": "5e9cc2b396ca265b64fc523e79177d2baed230763f20dfa45b34456d45e05936",
+  "status": "partial_unknown",
+  "charged_interactions": 5575,
+  "attempts": [
+    {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911/checkpoint_128000/labels/result/evaluator_000/chunk_4497d32c822ad4ae57132a3462f6a0630d5d4a7863915c4ee08634841c4fee9f/attempt_0000",
+      "charged_interactions": 2443,
+      "status": "completed"
+    },
+    {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911/checkpoint_128000/labels/result/evaluator_000/chunk_9a8388fe09be4431b3bffa67614353d45a3a51cb84dbb002b054dfda2fbfc8f5/attempt_0000",
+      "charged_interactions": 1741,
+      "status": "completed"
+    },
+    {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911/checkpoint_128000/labels/result/evaluator_001/chunk_c2420b1bb64c890eec2cb24a9d42705bd0464b97e98d30462c265dc718beed92/attempt_0000",
+      "charged_interactions": 568,
+      "status": "completed"
+    },
+    {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911/checkpoint_128000/labels/result/evaluator_002/chunk_889ae6eda3e3717e3fc0f34f2dfa01e41d29774509d49f0e6af2a5e2951f7666/attempt_0000",
+      "charged_interactions": 244,
+      "status": "completed"
+    },
+    {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911/checkpoint_128000/labels/result/evaluator_003/chunk_71fb6d67af5b9284f759916ac419ce28adc58f208859260f0eb6cf5d79814be1/attempt_0000",
+      "charged_interactions": 146,
+      "status": "completed"
+    },
+    {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911/checkpoint_128000/labels/result/evaluator_004/chunk_71fb6d67af5b9284f759916ac419ce28adc58f208859260f0eb6cf5d79814be1/attempt_0000",
+      "charged_interactions": 161,
+      "status": "completed"
+    },
+    {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911/checkpoint_128000/labels/result/evaluator_005/chunk_54ff5d48a2e16c83dced662ac61edeac32a2d98b1a1aaeb4bae9cb28105dbc08/attempt_0000",
+      "charged_interactions": 132,
+      "status": "completed"
+    },
+    {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911/checkpoint_128000/labels/result/evaluator_006/chunk_54ff5d48a2e16c83dced662ac61edeac32a2d98b1a1aaeb4bae9cb28105dbc08/attempt_0000",
+      "charged_interactions": 140,
+      "status": "completed"
+    }
+  ],
+  "wall_seconds": 308.60020899399933,
+  "budget_exhausted": false,
+  "execution_identity_error": null,
+  "complete_evaluator_matrix": false,
+  "positive_count": 206,
+  "negative_count": 5,
+  "unknown_count": 5,
+  "final_test_used": false,
+  "training_transitions": 0,
+  "index_sha256": "2fb0686776170a2fc5961425e4560e0c1a4e7955503d5b1314a95a85b3d79410"
+}

@@ -1,0 +1,682 @@
+{
+  "bank_sha256": "5e9cc2b396ca265b64fc523e79177d2baed230763f20dfa45b34456d45e05936",
+  "formal_envelope_claim_authorized": false,
+  "label_interaction_budget": 1500000,
+  "max_candidates_per_process": 128,
+  "max_ticks": 400,
+  "members": [
+    {
+      "frozen_file_sha256": "b94709172dfe4734760b567e5acde172172e853a9c5265b471c1272c7e9f0070",
+      "frozen_policy": "/home/qy/DVGC/JIT/runs/frozen_unified/pi_0_round1_10009600_20260831/frozen_unified_policy.json",
+      "name": "pi_0",
+      "policy": {
+        "action_order": [
+          "steer",
+          "rear_wheel_drive",
+          "hip",
+          "knee"
+        ],
+        "actor_frame_fields": [
+          "gravity_x",
+          "gravity_y",
+          "gravity_z",
+          "angular_velocity_x",
+          "angular_velocity_y",
+          "angular_velocity_z",
+          "acceleration_x",
+          "acceleration_y",
+          "acceleration_z",
+          "steering_position",
+          "hip_position",
+          "knee_position",
+          "steering_velocity",
+          "hip_velocity",
+          "knee_velocity",
+          "front_wheel_velocity",
+          "rear_wheel_velocity",
+          "last_action_steer",
+          "last_action_rear_wheel_drive",
+          "last_action_hip",
+          "last_action_knee",
+          "estimated_forward_velocity",
+          "obstacle_relative_x",
+          "root_height",
+          "history_valid"
+        ],
+        "actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+        "actor_task_fields": [
+          "jump_signal"
+        ],
+        "checkpoint": "JIT/runs/pi_unified/pi_unified_round1_natural10_10009600_seed821101_20260831/checkpoints/transition_10009600",
+        "critic_sha256": "cf1603512349ee388593b6468de0aa58d6ad25b36b8c28da72f4d519f363a1ca",
+        "formal_config": "JIT/configs/pi_unified_round1_natural10.json",
+        "formal_config_sha256": "fba8ac1975727ea77ec271a6196cc998eb63b47960aba25935656927d69f2ae1",
+        "iteration": 0,
+        "name": "pi_0",
+        "normalizer_sha256": "f01e64be56d405e5fc2647823bb07b487d8fa04a0a6de2bd7b0df73d1ceb69a7",
+        "payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+        "policy_role": "envelope_expansion_authority",
+        "source_reset_mixture": {
+          "natural_reset_probability": 0.1,
+          "selection": "bernoulli_per_episode",
+          "soft_tube_probability": 0.9
+        },
+        "source_training_run_id": "pi_unified_round1_natural10_10009600_seed821101_20260831",
+        "source_training_transitions": 10009600,
+        "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+      },
+      "roles": [
+        "evaluator"
+      ]
+    },
+    {
+      "frozen_file_sha256": "a3ed7fddcc813e688bea044b0bda76c1cd425123746d474ca6e93eb5516543a3",
+      "frozen_policy": "/home/qy/DVGC/JIT/runs/frozen_unified/pi_1_core_replay75_10009600_20260903/frozen_unified_policy.json",
+      "name": "pi_1",
+      "policy": {
+        "action_order": [
+          "steer",
+          "rear_wheel_drive",
+          "hip",
+          "knee"
+        ],
+        "actor_frame_fields": [
+          "gravity_x",
+          "gravity_y",
+          "gravity_z",
+          "angular_velocity_x",
+          "angular_velocity_y",
+          "angular_velocity_z",
+          "acceleration_x",
+          "acceleration_y",
+          "acceleration_z",
+          "steering_position",
+          "hip_position",
+          "knee_position",
+          "steering_velocity",
+          "hip_velocity",
+          "knee_velocity",
+          "front_wheel_velocity",
+          "rear_wheel_velocity",
+          "last_action_steer",
+          "last_action_rear_wheel_drive",
+          "last_action_hip",
+          "last_action_knee",
+          "estimated_forward_velocity",
+          "obstacle_relative_x",
+          "root_height",
+          "history_valid"
+        ],
+        "actor_sha256": "85d6b4667364daf8e054af9bccbf155dda16a62518df19883057fcfcbbd6f86a",
+        "actor_task_fields": [
+          "jump_signal"
+        ],
+        "checkpoint": "JIT/runs/pi_unified/pi_1_tube1_core_replay75_natural10_10009600_seed821101_20260903/checkpoints/transition_10009600",
+        "critic_sha256": "113cc40c56f07069dc10eb2f3715a14526ce8b4db5d5a4240a1729659ef98bbe",
+        "formal_config": "JIT/configs/pi_unified_iter1_tube1_core_replay75_natural10.json",
+        "formal_config_sha256": "0cb0027983dc8aa3668a0936b8335a40f51baee9dee81bc49c6484f5ee93e086",
+        "iteration": 1,
+        "name": "pi_1",
+        "normalizer_sha256": "285e17c37a5e1612ef71f31a0c25e766cf84fc85112542e481aed7a110d2b479",
+        "payload_sha256": "3b9af512c7e389aade1c86ca76e9420a0bc687c499f2ff9cf7637701dd5d0cbc",
+        "policy_role": "envelope_expansion_authority",
+        "source_reset_mixture": {
+          "natural_reset_probability": 0.1,
+          "selection": "bernoulli_per_episode",
+          "soft_tube_probability": 0.9
+        },
+        "source_training_run_id": "pi_1_tube1_core_replay75_natural10_10009600_seed821101_20260903",
+        "source_training_transitions": 10009600,
+        "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+      },
+      "roles": [
+        "evaluator"
+      ]
+    },
+    {
+      "frozen_file_sha256": "f69e0ca354c47c531a71adfce4236f6cd5518016d082bb4404eda9835a369a4d",
+      "frozen_policy": "/home/qy/DVGC/JIT/runs/frozen_unified/pi_2_landing_replay_pi1_actor_warmstart_10009600_20260904/frozen_unified_policy.json",
+      "name": "pi_2",
+      "policy": {
+        "action_order": [
+          "steer",
+          "rear_wheel_drive",
+          "hip",
+          "knee"
+        ],
+        "actor_frame_fields": [
+          "gravity_x",
+          "gravity_y",
+          "gravity_z",
+          "angular_velocity_x",
+          "angular_velocity_y",
+          "angular_velocity_z",
+          "acceleration_x",
+          "acceleration_y",
+          "acceleration_z",
+          "steering_position",
+          "hip_position",
+          "knee_position",
+          "steering_velocity",
+          "hip_velocity",
+          "knee_velocity",
+          "front_wheel_velocity",
+          "rear_wheel_velocity",
+          "last_action_steer",
+          "last_action_rear_wheel_drive",
+          "last_action_hip",
+          "last_action_knee",
+          "estimated_forward_velocity",
+          "obstacle_relative_x",
+          "root_height",
+          "history_valid"
+        ],
+        "actor_sha256": "d0753cb3be742743c82a68fbb00bb30d914a4c25873e864e77ac298ea5cca4ff",
+        "actor_task_fields": [
+          "jump_signal"
+        ],
+        "checkpoint": "JIT/runs/pi_unified/pi_2_landing_replay_pi1_actor_warmstart_core75_natural10_10009600_seed821101_20260904/checkpoints/transition_10009600",
+        "critic_sha256": "853fc628c15d76b2c9781aa9780a46960e008c661e639ea9ef0905381501b419",
+        "formal_config": "JIT/configs/pi_unified_iter2_landing_replay_pi1_actor_warmstart_core75_natural10_20260904.json",
+        "formal_config_sha256": "3df709ab2d6c663f23c6b448396007206f046c66a816c222cd9cabac496a12c5",
+        "iteration": 2,
+        "name": "pi_2",
+        "normalizer_sha256": "700933284202c52c323f65a765b3ef296524eccc1a80751a0008cbee93007b02",
+        "payload_sha256": "f17b2361ae897de876a35955fd3bdcc86cfbdcf4368c24b6cf3d41fcde59181c",
+        "policy_role": "envelope_expansion_authority",
+        "source_reset_mixture": {
+          "natural_reset_probability": 0.1,
+          "selection": "bernoulli_per_episode",
+          "soft_tube_probability": 0.9
+        },
+        "source_training_run_id": "pi_2_landing_replay_pi1_actor_warmstart_core75_natural10_10009600_seed821101_20260904",
+        "source_training_transitions": 10009600,
+        "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+      },
+      "roles": [
+        "evaluator"
+      ]
+    },
+    {
+      "frozen_file_sha256": "6b3935984b1056fda1cb3dda439cda9c2d0bccec20da6f9ecd0feb219200d618",
+      "frozen_policy": "/home/qy/DVGC/JIT/runs/frozen_unified/pi_3_landing_replay_pi2_actor_warmstart_10009600_20260905/frozen_unified_policy.json",
+      "name": "pi_3",
+      "policy": {
+        "action_order": [
+          "steer",
+          "rear_wheel_drive",
+          "hip",
+          "knee"
+        ],
+        "actor_frame_fields": [
+          "gravity_x",
+          "gravity_y",
+          "gravity_z",
+          "angular_velocity_x",
+          "angular_velocity_y",
+          "angular_velocity_z",
+          "acceleration_x",
+          "acceleration_y",
+          "acceleration_z",
+          "steering_position",
+          "hip_position",
+          "knee_position",
+          "steering_velocity",
+          "hip_velocity",
+          "knee_velocity",
+          "front_wheel_velocity",
+          "rear_wheel_velocity",
+          "last_action_steer",
+          "last_action_rear_wheel_drive",
+          "last_action_hip",
+          "last_action_knee",
+          "estimated_forward_velocity",
+          "obstacle_relative_x",
+          "root_height",
+          "history_valid"
+        ],
+        "actor_sha256": "0e8ede7cc72122793345339de294abb46ed00b6740d16aafad0c230257be0014",
+        "actor_task_fields": [
+          "jump_signal"
+        ],
+        "checkpoint": "JIT/runs/pi_unified/pi_3_landing_replay_pi2_actor_warmstart_core75_natural10_10009600_seed821101_20260905/checkpoints/transition_10009600",
+        "critic_sha256": "0a59a72b140ddd9a468e71941745c7bd53ca0749a9cec2b07b656be231a0ef2b",
+        "formal_config": "JIT/configs/pi_unified_iter3_landing_replay_pi2_actor_warmstart_core75_natural10_20260905.json",
+        "formal_config_sha256": "6210768153b7fee949a1fb5f550efc1838c742145bca5da73d8ba206c3760d87",
+        "iteration": 3,
+        "name": "pi_3",
+        "normalizer_sha256": "6690bf0c39a159de87eadeab769157416182cb0d616ee637557a25fa1482775f",
+        "payload_sha256": "1b14547812c9dc199628d85561d731df591cbc5e59eda6dc3be12ffa41a01bcf",
+        "policy_role": "envelope_expansion_authority",
+        "source_reset_mixture": {
+          "natural_reset_probability": 0.1,
+          "selection": "bernoulli_per_episode",
+          "soft_tube_probability": 0.9
+        },
+        "source_training_run_id": "pi_3_landing_replay_pi2_actor_warmstart_core75_natural10_10009600_seed821101_20260905",
+        "source_training_transitions": 10009600,
+        "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+      },
+      "roles": [
+        "evaluator"
+      ]
+    },
+    {
+      "frozen_file_sha256": "7761c3526bab460e75f04e045803462620fe2ae7faac865166382185c0bd0180",
+      "frozen_policy": "/home/qy/DVGC/JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1/round_000/training_attempt_000/frozen/frozen_unified_policy.json",
+      "name": "pi_4",
+      "policy": {
+        "action_order": [
+          "steer",
+          "rear_wheel_drive",
+          "hip",
+          "knee"
+        ],
+        "actor_frame_fields": [
+          "gravity_x",
+          "gravity_y",
+          "gravity_z",
+          "angular_velocity_x",
+          "angular_velocity_y",
+          "angular_velocity_z",
+          "acceleration_x",
+          "acceleration_y",
+          "acceleration_z",
+          "steering_position",
+          "hip_position",
+          "knee_position",
+          "steering_velocity",
+          "hip_velocity",
+          "knee_velocity",
+          "front_wheel_velocity",
+          "rear_wheel_velocity",
+          "last_action_steer",
+          "last_action_rear_wheel_drive",
+          "last_action_hip",
+          "last_action_knee",
+          "estimated_forward_velocity",
+          "obstacle_relative_x",
+          "root_height",
+          "history_valid"
+        ],
+        "actor_sha256": "ce06522b457089632e317243ab29748b496eead79c4d96078c020be073182b0b",
+        "actor_task_fields": [
+          "jump_signal"
+        ],
+        "checkpoint": "/home/qy/DVGC/JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1/round_000/training_attempt_000/training/pi_4_campaign_r0_attempt000/checkpoints/transition_25600",
+        "critic_sha256": "db2c36aece21d25420d7ea6880df82abe0d250a38140af2f8c318595b5967414",
+        "formal_config": "/home/qy/DVGC/JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1/round_000/training_attempt_000/config.json",
+        "formal_config_sha256": "dce6f322b169776598b960ec9f28c4c0fc6e70ca7caf5503d5e09b9cbe51df14",
+        "iteration": 4,
+        "name": "pi_4",
+        "normalizer_sha256": "fda894a047def59feaf9f8a49b2ddfaca2ed492e7ee8978b6e831dd2708698a7",
+        "payload_sha256": "27e2f0f28eb9ba7e70e0e5433b7e0c26791eea67b0a61bdb44e3becdf211496b",
+        "policy_role": "envelope_expansion_authority",
+        "source_reset_mixture": {
+          "natural_reset_probability": 0.2,
+          "selection": "fixed_jump_start_20pct_exact_snapshot_80pct",
+          "soft_tube_probability": 0.8
+        },
+        "source_training_run_id": "pi_4_campaign_r0_attempt000",
+        "source_training_transitions": 25600,
+        "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+      },
+      "roles": [
+        "evaluator"
+      ]
+    },
+    {
+      "frozen_file_sha256": "0972c7a5eaa8ea70ac3c9f113960855dc021e7029f23404abadc91f4d5f0aca0",
+      "frozen_policy": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_000/training_attempt_000/frozen/frozen_unified_policy.json",
+      "name": "pi_5",
+      "policy": {
+        "action_order": [
+          "steer",
+          "rear_wheel_drive",
+          "hip",
+          "knee"
+        ],
+        "actor_frame_fields": [
+          "gravity_x",
+          "gravity_y",
+          "gravity_z",
+          "angular_velocity_x",
+          "angular_velocity_y",
+          "angular_velocity_z",
+          "acceleration_x",
+          "acceleration_y",
+          "acceleration_z",
+          "steering_position",
+          "hip_position",
+          "knee_position",
+          "steering_velocity",
+          "hip_velocity",
+          "knee_velocity",
+          "front_wheel_velocity",
+          "rear_wheel_velocity",
+          "last_action_steer",
+          "last_action_rear_wheel_drive",
+          "last_action_hip",
+          "last_action_knee",
+          "estimated_forward_velocity",
+          "obstacle_relative_x",
+          "root_height",
+          "history_valid"
+        ],
+        "actor_sha256": "cafb603e91b847a220deaf4c00aa505b370fcb4afbfa88cf9de94a01849b644d",
+        "actor_task_fields": [
+          "jump_signal"
+        ],
+        "checkpoint": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_000/training_attempt_000/training/pi_5_campaign_r0_attempt000/checkpoints/transition_128000",
+        "critic_sha256": "052e78c14d887319b0b1001e88af4242bac84a61f95c2c3bc7e27910191c6bfb",
+        "formal_config": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_000/training_attempt_000/config.json",
+        "formal_config_sha256": "3053228fe9c69e217f3b3adcca8166d0d0d69e50809aa618fa2976047d30e5b1",
+        "iteration": 5,
+        "name": "pi_5",
+        "normalizer_sha256": "e70584979546785cebb5a395e93bedcb4fad452002689a4b3f4c3953a90760a3",
+        "payload_sha256": "8de5cd7861a138aa5539cf4ccecee896a2ad8791d74fef13583e9dae2cb83cbb",
+        "policy_role": "envelope_expansion_authority",
+        "source_reset_mixture": {
+          "natural_reset_probability": 0.2,
+          "selection": "fixed_jump_start_20pct_exact_snapshot_80pct",
+          "soft_tube_probability": 0.8
+        },
+        "source_training_run_id": "pi_5_campaign_r0_attempt000",
+        "source_training_transitions": 128000,
+        "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+      },
+      "roles": [
+        "evaluator"
+      ]
+    },
+    {
+      "frozen_file_sha256": "de2c90a70a2342f891f1445e2bad6690813e35f7aafc142dd90ffcdc50a3a414",
+      "frozen_policy": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/training_attempt_000/frozen/frozen_unified_policy.json",
+      "name": "pi_6",
+      "policy": {
+        "action_order": [
+          "steer",
+          "rear_wheel_drive",
+          "hip",
+          "knee"
+        ],
+        "actor_frame_fields": [
+          "gravity_x",
+          "gravity_y",
+          "gravity_z",
+          "angular_velocity_x",
+          "angular_velocity_y",
+          "angular_velocity_z",
+          "acceleration_x",
+          "acceleration_y",
+          "acceleration_z",
+          "steering_position",
+          "hip_position",
+          "knee_position",
+          "steering_velocity",
+          "hip_velocity",
+          "knee_velocity",
+          "front_wheel_velocity",
+          "rear_wheel_velocity",
+          "last_action_steer",
+          "last_action_rear_wheel_drive",
+          "last_action_hip",
+          "last_action_knee",
+          "estimated_forward_velocity",
+          "obstacle_relative_x",
+          "root_height",
+          "history_valid"
+        ],
+        "actor_sha256": "946c23d5199f1d30e4fef799fd7a4b54d271c626a305877a0fa3e45430d3c5b1",
+        "actor_task_fields": [
+          "jump_signal"
+        ],
+        "checkpoint": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/training_attempt_000/training/pi_6_campaign_r1_attempt000/checkpoints/transition_128000",
+        "critic_sha256": "1a4a02c14cdf394bb628e2c705a93ace0613a7af4606b065cb62192634d77178",
+        "formal_config": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/training_attempt_000/config.json",
+        "formal_config_sha256": "1c98a6c5deae1199d32d6ad2d8f00e8b63912d6a1b845c38e5903ea8000dc71b",
+        "iteration": 6,
+        "name": "pi_6",
+        "normalizer_sha256": "078ab7ac4c5c7b0e28e677a81bd58a3b97ba30d47224120fcca95e1d735bee8e",
+        "payload_sha256": "5550494092b73b57cd9adec0aa632a15342fd7fb23af68355f4ab741e49d920d",
+        "policy_role": "envelope_expansion_authority",
+        "source_reset_mixture": {
+          "natural_reset_probability": 0.2,
+          "selection": "fixed_jump_start_20pct_exact_snapshot_80pct",
+          "soft_tube_probability": 0.8
+        },
+        "source_training_run_id": "pi_6_campaign_r1_attempt000",
+        "source_training_transitions": 128000,
+        "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+      },
+      "roles": [
+        "evaluator",
+        "proposer"
+      ]
+    },
+    {
+      "frozen_file_sha256": "1e801fcd088f9c99b135f565fa2c77e7c48774d659a3e154d0e1b90d1558e925",
+      "frozen_policy": "/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911_inputs/checkpoint_32000/frozen_unified_policy.json",
+      "name": "checkpoint_32000",
+      "policy": {
+        "action_order": [
+          "steer",
+          "rear_wheel_drive",
+          "hip",
+          "knee"
+        ],
+        "actor_frame_fields": [
+          "gravity_x",
+          "gravity_y",
+          "gravity_z",
+          "angular_velocity_x",
+          "angular_velocity_y",
+          "angular_velocity_z",
+          "acceleration_x",
+          "acceleration_y",
+          "acceleration_z",
+          "steering_position",
+          "hip_position",
+          "knee_position",
+          "steering_velocity",
+          "hip_velocity",
+          "knee_velocity",
+          "front_wheel_velocity",
+          "rear_wheel_velocity",
+          "last_action_steer",
+          "last_action_rear_wheel_drive",
+          "last_action_hip",
+          "last_action_knee",
+          "estimated_forward_velocity",
+          "obstacle_relative_x",
+          "root_height",
+          "history_valid"
+        ],
+        "actor_sha256": "ff56c9b56de2fd2be13969ebed4521f54ed60fcbbb082aa2b340112acf7fb0e4",
+        "actor_task_fields": [
+          "jump_signal"
+        ],
+        "checkpoint": "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_20260911/training/pi6_multicheckpoint_train_20260911/checkpoints/transition_32000",
+        "checkpoint_identity_sha256": "04198ab6fe84d65dc45c91df99742eac0dc37ccb691390be5e067ba7a5a2495e",
+        "critic_sha256": "ed4edf841555d9f05aebe0b313cda1a5b72a8c0135ed75fde778ee6136bac19d",
+        "data_role": "train",
+        "formal_config": "/home/qy/DVGC/JIT/configs/pi6_multicheckpoint_train_20260911.json",
+        "formal_config_file_sha256": "a4de5b2e4b44c46f4bd6a17354e370b5ca13a28357da6d254f8091ac815a37f0",
+        "formal_config_sha256": "4a9fc4f35a4862581226240d169f52719f4a66f490683d55d5195f11c7ea7a55",
+        "iteration": 7,
+        "name": "checkpoint_32000",
+        "normalizer_sha256": "e5cd133a610ee677394ac090da0f8cdd7df0f81bbb3ad6e572c5f02e9db83571",
+        "payload_sha256": "80c991bc371ae1319f2952e4af3cfbeabe6dbd6c0f6f81467ffe848280edf2d3",
+        "policy_role": "development_checkpoint",
+        "source_formal_report": "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_20260911/training/pi6_multicheckpoint_train_20260911/formal_report.json",
+        "source_formal_report_sha256": "f0036b7bae36ca731f7a3ce9e6766f318cfe206b01668695bce9041096aaad13",
+        "source_requested_training_transitions": 128000,
+        "source_reset_mixture": {
+          "natural_reset_probability": 0.2,
+          "selection": "fixed_jump_start_20pct_exact_snapshot_80pct",
+          "soft_tube_probability": 0.8
+        },
+        "source_training_run_id": "pi6_multicheckpoint_train_20260911",
+        "source_training_transitions": 32000,
+        "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+      },
+      "roles": [
+        "proposer"
+      ]
+    },
+    {
+      "frozen_file_sha256": "f6cfb6d403518b20b226f6d62eb3c599ee7b2a05c4d622406a8c28e2b6670ad6",
+      "frozen_policy": "/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911_inputs/checkpoint_64000/frozen_unified_policy.json",
+      "name": "checkpoint_64000",
+      "policy": {
+        "action_order": [
+          "steer",
+          "rear_wheel_drive",
+          "hip",
+          "knee"
+        ],
+        "actor_frame_fields": [
+          "gravity_x",
+          "gravity_y",
+          "gravity_z",
+          "angular_velocity_x",
+          "angular_velocity_y",
+          "angular_velocity_z",
+          "acceleration_x",
+          "acceleration_y",
+          "acceleration_z",
+          "steering_position",
+          "hip_position",
+          "knee_position",
+          "steering_velocity",
+          "hip_velocity",
+          "knee_velocity",
+          "front_wheel_velocity",
+          "rear_wheel_velocity",
+          "last_action_steer",
+          "last_action_rear_wheel_drive",
+          "last_action_hip",
+          "last_action_knee",
+          "estimated_forward_velocity",
+          "obstacle_relative_x",
+          "root_height",
+          "history_valid"
+        ],
+        "actor_sha256": "db90036baaf5248906c310f5757635cb1ecf963ef109676951a3373c582ca44d",
+        "actor_task_fields": [
+          "jump_signal"
+        ],
+        "checkpoint": "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_20260911/training/pi6_multicheckpoint_train_20260911/checkpoints/transition_64000",
+        "checkpoint_identity_sha256": "38301fd196ce5c7dde7e01585dd988d863a8edb00ca2fbb97e1d89887443a001",
+        "critic_sha256": "6d1d86539aa27b8ecc5c9f536008350fbbfae81280e87c4561b632c440d78afc",
+        "data_role": "train",
+        "formal_config": "/home/qy/DVGC/JIT/configs/pi6_multicheckpoint_train_20260911.json",
+        "formal_config_file_sha256": "a4de5b2e4b44c46f4bd6a17354e370b5ca13a28357da6d254f8091ac815a37f0",
+        "formal_config_sha256": "4a9fc4f35a4862581226240d169f52719f4a66f490683d55d5195f11c7ea7a55",
+        "iteration": 7,
+        "name": "checkpoint_64000",
+        "normalizer_sha256": "eb931c6b8f67c675207f382ec8ae38490e141b556e3c2e05386c5209ee901f66",
+        "payload_sha256": "ffed2adb2f145a3887ab6b2a06688c0217a2ac4afa9089826315611f9d323027",
+        "policy_role": "development_checkpoint",
+        "source_formal_report": "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_20260911/training/pi6_multicheckpoint_train_20260911/formal_report.json",
+        "source_formal_report_sha256": "f0036b7bae36ca731f7a3ce9e6766f318cfe206b01668695bce9041096aaad13",
+        "source_requested_training_transitions": 128000,
+        "source_reset_mixture": {
+          "natural_reset_probability": 0.2,
+          "selection": "fixed_jump_start_20pct_exact_snapshot_80pct",
+          "soft_tube_probability": 0.8
+        },
+        "source_training_run_id": "pi6_multicheckpoint_train_20260911",
+        "source_training_transitions": 64000,
+        "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+      },
+      "roles": [
+        "proposer"
+      ]
+    },
+    {
+      "frozen_file_sha256": "f10eb8d29341bb8ed09922a10758baf1e083c74c43c6cce3af13a7215ef03319",
+      "frozen_policy": "/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911_inputs/checkpoint_128000/frozen_unified_policy.json",
+      "name": "checkpoint_128000",
+      "policy": {
+        "action_order": [
+          "steer",
+          "rear_wheel_drive",
+          "hip",
+          "knee"
+        ],
+        "actor_frame_fields": [
+          "gravity_x",
+          "gravity_y",
+          "gravity_z",
+          "angular_velocity_x",
+          "angular_velocity_y",
+          "angular_velocity_z",
+          "acceleration_x",
+          "acceleration_y",
+          "acceleration_z",
+          "steering_position",
+          "hip_position",
+          "knee_position",
+          "steering_velocity",
+          "hip_velocity",
+          "knee_velocity",
+          "front_wheel_velocity",
+          "rear_wheel_velocity",
+          "last_action_steer",
+          "last_action_rear_wheel_drive",
+          "last_action_hip",
+          "last_action_knee",
+          "estimated_forward_velocity",
+          "obstacle_relative_x",
+          "root_height",
+          "history_valid"
+        ],
+        "actor_sha256": "ca5a1e1e3ac8a8d0d8d0d4d3f60bea1f8b72797c4d8f3902c437632aeae7e419",
+        "actor_task_fields": [
+          "jump_signal"
+        ],
+        "checkpoint": "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_20260911/training/pi6_multicheckpoint_train_20260911/checkpoints/transition_128000",
+        "checkpoint_identity_sha256": "5e4ac5263323d98751927e97327cbb75a9060ee5cb499e158e2489476a1687af",
+        "critic_sha256": "d721d1f6b6e3225c20d4a6895fdc7030580eb681f3e8e4fd1b94ed8d597bb10a",
+        "data_role": "train",
+        "formal_config": "/home/qy/DVGC/JIT/configs/pi6_multicheckpoint_train_20260911.json",
+        "formal_config_file_sha256": "a4de5b2e4b44c46f4bd6a17354e370b5ca13a28357da6d254f8091ac815a37f0",
+        "formal_config_sha256": "4a9fc4f35a4862581226240d169f52719f4a66f490683d55d5195f11c7ea7a55",
+        "iteration": 7,
+        "name": "checkpoint_128000",
+        "normalizer_sha256": "c20c0b983f57e4a2ff168b8ed10be804840b6bf5c41dc2734f19a0adc25c9bec",
+        "payload_sha256": "c869b384c9b1124047dc2e3f52ca8b63f75f991dd464606f8ede79221c5decfb",
+        "policy_role": "development_checkpoint",
+        "source_formal_report": "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_20260911/training/pi6_multicheckpoint_train_20260911/formal_report.json",
+        "source_formal_report_sha256": "f0036b7bae36ca731f7a3ce9e6766f318cfe206b01668695bce9041096aaad13",
+        "source_requested_training_transitions": 128000,
+        "source_reset_mixture": {
+          "natural_reset_probability": 0.2,
+          "selection": "fixed_jump_start_20pct_exact_snapshot_80pct",
+          "soft_tube_probability": 0.8
+        },
+        "source_training_run_id": "pi6_multicheckpoint_train_20260911",
+        "source_training_transitions": 128000,
+        "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+      },
+      "roles": [
+        "proposer"
+      ]
+    }
+  ],
+  "schema": "jit_complementary_probe_bank_v1",
+  "snapshot_replay_equivalence_verified": false,
+  "status": "identity_locked_runtime_unverified",
+  "task": {
+    "centerline_sha256": "8976da1103f5b48372655cc9404b64fa31cec10ab12e785f4b128a3af0535523",
+    "continuation_start_semantics": "fresh_continuation_v1",
+    "resolution_sha256": "9f918a9dd3846e2fc8e787bd47bb008a3a8401c259cd68631bb22df7a945dcbe",
+    "start_contract_sha256": "52e21c8ed034edf7e9944ee69c991c4c00feb185ca60ac4bef46006952287acc",
+    "success_criterion": "first_valid_landing",
+    "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+  },
+  "technical_gpu_smoke_verified": false,
+  "version": "checkpoint_discovery_pi6_20260911",
+  "whole_tube_actor_retention_required": false
+}

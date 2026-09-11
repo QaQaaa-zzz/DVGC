@@ -1,0 +1,312 @@
+Warp 1.11.0 initialized:
+   CUDA Toolkit 12.9, Driver 13.0
+   Devices:
+     "cpu"      : "x86_64"
+     "cuda:0"   : "NVIDIA GeForce RTX 4090 D" (24 GiB, sm_89, mempool enabled)
+   Kernel cache:
+     /home/qy/.cache/warp/1.11.0
+Warp DeprecationWarning: The symbol `warp.types.warp_type_to_np_dtype` will soon be removed from the public API. It can still be accessed from `warp._src.types.warp_type_to_np_dtype` but might be changed or removed without notice.
+[frontier-shard] warp_memory_maintenance=enabled device=cuda:0 step_interval=64 mempool_supported=True mempool_enabled=True
+Module mujoco.mjx.warp.ffi edde159 load on device 'cuda:0' took 0.38 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.smooth 9d8c26b load on device 'cuda:0' took 6.27 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.collision_driver de6dc98 load on device 'cuda:0' took 0.24 ms  (cached)
+Module _nxn_broadphase__locals__kernel_36c68517 36c6851 load on device 'cuda:0' took 0.26 ms  (cached)
+Module ccd_kernel_builder__locals__ccd_kernel_30387cff 30387cf load on device 'cuda:0' took 0.82 ms  (cached)
+Module ccd_kernel_builder__locals__ccd_kernel_9855f04a 9855f04 load on device 'cuda:0' took 0.83 ms  (cached)
+Module ccd_kernel_builder__locals__ccd_kernel_927e4d05 927e4d0 load on device 'cuda:0' took 0.80 ms  (cached)
+Module ccd_kernel_builder__locals__ccd_kernel_2b578852 2b57885 load on device 'cuda:0' took 1.27 ms  (cached)
+Module _primitive_narrowphase__locals__primitive_narrowphase_1bf02ad9 91f16af load on device 'cuda:0' took 0.45 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.constraint 2aca1f5 load on device 'cuda:0' took 1.27 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.sensor a2c5a56 load on device 'cuda:0' took 1.38 ms  (cached)
+Module _actuator_velocity__locals__actuator_velocity_12383059 73552e7 load on device 'cuda:0' took 0.27 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.passive 45a1f12 load on device 'cuda:0' took 0.50 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.forward 3875c24 load on device 'cuda:0' took 0.55 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.support b7a7a89 load on device 'cuda:0' took 0.24 ms  (cached)
+Module _tile_cholesky_factorize_solve__locals__cholesky_factorize_solve_be145701 4a8f693 load on device 'cuda:0' took 15.41 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.solver 8800eae load on device 'cuda:0' took 0.86 ms  (cached)
+Module solve_init_jaref__locals__kernel_0e441fb9 0e441fb load on device 'cuda:0' took 0.20 ms  (cached)
+Module mul_m_dense__locals___mul_m_dense_a919c505 a919c50 load on device 'cuda:0' took 0.25 ms  (cached)
+Module update_constraint_gauss_cost__locals__kernel_9283aa6c 9283aa6 load on device 'cuda:0' took 0.22 ms  (cached)
+Module update_gradient_JTDAJ_dense_tiled__locals__kernel_926cd55c 4b2efd1 load on device 'cuda:0' took 29.22 ms  (cached)
+Module update_gradient_cholesky__locals__kernel_0282940c df4c2e1 load on device 'cuda:0' took 18.38 ms  (cached)
+Module linesearch_iterative__locals__kernel_d5d90354 cc0622d load on device 'cuda:0' took 0.50 ms  (cached)
+[causal] trajectory=dense_v1_train_x2.90_family0/variant_0 saved=27 total_candidates=27 interactions=46
+[causal] trajectory=dense_v1_train_x2.90_family0/variant_5 saved=26 total_candidates=53 interactions=94
+[causal] trajectory=dense_v1_train_x2.90_family1/variant_1 saved=27 total_candidates=80 interactions=141
+[causal] trajectory=dense_v1_train_x2.90_family1/variant_6 saved=3 total_candidates=83 interactions=155
+[causal] trajectory=dense_v1_train_x2.90_family2/variant_2 saved=27 total_candidates=110 interactions=202
+[causal] trajectory=dense_v1_train_x2.90_family2/variant_7 saved=23 total_candidates=133 interactions=244
+[causal] trajectory=dense_v1_train_x2.90_family3/variant_3 saved=28 total_candidates=161 interactions=292
+[causal] trajectory=dense_v1_train_x2.90_family4/variant_4 saved=26 total_candidates=187 interactions=334
+{
+  "schema": "jit_unified_boundary_catalog_v1",
+  "status": "completed",
+  "artifact_role": "unlabeled_policy_conditioned_frontier_candidates",
+  "split": "train",
+  "iteration": 7,
+  "policy_name": "checkpoint_32000",
+  "policy_actor_sha256": "ff56c9b56de2fd2be13969ebed4521f54ed60fcbbb082aa2b340112acf7fb0e4",
+  "policy_payload_sha256": "80c991bc371ae1319f2952e4af3cfbeabe6dbd6c0f6f81467ffe848280edf2d3",
+  "frozen_unified_manifest_sha256": "1e801fcd088f9c99b135f565fa2c77e7c48774d659a3e154d0e1b90d1558e925",
+  "source_tube_manifest_sha256": "0220342253aae21aaa63bdef7f75c73f3480dbc971851e87156e0af01b57aa11",
+  "protocol_sha256": "f08a0005f62a28d067e836be0f5e6510b49816b792eba3872eeeef15da120112",
+  "acquisition_mode": "jump_start_connected_causal_rollout_v1",
+  "jump_start_reachability_proven": true,
+  "natural_start_connected": false,
+  "rsi_used_for_reachability": false,
+  "jump_start_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+  "attempted_candidate_count": 8,
+  "candidate_count": 187,
+  "phase_attempted_candidate_counts": {
+    "upstream": 8,
+    "downstream": 0
+  },
+  "phase_candidate_counts": {
+    "upstream": 134,
+    "downstream": 53
+  },
+  "environment_interactions": 334,
+  "maximum_environment_interactions": 4000,
+  "exclusion_counts": {},
+  "training_transitions": 0,
+  "expert_switching_used": false,
+  "test_data_used": false,
+  "validation_data_used": false,
+  "final_evaluation_data_used": false,
+  "claim_boundary": {
+    "unlabeled_acquisition_only": true,
+    "tube_expansion_claim": false,
+    "jce_jel_claim": false,
+    "certified_safe_set_claim": false
+  },
+  "trajectory_receipts": [
+    {
+      "trajectory_id": "dense_v1_train_x2.90_family0/variant_0",
+      "proposer": "checkpoint_32000",
+      "anchor_x_m": 2.9,
+      "strength": 0.15,
+      "direction": {
+        "action_dimension": 0,
+        "action_name": "steer",
+        "sign": -1,
+        "basis_vector": [
+          -1.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "environment_interactions": 46,
+      "candidate_count": 27,
+      "stop_reason": "first_valid_landing",
+      "perturbation_started": true,
+      "final_x_m": 4.128626823425293,
+      "peak_root_z_m": 0.6394547820091248,
+      "peak_sampling": "control_step_states_including_reset",
+      "physical_failure": false,
+      "timeout": false,
+      "valid_landing": true,
+      "truncated": false
+    },
+    {
+      "trajectory_id": "dense_v1_train_x2.90_family0/variant_5",
+      "proposer": "checkpoint_32000",
+      "anchor_x_m": 2.9,
+      "strength": 0.15,
+      "direction": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "sign": 1,
+        "basis_vector": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      "environment_interactions": 48,
+      "candidate_count": 26,
+      "stop_reason": "first_valid_landing",
+      "perturbation_started": true,
+      "final_x_m": 4.107583045959473,
+      "peak_root_z_m": 0.7051641941070557,
+      "peak_sampling": "control_step_states_including_reset",
+      "physical_failure": false,
+      "timeout": false,
+      "valid_landing": true,
+      "truncated": false
+    },
+    {
+      "trajectory_id": "dense_v1_train_x2.90_family1/variant_1",
+      "proposer": "checkpoint_32000",
+      "anchor_x_m": 2.9,
+      "strength": 0.15,
+      "direction": {
+        "action_dimension": 0,
+        "action_name": "steer",
+        "sign": 1,
+        "basis_vector": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "environment_interactions": 47,
+      "candidate_count": 27,
+      "stop_reason": "first_valid_landing",
+      "perturbation_started": true,
+      "final_x_m": 4.120532989501953,
+      "peak_root_z_m": 0.6805849671363831,
+      "peak_sampling": "control_step_states_including_reset",
+      "physical_failure": false,
+      "timeout": false,
+      "valid_landing": true,
+      "truncated": false
+    },
+    {
+      "trajectory_id": "dense_v1_train_x2.90_family1/variant_6",
+      "proposer": "checkpoint_32000",
+      "anchor_x_m": 2.9,
+      "strength": 0.15,
+      "direction": {
+        "action_dimension": 3,
+        "action_name": "knee",
+        "sign": -1,
+        "basis_vector": [
+          0.0,
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      "environment_interactions": 14,
+      "candidate_count": 3,
+      "stop_reason": "task_terminated_before_landing",
+      "perturbation_started": true,
+      "final_x_m": 2.928122043609619,
+      "peak_root_z_m": 0.2869517207145691,
+      "peak_sampling": "control_step_states_including_reset",
+      "physical_failure": true,
+      "timeout": false,
+      "valid_landing": false,
+      "truncated": false
+    },
+    {
+      "trajectory_id": "dense_v1_train_x2.90_family2/variant_2",
+      "proposer": "checkpoint_32000",
+      "anchor_x_m": 2.9,
+      "strength": 0.15,
+      "direction": {
+        "action_dimension": 1,
+        "action_name": "rear_wheel_drive",
+        "sign": -1,
+        "basis_vector": [
+          0.0,
+          -1.0,
+          0.0,
+          0.0
+        ]
+      },
+      "environment_interactions": 47,
+      "candidate_count": 27,
+      "stop_reason": "first_valid_landing",
+      "perturbation_started": true,
+      "final_x_m": 4.139157295227051,
+      "peak_root_z_m": 0.5920988321304321,
+      "peak_sampling": "control_step_states_including_reset",
+      "physical_failure": false,
+      "timeout": false,
+      "valid_landing": true,
+      "truncated": false
+    },
+    {
+      "trajectory_id": "dense_v1_train_x2.90_family2/variant_7",
+      "proposer": "checkpoint_32000",
+      "anchor_x_m": 2.9,
+      "strength": 0.15,
+      "direction": {
+        "action_dimension": 3,
+        "action_name": "knee",
+        "sign": 1,
+        "basis_vector": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      "environment_interactions": 42,
+      "candidate_count": 23,
+      "stop_reason": "first_valid_landing",
+      "perturbation_started": true,
+      "final_x_m": 3.894915819168091,
+      "peak_root_z_m": 0.5598166584968567,
+      "peak_sampling": "control_step_states_including_reset",
+      "physical_failure": false,
+      "timeout": false,
+      "valid_landing": true,
+      "truncated": false
+    },
+    {
+      "trajectory_id": "dense_v1_train_x2.90_family3/variant_3",
+      "proposer": "checkpoint_32000",
+      "anchor_x_m": 2.9,
+      "strength": 0.15,
+      "direction": {
+        "action_dimension": 1,
+        "action_name": "rear_wheel_drive",
+        "sign": 1,
+        "basis_vector": [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ]
+      },
+      "environment_interactions": 48,
+      "candidate_count": 28,
+      "stop_reason": "first_valid_landing",
+      "perturbation_started": true,
+      "final_x_m": 4.18829870223999,
+      "peak_root_z_m": 0.6910607814788818,
+      "peak_sampling": "control_step_states_including_reset",
+      "physical_failure": false,
+      "timeout": false,
+      "valid_landing": true,
+      "truncated": false
+    },
+    {
+      "trajectory_id": "dense_v1_train_x2.90_family4/variant_4",
+      "proposer": "checkpoint_32000",
+      "anchor_x_m": 2.9,
+      "strength": 0.15,
+      "direction": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "sign": -1,
+        "basis_vector": [
+          0.0,
+          0.0,
+          -1.0,
+          0.0
+        ]
+      },
+      "environment_interactions": 42,
+      "candidate_count": 26,
+      "stop_reason": "first_valid_landing",
+      "perturbation_started": true,
+      "final_x_m": 4.079644680023193,
+      "peak_root_z_m": 0.5591061115264893,
+      "peak_sampling": "control_step_states_including_reset",
+      "physical_failure": false,
+      "timeout": false,
+      "valid_landing": true,
+      "truncated": false
+    }
+  ],
+  "trajectory_stop_counts": {
+    "first_valid_landing": 7,
+    "task_terminated_before_landing": 1
+  }
+}

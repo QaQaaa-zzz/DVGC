@@ -1,0 +1,37 @@
+[
+  {
+    "parent_group_id": "dense_v1_train_x2.90_family0",
+    "phase": "upstream",
+    "proposal_family_index": 0,
+    "state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+    "x_target_m": 2.9
+  },
+  {
+    "parent_group_id": "dense_v1_train_x2.90_family1",
+    "phase": "upstream",
+    "proposal_family_index": 1,
+    "state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+    "x_target_m": 2.9
+  },
+  {
+    "parent_group_id": "dense_v1_train_x2.90_family2",
+    "phase": "upstream",
+    "proposal_family_index": 2,
+    "state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+    "x_target_m": 2.9
+  },
+  {
+    "parent_group_id": "dense_v1_train_x2.90_family3",
+    "phase": "upstream",
+    "proposal_family_index": 3,
+    "state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+    "x_target_m": 2.9
+  },
+  {
+    "parent_group_id": "dense_v1_train_x2.90_family4",
+    "phase": "upstream",
+    "proposal_family_index": 4,
+    "state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+    "x_target_m": 2.9
+  }
+]

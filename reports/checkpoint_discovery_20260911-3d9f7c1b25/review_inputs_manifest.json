@@ -1,0 +1,27 @@
+[
+  {
+    "source": "/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911_inputs/anchors.json",
+    "review_copy": "review_inputs/anchors.json",
+    "sha256": "5c4f4e4185ef44f7882f219ffee2be6b3add75e0d1de6a4bb4b09210c5fc0389"
+  },
+  {
+    "source": "/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911_inputs/bank.json",
+    "review_copy": "review_inputs/bank.json",
+    "sha256": "188949a1fc0784b95fc5ec995ffe8130f834dbb744fe22ed6a397bbd5dbde824"
+  },
+  {
+    "source": "/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911_inputs/checkpoint_64000/frozen_unified_policy.json",
+    "review_copy": "review_inputs/checkpoint_64000/frozen_unified_policy.json",
+    "sha256": "f6cfb6d403518b20b226f6d62eb3c599ee7b2a05c4d622406a8c28e2b6670ad6"
+  },
+  {
+    "source": "/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911_inputs/checkpoint_32000/frozen_unified_policy.json",
+    "review_copy": "review_inputs/checkpoint_32000/frozen_unified_policy.json",
+    "sha256": "1e801fcd088f9c99b135f565fa2c77e7c48774d659a3e154d0e1b90d1558e925"
+  },
+  {
+    "source": "/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911_inputs/checkpoint_128000/frozen_unified_policy.json",
+    "review_copy": "review_inputs/checkpoint_128000/frozen_unified_policy.json",
+    "sha256": "f10eb8d29341bb8ed09922a10758baf1e083c74c43c6cce3af13a7215ef03319"
+  }
+]

@@ -1,0 +1,9 @@
+arm,scenario,interactions,completed_candidates,positive_candidates,negative_candidates,unknown_candidates,witnessed_root_cells,novel_root_cells,common_budget,budget_below_training_surcharge,training_surcharge,full_schedule_interactions,scope
+pi_6,exploration_only,4051,186,186,0,0,185,132,4058,False,0,4225,conservative_offline_declared_order
+pi_6,training_inclusive,4225,202,202,0,0,201,146,4225,False,0,4225,conservative_offline_declared_order
+checkpoint_32000,exploration_only,4058,187,187,0,0,186,186,4058,False,0,4058,conservative_offline_declared_order
+checkpoint_32000,training_inclusive,0,0,0,0,0,0,0,4225,True,32076,36134,conservative_offline_declared_order
+checkpoint_64000,exploration_only,4002,137,133,3,1,132,132,4058,False,0,6502,conservative_offline_declared_order
+checkpoint_64000,training_inclusive,0,0,0,0,0,0,0,4225,True,64152,70654,conservative_offline_declared_order
+checkpoint_128000,exploration_only,4052,166,166,0,0,165,165,4058,False,0,5948,conservative_offline_declared_order
+checkpoint_128000,training_inclusive,0,0,0,0,0,0,0,4225,True,128225,134173,conservative_offline_declared_order

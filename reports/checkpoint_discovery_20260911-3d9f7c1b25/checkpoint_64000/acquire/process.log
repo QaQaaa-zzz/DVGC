@@ -1,0 +1,312 @@
+Warp 1.11.0 initialized:
+   CUDA Toolkit 12.9, Driver 13.0
+   Devices:
+     "cpu"      : "x86_64"
+     "cuda:0"   : "NVIDIA GeForce RTX 4090 D" (24 GiB, sm_89, mempool enabled)
+   Kernel cache:
+     /home/qy/.cache/warp/1.11.0
+Warp DeprecationWarning: The symbol `warp.types.warp_type_to_np_dtype` will soon be removed from the public API. It can still be accessed from `warp._src.types.warp_type_to_np_dtype` but might be changed or removed without notice.
+[frontier-shard] warp_memory_maintenance=enabled device=cuda:0 step_interval=64 mempool_supported=True mempool_enabled=True
+Module mujoco.mjx.warp.ffi edde159 load on device 'cuda:0' took 0.37 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.smooth 9d8c26b load on device 'cuda:0' took 6.27 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.collision_driver de6dc98 load on device 'cuda:0' took 0.24 ms  (cached)
+Module _nxn_broadphase__locals__kernel_36c68517 36c6851 load on device 'cuda:0' took 0.25 ms  (cached)
+Module ccd_kernel_builder__locals__ccd_kernel_30387cff 30387cf load on device 'cuda:0' took 0.82 ms  (cached)
+Module ccd_kernel_builder__locals__ccd_kernel_9855f04a 9855f04 load on device 'cuda:0' took 0.82 ms  (cached)
+Module ccd_kernel_builder__locals__ccd_kernel_927e4d05 927e4d0 load on device 'cuda:0' took 0.82 ms  (cached)
+Module ccd_kernel_builder__locals__ccd_kernel_2b578852 2b57885 load on device 'cuda:0' took 1.10 ms  (cached)
+Module _primitive_narrowphase__locals__primitive_narrowphase_1bf02ad9 91f16af load on device 'cuda:0' took 0.47 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.constraint 2aca1f5 load on device 'cuda:0' took 1.35 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.sensor a2c5a56 load on device 'cuda:0' took 1.35 ms  (cached)
+Module _actuator_velocity__locals__actuator_velocity_12383059 73552e7 load on device 'cuda:0' took 0.25 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.passive 45a1f12 load on device 'cuda:0' took 0.52 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.forward 3875c24 load on device 'cuda:0' took 0.54 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.support b7a7a89 load on device 'cuda:0' took 0.23 ms  (cached)
+Module _tile_cholesky_factorize_solve__locals__cholesky_factorize_solve_be145701 4a8f693 load on device 'cuda:0' took 15.11 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.solver 8800eae load on device 'cuda:0' took 0.77 ms  (cached)
+Module solve_init_jaref__locals__kernel_0e441fb9 0e441fb load on device 'cuda:0' took 0.21 ms  (cached)
+Module mul_m_dense__locals___mul_m_dense_a919c505 a919c50 load on device 'cuda:0' took 0.25 ms  (cached)
+Module update_constraint_gauss_cost__locals__kernel_9283aa6c 9283aa6 load on device 'cuda:0' took 0.20 ms  (cached)
+Module update_gradient_JTDAJ_dense_tiled__locals__kernel_926cd55c 4b2efd1 load on device 'cuda:0' took 28.78 ms  (cached)
+Module update_gradient_cholesky__locals__kernel_0282940c df4c2e1 load on device 'cuda:0' took 18.42 ms  (cached)
+Module linesearch_iterative__locals__kernel_d5d90354 cc0622d load on device 'cuda:0' took 0.52 ms  (cached)
+[causal] trajectory=dense_v1_train_x2.90_family0/variant_0 saved=27 total_candidates=27 interactions=44
+[causal] trajectory=dense_v1_train_x2.90_family0/variant_5 saved=22 total_candidates=49 interactions=86
+[causal] trajectory=dense_v1_train_x2.90_family1/variant_1 saved=26 total_candidates=75 interactions=130
+[causal] trajectory=dense_v1_train_x2.90_family1/variant_6 saved=29 total_candidates=104 interactions=178
+[causal] trajectory=dense_v1_train_x2.90_family2/variant_2 saved=25 total_candidates=129 interactions=220
+[causal] trajectory=dense_v1_train_x2.90_family2/variant_7 saved=25 total_candidates=154 interactions=265
+[causal] trajectory=dense_v1_train_x2.90_family3/variant_3 saved=23 total_candidates=177 interactions=308
+[causal] trajectory=dense_v1_train_x2.90_family4/variant_4 saved=27 total_candidates=204 interactions=348
+{
+  "schema": "jit_unified_boundary_catalog_v1",
+  "status": "completed",
+  "artifact_role": "unlabeled_policy_conditioned_frontier_candidates",
+  "split": "train",
+  "iteration": 7,
+  "policy_name": "checkpoint_64000",
+  "policy_actor_sha256": "db90036baaf5248906c310f5757635cb1ecf963ef109676951a3373c582ca44d",
+  "policy_payload_sha256": "ffed2adb2f145a3887ab6b2a06688c0217a2ac4afa9089826315611f9d323027",
+  "frozen_unified_manifest_sha256": "f6cfb6d403518b20b226f6d62eb3c599ee7b2a05c4d622406a8c28e2b6670ad6",
+  "source_tube_manifest_sha256": "0220342253aae21aaa63bdef7f75c73f3480dbc971851e87156e0af01b57aa11",
+  "protocol_sha256": "6ca34a3ce21e5d4428f9bcb855fcfa29a4d853ef267082cd40dc7b2f43b5000f",
+  "acquisition_mode": "jump_start_connected_causal_rollout_v1",
+  "jump_start_reachability_proven": true,
+  "natural_start_connected": false,
+  "rsi_used_for_reachability": false,
+  "jump_start_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+  "attempted_candidate_count": 8,
+  "candidate_count": 204,
+  "phase_attempted_candidate_counts": {
+    "upstream": 8,
+    "downstream": 0
+  },
+  "phase_candidate_counts": {
+    "upstream": 159,
+    "downstream": 45
+  },
+  "environment_interactions": 348,
+  "maximum_environment_interactions": 4000,
+  "exclusion_counts": {},
+  "training_transitions": 0,
+  "expert_switching_used": false,
+  "test_data_used": false,
+  "validation_data_used": false,
+  "final_evaluation_data_used": false,
+  "claim_boundary": {
+    "unlabeled_acquisition_only": true,
+    "tube_expansion_claim": false,
+    "jce_jel_claim": false,
+    "certified_safe_set_claim": false
+  },
+  "trajectory_receipts": [
+    {
+      "trajectory_id": "dense_v1_train_x2.90_family0/variant_0",
+      "proposer": "checkpoint_64000",
+      "anchor_x_m": 2.9,
+      "strength": 0.15,
+      "direction": {
+        "action_dimension": 0,
+        "action_name": "steer",
+        "sign": -1,
+        "basis_vector": [
+          -1.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "environment_interactions": 44,
+      "candidate_count": 27,
+      "stop_reason": "first_valid_landing",
+      "perturbation_started": true,
+      "final_x_m": 4.113462448120117,
+      "peak_root_z_m": 0.5845468044281006,
+      "peak_sampling": "control_step_states_including_reset",
+      "physical_failure": false,
+      "timeout": false,
+      "valid_landing": true,
+      "truncated": false
+    },
+    {
+      "trajectory_id": "dense_v1_train_x2.90_family0/variant_5",
+      "proposer": "checkpoint_64000",
+      "anchor_x_m": 2.9,
+      "strength": 0.15,
+      "direction": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "sign": 1,
+        "basis_vector": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      "environment_interactions": 42,
+      "candidate_count": 22,
+      "stop_reason": "task_terminated_before_landing",
+      "perturbation_started": true,
+      "final_x_m": 3.8447701930999756,
+      "peak_root_z_m": 0.6241424679756165,
+      "peak_sampling": "control_step_states_including_reset",
+      "physical_failure": true,
+      "timeout": false,
+      "valid_landing": false,
+      "truncated": false
+    },
+    {
+      "trajectory_id": "dense_v1_train_x2.90_family1/variant_1",
+      "proposer": "checkpoint_64000",
+      "anchor_x_m": 2.9,
+      "strength": 0.15,
+      "direction": {
+        "action_dimension": 0,
+        "action_name": "steer",
+        "sign": 1,
+        "basis_vector": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "environment_interactions": 44,
+      "candidate_count": 26,
+      "stop_reason": "first_valid_landing",
+      "perturbation_started": true,
+      "final_x_m": 4.100686550140381,
+      "peak_root_z_m": 0.6640644669532776,
+      "peak_sampling": "control_step_states_including_reset",
+      "physical_failure": false,
+      "timeout": false,
+      "valid_landing": true,
+      "truncated": false
+    },
+    {
+      "trajectory_id": "dense_v1_train_x2.90_family1/variant_6",
+      "proposer": "checkpoint_64000",
+      "anchor_x_m": 2.9,
+      "strength": 0.15,
+      "direction": {
+        "action_dimension": 3,
+        "action_name": "knee",
+        "sign": -1,
+        "basis_vector": [
+          0.0,
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      "environment_interactions": 48,
+      "candidate_count": 29,
+      "stop_reason": "first_valid_landing",
+      "perturbation_started": true,
+      "final_x_m": 4.252590179443359,
+      "peak_root_z_m": 0.658613920211792,
+      "peak_sampling": "control_step_states_including_reset",
+      "physical_failure": false,
+      "timeout": false,
+      "valid_landing": true,
+      "truncated": false
+    },
+    {
+      "trajectory_id": "dense_v1_train_x2.90_family2/variant_2",
+      "proposer": "checkpoint_64000",
+      "anchor_x_m": 2.9,
+      "strength": 0.15,
+      "direction": {
+        "action_dimension": 1,
+        "action_name": "rear_wheel_drive",
+        "sign": -1,
+        "basis_vector": [
+          0.0,
+          -1.0,
+          0.0,
+          0.0
+        ]
+      },
+      "environment_interactions": 42,
+      "candidate_count": 25,
+      "stop_reason": "first_valid_landing",
+      "perturbation_started": true,
+      "final_x_m": 4.014636993408203,
+      "peak_root_z_m": 0.5619486570358276,
+      "peak_sampling": "control_step_states_including_reset",
+      "physical_failure": false,
+      "timeout": false,
+      "valid_landing": true,
+      "truncated": false
+    },
+    {
+      "trajectory_id": "dense_v1_train_x2.90_family2/variant_7",
+      "proposer": "checkpoint_64000",
+      "anchor_x_m": 2.9,
+      "strength": 0.15,
+      "direction": {
+        "action_dimension": 3,
+        "action_name": "knee",
+        "sign": 1,
+        "basis_vector": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      "environment_interactions": 45,
+      "candidate_count": 25,
+      "stop_reason": "task_terminated_before_landing",
+      "perturbation_started": true,
+      "final_x_m": 4.014223098754883,
+      "peak_root_z_m": 0.4334143400192261,
+      "peak_sampling": "control_step_states_including_reset",
+      "physical_failure": true,
+      "timeout": false,
+      "valid_landing": false,
+      "truncated": false
+    },
+    {
+      "trajectory_id": "dense_v1_train_x2.90_family3/variant_3",
+      "proposer": "checkpoint_64000",
+      "anchor_x_m": 2.9,
+      "strength": 0.15,
+      "direction": {
+        "action_dimension": 1,
+        "action_name": "rear_wheel_drive",
+        "sign": 1,
+        "basis_vector": [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ]
+      },
+      "environment_interactions": 43,
+      "candidate_count": 23,
+      "stop_reason": "first_valid_landing",
+      "perturbation_started": true,
+      "final_x_m": 4.096210956573486,
+      "peak_root_z_m": 0.5265443921089172,
+      "peak_sampling": "control_step_states_including_reset",
+      "physical_failure": false,
+      "timeout": false,
+      "valid_landing": true,
+      "truncated": false
+    },
+    {
+      "trajectory_id": "dense_v1_train_x2.90_family4/variant_4",
+      "proposer": "checkpoint_64000",
+      "anchor_x_m": 2.9,
+      "strength": 0.15,
+      "direction": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "sign": -1,
+        "basis_vector": [
+          0.0,
+          0.0,
+          -1.0,
+          0.0
+        ]
+      },
+      "environment_interactions": 40,
+      "candidate_count": 27,
+      "stop_reason": "first_valid_landing",
+      "perturbation_started": true,
+      "final_x_m": 4.137948513031006,
+      "peak_root_z_m": 0.5673129558563232,
+      "peak_sampling": "control_step_states_including_reset",
+      "physical_failure": false,
+      "timeout": false,
+      "valid_landing": true,
+      "truncated": false
+    }
+  ],
+  "trajectory_stop_counts": {
+    "first_valid_landing": 6,
+    "task_terminated_before_landing": 2
+  }
+}
