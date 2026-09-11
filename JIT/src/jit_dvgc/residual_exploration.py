@@ -1,7 +1,8 @@
 """Bounded frozen-bank residual warm starts, without simulation or RL discovery.
 
 The dataset is an explicit export of witnessed TRAIN action examples. Historical
-candidate snapshots alone are insufficient: each action must have its original
+candidate snapshots alone are insufficient; versioned causal exports can join
+saved FIFO/event observations to later stored action prefixes. Each action needs its original
 observation/history/base action/goal, complete prefix and same-context suffix
 identity. This module checks the declared export and its content hashes; it does
 not replay physics or independently certify a producer's witness assertions.
@@ -117,6 +118,8 @@ def _features(observation, history, base_action, goal, contract):
     base_action = jnp.asarray(base_action)
     goal = jnp.asarray(goal)
     expected = (len(contract['observation_names']),)
+    if contract['history_steps'] == 0 and history.shape == (0,):
+        history = history.reshape((0, expected[0]))
     if observation.shape != expected or history.shape != (contract['history_steps'],expected[0]):
         raise ValueError('observation/history contract mismatch')
     if base_action.shape != (4,) or goal.shape != (len(contract['goal_names']),):
@@ -158,7 +161,7 @@ def load_training_data(dataset):
     examples. No credit is assigned to an unfamiliar state without a suffix.
     The caller must freeze the named cumulative baseline for the fitting block.
     """
-    if dataset.get('schema') != 'residual_warmstart_dataset_v1' or dataset.get('role') != 'TRAIN':
+    if dataset.get('schema') not in {'residual_warmstart_dataset_v1', 'residual_causal_dataset_v2'} or dataset.get('role') != 'TRAIN':
         raise ValueError('explicit TRAIN warm-start dataset required')
     contract = dataset['contract']
     validate_contract(contract)
@@ -174,7 +177,10 @@ def load_training_data(dataset):
     rows=[]
     for source in dataset['sources']:
         doc = json.loads(Path(source['path']).read_text())
-        if doc.get('schema') != 'residual_action_witnesses_v1' or doc.get('role') != 'TRAIN':
+        if dataset['schema'] == 'residual_causal_dataset_v2':
+            from .residual_dataset import validate_causal_export
+            validate_causal_export(doc, dataset)
+        elif doc.get('schema') != 'residual_action_witnesses_v1' or doc.get('role') != 'TRAIN':
             raise ValueError('source must be an explicit TRAIN action witness export')
         if doc.get('contract_sha256') != digest(contract):
             raise ValueError('source observation/action contract mismatch')
@@ -227,6 +233,8 @@ def fit(dataset, *, steps, max_steps, seed=0, learning_rate=.001):
         raise ValueError('positive explicit optimizer-step budget required')
     if not np.isfinite(learning_rate) or learning_rate<=0:
         raise ValueError('learning rate must be positive')
+    if dataset.get('schema') == 'residual_causal_dataset_v2' and dataset.get('partition') != 'fit':
+        raise ValueError('only the fit partition can update the explorer')
     started=time.monotonic()
     batch=load_training_data(dataset)
     contract=dataset['contract']
