@@ -1,0 +1,34 @@
+{
+  "JIT/runs/experiments/multicheckpoint_pi6_20260911/training/pi6_multicheckpoint_train_20260911/checkpoints/transition_0/identity.json": {
+    "bytes": 1044,
+    "sha256": "9c6448da6c59539ab8ef30589312a04324db12a2b2984e9bfd73a30a1bbaba2b"
+  },
+  "JIT/runs/experiments/multicheckpoint_pi6_20260911/training/pi6_multicheckpoint_train_20260911/checkpoints/transition_0/payload.pkl": {
+    "bytes": 1255275,
+    "sha256": "c456d51b2ce150b6190ef20f23ed28a42dd5c9cf63497f68521a8d5efb43b301"
+  },
+  "JIT/runs/experiments/multicheckpoint_pi6_20260911/training/pi6_multicheckpoint_train_20260911/checkpoints/transition_32000/identity.json": {
+    "bytes": 1048,
+    "sha256": "04198ab6fe84d65dc45c91df99742eac0dc37ccb691390be5e067ba7a5a2495e"
+  },
+  "JIT/runs/experiments/multicheckpoint_pi6_20260911/training/pi6_multicheckpoint_train_20260911/checkpoints/transition_32000/payload.pkl": {
+    "bytes": 1255276,
+    "sha256": "80c991bc371ae1319f2952e4af3cfbeabe6dbd6c0f6f81467ffe848280edf2d3"
+  },
+  "JIT/runs/experiments/multicheckpoint_pi6_20260911/training/pi6_multicheckpoint_train_20260911/checkpoints/transition_64000/identity.json": {
+    "bytes": 1048,
+    "sha256": "38301fd196ce5c7dde7e01585dd988d863a8edb00ca2fbb97e1d89887443a001"
+  },
+  "JIT/runs/experiments/multicheckpoint_pi6_20260911/training/pi6_multicheckpoint_train_20260911/checkpoints/transition_64000/payload.pkl": {
+    "bytes": 1255276,
+    "sha256": "ffed2adb2f145a3887ab6b2a06688c0217a2ac4afa9089826315611f9d323027"
+  },
+  "JIT/runs/experiments/multicheckpoint_pi6_20260911/training/pi6_multicheckpoint_train_20260911/checkpoints/transition_128000/identity.json": {
+    "bytes": 1049,
+    "sha256": "5e4ac5263323d98751927e97327cbb75a9060ee5cb499e158e2489476a1687af"
+  },
+  "JIT/runs/experiments/multicheckpoint_pi6_20260911/training/pi6_multicheckpoint_train_20260911/checkpoints/transition_128000/payload.pkl": {
+    "bytes": 1255278,
+    "sha256": "c869b384c9b1124047dc2e3f52ca8b63f75f991dd464606f8ede79221c5decfb"
+  }
+}

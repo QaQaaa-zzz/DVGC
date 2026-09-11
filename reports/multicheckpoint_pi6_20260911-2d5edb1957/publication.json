@@ -1,0 +1,27 @@
+{
+  "run_id": "multicheckpoint_pi6_20260911-2d5edb1957",
+  "local_run": "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_20260911",
+  "archive_sha256": "b81f5c1acbad4556c999f967e8b604ba274b5ad30c08cc54ed73e708574bae18",
+  "files": {
+    "INDEX.md": "dc101495aa11ea8b620c104974368861721bc43112390865c9ea690cf959f094",
+    "all_panel_records.csv": "bc43e40004cb219d1865db7f5e99ec3c3cdaaa9d7308a7b5410d95b15d9158cc",
+    "analysis_summary.json": "3da39f6b66a32091ce3231dea11b591976a268fe2aa0793426673559191c1e41",
+    "checkpoint_manifest.json": "19bb5f937824e0da5d6ffceb3aab24b421c782c3edee79ece7d1f854095e74bb",
+    "checkpoint_panels.csv": "d5ca5453939e8a2c4109226b203ad92026bc8df797539ae34d4a0cda96bb1b26",
+    "command.json": "54e3a44a763803d6bfe609aaacd475e5796c89e2393429a70e98cce29e57caca",
+    "exit.json": "d8d5dd1ce616eaaf943a31041c964a6f80378ef317d8d43056444877c3b97c31",
+    "process.log": "5cd7aacf588086ee2018b1712ed7bc1dcc1859b54fe84b13630084201152f5c9",
+    "reservation.json": "ebe1c9df7250295dccc82593bb77bed0bcf4225647ea1efa468efef34ded3893",
+    "status.json": "4be993a620e2c052fab46315a5bea6c4b198587697087a652a5e09b9c2ac6875",
+    "summary.json": "4be993a620e2c052fab46315a5bea6c4b198587697087a652a5e09b9c2ac6875",
+    "training/pi6_multicheckpoint_train_20260911/train_panels/transition_128000/completion.json": "0150dbeca5c92edc08f9a0c237a199c05dd51872879e9c65f36b79e0a86f2fd0",
+    "training/pi6_multicheckpoint_train_20260911/train_panels/transition_128000/reservation.json": "dd4b895242c6b5364da1ce0bc2b478ffffadd4cf03876767e9214a82100b7b73",
+    "training/pi6_multicheckpoint_train_20260911/train_panels/transition_32000/completion.json": "f90aec709e4fd7c98f3ec5c0741081bfa63e366cb601bed5c2535ba0abd9f7cf",
+    "training/pi6_multicheckpoint_train_20260911/train_panels/transition_32000/reservation.json": "dafed2ffc76ad19ba2122e6a61782bbfa913d64348da3a543fa540aefd287200",
+    "training/pi6_multicheckpoint_train_20260911/train_panels/transition_64000/completion.json": "f90aec709e4fd7c98f3ec5c0741081bfa63e366cb601bed5c2535ba0abd9f7cf",
+    "training/pi6_multicheckpoint_train_20260911/train_panels/transition_64000/reservation.json": "2addb781a9bdea408dc861ce56e5fffcb6256189bb27b7a043e8581491b67a80",
+    "training_metrics.csv": "0b6b7342192cc0aeabe30072e425393be0c27adba22ae919d2bd0eb76a495df4",
+    "bundle_inventory.json": "10f606d283e6a0388a21510315eb03ae44257d199de67b11fde5d4c015bdf22b"
+  },
+  "scope": "compact text review; raw snapshots, checkpoints and images stay on server"
+}

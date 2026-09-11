@@ -1,0 +1,8 @@
+[
+  "/home/qy/mujoco_playground/.venv/bin/python",
+  "/home/qy/DVGC/JIT/cli/train_unified.py",
+  "--config",
+  "/home/qy/DVGC/JIT/configs/pi6_multicheckpoint_train_20260911.json",
+  "--run-id",
+  "pi6_multicheckpoint_train_20260911"
+]

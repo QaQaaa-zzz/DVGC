@@ -1,0 +1,227 @@
+{
+  "schema": "jit_review_bundle_v2",
+  "mode": "compact",
+  "raw_files_deleted": false,
+  "standalone_replay_archive": false,
+  "files": [
+    {
+      "path": "INDEX.md",
+      "source_bytes": 2677,
+      "source_sha256": "dc101495aa11ea8b620c104974368861721bc43112390865c9ea690cf959f094",
+      "disposition": "included"
+    },
+    {
+      "path": "all_panel_records.csv",
+      "source_bytes": 2443,
+      "source_sha256": "bc43e40004cb219d1865db7f5e99ec3c3cdaaa9d7308a7b5410d95b15d9158cc",
+      "disposition": "included"
+    },
+    {
+      "path": "analysis_summary.json",
+      "source_bytes": 2001,
+      "source_sha256": "3da39f6b66a32091ce3231dea11b591976a268fe2aa0793426673559191c1e41",
+      "disposition": "included"
+    },
+    {
+      "path": "checkpoint_manifest.json",
+      "source_bytes": 1993,
+      "source_sha256": "19bb5f937824e0da5d6ffceb3aab24b421c782c3edee79ece7d1f854095e74bb",
+      "disposition": "included"
+    },
+    {
+      "path": "checkpoint_panels.csv",
+      "source_bytes": 333,
+      "source_sha256": "d5ca5453939e8a2c4109226b203ad92026bc8df797539ae34d4a0cda96bb1b26",
+      "disposition": "included"
+    },
+    {
+      "path": "checkpoint_training.pdf",
+      "source_bytes": 16899,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "checkpoint_training.png",
+      "source_bytes": 96738,
+      "source_sha256": "c07d771610fee4d87ba2cf6cde672eb8376700b1502aab264e7343d662669572",
+      "disposition": "included"
+    },
+    {
+      "path": "checkpoint_training.svg",
+      "source_bytes": 50391,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "command.json",
+      "source_bytes": 235,
+      "source_sha256": "54e3a44a763803d6bfe609aaacd475e5796c89e2393429a70e98cce29e57caca",
+      "disposition": "included"
+    },
+    {
+      "path": "exit.json",
+      "source_bytes": 176,
+      "source_sha256": "d8d5dd1ce616eaaf943a31041c964a6f80378ef317d8d43056444877c3b97c31",
+      "disposition": "included"
+    },
+    {
+      "path": "process.log",
+      "source_bytes": 16345,
+      "source_sha256": "5cd7aacf588086ee2018b1712ed7bc1dcc1859b54fe84b13630084201152f5c9",
+      "disposition": "included"
+    },
+    {
+      "path": "reservation.json",
+      "source_bytes": 16312,
+      "source_sha256": "ebe1c9df7250295dccc82593bb77bed0bcf4225647ea1efa468efef34ded3893",
+      "disposition": "included"
+    },
+    {
+      "path": "status.json",
+      "source_bytes": 399,
+      "source_sha256": "4be993a620e2c052fab46315a5bea6c4b198587697087a652a5e09b9c2ac6875",
+      "disposition": "included"
+    },
+    {
+      "path": "summary.json",
+      "source_bytes": 399,
+      "source_sha256": "4be993a620e2c052fab46315a5bea6c4b198587697087a652a5e09b9c2ac6875",
+      "disposition": "included"
+    },
+    {
+      "path": "training/pi6_multicheckpoint_train_20260911/backend.json",
+      "source_bytes": 60,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "training/pi6_multicheckpoint_train_20260911/checkpoints/transition_0/identity.json",
+      "source_bytes": 1044,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "training/pi6_multicheckpoint_train_20260911/checkpoints/transition_128000/identity.json",
+      "source_bytes": 1049,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "training/pi6_multicheckpoint_train_20260911/checkpoints/transition_32000/identity.json",
+      "source_bytes": 1048,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "training/pi6_multicheckpoint_train_20260911/checkpoints/transition_64000/identity.json",
+      "source_bytes": 1048,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "training/pi6_multicheckpoint_train_20260911/formal_provenance.json",
+      "source_bytes": 838,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "training/pi6_multicheckpoint_train_20260911/formal_report.json",
+      "source_bytes": 11397,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "training/pi6_multicheckpoint_train_20260911/resolved_config.json",
+      "source_bytes": 12346,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "training/pi6_multicheckpoint_train_20260911/run_manifest.json",
+      "source_bytes": 1296,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "training/pi6_multicheckpoint_train_20260911/status.json",
+      "source_bytes": 334,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "training/pi6_multicheckpoint_train_20260911/train_panels/transition_128000/completion.json",
+      "source_bytes": 119,
+      "source_sha256": "0150dbeca5c92edc08f9a0c237a199c05dd51872879e9c65f36b79e0a86f2fd0",
+      "disposition": "included"
+    },
+    {
+      "path": "training/pi6_multicheckpoint_train_20260911/train_panels/transition_128000/report.json",
+      "source_bytes": 12545,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "training/pi6_multicheckpoint_train_20260911/train_panels/transition_128000/reservation.json",
+      "source_bytes": 165,
+      "source_sha256": "dd4b895242c6b5364da1ce0bc2b478ffffadd4cf03876767e9214a82100b7b73",
+      "disposition": "included"
+    },
+    {
+      "path": "training/pi6_multicheckpoint_train_20260911/train_panels/transition_128000/trajectories.json",
+      "source_bytes": 5105,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "training/pi6_multicheckpoint_train_20260911/train_panels/transition_128000/xz_visitation.png",
+      "source_bytes": 243344,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "training/pi6_multicheckpoint_train_20260911/train_panels/transition_32000/completion.json",
+      "source_bytes": 119,
+      "source_sha256": "f90aec709e4fd7c98f3ec5c0741081bfa63e366cb601bed5c2535ba0abd9f7cf",
+      "disposition": "included"
+    },
+    {
+      "path": "training/pi6_multicheckpoint_train_20260911/train_panels/transition_32000/report.json",
+      "source_bytes": 12547,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "training/pi6_multicheckpoint_train_20260911/train_panels/transition_32000/reservation.json",
+      "source_bytes": 164,
+      "source_sha256": "dafed2ffc76ad19ba2122e6a61782bbfa913d64348da3a543fa540aefd287200",
+      "disposition": "included"
+    },
+    {
+      "path": "training/pi6_multicheckpoint_train_20260911/train_panels/transition_32000/trajectories.json",
+      "source_bytes": 5276,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "training/pi6_multicheckpoint_train_20260911/train_panels/transition_32000/xz_visitation.png",
+      "source_bytes": 242476,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "training/pi6_multicheckpoint_train_20260911/train_panels/transition_64000/completion.json",
+      "source_bytes": 119,
+      "source_sha256": "f90aec709e4fd7c98f3ec5c0741081bfa63e366cb601bed5c2535ba0abd9f7cf",
+      "disposition": "included"
+    },
+    {
+      "path": "training/pi6_multicheckpoint_train_20260911/train_panels/transition_64000/report.json",
+      "source_bytes": 12544,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "training/pi6_multicheckpoint_train_20260911/train_panels/transition_64000/reservation.json",
+      "source_bytes": 164,
+      "source_sha256": "2addb781a9bdea408dc861ce56e5fffcb6256189bb27b7a043e8581491b67a80",
+      "disposition": "included"
+    },
+    {
+      "path": "training/pi6_multicheckpoint_train_20260911/train_panels/transition_64000/trajectories.json",
+      "source_bytes": 5290,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "training/pi6_multicheckpoint_train_20260911/train_panels/transition_64000/xz_visitation.png",
+      "source_bytes": 242823,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "training_metrics.csv",
+      "source_bytes": 11672,
+      "source_sha256": "0b6b7342192cc0aeabe30072e425393be0c27adba22ae919d2bd0eb76a495df4",
+      "disposition": "included"
+    }
+  ]
+}
