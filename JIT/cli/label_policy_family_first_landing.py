@@ -27,7 +27,11 @@ def main() -> int:
     parser.add_argument("--shard-index", type=int)
     parser.add_argument("--shard-count", type=int)
     parser.add_argument("--merge-shard-dir", type=Path, action="append")
+    parser.add_argument("--execution-backend", choices=("serial", "device", "vectorized"), default="serial")
+    parser.add_argument("--batch-size", type=int, default=1)
     args = parser.parse_args()
+    if (args.execution_backend != "serial" or args.batch_size != 1) and args.shard_index is None:
+        parser.error("execution settings require evaluator shard mode")
     if args.merge_shard_dir:
         if len(args.evaluator_frozen_policy) != 1:
             parser.error("shard merge requires exactly one evaluator frozen policy")
@@ -57,6 +61,7 @@ def main() -> int:
             output_dir=args.output_dir,
             shard_index=args.shard_index,
             shard_count=args.shard_count,
+            execution_backend=args.execution_backend, batch_size=args.batch_size,
             max_ticks=args.max_ticks,
             protocol_seed=args.protocol_seed,
         )

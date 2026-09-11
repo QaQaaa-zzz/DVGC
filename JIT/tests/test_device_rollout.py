@@ -31,20 +31,22 @@ def step(s,a):
     info={**s.info,'down_events':Down(jp.array(False), x[0]>=s.obs['state'][0])}
     return s._replace(data=Data(x,s.data.qvel),info=info)
 
-def test_device_stops_each_lane_and_accounts_inactive_steps():
+@pytest.mark.parametrize("vectorized", [False, True])
+def test_device_stops_each_lane_and_accounts_inactive_steps(vectorized):
     states=jax.tree_util.tree_map(lambda *a:jp.stack(a),initial(2.),initial(4.))
-    out,counts,bad,flags,cost=make_device_rollout(policy,step,10)(states,jax.random.split(jax.random.PRNGKey(1),2))
+    out,counts,bad,flags,cost=make_device_rollout(policy,step,10,vectorized=vectorized)(states,jax.random.split(jax.random.PRNGKey(1),2))
     np.testing.assert_array_equal(counts,[2,4])
     np.testing.assert_array_equal(out.data.qpos[:,0],[2,4])
     assert int(cost)==8 and int(cost)-int(sum(counts))==2
     assert not np.any(bad) and np.all(flags[:,3])
 
-def test_horizon_and_nonfinite_are_not_success():
+@pytest.mark.parametrize("vectorized", [False, True])
+def test_horizon_and_nonfinite_are_not_success(vectorized):
     states=jax.tree_util.tree_map(lambda *a:jp.stack(a),initial(20.),initial(30.))
-    _,counts,bad,flags,cost=make_device_rollout(policy,step,3)(states,jax.random.split(jax.random.PRNGKey(1),2))
+    _,counts,bad,flags,cost=make_device_rollout(policy,step,3,vectorized=vectorized)(states,jax.random.split(jax.random.PRNGKey(1),2))
     assert list(counts)==[3,3] and int(cost)==6 and not np.any(flags[:,3])
     def broken(s,a): return s._replace(data=Data(s.data.qpos*jp.nan,s.data.qvel))
-    _,counts,bad,_,_=make_device_rollout(policy,broken,3)(states,jax.random.split(jax.random.PRNGKey(1),2))
+    _,counts,bad,_,_=make_device_rollout(policy,broken,3,vectorized=vectorized)(states,jax.random.split(jax.random.PRNGKey(1),2))
     assert np.all(bad) and list(counts)==[1,1]
 
 def test_real_slice_selection_never_fills_skipped_bins():
@@ -80,11 +82,13 @@ def test_device_labeler_matches_serial_rows_and_accounts_padding(tmp_path,monkey
     monkeypatch.setattr(labels,'fresh_unified_continuation_start',lambda snapshot,env:snapshot.state)
     env=SimpleNamespace(step=step,_bundle=SimpleNamespace(xml_sha256='xml'),resolved_config=SimpleNamespace(ppo=SimpleNamespace(episode_horizon=6)))
     reports=[]
-    for backend,size in [('serial',1),('device',2)]:
+    for backend,size in [('serial',1),('device',2),('vectorized',2)]:
         reports.append(labels.label_unified_continuation_shard(path,tmp_path/backend,env=env,policy=policy,policy_record=record,
             frozen_manifest_sha256='f'*64,shard_index=0,shard_count=1,max_ticks=6,protocol_seed=9,
             success_criterion='first_valid_landing',execution_backend=backend,batch_size=size))
     assert read(tmp_path/'serial/labels.json')==read(tmp_path/'device/labels.json')
+    assert read(tmp_path/'serial/labels.json')==read(tmp_path/'vectorized/labels.json')
+    assert reports[2]['environment_interactions']==11
     assert reports[0]['environment_interactions']==9
     assert reports[1]['environment_interactions']==11
     assert reports[1]['inactive_lane_interactions']==2
@@ -107,3 +111,72 @@ def test_warp_like_step_refuses_vmap_but_device_loop_uses_single_world():
     out,counts,bad,flags,cost=make_device_rollout(policy,single_world,10)(states,keys)
     assert list(counts)==[2,4] and not np.any(bad)
     np.testing.assert_array_equal(out.data.qpos[:,0],[2,4])
+
+@pytest.mark.parametrize('size', [1, 3, 64])
+def test_vectorized_lanes_keep_keys_and_terminal_state(size):
+    targets = [float(i % 4 + 1) for i in range(size)]
+    states = jax.tree_util.tree_map(lambda *a: jp.stack(a), *map(initial, targets))
+    keys = jax.random.split(jax.random.PRNGKey(8), size)
+    def random_policy(obs, key):
+        return jax.random.uniform(key, (4,)), {}
+    def keyed_step(s, a):
+        out = step(s, a)
+        return out._replace(data=Data(out.data.qpos, s.data.qvel + a[:1]))
+    serial = make_device_rollout(random_policy, keyed_step, 8)(states, keys)
+    parallel = make_device_rollout(random_policy, keyed_step, 8, vectorized=True)(states, keys)
+    for a, b in zip(jax.tree_util.tree_leaves(serial), jax.tree_util.tree_leaves(parallel)):
+        np.testing.assert_array_equal(a, b)
+
+
+def test_warp_batch_shared_buffers_have_no_world_axis():
+    from mujoco import mjx
+    import mujoco
+    from jit_dvgc.continuation.device_rollout import stack_worlds, take_world
+    from mujoco.mjx.warp.types import DATA_NON_VMAP
+    model = mujoco.MjModel.from_xml_string('<mujoco><worldbody><body><freejoint/><geom size=".1"/></body></worldbody></mujoco>')
+    # Real DataWarp pytree on CPU tests layout; GPU stepping has its own bounded benchmark.
+    from mujoco.mjx.warp.types import DataWarp
+    impl = DataWarp(**{f.name: jp.zeros((2,), jp.float32) for f in DataWarp.fields()})
+    data = mjx.make_data(model, impl='jax').replace(_impl=impl)
+    a = initial(2.)._replace(data=data)
+    b = a._replace(data=data.replace(qpos=data.qpos.at[0].set(1.)))
+    batch = stack_worlds([a, b])
+    assert batch.data.qpos.shape == (2, model.nq)
+    for field in DATA_NON_VMAP:
+        assert getattr(batch.data._impl, field).shape == getattr(data._impl, field).shape
+    np.testing.assert_array_equal(take_world(batch, 1).data.qpos, b.data.qpos)
+
+
+def test_repeat_worlds_cycles_inputs_without_new_candidate_claims():
+    from jit_dvgc.continuation.device_rollout import repeat_worlds, stack_worlds
+    states = stack_worlds([initial(2.), initial(4.)])
+    repeated = repeat_worlds(states, 5)
+    np.testing.assert_array_equal(repeated.obs['state'][:, 0], [2., 4., 2., 4., 2.])
+
+
+def test_capacity_guard_remembers_overflow_between_control_steps(monkeypatch):
+    from flax import struct
+    from mujoco import mjx
+    from jit_dvgc.continuation.device_rollout import checked_physics_step
+    @struct.dataclass
+    class Scratch:
+        nacon: object
+        naconmax: object
+        ncollision: object
+        naccdmax: object
+        njmax: object
+    @struct.dataclass
+    class Physics:
+        ctrl: object
+        tick: object
+        nefc: object
+        _impl: object
+    data = Physics(jp.zeros(4), jp.array(0), jp.array(0),
+                   Scratch(jp.array(0), jp.array(8), jp.array(0), jp.array(32), jp.array(64)))
+    def simulate(model, d):
+        tick = d.tick + 1
+        return d.replace(tick=tick, _impl=d._impl.replace(nacon=jp.where(tick==2, 9, 1)))
+    monkeypatch.setattr(mjx, 'step', simulate)
+    final, overflow = checked_physics_step(None, data, jp.ones(4), 4)
+    assert int(final._impl.nacon) == 1
+    assert bool(overflow)

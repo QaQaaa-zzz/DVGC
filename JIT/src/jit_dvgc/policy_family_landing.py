@@ -231,7 +231,7 @@ def run_policy_family_evaluator_shard(
             raise RuntimeError(f"existing evaluator shard is incomplete: {output}")
         protocol = _verify_cached_contract(output, contract)
         execution = json.loads((output / "execution.json").read_text())
-        if execution_backend == "device" and execution.get("device_step_schedule") != "lax_map_single_world_v2":
+        if execution_backend in {"device", "vectorized"} and execution.get("device_step_schedule") != {"device": "lax_map_single_world_v2", "vectorized": "vmap_checked_shared_warp_v2"}[execution_backend]:
             raise ValueError("cached device execution schedule drift")
         if execution.get("execution_backend", "serial") != execution_backend or execution.get("batch_size", 1) != batch_size:
             raise ValueError("cached shard execution backend/batch drift")

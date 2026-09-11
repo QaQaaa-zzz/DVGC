@@ -222,9 +222,9 @@ def label_unified_continuation_shard(
     batch_size: int = 1,
 ) -> dict[str, Any]:
     started = time.perf_counter()
-    if execution_backend not in {"serial", "device"} or not 1 <= batch_size <= 32:
+    if execution_backend not in {"serial", "device", "vectorized"} or type(batch_size) is not int or batch_size < 1:
         raise ValueError("invalid execution backend/batch size")
-    if execution_backend == "device" and success_criterion != "first_valid_landing":
+    if execution_backend in {"device", "vectorized"} and success_criterion != "first_valid_landing":
         raise ValueError("device rollout supports first landing only")
     acquisition_record = (
         policy_record
@@ -286,7 +286,7 @@ def label_unified_continuation_shard(
         "maximum_environment_interactions": (stop - start) * max_ticks,
     }
     execution.update(execution_backend=execution_backend, batch_size=batch_size,
-                     device_step_schedule='lax_map_single_world_v2' if execution_backend=='device' else None)
+                     device_step_schedule=({'device': 'lax_map_single_world_v2', 'vectorized': 'vmap_checked_shared_warp_v2'}.get(execution_backend)))
     _write_json(output / "execution.json", execution)
 
     step_fn = compiled_step_fn if compiled_step_fn is not None else jax.jit(env.step)
@@ -301,14 +301,20 @@ def label_unified_continuation_shard(
     padded_interactions = 0
     batch_results = {}
     batch_times = []
-    if execution_backend == "device":
-        from .continuation.device_rollout import make_device_rollout
-        device_run = make_device_rollout(policy, env.step, max_ticks)
+    compile_times = []
+    restore_seconds = 0.0
+    compiled_batches = {}
+    batch_sources = {}
+    if execution_backend in {"device", "vectorized"}:
+        from .continuation.device_rollout import make_device_rollout, stack_worlds, take_world, prepare_parallel_worlds
+        device_run = make_device_rollout(policy, env.step, max_ticks, vectorized=execution_backend == "vectorized")
     try:
         for candidate_index in range(start, stop):
-            if execution_backend == "device" and (candidate_index - start) % batch_size == 0:
+            if execution_backend in {"device", "vectorized"} and (candidate_index - start) % batch_size == 0:
                 indices = list(range(candidate_index, min(candidate_index + batch_size, stop)))
                 states = []
+                restore_start = time.perf_counter()
+                batch_sources = {}
                 for index in indices:
                     source = load_unified_envelope_snapshot(_candidate_snapshot_path(catalog_path, rows[index]))
                     validate_candidate_snapshot(source, rows[index], policy_record=acquisition_record)
@@ -316,24 +322,40 @@ def label_unified_continuation_shard(
                     if not _finite_state(state0) or _integer(state0.info["active_phase"]) != int(rows[index]["phase_index"]) or _truth(state0.info["expert_switching_used"]):
                         raise ValueError("invalid batch start")
                     states.append(state0)
-                stacked = jax.tree_util.tree_map(lambda *xs: jax.numpy.stack(xs), *states)
+                    batch_sources[index] = (source, state0)
+                jax.block_until_ready(states)
+                restore_seconds += time.perf_counter() - restore_start
+                stacked = (stack_worlds(states) if execution_backend == "vectorized" else
+                           jax.tree_util.tree_map(lambda *xs: jax.numpy.stack(xs), *states))
+                if execution_backend == "vectorized":
+                    stacked = prepare_parallel_worlds(stacked, env, len(indices))
                 keys = jax.numpy.stack([jax.random.fold_in(base_key, i) for i in indices])
+                if len(indices) not in compiled_batches:
+                    before = time.perf_counter()
+                    compiled_batches[len(indices)] = device_run.lower(stacked, keys).compile()
+                    compile_times.append(time.perf_counter() - before)
                 before = time.perf_counter()
-                final, counts, bad, flags, slots = device_run(stacked, keys)
+                final, counts, bad, flags, slots = compiled_batches[len(indices)](stacked, keys)
                 jax.block_until_ready(final)
                 counts, bad, flags, slots = jax.device_get((counts, bad, flags, slots))
                 interactions += int(slots)
                 padded_interactions += int(slots) - int(sum(counts))
                 if np.any(bad):
-                    raise ValueError("device continuation returned nonfinite state/action or switching")
+                    raise ValueError("device continuation nonfinite, switching, or scratch capacity exceeded")
                 batch_times.append(time.perf_counter() - before)
-                batch_results = {i: (jax.tree_util.tree_map(lambda x: x[j], final), int(counts[j]), flags[j]) for j, i in enumerate(indices)}
+                batch_results = {i: ((take_world(final, j) if execution_backend == "vectorized" else jax.tree_util.tree_map(lambda x: x[j], final)), int(counts[j]), flags[j]) for j, i in enumerate(indices)}
                 print(f"[labels] device batch {indices[0]}:{indices[-1]+1} seconds={batch_times[-1]:.3f} slots={int(slots)} useful_steps={int(sum(counts))}", flush=True)
             row = rows[candidate_index]
             snapshot_path = _candidate_snapshot_path(catalog_path, row)
-            snapshot = load_unified_envelope_snapshot(snapshot_path)
-            validate_candidate_snapshot(snapshot, row, policy_record=acquisition_record)
-            state = fresh_unified_continuation_start(snapshot, env)
+            if execution_backend in {"device", "vectorized"}:
+                snapshot, state = batch_sources.pop(candidate_index)
+            else:
+                restore_start = time.perf_counter()
+                snapshot = load_unified_envelope_snapshot(snapshot_path)
+                validate_candidate_snapshot(snapshot, row, policy_record=acquisition_record)
+                state = fresh_unified_continuation_start(snapshot, env)
+                jax.block_until_ready(state)
+                restore_seconds += time.perf_counter() - restore_start
             if not _finite_state(state):
                 raise ValueError("sharded continuation candidate start is nonfinite")
             start_phase = _integer(state.info["active_phase"])
@@ -349,7 +371,7 @@ def label_unified_continuation_shard(
             rollout_interactions = 0
 
             candidate_key = jax.random.fold_in(base_key, int(candidate_index))
-            if execution_backend == "device":
+            if execution_backend in {"device", "vectorized"}:
                 state, rollout_interactions, flags = batch_results.pop(candidate_index)
                 apex_seen, phase_transitioned, recovery_success, valid_contact_seen = map(bool, flags)
             else:
@@ -494,7 +516,10 @@ def label_unified_continuation_shard(
                       inactive_lane_interactions=padded_interactions,
                       useful_label_interactions=interactions-padded_interactions,
                       elapsed_seconds=time.perf_counter()-started,
-                      device_batch_seconds=batch_times)
+                      device_batch_seconds=batch_times,
+                      device_compile_seconds=compile_times,
+                      snapshot_restore_seconds=restore_seconds,
+                      timing_scope="labeler only; caller records full process initialization and wall time")
         _write_json(output / "labels.json", labeled)
         report["labels_file_sha256"] = file_sha256(output / "labels.json")
         _write_json(output / "summary.json", report)

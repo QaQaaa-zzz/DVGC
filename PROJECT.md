@@ -43,3 +43,18 @@ TRAIN is adaptive support; CALIBRATION serves optional predictors; used ACCEPTAN
 ## Operations
 
 Working branch agent/two-phase-soft-tube; report branch agent/jit-run-reports in QaQaaa-zzz/DVGC. Full artifacts on /home/qy/DVGC, compact reports on GitHub. Routine project pushes and report publication already authorized. Raw experimental runs immutable; new protocols need new outputs. Follow [AGENTS](AGENTS.md).
+
+## Active optimization — 2026-09-11
+
+User authorized GPU parallelization and bounded engineering measurements. Implement in place on the target branch; preserve unrelated untracked files and completed campaigns. Design: a separate `vectorized` execution backend with genuine multi-world Warp stepping, backend-aware shared contact buffers, device-side endpoint masks, unchanged candidate keys/labels and charged inactive work. Retain serial/device paths. Expose batch/shard execution settings without changing old requests. Measure initialization, batch compilation/execution and process wall time; archive JSON/CSV/plots and failures. Select settings by measured throughput and label equality, not occupied VRAM.
+
+Execution checklist (writing-plans / inline execution):
+- [x] Add failing behavior tests for vectorized termination, keys, Warp shared buffers and label/cost equivalence.
+- [x] Extend continuation/device_rollout.py, unified_continuation_shards.py and policy_family_landing.py; expose configurable execution through existing CLIs.
+- [x] Run CPU regression tests; audit landing/failure priority without rewriting historical outcomes.
+- [x] Run a predeclared bounded TRAIN execution comparison on existing candidates, increasing batch size with time/memory limits, no PPO/acquisition/final TEST; preserve attempts, cost, plotting data and figures.
+- [x] Record measured limits and recommended execution settings and review diff; commit/push delivery follows verified76-test run.
+
+GPU initially shared with a STTW_CONTROL training process; never stop unrelated jobs. The engineering comparison does not authorize new scientific labels when outcomes differ, nor reopen accepted snapshot replay questions.
+
+Outcome: genuine vectorized Warp continuation and explicit batch CLI are implemented.4096/8192/16384 capacity measurements completed;the final16384 run checked aggregate contact/CCD/constraint capacity at every physics substep, peak14,522MiB and157,227 useful simulator steps/s.24576 stopped at the22,000MiB protection threshold (observed22,542MiB), retaining full failure charge. Existing16-candidate endpoints agree, but one final checked continuation changes38→39 ticks;do not automatically replace locked serial scientific campaigns. Larger capacity is not a full-campaign speedup claim. This task charged3,384,811 interactions including inactive slots and failures, zero PPO/new scientific candidates/final TEST. Full artifacts:`JIT/runs/engineering/continuation_parallel_20260911/INDEX.md`;compact evidence:`JIT/review_evidence/parallel_capacity_20260911.json`.

@@ -533,7 +533,13 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
             state.data.qpos[index.knee_qpos_address],
             self._bundle.action_mapping,
         )
-        data = mjx_env.step(model, state.data, ctrl, self.n_substeps)
+        if "parallel_capacity_exceeded" in state.info:
+            from .continuation.device_rollout import checked_physics_step
+            data, exceeded = checked_physics_step(model, state.data, ctrl, self.n_substeps)
+            state = state.replace(info={**state.info, "parallel_capacity_exceeded":
+                state.info["parallel_capacity_exceeded"] | exceeded})
+        else:
+            data = mjx_env.step(model, state.data, ctrl, self.n_substeps)
         geometry = extract_geometry(data, self._geometry)
         reward_state = self._reward_state(data, geometry)
         finite = (
