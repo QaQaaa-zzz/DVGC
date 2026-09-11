@@ -569,19 +569,45 @@ def _evaluate_train_panel(
 ) -> PanelResult:
     panel_dir = run_dir / "train_panels" / f"transition_{step}"
     panel_dir.mkdir(parents=True, exist_ok=False)
+    plan = config.raw.get("checkpoint_evaluation")
+    horizon = plan["horizon"] if plan else config.ppo.episode_horizon
+    maximum = 2 * config.formal.samples_per_phase * horizon
+    if plan:
+        from .iterative_probe_training import fixed_train_panel_identity
+        current_panel = fixed_train_panel_identity({
+            "support_sha256": artifact.manifest["manifest_sha256"],
+            "entries": artifact.entries,
+        }, plan)
+        if current_panel != config.raw["fixed_train_panel"]:
+            raise ValueError("runtime TRAIN panel identity drift")
+        _write_json(panel_dir / "reservation.json", {
+            "maximum_interactions": maximum,
+            "panel_sha256": config.raw["fixed_train_panel"]["panel_sha256"],
+            "training_checkpoint_transition": step,
+        })
     deterministic_policy = make_policy(params, deterministic=True)
     report, trajectories = rollout_fixed_tube_panel(
         env,
         deterministic_policy,
         samples_per_phase=config.formal.samples_per_phase,
-        horizon=config.ppo.episode_horizon,
+        horizon=horizon,
     )
+    if plan:
+        interactions = report["environment_interactions"]
+        if type(interactions) is not int or not 0 < interactions <= maximum:
+            raise ValueError("checkpoint panel exceeded its declared interaction reservation")
+        report = {**report, "fixed_train_panel": config.raw["fixed_train_panel"]}
     report = {**report, "training_checkpoint_transition": step}
     _write_json(panel_dir / "report.json", report)
     _write_json(panel_dir / "trajectories.json", {"trajectories": trajectories})
     plot_xz_visitation(
         _tube_points(artifact), trajectories, panel_dir / "xz_visitation.png"
     )
+    if plan:
+        _write_json(panel_dir / "completion.json", {
+            "charged_interactions": report["environment_interactions"],
+            "panel_sha256": config.raw["fixed_train_panel"]["panel_sha256"],
+        })
     return PanelResult(step, int(report["environment_interactions"]), report)
 
 
@@ -730,6 +756,9 @@ def run_unified_formal(
             "checkpoint_restored": True,
             "final_metrics": metrics,
         }
+        if config.raw.get("checkpoint_evaluation"):
+            report["checkpoint_evaluation"] = config.raw["checkpoint_evaluation"]
+            report["fixed_train_panel"] = config.raw["fixed_train_panel"]
         _write_json(run_dir / "formal_report.json", report)
         close_run(
             run_dir,
@@ -744,6 +773,10 @@ def run_unified_formal(
         )
         return {"run_dir": str(run_dir.resolve()), "formal_report": report}
     except Exception as exc:
+        panel_charge = controller.train_panel_interactions
+        if config.raw.get("checkpoint_evaluation"):
+            from .iterative_probe_training import charged_train_panel_interactions
+            panel_charge = max(panel_charge, charged_train_panel_interactions(run_dir))
         close_run(
             run_dir,
             status="engineering_error",
@@ -751,7 +784,7 @@ def run_unified_formal(
                 controller.segment_training_transitions,
                 0,
                 0,
-                controller.train_panel_interactions,
+                panel_charge,
             ),
             reason=f"{type(exc).__name__}: {exc}",
         )

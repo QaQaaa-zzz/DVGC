@@ -149,7 +149,8 @@ def render_progress(output,rows,rounds,seed_cells):
     plt.close(fig)
 
 
-def run(repo,output,*,gpu='0',max_rounds=3,budget=40_000_000,ppo_steps=512_000,patience=2,min_gain=5,all_proposers=False):
+def run(repo,output,*,gpu='0',max_rounds=3,budget=40_000_000,ppo_steps=512_000,patience=2,min_gain=5,all_proposers=False,
+        checkpoints=None,panel_samples_per_phase=2,panel_horizon=400):
     repo,output=Path(repo).resolve(),Path(output).resolve();output.mkdir(parents=True,exist_ok=True)
     with (output/'execution.lock').open('a') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
@@ -157,6 +158,11 @@ def run(repo,output,*,gpu='0',max_rounds=3,budget=40_000_000,ppo_steps=512_000,p
         request=dict(max_rounds=max_rounds,budget=budget,ppo_steps=ppo_steps,patience=patience,min_gain=min_gain)
         if all_proposers:request['mode']='all_proposers_v1'
         try:
+            from .iterative_probe_training import checkpoint_evaluation_plan
+            evaluation_plan=checkpoint_evaluation_plan(ppo_steps,checkpoints,
+                samples_per_phase=panel_samples_per_phase,horizon=panel_horizon)
+            if checkpoints is not None or panel_samples_per_phase != 2 or panel_horizon != 400:
+                request['checkpoint_evaluation']=evaluation_plan
             if not (1<=max_rounds<=(19 if all_proposers else 20) and patience>=1 and min_gain>=1 and ppo_steps>0 and ppo_steps%3200==0):raise ValueError('invalid campaign limits')
             if (output/'request.json').exists() and read(output/'request.json')!=request:raise ValueError('campaign limits changed; use new directory')
             write(output/'request.json',request)
@@ -213,7 +219,7 @@ def run(repo,output,*,gpu='0',max_rounds=3,budget=40_000_000,ppo_steps=512_000,p
                 write(support_path,support)
                 iteration=4+len(extra)
                 # All failed attempts are reserved; fresh retry directories retain evidence.
-                training_maximum=ppo_steps+4*400
+                training_maximum=evaluation_plan['maximum_total_interactions']
                 completed=None
                 for attempt in sorted(round_dir.glob('training_attempt_*')):
                     if (attempt/'completion.json').exists():
@@ -228,7 +234,8 @@ def run(repo,output,*,gpu='0',max_rounds=3,budget=40_000_000,ppo_steps=512_000,p
                     run_id=f'pi_{iteration}_campaign_r{index}_attempt{attempt.name[-3:]}'
                     from .iterative_probe_training import make_config
                     config_path=attempt/'config.json'
-                    make_config(support_path,initializer,bootstrap,config_path,run_id,iteration,ppo_steps,9860001+index)
+                    make_config(support_path,initializer,bootstrap,config_path,run_id,iteration,ppo_steps,9860001+index,
+                        checkpoints=checkpoints,panel_samples_per_phase=panel_samples_per_phase,panel_horizon=panel_horizon)
                     write(attempt/'reservation.json',{'maximum_interactions':training_maximum,'config_sha256':file_sha(config_path)})
                     # GPU remains first/default; Brax debug callbacks require a CPU backend.
                     env=dict(os.environ,PYTHONPATH=str(repo/'JIT/src')+os.pathsep+os.environ.get('PYTHONPATH',''),
@@ -256,7 +263,22 @@ def run(repo,output,*,gpu='0',max_rounds=3,budget=40_000_000,ppo_steps=512_000,p
                     policy_path=attempt/'frozen/frozen_unified_policy.json'
                     artifacts={str(p):file_sha(p) for p in [config_path,report_path,policy_path,checkpoint/'identity.json',checkpoint/'payload.pkl']}
                     panel_cost=report['train_panel_interactions']
-                    if type(panel_cost) is not int or not 0<=panel_cost<=1600:raise ValueError('invalid final panel accounting')
+                    if type(panel_cost) is not int or not 0<=panel_cost<=evaluation_plan['maximum_panel_interactions']:raise ValueError('invalid checkpoint panel accounting')
+                    if 'checkpoint_evaluation' in request:
+                        if report.get('checkpoint_transitions') != evaluation_plan['checkpoint_transitions'] or report.get('train_panel_transitions') != evaluation_plan['train_panel_transitions']:
+                            raise ValueError('incomplete checkpoint or TRAIN panel schedule')
+                        from .iterative_probe_training import charged_train_panel_interactions
+                        training_dir=report_path.parent
+                        if charged_train_panel_interactions(training_dir)!=panel_cost:
+                            raise ValueError('checkpoint panel receipt accounting mismatch')
+                        for milestone in evaluation_plan['checkpoint_transitions']:
+                            for name in ('identity.json','payload.pkl'):
+                                p=training_dir/'checkpoints'/f'transition_{milestone}'/name
+                                artifacts[str(p)]=file_sha(p)
+                        for milestone in evaluation_plan['train_panel_transitions']:
+                            for name in ('report.json','trajectories.json','reservation.json','completion.json'):
+                                p=training_dir/'train_panels'/f'transition_{milestone}'/name
+                                artifacts[str(p)]=file_sha(p)
                     write(attempt/'completion.json',{'charged_interactions':ppo_steps+panel_cost,
                         'policy':str(policy_path),'artifacts':artifacts})
                     completed=attempt

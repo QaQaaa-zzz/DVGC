@@ -18,6 +18,7 @@ from .ppo import make_checkpoint_policy
 from .unified_continuation_labels import label_unified_continuations
 from .unified_continuation_shards import (
     contiguous_shard_bounds,
+    validate_candidate_selection,
     label_unified_continuation_shard,
     merge_unified_continuation_shards,
 )
@@ -210,6 +211,7 @@ def run_policy_family_evaluator_shard(
     protocol_seed: int = 9_521_201,
     execution_backend: str = "serial",
     batch_size: int = 1,
+    candidate_indices: list[int] | None = None,
 ) -> dict[str, Any]:
     """Run one bounded first-landing evaluator shard in one GPU process."""
     output = Path(output_dir)
@@ -225,12 +227,15 @@ def run_policy_family_evaluator_shard(
                                    evaluator_frozen_sha, max_ticks, protocol_seed)
     catalog = json.loads(Path(catalog_path).read_text())
     start, stop = contiguous_shard_bounds(int(catalog["candidate_count"]), shard_index, shard_count)
+    selection = validate_candidate_selection(start, stop, candidate_indices)
     if (output / "summary.json").is_file():
         report = json.loads((output / "summary.json").read_text())
-        if report.get("status") != "completed_shard":
+        if report.get("status") != ("completed_subset" if candidate_indices is not None else "completed_shard"):
             raise RuntimeError(f"existing evaluator shard is incomplete: {output}")
         protocol = _verify_cached_contract(output, contract)
         execution = json.loads((output / "execution.json").read_text())
+        if execution.get("selected_candidate_indices") != candidate_indices:
+            raise ValueError("cached candidate selection drift")
         if execution_backend in {"device", "vectorized"} and execution.get("device_step_schedule") != {"device": "lax_map_single_world_v2", "vectorized": "vmap_checked_shared_warp_v2"}[execution_backend]:
             raise ValueError("cached device execution schedule drift")
         if execution.get("execution_backend", "serial") != execution_backend or execution.get("batch_size", 1) != batch_size:
@@ -246,10 +251,10 @@ def run_policy_family_evaluator_shard(
         if report.get("labels_file_sha256") is not None and report["labels_file_sha256"] != file_sha256(output / "labels.json"):
             raise ValueError("cached shard label file hash drift")
         labels = json.loads((output / "labels.json").read_text())
-        _verify_cached_rows(labels, catalog["entries"][start:stop], protocol)
+        _verify_cached_rows(labels, [catalog["entries"][i] for i in selection], protocol)
         if report.get("candidate_count") != len(labels):
             raise ValueError("cached shard count drift")
-        for index, row in enumerate(labels, start):
+        for index, row in zip(selection, labels, strict=True):
             if row.get("candidate_index") != index or row.get("policy_key_candidate_index") != index:
                 raise ValueError("cached shard global candidate index drift")
         return report
@@ -279,7 +284,7 @@ def run_policy_family_evaluator_shard(
         acquisition_policy_record=acquisition_record,
         acquisition_frozen_manifest_sha256=acquisition_frozen_sha,
         success_criterion="first_valid_landing",
-        execution_backend=execution_backend, batch_size=batch_size,
+        execution_backend=execution_backend, batch_size=batch_size, candidate_indices=candidate_indices,
     )
 
 

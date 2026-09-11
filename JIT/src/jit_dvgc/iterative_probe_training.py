@@ -8,6 +8,83 @@ SCHEMA='jit_iterative_probe_training_v1'
 SUPPORT_SCHEMA='jit_iterative_witnessed_support_v1'
 
 
+
+def checkpoint_evaluation_plan(steps, checkpoints=None, *, samples_per_phase=2, horizon=400):
+    """Declare aligned milestones and worst-case cost before any training starts.
+
+    Checkpoints are inference artifacts; they do not support optimizer restart.
+    All milestones run inside one trainer invocation with its live learning state.
+    """
+    if type(steps) is not int or steps <= 0 or steps % 3200:
+        raise ValueError('invalid aligned probe PPO budget')
+    milestones = [steps] if checkpoints is None else list(checkpoints)
+    if (not milestones or any(type(s) is not int or s <= 0 or s % 3200 or s > steps for s in milestones)
+        or milestones != sorted(set(milestones)) or milestones[-1] != steps):
+        raise ValueError('checkpoint schedule must be increasing, aligned and end at the training ceiling')
+    if type(samples_per_phase) is not int or samples_per_phase <= 0:
+        raise ValueError('positive samples_per_phase required')
+    if type(horizon) is not int or not 0 < horizon <= 400:
+        raise ValueError('panel horizon must be within the episode horizon')
+    maximum_panel = len(milestones) * 2 * samples_per_phase * horizon
+    return dict(schema='jit_probe_checkpoint_evaluation_v1', role='train',
+        checkpoint_transitions=[0, *milestones], train_panel_transitions=milestones,
+        samples_per_phase=samples_per_phase, horizon=horizon,
+        maximum_training_transitions=steps, maximum_panel_interactions=maximum_panel,
+        maximum_total_interactions=steps + maximum_panel, automatic_extension=False,
+        optimizer_continuation='same_live_trainer_only', checkpoint_resume_supported=False,
+        final_test_used=False)
+
+
+def fixed_train_panel_identity(support, plan):
+    """Lock the exact deterministic panel selection used by rollout_fixed_tube_panel."""
+    from copy import deepcopy
+    from .tube_rsi_smoke import fixed_indices
+    entries = sorted(support['entries'], key=lambda r: (r['phase'] != 'upstream', r['key']))
+    selected = []
+    for phase in ('upstream', 'downstream'):
+        rows = [r for r in entries if r['phase'] == phase]
+        if not rows:
+            raise ValueError('both TRAIN panel phases required')
+        for index in fixed_indices(len(rows), plan['samples_per_phase']):
+            selected.append(dict(phase=phase, entry_index=index, entry=deepcopy(rows[index])))
+    identity = dict(schema='jit_probe_fixed_train_panel_v1', role='train', final_test_used=False,
+        support_sha256=support['support_sha256'], selected_entries=selected,
+        horizon=plan['horizon'], samples_per_phase=plan['samples_per_phase'],
+        success_criterion='first_valid_landing', deterministic_policy=True,
+        rng_contract='1100000 + phase_index*10000 + ordinal*horizon + tick',
+        reset_contract='fresh episode and phase clocks; preserve saved event and controller context')
+    return {**identity, 'panel_sha256': canonical_sha256(identity)}
+
+
+def charged_train_panel_interactions(run_dir):
+    """Completed panels charge actual ticks; interrupted panels keep their reservation."""
+    total = 0
+    for path in Path(run_dir).glob('train_panels/transition_*/reservation.json'):
+        reservation = read(path)
+        reserve = reservation['maximum_interactions']
+        if type(reserve) is not int or reserve <= 0:
+            raise ValueError('invalid checkpoint panel reservation')
+        receipt = path.parent / 'completion.json'
+        charge = reserve
+        if receipt.exists():
+            completion = read(receipt)
+            report_path = path.parent / 'report.json'
+            if not report_path.exists():
+                raise ValueError('completed checkpoint panel report missing')
+            report = read(report_path)
+            charge = completion['charged_interactions']
+            if (completion.get('panel_sha256') != reservation.get('panel_sha256')
+                or report.get('fixed_train_panel', {}).get('panel_sha256') != reservation.get('panel_sha256')
+                or report.get('training_checkpoint_transition') != reservation.get('training_checkpoint_transition')
+                or type(report.get('environment_interactions')) is not int
+                or report['environment_interactions'] != charge):
+                raise ValueError('checkpoint panel receipt identity or accounting mismatch')
+        if type(charge) is not int or not 0 < charge <= reserve:
+            raise ValueError('invalid checkpoint panel charge')
+        total += charge
+    return total
+
+
 def load_config(path):
     from .unified_formal import UnifiedFormalConfig,UnifiedFormalSchedule,UnifiedResetMixture
     from .unified_training import UnifiedPPOConfig
@@ -28,9 +105,17 @@ def load_config(path):
     if init['actor']!='warm_start_frozen_unified' or init['critic']!='fresh' or init['optimizer']!='fresh':raise ValueError('probe initialization drift')
     for p,sha in support['inputs'].items():
         if file_sha(p)!=sha:raise ValueError('witnessed support input changed')
+    plan=checkpoint_evaluation_plan(ppo.requested_transitions)
+    if 'checkpoint_evaluation' in raw:
+        declared=raw['checkpoint_evaluation']
+        plan=checkpoint_evaluation_plan(ppo.requested_transitions, declared['train_panel_transitions'],
+            samples_per_phase=declared['samples_per_phase'], horizon=declared['horizon'])
+        if declared != plan:raise ValueError('checkpoint evaluation declaration drift')
+        if raw.get('fixed_train_panel') != fixed_train_panel_identity(support, plan):
+            raise ValueError('fixed TRAIN panel identity drift')
     return UnifiedFormalConfig(schema=SCHEMA,raw=raw,config_sha256=canonical_sha256(raw),
         runtime_naccdmax=1024,reset_mixture=UnifiedResetMixture('fixed_jump_start_20pct_exact_snapshot_80pct',.2,.8),
-        ppo=ppo,formal=UnifiedFormalSchedule((0,ppo.requested_transitions),(ppo.requested_transitions,),2,'fresh_only'),
+        ppo=ppo,formal=UnifiedFormalSchedule(tuple(plan['checkpoint_transitions']),tuple(plan['train_panel_transitions']),plan['samples_per_phase'],'fresh_only'),
         up_config_path=raw['inputs']['up_config_path'],up_config_sha256=raw['inputs']['up_config_sha256'],
         down_config_path=raw['inputs']['down_config_path'],down_config_sha256=raw['inputs']['down_config_sha256'],
         soft_tube_path=raw['support'],soft_tube_manifest_sha256=support['support_sha256'],
@@ -130,7 +215,8 @@ def build_environment(config):
     return artifact,env
 
 
-def make_config(support_path,initializer_path,bootstrap_config,output,run_id,iteration,steps,seed):
+def make_config(support_path,initializer_path,bootstrap_config,output,run_id,iteration,steps,seed,*,
+                checkpoints=None,panel_samples_per_phase=2,panel_horizon=400):
     support_path,initializer_path,bootstrap_config=map(lambda p:Path(p).resolve(),(support_path,initializer_path,bootstrap_config))
     base=read(bootstrap_config)
     raw=dict(schema=SCHEMA,support=str(support_path),bootstrap_formal_config=str(bootstrap_config),
@@ -145,5 +231,9 @@ def make_config(support_path,initializer_path,bootstrap_config,output,run_id,ite
              'requested_transitions':steps,'seed':seed},
         run_declaration={'run_id':run_id},claim_boundary={'iteration':iteration,'test_data_used':False,'validation_data_used':False},
         input_files={str(p):file_sha(p) for p in (support_path,initializer_path,bootstrap_config)})
+    if checkpoints is not None or panel_samples_per_phase != 2 or panel_horizon != 400:
+        plan=checkpoint_evaluation_plan(steps,checkpoints,samples_per_phase=panel_samples_per_phase,horizon=panel_horizon)
+        raw['checkpoint_evaluation']=plan
+        raw['fixed_train_panel']=fixed_train_panel_identity(read(support_path),plan)
     write(output,raw);load_config(output)
     return raw

@@ -26,7 +26,33 @@ def main():
     run.add_argument("--plan", type=Path, required=True)
     run.add_argument("--output", type=Path, required=True)
     run.add_argument("--python", default=sys.executable)
+    prepare_exists = sub.add_parser("prepare-existence")
+    prepare_exists.add_argument("--bank",type=Path,required=True)
+    prepare_exists.add_argument("--catalog",type=Path,required=True)
+    prepare_exists.add_argument("--output",type=Path,required=True)
+    prepare_exists.add_argument("--order",nargs='+',required=True)
+    prepare_exists.add_argument("--seed",type=int,required=True)
+    prepare_exists.add_argument("--budget",type=int,required=True)
+    prepare_exists.add_argument("--backend",choices=['serial','vectorized'],default='serial')
+    prepare_exists.add_argument("--batch-size",type=int,default=1)
+    prepare_exists.add_argument("--indices",type=Path)
+    prepare_exists.add_argument("--max-candidates-per-process",type=int,default=4096)
+    execute_exists = sub.add_parser("run-existence")
+    execute_exists.add_argument("--plan",type=Path,required=True)
+    execute_exists.add_argument("--output",type=Path,required=True)
+    execute_exists.add_argument("--gpu",default='0')
     args = parser.parse_args()
+    if args.command == 'prepare-existence':
+        from jit_dvgc.continuation.existence import prepare
+        result=prepare(args.bank,args.catalog,args.output,order=args.order,seed=args.seed,budget=args.budget,
+                       backend=args.backend,batch_size=args.batch_size,
+                       indices=json.loads(args.indices.read_text()) if args.indices else None,
+                       max_candidates_per_process=args.max_candidates_per_process)
+        print(json.dumps(result,indent=2));return 0
+    if args.command == 'run-existence':
+        from jit_dvgc.continuation.existence import run
+        result=run(args.plan,args.output,gpu=args.gpu)
+        print(json.dumps({k:v for k,v in result.items() if k!='entries'},indent=2));return 0 if result['status']=='completed' else 2
     if args.command == "lock":
         result = lock_probe_bank(json.loads(args.spec.read_text()), args.output)
     elif args.command == "acquire":

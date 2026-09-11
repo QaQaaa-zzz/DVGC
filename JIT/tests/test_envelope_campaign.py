@@ -279,3 +279,33 @@ def test_all_proposer_failed_labels_never_train(campaign,monkeypatch):
     result=c.run(repo,out,max_rounds=1,ppo_steps=3200,all_proposers=True)
     assert result['status']=='engineering_error' and result['charged_interactions']==400
     assert not trains
+
+
+def test_checkpoint_panels_reserved_before_training_and_failed_attempt_fully_charged(campaign,monkeypatch):
+    repo,out,trains,_=campaign
+    options=dict(max_rounds=1,ppo_steps=6400,checkpoints=[3200,6400],
+        panel_samples_per_phase=1,panel_horizon=20)
+    short=c.run(repo,out,budget=6479,**options)
+    assert short['status']=='budget_exhausted' and not trains
+    assert not list(out.glob('round_*/training_attempt_*'))
+    class Failure:
+        def __init__(self,command,**kwargs):
+            config_path=Path(command[command.index('--config')+1])
+            reservation=read(config_path.parent/'reservation.json')
+            assert reservation['maximum_interactions']==6480
+            config=t.load_config(config_path)
+            assert config.formal.train_panel_transitions==(3200,6400)
+        def wait(self,timeout=None):return 9
+        def poll(self):return 9
+    monkeypatch.setattr(c.subprocess,'Popen',Failure)
+    failed=c.run(repo,repo/'failed_campaign',budget=6480,**options)
+    assert failed['status']=='engineering_error'
+    assert failed['charged_interactions']==6480
+
+
+def test_invalid_checkpoint_schedule_preserves_engineering_error_summary(campaign):
+    repo,out,trains,_=campaign
+    result=c.run(repo,out,max_rounds=1,ppo_steps=6400,checkpoints=[3201,6400])
+    assert result['status']=='engineering_error'
+    assert read(out/'summary.json')==result
+    assert not trains

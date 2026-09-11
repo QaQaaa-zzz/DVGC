@@ -2,7 +2,7 @@
 
 Root [AGENTS](../AGENTS.md) governs. Read the [latest complete handoff](docs/CODEX_HANDOFF_20260911.md) and [roadmap](docs/JIT_TRAINING_ROADMAP.md) before editing.
 
-Production all_proposers_v1 is COMPLETE: pi_5/pi_6 trained and frozen, 9,296 campaign root cells, 256,000 new PPO transitions. The next task is efficiency/interpretation and controlled experiments, not repeating the same command. All-policy fixed perturbations exist; learned residual exploration, diffusion exploration, first-success stopping, adaptive proposer allocation, multi-checkpoint evaluation and automatic training extension do not yet exist.
+Production all_proposers_v1 is COMPLETE: pi_5/pi_6 trained and frozen, 9,296 campaign root cells, 256,000 new PPO transitions. The next task is efficiency/interpretation and controlled experiments, not repeating the same command. All-policy fixed perturbations exist; first-success stopping and fixed-panel multi-checkpoint evaluation now have opt-in implementations. The bounded residual module is a supervised warm-start prerequisite only. Actual learned exploration, diffusion, adaptive proposer allocation and automatic training extension remain unimplemented. See CURRENT_STATUS for validation scope.
 
 Implementation priorities:
 

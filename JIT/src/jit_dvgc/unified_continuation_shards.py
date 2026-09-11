@@ -106,6 +106,16 @@ def contiguous_shard_bounds(
     return start, stop
 
 
+def validate_candidate_selection(start, stop, indices):
+    if indices is None:
+        return list(range(start, stop))
+    if (not isinstance(indices, list) or not indices
+        or any(type(i) is not int or not start <= i < stop for i in indices)
+        or indices != sorted(set(indices))):
+        raise ValueError('candidate selection must be nonempty sorted unique global indices within shard')
+    return list(indices)
+
+
 def build_logical_label_protocol(
     *,
     catalog_path: Path,
@@ -220,6 +230,7 @@ def label_unified_continuation_shard(
     success_criterion: str = "stable_recovery",
     execution_backend: str = "serial",
     batch_size: int = 1,
+    candidate_indices: list[int] | None = None,
 ) -> dict[str, Any]:
     started = time.perf_counter()
     if execution_backend not in {"serial", "device", "vectorized"} or type(batch_size) is not int or batch_size < 1:
@@ -257,6 +268,7 @@ def label_unified_continuation_shard(
         raise ValueError("sharded continuation policy/runtime XML mismatch")
 
     start, stop = contiguous_shard_bounds(len(rows), shard_index, shard_count)
+    selection = validate_candidate_selection(start, stop, candidate_indices)
     protocol = build_logical_label_protocol(
         catalog_path=catalog_path,
         catalog=catalog,
@@ -285,6 +297,9 @@ def label_unified_continuation_shard(
         "policy_key_scheme": POLICY_KEY_SCHEME,
         "maximum_environment_interactions": (stop - start) * max_ticks,
     }
+    if candidate_indices is not None:
+        execution.update(schema='jit_unified_continuation_subset_v1', selected_candidate_indices=selection,
+                         selected_candidate_count=len(selection), maximum_environment_interactions=len(selection)*max_ticks)
     execution.update(execution_backend=execution_backend, batch_size=batch_size,
                      device_step_schedule=({'device': 'lax_map_single_world_v2', 'vectorized': 'vmap_checked_shared_warp_v2'}.get(execution_backend)))
     _write_json(output / "execution.json", execution)
@@ -296,7 +311,7 @@ def label_unified_continuation_shard(
     phase_candidate_counts: Counter[str] = Counter()
     phase_positive_counts: Counter[str] = Counter()
     interactions = 0
-    maximum_interactions = (stop - start) * max_ticks
+    maximum_interactions = len(selection) * max_ticks
 
     padded_interactions = 0
     batch_results = {}
@@ -309,9 +324,9 @@ def label_unified_continuation_shard(
         from .continuation.device_rollout import make_device_rollout, stack_worlds, take_world, prepare_parallel_worlds
         device_run = make_device_rollout(policy, env.step, max_ticks, vectorized=execution_backend == "vectorized")
     try:
-        for candidate_index in range(start, stop):
-            if execution_backend in {"device", "vectorized"} and (candidate_index - start) % batch_size == 0:
-                indices = list(range(candidate_index, min(candidate_index + batch_size, stop)))
+        for position, candidate_index in enumerate(selection):
+            if execution_backend in {"device", "vectorized"} and position % batch_size == 0:
+                indices = selection[position:position + batch_size]
                 states = []
                 restore_start = time.perf_counter()
                 batch_sources = {}
@@ -486,7 +501,7 @@ def label_unified_continuation_shard(
 
         if interactions > maximum_interactions:
             raise ValueError("sharded continuation labeling exceeded shard ceiling")
-        if len(labeled) != stop - start:
+        if len(labeled) != len(selection):
             raise ValueError("sharded continuation label count did not close")
         report = {
             "schema": SHARD_SCHEMA,
@@ -512,6 +527,9 @@ def label_unified_continuation_shard(
             "validation_data_used": False,
             "final_evaluation_data_used": False,
         }
+        if candidate_indices is not None:
+            report.update(schema='jit_unified_continuation_subset_v1', status='completed_subset',
+                          selected_candidate_indices=selection)
         report.update(execution_backend=execution_backend, batch_size=batch_size,
                       inactive_lane_interactions=padded_interactions,
                       useful_label_interactions=interactions-padded_interactions,

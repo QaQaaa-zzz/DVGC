@@ -92,6 +92,15 @@ def test_device_labeler_matches_serial_rows_and_accounts_padding(tmp_path,monkey
     assert reports[0]['environment_interactions']==9
     assert reports[1]['environment_interactions']==11
     assert reports[1]['inactive_lane_interactions']==2
+    for backend in ('serial', 'vectorized'):
+        target = tmp_path / ('subset_' + backend)
+        report = labels.label_unified_continuation_shard(path,target,env=env,policy=policy,policy_record=record,
+            frozen_manifest_sha256='f'*64,shard_index=0,shard_count=1,max_ticks=6,protocol_seed=9,
+            success_criterion='first_valid_landing',execution_backend=backend,batch_size=2,candidate_indices=[0,2])
+        assert read(target/'labels.json') == [read(tmp_path/'serial/labels.json')[i] for i in (0,2)]
+        assert report['status']=='completed_subset'
+        assert report['selected_candidate_indices']==[0,2]
+        assert report['maximum_environment_interactions']==12
 
 
 def test_warp_like_step_refuses_vmap_but_device_loop_uses_single_world():

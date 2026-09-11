@@ -22,10 +22,10 @@ All four action channels are allowed. Fixed x2.5 near-ground start and accepted 
 | --- | --- |
 | Growing frozen bank, all-proposer fixed perturbations, two-round PPO loop | Production completed |
 | Per-proposer/evaluator figures, replot CSV, phase slices, receipts, cost and automatic text report publication | Implemented; production artifacts reported; not all images visually inspected remotely |
-| First-success evaluator stopping | Proposed, not implemented; current full-bank serial labels dominate interaction work |
-| Multi-checkpoint capability evaluation and adaptive training length | Proposed, not implemented; current checkpoints0/final128k |
+| First-success evaluator stopping | Implemented as an opt-in versioned witness index with explicit unknowns and bounded subset workers; legacy full matrices preserved |
+| Multi-checkpoint capability evaluation and adaptive training length | Fixed TRAIN-panel checkpoints implemented; adaptive extension and per-checkpoint exploration remain unimplemented |
 | Gain-based proposer budget allocation | Proposed; current equal32-trajectory calls |
-| Learned residual exploration network | User-requested research direction; design proposed, not implemented |
+| Learned residual exploration network | Bounded supervised warm-start module implemented; actual exploration/data export/campaign integration still pending |
 | Conditional diffusion perturbation sequences | Optional later comparison; neither implemented nor established as beneficial |
 
 ## Next development
@@ -58,3 +58,13 @@ Execution checklist (writing-plans / inline execution):
 GPU initially shared with a STTW_CONTROL training process; never stop unrelated jobs. The engineering comparison does not authorize new scientific labels when outcomes differ, nor reopen accepted snapshot replay questions.
 
 Outcome: genuine vectorized Warp continuation and explicit batch CLI are implemented.4096/8192/16384 capacity measurements completed;the final16384 run checked aggregate contact/CCD/constraint capacity at every physics substep, peak14,522MiB and157,227 useful simulator steps/s.24576 stopped at the22,000MiB protection threshold (observed22,542MiB), retaining full failure charge. Existing16-candidate endpoints agree, but one final checked continuation changes38→39 ticks;do not automatically replace locked serial scientific campaigns. Larger capacity is not a full-campaign speedup claim. This task charged3,384,811 interactions including inactive slots and failures, zero PPO/new scientific candidates/final TEST. Full artifacts:`JIT/runs/engineering/continuation_parallel_20260911/INDEX.md`;compact evidence:`JIT/review_evidence/parallel_capacity_20260911.json`.
+
+## Roadmap implementation — 2026-09-11
+
+The new `probe_bank.py prepare-existence` / `run-existence` path locks bank, TRAIN catalog, exact candidate indices, evaluator order, horizon, seed, sources and budget. It stops each candidate after a nonconflicting witness; skipped evaluators stay untested, and incomplete/error/conflicting outcomes stay unknown. Every declared evaluator must complete with failure before a no-witness result. Resume audits all historical reservations before allocating retries. Completed old campaigns remain unchanged.
+
+Existing pi6 full-matrix scheduling analysis:98,093→15,388 useful continuation steps (84.31% hypothetical reduction); not measured wall-clock savings.64 evaluator-level contact/failure conflicts produce735 witnessed and3 unknown under the new quarantine view; historical738-positive union is not rewritten. Full artifacts and cost: `JIT/runs/engineering/existence_checkpoint_residual_20260911/INDEX.md`.
+
+The opt-in campaign `--checkpoint-steps 32000 64000 128000 --ppo-steps 128000` declares fixed TRAIN panel identity and costs inside one live trainer. This is an option description, not a command executed here. Intermediate equal-budget exploration needs a separate diagnostic checkpoint identity; automatic extension and optimizer restart remain unsupported.
+
+`residual_exploration.py` / `fit_residual_explorer.py` implement a bounded conditional supervised warm start. Historical snapshots do not supply matched per-action observations; actual production fitting requires an explicit matched TRAIN export. Frozen explorer state and identity must enter causal prefixes before acquisition integration. No learned exploration experiment, diffusion model, pi7 or production retraining was launched.
