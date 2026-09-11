@@ -1,0 +1,2 @@
+backend,batch_size,status,wall_seconds,label_seconds,compile_seconds,restore_seconds,execution_seconds,charged_interactions,useful_interactions,peak_device_memory_mib,endpoint_equal,exact_equal,candidates_per_second
+vectorized_capacity,16384,completed,19.494700688000194,,2.9066357760002575,,1.9076490850002301,638976,299934,14522,,,

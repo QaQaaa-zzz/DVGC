@@ -1,0 +1,6 @@
+backend,batch_size,status,wall_seconds,label_seconds,compile_seconds,restore_seconds,execution_seconds,charged_interactions,useful_interactions,peak_device_memory_mib,endpoint_equal,exact_equal,candidates_per_second,initialization_seconds,worlds,unique_source_candidates,replicated_capacity_test,simulated_steps_per_second,useful_steps_per_second,substep_capacity_exceeded
+vectorized_capacity,4096,completed,18.218199120999998,,2.890294706000077,,0.7697318589998758,159744,74969,4436,,,,10.54318636500011,4096,16,True,207532.01018281584,97396.25445334736,
+vectorized_capacity,8192,completed,19.07096189699996,,3.2484305140001197,,1.1411649940000643,319488,149933,7860,,,,10.572194709000087,8192,16,True,279966.5269087127,131385.9089512095,
+vectorized_capacity,16384,completed,19.60693486700029,,2.824462121000124,,1.9062503840000318,638976,299922,14543,,,,10.681414680999751,16384,16,True,335200.45706649905,157336.0994533418,
+vectorized_capacity,16384,completed,19.494700688000194,,2.9066357760002575,,1.9076490850002301,638976,299934,14522,,,,10.592580488999829,16384,16,True,334954.68586137943,157227.03004361194,False
+vectorized_capacity,24576,memory_limit,17.47413052999991,,,,,1572864,,22542,,,,,,,,,,

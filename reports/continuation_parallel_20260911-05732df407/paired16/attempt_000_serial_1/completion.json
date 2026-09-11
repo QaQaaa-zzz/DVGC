@@ -1,0 +1,17 @@
+{
+  "backend": "serial",
+  "batch_size": 1,
+  "candidates_per_second": 0.6554400711934399,
+  "charged_interactions": 368,
+  "compile_seconds": 0,
+  "endpoint_equal": true,
+  "exact_equal": true,
+  "execution_seconds": null,
+  "label_seconds": 18.51526949199979,
+  "peak_device_memory_mib": 1289,
+  "restore_seconds": 6.059142415000224,
+  "returncode": 0,
+  "status": "completed",
+  "useful_interactions": 368,
+  "wall_seconds": 24.411079980000068
+}

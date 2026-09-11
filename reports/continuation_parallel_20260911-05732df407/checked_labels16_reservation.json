@@ -1,0 +1,12 @@
+{
+  "role": "engineering_validation",
+  "maximum_interactions": 6400,
+  "candidate_range": [
+    0,
+    16
+  ],
+  "seed": 9852501,
+  "baseline": "paired16/attempt_000_serial_1/result",
+  "new_acquisition": false,
+  "final_test_used": false
+}

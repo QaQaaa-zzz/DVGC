@@ -1,0 +1,22 @@
+{
+  "differences": [
+    {
+      "candidate_index": 0,
+      "changes": {
+        "environment_interactions": [
+          38,
+          39
+        ]
+      }
+    }
+  ],
+  "endpoint_equal": true,
+  "exact_equal": false,
+  "original_protocol_sha256": [
+    "06537b34ca88899d592d0ac28e867068cdeec9fa8f973ad96e11d218767818a2",
+    "0e3fbbbfe8d56037c21b62811eb7605b294c23adf736931a92ae131ebd1fe2d2"
+  ],
+  "protocol_path_alias_audit": true,
+  "scope": "derived diagnostic after verifying all non-path protocol fields; raw labels unchanged",
+  "step_difference_count": 1
+}

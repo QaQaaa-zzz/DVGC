@@ -1,0 +1,5 @@
+{
+  "backend": "serial",
+  "batch_size": 1,
+  "maximum_interactions": 49200
+}

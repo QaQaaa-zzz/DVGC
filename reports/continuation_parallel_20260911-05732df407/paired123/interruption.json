@@ -1,0 +1,6 @@
+{
+  "reason": "user requested capacity test starting at 4096",
+  "charged_interactions": 51850,
+  "serial_completed": true,
+  "interrupted_vectorized_attempt_charged_ceiling": 49200
+}

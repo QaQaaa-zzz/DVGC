@@ -1,0 +1,25 @@
+{
+  "attempts": [
+    {
+      "backend": "serial",
+      "batch_size": 1,
+      "candidates_per_second": 1.1473154049581322,
+      "charged_interactions": 2650,
+      "compile_seconds": 0,
+      "endpoint_equal": true,
+      "exact_equal": true,
+      "execution_seconds": null,
+      "label_seconds": 100.90082512800018,
+      "peak_device_memory_mib": 1462,
+      "restore_seconds": 29.89060605199984,
+      "returncode": 0,
+      "status": "completed",
+      "useful_interactions": 2650,
+      "wall_seconds": 107.20678853300024
+    }
+  ],
+  "charged_interactions": 51850,
+  "final_test_used": false,
+  "status": "interrupted_user_requested_4096",
+  "interrupted_attempt_reservation": 49200
+}

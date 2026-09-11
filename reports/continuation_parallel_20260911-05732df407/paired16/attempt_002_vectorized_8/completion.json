@@ -1,0 +1,17 @@
+{
+  "backend": "vectorized",
+  "batch_size": 8,
+  "candidates_per_second": 0.8789722712306755,
+  "charged_interactions": 472,
+  "compile_seconds": 2.8082417820000956,
+  "endpoint_equal": true,
+  "exact_equal": false,
+  "execution_seconds": 0.36764790899997024,
+  "label_seconds": 12.206120179999743,
+  "peak_device_memory_mib": 1266,
+  "restore_seconds": 6.2598801530002675,
+  "returncode": 0,
+  "status": "completed",
+  "useful_interactions": 369,
+  "wall_seconds": 18.203077075000238
+}

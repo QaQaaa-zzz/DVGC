@@ -1,0 +1,126 @@
+[
+  {
+    "source": "JIT/runs/campaign/all_proposers_v1/round_000/discovery/tasks/acquire/attempt_0000/result/summary.json",
+    "receipt": {
+      "anchor_x_m": 2.975,
+      "candidate_count": 28,
+      "direction": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          -1.0,
+          0.0
+        ],
+        "sign": -1
+      },
+      "environment_interactions": 42,
+      "final_x_m": 4.235607147216797,
+      "peak_root_z_m": 0.5571383833885193,
+      "peak_sampling": "control_step_states_including_reset",
+      "perturbation_started": true,
+      "physical_failure": true,
+      "proposer": "pi_5",
+      "stop_reason": "first_valid_landing",
+      "strength": 0.225,
+      "timeout": false,
+      "trajectory_id": "dense_v1_train_x2.98_family2/variant_12",
+      "truncated": false,
+      "valid_landing": true
+    }
+  },
+  {
+    "source": "JIT/runs/campaign/all_proposers_v1/round_001/discovery/tasks/acquire/attempt_0000/result/summary.json",
+    "receipt": {
+      "anchor_x_m": 2.9,
+      "candidate_count": 38,
+      "direction": {
+        "action_dimension": 3,
+        "action_name": "knee",
+        "basis_vector": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "sign": 1
+      },
+      "environment_interactions": 70,
+      "final_x_m": 4.703917026519775,
+      "peak_root_z_m": 0.6552956700325012,
+      "peak_sampling": "control_step_states_including_reset",
+      "perturbation_started": true,
+      "physical_failure": true,
+      "proposer": "pi_6",
+      "stop_reason": "first_valid_landing",
+      "strength": 0.25,
+      "timeout": false,
+      "trajectory_id": "dense_v1_train_x2.90_family0/variant_15",
+      "truncated": false,
+      "valid_landing": true
+    }
+  },
+  {
+    "source": "JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_5/tasks/acquire/attempt_0000/result/summary.json",
+    "receipt": {
+      "anchor_x_m": 2.975,
+      "candidate_count": 50,
+      "direction": {
+        "action_dimension": 0,
+        "action_name": "steer",
+        "basis_vector": [
+          -1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "sign": -1
+      },
+      "environment_interactions": 80,
+      "final_x_m": 5.438241481781006,
+      "peak_root_z_m": 0.7697741985321045,
+      "peak_sampling": "control_step_states_including_reset",
+      "perturbation_started": true,
+      "physical_failure": true,
+      "proposer": "pi_5",
+      "stop_reason": "first_valid_landing",
+      "strength": 0.125,
+      "timeout": false,
+      "trajectory_id": "dense_v1_train_x2.98_family0/variant_0",
+      "truncated": false,
+      "valid_landing": true
+    }
+  },
+  {
+    "source": "JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_5/tasks/acquire/attempt_0000/result/summary.json",
+    "receipt": {
+      "anchor_x_m": 2.975,
+      "candidate_count": 28,
+      "direction": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          -1.0,
+          0.0
+        ],
+        "sign": -1
+      },
+      "environment_interactions": 42,
+      "final_x_m": 4.23560094833374,
+      "peak_root_z_m": 0.5571351647377014,
+      "peak_sampling": "control_step_states_including_reset",
+      "perturbation_started": true,
+      "physical_failure": true,
+      "proposer": "pi_5",
+      "stop_reason": "first_valid_landing",
+      "strength": 0.225,
+      "timeout": false,
+      "trajectory_id": "dense_v1_train_x2.98_family2/variant_12",
+      "truncated": false,
+      "valid_landing": true
+    }
+  }
+]

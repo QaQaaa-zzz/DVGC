@@ -1,0 +1,19 @@
+{
+  "role": "engineering_validation_on_existing_TRAIN",
+  "new_ppo": 0,
+  "new_acquisition": 0,
+  "final_test_used": false,
+  "maximum_interactions": 1000000,
+  "max_process_seconds": 900,
+  "initial_shard_count": 47,
+  "initial_shard_index": 0,
+  "sizes": [
+    8,
+    32,
+    128,
+    256
+  ],
+  "endpoint": "unchanged_first_valid_landing",
+  "stop": "timeout,OOM,nonfinite,or label discrepancy prevents automatic adoption; all failed reservations charged",
+  "gpu_competition": "STTW_CONTROL process 128191 observed; preserve unrelated jobs"
+}

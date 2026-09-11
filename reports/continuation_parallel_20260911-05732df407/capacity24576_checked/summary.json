@@ -1,0 +1,18 @@
+{
+  "attempts": [
+    {
+      "backend": "vectorized_capacity",
+      "batch_size": 24576,
+      "charged_interactions": 1572864,
+      "peak_device_memory_mib": 22542,
+      "returncode": -15,
+      "status": "memory_limit",
+      "wall_seconds": 17.47413052999991
+    }
+  ],
+  "charged_interactions": 1572864,
+  "final_test_used": false,
+  "new_scientific_candidates": 0,
+  "production_auto_adoption": false,
+  "status": "stopped"
+}

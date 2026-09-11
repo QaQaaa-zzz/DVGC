@@ -1,0 +1,5 @@
+{
+  "backend": "vectorized",
+  "batch_size": 16,
+  "maximum_interactions": 6400
+}

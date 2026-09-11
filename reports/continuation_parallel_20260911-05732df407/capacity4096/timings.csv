@@ -1,0 +1,4 @@
+backend,batch_size,status,wall_seconds,label_seconds,compile_seconds,restore_seconds,execution_seconds,charged_interactions,useful_interactions,peak_device_memory_mib,endpoint_equal,exact_equal,candidates_per_second
+vectorized_capacity,4096,completed,18.218199120999998,,2.890294706000077,,0.7697318589998758,159744,74969,4436,,,
+vectorized_capacity,8192,completed,19.07096189699996,,3.2484305140001197,,1.1411649940000643,319488,149933,7860,,,
+vectorized_capacity,16384,completed,19.60693486700029,,2.824462121000124,,1.9062503840000318,638976,299922,14543,,,
