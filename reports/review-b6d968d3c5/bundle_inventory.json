@@ -1,0 +1,60 @@
+{
+  "schema": "jit_review_bundle_v2",
+  "mode": "compact",
+  "raw_files_deleted": false,
+  "standalone_replay_archive": false,
+  "files": [
+    {
+      "path": "INDEX.md",
+      "source_bytes": 4084,
+      "source_sha256": "00be6d4ec942d13e573ac9fb68f349c5055ae09e9d8d861a6b2e6bcb520a12fa",
+      "disposition": "included"
+    },
+    {
+      "path": "all_episode_metrics.csv",
+      "source_bytes": 25757,
+      "source_sha256": "1c2abc051381ef71ee4f6c0458a76bace05719f1bf4faf75c56cc21e571dacae",
+      "disposition": "included"
+    },
+    {
+      "path": "analysis_summary.json",
+      "source_bytes": 1222,
+      "source_sha256": "58c9b695025c22177ebbc8bd588b312f1651ba6ce3ce664e085f50fe06afda20",
+      "disposition": "included"
+    },
+    {
+      "path": "first_update_diagnostic.json",
+      "source_bytes": 415,
+      "source_sha256": "402fa6abd547acf7f051f4bfbed450c33b8965189b6ddd3e569d372691f51348",
+      "disposition": "included"
+    },
+    {
+      "path": "runtime_versions.json",
+      "source_bytes": 173,
+      "source_sha256": "ab5fc3231c545c9f42d59d279f95e9662368c3a77461500e1c52b653c1065e09",
+      "disposition": "included"
+    },
+    {
+      "path": "training_analysis.pdf",
+      "source_bytes": 19769,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "training_analysis.png",
+      "source_bytes": 168628,
+      "source_sha256": "a17e75410129eca427a0c377aa78c12fc23282e55a6659287d24382cd8a0f63f",
+      "disposition": "included"
+    },
+    {
+      "path": "training_analysis.svg",
+      "source_bytes": 92178,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "training_metrics.csv",
+      "source_bytes": 2885,
+      "source_sha256": "28377d6d5ef60ba2d98f3d8fa153abad457aae80d9b0d625e84e2c249276dd08",
+      "disposition": "included"
+    }
+  ]
+}

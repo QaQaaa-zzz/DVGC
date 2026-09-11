@@ -1,0 +1,51 @@
+{
+  "status": {
+    "phase": "completed",
+    "wall_seconds": 56.775177026000165,
+    "charged_interactions": 281600,
+    "active_interactions": 18186,
+    "padding_interactions": 263414,
+    "training_scheduled_interactions": 256000,
+    "final_successes": 0,
+    "initial_baseline_cells": 813,
+    "training_new_cells": 1576.0,
+    "final_diagnostic_new_cells": 0.0,
+    "independent_repetitions": false,
+    "final_test_used": false
+  },
+  "actor_parameters": 161032,
+  "critic_parameters": 159233,
+  "training_active_interactions": 15917,
+  "training_optimizer_updates": 284,
+  "training_batches": 20,
+  "total_episode_records": 704,
+  "all_checkpoint_hashes_verified": true,
+  "initial_deterministic_successes": 32,
+  "zero_success_batches": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    15,
+    17,
+    18,
+    19
+  ],
+  "cost": {
+    "failed_preflight_reservation": 4800,
+    "passed_preflight_scheduled": 4800,
+    "pilot_scheduled": 281600,
+    "total_charged": 291200
+  },
+  "final_test_used": false,
+  "independent_repetitions": false,
+  "claim": "development training diagnosis; no matched-cost exploration superiority or whole-space convergence demonstrated"
+}

@@ -1,0 +1,9 @@
+{
+  "cpu_gpu_old_logprob_max_absolute_error": 0.030706405639648438,
+  "cpu_gpu_old_logprob_rmse": 0.003916469868272543,
+  "examples": 1498,
+  "mean_old_minus_new_log_prob": 57.6844367980957,
+  "mean_absolute_deterministic_action_change": 0.1861543357372284,
+  "fraction_ratios_outside_ppo_clip": 0.8865153538050734,
+  "scope": "old-policy sampled states only; empirical log-ratio, not an exact KL or new rollout"
+}

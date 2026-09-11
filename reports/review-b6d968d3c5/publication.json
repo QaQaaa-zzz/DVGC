@@ -1,0 +1,15 @@
+{
+  "run_id": "review-b6d968d3c5",
+  "local_run": "/home/qy/DVGC/JIT/runs/experiments/per_policy_coverage_ppo_20260911/review",
+  "archive_sha256": "4254c45e5f1ff4355ed9435c393ce4b8a265a02ea0144bf5193af06667a89e5d",
+  "files": {
+    "INDEX.md": "00be6d4ec942d13e573ac9fb68f349c5055ae09e9d8d861a6b2e6bcb520a12fa",
+    "all_episode_metrics.csv": "1c2abc051381ef71ee4f6c0458a76bace05719f1bf4faf75c56cc21e571dacae",
+    "analysis_summary.json": "58c9b695025c22177ebbc8bd588b312f1651ba6ce3ce664e085f50fe06afda20",
+    "first_update_diagnostic.json": "402fa6abd547acf7f051f4bfbed450c33b8965189b6ddd3e569d372691f51348",
+    "runtime_versions.json": "ab5fc3231c545c9f42d59d279f95e9662368c3a77461500e1c52b653c1065e09",
+    "training_metrics.csv": "28377d6d5ef60ba2d98f3d8fa153abad457aae80d9b0d625e84e2c249276dd08",
+    "bundle_inventory.json": "465567daefc8573042fa16a8bd8a3a8a7015ac8d065b8ce58ebbdd67e77bf8da"
+  },
+  "scope": "compact text review; raw snapshots, checkpoints and images stay on server"
+}
