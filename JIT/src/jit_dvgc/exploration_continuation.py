@@ -156,6 +156,26 @@ class FrozenSuffixEvaluator:
             _write(directory / 'trace.json', {'frames': frames, 'actions': actions,
                 'action_count_includes_dispatched_failure': True})
 
+    def defer(self, snapshot):
+        """Persist a real arrival for later evaluation without claiming failure."""
+        context = snapshot_context_sha256(snapshot)
+        if context in self._seen:
+            raise ValueError('candidate already recorded')
+        if bool(snapshot.down_events['valid_contact_seen']) or snapshot.xml_sha256 != self.bank['task']['xml_sha256']:
+            raise ValueError('invalid deferred candidate endpoint or model')
+        self._seen.add(context)
+        directory = self.output / context
+        directory.mkdir()
+        save_unified_envelope_snapshot(directory / 'snapshot', snapshot)
+        result = dict(label=None, witness=None, labels={name: None for name in self.order},
+            attempts=[], evaluation_status='deferred', snapshot_context_sha256=context,
+            state_sha256=physical_state_sha256(snapshot), bank_sha256=self.bank['bank_sha256'],
+            charged_interactions=0, total_charged_interactions=self.charged_interactions,
+            snapshot_identity_sha256=_file_sha(directory / 'snapshot' / 'identity.json'))
+        result['receipt_sha256'] = canonical_sha256(result)
+        _write(directory / 'result.json', result)
+        return result
+
     def evaluate(self, snapshot):
         context = snapshot_context_sha256(snapshot)
         if context in self._seen:

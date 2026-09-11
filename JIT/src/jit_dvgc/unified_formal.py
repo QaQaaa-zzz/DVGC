@@ -48,6 +48,7 @@ from .unified_training import (
 
 
 FORMAL_SCHEMA = "jit_pi_unified_formal_v1"
+ITERATIVE_TRAINING_SCHEMAS = frozenset({"jit_iterative_probe_training_v1", "jit_iterative_candidate_training_v1"})
 FORMAL_TARGET = 10_009_600
 FORMAL_CHECKPOINTS = (0, 1_024_000, 2_508_800, 5_017_600, 7_500_800, FORMAL_TARGET)
 FORMAL_TRAIN_PANELS = FORMAL_CHECKPOINTS[1:]
@@ -181,7 +182,7 @@ def _load_reset_mixture(payload: Mapping[str, Any]) -> UnifiedResetMixture:
 
 def load_unified_formal_config(path: Path) -> UnifiedFormalConfig:
     payload = read_json(Path(path))
-    if payload.get("schema") == "jit_iterative_probe_training_v1":
+    if payload.get("schema") in ITERATIVE_TRAINING_SCHEMAS:
         from .iterative_probe_training import load_config
         return load_config(path)
     if payload.get("schema") != FORMAL_SCHEMA:
@@ -294,7 +295,7 @@ def load_unified_actor_warm_start_config(path: Path) -> UnifiedFormalConfig:
     """
     path = Path(path)
     payload = read_json(path)
-    if payload.get("schema") == "jit_iterative_probe_training_v1":
+    if payload.get("schema") in ITERATIVE_TRAINING_SCHEMAS:
         from .iterative_probe_training import load_config
         return load_config(path)
     initialization = payload.get("initialization")
@@ -348,7 +349,7 @@ def load_unified_actor_warm_start_config(path: Path) -> UnifiedFormalConfig:
 
 def load_frozen_actor_restore_params(config_path: Path):
     """Load and verify the immediately preceding frozen unified Actor."""
-    if read_json(config_path).get("schema") == "jit_iterative_probe_training_v1":
+    if read_json(config_path).get("schema") in ITERATIVE_TRAINING_SCHEMAS:
         from .iterative_probe_training import restore_params
         return restore_params(config_path)
     config = load_unified_actor_warm_start_config(config_path)
@@ -426,7 +427,7 @@ def _build_unified_formal_environment(
     *,
     env_factory: Callable[..., Any] = UnifiedTubeRSIEnv,
 ):
-    if config.schema == "jit_iterative_probe_training_v1":
+    if config.schema in ITERATIVE_TRAINING_SCHEMAS:
         from .iterative_probe_training import build_environment
         return build_environment(config)
     up_config, down_config, artifact, _ = _load_runtime(config)
@@ -558,6 +559,14 @@ def _write_json(path: Path, payload: Mapping[str, Any]) -> None:
     )
 
 
+def _build_train_panel_environment(config, artifact, env):
+    """Candidate resets never enter the fixed witnessed comparison panel."""
+    if config.schema == "jit_iterative_candidate_training_v1":
+        from .iterative_probe_training import build_environment
+        return build_environment(config, panel=True)
+    return artifact, env
+
+
 def _evaluate_train_panel(
     env: Any,
     artifact: Any,
@@ -633,6 +642,7 @@ def run_unified_formal(
     if backend_name() != "gpu":
         raise RuntimeError("formal unified PPO requires the visible JAX GPU backend")
     artifact, env = _build_unified_formal_environment(config, env_factory=env_factory)
+    panel_artifact, panel_env = _build_train_panel_environment(config, artifact, env)
     root = (
         Path(run_root)
         if run_root is not None
@@ -679,10 +689,10 @@ def run_unified_formal(
             "expert_switching_used": False,
             "reset_mixture": config.reset_mixture.as_dict(),
             "soft_tube_manifest_sha256": config.soft_tube_manifest_sha256,
-            "tube_rsi_smoke_report_sha256": (None if config.schema == "jit_iterative_probe_training_v1"
+            "tube_rsi_smoke_report_sha256": (None if config.schema in ITERATIVE_TRAINING_SCHEMAS
                 else config.tube_rsi_smoke_report_sha256),
             "iterative_training_support_sha256": (config.soft_tube_manifest_sha256
-                if config.schema == "jit_iterative_probe_training_v1" else None),
+                if config.schema in ITERATIVE_TRAINING_SCHEMAS else None),
             "test_data_used": False,
             "validation_data_used": False,
         },
@@ -702,7 +712,7 @@ def run_unified_formal(
 
     def evaluate(step: int, make_policy: Any, params: Any) -> PanelResult:
         return _evaluate_train_panel(
-            env, artifact, run_dir, config, step, make_policy, params
+            panel_env, panel_artifact, run_dir, config, step, make_policy, params
         )
 
     controller = UnifiedFormalController(

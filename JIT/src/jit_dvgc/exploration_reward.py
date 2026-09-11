@@ -79,7 +79,7 @@ def reward_batch(ledger, episodes, *, expected_policy_sha256):
     return rewards, updated, evidence
 
 
-def continuation_reward_batch(ledger, candidates, *, shape, expected_policy_sha256):
+def _candidate_reward_batch(ledger, candidates, *, shape, expected_policy_sha256, arrival=False):
     """Pay candidate-time novelty after SAME-context frozen-bank validation.
 
     ``shape`` is (num_steps, num_episodes); ``tick`` is the zero-based transition
@@ -139,7 +139,7 @@ def continuation_reward_batch(ledger, candidates, *, shape, expected_policy_sha2
                             state_sha256=candidate['state_sha256'],
                             context_sha256=candidate['context_sha256'],
                             receipt_sha256=candidate['receipt_sha256'], witness=witness,
-                            eligible=label == 1, credit=0.))
+                            eligible=arrival or label == 1, credit=0.))
     counts = Counter(row['cell'] for row in records
                      if row['eligible'] and row['cell'] not in seen)
     rewards = np.zeros(shape, dtype=np.float64)
@@ -149,11 +149,32 @@ def continuation_reward_batch(ledger, candidates, *, shape, expected_policy_sha2
             rewards[row['tick'], row['episode_index']] += row['credit']
     before = dict(policy_sha256=policy, cells=sorted(seen))
     updated = dict(policy_sha256=policy, cells=sorted(seen | set(counts)))
-    evidence = dict(schema='jit_continuation_exploration_reward_v1',
+    evidence = dict(schema=('jit_arrival_exploration_reward_v1' if arrival else 'jit_continuation_exploration_reward_v1'),
                     policy_sha256=policy, ledger_before_sha256=_hash(before),
                     ledger_after_sha256=_hash(updated),
-                    novelty_credit='one_per_new_cell_shared_across_witnessed_candidates',
+                    novelty_credit=('one_per_new_arrival_cell_shared_across_candidates' if arrival else 'one_per_new_cell_shared_across_witnessed_candidates'),
+                    envelope_admission=False if arrival else 'requires_validated_suffix',
                     reward_assignment='candidate_tick', parent_episode_success_required=False,
                     candidates=records, novel_cells=sorted(counts),
                     novel_cell_count=len(counts), total_reward=float(rewards.sum()))
     return rewards, updated, evidence
+
+
+def continuation_reward_batch(ledger, candidates, *, shape, expected_policy_sha256):
+    """Candidate-time reward requiring an independently validated suffix witness."""
+    return _candidate_reward_batch(ledger, candidates, shape=shape,
+        expected_policy_sha256=expected_policy_sha256)
+
+
+def arrival_reward_batch(ledger, candidates, *, shape, expected_policy_sha256):
+    """Provisional novelty, not envelope membership or a successful suffix label.
+
+    Caller validates real complete prefix/snapshot provenance. Bank failure and
+    deferred labels remain unchanged; this ledger tracks arrivals for this pi.
+    Later evaluation only changes the candidate pool, never old PPO samples.
+    """
+    for candidate in candidates:
+        if candidate.get('generated_by_env_step_only') is not True:
+            raise ValueError('arrival reward requires real forward provenance')
+    return _candidate_reward_batch(ledger, candidates, shape=shape,
+        expected_policy_sha256=expected_policy_sha256, arrival=True)

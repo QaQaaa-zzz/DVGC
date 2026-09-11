@@ -24,7 +24,7 @@ def main() -> int:
     schema = read_json(args.config).get("schema")
     if schema == PILOT_SCHEMA:
         result = run_unified_pilot(args.config, args.run_id)
-    elif schema in {FORMAL_SCHEMA, "jit_iterative_probe_training_v1"}:
+    elif schema in {FORMAL_SCHEMA, "jit_iterative_probe_training_v1", "jit_iterative_candidate_training_v1"}:
         result = run_unified_formal(args.config, args.run_id)
     else:
         raise ValueError(f"unsupported unified training schema: {schema}")

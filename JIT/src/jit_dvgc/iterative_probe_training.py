@@ -1,4 +1,4 @@
-"""Versioned Actor-only PPO on exact witnessed snapshots and fixed jump starts."""
+"""Versioned Actor-only PPO on exact TRAIN snapshots and fixed jump starts."""
 from pathlib import Path
 from types import SimpleNamespace
 from .jump_evidence_validation import read,write,file_sha,verify_hash
@@ -6,7 +6,127 @@ from .evidence_integrity import canonical_sha256
 
 SCHEMA='jit_iterative_probe_training_v1'
 SUPPORT_SCHEMA='jit_iterative_witnessed_support_v1'
+CANDIDATE_SCHEMA='jit_iterative_candidate_training_v1'
+CANDIDATE_SUPPORT_SCHEMA='jit_iterative_candidate_support_v1'
 
+
+
+def validate_candidate_support(support):
+    """Validate training quotas without interpreting pending samples as evidence."""
+    import math
+    verify_hash(support, 'support_sha256')
+    if (support.get('schema') != CANDIDATE_SUPPORT_SCHEMA or support.get('role') != 'train'
+        or support.get('final_test_used') is not False):
+        raise ValueError('candidate support must be TRAIN only')
+    fraction = support['pending_fraction']
+    if type(fraction) not in (int, float) or not 0 < fraction < 1:
+        raise ValueError('pending_fraction must be strictly between zero and one')
+    rows = support['entries']
+    if len({r['key'] for r in rows}) != len(rows):
+        raise ValueError('duplicate training support key')
+    for row in rows:
+        status = row.get('evidence_status')
+        if row['phase'] not in ('upstream', 'downstream') or row.get('role') != 'train':
+            raise ValueError('invalid candidate phase or role')
+        if status not in ('pending', 'witnessed') or row.get('witnessed') is not (status == 'witnessed'):
+            raise ValueError('candidate evidence status drift')
+        if status == 'pending' and (any(v == 1 for v in row.get('labels', {}).values())
+                                    or row.get('continuation_label') == 1):
+            raise ValueError('pending reset cannot claim positive evidence')
+        weight = row['sampling_weight']
+        if type(weight) not in (int, float) or not math.isfinite(weight) or weight <= 0:
+            raise ValueError('invalid training sampling weight')
+        for name in ('identity.json', 'snapshot.pkl'):
+            path = str((Path(row['snapshot']) / name).resolve())
+            if path not in support['inputs']:
+                raise ValueError('complete snapshot input lock missing')
+    if not any(r['evidence_status'] == 'pending' for r in rows):
+        raise ValueError('at least one pending reset required')
+    for phase in ('upstream', 'downstream'):
+        selected = [r for r in rows if r['phase'] == phase]
+        realized = fraction if any(r['evidence_status'] == 'pending' for r in selected) else 0.0
+        if support['realized_pending_fraction_by_phase'][phase] != realized:
+            raise ValueError('realized pending quota drift')
+        for status, mass in (('pending', realized), ('witnessed', 1-realized)):
+            weights = [r['sampling_weight'] for r in selected if r['evidence_status'] == status]
+            if (mass > 0 and not weights) or not math.isclose(sum(weights), mass, rel_tol=1e-10, abs_tol=1e-12):
+                raise ValueError('both phases must preserve explicit pending/witnessed quotas')
+    return support
+
+
+def candidate_support_view(witnessed_support, pending_rows, pending_inputs, *,
+                           pending_fraction=.25, max_pending_per_phase=128):
+    """Combine locked full snapshots with trajectory-balanced pending TRAIN resets.
+
+    Existing witnessed relative weights are preserved. Pending groups have equal
+    mass in each phase; round-robin selection caps their count independently.
+    Caller supplies provenance locks linking selected pending rows to real arrivals.
+    """
+    from collections import defaultdict, Counter
+    from copy import deepcopy
+    import math
+    verify_hash(witnessed_support, 'support_sha256')
+    if (witnessed_support.get('schema') != SUPPORT_SCHEMA or witnessed_support.get('role') != 'train'
+        or witnessed_support.get('final_test_used') is not False
+        or any(r.get('witnessed') is not True for r in witnessed_support['entries'])):
+        raise ValueError('legacy witnessed TRAIN support required')
+    if type(max_pending_per_phase) is not int or max_pending_per_phase <= 0:
+        raise ValueError('positive pending phase cap required')
+    if type(pending_fraction) not in (int, float) or not 0 < pending_fraction < 1:
+        raise ValueError('pending_fraction must be strictly between zero and one')
+    inputs = dict(witnessed_support['inputs'])
+    for path, sha in pending_inputs.items():
+        if path in inputs and inputs[path] != sha:
+            raise ValueError('conflicting support input lock')
+        inputs[path] = sha
+    entries = []
+    realized = {}
+    for row in pending_rows:
+        if row.get('evidence_status') != 'pending' or row.get('witnessed') is not False:
+            raise ValueError('explicit pending non-witness required')
+        if row.get('role', 'train') != 'train' or row['phase'] not in ('upstream', 'downstream'):
+            raise ValueError('pending row must have TRAIN phase')
+    for phase in ('upstream', 'downstream'):
+        witnessed = [deepcopy(r) for r in witnessed_support['entries'] if r['phase'] == phase]
+        groups = defaultdict(list)
+        for row in pending_rows:
+            if row['phase'] == phase:
+                groups[row['trajectory_id']].append(deepcopy(row))
+        ordered = [sorted(g, key=lambda r:r['key']) for _, g in sorted(groups.items())]
+        pending = []
+        for index in range(max(map(len, ordered), default=0)):
+            pending.extend(group[index] for group in ordered if index < len(group))
+            if len(pending) >= max_pending_per_phase:
+                break
+        pending = pending[:max_pending_per_phase]
+        if not witnessed:
+            raise ValueError('both phases require witnessed resets')
+        realized[phase] = pending_fraction if pending else 0.0
+        counts = Counter(r['trajectory_id'] for r in pending)
+        for row in pending:
+            row['sampling_weight'] = 1 / counts[row['trajectory_id']]
+        for rows, status, mass in ((witnessed, 'witnessed', 1-realized[phase]), (pending, 'pending', realized[phase])):
+            if any(not math.isfinite(r['sampling_weight']) or r['sampling_weight'] <= 0 for r in rows):
+                raise ValueError('invalid source sampling weight')
+            total = sum(r['sampling_weight'] for r in rows)
+            for row in rows:
+                row.update(role='train', evidence_status=status, sampling_weight=mass*row['sampling_weight']/total)
+                row['snapshot'] = str(Path(row['snapshot']).resolve())
+                for name in ('identity.json', 'snapshot.pkl'):
+                    path = str(Path(row['snapshot']) / name)
+                    sha = file_sha(path)
+                    if path in inputs and inputs[path] != sha:
+                        raise ValueError('snapshot changed since source lock')
+                    inputs[path] = sha
+                entries.append(row)
+    result = dict(schema=CANDIDATE_SUPPORT_SCHEMA, role='train', final_test_used=False,
+        entries=entries, inputs=inputs, pending_fraction=pending_fraction,
+        max_pending_per_phase=max_pending_per_phase, realized_pending_fraction_by_phase=realized,
+        witnessed_support_sha256=witnessed_support['support_sha256'],
+        selection='phase 50/50; explicit status mass; pending trajectory round robin and equal group mass',
+        training_guidance_only=True, unwitnessed_resets_used=True)
+    result['support_sha256'] = canonical_sha256(result)
+    return validate_candidate_support(result)
 
 
 def checkpoint_evaluation_plan(steps, checkpoints=None, *, samples_per_phase=2, horizon=400):
@@ -89,13 +209,31 @@ def load_config(path):
     from .unified_formal import UnifiedFormalConfig,UnifiedFormalSchedule,UnifiedResetMixture
     from .unified_training import UnifiedPPOConfig
     raw=read(path)
-    if raw.get('schema')!=SCHEMA:raise ValueError('unknown probe training schema')
+    if raw.get('schema') not in (SCHEMA,CANDIDATE_SCHEMA):raise ValueError('unknown probe training schema')
+    candidate=raw['schema']==CANDIDATE_SCHEMA
     for p,sha in raw['input_files'].items():
         if file_sha(p)!=sha:raise ValueError('probe training input changed')
     support=read(raw['support']);verify_hash(support,'support_sha256')
-    if support.get('schema')!=SUPPORT_SCHEMA or support.get('role')!='train' or support.get('final_test_used') is not False:
+    if candidate:
+        required_paths=(raw['support'],raw['panel_support'],raw['initialization']['source_frozen_policy'],raw['bootstrap_formal_config'])
+        if any(p not in raw['input_files'] for p in required_paths):
+            raise ValueError('candidate training input lock missing')
+        validate_candidate_support(support)
+        if raw.get('pending_fraction') != support['pending_fraction']:
+            raise ValueError('candidate reset quota drift')
+        panel_support=read(raw['panel_support']);verify_hash(panel_support,'support_sha256')
+        if (panel_support.get('schema')!=SUPPORT_SCHEMA or panel_support.get('role')!='train'
+            or panel_support.get('final_test_used') is not False
+            or not panel_support['entries'] or any(r.get('witnessed') is not True for r in panel_support['entries'])):
+            raise ValueError('fixed panel requires witnessed TRAIN support')
+        for p,sha in panel_support['inputs'].items():
+            if file_sha(p)!=sha:raise ValueError('panel support input changed')
+        if 'checkpoint_evaluation' not in raw:raise ValueError('candidate training needs explicit fixed panel declaration')
+    else:
+        panel_support=support
+    if not candidate and (support.get('schema')!=SUPPORT_SCHEMA or support.get('role')!='train' or support.get('final_test_used') is not False):
         raise ValueError('TRAIN witnessed support required')
-    if not support['entries'] or any(not r['witnessed'] for r in support['entries']):raise ValueError('unwitnessed training reset')
+    if not candidate and (not support['entries'] or any(not r['witnessed'] for r in support['entries'])):raise ValueError('unwitnessed training reset')
     ppo=UnifiedPPOConfig(**raw['ppo'])
     if (ppo.num_parallel_envs!=128 or ppo.batch_size!=16 or ppo.num_minibatches!=8 or ppo.unroll_length!=25
         or ppo.episode_horizon!=400 or ppo.requested_transitions<=0 or ppo.requested_transitions%ppo.block_transitions):
@@ -111,9 +249,9 @@ def load_config(path):
         plan=checkpoint_evaluation_plan(ppo.requested_transitions, declared['train_panel_transitions'],
             samples_per_phase=declared['samples_per_phase'], horizon=declared['horizon'])
         if declared != plan:raise ValueError('checkpoint evaluation declaration drift')
-        if raw.get('fixed_train_panel') != fixed_train_panel_identity(support, plan):
+        if raw.get('fixed_train_panel') != fixed_train_panel_identity(panel_support, plan):
             raise ValueError('fixed TRAIN panel identity drift')
-    return UnifiedFormalConfig(schema=SCHEMA,raw=raw,config_sha256=canonical_sha256(raw),
+    return UnifiedFormalConfig(schema=raw['schema'],raw=raw,config_sha256=canonical_sha256(raw),
         runtime_naccdmax=1024,reset_mixture=UnifiedResetMixture('fixed_jump_start_20pct_exact_snapshot_80pct',.2,.8),
         ppo=ppo,formal=UnifiedFormalSchedule(tuple(plan['checkpoint_transitions']),tuple(plan['train_panel_transitions']),plan['samples_per_phase'],'fresh_only'),
         up_config_path=raw['inputs']['up_config_path'],up_config_sha256=raw['inputs']['up_config_sha256'],
@@ -161,7 +299,7 @@ def first_landing_state(state):
     return state.replace(done=jp.maximum(state.done,success.astype(state.done.dtype)),info=info,metrics=metrics)
 
 
-def build_environment(config):
+def build_environment(config, *, panel=False):
     import jax
     import jax.numpy as jp
     from .config import load_config as phase_config
@@ -175,9 +313,10 @@ def build_environment(config):
     from .unified_diagnostic import _load_runtime
     # One immutable bootstrap runtime supplies XML and the original task context.
     _,_,bootstrap_artifact,_=_load_runtime(load_unified_policy_formal_config(Path(config.raw['bootstrap_formal_config'])))
-    support=read(config.raw['support']);entries=sorted(support['entries'],key=lambda r:(r['phase']!='upstream',r['key']))
-    artifact=SimpleNamespace(root=Path(config.raw['support']).parent,entries=entries,
-        manifest={'schema':SUPPORT_SCHEMA,'status':'completed','training_guidance_only':True,
+    support_path=config.raw.get('panel_support',config.raw['support']) if panel else config.raw['support']
+    support=read(support_path);entries=sorted(support['entries'],key=lambda r:(r['phase']!='upstream',r['key']))
+    artifact=SimpleNamespace(root=Path(support_path).parent,entries=entries,
+        manifest={'schema':support['schema'],'status':'completed','training_guidance_only':True,
                   'test_data_used':False,'validation_data_used':False,'manifest_sha256':support['support_sha256']})
 
     class ProbeEnv(UnifiedTubeRSIEnv):
@@ -216,7 +355,8 @@ def build_environment(config):
 
 
 def make_config(support_path,initializer_path,bootstrap_config,output,run_id,iteration,steps,seed,*,
-                checkpoints=None,panel_samples_per_phase=2,panel_horizon=400):
+                checkpoints=None,panel_samples_per_phase=2,panel_horizon=400,
+                panel_support_path=None,pending_fraction=None):
     support_path,initializer_path,bootstrap_config=map(lambda p:Path(p).resolve(),(support_path,initializer_path,bootstrap_config))
     base=read(bootstrap_config)
     raw=dict(schema=SCHEMA,support=str(support_path),bootstrap_formal_config=str(bootstrap_config),
@@ -231,9 +371,17 @@ def make_config(support_path,initializer_path,bootstrap_config,output,run_id,ite
              'requested_transitions':steps,'seed':seed},
         run_declaration={'run_id':run_id},claim_boundary={'iteration':iteration,'test_data_used':False,'validation_data_used':False},
         input_files={str(p):file_sha(p) for p in (support_path,initializer_path,bootstrap_config)})
-    if checkpoints is not None or panel_samples_per_phase != 2 or panel_horizon != 400:
+    if panel_support_path is not None:
+        panel_support_path=Path(panel_support_path).resolve()
+        support=validate_candidate_support(read(support_path))
+        if pending_fraction is None:pending_fraction=support['pending_fraction']
+        raw.update(schema=CANDIDATE_SCHEMA,panel_support=str(panel_support_path),pending_fraction=pending_fraction)
+        raw['input_files'][str(panel_support_path)]=file_sha(panel_support_path)
+    elif pending_fraction is not None:
+        raise ValueError('candidate training requires separate witnessed panel support')
+    if panel_support_path is not None or checkpoints is not None or panel_samples_per_phase != 2 or panel_horizon != 400:
         plan=checkpoint_evaluation_plan(steps,checkpoints,samples_per_phase=panel_samples_per_phase,horizon=panel_horizon)
         raw['checkpoint_evaluation']=plan
-        raw['fixed_train_panel']=fixed_train_panel_identity(read(support_path),plan)
+        raw['fixed_train_panel']=fixed_train_panel_identity(read(panel_support_path or support_path),plan)
     write(output,raw);load_config(output)
     return raw

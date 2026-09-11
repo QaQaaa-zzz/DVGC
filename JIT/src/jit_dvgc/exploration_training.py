@@ -8,6 +8,56 @@ import json,time,hashlib,sys
 import numpy as np
 
 
+def select_candidate_ticks(data, episode_index, cells, ledger_cells, spec):
+    """Select existing eligible arrival frames; never synthesize a state.
+
+    Legacy mode keeps first unique x bins. Opt-in stratification allocates the
+    bounded quota round-robin over present phases and spans each phase's bins.
+    """
+    mode = spec.get('candidate_selection', 'first_bins')
+    if mode not in ('first_bins', 'phase_stratified_v1'):
+        raise ValueError('unknown candidate selection')
+    limit = spec['max_candidates_per_episode']
+    if type(limit) is not int or limit <= 0:
+        raise ValueError('positive candidate limit required')
+    spacing = spec['candidate_spacing']
+    if not np.isfinite(spacing) or spacing <= 0:
+        raise ValueError('positive finite candidate spacing required')
+    e = episode_index
+    seen = set(ledger_cells)
+    used_bins = set()
+    eligible = {0: [], 1: []}
+    ordered = []
+    for tick in np.flatnonzero(data['mask'][:, e]):
+        x = float(data['qpos'][tick, e, 0])
+        phase = int(data['phase'][tick, e])
+        semantic = ((phase == 0 and not bool(data['snap/up/apex_seen'][tick, e])) or
+                    (phase == 1 and data['qvel'][tick, e, 2] < 0 and not bool(data['snap/down/valid_contact_seen'][tick, e])))
+        if (data['terminal'][tick, e] or not data['finite'][tick, e] or not semantic
+            or not spec['candidate_min_x'] <= x <= spec['candidate_max_x'] or cells[tick] in seen):
+            continue
+        x_bin = int(np.floor(x / spacing))
+        key = x_bin if mode == 'first_bins' else (phase, x_bin)
+        if key in used_bins:
+            continue
+        used_bins.add(key)
+        eligible[phase].append(int(tick))
+        ordered.append(int(tick))
+    if mode == 'first_bins':
+        return ordered[:limit]
+    quotas = {phase: 0 for phase in eligible}
+    for _ in range(min(limit, len(ordered))):
+        available = [phase for phase in eligible if quotas[phase] < len(eligible[phase])]
+        phase = min(available, key=lambda phase: (quotas[phase], phase))
+        quotas[phase] += 1
+    selected = []
+    for phase, count in quotas.items():
+        if count:
+            indices = np.linspace(0, len(eligible[phase])-1, count, dtype=int)
+            selected.extend(eligible[phase][index] for index in indices)
+    return sorted(selected)
+
+
 def episode_advantages(rewards, values, mask, *, gamma, lam):
     rewards,values,mask=map(np.asarray,(rewards,values,mask))
     if rewards.shape!=values.shape or rewards.shape!=mask.shape or rewards.ndim!=2:
@@ -37,7 +87,7 @@ def run(spec_path,output):
     from .handoff_bank import pytree_sha256
     from flax import serialization
     from .exploration_network import make_exploration_network_factory,initialize_residual_actor,compose_residual_action,validate_residual_delta_limit
-    from .exploration_reward import continuation_reward_batch
+    from .exploration_reward import continuation_reward_batch,arrival_reward_batch
     from .exploration_continuation import snapshot_arrays,snapshot_from_arrays,FrozenSuffixEvaluator
     from .unified_envelope_snapshot import physical_state_sha256,snapshot_context_sha256
     from .evidence_integrity import canonical_sha256
@@ -57,6 +107,12 @@ def run(spec_path,output):
     for k in ['delta_limit','max_candidates_per_episode','candidate_min_x','candidate_max_x','candidate_spacing','evaluator_order','suffix_horizon','suffix_budget']:
         if k not in spec:raise ValueError('missing residual/suffix contract: '+k)
     limits=validate_residual_delta_limit(spec['delta_limit'])
+    arrival_mode=spec.get('reward_mode','witnessed_novelty_v1')=='arrival_novelty_v1'
+    random_control=spec.get('controller_mode','learned_residual')=='fixed_random'
+    if spec.get('reward_mode','witnessed_novelty_v1') not in ('witnessed_novelty_v1','arrival_novelty_v1'):raise ValueError('unknown reward mode')
+    if spec.get('controller_mode','learned_residual') not in ('learned_residual','fixed_random'):raise ValueError('unknown controller mode')
+    if spec.get('candidate_selection','first_bins') not in ('first_bins','phase_stratified_v1'):raise ValueError('unknown candidate selection')
+    if arrival_mode and spec['suffix_budget']!=0:raise ValueError('arrival mode defers suffix evaluation to separately budgeted stage')
     if type(spec['max_candidates_per_episode']) is not int or spec['max_candidates_per_episode']<=0 or not 0.01<=spec['candidate_spacing']<=0.1 or not 2.5<=spec['candidate_min_x']<spec['candidate_max_x']<=8.:raise ValueError('invalid candidate sampling budget')
     if any(k not in spec for k in required):raise ValueError('incomplete declared training configuration')
     if spec['horizon']!=400 or any(type(spec[k]) is not int or spec[k]<=0 for k in ['num_envs','batches','epochs','minibatch_size','evaluation_episodes']):raise ValueError('invalid budget/full episode horizon')
@@ -77,7 +133,7 @@ def run(spec_path,output):
         policy_record=bank_member['policy']
         for file in [bank_member['frozen_policy'],policy_record['formal_config'],str(Path(policy_record['checkpoint'])/'payload.pkl'),str(Path(policy_record['checkpoint'])/'identity.json')]:inputs[str(Path(file).resolve())]=_sha(file)
     scheduled=spec['num_envs']*spec['horizon']*(spec['batches']+2)
-    _write(output/'declaration.json',dict(spec=spec,input_files=inputs,source_files=sources,maximum_interactions=scheduled+spec['suffix_budget'],maximum_forward_interactions=scheduled,maximum_suffix_interactions=spec['suffix_budget'],maximum_attempts=1,role='train',final_test_used=False,resolution=resolution_contract(),normalizer='frozen_for_pilot',padding_charged=True,coverage_scope='per frozen pi; reached candidate with same-context frozen-bank suffix witness',reward='one per newly witnessed root cell at causal action tick; parent trajectory landing not required',controller='frozen pi plus bounded learned residual',base_actor_sha256=record['actor_sha256']))
+    _write(output/'declaration.json',dict(spec=spec,input_files=inputs,source_files=sources,maximum_interactions=scheduled+spec['suffix_budget'],maximum_forward_interactions=scheduled,maximum_suffix_interactions=spec['suffix_budget'],maximum_attempts=1,role='train',final_test_used=False,resolution=resolution_contract(),normalizer='frozen_for_pilot',padding_charged=True,coverage_scope=('per frozen pi provisional arrivals; not verified envelope' if arrival_mode else 'per frozen pi; reached candidate with same-context frozen-bank suffix witness'),reward=('one per new arrival root cell; delayed evaluation kept separate' if arrival_mode else 'one per newly witnessed root cell at causal action tick; parent trajectory landing not required'),controller=('frozen pi plus fixed uniform random residual' if random_control else 'frozen pi plus bounded learned residual'),base_actor_sha256=record['actor_sha256']))
     def verify():
         for p,sha in {**sources,**inputs}.items():
             if _sha(p)!=sha:raise ValueError('training source/input drift: '+p)
@@ -115,14 +171,17 @@ def run(spec_path,output):
                 raw=distribution.sample_no_postprocessing(logits,akey)
                 sampled=distribution.postprocess(raw)
                 normalized_delta=jp.where(deterministic,distribution.mode(logits),sampled)
+                if random_control:
+                    normalized_delta=jp.where(deterministic,jp.zeros_like(sampled),jax.random.uniform(akey,sampled.shape,minval=-1.,maxval=1.))
                 base_action=base_policy(state.obs,akey)[0]
                 action,requested_delta,effective_delta=compose_residual_action(base_action,normalized_delta,jp.asarray(limits))
                 value=net.value_network.apply(normalizer,params['value'],state.obs)
+                base_critic_value=net.value_network.apply(normalizer,payload.critic_params,state.obs)
                 nxt=step(state,action)
                 finite=jp.all(jp.isfinite(nxt.data.qpos),-1)&jp.all(jp.isfinite(nxt.data.qvel),-1)&jp.all(jp.isfinite(nxt.obs['privileged_state']),-1)&jp.all(jp.isfinite(action),-1)
                 finite=finite&~nxt.info['parallel_capacity_exceeded']
                 terminal=nxt.done.astype(bool)|~finite
-                observed=dict(observation=state.obs['privileged_state'],base_action=base_action,normalized_delta=normalized_delta,requested_delta=requested_delta,effective_delta=effective_delta,action=action,raw_action=raw,log_prob=distribution.log_prob(logits,raw),value=value,mask=alive,qpos=nxt.data.qpos,qvel=nxt.data.qvel,phase=nxt.info['active_phase'],success=nxt.info['success'],physical_failure=nxt.info['physical_failure'],finite=finite,terminal=terminal,end_code=nxt.info['end_code'])
+                observed=dict(base_critic_value=base_critic_value,observation=state.obs['privileged_state'],base_action=base_action,normalized_delta=normalized_delta,requested_delta=requested_delta,effective_delta=effective_delta,action=action,raw_action=raw,log_prob=distribution.log_prob(logits,raw),value=value,mask=alive,qpos=nxt.data.qpos,qvel=nxt.data.qvel,phase=nxt.info['active_phase'],success=nxt.info['success'],physical_failure=nxt.info['physical_failure'],finite=finite,terminal=terminal,end_code=nxt.info['end_code'])
                 observed.update({'snap/'+k:v for k,v in snapshot_arrays(nxt).items()})
                 # Reset inactive worlds to the fixed start before their next padded
                 # simulator slot; padding never contributes gradients or coverage.
@@ -173,41 +232,37 @@ def run(spec_path,output):
             return data,episodes,receipt
         def candidate_rewards(label,data,episodes,ledger):
             verify()
-            candidates=[];max_count=spec['max_candidates_per_episode']
-            controller=dict(base_actor_sha256=frozen_base_sha,residual_actor_sha256=pytree_sha256(params['policy']),normalizer_sha256=pytree_sha256(normalizer),action_composition='clip(base+delta_limit*tanh_sample,-1,1)',delta_limit=list(limits))
+            candidates=[]
+            controller=dict(base_actor_sha256=frozen_base_sha,residual_actor_sha256=pytree_sha256(params['policy']),normalizer_sha256=pytree_sha256(normalizer),action_composition=('clip(base+delta_limit*uniform[-1,1],-1,1)' if random_control else 'clip(base+delta_limit*tanh_sample,-1,1)'),delta_limit=list(limits))
+            controller['controller_mode']=spec.get('controller_mode','learned_residual')
+            controller['seed']=spec['seed']
             controller['residual_checkpoint']=str(current_residual_checkpoint)
             controller['residual_checkpoint_sha256']=_sha(current_residual_checkpoint)
             controller['controller_sha256']=canonical_sha256(controller)
             generator_record={**record,'actor_sha256':controller['controller_sha256'],'payload_sha256':controller['residual_checkpoint_sha256']}
             prefix_path=output/(label+'_trajectories.npz');prefix_sha=_sha(prefix_path)
             for e,episode in enumerate(episodes):
-                used_bins=set();selected=0
-                for tick in np.flatnonzero(data['mask'][:,e]):
-                    x=float(data['qpos'][tick,e,0]);phase=int(data['phase'][tick,e])
-                    semantic=(phase==0 and not bool(data['snap/up/apex_seen'][tick,e])) or (phase==1 and data['qvel'][tick,e,2]<0 and not bool(data['snap/down/valid_contact_seen'][tick,e]))
-                    if data['terminal'][tick,e] or not data['finite'][tick,e] or not semantic or not spec['candidate_min_x']<=x<=spec['candidate_max_x']:continue
+                for tick in select_candidate_ticks(data,e,episode['cells'],ledger['cells'],spec):
                     cell=episode['cells'][tick]
-                    if cell in ledger['cells']:continue
-                    bin_index=int(np.floor(x/spec['candidate_spacing']))
-                    if bin_index in used_bins:continue
-                    used_bins.add(bin_index)
                     arrays={k[5:]:v[tick,e] for k,v in data.items() if k.startswith('snap/')}
                     snapshot=snapshot_from_arrays(arrays,env=env,record=generator_record,parent_trajectory=f'{label}/episode_{e}',parent_state_sha256=spec['jump_start_state_sha256'])
                     context=snapshot_context_sha256(snapshot)
                     status('suffix_'+label,charged_interactions=charged+suffix.charged_interactions,candidate_episode=e,candidate_tick=int(tick))
                     result=suffix_cache.get(context)
                     if result is None:
-                        result=suffix.evaluate(snapshot);suffix_cache[context]=result
+                        result=(suffix.defer(snapshot) if arrival_mode else suffix.evaluate(snapshot));suffix_cache[context]=result
                     if result['snapshot_context_sha256']!=context or result['state_sha256']!=physical_state_sha256(snapshot) or result['bank_sha256']!=bank['bank_sha256']:raise ValueError('suffix receipt candidate or bank identity mismatch')
                     if canonical_sha256({k:v for k,v in result.items() if k!='receipt_sha256'})!=result['receipt_sha256']:raise ValueError('suffix receipt hash mismatch')
                     provenance=dict(episode_index=e,tick=int(tick),cell=cell,state_sha256=physical_state_sha256(snapshot),context_sha256=context,label=result['label'],witness=result['witness'],suffix_receipt_sha256=result['receipt_sha256'],prefix_file=str(prefix_path),prefix_file_sha256=prefix_sha,controller=controller,generated_by_env_step_only=True,jump_start_state_sha256=spec['jump_start_state_sha256'])
+                    provenance['snapshot_dir']=str(suffix.output/context/'snapshot')
+                    provenance['base_critic_value_before_action']=float(data['base_critic_value'][tick,e])
+                    provenance['reward_mode']=spec.get('reward_mode','witnessed_novelty_v1')
                     provenance['receipt_sha256']=canonical_sha256(provenance)
-                    candidates.append(provenance);selected+=1
+                    candidates.append(provenance)
                     _write(output/(label+'_candidates.json'),candidates)
-                    if result['label'] is None:raise RuntimeError('unknown suffix result retained; no negative conversion or PPO update')
-                    if selected>=max_count:break
+                    if result['label'] is None and not arrival_mode:raise RuntimeError('unknown suffix result retained; no negative conversion or PPO update')
             _write(output/(label+'_candidates.json'),candidates)
-            return continuation_reward_batch(ledger,candidates,shape=data['mask'].shape,expected_policy_sha256=record['actor_sha256'])
+            return (arrival_reward_batch if arrival_mode else continuation_reward_batch)(ledger,candidates,shape=data['mask'].shape,expected_policy_sha256=record['actor_sha256'])
         def checkpoint(label):
             nonlocal current_residual_checkpoint
             verify()
@@ -218,7 +273,7 @@ def run(spec_path,output):
             current_residual_checkpoint=p/'state.msgpack'
             _write(p/'identity.json',dict(schema='jit_frozen_policy_residual_ppo_checkpoint_v1',state_sha256=_sha(p/'state.msgpack'),base_actor_sha256=record['actor_sha256'],actor_input='privileged_state106',output_kind='bounded_delta_added_to_frozen_pi',delta_limit=list(limits),action_order=['steer','rear_wheel_drive','hip','knee'],ledger=ledger,charged_interactions=charged+suffix.charged_interactions,suffix_interactions=suffix.charged_interactions,active_interactions=active_total,spec=spec))
         data,episodes,receipt=rollout('initial',True)
-        ledger={'policy_sha256':record['actor_sha256'],'cells':sorted(set(baseline['cells']).union(*(set(e['cells']) for e in episodes if e['success'] and not e['physical_failure'] and e['completed'])))}
+        ledger={'policy_sha256':record['actor_sha256'],'cells':sorted(set(baseline['cells']).union(*(set(e['cells']) for e in episodes if arrival_mode or (e['success'] and not e['physical_failure'] and e['completed']))))}
         if not np.array_equal(data['action'],data['base_action']):raise ValueError('initial zero-mean residual does not reproduce frozen base action')
         _write(output/'baseline.json',ledger);checkpoint('initial')
         for iteration in range(1,spec['batches']+1):
@@ -232,7 +287,7 @@ def run(spec_path,output):
             np.savez_compressed(output/(label+'_learning.npz'),rewards=rewards,advantages=adv,returns=returns)
             size=len(a);mb=spec['minibatch_size'];losses=[]
             host_rng=np.random.default_rng(np.random.SeedSequence([spec['seed'],iteration]))
-            for epoch in range(spec['epochs']):
+            for epoch in range(0 if random_control else spec['epochs']):
                 order=host_rng.permutation(size)
                 for lo in range(0,size,mb):
                     ix=order[lo:lo+mb];actual=len(ix);ix=np.pad(ix,(0,mb-actual),mode='wrap')
@@ -240,10 +295,10 @@ def run(spec_path,output):
                     rng,key=jax.random.split(rng);params,optstate,loss=update(params,optstate,mini,key)
                     losses.append(np.asarray(loss))
             if not np.isfinite(losses).all() or not all(np.isfinite(np.asarray(x)).all() for x in jax.tree.leaves(params)):raise ValueError('nonfinite PPO update')
-            row=dict(batch=iteration,new_cells=float(np.sum(rewards)),cumulative_cells=len(ledger['cells']),successes=sum(e['success'] and not e['physical_failure'] and e['completed'] and e['finite'] for e in episodes),episodes=count,active_interactions=receipt['active_interactions'],charged_interactions=charged+suffix.charged_interactions,suffix_interactions=suffix.charged_interactions,mean_losses=np.mean(losses,axis=0).tolist(),optimizer_updates=len(losses),wall_seconds=time.monotonic()-start)
+            row=dict(batch=iteration,new_cells=float(np.sum(rewards)),cumulative_cells=len(ledger['cells']),successes=sum(e['success'] and not e['physical_failure'] and e['completed'] and e['finite'] for e in episodes),episodes=count,active_interactions=receipt['active_interactions'],charged_interactions=charged+suffix.charged_interactions,suffix_interactions=suffix.charged_interactions,mean_losses=np.mean(losses,axis=0).tolist() if losses else [],controller_mode=spec.get('controller_mode','learned_residual'),reward_mode=spec.get('reward_mode','witnessed_novelty_v1'),optimizer_updates=len(losses),wall_seconds=time.monotonic()-start)
             history.append(row);_write(output/'training_metrics.json',history);print(json.dumps(row),flush=True)
             checkpoint(label)
-        data,episodes,receipt=rollout('final',True)
+        data,episodes,receipt=rollout('final',not random_control)
         diagnostic_credits,_,evidence=candidate_rewards('final',data,episodes,ledger)
         _write(output/'final_diagnostic_reward.json',evidence)
         verify();status('completed',charged_interactions=charged+suffix.charged_interactions,forward_interactions=charged,suffix_interactions=suffix.charged_interactions,base_actor_unchanged=pytree_sha256(payload.actor_params)==frozen_base_sha,active_interactions=active_total,padding_interactions=charged-active_total,training_scheduled_interactions=count*horizon*spec['batches'],final_successes=sum(e['success'] and not e['physical_failure'] and e['completed'] and e['finite'] for e in episodes),initial_baseline_cells=len(json.loads((output/'baseline.json').read_text())['cells']),training_new_cells=sum(x['new_cells'] for x in history),final_diagnostic_new_cells=float(np.sum(diagnostic_credits)),independent_repetitions=False,final_test_used=False)
