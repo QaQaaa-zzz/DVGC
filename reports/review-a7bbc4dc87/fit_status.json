@@ -1,0 +1,24 @@
+{
+  "end_utc": "2026-09-11T06:32:14.673300+00:00",
+  "environment_interactions": 0,
+  "ppo_transitions": 0,
+  "process_wall_seconds": 9.08499572099754,
+  "report": {
+    "environment_interactions": 0,
+    "examples": 543,
+    "final_loss": 1.379094214826182e-06,
+    "independent_discovery_evidence": false,
+    "initial_loss": 0.0006114898133091629,
+    "learning_rate": 0.001,
+    "loss_contract": "requested_residual_regression_v1",
+    "max_optimizer_steps": 500,
+    "novel_cells": 512,
+    "optimizer_steps": 500,
+    "ppo_transitions": 0,
+    "seed": 9901101,
+    "training_kind": "supervised_warm_start",
+    "wall_seconds": 6.081639700998494
+  },
+  "start_utc": "2026-09-11T06:32:05.588317+00:00",
+  "status": "completed"
+}

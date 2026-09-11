@@ -1,0 +1,9 @@
+partition,group,channel,sign,examples
+fit,dense_v1_train_x2.90_family0/variant_5,hip,1,96
+fit,dense_v1_train_x2.90_family1/variant_6,knee,-1,84
+fit,dense_v1_train_x2.90_family2/variant_2,rear_wheel_drive,-1,102
+fit,dense_v1_train_x2.90_family2/variant_7,knee,1,69
+fit,dense_v1_train_x2.90_family3/variant_3,rear_wheel_drive,1,101
+fit,dense_v1_train_x2.90_family4/variant_4,hip,-1,91
+development,dense_v1_train_x2.90_family0/variant_0,steer,-1,104
+development,dense_v1_train_x2.90_family1/variant_1,steer,1,99

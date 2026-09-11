@@ -1,0 +1,9 @@
+partition,subset,model,examples,weighted_rmse,evaluation
+fit,all,zero,543,0.0247283186763525,teacher_forced_historical_previous_delta
+fit,all,fitted,543,0.0010017219310867573,teacher_forced_historical_previous_delta
+fit,nonzero,zero,66,0.07477141171693802,teacher_forced_historical_previous_delta
+fit,nonzero,fitted,66,0.0024543085728138225,teacher_forced_historical_previous_delta
+development,all,zero,203,0.02381252497434616,teacher_forced_historical_previous_delta
+development,all,fitted,203,0.1301035941603256,teacher_forced_historical_previous_delta
+development,nonzero,zero,24,0.07500000298023224,teacher_forced_historical_previous_delta
+development,nonzero,fitted,24,0.14984117504943395,teacher_forced_historical_previous_delta
