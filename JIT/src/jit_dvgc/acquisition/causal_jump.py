@@ -166,6 +166,18 @@ def _variant_specs(
     return result
 
 
+def validate_acquisition_policy_role(policy_record, *, evidence_mode, logical_role):
+    if int(policy_record.get("iteration", -1)) < 0:
+        raise ValueError("frozen unified policy iteration is invalid")
+    role = policy_record.get("policy_role")
+    if role == "envelope_expansion_authority":
+        return
+    if (role == "development_checkpoint" and policy_record.get("data_role") == "train"
+        and evidence_mode == "probe_bank_arrivals_v1" and logical_role == "train"):
+        return
+    raise ValueError("policy requires expansion authority or explicit TRAIN development probe")
+
+
 def collect_jump_start_connected_candidates(
     declared_anchors: Sequence[Mapping[str, Any]],
     output_dir: Path,
@@ -206,10 +218,7 @@ def collect_jump_start_connected_candidates(
         raise ValueError("causal Jump acquisition requires declared centerline-slice anchors")
     if int(max_forward_ticks) <= 0:
         raise ValueError("max_forward_ticks must be positive")
-    if int(policy_record.get("iteration", -1)) < 0:
-        raise ValueError("frozen unified policy iteration is invalid")
-    if policy_record.get("policy_role") != "envelope_expansion_authority":
-        raise ValueError("frozen unified policy is not an expansion authority")
+    validate_acquisition_policy_role(policy_record, evidence_mode=evidence_mode, logical_role=logical_role)
     if policy_record.get("xml_sha256") != env._bundle.xml_sha256:
         raise ValueError("causal Jump policy/runtime XML mismatch")
 

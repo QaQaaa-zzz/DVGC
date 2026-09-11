@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 import hashlib
 import json
+import re
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -24,6 +25,7 @@ from .unified_formal import (
 
 
 FROZEN_UNIFIED_POLICY_SCHEMA = "jit_frozen_unified_policy_v1"
+FROZEN_DEVELOPMENT_CHECKPOINT_SCHEMA = "jit_frozen_development_checkpoint_v1"
 
 
 @dataclass(frozen=True)
@@ -45,6 +47,18 @@ class FrozenUnifiedPolicyRecord:
     actor_frame_fields: tuple[str, ...]
     actor_task_fields: tuple[str, ...]
     action_order: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class FrozenDevelopmentCheckpointRecord(FrozenUnifiedPolicyRecord):
+    """TRAIN diagnostic identity; iteration is source metadata, not authority."""
+
+    data_role: str
+    formal_config_file_sha256: str
+    source_formal_report: str
+    source_formal_report_sha256: str
+    checkpoint_identity_sha256: str
+    source_requested_training_transitions: int
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -192,13 +206,78 @@ def _record_payload(record: FrozenUnifiedPolicyRecord) -> dict[str, Any]:
     return payload
 
 
+def inspect_development_checkpoint(
+    *, config_path: Path, checkpoint: Path, name: str,
+) -> FrozenDevelopmentCheckpointRecord:
+    """Verify a declared positive milestone from a completed run for TRAIN use.
+
+    The original training budget/config remains intact. This is deliberately
+    separate from final-checkpoint envelope authority inspection.
+    """
+    if (not isinstance(name, str) or not re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]*", name)
+            or re.fullmatch(r"pi_\d+", name)):
+        raise ValueError("development checkpoint needs a safe non-formal policy name")
+    config_path = Path(config_path).resolve()
+    checkpoint = Path(checkpoint).resolve()
+    config = _load_policy_formal_config(config_path)
+    run_id = _source_run_id(config)
+    run_dir = checkpoint.parent.parent
+    if checkpoint.parent.name != "checkpoints" or run_dir.name != run_id:
+        raise ValueError("development checkpoint run directory does not match config run_id")
+    match = re.fullmatch(r"transition_([1-9][0-9]*)", checkpoint.name)
+    if match is None or int(match[1]) not in config.formal.checkpoint_transitions:
+        raise ValueError("development checkpoint is not a declared positive milestone")
+    transition = int(match[1])
+    if transition > config.ppo.requested_transitions:
+        raise ValueError("development checkpoint exceeds the declared training budget")
+    report_path = run_dir / "formal_report.json"
+    report = _read_json(report_path)
+    _validate_formal_report(report, config)
+    if (report.get("checkpoint_transitions") != list(config.formal.checkpoint_transitions)
+            or report.get("train_panel_transitions") != list(config.formal.train_panel_transitions)):
+        raise ValueError("development source report checkpoint schedule drift")
+    if report.get("checkpoint_evaluation") != config.raw.get("checkpoint_evaluation"):
+        raise ValueError("development source checkpoint evaluation declaration drift")
+    identity = _checkpoint_identity(config)
+    payload = load_checkpoint(checkpoint, expected=identity)
+    if payload.training_transitions != transition:
+        raise ValueError("development checkpoint training-transition drift")
+    iteration = config.raw.get("claim_boundary", {}).get("iteration", 0)
+    if type(iteration) is not int or iteration < 0:
+        raise ValueError("development source iteration metadata is invalid")
+    return FrozenDevelopmentCheckpointRecord(
+        name=name, iteration=iteration, policy_role="development_checkpoint",
+        checkpoint=str(checkpoint), formal_config=str(config_path),
+        formal_config_sha256=config.config_sha256, xml_sha256=identity.xml_sha256,
+        source_training_run_id=run_id, source_training_transitions=transition,
+        source_reset_mixture=config.reset_mixture.as_dict(),
+        payload_sha256=file_sha256(checkpoint / "payload.pkl"),
+        normalizer_sha256=pytree_sha256(payload.observation_normalizer),
+        actor_sha256=pytree_sha256(payload.actor_params),
+        critic_sha256=pytree_sha256(payload.critic_params),
+        actor_frame_fields=ACTOR_FRAME_FIELDS, actor_task_fields=ACTOR_TASK_FIELDS,
+        action_order=ACTION_ORDER, data_role="train",
+        formal_config_file_sha256=file_sha256(config_path),
+        source_formal_report=str(report_path),
+        source_formal_report_sha256=file_sha256(report_path),
+        checkpoint_identity_sha256=file_sha256(checkpoint / "identity.json"),
+        source_requested_training_transitions=int(config.ppo.requested_transitions),
+    )
+
+
 def verify_frozen_unified_record(record: Mapping[str, Any]) -> FrozenUnifiedPolicyRecord:
     """Strictly reload a frozen record and prove checkpoint/config/hash binding."""
-    inspected = inspect_unified_policy(
-        config_path=Path(record["formal_config"]),
-        checkpoint=Path(record["checkpoint"]),
-        iteration=int(record["iteration"]),
-    )
+    if record.get("policy_role") == "development_checkpoint":
+        inspected = inspect_development_checkpoint(
+            config_path=Path(record["formal_config"]),
+            checkpoint=Path(record["checkpoint"]), name=record["name"],
+        )
+    else:
+        inspected = inspect_unified_policy(
+            config_path=Path(record["formal_config"]),
+            checkpoint=Path(record["checkpoint"]),
+            iteration=int(record["iteration"]),
+        )
     expected = _record_payload(inspected)
     if dict(record) != expected:
         differing = sorted(
@@ -249,10 +328,40 @@ def freeze_unified_policy(
     return manifest
 
 
+def freeze_development_checkpoint(
+    output_dir: Path, *, config_path: Path, checkpoint: Path, name: str,
+) -> dict[str, Any]:
+    """Freeze a completed-run milestone for diagnostic TRAIN comparisons only."""
+    record = inspect_development_checkpoint(
+        config_path=config_path, checkpoint=checkpoint, name=name,
+    )
+    protocol = {
+        "schema": FROZEN_DEVELOPMENT_CHECKPOINT_SCHEMA,
+        "status": "frozen", "immutable_parameters": True,
+        "copied_checkpoint": False, "training_transitions": 0,
+        "environment_interactions": 0, "expert_switching_used": False,
+        "policy": _record_payload(record),
+        "claim_boundary": {
+            "envelope_expansion_authority": False, "pi_unified_star_claim": False,
+            "jce_jel_claim": False, "certified_safe_tube_claim": False,
+        },
+    }
+    manifest = {**protocol, "freeze_protocol_sha256": _canonical_sha256(protocol)}
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=False)
+    (output_dir / "frozen_unified_policy.json").write_text(
+        json.dumps(manifest, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
+    return manifest
+
+
 def load_frozen_unified_manifest(path: Path) -> dict[str, Any]:
     payload = _read_json(Path(path))
     if (
-        payload.get("schema") != FROZEN_UNIFIED_POLICY_SCHEMA
+        payload.get("schema") not in {
+            FROZEN_UNIFIED_POLICY_SCHEMA, FROZEN_DEVELOPMENT_CHECKPOINT_SCHEMA,
+        }
         or payload.get("status") != "frozen"
     ):
         raise ValueError("not a frozen unified-policy manifest")
@@ -268,8 +377,14 @@ def load_frozen_unified_manifest(path: Path) -> dict[str, Any]:
     if payload.get("training_transitions") != 0 or payload.get("environment_interactions") != 0:
         raise ValueError("freezing a unified policy must use zero interactions")
     claims = payload.get("claim_boundary", {})
+    diagnostic = payload["schema"] == FROZEN_DEVELOPMENT_CHECKPOINT_SCHEMA
+    if diagnostic and payload.get("expert_switching_used") is not False:
+        raise ValueError("development checkpoint cannot use expert switching")
+    expected_role = "development_checkpoint" if diagnostic else "envelope_expansion_authority"
+    if payload.get("policy", {}).get("policy_role") != expected_role:
+        raise ValueError("frozen unified-policy schema/role mismatch")
     if claims != {
-        "envelope_expansion_authority": True,
+        "envelope_expansion_authority": not diagnostic,
         "pi_unified_star_claim": False,
         "jce_jel_claim": False,
         "certified_safe_tube_claim": False,

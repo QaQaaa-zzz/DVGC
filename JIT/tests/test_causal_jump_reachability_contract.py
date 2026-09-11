@@ -138,3 +138,14 @@ def test_capability_analysis_resolves_derived_role_to_original_catalog(
     assert [(row["candidate_id"], label["candidate_id"]) for row, label in pairs] == [
         ("kept", "kept")
     ]
+
+
+def test_development_checkpoint_is_train_probe_only():
+    check = causal_jump.validate_acquisition_policy_role
+    record = {'iteration':7, 'policy_role':'development_checkpoint', 'data_role':'train'}
+    check(record, evidence_mode='probe_bank_arrivals_v1', logical_role='train')
+    for mode,role in [('probe_bank_arrivals_v1','acceptance'),('legacy','train')]:
+        with pytest.raises(ValueError):
+            check(record,evidence_mode=mode,logical_role=role)
+    with pytest.raises(ValueError):
+        check({**record,'data_role':'test'},evidence_mode='probe_bank_arrivals_v1',logical_role='train')

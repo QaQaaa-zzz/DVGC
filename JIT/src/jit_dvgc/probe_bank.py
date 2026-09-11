@@ -341,6 +341,9 @@ def acquire_probe_catalog(spec_path: Path, output: Path) -> dict:
         raise ValueError("bank centerline drift")
     anchors = _read(spec["anchors"])
     record = member["policy"]
+    from .unified_policy_freeze import load_frozen_unified_manifest
+    if load_frozen_unified_manifest(Path(member["frozen_policy"]))["policy"] != record:
+        raise ValueError("acquisition frozen record drift")
     config, _, env = build_unified_formal_environment(Path(record["formal_config"]))
     payload = load_checkpoint(Path(record["checkpoint"]), expected=checkpoint_identity(config, env))
     policy = make_checkpoint_policy(env, payload, deterministic=True)
