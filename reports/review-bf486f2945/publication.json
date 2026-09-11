@@ -1,0 +1,13 @@
+{
+  "run_id": "review-bf486f2945",
+  "local_run": "/home/qy/DVGC/JIT/runs/engineering/residual_suffix_ppo_20260911/review",
+  "archive_sha256": "81bcf0337064eaaefd8ec671f434a8cab9d001fd26a5cd96ffc9a1bfbf784c18",
+  "files": {
+    "INDEX.md": "ac03c4b79f6d4c420ef68f24e5a15a9ec7a17e3e5d80bc0d21a71ec64564d42b",
+    "all_action_plot_data.csv": "755479a1690dc8029c81b1f7bac863ccea9094acad391c6e4c33007498f9309d",
+    "all_candidates.csv": "323313b7433537c97e058642c533457c3787ca262b976e02ef2331006a4fbb24",
+    "analysis_summary.json": "55a424fbd7a5d44c73e79476fe852d33522608d8be99da1b52effd6657f46873",
+    "bundle_inventory.json": "6f152bdd42a76600f01f28a39cf7d41990d70d45c0c7a1d633583079d702ef10"
+  },
+  "scope": "compact text review; raw snapshots, checkpoints and images stay on server"
+}

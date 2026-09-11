@@ -1,0 +1,48 @@
+{
+  "schema": "jit_review_bundle_v2",
+  "mode": "compact",
+  "raw_files_deleted": false,
+  "standalone_replay_archive": false,
+  "files": [
+    {
+      "path": "INDEX.md",
+      "source_bytes": 3681,
+      "source_sha256": "ac03c4b79f6d4c420ef68f24e5a15a9ec7a17e3e5d80bc0d21a71ec64564d42b",
+      "disposition": "included"
+    },
+    {
+      "path": "action_chain.pdf",
+      "source_bytes": 26522,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "action_chain.png",
+      "source_bytes": 379462,
+      "source_sha256": "6d401112e925089a61ac052cb99e5c282d62376f5e8498c95ed2192d96709125",
+      "disposition": "included"
+    },
+    {
+      "path": "action_chain.svg",
+      "source_bytes": 103649,
+      "disposition": "server_only_detail"
+    },
+    {
+      "path": "all_action_plot_data.csv",
+      "source_bytes": 88414,
+      "source_sha256": "755479a1690dc8029c81b1f7bac863ccea9094acad391c6e4c33007498f9309d",
+      "disposition": "included"
+    },
+    {
+      "path": "all_candidates.csv",
+      "source_bytes": 681,
+      "source_sha256": "323313b7433537c97e058642c533457c3787ca262b976e02ef2331006a4fbb24",
+      "disposition": "included"
+    },
+    {
+      "path": "analysis_summary.json",
+      "source_bytes": 807,
+      "source_sha256": "55a424fbd7a5d44c73e79476fe852d33522608d8be99da1b52effd6657f46873",
+      "disposition": "included"
+    }
+  ]
+}
