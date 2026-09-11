@@ -144,6 +144,15 @@ def build_export(spec):
         observation_contract_sha256=digest({name:file_sha(Path(__file__).parent/name) for name in ('observation.py','constants.py')}),
         endpoint_protocol_sha256=digest(endpoint),observation_contract='canonical saved FIFO plus active-phase jump signal; actor history already included',
         goal_contract='exogenous fixed perturbation schedule; no future outcome features',normalization_fit_groups=split['fit'])
+    mode=spec.get('normalization_mode','fit_std_v1')
+    if mode == 'actor_fit_std_goal_units_v1':
+        # Action coordinates and exogenous goals have known physical units.
+        # Constant training directions must not amplify unseen unit directions.
+        contract['feature_mean'][width:]=[0.]*(4+len(goal_names))
+        contract['feature_scale'][width:]=[1.]*(4+len(goal_names))
+        contract['normalization_mode']=mode
+    elif mode != 'fit_std_v1':
+        raise ValueError('unknown normalization mode')
     from .residual_exploration import validate_contract
     validate_contract(contract)
     inputs.update(Path(__file__).parent/name for name in ('observation.py','constants.py'))

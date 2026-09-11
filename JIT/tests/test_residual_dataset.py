@@ -117,3 +117,13 @@ def test_original_observation_semantics_must_match():
     files[next(iter(files))]='0'*64
     with pytest.raises(ValueError,match='observation'):
         rd.verify_observation_sources(files)
+
+
+def test_declared_unit_scaling_does_not_amplify_unseen_directions(monkeypatch):
+    from jit_dvgc import residual_dataset as rd
+    pairs=[dict(trajectory_group=g,observation=[float(i)],base_action=[0.]*4,goal=[2.9,2.75,0.,1.,0.,0.,.15]) for i,g in enumerate('abcd')]
+    monkeypatch.setattr(rd,'_checked_comparison',lambda root:(pairs,{},set(),{'model_sha256':'a'*64,'physical_cell_schema_sha256':'b'*64},[],set()))
+    built=rd.build_export(dict(comparison_root='unused',split_seed=12,development_fraction=.25,delta_limit=[.15]*4,slew_limit=[.3]*4,normalization_mode='actor_fit_std_goal_units_v1'))
+    c=built['contract'];assert c['feature_mean'][-11:]==[0.]*11
+    assert c['feature_scale'][-11:]==[1.]*11
+    assert c['normalization_mode']=='actor_fit_std_goal_units_v1'
