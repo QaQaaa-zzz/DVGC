@@ -1,0 +1,5 @@
+{
+  "maximum_interactions": 1600,
+  "panel_sha256": "4223c1d94fdab2d9178342bb5c3135f93b83c12bd51ba5abeee02acbe2f15387",
+  "training_checkpoint_transition": 32000
+}

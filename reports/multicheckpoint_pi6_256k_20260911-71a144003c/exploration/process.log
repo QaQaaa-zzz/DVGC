@@ -1,0 +1,12 @@
+[comparison] acquire pi_6
+[comparison] acquire late_checkpoint_128000
+[comparison] acquire late_checkpoint_192000
+[comparison] acquire late_checkpoint_256000
+{
+  "status": "completed",
+  "charged_interactions": 24916,
+  "wall_seconds": 1232.0735195550005,
+  "plan_sha256": "943cce3d93c45540dead680ba7803019cf48784b7ec69b2cabcebf98972ad40e",
+  "training_transitions": 0,
+  "final_test_used": false
+}

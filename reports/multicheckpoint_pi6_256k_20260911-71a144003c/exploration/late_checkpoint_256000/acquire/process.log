@@ -1,0 +1,311 @@
+Warp 1.11.0 initialized:
+   CUDA Toolkit 12.9, Driver 13.0
+   Devices:
+     "cpu"      : "x86_64"
+     "cuda:0"   : "NVIDIA GeForce RTX 4090 D" (24 GiB, sm_89, mempool enabled)
+   Kernel cache:
+     /home/qy/.cache/warp/1.11.0
+Warp DeprecationWarning: The symbol `warp.types.warp_type_to_np_dtype` will soon be removed from the public API. It can still be accessed from `warp._src.types.warp_type_to_np_dtype` but might be changed or removed without notice.
+[frontier-shard] warp_memory_maintenance=enabled device=cuda:0 step_interval=64 mempool_supported=True mempool_enabled=True
+Module mujoco.mjx.warp.ffi edde159 load on device 'cuda:0' took 0.37 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.smooth 9d8c26b load on device 'cuda:0' took 6.17 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.collision_driver de6dc98 load on device 'cuda:0' took 0.22 ms  (cached)
+Module _nxn_broadphase__locals__kernel_36c68517 36c6851 load on device 'cuda:0' took 0.26 ms  (cached)
+Module ccd_kernel_builder__locals__ccd_kernel_30387cff 30387cf load on device 'cuda:0' took 0.80 ms  (cached)
+Module ccd_kernel_builder__locals__ccd_kernel_9855f04a 9855f04 load on device 'cuda:0' took 0.81 ms  (cached)
+Module ccd_kernel_builder__locals__ccd_kernel_927e4d05 927e4d0 load on device 'cuda:0' took 0.80 ms  (cached)
+Module ccd_kernel_builder__locals__ccd_kernel_2b578852 2b57885 load on device 'cuda:0' took 1.08 ms  (cached)
+Module _primitive_narrowphase__locals__primitive_narrowphase_1bf02ad9 91f16af load on device 'cuda:0' took 0.46 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.constraint 2aca1f5 load on device 'cuda:0' took 1.33 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.sensor a2c5a56 load on device 'cuda:0' took 1.41 ms  (cached)
+Module _actuator_velocity__locals__actuator_velocity_12383059 73552e7 load on device 'cuda:0' took 0.26 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.passive 45a1f12 load on device 'cuda:0' took 0.53 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.forward 3875c24 load on device 'cuda:0' took 0.55 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.support b7a7a89 load on device 'cuda:0' took 0.26 ms  (cached)
+Module _tile_cholesky_factorize_solve__locals__cholesky_factorize_solve_be145701 4a8f693 load on device 'cuda:0' took 15.50 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.solver 8800eae load on device 'cuda:0' took 0.78 ms  (cached)
+Module solve_init_jaref__locals__kernel_0e441fb9 0e441fb load on device 'cuda:0' took 0.21 ms  (cached)
+Module mul_m_dense__locals___mul_m_dense_a919c505 a919c50 load on device 'cuda:0' took 0.26 ms  (cached)
+Module update_constraint_gauss_cost__locals__kernel_9283aa6c 9283aa6 load on device 'cuda:0' took 0.19 ms  (cached)
+Module update_gradient_JTDAJ_dense_tiled__locals__kernel_926cd55c 4b2efd1 load on device 'cuda:0' took 29.37 ms  (cached)
+Module update_gradient_cholesky__locals__kernel_0282940c df4c2e1 load on device 'cuda:0' took 18.80 ms  (cached)
+Module linesearch_iterative__locals__kernel_d5d90354 cc0622d load on device 'cuda:0' took 0.51 ms  (cached)
+[causal] trajectory=dense_v1_train_x2.90_family0/variant_0 saved=29 total_candidates=29 interactions=48
+[causal] trajectory=dense_v1_train_x2.90_family0/variant_5 saved=29 total_candidates=58 interactions=97
+[causal] trajectory=dense_v1_train_x2.90_family1/variant_1 saved=28 total_candidates=86 interactions=146
+[causal] trajectory=dense_v1_train_x2.90_family1/variant_6 saved=32 total_candidates=118 interactions=199
+[causal] trajectory=dense_v1_train_x2.90_family2/variant_2 saved=29 total_candidates=147 interactions=249
+[causal] trajectory=dense_v1_train_x2.90_family2/variant_7 saved=27 total_candidates=174 interactions=293
+[causal] trajectory=dense_v1_train_x2.90_family3/variant_3 saved=32 total_candidates=206 interactions=341
+[causal] trajectory=dense_v1_train_x2.90_family4/variant_4 saved=31 total_candidates=237 interactions=391
+{
+  "schema": "jit_unified_boundary_catalog_v1",
+  "status": "completed",
+  "artifact_role": "unlabeled_policy_conditioned_frontier_candidates",
+  "split": "train",
+  "iteration": 7,
+  "policy_name": "late_checkpoint_256000",
+  "policy_actor_sha256": "32e9f05529b5dc9eb8f4f9e14548bbc05446c458bc45bcdbd6c4d15c12b3bf5d",
+  "policy_payload_sha256": "858e35133a08df954339200e2e1931400292f6ee9a86c2c05da70df4ccd5c707",
+  "frozen_unified_manifest_sha256": "939a929bc6f23e4876a39ec9e9ebb0bd45e0f1c364bd44f4bd7dd1dad19f51c6",
+  "source_tube_manifest_sha256": "0220342253aae21aaa63bdef7f75c73f3480dbc971851e87156e0af01b57aa11",
+  "protocol_sha256": "346988473dc986043c37a1269f3a1eb1ccd88f325f7d454218120756e503fdda",
+  "acquisition_mode": "jump_start_connected_causal_rollout_v1",
+  "jump_start_reachability_proven": true,
+  "natural_start_connected": false,
+  "rsi_used_for_reachability": false,
+  "jump_start_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+  "attempted_candidate_count": 8,
+  "candidate_count": 237,
+  "phase_attempted_candidate_counts": {
+    "upstream": 8,
+    "downstream": 0
+  },
+  "phase_candidate_counts": {
+    "upstream": 166,
+    "downstream": 71
+  },
+  "environment_interactions": 391,
+  "maximum_environment_interactions": 4000,
+  "exclusion_counts": {},
+  "training_transitions": 0,
+  "expert_switching_used": false,
+  "test_data_used": false,
+  "validation_data_used": false,
+  "final_evaluation_data_used": false,
+  "claim_boundary": {
+    "unlabeled_acquisition_only": true,
+    "tube_expansion_claim": false,
+    "jce_jel_claim": false,
+    "certified_safe_set_claim": false
+  },
+  "trajectory_receipts": [
+    {
+      "trajectory_id": "dense_v1_train_x2.90_family0/variant_0",
+      "proposer": "late_checkpoint_256000",
+      "anchor_x_m": 2.9,
+      "strength": 0.15,
+      "direction": {
+        "action_dimension": 0,
+        "action_name": "steer",
+        "sign": -1,
+        "basis_vector": [
+          -1.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "environment_interactions": 48,
+      "candidate_count": 29,
+      "stop_reason": "first_valid_landing",
+      "perturbation_started": true,
+      "final_x_m": 4.244548320770264,
+      "peak_root_z_m": 0.7101179361343384,
+      "peak_sampling": "control_step_states_including_reset",
+      "physical_failure": false,
+      "timeout": false,
+      "valid_landing": true,
+      "truncated": false
+    },
+    {
+      "trajectory_id": "dense_v1_train_x2.90_family0/variant_5",
+      "proposer": "late_checkpoint_256000",
+      "anchor_x_m": 2.9,
+      "strength": 0.15,
+      "direction": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "sign": 1,
+        "basis_vector": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      "environment_interactions": 49,
+      "candidate_count": 29,
+      "stop_reason": "first_valid_landing",
+      "perturbation_started": true,
+      "final_x_m": 4.248969078063965,
+      "peak_root_z_m": 0.600366473197937,
+      "peak_sampling": "control_step_states_including_reset",
+      "physical_failure": false,
+      "timeout": false,
+      "valid_landing": true,
+      "truncated": false
+    },
+    {
+      "trajectory_id": "dense_v1_train_x2.90_family1/variant_1",
+      "proposer": "late_checkpoint_256000",
+      "anchor_x_m": 2.9,
+      "strength": 0.15,
+      "direction": {
+        "action_dimension": 0,
+        "action_name": "steer",
+        "sign": 1,
+        "basis_vector": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "environment_interactions": 49,
+      "candidate_count": 28,
+      "stop_reason": "first_valid_landing",
+      "perturbation_started": true,
+      "final_x_m": 4.195572376251221,
+      "peak_root_z_m": 0.7289969325065613,
+      "peak_sampling": "control_step_states_including_reset",
+      "physical_failure": false,
+      "timeout": false,
+      "valid_landing": true,
+      "truncated": false
+    },
+    {
+      "trajectory_id": "dense_v1_train_x2.90_family1/variant_6",
+      "proposer": "late_checkpoint_256000",
+      "anchor_x_m": 2.9,
+      "strength": 0.15,
+      "direction": {
+        "action_dimension": 3,
+        "action_name": "knee",
+        "sign": -1,
+        "basis_vector": [
+          0.0,
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      "environment_interactions": 53,
+      "candidate_count": 32,
+      "stop_reason": "first_valid_landing",
+      "perturbation_started": true,
+      "final_x_m": 4.397408485412598,
+      "peak_root_z_m": 0.8648351430892944,
+      "peak_sampling": "control_step_states_including_reset",
+      "physical_failure": false,
+      "timeout": false,
+      "valid_landing": true,
+      "truncated": false
+    },
+    {
+      "trajectory_id": "dense_v1_train_x2.90_family2/variant_2",
+      "proposer": "late_checkpoint_256000",
+      "anchor_x_m": 2.9,
+      "strength": 0.15,
+      "direction": {
+        "action_dimension": 1,
+        "action_name": "rear_wheel_drive",
+        "sign": -1,
+        "basis_vector": [
+          0.0,
+          -1.0,
+          0.0,
+          0.0
+        ]
+      },
+      "environment_interactions": 50,
+      "candidate_count": 29,
+      "stop_reason": "first_valid_landing",
+      "perturbation_started": true,
+      "final_x_m": 4.240171909332275,
+      "peak_root_z_m": 0.6889011859893799,
+      "peak_sampling": "control_step_states_including_reset",
+      "physical_failure": false,
+      "timeout": false,
+      "valid_landing": true,
+      "truncated": false
+    },
+    {
+      "trajectory_id": "dense_v1_train_x2.90_family2/variant_7",
+      "proposer": "late_checkpoint_256000",
+      "anchor_x_m": 2.9,
+      "strength": 0.15,
+      "direction": {
+        "action_dimension": 3,
+        "action_name": "knee",
+        "sign": 1,
+        "basis_vector": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      "environment_interactions": 44,
+      "candidate_count": 27,
+      "stop_reason": "first_valid_landing",
+      "perturbation_started": true,
+      "final_x_m": 4.1086907386779785,
+      "peak_root_z_m": 0.5333384871482849,
+      "peak_sampling": "control_step_states_including_reset",
+      "physical_failure": false,
+      "timeout": false,
+      "valid_landing": true,
+      "truncated": false
+    },
+    {
+      "trajectory_id": "dense_v1_train_x2.90_family3/variant_3",
+      "proposer": "late_checkpoint_256000",
+      "anchor_x_m": 2.9,
+      "strength": 0.15,
+      "direction": {
+        "action_dimension": 1,
+        "action_name": "rear_wheel_drive",
+        "sign": 1,
+        "basis_vector": [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ]
+      },
+      "environment_interactions": 48,
+      "candidate_count": 32,
+      "stop_reason": "first_valid_landing",
+      "perturbation_started": true,
+      "final_x_m": 4.384036064147949,
+      "peak_root_z_m": 0.7615886330604553,
+      "peak_sampling": "control_step_states_including_reset",
+      "physical_failure": false,
+      "timeout": false,
+      "valid_landing": true,
+      "truncated": false
+    },
+    {
+      "trajectory_id": "dense_v1_train_x2.90_family4/variant_4",
+      "proposer": "late_checkpoint_256000",
+      "anchor_x_m": 2.9,
+      "strength": 0.15,
+      "direction": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "sign": -1,
+        "basis_vector": [
+          0.0,
+          0.0,
+          -1.0,
+          0.0
+        ]
+      },
+      "environment_interactions": 50,
+      "candidate_count": 31,
+      "stop_reason": "first_valid_landing",
+      "perturbation_started": true,
+      "final_x_m": 4.333560466766357,
+      "peak_root_z_m": 0.653529167175293,
+      "peak_sampling": "control_step_states_including_reset",
+      "physical_failure": false,
+      "timeout": false,
+      "valid_landing": true,
+      "truncated": false
+    }
+  ],
+  "trajectory_stop_counts": {
+    "first_valid_landing": 8
+  }
+}

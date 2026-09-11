@@ -1,0 +1,271 @@
+{
+  "acquisition_mode": "jump_start_connected_causal_rollout_v1",
+  "artifact_role": "unlabeled_policy_conditioned_frontier_candidates",
+  "attempted_candidate_count": 8,
+  "candidate_count": 205,
+  "claim_boundary": {
+    "certified_safe_set_claim": false,
+    "jce_jel_claim": false,
+    "tube_expansion_claim": false,
+    "unlabeled_acquisition_only": true
+  },
+  "environment_interactions": 365,
+  "exclusion_counts": {},
+  "expert_switching_used": false,
+  "final_evaluation_data_used": false,
+  "frozen_unified_manifest_sha256": "de2c90a70a2342f891f1445e2bad6690813e35f7aafc142dd90ffcdc50a3a414",
+  "iteration": 6,
+  "jump_start_reachability_proven": true,
+  "jump_start_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+  "maximum_environment_interactions": 4000,
+  "natural_start_connected": false,
+  "phase_attempted_candidate_counts": {
+    "downstream": 0,
+    "upstream": 8
+  },
+  "phase_candidate_counts": {
+    "downstream": 62,
+    "upstream": 143
+  },
+  "policy_actor_sha256": "946c23d5199f1d30e4fef799fd7a4b54d271c626a305877a0fa3e45430d3c5b1",
+  "policy_name": "pi_6",
+  "policy_payload_sha256": "5550494092b73b57cd9adec0aa632a15342fd7fb23af68355f4ab741e49d920d",
+  "protocol_sha256": "88fa682259bf0cf773f037645f6970da32b2510789eeba52014334d733d1fa83",
+  "rsi_used_for_reachability": false,
+  "schema": "jit_unified_boundary_catalog_v1",
+  "source_tube_manifest_sha256": "0220342253aae21aaa63bdef7f75c73f3480dbc971851e87156e0af01b57aa11",
+  "split": "train",
+  "status": "completed",
+  "test_data_used": false,
+  "training_transitions": 0,
+  "trajectory_receipts": [
+    {
+      "anchor_x_m": 2.9,
+      "candidate_count": 25,
+      "direction": {
+        "action_dimension": 0,
+        "action_name": "steer",
+        "basis_vector": [
+          -1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "sign": -1
+      },
+      "environment_interactions": 44,
+      "final_x_m": 4.002654552459717,
+      "peak_root_z_m": 0.6123850345611572,
+      "peak_sampling": "control_step_states_including_reset",
+      "perturbation_started": true,
+      "physical_failure": false,
+      "proposer": "pi_6",
+      "stop_reason": "first_valid_landing",
+      "strength": 0.15,
+      "timeout": false,
+      "trajectory_id": "dense_v1_train_x2.90_family0/variant_0",
+      "truncated": false,
+      "valid_landing": true
+    },
+    {
+      "anchor_x_m": 2.9,
+      "candidate_count": 24,
+      "direction": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "sign": 1
+      },
+      "environment_interactions": 45,
+      "final_x_m": 3.9863436222076416,
+      "peak_root_z_m": 0.6643853783607483,
+      "peak_sampling": "control_step_states_including_reset",
+      "perturbation_started": true,
+      "physical_failure": false,
+      "proposer": "pi_6",
+      "stop_reason": "first_valid_landing",
+      "strength": 0.15,
+      "timeout": false,
+      "trajectory_id": "dense_v1_train_x2.90_family0/variant_5",
+      "truncated": false,
+      "valid_landing": true
+    },
+    {
+      "anchor_x_m": 2.9,
+      "candidate_count": 25,
+      "direction": {
+        "action_dimension": 0,
+        "action_name": "steer",
+        "basis_vector": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "sign": 1
+      },
+      "environment_interactions": 44,
+      "final_x_m": 4.038473129272461,
+      "peak_root_z_m": 0.567512571811676,
+      "peak_sampling": "control_step_states_including_reset",
+      "perturbation_started": true,
+      "physical_failure": false,
+      "proposer": "pi_6",
+      "stop_reason": "first_valid_landing",
+      "strength": 0.15,
+      "timeout": false,
+      "trajectory_id": "dense_v1_train_x2.90_family1/variant_1",
+      "truncated": false,
+      "valid_landing": true
+    },
+    {
+      "anchor_x_m": 2.9,
+      "candidate_count": 28,
+      "direction": {
+        "action_dimension": 3,
+        "action_name": "knee",
+        "basis_vector": [
+          0.0,
+          0.0,
+          0.0,
+          -1.0
+        ],
+        "sign": -1
+      },
+      "environment_interactions": 51,
+      "final_x_m": 4.190244197845459,
+      "peak_root_z_m": 0.6216743588447571,
+      "peak_sampling": "control_step_states_including_reset",
+      "perturbation_started": true,
+      "physical_failure": false,
+      "proposer": "pi_6",
+      "stop_reason": "first_valid_landing",
+      "strength": 0.15,
+      "timeout": false,
+      "trajectory_id": "dense_v1_train_x2.90_family1/variant_6",
+      "truncated": false,
+      "valid_landing": true
+    },
+    {
+      "anchor_x_m": 2.9,
+      "candidate_count": 27,
+      "direction": {
+        "action_dimension": 1,
+        "action_name": "rear_wheel_drive",
+        "basis_vector": [
+          0.0,
+          -1.0,
+          0.0,
+          0.0
+        ],
+        "sign": -1
+      },
+      "environment_interactions": 45,
+      "final_x_m": 4.147572994232178,
+      "peak_root_z_m": 0.6064174175262451,
+      "peak_sampling": "control_step_states_including_reset",
+      "perturbation_started": true,
+      "physical_failure": false,
+      "proposer": "pi_6",
+      "stop_reason": "first_valid_landing",
+      "strength": 0.15,
+      "timeout": false,
+      "trajectory_id": "dense_v1_train_x2.90_family2/variant_2",
+      "truncated": false,
+      "valid_landing": true
+    },
+    {
+      "anchor_x_m": 2.9,
+      "candidate_count": 24,
+      "direction": {
+        "action_dimension": 3,
+        "action_name": "knee",
+        "basis_vector": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "sign": 1
+      },
+      "environment_interactions": 45,
+      "final_x_m": 3.981083869934082,
+      "peak_root_z_m": 0.5219053030014038,
+      "peak_sampling": "control_step_states_including_reset",
+      "perturbation_started": true,
+      "physical_failure": false,
+      "proposer": "pi_6",
+      "stop_reason": "first_valid_landing",
+      "strength": 0.15,
+      "timeout": false,
+      "trajectory_id": "dense_v1_train_x2.90_family2/variant_7",
+      "truncated": false,
+      "valid_landing": true
+    },
+    {
+      "anchor_x_m": 2.9,
+      "candidate_count": 28,
+      "direction": {
+        "action_dimension": 1,
+        "action_name": "rear_wheel_drive",
+        "basis_vector": [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        "sign": 1
+      },
+      "environment_interactions": 48,
+      "final_x_m": 4.154273509979248,
+      "peak_root_z_m": 0.5655173659324646,
+      "peak_sampling": "control_step_states_including_reset",
+      "perturbation_started": true,
+      "physical_failure": false,
+      "proposer": "pi_6",
+      "stop_reason": "first_valid_landing",
+      "strength": 0.15,
+      "timeout": false,
+      "trajectory_id": "dense_v1_train_x2.90_family3/variant_3",
+      "truncated": false,
+      "valid_landing": true
+    },
+    {
+      "anchor_x_m": 2.9,
+      "candidate_count": 24,
+      "direction": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          -1.0,
+          0.0
+        ],
+        "sign": -1
+      },
+      "environment_interactions": 43,
+      "final_x_m": 4.009781837463379,
+      "peak_root_z_m": 0.5361171960830688,
+      "peak_sampling": "control_step_states_including_reset",
+      "perturbation_started": true,
+      "physical_failure": false,
+      "proposer": "pi_6",
+      "stop_reason": "first_valid_landing",
+      "strength": 0.15,
+      "timeout": false,
+      "trajectory_id": "dense_v1_train_x2.90_family4/variant_4",
+      "truncated": false,
+      "valid_landing": true
+    }
+  ],
+  "trajectory_stop_counts": {
+    "first_valid_landing": 8
+  },
+  "validation_data_used": false
+}

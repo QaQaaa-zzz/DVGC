@@ -1,0 +1,8 @@
+{
+  "training_and_panels": 256392,
+  "exploration": 24916,
+  "total_new_interactions": 281308,
+  "exploration_status": "completed",
+  "historical_bootstrap_excluded": true,
+  "training_prefix_surcharges_not_summed": true
+}

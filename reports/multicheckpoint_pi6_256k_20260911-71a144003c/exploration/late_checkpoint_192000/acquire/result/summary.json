@@ -1,0 +1,272 @@
+{
+  "acquisition_mode": "jump_start_connected_causal_rollout_v1",
+  "artifact_role": "unlabeled_policy_conditioned_frontier_candidates",
+  "attempted_candidate_count": 8,
+  "candidate_count": 202,
+  "claim_boundary": {
+    "certified_safe_set_claim": false,
+    "jce_jel_claim": false,
+    "tube_expansion_claim": false,
+    "unlabeled_acquisition_only": true
+  },
+  "environment_interactions": 322,
+  "exclusion_counts": {},
+  "expert_switching_used": false,
+  "final_evaluation_data_used": false,
+  "frozen_unified_manifest_sha256": "eeab665d76806760c82f032e13b3e08c412e4aa5c5aec61135297214e0b81b22",
+  "iteration": 7,
+  "jump_start_reachability_proven": true,
+  "jump_start_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+  "maximum_environment_interactions": 4000,
+  "natural_start_connected": false,
+  "phase_attempted_candidate_counts": {
+    "downstream": 0,
+    "upstream": 8
+  },
+  "phase_candidate_counts": {
+    "downstream": 48,
+    "upstream": 154
+  },
+  "policy_actor_sha256": "18ea5c6f9fe39ecaab9d23ba42c44c3c89aaed19d0026c7725154a0c0835c4ed",
+  "policy_name": "late_checkpoint_192000",
+  "policy_payload_sha256": "973da5f82b1955e34c4d649b62fcad23280b734ad41b9797a2b6fe5e37b6841e",
+  "protocol_sha256": "efa03a6679e98d1ff2b14997d141213d26eae80c2cf2c3665f534a5e76a1aa5e",
+  "rsi_used_for_reachability": false,
+  "schema": "jit_unified_boundary_catalog_v1",
+  "source_tube_manifest_sha256": "0220342253aae21aaa63bdef7f75c73f3480dbc971851e87156e0af01b57aa11",
+  "split": "train",
+  "status": "completed",
+  "test_data_used": false,
+  "training_transitions": 0,
+  "trajectory_receipts": [
+    {
+      "anchor_x_m": 2.9,
+      "candidate_count": 25,
+      "direction": {
+        "action_dimension": 0,
+        "action_name": "steer",
+        "basis_vector": [
+          -1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "sign": -1
+      },
+      "environment_interactions": 39,
+      "final_x_m": 4.0091681480407715,
+      "peak_root_z_m": 0.5514013171195984,
+      "peak_sampling": "control_step_states_including_reset",
+      "perturbation_started": true,
+      "physical_failure": false,
+      "proposer": "late_checkpoint_192000",
+      "stop_reason": "first_valid_landing",
+      "strength": 0.15,
+      "timeout": false,
+      "trajectory_id": "dense_v1_train_x2.90_family0/variant_0",
+      "truncated": false,
+      "valid_landing": true
+    },
+    {
+      "anchor_x_m": 2.9,
+      "candidate_count": 28,
+      "direction": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "sign": 1
+      },
+      "environment_interactions": 45,
+      "final_x_m": 4.172691345214844,
+      "peak_root_z_m": 0.6376103162765503,
+      "peak_sampling": "control_step_states_including_reset",
+      "perturbation_started": true,
+      "physical_failure": false,
+      "proposer": "late_checkpoint_192000",
+      "stop_reason": "first_valid_landing",
+      "strength": 0.15,
+      "timeout": false,
+      "trajectory_id": "dense_v1_train_x2.90_family0/variant_5",
+      "truncated": false,
+      "valid_landing": true
+    },
+    {
+      "anchor_x_m": 2.9,
+      "candidate_count": 23,
+      "direction": {
+        "action_dimension": 0,
+        "action_name": "steer",
+        "basis_vector": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "sign": 1
+      },
+      "environment_interactions": 37,
+      "final_x_m": 3.9497673511505127,
+      "peak_root_z_m": 0.565036416053772,
+      "peak_sampling": "control_step_states_including_reset",
+      "perturbation_started": true,
+      "physical_failure": false,
+      "proposer": "late_checkpoint_192000",
+      "stop_reason": "first_valid_landing",
+      "strength": 0.15,
+      "timeout": false,
+      "trajectory_id": "dense_v1_train_x2.90_family1/variant_1",
+      "truncated": false,
+      "valid_landing": true
+    },
+    {
+      "anchor_x_m": 2.9,
+      "candidate_count": 24,
+      "direction": {
+        "action_dimension": 3,
+        "action_name": "knee",
+        "basis_vector": [
+          0.0,
+          0.0,
+          0.0,
+          -1.0
+        ],
+        "sign": -1
+      },
+      "environment_interactions": 38,
+      "final_x_m": 3.9907891750335693,
+      "peak_root_z_m": 0.561263918876648,
+      "peak_sampling": "control_step_states_including_reset",
+      "perturbation_started": true,
+      "physical_failure": false,
+      "proposer": "late_checkpoint_192000",
+      "stop_reason": "first_valid_landing",
+      "strength": 0.15,
+      "timeout": false,
+      "trajectory_id": "dense_v1_train_x2.90_family1/variant_6",
+      "truncated": false,
+      "valid_landing": true
+    },
+    {
+      "anchor_x_m": 2.9,
+      "candidate_count": 22,
+      "direction": {
+        "action_dimension": 1,
+        "action_name": "rear_wheel_drive",
+        "basis_vector": [
+          0.0,
+          -1.0,
+          0.0,
+          0.0
+        ],
+        "sign": -1
+      },
+      "environment_interactions": 37,
+      "final_x_m": 3.9505932331085205,
+      "peak_root_z_m": 0.5568888187408447,
+      "peak_sampling": "control_step_states_including_reset",
+      "perturbation_started": true,
+      "physical_failure": false,
+      "proposer": "late_checkpoint_192000",
+      "stop_reason": "first_valid_landing",
+      "strength": 0.15,
+      "timeout": false,
+      "trajectory_id": "dense_v1_train_x2.90_family2/variant_2",
+      "truncated": false,
+      "valid_landing": true
+    },
+    {
+      "anchor_x_m": 2.9,
+      "candidate_count": 28,
+      "direction": {
+        "action_dimension": 3,
+        "action_name": "knee",
+        "basis_vector": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "sign": 1
+      },
+      "environment_interactions": 46,
+      "final_x_m": 4.1524128913879395,
+      "peak_root_z_m": 0.4369240999221802,
+      "peak_sampling": "control_step_states_including_reset",
+      "perturbation_started": true,
+      "physical_failure": true,
+      "proposer": "late_checkpoint_192000",
+      "stop_reason": "task_terminated_before_landing",
+      "strength": 0.15,
+      "timeout": false,
+      "trajectory_id": "dense_v1_train_x2.90_family2/variant_7",
+      "truncated": false,
+      "valid_landing": false
+    },
+    {
+      "anchor_x_m": 2.9,
+      "candidate_count": 26,
+      "direction": {
+        "action_dimension": 1,
+        "action_name": "rear_wheel_drive",
+        "basis_vector": [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        "sign": 1
+      },
+      "environment_interactions": 41,
+      "final_x_m": 4.098721981048584,
+      "peak_root_z_m": 0.618194043636322,
+      "peak_sampling": "control_step_states_including_reset",
+      "perturbation_started": true,
+      "physical_failure": false,
+      "proposer": "late_checkpoint_192000",
+      "stop_reason": "first_valid_landing",
+      "strength": 0.15,
+      "timeout": false,
+      "trajectory_id": "dense_v1_train_x2.90_family3/variant_3",
+      "truncated": false,
+      "valid_landing": true
+    },
+    {
+      "anchor_x_m": 2.9,
+      "candidate_count": 26,
+      "direction": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          -1.0,
+          0.0
+        ],
+        "sign": -1
+      },
+      "environment_interactions": 39,
+      "final_x_m": 4.0970659255981445,
+      "peak_root_z_m": 0.6232711672782898,
+      "peak_sampling": "control_step_states_including_reset",
+      "perturbation_started": true,
+      "physical_failure": false,
+      "proposer": "late_checkpoint_192000",
+      "stop_reason": "first_valid_landing",
+      "strength": 0.15,
+      "timeout": false,
+      "trajectory_id": "dense_v1_train_x2.90_family4/variant_4",
+      "truncated": false,
+      "valid_landing": true
+    }
+  ],
+  "trajectory_stop_counts": {
+    "first_valid_landing": 7,
+    "task_terminated_before_landing": 1
+  },
+  "validation_data_used": false
+}

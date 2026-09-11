@@ -1,0 +1,13 @@
+{
+  "automatic_extension": false,
+  "charge_scope": "actual completed PPO plus validated panels",
+  "charged_interactions": 256392,
+  "end_utc": "2026-09-11T05:51:18.001523+00:00",
+  "error": null,
+  "final_test_used": false,
+  "maximum_total_interactions": 264000,
+  "returncode": 0,
+  "start_utc": "2026-09-11T05:49:53.940451+00:00",
+  "status": "completed",
+  "wall_seconds": 84.06107889299892
+}

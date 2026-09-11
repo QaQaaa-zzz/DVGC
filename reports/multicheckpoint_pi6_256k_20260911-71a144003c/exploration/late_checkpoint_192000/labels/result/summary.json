@@ -1,0 +1,59 @@
+{
+  "attempts": [
+    {
+      "charged_interactions": 2685,
+      "path": "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/exploration/late_checkpoint_192000/labels/result/evaluator_000/chunk_4497d32c822ad4ae57132a3462f6a0630d5d4a7863915c4ee08634841c4fee9f/attempt_0000",
+      "status": "completed"
+    },
+    {
+      "charged_interactions": 1192,
+      "path": "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/exploration/late_checkpoint_192000/labels/result/evaluator_000/chunk_0f84caa88d99ee4aedba8f9bd20bd444329ffb2c6102798dddb695a72ba640df/attempt_0000",
+      "status": "completed"
+    },
+    {
+      "charged_interactions": 2102,
+      "path": "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/exploration/late_checkpoint_192000/labels/result/evaluator_001/chunk_873f6e2e6fb66d1323a6ca549bf75ff8ed8e822ae05bee16ff0c82fcd2292f19/attempt_0000",
+      "status": "completed"
+    },
+    {
+      "charged_interactions": 1120,
+      "path": "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/exploration/late_checkpoint_192000/labels/result/evaluator_002/chunk_dd8037d4f3b9ffc1811844d1251373dce561b71ef87c821c96a2d2c9a32bacc1/attempt_0000",
+      "status": "completed"
+    },
+    {
+      "charged_interactions": 457,
+      "path": "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/exploration/late_checkpoint_192000/labels/result/evaluator_003/chunk_bdc20de4dd21ac45a42dcbf6edb89140d3786f92fd0df1c6217bd01236347fc6/attempt_0000",
+      "status": "completed"
+    },
+    {
+      "charged_interactions": 441,
+      "path": "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/exploration/late_checkpoint_192000/labels/result/evaluator_004/chunk_bdc20de4dd21ac45a42dcbf6edb89140d3786f92fd0df1c6217bd01236347fc6/attempt_0000",
+      "status": "completed"
+    },
+    {
+      "charged_interactions": 445,
+      "path": "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/exploration/late_checkpoint_192000/labels/result/evaluator_005/chunk_bdc20de4dd21ac45a42dcbf6edb89140d3786f92fd0df1c6217bd01236347fc6/attempt_0000",
+      "status": "completed"
+    },
+    {
+      "charged_interactions": 427,
+      "path": "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/exploration/late_checkpoint_192000/labels/result/evaluator_006/chunk_bf65b44c9996b809da0e55d8d8614253f277a7453ffa8cdf97a05686f04c0cda/attempt_0000",
+      "status": "completed"
+    }
+  ],
+  "bank_sha256": "14e851634d4009e8a67e7d4dce60bf07e788ee237e4419b99bf7d464651c89f6",
+  "budget_exhausted": false,
+  "charged_interactions": 8869,
+  "complete_evaluator_matrix": false,
+  "execution_identity_error": null,
+  "final_test_used": false,
+  "index_sha256": "7390642748af63eb5d6529ef781b5bf5300b62b4f24afa95502422e86c59a29a",
+  "negative_count": 25,
+  "plan_sha256": "29f5a3c6d6b523bd96724f524469ff44bb041967972041a3c57d43f6a345053e",
+  "positive_count": 177,
+  "schema": "jit_first_success_witness_index_v1",
+  "status": "completed",
+  "training_transitions": 0,
+  "unknown_count": 0,
+  "wall_seconds": 420.3998724949997
+}

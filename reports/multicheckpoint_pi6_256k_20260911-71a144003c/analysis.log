@@ -1,0 +1,65 @@
+{
+  "automatic_extension": false,
+  "charge_scope": "actual completed PPO plus validated panels",
+  "charged_interactions": 256392,
+  "end_utc": "2026-09-11T05:51:18.001523+00:00",
+  "error": null,
+  "final_test_used": false,
+  "maximum_total_interactions": 264000,
+  "returncode": 0,
+  "start_utc": "2026-09-11T05:49:53.940451+00:00",
+  "status": "completed",
+  "wall_seconds": 84.06107889299892,
+  "panels": [
+    {
+      "training_transitions": 32000,
+      "successful": 4,
+      "count": 4,
+      "physical_failures": 0,
+      "panel_interactions": 74,
+      "panel_sha256": "4223c1d94fdab2d9178342bb5c3135f93b83c12bd51ba5abeee02acbe2f15387"
+    },
+    {
+      "training_transitions": 64000,
+      "successful": 4,
+      "count": 4,
+      "physical_failures": 0,
+      "panel_interactions": 75,
+      "panel_sha256": "4223c1d94fdab2d9178342bb5c3135f93b83c12bd51ba5abeee02acbe2f15387"
+    },
+    {
+      "training_transitions": 128000,
+      "successful": 4,
+      "count": 4,
+      "physical_failures": 0,
+      "panel_interactions": 77,
+      "panel_sha256": "4223c1d94fdab2d9178342bb5c3135f93b83c12bd51ba5abeee02acbe2f15387"
+    },
+    {
+      "training_transitions": 192000,
+      "successful": 4,
+      "count": 4,
+      "physical_failures": 0,
+      "panel_interactions": 81,
+      "panel_sha256": "4223c1d94fdab2d9178342bb5c3135f93b83c12bd51ba5abeee02acbe2f15387"
+    },
+    {
+      "training_transitions": 256000,
+      "successful": 4,
+      "count": 4,
+      "physical_failures": 0,
+      "panel_interactions": 85,
+      "panel_sha256": "4223c1d94fdab2d9178342bb5c3135f93b83c12bd51ba5abeee02acbe2f15387"
+    }
+  ],
+  "training_transitions": 256000,
+  "panel_interactions": 392,
+  "source_hashes": {
+    "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/training/pi6_multicheckpoint_256k_20260911/train_panels/transition_32000/report.json": "cb68f42ed679f6636f7ce887f3e9f67d154ccb4213b480d2b7ca7df15d213ae9",
+    "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/training/pi6_multicheckpoint_256k_20260911/train_panels/transition_64000/report.json": "92d66c8073c8e5f214688d97b46502465dd01ce1ebf4006fe527195c781684aa",
+    "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/training/pi6_multicheckpoint_256k_20260911/train_panels/transition_128000/report.json": "74e2b585d9726be30ce3a59e3aa1b2a6a740d1bb13774a3ee7be2e8c52ed42b4",
+    "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/training/pi6_multicheckpoint_256k_20260911/train_panels/transition_192000/report.json": "88610f33756307c2c4769fba179680debca84600e9269d8dc2cc098983e14393",
+    "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/training/pi6_multicheckpoint_256k_20260911/train_panels/transition_256000/report.json": "9ff65087ed421cb5560fb5ceac6c5d6fdcbd3418224b1bc5b59b599d136111f3"
+  },
+  "claim": "multi-checkpoint execution validated; no exploration gain or convergence claim"
+}

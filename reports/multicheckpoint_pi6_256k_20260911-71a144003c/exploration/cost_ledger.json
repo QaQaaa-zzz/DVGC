@@ -1,0 +1,50 @@
+[
+  {
+    "charged_interactions": 365,
+    "proposer": "pi_6",
+    "stage": "acquisition",
+    "status": "completed"
+  },
+  {
+    "charged_interactions": 3770,
+    "proposer": "pi_6",
+    "stage": "labels",
+    "status": "completed"
+  },
+  {
+    "charged_interactions": 337,
+    "proposer": "late_checkpoint_128000",
+    "stage": "acquisition",
+    "status": "completed"
+  },
+  {
+    "charged_interactions": 5622,
+    "proposer": "late_checkpoint_128000",
+    "stage": "labels",
+    "status": "completed"
+  },
+  {
+    "charged_interactions": 322,
+    "proposer": "late_checkpoint_192000",
+    "stage": "acquisition",
+    "status": "completed"
+  },
+  {
+    "charged_interactions": 8869,
+    "proposer": "late_checkpoint_192000",
+    "stage": "labels",
+    "status": "completed"
+  },
+  {
+    "charged_interactions": 391,
+    "proposer": "late_checkpoint_256000",
+    "stage": "acquisition",
+    "status": "completed"
+  },
+  {
+    "charged_interactions": 5240,
+    "proposer": "late_checkpoint_256000",
+    "stage": "labels",
+    "status": "completed"
+  }
+]

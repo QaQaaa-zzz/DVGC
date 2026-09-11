@@ -1,0 +1,158 @@
+Warp 1.11.0 initialized:
+   CUDA Toolkit 12.9, Driver 13.0
+   Devices:
+     "cpu"      : "x86_64"
+     "cuda:0"   : "NVIDIA GeForce RTX 4090 D" (24 GiB, sm_89, mempool enabled)
+   Kernel cache:
+     /home/qy/.cache/warp/1.11.0
+Warp DeprecationWarning: The symbol `warp.types.warp_type_to_np_dtype` will soon be removed from the public API. It can still be accessed from `warp._src.types.warp_type_to_np_dtype` but might be changed or removed without notice.
+[frontier-shard] warp_memory_maintenance=enabled device=cuda:0 step_interval=64 mempool_supported=True mempool_enabled=True
+Module mujoco.mjx.warp.ffi edde159 load on device 'cuda:0' took 0.36 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.smooth 9d8c26b load on device 'cuda:0' took 6.52 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.collision_driver de6dc98 load on device 'cuda:0' took 0.22 ms  (cached)
+Module _nxn_broadphase__locals__kernel_36c68517 36c6851 load on device 'cuda:0' took 0.24 ms  (cached)
+Module ccd_kernel_builder__locals__ccd_kernel_30387cff 30387cf load on device 'cuda:0' took 0.80 ms  (cached)
+Module ccd_kernel_builder__locals__ccd_kernel_9855f04a 9855f04 load on device 'cuda:0' took 0.80 ms  (cached)
+Module ccd_kernel_builder__locals__ccd_kernel_927e4d05 927e4d0 load on device 'cuda:0' took 0.81 ms  (cached)
+Module ccd_kernel_builder__locals__ccd_kernel_2b578852 2b57885 load on device 'cuda:0' took 1.50 ms  (cached)
+Module _primitive_narrowphase__locals__primitive_narrowphase_1bf02ad9 91f16af load on device 'cuda:0' took 0.44 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.constraint 2aca1f5 load on device 'cuda:0' took 1.44 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.sensor a2c5a56 load on device 'cuda:0' took 1.89 ms  (cached)
+Module _actuator_velocity__locals__actuator_velocity_12383059 73552e7 load on device 'cuda:0' took 0.26 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.passive 45a1f12 load on device 'cuda:0' took 0.57 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.forward 3875c24 load on device 'cuda:0' took 0.59 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.support b7a7a89 load on device 'cuda:0' took 0.26 ms  (cached)
+Module _tile_cholesky_factorize_solve__locals__cholesky_factorize_solve_be145701 4a8f693 load on device 'cuda:0' took 18.50 ms  (cached)
+Module mujoco.mjx.third_party.mujoco_warp._src.solver 8800eae load on device 'cuda:0' took 0.78 ms  (cached)
+Module solve_init_jaref__locals__kernel_0e441fb9 0e441fb load on device 'cuda:0' took 0.23 ms  (cached)
+Module mul_m_dense__locals___mul_m_dense_a919c505 a919c50 load on device 'cuda:0' took 0.26 ms  (cached)
+Module update_constraint_gauss_cost__locals__kernel_9283aa6c 9283aa6 load on device 'cuda:0' took 0.20 ms  (cached)
+Module update_gradient_JTDAJ_dense_tiled__locals__kernel_926cd55c 4b2efd1 load on device 'cuda:0' took 29.83 ms  (cached)
+Module update_gradient_cholesky__locals__kernel_0282940c df4c2e1 load on device 'cuda:0' took 18.36 ms  (cached)
+Module linesearch_iterative__locals__kernel_d5d90354 cc0622d load on device 'cuda:0' took 0.59 ms  (cached)
+[labels] completed=0/202 elapsed=7.0s backend=serial
+[labels] completed=25/202 elapsed=17.4s backend=serial
+[labels] completed=100/202 elapsed=41.9s backend=serial
+[labels] completed=125/202 elapsed=59.0s backend=serial
+{
+  "batch_size": 1,
+  "candidate_count": 78,
+  "candidate_start_index": 0,
+  "candidate_stop_index_exclusive": 202,
+  "device_batch_seconds": [],
+  "device_compile_seconds": [],
+  "elapsed_seconds": 77.12765100399702,
+  "environment_interactions": 2102,
+  "execution_backend": "serial",
+  "expert_switching_used": false,
+  "final_evaluation_data_used": false,
+  "inactive_lane_interactions": 0,
+  "labels_file_sha256": "25dc3f68057e6c4ba7787b87a7c1a8ae7464a0fee738b9c1a962bbfdde617b58",
+  "logical_candidate_count": 202,
+  "logical_protocol_sha256": "41cabff357ccf12c2bd1ed0af1eff65301d74cd570adc103f64df00293c10eb6",
+  "maximum_environment_interactions": 31200,
+  "negative_count": 63,
+  "outcome_counts": {
+    "airborne_physical_failure": 57,
+    "first_valid_landing": 15,
+    "task_failure_before_landing": 6
+  },
+  "phase_candidate_counts": {
+    "upstream": 78
+  },
+  "phase_positive_counts": {
+    "upstream": 15
+  },
+  "policy_key_scheme": "candidate_key=fold_in(PRNGKey(protocol_seed),global_candidate_index);action_key=fold_in(candidate_key,tick)",
+  "positive_count": 15,
+  "schema": "jit_unified_continuation_subset_v1",
+  "selected_candidate_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    6,
+    10,
+    11,
+    12,
+    13,
+    14,
+    25,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63,
+    64,
+    65,
+    77,
+    78,
+    79,
+    80,
+    83,
+    84,
+    85,
+    86,
+    87,
+    88,
+    89,
+    90,
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    108,
+    109,
+    110,
+    111,
+    112,
+    113,
+    123,
+    124,
+    125,
+    126,
+    127,
+    128,
+    129,
+    130,
+    131,
+    132,
+    133,
+    134,
+    135,
+    136,
+    137,
+    138,
+    139,
+    140,
+    141,
+    142,
+    143,
+    144,
+    145,
+    146,
+    147,
+    148,
+    149,
+    178,
+    180
+  ],
+  "shard_count": 1,
+  "shard_index": 0,
+  "snapshot_restore_seconds": 20.169281592003244,
+  "status": "completed_subset",
+  "test_data_used": false,
+  "timing_scope": "labeler only; caller records full process initialization and wall time",
+  "training_transitions": 0,
+  "useful_label_interactions": 2102,
+  "validation_data_used": false
+}

@@ -1,0 +1,50 @@
+{
+  "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/training/pi6_multicheckpoint_256k_20260911/checkpoints/transition_0/identity.json": {
+    "bytes": 1044,
+    "sha256": "0656385a9f370b4a615133de9280af8e68d2e5a26a83f59f0233a78a29e814f4"
+  },
+  "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/training/pi6_multicheckpoint_256k_20260911/checkpoints/transition_0/payload.pkl": {
+    "bytes": 1255275,
+    "sha256": "e03bae522b7e1bb1c166aa4a11b0938b270367e2794f87e0f1f77b45d8a0e00a"
+  },
+  "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/training/pi6_multicheckpoint_256k_20260911/checkpoints/transition_128000/identity.json": {
+    "bytes": 1049,
+    "sha256": "5f27fa63816c12f86e240637b837a75d96f87e88e8bd83bc1a3fc463cb0dab2f"
+  },
+  "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/training/pi6_multicheckpoint_256k_20260911/checkpoints/transition_128000/payload.pkl": {
+    "bytes": 1255278,
+    "sha256": "9121733ee72cd7258e219b21ede3d91fa5f59770330e5d59bc2ebd9329f3970d"
+  },
+  "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/training/pi6_multicheckpoint_256k_20260911/checkpoints/transition_192000/identity.json": {
+    "bytes": 1049,
+    "sha256": "4e8d0e147e88f9d4cc3efe183d5aeb6e2edab2e3ee5bc13faefe6b8416ddb4be"
+  },
+  "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/training/pi6_multicheckpoint_256k_20260911/checkpoints/transition_192000/payload.pkl": {
+    "bytes": 1255278,
+    "sha256": "973da5f82b1955e34c4d649b62fcad23280b734ad41b9797a2b6fe5e37b6841e"
+  },
+  "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/training/pi6_multicheckpoint_256k_20260911/checkpoints/transition_256000/identity.json": {
+    "bytes": 1049,
+    "sha256": "a21782d86aa24096b38fe2c6c044c6827b1c367a6b51bac19f0663156b5e2551"
+  },
+  "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/training/pi6_multicheckpoint_256k_20260911/checkpoints/transition_256000/payload.pkl": {
+    "bytes": 1255278,
+    "sha256": "858e35133a08df954339200e2e1931400292f6ee9a86c2c05da70df4ccd5c707"
+  },
+  "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/training/pi6_multicheckpoint_256k_20260911/checkpoints/transition_32000/identity.json": {
+    "bytes": 1048,
+    "sha256": "ad7cb64921105fd8d47895f1891e9e990004396cb18cbfa0b1be2b0aec1ff805"
+  },
+  "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/training/pi6_multicheckpoint_256k_20260911/checkpoints/transition_32000/payload.pkl": {
+    "bytes": 1255276,
+    "sha256": "4c9a24832efcf40926cfae439850285728eeed3dbe53be6ddad5b446e505c3be"
+  },
+  "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/training/pi6_multicheckpoint_256k_20260911/checkpoints/transition_64000/identity.json": {
+    "bytes": 1048,
+    "sha256": "40e7dfafa06ec2fd621cd859d75119a3ed8ca45645dedb3615a3b6f3ac38c88e"
+  },
+  "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/training/pi6_multicheckpoint_256k_20260911/checkpoints/transition_64000/payload.pkl": {
+    "bytes": 1255276,
+    "sha256": "191dae6af9438d7e698893e66c1d02d996506311643b9f03d8c2587217bcba74"
+  }
+}

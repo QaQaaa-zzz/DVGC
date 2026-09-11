@@ -1,0 +1,5 @@
+arm,completed_candidates,positive_candidates,negative_candidates,unknown_candidates,witnessed_root_cells,novel_root_cells,scope,acquisition_interactions,charged_interactions,training_surcharge,training_inclusive_interactions,upfront_exploration_overhead,candidate_label_interactions,exclusive_novel_root_cells,trajectory_count,clean_forward_landings,minimum_clean_forward_peak_root_z_m
+pi_6,205,205,0,0,204,134,full_actual_fixed_schedule,365,4135,0,4135,365,3770,134,8,8,0.5219053030014038
+late_checkpoint_128000,189,178,11,0,177,177,full_actual_fixed_schedule,337,5959,128226,134185,337,5622,177,8,6,0.6111782789230347
+late_checkpoint_192000,202,177,25,0,176,176,full_actual_fixed_schedule,322,9191,192307,201498,322,8869,176,8,7,0.5514013171195984
+late_checkpoint_256000,237,237,0,0,237,237,full_actual_fixed_schedule,391,5631,256392,262023,391,5240,237,8,8,0.5333384871482849

@@ -1,0 +1,7 @@
+{
+  "status": "length_pilot_complete",
+  "additional_length_sweeps": false,
+  "residual_data_audit": "/home/qy/DVGC/JIT/runs/engineering/residual_data_readiness_20260911/INDEX.md",
+  "next_implementation": "Explicit pre-action origin to downstream witness binding and grouped dataset export; residual fitting not yet run",
+  "final_test_used": false
+}

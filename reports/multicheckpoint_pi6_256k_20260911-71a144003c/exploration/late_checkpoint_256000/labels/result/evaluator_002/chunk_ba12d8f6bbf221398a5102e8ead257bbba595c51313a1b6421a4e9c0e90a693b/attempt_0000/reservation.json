@@ -1,0 +1,13 @@
+{
+  "candidate_indices": [
+    150,
+    151,
+    152,
+    161,
+    162,
+    163
+  ],
+  "evaluator": "pi_2",
+  "maximum_interactions": 2400,
+  "plan_sha256": "cfaa6e0a3d8d9cf17cb447d6f68030646bbd7601735b792700b2ec75f54e2343"
+}
