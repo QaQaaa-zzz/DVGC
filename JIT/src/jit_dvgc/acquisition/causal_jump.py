@@ -178,6 +178,27 @@ def validate_acquisition_policy_role(policy_record, *, evidence_mode, logical_ro
     raise ValueError("policy requires expansion authority or explicit TRAIN development probe")
 
 
+def _residual_action(artifact, observation, nominal, goal, state, active):
+    """Shared spatial gate; history advances even when the residual is disabled.
+
+    Acquisition requires slew >= 2 * amplitude, so setting delta to zero at the
+    spatial gate obeys the declared slew bound without an exception.
+    """
+    from ..residual_exploration import apply_residual, ExplorerState
+    if active:
+        return apply_residual(artifact['variables'], artifact['contract'],
+                              observation, nominal, goal, state)
+    history = state.history
+    if artifact['contract']['history_steps']:
+        history = jp.concatenate([history[1:], jp.asarray(observation)[None, :]])
+    return nominal, ExplorerState(history, jp.zeros(4))
+
+
+def _explorer_state_record(state):
+    return {'history': np.asarray(jax.device_get(state.history)).tolist(),
+            'previous_delta': np.asarray(jax.device_get(state.previous_delta)).tolist()}
+
+
 def collect_jump_start_connected_candidates(
     declared_anchors: Sequence[Mapping[str, Any]],
     output_dir: Path,
@@ -202,8 +223,15 @@ def collect_jump_start_connected_candidates(
     slice_spacing_m: float = 0.05,
     max_candidates_per_attempt: int = 64,
     sampling_max_x_m: float | None = None,
+    record_action_tape: bool = False,
+    residual_explorer: Path | None = None,
 ) -> dict[str, Any]:
     """Generate unlabeled jump-start-connected candidates around centerline x slices."""
+    if not isinstance(record_action_tape, bool):
+        raise ValueError("record_action_tape must be boolean")
+    if (record_action_tape or residual_explorer is not None) and (
+            not record_action_tape or sampling_mode != "trajectory_slices_v2" or logical_role != "train"):
+        raise ValueError("action tape/residual acquisition requires full recording and dense TRAIN mode")
     if sampling_mode not in {"single_target_v1", "trajectory_slices_v2"}:
         raise ValueError("unknown trajectory sampling mode")
     dense = sampling_mode == "trajectory_slices_v2"
@@ -221,6 +249,28 @@ def collect_jump_start_connected_candidates(
     validate_acquisition_policy_role(policy_record, evidence_mode=evidence_mode, logical_role=logical_role)
     if policy_record.get("xml_sha256") != env._bundle.xml_sha256:
         raise ValueError("causal Jump policy/runtime XML mismatch")
+
+    explorer = None
+    if residual_explorer is not None:
+        from ..residual_exploration import load_artifact, file_sha, reset_state
+        from ..action_tape import GOAL_NAMES
+        from ..constants import CTRL_DT
+        explorer = load_artifact(Path(residual_explorer))
+        contract = explorer['contract']
+        if frozen_manifest_sha256 not in {r['sha256'] for r in explorer['frozen_base_bank']}:
+            raise ValueError("residual explorer has unknown frozen base manifest")
+        if (contract['model_sha256'] != env._bundle.xml_sha256 or
+                contract['action_names'] != list(ACTION_ORDER) or contract['goal_names'] != GOAL_NAMES or
+                contract['control_dt'] != CTRL_DT or
+                contract.get('goal_contract') != 'exogenous fixed perturbation schedule; no future outcome features'):
+            raise ValueError("residual explorer model/action/goal/timing contract mismatch")
+        from ..residual_exploration import digest
+        source_root = Path(__file__).resolve().parents[1]
+        if contract['observation_contract_sha256'] != digest({name:file_sha(source_root/name) for name in ('observation.py','constants.py')}):
+            raise ValueError("residual explorer observation source contract mismatch")
+        if (contract['action_low'] != [-1.]*4 or contract['action_high'] != [1.]*4 or
+                np.any(np.asarray(contract['slew_limit']) < 2*np.asarray(contract['delta_limit']))):
+            raise ValueError("residual spatial gate requires canonical action bounds and slew >= 2 * delta_limit")
 
     centerline = load_nominal_jump_centerline(Path(nominal_centerline))
     original_x_max = float(centerline["effective_centerline_max_x_m"])
@@ -321,6 +371,17 @@ def collect_jump_start_connected_candidates(
     if sampling_max_x_m is not None:
         protocol.update(sampling_max_x_m=sample_x_max, original_centerline_max_x_m=original_x_max,
                         sampling_scope="real rollout until first landing/failure or declared guard; original reference unchanged")
+    if record_action_tape:
+        protocol.update(action_tape_anchors=[dict(anchor) for anchor in declared_anchors],
+                        record_action_tape=True, action_tape_schema="jit_causal_action_tape_v1",
+                        controller_mode="frozen_residual_spatial_window_v1" if explorer else "fixed_perturbation_v1")
+    if explorer is not None:
+        protocol.update(residual_explorer={'path':str(Path(residual_explorer).resolve()),
+            'sha256':file_sha(residual_explorer), 'explorer_sha256':explorer['explorer_sha256']},
+            residual_gate="shared fixed spatial window; history advances each tick; zero delta outside; slew >= twice amplitude")
+    if record_action_tape:
+        from ..action_tape import expected_action_tape_schedule
+        expected_action_tape_schedule(protocol)
     protocol_sha = _canonical_sha256(protocol)
 
     output = Path(output_dir)
@@ -414,6 +475,24 @@ def collect_jump_start_connected_candidates(
             effective_deltas: list[list[float]] = []
 
             trajectory_id = f"{anchor['parent_group_id']}/variant_{spec['ordinal']}"
+            tape_records = []
+            previous_requested = np.zeros(4, dtype=np.float32)
+            goal = [target_x, perturb_start_x, *direction['basis_vector'], strength]
+            explorer_state = reset_state(explorer['contract']) if explorer else None
+
+            def tape_identity(current):
+                # Terminal marker is not part of snapshot context identity. Capture
+                # final physical/controller context without changing rollout state.
+                captured = capture_unified_envelope_snapshot(
+                    current.replace(done=jp.asarray(False)) if _truth(current.done) else current,
+                    env=env, parent_trajectory=trajectory_id, parent_state_sha256=jump_start_sha,
+                    config_sha256=str(policy_record['formal_config_sha256']),
+                    policy_actor_sha256=str(policy_record['actor_sha256']),
+                    policy_payload_sha256=str(policy_record['payload_sha256']),
+                    policy_iteration=int(policy_record['iteration']))
+                return physical_state_sha256(captured), snapshot_context_sha256(captured), captured.episode_step
+
+            initial_identity = tape_identity(state) if record_action_tape else None
             captured_bins = set()
             saved_this_attempt = 0
             attempt_start_interactions = interactions
@@ -573,6 +652,30 @@ def collect_jump_start_connected_candidates(
                     action = nominal_array
                     nominal_prefix_ticks += 1
 
+                if record_action_tape:
+                    pre_state_sha, pre_context_sha, pre_tick = tape_identity(state)
+                    if pre_tick != tick:
+                        raise ValueError("action tape tick differs from actual episode step")
+                    observation = np.asarray(jax.device_get(state.obs['state'])).tolist()
+                    before_explorer = _explorer_state_record(explorer_state) if explorer else None
+                    if explorer:
+                        action, explorer_state = _residual_action(explorer, observation, nominal_array,
+                            goal, explorer_state, use_perturbation)
+                        action = np.asarray(jax.device_get(action), dtype=np.float32)
+                        requested_delta = np.asarray(jax.device_get(explorer_state.previous_delta))
+                    else:
+                        requested_delta = (np.asarray(direction['basis_vector'], dtype=np.float32)*np.float32(strength)
+                                           if use_perturbation else np.zeros(4, dtype=np.float32))
+                    tape_row = dict(tick=pre_tick, observation=observation,
+                        state_sha256=pre_state_sha, context_sha256=pre_context_sha,
+                        base_action=nominal_array.tolist(), applied_action=np.asarray(action).tolist(),
+                        requested_delta=requested_delta.tolist(), effective_delta=(np.asarray(action)-nominal_array).tolist(),
+                        previous_delta=previous_requested.tolist(),
+                        controller_history=before_explorer['history'] if explorer else [])
+                    if explorer:
+                        tape_row.update(explorer_state_before=before_explorer,
+                                        explorer_state_after=_explorer_state_record(explorer_state))
+                    previous_requested = requested_delta.copy()
                 state = step(state, action)
                 jax.block_until_ready(state)
                 interactions += 1
@@ -585,6 +688,12 @@ def collect_jump_start_connected_candidates(
                     rejected = "nonfinite"
                     if dense: raise ValueError("nonfinite acquisition is an engineering error, not a boundary failure")
                     break
+                if record_action_tape:
+                    post_sha, post_context, post_tick = tape_identity(state)
+                    if post_tick != tick+1:
+                        raise ValueError("action tape post-action episode step mismatch")
+                    tape_row.update(next_state_sha256=post_sha, next_context_sha256=post_context)
+                    tape_records.append(tape_row)
                 if _truth(state.info["expert_switching_used"]):
                     raise ValueError("causal Jump acquisition used expert switching")
 
@@ -632,6 +741,23 @@ def collect_jump_start_connected_candidates(
                     "timeout":_truth(state.info.get("timeout",False)),
                     "valid_landing":stop_reason=="first_valid_landing",
                     "truncated":stop_reason in {"sampling_x_guard","candidate_cap","forward_horizon_exhausted"}})
+                if record_action_tape:
+                    from ..action_tape import save_action_tape
+                    final_identity = tape_identity(state)
+                    tape_payload = dict(schema='jit_causal_action_tape_v1',protocol_sha256=protocol_sha,
+                        trajectory_id=trajectory_id,policy_actor_sha256=str(policy_record['actor_sha256']),
+                        policy_payload_sha256=str(policy_record['payload_sha256']),goal=goal,
+                        initial_state_sha256=initial_identity[0],initial_context_sha256=initial_identity[1],
+                        final_state_sha256=final_identity[0],final_context_sha256=final_identity[1],
+                        record_count=len(tape_records),environment_interactions=interactions-attempt_start_interactions,
+                        records=tape_records)
+                    if explorer:
+                        tape_payload.update(explorer_sha256=explorer['explorer_sha256'],
+                            delta_limit=explorer['contract']['delta_limit'],slew_limit=explorer['contract']['slew_limit'])
+                    relative_tape = Path('action_tapes') / f'trajectory_{attempt_index:06d}.json'
+                    tape_sha = save_action_tape(output / relative_tape, tape_payload)
+                    trajectory_receipts[-1]['lookback_m'] = lookback
+                    trajectory_receipts[-1]['action_tape'] = {'path':str(relative_tape),'sha256':tape_sha}
                 print(f"[causal] trajectory={trajectory_id} saved={saved_this_attempt} total_candidates={len(entries)} interactions={interactions}", flush=True)
                 continue
             if candidate_state is None:
@@ -689,6 +815,11 @@ def collect_jump_start_connected_candidates(
         },
         "entries": entries,
     }
+    if record_action_tape:
+        report.update(record_action_tape=True, action_tape_schema=protocol['action_tape_schema'],
+                      controller_mode=protocol['controller_mode'])
+    if explorer:
+        report['residual_explorer'] = protocol['residual_explorer']
     if dense:
         if sum(r["environment_interactions"] for r in trajectory_receipts) != interactions:
             raise ValueError("trajectory interaction ledger mismatch")

@@ -115,3 +115,25 @@ def test_witness_receipt_keeps_untested_unknown(tmp_path):
     index['entries'][0]['label']=0
     with pytest.raises(ValueError,match='witness'):
         comparison.validate_witness_receipt(index,plan,catalog,{}, {},tmp_path,1000)
+
+
+def test_alias_arms_resolve_same_base_with_distinct_controllers():
+    members={'pi_6':dict(roles=['proposer','evaluator'])}
+    spec=dict(proposers=['fixed','residual'],proposer_members={'fixed':'pi_6','residual':'pi_6'},residual_explorers={'residual':'/tmp/explorer.json'})
+    assert comparison.resolve_proposer_members(spec,members)=={'fixed':'pi_6','residual':'pi_6'}
+    for bad in [{}, {'fixed':'missing','residual':'pi_6'}]:
+        with pytest.raises(ValueError):comparison.resolve_proposer_members({**spec,'proposer_members':bad},members)
+    with pytest.raises(ValueError):comparison.resolve_proposer_members({**spec,'proposers':['../fixed','residual']},members)
+
+
+def test_acquisition_arm_override_preserves_shared_schedule():
+    spec=dict(bank='b',proposers=['fixed','residual'],proposer_members={'fixed':'pi_6','residual':'pi_6'},residual_explorers={'residual':'model'},acquisition={'strengths':[.15],'record_action_tape':True})
+    fixed=comparison.arm_acquisition(spec,'fixed',100)
+    learned=comparison.arm_acquisition(spec,'residual',100)
+    assert fixed==dict(bank='b',proposer='pi_6',interaction_ceiling=100,strengths=[.15],record_action_tape=True)
+    assert learned==dict(**fixed,residual_explorer='model')
+
+
+def test_default_arms_preserve_existing_acquisition():
+    spec=dict(bank='b',proposers=['a','b'],acquisition={'seed':1})
+    assert comparison.arm_acquisition(spec,'a',100)==dict(seed=1,bank='b',proposer='a',interaction_ceiling=100)

@@ -4,6 +4,7 @@ import csv
 import fcntl
 import math
 import os
+import re
 import signal
 import subprocess
 import sys
@@ -34,6 +35,29 @@ def schedule_bounds(template, anchors, evaluator_count):
                 label_ceiling=candidates*evaluator_count*400)
 
 
+def resolve_proposer_members(spec, members):
+    names=spec['proposers']
+    if (len(names)<2 or any(not isinstance(n,str) or n in {'.','..'} or not re.fullmatch(r'[A-Za-z0-9_.-]+',n) for n in names)
+        or len(set(names))!=len(names)):
+        raise ValueError('distinct safe comparison arm names required')
+    mapping=spec.get('proposer_members',{n:n for n in names})
+    if not isinstance(mapping,dict) or set(mapping)!=set(names) or any(
+        m not in members or 'proposer' not in members[m]['roles'] for m in mapping.values()):
+        raise ValueError('explicit complete arm-to-proposer mapping required')
+    explorers=spec.get('residual_explorers',{})
+    if not isinstance(explorers,dict) or not set(explorers)<=set(names) or any(not isinstance(p,str) or not p for p in explorers.values()):
+        raise ValueError('residual artifacts must bind declared comparison arms')
+    return mapping
+
+
+def arm_acquisition(spec, name, ceiling):
+    member=spec.get('proposer_members',{}).get(name,name)
+    acquisition={**spec['acquisition'],'bank':spec['bank'],'proposer':member,'interaction_ceiling':ceiling}
+    if name in spec.get('residual_explorers',{}):
+        acquisition['residual_explorer']=spec['residual_explorers'][name]
+    return acquisition
+
+
 def prepare(spec_path, output):
     from .probe_bank import load_probe_bank
     from .unified_policy_freeze import load_frozen_unified_manifest
@@ -44,11 +68,14 @@ def prepare(spec_path, output):
         if load_frozen_unified_manifest(Path(m['frozen_policy']))['policy']!=m['policy']:
             raise ValueError('bank member binding drift')
     names=spec['proposers'];order=spec['evaluator_order']
-    if len(names)<2 or len(set(names))!=len(names) or any(n not in members or 'proposer' not in members[n]['roles'] for n in names):
-        raise ValueError('distinct declared proposers required')
+    mapping=resolve_proposer_members(spec,members)
     if set(order)!={n for n,m in members.items() if 'evaluator' in m['roles']} or len(set(order))!=len(order):
         raise ValueError('complete distinct common evaluator order required')
     template=spec['acquisition']
+    if 'residual_explorer' in template:
+        raise ValueError('bind residual artifacts per arm, not in the shared acquisition template')
+    if spec.get('residual_explorers') and template.get('record_action_tape') is not True:
+        raise ValueError('learned residual comparisons require full action tapes')
     if template['role']!='train' or template['sampling_mode']!='trajectory_slices_v2' or template['slice_spacing_m']!=.05:
         raise ValueError('TRAIN real 5cm trajectory samples required')
     bounds=schedule_bounds(template,read(template['anchors']),len(order))
@@ -60,6 +87,12 @@ def prepare(spec_path, output):
         raise ValueError('explicit nonnegative incremental training costs required')
     inputs=[Path(spec_path),Path(spec['bank']),Path(spec['baseline_csv']),*(Path(template[k]) for k in ('anchors','start_contract','nominal_centerline'))]
     inputs += [Path(m['frozen_policy']) for m in members.values()]
+    for name,path in spec.get('residual_explorers',{}).items():
+        from .residual_exploration import load_artifact
+        artifact=load_artifact(Path(path));member=members[mapping[name]]
+        if member['frozen_file_sha256'] not in {b['sha256'] for b in artifact['frozen_base_bank']} or artifact['contract']['model_sha256']!=member['policy']['xml_sha256']:
+            raise ValueError('residual artifact base/model mismatch')
+        inputs.append(Path(path))
     plan=dict(schema='jit_checkpoint_discovery_plan_v1',spec=spec,bounds=bounds,
               maximum_total_interactions=len(names)*spec['per_arm_budget'],role='train',final_test_used=False,
               comparison_scope='matched schedule; conservative catalog-order equal-cost replay; no automatic promotion',
@@ -187,7 +220,8 @@ def _run(output,gpu):
     try:
         for name in spec['proposers']:
             verify_plan(output/'plan.json');arm=output/name;arm.mkdir()
-            acq={**spec['acquisition'],'bank':spec['bank'],'proposer':name,'interaction_ceiling':plan['bounds']['acquisition_ceiling']}
+            member=members[spec.get('proposer_members',{}).get(name,name)]
+            acq=arm_acquisition(spec,name,plan['bounds']['acquisition_ceiling'])
             write(arm/'acquisition_spec.json',acq)
             command=[sys.executable,str(cli),'acquire','--spec',str(arm/'acquisition_spec.json'),'--output',str(arm/'acquire/result')]
             reserved=plan['bounds']['acquisition_ceiling'];entry=dict(proposer=name,stage='acquisition',charged_interactions=reserved,status='reserved');ledger.append(entry);write(output/'cost_ledger.json',ledger)
@@ -197,7 +231,7 @@ def _run(output,gpu):
             verify_plan(output/'plan.json')
             catalog_path=arm/'acquire/result/catalog.json';catalog=read(catalog_path)
             if catalog['status']!='completed' or type(catalog['environment_interactions']) is not int or not 0<=catalog['environment_interactions']<=reserved: raise ValueError('acquisition accounting drift')
-            points=project_catalog(catalog_path,members[name]);write(arm/'projected.json',points)
+            points=project_catalog(catalog_path,member);write(arm/'projected.json',points)
             entry.update(charged_interactions=catalog['environment_interactions'],status='completed');write(output/'cost_ledger.json',ledger)
             witnesses=[];labelcost=[0]*len(points);label_charge=0
             if points:
@@ -217,7 +251,7 @@ def _run(output,gpu):
                         raise RuntimeError(error)
                 from .continuation.existence import load_plan as load_existence_plan
                 existence_plan,_=load_existence_plan(arm/'existence_plan.json')
-                labelcost=validate_witness_receipt(index,existence_plan,catalog,members,members[name],arm/'labels/result',remaining)
+                labelcost=validate_witness_receipt(index,existence_plan,catalog,members,member,arm/'labels/result',remaining)
                 label_charge=index['charged_interactions']
                 if not 0<=label_charge<=remaining:raise ValueError('label budget exceeded')
                 label_entry.update(charged_interactions=label_charge,status=index['status']);write(output/'cost_ledger.json',ledger)

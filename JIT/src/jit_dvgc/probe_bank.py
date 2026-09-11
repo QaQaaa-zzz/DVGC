@@ -106,6 +106,13 @@ def validate_probe_arrivals(path: Path, entries: list[dict], proposer: dict) -> 
     from .acquisition.causal_jump import validate_jump_start_reachability_payload
     from .unified_continuation_labels import validate_candidate_snapshot
     from .unified_envelope_snapshot import load_unified_envelope_snapshot
+    from .action_tape import validate_catalog_action_tapes, validate_tape_candidate_observation
+    from .evidence_integrity import read_verified_protocol
+    catalog = _read(path)
+    tapes = None
+    protocol_path = path.parent / 'protocol.json'
+    if protocol_path.exists() or catalog.get('record_action_tape') or catalog.get('residual_explorer'):
+        tapes = validate_catalog_action_tapes(path.parent, catalog, read_verified_protocol(protocol_path))
     seen = set()
     for row in entries:
         key = row["candidate_id"]
@@ -117,6 +124,8 @@ def validate_probe_arrivals(path: Path, entries: list[dict], proposer: dict) -> 
         _verify(provenance, "reachability_sha256")
         snapshot = load_unified_envelope_snapshot(path.parent / row["source_bank"] / row["snapshot"])
         validate_candidate_snapshot(snapshot, row, policy_record=proposer)
+        if tapes is not None:
+            validate_tape_candidate_observation(tapes[row["trajectory_id"]], row, snapshot)
 
 
 def prepare_probe_labels(bank_path: Path, catalogs: list[Path], output: Path,
@@ -358,4 +367,6 @@ def acquire_probe_catalog(spec_path: Path, output: Path) -> dict:
         sampling_mode=spec.get("sampling_mode", "single_target_v1"),
         slice_spacing_m=float(spec.get("slice_spacing_m", 0.05)),
         max_candidates_per_attempt=int(spec.get("max_candidates_per_attempt", 64)),
-        sampling_max_x_m=spec.get("sampling_max_x_m"))
+        sampling_max_x_m=spec.get("sampling_max_x_m"),
+        record_action_tape=spec.get("record_action_tape", False),
+        residual_explorer=Path(spec["residual_explorer"]) if spec.get("residual_explorer") is not None else None)

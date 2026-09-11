@@ -127,3 +127,105 @@ def test_declared_unit_scaling_does_not_amplify_unseen_directions(monkeypatch):
     c=built['contract'];assert c['feature_mean'][-11:]==[0.]*11
     assert c['feature_scale'][-11:]==[1.]*11
     assert c['normalization_mode']=='actor_fit_std_goal_units_v1'
+
+
+def tape_fixture():
+    rows,witnesses,points,_=fixture()
+    records=[]
+    for t in range(4):
+        records.append(dict(tick=t,observation=[float(t),2.],state_sha256=str(t)*64,
+            context_sha256=str(t+4)*64,next_state_sha256=str(t+1)*64,
+            next_context_sha256=str(t+5)*64,base_action=[0.]*4,
+            applied_action=[.1,0.,0.,0.],requested_delta=[.1,0.,0.,0.],
+            effective_delta=[.1,0.,0.,0.],previous_delta=[0.]*4 if t==0 else [.1,0.,0.,0.],controller_history=[]))
+    tape=dict(protocol_sha256='a'*64,trajectory_id='t',goal=[2.9,2.75,1.,0.,0.,0.,.1],records=records,tape_sha256='f'*64)
+    return rows,witnesses,points,tape
+
+
+def test_complete_tape_credits_initial_action_and_all_raw_actions():
+    from jit_dvgc import residual_dataset as rd
+    r,w,p,t=tape_fixture()
+    pairs,stats=rd.link_tape_action_pairs(r,w,p,{'t':t},{'0'},'base','endpoint',condition_group='condition')
+    assert len(pairs)==4 and stats['raw_actions']==4
+    assert pairs[0]['action_origin']['tick']==0
+    assert 'candidate_index' not in pairs[0]['action_origin']
+    assert pairs[0]['witness_origin']['tick']==2
+    assert pairs[0]['previous_delta']==[0.]*4
+    assert pairs[-1]['witness_origin']['tick']==4
+    assert all(x['condition_group']=='condition' for x in pairs)
+
+
+@pytest.mark.parametrize('change',['state','prefix','goal','unknown'])
+def test_tape_join_rejects_drift_and_never_credits_unknown(change):
+    from jit_dvgc import residual_dataset as rd
+    r,w,p,t=tape_fixture()
+    if change=='state':r[0]['state_sha256']='e'*64
+    if change=='prefix':r[0]['perturbation']['nominal_actions'][0]=[.5]*4
+    if change=='goal':t['goal'][0]=3.0
+    if change=='unknown':
+        for item in w:item.update(label=None,witness_status='unknown')
+        pairs,stats=rd.link_tape_action_pairs(r,w,p,{'t':t},set(),'base','endpoint',condition_group='condition')
+        assert pairs==[] and stats['no_later_novel_witness']==4
+    else:
+        with pytest.raises(ValueError):
+            rd.link_tape_action_pairs(r,w,p,{'t':t},set(),'base','endpoint',condition_group='condition')
+
+
+def comparison_fixture(root):
+    from jit_dvgc import residual_dataset as rd
+    rows=[]
+    for axis in range(4):
+        for sign in (-1,1):
+            basis=[0.]*4;basis[axis]=float(sign)
+            rows.append(dict(trajectory_group=f't{axis}{sign}',condition_group=str(root),
+                observation=[1. if str(root).endswith('fit') else 100.],base_action=[0.]*4,
+                goal=[2.9 if str(root).endswith('fit') else 3.0,2.75,*basis,.1],
+                target_delta=[x*.1 for x in basis],previous_delta=[0.]*4))
+    return rows,{},set(),{'model_sha256':'a'*64,'physical_cell_schema_sha256':'b'*64},[],set()
+
+
+def test_explicit_conditions_keep_all_signed_channels_and_fit_only_scaling(tmp_path,monkeypatch):
+    from jit_dvgc import residual_dataset as rd
+    monkeypatch.setattr(rd,'_checked_comparison',lambda root,**kw:comparison_fixture(root))
+    spec=dict(comparison_partitions={'fit':[str(tmp_path/'fit')],'development':[str(tmp_path/'dev')]},
+        require_action_tapes=True,delta_limit=[.15]*4,slew_limit=[.3]*4,normalization_mode='actor_fit_std_goal_units_v1')
+    built=rd.build_export(spec)
+    assert len(built['partitions']['fit'])==8
+    assert not set(built['split']['fit']) & set(built['split']['development'])
+    assert built['contract']['feature_mean'][0]==1.
+    assert built['channel_diagnostics']['development']['knee']['negative']==1
+    spec['comparison_partitions']['development']=spec['comparison_partitions']['fit']
+    with pytest.raises(ValueError,match='disjoint'):
+        rd.build_export(spec)
+
+
+def test_partition_rejects_missing_signed_channel(tmp_path,monkeypatch):
+    from jit_dvgc import residual_dataset as rd
+    def checked(root,**kw):
+        values=list(comparison_fixture(root));values[0]=values[0][:-1];return values
+    monkeypatch.setattr(rd,'_checked_comparison',checked)
+    with pytest.raises(ValueError,match='signed.*channel|channel.*coverage'):
+        rd.build_export(dict(comparison_partitions={'fit':[str(tmp_path/'fit')],'development':[str(tmp_path/'dev')]},
+            require_action_tapes=True,delta_limit=[.15]*4,slew_limit=[.3]*4))
+
+
+def test_tape_export_preserves_file_binding_and_counts_excluded_channels():
+    from jit_dvgc import residual_dataset as rd
+    r,w,p,t=tape_fixture();t['source_binding']={'path':'/tape.json','sha256':'e'*64}
+    pairs,stats=rd.link_tape_action_pairs(r,w,p,{'t':t},{'0','1','2','3'},'base','endpoint',condition_group='condition')
+    assert not pairs
+    assert stats['channels']['steer']['positive']==dict(raw_actions=4,exported_actions=0,no_later_novel_witness=4)
+    pairs,_=rd.link_tape_action_pairs(r,w,p,{'t':t},set(),'base','endpoint',condition_group='condition')
+    assert pairs[0]['action_origin']['action_tape']==t['source_binding']
+
+
+def test_same_physical_condition_cannot_cross_comparison_roots(tmp_path,monkeypatch):
+    from jit_dvgc import residual_dataset as rd
+    def checked(root,**kw):
+        values=comparison_fixture(root)
+        for row in values[0]:row['goal'][0]=2.9
+        return values
+    monkeypatch.setattr(rd,'_checked_comparison',checked)
+    with pytest.raises(ValueError,match='conditions.*disjoint'):
+        rd.build_export(dict(comparison_partitions={'fit':[str(tmp_path/'fit')],'development':[str(tmp_path/'dev')]},
+            require_action_tapes=True,delta_limit=[.15]*4,slew_limit=[.3]*4))
