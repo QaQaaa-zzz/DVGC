@@ -1,3 +1,5 @@
+> Completed in production, reviewed 2026-09-11: both rounds and pi_5/pi_6 training finished. The command below is historical, not the current next run. See [current handoff](CODEX_HANDOFF_20260911.md) for results and next implementation priorities.
+
 # All-proposer autonomous campaign
 
 The pi_2/pi_4 retrospective control completed: exploration-only matched budget 69,078 yielded 513 versus 685 novel seed-relative root cells. With completed training charged, pi_4 has not repaid its cost at the smaller matched budget. Lowest successful control-step peak root height was 0.606813 m versus 0.516082 m. These are observations, not global limits or independent replications.
