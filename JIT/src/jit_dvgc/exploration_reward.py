@@ -178,3 +178,48 @@ def arrival_reward_batch(ledger, candidates, *, shape, expected_policy_sha256):
             raise ValueError('arrival reward requires real forward provenance')
     return _candidate_reward_batch(ledger, candidates, shape=shape,
         expected_policy_sha256=expected_policy_sha256, arrival=True)
+
+
+def trajectory_reward_batch(ledger, data, episodes, *, expected_policy_sha256, weights):
+    """Full real-arrival novelty plus explicit physical-failure and delta costs.
+
+    Candidate export caps do not affect learning. Inactive simulator padding never
+    earns reward or penalty; each episode pays failure once. This is provisional
+    exploration reward, not an envelope admission rule or a future-learnability label.
+    """
+    if ledger.get('policy_sha256') != expected_policy_sha256:
+        raise ValueError('source policy identity mismatch')
+    if set(weights) != {'novelty','physical_failure','residual_energy'} or any(
+        type(v) not in (int,float) or not np.isfinite(v) or v<0 for v in weights.values()):
+        raise ValueError('finite nonnegative explicit reward weights required')
+    mask=np.asarray(data['mask'],bool)
+    if mask.ndim!=2 or len(episodes)!=mask.shape[1]:raise ValueError('episode shape mismatch')
+    finite=np.asarray(data['finite'],bool);failure=np.asarray(data['physical_failure'],bool)
+    terminal=np.asarray(data['terminal'],bool);delta=np.asarray(data['normalized_delta'])
+    if finite.shape!=mask.shape or failure.shape!=mask.shape or terminal.shape!=mask.shape or delta.shape!=mask.shape+(4,):
+        raise ValueError('rollout reward shapes differ')
+    if np.any(mask&~finite) or not np.isfinite(delta[mask]).all():raise ValueError('nonfinite active rollout')
+    seen=_cells(ledger['cells']);visits={}
+    novelty=np.zeros(mask.shape);penalty=np.zeros(mask.shape)
+    for e,episode in enumerate(episodes):
+        local=set()
+        for tick in np.flatnonzero(mask[:,e]):
+            if terminal[tick,e] or failure[tick,e]:continue
+            cell=episode['cells'][tick]
+            if cell not in seen and cell not in local:
+                visits.setdefault(cell,[]).append((int(tick),e));local.add(cell)
+        failed=np.flatnonzero(mask[:,e]&failure[:,e])
+        if len(failed):penalty[failed[0],e]=-weights['physical_failure']
+    for occurrences in visits.values():
+        for tick,e in occurrences:novelty[tick,e]+=weights['novelty']/len(occurrences)
+    energy=np.zeros(mask.shape)
+    energy[mask]=-weights['residual_energy']*np.mean(delta[mask]**2,axis=-1)
+    parts=dict(novelty=novelty,physical_failure=penalty,residual_energy=energy)
+    updated=dict(policy_sha256=expected_policy_sha256,cells=sorted(seen|set(visits)))
+    evidence=dict(schema='jit_full_trajectory_quality_reward_v1',envelope_admission=False,
+        policy_sha256=expected_policy_sha256,weights=weights,ledger_before_sha256=_hash(ledger),
+        ledger_after_sha256=_hash(updated),novel_cells=sorted(visits),novel_cell_count=len(visits),
+        reward_assignment='first_occurrence_per_episode_shared_per_new_cell',
+        component_sums={k:float(v.sum()) for k,v in parts.items()},total_reward=float(sum(parts.values()).sum()),
+        candidate_cap_affects_reward=False,physical_failure_count=int(np.sum(np.any(mask&failure,axis=0))))
+    return sum(parts.values()),updated,evidence,parts

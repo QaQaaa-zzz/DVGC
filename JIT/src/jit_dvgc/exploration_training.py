@@ -99,7 +99,8 @@ def run(spec_path,output):
     from .handoff_bank import pytree_sha256
     from flax import serialization
     from .exploration_network import make_exploration_network_factory,initialize_residual_actor,compose_residual_action,validate_residual_delta_limit
-    from .exploration_reward import continuation_reward_batch,arrival_reward_batch
+    from .exploration_reward import continuation_reward_batch,arrival_reward_batch,trajectory_reward_batch
+    from .exploration_process import append_update,export_process
     from .exploration_continuation import snapshot_arrays,snapshot_from_arrays,FrozenSuffixEvaluator
     from .unified_envelope_snapshot import physical_state_sha256,snapshot_context_sha256
     from .evidence_integrity import canonical_sha256
@@ -119,11 +120,13 @@ def run(spec_path,output):
     for k in ['delta_limit','max_candidates_per_episode','candidate_min_x','candidate_max_x','candidate_spacing','evaluator_order','suffix_horizon','suffix_budget']:
         if k not in spec:raise ValueError('missing residual/suffix contract: '+k)
     limits=validate_residual_delta_limit(spec['delta_limit'])
-    arrival_mode=spec.get('reward_mode','witnessed_novelty_v1')=='arrival_novelty_v1'
+    full_reward=spec.get('reward_mode')=='trajectory_quality_v1'
+    arrival_mode=spec.get('reward_mode','witnessed_novelty_v1') in ('arrival_novelty_v1','trajectory_quality_v1')
     random_control=spec.get('controller_mode','learned_residual')=='fixed_random'
-    if spec.get('reward_mode','witnessed_novelty_v1') not in ('witnessed_novelty_v1','arrival_novelty_v1'):raise ValueError('unknown reward mode')
+    if spec.get('reward_mode','witnessed_novelty_v1') not in ('witnessed_novelty_v1','arrival_novelty_v1','trajectory_quality_v1'):raise ValueError('unknown reward mode')
     if spec.get('controller_mode','learned_residual') not in ('learned_residual','fixed_random'):raise ValueError('unknown controller mode')
     if spec.get('candidate_selection','first_bins') not in ('first_bins','phase_stratified_v1'):raise ValueError('unknown candidate selection')
+    if full_reward and (set(spec.get('reward_weights',{}))!={'novelty','physical_failure','residual_energy'} or any(type(v) not in (int,float) or not np.isfinite(v) or v<0 for v in spec['reward_weights'].values())):raise ValueError('explicit finite nonnegative reward weights required')
     if arrival_mode and spec['suffix_budget']!=0:raise ValueError('arrival mode defers suffix evaluation to separately budgeted stage')
     if type(spec['max_candidates_per_episode']) is not int or spec['max_candidates_per_episode']<=0 or not 0.01<=spec['candidate_spacing']<=0.1 or not 2.5<=spec['candidate_min_x']<spec['candidate_max_x']<=8.:raise ValueError('invalid candidate sampling budget')
     if any(k not in spec for k in required):raise ValueError('incomplete declared training configuration')
@@ -150,7 +153,8 @@ def run(spec_path,output):
         for p,sha in {**sources,**inputs}.items():
             if _sha(p)!=sha:raise ValueError('training source/input drift: '+p)
     def status(phase,**kw):_write(output/'status.json',dict(phase=phase,wall_seconds=time.monotonic()-start,**kw))
-    charged=0;active_total=0;history=[];suffix=None
+    charged=0;active_total=0;history=[];suffix=None;update_index=0
+    _write(output/'hyperparameters.json',dict(spec=spec,actor_input='privileged_state106 including three-frame history',actor_hidden_layers=[256,256,256],activation='swish',output='four bounded residual actions',critic_hidden_layers=[256,256,256],base_policy_training=False,base_policy_loss=None,optimizer='Adam with global gradient clipping',loss_definition='actor_loss + value_coefficient * critic_loss - entropy_coefficient * entropy',reward_mode=spec.get('reward_mode'),reward_component_units='novel cells; one failure event per episode; mean normalized delta squared per active step',task_reward_used_for_explorer=False))
     try:
         status('building_runtime')
         if jax.default_backend()!='gpu':raise RuntimeError('GPU backend required for declared simulation stage')
@@ -166,6 +170,7 @@ def run(spec_path,output):
         rng,akey=jax.random.split(rng)
         params={'policy':initialize_residual_actor(net,akey),'value':net.value_network.init(vkey)}
         frozen_base_sha=pytree_sha256(payload.actor_params)
+        _write(output/'network_inventory.json',dict(residual_actor=dict(trainable=not random_control,parameters=sum(x.size for x in jax.tree.leaves(params['policy'])),process='optimizer_updates.jsonl:actor_loss'),exploration_critic=dict(trainable=not random_control,parameters=sum(x.size for x in jax.tree.leaves(params['value'])),process='optimizer_updates.jsonl:critic_loss'),base_actor=dict(trainable=False,sha256=frozen_base_sha,checkpoint=record['checkpoint']),base_critic=dict(trainable=False,sha256=record['critic_sha256'],telemetry='trajectory NPZ base_critic_value / base_critic_value_after_action'),hyperparameters='hyperparameters.json'))
         suffix=FrozenSuffixEvaluator(spec['bank'],spec['evaluator_order'],spec['suffix_horizon'],output/'suffixes',spec['suffix_budget'])
         suffix_cache={}
         current_residual_checkpoint=None
@@ -193,8 +198,9 @@ def run(spec_path,output):
                 finite=jp.all(jp.isfinite(nxt.data.qpos),-1)&jp.all(jp.isfinite(nxt.data.qvel),-1)&jp.all(jp.isfinite(nxt.obs['privileged_state']),-1)&jp.all(jp.isfinite(action),-1)
                 finite=finite&~nxt.info['parallel_capacity_exceeded']
                 terminal=nxt.done.astype(bool)|~finite
-                observed=dict(base_critic_value=base_critic_value,observation=state.obs['privileged_state'],base_action=base_action,normalized_delta=normalized_delta,requested_delta=requested_delta,effective_delta=effective_delta,action=action,raw_action=raw,log_prob=distribution.log_prob(logits,raw),value=value,mask=alive,qpos=nxt.data.qpos,qvel=nxt.data.qvel,phase=nxt.info['active_phase'],success=nxt.info['success'],physical_failure=nxt.info['physical_failure'],finite=finite,terminal=terminal,end_code=nxt.info['end_code'])
+                observed=dict(task_reward=nxt.reward,base_critic_value_after_action=net.value_network.apply(normalizer,payload.critic_params,nxt.obs),base_critic_value=base_critic_value,observation=state.obs['privileged_state'],base_action=base_action,normalized_delta=normalized_delta,requested_delta=requested_delta,effective_delta=effective_delta,action=action,raw_action=raw,log_prob=distribution.log_prob(logits,raw),value=value,mask=alive,qpos=nxt.data.qpos,qvel=nxt.data.qvel,phase=nxt.info['active_phase'],success=nxt.info['success'],physical_failure=nxt.info['physical_failure'],finite=finite,terminal=terminal,end_code=nxt.info['end_code'])
                 observed.update({'snap/'+k:v for k,v in snapshot_arrays(nxt).items()})
+                observed.update({'task_component/'+k:v for k,v in nxt.metrics.items() if k.startswith('reward/')})
                 # Reset inactive worlds to the fixed start before their next padded
                 # simulator slot; padding never contributes gradients or coverage.
                 keep=alive&~terminal
@@ -214,10 +220,13 @@ def run(spec_path,output):
                 vloss=.5*jp.sum(mask*(value-batch['return'])**2)/denom
                 entropy=jp.sum(mask*distribution.entropy(logits,key))/denom
                 total=policy+spec['value_coefficient']*vloss-spec['entropy_coefficient']*entropy
-                return total,jp.array([policy,vloss,entropy])
+                logratio=logp-batch['log_prob']
+                approximate_kl=jp.sum(mask*((ratio-1)-logratio))/denom
+                clip_fraction=jp.sum(mask*(jp.abs(ratio-1)>spec['clip']))/denom
+                return total,jp.array([policy,vloss,entropy,approximate_kl,clip_fraction])
             (lossval,parts),grads=jax.value_and_grad(loss,has_aux=True)(params)
             updates,optstate=optimizer.update(grads,optstate,params)
-            return optax.apply_updates(params,updates),optstate,jp.concatenate([jp.array([lossval]),parts])
+            return optax.apply_updates(params,updates),optstate,jp.concatenate([jp.array([lossval]),parts,jp.array([optax.global_norm(grads)])])
         def rollout(label,deterministic):
             nonlocal rng,charged,active_total
             verify();status('rollout_'+label,charged_interactions=charged+suffix.charged_interactions,forward_interactions=charged,suffix_interactions=suffix.charged_interactions)
@@ -274,6 +283,10 @@ def run(spec_path,output):
                     _write(output/(label+'_candidates.json'),candidates)
                     if result['label'] is None and not arrival_mode:raise RuntimeError('unknown suffix result retained; no negative conversion or PPO update')
             _write(output/(label+'_candidates.json'),candidates)
+            if full_reward:
+                rewards,next_ledger,evidence,parts=trajectory_reward_batch(ledger,data,episodes,expected_policy_sha256=record['actor_sha256'],weights=spec['reward_weights'])
+                np.savez_compressed(output/(label+'_reward_components.npz'),**parts,total=rewards,mask=data['mask'],task_reward=data['task_reward'],**{k:v for k,v in data.items() if k.startswith('task_component/')})
+                return rewards,next_ledger,evidence
             return (arrival_reward_batch if arrival_mode else continuation_reward_batch)(ledger,candidates,shape=data['mask'].shape,expected_policy_sha256=record['actor_sha256'])
         def checkpoint(label):
             nonlocal current_residual_checkpoint
@@ -305,15 +318,20 @@ def run(spec_path,output):
                     ix=order[lo:lo+mb];actual=len(ix);ix=np.pad(ix,(0,mb-actual),mode='wrap')
                     mini={k:jp.asarray(v[ix]) for k,v in batch.items()};mini['weight']=jp.asarray(np.arange(mb)<actual,dtype=jp.float32)
                     rng,key=jax.random.split(rng);params,optstate,loss=update(params,optstate,mini,key)
-                    losses.append(np.asarray(loss))
+                    losses.append(np.asarray(loss));update_index+=1
+                    named=dict(zip(('total_loss','actor_loss','critic_loss','entropy','approximate_kl','clip_fraction','gradient_norm'),map(float,np.asarray(loss))))
+                    append_update(output,dict(update=update_index,batch=iteration,epoch=epoch,minibatch_start=lo,valid_samples=actual,learning_rate=spec['learning_rate'],**named))
             if not np.isfinite(losses).all() or not all(np.isfinite(np.asarray(x)).all() for x in jax.tree.leaves(params)):raise ValueError('nonfinite PPO update')
-            row=dict(batch=iteration,new_cells=float(np.sum(rewards)),cumulative_cells=len(ledger['cells']),successes=sum(e['success'] and not e['physical_failure'] and e['completed'] and e['finite'] for e in episodes),episodes=count,active_interactions=receipt['active_interactions'],charged_interactions=charged+suffix.charged_interactions,suffix_interactions=suffix.charged_interactions,mean_losses=np.mean(losses,axis=0).tolist() if losses else [],controller_mode=spec.get('controller_mode','learned_residual'),reward_mode=spec.get('reward_mode','witnessed_novelty_v1'),optimizer_updates=len(losses),wall_seconds=time.monotonic()-start)
-            history.append(row);_write(output/'training_metrics.json',history);print(json.dumps(row),flush=True)
+            row=dict(batch=iteration,new_cells=evidence['novel_cell_count'],cumulative_cells=len(ledger['cells']),successes=sum(e['success'] and not e['physical_failure'] and e['completed'] and e['finite'] for e in episodes),episodes=count,active_interactions=receipt['active_interactions'],charged_interactions=charged+suffix.charged_interactions,suffix_interactions=suffix.charged_interactions,mean_losses=np.mean(losses,axis=0).tolist() if losses else [],controller_mode=spec.get('controller_mode','learned_residual'),reward_mode=spec.get('reward_mode','witnessed_novelty_v1'),optimizer_updates=len(losses),wall_seconds=time.monotonic()-start)
+            row.update(total_reward=float(rewards.sum()),reward_components=evidence.get('component_sums',{'novelty':float(rewards.sum()),'physical_failure':0.,'residual_energy':0.}),loss_components=dict(zip(('total_loss','actor_loss','critic_loss','entropy','approximate_kl','clip_fraction','gradient_norm'),np.mean(losses,axis=0).tolist())) if losses else {},cumulative_optimizer_updates=update_index,task_reward_total=float(data['task_reward'][mask].sum()),task_reward_components={k:float(v[mask].sum()) for k,v in data.items() if k.startswith('task_component/')},physical_failure_episodes=sum(e['physical_failure'] for e in episodes))
+            history.append(row);export_process(output,history);_write(output/'training_metrics.json',history);print(json.dumps(row),flush=True)
             checkpoint(label)
         data,episodes,receipt=rollout('final',not random_control)
         diagnostic_credits,_,evidence=candidate_rewards('final',data,episodes,ledger)
         _write(output/'final_diagnostic_reward.json',evidence)
-        verify();status('completed',charged_interactions=charged+suffix.charged_interactions,forward_interactions=charged,suffix_interactions=suffix.charged_interactions,base_actor_unchanged=pytree_sha256(payload.actor_params)==frozen_base_sha,active_interactions=active_total,padding_interactions=charged-active_total,training_scheduled_interactions=count*horizon*spec['batches'],final_successes=sum(e['success'] and not e['physical_failure'] and e['completed'] and e['finite'] for e in episodes),initial_baseline_cells=len(json.loads((output/'baseline.json').read_text())['cells']),training_new_cells=sum(x['new_cells'] for x in history),final_diagnostic_new_cells=float(np.sum(diagnostic_credits)),independent_repetitions=False,final_test_used=False)
+        export_process(output,history,plots=True)
+        verify();status('completed',charged_interactions=charged+suffix.charged_interactions,forward_interactions=charged,suffix_interactions=suffix.charged_interactions,base_actor_unchanged=pytree_sha256(payload.actor_params)==frozen_base_sha,active_interactions=active_total,padding_interactions=charged-active_total,training_scheduled_interactions=count*horizon*spec['batches'],final_successes=sum(e['success'] and not e['physical_failure'] and e['completed'] and e['finite'] for e in episodes),initial_baseline_cells=len(json.loads((output/'baseline.json').read_text())['cells']),training_new_cells=sum(x['new_cells'] for x in history),final_diagnostic_new_cells=evidence['novel_cell_count'],independent_repetitions=False,final_test_used=False)
     except BaseException as exc:
+        export_process(output,history,plots=True)
         status('error',error=f'{type(exc).__name__}: {exc}',charged_interactions=charged+(suffix.charged_interactions if suffix is not None else 0),forward_interactions=charged,suffix_interactions=suffix.charged_interactions if suffix is not None else 0,active_interactions=active_total,no_automatic_retry=True)
         raise

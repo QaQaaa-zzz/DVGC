@@ -66,3 +66,9 @@
 - [稿件、控制框图和来源哈希](paper/README.md)；[下一步](JIT_TRAINING_ROADMAP.md)。
 
 已核验报告分支 `origin/agent/jit-run-reports` 的最新提交为 `6121da9`（review-bf486f2945），其时间与内容早于本地最新 pilot。本地完整工件是本页最新结果的直接依据。最终 TEST/JCE/JEL 未开启；本次文档制作没有新仿真或 PPO。
+
+## Quality-aware exploration training — 2026-09-12
+
+User approved direct reward-ablation training and required inspectable learning histories/hyperparameters for every network. Implemented opt-in trajectory_quality_v1: full valid nonterminal trajectory novelty independent of candidate caps, once-per-episode physical-failure penalty, and normalized residual-energy cost. Pure weights1/0/0 versus quality1/50/0.01; matched uniform residual control. Base Actor and critic are explicitly frozen; their task reward and before/after-action critic values are telemetry, not exploration reward.
+
+142related CPU tests pass. Real2world/2batch GPU smoke completed3200interactions;2optimizerupdates, complete reward-array summation checked, named losses/hyperparameters/inventory/CSV/PNG/PDF/SVG verified present. Background supervisor1149051 then started the three32batch8world arms,329600combined forward maximum. Current live status:`../runs/experiments/quality_exploration_20260912/execution/status.json`. Each arm preserves per-update optimizer_updates.jsonl, per-batch training_metrics.json/training_process.csv, hyperparameters.json/network_inventory.json, per-transition reward_components NPZ and task reward components, full trajectories/candidates/checkpoints and figures. No suffix labels/new jumping-policy training or claimed exploration gain yet. This stage keeps fixed starts to isolate reward effects; existing-state curriculum is not yet run. Compact evidence:`../review_evidence/quality_exploration_20260912.json`.

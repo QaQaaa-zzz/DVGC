@@ -57,3 +57,15 @@
 - 原始轨迹/快照/checkpoint/完整图保存在 `JIT/runs/`，本次派生 CSV/JSON、来源哈希、SVG/PDF/PNG 和绘图脚本在 `JIT/docs/paper/`。
 - 2026-09-12 已 fetch 核验报告分支：`6121da9`，最新 compact report 为 `review-bf486f2945`，早于本地两轮 pilot。不能用该远端报告证明最新训练状态。
 - 本次更新范围覆盖全部现行项目入口、状态、方法、路线、验证、模块和论文文档。带日期的旧结果报告保留为历史证据；旧根目录论文规格加入历史标识，见 [维护清单](JIT/docs/paper/README.md)。
+
+## Approved quality-aware residual exploration — 2026-09-12
+
+User approved implementing and directly training the agreed novelty/physical-failure comparison; all networks must retain loss, reward composition, hyperparameters and process artifacts. First isolate reward effects from a common frozenpi6 and fixed complete starts: pure full-trajectory novelty, novelty+physical-failure cost+small normalized residual-energy cost, and matched fixed uniform residual control. No current-bank failure is a permanent infeasibility label; no raw critic gate, physics change or whole-Tube Actor claim. Existing-state curriculum follows evidence from this controlled stage; this experiment does not change reset sources.
+
+New opt-in trajectory_quality_v1 pays each new real nonterminal physical cell once perbatch (first occurrence perepisode, shared across duplicate episodes), independent of candidate export cap. Padding earns nothing; physical failure costs once perepisode. Declared quality weights novelty1,physical_failure50,normalized_delta_mean_square0.01 are an initial ablation setting, not tuned optimum. Pure arm uses1/0/0. Actual task reward and all environment reward components remain telemetry, not silently mixed into exploration rewards.
+
+Process artifacts: hyperparameters.json, network_inventory.json, per-update optimizer_updates.jsonl with named actor/critic/entropy/total losses, approximate KL/clip fraction/gradient norm, per-batch training_metrics.json and CSV including reward decomposition, per-transition reward_components NPZ plus full trajectory/task-reward components, checkpoints and source/input hashes. Frozen base Actor/critic are explicitly marked nontrainable; they have no fabricated optimizer losses. Replot PNG/PDF/SVG is generated at completion/error.
+
+Authorized bounded execution:2env×400×(2batches+2diagnostics)=3200-forward engineering check; if it completes, three matched arms8env×400×(32batches+2diagnostics)=108800 each (326400 total), seed9950101,lr3e-5,oneepoch,batch256,delta0.15all4channels. Combined forward ceiling329600; suffixes deferred and no new jumping-policy training in this reward ablation. More residual learning (32batches vs earlier4), one attempt perstage,1800s perchild, external GPU job gate. Each arm retains all evidence and common exact per-pi baseline; training novelty counts and weighted total reward are separate fields.
+
+Validation/launch:142CPU tests passed; real3200-interaction smoke completed and component-array totals/process artifacts verified. Supervisor1149051 is running the matched three-arm32batch experiment. Live entry:`JIT/runs/experiments/quality_exploration_20260912/INDEX.md`. No outcome/superiority claim before the comparison completes. Existing-snapshot curriculum remains the following stage rather than a silent reset-source change in this ablation.
