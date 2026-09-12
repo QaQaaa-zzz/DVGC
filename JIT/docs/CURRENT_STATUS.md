@@ -114,3 +114,7 @@ Previous queue failed before new-policy PPO because canonical preflight omitted 
 Fresh two-round128k pilot launched under3,664,000maximum, background supervisor3959291. Current status:`../runs/experiments/delayed_exploration_20260912/queue/execution/status.json`; do not infer completion from launch. Full iteration output will be under queue/stage_0_result. Compact recovery evidence:`../review_evidence/delayed_recovery_20260912.json`.
 
 Latest queue path supersedes the preceding launch: `../runs/experiments/delayed_exploration_reuse_20260912/queue/execution/status.json`. The prior pilot completed19,200forward slots but was blocked before labeling by an STTW analysis process. Inner stages now wait finitely; first learned arrivals are explicitly reused with locked artifacts and matching sampling contract.233CPU tests passed. All stopped outputs remain immutable; inherited interactions are separate from newly dispatched cost.
+
+## Latest user instruction: JIT paused
+
+Let STTW finish first; JIT requires a fresh explicit user start. Cancelled JIT wait runner487670 with zero child dispatch. No automatic restart. First-round128k and second-round exploration/labels are complete; second-round PPO has not started. Its prior timeout was a dependency-watcher deadlock, not a numerical failure. The opt-in passive-watcher gate fix passed43CPU tests; real STTW training workers remain blocking. Prepared continuation:`../runs/experiments/delayed_completion_20260912/`, currently cancelled by user instruction. Original failed pilot statuses remain historical evidence.

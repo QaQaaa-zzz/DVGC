@@ -1,0 +1,24 @@
+{
+  "passive_supervisors": [
+    {
+      "depends_on_repository": "/home/qy/DVGC",
+      "max_status_age_seconds": 90,
+      "script": "/home/qy/STTW_CONTROL/learning/cli/deferred_training.py",
+      "source_files": {
+        "/home/qy/STTW_CONTROL/learning/cli/deferred_training.py": "bc9632be587f6e8baae478f6ae7a72dd3da450eb0ea6a88b8a38baae432b38c2",
+        "/home/qy/STTW_CONTROL/learning/src/sttw_control/deferred_training.py": "bac2a671196b35bc872497fc105a6f7a70011cfa3469e29d249212725383339d"
+      },
+      "status_filename": "status.json",
+      "waiting_phases": [
+        "waiting_dependency",
+        "waiting_processes",
+        "waiting_status",
+        "waiting_gpu_query"
+      ]
+    }
+  ],
+  "process_repository_path": "/home/qy/STTW_CONTROL",
+  "process_run_path": "/home/qy/STTW_CONTROL/runs/priority_survival_20260911",
+  "process_uid": 1000,
+  "status_path": "/home/qy/STTW_CONTROL/runs/priority_survival_20260911/pipeline_status.json"
+}

@@ -123,3 +123,24 @@ def test_scanner_skips_other_uid_before_cwd_and_rejects_same_uid_denial(tmp_path
     result = check_execution_gate(config)
     assert not result["ready"]
     assert any("same UID cwd denied" in reason for reason in result["reasons"])
+
+
+def test_verified_waiting_supervisor_is_passive_but_worker_blocks(tmp_path):
+    import hashlib,time
+    config=gate(tmp_path);config['process_repository_path']=str(tmp_path)
+    script=tmp_path/'deferred_training.py';script.write_text('verified watcher')
+    plan=tmp_path/'plan.json';plan.write_text(json.dumps({'dependency_repository':'/jit'}))
+    status=tmp_path/'watch_status.json'
+    def update(phase='waiting_dependency',updated=None):
+        status.write_text(json.dumps({'phase':phase,'watcher_pid':123,'updated_unix':time.time() if updated is None else updated}))
+    config['passive_supervisors']=[{'script':str(script),'source_files':{str(script):hashlib.sha256(script.read_bytes()).hexdigest()},'depends_on_repository':'/jit','status_filename':'watch_status.json','waiting_phases':['waiting_dependency'],'max_status_age_seconds':90}]
+    proc=process(config);proc.update(cwd=str(tmp_path),cmdline=['python',str(script),'--plan',str(plan)])
+    update()
+    assert check_execution_gate(config,process_inventory=lambda:[proc])['ready']
+    assert not check_execution_gate(config,process_inventory=lambda:[proc,process(config)])['ready']
+    update('training_pipeline_running')
+    assert not check_execution_gate(config,process_inventory=lambda:[proc])['ready']
+    update(updated=0)
+    assert not check_execution_gate(config,process_inventory=lambda:[proc])['ready']
+    update();script.write_text('changed')
+    assert not check_execution_gate(config,process_inventory=lambda:[proc])['ready']

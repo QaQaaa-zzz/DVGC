@@ -61,6 +61,41 @@ def _within(value: str, root: Path, cwd: str) -> bool:
     return candidate.resolve().is_relative_to(root)
 
 
+def _passive_supervisor(process, declarations):
+    """Recognize only reviewed, unchanged CPU watchers waiting on this repository.
+
+    Worker processes are still checked independently. Missing/stale/running
+    status or any source/identity drift keeps the normal blocking behavior.
+    """
+    import hashlib
+    import time
+    argv=process['cmdline']
+    for entry in declarations:
+        try:
+            script=Path(entry['script']).resolve()
+            if len(argv)<4 or (Path(process['cwd'])/argv[1]).resolve()!=script:
+                continue
+            files=entry['source_files']
+            if str(script) not in files or any(hashlib.sha256(Path(p).read_bytes()).hexdigest()!=sha for p,sha in files.items()):
+                continue
+            index=argv.index('--plan')
+            plan_path=(Path(process['cwd'])/argv[index+1]).resolve()
+            plan=json.loads(plan_path.read_text())
+            if plan.get('dependency_repository')!=entry['depends_on_repository']:
+                continue
+            state=json.loads((plan_path.parent/entry['status_filename']).read_text())
+            allowed=set(entry['waiting_phases'])
+            if not allowed or not allowed <= {'waiting_dependency','waiting_processes','waiting_status','waiting_gpu_query'}:
+                continue
+            age=time.time()-state['updated_unix']
+            if (state.get('watcher_pid')==process['pid'] and state.get('phase') in allowed
+                    and 0<=age<=entry['max_status_age_seconds']<=120):
+                return True
+        except (OSError,ValueError,TypeError,KeyError,IndexError):
+            continue
+    return False
+
+
 def check_execution_gate(
     gate: Mapping[str, Any], *,
     process_inventory: Callable[[], Iterable[Mapping[str, Any]]] | None = None,
@@ -131,6 +166,9 @@ def check_execution_gate(
                 for arg in cmdline[1:] if not arg.startswith("-")
             ))
             if matches_run or matches_repository:
+                if _passive_supervisor(process,gate.get("passive_supervisors",[])):
+                    result.setdefault("passive_supervisors",[]).append(dict(process))
+                    continue
                 result["matching_processes"].append(dict(process))
         if result["matching_processes"]:
             reasons.append("external_run_python_processes_alive")
