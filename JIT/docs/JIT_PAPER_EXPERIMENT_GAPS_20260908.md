@@ -1,3 +1,5 @@
+> **2026-09-08历史结果与当时缺口，保留溯源。** 2026-09-12当前实验矩阵见[训练路线](JIT_TRAINING_ROADMAP.md)和[论文草稿](paper/JIT_PAPER_DRAFT.md)。旧文“pending零reset准入/实现尚缺/下一条命令”只适用于当时协议，不是当前执行指令。
+
 # Current boundary result, training support, and paper experiment gaps
 
 The corrected run completed: 290 arrivals, 93 all-policy successes, 102

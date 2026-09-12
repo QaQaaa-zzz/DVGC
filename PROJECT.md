@@ -1,190 +1,59 @@
-# DVGC / JIT — empirical jumping envelope discovery
+# DVGC / JIT 项目与当前工作
 
-Updated2026-09-11. The project studies fixed-condition jumping locomotion of a single-track two-wheeled bicycle–pendulum robot. The research product is a growing empirical capability envelope supported by real arrivals and successful landing continuations, not a single policy required to master every collected state.
+更新：2026-09-12。范围：`/home/qy/DVGC/JIT`；代码分支 `agent/two-phase-soft-tube`。本页替代此前按时间追加、含过时“待实现/等待训练”的状态描述。历史原始工件与 Git 历史保留。
 
-## Current outcome
+## 我们要解决的问题
 
-The two-round all-policy production campaign completed. pi_5 and pi_6 each trained128,000 transitions and were frozen. Coverage:1,689 inherited →4,629 →9,296 root cells; new candidates8,470; new interactions1,275,465. Stop reason was the declared two-round cap. This is development evidence, not convergence or a global physical boundary.
+在固定模型、载荷、起点和落地语义下，以有限总交互成本发现经验跳跃包线。种子策略展示可行跳跃；残差探索策略使冻结跳跃策略偏离已有轨迹，产生真实到达的新候选。当前策略库没有成功续接的候选仍可能被未来策略学会，因此独立保存为 pending，再训练新跳跃策略并延迟重评。只有同一完整状态及上下文的真实前缀与无冲突成功落地续接才能进入已见证包线。
 
-Old policies still discover substantial new space. The earlier pi_2/pi_4 retrospective control showed pi_4 exploration novelty benefits but not yet a training-inclusive cost advantage at its smaller matched budget. Multi-policy gains cannot all be assigned to newest training.
+分阶段 bootstrap → 加权 Tube0 训练支持 → 成功统一策略与真实 centerline → 冻结 π + 残差探索 → 到达新颖性/候选池 → 新跳跃 π 的 PPO → 旧候选延迟重评 → 累计成功见证。
 
-[Full handoff, results, risks and next tasks](JIT/docs/CODEX_HANDOFF_20260911.md) is the primary successor brief; [current status](JIT/docs/CURRENT_STATUS.md) is the concise record; [roadmap](JIT/docs/JIT_TRAINING_ROADMAP.md) is the implementation sequence.
+这是一条有限预算下交替探索和学习的外循环，不是贯穿多个训练阶段的端到端反向传播，也没有证明收敛到完整物理空间。PPO 是训练工具；研究价值必须由发现效率、可学习候选转化和完整证据支持。
 
-## Method
+## 当前真实进展
 
-Bootstrap up/down support → successful unified pi_0 and captured centerline → frozen-policy bank plus bounded legal action perturbations → real arrivals → successful suffix witnesses → deduplicated empirical Tube → witnessed-support PPO → new frozen policy → repeat within budget.
+| 阶段 | 核验结果 | 解释范围 |
+| --- | --- | --- |
+| 历史 all_proposers_v1 | π5/π6 各 128,000；root cells 1,689→4,629→9,296；新增交互 1,275,465 | 历史协议的多策略开发结果；不是残差网络收益 |
+| 训练长度 pilot | 32k–256k checkpoint 及小预算探索对照完成 | 暂用 128k–256k 有界预算；没有普适最优步数结论，不再无目的扫描 |
+| 接续加速/事件审查 | first-success 独立协议、unknown/冲突隔离、GPU 批量工程验证已实现 | 不重写旧标签；16384 容量不是当前所有训练使用的并行数 |
+| 残差探索 | frozen π + Actor 规模残差 PPO，106D 历史输入，4D 有界输出 | 监督拟合旧随机扰动已被替代；当前基础 critic 仅 telemetry |
+| 延迟评价两轮 pilot | 两次 128k 已完成；关联实际交互 348,371 | 两臂旧无见证→见证均 0，未证明探索收益或长期可学习性 |
+| 论文与维护 | 当前正文、公式、图件和证据索引统一维护 | 详细方法及开发证据草稿；仍需主实验才能支持投稿结论 |
 
-All four action channels are allowed. Fixed x2.5 near-ground start and accepted replay limits remain. Every candidate keeps provenance and full context. Phase-separated5cm slices support visualization; the existing physical quantization remains unchanged. No artificial state lifting/lowering, no interpolated reachable hull, no whole-Tube Actor gate.
+最新完成入口：`JIT/runs/experiments/delayed_completion_start_20260912/summary.json`。其补完任务新增 **128,407** 交互（PPO128,000 + TRAIN panel77 + suffix330），墙钟 **221.031 s（含等待）**。它仅补完第二轮；首轮及两轮采集在 `delayed_exploration_reuse_20260912/queue/stage_0_result/`。首轮learned的19,200步前向原件在`JIT/runs/experiments/delayed_exploration_20260912/queue/stage_0_result/round_000/learned_residual/arrivals/`，reuse保存锁定引用。原任务的 `error` 是历史事实，不能改为 completed。
 
-## Implemented versus proposed
+| 条件探索臂 | 首轮累计已见证 cells | 第二轮累计已见证 cells | 第二轮 pending 候选 | 两轮延迟 0→1 |
+| --- | ---: | ---: | ---: | ---: |
+| learned_residual | 150 | 289 | 12 | 0 |
+| fixed_random | 151 | 308 | 9 | 0 |
 
-| Capability | State |
-| --- | --- |
-| Growing frozen bank, all-proposer fixed perturbations, two-round PPO loop | Production completed |
-| Per-proposer/evaluator figures, replot CSV, phase slices, receipts, cost and automatic text report publication | Implemented; production artifacts reported; not all images visually inspected remotely |
-| First-success evaluator stopping | Implemented as an opt-in versioned witness index with explicit unknowns and bounded subset workers; legacy full matrices preserved |
-| Multi-checkpoint capability evaluation and adaptive training length | Fixed TRAIN-panel checkpoints implemented; adaptive extension and per-checkpoint exploration remain unimplemented |
-| Gain-based proposer budget allocation | Proposed; current equal32-trajectory calls |
-| Learned residual exploration network | Bounded supervised warm-start module implemented; actual exploration/data export/campaign integration still pending |
-| Conditional diffusion perturbation sequences | Optional later comparison; neither implemented nor established as beneficial |
+两臂每轮前向安排均 19,200 计费步，共用相同 π 基线。只有 learned 臂 pending 参与共享后继 π 的训练，因此这是**条件探索对照**，不是独立全流程等成本对照。已见证候选条数与物理单元数不得混用。单条训练谱系、候选截断和新颖性奖励饱和限制解释。
 
-## Next development
+## 当前实现契约
 
-Audit four conflicting forward landing/failure receipts, produce geometry/sensitivity views, measure stage wall time, implement versioned existence-only labeling alongside full comparison panels, then checkpoint evaluation and a lightweight residual exploration baseline. Preserve the completed all_proposers_v1; do not start pi_7 or rerun that command by default.
+- 固定起点 x=2.5 m，约 3.1 cm 轮胎初始间隙；固定 XML、2 kg 载荷、仿真 0.005 s / 控制 0.020 s；终点为首次有效落地。
+- 归一化动作顺序为 `[steer, rear-wheel drive, hip, knee]`。本轮髋膝使用 `keyframe_centered_absolute`，转向是位置目标，不能混用其他项目接口。
+- 基础 π 输入 76D；残差 Actor 与独立值网络输入 106D privileged observation，包含原有 3 帧历史。残差 Actor 为 256×3 Swish、8 个高斯分布参数、4 维 tanh 动作，四通道幅度 0.15；本轮训练过程中基础 Actor/normalizer 冻结。
+- 新颖性针对当前 π 的基线和本轮 ledger，不针对全历史策略库。新到达奖励不要求当前 bank 成功；包线准入仍必须有成功续接。
+- 新 π：旧 Actor+normalizer warm start，fresh critic/optimizer。20% 完整固定起点、80% 快照；可用 phase 内 pending 占快照抽样质量 25%，其余 witnessed；保留 phase/group 权重。
+- 待评价/错误/冲突为 unknown；完整当前 bank 没有成功才是 no-witness。旧有效见证保留，无见证不等于物理不可行。
+- 延迟反馈改变候选状态、重置支持和下一轮 source π，不把旧轨迹改奖励后回放为新的 PPO on-policy 数据。
+- 冻结基础 critic 的质量评分惩罚、扩散模型、自动按收益分配 proposer、无限外循环/连续域收敛均未实现或未成立。
 
-Residual exploration should generate bounded actions conditioned on the frozen policy/state/goal and be rewarded primarily for new witnessed cumulative support. A diffusion model could generate temporally structured perturbations, but cannot certify reachability or automatically seek boundaries. Its extra cost must be justified against the lightweight baseline.
+## 下一步：先解释现有结果，再做有限对照
 
-## Paper scope
+1. **零新仿真分析**：对已保存状态离线重算多分辨率的新颖性、重复率、候选上限命中率、残差有效幅度/饱和和 pending 相位分布；报告原始与派生口径，定位奖励缺少区分度的原因。
+2. **小型机制实验**：预先声明共同 π、动作采样模式、分辨率、训练/评价分离、预算及停止规则，对比当前新颖性与一个有区分度的新颖性方案。先验证奖励能区别有用行动，暂不加 critic 惩罚来掩盖当前问题。
+3. **公平外循环**：固定 bank、随机扰动、学习残差等主臂按完整成本匹配；如声称延迟学习有效，必须比较 pending-enabled 与 witnessed-only 支持，并分别训练各自后继策略。
+4. **论文闭合**：独立训练/探索种子、相位几何和分辨率敏感性、全部成本、冻结最终评价；bootstrap 若没有匹配消融，仅作为初始化背景。
 
-Submission target discussed: RAL. Still needed: fixed-bank versus training-iteration total-cost comparison, independent repetitions, phase geometry/resolution evidence, full lifecycle costs, locked final evaluation and bootstrap ablations if their benefit is claimed. Do not invent a completion percentage or promise acceptance after a fixed number of rounds.
+本次文档任务没有启动任何新训练、采集或续接评价。后续实验必须先写配置、数据角色、预算和停止条件；既有授权范围内无需重复询问。不要把过期队列或旧文档中的命令当作新启动要求。
 
-TRAIN is adaptive support; CALIBRATION serves optional predictors; used ACCEPTANCE is development. Final TEST/JCE/JEL remains unopened. Tube0 was weighted support (222 rows,42 historical negatives); preserve actual pi_0 lineage and the invalid historical pi_3 mixed-endpoint gate.
+## 维护与交付
 
-## Operations
-
-Working branch agent/two-phase-soft-tube; report branch agent/jit-run-reports in QaQaaa-zzz/DVGC. Full artifacts on /home/qy/DVGC, compact reports on GitHub. Routine project pushes and report publication already authorized. Raw experimental runs immutable; new protocols need new outputs. Follow [AGENTS](AGENTS.md).
-
-## Active optimization — 2026-09-11
-
-User authorized GPU parallelization and bounded engineering measurements. Implement in place on the target branch; preserve unrelated untracked files and completed campaigns. Design: a separate `vectorized` execution backend with genuine multi-world Warp stepping, backend-aware shared contact buffers, device-side endpoint masks, unchanged candidate keys/labels and charged inactive work. Retain serial/device paths. Expose batch/shard execution settings without changing old requests. Measure initialization, batch compilation/execution and process wall time; archive JSON/CSV/plots and failures. Select settings by measured throughput and label equality, not occupied VRAM.
-
-Execution checklist (writing-plans / inline execution):
-- [x] Add failing behavior tests for vectorized termination, keys, Warp shared buffers and label/cost equivalence.
-- [x] Extend continuation/device_rollout.py, unified_continuation_shards.py and policy_family_landing.py; expose configurable execution through existing CLIs.
-- [x] Run CPU regression tests; audit landing/failure priority without rewriting historical outcomes.
-- [x] Run a predeclared bounded TRAIN execution comparison on existing candidates, increasing batch size with time/memory limits, no PPO/acquisition/final TEST; preserve attempts, cost, plotting data and figures.
-- [x] Record measured limits and recommended execution settings and review diff; commit/push delivery follows verified76-test run.
-
-GPU initially shared with a STTW_CONTROL training process; never stop unrelated jobs. The engineering comparison does not authorize new scientific labels when outcomes differ, nor reopen accepted snapshot replay questions.
-
-Outcome: genuine vectorized Warp continuation and explicit batch CLI are implemented.4096/8192/16384 capacity measurements completed;the final16384 run checked aggregate contact/CCD/constraint capacity at every physics substep, peak14,522MiB and157,227 useful simulator steps/s.24576 stopped at the22,000MiB protection threshold (observed22,542MiB), retaining full failure charge. Existing16-candidate endpoints agree, but one final checked continuation changes38→39 ticks;do not automatically replace locked serial scientific campaigns. Larger capacity is not a full-campaign speedup claim. This task charged3,384,811 interactions including inactive slots and failures, zero PPO/new scientific candidates/final TEST. Full artifacts:`JIT/runs/engineering/continuation_parallel_20260911/INDEX.md`;compact evidence:`JIT/review_evidence/parallel_capacity_20260911.json`.
-
-## Roadmap implementation — 2026-09-11
-
-The new `probe_bank.py prepare-existence` / `run-existence` path locks bank, TRAIN catalog, exact candidate indices, evaluator order, horizon, seed, sources and budget. It stops each candidate after a nonconflicting witness; skipped evaluators stay untested, and incomplete/error/conflicting outcomes stay unknown. Every declared evaluator must complete with failure before a no-witness result. Resume audits all historical reservations before allocating retries. Completed old campaigns remain unchanged.
-
-Existing pi6 full-matrix scheduling analysis:98,093→15,388 useful continuation steps (84.31% hypothetical reduction); not measured wall-clock savings.64 evaluator-level contact/failure conflicts produce735 witnessed and3 unknown under the new quarantine view; historical738-positive union is not rewritten. Full artifacts and cost: `JIT/runs/engineering/existence_checkpoint_residual_20260911/INDEX.md`.
-
-The opt-in campaign `--checkpoint-steps 32000 64000 128000 --ppo-steps 128000` declares fixed TRAIN panel identity and costs inside one live trainer. This is an option description, not a command executed here. Intermediate equal-budget exploration needs a separate diagnostic checkpoint identity; automatic extension and optimizer restart remain unsupported.
-
-`residual_exploration.py` / `fit_residual_explorer.py` implement a bounded conditional supervised warm start. Historical snapshots do not supply matched per-action observations; actual production fitting requires an explicit matched TRAIN export. Frozen explorer state and identity must enter causal prefixes before acquisition integration. No learned exploration experiment, diffusion model, pi7 or production retraining was launched.
-
-## Authorized multi-checkpoint training — 2026-09-11
-
-User requested the corresponding local training after implementation. Prepared a separate development run `multicheckpoint_pi6_20260911`, initialized from frozen pi6 Actor/normalizer with fresh critic/optimizer, reusing immutable completed round_001 TRAIN support.128 environments,128,000 PPO transitions, seed9871101; fixed4-state TRAIN panels at32k/64k/128k, horizon400. Total worst-case132,800 interactions; one attempt,30-minute process limit; stop on numerical/device/checkpoint/evaluation failure, no automatic retry/extension/bank promotion or new acquisition/final TEST. This measures the new checkpoint path; it does not reconstruct old checkpoints or establish equal-budget exploration gains. Configuration:`JIT/configs/pi6_multicheckpoint_train_20260911.json`; declaration/results:`JIT/runs/experiments/multicheckpoint_pi6_20260911/`.
-
-Outcome: this run completed128,000 PPO transitions and225 panel steps (128,225 total), exit0,58.835s process wall.32k/64k/128k each scored4/4 on the same4-state TRAIN panel, with no physical failures. Four inference checkpoints0/32k/64k/128k and complete trajectories/plots/CSV/cost are saved. This validates checkpoint execution; it does not establish improvement, convergence or exploration gains. No automatic continuation or bank promotion. See `JIT/runs/experiments/multicheckpoint_pi6_20260911/INDEX.md` and `JIT/review_evidence/multicheckpoint_train_20260911.json`.
-
-## Authorized checkpoint exploration comparison — 2026-09-11
-
-User approved comparing original pi6 with32k/64k/128k under common exploration conditions and total costs. Add explicit TRAIN-only diagnostic checkpoint identities (no formal pi_N/envelope promotion), then use one common pi0–pi6 evaluator bank. Each proposer gets8 real forward trajectories: all4 action channels,±0.15,anchor x2.9,lookback0.15m,same acquisition seed9881101 and label seed9881601. Fixed complete x2.5 start,5cm real-frame samples,max64 candidates/trajectory,400 tick horizon; no new PPO/final TEST. Per-arm ceiling1,500,000 interactions (6,000,000 maximum overall), single attempt;600s acquisition/evaluator worker limits. Serial scientific continuation remains selected. All failures/padding charged.
-
-Full matched-schedule results and conservative catalog-order common-budget replay are distinct views. Training-inclusive costs add32,076/64,152/128,225 to the corresponding checkpoints, with pi6's inherited training shared baseline. Historical campaign witnessed root-cell CSV is a frozen conservative novelty-exclusion baseline; it does not silently adopt new conflict semantics. Preserve phase geometry gaps, all rows/trajectories/unknowns, plots and costs. Config:`JIT/configs/checkpoint_discovery_pi6_20260911.json`; outputs:`JIT/runs/experiments/checkpoint_discovery_20260911/`. Implementations and source locks are verified before launch; no automatic promotion or extra training follows the result.
-
-Completed comparison:20,733 new exploration interactions,1127.341s,no retries/PPO/final TEST. At common exploration budget4,058,novel cells pi6/32k/64k/128k=132/186/132/165. Full schedules yield146/186/182/205 novel cells at4,225/4,058/6,502/5,948 interactions. Clean forward landings8/8,7/8,6/8,7/8;64k has1 unknown and128k5 unknowns, preserved.32k is the best incremental novelty result at this small budget, while originalpi6 remains the strongest clean landing observation and lowest clean peak in this schedule. Most geometry overlaps; extra cells are not continuous volume. Training cost is not amortized by this pilot; pause further PPO and prioritize pi6/32k complementary verification, with independent repeats still needed. No automatic bank promotion. Full evidence:`JIT/runs/experiments/checkpoint_discovery_20260911/INDEX.md`;compact record:`JIT/review_evidence/checkpoint_discovery_20260911.json`.
-
-## Bounded length pilot closure — 2026-09-11
-
-User authorized a fresh pi6-initialized 256,000-transition run with unchanged seed9871101/support/recipe, checkpoints32k/64k/128k/192k/256k,128 environments. One attempt,1800s,8,000 maximum TRAIN-panel interactions,264,000 total ceiling. This supersedes the earlier pause recommendation; no optimizer restart represented as continuous training. Following one late-checkpoint exploration comparison, select a provisional working range and move to residual data/integration instead of further length sweeps. Prepared pi6/32k perturbation-condition plans remain unrun. Artifacts: `JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/`.
-
-256k PPO completed with392 validated panel interactions (256,392 total),84.061s,exit0; all five4-state TRAIN panels4/4,zero physical failures. These panels do not establish convergence or exploration improvement. Late pi6/128k/192k/256k matched exploration is running under a separate6M ceiling.63 relevant CPU tests passed in5.75s. Parallel zero-interaction residual data audit found809 saved states,777 potential observation/next-action pairs and90 nonzero pairs with later witnesses; sparse saved-state inputs reconstruct from FIFO/events, but explicit action-time/downstream-witness credit and trajectory-group split are required before fitting. Audit:`JIT/runs/engineering/residual_data_readiness_20260911/INDEX.md`.
-
-Residual next-stage design: preserve a separate pre-action origin (state/context/tick, actual Actor observation and base/applied actions) and downstream witnessed target (state/context/root cell, endpoint protocol and bank identity), joined within one locked acquisition protocol/trajectory with verified prefix nesting and strictly increasing ticks. Freeze goal and baseline before fitting; no outcome-derived feature leakage. Compare sparse existing-pair warm start with a small fully recorded fixed-perturbation export if needed; group by trajectory/ancestor, no frame random split. Start bounded supervised fitting only after these provenance checks, then frozen explorer acquisition with declared additional history/slew state and equal-cost fixed-perturbation control. No diffusion or automatic length sweep.
-
-## Residual export and warm-start implementation — 2026-09-11
-
-Length pilot closed: late comparison completed24,916 exploration interactions in1232.074s; new training+panels+exploration281,308. At common4,135 exploration budget pi6/128k/192k/256k novelty134/122/103/161; full schedules134/177/176/237 and clean forward8/8,6/8,7/8,8/8. Use provisional128k–256k training ceilings with early snapshots retained, no further length sweep. Single-lineage developmental evidence, no universal optimality/convergence or amortized training advantage.
-
-Implementation checklist (writing-plans and test-driven-development; established branch, no unrelated changes):
-- [x] Add causal action-pair tests: post-action/off-by-one rejection, altered prefix, unknown/old-cell exclusion, trajectory-group separation, file tampering.
-- [x] Add canonical residual dataset exporter with separately bound pre-action origin and strictly later same-trajectory witness; retain complete input hashes and exclusion counts. Reconstruct sparse original actor observations from stored FIFO/events without physics replay. Revalidate completed artifact identities, without resuming old runtime protocols or requiring old source files to equal current code.
-- [x] Extend the existing warm-start loader to validate versioned causal exports while retaining legacy explicit-export compatibility. Freeze exogenous perturbation goals, training-only normalization and trajectory-group split; development rows remain TRAIN development, not final TEST or independent trials.
-- [x] Export existing completed checkpoint comparison data, then execute one CPU supervised fit with seed9901101, learning_rate0.001,500 optimizer updates maximum,zero new interactions/PPO,one attempt. Stop on invalid provenance/nonfinite data or fit; no automatic retries or exploration performance claim.
-- [x] Preserve model, full records, prediction CSV, figures, wall time and cost; verify tests/diff; commit and push. Frozen explorer integration and real equal-cost exploration remain the subsequent bounded stage.
-
-Residual warm-start completed:500 supervised updates,543 fit rows,zero interactions/PPO,9.085s process wall. Fit RMSE0.02473→0.00100 but development RMSE0.02381→0.13010 (203 rows). No promotion: declared split holds both steering directions out of fit; constant direction feature/std floor maps development values to±1000. Added independently reviewed opt-in actor_fit_std_goal_units_v1, retaining legacy contracts; no refit or gain claimed. Next dataset must cover all4channels in both partitions under different whole trajectory conditions, with complete pre-action recording and fixed-unit goal scaling.76 related CPU tests pass; all results, failed first export, pictures/predictions and costs retained at `JIT/runs/experiments/residual_warmstart_20260911/INDEX.md`.
-
-## Authorized full-tape residual stage — 2026-09-11
-
-User approved starting four-channel data completion, bounded residual fitting and closed-loop comparison. Implementation uses existing branch and canonical modules; completed experiments remain immutable. No PPO-length sweep/all_proposers rerun/final TEST.
-
-Plan (subagent-driven-development; independent file ownership, integrated review before GPU):
-- [x] Add opt-in complete pre-action tapes and frozen residual acquisition. Legacy omitted options leave old protocol behavior unchanged. Tape schema jit_causal_action_tape_v1 locks trajectory/protocol/base identity, every tick's original Actor observation, pre/post physical and context hashes, nominal/applied/requested/effective action deltas and previous residual state. Counter/chain/finite/action/prefix checks. Frozen explorer uses explicit matched exogenous schedule goals; limits and all additional controller history must remain in tape provenance.
-- [x] Extend comparison runner with explicit arm-to-bank-member mapping and per-arm residual artifacts; lock artifact hashes, preserve original bank evaluator identities and no formal policy promotion.
-- [x] Extend causal exporter to complete action tapes and explicit whole-condition comparison partitions, all four action channels per partition, no row-level split. Preserve sparse v2 exports and default normalization compatibility; new data uses actor_fit_std_goal_units_v1.
-- [ ] Collect one TRAIN condition x2.9/strength0.10/lookback0.15 and one TRAIN development condition x3.0/strength0.15/lookback0.15. Each has pi6 and same-run256k proposer,4channels±,8trajectories/arm,400ticks,max64candidates/trajectory,5cm sampling. Shared original pi0–pi6 evaluator bank,serial first-success.1.5M ceiling/arm,6M across four data arms; one attempt each,600s acquisition/evaluator workers. Frozen cumulative novelty exclusion includes previous completed witnessed catalogs; declare its exact CSV before launch.
-- [ ] One500-update CPU warm-start,seed9911101,lr0.001,0PPO/0simulation,600s timeout. Full records, group diagnostics and before/after predictions. Preserve failures, no automatic refit. Development checks condition generalization, not independent training repeats.
-- [ ] If export/runtime checks pass, one bounded fixed-perturbation versus learned-residual comparison from identical base pi6,8 shared trajectories/arm at a separately declared condition,common frozen evaluator bank,1.5M/arm,3M ceiling. Include data collection plus fitting cost separately and jointly; unknowns never count as failure. Overall stage maximum9M environment interactions+500 supervised updates, no retries/automatic extension/promotion.
-- [ ] Full figures/CSV/receipts/wall time/cost, independent review, focused tests, meaningful commits/push and report publication.
-
-Implementation verification: 123 focused CPU tests passed in6.37s; fixed and zero-residual real GPU acquisitions passed complete catalog/tape checks,16 interactions each (32 total), no PPO or suffix labels. Zero-residual applied actions equal their recorded nominal actions on all16 recorded ticks; this short engineering check does not establish recovery performance. Full-tape collection and500-update supervised fit are next under the declared single-attempt budget.
-
-Full-tape collection/fit completed:754 fit/751 development pairs,109/84 nonzero, all8 signed channels in both partitions.500 supervised updates; weighted development RMSE0.021002→0.017605 (16.2% lower than zero), nonzero0.072789→0.058240 (20.0%). Fit/development gap remains; teacher-forced imitation only, not closed-loop novelty.1,553 acquisition+16,952 labels+32 engineering=18,537 new interactions,0PPO;928.416s collection/fit and9.534s fit process. Complete1505 predictions, signed-channel CSV and PNG/PDF/SVG inspected/saved at `JIT/runs/experiments/residual_full_tape_20260911/INDEX.md`. Next: predeclared fixed-versus-learned closed-loop comparison, not started; no additional fit.
-
-## Authorized per-policy coverage PPO explorer redesign — 2026-09-11
-
-User rejects supervised imitation of random perturbations and authorizes replacing the exploration learner with PPO: existing Actor-scale256×256×256 stochastic tanh-normal network, input same106-dimensional privileged Critic observation including existing3-frame history, output4 full normalized actions. Frozen current pi initializes Actor (extra input rows zero); fresh exploration value function/optimizer. Privileged exploration remains simulation-only. Historical supervised fits remain immutable, no more imitation fitting or old closed-loop residual launch.
-
-Implementation plan (writing-plans, subagent-driven-development, explicit user implementation/training authority):
-- [ ] Canonical exploration_network.py and tests: reuse PPO network factory,106 inputs, safe76→106 initialization, same underlying distribution.
-- [ ] Canonical exploration_reward.py and tests: exact root physical grid per frozen pi identity; new cells relative its own named baseline and accumulated current-explorer ledger, not union across policies. Credit once; split shared batch discovery among successful episodes, failure/conflict/incomplete receives0. Preserve per-cell credit audit. Default clean first landing eligibility; no claim all policies converge to identical full space.
-- [ ] Canonical exploration_training.py and thin CLI: GPU complete fixed x2.5 episodes; host batch reward assignment then PPO clipped policy/value/entropy updates. Record full observations/actions/logprob/values/physical trajectory/terminal events, padding and active costs, source/input hashes, same-live-optimizer checkpoints. No physics/start or production reward changes.
-- [ ] CPU tests plus one small real GPU end-to-end preflight before one bounded TRAIN pilot. Pilot:32 environments×400 scheduled steps×20 batches=256000 scheduled simulator steps;4 PPO epochs/batch, minibatch256,lr0.0003,clip0.2,gamma0.99,lambda0.95,value0.5,entropy0.001,gradient norm1,seed9921101. One deterministic base episode and initial/final4-episode diagnostic panels add at most3600; total pilot259600. Engineering4env×400×1batch+1base+initial/final4=5200 maximum; overall264800. 400step full-episode ceiling; unused slots charged, no fake shortened episodes. Timeout1800s preflight/3600s pilot; one attempt each, abort failures/nonfinite/integrity errors. No automatic retries, no final TEST.
-- [ ] Freeze per-pi baseline from source-pi6 witnessed TRAIN arrivals plus dense deterministic originalpi6 trajectory before first update, explicitly separate arrival+bank-witness historic support from new single-explorer cleanlanding credit. Freeze normalizer within this initial pilot to preserve warm-start and PPO likelihood identity. Recompute rewards only between rollout batches, no mutable Python callback inside JIT. Full-budget and actualactive costs both reported; no production-bank promotion.
-
-Prelaunch refinement: use dense unperturbed frozenpi6 initial rollout as own-π baseline; historical fixed-perturbation pi6 arrivals are not unperturbedπ6 visitation, so omit them entirely. Pilot evaluation uses the same32-world compiled collector at initial/final endpoints (25,600 scheduled diagnostic slots); pilot total281,600 including256,000 training slots. Preflight4-world initial/train/final=4,800; whole stage ceiling286,400. Active useful steps reported separately; reset/padding not treated as extra valid PPO samples. These values supersede the preliminary budget above, before any launch.
-
-Redesign implementation verified:141 focused CPU tests passed in7.33s. First GPU preflight stopped during compilation due to shared Warp scratch being selected with a per-world mask (reserved4,800 retained, no optimizer update). Fixed using canonical shared-leaf selection and per-substep capacity checking; separately predeclared preflight_shared_buffers completed4,800 slots/540 active/4,260 padding,one PPO optimizer update,13.160s,final4/4 clean landings. This is engineering evidence only. Combined maximum including failed reservation and281,600 pilot is291,200; current pilot has not yet run. Runtime versions captured. Reward is novelty gated by clean landing, with no independent landing bonus. New network emits full4actions; old±0.15 residual gate is not used.
-
-Coverage PPO pilot complete:20 batches/284 optimizer updates,56.775s,281,600 scheduled slots but only18,186 active (15,917 training); padding263,414. Total including failed/preflight reservations291,200. Initial deterministic32/32→final0/32; first stochastic batch31/32 and1,403 new cells BEFORE updates, total1,576 new cells, so no learned-improvement claim. First-update stored-state action change0.1862 and88.65% ratios outside PPO clip suggest excessive update.141 CPU tests and real GPU chain passed; no promotion/automatic retry. Full704episode table,21checkpoints, action tapes, reward ledgers, CSV/PNG/PDF/SVG at `JIT/runs/experiments/per_policy_coverage_ppo_20260911/INDEX.md`. Next stabilize PPO updates and remove paid inactive work; supervised residual comparison superseded by user redesign.
-
-## User-corrected residual exploration contract — 2026-09-11
-
-The previous privileged full-action PPO trial is an off-target engineering experiment, not a test of the user's residual explorer. User explicitly confirms architecture: frozen current pi provides its normal4-action control; a separate106-input256×3 learned stochastic residual replaces hand-selected perturbations. Execute clip(pi(obs)+bounded_delta). Update only residual/value; never replace or update basepi. Fresh residual mean head zero; reuse frozen privileged observation normalization. Existing3-frame history retained. Delta amplitude is declared perchannel, initially0.15 for engineering, not a stability guarantee.
-
-Correction plan (approved design, subagent-driven-development/TDD):
-- [x] Canonical network initialization/composition helpers; zero-delta regression, frozen-base gradients and saturation tests.
-- [x] Candidate-level per-pi novelty reward, paid at causal action tick after validated same-context first-valid-landing suffix. Parent perturbedtrajectory success is NOT an eligibility condition. Unknown/error is preserved and blocks PPO update, never negative; repeats share one credit pernew physical cell.
-- [x] Record actual full snapshot context during GPU rollout, select declared finite nonterminal5cm sampled candidates, save prefix/controller identity. Serial common frozen bank suffix evaluation from exact snapshot, no explorer residual during suffix, complete attempts/costs. No fabricated history, no added numerical replay gate.
-- [x] Replace current trainer action/reward wiring in canonical exploration_training.py; require explicit residual schema so oldfullaction configs cannot silently launch with new semantics. Base pi checkpoint remains immutable; separate residual optimizer/checkpoints preserve ownpi ledger.
-- [x] CPU regression, independently reviewed real short GPU chain (2env×400×initial/train/final=2400 forward slots, atmost1candidate/env/batch+final,7evaluators×400=11200 suffix ceiling;13600 total),1PPO epoch,seed9930101,lr0.00003,1batch,1attempt1800s. Keep earlier experiments unchanged. This verifies wiring, not exploration improvement; no automatic long training.
-
-Correction validated:184 CPU tests passed; real2-world GPU→full-context candidates→frozenbank suffixes→candidate-time PPO update completed31.067s.2,400 forward slots (263active,2,137padding)+164suffix=2,564 charged;1optimizerupdate,83valid training steps. Baseactor/normalizer unchanged, initialzeroδ exactlyequalsbaseactions; composite snapshot and all4candidate receipts audited.2trainingnovel cells/1finaldiagnostic novelcell, no performance claim or long training. Full images/data/checkpoints/cost: `JIT/runs/engineering/residual_suffix_ppo_20260911/INDEX.md`.
-
-## Approved delayed exploration/learning loop — 2026-09-11
-
-User approved implementing the two-round JIT loop now and deferring every GPU stage until the currently running STTW_CONTROL priority_survival pipeline completes. STTW remains a separate project; no STTW files or processes are modified. The prior witnessed-only residual engineering result remains immutable and is not a test of the new provisional-arrival reward.
-
-Implemented design (subagent-driven development and CPU behavior tests): frozen current pi plus bounded four-channel learned residual; explicit `arrival_novelty_v1` pays per-pi newly reached candidate cells even when continuation is deferred or currently has no witness. Such rewards update a provisional arrival ledger, not the verified envelope. Full real prefix, composite controller/checkpoint, history/events/RNG and exact snapshot context remain bound. Frozen base critic values are telemetry only; no quality penalty is introduced. Optional phase-stratified real-frame selection avoids selecting only the first near-start bins.
-
-A separate append-only candidate pool retains deferred, current-bank no-witness and witnessed histories. A declared full current-bank evaluation establishes the pre-learning label. Pending learned-arm candidates receive25% of the80% snapshot-reset mass within available phases, while20% complete fixed jump starts and existing witnessed support remain. Missing pending phases retain witnessed support. Newly witnessed pool rows join later training support with locked provenance; the original four-state witnessed TRAIN panel stays fixed. Each new policy starts from the current frozen Actor/normalizer with fresh critic/optimizer. Old PPO trajectories are never relabeled and replayed as on-policy data. Delayed success updates pool membership, subsequent reset selection and the next frozen source pi.
-
-A fixed uniform four-action residual arm receives the same forward budget, limits and seeds from the same evolving source pi. Only learned-arm pending data trains the shared next pi: this is a conditional exploration control, not an independent full-lifecycle random-training baseline. Key-level current-bank0→new-policy1 and unknown→witness are reported separately from deduplicated physical-cell counts. No convergence/global boundary or formal pi7 promotion is implied; diagnostic checkpoint identities are used.
-
-Bounded queue configuration: first two engineering rounds,2exploration worlds/1batch/4candidates per episode and3,200 policy transitions each; maximum352,000 interactions including both arms, padding, complete-bank labels, policy panels and delayed suffixes. Only a fully completed engineering loop permits the two-round pilot:8exploration worlds/4batches/4candidates per episode,128,000 policy transitions each, maximum3,664,000 interactions. Combined upper bound4,016,000; actual dispatched costs are recorded separately. Each GPU child has1attempt and1,800s limit. No pending states, failures, nonfinite/provenance drift, or exhausted limits stop the chain; no automatic retry/extension. Every stage rechecks the external-job gate. Waiting is bounded to12hours.
-
-Templates: `JIT/configs/delayed_exploration_engineering_20260911.json` and `JIT/configs/delayed_exploration_pilot_20260911.json`. Canonical CPU preparation and execution: `prepare_exploration_queue.py`, `run_gated_plan.py`, `run_exploration_loop.py`. Complete per-round snapshots/prefix NPZ/checkpoints/receipts, candidate/metric/cost CSV and PNG/PDF/SVG views are retained under fresh output directories. Current execution and CPU verification status is recorded in JIT/docs/CURRENT_STATUS.md.
-
-CPU verification completed:230 tests passed in7.51s. Prepared immutable4,016,000-maximum queue and started CPU wait supervisor1907686; actual launch status `waiting`, zero dispatched JIT interactions, STTW still training. Full local entry:`JIT/runs/experiments/delayed_exploration_20260911/INDEX.md`. GPU runtime validity and any learning gain remain unverified for this new loop.
-
-## Delayed-loop recovery — 2026-09-12
-
-The automatic queue did start after STTW completed, but candidate PPO failed in canonical training/formal.py preflight: the new candidate schema was mistakenly routed as a legacy directory. Original outputs remain immutable. Fixed schema dispatch with a failing-then-passing CLI-layer regression and real1040-row zero-interaction preflight. Also made random-arm novelty use the learned arm's exact per-pi baseline artifact instead of independently adding initial rollout cells.232 CPU tests passed in7.78s.
-
-User authorized recovery. Reused saved candidate support for one new3200-step training,77fixed TRAIN panel steps (4/4success), then25same-context suffix steps for the3pending candidates. Total3302new interactions of6000declared;0/2learned and0/1random candidates recovered. Runtime chain passes; no performance/envelope gain claim. Initial evaluation launch was blocked by a transient STTW analysis process at0interactions, then the waiting runner completed. Full evidence:`JIT/runs/engineering/delayed_recovery_20260912/INDEX.md`.
-
-Launched a fresh two-round128k-per-policy pilot using the existing finite template and current source/input locks, maximum3,664,000interactions, supervisor3959291. Live queue:`JIT/runs/experiments/delayed_exploration_20260912/queue/execution/status.json`; loop:`queue/stage_0_result/pipeline_status.json`. Source provenance differs from the failed run; no old run was resumed or overwritten. Fixed TRAIN panels, candidate pending/witness separation, complete per-round figures/data/cost and stop-on-error remain enforced.
-
-Pilot launch correction: the first fresh pilot completed19,200forward slots, then the between-stage gate encountered an STTW reward-analysis process and stopped before labeling (zero suffix charge). Those records remain unchanged. Inner stages now wait up to their declared1800s limit instead of aborting on transient external activity. Added explicit first learned-arrival reuse with exact sampling-contract check, locked source artifact files and full existing candidate-provenance validation; inherited acquisition cost is reported separately, not charged twice.233CPU tests pass in7.73s. Replacement queue reuses those completed19,200slots at `JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/`; earlier queue is stopped, not active. Same two-round128k ceiling; no duplicate acquisition for its first learned arm.
-
-## User pause — 2026-09-12
-
-The reused pilot completed round0's128k PPO and round1 acquisition/labels, then timed out waiting before round1 PPO (zero second-round PPO dispatched). Root cause: JIT classified the STTW deferred_training watcher, which was itself waiting for JIT, as an active trainer. Added opt-in recognition of reviewed source-hashed passive watchers with matching PID, fresh explicit waiting status and a declared dependency on this repository; actual worker processes remain blocking.43related CPU tests pass. The current STTW fixed-roll training is now actually running.
-
-User explicitly directed STTW first and JIT only after a new start instruction. Cancelled the newly prepared JIT wait runner487670 before any child launch, no new interactions. NO AUTOMATIC JIT START IS AUTHORIZED. Remaining work is second-round128k training and delayed evaluation of12learned/9random pending candidates, reusing saved data. Prepared recovery root:`JIT/runs/experiments/delayed_completion_20260912/`; training_execution/status.json is cancelled and USER_PAUSE.json records the explicit-start requirement. All original failed/completed records are unchanged. Gate configuration:`JIT/configs/external_training_gate.json`.
-
-## Explicit restart authorized — 2026-09-12
-
-User now instructed start training, superseding the pause for the remaining JIT work. Prepared a fresh source/input-locked invocation using the exact saved second-round config and support; offline preflight passed. Remaining budget128000PPO+1600fixed TRAIN panel+8400delayed suffix=138000 maximum, one attempt, no reacquisition. Full remaining sequence uses canonical gated training, diagnostic freeze, evaluation of12learned/9random pending entries, and complete table/figure/cost export. Prior cancelled/failed outputs are unchanged.
-
-Background CPU supervisor914277 launched at `JIT/runs/experiments/delayed_completion_start_20260912/`. It waits on the CURRENT STTW fixed-roll pipeline, which was in standard_evaluation at launch, plus real worker-process checks. The new explicit user instruction authorizes this automatic start after resource release. Live `pipeline_status.json` and `training_execution/status.json` distinguish waiting from dispatched training; no training-completion claim is made. Generated execution record, script hash, declaration and logs are retained in the same fresh root.
+- [当前证据与成本](JIT/docs/CURRENT_STATUS.md)；[接手入口](JIT/docs/CODEX_HANDOFF_20260911.md)；[路线与证据缺口](JIT/docs/JIT_TRAINING_ROADMAP.md)。
+- [论文大纲](JIT/docs/JIT_PAPER_OUTLINE.md)、[中文草稿](JIT/docs/paper/JIT_PAPER_DRAFT.md)、[可打印 PDF](JIT/docs/paper/JIT_PAPER_DRAFT.pdf)、[图件/数据/重绘索引](JIT/docs/paper/README.md)。
+- 原始轨迹/快照/checkpoint/完整图保存在 `JIT/runs/`，本次派生 CSV/JSON、来源哈希、SVG/PDF/PNG 和绘图脚本在 `JIT/docs/paper/`。
+- 2026-09-12 已 fetch 核验报告分支：`6121da9`，最新 compact report 为 `review-bf486f2945`，早于本地两轮 pilot。不能用该远端报告证明最新训练状态。
+- 本次更新范围覆盖全部现行项目入口、状态、方法、路线、验证、模块和论文文档。带日期的旧结果报告保留为历史证据；旧根目录论文规格加入历史标识，见 [维护清单](JIT/docs/paper/README.md)。

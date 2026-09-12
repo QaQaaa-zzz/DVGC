@@ -1,65 +1,25 @@
-# JIT code organization and migration map
+# JIT 当前代码组织
 
-`policy_comparison.py` owns the CPU-only resumable supervisor; `policy_comparison_runtime.py` reuses strict legacy label/shard/merge interfaces and validates/project snapshots; `analysis/policy_envelopes.py` owns common-panel physical metrics and PNG/PDF/SVG exports. `cli/compare_policy_envelopes.py` is the thin entry. See [run guide](JIT_POLICY_ENVELOPE_COMPARISON_20260907.md).
+更新：2026-09-12。维护既有能力模块，禁止按日期/seed/checkpoint复制实现。目录迁移须先检查import、CLI、配置和工件来源依赖，不因文件位于flat目录就删除。
 
-Active objective: [empirical-envelope project](../../PROJECT.md). Current implementation gaps: [review](JIT_EMPIRICAL_ENVELOPE_REVIEW_20260905.md). New schemas below are design requirements, not shipped capabilities.
-
-## Placement
-
-Durable scientific behavior belongs in `JIT/src/jit_dvgc/`; CLIs in `JIT/cli/` parse arguments and call modules; tests in `JIT/tests/`; configs in `JIT/configs/`; guidance in `JIT/docs/`. Extend existing capabilities instead of iteration-specific source copies.
-
-## Existing components and next responsibility
-
-| Area | Existing owner | Current role / required change |
+| 能力 | 当前模块（相对 JIT/src/jit_dvgc） | 职责与边界 |
 | --- | --- | --- |
-| Bootstrap/reset support | `soft_tube.py`, phase environments and value modules | Preserve value-weighted historical S0; do not label all rows as witnessed capability |
-| Unified training | `unified_formal.py`, `training/formal.py`, `cli/train_unified_from_pi0.py` | Consolidate warm-start in public implementation; explicit fixed-start versus legacy natural reset |
-| Frozen policy identity | `unified_policy_freeze.py`, `unified_training.py`, `checkpoint.py` | Reuse for technical probe eligibility; do not equate freeze with scientific selection |
-| Exact snapshot | `unified_envelope_snapshot.py`, `unified_continuation_labels.py` | Separate physical/context identities; verify restoration/time semantics |
-| Production evidence validation | `jump_evidence_validation.py`, `jump_evidence_runtime.py`, `cli/validate_jump_evidence.py` | CPU-only coordinator; fresh GPU workers for real prefix, four continuation controls and serial/shard comparison; diagnostic ZIP, no admission/training |
-| Centerline | `analysis/nominal_jump_centerline.py` | Fixed real pi_0 trajectory as coordinates |
-| Causal arrival | `acquisition/causal_jump.py`, `causal_frontier_protocol.py` | Reuse per-proposer primitive; remove training-support membership as witness veto in new mode; add supervisor/namespace |
-| Family outcomes | `policy_family_landing.py`, `unified_continuation_shards.py` | Versioned members, exact requested identity, row checks and safe publishing |
-| Empirical geometry | `analysis/causal_jump_capability.py`, `analysis/capability_tube.py`, `analysis/jump_tube_view.py` | Separate exact witnesses, cumulative cells, roles, physical projections and marginal attribution |
-| Training Tube updates | `iterative_tube.py`, `tube_rsi.py` | Keep training sampling independent of evidence admission and coverage deduplication |
-| Role isolation | `iterative_frontier_protocol.py`, isolation CLI | Extend cross-proposer/ancestor/bank-version isolation |
-| Optional predictor | `family_landing_predictor.py` | Verify score lock and target bank; tied AP; no admission labels |
-| Legacy selection | `analysis/capability_progression.py`, `iterative_acceptance_gate.py`, selection CLI | Close invalid historical evidence route; preserve legacy Actor comparisons as diagnostics |
-| Workflow | `workflow/iteration_loop.py`, `cli/prepare_iterative_envelope_workflow.py` | Migrate new protocol to bank/registry/declared-budget decisions rather than single selected successor |
+| 固定物理/观测/动作 | `constants.py`, `observation.py`, `action_mapping.py`, `unified_env.py` | 76D/106D、四动作、phase任务奖励；与XML/config绑定 |
+| 历史多proposer生产 | `envelope_campaign.py`, `campaign_bank.py`, `dense_tube.py`, `dense_tube_runtime.py` | all_proposers_v1已完成，不从旧命令重启 |
+| 真实采集与动作来源 | `acquisition/causal_jump.py` | 固定起点、完整tape、真实prefix/context |
+| 候选与物理几何 | `analysis/capability_tube.py` | root/full物理单元、phase、绘图投影；不是连续域认证 |
+| 残差网络 | `exploration_network.py` | frozen基础π、106D残差Actor/Critic、tanh Gaussian及动作合成 |
+| 探索PPO及候选选择 | `exploration_training.py` | active-step loss、因果候选tick、baseline、初始/最终诊断 |
+| 当前π新颖性 | `exploration_reward.py` | arrival/witnessed两个版本、每cell共享1信用、per-policy ledger |
+| 准确续接与未知标签 | `exploration_continuation.py`, `unified_continuation_labels.py` | 完整context恢复、fresh_continuation时钟、冲突unknown |
+| 候选池及延迟反馈 | `exploration_pool.py`, `exploration_reevaluation.py` | pending/witnessed、追加评价、不回放旧PPO |
+| 有限探索/学习外循环 | `exploration_loop.py`, `exploration_loop_declaration.py`, `exploration_loop_support.py` | 声明、成本、两臂、pending支持与下一sourceπ |
+| 后继π训练 | `iterative_probe_training.py`, `training/` | 固定起点/快照混合、phase/group、warm Actor+normalizer和fresh critic/optimizer |
+| checkpoint诊断 | `checkpoint_comparison.py`, `analysis/checkpoint_discovery.py` | 固定TRAINpanel与锁定探索安排、离线共同预算视图 |
+| 批量接续 | `continuation/device_rollout.py`, `unified_continuation_shards.py`, `policy_family_landing.py` | serial/device/vectorized、掩码、容量与计费；不追溯改变旧协议 |
+| 结果交付 | `result_bundle.py`, `result_publishing.py` | 原始工件索引、精简报告、来源身份 |
+| 旧监督探索 | `residual_exploration.py`及对应export/fit入口 | 保留可读性与历史结果；不是当前残差PPO训练器 |
 
-`probe_bank.py` now owns the new bank, multi-catalog label plan, fresh-process supervisor, attempt reservations and observation index. `evidence_integrity.py` supplies shared CPU-only endpoint/row/protocol checks. `cli/probe_bank.py` is the new entry point. Cumulative physical cells and complementary PPO remain future work; see [implementation status](JIT_PROBE_BANK_IMPLEMENTATION_20260905.md).
+`JIT/cli/`保持薄入口；`JIT/configs/`是声明而不是执行证据；`JIT/tests/`保留协议行为测试；`JIT/runs/`保存不可变运行产物，默认不Git。论文作者侧脚本、紧凑来源表和三格式图在 `JIT/docs/paper/`，不侵入训练模块。
 
-## New lifecycle requirements
-
-1. Freeze task/start/centerline/roles/budget and bank membership.
-2. Capture per-proposer arrivals with complete provenance.
-3. Evaluate exact suffix outcomes with immutable attempted/completed/error status.
-4. Publish validated witness registry and separate role/physical/Actor views.
-5. Account attempts and retries once in the cumulative ledger.
-6. Train/admit new probes under a declared recipe; technical eligibility, evidence validity and marginal utility are separate decisions.
-
-Old selected-policy artifacts remain readable; they do not automatically authorize new discovery. Legacy scans retain their fixed family and signatures.
-
-## Required verification
-
-- Wrong catalog/Actor/payload/seed/horizon/endpoint/cache request must refuse.
-- Mixed identity rows, duplicate/missing shard indices and incomplete files must refuse before publication.
-- Existing S states can gain missing witnesses without inflating physical counts.
-- Equal physical coordinates with distinct required contexts remain distinguishable.
-- Prefix/capture/restore/suffix and serial/sharded paths agree on a small real runtime bank.
-- Public warm-start actually routes Actor/normalizer and resets critic/optimizer as declared.
-- Role isolation spans all sources and versions.
-- Predictor score drift and target-bank drift are rejected; tied AP is order invariant.
-- Old mixed-endpoint gates cannot become fresh scientific eligibility evidence.
-
-Fixture/CPU/source checks do not replace real checkpoint/GPU/rollout checks. Document validation scope accurately.
-
-The small production validation path is implemented; [run it and return the ZIP](JIT_GPU_EVIDENCE_VALIDATION_20260906.md). Its CPU-tested orchestration does not establish the pending runtime gates.
-
-## Evidence storage
-
-Keep lightweight run summaries and reproducible source/config identities in Git. Large checkpoints and catalogs may remain external with a resolvable artifact index. Preserve old absolute paths as historical records and add a materialization map rather than rewriting provenance. Raw historical JSON must not be edited to retrofit the new protocol.
-
-## Dense real-frame pilot
-
-`cli/run_dense_tube.py` → `dense_tube.py` (CPU supervisor, receipts, backend decision) → `dense_tube_runtime.py` (isolated workers). Extend `acquisition/causal_jump.py` via `trajectory_slices_v2`; `acquisition/trajectory_sampling.py` selects real frames. `continuation/device_rollout.py` adds bounded device-side first-landing evaluation; `analysis/dense_coverage.py` compares old/new support without changing the physical grid. See [run guide](JIT_DENSE_TUBE_PILOT_20260907.md).
+旧“残差只实现监督warm start”“pending禁止进入所有训练支持”“自动checkpoint仍完全未实现”等描述已过时。当前仍未实现：critic质量罚项、扩散探索、跨policy通用条件explorer、收益自适应proposer分配、自动无限延长训练。

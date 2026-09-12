@@ -1,8 +1,10 @@
 # DVGC Repository Layout and Cleanup Rules
 
-Current for `agent/two-phase-soft-tube` as of 2026-09-01.
+Current for `agent/two-phase-soft-tube` as of 2026-09-12.
 
 This document replaces the old pre-JIT cleanup ledger. Historical deletion decisions and branch-specific migration notes remain available in Git history; they are no longer current execution guidance.
+
+Current module mapping: [JIT code organization](../JIT/docs/CODE_ORGANIZATION.md). Current manuscript, editable figures and compact source tables live in `JIT/docs/paper/`; raw runs remain under `JIT/runs/`. Dated reports remain historical evidence.
 
 ## 1. Active project boundary
 

@@ -1,126 +1,70 @@
-# JIT empirical jumping-envelope iteration protocol
+# JIT 经验跳跃包线与延迟探索协议
 
-2026-09-07 user decision supersedes earlier replay gates: accept the declared near-ground reset (about 3.1 cm wheel clearance) and observed numerical replay differences; no additional replay validation requested. Keep raw numerical failures recorded. Proceed with [shared-panel policy comparisons](JIT_POLICY_ENVELOPE_COMPARISON_20260907.md), keeping roles, frozen identities, endpoint and costs explicit. Do not mark exact replay verified or modify historical resets.
+当前版本说明：2026-09-12。本文描述已经实现的有限外循环及后续比较必须保持的契约。历史冻结协议不被本页追溯修改。详见[当前状态](CURRENT_STATUS.md)与[论文公式](paper/JIT_PAPER_DRAFT.md)。
 
-Version: user-confirmed envelope direction, 2026-09-05. Read [root authority](../../AGENTS.md), [status](CURRENT_STATUS.md), and [review](JIT_EMPIRICAL_ENVELOPE_REVIEW_20260905.md). The first bank/suffix scheduler and integrity fixes now exist; [implementation status](JIT_PROBE_BANK_IMPLEMENTATION_20260905.md) identifies unverified GPU replay and the still-pending cumulative physical/training loop.
+## 1. 对象与终点
 
-## 1. Objective and legacy boundary
+固定 `assets/orange_bike_4kg_horizontal.xml`、2kg载荷、完整x=2.5m近地起点、0.005s物理积分/0.020s控制。初始约3.1cm轮胎间隙已获用户接受。终点为首次有效落地，不能换成长期稳定恢复。两轮离地清隙先超过0.05m，随后任一轮接地、穿透不超过0.01m、无body contact且有限，才构成落地事件；并发physical_failure不能成为无冲突成功。
 
-Optimize discovery of exact forward-arrived states with successful first-landing witnesses, and report novel physical support versus total interactions. A single successor Actor and full-Tube retention are not acceptance requirements for empirical witnesses.
+完整候选记为χ，包含qpos/qvel/ctrl、控制FIFO和有效计数、last action、事件/phase、RNG、时间规则及来源。准确候选键绑定state/context/acquisition身份。单独位置速度相同不支持跨轨迹拼接；相同物理网格也不支持拼接。
 
-Already locked 2026-09-04/05 experiments retain their original pi_0 proposer, pi_0/pi_1/pi_2 evaluators, catalogs, endpoints, seeds, horizons and roles. Finish them as legacy experiments. New multi-probe work uses a new protocol/run identity and must not overwrite old outputs or reinterpret historical negative labels.
+## 2. 四类集合
 
-## 2. Lock task, bank and budget
+- A：具有真实动力学前向来源的候选记录。
+- W：A中至少获得一个同上下文、无冲突成功续接见证的记录。
+- P：A中尚没有有效见证的pending记录；其最新评价可为完整bank no-witness或unknown。
+- S：训练/reset支持；可以包括W以及按声明配额加入的P，不能把全部S宣称为包线。
 
-Before a new experiment, declare:
+库标签为1（存在成功）、0（全部声明评价者完成且均失败）、unknown（未完、错误、冲突等）。P中的0并非物理不可行；新的策略允许重新评价。保存逐评价者与每次追加结果，而非只保存OR。
 
-- XML, physics, actuator and observation-schema identities;
-- complete x=2.5 m ground state/context and task/phase time rules;
-- fixed real-frame pi_0 centerline, 0.1 m slices, phase assignment and corridor cap;
-- frozen policy records and normalizer/Actor/payload identities;
-- explicit proposer and evaluator membership, bank version and predecessor;
-- per-role allocation, seeds, perturbation windows/actions/strengths and horizons;
-- first-valid-landing and physical/task failure semantics;
-- exact snapshot/context identity and separate physical cell resolution;
-- per-attempt/per-role/total interaction budgets and stopping rules;
-- data role/ancestor grouping and holdout exclusion rules;
-- optional predictor identity and target bank, if used;
-- training recipe and admission decision, if a new probe is trained.
+## 3. 当前残差探索
 
-Proposed bank lifecycle must distinguish technically compatible, admitted-for-experiment, resource-inactive and retired probes. Retiring a probe from execution does not delete its prior witnesses. Names such as pi_3 are display labels, not complete identity.
+基础π_i的Actor与normalizer在探索训练块内冻结。基础Actor读76D三帧观测，残差Actor和其独立Critic读106D privileged observation。残差Actor为256×3 Swish，输出4D tanh Gaussian，当前归一化残差界为各通道0.15。
 
-## 3. Bootstrap provenance
+$$a_t=\operatorname{clip}\left(\pi_i(o_t)+d\odot\tanh u_\theta(z_t),-1,1\right).$$
 
-Preserve up/down training, handoff capture, phase labels, value models, initial weighted support and unified development history. The committed Tube0 includes negative phase labels with nonzero sampling weights; it is `S_0`, not automatically `T_hat_0`.
+动作顺序为steer/rear-wheel drive/hip/knee。本轮髋膝为keyframe-centered absolute position目标；转向position、后轮velocity actuator。requested与effective residual都记录，幅度限制不构成稳定性保证。
 
-Materialize the exact later Round1 pi_0 freeze/checkpoint/normalizer/config and fixed-start centerline trace. Do not substitute the first completed unified checkpoint because its run has the same transition count. A bootstrap comparison must include actual phase-expert and seed development cost.
+每个新source π重新初始化残差Actor/Critic/optimizer；同轮batch之间继续更新。没有显式policy ID/goal输入。random对照逐步均匀采样同界残差，不训练。当前只给learned臂训练共享后继π，因此该pilot是条件探索比较。
 
-## 4. Forward discovery
+## 4. 到达奖励与见证准入分离
 
-Run the declared frozen proposer from the complete fixed start, with bounded perturbations at declared ancestors/windows. Capture only states reached by actual env.step. Multiple proposers may generate separate catalogs; a supervisor must preserve stable attempt IDs and a global role/ancestor namespace.
+`arrival_novelty_v1` 的ledger针对当前π自身基线及本探索块已奖励单元，与全历史bank并集分离。每个满足真实prefix/context检查的新root cell每batch总奖励1，同格多候选分摊，信用绑定实际候选动作tick。父轨迹后来失败不抹掉此前真实到达。
 
-General ancestor restoration is permitted only after a verified prefix and full-context replay contract exist. Current code does not implement that general path; starting each attempt from the fixed start is a valid initial implementation.
+奖励不需要当前bank成功。所有需要展示为经验包线的候选仍需真实suffix见证。保留的`witnessed_novelty_v1`是另一奖励协议，不冒充当前方案。探索PPO没有基础task reward、失败罚项或critic质量惩罚；基础critic只记录telemetry。
 
-Retain successful and unsuccessful attempts and their interactions. A state already present in training support must not be excluded from witness acquisition solely for that reason. Preserve distinct controller/time contexts; deduplicate physical coverage only in the metric view. Repeated physical states under different probes can have useful attribution.
+物理网格为root的12维位置/速度/欧拉角/角速度加phase，分辨率分别0.1m/0.1m·s⁻¹/0.5°/2°·s⁻¹。5cm仅是纵向候选/绘图间隔。当前候选每episode最多4个，实际帧采样，不插值造状态；预算和上限可能影响观测新颖性。
 
-## 5. Exact continuation witnesses
+## 5. 同上下文续接
 
-Restore the candidate's physical and controller/event context for each declared evaluator. Stop at first valid landing, declared failure or horizon. Define explicitly whether horizon is suffix-local or remaining full-task time. If administrative counters are reset, show that the restoration still corresponds to the stated task contract; do not claim unconditional concatenation equivalence without a smoke test.
+对每个候选恢复声明的物理与控制历史，用冻结评价π单独续接，**不带探索残差**。当前`fresh_continuation_v1`重置声明的episode/phase行政计时及累计return，保留物理与控制历史；该时钟变换是协议的一部分，不能写成完整MuJoCo内部状态逐位一致。
 
-Every completed outcome binds:
+first-success可在首个无冲突见证后停止其他评价者，未测保持未测。仅当所有声明评价者完成失败才为0；错误、缺片、冲突不得凑成负样本。全矩阵用于单策略比较，存在性短路用于见证发现，两种统计不同。
 
-- attempt/candidate and exact snapshot/context identity;
-- arrival provenance, proposer, role and bank version;
-- evaluator Actor/payload/config identity;
-- endpoint, horizon, remaining-time rule and seed;
-- label, outcome class, interaction count and execution status.
+用户已接受历史数值replay差异，不额外引入精确replay准入门槛；同时不声称精确replay已通过。4条历史forward冲突保留，派生隔离规则不回写旧结果。
 
-The OR label means at least one declared evaluator succeeded. Completed failure, not-yet-evaluated and engineering error remain distinct. Downstream all-positive is a valid observed sample distribution; it does not require synthetic negatives or block envelope construction.
+## 6. pending学习与延迟重评
 
-## 6. Process isolation and merge
+新跳跃Actor由上一π的Actor+normalizer初始化，Critic和optimizer重新初始化；仍用任务phase reward，不用探索奖励。
 
-Use fresh evaluator processes. The historical 600-candidate suggestion is an operational starting limit, not a validated guarantee. Validate small banks first and adjust downward if required. Do not run multiple long-lived GPU evaluators concurrently without a measured resource budget.
+当前reset为20%完整固定起点 +80%快照；快照up/down各半。某phase存在pending时，该phase中pending质量为25%，其余75% witnessed；没有pending则仍全witnessed。pending按trajectory均衡。本pilot pending训练支持仅upstream，理论混合总pending质量约10%，不是25%也不是20%所有reset。
 
-Cache reuse must compare the complete requested contract before returning. Merge must validate all files, exact requested catalog, non-overlapping complete global indices, consistent per-row identities/endpoint, seed scheme and labels before atomically publishing. Never archive a completed valid result as an incomplete attempt. Preserve failed/partial directories and link retries in the cost ledger.
+训练新π后冻结身份，在旧pending完整上下文上追加新成员续接结果。新见证进入W，旧有效见证保留，仍无见证者保留P。此反馈更新支持选择和下一轮source π，不跨多个PPO训练反向传播，也不对旧探索轨迹重标奖励后作为on-policy样本重放。
 
-Exit check: same small catalog serially and in two or more processes yields the same ordered state/evaluator/seed/endpoint/label outcomes under the declared numeric tolerance. CPU fixture tests are insufficient for this exit check.
+固定小TRAIN面板独立于pending更新，用于诊断；4/4成功不证明完整能力或旧pending学会。当前两轮128k均完成，延迟0→1均0。
 
-## 7. Witness registry and metric views
+## 7. 经验包线与可作出的数学结论
 
-Store exact witnesses independently of training support. A new registry version adds verified observations with source bank/attempt/evaluator IDs. Historical valid witnesses remain intact; invalidated evidence needs an explicit derived exclusion reason rather than silent deletion.
+先确认准确记录W，再投影去重得到已见证cell集合。历史有效见证不删除时，同一身份、分辨率和协议下的累计集合只增不减，这是集合并的性质。它不意味着单π能力单调、真实连续区域内部都可行、随机成功概率有保证，或有限循环会遍历完整物理空间。
 
-Build separate role-aware views for:
+报告新到达、已见证、新suffix成功、训练支持、宏观相位几何和成本分别对应什么对象。不得把12维零重叠cell直接解释为宏观区域完全不重叠；不得将不同protocol结果未经去重直接相加。
 
-1. exact forward arrivals;
-2. exact states with a landing witness;
-3. root/full physical cells and longitudinal/phase sections;
-4. TRAIN reset support;
-5. each policy's realization and unique contribution;
-6. attempted-without-witness and untested coverage.
+## 8. 数据、预算、运行与复用
 
-Report both cumulative union and per-round gain. Attribute gains to new arrivals, new suffix successes on old arrivals, and overlapping contributions. Do not credit each probe with the entire union or sum overlapping cell counts. Fixed resolution/corridor and a stable comparison population are required for curves.
+仅TRAIN驱动探索/训练；CALIBRATION用于可选预测器；已使用ACCEPTANCE为开发证据；最终TEST/JCE/JEL保持封闭。frame/candidate共享祖先，独立重复按训练与探索谱系设计。
 
-Existing physical metrics can be reused, but existing `continuation_viability_proven` fields are historical names for observed outcomes, not certificates. New schemas should use witness terminology and retain old readers without rewriting raw results.
+声明模型、配置、source π/bank、种子、扰动、候选上限、endpoint、完整context、预算/停止条件及比较臂后再运行。缓存复用核验准确工件与协议身份，旧completed工件读取不强迫其源码等于当前HEAD。不得删锁跨变更resume。
 
-## 8. Data-role isolation
+成本按前向（active与padding分开）、所有suffix、PPO、panel、失败/重试、继承基线和bootstrap分项记录；actual、reserved上限、wall time和GPU时长不同。存在性减少suffix有用步不自动等于整条管线的墙钟提升。大批量工程验证结果不自动替换旧锁定科学协议。
 
-Only TRAIN can drive adaptive discovery and train new probes. CALIBRATION is for optional threshold calibration; decision-used ACCEPTANCE remains development data. Final TEST/JCE/JEL remains sealed for this work.
-
-Audit exact/context and declared-near overlap across all bank members, existing training supports, ancestor families and versions. Separate parent IDs alone do not prove independence. Preserve excluded counts and immutable raw roles. Historical bootstrap `test` labels have already been evaluated; reserve and audit the final distribution independently.
-
-## 9. Probe training and admission
-
-Before training, freeze support/weighting, initializer and normalizer rules, reset mixture, reward, phase balance, PPO transitions, seeds, exploration/labeling budget, comparison arms and stop rule.
-
-Legacy `natural_reset_probability` implements `existing_phase_u_natural_reset`. It is not a synonym for the selected x=2.5 start. A new fixed-start training mixture requires explicit configuration/runtime support. Actor-only warm start must import Actor/normalizer and reset critic/optimizer as declared through the public entry point; historical CLI monkey-patching is not a completed public API migration.
-
-Admission has separate stages:
-
-- technical compatibility/freeze/smoke check;
-- predeclared bounded evaluation as a new probe;
-- valid witness retention independent of aggregate Actor coverage;
-- optional active-bank scheduling based on incremental contribution and cost.
-
-A candidate may add useful support despite lower old-panel coverage. Report that diagnostic; do not use it as a universal witness veto. Conversely, training completion alone does not prove discovery gain. Use existing pi_0/pi_1/pi_2 and a verified pi_3 pilot before spending another large PPO run.
-
-No default sampling ratio, diversity loss or numerical admission threshold has been accepted as the method yet. The roadmap lists a controlled recipe to specify; do not invent a predeclared result after seeing outcomes.
-
-## 10. Optional predictor
-
-Predictors rank/diagnose only unless a separate controlled allocation study is declared. They never create arrivals, positive labels or Tube admission. A predictor trained for one bank must not silently change its target when the bank grows.
-
-Before fresh labels, lock score order, exact candidate/context identity, catalog/protocol, model/normalizer, threshold and target bank. At audit time verify self-hash and every link before joining outcomes. Record the pre-outcome history; hashes alone do not establish chronology.
-
-Compute tied-score-correct AP, explicitly distinguish AP from trapezoidal PR-AUC, report recall/FPR/class/group counts, and flag undefined metrics for single-class samples. Do not require ACCEPTANCE class balance to authorize TRAIN fitting. Predictor quality is not a prerequisite for predictor-free discovery.
-
-## 11. Cost, comparisons and stop
-
-A cumulative ledger links physical attempts and retries to consumed interactions, with no double counting of cached evidence. Charge bootstrap, acquisition prefixes/exclusions, all evaluators, PPO and development decisions; report wall time/hardware separately. Summaries of completed evaluators alone omit failed-run cost.
-
-Predeclare matched-budget pi_0-only, fixed-bank uniform and iterative/growing-bank arms. Attribute benefit of probe growth separately from changed perturbation grids. If claiming a curriculum schedule effect, compare the same TRAIN support pooled once versus incrementally supplied.
-
-Stop on the declared budget or predeclared marginal-gain rule, not when one Actor realizes the whole Tube. Coverage plateau under a finite bank/budget is not a physical boundary proof.
-
-## 12. Current execution boundary
-
-Correctness blockers and the missing new lifecycle prevent starting a formal new-probe run from the old selected-policy workflow. Follow [training roadmap](JIT_TRAINING_ROADMAP.md). Finish historical labels under their locked contract, then run an existing-probe discovery pilot under a new versioned protocol. Documentation editing itself executes no GPU work and does not change old manifests.
+每阶段保存完整轨迹/动作/快照/标签、所有PNG/PDF/SVG与replot CSV、SHA清单、INDEX和成本。本次文档更新不执行新GPU工作，不覆盖已完成all-proposer或旧失败记录。

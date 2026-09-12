@@ -1,121 +1,40 @@
-# JIT verification — current production checks
+# JIT 当前验证范围
 
-This page contains current verification only. Historical Phase-U v2/v3/v4
-instructions were removed from the active tree and remain available in Git
-history.
+更新：2026-09-12。本页替代旧π1 paired core gate作为所有后继工作的唯一入口。历史gate及其失败记录仍保留原有科学含义；当前经验见证不要求单Actor覆盖全部Tube。
 
-## 1. Repository/static preflight
+## 证据分层
 
-```bash
-cd ~/DVGC
-export PYTHONPATH="$PWD/JIT/src"
-export PYTHONUNBUFFERED=1
-export XLA_PYTHON_CLIENT_PREALLOCATE=false
-export MUJOCO_GL=egl
-PY=/home/qy/mujoco_playground/.venv/bin/python
+| 层次 | 当前已核验 | 不等价于 |
+| --- | --- | --- |
+| 源码/CPU行为 | 动作冻结与限幅、信用按cell分配、unknown不变negative、候选池追加、pending支持、预算与复用协议有测试 | GPU数值与实际探索收益 |
+| GPU工程 | corrected残差PPO动作→真实prefix/context→suffix→更新链跑通；批量接续容量测量 | 最终科学比较或实车能力 |
+| TRAIN开发 | 历史all-proposer、checkpoint pilot和两轮延迟pilot完成 | 独立重复/最终holdout |
+| 最新机制结果 | 两次128k后旧无见证→成功仍为0 | 延迟学习已有效、包线已收敛 |
+| 稿件与维护 | 以本次paper数据哈希、图件和文档链接验证记录为准 | 重新运行历史仿真 |
 
-$PY -m compileall -q JIT/src JIT/cli
-$PY -m pytest JIT/tests -q -m "not gpu"
-```
+## 修改相关验证
 
-Or use:
+从仓库根目录使用生产Python；仅对相关模块运行必要CPU测试，不以文档编辑触发全量GPU测试。
 
 ```bash
-JIT/scripts/local_preflight.sh
+PYTHONPATH=JIT/src JAX_PLATFORMS=cpu   /home/qy/mujoco_playground/.venv/bin/python -m pytest JIT/tests/<相关测试文件> -q
 ```
 
-GPU tests are explicit:
+全仓库静态/CPU preflight入口为 `JIT/scripts/local_preflight.sh`；GPU测试显式配置`JIT_RUN_GPU_TESTS=1`，须有相应工程预算。CPU通过不能写成GPU通过。
 
-```bash
-JIT_RUN_GPU_TESTS=1 JIT/scripts/local_preflight.sh
-```
+对动作/观测变更检查76D/106D顺序、history/FIFO和checkpoint绑定；对奖励变更检查candidate tick、per-π baseline、重复cell共享、unknown资格及旧reward版本；对pool检查完整identity与追加标签；对reset检查完整状态、phase/group和pending质量，而不是只检查配置数字；对运行控制检查actual/reserved、旧artifact复用和失败保留。
 
-Do not interpret an XLA autotuning warning or the existing
-`ccd_iterations=35` warning as the cause of a run failure unless it is actually
-in the exception path. Do not change physics/solver settings during a pi_k vs
-pi_(k+1) single-variable comparison merely to silence a warning.
+## 当前科学核对清单
 
-## 2. Current pi_1 completion evidence
+- 两轮完成由reuse首轮记录与completion次轮记录共同提供；原始error不改。
+- 最新128,407补完成本与两轮348,371关联成本分别核对，不重复计继承19,200。
+- 标签冲突为unknown；旧738-positive及新735-witness视图分开；历史4条forward冲突没有新增substep裁决。
+- 相同物理单元不等于相同context；fresh_continuation的计时变换必须公开，已接受数值差异不得写成精确replay通过。
+- 16384容量测量及38→39tick差异必须随性能解释，不能无条件替换锁定serial结果。
+- finalTEST/JCE/JEL未打开；没有从并行环境数虚构独立seed数量。
 
-Completed run:
+## 文档/论文交付验证
 
-`JIT/runs/pi_unified/pi_1_tube1_natural10_10009600_seed821101_20260901_retry01`
+运行 `JIT/docs/paper/build_figures.py` 从已保存CSV重绘；`build_manuscript.py`生成离线HTML/PDF；`verify_artifacts.py`核验数据哈希、源文件、图件和关键数值。构建依赖与命令见[论文索引](paper/README.md)。图件需实际查看，PDF需确认中文/公式与页面不裁切。构建程序不导入仿真环境，不执行env.step或PPO。
 
-Required local checks before freezing:
-
-- `formal_report.json` status is `completed`
-- completed transitions = 10,009,600
-- checkpoint list ends at `transition_10009600`
-- all five TRAIN panels are present
-- train-panel interactions = 2,838
-- Brax evaluation transitions = 0
-- validation/TEST flags are false
-- expert switching is false
-- checkpoint restoration is true
-
-The first failed pi_1 run is not a scientific checkpoint source and must not be
-used for warm-start. It remains an engineering-error provenance record.
-
-## 3. Formal-training plotting hardening
-
-`jit_dvgc.training.run_unified_formal` performs a full configured-Tube static
-snapshot/plot-point preflight before constructing the training environment. It
-must report zero environment interactions and zero training transitions.
-
-The mixed-snapshot regression must cover both `handoff_snapshot_v1` and
-`jit_unified_envelope_snapshot_v1`.
-
-## 4. Freeze then capability gates
-
-The next legal scientific sequence is:
-
-```text
-completed pi_1 final checkpoint
-        ↓
-freeze exact pi_1 identity
-        ↓
-core-preservation gate
-        ↓
-boundary-gain gate
-        ↓
-PASS + PASS ? allow empirical envelope expansion : stop / diagnose
-```
-
-Neither training reward nor a larger Tube substitutes for these gates.
-
-## 5. Iteration automation verification
-
-Plan a workflow without executing it:
-
-```bash
-$PY JIT/cli/run_iteration_workflow.py --config <workflow.json>
-```
-
-Execute/resume only with an explicit flag:
-
-```bash
-$PY JIT/cli/run_iteration_workflow.py --config <workflow.json> --execute
-```
-
-For every stage, verify that:
-
-- the declared completion artifact exists
-- JSON assertions pass before the next stage starts
-- exported SHA/path values come from that artifact, not from handwritten shell
-  variables
-- an engineering/scientific failure stops the workflow at that stage
-- restarting with the unchanged workflow config revalidates completed artifacts
-  and resumes rather than overwriting them
-- the workflow contains no final TEST/JCE/JEL stage
-
-## 6. Claims that remain prohibited
-
-Until core-preservation and boundary-gain both pass for frozen pi_1, do not
-claim:
-
-- empirical capability-envelope expansion from pi_0 to pi_1
-- pi_1 as final unified policy
-- Tube_1 as a certified safe/viable set
-- JCE/JEL final performance
-
-TEST remains untouched until a final frozen policy is selected.
+本轮具体检查结果写入 `JIT/docs/paper/validation.json`。没有执行的检查不写passed；过去的测试数不冒充本轮测试。

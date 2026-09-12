@@ -1,0 +1,56 @@
+{
+  "active_interactions": 375,
+  "episodes": [
+    {
+      "completed": true,
+      "finite": true,
+      "physical_failure": false,
+      "success": true
+    },
+    {
+      "completed": true,
+      "finite": true,
+      "physical_failure": false,
+      "success": true
+    },
+    {
+      "completed": true,
+      "finite": true,
+      "physical_failure": false,
+      "success": true
+    },
+    {
+      "completed": true,
+      "finite": true,
+      "physical_failure": false,
+      "success": true
+    },
+    {
+      "completed": true,
+      "finite": true,
+      "physical_failure": false,
+      "success": true
+    },
+    {
+      "completed": true,
+      "finite": true,
+      "physical_failure": false,
+      "success": true
+    },
+    {
+      "completed": true,
+      "finite": true,
+      "physical_failure": false,
+      "success": true
+    },
+    {
+      "completed": true,
+      "finite": true,
+      "physical_failure": false,
+      "success": true
+    }
+  ],
+  "padding_interactions": 2825,
+  "scheduled_interactions": 3200,
+  "wall_seconds": 6.484333083993988
+}

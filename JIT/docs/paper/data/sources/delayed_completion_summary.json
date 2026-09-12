@@ -1,0 +1,47 @@
+{
+  "completed_second_round": true,
+  "costs": [
+    {
+      "charged_interactions": 128000,
+      "stage": "policy_training"
+    },
+    {
+      "charged_interactions": 77,
+      "stage": "fixed_TRAIN_panel"
+    },
+    {
+      "charged_interactions": 111,
+      "stage": "fixed_random_delayed_suffix"
+    },
+    {
+      "charged_interactions": 219,
+      "stage": "learned_residual_delayed_suffix"
+    }
+  ],
+  "final_test_used": false,
+  "maximum_interactions": 138000,
+  "metrics": [
+    {
+      "arm": "fixed_random",
+      "pending_root_cells": 9,
+      "previous_bank_no_witness_to_witness": 0,
+      "previously_witnessed": 308,
+      "round_index": 1,
+      "still_pending": 9,
+      "unknown_to_witness": 0,
+      "verified_root_cells": 308
+    },
+    {
+      "arm": "learned_residual",
+      "pending_root_cells": 12,
+      "previous_bank_no_witness_to_witness": 0,
+      "previously_witnessed": 308,
+      "round_index": 1,
+      "still_pending": 12,
+      "unknown_to_witness": 0,
+      "verified_root_cells": 289
+    }
+  ],
+  "new_interactions": 128407,
+  "previous_records_unchanged": true
+}

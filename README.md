@@ -1,32 +1,17 @@
-# OrangeBike DVGC / JIT
+# DVGC / JIT：经验跳跃包线探索
 
-JIT studies **bootstrapping and budget-controlled discovery of empirical jumping envelopes** for a fixed bicycle–pendulum robot. A growing bank of complementary frozen policies supplies forward proposals and successful landing continuations. A single Actor need not realize the entire cumulative Tube.
+当前研究与实现位于 **JIT/**，维护日期 **2026-09-12**，工作分支 `agent/two-phase-soft-tube`。
 
-## Research scope
+我们研究固定自行车摆机器人、固定近地起点和首次有效落地终点下，如何利用互补冻结策略与有界残差探索，发现有真实到达和成功续接见证的经验跳跃支持。待学习候选与已见证包线分开保存；新策略训练后重新评价旧候选，逐轮积累证据。
 
-The task begins at the complete declared ground preparation state at x=2.5 m. Exact states enter empirical support only after real forward dynamics and a successful first-valid-landing continuation from the same state/context. Training resets do not create arrival evidence. Physical cells describe sampled support, not a continuous safe region or a complete physical limit.
+- [项目状态与下一步](PROJECT.md)
+- [当前结果与完整证据入口](JIT/docs/CURRENT_STATUS.md)
+- [论文大纲](JIT/docs/JIT_PAPER_OUTLINE.md) · [详细中文草稿](JIT/docs/paper/JIT_PAPER_DRAFT.md) · [论文 PDF](JIT/docs/paper/JIT_PAPER_DRAFT.pdf)
+- [控制框图与全部图件](JIT/docs/paper/README.md) · [方法契约](JIT/docs/ENVELOPE_ITERATION_PROTOCOL.md)
+- [代码组织](JIT/docs/CODE_ORGANIZATION.md) · [验证范围](JIT/docs/VERIFICATION.md)
 
-Phase-specific up/down learning supplies initial value-weighted training support, followed by unified seed development. The frozen pi_0 real trajectory is a longitudinal exploration coordinate. The new direction permits multiple frozen proposers/evaluators and retains valid historical witnesses independently of later Actor regressions.
+历史 `all_proposers_v1` 已完成 π5、π6 两轮各 128k 训练，历史口径累计 root cells 为 1,689 → 4,629 → 9,296。最新残差探索与延迟评价 pilot 的两轮 128k 训练也已完成；两臂旧无见证候选新增成功见证均为 0。执行链已跑通，残差探索的效率优势与长期收益尚未成立。
 
-## Current implementation boundary
+所有结果目前属于 TRAIN/开发证据，不代表完整物理可达集或单策略全包线控制能力。最终 TEST/JCE/JEL 未开启。不要重复运行完成的 all-proposer campaign。
 
-Reviewed remote baseline: `bfc22f2`. It still uses a fixed pi_0/pi_1/pi_2 family and single-successor workflow. The new bank/registry/training recipe requires implementation and validation. Documentation alignment does not fix the runtime defects recorded in the review.
-
-Recorded evidence includes initial 222-row weighted Tube0 (42 historical negative labels), a later Round1 pi_0 identity, 1,230/1,258 TRAIN family witnesses in the wide scan, 713 reported new causal root cells, and completed pi_3 training. The pi_3 historical core comparison mixed success endpoints and cannot serve as a fair comparison. Larger locked catalogs/scores exist, but family labels are incomplete after GPU failures.
-
-Start with integrity fixes, small runtime replay/shard checks, and a matched-budget pilot using existing probes before another large PPO run. Full-Tube Actor mastery and predictor quality are not prerequisites for empirical support discovery. Final TEST/JCE/JEL stays unopened for this work.
-
-## Read order
-
-1. [AGENTS.md](AGENTS.md) and [JIT/AGENTS.md](JIT/AGENTS.md).
-2. [Project definition](PROJECT.md) and [current status](JIT/docs/CURRENT_STATUS.md).
-3. [Paper outline](JIT/docs/JIT_PAPER_OUTLINE.md).
-4. [Code and evidence review](JIT/docs/JIT_EMPIRICAL_ENVELOPE_REVIEW_20260905.md).
-5. [Iteration protocol](JIT/docs/ENVELOPE_ITERATION_PROTOCOL.md) and [training roadmap](JIT/docs/JIT_TRAINING_ROADMAP.md).
-6. [Handoff](JIT/docs/CODEX_HANDOFF_20260904.md) and [code organization](JIT/docs/CODE_ORGANIZATION.md).
-
-## Runtime and repository
-
-Fixed XML: `assets/orange_bike_4kg_horizontal.xml`; 2 kg payload; 0.005 s simulation step; 0.020 s control; actions steering/rear-wheel drive/hip/knee; hip/knee +/-30 N m. Do not change task/physics/reward/reset semantics silently.
-
-Scientific logic is in `JIT/src/jit_dvgc/`, thin CLIs in `JIT/cli/`, tests in `JIT/tests/`, configs in `JIT/configs/`, guidance in `JIT/docs/`, and lightweight evidence in `JIT/runs/`. Large artifacts need a resolvable external index and preserved identities.
+实际代码、训练、证据均属于 DVGC/JIT；其他项目的日志、模型和结果不得混入。根目录旧 `dvgc/` 等基础设施保留，当前任务入口遵循 [AGENTS.md](AGENTS.md)。

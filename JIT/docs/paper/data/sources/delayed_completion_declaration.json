@@ -1,0 +1,21 @@
+{
+  "attempts": 1,
+  "automatic_retry": false,
+  "maximum_delayed_interactions": 8400,
+  "maximum_new_interactions": 138000,
+  "maximum_training_and_panel_interactions": 129600,
+  "old_records_unchanged": true,
+  "pending_counts": {
+    "fixed_random": 9,
+    "learned_residual": 12
+  },
+  "policy_steps": 128000,
+  "previous_paused_root": "/home/qy/DVGC/JIT/runs/experiments/delayed_completion_20260912",
+  "previous_second_round_train_dispatched": 0,
+  "role": "TRAIN",
+  "run_id": "stage_0_result_round_001",
+  "source_config": "/home/qy/DVGC/JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_001/policy_training.json",
+  "source_round": "/home/qy/DVGC/JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_001",
+  "stop_condition": "complete_remaining_second_round_or_fail",
+  "user_explicit_restart": true
+}

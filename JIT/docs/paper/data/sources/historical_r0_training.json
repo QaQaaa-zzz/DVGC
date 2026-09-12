@@ -1,0 +1,12 @@
+{
+  "brax_evaluation_transitions": 0,
+  "checkpoint_restored": true,
+  "completed_training_transitions": 128000,
+  "expert_switching_used": false,
+  "requested_training_transitions": 128000,
+  "schema": "jit_pi_unified_formal_report_v1",
+  "status": "completed",
+  "test_data_used": false,
+  "train_panel_interactions": 63,
+  "validation_data_used": false
+}
