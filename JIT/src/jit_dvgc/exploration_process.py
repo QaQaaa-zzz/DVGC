@@ -24,13 +24,16 @@ def export_process(root,history,*,plots=False):
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
-    fig,axes=plt.subplots(2,2,figsize=(11,7));x=[r['batch'] for r in rows]
+    fig,axes=plt.subplots(3,2,figsize=(11,10));x=[r['batch'] for r in rows]
     for key in ('actor_loss','critic_loss','total_loss'):
         axes[0,0].plot(x,[r.get(key,float('nan')) for r in rows],label=key)
     for key in ('novelty','physical_failure','residual_energy'):
         axes[0,1].plot(x,[r.get('reward_'+key,0) for r in rows],label=key)
     axes[1,0].plot(x,[r.get('total_reward',0) for r in rows],label='total reward')
     axes[1,1].plot(x,[r['new_cells'] for r in rows],label='new provisional cells')
+    axes[2,0].plot(x,[r.get('post_update_kl',float('nan')) for r in rows],label='full batch post-update KL')
+    axes[2,1].plot(x,[r['successes']/r['episodes'] for r in rows],label='forward success fraction')
+    axes[2,1].plot(x,[r.get('physical_failure_episodes',0)/r['episodes'] for r in rows],label='physical failure fraction')
     for ax in axes.flat:ax.set_xlabel('Batch');ax.legend();ax.grid(alpha=.2)
     fig.tight_layout()
     for suffix in ('png','pdf','svg'):fig.savefig(root/('training_process.'+suffix))

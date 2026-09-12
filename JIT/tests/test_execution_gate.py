@@ -144,3 +144,23 @@ def test_verified_waiting_supervisor_is_passive_but_worker_blocks(tmp_path):
     assert not check_execution_gate(config,process_inventory=lambda:[proc])['ready']
     update();script.write_text('changed')
     assert not check_execution_gate(config,process_inventory=lambda:[proc])['ready']
+
+
+def test_gpu_python_gate_ignores_desktop_but_blocks_compute(tmp_path,monkeypatch):
+    import subprocess
+    from types import SimpleNamespace
+    config=gate(tmp_path);config['wait_for_gpu_python']=True
+    monkeypatch.setattr(subprocess,'run',lambda *a,**k:SimpleNamespace(stdout='12, /usr/bin/desktop\n13, /venv/bin/python\n'))
+    result=check_execution_gate(config,process_inventory=lambda:[])
+    assert not result['ready'] and result['gpu_python_processes'][0]['pid']==13
+    monkeypatch.setattr(subprocess,'run',lambda *a,**k:SimpleNamespace(stdout='12, /usr/bin/desktop\n'))
+    assert check_execution_gate(config,process_inventory=lambda:[])['ready']
+
+
+def test_gpu_query_failure_closes_gate(tmp_path,monkeypatch):
+    import subprocess
+    config=gate(tmp_path);config['wait_for_gpu_python']=True
+    def fail(*args,**kwargs):raise subprocess.TimeoutExpired('nvidia-smi',10)
+    monkeypatch.setattr(subprocess,'run',fail)
+    result=check_execution_gate(config,process_inventory=lambda:[])
+    assert not result['ready'] and any('gpu_process_query_failed' in r for r in result['reasons'])

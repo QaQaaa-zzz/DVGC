@@ -8,6 +8,39 @@ import json,time,hashlib,sys
 import numpy as np
 
 
+def resume_metadata(checkpoint_path, spec):
+    """Validate an immutable checkpoint and retain its per-policy novelty ledger.
+
+    Only run length and reporting cadence may change in an exact continuation.
+    Legacy batch checkpoints reconstruct the stateless shuffle counter from their
+    original training log; no optimizer or RNG is reinitialized.
+    """
+    path=Path(checkpoint_path).resolve()
+    identity_path=path.parent/'identity.json'
+    identity=json.loads(identity_path.read_text())
+    if identity.get('schema')!='jit_frozen_policy_residual_ppo_checkpoint_v1' or _sha(path)!=identity['state_sha256']:
+        raise ValueError('resume checkpoint identity/hash mismatch')
+    allowed={'batches','resume_checkpoint','process_plot_interval'}
+    previous=identity['spec']
+    for key in (set(previous)|set(spec))-allowed:
+        if previous.get(key)!=spec.get(key):raise ValueError('resume contract changed: '+key)
+    if spec.get('reward_mode')!='trajectory_quality_v1' or spec.get('controller_mode')!='learned_residual':
+        raise ValueError('resume currently supports quality-mode learned residual only')
+    locks={str(path):_sha(path),str(identity_path):_sha(identity_path)}
+    if 'training_batches' in identity:
+        batches=identity['training_batches'];updates=identity['optimizer_updates']
+    else:
+        log=path.parent.parent.parent/'training_metrics.json'
+        rows=json.loads(log.read_text())
+        matches=[row for row in rows if path.parent.name==f"batch_{row['batch']:04d}"]
+        if len(matches)!=1:raise ValueError('legacy resume needs a logged batch checkpoint')
+        batches=matches[0]['batch'];updates=matches[0]['cumulative_optimizer_updates']
+        locks[str(log)]=_sha(log)
+    if type(batches) is not int or batches<0 or type(updates) is not int or updates<0:
+        raise ValueError('invalid resume counters')
+    return identity,batches,updates,locks
+
+
 def select_candidate_ticks(data, episode_index, cells, ledger_cells, spec):
     """Select existing eligible arrival frames; never synthesize a state.
 
@@ -147,13 +180,21 @@ def run(spec_path,output):
     for bank_member in bank['members']:
         policy_record=bank_member['policy']
         for file in [bank_member['frozen_policy'],policy_record['formal_config'],str(Path(policy_record['checkpoint'])/'payload.pkl'),str(Path(policy_record['checkpoint'])/'identity.json')]:inputs[str(Path(file).resolve())]=_sha(file)
+    resume=None;batch_offset=0;inherited_updates=0
+    if spec.get('resume_checkpoint'):
+        resume,batch_offset,inherited_updates,resume_locks=resume_metadata(spec['resume_checkpoint'],spec)
+        inputs.update(resume_locks)
+        if resume['base_actor_sha256']!=record['actor_sha256'] or resume['ledger']['policy_sha256']!=record['actor_sha256']:
+            raise ValueError('resume frozen base/ledger mismatch')
+    plot_interval=spec.get('process_plot_interval',32)
+    if type(plot_interval) is not int or plot_interval<1:raise ValueError('invalid process plot interval')
     scheduled=spec['num_envs']*spec['horizon']*(spec['batches']+2)
     _write(output/'declaration.json',dict(spec=spec,input_files=inputs,source_files=sources,maximum_interactions=scheduled+spec['suffix_budget'],maximum_forward_interactions=scheduled,maximum_suffix_interactions=spec['suffix_budget'],maximum_attempts=1,role='train',final_test_used=False,resolution=resolution_contract(),normalizer='frozen_for_pilot',padding_charged=True,coverage_scope=('per frozen pi provisional arrivals; not verified envelope' if arrival_mode else 'per frozen pi; reached candidate with same-context frozen-bank suffix witness'),reward=('one per new arrival root cell; delayed evaluation kept separate' if arrival_mode else 'one per newly witnessed root cell at causal action tick; parent trajectory landing not required'),controller=('frozen pi plus fixed uniform random residual' if random_control else 'frozen pi plus bounded learned residual'),base_actor_sha256=record['actor_sha256']))
     def verify():
         for p,sha in {**sources,**inputs}.items():
             if _sha(p)!=sha:raise ValueError('training source/input drift: '+p)
     def status(phase,**kw):_write(output/'status.json',dict(phase=phase,wall_seconds=time.monotonic()-start,**kw))
-    charged=0;active_total=0;history=[];suffix=None;update_index=0
+    charged=0;active_total=0;history=[];suffix=None;update_index=inherited_updates;completed_batches=batch_offset
     _write(output/'hyperparameters.json',dict(spec=spec,actor_input='privileged_state106 including three-frame history',actor_hidden_layers=[256,256,256],activation='swish',output='four bounded residual actions',critic_hidden_layers=[256,256,256],base_policy_training=False,base_policy_loss=None,optimizer='Adam with global gradient clipping',loss_definition='actor_loss + value_coefficient * critic_loss - entropy_coefficient * entropy',reward_mode=spec.get('reward_mode'),reward_component_units='novel cells; one failure event per episode; mean normalized delta squared per active step',task_reward_used_for_explorer=False))
     try:
         status('building_runtime')
@@ -175,6 +216,13 @@ def run(spec_path,output):
         suffix_cache={}
         current_residual_checkpoint=None
         optimizer=optax.chain(optax.clip_by_global_norm(spec['max_grad_norm']),optax.adam(spec['learning_rate']));optstate=optimizer.init(params)
+        if resume is not None:
+            state=serialization.from_bytes(dict(params=params,optimizer=optstate,normalizer=normalizer,rng=rng),Path(spec['resume_checkpoint']).read_bytes())
+            if pytree_sha256(state['normalizer'])!=record['normalizer_sha256']:
+                raise ValueError('resume normalizer mismatch')
+            params=state['params'];optstate=state['optimizer'];rng=state['rng']
+            _write(output/'resume.json',dict(parent_checkpoint=spec['resume_checkpoint'],parent_state_sha256=resume['state_sha256'],training_batches=batch_offset,optimizer_updates=inherited_updates,inherited_charged_interactions=resume['charged_interactions'],new_cost_accounting='local run only; ancestor checkpoint cost recorded separately',optimizer_restored=True,rng_restored=True,ledger_restored=True))
+
         distribution=net.parametric_action_distribution
         reset=jax.vmap(env._reset_jump_start_unified)
         step=jax.vmap(lambda s,a:first_landing_state(env.step(s,a)))
@@ -227,6 +275,12 @@ def run(spec_path,output):
             (lossval,parts),grads=jax.value_and_grad(loss,has_aux=True)(params)
             updates,optstate=optimizer.update(grads,optstate,params)
             return optax.apply_updates(params,updates),optstate,jp.concatenate([jp.array([lossval]),parts,jp.array([optax.global_norm(grads)])])
+        @jax.jit
+        def post_update_values(params,obs,raw,old_logp):
+            observation={'privileged_state':obs}
+            logits=net.policy_network.apply(normalizer,params['policy'],observation)
+            logratio=distribution.log_prob(logits,raw)-old_logp
+            return jp.expm1(logratio)-logratio,jp.abs(jp.expm1(logratio))>spec['clip'],net.value_network.apply(normalizer,params['value'],observation)
         def rollout(label,deterministic):
             nonlocal rng,charged,active_total
             verify();status('rollout_'+label,charged_interactions=charged+suffix.charged_interactions,forward_interactions=charged,suffix_interactions=suffix.charged_interactions)
@@ -296,10 +350,13 @@ def run(spec_path,output):
             state=dict(params=params,optimizer=optstate,normalizer=normalizer,rng=rng)
             (p/'state.msgpack').write_bytes(serialization.to_bytes(state))
             current_residual_checkpoint=p/'state.msgpack'
-            _write(p/'identity.json',dict(schema='jit_frozen_policy_residual_ppo_checkpoint_v1',state_sha256=_sha(p/'state.msgpack'),base_actor_sha256=record['actor_sha256'],actor_input='privileged_state106',output_kind='bounded_delta_added_to_frozen_pi',delta_limit=list(limits),action_order=['steer','rear_wheel_drive','hip','knee'],ledger=ledger,charged_interactions=charged+suffix.charged_interactions,suffix_interactions=suffix.charged_interactions,active_interactions=active_total,spec=spec))
-        data,episodes,receipt=rollout('initial',True)
-        ledger=initial_ledger(baseline,episodes,arrival_mode=arrival_mode,baseline_mode=spec.get('baseline_mode','collect'))
-        if not np.array_equal(data['action'],data['base_action']):raise ValueError('initial zero-mean residual does not reproduce frozen base action')
+            _write(p/'identity.json',dict(schema='jit_frozen_policy_residual_ppo_checkpoint_v1',state_sha256=_sha(p/'state.msgpack'),base_actor_sha256=record['actor_sha256'],actor_input='privileged_state106',output_kind='bounded_delta_added_to_frozen_pi',delta_limit=list(limits),action_order=['steer','rear_wheel_drive','hip','knee'],ledger=ledger,charged_interactions=charged+suffix.charged_interactions,suffix_interactions=suffix.charged_interactions,active_interactions=active_total,spec=spec,training_batches=completed_batches,optimizer_updates=update_index))
+        if resume is None:
+            data,episodes,receipt=rollout('initial',True)
+            ledger=initial_ledger(baseline,episodes,arrival_mode=arrival_mode,baseline_mode=spec.get('baseline_mode','collect'))
+            if not np.array_equal(data['action'],data['base_action']):raise ValueError('initial zero-mean residual does not reproduce frozen base action')
+        else:
+            ledger=resume['ledger']
         _write(output/'baseline.json',ledger);checkpoint('initial')
         for iteration in range(1,spec['batches']+1):
             label=f'batch_{iteration:04d}';data,episodes,receipt=rollout(label,False)
@@ -311,7 +368,7 @@ def run(spec_path,output):
             batch=dict(observation=data['observation'][mask],raw_action=data['raw_action'][mask],log_prob=data['log_prob'][mask],advantage=a,**{'return':returns[mask]})
             np.savez_compressed(output/(label+'_learning.npz'),rewards=rewards,advantages=adv,returns=returns)
             size=len(a);mb=spec['minibatch_size'];losses=[]
-            host_rng=np.random.default_rng(np.random.SeedSequence([spec['seed'],iteration]))
+            host_rng=np.random.default_rng(np.random.SeedSequence([spec['seed'],batch_offset+iteration]))
             for epoch in range(0 if random_control else spec['epochs']):
                 order=host_rng.permutation(size)
                 for lo in range(0,size,mb):
@@ -324,7 +381,19 @@ def run(spec_path,output):
             if not np.isfinite(losses).all() or not all(np.isfinite(np.asarray(x)).all() for x in jax.tree.leaves(params)):raise ValueError('nonfinite PPO update')
             row=dict(batch=iteration,new_cells=evidence['novel_cell_count'],cumulative_cells=len(ledger['cells']),successes=sum(e['success'] and not e['physical_failure'] and e['completed'] and e['finite'] for e in episodes),episodes=count,active_interactions=receipt['active_interactions'],charged_interactions=charged+suffix.charged_interactions,suffix_interactions=suffix.charged_interactions,mean_losses=np.mean(losses,axis=0).tolist() if losses else [],controller_mode=spec.get('controller_mode','learned_residual'),reward_mode=spec.get('reward_mode','witnessed_novelty_v1'),optimizer_updates=len(losses),wall_seconds=time.monotonic()-start)
             row.update(total_reward=float(rewards.sum()),reward_components=evidence.get('component_sums',{'novelty':float(rewards.sum()),'physical_failure':0.,'residual_energy':0.}),loss_components=dict(zip(('total_loss','actor_loss','critic_loss','entropy','approximate_kl','clip_fraction','gradient_norm'),np.mean(losses,axis=0).tolist())) if losses else {},cumulative_optimizer_updates=update_index,task_reward_total=float(data['task_reward'][mask].sum()),task_reward_components={k:float(v[mask].sum()) for k,v in data.items() if k.startswith('task_component/')},physical_failure_episodes=sum(e['physical_failure'] for e in episodes))
-            history.append(row);export_process(output,history);_write(output/'training_metrics.json',history);print(json.dumps(row),flush=True)
+            if not random_control:
+                diagnostic=[]
+                for lo in range(0,size,mb):
+                    ix=np.arange(lo,min(lo+mb,size));actual=len(ix);ix=np.pad(ix,(0,mb-actual),mode='wrap')
+                    values=post_update_values(params,jp.asarray(batch['observation'][ix]),jp.asarray(batch['raw_action'][ix]),jp.asarray(batch['log_prob'][ix]))
+                    diagnostic.append(np.stack([np.asarray(v)[:actual] for v in values],axis=1))
+                diagnostic=np.concatenate(diagnostic)
+                if not np.isfinite(diagnostic).all():raise ValueError('nonfinite post-update diagnostic')
+                target=batch['return'];variance=float(np.var(target))
+                row.update(post_update_kl=float(diagnostic[:,0].mean()),post_update_clip_fraction=float(diagnostic[:,1].mean()),value_explained_variance=float(1-np.var(target-diagnostic[:,2])/variance) if variance>1e-12 else None)
+            completed_batches=batch_offset+iteration
+            row.update(global_batch=completed_batches)
+            history.append(row);export_process(output,history,plots=iteration%plot_interval==0);_write(output/'training_metrics.json',history);print(json.dumps(row),flush=True)
             checkpoint(label)
         data,episodes,receipt=rollout('final',not random_control)
         diagnostic_credits,_,evidence=candidate_rewards('final',data,episodes,ledger)

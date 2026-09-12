@@ -174,5 +174,19 @@ def check_execution_gate(
             reasons.append("external_run_python_processes_alive")
     except (OSError, ValueError, TypeError, KeyError, RuntimeError) as exc:
         reasons.append(f"process_inventory_unreadable: {exc}")
+    if gate.get('wait_for_gpu_python',False):
+        # Query accelerator ownership only; never read another project's files.
+        import subprocess,csv
+        try:
+            query=subprocess.run(['nvidia-smi','--query-compute-apps=pid,process_name','--format=csv,noheader'],capture_output=True,text=True,check=True,timeout=10)
+            gpu_processes=[]
+            for row in csv.reader(query.stdout.splitlines()):
+                if len(row)!=2:raise ValueError('malformed GPU process record')
+                pid=int(row[0].strip());name=row[1].strip()
+                if _is_python([name]):gpu_processes.append({'pid':pid,'process_name':name})
+            result['gpu_python_processes']=gpu_processes
+            if gpu_processes:reasons.append('gpu_python_processes_alive')
+        except (OSError,ValueError,subprocess.SubprocessError) as exc:
+            reasons.append('gpu_process_query_failed: '+str(exc))
     result["ready"] = not reasons
     return result
