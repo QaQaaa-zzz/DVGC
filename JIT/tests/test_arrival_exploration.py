@@ -95,3 +95,11 @@ def test_frozen_critic_network_matches_original_ppo_cpu():
     expected=original.value_network.apply(normalizer,params,obs)
     actual=explorer.value_network.apply(normalizer,params,obs)
     np.testing.assert_array_equal(actual,expected)
+
+
+def test_locked_baseline_does_not_add_arm_specific_initial_cells():
+    from jit_dvgc.exploration_training import initial_ledger
+    baseline={'policy_sha256':'a'*64,'cells':['shared']}
+    episodes=[dict(cells=['different'],success=True,physical_failure=False,completed=True)]
+    assert initial_ledger(baseline,episodes,arrival_mode=True,baseline_mode='locked')==baseline
+    assert initial_ledger(baseline,episodes,arrival_mode=True)['cells']==['different','shared']

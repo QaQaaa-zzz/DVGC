@@ -148,3 +148,14 @@ def test_generated_argument_files_are_locked(fixture):
         for position,arg in enumerate(argv[:-1]):
             if arg in ('--spec','--config','--pool','--bank'):
                 assert str(Path(argv[position+1]).resolve()) in plan['input_files']
+
+
+def test_reused_arrival_contract_rejects_different_sampling(tmp_path):
+    source=tmp_path/'arrivals';source.mkdir()
+    expected={'seed':12,'num_envs':8,'baseline_cells':'new'}
+    loop.write(source/'declaration.json',{'spec':{**expected,'baseline_cells':'old'}})
+    loop.write(source/'status.json',{'phase':'completed','charged_interactions':19200})
+    loop.write(tmp_path/'old',{})
+    assert loop.validate_reused_arrivals(source,expected)==19200
+    with pytest.raises(ValueError,match='contract'):
+        loop.validate_reused_arrivals(source,{**expected,'seed':13})

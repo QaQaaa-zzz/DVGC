@@ -28,6 +28,10 @@ def prepare(template_path, output):
         inputs[path]=sha
     for path,sha in inputs.items():
         if _file_sha(path)!=sha:raise ValueError('inherited input drift: '+path)
+    if spec.get('reuse_first_learned_arrivals'):
+        source=Path(spec['reuse_first_learned_arrivals']).resolve()
+        for path in source.rglob('*'):
+            if path.is_file():inputs[str(path)]=_file_sha(path)
     sources={str(path.resolve()):_file_sha(path) for base in (repo/'JIT/src',repo/'JIT/cli') for path in base.rglob('*.py')}
     for base in (repo/'assets',repo/'JIT/configs'):
         for path in base.rglob('*'):

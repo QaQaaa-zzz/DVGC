@@ -80,6 +80,18 @@ def _write(path,value):
 def _sha(path):return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+def initial_ledger(baseline, episodes, *, arrival_mode, baseline_mode='collect'):
+    """A matched arm can reuse the first arm's exact per-pi baseline artifact."""
+    if baseline_mode not in ('collect','locked'):
+        raise ValueError('unknown baseline mode')
+    cells=set(baseline['cells'])
+    if baseline_mode=='collect':
+        for episode in episodes:
+            if arrival_mode or (episode['success'] and not episode['physical_failure'] and episode['completed']):
+                cells.update(episode['cells'])
+    return dict(policy_sha256=baseline['policy_sha256'],cells=sorted(cells))
+
+
 def run(spec_path,output):
     import jax,jax.numpy as jp,optax
     from brax.training.acme import running_statistics
@@ -273,7 +285,7 @@ def run(spec_path,output):
             current_residual_checkpoint=p/'state.msgpack'
             _write(p/'identity.json',dict(schema='jit_frozen_policy_residual_ppo_checkpoint_v1',state_sha256=_sha(p/'state.msgpack'),base_actor_sha256=record['actor_sha256'],actor_input='privileged_state106',output_kind='bounded_delta_added_to_frozen_pi',delta_limit=list(limits),action_order=['steer','rear_wheel_drive','hip','knee'],ledger=ledger,charged_interactions=charged+suffix.charged_interactions,suffix_interactions=suffix.charged_interactions,active_interactions=active_total,spec=spec))
         data,episodes,receipt=rollout('initial',True)
-        ledger={'policy_sha256':record['actor_sha256'],'cells':sorted(set(baseline['cells']).union(*(set(e['cells']) for e in episodes if arrival_mode or (e['success'] and not e['physical_failure'] and e['completed']))))}
+        ledger=initial_ledger(baseline,episodes,arrival_mode=arrival_mode,baseline_mode=spec.get('baseline_mode','collect'))
         if not np.array_equal(data['action'],data['base_action']):raise ValueError('initial zero-mean residual does not reproduce frozen base action')
         _write(output/'baseline.json',ledger);checkpoint('initial')
         for iteration in range(1,spec['batches']+1):

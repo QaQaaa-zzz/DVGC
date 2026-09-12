@@ -83,3 +83,18 @@ def test_cli_routes_candidate_schema_without_launch(tmp_path,jit_root,monkeypatc
     assert module.main()==0
     assert calls==[(path,'fixture')]
     assert 'true' in capsys.readouterr().out
+
+
+def test_canonical_cli_preflight_routes_candidate_support(tmp_path,monkeypatch):
+    import json
+    import jit_dvgc.training.formal as formal
+    support=tmp_path/'support.json'
+    support.write_text(json.dumps({'entries':[{'snapshot':'fixture'}],'selection':'pending quota'}))
+    config=SimpleNamespace(schema='jit_iterative_candidate_training_v1',soft_tube_path=str(support),
+        soft_tube_manifest_sha256='locked',raw={'jump_start_probability':.2})
+    monkeypatch.setattr(formal,'load_unified_policy_formal_config',lambda _:config)
+    monkeypatch.setattr(formal,'_tube_points',lambda artifact: tuple(artifact.entries))
+    monkeypatch.setattr(formal,'load_soft_tube',lambda _:pytest.fail('JSON support is not a legacy directory'))
+    result=formal.preflight_unified_formal_tube(tmp_path/'config.json')
+    assert result['entry_count']==1
+    assert result['environment_interactions']==0

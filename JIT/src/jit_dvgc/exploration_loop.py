@@ -141,6 +141,16 @@ def export_evidence(root, metrics, pools, costs):
         'The frozen critic is telemetry only. Delayed success updates reset selection and the next source policy.\n')
 
 
+def validate_reused_arrivals(source, expected):
+    """Reuse completed acquisition evidence only under the same sampling contract."""
+    recorded=read(Path(source)/'declaration.json')['spec']
+    strip=lambda spec:{k:v for k,v in spec.items() if k!='baseline_cells'}
+    if strip(recorded)!=strip(expected):raise ValueError('reused arrival sampling contract differs')
+    result=read(Path(source)/'status.json')
+    if result.get('phase')!='completed':raise ValueError('reused arrivals incomplete')
+    return result['charged_interactions']
+
+
 def run(spec_path, output):
     from .gated_execution import run_gated_plan
     from .iterative_probe_training import candidate_support_view, make_config
@@ -171,7 +181,7 @@ def run(spec_path, output):
             if str(arg) in ('--config','--spec','--pool','--bank'):
                 dependency=Path(argv[position+1]).resolve()
                 generated_inputs[str(dependency)]=_file_sha(dependency)
-        plan=dict(schema='jit_gated_plan_v1',max_interactions=maximum,wait_timeout_seconds=1,
+        plan=dict(schema='jit_gated_plan_v1',max_interactions=maximum,wait_timeout_seconds=spec['stage_timeout_seconds'],
             gate=spec['gate'],input_files={**spec['input_files'],**generated_inputs},source_locks=spec['source_locks'],
             stages=[dict(name=name,argv=[spec['python'],*map(str,argv)],cwd=spec['repo'],
                 env=dict(JAX_PLATFORMS='cuda,cpu',CUDA_VISIBLE_DEVICES='0',XLA_PYTHON_CLIENT_PREALLOCATE='false',
@@ -183,7 +193,7 @@ def run(spec_path, output):
         costs.append(reservation);status('running',current_stage=reservation['stage'])
         then=time.monotonic()
         try:
-            outcome=run_gated_plan(path,directory/(name+'_execution'),wait=False)
+            outcome=run_gated_plan(path,directory/(name+'_execution'),wait=True)
             if outcome['phase']!='completed':
                 if outcome.get('reserved_interactions')==0 or outcome['phase'] in ('blocked','gate_timeout'):
                     reservation.update(charged_interactions=0,accounting='not_launched')
@@ -212,6 +222,7 @@ def run(spec_path, output):
             member=next(m for m in bank['members'] if m['name']==proposer)
             baseline=directory/'baseline_seed.json'
             write(baseline,dict(policy_sha256=member['policy']['actor_sha256'],cells=[]))
+            shared_baseline=directory/'learned_residual/arrivals/baseline.json'
             # Per-pi zero-residual arrivals establish each arm's identical baseline.
             for arm in ('learned_residual','fixed_random'):
                 arm_dir=directory/arm;arm_dir.mkdir()
@@ -220,13 +231,25 @@ def run(spec_path, output):
                     'candidate_selection':'phase_stratified_v1',
                     'evaluator_order':[m['name'] for m in bank['members'] if 'evaluator' in m['roles']],
                     'seed':spec['explorer']['seed']+index}
+                if arm=='fixed_random':
+                    ex['baseline_cells']=str(shared_baseline)
+                    ex['baseline_mode']='locked'
                 path=arm_dir/'explorer.json';write(path,ex)
-                cost=child(arm_dir,'explore',['JIT/cli/train_coverage_explorer.py','--spec',path,'--output',arm_dir/'arrivals'],
-                           ex['num_envs']*400*(ex['batches']+2))
-                result=read(arm_dir/'arrivals/status.json')
-                if result['phase']!='completed':raise RuntimeError('explorer did not complete')
-                settle(cost,result['charged_interactions'])
-                pool=import_candidates(arm_dir/'arrivals',pools.get(arm),round_index=index)
+                source=arm_dir/'arrivals'
+                reused=spec.get('reuse_first_learned_arrivals') if index==0 and arm=='learned_residual' else None
+                if reused:
+                    source=Path(reused)
+                    inherited=validate_reused_arrivals(source,ex)
+                    shared_baseline=source/'baseline.json'
+                    costs.append(dict(stage=str(arm_dir.relative_to(root))+'/reuse_arrivals',
+                        charged_interactions=0,inherited_interactions=inherited,accounting='reused_locked_evidence',wall_seconds=0))
+                else:
+                    cost=child(arm_dir,'explore',['JIT/cli/train_coverage_explorer.py','--spec',path,'--output',source],
+                               ex['num_envs']*400*(ex['batches']+2))
+                    result=read(source/'status.json')
+                    if result['phase']!='completed':raise RuntimeError('explorer did not complete')
+                    settle(cost,result['charged_interactions'])
+                pool=import_candidates(source,pools.get(arm),round_index=index)
                 pool_path=arm_dir/'arrival_pool.json';write(pool_path,pool)
                 pool,pool_path=reevaluate(arm_dir,'before_learning',pool_path,bank_path,ex['evaluator_order'],index)
                 pools[arm],pool_paths[arm]=pool,pool_path
