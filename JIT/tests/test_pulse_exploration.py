@@ -38,3 +38,10 @@ def test_conflict_remains_unknown_but_another_policy_can_witness():
 def test_unknown_after_learning_never_receives_failure_penalty():
     rewards,mask,ledger,_=pulse_feedback([dict(cell='u',label=None,learning_attempted=True)],[],dict(novelty=.25,success=1.,failure=1.))
     assert rewards.tolist()==[0.] and mask.tolist()==[False] and ledger==['u']
+
+
+def test_delayed_pulses_charge_unperturbed_prefix_and_cycle_locations():
+    from jit_dvgc.pulse_exploration import pulse_delay
+    s=dict(rounds=4,num_envs=8,pulse_steps=3,horizon=400,policy_steps=128000,pulse_start_schedule=[0,10])
+    assert [pulse_delay(s,i) for i in range(4)]==[0,10,0,10]
+    assert budget_contract(s,7)['prefixes']==8*(3+13+3+13)

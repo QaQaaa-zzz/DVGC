@@ -61,47 +61,49 @@ def collect(spec, output):
         state=serialization.from_bytes(state,Path(spec['explorer_checkpoint']).read_bytes())
     (output/'behavior.msgpack').write_bytes(serialization.to_bytes(state))
     normalizer=payload.observation_normalizer;params=state['params'];count=spec['num_envs']
+    from .pulse_exploration import pulse_delay
+    delay=pulse_delay(spec,spec['round_index']);prefix_steps=delay+spec['pulse_steps']
     base=make_checkpoint_policy(env,payload,deterministic=True);dist=net.parametric_action_distribution
     reset=jax.vmap(env._reset_jump_start_unified)
     step=jax.vmap(lambda s,a:first_landing_state(env.step(s,a)))
     def run(rng):
         initial=prepare_parallel_worlds(reset(jax.random.split(rng,count)),env,count)
-        def advance(carry,_):
+        def advance(carry,tick):
             s,key,alive=carry;key,k=jax.random.split(key)
             logits=net.policy_network.apply(normalizer,params['policy'],s.obs)
             raw=dist.sample_no_postprocessing(logits,k);delta=dist.postprocess(raw)
             b=base(s.obs,k)[0]
-            action,requested,effective=compose_residual_action(b,delta,jp.asarray(spec['delta_limit']))
+            action,requested,effective=compose_residual_action(b,jp.where(tick>=delay,delta,0.),jp.asarray(spec['delta_limit']))
             nxt=step(s,action)
             finite=jp.all(jp.isfinite(nxt.data.qpos),axis=-1)&jp.all(jp.isfinite(nxt.data.qvel),axis=-1)
             terminal=nxt.done.astype(bool)|~finite
-            tape=dict(observation=s.obs['privileged_state'],raw_action=raw,log_prob=dist.log_prob(logits,raw),value=net.value_network.apply(normalizer,params['value'],s.obs),mask=alive,terminal=terminal,finite=finite,action=action,base_action=b,delta=delta,effective_delta=effective,qpos=nxt.data.qpos,qvel=nxt.data.qvel,phase=nxt.info['active_phase'])
+            tape=dict(observation=s.obs['privileged_state'],raw_action=raw,log_prob=dist.log_prob(logits,raw),value=net.value_network.apply(normalizer,params['value'],s.obs),mask=alive&(tick>=delay),prefix_mask=alive,terminal=terminal,finite=finite,action=action,base_action=b,delta=delta,effective_delta=effective,qpos=nxt.data.qpos,qvel=nxt.data.qvel,phase=nxt.info['active_phase'])
             tape.update({'snap/'+k:v for k,v in snapshot_arrays(nxt).items()})
             def choose(path,n,o):
                 return n if _shared_warp(path) else jp.where(alive.reshape((count,)+(1,)*(n.ndim-1)),n,o)
             nxt=jax.tree_util.tree_map_with_path(choose,nxt,s)
             return (nxt,key,alive&~terminal),tape
-        (_,key,_),tape=jax.lax.scan(advance,(initial,rng,jp.ones(count,bool)),None,length=spec['pulse_steps'])
+        (_,key,_),tape=jax.lax.scan(advance,(initial,rng,jp.ones(count,bool)),jp.arange(prefix_steps),length=prefix_steps)
         return key,tape
     start=time.monotonic();rng,key=jax.random.split(state['rng'])
-    write(output/'status.json',dict(phase='running',charged_interactions=count*spec['pulse_steps']))
+    write(output/'status.json',dict(phase='running',charged_interactions=count*prefix_steps))
     next_rng,tape=jax.device_get(jax.jit(run)(key));np.savez_compressed(output/'prefixes.npz',**tape)
-    if np.any(tape['mask']&~tape['finite']):raise ValueError('nonfinite pulse prefix')
+    if np.any(tape['prefix_mask']&~tape['finite']):raise ValueError('nonfinite pulse prefix')
     state['rng']=next_rng;(output/'update_state.msgpack').write_bytes(serialization.to_bytes(state))
-    generator={**member['policy'],'actor_sha256':canonical_sha256(dict(base=member['policy']['actor_sha256'],residual=_file_sha(output/'behavior.msgpack'),delta=spec['delta_limit'],pulse_steps=spec['pulse_steps'])),'payload_sha256':_file_sha(output/'behavior.msgpack')}
+    generator={**member['policy'],'actor_sha256':canonical_sha256(dict(base=member['policy']['actor_sha256'],residual=_file_sha(output/'behavior.msgpack'),delta=spec['delta_limit'],pulse_steps=spec['pulse_steps'],pulse_start_step=delay)),'payload_sha256':_file_sha(output/'behavior.msgpack')}
     rows=[]
     for e in range(count):
-        t=int(np.flatnonzero(tape['mask'][:,e])[-1])
+        t=int(np.flatnonzero(tape['prefix_mask'][:,e])[-1])
         arrays={k[5:]:v[t,e] for k,v in tape.items() if k.startswith('snap/')}
         snap=snapshot_from_arrays(arrays,env=env,record=generator,parent_trajectory=str(output/'prefixes.npz')+'::'+str(e),parent_state_sha256=_file_sha(output/'prefixes.npz'))
         path=output/'snapshots'/f'{e:05d}';save_unified_envelope_snapshot(path,snap)
         coords=physical_coordinates_from_arrays(tape['qpos'][t,e],tape['qvel'][t,e],bundle=env._bundle)
         phase='upstream' if snap.active_phase==0 else 'downstream'
-        rows.append(dict(index=e,cell=_cell_id(phase,'root_geometry_v1',quantize_coordinates(coords,ROOT_GEOMETRY_FIELDS)),coordinates=coords,phase=phase,snapshot=str(path),state_sha256=physical_state_sha256(snap),snapshot_context_sha256=snapshot_context_sha256(snap),prefix_file=str(output/'prefixes.npz'),prefix_sha256=_file_sha(output/'prefixes.npz'),behavior_sha256=_file_sha(output/'behavior.msgpack'),prefix_terminal=bool(tape['terminal'][t,e]),label=None,learning_attempted=False))
+        rows.append(dict(index=e,cell=_cell_id(phase,'root_geometry_v1',quantize_coordinates(coords,ROOT_GEOMETRY_FIELDS)),coordinates=coords,phase=phase,snapshot=str(path),state_sha256=physical_state_sha256(snap),snapshot_context_sha256=snapshot_context_sha256(snap),prefix_file=str(output/'prefixes.npz'),prefix_sha256=_file_sha(output/'prefixes.npz'),behavior_sha256=_file_sha(output/'behavior.msgpack'),prefix_terminal=bool(tape['terminal'][t,e]),pulse_start_step=delay,pulse_applied_steps=int(tape['mask'][:,e].sum()),label=None,learning_attempted=False))
     write(output/'candidates.json',rows)
     write(output/'network_inventory.json',dict(actor_parameters=sum(x.size for x in jax.tree.leaves(params['policy'])),critic_parameters=sum(x.size for x in jax.tree.leaves(params['value'])),base_actor_frozen=True,base_critic_frozen=True,inputs=106,history_frames=3,hidden=[256,256,256],output_actions=4))
     write(output/'hyperparameters.json',spec)
-    write(output/'status.json',dict(phase='completed',charged_interactions=count*spec['pulse_steps'],active_interactions=int(tape['mask'].sum()),wall_seconds=time.monotonic()-start))
+    write(output/'status.json',dict(phase='completed',charged_interactions=count*prefix_steps,active_interactions=int(tape['prefix_mask'].sum()),pulse_training_steps=int(tape['mask'].sum()),pulse_start_step=delay,wall_seconds=time.monotonic()-start))
 
 
 def evaluate(spec, output):

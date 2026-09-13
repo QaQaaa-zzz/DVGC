@@ -23,12 +23,19 @@ def pulse_feedback(rows,seen,weights):
     return novelty+quality,mask,sorted(old|{r['cell'] for r in rows}),dict(novelty=novelty.tolist(),quality=quality.tolist())
 
 
+def pulse_delay(spec,index):
+    schedule=spec.get('pulse_start_schedule',[0])
+    if not schedule or any(type(t) is not int or t<0 or t+spec['pulse_steps']>=spec['horizon'] for t in schedule):
+        raise ValueError('invalid pulse start schedule')
+    return schedule[index%len(schedule)]
+
+
 def budget_contract(spec,evaluators):
     rounds=spec['rounds'];n=spec['num_envs'];h=spec['horizon']
     if any(type(spec[k]) is not int or spec[k]<=0 for k in ['rounds','num_envs','horizon','pulse_steps','policy_steps']):raise ValueError('positive pulse budgets required')
     if spec['pulse_steps']>5 or h!=400 or spec['policy_steps']%3200:raise ValueError('short-pulse/horizon/aligned learning contract')
     baseline=evaluators*h
-    prefixes=rounds*n*spec['pulse_steps']
+    prefixes=n*sum(pulse_delay(spec,i)+spec['pulse_steps'] for i in range(rounds))
     suffixes=sum((evaluators+i)*n*h for i in range(rounds))
     learning=rounds*(spec['policy_steps']+1600+n*h)
     return dict(baseline=baseline,prefixes=prefixes,bank_suffixes=suffixes,learning_and_reevaluation=learning,maximum_interactions=baseline+prefixes+suffixes+learning)
@@ -42,7 +49,7 @@ def export(root,metrics,rows):
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
-    for name,items in [('training_process',metrics),('regions',[dict(cell=r['cell'],state_sha256=r['state_sha256'],context=r['snapshot_context_sha256'],status='successful' if r['label']==1 else ('unresolved_after_learning' if r['label']==0 and r['learning_attempted'] else 'pending'),snapshot=r['snapshot'],witness=r.get('witness'),round=r['round']) for r in rows])]:
+    for name,items in [('training_process',metrics),('regions',[dict(cell=r['cell'],state_sha256=r['state_sha256'],context=r['snapshot_context_sha256'],status='successful' if r['label']==1 else ('unresolved_after_learning' if r['label']==0 and r['learning_attempted'] else 'pending'),snapshot=r['snapshot'],witness=r.get('witness'),round=r['round'],pulse_start_step=r.get('pulse_start_step',0)) for r in rows])]:
         if not items:continue
         with (root/(name+'.csv')).open('w') as f:
             w=csv.DictWriter(f,fieldnames=list(dict.fromkeys(k for r in items for k in r)));w.writeheader();w.writerows(items)
@@ -104,6 +111,7 @@ def run(spec_path,output):
         if spec.get('resume_run'):
             previous=Path(spec['resume_run']);old=read(previous/'declaration.json')['spec']
             contract=['proposer','order','num_envs','pulse_steps','delta_limit','horizon','policy_steps','pending_fraction','seed','learning_rate','minibatch_size','epochs','clip','target_kl','reward_weights','value_coefficient','entropy_coefficient','max_grad_norm','jump_start_state_sha256']
+            if old.get('pulse_start_schedule',[0])!=spec.get('pulse_start_schedule',[0]):raise ValueError('resume pulse schedule differs')
             if any(old[k]!=spec[k] for k in contract):raise ValueError('resumed pulse training contract differs')
             old_bank=load_probe_bank(Path(old['bank']))
             for name in spec['order']:
@@ -135,11 +143,11 @@ def run(spec_path,output):
                 if read(collection/'status.json')['phase']!='completed':raise ValueError('incomplete reused collection')
                 write(d/'reused_collection.json',dict(path=str(collection),prefix_sha256=_file_sha(collection/'prefixes.npz')))
             else:
-                collection=runtime(d,'collection','collect',ex,spec['num_envs']*spec['pulse_steps'])
+                collection=runtime(d,'collection','collect',ex,spec['num_envs']*(pulse_delay(spec,index)+spec['pulse_steps']))
             order=spec['order']+[m['name'] for m in bank['members'] if m['name'] not in initial_bank_names]
             evaluation=runtime(d,'bank_evaluation','evaluate',{**ex,'candidates':str(collection/'candidates.json'),'order':order,'budget':len(order)*spec['num_envs']*spec['horizon'], 'reuse_results':spec.get('reuse_results') if index==first_round else None},len(order)*spec['num_envs']*spec['horizon'])
             rows=read(evaluation/'results.json');pending=[r for r in rows if r['label']==0 and not r['prefix_terminal']]
-            for r in rows:r['round']=index
+            for r in rows:r['round']=index;r['pulse_start_step']=pulse_delay(spec,index)
             if pending:
                 support_inputs={str(evaluation/'results.json'):_file_sha(evaluation/'results.json')}
                 for r in pending:
@@ -173,7 +181,7 @@ def run(spec_path,output):
             feedback=d/'feedback.json';write(feedback,dict(rewards=reward.tolist(),eligible=eligible.tolist(),parts=parts,component_sums={k:float(sum(v)) for k,v in parts.items()},new_cells=len(next_seen)-len(seen),outcomes=str(outcomes),outcomes_sha256=_file_sha(outcomes)))
             update=runtime(d,'update','update',{**ex,'collection':str(collection),'feedback':str(feedback)},0)
             checkpoint=str(update/'state.msgpack');m=read(update/'metrics.json')
-            metrics.append(dict(round=index+1,successes=sum(r['label']==1 for r in rows),failed_after_learning=sum(r['label']==0 and r['learning_attempted'] for r in rows),new_cells=len(next_seen)-len(seen),charged_interactions=inherited_cost+sum(c['charged_interactions'] for c in costs),reward_novelty=m['reward_components']['novelty'],reward_quality=m['reward_components']['quality'],**{k:v for k,v in m.items() if k!='reward_components'}))
+            metrics.append(dict(round=index+1,pulse_start_step=pulse_delay(spec,index),successes=sum(r['label']==1 for r in rows),failed_after_learning=sum(r['label']==0 and r['learning_attempted'] for r in rows),new_cells=len(next_seen)-len(seen),charged_interactions=inherited_cost+sum(c['charged_interactions'] for c in costs),reward_novelty=m['reward_components']['novelty'],reward_quality=m['reward_components']['quality'],**{k:v for k,v in m.items() if k!='reward_components'}))
             seen=next_seen;rows_all.extend(rows);write(root/'visited_cells.json',seen);write(root/'training_metrics.json',metrics);export(root,metrics,rows_all);status('round_completed',completed_rounds=index+1)
         status('completed',completed_rounds=spec['rounds'],final_test_used=False,checkpoint=checkpoint)
     except BaseException as exc:
