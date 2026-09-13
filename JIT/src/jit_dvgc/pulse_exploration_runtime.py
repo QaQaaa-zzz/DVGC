@@ -8,6 +8,19 @@ from .probe_bank import load_probe_bank, _file_sha
 from .evidence_integrity import canonical_sha256
 
 
+def suffix_label(valid, failure, timeout, done, horizon_reached):
+    from .unified_continuation_labels import classify_first_valid_landing_outcome
+    if valid and failure:return None,'simultaneous_landing_failure_unresolved'
+    positive,outcome=classify_first_valid_landing_outcome(valid_contact_seen=valid,physical_failure_before_landing=failure,timeout=timeout,done=done,reached_rollout_horizon=horizon_reached)
+    return int(positive),outcome
+
+
+def aggregate_labels(attempts,order):
+    if any(a['label']==1 for a in attempts):return 1
+    by_policy={a['policy']:a['label'] for a in attempts}
+    return 0 if all(name in by_policy and by_policy[name]==0 for name in order) else None
+
+
 def networks(spec):
     import jax
     import optax
@@ -106,10 +119,18 @@ def evaluate(spec, output):
     bank=load_probe_bank(Path(spec['bank']));all_names=[m['name'] for m in bank['members'] if 'evaluator' in m['roles']]
     suffix=FrozenSuffixEvaluator(spec['bank'],all_names,horizon,output/'runtime',spec['budget'])
     for r in rows:r.update(attempts=[],label=None,witness=None)
+    if spec.get('reuse_results'):
+        reused=read(spec['reuse_results'])
+        if len(reused)!=len(rows):raise ValueError('reused candidate count differs')
+        for row,old in zip(rows,reused):
+            if row['snapshot_context_sha256']!=old['snapshot_context_sha256']:raise ValueError('reused context differs')
+            for a in old['attempts']:
+                if a['actor_sha256']!=suffix.members[a['policy']]['policy']['actor_sha256'] or _file_sha(Path(a['trace']))!=a['trace_sha256']:raise ValueError('reused evaluator/trace drift')
+            row.update(attempts=old['attempts'],label=old['label'],witness=old['witness'])
     start=time.monotonic()
     for name in spec['order']:
-        subset=[r for r in rows if (spec.get('full_matrix',False) or r['label']!=1) and not r.get('prefix_terminal',False)]
-        if not subset:break
+        subset=[r for r in rows if (spec.get('full_matrix',False) or r['label']!=1) and not r.get('prefix_terminal',False) and not any(a['policy']==name for a in r['attempts'])]
+        if not subset:continue
         env,policy,_=suffix._runtime(name)
         restored=[]
         for r in subset:
@@ -145,15 +166,14 @@ def evaluate(spec, output):
         for e,r in enumerate(subset):
             indices=np.flatnonzero(tape['mask'][:,e]);last=int(indices[-1]);valid=bool(tape['valid_contact'][last,e]);failure=bool(tape['physical_failure'][last,e])
             if not np.isfinite(tape['qpos'][indices,e]).all() or not np.isfinite(tape['qvel'][indices,e]).all():raise ValueError('nonfinite suffix')
-            if valid and failure:raise ValueError('simultaneous landing/failure remains unresolved')
-            label,outcome=classify_first_valid_landing_outcome(valid_contact_seen=valid,physical_failure_before_landing=failure,timeout=bool(tape['timeout'][last,e]),done=bool(tape['done'][last,e]),reached_rollout_horizon=len(indices)>=horizon)
-            r['attempts'].append(dict(policy=name,actor_sha256=suffix.members[name]['policy']['actor_sha256'],label=int(label),outcome=outcome,steps=len(indices),task_return=float(tape['reward'][indices,e].sum()),trace=str(trace_path),trace_lane=e,trace_sha256=_file_sha(trace_path),snapshot_context_sha256=r['snapshot_context_sha256']))
+            label,outcome=suffix_label(valid,failure,bool(tape['timeout'][last,e]),bool(tape['done'][last,e]),len(indices)>=horizon)
+            r['attempts'].append(dict(policy=name,actor_sha256=suffix.members[name]['policy']['actor_sha256'],label=label,outcome=outcome,steps=len(indices),task_return=float(tape['reward'][indices,e].sum()),trace=str(trace_path),trace_lane=e,trace_sha256=_file_sha(trace_path),snapshot_context_sha256=r['snapshot_context_sha256']))
             if label:r.update(label=1,witness=name)
         del initial,restored
         jax.clear_caches()
     for r in rows:
         if r.get('prefix_terminal'):r.update(label=0,terminal_reason='pulse_terminated_before_handoff')
-        elif r['label']!=1 and len(r['attempts'])==len(spec['order']):r['label']=0
+        elif r['label']!=1:r['label']=aggregate_labels(r['attempts'],spec['order'])
     write(output/'results.json',rows)
     write(output/'status.json',dict(phase='completed',charged_interactions=charged,active_interactions=active_count,padding_interactions=charged-active_count,successes=sum(r['label']==1 for r in rows),wall_seconds=time.monotonic()-start))
 
@@ -174,7 +194,11 @@ def update(spec, output):
         ix=np.flatnonzero(mask[:,e])
         if len(ix):reward[ix[-1],e]=feedback['rewards'][e]
     adv,ret=episode_advantages(reward,tape['value'],mask,gamma=1.,lam=1.)
-    if not mask.any():raise ValueError('no resolved feedback for explorer update')
+    if not mask.any():
+        (output/'state.msgpack').write_bytes(serialization.to_bytes(state))
+        write(output/'optimizer_updates.json',[]);write(output/'hyperparameters.json',spec)
+        write(output/'metrics.json',dict(optimizer_updates=0,post_update_kl=0.,post_update_clip_fraction=0.,value_explained_variance=None,total_loss=0.,actor_loss=0.,critic_loss=0.,entropy=0.,gradient_norm=0.,reward_components=feedback['component_sums'],reward=0.,eligible_episodes=0,effective_training_samples=0,update_skipped=True))
+        write(output/'status.json',dict(phase='completed',charged_interactions=0));return
     a=adv[mask];a=(a-a.mean())/(a.std()+1e-8)
     batch=dict(obs=tape['observation'][mask],raw=tape['raw_action'][mask],old=tape['log_prob'][mask],adv=a,target=ret[mask])
     dist=net.parametric_action_distribution;normalizer=payload.observation_normalizer

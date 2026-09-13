@@ -42,7 +42,7 @@ def export(root,metrics,rows):
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
-    for name,items in [('training_process',metrics),('regions',[dict(cell=r['cell'],state_sha256=r['state_sha256'],context=r['snapshot_context_sha256'],status='successful' if r['label']==1 else ('unresolved_after_learning' if r['learning_attempted'] else 'pending'),snapshot=r['snapshot'],witness=r.get('witness'),round=r['round']) for r in rows])]:
+    for name,items in [('training_process',metrics),('regions',[dict(cell=r['cell'],state_sha256=r['state_sha256'],context=r['snapshot_context_sha256'],status='successful' if r['label']==1 else ('unresolved_after_learning' if r['label']==0 and r['learning_attempted'] else 'pending'),snapshot=r['snapshot'],witness=r.get('witness'),round=r['round']) for r in rows])]:
         if not items:continue
         with (root/(name+'.csv')).open('w') as f:
             w=csv.DictWriter(f,fieldnames=list(dict.fromkeys(k for r in items for k in r)));w.writeheader();w.writerows(items)
@@ -112,22 +112,34 @@ def run(spec_path,output):
             if first_round<1 or first_round>=spec['rounds']:raise ValueError('no resumable completed rounds')
             prior=previous/f'round_{first_round-1:04d}'
             checkpoint=str(prior/'update/state.msgpack');support=read(prior/'witnessed_support.json');seen=read(previous/'visited_cells.json')
-            for i in range(first_round):rows_all.extend(read(previous/f'round_{i:04d}'/'outcomes.json'))
+            for i in range(first_round):
+                ancestor=previous;visited=set()
+                while not (ancestor/f'round_{i:04d}'/'outcomes.json').exists():
+                    if str(ancestor) in visited:raise ValueError('resume ancestry cycle')
+                    visited.add(str(ancestor));ancestor=Path(read(ancestor/'resume.json')['previous'])
+                rows_all.extend(read(ancestor/f'round_{i:04d}'/'outcomes.json'))
             if any((previous/f'round_{i:04d}'/'expanded_bank.json').exists() for i in range(first_round)):raise ValueError('resume requires explicit expanded bank import')
-            inherited_cost=read(previous/'status.json')['charged_interactions']
-            write(root/'resume.json',dict(previous=str(previous),completed_rounds=first_round,checkpoint=checkpoint,checkpoint_sha256=_file_sha(Path(checkpoint)),inherited_interactions=read(previous/'status.json')['charged_interactions']))
+            inherited_cost=read(spec['inherited_cost_receipt'])['actual_interactions'] if spec.get('inherited_cost_receipt') else read(previous/'status.json')['charged_interactions']
+            write(root/'resume.json',dict(previous=str(previous),completed_rounds=first_round,checkpoint=checkpoint,checkpoint_sha256=_file_sha(Path(checkpoint)),inherited_interactions=inherited_cost))
             export(root,metrics,rows_all)
         else:
             runtime(root,'baseline','baseline',spec,count*spec['horizon'])
         for index in range(first_round,spec['rounds']):
             d=root/f'round_{index:04d}';d.mkdir()
             ex={**spec,'bank':str(bank_path),'round_index':index,'explorer_checkpoint':checkpoint}
-            collection=runtime(d,'collection','collect',ex,spec['num_envs']*spec['pulse_steps'])
+            if index==first_round and spec.get('reuse_collection'):
+                collection=Path(spec['reuse_collection'])
+                old=read(collection/'hyperparameters.json')
+                for k in ['round_index','explorer_checkpoint','pulse_steps','num_envs','delta_limit','bank','seed']:
+                    if old[k]!=ex[k]:raise ValueError('reused pulse contract differs: '+k)
+                if read(collection/'status.json')['phase']!='completed':raise ValueError('incomplete reused collection')
+                write(d/'reused_collection.json',dict(path=str(collection),prefix_sha256=_file_sha(collection/'prefixes.npz')))
+            else:
+                collection=runtime(d,'collection','collect',ex,spec['num_envs']*spec['pulse_steps'])
             order=spec['order']+[m['name'] for m in bank['members'] if m['name'] not in initial_bank_names]
-            evaluation=runtime(d,'bank_evaluation','evaluate',{**ex,'candidates':str(collection/'candidates.json'),'order':order,'budget':len(order)*spec['num_envs']*spec['horizon']},len(order)*spec['num_envs']*spec['horizon'])
+            evaluation=runtime(d,'bank_evaluation','evaluate',{**ex,'candidates':str(collection/'candidates.json'),'order':order,'budget':len(order)*spec['num_envs']*spec['horizon'], 'reuse_results':spec.get('reuse_results') if index==first_round else None},len(order)*spec['num_envs']*spec['horizon'])
             rows=read(evaluation/'results.json');pending=[r for r in rows if r['label']==0 and not r['prefix_terminal']]
             for r in rows:r['round']=index
-            if any(r['label'] is None for r in rows):raise ValueError('unknown bank outcome; do not punish or update')
             if pending:
                 support_inputs={str(evaluation/'results.json'):_file_sha(evaluation/'results.json')}
                 for r in pending:

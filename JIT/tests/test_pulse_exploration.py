@@ -22,3 +22,19 @@ def test_budget_includes_growing_bank_new_policy_and_panels():
     s=dict(rounds=2,num_envs=4,pulse_steps=3,horizon=400,policy_steps=128000)
     b=budget_contract(s,7)
     assert b['maximum_interactions']==7*400+2*4*3+(7+8)*4*400+2*(128000+1600+4*400)
+
+
+def test_conflict_remains_unknown_but_another_policy_can_witness():
+    from jit_dvgc.pulse_exploration_runtime import suffix_label,aggregate_labels
+    label,_=suffix_label(True,True,False,True,False)
+    assert label is None
+    attempts=[dict(policy='pi_0',label=label),dict(policy='pi_1',label=0)]
+    assert aggregate_labels(attempts,['pi_0','pi_1']) is None
+    attempts[1]['label']=1
+    assert aggregate_labels(attempts,['pi_0','pi_1'])==1
+    assert aggregate_labels([dict(policy='pi_0',label=0)],['pi_0','pi_1']) is None
+
+
+def test_unknown_after_learning_never_receives_failure_penalty():
+    rewards,mask,ledger,_=pulse_feedback([dict(cell='u',label=None,learning_attempted=True)],[],dict(novelty=.25,success=1.,failure=1.))
+    assert rewards.tolist()==[0.] and mask.tolist()==[False] and ledger==['u']
