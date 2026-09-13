@@ -1,0 +1,596 @@
+{
+  "captured_utc": "2026-09-12T08:15:19.913757+00:00",
+  "original_artifacts_modified": false,
+  "repository": "/home/qy/DVGC",
+  "schema": "jit_paper_source_snapshots_v1",
+  "snapshot_scope": "Minimal exact field projections; no model or trajectory payloads",
+  "source_head": "830a10fc4f276f1876e553ab319b1d5502633c12",
+  "source_ref": "refs/heads/agent/two-phase-soft-tube",
+  "sources": {
+    "corrected_residual_engineering": {
+      "original_bytes": 807,
+      "original_path": "JIT/runs/engineering/residual_suffix_ppo_20260911/analysis_summary.json",
+      "original_sha256": "55a424fbd7a5d44c73e79476fe852d33522608d8be99da1b52effd6657f46873",
+      "projection": "Complete small source JSON",
+      "snapshot_bytes": 807,
+      "snapshot_path": "sources/corrected_residual_engineering.json",
+      "snapshot_sha256": "1e6e152c9b090eca28175c73703a760f6dd6f7ec4a6b3cc05fc74812f8c9fe11"
+    },
+    "delayed_completion_declaration": {
+      "original_bytes": 875,
+      "original_path": "JIT/runs/experiments/delayed_completion_start_20260912/declaration.json",
+      "original_sha256": "1b43a9e1aeceddb55873d2fa18728ed08740df885404af7f47cb9c2c6294b6eb",
+      "projection": "Complete small source JSON",
+      "snapshot_bytes": 875,
+      "snapshot_path": "sources/delayed_completion_declaration.json",
+      "snapshot_sha256": "1b43a9e1aeceddb55873d2fa18728ed08740df885404af7f47cb9c2c6294b6eb"
+    },
+    "delayed_completion_status": {
+      "original_bytes": 193,
+      "original_path": "JIT/runs/experiments/delayed_completion_start_20260912/pipeline_status.json",
+      "original_sha256": "d87aede37235bd71eb24c93330c5c24054fbc9c1b68c4ec30898c4f295598d3a",
+      "projection": "Complete small source JSON",
+      "snapshot_bytes": 193,
+      "snapshot_path": "sources/delayed_completion_status.json",
+      "snapshot_sha256": "d87aede37235bd71eb24c93330c5c24054fbc9c1b68c4ec30898c4f295598d3a"
+    },
+    "delayed_completion_summary": {
+      "original_bytes": 1105,
+      "original_path": "JIT/runs/experiments/delayed_completion_start_20260912/summary.json",
+      "original_sha256": "311c1488e13aca01e5928866df90d674f3d7e1ba917fd2075c3d32bdb8859a20",
+      "projection": "Complete small source JSON",
+      "snapshot_bytes": 1105,
+      "snapshot_path": "sources/delayed_completion_summary.json",
+      "snapshot_sha256": "311c1488e13aca01e5928866df90d674f3d7e1ba917fd2075c3d32bdb8859a20"
+    },
+    "delayed_r0_fixed_random_acquisition": {
+      "original_bytes": 488,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_000/fixed_random/arrivals/status.json",
+      "original_sha256": "a7f167b9a249d9a86f316c0dec70d2df09df353229407ec53b88e9572e208f19",
+      "projection": "Complete small source JSON",
+      "snapshot_bytes": 488,
+      "snapshot_path": "sources/delayed_r0_fixed_random_acquisition.json",
+      "snapshot_sha256": "ec8c7745f634c9ceb5a362c9252229ebba0ba683d4d82feaecd19f097fa9fce4"
+    },
+    "delayed_r0_fixed_random_after_pool": {
+      "original_bytes": 1322286,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_000/fixed_random/after_learning/pool.json",
+      "original_sha256": "f6e3ef3bf98b800d70cf941d0d79a8df0d852790ef090b195a6474f7a6c72592",
+      "projection": "All candidate keys, physical cells, status, phase, discovery round and label histories",
+      "snapshot_bytes": 52582,
+      "snapshot_path": "sources/delayed_r0_fixed_random_after_pool.json",
+      "snapshot_sha256": "ac925f075f7ee64f10bee2fcd0c2d60e6b7b24243eda9b5c05e5ab878809ebbb"
+    },
+    "delayed_r0_fixed_random_before_pool": {
+      "original_bytes": 1306316,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_000/fixed_random/before_learning/pool.json",
+      "original_sha256": "aab6c06fcce3fd812a6a1da99bfe407b3f53cc251f118c5d90d7ca342d5e1164",
+      "projection": "All candidate keys, physical cells, status, phase, discovery round and label histories",
+      "snapshot_bytes": 52516,
+      "snapshot_path": "sources/delayed_r0_fixed_random_before_pool.json",
+      "snapshot_sha256": "20264062cfb490919cbad51b48a441df680919fbed42c02bb3fb5c192fd0ee3d"
+    },
+    "delayed_r0_fixed_random_config": {
+      "original_bytes": 1225,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_000/fixed_random/explorer.json",
+      "original_sha256": "20c8239d33796e2d31eecb97847b986780099da59ff694e215abc5d9ef593609",
+      "projection": "All scalar explorer configuration fields; no source lock maps",
+      "snapshot_bytes": 1051,
+      "snapshot_path": "sources/delayed_r0_fixed_random_config.json",
+      "snapshot_sha256": "9dca4d906d7ca7ff914480f03d5d385ccf733985a355ce3abf08c9502cb30a6a"
+    },
+    "delayed_r0_fixed_random_final": {
+      "original_bytes": 25902,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_000/fixed_random/arrivals/final_episodes.json",
+      "original_sha256": "c06312c2a390c0599d54006fbfc28763efe7596f62b5c6107dc8567533ad58bb",
+      "projection": "All episodes and scalar timing/cost fields; per-step cell lists omitted",
+      "snapshot_bytes": 1078,
+      "snapshot_path": "sources/delayed_r0_fixed_random_final.json",
+      "snapshot_sha256": "1ea65126b6a1ae015f02534b40ff11997dfb0d7b3bae49d4dcad299213434563"
+    },
+    "delayed_r0_fixed_random_initial": {
+      "original_bytes": 30840,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_000/fixed_random/arrivals/initial_episodes.json",
+      "original_sha256": "6931009d696f94febb84ce11fbee892c7cf2b278b52a465b9d83c457afc7672a",
+      "projection": "All episodes and scalar timing/cost fields; per-step cell lists omitted",
+      "snapshot_bytes": 1076,
+      "snapshot_path": "sources/delayed_r0_fixed_random_initial.json",
+      "snapshot_sha256": "9759a8e246db7bb7584285f2919e1fdeea717c3663cae5013807ce879a77aebb"
+    },
+    "delayed_r0_fixed_random_training_metrics": {
+      "original_bytes": 1532,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_000/fixed_random/arrivals/training_metrics.json",
+      "original_sha256": "3ec3172cb02003d15de4ead78db4d0a0075fa0467ce2319b0e909f62cb4b8dcf",
+      "projection": "Complete small source JSON",
+      "snapshot_bytes": 1532,
+      "snapshot_path": "sources/delayed_r0_fixed_random_training_metrics.json",
+      "snapshot_sha256": "0b93a9476c5444cb52c009db091f2def0dad0867ed52a16c6ec6ecc0271782a6"
+    },
+    "delayed_r0_learned_residual_acquisition": {
+      "original_bytes": 489,
+      "original_path": "JIT/runs/experiments/delayed_exploration_20260912/queue/stage_0_result/round_000/learned_residual/arrivals/status.json",
+      "original_sha256": "5bff6e850c6da8d0ad58369de34e01f27c152132d75da78651bd1c9008a27a2f",
+      "projection": "Complete small source JSON",
+      "snapshot_bytes": 489,
+      "snapshot_path": "sources/delayed_r0_learned_residual_acquisition.json",
+      "snapshot_sha256": "cdd00c0ce66a1403057f0809e8bf8e57728255af80789304b4bf4edb5297e315"
+    },
+    "delayed_r0_learned_residual_after_pool": {
+      "original_bytes": 1306937,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_000/learned_residual/after_learning/pool.json",
+      "original_sha256": "2ec02f8246d5f5a283f602d5d796c8bac134152e0f11606d360734a455a23143",
+      "projection": "All candidate keys, physical cells, status, phase, discovery round and label histories",
+      "snapshot_bytes": 53561,
+      "snapshot_path": "sources/delayed_r0_learned_residual_after_pool.json",
+      "snapshot_sha256": "1162745eec778749ee787fcde5eec070cd8cfb925798af0175445c8b7a482937"
+    },
+    "delayed_r0_learned_residual_before_pool": {
+      "original_bytes": 1301606,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_000/learned_residual/before_learning/pool.json",
+      "original_sha256": "d3d0649dba85e1b3bb0294f08644d10b0732fe375f57b9e932dc4a0103bc31fd",
+      "projection": "All candidate keys, physical cells, status, phase, discovery round and label histories",
+      "snapshot_bytes": 53539,
+      "snapshot_path": "sources/delayed_r0_learned_residual_before_pool.json",
+      "snapshot_sha256": "52e18d4a8c4ad27aecd75baf42c1bbbb31b1bae432fa9b094b4cae4f859c50b1"
+    },
+    "delayed_r0_learned_residual_config": {
+      "original_bytes": 1185,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_000/learned_residual/explorer.json",
+      "original_sha256": "cd7783b5d156b620db775589a2eae53b4b90ee8bfb51c01e41b332d804910f41",
+      "projection": "All scalar explorer configuration fields; no source lock maps",
+      "snapshot_bytes": 1011,
+      "snapshot_path": "sources/delayed_r0_learned_residual_config.json",
+      "snapshot_sha256": "a3c68da43fc672a1008e20010c0f4b4cbbda3a2306cea679c384867ae0c6c9b7"
+    },
+    "delayed_r0_learned_residual_final": {
+      "original_bytes": 32209,
+      "original_path": "JIT/runs/experiments/delayed_exploration_20260912/queue/stage_0_result/round_000/learned_residual/arrivals/final_episodes.json",
+      "original_sha256": "2672d071e5213da7e015ed08968fe154b39bdad05c2858bf9622e928f38e7b2a",
+      "projection": "All episodes and scalar timing/cost fields; per-step cell lists omitted",
+      "snapshot_bytes": 1077,
+      "snapshot_path": "sources/delayed_r0_learned_residual_final.json",
+      "snapshot_sha256": "a1a2a445fadc57451cc74f634a1971039f8155fc41371d4d5a81cc100125e815"
+    },
+    "delayed_r0_learned_residual_initial": {
+      "original_bytes": 29776,
+      "original_path": "JIT/runs/experiments/delayed_exploration_20260912/queue/stage_0_result/round_000/learned_residual/arrivals/initial_episodes.json",
+      "original_sha256": "3875954ceb5861af7fc4ddddc4be62194aafcd06048030da8a71144336894d4f",
+      "projection": "All episodes and scalar timing/cost fields; per-step cell lists omitted",
+      "snapshot_bytes": 1076,
+      "snapshot_path": "sources/delayed_r0_learned_residual_initial.json",
+      "snapshot_sha256": "31b7a4c71f18b8b8ca3fb859c103990f8f54162e96fe9d7a77f3fe9b76445279"
+    },
+    "delayed_r0_learned_residual_training_metrics": {
+      "original_bytes": 1991,
+      "original_path": "JIT/runs/experiments/delayed_exploration_20260912/queue/stage_0_result/round_000/learned_residual/arrivals/training_metrics.json",
+      "original_sha256": "a02773bf88b952edae29cbd6b0eef3ef0b9d58e52fe35747d29c2a0a94cc622d",
+      "projection": "Complete small source JSON",
+      "snapshot_bytes": 1991,
+      "snapshot_path": "sources/delayed_r0_learned_residual_training_metrics.json",
+      "snapshot_sha256": "7538de915df319ca9335e942c417ed6fcb0984d0d9aa53284994478c7e50a594"
+    },
+    "delayed_r0_support": {
+      "original_bytes": 7055102,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_000/training_support.json",
+      "original_sha256": "11a1573242b66de408701d3e63ecc4ab0025727529c078bfc8b3f554fa46dedb",
+      "projection": "All reset rows retained as phase/status/weight plus actual pending fractions",
+      "snapshot_bytes": 149157,
+      "snapshot_path": "sources/delayed_r0_support.json",
+      "snapshot_sha256": "c1d3f430e39c7be7655266f32ddbfa3ee683de70efe907bcff30cb484126daab"
+    },
+    "delayed_r0_training": {
+      "original_bytes": 11299,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_000/training/stage_0_result_round_000/formal_report.json",
+      "original_sha256": "dca67b5e0a25759eb2b18db6edefa8c8f86a60545278b51698409893b6371715",
+      "projection": "All scalar fields from completed formal training report",
+      "snapshot_bytes": 358,
+      "snapshot_path": "sources/delayed_r0_training.json",
+      "snapshot_sha256": "ad940584d8622f34da3ff24fe46c6272cf3c64b3b85553d9daa99c7028828b52"
+    },
+    "delayed_r0_training_config": {
+      "original_bytes": 12659,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_000/policy_training.json",
+      "original_sha256": "b56251aa890f85588b04b95bc13ff37a7f050e6fb3855051fb2831e497b77828",
+      "projection": "PPO configuration, initialization, reset probabilities, schema",
+      "snapshot_bytes": 802,
+      "snapshot_path": "sources/delayed_r0_training_config.json",
+      "snapshot_sha256": "e490c622ef50fed9351425f5b83fbc92209502ee2bfe7d5cd1adf9b8d87e44cb"
+    },
+    "delayed_r1_fixed_random_acquisition": {
+      "original_bytes": 488,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_001/fixed_random/arrivals/status.json",
+      "original_sha256": "afc6c949680ef64e186acff77c706fc626af8ac233506fe371e2753241f09ff8",
+      "projection": "Complete small source JSON",
+      "snapshot_bytes": 488,
+      "snapshot_path": "sources/delayed_r1_fixed_random_acquisition.json",
+      "snapshot_sha256": "a9c6fefce88ceff489ab28d4bf9d866f7192c05f4eeb77eecf78baae76eda9d1"
+    },
+    "delayed_r1_fixed_random_after_pool": {
+      "original_bytes": 2733037,
+      "original_path": "JIT/runs/experiments/delayed_completion_start_20260912/fixed_random/pool.json",
+      "original_sha256": "120f1a5b01bd8325a9a30d77dbd184b4b732899ef578cbc19b19d825ca93432a",
+      "projection": "All candidate keys, physical cells, status, phase, discovery round and label histories",
+      "snapshot_bytes": 106177,
+      "snapshot_path": "sources/delayed_r1_fixed_random_after_pool.json",
+      "snapshot_sha256": "e05566c701588490e0d4f229492811ba17ee85c145e610f6b60972065905976a"
+    },
+    "delayed_r1_fixed_random_before_pool": {
+      "original_bytes": 2709603,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_001/fixed_random/before_learning/pool.json",
+      "original_sha256": "fe121e78acc5f6d50bf111fa9ea03023675d4f6917d42bc9304f53cc7e6f2664",
+      "projection": "All candidate keys, physical cells, status, phase, discovery round and label histories",
+      "snapshot_bytes": 106078,
+      "snapshot_path": "sources/delayed_r1_fixed_random_before_pool.json",
+      "snapshot_sha256": "d7729ad0457c22dcda831aede3bb018745ba1d4b8d4d80d8eccdf759f7d737a2"
+    },
+    "delayed_r1_fixed_random_config": {
+      "original_bytes": 1323,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_001/fixed_random/explorer.json",
+      "original_sha256": "654e4585eb85e03e8449653da919ecc48bae26236d34c258fdf20adbaa735320",
+      "projection": "All scalar explorer configuration fields; no source lock maps",
+      "snapshot_bytes": 1112,
+      "snapshot_path": "sources/delayed_r1_fixed_random_config.json",
+      "snapshot_sha256": "8733f681b5c2c36cdbc018227d44dd1db0adcccb96bc4fe1e2d5a18c0d666dc6"
+    },
+    "delayed_r1_fixed_random_final": {
+      "original_bytes": 29168,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_001/fixed_random/arrivals/final_episodes.json",
+      "original_sha256": "81144169e035672ff1da484f5d6dad1ed0279da7c2c5dc2210b9f30399b23f6d",
+      "projection": "All episodes and scalar timing/cost fields; per-step cell lists omitted",
+      "snapshot_bytes": 1076,
+      "snapshot_path": "sources/delayed_r1_fixed_random_final.json",
+      "snapshot_sha256": "0f9788cc54902070cfbdb3428033e1e05d87eb4c47410de7f51e1cf4671fa534"
+    },
+    "delayed_r1_fixed_random_initial": {
+      "original_bytes": 29244,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_001/fixed_random/arrivals/initial_episodes.json",
+      "original_sha256": "69d1f9fe1b48e45e26e04206c44821b0cc4330a65c85226e92bdbd1d53bc8683",
+      "projection": "All episodes and scalar timing/cost fields; per-step cell lists omitted",
+      "snapshot_bytes": 1076,
+      "snapshot_path": "sources/delayed_r1_fixed_random_initial.json",
+      "snapshot_sha256": "92a80c7319144efd8245b40a14684cf4b9dde4cd65cd1bceaea856e87259c364"
+    },
+    "delayed_r1_fixed_random_training_metrics": {
+      "original_bytes": 1533,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_001/fixed_random/arrivals/training_metrics.json",
+      "original_sha256": "68988ab740c98a3395baf6a2f5b3f222c254a57b8cec4d4118d5802382db6d61",
+      "projection": "Complete small source JSON",
+      "snapshot_bytes": 1533,
+      "snapshot_path": "sources/delayed_r1_fixed_random_training_metrics.json",
+      "snapshot_sha256": "8d2e2fe7d9ee54d8dc6e86dd19829f9da6675f6926a50641f96e7e17451706b2"
+    },
+    "delayed_r1_learned_residual_acquisition": {
+      "original_bytes": 487,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_001/learned_residual/arrivals/status.json",
+      "original_sha256": "19a3e31ebed0eae07f576491e3260842bbfebc776db5546f2312bb4c242872c1",
+      "projection": "Complete small source JSON",
+      "snapshot_bytes": 487,
+      "snapshot_path": "sources/delayed_r1_learned_residual_acquisition.json",
+      "snapshot_sha256": "b0ac9e6c3d0298917cc5dcddf5704e3c45c4331bb8c77dfcb865c9dd67beaf5b"
+    },
+    "delayed_r1_learned_residual_after_pool": {
+      "original_bytes": 2747561,
+      "original_path": "JIT/runs/experiments/delayed_completion_start_20260912/learned_residual/pool.json",
+      "original_sha256": "71730bb0e1862729bf1a7f513b54e8f31dde089ab5dc8335a7a161e65cb1a28b",
+      "projection": "All candidate keys, physical cells, status, phase, discovery round and label histories",
+      "snapshot_bytes": 107119,
+      "snapshot_path": "sources/delayed_r1_learned_residual_after_pool.json",
+      "snapshot_sha256": "432249905db7b09bdcc99d25f9aefcd2a6bb090080402c098135db6025919f8b"
+    },
+    "delayed_r1_learned_residual_before_pool": {
+      "original_bytes": 2716264,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_001/learned_residual/before_learning/pool.json",
+      "original_sha256": "ba121c5b9c4cb4ac5312eea918b329e18b1f2f11de2dd26eb00a572ac4cc3578",
+      "projection": "All candidate keys, physical cells, status, phase, discovery round and label histories",
+      "snapshot_bytes": 106987,
+      "snapshot_path": "sources/delayed_r1_learned_residual_before_pool.json",
+      "snapshot_sha256": "bcdab41747529a0941b44911f7072532eb3702b36f2e1124b395c64dc8edb82b"
+    },
+    "delayed_r1_learned_residual_config": {
+      "original_bytes": 1277,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_001/learned_residual/explorer.json",
+      "original_sha256": "eb8aa6a450e734ef6cfe983616f9de0ebe9c0ea4f856b3a1471a0ae08865f0e4",
+      "projection": "All scalar explorer configuration fields; no source lock maps",
+      "snapshot_bytes": 1066,
+      "snapshot_path": "sources/delayed_r1_learned_residual_config.json",
+      "snapshot_sha256": "89a7f7c55731666ca72d6625b8e043aadab5a65975914ac00edb7eb0dc040785"
+    },
+    "delayed_r1_learned_residual_final": {
+      "original_bytes": 27572,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_001/learned_residual/arrivals/final_episodes.json",
+      "original_sha256": "4f314d2d5da606ad7fc082533cb9562e38949e4b619fd26cb3e0b4923509fea1",
+      "projection": "All episodes and scalar timing/cost fields; per-step cell lists omitted",
+      "snapshot_bytes": 1076,
+      "snapshot_path": "sources/delayed_r1_learned_residual_final.json",
+      "snapshot_sha256": "57749cabde6ff5150daff95a2bd7b5840fb6d1fd54422a658f96038ba2d801e7"
+    },
+    "delayed_r1_learned_residual_initial": {
+      "original_bytes": 29320,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_001/learned_residual/arrivals/initial_episodes.json",
+      "original_sha256": "e8ec55eb8766b31ea3d0ba69121e0e5fed44c5d5b22ac2ee63198b8dd97263fc",
+      "projection": "All episodes and scalar timing/cost fields; per-step cell lists omitted",
+      "snapshot_bytes": 1076,
+      "snapshot_path": "sources/delayed_r1_learned_residual_initial.json",
+      "snapshot_sha256": "412343129e2364da33358be5767e43658b5c8a5b4a1a62cf029cc770190ca698"
+    },
+    "delayed_r1_learned_residual_training_metrics": {
+      "original_bytes": 1986,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_001/learned_residual/arrivals/training_metrics.json",
+      "original_sha256": "988dbf13979bdf28b59588f35f48f75e3909a2ccfd440f6368fe6b9d98fcc136",
+      "projection": "Complete small source JSON",
+      "snapshot_bytes": 1986,
+      "snapshot_path": "sources/delayed_r1_learned_residual_training_metrics.json",
+      "snapshot_sha256": "e0c5ee1e870cdd51f21c80d88781361b206b59b756a99c4b2de61f9f63a35774"
+    },
+    "delayed_r1_support": {
+      "original_bytes": 7361184,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_001/training_support.json",
+      "original_sha256": "06716aadb8218e46ba67fe17c3f3b92c23ff08b2a6e9efe7e7aa1522aa63fb3e",
+      "projection": "All reset rows retained as phase/status/weight plus actual pending fractions",
+      "snapshot_bytes": 169399,
+      "snapshot_path": "sources/delayed_r1_support.json",
+      "snapshot_sha256": "fd52e06b248c0396ee507c6d24b28f35953cce8a9046a9be3e2a918bd6237116"
+    },
+    "delayed_r1_training": {
+      "original_bytes": 11299,
+      "original_path": "JIT/runs/experiments/delayed_completion_start_20260912/training/stage_0_result_round_001/formal_report.json",
+      "original_sha256": "0233bfd8370cdfcc5b521cb6de3c155b0c8c8ca70ec32a08dd249a6beaf02071",
+      "projection": "All scalar fields from completed formal training report",
+      "snapshot_bytes": 358,
+      "snapshot_path": "sources/delayed_r1_training.json",
+      "snapshot_sha256": "16c5771b142941a2d90d4297588fa203a9f47e0fc934e87c23a8b2f89d10a20b"
+    },
+    "delayed_r1_training_config": {
+      "original_bytes": 12701,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_001/policy_training.json",
+      "original_sha256": "9dddd3e9dc416c00b968996795afd174f67667cba8fb40941e6e38903742d7aa",
+      "projection": "PPO configuration, initialization, reset probabilities, schema",
+      "snapshot_bytes": 823,
+      "snapshot_path": "sources/delayed_r1_training_config.json",
+      "snapshot_sha256": "f9bd6472b8b566ba51a3660a7a3adc3fca26f54fa1deb39bd0176a6178f4765a"
+    },
+    "delayed_reuse_status": {
+      "original_bytes": 2895,
+      "original_path": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/pipeline_status.json",
+      "original_sha256": "bb99ce172f709e1aa45512c2ee649713106ae947d3b79e727e15790282d8e9e4",
+      "projection": "Complete small source JSON",
+      "snapshot_bytes": 2895,
+      "snapshot_path": "sources/delayed_reuse_status.json",
+      "snapshot_sha256": "bb99ce172f709e1aa45512c2ee649713106ae947d3b79e727e15790282d8e9e4"
+    },
+    "diagnostic_semantics": {
+      "original_bytes": 27419,
+      "original_path": "JIT/src/jit_dvgc/exploration_training.py",
+      "original_sha256": "a707bd69c5a1417ef80dd60822cc6a0d9457300a72a176d7f19adb946e175bbf",
+      "projection": "Verbatim initial/final rollout calls and source line numbers",
+      "snapshot_bytes": 203,
+      "snapshot_path": "sources/diagnostic_semantics.json",
+      "snapshot_sha256": "7050d6d96da831bd6512063dce0ff6c2e7433e8791d12de0a6c187cada43338a"
+    },
+    "early_exploration_summary": {
+      "original_bytes": 1577823,
+      "original_path": "JIT/runs/experiments/checkpoint_discovery_20260911/summary.json",
+      "original_sha256": "644db7f9476b2c0c7a1b2bf87844ad10bd8a24456f652f5ab77e7698d16c279b",
+      "projection": "Complete arm and equal-budget tables; baseline and scope; point/curve arrays omitted",
+      "snapshot_bytes": 8072,
+      "snapshot_path": "sources/early_exploration_summary.json",
+      "snapshot_sha256": "519c8cc9bf12f0c558032ee8ecb2cf28f5e17c967894e00b09ff65e44f19ae0a"
+    },
+    "early_training_summary": {
+      "original_bytes": 399,
+      "original_path": "JIT/runs/experiments/multicheckpoint_pi6_20260911/summary.json",
+      "original_sha256": "4be993a620e2c052fab46315a5bea6c4b198587697087a652a5e09b9c2ac6875",
+      "projection": "Complete small source JSON",
+      "snapshot_bytes": 399,
+      "snapshot_path": "sources/early_training_summary.json",
+      "snapshot_sha256": "4be993a620e2c052fab46315a5bea6c4b198587697087a652a5e09b9c2ac6875"
+    },
+    "historical_geometry": {
+      "column_mapping": {
+        "key": "key",
+        "phase": "phase",
+        "pitch_deg": "pitch_deg",
+        "proposer": "proposer",
+        "roll_deg": "roll_deg",
+        "root_cell": "root_cell",
+        "root_vx_mps": "root_vx_mps",
+        "root_vz_mps": "root_vz_mps",
+        "root_x_m": "root_x_m",
+        "root_y_m": "root_y_m",
+        "root_z_m": "root_z_m",
+        "snapshot_context_sha256": "snapshot_context_sha256",
+        "state_sha256": "state_sha256",
+        "witnessed": "witnessed"
+      },
+      "format": "csv_gzip",
+      "original_bytes": 9509246,
+      "original_path": "JIT/runs/campaign/all_proposers_v1/round_001/figures/all_points.csv",
+      "original_sha256": "ec4943cd3ff07266c6c0dc8a05f52db0d379fc33ecdbf1f48642470441a9278b",
+      "projection": "All original rows in original order; listed columns only; no sample or label filtering",
+      "rows": 10464,
+      "snapshot_bytes": 2361132,
+      "snapshot_path": "sources/historical_geometry.csv.gz",
+      "snapshot_sha256": "60bab104cd413e9c17533b15275b1eb41362ef769836d057d33caf2da6084b9a"
+    },
+    "historical_geometry_manifest": {
+      "original_bytes": 7286,
+      "original_path": "JIT/runs/campaign/all_proposers_v1/round_001/figures/figure_manifest.json",
+      "original_sha256": "b842dfc6272c34d8245f76c773295261dfd512c2860c6b2533671fed2e5343e9",
+      "projection": "Complete small source JSON",
+      "snapshot_bytes": 7286,
+      "snapshot_path": "sources/historical_geometry_manifest.json",
+      "snapshot_sha256": "b842dfc6272c34d8245f76c773295261dfd512c2860c6b2533671fed2e5343e9"
+    },
+    "historical_r0_ledger0": {
+      "original_bytes": 10671,
+      "original_path": "JIT/runs/campaign/all_proposers_v1/round_000/discovery/cost_ledger.json",
+      "original_sha256": "f9a36dbe17abc3f015b6206816a2a503b6b18b0b8550ac708b6b3da425913b43",
+      "projection": "Every attempt retained: stage, attempt ordinal, charged interactions, measured flag",
+      "snapshot_bytes": 7484,
+      "snapshot_path": "sources/historical_r0_ledger0.json",
+      "snapshot_sha256": "110d1bbda49bcce131645b06c5b76a1659bdae40ceff91b04ffb94125ed08f3d"
+    },
+    "historical_r0_ledger1": {
+      "original_bytes": 6479,
+      "original_path": "JIT/runs/campaign/all_proposers_v1/round_000/proposers/pi_0/cost_ledger.json",
+      "original_sha256": "8a155625f40def5cb466b3d6918c6af54d2abc5d310a7a7df41de377735b6c18",
+      "projection": "Every attempt retained: stage, attempt ordinal, charged interactions, measured flag",
+      "snapshot_bytes": 4371,
+      "snapshot_path": "sources/historical_r0_ledger1.json",
+      "snapshot_sha256": "66814523833851117447b36f8de2f348220b98153b6acfeaf87984baee478840"
+    },
+    "historical_r0_ledger2": {
+      "original_bytes": 8349,
+      "original_path": "JIT/runs/campaign/all_proposers_v1/round_000/proposers/pi_1/cost_ledger.json",
+      "original_sha256": "8b9c7a2d99ba2a72eb3f003caefa1ec1a4dbfc83cbe0b648b9f8dbf0f5f8477b",
+      "projection": "Every attempt retained: stage, attempt ordinal, charged interactions, measured flag",
+      "snapshot_bytes": 5671,
+      "snapshot_path": "sources/historical_r0_ledger2.json",
+      "snapshot_sha256": "3057ff7b55546bef3dd9d5f1cbece2c7b0b11842088b9ced13288a26dda28aa3"
+    },
+    "historical_r0_ledger3": {
+      "original_bytes": 8349,
+      "original_path": "JIT/runs/campaign/all_proposers_v1/round_000/proposers/pi_3/cost_ledger.json",
+      "original_sha256": "de46c5a7666656b5c5989497139eb0dfd3c9b74ef45c863652a933d48dfb6abc",
+      "projection": "Every attempt retained: stage, attempt ordinal, charged interactions, measured flag",
+      "snapshot_bytes": 5671,
+      "snapshot_path": "sources/historical_r0_ledger3.json",
+      "snapshot_sha256": "b4c59fcce41d4a18dd4c9f23185b5bcdadec4e5d933800592ea2683d248fd402"
+    },
+    "historical_r0_proposers": {
+      "original_bytes": 241,
+      "original_path": "JIT/runs/campaign/all_proposers_v1/round_000/figures/proposer_metrics.csv",
+      "original_sha256": "9aa5c1a8050cd46578457d49b71c0939b8c2676c3669885901f2f2dc94b81352",
+      "projection": "All proposer rows from source CSV",
+      "snapshot_bytes": 1080,
+      "snapshot_path": "sources/historical_r0_proposers.json",
+      "snapshot_sha256": "4af02ea7267ab183807144d7dec7b3712e978e33d603b1a5aef3b495a3fc117c"
+    },
+    "historical_r0_training": {
+      "original_bytes": 1353,
+      "original_path": "JIT/runs/campaign/all_proposers_v1/round_000/training_attempt_000/training/pi_5_campaign_r0_attempt000/formal_report.json",
+      "original_sha256": "7b34b6b1806f7f529b31bf68dbf1d14ef9643dbe4ce70fb12ed0a14147be7438",
+      "projection": "All scalar fields of formal training report; no model payload",
+      "snapshot_bytes": 358,
+      "snapshot_path": "sources/historical_r0_training.json",
+      "snapshot_sha256": "93c19685340449a1abebac2f47364bebc6bcbbc1b82f6afe1ac88d28a8e90f52"
+    },
+    "historical_r1_ledger0": {
+      "original_bytes": 9753,
+      "original_path": "JIT/runs/campaign/all_proposers_v1/round_001/discovery/cost_ledger.json",
+      "original_sha256": "eec9c3b836c6a3e749bb8a691bc1aa051f9539f7d60a0f6d0172f53d8b1d4a3d",
+      "projection": "Every attempt retained: stage, attempt ordinal, charged interactions, measured flag",
+      "snapshot_bytes": 6827,
+      "snapshot_path": "sources/historical_r1_ledger0.json",
+      "snapshot_sha256": "c1d29a67ebdddc3cba650b8a0273d6c991e555221072c0d70ed9d70402ed7f19"
+    },
+    "historical_r1_ledger1": {
+      "original_bytes": 7594,
+      "original_path": "JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_0/cost_ledger.json",
+      "original_sha256": "2cb23e1394e77294a1f13ccf75a460a837274e16e2aca95e7f8785b79f874715",
+      "projection": "Every attempt retained: stage, attempt ordinal, charged interactions, measured flag",
+      "snapshot_bytes": 5144,
+      "snapshot_path": "sources/historical_r1_ledger1.json",
+      "snapshot_sha256": "0d58c24d36510843b04f06d4cfafe3c6a63b040f77edf37e8832c892f779c9b1"
+    },
+    "historical_r1_ledger2": {
+      "original_bytes": 9838,
+      "original_path": "JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_1/cost_ledger.json",
+      "original_sha256": "13b1445a3eff3549d3164d8471f5707932a70d803956dd1e3ad466333cae13d6",
+      "projection": "Every attempt retained: stage, attempt ordinal, charged interactions, measured flag",
+      "snapshot_bytes": 6704,
+      "snapshot_path": "sources/historical_r1_ledger2.json",
+      "snapshot_sha256": "bbb3c78b8e1fa234b0a605f6ab8fcaf3306ebd56174f815b423a077cbd6e1d2c"
+    },
+    "historical_r1_ledger3": {
+      "original_bytes": 7594,
+      "original_path": "JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_2/cost_ledger.json",
+      "original_sha256": "2969539fcc2230a13f68a2697781ad286968f59f65579276d0361073c7951a62",
+      "projection": "Every attempt retained: stage, attempt ordinal, charged interactions, measured flag",
+      "snapshot_bytes": 5144,
+      "snapshot_path": "sources/historical_r1_ledger3.json",
+      "snapshot_sha256": "a5be323c64139122601e94af2012085b6381e261d304a8505fd69bb98e09c82f"
+    },
+    "historical_r1_ledger4": {
+      "original_bytes": 9839,
+      "original_path": "JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_3/cost_ledger.json",
+      "original_sha256": "5198e1c13035a381e674fa76fe90390946a9358c35447bbf914d699dc20c1e03",
+      "projection": "Every attempt retained: stage, attempt ordinal, charged interactions, measured flag",
+      "snapshot_bytes": 6704,
+      "snapshot_path": "sources/historical_r1_ledger4.json",
+      "snapshot_sha256": "7c07ccca35da498935a56d481fd6fd025994c6fe95d1c5a4a61f877f120d5b08"
+    },
+    "historical_r1_ledger5": {
+      "original_bytes": 8716,
+      "original_path": "JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_4/cost_ledger.json",
+      "original_sha256": "eac0de3f148d940b80057af6c95022ec7415a9a693c0d77b8d9c4a92c0ab6bc5",
+      "projection": "Every attempt retained: stage, attempt ordinal, charged interactions, measured flag",
+      "snapshot_bytes": 5924,
+      "snapshot_path": "sources/historical_r1_ledger5.json",
+      "snapshot_sha256": "410a50983f74ad92ec6f1b184ba653ae591843820a7717ae3b0edd405f88e532"
+    },
+    "historical_r1_ledger6": {
+      "original_bytes": 10961,
+      "original_path": "JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_5/cost_ledger.json",
+      "original_sha256": "3af6c84b3181dec40474c87c9a68b013a2707ea2a59c481260ab018bda7d6fc7",
+      "projection": "Every attempt retained: stage, attempt ordinal, charged interactions, measured flag",
+      "snapshot_bytes": 7484,
+      "snapshot_path": "sources/historical_r1_ledger6.json",
+      "snapshot_sha256": "57fce2e5bd7432b88ad2a0c173ff1c6111fc9dea4e1fd587df27f5fccb407b5c"
+    },
+    "historical_r1_proposers": {
+      "original_bytes": 294,
+      "original_path": "JIT/runs/campaign/all_proposers_v1/round_001/figures/proposer_metrics.csv",
+      "original_sha256": "c40dcc9ca9de6c789f722d0de618c243a8936cd41547f193961e21c37e3d861a",
+      "projection": "All proposer rows from source CSV",
+      "snapshot_bytes": 1287,
+      "snapshot_path": "sources/historical_r1_proposers.json",
+      "snapshot_sha256": "f62e41571a678ecda08d89ae411ea904ded48cb2ccbeb4d19f5e9abe1bd51cd4"
+    },
+    "historical_r1_training": {
+      "original_bytes": 1358,
+      "original_path": "JIT/runs/campaign/all_proposers_v1/round_001/training_attempt_000/training/pi_6_campaign_r1_attempt000/formal_report.json",
+      "original_sha256": "7504d06261eb596ff6ab36960cbb921f72234aaca3c330514323bc98f9207d8f",
+      "projection": "All scalar fields of formal training report; no model payload",
+      "snapshot_bytes": 358,
+      "snapshot_path": "sources/historical_r1_training.json",
+      "snapshot_sha256": "b453040ef739afb2eed810b0dd2167f42a11cdcd4034d6d84ab2240c0f368113"
+    },
+    "historical_summary": {
+      "original_bytes": 1323,
+      "original_path": "JIT/runs/campaign/all_proposers_v1/summary.json",
+      "original_sha256": "d2356372444ebfb8cfc66ab7660ad36338e31693f1834582d22f8d62b12abd38",
+      "projection": "Complete small source JSON",
+      "snapshot_bytes": 1323,
+      "snapshot_path": "sources/historical_summary.json",
+      "snapshot_sha256": "d2356372444ebfb8cfc66ab7660ad36338e31693f1834582d22f8d62b12abd38"
+    },
+    "late_exploration_summary": {
+      "original_bytes": 1636065,
+      "original_path": "JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/exploration/summary.json",
+      "original_sha256": "36b8f5a82e1c68be60e30595387c5d6eecc50278378a72563cc27908b3511b01",
+      "projection": "Complete arm and equal-budget tables; baseline and scope; point/curve arrays omitted",
+      "snapshot_bytes": 8134,
+      "snapshot_path": "sources/late_exploration_summary.json",
+      "snapshot_sha256": "5f16fa2f57aae7817416f8a4a2b6bbff018da5a4133ae8d592d7f06715743311"
+    },
+    "late_training_summary": {
+      "original_bytes": 399,
+      "original_path": "JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/summary.json",
+      "original_sha256": "6824bf63a758076e77110d3ba4ec24f8458769eec8d65a28ae6395ee01d8c02d",
+      "projection": "Complete small source JSON",
+      "snapshot_bytes": 399,
+      "snapshot_path": "sources/late_training_summary.json",
+      "snapshot_sha256": "6824bf63a758076e77110d3ba4ec24f8458769eec8d65a28ae6395ee01d8c02d"
+    },
+    "off_target_engineering": {
+      "original_bytes": 1222,
+      "original_path": "JIT/runs/experiments/per_policy_coverage_ppo_20260911/analysis_summary.json",
+      "original_sha256": "58c9b695025c22177ebbc8bd588b312f1651ba6ce3ce664e085f50fe06afda20",
+      "projection": "Complete small source JSON",
+      "snapshot_bytes": 1222,
+      "snapshot_path": "sources/off_target_engineering.json",
+      "snapshot_sha256": "3224bceaba2acf9eaedbe8a4427a794890f9f055292a89ebd2f23402b8fdf6cc"
+    }
+  }
+}

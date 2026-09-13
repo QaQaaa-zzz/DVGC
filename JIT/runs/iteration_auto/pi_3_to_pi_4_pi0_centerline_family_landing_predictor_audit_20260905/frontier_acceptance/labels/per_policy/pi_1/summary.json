@@ -1,0 +1,50 @@
+{
+  "acquisition_policy_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+  "acquisition_policy_name": "pi_0",
+  "acquisition_policy_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+  "artifact_role": "pi_k_conditioned_expansion_train_labels",
+  "candidate_catalog_file_sha256": "bf636385a340f1a1fbec3c0c7875dfe1b3213b43e4345e78574bac948be9811a",
+  "candidate_catalog_protocol_sha256": "4fea567fc8d321318afcc4e7d72524199bd609b6d62c13862730d75027255343",
+  "candidate_count": 574,
+  "claim_boundary": {
+    "certified_safe_set_claim": false,
+    "continuation_field_trained": false,
+    "expansion_train_labels_only": true,
+    "jce_jel_claim": false,
+    "tube_expansion_claim": false
+  },
+  "environment_interactions": 11121,
+  "evaluator_policy_name": "pi_1",
+  "expert_switching_used": false,
+  "final_evaluation_data_used": false,
+  "frozen_unified_manifest_sha256": "a3ed7fddcc813e688bea044b0bda76c1cd425123746d474ca6e93eb5516543a3",
+  "iteration": 1,
+  "label_count": 574,
+  "maximum_environment_interactions": 229600,
+  "negative_count": 53,
+  "outcome_counts": {
+    "airborne_physical_failure": 39,
+    "first_valid_landing": 521,
+    "task_failure_before_landing": 14
+  },
+  "phase_candidate_counts": {
+    "downstream": 241,
+    "upstream": 333
+  },
+  "phase_positive_counts": {
+    "downstream": 241,
+    "upstream": 280
+  },
+  "policy_actor_sha256": "85d6b4667364daf8e054af9bccbf155dda16a62518df19883057fcfcbbd6f86a",
+  "policy_name": "pi_1",
+  "policy_payload_sha256": "3b9af512c7e389aade1c86ca76e9420a0bc687c499f2ff9cf7637701dd5d0cbc",
+  "positive_count": 521,
+  "protocol_sha256": "4745b32d80eec17f7c89aa35de6fdc75f3bebc2ce9e056092086ce02eb0494de",
+  "schema": "jit_unified_continuation_labels_v1",
+  "split": "train",
+  "status": "completed",
+  "success_criterion": "first_valid_landing",
+  "test_data_used": false,
+  "training_transitions": 0,
+  "validation_data_used": false
+}

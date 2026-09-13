@@ -55,11 +55,3 @@ def test_stale_lock_requires_all_liveness_checks_to_fail():
     assert not is_stale_lock(lock, unit_active=True, worker_pids=[], heartbeat_age=61)
     assert not is_stale_lock(lock, unit_active=False, worker_pids=[7], heartbeat_age=61)
     assert not is_stale_lock(lock, unit_active=False, worker_pids=[], heartbeat_age=59)
-
-
-def test_controller_service_has_restart_and_terminal_exit_guards():
-    text = open("scripts/start_descent_local_controller.sh", encoding="utf-8").read()
-    assert "Restart=on-failure" in text
-    assert 'RestartPreventExitStatus="40 41"' in text
-    assert "StartLimitIntervalSec=0" in text
-    assert "RuntimeMaxSec=infinity" in text

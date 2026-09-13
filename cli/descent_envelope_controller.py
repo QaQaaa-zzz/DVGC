@@ -8,9 +8,9 @@ from pathlib import Path
 
 from cli.descent_local_controller import (
     Controller, ENTRY, LANDING, PYTHON, RUNTIME_GATE, SHARD_SIZE,
-    split_range_after_oom,
 )
-from cli.descent_tube_controller import failure_fuse_update, select_policy_for_hash
+from cli.descent_tube_controller import select_policy_for_hash
+from dvgc.construction_lifecycle import failure_fuse_update, split_range_after_oom
 from dvgc.audit_manifest import completed_manifest
 from dvgc.bank import SnapshotBank
 from dvgc.certification import branch_seed

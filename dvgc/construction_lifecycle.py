@@ -1,11 +1,74 @@
 """Fail-closed identity rules for immutable stable-construction cycles."""
 from __future__ import annotations
 
+import hashlib
 import json
+import os
+import re
 from pathlib import Path
 
 
 PROTOCOL_VERSION="stable-descent-cross-seed-v1"
+
+
+def is_stale_lock(lock_payload, *, unit_active, worker_pids, heartbeat_age):
+    """Return true only when every independent liveness signal is absent."""
+    pid = int(lock_payload.get("pid", 0) or 0)
+    try:
+        os.kill(pid, 0)
+        pid_alive = pid > 0
+    except OSError:
+        pid_alive = False
+    return bool(not pid_alive and not unit_active and not worker_pids and heartbeat_age > 60.0)
+
+
+def split_range_after_oom(start, end):
+    """Apply the declared 12 -> 6 -> 3 -> 1 state OOM backoff."""
+    width = int(end) - int(start)
+    if width <= 1:
+        return [(int(start), int(end))]
+    target = 6 if width > 6 else 3 if width > 3 else 1
+    return [
+        (left, min(left + target, int(end)))
+        for left in range(int(start), int(end), target)
+    ]
+
+
+def completed_coverage(payloads, total):
+    """Return exact completed coverage, rejecting gaps and overlaps."""
+    indices = sorted(
+        int(row["candidate_index"])
+        for payload in payloads
+        for row in payload["rows"]
+    )
+    if indices != list(range(int(total))):
+        raise ValueError(
+            "Completed shard markers do not cover every global index exactly once"
+        )
+    return indices
+
+
+def worker_log_is_oom(text):
+    """Recognize allocation failure without conflating domain-level failures."""
+    lowered = str(text).lower()
+    return any(
+        token in lowered
+        for token in ("out of memory", "failed to allocate", "resource_exhausted")
+    )
+
+
+def failure_fuse_update(state, stage: str, exc: Exception):
+    """Count identical deterministic failures across timestamped worker restarts."""
+    normalized = re.sub(r"-\d{10}\.service", "-<launch>.service", str(exc))
+    message = f"{stage}|{type(exc).__name__}|{normalized}"
+    signature = hashlib.sha256(message.encode("utf-8")).hexdigest()
+    previous = state.get("failure_signature")
+    count = (
+        int(state.get("consecutive_failure_count", 0)) + 1
+        if previous == signature
+        else 1
+    )
+    return signature, count
 
 
 def artifact_checks(payload,identity,*,stage=None,seed=None):

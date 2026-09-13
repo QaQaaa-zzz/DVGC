@@ -1,0 +1,42 @@
+{
+  "action_order": [
+    "steer",
+    "rear_wheel_drive",
+    "hip",
+    "knee"
+  ],
+  "actor_frame_fields": [
+    "gravity_x",
+    "gravity_y",
+    "gravity_z",
+    "angular_velocity_x",
+    "angular_velocity_y",
+    "angular_velocity_z",
+    "acceleration_x",
+    "acceleration_y",
+    "acceleration_z",
+    "steering_position",
+    "hip_position",
+    "knee_position",
+    "steering_velocity",
+    "hip_velocity",
+    "knee_velocity",
+    "front_wheel_velocity",
+    "rear_wheel_velocity",
+    "last_action_steer",
+    "last_action_rear_wheel_drive",
+    "last_action_hip",
+    "last_action_knee",
+    "estimated_forward_velocity",
+    "obstacle_relative_x",
+    "root_height",
+    "history_valid"
+  ],
+  "actor_task_fields": [
+    "jump_signal"
+  ],
+  "config_sha256": "a45e70438c2b5cc005ddd415bbb4920c8e07e7504feae7e630a94b473d91f3a6",
+  "payload_sha256": "78bbe470de59391a45e909e490141ef0f8192c69fcdd93b7d4a1515b8bb024dd",
+  "training_transitions": 491520,
+  "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+}

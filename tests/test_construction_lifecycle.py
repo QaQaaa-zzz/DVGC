@@ -3,7 +3,16 @@ import os
 
 import pytest
 
-from dvgc.construction_lifecycle import PROTOCOL_VERSION,validate_artifact,validate_policy_update_gate
+from dvgc.construction_lifecycle import (
+    PROTOCOL_VERSION,
+    completed_coverage,
+    failure_fuse_update,
+    is_stale_lock,
+    split_range_after_oom,
+    validate_artifact,
+    validate_policy_update_gate,
+    worker_log_is_oom,
+)
 
 
 def _identity(policy="policy",bank="bank",cycle=5):
@@ -54,3 +63,48 @@ def test_policy_update_gate_accepts_fresh_cycle5_report(tmp_path):
     os.utime(before,(10,10));os.utime(after,(11,11))
     _,_,checks=validate_policy_update_gate(before,after,before_policy_hash="old",after_policy_hash="new",before_cycle=4,after_cycle=5)
     assert all(checks.values())
+
+
+def test_completed_coverage_requires_every_index_exactly_once():
+    complete = [
+        {"rows": [{"candidate_index": 0}, {"candidate_index": 1}]},
+        {"rows": [{"candidate_index": 2}]},
+    ]
+    assert completed_coverage(complete, 3) == [0, 1, 2]
+    with pytest.raises(ValueError, match="every global index exactly once"):
+        completed_coverage(complete + [{"rows": [{"candidate_index": 2}]}], 3)
+
+
+def test_oom_backoff_reaches_single_state_shards():
+    assert split_range_after_oom(0, 12) == [(0, 6), (6, 12)]
+    assert split_range_after_oom(0, 6) == [(0, 3), (3, 6)]
+    assert split_range_after_oom(0, 3) == [(0, 1), (1, 2), (2, 3)]
+    assert split_range_after_oom(4, 5) == [(4, 5)]
+
+
+def test_oom_detection_does_not_confuse_domain_failure_with_allocation_failure():
+    assert worker_log_is_oom("RuntimeError: Failed to allocate 8192 bytes")
+    assert worker_log_is_oom("RESOURCE_EXHAUSTED")
+    assert not worker_log_is_oom("No Landing-entry radius meets calibration precision")
+
+
+def test_failure_fuse_normalizes_worker_launch_timestamp_and_resets_on_stage_change():
+    state = {}
+    signature, count = failure_fuse_update(
+        state, "audit", RuntimeError("worker failed unit=dvgc-worker-audit-1784275003.service")
+    )
+    state.update(failure_signature=signature, consecutive_failure_count=count)
+    _, count = failure_fuse_update(
+        state, "audit", RuntimeError("worker failed unit=dvgc-worker-audit-1784275093.service")
+    )
+    assert count == 2
+    _, count = failure_fuse_update(state, "merge", RuntimeError("different"))
+    assert count == 1
+
+
+def test_stale_lock_requires_every_liveness_signal_to_be_absent():
+    lock = {"pid": 99_999_999}
+    assert is_stale_lock(lock, unit_active=False, worker_pids=[], heartbeat_age=61)
+    assert not is_stale_lock(lock, unit_active=True, worker_pids=[], heartbeat_age=61)
+    assert not is_stale_lock(lock, unit_active=False, worker_pids=[7], heartbeat_age=61)
+    assert not is_stale_lock(lock, unit_active=False, worker_pids=[], heartbeat_age=59)

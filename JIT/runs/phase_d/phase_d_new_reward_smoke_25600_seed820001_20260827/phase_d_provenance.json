@@ -1,0 +1,79 @@
+{
+  "actor_init_checkpoint": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_9977856",
+  "actor_init_config": "/home/qy/DVGC/JIT/configs/phase_u_continuation_10m.json",
+  "actor_initialized": true,
+  "catalog_sha256": "4795623ca613ea02802aebc196d4ce3f7ea3a36452a63fbca743145ad0d591aa",
+  "critic_fresh": true,
+  "diagnostic_source": {
+    "parent_group_id": "transition_4988928__1000007",
+    "role": "pre_apex",
+    "seed": 1000007,
+    "source_bank": "handoff_bank_4988928",
+    "tick": 46
+  },
+  "entry_count": 168,
+  "eval_parent_groups": [
+    "transition_4988928__1000007",
+    "transition_4988928__1000008",
+    "transition_7987200__1000007",
+    "transition_7987200__1000008",
+    "transition_9977856__1000007",
+    "transition_9977856__1000008"
+  ],
+  "eval_seeds": [
+    1000007,
+    1000008
+  ],
+  "optimizer_fresh": true,
+  "parent_actor_sha256": "f218775e3cf99555ce524f1357a800172904bc815b06c54a53db8965204d9081",
+  "parent_payload_sha256": "965b2f141d5cff17f7cef943004fe4e4f62f0fecfe88b47353dc78b14ced723a",
+  "parent_transition": 9977856,
+  "snapshot_input": "JIT/runs/handoff_bank/catalog_20260827.json",
+  "source_bank_hashes": {
+    "handoff_bank_4988928": {
+      "manifest_sha256": "b568c56807d25ce105c177d8f651ce7b1d8f0307b6bb4afc623960b0bb6c47cc",
+      "snapshot_identity_sha256": "6d475c313f659deab6672b8a63ec9ca88d88971dd23b983803d060940fff4806"
+    },
+    "handoff_bank_7987200_jit2": {
+      "manifest_sha256": "f73d2e4c5082331b38a3c0314cfb50e26f446d08d9a879ab50ca4d3ca28d850e",
+      "snapshot_identity_sha256": "52e1d06aa2d3eeaa62658d5a36ac254204fcbd32866ae9d7a5e1fc0e75cdb6bf"
+    },
+    "handoff_bank_7987200_seeds1000003_8": {
+      "manifest_sha256": "3ee6cb7adbfc505fccbacfd9acdb1c4e04bb77c15253c5f2e03478f555c506ab",
+      "snapshot_identity_sha256": "37fae5a16f653b2049663f8375cfbcb0ab7eac1f3a3f441c1c782d4d5bb265fd"
+    },
+    "handoff_bank_9977856_jit8": {
+      "manifest_sha256": "bcf5abb5c8761298ed459da90dcb07625d09f57140091c42304028d3ca46c202",
+      "snapshot_identity_sha256": "7266ab0ccf08915b77b0dc6daaaf2bdee6bfa6d0a2fbac193bc89a187bd9d40b"
+    }
+  },
+  "train_eval_split": "parent_group_id only",
+  "train_parent_groups": [
+    "transition_4988928__1000001",
+    "transition_4988928__1000002",
+    "transition_4988928__1000003",
+    "transition_4988928__1000004",
+    "transition_4988928__1000005",
+    "transition_4988928__1000006",
+    "transition_7987200__1000001",
+    "transition_7987200__1000002",
+    "transition_7987200__1000003",
+    "transition_7987200__1000004",
+    "transition_7987200__1000005",
+    "transition_7987200__1000006",
+    "transition_9977856__1000001",
+    "transition_9977856__1000002",
+    "transition_9977856__1000003",
+    "transition_9977856__1000004",
+    "transition_9977856__1000005",
+    "transition_9977856__1000006"
+  ],
+  "train_seeds": [
+    1000001,
+    1000002,
+    1000003,
+    1000004,
+    1000005,
+    1000006
+  ]
+}

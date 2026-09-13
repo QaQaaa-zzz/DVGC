@@ -1,0 +1,32 @@
+{
+  "activation": "tanh",
+  "boundary_train_labels_sha256": "617f4d32a637645303e335b3349945be120d4010f3357d5503818be649ac6ee6",
+  "boundary_validation_labels_sha256": "2f326d4a9852cba1ff43289722474e39b481e4f23b6336597e9fc743014019f2",
+  "environment_interactions": 0,
+  "expert_actor_sha256": "f218775e3cf99555ce524f1357a800172904bc815b06c54a53db8965204d9081",
+  "hidden_sizes": [
+    64,
+    64
+  ],
+  "input": "actor_observation",
+  "learning_rate": 0.001,
+  "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+  "manifest_sha256": "fd8afee42bcad15ad2f25903fbd4c0aab8900a2a9cb023b32da533e6d6eab1a7",
+  "model_selection_note": "first-pass fixed schedule; validation is reported, not used to retune boundary collection",
+  "nominal_labels_sha256": "b22876b60da3522a1271458499b540863fcb0e8ecfe05cd21b649d59e0b29922",
+  "normalization_sha256": "9f2b5494a94a4d7d6eedbc4adf10f668e74fe3c23076198809b543df917baf28",
+  "observation_size": 76,
+  "optimizer": "adamw_full_batch_fixed_schedule",
+  "optimizer_steps": 2000,
+  "params_sha256": "4e1647d2ed5d353e78802c234d48e4fc6061f4237f88201b8479b6cc9040fcc7",
+  "schema": "jit_upstream_value_model_v1",
+  "seed": 830001,
+  "status": "completed",
+  "target": "V_up",
+  "target_semantics": "probability that frozen pi_up_star reaches Apex before retained failure",
+  "test_data_used": false,
+  "train_count": 117,
+  "training_transitions": 0,
+  "validation_count": 41,
+  "weight_decay": 0.0001
+}

@@ -1,0 +1,75 @@
+{
+  "schema": "jit_upstream_checkpoint_train_evidence_freeze_config_v1",
+  "output_dir": "JIT/runs/frozen_upstream_checkpoint_train/pi_0_iter0_three_checkpoint_domains_20260901",
+  "expected_protocol_sha256": "e584d09165bd281cd9763bc06ccf615594ddf485c6e6713fa6cd87a362e9b4ea",
+  "protocol": {
+    "schema": "jit_upstream_checkpoint_train_evidence_freeze_protocol_v1",
+    "status": "predeclared_after_parent_domain_expansion_before_checkpoint_cv",
+    "iteration": 0,
+    "policy_name": "pi_0",
+    "policy_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+    "policy_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+    "base_frozen_train_evidence": "JIT/runs/pi_unified_transition_band/pi_0_iter0_train_evidence_frozen_20260831",
+    "base_frozen_train_manifest_sha256": "27832237a85eccfa0ae2eaea7575dd2efda12535a3815fee0c6d0660f58921b8",
+    "parent_diversity_root": "JIT/runs/pi_unified_upstream_parent_diversity/pi_0_iter0_checkpoint_domains_20260901",
+    "parent_diversity_scientific_protocol_sha256": "b4c5a491fa57b0f181e1c7c2eceac56b80f9d9a8209d93d0317bfc2f4e67b040",
+    "parent_diversity_acquisition_protocol_sha256": "cf732c7b55fb54cc2b41c1fca5cdc6dc8174453777d27a414377a6110babc470",
+    "expected_base_upstream": {
+      "candidate_count": 571,
+      "positive_count": 545,
+      "negative_count": 26,
+      "parent_group_count": 5,
+      "checkpoint_domain": "transition_4988928"
+    },
+    "expected_expansion": {
+      "candidate_count": 480,
+      "positive_count": 418,
+      "negative_count": 62,
+      "parent_group_count": 10,
+      "checkpoint_domains": ["transition_7987200", "transition_9977856"]
+    },
+    "expected_combined": {
+      "candidate_count": 1051,
+      "positive_count": 963,
+      "negative_count": 88,
+      "parent_group_count": 15,
+      "checkpoint_domain_count": 3
+    },
+    "required_domain_stats": {
+      "transition_4988928": {
+        "candidate_count": 571,
+        "positive_count": 545,
+        "negative_count": 26,
+        "parent_group_count": 5
+      },
+      "transition_7987200": {
+        "candidate_count": 240,
+        "positive_count": 217,
+        "negative_count": 23,
+        "parent_group_count": 5
+      },
+      "transition_9977856": {
+        "candidate_count": 240,
+        "positive_count": 201,
+        "negative_count": 39,
+        "parent_group_count": 5
+      }
+    },
+    "data_policy": {
+      "train_rows_only": true,
+      "consumed_validation_rows_read": false,
+      "consumed_validation_predictions_read": false,
+      "test_data_used": false,
+      "final_evaluation_data_used": false
+    },
+    "claim_boundary": {
+      "checkpoint_domain_train_evidence_only": true,
+      "continuation_field_reselected": false,
+      "fresh_validation_bank_predeclared": false,
+      "tube_1_constructed": false,
+      "pi_1_trained": false,
+      "jce_jel_claim": false,
+      "certified_safe_set_claim": false
+    }
+  }
+}

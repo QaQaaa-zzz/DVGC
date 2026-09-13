@@ -1,0 +1,29 @@
+{
+  "expert_switching_used": false,
+  "initialization": {
+    "actor": "warm_start_frozen_unified",
+    "critic": "fresh",
+    "optimizer": "fresh",
+    "source_frozen_policy": "JIT/runs/frozen_unified/pi_2_landing_replay_pi1_actor_warmstart_10009600_20260904/frozen_unified_policy.json"
+  },
+  "policy_count": 1,
+  "reset_mixture": {
+    "natural_reset_probability": 0.1,
+    "selection": "bernoulli_per_episode",
+    "soft_tube_probability": 0.9
+  },
+  "schema": "jit_pi_unified_formal_provenance_v1",
+  "soft_tube_manifest_sha256": "b5eebad447ea4ef77f624edcf2020f0045395c475c2e3297825436b0c02d701f",
+  "test_data_used": false,
+  "tube_rsi_smoke_report_sha256": "666908197f2390aed9eb22ec225a4518f5b1758b2dd16605400bdb29b537887b",
+  "tube_sampling": {
+    "core_probability": 0.75,
+    "core_within_source": "uniform",
+    "expansion_probability": 0.25,
+    "expansion_within_source": "value_weighted",
+    "schema": "jit_tube_rsi_core_replay_v1",
+    "selection": "phase_then_source_then_entry",
+    "source_core_definition": "first_core_retained_count_entries"
+  },
+  "validation_data_used": false
+}

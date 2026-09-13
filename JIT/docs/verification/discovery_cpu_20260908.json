@@ -1,0 +1,20 @@
+{
+  "tests_passed": 66,
+  "tests_failed": 0,
+  "scope": "CPU fixtures; production Warp GPU and throughput pending",
+  "suites": [
+    "test_device_rollout",
+    "test_dense_tube",
+    "test_discovery_comparison",
+    "test_policy_family_landing",
+    "test_probe_bank",
+    "test_unified_continuation_shards",
+    "test_causal_jump_reachability_contract",
+    "test_policy_envelopes"
+  ],
+  "python_files_parsed": 11,
+  "local_document_links_checked": 57,
+  "cli_missing_previous_pilot": "exit 2; engineering_error; results_to_send.zip generated before GPU launch",
+  "device_fix": "lax.map single-world step; custom-vmap rejection regression passed",
+  "production_training_transitions": 0
+}

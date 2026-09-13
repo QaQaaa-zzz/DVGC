@@ -1,0 +1,256 @@
+{
+  "cells_file": "/home/qy/DVGC/JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/causal_jump_capability/cells.json",
+  "cells_file_sha256": "88428751e29c7f9303c7752ef337575510e518fa0ef83ee0a55a50bb27656000",
+  "centerline_point_count": 14,
+  "centerline_unique_root_geometry_cell_count": 14,
+  "claim_boundary": {
+    "certified_safe_set_claim": false,
+    "empirical_jump_start_connected_capability_evidence": true,
+    "formal_reachability_proof": false,
+    "natural_start_connected_capability_claim": false,
+    "physical_limit_proof": false,
+    "viability_kernel_claim": false
+  },
+  "continuation_rsi_used_after_forward_reachability": true,
+  "curriculum_capability": {
+    "acceptance_cells_merged": false,
+    "calibration_cells_merged": false,
+    "definition": "locked centerline cells UNION TRAIN-positive jump-start-connected causal cells",
+    "new_train_root_geometry_cell_count_vs_source_or_centerline": 713,
+    "root_geometry_cell_count": 977,
+    "source_comparison": "JIT/runs/iteration_auto/pi_1_to_pi_2_pi0_centerline_family_landing_20260904/causal_jump_capability/summary.json"
+  },
+  "evidence_rows_file": "/home/qy/DVGC/JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/causal_jump_capability/evidence_rows.json",
+  "evidence_rows_file_sha256": "e0369ab39642b7d20117946f58b20f0e6f7ba46c60c4f69c271224881dc34fa7",
+  "final_evaluation_data_used": false,
+  "holdout_evidence": {
+    "acceptance_positive_root_geometry_cell_count": 324,
+    "calibration_positive_root_geometry_cell_count": 343
+  },
+  "jump_start_reachability_verified": true,
+  "jump_start_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+  "model_config": "JIT/configs/phase_u_continuation_smoke.json",
+  "model_config_sha256": "748581e00a5e9452044a02d94dabdce7c98bc4d0bb107644a29dc48bdbd84089",
+  "natural_start_connected": false,
+  "nominal_centerline": "JIT/runs/nominal_centerline/pi_0_jump_start_centerline_v3_20260904/centerline.json",
+  "nominal_centerline_sha256": "8976da1103f5b48372655cc9404b64fa31cec10ab12e785f4b128a3af0535523",
+  "raw_soft_tube_is_capability_proof": false,
+  "resolution_contract": {
+    "actor_observation_defines_capability_cells": false,
+    "full_physical_fields": [
+      "root_x_m",
+      "root_y_m",
+      "root_z_m",
+      "root_vx_mps",
+      "root_vy_mps",
+      "root_vz_mps",
+      "roll_deg",
+      "pitch_deg",
+      "yaw_deg",
+      "root_wx_degps",
+      "root_wy_degps",
+      "root_wz_degps",
+      "steering_deg",
+      "hip_deg",
+      "knee_deg",
+      "steering_rate_degps",
+      "hip_rate_degps",
+      "knee_rate_degps",
+      "rearwheel_tangent_mps",
+      "frontwheel_tangent_mps"
+    ],
+    "longitudinal_progress_coordinate": "root_x_m",
+    "phase_is_discrete": true,
+    "quantization": "nearest_grid_round_half_away_from_zero",
+    "resolution_sha256": "9f918a9dd3846e2fc8e787bd47bb008a3a8401c259cd68631bb22df7a945dcbe",
+    "resolutions": {
+      "frontwheel_tangent_mps": {
+        "resolution": 0.1,
+        "unit": "m/s"
+      },
+      "hip_deg": {
+        "resolution": 0.5,
+        "unit": "deg"
+      },
+      "hip_rate_degps": {
+        "resolution": 2.0,
+        "unit": "deg/s"
+      },
+      "knee_deg": {
+        "resolution": 0.5,
+        "unit": "deg"
+      },
+      "knee_rate_degps": {
+        "resolution": 2.0,
+        "unit": "deg/s"
+      },
+      "pitch_deg": {
+        "resolution": 0.5,
+        "unit": "deg"
+      },
+      "rearwheel_tangent_mps": {
+        "resolution": 0.1,
+        "unit": "m/s"
+      },
+      "roll_deg": {
+        "resolution": 0.5,
+        "unit": "deg"
+      },
+      "root_vx_mps": {
+        "resolution": 0.1,
+        "unit": "m/s"
+      },
+      "root_vy_mps": {
+        "resolution": 0.1,
+        "unit": "m/s"
+      },
+      "root_vz_mps": {
+        "resolution": 0.1,
+        "unit": "m/s"
+      },
+      "root_wx_degps": {
+        "resolution": 2.0,
+        "unit": "deg/s"
+      },
+      "root_wy_degps": {
+        "resolution": 2.0,
+        "unit": "deg/s"
+      },
+      "root_wz_degps": {
+        "resolution": 2.0,
+        "unit": "deg/s"
+      },
+      "root_x_m": {
+        "resolution": 0.1,
+        "unit": "m"
+      },
+      "root_y_m": {
+        "resolution": 0.1,
+        "unit": "m"
+      },
+      "root_z_m": {
+        "resolution": 0.1,
+        "unit": "m"
+      },
+      "steering_deg": {
+        "resolution": 0.5,
+        "unit": "deg"
+      },
+      "steering_rate_degps": {
+        "resolution": 2.0,
+        "unit": "deg/s"
+      },
+      "yaw_deg": {
+        "resolution": 0.5,
+        "unit": "deg"
+      }
+    },
+    "root_geometry_fields": [
+      "root_x_m",
+      "root_y_m",
+      "root_z_m",
+      "root_vx_mps",
+      "root_vy_mps",
+      "root_vz_mps",
+      "roll_deg",
+      "pitch_deg",
+      "yaw_deg",
+      "root_wx_degps",
+      "root_wy_degps",
+      "root_wz_degps"
+    ],
+    "schema": "jit_capability_state_resolution_v1",
+    "wheel_angle_phase_in_cell_identity": false,
+    "x_slice_width_m": 0.1
+  },
+  "roles": {
+    "acceptance": {
+      "candidate_count": 396,
+      "negative_count": 9,
+      "negative_unique_root_geometry_cell_count": 9,
+      "positive_by_phase": {
+        "downstream": 171,
+        "upstream": 216
+      },
+      "positive_count": 387,
+      "positive_root_cells_by_x_bin": {
+        "25": 1,
+        "26": 2,
+        "27": 7,
+        "28": 33,
+        "29": 32,
+        "30": 34,
+        "31": 34,
+        "32": 36,
+        "33": 37,
+        "34": 32,
+        "35": 28,
+        "36": 38,
+        "37": 35,
+        "38": 38
+      },
+      "positive_unique_root_geometry_cell_count": 324
+    },
+    "calibration": {
+      "candidate_count": 408,
+      "negative_count": 4,
+      "negative_unique_root_geometry_cell_count": 4,
+      "positive_by_phase": {
+        "downstream": 177,
+        "upstream": 227
+      },
+      "positive_count": 404,
+      "positive_root_cells_by_x_bin": {
+        "25": 2,
+        "26": 3,
+        "27": 7,
+        "28": 32,
+        "29": 37,
+        "30": 33,
+        "31": 38,
+        "32": 38,
+        "33": 37,
+        "34": 32,
+        "35": 30,
+        "36": 39,
+        "37": 39,
+        "38": 37
+      },
+      "positive_unique_root_geometry_cell_count": 343
+    },
+    "train": {
+      "candidate_count": 1258,
+      "negative_count": 28,
+      "negative_unique_root_geometry_cell_count": 26,
+      "positive_by_phase": {
+        "downstream": 516,
+        "upstream": 714
+      },
+      "positive_count": 1230,
+      "positive_root_cells_by_x_bin": {
+        "25": 15,
+        "26": 22,
+        "27": 37,
+        "28": 90,
+        "29": 107,
+        "30": 105,
+        "31": 109,
+        "32": 112,
+        "33": 117,
+        "34": 98,
+        "35": 83,
+        "36": 111,
+        "37": 113,
+        "38": 111
+      },
+      "positive_unique_root_geometry_cell_count": 964
+    }
+  },
+  "rsi_used_to_establish_reachability": false,
+  "schema": "jit_conditional_jump_start_capability_evidence_v2",
+  "scientific_definition": "Conditional Jump capability evidence = fixed-jump-start-forward-reachable state AND successful continuation from that exact state",
+  "status": "completed",
+  "summary_sha256": "f664ca36a6a38dfa3a7391b888a03b92d08aab1c1037f28f5d4cecb3a8731a30",
+  "test_data_used": false,
+  "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+}

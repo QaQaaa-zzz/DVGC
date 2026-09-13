@@ -1,0 +1,20 @@
+{
+  "schema": "jit_family_landing_predictor_forward_audit_v1",
+  "status": "locked_before_frontier_outcomes",
+  "frontier_plan": "JIT/runs/iteration_auto/pi_3_to_pi_4_pi0_centerline_family_landing_predictor_audit_20260905/frontier_plan_causal_expanded.json",
+  "predictor_summary": "JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/family_landing_predictor/summary.json",
+  "evaluated_phase": "upstream",
+  "downstream_predictor_status": "not_fitted_single_class_all_positive",
+  "timing": "score_reached_candidates_before_loading_new_outcome_labels",
+  "all_reached_candidates_still_receive_real_policy_family_rollouts": true,
+  "predictor_may_filter_labels": false,
+  "predictor_may_establish_reachability": false,
+  "predictor_may_admit_tube_rows": false,
+  "metrics_after_labels_are_locked": [
+    "roc_auc",
+    "positive_recall_at_prior_calibration_threshold",
+    "accepted_negative_count_at_prior_calibration_threshold"
+  ],
+  "test_data_used": false,
+  "final_evaluation_data_used": false
+}

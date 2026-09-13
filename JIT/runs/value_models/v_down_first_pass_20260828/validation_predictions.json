@@ -1,0 +1,233 @@
+[
+  {
+    "candidate_id": "899db5c65811854d06ea22c71f6eed3eb10390c70e48ad67f9a9e77096d493ec",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 0.9999682903289795,
+    "role": "pre_apex",
+    "seed": 1000006,
+    "source_bank": "handoff_bank_4988928",
+    "split": "validation",
+    "state_sha256": "885faa0fcd646442ea1742aa6e5fc3807c177054650f478ce78d24e4acf607b5",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "f3fba7963dd8a4ff19f887c86f918eb4abde6f26a710e576ac6fb15a5ac5a7e2",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 0.9999608993530273,
+    "role": "pre_apex",
+    "seed": 1000006,
+    "source_bank": "handoff_bank_4988928",
+    "split": "validation",
+    "state_sha256": "8c6cc32627104be228e59733ac47893c1440d3ca07f50a30624d284567e6c2e8",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "27e0cbacfc34a6b4be0745d1c877fbe9c4aec6b7fe300b379c2f6f6d88905edc",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 0.1951046884059906,
+    "role": "nearest_pre_apex",
+    "seed": 1000006,
+    "source_bank": "handoff_bank_4988928",
+    "split": "validation",
+    "state_sha256": "b0af78e5f48756600d578f4f7704f401415fb02210474916f18e360960d4c5e4",
+    "target": 0.0
+  },
+  {
+    "candidate_id": "519fcaaca1890a3f2c192860b95d459772bac72c0a8f7a1218d26675ee04440a",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 6.363071588566527e-05,
+    "role": "nearest_apex",
+    "seed": 1000006,
+    "source_bank": "handoff_bank_4988928",
+    "split": "validation",
+    "state_sha256": "b7168b1d0d16d1c9ba3cc64403f496bbbdff4672849e8a23b4e270250e4c38c3",
+    "target": 0.0
+  },
+  {
+    "candidate_id": "5e3db4cff834c9e921b80afb56b8b20dfda61bff410a5a8516adc2e807292a86",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 1.1053153684770223e-05,
+    "role": "post_apex",
+    "seed": 1000006,
+    "source_bank": "handoff_bank_4988928",
+    "split": "validation",
+    "state_sha256": "08750fd2c9f30c684a4701de9313ca84dba3e5e4ea3bf59523f32c03e5434cbc",
+    "target": 0.0
+  },
+  {
+    "candidate_id": "7f8112b5c8e6d47bc7440eae81768f3e85da32ba1b6b09dce4117b4a0422ff74",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 7.42079237170401e-06,
+    "role": "post_apex",
+    "seed": 1000006,
+    "source_bank": "handoff_bank_4988928",
+    "split": "validation",
+    "state_sha256": "d5d9f22fae696e979a0c6cc53236c341b646c66e05ec00ffcc6cdd963981e36d",
+    "target": 0.0
+  },
+  {
+    "candidate_id": "72df3185d25e329b40c18f1209fb5927ad212eb30220937a4a2fbd9e444560cd",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 7.502719199692365e-06,
+    "role": "early_descent",
+    "seed": 1000006,
+    "source_bank": "handoff_bank_4988928",
+    "split": "validation",
+    "state_sha256": "5740330ba3943d72c5bc978c6f0c174ac6ec488d72a5c86b8ec43d977d18f3ae",
+    "target": 0.0
+  },
+  {
+    "candidate_id": "05643a871e64209c131e6f1df8ae18222b0ba64a1b5977d7bfe6b38941bd14f2",
+    "parent_group_id": "transition_7987200__1000006",
+    "probability": 0.9999873638153076,
+    "role": "pre_apex",
+    "seed": 1000006,
+    "source_bank": "handoff_bank_7987200_seeds1000003_8",
+    "split": "validation",
+    "state_sha256": "443f83a12aaae7b50da50f2e6213abed59264150d761add01d631b83742a8b54",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "528fefc2dc56bbe254c22b89f395ce48736f609cf913cd007a6488ea017d84f4",
+    "parent_group_id": "transition_7987200__1000006",
+    "probability": 0.9999417066574097,
+    "role": "pre_apex",
+    "seed": 1000006,
+    "source_bank": "handoff_bank_7987200_seeds1000003_8",
+    "split": "validation",
+    "state_sha256": "a48b05bc84177b77ce1341447dec604bafbfc52fdcb43746408338ccc6c7ae10",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "c8ef4db8dd18ccd9a6fed938e0be2adb6b9f1bd8cf91c7f24ca5b010d60c432f",
+    "parent_group_id": "transition_7987200__1000006",
+    "probability": 0.9999816417694092,
+    "role": "nearest_pre_apex",
+    "seed": 1000006,
+    "source_bank": "handoff_bank_7987200_seeds1000003_8",
+    "split": "validation",
+    "state_sha256": "28a7f09296ca456838f6552ce7e83136be72326b3e78bfd16964d3d55e97e2ea",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "c8547266121e78b583bb90dbf3dfd1f071aaa1e05c50953f691554bac2fdd8ff",
+    "parent_group_id": "transition_7987200__1000006",
+    "probability": 0.9999812841415405,
+    "role": "nearest_apex",
+    "seed": 1000006,
+    "source_bank": "handoff_bank_7987200_seeds1000003_8",
+    "split": "validation",
+    "state_sha256": "0e0c398603ec1840694c27785736984473681aaa5615e91551fd28be34935a01",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "7d9d8914ccf3d63cdeee44a6bb917a758c054df98c98b98a839991fa5340e7ce",
+    "parent_group_id": "transition_7987200__1000006",
+    "probability": 0.9999839067459106,
+    "role": "post_apex",
+    "seed": 1000006,
+    "source_bank": "handoff_bank_7987200_seeds1000003_8",
+    "split": "validation",
+    "state_sha256": "3afcaf2c041755cb2ac5ebe338bb3f66fbf46d9521d31a517d7f1b0c2647059d",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "7c9b660702857ab26bab4b5932aa9ff5d1222b42e7c35356a3f9e603cb07d732",
+    "parent_group_id": "transition_7987200__1000006",
+    "probability": 0.9999731779098511,
+    "role": "post_apex",
+    "seed": 1000006,
+    "source_bank": "handoff_bank_7987200_seeds1000003_8",
+    "split": "validation",
+    "state_sha256": "7c18c44e0c67ea7f9ae983d59f655c3c7ebca0a548b6d721727c4bf1800ca3a0",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "df0753324c306b733d2da611e0e7cc164e2f6b78d669e3658606e5a3b9ac9fe5",
+    "parent_group_id": "transition_7987200__1000006",
+    "probability": 0.9972004890441895,
+    "role": "early_descent",
+    "seed": 1000006,
+    "source_bank": "handoff_bank_7987200_seeds1000003_8",
+    "split": "validation",
+    "state_sha256": "61cf47c295525bf169f58993d492998808b37cd112b485f681fc16ee4f21e28c",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "3a3854dafa44c11b2eb8c818144ed7b2ac0bf207316423d0d2b883f2a6688062",
+    "parent_group_id": "transition_9977856__1000006",
+    "probability": 0.9999706745147705,
+    "role": "pre_apex",
+    "seed": 1000006,
+    "source_bank": "handoff_bank_9977856_jit8",
+    "split": "validation",
+    "state_sha256": "2a5534577bf833cdce2588e4559b69f0891b1b5095ac1878c16b7a7fc96caa67",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "9705e51d16d5fbcb1deea09467444c09a3147a430e38e83341dba24b74ac3b04",
+    "parent_group_id": "transition_9977856__1000006",
+    "probability": 0.9999620914459229,
+    "role": "pre_apex",
+    "seed": 1000006,
+    "source_bank": "handoff_bank_9977856_jit8",
+    "split": "validation",
+    "state_sha256": "e94ce34d9913ebdadc2cd9d5bc24f9c0a2fc5951885fcc5d65bc33f2e3c8b916",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "36b5f465ae38ce60721da08f7bc5935bf10d9b6406a9fde25d12e52836422872",
+    "parent_group_id": "transition_9977856__1000006",
+    "probability": 0.9999765157699585,
+    "role": "nearest_pre_apex",
+    "seed": 1000006,
+    "source_bank": "handoff_bank_9977856_jit8",
+    "split": "validation",
+    "state_sha256": "34ddb421063e0c03620061e89d5a36866fd0b0423264c4797e5932d1968c85a2",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "5d4938f1ccf0be9414c9ebbdff0b5656fcf179b7f61aa7ff02a58175f1f5ce70",
+    "parent_group_id": "transition_9977856__1000006",
+    "probability": 0.9999784231185913,
+    "role": "nearest_apex",
+    "seed": 1000006,
+    "source_bank": "handoff_bank_9977856_jit8",
+    "split": "validation",
+    "state_sha256": "8ece5496d6f62d6f37e98ecfb49c018cc77914794359176508c99179149b44cf",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "2a460d033b383c68a989bf8ee5dc808909b219d74bb7bb9dad622cc5fe9c09b0",
+    "parent_group_id": "transition_9977856__1000006",
+    "probability": 0.9999818801879883,
+    "role": "post_apex",
+    "seed": 1000006,
+    "source_bank": "handoff_bank_9977856_jit8",
+    "split": "validation",
+    "state_sha256": "ac817cd763393c36aef54e74ab0cc2f35bd6e573c50e9e636ee868a5ce27459e",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "857c2b322f8c671f32547a88010f9dc02c665d39b44dc308f170c84badac024e",
+    "parent_group_id": "transition_9977856__1000006",
+    "probability": 0.9999897480010986,
+    "role": "post_apex",
+    "seed": 1000006,
+    "source_bank": "handoff_bank_9977856_jit8",
+    "split": "validation",
+    "state_sha256": "d966a6d20570ec260465d235cfee5689523baa13ae99b7e6d5d040cc697a7de1",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "48bbbbba31cde9a4793ca357e3adbb3967c02eb084a9c252f4a9c3280e64d7e0",
+    "parent_group_id": "transition_9977856__1000006",
+    "probability": 0.9999802112579346,
+    "role": "early_descent",
+    "seed": 1000006,
+    "source_bank": "handoff_bank_9977856_jit8",
+    "split": "validation",
+    "state_sha256": "094245ace44fc0ace0410224314c497610eeaa8238a2798694c9651138a380a2",
+    "target": 1.0
+  }
+]

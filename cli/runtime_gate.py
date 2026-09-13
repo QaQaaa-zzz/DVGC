@@ -17,6 +17,7 @@ import numpy as np
 from dvgc.bank import SnapshotBank
 from dvgc.config import (
     ACTION_MAPPING_VERSION,
+    AUTHORITATIVE_PAYLOAD_MASS_KG,
     AUTHORITATIVE_XML_PATH,
     AUTHORITATIVE_XML_SHA256,
     ID_STAGE,
@@ -88,7 +89,9 @@ def source_fingerprint(root: Path) -> str:
         "dvgc/action_mapping.py", "dvgc/bank.py", "dvgc/config.py",
         "dvgc/env.py", "dvgc/experts.py", "dvgc/composite.py", "dvgc/expert_training.py", "dvgc/curriculum.py", "dvgc/model.py", "dvgc/policy.py",
         "dvgc/rewards.py", "dvgc/descent_local.py", "dvgc/rollout.py", "dvgc/runtime.py", "dvgc/wrappers.py",
+        "dvgc/two_phase_runtime.py", "dvgc/two_phase_guideline.py", "dvgc/two_phase_roundtrip.py", "dvgc/failure_video.py",
         "dvgc/signals.py", "cli/train.py", "cli/train_expert.py", "cli/train_descent_local_block.py",
+        "cli/build_two_phase_guideline_banks.py", "cli/render_two_phase_failures.py",
         "cli/certify_descent_entries.py", "cli/evaluate_composite.py", "cli/runtime_gate.py",
         "pyproject.toml", "requirements.txt",
     )
@@ -530,8 +533,11 @@ def main() -> None:
         model = inspect_model(AUTHORITATIVE_XML_PATH)
         if model["xml_sha256"] != AUTHORITATIVE_XML_SHA256:
             raise RuntimeError("Authoritative XML hash mismatch")
-        if model["named_masses_kg"].get("load") != 4.0:
-            raise RuntimeError("Authoritative XML payload is not 4 kg")
+        if model["named_masses_kg"].get("load") != AUTHORITATIVE_PAYLOAD_MASS_KG:
+            raise RuntimeError(
+                "Authoritative XML payload is not "
+                f"{AUTHORITATIVE_PAYLOAD_MASS_KG:g} kg"
+            )
         actuator = {row["name"]: row for row in model["actuators"]}
         for name in ("cmd_hip_f", "cmd_knee_f"):
             if actuator[name]["forcerange"] != "-50 50":

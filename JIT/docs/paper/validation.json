@@ -1,0 +1,40 @@
+{
+  "schema": "jit_paper_validation_v1",
+  "checked_utc": "2026-09-12T08:33:38.611337+00:00",
+  "data_rebuild": "passed",
+  "original_source_hashes_checked": 63,
+  "original_sources_unavailable": [],
+  "figures_checked": 5,
+  "figure_formats": [
+    "SVG",
+    "PDF",
+    "PNG"
+  ],
+  "equations_checked": 30,
+  "pdf_pages": 18,
+  "active_document_links_checked": 116,
+  "broken_active_links": [],
+  "manuscript_sha256": "790901b575ce9b51731f3361a139609e33b21745a0b8b3c8a7810bba53bd1c9e",
+  "pdf_sha256": "dccd3afee44c1a28d46e96c4c29706f63ae8abaa651068a923ec09139ca048fe",
+  "figure_manifest_sha256": "35cd773fc53b98cb00be3c0f98b8c27ab610fabe7e6724eaae2c3aa1ace203c0",
+  "new_simulator_interactions": 0,
+  "new_ppo_transitions": 0,
+  "scientific_scope": "Source/formula audit and CPU artifact consistency, not new GPU validation or final TEST.",
+  "authoring_cost": "CPU plotting and HTML/PDF rendering only; no new environment interactions. Existing experiment costs are in data/cost_breakdown.csv.",
+  "visual_review": {
+    "all_five_png_figures": "viewed; corrected checkpoint labels and residual-bound notation",
+    "pdf_pages_sampled": [
+      1,
+      7,
+      11,
+      17
+    ],
+    "checked": "Chinese glyphs, equations, tables, clipping, figure annotations; first-page title balanced after initial review"
+  },
+  "print_width_browser_layout_check": {
+    "equation_count": 30,
+    "overflow": [],
+    "missing_images": [],
+    "method": "Headless Chrome, print-width 674px, all equation and image DOM bounds; subsequent changes only normalize SVG whitespace and add build provenance"
+  }
+}

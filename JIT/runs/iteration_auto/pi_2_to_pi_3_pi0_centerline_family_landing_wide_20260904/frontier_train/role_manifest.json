@@ -1,0 +1,106 @@
+{
+  "acquisition_mode": "jump_start_connected_causal_rollout_v1",
+  "acquisition_phase_support": {
+    "downstream": {
+      "candidate_count": 516,
+      "minimum_candidate_count_before_labeling": 40,
+      "minimum_parent_group_count_before_labeling": 3,
+      "parent_group_count": 15
+    },
+    "upstream": {
+      "candidate_count": 742,
+      "minimum_candidate_count_before_labeling": 40,
+      "minimum_parent_group_count_before_labeling": 3,
+      "parent_group_count": 27
+    }
+  },
+  "claim_boundary": {
+    "certified_safe_set_claim": false,
+    "forward_reachability_established_before_rsi_labeling": true,
+    "jce_jel_claim": false,
+    "role_locked_before_next_policy_training": true,
+    "rows_may_calibrate_thresholds": false,
+    "rows_may_enter_tube": true,
+    "rows_may_gate_next_policy": false,
+    "rsi_establishes_reachability": false,
+    "train_rows_may_fit_fields": false
+  },
+  "continuation_policy_family": {
+    "actor_family_sha256": "cfb2eb23cfaacdfc359a17b774bc2eb55fab4012a3ecee629770d3cf795bc91a",
+    "aggregation": "positive_if_any_policy_reaches_first_valid_landing",
+    "members": [
+      {
+        "actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+        "name": "pi_0",
+        "payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719"
+      },
+      {
+        "actor_sha256": "85d6b4667364daf8e054af9bccbf155dda16a62518df19883057fcfcbbd6f86a",
+        "name": "pi_1",
+        "payload_sha256": "3b9af512c7e389aade1c86ca76e9420a0bc687c499f2ff9cf7637701dd5d0cbc"
+      },
+      {
+        "actor_sha256": "d0753cb3be742743c82a68fbb00bb30d914a4c25873e864e77ac298ea5cca4ff",
+        "name": "pi_2",
+        "payload_sha256": "f17b2361ae897de876a35955fd3bdcc86cfbdcf4368c24b6cf3d41fcde59181c"
+      }
+    ],
+    "payload_family_sha256": "80acec509d7a1c2f7d92f7a83faba0f75bb416a13e97a84fb7406d9d6fd5f54f",
+    "policy_family_sha256": "11580df841b188001c22d4a5132402541161627fab30d9e3eed1a5958c9488dd",
+    "policy_names": [
+      "pi_0",
+      "pi_1",
+      "pi_2"
+    ]
+  },
+  "continuation_success_criterion": "first_valid_landing_before_physical_failure",
+  "environment_interactions": 104458,
+  "expert_switching_used": false,
+  "final_evaluation_data_used": false,
+  "iteration": 2,
+  "jump_start_reachability_proven": true,
+  "legacy_low_level_split_marker": "train",
+  "legacy_marker_is_not_logical_data_role": true,
+  "logical_labels": "JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/frontier_train/logical_labels.json",
+  "logical_labels_file_sha256": "778a81eee73be566782fdd204ddec6c7732c4d8bf568f8ce9d75c1bf9d7bea0e",
+  "logical_split": "train",
+  "natural_start_connected": false,
+  "nominal_centerline": "JIT/runs/nominal_centerline/pi_0_jump_start_centerline_v3_20260904/centerline.json",
+  "nominal_centerline_sha256": "8976da1103f5b48372655cc9404b64fa31cec10ab12e785f4b128a3af0535523",
+  "phase_counts": {
+    "downstream": {
+      "candidate_count": 516,
+      "negative_count": 0,
+      "parent_group_count": 15,
+      "positive_count": 516
+    },
+    "upstream": {
+      "candidate_count": 742,
+      "negative_count": 28,
+      "parent_group_count": 27,
+      "positive_count": 714
+    }
+  },
+  "plan": "JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/frontier_plan_causal.json",
+  "plan_sha256": "abe7b32417ff7e6ca99d45108d9c8b5862016184580ef2b4c29b6bc38eee7d9d",
+  "policy_actor_sha256": "cfb2eb23cfaacdfc359a17b774bc2eb55fab4012a3ecee629770d3cf795bc91a",
+  "policy_identity_kind": "frozen_policy_family",
+  "policy_payload_sha256": "80acec509d7a1c2f7d92f7a83faba0f75bb416a13e97a84fb7406d9d6fd5f54f",
+  "post_landing_recovery_required": false,
+  "proposal_policy_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+  "proposal_policy_name": "pi_0",
+  "role": "train",
+  "role_manifest_sha256": "d6883768f4e3be6fe6ff3bb1060719fc1c524fdfacc6bc1b5b7de4d4713685fd",
+  "rsi_used_for_reachability": false,
+  "schema": "jit_iterative_frontier_role_v1",
+  "selected_policy_sha256": "a032ee55cc291c4afd5bc8b16571cbfd000fe74e7cf38eb05bc7f67384b909f7",
+  "source_acquisition_catalog": "JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/frontier_train/acquisition/catalog.json",
+  "source_acquisition_catalog_sha256": "9d90a797372bdd9dc55f169488e5d8230902ff7b4e94653a720e0afdf87ee80f",
+  "source_label_summary": "JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/frontier_train/labels/summary.json",
+  "source_label_summary_sha256": "e261954a531e7690ce87953ca027d5202fd63af89d044e479a76002f7cfe8e28",
+  "source_tube_manifest_sha256": "e30f0d8bf468482988f2d5d00c259c416bc88d84a9862a63c76271cafb144193",
+  "status": "completed",
+  "support_contract": "observed_policy_family_landing_capability_no_class_balance_requirement",
+  "test_data_used": false,
+  "training_transitions": 0
+}

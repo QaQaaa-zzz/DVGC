@@ -1,0 +1,99 @@
+{
+  "schema": "jit_upstream_support_stratified_parent_cv_config_v1",
+  "protocol": {
+    "schema": "jit_upstream_support_stratified_parent_cv_protocol_v1",
+    "status": "predeclared_after_tiny_mlp_checkpoint_extrapolation_stress_fail_before_support_parent_cv",
+    "iteration": 0,
+    "policy_name": "pi_0",
+    "policy_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+    "policy_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+    "frozen_upstream_train_evidence": "JIT/runs/frozen_upstream_checkpoint_train/pi_0_iter0_three_checkpoint_matched_panel_20260901",
+    "frozen_upstream_train_manifest_sha256": "25160e1f198d710327b8390a53869bc72ec62afced5f3d86dcc45d1543793626",
+    "frozen_upstream_train_freeze_protocol_sha256": "2df65325660ac54c914b14fca98d1d5e2f0f52a3da74bf941b4979edbc32bf1d",
+    "prior_tiny_mlp_checkpoint_stress_summary": "JIT/runs/pi_unified_continuation_field_diagnostic/pi_0_iter0_upstream_checkpoint_domain_logo_matched_tiny_mlp_20260901/summary.json",
+    "prior_tiny_mlp_checkpoint_stress_summary_sha256": "181053222c4de9a44aebdad16dc6afa999960a8292d5882bc9f3f0962de4c51a",
+    "expected_combined": {
+      "candidate_count": 720,
+      "positive_count": 639,
+      "negative_count": 81,
+      "parent_group_count": 15,
+      "checkpoint_domain_count": 3,
+      "seed_family_count": 5,
+      "rows_per_parent_group": 48
+    },
+    "required_domains": [
+      "transition_4988928",
+      "transition_7987200",
+      "transition_9977856"
+    ],
+    "required_seed_families": [
+      "1000001",
+      "1000002",
+      "1000003",
+      "1000004",
+      "1000005"
+    ],
+    "fold_design": {
+      "kind": "leave_one_seed_family_out_across_all_checkpoint_domains",
+      "fold_count": 5,
+      "heldout_parent_groups_per_fold": 3,
+      "heldout_rows_per_fold": 144,
+      "train_parent_groups_per_fold": 12,
+      "train_rows_per_fold": 576,
+      "checkpoint_domains_present_in_train_every_fold": true,
+      "checkpoint_domains_present_in_heldout_every_fold": true,
+      "physical_parent_groups_disjoint": true
+    },
+    "model": {
+      "family": "tiny_mlp_tanh",
+      "input": "unified_actor_observation",
+      "observation_size": 76,
+      "hidden_units": 8,
+      "activation": "tanh",
+      "parameter_count": 625,
+      "normalization": "fold_train_only_zscore_clip10",
+      "sample_weighting": "equal_parent_label_cell_mass",
+      "l2_weight": 0.01,
+      "optimizer": "adam_full_batch_fixed_schedule",
+      "steps": 4000,
+      "learning_rate": 0.01,
+      "seed_base": 848000
+    },
+    "diagnostic_gate": {
+      "minimum_pooled_oof_roc_auc": 0.7,
+      "minimum_worst_domain_oof_roc_auc": 0.6,
+      "require_positive_score_gap_in_every_domain": true,
+      "minimum_mean_fold_roc_auc": 0.7,
+      "minimum_worst_fold_roc_auc": 0.6,
+      "require_positive_score_gap_in_every_fold": true
+    },
+    "method_decision": {
+      "checkpoint_domain_holdout_reclassified_as_out_of_support_extrapolation_stress_test": true,
+      "original_jit_requirement_is_group_disjoint_generalization_within_declared_support": true,
+      "no_additional_model_family_search": true,
+      "no_consumed_validation_reuse": true,
+      "if_pass_next_gate_is_same_architecture_downstream_train_check": true,
+      "if_fail_stop_tiny_mlp_and_make_explicit_continuation_method_decision": true
+    },
+    "data_policy": {
+      "train_rows_only": true,
+      "consumed_validation_rows_reused": false,
+      "consumed_validation_predictions_reused": false,
+      "prior_checkpoint_stress_summary_read_for_provenance_only": true,
+      "test_data_used": false,
+      "final_evaluation_data_used": false
+    },
+    "claim_boundary": {
+      "diagnostic_only": true,
+      "continuation_field_reselected": false,
+      "unified_continuation_architecture_frozen": false,
+      "fresh_validation_bank_predeclared": false,
+      "tube_1_constructed": false,
+      "pi_1_trained": false,
+      "jce_jel_claim": false,
+      "certified_safe_set_claim": false
+    }
+  },
+  "expected_protocol_sha256": "bfdf8795a98720741e6edcac0d1ff82156f4eb3ec669422330a74855e28dd89c",
+  "output_dir": "JIT/runs/pi_unified_continuation_field_diagnostic/pi_0_iter0_upstream_support_stratified_parent_cv_tiny_mlp_20260901"
+}

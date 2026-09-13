@@ -1,0 +1,17 @@
+{
+  "active_interactions": 2181,
+  "base_actor_unchanged": true,
+  "charged_interactions": 19200,
+  "final_diagnostic_new_cells": 21.0,
+  "final_successes": 8,
+  "final_test_used": false,
+  "forward_interactions": 19200,
+  "independent_repetitions": false,
+  "initial_baseline_cells": 92,
+  "padding_interactions": 17019,
+  "phase": "completed",
+  "suffix_interactions": 0,
+  "training_new_cells": 128.0,
+  "training_scheduled_interactions": 12800,
+  "wall_seconds": 21.29058385800454
+}

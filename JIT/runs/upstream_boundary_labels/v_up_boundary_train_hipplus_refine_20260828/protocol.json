@@ -1,0 +1,25 @@
+{
+  "branches": 1,
+  "catalog_sha256": "fc2c02d53bef1fdab3bf9f87caae553028e9ea30a523520347d98f05a0bfcf33",
+  "expert_actor_sha256": "f218775e3cf99555ce524f1357a800172904bc815b06c54a53db8965204d9081",
+  "expert_config_sha256": "a45e70438c2b5cc005ddd415bbb4920c8e07e7504feae7e630a94b473d91f3a6",
+  "expert_payload_sha256": "965b2f141d5cff17f7cef943004fe4e4f62f0fecfe88b47353dc78b14ced723a",
+  "frozen_manifest_sha256": "505a94fa732badbd319eb286497e4f50b06b407c90acf4defb417619f0b1f584",
+  "max_ticks": 400,
+  "policy_mode": "deterministic",
+  "protocol_seed": 820402,
+  "protocol_sha256": "ec7fe21ce06774b7665d6c0aba42dcc95283df539c24da04f7aa2e1f3ce9e9f9",
+  "question": "frozen pi_up_star reaches Apex before a retained terminal",
+  "schema": "jit_upstream_boundary_labels_v1",
+  "split": "train",
+  "target": "V_up",
+  "train_seeds": [
+    1000001,
+    1000002,
+    1000003,
+    1000004,
+    1000005
+  ],
+  "training_transitions": 0,
+  "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+}

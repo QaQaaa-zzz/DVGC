@@ -1,0 +1,170 @@
+{
+  "failure_reason": "pitch_limit",
+  "matching_negative_count": 5,
+  "near_duplicate_cluster_count": 1,
+  "near_duplicate_clusters": [
+    {
+      "member_seeds": [
+        1000001,
+        1000002,
+        1000003,
+        1000004,
+        1000005
+      ],
+      "member_state_sha256": [
+        "6474a53b6cba72cbc35e83aab2c160a34e36004c217b2849526ac2d15e325aa8",
+        "08ffe2f699d72d4f5c4af7ebf742912029564aeb83377a9a5624c85069e46b18",
+        "ecc953d9b9a47fc324449a51aa9a8cd926bbc12ea6b6f8d9921405a5413b1dcc",
+        "ccbaeb402a4098dd2f29b5648c01688cd86055d6b0d6d710ca34f11c9af466a2",
+        "ea6cde78ab1109e136c32757af6ec588fb8f5c5fec1560fe690102633d9e4455"
+      ],
+      "representative_seed": 1000001,
+      "representative_state_sha256": "6474a53b6cba72cbc35e83aab2c160a34e36004c217b2849526ac2d15e325aa8"
+    }
+  ],
+  "near_duplicate_tolerances": {
+    "observation_atol": 0.01,
+    "qpos_atol": 0.0005,
+    "qvel_atol": 0.002
+  },
+  "negative_role": "ascending_entry",
+  "neighbor_outcomes": [],
+  "pairwise_distances": [
+    {
+      "exact": false,
+      "left_seed": 1000001,
+      "left_state_sha256": "6474a53b6cba72cbc35e83aab2c160a34e36004c217b2849526ac2d15e325aa8",
+      "near_duplicate": true,
+      "observation_linf": 0.0033016204833984375,
+      "qpos_linf": 0.0003256797790527344,
+      "qvel_linf": 0.0006513595581054688,
+      "right_seed": 1000002,
+      "right_state_sha256": "08ffe2f699d72d4f5c4af7ebf742912029564aeb83377a9a5624c85069e46b18"
+    },
+    {
+      "exact": false,
+      "left_seed": 1000001,
+      "left_state_sha256": "6474a53b6cba72cbc35e83aab2c160a34e36004c217b2849526ac2d15e325aa8",
+      "near_duplicate": true,
+      "observation_linf": 0.00238800048828125,
+      "qpos_linf": 0.00012731552124023438,
+      "qvel_linf": 0.0012149810791015625,
+      "right_seed": 1000003,
+      "right_state_sha256": "ecc953d9b9a47fc324449a51aa9a8cd926bbc12ea6b6f8d9921405a5413b1dcc"
+    },
+    {
+      "exact": false,
+      "left_seed": 1000001,
+      "left_state_sha256": "6474a53b6cba72cbc35e83aab2c160a34e36004c217b2849526ac2d15e325aa8",
+      "near_duplicate": true,
+      "observation_linf": 0.002620697021484375,
+      "qpos_linf": 5.435943603515625e-05,
+      "qvel_linf": 0.00027561187744140625,
+      "right_seed": 1000004,
+      "right_state_sha256": "ccbaeb402a4098dd2f29b5648c01688cd86055d6b0d6d710ca34f11c9af466a2"
+    },
+    {
+      "exact": false,
+      "left_seed": 1000001,
+      "left_state_sha256": "6474a53b6cba72cbc35e83aab2c160a34e36004c217b2849526ac2d15e325aa8",
+      "near_duplicate": true,
+      "observation_linf": 0.006305694580078125,
+      "qpos_linf": 0.00020170211791992188,
+      "qvel_linf": 0.00027942657470703125,
+      "right_seed": 1000005,
+      "right_state_sha256": "ea6cde78ab1109e136c32757af6ec588fb8f5c5fec1560fe690102633d9e4455"
+    },
+    {
+      "exact": false,
+      "left_seed": 1000002,
+      "left_state_sha256": "08ffe2f699d72d4f5c4af7ebf742912029564aeb83377a9a5624c85069e46b18",
+      "near_duplicate": true,
+      "observation_linf": 0.00530242919921875,
+      "qpos_linf": 0.0001983642578125,
+      "qvel_linf": 0.0005636215209960938,
+      "right_seed": 1000003,
+      "right_state_sha256": "ecc953d9b9a47fc324449a51aa9a8cd926bbc12ea6b6f8d9921405a5413b1dcc"
+    },
+    {
+      "exact": false,
+      "left_seed": 1000002,
+      "left_state_sha256": "08ffe2f699d72d4f5c4af7ebf742912029564aeb83377a9a5624c85069e46b18",
+      "near_duplicate": true,
+      "observation_linf": 0.0059223175048828125,
+      "qpos_linf": 0.0002713203430175781,
+      "qvel_linf": 0.0005388259887695312,
+      "right_seed": 1000004,
+      "right_state_sha256": "ccbaeb402a4098dd2f29b5648c01688cd86055d6b0d6d710ca34f11c9af466a2"
+    },
+    {
+      "exact": false,
+      "left_seed": 1000002,
+      "left_state_sha256": "08ffe2f699d72d4f5c4af7ebf742912029564aeb83377a9a5624c85069e46b18",
+      "near_duplicate": true,
+      "observation_linf": 0.008090972900390625,
+      "qpos_linf": 0.0001239776611328125,
+      "qvel_linf": 0.0003719329833984375,
+      "right_seed": 1000005,
+      "right_state_sha256": "ea6cde78ab1109e136c32757af6ec588fb8f5c5fec1560fe690102633d9e4455"
+    },
+    {
+      "exact": false,
+      "left_seed": 1000003,
+      "left_state_sha256": "ecc953d9b9a47fc324449a51aa9a8cd926bbc12ea6b6f8d9921405a5413b1dcc",
+      "near_duplicate": true,
+      "observation_linf": 0.0027618408203125,
+      "qpos_linf": 9.059906005859375e-05,
+      "qvel_linf": 0.001102447509765625,
+      "right_seed": 1000004,
+      "right_state_sha256": "ccbaeb402a4098dd2f29b5648c01688cd86055d6b0d6d710ca34f11c9af466a2"
+    },
+    {
+      "exact": false,
+      "left_seed": 1000003,
+      "left_state_sha256": "ecc953d9b9a47fc324449a51aa9a8cd926bbc12ea6b6f8d9921405a5413b1dcc",
+      "near_duplicate": true,
+      "observation_linf": 0.006305694580078125,
+      "qpos_linf": 7.43865966796875e-05,
+      "qvel_linf": 0.0009355545043945312,
+      "right_seed": 1000005,
+      "right_state_sha256": "ea6cde78ab1109e136c32757af6ec588fb8f5c5fec1560fe690102633d9e4455"
+    },
+    {
+      "exact": false,
+      "left_seed": 1000004,
+      "left_state_sha256": "ccbaeb402a4098dd2f29b5648c01688cd86055d6b0d6d710ca34f11c9af466a2",
+      "near_duplicate": true,
+      "observation_linf": 0.004718780517578125,
+      "qpos_linf": 0.00014734268188476562,
+      "qvel_linf": 0.00016689300537109375,
+      "right_seed": 1000005,
+      "right_state_sha256": "ea6cde78ab1109e136c32757af6ec588fb8f5c5fec1560fe690102633d9e4455"
+    }
+  ],
+  "schema": "jit_upstream_boundary_audit_v1",
+  "selected_anchor_count": 1,
+  "selected_anchor_kinds": [
+    "failure_anchor"
+  ],
+  "selected_failure_anchors": [
+    {
+      "parent_group_id": "transition_4988928__1000001",
+      "reasons": [
+        "pitch_limit"
+      ],
+      "role": "ascending_entry",
+      "seed": 1000001,
+      "state_sha256": "6474a53b6cba72cbc35e83aab2c160a34e36004c217b2849526ac2d15e325aa8",
+      "tick": 34
+    }
+  ],
+  "source_training_transitions": 4988928,
+  "split": "train",
+  "train_seeds": [
+    1000001,
+    1000002,
+    1000003,
+    1000004,
+    1000005
+  ]
+}

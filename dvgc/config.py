@@ -33,7 +33,8 @@ ACTION_MAPPING_VERSION = "steer_drive_hip_knee.incremental_positive_flexion.v2"
 POLICY_NETWORK_VERSION = "bounded_neutral_tanh.v2"
 SNAPSHOT_SCHEMA = "dvgc_physical_policy_state_v4_timing_explicit"
 AUTHORITATIVE_XML_PATH = "assets/orange_bike_4kg_horizontal.xml"
-AUTHORITATIVE_XML_SHA256 = "d7e9f43ff8fb9e4571203f81062ce9c828acfa38692ee8c71a3e5daa15ce794c"
+AUTHORITATIVE_PAYLOAD_MASS_KG = 2.0
+AUTHORITATIVE_XML_SHA256 = "e2762bec49fdce61eff6ad01b6a67925934d8997b53929b0a67ace7f44109192"
 
 
 def default_config() -> config_dict.ConfigDict:

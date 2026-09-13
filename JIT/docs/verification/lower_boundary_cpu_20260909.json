@@ -1,0 +1,16 @@
+{
+  "tests_passed": 22,
+  "tests_failed": 0,
+  "production_gpu_run": false,
+  "ppo_started": false,
+  "checks": [
+    "real partition budget bound 8000",
+    "16 variant schedule",
+    "lower slices exclude failures and preserve phase/provenance",
+    "low budget refuses GPU launch",
+    "source drift refuses",
+    "PNG/PDF/SVG export",
+    "collector control-step peak receipt",
+    "dense/frontier regression"
+  ]
+}

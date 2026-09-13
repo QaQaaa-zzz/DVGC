@@ -1,0 +1,57 @@
+{
+  "schema": "jit_iteration_validation_evidence_freeze_config_v1",
+  "output_dir": "JIT/runs/frozen_expansion_validation/pi_0_iter0_group_disjoint_20260831",
+  "expected_protocol_sha256": "bfa1b4333047d2bb999afc6101cd8587e6267b29bb8c4b3ab6fedc72f4f96bb9",
+  "protocol": {
+    "schema": "jit_iteration_validation_evidence_freeze_protocol_v1",
+    "status": "postrun_freeze",
+    "iteration": 0,
+    "policy_name": "pi_0",
+    "policy_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+    "policy_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+    "scientific_protocol_sha256": "9ec0a1e8c314cc5710688a3537fbd339f520d4db3c4268d20715bcde938586b0",
+    "runtime_protocol_sha256": "9cda2c58c5918db4c5791ce9d18e7689d49a50336638c2caac43ddb02e88eda3",
+    "source_repository_head": "df30d6b2a1658f8b70d82d415ea735f6747a3495",
+    "source_root": "JIT/runs/pi_unified_expansion_validation/pi_0_iter0_group_disjoint_20260831",
+    "frozen_train_evidence": "JIT/runs/pi_unified_transition_band/pi_0_iter0_train_evidence_frozen_20260831",
+    "frozen_train_manifest_sha256": "27832237a85eccfa0ae2eaea7575dd2efda12535a3815fee0c6d0660f58921b8",
+    "expected": {
+      "attempt_count": 160,
+      "candidate_count": 147,
+      "label_count": 147,
+      "positive_count": 117,
+      "negative_count": 30,
+      "phase_candidate_counts": {
+        "upstream": 131,
+        "downstream": 16
+      },
+      "phase_positive_counts": {
+        "upstream": 113,
+        "downstream": 4
+      },
+      "candidate_exclusion_counts": {
+        "train_near_duplicate_observation": 13
+      },
+      "outcome_counts": {
+        "physical_failure": 30,
+        "success": 117
+      },
+      "terminal_probe_outcomes": {
+        "pitch_limit": 9,
+        "roll_limit": 1
+      }
+    },
+    "near_duplicate_audit": {
+      "actor_observation_atol": 0.01,
+      "all_features_must_be_within_tolerance": true
+    },
+    "claim_boundary": {
+      "expansion_validation_evidence_only": true,
+      "continuation_field_trained": false,
+      "tube_1_constructed": false,
+      "pi_1_trained": false,
+      "jce_jel_claim": false,
+      "certified_safe_set_claim": false
+    }
+  }
+}

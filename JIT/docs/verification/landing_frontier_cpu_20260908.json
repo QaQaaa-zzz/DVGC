@@ -1,0 +1,30 @@
+{
+  "tests_passed": 69,
+  "failures": 0,
+  "scope": "targeted CPU regression; no GPU rollout or PPO performed",
+  "suites": [
+    "test_dense_tube",
+    "test_discovery_comparison",
+    "test_frontier_exploration",
+    "test_policy_family_landing",
+    "test_probe_bank",
+    "test_unified_continuation_shards",
+    "test_causal_jump_reachability_contract",
+    "test_policy_envelopes"
+  ],
+  "checks": [
+    "real-frame acquisition beyond original corridor",
+    "first landing vs cap truncation receipts",
+    "per-trajectory cost closure",
+    "serial-only skips benchmarks",
+    "TRAIN-informed profile locks",
+    "low-budget refuses before GPU",
+    "new label seed routing",
+    "extended-only novelty separated from old-domain novelty",
+    "missing-input CLI generates ZIP"
+  ],
+  "python_files_parsed": 11,
+  "local_document_links_checked": 63,
+  "production_gpu_verified": false,
+  "ppo_started": false
+}

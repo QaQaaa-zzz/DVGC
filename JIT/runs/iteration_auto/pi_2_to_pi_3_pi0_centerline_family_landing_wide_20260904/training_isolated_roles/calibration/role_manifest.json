@@ -1,0 +1,168 @@
+{
+  "acquisition_mode": "jump_start_connected_causal_rollout_v1",
+  "acquisition_phase_support": {
+    "downstream": {
+      "candidate_count": 180,
+      "minimum_candidate_count_before_labeling": 2,
+      "minimum_parent_group_count_before_labeling": 1,
+      "parent_group_count": 5
+    },
+    "upstream": {
+      "candidate_count": 255,
+      "minimum_candidate_count_before_labeling": 2,
+      "minimum_parent_group_count_before_labeling": 1,
+      "parent_group_count": 9
+    }
+  },
+  "claim_boundary": {
+    "certified_safe_set_claim": false,
+    "forward_reachability_established_before_rsi_labeling": true,
+    "jce_jel_claim": false,
+    "role_locked_before_next_policy_training": true,
+    "rows_may_calibrate_thresholds": false,
+    "rows_may_enter_tube": false,
+    "rows_may_gate_next_policy": false,
+    "rsi_establishes_reachability": false,
+    "train_rows_may_fit_fields": false
+  },
+  "continuation_policy_family": {
+    "actor_family_sha256": "cfb2eb23cfaacdfc359a17b774bc2eb55fab4012a3ecee629770d3cf795bc91a",
+    "aggregation": "positive_if_any_policy_reaches_first_valid_landing",
+    "members": [
+      {
+        "actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+        "name": "pi_0",
+        "payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719"
+      },
+      {
+        "actor_sha256": "85d6b4667364daf8e054af9bccbf155dda16a62518df19883057fcfcbbd6f86a",
+        "name": "pi_1",
+        "payload_sha256": "3b9af512c7e389aade1c86ca76e9420a0bc687c499f2ff9cf7637701dd5d0cbc"
+      },
+      {
+        "actor_sha256": "d0753cb3be742743c82a68fbb00bb30d914a4c25873e864e77ac298ea5cca4ff",
+        "name": "pi_2",
+        "payload_sha256": "f17b2361ae897de876a35955fd3bdcc86cfbdcf4368c24b6cf3d41fcde59181c"
+      }
+    ],
+    "payload_family_sha256": "80acec509d7a1c2f7d92f7a83faba0f75bb416a13e97a84fb7406d9d6fd5f54f",
+    "policy_family_sha256": "11580df841b188001c22d4a5132402541161627fab30d9e3eed1a5958c9488dd",
+    "policy_names": [
+      "pi_0",
+      "pi_1",
+      "pi_2"
+    ]
+  },
+  "continuation_success_criterion": "first_valid_landing_before_physical_failure",
+  "environment_interactions": 35939,
+  "exact_state_partition": {
+    "excluded_state_count": 27,
+    "excluded_state_sha256": [
+      "03a2565c466d3fe3dbc37c4c8727c4d922f081de9ff763034568ef86d74bf9d1",
+      "0868d655ccddf0623ba747a781a0c245c63812b31e331cced9c04a868d599e33",
+      "1159e997a2786bc7c50cb62a1d5bcb94b1e92191656ee9616620307dec1bcdf3",
+      "229acc7c88233017c9ff7f8555eba099877f2f9126e0da12d3d73ebec567302a",
+      "280a218f9694fbe1022dcf89ed7adfc83db5f139fd3b0ae30780d7919a884c1d",
+      "30e35f9c7942b818f4d14ec96d59ca1c197a19a9c155ff8dba98fe2027a92296",
+      "339dbf8fc94b5fb74647bd43cbaec47572173e965dbfc3da961b20c194a6476c",
+      "350db0049f4e65329d73ac4634cb049667eaef89cd0c3fa61c049bcf41d5c9e3",
+      "3517da3e5f4365fa76b7f4e59ac8529bdcdb4a522b0c16d51dd421d3e9d7459a",
+      "383bb3b1ac32424d954a756ff49b42159aad0a43a4ab1c0f0fcb5bf9b9c33b54",
+      "393aeb5673de5003195dcc80acfc6f537105758fcc5321217d3f55acf7049243",
+      "42e2ceec673ec9f061865192ac1d277b4d0e25abe64cd4b2c9982fa234b6b5e5",
+      "4d81c2a35a52fc2d00221682b5e0ff44fd3bd303626225c2b84c7a9db475ac03",
+      "64af2ab8b5c550953f33bb02778c6b16b611fcc6eebc7a797de8bb75747a69ab",
+      "6a9db6985383efb810c45365c4c4a52d5ff2161192ba14c8d7950f3d64d449d7",
+      "73d75bcff1be929756699a3388049e4f101a39e3ab3c8eefdcd4a8c8efc1a350",
+      "838eba2a8d2bfab4c1a48ca8c61d8007ef57ab48796249247914744dc5185bae",
+      "846d47d561ca79cf5018577d0708aac9de20badb54604e81932e8d7781d3f3c7",
+      "8e5f2149bf2bc8f7c7c991d48385a919afde5329a27842df24213b20d24d0dee",
+      "966ac9d11be6b1e5bae4257510a715feb05aff96a3e0972c0c266d7a7287ee54",
+      "a66cd432b7bccf6df76df8e57fd9ade1e8692d0c7e5cf3e7a99fa6eccde5f64b",
+      "aee9faef9f6438a71ce0f6399f86c6fbc1c04d1f80baef11db02652cd99d4b28",
+      "b11f01fc4632b1e3579ec2429dd29fc018768554e4ffdcb4fe77b17e8d15e961",
+      "c25a71ccdf87ca328fc31e70cb1620d96ae6b5286c0d85e323ab960e74c231a9",
+      "c4aa1a14fbf9ade678f4cebc36ca83d3f3fd6261ebf94c669fa851c4616f5b57",
+      "d77add47aeb465833b8df3ff91afbafdb7cbee6b9141796c6203376fc6359a60",
+      "e17066285950299fc9e8aad0ff96fa0a2327f6782ef0fb07c6d6d0bd175e4a62"
+    ],
+    "new_environment_interactions": 0,
+    "outcome_fields_used_for_partition": false,
+    "priority": [
+      "train",
+      "calibration",
+      "acceptance"
+    ],
+    "role": "calibration",
+    "target_tube_excluded_state_count": 17,
+    "target_tube_excluded_state_sha256": [
+      "03a2565c466d3fe3dbc37c4c8727c4d922f081de9ff763034568ef86d74bf9d1",
+      "229acc7c88233017c9ff7f8555eba099877f2f9126e0da12d3d73ebec567302a",
+      "280a218f9694fbe1022dcf89ed7adfc83db5f139fd3b0ae30780d7919a884c1d",
+      "339dbf8fc94b5fb74647bd43cbaec47572173e965dbfc3da961b20c194a6476c",
+      "350db0049f4e65329d73ac4634cb049667eaef89cd0c3fa61c049bcf41d5c9e3",
+      "393aeb5673de5003195dcc80acfc6f537105758fcc5321217d3f55acf7049243",
+      "42e2ceec673ec9f061865192ac1d277b4d0e25abe64cd4b2c9982fa234b6b5e5",
+      "4d81c2a35a52fc2d00221682b5e0ff44fd3bd303626225c2b84c7a9db475ac03",
+      "64af2ab8b5c550953f33bb02778c6b16b611fcc6eebc7a797de8bb75747a69ab",
+      "6a9db6985383efb810c45365c4c4a52d5ff2161192ba14c8d7950f3d64d449d7",
+      "846d47d561ca79cf5018577d0708aac9de20badb54604e81932e8d7781d3f3c7",
+      "8e5f2149bf2bc8f7c7c991d48385a919afde5329a27842df24213b20d24d0dee",
+      "966ac9d11be6b1e5bae4257510a715feb05aff96a3e0972c0c266d7a7287ee54",
+      "a66cd432b7bccf6df76df8e57fd9ade1e8692d0c7e5cf3e7a99fa6eccde5f64b",
+      "c4aa1a14fbf9ade678f4cebc36ca83d3f3fd6261ebf94c669fa851c4616f5b57",
+      "d77add47aeb465833b8df3ff91afbafdb7cbee6b9141796c6203376fc6359a60",
+      "e17066285950299fc9e8aad0ff96fa0a2327f6782ef0fb07c6d6d0bd175e4a62"
+    ],
+    "target_tube_manifest_sha256": "b5eebad447ea4ef77f624edcf2020f0045395c475c2e3297825436b0c02d701f"
+  },
+  "expert_switching_used": false,
+  "final_evaluation_data_used": false,
+  "iteration": 2,
+  "jump_start_reachability_proven": true,
+  "legacy_low_level_split_marker": "train",
+  "legacy_marker_is_not_logical_data_role": true,
+  "logical_labels": "JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/training_isolated_roles/calibration/logical_labels.json",
+  "logical_labels_file_sha256": "a77552b6bf50e5ba631ad05d38753a493ea126747be7eada2e6f36618159a11e",
+  "logical_split": "calibration",
+  "natural_start_connected": false,
+  "nominal_centerline": "JIT/runs/nominal_centerline/pi_0_jump_start_centerline_v3_20260904/centerline.json",
+  "nominal_centerline_sha256": "8976da1103f5b48372655cc9404b64fa31cec10ab12e785f4b128a3af0535523",
+  "phase_counts": {
+    "downstream": {
+      "candidate_count": 177,
+      "negative_count": 0,
+      "parent_group_count": 5,
+      "positive_count": 177
+    },
+    "upstream": {
+      "candidate_count": 231,
+      "negative_count": 4,
+      "parent_group_count": 9,
+      "positive_count": 227
+    }
+  },
+  "plan": "JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/frontier_plan_causal.json",
+  "plan_sha256": "abe7b32417ff7e6ca99d45108d9c8b5862016184580ef2b4c29b6bc38eee7d9d",
+  "policy_actor_sha256": "cfb2eb23cfaacdfc359a17b774bc2eb55fab4012a3ecee629770d3cf795bc91a",
+  "policy_identity_kind": "frozen_policy_family",
+  "policy_payload_sha256": "80acec509d7a1c2f7d92f7a83faba0f75bb416a13e97a84fb7406d9d6fd5f54f",
+  "post_landing_recovery_required": false,
+  "proposal_policy_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+  "proposal_policy_name": "pi_0",
+  "role": "calibration",
+  "role_manifest_sha256": "5630f4d229ca843b1b78bfd183859d73639877c6460a70830476ba198f700cea",
+  "rsi_used_for_reachability": false,
+  "schema": "jit_iterative_frontier_role_v1",
+  "selected_policy_sha256": "a032ee55cc291c4afd5bc8b16571cbfd000fe74e7cf38eb05bc7f67384b909f7",
+  "source_acquisition_catalog": "JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/frontier_calibration/acquisition/catalog.json",
+  "source_acquisition_catalog_sha256": "dacee8fd96be44174afa438485758d2dfa0edab57bfdb5447505ab68428075d5",
+  "source_label_summary": "JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/frontier_calibration/labels/summary.json",
+  "source_label_summary_sha256": "1e54e0a54a72f230f339c2b6c6a87a52b5667d135d88faf82e332803ae807347",
+  "source_role_manifest_sha256": "65bbcc060991c998f2703726612d6996fc4e525c0463c91bb64eb586443e61a5",
+  "source_tube_manifest_sha256": "e30f0d8bf468482988f2d5d00c259c416bc88d84a9862a63c76271cafb144193",
+  "status": "completed",
+  "support_contract": "observed_policy_family_landing_capability_no_class_balance_requirement",
+  "test_data_used": false,
+  "training_transitions": 0
+}

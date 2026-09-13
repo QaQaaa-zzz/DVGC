@@ -1,0 +1,75 @@
+{
+  "schema": "jit_pi_unified_round1_prelaunch_v1",
+  "status": "metadata_sealed_pending_post_seal_verification",
+  "date": "2026-08-31",
+  "method": {
+    "single_variable": "reset_distribution_only",
+    "natural_reset_probability": 0.1,
+    "soft_tube_probability": 0.9,
+    "selection": "bernoulli_per_episode",
+    "seed": 821101,
+    "requested_training_transitions": 10009600,
+    "fresh_actor": true,
+    "fresh_critic": true,
+    "fresh_optimizer": true
+  },
+  "run_declaration": {
+    "run_id": "pi_unified_round1_natural10_10009600_seed821101_20260831",
+    "output_dir": "JIT/runs/pi_unified/pi_unified_round1_natural10_10009600_seed821101_20260831",
+    "status": "predeclared_not_started"
+  },
+  "config": {
+    "path": "JIT/configs/pi_unified_round1_natural10.json",
+    "canonical_sha256": "fba8ac1975727ea77ec271a6196cc998eb63b47960aba25935656927d69f2ae1"
+  },
+  "round0_diagnosis": {
+    "classification": "PI_UP_APEX_UNIFIED_PRE_JUMP_FAIL",
+    "natural_diagnostic_sha256": "eb8ccb07e1d8229abd794283fc3c48c63943f9a0356cf313c89186458a939721",
+    "pi_up_unified_comparison_sha256": "53c708fd33df66c53a1ab60098d033ebf1284df3fe0c16f999a3942630bbca8f",
+    "reports_regenerated": false,
+    "binding_mode": "sha256_identity_only_existing_local_reports_not_regenerated"
+  },
+  "hardening_validation": {
+    "validated_head": "f9be2c6e4b5e5ef7e654bb7704e711177ffa89d6",
+    "natural_semantics_equivalence_gpu": "1 passed",
+    "brax_full_reset_cycle_gpu": "1 passed",
+    "unified_reset_mixture_gpu_suite": "4 passed",
+    "runtime_naccdmax": 1024,
+    "expert_switching_used": false
+  },
+  "pre_metadata_seal_gates": {
+    "zero_interaction_reset_smoke": {
+      "status": "completed",
+      "executed_config_sha256": "70152153b980ec369bd5e3a883ba24db632b718be2397bc4275ae8ca8aea6d15",
+      "sample_count": 256,
+      "natural_count": 31,
+      "soft_tube_count": 225,
+      "observed_natural_fraction": 0.12109375,
+      "soft_tube_upstream_count": 117,
+      "soft_tube_downstream_count": 108,
+      "environment_interactions": 0,
+      "training_transitions": 0,
+      "validation_data_used": false,
+      "test_data_used": false
+    },
+    "locked_handoff_archive": "verified 1149 files, 39937705 bytes, largest=1861326 bytes",
+    "local_preflight_non_gpu": "374 passed, 29 deselected",
+    "local_preflight_gpu": "14 passed"
+  },
+  "post_metadata_seal_required": [
+    "load_and_contract-test the final config SHA",
+    "rerun zero-interaction reset smoke against the final config SHA",
+    "verify the locked handoff archive",
+    "run local_preflight on the metadata-sealed branch"
+  ],
+  "claim_boundary": {
+    "training_guidance_only_soft_tube": true,
+    "train_panels_are_not_independent_evaluation": true,
+    "independent_frozen_final_policy_evaluation_required": true,
+    "pi_unified_star_claim": false,
+    "jce_jel_claim": false,
+    "certified_safe_tube_claim": false,
+    "validation_data_used": false,
+    "test_data_used": false
+  }
+}

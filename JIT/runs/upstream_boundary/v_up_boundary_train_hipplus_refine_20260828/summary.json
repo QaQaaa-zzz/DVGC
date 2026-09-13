@@ -1,0 +1,19 @@
+{
+  "anchor_count": 1,
+  "attempted_candidate_count": 22,
+  "candidate_count": 22,
+  "collection_transitions": 33,
+  "exclusion_counts": {
+    "apex": 0,
+    "duplicate": 0,
+    "terminal": 0
+  },
+  "protocol_sha256": "1e269bf62d9661126f9290f490390f9fad46d2c1abb8f9e96b65eb123773ae0a",
+  "schema": "jit_upstream_boundary_catalog_v1",
+  "selection": "train_unique_reachable_boundary_action_basis_subset",
+  "source_bank": "boundary_bank",
+  "split": "train",
+  "status": "completed",
+  "target": "V_up",
+  "training_transitions": 0
+}

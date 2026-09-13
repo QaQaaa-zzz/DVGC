@@ -1,0 +1,86 @@
+{
+  "compatibility_identity": {
+    "action_mapping": {
+      "base_rear_speed": 12.0,
+      "ctrl_max": [
+        0.800000011920929,
+        40.0,
+        0.5,
+        2.5
+      ],
+      "ctrl_min": [
+        -0.800000011920929,
+        -5.0,
+        -1.2999999523162842,
+        -1.5
+      ],
+      "hip_initial": -1.2,
+      "joint_target_semantics": "keyframe_centered_absolute",
+      "knee_initial": 2.5,
+      "knee_target_delta": 0.0,
+      "rear_speed_delta": 12.0
+    },
+    "action_order": [
+      "steer",
+      "rear_wheel_drive",
+      "hip",
+      "knee"
+    ],
+    "actor_frame_fields": [
+      "gravity_x",
+      "gravity_y",
+      "gravity_z",
+      "angular_velocity_x",
+      "angular_velocity_y",
+      "angular_velocity_z",
+      "acceleration_x",
+      "acceleration_y",
+      "acceleration_z",
+      "steering_position",
+      "hip_position",
+      "knee_position",
+      "steering_velocity",
+      "hip_velocity",
+      "knee_velocity",
+      "front_wheel_velocity",
+      "rear_wheel_velocity",
+      "last_action_steer",
+      "last_action_rear_wheel_drive",
+      "last_action_hip",
+      "last_action_knee",
+      "estimated_forward_velocity",
+      "obstacle_relative_x",
+      "root_height",
+      "history_valid"
+    ],
+    "actor_task_fields": [
+      "jump_signal"
+    ],
+    "control_dt": 0.02,
+    "event_schema": [
+      "jump_signal",
+      "jump_zone_seen",
+      "jump_zone_consumed",
+      "ascending_seen",
+      "height_seen",
+      "apex_seen",
+      "stuck_anchor_x",
+      "stuck_ticks",
+      "stuck",
+      "episode_step"
+    ],
+    "history_length": 3,
+    "sim_dt": 0.005,
+    "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+  },
+  "config_sha256": "a45e70438c2b5cc005ddd415bbb4920c8e07e7504feae7e630a94b473d91f3a6",
+  "history_valid_count": 3,
+  "parent_tick": 52,
+  "parent_trajectory": "transition_7987200__1000006",
+  "payload_sha256": "d5402ad7459b7f3975e233358454f30a625190267965e37e70dcfd9511839fc7",
+  "policy_identity": null,
+  "policy_sha256": "910999dc12d44427daa2f8a0068ec3e5e080dbb75f85f20605c5f30c04e0d793",
+  "schema": "handoff_snapshot_v1",
+  "tick": 52,
+  "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+}

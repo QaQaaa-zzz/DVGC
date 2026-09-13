@@ -1,0 +1,41 @@
+{
+  "acceptance_role_manifest_sha256": "c9e10ad138001c3b909c670be2408843c1688bb9a95c8249a3cc7f345b21e68b",
+  "acceptance_target_tube_overlap_count": 0,
+  "actor_observation_atol": 0.01,
+  "audit_sha256": "c69cad6d2119f02455483384c96fddd58a6f4a0596f30902ed5b2919286c8861",
+  "calibration_acceptance_exact_overlap_count": 0,
+  "calibration_acceptance_near_overlap_count": 0,
+  "calibration_role_manifest_sha256": "5630f4d229ca843b1b78bfd183859d73639877c6460a70830476ba198f700cea",
+  "calibration_target_tube_overlap_count": 0,
+  "candidate_training_acceptance_isolation_passed": true,
+  "engineering_near_overlap_override_used": false,
+  "environment_interactions": 0,
+  "final_evaluation_data_used": false,
+  "formal_all_role_geometric_isolation_passed": true,
+  "iteration": 2,
+  "no_replacement_after_exclusion": true,
+  "parent_group_counts": {
+    "downstream": {
+      "acceptance": 5,
+      "calibration": 5,
+      "train": 15
+    },
+    "upstream": {
+      "acceptance": 9,
+      "calibration": 9,
+      "train": 27
+    }
+  },
+  "plan_sha256": "abe7b32417ff7e6ca99d45108d9c8b5862016184580ef2b4c29b6bc38eee7d9d",
+  "schema": "jit_iterative_role_isolation_audit_v1",
+  "status": "independent",
+  "target_tube_iteration": 3,
+  "target_tube_manifest_sha256": "b5eebad447ea4ef77f624edcf2020f0045395c475c2e3297825436b0c02d701f",
+  "test_data_used": false,
+  "train_acceptance_exact_overlap_count": 0,
+  "train_acceptance_near_overlap_count": 0,
+  "train_calibration_exact_overlap_count": 0,
+  "train_calibration_near_overlap_count": 0,
+  "train_role_manifest_sha256": "d6883768f4e3be6fe6ff3bb1060719fc1c524fdfacc6bc1b5b7de4d4713685fd",
+  "training_transitions": 0
+}

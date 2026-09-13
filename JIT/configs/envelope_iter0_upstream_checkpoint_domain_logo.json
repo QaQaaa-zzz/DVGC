@@ -1,0 +1,66 @@
+{
+  "schema": "jit_upstream_checkpoint_domain_logo_config_v1",
+  "output_dir": "JIT/runs/pi_unified_continuation_field_diagnostic/pi_0_iter0_upstream_checkpoint_domain_logo_20260901",
+  "expected_protocol_sha256": "e7a2e48ca1664fd0858cc2b32cf5da7f9d95e4d668980e3e26fec910cdff8766",
+  "protocol": {
+    "schema": "jit_upstream_checkpoint_domain_logo_protocol_v1",
+    "status": "predeclared_after_three_domain_train_freeze_before_checkpoint_cv",
+    "iteration": 0,
+    "policy_name": "pi_0",
+    "policy_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+    "policy_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+    "frozen_upstream_train_evidence": "JIT/runs/frozen_upstream_checkpoint_train/pi_0_iter0_three_checkpoint_domains_20260901",
+    "frozen_upstream_train_freeze_protocol_sha256": "e584d09165bd281cd9763bc06ccf615594ddf485c6e6713fa6cd87a362e9b4ea",
+    "expected_combined": {
+      "candidate_count": 1051,
+      "positive_count": 963,
+      "negative_count": 88,
+      "parent_group_count": 15,
+      "checkpoint_domain_count": 3
+    },
+    "required_domains": [
+      "transition_4988928",
+      "transition_7987200",
+      "transition_9977856"
+    ],
+    "model": {
+      "family": "linear_logistic",
+      "input": "unified_actor_observation",
+      "observation_size": 76,
+      "normalization": "fold_train_only_zscore_clip10",
+      "sample_weighting": "equal_parent_label_cell_mass",
+      "l2_weight": 0.01,
+      "optimizer": "adam_full_batch_fixed_schedule",
+      "steps": 4000,
+      "learning_rate": 0.01,
+      "seed_base": 846000
+    },
+    "diagnostic_gate": {
+      "minimum_mean_logo_roc_auc": 0.7,
+      "minimum_worst_logo_roc_auc": 0.6,
+      "require_positive_score_gap_in_every_fold": true
+    },
+    "data_policy": {
+      "train_rows_only": true,
+      "consumed_validation_rows_reused": false,
+      "consumed_validation_predictions_reused": false,
+      "test_data_used": false,
+      "final_evaluation_data_used": false
+    },
+    "interpretation": {
+      "checkpoint_domain_is_parent_group_transition_prefix": true,
+      "legacy_4988928_acquisition_family_is_heterogeneous": true,
+      "new_7987200_and_9977856_domains_use_locked_matched_panel": true,
+      "failure_cannot_be_attributed_to_checkpoint_shift_alone": true
+    },
+    "claim_boundary": {
+      "diagnostic_only": true,
+      "continuation_field_reselected": false,
+      "fresh_validation_bank_predeclared": false,
+      "tube_1_constructed": false,
+      "pi_1_trained": false,
+      "jce_jel_claim": false,
+      "certified_safe_set_claim": false
+    }
+  }
+}

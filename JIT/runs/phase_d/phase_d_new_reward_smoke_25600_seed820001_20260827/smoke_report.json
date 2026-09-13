@@ -1,0 +1,14 @@
+{
+  "status": "completed",
+  "training_transitions": 25600,
+  "diagnostic_transitions": 47,
+  "checkpoint": "JIT/runs/phase_d/phase_d_new_reward_smoke_25600_seed820001_20260827/checkpoints/transition_25600",
+  "restored": true,
+  "diagnostic_source": {
+    "seed": 1000007,
+    "parent_group_id": "transition_4988928__1000007",
+    "role": "pre_apex",
+    "tick": 46,
+    "source_bank": "handoff_bank_4988928"
+  }
+}

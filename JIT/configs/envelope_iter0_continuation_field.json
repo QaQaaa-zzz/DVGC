@@ -1,0 +1,75 @@
+{
+  "schema": "jit_policy_conditioned_continuation_field_config_v1",
+  "output_dir": "JIT/runs/pi_unified_continuation_field/pi_0_iter0_linear_20260901",
+  "expected_protocol_sha256": "8ee93ece342ee23365aa4adc4f904476e26d99edb69efb341fd12cee3020ad58",
+  "protocol": {
+    "schema": "jit_policy_conditioned_continuation_field_protocol_v1",
+    "status": "predeclared_before_model_fit",
+    "iteration": 0,
+    "policy_name": "pi_0",
+    "policy_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+    "policy_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+    "frozen_train_evidence": "JIT/runs/pi_unified_transition_band/pi_0_iter0_train_evidence_frozen_20260831",
+    "frozen_train_manifest_sha256": "27832237a85eccfa0ae2eaea7575dd2efda12535a3815fee0c6d0660f58921b8",
+    "frozen_validation_evidence": "JIT/runs/frozen_expansion_validation/pi_0_iter0_group_disjoint_20260831",
+    "validation_scientific_protocol_sha256": "9ec0a1e8c314cc5710688a3537fbd339f520d4db3c4268d20715bcde938586b0",
+    "validation_runtime_protocol_sha256": "9cda2c58c5918db4c5791ce9d18e7689d49a50336638c2caac43ddb02e88eda3",
+    "expected_counts": {
+      "train": {
+        "upstream": {
+          "candidate_count": 571,
+          "positive_count": 545,
+          "negative_count": 26
+        },
+        "downstream": {
+          "candidate_count": 2619,
+          "positive_count": 2589,
+          "negative_count": 30
+        }
+      },
+      "validation": {
+        "upstream": {
+          "candidate_count": 131,
+          "positive_count": 113,
+          "negative_count": 18
+        },
+        "downstream": {
+          "candidate_count": 16,
+          "positive_count": 4,
+          "negative_count": 12
+        }
+      }
+    },
+    "model": {
+      "family": "linear_logistic",
+      "input": "unified_actor_observation",
+      "observation_size": 76,
+      "normalization": "train_only_zscore_clip10",
+      "sample_weighting": "equal_parent_label_cell_mass",
+      "l2_weight": 0.01,
+      "optimizer": "adam_full_batch_fixed_schedule",
+      "steps": 4000,
+      "learning_rate": 0.01,
+      "seeds": {
+        "upstream": 840001,
+        "downstream": 840002
+      }
+    },
+    "calibration": {
+      "decision_rule": "accept_if_score_strictly_greater_than_max_validation_negative_score",
+      "minimum_validation_roc_auc": 0.7,
+      "minimum_validation_positive_recall": 0.2,
+      "require_accepted_positive_in_every_validation_parent": true,
+      "validation_hyperparameter_search": false,
+      "threshold_is_safety_certificate": false
+    },
+    "claim_boundary": {
+      "policy_conditioned_empirical_continuation_field": true,
+      "certified_probability_claim": false,
+      "certified_safe_set_claim": false,
+      "tube_1_constructed": false,
+      "pi_1_trained": false,
+      "jce_jel_claim": false
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "schema": "jit_validation_prelaunch_repair_v1",
+  "status": "repaired_before_validation_launch",
+  "date": "2026-09-01",
+  "iteration": 0,
+  "failed_gate": "gpu_held_out_anchor_restore_contract",
+  "source_head": "c301ce4ee20b022d2bdae328dd0fc84208037899",
+  "scientific_protocol_sha256": "9ec0a1e8c314cc5710688a3537fbd339f520d4db3c4268d20715bcde938586b0",
+  "failure": {
+    "test": "test_real_validation_anchors_restore_into_unified_runtime_without_steps",
+    "error": "ValueError: validation anchor actor observation reconstruction drift",
+    "cause": "GPU restore still compared the unified downstream actor observation against the legacy cached Phase-U observation after the host preflight had already established that the two held-out downstream anchors legitimately differ only in the phase-aware task bit",
+    "focused_cpu_passed": 19,
+    "runtime_preflight_status": "runtime_preflight_ready",
+    "legacy_cached_observation_match_count": 3,
+    "legacy_cached_observation_mismatch_count": 2,
+    "legacy_cached_observation_mismatch_count_by_phase": {
+      "upstream": 0,
+      "downstream": 2
+    },
+    "train_parent_overlap_count": 0,
+    "exact_state_overlap_count": 0,
+    "near_duplicate_overlap_count": 0
+  },
+  "validation_consumption": {
+    "formal_validation_launched": false,
+    "validation_attempts_executed": 0,
+    "acquisition_environment_interactions": 0,
+    "labeling_environment_interactions": 0,
+    "validation_outcomes_inspected": false,
+    "test_data_used": false,
+    "final_evaluation_data_used": false
+  },
+  "repair": {
+    "runtime_restore_authority": "preserved FIFO plus phase-aware unified task bit",
+    "legacy_cached_observation_role": "provenance_only",
+    "runtime_and_preflight_share_one_observation_helper": true,
+    "historical_snapshots_modified": false,
+    "scientific_protocol_modified": false,
+    "validation_seed_modified": false,
+    "panel_modified": false,
+    "interaction_budget_modified": false
+  },
+  "repair_commits": [
+    "836e321602d69469438e2ca1edf092673dc026aa",
+    "4e58edbc9e6592cd7ca62b2d03b201f2e8901daf",
+    "7bb953bd0e6cb788d03dcde078ff4ba194c8d1f8"
+  ],
+  "next_gate": "rerun focused CPU, zero-interaction audit, GPU restore, full JIT preflight, output guard, then launch the unchanged formal validation protocol"
+}

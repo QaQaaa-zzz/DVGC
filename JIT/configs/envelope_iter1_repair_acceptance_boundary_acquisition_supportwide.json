@@ -1,0 +1,72 @@
+{
+  "schema": "jit_repair_acceptance_boundary_acquisition_v1",
+  "expected_protocol_sha256": "2b4d0f6e0e5f86590a8c24ccf435b09150e18f2a656933751f88869a295dc180",
+  "protocol": {
+    "schema": "jit_repair_acceptance_boundary_acquisition_protocol_v1",
+    "status": "predeclared_before_repair_training",
+    "purpose": "fresh_nonfinal_acceptance_bank_for_iteration1_replacement_candidate_supportwide_anchor_retry",
+    "source_iteration": 0,
+    "candidate_iteration": 1,
+    "baseline_frozen_policy": "JIT/runs/frozen_unified/pi_0_round1_10009600_20260831/frozen_unified_policy.json",
+    "baseline_policy_name": "pi_0",
+    "baseline_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+    "baseline_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+    "source_tube_manifest_sha256": "c1c1161ebafd16716f2566aaccfe89169fe9cb0c2b090266c0e2bf90165df28b",
+    "consumed_gate": {
+      "root": "JIT/runs/pi_unified_gate/pi_0_to_pi_1_paired_core_boundary_20260901_retry01",
+      "protocol_sha256": "24a126ee94472eebbcb59fff66618ae00dae41074a1d1cfee8bb816afaff410a",
+      "summary_file_sha256": "cf63f59f4862c51351ceca80afa8796316592be515c28b572584e97e39d9f7fc",
+      "bank_file_sha256": "97cb62727e12824abc2a5238e9187e47773c80b5f169f2f286c0f412a8e2a6bd",
+      "records_file_sha256": "614d020198a38235f0a2bfddc6b087fdd5e3729c5fcff49f40c4fcf71683cae2",
+      "boundary_state_count": 56
+    },
+    "acquisition": {
+      "anchors_per_phase": 8,
+      "minimum_anchors_per_phase": 4,
+      "frontier_score_ceiling": 1.0,
+      "strengths": [0.025, 0.05, 0.1],
+      "durations": [1, 2],
+      "action_names": ["steer", "rear_wheel_drive", "hip", "knee"],
+      "signs": [-1, 1],
+      "protocol_seed": 9511004
+    },
+    "labeling": {
+      "policy_mode": "deterministic",
+      "max_ticks": 400,
+      "protocol_seed": 9511005,
+      "baseline_policy_only": true
+    },
+    "bank_lock": {
+      "selection": "all_baseline_continuation_negative_candidates",
+      "exclude_target_tube_states": true,
+      "target_tube": "JIT/runs/soft_tube/soft_tube_iter1_pi0_conditioned_20260901",
+      "target_tube_manifest_sha256": "817a980a5dd84f36507f762a913c21c1fc0913580d925ff9c68e982edfd82a80",
+      "physical_state_unique": true,
+      "require_both_phases": true,
+      "minimum_negative_states_per_phase": 10,
+      "minimum_negative_parent_groups_per_phase": 3,
+      "candidate_training_must_not_start_before_lock": true
+    },
+    "isolation": {
+      "exclude_consumed_boundary_states": true,
+      "exclude_consumed_boundary_parent_groups_by_phase": true,
+      "validation_data_used": false,
+      "test_data_used": false,
+      "final_evaluation_data_used": false
+    },
+    "future_use": {
+      "candidate_generation_before_repair_training": true,
+      "baseline_label_before_repair_training": true,
+      "lock_bank_before_repair_training": true,
+      "forbid_repair_training_use": true,
+      "forbid_tube_construction_use": true,
+      "forbid_continuation_field_fit_use": true
+    },
+    "claim_boundary": {
+      "nonfinal_iteration_acceptance_audit_only": true,
+      "repaired_candidate_not_yet_trained": true,
+      "jce_jel_claim": false,
+      "certified_safe_set_claim": false
+    }
+  }
+}

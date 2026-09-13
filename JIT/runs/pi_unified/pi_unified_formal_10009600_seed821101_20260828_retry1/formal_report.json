@@ -1,0 +1,43 @@
+{
+  "brax_evaluation_transitions": 0,
+  "checkpoint_restored": true,
+  "checkpoint_transitions": [
+    0,
+    1024000,
+    2508800,
+    5017600,
+    7500800,
+    10009600
+  ],
+  "completed_training_transitions": 10009600,
+  "expert_switching_used": false,
+  "final_metrics": {
+    "training/entropy_loss": 0.0022132955491542816,
+    "training/kl_mean": 0.01937149092555046,
+    "training/learning_rate": 9.999999747378752e-05,
+    "training/policy_dist_max_loc": 2.4722204208374023,
+    "training/policy_dist_max_std": 1.0984498262405396,
+    "training/policy_dist_mean_loc": -0.07681998610496521,
+    "training/policy_dist_mean_std": 0.25532156229019165,
+    "training/policy_dist_min_loc": -2.7327489852905273,
+    "training/policy_dist_min_std": 0.007134412880986929,
+    "training/policy_loss": 0.006443309597671032,
+    "training/sps": 49381.81199401941,
+    "training/total_loss": 3.5640902519226074,
+    "training/v_loss": 3.555433750152588,
+    "training/walltime": 233.37579345703125
+  },
+  "requested_training_transitions": 10009600,
+  "schema": "jit_pi_unified_formal_report_v1",
+  "status": "completed",
+  "test_data_used": false,
+  "train_panel_interactions": 3251,
+  "train_panel_transitions": [
+    1024000,
+    2508800,
+    5017600,
+    7500800,
+    10009600
+  ],
+  "validation_data_used": false
+}

@@ -188,6 +188,173 @@ def test_policy_network_starts_neutral_and_low_variance():
     )
 
 
+@pytest.mark.skipif(
+    not RUNTIME_READY,
+    reason="The configured Brax runtime is required for the policy-network test.",
+)
+def test_policy_network_accepts_phase_specific_initial_action_std():
+    """Ignoring the Phase U scale would keep useful launch actions outside exploration."""
+    import jax
+    import jax.numpy as jp
+    import numpy as np
+
+    from dvgc.runtime import make_dvgc_ppo_networks
+
+    networks = make_dvgc_ppo_networks(
+        observation_size={"state": (140,), "privileged_state": (29,)},
+        action_size=4,
+        preprocess_observations_fn=lambda obs, _params: obs,
+        initial_action_std=0.25,
+    )
+    params = networks.policy_network.init(jax.random.PRNGKey(0))
+    logits = networks.policy_network.apply(
+        None, params, {"state": jp.ones((3, 140), jp.float32)}
+    )
+    dist = networks.parametric_action_distribution.create_dist(logits)
+
+    np.testing.assert_allclose(np.asarray(dist.loc), 0.0, atol=0.0)
+    np.testing.assert_allclose(np.asarray(dist.scale), 0.25, rtol=1e-6, atol=1e-7)
+
+
+@pytest.mark.skipif(
+    not RUNTIME_READY,
+    reason="The configured Brax runtime is required for the policy-network test.",
+)
+def test_policy_network_accepts_channel_specific_initial_action_std():
+    """Phase U must widen hip exploration without widening unrelated channels."""
+    import jax
+    import jax.numpy as jp
+    import numpy as np
+
+    from dvgc.runtime import make_dvgc_ppo_networks
+
+    expected = np.asarray([0.05, 0.05, 0.5, 0.05], np.float32)
+    networks = make_dvgc_ppo_networks(
+        observation_size={"state": (140,), "privileged_state": (29,)},
+        action_size=4,
+        preprocess_observations_fn=lambda obs, _params: obs,
+        initial_action_std=tuple(float(value) for value in expected),
+    )
+    params = networks.policy_network.init(jax.random.PRNGKey(0))
+    logits = networks.policy_network.apply(
+        None, params, {"state": jp.ones((3, 140), jp.float32)}
+    )
+    dist = networks.parametric_action_distribution.create_dist(logits)
+
+    np.testing.assert_allclose(np.asarray(dist.loc), 0.0, atol=0.0)
+    np.testing.assert_allclose(
+        np.asarray(dist.scale),
+        np.broadcast_to(expected, (3, 4)),
+        rtol=1e-6,
+        atol=1e-7,
+    )
+
+
+@pytest.mark.parametrize("value", [0.001, 1.0, float("nan"), float("inf")])
+def test_policy_network_rejects_invalid_initial_action_std(value):
+    """An invalid scale must fail before it can create a nonfinite policy head."""
+    from dvgc.runtime import make_dvgc_ppo_networks
+
+    with pytest.raises(ValueError, match="initial_action_std"):
+        make_dvgc_ppo_networks(
+            observation_size={"state": (140,), "privileged_state": (29,)},
+            action_size=4,
+            preprocess_observations_fn=lambda obs, _params: obs,
+            initial_action_std=value,
+        )
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        (),
+        (0.05, 0.05, 0.5),
+        (0.05, 0.05, 0.5, 0.05, 0.05),
+        ((0.05,), 0.05, 0.5, 0.05),
+        (True, 0.05, 0.5, 0.05),
+        (0.001, 0.05, 0.5, 0.05),
+        (0.05, 0.05, 1.0, 0.05),
+        (0.05, float("nan"), 0.5, 0.05),
+        (0.05, 0.05, float("inf"), 0.05),
+    ],
+)
+def test_policy_network_rejects_invalid_channel_specific_initial_action_std(value):
+    from dvgc.runtime import make_dvgc_ppo_networks
+
+    with pytest.raises((TypeError, ValueError), match="initial_action_std"):
+        make_dvgc_ppo_networks(
+            observation_size={"state": (140,), "privileged_state": (29,)},
+            action_size=4,
+            preprocess_observations_fn=lambda obs, _params: obs,
+            initial_action_std=value,
+        )
+
+
+@pytest.mark.skipif(not RUNTIME_READY, reason="The configured Brax runtime is required.")
+def test_ppo_factory_can_disable_internal_eval_and_automatic_checkpoint_writes():
+    """Per-block policy callbacks must not force 625 hidden evals or checkpoints."""
+    from dvgc.runtime import make_ppo_train_fn
+
+    train_fn = make_ppo_train_fn(
+        timesteps=1_600,
+        episode_length=200,
+        num_envs=64,
+        num_eval_envs=4,
+        num_evals=2,
+        seed=17,
+        learning_rate=1.0e-4,
+        entropy_cost=1.0e-3,
+        reward_scaling=0.1,
+        checkpoint_dir=None,
+        run_evals=False,
+    )
+    assert train_fn.keywords["run_evals"] is False
+    assert train_fn.keywords["save_checkpoint_path"] is None
+
+
+@pytest.mark.skipif(not RUNTIME_READY, reason="The configured Brax runtime is required.")
+def test_ppo_factory_builds_the_requested_phase_action_distribution():
+    """Dropping the Phase U scale at the train boundary would recreate the no-liftoff plateau."""
+    import jax
+    import jax.numpy as jp
+    import numpy as np
+
+    from dvgc.runtime import make_ppo_train_fn
+
+    train_fn = make_ppo_train_fn(
+        timesteps=1_600,
+        episode_length=200,
+        num_envs=64,
+        num_eval_envs=4,
+        num_evals=2,
+        seed=17,
+        learning_rate=1.0e-4,
+        entropy_cost=1.0e-3,
+        reward_scaling=0.1,
+        checkpoint_dir=None,
+        run_evals=False,
+        initial_action_std=(0.05, 0.05, 0.5, 0.05),
+    )
+    networks = train_fn.keywords["network_factory"](
+        observation_size={"state": (140,), "privileged_state": (29,)},
+        action_size=4,
+        preprocess_observations_fn=lambda obs, _params: obs,
+    )
+    params = networks.policy_network.init(jax.random.PRNGKey(0))
+    logits = networks.policy_network.apply(
+        None, params, {"state": jp.ones((1, 140), jp.float32)}
+    )
+    dist = networks.parametric_action_distribution.create_dist(logits)
+
+    np.testing.assert_allclose(np.asarray(dist.loc), 0.0, atol=0.0)
+    np.testing.assert_allclose(
+        np.asarray(dist.scale),
+        np.asarray([[0.05, 0.05, 0.5, 0.05]], np.float32),
+        rtol=1e-6,
+        atol=1e-7,
+    )
+
+
 @pytest.mark.skipif(not RUNTIME_READY, reason="The configured Brax runtime is required.")
 def test_frozen_normalizer_training_state_has_zero_mean_std_drift():
     import jax.numpy as jp

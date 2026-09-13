@@ -1,0 +1,2353 @@
+{
+  "acceptance_threshold_exclusive": 0.2567880342884696,
+  "calibration_sha256": "5701f217e1da12349fb659bc03c399503265d399ec98f8a02c5e2fabc57bb221",
+  "catalog_file_sha256": "bf636385a340f1a1fbec3c0c7875dfe1b3213b43e4345e78574bac948be9811a",
+  "catalog_path": "JIT/runs/iteration_auto/pi_3_to_pi_4_pi0_centerline_family_landing_predictor_audit_20260905/frontier_acceptance/acquisition/catalog.json",
+  "catalog_protocol_sha256": "4fea567fc8d321318afcc4e7d72524199bd609b6d62c13862730d75027255343",
+  "downstream_candidate_count": 241,
+  "entries": [
+    {
+      "candidate_id": "pi0_causal_upstream_000000",
+      "parent_group_id": "causal_centerline_upstream_x0025_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.999774108816515,
+      "state_sha256": "4a3e96bac5a8b7bd336eaf4aeec901dea6d0ab56dc9a4507d5add0e3cd3d867b"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000001",
+      "parent_group_id": "causal_centerline_upstream_x0025_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9998050047371752,
+      "state_sha256": "dd95620e0a4d3fcbc420c977d004657d70e193b85649f9dbb324c8df2f4ca06f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000002",
+      "parent_group_id": "causal_centerline_upstream_x0025_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9997670043642554,
+      "state_sha256": "c25a71ccdf87ca328fc31e70cb1620d96ae6b5286c0d85e323ab960e74c231a9"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000003",
+      "parent_group_id": "causal_centerline_upstream_x0025_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9998402972902158,
+      "state_sha256": "823a02f7503bd404f18edd565e8be8a47a0641e33380058ceb04849e2609d4f9"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000004",
+      "parent_group_id": "causal_centerline_upstream_x0025_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9996939005273956,
+      "state_sha256": "9609f0d93bb5240c8775d3be774d55a372ed6b2294e848ff02b86e9f8ffd6a72"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000005",
+      "parent_group_id": "causal_centerline_upstream_x0025_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9996473232633218,
+      "state_sha256": "b3731dddf4ecef677077f5d6a90b60df647e141bfd6eeb7e2a9dfeaeee3995fb"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000006",
+      "parent_group_id": "causal_centerline_upstream_x0025_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9979779996618072,
+      "state_sha256": "1159e997a2786bc7c50cb62a1d5bcb94b1e92191656ee9616620307dec1bcdf3"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000007",
+      "parent_group_id": "causal_centerline_upstream_x0026_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9996605419358559,
+      "state_sha256": "eaecc9679daf573d8e4c40b53c3ba912704326582bd4339999bfeb11882a23e3"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000008",
+      "parent_group_id": "causal_centerline_upstream_x0026_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.999587054696054,
+      "state_sha256": "be8d8c81b53a6ce97b8a72028b5005c3d090145fac5592c75e7648b8729b43cf"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000009",
+      "parent_group_id": "causal_centerline_upstream_x0026_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9996397537313153,
+      "state_sha256": "b2214239fc92f8f1a7153fb5465efd7dfbf5d04aee49bf6979c1603bd0e57007"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000010",
+      "parent_group_id": "causal_centerline_upstream_x0026_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9998675582866886,
+      "state_sha256": "b4867215a2286559a349e64b3787b8ded6bdca9e65b7dc43717816f4dc12da6d"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000011",
+      "parent_group_id": "causal_centerline_upstream_x0026_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9997442360745329,
+      "state_sha256": "0f3ed8a9fb39a923cfa7cde3194c0a6fe6430ebe7bd0840212cc7ce7658357f6"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000012",
+      "parent_group_id": "causal_centerline_upstream_x0026_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9994326743046473,
+      "state_sha256": "811093b47da1c0825c97aac188542c8b65379c8c834ea9d2eddc425638d92c72"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000013",
+      "parent_group_id": "causal_centerline_upstream_x0026_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9994644665768839,
+      "state_sha256": "73d75bcff1be929756699a3388049e4f101a39e3ab3c8eefdcd4a8c8efc1a350"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000014",
+      "parent_group_id": "causal_centerline_upstream_x0026_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.999597637905519,
+      "state_sha256": "838eba2a8d2bfab4c1a48ca8c61d8007ef57ab48796249247914744dc5185bae"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000015",
+      "parent_group_id": "causal_centerline_upstream_x0027_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9981283318792742,
+      "state_sha256": "1001db41d1ecaad77d6008ebd19898f06b1d2c09ee83adb4d0eddf202da8378a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000016",
+      "parent_group_id": "causal_centerline_upstream_x0027_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9989519272013286,
+      "state_sha256": "9469927e021f5ca4501a5aaad56f105566e56550b100d5dc40759c7fd16d9bd4"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000017",
+      "parent_group_id": "causal_centerline_upstream_x0027_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9980879057922444,
+      "state_sha256": "0868d655ccddf0623ba747a781a0c245c63812b31e331cced9c04a868d599e33"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000018",
+      "parent_group_id": "causal_centerline_upstream_x0027_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9974628175309781,
+      "state_sha256": "e6a7792f690a7cf7ddadb05a0edda712071f1ca78757342badfc1d8665b489ec"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000019",
+      "parent_group_id": "causal_centerline_upstream_x0027_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9976327344006319,
+      "state_sha256": "2b3927901b146822e3c634e56914e413af7d84d4d3ec8985a570136737c60fa1"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000020",
+      "parent_group_id": "causal_centerline_upstream_x0027_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9981223771754689,
+      "state_sha256": "34f57686de24e43241a6e3a2180487a48e7a9417d3cc91a23ad614483abc6c42"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000021",
+      "parent_group_id": "causal_centerline_upstream_x0027_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9987162862364469,
+      "state_sha256": "402495f39c44985517a12b98a3ede1814ac48f9fc5a81cdea9d60d71ca23ee99"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000022",
+      "parent_group_id": "causal_centerline_upstream_x0027_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.998136784379326,
+      "state_sha256": "23f894abb0423ff02e42c0b0ce1fc3a852ee70e92a16ab48ef2746de6dad619f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000023",
+      "parent_group_id": "causal_centerline_upstream_x0027_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9999362318213854,
+      "state_sha256": "e1bd450b435622681622a2b36b3c177d20f1f8d4dd1704abdfdbbb8e2cef0d02"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000024",
+      "parent_group_id": "causal_centerline_upstream_x0027_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9942263786669312,
+      "state_sha256": "ea0478d84855e84d22ee250327a9fd1a7e75a0d4ba6b56abcb81eb349ac94935"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000025",
+      "parent_group_id": "causal_centerline_upstream_x0027_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.999891614030888,
+      "state_sha256": "3cd96c4bb34174adbc728526634419acca5aa5c559deeb9d6de490604a05359e"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000026",
+      "parent_group_id": "causal_centerline_upstream_x0027_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.999820013538513,
+      "state_sha256": "b11f01fc4632b1e3579ec2429dd29fc018768554e4ffdcb4fe77b17e8d15e961"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000027",
+      "parent_group_id": "causal_centerline_upstream_x0027_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9980881742276256,
+      "state_sha256": "574ab64c40f27c5555086792c2c680a7dffadc78c2bfd5e3f79ab5a8aaa68abd"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000028",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.99950573138666,
+      "state_sha256": "f3d0e8f8fb338258a5802146c40f2fb47becb4032258eddb924b381f490aa93d"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000029",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9996289606646147,
+      "state_sha256": "a5f67e74e21654c989b77add290d90109a8757b1d31a9065fca45ef44578a503"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000030",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9994891006399441,
+      "state_sha256": "3517da3e5f4365fa76b7f4e59ac8529bdcdb4a522b0c16d51dd421d3e9d7459a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000031",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9994047007542012,
+      "state_sha256": "c2dd6099769f6d61e662af6379819f7a4dd00a5e030eef5252afff1941ef424d"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000032",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9994105409512692,
+      "state_sha256": "4141000de83da954dbac1e3e3bd3a548db7770c997d59dde9d6f366f269b9a42"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000033",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9994927428935108,
+      "state_sha256": "395085515c72c1bd77aafba00a4dc1de51e2aef58601529be7110c1cd249eea3"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000034",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9995208827399064,
+      "state_sha256": "e9add215fbdd9c893ac94a45b9c513850130b71f22fc124ee4a6885e775ea2d3"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000035",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9996032627667568,
+      "state_sha256": "c087da55f5d80a7a348d30845bbcaba3ac957b3ddc63dd2fc9f7a01498f01136"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000036",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9994626683100106,
+      "state_sha256": "22851d133b97087ac4e9f3bbe5d49816d0af70e99338aba9da12e56e4acab32b"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000037",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9995830548404016,
+      "state_sha256": "3d151532aec26062a5d377d92c8173023f659892b2b723277a62d6da8b972842"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000038",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9968074759438117,
+      "state_sha256": "79c52f97943ace7883fbb1417a83b572a561ec0ede2203225ed56a334ae252e2"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000039",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9980119817148522,
+      "state_sha256": "26cccc882f4e8376842f57330e3fcf79d1a663cd708f94884db5ff292342f00f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000040",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9995027374633747,
+      "state_sha256": "f0ac6e97ade2bdbd40d612d41a2d6f122d11a961d08294cd98c546450246fb4d"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000041",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.999514237514444,
+      "state_sha256": "c7cc496e1e3375babb76865a0fd125e50c88fc2c735beb107f0d313d0858f5a1"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000042",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9994179277528562,
+      "state_sha256": "b9f410c9fd00da1efde8c7b1405620b8afb04c847d533818794cab0142b287a2"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000043",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9997611248618077,
+      "state_sha256": "8df5ee723eaf019efe3a9fdce78780bebd7e15841e2aefd3cfc947c134084ad7"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000044",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9995109327670851,
+      "state_sha256": "97a8c9cdb152589f177e8f06c114f8c4f90471b4f33e9d2d1985515177b19022"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000045",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9466858598921163,
+      "state_sha256": "22c0ade3ebe4cb34fe0034a1efd7976a5e2b43b809b96c264370c634510cf20d"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000046",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9976583875600963,
+      "state_sha256": "cd857d16ef8032a895c59978ed05a8e3964ddf55a15e8a5ac37914c3a9d050f4"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000047",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9813394939659063,
+      "state_sha256": "4406f878a9d94de4ce606bc05c180ffc6cbb7bb039626be0775f3f26b3488ed0"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000048",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9994910412252586,
+      "state_sha256": "a39ce33ac458606fc93b1b7fd70bde7e460e3fa87b23d0d3377bd03d1a07b70c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000049",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9995307426655282,
+      "state_sha256": "726829f985869dc08c6700b88a1a8b31aa1c41da6d298d3278a0617d34bbf844"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000050",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9997611253173165,
+      "state_sha256": "b0993b9ad3a06a929033d6c845ba48e8efb1254cc3433b9f2ebcf44fa5b47459"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000051",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9995109260073886,
+      "state_sha256": "88bea4d78749ae5ad8f2103f97f739af02b51004d588308993d310a884a2e6f0"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000052",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9466890366207033,
+      "state_sha256": "b2acb98ec8053e270189b7ed4f2e5f5e4e532b7d271ffe0751f5e6fab769f5ba"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000053",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9976584209784559,
+      "state_sha256": "c22587ab260041c407c6b2a82d49e222c0ea0736d85dfdcc3fbcf61c75e13064"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000054",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9994928383782826,
+      "state_sha256": "b375adf7739ff91c8501e7a05412a389bc9474c5b5c2569fb1e50d50ab02ca24"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000055",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9995306062165602,
+      "state_sha256": "dae615e4ac7bf4e58c29be16778a90759f5b6bee709ee6b8ed28a1bdfbab71ca"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000056",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9994179266432868,
+      "state_sha256": "bb6961d3834972b85e8bf20e598e93baa6df34743b295408c29739650375a91c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000057",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9997611264560852,
+      "state_sha256": "6fedeb2d2907a75e62d076f8e9341bca23e440886e358aae096f2e39434d7eeb"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000058",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9995109621357171,
+      "state_sha256": "456527a146783817fe7df8760d202504d3c9fae0c35fc0a68ed90b0e4a72e810"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000059",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.946690769306461,
+      "state_sha256": "1e23459ec202117d054282e3a99b776074d7c2bd6dd9f6300cb4134b3e943e9f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000060",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9976584154087622,
+      "state_sha256": "62a18810d1108bbaedfcfe1bcea607131fba323f24481b3561a1ef31643e1d5d"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000061",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9813395114298604,
+      "state_sha256": "c988b3124c7b99e60562c03eb829ea4161ae34fe46ccfaae91f3dcd8651ff71f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000062",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.999492305851731,
+      "state_sha256": "66027f3042df1453de8864e3f3dec94e77780d4199ef0b07f9ca714a250ccd67"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000063",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9995306091249024,
+      "state_sha256": "5eabc51f40cea85047728a026c3481af2d40e48a029efef07611bf5a95e42bc8"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000064",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9994179283076402,
+      "state_sha256": "c57456224daeab27d9a9ce9d4d3b6ac2cc4039addf0f5692c1a07379d51f4bf5"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000065",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9997611264560852,
+      "state_sha256": "0eb458235151893bad660411abd8d9b6f75c6beca810edf674a84543213476bc"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000066",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9995106688364911,
+      "state_sha256": "b9914f6ef7a7a2f8a0518f3359a716ca7343d296b5575d251159063a41f35d42"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000067",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9466881461920716,
+      "state_sha256": "e3c3810c4ec2432bc6faa5f4ca5f5e44dd92950045e811f765be989b84105ca8"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000068",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9976584098390556,
+      "state_sha256": "b744e798257d88ef956f61067bf99652174c55d6ccdb3db4d38c7f1c8eaf5605"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000069",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9813397733872481,
+      "state_sha256": "64d599aefcf37b560731dda8572d854419bd7cabc79a7558ccb6f0b3f2b2a1b2"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000070",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.999528346601688,
+      "state_sha256": "ed5e2969f60f200b8cb8a98f50aa52fbd865b8f52320b49615f90515e3a53fc2"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000071",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9994179396805952,
+      "state_sha256": "1b72f599210001766310701c579b121d36b1b87dfca1c834cd78dea8a031a0e1"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000072",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9997611084629089,
+      "state_sha256": "d5ac68fa60ebcc7765af5b9092c79c240de94710cba4dcfbeb6377618ade2afb"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000073",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9466882665210853,
+      "state_sha256": "005094f2cff95a09f3a6a44d67178d71e9b8069fda9d4526abe3817349a06617"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000074",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9976584187505799,
+      "state_sha256": "6858bf6c047a165f79e507a3ce3ac358e15251f5260b886abb744c3a33d2c862"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000075",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9813396511409161,
+      "state_sha256": "242f5e274492e9e64766333c0faf8ca718348247053f943a0ab12361c84f4bad"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000076",
+      "parent_group_id": "causal_centerline_upstream_x0028_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9995286477319223,
+      "state_sha256": "78aeb38f5615634d8fc9ad6af2e888df49c6fa3579d284346cfbb1abb032e4c6"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000077",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.978920433555152,
+      "state_sha256": "3a0303cd052aa8e9252540d2f6b68268aafe81dab76526b1423f285e79c38e79"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000078",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9893006715336051,
+      "state_sha256": "6f6db7636eb9a3fba8a00205e3cef846ce162cf7ac906c0fe0a3be35037d06f0"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000079",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9888161172340626,
+      "state_sha256": "62da60079549bb8b7ee19d70bbbda079a504255b3f72805a1b8915a79bdefcdb"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000080",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9971298352379727,
+      "state_sha256": "053accf2ba19a6f1757147b9c9dd4d8d1a1bf98658600dd1a3d0e0c8d4fa5bb6"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000081",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9863604385527543,
+      "state_sha256": "570b983446ffadd4522c4141d6b213eeb5d1c2da8863b7def86d02c4143da1ff"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000082",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9817015158168999,
+      "state_sha256": "e579686e9fe350808e1644c209ca639552375f42db97fce9509a26c2ad8f78fd"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000083",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.990236581776293,
+      "state_sha256": "3f5e935b9b3721b6b3734b3cd8e7f922f7cb20ee220e7317e4f405f9f6ce9ae5"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000084",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9879484348621681,
+      "state_sha256": "70cdc77a1c55a627e593797241fe3ffa37b629fb6943cc9d782939e24aeda00a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000085",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9907162199562816,
+      "state_sha256": "0525b6d7a17bf7fc78436aaa021f9df35538cf2754789f09e10b97121c1fe9e6"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000086",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9754767639899192,
+      "state_sha256": "a1c5d29f147ad0b747239e63bbd34796da0af98db6c73e127a4acb98cb5e8ae7"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000087",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": false,
+      "score": 0.034177672905338886,
+      "state_sha256": "571e9200f4b2d7cdd8147486aeaff13c1e7bfac3608c860a345658700fe0098b"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000088",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9749612940672145,
+      "state_sha256": "040f4c0d5100132b0613de1bc4e27e4d62c2728d7f645bec6066625a9c193b77"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000089",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9946045194567669,
+      "state_sha256": "f6a96285510a62bafcdb9edb7d9fa3228d4366f1660204303636c2bb1300d7b3"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000090",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.95618974286301,
+      "state_sha256": "fd105525f42273bca3221c064cf555676503a9355d98af6ca072b517938558cb"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000091",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.886592354012337,
+      "state_sha256": "c840ce695a02844243f122b72a8fd8e661fffb1cf04833d93fb56df075b93539"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000092",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9626366676788747,
+      "state_sha256": "e808c1a7cb2be5bc12ba4b863cc86a48afd8b34983c70d6c63850a88b5577213"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000093",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9740580702062394,
+      "state_sha256": "b6de457fa4f83c5f75567b5389a4383b125d09b5be530f56e99285158c818361"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000094",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.5700919595308342,
+      "state_sha256": "4e783ac53bb556baa71949dcc38324b2bc58d4224cec8a1a2a818f4c9661f453"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000095",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9911901568716797,
+      "state_sha256": "eee61fb2fbac72e70b1f8d868ea78f3e89fb94b8a1e5920970d78bd87f20de8c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000096",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.8755842624912381,
+      "state_sha256": "0b45aa8ee21b2ae84192c4e21c4039480a2b87a41c2ccc0dbf04d33ba35805f8"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000097",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9486501014514467,
+      "state_sha256": "53a11c2bb13189814840e2afc1dcf1767061031d123b245f8da4b5dcdc4b56a9"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000098",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.6206437892519794,
+      "state_sha256": "f233637ffd06b747b955f648f3783830e8df5ae9d0f6ed0dad850e669884cf89"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000099",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9899599707417134,
+      "state_sha256": "0af71f841ad4bae7831615309a37190ffaeeac12a33f5a33f9a86bd400951243"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000100",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.97412679426733,
+      "state_sha256": "6b70fd491e9ecf5a3bda6a97fbc5c22d402ac28b1324ef126f602d105c426d40"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000101",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9696915609761237,
+      "state_sha256": "ed69fdd0b385257c5ac4cadaea41189ac7163627e81b653bcae41812038195b1"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000102",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": false,
+      "score": 0.16133291518825763,
+      "state_sha256": "5895a3069707df9334c1cad4c67aa5e8768b50dc505f5652d508f481001c9717"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000103",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.5740491617219553,
+      "state_sha256": "1e93ff945071bb35633efe7d2565e827ba3eca6d8b02df017de04fb52295a38a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000104",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9589443904954035,
+      "state_sha256": "27017497d64265729c5954360dc07a26fed2a0bdab7ff4124daa9ab07996a2e9"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000105",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9967701323699449,
+      "state_sha256": "97915253db7e9a86929a4a0406a70e733e827262da5b1a657131ca2640e60034"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000106",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.989961136565335,
+      "state_sha256": "4ac57a70c12a755a762888394401a327cca513e7cc52a886306f5b9a7b221c55"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000107",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9740899091846691,
+      "state_sha256": "ecd59777439a83e2938d1856fa29c5497d4ad5e3887e52b75e1ab2a1f01979c7"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000108",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9696819037251742,
+      "state_sha256": "28d562ca4a67be4983db013db06c5bb6756a6cd46960a79910e8b122862a9840"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000109",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": false,
+      "score": 0.16132573766037647,
+      "state_sha256": "8ad3a678b68d3e99a8f1b367fec32ce93fe430d05e0f67516ffc54d6803b342c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000110",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9589524809388346,
+      "state_sha256": "232c53692b20544602db7da0eb134950797d3dc8943af9c9514541587b4b911a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000111",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9991953683311228,
+      "state_sha256": "550726f0abe9380d68e0766c7a6050cfa6fd2faa3ee767eb3eace4fa015c5241"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000112",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.620624520901318,
+      "state_sha256": "29918124febc94d23f8812daf6e7befe1dc6252198d538b63d76ff7a8b9d7bca"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000113",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9922339982958398,
+      "state_sha256": "199f0b382139d58f1a4195afe78af4cc763cfd7d297f4dee2c225a2210160df8"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000114",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9696692845386398,
+      "state_sha256": "5fa78c1ac2e72082730add38c4821b8ebdbe3c0b96c6730337aca707c89482d5"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000115",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": false,
+      "score": 0.16132902800069376,
+      "state_sha256": "a87cd9f1e72987a65337d0d12c849d34afa038099fb6432ce151e40fd863bcac"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000116",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9589358103301451,
+      "state_sha256": "52f0f472731c473e667ff0dcd941c88b8b8d8348257a8ae6ae3d053eabd9dc57"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000117",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9978550674234611,
+      "state_sha256": "e216dc80678350fb65871213c2ec0c419cdcbb0a7a18bddbeb46c2a78a7a37d1"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000118",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9899613829824396,
+      "state_sha256": "d2dc46d08a3b9e1e8203f22940ca1a5ddc595e4d89499993edb4ca10b8a37481"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000119",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9741830994324374,
+      "state_sha256": "13ea63a70649a3ea0b1b14fee462ddc75de869dc8c3d23d96129b30741388d20"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000120",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9696842307083947,
+      "state_sha256": "ed2d9ab73752c5714a6cd2531a33d263a6467af464f1444c83cf3eacfd747fa4"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000121",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": false,
+      "score": 0.1613338345756304,
+      "state_sha256": "a93e32c40fda3420f04e438dd0af482db950782d18c7b27fb1f6df0ccdf79b60"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000122",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.5740438566564624,
+      "state_sha256": "951fcfe3ab07833d61db1cc9b14f215e6c26544b547dae9417efaeb5426ec3d2"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000123",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9589365426212957,
+      "state_sha256": "45c2914d87e08fc94ec32af9c03c8ea51c81ec454b9552e74ff6661769e4404b"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000124",
+      "parent_group_id": "causal_centerline_upstream_x0029_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9978483240376073,
+      "state_sha256": "db56a0eb7a10a49e863ad78745c9eec21cbc9d2931626b93b457d933b9113e1a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000125",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9952713682389407,
+      "state_sha256": "266ae6b9c325fc5fc449da9de32af6273a30844b7d170ce9a02e2ef16df1d09f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000126",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9956626680837574,
+      "state_sha256": "06e8a0b2f7bf13d205a20f3d430fc80b24504349d22fceaa3eeac79cadf1bd69"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000127",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9948842325697513,
+      "state_sha256": "fc9bf78fb13f2f403f31283d681e94ca970763420fea0c1883e801c920d43c4f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000128",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9950691112038004,
+      "state_sha256": "4cf68a79a8bc79fb87164d8d1d7b95db585ad5c17650aa60efd2c91e73e1e419"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000129",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9939732683622492,
+      "state_sha256": "6d041732f44ea6490881cc4d1d340080047e4640581de169c7a3571f335f1d49"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000130",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9920893561448737,
+      "state_sha256": "ae0bdf9b996ae94e8503bbed23a2d3d8ca97c3efbd6a9c48222152ee1279a87f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000131",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9945804793670617,
+      "state_sha256": "6154b961a265a63ffc222bd7316c4a9910ff509ad988f8816aa7e7c368abe6ba"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000132",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9940329014981748,
+      "state_sha256": "79eb3bb23f559a0541502b92dbc737c1a523ef3b62db93eef19e9d0045e6c9ad"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000133",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9954926214178417,
+      "state_sha256": "a657416eb9844b0a05bd7f42e872568f7c586c44b45c892645ae27024ee2fd16"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000134",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9945045135546209,
+      "state_sha256": "952e7f1c3d4a4af0bdb48d9e707583160f1d4ee1269f845b9b10477cb4522310"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000135",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.989797477306149,
+      "state_sha256": "4d78f4fafce5dfd4a463b37c6d8301d3e7671f3429c59b0a9a4ad0965be4609d"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000136",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.990400145646415,
+      "state_sha256": "2ef6b1a296100a862fc4bed561e7244c8fccec874f5eb410bceb39a064a7d8f0"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000137",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9959896781664658,
+      "state_sha256": "062cb37a944bf1b88658c68979355db2645b0823f35e1591087e02031db473ce"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000138",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9953164350933418,
+      "state_sha256": "75ddfe3124792ee96aaf38a0dfea4b1c92552e2642936ffdca200f79f8e23f6e"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000139",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9858141566593639,
+      "state_sha256": "0571dd93f366255b1473d25f2386411840c617e7de08d323edbcaf94ad164403"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000140",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9974949490206008,
+      "state_sha256": "669a33a15b8bebaf5afa362b20eb75ae174d75ec8f6ab320aa6f1a434f0c0657"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000141",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9974408702943285,
+      "state_sha256": "2c0af12f4757ffcb990083ffc9368d52d5bff7dc6f536db104f46b123b12f779"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000142",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.995258712499939,
+      "state_sha256": "2e87ad9d5ec88446cdf6bce640df7e785f09e427c662b537b126a58674edad34"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000143",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.5684848949833234,
+      "state_sha256": "dc4ef53a5003b6539723d07c6388cef74e87d13257a64364905bba6924b600df"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000144",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9884568438287187,
+      "state_sha256": "73adf83b81c682cccc95467e8cb08d1bdb7113c6411c1a15b01decfb4665e314"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000145",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9906699063706407,
+      "state_sha256": "185b0e8f7266fffde5ffd07e914ae22225c29e3e06b077e68e29cfd9d97be1e9"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000146",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.96330428174663,
+      "state_sha256": "6fe37b3e961e1f8d93077df4bcffe36396f97b6167c7d704168aa9c3aa7d8b7f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000147",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9429108173512717,
+      "state_sha256": "d12db8e051d8652c7136abe30ca9c3310995b4e968d1ccc6a931036a6ef52e2d"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000148",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9858393543872733,
+      "state_sha256": "be5547a89098cbcba724821347015a4c6ba758aee9fc35d135f702538e754de7"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000149",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9471154945045865,
+      "state_sha256": "b1958877ebe94a0e0a3988d0f21bea493ef8c8e4a8280d2020934711fbeb8058"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000150",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9363208950609201,
+      "state_sha256": "57ad82bfee92c356744588915a9afb825668d9aba2e9ba0feab4d1af36f88ae3"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000151",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9978965740033041,
+      "state_sha256": "60137caf40967e42921c636cd440b4e61ec3d8ac7e8370668c41fd8d791d6f12"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000152",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9928518659601286,
+      "state_sha256": "924203dc43a35ecb0bab38747e3f587cc024265dbf44b374e10125d9a79f1d46"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000153",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.2926371607699553,
+      "state_sha256": "0b6eff0fbb3ca8124edca5625cb3f5f27a54882883555a4e544db0ec02f3c228"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000154",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9817807001686294,
+      "state_sha256": "45c5e499d08fc02586321ea72471088029867c083e8fae4044c43c5a2aed9f1c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000155",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9915656383406708,
+      "state_sha256": "3144d0e7ea9804a3c152f9c8c06f006a48fa1de3062458373970e1b368599644"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000156",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9963926985663263,
+      "state_sha256": "c1a4a4437aa6bac36aa549b3c0c94008ec917a4d17034c8a87a7818daba17c1b"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000157",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9063533682071518,
+      "state_sha256": "9c531e7d393174bc6d09bf5be725bc2a5f3d390ed24e6d2b45e26c87c6aa916a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000158",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.8985914127372171,
+      "state_sha256": "aef98a2729dd3b41e95ee6678384356c7d065ef43081d554deaf613bbca90e2b"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000159",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.41080695970870196,
+      "state_sha256": "e94d7e2b32e3b3e81de2e09652447017540f66b25a67a6b0aa44c0e687f0cece"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000160",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9990308456313459,
+      "state_sha256": "314961e421bd765565f367dc27c137b6e859a00bf9b2942de998352cea75de31"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000161",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": false,
+      "score": 0.011427207329404134,
+      "state_sha256": "3f0679f9fbf1d5b466ecc735850ca0625f7f68b49a7fb7b36166fa2c6a5facaf"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000162",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9817893383962826,
+      "state_sha256": "e508cab39e4e1d56a0c2b6edcc261e5718372d0c3a4199f740fb3d2866f21c81"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000163",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9915317296575467,
+      "state_sha256": "f2c8a4bcdc3d253a7904dcd59bcb9af10b85e367596b334e5461045686fe69c7"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000164",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9963892725932192,
+      "state_sha256": "dafac83a123a0d43ca4cb3ca5a277414f111207224b800b24bb4128831fcaaf9"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000165",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9063661567274363,
+      "state_sha256": "4eca5e1a5a88bc10daebad127abcbad70e994ae1add54733e2cd320e859d01a8"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000166",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.8985962357776648,
+      "state_sha256": "185c533a39e760075648599382080043d2aa738e57263f8500cff69392318297"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000167",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.41130226330923025,
+      "state_sha256": "3426d8bdcf31196dd8f131d6334f361d48d7b1e520f3628dc71287db6bbe551b"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000168",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9990311904457132,
+      "state_sha256": "4745ef74c54af3d4231659deefe853ae310843b88edfaa45b2634b46a1c89604"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000169",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": false,
+      "score": 0.08090301968996581,
+      "state_sha256": "6bd82364d6efa0e45f6714c0d1220994bd1f4f9386db37e48cac2e77da228fa4"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000170",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.981794981344543,
+      "state_sha256": "82c2331abe2fef782f6315a9fdebf4eb880f098b4c533eb54771620ffe55d658"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000171",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9915417172763269,
+      "state_sha256": "6b2b8081f191f8f2675668236ef0b6546db569561c60cc223d84af1e3d194a69"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000172",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9963893858152623,
+      "state_sha256": "e3737c329e2e119837cc2274db4870145ddee85edc9a9a7d9113608a1c87b4bc"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000173",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9062629540502045,
+      "state_sha256": "8b5f3a6eb52dc0967bd816175cf66b958b3c4b5a0d8db3b002d3aaa35d6996bf"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000174",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.8985877192803681,
+      "state_sha256": "ca51bcac0e5169b212e2a2ace8e4ea31d48480668f22e741c4986aebbc2b92f4"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000175",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.410941570128767,
+      "state_sha256": "527448a11b29515fa5d527ceaf1a8bbda2e3db6555a1068de66726b35c4f7b06"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000176",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9990310432106654,
+      "state_sha256": "ccdaf3232d8eb7e676c34868cc3fa43567fde9171e0ef95c0087aa91ab7b2a0b"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000177",
+      "parent_group_id": "causal_centerline_upstream_x0030_family4_acceptance",
+      "predicted_positive": false,
+      "score": 0.01088610623770512,
+      "state_sha256": "71347cccd197d81d45c4757e45c457a144f4ec5334a4174a8fd5b4eda438366d"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000178",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9982609975083316,
+      "state_sha256": "bc807611614a14480bb1c3331510a1e34bf4e9bdd6792a1d30c6de264af431ce"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000179",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9982562860528207,
+      "state_sha256": "0e8d616da337db022a10bdcecb9148c1b6c76c866930428c45383a02dbd80be9"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000180",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9975017944259115,
+      "state_sha256": "5fe7c4a0c2b318a7ede78a8dcf4eabe4db5529da17288986fd417af57a376a07"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000181",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9996713396051331,
+      "state_sha256": "f78d502b360b5ec44d35f78fce35e9c887909c5040c44c411ad2fa793e0a4ffb"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000182",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9930975348903889,
+      "state_sha256": "29452714aaf458010713e7f1b92722ca2da9933fb670fa1294637353de2f4dd2"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000183",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9930291873349036,
+      "state_sha256": "126af1de2606517522f2bbd77f3e3fa2416d452aa69a50dea4f6b68bc2f20878"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000184",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9935891328978632,
+      "state_sha256": "d0ce6533aee088633e3467c96f0219c2766ae373e570c4d3f9045b5c324a5544"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000185",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.997829262257663,
+      "state_sha256": "343baccc4b7b0ca848bbd24b5e9bc1f29ee86b20931ac02c6c1e31a75660d160"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000186",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9983821027735416,
+      "state_sha256": "eb32c39dd2c6cca8d59084a63a78e7f9205950170b182343d534c838b94f9868"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000187",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9980759703308144,
+      "state_sha256": "6fb90de2541dd36f57a5ab2049ef394f2317d6426ee2b00badc619d309c0fe1a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000188",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.996533892927937,
+      "state_sha256": "68741c6c97921ad3da1e232fe1c34bd9487fd1581fb190fcaa925108dcd04248"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000189",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9996521213167763,
+      "state_sha256": "88e45d178f602959b98137109a1fe771eb4d7d78f7cec17bc054e2d904ed6c26"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000190",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9947033256802013,
+      "state_sha256": "5173cf0ade40764660d5998ef846336862d82084ab88b736bc8272c068e3d67e"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000191",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9903691405892456,
+      "state_sha256": "00535e547ecb01b456e5a74ed9697bc9be49a80a18b90fd43fe3605bfb3faf20"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000192",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9957076732243036,
+      "state_sha256": "2ae713de6a081245f432e1462ff3111e53b56ca93cbd03843691ab045f90de33"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000193",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9985586090312562,
+      "state_sha256": "4304b5a4b20ce0a95218c776259ee87cd88694143d02d07a36a4325a52cbcfc5"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000194",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9953882240978874,
+      "state_sha256": "c9ae97463e1157408004929b2f0aff99dad33f0de895e86269fab4dc781a7bf2"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000195",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9970177907380473,
+      "state_sha256": "2e7fdf6f02df7c3dc510802d75589e90595be29cefac998bad2935f71ee0a059"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000196",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9997026808651189,
+      "state_sha256": "5e63b0be395ce1df3fe52033eaefaca6b26043e21acb920588387aaf31094fb6"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000197",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9987325359016964,
+      "state_sha256": "34317d292bd907dfd2bcb06e6b26f11345c0626bb999db0b94a68e248b36952c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000198",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.99966532505093,
+      "state_sha256": "1361523ed4e66f3bf29a0df6f9b5c1c1de08cd5944205c3de5180e7d63c58a46"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000199",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9961316564704163,
+      "state_sha256": "f32844a8ae5c5af403ca3d23356b11d48699d32fb69a8e3cdd0d1a837a3985b7"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000200",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9984768874946907,
+      "state_sha256": "e28cf8df255bcdc69a723cb94397db01e291ce2427fce14a0231ee0c700ff1ee"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000201",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9992896306246498,
+      "state_sha256": "feea94c153d9e7bb31164ca50bac352b8de4811ec3d6fb63b8ec5c5bf25075aa"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000202",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9994428452686114,
+      "state_sha256": "46b05a85bf949cfbd0855bfc3c539b79422e2656793af32d0f985a0b227aa9fe"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000203",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9988686570384437,
+      "state_sha256": "f5860d2afafde2d1417a1497259b4f7487c5285c7af6fe9591367decb6d1bbaa"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000204",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": false,
+      "score": 0.19251869016110643,
+      "state_sha256": "de2d75d796f5fb13ecfa432b1f3e0d6dd7ce3d14bc76cc4f06be006c63f8dfd1"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000205",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9310043835041824,
+      "state_sha256": "46719bc99dcd366a8d9f30f3f66440b6f7ec726d6f544f91c3ef62f017e90590"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000206",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9980715911435791,
+      "state_sha256": "05b9276e53540c6637bbdaac15fd5a05f6da3b9cfd4a7b38283e84fb5e379151"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000207",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9750084527218946,
+      "state_sha256": "57e6c7647524ec6a0c10354b7f98276eee6bf9d804b592795000786b9b621a8a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000208",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.5042861730446111,
+      "state_sha256": "b42af5d1b15756b7cc63ce09d12b3eed9ab61f3493e493efaedd43ccf488b549"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000209",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9769380288959925,
+      "state_sha256": "a147ee3ecd2f553e7286488b075879df74ae75e67bd09ccdd7ba97ff8402f1eb"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000210",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.923265472380714,
+      "state_sha256": "f994f96931450336f71d02789c01f96d131d4edf3c73bff51fd7a52895803b35"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000211",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.27023911394631134,
+      "state_sha256": "d9fdd475106323eca2e1fc471c09226362730c3da03348d2123024e9c43e9e54"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000212",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9995309617956188,
+      "state_sha256": "ba7b99ff539c622467607363235f7959b3f2307283e1d059205df1ea6f3aae24"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000213",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9994875973095283,
+      "state_sha256": "d46be1c706f61b9e9c66a69ca16f954bc81504efbf200eb6ecb977c14f15ba04"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000214",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.2798597482203498,
+      "state_sha256": "830f8152e712058a52afe1107d532f1b0e9a054b2d4a8bb3de956a869b3cf6ce"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000215",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.98135181080187,
+      "state_sha256": "2695c13b6fe055b504b9c460482275b6a49747c28843a03d2b1fc4d8a1cdba38"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000216",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9653714866592625,
+      "state_sha256": "38b36e0ee01c0190bbd5956dc852a61e1d731b0d2a993bb39eb85ff59af29cfe"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000217",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9924177478199274,
+      "state_sha256": "84d4d189a4e7f928206c583445dce1fe6a2d2f887d07181a5f9e19490c406d8a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000218",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9643488203945428,
+      "state_sha256": "e0c339c171a91dd69b5483acd84071546b54d971240a9c788f16d51c018b3056"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000219",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.7316994984066346,
+      "state_sha256": "2443817b3fafc0e876775ea8dfcce97c10b0864b660ab69cda28bbe7f62fc9d1"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000220",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9811628165259418,
+      "state_sha256": "6af2b2d15a65b795e14be1ba794ce599baa2961a6a63de03fb5db0ad4c3ccd25"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000221",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9985272482126533,
+      "state_sha256": "9197880a70a6f7eb1c1f60c8a6a6d2ab803a2ee61fe0811b5f81a47bb27a2bd3"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000222",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": false,
+      "score": 0.022181818086096046,
+      "state_sha256": "906938bd9e47a75ce38c8706119ddcfb4eff9990966ecd4c2ea5bd7ad5083146"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000223",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9652967922286262,
+      "state_sha256": "e5366ead677f38ded7f975d0f94277840a458db565d118e5324e9306f1b14537"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000224",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9924242000606649,
+      "state_sha256": "eeb9af0663323988a8775a8bf9ad71de0cee2cad2e0c8989fa95979a8b3a55ad"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000225",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.964359720629217,
+      "state_sha256": "6dce25aecb95a09dac7f283c78171a1764fe8bf15971df13bf3a3f32fcfa6a80"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000226",
+      "parent_group_id": "causal_centerline_upstream_x0031_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9985271311028415,
+      "state_sha256": "232eeaa9ffa4835b85b1a7e23df57ce955e529d5e4530164def54f572131473f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000227",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.997401537367339,
+      "state_sha256": "f65358d683619685798510a92e56575a14ebeb53af7d11fcada66b93b8ff0eac"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000228",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9980365929079171,
+      "state_sha256": "d92ef9cc0df99a75b7369c5d3c1c56b2a0cb1227da05c41cebff43a1137c2c7b"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000229",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9977109708139416,
+      "state_sha256": "88ec4e8bd290c0975ed401af4abbbf17aa2254d003784d232e767d34a13a38a6"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000230",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9982029221490354,
+      "state_sha256": "a1837347c38e51e25ce58ebcd5d5df7786571143a7efb39b8415b7aa24e8f669"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000231",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9942029038088659,
+      "state_sha256": "0c18d9875ecf045906efed3b587a05f315b193e35a142ae4f7c06232c14ee5af"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000232",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9977498148379389,
+      "state_sha256": "afdc7f1d2d8dec96ade2ef46dc08917697285da946926f0dcf34014617790227"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000233",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9947865111569831,
+      "state_sha256": "398ce8ddd1b52d7f9efa0d021619d3d0e9d52e195b99075d7a299603ced76f00"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000234",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9977119604975216,
+      "state_sha256": "f8736515e2cdf232e7f87fec46230113dea7d3be22ffce47747554410882be12"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000235",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.997006337245803,
+      "state_sha256": "6db592d3f4d0709cc3b60b55a19644b52e44d2bfa51524223b9fa89e514e7765"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000236",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9977641403102947,
+      "state_sha256": "3065a1a5b0af4a657ae4385c52f122cc4fb7633726c3399255a4a88d5fd93753"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000237",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.998495905915362,
+      "state_sha256": "af270d793a831550726f468416a88baa9ad4bea88acc719e7210dc578103d5a0"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000238",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9963001438591936,
+      "state_sha256": "6548bff558d38414caf079363e2089954ed52286528d056eb44bb4ab19b778d8"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000239",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.996085923812309,
+      "state_sha256": "4ee21f160961c323a5d9d4be59ca6c15be1eb74bd81cc6b5a351a531618f429f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000240",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9992535624784126,
+      "state_sha256": "52db5e0fbc93b9a35feaa489e0e62ee183f977fed2935f9d1f685fe5edf6e478"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000241",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9977650974873256,
+      "state_sha256": "c65d6dbc3b53e0705edc6acffa028f6df4d2fc2cfbeddebd5092771001e670ae"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000242",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9953236781879193,
+      "state_sha256": "d01f102d5026f083d9d3d5b45835d5514f0cdc064c8f56ccc483169cf1533457"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000243",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9970038754963814,
+      "state_sha256": "d6d65ca007667ba2dc44c548300bba1e3eae57968bec696f5b0e3eaba1dbf498"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000244",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9979715348292575,
+      "state_sha256": "4d10d0a2bf690ec23e801314b0f6e8c23d3bf816261e83ae08edf2efbc7885a7"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000245",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9992851866359674,
+      "state_sha256": "0d69424f3d67314ca597b255c4f41aca404a390c358db24e6a72f55d9672e46c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000246",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.997114633720309,
+      "state_sha256": "212b1772e36ba7f42f40ca5ec463301e544451c02acc58e0c81f0284117601e1"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000247",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9957911683033259,
+      "state_sha256": "deafdc4edcbb4d6fb2ed2cf838bd224c15b599953b1c5c4571c9bdf3b7249432"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000248",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.999231888222427,
+      "state_sha256": "55035165691d2736e4bc153aab66d6c2439ba2a9bfdd49b67406c05b185a37d2"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000249",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.997633654268891,
+      "state_sha256": "dab5e66abc27537da5da37072916ca8935ee5b21bebbba00b71353bd0a0557b1"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000250",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9945567587001253,
+      "state_sha256": "8f9492e1a1b9f49e059572be08307a8f65de9effe0460da26ccf872e9dbd7aa0"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000251",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9028106580067937,
+      "state_sha256": "38f96e43f26d54dd890d5b38bcc55424f6910a9fe49e5118609e886c5ce31b57"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000252",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9971669854554256,
+      "state_sha256": "64575059c29775e66b1b40aa0deabcfc5a7e78b46f2c0b025895d3c9f5ed782d"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000253",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9894539104031684,
+      "state_sha256": "848c09dcaba098e3c5cf46ea453d8b09126f96aad239cc497d337293ae642da8"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000254",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9980046095240843,
+      "state_sha256": "e04255a88dd2df50fb51f0953a1c8713139b2b632f9165ddb65d8aaa0049f832"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000255",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9990257867756006,
+      "state_sha256": "ba16955b81bde7ed00b4b7b7c21455f5a6203deaf8f46af929d91f7000834696"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000256",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9767961812588117,
+      "state_sha256": "d8f0dce880bdf22b1589e8652af8decd13007b5ce5008ea99f508ab3cb12fd45"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000257",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9939178702077783,
+      "state_sha256": "bf21777f372c0530570366e6a04317d728cef133a76b7eb9be365b9feb22d8a0"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000258",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9925601111249863,
+      "state_sha256": "9b1c89ca37493f488afc77e746687d7b0b9c0873761e21099d243352a6dfe51a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000259",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.995472864182901,
+      "state_sha256": "d53396422edf43a9de4236107cac2466be975600128c8d0e4c3a4c2f683c3e72"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000260",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9819652305762906,
+      "state_sha256": "4edfa284c7fba53c7aabfba0c8e0ffeb505455dcb7d32d97237453ae548f9ec7"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000261",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.48599405523654315,
+      "state_sha256": "3db27d90a5c1a3c5e8f75cb4d206e0d10574139400703076546e2393bf0316f4"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000262",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.805066201872325,
+      "state_sha256": "b3be99cb88e41a106ea2e3a9cc9ba1ef584f8f6883d8e7386906de6ff91d8a40"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000263",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9910494323761891,
+      "state_sha256": "4c04382e982842b89512725f1479c1f529fd2b51cd289d9de29c2be5a0c164e6"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000264",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.3088426060489597,
+      "state_sha256": "7fb33aa4a90a6c7e0a5d9ff22e1c8a991cc0d6003fa34e26708a35c81434fe76"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000265",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.5746134997501913,
+      "state_sha256": "e11df1f041e1ccf5ab61d2f9c62aa5e9e6df4cc9f89ef8dcc85cb7a305bf754d"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000266",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.35194841731529125,
+      "state_sha256": "f43d57d16a2eebd83ce899b718236cfede5843e0cdebecbf3dccaf4658cf7329"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000267",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.7650943722315352,
+      "state_sha256": "1d31a2d74356f626a62dbe645bce8e8d3de69535f08da4d3fe17332ec1013809"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000268",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.5918493470477884,
+      "state_sha256": "1634cb957ac4aea62e6ef8ab02a757dd4471a4feadd726497cbec2a30589a610"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000269",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9510988158650131,
+      "state_sha256": "ff4322141bb4685a38d847999496c8a2914cd86d70eea0ce3d1d3d00a1d7e006"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000270",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.999203009968108,
+      "state_sha256": "371b597f03d08f80add7856e9c9f796d54f3680f6bfcf862518bb2bf5b8ad008"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000271",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": false,
+      "score": 0.2078519767539435,
+      "state_sha256": "b9b5fa95a1a4e240319755c9fa7680dbc9a595da396894984b90313caf1c5558"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000272",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": false,
+      "score": 0.0648939920209893,
+      "state_sha256": "2bc015bf74fba1ecc564ee49a8f2b11ee92acb71b089d7ff2db994fbad724d2d"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000273",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.6936837692273872,
+      "state_sha256": "6dfe071ca2b0f84d0d1ac8b459be6adf5de68d34b31a92dabca81bcd299c6f33"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000274",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9909473540556903,
+      "state_sha256": "5fa0df5d9c21eeb4dbd908d56bf9b30dd795fd4ecc4e2cd7421626768c98f8f5"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000275",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9102075411518976,
+      "state_sha256": "383c6aa7df0d64de906f1e81939f2bfccc76ae2c3db0207e2741d283d7e24b9f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000276",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.2682973422524585,
+      "state_sha256": "af1a3727ea4c39ee3a4706feae179ba3fec28e90cf11248fc9dd09b495a4d520"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000277",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.5549327500624236,
+      "state_sha256": "35a0f1ac9bbedef1894a92a8db31a3ef9f160cbcb29e41b62a9dea26278d69c3"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000278",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9973403183127142,
+      "state_sha256": "7efb86a7228920e0fb774f75d291bf749616c88887feab5609a83dfeb74a304c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000279",
+      "parent_group_id": "causal_centerline_upstream_x0032_family4_acceptance",
+      "predicted_positive": false,
+      "score": 0.00970754588872904,
+      "state_sha256": "e7535ef6c51d2ce06827b89ae540d9201599a0a038671dfa19b377b0c6cf96a0"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000280",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9982476216600091,
+      "state_sha256": "6a7ecaec6777fff09d167f4f8b0586dd0490957fdfbc5c88a8d28b2368a2a2e7"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000281",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9980506238488857,
+      "state_sha256": "91c0637d5d7600a8932d5ec79334cb7fbe59be00c1fe74d1b4b7dab8534bd857"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000282",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9978938147691525,
+      "state_sha256": "26245d049188e0ba469d0e2ca80bd9e182b1685d1bea85f6bc17970dcd41a30d"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000283",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9984438995821556,
+      "state_sha256": "1bdf3adbb20bf4469e3250a7601cee21c66dfc757c8fc5cacc98589594825fcf"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000284",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9988243711611293,
+      "state_sha256": "6a95d8c4464b79a85dca44a3f4b82e9f4ce319802eb194cf613d474516b970ea"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000285",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9982370464700614,
+      "state_sha256": "aff7f0b65d6be6f68a6cfe895d57b13f85a2eb17d8a0db6ca3d6c04057d84918"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000286",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9979534298960089,
+      "state_sha256": "1fcf4cc0e976c1ce840e4a1171f5b9411a8ed79bd7dc6bb7a8e57f7a2303ce8b"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000287",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.998938169693268,
+      "state_sha256": "077e40cc1ff8357bd21a4929bc04514c7c0eb8f3f1806d9b613bda2a8ec0394c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000288",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9973505062384412,
+      "state_sha256": "b610962a62d6e370deb6c58fe998ce9e7f736ba410623c0883bf8004b6fc5057"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000289",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9984431541069492,
+      "state_sha256": "19d0720b20f5ae5edf88a52e9b8e251e648f5953e481cc9115ee3ffc7662d68f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000290",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9986073116754927,
+      "state_sha256": "72074bc0946f8d232235ddaa753a71e1c74adde55258f44d4b572334c848f197"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000291",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.99832337457294,
+      "state_sha256": "7b0979d3b942aa7904ce5f4a34fbceff470f1d4c9ba364c8f8a18960be18379e"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000292",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9975511142327741,
+      "state_sha256": "84bd7ddd2c3228fdec7a82c6dc01fb77f43b05850aeabafdceebf411516be358"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000293",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9987841217042198,
+      "state_sha256": "310c47114532620d83dcdcb2788b50a9e321902358f9268cc6c5251f89194788"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000294",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9984339546487251,
+      "state_sha256": "b2051a3e9b047e646ebfd1ddde1c2237246bbcae3da76a4847d5a2aab5b09262"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000295",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9901276702948243,
+      "state_sha256": "229a73ce558ae556b922503cad34d2366f24e276bac6614ea22d8cab2857872c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000296",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9979355714239566,
+      "state_sha256": "82b4a80eb3b54d22504c926f1cadb48c722b1c7e2b2dcc059b8188d885ad118d"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000297",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9985615647183492,
+      "state_sha256": "2520a644f7f3b12017bd9a591f7f0693e45853cef09ca83436751c1c459abc92"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000298",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9988026017645216,
+      "state_sha256": "29d90339258aaf586073bd02a51ea87012756a8c544fbc122d89e5cd9ed3470a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000299",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9970509743376068,
+      "state_sha256": "662679438b33498c6a77a5210e59d4701c1c8968b1d5c7a5132380a1d7e95d65"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000300",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9970583931216731,
+      "state_sha256": "f8e8c1d07186b76d4fadfc896318088d905876bde00ce43bbd04823f263215cb"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000301",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9992113892296521,
+      "state_sha256": "4d0d287c041e36fdf9c095b5714ab0f33853ddfdfc3dfb704f3f3c83b36cc54b"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000302",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9984659031384197,
+      "state_sha256": "91e851c41a39ae8c92d8d436a24bbe76418faa7e8c78e8f9df3022625aa85eab"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000303",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9896461495055994,
+      "state_sha256": "17056d5323119acc9727b815cd2fa536f997975bd755bc0fea8bd49674f2f266"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000304",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9979830929904726,
+      "state_sha256": "5e1161252742357522cca0a04b965073ca4d579a1f52eca80b1253d75a80329a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000305",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9987145513159565,
+      "state_sha256": "393916c65d9a6e53490a49127a3ca5929eda834177d8c7e88345bcf8aca3e3cf"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000306",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9986263236916111,
+      "state_sha256": "de60a63704028d82e3c3bd9a2ba7dd7ffe50fce58f91d4d8605343c4c882532a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000307",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9969906681671188,
+      "state_sha256": "c555949d0200c9dbafd14fe5e0100e496d9236e5020d5c5cc0e5bbe8151e5472"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000308",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9964984454550059,
+      "state_sha256": "16af9da65dda5456843b841dc5e378b87affa482fdeb2af3445f3bd702562647"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000309",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9989187926587823,
+      "state_sha256": "16a2c6e78996ef3384b3f8fdacccdbfe1369763811e9b91d7e37ae2d3269cd44"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000310",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9984091179258532,
+      "state_sha256": "5a33cad32e97bc7efe173a3b5d0a43a17016494c9d9cfac53f9c42ad3295b23c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000311",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9668192815906238,
+      "state_sha256": "ba8c5f4d40522c55b3acf86d3246fb7674ccbb6bc442075945fa790251b1d411"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000312",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9881401756206429,
+      "state_sha256": "0fabf472301df9651d795be47cf185a7a0363c54c612322d5a665ee567cb3cd8"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000313",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9981488658283652,
+      "state_sha256": "24bdac034e02902e7735e902d247711b1cbb2bd92fd7331dc9848020d14e377f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000314",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9871043457576403,
+      "state_sha256": "20839bdf89cb8ad0ee7fef74424f56dcf83c07bd622cc8f98b9e30cf5a363c81"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000315",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9923413838585464,
+      "state_sha256": "2f8960aae7365f516d6114ad1341b7542ab02bbd4c4887453dc0f01198fc1e32"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000316",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9978586609746005,
+      "state_sha256": "c38502c73e55fd0fa24a1d4c0c732a9139f60ac235f1bb46382d46e1c11f4408"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000317",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.8734967394421325,
+      "state_sha256": "6d4ab931e7c92e4bb69ccef01dc7da5c1d1b8959b88d7f7bdc0e0cdb34ee3a82"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000318",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9753299305554551,
+      "state_sha256": "7a89ae3acc7d6a846087d44a76ff661aa92a88db6c7f9fc0a27f610748714aaf"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000319",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9903173958695027,
+      "state_sha256": "20e2ff308631b5dac205683b19bd137f413abec01cf851195f71f0333bd86ad1"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000320",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9982405632390429,
+      "state_sha256": "03e492f6e021a5150aad70db42c966bab6f1fcb9db33ab25729d9ef928bc4e0b"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000321",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9423078021313559,
+      "state_sha256": "7ece1f50c1857bcbc93797499198b1992eb649e465f84f4b58f0fdddd68637ce"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000322",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.4725687918866915,
+      "state_sha256": "1e64d60edf1016dcd5b4bb0734b85397047377daae71e23e96d3eecc4ca7233a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000323",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.3056220486710619,
+      "state_sha256": "11bd52b6701a5a4c02a3ef9a40a754e3d362f85ccc8109bb100f1eaf8f973ff8"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000324",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9353625137640937,
+      "state_sha256": "7a53c4315df14841f21789b3470e1e2e585a86024ba507a16a27724ea2531c3c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000325",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": false,
+      "score": 0.055894334250397866,
+      "state_sha256": "400f0a74379fa9e005066a2105df4dafc8b0de4e86708d6e75a0b21e2a7d033e"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000326",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.8269331478095877,
+      "state_sha256": "f7680856d1318225e2202547e2999863fcfae51c071ea44f7a75e0a5a0a62947"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000327",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.932526042897056,
+      "state_sha256": "6f5798e6266a9f53b438b5555f5d5d1510afa94b811059e57584df19bf2ea729"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000328",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.7402509959420397,
+      "state_sha256": "bebda368690bf464cd9ce420f6bf06905b52e25d38c4f3abd9c926702536b2f6"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000329",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": false,
+      "score": 0.05694814610255196,
+      "state_sha256": "5d04d57919d6044fb72ad0abe3a24978d85c6c354f6fea6b7c4ab3915bd41c45"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000330",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9730101279331144,
+      "state_sha256": "3f79f5f1eee478ea5ea5ad7a3f214aec78c155d1ff8aa172d4a4c7e8833075b9"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000331",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": true,
+      "score": 0.9751262659687383,
+      "state_sha256": "6ee57e18a7048f7bc96fd0a9535c7b8c140a2819b8cf9577d96457ca88795a6a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000332",
+      "parent_group_id": "causal_centerline_upstream_x0033_family4_acceptance",
+      "predicted_positive": false,
+      "score": 0.09928631448550795,
+      "state_sha256": "d826843ad94a50d49a7b14a2796f564783df5c993967f1eaebcfbfaf66badbb1"
+    }
+  ],
+  "field_file_sha256": "54a274581e95fc2d65e1152614322de6084096bf7cd8bdb9f34cb3a16d5bbe03",
+  "field_manifest_sha256": "23026c7e75161e3c352b06b0ce889d30d0d78ac95ae131bc7218e52a6e3c91d2",
+  "field_path": "JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/family_landing_predictor/upstream/field.npz",
+  "outcome_labels_read": false,
+  "outcome_labels_used": false,
+  "prediction_can_admit_tube_rows": false,
+  "prediction_can_filter_acquisition": false,
+  "role": "acceptance",
+  "schema": "jit_policy_family_landing_forward_scores_v1",
+  "scores_sha256": "627063a3c2f0085be595e5f267a0139fb2e92af60cac5e7dcdbfe80cd82c640e",
+  "status": "locked_before_outcome_analysis",
+  "upstream_candidate_count": 333
+}

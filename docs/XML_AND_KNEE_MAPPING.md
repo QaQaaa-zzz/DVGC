@@ -1,4 +1,4 @@
-# 原始 XML 使用方式与 Knee 动作映射说明
+# 权威 XML 使用方式与 Knee 动作映射说明
 
 ## 1. 模型文件处理原则
 
@@ -7,6 +7,10 @@
 ```text
 assets/orange_bike_4kg_horizontal.xml
 ```
+
+文件名中的 `4kg` 是保留的历史名称。当前文件内唯一命名负载
+`geom name="load"` 的权威质量为 2.0 kg；保持旧路径可以让历史产物继续
+按旧 hash 解析，而不会引入第二份可选模型。
 
 代码不会再执行以下操作：
 
@@ -193,6 +197,6 @@ contact_mode = "imu"
 `tests/test_source_contracts.py` 还检查：
 
 - 环境直接调用 `MjModel.from_xml_path`；
-- 唯一模型路径为 `orange_bike_4kg_horizontal.xml`；
+- 唯一模型路径为 `orange_bike_4kg_horizontal.xml`，其中 `4kg` 仅为历史文件名；
 - 工程中不存在 `prepare_runtime_xml`；
 - 配置和代码中不存在 `orange_bike_runtime.xml`。

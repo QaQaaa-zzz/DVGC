@@ -1,0 +1,125 @@
+{
+  "schema": "jit_expansion_validation_protocol_config_v1",
+  "output_dir": "JIT/runs/pi_unified_expansion_validation/pi_0_iter0_group_disjoint_20260831",
+  "expected_protocol_sha256": "9ec0a1e8c314cc5710688a3537fbd339f520d4db3c4268d20715bcde938586b0",
+  "protocol": {
+    "schema": "jit_expansion_validation_protocol_v1",
+    "status": "predeclared",
+    "iteration": 0,
+    "policy_name": "pi_0",
+    "frozen_policy": "JIT/runs/frozen_unified/pi_0_round1_10009600_20260831/frozen_unified_policy.json",
+    "frozen_policy_file_sha256": "b94709172dfe4734760b567e5acde172172e853a9c5265b471c1272c7e9f0070",
+    "policy_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+    "policy_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+    "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+    "frozen_train_evidence": "JIT/runs/pi_unified_transition_band/pi_0_iter0_train_evidence_frozen_20260831",
+    "frozen_train_manifest_sha256": "27832237a85eccfa0ae2eaea7575dd2efda12535a3815fee0c6d0660f58921b8",
+    "validation_seed": 1000006,
+    "sources": {
+      "upstream": {
+        "catalog_path": "JIT/runs/continuation_candidates/v_up_nominal_piup9977856_sources3_20260827/catalog.json",
+        "catalog_file_sha256": "52b8b1fcb0f3749d772c75f2efb495f94df974ab87f1fca37cfc509931186c2f",
+        "labels_path": "JIT/runs/continuation_labels/v_up_piup9977856_nominal1_20260827/labels.json",
+        "labels_file_sha256": "b22876b60da3522a1271458499b540863fcb0e8ecfe05cd21b649d59e0b29922",
+        "anchors": [
+          {
+            "source_bank": "source_4988928",
+            "snapshot": "snapshots/snapshot_000037",
+            "parent_group_id": "transition_4988928__1000006",
+            "snapshot_parent_trajectory": "transition_4988928__1000006",
+            "role": "ascending_entry",
+            "tick": 34,
+            "state_sha256": "274e0e4b8f69b57230c01662efecd3acfe46ab182f710e1cfe138bf82910031c"
+          },
+          {
+            "source_bank": "source_7987200",
+            "snapshot": "snapshots/snapshot_000032",
+            "parent_group_id": "transition_7987200__1000006",
+            "snapshot_parent_trajectory": "transition_7987200__1000006",
+            "role": "ascending_entry",
+            "tick": 32,
+            "state_sha256": "936b66345b60969eff7d3859185a86ef8ece6c0d4ce9f589c156abe6be1ae2cc"
+          },
+          {
+            "source_bank": "source_9977856",
+            "snapshot": "snapshots/snapshot_000032",
+            "parent_group_id": "transition_9977856__1000006",
+            "snapshot_parent_trajectory": "transition_9977856__1000006",
+            "role": "ascending_entry",
+            "tick": 29,
+            "state_sha256": "270009ae5595bf493f1ac7777d908a7da3d241b5d369691d7f567f271abc1a4a"
+          }
+        ]
+      },
+      "downstream": {
+        "catalog_path": "JIT/runs/handoff_bank/catalog_20260827.json",
+        "catalog_file_sha256": "4795623ca613ea02802aebc196d4ce3f7ea3a36452a63fbca743145ad0d591aa",
+        "labels_path": "JIT/runs/continuation_labels/v_down_pi_down25600_nominal1_global_seed_v2_20260827/labels.json",
+        "labels_file_sha256": "b6cda4a633ad3b825c2cf0a52e407735ffef8c7942464139d17bc349f2308e8f",
+        "anchors": [
+          {
+            "source_bank": "handoff_bank_4988928",
+            "snapshot": "snapshots/snapshot_000039",
+            "parent_group_id": "transition_4988928__1000006",
+            "snapshot_parent_trajectory": "seed-1000006",
+            "role": "post_apex",
+            "tick": 57,
+            "state_sha256": "08750fd2c9f30c684a4701de9313ca84dba3e5e4ea3bf59523f32c03e5434cbc"
+          },
+          {
+            "source_bank": "handoff_bank_9977856_jit8",
+            "snapshot": "snapshots/snapshot_000039",
+            "parent_group_id": "transition_9977856__1000006",
+            "snapshot_parent_trajectory": "seed-1000006",
+            "role": "post_apex",
+            "tick": 53,
+            "state_sha256": "ac817cd763393c36aef54e74ab0cc2f35bd6e573c50e9e636ee868a5ce27459e"
+          }
+        ]
+      }
+    },
+    "panels": {
+      "upstream": {
+        "action_names": ["steer", "rear_wheel_drive", "hip", "knee"],
+        "signs": [-1, 1],
+        "strengths": [0.025, 0.1],
+        "durations": [4, 8, 16],
+        "max_label_ticks": 400,
+        "terminal_clipping": true
+      },
+      "downstream": {
+        "action_names": ["hip"],
+        "signs": [1],
+        "strengths": [0.15, 0.2, 0.3, 0.32, 0.35, 0.4, 0.45, 0.5],
+        "durations": [30],
+        "max_label_ticks": 400,
+        "terminal_clipping": true
+      }
+    },
+    "near_duplicate_audit": {
+      "exact_state_sha256": true,
+      "actor_observation_atol": 0.01,
+      "all_features_must_be_within_tolerance": true
+    },
+    "interaction_budget": {
+      "attempt_count": 160,
+      "maximum_acquisition_environment_interactions": 1824,
+      "maximum_labeling_environment_interactions": 64000,
+      "training_transitions": 0
+    },
+    "data_policy": {
+      "validation_outcomes_may_calibrate_c0": true,
+      "validation_rows_may_enter_train_or_tube": false,
+      "test_outcomes_inspected": false,
+      "final_evaluation_data_used": false
+    },
+    "claim_boundary": {
+      "expansion_validation_only": true,
+      "continuation_field_trained": false,
+      "tube_1_constructed": false,
+      "pi_1_trained": false,
+      "jce_jel_claim": false,
+      "certified_safe_set_claim": false
+    }
+  }
+}

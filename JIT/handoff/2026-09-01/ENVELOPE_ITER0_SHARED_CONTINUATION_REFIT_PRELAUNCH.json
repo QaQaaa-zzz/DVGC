@@ -1,0 +1,45 @@
+{
+  "status": "predeclared_before_shared_architecture_freeze_and_full_train_refit",
+  "iteration": 0,
+  "policy": "pi_0",
+  "architecture": "76->8_tanh->1",
+  "model_family": "tiny_mlp_tanh",
+  "parameter_count_per_phase": 625,
+  "upstream_train_gate": {
+    "summary_sha256": "093e9e5d6ed7845046cf3abb483fcfecee3107ffbcda771ce85a4880a1279541",
+    "pooled_oof_roc_auc": 0.902722231882378,
+    "worst_fold_roc_auc": 0.7934065934065934,
+    "passed": true
+  },
+  "downstream_train_gate": {
+    "summary_sha256": "c2bb51f0b4432db8d78c2f17bf941521aa385dec57c387f604d5a59832a100c3",
+    "pooled_oof_roc_auc": 1.0,
+    "worst_fold_roc_auc": 1.0,
+    "passed": true
+  },
+  "train_refit": {
+    "upstream_rows": 720,
+    "upstream_positive": 639,
+    "upstream_negative": 81,
+    "downstream_rows": 2619,
+    "downstream_positive": 2589,
+    "downstream_negative": 30,
+    "shared_architecture": true,
+    "phase_specific_weights": true,
+    "phase_specific_calibration": true,
+    "validation_rows_used": 0,
+    "environment_interactions": 0,
+    "ppo_transitions": 0
+  },
+  "protocol_sha256": "163768104c459e471515a846860876b17daeaa56e262cf526348a01ae6cd9c26",
+  "next_gate_if_refit_completes": "predeclare one fresh group-disjoint independent validation bank for both phase-specific fields; calibrate separate thresholds only on that fresh bank before Tube_1",
+  "claim_boundary": {
+    "architecture_may_be_frozen_after_prior_train_gates": true,
+    "fields_are_uncalibrated_after_train_only_refit": true,
+    "fresh_validation_bank_not_yet_predeclared": true,
+    "tube_1_not_authorized": true,
+    "pi_1_not_trained": true,
+    "jce_jel_not_claimed": true,
+    "certified_safe_set_not_claimed": true
+  }
+}

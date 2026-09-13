@@ -1,3 +1,5 @@
+> **历史规格/报告，非当前JIT论文或运行指令。** 2026-09-12维护说明：本文件正文保留原阶段语义；当前JIT采用固定近地起点、首次有效落地见证及延迟候选探索，见[当前论文与维护入口](../JIT/docs/paper/README.md)。旧文中的“最终定稿/认证/next”不构成当前实现、实验通过或启动授权。
+
 # Jump Envelope Learning RA-L Core Method Contract
 
 ## Scope

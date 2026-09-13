@@ -1,0 +1,1 @@
+train_phase_expert.py --phase descent_recovery --smoke --config JIT/configs/descent_recovery_smoke.json --run-id phase_d_new_reward_smoke_25600_seed820001_20260827 --eval-seeds 1000007 1000008

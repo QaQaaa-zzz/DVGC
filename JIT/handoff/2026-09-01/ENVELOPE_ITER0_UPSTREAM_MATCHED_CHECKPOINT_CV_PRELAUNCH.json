@@ -1,0 +1,49 @@
+{
+  "schema": "jit_handoff_v1",
+  "status": "prelaunch_locked",
+  "date": "2026-09-01",
+  "topic": "iteration0_upstream_matched_checkpoint_domain_cv",
+  "scientific_state": {
+    "prior_full_three_checkpoint_cv_supported": false,
+    "prior_full_three_checkpoint_mean_auc": 0.6625978052454596,
+    "prior_full_three_checkpoint_worst_auc": 0.4663860186248246,
+    "matched_panel_audit_complete": true,
+    "matched_4988928_candidate_count": 240,
+    "matched_4988928_positive_count": 221,
+    "matched_4988928_negative_count": 19,
+    "matched_4988928_missing_cells": 0,
+    "new_environment_interactions_required": 0
+  },
+  "matched_train": {
+    "checkpoint_domains": [
+      "transition_4988928",
+      "transition_7987200",
+      "transition_9977856"
+    ],
+    "candidate_count_per_domain": 240,
+    "candidate_count": 720,
+    "positive_count": 639,
+    "negative_count": 81,
+    "parent_group_count": 15,
+    "freeze_protocol_sha256": "2df65325660ac54c914b14fca98d1d5e2f0f52a3da74bf941b4979edbc32bf1d"
+  },
+  "fair_checkpoint_cv": {
+    "protocol_sha256": "908e5b3c0e235b666dfe6368504e75343eae5a9d95dd3cab85daa1803981573d",
+    "model_unchanged": true,
+    "model": "76-D linear logistic, L2=0.01, 4000 fixed full-batch Adam steps",
+    "sample_weighting": "equal_parent_label_cell_mass",
+    "gate": {
+      "minimum_mean_logo_roc_auc": 0.7,
+      "minimum_worst_logo_roc_auc": 0.6,
+      "require_positive_score_gap_in_every_fold": true
+    },
+    "consumed_validation_reused": false,
+    "test_data_used": false,
+    "final_evaluation_data_used": false,
+    "tube_1_authorized_before_result": false
+  },
+  "decision_rule": {
+    "pass": "matched acquisition-family confound is removed and TRAIN-side cross-checkpoint ranking is supported; fresh validation may be predeclared but Tube_1 remains locked",
+    "fail": "do not collect more matched-panel data merely to force the gate; acquisition-family confound is removed, so revise the upstream continuation representation/model on TRAIN only before any fresh validation"
+  }
+}
