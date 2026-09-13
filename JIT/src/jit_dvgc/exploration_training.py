@@ -8,6 +8,25 @@ import json,time,hashlib,sys
 import numpy as np
 
 
+
+def verify_restored_checkpoint(parent_path, restored_path):
+    """Compare decoded checkpoint state; mapping serialization order is immaterial."""
+    from flax.serialization import msgpack_restore
+    parent_path=Path(parent_path);restored_path=Path(restored_path)
+    for path in (parent_path,restored_path):
+        identity=json.loads((path.parent/'identity.json').read_text())
+        if _sha(path)!=identity['state_sha256']:raise ValueError('checkpoint file hash mismatch')
+    def compare(left,right,path='state'):
+        if isinstance(left,dict):
+            if not isinstance(right,dict) or set(left)!=set(right):raise ValueError('checkpoint structure mismatch: '+path)
+            return sum(compare(left[k],right[k],path+'/'+str(k)) for k in left)
+        left=np.asarray(left);right=np.asarray(right)
+        if left.shape!=right.shape or left.dtype!=right.dtype or not np.array_equal(left,right):
+            raise ValueError('checkpoint value mismatch: '+path)
+        return 1
+    return compare(msgpack_restore(parent_path.read_bytes()),msgpack_restore(restored_path.read_bytes()))
+
+
 def resume_metadata(checkpoint_path, spec):
     """Validate an immutable checkpoint and retain its per-policy novelty ledger.
 
