@@ -45,3 +45,17 @@ def test_delayed_pulses_charge_unperturbed_prefix_and_cycle_locations():
     s=dict(rounds=4,num_envs=8,pulse_steps=3,horizon=400,policy_steps=128000,pulse_start_schedule=[0,10])
     assert [pulse_delay(s,i) for i in range(4)]==[0,10,0,10]
     assert budget_contract(s,7)['prefixes']==8*(3+13+3+13)
+
+
+def test_terminal_prefix_quality_preserves_failure_success_and_conflict():
+    from jit_dvgc.pulse_exploration_runtime import terminal_prefix_label
+    assert terminal_prefix_label(False,True)[0]==0
+    assert terminal_prefix_label(True,False)[0]==1
+    assert terminal_prefix_label(True,True)[0] is None
+    assert terminal_prefix_label(True,None)[0] is None
+    assert terminal_prefix_label(False,None)[0]==0
+    rows=[dict(cell=str(i),label=label,learning_attempted=False,prefix_terminal=True)
+          for i,label in enumerate([0,1,None])]
+    r,mask,ledger,_=pulse_feedback(rows,[],dict(novelty=.25,success=1.,failure=1.))
+    np.testing.assert_allclose(r,[-.75,1.25,0]);assert mask.tolist()==[True,True,False]
+    assert len(ledger)==3

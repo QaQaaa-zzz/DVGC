@@ -15,6 +15,12 @@ def suffix_label(valid, failure, timeout, done, horizon_reached):
     return int(positive),outcome
 
 
+def terminal_prefix_label(valid, failure):
+    """Old tapes lack failure flags: a landing then cannot establish success."""
+    if valid and failure is None:return None,'legacy_terminal_landing_unresolved'
+    return suffix_label(bool(valid),bool(failure),False,True,False)
+
+
 def aggregate_labels(attempts,order):
     if any(a['label']==1 for a in attempts):return 1
     by_policy={a['policy']:a['label'] for a in attempts}
@@ -78,6 +84,7 @@ def collect(spec, output):
             finite=jp.all(jp.isfinite(nxt.data.qpos),axis=-1)&jp.all(jp.isfinite(nxt.data.qvel),axis=-1)
             terminal=nxt.done.astype(bool)|~finite
             tape=dict(observation=s.obs['privileged_state'],raw_action=raw,log_prob=dist.log_prob(logits,raw),value=net.value_network.apply(normalizer,params['value'],s.obs),mask=alive&(tick>=delay),prefix_mask=alive,terminal=terminal,finite=finite,action=action,base_action=b,delta=delta,effective_delta=effective,qpos=nxt.data.qpos,qvel=nxt.data.qvel,phase=nxt.info['active_phase'])
+            tape.update(physical_failure=nxt.info['physical_failure'],end_code=nxt.info['end_code'])
             tape.update({'snap/'+k:v for k,v in snapshot_arrays(nxt).items()})
             def choose(path,n,o):
                 return n if _shared_warp(path) else jp.where(alive.reshape((count,)+(1,)*(n.ndim-1)),n,o)
@@ -87,7 +94,20 @@ def collect(spec, output):
         return key,tape
     start=time.monotonic();rng,key=jax.random.split(state['rng'])
     write(output/'status.json',dict(phase='running',charged_interactions=count*prefix_steps))
-    next_rng,tape=jax.device_get(jax.jit(run)(key));np.savez_compressed(output/'prefixes.npz',**tape)
+    if spec.get('reuse_prefix_collection'):
+        import shutil
+        previous=Path(spec['reuse_prefix_collection']);old=read(previous.parent/'collection_spec.json')
+        for field in ['round_index','explorer_checkpoint','pulse_steps','num_envs','delta_limit','bank','seed','pulse_start_schedule']:
+            if old.get(field)!=spec.get(field):raise ValueError('reused prefix contract differs: '+field)
+        if _file_sha(previous/'behavior.msgpack')!=_file_sha(output/'behavior.msgpack'):raise ValueError('reused behavior differs')
+        for filename in ['prefixes.npz','update_state.msgpack']:
+            if spec['input_files'].get(str(previous/filename))!=_file_sha(previous/filename):raise ValueError('unlocked reused prefix state')
+        tape=dict(np.load(previous/'prefixes.npz'))
+        state=serialization.from_bytes(state,(previous/'update_state.msgpack').read_bytes());next_rng=state['rng']
+        shutil.copyfile(previous/'prefixes.npz',output/'prefixes.npz')
+        write(output/'reuse.json',dict(previous=str(previous),physics_replayed=False,charged_interactions=0))
+    else:
+        next_rng,tape=jax.device_get(jax.jit(run)(key));np.savez_compressed(output/'prefixes.npz',**tape)
     if np.any(tape['prefix_mask']&~tape['finite']):raise ValueError('nonfinite pulse prefix')
     state['rng']=next_rng;(output/'update_state.msgpack').write_bytes(serialization.to_bytes(state))
     generator={**member['policy'],'actor_sha256':canonical_sha256(dict(base=member['policy']['actor_sha256'],residual=_file_sha(output/'behavior.msgpack'),delta=spec['delta_limit'],pulse_steps=spec['pulse_steps'],pulse_start_step=delay)),'payload_sha256':_file_sha(output/'behavior.msgpack')}
@@ -95,15 +115,22 @@ def collect(spec, output):
     for e in range(count):
         t=int(np.flatnonzero(tape['prefix_mask'][:,e])[-1])
         arrays={k[5:]:v[t,e] for k,v in tape.items() if k.startswith('snap/')}
-        snap=snapshot_from_arrays(arrays,env=env,record=generator,parent_trajectory=str(output/'prefixes.npz')+'::'+str(e),parent_state_sha256=_file_sha(output/'prefixes.npz'))
-        path=output/'snapshots'/f'{e:05d}';save_unified_envelope_snapshot(path,snap)
+        terminal=bool(tape['terminal'][t,e])
+        phase='upstream' if int(arrays['info/active_phase'])==0 else 'downstream'
         coords=physical_coordinates_from_arrays(tape['qpos'][t,e],tape['qvel'][t,e],bundle=env._bundle)
-        phase='upstream' if snap.active_phase==0 else 'downstream'
-        rows.append(dict(index=e,cell=_cell_id(phase,'root_geometry_v1',quantize_coordinates(coords,ROOT_GEOMETRY_FIELDS)),coordinates=coords,phase=phase,snapshot=str(path),state_sha256=physical_state_sha256(snap),snapshot_context_sha256=snapshot_context_sha256(snap),prefix_file=str(output/'prefixes.npz'),prefix_sha256=_file_sha(output/'prefixes.npz'),behavior_sha256=_file_sha(output/'behavior.msgpack'),prefix_terminal=bool(tape['terminal'][t,e]),pulse_start_step=delay,pulse_applied_steps=int(tape['mask'][:,e].sum()),label=None,learning_attempted=False))
+        if terminal:
+            # Terminal evidence is never passed to the nonterminal snapshot API.
+            label,reason=terminal_prefix_label(bool(arrays['down/valid_contact_seen']),bool(tape['physical_failure'][t,e]) if 'physical_failure' in tape else None)
+            endpoint=dict(snapshot=None,state_sha256=canonical_sha256(dict(qpos=arrays['data/qpos'].tolist(),qvel=arrays['data/qvel'].tolist())),snapshot_context_sha256=canonical_sha256(dict(terminal_prefix_sha256=_file_sha(output/'prefixes.npz'),lane=e,tick=t)),prefix_label=label,terminal_reason=reason,endpoint_kind='terminal_trace',terminal_tick=t)
+        else:
+            snap=snapshot_from_arrays(arrays,env=env,record=generator,parent_trajectory=str(output/'prefixes.npz')+'::'+str(e),parent_state_sha256=_file_sha(output/'prefixes.npz'))
+            path=output/'snapshots'/f'{e:05d}';save_unified_envelope_snapshot(path,snap)
+            endpoint=dict(snapshot=str(path),state_sha256=physical_state_sha256(snap),snapshot_context_sha256=snapshot_context_sha256(snap),endpoint_kind='continuation_snapshot')
+        rows.append(dict(index=e,cell=_cell_id(phase,'root_geometry_v1',quantize_coordinates(coords,ROOT_GEOMETRY_FIELDS)),coordinates=coords,phase=phase,**endpoint,prefix_file=str(output/'prefixes.npz'),prefix_sha256=_file_sha(output/'prefixes.npz'),behavior_sha256=_file_sha(output/'behavior.msgpack'),prefix_terminal=terminal,pulse_start_step=delay,pulse_applied_steps=int(tape['mask'][:,e].sum()),label=None,learning_attempted=False))
     write(output/'candidates.json',rows)
     write(output/'network_inventory.json',dict(actor_parameters=sum(x.size for x in jax.tree.leaves(params['policy'])),critic_parameters=sum(x.size for x in jax.tree.leaves(params['value'])),base_actor_frozen=True,base_critic_frozen=True,inputs=106,history_frames=3,hidden=[256,256,256],output_actions=4))
     write(output/'hyperparameters.json',spec)
-    write(output/'status.json',dict(phase='completed',charged_interactions=count*prefix_steps,active_interactions=int(tape['prefix_mask'].sum()),pulse_training_steps=int(tape['mask'].sum()),pulse_start_step=delay,wall_seconds=time.monotonic()-start))
+    write(output/'status.json',dict(phase='completed',charged_interactions=0 if spec.get('reuse_prefix_collection') else count*prefix_steps,active_interactions=int(tape['prefix_mask'].sum()),pulse_training_steps=int(tape['mask'].sum()),pulse_start_step=delay,wall_seconds=time.monotonic()-start))
 
 
 def evaluate(spec, output):
@@ -174,7 +201,7 @@ def evaluate(spec, output):
         del initial,restored
         jax.clear_caches()
     for r in rows:
-        if r.get('prefix_terminal'):r.update(label=0,terminal_reason='pulse_terminated_before_handoff')
+        if r.get('prefix_terminal'):r.update(label=r.get('prefix_label'),witness=spec['proposer'] if r.get('prefix_label')==1 else None)
         elif r['label']!=1:r['label']=aggregate_labels(r['attempts'],spec['order'])
     write(output/'results.json',rows)
     write(output/'status.json',dict(phase='completed',charged_interactions=charged,active_interactions=active_count,padding_interactions=charged-active_count,successes=sum(r['label']==1 for r in rows),wall_seconds=time.monotonic()-start))

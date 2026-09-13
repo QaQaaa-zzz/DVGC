@@ -135,6 +135,7 @@ def run(spec_path,output):
         for index in range(first_round,spec['rounds']):
             d=root/f'round_{index:04d}';d.mkdir()
             ex={**spec,'bank':str(bank_path),'round_index':index,'explorer_checkpoint':checkpoint}
+            if index!=first_round:ex.pop('reuse_prefix_collection',None)
             if index==first_round and spec.get('reuse_collection'):
                 collection=Path(spec['reuse_collection'])
                 old=read(collection/'hyperparameters.json')
@@ -172,7 +173,7 @@ def run(spec_path,output):
             # Accumulate positives only in witnessed reset support; failed cells stay in visited ledger.
             keys={r['key'] for r in support['entries']};support.pop('support_sha256')
             for r in rows:
-                if r['label']==1 and r['snapshot_context_sha256'] not in keys:
+                if r['label']==1 and not r.get('prefix_terminal',False) and r['snapshot_context_sha256'] not in keys:
                     support['entries'].append(support_row(r,True));keys.add(r['snapshot_context_sha256'])
                     for filename in ['identity.json','snapshot.pkl']:
                         p=Path(r['snapshot'])/filename;support['inputs'][str(p)]=_file_sha(p)
