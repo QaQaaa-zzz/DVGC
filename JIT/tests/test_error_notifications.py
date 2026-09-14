@@ -12,7 +12,7 @@ def test_active_only_dedup_and_pointer_change(tmp_path):
     manifest.write_text(json.dumps({"lineage": str(status), "previous_failed_attempt": str(old)}))
     state, alerts = {}, []
     send = lambda *args: alerts.append(args)
-    for phase in ("running", "waiting", "completed", "blocked"):
+    for phase in ("running", "waiting", "round_completed", "blocked"):
         status.write_text(json.dumps({"phase": phase}))
         check_once([manifest], state, send)
     assert not alerts
@@ -38,3 +38,20 @@ def test_delivery_failure_retries(tmp_path):
     check_once([manifest], state, lambda *args: None)
     assert len(state["delivered"]) == 1
     assert not state["delivery_errors"]
+
+
+def test_completion_waits_for_whole_run_and_deduplicates(tmp_path):
+    lineage, execution = tmp_path / "lineage.json", tmp_path / "execution.json"
+    manifest = tmp_path / "ACTIVE_RUN.json"
+    manifest.write_text(json.dumps({"lineage": str(lineage), "execution": str(execution)}))
+    lineage.write_text(json.dumps({"phase": "completed"}))
+    execution.write_text(json.dumps({"phase": "running"}))
+    state, alerts = {}, []
+    send = lambda *args: alerts.append(args)
+    check_once([manifest], state, send)
+    assert not alerts
+    for wall in (1, 2):
+        execution.write_text(json.dumps({"phase": "completed", "wall_seconds": wall}))
+        check_once([manifest], state, send)
+    assert len(alerts) == 1
+    assert alerts[0][0] == "JIT 实验正常结束"

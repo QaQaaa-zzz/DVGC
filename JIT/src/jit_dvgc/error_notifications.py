@@ -1,4 +1,4 @@
-"""Desktop error alerts for explicitly selected active JIT runs (CPU only)."""
+"""Desktop error and completion alerts for selected active JIT runs (CPU only)."""
 import argparse
 import fcntl
 import hashlib
@@ -44,6 +44,26 @@ def find_failure(manifest_path):
     return None
 
 
+def find_completion(manifest_path):
+    """Require all declared top-level statuses to finish, not a child stage."""
+    manifest_path = Path(manifest_path)
+    manifest = read_json(manifest_path)
+    paths = []
+    for key in ("lineage", "execution"):
+        if key not in manifest:
+            continue
+        path = Path(manifest[key])
+        if not path.is_absolute():
+            path = manifest_path.parent / path
+        status = read_json(path)
+        if status.get("phase", status.get("status")) != "completed":
+            return None
+        paths.append(str(path.resolve()))
+    if paths:
+        return {"phase": "completed", "paths": paths}
+    return None
+
+
 def notify(title, body):
     subprocess.run(["notify-send", "--app-name=JIT", "--urgency=critical",
                     title, body], check=True, capture_output=True, text=True, timeout=10)
@@ -56,6 +76,13 @@ def check_once(manifests, state, send=notify):
         try:
             failure = find_failure(manifest)
             if failure is None:
+                completion = find_completion(manifest)
+                if completion is None:
+                    continue
+                fingerprint = hashlib.sha256(json.dumps(completion, sort_keys=True).encode()).hexdigest()
+                if fingerprint not in seen:
+                    send("JIT 实验正常结束", "当前实验已正常完成。\n状态文件：\n" + "\n".join(completion["paths"]))
+                    seen[fingerprint] = {**completion, "notified_unix": time.time()}
                 continue
             fingerprint = hashlib.sha256(json.dumps(failure, sort_keys=True).encode()).hexdigest()
             if fingerprint in seen:
