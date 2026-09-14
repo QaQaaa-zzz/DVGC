@@ -1,0 +1,2064 @@
+{
+  "schema": "jump_historical_landing_evidence_v1",
+  "date": "2026-09-14",
+  "data_role": "RETROSPECTIVE_ALREADY_USED_DEVELOPMENT_DIAGNOSTIC",
+  "correction": "Eventual failure does not negate earlier recorded landing/riding. Descriptive intervals do not establish new-task success. Original labels and raw records are unchanged.",
+  "audit": {
+    "schema": "jump_historical_landing_window_audit_v1",
+    "control_dt": 0.02,
+    "source_root": "/home/qy/DVGC",
+    "new_control_steps": 0,
+    "new_physics_steps": 0,
+    "new_optimizer_updates": 0,
+    "descriptor": "post-Apex; abs(front/rear terrain clearance)<=0.01m; abs roll<=5deg; abs pitch<=10deg; vx>=1m/s",
+    "post_hoc": true,
+    "window_duration": "last timestamp minus first timestamp, not frame_count*dt",
+    "claim_boundary": "Descriptive recorded landing/riding intervals, not a new full-task success adjudication. New tracking_values_only excludes contact/collision and event-chain evidence, so it cannot qualify task success.",
+    "tracking_config": "/home/qy/DVGC/runs/worktrees/jump-planning/JUMP/configs/qualification_source_expert.json",
+    "tracking_config_sha256": "3684e93e3ad7bd6f35ab17a064ee881fedfe67fa24b98c35acd4287f06b46c45",
+    "tracking_thresholds": {
+      "nominal_speed": 2.0,
+      "recovery_roll": 0.08726646259971647,
+      "recovery_pitch": 0.17453292519943295,
+      "recovery_rate": 0.5,
+      "recovery_yaw": 0.08726646259971647,
+      "recovery_lateral": 0.15,
+      "recovery_speed_error": 0.4
+    },
+    "tracking_scope": "Post-Apex numerical recovery thresholds only, sampled at control endpoints; excludes terrain descriptor, contacts, collision and new event chain. No passing 0.5s numerical hold occurs in these old traces; this is not a new-scene evaluation.",
+    "case_count": 16,
+    "cases": [
+      {
+        "case": "earlier_4988928__980001",
+        "policy": "earlier_4988928",
+        "seed": 980001,
+        "checkpoint": "JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/checkpoints/transition_4988928",
+        "source_trace": "JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/evaluations/transition_4988928/seed_980001.npz",
+        "source_sha256": "8110dc3c80b2077e1f86deba7c30ae15160e6708e218816dffb3fa6823e64f38",
+        "initial_root": [
+          1.5,
+          0.0,
+          0.15000000596046448
+        ],
+        "initial_forward_velocity": 2.0,
+        "initial_airborne_rsi": 0.0,
+        "first_signal_seconds": 0.52,
+        "first_apex_seconds": 1.0,
+        "terminal_seconds": 6.22,
+        "terminal_root": [
+          14.882140159606934,
+          -1.2402522563934326,
+          0.09849386662244797
+        ],
+        "terminal_end_code": 3,
+        "original_physical_failure": true,
+        "descriptor_windows": {
+          "all": {
+            "start_tick": 170,
+            "end_tick": 296,
+            "start_seconds": 3.4,
+            "end_seconds": 5.92,
+            "duration_seconds": 2.52,
+            "x_range": [
+              8.326601028442383,
+              14.224639892578125
+            ],
+            "vx_range": [
+              2.203981399536133,
+              3.2576334476470947
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.724155407839502,
+              "pitch": 0.3588984797972553,
+              "yaw": 8.639693257577658
+            },
+            "maximum_abs_qvel_angular_rates": [
+              0.4018428921699524,
+              3.8250069618225098,
+              0.2896469235420227
+            ],
+            "max_abs_lateral_position": 1.1316760778427124
+          },
+          "platform": {
+            "start_tick": 65,
+            "end_tick": 153,
+            "start_seconds": 1.3,
+            "end_seconds": 3.06,
+            "duration_seconds": 1.76,
+            "x_range": [
+              3.8953182697296143,
+              7.481782913208008
+            ],
+            "vx_range": [
+              1.37869131565094,
+              2.3239290714263916
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 3.369307131244726,
+              "pitch": 0.44663764913221105,
+              "yaw": 12.73767442467014
+            },
+            "maximum_abs_qvel_angular_rates": [
+              1.803009033203125,
+              1.270736575126648,
+              3.312662363052368
+            ],
+            "max_abs_lateral_position": 0.3695278763771057
+          },
+          "ground_after_platform": {
+            "start_tick": 170,
+            "end_tick": 296,
+            "start_seconds": 3.4,
+            "end_seconds": 5.92,
+            "duration_seconds": 2.52,
+            "x_range": [
+              8.326601028442383,
+              14.224639892578125
+            ],
+            "vx_range": [
+              2.203981399536133,
+              3.2576334476470947
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.724155407839502,
+              "pitch": 0.3588984797972553,
+              "yaw": 8.639693257577658
+            },
+            "maximum_abs_qvel_angular_rates": [
+              0.4018428921699524,
+              3.8250069618225098,
+              0.2896469235420227
+            ],
+            "max_abs_lateral_position": 1.1316760778427124
+          },
+          "new_tracking_values_only": null
+        },
+        "source_summary_sha256": "d9c6c67707b2c18442b06ab7065414f31b087a00d1ab06bae9274929385e115f",
+        "payload_sha256": "b388de198628b56309e83b3b4993ecf0c655f341c259883a2d43f19e954c6f5e"
+      },
+      {
+        "case": "earlier_4988928__980002",
+        "policy": "earlier_4988928",
+        "seed": 980002,
+        "checkpoint": "JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/checkpoints/transition_4988928",
+        "source_trace": "JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/evaluations/transition_4988928/seed_980002.npz",
+        "source_sha256": "ed15c9bfa7e6e952d4b971ecfb04cdbca4204dfe9edddec2f8e6004360653c5b",
+        "initial_root": [
+          1.5,
+          0.0,
+          0.15000000596046448
+        ],
+        "initial_forward_velocity": 2.0,
+        "initial_airborne_rsi": 0.0,
+        "first_signal_seconds": 0.52,
+        "first_apex_seconds": 1.0,
+        "terminal_seconds": 6.28,
+        "terminal_root": [
+          14.76058578491211,
+          -0.9308697581291199,
+          0.10065539181232452
+        ],
+        "terminal_end_code": 3,
+        "original_physical_failure": true,
+        "descriptor_windows": {
+          "all": {
+            "start_tick": 178,
+            "end_tick": 300,
+            "start_seconds": 3.56,
+            "end_seconds": 6.0,
+            "duration_seconds": 2.44,
+            "x_range": [
+              8.550827980041504,
+              14.147851943969727
+            ],
+            "vx_range": [
+              2.1500587463378906,
+              2.6311049461364746
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.81667501590238,
+              "pitch": 0.6188424061989825,
+              "yaw": 7.946128528497883
+            },
+            "maximum_abs_qvel_angular_rates": [
+              0.44890618324279785,
+              1.019839882850647,
+              0.3094523251056671
+            ],
+            "max_abs_lateral_position": 0.8264485597610474
+          },
+          "platform": {
+            "start_tick": 65,
+            "end_tick": 156,
+            "start_seconds": 1.3,
+            "end_seconds": 3.12,
+            "duration_seconds": 1.82,
+            "x_range": [
+              3.8973777294158936,
+              7.482184886932373
+            ],
+            "vx_range": [
+              1.366676688194275,
+              2.3231699466705322
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 2.120748124079572,
+              "pitch": 0.7222445866829525,
+              "yaw": 10.831786122632598
+            },
+            "maximum_abs_qvel_angular_rates": [
+              1.2047010660171509,
+              1.2623282670974731,
+              2.0831432342529297
+            ],
+            "max_abs_lateral_position": 0.24767908453941345
+          },
+          "ground_after_platform": {
+            "start_tick": 178,
+            "end_tick": 300,
+            "start_seconds": 3.56,
+            "end_seconds": 6.0,
+            "duration_seconds": 2.44,
+            "x_range": [
+              8.550827980041504,
+              14.147851943969727
+            ],
+            "vx_range": [
+              2.1500587463378906,
+              2.6311049461364746
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.81667501590238,
+              "pitch": 0.6188424061989825,
+              "yaw": 7.946128528497883
+            },
+            "maximum_abs_qvel_angular_rates": [
+              0.44890618324279785,
+              1.019839882850647,
+              0.3094523251056671
+            ],
+            "max_abs_lateral_position": 0.8264485597610474
+          },
+          "new_tracking_values_only": {
+            "start_tick": 94,
+            "end_tick": 100,
+            "start_seconds": 1.8800000000000001,
+            "end_seconds": 2.0,
+            "duration_seconds": 0.11999999999999988,
+            "x_range": [
+              4.820700168609619,
+              5.043588161468506
+            ],
+            "vx_range": [
+              1.7921339273452759,
+              1.9366793632507324
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 0.1062623288690196,
+              "pitch": 0.16910457155509956,
+              "yaw": 4.7293775143468
+            },
+            "maximum_abs_qvel_angular_rates": [
+              0.054785143584012985,
+              0.2777784764766693,
+              0.11782818287611008
+            ],
+            "max_abs_lateral_position": 0.08077047765254974
+          }
+        },
+        "source_summary_sha256": "d9c6c67707b2c18442b06ab7065414f31b087a00d1ab06bae9274929385e115f",
+        "payload_sha256": "b388de198628b56309e83b3b4993ecf0c655f341c259883a2d43f19e954c6f5e"
+      },
+      {
+        "case": "earlier_4988928__980003",
+        "policy": "earlier_4988928",
+        "seed": 980003,
+        "checkpoint": "JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/checkpoints/transition_4988928",
+        "source_trace": "JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/evaluations/transition_4988928/seed_980003.npz",
+        "source_sha256": "05d95533418c070d318065308c8d5cec2d94d4b21fa7d0288ff0093786dc2fa8",
+        "initial_root": [
+          1.5,
+          0.0,
+          0.15000000596046448
+        ],
+        "initial_forward_velocity": 2.0,
+        "initial_airborne_rsi": 0.0,
+        "first_signal_seconds": 0.52,
+        "first_apex_seconds": 1.0,
+        "terminal_seconds": 6.38,
+        "terminal_root": [
+          15.265722274780273,
+          -0.857053816318512,
+          0.09804592281579971
+        ],
+        "terminal_end_code": 3,
+        "original_physical_failure": true,
+        "descriptor_windows": {
+          "all": {
+            "start_tick": 170,
+            "end_tick": 305,
+            "start_seconds": 3.4,
+            "end_seconds": 6.1000000000000005,
+            "duration_seconds": 2.7000000000000006,
+            "x_range": [
+              8.29988956451416,
+              14.669719696044922
+            ],
+            "vx_range": [
+              2.248656749725342,
+              3.245661735534668
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.556306497194201,
+              "pitch": 1.9861842193636232,
+              "yaw": 7.328918484149681
+            },
+            "maximum_abs_qvel_angular_rates": [
+              0.5031710863113403,
+              3.7153947353363037,
+              0.20850498974323273
+            ],
+            "max_abs_lateral_position": 0.7756306529045105
+          },
+          "platform": {
+            "start_tick": 65,
+            "end_tick": 154,
+            "start_seconds": 1.3,
+            "end_seconds": 3.08,
+            "duration_seconds": 1.78,
+            "x_range": [
+              3.8973307609558105,
+              7.500462532043457
+            ],
+            "vx_range": [
+              1.3698821067810059,
+              2.354294538497925
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 2.143723172900202,
+              "pitch": 0.7162209468043831,
+              "yaw": 10.847305166200513
+            },
+            "maximum_abs_qvel_angular_rates": [
+              1.2140322923660278,
+              0.894862949848175,
+              2.100058078765869
+            ],
+            "max_abs_lateral_position": 0.23779477179050446
+          },
+          "ground_after_platform": {
+            "start_tick": 170,
+            "end_tick": 305,
+            "start_seconds": 3.4,
+            "end_seconds": 6.1000000000000005,
+            "duration_seconds": 2.7000000000000006,
+            "x_range": [
+              8.29988956451416,
+              14.669719696044922
+            ],
+            "vx_range": [
+              2.248656749725342,
+              3.245661735534668
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.556306497194201,
+              "pitch": 1.9861842193636232,
+              "yaw": 7.328918484149681
+            },
+            "maximum_abs_qvel_angular_rates": [
+              0.5031710863113403,
+              3.7153947353363037,
+              0.20850498974323273
+            ],
+            "max_abs_lateral_position": 0.7756306529045105
+          },
+          "new_tracking_values_only": {
+            "start_tick": 96,
+            "end_tick": 106,
+            "start_seconds": 1.92,
+            "end_seconds": 2.12,
+            "duration_seconds": 0.20000000000000018,
+            "x_range": [
+              4.935003280639648,
+              5.336104393005371
+            ],
+            "vx_range": [
+              1.9253009557724,
+              2.0653717517852783
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 0.17306449378833347,
+              "pitch": 0.17349419539644925,
+              "yaw": 4.520590157363735
+            },
+            "maximum_abs_qvel_angular_rates": [
+              0.07807517051696777,
+              0.37494519352912903,
+              0.14203807711601257
+            ],
+            "max_abs_lateral_position": 0.09757129848003387
+          }
+        },
+        "source_summary_sha256": "d9c6c67707b2c18442b06ab7065414f31b087a00d1ab06bae9274929385e115f",
+        "payload_sha256": "b388de198628b56309e83b3b4993ecf0c655f341c259883a2d43f19e954c6f5e"
+      },
+      {
+        "case": "earlier_4988928__980004",
+        "policy": "earlier_4988928",
+        "seed": 980004,
+        "checkpoint": "JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/checkpoints/transition_4988928",
+        "source_trace": "JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/evaluations/transition_4988928/seed_980004.npz",
+        "source_sha256": "57b210cae82ac5175f18dce341c20f51c06485c3e730621352d7fb8bb8bed2e2",
+        "initial_root": [
+          1.5,
+          0.0,
+          0.15000000596046448
+        ],
+        "initial_forward_velocity": 2.0,
+        "initial_airborne_rsi": 0.0,
+        "first_signal_seconds": 0.52,
+        "first_apex_seconds": 1.0,
+        "terminal_seconds": 6.24,
+        "terminal_root": [
+          14.94076156616211,
+          -0.7758116722106934,
+          0.10116403549909592
+        ],
+        "terminal_end_code": 3,
+        "original_physical_failure": true,
+        "descriptor_windows": {
+          "all": {
+            "start_tick": 172,
+            "end_tick": 298,
+            "start_seconds": 3.44,
+            "end_seconds": 5.96,
+            "duration_seconds": 2.52,
+            "x_range": [
+              8.357284545898438,
+              14.319967269897461
+            ],
+            "vx_range": [
+              2.2553226947784424,
+              3.2614939212799072
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.869398526766178,
+              "pitch": 0.8270267855443826,
+              "yaw": 7.4411666667433165
+            },
+            "maximum_abs_qvel_angular_rates": [
+              0.3835738003253937,
+              3.3535046577453613,
+              0.30864417552948
+            ],
+            "max_abs_lateral_position": 0.6853705644607544
+          },
+          "platform": {
+            "start_tick": 65,
+            "end_tick": 155,
+            "start_seconds": 1.3,
+            "end_seconds": 3.1,
+            "duration_seconds": 1.8,
+            "x_range": [
+              3.897413492202759,
+              7.499002933502197
+            ],
+            "vx_range": [
+              1.362260103225708,
+              2.3309717178344727
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 2.116417570702372,
+              "pitch": 0.7624822449397026,
+              "yaw": 10.827713622339978
+            },
+            "maximum_abs_qvel_angular_rates": [
+              1.196670651435852,
+              1.0224714279174805,
+              2.0615999698638916
+            ],
+            "max_abs_lateral_position": 0.19408169388771057
+          },
+          "ground_after_platform": {
+            "start_tick": 172,
+            "end_tick": 298,
+            "start_seconds": 3.44,
+            "end_seconds": 5.96,
+            "duration_seconds": 2.52,
+            "x_range": [
+              8.357284545898438,
+              14.319967269897461
+            ],
+            "vx_range": [
+              2.2553226947784424,
+              3.2614939212799072
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.869398526766178,
+              "pitch": 0.8270267855443826,
+              "yaw": 7.4411666667433165
+            },
+            "maximum_abs_qvel_angular_rates": [
+              0.3835738003253937,
+              3.3535046577453613,
+              0.30864417552948
+            ],
+            "max_abs_lateral_position": 0.6853705644607544
+          },
+          "new_tracking_values_only": {
+            "start_tick": 121,
+            "end_tick": 134,
+            "start_seconds": 2.42,
+            "end_seconds": 2.68,
+            "duration_seconds": 0.26000000000000023,
+            "x_range": [
+              5.960206031799316,
+              6.533804893493652
+            ],
+            "vx_range": [
+              2.118403434753418,
+              2.259587049484253
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 0.08632647410520687,
+              "pitch": 0.18192351594610445,
+              "yaw": 3.5162501135010875
+            },
+            "maximum_abs_qvel_angular_rates": [
+              0.05979452654719353,
+              0.29618334770202637,
+              0.06914238631725311
+            ],
+            "max_abs_lateral_position": 0.14909696578979492
+          }
+        },
+        "source_summary_sha256": "d9c6c67707b2c18442b06ab7065414f31b087a00d1ab06bae9274929385e115f",
+        "payload_sha256": "b388de198628b56309e83b3b4993ecf0c655f341c259883a2d43f19e954c6f5e"
+      },
+      {
+        "case": "earlier_4988928__980005",
+        "policy": "earlier_4988928",
+        "seed": 980005,
+        "checkpoint": "JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/checkpoints/transition_4988928",
+        "source_trace": "JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/evaluations/transition_4988928/seed_980005.npz",
+        "source_sha256": "b039e32b6af58a06304798305b2859345f59899fbf5c514345b92632aa90be6a",
+        "initial_root": [
+          1.5,
+          0.0,
+          0.15000000596046448
+        ],
+        "initial_forward_velocity": 2.0,
+        "initial_airborne_rsi": 0.0,
+        "first_signal_seconds": 0.52,
+        "first_apex_seconds": 1.0,
+        "terminal_seconds": 6.28,
+        "terminal_root": [
+          14.760581016540527,
+          -0.930867075920105,
+          0.10065509378910065
+        ],
+        "terminal_end_code": 3,
+        "original_physical_failure": true,
+        "descriptor_windows": {
+          "all": {
+            "start_tick": 178,
+            "end_tick": 300,
+            "start_seconds": 3.56,
+            "end_seconds": 6.0,
+            "duration_seconds": 2.44,
+            "x_range": [
+              8.550827980041504,
+              14.147851943969727
+            ],
+            "vx_range": [
+              2.1500587463378906,
+              2.6311049461364746
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.81667501590238,
+              "pitch": 0.6188424061989825,
+              "yaw": 7.946128528497883
+            },
+            "maximum_abs_qvel_angular_rates": [
+              0.44890618324279785,
+              1.019839882850647,
+              0.3094523251056671
+            ],
+            "max_abs_lateral_position": 0.8264485597610474
+          },
+          "platform": {
+            "start_tick": 65,
+            "end_tick": 156,
+            "start_seconds": 1.3,
+            "end_seconds": 3.12,
+            "duration_seconds": 1.82,
+            "x_range": [
+              3.8973777294158936,
+              7.482184886932373
+            ],
+            "vx_range": [
+              1.366676688194275,
+              2.3231699466705322
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 2.120748124079572,
+              "pitch": 0.7222445866829525,
+              "yaw": 10.831786122632598
+            },
+            "maximum_abs_qvel_angular_rates": [
+              1.2047010660171509,
+              1.2623282670974731,
+              2.0831432342529297
+            ],
+            "max_abs_lateral_position": 0.24767908453941345
+          },
+          "ground_after_platform": {
+            "start_tick": 178,
+            "end_tick": 300,
+            "start_seconds": 3.56,
+            "end_seconds": 6.0,
+            "duration_seconds": 2.44,
+            "x_range": [
+              8.550827980041504,
+              14.147851943969727
+            ],
+            "vx_range": [
+              2.1500587463378906,
+              2.6311049461364746
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.81667501590238,
+              "pitch": 0.6188424061989825,
+              "yaw": 7.946128528497883
+            },
+            "maximum_abs_qvel_angular_rates": [
+              0.44890618324279785,
+              1.019839882850647,
+              0.3094523251056671
+            ],
+            "max_abs_lateral_position": 0.8264485597610474
+          },
+          "new_tracking_values_only": {
+            "start_tick": 94,
+            "end_tick": 100,
+            "start_seconds": 1.8800000000000001,
+            "end_seconds": 2.0,
+            "duration_seconds": 0.11999999999999988,
+            "x_range": [
+              4.820700168609619,
+              5.043588161468506
+            ],
+            "vx_range": [
+              1.7921339273452759,
+              1.9366793632507324
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 0.1062623288690196,
+              "pitch": 0.16910457155509956,
+              "yaw": 4.7293775143468
+            },
+            "maximum_abs_qvel_angular_rates": [
+              0.054785143584012985,
+              0.2777784764766693,
+              0.11782818287611008
+            ],
+            "max_abs_lateral_position": 0.08077047765254974
+          }
+        },
+        "source_summary_sha256": "d9c6c67707b2c18442b06ab7065414f31b087a00d1ab06bae9274929385e115f",
+        "payload_sha256": "b388de198628b56309e83b3b4993ecf0c655f341c259883a2d43f19e954c6f5e"
+      },
+      {
+        "case": "earlier_4988928__980006",
+        "policy": "earlier_4988928",
+        "seed": 980006,
+        "checkpoint": "JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/checkpoints/transition_4988928",
+        "source_trace": "JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/evaluations/transition_4988928/seed_980006.npz",
+        "source_sha256": "f4b64bf7a6ff3b8ec58c1c96e7c86117482e56791310f142d7d67e8d590c24b2",
+        "initial_root": [
+          1.5,
+          0.0,
+          0.15000000596046448
+        ],
+        "initial_forward_velocity": 2.0,
+        "initial_airborne_rsi": 0.0,
+        "first_signal_seconds": 0.52,
+        "first_apex_seconds": 1.0,
+        "terminal_seconds": 6.3,
+        "terminal_root": [
+          14.969627380371094,
+          -0.7351957559585571,
+          0.09924402832984924
+        ],
+        "terminal_end_code": 3,
+        "original_physical_failure": true,
+        "descriptor_windows": {
+          "all": {
+            "start_tick": 172,
+            "end_tick": 301,
+            "start_seconds": 3.44,
+            "end_seconds": 6.0200000000000005,
+            "duration_seconds": 2.5800000000000005,
+            "x_range": [
+              8.288228988647461,
+              14.353415489196777
+            ],
+            "vx_range": [
+              2.2111828327178955,
+              3.242292881011963
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.815186888436963,
+              "pitch": 1.5875685097078611,
+              "yaw": 6.870750675285695
+            },
+            "maximum_abs_qvel_angular_rates": [
+              0.427913099527359,
+              3.133692979812622,
+              0.26566624641418457
+            ],
+            "max_abs_lateral_position": 0.6368140578269958
+          },
+          "platform": {
+            "start_tick": 65,
+            "end_tick": 156,
+            "start_seconds": 1.3,
+            "end_seconds": 3.12,
+            "duration_seconds": 1.82,
+            "x_range": [
+              3.897927761077881,
+              7.488110065460205
+            ],
+            "vx_range": [
+              1.3583697080612183,
+              2.329190731048584
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 1.9768994309606371,
+              "pitch": 0.7456936399598112,
+              "yaw": 10.674415149060918
+            },
+            "maximum_abs_qvel_angular_rates": [
+              1.1454805135726929,
+              1.3089607954025269,
+              1.9469573497772217
+            ],
+            "max_abs_lateral_position": 0.17728284001350403
+          },
+          "ground_after_platform": {
+            "start_tick": 172,
+            "end_tick": 301,
+            "start_seconds": 3.44,
+            "end_seconds": 6.0200000000000005,
+            "duration_seconds": 2.5800000000000005,
+            "x_range": [
+              8.288228988647461,
+              14.353415489196777
+            ],
+            "vx_range": [
+              2.2111828327178955,
+              3.242292881011963
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.815186888436963,
+              "pitch": 1.5875685097078611,
+              "yaw": 6.870750675285695
+            },
+            "maximum_abs_qvel_angular_rates": [
+              0.427913099527359,
+              3.133692979812622,
+              0.26566624641418457
+            ],
+            "max_abs_lateral_position": 0.6368140578269958
+          },
+          "new_tracking_values_only": {
+            "start_tick": 109,
+            "end_tick": 123,
+            "start_seconds": 2.18,
+            "end_seconds": 2.46,
+            "duration_seconds": 0.2799999999999998,
+            "x_range": [
+              5.438318729400635,
+              6.004579544067383
+            ],
+            "vx_range": [
+              1.9632610082626343,
+              2.1020472049713135
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 0.22651537977809794,
+              "pitch": 0.1536317251455745,
+              "yaw": 3.863313796457415
+            },
+            "maximum_abs_qvel_angular_rates": [
+              0.1322876662015915,
+              0.490513414144516,
+              0.33260464668273926
+            ],
+            "max_abs_lateral_position": 0.11281602084636688
+          }
+        },
+        "source_summary_sha256": "d9c6c67707b2c18442b06ab7065414f31b087a00d1ab06bae9274929385e115f",
+        "payload_sha256": "b388de198628b56309e83b3b4993ecf0c655f341c259883a2d43f19e954c6f5e"
+      },
+      {
+        "case": "earlier_4988928__980007",
+        "policy": "earlier_4988928",
+        "seed": 980007,
+        "checkpoint": "JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/checkpoints/transition_4988928",
+        "source_trace": "JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/evaluations/transition_4988928/seed_980007.npz",
+        "source_sha256": "fcc964c1261b8b36edeac875615cb4094a8efc320e2067fdb9e046226f5f0a49",
+        "initial_root": [
+          1.5,
+          0.0,
+          0.15000000596046448
+        ],
+        "initial_forward_velocity": 2.0,
+        "initial_airborne_rsi": 0.0,
+        "first_signal_seconds": 0.52,
+        "first_apex_seconds": 1.0,
+        "terminal_seconds": 6.24,
+        "terminal_root": [
+          14.954731941223145,
+          -0.8745735287666321,
+          0.09872215986251831
+        ],
+        "terminal_end_code": 3,
+        "original_physical_failure": true,
+        "descriptor_windows": {
+          "all": {
+            "start_tick": 172,
+            "end_tick": 297,
+            "start_seconds": 3.44,
+            "end_seconds": 5.94,
+            "duration_seconds": 2.5000000000000004,
+            "x_range": [
+              8.348844528198242,
+              14.27662467956543
+            ],
+            "vx_range": [
+              2.2791876792907715,
+              3.3056790828704834
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.790424891374728,
+              "pitch": 1.1456419301948135,
+              "yaw": 7.282538084590709
+            },
+            "maximum_abs_qvel_angular_rates": [
+              0.4157288074493408,
+              3.7437245845794678,
+              0.21999308466911316
+            ],
+            "max_abs_lateral_position": 0.7744402885437012
+          },
+          "platform": {
+            "start_tick": 65,
+            "end_tick": 155,
+            "start_seconds": 1.3,
+            "end_seconds": 3.1,
+            "duration_seconds": 1.8,
+            "x_range": [
+              3.897401809692383,
+              7.484280109405518
+            ],
+            "vx_range": [
+              1.363277554512024,
+              2.360769033432007
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 2.15716946749843,
+              "pitch": 0.7624811777226448,
+              "yaw": 10.83364222653955
+            },
+            "maximum_abs_qvel_angular_rates": [
+              1.200659990310669,
+              0.976474940776825,
+              2.0731146335601807
+            ],
+            "max_abs_lateral_position": 0.22180160880088806
+          },
+          "ground_after_platform": {
+            "start_tick": 172,
+            "end_tick": 297,
+            "start_seconds": 3.44,
+            "end_seconds": 5.94,
+            "duration_seconds": 2.5000000000000004,
+            "x_range": [
+              8.348844528198242,
+              14.27662467956543
+            ],
+            "vx_range": [
+              2.2791876792907715,
+              3.3056790828704834
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.790424891374728,
+              "pitch": 1.1456419301948135,
+              "yaw": 7.282538084590709
+            },
+            "maximum_abs_qvel_angular_rates": [
+              0.4157288074493408,
+              3.7437245845794678,
+              0.21999308466911316
+            ],
+            "max_abs_lateral_position": 0.7744402885437012
+          },
+          "new_tracking_values_only": {
+            "start_tick": 108,
+            "end_tick": 113,
+            "start_seconds": 2.16,
+            "end_seconds": 2.2600000000000002,
+            "duration_seconds": 0.10000000000000009,
+            "x_range": [
+              5.428729057312012,
+              5.639822483062744
+            ],
+            "vx_range": [
+              2.0718026161193848,
+              2.1404612064361572
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 0.04047153220486347,
+              "pitch": 0.12020654025567748,
+              "yaw": 4.460885766281361
+            },
+            "maximum_abs_qvel_angular_rates": [
+              0.05779356509447098,
+              0.3672577738761902,
+              0.17798449099063873
+            ],
+            "max_abs_lateral_position": 0.11238430440425873
+          }
+        },
+        "source_summary_sha256": "d9c6c67707b2c18442b06ab7065414f31b087a00d1ab06bae9274929385e115f",
+        "payload_sha256": "b388de198628b56309e83b3b4993ecf0c655f341c259883a2d43f19e954c6f5e"
+      },
+      {
+        "case": "earlier_4988928__980008",
+        "policy": "earlier_4988928",
+        "seed": 980008,
+        "checkpoint": "JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/checkpoints/transition_4988928",
+        "source_trace": "JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/evaluations/transition_4988928/seed_980008.npz",
+        "source_sha256": "c6c9d1dbe3d394149a83e9531fa472cae37ba053812f7943d57e0b8bd5e90a1f",
+        "initial_root": [
+          1.5,
+          0.0,
+          0.15000000596046448
+        ],
+        "initial_forward_velocity": 2.0,
+        "initial_airborne_rsi": 0.0,
+        "first_signal_seconds": 0.52,
+        "first_apex_seconds": 1.0,
+        "terminal_seconds": 6.2,
+        "terminal_root": [
+          14.879902839660645,
+          -0.7604957222938538,
+          0.10148392617702484
+        ],
+        "terminal_end_code": 3,
+        "original_physical_failure": true,
+        "descriptor_windows": {
+          "all": {
+            "start_tick": 171,
+            "end_tick": 295,
+            "start_seconds": 3.42,
+            "end_seconds": 5.9,
+            "duration_seconds": 2.4800000000000004,
+            "x_range": [
+              8.33791732788086,
+              14.212313652038574
+            ],
+            "vx_range": [
+              2.232571840286255,
+              3.2833316326141357
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.733785120795575,
+              "pitch": 0.7808397123554341,
+              "yaw": 7.33146529093645
+            },
+            "maximum_abs_qvel_angular_rates": [
+              0.27868515253067017,
+              3.839888334274292,
+              0.3577412962913513
+            ],
+            "max_abs_lateral_position": 0.6785056591033936
+          },
+          "platform": {
+            "start_tick": 65,
+            "end_tick": 154,
+            "start_seconds": 1.3,
+            "end_seconds": 3.08,
+            "duration_seconds": 1.78,
+            "x_range": [
+              3.8977162837982178,
+              7.480055332183838
+            ],
+            "vx_range": [
+              1.359683632850647,
+              2.368016004562378
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 2.0821370647014894,
+              "pitch": 0.7417226320093893,
+              "yaw": 10.745250187169475
+            },
+            "maximum_abs_qvel_angular_rates": [
+              1.1703592538833618,
+              0.9628781080245972,
+              2.003638982772827
+            ],
+            "max_abs_lateral_position": 0.1810171902179718
+          },
+          "ground_after_platform": {
+            "start_tick": 171,
+            "end_tick": 295,
+            "start_seconds": 3.42,
+            "end_seconds": 5.9,
+            "duration_seconds": 2.4800000000000004,
+            "x_range": [
+              8.33791732788086,
+              14.212313652038574
+            ],
+            "vx_range": [
+              2.232571840286255,
+              3.2833316326141357
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.733785120795575,
+              "pitch": 0.7808397123554341,
+              "yaw": 7.33146529093645
+            },
+            "maximum_abs_qvel_angular_rates": [
+              0.27868515253067017,
+              3.839888334274292,
+              0.3577412962913513
+            ],
+            "max_abs_lateral_position": 0.6785056591033936
+          },
+          "new_tracking_values_only": {
+            "start_tick": 118,
+            "end_tick": 126,
+            "start_seconds": 2.36,
+            "end_seconds": 2.52,
+            "duration_seconds": 0.16000000000000014,
+            "x_range": [
+              5.84510612487793,
+              6.1983747482299805
+            ],
+            "vx_range": [
+              2.1866812705993652,
+              2.2323222160339355
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 0.10148907384591867,
+              "pitch": 0.08947567156025876,
+              "yaw": 3.3616274372966926
+            },
+            "maximum_abs_qvel_angular_rates": [
+              0.10071168094873428,
+              0.4599137008190155,
+              0.15879137814044952
+            ],
+            "max_abs_lateral_position": 0.12251295149326324
+          }
+        },
+        "source_summary_sha256": "d9c6c67707b2c18442b06ab7065414f31b087a00d1ab06bae9274929385e115f",
+        "payload_sha256": "b388de198628b56309e83b3b4993ecf0c655f341c259883a2d43f19e954c6f5e"
+      },
+      {
+        "case": "frozen_up_9977856__1000001",
+        "policy": "frozen_up_9977856",
+        "seed": 1000001,
+        "checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_9977856",
+        "source_trace": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/evaluations/transition_9977856/seed_1000001.npz",
+        "source_sha256": "922d92c5c06841e76009b176d4e08d2e8473ae494e9420c9b423a047813c1cbc",
+        "initial_root": [
+          1.5,
+          0.0,
+          0.15000000596046448
+        ],
+        "initial_forward_velocity": 2.0,
+        "initial_airborne_rsi": 0.0,
+        "first_signal_seconds": 0.56,
+        "first_apex_seconds": 1.04,
+        "terminal_seconds": 4.68,
+        "terminal_root": [
+          7.724946975708008,
+          -1.0126829147338867,
+          0.22770176827907562
+        ],
+        "terminal_end_code": 4,
+        "original_physical_failure": true,
+        "descriptor_windows": {
+          "all": {
+            "start_tick": 68,
+            "end_tick": 204,
+            "start_seconds": 1.36,
+            "end_seconds": 4.08,
+            "duration_seconds": 2.7199999999999998,
+            "x_range": [
+              3.82814359664917,
+              7.105768203735352
+            ],
+            "vx_range": [
+              1.0251164436340332,
+              2.7029993534088135
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.003926474013644,
+              "pitch": 0.8627696457187354,
+              "yaw": 20.20777377273763
+            },
+            "maximum_abs_qvel_angular_rates": [
+              2.9164583683013916,
+              7.004990577697754,
+              2.646399736404419
+            ],
+            "max_abs_lateral_position": 0.835008442401886
+          },
+          "platform": {
+            "start_tick": 68,
+            "end_tick": 204,
+            "start_seconds": 1.36,
+            "end_seconds": 4.08,
+            "duration_seconds": 2.7199999999999998,
+            "x_range": [
+              3.82814359664917,
+              7.105768203735352
+            ],
+            "vx_range": [
+              1.0251164436340332,
+              2.7029993534088135
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.003926474013644,
+              "pitch": 0.8627696457187354,
+              "yaw": 20.20777377273763
+            },
+            "maximum_abs_qvel_angular_rates": [
+              2.9164583683013916,
+              7.004990577697754,
+              2.646399736404419
+            ],
+            "max_abs_lateral_position": 0.835008442401886
+          },
+          "ground_after_platform": null,
+          "new_tracking_values_only": null
+        },
+        "source_summary_sha256": "323d74a87b6e3709a667a09e7591ebe3529f6d1debd5b6c5e87d50fab523220d",
+        "payload_sha256": "965b2f141d5cff17f7cef943004fe4e4f62f0fecfe88b47353dc78b14ced723a"
+      },
+      {
+        "case": "frozen_up_9977856__1000002",
+        "policy": "frozen_up_9977856",
+        "seed": 1000002,
+        "checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_9977856",
+        "source_trace": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/evaluations/transition_9977856/seed_1000002.npz",
+        "source_sha256": "3c56d55e629b94e87bb3881d5e7f62b41c98d935760041c70679d1ac26ce5327",
+        "initial_root": [
+          1.5,
+          0.0,
+          0.15000000596046448
+        ],
+        "initial_forward_velocity": 2.0,
+        "initial_airborne_rsi": 0.0,
+        "first_signal_seconds": 0.56,
+        "first_apex_seconds": 1.04,
+        "terminal_seconds": 4.78,
+        "terminal_root": [
+          7.778750896453857,
+          -0.9813641905784607,
+          0.2203981578350067
+        ],
+        "terminal_end_code": 4,
+        "original_physical_failure": true,
+        "descriptor_windows": {
+          "all": {
+            "start_tick": 68,
+            "end_tick": 198,
+            "start_seconds": 1.36,
+            "end_seconds": 3.96,
+            "duration_seconds": 2.5999999999999996,
+            "x_range": [
+              3.828143358230591,
+              6.945369720458984
+            ],
+            "vx_range": [
+              1.0139853954315186,
+              2.7027993202209473
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.002160443226373,
+              "pitch": 1.2948272422113494,
+              "yaw": 19.0970381646264
+            },
+            "maximum_abs_qvel_angular_rates": [
+              2.916689395904541,
+              7.004348278045654,
+              2.711620569229126
+            ],
+            "max_abs_lateral_position": 0.7660717964172363
+          },
+          "platform": {
+            "start_tick": 68,
+            "end_tick": 198,
+            "start_seconds": 1.36,
+            "end_seconds": 3.96,
+            "duration_seconds": 2.5999999999999996,
+            "x_range": [
+              3.828143358230591,
+              6.945369720458984
+            ],
+            "vx_range": [
+              1.0139853954315186,
+              2.7027993202209473
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.002160443226373,
+              "pitch": 1.2948272422113494,
+              "yaw": 19.0970381646264
+            },
+            "maximum_abs_qvel_angular_rates": [
+              2.916689395904541,
+              7.004348278045654,
+              2.711620569229126
+            ],
+            "max_abs_lateral_position": 0.7660717964172363
+          },
+          "ground_after_platform": null,
+          "new_tracking_values_only": null
+        },
+        "source_summary_sha256": "323d74a87b6e3709a667a09e7591ebe3529f6d1debd5b6c5e87d50fab523220d",
+        "payload_sha256": "965b2f141d5cff17f7cef943004fe4e4f62f0fecfe88b47353dc78b14ced723a"
+      },
+      {
+        "case": "frozen_up_9977856__1000003",
+        "policy": "frozen_up_9977856",
+        "seed": 1000003,
+        "checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_9977856",
+        "source_trace": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/evaluations/transition_9977856/seed_1000003.npz",
+        "source_sha256": "a34797e2f4813796465b1bcc55c5406f9b81dd8b021c0c7efab4cf01f24131e8",
+        "initial_root": [
+          1.5,
+          0.0,
+          0.15000000596046448
+        ],
+        "initial_forward_velocity": 2.0,
+        "initial_airborne_rsi": 0.0,
+        "first_signal_seconds": 0.56,
+        "first_apex_seconds": 1.04,
+        "terminal_seconds": 4.68,
+        "terminal_root": [
+          7.747798442840576,
+          -0.9870882034301758,
+          0.22338297963142395
+        ],
+        "terminal_end_code": 4,
+        "original_physical_failure": true,
+        "descriptor_windows": {
+          "all": {
+            "start_tick": 68,
+            "end_tick": 208,
+            "start_seconds": 1.36,
+            "end_seconds": 4.16,
+            "duration_seconds": 2.8,
+            "x_range": [
+              3.82814359664917,
+              7.214206695556641
+            ],
+            "vx_range": [
+              1.0165003538131714,
+              2.7025208473205566
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.000147244968511,
+              "pitch": 0.8607692540655679,
+              "yaw": 20.03077625058592
+            },
+            "maximum_abs_qvel_angular_rates": [
+              2.9172046184539795,
+              7.003386497497559,
+              2.686150074005127
+            ],
+            "max_abs_lateral_position": 0.8290407657623291
+          },
+          "platform": {
+            "start_tick": 68,
+            "end_tick": 208,
+            "start_seconds": 1.36,
+            "end_seconds": 4.16,
+            "duration_seconds": 2.8,
+            "x_range": [
+              3.82814359664917,
+              7.214206695556641
+            ],
+            "vx_range": [
+              1.0165003538131714,
+              2.7025208473205566
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.000147244968511,
+              "pitch": 0.8607692540655679,
+              "yaw": 20.03077625058592
+            },
+            "maximum_abs_qvel_angular_rates": [
+              2.9172046184539795,
+              7.003386497497559,
+              2.686150074005127
+            ],
+            "max_abs_lateral_position": 0.8290407657623291
+          },
+          "ground_after_platform": null,
+          "new_tracking_values_only": null
+        },
+        "source_summary_sha256": "323d74a87b6e3709a667a09e7591ebe3529f6d1debd5b6c5e87d50fab523220d",
+        "payload_sha256": "965b2f141d5cff17f7cef943004fe4e4f62f0fecfe88b47353dc78b14ced723a"
+      },
+      {
+        "case": "frozen_up_9977856__1000004",
+        "policy": "frozen_up_9977856",
+        "seed": 1000004,
+        "checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_9977856",
+        "source_trace": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/evaluations/transition_9977856/seed_1000004.npz",
+        "source_sha256": "1b86eb29404161599ac7ebf82d941a17f3575266e5485e22de955aae15f70cb9",
+        "initial_root": [
+          1.5,
+          0.0,
+          0.15000000596046448
+        ],
+        "initial_forward_velocity": 2.0,
+        "initial_airborne_rsi": 0.0,
+        "first_signal_seconds": 0.56,
+        "first_apex_seconds": 1.04,
+        "terminal_seconds": 4.72,
+        "terminal_root": [
+          7.656912803649902,
+          -0.8921982049942017,
+          0.24055197834968567
+        ],
+        "terminal_end_code": 4,
+        "original_physical_failure": true,
+        "descriptor_windows": {
+          "all": {
+            "start_tick": 68,
+            "end_tick": 140,
+            "start_seconds": 1.36,
+            "end_seconds": 2.8000000000000003,
+            "duration_seconds": 1.4400000000000002,
+            "x_range": [
+              3.8281514644622803,
+              5.584281921386719
+            ],
+            "vx_range": [
+              1.1109004020690918,
+              2.7030465602874756
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.0050534552266965,
+              "pitch": 0.862722901611603,
+              "yaw": 19.700565632519776
+            },
+            "maximum_abs_qvel_angular_rates": [
+              2.9164609909057617,
+              7.005071640014648,
+              2.809288501739502
+            ],
+            "max_abs_lateral_position": 0.3706466853618622
+          },
+          "platform": {
+            "start_tick": 68,
+            "end_tick": 140,
+            "start_seconds": 1.36,
+            "end_seconds": 2.8000000000000003,
+            "duration_seconds": 1.4400000000000002,
+            "x_range": [
+              3.8281514644622803,
+              5.584281921386719
+            ],
+            "vx_range": [
+              1.1109004020690918,
+              2.7030465602874756
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.0050534552266965,
+              "pitch": 0.862722901611603,
+              "yaw": 19.700565632519776
+            },
+            "maximum_abs_qvel_angular_rates": [
+              2.9164609909057617,
+              7.005071640014648,
+              2.809288501739502
+            ],
+            "max_abs_lateral_position": 0.3706466853618622
+          },
+          "ground_after_platform": null,
+          "new_tracking_values_only": null
+        },
+        "source_summary_sha256": "323d74a87b6e3709a667a09e7591ebe3529f6d1debd5b6c5e87d50fab523220d",
+        "payload_sha256": "965b2f141d5cff17f7cef943004fe4e4f62f0fecfe88b47353dc78b14ced723a"
+      },
+      {
+        "case": "frozen_up_9977856__1000005",
+        "policy": "frozen_up_9977856",
+        "seed": 1000005,
+        "checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_9977856",
+        "source_trace": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/evaluations/transition_9977856/seed_1000005.npz",
+        "source_sha256": "42594b297ebbee79cc65d8fd27e93c5fbbec0620b2197161f62938509ccbd4f7",
+        "initial_root": [
+          1.5,
+          0.0,
+          0.15000000596046448
+        ],
+        "initial_forward_velocity": 2.0,
+        "initial_airborne_rsi": 0.0,
+        "first_signal_seconds": 0.56,
+        "first_apex_seconds": 1.04,
+        "terminal_seconds": 4.64,
+        "terminal_root": [
+          7.730624198913574,
+          -0.8682506680488586,
+          0.22272250056266785
+        ],
+        "terminal_end_code": 4,
+        "original_physical_failure": true,
+        "descriptor_windows": {
+          "all": {
+            "start_tick": 68,
+            "end_tick": 200,
+            "start_seconds": 1.36,
+            "end_seconds": 4.0,
+            "duration_seconds": 2.6399999999999997,
+            "x_range": [
+              3.8281404972076416,
+              7.092138767242432
+            ],
+            "vx_range": [
+              1.0267901420593262,
+              2.7027268409729004
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.002668438545893,
+              "pitch": 1.180333528206366,
+              "yaw": 20.435161015491108
+            },
+            "maximum_abs_qvel_angular_rates": [
+              2.917012929916382,
+              7.0040507316589355,
+              2.6442463397979736
+            ],
+            "max_abs_lateral_position": 0.7214806079864502
+          },
+          "platform": {
+            "start_tick": 68,
+            "end_tick": 200,
+            "start_seconds": 1.36,
+            "end_seconds": 4.0,
+            "duration_seconds": 2.6399999999999997,
+            "x_range": [
+              3.8281404972076416,
+              7.092138767242432
+            ],
+            "vx_range": [
+              1.0267901420593262,
+              2.7027268409729004
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.002668438545893,
+              "pitch": 1.180333528206366,
+              "yaw": 20.435161015491108
+            },
+            "maximum_abs_qvel_angular_rates": [
+              2.917012929916382,
+              7.0040507316589355,
+              2.6442463397979736
+            ],
+            "max_abs_lateral_position": 0.7214806079864502
+          },
+          "ground_after_platform": null,
+          "new_tracking_values_only": null
+        },
+        "source_summary_sha256": "323d74a87b6e3709a667a09e7591ebe3529f6d1debd5b6c5e87d50fab523220d",
+        "payload_sha256": "965b2f141d5cff17f7cef943004fe4e4f62f0fecfe88b47353dc78b14ced723a"
+      },
+      {
+        "case": "frozen_up_9977856__1000006",
+        "policy": "frozen_up_9977856",
+        "seed": 1000006,
+        "checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_9977856",
+        "source_trace": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/evaluations/transition_9977856/seed_1000006.npz",
+        "source_sha256": "ddedc71991f6db0ab0869343ac49e73d8293e5e074dfa61daff31174254b35ca",
+        "initial_root": [
+          1.5,
+          0.0,
+          0.15000000596046448
+        ],
+        "initial_forward_velocity": 2.0,
+        "initial_airborne_rsi": 0.0,
+        "first_signal_seconds": 0.56,
+        "first_apex_seconds": 1.04,
+        "terminal_seconds": 4.64,
+        "terminal_root": [
+          7.73969841003418,
+          -0.9509015679359436,
+          0.22377042472362518
+        ],
+        "terminal_end_code": 4,
+        "original_physical_failure": true,
+        "descriptor_windows": {
+          "all": {
+            "start_tick": 68,
+            "end_tick": 218,
+            "start_seconds": 1.36,
+            "end_seconds": 4.36,
+            "duration_seconds": 3.0,
+            "x_range": [
+              3.828139305114746,
+              7.48600435256958
+            ],
+            "vx_range": [
+              1.042862892150879,
+              2.702730178833008
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.002613370145709,
+              "pitch": 1.9524943112825353,
+              "yaw": 19.842281812513786
+            },
+            "maximum_abs_qvel_angular_rates": [
+              2.916959285736084,
+              7.004166126251221,
+              2.8051321506500244
+            ],
+            "max_abs_lateral_position": 0.9002476930618286
+          },
+          "platform": {
+            "start_tick": 68,
+            "end_tick": 218,
+            "start_seconds": 1.36,
+            "end_seconds": 4.36,
+            "duration_seconds": 3.0,
+            "x_range": [
+              3.828139305114746,
+              7.48600435256958
+            ],
+            "vx_range": [
+              1.042862892150879,
+              2.702730178833008
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.002613370145709,
+              "pitch": 1.9524943112825353,
+              "yaw": 19.842281812513786
+            },
+            "maximum_abs_qvel_angular_rates": [
+              2.916959285736084,
+              7.004166126251221,
+              2.8051321506500244
+            ],
+            "max_abs_lateral_position": 0.9002476930618286
+          },
+          "ground_after_platform": null,
+          "new_tracking_values_only": null
+        },
+        "source_summary_sha256": "323d74a87b6e3709a667a09e7591ebe3529f6d1debd5b6c5e87d50fab523220d",
+        "payload_sha256": "965b2f141d5cff17f7cef943004fe4e4f62f0fecfe88b47353dc78b14ced723a"
+      },
+      {
+        "case": "frozen_up_9977856__1000007",
+        "policy": "frozen_up_9977856",
+        "seed": 1000007,
+        "checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_9977856",
+        "source_trace": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/evaluations/transition_9977856/seed_1000007.npz",
+        "source_sha256": "4772739d4d02f76c82548ca14d5ddc63b2200b784bd6408c9db5fdfec8896e81",
+        "initial_root": [
+          1.5,
+          0.0,
+          0.15000000596046448
+        ],
+        "initial_forward_velocity": 2.0,
+        "initial_airborne_rsi": 0.0,
+        "first_signal_seconds": 0.56,
+        "first_apex_seconds": 1.04,
+        "terminal_seconds": 4.7,
+        "terminal_root": [
+          7.737706184387207,
+          -0.9032480716705322,
+          0.22220541536808014
+        ],
+        "terminal_end_code": 4,
+        "original_physical_failure": true,
+        "descriptor_windows": {
+          "all": {
+            "start_tick": 68,
+            "end_tick": 203,
+            "start_seconds": 1.36,
+            "end_seconds": 4.0600000000000005,
+            "duration_seconds": 2.7,
+            "x_range": [
+              3.828127384185791,
+              7.069653034210205
+            ],
+            "vx_range": [
+              1.0331496000289917,
+              2.702575922012329
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.00109621437632,
+              "pitch": 0.8611996093441315,
+              "yaw": 20.124245681830253
+            },
+            "maximum_abs_qvel_angular_rates": [
+              2.917248010635376,
+              7.003648281097412,
+              2.769407272338867
+            ],
+            "max_abs_lateral_position": 0.7496393918991089
+          },
+          "platform": {
+            "start_tick": 68,
+            "end_tick": 203,
+            "start_seconds": 1.36,
+            "end_seconds": 4.0600000000000005,
+            "duration_seconds": 2.7,
+            "x_range": [
+              3.828127384185791,
+              7.069653034210205
+            ],
+            "vx_range": [
+              1.0331496000289917,
+              2.702575922012329
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.00109621437632,
+              "pitch": 0.8611996093441315,
+              "yaw": 20.124245681830253
+            },
+            "maximum_abs_qvel_angular_rates": [
+              2.917248010635376,
+              7.003648281097412,
+              2.769407272338867
+            ],
+            "max_abs_lateral_position": 0.7496393918991089
+          },
+          "ground_after_platform": null,
+          "new_tracking_values_only": null
+        },
+        "source_summary_sha256": "323d74a87b6e3709a667a09e7591ebe3529f6d1debd5b6c5e87d50fab523220d",
+        "payload_sha256": "965b2f141d5cff17f7cef943004fe4e4f62f0fecfe88b47353dc78b14ced723a"
+      },
+      {
+        "case": "frozen_up_9977856__1000008",
+        "policy": "frozen_up_9977856",
+        "seed": 1000008,
+        "checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_9977856",
+        "source_trace": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/evaluations/transition_9977856/seed_1000008.npz",
+        "source_sha256": "29f10b275f71e3353b2718aca5cefbd73c3fae1e19a7c02dfd8d90cfc9c694f4",
+        "initial_root": [
+          1.5,
+          0.0,
+          0.15000000596046448
+        ],
+        "initial_forward_velocity": 2.0,
+        "initial_airborne_rsi": 0.0,
+        "first_signal_seconds": 0.56,
+        "first_apex_seconds": 1.04,
+        "terminal_seconds": 4.62,
+        "terminal_root": [
+          7.749519348144531,
+          -0.924777090549469,
+          0.2277914583683014
+        ],
+        "terminal_end_code": 4,
+        "original_physical_failure": true,
+        "descriptor_windows": {
+          "all": {
+            "start_tick": 68,
+            "end_tick": 216,
+            "start_seconds": 1.36,
+            "end_seconds": 4.32,
+            "duration_seconds": 2.96,
+            "x_range": [
+              3.828139066696167,
+              7.474100112915039
+            ],
+            "vx_range": [
+              1.007888913154602,
+              2.702801465988159
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.002288509273311,
+              "pitch": 0.8913776796139222,
+              "yaw": 20.465116517643494
+            },
+            "maximum_abs_qvel_angular_rates": [
+              2.9167256355285645,
+              7.004385471343994,
+              2.703061819076538
+            ],
+            "max_abs_lateral_position": 0.858213484287262
+          },
+          "platform": {
+            "start_tick": 68,
+            "end_tick": 216,
+            "start_seconds": 1.36,
+            "end_seconds": 4.32,
+            "duration_seconds": 2.96,
+            "x_range": [
+              3.828139066696167,
+              7.474100112915039
+            ],
+            "vx_range": [
+              1.007888913154602,
+              2.702801465988159
+            ],
+            "maximum_abs_angles_deg": {
+              "roll": 4.002288509273311,
+              "pitch": 0.8913776796139222,
+              "yaw": 20.465116517643494
+            },
+            "maximum_abs_qvel_angular_rates": [
+              2.9167256355285645,
+              7.004385471343994,
+              2.703061819076538
+            ],
+            "max_abs_lateral_position": 0.858213484287262
+          },
+          "ground_after_platform": null,
+          "new_tracking_values_only": null
+        },
+        "source_summary_sha256": "323d74a87b6e3709a667a09e7591ebe3529f6d1debd5b6c5e87d50fab523220d",
+        "payload_sha256": "965b2f141d5cff17f7cef943004fe4e4f62f0fecfe88b47353dc78b14ced723a"
+      }
+    ]
+  },
+  "checkpoint_integrity": {
+    "schema": "jump_checkpoint_integrity_audit_v1",
+    "source_root": "/home/qy/DVGC",
+    "checkpoints": [
+      {
+        "checkpoint": "JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/checkpoints/transition_4988928",
+        "payload_sha256": "b388de198628b56309e83b3b4993ecf0c655f341c259883a2d43f19e954c6f5e",
+        "identity_sha256": "0c15bb4f49938b2420d3dc2d7451e06d83b222b1912c2c9ee8dc9f8d87178fd3",
+        "training_transitions": 4988928,
+        "identity_verified": true,
+        "zero_observation_inference_action": [
+          0.09470300376415253,
+          -0.007133593317121267,
+          -0.47052064538002014,
+          0.5306766033172607
+        ],
+        "finite": true
+      },
+      {
+        "checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_9977856",
+        "payload_sha256": "965b2f141d5cff17f7cef943004fe4e4f62f0fecfe88b47353dc78b14ced723a",
+        "identity_sha256": "6f4c2993142037ebccde0ab11f9f723164b2fd27269fb45b850067524dad1c62",
+        "training_transitions": 9977856,
+        "identity_verified": true,
+        "zero_observation_inference_action": [
+          -0.1958305835723877,
+          -0.14049623906612396,
+          -0.4319169819355011,
+          0.11841841787099838
+        ],
+        "finite": true
+      }
+    ],
+    "new_control_steps": 0,
+    "new_physics_steps": 0,
+    "new_optimizer_updates": 0,
+    "scope": "Identity, payload hash and parameter restore; one deterministic 76D zero-observation inference. No new physics, no fresh performance evaluation."
+  },
+  "validation": {
+    "original_npz_sha256_verified": 16,
+    "csv_tables_compared_to_all_raw_plotted_values": 16,
+    "png_files_decoded": 16,
+    "pdf_headers_checked": 16,
+    "checkpoint_payload_and_identity_hashes_verified": 2,
+    "terminal_failures_retained": 16,
+    "duration_formula_verified": true,
+    "simulation_or_training_executed": false
+  },
+  "independent_review_scope": "A second agent independently verified earlier-policy 8 NPZ hashes, descriptor durations and recovery numerical holds. This is data review, not simulator replay.",
+  "search_scope": {
+    "included": [
+      "JIT Phase U provenance and previously used historical evaluations",
+      "DVGC non-JIT historical reports, manifests and phase-RSI checkpoints",
+      "DVGC reference_jump.csv source references and reachable Git history"
+    ],
+    "excluded": [
+      "STTW_CONTROL",
+      "old unopened final TEST",
+      "new simulator evaluation or training"
+    ],
+    "limitations": [
+      "No provenance-bound generator checkpoint was located for reference_jump.csv.",
+      "Search coverage does not prove global absence of another remembered policy.",
+      "The new narrow-obstacle task has not been evaluated with the earlier candidate."
+    ]
+  },
+  "artifacts": [
+    {
+      "path": "JUMP/runs/source_search/20260914/audit_trajectories.py",
+      "sha256": "4ebe8acd9eedb883576e7c8ec632fc69633d59549f851ab709b18f1d967904f6",
+      "bytes": 10362
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/landing_window_audit.json",
+      "sha256": "0ce2634a94c69920aebd18415fcb84ca2550d8eab31fe365029aa04caaf82864",
+      "bytes": 57209
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/checkpoint_integrity.json",
+      "sha256": "155694f51deecd91197a6a73ecc3bdf53ac1d212b2156f2da8a18f099cb19c3b",
+      "bytes": 1534
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/INDEX.md",
+      "sha256": "fcdea3d3a4121db5afea14fdd5bac961bdd4529ecedc248e283f25855fb9444f",
+      "bytes": 4387
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/earlier_4988928__980001.pdf",
+      "sha256": "97df3358cb0b200fd9eae94fe0b059c157cc25e4be53a860ae2e1cf9ecda0740",
+      "bytes": 42070
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/earlier_4988928__980001.png",
+      "sha256": "59f44f635d70d001c04393ee0932db56aea702a4b4acea67d4e14a8b86340094",
+      "bytes": 293265
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/earlier_4988928__980002.pdf",
+      "sha256": "6f7a7ec1bf3a103224ded5e7b554ee86170e7028c85b66321ee3febfd2f464c5",
+      "bytes": 42726
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/earlier_4988928__980002.png",
+      "sha256": "25c6497912fc83f38fb8b8e64e3c70a747a135f249a26a85b8844e79b7a086bb",
+      "bytes": 298226
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/earlier_4988928__980003.pdf",
+      "sha256": "f25fa5cdfa85165d484c9a5975e37ee62790562982bee0fdfec672aac22ec4ef",
+      "bytes": 42494
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/earlier_4988928__980003.png",
+      "sha256": "e7f9b18e799089b0a5fe9a0f40bacd91ce9f5fd0c5c374b68bf4f7e29394561f",
+      "bytes": 294785
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/earlier_4988928__980004.pdf",
+      "sha256": "9a7ae92da0505719144903f1f390f7da4344bb9a807922967e7278628acc40b3",
+      "bytes": 42368
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/earlier_4988928__980004.png",
+      "sha256": "b608a0a49cb3a1c7f1003df83cc61189721ac685c74ce7020bda6e7dab5c65b9",
+      "bytes": 295293
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/earlier_4988928__980005.pdf",
+      "sha256": "77a91deac4e54fad1e56b0f51544ea9cc4bd0b8e56c75a3a783c5acda551aec5",
+      "bytes": 42622
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/earlier_4988928__980005.png",
+      "sha256": "3d4082ee4ba4802aa3a6e58506d61effad7f9f782f65b2d887279a4a9ce15d4b",
+      "bytes": 298219
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/earlier_4988928__980006.pdf",
+      "sha256": "a4041bcd37547fca62fcd7ef47f5255e02804014fb946b724c41d9bb3fbf7e2d",
+      "bytes": 42303
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/earlier_4988928__980006.png",
+      "sha256": "1a8208863c7455b6bde1790ba5a551df3603eea83bb97fcc4386a47899d3e103",
+      "bytes": 292301
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/earlier_4988928__980007.pdf",
+      "sha256": "cc0a7c14112e253052628f4962cecb57b1cc96a1a0e2b0caade423a8cb3d638c",
+      "bytes": 42602
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/earlier_4988928__980007.png",
+      "sha256": "0789a0c5c2230adfead3f714849119678a1c2c01c2b505d1b3dc133afa3f0cc0",
+      "bytes": 291595
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/earlier_4988928__980008.pdf",
+      "sha256": "ece7026a737996e3e12e2effb447b46a2ea43c39578b1908c8afe87e1796c73d",
+      "bytes": 41732
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/earlier_4988928__980008.png",
+      "sha256": "fc48d03ee371183dcb040c14a647c5907d6c96a4a247efe2e56910a46c7fc0be",
+      "bytes": 293124
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/frozen_up_9977856__1000001.pdf",
+      "sha256": "643cd24d22c20803fc447504df35cc8b17e00c864a330e7cba7eeb20b21f121f",
+      "bytes": 38337
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/frozen_up_9977856__1000001.png",
+      "sha256": "297a1472b113e6b856fc27802ba94b1fb9eb0f4123e8d7d961345e3af9a84656",
+      "bytes": 281577
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/frozen_up_9977856__1000002.pdf",
+      "sha256": "ed8a62bd999e5f5cae5314a359251297779678726c72c1ca65d00227683836cd",
+      "bytes": 38646
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/frozen_up_9977856__1000002.png",
+      "sha256": "2a4d65578b0062d900bc703e96c9bc441d84f994044432f734f5bed4ad0f5312",
+      "bytes": 284454
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/frozen_up_9977856__1000003.pdf",
+      "sha256": "1e3c6fbe3e36dbbc80a2572f8d5e9561c6865e9f52409d5cc4b541b290b31a02",
+      "bytes": 38047
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/frozen_up_9977856__1000003.png",
+      "sha256": "c3bb918346ad67e45a3f697a28974fbf33d225c6e33e67f9a041e060a764e5dd",
+      "bytes": 276203
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/frozen_up_9977856__1000004.pdf",
+      "sha256": "f050453e470666aae5d895e31492967513eb92ac1486605418a3bffecafb4289",
+      "bytes": 38259
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/frozen_up_9977856__1000004.png",
+      "sha256": "24cd7cbd158abb981ae6baaa5ed5a2e7f5dde4bd6da77266592fadc20d3a7b2f",
+      "bytes": 277661
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/frozen_up_9977856__1000005.pdf",
+      "sha256": "ed8428e9f41adacb25715fb9c039dd7f0de0bc5c686c15cb51a9ad042bb8fefb",
+      "bytes": 38052
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/frozen_up_9977856__1000005.png",
+      "sha256": "bbb39a08d22d1fdeab909754869b5ce039a9bb2de77cec6243cdb5aee969a8b2",
+      "bytes": 282096
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/frozen_up_9977856__1000006.pdf",
+      "sha256": "acd24bbe7fe90a394aabd5672af4f618587dc3037b58d64216e12415ab9aceef",
+      "bytes": 37671
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/frozen_up_9977856__1000006.png",
+      "sha256": "8178fdecffdf80618a3f2679fc1f45c5061206e5cea128e88686add440ea6372",
+      "bytes": 273016
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/frozen_up_9977856__1000007.pdf",
+      "sha256": "630f6f65383115f25d9fabc52b855baf935a7d639edb1e679c9e04b6bf3f67e8",
+      "bytes": 38076
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/frozen_up_9977856__1000007.png",
+      "sha256": "7062a2b002226f6c502fe703f92f1c52efe1252b50664b2b8b154eb52117e7b2",
+      "bytes": 276325
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/frozen_up_9977856__1000008.pdf",
+      "sha256": "d82d428681bae834659effc737d617d0cd674441107be879a46d4ffdadf9de62",
+      "bytes": 37652
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/figures/frozen_up_9977856__1000008.png",
+      "sha256": "9fe5cdbb5ac2dde17e4ea0cdba08b575f229caedd96f79441fcab961fe6927c0",
+      "bytes": 273075
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/plot_data/earlier_4988928__980001.csv",
+      "sha256": "025d4236651709c25d8beb79dad3a381870e36008251f618bcc4bd8f3f3fe042",
+      "bytes": 118616
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/plot_data/earlier_4988928__980002.csv",
+      "sha256": "ce108ec7e7959b00f206ad6387d5f002f902ab922a188eb53c60df6540c2a11d",
+      "bytes": 119735
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/plot_data/earlier_4988928__980003.csv",
+      "sha256": "f41d8f41293e0aad58f0db0337517bae620bed4ad709ac2394b1c12c57ed65c3",
+      "bytes": 121620
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/plot_data/earlier_4988928__980004.csv",
+      "sha256": "d07ef50e7c0fd9afcb2178ed2b03fde1e1510b8d0f1aca496170b3046446f1b4",
+      "bytes": 118977
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/plot_data/earlier_4988928__980005.csv",
+      "sha256": "2838b1ed69be79246352337948c3fdbcff1fc17d6251ec06164c95bd18b909c9",
+      "bytes": 119735
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/plot_data/earlier_4988928__980006.csv",
+      "sha256": "6d78bf2ae03681aa2fb18e7030846d20095c7d1897749ef67697acd32d2969fa",
+      "bytes": 120110
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/plot_data/earlier_4988928__980007.csv",
+      "sha256": "67ab91abeb10a0444f99865bb3ef13bac23c30b4453b603fbbc8707422a9d078",
+      "bytes": 118981
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/plot_data/earlier_4988928__980008.csv",
+      "sha256": "2e3cc18abc3b80615a741f817b0de26d14637dd97a908bd1bb8ab191d4a1c9b4",
+      "bytes": 118209
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/plot_data/frozen_up_9977856__1000001.csv",
+      "sha256": "50a3f5790d82f39c3842852dd3babcf9ecd8bef7e61ff7a25d2fb7654f1cae5f",
+      "bytes": 89156
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/plot_data/frozen_up_9977856__1000002.csv",
+      "sha256": "b182e081aa385543c62522b545fb677eb76802a45845573383f315535923c6e0",
+      "bytes": 91095
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/plot_data/frozen_up_9977856__1000003.csv",
+      "sha256": "959f8af618be15485a6c4c5033b4f3df7b47ad440684c3659effc59a4774db9c",
+      "bytes": 89210
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/plot_data/frozen_up_9977856__1000004.csv",
+      "sha256": "cb5b43441b17cd8aefc521724adf439ec9350f8490d65d26a59335a581c31604",
+      "bytes": 89969
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/plot_data/frozen_up_9977856__1000005.csv",
+      "sha256": "d860b4b6c9b93089a481dacac6ec80f2d5f449413a27cd2062b30b220451c161",
+      "bytes": 88417
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/plot_data/frozen_up_9977856__1000006.csv",
+      "sha256": "e8a359d5282247906e820a5c98a43aa8735be70af21fcade00dd43dc1265908d",
+      "bytes": 88408
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/plot_data/frozen_up_9977856__1000007.csv",
+      "sha256": "fdf71e553cea025f35e9570fcd5003cbe2c4ba63f6775e2d654d245bfa105eb3",
+      "bytes": 89547
+    },
+    {
+      "path": "JUMP/runs/source_search/20260914/plot_data/frozen_up_9977856__1000008.csv",
+      "sha256": "6eca79c36625c96d0c6f81dd8ed9bc214e9e8c723b6c0f634203d22d3ddd4a30",
+      "bytes": 88031
+    }
+  ]
+}

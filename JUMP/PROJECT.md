@@ -1,6 +1,6 @@
 # JUMP — preparation and trigger planning
 
-> Implementation plan approved in conversation 2026-09-14. First qualification, near-start diagnosis and source-expert comparison COMPLETE. The frozen upstream teacher has a stable measured approach; the strict continuous dual-contact gate still fails. Next: diagnose the grounded-support contract before choosing adaptation or testing online expert switching.
+> Implementation plan approved in conversation 2026-09-14. Qualification, source comparison and earlier-policy historical audit COMPLETE. Both the frozen teacher and an earlier transition_4988928 have recorded natural-start landing/riding segments; their eventual failures do not erase those segments. New contact qualification and complete narrow-obstacle recovery remain unverified. Next: diagnose support and compare these two source candidates under the same new protocol before choosing adaptation.
 
 Goal: determine whether a frozen JIT Actor can maintain a genuine grounded forward approach and respond to an external trigger, before learning preparation/timing for complete narrow-obstacle crossing.
 
@@ -55,7 +55,7 @@ Policy input compatibility: same JIT 25-field frame/FIFO and 76D Actor. Metadata
 
 ## Next bounded stage
 
-Before spending the40M common-skill adaptation allocation, use the identified frozen upstream teacher as the source candidate. Its native historical and new CPU approach evidence is stronger than later pi0. Diagnose contact support separately from backend sensor sampling; no old failure labels change. Verify or adapt the approach/jump/recovery bundle before window construction. The200M budget is available stage-by-stage, not a requirement to consume it on identical rollouts.
+Before spending the40M common-skill adaptation allocation, compare the identified frozen upstream teacher and the earlier transition_4988928 as source candidates. The earlier Actor has historical natural-start platform and lower-ground riding segments; the teacher has stronger measured new-CPU approach evidence than later pi0. Historical pose/terrain windows do not qualify new-task recovery. Diagnose contact support separately from backend sensor sampling; no old failure labels change. Verify or adapt the approach/jump/recovery bundle before window construction. The200M budget is available stage-by-stage, not a requirement to consume it on identical rollouts.
 
 ### Natural-start source audit — completed 2026-09-14
 
@@ -69,3 +69,11 @@ The user authorized training pi0 for a stable early approach, then pointed to an
 The historical pi0 canonical GPU evaluation already failed yaw at16controls/.32s fromx1.5. Thus its natural-approach deficiency is not exclusively a new-CPU artifact. Upstream-only historical runs reach Apex8/8 but later all fail pitch; D's42 historical snapshot rollouts recover32/42, including14/14 from this upstream checkpoint. Those are old platform/recovery criteria, not new2s full crossing. Exact source paths/hashes and current result summaries are in `docs/evidence/source_expert_audit.json`. New-project cumulative executed cost is400controls/1555physics; training updates remain0.
 
 Implementation changes remain in JUMP. Source inspection showed legacy non-JIT DVGC uses different observation, knee and wheel commands; those params cannot be loaded through the JIT76D adapter. JIT pi_up_star uses the same76D interface and12+12a wheel/absolute joint mapping and is a compatible source candidate.
+
+### Earlier complete-trajectory search — completed 2026-09-14
+
+- Found `phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/checkpoints/transition_4988928`: one reward-trained JIT Actor, natural x1.5/vx2 start, no phase switch. Its eight previously used historical traces include a platform pose/terrain window of1.76–1.82s and a second lower-ground window of2.44–2.70s, followed by roll failure at6.20–6.38s. These are repeated nominal starts, not eight initial-state conditions or training seeds.
+- Corrected the earlier terminal-only assessment: frozen pi_up_star also has platform landing/riding segments (first seed1.36–4.08s) before eventual pitch failure. Landing capability cannot be ruled out solely by the later failure flag.
+- Both payloads loaded with verified identities and finite76D zero-input inference, zero physics. Full16-case plots retain actual failures. Current recovery numerical thresholds after Apex yield maximum hold0.28s for the earlier policy and no passing sample for frozen U; actual contact/event-chain qualification and new narrow-obstacle transfer are still unverified.
+- Further non-JIT/Git source tracing did not locate a provenance-bound generator checkpoint for `reference_jump.csv` or a confirmed natural-start full-recovery predecessor. This bounds the search result rather than proving global absence.
+- Added earlier Actor as a future comparison candidate only; existing configs, source and old labels unchanged. Evidence: `docs/evidence/historical_landing_audit.json`; full local index: `runs/source_search/20260914/INDEX.md`. This audit adds0controls/0physics/0updates. Cumulative400controls/1555physics/0updates remains unchanged.
