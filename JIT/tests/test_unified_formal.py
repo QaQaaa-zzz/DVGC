@@ -353,3 +353,20 @@ def test_public_formal_entry_routes_actor_restore_without_cli_patching(jit_root,
                                   backend_name=lambda: "gpu", trainer=trainer)
     assert loaded == [path]
     assert restore_calls == ([path] if warm else [])
+
+
+def test_adaptive_kl_reaches_trainer_and_reduces_large_update_lr(jit_root):
+    import optax
+    from brax.training.agents.ppo.optimizer import adaptive_kl_learning_rate
+    from jit_dvgc.unified_formal import build_unified_formal_trainer_kwargs, load_unified_formal_config
+    config=load_unified_formal_config(jit_root/'configs/pi_unified_formal.json')
+    config.raw['kl_control']={'mode':'adaptive_kl','target':.01,'min_learning_rate':1e-5,'max_learning_rate':1e-4}
+    callbacks=SimpleNamespace(on_progress=lambda *_:None,on_policy_params=lambda *_:None)
+    kw=build_unified_formal_trainer_kwargs(config,object(),callbacks)
+    assert kw['learning_rate_schedule']=='ADAPTIVE_KL' and kw['desired_kl']==.01
+    opt=optax.inject_hyperparams(optax.adam)(learning_rate=1e-4)
+    state=opt.init(jp.asarray(1.))
+    state,lr=adaptive_kl_learning_rate(state,jp.asarray(.03),.01,1e-5,1e-4)
+    assert float(lr)<1e-4
+    for _ in range(20):state,lr=adaptive_kl_learning_rate(state,jp.asarray(.03),.01,1e-5,1e-4)
+    assert float(lr)==pytest.approx(1e-5)

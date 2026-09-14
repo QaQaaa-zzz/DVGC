@@ -693,7 +693,8 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
             advanced_down,
             initial_descent_events(data.qpos[index.root_qpos_address]),
         )
-        reward = jp.where(active_up, up_reward, down_reward_result.total)
+        reward_uses_up = active_up | jp.asarray(getattr(self, "_reward_mode", "phase_recovery") == "original_all_phases")
+        reward = jp.where(reward_uses_up, up_reward, down_reward_result.total)
         terminated = jp.where(
             active_up, up_terminal.terminated, down_terminal.terminated
         )
@@ -777,24 +778,24 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
             {
                 "reward": reward,
                 "reward/unclipped": jp.where(
-                    active_up,
+                    reward_uses_up,
                     up_reward_result.unclipped_total,
                     down_reward_result.total,
                 ),
                 "reward/pre_episode_return_override": jp.where(
-                    active_up, up_reward_result.total, down_reward_result.total
+                    reward_uses_up, up_reward_result.total, down_reward_result.total
                 ),
                 "reward/unclipped_pre_episode_return_override": jp.where(
-                    active_up,
+                    reward_uses_up,
                     up_reward_result.unclipped_total,
                     down_reward_result.total,
                 ),
                 "reward/episode_return_override": jp.where(
-                    active_up, up_reward - up_reward_result.total, jp.asarray(0.0)
+                    reward_uses_up, up_reward - up_reward_result.total, jp.asarray(0.0)
                 ),
                 **{
                     f"reward/{key}": jp.where(
-                        active_up,
+                        reward_uses_up,
                         value,
                         jp.asarray(0.0, jp.float32),
                     )
@@ -802,7 +803,7 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
                 },
                 **{
                     f"reward/descent_{key}": jp.where(
-                        active_up,
+                        reward_uses_up,
                         jp.asarray(0.0, jp.float32),
                         value,
                     )

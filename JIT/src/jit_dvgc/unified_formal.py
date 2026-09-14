@@ -514,7 +514,7 @@ def build_unified_formal_trainer_kwargs(
     callbacks: Any,
 ) -> dict[str, Any]:
     ppo = config.ppo
-    return {
+    kwargs = {
         "environment": environment,
         "num_timesteps": ppo.requested_transitions,
         "max_devices_per_host": 1,
@@ -549,6 +549,13 @@ def build_unified_formal_trainer_kwargs(
         "restore_value_fn": False,
         "run_evals": False,
     }
+
+    kl = config.raw.get('kl_control')
+    if kl:
+        kwargs.update(learning_rate_schedule='ADAPTIVE_KL', desired_kl=kl['target'],
+                      learning_rate_schedule_min_lr=kl['min_learning_rate'],
+                      learning_rate_schedule_max_lr=kl['max_learning_rate'])
+    return kwargs
 
 
 def _write_json(path: Path, payload: Mapping[str, Any]) -> None:

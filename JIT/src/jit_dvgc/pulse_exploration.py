@@ -221,7 +221,7 @@ def run(spec_path,output):
                     write(d/'learn_policy_reuse.json',dict(previous=str(training),config=str(config),
                         report_sha256=_file_sha(training/'formal_report.json'),new_training_interactions=0))
                 else:
-                    make_config(sp,source['frozen_policy'],spec['bootstrap_config'],config,run_id,source['policy']['iteration']+index+1,spec['policy_steps'],spec['seed']+10000+index,checkpoints=[spec['policy_steps']],panel_support_path=root/'source_pi_support.json',pending_fraction=spec['pending_fraction'])
+                    make_config(sp,source['frozen_policy'],spec['bootstrap_config'],config,run_id,source['policy']['iteration']+index+1,spec['policy_steps'],spec['seed']+10000+index,checkpoints=[spec['policy_steps']],panel_support_path=root/'source_pi_support.json',pending_fraction=spec['pending_fraction'],reward_mode=spec.get('reward_mode'),kl_control=spec.get('kl_control'))
                     cost=child(d,'learn_policy',['JIT/cli/train_unified_from_pi0.py','--config',config,'--run-id',run_id],spec['policy_steps']+1600,dict(JIT_RUN_ROOT=str(d/'policy_training')))
                     training=d/'policy_training'/run_id;report=read(training/'formal_report.json');cost.update(charged_interactions=report['completed_training_transitions']+report['train_panel_interactions'],accounting='actual')
                 if current_only and not reused_training:

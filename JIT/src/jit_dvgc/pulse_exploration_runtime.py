@@ -57,6 +57,7 @@ def networks(spec):
     config,_,env=build_unified_formal_environment(Path(member['policy']['formal_config']))
     if config.raw.get('success_criterion', 'first_valid_landing') != spec.get('success_criterion', 'first_valid_landing'):
         raise ValueError('source and exploration endpoint differ')
+    env._reward_mode=spec.get('reward_mode',config.raw.get('reward_mode','phase_recovery'))
     payload=load_checkpoint(Path(member['policy']['checkpoint']),expected=checkpoint_identity(config,env))
     for k,v in [('actor_sha256',payload.actor_params),('normalizer_sha256',payload.observation_normalizer),('critic_sha256',payload.critic_params)]:
         if pytree_sha256(v)!=member['policy'][k]:raise ValueError('base payload drift: '+k)
@@ -179,6 +180,7 @@ def evaluate(spec, output):
         subset=[r for r in rows if (spec.get('full_matrix',False) or r['label']!=1) and not r.get('prefix_terminal',False) and not any(a['policy']==name for a in r['attempts'])]
         if not subset:continue
         env,policy,_=suffix._runtime(name)
+        env._reward_mode=spec.get('reward_mode',getattr(env,'_reward_mode','phase_recovery'))
         restored=[]
         for r in subset:
             snap=load_unified_envelope_snapshot(Path(r['snapshot']))

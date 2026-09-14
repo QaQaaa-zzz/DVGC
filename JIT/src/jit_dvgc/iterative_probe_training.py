@@ -234,6 +234,15 @@ def load_config(path):
     if not candidate and (support.get('schema')!=SUPPORT_SCHEMA or support.get('role')!='train' or support.get('final_test_used') is not False):
         raise ValueError('TRAIN witnessed support required')
     if not candidate and (not support['entries'] or any(not r['witnessed'] for r in support['entries'])):raise ValueError('unwitnessed training reset')
+    if raw.get('reward_mode','phase_recovery') not in ('phase_recovery','original_all_phases'):
+        raise ValueError('unsupported training reward mode')
+    kl=raw.get('kl_control')
+    if kl is not None:
+        import math
+        if (kl.get('mode') != 'adaptive_kl' or any(not math.isfinite(kl[k]) or kl[k] <= 0
+                for k in ('target','min_learning_rate','max_learning_rate'))
+                or not kl['min_learning_rate'] <= raw['ppo']['learning_rate'] <= kl['max_learning_rate']):
+            raise ValueError('invalid adaptive KL configuration')
     ppo=UnifiedPPOConfig(**raw['ppo'])
     if (ppo.num_parallel_envs!=128 or ppo.batch_size!=16 or ppo.num_minibatches!=8 or ppo.unroll_length!=25
         or ppo.episode_horizon!=400 or ppo.requested_transitions<=0 or ppo.requested_transitions%ppo.block_transitions):
@@ -380,6 +389,7 @@ def build_environment(config, *, panel=False):
     down=phase_config(Path(config.down_config_path))
     if up.config_sha256!=config.up_config_sha256 or down.config_sha256!=config.down_config_sha256:raise ValueError('phase config drift')
     env=ProbeEnv(up,down,bootstrap_artifact,runtime_naccdmax=1024)
+    env._reward_mode=config.raw.get("reward_mode","phase_recovery")
     pool=SnapshotPool.from_paths([Path(r['snapshot']) for r in entries],compatibility=compatibility_identity(env))
     up_rows=[r for r in entries if r['phase']=='upstream'];down_rows=[r for r in entries if r['phase']=='downstream']
     if not up_rows or not down_rows:raise ValueError('both training phases required')
@@ -392,7 +402,7 @@ def build_environment(config, *, panel=False):
 
 def make_config(support_path,initializer_path,bootstrap_config,output,run_id,iteration,steps,seed,*,
                 checkpoints=None,panel_samples_per_phase=2,panel_horizon=400,
-                panel_support_path=None,pending_fraction=None):
+                panel_support_path=None,pending_fraction=None,reward_mode=None,kl_control=None):
     support_path,initializer_path,bootstrap_config=map(lambda p:Path(p).resolve(),(support_path,initializer_path,bootstrap_config))
     base=read(bootstrap_config)
     raw=dict(schema=SCHEMA,support=str(support_path),bootstrap_formal_config=str(bootstrap_config),
@@ -431,5 +441,10 @@ def make_config(support_path,initializer_path,bootstrap_config,output,run_id,ite
             raw['input_files'][str(path)]=file_sha(path)
         if 'fixed_train_panel' in raw:
             raw['fixed_train_panel']=fixed_train_panel_identity(read(panel_support_path or support_path),plan,raw['success_criterion'])
+    raw['reward_mode']=reward_mode or source_runtime.get('reward_mode','phase_recovery')
+    selected_kl=kl_control if kl_control is not None else source_runtime.get('kl_control')
+    if selected_kl is not None:raw['kl_control']=selected_kl
+    if raw['reward_mode']=='original_all_phases':
+        raw['reward_contract']='original Phase U reward throughout; stable recovery terminal unchanged; no added recovery bonuses'
     write(output,raw);load_config(output)
     return raw
