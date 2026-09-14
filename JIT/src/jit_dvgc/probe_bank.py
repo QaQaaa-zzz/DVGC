@@ -49,8 +49,8 @@ def lock_probe_bank(spec: dict, output: Path) -> dict:
     for field in ("xml_sha256", "start_contract_sha256", "centerline_sha256", "resolution_sha256"):
         if not re.fullmatch(r"[a-f0-9]{64}", str(task.get(field, ""))):
             raise ValueError(f"bank requires declared task {field}")
-    if task.get("success_criterion") != "first_valid_landing":
-        raise ValueError("probe bank endpoint must be first_valid_landing")
+    if task.get("success_criterion") not in ("first_valid_landing", "stable_forward_recovery"):
+        raise ValueError("unsupported probe bank endpoint")
     if task.get("continuation_start_semantics") != "fresh_continuation_v1":
         raise ValueError("only explicitly declared fresh_continuation_v1 is implemented; replay equivalence is pending")
     for key in ("max_ticks", "label_interaction_budget", "max_candidates_per_process"):

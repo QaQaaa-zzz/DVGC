@@ -93,7 +93,7 @@ def _source_run_id(config: Any) -> str:
 
 
 def _checkpoint_identity(config: Any) -> CheckpointIdentity:
-    up_config = load_config(Path(config.up_config_path))
+    up_config = load_config(Path(config.up_config_path), runtime_only=True) if config.raw.get("historical_up_runtime") else load_config(Path(config.up_config_path))
     down_config = load_config(Path(config.down_config_path))
     if up_config.config_sha256 != config.up_config_sha256:
         raise ValueError("unified freeze upstream config hash drift")
@@ -207,7 +207,7 @@ def _record_payload(record: FrozenUnifiedPolicyRecord) -> dict[str, Any]:
 
 
 def inspect_development_checkpoint(
-    *, config_path: Path, checkpoint: Path, name: str,
+    *, config_path: Path, checkpoint: Path, name: str, allow_initialization: bool = False,
 ) -> FrozenDevelopmentCheckpointRecord:
     """Verify a declared positive milestone from a completed run for TRAIN use.
 
@@ -224,8 +224,8 @@ def inspect_development_checkpoint(
     run_dir = checkpoint.parent.parent
     if checkpoint.parent.name != "checkpoints" or run_dir.name != run_id:
         raise ValueError("development checkpoint run directory does not match config run_id")
-    match = re.fullmatch(r"transition_([1-9][0-9]*)", checkpoint.name)
-    if match is None or int(match[1]) not in config.formal.checkpoint_transitions:
+    match = re.fullmatch(r"transition_(0|[1-9][0-9]*)", checkpoint.name)
+    if match is None or (int(match[1]) not in config.formal.checkpoint_transitions and not (allow_initialization and int(match[1]) == 0)):
         raise ValueError("development checkpoint is not a declared positive milestone")
     transition = int(match[1])
     if transition > config.ppo.requested_transitions:
@@ -271,6 +271,7 @@ def verify_frozen_unified_record(record: Mapping[str, Any]) -> FrozenUnifiedPoli
         inspected = inspect_development_checkpoint(
             config_path=Path(record["formal_config"]),
             checkpoint=Path(record["checkpoint"]), name=record["name"],
+            allow_initialization=record.get("source_training_transitions") == 0,
         )
     else:
         inspected = inspect_unified_policy(
@@ -329,11 +330,11 @@ def freeze_unified_policy(
 
 
 def freeze_development_checkpoint(
-    output_dir: Path, *, config_path: Path, checkpoint: Path, name: str,
+    output_dir: Path, *, config_path: Path, checkpoint: Path, name: str, allow_initialization: bool = False,
 ) -> dict[str, Any]:
     """Freeze a completed-run milestone for diagnostic TRAIN comparisons only."""
     record = inspect_development_checkpoint(
-        config_path=config_path, checkpoint=checkpoint, name=name,
+        config_path=config_path, checkpoint=checkpoint, name=name, allow_initialization=allow_initialization,
     )
     protocol = {
         "schema": FROZEN_DEVELOPMENT_CHECKPOINT_SCHEMA,

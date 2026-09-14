@@ -76,7 +76,7 @@ def test_candidate_config_keeps_witnessed_panel_and_locks_snapshots(sources,tmp_
     support=candidate_support_view(witness,pending,{})
     support_path=tmp_path/'candidate.json';write(support_path,support)
     panel_path=tmp_path/'witness.json';write(panel_path,witness)
-    initializer=tmp_path/'frozen.json';write(initializer,{})
+    initializer=tmp_path/'frozen.json';write(initializer,{'policy':{'formal_config':str(jit_root/'configs/pi_unified_formal.json')}})
     output=tmp_path/'config.json'
     raw=make_config(support_path,initializer,jit_root/'configs/pi_unified_formal.json',output,
         'candidate',7,128000,123,checkpoints=[32000,64000,128000],panel_support_path=panel_path,pending_fraction=.25,panel_samples_per_phase=1)

@@ -75,7 +75,8 @@ def seed_support(spec, output):
     tape = dict(np.load(trace))
     active = np.flatnonzero(tape['prefix_mask'][:, 0])
     end = int(active[-1])
-    if not (bool(tape['snap/down/valid_contact_seen'][end, 0]) and
+    success_key = 'snap/down/recovery_success' if spec.get('success_criterion') == 'stable_forward_recovery' else 'snap/down/valid_contact_seen'
+    if not (bool(tape[success_key][end, 0]) and
             not bool(tape['physical_failure'][end, 0])):
         raise ValueError('current source did not complete a conflict-free nominal jump')
     rows = []

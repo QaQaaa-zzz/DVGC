@@ -59,3 +59,14 @@ def test_terminal_prefix_quality_preserves_failure_success_and_conflict():
     r,mask,ledger,_=pulse_feedback(rows,[],dict(novelty=.25,success=1.,failure=1.))
     np.testing.assert_allclose(r,[-.75,1.25,0]);assert mask.tolist()==[True,True,False]
     assert len(ledger)==3
+
+
+def test_stable_pulse_does_not_finish_at_contact():
+    from types import SimpleNamespace
+    from jit_dvgc.pulse_exploration_runtime import endpoint_state, endpoint_success
+    state=SimpleNamespace(info={'success':False,'down_events':SimpleNamespace(valid_contact_seen=True)})
+    spec={'success_criterion':'stable_forward_recovery'}
+    assert endpoint_state(state,spec) is state
+    assert not endpoint_success(state,spec)
+    state.info['success']=True
+    assert endpoint_success(state,spec)

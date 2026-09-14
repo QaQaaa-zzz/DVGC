@@ -374,9 +374,8 @@ def build_environment(config, *, panel=False):
             return first_landing_state(advanced) if config.raw['success_criterion']=='first_valid_landing' else advanced
 
     historical = config.raw.get('historical_up_runtime', False)
-    if historical and (config.raw['initialization']['actor']!='warm_start_phase_checkpoint'
-                       or config.up_config_path!=config.raw['initialization']['source_phase_config']):
-        raise ValueError('historical runtime must be the identity-locked initializer config')
+    if historical and config.raw['input_files'].get(config.up_config_path) != file_sha(Path(config.up_config_path)):
+        raise ValueError('historical runtime requires an identity-locked source config')
     up=phase_config(Path(config.up_config_path), runtime_only=True) if historical else phase_config(Path(config.up_config_path))
     down=phase_config(Path(config.down_config_path))
     if up.config_sha256!=config.up_config_sha256 or down.config_sha256!=config.down_config_sha256:raise ValueError('phase config drift')
@@ -420,5 +419,17 @@ def make_config(support_path,initializer_path,bootstrap_config,output,run_id,ite
         plan=checkpoint_evaluation_plan(steps,checkpoints,samples_per_phase=panel_samples_per_phase,horizon=panel_horizon)
         raw['checkpoint_evaluation']=plan
         raw['fixed_train_panel']=fixed_train_panel_identity(read(panel_support_path or support_path),plan)
+    source_runtime=read(read(initializer_path)['policy']['formal_config'])
+    if source_runtime.get('success_criterion') == 'stable_forward_recovery':
+        raw['inputs']=source_runtime['inputs'].copy()
+        raw['success_criterion']='stable_forward_recovery'
+        raw['reward_contract']=source_runtime['reward_contract']
+        raw['ppo']={**source_runtime['ppo'],'requested_transitions':steps,'seed':seed}
+        raw['historical_up_runtime']=source_runtime.get('historical_up_runtime',False)
+        for phase in ('up','down'):
+            path=Path(raw['inputs'][phase+'_config_path'])
+            raw['input_files'][str(path)]=file_sha(path)
+        if 'fixed_train_panel' in raw:
+            raw['fixed_train_panel']=fixed_train_panel_identity(read(panel_support_path or support_path),plan,raw['success_criterion'])
     write(output,raw);load_config(output)
     return raw

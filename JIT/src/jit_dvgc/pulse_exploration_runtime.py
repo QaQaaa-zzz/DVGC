@@ -27,6 +27,22 @@ def aggregate_labels(attempts,order):
     return 0 if all(name in by_policy and by_policy[name]==0 for name in order) else None
 
 
+def recovery_mode(spec):
+    criterion = spec.get('success_criterion', 'first_valid_landing')
+    if criterion not in ('first_valid_landing', 'stable_forward_recovery'):
+        raise ValueError('unsupported pulse success criterion')
+    return criterion == 'stable_forward_recovery'
+
+
+def endpoint_state(state, spec):
+    from .iterative_probe_training import first_landing_state
+    return state if recovery_mode(spec) else first_landing_state(state)
+
+
+def endpoint_success(state, spec):
+    return state.info['success'] if recovery_mode(spec) else state.info['down_events'].valid_contact_seen
+
+
 def networks(spec):
     import jax
     import optax
@@ -39,6 +55,8 @@ def networks(spec):
     bank=load_probe_bank(Path(spec['bank']))
     member=next(m for m in bank['members'] if m['name']==spec['proposer'])
     config,_,env=build_unified_formal_environment(Path(member['policy']['formal_config']))
+    if config.raw.get('success_criterion', 'first_valid_landing') != spec.get('success_criterion', 'first_valid_landing'):
+        raise ValueError('source and exploration endpoint differ')
     payload=load_checkpoint(Path(member['policy']['checkpoint']),expected=checkpoint_identity(config,env))
     for k,v in [('actor_sha256',payload.actor_params),('normalizer_sha256',payload.observation_normalizer),('critic_sha256',payload.critic_params)]:
         if pytree_sha256(v)!=member['policy'][k]:raise ValueError('base payload drift: '+k)
@@ -71,7 +89,7 @@ def collect(spec, output):
     delay=pulse_delay(spec,spec['round_index']);prefix_steps=delay+spec['pulse_steps']
     base=make_checkpoint_policy(env,payload,deterministic=True);dist=net.parametric_action_distribution
     reset=jax.vmap(env._reset_jump_start_unified)
-    step=jax.vmap(lambda s,a:first_landing_state(env.step(s,a)))
+    step=jax.vmap(lambda s,a:endpoint_state(env.step(s,a),spec))
     def run(rng):
         initial=prepare_parallel_worlds(reset(jax.random.split(rng,count)),env,count)
         def advance(carry,tick):
@@ -120,7 +138,7 @@ def collect(spec, output):
         coords=physical_coordinates_from_arrays(tape['qpos'][t,e],tape['qvel'][t,e],bundle=env._bundle)
         if terminal:
             # Terminal evidence is never passed to the nonterminal snapshot API.
-            label,reason=terminal_prefix_label(bool(arrays['down/valid_contact_seen']),bool(tape['physical_failure'][t,e]) if 'physical_failure' in tape else None)
+            label,reason=terminal_prefix_label(bool(arrays['down/recovery_success'] if recovery_mode(spec) else arrays['down/valid_contact_seen']),bool(tape['physical_failure'][t,e]) if 'physical_failure' in tape else None)
             endpoint=dict(snapshot=None,state_sha256=canonical_sha256(dict(qpos=arrays['data/qpos'].tolist(),qvel=arrays['data/qvel'].tolist())),snapshot_context_sha256=canonical_sha256(dict(terminal_prefix_sha256=_file_sha(output/'prefixes.npz'),lane=e,tick=t)),prefix_label=label,terminal_reason=reason,endpoint_kind='terminal_trace',terminal_tick=t)
         else:
             snap=snapshot_from_arrays(arrays,env=env,record=generator,parent_trajectory=str(output/'prefixes.npz')+'::'+str(e),parent_state_sha256=_file_sha(output/'prefixes.npz'))
@@ -165,14 +183,17 @@ def evaluate(spec, output):
         for r in subset:
             snap=load_unified_envelope_snapshot(Path(r['snapshot']))
             if snapshot_context_sha256(snap)!=r['snapshot_context_sha256']:raise ValueError('suffix snapshot identity changed')
-            restored.append(fresh_unified_continuation_start(snap,env))
+            state=fresh_unified_continuation_start(snap,env)
+            if recovery_mode(spec):
+                state=state.replace(info={**state.info,'down_events':state.info['down_events'].replace(post_contact_ticks=jp.asarray(0,jp.int32),recovery_success=jp.asarray(False))})
+            restored.append(state)
         count=len(restored);initial=prepare_parallel_worlds(stack_worlds(restored),env,count)
         if charged+count*horizon>spec['budget']:raise RuntimeError('insufficient declared suffix reservation')
         write(output/'status.json',dict(phase='running',policy=name,charged_interactions=charged,reserved_attempt_interactions=count*horizon))
-        step=jax.vmap(lambda s,a:first_landing_state(env.step(s,a)))
+        step=jax.vmap(lambda s,a:endpoint_state(env.step(s,a),spec))
         def rollout(initial):
             def frame(s,action,mask):
-                return dict(qpos=s.data.qpos,qvel=s.data.qvel,action=action,reward=s.reward,mask=mask,done=s.done,success=s.info['success'],physical_failure=s.info['physical_failure'],timeout=s.info['timeout'],end_code=s.info['end_code'],valid_contact=s.info['down_events'].valid_contact_seen)
+                return dict(qpos=s.data.qpos,qvel=s.data.qvel,action=action,reward=s.reward,mask=mask,done=s.done,success=s.info['success'],physical_failure=s.info['physical_failure'],timeout=s.info['timeout'],end_code=s.info['end_code'],valid_contact=endpoint_success(s,spec))
             blank=frame(initial,jp.zeros((count,4)),jp.zeros(count,bool))
             traces={k:jp.zeros((horizon,)+v.shape,v.dtype) for k,v in blank.items()}
             def condition(c):return (c[0]<horizon)&jp.any(c[2])
@@ -185,7 +206,7 @@ def evaluate(spec, output):
                 f=frame(nxt,action,alive);tr={k:v.at[t].set(f[k]) for k,v in tr.items()}
                 def choose(path,n,o):return n if _shared_warp(path) else jp.where(alive.reshape((count,)+(1,)*(n.ndim-1)),n,o)
                 nxt=jax.tree_util.tree_map_with_path(choose,nxt,s)
-                alive=alive&~nxt.done.astype(bool)&~nxt.info['down_events'].valid_contact_seen&finite
+                alive=alive&~nxt.done.astype(bool)&~endpoint_success(nxt,spec)&finite
                 return t+1,nxt,alive,tr
             tick,final,_,tr=jax.lax.while_loop(condition,advance,(jp.array(0),initial,jp.ones(count,bool),traces))
             return tick,tr
@@ -196,6 +217,7 @@ def evaluate(spec, output):
             indices=np.flatnonzero(tape['mask'][:,e]);last=int(indices[-1]);valid=bool(tape['valid_contact'][last,e]);failure=bool(tape['physical_failure'][last,e])
             if not np.isfinite(tape['qpos'][indices,e]).all() or not np.isfinite(tape['qvel'][indices,e]).all():raise ValueError('nonfinite suffix')
             label,outcome=suffix_label(valid,failure,bool(tape['timeout'][last,e]),bool(tape['done'][last,e]),len(indices)>=horizon)
+            if recovery_mode(spec) and label == 1: outcome='stable_forward_recovery'
             r['attempts'].append(dict(policy=name,actor_sha256=suffix.members[name]['policy']['actor_sha256'],label=label,outcome=outcome,steps=len(indices),task_return=float(tape['reward'][indices,e].sum()),trace=str(trace_path),trace_lane=e,trace_sha256=_file_sha(trace_path),snapshot_context_sha256=r['snapshot_context_sha256']))
             if label:r.update(label=1,witness=name)
         del initial,restored

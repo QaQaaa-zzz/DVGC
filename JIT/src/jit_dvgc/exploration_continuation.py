@@ -78,7 +78,7 @@ class FrozenSuffixEvaluator:
         if horizon != self.bank['max_ticks']:
             raise ValueError('suffix horizon differs from locked bank')
         task = self.bank['task']
-        if task['success_criterion'] != 'first_valid_landing' or task['continuation_start_semantics'] != 'fresh_continuation_v1':
+        if task['success_criterion'] not in ('first_valid_landing','stable_forward_recovery') or task['continuation_start_semantics'] != 'fresh_continuation_v1':
             raise ValueError('unsupported bank endpoint/context semantics')
         self.output = Path(output)
         self.output.mkdir(parents=True, exist_ok=False)
@@ -125,6 +125,8 @@ class FrozenSuffixEvaluator:
         return runtime
 
     def _attempt(self, snapshot, name, directory):
+        if self.bank["task"]["success_criterion"] != "first_valid_landing":
+            raise ValueError("stable recovery requires the pulse batched evaluator")
         from .unified_continuation_labels import fresh_unified_continuation_start, classify_first_valid_landing_outcome
         from .jump_evidence_runtime import view, action_for
         env, policy, step = self._runtime(name)
