@@ -11,6 +11,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--config', type=Path, required=True)
     p.add_argument('--frozen-policy', type=Path)
+    p.add_argument('--trained-checkpoint', type=Path)
     p.add_argument('--output', type=Path, required=True)
     a = p.parse_args()
     a.output.mkdir(parents=True, exist_ok=False)
@@ -31,7 +32,12 @@ def main():
         if config.raw['success_criterion']!='stable_forward_recovery':
             raise ValueError('strict stable recovery config required')
         _,env=build_environment(config)
-        if a.frozen_policy:
+        if a.trained_checkpoint:
+            from jit_dvgc.unified_training import checkpoint_identity
+            from jit_dvgc.handoff_bank import pytree_sha256
+            payload=load_checkpoint(a.trained_checkpoint,expected=checkpoint_identity(config))
+            source={'actor_sha256':pytree_sha256(payload.actor_params)}
+        elif a.frozen_policy:
             frozen=load_frozen_unified_manifest(a.frozen_policy)
             source=frozen['policy']; original=_load_policy_formal_config(Path(source['formal_config']))
             payload=load_checkpoint(Path(source['checkpoint']),expected=_checkpoint_identity(original))
@@ -47,7 +53,7 @@ def main():
         frames=trace.frames
         contact=next((i for i,f in enumerate(frames) if f.metrics.get('event/descent_valid_contact_seen',0)>0),None)
         best=max(f.metrics.get('event/descent_post_contact_ticks',0) for f in frames)
-        summary=dict(policy=str(a.frozen_policy or config.raw['initialization']['source_checkpoint']),config=str(a.config),success=bool(frames[-1].success),
+        summary=dict(policy=str(a.trained_checkpoint or a.frozen_policy or config.raw['initialization']['source_checkpoint']),config=str(a.config),success=bool(frames[-1].success),
             terminal=END_REASONS.get(frames[-1].end_code,str(frames[-1].end_code)),
             first_contact_step=contact,longest_stable_ticks=float(best),longest_stable_seconds=float(best)*.02,
             total_seconds=trace.environment_transitions*.02,
