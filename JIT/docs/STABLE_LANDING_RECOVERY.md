@@ -11,3 +11,7 @@
 配置：`configs/descent_stable_forward_2s.json`、`configs/stable_landing_recovery_20260914.json`。运行入口：`runs/experiments/stable_landing_recovery_20260914/INDEX.md`。TensorBoard 使用已有 CPU 日志桥读取原始 metrics.jsonl/episode_metrics.jsonl；不改变生产依赖。
 
 CPU 验证覆盖：完整 100 步才成功、首次接触不计时、低速/倾斜/离地/禁止接触重置计时，旧下降与训练配置回归。训练完成与否以执行状态文件为准；通过 CPU 测试不代表已学会稳定落地。
+
+## 原始 π0 固定起点验证
+
+`runs/experiments/pi0_stable_jump_check_20260914`：真实完整仿真77步，无扰动或策略切换。首次有效接触0.82s，1.54s禁止接触失败，最长连续稳定0.08s，未达到2秒。不具备启动“以稳定π0为基础”的大探索循环前提。单个确定性起点结论，不是统计成功率。视频和逐步数据见运行INDEX。
