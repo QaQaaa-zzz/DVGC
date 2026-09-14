@@ -1,6 +1,6 @@
 # JUMP — preparation and trigger planning
 
-> Implementation plan approved in conversation 2026-09-14. Use isolated, bounded tasks and behavioral verification. First qualification and single-variable near-start diagnosis COMPLETE; engineering execution succeeded, scientific approach qualification failed. Next: bounded observation/backend compatibility diagnosis before lower-skill adaptation.
+> Implementation plan approved in conversation 2026-09-14. First qualification, near-start diagnosis and source-expert comparison COMPLETE. The frozen upstream teacher has a stable measured approach; the strict continuous dual-contact gate still fails. Next: diagnose the grounded-support contract before choosing adaptation or testing online expert switching.
 
 Goal: determine whether a frozen JIT Actor can maintain a genuine grounded forward approach and respond to an external trigger, before learning preparation/timing for complete narrow-obstacle crossing.
 
@@ -55,4 +55,17 @@ Policy input compatibility: same JIT 25-field frame/FIFO and 76D Actor. Metadata
 
 ## Next bounded stage
 
-Before spending the 40M common-skill adaptation allocation, compare frozen Actor inputs/actions from the same complete state under the host and declared Warp sampling contracts. Preserve current negative runs. Then verify or adapt a grounded no-jump approach controller with a finite training configuration; freeze the resulting approach/jump/recovery bundle before window construction. The 200M budget is available stage-by-stage; the 270-step early failures do not justify consuming the rest on identical unsuccessful rollouts.
+Before spending the40M common-skill adaptation allocation, use the identified frozen upstream teacher as the source candidate. Its native historical and new CPU approach evidence is stronger than later pi0. Diagnose contact support separately from backend sensor sampling; no old failure labels change. Verify or adapt the approach/jump/recovery bundle before window construction. The200M budget is available stage-by-stage, not a requirement to consume it on identical rollouts.
+
+### Natural-start source audit — completed 2026-09-14
+
+The user authorized training pi0 for a stable early approach, then pointed to an older reward-trained natural-start policy used for Phase U/D. First audit that source before choosing initialization. The actual frozen JIT teacher manifest identifies pi_up_star at transition9977856 and pi_down_star at transition25600. Historical upstream evaluation starts at x=1.5, vx=2, activates signal around .56s and reaches Apex around1.04s; its eventual pitch failures do not establish complete-task success. This is previously used bootstrap evidence, not unopened final TEST.
+
+- [x] Audit source identity, natural approach and reward/trigger/action contracts. Phase D provenance explicitly binds its Actor initialization to this upstream teacher; two experts are not one verified complete-task Actor.
+- [x] Execute `configs/qualification_source_expert.json`: same x=1.5 start/new narrow scene, pi_up_star and pi0, each null trigger and .3s after qualification; declared maximum1600controls/900s. Run `runs/qualification/source_expert_20260914T120639Z` completed130controls/514physics, four cases/two different traces, zero trigger/qualification/success and zero unknown. Completion notification delivered without recorded errors.
+- [x] Select pi_up_star as the approach source candidate: it advances1.84106m in1s with vx1.64776–2.13575m/s, |roll|max0.435deg and |yaw|max0.865deg. Current pi0 reaches yaw_limit at.285s. No PPO has started; the user's alternative of first locating the source resolved the immediate initialization choice.
+- [ ] Diagnose continuous-support qualification before further integration: upstream actual contacts alternate, and continuous simultaneous dual contact spans only10ms rather than100ms. No post-first-contact frame has both wheels absent from contact AND both clearances>2mm. Preserve existing failed qualification labels and predeclare any future protocol change. An online U→D switch and full narrow-obstacle recovery remain untested.
+
+The historical pi0 canonical GPU evaluation already failed yaw at16controls/.32s fromx1.5. Thus its natural-approach deficiency is not exclusively a new-CPU artifact. Upstream-only historical runs reach Apex8/8 but later all fail pitch; D's42 historical snapshot rollouts recover32/42, including14/14 from this upstream checkpoint. Those are old platform/recovery criteria, not new2s full crossing. Exact source paths/hashes and current result summaries are in `docs/evidence/source_expert_audit.json`. New-project cumulative executed cost is400controls/1555physics; training updates remain0.
+
+Implementation changes remain in JUMP. Source inspection showed legacy non-JIT DVGC uses different observation, knee and wheel commands; those params cannot be loaded through the JIT76D adapter. JIT pi_up_star uses the same76D interface and12+12a wheel/absolute joint mapping and is a compatible source candidate.
