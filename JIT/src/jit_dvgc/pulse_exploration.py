@@ -25,6 +25,11 @@ def pulse_feedback(rows,seen,weights):
 
 def pulse_delay(spec,index):
     schedule=spec.get('pulse_start_schedule',[0])
+    if spec.get('nominal_source_rollout') is True:
+        if (schedule!=[0] or spec['pulse_steps']!=spec['horizon'] or spec['num_envs']!=1
+                or spec['delta_limit']!=[0.,0.,0.,0.] or spec.get('explorer_checkpoint')):
+            raise ValueError('nominal rollout must be one full-horizon zero-residual source trajectory')
+        return 0
     if not schedule or any(type(t) is not int or t<0 or t+spec['pulse_steps']>=spec['horizon'] for t in schedule):
         raise ValueError('invalid pulse start schedule')
     return schedule[index%len(schedule)]

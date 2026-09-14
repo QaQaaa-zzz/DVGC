@@ -2,6 +2,15 @@ import pytest
 from jit_dvgc import current_policy_iteration as iteration
 
 
+def test_full_nominal_rollout_is_explicitly_zero_residual_only():
+    from jit_dvgc.pulse_exploration import pulse_delay
+    spec=dict(nominal_source_rollout=True,pulse_start_schedule=[0],pulse_steps=400,
+              horizon=400,num_envs=1,delta_limit=[0.,0.,0.,0.])
+    assert pulse_delay(spec,0)==0
+    with pytest.raises(ValueError):pulse_delay({**spec,'delta_limit':[.15]*4},0)
+    with pytest.raises(ValueError):pulse_delay({**spec,'nominal_source_rollout':False},0)
+
+
 def test_initial_bank_rejects_historical_helpers():
     with pytest.raises(ValueError):
         iteration.validate_initial_bank({'members':[{'name':'pi_0'}, {'name':'pi_1'}]}, 'pi_0')
