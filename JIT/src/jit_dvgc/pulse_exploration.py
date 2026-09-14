@@ -112,6 +112,17 @@ def run(spec_path,output):
         write(root/'source_pi_support.json',base)
     write(root/'declaration.json',dict(spec=spec,budget=budget,role='TRAIN',final_test_used=False))
     seen=sorted({r['root_cell'] for r in base['entries']}) if base else [];rows_all=[];metrics=[];costs=[];checkpoint=None;start=time.monotonic();support=json.loads(json.dumps(base));inherited_cost=0
+    reuse_root=Path(spec['resume_stage_root']) if spec.get('resume_stage_root') else None
+    if reuse_root is not None:
+        if not current_only:raise ValueError('stage recovery is restricted to current-policy runs')
+        from .current_policy_iteration import verify_stage_reuse
+        verify_stage_reuse(read(reuse_root/'declaration.json')['spec'],spec)
+        previous_status=read(reuse_root/'status.json')
+        if any(c['accounting']!='actual' for c in previous_status['costs']):
+            raise ValueError('stage recovery needs measured prior costs')
+        inherited_cost=previous_status['charged_interactions']
+        write(root/'recovery.json',dict(previous=str(reuse_root),inherited_interactions=inherited_cost,
+            previous_status_sha256=_file_sha(reuse_root/'status.json'),no_completed_training_repeated=True))
     def status(phase,**kw):write(root/'status.json',dict(phase=phase,charged_interactions=inherited_cost+sum(c['charged_interactions'] for c in costs),new_interactions=sum(c['charged_interactions'] for c in costs),inherited_interactions=inherited_cost,maximum_interactions=budget['maximum_interactions'],wall_seconds=time.monotonic()-start,costs=costs,**kw))
     def child(directory,name,argv,maximum,env=None):
         inputs={str((Path(spec['repo'])/p).resolve()):sha for p,sha in spec['input_files'].items()}
@@ -127,6 +138,13 @@ def run(spec_path,output):
             raise RuntimeError('pulse child stopped: '+name+' '+result['phase'])
         return cost
     def runtime(directory,name,mode,args,maximum):
+        if reuse_root is not None:
+            prior=reuse_root/directory.relative_to(root)/name
+            if (prior/'status.json').exists() and read(prior/'status.json')['phase']=='completed':
+                verify_stage_reuse(read(prior.parent/(name+'_spec.json')),args)
+                write(directory/(name+'_reuse.json'),dict(previous=str(prior),
+                    receipt_sha256=_file_sha(prior/'status.json'),new_interactions=0))
+                return prior
         p=directory/(name+'_spec.json');write(p,args);out=directory/name
         cost=child(directory,name,['JIT/cli/run_pulse_exploration.py','--mode',mode,'--spec',p,'--output',out],maximum)
         result=read(out/'status.json');actual=result['charged_interactions']
@@ -190,10 +208,23 @@ def run(spec_path,output):
                 pending_view=candidate_support_view(support,[support_row(r,False) for r in pending],support_inputs,pending_fraction=spec['pending_fraction'],max_pending_per_phase=spec['num_envs'])
                 sp=d/'training_support.json';write(sp,pending_view)
                 config=d/'policy_config.json';run_id=root.name+f'_repair_{index:04d}'
-                make_config(sp,source['frozen_policy'],spec['bootstrap_config'],config,run_id,source['policy']['iteration']+index+1,spec['policy_steps'],spec['seed']+10000+index,checkpoints=[spec['policy_steps']],panel_support_path=root/'source_pi_support.json',pending_fraction=spec['pending_fraction'])
-                cost=child(d,'learn_policy',['JIT/cli/train_unified_from_pi0.py','--config',config,'--run-id',run_id],spec['policy_steps']+1600,dict(JIT_RUN_ROOT=str(d/'policy_training')))
-                training=d/'policy_training'/run_id;report=read(training/'formal_report.json');cost.update(charged_interactions=report['completed_training_transitions']+report['train_panel_interactions'],accounting='actual')
-                if current_only:
+                prior=reuse_root/d.relative_to(root) if reuse_root is not None else None
+                old_training=prior/'policy_training'/run_id if prior is not None else None
+                reused_training=old_training is not None and (old_training/'formal_report.json').exists()
+                if reused_training:
+                    if read(prior/'training_support.json')!=pending_view:raise ValueError('reused PPO support changed')
+                    config=prior/'policy_config.json';training=old_training;report=read(training/'formal_report.json')
+                    old_config=read(config)
+                    if (old_config['initialization']['source_frozen_policy']!=source['frozen_policy'] or
+                            report['completed_training_transitions']!=spec['policy_steps']):
+                        raise ValueError('reused PPO source or completed budget changed')
+                    write(d/'learn_policy_reuse.json',dict(previous=str(training),config=str(config),
+                        report_sha256=_file_sha(training/'formal_report.json'),new_training_interactions=0))
+                else:
+                    make_config(sp,source['frozen_policy'],spec['bootstrap_config'],config,run_id,source['policy']['iteration']+index+1,spec['policy_steps'],spec['seed']+10000+index,checkpoints=[spec['policy_steps']],panel_support_path=root/'source_pi_support.json',pending_fraction=spec['pending_fraction'])
+                    cost=child(d,'learn_policy',['JIT/cli/train_unified_from_pi0.py','--config',config,'--run-id',run_id],spec['policy_steps']+1600,dict(JIT_RUN_ROOT=str(d/'policy_training')))
+                    training=d/'policy_training'/run_id;report=read(training/'formal_report.json');cost.update(charged_interactions=report['completed_training_transitions']+report['train_panel_interactions'],accounting='actual')
+                if current_only and not reused_training:
                     from .retention_experiment import export_training
                     export_training(training)
                 name=f'{root.name}_repair_{index:04d}'
@@ -207,7 +238,8 @@ def run(spec_path,output):
                     if r['index'] in resolved:
                         new=resolved[r['index']];r.update(label=new['label'],witness=new['witness'],learning_attempted=True,bank_attempts=r['attempts'],attempts=r['attempts']+new['attempts'],learning_config=str(config))
                 if current_only:
-                    panel=retention_candidates(support,read(root/'baseline/candidates.json')[0],spec['retention_samples_per_phase'])
+                    baseline_path=reuse_root/'baseline/candidates.json' if reuse_root is not None else root/'baseline/candidates.json'
+                    panel=retention_candidates(support,read(baseline_path)[0],spec['retention_samples_per_phase'])
                     panel_path=d/'retention_candidates.json';write(panel_path,panel)
                     checked=runtime(d,'retention_evaluation','evaluate',{**ex,'bank':str(bank_path),
                         'candidates':str(panel_path),'order':[source_name,name],'full_matrix':True,

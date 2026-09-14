@@ -10,6 +10,21 @@ def validate_initial_bank(bank, source):
         raise ValueError('current-policy experiment requires a singleton initial source bank')
 
 
+def verify_stage_reuse(previous_spec, current_spec):
+    """Match science inputs, resolving relocated candidate/bank manifests."""
+    from .probe_bank import load_probe_bank
+    def normalize(spec):
+        result={k:v for k,v in spec.items() if k not in ('input_files','source_locks','resume_stage_root')}
+        if 'bank' in result:
+            bank=load_probe_bank(Path(result['bank']))
+            result['bank']={'task':bank['task'],'members':{m['name']:m['policy'] for m in bank['members']}}
+        if 'candidates' in result:
+            result['candidates']=read(result['candidates'])
+        return result
+    if normalize(previous_spec)!=normalize(current_spec):
+        raise ValueError('completed stage scientific contract differs; cannot reuse')
+
+
 def promotion_decision(rows, old, new, gains, minimum_retention):
     if not 0 <= minimum_retention <= 1 or not rows:
         raise ValueError('nonempty start/panel and valid retention threshold required')
@@ -33,7 +48,9 @@ def retention_candidates(support, initial, samples_per_phase):
     result = [{**initial, 'index': 0, 'evaluation_group': 'fixed_start'}]
     for phase in ('upstream', 'downstream'):
         entries = sorted([r for r in support['entries'] if r['phase'] == phase], key=lambda r:r['key'])
-        for i in fixed_indices(len(entries), samples_per_phase):
+        if not entries:
+            raise ValueError('retention panel requires both witnessed phases')
+        for i in fixed_indices(len(entries), min(samples_per_phase, len(entries))):
             result.append({**entries[i], 'index': len(result), 'prefix_terminal': False,
                            'evaluation_group': 'old_support'})
     return result

@@ -17,6 +17,19 @@ def test_initial_bank_rejects_historical_helpers():
     iteration.validate_initial_bank({'members':[{'name':'pi_0'}]}, 'pi_0')
 
 
+def test_retention_panel_uses_available_distinct_phase_entries():
+    support={'entries':[dict(key=str(i),phase=phase) for phase,n in [('upstream',3),('downstream',1)] for i in range(n)]}
+    rows=iteration.retention_candidates(support,{'snapshot':'start'},8)
+    assert len(rows)==5
+    assert len({(r['phase'],r['key']) for r in rows[1:]})==4
+
+
+def test_reuse_rejects_scientific_drift_but_allows_new_code_locks():
+    iteration.verify_stage_reuse({'seed':1,'source_locks':{'old':'hash'}},
+                                 {'seed':1,'source_locks':{'new':'hash'},'resume_stage_root':'old'})
+    with pytest.raises(ValueError):iteration.verify_stage_reuse({'seed':1},{'seed':2})
+
+
 def test_promotion_requires_new_success_and_old_retention_and_start():
     def row(a,b):
         return dict(attempts=[dict(policy='old',label=a),dict(policy='new',label=b)])
