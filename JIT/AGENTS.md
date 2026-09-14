@@ -2,6 +2,8 @@
 
 Root [AGENTS](../AGENTS.md) governs. Read the [latest complete handoff](docs/CODEX_HANDOFF_20260911.md) and [roadmap](docs/JIT_TRAINING_ROADMAP.md) before editing.
 
+User requirement (2026-09-14): every future JIT experiment launch must include a desktop error watcher. Start `PYTHONPATH=src python cli/watch_run_errors.py --active-run <experiment>/ACTIVE_RUN.json --state-dir <experiment>/notifications` in a detached process with desktop DBus environment preserved, and verify its heartbeat. The active manifest names current `execution` and `lineage` status files; update it on restart. The watcher follows that pointer, ignores previous failed attempts, deduplicates delivered errors, and retries failed notification delivery. It requires a live desktop notification service; it does not automatically survive a machine reboot or detect a killed process whose status was never updated. Verify notification delivery and watcher health instead of claiming popup visibility. Keep its log and notification_status.json with the experiment.
+
 Production all_proposers_v1 is COMPLETE: pi_5/pi_6 trained and frozen, 9,296 historical campaign root cells, 256,000 new PPO transitions. First-success stopping, checkpoint comparisons, vectorized continuation engineering, frozen-base residual PPO, per-policy arrival rewards and pending/delayed learning now exist. The latest two-round pilot completed two128k policy trainings with zero delayed no-witness-to-witness gains. The old supervised residual and full-action experiments are superseded research stages, not current architecture. Diffusion, critic quality penalties, adaptive proposer allocation and automatic training extension remain unimplemented. See CURRENT_STATUS for current evidence.
 
 Implementation priorities:

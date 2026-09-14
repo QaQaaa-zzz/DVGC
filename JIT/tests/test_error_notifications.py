@@ -1,0 +1,40 @@
+import json
+import subprocess
+
+from jit_dvgc.error_notifications import check_once
+
+
+def test_active_only_dedup_and_pointer_change(tmp_path):
+    status = tmp_path / "status.json"
+    old = tmp_path / "old.json"
+    old.write_text(json.dumps({"phase": "error"}))
+    manifest = tmp_path / "ACTIVE_RUN.json"
+    manifest.write_text(json.dumps({"lineage": str(status), "previous_failed_attempt": str(old)}))
+    state, alerts = {}, []
+    send = lambda *args: alerts.append(args)
+    for phase in ("running", "waiting", "completed", "blocked"):
+        status.write_text(json.dumps({"phase": phase}))
+        check_once([manifest], state, send)
+    assert not alerts
+    for wall in (1, 2):
+        status.write_text(json.dumps({"phase": "error", "error": "boom", "wall_seconds": wall}))
+        check_once([manifest], state, send)
+    assert len(alerts) == 1
+    manifest.write_text(json.dumps({"execution": str(old)}))
+    check_once([manifest], state, send)
+    assert len(alerts) == 2
+
+
+def test_delivery_failure_retries(tmp_path):
+    status = tmp_path / "status.json"
+    status.write_text(json.dumps({"phase": "failed"}))
+    manifest = tmp_path / "ACTIVE_RUN.json"
+    manifest.write_text(json.dumps({"execution": str(status)}))
+    state = {}
+    def fail(*args):
+        raise subprocess.CalledProcessError(1, "notify-send")
+    check_once([manifest], state, fail)
+    assert state["delivery_errors"] and not state["delivered"]
+    check_once([manifest], state, lambda *args: None)
+    assert len(state["delivered"]) == 1
+    assert not state["delivery_errors"]
