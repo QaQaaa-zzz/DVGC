@@ -11,6 +11,7 @@ class DescentSignals:
     x: jax.Array; front_clearance: jax.Array; rear_clearance: jax.Array
     maximum_wheel_penetration: jax.Array; body_contact: jax.Array; finite: jax.Array
     roll: jax.Array; pitch: jax.Array; backward_exit: jax.Array
+    forward_velocity: jax.Array | None = None
 
 @struct.dataclass
 class DescentEventState:
@@ -26,6 +27,18 @@ def advance_descent_events(previous: DescentEventState, signals: DescentSignals,
     seen = previous.valid_contact_seen | contact
     contact_x = jp.where(contact, signals.x, previous.contact_x)
     ticks = jp.where(seen & signals.finite, previous.post_contact_ticks + 1, previous.post_contact_ticks)
+    if config.continuous_stability:
+        if signals.forward_velocity is None:
+            raise ValueError('continuous recovery requires measured forward velocity')
+        stable = (signals.finite & ~signals.body_contact & ~signals.backward_exit
+                  & (jp.abs(signals.roll) <= config.stable_max_abs_roll)
+                  & (jp.abs(signals.pitch) <= config.stable_max_abs_pitch)
+                  & (signals.forward_velocity >= config.stable_min_forward_velocity)
+                  & (signals.front_clearance <= config.stable_max_wheel_clearance)
+                  & (signals.rear_clearance <= config.stable_max_wheel_clearance)
+                  & (signals.maximum_wheel_penetration <= config.max_wheel_penetration))
+        # Contact sample is time zero: require a full subsequent recovery window.
+        ticks = jp.where(previous.valid_contact_seen & stable, previous.post_contact_ticks + 1, 0)
     success = previous.recovery_success | (seen & (ticks >= config.recovery_ticks) & (signals.x - contact_x + jp.asarray(1e-6, jp.float32) >= config.min_post_contact_forward_progress))
     return DescentEventState(airborne, seen, contact_x, ticks, success)
 

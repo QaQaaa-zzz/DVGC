@@ -155,7 +155,7 @@ def checkpoint_evaluation_plan(steps, checkpoints=None, *, samples_per_phase=2, 
         final_test_used=False)
 
 
-def fixed_train_panel_identity(support, plan):
+def fixed_train_panel_identity(support, plan, success_criterion='first_valid_landing'):
     """Lock the exact deterministic panel selection used by rollout_fixed_tube_panel."""
     from copy import deepcopy
     from .tube_rsi_smoke import fixed_indices
@@ -170,7 +170,7 @@ def fixed_train_panel_identity(support, plan):
     identity = dict(schema='jit_probe_fixed_train_panel_v1', role='train', final_test_used=False,
         support_sha256=support['support_sha256'], selected_entries=selected,
         horizon=plan['horizon'], samples_per_phase=plan['samples_per_phase'],
-        success_criterion='first_valid_landing', deterministic_policy=True,
+        success_criterion=success_criterion, deterministic_policy=True,
         rng_contract='1100000 + phase_index*10000 + ordinal*horizon + tick',
         reset_contract='fresh episode and phase clocks; preserve saved event and controller context')
     return {**identity, 'panel_sha256': canonical_sha256(identity)}
@@ -238,7 +238,13 @@ def load_config(path):
     if (ppo.num_parallel_envs!=128 or ppo.batch_size!=16 or ppo.num_minibatches!=8 or ppo.unroll_length!=25
         or ppo.episode_horizon!=400 or ppo.requested_transitions<=0 or ppo.requested_transitions%ppo.block_transitions):
         raise ValueError('invalid aligned probe PPO budget')
-    if raw['jump_start_probability']!=.2 or raw['success_criterion']!='first_valid_landing':raise ValueError('probe reset/endpoint drift')
+    if raw['jump_start_probability']!=.2 or raw['success_criterion'] not in ('first_valid_landing','stable_forward_recovery'):raise ValueError('probe reset/endpoint drift')
+    if raw['success_criterion']=='stable_forward_recovery':
+        from .config import load_config as phase_config
+        from .constants import CTRL_DT
+        recovery = phase_config(Path(raw['inputs']['down_config_path'])).descent
+        if not recovery.continuous_stability or recovery.recovery_ticks * CTRL_DT < 2.0:
+            raise ValueError('stable recovery requires at least two continuous seconds')
     init=raw['initialization']
     if init['actor']!='warm_start_frozen_unified' or init['critic']!='fresh' or init['optimizer']!='fresh':raise ValueError('probe initialization drift')
     for p,sha in support['inputs'].items():
@@ -249,7 +255,7 @@ def load_config(path):
         plan=checkpoint_evaluation_plan(ppo.requested_transitions, declared['train_panel_transitions'],
             samples_per_phase=declared['samples_per_phase'], horizon=declared['horizon'])
         if declared != plan:raise ValueError('checkpoint evaluation declaration drift')
-        if raw.get('fixed_train_panel') != fixed_train_panel_identity(panel_support, plan):
+        if raw.get('fixed_train_panel') != fixed_train_panel_identity(panel_support, plan, raw['success_criterion']):
             raise ValueError('fixed TRAIN panel identity drift')
     return UnifiedFormalConfig(schema=raw['schema'],raw=raw,config_sha256=canonical_sha256(raw),
         runtime_naccdmax=1024,reset_mixture=UnifiedResetMixture('fixed_jump_start_20pct_exact_snapshot_80pct',.2,.8),
@@ -274,9 +280,13 @@ def restore_params(path):
     return values
 
 
-def fresh_sample(sample):
+def fresh_sample(sample, reset_recovery=False):
     """Reset continuation clocks only; preserve controller and arrival context."""
     import jax.numpy as jp
+    if reset_recovery:
+        sample = {**sample, 'down_events': {**sample['down_events'],
+                  'post_contact_ticks': jp.asarray(0, jp.int32),
+                  'recovery_success': jp.asarray(False)}}
     return {**sample, 'episode_step':jp.asarray(0,jp.int32),
             'phase_episode_step':jp.asarray(0,jp.int32),
             'episode_return':jp.asarray(0.,jp.float32),
@@ -324,7 +334,7 @@ def build_environment(config, *, panel=False):
             decision,key=jax.random.split(rng)
             jump=jax.random.bernoulli(decision,.2)
             tube=self._tube_pool.sample(key)
-            tube=fresh_sample(tube)
+            tube=fresh_sample(tube, config.raw['success_criterion']=='stable_forward_recovery')
             start=self._natural_reset_sample(key,tube)
             root_x=jp.asarray(2.5,jp.float32);index=self._bundle.model_index.root_qpos_address
             up=initial_event_state(root_x,self._resolved_config);down=initial_descent_events(root_x)
@@ -335,11 +345,12 @@ def build_environment(config, *, panel=False):
             return self._with_reset_source(state,soft_tube=~jump,jump_start=jump)
 
         def reset_tube_index(self,phase_index,entry_index):
-            sample=fresh_sample(self._tube_pool.sample_at(phase_index,entry_index))
+            sample=fresh_sample(self._tube_pool.sample_at(phase_index,entry_index), config.raw['success_criterion']=='stable_forward_recovery')
             return self._with_reset_source(self._reset_from_tube_sample(sample),soft_tube=True)
 
         def step(self,state,action):
-            return first_landing_state(super().step(state,action))
+            advanced = super().step(state,action)
+            return first_landing_state(advanced) if config.raw['success_criterion']=='first_valid_landing' else advanced
 
     up=phase_config(Path(config.up_config_path));down=phase_config(Path(config.down_config_path))
     if up.config_sha256!=config.up_config_sha256 or down.config_sha256!=config.down_config_sha256:raise ValueError('phase config drift')

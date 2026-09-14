@@ -138,6 +138,11 @@ class DescentConfig:
     roll_rate_penalty_coeff: float
     pitch_rate_penalty_coeff: float
     action_smoothness_penalty_coeff: float
+    continuous_stability: bool = False
+    stable_min_forward_velocity: float = 0.5
+    stable_max_abs_roll: float = 0.17453292519943295
+    stable_max_abs_pitch: float = 0.2617993877991494
+    stable_max_wheel_clearance: float = 0.02
 
 
 @dataclass(frozen=True)
@@ -723,6 +728,10 @@ def resolve_config_payload(payload: Mapping[str, Any]) -> ResolvedConfig:
             if missing_dense:
                 raise ValueError(f"descent missing required reward fields: {', '.join(missing_dense)}")
         descent = _dataclass_from(DescentConfig, raw_descent)
+        if type(descent.continuous_stability) is not bool:
+            raise ValueError('continuous_stability must be boolean')
+        for name in ('stable_min_forward_velocity', 'stable_max_abs_roll', 'stable_max_abs_pitch', 'stable_max_wheel_clearance'):
+            _positive('descent.' + name, getattr(descent, name))
         if descent.recovery_ticks <= 0 or descent.recovery_ticks >= ppo.episode_horizon:
             raise ValueError("descent.recovery_ticks must be positive and less than episode horizon")
         for name in ("min_airborne_clearance", "contact_clearance_threshold", "max_wheel_penetration", "min_post_contact_forward_progress", "reward_contact", "reward_recovery_tick", "penalty_bad_contact", "penalty_failure", "penalty_timeout", "reward_forward_progress", "reward_success", "roll_posture_coeff", "pitch_posture_coeff", "roll_rate_penalty_coeff", "pitch_rate_penalty_coeff", "action_smoothness_penalty_coeff"):

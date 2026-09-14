@@ -623,6 +623,7 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
 
         previous_down = state.info["down_events"]
         down_signals = DescentSignals(
+            forward_velocity=data.qvel[index.root_dof_address],
             x=data.qpos[index.root_qpos_address],
             front_clearance=geometry.front_wheel_terrain_clearance,
             rear_clearance=geometry.rear_wheel_terrain_clearance,
@@ -653,7 +654,8 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
                 x_delta=reward_state.x - state.info["reward_state"].x,
                 valid_contact=advanced_down.valid_contact_seen,
                 previous_valid_contact=previous_down.valid_contact_seen,
-                post_contact=advanced_down.valid_contact_seen,
+                post_contact=(advanced_down.post_contact_ticks > previous_down.post_contact_ticks)
+                    if self._down_config.descent.continuous_stability else advanced_down.valid_contact_seen,
                 recovery_success=advanced_down.recovery_success,
                 previous_recovery_success=previous_down.recovery_success,
                 bad_contact=down_signals.body_contact,

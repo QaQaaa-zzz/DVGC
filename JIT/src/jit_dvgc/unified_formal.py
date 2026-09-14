@@ -586,7 +586,7 @@ def _evaluate_train_panel(
         current_panel = fixed_train_panel_identity({
             "support_sha256": artifact.manifest["manifest_sha256"],
             "entries": artifact.entries,
-        }, plan)
+        }, plan, config.raw.get('success_criterion', 'first_valid_landing'))
         if current_panel != config.raw["fixed_train_panel"]:
             raise ValueError("runtime TRAIN panel identity drift")
         _write_json(panel_dir / "reservation.json", {

@@ -11,6 +11,13 @@ import time
 
 def metric_rows(source):
     path = Path(source['path'])
+    if path.suffix == '.jsonl':
+        rows = []
+        for line in path.read_text().splitlines():
+            if line.strip():
+                row = json.loads(line)
+                rows.append({'training_transitions': row['training_transitions'], **row['metrics']})
+        return rows
     if path.suffix == '.csv':
         with path.open() as stream:
             return list(csv.DictReader(stream))
