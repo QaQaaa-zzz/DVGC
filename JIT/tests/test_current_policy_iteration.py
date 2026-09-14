@@ -51,3 +51,24 @@ def test_current_budget_reserves_reseeding_and_uses_one_evaluator():
     assert budget['nominal_support']==13*400*401
     assert budget['retention_evaluation']==12*2*17*400
     assert budget['maximum_interactions']==sum(v for k,v in budget.items() if k!='maximum_interactions')
+
+
+def test_failed_nominal_candidate_is_a_negative_result_not_pipeline_error(tmp_path,monkeypatch):
+    import numpy as np
+    from jit_dvgc import pulse_exploration_runtime as runtime
+    from jit_dvgc.jump_evidence_validation import write,read
+    def collect(spec,out):
+        out.mkdir(parents=True)
+        np.savez(out/'prefixes.npz',prefix_mask=np.ones((2,1),bool),
+            **{'snap/down/recovery_success':np.zeros((2,1),bool),'physical_failure':np.array([[False],[True]])})
+        write(out/'status.json',{'charged_interactions':400})
+    monkeypatch.setattr(runtime,'collect',collect)
+    monkeypatch.setattr(runtime,'networks',lambda spec:(None,None,None,None,None,None))
+    spec={'horizon':400,'success_criterion':'stable_forward_recovery','allow_nominal_failure':True}
+    iteration.seed_support(spec,tmp_path/'candidate')
+    result=read(tmp_path/'candidate/status.json')
+    assert result['phase']=='completed' and result['support_ready'] is False
+    assert result['charged_interactions']==400
+    assert not (tmp_path/'candidate/support.json').exists()
+    with pytest.raises(ValueError,match='current source'):
+        iteration.seed_support({**spec,'allow_nominal_failure':False},tmp_path/'initial')

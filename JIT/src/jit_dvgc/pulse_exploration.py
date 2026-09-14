@@ -112,6 +112,11 @@ def run(spec_path,output):
         write(root/'source_pi_support.json',base)
     write(root/'declaration.json',dict(spec=spec,budget=budget,role='TRAIN',final_test_used=False))
     seen=sorted({r['root_cell'] for r in base['entries']}) if base else [];rows_all=[];metrics=[];costs=[];checkpoint=None;start=time.monotonic();support=json.loads(json.dumps(base));inherited_cost=0
+    boundary=read(spec['resume_boundary']) if spec.get('resume_boundary') else None
+    if boundary:
+        from .current_policy_iteration import verify_stage_reuse
+        verify_stage_reuse(read(Path(boundary['previous'])/'declaration.json')['spec'],spec)
+        inherited_cost=boundary['charged_interactions']
     reuse_root=Path(spec['resume_stage_root']) if spec.get('resume_stage_root') else None
     if reuse_root is not None:
         if not current_only:raise ValueError('stage recovery is restricted to current-policy runs')
@@ -151,13 +156,25 @@ def run(spec_path,output):
         if result['phase']!='completed' or not 0<=actual<=maximum:raise ValueError('runtime receipt/budget mismatch')
         cost.update(charged_interactions=actual,accounting='actual');return out
     try:
-        if current_only:
+        if current_only and not boundary:
             seed=runtime(root,'seed_support','seed_support',spec,spec['horizon']*(spec['horizon']+1))
             base=read(seed/'support.json');support=json.loads(json.dumps(base))
             seen=sorted({r['root_cell'] for r in base['entries']})
             write(root/'source_pi_support.json',base)
         first_round=0
-        if spec.get('resume_run'):
+        if boundary:
+            previous=Path(boundary['previous'])
+            metrics=read(previous/'training_metrics.json');first_round=len(metrics)
+            if first_round != boundary['completed_rounds']:raise ValueError('boundary round count drift')
+            bank_path=Path(boundary['bank']);bank=load_probe_bank(bank_path)
+            source=next(m for m in bank['members'] if m['name']==boundary['source'])
+            checkpoint=boundary['explorer_checkpoint'];support=read(boundary['support'])
+            seen=read(previous/'visited_cells.json')
+            rows_all=[row for i in range(first_round) for row in read(previous/f'round_{i:04d}'/'outcomes.json')]
+            write(root/'source_pi_support.json',read(previous/'source_pi_support.json'))
+            write(root/'training_metrics.json',metrics);export(root,metrics,rows_all)
+            write(root/'recovery.json',boundary)
+        elif spec.get('resume_run'):
             previous=Path(spec['resume_run']);old=read(previous/'declaration.json')['spec']
             contract=['proposer','order','num_envs','pulse_steps','delta_limit','horizon','policy_steps','pending_fraction','seed','learning_rate','minibatch_size','epochs','clip','target_kl','reward_weights','value_coefficient','entropy_coefficient','max_grad_norm','jump_start_state_sha256']
             if old.get('pulse_start_schedule',[0])!=spec.get('pulse_start_schedule',[0]):raise ValueError('resume pulse schedule differs')
@@ -238,7 +255,7 @@ def run(spec_path,output):
                     if r['index'] in resolved:
                         new=resolved[r['index']];r.update(label=new['label'],witness=new['witness'],learning_attempted=True,bank_attempts=r['attempts'],attempts=r['attempts']+new['attempts'],learning_config=str(config))
                 if current_only:
-                    baseline_path=reuse_root/'baseline/candidates.json' if reuse_root is not None else root/'baseline/candidates.json'
+                    baseline_path=(Path(boundary['previous']) if boundary else (reuse_root if reuse_root is not None else root))/'baseline/candidates.json'
                     panel=retention_candidates(support,read(baseline_path)[0],spec['retention_samples_per_phase'])
                     panel_path=d/'retention_candidates.json';write(panel_path,panel)
                     checked=runtime(d,'retention_evaluation','evaluate',{**ex,'bank':str(bank_path),
@@ -264,19 +281,25 @@ def run(spec_path,output):
             seen=next_seen;rows_all.extend(rows);write(root/'visited_cells.json',seen);write(root/'training_metrics.json',metrics);export(root,metrics,rows_all);status('round_completed',completed_rounds=index+1)
             if current_only:
                 write(d/'source_ledger.json',dict(source=source_name,cells=seen))
+                if adopt is not None and index+1<spec['rounds']:
+                    nominal=runtime(d,'next_source_seed','seed_support',{**ex,'bank':str(bank_path),
+                        'proposer':adopt['name'],'explorer_checkpoint':None,'allow_nominal_failure':True},spec['horizon']*(spec['horizon']+1))
+                    ready=read(nominal/'status.json').get('support_ready',True)
+                    if not ready:
+                        decision=read(d/'promotion.json')
+                        write(d/'promotion.json',{**decision,'panel_promote':decision['promote'],
+                            'promote':False,'reason':'nominal_recovery_failed','source_retained':source['name']})
+                        adopt=None
+                    else:
+                        fresh=read(nominal/'support.json');seen=sorted({r['root_cell'] for r in fresh['entries']})
+                        support.pop('support_sha256');keys={r['key'] for r in support['entries']}
+                        support['entries'].extend(r for r in fresh['entries'] if r['key'] not in keys)
+                        support['inputs'].update(fresh['inputs']);support['support_sha256']=canonical_sha256(support)
+                        write(d/'next_training_support.json',support)
+                        write(root/'visited_cells.json',seen)
                 if adopt is not None:
                     source=adopt
                     checkpoint=None
-                if adopt is not None and index+1<spec['rounds']:
-                    nominal=runtime(d,'next_source_seed','seed_support',{**ex,'bank':str(bank_path),
-                        'proposer':source['name'],'explorer_checkpoint':None},spec['horizon']*(spec['horizon']+1))
-                    fresh=read(nominal/'support.json');seen=sorted({r['root_cell'] for r in fresh['entries']})
-                    support.pop('support_sha256');keys={r['key'] for r in support['entries']}
-                    support['entries'].extend(r for r in fresh['entries'] if r['key'] not in keys)
-                    support['inputs'].update(fresh['inputs']);support['support_sha256']=canonical_sha256(support)
-                    checkpoint=None
-                    write(d/'next_training_support.json',support)
-                    write(root/'visited_cells.json',seen)
                 write(root/'current_source.json',dict(source=source['name'],frozen_policy=source['frozen_policy'],
                     explorer_checkpoint=checkpoint,completed_rounds=index+1,historical_helpers_used=False))
         status('completed',completed_rounds=spec['rounds'],final_test_used=False,checkpoint=checkpoint)

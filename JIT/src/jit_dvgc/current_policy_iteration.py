@@ -14,7 +14,7 @@ def verify_stage_reuse(previous_spec, current_spec):
     """Match science inputs, resolving relocated candidate/bank manifests."""
     from .probe_bank import load_probe_bank
     def normalize(spec):
-        result={k:v for k,v in spec.items() if k not in ('input_files','source_locks','resume_stage_root')}
+        result={k:v for k,v in spec.items() if k not in ('input_files','source_locks','resume_stage_root','resume_boundary')}
         if 'bank' in result:
             bank=load_probe_bank(Path(result['bank']))
             result['bank']={'task':bank['task'],'members':{m['name']:m['policy'] for m in bank['members']}}
@@ -78,6 +78,9 @@ def seed_support(spec, output):
     success_key = 'snap/down/recovery_success' if spec.get('success_criterion') == 'stable_forward_recovery' else 'snap/down/valid_contact_seen'
     if not (bool(tape[success_key][end, 0]) and
             not bool(tape['physical_failure'][end, 0])):
+        if spec.get('allow_nominal_failure'):
+            write(output/'status.json',dict(phase='completed',support_ready=False,reason='nominal_recovery_failed',charged_interactions=read(output/'nominal/status.json')['charged_interactions']))
+            return
         raise ValueError('current source did not complete a conflict-free nominal jump')
     rows = []
     for t in active[::spec.get('seed_stride', 2)]:
