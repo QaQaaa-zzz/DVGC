@@ -724,7 +724,7 @@ def run_unified_formal(
     try:
         trainer_kwargs = build_unified_formal_trainer_kwargs(config, env, controller)
         if config.raw.get("initialization", {}).get("actor") in {
-            "warm_start_frozen_unified", "warm_start_pi_0"
+            "warm_start_frozen_unified", "warm_start_pi_0", "warm_start_phase_checkpoint"
         }:
             trainer_kwargs["restore_params"] = load_frozen_actor_restore_params(config_path)
             trainer_kwargs["restore_value_fn"] = False

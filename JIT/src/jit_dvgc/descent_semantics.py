@@ -37,6 +37,9 @@ def advance_descent_events(previous: DescentEventState, signals: DescentSignals,
                   & (signals.front_clearance <= config.stable_max_wheel_clearance)
                   & (signals.rear_clearance <= config.stable_max_wheel_clearance)
                   & (signals.maximum_wheel_penetration <= config.max_wheel_penetration))
+        if config.forward_survival_only:
+            stable = (signals.finite & ~signals.body_contact & ~signals.backward_exit
+                      & (signals.forward_velocity > config.stable_min_forward_velocity))
         # Contact sample is time zero: require a full subsequent recovery window.
         ticks = jp.where(previous.valid_contact_seen & stable, previous.post_contact_ticks + 1, 0)
     success = previous.recovery_success | (seen & (ticks >= config.recovery_ticks) & (signals.x - contact_x + jp.asarray(1e-6, jp.float32) >= config.min_post_contact_forward_progress))

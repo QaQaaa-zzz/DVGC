@@ -139,6 +139,7 @@ class DescentConfig:
     pitch_rate_penalty_coeff: float
     action_smoothness_penalty_coeff: float
     continuous_stability: bool = False
+    forward_survival_only: bool = False
     stable_min_forward_velocity: float = 0.5
     stable_max_abs_roll: float = 0.17453292519943295
     stable_max_abs_pitch: float = 0.2617993877991494
@@ -594,7 +595,7 @@ def _validate_approved_absolute_method(
             raise ValueError(f"approved {version} {section} method contract drift")
 
 
-def resolve_config_payload(payload: Mapping[str, Any]) -> ResolvedConfig:
+def resolve_config_payload(payload: Mapping[str, Any], *, runtime_only: bool = False) -> ResolvedConfig:
     payload = dict(payload)
     schema = str(payload.get("schema", ""))
     if schema not in {
@@ -639,7 +640,8 @@ def resolve_config_payload(payload: Mapping[str, Any]) -> ResolvedConfig:
             requested_transitions=ppo.requested_transitions,
             block_transitions=ppo.block_transitions,
         )
-        _validate_formal(schema, ppo, formal)
+        if not runtime_only:
+            _validate_formal(schema, ppo, formal)
     elif "formal" in payload:
         raise ValueError("smoke config must not contain formal settings")
     events = _dataclass_from(EventConfig, payload["events"])
@@ -730,7 +732,11 @@ def resolve_config_payload(payload: Mapping[str, Any]) -> ResolvedConfig:
         descent = _dataclass_from(DescentConfig, raw_descent)
         if type(descent.continuous_stability) is not bool:
             raise ValueError('continuous_stability must be boolean')
-        for name in ('stable_min_forward_velocity', 'stable_max_abs_roll', 'stable_max_abs_pitch', 'stable_max_wheel_clearance'):
+        if type(descent.forward_survival_only) is not bool:
+            raise ValueError('forward_survival_only must be boolean')
+        if not math.isfinite(descent.stable_min_forward_velocity) or descent.stable_min_forward_velocity < 0:
+            raise ValueError('stable_min_forward_velocity must be finite and nonnegative')
+        for name in ('stable_max_abs_roll', 'stable_max_abs_pitch', 'stable_max_wheel_clearance'):
             _positive('descent.' + name, getattr(descent, name))
         if descent.recovery_ticks <= 0 or descent.recovery_ticks >= ppo.episode_horizon:
             raise ValueError("descent.recovery_ticks must be positive and less than episode horizon")
@@ -746,16 +752,17 @@ def resolve_config_payload(payload: Mapping[str, Any]) -> ResolvedConfig:
         if schema.endswith(("_v3", "_v4"))
         else _validate_approved_v2_method
     )
-    validator(
-        schema,
-        model=payload["model"],
-        action=action,
-        reset=reset,
-        events=events,
-        physical_limits=physical_limits,
-        reward=reward,
-        ppo=ppo,
-    )
+    if not runtime_only:
+        validator(
+            schema,
+            model=payload["model"],
+            action=action,
+            reset=reset,
+            events=events,
+            physical_limits=physical_limits,
+            reward=reward,
+            ppo=ppo,
+        )
     return ResolvedConfig(
         schema=schema,
         phase=str(payload["phase"]),
@@ -773,6 +780,6 @@ def resolve_config_payload(payload: Mapping[str, Any]) -> ResolvedConfig:
     )
 
 
-def load_config(path: Path) -> ResolvedConfig:
+def load_config(path: Path, *, runtime_only: bool = False) -> ResolvedConfig:
     payload = json.loads(Path(path).read_text(encoding="utf-8"))
-    return resolve_config_payload(payload)
+    return resolve_config_payload(payload, runtime_only=runtime_only)

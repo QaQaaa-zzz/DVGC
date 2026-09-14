@@ -249,7 +249,11 @@ def load_config(path):
         if not recovery.continuous_stability or recovery.recovery_ticks * CTRL_DT < 2.0:
             raise ValueError('stable recovery requires at least two continuous seconds')
     init=raw['initialization']
-    if init['actor']!='warm_start_frozen_unified' or init['critic']!='fresh' or init['optimizer']!='fresh':raise ValueError('probe initialization drift')
+    if init['actor'] not in ('warm_start_frozen_unified','warm_start_phase_checkpoint') or init['critic']!='fresh' or init['optimizer']!='fresh':raise ValueError('probe initialization drift')
+    if init['actor']=='warm_start_phase_checkpoint':
+        for item in (init['source_phase_config'], str(Path(init['source_checkpoint'])/'identity.json'), str(Path(init['source_checkpoint'])/'payload.pkl')):
+            if item not in raw['input_files']:
+                raise ValueError('phase initializer input lock missing')
     for p,sha in support['inputs'].items():
         if file_sha(p)!=sha:raise ValueError('witnessed support input changed')
     plan=checkpoint_evaluation_plan(ppo.requested_transitions)
@@ -274,6 +278,9 @@ def restore_params(path):
     from .checkpoint import load_checkpoint
     from .handoff_bank import pytree_sha256
     config=load_config(path)
+    if config.raw['initialization']['actor']=='warm_start_phase_checkpoint':
+        checkpoint=load_phase_initializer(config.raw['initialization'])
+        return checkpoint.observation_normalizer,checkpoint.actor_params,checkpoint.critic_params
     policy=load_frozen_unified_manifest(Path(config.raw['initialization']['source_frozen_policy']))['policy']
     source=_load_policy_formal_config(Path(policy['formal_config']))
     checkpoint=load_checkpoint(Path(policy['checkpoint']),expected=_checkpoint_identity(source))
@@ -281,6 +288,17 @@ def restore_params(path):
     for name,value in zip(('normalizer_sha256','actor_sha256','critic_sha256'),values):
         if pytree_sha256(value)!=policy[name]:raise ValueError('initializer checkpoint identity drift')
     return values
+
+
+def load_phase_initializer(initialization):
+    from .checkpoint import load_checkpoint, CheckpointIdentity
+    from .constants import ACTOR_FRAME_FIELDS, ACTOR_TASK_FIELDS, ACTION_ORDER
+    # Historical training schedules need not satisfy today's launch validator.
+    # Verify the original raw config identity against the checkpoint instead.
+    source=read(Path(initialization['source_phase_config']))
+    expected=CheckpointIdentity(canonical_sha256(source),source['model']['xml_sha256'],
+        tuple(ACTOR_FRAME_FIELDS),tuple(ACTOR_TASK_FIELDS),tuple(ACTION_ORDER))
+    return load_checkpoint(Path(initialization['source_checkpoint']),expected=expected)
 
 
 def fresh_sample(sample, reset_recovery=False):
@@ -355,7 +373,12 @@ def build_environment(config, *, panel=False):
             advanced = super().step(state,action)
             return first_landing_state(advanced) if config.raw['success_criterion']=='first_valid_landing' else advanced
 
-    up=phase_config(Path(config.up_config_path));down=phase_config(Path(config.down_config_path))
+    historical = config.raw.get('historical_up_runtime', False)
+    if historical and (config.raw['initialization']['actor']!='warm_start_phase_checkpoint'
+                       or config.up_config_path!=config.raw['initialization']['source_phase_config']):
+        raise ValueError('historical runtime must be the identity-locked initializer config')
+    up=phase_config(Path(config.up_config_path), runtime_only=True) if historical else phase_config(Path(config.up_config_path))
+    down=phase_config(Path(config.down_config_path))
     if up.config_sha256!=config.up_config_sha256 or down.config_sha256!=config.down_config_sha256:raise ValueError('phase config drift')
     env=ProbeEnv(up,down,bootstrap_artifact,runtime_naccdmax=1024)
     pool=SnapshotPool.from_paths([Path(r['snapshot']) for r in entries],compatibility=compatibility_identity(env))
