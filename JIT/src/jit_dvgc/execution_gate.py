@@ -120,6 +120,11 @@ def check_execution_gate(
     that user's processes are monitored, not global accelerator use. Inventory
     errors within that declared scope always close the gate.
     """
+    if gate.get('kind') == 'user_requested_immediate':
+        if gate.get('authorization') != 'start_without_gpu_idle_wait':
+            raise ValueError('immediate execution requires explicit declared authorization')
+        return dict(ready=True, phase='user_requested_immediate',
+                    reasons=['User explicitly requested immediate launch; GPU idle is not required'])
     if gate.get('kind') == 'gpu_idle':
         import subprocess
         try:
