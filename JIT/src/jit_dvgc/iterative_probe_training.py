@@ -242,7 +242,10 @@ def load_config(path):
     if raw['success_criterion']=='stable_forward_recovery':
         from .config import load_config as phase_config
         from .constants import CTRL_DT
-        recovery = phase_config(Path(raw['inputs']['down_config_path'])).descent
+        recovery_config = phase_config(Path(raw['inputs']['down_config_path']))
+        if recovery_config.config_sha256 != raw['inputs']['down_config_sha256']:
+            raise ValueError('recovery phase config drift: expected canonical configuration hash, not file hash')
+        recovery = recovery_config.descent
         if not recovery.continuous_stability or recovery.recovery_ticks * CTRL_DT < 2.0:
             raise ValueError('stable recovery requires at least two continuous seconds')
     init=raw['initialization']

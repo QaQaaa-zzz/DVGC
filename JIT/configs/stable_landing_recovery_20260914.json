@@ -6,7 +6,7 @@
     "up_config_path": "JIT/configs/phase_u_continuation_smoke.json",
     "up_config_sha256": "748581e00a5e9452044a02d94dabdce7c98bc4d0bb107644a29dc48bdbd84089",
     "down_config_path": "/home/qy/DVGC/JIT/configs/descent_stable_forward_2s.json",
-    "down_config_sha256": "1b603838df2e7507a41b706c7aae73caebe70eb5c401f8a36bce4c77cca95e54"
+    "down_config_sha256": "59f1bd052489406730de68d27e234db8b89d3915b730dd2a58f85762165b9fda"
   },
   "initialization": {
     "actor": "warm_start_frozen_unified",
