@@ -1,5 +1,19 @@
 # JIT 当前状态与证据
 
+## 2026-09-14 已批准的旧能力保留对照
+
+新增 opt-in source-action MSE：在942个冻结π0成功TRAIN快照观测上约束
+新Actor的确定性归一化动作；teacher normalizer冻结，student normalizer沿用
+PPO当前值。旧快照仅用于监督项，不回放成PPO轨迹。原奖励、物理和端点不变。
+配置对照系数1/0、同seed9981401、128环境、各128000步，32k/64k/128k
+checkpoint；相同64旧状态+2 pending对π0与6个checkpoint做全矩阵续接。
+全部为TRAIN机制诊断，不是独立holdout。总新交互上限479200。
+
+代码与配置见[实施计划](RETENTION_TRAINING.md)。运行入口：
+`runs/experiments/policy_retention_20260914/INDEX.md`，实时启动状态只以其中
+`execution/status.json`为准。后台GPU空闲门控不读取其他项目文件、不终止其他任务。
+旧生产工件不修改；下方2026-09-12数值保留为历史快照。
+
 核验日期：2026-09-12；文档修订前代码 HEAD `830a10f`。本页仅描述 DVGC/JIT。原始记录保持不变。
 
 ## 最新完成结果

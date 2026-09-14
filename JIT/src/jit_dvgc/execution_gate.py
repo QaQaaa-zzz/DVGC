@@ -96,6 +96,15 @@ def _passive_supervisor(process, declarations):
     return False
 
 
+def gpu_idle_assessment(output: str) -> dict[str, Any]:
+    """Conservatively parse nvidia-smi compute PIDs; empty is idle."""
+    rows = [line.strip() for line in output.splitlines() if line.strip()]
+    valid = all(re.fullmatch(r'\d+\s*,\s*\d+', row) for row in rows)
+    return {'ready': valid and not rows, 'phase': 'idle' if not rows else 'busy',
+            'reasons': [] if valid and not rows else ['GPU compute process present or unreadable inventory'],
+            'compute_processes': rows}
+
+
 def check_execution_gate(
     gate: Mapping[str, Any], *,
     process_inventory: Callable[[], Iterable[Mapping[str, Any]]] | None = None,
@@ -111,6 +120,15 @@ def check_execution_gate(
     that user's processes are monitored, not global accelerator use. Inventory
     errors within that declared scope always close the gate.
     """
+    if gate.get('kind') == 'gpu_idle':
+        import subprocess
+        try:
+            query = subprocess.run(['nvidia-smi', '--query-compute-apps=pid,used_memory',
+                '--format=csv,noheader,nounits'], check=True, text=True,
+                capture_output=True, timeout=10)
+            return gpu_idle_assessment(query.stdout)
+        except (OSError, subprocess.SubprocessError) as exc:
+            return {'ready': False, 'reasons': [str(exc)], 'phase': 'unknown'}
     result: dict[str, Any] = {"ready": False, "reasons": [], "phase": None,
                               "matching_processes": [], "status_path": None}
     reasons = result["reasons"]

@@ -212,6 +212,14 @@ def run_unified_formal(config_path: Path, run_id: str, **kwargs: Any) -> dict[st
     call_kwargs = dict(kwargs)
     base_factory = call_kwargs.pop("env_factory", UnifiedTubeRSIEnv)
     call_kwargs["env_factory"] = _core_replay_env_factory(base_factory, contract)
+    raw = _read_json_object(Path(config_path))
+    if raw.get("action_retention") is not None:
+        from ..policy_retention import wrap_trainer
+        from ..unified_formal import ppo_train
+        source = _read_json_object(Path(raw['initialization']['source_frozen_policy']))
+        call_kwargs['trainer'] = wrap_trainer(
+            call_kwargs.get('trainer', ppo_train.train), raw['action_retention'],
+            source['policy']['name'], run_dir)
     try:
         result = _run_unified_formal(config_path, run_id, **call_kwargs)
         _record_tube_sampling(run_dir, contract)
