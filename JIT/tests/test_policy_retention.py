@@ -5,6 +5,13 @@ import pytest
 from jit_dvgc import policy_retention as retention
 
 
+def test_retention_evaluation_preserves_source_proposer_role():
+    from jit_dvgc.retention_experiment import source_bank_member
+    source = dict(frozen_policy='/frozen/pi0.json', roles=['evaluator'])
+    assert 'proposer' in source_bank_member(source)['roles']
+    assert 'evaluator' in source_bank_member(source)['roles']
+
+
 def test_penalty_preserves_teacher_and_pulls_student_toward_it():
     student = jp.array([[.8, -.5]])
     teacher = jp.array([[.1, -.1]])

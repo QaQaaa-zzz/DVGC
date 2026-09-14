@@ -4,6 +4,12 @@ import csv
 from .jump_evidence_validation import read, write
 
 
+def source_bank_member(source):
+    """Declare the experiment's arrival source, even in an evaluator-only record."""
+    return dict(frozen_policy=source['frozen_policy'],
+                roles=sorted(set(source['roles']) | {'proposer', 'evaluator'}))
+
+
 def export_training(run_dir):
     import matplotlib
     matplotlib.use('Agg')
@@ -47,7 +53,7 @@ def evaluate(spec_path, output):
     output.mkdir(parents=True, exist_ok=False)
     bank = load_probe_bank(Path(spec['bank']))
     source = next(m for m in bank['members'] if m['name'] == spec['source'])
-    members = [dict(frozen_policy=source['frozen_policy'], roles=['evaluator'])]
+    members = [source_bank_member(source)]
     order = [spec['source']]
     for arm in spec['arms']:
         config = read(arm['config'])
