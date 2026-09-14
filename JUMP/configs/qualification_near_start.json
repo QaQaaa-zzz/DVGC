@@ -1,0 +1,76 @@
+{
+  "schema": "jump_qualification_v1",
+  "data_role": "ENGINEERING_DEVELOPMENT",
+  "backend": "mujoco_cpu",
+  "jit_model_config": "JIT/configs/phase_u_continuation_smoke.json",
+  "scene": {
+    "front_x": 3.6,
+    "length": 0.2,
+    "height": 0.1,
+    "half_width": 1.0,
+    "landing_near": 0.05,
+    "landing_far": 1.5
+  },
+  "timing": {
+    "sim_dt": 0.005,
+    "control_dt": 0.02,
+    "episode_seconds": 8.0,
+    "approach_timeout_seconds": 1.0,
+    "settle_seconds": 0.1,
+    "airborne_seconds": 0.01,
+    "recovery_seconds": 2.0,
+    "hold_seconds": 0.5
+  },
+  "limits": {
+    "nominal_speed": 2.0,
+    "min_forward_speed": 1.0,
+    "corridor_half_width": 0.3,
+    "max_roll": 0.6108652381980153,
+    "max_pitch": 0.7853981633974483,
+    "max_yaw": 0.7853981633974483,
+    "recovery_roll": 0.08726646259971647,
+    "recovery_pitch": 0.17453292519943295,
+    "recovery_rate": 0.5,
+    "recovery_yaw": 0.08726646259971647,
+    "recovery_lateral": 0.15,
+    "recovery_speed_error": 0.4,
+    "contact_force_threshold": 1e-06,
+    "contact_distance_tolerance": 1e-06,
+    "airborne_clearance": 0.002
+  },
+  "initial": {
+    "keyframe": "initial_state",
+    "x": 2.5,
+    "forward_velocity": 2.0
+  },
+  "action": {
+    "base_rear_speed": 12.0,
+    "rear_speed_delta": 12.0,
+    "joint_target_semantics": "keyframe_centered_absolute"
+  },
+  "policies": [
+    {
+      "name": "pi_0",
+      "checkpoint": "JIT/runs/pi_unified/pi_unified_round1_natural10_10009600_seed821101_20260831/checkpoints/transition_10009600",
+      "payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719"
+    },
+    {
+      "name": "repair_0000",
+      "checkpoint": "JIT/runs/experiments/current_policy_lineage_20260914/restart/lineage/round_0000/policy_training/lineage_repair_0000/checkpoints/transition_128000",
+      "payload_sha256": "6cea97f923f9acefe45b7e6d65a37438e76dedf2824d2ead48bb571c381fbbbd"
+    }
+  ],
+  "cases": [
+    {
+      "name": "never_trigger",
+      "seed": 71401,
+      "trigger_delay_seconds": null
+    }
+  ],
+  "budget": {
+    "stage": "qualification_engineering",
+    "max_control_steps": 800,
+    "wall_seconds": 900
+  },
+  "interpretation": "Single-variable development diagnostic after the initial approach failure: move only declared initial x from 1.8 to legacy x=2.5, retain signal=0, actual narrow-obstacle geometry, complete oracle, model, actions and both frozen checkpoints. Two deterministic cases; does not test trigger response or claim CPU/MJX equivalence."
+}

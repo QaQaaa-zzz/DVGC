@@ -1,0 +1,268 @@
+{
+  "schema": "jump_qualification_compact_evidence_v1",
+  "runs": [
+    {
+      "run": "JUMP/runs/qualification/initial_20260914T114808Z",
+      "status": "completed",
+      "accounting": {
+        "charged_control_steps": 216,
+        "physics_steps": 828,
+        "physics_steps_complete": true,
+        "conservative_error_control_steps": 0,
+        "engineering_errors": 0,
+        "ppo_training_steps": 0,
+        "supervised_optimizer_updates": 0,
+        "case_count": 12
+      },
+      "outcome_counts": {
+        "success": 0,
+        "failure": 12,
+        "unknown": 0
+      },
+      "qualified_cases": 0,
+      "unique_trace_count": 2,
+      "cases": [
+        {
+          "case_id": "pi_0__never_trigger",
+          "status": "failure",
+          "reason": "yaw_limit",
+          "qualified": false,
+          "qualification_time": null,
+          "trigger_time": null,
+          "liftoff_time": null,
+          "terminal_time": 0.40500000000000025,
+          "charged_control_steps": 21,
+          "physics_steps": 81,
+          "trajectory": "trajectories/pi_0__never_trigger.jsonl",
+          "trajectory_sha256": "3c6dbb877644a3bc078282cdc8da48ae72d383977c55b25d09fcb9e57bb0f41a"
+        },
+        {
+          "case_id": "pi_0__trigger_immediate",
+          "status": "failure",
+          "reason": "yaw_limit",
+          "qualified": false,
+          "qualification_time": null,
+          "trigger_time": null,
+          "liftoff_time": null,
+          "terminal_time": 0.40500000000000025,
+          "charged_control_steps": 21,
+          "physics_steps": 81,
+          "trajectory": "trajectories/pi_0__trigger_immediate.jsonl",
+          "trajectory_sha256": "3c6dbb877644a3bc078282cdc8da48ae72d383977c55b25d09fcb9e57bb0f41a"
+        },
+        {
+          "case_id": "pi_0__trigger_100ms",
+          "status": "failure",
+          "reason": "yaw_limit",
+          "qualified": false,
+          "qualification_time": null,
+          "trigger_time": null,
+          "liftoff_time": null,
+          "terminal_time": 0.40500000000000025,
+          "charged_control_steps": 21,
+          "physics_steps": 81,
+          "trajectory": "trajectories/pi_0__trigger_100ms.jsonl",
+          "trajectory_sha256": "3c6dbb877644a3bc078282cdc8da48ae72d383977c55b25d09fcb9e57bb0f41a"
+        },
+        {
+          "case_id": "pi_0__trigger_200ms",
+          "status": "failure",
+          "reason": "yaw_limit",
+          "qualified": false,
+          "qualification_time": null,
+          "trigger_time": null,
+          "liftoff_time": null,
+          "terminal_time": 0.40500000000000025,
+          "charged_control_steps": 21,
+          "physics_steps": 81,
+          "trajectory": "trajectories/pi_0__trigger_200ms.jsonl",
+          "trajectory_sha256": "3c6dbb877644a3bc078282cdc8da48ae72d383977c55b25d09fcb9e57bb0f41a"
+        },
+        {
+          "case_id": "pi_0__trigger_400ms",
+          "status": "failure",
+          "reason": "yaw_limit",
+          "qualified": false,
+          "qualification_time": null,
+          "trigger_time": null,
+          "liftoff_time": null,
+          "terminal_time": 0.40500000000000025,
+          "charged_control_steps": 21,
+          "physics_steps": 81,
+          "trajectory": "trajectories/pi_0__trigger_400ms.jsonl",
+          "trajectory_sha256": "3c6dbb877644a3bc078282cdc8da48ae72d383977c55b25d09fcb9e57bb0f41a"
+        },
+        {
+          "case_id": "pi_0__trigger_800ms",
+          "status": "failure",
+          "reason": "yaw_limit",
+          "qualified": false,
+          "qualification_time": null,
+          "trigger_time": null,
+          "liftoff_time": null,
+          "terminal_time": 0.40500000000000025,
+          "charged_control_steps": 21,
+          "physics_steps": 81,
+          "trajectory": "trajectories/pi_0__trigger_800ms.jsonl",
+          "trajectory_sha256": "3c6dbb877644a3bc078282cdc8da48ae72d383977c55b25d09fcb9e57bb0f41a"
+        },
+        {
+          "case_id": "repair_0000__never_trigger",
+          "status": "failure",
+          "reason": "yaw_limit",
+          "qualified": false,
+          "qualification_time": null,
+          "trigger_time": null,
+          "liftoff_time": null,
+          "terminal_time": 0.28500000000000014,
+          "charged_control_steps": 15,
+          "physics_steps": 57,
+          "trajectory": "trajectories/repair_0000__never_trigger.jsonl",
+          "trajectory_sha256": "45d9ed36ffbfec2f2a0248436c2c2cef014b219d14ca9aaf049edfc8e6ea6515"
+        },
+        {
+          "case_id": "repair_0000__trigger_immediate",
+          "status": "failure",
+          "reason": "yaw_limit",
+          "qualified": false,
+          "qualification_time": null,
+          "trigger_time": null,
+          "liftoff_time": null,
+          "terminal_time": 0.28500000000000014,
+          "charged_control_steps": 15,
+          "physics_steps": 57,
+          "trajectory": "trajectories/repair_0000__trigger_immediate.jsonl",
+          "trajectory_sha256": "45d9ed36ffbfec2f2a0248436c2c2cef014b219d14ca9aaf049edfc8e6ea6515"
+        },
+        {
+          "case_id": "repair_0000__trigger_100ms",
+          "status": "failure",
+          "reason": "yaw_limit",
+          "qualified": false,
+          "qualification_time": null,
+          "trigger_time": null,
+          "liftoff_time": null,
+          "terminal_time": 0.28500000000000014,
+          "charged_control_steps": 15,
+          "physics_steps": 57,
+          "trajectory": "trajectories/repair_0000__trigger_100ms.jsonl",
+          "trajectory_sha256": "45d9ed36ffbfec2f2a0248436c2c2cef014b219d14ca9aaf049edfc8e6ea6515"
+        },
+        {
+          "case_id": "repair_0000__trigger_200ms",
+          "status": "failure",
+          "reason": "yaw_limit",
+          "qualified": false,
+          "qualification_time": null,
+          "trigger_time": null,
+          "liftoff_time": null,
+          "terminal_time": 0.28500000000000014,
+          "charged_control_steps": 15,
+          "physics_steps": 57,
+          "trajectory": "trajectories/repair_0000__trigger_200ms.jsonl",
+          "trajectory_sha256": "45d9ed36ffbfec2f2a0248436c2c2cef014b219d14ca9aaf049edfc8e6ea6515"
+        },
+        {
+          "case_id": "repair_0000__trigger_400ms",
+          "status": "failure",
+          "reason": "yaw_limit",
+          "qualified": false,
+          "qualification_time": null,
+          "trigger_time": null,
+          "liftoff_time": null,
+          "terminal_time": 0.28500000000000014,
+          "charged_control_steps": 15,
+          "physics_steps": 57,
+          "trajectory": "trajectories/repair_0000__trigger_400ms.jsonl",
+          "trajectory_sha256": "45d9ed36ffbfec2f2a0248436c2c2cef014b219d14ca9aaf049edfc8e6ea6515"
+        },
+        {
+          "case_id": "repair_0000__trigger_800ms",
+          "status": "failure",
+          "reason": "yaw_limit",
+          "qualified": false,
+          "qualification_time": null,
+          "trigger_time": null,
+          "liftoff_time": null,
+          "terminal_time": 0.28500000000000014,
+          "charged_control_steps": 15,
+          "physics_steps": 57,
+          "trajectory": "trajectories/repair_0000__trigger_800ms.jsonl",
+          "trajectory_sha256": "45d9ed36ffbfec2f2a0248436c2c2cef014b219d14ca9aaf049edfc8e6ea6515"
+        }
+      ],
+      "evidence_sha256": {
+        "config.json": "f3864b27a7da0629aa78443d04a7e5e13723889f6b231736a3c77d028181f6b3",
+        "manifest.json": "725d14607c3d212c00fe79607134dd2d2662ed1ef1bd9057f6f8ab340aee70b0",
+        "results.json": "afdbbb1e5f250516207d290d80cd073d0100ecf0088e6c1b10a3ae7273e249e6",
+        "status.json": "6d59e9bb695622ab2f2f7d299e22a275208a0a5b9b6ff0723747bf9ee3e8eee1",
+        "analysis/report_manifest.json": "3d1c894368024a68bac56c8f1e1f769242fa7f6b7513b5c947739783621b461a",
+        "notifications/notification_status.json": "856c79673ac5abf96d88839a974dae5f26ddf9302a0a26ee7137c27ff88dc399"
+      }
+    },
+    {
+      "run": "JUMP/runs/qualification/near_start_20260914T115254Z",
+      "status": "completed",
+      "accounting": {
+        "charged_control_steps": 54,
+        "physics_steps": 213,
+        "physics_steps_complete": true,
+        "conservative_error_control_steps": 0,
+        "engineering_errors": 0,
+        "ppo_training_steps": 0,
+        "supervised_optimizer_updates": 0,
+        "case_count": 2
+      },
+      "outcome_counts": {
+        "success": 0,
+        "failure": 2,
+        "unknown": 0
+      },
+      "qualified_cases": 0,
+      "unique_trace_count": 2,
+      "cases": [
+        {
+          "case_id": "pi_0__never_trigger",
+          "status": "failure",
+          "reason": "roll_limit",
+          "qualified": false,
+          "qualification_time": null,
+          "trigger_time": null,
+          "liftoff_time": null,
+          "terminal_time": 0.6750000000000005,
+          "charged_control_steps": 34,
+          "physics_steps": 135,
+          "trajectory": "trajectories/pi_0__never_trigger.jsonl",
+          "trajectory_sha256": "755e059cf9c6c6467239841f24518b116f2b769ab7c3c28bdadd17870fa25d5f"
+        },
+        {
+          "case_id": "repair_0000__never_trigger",
+          "status": "failure",
+          "reason": "yaw_limit",
+          "qualified": false,
+          "qualification_time": null,
+          "trigger_time": null,
+          "liftoff_time": null,
+          "terminal_time": 0.39000000000000024,
+          "charged_control_steps": 20,
+          "physics_steps": 78,
+          "trajectory": "trajectories/repair_0000__never_trigger.jsonl",
+          "trajectory_sha256": "cf3fc164ac5d68ed954721722df9470af0ecd3a126358e397a2885bff8ac42bd"
+        }
+      ],
+      "evidence_sha256": {
+        "config.json": "458fde68ce2e1dc778cde7c3ba37833ccf3b99de604e8c0ca9354b5380c95f0d",
+        "manifest.json": "b1c8d883300539b245b48760aca5e21c1b1d697d81b719c4ab78d241c731214a",
+        "results.json": "31497defccedc57b16f647bce84ab1fb899d16bf4a6f7d03c8c70e16ffada555",
+        "status.json": "ba33d8cfb43b8450cbe878b856acabeee710fd125764103bcca6607e2eaf2980",
+        "analysis/report_manifest.json": "888de898324891779a95ebada29fc270db6eb644892e68c089859f1eb738c2c8",
+        "notifications/notification_status.json": "e6286f69c1be8159e73de7e69d1d8c6fa227159cfe2dcf56df8748ce5385809c"
+      }
+    }
+  ],
+  "total_charged_control_steps": 270,
+  "total_physics_steps": 1041,
+  "new_ppo_training_steps": 0,
+  "new_supervised_updates": 0,
+  "claim_boundary": "new CPU scene/trigger qualification only; no successful grounded approach, no actual trigger, no timing comparison, no old MJX equivalence"
+}

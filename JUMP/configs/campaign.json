@@ -1,0 +1,24 @@
+{
+  "schema": "jump_campaign_budget_v1",
+  "total_control_steps": 200000000,
+  "physics_substeps_per_control": 4,
+  "stages": {
+    "qualification_engineering": 2000000,
+    "common_skill_adaptation": 40000000,
+    "window_mechanism": 20000000,
+    "outcome_data": 60000000,
+    "closed_loop_development": 30000000,
+    "independent_comparison": 30000000,
+    "contingency": 18000000
+  },
+  "allocation_semantics": "ceilings_not_targets; each run reserves an allocation before stepping; no automatic infinite extension",
+  "advance_conditions": {
+    "qualification_engineering": "complete approach, external-trigger, contact and reporting checks; negative qualification stops dependent stages",
+    "common_skill_adaptation": "only after measured lower-skill deficiency; declare adaptation config, fresh finite budget and shared freeze",
+    "window_mechanism": "qualified shared lower-skill bundle and validated full-task oracle",
+    "outcome_data": "measured active-preparation benefit; group-disjoint training/development/calibration parents",
+    "closed_loop_development": "frozen outcome models; evaluate selected-candidate error and real latency",
+    "independent_comparison": "freeze method and unseen test protocol before opening new TEST",
+    "contingency": "explicit separately identified attempts; no silently discarded costs"
+  }
+}
