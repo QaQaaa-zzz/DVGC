@@ -35,7 +35,7 @@ def main():
         if a.trained_checkpoint:
             from jit_dvgc.unified_training import checkpoint_identity
             from jit_dvgc.handoff_bank import pytree_sha256
-            payload=load_checkpoint(a.trained_checkpoint,expected=checkpoint_identity(config))
+            payload=load_checkpoint(a.trained_checkpoint,expected=checkpoint_identity(config,env))
             source={'actor_sha256':pytree_sha256(payload.actor_params)}
         elif a.frozen_policy:
             frozen=load_frozen_unified_manifest(a.frozen_policy)
