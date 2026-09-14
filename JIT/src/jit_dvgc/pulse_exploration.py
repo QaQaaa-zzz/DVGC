@@ -36,9 +36,20 @@ def budget_contract(spec,evaluators):
     if spec['pulse_steps']>5 or h!=400 or spec['policy_steps']%3200:raise ValueError('short-pulse/horizon/aligned learning contract')
     baseline=evaluators*h
     prefixes=n*sum(pulse_delay(spec,i)+spec['pulse_steps'] for i in range(rounds))
-    suffixes=sum((evaluators+i)*n*h for i in range(rounds))
+    current_only=spec.get('iteration_mode')=='current_policy_only_v1'
+    if spec.get('iteration_mode') not in (None,'current_policy_only_v1'):
+        raise ValueError('unsupported pulse iteration mode')
+    if current_only and (type(spec.get('retention_samples_per_phase')) is not int or
+            spec['retention_samples_per_phase']<=0 or not 0<=spec['minimum_retention']<=1):
+        raise ValueError('valid current-policy retention panel required')
+    suffixes=rounds*n*h if current_only else sum((evaluators+i)*n*h for i in range(rounds))
     learning=rounds*(spec['policy_steps']+1600+n*h)
-    return dict(baseline=baseline,prefixes=prefixes,bank_suffixes=suffixes,learning_and_reevaluation=learning,maximum_interactions=baseline+prefixes+suffixes+learning)
+    extra={}
+    if current_only:
+        extra=dict(nominal_support=(rounds+1)*h*(h+1),
+            retention_evaluation=rounds*2*(1+2*spec['retention_samples_per_phase'])*h)
+    return dict(baseline=baseline,prefixes=prefixes,bank_suffixes=suffixes,learning_and_reevaluation=learning,
+        **extra,maximum_interactions=baseline+prefixes+suffixes+learning+sum(extra.values()))
 
 
 def support_row(row,witnessed):
@@ -80,12 +91,22 @@ def run(spec_path,output):
     bank=load_probe_bank(Path(spec['bank']));bank_path=Path(spec['bank']);count=len(spec['order']);budget=budget_contract(spec,count)
     if spec['maximum_interactions']!=budget['maximum_interactions']:raise ValueError('pulse budget mismatch')
     source=next(m for m in bank['members'] if m['name']==spec['proposer'])
+    current_only=spec.get('iteration_mode')=='current_policy_only_v1'
+    if current_only:
+        from .current_policy_iteration import validate_initial_bank,retention_candidates,promotion_decision
+        validate_initial_bank(bank,spec['proposer'])
+        if spec['order']!=[spec['proposer']] or any(spec.get(k) for k in
+                ('resume_run','reuse_results','reuse_collection','reuse_prefix_collection','witnessed_support')):
+            raise ValueError('clean source lineage cannot import historical support or replay')
     initial_bank_names={m['name'] for m in bank['members']}
-    base=read(spec['witnessed_support']);base['entries']=[r for r in base['entries'] if r.get('labels',{}).get(spec['proposer'])==1]
-    if {r['phase'] for r in base['entries']}!={'upstream','downstream'}:raise ValueError('source pi needs witnessed support in both phases')
-    base.pop('support_sha256');base['selection']='only frozen source-pi positive rows';base['support_sha256']=canonical_sha256(base)
-    write(root/'source_pi_support.json',base);write(root/'declaration.json',dict(spec=spec,budget=budget,role='TRAIN',final_test_used=False))
-    seen=sorted({r['root_cell'] for r in base['entries']});rows_all=[];metrics=[];costs=[];checkpoint=None;start=time.monotonic();support=json.loads(json.dumps(base));inherited_cost=0
+    base=None
+    if not current_only:
+        base=read(spec['witnessed_support']);base['entries']=[r for r in base['entries'] if r.get('labels',{}).get(spec['proposer'])==1]
+        if {r['phase'] for r in base['entries']}!={'upstream','downstream'}:raise ValueError('source pi needs witnessed support in both phases')
+        base.pop('support_sha256');base['selection']='only frozen source-pi positive rows';base['support_sha256']=canonical_sha256(base)
+        write(root/'source_pi_support.json',base)
+    write(root/'declaration.json',dict(spec=spec,budget=budget,role='TRAIN',final_test_used=False))
+    seen=sorted({r['root_cell'] for r in base['entries']}) if base else [];rows_all=[];metrics=[];costs=[];checkpoint=None;start=time.monotonic();support=json.loads(json.dumps(base));inherited_cost=0
     def status(phase,**kw):write(root/'status.json',dict(phase=phase,charged_interactions=inherited_cost+sum(c['charged_interactions'] for c in costs),new_interactions=sum(c['charged_interactions'] for c in costs),inherited_interactions=inherited_cost,maximum_interactions=budget['maximum_interactions'],wall_seconds=time.monotonic()-start,costs=costs,**kw))
     def child(directory,name,argv,maximum,env=None):
         inputs={str((Path(spec['repo'])/p).resolve()):sha for p,sha in spec['input_files'].items()}
@@ -107,6 +128,11 @@ def run(spec_path,output):
         if result['phase']!='completed' or not 0<=actual<=maximum:raise ValueError('runtime receipt/budget mismatch')
         cost.update(charged_interactions=actual,accounting='actual');return out
     try:
+        if current_only:
+            seed=runtime(root,'seed_support','seed_support',spec,spec['horizon']*(spec['horizon']+1))
+            base=read(seed/'support.json');support=json.loads(json.dumps(base))
+            seen=sorted({r['root_cell'] for r in base['entries']})
+            write(root/'source_pi_support.json',base)
         first_round=0
         if spec.get('resume_run'):
             previous=Path(spec['resume_run']);old=read(previous/'declaration.json')['spec']
@@ -134,7 +160,9 @@ def run(spec_path,output):
             runtime(root,'baseline','baseline',spec,count*spec['horizon'])
         for index in range(first_round,spec['rounds']):
             d=root/f'round_{index:04d}';d.mkdir()
-            ex={**spec,'bank':str(bank_path),'round_index':index,'explorer_checkpoint':checkpoint}
+            source_name=source['name'];adopt=None
+            ex={**spec,'bank':str(bank_path),'round_index':index,'explorer_checkpoint':checkpoint,
+                'proposer':source_name if current_only else spec['proposer']}
             if index!=first_round:ex.pop('reuse_prefix_collection',None)
             if index==first_round and spec.get('reuse_collection'):
                 collection=Path(spec['reuse_collection'])
@@ -145,7 +173,7 @@ def run(spec_path,output):
                 write(d/'reused_collection.json',dict(path=str(collection),prefix_sha256=_file_sha(collection/'prefixes.npz')))
             else:
                 collection=runtime(d,'collection','collect',ex,spec['num_envs']*(pulse_delay(spec,index)+spec['pulse_steps']))
-            order=spec['order']+[m['name'] for m in bank['members'] if m['name'] not in initial_bank_names]
+            order=[source_name] if current_only else spec['order']+[m['name'] for m in bank['members'] if m['name'] not in initial_bank_names]
             evaluation=runtime(d,'bank_evaluation','evaluate',{**ex,'candidates':str(collection/'candidates.json'),'order':order,'budget':len(order)*spec['num_envs']*spec['horizon'], 'reuse_results':spec.get('reuse_results') if index==first_round else None},len(order)*spec['num_envs']*spec['horizon'])
             rows=read(evaluation/'results.json');pending=[r for r in rows if r['label']==0 and not r['prefix_terminal']]
             for r in rows:r['round']=index;r['pulse_start_step']=pulse_delay(spec,index)
@@ -160,9 +188,12 @@ def run(spec_path,output):
                 make_config(sp,source['frozen_policy'],spec['bootstrap_config'],config,run_id,source['policy']['iteration']+index+1,spec['policy_steps'],spec['seed']+10000+index,checkpoints=[spec['policy_steps']],panel_support_path=root/'source_pi_support.json',pending_fraction=spec['pending_fraction'])
                 cost=child(d,'learn_policy',['JIT/cli/train_unified_from_pi0.py','--config',config,'--run-id',run_id],spec['policy_steps']+1600,dict(JIT_RUN_ROOT=str(d/'policy_training')))
                 training=d/'policy_training'/run_id;report=read(training/'formal_report.json');cost.update(charged_interactions=report['completed_training_transitions']+report['train_panel_interactions'],accounting='actual')
+                if current_only:
+                    from .retention_experiment import export_training
+                    export_training(training)
                 name=f'{root.name}_repair_{index:04d}'
                 freeze_development_checkpoint(d/'frozen',config_path=config,checkpoint=training/'checkpoints'/f"transition_{spec['policy_steps']}",name=name)
-                bank_spec=dict(version=name,task=bank['task'],max_ticks=bank['max_ticks'],label_interaction_budget=bank['label_interaction_budget'],max_candidates_per_process=bank['max_candidates_per_process'],members=[dict(frozen_policy=m['frozen_policy'],roles=m['roles']) for m in bank['members']]+[dict(frozen_policy=str(d/'frozen/frozen_unified_policy.json'),roles=['evaluator'])])
+                bank_spec=dict(version=name,task=bank['task'],max_ticks=bank['max_ticks'],label_interaction_budget=bank['label_interaction_budget'],max_candidates_per_process=bank['max_candidates_per_process'],members=[dict(frozen_policy=m['frozen_policy'],roles=m['roles']) for m in bank['members']]+[dict(frozen_policy=str(d/'frozen/frozen_unified_policy.json'),roles=['proposer','evaluator'] if current_only else ['evaluator'])])
                 bank_path=d/'expanded_bank.json';bank=lock_probe_bank(bank_spec,bank_path)
                 pp=d/'pending.json';write(pp,pending)
                 after=runtime(d,'after_learning','evaluate',{**ex,'bank':str(bank_path),'candidates':str(pp),'order':[name],'budget':len(pending)*spec['horizon']},len(pending)*spec['horizon'])
@@ -170,6 +201,16 @@ def run(spec_path,output):
                 for r in rows:
                     if r['index'] in resolved:
                         new=resolved[r['index']];r.update(label=new['label'],witness=new['witness'],learning_attempted=True,bank_attempts=r['attempts'],attempts=r['attempts']+new['attempts'],learning_config=str(config))
+                if current_only:
+                    panel=retention_candidates(support,read(root/'baseline/candidates.json')[0],spec['retention_samples_per_phase'])
+                    panel_path=d/'retention_candidates.json';write(panel_path,panel)
+                    checked=runtime(d,'retention_evaluation','evaluate',{**ex,'bank':str(bank_path),
+                        'candidates':str(panel_path),'order':[source_name,name],'full_matrix':True,
+                        'budget':2*len(panel)*spec['horizon']},2*len(panel)*spec['horizon'])
+                    decision=promotion_decision(read(checked/'results.json'),source_name,name,
+                        sum(r['label']==1 for r in resolved.values()),spec['minimum_retention'])
+                    write(d/'promotion.json',dict(source=source_name,successor=name,**decision))
+                    if decision['promote']:adopt=next(m for m in bank['members'] if m['name']==name)
             # Accumulate positives only in witnessed reset support; failed cells stay in visited ledger.
             keys={r['key'] for r in support['entries']};support.pop('support_sha256')
             for r in rows:
@@ -182,8 +223,25 @@ def run(spec_path,output):
             feedback=d/'feedback.json';write(feedback,dict(rewards=reward.tolist(),eligible=eligible.tolist(),parts=parts,component_sums={k:float(sum(v)) for k,v in parts.items()},new_cells=len(next_seen)-len(seen),outcomes=str(outcomes),outcomes_sha256=_file_sha(outcomes)))
             update=runtime(d,'update','update',{**ex,'collection':str(collection),'feedback':str(feedback)},0)
             checkpoint=str(update/'state.msgpack');m=read(update/'metrics.json')
-            metrics.append(dict(round=index+1,pulse_start_step=pulse_delay(spec,index),successes=sum(r['label']==1 for r in rows),failed_after_learning=sum(r['label']==0 and r['learning_attempted'] for r in rows),new_cells=len(next_seen)-len(seen),charged_interactions=inherited_cost+sum(c['charged_interactions'] for c in costs),reward_novelty=m['reward_components']['novelty'],reward_quality=m['reward_components']['quality'],**{k:v for k,v in m.items() if k!='reward_components'}))
+            metrics.append(dict(round=index+1,source_policy=source_name,pulse_start_step=pulse_delay(spec,index),successes=sum(r['label']==1 for r in rows),failed_after_learning=sum(r['label']==0 and r['learning_attempted'] for r in rows),new_cells=len(next_seen)-len(seen),charged_interactions=inherited_cost+sum(c['charged_interactions'] for c in costs),reward_novelty=m['reward_components']['novelty'],reward_quality=m['reward_components']['quality'],**{k:v for k,v in m.items() if k!='reward_components'}))
             seen=next_seen;rows_all.extend(rows);write(root/'visited_cells.json',seen);write(root/'training_metrics.json',metrics);export(root,metrics,rows_all);status('round_completed',completed_rounds=index+1)
+            if current_only:
+                write(d/'source_ledger.json',dict(source=source_name,cells=seen))
+                if adopt is not None:
+                    source=adopt
+                    checkpoint=None
+                if adopt is not None and index+1<spec['rounds']:
+                    nominal=runtime(d,'next_source_seed','seed_support',{**ex,'bank':str(bank_path),
+                        'proposer':source['name'],'explorer_checkpoint':None},spec['horizon']*(spec['horizon']+1))
+                    fresh=read(nominal/'support.json');seen=sorted({r['root_cell'] for r in fresh['entries']})
+                    support.pop('support_sha256');keys={r['key'] for r in support['entries']}
+                    support['entries'].extend(r for r in fresh['entries'] if r['key'] not in keys)
+                    support['inputs'].update(fresh['inputs']);support['support_sha256']=canonical_sha256(support)
+                    checkpoint=None
+                    write(d/'next_training_support.json',support)
+                    write(root/'visited_cells.json',seen)
+                write(root/'current_source.json',dict(source=source['name'],frozen_policy=source['frozen_policy'],
+                    explorer_checkpoint=checkpoint,completed_rounds=index+1,historical_helpers_used=False))
         status('completed',completed_rounds=spec['rounds'],final_test_used=False,checkpoint=checkpoint)
     except BaseException as exc:
         status('error',error=f'{type(exc).__name__}: {exc}',no_automatic_retry=True);export(root,metrics,rows_all);raise
