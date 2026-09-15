@@ -1,6 +1,33 @@
 # JIT 当前状态与证据
 
 
+## 2026-09-15 RSL sampler precision repair;18 rounds complete
+
+Original-reward arm completed17 rounds and all round18 acquisition, repair-policy
+training and evaluation; explorer update stopped at logprob error.0021715 against
+Torch, exceeding.002 guard. Exact saved-state audit reproduced GPU default-matmul
+behavior within2.4e-6 while GPU highest precision agreed with Torch. This is a
+reduced-precision sampler/optimizer arithmetic mismatch, not changed checkpoint data.
+
+Sampler now explicitly uses highest matmul precision and records it. Updates replay
+the saved collection arithmetic, retain actual saved behavior log probabilities,
+require replay error<=.002 and max per-state distribution KL toTorch<=1e-5, and use
+replayed behavior means/scales for RSL KL. No blanket tolerance increase or replacement
+of old likelihoods. Legacy round18 replay error3.8e-6, maximum distribution KL2.4e-7;
+completed3072 valid actions/12 updates, lifetime708 updates. Its post-update KL.03176
+triggered the existing epoch stop; no strict KL bound or rollback claim.
+
+New `runs/experiments/rsl_reward_comparison_20260915/precision_repair/` resumes
+round19 with frozen source lineage, explorer+Adam continuation and5,821,825 inherited
+interactions. Source promotion in round18 had been rejected (fixed start failed),
+so source remains lineage_repair_0013. All policy training, evaluation and prior
+17 explorer updates reused; only the previously failed update was completed in a
+new derived view. Source records remain immutable.26 related CPU tests pass;
+real GPU collection for round19 completed8192 new interactions and evaluation began.
+Supervisor2043281; watcher1494267 healthy with no delivery errors. Active manifest
+and INDEX updated. Both200-round arms,1024 envs,delta.25 and initial/maxLR.001 unchanged.
+
+
 ## 2026-09-15 RSL amp25 bootstrap reference repair
 
 The first1024-candidate acquisition and current-pi evaluation completed. Repair

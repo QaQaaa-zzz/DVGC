@@ -60,14 +60,14 @@ def normalized(state,obs):
     return (obs-state['normalizer_mean'])/state['normalizer_std']
 
 
-def infer(state,obs):
+def infer(state,obs,precision="highest"):
     import jax
     import jax.numpy as jnp
     x=normalized(state,obs)
     def forward(layers):
         y=x
         for i in range(len(layers)):
-            layer=layers[str(i)];y=y@jnp.asarray(layer['kernel'])+jnp.asarray(layer['bias'])
+            layer=layers[str(i)];y=jnp.matmul(y,jnp.asarray(layer['kernel']),precision=precision)+jnp.asarray(layer['bias'])
             if i<len(layers)-1:y=jax.nn.elu(y)
         return y
     out=forward(state['params']['actor'])
@@ -122,8 +122,30 @@ def update_batch(spec,state,tape,feedback):
         p.act(td);old_mu=p.action_mean.clone();old_sd=p.action_std.clone()
         error=float((p.get_actions_log_prob(raw)-old_lp).abs().max())
         value_error=float((p.evaluate(td).flatten()-old_v).abs().max())
-    if error>2e-3 or value_error>2e-3:
-        raise ValueError(f'JAX/RSL behavior mismatch: logprob={error}, value={value_error}')
+    # Validate the actual collection arithmetic, then bound distribution drift
+    # against Torch. Legacy GPU default dots used reduced precision; do not
+    # silently replace the saved behavior probabilities with recomputed ones.
+    import jax
+    import jax.numpy as jnp
+    precision=spec.get('behavior_matmul_precision','highest')
+    def replay(x,a):
+        mu,sd,v=infer(state,x,precision=precision)
+        lp=(-.5*((a-mu)/sd)**2-jnp.log(sd)-.5*math.log(2*math.pi)).sum(-1)
+        return mu,sd,v,lp
+    mu,sd,rv,rlp=map(np.asarray,jax.jit(replay)(
+        jnp.asarray(np.asarray(tape['observation'])[mask]),jnp.asarray(raw.numpy())))
+    replay_error=float(np.max(np.abs(rlp-old_lp.numpy())))
+    replay_value_error=float(np.max(np.abs(rv-old_v.numpy())))
+    with torch.no_grad():
+        actual_mu=torch.from_numpy(mu.copy());actual_sd=torch.from_numpy(sd.copy())
+        drift=(torch.log(old_sd/actual_sd)+(actual_sd**2+(actual_mu-old_mu)**2)/(2*old_sd**2)-.5).sum(-1)
+        max_drift=float(drift.max())
+    if (not np.isfinite([replay_error,replay_value_error,max_drift,value_error]).all()
+            or replay_error>2e-3 or replay_value_error>2e-3 or max_drift>1e-5 or value_error>2e-3):
+        raise ValueError(f'JAX/RSL behavior mismatch: replay={replay_error}, value={value_error}, distribution_KL={max_drift}')
+    old_mu,old_sd=actual_mu,actual_sd
+    metrics.update(behavior_replay_log_prob_error=replay_error,
+                   behavior_distribution_max_kl=max_drift,behavior_matmul_precision=precision)
     class ValidStorage(RolloutStorage):
         def mini_batch_generator(self,num_mini_batches,num_epochs=1):
             # All valid samples, including a smaller final minibatch, once/epoch.
@@ -184,6 +206,8 @@ def update_runtime(spec,output):
     import time
     start=time.monotonic();output=Path(output);output.mkdir(parents=True,exist_ok=False)
     source=Path(spec['collection']);state=restore(source/'update_state.msgpack')
+    collection_spec=read(source/'hyperparameters.json')
+    spec={**spec,'behavior_matmul_precision':collection_spec.get('inference_precision','default')}
     with np.load(source/'prefixes.npz') as tape:
         state,metrics,learning,logs=update_batch(spec,state,tape,read(spec['feedback']))
     (output/'state.msgpack').write_bytes(msgpack_serialize(state))
