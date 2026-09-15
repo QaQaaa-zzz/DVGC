@@ -72,3 +72,21 @@ def test_failed_nominal_candidate_is_a_negative_result_not_pipeline_error(tmp_pa
     assert not (tmp_path/'candidate/support.json').exists()
     with pytest.raises(ValueError,match='current source'):
         iteration.seed_support({**spec,'allow_nominal_failure':False},tmp_path/'initial')
+
+def test_stage_reuse_allows_relocated_code_but_not_changed_sampling():
+    iteration.verify_stage_reuse({'repo':'/old/code','num_envs':1024},
+                                 {'repo':'/new/code','num_envs':1024})
+    with pytest.raises(ValueError):
+        iteration.verify_stage_reuse({'repo':'/old/code','num_envs':1024},
+                                     {'repo':'/new/code','num_envs':128})
+
+
+def test_nested_training_config_resolves_original_bootstrap(tmp_path):
+    import json
+    from jit_dvgc.iterative_probe_training import resolve_bootstrap_config
+    original=tmp_path/'original.json';original.write_text(json.dumps({'schema':'jit_unified_formal_v1'}))
+    derived=tmp_path/'derived.json';derived.write_text(json.dumps({'bootstrap_formal_config':'original.json'}))
+    successor=tmp_path/'successor.json';successor.write_text(json.dumps({'bootstrap_formal_config':str(derived)}))
+    assert resolve_bootstrap_config(successor)==original.resolve()
+    original.write_text(json.dumps({'bootstrap_formal_config':str(successor)}))
+    with pytest.raises(ValueError,match='cycle'):resolve_bootstrap_config(successor)

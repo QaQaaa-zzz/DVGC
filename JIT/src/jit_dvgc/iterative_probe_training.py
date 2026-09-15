@@ -354,7 +354,7 @@ def build_environment(config, *, panel=False):
     from .unified_formal import load_unified_policy_formal_config
     from .unified_diagnostic import _load_runtime
     # One immutable bootstrap runtime supplies XML and the original task context.
-    _,_,bootstrap_artifact,_=_load_runtime(load_unified_policy_formal_config(Path(config.raw['bootstrap_formal_config'])))
+    _,_,bootstrap_artifact,_=_load_runtime(load_unified_policy_formal_config(resolve_bootstrap_config(config.raw['bootstrap_formal_config'])))
     support_path=config.raw.get('panel_support',config.raw['support']) if panel else config.raw['support']
     support=read(support_path);entries=sorted(support['entries'],key=lambda r:(r['phase']!='upstream',r['key']))
     artifact=SimpleNamespace(root=Path(support_path).parent,entries=entries,
@@ -402,12 +402,24 @@ def build_environment(config, *, panel=False):
     return artifact,env
 
 
+def resolve_bootstrap_config(path):
+    """Find the immutable original runtime, not a successor's training config."""
+    path=Path(path).resolve();visited=set()
+    while True:
+        if path in visited:raise ValueError('bootstrap configuration cycle')
+        visited.add(path)
+        parent=read(path).get('bootstrap_formal_config')
+        if parent is None:return path
+        parent=Path(parent)
+        path=(parent if parent.is_absolute() else path.parent/parent).resolve()
+
+
 def make_config(support_path,initializer_path,bootstrap_config,output,run_id,iteration,steps,seed,*,
                 checkpoints=None,panel_samples_per_phase=2,panel_horizon=400,
                 panel_support_path=None,pending_fraction=None,reward_mode=None,kl_control=None):
     support_path,initializer_path,bootstrap_config=map(lambda p:Path(p).resolve(),(support_path,initializer_path,bootstrap_config))
     base=read(bootstrap_config)
-    raw=dict(schema=SCHEMA,support=str(support_path),bootstrap_formal_config=str(bootstrap_config),
+    raw=dict(schema=SCHEMA,support=str(support_path),bootstrap_formal_config=str(resolve_bootstrap_config(bootstrap_config)),
         inputs={k:base['inputs'][k] for k in ('up_config_path','up_config_sha256','down_config_path','down_config_sha256')},
         initialization={'actor':'warm_start_frozen_unified','critic':'fresh','optimizer':'fresh',
                         'source_frozen_policy':str(initializer_path)},
@@ -419,6 +431,8 @@ def make_config(support_path,initializer_path,bootstrap_config,output,run_id,ite
              'requested_transitions':steps,'seed':seed},
         run_declaration={'run_id':run_id},claim_boundary={'iteration':iteration,'test_data_used':False,'validation_data_used':False},
         input_files={str(p):file_sha(p) for p in (support_path,initializer_path,bootstrap_config)})
+    root_bootstrap=resolve_bootstrap_config(bootstrap_config)
+    raw['input_files'][str(root_bootstrap)]=file_sha(root_bootstrap)
     if panel_support_path is not None:
         panel_support_path=Path(panel_support_path).resolve()
         support=validate_candidate_support(read(support_path))

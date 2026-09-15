@@ -1,6 +1,27 @@
 # JIT 当前状态与证据
 
 
+## 2026-09-15 RSL amp25 bootstrap reference repair
+
+The first1024-candidate acquisition and current-pi evaluation completed. Repair
+training failed before optimizer/environment creation: nested iterative config was
+passed as the immutable bootstrap, invoking an unrelated historical formal-seed
+guard (`formal training seed must equal820901`). Fixed generic bootstrap ancestry
+resolution with cycle detection; generated successor configs reference the canonical
+bootstrap and lock its file. The requested repair/explorer seeds and physics stay
+unchanged; no seed validator was weakened.
+
+49 related CPU tests pass, including nested bootstrap/cycles and reuse across
+relocated locked source snapshots. Updated an obsolete test's empty frozen manifest
+to the required source-policy reference. New attempt `runs/experiments/rsl_reward_comparison_20260915/amp25_repair/` reuses103716 actual
+acquisition/evaluation steps. `reuse_audit.json` preserves original failure hashes;
+the failed129600 training reservation is zero actual because execution failed during
+bootstrap resolution before creating any training output. Original failed records
+remain untouched. Both200-round arms retain0.25 limits,1024 envs,128×3 ELU,RSL3.2,
+LR/ceiling.001 and continuous explorer state. Supervisor1540416,watcher1494267 follows
+ACTIVE_RUN; live status is authoritative. No completed-training or efficacy claim.
+
+
 ## 2026-09-15 RSL continuous explorer: two 200-round reward arms
 
 User corrected explorer LR to **1e-3**, also the adaptive ceiling. Optional RSL-RL3.2.0

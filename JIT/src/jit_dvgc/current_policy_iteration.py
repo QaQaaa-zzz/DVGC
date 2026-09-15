@@ -14,7 +14,7 @@ def verify_stage_reuse(previous_spec, current_spec):
     """Match science inputs, resolving relocated candidate/bank manifests."""
     from .probe_bank import load_probe_bank
     def normalize(spec):
-        result={k:v for k,v in spec.items() if k not in ('input_files','source_locks','resume_stage_root','resume_boundary')}
+        result={k:v for k,v in spec.items() if k not in ('input_files','source_locks','resume_stage_root','resume_boundary','repo')}
         if 'bank' in result:
             bank=load_probe_bank(Path(result['bank']))
             result['bank']={'task':bank['task'],'members':{m['name']:m['policy'] for m in bank['members']}}

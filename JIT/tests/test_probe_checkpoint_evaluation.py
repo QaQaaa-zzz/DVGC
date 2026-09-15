@@ -104,7 +104,7 @@ def test_generated_config_locks_panel_and_drives_existing_callbacks(tmp_path, ji
             for phase in ('upstream','downstream') for i in range(2)]}
     support['support_sha256']=canonical_sha256(support)
     support_path=tmp_path/'support.json';support_path.write_text(json.dumps(support))
-    init=tmp_path/'frozen.json';init.write_text('{}')
+    init=tmp_path/'frozen.json';init.write_text(json.dumps({'policy':{'formal_config':str(jit_root/'configs/pi_unified_formal.json')}}))
     path=tmp_path/'config.json'
     make_config(support_path,init,jit_root/'configs/pi_unified_formal.json',path,'fixture',1,6400,123,
         checkpoints=[3200,6400],panel_samples_per_phase=1,panel_horizon=20)
