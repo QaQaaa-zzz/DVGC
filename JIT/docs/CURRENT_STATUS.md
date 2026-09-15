@@ -8,6 +8,8 @@
 
 新运行使用冻结源码快照，避免之后代码迭代破坏运行锁；GPU子任务通过设备compute进程空闲门控，CPU调度器可先启动。未改动物理参数，不读取其他项目源代码/结果。主训练的更强KL拒绝、固定π0开发锚点和最终配对测试器仍是下一阶段待实现项。
 
+启动快照：调度器PID435644与弹窗监视器PID435645已启动并核验存活，监视器已有心跳，启动通知发送返回0。入口为`runs/experiments/exploration_paper_20260915/execution/status.json`；工程两臂正常完成后自动进入机制对照。此次检查时，首个GPU子任务`engineering/learned/lineage/seed_support_execution/status.json`为waiting，设备已有其他compute进程，JIT新增交互为0；这是已排队，尚未开始仿真或训练。源码快照为9ac50f1，本阶段总上限5212800控制步，最新状态以运行文件为准。
+
 ## 2026-09-15 两组几何与论文主线复核
 
 新CPU分析见`runs/experiments/reward_comparison_pulse_20260914/analysis/geometry_review/INDEX.md`，无新训练。成功轨迹根部z峰值中位数原奖励0.596m/恢复奖励0.612m，最大0.686/0.705m；初始策略成功样本中位数约0.655m，不能声称后继跳高增加。逐策略样本是自适应筛选而非配对。suffix字段valid_contact由endpoint_success写入，稳定协议下不是首次接地，禁止用它推算跳远。动作晚偏移转向平方幅值占比下降仅是线索，不是已验证阶段分工。待做学习探索vs随机探索等预算对照、单最终策略独立扰动评价；旧结果仍为2s，0.5s尚未运行。
