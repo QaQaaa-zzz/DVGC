@@ -1,5 +1,9 @@
 # JIT 当前状态与证据
 
+## 2026-09-15 x-z图按用户给定样式调整
+
+常用绘图脚本改用中文标题、逐策略颜色/图例、成功候选散点，首次记录到稳定恢复success后截断。旧轨迹已止于该终点，长距离是恢复期间前进而非额外成功后运行。主图默认放大3.3m跳跃窗口，并明确标注局部放大；`tube_xz_full`保留完整2s稳定恢复距离，未改变终止或成功判据。新图入口：`runs/experiments/reward_comparison_pulse_20260914/analysis/tube_xz_policy_style/INDEX.md`。无新仿真/训练，旧图保留。
+
 ## 2026-09-15 常用x-z包线投影脚本
 
 `cli/plot_pulse_tube_xz.py`支持多lineage、恢复祖先追溯、统一轴范围和证据校验。每组pulse循环完成时自动输出`lineage/analysis/tube_xz/`，无仿真交互。两组0.10奖励对照分别绘制7253/7472个成功上下文策略见证的前缀与续接轨迹，保留恢复段、不连虚假接缝、不填凸包；候选点区分成功/未解决/未知。图和NPZ/CSV/JSON证据位于`runs/experiments/reward_comparison_pulse_20260914/analysis/tube_xz/INDEX.md`。17项相关测试通过。0.15两组仍停止。用法见[PULSE_TUBE_PLOTTING](PULSE_TUBE_PLOTTING.md)。

@@ -80,6 +80,8 @@ def extract(root,output):
                 check(path,a['trace_sha256']);ticks,points=active_xz(tape,a['trace_lane'],'mask',q0)
                 if len(ticks)!=a['steps'] or not bool(tape['success'][ticks[-1],a['trace_lane']]):raise ValueError('success/length mismatch')
                 if bool(tape['physical_failure'][ticks[-1],a['trace_lane']]):raise ValueError('conflicting success')
+                success_at=np.flatnonzero(tape['success'][ticks,a['trace_lane']])
+                points=points[:int(success_at[0])+1]
                 prefix=row['prefix_file'];check(prefix,row['prefix_sha256'])
                 if prefix not in prefix_cache:
                     with np.load(prefix) as z:prefix_cache[prefix]={k:z[k] for k in ('qpos','prefix_mask')}
@@ -100,29 +102,57 @@ def extract(root,output):
     return segments,candidates,manifest
 
 
-def build(lineages,output,labels=None):
+def render(data,output,labels,focus_width=3.3):
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
+    from matplotlib import font_manager
     from matplotlib.collections import LineCollection
+    font=Path('/usr/share/fonts/opentype/noto/NotoSerifCJK-Regular.ttc')
+    if font.exists():
+        font_manager.fontManager.addfont(str(font))
+        plt.rcParams['font.family']=font_manager.FontProperties(fname=str(font)).get_name()
+    plt.rcParams.update({'axes.unicode_minus':False,'font.size':11})
+    allpts=np.concatenate([s for seg,_,_ in data for s in seg]);lo=allpts.min(0);hi=allpts.max(0)
+    allnames=sorted({m['policy'] for i in range(len(data)) for m in read(output/f'scheme_{i+1}'/'trajectory_metadata.json') if m['policy']})
+    ordered=sorted(allnames,key=lambda n:('repair_' in n,n))
+    palette=plt.get_cmap('turbo');colors={n:palette(i/max(1,len(ordered)-1)) for i,n in enumerate(ordered)}
+    for i,((segments,rows,manifest),label) in enumerate(zip(data,labels)):
+        dest=output/f'scheme_{i+1}';meta=read(dest/'trajectory_metadata.json');by=defaultdict(list)
+        for m,seg in zip(meta,segments):by[m['policy']].append(seg)
+        for full in (False,True):
+            right=hi[0]+.08 if full else min(hi[0]+.08,lo[0]+focus_width)
+            fig,axes=plt.subplots(2,1,figsize=(15,8.5),gridspec_kw={'height_ratios':[2.3,1]},layout='constrained')
+            for name in ordered:
+                if name not in by:continue
+                axes[0].add_collection(LineCollection(by[name],colors=[colors[name]],linewidths=.5,alpha=.15,rasterized=True))
+                legend=('初始策略' if 'repair_' not in name else '后继策略 '+name.rsplit('repair_',1)[1])
+                axes[0].plot([],[],color=colors[name],label=legend)
+            axes[0].set_title('当前策略族的 tube：成功轨迹的 x–z 投影'+('（完整恢复）' if full else '（跳跃段局部放大）'),loc='left',weight='bold')
+            axes[0].legend(ncol=2,fontsize=7,loc='upper left',bbox_to_anchor=(1.01,1),title='成功接续策略（不等于全部已接纳）',title_fontsize=8)
+            pts=np.array([[r['x'],r['z']] for r in rows if r['label']=='success'])
+            if len(pts):axes[1].scatter(pts[:,0],pts[:,1],s=7,color='#176b87',alpha=.35,rasterized=True)
+            axes[1].set_title('已保存的成功候选状态位置（实际采样点）',loc='left')
+            for ax in axes:
+                ax.set(xlim=(lo[0]-.05,right),ylim=(max(0,lo[1]-.03),hi[1]+.05),xlabel='前向位置 x（m）',ylabel='车体根部高度 z（m）')
+                ax.grid(alpha=.2);ax.spines[['top','right']].set_visible(False)
+            fig.suptitle(label+'｜按策略分色，真实记录合并，不插值填充空隙',fontsize=14,weight='bold')
+            fig.text(.01,.005,'轨迹数据在首次稳定恢复成功处结束。'+('本图包含完整恢复距离。' if full else '此图仅缩放显示范围；完整的落地后稳定2秒证据见完整图。'),fontsize=9)
+            stem='tube_xz_full' if full else 'tube_xz'
+            for ext in ('png','pdf','svg'):fig.savefig(dest/f'{stem}.{ext}',dpi=180)
+            plt.close(fig)
+        manifest.update(display_focus_width_m=focus_width,cutoff='first recorded recovery success; spatial focus is display only',policy_colors={n:list(colors[n]) for n in ordered if n in by})
+        (dest/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+    lines=['# 两种奖励方案的 x-z 投影','','主图按策略分色并放大跳跃段；完整图保留首次满足稳定恢复条件前的全部距离。两组采用相同坐标范围。下图只显示成功候选；全部成功/未解决/未知点仍保存在CSV。这里是策略族的经验投影，不是最终单策略的完整可控集。','']
+    for i,label in enumerate(labels):lines.append(f'- {label}：[主图](scheme_{i+1}/tube_xz.png) · [PDF](scheme_{i+1}/tube_xz.pdf) · [完整恢复图](scheme_{i+1}/tube_xz_full.png) · [证据](scheme_{i+1}/manifest.json)')
+    (output/'INDEX.md').write_text('\n'.join(lines)+'\n')
+
+
+def build(lineages,output,labels=None,focus_width=3.3):
     output=Path(output).resolve();output.mkdir(parents=True,exist_ok=False)
     labels=labels or [Path(p).parent.name for p in lineages]
     if len(labels)!=len(lineages):raise ValueError('one label per lineage required')
+    if not np.isfinite(focus_width) or focus_width<=0:raise ValueError('focus width must be positive')
     data=[extract(p,output/f'scheme_{i+1}') for i,p in enumerate(lineages)]
-    allpts=np.concatenate([s for seg,_,_ in data for s in seg]);cp=np.array([[r['x'],r['z']] for _,rows,_ in data for r in rows]);lo=allpts.min(0);hi=allpts.max(0)
-    for i,((segments,rows,manifest),label) in enumerate(zip(data,labels)):
-        dest=output/f'scheme_{i+1}';fig,axes=plt.subplots(2,1,figsize=(12,8),layout='constrained')
-        axes[0].add_collection(LineCollection(segments,colors='#176b87',linewidths=.35,alpha=.06,rasterized=True))
-        axes[0].set(xlim=(lo[0]-.1,hi[0]+.1),ylim=(lo[1]-.03,hi[1]+.05),title=f'{label}: observed successful trajectories ({manifest["successful_context_policy_pairs"]} witnesses)')
-        for status,color,name in [('success','#16855b','Successful handoff'),('unresolved','#d45d43','Unresolved after attempts'),('unknown','#888888','Unknown')]:
-            pts=np.array([[r['x'],r['z']] for r in rows if r['label']==status])
-            if len(pts):axes[1].scatter(pts[:,0],pts[:,1],s=4,c=color,alpha=.35,label=name,rasterized=True)
-        axes[1].set(xlim=(cp[:,0].min()-.03,cp[:,0].max()+.03),ylim=(cp[:,1].min()-.03,cp[:,1].max()+.03),title='Explored handoff positions (not continuous dead/safe regions)');axes[1].legend()
-        for ax in axes:ax.set_xlabel('Root forward position x (m)');ax.set_ylabel('Root height z (m)');ax.grid(alpha=.2)
-        fig.suptitle('Empirical x-z projection; full recovery retained; no hull/interpolation')
-        for ext in ('png','pdf','svg'):fig.savefig(dest/f'tube_xz.{ext}',dpi=180)
-        plt.close(fig)
-    lines=['# Pulse campaign x-z projections','','All schemes use identical axis ranges. Positions are robot root coordinates, not wheel clearance. Successful trajectories include recovery and may include subsequent bounces. Prefixes and suffixes are drawn separately; no artificial bridge or hull. Failed handoff points are not proven physical dead zones.','']
-    for i,label in enumerate(labels):lines.append(f'- {label}: [PNG](scheme_{i+1}/tube_xz.png) · [PDF](scheme_{i+1}/tube_xz.pdf) · [evidence/data](scheme_{i+1}/manifest.json)')
-    (output/'INDEX.md').write_text('\n'.join(lines)+'\n')
+    render(data,output,labels,focus_width)
     return [d[2] for d in data]
