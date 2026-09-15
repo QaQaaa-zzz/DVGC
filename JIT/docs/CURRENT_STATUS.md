@@ -1,5 +1,41 @@
 # JIT 当前状态与证据
 
+
+## 2026-09-15 RSL continuous explorer: two 200-round reward arms
+
+User corrected explorer LR to **1e-3**, also the adaptive ceiling. Optional RSL-RL3.2.0
+uses official PPO.update with106→128×3 ELU actor/critic and state-dependent log std.
+JAX GPU sampler mirrors Torch weights; environment tanh bounds the residual.
+Only eligible pulse actions receive gamma=lambda=1 Monte Carlo outcome targets;
+no suffix-action training or stale replay. Entropy is latent Gaussian entropy.
+8 epochs maximum, minibatch512, adaptive KL target.01, epoch stop.03 (no rollback),
+value clipping, entropy.001,valuecoef.5,gradclip1. Explorer weights, Adam, LR,
+Torch/JAX RNG and its frozen initial normalization persist across base-pi changes.
+The new pi gets its own novelty ledger; it does not get a reinitialized explorer.
+
+Authorized original_all_phases/phase_recovery arms,200 rounds each,1024 envs×3 ticks
+(.06s), amplitude.25 on all four channels (latest user correction), onsets0/5/10/15/20/25. Only repair-policy reward differs.
+Current-pi-only outer loop retains pending repair128k, delayed evaluation and
+retention/nominal promotion checks; recovery window0.5s. No old pi1–pi6 helpers or
+final TEST. Plan ceiling455,769,920 interactions plus400 measured setup ticks;
+reserved maxima are not measured cost. Two setup errors retained: missing relative
+Tube data path (zero simulation), old inventory keys (400 ticks; no production update).
+
+Entry: `runs/experiments/rsl_reward_comparison_20260915/INDEX.md`; current attempt
+`amp25/`, supervisor1511765, watcher1494267 follows ACTIVE_RUN. The earlier
+.10/.15 attempt was stopped by user correction after11366 measured interactions;
+its interrupted suffix has a409600 reservation and unknown actual cost, kept
+separately in amp25/superseded_run.json. No production PPO updates were completed.
+Frozen source
+snapshot protects the run from future workspace edits. Read live status for progress.
+30 CPU tests passed: cross-framework output, short/unknown masks, serialization,
+continuous state, LR ceiling, stale likelihood rejection and inventory. Real GPU
+observations match Torch logprob within4.8e-7, value2.8e-8; one synthetic-feedback
+engineering update passed. These checks do not prove exploration efficacy.
+Each round retains tapes, checkpoints, hyperparameters, official epoch losses,
+step LR/gradient norms, KL, component rewards, inventory and costs. TensorBoard
+lives in each lineage/tensorboard; standard CSV+PNG/PDF/SVG process exports remain.
+
 ## 2026-09-15 昨天冻结探索器对照与倾向分析完成
 
 `frozen_yesterday_explorers_20260915/restart`三组全部完成：原奖励/恢复奖励谱系探索器与均匀随机成功555/545/535（各768），成功到达格439/430/421，实际控制步81280/80128/83328。没有训练更新。首次空事件列表错误已修正，完成弹窗已有发送记录。必须保留配对局限：初始观测一致，后期起扰前独立复演分叉，最大根z差约0.02684m；不是严格同起扰状态配对，不能将小幅成功差归因于探索器。

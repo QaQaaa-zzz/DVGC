@@ -20,6 +20,11 @@ def reserve_interactions(used, maximum, cap):
         raise InteractionBudgetExhausted(f'{used} used + {maximum} next stage > {cap} cap')
 
 
+def promoted_explorer_checkpoint(spec, checkpoint):
+    # Historical runs may explicitly retain their old reset contract.
+    return checkpoint if spec.get('explorer_backend')=='rsl_rl' or spec.get('continuous_explorer',False) else None
+
+
 def round_delta_limit(spec, index):
     schedule=spec.get('delta_limit_schedule')
     values=schedule[index % len(schedule)] if schedule else spec['delta_limit']
@@ -371,7 +376,7 @@ def run(spec_path,output):
                         write(root/'visited_cells.json',seen)
                 if adopt is not None:
                     source=adopt
-                    checkpoint=None
+                    checkpoint=promoted_explorer_checkpoint(spec,checkpoint)
                 write(root/'current_source.json',dict(source=source['name'],frozen_policy=source['frozen_policy'],
                     explorer_checkpoint=checkpoint,completed_rounds=index+1,historical_helpers_used=False))
         status('running',stage='plot_tube_xz',completed_rounds=spec['rounds'])
