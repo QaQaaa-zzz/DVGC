@@ -137,7 +137,7 @@ def render(data,output,labels,focus_width=3.3):
                 ax.set(xlim=(lo[0]-.05,right),ylim=(max(0,lo[1]-.03),hi[1]+.05),xlabel='前向位置 x（m）',ylabel='车体根部高度 z（m）')
                 ax.grid(alpha=.2);ax.spines[['top','right']].set_visible(False)
             fig.suptitle(label+'｜按策略分色，真实记录合并，不插值填充空隙',fontsize=14,weight='bold')
-            fig.text(.01,.005,'轨迹数据在首次稳定恢复成功处结束。'+('本图包含完整恢复距离。' if full else '此图仅缩放显示范围；完整的落地后稳定2秒证据见完整图。'),fontsize=9)
+            fig.text(.01,.005,'轨迹数据在首次稳定恢复成功处结束。'+('本图包含完整恢复距离。' if full else '此图仅缩放显示范围；完整的落地后稳定恢复证据见完整图。'),fontsize=9)
             stem='tube_xz_full' if full else 'tube_xz'
             for ext in ('png','pdf','svg'):fig.savefig(dest/f'{stem}.{ext}',dpi=180)
             plt.close(fig)
