@@ -1,0 +1,1 @@
+/home/qy/mujoco_playground/.venv/bin/python JIT/cli/train_unified.py --config JIT/configs/pi_unified_pilot.json --run-id pi_unified_pilot_25600_seed821001_ccd1024_20260828

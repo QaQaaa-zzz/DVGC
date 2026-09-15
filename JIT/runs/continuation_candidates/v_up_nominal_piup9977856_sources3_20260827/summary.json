@@ -1,0 +1,71 @@
+{
+  "candidate_count": 152,
+  "collection_transitions": 1286,
+  "config_sha256": "a45e70438c2b5cc005ddd415bbb4920c8e07e7504feae7e630a94b473d91f3a6",
+  "frozen_pi_up_actor_sha256": "f218775e3cf99555ce524f1357a800172904bc815b06c54a53db8965204d9081",
+  "parent_count": 24,
+  "role_counts": {
+    "ascending_entry": 24,
+    "height_entry": 24,
+    "jump_zone_entry": 23,
+    "pre_apex_1": 24,
+    "pre_apex_10": 10,
+    "pre_apex_5": 24,
+    "pre_jump_zone": 23
+  },
+  "schema": "jit_upstream_candidate_catalog_v1",
+  "seeds": [
+    1000001,
+    1000002,
+    1000003,
+    1000004,
+    1000005,
+    1000006,
+    1000007,
+    1000008
+  ],
+  "selection": "semantic_pre_apex_nominal",
+  "selection_roles": [
+    "pre_jump_zone",
+    "jump_zone_entry",
+    "ascending_entry",
+    "height_entry",
+    "pre_apex_10",
+    "pre_apex_5",
+    "pre_apex_1"
+  ],
+  "source_count": 3,
+  "sources": [
+    {
+      "actor_sha256": "44ca9fd8eba3031559c70dd81176a1487c1242702370ee49d2fb3b95f1dc8392",
+      "checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_4988928",
+      "collection_transitions": 448,
+      "snapshot_count": 56,
+      "source_bank": "source_4988928",
+      "status": "closed",
+      "training_transitions": 4988928
+    },
+    {
+      "actor_sha256": "910999dc12d44427daa2f8a0068ec3e5e080dbb75f85f20605c5f30c04e0d793",
+      "checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_7987200",
+      "collection_transitions": 422,
+      "snapshot_count": 48,
+      "source_bank": "source_7987200",
+      "status": "closed",
+      "training_transitions": 7987200
+    },
+    {
+      "actor_sha256": "f218775e3cf99555ce524f1357a800172904bc815b06c54a53db8965204d9081",
+      "checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_9977856",
+      "collection_transitions": 416,
+      "snapshot_count": 48,
+      "source_bank": "source_9977856",
+      "status": "closed",
+      "training_transitions": 9977856
+    }
+  ],
+  "status": "completed",
+  "target": "V_up",
+  "training_transitions": 0,
+  "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+}

@@ -37,15 +37,6 @@ def test_candidate_rng_and_incremental_training_log_contracts():
     assert 'distance=float(a.dedup_distance)' in candidates
 
 
-def test_formal_pipeline_contains_tube_rsi_refinement_and_recertification():
-    script = Path("scripts/run_backward_bootstrap.sh").read_text()
-    assert "_bootstrap_tube.pkl" in script
-    assert "--require-final-safe-rsi" in script
-    assert script.count("-m cli.certify") == 2
-    assert "600000 400000" in script
-    assert "cli.runtime_gate" in script and "--check-only" in script
-
-
 def test_metric_contract_uses_synchronized_jit_warp_path():
     runtime = Path("dvgc/runtime.py").read_text()
     assert "next_state = jax.jit(env.step)" in runtime

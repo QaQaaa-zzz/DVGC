@@ -193,13 +193,16 @@ def compute_takeoff_reward_profile(
     action: jp.ndarray,
     phase0: jp.ndarray,
     phase1: jp.ndarray,
+    jump_latched: jp.ndarray,
     dual_wheel_liftoff_seen: jp.ndarray,
     positive_pitch_count: jp.ndarray,
     wheelie_count: jp.ndarray,
 ) -> Dict[str, jp.ndarray]:
     """Returns reward terms and clean takeoff terminal gates."""
     profile = str(getattr(cfg, "takeoff_reward_profile", "minimal_dual_wheel")).lower()
-    takeoff_active = (phase0 == 1) | (phase1 == 1)  # STAGE_ID["takeoff"] is static in dvgc_common.
+    takeoff_active = ((phase0 == 1) | (phase1 == 1)) & jp.asarray(
+        jump_latched, dtype=bool
+    )  # STAGE_ID["takeoff"] is static in dvgc_common.
     takeoff_gate = takeoff_active.astype(jp.float32)
 
     if profile == "debug_no_reward":
@@ -255,7 +258,9 @@ def compute_takeoff_reward_profile(
     p_wheel_unsync = float(cfg.takeoff_penalty_scale_wheel_unsync) * takeoff_gate * wheel_unsync ** 2
     p_action_mag = float(cfg.coeff_action_mag) * takeoff_gate * jp.mean(action * action)
 
-    dual_wheel_liftoff_seen = dual_wheel_liftoff_seen | signals["dual_wheel_liftoff"]
+    dual_wheel_liftoff_seen = dual_wheel_liftoff_seen | (
+        takeoff_active & signals["dual_wheel_liftoff"]
+    )
     positive_pitch_count = jp.where(takeoff_active & signals["positive_pitch_hard"], positive_pitch_count + 1, 0)
     wheelie_count = jp.where(takeoff_active & signals["wheelie_detected"], wheelie_count + 1, 0)
 

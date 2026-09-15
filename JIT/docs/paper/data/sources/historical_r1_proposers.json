@@ -1,0 +1,58 @@
+[
+  {
+    "candidates": "1193",
+    "exclusive_observed_cells": "1083",
+    "novel_vs_round_start": "596",
+    "proposer": "pi_0",
+    "root_cells": "1083",
+    "witnessed": "1113"
+  },
+  {
+    "candidates": "1897",
+    "exclusive_observed_cells": "1667",
+    "novel_vs_round_start": "732",
+    "proposer": "pi_1",
+    "root_cells": "1667",
+    "witnessed": "1739"
+  },
+  {
+    "candidates": "1587",
+    "exclusive_observed_cells": "1396",
+    "novel_vs_round_start": "629",
+    "proposer": "pi_2",
+    "root_cells": "1396",
+    "witnessed": "1586"
+  },
+  {
+    "candidates": "1698",
+    "exclusive_observed_cells": "1679",
+    "novel_vs_round_start": "860",
+    "proposer": "pi_3",
+    "root_cells": "1679",
+    "witnessed": "1692"
+  },
+  {
+    "candidates": "1475",
+    "exclusive_observed_cells": "1449",
+    "novel_vs_round_start": "715",
+    "proposer": "pi_4",
+    "root_cells": "1449",
+    "witnessed": "1465"
+  },
+  {
+    "candidates": "1876",
+    "exclusive_observed_cells": "1293",
+    "novel_vs_round_start": "406",
+    "proposer": "pi_5",
+    "root_cells": "1293",
+    "witnessed": "1830"
+  },
+  {
+    "candidates": "738",
+    "exclusive_observed_cells": "729",
+    "novel_vs_round_start": "729",
+    "proposer": "pi_6",
+    "root_cells": "729",
+    "witnessed": "738"
+  }
+]

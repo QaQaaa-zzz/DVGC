@@ -1,103 +1,17 @@
-# OrangeBike DVGC Clean Project
+# DVGC / JIT：经验跳跃包线探索
 
-这是删除历史过程脚本后保留的唯一正式工程。方法说明见 `PROJECT_SUMMARY.md`，旧文件处理见 `docs/REMOVED_FILES.md`。
+当前研究与实现位于 **JIT/**，维护日期 **2026-09-12**，工作分支 `agent/two-phase-soft-tube`。
 
-## 1. 环境准备
+我们研究固定自行车摆机器人、固定近地起点和首次有效落地终点下，如何利用互补冻结策略与有界残差探索，发现有真实到达和成功续接见证的经验跳跃支持。待学习候选与已见证包线分开保存；新策略训练后重新评价旧候选，逐轮积累证据。
 
-在已有 MuJoCo Playground GPU 环境中安装本项目：
+- [项目状态与下一步](PROJECT.md)
+- [当前结果与完整证据入口](JIT/docs/CURRENT_STATUS.md)
+- [论文大纲](JIT/docs/JIT_PAPER_OUTLINE.md) · [详细中文草稿](JIT/docs/paper/JIT_PAPER_DRAFT.md) · [论文 PDF](JIT/docs/paper/JIT_PAPER_DRAFT.pdf)
+- [控制框图与全部图件](JIT/docs/paper/README.md) · [方法契约](JIT/docs/ENVELOPE_ITERATION_PROTOCOL.md)
+- [代码组织](JIT/docs/CODE_ORGANIZATION.md) · [验证范围](JIT/docs/VERIFICATION.md)
 
-```bash
-pip install -e .
-python -m cli.prepare_project
-python -m pytest -q
-```
+历史 `all_proposers_v1` 已完成 π5、π6 两轮各 128k 训练，历史口径累计 root cells 为 1,689 → 4,629 → 9,296。最新残差探索与延迟评价 pilot 的两轮 128k 训练也已完成；两臂旧无见证候选新增成功见证均为 0。执行链已跑通，残差探索的效率优势与长期收益尚未成立。
 
-在已配置好的 Ubuntu MuJoCo Playground 环境中，不安装或升级依赖，直接运行：
+所有结果目前属于 TRAIN/开发证据，不代表完整物理可达集或单策略全包线控制能力。最终 TEST/JCE/JEL 未开启。不要重复运行完成的 all-proposer campaign。
 
-```bash
-bash scripts/local_preflight.sh
-```
-
-本项目只读取 `assets/orange_bike_4kg_horizontal.xml`，不生成 runtime XML，也不修改碰撞几何。正式模型使用 4 kg 负载和 hip/knee `±50 N·m` 限幅，默认使用 `impl="warp"`、`contact_mode="imu"`；Actor observation 不读取 oracle contact。请将你已有的 STL 保持在 XML 指定的 `assets/meshes/` 目录。
-
-模型与 knee 动作映射的完整说明见 `docs/XML_AND_KNEE_MAPPING.md`。
-
-## 2. 单阶段命令
-
-```bash
-python -m cli.build_candidates \
-  --phase landing \
-  --target 96 \
-  --bank artifacts/landing_candidates.pkl
-
-python -m cli.train \
-  --stage landing \
-  --bank artifacts/landing_candidates.pkl \
-  --run runs/landing
-
-python -m cli.certify \
-  --phase landing \
-  --policy runs/landing/policy \
-  --candidate-bank artifacts/landing_candidates.pkl \
-  --output-bank artifacts/landing_tube.pkl
-
-python -m cli.audit \
-  --phase landing \
-  --policy runs/landing/policy \
-  --bank artifacts/landing_tube.pkl \
-  --output runs/landing/audit.json
-```
-
-Flight、Takeoff 和 Approach 必须显式提供已认证下游 bank：
-
-```bash
-python -m cli.certify \
-  --phase takeoff \
-  --policy runs/takeoff/policy \
-  --candidate-bank artifacts/takeoff_candidates.pkl \
-  --downstream-bank artifacts/flight_tube.pkl \
-  --output-bank artifacts/takeoff_tube.pkl
-```
-
-## 3. 完整顺序
-
-```bash
-bash scripts/run_backward_bootstrap.sh
-```
-
-脚本按 Landing → Flight → Takeoff → Approach → natural-start 顺序执行。每个阶段先用几何候选完成 backward bootstrap，冻结策略并认证第一版 Tube；只有达到 Final-safe 激活门槛后，才从 Final-safe/Boundary Tube 继续 RSI refinement，然后再次冻结、重新认证并独立 audit。bootstrap/refinement 按 60%/40% 拆分原阶段 PPO 预算；中间认证的 branch rollout 是额外环境交互，必须单独计入并报告总交互成本。后续阶段通过 `--resume` 继承前一阶段共享 Actor，并混入单独计权的已认证下游 rehearsal。
-
-`scripts/local_preflight.sh` 只是本地基础预检；正式长训练仍须先满足 `docs/VERIFICATION_PROTOCOL.md` 中的完整训练 gates。
-
-首次长训练前运行完整 gate（会执行两个极短 PPO compile/run/resume probe），之后正式脚本会校验报告是否仍与源码、XML 和配置一致：
-
-```bash
-/home/qy/mujoco_playground/.venv/bin/python -m cli.runtime_gate
-```
-
-## 4. 认证原则
-
-- Candidate bank 与 downstream certified bank 是两个不同参数；
-- `training_only=True` 的 velocity seeds 和 rehearsal states 永不参与认证；
-- Chain 与 Final Recovery 分别统计；
-- Chain 事件锁存，不读取最后一步瞬时值；
-- Tube entry 使用下游 final-safe 状态的标准化距离；
-- build 与 audit 使用不同 seed namespace；
-- timeout 单独报告，不能写成物理 Failure；
-- policy manifest 校验 action mapping、原始 XML、config 和 bank 版本；
-- 全部入口直接读取 `orange_bike_4kg_horizontal.xml`，禁止 runtime XML 或替代几何。
-
-## 5. 参考轨迹的允许用途
-
-允许：候选范围、阶段姿态 envelope、动作方向/执行器诊断、消融参考。
-
-禁止：逐点 CoM/姿态轨迹跟踪 reward、用“接近参考”替代经验可恢复标签、用 velocity-seeded 辅助状态进行正式认证。
-
-## 6. 输出
-
-- `artifacts/*_tube.pkl`：带 Chain/Final Beta posterior 的版本化 Tube；
-- `runs/*/policy/`：不可变 policy bundle；
-- `runs/*/audit.json`：独立 Tube 质量报告；
-- `runs/natural_start_evaluation.json`：最终自然起点成功率；
-- `docs/reference_report.json`、`docs/reference_phase_envelopes.csv`：参考轨迹审计；
-- `docs/model_report.json`：模型结构审计。
+实际代码、训练、证据均属于 DVGC/JIT；其他项目的日志、模型和结果不得混入。根目录旧 `dvgc/` 等基础设施保留，当前任务入口遵循 [AGENTS.md](AGENTS.md)。

@@ -1,0 +1,14 @@
+{
+  "schema": "jit_manuscript_build_v1",
+  "equation_count": 30,
+  "offline_native_mathml": true,
+  "source_sha256": "790901b575ce9b51731f3361a139609e33b21745a0b8b3c8a7810bba53bd1c9e",
+  "html_sha256": "99738568517b5f852c704403f86e7c716d87f85392aaad91260c74a649b80210",
+  "new_simulator_interactions": 0,
+  "new_ppo_transitions": 0,
+  "pdf_built": true,
+  "figure_manifest_sha256": "35cd773fc53b98cb00be3c0f98b8c27ab610fabe7e6724eaae2c3aa1ace203c0",
+  "chrome_exit_code": 0,
+  "pdf_sha256": "dccd3afee44c1a28d46e96c4c29706f63ae8abaa651068a923ec09139ca048fe",
+  "pdfinfo": "Title:           JIT 论文草稿 · 2026-09-12\nCreator:         Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/148.0.0.0 Safari/537.36\nProducer:        Skia/PDF m148\nCreationDate:    Sat Sep 12 16:33:37 2026 CST\nModDate:         Sat Sep 12 16:33:37 2026 CST\nCustom Metadata: no\nMetadata Stream: no\nTagged:          yes\nUserProperties:  no\nSuspects:        no\nForm:            none\nJavaScript:      no\nPages:           18\nEncrypted:       no\nPage size:       594.96 x 841.92 pts (A4)\nPage rot:        0\nFile size:       2237396 bytes\nOptimized:       no\nPDF version:     1.4\n"
+}

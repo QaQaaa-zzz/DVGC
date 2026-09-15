@@ -1,0 +1,83 @@
+{
+  "candidate_count": 16,
+  "cpu_tests_passed": 126,
+  "evaluator_calls": 40,
+  "final_test_used": false,
+  "full_matrix_existence_agreement": true,
+  "limitations": [
+    "16 selected existing TRAIN states; not held out",
+    "No paired full-bank wall-time run; no wall-time speedup claim",
+    "No multi-checkpoint GPU training or intermediate exploration",
+    "Residual tests are synthetic supervised warm starts; no production fit or acquisition integration"
+  ],
+  "measured_run_wall_seconds": 104.59629281899925,
+  "new_acquisition_interactions": 0,
+  "new_environment_interactions": 1633,
+  "offline_analysis": {
+    "candidate_count": 738,
+    "conflicts": 64,
+    "engineering_panel_selection": "existing TRAIN panel; not held out",
+    "evaluator_order": [
+      "pi_0",
+      "pi_1",
+      "pi_2",
+      "pi_3",
+      "pi_4",
+      "pi_5",
+      "pi_6"
+    ],
+    "full_evaluator_calls": 5166,
+    "full_matrix_existence_agreement": true,
+    "full_useful_interactions": 98093,
+    "hypothetical_evaluator_calls": 844,
+    "hypothetical_useful_interactions": 15388,
+    "new_environment_interactions": 0,
+    "positive_count": 735,
+    "scope": "offline scheduling; excludes padding/process/failed attempts; not measured wall-clock savings",
+    "unknown_count": 3,
+    "useful_interaction_reduction_fraction": 0.8431284597269938
+  },
+  "ppo_transitions": 0,
+  "processes": [
+    {
+      "candidates": 16,
+      "charged_interactions": 527,
+      "end_utc": "2026-09-11T02:50:18.100777+00:00",
+      "evaluator": "pi_0",
+      "returncode": 0,
+      "start_utc": "2026-09-11T02:49:47.869408+00:00",
+      "wall_seconds": 30.23138350299996
+    },
+    {
+      "candidates": 8,
+      "charged_interactions": 288,
+      "end_utc": "2026-09-11T02:50:40.698946+00:00",
+      "evaluator": "pi_1",
+      "returncode": 0,
+      "start_utc": "2026-09-11T02:50:18.101330+00:00",
+      "wall_seconds": 22.597629433999828
+    },
+    {
+      "candidates": 8,
+      "charged_interactions": 395,
+      "end_utc": "2026-09-11T02:51:06.057775+00:00",
+      "evaluator": "pi_2",
+      "returncode": 0,
+      "start_utc": "2026-09-11T02:50:40.699501+00:00",
+      "wall_seconds": 25.35828632799985
+    },
+    {
+      "candidates": 8,
+      "charged_interactions": 423,
+      "end_utc": "2026-09-11T02:51:32.425642+00:00",
+      "evaluator": "pi_3",
+      "returncode": 0,
+      "start_utc": "2026-09-11T02:51:06.058325+00:00",
+      "wall_seconds": 26.367329859000165
+    }
+  ],
+  "schema": "jit_roadmap_engineering_result_v1",
+  "status": "completed",
+  "artifact_index": "JIT/runs/engineering/existence_checkpoint_residual_20260911/INDEX.md",
+  "source_branch": "agent/two-phase-soft-tube"
+}

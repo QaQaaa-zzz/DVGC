@@ -1,0 +1,31 @@
+{
+  "brax_evaluation_transitions": 0,
+  "checkpoint": "/home/qy/DVGC/JIT/runs/pi_unified/pi_unified_pilot_25600_seed821001_ccd1024_20260828/checkpoints/transition_25600",
+  "checkpoint_restored": true,
+  "claim_boundary": {
+    "certified_safe_tube_claim": false,
+    "engineering_integrity_only": true,
+    "final_policy_claim": false,
+    "jce_jel_claim": false,
+    "learnability_claim": false
+  },
+  "diagnostic_transitions": 0,
+  "environment_interactions": 25600,
+  "expert_switching_used": false,
+  "final_metrics": {},
+  "fixed_evaluation_transitions": 0,
+  "initialization": {
+    "actor": "fresh",
+    "critic": "fresh",
+    "optimizer": "fresh",
+    "restore_checkpoint": null
+  },
+  "pi_unified_pilot": "GO",
+  "policy_count": 1,
+  "runtime_naccdmax": 1024,
+  "schema": "jit_pi_unified_pilot_report_v1",
+  "status": "completed",
+  "test_data_used": false,
+  "training_transitions": 25600,
+  "validation_data_used": false
+}

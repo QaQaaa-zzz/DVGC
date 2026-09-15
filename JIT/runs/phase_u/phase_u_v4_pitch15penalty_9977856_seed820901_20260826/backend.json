@@ -1,0 +1,6 @@
+{
+  "devices": [
+    "cuda:0"
+  ],
+  "jax_backend": "gpu"
+}

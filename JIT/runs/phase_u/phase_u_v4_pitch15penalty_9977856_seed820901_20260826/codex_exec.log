@@ -1,0 +1,11 @@
+STDOUT
+
+STDERR
+error: unexpected argument '--reasoning-effort' found
+
+  tip: to pass '--reasoning-effort' as a value, use '-- --reasoning-effort'
+
+Usage: codex exec [OPTIONS] [PROMPT]
+       codex exec [OPTIONS] <COMMAND> [ARGS]
+
+For more information, try '--help'.

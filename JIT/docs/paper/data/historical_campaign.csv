@@ -1,0 +1,4 @@
+round_index,new_policy,new_candidates,new_root_cells,cumulative_root_cells,new_interactions,cumulative_new_interactions,ppo_interactions,source_ids
+-1,inherited_seed,0,0,1689,0,0,0,historical_summary
+0,pi_5,3147,2940,4629,483320,483320,128000,historical_summary;historical_r0_training
+1,pi_6,5323,4667,9296,792145,1275465,128000,historical_summary;historical_r1_training

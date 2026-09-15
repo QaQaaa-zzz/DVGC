@@ -1,0 +1,30 @@
+{
+  "schema": "jit_validation_preflight_repair_v1",
+  "status": "repaired_before_validation_launch",
+  "date": "2026-09-01",
+  "iteration": 0,
+  "scientific_protocol_sha256": "9ec0a1e8c314cc5710688a3537fbd339f520d4db3c4268d20715bcde938586b0",
+  "failed_prelaunch_head": "0b4523f13d938eb945cfbe58e343f3ac26dede5c",
+  "failure_stage": "focused_cpu_zero_interaction_runtime_preflight",
+  "failure": "legacy downstream cached actor observation differs from the unified downstream policy input because the legacy Phase-U task bit is not the authoritative unified downstream task bit",
+  "environment_interactions_consumed": 0,
+  "validation_outcomes_inspected": false,
+  "test_data_used": false,
+  "final_evaluation_data_used": false,
+  "scientific_protocol_changed": false,
+  "validation_parent_groups_changed": false,
+  "validation_panel_changed": false,
+  "repair": {
+    "authoritative_validation_actor_observation": "rebuild from preserved 3x25 actor FIFO plus the unified phase-aware task bit",
+    "upstream_task_bit": "preserve snapshot up-event jump_signal",
+    "downstream_task_bit": false,
+    "legacy_cached_observation_role": "provenance_only_not_runtime_authority",
+    "near_duplicate_audit_observation": "unified-policy actor observation",
+    "cached_mismatch_is_failure": false
+  },
+  "repair_commits": [
+    "6437305eb89e67d8be57a81dde5db9ad6fcc9854",
+    "364fceffc845a24105c43c6a3affc61973bcfe06"
+  ],
+  "next_gate": "rerun focused CPU contracts, GPU restore contracts, full JIT preflight, zero-interaction runtime audit, then launch the unchanged validation protocol only if all gates pass"
+}

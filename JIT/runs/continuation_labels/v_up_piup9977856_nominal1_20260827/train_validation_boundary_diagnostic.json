@@ -1,0 +1,415 @@
+{
+  "failures": [
+    {
+      "pitch": 0.00418623024597764,
+      "pitch_rate": 0.8092800378799438,
+      "reason": "pitch_limit",
+      "role": "ascending_entry",
+      "seed": 1000001,
+      "source_bank": "source_4988928",
+      "source_training_transitions": 4988928,
+      "split": "train",
+      "state_sha256": "6474a53b6cba72cbc35e83aab2c160a34e36004c217b2849526ac2d15e325aa8",
+      "tick": 34,
+      "transitions": 183,
+      "vx": 0.7156240344047546,
+      "vz": 0.1257263720035553,
+      "z": 0.1181768998503685
+    },
+    {
+      "pitch": 0.004185867495834827,
+      "pitch_rate": 0.809296190738678,
+      "reason": "pitch_limit",
+      "role": "ascending_entry",
+      "seed": 1000002,
+      "source_bank": "source_4988928",
+      "source_training_transitions": 4988928,
+      "split": "train",
+      "state_sha256": "08ffe2f699d72d4f5c4af7ebf742912029564aeb83377a9a5624c85069e46b18",
+      "tick": 34,
+      "transitions": 174,
+      "vx": 0.7155919671058655,
+      "vz": 0.12572942674160004,
+      "z": 0.11817681044340134
+    },
+    {
+      "pitch": 0.004186016973108053,
+      "pitch_rate": 0.8092789649963379,
+      "reason": "pitch_limit",
+      "role": "ascending_entry",
+      "seed": 1000003,
+      "source_bank": "source_4988928",
+      "source_training_transitions": 4988928,
+      "split": "train",
+      "state_sha256": "ecc953d9b9a47fc324449a51aa9a8cd926bbc12ea6b6f8d9921405a5413b1dcc",
+      "tick": 34,
+      "transitions": 182,
+      "vx": 0.7156240344047546,
+      "vz": 0.12572479248046875,
+      "z": 0.11817698925733566
+    },
+    {
+      "pitch": 0.004186184611171484,
+      "pitch_rate": 0.8092904686927795,
+      "reason": "pitch_limit",
+      "role": "ascending_entry",
+      "seed": 1000004,
+      "source_bank": "source_4988928",
+      "source_training_transitions": 4988928,
+      "split": "train",
+      "state_sha256": "ccbaeb402a4098dd2f29b5648c01688cd86055d6b0d6d710ca34f11c9af466a2",
+      "tick": 34,
+      "transitions": 183,
+      "vx": 0.7156232595443726,
+      "vz": 0.1257246881723404,
+      "z": 0.11817701160907745
+    },
+    {
+      "pitch": 0.004185974132269621,
+      "pitch_rate": 0.8093108534812927,
+      "reason": "pitch_limit",
+      "role": "ascending_entry",
+      "seed": 1000005,
+      "source_bank": "source_4988928",
+      "source_training_transitions": 4988928,
+      "split": "train",
+      "state_sha256": "ea6cde78ab1109e136c32757af6ec588fb8f5c5fec1560fe690102633d9e4455",
+      "tick": 34,
+      "transitions": 183,
+      "vx": 0.7156139612197876,
+      "vz": 0.12573246657848358,
+      "z": 0.11817687749862671
+    },
+    {
+      "pitch": 0.004186125472187996,
+      "pitch_rate": 0.8092778325080872,
+      "reason": "pitch_limit",
+      "role": "ascending_entry",
+      "seed": 1000006,
+      "source_bank": "source_4988928",
+      "source_training_transitions": 4988928,
+      "split": "validation",
+      "state_sha256": "274e0e4b8f69b57230c01662efecd3acfe46ab182f710e1cfe138bf82910031c",
+      "tick": 34,
+      "transitions": 180,
+      "vx": 0.7156161665916443,
+      "vz": 0.12572349607944489,
+      "z": 0.11817698180675507
+    }
+  ],
+  "group_statistics": [
+    {
+      "failure": 5,
+      "role": "ascending_entry",
+      "source_bank": "source_4988928",
+      "split": "train",
+      "success": 0,
+      "total": 5
+    },
+    {
+      "failure": 0,
+      "role": "height_entry",
+      "source_bank": "source_4988928",
+      "split": "train",
+      "success": 5,
+      "total": 5
+    },
+    {
+      "failure": 0,
+      "role": "jump_zone_entry",
+      "source_bank": "source_4988928",
+      "split": "train",
+      "success": 5,
+      "total": 5
+    },
+    {
+      "failure": 0,
+      "role": "pre_apex_1",
+      "source_bank": "source_4988928",
+      "split": "train",
+      "success": 5,
+      "total": 5
+    },
+    {
+      "failure": 0,
+      "role": "pre_apex_10",
+      "source_bank": "source_4988928",
+      "split": "train",
+      "success": 5,
+      "total": 5
+    },
+    {
+      "failure": 0,
+      "role": "pre_apex_5",
+      "source_bank": "source_4988928",
+      "split": "train",
+      "success": 5,
+      "total": 5
+    },
+    {
+      "failure": 0,
+      "role": "pre_jump_zone",
+      "source_bank": "source_4988928",
+      "split": "train",
+      "success": 5,
+      "total": 5
+    },
+    {
+      "failure": 0,
+      "role": "ascending_entry",
+      "source_bank": "source_7987200",
+      "split": "train",
+      "success": 5,
+      "total": 5
+    },
+    {
+      "failure": 0,
+      "role": "height_entry",
+      "source_bank": "source_7987200",
+      "split": "train",
+      "success": 5,
+      "total": 5
+    },
+    {
+      "failure": 0,
+      "role": "jump_zone_entry",
+      "source_bank": "source_7987200",
+      "split": "train",
+      "success": 4,
+      "total": 4
+    },
+    {
+      "failure": 0,
+      "role": "pre_apex_1",
+      "source_bank": "source_7987200",
+      "split": "train",
+      "success": 5,
+      "total": 5
+    },
+    {
+      "failure": 0,
+      "role": "pre_apex_10",
+      "source_bank": "source_7987200",
+      "split": "train",
+      "success": 2,
+      "total": 2
+    },
+    {
+      "failure": 0,
+      "role": "pre_apex_5",
+      "source_bank": "source_7987200",
+      "split": "train",
+      "success": 5,
+      "total": 5
+    },
+    {
+      "failure": 0,
+      "role": "pre_jump_zone",
+      "source_bank": "source_7987200",
+      "split": "train",
+      "success": 4,
+      "total": 4
+    },
+    {
+      "failure": 0,
+      "role": "ascending_entry",
+      "source_bank": "source_9977856",
+      "split": "train",
+      "success": 5,
+      "total": 5
+    },
+    {
+      "failure": 0,
+      "role": "height_entry",
+      "source_bank": "source_9977856",
+      "split": "train",
+      "success": 5,
+      "total": 5
+    },
+    {
+      "failure": 0,
+      "role": "jump_zone_entry",
+      "source_bank": "source_9977856",
+      "split": "train",
+      "success": 5,
+      "total": 5
+    },
+    {
+      "failure": 0,
+      "role": "pre_apex_1",
+      "source_bank": "source_9977856",
+      "split": "train",
+      "success": 5,
+      "total": 5
+    },
+    {
+      "failure": 0,
+      "role": "pre_apex_5",
+      "source_bank": "source_9977856",
+      "split": "train",
+      "success": 5,
+      "total": 5
+    },
+    {
+      "failure": 0,
+      "role": "pre_jump_zone",
+      "source_bank": "source_9977856",
+      "split": "train",
+      "success": 5,
+      "total": 5
+    },
+    {
+      "failure": 1,
+      "role": "ascending_entry",
+      "source_bank": "source_4988928",
+      "split": "validation",
+      "success": 0,
+      "total": 1
+    },
+    {
+      "failure": 0,
+      "role": "height_entry",
+      "source_bank": "source_4988928",
+      "split": "validation",
+      "success": 1,
+      "total": 1
+    },
+    {
+      "failure": 0,
+      "role": "jump_zone_entry",
+      "source_bank": "source_4988928",
+      "split": "validation",
+      "success": 1,
+      "total": 1
+    },
+    {
+      "failure": 0,
+      "role": "pre_apex_1",
+      "source_bank": "source_4988928",
+      "split": "validation",
+      "success": 1,
+      "total": 1
+    },
+    {
+      "failure": 0,
+      "role": "pre_apex_10",
+      "source_bank": "source_4988928",
+      "split": "validation",
+      "success": 1,
+      "total": 1
+    },
+    {
+      "failure": 0,
+      "role": "pre_apex_5",
+      "source_bank": "source_4988928",
+      "split": "validation",
+      "success": 1,
+      "total": 1
+    },
+    {
+      "failure": 0,
+      "role": "pre_jump_zone",
+      "source_bank": "source_4988928",
+      "split": "validation",
+      "success": 1,
+      "total": 1
+    },
+    {
+      "failure": 0,
+      "role": "ascending_entry",
+      "source_bank": "source_7987200",
+      "split": "validation",
+      "success": 1,
+      "total": 1
+    },
+    {
+      "failure": 0,
+      "role": "height_entry",
+      "source_bank": "source_7987200",
+      "split": "validation",
+      "success": 1,
+      "total": 1
+    },
+    {
+      "failure": 0,
+      "role": "jump_zone_entry",
+      "source_bank": "source_7987200",
+      "split": "validation",
+      "success": 1,
+      "total": 1
+    },
+    {
+      "failure": 0,
+      "role": "pre_apex_1",
+      "source_bank": "source_7987200",
+      "split": "validation",
+      "success": 1,
+      "total": 1
+    },
+    {
+      "failure": 0,
+      "role": "pre_apex_5",
+      "source_bank": "source_7987200",
+      "split": "validation",
+      "success": 1,
+      "total": 1
+    },
+    {
+      "failure": 0,
+      "role": "pre_jump_zone",
+      "source_bank": "source_7987200",
+      "split": "validation",
+      "success": 1,
+      "total": 1
+    },
+    {
+      "failure": 0,
+      "role": "ascending_entry",
+      "source_bank": "source_9977856",
+      "split": "validation",
+      "success": 1,
+      "total": 1
+    },
+    {
+      "failure": 0,
+      "role": "height_entry",
+      "source_bank": "source_9977856",
+      "split": "validation",
+      "success": 1,
+      "total": 1
+    },
+    {
+      "failure": 0,
+      "role": "jump_zone_entry",
+      "source_bank": "source_9977856",
+      "split": "validation",
+      "success": 1,
+      "total": 1
+    },
+    {
+      "failure": 0,
+      "role": "pre_apex_1",
+      "source_bank": "source_9977856",
+      "split": "validation",
+      "success": 1,
+      "total": 1
+    },
+    {
+      "failure": 0,
+      "role": "pre_apex_5",
+      "source_bank": "source_9977856",
+      "split": "validation",
+      "success": 1,
+      "total": 1
+    },
+    {
+      "failure": 0,
+      "role": "pre_jump_zone",
+      "source_bank": "source_9977856",
+      "split": "validation",
+      "success": 1,
+      "total": 1
+    }
+  ],
+  "train_validation_failure_count": 6
+}

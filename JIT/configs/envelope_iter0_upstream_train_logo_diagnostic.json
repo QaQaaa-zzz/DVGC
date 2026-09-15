@@ -1,0 +1,59 @@
+{
+  "expected_protocol_sha256": "c03e261cc2de28f48c55b65b822ab748a2ea2e390bf52541526e204fc98db0d0",
+  "output_dir": "JIT/runs/pi_unified_continuation_field_diagnostic/pi_0_iter0_upstream_logo_linear_20260901",
+  "protocol": {
+    "claim_boundary": {
+      "certified_safe_set_claim": false,
+      "continuation_field_reselected": false,
+      "diagnostic_only": true,
+      "fresh_validation_authorized": false,
+      "jce_jel_claim": false,
+      "pi_1_trained": false,
+      "tube_1_constructed": false
+    },
+    "data_policy": {
+      "consumed_validation_predictions_reused": false,
+      "consumed_validation_rows_reused": false,
+      "final_evaluation_data_used": false,
+      "prior_c0_gate_summary_read_for_provenance_only": true,
+      "test_data_used": false,
+      "train_rows_only": true
+    },
+    "diagnostic_gate": {
+      "minimum_mean_logo_roc_auc": 0.7,
+      "minimum_worst_logo_roc_auc": 0.55,
+      "require_positive_score_gap_in_every_fold": true
+    },
+    "expected_upstream_train": {
+      "candidate_count": 571,
+      "negative_count": 26,
+      "parent_group_count": 5,
+      "positive_count": 545
+    },
+    "frozen_train_evidence": "JIT/runs/pi_unified_transition_band/pi_0_iter0_train_evidence_frozen_20260831",
+    "frozen_train_manifest_sha256": "27832237a85eccfa0ae2eaea7575dd2efda12535a3815fee0c6d0660f58921b8",
+    "iteration": 0,
+    "model": {
+      "family": "linear_logistic",
+      "input": "unified_actor_observation",
+      "l2_weight": 0.01,
+      "learning_rate": 0.01,
+      "normalization": "fold_train_only_zscore_clip10",
+      "observation_size": 76,
+      "optimizer": "adam_full_batch_fixed_schedule",
+      "sample_weighting": "equal_parent_label_cell_mass",
+      "seed_base": 845000,
+      "steps": 4000
+    },
+    "policy_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+    "policy_name": "pi_0",
+    "policy_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+    "prior_c0_root": "JIT/runs/pi_unified_continuation_field/pi_0_iter0_linear_20260901",
+    "prior_c0_summary_sha256": "01fb03961517b1fbdedb3e50559b22e2e26a478c5828a9b62279816c9ef5edd6",
+    "prior_downstream_manifest_sha256": "fd5186a71e3ac98dbb9ee1e787a75fbc159d8ae2645c48f556d05f6a476e39d3",
+    "prior_upstream_manifest_sha256": "69fc1b8f72336096b883c99f5bde79c69a87317b3af29ce7c43cbef97cca4d46",
+    "schema": "jit_upstream_train_logo_diagnostic_protocol_v1",
+    "status": "predeclared_after_c0_gate_fail_before_train_diagnostic"
+  },
+  "schema": "jit_upstream_train_logo_diagnostic_config_v1"
+}

@@ -1,0 +1,31 @@
+{
+  "date": "2026-09-09",
+  "status": "cpu_contract_checks_passed",
+  "unique_targeted_tests": 58,
+  "test_files": [
+    "test_envelope_campaign.py",
+    "test_result_publishing.py",
+    "test_unified_formal.py",
+    "test_unified_policy_freeze.py",
+    "test_dense_tube.py",
+    "test_policy_envelopes.py",
+    "test_frontier_exploration.py",
+    "test_package_facades.py"
+  ],
+  "execution": "combined suite plus targeted reruns after fixes; all 58 unique cases passed",
+  "coverage": [
+    "two-round mocked PPO-discovery loop",
+    "training retry reservation",
+    "completed checkpoint reuse",
+    "growing bank",
+    "static production training preflight",
+    "JAX fresh clocks and first-landing terminal",
+    "five-policy figure exports",
+    "campaign coverage-cost plots",
+    "isolated git report publication"
+  ],
+  "gpu_training_run": false,
+  "physics_rollouts_run": false,
+  "learning_benefit_verified": false,
+  "physical_boundary_proven": false
+}

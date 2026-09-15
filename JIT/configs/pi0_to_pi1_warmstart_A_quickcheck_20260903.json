@@ -1,0 +1,66 @@
+{
+  "expected_protocol_sha256": "414b80451e0326283c509d136d61cdf7a6afc5f6d7c9e53e35496b5498851431",
+  "output_dir": "JIT/runs/pi_unified_gate/pi0_to_pi1_warmstart_A_quickcheck_20260903",
+  "protocol": {
+    "boundary": {
+      "locked_bank": "JIT/runs/pi_unified_gate_prelock/pi_0_repair_acceptance_two_axis_sharded_20260902/merged/acceptance_bank.json",
+      "locked_bank_sha256": "fa081774839508c722ab1ff59daaa6a5fec78ba225cfa89c18ed78ba5bab22bf",
+      "minimum_candidate_success_parent_groups": 2,
+      "require_baseline_negative_reproduction": true,
+      "selection": "locked_baseline_continuation_negative_bank",
+      "snapshot_provenance": "locked_bank_source_catalog_root",
+      "source_catalog_file_sha256": "e5e73f98e6d290d26048bfe65b11f76f090ad9b2bfb8219372403b1b59583e0d",
+      "source_catalog_protocol_sha256": "367870a979347363ce38eabf116c3fb9d09b2859d9b79615efbda12cd89caef1",
+      "source_catalog_root": "JIT/runs/pi_unified_gate_prelock/pi_0_repair_acceptance_two_axis_acquisition_20260902",
+      "target_tube": "JIT/runs/soft_tube/soft_tube_iter1_pi0_conditioned_20260901",
+      "target_tube_manifest_sha256": "817a980a5dd84f36507f762a913c21c1fc0913580d925ff9c68e982edfd82a80"
+    },
+    "candidate_iteration": 1,
+    "claim_boundary": {
+      "certified_safe_set_claim": false,
+      "empirical_envelope_expansion_claim_requires_both_gates": true,
+      "iteration_selection_gate_only": true,
+      "jce_jel_claim": false
+    },
+    "core": {
+      "preservation_rule": "zero_baseline_success_to_candidate_failure",
+      "require_baseline_success_each_phase": true,
+      "selection": "all_source_tube_entries",
+      "source_tube": "JIT/runs/soft_tube/soft_tube_train_v1_20260828",
+      "source_tube_manifest_sha256": "c1c1161ebafd16716f2566aaccfe89169fe9cb0c2b090266c0e2bf90165df28b"
+    },
+    "data_policy": {
+      "expert_switching_used": false,
+      "final_evaluation_data_used": false,
+      "split": "train_audit_only",
+      "test_data_used": false,
+      "training_transitions": 0,
+      "validation_data_used": false
+    },
+    "policies": {
+      "baseline": {
+        "actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+        "frozen_manifest": "JIT/runs/frozen_unified/pi_0_round1_10009600_20260831/frozen_unified_policy.json",
+        "iteration": 0,
+        "name": "pi_0",
+        "payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719"
+      },
+      "candidate": {
+        "actor_sha256": "bb45c20e566b3b91b91bd465483e354f194033c61356c5596ee4be1f9c10c522",
+        "frozen_manifest": "JIT/runs/frozen_unified/pi_1_pi0_warmstart_actor_only_10009600_20260903/frozen_unified_policy.json",
+        "iteration": 1,
+        "name": "pi_1",
+        "payload_sha256": "65f60942bf4862bbd5a313301d1ed3f2dc83dc49f52556393052e4578f7bc519"
+      }
+    },
+    "runtime": {
+      "max_ticks": 400,
+      "policy_mode": "deterministic",
+      "protocol_seed": 9513020
+    },
+    "schema": "jit_paired_policy_gate_protocol_v2",
+    "source_iteration": 0,
+    "status": "predeclared_before_gate_execution"
+  },
+  "schema": "jit_paired_policy_gate_config_v2"
+}

@@ -1,0 +1,54 @@
+{
+  "schema": "jit_pi_unified_formal_v1",
+  "inputs": {
+    "up_config_path": "JIT/configs/phase_u_continuation_smoke.json",
+    "up_config_sha256": "748581e00a5e9452044a02d94dabdce7c98bc4d0bb107644a29dc48bdbd84089",
+    "down_config_path": "JIT/configs/descent_recovery_smoke.json",
+    "down_config_sha256": "85b575e6579eabe384b0a1643ba24359dd35a24d8d357ee1806e96bd6c280ed0",
+    "soft_tube_path": "JIT/runs/soft_tube/soft_tube_train_v1_20260828",
+    "soft_tube_manifest_sha256": "c1c1161ebafd16716f2566aaccfe89169fe9cb0c2b090266c0e2bf90165df28b",
+    "tube_rsi_smoke_report": "JIT/runs/tube_rsi/tube_rsi_smoke_train_v1_20260828/report.json",
+    "tube_rsi_smoke_report_sha256": "34f35b49353cbdc544edf13e0419ca4cea17bf492b000ea77d8a3cae3a0a2796"
+  },
+  "initialization": {
+    "actor": "fresh",
+    "critic": "fresh",
+    "optimizer": "fresh",
+    "restore_checkpoint": null
+  },
+  "runtime": {
+    "naccdmax": 1024
+  },
+  "ppo": {
+    "num_parallel_envs": 1024,
+    "episode_horizon": 400,
+    "unroll_length": 25,
+    "batch_size": 128,
+    "num_minibatches": 8,
+    "num_updates_per_batch": 1,
+    "requested_transitions": 10009600,
+    "learning_rate": 0.0001,
+    "entropy_cost": 0.001,
+    "reward_scaling": 0.1,
+    "discounting": 0.995,
+    "gae_lambda": 0.97,
+    "clipping_epsilon": 0.1,
+    "max_grad_norm": 0.75,
+    "seed": 821101
+  },
+  "formal": {
+    "checkpoint_transitions": [0, 1024000, 2508800, 5017600, 7500800, 10009600],
+    "train_panel_transitions": [1024000, 2508800, 5017600, 7500800, 10009600],
+    "samples_per_phase": 8,
+    "resume_semantics": "fresh_only"
+  },
+  "claim_boundary": {
+    "formal_method_stage_training": true,
+    "learnability_claim": false,
+    "final_policy_claim": false,
+    "certified_safe_tube_claim": false,
+    "jce_jel_claim": false,
+    "test_data_used": false,
+    "validation_data_used": false
+  }
+}

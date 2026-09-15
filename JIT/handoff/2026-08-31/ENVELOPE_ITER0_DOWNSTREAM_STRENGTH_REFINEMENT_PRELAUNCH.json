@@ -1,0 +1,42 @@
+{
+  "schema": "jit_envelope_iter0_downstream_strength_refinement_prelaunch_v1",
+  "status": "predeclared",
+  "date": "2026-08-31",
+  "iteration": 0,
+  "scientific_role": "downstream_strength_extrapolation_after_duration_search_exhaustion",
+  "prior_search": {
+    "root": "JIT/runs/pi_unified_transition_band/pi_0_downstream_local_refinement_20260831",
+    "status": "search_exhausted",
+    "protocol_sha256": "65d9fe19b453288dc76105c13e31e2c63571655e4f6e42f25da0911e3d5cc32c",
+    "accumulated_unique_label_count": 3045,
+    "upstream_ready": true,
+    "downstream_candidate_count": 2474,
+    "downstream_positive_count": 2474,
+    "downstream_negative_count": 0,
+    "downstream_ready": false
+  },
+  "method_decision": {
+    "reason": "Duration 31 and 32 saturated at recovery-success terminal predecessors, so longer duration is not an informative continuation-feasibility coordinate.",
+    "search_mode": "fixed_duration_strength_extrapolation",
+    "duration": 30,
+    "strengths": [0.15, 0.2, 0.3],
+    "action_names": ["steer", "rear_wheel_drive", "hip", "knee"],
+    "signs": [-1, 1],
+    "expected_anchor_count": 5,
+    "maximum_attempts": 120,
+    "maximum_acquisition_environment_interactions": 3600,
+    "maximum_labeling_environment_interactions": 48000,
+    "training_transitions": 0
+  },
+  "config": "JIT/configs/envelope_iter0_downstream_strength_refinement.json",
+  "output_dir": "JIT/runs/pi_unified_transition_band/pi_0_downstream_strength_refinement_20260831",
+  "claim_boundary": {
+    "training_only_search": true,
+    "upstream_transition_band_frozen": true,
+    "continuation_field_trained": false,
+    "tube_1_constructed": false,
+    "pi_1_trained": false,
+    "jce_jel_claim": false,
+    "certified_safe_set_claim": false
+  }
+}

@@ -1,0 +1,10 @@
+[
+  {
+    "line": 287,
+    "text": "        data,episodes,receipt=rollout('initial',True)"
+  },
+  {
+    "line": 313,
+    "text": "        data,episodes,receipt=rollout('final',not random_control)"
+  }
+]

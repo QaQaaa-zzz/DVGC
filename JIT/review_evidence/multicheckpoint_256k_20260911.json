@@ -1,0 +1,77 @@
+{
+  "training": {
+    "automatic_extension": false,
+    "charge_scope": "actual completed PPO plus validated panels",
+    "charged_interactions": 256392,
+    "claim": "multi-checkpoint execution validated; no exploration gain or convergence claim",
+    "end_utc": "2026-09-11T05:51:18.001523+00:00",
+    "error": null,
+    "final_test_used": false,
+    "maximum_total_interactions": 264000,
+    "panel_interactions": 392,
+    "panels": [
+      {
+        "count": 4,
+        "panel_interactions": 74,
+        "panel_sha256": "4223c1d94fdab2d9178342bb5c3135f93b83c12bd51ba5abeee02acbe2f15387",
+        "physical_failures": 0,
+        "successful": 4,
+        "training_transitions": 32000
+      },
+      {
+        "count": 4,
+        "panel_interactions": 75,
+        "panel_sha256": "4223c1d94fdab2d9178342bb5c3135f93b83c12bd51ba5abeee02acbe2f15387",
+        "physical_failures": 0,
+        "successful": 4,
+        "training_transitions": 64000
+      },
+      {
+        "count": 4,
+        "panel_interactions": 77,
+        "panel_sha256": "4223c1d94fdab2d9178342bb5c3135f93b83c12bd51ba5abeee02acbe2f15387",
+        "physical_failures": 0,
+        "successful": 4,
+        "training_transitions": 128000
+      },
+      {
+        "count": 4,
+        "panel_interactions": 81,
+        "panel_sha256": "4223c1d94fdab2d9178342bb5c3135f93b83c12bd51ba5abeee02acbe2f15387",
+        "physical_failures": 0,
+        "successful": 4,
+        "training_transitions": 192000
+      },
+      {
+        "count": 4,
+        "panel_interactions": 85,
+        "panel_sha256": "4223c1d94fdab2d9178342bb5c3135f93b83c12bd51ba5abeee02acbe2f15387",
+        "physical_failures": 0,
+        "successful": 4,
+        "training_transitions": 256000
+      }
+    ],
+    "returncode": 0,
+    "start_utc": "2026-09-11T05:49:53.940451+00:00",
+    "status": "completed",
+    "training_transitions": 256000,
+    "wall_seconds": 84.06107889299892
+  },
+  "training_artifacts": "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/INDEX.md",
+  "residual_data_audit": {
+    "environment_interactions": 0,
+    "independent_trajectories_not_claimed": true,
+    "nonzero_pairs": 90,
+    "nonzero_with_later_witness": 90,
+    "potential_pairs": 777,
+    "reason": "Sparse saved-state observations are reconstructible; full pre-action sequence is not stored. Need explicit action-time to future witness credit/provenance and group split before fitting. No fitting or replay performed.",
+    "rows": 809,
+    "schema": "jit_residual_data_readiness_audit_v1",
+    "training_ready": false,
+    "training_transitions": 0
+  },
+  "residual_artifacts": "/home/qy/DVGC/JIT/runs/engineering/residual_data_readiness_20260911/INDEX.md",
+  "exploration_status_at_record": "running; result not yet claimed",
+  "tests": "63 passed in 5.75s: probe_checkpoint_evaluation, checkpoint_comparison, checkpoint_discovery, residual_exploration",
+  "next_scope": "Close training-length pilot after one late-checkpoint exploration comparison; no further length sweeps. Implement explicit action-origin to later-witness binding and trajectory-group split before fitting; full production residual/RL discovery remains pending."
+}

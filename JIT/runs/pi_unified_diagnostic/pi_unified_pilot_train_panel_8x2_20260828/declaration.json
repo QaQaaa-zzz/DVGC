@@ -1,0 +1,14 @@
+{
+  "checkpoint": "/home/qy/DVGC/JIT/runs/pi_unified/pi_unified_pilot_25600_seed821001_ccd1024_20260828/checkpoints/transition_25600",
+  "checkpoint_payload_sha256": "78d967dd380a9ca63d670135ed2b57cc4ca4ddd54774bfe89a0ce15c0754d9aa",
+  "expert_switching_used": false,
+  "maximum_environment_interactions": 6400,
+  "purpose": "deterministic TRAIN-only Tube visitation from frozen pilot checkpoint",
+  "samples_per_phase": 8,
+  "schema": "jit_pi_unified_train_panel_declaration_v1",
+  "soft_tube_manifest_sha256": "c1c1161ebafd16716f2566aaccfe89169fe9cb0c2b090266c0e2bf90165df28b",
+  "stopping_condition": "each fixed rollout stops at true terminal or 400-step ceiling",
+  "test_data_used": false,
+  "training_transitions": 0,
+  "validation_data_used": false
+}

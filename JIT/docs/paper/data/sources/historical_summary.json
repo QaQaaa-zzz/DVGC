@@ -1,0 +1,39 @@
+{
+  "baseline_scope": "knee, lower-boundary, and inherited pi_2/pi_4 panels",
+  "campaign_union_root_cells": 9296,
+  "charged_interactions": 1275465,
+  "completed_training_transitions": 256000,
+  "final_test_used": false,
+  "frozen_new_policies": [
+    "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_000/training_attempt_000/frozen/frozen_unified_policy.json",
+    "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/training_attempt_000/frozen/frozen_unified_policy.json"
+  ],
+  "inherited_policy_paths": [
+    "/home/qy/DVGC/JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1/round_000/training_attempt_000/frozen/frozen_unified_policy.json"
+  ],
+  "inherited_recorded_charge": 195551,
+  "physical_boundary_proven": false,
+  "rounds": [
+    {
+      "bank_size": 6,
+      "campaign_union_root_cells": 4629,
+      "candidate_count": 3147,
+      "charged_interactions": 483320,
+      "novel_root_cells": 2940,
+      "policy": "pi_5",
+      "round": 0
+    },
+    {
+      "bank_size": 7,
+      "campaign_union_root_cells": 9296,
+      "candidate_count": 5323,
+      "charged_interactions": 1275465,
+      "novel_root_cells": 4667,
+      "policy": "pi_6",
+      "round": 1
+    }
+  ],
+  "seed_root_cells": 1689,
+  "status": "round_limit_reached",
+  "total_including_inherited_recorded_charge": 1471016
+}

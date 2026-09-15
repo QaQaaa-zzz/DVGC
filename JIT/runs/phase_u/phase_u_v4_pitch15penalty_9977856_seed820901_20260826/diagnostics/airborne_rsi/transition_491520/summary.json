@@ -1,0 +1,124 @@
+{
+  "absolute_transition": 491520,
+  "action_saturation_fraction": 0.0,
+  "apex_rollouts": 8,
+  "apex_success_rate": 1.0,
+  "ascending_rate": 1.0,
+  "end_reason_counts": {
+    "roll_limit": 8
+  },
+  "environment_transitions": 588,
+  "height_reach_rate": 1.0,
+  "held_out_seeds": [
+    1000001,
+    1000002,
+    1000003,
+    1000004,
+    1000005,
+    1000006,
+    1000007,
+    1000008
+  ],
+  "jump_zone_reach_rate": 1.0,
+  "maximum_abs_pitch": 0.23450295627117157,
+  "maximum_abs_roll": 0.6531857848167419,
+  "maximum_angular_speed": 5.599562644958496,
+  "maximum_root_height": 1.0686322450637817,
+  "mean_post_apex_environment_transitions": 55.5,
+  "physical_failure_rate": 1.0,
+  "post_apex_environment_transitions": 444,
+  "post_apex_horizon_survival_rate": 0.0,
+  "post_apex_physical_failure_rate": 1.0,
+  "pre_apex_environment_transitions": 144,
+  "reward_component_sums": {
+    "action_magnitude": -112.35757548362017,
+    "action_smoothness": -11.69686567286913,
+    "apex_success": 400.0,
+    "height": 5064.8981075286865,
+    "illegal_contact": 0.0,
+    "joint_energy": -309.14797564284527,
+    "jump_zone_missed": 0.0,
+    "low_height": 0.0,
+    "physical_failure": -240.0,
+    "pitch": 559.8021502457559,
+    "pitch_rate": -23.543865458303685,
+    "roll": 748.7043520323932,
+    "roll_pitch_failure": -3200.0,
+    "roll_rate": 0.0,
+    "speed": 487.45997043699026,
+    "stuck": 0.0,
+    "survival": 882.0,
+    "timeout": 0.0,
+    "yaw": 153.5622858479619,
+    "yaw_limit": 0.0,
+    "yaw_rate": 0.0
+  },
+  "rollouts": 8,
+  "timeout_rate": 0.0,
+  "trace_artifacts": [
+    {
+      "captured_state_count": 63,
+      "environment_transitions": 62,
+      "metadata_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/diagnostics/airborne_rsi/transition_491520/seed_1000001.json",
+      "npz_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/diagnostics/airborne_rsi/transition_491520/seed_1000001.npz",
+      "npz_sha256": "a8060c97bca07d1980a2cb4c24717c1eedeea1091019522a75fbf6643a1361b1",
+      "seed": 1000001
+    },
+    {
+      "captured_state_count": 88,
+      "environment_transitions": 87,
+      "metadata_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/diagnostics/airborne_rsi/transition_491520/seed_1000002.json",
+      "npz_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/diagnostics/airborne_rsi/transition_491520/seed_1000002.npz",
+      "npz_sha256": "1fb8571ac9b28d76f8b5cff5610964c95c125284298db3a9d631ccee4e2ed75d",
+      "seed": 1000002
+    },
+    {
+      "captured_state_count": 77,
+      "environment_transitions": 76,
+      "metadata_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/diagnostics/airborne_rsi/transition_491520/seed_1000003.json",
+      "npz_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/diagnostics/airborne_rsi/transition_491520/seed_1000003.npz",
+      "npz_sha256": "0bc12c50a443e988e3f220bae350ad54c0fed0a61a4d25b6d57fca6ceca1931e",
+      "seed": 1000003
+    },
+    {
+      "captured_state_count": 69,
+      "environment_transitions": 68,
+      "metadata_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/diagnostics/airborne_rsi/transition_491520/seed_1000004.json",
+      "npz_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/diagnostics/airborne_rsi/transition_491520/seed_1000004.npz",
+      "npz_sha256": "37994eecf592e58a943c81acad697b93fcf4eb7f06df29f67b1b9ec4ac02fd21",
+      "seed": 1000004
+    },
+    {
+      "captured_state_count": 76,
+      "environment_transitions": 75,
+      "metadata_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/diagnostics/airborne_rsi/transition_491520/seed_1000005.json",
+      "npz_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/diagnostics/airborne_rsi/transition_491520/seed_1000005.npz",
+      "npz_sha256": "a1fc5195e5ab2b4fdeeba6399a3749235daf02052a99479ced669ac90ecb2b67",
+      "seed": 1000005
+    },
+    {
+      "captured_state_count": 81,
+      "environment_transitions": 80,
+      "metadata_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/diagnostics/airborne_rsi/transition_491520/seed_1000006.json",
+      "npz_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/diagnostics/airborne_rsi/transition_491520/seed_1000006.npz",
+      "npz_sha256": "0e7c8ca388907eb2bf9756038ef7f011e77a2a5a602a6b07026c9c55977b5c3d",
+      "seed": 1000006
+    },
+    {
+      "captured_state_count": 77,
+      "environment_transitions": 76,
+      "metadata_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/diagnostics/airborne_rsi/transition_491520/seed_1000007.json",
+      "npz_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/diagnostics/airborne_rsi/transition_491520/seed_1000007.npz",
+      "npz_sha256": "47507fd23d652b5a992f7496c7d089f7b1acf1095332fd9957a120aec776e8e2",
+      "seed": 1000007
+    },
+    {
+      "captured_state_count": 65,
+      "environment_transitions": 64,
+      "metadata_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/diagnostics/airborne_rsi/transition_491520/seed_1000008.json",
+      "npz_path": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/diagnostics/airborne_rsi/transition_491520/seed_1000008.npz",
+      "npz_sha256": "9c9478decdf48ba8bc02eabbb02e45d9f7d86c87d0b9d67274f49fd43eebf097",
+      "seed": 1000008
+    }
+  ]
+}

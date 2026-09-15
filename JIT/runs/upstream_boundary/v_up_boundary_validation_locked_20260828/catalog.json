@@ -1,0 +1,1761 @@
+{
+  "anchor_count": 1,
+  "attempted_candidate_count": 22,
+  "candidate_count": 22,
+  "collection_transitions": 33,
+  "entries": [
+    {
+      "anchor_kind": "failure_anchor",
+      "anchor_parent_group_id": "transition_4988928__1000006",
+      "anchor_role": "ascending_entry",
+      "anchor_seed": 1000006,
+      "anchor_snapshot": "snapshots/snapshot_000037",
+      "anchor_source_actor_sha256": "44ca9fd8eba3031559c70dd81176a1487c1242702370ee49d2fb3b95f1dc8392",
+      "anchor_source_bank": "source_4988928",
+      "anchor_source_checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_4988928",
+      "anchor_source_training_transitions": 4988928,
+      "anchor_split": "validation",
+      "anchor_state_sha256": "274e0e4b8f69b57230c01662efecd3acfe46ab182f710e1cfe138bf82910031c",
+      "anchor_tick": 34,
+      "candidate_kind": "reachable_boundary_validation",
+      "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+      "parent_group_id": "transition_4988928__1000006",
+      "parent_trajectory": "transition_4988928__1000006",
+      "perturbation": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "duration": 1,
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.050000011920928955,
+            0.0
+          ]
+        ],
+        "nominal_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.526931881904602,
+            -0.6315261125564575
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.576931893825531,
+            -0.6315261125564575
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.05,
+        "variant_index": 0
+      },
+      "pitch": 0.005060433875769377,
+      "pitch_rate": 0.2743014097213745,
+      "protocol_seed": 820404,
+      "protocol_sha256": "c714e7354f4042abac99d2843bafcb398d76ddf146ed5b7fcbd9e7c5a08a2969",
+      "result_state_sha256": "73998ce618359f4593f80f777b8522ff39a3fe521f2fa161b77b0942746e2569",
+      "role": "ascending_entry",
+      "seed": 1000006,
+      "snapshot": "snapshots/candidate_000000",
+      "source_bank": "boundary_bank",
+      "state_sha256": "73998ce618359f4593f80f777b8522ff39a3fe521f2fa161b77b0942746e2569",
+      "tick": 35,
+      "vx": 0.6037272214889526,
+      "vz": 0.05148647353053093,
+      "z": 0.1188274621963501
+    },
+    {
+      "anchor_kind": "failure_anchor",
+      "anchor_parent_group_id": "transition_4988928__1000006",
+      "anchor_role": "ascending_entry",
+      "anchor_seed": 1000006,
+      "anchor_snapshot": "snapshots/snapshot_000037",
+      "anchor_source_actor_sha256": "44ca9fd8eba3031559c70dd81176a1487c1242702370ee49d2fb3b95f1dc8392",
+      "anchor_source_bank": "source_4988928",
+      "anchor_source_checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_4988928",
+      "anchor_source_training_transitions": 4988928,
+      "anchor_split": "validation",
+      "anchor_state_sha256": "274e0e4b8f69b57230c01662efecd3acfe46ab182f710e1cfe138bf82910031c",
+      "anchor_tick": 34,
+      "candidate_kind": "reachable_boundary_validation",
+      "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+      "parent_group_id": "transition_4988928__1000006",
+      "parent_trajectory": "transition_4988928__1000006",
+      "perturbation": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "duration": 1,
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.05500000715255737,
+            0.0
+          ]
+        ],
+        "nominal_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.526931881904602,
+            -0.6315261125564575
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.5819318890571594,
+            -0.6315261125564575
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.055,
+        "variant_index": 1
+      },
+      "pitch": 0.005137579049915075,
+      "pitch_rate": 0.47380366921424866,
+      "protocol_seed": 820404,
+      "protocol_sha256": "c714e7354f4042abac99d2843bafcb398d76ddf146ed5b7fcbd9e7c5a08a2969",
+      "result_state_sha256": "04f2cba02a370e9bb8850377f8efea8eb366c41fb18f6783e9c9e64957ec4582",
+      "role": "ascending_entry",
+      "seed": 1000006,
+      "snapshot": "snapshots/candidate_000001",
+      "source_bank": "boundary_bank",
+      "state_sha256": "04f2cba02a370e9bb8850377f8efea8eb366c41fb18f6783e9c9e64957ec4582",
+      "tick": 35,
+      "vx": 0.5708383321762085,
+      "vz": 0.08334006369113922,
+      "z": 0.11888910830020905
+    },
+    {
+      "anchor_kind": "failure_anchor",
+      "anchor_parent_group_id": "transition_4988928__1000006",
+      "anchor_role": "ascending_entry",
+      "anchor_seed": 1000006,
+      "anchor_snapshot": "snapshots/snapshot_000037",
+      "anchor_source_actor_sha256": "44ca9fd8eba3031559c70dd81176a1487c1242702370ee49d2fb3b95f1dc8392",
+      "anchor_source_bank": "source_4988928",
+      "anchor_source_checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_4988928",
+      "anchor_source_training_transitions": 4988928,
+      "anchor_split": "validation",
+      "anchor_state_sha256": "274e0e4b8f69b57230c01662efecd3acfe46ab182f710e1cfe138bf82910031c",
+      "anchor_tick": 34,
+      "candidate_kind": "reachable_boundary_validation",
+      "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+      "parent_group_id": "transition_4988928__1000006",
+      "parent_trajectory": "transition_4988928__1000006",
+      "perturbation": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "duration": 1,
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.06000000238418579,
+            0.0
+          ]
+        ],
+        "nominal_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.526931881904602,
+            -0.6315261125564575
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.5869318842887878,
+            -0.6315261125564575
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.06,
+        "variant_index": 2
+      },
+      "pitch": 0.0051551805809140205,
+      "pitch_rate": 0.02187536470592022,
+      "protocol_seed": 820404,
+      "protocol_sha256": "c714e7354f4042abac99d2843bafcb398d76ddf146ed5b7fcbd9e7c5a08a2969",
+      "result_state_sha256": "76b7d8b79f0740d08beb9cd5217ee031fb3f4805bb8907744c707602cd470076",
+      "role": "ascending_entry",
+      "seed": 1000006,
+      "snapshot": "snapshots/candidate_000002",
+      "source_bank": "boundary_bank",
+      "state_sha256": "76b7d8b79f0740d08beb9cd5217ee031fb3f4805bb8907744c707602cd470076",
+      "tick": 35,
+      "vx": 0.5563598871231079,
+      "vz": 0.007700345013290644,
+      "z": 0.11874280124902725
+    },
+    {
+      "anchor_kind": "failure_anchor",
+      "anchor_parent_group_id": "transition_4988928__1000006",
+      "anchor_role": "ascending_entry",
+      "anchor_seed": 1000006,
+      "anchor_snapshot": "snapshots/snapshot_000037",
+      "anchor_source_actor_sha256": "44ca9fd8eba3031559c70dd81176a1487c1242702370ee49d2fb3b95f1dc8392",
+      "anchor_source_bank": "source_4988928",
+      "anchor_source_checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_4988928",
+      "anchor_source_training_transitions": 4988928,
+      "anchor_split": "validation",
+      "anchor_state_sha256": "274e0e4b8f69b57230c01662efecd3acfe46ab182f710e1cfe138bf82910031c",
+      "anchor_tick": 34,
+      "candidate_kind": "reachable_boundary_validation",
+      "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+      "parent_group_id": "transition_4988928__1000006",
+      "parent_trajectory": "transition_4988928__1000006",
+      "perturbation": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "duration": 1,
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.06499999761581421,
+            0.0
+          ]
+        ],
+        "nominal_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.526931881904602,
+            -0.6315261125564575
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.5919318795204163,
+            -0.6315261125564575
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.065,
+        "variant_index": 3
+      },
+      "pitch": 0.005189857911318541,
+      "pitch_rate": 0.2839241921901703,
+      "protocol_seed": 820404,
+      "protocol_sha256": "c714e7354f4042abac99d2843bafcb398d76ddf146ed5b7fcbd9e7c5a08a2969",
+      "result_state_sha256": "3d054d2e7894e641b0f317b5cda622d73e66a1b5ed25aa0e8b1105da2394e930",
+      "role": "ascending_entry",
+      "seed": 1000006,
+      "snapshot": "snapshots/candidate_000003",
+      "source_bank": "boundary_bank",
+      "state_sha256": "3d054d2e7894e641b0f317b5cda622d73e66a1b5ed25aa0e8b1105da2394e930",
+      "tick": 35,
+      "vx": 0.5579797625541687,
+      "vz": 0.049820296466350555,
+      "z": 0.11876509338617325
+    },
+    {
+      "anchor_kind": "failure_anchor",
+      "anchor_parent_group_id": "transition_4988928__1000006",
+      "anchor_role": "ascending_entry",
+      "anchor_seed": 1000006,
+      "anchor_snapshot": "snapshots/snapshot_000037",
+      "anchor_source_actor_sha256": "44ca9fd8eba3031559c70dd81176a1487c1242702370ee49d2fb3b95f1dc8392",
+      "anchor_source_bank": "source_4988928",
+      "anchor_source_checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_4988928",
+      "anchor_source_training_transitions": 4988928,
+      "anchor_split": "validation",
+      "anchor_state_sha256": "274e0e4b8f69b57230c01662efecd3acfe46ab182f710e1cfe138bf82910031c",
+      "anchor_tick": 34,
+      "candidate_kind": "reachable_boundary_validation",
+      "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+      "parent_group_id": "transition_4988928__1000006",
+      "parent_trajectory": "transition_4988928__1000006",
+      "perturbation": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "duration": 1,
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.06999999284744263,
+            0.0
+          ]
+        ],
+        "nominal_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.526931881904602,
+            -0.6315261125564575
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.5969318747520447,
+            -0.6315261125564575
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.07,
+        "variant_index": 4
+      },
+      "pitch": 0.005239157937467098,
+      "pitch_rate": 0.4909876883029938,
+      "protocol_seed": 820404,
+      "protocol_sha256": "c714e7354f4042abac99d2843bafcb398d76ddf146ed5b7fcbd9e7c5a08a2969",
+      "result_state_sha256": "42dd2003c39855b8bfc2e30c66ca1e9ea1bb6fa29c378a4a5737824a8ce18f35",
+      "role": "ascending_entry",
+      "seed": 1000006,
+      "snapshot": "snapshots/candidate_000004",
+      "source_bank": "boundary_bank",
+      "state_sha256": "42dd2003c39855b8bfc2e30c66ca1e9ea1bb6fa29c378a4a5737824a8ce18f35",
+      "tick": 35,
+      "vx": 0.5263124704360962,
+      "vz": 0.08310306817293167,
+      "z": 0.11894933134317398
+    },
+    {
+      "anchor_kind": "failure_anchor",
+      "anchor_parent_group_id": "transition_4988928__1000006",
+      "anchor_role": "ascending_entry",
+      "anchor_seed": 1000006,
+      "anchor_snapshot": "snapshots/snapshot_000037",
+      "anchor_source_actor_sha256": "44ca9fd8eba3031559c70dd81176a1487c1242702370ee49d2fb3b95f1dc8392",
+      "anchor_source_bank": "source_4988928",
+      "anchor_source_checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_4988928",
+      "anchor_source_training_transitions": 4988928,
+      "anchor_split": "validation",
+      "anchor_state_sha256": "274e0e4b8f69b57230c01662efecd3acfe46ab182f710e1cfe138bf82910031c",
+      "anchor_tick": 34,
+      "candidate_kind": "reachable_boundary_validation",
+      "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+      "parent_group_id": "transition_4988928__1000006",
+      "parent_trajectory": "transition_4988928__1000006",
+      "perturbation": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "duration": 1,
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.07499998807907104,
+            0.0
+          ]
+        ],
+        "nominal_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.526931881904602,
+            -0.6315261125564575
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.6019318699836731,
+            -0.6315261125564575
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.075,
+        "variant_index": 5
+      },
+      "pitch": 0.005747877527028322,
+      "pitch_rate": 0.2440054714679718,
+      "protocol_seed": 820404,
+      "protocol_sha256": "c714e7354f4042abac99d2843bafcb398d76ddf146ed5b7fcbd9e7c5a08a2969",
+      "result_state_sha256": "2c0523767623a648068bc35fd4b9ca82132770e6e9ea8d284f5cde60cbd75a0b",
+      "role": "ascending_entry",
+      "seed": 1000006,
+      "snapshot": "snapshots/candidate_000005",
+      "source_bank": "boundary_bank",
+      "state_sha256": "2c0523767623a648068bc35fd4b9ca82132770e6e9ea8d284f5cde60cbd75a0b",
+      "tick": 35,
+      "vx": 0.6173704862594604,
+      "vz": -0.018862038850784302,
+      "z": 0.11849933117628098
+    },
+    {
+      "anchor_kind": "failure_anchor",
+      "anchor_parent_group_id": "transition_4988928__1000006",
+      "anchor_role": "ascending_entry",
+      "anchor_seed": 1000006,
+      "anchor_snapshot": "snapshots/snapshot_000037",
+      "anchor_source_actor_sha256": "44ca9fd8eba3031559c70dd81176a1487c1242702370ee49d2fb3b95f1dc8392",
+      "anchor_source_bank": "source_4988928",
+      "anchor_source_checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_4988928",
+      "anchor_source_training_transitions": 4988928,
+      "anchor_split": "validation",
+      "anchor_state_sha256": "274e0e4b8f69b57230c01662efecd3acfe46ab182f710e1cfe138bf82910031c",
+      "anchor_tick": 34,
+      "candidate_kind": "reachable_boundary_validation",
+      "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+      "parent_group_id": "transition_4988928__1000006",
+      "parent_trajectory": "transition_4988928__1000006",
+      "perturbation": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "duration": 1,
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.07999998331069946,
+            0.0
+          ]
+        ],
+        "nominal_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.526931881904602,
+            -0.6315261125564575
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.6069318652153015,
+            -0.6315261125564575
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.08,
+        "variant_index": 6
+      },
+      "pitch": 0.005787298548966646,
+      "pitch_rate": 0.7224604487419128,
+      "protocol_seed": 820404,
+      "protocol_sha256": "c714e7354f4042abac99d2843bafcb398d76ddf146ed5b7fcbd9e7c5a08a2969",
+      "result_state_sha256": "ae1423fdcce5a80f77d480b9183714e4e71d07517e17fe8f398ab6717c319a99",
+      "role": "ascending_entry",
+      "seed": 1000006,
+      "snapshot": "snapshots/candidate_000006",
+      "source_bank": "boundary_bank",
+      "state_sha256": "ae1423fdcce5a80f77d480b9183714e4e71d07517e17fe8f398ab6717c319a99",
+      "tick": 35,
+      "vx": 0.5712723731994629,
+      "vz": 0.05908240005373955,
+      "z": 0.11861776560544968
+    },
+    {
+      "anchor_kind": "failure_anchor",
+      "anchor_parent_group_id": "transition_4988928__1000006",
+      "anchor_role": "ascending_entry",
+      "anchor_seed": 1000006,
+      "anchor_snapshot": "snapshots/snapshot_000037",
+      "anchor_source_actor_sha256": "44ca9fd8eba3031559c70dd81176a1487c1242702370ee49d2fb3b95f1dc8392",
+      "anchor_source_bank": "source_4988928",
+      "anchor_source_checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_4988928",
+      "anchor_source_training_transitions": 4988928,
+      "anchor_split": "validation",
+      "anchor_state_sha256": "274e0e4b8f69b57230c01662efecd3acfe46ab182f710e1cfe138bf82910031c",
+      "anchor_tick": 34,
+      "candidate_kind": "reachable_boundary_validation",
+      "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+      "parent_group_id": "transition_4988928__1000006",
+      "parent_trajectory": "transition_4988928__1000006",
+      "perturbation": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "duration": 1,
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.08499997854232788,
+            0.0
+          ]
+        ],
+        "nominal_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.526931881904602,
+            -0.6315261125564575
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.6119318604469299,
+            -0.6315261125564575
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.085,
+        "variant_index": 7
+      },
+      "pitch": 0.0058091809041798115,
+      "pitch_rate": 0.639534056186676,
+      "protocol_seed": 820404,
+      "protocol_sha256": "c714e7354f4042abac99d2843bafcb398d76ddf146ed5b7fcbd9e7c5a08a2969",
+      "result_state_sha256": "57e043de92b278733e38633b685aa4a82da76b0b90d4ca0a0db357d3b7faa1ed",
+      "role": "ascending_entry",
+      "seed": 1000006,
+      "snapshot": "snapshots/candidate_000007",
+      "source_bank": "boundary_bank",
+      "state_sha256": "57e043de92b278733e38633b685aa4a82da76b0b90d4ca0a0db357d3b7faa1ed",
+      "tick": 35,
+      "vx": 0.6478224396705627,
+      "vz": 0.04736608639359474,
+      "z": 0.11878804862499237
+    },
+    {
+      "anchor_kind": "failure_anchor",
+      "anchor_parent_group_id": "transition_4988928__1000006",
+      "anchor_role": "ascending_entry",
+      "anchor_seed": 1000006,
+      "anchor_snapshot": "snapshots/snapshot_000037",
+      "anchor_source_actor_sha256": "44ca9fd8eba3031559c70dd81176a1487c1242702370ee49d2fb3b95f1dc8392",
+      "anchor_source_bank": "source_4988928",
+      "anchor_source_checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_4988928",
+      "anchor_source_training_transitions": 4988928,
+      "anchor_split": "validation",
+      "anchor_state_sha256": "274e0e4b8f69b57230c01662efecd3acfe46ab182f710e1cfe138bf82910031c",
+      "anchor_tick": 34,
+      "candidate_kind": "reachable_boundary_validation",
+      "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+      "parent_group_id": "transition_4988928__1000006",
+      "parent_trajectory": "transition_4988928__1000006",
+      "perturbation": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "duration": 1,
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.09000003337860107,
+            0.0
+          ]
+        ],
+        "nominal_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.526931881904602,
+            -0.6315261125564575
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.6169319152832031,
+            -0.6315261125564575
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.09,
+        "variant_index": 8
+      },
+      "pitch": 0.00590904476121068,
+      "pitch_rate": 0.9291291832923889,
+      "protocol_seed": 820404,
+      "protocol_sha256": "c714e7354f4042abac99d2843bafcb398d76ddf146ed5b7fcbd9e7c5a08a2969",
+      "result_state_sha256": "65808e645412391c4cd1a887ab131a970d2a5a0995cee4c7c6cd676cda66af43",
+      "role": "ascending_entry",
+      "seed": 1000006,
+      "snapshot": "snapshots/candidate_000008",
+      "source_bank": "boundary_bank",
+      "state_sha256": "65808e645412391c4cd1a887ab131a970d2a5a0995cee4c7c6cd676cda66af43",
+      "tick": 35,
+      "vx": 0.6085066199302673,
+      "vz": 0.07943054288625717,
+      "z": 0.11867871880531311
+    },
+    {
+      "anchor_kind": "failure_anchor",
+      "anchor_parent_group_id": "transition_4988928__1000006",
+      "anchor_role": "ascending_entry",
+      "anchor_seed": 1000006,
+      "anchor_snapshot": "snapshots/snapshot_000037",
+      "anchor_source_actor_sha256": "44ca9fd8eba3031559c70dd81176a1487c1242702370ee49d2fb3b95f1dc8392",
+      "anchor_source_bank": "source_4988928",
+      "anchor_source_checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_4988928",
+      "anchor_source_training_transitions": 4988928,
+      "anchor_split": "validation",
+      "anchor_state_sha256": "274e0e4b8f69b57230c01662efecd3acfe46ab182f710e1cfe138bf82910031c",
+      "anchor_tick": 34,
+      "candidate_kind": "reachable_boundary_validation",
+      "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+      "parent_group_id": "transition_4988928__1000006",
+      "parent_trajectory": "transition_4988928__1000006",
+      "perturbation": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "duration": 1,
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.09500002861022949,
+            0.0
+          ]
+        ],
+        "nominal_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.526931881904602,
+            -0.6315261125564575
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.6219319105148315,
+            -0.6315261125564575
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.095,
+        "variant_index": 9
+      },
+      "pitch": 0.005914714653044939,
+      "pitch_rate": 0.9015887379646301,
+      "protocol_seed": 820404,
+      "protocol_sha256": "c714e7354f4042abac99d2843bafcb398d76ddf146ed5b7fcbd9e7c5a08a2969",
+      "result_state_sha256": "1428559f3bc7f0d80a7b1cffae0985b9f5e11575568ce405c9359fbe3b0f81f7",
+      "role": "ascending_entry",
+      "seed": 1000006,
+      "snapshot": "snapshots/candidate_000009",
+      "source_bank": "boundary_bank",
+      "state_sha256": "1428559f3bc7f0d80a7b1cffae0985b9f5e11575568ce405c9359fbe3b0f81f7",
+      "tick": 35,
+      "vx": 0.6020212173461914,
+      "vz": 0.07513980567455292,
+      "z": 0.11864165961742401
+    },
+    {
+      "anchor_kind": "failure_anchor",
+      "anchor_parent_group_id": "transition_4988928__1000006",
+      "anchor_role": "ascending_entry",
+      "anchor_seed": 1000006,
+      "anchor_snapshot": "snapshots/snapshot_000037",
+      "anchor_source_actor_sha256": "44ca9fd8eba3031559c70dd81176a1487c1242702370ee49d2fb3b95f1dc8392",
+      "anchor_source_bank": "source_4988928",
+      "anchor_source_checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_4988928",
+      "anchor_source_training_transitions": 4988928,
+      "anchor_split": "validation",
+      "anchor_state_sha256": "274e0e4b8f69b57230c01662efecd3acfe46ab182f710e1cfe138bf82910031c",
+      "anchor_tick": 34,
+      "candidate_kind": "reachable_boundary_validation",
+      "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+      "parent_group_id": "transition_4988928__1000006",
+      "parent_trajectory": "transition_4988928__1000006",
+      "perturbation": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "duration": 1,
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.10000002384185791,
+            0.0
+          ]
+        ],
+        "nominal_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.526931881904602,
+            -0.6315261125564575
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.62693190574646,
+            -0.6315261125564575
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.1,
+        "variant_index": 10
+      },
+      "pitch": 0.005966451950371265,
+      "pitch_rate": 0.6443542242050171,
+      "protocol_seed": 820404,
+      "protocol_sha256": "c714e7354f4042abac99d2843bafcb398d76ddf146ed5b7fcbd9e7c5a08a2969",
+      "result_state_sha256": "b8662f340dd846441d6d541d22aed4388a4705b9911a845e4698d36e6c194c05",
+      "role": "ascending_entry",
+      "seed": 1000006,
+      "snapshot": "snapshots/candidate_000010",
+      "source_bank": "boundary_bank",
+      "state_sha256": "b8662f340dd846441d6d541d22aed4388a4705b9911a845e4698d36e6c194c05",
+      "tick": 35,
+      "vx": 0.531594455242157,
+      "vz": -0.06591516733169556,
+      "z": 0.11842121183872223
+    },
+    {
+      "anchor_kind": "failure_anchor",
+      "anchor_parent_group_id": "transition_4988928__1000006",
+      "anchor_role": "ascending_entry",
+      "anchor_seed": 1000006,
+      "anchor_snapshot": "snapshots/snapshot_000037",
+      "anchor_source_actor_sha256": "44ca9fd8eba3031559c70dd81176a1487c1242702370ee49d2fb3b95f1dc8392",
+      "anchor_source_bank": "source_4988928",
+      "anchor_source_checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_4988928",
+      "anchor_source_training_transitions": 4988928,
+      "anchor_split": "validation",
+      "anchor_state_sha256": "274e0e4b8f69b57230c01662efecd3acfe46ab182f710e1cfe138bf82910031c",
+      "anchor_tick": 34,
+      "candidate_kind": "reachable_boundary_validation",
+      "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+      "parent_group_id": "transition_4988928__1000006",
+      "parent_trajectory": "transition_4988928__1000006",
+      "perturbation": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "duration": 2,
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.050000011920928955,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.04999999701976776,
+            0.0
+          ]
+        ],
+        "nominal_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.526931881904602,
+            -0.6315261125564575
+          ],
+          [
+            -0.4404308795928955,
+            -0.8591799139976501,
+            0.15564586222171783,
+            -0.7626141309738159
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.576931893825531,
+            -0.6315261125564575
+          ],
+          [
+            -0.4404308795928955,
+            -0.8591799139976501,
+            0.2056458592414856,
+            -0.7626141309738159
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.05,
+        "variant_index": 11
+      },
+      "pitch": 0.004054860211908817,
+      "pitch_rate": 7.161333084106445,
+      "protocol_seed": 820404,
+      "protocol_sha256": "c714e7354f4042abac99d2843bafcb398d76ddf146ed5b7fcbd9e7c5a08a2969",
+      "result_state_sha256": "a03931e1e50b3a046391cb8cff3c351f80202bfdd0b0d131256a9f8f71023cb8",
+      "role": "ascending_entry",
+      "seed": 1000006,
+      "snapshot": "snapshots/candidate_000011",
+      "source_bank": "boundary_bank",
+      "state_sha256": "a03931e1e50b3a046391cb8cff3c351f80202bfdd0b0d131256a9f8f71023cb8",
+      "tick": 36,
+      "vx": 0.8182586431503296,
+      "vz": 1.1634633541107178,
+      "z": 0.13112805783748627
+    },
+    {
+      "anchor_kind": "failure_anchor",
+      "anchor_parent_group_id": "transition_4988928__1000006",
+      "anchor_role": "ascending_entry",
+      "anchor_seed": 1000006,
+      "anchor_snapshot": "snapshots/snapshot_000037",
+      "anchor_source_actor_sha256": "44ca9fd8eba3031559c70dd81176a1487c1242702370ee49d2fb3b95f1dc8392",
+      "anchor_source_bank": "source_4988928",
+      "anchor_source_checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_4988928",
+      "anchor_source_training_transitions": 4988928,
+      "anchor_split": "validation",
+      "anchor_state_sha256": "274e0e4b8f69b57230c01662efecd3acfe46ab182f710e1cfe138bf82910031c",
+      "anchor_tick": 34,
+      "candidate_kind": "reachable_boundary_validation",
+      "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+      "parent_group_id": "transition_4988928__1000006",
+      "parent_trajectory": "transition_4988928__1000006",
+      "perturbation": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "duration": 2,
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.05500000715255737,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.05499999225139618,
+            0.0
+          ]
+        ],
+        "nominal_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.526931881904602,
+            -0.6315261125564575
+          ],
+          [
+            -0.45955196022987366,
+            -0.8572919964790344,
+            0.16031180322170258,
+            -0.7618775367736816
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.5819318890571594,
+            -0.6315261125564575
+          ],
+          [
+            -0.45955196022987366,
+            -0.8572919964790344,
+            0.21531179547309875,
+            -0.7618775367736816
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.055,
+        "variant_index": 12
+      },
+      "pitch": 0.004335976671427488,
+      "pitch_rate": 7.035528659820557,
+      "protocol_seed": 820404,
+      "protocol_sha256": "c714e7354f4042abac99d2843bafcb398d76ddf146ed5b7fcbd9e7c5a08a2969",
+      "result_state_sha256": "b67a4366b905f5e0a2303dd20490ce4b574ae7c88f705c485a47e961b0a8ec26",
+      "role": "ascending_entry",
+      "seed": 1000006,
+      "snapshot": "snapshots/candidate_000012",
+      "source_bank": "boundary_bank",
+      "state_sha256": "b67a4366b905f5e0a2303dd20490ce4b574ae7c88f705c485a47e961b0a8ec26",
+      "tick": 36,
+      "vx": 0.7820719480514526,
+      "vz": 1.1462674140930176,
+      "z": 0.1319492906332016
+    },
+    {
+      "anchor_kind": "failure_anchor",
+      "anchor_parent_group_id": "transition_4988928__1000006",
+      "anchor_role": "ascending_entry",
+      "anchor_seed": 1000006,
+      "anchor_snapshot": "snapshots/snapshot_000037",
+      "anchor_source_actor_sha256": "44ca9fd8eba3031559c70dd81176a1487c1242702370ee49d2fb3b95f1dc8392",
+      "anchor_source_bank": "source_4988928",
+      "anchor_source_checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_4988928",
+      "anchor_source_training_transitions": 4988928,
+      "anchor_split": "validation",
+      "anchor_state_sha256": "274e0e4b8f69b57230c01662efecd3acfe46ab182f710e1cfe138bf82910031c",
+      "anchor_tick": 34,
+      "candidate_kind": "reachable_boundary_validation",
+      "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+      "parent_group_id": "transition_4988928__1000006",
+      "parent_trajectory": "transition_4988928__1000006",
+      "perturbation": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "duration": 2,
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.06000000238418579,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.06000000238418579,
+            0.0
+          ]
+        ],
+        "nominal_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.526931881904602,
+            -0.6315261125564575
+          ],
+          [
+            -0.48129358887672424,
+            -0.8421609401702881,
+            0.14061304926872253,
+            -0.7582896947860718
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.5869318842887878,
+            -0.6315261125564575
+          ],
+          [
+            -0.48129358887672424,
+            -0.8421609401702881,
+            0.20061305165290833,
+            -0.7582896947860718
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.06,
+        "variant_index": 13
+      },
+      "pitch": 0.004183394368737936,
+      "pitch_rate": 6.762704849243164,
+      "protocol_seed": 820404,
+      "protocol_sha256": "c714e7354f4042abac99d2843bafcb398d76ddf146ed5b7fcbd9e7c5a08a2969",
+      "result_state_sha256": "7ea55323e935daac6f51cb8fc3d3e2fe8c14b0cb515cb51235c75b8228aa4112",
+      "role": "ascending_entry",
+      "seed": 1000006,
+      "snapshot": "snapshots/candidate_000013",
+      "source_bank": "boundary_bank",
+      "state_sha256": "7ea55323e935daac6f51cb8fc3d3e2fe8c14b0cb515cb51235c75b8228aa4112",
+      "tick": 36,
+      "vx": 0.7674777507781982,
+      "vz": 1.1044130325317383,
+      "z": 0.13028550148010254
+    },
+    {
+      "anchor_kind": "failure_anchor",
+      "anchor_parent_group_id": "transition_4988928__1000006",
+      "anchor_role": "ascending_entry",
+      "anchor_seed": 1000006,
+      "anchor_snapshot": "snapshots/snapshot_000037",
+      "anchor_source_actor_sha256": "44ca9fd8eba3031559c70dd81176a1487c1242702370ee49d2fb3b95f1dc8392",
+      "anchor_source_bank": "source_4988928",
+      "anchor_source_checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_4988928",
+      "anchor_source_training_transitions": 4988928,
+      "anchor_split": "validation",
+      "anchor_state_sha256": "274e0e4b8f69b57230c01662efecd3acfe46ab182f710e1cfe138bf82910031c",
+      "anchor_tick": 34,
+      "candidate_kind": "reachable_boundary_validation",
+      "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+      "parent_group_id": "transition_4988928__1000006",
+      "parent_trajectory": "transition_4988928__1000006",
+      "perturbation": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "duration": 2,
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.06499999761581421,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.06499999761581421,
+            0.0
+          ]
+        ],
+        "nominal_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.526931881904602,
+            -0.6315261125564575
+          ],
+          [
+            -0.4458613395690918,
+            -0.8601235151290894,
+            0.1345999538898468,
+            -0.7644343376159668
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.5919318795204163,
+            -0.6315261125564575
+          ],
+          [
+            -0.4458613395690918,
+            -0.8601235151290894,
+            0.199599951505661,
+            -0.7644343376159668
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.065,
+        "variant_index": 14
+      },
+      "pitch": 0.0043893856927752495,
+      "pitch_rate": 6.951262950897217,
+      "protocol_seed": 820404,
+      "protocol_sha256": "c714e7354f4042abac99d2843bafcb398d76ddf146ed5b7fcbd9e7c5a08a2969",
+      "result_state_sha256": "3442df28608426d44ba174c94d5c7bacde51e2ed7714143974ba0ea23181fd0d",
+      "role": "ascending_entry",
+      "seed": 1000006,
+      "snapshot": "snapshots/candidate_000014",
+      "source_bank": "boundary_bank",
+      "state_sha256": "3442df28608426d44ba174c94d5c7bacde51e2ed7714143974ba0ea23181fd0d",
+      "tick": 36,
+      "vx": 0.7704193592071533,
+      "vz": 1.132332682609558,
+      "z": 0.13112084567546844
+    },
+    {
+      "anchor_kind": "failure_anchor",
+      "anchor_parent_group_id": "transition_4988928__1000006",
+      "anchor_role": "ascending_entry",
+      "anchor_seed": 1000006,
+      "anchor_snapshot": "snapshots/snapshot_000037",
+      "anchor_source_actor_sha256": "44ca9fd8eba3031559c70dd81176a1487c1242702370ee49d2fb3b95f1dc8392",
+      "anchor_source_bank": "source_4988928",
+      "anchor_source_checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_4988928",
+      "anchor_source_training_transitions": 4988928,
+      "anchor_split": "validation",
+      "anchor_state_sha256": "274e0e4b8f69b57230c01662efecd3acfe46ab182f710e1cfe138bf82910031c",
+      "anchor_tick": 34,
+      "candidate_kind": "reachable_boundary_validation",
+      "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+      "parent_group_id": "transition_4988928__1000006",
+      "parent_trajectory": "transition_4988928__1000006",
+      "perturbation": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "duration": 2,
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.06999999284744263,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.07000000774860382,
+            0.0
+          ]
+        ],
+        "nominal_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.526931881904602,
+            -0.6315261125564575
+          ],
+          [
+            -0.4658147692680359,
+            -0.8572847843170166,
+            0.14167962968349457,
+            -0.7639071941375732
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.5969318747520447,
+            -0.6315261125564575
+          ],
+          [
+            -0.4658147692680359,
+            -0.8572847843170166,
+            0.2116796374320984,
+            -0.7639071941375732
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.07,
+        "variant_index": 15
+      },
+      "pitch": 0.004664318636059761,
+      "pitch_rate": 7.181514739990234,
+      "protocol_seed": 820404,
+      "protocol_sha256": "c714e7354f4042abac99d2843bafcb398d76ddf146ed5b7fcbd9e7c5a08a2969",
+      "result_state_sha256": "68f8b942f0eb6fc2f0b306e9d5d7b6c4cbbbb382e37b88777d125f9d6e0ccc01",
+      "role": "ascending_entry",
+      "seed": 1000006,
+      "snapshot": "snapshots/candidate_000015",
+      "source_bank": "boundary_bank",
+      "state_sha256": "68f8b942f0eb6fc2f0b306e9d5d7b6c4cbbbb382e37b88777d125f9d6e0ccc01",
+      "tick": 36,
+      "vx": 0.7355743646621704,
+      "vz": 1.1660683155059814,
+      "z": 0.13203060626983643
+    },
+    {
+      "anchor_kind": "failure_anchor",
+      "anchor_parent_group_id": "transition_4988928__1000006",
+      "anchor_role": "ascending_entry",
+      "anchor_seed": 1000006,
+      "anchor_snapshot": "snapshots/snapshot_000037",
+      "anchor_source_actor_sha256": "44ca9fd8eba3031559c70dd81176a1487c1242702370ee49d2fb3b95f1dc8392",
+      "anchor_source_bank": "source_4988928",
+      "anchor_source_checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_4988928",
+      "anchor_source_training_transitions": 4988928,
+      "anchor_split": "validation",
+      "anchor_state_sha256": "274e0e4b8f69b57230c01662efecd3acfe46ab182f710e1cfe138bf82910031c",
+      "anchor_tick": 34,
+      "candidate_kind": "reachable_boundary_validation",
+      "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+      "parent_group_id": "transition_4988928__1000006",
+      "parent_trajectory": "transition_4988928__1000006",
+      "perturbation": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "duration": 2,
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.07499998807907104,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.07500000298023224,
+            0.0
+          ]
+        ],
+        "nominal_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.526931881904602,
+            -0.6315261125564575
+          ],
+          [
+            -0.4144039452075958,
+            -0.8927838206291199,
+            0.10341213643550873,
+            -0.7805346250534058
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.6019318699836731,
+            -0.6315261125564575
+          ],
+          [
+            -0.4144039452075958,
+            -0.8927838206291199,
+            0.17841213941574097,
+            -0.7805346250534058
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.075,
+        "variant_index": 16
+      },
+      "pitch": 0.004837242886424065,
+      "pitch_rate": 7.463885307312012,
+      "protocol_seed": 820404,
+      "protocol_sha256": "c714e7354f4042abac99d2843bafcb398d76ddf146ed5b7fcbd9e7c5a08a2969",
+      "result_state_sha256": "2d15d11cf788b1b703268af018626eef0fd08323f9c23de9627157f1852f2e9f",
+      "role": "ascending_entry",
+      "seed": 1000006,
+      "snapshot": "snapshots/candidate_000016",
+      "source_bank": "boundary_bank",
+      "state_sha256": "2d15d11cf788b1b703268af018626eef0fd08323f9c23de9627157f1852f2e9f",
+      "tick": 36,
+      "vx": 0.814733624458313,
+      "vz": 1.2249799966812134,
+      "z": 0.1314900815486908
+    },
+    {
+      "anchor_kind": "failure_anchor",
+      "anchor_parent_group_id": "transition_4988928__1000006",
+      "anchor_role": "ascending_entry",
+      "anchor_seed": 1000006,
+      "anchor_snapshot": "snapshots/snapshot_000037",
+      "anchor_source_actor_sha256": "44ca9fd8eba3031559c70dd81176a1487c1242702370ee49d2fb3b95f1dc8392",
+      "anchor_source_bank": "source_4988928",
+      "anchor_source_checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_4988928",
+      "anchor_source_training_transitions": 4988928,
+      "anchor_split": "validation",
+      "anchor_state_sha256": "274e0e4b8f69b57230c01662efecd3acfe46ab182f710e1cfe138bf82910031c",
+      "anchor_tick": 34,
+      "candidate_kind": "reachable_boundary_validation",
+      "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+      "parent_group_id": "transition_4988928__1000006",
+      "parent_trajectory": "transition_4988928__1000006",
+      "perturbation": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "duration": 2,
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.07999998331069946,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.07999999076128006,
+            0.0
+          ]
+        ],
+        "nominal_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.526931881904602,
+            -0.6315261125564575
+          ],
+          [
+            -0.4146243631839752,
+            -0.8858198523521423,
+            0.11580019444227219,
+            -0.7749828100204468
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.6069318652153015,
+            -0.6315261125564575
+          ],
+          [
+            -0.4146243631839752,
+            -0.8858198523521423,
+            0.19580018520355225,
+            -0.7749828100204468
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.08,
+        "variant_index": 17
+      },
+      "pitch": 0.0051094116643071175,
+      "pitch_rate": 7.4705657958984375,
+      "protocol_seed": 820404,
+      "protocol_sha256": "c714e7354f4042abac99d2843bafcb398d76ddf146ed5b7fcbd9e7c5a08a2969",
+      "result_state_sha256": "2a442d1fad045ebd5f6ac59ab10135353655ec5ce067cb15a4eed7caf6461145",
+      "role": "ascending_entry",
+      "seed": 1000006,
+      "snapshot": "snapshots/candidate_000017",
+      "source_bank": "boundary_bank",
+      "state_sha256": "2a442d1fad045ebd5f6ac59ab10135353655ec5ce067cb15a4eed7caf6461145",
+      "tick": 36,
+      "vx": 0.8039308190345764,
+      "vz": 1.223341464996338,
+      "z": 0.13176898658275604
+    },
+    {
+      "anchor_kind": "failure_anchor",
+      "anchor_parent_group_id": "transition_4988928__1000006",
+      "anchor_role": "ascending_entry",
+      "anchor_seed": 1000006,
+      "anchor_snapshot": "snapshots/snapshot_000037",
+      "anchor_source_actor_sha256": "44ca9fd8eba3031559c70dd81176a1487c1242702370ee49d2fb3b95f1dc8392",
+      "anchor_source_bank": "source_4988928",
+      "anchor_source_checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_4988928",
+      "anchor_source_training_transitions": 4988928,
+      "anchor_split": "validation",
+      "anchor_state_sha256": "274e0e4b8f69b57230c01662efecd3acfe46ab182f710e1cfe138bf82910031c",
+      "anchor_tick": 34,
+      "candidate_kind": "reachable_boundary_validation",
+      "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+      "parent_group_id": "transition_4988928__1000006",
+      "parent_trajectory": "transition_4988928__1000006",
+      "perturbation": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "duration": 2,
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.08499997854232788,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.08499999344348907,
+            0.0
+          ]
+        ],
+        "nominal_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.526931881904602,
+            -0.6315261125564575
+          ],
+          [
+            -0.4710428714752197,
+            -0.8796411156654358,
+            0.15583939850330353,
+            -0.7776954174041748
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.6119318604469299,
+            -0.6315261125564575
+          ],
+          [
+            -0.4710428714752197,
+            -0.8796411156654358,
+            0.2408393919467926,
+            -0.7776954174041748
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.085,
+        "variant_index": 18
+      },
+      "pitch": 0.004872752819210291,
+      "pitch_rate": 7.051056861877441,
+      "protocol_seed": 820404,
+      "protocol_sha256": "c714e7354f4042abac99d2843bafcb398d76ddf146ed5b7fcbd9e7c5a08a2969",
+      "result_state_sha256": "cd575b8a7d5cbbd8c3f1c5cec67390da1d308595a750bf4114b0fd3a19d21b84",
+      "role": "ascending_entry",
+      "seed": 1000006,
+      "snapshot": "snapshots/candidate_000018",
+      "source_bank": "boundary_bank",
+      "state_sha256": "cd575b8a7d5cbbd8c3f1c5cec67390da1d308595a750bf4114b0fd3a19d21b84",
+      "tick": 36,
+      "vx": 0.8692099452018738,
+      "vz": 1.1552094221115112,
+      "z": 0.1310189664363861
+    },
+    {
+      "anchor_kind": "failure_anchor",
+      "anchor_parent_group_id": "transition_4988928__1000006",
+      "anchor_role": "ascending_entry",
+      "anchor_seed": 1000006,
+      "anchor_snapshot": "snapshots/snapshot_000037",
+      "anchor_source_actor_sha256": "44ca9fd8eba3031559c70dd81176a1487c1242702370ee49d2fb3b95f1dc8392",
+      "anchor_source_bank": "source_4988928",
+      "anchor_source_checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_4988928",
+      "anchor_source_training_transitions": 4988928,
+      "anchor_split": "validation",
+      "anchor_state_sha256": "274e0e4b8f69b57230c01662efecd3acfe46ab182f710e1cfe138bf82910031c",
+      "anchor_tick": 34,
+      "candidate_kind": "reachable_boundary_validation",
+      "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+      "parent_group_id": "transition_4988928__1000006",
+      "parent_trajectory": "transition_4988928__1000006",
+      "perturbation": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "duration": 2,
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.09000003337860107,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.08999998867511749,
+            0.0
+          ]
+        ],
+        "nominal_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.526931881904602,
+            -0.6315261125564575
+          ],
+          [
+            -0.6856071949005127,
+            -0.8842737078666687,
+            0.16677157580852509,
+            -0.7881536483764648
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.6169319152832031,
+            -0.6315261125564575
+          ],
+          [
+            -0.6856071949005127,
+            -0.8842737078666687,
+            0.2567715644836426,
+            -0.7881536483764648
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.09,
+        "variant_index": 19
+      },
+      "pitch": 0.005117003805935383,
+      "pitch_rate": 7.035390377044678,
+      "protocol_seed": 820404,
+      "protocol_sha256": "c714e7354f4042abac99d2843bafcb398d76ddf146ed5b7fcbd9e7c5a08a2969",
+      "result_state_sha256": "01c596aa42f65c97122ee9862cf6da4241010e8d274a6eca489089f9db139a14",
+      "role": "ascending_entry",
+      "seed": 1000006,
+      "snapshot": "snapshots/candidate_000019",
+      "source_bank": "boundary_bank",
+      "state_sha256": "01c596aa42f65c97122ee9862cf6da4241010e8d274a6eca489089f9db139a14",
+      "tick": 36,
+      "vx": 0.829652726650238,
+      "vz": 1.1536755561828613,
+      "z": 0.1317061483860016
+    },
+    {
+      "anchor_kind": "failure_anchor",
+      "anchor_parent_group_id": "transition_4988928__1000006",
+      "anchor_role": "ascending_entry",
+      "anchor_seed": 1000006,
+      "anchor_snapshot": "snapshots/snapshot_000037",
+      "anchor_source_actor_sha256": "44ca9fd8eba3031559c70dd81176a1487c1242702370ee49d2fb3b95f1dc8392",
+      "anchor_source_bank": "source_4988928",
+      "anchor_source_checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_4988928",
+      "anchor_source_training_transitions": 4988928,
+      "anchor_split": "validation",
+      "anchor_state_sha256": "274e0e4b8f69b57230c01662efecd3acfe46ab182f710e1cfe138bf82910031c",
+      "anchor_tick": 34,
+      "candidate_kind": "reachable_boundary_validation",
+      "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+      "parent_group_id": "transition_4988928__1000006",
+      "parent_trajectory": "transition_4988928__1000006",
+      "perturbation": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "duration": 2,
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.09500002861022949,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0950000137090683,
+            0.0
+          ]
+        ],
+        "nominal_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.526931881904602,
+            -0.6315261125564575
+          ],
+          [
+            -0.6855951547622681,
+            -0.8846443295478821,
+            0.16020973026752472,
+            -0.7889057397842407
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.6219319105148315,
+            -0.6315261125564575
+          ],
+          [
+            -0.6855951547622681,
+            -0.8846443295478821,
+            0.255209743976593,
+            -0.7889057397842407
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.095,
+        "variant_index": 20
+      },
+      "pitch": 0.005262881983071566,
+      "pitch_rate": 7.099820613861084,
+      "protocol_seed": 820404,
+      "protocol_sha256": "c714e7354f4042abac99d2843bafcb398d76ddf146ed5b7fcbd9e7c5a08a2969",
+      "result_state_sha256": "7939035e371e0c146426be98064f927a52136afddc453723538e384aa2b99026",
+      "role": "ascending_entry",
+      "seed": 1000006,
+      "snapshot": "snapshots/candidate_000020",
+      "source_bank": "boundary_bank",
+      "state_sha256": "7939035e371e0c146426be98064f927a52136afddc453723538e384aa2b99026",
+      "tick": 36,
+      "vx": 0.8252595663070679,
+      "vz": 1.1614032983779907,
+      "z": 0.1318667232990265
+    },
+    {
+      "anchor_kind": "failure_anchor",
+      "anchor_parent_group_id": "transition_4988928__1000006",
+      "anchor_role": "ascending_entry",
+      "anchor_seed": 1000006,
+      "anchor_snapshot": "snapshots/snapshot_000037",
+      "anchor_source_actor_sha256": "44ca9fd8eba3031559c70dd81176a1487c1242702370ee49d2fb3b95f1dc8392",
+      "anchor_source_bank": "source_4988928",
+      "anchor_source_checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_4988928",
+      "anchor_source_training_transitions": 4988928,
+      "anchor_split": "validation",
+      "anchor_state_sha256": "274e0e4b8f69b57230c01662efecd3acfe46ab182f710e1cfe138bf82910031c",
+      "anchor_tick": 34,
+      "candidate_kind": "reachable_boundary_validation",
+      "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+      "parent_group_id": "transition_4988928__1000006",
+      "parent_trajectory": "transition_4988928__1000006",
+      "perturbation": {
+        "action_dimension": 2,
+        "action_name": "hip",
+        "basis_vector": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "duration": 2,
+        "effective_deltas": [
+          [
+            0.0,
+            0.0,
+            0.10000002384185791,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.10000000894069672,
+            0.0
+          ]
+        ],
+        "nominal_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.526931881904602,
+            -0.6315261125564575
+          ],
+          [
+            -0.5924842357635498,
+            -0.8686808943748474,
+            0.12682195007801056,
+            -0.7879109382629395
+          ]
+        ],
+        "perturbed_actions": [
+          [
+            -0.421927273273468,
+            -0.32163718342781067,
+            0.62693190574646,
+            -0.6315261125564575
+          ],
+          [
+            -0.5924842357635498,
+            -0.8686808943748474,
+            0.22682195901870728,
+            -0.7879109382629395
+          ]
+        ],
+        "sign": 1,
+        "strength": 0.1,
+        "variant_index": 21
+      },
+      "pitch": 0.005367237608879805,
+      "pitch_rate": 7.239558696746826,
+      "protocol_seed": 820404,
+      "protocol_sha256": "c714e7354f4042abac99d2843bafcb398d76ddf146ed5b7fcbd9e7c5a08a2969",
+      "result_state_sha256": "1d6e7129661ee44201028f8bd2adfbde81aef72fcff538c5d2805cb2d6799bdb",
+      "role": "ascending_entry",
+      "seed": 1000006,
+      "snapshot": "snapshots/candidate_000021",
+      "source_bank": "boundary_bank",
+      "state_sha256": "1d6e7129661ee44201028f8bd2adfbde81aef72fcff538c5d2805cb2d6799bdb",
+      "tick": 36,
+      "vx": 0.7669675946235657,
+      "vz": 1.2066577672958374,
+      "z": 0.13099868595600128
+    }
+  ],
+  "exclusion_counts": {
+    "apex": 0,
+    "duplicate": 0,
+    "terminal": 0
+  },
+  "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+  "protocol_sha256": "c714e7354f4042abac99d2843bafcb398d76ddf146ed5b7fcbd9e7c5a08a2969",
+  "schema": "jit_upstream_boundary_catalog_v1",
+  "selection": "validation_locked_reachable_boundary_action_basis_subset",
+  "source_bank": "boundary_bank",
+  "split": "validation",
+  "status": "completed",
+  "target": "V_up",
+  "test_interaction_count": 0,
+  "training_transitions": 0
+}

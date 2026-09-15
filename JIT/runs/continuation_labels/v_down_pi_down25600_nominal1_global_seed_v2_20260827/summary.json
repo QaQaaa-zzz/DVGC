@@ -1,0 +1,69 @@
+{
+  "branch_rollout_count": 168,
+  "candidate_count": 168,
+  "closed_outcome_counts": {
+    "recovery_success": 129,
+    "roll_limit": 39
+  },
+  "labeling_transitions": 6418,
+  "parent_split": {
+    "transition_4988928__1000001": "train",
+    "transition_4988928__1000002": "train",
+    "transition_4988928__1000003": "train",
+    "transition_4988928__1000004": "train",
+    "transition_4988928__1000005": "train",
+    "transition_4988928__1000006": "validation",
+    "transition_4988928__1000007": "test",
+    "transition_4988928__1000008": "test",
+    "transition_7987200__1000001": "train",
+    "transition_7987200__1000002": "train",
+    "transition_7987200__1000003": "train",
+    "transition_7987200__1000004": "train",
+    "transition_7987200__1000005": "train",
+    "transition_7987200__1000006": "validation",
+    "transition_7987200__1000007": "test",
+    "transition_7987200__1000008": "test",
+    "transition_9977856__1000001": "train",
+    "transition_9977856__1000002": "train",
+    "transition_9977856__1000003": "train",
+    "transition_9977856__1000004": "train",
+    "transition_9977856__1000005": "train",
+    "transition_9977856__1000006": "validation",
+    "transition_9977856__1000007": "test",
+    "transition_9977856__1000008": "test"
+  },
+  "physical_failure_rollouts": 39,
+  "protocol_sha256": "7d1e4b058f11a623bfad7d1751dfbf2abaf4173a2f951e285833f918511a7e56",
+  "schema": "jit_continuation_labels_v1",
+  "seed_split": {
+    "1000001": "train",
+    "1000002": "train",
+    "1000003": "train",
+    "1000004": "train",
+    "1000005": "train",
+    "1000006": "validation",
+    "1000007": "test",
+    "1000008": "test"
+  },
+  "split_candidate_counts": {
+    "test": 42,
+    "train": 105,
+    "validation": 21
+  },
+  "split_parent_counts": {
+    "test": 6,
+    "train": 15,
+    "validation": 3
+  },
+  "split_positive_candidate_counts": {
+    "test": 32,
+    "train": 81,
+    "validation": 16
+  },
+  "split_unit": "global_seed",
+  "status": "completed",
+  "success_rollouts": 129,
+  "target": "V_down",
+  "timeout_rollouts": 0,
+  "training_transitions": 0
+}
