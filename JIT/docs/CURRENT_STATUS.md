@@ -1,5 +1,9 @@
 # JIT 当前状态与证据
 
+## 2026-09-15 常用x-z包线投影脚本
+
+`cli/plot_pulse_tube_xz.py`支持多lineage、恢复祖先追溯、统一轴范围和证据校验。每组pulse循环完成时自动输出`lineage/analysis/tube_xz/`，无仿真交互。两组0.10奖励对照分别绘制7253/7472个成功上下文策略见证的前缀与续接轨迹，保留恢复段、不连虚假接缝、不填凸包；候选点区分成功/未解决/未知。图和NPZ/CSV/JSON证据位于`runs/experiments/reward_comparison_pulse_20260914/analysis/tube_xz/INDEX.md`。17项相关测试通过。0.15两组仍停止。用法见[PULSE_TUBE_PLOTTING](PULSE_TUBE_PLOTTING.md)。
+
 ## 2026-09-15 已完成0.10两组分析；0.15两组暂停
 
 原奖励/恢复奖励各60轮×128候选已完成；最终候选成功7253/7680与7472/7680，同状态补训转换384/811与155/363，总实际交互8614821与5782254。恢复奖励更省成本，原奖励发现更多需补训才成功的候选；两组不是固定状态配对测试，单种子不宣称reward因果优越性。补训KL峰值3.062与0.12265，自适应LR不是硬限。详细可重绘证据：`runs/experiments/reward_comparison_pulse_20260914/analysis/amp10_comparison/INDEX.md`。用户要求后两组先不启动：原奖励0.15已因非有限reward指标失败，恢复0.15未运行，队列保持停止；不恢复任何旧暂停计划。

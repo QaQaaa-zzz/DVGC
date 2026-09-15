@@ -302,6 +302,9 @@ def run(spec_path,output):
                     checkpoint=None
                 write(root/'current_source.json',dict(source=source['name'],frozen_policy=source['frozen_policy'],
                     explorer_checkpoint=checkpoint,completed_rounds=index+1,historical_helpers_used=False))
+        from .analysis.pulse_tube_xz import build as plot_tube_xz
+        status('running',stage='plot_tube_xz',completed_rounds=spec['rounds'])
+        plot_tube_xz([root],root/'analysis/tube_xz')
         status('completed',completed_rounds=spec['rounds'],final_test_used=False,checkpoint=checkpoint)
     except BaseException as exc:
         status('error',error=f'{type(exc).__name__}: {exc}',no_automatic_retry=True);export(root,metrics,rows_all);raise
