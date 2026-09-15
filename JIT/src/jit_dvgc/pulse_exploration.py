@@ -9,21 +9,59 @@ from .probe_bank import load_probe_bank,lock_probe_bank,_file_sha
 from .evidence_integrity import canonical_sha256
 
 
-def pulse_feedback(rows,seen,weights):
+class InteractionBudgetExhausted(RuntimeError):
+    """A complete next stage would exceed the declared finite cap."""
+
+
+def reserve_interactions(used, maximum, cap):
+    if any(type(v) is not int or v < 0 for v in (used, maximum, cap)):
+        raise ValueError('interaction reservations require nonnegative integers')
+    if used + maximum > cap:
+        raise InteractionBudgetExhausted(f'{used} used + {maximum} next stage > {cap} cap')
+
+
+def round_delta_limit(spec, index):
+    schedule=spec.get('delta_limit_schedule')
+    values=schedule[index % len(schedule)] if schedule else spec['delta_limit']
+    if len(values)!=4 or any(not np.isfinite(x) or not 0<=x<=1 for x in values):
+        raise ValueError('four finite residual limits in [0,1] required')
+    return list(values)
+
+
+def prefix_budget(spec, index):
+    ticks=spec['horizon'] if spec.get('pulse_event_schedule') else pulse_delay(spec,index)+spec['pulse_steps']
+    return spec['num_envs']*ticks
+
+
+def seed_support_budget(spec):
+    horizon=spec['horizon'];stride=spec.get('seed_stride',2)
+    if type(stride) is not int or stride<1:raise ValueError('positive seed stride required')
+    # At most ceil(horizon/stride) snapshots, each with a horizon-long suffix.
+    return horizon + ((horizon+stride-1)//stride)*horizon
+
+
+def pulse_feedback(rows,seen,weights,*,quality_mode='delayed'):
     """Newly visited cells stay visited after failure; unknown is not punished."""
     counts={};old=set(seen)
+    if quality_mode not in ('delayed','current_policy','novelty_only'):
+        raise ValueError('unsupported exploration quality mode')
     for r in rows:
+        if not r.get('stage_reached',True):continue
         if r['cell'] not in old:counts[r['cell']]=counts.get(r['cell'],0)+1
     novelty=np.zeros(len(rows));quality=np.zeros(len(rows));mask=np.zeros(len(rows),bool)
     for i,r in enumerate(rows):
-        mask[i]=r['label']==1 or (r['label']==0 and (r['learning_attempted'] or r.get('prefix_terminal',False)))
+        label=r.get('initial_label',r['label']) if quality_mode=='current_policy' else r['label']
+        mask[i]=r.get('stage_reached',True) and (label==1 or (label==0 and
+            (quality_mode=='current_policy' or r['learning_attempted'] or r.get('prefix_terminal',False))))
         if mask[i]:
             novelty[i]=weights['novelty']/counts[r['cell']] if r['cell'] in counts else 0
-            quality[i]=weights['success'] if r['label']==1 else -weights['failure']
-    return novelty+quality,mask,sorted(old|{r['cell'] for r in rows}),dict(novelty=novelty.tolist(),quality=quality.tolist())
+            quality[i]=0 if quality_mode=='novelty_only' else (weights['success'] if label==1 else -weights['failure'])
+    return novelty+quality,mask,sorted(old|{r['cell'] for r in rows if r.get('stage_reached',True)}),dict(novelty=novelty.tolist(),quality=quality.tolist())
 
 
 def pulse_delay(spec,index):
+    if spec.get('pulse_event_schedule') and not spec.get('nominal_source_rollout'):
+        return -1  # An event-triggered pulse has no fixed global onset tick.
     schedule=spec.get('pulse_start_schedule',[0])
     if spec.get('nominal_source_rollout') is True:
         if (schedule!=[0] or spec['pulse_steps']!=spec['horizon'] or spec['num_envs']!=1
@@ -40,7 +78,10 @@ def budget_contract(spec,evaluators):
     if any(type(spec[k]) is not int or spec[k]<=0 for k in ['rounds','num_envs','horizon','pulse_steps','policy_steps']):raise ValueError('positive pulse budgets required')
     if spec['pulse_steps']>5 or h!=400 or spec['policy_steps']%3200:raise ValueError('short-pulse/horizon/aligned learning contract')
     baseline=evaluators*h
-    prefixes=n*sum(pulse_delay(spec,i)+spec['pulse_steps'] for i in range(rounds))
+    prefixes=sum(prefix_budget(spec,i) for i in range(rounds))
+    mode=spec.get('training_mode','adaptive')
+    if mode not in ('adaptive','fixed_policy'):raise ValueError('unsupported policy training mode')
+    fixed=mode=='fixed_policy'
     current_only=spec.get('iteration_mode')=='current_policy_only_v1'
     if spec.get('iteration_mode') not in (None,'current_policy_only_v1'):
         raise ValueError('unsupported pulse iteration mode')
@@ -48,17 +89,30 @@ def budget_contract(spec,evaluators):
             spec['retention_samples_per_phase']<=0 or not 0<=spec['minimum_retention']<=1):
         raise ValueError('valid current-policy retention panel required')
     suffixes=rounds*n*h if current_only else sum((evaluators+i)*n*h for i in range(rounds))
-    learning=rounds*(spec['policy_steps']+1600+n*h)
+    learning=0 if fixed else rounds*(spec['policy_steps']+1600+n*h)
     extra={}
     if current_only:
-        extra=dict(nominal_support=(rounds+1)*h*(h+1),
-            retention_evaluation=rounds*2*(1+2*spec['retention_samples_per_phase'])*h)
+        extra=dict(nominal_support=seed_support_budget(spec) if fixed else (rounds+1)*h*(h+1),
+            retention_evaluation=0 if fixed else rounds*2*(1+2*spec['retention_samples_per_phase'])*h)
     return dict(baseline=baseline,prefixes=prefixes,bank_suffixes=suffixes,learning_and_reevaluation=learning,
         **extra,maximum_interactions=baseline+prefixes+suffixes+learning+sum(extra.values()))
 
 
 def support_row(row,witnessed):
     return dict(key=row['snapshot_context_sha256'],phase=row['phase'],snapshot=row['snapshot'],state_sha256=row['state_sha256'],snapshot_context_sha256=row['snapshot_context_sha256'],trajectory_id=row['prefix_file']+'::'+str(row['index']),root_cell=row['cell'],witnessed=witnessed,evidence_status='witnessed' if witnessed else 'pending',role='train',sampling_weight=1.)
+
+
+def plot_completed_rounds(root, rows):
+    """An empty successful set is an experimental result, not a plot failure."""
+    destination=Path(root)/'analysis/tube_xz'
+    if not any(row['label']==1 for row in rows):
+        destination.mkdir(parents=True,exist_ok=False)
+        write(destination/'status.json',dict(phase='completed',successful_witnesses=0,
+            reason='no_successful_witnesses',new_simulation_interactions=0))
+        (destination/'INDEX.md').write_text('# x-z projection\n\nNo successful witnesses in completed rounds. No successful tube is drawn. See the retained candidates and outcomes.\n')
+        return
+    from .analysis.pulse_tube_xz import build
+    build([root],destination)
 
 
 def export(root,metrics,rows):
@@ -95,6 +149,12 @@ def run(spec_path,output):
         if _file_sha(Path(path))!=expected:raise ValueError('pulse input/source drift: '+path)
     bank=load_probe_bank(Path(spec['bank']));bank_path=Path(spec['bank']);count=len(spec['order']);budget=budget_contract(spec,count)
     if spec['maximum_interactions']!=budget['maximum_interactions']:raise ValueError('pulse budget mismatch')
+    actual_cap=spec.get('maximum_actual_interactions',budget['maximum_interactions'])
+    reserve_interactions(0,0,actual_cap)
+    fixed_policy=spec.get('training_mode','adaptive')=='fixed_policy'
+    quality_mode=spec.get('quality_mode','delayed')
+    if fixed_policy and quality_mode not in ('current_policy','novelty_only'):
+        raise ValueError('fixed-policy exploration must explicitly declare current-policy quality or novelty only')
     source=next(m for m in bank['members'] if m['name']==spec['proposer'])
     current_only=spec.get('iteration_mode')=='current_policy_only_v1'
     if current_only:
@@ -128,8 +188,9 @@ def run(spec_path,output):
         inherited_cost=previous_status['charged_interactions']
         write(root/'recovery.json',dict(previous=str(reuse_root),inherited_interactions=inherited_cost,
             previous_status_sha256=_file_sha(reuse_root/'status.json'),no_completed_training_repeated=True))
-    def status(phase,**kw):write(root/'status.json',dict(phase=phase,charged_interactions=inherited_cost+sum(c['charged_interactions'] for c in costs),new_interactions=sum(c['charged_interactions'] for c in costs),inherited_interactions=inherited_cost,maximum_interactions=budget['maximum_interactions'],wall_seconds=time.monotonic()-start,costs=costs,**kw))
+    def status(phase,**kw):write(root/'status.json',dict(phase=phase,charged_interactions=inherited_cost+sum(c['charged_interactions'] for c in costs),new_interactions=sum(c['charged_interactions'] for c in costs),inherited_interactions=inherited_cost,maximum_interactions=budget['maximum_interactions'],maximum_actual_interactions=actual_cap,wall_seconds=time.monotonic()-start,costs=costs,**kw))
     def child(directory,name,argv,maximum,env=None):
+        reserve_interactions(inherited_cost+sum(c['charged_interactions'] for c in costs),maximum,actual_cap)
         inputs={str((Path(spec['repo'])/p).resolve()):sha for p,sha in spec['input_files'].items()}
         inputs[str(Path(spec_path).resolve())]=_file_sha(Path(spec_path))
         for i,a in enumerate(argv[:-1]):
@@ -157,7 +218,8 @@ def run(spec_path,output):
         cost.update(charged_interactions=actual,accounting='actual');return out
     try:
         if current_only and not boundary:
-            seed=runtime(root,'seed_support','seed_support',spec,spec['horizon']*(spec['horizon']+1))
+            seed=runtime(root,'seed_support','seed_support',spec,
+                         seed_support_budget(spec) if fixed_policy else spec['horizon']*(spec['horizon']+1))
             base=read(seed/'support.json');support=json.loads(json.dumps(base))
             seen=sorted({r['root_cell'] for r in base['entries']})
             write(root/'source_pi_support.json',base)
@@ -199,9 +261,14 @@ def run(spec_path,output):
         else:
             runtime(root,'baseline','baseline',spec,count*spec['horizon'])
         for index in range(first_round,spec['rounds']):
+            # Reserve enough for a complete collection/evaluation pair before
+            # sampling a new round; no candidate disappears because of a cap.
+            reserve_interactions(inherited_cost+sum(c['charged_interactions'] for c in costs),
+                prefix_budget(spec,index)+count*spec['num_envs']*spec['horizon'],actual_cap)
             d=root/f'round_{index:04d}';d.mkdir()
             source_name=source['name'];adopt=None
             ex={**spec,'bank':str(bank_path),'round_index':index,'explorer_checkpoint':checkpoint,
+                'delta_limit':round_delta_limit(spec,index),
                 'proposer':source_name if current_only else spec['proposer']}
             if index!=first_round:ex.pop('reuse_prefix_collection',None)
             if index==first_round and spec.get('reuse_collection'):
@@ -212,12 +279,17 @@ def run(spec_path,output):
                 if read(collection/'status.json')['phase']!='completed':raise ValueError('incomplete reused collection')
                 write(d/'reused_collection.json',dict(path=str(collection),prefix_sha256=_file_sha(collection/'prefixes.npz')))
             else:
-                collection=runtime(d,'collection','collect',ex,spec['num_envs']*(pulse_delay(spec,index)+spec['pulse_steps']))
+                collection=runtime(d,'collection','collect',ex,prefix_budget(spec,index))
             order=[source_name] if current_only else spec['order']+[m['name'] for m in bank['members'] if m['name'] not in initial_bank_names]
             evaluation=runtime(d,'bank_evaluation','evaluate',{**ex,'candidates':str(collection/'candidates.json'),'order':order,'budget':len(order)*spec['num_envs']*spec['horizon'], 'reuse_results':spec.get('reuse_results') if index==first_round else None},len(order)*spec['num_envs']*spec['horizon'])
             rows=read(evaluation/'results.json');pending=[r for r in rows if r['label']==0 and not r['prefix_terminal']]
-            for r in rows:r['round']=index;r['pulse_start_step']=pulse_delay(spec,index)
-            if pending:
+            for r in rows:
+                r['round']=index;r['pulse_start_step']=r.get('pulse_start_step',pulse_delay(spec,index))
+                r['initial_label']=r['label']
+            # Persist evaluated candidates even when a later training stage
+            # cannot fit the remaining budget. Missing training stays pending.
+            write(d/'evaluated_candidates.json',rows)
+            if pending and not fixed_policy:
                 support_inputs={str(evaluation/'results.json'):_file_sha(evaluation/'results.json')}
                 for r in pending:
                     for filename in ['identity.json','snapshot.pkl']:
@@ -273,7 +345,7 @@ def run(spec_path,output):
                     for filename in ['identity.json','snapshot.pkl']:
                         p=Path(r['snapshot'])/filename;support['inputs'][str(p)]=_file_sha(p)
             outcomes=d/'outcomes.json';write(outcomes,rows);support['inputs'][str(outcomes)]=_file_sha(outcomes);support['support_sha256']=canonical_sha256(support);write(d/'witnessed_support.json',support)
-            reward,eligible,next_seen,parts=pulse_feedback(rows,seen,spec['reward_weights'])
+            reward,eligible,next_seen,parts=pulse_feedback(rows,seen,spec['reward_weights'],quality_mode=quality_mode)
             feedback=d/'feedback.json';write(feedback,dict(rewards=reward.tolist(),eligible=eligible.tolist(),parts=parts,component_sums={k:float(sum(v)) for k,v in parts.items()},new_cells=len(next_seen)-len(seen),outcomes=str(outcomes),outcomes_sha256=_file_sha(outcomes)))
             update=runtime(d,'update','update',{**ex,'collection':str(collection),'feedback':str(feedback)},0)
             checkpoint=str(update/'state.msgpack');m=read(update/'metrics.json')
@@ -281,7 +353,7 @@ def run(spec_path,output):
             seen=next_seen;rows_all.extend(rows);write(root/'visited_cells.json',seen);write(root/'training_metrics.json',metrics);export(root,metrics,rows_all);status('round_completed',completed_rounds=index+1)
             if current_only:
                 write(d/'source_ledger.json',dict(source=source_name,cells=seen))
-                if adopt is not None and index+1<spec['rounds']:
+                if adopt is not None:
                     nominal=runtime(d,'next_source_seed','seed_support',{**ex,'bank':str(bank_path),
                         'proposer':adopt['name'],'explorer_checkpoint':None,'allow_nominal_failure':True},spec['horizon']*(spec['horizon']+1))
                     ready=read(nominal/'status.json').get('support_ready',True)
@@ -302,9 +374,17 @@ def run(spec_path,output):
                     checkpoint=None
                 write(root/'current_source.json',dict(source=source['name'],frozen_policy=source['frozen_policy'],
                     explorer_checkpoint=checkpoint,completed_rounds=index+1,historical_helpers_used=False))
-        from .analysis.pulse_tube_xz import build as plot_tube_xz
         status('running',stage='plot_tube_xz',completed_rounds=spec['rounds'])
-        plot_tube_xz([root],root/'analysis/tube_xz')
+        plot_completed_rounds(root,rows_all)
         status('completed',completed_rounds=spec['rounds'],final_test_used=False,checkpoint=checkpoint)
+    except InteractionBudgetExhausted as exc:
+        export(root,metrics,rows_all)
+        write(root/'training_metrics.json',metrics)
+        write(root/'visited_cells.json',seen)
+        if metrics:
+            if not (root/'analysis/tube_xz').exists():
+                plot_completed_rounds(root,rows_all)
+        status('completed',stop_reason='actual_interaction_cap',detail=str(exc),
+               completed_rounds=len(metrics),final_test_used=False,checkpoint=checkpoint)
     except BaseException as exc:
         status('error',error=f'{type(exc).__name__}: {exc}',no_automatic_retry=True);export(root,metrics,rows_all);raise

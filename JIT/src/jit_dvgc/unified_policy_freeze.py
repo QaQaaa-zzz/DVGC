@@ -1,20 +1,21 @@
 """Freeze one completed unified checkpoint as an envelope-iteration authority.
 
-This module creates an identity/provenance manifest only.  It does not copy,
-retrain, evaluate, or promote the policy to ``pi_unified_star``.  The frozen
+Ordinary freezing creates an identity/provenance manifest only. The explicit
+initialization-only path copies unchanged parameters into a new runtime identity.
+Neither path retrains, evaluates, or promotes the policy to ``pi_unified_star``. The frozen
 record is the policy authority under which boundary candidates and continuation
 labels for one envelope iteration must be generated.
 """
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 import hashlib
 import json
 import re
 from pathlib import Path
 from typing import Any, Mapping
 
-from .checkpoint import CheckpointIdentity, load_checkpoint
+from .checkpoint import CheckpointIdentity, load_checkpoint, save_checkpoint
 from .config import file_sha256, load_config
 from .constants import ACTION_ORDER, ACTOR_FRAME_FIELDS, ACTOR_TASK_FIELDS
 from .handoff_bank import pytree_sha256
@@ -26,6 +27,7 @@ from .unified_formal import (
 
 FROZEN_UNIFIED_POLICY_SCHEMA = "jit_frozen_unified_policy_v1"
 FROZEN_DEVELOPMENT_CHECKPOINT_SCHEMA = "jit_frozen_development_checkpoint_v1"
+FROZEN_INITIALIZATION_POLICY_SCHEMA = "jit_frozen_initialization_policy_v1"
 
 
 @dataclass(frozen=True)
@@ -59,6 +61,19 @@ class FrozenDevelopmentCheckpointRecord(FrozenUnifiedPolicyRecord):
     source_formal_report_sha256: str
     checkpoint_identity_sha256: str
     source_requested_training_transitions: int
+
+
+@dataclass(frozen=True)
+class FrozenInitializationPolicyRecord(FrozenUnifiedPolicyRecord):
+    """Unchanged source parameters bound to a separately declared endpoint."""
+
+    data_role: str
+    formal_config_file_sha256: str
+    checkpoint_identity_sha256: str
+    source_frozen_policy: str
+    source_frozen_policy_sha256: str
+    initialization_receipt: str
+    initialization_receipt_sha256: str
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -265,9 +280,104 @@ def inspect_development_checkpoint(
     )
 
 
+def _initialization_inputs(config_path: Path, source_frozen_policy: Path, name: str):
+    if (not isinstance(name, str) or not re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]*", name)
+            or re.fullmatch(r"pi_\d+", name)):
+        raise ValueError("initialization policy needs a safe non-formal policy name")
+    source = load_frozen_unified_manifest(source_frozen_policy)["policy"]
+    source_config = _load_policy_formal_config(Path(source["formal_config"]))
+    config = _load_policy_formal_config(config_path)
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", _source_run_id(config)):
+        raise ValueError("initialization config requires a safe run_id")
+    identity = _checkpoint_identity(config)
+    source_identity = _checkpoint_identity(source_config)
+    if replace(identity, config_sha256=source_identity.config_sha256) != source_identity:
+        raise ValueError("initialization policy observation/action/XML contract drift")
+    if config.up_config_sha256 != source_config.up_config_sha256:
+        raise ValueError("initialization policy upstream runtime contract drift")
+    # This rebind changes only the declared recovery endpoint. Physics, rewards,
+    # controller interfaces and reset/training parameters remain identical.
+    source_down = _read_json(Path(source_config.down_config_path))
+    target_down = _read_json(Path(config.down_config_path))
+    for phase in (source_down, target_down):
+        phase["descent"] = {key: value for key, value in phase.get("descent", {}).items()
+                            if key not in {"recovery_ticks", "min_post_contact_forward_progress"}}
+    if source_down != target_down:
+        raise ValueError("initialization policy downstream runtime contract drift")
+    payload = load_checkpoint(Path(source["checkpoint"]), expected=source_identity)
+    return config, identity, source, payload
+
+
+def _initialization_receipt(config_path, config, checkpoint, source_path, source):
+    return {
+        "schema": "jit_zero_training_initialization_v1", "status": "completed",
+        "operation": "endpoint_identity_rebind_with_unchanged_parameters",
+        "new_training_transitions": 0, "environment_interactions": 0,
+        "source_frozen_policy": str(source_path),
+        "source_frozen_policy_sha256": file_sha256(source_path),
+        "source_policy": source,
+        "formal_config": str(config_path), "formal_config_sha256": config.config_sha256,
+        "formal_config_file_sha256": file_sha256(config_path),
+        "checkpoint": str(checkpoint),
+        "checkpoint_identity_sha256": file_sha256(checkpoint / "identity.json"),
+        "payload_sha256": file_sha256(checkpoint / "payload.pkl"),
+        "preserved_parameters": {field: source[field] for field in
+                                 ("actor_sha256", "normalizer_sha256", "critic_sha256")},
+        "new_runtime_training_completed": False,
+    }
+
+
+def inspect_initialization_policy(
+    *, config_path: Path, checkpoint: Path, source_frozen_policy: Path,
+    initialization_receipt: Path, name: str,
+) -> FrozenInitializationPolicyRecord:
+    """Verify original provenance and exact parameter equality with zero new PPO."""
+    config_path, checkpoint, source_frozen_policy, initialization_receipt = (
+        Path(path).resolve() for path in
+        (config_path, checkpoint, source_frozen_policy, initialization_receipt)
+    )
+    config, identity, source, _ = _initialization_inputs(config_path, source_frozen_policy, name)
+    payload = load_checkpoint(checkpoint, expected=identity)
+    if payload.training_transitions != 0 or checkpoint.name != "transition_0":
+        raise ValueError("initialization checkpoint must have zero new training transitions")
+    hashes = dict(actor_sha256=pytree_sha256(payload.actor_params),
+                  normalizer_sha256=pytree_sha256(payload.observation_normalizer),
+                  critic_sha256=pytree_sha256(payload.critic_params))
+    if any(hashes[field] != source[field] for field in hashes):
+        raise ValueError("initialization checkpoint changed source parameters")
+    expected = _initialization_receipt(config_path, config, checkpoint, source_frozen_policy, source)
+    if _read_json(initialization_receipt) != expected:
+        raise ValueError("initialization receipt provenance or zero-training contract drift")
+    iteration = config.raw.get("claim_boundary", {}).get("iteration", 0)
+    if type(iteration) is not int or iteration < 0:
+        raise ValueError("initialization source iteration metadata is invalid")
+    return FrozenInitializationPolicyRecord(
+        name=name, iteration=iteration, policy_role="initialization_only",
+        checkpoint=str(checkpoint), formal_config=str(config_path),
+        formal_config_sha256=config.config_sha256, xml_sha256=identity.xml_sha256,
+        source_training_run_id=_source_run_id(config), source_training_transitions=0,
+        source_reset_mixture=config.reset_mixture.as_dict(),
+        payload_sha256=file_sha256(checkpoint / "payload.pkl"), **hashes,
+        actor_frame_fields=ACTOR_FRAME_FIELDS, actor_task_fields=ACTOR_TASK_FIELDS,
+        action_order=ACTION_ORDER, data_role="train",
+        formal_config_file_sha256=file_sha256(config_path),
+        checkpoint_identity_sha256=file_sha256(checkpoint / "identity.json"),
+        source_frozen_policy=str(source_frozen_policy),
+        source_frozen_policy_sha256=file_sha256(source_frozen_policy),
+        initialization_receipt=str(initialization_receipt),
+        initialization_receipt_sha256=file_sha256(initialization_receipt),
+    )
+
+
 def verify_frozen_unified_record(record: Mapping[str, Any]) -> FrozenUnifiedPolicyRecord:
     """Strictly reload a frozen record and prove checkpoint/config/hash binding."""
-    if record.get("policy_role") == "development_checkpoint":
+    if record.get("policy_role") == "initialization_only":
+        inspected = inspect_initialization_policy(
+            config_path=Path(record["formal_config"]), checkpoint=Path(record["checkpoint"]),
+            source_frozen_policy=Path(record["source_frozen_policy"]),
+            initialization_receipt=Path(record["initialization_receipt"]), name=record["name"],
+        )
+    elif record.get("policy_role") == "development_checkpoint":
         inspected = inspect_development_checkpoint(
             config_path=Path(record["formal_config"]),
             checkpoint=Path(record["checkpoint"]), name=record["name"],
@@ -357,11 +467,55 @@ def freeze_development_checkpoint(
     return manifest
 
 
+def freeze_initialization_policy(
+    output_dir: Path, *, config_path: Path, source_frozen_policy: Path, name: str,
+) -> dict[str, Any]:
+    """Rebind unchanged source parameters to a recovery endpoint, with zero PPO.
+
+    The new checkpoint has local transition zero. The receipt retains the full
+    verified source policy record, including its original training provenance.
+    No new-runtime formal training report is created or required.
+    """
+    output_dir, config_path, source_frozen_policy = (
+        Path(path).resolve() for path in (output_dir, config_path, source_frozen_policy)
+    )
+    config, identity, source, payload = _initialization_inputs(config_path, source_frozen_policy, name)
+    output_dir.mkdir(parents=True, exist_ok=False)
+    checkpoint = output_dir / _source_run_id(config) / "checkpoints/transition_0"
+    save_checkpoint(checkpoint, replace(payload, identity=identity, training_transitions=0))
+    receipt_path = output_dir / "initialization_receipt.json"
+    receipt_path.write_text(json.dumps(
+        _initialization_receipt(config_path, config, checkpoint, source_frozen_policy, source),
+        indent=2, sort_keys=True, allow_nan=False,
+    ) + "\n", encoding="utf-8")
+    record = inspect_initialization_policy(
+        config_path=config_path, checkpoint=checkpoint, source_frozen_policy=source_frozen_policy,
+        initialization_receipt=receipt_path, name=name,
+    )
+    protocol = {
+        "schema": FROZEN_INITIALIZATION_POLICY_SCHEMA, "status": "frozen",
+        "immutable_parameters": True, "copied_checkpoint": True,
+        "training_transitions": 0, "new_training_transitions": 0,
+        "environment_interactions": 0, "expert_switching_used": False,
+        "policy": _record_payload(record),
+        "claim_boundary": {
+            "envelope_expansion_authority": False, "pi_unified_star_claim": False,
+            "jce_jel_claim": False, "certified_safe_tube_claim": False,
+        },
+    }
+    manifest = {**protocol, "freeze_protocol_sha256": _canonical_sha256(protocol)}
+    (output_dir / "frozen_unified_policy.json").write_text(
+        json.dumps(manifest, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8",
+    )
+    return manifest
+
+
 def load_frozen_unified_manifest(path: Path) -> dict[str, Any]:
     payload = _read_json(Path(path))
     if (
         payload.get("schema") not in {
             FROZEN_UNIFIED_POLICY_SCHEMA, FROZEN_DEVELOPMENT_CHECKPOINT_SCHEMA,
+            FROZEN_INITIALIZATION_POLICY_SCHEMA,
         }
         or payload.get("status") != "frozen"
     ):
@@ -373,15 +527,19 @@ def load_frozen_unified_manifest(path: Path) -> dict[str, Any]:
         raise ValueError("frozen unified-policy manifest hash mismatch")
     if payload.get("immutable_parameters") is not True:
         raise ValueError("frozen unified policy is not immutable")
-    if payload.get("copied_checkpoint") is not False:
+    initialization = payload["schema"] == FROZEN_INITIALIZATION_POLICY_SCHEMA
+    if payload.get("copied_checkpoint") is not initialization:
         raise ValueError("frozen unified policy unexpectedly copied its checkpoint")
     if payload.get("training_transitions") != 0 or payload.get("environment_interactions") != 0:
         raise ValueError("freezing a unified policy must use zero interactions")
     claims = payload.get("claim_boundary", {})
-    diagnostic = payload["schema"] == FROZEN_DEVELOPMENT_CHECKPOINT_SCHEMA
+    if initialization and payload.get("new_training_transitions") != 0:
+        raise ValueError("initialization policy requires zero new training transitions")
+    diagnostic = initialization or payload["schema"] == FROZEN_DEVELOPMENT_CHECKPOINT_SCHEMA
     if diagnostic and payload.get("expert_switching_used") is not False:
         raise ValueError("development checkpoint cannot use expert switching")
-    expected_role = "development_checkpoint" if diagnostic else "envelope_expansion_authority"
+    expected_role = ("initialization_only" if initialization else
+                     "development_checkpoint" if diagnostic else "envelope_expansion_authority")
     if payload.get("policy", {}).get("policy_role") != expected_role:
         raise ValueError("frozen unified-policy schema/role mismatch")
     if claims != {

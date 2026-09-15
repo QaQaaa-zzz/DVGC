@@ -255,8 +255,10 @@ def load_config(path):
         if recovery_config.config_sha256 != raw['inputs']['down_config_sha256']:
             raise ValueError('recovery phase config drift: expected canonical configuration hash, not file hash')
         recovery = recovery_config.descent
-        if not recovery.continuous_stability or recovery.recovery_ticks * CTRL_DT < 2.0:
-            raise ValueError('stable recovery requires at least two continuous seconds')
+        if (recovery is None or recovery.continuous_stability is not True
+                or type(recovery.recovery_ticks) is not int
+                or recovery.recovery_ticks * CTRL_DT <= 0):
+            raise ValueError('stable recovery requires positive integer recovery_ticks and continuous stability')
     init=raw['initialization']
     if init['actor'] not in ('warm_start_frozen_unified','warm_start_phase_checkpoint') or init['critic']!='fresh' or init['optimizer']!='fresh':raise ValueError('probe initialization drift')
     if init['actor']=='warm_start_phase_checkpoint':
