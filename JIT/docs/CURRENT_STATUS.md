@@ -15,7 +15,10 @@
 
 新实验入口：`runs/experiments/neighborhood_mixed_rsl_20260916/`；
 150轮最大新交互预算172881600，按实际使用记账，不自动续训。
-发布时已完成验证并准备冻结启动，实际进度以该目录ACTIVE_RUN.json及状态文件为准。
+已从冻结代码1af91cb启动，实际GPU子进程进入初始邻域种子生成阶段。
+监督器869897、通知监视器869898；心跳正常，无通知投递错误。
+TensorBoard为http://localhost:6008；首轮更新后写入reward/successes等曲线。
+实时进度以该目录ACTIVE_RUN.json及状态文件为准。
 实现与证据说明：[NEIGHBORHOOD_EXPLORER](NEIGHBORHOOD_EXPLORER.md)。
 
 

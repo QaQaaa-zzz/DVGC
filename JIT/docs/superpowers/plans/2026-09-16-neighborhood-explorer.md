@@ -21,9 +21,9 @@
 - [x] Sampling: tests for balanced rotating mixed onsets, exact three applied steps and end-of-pulse snapshots; store causal augmented obs, per-lane onset and phase.
 - [x] Restoration: validate optional batched/fused preparation against canonical serial reconstruction; retain legacy fallback and fail closed on mismatch.
 - [x] Integration: regression suite; bounded actual GPU collect/evaluate/update plus restore parity/timing, separately counted.
-- [ ] Production: freeze code/config, calculate 150-round maximum reservation, launch gated loop and desktop watcher; verify live first-stage progress and heartbeat; update docs, commit and push.
+- [x] Production: freeze code/config, calculate 150-round maximum reservation, launch gated loop and desktop watcher; verify live first-stage progress and heartbeat; update docs, commit and push.
 
 ## Progress
 Initial live audit: previous JIT lineage stopped by user after104 rounds. Other project training remains unrelated. All work starts from4dc3789 in agent/neighborhood-explorer.
 
-CPU regression:84 passed. GPU24-lane mixed sampler and real PPO update passed. Fused restore not adopted: suffix parity failed with canonical-repeat variance too;4592 measured validation steps. Original canonical restore retained. Full-loop smoke completed:141099 interactions,459.82s,including repair/reassessment/retention/update/promotion reseeding.150-round launch follows frozen code/config. Runtime worker caching deferred, not claimed implemented.
+CPU regression:84 passed. GPU24-lane mixed sampler and real PPO update passed. Fused restore not adopted: suffix parity failed with canonical-repeat variance too;4592 measured validation steps. Original canonical restore retained. Full-loop smoke completed:141099 interactions,459.82s,including repair/reassessment/retention/update/promotion reseeding.150-round run launched from frozen commit1af91cb; supervisor869897, watcher869898 healthy; GPU child running nominal seeding. TensorBoard6008. Main agent branch fast-forward integrated; delivery commit follows. Runtime worker caching deferred, not claimed implemented.
