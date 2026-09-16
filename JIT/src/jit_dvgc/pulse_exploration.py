@@ -344,7 +344,8 @@ def run(spec_path,output):
                 if current_only and not reused_training:
                     from .retention_experiment import export_training
                     export_training(training)
-                name=f'{root.name}_repair_{index:04d}'
+                from .current_policy_iteration import successor_name
+                name=successor_name(root.name,index,bank)
                 freeze_development_checkpoint(d/'frozen',config_path=config,checkpoint=training/'checkpoints'/f"transition_{spec['policy_steps']}",name=name)
                 bank_spec=dict(version=name,task=bank['task'],max_ticks=bank['max_ticks'],label_interaction_budget=bank['label_interaction_budget'],max_candidates_per_process=bank['max_candidates_per_process'],members=[dict(frozen_policy=m['frozen_policy'],roles=m['roles']) for m in bank['members']]+[dict(frozen_policy=str(d/'frozen/frozen_unified_policy.json'),roles=['proposer','evaluator'] if current_only else ['evaluator'])])
                 bank_path=d/'expanded_bank.json';bank=lock_probe_bank(bank_spec,bank_path)

@@ -14,7 +14,7 @@ def verify_stage_reuse(previous_spec, current_spec):
     """Match science inputs, resolving relocated candidate/bank manifests."""
     from .probe_bank import load_probe_bank
     def normalize(spec):
-        result={k:v for k,v in spec.items() if k not in ('input_files','source_locks','resume_stage_root','resume_boundary','repo')}
+        result={k:v for k,v in spec.items() if k not in ('input_files','source_locks','resume_stage_root','resume_boundary','repo','code_commit')}
         if 'bank' in result:
             bank=load_probe_bank(Path(result['bank']))
             result['bank']={'task':bank['task'],'members':{m['name']:m['policy'] for m in bank['members']}}
@@ -28,6 +28,18 @@ def verify_stage_reuse(previous_spec, current_spec):
         return result
     if normalize(previous_spec)!=normalize(current_spec):
         raise ValueError('completed stage scientific contract differs; cannot reuse')
+
+
+def successor_name(lineage_name, index, bank):
+    """Allocate a deterministic free display name without changing old identities."""
+    stem=f'{lineage_name}_repair_{index:04d}'
+    occupied={member['name'] for member in bank['members']}
+    name=stem
+    ordinal=0
+    while name in occupied:
+        ordinal+=1
+        name=f'{stem}_new_{ordinal:04d}'
+    return name
 
 
 def promotion_decision(rows, old, new, gains, minimum_retention):

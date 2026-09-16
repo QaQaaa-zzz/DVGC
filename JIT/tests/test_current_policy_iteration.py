@@ -103,3 +103,18 @@ def test_relocated_neighborhood_map_reuses_verified_content(tmp_path):
     with pytest.raises(ValueError,match='map'):
         verify_stage_reuse({'neighborhood_map':str(a),'neighborhood_map_sha256':sha},
                            {'neighborhood_map':str(b),'neighborhood_map_sha256':sha})
+
+
+def test_successor_name_avoids_inherited_and_local_names():
+    from jit_dvgc.current_policy_iteration import successor_name
+    bank={'members':[{'name':'lineage_repair_0010'},{'name':'lineage_repair_0010_new_0001'}]}
+    assert successor_name('lineage',10,bank)=='lineage_repair_0010_new_0002'
+    assert successor_name('lineage',9,bank)=='lineage_repair_0009'
+
+
+def test_code_commit_is_provenance_not_scientific_reuse_identity():
+    from jit_dvgc.current_policy_iteration import verify_stage_reuse
+    verify_stage_reuse({'code_commit':'old','seed':1},{'code_commit':'fixed','seed':1})
+    import pytest
+    with pytest.raises(ValueError):
+        verify_stage_reuse({'code_commit':'old','seed':1},{'code_commit':'fixed','seed':2})
