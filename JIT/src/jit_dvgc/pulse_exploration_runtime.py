@@ -255,7 +255,7 @@ def collect(spec, output):
             snap=snapshot_from_arrays(arrays,env=env,record=generator,parent_trajectory=str(output/'prefixes.npz')+'::'+str(e),parent_state_sha256=prefix_sha)
             path=output/'snapshots'/f'{e:05d}';save_unified_envelope_snapshot(path,snap)
             endpoint=dict(snapshot=str(path),state_sha256=physical_state_sha256(snap),snapshot_context_sha256=snapshot_context_sha256(snap),endpoint_kind='continuation_snapshot')
-        rows.append(dict(index=e,cell=_cell_id(phase,'root_geometry_v1',quantize_coordinates(coords,ROOT_GEOMETRY_FIELDS)),coordinates=coords,phase=phase,**endpoint,prefix_file=str(output/'prefixes.npz'),prefix_sha256=prefix_sha,behavior_sha256=behavior_sha,prefix_terminal=terminal or not stage_reached,physical_prefix_terminal=terminal,pulse_start_step=trigger_step if (event or mixed) else delay,pulse_trigger_step=trigger_step,pulse_event=event,stage_reached=stage_reached,pulse_applied_steps=int(tape['mask'][:,e].sum()),label=None,learning_attempted=False))
+        rows.append(dict(index=e,cell=_cell_id(phase,'root_geometry_v1',quantize_coordinates(coords,ROOT_GEOMETRY_FIELDS)),coordinates=coords,phase=phase,**endpoint,prefix_file=str(output/'prefixes.npz'),prefix_sha256=prefix_sha,behavior_sha256=behavior_sha,prefix_terminal=terminal or not stage_reached,physical_prefix_terminal=terminal,prefix_physical_failure=bool(tape['physical_failure'][t,e]) if 'physical_failure' in tape else False,pulse_start_step=trigger_step if (event or mixed) else delay,pulse_trigger_step=trigger_step,pulse_event=event,stage_reached=stage_reached,pulse_applied_steps=int(tape['mask'][:,e].sum()),label=None,learning_attempted=False))
     write(output/'candidates.json',rows)
     write(output/'network_inventory.json',dict(**explorer_inventory(spec,params),base_actor_frozen=True,base_critic_frozen=True,inputs=int(np.asarray(state['normalizer_mean']).size) if spec.get('explorer_backend')=='rsl_rl' else 106,history_frames=3,output_actions=4,controller_mode=mode,explorer_actor_used=mode=='learned_residual',explorer_trainable=mode=='learned_residual',exploration_critic_used=mode=='learned_residual',random_distribution='uniform[-1,1]' if mode=='fixed_random' else None,trace_schema='jit_pulse_physical_trace_v2',event_time_resolution_seconds=.02))
     write(output/'hyperparameters.json',{**spec,'pulse_descent_clearance':descent_limit,
@@ -265,7 +265,13 @@ def collect(spec, output):
 
 
 def evaluate(spec, output):
-    """Each policy handles all unresolved candidates in one compiled batch."""
+    """Evaluate with canonical restoration, optionally in bounded processes."""
+    if spec.get('evaluation_batch_size') is not None:
+        from .pulse_evaluation_batches import evaluation_shards, evaluate_batched
+        rows=read(spec['candidates'])
+        batches=evaluation_shards(rows,spec['evaluation_batch_size'])
+        if len(batches)>1:
+            return evaluate_batched(spec,output)
     import jax
     import jax.numpy as jp
     from .exploration_continuation import FrozenSuffixEvaluator
@@ -304,6 +310,16 @@ def evaluate(spec, output):
                 state=state.replace(info={**state.info,'down_events':state.info['down_events'].replace(post_contact_ticks=jp.asarray(0,jp.int32),recovery_success=jp.asarray(False))})
             restored.append(state)
         count=len(restored);initial=prepare_parallel_worlds(stack_worlds(restored),env,count)
+        # The stacked world now owns every required leaf; release individual worlds
+        # before compiling/stepping to avoid retaining two full state representations.
+        jax.block_until_ready(initial)
+        del restored,state,snap
+        rng_count=spec.get('suffix_rng_count',count)
+        rng_indices=spec.get('suffix_rng_indices',list(range(count)))
+        if (type(rng_count) is not int or rng_count<count or len(rng_indices)!=count
+                or len(set(rng_indices))!=count
+                or any(type(i) is not int or not 0<=i<rng_count for i in rng_indices)):
+            raise ValueError('invalid original suffix RNG lane mapping')
         if charged+count*horizon>spec['budget']:raise RuntimeError('insufficient declared suffix reservation')
         write(output/'status.json',dict(phase='running',policy=name,charged_interactions=charged,reserved_attempt_interactions=count*horizon))
         restore_ready=time.monotonic()
@@ -324,7 +340,7 @@ def evaluate(spec, output):
             def condition(c):return (c[0]<horizon)&jp.any(c[2])
             def advance(c):
                 t,s,alive,tr=c
-                keys=jax.random.split(jax.random.fold_in(jax.random.PRNGKey(0),t),count)
+                keys=jax.random.split(jax.random.fold_in(jax.random.PRNGKey(0),t),rng_count)[jp.asarray(rng_indices)]
                 action=jax.vmap(policy)(s.obs,keys)[0]
                 nxt=step(s,jp.where(alive[:,None],action,0))
                 finite=jp.all(jp.isfinite(nxt.data.qpos),axis=-1)&jp.all(jp.isfinite(nxt.data.qvel),axis=-1)
@@ -349,13 +365,14 @@ def evaluate(spec, output):
             if label:r.update(label=1,witness=name)
         timings.append(dict(policy=name,candidates=count,runtime_seconds=runtime_ready-stage_start,restore_seconds=restore_ready-runtime_ready,compile_and_rollout_seconds=rollout_ready-restore_ready,export_seconds=time.monotonic()-rollout_ready))
         write(output/'timings.json',timings)
-        del initial,restored
+        del initial
         jax.clear_caches()
     for r in rows:
         if r.get('prefix_terminal'):r.update(label=r.get('prefix_label'),witness=spec['proposer'] if r.get('prefix_label')==1 else None)
         elif r['label']!=1:r['label']=aggregate_labels(r['attempts'],spec['order'])
     write(output/'results.json',rows)
-    write(output/'status.json',dict(phase='completed',charged_interactions=charged,active_interactions=active_count,padding_interactions=charged-active_count,successes=sum(r['label']==1 for r in rows),wall_seconds=time.monotonic()-start))
+    import resource
+    write(output/'status.json',dict(phase='completed',charged_interactions=charged,active_interactions=active_count,padding_interactions=charged-active_count,successes=sum(r['label']==1 for r in rows),wall_seconds=time.monotonic()-start,peak_rss_kib=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss))
 
 
 def update(spec, output):

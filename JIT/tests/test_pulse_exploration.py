@@ -70,3 +70,19 @@ def test_stable_pulse_does_not_finish_at_contact():
     assert not endpoint_success(state,spec)
     state.info['success']=True
     assert endpoint_success(state,spec)
+
+
+def test_heavy_penalty_only_for_explicit_physical_failure_after_pulse_action():
+    weights=dict(novelty=.05,success=1.,failure=1.,pulse_failure=5.)
+    base=dict(label=0,learning_attempted=False,prefix_terminal=True,
+              prefix_physical_failure=True,pulse_applied_steps=1)
+    rows=[dict(base,cell='direct'),
+          dict(base,cell='success',label=1,prefix_physical_failure=False),
+          dict(base,cell='conflict',label=None),
+          dict(base,cell='before',pulse_applied_steps=0),
+          dict(base,cell='ordinary',prefix_terminal=False,learning_attempted=True),
+          dict(base,cell='rescued',prefix_terminal=False,learning_attempted=True,label=1),
+          dict(base,cell='timeout',prefix_physical_failure=False)]
+    r,mask,_,_=pulse_feedback(rows,[],weights)
+    np.testing.assert_allclose(r,[-4.95,1.05,0,-.95,-.95,1.05,-.95])
+    assert mask.tolist()==[True,True,False,True,True,True,True]

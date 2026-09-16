@@ -62,7 +62,10 @@ def pulse_feedback(rows,seen,weights,*,quality_mode='delayed'):
             (quality_mode=='current_policy' or r['learning_attempted'] or r.get('prefix_terminal',False))))
         if mask[i]:
             novelty[i]=weights['novelty']/counts[r['cell']] if r['cell'] in counts else 0
-            quality[i]=0 if quality_mode=='novelty_only' else (weights['success'] if label==1 else -weights['failure'])
+            direct_failure=(r.get('prefix_terminal',False) and r.get('prefix_physical_failure',False)
+                            and r.get('pulse_applied_steps',0)>0)
+            penalty=weights.get('pulse_failure',weights['failure']) if direct_failure else weights['failure']
+            quality[i]=0 if quality_mode=='novelty_only' else (weights['success'] if label==1 else -penalty)
     return novelty+quality,mask,sorted(old|{r['cell'] for r in rows if r.get('stage_reached',True)}),dict(novelty=novelty.tolist(),quality=quality.tolist())
 
 

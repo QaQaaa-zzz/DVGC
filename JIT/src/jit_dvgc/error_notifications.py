@@ -74,6 +74,8 @@ def check_once(manifests, state, send=notify):
     state["delivery_errors"] = []
     for manifest in manifests:
         try:
+            name = read_json(manifest).get("name", "")
+            title_suffix = f"：{name}" if name else ""
             failure = find_failure(manifest)
             if failure is None:
                 completion = find_completion(manifest)
@@ -81,13 +83,13 @@ def check_once(manifests, state, send=notify):
                     continue
                 fingerprint = hashlib.sha256(json.dumps(completion, sort_keys=True).encode()).hexdigest()
                 if fingerprint not in seen:
-                    send("JIT 实验正常结束", "当前实验已正常完成。\n状态文件：\n" + "\n".join(completion["paths"]))
+                    send("JIT 实验正常结束" + title_suffix, "当前实验已正常完成。\n状态文件：\n" + "\n".join(completion["paths"]))
                     seen[fingerprint] = {**completion, "notified_unix": time.time()}
                 continue
             fingerprint = hashlib.sha256(json.dumps(failure, sort_keys=True).encode()).hexdigest()
             if fingerprint in seen:
                 continue
-            send("JIT 程序报错", f"阶段：{failure['stage']}\n{failure['error'][:1200]}\n状态文件：{failure['path']}")
+            send("JIT 程序报错" + title_suffix, f"阶段：{failure['stage']}\n{failure['error'][:1200]}\n状态文件：{failure['path']}")
             seen[fingerprint] = {**failure, "notified_unix": time.time()}
         except (OSError, ValueError, subprocess.SubprocessError) as exc:
             state["delivery_errors"].append({"manifest": str(manifest), "error": str(exc)})

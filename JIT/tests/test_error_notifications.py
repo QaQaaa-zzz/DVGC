@@ -55,3 +55,10 @@ def test_completion_waits_for_whole_run_and_deduplicates(tmp_path):
         check_once([manifest], state, send)
     assert len(alerts) == 1
     assert alerts[0][0] == "JIT 实验正常结束"
+
+
+def test_named_run_distinguishes_validation_from_training(tmp_path):
+    status=tmp_path/'status.json';status.write_text(json.dumps({'phase':'completed'}))
+    manifest=tmp_path/'ACTIVE_RUN.json';manifest.write_text(json.dumps({'name':'工程验证','execution':str(status)}))
+    alerts=[];check_once([manifest],{},lambda *a:alerts.append(a))
+    assert '工程验证' in alerts[0][0]
