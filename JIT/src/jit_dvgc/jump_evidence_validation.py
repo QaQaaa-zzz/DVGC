@@ -25,12 +25,7 @@ def read(path):
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
-def file_sha(path):
-    digest = hashlib.sha256()
-    with Path(path).open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+from .evidence_hash_cache import file_sha256 as file_sha
 
 
 def write(path, value):

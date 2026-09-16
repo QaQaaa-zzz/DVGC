@@ -313,3 +313,14 @@ Live queue and declaration: `../runs/experiments/pi0_pulse_campaign_20260913/IND
 The original six-arm queue stopped at amplitude0.25 seed9961302 round0001: two terminal lanes were passed to the nonterminal snapshot API. Completed72round0.10/0.15 arms stay immutable. Collector now emits terminal trace records without restart snapshots; actual terminal landing/failure/conflict labels are distinct, and terminal positives cannot enter restart support. New tapes retain physical_failure/end_code. Legacy landing terminals without conflict telemetry remain unknown. No clearing done or inventing continuation states.
 
 Seven focused tests pass. Real GPU recovery collection reused the saved13×128prefix plus locked behavior/post-collection optimizer/RNG without new physics:128candidate records,126valid snapshots and2terminal records (lanes21/82), collection receipt0new interactions. Prior11893interactions include10229completed receipts plus1664saved physics. Suffix evaluation has started for the126nonterminal candidates. Recovery queue continues this arm to72rounds then runs three unstarted seed9961303 arms; same amplitude/reward/PPO budgets,8hper-stage ceiling, no automatic retry. Frozen configs are pi0_pulse_campaign_recovery_20260913_*.json. Live index: `../runs/experiments/pi0_pulse_campaign_recovery_20260913/INDEX.md`.
+
+## 2026-09-16 已授权的效率修复与续训
+
+针对RSL两奖励臂训练的重复读盘瓶颈，完成同一输出轨迹哈希逐候选重复计算的消除，
+以及单次策略库核验内的文件哈希复用；保留内容哈希比较和元数据变更失效。
+新增接续初始化、恢复、编译与仿真、导出耗时。27项CPU测试通过；不等同于GPU提速证明。
+当前派生验证与续训入口为
+`runs/experiments/rsl_reward_comparison_20260915/efficiency_resume_20260916/`，
+实际是否运行以其execution/status.json和进程为准。继续94轮后的已有进度，
+两臂各200轮、1024环境、0.25幅度、0.001探索器初始学习率不变。
+细节见[EVIDENCE_IO_OPTIMIZATION](EVIDENCE_IO_OPTIMIZATION.md)。

@@ -23,9 +23,7 @@ def _read(path):
     return json.loads(Path(path).read_text())
 
 
-def _file_sha(path):
-    import hashlib
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+from .evidence_hash_cache import file_sha256 as _file_sha, scoped_hashes
 
 
 def _write_new(path, value):
@@ -40,6 +38,7 @@ def _verify(value, field):
         raise ValueError(f"{field} self-hash drift")
 
 
+@scoped_hashes
 def lock_probe_bank(spec: dict, output: Path) -> dict:
     """Lock frozen identities and a declared task; no checkpoint admission claim."""
     from .unified_policy_freeze import load_frozen_unified_manifest

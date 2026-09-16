@@ -19,12 +19,7 @@ def canonical_sha256(value: Mapping[str, Any]) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
-def file_sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with Path(path).open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+from .evidence_hash_cache import file_sha256
 
 
 def _positive(name: str, value: Any) -> float:

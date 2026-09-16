@@ -224,7 +224,9 @@ def collect(spec, output):
         np.savez_compressed(output/'prefixes.npz',**tape)
     if np.any(tape['prefix_mask']&~tape['finite']):raise ValueError('nonfinite pulse prefix')
     state['rng']=next_rng;(output/'update_state.msgpack').write_bytes(serialization.to_bytes(state))
-    generator={**member['policy'],'actor_sha256':canonical_sha256(dict(base=member['policy']['actor_sha256'],residual=_file_sha(output/'behavior.msgpack'),delta=spec['delta_limit'],pulse_steps=spec['pulse_steps'],pulse_start_step=delay,controller_mode=mode,pulse_event=event,pulse_descent_clearance=descent_limit)),'payload_sha256':_file_sha(output/'behavior.msgpack')}
+    prefix_sha = _file_sha(output/'prefixes.npz')
+    behavior_sha = _file_sha(output/'behavior.msgpack')
+    generator={**member['policy'],'actor_sha256':canonical_sha256(dict(base=member['policy']['actor_sha256'],residual=behavior_sha,delta=spec['delta_limit'],pulse_steps=spec['pulse_steps'],pulse_start_step=delay,controller_mode=mode,pulse_event=event,pulse_descent_clearance=descent_limit)),'payload_sha256':behavior_sha}
     rows=[]
     for e in range(count):
         t=int(np.flatnonzero(tape['prefix_mask'][:,e])[-1])
@@ -238,12 +240,12 @@ def collect(spec, output):
             # Terminal evidence is never passed to the nonterminal snapshot API.
             label,reason=terminal_prefix_label(bool(arrays['down/recovery_success'] if recovery_mode(spec) else arrays['down/valid_contact_seen']),bool(tape['physical_failure'][t,e]) if 'physical_failure' in tape else None)
             if not stage_reached:label,reason=None,'stage_not_reached'
-            endpoint=dict(snapshot=None,state_sha256=canonical_sha256(dict(qpos=arrays['data/qpos'].tolist(),qvel=arrays['data/qvel'].tolist())),snapshot_context_sha256=canonical_sha256(dict(terminal_prefix_sha256=_file_sha(output/'prefixes.npz'),lane=e,tick=t)),prefix_label=label,terminal_reason=reason,endpoint_kind='terminal_trace',terminal_tick=t)
+            endpoint=dict(snapshot=None,state_sha256=canonical_sha256(dict(qpos=arrays['data/qpos'].tolist(),qvel=arrays['data/qvel'].tolist())),snapshot_context_sha256=canonical_sha256(dict(terminal_prefix_sha256=prefix_sha,lane=e,tick=t)),prefix_label=label,terminal_reason=reason,endpoint_kind='terminal_trace',terminal_tick=t)
         else:
-            snap=snapshot_from_arrays(arrays,env=env,record=generator,parent_trajectory=str(output/'prefixes.npz')+'::'+str(e),parent_state_sha256=_file_sha(output/'prefixes.npz'))
+            snap=snapshot_from_arrays(arrays,env=env,record=generator,parent_trajectory=str(output/'prefixes.npz')+'::'+str(e),parent_state_sha256=prefix_sha)
             path=output/'snapshots'/f'{e:05d}';save_unified_envelope_snapshot(path,snap)
             endpoint=dict(snapshot=str(path),state_sha256=physical_state_sha256(snap),snapshot_context_sha256=snapshot_context_sha256(snap),endpoint_kind='continuation_snapshot')
-        rows.append(dict(index=e,cell=_cell_id(phase,'root_geometry_v1',quantize_coordinates(coords,ROOT_GEOMETRY_FIELDS)),coordinates=coords,phase=phase,**endpoint,prefix_file=str(output/'prefixes.npz'),prefix_sha256=_file_sha(output/'prefixes.npz'),behavior_sha256=_file_sha(output/'behavior.msgpack'),prefix_terminal=terminal or not stage_reached,physical_prefix_terminal=terminal,pulse_start_step=trigger_step if event else delay,pulse_trigger_step=trigger_step,pulse_event=event,stage_reached=stage_reached,pulse_applied_steps=int(tape['mask'][:,e].sum()),label=None,learning_attempted=False))
+        rows.append(dict(index=e,cell=_cell_id(phase,'root_geometry_v1',quantize_coordinates(coords,ROOT_GEOMETRY_FIELDS)),coordinates=coords,phase=phase,**endpoint,prefix_file=str(output/'prefixes.npz'),prefix_sha256=prefix_sha,behavior_sha256=behavior_sha,prefix_terminal=terminal or not stage_reached,physical_prefix_terminal=terminal,pulse_start_step=trigger_step if event else delay,pulse_trigger_step=trigger_step,pulse_event=event,stage_reached=stage_reached,pulse_applied_steps=int(tape['mask'][:,e].sum()),label=None,learning_attempted=False))
     write(output/'candidates.json',rows)
     write(output/'network_inventory.json',dict(**explorer_inventory(spec,params),base_actor_frozen=True,base_critic_frozen=True,inputs=106,history_frames=3,output_actions=4,controller_mode=mode,explorer_actor_used=mode=='learned_residual',explorer_trainable=mode=='learned_residual',exploration_critic_used=mode=='learned_residual',random_distribution='uniform[-1,1]' if mode=='fixed_random' else None,trace_schema='jit_pulse_physical_trace_v2',event_time_resolution_seconds=.02))
     write(output/'hyperparameters.json',{**spec,'pulse_descent_clearance':descent_limit,
@@ -275,11 +277,13 @@ def evaluate(spec, output):
             for a in old['attempts']:
                 if a['actor_sha256']!=suffix.members[a['policy']]['policy']['actor_sha256'] or _file_sha(Path(a['trace']))!=a['trace_sha256']:raise ValueError('reused evaluator/trace drift')
             row.update(attempts=old['attempts'],label=old['label'],witness=old['witness'])
-    start=time.monotonic()
+    start=time.monotonic(); timings=[]
     for name in spec['order']:
         subset=[r for r in rows if (spec.get('full_matrix',False) or r['label']!=1) and not r.get('prefix_terminal',False) and not any(a['policy']==name for a in r['attempts'])]
         if not subset:continue
+        stage_start=time.monotonic()
         env,policy,_=suffix._runtime(name)
+        runtime_ready=time.monotonic()
         env._reward_mode=spec.get('reward_mode',getattr(env,'_reward_mode','phase_recovery'))
         restored=[]
         for r in subset:
@@ -292,6 +296,7 @@ def evaluate(spec, output):
         count=len(restored);initial=prepare_parallel_worlds(stack_worlds(restored),env,count)
         if charged+count*horizon>spec['budget']:raise RuntimeError('insufficient declared suffix reservation')
         write(output/'status.json',dict(phase='running',policy=name,charged_interactions=charged,reserved_attempt_interactions=count*horizon))
+        restore_ready=time.monotonic()
         step=jax.vmap(lambda s,a:endpoint_state(env.step(s,a),spec))
         def rollout(initial):
             def frame(s,action,mask,previous):
@@ -321,15 +326,19 @@ def evaluate(spec, output):
             tick,final,_,tr=jax.lax.while_loop(condition,advance,(jp.array(0),initial,jp.ones(count,bool),traces))
             return tick,tr
         tick,tape=jax.device_get(jax.jit(rollout)(initial));tick=int(tick);tape={k:v[:tick] for k,v in tape.items()}
+        rollout_ready=time.monotonic()
         cost=count*tick;charged+=cost;active_count+=int(tape['mask'].sum())
         trace_path=output/(name+'_traces.npz');np.savez_compressed(trace_path,**tape)
+        trace_sha = _file_sha(trace_path)
         for e,r in enumerate(subset):
             indices=np.flatnonzero(tape['mask'][:,e]);last=int(indices[-1]);valid=bool(tape['valid_contact'][last,e]);failure=bool(tape['physical_failure'][last,e])
             if not np.isfinite(tape['qpos'][indices,e]).all() or not np.isfinite(tape['qvel'][indices,e]).all():raise ValueError('nonfinite suffix')
             label,outcome=suffix_label(valid,failure,bool(tape['timeout'][last,e]),bool(tape['done'][last,e]),len(indices)>=horizon)
             if recovery_mode(spec) and label == 1: outcome='stable_forward_recovery'
-            r['attempts'].append(dict(policy=name,actor_sha256=suffix.members[name]['policy']['actor_sha256'],label=label,outcome=outcome,steps=len(indices),task_return=float(tape['reward'][indices,e].sum()),trace=str(trace_path),trace_lane=e,trace_sha256=_file_sha(trace_path),snapshot_context_sha256=r['snapshot_context_sha256']))
+            r['attempts'].append(dict(policy=name,actor_sha256=suffix.members[name]['policy']['actor_sha256'],label=label,outcome=outcome,steps=len(indices),task_return=float(tape['reward'][indices,e].sum()),trace=str(trace_path),trace_lane=e,trace_sha256=trace_sha,snapshot_context_sha256=r['snapshot_context_sha256']))
             if label:r.update(label=1,witness=name)
+        timings.append(dict(policy=name,candidates=count,runtime_seconds=runtime_ready-stage_start,restore_seconds=restore_ready-runtime_ready,compile_and_rollout_seconds=rollout_ready-restore_ready,export_seconds=time.monotonic()-rollout_ready))
+        write(output/'timings.json',timings)
         del initial,restored
         jax.clear_caches()
     for r in rows:
