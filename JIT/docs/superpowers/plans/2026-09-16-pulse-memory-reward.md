@@ -28,3 +28,6 @@ steps.24-state split differs1/24; full historical comparison differs42/1024;
 explicit new numerical layout, no exact-equivalence/throughput claim.
 Final audit fix records incomplete shard reservation separately on failure.
 New experiment prepared with150 fresh rounds, last accepted base, fresh explorer.
+
+Production launched from frozen faeab68; supervisor1302222, watcher1302223.
+Nominal seeding completed and round0 collection started. TensorBoard6009.

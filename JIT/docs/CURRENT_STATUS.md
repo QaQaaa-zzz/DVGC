@@ -15,8 +15,10 @@ PID1176471约12GiB匿名RSS；旧数据保持原样。用户授权修复、加�
 
 新实验：`runs/experiments/neighborhood_reward005_safe256_20260916/`。
 从已接受lineage_repair_0010出发，探索器重新初始化，150轮上限，
-最大新预算172881600；验证359600步另计。即将冻结启动，实时状态见
-该目录ACTIVE_RUN.json。通知标题区分工程验证与正式150轮训练。
+最大新预算172881600；验证359600步另计。已从冻结提交faeab68启动：监督器1302222，
+通知监视器1302223。初始名义轨迹与种子评估完成，进入第1轮采样。
+TensorBoard：http://localhost:6009；实时状态见该目录ACTIVE_RUN.json。
+通知标题区分工程验证与正式150轮训练。
 详见[PULSE_MEMORY_REWARD_RESTART](PULSE_MEMORY_REWARD_RESTART.md)。
 
 
