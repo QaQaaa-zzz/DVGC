@@ -90,3 +90,16 @@ def test_nested_training_config_resolves_original_bootstrap(tmp_path):
     assert resolve_bootstrap_config(successor)==original.resolve()
     original.write_text(json.dumps({'bootstrap_formal_config':str(successor)}))
     with pytest.raises(ValueError,match='cycle'):resolve_bootstrap_config(successor)
+
+def test_relocated_neighborhood_map_reuses_verified_content(tmp_path):
+    import json,hashlib
+    from jit_dvgc.current_policy_iteration import verify_stage_reuse
+    data=json.dumps({'source_actor_sha256':'source','rows':[]}).encode();sha=hashlib.sha256(data).hexdigest()
+    a=tmp_path/'a.json';b=tmp_path/'b.json';a.write_bytes(data);b.write_bytes(data)
+    verify_stage_reuse({'neighborhood_map':str(a),'neighborhood_map_sha256':sha},
+                       {'neighborhood_map':str(b),'neighborhood_map_sha256':sha})
+    b.write_text('{}')
+    import pytest
+    with pytest.raises(ValueError,match='map'):
+        verify_stage_reuse({'neighborhood_map':str(a),'neighborhood_map_sha256':sha},
+                           {'neighborhood_map':str(b),'neighborhood_map_sha256':sha})

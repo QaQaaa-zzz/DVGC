@@ -11,18 +11,76 @@ import math
 import numpy as np
 
 
+NEIGHBORHOOD_FEATURE_LAYOUT = 'relative12_evidence4_valid1_near_far_stats8_v1'
+
+
+def neighborhood_config(config):
+    """Canonical network and observation semantics; dynamic map contents excluded."""
+    if config is None:
+        return None
+    from .neighborhood import _config
+    config = dict(config)
+    # Collection uses Flax to_bytes, which encodes lists as index-keyed dicts;
+    # update checkpoints use msgpack_serialize, which preserves ordinary lists.
+    widths = config.get('medium_halfwidths')
+    if isinstance(widths, dict):
+        if set(widths) != {str(i) for i in range(12)}:
+            raise ValueError('neighborhood checkpoint has invalid width indices')
+        config['medium_halfwidths'] = [widths[str(i)] for i in range(12)]
+    config = _config(config)
+    defaults = dict(neighbors=16, feature_dim=17, summary_dim=64, base_dim=106, stats_dim=8)
+    result = {}
+    for key, default in defaults.items():
+        value = config.get(key, default)
+        if isinstance(value, bool) or not isinstance(value, (int, np.integer)) or value < 1:
+            raise ValueError(f'neighborhood {key} must be a positive integer')
+        result[key] = int(value)
+    if result['feature_dim'] < 2:
+        raise ValueError('neighborhood feature_dim must include features and a valid mask')
+    return dict(result, medium_halfwidths=list(config['medium_halfwidths']),
+                far_scale=float(config['far_scale']))
+
+
+def validate_neighborhood_identity(spec, state):
+    """Reject changed feature semantics even when the raw input shape is equal.
+
+    Omitted spec configuration is permitted for tape-only updates. Collection
+    callers must additionally require the requested presence/absence to match.
+    Legacy 106D checkpoints require no neighborhood metadata.
+    """
+    saved = state.get('neighborhood')
+    if saved is not None:
+        if (state.get('neighborhood_feature_layout') != NEIGHBORHOOD_FEATURE_LAYOUT or
+                not {'medium_halfwidths', 'far_scale'}.issubset(saved)):
+            raise ValueError('neighborhood checkpoint lacks a compatible complete observation identity')
+    elif state.get('neighborhood_feature_layout') is not None or 'actor_encoder' in state.get('params', {}):
+        raise ValueError('neighborhood checkpoint is missing observation configuration')
+    config = neighborhood_config(saved)
+    if 'neighborhood' in spec and neighborhood_config(spec['neighborhood']) != config:
+        raise ValueError('neighborhood observation/architecture does not match checkpoint; initialize a fresh explorer')
+    return config
+
+
 def torch_policy(spec, state=None):
     import torch
     from importlib.metadata import version
     if version('rsl-rl-lib')!='3.2.0':raise ValueError('Pinned RSL-RL 3.2.0 required')
     from tensordict import TensorDict
     from rsl_rl.modules import ActorCritic
+    config = neighborhood_config(spec.get('neighborhood'))
+    if state is not None:
+        config = validate_neighborhood_identity(spec, state)
     torch.set_num_threads(4)
     torch.manual_seed(spec['seed'])
-    p=ActorCritic(TensorDict({'obs':torch.zeros(1,106)},[1]),
+    head_dim = 106 if config is None else config['base_dim'] + config['summary_dim'] + config['stats_dim']
+    p=ActorCritic(TensorDict({'obs':torch.zeros(1,head_dim)},[1]),
         {'policy':['obs'],'critic':['obs']},4,
         actor_hidden_dims=[128]*3,critic_hidden_dims=[128]*3,activation='elu',
         state_dependent_std=True,noise_std_type='log',init_noise_std=.6)
+    if config is not None:
+        from .neighborhood_network import NeighborhoodNetwork
+        p.actor = NeighborhoodNetwork(config, p.actor)
+        p.critic = NeighborhoodNetwork(config, p.critic)
     if state is not None:
         saved=torch.load(io.BytesIO(state['torch_state']),map_location='cpu',weights_only=False)
         p.load_state_dict(saved['policy'])
@@ -34,10 +92,16 @@ def torch_policy(spec, state=None):
 
 def export(p):
     import torch
+    modules = {}
+    for name in ('actor', 'critic'):
+        network = getattr(p, name)
+        modules[name] = getattr(network, 'head', network)
+        if hasattr(network, 'encoder'):
+            modules[name + '_encoder'] = network.encoder
     return {name:{str(i):{'kernel':m.weight.detach().numpy().T.copy(),
                           'bias':m.bias.detach().numpy().copy()}
-                  for i,m in enumerate(x for x in getattr(p,name).modules() if isinstance(x,torch.nn.Linear))}
-            for name in ['actor','critic']}
+                  for i,m in enumerate(x for x in module.modules() if isinstance(x,torch.nn.Linear))}
+            for name, module in modules.items()}
 
 
 def serialize_torch(p, optimizer=None, lr=.01):
@@ -50,10 +114,23 @@ def serialize_torch(p, optimizer=None, lr=.01):
 def initialize(spec,mean,std):
     import jax
     p=torch_policy(spec)
-    return dict(params=export(p),normalizer_mean=np.asarray(mean,dtype=np.float32),
-        normalizer_std=np.asarray(std,dtype=np.float32),rng=np.asarray(jax.random.PRNGKey(spec['seed'])),
+    config = neighborhood_config(spec.get('neighborhood'))
+    mean, std = np.asarray(mean,dtype=np.float32), np.asarray(std,dtype=np.float32)
+    if config is not None:
+        if mean.shape != (config['base_dim'],) or std.shape != mean.shape:
+            raise ValueError('neighborhood initialization requires base-only normalizer arrays')
+        context_dim = config['neighbors'] * config['feature_dim'] + config['stats_dim']
+        mean = np.concatenate((mean, np.zeros(context_dim, np.float32)))
+        std = np.concatenate((std, np.ones(context_dim, np.float32)))
+    result = dict(params=export(p),normalizer_mean=mean,
+        normalizer_std=std,rng=np.asarray(jax.random.PRNGKey(spec['seed'])),
         torch_state=serialize_torch(p,lr=spec['learning_rate']),total_updates=0,
         backend='rsl_rl_3.2.0',architecture='106_128_128_128_elu_state_dependent_log_std')
+    if config is not None:
+        result.update(neighborhood=config,
+                      neighborhood_feature_layout=NEIGHBORHOOD_FEATURE_LAYOUT,
+                      architecture='neighborhood_masked_mean_v1_128_128_128_elu_state_dependent_log_std')
+    return result
 
 
 def normalized(state,obs):
@@ -64,14 +141,27 @@ def infer(state,obs,precision="highest"):
     import jax
     import jax.numpy as jnp
     x=normalized(state,obs)
-    def forward(layers):
-        y=x
+    def forward(layers, y, activate_last=False):
         for i in range(len(layers)):
             layer=layers[str(i)];y=jnp.matmul(y,jnp.asarray(layer['kernel']),precision=precision)+jnp.asarray(layer['bias'])
-            if i<len(layers)-1:y=jax.nn.elu(y)
+            if i<len(layers)-1 or activate_last:y=jax.nn.elu(y)
         return y
-    out=forward(state['params']['actor'])
-    return out[...,:4],jnp.exp(out[...,4:]),forward(state['params']['critic'])[...,0]
+    def network(name):
+        config = state.get('neighborhood')
+        y = x
+        if config is not None:
+            end = config['base_dim'] + config['neighbors'] * config['feature_dim']
+            rows = x[..., config['base_dim']:end].reshape(
+                *x.shape[:-1], config['neighbors'], config['feature_dim'])
+            valid = rows[..., -1:] > 0
+            features = jnp.where(valid, rows[..., :-1], 0.)
+            encoded = forward(state['params'][name + '_encoder'], features, activate_last=True)
+            summary = jnp.where(valid, encoded, 0.).sum(axis=-2)
+            summary = summary / jnp.maximum(valid.sum(axis=-2), 1)
+            y = jnp.concatenate((x[..., :config['base_dim']], summary, x[..., end:]), axis=-1)
+        return forward(state['params'][name], y)
+    out=network('actor')
+    return out[...,:4],jnp.exp(out[...,4:]),network('critic')[...,0]
 
 
 def sample(state,obs,key):
@@ -87,6 +177,9 @@ def restore(path):
     from flax.serialization import msgpack_restore
     state=msgpack_restore(Path(path).read_bytes())
     if state.get('backend')!='rsl_rl_3.2.0':raise ValueError('RSL checkpoint backend mismatch')
+    config = validate_neighborhood_identity({}, state)
+    if config is not None:
+        state['neighborhood'] = config
     return state
 
 

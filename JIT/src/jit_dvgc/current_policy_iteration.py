@@ -18,6 +18,11 @@ def verify_stage_reuse(previous_spec, current_spec):
         if 'bank' in result:
             bank=load_probe_bank(Path(result['bank']))
             result['bank']={'task':bank['task'],'members':{m['name']:m['policy'] for m in bank['members']}}
+        if 'neighborhood_map' in result:
+            import hashlib
+            digest=hashlib.sha256(Path(result['neighborhood_map']).read_bytes()).hexdigest()
+            if digest!=result.get('neighborhood_map_sha256'):raise ValueError('neighborhood map drift')
+            result['neighborhood_map']=digest
         if 'candidates' in result:
             result['candidates']=read(result['candidates'])
         return result

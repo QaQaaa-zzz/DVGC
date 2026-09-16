@@ -20,6 +20,8 @@ def descent_clearance(spec):
 
 def selected_event(spec):
     schedule = spec.get('pulse_event_schedule')
+    if schedule and spec.get('pulse_batch_mode')=='mixed' and not spec.get('nominal_source_rollout'):
+        raise ValueError('mixed fixed onsets cannot combine event scheduling')
     if schedule is None:
         return None
     if (not isinstance(schedule, list) or not schedule or
@@ -66,3 +68,20 @@ def pulse_activity(trigger_tick, applied_steps, ready, alive, tick, pulse_steps)
     trigger_tick = jp.where((trigger_tick < 0) & ready & alive, tick, trigger_tick)
     active = alive & (trigger_tick >= 0) & (jp.asarray(applied_steps) < pulse_steps)
     return trigger_tick, active
+
+
+def lane_onsets(spec, index):
+    """Balanced fixed onset allocation, with rotating remainder across batches."""
+    import numpy as np
+    from .pulse_exploration import pulse_delay
+    mode=spec.get('pulse_batch_mode','single')
+    if mode not in ('single','mixed'):
+        raise ValueError('unsupported pulse_batch_mode')
+    n=spec['num_envs']
+    if type(n) is not int or n<1:raise ValueError('positive num_envs required')
+    if mode=='single' or spec.get('nominal_source_rollout'):
+        return np.full(n,pulse_delay(spec,index),np.int32)
+    if spec.get('pulse_event_schedule'):raise ValueError('mixed fixed onsets cannot combine event scheduling')
+    pulse_delay(spec,index)  # Validate the unchanged fixed-onset contract.
+    schedule=np.asarray(spec['pulse_start_schedule'],np.int32)
+    return schedule[(np.arange(n)+index)%len(schedule)]

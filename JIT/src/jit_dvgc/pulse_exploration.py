@@ -34,7 +34,9 @@ def round_delta_limit(spec, index):
 
 
 def prefix_budget(spec, index):
-    ticks=spec['horizon'] if spec.get('pulse_event_schedule') else pulse_delay(spec,index)+spec['pulse_steps']
+    from .pulse_schedule import lane_onsets, selected_event
+    selected_event(spec)
+    ticks=spec['horizon'] if spec.get('pulse_event_schedule') else int(lane_onsets(spec,index).max())+spec['pulse_steps']
     return spec['num_envs']*ticks
 
 
@@ -145,6 +147,13 @@ def export(root,metrics,rows):
     plt.close(fig)
 
 
+def neighborhood_seed_history(root):
+    """Recover prior nominal map evidence without reading future round outcomes."""
+    root=Path(root);paths=[root/'seed_support/evaluation/results.json']
+    paths.extend(sorted(root.glob('round_*/next_source_seed/evaluation/results.json')))
+    return [row for p in paths if p.exists() for row in read(p)]
+
+
 def run(spec_path,output):
     from .gated_execution import run_gated_plan
     from .iterative_probe_training import candidate_support_view,make_config
@@ -176,7 +185,7 @@ def run(spec_path,output):
         base.pop('support_sha256');base['selection']='only frozen source-pi positive rows';base['support_sha256']=canonical_sha256(base)
         write(root/'source_pi_support.json',base)
     write(root/'declaration.json',dict(spec=spec,budget=budget,role='TRAIN',final_test_used=False))
-    seen=sorted({r['root_cell'] for r in base['entries']}) if base else [];rows_all=[];metrics=[];costs=[];checkpoint=None;start=time.monotonic();support=json.loads(json.dumps(base));inherited_cost=0
+    seen=sorted({r['root_cell'] for r in base['entries']}) if base else [];rows_all=[];neighborhood_seeds=[];metrics=[];costs=[];checkpoint=None;start=time.monotonic();support=json.loads(json.dumps(base));inherited_cost=0
     boundary=read(spec['resume_boundary']) if spec.get('resume_boundary') else None
     if boundary:
         from .current_policy_iteration import verify_stage_reuse
@@ -226,11 +235,13 @@ def run(spec_path,output):
             seed=runtime(root,'seed_support','seed_support',spec,
                          seed_support_budget(spec) if fixed_policy else spec['horizon']*(spec['horizon']+1))
             base=read(seed/'support.json');support=json.loads(json.dumps(base))
+            if spec.get('neighborhood'):neighborhood_seeds.extend(read(seed/'evaluation/results.json'))
             seen=sorted({r['root_cell'] for r in base['entries']})
             write(root/'source_pi_support.json',base)
         first_round=0
         if boundary:
             previous=Path(boundary['previous'])
+            if spec.get('neighborhood'):neighborhood_seeds.extend(neighborhood_seed_history(previous))
             metrics=read(previous/'training_metrics.json');first_round=len(metrics)
             if first_round != boundary['completed_rounds']:raise ValueError('boundary round count drift')
             bank_path=Path(boundary['bank']);bank=load_probe_bank(bank_path)
@@ -275,12 +286,21 @@ def run(spec_path,output):
             ex={**spec,'bank':str(bank_path),'round_index':index,'explorer_checkpoint':checkpoint,
                 'delta_limit':round_delta_limit(spec,index),
                 'proposer':source_name if current_only else spec['proposer']}
+            if spec.get('neighborhood'):
+                # Snapshot only already observed rows; this round never queries its future outcomes.
+                actor=source['policy']['actor_sha256']
+                history=[r for r in neighborhood_seeds+rows_all
+                    if r.get('source_actor_sha256',(r.get('attempts') or [{}])[0].get('actor_sha256'))==actor]
+                map_payload=dict(schema='jit_frozen_neighborhood_map_v1',source_actor_sha256=actor,
+                    round_index=index,config=spec['neighborhood'],rows=history)
+                map_path=d/'neighborhood_map.json';write(map_path,map_payload)
+                ex.update(neighborhood_map=str(map_path),neighborhood_map_sha256=_file_sha(map_path))
             if index!=first_round:ex.pop('reuse_prefix_collection',None)
             if index==first_round and spec.get('reuse_collection'):
                 collection=Path(spec['reuse_collection'])
                 old=read(collection/'hyperparameters.json')
-                for k in ['round_index','explorer_checkpoint','pulse_steps','num_envs','delta_limit','bank','seed']:
-                    if old[k]!=ex[k]:raise ValueError('reused pulse contract differs: '+k)
+                for k in ['round_index','explorer_checkpoint','pulse_steps','num_envs','delta_limit','bank','seed','pulse_batch_mode','neighborhood','neighborhood_map_sha256']:
+                    if old.get(k)!=ex.get(k):raise ValueError('reused pulse contract differs: '+k)
                 if read(collection/'status.json')['phase']!='completed':raise ValueError('incomplete reused collection')
                 write(d/'reused_collection.json',dict(path=str(collection),prefix_sha256=_file_sha(collection/'prefixes.npz')))
             else:
@@ -289,7 +309,7 @@ def run(spec_path,output):
             evaluation=runtime(d,'bank_evaluation','evaluate',{**ex,'candidates':str(collection/'candidates.json'),'order':order,'budget':len(order)*spec['num_envs']*spec['horizon'], 'reuse_results':spec.get('reuse_results') if index==first_round else None},len(order)*spec['num_envs']*spec['horizon'])
             rows=read(evaluation/'results.json');pending=[r for r in rows if r['label']==0 and not r['prefix_terminal']]
             for r in rows:
-                r['round']=index;r['pulse_start_step']=r.get('pulse_start_step',pulse_delay(spec,index))
+                r['round']=index;r['pulse_start_step']=r.get('pulse_start_step',pulse_delay(spec,index));r['source_actor_sha256']=source['policy']['actor_sha256']
                 r['initial_label']=r['label']
             # Persist evaluated candidates even when a later training stage
             # cannot fit the remaining budget. Missing training stays pending.
@@ -354,7 +374,7 @@ def run(spec_path,output):
             feedback=d/'feedback.json';write(feedback,dict(rewards=reward.tolist(),eligible=eligible.tolist(),parts=parts,component_sums={k:float(sum(v)) for k,v in parts.items()},new_cells=len(next_seen)-len(seen),outcomes=str(outcomes),outcomes_sha256=_file_sha(outcomes)))
             update=runtime(d,'update','update',{**ex,'collection':str(collection),'feedback':str(feedback)},0)
             checkpoint=str(update/'state.msgpack');m=read(update/'metrics.json')
-            metrics.append(dict(round=index+1,source_policy=source_name,pulse_start_step=pulse_delay(spec,index),successes=sum(r['label']==1 for r in rows),failed_after_learning=sum(r['label']==0 and r['learning_attempted'] for r in rows),new_cells=len(next_seen)-len(seen),charged_interactions=inherited_cost+sum(c['charged_interactions'] for c in costs),reward_novelty=m['reward_components']['novelty'],reward_quality=m['reward_components']['quality'],**{k:v for k,v in m.items() if k!='reward_components'}))
+            metrics.append(dict(round=index+1,source_policy=source_name,pulse_start_step=None if spec.get('pulse_batch_mode')=='mixed' else pulse_delay(spec,index),pulse_batch_mode=spec.get('pulse_batch_mode','single'),successes=sum(r['label']==1 for r in rows),failed_after_learning=sum(r['label']==0 and r['learning_attempted'] for r in rows),new_cells=len(next_seen)-len(seen),charged_interactions=inherited_cost+sum(c['charged_interactions'] for c in costs),reward_novelty=m['reward_components']['novelty'],reward_quality=m['reward_components']['quality'],**{k:v for k,v in m.items() if k!='reward_components'}))
             seen=next_seen;rows_all.extend(rows);write(root/'visited_cells.json',seen);write(root/'training_metrics.json',metrics);export(root,metrics,rows_all);status('round_completed',completed_rounds=index+1)
             if current_only:
                 write(d/'source_ledger.json',dict(source=source_name,cells=seen))
@@ -368,7 +388,9 @@ def run(spec_path,output):
                             'promote':False,'reason':'nominal_recovery_failed','source_retained':source['name']})
                         adopt=None
                     else:
-                        fresh=read(nominal/'support.json');seen=sorted({r['root_cell'] for r in fresh['entries']})
+                        fresh=read(nominal/'support.json')
+                        if spec.get('neighborhood'):neighborhood_seeds.extend(read(nominal/'evaluation/results.json'))
+                        seen=sorted({r['root_cell'] for r in fresh['entries']})
                         support.pop('support_sha256');keys={r['key'] for r in support['entries']}
                         support['entries'].extend(r for r in fresh['entries'] if r['key'] not in keys)
                         support['inputs'].update(fresh['inputs']);support['support_sha256']=canonical_sha256(support)

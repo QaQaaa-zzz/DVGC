@@ -6,7 +6,7 @@ import numpy as np
 from .exploration_loop import read, write
 from .probe_bank import load_probe_bank, _file_sha
 from .evidence_integrity import canonical_sha256
-from .pulse_schedule import controller_mode, selected_event, event_ready, pulse_activity, descent_clearance
+from .pulse_schedule import controller_mode, selected_event, event_ready, pulse_activity, descent_clearance, lane_onsets
 
 
 def suffix_label(valid, failure, timeout, done, horizon_reached):
@@ -66,10 +66,11 @@ def networks(spec):
     for k,v in [('actor_sha256',payload.actor_params),('normalizer_sha256',payload.observation_normalizer),('critic_sha256',payload.critic_params)]:
         if pytree_sha256(v)!=member['policy'][k]:raise ValueError('base payload drift: '+k)
     if spec.get('explorer_backend')=='rsl_rl':
-        from .rsl_pulse import initialize,restore
+        from .rsl_pulse import initialize,restore,validate_neighborhood_identity
         state=(restore(spec['explorer_checkpoint']) if spec.get('explorer_checkpoint') else
                initialize(spec,payload.observation_normalizer.mean['privileged_state'],
                           payload.observation_normalizer.std['privileged_state']))
+        validate_neighborhood_identity({'neighborhood':spec.get('neighborhood')},state)
         return env,payload,member,None,None,state
     net=make_exploration_network_factory()({'state':76,'privileged_state':106},4,preprocess_observations_fn=running_statistics.normalize)
     rng=jax.random.PRNGKey(spec['seed']);rng,a,v=jax.random.split(rng,3)
@@ -82,8 +83,8 @@ def explorer_inventory(spec, params):
     import jax
     rsl=spec.get('explorer_backend')=='rsl_rl'
     actor,critic=('actor','critic') if rsl else ('policy','value')
-    return dict(actor_parameters=sum(x.size for x in jax.tree.leaves(params[actor])),
-                critic_parameters=sum(x.size for x in jax.tree.leaves(params[critic])),
+    return dict(actor_parameters=sum(x.size for name in [actor,actor+'_encoder'] if name in params for x in jax.tree.leaves(params[name])),
+                critic_parameters=sum(x.size for name in [critic,critic+'_encoder'] if name in params for x in jax.tree.leaves(params[name])),
                 hidden=[128]*3 if rsl else [256]*3,activation='elu' if rsl else 'swish',
                 backend='rsl_rl_3.2.0' if rsl else 'jax_custom')
 
@@ -131,7 +132,13 @@ def collect(spec, output):
     mode=controller_mode(spec);event=selected_event(spec)
     descent_limit=descent_clearance(spec)
     delay=0 if event else pulse_delay(spec,spec['round_index'])
-    prefix_steps=spec['horizon'] if event else delay+spec['pulse_steps']
+    mixed=spec.get('pulse_batch_mode')=='mixed' and not spec.get('nominal_source_rollout')
+    delays=lane_onsets(spec,spec['round_index']) if not event else np.zeros(count,np.int32)
+    prefix_steps=spec['horizon'] if event else int(delays.max())+spec['pulse_steps']
+    neighbor_query=None
+    if spec.get('neighborhood'):
+        from .neighborhood_sampling import prepare_neighbor_query
+        neighbor_query=prepare_neighbor_query(spec,env,member,output)
     if event and (spec['horizon']!=400 or not 1<=spec['pulse_steps']<=5):
         raise ValueError('event pulse requires horizon400 and one to five pulse steps')
     base=make_checkpoint_policy(env,payload,deterministic=True);dist=net.parametric_action_distribution if net else None
@@ -151,8 +158,11 @@ def collect(spec, output):
                     min_descent_velocity=env._resolved_config.events.min_descent_velocity,
                     descent_clearance=descent_limit)
             else:
-                ready=jp.full((count,),tick>=delay,bool)
+                ready=tick>=jp.asarray(delays)
             trigger_tick,pulse_mask=pulse_activity(trigger_tick,applied_steps,ready,alive,tick,spec['pulse_steps'])
+            explorer_obs=s.obs['privileged_state']
+            if neighbor_query is not None:
+                explorer_obs=jp.concatenate([explorer_obs,neighbor_query(s,pulse_mask)],axis=-1)
             if mode=='fixed_random':
                 delta=jax.random.uniform(k,(count,4),minval=-1.,maxval=1.)
                 raw=delta
@@ -160,20 +170,20 @@ def collect(spec, output):
                 value=jp.zeros(count)
             elif spec.get('explorer_backend')=='rsl_rl':
                 from .rsl_pulse import sample
-                raw,delta,log_prob,value=sample(state,s.obs['privileged_state'],k)
+                raw,delta,log_prob,value=sample(state,explorer_obs,k)
             else:
                 logits=net.policy_network.apply(normalizer,params['policy'],s.obs)
                 raw=dist.sample_no_postprocessing(logits,k);delta=dist.postprocess(raw)
                 log_prob=dist.log_prob(logits,raw)
                 value=net.value_network.apply(normalizer,params['value'],s.obs)
             b=base(s.obs,k)[0]
-            apply_pulse=pulse_mask[:,None] if event else tick>=delay
+            apply_pulse=pulse_mask[:,None] if (event or mixed) else tick>=delay
             action,requested,effective=compose_residual_action(b,jp.where(apply_pulse,delta,0.),jp.asarray(spec['delta_limit']))
             nxt=step(s,action)
             finite=jp.all(jp.isfinite(nxt.data.qpos),axis=-1)&jp.all(jp.isfinite(nxt.data.qvel),axis=-1)
             terminal=nxt.done.astype(bool)|~finite
             after=physical_trace(env,nxt)
-            tape=dict(observation=s.obs['privileged_state'],raw_action=raw,log_prob=log_prob,value=value,mask=pulse_mask,prefix_mask=alive,terminal=terminal,finite=finite,action=action,base_action=b,delta=delta,requested_delta=requested,effective_delta=effective,qpos=nxt.data.qpos,qvel=nxt.data.qvel,phase=nxt.info['active_phase'],phase_before=s.info['active_phase'],phase_after=nxt.info['active_phase'],pulse_triggered=trigger_tick>=0,pulse_trigger_tick=trigger_tick,pulse_step_index=jp.where(pulse_mask,applied_steps,-1),pulse_event_ready=ready,action_clipped=jp.abs(requested-effective)>1e-7)
+            tape=dict(observation=explorer_obs,raw_action=raw,log_prob=log_prob,value=value,mask=pulse_mask,prefix_mask=alive,terminal=terminal,finite=finite,action=action,base_action=b,delta=delta,requested_delta=requested,effective_delta=effective,qpos=nxt.data.qpos,qvel=nxt.data.qvel,phase=nxt.info['active_phase'],phase_before=s.info['active_phase'],phase_after=nxt.info['active_phase'],pulse_triggered=trigger_tick>=0,pulse_trigger_tick=trigger_tick,pulse_step_index=jp.where(pulse_mask,applied_steps,-1),pulse_event_ready=ready,action_clipped=jp.abs(requested-effective)>1e-7)
             tape.update(after)
             tape.update({k+'_before':v for k,v in before.items()})
             tape['first_valid_contact']=~before['valid_contact_seen']&after['valid_contact_seen']&alive
@@ -185,7 +195,7 @@ def collect(spec, output):
             nxt=jax.tree_util.tree_map_with_path(choose,nxt,s)
             applied_steps=applied_steps+pulse_mask.astype(jp.int32)
             active=alive&~terminal
-            if event:active=active&(applied_steps<spec['pulse_steps'])
+            if event or mixed:active=active&(applied_steps<spec['pulse_steps'])
             return (nxt,key,active,trigger_tick,applied_steps,vz),tape
         carry=(initial,rng,jp.ones(count,bool),jp.full(count,-1,jp.int32),jp.zeros(count,jp.int32),
                initial.data.qvel[:,env._bundle.model_index.root_dof_address+2])
@@ -208,7 +218,7 @@ def collect(spec, output):
     if spec.get('reuse_prefix_collection'):
         import shutil
         previous=Path(spec['reuse_prefix_collection']);old=read(previous.parent/'collection_spec.json')
-        for field in ['round_index','explorer_checkpoint','pulse_steps','num_envs','delta_limit','bank','seed','pulse_start_schedule','pulse_event_schedule','controller_mode','pulse_descent_clearance']:
+        for field in ['round_index','explorer_checkpoint','pulse_steps','num_envs','delta_limit','bank','seed','pulse_start_schedule','pulse_event_schedule','controller_mode','pulse_descent_clearance','pulse_batch_mode','neighborhood','neighborhood_map_sha256']:
             if old.get(field)!=spec.get(field):raise ValueError('reused prefix contract differs: '+field)
         if _file_sha(previous/'behavior.msgpack')!=_file_sha(output/'behavior.msgpack'):raise ValueError('reused behavior differs')
         for filename in ['prefixes.npz','update_state.msgpack']:
@@ -226,7 +236,7 @@ def collect(spec, output):
     state['rng']=next_rng;(output/'update_state.msgpack').write_bytes(serialization.to_bytes(state))
     prefix_sha = _file_sha(output/'prefixes.npz')
     behavior_sha = _file_sha(output/'behavior.msgpack')
-    generator={**member['policy'],'actor_sha256':canonical_sha256(dict(base=member['policy']['actor_sha256'],residual=behavior_sha,delta=spec['delta_limit'],pulse_steps=spec['pulse_steps'],pulse_start_step=delay,controller_mode=mode,pulse_event=event,pulse_descent_clearance=descent_limit)),'payload_sha256':behavior_sha}
+    generator={**member['policy'],'actor_sha256':canonical_sha256(dict(base=member['policy']['actor_sha256'],residual=behavior_sha,delta=spec['delta_limit'],pulse_steps=spec['pulse_steps'],pulse_start_step=delay,pulse_batch_mode=spec.get('pulse_batch_mode','single'),neighborhood_map_sha256=spec.get('neighborhood_map_sha256'),controller_mode=mode,pulse_event=event,pulse_descent_clearance=descent_limit)),'payload_sha256':behavior_sha}
     rows=[]
     for e in range(count):
         t=int(np.flatnonzero(tape['prefix_mask'][:,e])[-1])
@@ -245,13 +255,13 @@ def collect(spec, output):
             snap=snapshot_from_arrays(arrays,env=env,record=generator,parent_trajectory=str(output/'prefixes.npz')+'::'+str(e),parent_state_sha256=prefix_sha)
             path=output/'snapshots'/f'{e:05d}';save_unified_envelope_snapshot(path,snap)
             endpoint=dict(snapshot=str(path),state_sha256=physical_state_sha256(snap),snapshot_context_sha256=snapshot_context_sha256(snap),endpoint_kind='continuation_snapshot')
-        rows.append(dict(index=e,cell=_cell_id(phase,'root_geometry_v1',quantize_coordinates(coords,ROOT_GEOMETRY_FIELDS)),coordinates=coords,phase=phase,**endpoint,prefix_file=str(output/'prefixes.npz'),prefix_sha256=prefix_sha,behavior_sha256=behavior_sha,prefix_terminal=terminal or not stage_reached,physical_prefix_terminal=terminal,pulse_start_step=trigger_step if event else delay,pulse_trigger_step=trigger_step,pulse_event=event,stage_reached=stage_reached,pulse_applied_steps=int(tape['mask'][:,e].sum()),label=None,learning_attempted=False))
+        rows.append(dict(index=e,cell=_cell_id(phase,'root_geometry_v1',quantize_coordinates(coords,ROOT_GEOMETRY_FIELDS)),coordinates=coords,phase=phase,**endpoint,prefix_file=str(output/'prefixes.npz'),prefix_sha256=prefix_sha,behavior_sha256=behavior_sha,prefix_terminal=terminal or not stage_reached,physical_prefix_terminal=terminal,pulse_start_step=trigger_step if (event or mixed) else delay,pulse_trigger_step=trigger_step,pulse_event=event,stage_reached=stage_reached,pulse_applied_steps=int(tape['mask'][:,e].sum()),label=None,learning_attempted=False))
     write(output/'candidates.json',rows)
-    write(output/'network_inventory.json',dict(**explorer_inventory(spec,params),base_actor_frozen=True,base_critic_frozen=True,inputs=106,history_frames=3,output_actions=4,controller_mode=mode,explorer_actor_used=mode=='learned_residual',explorer_trainable=mode=='learned_residual',exploration_critic_used=mode=='learned_residual',random_distribution='uniform[-1,1]' if mode=='fixed_random' else None,trace_schema='jit_pulse_physical_trace_v2',event_time_resolution_seconds=.02))
+    write(output/'network_inventory.json',dict(**explorer_inventory(spec,params),base_actor_frozen=True,base_critic_frozen=True,inputs=int(np.asarray(state['normalizer_mean']).size) if spec.get('explorer_backend')=='rsl_rl' else 106,history_frames=3,output_actions=4,controller_mode=mode,explorer_actor_used=mode=='learned_residual',explorer_trainable=mode=='learned_residual',exploration_critic_used=mode=='learned_residual',random_distribution='uniform[-1,1]' if mode=='fixed_random' else None,trace_schema='jit_pulse_physical_trace_v2',event_time_resolution_seconds=.02))
     write(output/'hyperparameters.json',{**spec,'pulse_descent_clearance':descent_limit,
         **({'inference_precision':'highest'} if spec.get('explorer_backend')=='rsl_rl' else {})})
     active_count=int(tape['prefix_mask'].sum());physical_count=count*executed_ticks
-    write(output/'status.json',dict(phase='completed',charged_interactions=0 if spec.get('reuse_prefix_collection') else physical_count,active_interactions=active_count,padding_interactions=physical_count-active_count,waiting_interactions=active_count-int(tape['mask'].sum()),pulse_training_steps=int(tape['mask'].sum()) if mode=='learned_residual' else 0,pulse_applied_steps=int(tape['mask'].sum()),pulse_start_step=delay if event is None else None,pulse_event=event,stage_not_reached=sum(not r['stage_reached'] for r in rows),executed_ticks=executed_ticks,wall_seconds=time.monotonic()-start))
+    write(output/'status.json',dict(phase='completed',charged_interactions=0 if spec.get('reuse_prefix_collection') else physical_count,active_interactions=active_count,padding_interactions=physical_count-active_count,waiting_interactions=active_count-int(tape['mask'].sum()),pulse_training_steps=int(tape['mask'].sum()) if mode=='learned_residual' else 0,pulse_applied_steps=int(tape['mask'].sum()),pulse_start_step=delay if event is None and not mixed else None,pulse_batch_mode=spec.get('pulse_batch_mode','single'),onset_counts={str(int(t)):int((delays==t).sum()) for t in np.unique(delays)},pulse_event=event,stage_not_reached=sum(not r['stage_reached'] for r in rows),executed_ticks=executed_ticks,wall_seconds=time.monotonic()-start))
 
 
 def evaluate(spec, output):

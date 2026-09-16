@@ -15,6 +15,7 @@ from pathlib import Path
 import pickle
 import tempfile
 from typing import Any, Mapping
+from types import SimpleNamespace
 
 import jax
 from jax import numpy as jp
@@ -309,11 +310,25 @@ def load_unified_envelope_snapshot(path: Path) -> UnifiedEnvelopeSnapshot:
 
 def restore_unified_envelope_snapshot(snapshot: UnifiedEnvelopeSnapshot, env: Any) -> mjx_env.State:
     """Restore one candidate with full unified metadata for the very next step."""
+    validate_unified_envelope_snapshot_runtime(snapshot, env)
+    return _restore_unified_envelope_payload(snapshot.__dict__, env)
+
+
+def validate_unified_envelope_snapshot_runtime(snapshot: UnifiedEnvelopeSnapshot, env: Any) -> None:
+    """Host identity checks shared by canonical and optional fused restoration."""
     if snapshot.compatibility_identity != compatibility_identity(env):
         raise ValueError("unified envelope snapshot runtime compatibility mismatch")
     if snapshot.xml_sha256 != env._bundle.xml_sha256:
         raise ValueError("unified envelope snapshot XML mismatch")
 
+
+def _restore_unified_envelope_payload(payload: Mapping[str, Any], env: Any) -> mjx_env.State:
+    """Canonical numerical reconstruction; caller must validate identity first.
+
+    Keeping this single implementation lets an optional JIT fuse the same
+    make_data/forward/history/event reconstruction without a qpos-only shortcut.
+    """
+    snapshot = SimpleNamespace(**payload)
     model = env._require_runtime_model()
     data = mjx_env.make_data(
         env.mj_model,
