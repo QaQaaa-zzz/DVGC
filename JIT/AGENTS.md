@@ -22,4 +22,12 @@ Respect the declared backend and budget for each stage.4096/8192/16384 vectorize
 
 Store each round's replot CSV/manifest, individual PNG/PDF/SVG, receipts and cost. Preserve observed gaps, missing evaluator outcomes and historical bank versions. Full images stay server-side; GitHub compact report absence of images is not a plotting failure.
 
+## 离地点对齐图（2026-09-18，用户要求保存并复用）
+
+- 使用 `PYTHONPATH=src /home/qy/mujoco_playground/.venv/bin/python cli/plot_liftoff_aligned.py --lineage <当前lineage目录> --output <新派生目录>`，在 JIT 目录执行；可沿 recovery/resume 祖先读取已完成轮次，零新增仿真，不覆盖原始记录。
+- 同时输出原世界坐标与 `x_relative=x_world-x_liftoff` 对齐视图，只平移水平位置，保留真实根部高度；离地点高度不强行拉齐。前缀和接续保持分段，不画虚构重放连接。
+- 默认离地诊断：先观察至少一个车轮间隙≤0，再取双轮间隙连续3个控制帧>0.01m的首帧；`--clearance` 和 `--hold-frames` 可显式配置。该诊断用于画图，排除初始悬空间隙，不能冒充正式物理子步离地事件或修改成功判据。未检出者须列入排除记录。
+- 默认每轮按成功候选索引均匀抽取最多24条，每候选取首个成功attempt；`--per-round 0` 才是所有成功候选。报告已完成轮次、成功候选总数、抽取数及可对齐数，不把抽样投影称完整包线。
+- 保留局部与完整恢复PNG/PDF/SVG、原始/对齐坐标NPZ、离地点CSV、见证/段索引JSON、来源哈希及INDEX。对齐坐标只比较形状，不参与世界坐标物理单元去重或可达性计数；不同prefix/suffix策略见证不等于单策略全程能力。
+
 Do not open final TEST. TRAIN adaptation and development ACCEPTANCE are not final held-out performance. Data rows share ancestors and are not independent repetitions. Follow root authority for authorization, git safety and report retrieval.
