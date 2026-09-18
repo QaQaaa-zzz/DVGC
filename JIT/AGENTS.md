@@ -31,3 +31,9 @@ Store each round's replot CSV/manifest, individual PNG/PDF/SVG, receipts and cos
 - 保留局部与完整恢复PNG/PDF/SVG、原始/对齐坐标NPZ、离地点CSV、见证/段索引JSON、来源哈希及INDEX。对齐坐标只比较形状，不参与世界坐标物理单元去重或可达性计数；不同prefix/suffix策略见证不等于单策略全程能力。
 
 Do not open final TEST. TRAIN adaptation and development ACCEPTANCE are not final held-out performance. Data rows share ancestors and are not independent repetitions. Follow root authority for authorization, git safety and report retrieval.
+
+## 固定策略大样本配对扰动（2026-09-18）
+
+- 复用 `cli/run_rsi_comparison.py prepare-batched --previous <已完成三策略实验> --output <新目录> --episodes <每策略回合数> --batch-size 256 --seed <新种子>`，随后 `launch --spec <新目录/spec.json> --repository <Git根> --snapshot <独立代码快照>`；预算为策略数×回合数×horizon，零训练。
+- 各批三者同seed/global episode偏移，尾批严格截断；逐批核对draw、共同存活请求、分母和成本。全部失败计入，实际有效扰动与请求分开保存，不宣称不同batch容量逐位等价。
+- 新样本不混入旧100回合；已有名义轨迹按哈希复用。全部批次NPZ、逐回合CSV、真实终点和无离地排除数保留；全部轨迹层可栅格化，PDF/SVG坐标及文字保留。重绘使用report的--report-output新目录，零额外交互。
