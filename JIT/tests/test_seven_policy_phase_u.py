@@ -61,7 +61,7 @@ def declarations(tmp_path):
 
 def prepare(declarations):
     sources,historical,previous,output=declarations
-    return pipeline.prepare_experiment(sources,historical,previous,output,training_seeds=[11,12,13],condition_seeds=[21,22,23,24])
+    return pipeline.prepare_experiment(sources,historical,previous,output,training_seeds=[11,12,13],condition_seeds=[21,22,23,24],execution_repository=Path(__file__).parents[2])
 
 
 def test_prepare_locks_sources_and_exact_budget_without_runtime_changes(declarations):
@@ -241,3 +241,38 @@ def test_preparation_locks_physical_assets_and_configs_pass_real_loader(declarat
         config=load_config(Path(arm['config']))
         assert config.ppo.requested_transitions==pipeline.TARGET
         assert config.formal.checkpoint_transitions==pipeline.SCHEDULE
+
+
+def test_explicit_execution_repository_replaces_old_evidence_snapshot(declarations,tmp_path):
+    previous=read(declarations[2]/'spec.json')
+    old=tmp_path/'old_snapshot';old.mkdir();previous['repo']=str(old)
+    write(declarations[2]/'spec.json',previous)
+    current=Path(__file__).parents[2]
+    spec=pipeline.prepare_experiment(*declarations,training_seeds=[11,12,13],condition_seeds=[21,22,23,24],
+                                     execution_repository=current)
+    assert spec['repo']==str(current)
+    assert spec['source_comparison_repository']==str(old)
+    assert spec['execution_identity']['repository']==str(current)
+    assert str(current/'JIT/cli/run_seven_policy_phase_u.py') in spec['execution_identity']['input_files']
+    assert str(current/'JIT/src/jit_dvgc/formal_training.py') in spec['execution_identity']['input_files']
+
+
+def test_missing_execution_entrypoint_rejected_before_output(declarations,tmp_path):
+    incomplete=tmp_path/'incomplete';incomplete.mkdir()
+    with pytest.raises(ValueError,match='entrypoint'):
+        pipeline.prepare_experiment(*declarations,training_seeds=[11,12,13],condition_seeds=[21,22,23,24],
+                                     execution_repository=incomplete)
+    assert not declarations[3].exists()
+
+
+def test_execution_entrypoint_drift_stops_before_any_child(declarations,tmp_path,monkeypatch):
+    import shutil
+    repo=Path(__file__).parents[2];snapshot=tmp_path/'execution_snapshot'
+    for source in ('JIT/src/jit_dvgc','JIT/cli','assets','data'):
+        shutil.copytree(repo/source,snapshot/source,ignore=shutil.ignore_patterns('__pycache__'))
+    pipeline.prepare_experiment(*declarations,training_seeds=[11,12,13],condition_seeds=[21,22,23,24],
+                                execution_repository=snapshot)
+    entry=snapshot/'JIT/cli/run_seven_policy_phase_u.py';entry.write_text(entry.read_text()+'\n# drift\n')
+    monkeypatch.setattr(pipeline,'_run_child',lambda *a,**k:pytest.fail('launched drifted entrypoint'))
+    with pytest.raises(ValueError,match='drift'):
+        pipeline.run_experiment(declarations[3]/'spec.json')

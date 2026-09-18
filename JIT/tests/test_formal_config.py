@@ -475,3 +475,38 @@ def test_active_v2_config_contains_no_target_or_deceleration_fields(jit_root):
             "deceleration_zone",
         ):
             assert forbidden not in encoded
+
+
+def test_generated_v4_accepts_actual_locked_historical_runtime(jit_root, tmp_path):
+    historical = (jit_root / 'runs/phase_u/'
+        'phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/resolved_config.json')
+    if not historical.is_file():
+        pytest.skip('requires the immutable requested historical Phase U artifact')
+    original = json.loads(historical.read_text())
+    assert original['ppo']['seed'] == 820701
+    assert original['ppo']['held_out_seeds'] == list(range(980001, 980009))
+    assert original['model']['naccdmax'] == 320
+    assert original['events']['jump_zone_x_max'] == 4.0
+    assert original['physical_limits']['max_abs_pitch'] == pytest.approx(math.radians(75))
+    path = _generated_v4_config(jit_root, tmp_path)
+    declared = json.loads(path.read_text())
+    payload = json.loads(historical.read_text())
+    for field in ('requested_transitions', 'num_evals', 'seed'):
+        payload['ppo'][field] = declared['ppo'][field]
+    payload['formal'] = declared['formal']
+    for field in ('initialization', 'run_declaration'):
+        payload[field] = declared[field]
+    payload['training_reference'] = {'resolved_config':str(historical.resolve()), 'sha256':_file_sha256(historical)}
+    path.write_text(json.dumps(payload))
+    config = load_config(path)
+    assert config.ppo.requested_transitions == 14991360
+    assert config.ppo.held_out_seeds == tuple(range(980001, 980009))
+    assert config.model['naccdmax'] == 320
+    assert config.events.jump_zone_x_max == 4.0
+    assert config.physical_limits.max_abs_pitch == pytest.approx(math.radians(75))
+    payload['reward']['height_coeff'] += 1
+    path.write_text(json.dumps(payload))
+    with pytest.raises(ValueError, match='reference.*drift'):
+        load_config(path)
+    with pytest.raises(ValueError, match='seed'):
+        load_config(historical)

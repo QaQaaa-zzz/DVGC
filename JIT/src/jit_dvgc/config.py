@@ -392,9 +392,11 @@ def _validate_generated_v4(
         raise ValueError("generated v4 training reference must use the v4 schema")
     if _GENERATED_V4_BLOCKS.intersection(reference_payload):
         raise ValueError("generated v4 training reference must be historical")
-    # A generated declaration may only point at an independently valid legacy
-    # v4 config; this keeps the reference hash from blessing method drift.
-    resolve_config_payload(reference_payload)
+    # Historical resolved configs bind the original experiment, whose seed and
+    # scientific constants may predate today's launch recipe. Validate their
+    # structure/runtime contract without silently substituting the newer recipe;
+    # the file hash and complete comparison below preserve historical identity.
+    resolve_config_payload(reference_payload, runtime_only=True)
 
     run_declaration = payload.get("run_declaration")
     if not isinstance(run_declaration, Mapping) or set(run_declaration) != {"run_id"}:

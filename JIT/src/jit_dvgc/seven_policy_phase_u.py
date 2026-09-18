@@ -48,8 +48,34 @@ def _safe_key(key):
     return key
 
 
+def _execution_identity(repository):
+    """Freeze the explicitly selected runnable code tree, including snapshots."""
+    repository = Path(repository).resolve()
+    required = ('JIT/cli/run_seven_policy_phase_u.py', 'JIT/cli/run_pulse_exploration.py',
+                'JIT/src/jit_dvgc/seven_policy_phase_u.py', 'JIT/src/jit_dvgc/formal_training.py',
+                'JIT/src/jit_dvgc/config.py', 'JIT/src/jit_dvgc/rsi_comparison.py')
+    missing = [relative for relative in required if not (repository/relative).is_file()]
+    if missing:
+        raise ValueError('execution repository missing required entrypoint/module: ' + ', '.join(missing))
+    files = sorted((repository/'JIT/src/jit_dvgc').rglob('*.py'))
+    files += sorted((repository/'JIT/cli').glob('*.py'))
+    locks = {}
+    _lock(files, locks)
+    relative_hashes = {str(Path(path).relative_to(repository)):sha for path,sha in locks.items()}
+    commit = None
+    root = subprocess.run(['git', '-C', str(repository), 'rev-parse', '--show-toplevel'],
+                          capture_output=True, text=True, timeout=10)
+    if root.returncode == 0 and Path(root.stdout.strip()).resolve() == repository:
+        revision = subprocess.run(['git', '-C', str(repository), 'rev-parse', 'HEAD'],
+                                  capture_output=True, text=True, check=True, timeout=10)
+        commit = revision.stdout.strip()
+    return dict(schema='jit_execution_code_identity_v1', repository=str(repository),
+                git_commit=commit, code_tree_sha256=canonical_sha256(relative_hashes),
+                input_files=locks, authority='Exact file hashes; git commit is provenance only')
+
+
 def prepare_experiment(sources, historical_config, previous, output, *, training_seeds,
-                       condition_seeds, python=None):
+                       condition_seeds, execution_repository, python=None):
     """Lock four declared sources, three Actor warm starts and four fixed windows."""
     from .phase_u_warm_start import load_phase_u_actor_initialization
     from .iterative_probe_training import load_phase_initializer
@@ -57,6 +83,7 @@ def prepare_experiment(sources, historical_config, previous, output, *, training
                                                     (sources, historical_config, previous, output)]
     if output.exists():
         raise FileExistsError(output)
+    execution = _execution_identity(execution_repository)
     declaration = read(sources)
     rows = declaration.get('sources', [])
     if declaration.get('schema') != 'jit_seven_policy_sources_v1' or len(rows) != 4:
@@ -73,10 +100,10 @@ def prepare_experiment(sources, historical_config, previous, output, *, training
     historical = read(historical_config)
     if historical.get('schema') != 'jit_phase_u_formal_v4':
         raise ValueError('historical resolved Phase U v4 config required')
-    locks = {}
+    locks = dict(execution['input_files'])
     _lock((sources, historical_config, previous/'spec.json', previous/'status.json'), locks)
     for asset in ('xml', 'reference'):
-        asset_path = (Path(source_spec['repo'])/historical['model'][asset+'_path']).resolve()
+        asset_path = (Path(execution['repository'])/historical['model'][asset+'_path']).resolve()
         if file_sha(asset_path) != historical['model'][asset+'_sha256']:
             raise ValueError('historical physical asset drift: ' + str(asset_path))
         _lock((asset_path,), locks)
@@ -185,7 +212,8 @@ def prepare_experiment(sources, historical_config, previous, output, *, training
                                          source_identities=identities))
     horizon = common['horizon']
     diagnostic_max = 3 * 2 * len(SCHEDULE[1:]) * len(historical['ppo']['held_out_seeds']) * historical['ppo']['episode_horizon']
-    spec = dict(schema='jit_seven_policy_phase_u_v1', output=str(output), repo=source_spec['repo'],
+    spec = dict(schema='jit_seven_policy_phase_u_v1', output=str(output), repo=execution['repository'],
+                source_comparison_repository=source_spec['repo'], execution_identity=execution,
                 python=str(python or source_spec['python']), historical_config=str(historical_config),
                 root_qpos_address=source_spec['root_qpos_address'], source_lock=str(output/'source_lock.json'),
                 source_lock_sha256=file_sha(output/'source_lock.json'), methods=methods, arms=arms,

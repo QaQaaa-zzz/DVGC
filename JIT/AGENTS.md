@@ -48,7 +48,7 @@ Do not open final TEST. TRAIN adaptation and development ACCEPTANCE are not fina
 
 ## 七策略 Phase U 顺序训练与四固定起扰窗口（2026-09-18）
 
-- 稳定入口为 `PYTHONPATH=JIT/src /home/qy/mujoco_playground/.venv/bin/python JIT/cli/run_seven_policy_phase_u.py prepare --sources <声明.json> --historical-config <历史Phase U resolved_config.json> --previous <已完成扰动对比目录> --output <新目录> --training-seeds <三个种子> --condition-seeds <四个种子>`；之后使用 `run --spec <新目录/spec.json>` 和 `report --spec <新目录/spec.json>`。命令从仓库根执行，report仅重读原始数据并生成新派生目录。
+- 稳定入口为 `PYTHONPATH=JIT/src /home/qy/mujoco_playground/.venv/bin/python JIT/cli/run_seven_policy_phase_u.py prepare --sources <声明.json> --historical-config <历史Phase U resolved_config.json> --previous <已完成扰动对比目录> --output <新目录> --execution-repository <当前代码仓库或独立快照> --training-seeds <三个种子> --condition-seeds <四个种子>`；之后使用 `run --spec <新目录/spec.json>` 和 `report --spec <新目录/spec.json>`。命令从仓库根执行，report仅重读原始数据并生成新派生目录。执行代码目录必须显式声明，核验所需CLI/模块并锁定Python源码；旧对比的repo仅作来源证据，不能自动当作新子进程的代码目录。
 - 来源声明schema为`jit_seven_policy_sources_v1`，`sources`恰好四行，每行声明`key/label/template_path/frozen_policy/warm_start`，三个warm_start=true的行另声明`descendant_key`。本次成员为lineage_repair_0010、fresh RSI 8,000,000步、历史Phase U 4,988,928步、lineage_repair_0070，以及除历史Phase U外三者各自的Phase U重训后代。成员名称写入声明，源码不按名称分支。
 - 每臂14,991,360个新增训练转移，保留历史Phase U物理、奖励、reset、动作及观测；Actor和normalizer来自身份锁定的development checkpoint，Critic和optimizer全新，训练计数从0开始。三个训练子进程顺序执行，不等待STTW或GPU空闲阈值。后代仍为Phase U checkpoint，经兼容性证明后使用`phase_policy`在完整任务中评估；不得改写为unified身份或宣称专家切换。
 - 四个独立条件使用单元素起扰计划`[0]`、`[5]`、`[10]`、`[15]`，分别只在0–2、5–7、10–12、15–17控制步请求四通道±0.25随机残差。每条件七策略各1,000回合、batch size 256，最后批232；共享条件种子和批偏移，全部失败计入。每批必须通过`verify_batch`及数组级固定窗口验收。

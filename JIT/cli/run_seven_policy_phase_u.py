@@ -15,6 +15,7 @@ def main():
     prepare.add_argument('--historical-config', type=Path, required=True)
     prepare.add_argument('--previous', type=Path, required=True)
     prepare.add_argument('--output', type=Path, required=True)
+    prepare.add_argument('--execution-repository', type=Path, required=True)
     prepare.add_argument('--training-seeds', type=int, nargs=3, required=True)
     prepare.add_argument('--condition-seeds', type=int, nargs=4, required=True)
     prepare.add_argument('--python')
@@ -26,7 +27,8 @@ def main():
     args = parser.parse_args()
     if args.command == 'prepare':
         result = prepare_experiment(args.sources, args.historical_config, args.previous, args.output,
-            training_seeds=args.training_seeds, condition_seeds=args.condition_seeds, python=args.python)
+            training_seeds=args.training_seeds, condition_seeds=args.condition_seeds,
+            execution_repository=args.execution_repository, python=args.python)
     elif args.command == '_train-arm':
         result = train_arm(args.spec, args.arm)
     elif args.command == 'run':
