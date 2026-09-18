@@ -116,3 +116,12 @@ def test_phase_policy_preserves_payload_and_rejects_runtime_drift(tmp_path,monke
     with pytest.raises(ValueError,match='runtime differs'):comparison.load_phase_evaluation_policy(spec,config,member)
     config_path.write_text('{}')
     with pytest.raises(ValueError,match='input drift'):comparison.load_phase_evaluation_policy(spec,config,member)
+
+
+def test_zero_amplitude_nominal_window_is_not_an_applied_disturbance():
+    tape={k:np.zeros((1,1),bool) for k in ('success','physical_failure')}
+    tape.update(prefix_mask=np.ones((1,1),bool),terminal=np.ones((1,1),bool),mask=np.ones((1,1),bool),
+                time=np.array([[.02]]),qpos=np.zeros((1,1,3)),effective_delta=np.zeros((1,1,4)))
+    row=episode_results(tape,0)[0]
+    assert row['pulse_applied_steps']==0
+    assert row['pulse_window_steps']==1

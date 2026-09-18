@@ -284,13 +284,18 @@ def episode_results(tape, q0):
         last = int(ticks[-1])
         success = bool(tape['success'][last, lane]); failure = bool(tape['physical_failure'][last, lane])
         code = int(tape['end_code'][last, lane]) if 'end_code' in tape else None
+        pulse_window = tape['mask'][:, lane] & tape['prefix_mask'][:, lane]
+        applied = pulse_window
+        if 'effective_delta' in tape:
+            applied = applied & np.any(tape['effective_delta'][:, lane] != 0, axis=-1)
         result.append(dict(episode=lane, success=success and not failure,
                            physical_failure=failure, conflict=success and failure,
                            end_code=code, terminal_reason=END_REASONS.get(code, 'not_recorded'),
                            environment_timeout=code == END_TIMEOUT,
                            horizon_exhausted=not bool(tape['terminal'][last, lane]),
                            control_steps=len(ticks), end_time_s=float(tape['time'][last, lane]),
-                           pulse_applied_steps=int(tape['mask'][:, lane].sum()),
+                           pulse_window_steps=int(pulse_window.sum()),
+                           pulse_applied_steps=int(applied.sum()),
                            peak_root_z_m=float(tape['qpos'][ticks, lane, q0+2].max())))
     return result
 

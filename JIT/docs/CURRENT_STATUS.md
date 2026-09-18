@@ -1,5 +1,19 @@
 # JIT 当前状态与证据
 
+## 2026-09-18 三策略100回合配对扰动已完成
+
+800万步RSI训练已完成（8000000训练+386末TRAIN检查）；原Phase U transition_4988928
+新增100随机扰动+1名义回合，与同一批lineage_repair_0010和RSI轨迹合图。
+基线76/100、RSI72/100、Phase U66/100；三者无扰动均成功，根部峰高分别0.534/0.529/0.677m。
+原Phase U更高不等于稳定恢复更好；RSI在本次开发样本未超过lineage_repair_0010。
+全部300回合收到非零扰动且检出诊断离地，全部失败保留。随机draw及共同存活请求逐元素配对。
+
+新增预算/计费40400（有效6822），复用80800，零训练；评估冻结代码196c27e。
+两子进程退出0，桌面完成通知交付成功；原载荷Actor/critic/normalizer不变，独立保留Phase U来源，
+不将共享运行模板当作其训练身份。报告CSV区分零幅值名义窗口与实际非零扰动，零仿真重建comparison_verified。
+44项相关CPU检查通过（16扩展/脉冲与28训练回归），已核验PNG图面、输入和冻结代码哈希。
+[三策略图与数据](../runs/experiments/three_policy_pulse_comparison_20260918/INDEX.md)。
+
 ## 2026-09-18 指定 Phase U 奖励的全新 RSI 800万步
 
 用户指定 `phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/checkpoints/transition_4988928` 为奖励来源。
