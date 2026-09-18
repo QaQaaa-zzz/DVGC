@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 
@@ -28,6 +29,126 @@ V4_10M_CHECKPOINTS = (
     9_977_856,
 )
 V4_10M_EVALUATIONS = V4_10M_CHECKPOINTS[1:]
+GENERATED_V4_CHECKPOINTS = (
+    0,
+    737_280,
+    2_998_272,
+    7_495_680,
+    11_993_088,
+    14_991_360,
+)
+GENERATED_V4_EVALUATIONS = GENERATED_V4_CHECKPOINTS[1:]
+
+
+def _file_sha256(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _generated_v4_config(jit_root, tmp_path, mutate=None):
+    reference = jit_root / "configs" / "phase_u_continuation_10m.json"
+    frozen_policy = tmp_path / "source_frozen_policy.json"
+    frozen_policy.write_text("{}\n", encoding="utf-8")
+    payload = json.loads(reference.read_text(encoding="utf-8"))
+    payload["ppo"].update(
+        requested_transitions=14_991_360,
+        num_evals=611,
+        seed=821_101,
+    )
+    payload["formal"].update(
+        checkpoint_transitions=list(GENERATED_V4_CHECKPOINTS),
+        fixed_evaluation_transitions=list(GENERATED_V4_EVALUATIONS),
+        resume_semantics="parameter_warm_start_optimizer_reset",
+    )
+    payload["initialization"] = {
+        "actor": "warm_start_frozen_development",
+        "critic": "fresh",
+        "optimizer": "fresh",
+        "source_frozen_policy": str(frozen_policy.resolve()),
+    }
+    payload["training_reference"] = {
+        "resolved_config": str(reference.resolve()),
+        "sha256": _file_sha256(reference),
+    }
+    payload["run_declaration"] = {"run_id": "descendant_repair10"}
+    if mutate is not None:
+        mutate(payload)
+    path = tmp_path / "generated_v4.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    return path
+
+
+def test_generated_v4_config_is_reference_locked_with_exact_610_block_schedule(
+    jit_root, tmp_path
+):
+    config = load_config(_generated_v4_config(jit_root, tmp_path))
+
+    assert config.schema == "jit_phase_u_formal_v4"
+    assert config.ppo.requested_transitions == 14_991_360
+    assert config.ppo.block_transitions == 24_576
+    assert config.ppo.num_evals == 611
+    assert config.ppo.seed == 821_101
+    assert config.ppo.held_out_seeds == tuple(range(1000001, 1000009))
+    assert config.formal is not None
+    assert config.formal.formal_blocks == 610
+    assert config.formal.checkpoint_transitions == GENERATED_V4_CHECKPOINTS
+    assert config.formal.fixed_evaluation_transitions == GENERATED_V4_EVALUATIONS
+    assert config.formal.resume_semantics == "parameter_warm_start_optimizer_reset"
+
+
+@pytest.mark.parametrize(
+    ("mutate", "message"),
+    [
+        (
+            lambda p: p["initialization"].update(actor="wrong"),
+            "initialization",
+        ),
+        (
+            lambda p: p["initialization"].update(critic="restored"),
+            "initialization",
+        ),
+        (
+            lambda p: p["initialization"].update(
+                source_frozen_policy="relative/policy.json"
+            ),
+            "source_frozen_policy.*absolute",
+        ),
+        (
+            lambda p: p["training_reference"].update(sha256="0" * 64),
+            "reference.*hash",
+        ),
+        (
+            lambda p: p["ppo"].update(held_out_seeds=list(range(1000002, 1000010))),
+            "reference.*drift",
+        ),
+        (lambda p: p["reward"].update(height_coeff=41.0), "reference.*drift"),
+        (
+            lambda p: p["ppo"].update(requested_transitions=14_991_359),
+            "whole PPO blocks|block-aligned",
+        ),
+        (lambda p: p["ppo"].update(num_evals=610), "num_evals"),
+        (
+            lambda p: p["formal"]["checkpoint_transitions"].__setitem__(1, 761_856),
+            "exact checkpoint schedule",
+        ),
+        (
+            lambda p: p["formal"].update(
+                fixed_evaluation_transitions=list(GENERATED_V4_EVALUATIONS[:-1])
+            ),
+            "nonzero checkpoint",
+        ),
+        (
+            lambda p: p["formal"].update(resume_semantics="fresh_only"),
+            "resume_semantics",
+        ),
+        (lambda p: p.pop("run_declaration"), "three generated blocks"),
+    ],
+)
+def test_generated_v4_config_rejects_identity_or_schedule_drift(
+    jit_root, tmp_path, mutate, message
+):
+    path = _generated_v4_config(jit_root, tmp_path, mutate)
+    with pytest.raises(ValueError, match=message):
+        load_config(path)
 
 
 def test_formal_config_is_exactly_39_aligned_blocks(jit_root):

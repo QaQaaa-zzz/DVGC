@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass, replace
 import hashlib
 import json
@@ -20,6 +21,19 @@ def canonical_sha256(value: Mapping[str, Any]) -> str:
 
 
 from .evidence_hash_cache import file_sha256
+
+
+_GENERATED_V4_BLOCKS = frozenset(
+    {"initialization", "training_reference", "run_declaration"}
+)
+_GENERATED_V4_CHECKPOINTS = (
+    0,
+    737_280,
+    2_998_272,
+    7_495_680,
+    11_993_088,
+    14_991_360,
+)
 
 
 def _positive(name: str, value: Any) -> float:
@@ -326,6 +340,115 @@ def _validate_formal(
         )
 
 
+def _is_generated_v4(payload: Mapping[str, Any], schema: str) -> bool:
+    if schema != "jit_phase_u_formal_v4":
+        return False
+    present = _GENERATED_V4_BLOCKS.intersection(payload)
+    if present and present != _GENERATED_V4_BLOCKS:
+        raise ValueError("generated v4 config must declare all three generated blocks")
+    return bool(present)
+
+
+def _validate_generated_v4(
+    payload: Mapping[str, Any], ppo: PPOConfig, formal: FormalTrainingConfig
+) -> None:
+    initialization = payload.get("initialization")
+    if not isinstance(initialization, Mapping):
+        raise ValueError("generated v4 initialization must be an object")
+    expected_initialization = {
+        "actor": "warm_start_frozen_development",
+        "critic": "fresh",
+        "optimizer": "fresh",
+        "source_frozen_policy": initialization.get("source_frozen_policy"),
+    }
+    if dict(initialization) != expected_initialization:
+        raise ValueError("generated v4 initialization contract drift")
+    source_policy = Path(str(initialization["source_frozen_policy"]))
+    if not source_policy.is_absolute():
+        raise ValueError(
+            "generated v4 initialization source_frozen_policy must be absolute"
+        )
+
+    reference = payload.get("training_reference")
+    if not isinstance(reference, Mapping) or set(reference) != {
+        "resolved_config",
+        "sha256",
+    }:
+        raise ValueError("generated v4 training reference contract drift")
+    reference_path = Path(str(reference["resolved_config"]))
+    if not reference_path.is_absolute() or not reference_path.is_file():
+        raise ValueError(
+            "generated v4 training reference must name an existing absolute file"
+        )
+    if file_sha256(reference_path) != str(reference["sha256"]):
+        raise ValueError("generated v4 training reference hash mismatch")
+    try:
+        reference_payload = json.loads(reference_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError("generated v4 training reference is unreadable") from exc
+    if not isinstance(reference_payload, dict):
+        raise ValueError("generated v4 training reference must be a JSON object")
+    if reference_payload.get("schema") != "jit_phase_u_formal_v4":
+        raise ValueError("generated v4 training reference must use the v4 schema")
+    if _GENERATED_V4_BLOCKS.intersection(reference_payload):
+        raise ValueError("generated v4 training reference must be historical")
+    # A generated declaration may only point at an independently valid legacy
+    # v4 config; this keeps the reference hash from blessing method drift.
+    resolve_config_payload(reference_payload)
+
+    run_declaration = payload.get("run_declaration")
+    if not isinstance(run_declaration, Mapping) or set(run_declaration) != {"run_id"}:
+        raise ValueError("generated v4 run_declaration contract drift")
+    run_id = run_declaration["run_id"]
+    if (
+        not isinstance(run_id, str)
+        or not run_id
+        or Path(run_id).name != run_id
+        or run_id in {".", ".."}
+    ):
+        raise ValueError("generated v4 run_declaration run_id must be a path-safe name")
+
+    candidate_identity = copy.deepcopy(dict(payload))
+    for block in _GENERATED_V4_BLOCKS:
+        candidate_identity.pop(block)
+    reference_identity = copy.deepcopy(reference_payload)
+    for field in ("requested_transitions", "num_evals", "seed"):
+        candidate_identity["ppo"][field] = reference_identity["ppo"][field]
+    for field in (
+        "checkpoint_transitions",
+        "fixed_evaluation_transitions",
+        "resume_semantics",
+    ):
+        candidate_identity["formal"][field] = reference_identity["formal"][field]
+    if candidate_identity != reference_identity:
+        raise ValueError("generated v4 training reference contract drift")
+
+    if ppo.requested_transitions <= 0:
+        raise ValueError("generated v4 requested_transitions must be positive")
+    if ppo.requested_transitions % ppo.block_transitions:
+        raise ValueError("generated v4 target must be block-aligned")
+    if ppo.num_evals != ppo.requested_transitions // ppo.block_transitions + 1:
+        raise ValueError("generated v4 num_evals must equal target blocks plus one")
+    checkpoints = formal.checkpoint_transitions
+    if not checkpoints or checkpoints[0] != 0:
+        raise ValueError("generated v4 checkpoints must start at zero")
+    if tuple(sorted(set(checkpoints))) != checkpoints:
+        raise ValueError("generated v4 checkpoints must be strictly increasing")
+    if any(step % ppo.block_transitions for step in checkpoints):
+        raise ValueError("generated v4 checkpoints must be block-aligned")
+    if checkpoints[-1] != ppo.requested_transitions:
+        raise ValueError("generated v4 checkpoints must end at the target")
+    if checkpoints != _GENERATED_V4_CHECKPOINTS:
+        raise ValueError("generated v4 config must use the exact checkpoint schedule")
+    if formal.fixed_evaluation_transitions != checkpoints[1:]:
+        raise ValueError("generated v4 evaluation must run at every nonzero checkpoint")
+    if formal.resume_semantics != "parameter_warm_start_optimizer_reset":
+        raise ValueError(
+            "generated v4 resume_semantics must declare "
+            "parameter_warm_start_optimizer_reset"
+        )
+
+
 def _validate_approved_v2_method(
     schema: str,
     *,
@@ -615,6 +738,7 @@ def resolve_config_payload(payload: Mapping[str, Any], *, runtime_only: bool = F
         raise ValueError("timing constants do not produce exactly four substeps")
     if tuple(payload.get("action_order", ACTION_ORDER)) != ACTION_ORDER:
         raise ValueError("action order does not match the immutable contract")
+    generated_v4 = _is_generated_v4(payload, schema)
 
     ppo_payload = dict(payload["ppo"])
     ppo_payload["held_out_seeds"] = tuple(int(x) for x in ppo_payload["held_out_seeds"])
@@ -636,7 +760,10 @@ def resolve_config_payload(payload: Mapping[str, Any], *, runtime_only: bool = F
             block_transitions=ppo.block_transitions,
         )
         if not runtime_only:
-            _validate_formal(schema, ppo, formal)
+            if generated_v4:
+                _validate_generated_v4(payload, ppo, formal)
+            else:
+                _validate_formal(schema, ppo, formal)
     elif "formal" in payload:
         raise ValueError("smoke config must not contain formal settings")
     events = _dataclass_from(EventConfig, payload["events"])
@@ -747,7 +874,7 @@ def resolve_config_payload(payload: Mapping[str, Any], *, runtime_only: bool = F
         if schema.endswith(("_v3", "_v4"))
         else _validate_approved_v2_method
     )
-    if not runtime_only:
+    if not runtime_only and not generated_v4:
         validator(
             schema,
             model=payload["model"],

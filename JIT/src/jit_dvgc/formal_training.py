@@ -532,6 +532,20 @@ def run_phase_u_formal(
     config = load_config(Path(config_path))
     if config.formal is None:
         raise ValueError("formal training requires the formal config schema")
+    declared_initialization = config.raw.get("initialization")
+    if declared_initialization is not None:
+        expected_source = Path(
+            str(declared_initialization["source_frozen_policy"])
+        ).resolve()
+        provided_source = (
+            None
+            if actor_init_frozen_policy is None
+            else Path(actor_init_frozen_policy).resolve()
+        )
+        if provided_source != expected_source:
+            raise ValueError(
+                "actor_init_frozen_policy must match the config initialization source"
+            )
     if (
         restore_checkpoint is not None
         and config.formal.resume_semantics == "fresh_only"

@@ -44,6 +44,45 @@ V4_10M_CHECKPOINTS = (
     7_987_200,
     9_977_856,
 )
+GENERATED_V4_CHECKPOINTS = (
+    0,
+    737_280,
+    2_998_272,
+    7_495_680,
+    11_993_088,
+    14_991_360,
+)
+
+
+def _generated_v4_config(jit_root, tmp_path, *, run_id):
+    reference = jit_root / "configs" / "phase_u_continuation_10m.json"
+    source_policy = tmp_path / "declared_frozen_policy.json"
+    source_policy.write_text("{}\n", encoding="utf-8")
+    payload = json.loads(reference.read_text(encoding="utf-8"))
+    payload["ppo"].update(
+        requested_transitions=14_991_360,
+        num_evals=611,
+        seed=821_101,
+    )
+    payload["formal"].update(
+        checkpoint_transitions=list(GENERATED_V4_CHECKPOINTS),
+        fixed_evaluation_transitions=list(GENERATED_V4_CHECKPOINTS[1:]),
+        resume_semantics="parameter_warm_start_optimizer_reset",
+    )
+    payload["initialization"] = {
+        "actor": "warm_start_frozen_development",
+        "critic": "fresh",
+        "optimizer": "fresh",
+        "source_frozen_policy": str(source_policy.resolve()),
+    }
+    payload["training_reference"] = {
+        "resolved_config": str(reference.resolve()),
+        "sha256": hashlib.sha256(reference.read_bytes()).hexdigest(),
+    }
+    payload["run_declaration"] = {"run_id": run_id}
+    config_path = tmp_path / "generated_v4.json"
+    config_path.write_text(json.dumps(payload), encoding="utf-8")
+    return config_path, source_policy
 
 
 def _identity():
@@ -1157,6 +1196,35 @@ def test_formal_runner_rejects_full_resume_with_actor_initialization(
             run_root=tmp_path,
             backend_name=unexpected_backend,
         )
+    assert not (tmp_path / run_id).exists()
+
+
+@pytest.mark.parametrize("cli_source", ["missing", "mismatch"])
+def test_generated_v4_runner_requires_declared_actor_initialization_source(
+    jit_root, tmp_path, cli_source
+):
+    run_id = f"generated_source_{cli_source}"
+    config_path, declared_source = _generated_v4_config(
+        jit_root, tmp_path, run_id=run_id
+    )
+    provided_source = None
+    if cli_source == "mismatch":
+        provided_source = tmp_path / "different_frozen_policy.json"
+        provided_source.write_text("{}\n", encoding="utf-8")
+
+    def unexpected_backend():
+        raise AssertionError("backend must not be inspected before source validation")
+
+    with pytest.raises(ValueError, match="actor_init_frozen_policy.*initialization"):
+        run_phase_u_formal(
+            config_path,
+            run_id,
+            actor_init_frozen_policy=provided_source,
+            run_root=tmp_path,
+            backend_name=unexpected_backend,
+        )
+
+    assert declared_source.is_file()
     assert not (tmp_path / run_id).exists()
 
 
