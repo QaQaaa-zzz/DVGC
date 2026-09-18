@@ -59,6 +59,10 @@ def test_batched_report_keeps_every_episode_and_cost(tmp_path):
     assert result['methods']['baseline']['episodes']==3
     assert result['charged_interactions']==18
     assert result['aligned_exclusions']==dict(baseline=3,fresh_rsi=3,phase_u=3)
+    assert result['display_contract']['world_x_max_m']==5.5
+    assert result['display_contract']['aligned_x_max_m']==5.5
+    assert (tmp_path/'comparison/aligned_density.png').exists()
+    assert (tmp_path/'comparison/plot_data.npz').exists()
     rows=list(csv.DictReader((tmp_path/'comparison/episodes.csv').open()))
     assert len(rows)==9
     for m in ('baseline','fresh_rsi','phase_u'):

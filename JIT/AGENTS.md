@@ -37,3 +37,4 @@ Do not open final TEST. TRAIN adaptation and development ACCEPTANCE are not fina
 - 复用 `cli/run_rsi_comparison.py prepare-batched --previous <已完成三策略实验> --output <新目录> --episodes <每策略回合数> --batch-size 256 --seed <新种子>`，随后 `launch --spec <新目录/spec.json> --repository <Git根> --snapshot <独立代码快照>`；预算为策略数×回合数×horizon，零训练。
 - 各批三者同seed/global episode偏移，尾批严格截断；逐批核对draw、共同存活请求、分母和成本。全部失败计入，实际有效扰动与请求分开保存，不宣称不同batch容量逐位等价。
 - 新样本不混入旧100回合；已有名义轨迹按哈希复用。全部批次NPZ、逐回合CSV、真实终点和无离地排除数保留；全部轨迹层可栅格化，PDF/SVG坐标及文字保留。重绘使用report的--report-output新目录，零额外交互。
+- 大样本轨迹主图不要把不同策略的万条折线叠在同一轴。按策略使用共同尺度的小多图和回合等权二维密度，同时给出成功率区间、统一分母失败组成和峰值分布；保留独立离地点对齐密度图。用户指定显示边界时只裁剪图面，不删原始轨迹或改变统计分母，并在summary记录边界及越界回合数。
