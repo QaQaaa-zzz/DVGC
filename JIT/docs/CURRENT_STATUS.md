@@ -1,5 +1,23 @@
 # JIT 当前状态与证据
 
+## 2026-09-18 指定 Phase U 奖励的全新 RSI 800万步
+
+用户指定 `phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/checkpoints/transition_4988928` 为奖励来源。
+实际恢复检查通过：训练计数4988928，配置哈希 `baae0efb9be3d35daad6ecfd0a6e36afdbf3aecc9d2f45f4699e0eca6997284d`。
+其冻结 resolved_config 已是前次998400步RSI的上游奖励来源，因此没有更换奖励数值。
+仍以 original_all_phases 将原Phase U公式用于完整RSI回合，采用stable_forward_recovery终点；
+这不同于原模型仅训练上升阶段的任务范围，不宣称重现其整个训练实验。
+
+新Actor/Critic/优化器/归一化从零初始化，不加载指定模型或前次RSI参数。
+同一1368原始完整快照，20%固定起点、80%RSI，保留原PPO配置及种子9182601。
+预算8000000步（2500整批），末TRAIN检查最多1600步，后续基线lineage_repair_0010和新策略
+各1无扰动+100配对随机脉冲回合最多80800步，总上限8082400；不自动续训。
+
+独立目录 [实验索引](../runs/experiments/fresh_rsi_phase_u_reward_8m_20260918/INDEX.md)，
+含奖励来源审计、完整参数、零交互1368状态预检及输入哈希锁。
+冻结代码0ccb2ee，监督PID457072、训练PID457447、监视PID457073；已确认实际采样至少240000步，结果尚未完成。
+实时进度以该目录status.json和training/fresh_rsi/status.json为准。前次负结果和产物保留。
+
 ## 2026-09-18 全新 RSI 998400步与初始策略对照：负结果
 
 用户授权从对齐图对应的原始完整快照进行全新训练，并最终指定基线
