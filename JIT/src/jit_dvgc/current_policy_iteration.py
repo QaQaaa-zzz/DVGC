@@ -14,7 +14,9 @@ def verify_stage_reuse(previous_spec, current_spec):
     """Match science inputs, resolving relocated candidate/bank manifests."""
     from .probe_bank import load_probe_bank
     def normalize(spec):
-        result={k:v for k,v in spec.items() if k not in ('input_files','source_locks','resume_stage_root','resume_boundary','repo','code_commit')}
+        # Launch resources and the finite outer stopping horizon do not alter a
+        # saved stage. The caller separately validates the new total budget.
+        result={k:v for k,v in spec.items() if k not in ('input_files','source_locks','resume_stage_root','resume_boundary','repo','code_commit','gate','rounds','maximum_interactions','maximum_actual_interactions','resume_evaluation_root')}
         if 'bank' in result:
             bank=load_probe_bank(Path(result['bank']))
             result['bank']={'task':bank['task'],'members':{m['name']:m['policy'] for m in bank['members']}}

@@ -63,3 +63,31 @@ def test_failed_shard_keeps_reservation_separate_from_measured_completed_cost(tm
     assert s['incomplete_reserved_interactions']==800
     assert s['accounting']=='completed_shards_only_with_incomplete_reservation'
     assert s['active_shard']==0
+
+
+def test_resume_completed_shards_requires_locks_and_charges_only_new_work(tmp_path,monkeypatch):
+    from jit_dvgc.probe_bank import _file_sha
+    spec,calls=setup_case(tmp_path,monkeypatch)
+    old=tmp_path/'old';evaluate_batched(spec,old)
+    # Only the first shard is complete in this interrupted run.
+    for i in (1,2):
+        (old/f'shard_{i:04d}/evaluation/status.json').unlink()
+    spec['resume_evaluation_root']=str(old)
+    paths=[old/'shard_0000'/p for p in ('spec.json','evaluation/status.json','evaluation/results.json')]
+    spec['input_files']={str(p):_file_sha(p) for p in paths}
+    calls.clear();out=tmp_path/'resumed';evaluate_batched(spec,out)
+    s=json.loads((out/'status.json').read_text())
+    assert len(calls)==2
+    assert s['charged_interactions']==30 and s['reused_interactions']==20
+    assert len(json.loads((out/'results.json').read_text()))==5
+    spec['resume_evaluation_root']=str(out)
+    for i in range(3):
+        for filename in ('spec.json','evaluation/status.json','evaluation/results.json'):
+            p=(out/f'shard_{i:04d}'/filename).resolve()
+            spec['input_files'][str(p)]=_file_sha(p)
+    calls.clear();evaluate_batched(spec,tmp_path/'twice')
+    assert not calls
+    assert json.loads((tmp_path/'twice/status.json').read_text())['charged_interactions']==0
+    paths[-1].write_text('[]')
+    with pytest.raises(ValueError,match='lock'):
+        evaluate_batched(spec,tmp_path/'tampered')

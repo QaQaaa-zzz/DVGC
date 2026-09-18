@@ -30,6 +30,13 @@ def test_reuse_rejects_scientific_drift_but_allows_new_code_locks():
     with pytest.raises(ValueError):iteration.verify_stage_reuse({'seed':1},{'seed':2})
 
 
+def test_reuse_allows_new_stop_horizon_and_resource_gate_only():
+    old={'rounds':150,'maximum_interactions':999999,'gate':{'kind':'user_requested_immediate'},'horizon':400,'seed':5}
+    new={**old,'rounds':100,'maximum_interactions':666666,'gate':{'kind':'gpu_idle','minimum_free_mib':20000}}
+    iteration.verify_stage_reuse(old,new)
+    with pytest.raises(ValueError):iteration.verify_stage_reuse(old,{**new,'horizon':200})
+
+
 def test_promotion_requires_new_success_and_old_retention_and_start():
     def row(a,b):
         return dict(attempts=[dict(policy='old',label=a),dict(policy='new',label=b)])

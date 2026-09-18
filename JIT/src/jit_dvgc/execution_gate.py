@@ -131,8 +131,25 @@ def check_execution_gate(
             query = subprocess.run(['nvidia-smi', '--query-compute-apps=pid,used_memory',
                 '--format=csv,noheader,nounits'], check=True, text=True,
                 capture_output=True, timeout=10)
-            return gpu_idle_assessment(query.stdout)
-        except (OSError, subprocess.SubprocessError) as exc:
+            result = gpu_idle_assessment(query.stdout)
+            if 'minimum_free_mib' in gate:
+                minimum = gate['minimum_free_mib']
+                if type(minimum) is not int or minimum <= 0:
+                    raise ValueError('minimum_free_mib must be a positive integer')
+                memory = subprocess.run(['nvidia-smi', '--query-gpu=memory.free,memory.total',
+                    '--format=csv,noheader,nounits'], check=True, text=True,
+                    capture_output=True, timeout=10)
+                rows = [tuple(int(x.strip()) for x in line.split(','))
+                        for line in memory.stdout.splitlines() if line.strip()]
+                if not rows or any(len(row) != 2 or not 0 <= row[0] <= row[1] for row in rows):
+                    raise ValueError('invalid GPU memory inventory')
+                result['memory_free_total_mib'] = rows
+                result['minimum_free_mib'] = minimum
+                if any(free < minimum for free, total in rows):
+                    result.update(ready=False, phase='insufficient_free_memory')
+                    result['reasons'].append('GPU free memory below declared margin')
+            return result
+        except (OSError, ValueError, subprocess.SubprocessError) as exc:
             return {'ready': False, 'reasons': [str(exc)], 'phase': 'unknown'}
     result: dict[str, Any] = {"ready": False, "reasons": [], "phase": None,
                               "matching_processes": [], "status_path": None}

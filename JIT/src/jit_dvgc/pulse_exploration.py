@@ -228,6 +228,10 @@ def run(spec_path,output):
                 write(directory/(name+'_reuse.json'),dict(previous=str(prior),
                     receipt_sha256=_file_sha(prior/'status.json'),new_interactions=0))
                 return prior
+            if (mode=='evaluate' and args.get('evaluation_batch_size')
+                    and (prior/'status.json').exists()):
+                verify_stage_reuse(read(prior.parent/(name+'_spec.json')),args)
+                args={**args,'resume_evaluation_root':str(prior)}
         p=directory/(name+'_spec.json');write(p,args);out=directory/name
         cost=child(directory,name,['JIT/cli/run_pulse_exploration.py','--mode',mode,'--spec',p,'--output',out],maximum)
         result=read(out/'status.json');actual=result['charged_interactions']
@@ -247,6 +251,7 @@ def run(spec_path,output):
             if spec.get('neighborhood'):neighborhood_seeds.extend(neighborhood_seed_history(previous))
             metrics=read(previous/'training_metrics.json');first_round=len(metrics)
             if first_round != boundary['completed_rounds']:raise ValueError('boundary round count drift')
+            if not 0 < first_round < spec['rounds']:raise ValueError('resume requires unfinished rounds within the new limit')
             bank_path=Path(boundary['bank']);bank=load_probe_bank(bank_path)
             source=next(m for m in bank['members'] if m['name']==boundary['source'])
             checkpoint=boundary['explorer_checkpoint'];support=read(boundary['support'])

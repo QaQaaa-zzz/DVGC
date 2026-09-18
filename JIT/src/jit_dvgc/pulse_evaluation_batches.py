@@ -39,10 +39,12 @@ def evaluate_batched(spec, output):
     output = Path(output).resolve();output.mkdir(parents=True, exist_ok=False)
     start = time.monotonic(); merged = []; receipts = []
     charged = active = padding = peak = 0
+    reused_interactions = 0
     incomplete_reservation = 0
     active_shard = None
     def status(phase, **extra):
         write(output/'status.json', dict(phase=phase, charged_interactions=charged,
+            reused_interactions=reused_interactions,
             active_interactions=active, padding_interactions=padding,
             evaluation_batch_size=spec['evaluation_batch_size'], completed_shards=len(receipts),
             total_shards=len(batches), peak_child_rss_kib=peak,
@@ -55,7 +57,7 @@ def evaluate_batched(spec, output):
         for ordinal, (batch, lanes, full_count) in enumerate(batches):
             directory=output/f'shard_{ordinal:04d}';directory.mkdir()
             candidates=directory/'candidates.json';write(candidates,batch)
-            child={k:v for k,v in spec.items() if k!='evaluation_batch_size'}
+            child={k:v for k,v in spec.items() if k not in ('evaluation_batch_size','resume_evaluation_root')}
             child.update(candidates=str(candidates),budget=len(batch)*spec['horizon'],
                          suffix_rng_count=full_count,suffix_rng_indices=lanes)
             child_spec=directory/'spec.json';write(child_spec,child)
@@ -72,19 +74,41 @@ def evaluate_batched(spec, output):
             path=directory/'plan.json';write(path,plan)
             status('running',active_shard=ordinal,reserved_attempt_interactions=child['budget'])
             active_shard=ordinal
-            incomplete_reservation=child['budget']
-            result=run_gated_plan(path,directory/'execution',wait=True,poll_seconds=5)
-            incomplete_reservation=result.get('reserved_interactions',incomplete_reservation)
-            if result['phase']!='completed':
-                raise RuntimeError(f'evaluation shard {ordinal} stopped: {result["phase"]}')
-            receipt=read(directory/'evaluation/status.json');evaluated=read(directory/'evaluation/results.json')
+            incomplete_reservation=0
+            prior = (Path(spec['resume_evaluation_root'])/f'shard_{ordinal:04d}'
+                     if spec.get('resume_evaluation_root') else None)
+            reused = bool(prior is not None and (prior/'evaluation/status.json').exists()
+                          and read(prior/'evaluation/status.json')['phase']=='completed')
+            if reused:
+                from .current_policy_iteration import verify_stage_reuse
+                for filename in ('spec.json','evaluation/status.json','evaluation/results.json'):
+                    artifact=(prior/filename).resolve()
+                    if spec['input_files'].get(str(artifact)) != _file_sha(artifact):
+                        raise ValueError('completed shard reuse requires matching artifact locks')
+                verify_stage_reuse(read(prior/'spec.json'),child)
+                receipt=read(prior/'evaluation/status.json');evaluated=read(prior/'evaluation/results.json')
+                write(directory/'reuse.json',dict(previous=str(prior),new_interactions=0,
+                    receipt_sha256=_file_sha(prior/'evaluation/status.json')))
+                # Keep canonical artifacts discoverable across repeated resumes.
+                (directory/'evaluation').symlink_to((prior/'evaluation').resolve(),target_is_directory=True)
+            else:
+                incomplete_reservation=child['budget']
+                result=run_gated_plan(path,directory/'execution',wait=True,poll_seconds=5)
+                incomplete_reservation=result.get('reserved_interactions',incomplete_reservation)
+                if result['phase']!='completed':
+                    raise RuntimeError(f'evaluation shard {ordinal} stopped: {result["phase"]}')
+                receipt=read(directory/'evaluation/status.json');evaluated=read(directory/'evaluation/results.json')
             if (receipt['phase']!='completed' or len(evaluated)!=len(batch)
                     or any(_identity(a)!=_identity(b) for a,b in zip(batch,evaluated))):
                 raise ValueError('evaluation shard candidate identity/order drift')
             c=receipt['charged_interactions'];a=receipt['active_interactions'];p=receipt['padding_interactions']
             if not (0<=a<=c<=child['budget'] and p==c-a):
                 raise ValueError('evaluation shard cost mismatch')
-            charged+=c;active+=a;padding+=p;peak=max(peak,receipt.get('peak_rss_kib',0))
+            if reused:
+                reused_interactions+=c
+            else:
+                charged+=c;active+=a;padding+=p
+            peak=max(peak,receipt.get('peak_rss_kib',0))
             incomplete_reservation=0
             active_shard=None
             merged.extend(evaluated);receipts.append(dict(shard=ordinal,receipt=receipt))
