@@ -45,6 +45,29 @@ def _manifest_checkpoint(manifest_path: Path, declared: Any) -> Path:
     return checkpoint.resolve()
 
 
+def _verified_source_artifact(
+    manifest_path: Path,
+    policy: Mapping[str, Any],
+    *,
+    path_field: str,
+    hash_field: str,
+    label: str,
+) -> tuple[Path, str]:
+    declared = policy.get(path_field)
+    if not isinstance(declared, str) or not declared:
+        raise ValueError(f"source {label} path is missing")
+    path = Path(declared)
+    if not path.is_absolute():
+        path = manifest_path.parent / path
+    path = path.resolve()
+    if not path.is_file():
+        raise ValueError(f"source {label} is missing")
+    digest = file_sha256(path)
+    if digest != policy.get(hash_field):
+        raise ValueError(f"source {label} content hash drift")
+    return path, digest
+
+
 def load_phase_u_actor_initialization(
     frozen_policy: Path,
 ) -> ActorOnlyInitialization:
@@ -84,6 +107,21 @@ def load_phase_u_actor_initialization(
         raise ValueError("frozen development checkpoint policy role drift")
     if policy.get("data_role") != "train":
         raise ValueError("frozen development checkpoint must have TRAIN data role")
+
+    source_config, source_config_sha256 = _verified_source_artifact(
+        manifest_path,
+        policy,
+        path_field="formal_config",
+        hash_field="formal_config_file_sha256",
+        label="formal config",
+    )
+    source_report, source_report_sha256 = _verified_source_artifact(
+        manifest_path,
+        policy,
+        path_field="source_formal_report",
+        hash_field="source_formal_report_sha256",
+        label="formal report",
+    )
 
     expected = CheckpointIdentity(
         config_sha256=str(policy.get("formal_config_sha256", "")),
@@ -141,11 +179,9 @@ def load_phase_u_actor_initialization(
             "source_actor_task_fields": list(policy["actor_task_fields"]),
             "source_action_order": list(policy["action_order"]),
             "source_formal_config_sha256": str(policy["formal_config_sha256"]),
-            "source_formal_config_file_sha256": str(
-                policy["formal_config_file_sha256"]
-            ),
-            "source_formal_report_sha256": str(
-                policy["source_formal_report_sha256"]
-            ),
+            "source_formal_config": str(source_config),
+            "source_formal_config_file_sha256": source_config_sha256,
+            "source_formal_report": str(source_report),
+            "source_formal_report_sha256": source_report_sha256,
         },
     )

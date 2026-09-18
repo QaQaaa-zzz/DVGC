@@ -636,6 +636,53 @@ def _verify_training_curves(path: Path, *, target: int) -> dict[str, Any]:
     return payload
 
 
+def _verify_actor_initialization_receipt(
+    path: Path, *, manifest: Mapping[str, Any]
+) -> dict[str, Any]:
+    receipt_path = path / "actor_initialization.json"
+    if not receipt_path.is_file():
+        if (
+            manifest.get("starting_training_transition") == 0
+            and manifest.get("resume_semantics")
+            == "parameter_warm_start_optimizer_reset"
+        ):
+            raise ValueError("formal Actor warm-start provenance receipt is missing")
+        return {}
+
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    if manifest.get("starting_training_transition") != 0:
+        raise ValueError("formal Actor warm-start provenance requires transition zero")
+    if receipt.get("schema") != "jit_phase_u_actor_initialization_v1":
+        raise ValueError("formal Actor warm-start provenance schema mismatch")
+    if manifest.get("resume_semantics") != "parameter_warm_start_optimizer_reset":
+        raise ValueError("formal Actor warm-start provenance semantics mismatch")
+    parent = manifest.get("parent_checkpoint")
+    if not isinstance(parent, str) or not parent:
+        raise ValueError("formal Actor warm-start provenance requires a parent")
+    if receipt.get("source_checkpoint") != parent:
+        raise ValueError("formal Actor warm-start parent checkpoint mismatch")
+    if receipt.get("restored_components") != ["observation_normalizer", "actor"]:
+        raise ValueError("formal Actor warm-start restored components mismatch")
+    if receipt.get("fresh_components") != ["critic", "optimizer"]:
+        raise ValueError("formal Actor warm-start fresh components mismatch")
+    source_manifest = receipt.get("source_frozen_policy")
+    if not isinstance(source_manifest, str) or not source_manifest:
+        raise ValueError("formal Actor warm-start source manifest is missing")
+    from .phase_u_warm_start import load_phase_u_actor_initialization
+
+    initialization = load_phase_u_actor_initialization(Path(source_manifest))
+    expected = {
+        "schema": "jit_phase_u_actor_initialization_v1",
+        **dict(initialization.provenance),
+        "source_parent_transition": initialization.parent_transition,
+        "restored_components": ["observation_normalizer", "actor"],
+        "fresh_components": ["critic", "optimizer"],
+    }
+    if receipt != expected:
+        raise ValueError("formal Actor warm-start provenance drift")
+    return receipt
+
+
 def _verify_formal_run(
     path: Path,
     *,
@@ -669,43 +716,7 @@ def _verify_formal_run(
             raise ValueError(
                 "formal v4 fresh-start provenance requires starting transition 0"
             )
-        actor_initialization_path = path / "actor_initialization.json"
-        if actor_initialization_path.is_file():
-            actor_initialization = json.loads(
-                actor_initialization_path.read_text(encoding="utf-8")
-            )
-            if actor_initialization.get("schema") != "jit_phase_u_actor_initialization_v1":
-                raise ValueError("formal v4 Actor warm-start provenance schema mismatch")
-            if manifest.get("resume_semantics") != "parameter_warm_start_optimizer_reset":
-                raise ValueError("formal v4 Actor warm-start provenance semantics mismatch")
-            parent = manifest.get("parent_checkpoint")
-            if not isinstance(parent, str) or not parent:
-                raise ValueError("formal v4 Actor warm-start provenance requires a parent")
-            if actor_initialization.get("source_checkpoint") != parent:
-                raise ValueError("formal v4 Actor warm-start parent checkpoint mismatch")
-            if actor_initialization.get("restored_components") != [
-                "observation_normalizer",
-                "actor",
-            ]:
-                raise ValueError("formal v4 Actor warm-start restored components mismatch")
-            if actor_initialization.get("fresh_components") != ["critic", "optimizer"]:
-                raise ValueError("formal v4 Actor warm-start fresh components mismatch")
-            source_manifest = actor_initialization.get("source_frozen_policy")
-            if not isinstance(source_manifest, str) or not source_manifest:
-                raise ValueError("formal v4 Actor warm-start source manifest is missing")
-            from .phase_u_warm_start import load_phase_u_actor_initialization
-
-            initialization = load_phase_u_actor_initialization(Path(source_manifest))
-            expected_initialization = {
-                "schema": "jit_phase_u_actor_initialization_v1",
-                **dict(initialization.provenance),
-                "source_parent_transition": initialization.parent_transition,
-                "restored_components": ["observation_normalizer", "actor"],
-                "fresh_components": ["critic", "optimizer"],
-            }
-            if actor_initialization != expected_initialization:
-                raise ValueError("formal v4 Actor warm-start provenance drift")
-        else:
+        if not (path / "actor_initialization.json").is_file():
             if manifest.get("parent_checkpoint") is not None:
                 raise ValueError(
                     "formal v4 fresh-start provenance forbids a parent checkpoint"
@@ -714,6 +725,9 @@ def _verify_formal_run(
                 raise ValueError(
                     "formal v4 fresh-start provenance requires fresh resume semantics"
                 )
+        actor_initialization = _verify_actor_initialization_receipt(
+            path, manifest=manifest
+        )
         expected_seed = int(resolved["ppo"]["seed"])
         if (
             type(manifest.get("segment_seed")) is not int
@@ -740,6 +754,10 @@ def _verify_formal_run(
             raise ValueError(
                 "formal v4 fresh-start provenance resume command artifact mismatch"
             )
+    else:
+        actor_initialization = _verify_actor_initialization_receipt(
+            path, manifest=manifest
+        )
     repository_root = Path(__file__).resolve().parents[3]
     model = resolved["model"]
     if model.get("xml_sha256") != manifest["xml_sha256"]:

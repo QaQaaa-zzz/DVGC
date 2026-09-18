@@ -470,7 +470,7 @@ def _fake_trainer(expected_steps, expected_evals):
     return train
 
 
-def _fake_absolute_trainer():
+def _fake_absolute_trainer(*, expected_restore=None, expected_restore_value_fn=None):
     def train(**kwargs):
         assert kwargs["num_timesteps"] == 4_988_928
         assert kwargs["num_evals"] == 204
@@ -484,7 +484,9 @@ def _fake_absolute_trainer():
         assert kwargs["discounting"] == 0.99
         assert kwargs["clipping_epsilon"] == 0.2
         assert kwargs["max_grad_norm"] == 0.5
-        assert kwargs["restore_params"] is None
+        assert kwargs["restore_params"] == expected_restore
+        if expected_restore_value_fn is not None:
+            assert kwargs["restore_value_fn"] is expected_restore_value_fn
         params = ({"normalizer": 0}, {"actor": 1}, {"critic": 2})
         kwargs["policy_params_fn"](0, _fake_make_policy, params)
         for step in range(24_576, 4_988_928 + 1, 24_576):
@@ -1016,6 +1018,10 @@ def test_formal_runner_uses_transition_zero_actor_only_initialization(
         "jit_dvgc.formal_training.load_phase_u_actor_initialization",
         lambda path: initialization,
     )
+    monkeypatch.setattr(
+        "jit_dvgc.phase_u_warm_start.load_phase_u_actor_initialization",
+        lambda path: initialization,
+    )
     captured = {}
     base_trainer = _fake_trainer(998_400, 40)
 
@@ -1056,6 +1062,83 @@ def test_formal_runner_uses_transition_zero_actor_only_initialization(
         "actor",
     ]
     assert actor_initialization["fresh_components"] == ["critic", "optimizer"]
+    assert verify_run(run_dir)["absolute_training_transition"] == 998_400
+    actor_initialization["source_actor_sha256"] = "0" * 64
+    (run_dir / "actor_initialization.json").write_text(
+        json.dumps(actor_initialization), encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match="Actor warm-start provenance drift"):
+        verify_run(run_dir)
+
+
+def test_v3_actor_warm_start_receipt_is_revalidated(
+    jit_root, tmp_path, monkeypatch
+):
+    source_manifest = tmp_path / "v3_source/frozen_unified_policy.json"
+    source_checkpoint = str(
+        (tmp_path / "v3_source/checkpoints/transition_128000").resolve()
+    )
+    provenance = {
+        "actor_initialized": True,
+        "normalizer_initialized": True,
+        "critic_fresh": True,
+        "optimizer_fresh": True,
+        "source_frozen_policy": str(source_manifest.resolve()),
+        "source_frozen_policy_sha256": "1" * 64,
+        "source_checkpoint": source_checkpoint,
+        "source_checkpoint_identity_sha256": "2" * 64,
+        "source_payload_sha256": "3" * 64,
+        "source_normalizer_sha256": "4" * 64,
+        "source_actor_sha256": "5" * 64,
+        "source_critic_sha256": "6" * 64,
+        "source_xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+        "source_actor_frame_fields": list(ACTOR_FRAME_FIELDS),
+        "source_actor_task_fields": list(ACTOR_TASK_FIELDS),
+        "source_action_order": list(ACTION_ORDER),
+        "source_formal_config_sha256": "7" * 64,
+        "source_formal_config_file_sha256": "8" * 64,
+        "source_formal_report_sha256": "9" * 64,
+    }
+    initialization = ActorOnlyInitialization(
+        observation_normalizer={"normalizer": 17},
+        actor_params={"actor": 23},
+        parent_transition=128_000,
+        payload_sha256=provenance["source_payload_sha256"],
+        actor_sha256=provenance["source_actor_sha256"],
+        provenance=provenance,
+    )
+    monkeypatch.setattr(
+        "jit_dvgc.formal_training.load_phase_u_actor_initialization",
+        lambda _path: initialization,
+    )
+    monkeypatch.setattr(
+        "jit_dvgc.phase_u_warm_start.load_phase_u_actor_initialization",
+        lambda _path: initialization,
+    )
+
+    run_phase_u_formal(
+        jit_root / "configs" / "phase_u_absolute_5m.json",
+        "v3_actor_warm_unit",
+        actor_init_frozen_policy=source_manifest,
+        run_root=tmp_path,
+        trainer=_fake_absolute_trainer(
+            expected_restore=initialization.restore_params,
+            expected_restore_value_fn=False,
+        ),
+        env_factory=_FakeEnv,
+        panel_evaluator=_fake_panel,
+        diagnostic_panel_evaluator=_fake_rsi_panel,
+        backend_name=lambda: "gpu",
+    )
+
+    run_dir = tmp_path / "v3_actor_warm_unit"
+    assert verify_run(run_dir)["absolute_training_transition"] == 4_988_928
+    receipt_path = run_dir / "actor_initialization.json"
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    receipt["source_payload_sha256"] = "0" * 64
+    receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+    with pytest.raises(ValueError, match="Actor warm-start provenance drift"):
+        verify_run(run_dir)
 
 
 def test_formal_runner_rejects_full_resume_with_actor_initialization(

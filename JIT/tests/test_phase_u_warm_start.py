@@ -55,12 +55,16 @@ def frozen_phase_u_policy(tmp_path):
         checkpoint,
         CheckpointPayload(identity, 128_000, normalizer, actor, critic),
     )
+    source_config = tmp_path / "source_config.json"
+    source_config.write_text('{"source":"config"}\n', encoding="utf-8")
+    source_report = tmp_path / "formal_report.json"
+    source_report.write_text('{"status":"completed"}\n', encoding="utf-8")
     policy = {
         "name": "source_development_checkpoint",
         "iteration": 6,
         "policy_role": "development_checkpoint",
         "checkpoint": str(checkpoint.resolve()),
-        "formal_config": str((tmp_path / "source_config.json").resolve()),
+        "formal_config": str(source_config.resolve()),
         "formal_config_sha256": identity.config_sha256,
         "xml_sha256": identity.xml_sha256,
         "source_training_run_id": "source",
@@ -74,9 +78,9 @@ def frozen_phase_u_policy(tmp_path):
         "actor_task_fields": list(ACTOR_TASK_FIELDS),
         "action_order": list(ACTION_ORDER),
         "data_role": "train",
-        "formal_config_file_sha256": "3" * 64,
-        "source_formal_report": str((tmp_path / "formal_report.json").resolve()),
-        "source_formal_report_sha256": "4" * 64,
+        "formal_config_file_sha256": _file_sha256(source_config),
+        "source_formal_report": str(source_report.resolve()),
+        "source_formal_report_sha256": _file_sha256(source_report),
         "checkpoint_identity_sha256": _file_sha256(checkpoint / "identity.json"),
         "source_requested_training_transitions": 256_000,
     }
@@ -105,6 +109,8 @@ def frozen_phase_u_policy(tmp_path):
         "normalizer": normalizer,
         "actor": actor,
         "critic": critic,
+        "source_config": source_config,
+        "source_report": source_report,
     }
 
 
@@ -172,4 +178,20 @@ def test_loader_rejects_identity_or_manifest_drift(
     _write_manifest(source["path"], manifest)
 
     with pytest.raises(ValueError, match=message):
+        load_phase_u_actor_initialization(source["path"])
+
+
+@pytest.mark.parametrize("artifact", ["source_config", "source_report"])
+@pytest.mark.parametrize("mutation", ["missing", "content"])
+def test_loader_rejects_missing_or_changed_source_artifacts(
+    frozen_phase_u_policy, artifact, mutation
+):
+    source = frozen_phase_u_policy
+    path = source[artifact]
+    if mutation == "missing":
+        path.unlink()
+    else:
+        path.write_text('{"drift":true}\n', encoding="utf-8")
+
+    with pytest.raises(ValueError, match="source.*(config|report).*(missing|hash)"):
         load_phase_u_actor_initialization(source["path"])
