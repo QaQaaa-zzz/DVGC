@@ -1,5 +1,20 @@
 # JIT 当前状态与证据
 
+## 2026-09-18 七策略 Phase U 重训与四固定起扰窗口已启动
+
+2026-09-18 17:11 CST 现场核验：用户批准的三臂顺序 Phase U 重训已经启动，当前第一臂 `training_baseline_phase_u`。实验入口：[INDEX](../runs/experiments/seven_policy_phase_u_15m_pulse_20260918/INDEX.md)、[冻结声明](../runs/experiments/seven_policy_phase_u_15m_pulse_20260918/spec.json)、[实时状态](../runs/experiments/seven_policy_phase_u_15m_pulse_20260918/status.json)、[启动核验](../runs/experiments/seven_policy_phase_u_15m_pulse_20260918/launch_verification.json)。结果尚未产生，本条不宣称训练完成或成功率提升。
+
+执行代码为已提交 `876118d94202703a1f2891a693139d23b85a96ff` 的独立 `git archive` 快照：`JIT/runs/code_snapshots/seven_policy_phase_u_15m_pulse_20260918`。来源严格复用已完成 `four_policy_initial_pulse_10k_20260918/spec.json` 的四个方法：repair10 来自 `neighborhood_mixed_rsl_20260916/lineage/round_0010` development manifest；fresh RSI 为 8,000,000 步；repair70 为 `neighborhood_reward005_safe256_20260916/nonfinite_recovery/attempt_0002/lineage/round_0070`；历史 Phase U 为 `phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826` 的 4,988,928 checkpoint。只有前三个非历史 Phase U 来源创建后代，恢复 Actor/normalizer，Critic/optimizer 全新、训练计数从0开始；历史 Phase U 只作固定比较来源，未作为warm start。
+
+三臂按 baseline/fresh_rsi/repair_0070 顺序执行，训练种子 9183101/9183102/9183103；各新增 **14,991,360** 步，共 **44,974,080**。保留指定历史 Phase U 物理、奖励、reset、动作及观测。四个独立起扰条件 `[0]`、`[5]`、`[10]`、`[15]` 使用种子 9183200/9183205/9183210/9183215，各条件七策略×1,000回合，batch256、尾批232；四通道±0.25，持续3控制步，正式25步恢复成功口径不变。最终评价上限 **11,200,000**，训练内固定面板及诊断上限 **96,000**，合计交互上限 **56,270,080**。开发证据，未开启最终TEST/JCE/JEL。
+
+启动验证：311个来源/配置/代码文件锁全部通过；`test_seven_policy_phase_u.py` 与 `test_phase_u_warm_start.py` 共 **27 passed**（CPU回归）。生产CUDA烟测成功加载全部三个initializer，编译一次 Phase U reset，完成三个Actor推理，动作有限；额外训练/物理转移均0，不能据此宣称生产rollout或吞吐已验证。烟测0.5s采样GPU峰值436MiB，期间现有STTW PID1600571保持存活、显存1918MiB。
+
+后台supervisor **1638053**，第一训练子进程 **1638090**，通知watcher **1638054**；核验时JIT子进程GPU846MiB、STTW1918MiB，未等待GPU空闲，也未停止STTW。`JAX_PLATFORMS=cuda,cpu`、预分配false；完整nohup命令与环境见[launch.json](../runs/experiments/seven_policy_phase_u_15m_pulse_20260918/launch.json)。第一臂`backend.json`为gpu/cuda:0，`actor_initialization.json`确认Actor/normalizer恢复和fresh Critic/optimizer。
+
+watcher使用本实验`ACTIVE_RUN.json`与`notifications/`，保留`DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus`、`DISPLAY=:0`；心跳`checked_unix=1789722676.2084248`，无delivery_errors，GNOME通知服务可访问。当前没有错误或整体完成事件，不宣称已显示弹窗；只在顶层整体完成时通知。生产训练与四条件评价由后台继续执行，任何错误保留且不自动重试；最终成功率、实际交互数和报告验收待全部完成后核实。
+
+
 ## 2026-09-18 四策略初始化后三步扰动对比已启动
 
 用户纠正扰动协议：跳跃策略从初始化起全程控制，只在控制步0、1、2叠加四通道±0.25随机动作残差，控制步3以后扰动归零。此前三策略10000回合使用0/5/10/15/20/25混合起扰，其中大量脉冲与离地重叠或发生在离地后，因此旧结果不能回答该问题，保持为独立历史证据。
