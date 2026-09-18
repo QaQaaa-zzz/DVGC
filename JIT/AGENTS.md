@@ -45,3 +45,12 @@ Do not open final TEST. TRAIN adaptation and development ACCEPTANCE are not fina
 - 新对比仅在初始化后的控制步0、1、2叠加随机动作残差，`CTRL_DT=0.020`，共0.06秒；跳跃策略从第0步起全程闭环，控制步3以后请求扰动必须严格为零，不再使用0/5/10/15/20/25混合起扰。
 - 旧三策略10000回合混合起扰结果保持原样，但不能作为“仅起跳前扰动”证据。新实验使用`lineage_repair_0010`、fresh RSI 800万步、Phase U 4,988,928步和当前nonfinite_recovery attempt_0002的`lineage_repair_0070`，每策略10000回合。
 - 额外策略通过`jit_additional_comparison_methods_v1`清单加入，核对XML、动作顺序、Actor观测字段并锁定bank/frozen/config/checkpoint；不得按轮次名在源码中写死。新增策略补一个匹配无扰动回合。批次验收以数组级门槛检查前三步mask及后续零请求，不另做逐回合审计图。
+
+## 七策略 Phase U 顺序训练与四固定起扰窗口（2026-09-18）
+
+- 稳定入口为 `PYTHONPATH=JIT/src /home/qy/mujoco_playground/.venv/bin/python JIT/cli/run_seven_policy_phase_u.py prepare --sources <声明.json> --historical-config <历史Phase U resolved_config.json> --previous <已完成扰动对比目录> --output <新目录> --training-seeds <三个种子> --condition-seeds <四个种子>`；之后使用 `run --spec <新目录/spec.json>` 和 `report --spec <新目录/spec.json>`。命令从仓库根执行，report仅重读原始数据并生成新派生目录。
+- 来源声明schema为`jit_seven_policy_sources_v1`，`sources`恰好四行，每行声明`key/label/template_path/frozen_policy/warm_start`，三个warm_start=true的行另声明`descendant_key`。本次成员为lineage_repair_0010、fresh RSI 8,000,000步、历史Phase U 4,988,928步、lineage_repair_0070，以及除历史Phase U外三者各自的Phase U重训后代。成员名称写入声明，源码不按名称分支。
+- 每臂14,991,360个新增训练转移，保留历史Phase U物理、奖励、reset、动作及观测；Actor和normalizer来自身份锁定的development checkpoint，Critic和optimizer全新，训练计数从0开始。三个训练子进程顺序执行，不等待STTW或GPU空闲阈值。后代仍为Phase U checkpoint，经兼容性证明后使用`phase_policy`在完整任务中评估；不得改写为unified身份或宣称专家切换。
+- 四个独立条件使用单元素起扰计划`[0]`、`[5]`、`[10]`、`[15]`，分别只在0–2、5–7、10–12、15–17控制步请求四通道±0.25随机残差。每条件七策略各1,000回合、batch size 256，最后批232；共享条件种子和批偏移，全部失败计入。每批必须通过`verify_batch`及数组级固定窗口验收。
+- 原始NPZ不裁剪，报告保留逐回合正式标签、首次有效接触与恢复终点时间、Wilson区间、共同坐标的七策略密度图、来源/配置/后代身份哈希和训练/诊断/评估成本。此为开发证据，不能把回合数当独立训练重复；不得事后重标正式25步恢复成功。
+- prepare只生成声明，生产launch另按授权执行。每次run启动时必须同时启动/更新本文件规定的桌面错误与正常完成watcher，使用该实验`ACTIVE_RUN.json`与`notifications/`并核对heartbeat。只监视顶层整体完成，不为每个训练子阶段发完成弹窗；失败保留全部日志与尝试，不自动重训。

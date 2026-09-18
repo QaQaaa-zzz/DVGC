@@ -125,3 +125,56 @@ def test_zero_amplitude_nominal_window_is_not_an_applied_disturbance():
     row=episode_results(tape,0)[0]
     assert row['pulse_applied_steps']==0
     assert row['pulse_window_steps']==1
+
+
+def test_descendant_runtime_compatibility_allows_only_declared_training_changes(tmp_path):
+    import copy
+    import pytest
+    from jit_dvgc.rsi_comparison import validate_phase_runtime_compatibility
+    historical={'schema':'jit_phase_u_formal_v4','phase':'propulsion_ascent',
+                **{key:{'v':1} for key in ('model','action','reset','events','physical_limits','reward','training_wrapper')},
+                'ppo':{'seed':1,'requested_transitions':24576,'num_evals':2,'episode_horizon':400},
+                'formal':{'checkpoint_transitions':[0,24576],'fixed_evaluation_transitions':[24576],'resume_semantics':'fresh_only'},
+                'action_order':['a'],'actor_frame_fields':['b'],'actor_task_fields':['c']}
+    descendant=copy.deepcopy(historical)
+    descendant['ppo'].update(seed=2,requested_transitions=49152,num_evals=3)
+    descendant['formal'].update(checkpoint_transitions=[0,49152],fixed_evaluation_transitions=[49152],resume_semantics='parameter_warm_start_optimizer_reset')
+    descendant['initialization']={'actor':'warm_start_frozen_development'}
+    descendant['training_reference']={'resolved_config':'unused','sha256':'unused'}
+    descendant['run_declaration']={'run_id':'descendant'}
+    validate_phase_runtime_compatibility(descendant,historical)
+    for field in ('model','action','reset','events','physical_limits','reward','training_wrapper','action_order','actor_frame_fields','actor_task_fields','phase'):
+        changed=copy.deepcopy(descendant);changed[field]='changed'
+        with pytest.raises(ValueError,match='runtime'):validate_phase_runtime_compatibility(changed,historical)
+    for field in ('episode_horizon','held_out_seeds'):
+        changed=copy.deepcopy(descendant);changed['ppo'][field]='changed'
+        with pytest.raises(ValueError,match='runtime'):validate_phase_runtime_compatibility(changed,historical)
+    changed=copy.deepcopy(descendant);changed['unexpected_runtime_knob']=1
+    with pytest.raises(ValueError,match='runtime'):validate_phase_runtime_compatibility(changed,historical)
+
+
+def test_phase_descendant_loader_checks_locked_historical_contract_and_keeps_identity(tmp_path,monkeypatch):
+    from types import SimpleNamespace
+    import pytest
+    from jit_dvgc import rsi_comparison as comparison, iterative_probe_training
+    from jit_dvgc.jump_evidence_validation import write,file_sha
+    historical={'schema':'jit_phase_u_formal_v4','phase':'propulsion_ascent',
+                **{key:{'v':1} for key in ('model','action','reset','events','physical_limits','reward','training_wrapper')},
+                'ppo':{'seed':1},'formal':{}}
+    descendant={**historical,'ppo':{'seed':2}}
+    hp=tmp_path/'historical.json';cp=tmp_path/'descendant.json';write(hp,historical);write(cp,descendant)
+    checkpoint=tmp_path/'checkpoint';checkpoint.mkdir();(checkpoint/'payload.pkl').write_bytes(b'fixture');write(checkpoint/'identity.json',{})
+    payload=SimpleNamespace(identity=SimpleNamespace(xml_sha256='xml',actor_frame_fields=('a',),actor_task_fields=('b',),action_order=('c',)),training_transitions=14991360,
+        actor_params={'w':np.array([3.])},critic_params={'w':np.array([4.])},observation_normalizer={'mean':np.array([5.])})
+    monkeypatch.setattr(iterative_probe_training,'load_phase_initializer',lambda _:payload)
+    phase=dict(name='descendant',source_phase_config=str(cp),source_checkpoint=str(checkpoint),
+        runtime_compatibility=dict(schema='jit_phase_u_runtime_compatibility_v1',historical_config=str(hp)),
+        input_files={str(p):file_sha(p) for p in (hp,cp,checkpoint/'identity.json',checkpoint/'payload.pkl')})
+    spec=dict(controller_mode='fixed_random',full_episode_rollout=True,phase_policy=phase)
+    config=SimpleNamespace(up_config_sha256=comparison.canonical_sha256(historical),up_config_path=str(hp))
+    member={'name':'baseline','policy':{'xml_sha256':'xml','actor_frame_fields':['a'],'actor_task_fields':['b'],'action_order':['c']}}
+    restored,record=comparison.load_phase_evaluation_policy(spec,config,member)
+    assert restored is payload
+    assert record['policy']['source_config_sha256']==comparison.canonical_sha256(descendant)
+    descendant['reward']={'changed':True};write(cp,descendant);phase['input_files'][str(cp)]=file_sha(cp)
+    with pytest.raises(ValueError,match='runtime'):comparison.load_phase_evaluation_policy(spec,config,member)

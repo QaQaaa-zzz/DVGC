@@ -13,6 +13,26 @@ from .jump_evidence_validation import read, write, file_sha
 from .evidence_integrity import canonical_sha256
 
 
+def validate_phase_runtime_compatibility(source, historical):
+    """Compare the complete runtime, allowing only declared training metadata."""
+    import copy
+    def runtime(raw):
+        raw = copy.deepcopy(raw)
+        for key in ('initialization', 'training_reference', 'run_declaration'):
+            raw.pop(key, None)
+        for key in ('seed', 'requested_transitions', 'num_evals'):
+            raw.get('ppo', {}).pop(key, None)
+        for key in ('checkpoint_transitions', 'fixed_evaluation_transitions', 'resume_semantics'):
+            raw.get('formal', {}).pop(key, None)
+        return raw
+    required = {'schema', 'phase', 'model', 'action', 'reset', 'events',
+                'physical_limits', 'reward', 'training_wrapper', 'ppo', 'formal'}
+    if not required <= source.keys() or not required <= historical.keys():
+        raise ValueError('phase policy runtime contract is incomplete')
+    if runtime(source) != runtime(historical):
+        raise ValueError('phase policy runtime differs outside declared training fields')
+
+
 def load_phase_evaluation_policy(spec, config, member):
     """Use an unchanged historical Phase U payload in a matched full-task runtime."""
     from .iterative_probe_training import load_phase_initializer
@@ -23,11 +43,32 @@ def load_phase_evaluation_policy(spec, config, member):
     for path, sha in source['input_files'].items():
         if file_sha(path) != sha:
             raise ValueError('phase evaluation input drift: '+path)
-    if canonical_sha256(read(source['source_phase_config'])) != config.up_config_sha256:
-        raise ValueError('phase policy upstream runtime differs')
+    source_config_sha = canonical_sha256(read(source['source_phase_config']))
+    compatibility = source.get('runtime_compatibility')
+    if compatibility is None:
+        if source_config_sha != config.up_config_sha256:
+            raise ValueError('phase policy upstream runtime differs')
+    else:
+        if compatibility.get('schema') != 'jit_phase_u_runtime_compatibility_v1':
+            raise ValueError('phase policy runtime compatibility schema differs')
+        historical_path = Path(compatibility['historical_config']).resolve()
+        checkpoint = Path(source['source_checkpoint']).resolve()
+        required_paths = (historical_path, Path(source['source_phase_config']).resolve(),
+                          checkpoint/'identity.json', checkpoint/'payload.pkl')
+        if any(str(path) not in source['input_files'] for path in required_paths):
+            raise ValueError('phase policy runtime compatibility inputs are not locked')
+        historical = read(historical_path)
+        if (historical_path != Path(config.up_config_path).resolve() or
+                canonical_sha256(historical) != config.up_config_sha256):
+            raise ValueError('phase policy upstream runtime differs')
+        validate_phase_runtime_compatibility(read(source['source_phase_config']), historical)
     payload = load_phase_initializer(source)
     if payload.identity.xml_sha256 != member['policy']['xml_sha256']:
         raise ValueError('phase policy XML differs')
+    if compatibility is not None:
+        for field in ('actor_frame_fields', 'actor_task_fields', 'action_order'):
+            if list(getattr(payload.identity, field)) != member['policy'].get(field):
+                raise ValueError('phase policy runtime observation/action semantics differ')
     checkpoint=Path(source['source_checkpoint'])
     record = dict(name=source['name'], checkpoint=str(checkpoint),
                   payload_sha256=file_sha(checkpoint/'payload.pkl'),
@@ -35,7 +76,7 @@ def load_phase_evaluation_policy(spec, config, member):
                   source_training_run_id=checkpoint.parent.parent.name,
                   policy_role='phase_checkpoint_full_task_diagnostic',
                   source_phase_config=source['source_phase_config'],
-                  source_config_sha256=config.up_config_sha256,
+                  source_config_sha256=source_config_sha,
                   xml_sha256=payload.identity.xml_sha256,
                   runtime_template_policy=member['name'],
                   runtime_formal_config=member['policy'].get('formal_config'),
