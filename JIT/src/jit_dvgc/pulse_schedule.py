@@ -10,6 +10,15 @@ def controller_mode(spec):
     return mode
 
 
+def collection_steps(spec, delays, event):
+    """Opt-in fixed-random evaluation runs through the declared episode horizon."""
+    if spec.get('full_episode_rollout'):
+        if controller_mode(spec) != 'fixed_random':
+            raise ValueError('full episode collection is a fixed-random evaluation only')
+        return spec['horizon']
+    return spec['horizon'] if event else int(delays.max()) + spec['pulse_steps']
+
+
 def descent_clearance(spec):
     import math
     value = spec.get('pulse_descent_clearance', .10)

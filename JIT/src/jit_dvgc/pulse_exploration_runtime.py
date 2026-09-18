@@ -6,7 +6,7 @@ import numpy as np
 from .exploration_loop import read, write
 from .probe_bank import load_probe_bank, _file_sha
 from .evidence_integrity import canonical_sha256
-from .pulse_schedule import controller_mode, selected_event, event_ready, pulse_activity, descent_clearance, lane_onsets
+from .pulse_schedule import controller_mode, selected_event, event_ready, pulse_activity, descent_clearance, lane_onsets, collection_steps
 
 
 def suffix_label(valid, failure, timeout, done, horizon_reached):
@@ -134,7 +134,8 @@ def collect(spec, output):
     delay=0 if event else pulse_delay(spec,spec['round_index'])
     mixed=spec.get('pulse_batch_mode')=='mixed' and not spec.get('nominal_source_rollout')
     delays=lane_onsets(spec,spec['round_index']) if not event else np.zeros(count,np.int32)
-    prefix_steps=spec['horizon'] if event else int(delays.max())+spec['pulse_steps']
+    prefix_steps=collection_steps(spec,delays,event)
+    full_episode=bool(spec.get('full_episode_rollout'))
     neighbor_query=None
     if spec.get('neighborhood'):
         from .neighborhood_sampling import prepare_neighbor_query
@@ -177,7 +178,7 @@ def collect(spec, output):
                 log_prob=dist.log_prob(logits,raw)
                 value=net.value_network.apply(normalizer,params['value'],s.obs)
             b=base(s.obs,k)[0]
-            apply_pulse=pulse_mask[:,None] if (event or mixed) else tick>=delay
+            apply_pulse=pulse_mask[:,None] if (event or mixed or full_episode) else tick>=delay
             action,requested,effective=compose_residual_action(b,jp.where(apply_pulse,delta,0.),jp.asarray(spec['delta_limit']))
             nxt=step(s,action)
             finite=jp.all(jp.isfinite(nxt.data.qpos),axis=-1)&jp.all(jp.isfinite(nxt.data.qvel),axis=-1)
@@ -189,13 +190,15 @@ def collect(spec, output):
             tape['first_valid_contact']=~before['valid_contact_seen']&after['valid_contact_seen']&alive
             tape['time_after']=after['time'];tape['time_before']=before['time']
             tape.update(physical_failure=nxt.info['physical_failure'],end_code=nxt.info['end_code'])
+            if full_episode:
+                tape['success']=endpoint_success(nxt,spec)
             tape.update({'snap/'+k:v for k,v in snapshot_arrays(nxt).items()})
             def choose(path,n,o):
                 return n if _shared_warp(path) else jp.where(alive.reshape((count,)+(1,)*(n.ndim-1)),n,o)
             nxt=jax.tree_util.tree_map_with_path(choose,nxt,s)
             applied_steps=applied_steps+pulse_mask.astype(jp.int32)
             active=alive&~terminal
-            if event or mixed:active=active&(applied_steps<spec['pulse_steps'])
+            if (event or mixed) and not full_episode:active=active&(applied_steps<spec['pulse_steps'])
             return (nxt,key,active,trigger_tick,applied_steps,vz),tape
         carry=(initial,rng,jp.ones(count,bool),jp.full(count,-1,jp.int32),jp.zeros(count,jp.int32),
                initial.data.qvel[:,env._bundle.model_index.root_dof_address+2])

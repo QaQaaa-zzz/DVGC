@@ -260,7 +260,9 @@ def load_config(path):
                 or recovery.recovery_ticks * CTRL_DT <= 0):
             raise ValueError('stable recovery requires positive integer recovery_ticks and continuous stability')
     init=raw['initialization']
-    if init['actor'] not in ('warm_start_frozen_unified','warm_start_phase_checkpoint') or init['critic']!='fresh' or init['optimizer']!='fresh':raise ValueError('probe initialization drift')
+    if init['actor'] not in ('fresh','warm_start_frozen_unified','warm_start_phase_checkpoint') or init['critic']!='fresh' or init['optimizer']!='fresh':raise ValueError('probe initialization drift')
+    if init['actor']=='fresh' and init.get('normalizer')!='fresh':
+        raise ValueError('fresh Actor requires fresh observation normalization')
     if init['actor']=='warm_start_phase_checkpoint':
         for item in (init['source_phase_config'], str(Path(init['source_checkpoint'])/'identity.json'), str(Path(init['source_checkpoint'])/'payload.pkl')):
             if item not in raw['input_files']:
@@ -289,6 +291,8 @@ def restore_params(path):
     from .checkpoint import load_checkpoint
     from .handoff_bank import pytree_sha256
     config=load_config(path)
+    if config.raw['initialization']['actor']=='fresh':
+        raise ValueError('fresh training must not restore checkpoint parameters')
     if config.raw['initialization']['actor']=='warm_start_phase_checkpoint':
         checkpoint=load_phase_initializer(config.raw['initialization'])
         return checkpoint.observation_normalizer,checkpoint.actor_params,checkpoint.critic_params
@@ -416,7 +420,10 @@ def resolve_bootstrap_config(path):
 
 def make_config(support_path,initializer_path,bootstrap_config,output,run_id,iteration,steps,seed,*,
                 checkpoints=None,panel_samples_per_phase=2,panel_horizon=400,
-                panel_support_path=None,pending_fraction=None,reward_mode=None,kl_control=None):
+                panel_support_path=None,pending_fraction=None,reward_mode=None,kl_control=None,
+                initialization_mode='warm_start_frozen_unified'):
+    if initialization_mode not in ('fresh','warm_start_frozen_unified'):
+        raise ValueError('unsupported initialization mode')
     support_path,initializer_path,bootstrap_config=map(lambda p:Path(p).resolve(),(support_path,initializer_path,bootstrap_config))
     base=read(bootstrap_config)
     raw=dict(schema=SCHEMA,support=str(support_path),bootstrap_formal_config=str(resolve_bootstrap_config(bootstrap_config)),
@@ -462,5 +469,8 @@ def make_config(support_path,initializer_path,bootstrap_config,output,run_id,ite
     if selected_kl is not None:raw['kl_control']=selected_kl
     if raw['reward_mode']=='original_all_phases':
         raw['reward_contract']='original Phase U reward throughout; stable recovery terminal unchanged; no added recovery bonuses'
+    if initialization_mode=='fresh':
+        raw['initialization'].update(actor='fresh',normalizer='fresh')
+        raw['initialization']['source_usage']='runtime template only; no parameters restored'
     write(output,raw);load_config(output)
     return raw
