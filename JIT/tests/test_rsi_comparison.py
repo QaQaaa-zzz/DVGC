@@ -23,3 +23,12 @@ def test_conflicting_success_and_failure_is_not_success():
     tape.update(time=np.array([[.02]]), qpos=np.zeros((1, 1, 3)))
     row = episode_results(tape, 0)[0]
     assert row['conflict'] and not row['success']
+
+
+def test_environment_timeout_is_counted_separately_from_rollout_horizon():
+    from jit_dvgc.constants import END_TIMEOUT
+    tape = {k: np.zeros((1, 1), bool) for k in ('success', 'physical_failure', 'mask')}
+    tape.update(prefix_mask=np.ones((1, 1), bool), terminal=np.ones((1, 1), bool),
+                time=np.array([[8.]]), qpos=np.zeros((1, 1, 3)), end_code=np.array([[END_TIMEOUT]]))
+    row = episode_results(tape, 0)[0]
+    assert row['environment_timeout'] and not row['horizon_exhausted'] and not row['success']

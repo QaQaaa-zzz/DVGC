@@ -180,13 +180,17 @@ def run(spec_path):
 
 
 def episode_results(tape, q0):
+    from .constants import END_TIMEOUT, END_REASONS
     result = []
     for lane in range(tape['prefix_mask'].shape[1]):
         ticks = np.flatnonzero(tape['prefix_mask'][:, lane])
         last = int(ticks[-1])
         success = bool(tape['success'][last, lane]); failure = bool(tape['physical_failure'][last, lane])
+        code = int(tape['end_code'][last, lane]) if 'end_code' in tape else None
         result.append(dict(episode=lane, success=success and not failure,
                            physical_failure=failure, conflict=success and failure,
+                           end_code=code, terminal_reason=END_REASONS.get(code, 'not_recorded'),
+                           environment_timeout=code == END_TIMEOUT,
                            horizon_exhausted=not bool(tape['terminal'][last, lane]),
                            control_steps=len(ticks), end_time_s=float(tape['time'][last, lane]),
                            pulse_applied_steps=int(tape['mask'][:, lane].sum()),
@@ -194,21 +198,22 @@ def episode_results(tape, q0):
     return result
 
 
-def report(output):
+def report(output, destination=None):
     import csv
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     from matplotlib import font_manager
     from .analysis.liftoff_alignment import liftoff_index, align_xz
-    output=Path(output); spec=read(output/'spec.json'); destination=output/'comparison'
+    output=Path(output); spec=read(output/'spec.json')
+    destination=Path(destination) if destination else output/'comparison'
     destination.mkdir(exist_ok=False)
     q0=spec['root_qpos_address']; tapes={}; rows=[]; summary={}; hashes={}
     for method in ('baseline','fresh_rsi'):
         for condition in ('nominal','random'):
             path=output/'evaluation'/f'{method}_{condition}'/'prefixes.npz'
             with np.load(path) as z:
-                keys=['prefix_mask','qpos','success','physical_failure','terminal','time','mask','delta',
+                keys=['prefix_mask','qpos','success','physical_failure','terminal','end_code','time','mask','delta',
                       'front_wheel_clearance','rear_wheel_clearance','requested_delta','effective_delta']
                 tapes[method,condition]={k:z[k] for k in keys}
             hashes[str(path)]=file_sha(path)
@@ -218,6 +223,8 @@ def report(output):
                 summary[method]=dict(successes=sum(r['success'] for r in records),episodes=len(records),
                                      physical_failures=sum(r['physical_failure'] for r in records),
                                      conflicts=sum(r['conflict'] for r in records),
+                                     environment_timeouts=sum(r['environment_timeout'] for r in records),
+                                     terminal_reasons=dict(Counter(r['terminal_reason'] for r in records)),
                                      horizon_exhausted=sum(r['horizon_exhausted'] for r in records))
                 if len(records)!=spec['episodes']:
                     raise ValueError('comparison denominator drift')
@@ -250,12 +257,12 @@ def report(output):
                     if k is None:exclusions[method]+=1
                     else:
                         aligned=align_xz(pts,pts[k,0]);axes[1,0].plot(aligned[:,0],aligned[:,1],color=colors[method],alpha=.23,lw=.8,ls='-' if good else '--')
-    for ax,title in zip(axes.flat[:3],['无扰动完整闭环','100个配对随机扰动回合：全部轨迹','诊断离地点对齐：保留真实高度']):
+    for ax,title in zip(axes.flat[:3],['无扰动完整闭环',f'{spec["episodes"]}个配对随机扰动回合：全部轨迹','诊断离地点对齐：保留真实高度']):
         ax.set_title(title);ax.set_ylabel('根部高度 z（m）');ax.set_xlabel('世界位置 x（m）' if ax is not axes[1,0] else 'x − x_LO（m）');ax.grid(alpha=.2)
     axes[0,0].legend();axes[0,1].legend();axes[1,0].axvline(0,color='gray',ls='--',lw=.8)
     values=[100*summary[m]['successes']/summary[m]['episodes'] for m in colors]
     bars=axes[1,1].bar([labels[m] for m in colors],values,color=list(colors.values()),width=.5)
-    axes[1,1].set(ylim=(0,112),ylabel='成功率（%）',title='相同稳定恢复判据；全部100回合为分母')
+    axes[1,1].set(ylim=(0,112),ylabel='成功率（%）',title=f'相同稳定恢复判据；全部{spec["episodes"]}回合为分母')
     for bar,method,value in zip(bars,colors,values):
         axes[1,1].text(bar.get_x()+bar.get_width()/2,value+2,f'{summary[method]["successes"]}/{spec["episodes"]} = {value:.0f}%',ha='center')
     fig.suptitle('初始策略与全新RSI策略：固定起点、配对随机扰动对照',fontsize=17)
@@ -268,13 +275,15 @@ def report(output):
         w=csv.DictWriter(f,fieldnames=list(rows[0]));w.writeheader();w.writerows(rows)
     summary.update(paired_random_draws_identical=True,paired_requested_pulses_identical_before_termination=True,
                    aligned_exclusions=dict(exclusions),input_sha256=hashes,baseline=spec['baseline'],
-                   training_steps=spec['training_steps'],evaluation_role=spec['role'])
+                   training_steps=spec['training_steps'],evaluation_role=spec['role'],
+                   report_source_sha256=file_sha(__file__))
     report_path=output/'training/fresh_rsi/formal_report.json'
     summary['training_report']=str(report_path)
     summary['evaluation_charged_interactions']=sum(read(output/'evaluation'/f'{m}_{c}'/'status.json')['charged_interactions'] for m in colors for c in ('nominal','random'))
     write(destination/'summary.json',summary)
+    link=os.path.relpath(destination,output)
     with (output/'INDEX.md').open('a') as f:
-        f.write('\n## 已完成的对照\n\n[同图对比](comparison/comparison.png) · [PDF](comparison/comparison.pdf) · [SVG](comparison/comparison.svg) · [逐回合结果](comparison/episodes.csv) · [汇总](comparison/summary.json)\n\n')
+        f.write(f'\n## 已完成的对照\n\n[同图对比]({link}/comparison.png) · [PDF]({link}/comparison.pdf) · [SVG]({link}/comparison.svg) · [逐回合结果]({link}/episodes.csv) · [汇总]({link}/summary.json)\n\n')
         for m in colors:f.write(f'- {labels[m]}：成功 {summary[m]["successes"]}/{summary[m]["episodes"]}。\n')
     return summary
 
