@@ -1,5 +1,13 @@
 # JIT 当前状态与证据
 
+## 2026-09-18 GPU空闲自动接续100轮
+
+用户授权GPU空闲后自动续训、再次占用时让出并继续等待。修复最终启动检查的资源竞争：wait模式下重新等待，不返回blocked错误。显式wait_until_idle允许资源无限等待；CPU外层与分片监督不因等待超时，实际GPU子任务仍保留计算超时和有限交互预算。
+新脚本`cli/resume_pulse_when_idle.py`冻结代码并复用锁定的完成阶段。52项相关CPU测试通过，离线核对第72轮56个pending训练支持与已完成128000步PPO。
+监督PID1982304，冻结代码ae098bd；当前GPU占用，执行状态waiting。累计71→100轮，保守继承31919967，总预算115308000。
+暂停发生在完成的子任务边界并退出释放GPU；不是即时无损抢占，不使用保留显存的SIGSTOP。单子任务中途外部抢占显存仍有OOM风险；真实错误不隐藏。
+[状态、冻结配置及启动证据](../runs/experiments/neighborhood_reward005_safe256_20260916/idle_resume_100/INDEX.md)。
+
 ## 2026-09-18 七策略 Phase U 重训与四固定起扰窗口已启动
 
 2026-09-18 17:11 CST 现场核验：用户批准的三臂顺序 Phase U 重训已经启动，当前第一臂 `training_baseline_phase_u`。实验入口：[INDEX](../runs/experiments/seven_policy_phase_u_15m_pulse_20260918/INDEX.md)、[冻结声明](../runs/experiments/seven_policy_phase_u_15m_pulse_20260918/spec.json)、[实时状态](../runs/experiments/seven_policy_phase_u_15m_pulse_20260918/status.json)、[启动核验](../runs/experiments/seven_policy_phase_u_15m_pulse_20260918/launch_verification.json)。结果尚未产生，本条不宣称训练完成或成功率提升。

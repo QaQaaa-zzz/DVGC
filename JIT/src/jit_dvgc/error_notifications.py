@@ -55,7 +55,10 @@ def find_completion(manifest_path):
         path = Path(manifest[key])
         if not path.is_absolute():
             path = manifest_path.parent / path
-        status = read_json(path)
+        try:
+            status = read_json(path)
+        except FileNotFoundError:
+            return None  # Queued child has not created its status yet.
         if status.get("phase", status.get("status")) != "completed":
             return None
         paths.append(str(path.resolve()))

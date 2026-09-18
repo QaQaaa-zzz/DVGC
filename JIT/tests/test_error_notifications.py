@@ -4,6 +4,15 @@ import subprocess
 from jit_dvgc.error_notifications import check_once
 
 
+def test_queued_run_missing_lineage_is_not_notification_error(tmp_path):
+    execution=tmp_path/'execution.json';execution.write_text(json.dumps({'phase':'waiting'}))
+    manifest=tmp_path/'ACTIVE_RUN.json'
+    manifest.write_text(json.dumps({'execution':str(execution),'lineage':str(tmp_path/'not_started.json')}))
+    state={};alerts=[]
+    check_once([manifest],state,lambda *args:alerts.append(args))
+    assert not alerts and not state['delivery_errors']
+
+
 def test_active_only_dedup_and_pointer_change(tmp_path):
     status = tmp_path / "status.json"
     old = tmp_path / "old.json"
