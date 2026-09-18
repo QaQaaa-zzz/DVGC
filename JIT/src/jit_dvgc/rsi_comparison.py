@@ -13,6 +13,97 @@ from .jump_evidence_validation import read, write, file_sha
 from .evidence_integrity import canonical_sha256
 
 
+def load_phase_evaluation_policy(spec, config, member):
+    """Use an unchanged historical Phase U payload in a matched full-task runtime."""
+    from .iterative_probe_training import load_phase_initializer
+    from .handoff_bank import pytree_sha256
+    if spec.get('controller_mode') != 'fixed_random' or not spec.get('full_episode_rollout'):
+        raise ValueError('phase policy override requires fixed_random full-episode evaluation')
+    source = spec['phase_policy']
+    for path, sha in source['input_files'].items():
+        if file_sha(path) != sha:
+            raise ValueError('phase evaluation input drift: '+path)
+    if canonical_sha256(read(source['source_phase_config'])) != config.up_config_sha256:
+        raise ValueError('phase policy upstream runtime differs')
+    payload = load_phase_initializer(source)
+    if payload.identity.xml_sha256 != member['policy']['xml_sha256']:
+        raise ValueError('phase policy XML differs')
+    checkpoint=Path(source['source_checkpoint'])
+    record = dict(name=source['name'], checkpoint=str(checkpoint),
+                  payload_sha256=file_sha(checkpoint/'payload.pkl'),
+                  source_training_transitions=payload.training_transitions,
+                  source_training_run_id=checkpoint.parent.parent.name,
+                  policy_role='phase_checkpoint_full_task_diagnostic',
+                  source_phase_config=source['source_phase_config'],
+                  source_config_sha256=config.up_config_sha256,
+                  xml_sha256=payload.identity.xml_sha256,
+                  runtime_template_policy=member['name'],
+                  runtime_formal_config=member['policy'].get('formal_config'),
+                  runtime_formal_config_sha256=member['policy'].get('formal_config_sha256'))
+    for field in ('actor_frame_fields','actor_task_fields','action_order'):
+        record[field]=list(getattr(payload.identity,field))
+    record['checkpoint_identity_sha256']=file_sha(checkpoint/'identity.json')
+    for key, value in [('actor_sha256', payload.actor_params),
+                       ('critic_sha256', payload.critic_params),
+                       ('normalizer_sha256', payload.observation_normalizer)]:
+        record[key] = pytree_sha256(value)
+    return payload, dict(name=source['name'], roles=['diagnostic'], policy=record)
+
+
+def prepare_phase_comparison(previous, checkpoint, output):
+    """Predeclare 101 additional rollouts and reuse the completed paired evidence."""
+    previous, checkpoint, output = [Path(p).resolve() for p in (previous, checkpoint, output)]
+    source = read(previous/'spec.json')
+    if read(previous/'status.json')['phase'] != 'completed':
+        raise ValueError('previous paired comparison is not complete')
+    config = read(source['training_config'])
+    phase_config = Path(config['inputs']['up_config_path'])
+    phase = dict(name='phase_u', source_checkpoint=str(checkpoint),
+                 source_phase_config=str(phase_config), input_files={})
+    for path in (phase_config, checkpoint/'identity.json', checkpoint/'payload.pkl'):
+        phase['input_files'][str(path)] = file_sha(path)
+    from .iterative_probe_training import load_config
+    from .probe_bank import load_probe_bank
+    bank=load_probe_bank(Path(source['source_bank']))
+    member=next(m for m in bank['members'] if m['name']==source['baseline'])
+    payload, record=load_phase_evaluation_policy(
+        dict(controller_mode='fixed_random', full_episode_rollout=True, phase_policy=phase),
+        load_config(source['training_config']), member)
+    spec={k:v for k,v in source.items() if k not in ('source_locks','code_commit')}
+    spec.update(output=str(output), additional_phase_policy=phase,
+                maximum_interactions=(source['episodes']+1)*source['horizon'],
+                new_training_transitions=0, training_report_path=str(previous/'training/fresh_rsi/formal_report.json'),
+                reused_experiment=str(previous), input_files=dict(source['input_files']))
+    spec['input_files'].update(phase['input_files'])
+    methods=[]
+    for key,label in [('baseline',source['baseline']),('fresh_rsi',f'全新RSI（{source["training_steps"]:,}步）')]:
+        methods.append(dict(key=key,label=label,evaluation_dir=str(previous/'evaluation')))
+        for condition in ('nominal','random'):
+            ev=read(previous/f'{key}_{condition}_spec.json')
+            for field in ('seed','num_envs','horizon','pulse_steps','pulse_start_schedule','pulse_batch_mode',
+                          'full_episode_rollout','controller_mode','delta_limit','success_criterion','reward_mode'):
+                other=read(previous/f'baseline_{condition}_spec.json')
+                if ev[field] != other[field]:
+                    raise ValueError('reused comparison contract differs: '+field)
+            for path in (previous/f'{key}_{condition}_spec.json',
+                         previous/'evaluation'/f'{key}_{condition}'/'prefixes.npz',
+                         previous/'evaluation'/f'{key}_{condition}'/'status.json'):
+                spec['input_files'][str(path)]=file_sha(path)
+    methods.append(dict(key='phase_u',label=f'Phase U（{payload.training_transitions:,}步）',evaluation_dir=str(output/'evaluation')))
+    spec['comparison_methods']=methods
+    output.mkdir(parents=True,exist_ok=False)
+    write(output/'spec.json',spec)
+    write(output/'phase_policy_audit.json',dict(policy=record['policy'],new_training_transitions=0,
+        parameters_changed=False,expert_switching=False,comparison_endpoint=source['success_criterion']))
+    write(output/'status.json',dict(phase='prepared',maximum_interactions=spec['maximum_interactions']))
+    write(output/'ACTIVE_RUN.json',dict(name='三策略100回合配对扰动对比',execution=str(output/'status.json')))
+    (output/'INDEX.md').write_text('# 三策略配对扰动对照\n\n'
+        '复用已完成的基线和800万步RSI轨迹；仅新增Phase U的100扰动+1无扰动回合。\n'
+        '原Phase U网络及归一化不变，在相同完整回合运行，无专家切换。原模型训练仅面向上升阶段。\n'
+        '[状态](status.json) · [配置与输入哈希](spec.json) · [模型核验](phase_policy_audit.json)\n')
+    return spec
+
+
 def prepare(alignment, source_spec, output, *, steps=1_000_000, episodes=100, seed=9182601):
     from .iterative_probe_training import make_config, SUPPORT_SCHEMA
     from .pulse_exploration import support_row
@@ -147,19 +238,23 @@ def run(spec_path):
         for path, sha in spec['input_files'].items():
             if file_sha(path) != sha:
                 raise ValueError('comparison input changed: '+path)
-        child('training', [cli/'train_unified.py', '--config', spec['training_config'], '--run-id', 'fresh_rsi'])
-        checkpoint = output/'training/fresh_rsi/checkpoints'/f'transition_{spec["training_steps"]}'
-        frozen = freeze_development_checkpoint(output/'frozen', config_path=Path(spec['training_config']),
-                                              checkpoint=checkpoint, name='fresh_rsi')
-        source_bank = read(spec['source_bank'])
-        new_bank = output/'trained_bank.json'
-        lock_probe_bank(dict(version='fresh_rsi_evaluation', task=source_bank['task'],
-                             max_ticks=spec['horizon'], label_interaction_budget=spec['episodes']*spec['horizon'],
-                             max_candidates_per_process=spec['episodes'],
-                             members=[dict(frozen_policy=str(output/'frozen/frozen_unified_policy.json'),
-                                           roles=['proposer', 'evaluator'])]), new_bank)
-        for method, bank, proposer in [('baseline', spec['source_bank'], spec['baseline']),
-                                       ('fresh_rsi', str(new_bank), frozen['policy']['name'])]:
+        if spec.get('additional_phase_policy'):
+            policies = [('phase_u', spec['source_bank'], spec['baseline'])]
+        else:
+            child('training', [cli/'train_unified.py', '--config', spec['training_config'], '--run-id', 'fresh_rsi'])
+            checkpoint = output/'training/fresh_rsi/checkpoints'/f'transition_{spec["training_steps"]}'
+            frozen = freeze_development_checkpoint(output/'frozen', config_path=Path(spec['training_config']),
+                                                  checkpoint=checkpoint, name='fresh_rsi')
+            source_bank = read(spec['source_bank'])
+            new_bank = output/'trained_bank.json'
+            lock_probe_bank(dict(version='fresh_rsi_evaluation', task=source_bank['task'],
+                                 max_ticks=spec['horizon'], label_interaction_budget=spec['episodes']*spec['horizon'],
+                                 max_candidates_per_process=spec['episodes'],
+                                 members=[dict(frozen_policy=str(output/'frozen/frozen_unified_policy.json'),
+                                               roles=['proposer', 'evaluator'])]), new_bank)
+            policies = [('baseline', spec['source_bank'], spec['baseline']),
+                        ('fresh_rsi', str(new_bank), frozen['policy']['name'])]
+        for method, bank, proposer in policies:
             for condition, count in [('nominal', 1), ('random', spec['episodes'])]:
                 ev = dict(bank=bank, proposer=proposer, seed=spec['evaluation_seed'],
                           num_envs=count, horizon=spec['horizon'], pulse_steps=spec['pulse_steps'],
@@ -168,6 +263,8 @@ def run(spec_path):
                           delta_limit=spec['delta_limit'] if condition=='random' else [0.]*4,
                           success_criterion=spec['success_criterion'], reward_mode=spec['reward_mode'],
                           learning_rate=3e-5, max_grad_norm=.75)
+                if spec.get('additional_phase_policy'):
+                    ev['phase_policy'] = spec['additional_phase_policy']
                 name=method+'_'+condition; path=output/(name+'_spec.json'); write(path,ev)
                 child(name, [cli/'run_pulse_exploration.py', '--mode', 'collect', '--spec', path,
                              '--output', output/'evaluation'/name])
@@ -209,9 +306,15 @@ def report(output, destination=None):
     destination=Path(destination) if destination else output/'comparison'
     destination.mkdir(exist_ok=False)
     q0=spec['root_qpos_address']; tapes={}; rows=[]; summary={}; hashes={}
-    for method in ('baseline','fresh_rsi'):
+    methods=spec.get('comparison_methods', [
+        dict(key='baseline',label=spec['baseline'],evaluation_dir=str(output/'evaluation')),
+        dict(key='fresh_rsi',label=f'全新RSI（{spec["training_steps"]:,}步）',evaluation_dir=str(output/'evaluation'))])
+    if len({m['key'] for m in methods}) != len(methods):
+        raise ValueError('duplicate comparison method')
+    for item in methods:
+        method=item['key']
         for condition in ('nominal','random'):
-            path=output/'evaluation'/f'{method}_{condition}'/'prefixes.npz'
+            path=Path(item['evaluation_dir'])/f'{method}_{condition}'/'prefixes.npz'
             with np.load(path) as z:
                 keys=['prefix_mask','qpos','success','physical_failure','terminal','end_code','time','mask','delta',
                       'front_wheel_clearance','rear_wheel_clearance','requested_delta','effective_delta']
@@ -229,17 +332,20 @@ def report(output, destination=None):
                 if len(records)!=spec['episodes']:
                     raise ValueError('comparison denominator drift')
     # Random draws are policy-independent, including unused draws after early termination.
-    np.testing.assert_array_equal(tapes['baseline','random']['delta'],tapes['fresh_rsi','random']['delta'])
-    a,b=tapes['baseline','random'],tapes['fresh_rsi','random']
-    common=a['mask'] & b['mask']
-    np.testing.assert_array_equal(a['requested_delta'][common],b['requested_delta'][common])
+    a=tapes[methods[0]['key'],'random']
+    for item in methods[1:]:
+        b=tapes[item['key'],'random']
+        np.testing.assert_array_equal(a['delta'],b['delta'])
+        common=a['mask'] & b['mask']
+        np.testing.assert_array_equal(a['requested_delta'][common],b['requested_delta'][common])
     font=Path('/usr/share/fonts/opentype/noto/NotoSerifCJK-Regular.ttc')
     if font.exists():
         font_manager.fontManager.addfont(str(font));plt.rcParams['font.family']=font_manager.FontProperties(fname=str(font)).get_name()
     plt.rcParams['axes.unicode_minus']=False
     fig,axes=plt.subplots(2,2,figsize=(14,10),layout='constrained')
-    colors={'baseline':'#2369a1','fresh_rsi':'#d15a28'}
-    labels={'baseline':spec['baseline'],'fresh_rsi':f'全新RSI（{spec["training_steps"]:,}步）'}
+    palette=['#2369a1','#d15a28','#32845d','#8556a8']
+    colors={m['key']:palette[i%len(palette)] for i,m in enumerate(methods)}
+    labels={m['key']:m['label'] for m in methods}
     exclusions=Counter()
     for method in colors:
         for condition in ('nominal','random'):
@@ -265,9 +371,9 @@ def report(output, destination=None):
     axes[1,1].set(ylim=(0,112),ylabel='成功率（%）',title=f'相同稳定恢复判据；全部{spec["episodes"]}回合为分母')
     for bar,method,value in zip(bars,colors,values):
         axes[1,1].text(bar.get_x()+bar.get_width()/2,value+2,f'{summary[method]["successes"]}/{spec["episodes"]} = {value:.0f}%',ha='center')
-    fig.suptitle('初始策略与全新RSI策略：固定起点、配对随机扰动对照',fontsize=17)
+    fig.suptitle('策略对比：固定起点、配对随机扰动与稳定恢复',fontsize=17)
     fig.supxlabel('实线：成功；虚线/叉号：未成功轨迹及真实终点。对齐图未检出离地：'
-                    f'基线 {exclusions["baseline"]}，RSI {exclusions["fresh_rsi"]}；这些回合仍计入成功率。\n'
+                     + '，'.join(f'{labels[m]} {exclusions[m]}' for m in colors) + '；这些回合仍计入成功率。\n' +
                     '随机动作残差3步，四通道±0.25；本次为开发评估、单训练种子，不是独立最终测试。',fontsize=10)
     for ext in ('png','pdf','svg'):fig.savefig(destination/f'comparison.{ext}',dpi=180)
     plt.close(fig)
@@ -277,9 +383,9 @@ def report(output, destination=None):
                    aligned_exclusions=dict(exclusions),input_sha256=hashes,baseline_policy=spec['baseline'],
                    training_steps=spec['training_steps'],evaluation_role=spec['role'],
                    report_source_sha256=file_sha(__file__))
-    report_path=output/'training/fresh_rsi/formal_report.json'
+    report_path=Path(spec.get('training_report_path',output/'training/fresh_rsi/formal_report.json'))
     summary['training_report']=str(report_path)
-    summary['evaluation_charged_interactions']=sum(read(output/'evaluation'/f'{m}_{c}'/'status.json')['charged_interactions'] for m in colors for c in ('nominal','random'))
+    summary['evaluation_charged_interactions']=sum(read(Path(m['evaluation_dir'])/f'{m["key"]}_{c}'/'status.json')['charged_interactions'] for m in methods for c in ('nominal','random'))
     write(destination/'summary.json',summary)
     link=os.path.relpath(destination,output)
     with (output/'INDEX.md').open('a') as f:

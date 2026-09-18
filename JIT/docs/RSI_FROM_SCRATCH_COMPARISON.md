@@ -65,3 +65,18 @@ end_code并保存终止原因；冻结运行代码不改，完成后从原始记
 含奖励来源审计、完整参数、零交互1368状态预检及输入哈希锁。
 冻结代码0ccb2ee，监督PID457072、训练PID457447、监视PID457073；已确认实际采样至少240000步，结果尚未完成。
 实时进度以该目录status.json和training/fresh_rsi/status.json为准。前次负结果和产物保留。
+
+## 三策略配对扩展（2026-09-18）
+
+按用户新指令增加原Phase U transition_4988928。复用完成的800万步实验两组轨迹，
+只新增原模型100随机扰动+1无扰动回合，上限40400控制步，零训练。
+实现计划：原位扩展rsi_comparison和薄CLI；限定fixed_random完整回合才允许
+直接加载原Phase U Actor/归一化/critic，核验原配置、XML、动作/观测与参数哈希；
+相同运行模板、固定起点和稳定恢复终点，不切专家。报告接受声明的方法列表与数据路径，
+逐元素验证随机draw和共同存活扰动；保留全部失败并输出三策略同图PNG/PDF/SVG及CSV。
+原Phase U只针对上升训练，因此完整恢复评价是扩展任务诊断。
+
+复用入口：`cli/run_rsi_comparison.py prepare-phase --previous <已完成实验> --checkpoint <原Phase U checkpoint> --output <新目录>`，
+随后使用既有launch命令冻结代码并启动监督与桌面监视器。
+本次目录：`runs/experiments/three_policy_pulse_comparison_20260918`。
+测试覆盖三方法分母、随机draw不配对拒绝、学习模式禁止覆盖、原载荷保持及配置漂移拒绝。

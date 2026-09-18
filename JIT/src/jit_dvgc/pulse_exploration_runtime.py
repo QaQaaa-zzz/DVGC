@@ -62,7 +62,11 @@ def networks(spec):
     if config.raw.get('success_criterion', 'first_valid_landing') != spec.get('success_criterion', 'first_valid_landing'):
         raise ValueError('source and exploration endpoint differ')
     env._reward_mode=spec.get('reward_mode',config.raw.get('reward_mode','phase_recovery'))
-    payload=load_checkpoint(Path(member['policy']['checkpoint']),expected=checkpoint_identity(config,env))
+    if spec.get('phase_policy'):
+        from .rsi_comparison import load_phase_evaluation_policy
+        payload,member=load_phase_evaluation_policy(spec,config,member)
+    else:
+        payload=load_checkpoint(Path(member['policy']['checkpoint']),expected=checkpoint_identity(config,env))
     for k,v in [('actor_sha256',payload.actor_params),('normalizer_sha256',payload.observation_normalizer),('critic_sha256',payload.critic_params)]:
         if pytree_sha256(v)!=member['policy'][k]:raise ValueError('base payload drift: '+k)
     if spec.get('explorer_backend')=='rsl_rl':

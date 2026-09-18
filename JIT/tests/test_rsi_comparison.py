@@ -56,3 +56,63 @@ def test_report_retains_baseline_counts_and_all_failed_episodes(tmp_path):
     assert summary['baseline_policy']=='initial'
     assert summary['aligned_exclusions']=={'baseline':2,'fresh_rsi':2}
     assert read(tmp_path/'comparison/summary.json')['baseline']['episodes']==2
+
+
+def test_report_compares_three_methods_and_rejects_unpaired_draws(tmp_path):
+    import pytest
+    from jit_dvgc.rsi_comparison import report
+    from jit_dvgc.jump_evidence_validation import write
+    methods=[dict(key=m,label=m,evaluation_dir=str(tmp_path/'evaluation')) for m in ('baseline','fresh_rsi','phase_u')]
+    write(tmp_path/'spec.json',dict(root_qpos_address=0,episodes=2,baseline='initial',training_steps=8000000,role='development',comparison_methods=methods))
+    for method in methods:
+        for condition,n in [('nominal',1),('random',2)]:
+            p=tmp_path/'evaluation'/f'{method["key"]}_{condition}';p.mkdir(parents=True)
+            tape={k:np.zeros((2,n),bool) for k in ('success','physical_failure','mask')}
+            tape.update(prefix_mask=np.ones((2,n),bool),terminal=np.ones((2,n),bool),end_code=np.zeros((2,n),int),
+                        qpos=np.zeros((2,n,3)),time=np.full((2,n),.02),
+                        front_wheel_clearance=np.zeros((2,n)),rear_wheel_clearance=np.zeros((2,n)))
+            for k in ('delta','requested_delta','effective_delta'):tape[k]=np.zeros((2,n,4))
+            if method['key']=='phase_u':tape['success'][-1,0]=True
+            np.savez_compressed(p/'prefixes.npz',**tape)
+            write(p/'status.json',dict(charged_interactions=2*n))
+    summary=report(tmp_path)
+    assert summary['phase_u']['successes']==1
+    assert summary['evaluation_charged_interactions']==18
+    p=tmp_path/'evaluation/phase_u_random/prefixes.npz'
+    tape=dict(np.load(p));tape['delta'][0,0,0]=1
+    np.savez_compressed(p,**tape)
+    with pytest.raises(AssertionError):report(tmp_path,tmp_path/'unpaired')
+
+
+def test_phase_policy_override_forbidden_for_learning():
+    import pytest
+    from jit_dvgc.rsi_comparison import load_phase_evaluation_policy
+    with pytest.raises(ValueError,match='fixed_random'):
+        load_phase_evaluation_policy({'controller_mode':'learned_residual'},None,None)
+
+
+def test_phase_policy_preserves_payload_and_rejects_runtime_drift(tmp_path,monkeypatch):
+    from types import SimpleNamespace
+    import pytest
+    from jit_dvgc import rsi_comparison as comparison, iterative_probe_training
+    from jit_dvgc.handoff_bank import pytree_sha256
+    from jit_dvgc.jump_evidence_validation import write,file_sha
+    config_path=tmp_path/'phase.json';write(config_path,{'model':'fixture'})
+    checkpoint=tmp_path/'checkpoint';checkpoint.mkdir();(checkpoint/'payload.pkl').write_bytes(b'fixture')
+    (checkpoint/'identity.json').write_text('{}')
+    payload=SimpleNamespace(identity=SimpleNamespace(xml_sha256='xml',actor_frame_fields=('a',),actor_task_fields=('b',),action_order=('c',)),training_transitions=4988928,
+        actor_params={'w':np.array([3.])},critic_params={'w':np.array([4.])},observation_normalizer={'mean':np.array([5.])})
+    monkeypatch.setattr(iterative_probe_training,'load_phase_initializer',lambda _:payload)
+    phase=dict(name='phase_u',source_phase_config=str(config_path),source_checkpoint=str(checkpoint),
+               input_files={str(config_path):file_sha(config_path)})
+    spec=dict(controller_mode='fixed_random',full_episode_rollout=True,phase_policy=phase)
+    config=SimpleNamespace(up_config_sha256=comparison.canonical_sha256({'model':'fixture'}))
+    member={'name':'baseline','policy':{'xml_sha256':'xml'}}
+    restored,record=comparison.load_phase_evaluation_policy(spec,config,member)
+    assert restored is payload
+    assert record['policy']['normalizer_sha256']==pytree_sha256(payload.observation_normalizer)
+    assert member['name']=='baseline' and 'actor_sha256' not in member['policy']
+    config.up_config_sha256='wrong'
+    with pytest.raises(ValueError,match='runtime differs'):comparison.load_phase_evaluation_policy(spec,config,member)
+    config_path.write_text('{}')
+    with pytest.raises(ValueError,match='input drift'):comparison.load_phase_evaluation_policy(spec,config,member)
