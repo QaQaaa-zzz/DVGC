@@ -49,12 +49,12 @@
 - Consumes: committed Task 1 code and the completed three-policy comparison as policy/provenance source.
 - Produces: immutable `spec.json`, source snapshot, launch receipt, live status, watcher state, batch receipts, and final reports.
 
-- [ ] Run all related CPU tests and inspect the staged diff.
-- [ ] Commit and push the code and protocol documentation.
-- [ ] Prepare the new run with `--episodes 10000 --batch-size 256 --seed 9183002 --pulse-start-schedule 0 --resource-wait-timeout-seconds 604800` and the locked `lineage_repair_0070` additional-method manifest, so the run waits for the active recovery job instead of stopping it.
-- [ ] Verify the frozen contract has schedule `[0]`, three steps, all four requested policies, and a 16,000,400-interaction ceiling.
-- [ ] Launch from an isolated committed source snapshot and verify the supervisor, first child, and desktop watcher are alive.
-- [ ] Record live PIDs, status paths, exact protocol, and the superseded interpretation of the mixed-onset plot.
+- [x] Run all related CPU tests and inspect the staged diff.
+- [x] Commit and push the code and protocol documentation.
+- [x] Prepare the new run with `--episodes 10000 --batch-size 256 --seed 9183002 --pulse-start-schedule 0 --resource-wait-timeout-seconds 604800` and the locked `lineage_repair_0070` additional-method manifest, so the run waits for the active recovery job instead of stopping it.
+- [x] Verify the frozen contract has schedule `[0]`, three steps, all four requested policies, and a 16,000,400-interaction ceiling.
+- [x] Launch from an isolated committed source snapshot and verify the supervisor, first child, and desktop watcher are alive.
+- [x] Record live PIDs, status paths, exact protocol, and the superseded interpretation of the mixed-onset plot.
 
 ### Task 3: Completion report
 
