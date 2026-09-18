@@ -118,3 +118,26 @@ def test_code_commit_is_provenance_not_scientific_reuse_identity():
     import pytest
     with pytest.raises(ValueError):
         verify_stage_reuse({'code_commit':'old','seed':1},{'code_commit':'fixed','seed':2})
+
+
+def test_recovery_resolves_ancestor_artifacts_and_rejects_cycles(tmp_path):
+    from jit_dvgc.jump_evidence_validation import write
+    original=tmp_path/'original'; original.mkdir()
+    resumed=tmp_path/'resumed'; resumed.mkdir()
+    write(original/'outcomes.json', [{'label':1}])
+    write(resumed/'recovery.json', {'previous':str(original)})
+    assert iteration.lineage_artifact(resumed,'outcomes.json') == original/'outcomes.json'
+    write(resumed/'outcomes.json',[{'label':0}])
+    assert iteration.lineage_artifact(resumed,'outcomes.json') == resumed/'outcomes.json'
+    write(original/'recovery.json', {'previous':str(resumed)})
+    with pytest.raises(ValueError,match='cycle'):
+        iteration.lineage_artifact(resumed,'missing.json')
+
+
+def test_recovery_keeps_incomplete_stage_maximum_charged():
+    status={'inherited_interactions':10,'charged_interactions':40,'costs':[
+        {'accounting':'actual','charged_interactions':10,'maximum_interactions':20},
+        {'accounting':'reserved_after_incomplete_child','charged_interactions':20,'maximum_interactions':20}]}
+    assert iteration.recovery_charge(status) == 40
+    status['costs'][1]['charged_interactions']=19
+    with pytest.raises(ValueError): iteration.recovery_charge(status)

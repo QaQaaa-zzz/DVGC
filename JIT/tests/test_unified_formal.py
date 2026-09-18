@@ -370,3 +370,23 @@ def test_adaptive_kl_reaches_trainer_and_reduces_large_update_lr(jit_root):
     assert float(lr)<1e-4
     for _ in range(20):state,lr=adaptive_kl_learning_rate(state,jp.asarray(.03),.01,1e-5,1e-4)
     assert float(lr)==pytest.approx(1e-5)
+
+
+def test_nonfinite_episode_metrics_are_preserved_before_failure(jit_root, tmp_path):
+    from jit_dvgc.checkpoint import CheckpointIdentity
+    from jit_dvgc.unified_formal import UnifiedFormalController, load_unified_formal_config
+    config = load_unified_formal_config(jit_root / 'configs/pi_unified_formal.json')
+    controller = UnifiedFormalController(config=config, run_dir=tmp_path,
+        identity=CheckpointIdentity('cfg', 'xml', (), (), ()),
+        evaluate_train_panel=lambda *_: None)
+    with pytest.raises(ValueError, match='nonfinite metric'):
+        controller.on_progress(25600, {'episode/reward': float('nan'),
+            'episode/energy': float('-inf'), 'episode/length': 12.,
+            'episode/nested': {'value': float('inf')}})
+    row = json.loads((tmp_path / 'nonfinite_metrics.json').read_text())
+    assert row['training_transitions'] == 25600
+    assert row['nonfinite_keys'] == ['episode/reward', 'episode/energy', 'episode/nested/value']
+    assert row['metrics']['episode/reward'] == 'nan'
+    assert row['metrics']['episode/energy'] == '-inf'
+    assert row['metrics']['episode/length'] == 12.
+    assert not (tmp_path / 'episode_metrics.jsonl').exists()

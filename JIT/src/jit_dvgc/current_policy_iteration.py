@@ -143,3 +143,39 @@ def seed_support(spec, output):
     cost=read(output/'nominal/status.json')['charged_interactions']+read(output/'evaluation/status.json')['charged_interactions']
     write(output/'status.json',dict(phase='completed',charged_interactions=cost,
         source_policy=spec['proposer'],witnessed_rows=len(entries),historical_support_imported=False))
+
+
+def lineage_artifact(root, relative):
+    """Find preserved evidence through repeated recovery boundaries."""
+    root = Path(root)
+    seen = set()
+    while True:
+        identity = root.resolve()
+        if identity in seen:
+            raise ValueError('lineage recovery cycle')
+        seen.add(identity)
+        path = root / relative
+        if path.exists():
+            return path
+        recovery = root / 'recovery.json'
+        if not recovery.exists():
+            raise FileNotFoundError(path)
+        root = Path(read(recovery)['previous'])
+
+
+def recovery_charge(status):
+    """Carry failed child maxima forward without mislabelling them as actuals."""
+    total = status.get('inherited_interactions', 0)
+    for cost in status['costs']:
+        charged, maximum = cost['charged_interactions'], cost['maximum_interactions']
+        if not 0 <= charged <= maximum:
+            raise ValueError('invalid recovery cost')
+        if cost['accounting'] == 'reserved_after_incomplete_child':
+            if charged != maximum:
+                raise ValueError('incomplete child must retain its full reserved cost')
+        elif cost['accounting'] != 'actual':
+            raise ValueError('unresolved recovery accounting')
+        total += charged
+    if total != status['charged_interactions']:
+        raise ValueError('recovery cost total mismatch')
+    return total

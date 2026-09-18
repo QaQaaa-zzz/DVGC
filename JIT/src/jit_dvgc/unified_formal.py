@@ -493,9 +493,41 @@ class UnifiedFormalController(FormalRunController):
                 raise ValueError("episode metric callback must be block-aligned")
             if relative > self.config.ppo.requested_transitions:
                 raise ValueError("episode metric callback exceeded the formal target")
+            try:
+                finite_metrics = _flatten_finite_metrics(metrics)
+            except ValueError:
+                # Preserve the entire callback before aborting. Never replace
+                # invalid training values with zeros or silently continue.
+                diagnostic = {}
+                nonfinite = []
+                def capture(values, prefix=""):
+                    for key, value in values.items():
+                        name = f"{prefix}/{key}" if prefix else str(key)
+                        if isinstance(value, Mapping):
+                            capture(value, name)
+                            continue
+                        capture_value(name, value)
+
+                def capture_value(key, value):
+                    array = np.asarray(jax.device_get(value))
+                    if array.ndim == 0:
+                        scalar = float(array)
+                        diagnostic[str(key)] = scalar if math.isfinite(scalar) else str(scalar)
+                        if not math.isfinite(scalar):
+                            nonfinite.append(str(key))
+                    else:
+                        diagnostic[str(key)] = repr(array)
+                capture(metrics)
+                _write_json(self.run_dir / "nonfinite_metrics.json", {
+                    "training_transitions": relative,
+                    "last_completed_training_transitions": self.completed_training_transitions,
+                    "nonfinite_keys": nonfinite,
+                    "metrics": diagnostic,
+                })
+                raise
             row = {
                 "training_transitions": relative,
-                "metrics": _flatten_finite_metrics(metrics),
+                "metrics": finite_metrics,
             }
             with (self.run_dir / "episode_metrics.jsonl").open(
                 "a", encoding="utf-8"

@@ -200,9 +200,8 @@ def run(spec_path,output):
         from .current_policy_iteration import verify_stage_reuse
         verify_stage_reuse(read(reuse_root/'declaration.json')['spec'],spec)
         previous_status=read(reuse_root/'status.json')
-        if any(c['accounting']!='actual' for c in previous_status['costs']):
-            raise ValueError('stage recovery needs measured prior costs')
-        inherited_cost=previous_status['charged_interactions']
+        from .current_policy_iteration import recovery_charge
+        inherited_cost=recovery_charge(previous_status)
         write(root/'recovery.json',dict(previous=str(reuse_root),inherited_interactions=inherited_cost,
             previous_status_sha256=_file_sha(reuse_root/'status.json'),no_completed_training_repeated=True))
     def status(phase,**kw):write(root/'status.json',dict(phase=phase,charged_interactions=inherited_cost+sum(c['charged_interactions'] for c in costs),new_interactions=sum(c['charged_interactions'] for c in costs),inherited_interactions=inherited_cost,maximum_interactions=budget['maximum_interactions'],maximum_actual_interactions=actual_cap,wall_seconds=time.monotonic()-start,costs=costs,**kw))
@@ -251,7 +250,8 @@ def run(spec_path,output):
             source=next(m for m in bank['members'] if m['name']==boundary['source'])
             checkpoint=boundary['explorer_checkpoint'];support=read(boundary['support'])
             seen=read(previous/'visited_cells.json')
-            rows_all=[row for i in range(first_round) for row in read(previous/f'round_{i:04d}'/'outcomes.json')]
+            from .current_policy_iteration import lineage_artifact
+            rows_all=[row for i in range(first_round) for row in read(lineage_artifact(previous,f'round_{i:04d}/outcomes.json'))]
             write(root/'source_pi_support.json',read(previous/'source_pi_support.json'))
             write(root/'training_metrics.json',metrics);export(root,metrics,rows_all)
             write(root/'recovery.json',boundary)
@@ -356,7 +356,8 @@ def run(spec_path,output):
                     if r['index'] in resolved:
                         new=resolved[r['index']];r.update(label=new['label'],witness=new['witness'],learning_attempted=True,bank_attempts=r['attempts'],attempts=r['attempts']+new['attempts'],learning_config=str(config))
                 if current_only:
-                    baseline_path=(Path(boundary['previous']) if boundary else (reuse_root if reuse_root is not None else root))/'baseline/candidates.json'
+                    from .current_policy_iteration import lineage_artifact
+                    baseline_path=lineage_artifact(Path(boundary['previous']) if boundary else (reuse_root if reuse_root is not None else root), 'baseline/candidates.json')
                     panel=retention_candidates(support,read(baseline_path)[0],spec['retention_samples_per_phase'])
                     panel_path=d/'retention_candidates.json';write(panel_path,panel)
                     checked=runtime(d,'retention_evaluation','evaluate',{**ex,'bank':str(bank_path),
