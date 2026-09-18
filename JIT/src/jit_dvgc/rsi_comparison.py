@@ -274,7 +274,7 @@ def report(output, destination=None):
     with (destination/'episodes.csv').open('w') as f:
         w=csv.DictWriter(f,fieldnames=list(rows[0]));w.writeheader();w.writerows(rows)
     summary.update(paired_random_draws_identical=True,paired_requested_pulses_identical_before_termination=True,
-                   aligned_exclusions=dict(exclusions),input_sha256=hashes,baseline=spec['baseline'],
+                   aligned_exclusions=dict(exclusions),input_sha256=hashes,baseline_policy=spec['baseline'],
                    training_steps=spec['training_steps'],evaluation_role=spec['role'],
                    report_source_sha256=file_sha(__file__))
     report_path=output/'training/fresh_rsi/formal_report.json'

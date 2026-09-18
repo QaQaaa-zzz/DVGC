@@ -32,3 +32,27 @@ def test_environment_timeout_is_counted_separately_from_rollout_horizon():
                 time=np.array([[8.]]), qpos=np.zeros((1, 1, 3)), end_code=np.array([[END_TIMEOUT]]))
     row = episode_results(tape, 0)[0]
     assert row['environment_timeout'] and not row['horizon_exhausted'] and not row['success']
+
+
+def test_report_retains_baseline_counts_and_all_failed_episodes(tmp_path):
+    from jit_dvgc.constants import END_TIMEOUT
+    from jit_dvgc.rsi_comparison import report
+    from jit_dvgc.jump_evidence_validation import write, read
+    write(tmp_path/'spec.json',dict(root_qpos_address=0,episodes=2,baseline='initial',training_steps=3200,role='development'))
+    for method in ('baseline','fresh_rsi'):
+        for condition,n in [('nominal',1),('random',2)]:
+            p=tmp_path/'evaluation'/f'{method}_{condition}';p.mkdir(parents=True)
+            tape={k:np.zeros((2,n),bool) for k in ('success','physical_failure','terminal','mask')}
+            tape.update(prefix_mask=np.ones((2,n),bool),end_code=np.full((2,n),END_TIMEOUT),
+                        qpos=np.zeros((2,n,3)),time=np.full((2,n),.02),
+                        front_wheel_clearance=np.zeros((2,n)),rear_wheel_clearance=np.zeros((2,n)))
+            for k in ('delta','requested_delta','effective_delta'):tape[k]=np.zeros((2,n,4))
+            tape['terminal'][-1]=True
+            np.savez_compressed(p/'prefixes.npz',**tape)
+            write(p/'status.json',dict(charged_interactions=2*n))
+    summary=report(tmp_path)
+    assert summary['baseline']['successes']==0 and summary['baseline']['episodes']==2
+    assert summary['baseline']['environment_timeouts']==2
+    assert summary['baseline_policy']=='initial'
+    assert summary['aligned_exclusions']=={'baseline':2,'fresh_rsi':2}
+    assert read(tmp_path/'comparison/summary.json')['baseline']['episodes']==2
