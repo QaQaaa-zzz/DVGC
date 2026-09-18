@@ -175,6 +175,9 @@ def recovery_charge(status):
         if cost['accounting'] == 'reserved_after_incomplete_child':
             if charged != maximum:
                 raise ValueError('incomplete child must retain its full reserved cost')
+        elif cost['accounting'] == 'not_launched':
+            if charged != 0:
+                raise ValueError('unlaunched child must have zero cost')
         elif cost['accounting'] != 'actual':
             raise ValueError('unresolved recovery accounting')
         total += charged

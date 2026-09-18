@@ -61,6 +61,9 @@ def _validate(plan: dict[str, Any]) -> None:
         backend = stage.get("execution_backend", "gpu")
         if backend not in ("cpu", "gpu"):
             raise ValueError("execution_backend must be cpu or gpu")
+        if stage.get('resource_supervisor') and (backend != 'cpu' or
+                plan['gate'].get('kind') != 'gpu_idle' or not plan['gate'].get('wait_until_idle')):
+            raise ValueError('resource_supervisor requires a CPU idle-wait supervisor')
         expected_platforms = "cpu" if backend == "cpu" else "cuda,cpu"
         if not isinstance(env, dict) or env.get("JAX_PLATFORMS") != expected_platforms or any(
             not isinstance(key, str) or not isinstance(value, str) for key, value in env.items()
@@ -142,10 +145,10 @@ def run_gated_plan(plan_path: Path, output_dir: Path, *, wait: bool = False,
                 if not wait:
                     return status
                 remaining = plan["wait_timeout_seconds"] - (time.monotonic() - gate_start)
-                if remaining <= 0:
+                if remaining <= 0 and not plan['gate'].get('wait_until_idle',False):
                     status["phase"] = "gate_timeout"
                     return status
-                time.sleep(min(poll_seconds, remaining))
+                time.sleep(poll_seconds if plan['gate'].get('wait_until_idle',False) else min(poll_seconds, remaining))
             record = {"name": stage["name"], "argv": stage["argv"], "cwd": stage["cwd"],
                       "env_overrides": stage["env"], "execution_backend": stage.get("execution_backend", "gpu"),
                       "max_interactions": stage["max_interactions"],
@@ -160,18 +163,32 @@ def run_gated_plan(plan_path: Path, output_dir: Path, *, wait: bool = False,
                 with (output / f"{stage['name']}.log").open("xb") as log:
                     # Recheck immediately before each process creation.
                     _verify_locks(plan, plan_path, digest)
-                    assessment = check_execution_gate(plan["gate"])
-                    status["gate"] = assessment
-                    if not assessment["ready"]:
-                        record["phase"] = status["phase"] = "blocked"
-                        return status
+                    while True:
+                        _verify_locks(plan, plan_path, digest)
+                        assessment = check_execution_gate(plan["gate"])
+                        status["gate"] = assessment
+                        if assessment["ready"]:
+                            record["phase"] = "launching"
+                            status["phase"] = "running"
+                            break
+                        record["phase"] = status["phase"] = "waiting" if wait else "blocked"
+                        _write_status(output, status)
+                        if not wait:
+                            return status
+                        remaining = plan['wait_timeout_seconds'] - (time.monotonic() - gate_start)
+                        if remaining <= 0 and not plan['gate'].get('wait_until_idle',False):
+                            record['phase'] = status['phase'] = 'gate_timeout'
+                            return status
+                        time.sleep(poll_seconds if plan['gate'].get('wait_until_idle',False) else min(poll_seconds, remaining))
                     process = subprocess.Popen(stage["argv"], cwd=stage["cwd"],
                         env={**os.environ, **stage["env"]}, stdout=log, stderr=subprocess.STDOUT,
                         start_new_session=True)
                     status["reserved_interactions"] += stage["max_interactions"]
                     record["pid"] = process.pid
                     _write_status(output, status)
-                    record["returncode"] = process.wait(timeout=stage["timeout_seconds"])
+                    # A CPU supervisor can be waiting on GPU children for an
+                    # arbitrary time. Actual compute children retain time limits.
+                    record["returncode"] = process.wait(timeout=None if stage.get('resource_supervisor') else stage["timeout_seconds"])
                     record["phase"] = "completed" if record["returncode"] == 0 else "failed"
             except subprocess.TimeoutExpired:
                 if process is not None:

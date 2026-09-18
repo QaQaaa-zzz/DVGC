@@ -212,6 +212,13 @@ def run(spec_path,output):
         for i,a in enumerate(argv[:-1]):
             if a in ['--spec','--config']:inputs[str(Path(argv[i+1]).resolve())]=_file_sha(Path(argv[i+1]))
         plan=dict(schema='jit_gated_plan_v1',gate=spec['gate'],input_files=inputs,source_locks=spec['source_locks'],max_interactions=max(1,maximum),wait_timeout_seconds=spec['wait_timeout_seconds'],stages=[dict(name=name,argv=[spec['python'],*map(str,argv)],cwd=spec['repo'],env=dict(JAX_PLATFORMS='cuda,cpu',CUDA_VISIBLE_DEVICES='0',PYTHONPATH=str(Path(spec['repo'])/'JIT/src'),XLA_PYTHON_CLIENT_PREALLOCATE='false',JIT_AUTO_PUBLISH='0',**(env or {})),timeout_seconds=spec['stage_timeout_seconds'],max_interactions=maximum)])
+        if spec['gate'].get('wait_until_idle') and '--mode' in argv and argv[argv.index('--mode')+1]=='evaluate':
+            evaluation_spec=read(argv[argv.index('--spec')+1])
+            batch_size=evaluation_spec.get('evaluation_batch_size')
+            if batch_size and len(read(evaluation_spec['candidates'])) > batch_size:
+                stage=plan['stages'][0]
+                stage.update(execution_backend='cpu',resource_supervisor=True)
+                stage['env']['JAX_PLATFORMS']='cpu'
         path=directory/(name+'_plan.json');write(path,plan)
         cost=dict(stage=str(directory.relative_to(root))+'/'+name,charged_interactions=0,maximum_interactions=maximum,accounting='not_launched');costs.append(cost);status('running',stage=cost['stage'])
         result=run_gated_plan(path,directory/(name+'_execution'),wait=True,poll_seconds=30)

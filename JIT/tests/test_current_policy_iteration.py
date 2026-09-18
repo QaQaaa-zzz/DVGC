@@ -2,6 +2,14 @@ import pytest
 from jit_dvgc import current_policy_iteration as iteration
 
 
+def test_recover_unlaunched_stage_is_zero_cost_only():
+    status={'charged_interactions':12,'inherited_interactions':12,'costs':[
+        {'accounting':'not_launched','charged_interactions':0,'maximum_interactions':100}]}
+    assert iteration.recovery_charge(status)==12
+    status['costs'][0]['charged_interactions']=1
+    with pytest.raises(ValueError):iteration.recovery_charge(status)
+
+
 def test_full_nominal_rollout_is_explicitly_zero_residual_only():
     from jit_dvgc.pulse_exploration import pulse_delay
     spec=dict(nominal_source_rollout=True,pulse_start_schedule=[0],pulse_steps=400,

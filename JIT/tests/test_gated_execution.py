@@ -62,6 +62,48 @@ def test_reclosed_gate_prevents_child(tmp_path, monkeypatch, children):
     assert result["phase"] == "blocked" and not children
 
 
+def test_reclosed_gate_waits_and_resumes_without_duplicate_launch(tmp_path, monkeypatch, children):
+    path, _ = plan(tmp_path, stages=2)
+    assessments=iter([True,False,False,True,False,True,True])
+    monkeypatch.setattr(runner,'check_execution_gate',lambda _: {'ready':next(assessments)})
+    monkeypatch.setattr(runner.time,'sleep',lambda _: None)
+    result=runner.run_gated_plan(path,tmp_path/'output',wait=True)
+    assert result['phase']=='completed' and len(children)==2
+    assert result['reserved_interactions']==20
+
+
+def test_opt_in_resource_wait_outlives_wait_deadline(tmp_path,monkeypatch,children):
+    path,data=plan(tmp_path)
+    data['gate']={'kind':'gpu_idle','wait_until_idle':True}
+    path.write_text(json.dumps(data))
+    clock=[0.]
+    monkeypatch.setattr(runner.time,'monotonic',lambda:clock[0])
+    monkeypatch.setattr(runner.time,'sleep',lambda s:clock.__setitem__(0,clock[0]+s))
+    monkeypatch.setattr(runner,'check_execution_gate',lambda _: {'ready':clock[0]>=3})
+    result=runner.run_gated_plan(path,tmp_path/'output',wait=True,poll_seconds=1)
+    assert result['phase']=='completed' and len(children)==1 and clock[0]>=3
+
+
+def test_only_cpu_resource_supervisor_can_wait_without_execution_timeout(tmp_path,monkeypatch):
+    path,data=plan(tmp_path)
+    data['gate']={'kind':'gpu_idle','wait_until_idle':True}
+    data['stages'][0].update(resource_supervisor=True)
+    path.write_text(json.dumps(data))
+    with pytest.raises(ValueError,match='CPU'):
+        runner.run_gated_plan(path,tmp_path/'invalid')
+    data['stages'][0].update(execution_backend='cpu',env={'JAX_PLATFORMS':'cpu'})
+    path.write_text(json.dumps(data))
+    waits=[]
+    class Process:
+        pid=123
+        def __init__(self,*args,**kwargs):pass
+        def wait(self,timeout):waits.append(timeout);return 0
+    monkeypatch.setattr(runner.subprocess,'Popen',Process)
+    monkeypatch.setattr(runner,'check_execution_gate',lambda _: {'ready':True})
+    assert runner.run_gated_plan(path,tmp_path/'valid')['phase']=='completed'
+    assert waits==[None]
+
+
 def test_blocked_without_wait_never_launches(tmp_path, monkeypatch, children):
     path, _ = plan(tmp_path)
     monkeypatch.setattr(runner, "check_execution_gate", lambda _: {"ready": False})
