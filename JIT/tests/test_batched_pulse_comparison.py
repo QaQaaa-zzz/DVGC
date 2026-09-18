@@ -37,7 +37,8 @@ def _fixture(tmp_path):
             tape={k:np.zeros((2,n),bool) for k in ('success','physical_failure','mask')}
             tape.update(prefix_mask=np.ones((2,n),bool),terminal=np.ones((2,n),bool),end_code=np.zeros((2,n),int),
                         qpos=np.zeros((2,n,3)),time=np.full((2,n),.02),
-                        front_wheel_clearance=np.zeros((2,n)),rear_wheel_clearance=np.zeros((2,n)))
+                        front_wheel_clearance=np.zeros((2,n)),rear_wheel_clearance=np.zeros((2,n)),
+                        valid_contact_seen=np.ones((2,n),bool),recovery_ticks=np.zeros((2,n),int))
             for k in ('delta','requested_delta','effective_delta'):tape[k]=np.zeros((2,n,4))
             tape['delta'][:]=batch['seed']
             tape['success'][-1]=m['key']=='phase_u'
