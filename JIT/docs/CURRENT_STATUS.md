@@ -16,6 +16,9 @@ baseline追溯，并允许保留失败子任务最大预留成本接续，不能
 总上限172881600。新入口`runs/experiments/neighborhood_reward005_safe256_20260916/nonfinite_recovery/`；
 实际是否运行以根目录ACTIVE_RUN.json与该入口状态为准。
 有界重试证据`runs/monitoring/nonfinite_reward_20260918/`。
+131项相关测试通过；首次启动路径身份预检退出且新增交互0。链接解析修复后，
+`nonfinite_recovery/attempt_0002`已实际进入第57轮after_learning评估。
+TensorBoard6009已切换，根ACTIVE_RUN指向本次接续。此为启动验证快照。
 
 ## 2026-09-16 策略名称冲突修复与原预算接续
 
