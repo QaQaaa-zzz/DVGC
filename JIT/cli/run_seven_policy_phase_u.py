@@ -4,7 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
-from jit_dvgc.seven_policy_phase_u import prepare_experiment, run_experiment, report_experiment, train_arm
+from jit_dvgc.seven_policy_phase_u import prepare_experiment, run_experiment, report_experiment, train_arm, prepare_resume
 
 
 def main():
@@ -24,8 +24,14 @@ def main():
         child.add_argument('--spec', type=Path, required=True)
         if name == '_train-arm':
             child.add_argument('--arm', required=True)
+    resume = commands.add_parser('prepare-resume')
+    resume.add_argument('--previous', type=Path, required=True)
+    resume.add_argument('--output', type=Path, required=True)
+    resume.add_argument('--execution-repository', type=Path, required=True)
     args = parser.parse_args()
-    if args.command == 'prepare':
+    if args.command == 'prepare-resume':
+        result = prepare_resume(args.previous, args.output, args.execution_repository)
+    elif args.command == 'prepare':
         result = prepare_experiment(args.sources, args.historical_config, args.previous, args.output,
             training_seeds=args.training_seeds, condition_seeds=args.condition_seeds,
             execution_repository=args.execution_repository, python=args.python)

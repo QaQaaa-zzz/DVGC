@@ -19,3 +19,26 @@ def test_legacy_prefix_length_unchanged_and_learning_cannot_use_eval_mode():
     assert collection_steps(spec, np.array([0]), 'liftoff') == 400
     with pytest.raises(ValueError):
         collection_steps({**spec, 'full_episode_rollout': True}, np.array([0]), None)
+
+
+def test_phase_policy_full_episode_cutoff_needs_no_continuation_identity():
+    from jit_dvgc.pulse_exploration_runtime import completed_trace_endpoint
+    # Phase policies deliberately have neither formal_config_sha256 nor iteration.
+    phase_policy = {'source_checkpoint': 'phase_u/transition_14991360'}
+    arrays = {'data/qpos': np.zeros(7), 'data/qvel': np.zeros(6)}
+    assert 'formal_config_sha256' not in phase_policy
+    endpoint = completed_trace_endpoint(arrays=arrays, terminal=False,
+        stage_reached=True, full_episode=True, valid=False, failure=False,
+        prefix_sha='trace', lane=198, tick=399)
+    assert endpoint['snapshot'] is None
+    assert endpoint['endpoint_kind'] == 'horizon_trace'
+    assert endpoint['terminal_reason'] == 'horizon_exhausted'
+    assert endpoint['prefix_label'] is None
+    assert completed_trace_endpoint(arrays=arrays, terminal=False,
+        stage_reached=True, full_episode=False, valid=False, failure=False,
+        prefix_sha='trace', lane=198, tick=2) is None
+    failure = completed_trace_endpoint(arrays=arrays, terminal=True,
+        stage_reached=True, full_episode=True, valid=False, failure=True,
+        prefix_sha='trace', lane=198, tick=399)
+    assert failure['endpoint_kind'] == 'terminal_trace'
+    assert failure['prefix_label'] == 0

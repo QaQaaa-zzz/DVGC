@@ -22,6 +22,24 @@ def terminal_prefix_label(valid, failure):
     return suffix_label(bool(valid),bool(failure),False,True,False)
 
 
+def completed_trace_endpoint(*, arrays, terminal, stage_reached, full_episode,
+                             valid, failure, prefix_sha, lane, tick):
+    """Return evaluation cutoff evidence without inventing physical termination."""
+    if not (terminal or not stage_reached or full_episode):
+        return None
+    label, reason = terminal_prefix_label(valid, failure)
+    if not stage_reached:
+        label, reason = None, 'stage_not_reached'
+    elif full_episode and not terminal:
+        label, reason = None, 'horizon_exhausted'
+    return dict(snapshot=None,
+                state_sha256=canonical_sha256(dict(qpos=arrays['data/qpos'].tolist(), qvel=arrays['data/qvel'].tolist())),
+                snapshot_context_sha256=canonical_sha256(dict(terminal_prefix_sha256=prefix_sha, lane=lane, tick=tick)),
+                prefix_label=label, terminal_reason=reason,
+                endpoint_kind='terminal_trace' if terminal else 'horizon_trace' if stage_reached else 'stage_not_reached_trace',
+                terminal_tick=tick)
+
+
 def aggregate_labels(attempts,order):
     if any(a['label']==1 for a in attempts):return 1
     by_policy={a['policy']:a['label'] for a in attempts}
@@ -253,16 +271,15 @@ def collect(spec, output):
         stage_reached=event is None or trigger_step>=0
         phase='upstream' if int(arrays['info/active_phase'])==0 else 'downstream'
         coords=physical_coordinates_from_arrays(tape['qpos'][t,e],tape['qvel'][t,e],bundle=env._bundle)
-        if terminal or not stage_reached:
-            # Terminal evidence is never passed to the nonterminal snapshot API.
-            label,reason=terminal_prefix_label(bool(arrays['down/recovery_success'] if recovery_mode(spec) else arrays['down/valid_contact_seen']),bool(tape['physical_failure'][t,e]) if 'physical_failure' in tape else None)
-            if not stage_reached:label,reason=None,'stage_not_reached'
-            endpoint=dict(snapshot=None,state_sha256=canonical_sha256(dict(qpos=arrays['data/qpos'].tolist(),qvel=arrays['data/qvel'].tolist())),snapshot_context_sha256=canonical_sha256(dict(terminal_prefix_sha256=prefix_sha,lane=e,tick=t)),prefix_label=label,terminal_reason=reason,endpoint_kind='terminal_trace',terminal_tick=t)
-        else:
+        endpoint=completed_trace_endpoint(arrays=arrays, terminal=terminal, stage_reached=stage_reached,
+            full_episode=full_episode, valid=bool(arrays['down/recovery_success'] if recovery_mode(spec) else arrays['down/valid_contact_seen']),
+            failure=bool(tape['physical_failure'][t,e]) if 'physical_failure' in tape else None,
+            prefix_sha=prefix_sha, lane=e, tick=t)
+        if endpoint is None:
             snap=snapshot_from_arrays(arrays,env=env,record=generator,parent_trajectory=str(output/'prefixes.npz')+'::'+str(e),parent_state_sha256=prefix_sha)
             path=output/'snapshots'/f'{e:05d}';save_unified_envelope_snapshot(path,snap)
             endpoint=dict(snapshot=str(path),state_sha256=physical_state_sha256(snap),snapshot_context_sha256=snapshot_context_sha256(snap),endpoint_kind='continuation_snapshot')
-        rows.append(dict(index=e,cell=_cell_id(phase,'root_geometry_v1',quantize_coordinates(coords,ROOT_GEOMETRY_FIELDS)),coordinates=coords,phase=phase,**endpoint,prefix_file=str(output/'prefixes.npz'),prefix_sha256=prefix_sha,behavior_sha256=behavior_sha,prefix_terminal=terminal or not stage_reached,physical_prefix_terminal=terminal,prefix_physical_failure=bool(tape['physical_failure'][t,e]) if 'physical_failure' in tape else False,pulse_start_step=trigger_step if (event or mixed) else delay,pulse_trigger_step=trigger_step,pulse_event=event,stage_reached=stage_reached,pulse_applied_steps=int(tape['mask'][:,e].sum()),label=None,learning_attempted=False))
+        rows.append(dict(index=e,cell=_cell_id(phase,'root_geometry_v1',quantize_coordinates(coords,ROOT_GEOMETRY_FIELDS)),coordinates=coords,phase=phase,**endpoint,prefix_file=str(output/'prefixes.npz'),prefix_sha256=prefix_sha,behavior_sha256=behavior_sha,prefix_terminal=terminal or not stage_reached or full_episode,physical_prefix_terminal=terminal,rollout_horizon_exhausted=full_episode and not terminal,prefix_physical_failure=bool(tape['physical_failure'][t,e]) if 'physical_failure' in tape else False,pulse_start_step=trigger_step if (event or mixed) else delay,pulse_trigger_step=trigger_step,pulse_event=event,stage_reached=stage_reached,pulse_applied_steps=int(tape['mask'][:,e].sum()),label=None,learning_attempted=False))
     write(output/'candidates.json',rows)
     write(output/'network_inventory.json',dict(**explorer_inventory(spec,params),base_actor_frozen=True,base_critic_frozen=True,inputs=int(np.asarray(state['normalizer_mean']).size) if spec.get('explorer_backend')=='rsl_rl' else 106,history_frames=3,output_actions=4,controller_mode=mode,explorer_actor_used=mode=='learned_residual',explorer_trainable=mode=='learned_residual',exploration_critic_used=mode=='learned_residual',random_distribution='uniform[-1,1]' if mode=='fixed_random' else None,trace_schema='jit_pulse_physical_trace_v2',event_time_resolution_seconds=.02))
     write(output/'hyperparameters.json',{**spec,'pulse_descent_clearance':descent_limit,

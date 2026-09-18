@@ -54,3 +54,5 @@ Do not open final TEST. TRAIN adaptation and development ACCEPTANCE are not fina
 - 四个独立条件使用单元素起扰计划`[0]`、`[5]`、`[10]`、`[15]`，分别只在0–2、5–7、10–12、15–17控制步请求四通道±0.25随机残差。每条件七策略各1,000回合、batch size 256，最后批232；共享条件种子和批偏移，全部失败计入。每批必须通过`verify_batch`及数组级固定窗口验收。
 - 原始NPZ不裁剪，报告保留逐回合正式标签、首次有效接触与恢复终点时间、Wilson区间、共同坐标的七策略密度图、来源/配置/后代身份哈希和训练/诊断/评估成本。此为开发证据，不能把回合数当独立训练重复；不得事后重标正式25步恢复成功。
 - prepare只生成声明，生产launch另按授权执行。每次run启动时必须同时启动/更新本文件规定的桌面错误与正常完成watcher，使用该实验`ACTIVE_RUN.json`与`notifications/`并核对heartbeat。只监视顶层整体完成，不为每个训练子阶段发完成弹窗；失败保留全部日志与尝试，不自动重训。
+
+- 七策略评估失败后使用 `run_seven_policy_phase_u.py prepare-resume --previous <旧实验根> --output <新尝试目录> --execution-repository <修复代码快照>`，再对新spec执行run。复用身份锁定的已完成训练和成员批次；不重新训练，不修改旧失败日志。重试物理成本单列并计入总成本。full_episode达到采样上限保留真实terminal=false，记录horizon_exhausted，不创建探索接续快照。

@@ -276,3 +276,25 @@ def test_execution_entrypoint_drift_stops_before_any_child(declarations,tmp_path
     monkeypatch.setattr(pipeline,'_run_child',lambda *a,**k:pytest.fail('launched drifted entrypoint'))
     with pytest.raises(ValueError,match='drift'):
         pipeline.run_experiment(declarations[3]/'spec.json')
+
+
+def test_evaluation_resume_skips_all_completed_training_and_locks_evidence(declarations, monkeypatch):
+    spec = prepare(declarations)
+    original = Path(spec['output'])
+    for arm in spec['arms']:
+        manifest = dict(phase_policy={'input_files': {}},
+            verification={'status': 'completed', 'training_transitions': pipeline.TARGET})
+        write(arm['output_manifest'], manifest)
+    # Isolate the resumption lifecycle from expensive GPU evaluation.
+    spec['conditions'] = []
+    write(original/'spec.json', spec)
+    write(original/'status.json', dict(phase='error', spec_sha256=file_sha(original/'spec.json')))
+    attempt = original.parent/'resume'
+    resumed = pipeline.prepare_resume(original, attempt, Path(__file__).parents[2])
+    assert resumed['arms'] == spec['arms']
+    assert resumed['resume']['new_training_transitions'] == 0
+    assert read(original/'status.json')['phase'] == 'error'
+    monkeypatch.setattr(pipeline, '_run_child', lambda *a, **k: pytest.fail('training restarted'))
+    monkeypatch.setattr(pipeline, 'report_experiment', lambda *a: {'ok': True})
+    assert pipeline.run_experiment(attempt/'spec.json') == {'ok': True}
+    assert read(attempt/'status.json')['completed_arms'] == [a['key'] for a in spec['arms']]

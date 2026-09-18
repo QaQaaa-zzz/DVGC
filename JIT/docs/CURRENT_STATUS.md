@@ -547,3 +547,7 @@ Seven focused tests pass. Real GPU recovery collection reused the saved13×128pr
 实际是否运行以其execution/status.json和进程为准。继续94轮后的已有进度，
 两臂各200轮、1024环境、0.25幅度、0.001探索器初始学习率不变。
 细节见[EVIDENCE_IO_OPTIMIZATION](EVIDENCE_IO_OPTIMIZATION.md)。
+
+## 2026-09-18 七策略评估截止状态修复
+
+三路14,991,360步Phase U训练全部完成；0和5步起扰评估完成。10步起扰第二批fresh RSI后代出现400步未终止样本，原代码误调用接续快照接口并缺少formal_config_sha256。修复完整回合截止为horizon_trace，不改变物理terminal或成功标签。新增prepare-resume复用身份锁定训练/完成成员、独立代码与尝试目录，失败102,400交互另计。CPU回归及保存的lane198截止证据已验证；恢复后的GPU执行状态见实验ACTIVE_RUN指针。

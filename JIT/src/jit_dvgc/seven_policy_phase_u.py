@@ -347,6 +347,80 @@ def _condition_spec(spec, condition):
                 maximum_interactions=len(methods)*condition['episodes']*spec['contract']['horizon'])
 
 
+def prepare_resume(previous, output, execution_repository):
+    """Freeze an evaluation-only attempt; completed members remain immutable."""
+    previous = Path(previous).resolve(); output = Path(output).resolve()
+    old = read(previous/'spec.json')
+    if file_sha(previous/'spec.json') != read(previous/'status.json')['spec_sha256']:
+        raise ValueError('previous experiment declaration drift')
+    if file_sha(old['source_lock']) != old['source_lock_sha256']:
+        raise ValueError('previous source lock drift')
+    _verify_locks(read(old['source_lock'])['input_files'])
+    spec = copy.deepcopy(old)
+    execution = _execution_identity(execution_repository)
+    spec.update(output=str(output), repo=execution['repository'], execution_identity=execution)
+    locks = dict(read(old['source_lock'])['input_files'])
+    locks.update(execution['input_files'])
+    _lock((previous/'spec.json', previous/'status.json'), locks)
+    reused = {}; failed_cost = 0
+    for arm in old['arms']:
+        manifest = read(arm['output_manifest'])
+        _verify_locks(manifest['phase_policy']['input_files'])
+        verification = manifest['verification']
+        if verification['status'] != 'completed' or verification['training_transitions'] != TARGET:
+            raise ValueError('cannot resume before all training arms complete')
+        _lock((arm['output_manifest'],), locks)
+    for original, condition in zip(old['conditions'], spec['conditions']):
+        condition['output'] = str(output/'conditions'/f'onset_{condition["onset"]:02d}')
+        source = Path(original['output'])
+        if not (source/'spec.json').exists():
+            continue
+        cspec = _condition_spec(old, original)
+        if read(source/'spec.json') != cspec:
+            raise ValueError('previous condition declaration drift')
+        for batch in cspec['batches']:
+            for method in cspec['methods']:
+                directory = source/'batches'/f'{batch["index"]:04d}'/method['key']
+                if not directory.exists():
+                    continue
+                expected = dict(method['template'], seed=batch['seed'], num_envs=batch['count'], round_index=batch['offset'])
+                ev_path = directory.parent/f'{method["key"]}_spec.json'
+                if read(ev_path) != expected:
+                    raise ValueError('previous member declaration drift')
+                status_path = directory/'status.json'
+                if status_path.exists() and read(status_path)['phase'] == 'completed':
+                    actual = read(directory/'hyperparameters.json')
+                    if any(actual.get(k) != v for k,v in expected.items()):
+                        raise ValueError('previous member execution contract drift')
+                    files = [p for p in directory.rglob('*') if p.is_file()]
+                    _lock(files + [ev_path], locks)
+                    key = f'{condition["onset"]}/{batch["index"]}/{method["key"]}'
+                    reused[key] = str(directory)
+                elif (directory/'prefixes.npz').exists():
+                    with np.load(directory/'prefixes.npz') as tape:
+                        failed_cost += int(tape['prefix_mask'].shape[0] * tape['prefix_mask'].shape[1])
+                    _lock((directory/'prefixes.npz',), locks)
+                else:
+                    # Unknown failed rollout cost is conservatively reserved in full.
+                    failed_cost += batch['count'] * spec['contract']['horizon']
+    spec['resume'] = dict(previous=str(previous), reused_members=reused,
+                          inherited_failed_interactions=old.get('resume', {}).get('inherited_failed_interactions', 0)+failed_cost,
+                          new_training_transitions=0)
+    spec['maximum_interactions'] += failed_cost
+    output.mkdir(parents=True, exist_ok=False)
+    spec['source_lock'] = str(output/'source_lock.json')
+    write(spec['source_lock'], dict(schema='jit_seven_policy_resume_lock_v1', input_files=locks))
+    spec['source_lock_sha256'] = file_sha(spec['source_lock'])
+    write(output/'spec.json', spec)
+    write(output/'status.json', dict(phase='prepared', spec_sha256=file_sha(output/'spec.json')))
+    write(output/'ACTIVE_RUN.json', dict(name='Seven-policy evaluation recovery', execution=str(output/'status.json')))
+    (output/'INDEX.md').write_text('# Seven-policy evaluation recovery\n\n'
+        '[Status](status.json) · [Spec](spec.json) · [Source locks](source_lock.json)\n\n'
+        f'All three trainings reused; {len(reused)} completed member batches reused. '
+        f'Failed-attempt interactions retained separately: {failed_cost}. Original artifacts preserved.\n')
+    return spec
+
+
 def run_experiment(spec_path):
     """Execute once, sequentially; retain failed attempts and stop before evaluation."""
     spec_path = Path(spec_path).resolve(); spec = read(spec_path); output = Path(spec['output'])
@@ -365,6 +439,9 @@ def run_experiment(spec_path):
             raise ValueError('experiment declaration drift')
         _verify_locks(read(spec['source_lock'])['input_files'])
         for arm in spec['arms']:
+            if spec.get('resume'):
+                completed_arms.append(arm['key'])
+                continue
             stage = 'training_' + arm['key']; status('running')
             _run_child([spec['python'], str(cli/'run_seven_policy_phase_u.py'), '_train-arm',
                         '--spec', str(spec_path), '--arm', arm['key']], output/'logs'/f'{stage}.log',
@@ -382,6 +459,11 @@ def run_experiment(spec_path):
                     stage = f'onset_{condition["onset"]:02d}_batch_{batch["index"]:04d}_{method["key"]}'; status('running')
                     ev = dict(method['template'], seed=batch['seed'], num_envs=batch['count'], round_index=batch['offset'])
                     ev_path = batch_dir/f'{method["key"]}_spec.json'; write(ev_path, ev)
+                    reuse_key = f'{condition["onset"]}/{batch["index"]}/{method["key"]}'
+                    reused = spec.get('resume', {}).get('reused_members', {}).get(reuse_key)
+                    if reused:
+                        (batch_dir/method['key']).symlink_to(reused, target_is_directory=True)
+                        continue
                     _run_child([spec['python'], str(cli/'run_pulse_exploration.py'), '--mode', 'collect',
                                 '--spec', str(ev_path), '--output', str(batch_dir/method['key'])],
                                batch_dir/f'{method["key"]}.log', repo=spec['repo'], timeout=spec['stage_timeout_seconds'])
@@ -470,7 +552,7 @@ def report_experiment(spec_path):
         verification = read(arm['output_manifest'])['verification']
         training_total += verification['total_environment_transitions']
         training += verification['training_transitions']
-    if training != spec['training_transitions'] or training_total+charged > spec['maximum_interactions']:
+    if training != spec['training_transitions'] or training_total+charged+spec.get('resume', {}).get('inherited_failed_interactions', 0) > spec['maximum_interactions']:
         raise ValueError('experiment cost reconciliation differs from budget')
     reports = output/'reports'; reports.mkdir(exist_ok=True)
     index = 0
@@ -514,7 +596,8 @@ def report_experiment(spec_path):
                         **{f'onset_{onset:02d}_{key}':value for (onset,key),value in densities.items()})
     summary = dict(conditions=summaries, episodes=len(rows), training_transitions=training,
                    training_panel_interactions=training_total-training, evaluation_charged_interactions=charged,
-                   evaluation_active_interactions=active, charged_interactions=training_total+charged,
+                   evaluation_active_interactions=active, inherited_failed_interactions=spec.get('resume', {}).get('inherited_failed_interactions', 0),
+                   charged_interactions=training_total+charged+spec.get('resume', {}).get('inherited_failed_interactions', 0),
                    maximum_interactions=spec['maximum_interactions'], episodes_csv=str(csv_path), density_panels=panels,
                    source_lock=spec['source_lock'], source_lock_sha256=spec['source_lock_sha256'],
                    config_sha256={arm['key']:file_sha(arm['config']) for arm in spec['arms']},
@@ -536,7 +619,8 @@ def report_experiment(spec_path):
             count = summaries[str(onset)][method['key']]; low, high = count['wilson_95']
             text.append(f'| {method["label"]} | {count["successes"]}/1000 | {count["failures"]} | {count["success_rate"]:.3%} | {low:.3%}–{high:.3%} |')
         text.append(f'\n![All-episode density](onset_{onset:02d}_density.png)\n\n[PDF](onset_{onset:02d}_density.pdf)\n')
-    text.append(f'\nCharged transitions: {training:,} PPO + {training_total-training:,} training panels + {charged:,} comparison = {training_total+charged:,}.\n')
+    failed_cost = spec.get('resume', {}).get('inherited_failed_interactions', 0)
+    text.append(f'\nCharged transitions: {training:,} PPO + {training_total-training:,} training panels + {charged:,} comparison + {failed_cost:,} failed attempts = {training_total+charged+failed_cost:,}.\n')
     (destination/'INDEX.md').write_text('\n'.join(text))
     with (output/'INDEX.md').open('a') as stream:
         stream.write(f'\n[Verified seven-policy tables, timing CSV and density panels]({destination.relative_to(output)}/INDEX.md)\n')
