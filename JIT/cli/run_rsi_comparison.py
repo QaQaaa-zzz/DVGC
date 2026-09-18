@@ -10,13 +10,18 @@ p.add_argument('--previous');p.add_argument('--checkpoint')
 p.add_argument('--alignment');p.add_argument('--source-spec');p.add_argument('--output');p.add_argument('--spec')
 p.add_argument('--steps',type=int,default=1_000_000);p.add_argument('--episodes',type=int,default=100)
 p.add_argument('--seed',type=int,default=9182601)
+p.add_argument('--pulse-start-schedule',type=int,nargs='+')
+p.add_argument('--additional-methods',help='JSON manifest of extra frozen policies for a batched comparison')
+p.add_argument('--resource-wait-timeout-seconds',type=int,default=1800)
 p.add_argument('--repository');p.add_argument('--snapshot')
 p.add_argument('--report-output',help='New derived report directory; preserve an earlier report')
 a=p.parse_args()
 if a.mode=='prepare-batched':
     if not all((a.previous,a.output)):p.error('prepare-batched requires previous and output')
     from jit_dvgc.batched_pulse_comparison import prepare as prepare_batched
-    print(prepare_batched(a.previous,a.output,episodes=a.episodes,batch_size=a.batch_size,seed=a.seed))
+    print(prepare_batched(a.previous,a.output,episodes=a.episodes,batch_size=a.batch_size,seed=a.seed,
+                          pulse_start_schedule=a.pulse_start_schedule,additional_methods=a.additional_methods,
+                          resource_wait_timeout_seconds=a.resource_wait_timeout_seconds))
 elif a.mode=='prepare-phase':
     if not all((a.previous,a.checkpoint,a.output)):p.error('prepare-phase requires previous, checkpoint and output')
     print(prepare_phase_comparison(a.previous,a.checkpoint,a.output))
