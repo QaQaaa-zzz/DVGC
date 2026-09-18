@@ -27,15 +27,18 @@ def _fixture(tmp_path, keys=('baseline','fresh_rsi','phase_u')):
     from jit_dvgc.batched_pulse_comparison import batch_plan,verify_batch
     from jit_dvgc.rsi_comparison import write,file_sha
     methods=[dict(key=k,label=k,nominal_trace=str(tmp_path/f'{k}_nominal.npz')) for k in keys]
-    spec=dict(methods=methods,root_qpos_address=0,episodes=3,batches=batch_plan(3,2,99),contract={'horizon':2},maximum_interactions=len(keys)*6,role='fixture')
+    spec=dict(methods=methods,root_qpos_address=0,episodes=3,batches=batch_plan(3,2,99),
+              contract={'horizon':2,'pulse_steps':3,'pulse_start_schedule':[0]},
+              maximum_interactions=len(keys)*6,role='fixture')
     receipts=[]
     for batch in spec['batches']:
         directory=tmp_path/'batches'/f'{batch["index"]:04d}'
         n=batch['count']
         for m in methods:
             p=directory/m['key'];p.mkdir(parents=True)
-            tape={k:np.zeros((2,n),bool) for k in ('success','physical_failure','mask')}
+            tape={k:np.zeros((2,n),bool) for k in ('success','physical_failure')}
             tape.update(prefix_mask=np.ones((2,n),bool),terminal=np.ones((2,n),bool),end_code=np.zeros((2,n),int),
+                        mask=np.ones((2,n),bool),
                         qpos=np.zeros((2,n,3)),time=np.full((2,n),.02),
                         front_wheel_clearance=np.zeros((2,n)),rear_wheel_clearance=np.zeros((2,n)),
                         valid_contact_seen=np.ones((2,n),bool),recovery_ticks=np.zeros((2,n),int))
@@ -81,15 +84,33 @@ def test_verify_batch_rejects_unpaired_randomness(tmp_path):
     with pytest.raises(AssertionError):verify_batch(spec,spec['batches'][0],directory)
 
 
-def test_initial_pulse_tape_rejects_any_requested_disturbance_after_tick_two():
-    from jit_dvgc.batched_pulse_comparison import verify_initial_pulse_tape
-    tape=dict(prefix_mask=np.ones((5,2),bool),mask=np.zeros((5,2),bool),
-              requested_delta=np.zeros((5,2,4)))
-    tape['mask'][:3]=True;tape['requested_delta'][:3]=.1
-    verify_initial_pulse_tape(tape,3)
-    tape['requested_delta'][3,0,0]=.1
-    with pytest.raises(ValueError,match='after declared initial pulse'):
-        verify_initial_pulse_tape(tape,3)
+@pytest.mark.parametrize('onset', [0,5,10,15])
+def test_fixed_pulse_tape_accepts_only_live_declared_window(onset):
+    from jit_dvgc.batched_pulse_comparison import verify_fixed_pulse_tape
+    ticks=np.arange(20)[:,None]
+    prefix_mask=np.ones((20,2),bool)
+    prefix_mask[12:,1]=False
+    expected=prefix_mask & (ticks >= onset) & (ticks < onset+3)
+    tape=dict(prefix_mask=prefix_mask,mask=expected.copy(),
+              requested_delta=np.zeros((20,2,4)))
+    tape['requested_delta'][expected]=.1
+    verify_fixed_pulse_tape(tape,onset,3)
+    invalid_mask=dict(tape,mask=tape['mask'].copy())
+    invalid_mask['mask'][onset,0]=False
+    with pytest.raises(ValueError,match='mask differs from declared fixed pulse'):
+        verify_fixed_pulse_tape(invalid_mask,onset,3)
+    for outside_tick in ([onset-1] if onset else [])+[onset+3]:
+        invalid=dict(tape,requested_delta=tape['requested_delta'].copy())
+        invalid['requested_delta'][outside_tick,0,0]=.1
+        with pytest.raises(ValueError,match='outside declared fixed pulse'):
+            verify_fixed_pulse_tape(invalid,onset,3)
+
+
+def test_verify_batch_requires_exactly_one_declared_onset(tmp_path):
+    from jit_dvgc.batched_pulse_comparison import verify_batch
+    spec=_fixture(tmp_path);spec['contract']['pulse_start_schedule']=[0,5]
+    with pytest.raises(ValueError,match='exactly one fixed pulse onset'):
+        verify_batch(spec,spec['batches'][0],tmp_path/'batches/0000')
 
 
 @pytest.mark.parametrize('value,expected', [([0],[0]), ((0,5),[0,5])])

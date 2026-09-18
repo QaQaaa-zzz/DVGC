@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import subprocess
 import time
+from typing import Mapping
 
 import numpy as np
 
@@ -19,16 +20,19 @@ def normalize_pulse_start_schedule(value):
     return list(value)
 
 
-def verify_initial_pulse_tape(tape,pulse_steps):
-    """Require the only requested disturbance to occupy initial live ticks."""
+def verify_fixed_pulse_tape(tape: Mapping[str,np.ndarray], onset: int, pulse_steps: int) -> None:
+    """Require the requested disturbance to occupy one declared live window."""
+    if type(onset) is not int or onset < 0:
+        raise ValueError('nonnegative integer onset required')
     if type(pulse_steps) is not int or pulse_steps < 1:
         raise ValueError('positive integer pulse_steps required')
     ticks=np.arange(tape['prefix_mask'].shape[0])[:,None]
-    expected=tape['prefix_mask'] & (ticks < pulse_steps)
+    in_window=(ticks >= onset) & (ticks < onset+pulse_steps)
+    expected=tape['prefix_mask'] & in_window
     if not np.array_equal(tape['mask'],expected):
-        raise ValueError('pulse mask differs from declared initial pulse')
-    if np.any(tape['requested_delta'][ticks[:,0] >= pulse_steps] != 0):
-        raise ValueError('requested disturbance exists after declared initial pulse')
+        raise ValueError('pulse mask differs from declared fixed pulse')
+    if np.any(tape['requested_delta'][~in_window[:,0]] != 0):
+        raise ValueError('requested disturbance exists outside declared fixed pulse')
 
 
 def load_additional_methods(manifest_path,template,output,inputs,expected_policy):
@@ -138,10 +142,13 @@ def load_tape(path):
 def verify_batch(spec,batch,directory):
     """Check pair identity, exact denominator, and costs before accepting a batch."""
     directory=Path(directory); reference=None; rows=[]; hashes={}; charged=active=0
+    schedule=spec['contract'].get('pulse_start_schedule')
+    if not isinstance(schedule,(list,tuple)) or len(schedule)!=1:
+        raise ValueError('exactly one fixed pulse onset required')
+    onset=schedule[0]
     for method in spec['methods']:
         key=method['key'];path=directory/key/'prefixes.npz';tape=load_tape(path)
-        if spec['contract'].get('pulse_start_schedule') == [0]:
-            verify_initial_pulse_tape(tape,spec['contract']['pulse_steps'])
+        verify_fixed_pulse_tape(tape,onset,spec['contract']['pulse_steps'])
         if reference is None:reference=tape
         else:
             np.testing.assert_array_equal(reference['delta'],tape['delta'])
