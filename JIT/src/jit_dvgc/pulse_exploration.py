@@ -221,7 +221,8 @@ def run(spec_path,output):
         return cost
     def runtime(directory,name,mode,args,maximum):
         if reuse_root is not None:
-            prior=reuse_root/directory.relative_to(root)/name
+            # Preserve canonical input identities when a recovery view uses links.
+            prior=(reuse_root/directory.relative_to(root)/name).resolve()
             if (prior/'status.json').exists() and read(prior/'status.json')['phase']=='completed':
                 verify_stage_reuse(read(prior.parent/(name+'_spec.json')),args)
                 write(directory/(name+'_reuse.json'),dict(previous=str(prior),
