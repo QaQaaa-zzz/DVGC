@@ -20,6 +20,7 @@ def _parser() -> argparse.ArgumentParser:
     mode.add_argument("--formal", action="store_true")
     mode.add_argument("--diagnostic-only", action="store_true")
     parser.add_argument("--restore-checkpoint", type=Path)
+    parser.add_argument("--actor-init-frozen-policy", type=Path)
     parser.add_argument("--snapshot-bank", type=Path)
     parser.add_argument("--snapshot-catalog", type=Path)
     parser.add_argument("--actor-init-checkpoint", type=Path)
@@ -36,6 +37,10 @@ def main() -> int:
         parser.error("unsupported phase")
     if args.restore_checkpoint is not None and not (args.formal or args.diagnostic_only):
         parser.error("--restore-checkpoint is only valid with --formal")
+    if args.actor_init_frozen_policy is not None and not args.formal:
+        parser.error("--actor-init-frozen-policy is only valid with --formal")
+    if args.restore_checkpoint is not None and args.actor_init_frozen_policy is not None:
+        parser.error("--restore-checkpoint and --actor-init-frozen-policy are mutually exclusive")
     if args.diagnostic_only:
         if args.phase != "descent_recovery":
             parser.error("diagnostic-only is only valid for descent_recovery")
@@ -77,6 +82,7 @@ def main() -> int:
             args.config,
             args.run_id,
             restore_checkpoint=args.restore_checkpoint,
+            actor_init_frozen_policy=args.actor_init_frozen_policy,
         )
     print(json.dumps(report, indent=2, sort_keys=True))
     return 0

@@ -31,6 +31,7 @@ from jit_dvgc.formal_training import (
     run_phase_u_formal,
     validate_formal_report,
 )
+from jit_dvgc.phase_expert_init import ActorOnlyInitialization
 from jit_dvgc.ppo import wrap_for_jit_training
 from jit_dvgc.provenance import verify_run
 
@@ -494,13 +495,17 @@ def _fake_absolute_trainer():
     return train
 
 
-def _fake_continuation_10m_trainer():
+def _fake_continuation_10m_trainer(
+    *, expected_restore=None, expected_restore_value_fn=None
+):
     def train(**kwargs):
         assert kwargs["num_timesteps"] == 9_977_856
         assert kwargs["num_evals"] == 407
         assert kwargs["log_training_metrics"] is True
         assert kwargs["training_metrics_steps"] == 24_576
-        assert kwargs["restore_params"] is None
+        assert kwargs["restore_params"] == expected_restore
+        if expected_restore_value_fn is not None:
+            assert kwargs["restore_value_fn"] is expected_restore_value_fn
         assert kwargs["wrap_env_fn"] is wrap_for_jit_training
         params = ({"normalizer": 0}, {"actor": 1}, {"critic": 2})
         kwargs["policy_params_fn"](0, _fake_make_policy, params)
@@ -691,6 +696,68 @@ def test_continuation_v4_runner_is_fresh_and_persists_learning_curves(
     with pytest.raises(ValueError, match="Apex source indices|sample count"):
         verify_run(run_dir)
     video_path.write_text(original_video, encoding="utf-8")
+
+
+def test_continuation_v4_actor_warm_start_provenance_verifies(
+    jit_root, tmp_path, monkeypatch
+):
+    source_manifest = tmp_path / "source/frozen_unified_policy.json"
+    source_checkpoint = str((tmp_path / "source/checkpoints/transition_128000").resolve())
+    provenance = {
+        "actor_initialized": True,
+        "normalizer_initialized": True,
+        "critic_fresh": True,
+        "optimizer_fresh": True,
+        "source_frozen_policy": str(source_manifest.resolve()),
+        "source_frozen_policy_sha256": "1" * 64,
+        "source_checkpoint": source_checkpoint,
+        "source_checkpoint_identity_sha256": "2" * 64,
+        "source_payload_sha256": "3" * 64,
+        "source_normalizer_sha256": "4" * 64,
+        "source_actor_sha256": "5" * 64,
+        "source_critic_sha256": "6" * 64,
+        "source_xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+        "source_actor_frame_fields": list(ACTOR_FRAME_FIELDS),
+        "source_actor_task_fields": list(ACTOR_TASK_FIELDS),
+        "source_action_order": list(ACTION_ORDER),
+        "source_formal_config_sha256": "7" * 64,
+        "source_formal_config_file_sha256": "8" * 64,
+        "source_formal_report_sha256": "9" * 64,
+    }
+    initialization = ActorOnlyInitialization(
+        observation_normalizer={"normalizer": 7},
+        actor_params={"actor": 11},
+        parent_transition=128_000,
+        payload_sha256=provenance["source_payload_sha256"],
+        actor_sha256=provenance["source_actor_sha256"],
+        provenance=provenance,
+    )
+    monkeypatch.setattr(
+        "jit_dvgc.formal_training.load_phase_u_actor_initialization",
+        lambda _path: initialization,
+    )
+    monkeypatch.setattr(
+        "jit_dvgc.phase_u_warm_start.load_phase_u_actor_initialization",
+        lambda _path: initialization,
+    )
+
+    run_phase_u_formal(
+        jit_root / "configs" / "phase_u_continuation_10m.json",
+        "continuation_v4_actor_warm_unit",
+        actor_init_frozen_policy=source_manifest,
+        run_root=tmp_path,
+        trainer=_fake_continuation_10m_trainer(
+            expected_restore=initialization.restore_params,
+            expected_restore_value_fn=False,
+        ),
+        env_factory=_FakeEnv,
+        panel_evaluator=_fake_panel,
+        diagnostic_panel_evaluator=_fake_rsi_panel,
+        backend_name=lambda: "gpu",
+    )
+
+    verified = verify_run(tmp_path / "continuation_v4_actor_warm_unit")
+    assert verified["absolute_training_transition"] == 9_977_856
 
 
 def test_completed_v4_provenance_rejects_previous_method_values(
@@ -907,6 +974,107 @@ def test_formal_runner_closes_exact_fresh_segment_with_injected_trainer(
     assert report["checkpoint_restored"] is True
     assert report["completed_training_transitions"] == 998_400
     assert result["run_dir"] == str(run_dir.resolve())
+
+
+def test_formal_runner_uses_transition_zero_actor_only_initialization(
+    jit_root, tmp_path, monkeypatch
+):
+    source_normalizer = {"normalizer": 7}
+    source_actor = {"actor": 11}
+    source_checkpoint = str((tmp_path / "source/checkpoints/transition_128000").resolve())
+    source_manifest = tmp_path / "source/frozen_unified_policy.json"
+    provenance = {
+        "actor_initialized": True,
+        "normalizer_initialized": True,
+        "critic_fresh": True,
+        "optimizer_fresh": True,
+        "source_frozen_policy": str(source_manifest.resolve()),
+        "source_frozen_policy_sha256": "1" * 64,
+        "source_checkpoint": source_checkpoint,
+        "source_checkpoint_identity_sha256": "2" * 64,
+        "source_payload_sha256": "3" * 64,
+        "source_normalizer_sha256": "4" * 64,
+        "source_actor_sha256": "5" * 64,
+        "source_critic_sha256": "6" * 64,
+        "source_xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+        "source_actor_frame_fields": list(ACTOR_FRAME_FIELDS),
+        "source_actor_task_fields": list(ACTOR_TASK_FIELDS),
+        "source_action_order": list(ACTION_ORDER),
+        "source_formal_config_sha256": "7" * 64,
+        "source_formal_config_file_sha256": "8" * 64,
+        "source_formal_report_sha256": "9" * 64,
+    }
+    initialization = ActorOnlyInitialization(
+        observation_normalizer=source_normalizer,
+        actor_params=source_actor,
+        parent_transition=128_000,
+        payload_sha256=provenance["source_payload_sha256"],
+        actor_sha256=provenance["source_actor_sha256"],
+        provenance=provenance,
+    )
+    monkeypatch.setattr(
+        "jit_dvgc.formal_training.load_phase_u_actor_initialization",
+        lambda path: initialization,
+    )
+    captured = {}
+    base_trainer = _fake_trainer(998_400, 40)
+
+    def trainer(**kwargs):
+        captured.update(kwargs)
+        return base_trainer(**kwargs)
+
+    run_phase_u_formal(
+        jit_root / "configs" / "phase_u_formal.json",
+        "actor_warm_unit",
+        actor_init_frozen_policy=source_manifest,
+        run_root=tmp_path,
+        trainer=trainer,
+        env_factory=_FakeEnv,
+        panel_evaluator=_fake_panel,
+        backend_name=lambda: "gpu",
+    )
+
+    assert captured["restore_params"] == (source_normalizer, source_actor)
+    assert captured["restore_value_fn"] is False
+    run_dir = tmp_path / "actor_warm_unit"
+    manifest = json.loads(
+        (run_dir / "run_manifest.json").read_text(encoding="utf-8")
+    )
+    assert manifest["starting_training_transition"] == 0
+    assert manifest["resume_semantics"] == "parameter_warm_start_optimizer_reset"
+    assert manifest["parent_checkpoint"] == source_checkpoint
+    assert "--actor-init-frozen-policy" in manifest["resume_command"]
+    actor_initialization = json.loads(
+        (run_dir / "actor_initialization.json").read_text(encoding="utf-8")
+    )
+    assert actor_initialization["source_actor_sha256"] == "5" * 64
+    assert actor_initialization["source_normalizer_sha256"] == "4" * 64
+    assert actor_initialization["source_critic_sha256"] == "6" * 64
+    assert actor_initialization["source_parent_transition"] == 128_000
+    assert actor_initialization["restored_components"] == [
+        "observation_normalizer",
+        "actor",
+    ]
+    assert actor_initialization["fresh_components"] == ["critic", "optimizer"]
+
+
+def test_formal_runner_rejects_full_resume_with_actor_initialization(
+    jit_root, tmp_path
+):
+    def unexpected_backend():
+        raise AssertionError("backend must not be inspected for mixed initialization")
+
+    run_id = "mixed_restore_forbidden"
+    with pytest.raises(ValueError, match="mutually exclusive"):
+        run_phase_u_formal(
+            jit_root / "configs" / "phase_u_formal.json",
+            run_id,
+            restore_checkpoint=tmp_path / "checkpoint",
+            actor_init_frozen_policy=tmp_path / "frozen_unified_policy.json",
+            run_root=tmp_path,
+            backend_name=unexpected_backend,
+        )
+    assert not (tmp_path / run_id).exists()
 
 
 def test_formal_runner_warm_start_records_optimizer_reset_and_absolute_offset(

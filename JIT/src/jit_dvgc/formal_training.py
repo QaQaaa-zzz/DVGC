@@ -30,6 +30,7 @@ from .evaluation import (
     summarize_phase_u,
 )
 from .ppo import make_network_factory, wrap_for_jit_training
+from .phase_u_warm_start import load_phase_u_actor_initialization
 from .provenance import (
     InteractionAccounting,
     RunDeclaration,
@@ -128,12 +129,12 @@ def validate_formal_report(
             raise ValueError("formal report contains a nonfinite metric")
     if not report.checkpoint_restored:
         raise ValueError("formal final checkpoint restore was not verified")
-    expected_resume = (
-        "fresh"
+    valid_resume = (
+        {"fresh", "parameter_warm_start_optimizer_reset"}
         if report.starting_training_transition == 0
-        else "parameter_warm_start_optimizer_reset"
+        else {"parameter_warm_start_optimizer_reset"}
     )
-    if report.resume_semantics != expected_resume:
+    if report.resume_semantics not in valid_resume:
         raise ValueError("formal report resume semantics mismatch")
     return report
 
@@ -514,6 +515,7 @@ def run_phase_u_formal(
     run_id: str,
     *,
     restore_checkpoint: Path | None = None,
+    actor_init_frozen_policy: Path | None = None,
     run_root: Path | None = None,
     trainer: Callable[..., Any] = ppo_train.train,
     env_factory: Callable[[ResolvedConfig], Any] = TwoPhaseBikeEnv,
@@ -523,6 +525,10 @@ def run_phase_u_formal(
 ) -> dict[str, Any]:
     """Runs one formal segment to the exact target declared by its config."""
 
+    if restore_checkpoint is not None and actor_init_frozen_policy is not None:
+        raise ValueError(
+            "restore_checkpoint and actor_init_frozen_policy are mutually exclusive"
+        )
     config = load_config(Path(config_path))
     if config.formal is None:
         raise ValueError("formal training requires the formal config schema")
@@ -545,10 +551,36 @@ def run_phase_u_formal(
     env = env_factory(config)
     identity = _checkpoint_identity(config, env._bundle.xml_sha256)
     restored_payload: CheckpointPayload | None = None
+    actor_initialization = None
     starting_transition = 0
     parent_checkpoint: str | None = None
     resume_semantics = "fresh"
-    if restore_checkpoint is not None:
+    if actor_init_frozen_policy is not None:
+        actor_initialization = load_phase_u_actor_initialization(
+            Path(actor_init_frozen_policy)
+        )
+        if (
+            actor_initialization.provenance.get("source_xml_sha256")
+            != env._bundle.xml_sha256
+        ):
+            raise ValueError("Actor warm-start XML identity mismatch")
+        if tuple(
+            actor_initialization.provenance.get("source_actor_frame_fields", ())
+        ) != ACTOR_FRAME_FIELDS:
+            raise ValueError("Actor warm-start frame observation fields mismatch")
+        if tuple(
+            actor_initialization.provenance.get("source_actor_task_fields", ())
+        ) != ACTOR_TASK_FIELDS:
+            raise ValueError("Actor warm-start task observation fields mismatch")
+        if tuple(
+            actor_initialization.provenance.get("source_action_order", ())
+        ) != ACTION_ORDER:
+            raise ValueError("Actor warm-start action order mismatch")
+        parent_checkpoint = str(
+            actor_initialization.provenance["source_checkpoint"]
+        )
+        resume_semantics = "parameter_warm_start_optimizer_reset"
+    elif restore_checkpoint is not None:
         parent_path = Path(restore_checkpoint).resolve()
         restored_payload = load_checkpoint(parent_path, expected=identity)
         starting_transition = int(restored_payload.training_transitions)
@@ -565,9 +597,15 @@ def run_phase_u_formal(
         os.environ.get("JIT_RUN_ROOT", _default_run_root())
     )
     run_dir = root / run_id
-    resume_suffix = (
-        f" --restore-checkpoint {parent_checkpoint}" if parent_checkpoint else ""
-    )
+    if actor_init_frozen_policy is not None:
+        resume_suffix = (
+            " --actor-init-frozen-policy "
+            f"{Path(actor_init_frozen_policy).resolve()}"
+        )
+    else:
+        resume_suffix = (
+            f" --restore-checkpoint {parent_checkpoint}" if parent_checkpoint else ""
+        )
     declaration = RunDeclaration(
         run_id=run_id,
         purpose="formal_propulsion_ascent_ppo",
@@ -594,6 +632,17 @@ def run_phase_u_formal(
         segment_seed=segment_seed,
     )
     predeclare_run(declaration, resolved_config=config.raw)
+    if actor_initialization is not None:
+        _write_json(
+            run_dir / "actor_initialization.json",
+            {
+                "schema": "jit_phase_u_actor_initialization_v1",
+                **dict(actor_initialization.provenance),
+                "source_parent_transition": actor_initialization.parent_transition,
+                "restored_components": ["observation_normalizer", "actor"],
+                "fresh_components": ["critic", "optimizer"],
+            },
+        )
     _write_json(
         run_dir / "backend.json",
         {
@@ -642,12 +691,16 @@ def run_phase_u_formal(
         ),
     )
     restore_params = None
+    restore_value_fn = None
     if restored_payload is not None:
         restore_params = (
             restored_payload.observation_normalizer,
             restored_payload.actor_params,
             restored_payload.critic_params,
         )
+    elif actor_initialization is not None:
+        restore_params = actor_initialization.restore_params
+        restore_value_fn = False
 
     try:
         is_continuation_v4 = config.schema == "jit_phase_u_formal_v4"
@@ -658,6 +711,9 @@ def run_phase_u_formal(
             else:
                 controller.on_progress(step, metrics)
 
+        restore_kwargs = {"restore_params": restore_params}
+        if restore_value_fn is not None:
+            restore_kwargs["restore_value_fn"] = restore_value_fn
         make_policy, _params, final_metrics = trainer(
             environment=env,
             num_timesteps=remaining,
@@ -694,8 +750,8 @@ def run_phase_u_formal(
             ),
             progress_fn=(progress_router if is_continuation_v4 else controller.on_progress),
             policy_params_fn=controller.on_policy_params,
-            restore_params=restore_params,
             run_evals=False,
+            **restore_kwargs,
         )
         if controller.completed_training_transitions != config.ppo.requested_transitions:
             raise ValueError("formal trainer returned before the absolute target")

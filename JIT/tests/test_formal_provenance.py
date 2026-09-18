@@ -88,6 +88,54 @@ def test_warm_start_metadata_is_immutable_and_truthful(tmp_path):
     assert manifest["segment_seed"] == 820111
 
 
+def test_transition_zero_actor_warm_start_records_parent_and_optimizer_reset(tmp_path):
+    parent = "/tmp/frozen/frozen_unified_policy.json/checkpoint"
+    declaration, resolved = _declaration(
+        tmp_path,
+        parent_checkpoint=parent,
+        starting_training_transition=0,
+        resume_semantics="parameter_warm_start_optimizer_reset",
+        segment_seed=820701,
+    )
+
+    run_dir = predeclare_run(declaration, resolved_config=resolved)
+
+    manifest = json.loads(
+        (run_dir / "run_manifest.json").read_text(encoding="utf-8")
+    )
+    assert manifest["parent_checkpoint"] == parent
+    assert manifest["starting_training_transition"] == 0
+    assert manifest["resume_semantics"] == "parameter_warm_start_optimizer_reset"
+    assert manifest["segment_seed"] == 820701
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {
+            "starting_training_transition": 0,
+            "resume_semantics": "parameter_warm_start_optimizer_reset",
+            "segment_seed": 820701,
+        },
+        {
+            "starting_training_transition": 0,
+            "parent_checkpoint": "/tmp/checkpoint",
+            "resume_semantics": "parameter_warm_start_optimizer_reset",
+        },
+        {
+            "starting_training_transition": 0,
+            "parent_checkpoint": "/tmp/checkpoint",
+            "resume_semantics": "fresh",
+            "segment_seed": 820701,
+        },
+    ],
+)
+def test_transition_zero_actor_warm_start_rejects_mixed_states(tmp_path, overrides):
+    declaration, resolved = _declaration(tmp_path, **overrides)
+    with pytest.raises(ValueError, match="fresh|warm start|parent|segment seed"):
+        predeclare_run(declaration, resolved_config=resolved)
+
+
 @pytest.mark.parametrize(
     "overrides",
     [

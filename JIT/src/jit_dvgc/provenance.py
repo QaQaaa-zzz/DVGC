@@ -73,10 +73,16 @@ def predeclare_run(
     if declaration.starting_training_transition < 0:
         raise ValueError("starting training transition must be nonnegative")
     if declaration.starting_training_transition == 0:
-        if declaration.parent_checkpoint is not None:
-            raise ValueError("fresh run must not declare a parent checkpoint")
-        if declaration.resume_semantics != "fresh":
-            raise ValueError("fresh run must declare fresh resume semantics")
+        if declaration.resume_semantics == "fresh":
+            if declaration.parent_checkpoint is not None:
+                raise ValueError("fresh run must not declare a parent checkpoint")
+        elif declaration.resume_semantics == "parameter_warm_start_optimizer_reset":
+            if not declaration.parent_checkpoint:
+                raise ValueError("warm start requires a parent checkpoint")
+            if declaration.segment_seed is None:
+                raise ValueError("warm start requires a segment seed")
+        else:
+            raise ValueError("transition-zero run has invalid resume semantics")
     else:
         if not declaration.parent_checkpoint:
             raise ValueError("warm start requires a parent checkpoint")
@@ -654,6 +660,7 @@ def _verify_formal_run(
         "jit_phase_u_formal_v4",
     }:
         resolve_config_payload(resolved)
+    actor_initialization: dict[str, Any] = {}
     if schema == "jit_phase_u_formal_v4":
         if (
             type(manifest.get("starting_training_transition")) is not int
@@ -662,14 +669,51 @@ def _verify_formal_run(
             raise ValueError(
                 "formal v4 fresh-start provenance requires starting transition 0"
             )
-        if manifest.get("parent_checkpoint") is not None:
-            raise ValueError(
-                "formal v4 fresh-start provenance forbids a parent checkpoint"
+        actor_initialization_path = path / "actor_initialization.json"
+        if actor_initialization_path.is_file():
+            actor_initialization = json.loads(
+                actor_initialization_path.read_text(encoding="utf-8")
             )
-        if manifest.get("resume_semantics") != "fresh":
-            raise ValueError(
-                "formal v4 fresh-start provenance requires fresh resume semantics"
-            )
+            if actor_initialization.get("schema") != "jit_phase_u_actor_initialization_v1":
+                raise ValueError("formal v4 Actor warm-start provenance schema mismatch")
+            if manifest.get("resume_semantics") != "parameter_warm_start_optimizer_reset":
+                raise ValueError("formal v4 Actor warm-start provenance semantics mismatch")
+            parent = manifest.get("parent_checkpoint")
+            if not isinstance(parent, str) or not parent:
+                raise ValueError("formal v4 Actor warm-start provenance requires a parent")
+            if actor_initialization.get("source_checkpoint") != parent:
+                raise ValueError("formal v4 Actor warm-start parent checkpoint mismatch")
+            if actor_initialization.get("restored_components") != [
+                "observation_normalizer",
+                "actor",
+            ]:
+                raise ValueError("formal v4 Actor warm-start restored components mismatch")
+            if actor_initialization.get("fresh_components") != ["critic", "optimizer"]:
+                raise ValueError("formal v4 Actor warm-start fresh components mismatch")
+            source_manifest = actor_initialization.get("source_frozen_policy")
+            if not isinstance(source_manifest, str) or not source_manifest:
+                raise ValueError("formal v4 Actor warm-start source manifest is missing")
+            from .phase_u_warm_start import load_phase_u_actor_initialization
+
+            initialization = load_phase_u_actor_initialization(Path(source_manifest))
+            expected_initialization = {
+                "schema": "jit_phase_u_actor_initialization_v1",
+                **dict(initialization.provenance),
+                "source_parent_transition": initialization.parent_transition,
+                "restored_components": ["observation_normalizer", "actor"],
+                "fresh_components": ["critic", "optimizer"],
+            }
+            if actor_initialization != expected_initialization:
+                raise ValueError("formal v4 Actor warm-start provenance drift")
+        else:
+            if manifest.get("parent_checkpoint") is not None:
+                raise ValueError(
+                    "formal v4 fresh-start provenance forbids a parent checkpoint"
+                )
+            if manifest.get("resume_semantics") != "fresh":
+                raise ValueError(
+                    "formal v4 fresh-start provenance requires fresh resume semantics"
+                )
         expected_seed = int(resolved["ppo"]["seed"])
         if (
             type(manifest.get("segment_seed")) is not int
@@ -679,13 +723,13 @@ def _verify_formal_run(
                 "formal v4 fresh-start provenance segment seed mismatch"
             )
         resume_command = manifest.get("resume_command")
-        if (
-            not isinstance(resume_command, str)
-            or "--restore-checkpoint" in resume_command
-        ):
+        if not isinstance(resume_command, str) or "--restore-checkpoint" in resume_command:
             raise ValueError(
                 "formal v4 fresh-start provenance forbids restore-bearing resume commands"
             )
+        has_actor_initialization_flag = "--actor-init-frozen-policy" in resume_command
+        if has_actor_initialization_flag != bool(actor_initialization):
+            raise ValueError("formal v4 Actor warm-start resume command mismatch")
         resume_command_path = path / "resume_command.txt"
         expected_persisted_command = resume_command + "\n"
         if (
@@ -952,6 +996,8 @@ def _verify_formal_run(
         raise ValueError("formal report evaluation schedule mismatch")
     if formal_report.get("checkpoint_restored") is not True:
         raise ValueError("formal report lacks final checkpoint restore evidence")
+    if formal_report.get("resume_semantics") != manifest.get("resume_semantics"):
+        raise ValueError("formal report resume semantics mismatch")
     for value in formal_report.get("final_metrics", {}).values():
         if not isinstance(value, (int, float)) or not math.isfinite(float(value)):
             raise ValueError("formal report contains a nonfinite metric")
@@ -971,6 +1017,7 @@ def _verify_formal_run(
             "evaluation_summaries": evaluation_summaries,
             "airborne_rsi_diagnostic_summaries": diagnostic_summaries,
             "checkpoint_restored": True,
+            "actor_initialization": actor_initialization,
             "training_curves": training_curves,
         }
     )
