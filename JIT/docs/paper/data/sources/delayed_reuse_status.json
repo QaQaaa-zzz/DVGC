@@ -1,0 +1,94 @@
+{
+  "charged_interactions": 200764,
+  "costs": [
+    {
+      "accounting": "reused_locked_evidence",
+      "charged_interactions": 0,
+      "inherited_interactions": 19200,
+      "stage": "round_000/learned_residual/reuse_arrivals",
+      "wall_seconds": 0
+    },
+    {
+      "accounting": "actual_completed",
+      "charged_interactions": 3429,
+      "maximum_interactions": 448000,
+      "stage": "round_000/learned_residual/before_learning",
+      "wall_seconds": 137.12101068200718
+    },
+    {
+      "accounting": "actual_completed",
+      "charged_interactions": 19200,
+      "maximum_interactions": 19200,
+      "stage": "round_000/fixed_random/explore",
+      "wall_seconds": 24.548557093003183
+    },
+    {
+      "accounting": "actual_completed",
+      "charged_interactions": 3830,
+      "maximum_interactions": 439600,
+      "stage": "round_000/fixed_random/before_learning",
+      "wall_seconds": 152.9897616859962
+    },
+    {
+      "accounting": "actual_completed",
+      "charged_interactions": 128072,
+      "maximum_interactions": 129600,
+      "stage": "round_000/train_policy",
+      "wall_seconds": 52.5518435069971
+    },
+    {
+      "accounting": "actual_completed",
+      "charged_interactions": 29,
+      "maximum_interactions": 800,
+      "stage": "round_000/learned_residual/after_learning",
+      "wall_seconds": 15.123831503995461
+    },
+    {
+      "accounting": "actual_completed",
+      "charged_interactions": 73,
+      "maximum_interactions": 2400,
+      "stage": "round_000/fixed_random/after_learning",
+      "wall_seconds": 16.946985061003943
+    },
+    {
+      "accounting": "actual_completed",
+      "charged_interactions": 19200,
+      "maximum_interactions": 19200,
+      "stage": "round_001/learned_residual/explore",
+      "wall_seconds": 26.509897279000143
+    },
+    {
+      "accounting": "actual_completed",
+      "charged_interactions": 4313,
+      "maximum_interactions": 518400,
+      "stage": "round_001/learned_residual/before_learning",
+      "wall_seconds": 187.82207257699338
+    },
+    {
+      "accounting": "actual_completed",
+      "charged_interactions": 19200,
+      "maximum_interactions": 19200,
+      "stage": "round_001/fixed_random/explore",
+      "wall_seconds": 25.1853632429993
+    },
+    {
+      "accounting": "actual_completed",
+      "charged_interactions": 3418,
+      "maximum_interactions": 531200,
+      "stage": "round_001/fixed_random/before_learning",
+      "wall_seconds": 154.0873885129986
+    },
+    {
+      "accounting": "not_launched",
+      "charged_interactions": 0,
+      "maximum_interactions": 129600,
+      "stage": "round_001/train_policy",
+      "wall_seconds": 1800.7956623770006
+    }
+  ],
+  "error": "RuntimeError: gated child did not complete: train_policy phase=gate_timeout",
+  "maximum_interactions": 3664000,
+  "no_automatic_retry": true,
+  "phase": "error",
+  "wall_seconds": 2616.4462519990047
+}

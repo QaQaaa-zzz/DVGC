@@ -1,0 +1,87 @@
+{
+  "status": "supervised_fit_and_offline_analysis_completed",
+  "code_commit": "08454ea",
+  "run": "/home/qy/DVGC/JIT/runs/experiments/residual_full_tape_20260911",
+  "metrics": [
+    {
+      "evaluation": "teacher_forced_historical_previous_delta",
+      "examples": 754,
+      "model": "zero",
+      "partition": "fit",
+      "subset": "all",
+      "weighted_rmse": 0.014743016101419926
+    },
+    {
+      "evaluation": "teacher_forced_historical_previous_delta",
+      "examples": 754,
+      "model": "fitted",
+      "partition": "fit",
+      "subset": "all",
+      "weighted_rmse": 0.0007281012501041465
+    },
+    {
+      "evaluation": "teacher_forced_historical_previous_delta",
+      "examples": 109,
+      "model": "zero",
+      "partition": "fit",
+      "subset": "nonzero",
+      "weighted_rmse": 0.05000000074505806
+    },
+    {
+      "evaluation": "teacher_forced_historical_previous_delta",
+      "examples": 109,
+      "model": "fitted",
+      "partition": "fit",
+      "subset": "nonzero",
+      "weighted_rmse": 0.0019139044679259967
+    },
+    {
+      "evaluation": "teacher_forced_historical_previous_delta",
+      "examples": 751,
+      "model": "zero",
+      "partition": "development",
+      "subset": "all",
+      "weighted_rmse": 0.02100181393325329
+    },
+    {
+      "evaluation": "teacher_forced_historical_previous_delta",
+      "examples": 751,
+      "model": "fitted",
+      "partition": "development",
+      "subset": "all",
+      "weighted_rmse": 0.017604847546014962
+    },
+    {
+      "evaluation": "teacher_forced_historical_previous_delta",
+      "examples": 84,
+      "model": "zero",
+      "partition": "development",
+      "subset": "nonzero",
+      "weighted_rmse": 0.07278945297002792
+    },
+    {
+      "evaluation": "teacher_forced_historical_previous_delta",
+      "examples": 84,
+      "model": "fitted",
+      "partition": "development",
+      "subset": "nonzero",
+      "weighted_rmse": 0.05824048016117347
+    }
+  ],
+  "cost": {
+    "acquisition": 1553,
+    "labels": 16952,
+    "engineering": 32,
+    "total_new_interactions": 18537,
+    "new_ppo_transitions": 0,
+    "supervised_updates": 500,
+    "fit_process_wall_seconds": 9.534146308898926,
+    "collection_and_fit_wall_seconds": 928.4157490730286,
+    "analysis_interactions": 0
+  },
+  "explorer_sha256": "4653c6881a1b4818b9fedf9768a5c836bc69cb4efa1ca0e8a268c06742103920",
+  "artifact_sha256": "4b64932613f144e751113432c702aaac9ce8ce6e38da0bc4898a5c6b2fde1f0c",
+  "closed_loop_started": false,
+  "final_test_used": false,
+  "independent_repetitions": false
+}

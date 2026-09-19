@@ -1,0 +1,68 @@
+{
+  "schema": "jit_upstream_parent_domain_expansion_prelaunch_v1",
+  "date": "2026-09-01",
+  "status": "prelaunch",
+  "trigger": {
+    "prior_c0_status": "C0_GATE_FAIL",
+    "downstream_c0_status": "PASS",
+    "upstream_validation_roc_auc": 0.4252704031465093,
+    "upstream_train_logo_mean_roc_auc": 0.8399165442101222,
+    "upstream_train_logo_worst_roc_auc": 0.7222222222222222,
+    "upstream_train_logo_all_score_gaps_positive": true,
+    "diagnosis": "existing TRAIN seed groups generalize within transition_4988928, but independent validation fails across checkpoint domains; increase checkpoint-domain TRAIN diversity before any new validation"
+  },
+  "scientific_decision": {
+    "change_field_model_now": false,
+    "reuse_consumed_validation": false,
+    "construct_tube_1": false,
+    "train_pi_1": false,
+    "expand_upstream_train_parent_diversity": true,
+    "independence_unit_for_next_cv": "source_checkpoint_transition",
+    "reason": "the five prior TRAIN parent groups all belong to transition_4988928, so leave-one-seed-group-out does not test checkpoint-domain generalization"
+  },
+  "new_train_parent_domains": [
+    "transition_7987200",
+    "transition_9977856"
+  ],
+  "new_train_seeds_per_domain": [
+    1000001,
+    1000002,
+    1000003,
+    1000004,
+    1000005
+  ],
+  "forbidden_consumed_validation_seed": 1000006,
+  "source_role": "ascending_entry",
+  "fixed_panel": {
+    "action_names": ["steer", "rear_wheel_drive", "hip", "knee"],
+    "signs": [-1, 1],
+    "strengths": [0.025, 0.1],
+    "durations": [4, 8, 16],
+    "terminal_clipping": true,
+    "max_label_ticks": 400
+  },
+  "budget": {
+    "parent_count": 10,
+    "attempt_count": 480,
+    "maximum_acquisition_environment_interactions": 4480,
+    "maximum_successful_labeling_environment_interactions": 192000,
+    "ppo_training_transitions": 0
+  },
+  "data_policy": {
+    "source_catalog_metadata_only_no_expert_outcomes": true,
+    "consumed_validation_rows_read": false,
+    "consumed_validation_predictions_read": false,
+    "test_data_used": false,
+    "final_evaluation_data_used": false
+  },
+  "next_gate": "merge new TRAIN-only upstream labels with frozen Iteration-0 TRAIN evidence and run leave-one-checkpoint-domain-out generalization across transition_4988928, transition_7987200, and transition_9977856; no fresh validation until that gate supports checkpoint-domain generalization",
+  "claims": {
+    "checkpoint_domain_train_expansion_only": true,
+    "continuation_field_reselected": false,
+    "fresh_validation_authorized": false,
+    "tube_1_constructed": false,
+    "pi_1_trained": false,
+    "jce_jel_claim": false,
+    "certified_safe_set_claim": false
+  }
+}

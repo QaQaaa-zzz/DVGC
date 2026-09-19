@@ -1,0 +1,51 @@
+{
+  "automatic_extension": false,
+  "charge_scope": "actual completed PPO plus validated panels",
+  "charged_interactions": 128225,
+  "claim": "multi-checkpoint execution validated; no exploration gain or convergence claim",
+  "end_utc": "2026-09-11T04:44:29.071342+00:00",
+  "error": null,
+  "final_test_used": false,
+  "maximum_total_interactions": 132800,
+  "panel_interactions": 225,
+  "panels": [
+    {
+      "count": 4,
+      "panel_interactions": 76,
+      "panel_sha256": "4223c1d94fdab2d9178342bb5c3135f93b83c12bd51ba5abeee02acbe2f15387",
+      "physical_failures": 0,
+      "successful": 4,
+      "training_transitions": 32000
+    },
+    {
+      "count": 4,
+      "panel_interactions": 76,
+      "panel_sha256": "4223c1d94fdab2d9178342bb5c3135f93b83c12bd51ba5abeee02acbe2f15387",
+      "physical_failures": 0,
+      "successful": 4,
+      "training_transitions": 64000
+    },
+    {
+      "count": 4,
+      "panel_interactions": 73,
+      "panel_sha256": "4223c1d94fdab2d9178342bb5c3135f93b83c12bd51ba5abeee02acbe2f15387",
+      "physical_failures": 0,
+      "successful": 4,
+      "training_transitions": 128000
+    }
+  ],
+  "returncode": 0,
+  "source_hashes": {
+    "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_20260911/training/pi6_multicheckpoint_train_20260911/train_panels/transition_128000/report.json": "ef7ffa3b9b93769e372398a8cc87c7a072c1e4a463a938b106c31cb244c62fe1",
+    "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_20260911/training/pi6_multicheckpoint_train_20260911/train_panels/transition_32000/report.json": "62846c1b3fadba154c938d1300ed080f9b6c8de07f61acf76ecbac68420676bc",
+    "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_20260911/training/pi6_multicheckpoint_train_20260911/train_panels/transition_64000/report.json": "c0a0a052c0b02e709df505fe03357cdf797870f478bbe4eb6117302677ec2106"
+  },
+  "start_utc": "2026-09-11T04:43:30.236604+00:00",
+  "status": "completed",
+  "training_transitions": 128000,
+  "wall_seconds": 58.83474881099937,
+  "checkpoint_manifest": "JIT/runs/experiments/multicheckpoint_pi6_20260911/checkpoint_manifest.json",
+  "artifact_index": "JIT/runs/experiments/multicheckpoint_pi6_20260911/INDEX.md",
+  "configuration_commit": "3e20ed2",
+  "related_cpu_tests": "30 passed in 3.07s"
+}

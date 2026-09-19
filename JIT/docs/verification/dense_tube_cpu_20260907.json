@@ -1,0 +1,61 @@
+{
+  "schema": "jit_dense_tube_cpu_verification_v1",
+  "date": "2026-09-07",
+  "remote_baseline": "ff0e324ebdbb0cd624c3b223ba0137abf61e25cd",
+  "tests": 68,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "python": "3.12.13",
+  "dependencies": {
+    "jax": "0.6.2",
+    "numpy": "2.3.5",
+    "mujoco": "3.6.0",
+    "brax": "0.14.2",
+    "pytest": "9.1.1",
+    "matplotlib": "3.10.8"
+  },
+  "source_file_sha256": {
+    "JIT/cli/run_dense_tube.py": "75d4e16dbe9e95d74aab67c1e9d03bde2e3c254fd62bf72e9288156aaf79604b",
+    "JIT/src/jit_dvgc/acquisition/causal_jump.py": "bdddad8ca2f0a9d38b9f904b9cae5cda44485b9bb4b0d601cbe80810a83e9a02",
+    "JIT/src/jit_dvgc/acquisition/trajectory_sampling.py": "580badba13d1f9cb4b9343be87cfa6c71c0d0f67842667b3880c07ae78abb85b",
+    "JIT/src/jit_dvgc/analysis/dense_coverage.py": "82379d043b4b63bfb8e8a965b76051d8b3d0c731cba1d7a18fe21908657022b0",
+    "JIT/src/jit_dvgc/analysis/policy_envelopes.py": "ca6f1c453b219300f453d1f5ac9e4324f05f1358de3d3ec0a0b0d94029a9d1c7",
+    "JIT/src/jit_dvgc/continuation/device_rollout.py": "64a190274daf39637e4f9683cf563cc000724d6639944960bd913554dcf2f83a",
+    "JIT/src/jit_dvgc/dense_tube.py": "77a78a6a5e0cd8c8b63822188bd0a8db4c3e01f67004bd97eb4a024fcb5b554b",
+    "JIT/src/jit_dvgc/dense_tube_runtime.py": "4faa140b1db0dccf5021c6b96e492a1baca41d26197e10cc83f1c6f180192658",
+    "JIT/src/jit_dvgc/policy_family_landing.py": "c3ad14b2c9183743709cb49d26f41fc7f4d28830bf978174d98c4199808b8de7",
+    "JIT/src/jit_dvgc/probe_bank.py": "0286d37338fe21f9375fa9585940b925981dcb25ba6b5c67e28a1d9a7ceed2b3",
+    "JIT/src/jit_dvgc/unified_continuation_shards.py": "33e402c52cdd57c49704cc133ba5c81016133eb251d2a0bc07728e8212c2507a",
+    "JIT/tests/test_dense_tube.py": "9d6b3be9a4ddc8774be284eadabb1b38ae54b8311b3a569bcd207964db66c909",
+    "JIT/tests/test_device_rollout.py": "235874e5f01045696646ae62c01e66c25a3be47bae59b083a45a37c6f54133ed"
+  },
+  "scope": "Eight focused test files: dense collector control flow with fake physics, real labeler serial/device rows with fake env, device loop termination/padding/nonfinite, supervisor retry/fallback/resume/cost and altered artifact refusal, old/new cell arithmetic, existing policy plots/family/shards/bank/causal contracts.",
+  "test_files": [
+    "JIT/tests/test_dense_tube.py",
+    "JIT/tests/test_device_rollout.py",
+    "JIT/tests/test_policy_comparison.py",
+    "JIT/tests/test_policy_envelopes.py",
+    "JIT/tests/test_policy_family_landing.py",
+    "JIT/tests/test_unified_continuation_shards.py",
+    "JIT/tests/test_probe_bank.py",
+    "JIT/tests/test_causal_jump_reachability_contract.py"
+  ],
+  "production_gpu_execution": false,
+  "production_speedup_measured": false,
+  "new_training_transitions": 0,
+  "additional_snapshot_replay_validation": false,
+  "actual_cli_missing_baseline_packaging": "engineering_error with zero charged interactions and results_to_send.zip",
+  "figure_exports_visual_checked": [
+    "synthetic_old_new_support.png",
+    "pdf",
+    "svg"
+  ],
+  "legacy_physical_resolution_unchanged": true,
+  "changed_document_local_links_checked": 70,
+  "final_grid_compatibility_recheck": {
+    "tests": 13,
+    "failures": 0,
+    "scope": "policy_envelopes and dense_tube after preserving the legacy default x quantization"
+  }
+}

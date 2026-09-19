@@ -1,0 +1,68 @@
+{
+  "by_phase": {
+    "downstream": {
+      "raw_snapshot_count": 1096,
+      "unique_root_geometry_cell_count": 478,
+      "x_bin_count": 7
+    },
+    "upstream": {
+      "raw_snapshot_count": 1390,
+      "unique_root_geometry_cell_count": 880,
+      "x_bin_count": 10
+    }
+  },
+  "capability_geometry_summary": "JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/tube3_control_tube_geometry/summary.json",
+  "capability_geometry_summary_file_sha256": "3e76712d4b70673235ad18a2c6b8079ae4c3133cb7848cc004ba8901c4ed9fa8",
+  "capability_geometry_summary_sha256": "fa2a0a05aa88b84de6e7547a045fea15538afb9cb884d58172407949c80f23fb",
+  "excluded_raw_snapshot_count": 2317,
+  "expansion_vs_source": {
+    "new_cells_by_phase": {
+      "downstream": 287,
+      "upstream": 427
+    },
+    "new_jump_tube_root_geometry_cell_count": 714,
+    "source_capability_geometry_summary": "JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/source_control_tube_geometry/summary.json",
+    "source_capability_geometry_summary_sha256": "4fdf54ff9cbe713948698abc56ec4ef8151de5ee7649071b432d021e2eceda1e",
+    "source_jump_tube_root_cell_count": 644,
+    "target_jump_tube_root_cell_count": 1358
+  },
+  "final_evaluation_data_used": false,
+  "jump_corridor": {
+    "hard_x_max_m": 4.2,
+    "terminates_at_first_valid_landing": true,
+    "x_max_m": 3.8,
+    "x_min_m": 2.5,
+    "x_step_m": 0.1
+  },
+  "nominal_centerline": "JIT/runs/nominal_centerline/pi_0_jump_start_centerline_v3_20260904/centerline.json",
+  "nominal_centerline_sha256": "8976da1103f5b48372655cc9404b64fa31cec10ab12e785f4b128a3af0535523",
+  "raw_control_tube_entry_count": 4803,
+  "raw_snapshot_count": 2486,
+  "root_cells_by_x_bin": {
+    "25": 13,
+    "26": 10,
+    "27": 89,
+    "28": 96,
+    "29": 138,
+    "30": 135,
+    "31": 145,
+    "32": 131,
+    "33": 126,
+    "34": 120,
+    "35": 100,
+    "36": 97,
+    "37": 99,
+    "38": 59
+  },
+  "schema": "jit_jump_tube_view_v1",
+  "semantic_filter": {
+    "downstream": "source phase downstream within nominal jump corridor AND root_vz_mps < 0",
+    "post_landing_recovery_included": false,
+    "upstream": "source phase upstream within nominal jump corridor"
+  },
+  "status": "completed",
+  "summary_sha256": "53612ea4fcc9eb410ad9e479d7145a75f3eb8f75669ccb36cceafad41be8b383",
+  "test_data_used": false,
+  "unique_root_geometry_cell_count": 1358,
+  "x_bin_count": 14
+}

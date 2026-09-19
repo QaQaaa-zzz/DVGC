@@ -1,0 +1,79 @@
+{
+  "schema": "jit_shared_continuation_field_refit_config_v1",
+  "output_dir": "JIT/runs/pi_unified_continuation_field/pi_0_iter0_shared_tiny_mlp_refit_20260901",
+  "expected_protocol_sha256": "163768104c459e471515a846860876b17daeaa56e262cf526348a01ae6cd9c26",
+  "protocol": {
+    "schema": "jit_shared_continuation_field_refit_protocol_v1",
+    "status": "predeclared_after_upstream_and_downstream_train_gates_pass_before_full_train_refit",
+    "iteration": 0,
+    "policy_name": "pi_0",
+    "policy_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+    "policy_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+    "upstream_train_evidence": "JIT/runs/frozen_upstream_checkpoint_train/pi_0_iter0_three_checkpoint_matched_panel_20260901",
+    "upstream_train_manifest_sha256": "25160e1f198d710327b8390a53869bc72ec62afced5f3d86dcc45d1543793626",
+    "downstream_train_evidence": "JIT/runs/pi_unified_transition_band/pi_0_iter0_train_evidence_frozen_20260831",
+    "downstream_train_manifest_sha256": "27832237a85eccfa0ae2eaea7575dd2efda12535a3815fee0c6d0660f58921b8",
+    "upstream_train_gate_summary": "JIT/runs/pi_unified_continuation_field_diagnostic/pi_0_iter0_upstream_support_stratified_parent_cv_tiny_mlp_20260901/summary.json",
+    "upstream_train_gate_summary_sha256": "093e9e5d6ed7845046cf3abb483fcfecee3107ffbcda771ce85a4880a1279541",
+    "downstream_train_gate_summary": "JIT/runs/pi_unified_continuation_field_diagnostic/pi_0_iter0_downstream_parent_logo_tiny_mlp_20260901/summary.json",
+    "downstream_train_gate_summary_sha256": "c2bb51f0b4432db8d78c2f17bf941521aa385dec57c387f604d5a59832a100c3",
+    "architecture": {
+      "family": "tiny_mlp_tanh",
+      "input": "unified_actor_observation",
+      "observation_size": 76,
+      "hidden_units": 8,
+      "activation": "tanh",
+      "parameter_count": 625,
+      "normalization": "train_only_zscore_clip10",
+      "sample_weighting": "equal_parent_label_cell_mass",
+      "l2_weight": 0.01,
+      "optimizer": "adam_full_batch_fixed_schedule",
+      "steps": 4000,
+      "learning_rate": 0.01,
+      "phase_specific_seeds": {
+        "upstream": 850001,
+        "downstream": 850002
+      }
+    },
+    "expected_train": {
+      "upstream": {
+        "candidate_count": 720,
+        "positive_count": 639,
+        "negative_count": 81,
+        "parent_group_count": 15
+      },
+      "downstream": {
+        "candidate_count": 2619,
+        "positive_count": 2589,
+        "negative_count": 30,
+        "parent_group_count": 5
+      }
+    },
+    "method_decision": {
+      "shared_up_down_architecture_required": true,
+      "phase_specific_weights_required": true,
+      "phase_specific_calibration_required": true,
+      "architecture_selection_complete": true,
+      "no_additional_architecture_search": true,
+      "full_train_refit_uses_no_validation": true,
+      "fresh_validation_may_be_predeclared_after_successful_refit": true
+    },
+    "data_policy": {
+      "train_only": true,
+      "consumed_validation_rows_reused": false,
+      "consumed_validation_predictions_reused": false,
+      "test_data_used": false,
+      "final_evaluation_data_used": false
+    },
+    "claim_boundary": {
+      "policy_conditioned_empirical_continuation_fields": true,
+      "architecture_frozen": true,
+      "fields_calibrated": false,
+      "fresh_validation_bank_predeclared": false,
+      "tube_1_constructed": false,
+      "pi_1_trained": false,
+      "jce_jel_claim": false,
+      "certified_safe_set_claim": false
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "anchor_count": 1,
+  "attempted_candidate_count": 22,
+  "candidate_count": 22,
+  "collection_transitions": 33,
+  "exclusion_counts": {
+    "apex": 0,
+    "duplicate": 0,
+    "terminal": 0
+  },
+  "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+  "protocol_sha256": "c714e7354f4042abac99d2843bafcb398d76ddf146ed5b7fcbd9e7c5a08a2969",
+  "schema": "jit_upstream_boundary_catalog_v1",
+  "selection": "validation_locked_reachable_boundary_action_basis_subset",
+  "source_bank": "boundary_bank",
+  "split": "validation",
+  "status": "completed",
+  "target": "V_up",
+  "test_interaction_count": 0,
+  "training_transitions": 0
+}

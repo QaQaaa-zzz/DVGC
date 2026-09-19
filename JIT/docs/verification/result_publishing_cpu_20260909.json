@@ -1,0 +1,13 @@
+{
+  "tests_passed": 13,
+  "tests_failed": 0,
+  "real_remote_publication_tested": false,
+  "tests": [
+    "isolated local bare-Git branch publication",
+    "idempotent unchanged publication",
+    "binary exclusion",
+    "failed publishing preserves result ZIP",
+    "archive traversal rejection",
+    "comparison/bundle regressions"
+  ]
+}

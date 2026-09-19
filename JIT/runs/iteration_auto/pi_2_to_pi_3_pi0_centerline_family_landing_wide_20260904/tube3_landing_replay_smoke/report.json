@@ -1,0 +1,177 @@
+{
+  "environment_interactions": 16,
+  "expert_switching_used": false,
+  "phase_interactions": {
+    "downstream": 8,
+    "upstream": 8
+  },
+  "records": [
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 0,
+      "finite": true,
+      "global_index": 0,
+      "phase": "upstream",
+      "phase_index": 0,
+      "reward": 0.22429592907428741
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 200,
+      "finite": true,
+      "global_index": 200,
+      "phase": "upstream",
+      "phase_index": 0,
+      "reward": -27.174577713012695
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 400,
+      "finite": true,
+      "global_index": 400,
+      "phase": "upstream",
+      "phase_index": 0,
+      "reward": -5.108457088470459
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 601,
+      "finite": true,
+      "global_index": 601,
+      "phase": "upstream",
+      "phase_index": 0,
+      "reward": 46.239479064941406
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 801,
+      "finite": true,
+      "global_index": 801,
+      "phase": "upstream",
+      "phase_index": 0,
+      "reward": -1.3687615394592285
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 1002,
+      "finite": true,
+      "global_index": 1002,
+      "phase": "upstream",
+      "phase_index": 0,
+      "reward": 41.671024322509766
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 1202,
+      "finite": true,
+      "global_index": 1202,
+      "phase": "upstream",
+      "phase_index": 0,
+      "reward": 41.10521697998047
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 1403,
+      "finite": true,
+      "global_index": 1403,
+      "phase": "upstream",
+      "phase_index": 0,
+      "reward": 28.61507797241211
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 0,
+      "finite": true,
+      "global_index": 1404,
+      "phase": "downstream",
+      "phase_index": 1,
+      "reward": 0.9957343935966492
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 485,
+      "finite": true,
+      "global_index": 1889,
+      "phase": "downstream",
+      "phase_index": 1,
+      "reward": 0.28185170888900757
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 970,
+      "finite": true,
+      "global_index": 2374,
+      "phase": "downstream",
+      "phase_index": 1,
+      "reward": 4.2480621337890625
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 1456,
+      "finite": true,
+      "global_index": 2860,
+      "phase": "downstream",
+      "phase_index": 1,
+      "reward": 2.7119932174682617
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 1941,
+      "finite": true,
+      "global_index": 3345,
+      "phase": "downstream",
+      "phase_index": 1,
+      "reward": 0.5394078493118286
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 2427,
+      "finite": true,
+      "global_index": 3831,
+      "phase": "downstream",
+      "phase_index": 1,
+      "reward": 3.7952396869659424
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 2912,
+      "finite": true,
+      "global_index": 4316,
+      "phase": "downstream",
+      "phase_index": 1,
+      "reward": 0.1157124787569046
+    },
+    {
+      "done": false,
+      "end_code": 0,
+      "entry_index": 3398,
+      "finite": true,
+      "global_index": 4802,
+      "phase": "downstream",
+      "phase_index": 1,
+      "reward": -2.5199992656707764
+    }
+  ],
+  "schema": "jit_tube_rsi_smoke_v1",
+  "soft_tube_manifest_sha256": "b5eebad447ea4ef77f624edcf2020f0045395c475c2e3297825436b0c02d701f",
+  "status": "completed",
+  "test_data_used": false,
+  "training_transitions": 0,
+  "tube_rsi_smoke": "GO",
+  "validation_data_used": false
+}

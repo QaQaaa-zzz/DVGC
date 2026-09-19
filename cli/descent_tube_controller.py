@@ -1,9 +1,7 @@
 """Persistent controller for exact descent Tube audit and expansion."""
 from __future__ import annotations
 
-import hashlib
 import json
-import re
 import subprocess
 import time
 from pathlib import Path
@@ -18,13 +16,16 @@ from cli.descent_local_controller import (
     RESET_BANK,
     RUNTIME_GATE,
     SHARD_SIZE,
-    completed_coverage,
-    split_range_after_oom,
 )
 from dvgc.bank import SnapshotBank
 from dvgc.audit_manifest import completed_manifest
 from dvgc.certification import assert_disjoint_branch_seeds, branch_seed
 from dvgc.config import file_sha256
+from dvgc.construction_lifecycle import (
+    completed_coverage,
+    failure_fuse_update,
+    split_range_after_oom,
+)
 from dvgc.runtime import save_json
 from dvgc.seed_registry import (
     allocate_disjoint_grid,
@@ -60,18 +61,6 @@ def planned_branch_seeds(base_seed: int, state_count: int, branches: int = AUDIT
         for state_index in range(int(state_count))
         for branch_index in range(int(branches))
     ]
-
-
-def failure_fuse_update(state, stage: str, exc: Exception):
-    """Count identical deterministic controller failures across service restarts."""
-    # Worker unit names contain launch timestamps.  They must not make the
-    # same deterministic failure look unique on every systemd restart.
-    normalized = re.sub(r"-\d{10}\.service", "-<launch>.service", str(exc))
-    message = f"{stage}|{type(exc).__name__}|{normalized}"
-    signature = hashlib.sha256(message.encode("utf-8")).hexdigest()
-    previous = state.get("failure_signature")
-    count = int(state.get("consecutive_failure_count", 0)) + 1 if previous == signature else 1
-    return signature, count
 
 
 def select_policy_for_hash(source_hash: str, candidates, hash_fn=file_sha256) -> Path:

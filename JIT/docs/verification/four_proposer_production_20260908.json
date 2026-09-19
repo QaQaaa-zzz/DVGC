@@ -1,0 +1,362 @@
+{
+  "source_zip_sha256": "86d7cb0dd12810c038070ca1316c030be3432a561da22163577fc9ed046286a8",
+  "report": {
+    "baseline_root_cells": 1452,
+    "baseline_scope": "previous shared-panel TRAIN union plus completed 5cm pi0 pilot",
+    "charged_interactions": 111232,
+    "comparison_scope": "each proposer uses the same four suffix evaluators; own-Actor support is a separate geometric diagnostic",
+    "continuous_volume_claim": false,
+    "cost_curve_semantics": "predeclared catalog-order replay; round-robin across proposers; all acquisition, benchmark, failed-attempt and padding costs upfront; complete four-label candidate events only",
+    "cumulative_root_cells": 2356,
+    "final_test_used": false,
+    "independent_repetitions": 1,
+    "matched_budget": [
+      {
+        "budget": 21668,
+        "full_cells": 235,
+        "novel_root_cells": 55,
+        "root_cells": 228,
+        "schedule": "pi_0"
+      },
+      {
+        "budget": 21668,
+        "full_cells": 200,
+        "novel_root_cells": 200,
+        "root_cells": 200,
+        "schedule": "pi_1"
+      },
+      {
+        "budget": 21668,
+        "full_cells": 199,
+        "novel_root_cells": 198,
+        "root_cells": 198,
+        "schedule": "pi_2"
+      },
+      {
+        "budget": 21668,
+        "full_cells": 162,
+        "novel_root_cells": 161,
+        "root_cells": 161,
+        "schedule": "pi_3"
+      },
+      {
+        "budget": 21668,
+        "full_cells": 70,
+        "novel_root_cells": 57,
+        "root_cells": 70,
+        "schedule": "bank_round_robin"
+      }
+    ],
+    "matrix": [
+      {
+        "candidates": 241,
+        "evaluator": "pi_0",
+        "proposer": "pi_0",
+        "root_cells": 214,
+        "successful_states": 226
+      },
+      {
+        "candidates": 241,
+        "evaluator": "pi_1",
+        "proposer": "pi_0",
+        "root_cells": 226,
+        "successful_states": 238
+      },
+      {
+        "candidates": 241,
+        "evaluator": "pi_2",
+        "proposer": "pi_0",
+        "root_cells": 225,
+        "successful_states": 237
+      },
+      {
+        "candidates": 241,
+        "evaluator": "pi_3",
+        "proposer": "pi_0",
+        "root_cells": 208,
+        "successful_states": 219
+      },
+      {
+        "candidates": 311,
+        "evaluator": "pi_0",
+        "proposer": "pi_1",
+        "root_cells": 303,
+        "successful_states": 307
+      },
+      {
+        "candidates": 311,
+        "evaluator": "pi_1",
+        "proposer": "pi_1",
+        "root_cells": 307,
+        "successful_states": 311
+      },
+      {
+        "candidates": 311,
+        "evaluator": "pi_2",
+        "proposer": "pi_1",
+        "root_cells": 307,
+        "successful_states": 311
+      },
+      {
+        "candidates": 311,
+        "evaluator": "pi_3",
+        "proposer": "pi_1",
+        "root_cells": 303,
+        "successful_states": 306
+      },
+      {
+        "candidates": 287,
+        "evaluator": "pi_0",
+        "proposer": "pi_2",
+        "root_cells": 270,
+        "successful_states": 287
+      },
+      {
+        "candidates": 287,
+        "evaluator": "pi_1",
+        "proposer": "pi_2",
+        "root_cells": 270,
+        "successful_states": 287
+      },
+      {
+        "candidates": 287,
+        "evaluator": "pi_2",
+        "proposer": "pi_2",
+        "root_cells": 270,
+        "successful_states": 287
+      },
+      {
+        "candidates": 287,
+        "evaluator": "pi_3",
+        "proposer": "pi_2",
+        "root_cells": 269,
+        "successful_states": 286
+      },
+      {
+        "candidates": 277,
+        "evaluator": "pi_0",
+        "proposer": "pi_3",
+        "root_cells": 272,
+        "successful_states": 277
+      },
+      {
+        "candidates": 277,
+        "evaluator": "pi_1",
+        "proposer": "pi_3",
+        "root_cells": 272,
+        "successful_states": 277
+      },
+      {
+        "candidates": 277,
+        "evaluator": "pi_2",
+        "proposer": "pi_3",
+        "root_cells": 271,
+        "successful_states": 276
+      },
+      {
+        "candidates": 277,
+        "evaluator": "pi_3",
+        "proposer": "pi_3",
+        "root_cells": 266,
+        "successful_states": 271
+      }
+    ],
+    "metrics": [
+      {
+        "bank_root_cells": 228,
+        "bank_success_states": 240,
+        "candidates": 241,
+        "charged_interactions": 21668,
+        "novel_vs_previous_train_union": 55,
+        "own_root_cells": 214,
+        "own_success_states": 226,
+        "proposer": "pi_0",
+        "trajectories": 16,
+        "unique_proposer_root_cells": 228
+      },
+      {
+        "bank_root_cells": 307,
+        "bank_success_states": 311,
+        "candidates": 311,
+        "charged_interactions": 29752,
+        "novel_vs_previous_train_union": 307,
+        "own_root_cells": 307,
+        "own_success_states": 311,
+        "proposer": "pi_1",
+        "trajectories": 16,
+        "unique_proposer_root_cells": 307
+      },
+      {
+        "bank_root_cells": 270,
+        "bank_success_states": 287,
+        "candidates": 287,
+        "charged_interactions": 27675,
+        "novel_vs_previous_train_union": 270,
+        "own_root_cells": 270,
+        "own_success_states": 287,
+        "proposer": "pi_2",
+        "trajectories": 16,
+        "unique_proposer_root_cells": 270
+      },
+      {
+        "bank_root_cells": 272,
+        "bank_success_states": 277,
+        "candidates": 277,
+        "charged_interactions": 32137,
+        "novel_vs_previous_train_union": 272,
+        "own_root_cells": 266,
+        "own_success_states": 271,
+        "proposer": "pi_3",
+        "trajectories": 16,
+        "unique_proposer_root_cells": 272
+      }
+    ],
+    "novel_root_cells": 904,
+    "own_policy_semantics": "same frozen Actor for perturbed prefix and fresh-continuation suffix; no claim of uninterrupted exact replay",
+    "physical_resolution": {
+      "actor_observation_defines_capability_cells": false,
+      "full_physical_fields": [
+        "root_x_m",
+        "root_y_m",
+        "root_z_m",
+        "root_vx_mps",
+        "root_vy_mps",
+        "root_vz_mps",
+        "roll_deg",
+        "pitch_deg",
+        "yaw_deg",
+        "root_wx_degps",
+        "root_wy_degps",
+        "root_wz_degps",
+        "steering_deg",
+        "hip_deg",
+        "knee_deg",
+        "steering_rate_degps",
+        "hip_rate_degps",
+        "knee_rate_degps",
+        "rearwheel_tangent_mps",
+        "frontwheel_tangent_mps"
+      ],
+      "longitudinal_progress_coordinate": "root_x_m",
+      "phase_is_discrete": true,
+      "quantization": "nearest_grid_round_half_away_from_zero",
+      "resolution_sha256": "9f918a9dd3846e2fc8e787bd47bb008a3a8401c259cd68631bb22df7a945dcbe",
+      "resolutions": {
+        "frontwheel_tangent_mps": {
+          "resolution": 0.1,
+          "unit": "m/s"
+        },
+        "hip_deg": {
+          "resolution": 0.5,
+          "unit": "deg"
+        },
+        "hip_rate_degps": {
+          "resolution": 2.0,
+          "unit": "deg/s"
+        },
+        "knee_deg": {
+          "resolution": 0.5,
+          "unit": "deg"
+        },
+        "knee_rate_degps": {
+          "resolution": 2.0,
+          "unit": "deg/s"
+        },
+        "pitch_deg": {
+          "resolution": 0.5,
+          "unit": "deg"
+        },
+        "rearwheel_tangent_mps": {
+          "resolution": 0.1,
+          "unit": "m/s"
+        },
+        "roll_deg": {
+          "resolution": 0.5,
+          "unit": "deg"
+        },
+        "root_vx_mps": {
+          "resolution": 0.1,
+          "unit": "m/s"
+        },
+        "root_vy_mps": {
+          "resolution": 0.1,
+          "unit": "m/s"
+        },
+        "root_vz_mps": {
+          "resolution": 0.1,
+          "unit": "m/s"
+        },
+        "root_wx_degps": {
+          "resolution": 2.0,
+          "unit": "deg/s"
+        },
+        "root_wy_degps": {
+          "resolution": 2.0,
+          "unit": "deg/s"
+        },
+        "root_wz_degps": {
+          "resolution": 2.0,
+          "unit": "deg/s"
+        },
+        "root_x_m": {
+          "resolution": 0.1,
+          "unit": "m"
+        },
+        "root_y_m": {
+          "resolution": 0.1,
+          "unit": "m"
+        },
+        "root_z_m": {
+          "resolution": 0.1,
+          "unit": "m"
+        },
+        "steering_deg": {
+          "resolution": 0.5,
+          "unit": "deg"
+        },
+        "steering_rate_degps": {
+          "resolution": 2.0,
+          "unit": "deg/s"
+        },
+        "yaw_deg": {
+          "resolution": 0.5,
+          "unit": "deg"
+        }
+      },
+      "root_geometry_fields": [
+        "root_x_m",
+        "root_y_m",
+        "root_z_m",
+        "root_vx_mps",
+        "root_vy_mps",
+        "root_vz_mps",
+        "roll_deg",
+        "pitch_deg",
+        "yaw_deg",
+        "root_wx_degps",
+        "root_wy_degps",
+        "root_wz_degps"
+      ],
+      "schema": "jit_capability_state_resolution_v1",
+      "wheel_angle_phase_in_cell_identity": false,
+      "x_slice_width_m": 0.1
+    },
+    "pooled_root_cells": 1077,
+    "report_sha256": "c5dcdf08e9c2c8118baf413c1b3717666ebd902106590cc835a5e0f822a06a8f",
+    "root_overhead_by_proposer": {
+      "pi_0": 3629,
+      "pi_1": 3603,
+      "pi_2": 3608,
+      "pi_3": 3627
+    },
+    "scope": "TRAIN four-proposer development discovery pilot",
+    "status": "completed",
+    "training_admission_authorized": false,
+    "training_transitions": 0
+  },
+  "device_backend_used_for_formal_labels": false,
+  "device_observation": "all benchmarks exited normally; some endpoint/step comparisons differ and matching cases slower; all formal labels serial",
+  "total_processes": 108,
+  "processes_failed": 0,
+  "process_wall_seconds_sum": 4798.567306414997
+}

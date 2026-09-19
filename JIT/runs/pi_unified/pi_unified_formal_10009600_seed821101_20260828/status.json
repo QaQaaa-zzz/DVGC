@@ -1,0 +1,11 @@
+{
+  "environment_transitions": 0,
+  "interaction_accounting": {
+    "brax_evaluation": 0,
+    "diagnostic": 0,
+    "fixed_evaluation": 0,
+    "training": 0
+  },
+  "reason": "XlaRuntimeError: INTERNAL: CpuCallback error calling callback: Traceback (most recent call last):\n  File \"/home/qy/DVGC/JIT/cli/train_unified.py\", line 31, in <module>\n  File \"/home/qy/DVGC/JIT/cli/train_unified.py\", line 23, in main\n  File \"/home/qy/DVGC/JIT/src/jit_dvgc/unified_formal.py\", line 375, in run_unified_formal\n  File \"/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/brax/training/agents/ppo/train.py\", line 814, in train\n  File \"/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/brax/training/agents/ppo/train.py\", line 685, in training_epoch_with_timing\n  File \"/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/jax/_src/traceback_util.py\", line 182, in reraise_with_filtered_traceback\n  File \"/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/jax/_src/api.py\", line 1709, in cache_miss\n  File \"/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/jax/_src/profiler.py\", line 354, in wrapper\n  File \"/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/jax/_src/interpreters/pxla.py\", line 1297, in __call__\n  File \"/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/jax/_src/callback.py\", line 782, in _wrapped_callback\n  File \"/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/jax/_src/debugging.py\", line 202, in _callback\n  File \"/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/jax/_src/debugging.py\", line 99, in debug_callback_impl\n  File \"/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/jax/_src/debugging.py\", line 336, in _flat_callback\n  File \"/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/brax/training/logger.py\", line 56, in update_episode_metrics\n  File \"/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/brax/training/logger.py\", line 87, in log_metrics\n  File \"/home/qy/DVGC/JIT/src/jit_dvgc/unified_formal.py\", line 197, in on_progress\n  File \"/home/qy/DVGC/JIT/src/jit_dvgc/formal_training.py\", line 287, in on_progress\nValueError: progress callback does not match the latest policy callback",
+  "status": "engineering_error"
+}

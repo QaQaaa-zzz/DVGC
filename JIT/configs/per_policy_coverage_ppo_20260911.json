@@ -1,0 +1,20 @@
+{
+  "bank": "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/comparison_bank.json",
+  "proposer": "pi_6",
+  "num_envs": 32,
+  "evaluation_episodes": 32,
+  "horizon": 400,
+  "batches": 20,
+  "epochs": 4,
+  "minibatch_size": 256,
+  "seed": 9921101,
+  "learning_rate": 0.0003,
+  "clip": 0.2,
+  "gamma": 0.99,
+  "gae_lambda": 0.95,
+  "value_coefficient": 0.5,
+  "entropy_coefficient": 0.001,
+  "max_grad_norm": 1.0,
+  "baseline_cells": "/home/qy/DVGC/JIT/runs/experiments/per_policy_coverage_ppo_20260911/baseline_seed.json",
+  "jump_start_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606"
+}

@@ -1,0 +1,2416 @@
+{
+  "acceptance_threshold_exclusive": 0.2567880342884696,
+  "calibration_sha256": "5701f217e1da12349fb659bc03c399503265d399ec98f8a02c5e2fabc57bb221",
+  "catalog_file_sha256": "41274a0701d646d1924cf1790ccce55cf3570a71ce22d9fb206ebc0ce63c5eb6",
+  "catalog_path": "JIT/runs/iteration_auto/pi_3_to_pi_4_pi0_centerline_family_landing_predictor_audit_20260905/frontier_calibration/acquisition/catalog.json",
+  "catalog_protocol_sha256": "4fea567fc8d321318afcc4e7d72524199bd609b6d62c13862730d75027255343",
+  "downstream_candidate_count": 241,
+  "entries": [
+    {
+      "candidate_id": "pi0_causal_upstream_000000",
+      "parent_group_id": "causal_centerline_upstream_x0025_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9997848578519837,
+      "state_sha256": "8e5f2149bf2bc8f7c7c991d48385a919afde5329a27842df24213b20d24d0dee"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000001",
+      "parent_group_id": "causal_centerline_upstream_x0025_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.999701815050254,
+      "state_sha256": "350db0049f4e65329d73ac4634cb049667eaef89cd0c3fa61c049bcf41d5c9e3"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000002",
+      "parent_group_id": "causal_centerline_upstream_x0025_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9997272045046849,
+      "state_sha256": "6a9db6985383efb810c45365c4c4a52d5ff2161192ba14c8d7950f3d64d449d7"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000003",
+      "parent_group_id": "causal_centerline_upstream_x0025_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9979779996618072,
+      "state_sha256": "1159e997a2786bc7c50cb62a1d5bcb94b1e92191656ee9616620307dec1bcdf3"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000004",
+      "parent_group_id": "causal_centerline_upstream_x0025_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9997481849629828,
+      "state_sha256": "c25a71ccdf87ca328fc31e70cb1620d96ae6b5286c0d85e323ab960e74c231a9"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000005",
+      "parent_group_id": "causal_centerline_upstream_x0025_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9998337099273682,
+      "state_sha256": "99dcd0c036456628e4d36dca68eccbcba3bf2c22d614ca9179b89f10081bcc04"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000006",
+      "parent_group_id": "causal_centerline_upstream_x0025_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9998930471869221,
+      "state_sha256": "988a8912c602d1e6518858dcd52be6907759ccd921c46af57f0422ae57e58c5a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000007",
+      "parent_group_id": "causal_centerline_upstream_x0026_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9997248166613618,
+      "state_sha256": "03a2565c466d3fe3dbc37c4c8727c4d922f081de9ff763034568ef86d74bf9d1"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000008",
+      "parent_group_id": "causal_centerline_upstream_x0026_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9996786510865725,
+      "state_sha256": "c4aa1a14fbf9ade678f4cebc36ca83d3f3fd6261ebf94c669fa851c4616f5b57"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000009",
+      "parent_group_id": "causal_centerline_upstream_x0026_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9995786545201095,
+      "state_sha256": "280a218f9694fbe1022dcf89ed7adfc83db5f139fd3b0ae30780d7919a884c1d"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000010",
+      "parent_group_id": "causal_centerline_upstream_x0026_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9994644665768839,
+      "state_sha256": "73d75bcff1be929756699a3388049e4f101a39e3ab3c8eefdcd4a8c8efc1a350"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000011",
+      "parent_group_id": "causal_centerline_upstream_x0026_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9996223606323963,
+      "state_sha256": "838eba2a8d2bfab4c1a48ca8c61d8007ef57ab48796249247914744dc5185bae"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000012",
+      "parent_group_id": "causal_centerline_upstream_x0026_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.999759908298253,
+      "state_sha256": "c99356f2f3ee6a877356cca1355b006759e7b2a862806bd97749d255789d2db8"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000013",
+      "parent_group_id": "causal_centerline_upstream_x0026_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9994107667599098,
+      "state_sha256": "466a6bafe1fc9d2ef00afa8287b412231326e2e7fc7c89b58b476da98690d14d"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000014",
+      "parent_group_id": "causal_centerline_upstream_x0026_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.999555078367528,
+      "state_sha256": "0807a413cce7d48257b43481ede30cc17039156299e10e18b6d6e03f0d4f27b0"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000015",
+      "parent_group_id": "causal_centerline_upstream_x0027_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9980932501174294,
+      "state_sha256": "0868d655ccddf0623ba747a781a0c245c63812b31e331cced9c04a868d599e33"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000016",
+      "parent_group_id": "causal_centerline_upstream_x0027_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9978328164572959,
+      "state_sha256": "e04bcbbc73a3c24326ed7b49d47a70f7841ec7a53491576b50c69be6ef8da930"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000017",
+      "parent_group_id": "causal_centerline_upstream_x0027_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9979324894191566,
+      "state_sha256": "deba7adeb080b9b2503b9d21e9d4d541562e91cfca4d87c206a263f2617a1d90"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000018",
+      "parent_group_id": "causal_centerline_upstream_x0027_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9984086558541057,
+      "state_sha256": "0b14e23e11febe1c54b966ced7cdfd3ba1b00c5cfe7b161ddda36f77bb8626b0"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000019",
+      "parent_group_id": "causal_centerline_upstream_x0027_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.999738266989659,
+      "state_sha256": "d90780ebcded2b0adfaed1671a5f86c4476565044133e84c455d38e3cce4744f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000020",
+      "parent_group_id": "causal_centerline_upstream_x0027_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9986462760670209,
+      "state_sha256": "229acc7c88233017c9ff7f8555eba099877f2f9126e0da12d3d73ebec567302a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000021",
+      "parent_group_id": "causal_centerline_upstream_x0027_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9973867347925369,
+      "state_sha256": "d77add47aeb465833b8df3ff91afbafdb7cbee6b9141796c6203376fc6359a60"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000022",
+      "parent_group_id": "causal_centerline_upstream_x0027_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9998941253310076,
+      "state_sha256": "966ac9d11be6b1e5bae4257510a715feb05aff96a3e0972c0c266d7a7287ee54"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000023",
+      "parent_group_id": "causal_centerline_upstream_x0027_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9998249010777936,
+      "state_sha256": "b11f01fc4632b1e3579ec2429dd29fc018768554e4ffdcb4fe77b17e8d15e961"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000024",
+      "parent_group_id": "causal_centerline_upstream_x0027_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.998060920314672,
+      "state_sha256": "64af2ab8b5c550953f33bb02778c6b16b611fcc6eebc7a797de8bb75747a69ab"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000025",
+      "parent_group_id": "causal_centerline_upstream_x0027_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9984170476402557,
+      "state_sha256": "91d0bc6858fcb30f6e77927fbb10c8e03135a3efcc9ef72831f53aaf8c14e2c7"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000026",
+      "parent_group_id": "causal_centerline_upstream_x0027_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9996328254798856,
+      "state_sha256": "fd1d157e155e8be73d6023de2b2d60d75614f7c683ccf1ff4e6c1d3fa5494a53"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000027",
+      "parent_group_id": "causal_centerline_upstream_x0027_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.8358863198937538,
+      "state_sha256": "461d1e716b68074ae61cf87e199ca58b4bb61c518032795690360cc136816737"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000028",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9994884288933269,
+      "state_sha256": "92caf16b7ffc3dded9259fb080a1da1f4827a1d13e14267af0126fe880a3024c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000029",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9994590108534898,
+      "state_sha256": "c78505184cadb98628daefb5f3d4ef944460963f4e9815625850007d30a52681"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000030",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9994466646985053,
+      "state_sha256": "97047944bb0a4a2709122a02f9a3405100dbc2265ff8415addae34d73f09ce16"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000031",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9994687820674906,
+      "state_sha256": "7e7bd6324dc8295cd79e783b9b5df19d19e8d332706dbc44c76f7dc020905391"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000032",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9994753266424883,
+      "state_sha256": "3517da3e5f4365fa76b7f4e59ac8529bdcdb4a522b0c16d51dd421d3e9d7459a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000033",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9995977080923433,
+      "state_sha256": "cd89df817b2d98340a2a1ea7b637d4fffc0d1f430fbe9f713bc19a7269c3b2c1"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000034",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9998957610282827,
+      "state_sha256": "20fe43e70cdce3d3b6411b0f2ad51d7d9c58295f05d9ac8209ada0cdd64a1964"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000035",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9995021375036838,
+      "state_sha256": "9f96b400835a609d16b0e3cfb587a6e9abbf87ba31fd6488577127df89c45124"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000036",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9995242710890611,
+      "state_sha256": "1b2a3cf1b893810ed13941b299dfca7854c59d08213a07ccd4aeef6c3a88c654"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000037",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9991659376092991,
+      "state_sha256": "8a0cc6da87b01d8b32e5e403abc0857821c78a3c9984e8073eac415fd69e7b55"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000038",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9994393477462253,
+      "state_sha256": "f216c24287b2bdb8309c4d29410e960b2d2cd7297dcdf0c0d68c1268b3261027"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000039",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9995931029407075,
+      "state_sha256": "73e8b46ef9cc18f4c883ea016bf5c99d34c598ebc2d87dd6bb707c96b34029d8"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000040",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9994732865109998,
+      "state_sha256": "bdf53bcbc9e929f565a29ee57f8a34ece956fcae31cd74add734f11b7d7cc0f2"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000041",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9998732835077945,
+      "state_sha256": "dfc66e86aeda1b316a2cd182f379fd6b43800560d7cb9fe4ed62d4fddd81a85f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000042",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9999677870284817,
+      "state_sha256": "30cc3b5952b8b8024a640a387707577d42c0e2185b0cc4f94268e5395fcdc243"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000043",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9995040257581537,
+      "state_sha256": "d23b2660ed105f36d8e0092c15c99345325848f1c3faa835d10adae3577dd2d5"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000044",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9995754354608866,
+      "state_sha256": "8d2c449966fcfc5f5c50248526c93b1d9f0671b1f6f646586cdf4dd204c73653"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000045",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9991842046096836,
+      "state_sha256": "40f321e2c529902063402dbaea40f3147c6d0c177db49610479e2521516fb0cb"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000046",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9659600215356156,
+      "state_sha256": "66076bb859794280256ee07d8f0785816b52d21a884eed42ab1984f4fc7ddd97"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000047",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9968253470304561,
+      "state_sha256": "2d26208fe12879547d6f0b8a9e301593c0314d1c37f1d93816f1083d184a0c0a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000048",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9994109885523526,
+      "state_sha256": "e1cfd5c557a08b5db8cdc90ae88f6b00a3addfb92c1b3cecde1fe667db158901"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000049",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9938947894826348,
+      "state_sha256": "c88b56980f768314e724abe3c017a312c14b14e7e0355d205d9e1a5dd6452627"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000050",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9999206278934988,
+      "state_sha256": "4a2c723579acb4bbceb3ff6dc9bcaa61143c62feb6e788f43ee0d571733d9373"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000051",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9934788631012769,
+      "state_sha256": "99431e444c43bc1b44e18b0e0bbbd6d95ff94e33df1c494a94f07e6c8058d16c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000052",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9995754273663217,
+      "state_sha256": "4bc7a83353b49491f5ff22ca39d1715bbc381ac0111128744e2208223a8bfad3"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000053",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9991841389194097,
+      "state_sha256": "2cb62331de4aae69073f1c663156abe0d92acf34ffbff5c65fec114e03dea95c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000054",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9659639253920711,
+      "state_sha256": "393aeb5673de5003195dcc80acfc6f537105758fcc5321217d3f55acf7049243"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000055",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9968239584600403,
+      "state_sha256": "e91730086ad84eea40fc6e0f1387939145f70d6830d6f765c5618cdac6e63680"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000056",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9994110166213954,
+      "state_sha256": "15aa91b6a11a3a25f814737ec68ed1559f5cefe239cdc226df661f552499d836"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000057",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9938945956205832,
+      "state_sha256": "5cc56dcb81993063537b23de8e622add350fc8318ef6acd6933ca6e8f1f66c81"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000058",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9934728672336024,
+      "state_sha256": "3501d147f895a062943e7184076ff33ed815dd8f7efa90cc0ed7c1e2d40469bc"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000059",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9995751731184965,
+      "state_sha256": "26caf244200ec1fc2666165aea1eee1b0d58d97027d18a5340f97fe4c2ab349a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000060",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.999184212383331,
+      "state_sha256": "5eabe4f76b25e3113fcb41ac8c75089fb67cdc785c9882d537ca0e5b484294dc"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000061",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9968251508561389,
+      "state_sha256": "9a6d557b02d2723a73de29d8d9e55ae860df43444a0bb0311f39029750f736c9"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000062",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9938946419165545,
+      "state_sha256": "2d6be3ffdc77e256e0f3d078864702ae1c11eba2dd72325be914eb4a0afbce38"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000063",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9999206327374555,
+      "state_sha256": "ee87e0144e76df9a3c2695bcb2eabfb8b9616aee526b9219fc8fd4393a6f47f3"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000064",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9934728579574023,
+      "state_sha256": "2f37e8bd86d864f178179f22808e9f665b616294b6efd201c92dced0be86564d"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000065",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9995754127957159,
+      "state_sha256": "39089ee39b89b80b84a63717a6ecaf20bfa751c8e6bcb3e48f608f2acf361ced"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000066",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9991841843978547,
+      "state_sha256": "9e028be74aab67496b75869436b1514ad125effe8f5fa5f53ba3422c81a32f7d"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000067",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9968254134251802,
+      "state_sha256": "427a663b1e4eb7b4be6de8f098bd669ed5a5e83e9911e03471181e27209326ee"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000068",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9994109896751397,
+      "state_sha256": "9ad32ea3766370bd2c37138541d8089494da94ea53b7b23bcd17269af19eddbe"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000069",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9938947460812144,
+      "state_sha256": "726595bfb368450dfec46f93a47487d065a2f41cfcaf207fe781280aeab3f18c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000070",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9999206339483984,
+      "state_sha256": "5aec29bb2d9928bdd4cf3822b5ca46c175efd8d2b32988a9752c3df3ba67dd24"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000071",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9934768115235397,
+      "state_sha256": "ebfb66f03062a707dea32e9f32ff0cd62a1b8f52d2fd0ee9d603f96ada15b1d8"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000072",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9995752427683803,
+      "state_sha256": "f56f78e972c2ee9fee70d9f56c3d0cdb2c45dcb13f6c9369af4dc08bab207b41"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000073",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9991841890621674,
+      "state_sha256": "c62f6df1fe4fa1df180e6a7941b28b5014f7580de1ac930373618a005fda37ee"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000074",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9659627338993552,
+      "state_sha256": "a1e6f88f803b475e2b222b91ff144343f726f01f7adc6e06e8f8358378de08ce"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000075",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9994110087621981,
+      "state_sha256": "dd5ed2e324a54c5b0d4256285dd2fd6a3b4649ae536c238dbd5155b47217ddd1"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000076",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9938945869400498,
+      "state_sha256": "8829ee296f77ef42c9fa38ebd0229f696d03311d5749cfdd7d5f1959b41da9ce"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000077",
+      "parent_group_id": "causal_centerline_upstream_x0028_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9999206295586422,
+      "state_sha256": "ee0a0a4784b7c150f2c9965c775dbd837eee35bf58e838d3bc36fd1884cc762c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000078",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9905651186083954,
+      "state_sha256": "06b81fce5e89370336c65adda29a03f3efd74682f10424735231d5aa4fe13820"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000079",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9905545866426946,
+      "state_sha256": "bfd5468e02c8b88e02940f63abcafda2b9cd04e9dcd23b720908580c74d3d30e"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000080",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9674811090184864,
+      "state_sha256": "1b6c766c393b166efd62e575bab3e0e101858ebe71a3b10eed8b3b28268ffd9d"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000081",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9865628099355462,
+      "state_sha256": "a42a1114c95d47051455996ec6a49204733e4d20345cb88e6bf1a402ab1a0bea"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000082",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9603689655424857,
+      "state_sha256": "983bd784801824a2ec2e8599b58fec31168315e2b19bb7371457305629fa752c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000083",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9815823642715689,
+      "state_sha256": "97ec651bbf5ae6af8a59d9b5cb813c261c11c2721d1e1cddc0bc9ff34441a694"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000084",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9844202804133164,
+      "state_sha256": "3e7d2bf19261ac7f22c81553d6ad752cf01b0724861673c4023579c46920c200"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000085",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9905862899477362,
+      "state_sha256": "b9eb8a52404706955345a27d8e73b15d8a8d2c068d43991ac377c99559d3e269"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000086",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9800171453218841,
+      "state_sha256": "eadfd3e20102838a4446103ea44db7e08a8ec49ac542551f761c2c30911032a2"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000087",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.8334215668065134,
+      "state_sha256": "59226069d1724e4cfa35cbf83389738a32d7fc505c70aaa6b30c08e01e5e7b93"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000088",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.986515926878027,
+      "state_sha256": "c855f5701e67046a2d1f5f913cf04ce34204932b6bf6ee116c422a2c52f59932"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000089",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9974464546482544,
+      "state_sha256": "37191d55997614e5fbcdf2334e79370c40019d31c3f133a5ccffc500972c092f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000090",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9976252722288345,
+      "state_sha256": "28c194722a600281ae77447a315337b1737dc24c577559a06494666cbd47d634"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000091",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.974666439643404,
+      "state_sha256": "adf7199369cf63b1525516a686024d7b330dfb49881a671356c9c507c7d9d361"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000092",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9069555146245615,
+      "state_sha256": "483982d460a5ec8ada7a922714f479acefdb1a0e25dbd439efbfe3a5aa3eb6d9"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000093",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.41849520085747616,
+      "state_sha256": "dac7a7bd46f6c2448d8362a1e43f33972041d9942b1a97a41468b54af7b40c69"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000094",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9162210608666947,
+      "state_sha256": "eac9a2bebc86b0fa82a7f5a42f701e499c55bc1fd9f02a164c0b5b34f4a10403"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000095",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9568038281741822,
+      "state_sha256": "720b50cdf27e5b1d0d5ffc7fc34040da0d6b9d40bbd270598ea6d166805e74cc"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000096",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9423290809699215,
+      "state_sha256": "e611afaa44723ae0cd1f5ee30c7c5dd93811d94a22c3c70c6583a8246ee7632b"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000097",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9974375379680529,
+      "state_sha256": "94dcda263244d58109819775fc0057d26f3b6d7d7db2845035b9f1af9fe40701"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000098",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9996207537447177,
+      "state_sha256": "ecd3ecff2d8bc61745a59fadc2e888aa5b76be24faf873856e6029623c489e09"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000099",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.983793350184151,
+      "state_sha256": "4350d865fdd7ca6fd970c9c84dbccc653b722a2d03ebcda0197df7c2847606f6"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000100",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.3229300093323711,
+      "state_sha256": "0b726c0f552e9b60c50842727d1d859e34e1d1c8ef861a2dfacd9876a7554767"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000101",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9721754733533278,
+      "state_sha256": "1356516d519af803b0c4a0fef9bdbf1e9e13894c8317ddb04ce10674d03cd3ad"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000102",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.8485433718403569,
+      "state_sha256": "6f308ab0c6a0e5ad172da3e43de64af6130d2d887926b5ab05c7104ce3782772"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000103",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.7998483423651999,
+      "state_sha256": "5b31d2749301dc5f3dd432d1e4885560e95e0760ac057e7b5712dc31f4c45f4e"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000104",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9811289798247663,
+      "state_sha256": "b7b6bac51d4174f7718e83de3e15475571efb1fef51c6d2d7d60a28c8244ac2a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000105",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9813534425549911,
+      "state_sha256": "11a351ae8431cc26b6ba214e4d319380e24905771b2f8264f1a056d6b689388a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000106",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9965003084448318,
+      "state_sha256": "f87794e2061abfed0d59ca320e196099634b6634924b6df752762006a72169ab"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000107",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9725328123010052,
+      "state_sha256": "093a2753d9d709d0a7db0a75b13cad529ed1b3637e0da2918ec98d754ab6630b"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000108",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.972220170783152,
+      "state_sha256": "0e48b5b4b9c769414653ebedbdb5c824e9087913a04426bf176a90d98da36aa8"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000109",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.8487052382254032,
+      "state_sha256": "5abe2c085d12bb91d9199bb26f49047b75e8fb763898afa665b029a4a415e275"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000110",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.7997809279980699,
+      "state_sha256": "75522da3c7cfb1149c1d3fcd22f98a1384eb44020d32cddbc1d9d9ad24e474b7"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000111",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.981127514222252,
+      "state_sha256": "e2dce222f8baa07941fba250ddb3e354825f1bfaa3e35f6fb31eb7ce2d721d66"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000112",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9813522122086765,
+      "state_sha256": "eff993f9326faa91115ee2f8d95fb01eb328c96be24b05d21c113c58b293d576"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000113",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9964997180505364,
+      "state_sha256": "9460520141f5639a86f5f62dabca189aade0058c268fec7a4e77c9429cf9312f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000114",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9902455489635341,
+      "state_sha256": "e01b29fb38cbf9671ddf05281243c8739156a085aa022523b1cc6403cddffa57"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000115",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.3229255262270661,
+      "state_sha256": "34e7a8bde349287a8f5ff4a7092336fdf7e50cfed58f3c4b4d390d887865c256"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000116",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.8486216122546568,
+      "state_sha256": "7b17d15965ada4bef5f83e05f889daaee3df3d9ff729b2365341a92bdde81e6e"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000117",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9811302511003863,
+      "state_sha256": "09cc73339a89e5d0424ccc9e65eef20417492751f37defcfdce3fb3b0aa95b8d"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000118",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9813508421548884,
+      "state_sha256": "e5edaad0d43cb78f2f0ff7512452fcb6cb307c622863898404395925b221dfaf"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000119",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9964997679468511,
+      "state_sha256": "acc4d1bd515ea2106e48a06ba5b7cd989aa68ac4abff11a1a76c3e77b57f1eab"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000120",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9724084239827108,
+      "state_sha256": "f8486047cc31643444bc556834587ed45837b437981c95e3f4113129d5452ea2"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000121",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9721794845366903,
+      "state_sha256": "abf48b9a026fda0b69141c0936b5985f3ff0b159dd2a248f0f01ea3f0c35ce1e"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000122",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.8488613037187112,
+      "state_sha256": "be3367a0e83b9bf4f39ef69dca2613c0bb94af4944802dff18a851aa6593fba6"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000123",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.799792381242399,
+      "state_sha256": "f06da77c02e8fcbdb67155016f977aa49eebe63d3cd6ba54c953d4d01a588787"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000124",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.981129032796261,
+      "state_sha256": "45774f5b7b944c2b92ce084602598ff88355ec7f452f566db28087ebf7dfcb8a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000125",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9813508072477695,
+      "state_sha256": "61beeac3e46dece23d4cbb6b118da7293dfe1ac9ccb081f70be9a8800d06fdf1"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000126",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.996499265624937,
+      "state_sha256": "34831892815bfc16cfafcbf4afbcf09edb2c9fb9474ce9c75e9b9a26ac4d2531"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000127",
+      "parent_group_id": "causal_centerline_upstream_x0029_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9703787483650164,
+      "state_sha256": "09a47ba6f31c8a885a80da890edb04852ad8c029f99fb99dc091ba1d3adf9dda"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000128",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9949537336479083,
+      "state_sha256": "383bb3b1ac32424d954a756ff49b42159aad0a43a4ab1c0f0fcb5bf9b9c33b54"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000129",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.994240452598036,
+      "state_sha256": "0f21401cbbb705570b42c08fdf54f0ba553c5e620aae9a730a86697432a5cc13"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000130",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.99411405071132,
+      "state_sha256": "6052cd162c8f8e273c6a07ba5323ad78d8a2ee27dc7a57295cf601aac8e7de16"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000131",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9947522969554821,
+      "state_sha256": "f94fb6a3966a596641cdb3b6812f0a20946d2776769d16275e0cd66ac8403514"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000132",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9946860660852627,
+      "state_sha256": "cd43d949dfce2705304a7a1d91cec392e80b5c1f6a1b538100507024f1069dd6"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000133",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9966896422205254,
+      "state_sha256": "dab27ebc2ae7c672b1e774cb50e561d841cd7b9a529c1fa2337362e0150b86b3"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000134",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9969490613332119,
+      "state_sha256": "67ffeff23a6d1d9ded545b94237c5e2a4cea5acccf3581a470cbb3a288737914"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000135",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9958935022646058,
+      "state_sha256": "e1b3ae048aed7fe0af75d14b4defd6e950c4c1021a5f2903811a9be6ee959252"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000136",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9954279069274414,
+      "state_sha256": "add13a67333853a9b34149566fce04b871380af2d5f9a4d11669bd91373fd119"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000137",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9951023809615748,
+      "state_sha256": "0ba7bb0325f2aa71c112465f01e55c1a9760b77906e46ded4c832aca59b52493"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000138",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.99668087538885,
+      "state_sha256": "e586ee1a4f9dd49d8f23b875bd65346272eee83bd355e962ac83d5879532ed27"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000139",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9955887769034326,
+      "state_sha256": "7fb09e111402f05d4d5148fb766ecb43a9aaccd69455e0eef1371769a758612c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000140",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9891912067399382,
+      "state_sha256": "79021bd15201caa17a76db65295cd4db1548c97c962c0b0683d29f080206df5c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000141",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9915601651879986,
+      "state_sha256": "9c338d9615a59871337a7127dd99069abc23d4d8c6cbab17db7deb007f4e0dbf"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000142",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9984743124189476,
+      "state_sha256": "6afeb9f55b686af74bd030df029042c4206eb8562d210f00f827be3399dae89b"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000143",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9945294387807081,
+      "state_sha256": "67507bbe77a2e3b1ac93330af885deb88438760823141c86c837d26de195b1e2"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000144",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9980768253896467,
+      "state_sha256": "92f0d40037fde34e922021b870fabba2b93d2ccffb0646c9a620446149799d92"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000145",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.956894904670616,
+      "state_sha256": "7de19b7ace702f3bf77a26d86ee8c3965f05260f5f57315ccc6bebc9842e1fb6"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000146",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9913705853780311,
+      "state_sha256": "81d83455ea16e4d89d3f54508fcbbccd626bc5eb27a4ace3f4ca6dfb9bf6834f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000147",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.30816402348019123,
+      "state_sha256": "1afba59dea50ab1704c3562e38816c12aa9d8ee3ec8ed77a552a1fc934e8c1f8"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000148",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9954317205128996,
+      "state_sha256": "8ada5f4f2f74c53fdfe31ce706899b440801fbb9fa340b9a7434b2390e6e1e29"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000149",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.997227462041715,
+      "state_sha256": "121b17cd6c0930e4c493f2b5ffcea82c70b36cd158d1a3bb7a62cf74dc416c8a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000150",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.36724468379846126,
+      "state_sha256": "277cabcd4282b976d27579d8d6c3e8700222df30a5e209e3365a245a99b4e4e8"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000151",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9513972356860191,
+      "state_sha256": "dd75b04620d4449dbd7b7b56c1edf03fb0e520cdc7d6f8e0ef8926b9c02c5bc7"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000152",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.937517127755437,
+      "state_sha256": "a827807fb026e452814e35646c677655082a58df43720f2d0bd7385f4114c2bc"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000153",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9960466042333774,
+      "state_sha256": "c08fe3103c574951b78e8f36a994ad3f7a06acf7370b7648229a59b394d10d01"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000154",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.8740673416614477,
+      "state_sha256": "ed839884fa7d98fc738dedfd417cadfb625a4212765235bc33048582cbd29138"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000155",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": false,
+      "score": 0.014025791982387266,
+      "state_sha256": "444d987657b122eca7e6ccaea7ddae081ac8c14582ab246ca4a38f93109a502d"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000156",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9994213840259152,
+      "state_sha256": "9898b48a1053da6eadce5a6e9d9afb9474e9b2ac08e7a9628ee7fd96fc419313"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000157",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9764695866185674,
+      "state_sha256": "cea5505b3ba0a270ca33f83dcd9bf8b0b05183367379002340486b8d4bc9f872"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000158",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9369371538234118,
+      "state_sha256": "723a52fb9c4a5dbdd12acc73f1ad11675f454bf6e95643087f927682edbe2189"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000159",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.8786316332144805,
+      "state_sha256": "17ad4a4af96d5937e489bae5cee5ab968794a3bcb053b6c696f00bcee3af6475"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000160",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.7108175605788448,
+      "state_sha256": "5ea58f1a997c3af31d63762a7ac028d85ba1aae2fcefb5246e7281a64e2b1c75"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000161",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9886739184506687,
+      "state_sha256": "558ec2f684a5feb6c0fa5c0b2cda5c9dce75e5064500f8d887a846daa3e2dee2"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000162",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": false,
+      "score": 0.25678801153762293,
+      "state_sha256": "3ef6a340393b2936ce01208539bc61dd4d1148df62bbeb1e6984f3595a5044fa"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000163",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": false,
+      "score": 0.07942552266102348,
+      "state_sha256": "1d26ed6bca06d8fdad5009a92d29224d001ad0ee5ed63a28dee3992d1d1b809e"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000164",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9988950677247991,
+      "state_sha256": "a0cca2b11664b68990e8d779939a7561aea80fd676d33cc62e4974d42f949004"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000165",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9969036607600805,
+      "state_sha256": "95e3a1973f8534979a25c97340e6173d076d4684a685c14ed5d2966c6c98543c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000166",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9370209487598405,
+      "state_sha256": "b9c0545ebef09e3df88905d69901b42d1a87159a8a89e7f01543d36d8ff73909"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000167",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.8776196308221991,
+      "state_sha256": "2f773709346984df2130f0a4785cc31dc13e53fdaefd026ddd188f69e9ea994b"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000168",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.7102417649770778,
+      "state_sha256": "7ceca011b22d79133ae69fd438df8245468c7e405e8528d2101840bf549c4f23"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000169",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9886737689429145,
+      "state_sha256": "69721bd1f816d52c121b8ec85e960fb0cee816f8a81a6c3cf42df305f6d8b646"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000170",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.2569498716755552,
+      "state_sha256": "fcdab49db7879b92dc407bba2c1c65e29bcd77bd7eec9d48712e66cd67aeb757"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000171",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": false,
+      "score": 0.07941854994980264,
+      "state_sha256": "ce42801806b730271b1230881844ff8fca6d4ed7f4291e9d852e2df9de01ef40"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000172",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9988953171584195,
+      "state_sha256": "ab0743f9421cbe8d9493cc102703a4d01219ea5de33dde75d3c062d42df15784"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000173",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9859000680159635,
+      "state_sha256": "5f85a550a72e69c05fc68ff3c50a5016094d97f7795fd080bcaf6595d51fb593"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000174",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9368337594628268,
+      "state_sha256": "dc19ffcb12947d1672e772375bc0c747a0d711d9c0b6c9dac37f4b2f7b936468"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000175",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.8743492947304885,
+      "state_sha256": "a9023c97d96c1d3c88a8889cf0869b0349e87227acfb58afa82f9e91419ea6af"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000176",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.7109164861638606,
+      "state_sha256": "abc53c225ff32bb1c476384bfda8f9f75c795cafc67dda6121240231e0b0e6cb"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000177",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.988674388319481,
+      "state_sha256": "1c3a7fb871d2838f7b16737f9ae4133e9afe3b9d2b70fc771088125529e8e916"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000178",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": false,
+      "score": 0.2561336070270137,
+      "state_sha256": "5b6ba8ff822b131fad33e2d3ea805969db51bab323da23461b7da8ea7e3e1682"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000179",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": false,
+      "score": 0.07942824217001243,
+      "state_sha256": "cd90a71f6dbb2d604b6cd28f832940401eb4b5928b363b29e1aa5d59f8cbe61c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000180",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9988951087747047,
+      "state_sha256": "023ab577b48fd091d51ec910b30a453d76611d8fb75e7b35fd97fdba1d9b3ad9"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000181",
+      "parent_group_id": "causal_centerline_upstream_x0030_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9970285098073375,
+      "state_sha256": "6c75e29c34831a49fad62eb48bf21226c55996100bb73a9ed3eebc520913ce27"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000182",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.998070538181739,
+      "state_sha256": "5984d7ca0fa5db33f09e5d27eb062d816e9a8b860534e0e15e68b3c678340c7a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000183",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9965613063635239,
+      "state_sha256": "c89baf80a445357117d6e2e15608236ba0279cd4a314951db9ae8e168ca75f31"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000184",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9965293325813684,
+      "state_sha256": "9c43f4b315afa1ff60959d3080ae324181d848230fa53e0833e86f57851f1042"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000185",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.996056406707531,
+      "state_sha256": "75bbdd58290c1003cc666d35b8c9e9f7fb4ce5e74c73dc94a7ff4fd19b91fb8c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000186",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9975989944748686,
+      "state_sha256": "2cf0dbb57a7083f394fe8754ada7117a398c6c6a2e99d8cacd47b86aa6aeb3d7"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000187",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9997251771742833,
+      "state_sha256": "a56749584d2f289b9b595661d338fafe05130dc71db59154a0f5fb5ee080ea0b"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000188",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9987686504631528,
+      "state_sha256": "351917a1759722c4317236a01c629250fece919a5f4633046b05bf0383978551"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000189",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9960321744350515,
+      "state_sha256": "be1b460e764d583d2dd29e4c2d9a2e9e9c352b158679c3a0b1e7c3daa9c3f618"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000190",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9979438939262671,
+      "state_sha256": "b4700470a846121d031f7937f3aa7c5c548e9ebfe95002325f35f4b8906b81c2"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000191",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9969767503581171,
+      "state_sha256": "6b9849f5a6f670d57aef60bb770d2302d8af183d695583d8989a6bd9648bf5d6"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000192",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9961145786621481,
+      "state_sha256": "e414547138107dab5c5fa934ae1342ae1996f2cb19833e89da68d8e2d01d3270"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000193",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9968464808786915,
+      "state_sha256": "bb9fbb6547231c016006f410df39be81fa4b940500cf05bf2ad08c2c0136e33f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000194",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9973502315377504,
+      "state_sha256": "01a4d7ecca6a5c40bafa05540542c92f5ae9c822f06031bc1b888cfd9e2a25be"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000195",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9993108240470012,
+      "state_sha256": "4381b7a90d8d66928640b0b217dcdb520a02c602e627490d4f1844f9382aee72"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000196",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9985909846615735,
+      "state_sha256": "92d1409dcf2456902aa2192c8a54e93ab4362ac6f6873626ff62c1b99d8db634"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000197",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9958949060901373,
+      "state_sha256": "f7706a37f2a4a6331956df87f2734e949a09b66aeb8ab7fd0d657a83ba26a801"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000198",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9977664283469833,
+      "state_sha256": "8b0c99378c3ff8079599bc9a2e5a2bf328925ef39511bc5ee682743fa448eb55"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000199",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.999615108463277,
+      "state_sha256": "60ce767ec7588e9ac671fabacc0b57a86f32befc23d94cc07d3c25ef5022f3e8"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000200",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9982318486330405,
+      "state_sha256": "3f67d7b878d32fd84d8fe6ae2046eb60a4c1621b31ab1a6150756cb92504fc39"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000201",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9958551323435652,
+      "state_sha256": "57666d26e031deb304d088a292c37453caf84e7e51b2b8b7332b5c148e64b850"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000202",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9119754212352511,
+      "state_sha256": "c8f5fbd25a18a2396d731882de48f5a6daa1e9c0014eb6ff06bb5e480ccb49d8"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000203",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9792603100776853,
+      "state_sha256": "9895b5b5c63cd651dfc63fd1ebfce3e766a6ff432e8edac28776d35a308a2b7f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000204",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9991149400866256,
+      "state_sha256": "b844ac34f3c972513193d675f85a140e6ec2f0de204b2f4565d1051732086a3c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000205",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9995008316978975,
+      "state_sha256": "01e5fffa2ca0658454ac38bb7fe3d11520d3ac82ba75c5f1fff8726dfb6d09a2"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000206",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.997236847558338,
+      "state_sha256": "b9f466df0611caf9c2ffc51b08a5853e84cdf0d074fe7421f4d75dedf638a9d6"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000207",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.7813208468670422,
+      "state_sha256": "14df91c9f0beda40bfbfd5cf800c6babf4d1f54e6b13c283b61a675cba815c73"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000208",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9954814475101863,
+      "state_sha256": "93ae43c5ece38ce4ce42379a7147a691182575ef9df1e1a50492d0f8f3b124c8"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000209",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.7843774389530592,
+      "state_sha256": "7b488daa3ad0a456a7633733d491e806014832d888aba9f25dced7dd14b2245f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000210",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9990678588185323,
+      "state_sha256": "d463a7b5baa5efb9d11f0a7b7e9449fe7ea3fc16a86abdf7eff29542cd39c028"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000211",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9996577450613617,
+      "state_sha256": "2aceca833feb7e8691a41fc1a90a66b4fe0f1de6314dbd540c6dabfe12a7fd0c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000212",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.5950328272289972,
+      "state_sha256": "6e56ec2dabaee6ea8acec567886c2a785a65decfa16751bc43b3a45bd8c58555"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000213",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9720822456901587,
+      "state_sha256": "e223218b4e0614e1ee4d4703a9e89b067e31ebc26cc92929de68f362a96d919e"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000214",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9948877649349507,
+      "state_sha256": "27ad7da6070d7b2423e14d810c1de689b488752c22354863158217b29fa81d32"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000215",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9993375835690513,
+      "state_sha256": "5a369845b45b1c8ee20dd93df15a59e08faa45c13bf27729a49cc76a6670ee8f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000216",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.5677412837914326,
+      "state_sha256": "432d948a61b13401b377cbd5fe33a830a6cbf9a08143922fecf31afcf6936f0f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000217",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": false,
+      "score": 0.125066439113985,
+      "state_sha256": "d08f91d35c41278b6fdb5e707c1d1b752e775ef795256074a4a317ab747b3308"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000218",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9998512055068428,
+      "state_sha256": "90af7f6881358328b9f7962085b09cbbc9d382a0d44c27a7bd4a53b552fafab0"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000219",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9971193450325244,
+      "state_sha256": "5cdad661f2a3535289e60a86d35a43303f08bcfa4e7aed4e0b18d4d57571ff62"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000220",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.7846094107692871,
+      "state_sha256": "2b1c6c5d7657e6aef55a11582a73d804793fa4811b43e4554c01fd91c0f0150e"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000221",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9413839950139533,
+      "state_sha256": "bb5a93df3c61ee32ba9cd325fc61713cff750be6e6484c0d5782bef00da30a86"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000222",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.8581672995681644,
+      "state_sha256": "6b87c0fe6dcdce1dbecfbbc4f488ae57a2808960a55f87d1c8ccf597628f10cb"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000223",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.99386855106884,
+      "state_sha256": "6ee9ddec8b08f2448c0cb5a94ab403a43c48613720edf53a812abf6bcdd6d6eb"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000224",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.48531312669153015,
+      "state_sha256": "c6ed976eb4185be7ed3ed409ab49c26cad302eaa989ba6dc991b3d25f7681520"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000225",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": false,
+      "score": 0.011167463252200497,
+      "state_sha256": "c6541375e71f823e3eca3722e2a8e4cd3422b84e3f521f33b234c6fd5c48038b"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000226",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9884892469508153,
+      "state_sha256": "e90cf303716426546ccc6bb2fe64c88763f7a9200ffbebe608468c74cfde18cc"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000227",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9890092380049871,
+      "state_sha256": "6a79a7771d16e89df37f5814b37642cd7f931b0df18339d5a29cc3bd166a98cd"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000228",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.7850574230121864,
+      "state_sha256": "418f5383181ead04cb992cd86b47b3e7691cf878565d901a9829af215bb2fa98"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000229",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.8584333585015862,
+      "state_sha256": "2250af1d1b564ba101f2624c43cec3c7a93d65a14bc8b595dd75b6527a247f81"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000230",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9938684638949394,
+      "state_sha256": "3a83ba69a70984b058da8001a664b4e7515eb4639fa2b0ac09f93401ae5ecc23"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000231",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.48546718481004947,
+      "state_sha256": "ad43bda42f6df68934e79c2d5798a1f7a1430b92fea9cc4e3003478f26c7df96"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000232",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": false,
+      "score": 0.011167473783393434,
+      "state_sha256": "d362e62bf5606cee284ebfc97cc52fd31870dfd959651efb3722459b7a17295b"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000233",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9884887532130183,
+      "state_sha256": "9305f2bf03036a2e8ce4e89e33f1463a468e5a96b4e5c9064cc86cca8adbc888"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000234",
+      "parent_group_id": "causal_centerline_upstream_x0031_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9979967458403173,
+      "state_sha256": "97e1abc397020cf4bdc7b824066f0182c2341f27796ff731f5f6efa3a4a04059"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000235",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9976787773942366,
+      "state_sha256": "d2a7c12c798111a38f96eb40071c43e0d54c03bee54441a5dfedb3e78de724c7"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000236",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9967133264284339,
+      "state_sha256": "63cf0bf79ed0d309437a13bd84f961a60474394b8c296a34b9640dd54c653089"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000237",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9977181089433701,
+      "state_sha256": "fc36fca339da3696178e0c2e28cee7e272d8d393436880690890cbfaca95a369"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000238",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9964177797651053,
+      "state_sha256": "d8dd00ea48d79695f6bd69e62d2289ec7e4a210c7b6cdcf91d0ae2c39a8153e3"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000239",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9974051804983047,
+      "state_sha256": "baf8140ffb0aec5cb5fbb61ae30499ab1f35dd5d3f60e437fac683ffdef01acc"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000240",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9974458023700554,
+      "state_sha256": "5541e7ba51748cb2d55e0792f252cd4c1557ff83a768c78be5ba18e07c549314"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000241",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9990047989379202,
+      "state_sha256": "84435b6428218c9bf195d514dccbea9eaf91e1e92fdaa8a22ea856b276b52ae1"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000242",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9950734119295326,
+      "state_sha256": "b9f006a38ca61f26b45cdc030cb68d4bf81573ec900f8a75e7414ed2459e8ede"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000243",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9976484389840808,
+      "state_sha256": "6871865bbd2c4f3680b7f693d20e1ca71e8ea6c9bf13bd8b04ed8ff98ef7e88a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000244",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9971180339834791,
+      "state_sha256": "009a953682a93875e0dbf127e9de210180c5a87eeb0df470871e359bcf8b1905"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000245",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9985918881071073,
+      "state_sha256": "ed0379b4fd8bdcbc3335ae7d7c17ee58f2c2f61010a68131586c7dcd305deabd"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000246",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9977126755475727,
+      "state_sha256": "6ef6defeadb0921257f37e05e3358a452cd6e3b891febe418221023bce535597"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000247",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9953096750377423,
+      "state_sha256": "4e3e348a00ba80b549a134e336c9fd6c3b0d91e882855d2890119498b53a7ff1"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000248",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9995066640665456,
+      "state_sha256": "55fd3b8bc40cd240c34ce973f8da32c40f189f5060c18d6acef0b587c448f20b"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000249",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9986036143043626,
+      "state_sha256": "ec6c544fd7865f3b263b6dd09681fff9488f5e490507835e57e383bf6ef7b272"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000250",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9994969025772991,
+      "state_sha256": "4324c1913dedaee6e82171131edb45ea9751f5aeb52d6bd6ffd74697fd684464"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000251",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.997629263390123,
+      "state_sha256": "62accefdd863c5c2711cac2dc315f3fcc298d7a9161e36b774178218ae732a4c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000252",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9969347928665576,
+      "state_sha256": "e2585498ef47df41d870fa145114a668f64af64cb700acfc0c2b410756358deb"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000253",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9986663417328643,
+      "state_sha256": "9db5323d1844cc8cbc1fb7ae07e46b130f2522f7a71012ee00e46b26a69151a0"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000254",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9977172652707408,
+      "state_sha256": "f780fb97335406656b9e89de3097f8e4b9c3d9d1e1cdf1384c460d3e4c6cd125"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000255",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9916773174994301,
+      "state_sha256": "ed69938355defd603366f1fbda2207a3df2189528139ec3753245177c6a5a2c3"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000256",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9979290756795886,
+      "state_sha256": "bcfdb63aa38a23f29b01c071a52f3587a1171c00760baec98c53be8310df571d"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000257",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.99880304764078,
+      "state_sha256": "c184e7037fd3a33a0ddd295f3f6fa41ed5be575835db2c8c3a93b5478c94f8d3"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000258",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.999503184946222,
+      "state_sha256": "2a3d3862a8d1f58d87648add7376f66f8d38c0bf2cb0fc6797f50eb4e57c9afe"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000259",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9968072968792254,
+      "state_sha256": "695a0e1c8ae74bac3271d3c0a43f00a78a5dc353a0510d2c30bc0ae83370035f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000260",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9976505590375867,
+      "state_sha256": "fd803e219042400a48ea587e3ea5d738352406a3d4be19b0e99153416a1a4a1d"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000261",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9806465900951319,
+      "state_sha256": "8247c36658439af5d13e77b229f8636517cd783dadbaee05d02df7ef4805114f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000262",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9911731479406493,
+      "state_sha256": "44ece1185bb6ff9d54664e6ca68e9d40e408c56000972984adb6ca57ac1b5043"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000263",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9237666438051926,
+      "state_sha256": "0a0f975f4c530d23796f4d933576e25e32b16a2ce259546d37d4709dd7676025"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000264",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9847621292789716,
+      "state_sha256": "9816dca0962062baf1a5b6eb4c2ce3174d4a888d2c4ee877d14137e62ef736cf"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000265",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9985797430631285,
+      "state_sha256": "efb10643e26558cf924aeb538028de16e01ed025bc03438a99135dce7e679205"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000266",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9935804889124807,
+      "state_sha256": "27a8d2505dba8d13c5d69ae5fc7abda123cdf24efe2cdb1e700caf3cad3371a1"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000267",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9986264649743014,
+      "state_sha256": "57cb52d700f3ac89e1048c4bdac748bb4f17897e99b7f1a32beed546c68009f5"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000268",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9642003568634642,
+      "state_sha256": "4d669b30006ed291f64ab517e8cd7ff42bc37f25cba742d5ba5832dbfdf73da9"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000269",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9907780123409873,
+      "state_sha256": "89d1704068b50002a483f2b0c3d96101bc8fd079e89a4b9251e2140638652501"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000270",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.4165808162424984,
+      "state_sha256": "47b182981bb84f02c29a02c2b7e1ac9b2aacee0706cb4e80ae17720fc52d86c1"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000271",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9824654716016735,
+      "state_sha256": "a6d2229a14278f5697e7495768942522c49b3d9f7372ca4bcd695451d2791139"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000272",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9996928777102251,
+      "state_sha256": "cbf0a267d33425fb69386ba404d748c2aa0eb0c0c85980262dea39e26f60ed35"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000273",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.6992667676118034,
+      "state_sha256": "c873cf4c6f40386e1842f9b6658eb3357088e4d7f4889414c45f480c54b2fa12"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000274",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.72198854491655,
+      "state_sha256": "0136124b13f81bec3626a702443fa66776e1a6b015ec6ea38994de8ff301036c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000275",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.7158656145072804,
+      "state_sha256": "a3f3c8292dded0a9e00c493f6e24b4c4276399796d32cd21df998227e7bf31e2"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000276",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9978336371008724,
+      "state_sha256": "04716045d56b9d07cd2334436bc7f1fe460bbdb7db5603dbb2c5cbb125818078"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000277",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": false,
+      "score": 0.03904151199178652,
+      "state_sha256": "3473b2344e48d75f3ae42f2503ec5a6ed53ef1c34d4f944590e5ddc561d636b7"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000278",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": false,
+      "score": 0.14825926769140912,
+      "state_sha256": "69930550e641ebe3e65e437413ae632912ba56cbec86b43779a719007e32544c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000279",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9998859433248269,
+      "state_sha256": "7006b6f55823b958d25830e5c2cc1863943bf0b44c0558df6052b6201704b3a0"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000280",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9764266989801224,
+      "state_sha256": "454a36c8e5eefb43b7603c6774eae8991d55a1a336bbd87ebfa4bc551acc2976"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000281",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.5588986581839742,
+      "state_sha256": "2bd457a8a6ef0b83c0fde20a5b3676f3d01f7650ec1ce727a8650ec79df5ce26"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000282",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.35722677414483395,
+      "state_sha256": "a1f2da9bd025169c640ab44df32d3ba564e7f4151bb21e0462a325d6f59374b6"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000283",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": false,
+      "score": 0.11052748917335103,
+      "state_sha256": "f9c14e11effb179a399873780c18c5ce7de615cf47adf3f48a9e4109d461267a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000284",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.7000839168573093,
+      "state_sha256": "fc42bb8b34a55277944f89b611d972bbbb7ad0ee6a28e9e456973296c3ace6de"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000285",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.6996486284202181,
+      "state_sha256": "52dec2bf1d0b8b6a5e9e0914d873d409393f8e63dcb946769bff571d334bb041"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000286",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": false,
+      "score": 0.25214308477900294,
+      "state_sha256": "df243a36d7ef4021275b276eb0bac5496df86ca0e07a52a40fc35643080fe20a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000287",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9825175903496232,
+      "state_sha256": "b6e3f38ecf0a54e8b47616e617f09e7471020b4bf0f764848625631b1cdf38ec"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000288",
+      "parent_group_id": "causal_centerline_upstream_x0032_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9993082824990758,
+      "state_sha256": "e7b0cf53a115c287e01298ba929d49ddee2f044ddf29c5fa42e4b837591b8849"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000289",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9983369460312824,
+      "state_sha256": "8bd94276ed46b1798bfed6c111509eb645210ae2fac293c7e19245eccf5189d4"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000290",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9985054395241613,
+      "state_sha256": "bf318f83abaeace258a6b047673075860cdb8288f8ec257d63e31e5bba60e2a5"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000291",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9983797472545914,
+      "state_sha256": "1423f6dd8e88bc721b737d6d6a87c96ba242cb185654e3c252d23cdaa0704b17"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000292",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9987308180790935,
+      "state_sha256": "3c97576d2b5ea17bef98c389c873088a70c0effa9c6e6304051f7225a9fd200a"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000293",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9983856757553495,
+      "state_sha256": "b53a468deb7cc2b18080ddf0fa725d3899b039f7d7d13ae5d8ee6e9df7d6509b"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000294",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9976958933471285,
+      "state_sha256": "325fe23c1d1601177fbb07cf510ee37b81642b386d6cbaabf6d187f70683b209"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000295",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9923310269313765,
+      "state_sha256": "435392a1abec59d575eb721209f86b56d585b2b237619c246bf2d95bfef85fbe"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000296",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9982833992654654,
+      "state_sha256": "12474cf7815899f71fba575d544a5ed6763c92ed2ecef9ab108c1bd843155d97"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000297",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9981067345777297,
+      "state_sha256": "debe5e48ca38c23e2d3ac4b1c147888fadc3e03ecc71332e2dd6ccbee0d5eec3"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000298",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9990002102445292,
+      "state_sha256": "c0f27dca5044b69aba06f7f7be3d8b0ba441d512a2fac6c708c57c42d99cd540"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000299",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9984029302265057,
+      "state_sha256": "6c0f7f32711c818388997a6ea42b96f969474fecdd427d618ec65809eea467d2"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000300",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9964711916798324,
+      "state_sha256": "afe704a109d1dd325cc9f5a20f5d9972bc4b7f1715622c7a090f0e0ce073ad4f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000301",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9923732159898704,
+      "state_sha256": "17bb6ffaa3b82aab6bdeab50fb99ae4313cbf31ca34e71a048fc7cb698fc2402"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000302",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9986414818609256,
+      "state_sha256": "31376af4f8e24078810d74b0b947cc71cf3f15bbe4a3928e6b7aa452dd01d5be"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000303",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9979759934123733,
+      "state_sha256": "375b7cd7e963eb993271f6e7c0a3e54966d73af4f530d4984dc7780f77564db8"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000304",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9982217481638201,
+      "state_sha256": "1440261752350da474c095d3d9f61c518ba5597ba4e8c2c21a8f650f61924edc"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000305",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9979873155168445,
+      "state_sha256": "5f1efe20f49bfbe13ee3787dfbd1fae1b275061da363bdbfa260ba426c93b1e2"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000306",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9989065378160786,
+      "state_sha256": "20de26291458807bd93cbb60d3218876cf1f058e0cc2ae9c80e832fb08c42725"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000307",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9986611110785757,
+      "state_sha256": "12f8e585c0daed1b04784358f7f3b3369b72e3fee41996d3bdafb700f2d190e4"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000308",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9958438824828336,
+      "state_sha256": "939ead3ac51217a49c67fc9abd695a00ea075dad8b966d227b4b0b8e46295c52"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000309",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9959290890535224,
+      "state_sha256": "70a9e874d7db2d54449660cf9d7f972c253bce1dc57b681ede4c451fdd0569a0"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000310",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9989749316643183,
+      "state_sha256": "a9a9f65efaf0cb7fadcbf2b38e3e287225fdc6a7942eb2fccfea1a6ec1574235"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000311",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9969777390176641,
+      "state_sha256": "9d87747d82a44fa1b66246acdb0d954e50647c0c3ca8c38e89896dfbfb168d1f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000312",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9982442109101167,
+      "state_sha256": "c60b5b369dbd35d73ce93830bced5e24d410a9ebd01cefcd7c3f82452a81f83d"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000313",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9978092138794397,
+      "state_sha256": "6c1fbfa6293c912760651b03030ca90a05a328def9861089c4b3aa66924fd0ab"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000314",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.998914046320404,
+      "state_sha256": "3eda5f9f654a22d4064742cf5b8d7d5ee5f9433afed45f37d4e76d52e9d6f9b7"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000315",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9986194251071545,
+      "state_sha256": "17b74c43c34ffec4c49ba3f9c6be2255f326aef92cef633da133b51e7ef3ab4f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000316",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9933621895257778,
+      "state_sha256": "a495022ca98c418c928a422f585f7b29af8f68da7ba4833acc98c1c1aea0382b"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000317",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9919894347481661,
+      "state_sha256": "819201fb481daf2a8402cefe63f9e7b94626acfaac23404e69749646290debb5"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000318",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9992339072557977,
+      "state_sha256": "80e083bec83ce848ad9553b7e51d98d752d3ca03c2567a6f35983d6174a88daf"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000319",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9992548137203743,
+      "state_sha256": "cb23723ba254fb73fc005e30e07ecad4a892e10dcb25295cb3254e009ebec4b2"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000320",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9980460215679343,
+      "state_sha256": "be38ae2f41bb08caf69658fb9e2ebfa9e36e33b380dc17350ec0dcc0c22b0652"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000321",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9974440815992622,
+      "state_sha256": "c55ecadf8f252c709f56557568a55eee829621bfd7c025e891e396f04864c48f"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000322",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9294061226336867,
+      "state_sha256": "7d6aa33262e442804db48498ec575ffbc0380fcda872dd4aae1dffea4f4849fb"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000323",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9906064957957105,
+      "state_sha256": "fa81710f0ce71fcf94060ab88dbe1632876078463f3723bf9d60644f6cf469f4"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000324",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": false,
+      "score": 0.05505530276581424,
+      "state_sha256": "806eebd6c1d72e36dc8d1d91172feede8439ec58739a82031819e83d54ebc70b"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000325",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9653678520709525,
+      "state_sha256": "d7243123e396a3f32cc40ba7a546ae0f68f9b035d11aca526fbc9d5f965a6667"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000326",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.999710611049218,
+      "state_sha256": "032a7539cfda732bab48c5fbacc68f1d7b15248a801efe94d95ffba35d284aef"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000327",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9974477235029804,
+      "state_sha256": "1d260efe706208719ad735f523f03a6ad51f3d359a3f08c6588e54c19e44f8ca"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000328",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.997922165072865,
+      "state_sha256": "7d8695b8930905a816882c13584b77ed88cbc1379a23116082f6124c40e29f68"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000329",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9859461946326598,
+      "state_sha256": "9527b93a6af9568df016a92405eff3d90ea95d208a89752fb185dec81adf8147"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000330",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9926289114924591,
+      "state_sha256": "ee33b1ec48010b3e90a293d5d103698820f1d0d39d7c18b143c2aee1fcbe8ce2"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000331",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.2932427408903209,
+      "state_sha256": "d7b08bbb617ad327f3f7818421fbfb558381fce317bce8d979e4566d812cb160"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000332",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9910366663992685,
+      "state_sha256": "61b6613a46ab22d14fd48caa10a7027e9ecaa06dc69b89d0025b7a92878634be"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000333",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9938899121384311,
+      "state_sha256": "b78ee50333f4d9e8e78a4d7ed808e76a1b63916e2e859fdf0e77feb6a4d3ba7d"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000334",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.2582128794528789,
+      "state_sha256": "754752891bbf45a213935de3de7188091a97b6959cfc90901e00c7fdf54c9048"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000335",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.3941986217807466,
+      "state_sha256": "23a98522358fb30119c5f5736e724bd0212f15f5e925ca3f0a9c1ffd137dca9d"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000336",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.8966452355013922,
+      "state_sha256": "de7766cf83f7a03386ddd0ee099d1fa661d2154dd5fde8691eb62ed8f3596c12"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000337",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.999642611557663,
+      "state_sha256": "7928e0f64e7daa2c2f1baa23dd728ab40183e8dc7a46f3482e0577f7a5ff9baa"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000338",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": false,
+      "score": 0.041425561208939365,
+      "state_sha256": "9c70d17dd953b2d22e5e26bc0342dbb5a055b849369a776aba92e8852162978c"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000339",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": false,
+      "score": 0.057659077607057484,
+      "state_sha256": "18bda289010f90d8050514788cdfe4ffe78b3a05b38ff6ca7197119d4cb6448b"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000340",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.999886129588111,
+      "state_sha256": "3c210a4242b8ed39252ad4f4205992c1c6589236d3f7f11b8e5c0323ed20dd36"
+    },
+    {
+      "candidate_id": "pi0_causal_upstream_000341",
+      "parent_group_id": "causal_centerline_upstream_x0033_family3_calibration",
+      "predicted_positive": true,
+      "score": 0.9978885276077396,
+      "state_sha256": "c8fb40fee4ed3cc3605ed04e7c122047bd6732f2a63eda6710acdb69775c9e8f"
+    }
+  ],
+  "field_file_sha256": "54a274581e95fc2d65e1152614322de6084096bf7cd8bdb9f34cb3a16d5bbe03",
+  "field_manifest_sha256": "23026c7e75161e3c352b06b0ce889d30d0d78ac95ae131bc7218e52a6e3c91d2",
+  "field_path": "JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/family_landing_predictor/upstream/field.npz",
+  "outcome_labels_read": false,
+  "outcome_labels_used": false,
+  "prediction_can_admit_tube_rows": false,
+  "prediction_can_filter_acquisition": false,
+  "role": "calibration",
+  "schema": "jit_policy_family_landing_forward_scores_v1",
+  "scores_sha256": "70186408b2b4fcfdf776616c618c921358da79dd39d5ee6f18f6d4310ab761d7",
+  "status": "locked_before_outcome_analysis",
+  "upstream_candidate_count": 342
+}

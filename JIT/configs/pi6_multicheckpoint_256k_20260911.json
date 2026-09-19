@@ -1,0 +1,278 @@
+{
+  "bootstrap_formal_config": "/home/qy/DVGC/JIT/configs/pi_unified_iter2_landing_replay_pi1_actor_warmstart_core75_natural10_20260904.json",
+  "checkpoint_evaluation": {
+    "automatic_extension": false,
+    "checkpoint_resume_supported": false,
+    "checkpoint_transitions": [
+      0,
+      32000,
+      64000,
+      128000,
+      192000,
+      256000
+    ],
+    "final_test_used": false,
+    "horizon": 400,
+    "maximum_panel_interactions": 8000,
+    "maximum_total_interactions": 264000,
+    "maximum_training_transitions": 256000,
+    "optimizer_continuation": "same_live_trainer_only",
+    "role": "train",
+    "samples_per_phase": 2,
+    "schema": "jit_probe_checkpoint_evaluation_v1",
+    "train_panel_transitions": [
+      32000,
+      64000,
+      128000,
+      192000,
+      256000
+    ]
+  },
+  "claim_boundary": {
+    "iteration": 7,
+    "test_data_used": false,
+    "validation_data_used": false
+  },
+  "fixed_train_panel": {
+    "deterministic_policy": true,
+    "final_test_used": false,
+    "horizon": 400,
+    "panel_sha256": "4223c1d94fdab2d9178342bb5c3135f93b83c12bd51ba5abeee02acbe2f15387",
+    "reset_contract": "fresh episode and phase clocks; preserve saved event and controller context",
+    "rng_contract": "1100000 + phase_index*10000 + ordinal*horizon + tick",
+    "role": "train",
+    "samples_per_phase": 2,
+    "schema": "jit_probe_fixed_train_panel_v1",
+    "selected_entries": [
+      {
+        "entry": {
+          "coordinates": {
+            "frontwheel_tangent_mps": -0.6956095790863038,
+            "hip_deg": 17.126088041876258,
+            "hip_rate_degps": 139.55921991449787,
+            "knee_deg": -62.07156389397113,
+            "knee_rate_degps": -281.7006338258541,
+            "pitch_deg": 11.900988065853983,
+            "rearwheel_tangent_mps": 0.5570788717269898,
+            "roll_deg": 2.286794245946811,
+            "root_vx_mps": 2.107954978942871,
+            "root_vy_mps": -0.15035788714885712,
+            "root_vz_mps": 1.0133264064788818,
+            "root_wx_degps": -14.983032519967423,
+            "root_wy_degps": -5.046855806026394,
+            "root_wz_degps": 10.733339191030618,
+            "root_x_m": 4.05471658706665,
+            "root_y_m": -0.01772826910018921,
+            "root_z_m": 1.18411386013031,
+            "steering_deg": 41.225775320673435,
+            "steering_rate_degps": 31.948015182343298,
+            "yaw_deg": 19.77053192181905
+          },
+          "key": "0000eda50db5e5cba88f9e292f2796b5703e85662828ad6462e4b3820b07c049",
+          "labels": {
+            "pi_0": 1,
+            "pi_1": 1,
+            "pi_2": 1,
+            "pi_3": 1,
+            "pi_4": 1,
+            "pi_5": 1
+          },
+          "phase": "upstream",
+          "root_cell": "a9ba756c1e01f078cac79109b5dea02254488a60a61a396e525b1a5d9878313d",
+          "sampling_weight": 2.0,
+          "snapshot": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_3/tasks/acquire/attempt_0000/result/boundary_bank/snapshots/candidate_000843",
+          "snapshot_context_sha256": "b0c240eb3d5eaf8588b1e793086e25279b613eb83bd5230308fe85f95c487353",
+          "source": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_3",
+          "state_sha256": "1046eff97394430628c38f2c6f85dbb0d9d6e9357715cdcc1bba62122ee320e1",
+          "trajectory_id": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_3/tasks/acquire/attempt_0000/result/catalog.json::dense_v1_train_x2.98_family4/variant_14",
+          "witnessed": true
+        },
+        "entry_index": 0,
+        "phase": "upstream"
+      },
+      {
+        "entry": {
+          "coordinates": {
+            "frontwheel_tangent_mps": 1.4362926864624024,
+            "hip_deg": -58.466637861362585,
+            "hip_rate_degps": 526.7795418505274,
+            "knee_deg": 121.22924614460976,
+            "knee_rate_degps": -682.8122627977472,
+            "pitch_deg": -0.39534221656862895,
+            "rearwheel_tangent_mps": 0.6462023735046387,
+            "roll_deg": -0.2900217763436764,
+            "root_vx_mps": 0.8841286897659302,
+            "root_vy_mps": 0.07165530323982239,
+            "root_vz_mps": 0.03217368572950363,
+            "root_wx_degps": 10.98647283186046,
+            "root_wy_degps": 27.907364061822964,
+            "root_wz_degps": 40.743304418082076,
+            "root_x_m": 2.837596893310547,
+            "root_y_m": 0.0004958502831868827,
+            "root_z_m": 0.11746887117624283,
+            "steering_deg": -0.8844806826560903,
+            "steering_rate_degps": 2.8524931837328946,
+            "yaw_deg": 1.201656647819671
+          },
+          "key": "fb6979907a0bfa1f0b91d964d389d4808d310a808e7c083a2323a9e47bbde64f",
+          "labels": {
+            "pi_0": 1,
+            "pi_1": 1,
+            "pi_2": 1,
+            "pi_3": 1,
+            "pi_4": 1
+          },
+          "phase": "upstream",
+          "root_cell": "4a48d799836ce8d59fcbb2b8e9f8c1825cddbb9fbac63fd4edcb96414e6a6253",
+          "sampling_weight": 1.0,
+          "snapshot": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/acquire/attempt_0000/result/boundary_bank/snapshots/candidate_000606",
+          "snapshot_context_sha256": "0e49aede53313abcb3419b6bd1252953398241164591dc5542e4104d2aec2d7e",
+          "source": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2",
+          "state_sha256": "a924f717503bcf95fe398c2650506f59b3a1edc5d3fba6266fef90738480113d",
+          "trajectory_id": "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2/tasks/acquire/attempt_0000/result/catalog.json::dense_v1_train_x2.95_family3/variant_13",
+          "witnessed": true
+        },
+        "entry_index": 511,
+        "phase": "upstream"
+      },
+      {
+        "entry": {
+          "coordinates": {
+            "frontwheel_tangent_mps": 1.6128839111328126,
+            "hip_deg": -52.560440097363745,
+            "hip_rate_degps": 10.026278861924546,
+            "knee_deg": 133.3467940341561,
+            "knee_rate_degps": 184.31053739415137,
+            "pitch_deg": 19.345847783214424,
+            "rearwheel_tangent_mps": 0.4728743410110474,
+            "roll_deg": -20.109521206223196,
+            "root_vx_mps": 2.407317638397217,
+            "root_vy_mps": 0.23964612185955048,
+            "root_vz_mps": -2.0831387042999268,
+            "root_wx_degps": -24.258168158108987,
+            "root_wy_degps": -13.89024408767405,
+            "root_wz_degps": 81.66329216961404,
+            "root_x_m": 5.553652763366699,
+            "root_y_m": -0.0067367409355938435,
+            "root_z_m": 0.43573054671287537,
+            "steering_deg": 28.732041102210303,
+            "steering_rate_degps": 55.87641156204031,
+            "yaw_deg": 28.309331388917723
+          },
+          "key": "00041330dd4ca210ac1ee2f310580f0e794d9e45b8906ebe59e9626817dba346",
+          "labels": {
+            "pi_0": 1,
+            "pi_1": 1,
+            "pi_2": 1,
+            "pi_3": 1,
+            "pi_4": 1,
+            "pi_5": 1
+          },
+          "phase": "downstream",
+          "root_cell": "ad4ca5d610c169c2826b1d3b0505109adcd8081e9b413b0e5f6ef613364605fb",
+          "sampling_weight": 0.5,
+          "snapshot": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_000/discovery/tasks/acquire/attempt_0000/result/boundary_bank/snapshots/candidate_000329",
+          "snapshot_context_sha256": "eab1788089e7dd20ef1ecd94f2bb8a04decab75f48e6382134f0ec33015dde67",
+          "source": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_000/discovery",
+          "state_sha256": "5fe24643cfc1b0015a4ad838e1f8e8b09291032fbd0ee52ccbecd7a949692ee1",
+          "trajectory_id": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_000/discovery/tasks/acquire/attempt_0000/result/catalog.json::dense_v1_train_x2.88_family2/variant_7",
+          "witnessed": true
+        },
+        "entry_index": 0,
+        "phase": "downstream"
+      },
+      {
+        "entry": {
+          "coordinates": {
+            "frontwheel_tangent_mps": 0.40627735614776617,
+            "hip_deg": -68.6773950101273,
+            "hip_rate_degps": 2.5399035999517374,
+            "knee_deg": 141.21253550499117,
+            "knee_rate_degps": 49.73166602618419,
+            "pitch_deg": 10.05120814652507,
+            "rearwheel_tangent_mps": 0.7108489799499512,
+            "roll_deg": -5.744346787145005,
+            "root_vx_mps": 2.084625005722046,
+            "root_vy_mps": 0.000738366914447397,
+            "root_vz_mps": -2.0587363243103027,
+            "root_wx_degps": -12.594959329510015,
+            "root_wy_degps": -24.95532044405031,
+            "root_wz_degps": -11.680279178882126,
+            "root_x_m": 4.0038933753967285,
+            "root_y_m": 0.011374495923519135,
+            "root_z_m": 0.39272910356521606,
+            "steering_deg": 32.10865440143283,
+            "steering_rate_degps": 27.948879659145593,
+            "yaw_deg": -13.534370472269229
+          },
+          "key": "9e16f5e38324c72c16b427316eff53934985df2d4411b47d88789b30fa525c44",
+          "labels": {
+            "pi_0": 1,
+            "pi_1": 1,
+            "pi_2": 1,
+            "pi_3": 1,
+            "pi_4": 1,
+            "pi_5": 1
+          },
+          "phase": "downstream",
+          "root_cell": "0c77f243b352229eef17c0ddc0abf17d4bc7ca051fa66fc0ace0b6206abaa149",
+          "sampling_weight": 2.0,
+          "snapshot": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_5/tasks/acquire/attempt_0000/result/boundary_bank/snapshots/candidate_000246",
+          "snapshot_context_sha256": "cad084625a9d9eb57ee0e63b05accc7c4332ec862e58ff74d508ee9fb144223b",
+          "source": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_5",
+          "state_sha256": "3d89fd2184798e5b58d15496158cb771cce15e871463e6eafefee0623741cd69",
+          "trajectory_id": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_5/tasks/acquire/attempt_0000/result/catalog.json::dense_v1_train_x2.88_family1/variant_11",
+          "witnessed": true
+        },
+        "entry_index": 511,
+        "phase": "downstream"
+      }
+    ],
+    "success_criterion": "first_valid_landing",
+    "support_sha256": "0220342253aae21aaa63bdef7f75c73f3480dbc971851e87156e0af01b57aa11"
+  },
+  "initialization": {
+    "actor": "warm_start_frozen_unified",
+    "critic": "fresh",
+    "optimizer": "fresh",
+    "source_frozen_policy": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/training_attempt_000/frozen/frozen_unified_policy.json"
+  },
+  "input_files": {
+    "/home/qy/DVGC/JIT/configs/pi_unified_iter2_landing_replay_pi1_actor_warmstart_core75_natural10_20260904.json": "2696b8bf91b474c28b6c5e48e4555fd2db9a8e019410b845805430edb9131b99",
+    "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/support.json": "cab8625ea2ee5f73ec11cb787caec2ebf6e0533d7cb91573292da4d3225cc3f6",
+    "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/training_attempt_000/frozen/frozen_unified_policy.json": "de2c90a70a2342f891f1445e2bad6690813e35f7aafc142dd90ffcdc50a3a414"
+  },
+  "inputs": {
+    "down_config_path": "JIT/configs/descent_recovery_smoke.json",
+    "down_config_sha256": "85b575e6579eabe384b0a1643ba24359dd35a24d8d357ee1806e96bd6c280ed0",
+    "up_config_path": "JIT/configs/phase_u_continuation_smoke.json",
+    "up_config_sha256": "748581e00a5e9452044a02d94dabdce7c98bc4d0bb107644a29dc48bdbd84089"
+  },
+  "jump_start_probability": 0.2,
+  "ppo": {
+    "batch_size": 16,
+    "clipping_epsilon": 0.1,
+    "discounting": 0.995,
+    "entropy_cost": 0.001,
+    "episode_horizon": 400,
+    "gae_lambda": 0.97,
+    "learning_rate": 0.0001,
+    "max_grad_norm": 0.75,
+    "num_minibatches": 8,
+    "num_parallel_envs": 128,
+    "num_updates_per_batch": 1,
+    "requested_transitions": 256000,
+    "reward_scaling": 0.1,
+    "seed": 9871101,
+    "unroll_length": 25
+  },
+  "production_training_smoke_verified": false,
+  "reward_contract": "unchanged phase rewards; terminate at first valid landing",
+  "run_declaration": {
+    "run_id": "pi6_multicheckpoint_256k_20260911"
+  },
+  "schema": "jit_iterative_probe_training_v1",
+  "snapshot_reset_contract": "fresh episode and phase clocks; preserve saved event and controller context",
+  "success_criterion": "first_valid_landing",
+  "support": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/support.json"
+}

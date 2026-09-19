@@ -1,0 +1,153 @@
+{
+  "analysis_wall_seconds": 7.203820987000654,
+  "artifact_sha256": "a8492c2f60ad93a4375640ff31d47b0b05822168885310e03c9faaff0c637486",
+  "dataset": {
+    "counts": {
+      "development": 203,
+      "fit": 543
+    },
+    "environment_interactions": 0,
+    "exclusions": {
+      "checkpoint_128000": {
+        "no_later_novel_witness": 10,
+        "no_next_saved_action": 8
+      },
+      "checkpoint_32000": {
+        "no_later_novel_witness": 0,
+        "no_next_saved_action": 8
+      },
+      "checkpoint_64000": {
+        "no_later_novel_witness": 21,
+        "no_next_saved_action": 8
+      },
+      "pi_6": {
+        "no_later_novel_witness": 0,
+        "no_next_saved_action": 8
+      }
+    },
+    "final_test_used": false,
+    "independent_repetitions": false,
+    "nonzero_counts": {
+      "development": 24,
+      "fit": 66
+    },
+    "ppo_transitions": 0,
+    "schema": "jit_residual_export_summary_v2",
+    "split": {
+      "development": [
+        "dense_v1_train_x2.90_family0/variant_0",
+        "dense_v1_train_x2.90_family1/variant_1"
+      ],
+      "fit": [
+        "dense_v1_train_x2.90_family0/variant_5",
+        "dense_v1_train_x2.90_family1/variant_6",
+        "dense_v1_train_x2.90_family2/variant_2",
+        "dense_v1_train_x2.90_family2/variant_7",
+        "dense_v1_train_x2.90_family3/variant_3",
+        "dense_v1_train_x2.90_family4/variant_4"
+      ]
+    }
+  },
+  "environment_interactions": 0,
+  "explorer_sha256": "8d19ae30998aca73578588fe5da840d8681672681bb6ee0c198b7a4bb0b0f9ab",
+  "final_test_used": false,
+  "fit": {
+    "end_utc": "2026-09-11T06:32:14.673300+00:00",
+    "environment_interactions": 0,
+    "ppo_transitions": 0,
+    "process_wall_seconds": 9.08499572099754,
+    "report": {
+      "environment_interactions": 0,
+      "examples": 543,
+      "final_loss": 1.379094214826182e-06,
+      "independent_discovery_evidence": false,
+      "initial_loss": 0.0006114898133091629,
+      "learning_rate": 0.001,
+      "loss_contract": "requested_residual_regression_v1",
+      "max_optimizer_steps": 500,
+      "novel_cells": 512,
+      "optimizer_steps": 500,
+      "ppo_transitions": 0,
+      "seed": 9901101,
+      "training_kind": "supervised_warm_start",
+      "wall_seconds": 6.081639700998494
+    },
+    "start_utc": "2026-09-11T06:32:05.588317+00:00",
+    "status": "completed"
+  },
+  "learned_exploration_validated": false,
+  "ppo_transitions": 0,
+  "scope": "supervised warm start; teacher-forced development conditions, shared ancestors; no promotion or automatic refit",
+  "status": "completed",
+  "metrics": [
+    {
+      "evaluation": "teacher_forced_historical_previous_delta",
+      "examples": 543,
+      "model": "zero",
+      "partition": "fit",
+      "subset": "all",
+      "weighted_rmse": 0.0247283186763525
+    },
+    {
+      "evaluation": "teacher_forced_historical_previous_delta",
+      "examples": 543,
+      "model": "fitted",
+      "partition": "fit",
+      "subset": "all",
+      "weighted_rmse": 0.0010017219310867573
+    },
+    {
+      "evaluation": "teacher_forced_historical_previous_delta",
+      "examples": 66,
+      "model": "zero",
+      "partition": "fit",
+      "subset": "nonzero",
+      "weighted_rmse": 0.07477141171693802
+    },
+    {
+      "evaluation": "teacher_forced_historical_previous_delta",
+      "examples": 66,
+      "model": "fitted",
+      "partition": "fit",
+      "subset": "nonzero",
+      "weighted_rmse": 0.0024543085728138225
+    },
+    {
+      "evaluation": "teacher_forced_historical_previous_delta",
+      "examples": 203,
+      "model": "zero",
+      "partition": "development",
+      "subset": "all",
+      "weighted_rmse": 0.02381252497434616
+    },
+    {
+      "evaluation": "teacher_forced_historical_previous_delta",
+      "examples": 203,
+      "model": "fitted",
+      "partition": "development",
+      "subset": "all",
+      "weighted_rmse": 0.1301035941603256
+    },
+    {
+      "evaluation": "teacher_forced_historical_previous_delta",
+      "examples": 24,
+      "model": "zero",
+      "partition": "development",
+      "subset": "nonzero",
+      "weighted_rmse": 0.07500000298023224
+    },
+    {
+      "evaluation": "teacher_forced_historical_previous_delta",
+      "examples": 24,
+      "model": "fitted",
+      "partition": "development",
+      "subset": "nonzero",
+      "weighted_rmse": 0.14984117504943395
+    }
+  ],
+  "decision": "no_promotion; address missing steering fit support and exogenous goal scaling",
+  "artifact_index": "/home/qy/DVGC/JIT/runs/experiments/residual_warmstart_20260911/INDEX.md",
+  "tests": "76 passed in 5.97s",
+  "implementation_commit": "e1c88b5",
+  "new_normalization_used_for_this_fit": false
+}

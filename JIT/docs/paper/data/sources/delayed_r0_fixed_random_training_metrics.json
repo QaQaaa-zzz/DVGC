@@ -1,0 +1,62 @@
+[
+  {
+    "active_interactions": 321,
+    "batch": 1,
+    "charged_interactions": 6400,
+    "controller_mode": "fixed_random",
+    "cumulative_cells": 307,
+    "episodes": 8,
+    "mean_losses": [],
+    "new_cells": 30.0,
+    "optimizer_updates": 0,
+    "reward_mode": "arrival_novelty_v1",
+    "successes": 5,
+    "suffix_interactions": 0,
+    "wall_seconds": 11.334073181002168
+  },
+  {
+    "active_interactions": 352,
+    "batch": 2,
+    "charged_interactions": 9600,
+    "controller_mode": "fixed_random",
+    "cumulative_cells": 339,
+    "episodes": 8,
+    "mean_losses": [],
+    "new_cells": 32.0,
+    "optimizer_updates": 0,
+    "reward_mode": "arrival_novelty_v1",
+    "successes": 8,
+    "suffix_interactions": 0,
+    "wall_seconds": 13.361021345001063
+  },
+  {
+    "active_interactions": 366,
+    "batch": 3,
+    "charged_interactions": 12800,
+    "controller_mode": "fixed_random",
+    "cumulative_cells": 371,
+    "episodes": 8,
+    "mean_losses": [],
+    "new_cells": 32.0,
+    "optimizer_updates": 0,
+    "reward_mode": "arrival_novelty_v1",
+    "successes": 8,
+    "suffix_interactions": 0,
+    "wall_seconds": 15.38376803099527
+  },
+  {
+    "active_interactions": 357,
+    "batch": 4,
+    "charged_interactions": 16000,
+    "controller_mode": "fixed_random",
+    "cumulative_cells": 403,
+    "episodes": 8,
+    "mean_losses": [],
+    "new_cells": 32.0,
+    "optimizer_updates": 0,
+    "reward_mode": "arrival_novelty_v1",
+    "successes": 8,
+    "suffix_interactions": 0,
+    "wall_seconds": 17.403454170998884
+  }
+]

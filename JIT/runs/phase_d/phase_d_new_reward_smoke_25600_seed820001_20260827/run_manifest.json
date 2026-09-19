@@ -1,0 +1,27 @@
+{
+  "claim_boundary": {
+    "engineering_integrity_only": true,
+    "formal_training_evidence": false,
+    "learnability_claim": false,
+    "trained_expert_claim": false,
+    "tube_or_safety_claim": false
+  },
+  "config_sha256": "85b575e6579eabe384b0a1643ba24359dd35a24d8d357ee1806e96bd6c280ed0",
+  "output_dir": "/home/qy/DVGC/JIT/runs/phase_d/phase_d_new_reward_smoke_25600_seed820001_20260827",
+  "parent_checkpoint": null,
+  "purpose": "descent_recovery_engineering_smoke",
+  "reference_sha256": "612fe758eb1042481b9c7642cc9b92d3e9c14b4a75c9deaf5340183c928bc41f",
+  "resume_command": "train_phase_expert.py --phase descent_recovery --smoke --config JIT/configs/descent_recovery_smoke.json --run-id phase_d_new_reward_smoke_25600_seed820001_20260827 --eval-seeds 1000007 1000008",
+  "resume_semantics": "fresh",
+  "run_id": "phase_d_new_reward_smoke_25600_seed820001_20260827",
+  "segment_seed": null,
+  "starting_training_transition": 0,
+  "stopping_conditions": [
+    "stop_after_one_declared_ppo_block",
+    "stop_on_terminal_diagnostic",
+    "stop_on_nonfinite_metric",
+    "stop_on_checkpoint_restore_failure"
+  ],
+  "training_transition_ceiling": 25600,
+  "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+}

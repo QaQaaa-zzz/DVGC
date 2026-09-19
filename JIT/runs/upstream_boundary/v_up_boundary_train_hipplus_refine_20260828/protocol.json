@@ -1,0 +1,64 @@
+{
+  "action_order": [
+    "steer",
+    "rear_wheel_drive",
+    "hip",
+    "knee"
+  ],
+  "direction_family": "action_basis_subset",
+  "durations": [
+    1,
+    2
+  ],
+  "failure_reason": "pitch_limit",
+  "frozen_manifest_sha256": "505a94fa732badbd319eb286497e4f50b06b407c90acf4defb417619f0b1f584",
+  "frozen_pi_up_actor_sha256": "f218775e3cf99555ce524f1357a800172904bc815b06c54a53db8965204d9081",
+  "frozen_pi_up_config_sha256": "a45e70438c2b5cc005ddd415bbb4920c8e07e7504feae7e630a94b473d91f3a6",
+  "frozen_pi_up_payload_sha256": "965b2f141d5cff17f7cef943004fe4e4f62f0fecfe88b47353dc78b14ced723a",
+  "guard_roles": [],
+  "max_negative_anchors": 1,
+  "near_duplicate_tolerances": {
+    "observation_atol": 0.01,
+    "qpos_atol": 0.0005,
+    "qvel_atol": 0.002
+  },
+  "negative_role": "ascending_entry",
+  "nominal_catalog_sha256": "52b8b1fcb0f3749d772c75f2efb495f94df974ab87f1fca37cfc509931186c2f",
+  "nominal_labels_sha256": "b22876b60da3522a1271458499b540863fcb0e8ecfe05cd21b649d59e0b29922",
+  "protocol_seed": 820403,
+  "protocol_sha256": "1e269bf62d9661126f9290f490390f9fad46d2c1abb8f9e96b65eb123773ae0a",
+  "purpose": "unique reachable continuation boundary pilot",
+  "schema": "jit_upstream_boundary_protocol_v1",
+  "selected_action_names": [
+    "hip"
+  ],
+  "selected_signs": [
+    1
+  ],
+  "source_training_transitions": 4988928,
+  "split": "train",
+  "state_generation": "restore real nominal snapshot; recompute deterministic pi_up_star action; add one bounded selected action-basis perturbation for duration ticks; env.step; exclude terminal/Apex; capture real resulting snapshot",
+  "strengths": [
+    0.05,
+    0.055,
+    0.06,
+    0.065,
+    0.07,
+    0.075,
+    0.08,
+    0.085,
+    0.09,
+    0.095,
+    0.1
+  ],
+  "target": "V_up",
+  "train_seeds": [
+    1000001,
+    1000002,
+    1000003,
+    1000004,
+    1000005
+  ],
+  "training_transitions": 0,
+  "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+}

@@ -1,0 +1,11 @@
+{
+  "tests_passed": 17,
+  "tests_failed": 0,
+  "old_4500_reservation_reproduced_before_rollout": true,
+  "new_6000_reservation_executed_nine_mock_trajectories": true,
+  "production_gpu_run": false,
+  "new_first_attempt_ceiling": 1849200,
+  "new_total_budget": 2000000,
+  "prior_failed_attempt_reserved_cost": 4500,
+  "prior_failed_attempt_was_not_measured_rollout_cost": true
+}

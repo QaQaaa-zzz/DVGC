@@ -1,0 +1,101 @@
+{
+  "schema": "jit_pi_unified_formal_v1",
+  "inputs": {
+    "up_config_path": "JIT/configs/phase_u_continuation_smoke.json",
+    "up_config_sha256": "748581e00a5e9452044a02d94dabdce7c98bc4d0bb107644a29dc48bdbd84089",
+    "down_config_path": "JIT/configs/descent_recovery_smoke.json",
+    "down_config_sha256": "85b575e6579eabe384b0a1643ba24359dd35a24d8d357ee1806e96bd6c280ed0",
+    "soft_tube_path": "JIT/runs/soft_tube/soft_tube_iter1_pi0_conditioned_20260901",
+    "soft_tube_manifest_sha256": "817a980a5dd84f36507f762a913c21c1fc0913580d925ff9c68e982edfd82a80",
+    "tube_rsi_smoke_report": "JIT/runs/tube_rsi/tube_rsi_iter1_pi0_conditioned_20260901/report.json",
+    "tube_rsi_smoke_report_sha256": "ce2522c78ac22b50d6fbee9a93e684943c36a1c2b7bb9d2766bb99d9d636dfbc"
+  },
+  "initialization": {
+    "actor": "fresh",
+    "critic": "fresh",
+    "optimizer": "fresh",
+    "restore_checkpoint": null
+  },
+  "runtime": {
+    "naccdmax": 1024
+  },
+  "reset_mixture": {
+    "schema": "jit_pi_unified_reset_mix_v1",
+    "selection": "bernoulli_per_episode",
+    "natural_reset_probability": 0.1,
+    "soft_tube_probability": 0.9,
+    "natural_reset_semantics": "existing_phase_u_natural_reset",
+    "soft_tube_semantics": "existing_phase_balanced_value_weighted_tube_rsi",
+    "single_variable": "reset_distribution_only"
+  },
+  "tube_sampling": {
+    "schema": "jit_tube_rsi_core_replay_v1",
+    "selection": "phase_then_source_then_entry",
+    "core_probability": 0.5,
+    "expansion_probability": 0.5,
+    "core_within_source": "uniform",
+    "expansion_within_source": "value_weighted",
+    "source_core_definition": "first_core_retained_count_entries"
+  },
+  "ppo": {
+    "num_parallel_envs": 1024,
+    "episode_horizon": 400,
+    "unroll_length": 25,
+    "batch_size": 128,
+    "num_minibatches": 8,
+    "num_updates_per_batch": 1,
+    "requested_transitions": 10009600,
+    "learning_rate": 0.0001,
+    "entropy_cost": 0.001,
+    "reward_scaling": 0.1,
+    "discounting": 0.995,
+    "gae_lambda": 0.97,
+    "clipping_epsilon": 0.1,
+    "max_grad_norm": 0.75,
+    "seed": 821101
+  },
+  "formal": {
+    "checkpoint_transitions": [0, 1024000, 2508800, 5017600, 7500800, 10009600],
+    "train_panel_transitions": [1024000, 2508800, 5017600, 7500800, 10009600],
+    "samples_per_phase": 8,
+    "resume_semantics": "fresh_only"
+  },
+  "run_declaration": {
+    "run_id": "pi_1_tube1_core_replay50_natural10_10009600_seed821101_20260902",
+    "output_dir": "JIT/runs/pi_unified/pi_1_tube1_core_replay50_natural10_10009600_seed821101_20260902",
+    "purpose": "iteration1_replacement_candidate_after_core_support_dilution_diagnosis",
+    "status": "predeclared_not_started"
+  },
+  "claim_boundary": {
+    "formal_method_stage_training": true,
+    "iteration": 1,
+    "policy_name": "pi_1",
+    "source_policy_name": "pi_0",
+    "source_tube_iteration": 1,
+    "candidate_revision": "core_replay_repair01",
+    "replaces_rejected_candidate_run_id": "pi_1_tube1_natural10_10009600_seed821101_20260901_retry01",
+    "rejected_candidate_gate_summary_sha256": "cf63f59f4862c51351ceca80afa8796316592be515c28b572584e97e39d9f7fc",
+    "core_regression_diagnosis_sha256": "61e12385ef0e77180b773a2e0de04b36e2a27f649c24d509b4f18345c00a7689",
+    "method_revision_after_nonfinal_gate": true,
+    "single_variable_iteration": false,
+    "single_variable_vs_rejected_candidate": "tube_sampling_contract_only",
+    "soft_tube_support_matches_rejected_candidate": true,
+    "fresh_initialization_matches_rejected_candidate": true,
+    "ppo_hyperparameters_match_rejected_candidate": true,
+    "reward_physics_action_semantics_unchanged": true,
+    "reset_probabilities_match_rejected_candidate": true,
+    "tube_1_manifest_sha256": "817a980a5dd84f36507f762a913c21c1fc0913580d925ff9c68e982edfd82a80",
+    "tube_1_engineering_gate": "GO",
+    "core_replay_contract": "phase_50_50_then_core_50_50_expansion_core_uniform_expansion_value_weighted",
+    "rejected_candidate_scientific_evidence_used_for_method_diagnosis": true,
+    "rejected_candidate_parameters_reused": false,
+    "core_preservation_claim": false,
+    "boundary_gain_claim": false,
+    "empirical_envelope_expansion_claim": false,
+    "final_policy_claim": false,
+    "certified_safe_tube_claim": false,
+    "jce_jel_claim": false,
+    "test_data_used": false,
+    "validation_data_used": false
+  }
+}

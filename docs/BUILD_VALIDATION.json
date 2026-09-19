@@ -1,15 +1,16 @@
 {
-  "date": "2026-07-14",
+  "date": "2026-08-13",
+  "validation_state": "PASS_2KG_REVALIDATED",
   "configured_python": "/home/qy/mujoco_playground/.venv/bin/python",
   "environment_reconfigured": false,
   "python_compileall": "PASS",
   "pure_pytest": {
     "status": "PASS",
-    "tests": 22
+    "tests": 919
   },
   "local_preflight": {
     "status": "PASS",
-    "tests": 24,
+    "tests": 919,
     "jax_backend": "gpu",
     "device": "NVIDIA GeForce RTX 4090 D",
     "mujoco": "3.6.0"
@@ -17,7 +18,7 @@
   "runtime_gate": {
     "status": "PASS",
     "report": "docs/RUNTIME_GATE.json",
-    "elapsed_seconds": 70.29655957221985,
+    "elapsed_seconds": 94.2571952342987,
     "zero_action_100": {
       "physical_failures": 3,
       "timeouts": 0,
@@ -26,14 +27,13 @@
       }
     },
     "random_action_100": {
-      "physical_failures": 15,
+      "physical_failures": 5,
       "timeouts": 0,
       "end_reasons": {
-        "prelaunch_airborne": 14,
-        "roll_limit": 1
+        "roll_limit": 5
       }
     },
-    "snapshot_roundtrip_step_max_abs": 5.878973752260208e-07,
+    "snapshot_roundtrip_step_max_abs": 0.0,
     "snapshot_roundtrip_tolerance": 1e-05,
     "short_ppo_requested_effective_steps": [
       64,
@@ -46,8 +46,8 @@
     "deterministic_action_max_abs": 0.0
   },
   "authoritative_xml": "assets/orange_bike_4kg_horizontal.xml",
-  "xml_sha256": "d7e9f43ff8fb9e4571203f81062ce9c828acfa38692ee8c71a3e5daa15ce794c",
-  "payload_mass_kg": 4.0,
+  "xml_sha256": "e2762bec49fdce61eff6ad01b6a67925934d8997b53929b0a67ace7f44109192",
+  "payload_mass_kg": 2.0,
   "hip_knee_force_range_nm": [
     -50.0,
     50.0

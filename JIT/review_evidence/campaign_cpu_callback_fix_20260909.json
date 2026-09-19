@@ -1,0 +1,18 @@
+{
+  "date": "2026-09-09",
+  "source_report": "https://github.com/QaQaaa-zzz/DVGC/tree/agent/jit-run-reports/reports/empirical_envelope_smoke_v1-f4a3f5f72a",
+  "status": "engineering_error",
+  "completed_rounds": 0,
+  "charged_interactions": 27200,
+  "cost_is_failed_attempt_reservation": true,
+  "actual_failed_training_steps_known": false,
+  "error": "jax.debug.callback failed to find a local CPU device to place the inputs on",
+  "location": "Brax PPO training_epoch; training subprocess",
+  "old_platforms": "cuda",
+  "fixed_platforms": "cuda,cpu",
+  "gpu_training_still_required": true,
+  "cpu_targeted_tests_passed": 9,
+  "production_retry_verified": false,
+  "retry_output": "JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1",
+  "previous_failed_run_preserved": true
+}
