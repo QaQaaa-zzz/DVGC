@@ -205,6 +205,72 @@ def charged_train_panel_interactions(run_dir):
     return total
 
 
+def validate_training_action_pulse(pulse, *, horizon=400):
+    """Optional episode-relative action perturbation; no external force injection."""
+    import math
+    if pulse is None:
+        return
+    if not isinstance(pulse, dict):
+        raise ValueError('training_action_pulse must be an object')
+    onsets = pulse.get('onsets')
+    steps = pulse.get('steps')
+    limits = pulse.get('delta_limit')
+    probability = pulse.get('probability')
+    if (not isinstance(onsets, list) or not onsets
+        or any(type(x) is not int or x < 0 for x in onsets)
+        or len(set(onsets)) != len(onsets)
+        or type(steps) is not int or steps <= 0
+        or any(x + steps > horizon for x in onsets)
+        or not isinstance(limits, list) or len(limits) != 4
+        or any(type(x) not in (int, float) or not math.isfinite(x) or x < 0 for x in limits)
+        or type(probability) not in (int, float) or not math.isfinite(probability)
+        or not 0 <= probability <= 1):
+        raise ValueError('invalid training_action_pulse schedule, limits, or probability')
+
+
+def initialize_training_action_pulse(info, reset_rng, pulse):
+    """Keep the physical snapshot RNG; derive a separate stream from fresh reset RNG.
+
+    Clock zero is the reset, for fixed-start and RSI alike, not source trajectory
+    time or liftoff. Disabled config is the exact historical path.
+    """
+    if pulse is None:
+        return info
+    import jax
+    import jax.numpy as jp
+    rng, onset_rng, enabled_rng = jax.random.split(jax.random.fold_in(reset_rng, 0x50554C53), 3)
+    return {**info, 'training_pulse_rng': rng,
+        'training_pulse_onset': jax.random.choice(onset_rng, jp.asarray(pulse['onsets'], jp.int32)),
+        'training_pulse_enabled': jax.random.bernoulli(enabled_rng, float(pulse['probability'])),
+        'training_pulse_tick': jp.asarray(0, jp.int32),
+        'training_pulse_request': jp.zeros(4, jp.float32),
+        'training_pulse_effective': jp.zeros(4, jp.float32)}
+
+
+def apply_training_action_pulse(info, action, pulse):
+    """Perturb environment execution, leaving PPO sampled actions/log probabilities intact."""
+    if pulse is None:
+        return action, info, {}
+    import jax
+    import jax.numpy as jp
+    rng, draw_rng = jax.random.split(info['training_pulse_rng'])
+    tick, onset = info['training_pulse_tick'], info['training_pulse_onset']
+    active = info['training_pulse_enabled'] & (tick >= onset) & (tick < onset + pulse['steps'])
+    limits = jp.asarray(pulse['delta_limit'], jp.float32)
+    draw = jax.random.uniform(draw_rng, (4,), minval=-1., maxval=1.) * limits
+    requested = jp.where(active, draw, jp.zeros_like(draw))
+    base = jp.clip(jp.asarray(action, jp.float32), -1., 1.)
+    actual = jp.clip(base + requested, -1., 1.)
+    effective = actual - base
+    next_info = {**info, 'training_pulse_rng': rng, 'training_pulse_tick': tick + 1,
+        'training_pulse_request': requested, 'training_pulse_effective': effective}
+    metrics = {'pulse/active': active.astype(jp.float32),
+        'pulse/request_l1': jp.sum(jp.abs(requested)),
+        'pulse/effective_l1': jp.sum(jp.abs(effective)),
+        'pulse/clipped_channels': jp.sum((jp.abs(base + requested) > 1.) & active).astype(jp.float32)}
+    return actual, next_info, metrics
+
+
 def load_config(path):
     from .unified_formal import UnifiedFormalConfig,UnifiedFormalSchedule,UnifiedResetMixture
     from .unified_training import UnifiedPPOConfig
@@ -244,6 +310,7 @@ def load_config(path):
                 or not kl['min_learning_rate'] <= raw['ppo']['learning_rate'] <= kl['max_learning_rate']):
             raise ValueError('invalid adaptive KL configuration')
     ppo=UnifiedPPOConfig(**raw['ppo'])
+    validate_training_action_pulse(raw.get('training_action_pulse'), horizon=ppo.episode_horizon)
     if (ppo.num_parallel_envs!=128 or ppo.batch_size!=16 or ppo.num_minibatches!=8 or ppo.unroll_length!=25
         or ppo.episode_horizon!=400 or ppo.requested_transitions<=0 or ppo.requested_transitions%ppo.block_transitions):
         raise ValueError('invalid aligned probe PPO budget')
@@ -365,7 +432,19 @@ def build_environment(config, *, panel=False):
         manifest={'schema':support['schema'],'status':'completed','training_guidance_only':True,
                   'test_data_used':False,'validation_data_used':False,'manifest_sha256':support['support_sha256']})
 
+    pulse = None if panel else config.raw.get('training_action_pulse')
+    validate_training_action_pulse(pulse, horizon=config.ppo.episode_horizon)
+
     class ProbeEnv(UnifiedTubeRSIEnv):
+        def _with_training_pulse(self, state, rng):
+            pulse = self._training_action_pulse
+            if pulse is None:
+                return state
+            info = initialize_training_action_pulse(state.info, rng, pulse)
+            _, _, zeros = apply_training_action_pulse(info, jp.zeros(4), pulse)
+            return state.replace(info=info, metrics={**state.metrics,
+                **{name: jp.zeros_like(value) for name, value in zeros.items()}})
+
         def reset(self,rng):
             decision,key=jax.random.split(rng)
             jump=jax.random.bernoulli(decision,.2)
@@ -378,14 +457,20 @@ def build_environment(config, *, panel=False):
                 'events':{n:jp.asarray(getattr(up,n)) for n in start['events']},
                 'down_events':{n:jp.asarray(getattr(down,n)) for n in start['down_events']}}
             state=self._reset_from_tube_sample(self._select_reset_sample(jump,start,tube))
-            return self._with_reset_source(state,soft_tube=~jump,jump_start=jump)
+            state = self._with_reset_source(state,soft_tube=~jump,jump_start=jump)
+            return self._with_training_pulse(state, rng)
 
         def reset_tube_index(self,phase_index,entry_index):
             sample=fresh_sample(self._tube_pool.sample_at(phase_index,entry_index), config.raw['success_criterion']=='stable_forward_recovery')
-            return self._with_reset_source(self._reset_from_tube_sample(sample),soft_tube=True)
+            state = self._with_reset_source(self._reset_from_tube_sample(sample),soft_tube=True)
+            return self._with_training_pulse(state, sample['rng'])
 
         def step(self,state,action):
-            advanced = super().step(state,action)
+            pulse = self._training_action_pulse
+            actual, info, pulse_metrics = apply_training_action_pulse(state.info, action, pulse)
+            advanced = super().step(state.replace(info=info) if pulse is not None else state, actual)
+            if pulse is not None:
+                advanced = advanced.replace(metrics={**advanced.metrics, **pulse_metrics})
             return first_landing_state(advanced) if config.raw['success_criterion']=='first_valid_landing' else advanced
 
     historical = config.raw.get('historical_up_runtime', False)
@@ -395,6 +480,7 @@ def build_environment(config, *, panel=False):
     down=phase_config(Path(config.down_config_path))
     if up.config_sha256!=config.up_config_sha256 or down.config_sha256!=config.down_config_sha256:raise ValueError('phase config drift')
     env=ProbeEnv(up,down,bootstrap_artifact,runtime_naccdmax=1024)
+    env._training_action_pulse = pulse
     env._reward_mode=config.raw.get("reward_mode","phase_recovery")
     pool=SnapshotPool.from_paths([Path(r['snapshot']) for r in entries],compatibility=compatibility_identity(env))
     up_rows=[r for r in entries if r['phase']=='upstream'];down_rows=[r for r in entries if r['phase']=='downstream']

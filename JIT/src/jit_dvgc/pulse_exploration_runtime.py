@@ -77,6 +77,9 @@ def networks(spec):
     bank=load_probe_bank(Path(spec['bank']))
     member=next(m for m in bank['members'] if m['name']==spec['proposer'])
     config,_,env=build_unified_formal_environment(Path(member['policy']['formal_config']))
+    # This runtime owns its declared pulse schedule. Never apply the training
+    # augmentation a second time, including nominal and snapshot continuations.
+    env._training_action_pulse = None
     if config.raw.get('success_criterion', 'first_valid_landing') != spec.get('success_criterion', 'first_valid_landing'):
         raise ValueError('source and exploration endpoint differ')
     env._reward_mode=spec.get('reward_mode',config.raw.get('reward_mode','phase_recovery'))
