@@ -284,6 +284,9 @@ def _initialization_inputs(config_path: Path, source_frozen_policy: Path, name: 
     if (not isinstance(name, str) or not re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]*", name)
             or re.fullmatch(r"pi_\d+", name)):
         raise ValueError("initialization policy needs a safe non-formal policy name")
+    descriptor = _read_json(source_frozen_policy)
+    if descriptor.get('schema') == 'jit_phase_checkpoint_initialization_source_v1':
+        return _phase_initialization_inputs(config_path, descriptor)
     source = load_frozen_unified_manifest(source_frozen_policy)["policy"]
     source_config = _load_policy_formal_config(Path(source["formal_config"]))
     config = _load_policy_formal_config(config_path)
@@ -308,10 +311,40 @@ def _initialization_inputs(config_path: Path, source_frozen_policy: Path, name: 
     return config, identity, source, payload
 
 
+def _phase_initialization_inputs(config_path, descriptor):
+    """Explicit zero-training Phase U binding; original checkpoint stays immutable."""
+    from .iterative_probe_training import load_phase_initializer
+    phase_path=Path(descriptor['source_phase_config']).resolve()
+    checkpoint=Path(descriptor['source_checkpoint']).resolve()
+    required=(phase_path,checkpoint/'identity.json',checkpoint/'payload.pkl')
+    locks=descriptor.get('input_files',{})
+    if any(str(p) not in locks for p in required):
+        raise ValueError('phase initialization input lock missing')
+    if any(file_sha256(Path(p))!=h for p,h in locks.items()):
+        raise ValueError('phase initialization input lock drift')
+    config=_load_policy_formal_config(config_path)
+    if not re.fullmatch(r'[A-Za-z0-9_-]+',_source_run_id(config)):
+        raise ValueError('initialization config requires a safe run_id')
+    if _canonical_sha256(_read_json(phase_path))!=config.up_config_sha256:
+        raise ValueError('phase initialization upstream runtime contract drift')
+    payload=load_phase_initializer(descriptor)
+    identity=_checkpoint_identity(config)
+    if replace(identity,config_sha256=payload.identity.config_sha256)!=payload.identity:
+        raise ValueError('phase initialization observation/action/XML contract drift')
+    source=dict(source_kind='phase_checkpoint',checkpoint=str(checkpoint),
+                source_phase_config=str(phase_path),source_training_transitions=payload.training_transitions,
+                actor_sha256=pytree_sha256(payload.actor_params),
+                normalizer_sha256=pytree_sha256(payload.observation_normalizer),
+                critic_sha256=pytree_sha256(payload.critic_params))
+    return config,identity,source,payload
+
+
 def _initialization_receipt(config_path, config, checkpoint, source_path, source):
     return {
         "schema": "jit_zero_training_initialization_v1", "status": "completed",
-        "operation": "endpoint_identity_rebind_with_unchanged_parameters",
+        "operation": ("phase_checkpoint_runtime_rebind_with_unchanged_parameters"
+                      if source.get('source_kind')=='phase_checkpoint' else
+                      "endpoint_identity_rebind_with_unchanged_parameters"),
         "new_training_transitions": 0, "environment_interactions": 0,
         "source_frozen_policy": str(source_path),
         "source_frozen_policy_sha256": file_sha256(source_path),

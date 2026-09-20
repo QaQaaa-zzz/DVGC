@@ -87,6 +87,13 @@ def torch_policy(spec, state=None):
     else:
         head=[m for m in p.actor.modules() if isinstance(m,torch.nn.Linear)][-1]
         with torch.no_grad():head.weight[:4].zero_();head.bias[:4].zero_()
+        initialization=spec.get('explorer_initialization')
+        if initialization is not None:
+            std=initialization.get('latent_std')
+            if initialization.get('mode')!='symmetric' or not isinstance(std,(int,float)) or not np.isfinite(std) or std<=0:
+                raise ValueError('invalid symmetric explorer initialization')
+            with torch.no_grad():
+                head.weight.zero_();head.bias[:4].zero_();head.bias[4:].fill_(float(np.log(std)))
     return p
 
 

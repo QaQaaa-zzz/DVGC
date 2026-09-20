@@ -1,5 +1,9 @@
 # JIT 当前状态与证据
 
+## 2026-09-20 Phase U conversion-first exploration
+
+User-authorized fresh100-round experiment: Phase U transition4988928, fresh symmetric explorer, conversion+2 / novelty≤0.05 / repeat−0.1 / failed retraining−0.5 / physical pulse failure−5. [Method and boundaries](DISCOVERY_CONVERSION.md). Prepared under `runs/experiments/phase_u_discovery100_20260920`; it queues after the previously authorized random100, preserving both existing queues. Initial Phase U parameters are unchanged in a zero-training full-task runtime binding.70 CPU tests passed; GPU seed-support validation remains pending behind the queue. No formal TEST.
+
 ## 2026-09-19 100轮完成后的0098配对诊断
 
 完成100轮逐轮审计与0010/0070/0098四时刻各256回合诊断。复用七策略前两模型同seed首批2048回合，仅新增0098共1024回合，计费409600控制步、0训练步；逐元素随机draw及共同存活请求配对通过。

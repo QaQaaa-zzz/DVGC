@@ -170,3 +170,24 @@ def test_initialization_manifest_rejects_resealed_training_or_authority_claim(
     write(path, manifest)
     with pytest.raises(ValueError):
         frozen.load_frozen_unified_manifest(path)
+
+
+def test_phase_source_rebind_preserves_parameters_and_rejects_missing_locks(tmp_path, initialized_source):
+    config_path, _, manifest=initialized_source
+    config=frozen._load_policy_formal_config(config_path)
+    old=manifest['policy']
+    old_payload=load_checkpoint(Path(old['checkpoint']),expected=frozen._checkpoint_identity(frozen._load_policy_formal_config(Path(old['formal_config']))))
+    phase_identity=replace(frozen._checkpoint_identity(config),config_sha256=config.up_config_sha256)
+    checkpoint=tmp_path/'phase/checkpoints/transition_3200'
+    save_checkpoint(checkpoint,replace(old_payload,identity=phase_identity,training_transitions=3200))
+    descriptor=dict(schema='jit_phase_checkpoint_initialization_source_v1',source_checkpoint=str(checkpoint),source_phase_config=str(config.up_config_path),input_files={str(p):file_sha256(p) for p in [Path(config.up_config_path),checkpoint/'identity.json',checkpoint/'payload.pkl']})
+    source_path=tmp_path/'phase_source.json';write(source_path,descriptor)
+    result=frozen.freeze_initialization_policy(tmp_path/'phase_rebound',config_path=config_path,source_frozen_policy=source_path,name='phase_source')
+    assert result['policy']['actor_sha256']==old['actor_sha256']
+    receipt=read(result['policy']['initialization_receipt'])
+    assert receipt['operation']=='phase_checkpoint_runtime_rebind_with_unchanged_parameters'
+    assert receipt['source_policy']['source_training_transitions']==3200
+    assert frozen.load_frozen_unified_manifest(tmp_path/'phase_rebound/frozen_unified_policy.json')==result
+    del descriptor['input_files'][str(checkpoint/'payload.pkl')];write(source_path,descriptor)
+    with pytest.raises(ValueError,match='lock'):
+        frozen.freeze_initialization_policy(tmp_path/'bad_phase',config_path=config_path,source_frozen_policy=source_path,name='bad_phase')

@@ -49,6 +49,9 @@ def seed_support_budget(spec):
 
 def pulse_feedback(rows,seen,weights,*,quality_mode='delayed'):
     """Newly visited cells stay visited after failure; unknown is not punished."""
+    if quality_mode=='discovery_conversion':
+        from .discovery_reward import conversion_feedback
+        return conversion_feedback(rows,seen,weights)
     counts={};old=set(seen)
     if quality_mode not in ('delayed','current_policy','novelty_only'):
         raise ValueError('unsupported exploration quality mode')
@@ -392,6 +395,12 @@ def run(spec_path,output):
             feedback=d/'feedback.json';write(feedback,dict(rewards=reward.tolist(),eligible=eligible.tolist(),parts=parts,component_sums={k:float(sum(v)) for k,v in parts.items()},new_cells=len(next_seen)-len(seen),outcomes=str(outcomes),outcomes_sha256=_file_sha(outcomes)))
             update=runtime(d,'update','update',{**ex,'collection':str(collection),'feedback':str(feedback)},0)
             checkpoint=str(update/'state.msgpack');m=read(update/'metrics.json')
+            if quality_mode=='discovery_conversion':
+                m.update(source_successes=sum(r['initial_label']==1 for r in rows),
+                    verified_conversions=sum(r['initial_label']==0 and r['label']==1 and r['learning_attempted'] for r in rows),
+                    repeated_windows=sum(bool(r['pulse_cells']) and set(r['pulse_cells'])<=set(seen) for r in rows),
+                    novelty_component_positive=float(sum(max(x,0.) for x in parts['novelty'])),
+                    repeat_component=float(sum(min(x,0.) for x in parts['novelty'])))
             metrics.append(dict(round=index+1,source_policy=source_name,pulse_start_step=None if spec.get('pulse_batch_mode')=='mixed' else pulse_delay(spec,index),pulse_batch_mode=spec.get('pulse_batch_mode','single'),successes=sum(r['label']==1 for r in rows),failed_after_learning=sum(r['label']==0 and r['learning_attempted'] for r in rows),new_cells=len(next_seen)-len(seen),charged_interactions=inherited_cost+sum(c['charged_interactions'] for c in costs),reward_novelty=m['reward_components']['novelty'],reward_quality=m['reward_components']['quality'],**{k:v for k,v in m.items() if k!='reward_components'}))
             seen=next_seen;rows_all.extend(rows);write(root/'visited_cells.json',seen);write(root/'training_metrics.json',metrics);export(root,metrics,rows_all);status('round_completed',completed_rounds=index+1)
             if current_only:
