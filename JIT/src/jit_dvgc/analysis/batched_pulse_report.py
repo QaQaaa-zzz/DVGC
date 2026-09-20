@@ -135,7 +135,7 @@ def _render_readable(destination,methods,colors,counts,density,ends,peaks,beyond
         ax.plot(pts[:,0],pts[:,1],color='#222222',lw=1.8,label='无扰动轨迹')
         endpoint=np.asarray(ends[key]);visible=endpoint[(endpoint[:,0]>=2.4)&(endpoint[:,0]<=5.5)&
             (endpoint[:,1]>=.05)&(endpoint[:,1]<=1.30)] if len(endpoint) else np.empty((0,2))
-        if len(visible):ax.scatter(visible[:,0],visible[:,1],s=5,marker='x',color='#7a1f1f',alpha=.25,rasterized=True)
+        if spec.get('draw_failure_markers', True) and len(visible):ax.scatter(visible[:,0],visible[:,1],s=5,marker='x',color='#7a1f1f',alpha=.25,rasterized=True)
         ax.set(xlim=(2.4,5.5),ylim=(.05,1.30),title=method['label'],xlabel='世界位置 x（m）')
         if i==0:ax.set_ylabel('根部高度 z（m）')
         ax.grid(alpha=.12);ax.legend(loc='upper right',fontsize=8,frameon=False)
@@ -174,7 +174,7 @@ def _render_readable(destination,methods,colors,counts,density,ends,peaks,beyond
     ax.set(xticks=positions,xticklabels=short_labels,ylim=(.25,1.30),ylabel='单回合根部峰值高度（m）',title='峰值高度分布：10–90% / 25–75% / 中位数')
     ax.grid(axis='y',alpha=.2)
     fig.suptitle(f'{len(methods)}策略配对随机扰动（每策略 {spec["episodes"]:,} 回合，显示范围 x≤5.5m）',fontsize=17)
-    fig.supxlabel('上排为全部回合的等权轨迹密度；红叉为显示范围内的未成功终点。超过x=5.5m的轨迹仅裁剪显示，仍完整计入统计。',fontsize=10)
+    fig.supxlabel('上排为全部回合的等权轨迹密度；超过x=5.5m的轨迹仅裁剪显示，仍完整计入统计。' + (' 红叉为未成功终点。' if spec.get('draw_failure_markers', True) else ' 不绘制失败终点标记。'),fontsize=10)
     fig.subplots_adjust(left=.045,right=.98,top=.90,bottom=.11,hspace=.34,wspace=.55)
     for ext in ('png','pdf','svg'):fig.savefig(destination/f'comparison.{ext}',dpi=190)
     plt.close(fig)
@@ -184,7 +184,7 @@ def _render_readable(destination,methods,colors,counts,density,ends,peaks,beyond
     aligned_vmax=max(float(density[m['key']]['aligned'].max()) for m in methods)
     aligned_vmin=max(float(np.quantile(aligned_positive,.08)),aligned_vmax/500) if len(aligned_positive) else 0
     aligned_norm=LogNorm(vmin=aligned_vmin,vmax=aligned_vmax) if aligned_vmax>aligned_vmin>0 else Normalize(vmin=0,vmax=1)
-    for i,(ax,method) in enumerate(zip(axes,methods)):
+    for i,(ax,method) in enumerate(zip(np.atleast_1d(axes),methods)):
         key=method['key'];cmap=LinearSegmentedColormap.from_list(key+'aligned',['#ffffff',colors[i]])
         ax.pcolormesh(aligned_x_edges,z_edges,density[key]['aligned'].T,cmap=cmap,
             norm=aligned_norm,shading='auto',rasterized=True)
