@@ -6,7 +6,9 @@ import numpy as np
 from .exploration_loop import read, write
 from .probe_bank import load_probe_bank, _file_sha
 from .evidence_integrity import canonical_sha256
-from .pulse_schedule import controller_mode, selected_event, event_ready, pulse_activity, descent_clearance, lane_onsets, collection_steps
+from .pulse_schedule import (controller_mode, selected_event, event_ready,
+    pulse_activity, descent_clearance, lane_onsets, collection_steps,
+    initial_velocity_randomization, sample_initial_velocity_noise)
 
 
 def suffix_label(valid, failure, timeout, done, horizon_reached):
@@ -171,7 +173,12 @@ def collect(spec, output):
     reset=jax.vmap(env._reset_jump_start_unified)
     step=jax.vmap(lambda s,a:endpoint_state(env.step(s,a),spec))
     def run(rng):
-        initial=prepare_parallel_worlds(reset(jax.random.split(rng,count)),env,count)
+        reset_key, noise_key, pulse_key = jax.random.split(rng, 3)
+        initial_velocity_noise = sample_initial_velocity_noise(
+            jax.random.split(noise_key, count), env._bundle.model_index,
+            env.mj_model.nv, spec)
+        initial=prepare_parallel_worlds(
+            reset(jax.random.split(reset_key, count), initial_velocity_noise), env, count)
         def advance(carry,tick):
             s,key,alive,trigger_tick,applied_steps,previous_vz=carry;key,k=jax.random.split(key)
             before=physical_trace(env,s)
@@ -225,7 +232,7 @@ def collect(spec, output):
             active=alive&~terminal
             if (event or mixed) and not full_episode:active=active&(applied_steps<spec['pulse_steps'])
             return (nxt,key,active,trigger_tick,applied_steps,vz),tape
-        carry=(initial,rng,jp.ones(count,bool),jp.full(count,-1,jp.int32),jp.zeros(count,jp.int32),
+        carry=(initial,pulse_key,jp.ones(count,bool),jp.full(count,-1,jp.int32),jp.zeros(count,jp.int32),
                initial.data.qvel[:,env._bundle.model_index.root_dof_address+2])
         if event:
             shape=jax.eval_shape(lambda c,t:advance(c,t)[1],carry,jp.asarray(0,jp.int32))
@@ -240,6 +247,9 @@ def collect(spec, output):
         else:
             carry,tape=jax.lax.scan(advance,carry,jp.arange(prefix_steps),length=prefix_steps)
             ticks=jp.asarray(prefix_steps)
+        tape['initial_velocity_noise'] = jp.broadcast_to(
+            initial_velocity_noise, (prefix_steps, count, env.mj_model.nv)
+        )
         return carry[1],ticks,tape
     start=time.monotonic();rng,key=jax.random.split(state['rng'])
     write(output/'status.json',dict(phase='running',charged_interactions=count*prefix_steps))

@@ -254,10 +254,17 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
             phase_state.replace(info=info, metrics=metrics), soft_tube=False
         )
 
-    def _reset_jump_start_unified(self, rng: jax.Array) -> mjx_env.State:
+    def _reset_jump_start_unified(
+        self, rng: jax.Array, initial_velocity_noise: jax.Array | None = None
+    ) -> mjx_env.State:
         """Reset at the fixed ground jump start without using a Tube snapshot."""
         tube_sample = self._tube_pool.sample(rng)
         sample = self._natural_reset_sample(rng, tube_sample)
+        if initial_velocity_noise is not None:
+            noise = jp.asarray(initial_velocity_noise, dtype=jp.float32)
+            if noise.shape != sample["qvel"].shape:
+                raise ValueError("initial velocity noise shape does not match qvel")
+            sample = {**sample, "qvel": sample["qvel"] + noise}
         index = self._bundle.model_index
         root_x = jp.asarray(JUMP_START_X_M, jp.float32)
         qpos = sample["qpos"].at[index.root_qpos_address].set(root_x)

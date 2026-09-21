@@ -18,6 +18,21 @@ def test_invalid_controller_and_events_are_rejected_before_collection():
     assert selected_event({'pulse_event_schedule': ['apex'], 'nominal_source_rollout': True}) is None
 
 
+def test_initial_velocity_randomization_is_explicit_and_bounded():
+    from jit_dvgc.pulse_schedule import initial_velocity_randomization
+    assert initial_velocity_randomization({}) == {
+        'forward_m_s': 0.0, 'lateral_m_s': 0.0,
+        'angular_rad_s': 0.0, 'joint_rad_s': 0.0,
+    }
+    cfg = {'initial_velocity_randomization': {
+        'forward_m_s': .1, 'lateral_m_s': .1,
+        'angular_rad_s': .05, 'joint_rad_s': .1,
+    }}
+    assert initial_velocity_randomization(cfg) == cfg['initial_velocity_randomization']
+    with pytest.raises(ValueError):
+        initial_velocity_randomization({'initial_velocity_randomization': {'forward_m_s': -1}})
+
+
 def test_events_use_real_airborne_motion_and_pre_action_crossing():
     from jit_dvgc.pulse_schedule import event_ready
     args = dict(tick=9, front_clearance=np.array([.06, .06, .01]),

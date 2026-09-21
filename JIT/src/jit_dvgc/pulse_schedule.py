@@ -10,6 +10,55 @@ def controller_mode(spec):
     return mode
 
 
+def initial_velocity_randomization(spec):
+    """Validate the declared reset velocity-noise contract.
+
+    Values are symmetric half-ranges in SI units.  The zero-default keeps
+    historical fixed-reset experiments byte-for-byte compatible.
+    """
+    raw = spec.get('initial_velocity_randomization', {}) or {}
+    if not isinstance(raw, dict):
+        raise ValueError('initial_velocity_randomization must be a mapping')
+    defaults = {
+        'forward_m_s': 0.0, 'lateral_m_s': 0.0,
+        'angular_rad_s': 0.0, 'joint_rad_s': 0.0,
+    }
+    result = {}
+    import math
+    for name, default in defaults.items():
+        value = raw.get(name, default)
+        if type(value) not in (int, float) or not math.isfinite(float(value)) or float(value) < 0:
+            raise ValueError(f'invalid initial velocity randomization: {name}')
+        result[name] = float(value)
+    return result
+
+
+def sample_initial_velocity_noise(keys, model_index, qvel_size, spec):
+    """Sample per-lane qvel noise without changing qpos or root x."""
+    import jax
+    import jax.numpy as jp
+    bounds = initial_velocity_randomization(spec)
+    fields = (
+        (model_index.root_dof_address + 0, bounds['forward_m_s']),
+        (model_index.root_dof_address + 1, bounds['lateral_m_s']),
+        (model_index.root_dof_address + 3, bounds['angular_rad_s']),
+        (model_index.root_dof_address + 4, bounds['angular_rad_s']),
+        (model_index.root_dof_address + 5, bounds['angular_rad_s']),
+        (model_index.steering_dof_address, bounds['joint_rad_s']),
+        (model_index.hip_dof_address, bounds['joint_rad_s']),
+        (model_index.knee_dof_address, bounds['joint_rad_s']),
+    )
+    if any(i < 0 or i >= qvel_size for i, _ in fields):
+        raise ValueError('initial velocity randomization index outside qvel')
+    def one(key):
+        noise = jp.zeros((qvel_size,), dtype=jp.float32)
+        subkeys = jax.random.split(key, len(fields))
+        for subkey, (index, bound) in zip(subkeys, fields):
+            noise = noise.at[index].set(jax.random.uniform(subkey, (), minval=-bound, maxval=bound))
+        return noise
+    return jax.vmap(one)(keys)
+
+
 def collection_steps(spec, delays, event):
     """Opt-in fixed-random evaluation runs through the declared episode horizon."""
     if spec.get('full_episode_rollout'):
