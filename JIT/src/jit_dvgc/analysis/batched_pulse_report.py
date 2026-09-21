@@ -24,8 +24,10 @@ def report(output, destination=None):
     if font.exists():
         font_manager.fontManager.addfont(str(font));plt.rcParams['font.family']=font_manager.FontProperties(fname=str(font)).get_name()
     plt.rcParams['axes.unicode_minus']=False
-    methods=spec['methods'];q0=spec['root_qpos_address'];colors=['#2369a1','#d15a28','#32845d','#8556a8']
-    world_x_edges=np.linspace(2.4,5.5,156);aligned_x_edges=np.linspace(-.35,5.5,196)
+    methods=spec['methods'];q0=spec['root_qpos_address'];colors=['#2369a1','#d15a28','#32845d','#8556a8','#d62728']
+    display_x_max=float(spec.get('display_x_max_m',5.5))
+    if not 2.5 < display_x_max <= 5.5:raise ValueError('display_x_max_m must be in (2.5,5.5]')
+    world_x_edges=np.linspace(2.4,display_x_max,156);aligned_x_edges=np.linspace(-.35,display_x_max,196)
     z_edges=np.linspace(.05,1.30,151)
     density={m['key']:{'world':np.zeros((len(world_x_edges)-1,len(z_edges)-1)),
                        'aligned':np.zeros((len(aligned_x_edges)-1,len(z_edges)-1))} for m in methods}
@@ -67,7 +69,7 @@ def report(output, destination=None):
                     ticks=np.flatnonzero(tape['prefix_mask'][:,lane]);points=tape['qpos'][ticks,lane][:,[q0,q0+2]]
                     good=bool(tape['success'][ticks[-1],lane]) and not bool(tape['physical_failure'][ticks[-1],lane])
                     peaks[key].append(float(points[:,1].max()))
-                    beyond[key]+=int(np.any(points[:,0]>5.5))
+                    beyond[key]+=int(np.any(points[:,0]>display_x_max))
                     density[key]['world']+=np.histogram2d(points[:,0],points[:,1],bins=(world_x_edges,z_edges))[0]/len(points)
                     if not good:ends[key].append(points[-1])
                     k=liftoff_index(tape['front_wheel_clearance'][ticks,lane],tape['rear_wheel_clearance'][ticks,lane])
@@ -86,8 +88,8 @@ def report(output, destination=None):
         for b in methods[i+1:]:
             pairs[a['key']+'__'+b['key']]=dict(Counter(
                 f'{int(outcomes[a["key"]][e])}{int(outcomes[b["key"]][e])}' for e in range(spec['episodes'])))
-    display_contract=dict(world_x_min_m=2.4,world_x_max_m=5.5,
-        aligned_x_min_m=-.35,aligned_x_max_m=5.5,z_min_m=.05,z_max_m=1.30,
+    display_contract=dict(world_x_min_m=2.4,world_x_max_m=display_x_max,
+        aligned_x_min_m=-.35,aligned_x_max_m=display_x_max,z_min_m=.05,z_max_m=1.30,
         density='equal episode weight; each episode contributes 1/control_steps across occupied bins',
         trajectories_sampled=False,episodes_extending_beyond_world_x_max=beyond)
     summary=dict(methods={k:dict(v) for k,v in counts.items()},aligned_exclusions=dict(excluded),
@@ -99,7 +101,7 @@ def report(output, destination=None):
     write(destination/'summary.json',summary)
     link=os.path.relpath(destination,output)
     with (output/'INDEX.md').open('a') as stream:
-        stream.write(f'\n## 可读版图件（x≤5.5m）\n\n![轨迹密度与差异]({link}/comparison.png)\n\n'
+        stream.write(f'\n## 可读版图件（x≤{display_x_max:g}m）\n\n![轨迹密度与差异]({link}/comparison.png)\n\n'
             f'[PDF]({link}/comparison.pdf) · [SVG]({link}/comparison.svg) · [逐回合CSV]({link}/episodes.csv) · [汇总及轨迹哈希]({link}/summary.json)\n\n')
         for m in methods:stream.write(f'- {m["label"]}：{counts[m["key"]]["successes"]}/{spec["episodes"]}。\n')
     return summary
@@ -133,13 +135,14 @@ def _render_readable(destination,methods,colors,counts,density,ends,peaks,beyond
         nominal=load_tape(method['nominal_trace']);ticks=np.flatnonzero(nominal['prefix_mask'][:,0])
         pts=nominal['qpos'][ticks,0][:,[q0,q0+2]]
         ax.plot(pts[:,0],pts[:,1],color='#222222',lw=1.8,label='无扰动轨迹')
-        endpoint=np.asarray(ends[key]);visible=endpoint[(endpoint[:,0]>=2.4)&(endpoint[:,0]<=5.5)&
+        display_x_max=float(spec.get('display_x_max_m',5.5))
+        endpoint=np.asarray(ends[key]);visible=endpoint[(endpoint[:,0]>=2.4)&(endpoint[:,0]<=display_x_max)&
             (endpoint[:,1]>=.05)&(endpoint[:,1]<=1.30)] if len(endpoint) else np.empty((0,2))
         if spec.get('draw_failure_markers', True) and len(visible):ax.scatter(visible[:,0],visible[:,1],s=5,marker='x',color='#7a1f1f',alpha=.25,rasterized=True)
-        ax.set(xlim=(2.4,5.5),ylim=(.05,1.30),title=method['label'],xlabel='世界位置 x（m）')
+        ax.set(xlim=(2.4,display_x_max),ylim=(.05,1.30),title=method['label'],xlabel='世界位置 x（m）')
         if i==0:ax.set_ylabel('根部高度 z（m）')
         ax.grid(alpha=.12);ax.legend(loc='upper right',fontsize=8,frameon=False)
-        ax.text(.02,.97,f'成功 {counts[key]["successes"]:,}/{spec["episodes"]:,}\n越过5.5m：{beyond[key]:,}回合',
+        ax.text(.02,.97,f'成功 {counts[key]["successes"]:,}/{spec["episodes"]:,}\n越过{display_x_max:g}m：{beyond[key]:,}回合',
             transform=ax.transAxes,va='top',fontsize=9,bbox=dict(facecolor='white',alpha=.82,edgecolor='none'))
         fig.colorbar(image,ax=ax,shrink=.68,pad=.01,label='回合等权轨迹密度（对数）')
     ax=fig.add_subplot(grid[1,0:n]);positions=np.arange(len(methods));rates=[];low=[];high=[]
@@ -173,8 +176,8 @@ def _render_readable(destination,methods,colors,counts,density,ends,peaks,beyond
         ax.scatter(i,q[2],s=55,color=color,zorder=3);ax.text(i,q[4]+.025,f'中位 {q[2]:.3f}m',ha='center',fontsize=9)
     ax.set(xticks=positions,xticklabels=short_labels,ylim=(.25,1.30),ylabel='单回合根部峰值高度（m）',title='峰值高度分布：10–90% / 25–75% / 中位数')
     ax.grid(axis='y',alpha=.2)
-    fig.suptitle(f'{len(methods)}策略配对随机扰动（每策略 {spec["episodes"]:,} 回合，显示范围 x≤5.5m）',fontsize=17)
-    fig.supxlabel('上排为全部回合的等权轨迹密度；超过x=5.5m的轨迹仅裁剪显示，仍完整计入统计。' + (' 红叉为未成功终点。' if spec.get('draw_failure_markers', True) else ' 不绘制失败终点标记。'),fontsize=10)
+    fig.suptitle(f'{len(methods)}策略配对随机扰动（每策略 {spec["episodes"]:,} 回合，显示范围 x≤{display_x_max:g}m）',fontsize=17)
+    fig.supxlabel(f'上排为全部回合的等权轨迹密度；超过x={display_x_max:g}m的轨迹仅裁剪显示，仍完整计入统计。' + (' 红叉为未成功终点。' if spec.get('draw_failure_markers', True) else ' 不绘制失败终点标记。'),fontsize=10)
     fig.subplots_adjust(left=.045,right=.98,top=.90,bottom=.11,hspace=.34,wspace=.55)
     for ext in ('png','pdf','svg'):fig.savefig(destination/f'comparison.{ext}',dpi=190)
     plt.close(fig)
@@ -188,11 +191,11 @@ def _render_readable(destination,methods,colors,counts,density,ends,peaks,beyond
         key=method['key'];cmap=LinearSegmentedColormap.from_list(key+'aligned',['#ffffff',colors[i]])
         ax.pcolormesh(aligned_x_edges,z_edges,density[key]['aligned'].T,cmap=cmap,
             norm=aligned_norm,shading='auto',rasterized=True)
-        ax.axvline(0,color='#555555',ls='--',lw=1);ax.set(xlim=(-.35,5.5),ylim=(.05,1.30),title=method['label'],xlabel='x − x_LO（m）')
+        ax.axvline(0,color='#555555',ls='--',lw=1);ax.set(xlim=(-.35,display_x_max),ylim=(.05,1.30),title=method['label'],xlabel='x − x_LO（m）')
         if i==0:ax.set_ylabel('根部高度 z（m）')
         ax.grid(alpha=.12)
     fig.suptitle('诊断离地点对齐后的轨迹密度（仅平移x，真实高度不变）',fontsize=15)
-    fig.supxlabel('每个回合等权；显示截止到相对离地点 x=5.5m。未检出离地的回合不进入本图，但仍计入成功率。',fontsize=10)
+    fig.supxlabel(f'每个回合等权；显示截止到相对离地点 x={display_x_max:g}m。未检出离地的回合不进入本图，但仍计入成功率。',fontsize=10)
     for ext in ('png','pdf','svg'):fig.savefig(destination/f'aligned_density.{ext}',dpi=190)
     plt.close(fig)
     arrays={}
