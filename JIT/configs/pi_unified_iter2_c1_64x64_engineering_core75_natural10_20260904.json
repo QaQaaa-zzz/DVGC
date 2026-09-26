@@ -1,0 +1,105 @@
+{
+  "claim_boundary": {
+    "candidate_revision": "automatic_fixed_repair02_recipe",
+    "certified_safe_tube_claim": false,
+    "core_preservation_claim": false,
+    "core_replay_contract": "phase_50_50_then_source_core75_expansion25_core_uniform_expansion_value_weighted",
+    "final_policy_claim": false,
+    "fixed_training_recipe": "fresh_actor_critic_optimizer; Tube90/natural10; within_Tube old_core75/new_expansion25",
+    "formal_method_stage_training": true,
+    "fresh_initialization_unchanged": true,
+    "iteration": 2,
+    "jce_jel_claim": false,
+    "new_expansion_retention_claim": false,
+    "policy_name": "pi_2",
+    "ppo_hyperparameters_unchanged": true,
+    "reset_probabilities_unchanged": true,
+    "reward_physics_action_semantics_unchanged": true,
+    "soft_tube_support_predeclared": true,
+    "source_policy_name": "pi_1",
+    "source_tube_iteration": 2,
+    "test_data_used": false,
+    "tube_manifest_sha256": "135798c843a7acd9eb18cb44f9fd7a92ab39bf3df2d887b6c1fb8c629d480cff",
+    "validation_data_used": false
+  },
+  "formal": {
+    "checkpoint_transitions": [
+      0,
+      1024000,
+      2508800,
+      5017600,
+      7500800,
+      10009600
+    ],
+    "resume_semantics": "fresh_only",
+    "samples_per_phase": 8,
+    "train_panel_transitions": [
+      1024000,
+      2508800,
+      5017600,
+      7500800,
+      10009600
+    ]
+  },
+  "initialization": {
+    "actor": "fresh",
+    "critic": "fresh",
+    "optimizer": "fresh",
+    "restore_checkpoint": null
+  },
+  "inputs": {
+    "down_config_path": "JIT/configs/descent_recovery_smoke.json",
+    "down_config_sha256": "85b575e6579eabe384b0a1643ba24359dd35a24d8d357ee1806e96bd6c280ed0",
+    "soft_tube_manifest_sha256": "135798c843a7acd9eb18cb44f9fd7a92ab39bf3df2d887b6c1fb8c629d480cff",
+    "soft_tube_path": "JIT/runs/soft_tube/soft_tube_iter2_pi1_c1_64x64_engineering_20260904",
+    "tube_rsi_smoke_report": "JIT/runs/iteration_auto/pi_1_to_pi_2_20260903_phase_specific_twoaxis_v3/tube2_smoke_c1_64x64_engineering/report.json",
+    "tube_rsi_smoke_report_sha256": "4d65fc20d884504ce8a0eca37d9967c10a3cca206d286c73e23305cbc0c347cf",
+    "up_config_path": "JIT/configs/phase_u_continuation_smoke.json",
+    "up_config_sha256": "748581e00a5e9452044a02d94dabdce7c98bc4d0bb107644a29dc48bdbd84089"
+  },
+  "ppo": {
+    "batch_size": 128,
+    "clipping_epsilon": 0.1,
+    "discounting": 0.995,
+    "entropy_cost": 0.001,
+    "episode_horizon": 400,
+    "gae_lambda": 0.97,
+    "learning_rate": 0.0001,
+    "max_grad_norm": 0.75,
+    "num_minibatches": 8,
+    "num_parallel_envs": 1024,
+    "num_updates_per_batch": 1,
+    "requested_transitions": 10009600,
+    "reward_scaling": 0.1,
+    "seed": 821101,
+    "unroll_length": 25
+  },
+  "reset_mixture": {
+    "natural_reset_probability": 0.1,
+    "natural_reset_semantics": "existing_phase_u_natural_reset",
+    "schema": "jit_pi_unified_reset_mix_v1",
+    "selection": "bernoulli_per_episode",
+    "single_variable": "reset_distribution_only",
+    "soft_tube_probability": 0.9,
+    "soft_tube_semantics": "existing_phase_balanced_value_weighted_tube_rsi"
+  },
+  "run_declaration": {
+    "output_dir": "JIT/runs/pi_unified/pi_2_tube2_c1_64x64_engineering_core75_natural10_10009600_seed821101_20260904",
+    "purpose": "automatic_core_retaining_envelope_iteration_fixed_repair02_recipe",
+    "run_id": "pi_2_tube2_c1_64x64_engineering_core75_natural10_10009600_seed821101_20260904",
+    "status": "predeclared_not_started"
+  },
+  "runtime": {
+    "naccdmax": 1024
+  },
+  "schema": "jit_pi_unified_formal_v1",
+  "tube_sampling": {
+    "core_probability": 0.75,
+    "core_within_source": "uniform",
+    "expansion_probability": 0.25,
+    "expansion_within_source": "value_weighted",
+    "schema": "jit_tube_rsi_core_replay_v1",
+    "selection": "phase_then_source_then_entry",
+    "source_core_definition": "first_core_retained_count_entries"
+  }
+}

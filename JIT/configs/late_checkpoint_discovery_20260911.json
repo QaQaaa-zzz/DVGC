@@ -1,0 +1,56 @@
+{
+  "acquisition": {
+    "action_names": [
+      "steer",
+      "rear_wheel_drive",
+      "hip",
+      "knee"
+    ],
+    "anchors": "/home/qy/DVGC/JIT/runs/experiments/checkpoint_discovery_20260911_inputs/anchors.json",
+    "lookbacks_m": [
+      0.15
+    ],
+    "max_candidates_per_attempt": 64,
+    "max_forward_ticks": 400,
+    "nominal_centerline": "/home/qy/DVGC/JIT/runs/nominal_centerline/pi_0_jump_start_centerline_v3_20260904/centerline.json",
+    "role": "train",
+    "sampling_max_x_m": 8.0,
+    "sampling_mode": "trajectory_slices_v2",
+    "seed": 9881101,
+    "signs": [
+      -1,
+      1
+    ],
+    "slice_spacing_m": 0.05,
+    "start_contract": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/discovery/start_contract.json",
+    "strengths": [
+      0.15
+    ]
+  },
+  "bank": "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/comparison_bank.json",
+  "baseline_csv": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/figures/all_points.csv",
+  "evaluator_order": [
+    "pi_0",
+    "pi_1",
+    "pi_2",
+    "pi_3",
+    "pi_4",
+    "pi_5",
+    "pi_6"
+  ],
+  "label_seed": 9881601,
+  "per_arm_budget": 1500000,
+  "proposers": [
+    "pi_6",
+    "late_checkpoint_128000",
+    "late_checkpoint_192000",
+    "late_checkpoint_256000"
+  ],
+  "timeout_seconds": 600,
+  "training_surcharges": {
+    "late_checkpoint_128000": 128226,
+    "late_checkpoint_192000": 192307,
+    "late_checkpoint_256000": 256392,
+    "pi_6": 0
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "bank_sha256": "979d43ffa94b7440a77b7aa09dd6f9ffaea6cae775614b46a341ced1f2cf306a",
+  "baseline_actor_sha256": "d0753cb3be742743c82a68fbb00bb30d914a4c25873e864e77ac298ea5cca4ff",
+  "baseline_payload_sha256": "f17b2361ae897de876a35955fd3bdcc86cfbdcf4368c24b6cf3d41fcde59181c",
+  "baseline_policy_name": "pi_2",
+  "boundary_gate": {
+    "baseline_reproduction_failure_count": 0,
+    "candidate_success_count": 4,
+    "candidate_success_parent_group_count": 3,
+    "minimum_candidate_success_parent_groups": 2,
+    "passed": true,
+    "phase_counts": {
+      "downstream": {
+        "baseline_success_count": 0,
+        "candidate_success_count": 0,
+        "improvement_count": 0,
+        "regression_count": 0,
+        "state_count": 0
+      },
+      "upstream": {
+        "baseline_success_count": 0,
+        "candidate_success_count": 4,
+        "improvement_count": 4,
+        "regression_count": 0,
+        "state_count": 12
+      }
+    },
+    "state_count": 12
+  },
+  "boundary_source": {
+    "acceptance_role_manifest_sha256": "c9e10ad138001c3b909c670be2408843c1688bb9a95c8249a3cc7f345b21e68b",
+    "baseline_rerolled_during_gate": false,
+    "selection": "pretrained_candidate_blind_locked_baseline_negative_acceptance_role",
+    "success_criterion": "first_valid_landing"
+  },
+  "candidate_actor_sha256": "0e8ede7cc72122793345339de294abb46ed00b6740d16aafad0c230257be0014",
+  "candidate_iteration": 3,
+  "candidate_payload_sha256": "1b14547812c9dc199628d85561d731df591cbc5e59eda6dc3be12ffa41a01bcf",
+  "candidate_policy_name": "pi_3",
+  "certified_safe_set_claim": false,
+  "core_gate": {
+    "baseline_success_count": 3539,
+    "baseline_success_each_phase": {
+      "downstream": 2895,
+      "upstream": 644
+    },
+    "candidate_success_count": 3598,
+    "improvement_count": 89,
+    "nonvacuous": true,
+    "passed": false,
+    "phase_counts": {
+      "downstream": {
+        "baseline_success_count": 2895,
+        "candidate_success_count": 2895,
+        "improvement_count": 0,
+        "regression_count": 0,
+        "state_count": 2895
+      },
+      "upstream": {
+        "baseline_success_count": 644,
+        "candidate_success_count": 703,
+        "improvement_count": 89,
+        "regression_count": 30,
+        "state_count": 749
+      }
+    },
+    "regression_count": 30,
+    "state_count": 3644
+  },
+  "core_source": {
+    "baseline_success_criterion": "stable_recovery",
+    "candidate_success_criterion": "first_valid_landing",
+    "preservation_population": "locked_baseline_successes_only"
+  },
+  "empirical_envelope_expansion_accepted": false,
+  "environment_interactions": 38462,
+  "expert_switching_used": false,
+  "final_evaluation_data_used": false,
+  "iteration_accepted": false,
+  "jce_jel_claim": false,
+  "protocol_sha256": "979d43ffa94b7440a77b7aa09dd6f9ffaea6cae775614b46a341ced1f2cf306a",
+  "schema": "jit_paired_policy_gate_report_v1",
+  "source_iteration": 2,
+  "status": "completed",
+  "test_data_used": false,
+  "training_transitions": 0,
+  "validation_data_used": false
+}

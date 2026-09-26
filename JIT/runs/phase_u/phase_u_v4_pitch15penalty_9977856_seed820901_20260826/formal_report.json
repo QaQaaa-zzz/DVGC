@@ -1,0 +1,42 @@
+{
+  "brax_evaluation_transitions": 0,
+  "checkpoint_restored": true,
+  "checkpoint_transitions": [
+    0,
+    491520,
+    1990656,
+    4988928,
+    7987200,
+    9977856
+  ],
+  "completed_training_transitions": 9977856,
+  "diagnostic_transitions": 6055,
+  "evaluated_transitions": [
+    491520,
+    1990656,
+    4988928,
+    7987200,
+    9977856
+  ],
+  "final_metrics": {
+    "training/entropy_loss": 0.017547836527228355,
+    "training/kl_mean": 0.014741150662302971,
+    "training/learning_rate": 9.999999747378752e-05,
+    "training/policy_dist_max_loc": 1.4331483840942383,
+    "training/policy_dist_max_std": 0.9794121980667114,
+    "training/policy_dist_mean_loc": -0.14284104108810425,
+    "training/policy_dist_mean_std": 0.27152037620544434,
+    "training/policy_dist_min_loc": -3.3071250915527344,
+    "training/policy_dist_min_std": 0.03067035973072052,
+    "training/policy_loss": -0.006379634141921997,
+    "training/sps": 22538.133991844843,
+    "training/total_loss": 23.091482162475586,
+    "training/v_loss": 23.08031463623047,
+    "training/walltime": 469.17525339126587
+  },
+  "fixed_evaluation_transitions": 4868,
+  "requested_training_transitions": 9977856,
+  "resume_semantics": "fresh",
+  "segment_training_transitions": 9977856,
+  "starting_training_transition": 0
+}

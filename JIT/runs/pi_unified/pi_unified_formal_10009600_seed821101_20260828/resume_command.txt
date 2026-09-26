@@ -1,0 +1,1 @@
+PYTHONPATH=JIT/src /home/qy/mujoco_playground/.venv/bin/python JIT/cli/train_unified.py --config JIT/configs/pi_unified_formal.json --run-id pi_unified_formal_10009600_seed821101_20260828

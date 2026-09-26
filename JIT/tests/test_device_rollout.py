@@ -1,0 +1,191 @@
+from typing import NamedTuple
+import jax
+import jax.numpy as jp
+import numpy as np
+import pytest
+from jit_dvgc.continuation.device_rollout import make_device_rollout
+from jit_dvgc.acquisition.trajectory_sampling import observed_slice
+
+class Data(NamedTuple):
+    qpos: object
+    qvel: object
+class Up(NamedTuple):
+    apex_seen: object
+class Down(NamedTuple):
+    recovery_success: object
+    valid_contact_seen: object
+class State(NamedTuple):
+    data: object
+    obs: object
+    info: object
+    done: object
+
+def initial(target):
+    return State(Data(jp.array([0.]),jp.array([0.])),{'state':jp.array([target])},
+        {'up_events':Up(jp.array(False)), 'down_events':Down(jp.array(False),jp.array(False)),
+         'phase_transitioned':jp.array(False),'expert_switching_used':jp.array(False)},jp.array(False))
+def policy(obs,key):
+    return jp.ones(4), {}
+def step(s,a):
+    x=s.data.qpos+1
+    info={**s.info,'down_events':Down(jp.array(False), x[0]>=s.obs['state'][0])}
+    return s._replace(data=Data(x,s.data.qvel),info=info)
+
+@pytest.mark.parametrize("vectorized", [False, True])
+def test_device_stops_each_lane_and_accounts_inactive_steps(vectorized):
+    states=jax.tree_util.tree_map(lambda *a:jp.stack(a),initial(2.),initial(4.))
+    out,counts,bad,flags,cost=make_device_rollout(policy,step,10,vectorized=vectorized)(states,jax.random.split(jax.random.PRNGKey(1),2))
+    np.testing.assert_array_equal(counts,[2,4])
+    np.testing.assert_array_equal(out.data.qpos[:,0],[2,4])
+    assert int(cost)==8 and int(cost)-int(sum(counts))==2
+    assert not np.any(bad) and np.all(flags[:,3])
+
+@pytest.mark.parametrize("vectorized", [False, True])
+def test_horizon_and_nonfinite_are_not_success(vectorized):
+    states=jax.tree_util.tree_map(lambda *a:jp.stack(a),initial(20.),initial(30.))
+    _,counts,bad,flags,cost=make_device_rollout(policy,step,3,vectorized=vectorized)(states,jax.random.split(jax.random.PRNGKey(1),2))
+    assert list(counts)==[3,3] and int(cost)==6 and not np.any(flags[:,3])
+    def broken(s,a): return s._replace(data=Data(s.data.qpos*jp.nan,s.data.qvel))
+    _,counts,bad,_,_=make_device_rollout(policy,broken,3,vectorized=vectorized)(states,jax.random.split(jax.random.PRNGKey(1),2))
+    assert np.all(bad) and list(counts)==[1,1]
+
+def test_real_slice_selection_never_fills_skipped_bins():
+    seen=set()
+    a=observed_slice(2.51,'upstream',seen);seen.add(('upstream',a[0]))
+    assert observed_slice(2.52,'upstream',seen) is None
+    b=observed_slice(2.64,'upstream',seen)
+    assert b==(53,2.6500000000000004)
+    assert len(seen)==1
+    assert observed_slice(2.51,'downstream',seen) is not None
+    assert observed_slice(3.9,'downstream',seen) is None
+
+
+def test_device_labeler_matches_serial_rows_and_accounts_padding(tmp_path,monkeypatch):
+    from types import SimpleNamespace
+    from jit_dvgc import unified_continuation_shards as labels
+    from jit_dvgc.jump_evidence_validation import write,read
+    def start(target):
+        s=initial(target)
+        info={**s.info,'active_phase':jp.array(0),'success':jp.array(False),'physical_failure':jp.array(False),
+              'timeout':jp.array(False),'end_code':jp.array(0)}
+        return s._replace(info=info)
+    states=[start(2.),start(4.),start(3.)]
+    rows=[{'candidate_id':f'c{i}','candidate_kind':'reachable_unified_frontier_probe','state_sha256':str(i)*64,
+           'phase':'upstream','phase_index':0,'snapshot':str(i),'source_bank':'bank','parent_group_id':'g',
+           'parent_state_sha256':'p'*64} for i in range(3)]
+    record={'iteration':0,'name':'pi_0','actor_sha256':'a'*64,'payload_sha256':'b'*64,'formal_config_sha256':'c'*64,'xml_sha256':'xml'}
+    path=tmp_path/'catalog.json';write(path,{'candidate_count':3,'protocol_sha256':'d'*64,'entries':rows})
+    write(tmp_path/'protocol.json',{'protocol_sha256':'d'*64})
+    monkeypatch.setattr(labels,'validate_unified_boundary_catalog',lambda *a,**k:rows)
+    monkeypatch.setattr(labels,'validate_candidate_snapshot',lambda *a,**k:None)
+    monkeypatch.setattr(labels,'load_unified_envelope_snapshot',lambda p:SimpleNamespace(state=states[int(p.name)],observation=np.array([int(p.name)])))
+    monkeypatch.setattr(labels,'fresh_unified_continuation_start',lambda snapshot,env:snapshot.state)
+    env=SimpleNamespace(step=step,_bundle=SimpleNamespace(xml_sha256='xml'),resolved_config=SimpleNamespace(ppo=SimpleNamespace(episode_horizon=6)))
+    reports=[]
+    for backend,size in [('serial',1),('device',2),('vectorized',2)]:
+        reports.append(labels.label_unified_continuation_shard(path,tmp_path/backend,env=env,policy=policy,policy_record=record,
+            frozen_manifest_sha256='f'*64,shard_index=0,shard_count=1,max_ticks=6,protocol_seed=9,
+            success_criterion='first_valid_landing',execution_backend=backend,batch_size=size))
+    assert read(tmp_path/'serial/labels.json')==read(tmp_path/'device/labels.json')
+    assert read(tmp_path/'serial/labels.json')==read(tmp_path/'vectorized/labels.json')
+    assert reports[2]['environment_interactions']==11
+    assert reports[0]['environment_interactions']==9
+    assert reports[1]['environment_interactions']==11
+    assert reports[1]['inactive_lane_interactions']==2
+    for backend in ('serial', 'vectorized'):
+        target = tmp_path / ('subset_' + backend)
+        report = labels.label_unified_continuation_shard(path,target,env=env,policy=policy,policy_record=record,
+            frozen_manifest_sha256='f'*64,shard_index=0,shard_count=1,max_ticks=6,protocol_seed=9,
+            success_criterion='first_valid_landing',execution_backend=backend,batch_size=2,candidate_indices=[0,2])
+        assert read(target/'labels.json') == [read(tmp_path/'serial/labels.json')[i] for i in (0,2)]
+        assert report['status']=='completed_subset'
+        assert report['selected_candidate_indices']==[0,2]
+        assert report['maximum_environment_interactions']==12
+
+
+def test_warp_like_step_refuses_vmap_but_device_loop_uses_single_world():
+    # Models the backend's non-vmapped contact buffers: a vmap transform of
+    # this step must fail, while an ordinary step inside lax.map is supported.
+    from jax.custom_batching import custom_vmap
+    single_world = custom_vmap(step)
+
+    @single_world.def_vmap
+    def reject_batch(axis_size, in_batched, *args):
+        raise AssertionError('contact__dim must not acquire a vmap axis')
+
+    states=jax.tree_util.tree_map(lambda *a:jp.stack(a),initial(2.),initial(4.))
+    keys=jax.random.split(jax.random.PRNGKey(1),2)
+    with pytest.raises(AssertionError,match='contact__dim'):
+        jax.vmap(single_world)(states,jp.ones((2,4)))
+    out,counts,bad,flags,cost=make_device_rollout(policy,single_world,10)(states,keys)
+    assert list(counts)==[2,4] and not np.any(bad)
+    np.testing.assert_array_equal(out.data.qpos[:,0],[2,4])
+
+@pytest.mark.parametrize('size', [1, 3, 64])
+def test_vectorized_lanes_keep_keys_and_terminal_state(size):
+    targets = [float(i % 4 + 1) for i in range(size)]
+    states = jax.tree_util.tree_map(lambda *a: jp.stack(a), *map(initial, targets))
+    keys = jax.random.split(jax.random.PRNGKey(8), size)
+    def random_policy(obs, key):
+        return jax.random.uniform(key, (4,)), {}
+    def keyed_step(s, a):
+        out = step(s, a)
+        return out._replace(data=Data(out.data.qpos, s.data.qvel + a[:1]))
+    serial = make_device_rollout(random_policy, keyed_step, 8)(states, keys)
+    parallel = make_device_rollout(random_policy, keyed_step, 8, vectorized=True)(states, keys)
+    for a, b in zip(jax.tree_util.tree_leaves(serial), jax.tree_util.tree_leaves(parallel)):
+        np.testing.assert_array_equal(a, b)
+
+
+def test_warp_batch_shared_buffers_have_no_world_axis():
+    from mujoco import mjx
+    import mujoco
+    from jit_dvgc.continuation.device_rollout import stack_worlds, take_world
+    from mujoco.mjx.warp.types import DATA_NON_VMAP
+    model = mujoco.MjModel.from_xml_string('<mujoco><worldbody><body><freejoint/><geom size=".1"/></body></worldbody></mujoco>')
+    # Real DataWarp pytree on CPU tests layout; GPU stepping has its own bounded benchmark.
+    from mujoco.mjx.warp.types import DataWarp
+    impl = DataWarp(**{f.name: jp.zeros((2,), jp.float32) for f in DataWarp.fields()})
+    data = mjx.make_data(model, impl='jax').replace(_impl=impl)
+    a = initial(2.)._replace(data=data)
+    b = a._replace(data=data.replace(qpos=data.qpos.at[0].set(1.)))
+    batch = stack_worlds([a, b])
+    assert batch.data.qpos.shape == (2, model.nq)
+    for field in DATA_NON_VMAP:
+        assert getattr(batch.data._impl, field).shape == getattr(data._impl, field).shape
+    np.testing.assert_array_equal(take_world(batch, 1).data.qpos, b.data.qpos)
+
+
+def test_repeat_worlds_cycles_inputs_without_new_candidate_claims():
+    from jit_dvgc.continuation.device_rollout import repeat_worlds, stack_worlds
+    states = stack_worlds([initial(2.), initial(4.)])
+    repeated = repeat_worlds(states, 5)
+    np.testing.assert_array_equal(repeated.obs['state'][:, 0], [2., 4., 2., 4., 2.])
+
+
+def test_capacity_guard_remembers_overflow_between_control_steps(monkeypatch):
+    from flax import struct
+    from mujoco import mjx
+    from jit_dvgc.continuation.device_rollout import checked_physics_step
+    @struct.dataclass
+    class Scratch:
+        nacon: object
+        naconmax: object
+        ncollision: object
+        naccdmax: object
+        njmax: object
+    @struct.dataclass
+    class Physics:
+        ctrl: object
+        tick: object
+        nefc: object
+        _impl: object
+    data = Physics(jp.zeros(4), jp.array(0), jp.array(0),
+                   Scratch(jp.array(0), jp.array(8), jp.array(0), jp.array(32), jp.array(64)))
+    def simulate(model, d):
+        tick = d.tick + 1
+        return d.replace(tick=tick, _impl=d._impl.replace(nacon=jp.where(tick==2, 9, 1)))
+    monkeypatch.setattr(mjx, 'step', simulate)
+    final, overflow = checked_physics_step(None, data, jp.ones(4), 4)
+    assert int(final._impl.nacon) == 1
+    assert bool(overflow)

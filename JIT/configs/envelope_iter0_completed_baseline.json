@@ -1,0 +1,51 @@
+{
+  "schema": "jit_unified_transition_band_baseline_build_config_v1",
+  "output_dir": "JIT/runs/pi_unified_transition_band/pi_0_iter0_completed_baseline_20260831",
+  "expected_protocol_sha256": "dab211deb8c60a3f7b1db2a8fafc06bc7c3ad3e85f7a1c51ecfe2cc0fbdb937a",
+  "expected_composite_acquisition_protocol_sha256": "ac479d8f69ce10f82a33a647925befa473690381f79019e2f521a89cb1e53d5f",
+  "expected_output": {
+    "candidate_count": 896,
+    "positive_count": 883,
+    "negative_count": 13,
+    "maximum_duration": 8
+  },
+  "protocol": {
+    "schema": "jit_unified_transition_band_baseline_protocol_v1",
+    "status": "predeclared",
+    "iteration": 0,
+    "policy_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+    "policy_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+    "sources": [
+      {
+        "name": "inner_shell",
+        "labels_path": "JIT/runs/pi_unified_continuation/pi_0_frontier_train_labels_20260831/labels.json",
+        "expected_label_protocol_sha256": "6b8d7b28ba57718facec6236ea95ee8e00181eaa71dc19d68f24eebfb7ae9521",
+        "expected_acquisition_protocol_sha256": "f649dc90a9cb574eb6de05b84eb512a02c3d834d8a208a54544a5592d4edc7ca",
+        "expected_candidate_count": 416,
+        "expected_positive_count": 415,
+        "expected_negative_count": 1,
+        "maximum_duration": 2
+      },
+      {
+        "name": "outer_shell1",
+        "labels_path": "JIT/runs/pi_unified_continuation/pi_0_outer_shell1_train_labels_20260831/labels.json",
+        "expected_label_protocol_sha256": "7974bbf6cefc9c1a8bed2a156e23d1ead6f9d9bb497f7a48535c7d60851afa58",
+        "expected_acquisition_protocol_sha256": "58f2fef73c50de73e8ca8935e5235c037d4b311ed1fe73c2214d4563ab515a44",
+        "expected_candidate_count": 480,
+        "expected_positive_count": 468,
+        "expected_negative_count": 12,
+        "maximum_duration": 8
+      }
+    ],
+    "deduplicate_by": "state_sha256",
+    "conflict_policy": "reject",
+    "claim_boundary": {
+      "training_only_baseline": true,
+      "continuation_field_trained": false,
+      "tube_1_constructed": false,
+      "pi_1_trained": false,
+      "jce_jel_claim": false,
+      "certified_safe_set_claim": false
+    }
+  }
+}

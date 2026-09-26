@@ -1,0 +1,11 @@
+{
+  "environment_transitions": 10012557,
+  "interaction_accounting": {
+    "brax_evaluation": 0,
+    "diagnostic": 2957,
+    "fixed_evaluation": 0,
+    "training": 10009600
+  },
+  "reason": "formal unified Tube-RSI target and TRAIN-only milestone panels completed; independent final evaluation remains separate",
+  "status": "completed"
+}

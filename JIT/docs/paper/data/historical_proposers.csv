@@ -1,0 +1,14 @@
+round_index,candidates,exclusive_observed_cells,novel_vs_round_start,proposer,root_cells,witnessed,source_ids
+0,567,487,487,pi_0,487,498,historical_r0_proposers
+0,1105,935,747,pi_1,935,992,historical_r0_proposers
+0,951,767,0,pi_2,767,951,historical_r0_proposers
+0,830,819,819,pi_3,819,828,historical_r0_proposers
+0,753,734,0,pi_4,734,743,historical_r0_proposers
+0,935,887,887,pi_5,887,898,historical_r0_proposers
+1,1193,1083,596,pi_0,1083,1113,historical_r1_proposers
+1,1897,1667,732,pi_1,1667,1739,historical_r1_proposers
+1,1587,1396,629,pi_2,1396,1586,historical_r1_proposers
+1,1698,1679,860,pi_3,1679,1692,historical_r1_proposers
+1,1475,1449,715,pi_4,1449,1465,historical_r1_proposers
+1,1876,1293,406,pi_5,1293,1830,historical_r1_proposers
+1,738,729,729,pi_6,729,738,historical_r1_proposers

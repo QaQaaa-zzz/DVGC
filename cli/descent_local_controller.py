@@ -15,6 +15,12 @@ from pathlib import Path
 from cli.build_descent_entries import snapshot_identity
 from dvgc.bank import SnapshotBank
 from dvgc.config import file_sha256
+from dvgc.construction_lifecycle import (
+    completed_coverage,
+    is_stale_lock,
+    split_range_after_oom,
+    worker_log_is_oom,
+)
 from dvgc.runtime import save_json
 
 
@@ -29,39 +35,6 @@ RUNTIME_GATE = Path("docs/RUNTIME_GATE.json")
 SHARD_SIZE = 12
 GATE_PAUSE_EXIT = 40
 AUTHORIZED_STOP_EXIT = 41
-
-
-def is_stale_lock(lock_payload, *, unit_active, worker_pids, heartbeat_age):
-    """A lock is stale only after every independent liveness check agrees."""
-    pid = int(lock_payload.get("pid", 0) or 0)
-    try:
-        os.kill(pid, 0)
-        pid_alive = pid > 0
-    except OSError:
-        pid_alive = False
-    return bool(not pid_alive and not unit_active and not worker_pids and heartbeat_age > 60.0)
-
-
-def split_range_after_oom(start, end):
-    """Apply the declared 12 -> 6 -> 3 -> 1 state OOM backoff."""
-    width = int(end) - int(start)
-    if width <= 1:
-        return [(int(start), int(end))]
-    target = 6 if width > 6 else 3 if width > 3 else 1
-    return [(left, min(left + target, int(end))) for left in range(int(start), int(end), target)]
-
-
-def completed_coverage(payloads, total):
-    """Return exact completed coverage, rejecting gaps and overlaps."""
-    indices = sorted(int(row["candidate_index"]) for payload in payloads for row in payload["rows"])
-    if indices != list(range(int(total))):
-        raise ValueError("Completed shard markers do not cover every global index exactly once")
-    return indices
-
-
-def worker_log_is_oom(text):
-    lowered = str(text).lower()
-    return any(token in lowered for token in ("out of memory", "failed to allocate", "resource_exhausted"))
 
 
 class Controller:

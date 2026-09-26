@@ -1,0 +1,4 @@
+# Optional JIT pulse explorer backend; installed in the existing Playground venv.
+# Keep the environment's existing compatible Torch/JAX/MuJoCo stack.
+rsl-rl-lib==3.2.0
+tensorboard>=2.14

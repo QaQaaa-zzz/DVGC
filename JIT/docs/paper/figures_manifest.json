@@ -1,0 +1,85 @@
+{
+  "schema": "jit_paper_figures_v1",
+  "scientific_scope": "TRAIN/development; no simulator calls",
+  "figures": [
+    {
+      "name": "fig01_control_architecture",
+      "caption": "Implemented online control and residual PPO; no suffix reward gate or outer-loop gradient.",
+      "source_files": [
+        "data/evidence.json"
+      ],
+      "source_sha256": {
+        "data/evidence.json": "39358d7ceea2532458b504a49b07a64054766af47f0b06d97131c1db1179ec3c"
+      },
+      "files": {
+        "figures/fig01_control_architecture.svg": "6b16038d38f8b938824d7fb0dccd61e9ea257a36b6f92ae1b412bbf569ddcd7e",
+        "figures/fig01_control_architecture.pdf": "cdca42e93e599bb6f20c3dec406dcf403083ac29c8ac19ccdf70511c9f9a0212",
+        "figures/fig01_control_architecture.png": "317e38515f52a2eb47d3df78f5f6e5ea72cc26250a227d6451d71560ba85f7d8"
+      }
+    },
+    {
+      "name": "fig02_delayed_loop",
+      "caption": "Actual candidate, training and reevaluation loop; shared-source comparison limitation.",
+      "source_files": [
+        "data/evidence.json"
+      ],
+      "source_sha256": {
+        "data/evidence.json": "39358d7ceea2532458b504a49b07a64054766af47f0b06d97131c1db1179ec3c"
+      },
+      "files": {
+        "figures/fig02_delayed_loop.svg": "37377b47c2a56a945c0e444c204039af1a4567083faed1b0323c7e33076a66d2",
+        "figures/fig02_delayed_loop.pdf": "206d45fb2af8883faae78e65c2cb156bbf2b976287089c2d83e5e3a287660329",
+        "figures/fig02_delayed_loop.png": "ebcfd0b20605761306bb5533dca24c5a6d18180da3dd7952ba337625b3292cd5"
+      }
+    },
+    {
+      "name": "fig03_campaign_checkpoints",
+      "caption": "Historical expansion and both complete checkpoint comparisons, separate fresh-run scopes; same training seed.",
+      "source_files": [
+        "data/historical_campaign.csv",
+        "data/checkpoint_comparison.csv"
+      ],
+      "source_sha256": {
+        "data/historical_campaign.csv": "990849af8512d6a849dc1ba41426c5675a98c0e775cd89beb720ca0fd939eb0c",
+        "data/checkpoint_comparison.csv": "3f69f1790d12f2e82dfde812eb74ee8011042a4d4be55fc4479741fe8453355c"
+      },
+      "files": {
+        "figures/fig03_campaign_checkpoints.svg": "c1199b33560c1557016648a19a39b551bcc23201a7f15a4880b5e0015596a424",
+        "figures/fig03_campaign_checkpoints.pdf": "6e1385aaebd3bcf2cc5dabf345c0459a59769267710d9096e751743826bbe297",
+        "figures/fig03_campaign_checkpoints.png": "5d86a17e677dbf4699f3bc89c9db96fb518f3c80740167e88d0659591f17f0d6"
+      }
+    },
+    {
+      "name": "fig04_delayed_results",
+      "caption": "All two-round outcomes and separately audited additive cost; zero delayed gains retained.",
+      "source_files": [
+        "data/delayed_rounds.csv",
+        "data/cost_breakdown.csv"
+      ],
+      "source_sha256": {
+        "data/delayed_rounds.csv": "c17637d01735afe383c6e5a4138c991b3cf6af91330ddcb86ae854f5a61f8736",
+        "data/cost_breakdown.csv": "b5513f1083600fa5c4c366901bddf570580aa0e21073c849958001b7b63bd413"
+      },
+      "files": {
+        "figures/fig04_delayed_results.svg": "975ca4c7108307501782c3a3b8e3e123819918a078eac7abf30a20fa9151a6e8",
+        "figures/fig04_delayed_results.pdf": "e406bf1b4cc6c385051b46dc2c7c25e7d80dda6eb85ed1df65d274345bb34d8e",
+        "figures/fig04_delayed_results.png": "9ad87ff755f5e4a0ccdeb66d5135dd84082749c2eabd42f713a3c4eb8fb9c8f3"
+      }
+    },
+    {
+      "name": "fig05_geometry",
+      "caption": "Complete historical phase geometry, including unwitnessed points; no hull or interpolated feasibility.",
+      "source_files": [
+        "data/geometry_points.csv"
+      ],
+      "source_sha256": {
+        "data/geometry_points.csv": "0239ea4439fdb8921318e88b44460da7f9d9e67676943ec9fa94f15aded391d4"
+      },
+      "files": {
+        "figures/fig05_geometry.svg": "51aad562ee68c534ba118bd929324df94c6b620b19ff45a89b077e68e170c727",
+        "figures/fig05_geometry.pdf": "5b59956d556426e3c54511814b4ab4117a8a473ff33eddb38909fdf415eca176",
+        "figures/fig05_geometry.png": "4e8cb8265f31acab29d7cdf453002bcd5b160eecb90e0b862a5b7e02764b2c8e"
+      }
+    }
+  ]
+}

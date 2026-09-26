@@ -1,0 +1,539 @@
+{
+  "schema": "jit_iterative_probe_training_v1",
+  "support": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0011/witnessed_support.json",
+  "bootstrap_formal_config": "/home/qy/DVGC/JIT/configs/pi_unified_round1_natural10.json",
+  "inputs": {
+    "up_config_path": "JIT/configs/phase_u_continuation_smoke.json",
+    "up_config_sha256": "748581e00a5e9452044a02d94dabdce7c98bc4d0bb107644a29dc48bdbd84089",
+    "down_config_path": "/home/qy/DVGC/JIT/configs/descent_stable_forward_2s.json",
+    "down_config_sha256": "59f1bd052489406730de68d27e234db8b89d3915b730dd2a58f85762165b9fda"
+  },
+  "initialization": {
+    "actor": "warm_start_frozen_unified",
+    "critic": "fresh",
+    "optimizer": "fresh",
+    "source_frozen_policy": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0000/frozen/frozen_unified_policy.json"
+  },
+  "jump_start_probability": 0.2,
+  "success_criterion": "stable_forward_recovery",
+  "reward_contract": "Unchanged up rewards; descent recovery tick bonus only for consecutive grounded stable forward ticks; success after 100 full post-contact ticks and >=1m progress. Historical landing labels are reset guidance only.",
+  "snapshot_reset_contract": "fresh episode and phase clocks; preserve saved event and controller context",
+  "production_training_smoke_verified": false,
+  "ppo": {
+    "num_parallel_envs": 128,
+    "episode_horizon": 400,
+    "unroll_length": 25,
+    "batch_size": 16,
+    "num_minibatches": 8,
+    "num_updates_per_batch": 1,
+    "requested_transitions": 256000,
+    "learning_rate": 0.0001,
+    "entropy_cost": 0.001,
+    "reward_scaling": 0.1,
+    "discounting": 0.995,
+    "gae_lambda": 0.97,
+    "clipping_epsilon": 0.1,
+    "max_grad_norm": 0.75,
+    "seed": 9991418
+  },
+  "run_declaration": {
+    "run_id": "stable_landing_recovery_20260914"
+  },
+  "claim_boundary": {
+    "iteration": 37,
+    "test_data_used": false,
+    "validation_data_used": false
+  },
+  "input_files": {
+    "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0011/witnessed_support.json": "1523cc658a72e9451a6b704c833965afb1780403a80d538903c6a409ed01bebd",
+    "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0000/frozen/frozen_unified_policy.json": "289c5fa484a7be44ff104fb42979ae4cab8dd0b57dfe436b21495d4fc958ae00",
+    "/home/qy/DVGC/JIT/configs/pi_unified_round1_natural10.json": "742eec5178a91c20ab9ce423fe35c689996e14b397af3ad485f7e98ab7ce0441",
+    "/home/qy/DVGC/JIT/configs/descent_stable_forward_2s.json": "1b603838df2e7507a41b706c7aae73caebe70eb5c401f8a36bce4c77cca95e54"
+  },
+  "checkpoint_evaluation": {
+    "schema": "jit_probe_checkpoint_evaluation_v1",
+    "role": "train",
+    "checkpoint_transitions": [
+      0,
+      64000,
+      128000,
+      256000
+    ],
+    "train_panel_transitions": [
+      64000,
+      128000,
+      256000
+    ],
+    "samples_per_phase": 8,
+    "horizon": 400,
+    "maximum_training_transitions": 256000,
+    "maximum_panel_interactions": 19200,
+    "maximum_total_interactions": 275200,
+    "automatic_extension": false,
+    "optimizer_continuation": "same_live_trainer_only",
+    "checkpoint_resume_supported": false,
+    "final_test_used": false
+  },
+  "fixed_train_panel": {
+    "schema": "jit_probe_fixed_train_panel_v1",
+    "role": "train",
+    "final_test_used": false,
+    "support_sha256": "1c8117decd948b6fd230b89d15efbc98c24607019a9e4b336f733cdc8742b168",
+    "selected_entries": [
+      {
+        "phase": "upstream",
+        "entry_index": 0,
+        "entry": {
+          "evidence_status": "witnessed",
+          "key": "00320b11c29b97bb83c71240c679782372c04b7e1650975996e830178b7e4168",
+          "phase": "upstream",
+          "role": "train",
+          "root_cell": "c1fe4e22dd2c4657b0bfd6fcb2187ab9ebd3cceef0cb18a0aae9598bcd94b380",
+          "sampling_weight": 1.0,
+          "snapshot": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0004/collection/snapshots/00013",
+          "snapshot_context_sha256": "00320b11c29b97bb83c71240c679782372c04b7e1650975996e830178b7e4168",
+          "state_sha256": "aa5dcf969332d31df18ecef268a2f9a33fa91e8076a8bc948d1bc1af4709af57",
+          "trajectory_id": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0004/collection/prefixes.npz::13",
+          "witnessed": true
+        }
+      },
+      {
+        "phase": "upstream",
+        "entry_index": 219,
+        "entry": {
+          "coordinates": {
+            "frontwheel_tangent_mps": 0.12857392072677615,
+            "hip_deg": -35.0597366700798,
+            "hip_rate_degps": 109.48724254619823,
+            "knee_deg": 78.64203312233977,
+            "knee_rate_degps": -1134.686212851012,
+            "pitch_deg": 4.041682754509129,
+            "rearwheel_tangent_mps": -0.14028950929641726,
+            "roll_deg": 1.381394673270807,
+            "root_vx_mps": 0.9244574904441833,
+            "root_vy_mps": 0.0032540811225771904,
+            "root_vz_mps": 1.0262178182601929,
+            "root_wx_degps": 4.2089042929871345,
+            "root_wy_degps": 360.7358399575765,
+            "root_wz_degps": 4.119258060130718,
+            "root_x_m": 2.853968858718872,
+            "root_y_m": 0.0074747661128640175,
+            "root_z_m": 0.1299952119588852,
+            "steering_deg": -7.6537400829606845,
+            "steering_rate_degps": 74.22490880495751,
+            "yaw_deg": 4.181391728570379
+          },
+          "evidence_status": "witnessed",
+          "key": "26964533192a4cb3b77b08ed6d42f704b059ee9f993db7dc27a766a41b8df584",
+          "labels": {
+            "lineage_repair_0000": 1
+          },
+          "phase": "upstream",
+          "role": "train",
+          "root_cell": "c6b6c31a35ada87f11ae0fa77b3c330332e0f1607fdf2fc74ac331a0aaac5718",
+          "sampling_weight": 1.0,
+          "snapshot": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0000/next_source_seed/snapshots/00010",
+          "snapshot_context_sha256": "26964533192a4cb3b77b08ed6d42f704b059ee9f993db7dc27a766a41b8df584",
+          "state_sha256": "b2849672aafac70622f63122ddd5f5d6c7922a3a1742f89600129ec0856ef2ea",
+          "trajectory_id": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0000/next_source_seed/nominal/prefixes.npz::0",
+          "witnessed": true
+        }
+      },
+      {
+        "phase": "upstream",
+        "entry_index": 439,
+        "entry": {
+          "evidence_status": "witnessed",
+          "key": "4a2e7d946e134dd727fa9589f0b0ab795cd16660ca60dffe0b8916fe64e6f70c",
+          "phase": "upstream",
+          "role": "train",
+          "root_cell": "434d5ed3f63298e826210b70746d1f3ddae6468c2a8b4f0a023327c36b875aab",
+          "sampling_weight": 1.0,
+          "snapshot": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0002/collection/snapshots/00085",
+          "snapshot_context_sha256": "4a2e7d946e134dd727fa9589f0b0ab795cd16660ca60dffe0b8916fe64e6f70c",
+          "state_sha256": "914c259cf89128874566c881a929cfef2a2f9dd5c20c24e668edc56b7d57fe5c",
+          "trajectory_id": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0002/collection/prefixes.npz::85",
+          "witnessed": true
+        }
+      },
+      {
+        "phase": "upstream",
+        "entry_index": 658,
+        "entry": {
+          "evidence_status": "witnessed",
+          "key": "6d672e9082b310635b1fbbefc73fb9e10463b037771d3b5b18342d7f4a570a13",
+          "phase": "upstream",
+          "role": "train",
+          "root_cell": "5b75ace8e551b42fa231be4045891dc906ab609a114b035ca154a760660a71a5",
+          "sampling_weight": 1.0,
+          "snapshot": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0004/collection/snapshots/00019",
+          "snapshot_context_sha256": "6d672e9082b310635b1fbbefc73fb9e10463b037771d3b5b18342d7f4a570a13",
+          "state_sha256": "0d0b351baa7cd54d9559592efd9dbbc8b7d619901e4bbf85a4bdb88616e319f3",
+          "trajectory_id": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0004/collection/prefixes.npz::19",
+          "witnessed": true
+        }
+      },
+      {
+        "phase": "upstream",
+        "entry_index": 878,
+        "entry": {
+          "evidence_status": "witnessed",
+          "key": "927ed0e8452970b95ec22ce945a1305e0358c90ad5471d05e0011334c6cea498",
+          "phase": "upstream",
+          "role": "train",
+          "root_cell": "9bb00eb62dfa88fb4632a8268748b63219a69f8843856e433326789411e85ba0",
+          "sampling_weight": 1.0,
+          "snapshot": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0010/collection/snapshots/00002",
+          "snapshot_context_sha256": "927ed0e8452970b95ec22ce945a1305e0358c90ad5471d05e0011334c6cea498",
+          "state_sha256": "9f7d73a78b77c2802753f0fd25bbf9868cbb9894f29974cc3441f3acc13e7724",
+          "trajectory_id": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0010/collection/prefixes.npz::2",
+          "witnessed": true
+        }
+      },
+      {
+        "phase": "upstream",
+        "entry_index": 1097,
+        "entry": {
+          "evidence_status": "witnessed",
+          "key": "b70b65b808da628726c9880797f5f5ffb13bf649bd5c28eeced06d68cff9bdaa",
+          "phase": "upstream",
+          "role": "train",
+          "root_cell": "246cc48996010925bd745300be24ff2b442d45cf0720686a19652c563ac49283",
+          "sampling_weight": 1.0,
+          "snapshot": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0009/collection/snapshots/00063",
+          "snapshot_context_sha256": "b70b65b808da628726c9880797f5f5ffb13bf649bd5c28eeced06d68cff9bdaa",
+          "state_sha256": "f1313fa5539eee599864862d6257659e01c42a18d7ae15a635f5723b89c55982",
+          "trajectory_id": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0009/collection/prefixes.npz::63",
+          "witnessed": true
+        }
+      },
+      {
+        "phase": "upstream",
+        "entry_index": 1317,
+        "entry": {
+          "evidence_status": "witnessed",
+          "key": "dc4c4623e6db3f4607891489df05b013cf4d992d5ba87cf38248ac82c5afbb1a",
+          "phase": "upstream",
+          "role": "train",
+          "root_cell": "01738100b94d7586ef532e07607c29d7264f2af6bca0e26c644aabc9e33c142b",
+          "sampling_weight": 1.0,
+          "snapshot": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0002/collection/snapshots/00109",
+          "snapshot_context_sha256": "dc4c4623e6db3f4607891489df05b013cf4d992d5ba87cf38248ac82c5afbb1a",
+          "state_sha256": "d0237bd2161e5854c87927f8d98eef021fddd5aa6ad2b8684c346eef4f78819c",
+          "trajectory_id": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0002/collection/prefixes.npz::109",
+          "witnessed": true
+        }
+      },
+      {
+        "phase": "upstream",
+        "entry_index": 1537,
+        "entry": {
+          "evidence_status": "witnessed",
+          "key": "ffc1f05d4827d8d2c767c1e281b7742d8cfc68a7d49a227caea4255ee79c5110",
+          "phase": "upstream",
+          "role": "train",
+          "root_cell": "4fc1570dc4aeba5ad5fc93694f60daf666b5ba2d2ff27f5dd8c0d4491067e36e",
+          "sampling_weight": 1.0,
+          "snapshot": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0001/collection/snapshots/00036",
+          "snapshot_context_sha256": "ffc1f05d4827d8d2c767c1e281b7742d8cfc68a7d49a227caea4255ee79c5110",
+          "state_sha256": "68e0f5c1b5cbd456943c0cb27378d2491e39ba9b47958ef19954117e13d72e08",
+          "trajectory_id": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0001/collection/prefixes.npz::36",
+          "witnessed": true
+        }
+      },
+      {
+        "phase": "downstream",
+        "entry_index": 0,
+        "entry": {
+          "evidence_status": "witnessed",
+          "key": "0307bef7edc6bedf5c5894c383006374d9ca0993336c856322c71152e947a5a2",
+          "phase": "downstream",
+          "role": "train",
+          "root_cell": "e02d3b25f415e4f097a431df07347056556ab4977ceab4ea6350445e67ed5b3d",
+          "sampling_weight": 1.0,
+          "snapshot": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0010/collection/snapshots/00042",
+          "snapshot_context_sha256": "0307bef7edc6bedf5c5894c383006374d9ca0993336c856322c71152e947a5a2",
+          "state_sha256": "14ebe2f3206ac8416c08357fc8680ca2eaff69ffd8761303a317b2409bedde31",
+          "trajectory_id": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0010/collection/prefixes.npz::42",
+          "witnessed": true
+        }
+      },
+      {
+        "phase": "downstream",
+        "entry_index": 8,
+        "entry": {
+          "coordinates": {
+            "frontwheel_tangent_mps": -0.03433774560689926,
+            "hip_deg": -51.02605176069872,
+            "hip_rate_degps": -322.874462142795,
+            "knee_deg": 67.17756060047337,
+            "knee_rate_degps": 216.16699047557609,
+            "pitch_deg": 13.628779821420157,
+            "rearwheel_tangent_mps": -0.7576961135864259,
+            "roll_deg": -1.9743326470266944,
+            "root_vx_mps": 1.9545385837554932,
+            "root_vy_mps": 0.09209998697042465,
+            "root_vz_mps": -0.6299381852149963,
+            "root_wx_degps": -10.685770338556065,
+            "root_wy_degps": 141.44267189888558,
+            "root_wz_degps": 10.43100428251459,
+            "root_x_m": 3.726327657699585,
+            "root_y_m": 0.02986597642302513,
+            "root_z_m": 0.48969563841819763,
+            "steering_deg": -5.543828053999338,
+            "steering_rate_degps": 130.95988880604676,
+            "yaw_deg": 8.150848562241073
+          },
+          "evidence_status": "witnessed",
+          "key": "1c93ffc7acc193ce50ac771cd5cced9f2018ba1de102d6cd80a4e1a7b86f3dc9",
+          "labels": {
+            "lineage_repair_0006": 1
+          },
+          "phase": "downstream",
+          "role": "train",
+          "root_cell": "a835cc29eb125bf4619c15aecd632ff614ab9d83e2b6387cc843c2c0ccbe087b",
+          "sampling_weight": 1.0,
+          "snapshot": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0006/next_source_seed/snapshots/00034",
+          "snapshot_context_sha256": "1c93ffc7acc193ce50ac771cd5cced9f2018ba1de102d6cd80a4e1a7b86f3dc9",
+          "state_sha256": "3dd385aab4ab10d6257b459c8fe1561c4b95f27b409f7752358902ff9470ed6b",
+          "trajectory_id": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0006/next_source_seed/nominal/prefixes.npz::0",
+          "witnessed": true
+        }
+      },
+      {
+        "phase": "downstream",
+        "entry_index": 17,
+        "entry": {
+          "coordinates": {
+            "frontwheel_tangent_mps": 0.07983776688575746,
+            "hip_deg": -72.11864921965483,
+            "hip_rate_degps": -11.172102859349422,
+            "knee_deg": 118.56750776467744,
+            "knee_rate_degps": -58.71443029426148,
+            "pitch_deg": -6.12234146167534,
+            "rearwheel_tangent_mps": 1.330523509979248,
+            "roll_deg": 1.3121868267315575,
+            "root_vx_mps": 2.0027883052825928,
+            "root_vy_mps": 0.0330706425011158,
+            "root_vz_mps": -1.5836589336395264,
+            "root_wx_degps": -16.026147547748234,
+            "root_wy_degps": -27.440609424511802,
+            "root_wz_degps": 23.061356798529964,
+            "root_x_m": 3.9126462936401367,
+            "root_y_m": 0.021652793511748314,
+            "root_z_m": 0.6528052687644958,
+            "steering_deg": 10.06005585491755,
+            "steering_rate_degps": 42.24435460140827,
+            "yaw_deg": 30.402114033880615
+          },
+          "evidence_status": "witnessed",
+          "key": "34cbb276f79be33035e007f971f04debc0d743715074e9a014885a47499997b3",
+          "labels": {
+            "lineage_repair_0009": 1
+          },
+          "phase": "downstream",
+          "role": "train",
+          "root_cell": "4427beb8382998c4f821e389ff378eefe34677cde372e2cc7d6f0d0a8a2601e3",
+          "sampling_weight": 1.0,
+          "snapshot": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0009/next_source_seed/snapshots/00038",
+          "snapshot_context_sha256": "34cbb276f79be33035e007f971f04debc0d743715074e9a014885a47499997b3",
+          "state_sha256": "ea16a21f79540bf57c5be6695f6f752df90867105eda77373158fa955eceffc3",
+          "trajectory_id": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0009/next_source_seed/nominal/prefixes.npz::0",
+          "witnessed": true
+        }
+      },
+      {
+        "phase": "downstream",
+        "entry_index": 25,
+        "entry": {
+          "coordinates": {
+            "frontwheel_tangent_mps": 0.1593845057487488,
+            "hip_deg": -72.54275615578842,
+            "hip_rate_degps": 4.29771980408575,
+            "knee_deg": 110.15865014161048,
+            "knee_rate_degps": 93.81968334497024,
+            "pitch_deg": -4.5773655331315775,
+            "rearwheel_tangent_mps": 1.4120965385437012,
+            "roll_deg": 0.5698762931568462,
+            "root_vx_mps": 1.983265995979309,
+            "root_vy_mps": 0.018222622573375702,
+            "root_vz_mps": -1.7044763565063477,
+            "root_wx_degps": -17.316132932889985,
+            "root_wy_degps": -94.20651110861392,
+            "root_wz_degps": 22.740317416971855,
+            "root_x_m": 3.9928572177886963,
+            "root_y_m": 0.023407340049743652,
+            "root_z_m": 0.5708696842193604,
+            "steering_deg": 9.973673598710754,
+            "steering_rate_degps": -12.205912608159736,
+            "yaw_deg": 31.42493343565691
+          },
+          "evidence_status": "witnessed",
+          "key": "60a788af9583a0ab41188e7145028e7893eed47f66995ecb6f3c5a5005152fde",
+          "labels": {
+            "lineage_repair_0009": 1
+          },
+          "phase": "downstream",
+          "role": "train",
+          "root_cell": "1b378e5b0762173688e6b51cdeaae973fbd4cdebb12f008f4fc6d3a0d7678e12",
+          "sampling_weight": 1.0,
+          "snapshot": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0009/next_source_seed/snapshots/00040",
+          "snapshot_context_sha256": "60a788af9583a0ab41188e7145028e7893eed47f66995ecb6f3c5a5005152fde",
+          "state_sha256": "e396a79ef394ed4246bb813a61a6a28fbcb2d9b0dbd4822f2bbbc4a41c7edd5c",
+          "trajectory_id": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0009/next_source_seed/nominal/prefixes.npz::0",
+          "witnessed": true
+        }
+      },
+      {
+        "phase": "downstream",
+        "entry_index": 34,
+        "entry": {
+          "coordinates": {
+            "frontwheel_tangent_mps": -0.21446076631546024,
+            "hip_deg": -45.74346734339497,
+            "hip_rate_degps": -380.3890262753712,
+            "knee_deg": 47.78122013132243,
+            "knee_rate_degps": 10.95533485320802,
+            "pitch_deg": 18.392650755039256,
+            "rearwheel_tangent_mps": -0.9283982849121095,
+            "roll_deg": -1.703020554395223,
+            "root_vx_mps": 1.8613239526748657,
+            "root_vy_mps": 0.07275397330522537,
+            "root_vz_mps": -0.3710273206233978,
+            "root_wx_degps": -12.271273249648527,
+            "root_wy_degps": 281.1435089556345,
+            "root_wz_degps": 16.91269414918484,
+            "root_x_m": 3.6413614749908447,
+            "root_y_m": 0.025253327563405037,
+            "root_z_m": 0.5075821280479431,
+            "steering_deg": 11.04627882200674,
+            "steering_rate_degps": 5.15048514366112,
+            "yaw_deg": 7.642887548265141
+          },
+          "evidence_status": "witnessed",
+          "key": "804b051a57048e792b416dbe36c89450e6afea48fdc62d07a04a390e407a7332",
+          "labels": {
+            "lineage_repair_0006": 1
+          },
+          "phase": "downstream",
+          "role": "train",
+          "root_cell": "21492bfbc0beeb39e505f47428d21fa1883d7d8731c1184e0dbcd79c295306ed",
+          "sampling_weight": 1.0,
+          "snapshot": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0006/next_source_seed/snapshots/00032",
+          "snapshot_context_sha256": "804b051a57048e792b416dbe36c89450e6afea48fdc62d07a04a390e407a7332",
+          "state_sha256": "c748e769d8d77d360e5a62527f5a06805910a555a86a3dd45967b7e7c0fa2e12",
+          "trajectory_id": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0006/next_source_seed/nominal/prefixes.npz::0",
+          "witnessed": true
+        }
+      },
+      {
+        "phase": "downstream",
+        "entry_index": 42,
+        "entry": {
+          "coordinates": {
+            "frontwheel_tangent_mps": 0.3202243185043335,
+            "hip_deg": -31.559783814825188,
+            "hip_rate_degps": -45.94744069767365,
+            "knee_deg": 11.476433890650387,
+            "knee_rate_degps": 479.7826494170704,
+            "pitch_deg": 23.575027753070263,
+            "rearwheel_tangent_mps": -0.36540609359741216,
+            "roll_deg": -1.2176473896466617,
+            "root_vx_mps": 2.11846923828125,
+            "root_vy_mps": 0.09492127597332001,
+            "root_vz_mps": -0.0949324369430542,
+            "root_wx_degps": -9.389635221840365,
+            "root_wy_degps": -179.73551276353675,
+            "root_wz_degps": 7.074353491801897,
+            "root_x_m": 3.473270893096924,
+            "root_y_m": 0.01717209815979004,
+            "root_z_m": 0.5178544521331787,
+            "steering_deg": 18.512795735854557,
+            "steering_rate_degps": 72.38682293703704,
+            "yaw_deg": 6.698064963051824
+          },
+          "evidence_status": "witnessed",
+          "key": "b2ab797595fba4bc64e3b37e790e2ed9f39f7a3906e2c4020bbc0d165ad94904",
+          "labels": {
+            "lineage_repair_0006": 1
+          },
+          "phase": "downstream",
+          "role": "train",
+          "root_cell": "5ff99f1a94700825ef4776162b7220dbabc18df1bfdca8d8ddb91f3e04d6d074",
+          "sampling_weight": 1.0,
+          "snapshot": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0006/next_source_seed/snapshots/00028",
+          "snapshot_context_sha256": "b2ab797595fba4bc64e3b37e790e2ed9f39f7a3906e2c4020bbc0d165ad94904",
+          "state_sha256": "1a1905ad99f56fb7680a764341ac09976dc89620202b0d29e60191f957a40e33",
+          "trajectory_id": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0006/next_source_seed/nominal/prefixes.npz::0",
+          "witnessed": true
+        }
+      },
+      {
+        "phase": "downstream",
+        "entry_index": 51,
+        "entry": {
+          "coordinates": {
+            "frontwheel_tangent_mps": 0.2473215484619141,
+            "hip_deg": -68.95381276583771,
+            "hip_rate_degps": -82.66917412868182,
+            "knee_deg": 129.06298134899413,
+            "knee_rate_degps": 254.4426056031405,
+            "pitch_deg": -2.151731082576886,
+            "rearwheel_tangent_mps": -0.47601753711700445,
+            "roll_deg": -3.7146368931298213,
+            "root_vx_mps": 2.0298922061920166,
+            "root_vy_mps": 0.09193937480449677,
+            "root_vz_mps": -1.7027679681777954,
+            "root_wx_degps": -22.205546048358414,
+            "root_wy_degps": -89.05768228582653,
+            "root_wz_degps": 2.173799910910353,
+            "root_x_m": 3.9803874492645264,
+            "root_y_m": 0.04490020498633385,
+            "root_z_m": 0.3957701027393341,
+            "steering_deg": -19.9557756508573,
+            "steering_rate_degps": 23.807211748348063,
+            "yaw_deg": 9.278589720451519
+          },
+          "evidence_status": "witnessed",
+          "key": "dd543f19b67906f9e2d977434a510c1b45da77ecd420f1a6a26006791225639b",
+          "labels": {
+            "lineage_repair_0006": 1
+          },
+          "phase": "downstream",
+          "role": "train",
+          "root_cell": "ed5c33c6a025d31a48e035f0287059ab7fbcda2ee42d85b176be507f5cd601fa",
+          "sampling_weight": 1.0,
+          "snapshot": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0006/next_source_seed/snapshots/00040",
+          "snapshot_context_sha256": "dd543f19b67906f9e2d977434a510c1b45da77ecd420f1a6a26006791225639b",
+          "state_sha256": "f8cfda834a80181a0378b8bcf7171c576b8ee4fb7bf64a9b45c09d82a60c51f5",
+          "trajectory_id": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0006/next_source_seed/nominal/prefixes.npz::0",
+          "witnessed": true
+        }
+      },
+      {
+        "phase": "downstream",
+        "entry_index": 60,
+        "entry": {
+          "evidence_status": "witnessed",
+          "key": "fb7869fb243e68d07383805e1bdecf43bd6a578932370adae2aac5d762b84623",
+          "phase": "downstream",
+          "role": "train",
+          "root_cell": "691a861508e290658d987d56b3d5dd91fbd99b429ad9730f42655124d2618715",
+          "sampling_weight": 1.0,
+          "snapshot": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0010/collection/snapshots/00017",
+          "snapshot_context_sha256": "fb7869fb243e68d07383805e1bdecf43bd6a578932370adae2aac5d762b84623",
+          "state_sha256": "118d74fcb96007050df89c44811650df5b5d54d074c119c1f66e0a846ecf24ef",
+          "trajectory_id": "/home/qy/DVGC/JIT/runs/experiments/current_policy_lineage_20260914/continuation/lineage/round_0010/collection/prefixes.npz::17",
+          "witnessed": true
+        }
+      }
+    ],
+    "horizon": 400,
+    "samples_per_phase": 8,
+    "success_criterion": "stable_forward_recovery",
+    "deterministic_policy": true,
+    "rng_contract": "1100000 + phase_index*10000 + ordinal*horizon + tick",
+    "reset_contract": "fresh episode and phase clocks; preserve saved event and controller context",
+    "panel_sha256": "f14b1a53e659515ddbad8b6ead3c0191ef35b5a190c2e0d04cafdbc79fe6e19e"
+  }
+}

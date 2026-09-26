@@ -1,0 +1,11 @@
+{
+  "environment_transitions": 25600,
+  "interaction_accounting": {
+    "brax_evaluation": 0,
+    "diagnostic": 0,
+    "fixed_evaluation": 0,
+    "training": 25600
+  },
+  "reason": "one fresh unified PPO block and checkpoint restore completed; engineering integrity only",
+  "status": "completed"
+}

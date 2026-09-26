@@ -1,0 +1,40 @@
+{
+  "schema": "jit_experiment_protocol_declaration_v1",
+  "status": "superseded_before_launch",
+  "purpose": "historical group-disjoint expansion validation declaration for frozen pi_0",
+  "original_source_head": "5f3e0373bf180265870e6362f8bc50f81fa03b0f",
+  "original_config": "JIT/configs/envelope_iter0_expansion_validation.json",
+  "original_config_sha256": "e9453f75a9edfddb181918a853e86275cedacc234c40e93bcf47d8d4b1cb6d23",
+  "original_protocol_sha256": "16c944e2edd16d3ac57656f219506399d63256bd37e7760ee6938a95f225f2b7",
+  "original_interaction_budget": {
+    "attempt_count": 160,
+    "maximum_acquisition_environment_interactions": 696,
+    "maximum_labeling_environment_interactions": 64000,
+    "training_transitions": 0
+  },
+  "original_upstream_panel": {
+    "action_names": ["steer", "rear_wheel_drive", "hip", "knee"],
+    "signs": [-1, 1],
+    "strengths": [0.025, 0.05, 0.1],
+    "durations": [1, 2]
+  },
+  "superseded_by": {
+    "date": "2026-09-01",
+    "config": "JIT/configs/envelope_iter0_expansion_validation.json",
+    "protocol_sha256": "9ec0a1e8c314cc5710688a3537fbd339f520d4db3c4268d20715bcde938586b0",
+    "reason": "Before any validation rollout or outcome inspection, technical review found that the upstream 1/2-tick panel predominantly probes the already-known easy interior rather than the pi_0-conditioned TRAIN transition region. The revised panel preserves the same held-out parents, all action axes/signs, total 160 attempts, deterministic frozen pi_0, downstream panel, labeling ceiling, leakage rules, and claim boundary while moving the upstream panel to strengths 0.025/0.10 and durations 4/8/16."
+  },
+  "validation_runtime_started_under_original_protocol": false,
+  "validation_outcomes_inspected_under_original_protocol": false,
+  "test_data_used": false,
+  "final_evaluation_data_used": false,
+  "frozen_train_manifest_sha256": "27832237a85eccfa0ae2eaea7575dd2efda12535a3815fee0c6d0660f58921b8",
+  "claim_boundary": {
+    "expansion_validation_only": true,
+    "continuation_field_trained": false,
+    "tube_1_constructed": false,
+    "pi_1_trained": false,
+    "jce_jel_claim": false,
+    "certified_safe_set_claim": false
+  }
+}

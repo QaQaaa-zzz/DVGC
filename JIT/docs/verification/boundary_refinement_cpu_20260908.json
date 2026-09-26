@@ -1,0 +1,17 @@
+{
+  "targeted_tests_passed": 18,
+  "failed": 0,
+  "production_gpu_run": false,
+  "ppo_started": false,
+  "first_attempt_ceiling": 1847700,
+  "default_budget": 2000000,
+  "checks": [
+    "source role/hash and gap selection",
+    "nine legal action variants",
+    "low budget prevents GPU launch",
+    "single proposer with four frozen evaluators",
+    "analysis table and PNG/PDF/SVG export",
+    "failed preflight returns compact ZIP",
+    "dense collector real-frame and continuation regressions"
+  ]
+}

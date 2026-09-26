@@ -1,0 +1,383 @@
+{
+  "source_zip_sha256": "499b52566a908a985b467df2cfb7619826aa291ea379685593b7949f5bde13e5",
+  "production_summary": {
+    "baseline_root_cells": 2356,
+    "baseline_scope": "previous shared panel + pi0 dense pilot + four-proposer discovery",
+    "charged_interactions": 92058,
+    "comparison_scope": "unequal TRAIN-informed perturbation profiles; descriptive costs, not a fair policy ranking",
+    "continuous_volume_claim": false,
+    "cost_curve_semantics": "predeclared catalog-order replay; round-robin across proposers; all acquisition, benchmark, failed-attempt and padding costs upfront; complete four-label candidate events only",
+    "cumulative_root_cells": 3463,
+    "descriptive_budget": [
+      {
+        "budget": 10131,
+        "full_cells": 133,
+        "novel_root_cells": 131,
+        "root_cells": 133,
+        "schedule": "pi_0"
+      },
+      {
+        "budget": 10131,
+        "full_cells": 104,
+        "novel_root_cells": 103,
+        "root_cells": 104,
+        "schedule": "pi_1"
+      },
+      {
+        "budget": 10131,
+        "full_cells": 113,
+        "novel_root_cells": 111,
+        "root_cells": 113,
+        "schedule": "pi_2"
+      },
+      {
+        "budget": 10131,
+        "full_cells": 98,
+        "novel_root_cells": 97,
+        "root_cells": 98,
+        "schedule": "pi_3"
+      },
+      {
+        "budget": 10131,
+        "full_cells": 88,
+        "novel_root_cells": 88,
+        "root_cells": 88,
+        "schedule": "bank_round_robin"
+      }
+    ],
+    "final_test_used": false,
+    "frontier": {
+      "all_attempts_reached_terminal_outcome": true,
+      "candidate_status_counts": {
+        "all_succeed": 1035,
+        "no_success_witness": 12,
+        "policy_disagreement": 94
+      },
+      "correlated_frames_are_independent": false,
+      "extended_corridor_only_novel_root_cells": 267,
+      "extended_domain_is_not_same_domain_widening": true,
+      "no_success_witness_means_physical_impossibility": false,
+      "old_corridor_novel_root_cells": 840,
+      "total_novel_root_cells": 1107,
+      "training_admission_authorized": false,
+      "trajectory_stop_counts": {
+        "first_valid_landing": 40,
+        "task_terminated_before_landing": 8
+      },
+      "truncated_trajectories": 0
+    },
+    "independent_repetitions": 1,
+    "matched_budget_is_formal_comparison": false,
+    "matrix": [
+      {
+        "candidates": 136,
+        "evaluator": "pi_0",
+        "proposer": "pi_0",
+        "root_cells": 131,
+        "successful_states": 134
+      },
+      {
+        "candidates": 136,
+        "evaluator": "pi_1",
+        "proposer": "pi_0",
+        "root_cells": 126,
+        "successful_states": 128
+      },
+      {
+        "candidates": 136,
+        "evaluator": "pi_2",
+        "proposer": "pi_0",
+        "root_cells": 132,
+        "successful_states": 134
+      },
+      {
+        "candidates": 136,
+        "evaluator": "pi_3",
+        "proposer": "pi_0",
+        "root_cells": 117,
+        "successful_states": 119
+      },
+      {
+        "candidates": 391,
+        "evaluator": "pi_0",
+        "proposer": "pi_1",
+        "root_cells": 347,
+        "successful_states": 350
+      },
+      {
+        "candidates": 391,
+        "evaluator": "pi_1",
+        "proposer": "pi_1",
+        "root_cells": 353,
+        "successful_states": 356
+      },
+      {
+        "candidates": 391,
+        "evaluator": "pi_2",
+        "proposer": "pi_1",
+        "root_cells": 369,
+        "successful_states": 372
+      },
+      {
+        "candidates": 391,
+        "evaluator": "pi_3",
+        "proposer": "pi_1",
+        "root_cells": 365,
+        "successful_states": 367
+      },
+      {
+        "candidates": 376,
+        "evaluator": "pi_0",
+        "proposer": "pi_2",
+        "root_cells": 369,
+        "successful_states": 375
+      },
+      {
+        "candidates": 376,
+        "evaluator": "pi_1",
+        "proposer": "pi_2",
+        "root_cells": 370,
+        "successful_states": 376
+      },
+      {
+        "candidates": 376,
+        "evaluator": "pi_2",
+        "proposer": "pi_2",
+        "root_cells": 369,
+        "successful_states": 375
+      },
+      {
+        "candidates": 376,
+        "evaluator": "pi_3",
+        "proposer": "pi_2",
+        "root_cells": 368,
+        "successful_states": 374
+      },
+      {
+        "candidates": 238,
+        "evaluator": "pi_0",
+        "proposer": "pi_3",
+        "root_cells": 219,
+        "successful_states": 221
+      },
+      {
+        "candidates": 238,
+        "evaluator": "pi_1",
+        "proposer": "pi_3",
+        "root_cells": 222,
+        "successful_states": 224
+      },
+      {
+        "candidates": 238,
+        "evaluator": "pi_2",
+        "proposer": "pi_3",
+        "root_cells": 227,
+        "successful_states": 229
+      },
+      {
+        "candidates": 238,
+        "evaluator": "pi_3",
+        "proposer": "pi_3",
+        "root_cells": 235,
+        "successful_states": 237
+      }
+    ],
+    "metrics": [
+      {
+        "bank_root_cells": 133,
+        "bank_success_states": 136,
+        "candidates": 136,
+        "charged_interactions": 10131,
+        "novel_vs_previous_train_union": 131,
+        "own_root_cells": 131,
+        "own_success_states": 134,
+        "proposer": "pi_0",
+        "trajectories": 8,
+        "unique_proposer_root_cells": 133
+      },
+      {
+        "bank_root_cells": 376,
+        "bank_success_states": 379,
+        "candidates": 391,
+        "charged_interactions": 31069,
+        "novel_vs_previous_train_union": 374,
+        "own_root_cells": 353,
+        "own_success_states": 356,
+        "proposer": "pi_1",
+        "trajectories": 16,
+        "unique_proposer_root_cells": 376
+      },
+      {
+        "bank_root_cells": 370,
+        "bank_success_states": 376,
+        "candidates": 376,
+        "charged_interactions": 30008,
+        "novel_vs_previous_train_union": 367,
+        "own_root_cells": 369,
+        "own_success_states": 375,
+        "proposer": "pi_2",
+        "trajectories": 16,
+        "unique_proposer_root_cells": 370
+      },
+      {
+        "bank_root_cells": 236,
+        "bank_success_states": 238,
+        "candidates": 238,
+        "charged_interactions": 20850,
+        "novel_vs_previous_train_union": 235,
+        "own_root_cells": 235,
+        "own_success_states": 237,
+        "proposer": "pi_3",
+        "trajectories": 8,
+        "unique_proposer_root_cells": 236
+      }
+    ],
+    "novel_root_cells": 1107,
+    "own_policy_semantics": "same frozen Actor for perturbed prefix and fresh-continuation suffix; no claim of uninterrupted exact replay",
+    "physical_resolution": {
+      "actor_observation_defines_capability_cells": false,
+      "full_physical_fields": [
+        "root_x_m",
+        "root_y_m",
+        "root_z_m",
+        "root_vx_mps",
+        "root_vy_mps",
+        "root_vz_mps",
+        "roll_deg",
+        "pitch_deg",
+        "yaw_deg",
+        "root_wx_degps",
+        "root_wy_degps",
+        "root_wz_degps",
+        "steering_deg",
+        "hip_deg",
+        "knee_deg",
+        "steering_rate_degps",
+        "hip_rate_degps",
+        "knee_rate_degps",
+        "rearwheel_tangent_mps",
+        "frontwheel_tangent_mps"
+      ],
+      "longitudinal_progress_coordinate": "root_x_m",
+      "phase_is_discrete": true,
+      "quantization": "nearest_grid_round_half_away_from_zero",
+      "resolution_sha256": "9f918a9dd3846e2fc8e787bd47bb008a3a8401c259cd68631bb22df7a945dcbe",
+      "resolutions": {
+        "frontwheel_tangent_mps": {
+          "resolution": 0.1,
+          "unit": "m/s"
+        },
+        "hip_deg": {
+          "resolution": 0.5,
+          "unit": "deg"
+        },
+        "hip_rate_degps": {
+          "resolution": 2.0,
+          "unit": "deg/s"
+        },
+        "knee_deg": {
+          "resolution": 0.5,
+          "unit": "deg"
+        },
+        "knee_rate_degps": {
+          "resolution": 2.0,
+          "unit": "deg/s"
+        },
+        "pitch_deg": {
+          "resolution": 0.5,
+          "unit": "deg"
+        },
+        "rearwheel_tangent_mps": {
+          "resolution": 0.1,
+          "unit": "m/s"
+        },
+        "roll_deg": {
+          "resolution": 0.5,
+          "unit": "deg"
+        },
+        "root_vx_mps": {
+          "resolution": 0.1,
+          "unit": "m/s"
+        },
+        "root_vy_mps": {
+          "resolution": 0.1,
+          "unit": "m/s"
+        },
+        "root_vz_mps": {
+          "resolution": 0.1,
+          "unit": "m/s"
+        },
+        "root_wx_degps": {
+          "resolution": 2.0,
+          "unit": "deg/s"
+        },
+        "root_wy_degps": {
+          "resolution": 2.0,
+          "unit": "deg/s"
+        },
+        "root_wz_degps": {
+          "resolution": 2.0,
+          "unit": "deg/s"
+        },
+        "root_x_m": {
+          "resolution": 0.1,
+          "unit": "m"
+        },
+        "root_y_m": {
+          "resolution": 0.1,
+          "unit": "m"
+        },
+        "root_z_m": {
+          "resolution": 0.1,
+          "unit": "m"
+        },
+        "steering_deg": {
+          "resolution": 0.5,
+          "unit": "deg"
+        },
+        "steering_rate_degps": {
+          "resolution": 2.0,
+          "unit": "deg/s"
+        },
+        "yaw_deg": {
+          "resolution": 0.5,
+          "unit": "deg"
+        }
+      },
+      "root_geometry_fields": [
+        "root_x_m",
+        "root_y_m",
+        "root_z_m",
+        "root_vx_mps",
+        "root_vy_mps",
+        "root_vz_mps",
+        "roll_deg",
+        "pitch_deg",
+        "yaw_deg",
+        "root_wx_degps",
+        "root_wy_degps",
+        "root_wz_degps"
+      ],
+      "schema": "jit_capability_state_resolution_v1",
+      "wheel_angle_phase_in_cell_identity": false,
+      "x_slice_width_m": 0.1
+    },
+    "pooled_root_cells": 1115,
+    "report_sha256": "f0c69e69c5036f7da2bc4ff9f8a82eae8a3f3f768c0fc81acb359ba19591f2df",
+    "root_overhead_by_proposer": {
+      "pi_0": 269,
+      "pi_1": 655,
+      "pi_2": 670,
+      "pi_3": 409
+    },
+    "scope": "TRAIN-informed landing/frontier discovery",
+    "status": "completed",
+    "training_admission_authorized": false,
+    "training_transitions": 0
+  },
+  "process_count": 76,
+  "process_returncodes": {
+    "0": 76
+  },
+  "process_wall_seconds_sum": 4204.521585226998
+}

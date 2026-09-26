@@ -1,0 +1,41 @@
+{
+  "scope": "quality-aware residual reward ablation; no policy-bank promotion",
+  "cpu_tests_passed": 142,
+  "gpu_smoke": {
+    "phase": "completed",
+    "wall_seconds": 17.32196787299472,
+    "charged_interactions": 3200,
+    "forward_interactions": 3200,
+    "suffix_interactions": 0,
+    "base_actor_unchanged": true,
+    "active_interactions": 371,
+    "padding_interactions": 2829,
+    "training_scheduled_interactions": 1600,
+    "final_successes": 2,
+    "initial_baseline_cells": 48,
+    "training_new_cells": 170,
+    "final_diagnostic_new_cells": 45,
+    "independent_repetitions": false,
+    "final_test_used": false
+  },
+  "process_arrays_sum_verified": true,
+  "hyperparameters_file": "/home/qy/DVGC/JIT/runs/experiments/quality_exploration_20260912/smoke/hyperparameters.json",
+  "network_inventory_file": "/home/qy/DVGC/JIT/runs/experiments/quality_exploration_20260912/smoke/network_inventory.json",
+  "supervisor_pid": 1149051,
+  "maximum_total_interactions": 329600,
+  "arms": [
+    "novelty",
+    "quality",
+    "random"
+  ],
+  "batches_per_arm": 32,
+  "num_envs": 8,
+  "quality_weights": {
+    "novelty": 1.0,
+    "physical_failure": 50.0,
+    "residual_energy": 0.01
+  },
+  "reset_source": "fixed complete jump start",
+  "existing_state_curriculum_started": false,
+  "final_test_used": false
+}

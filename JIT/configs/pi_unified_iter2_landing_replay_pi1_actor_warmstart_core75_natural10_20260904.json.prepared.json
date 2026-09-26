@@ -1,0 +1,45 @@
+{
+  "config": "JIT/configs/pi_unified_iter2_landing_replay_pi1_actor_warmstart_core75_natural10_20260904.json",
+  "config_sha256": "3df709ab2d6c663f23c6b448396007206f046c66a816c222cd9cabac496a12c5",
+  "iteration": 2,
+  "policy_name": "pi_2",
+  "run_id": "pi_2_landing_replay_pi1_actor_warmstart_core75_natural10_10009600_seed821101_20260904",
+  "sampling_audit": {
+    "core_replay_contract": {
+      "core_probability": 0.75,
+      "core_within_source": "uniform",
+      "expansion_probability": 0.25,
+      "expansion_within_source": "value_weighted",
+      "schema": "jit_tube_rsi_core_replay_v1",
+      "selection": "phase_then_source_then_entry",
+      "source_core_definition": "first_core_retained_count_entries"
+    },
+    "phase_mixture": {
+      "downstream": 0.5,
+      "upstream": 0.5
+    },
+    "phases": {
+      "downstream": {
+        "core_count": 2692,
+        "core_probability": 0.7500001099528557,
+        "entry_count": 2895,
+        "expansion_count": 203,
+        "expansion_probability": 0.24999989004714412
+      },
+      "upstream": {
+        "core_count": 427,
+        "core_probability": 0.7499999486503556,
+        "entry_count": 749,
+        "expansion_count": 322,
+        "expansion_probability": 0.2500000513496447
+      }
+    }
+  },
+  "schema": "jit_iterative_unified_training_config_preparation_v1",
+  "soft_tube_manifest_sha256": "e30f0d8bf468482988f2d5d00c259c416bc88d84a9862a63c76271cafb144193",
+  "status": "completed",
+  "test_data_used": false,
+  "training_transitions": 0,
+  "tube_rsi_smoke_report_sha256": "535139ba032186d3512d851665721c78830ccdb65a6db7ed7d7bd2efe5d6ca46",
+  "validation_data_used": false
+}

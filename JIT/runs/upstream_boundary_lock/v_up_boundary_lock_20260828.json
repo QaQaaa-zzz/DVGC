@@ -1,0 +1,58 @@
+{
+  "direction_family": "action_basis_subset",
+  "durations": [
+    1,
+    2
+  ],
+  "failure_reason": "pitch_limit",
+  "frozen_pi_up_actor_sha256": "f218775e3cf99555ce524f1357a800172904bc815b06c54a53db8965204d9081",
+  "frozen_pi_up_config_sha256": "a45e70438c2b5cc005ddd415bbb4920c8e07e7504feae7e630a94b473d91f3a6",
+  "frozen_pi_up_payload_sha256": "965b2f141d5cff17f7cef943004fe4e4f62f0fecfe88b47353dc78b14ced723a",
+  "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+  "near_duplicate_tolerances": {
+    "observation_atol": 0.01,
+    "qpos_atol": 0.0005,
+    "qvel_atol": 0.002
+  },
+  "negative_role": "ascending_entry",
+  "nominal_catalog_sha256": "52b8b1fcb0f3749d772c75f2efb495f94df974ab87f1fca37cfc509931186c2f",
+  "nominal_labels_sha256": "b22876b60da3522a1271458499b540863fcb0e8ecfe05cd21b649d59e0b29922",
+  "schema": "jit_upstream_boundary_lock_v1",
+  "selected_action_names": [
+    "hip"
+  ],
+  "selected_signs": [
+    1
+  ],
+  "source_training_transitions": 4988928,
+  "state_generation": "restore real nominal snapshot; recompute deterministic pi_up_star action; add one bounded selected action-basis perturbation for duration ticks; env.step; exclude terminal/Apex; capture real resulting snapshot",
+  "status": "locked",
+  "strengths": [
+    0.05,
+    0.055,
+    0.06,
+    0.065,
+    0.07,
+    0.075,
+    0.08,
+    0.085,
+    0.09,
+    0.095,
+    0.1
+  ],
+  "target": "V_up",
+  "test_policy": "do not inspect or tune on TEST before V_up model selection is complete",
+  "test_seeds": [
+    1000007,
+    1000008
+  ],
+  "train_analysis_file_sha256": "c06043f0188b367f890d8b366a4cb8bc61baa4f346eb841b75edd3f3ff470bb7",
+  "train_protocol_file_sha256": "23261896b1c46bfae0c5fa7ccd040c92974f5d0faf62c0e7c847ba8eefd9fe36",
+  "train_protocol_sha256": "1e269bf62d9661126f9290f490390f9fad46d2c1abb8f9e96b65eb123773ae0a",
+  "training_transitions": 0,
+  "validation_policy": "apply the locked TRAIN recipe once; do not retune boundary collection from validation outcomes",
+  "validation_seeds": [
+    1000006
+  ],
+  "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+}

@@ -1,0 +1,18 @@
+{
+  "checkpoint": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_7987200",
+  "config_sha256": "a45e70438c2b5cc005ddd415bbb4920c8e07e7504feae7e630a94b473d91f3a6",
+  "failure": null,
+  "interaction_accounting": {
+    "actual_transitions": 422,
+    "budget": 3200,
+    "max_ticks": 400,
+    "max_transitions": 3200,
+    "snapshots": 48
+  },
+  "policy_sha256": "910999dc12d44427daa2f8a0068ec3e5e080dbb75f85f20605c5f30c04e0d793",
+  "purpose": "nominal V_up continuation candidate collection",
+  "schema": "handoff_bank_v1",
+  "snapshot_count": 48,
+  "status": "closed",
+  "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+}

@@ -1,0 +1,280 @@
+{
+  "attempts": [
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 1305,
+      "measured": true,
+      "stage": "acquire"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 0,
+      "measured": true,
+      "stage": "figures"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2586,
+      "measured": true,
+      "stage": "label_pi_0_000"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2166,
+      "measured": true,
+      "stage": "label_pi_0_001"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2517,
+      "measured": true,
+      "stage": "label_pi_0_002"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2392,
+      "measured": true,
+      "stage": "label_pi_0_003"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2424,
+      "measured": true,
+      "stage": "label_pi_0_004"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2072,
+      "measured": true,
+      "stage": "label_pi_0_005"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2475,
+      "measured": true,
+      "stage": "label_pi_1_000"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2245,
+      "measured": true,
+      "stage": "label_pi_1_001"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2277,
+      "measured": true,
+      "stage": "label_pi_1_002"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2527,
+      "measured": true,
+      "stage": "label_pi_1_003"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2061,
+      "measured": true,
+      "stage": "label_pi_1_004"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2054,
+      "measured": true,
+      "stage": "label_pi_1_005"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2106,
+      "measured": true,
+      "stage": "label_pi_2_000"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2034,
+      "measured": true,
+      "stage": "label_pi_2_001"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2131,
+      "measured": true,
+      "stage": "label_pi_2_002"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2148,
+      "measured": true,
+      "stage": "label_pi_2_003"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2101,
+      "measured": true,
+      "stage": "label_pi_2_004"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2084,
+      "measured": true,
+      "stage": "label_pi_2_005"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2605,
+      "measured": true,
+      "stage": "label_pi_3_000"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2383,
+      "measured": true,
+      "stage": "label_pi_3_001"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2678,
+      "measured": true,
+      "stage": "label_pi_3_002"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2588,
+      "measured": true,
+      "stage": "label_pi_3_003"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2434,
+      "measured": true,
+      "stage": "label_pi_3_004"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2453,
+      "measured": true,
+      "stage": "label_pi_3_005"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2415,
+      "measured": true,
+      "stage": "label_pi_4_000"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2207,
+      "measured": true,
+      "stage": "label_pi_4_001"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2239,
+      "measured": true,
+      "stage": "label_pi_4_002"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2171,
+      "measured": true,
+      "stage": "label_pi_4_003"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2082,
+      "measured": true,
+      "stage": "label_pi_4_004"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2137,
+      "measured": true,
+      "stage": "label_pi_4_005"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2437,
+      "measured": true,
+      "stage": "label_pi_5_000"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2209,
+      "measured": true,
+      "stage": "label_pi_5_001"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2256,
+      "measured": true,
+      "stage": "label_pi_5_002"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2145,
+      "measured": true,
+      "stage": "label_pi_5_003"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2069,
+      "measured": true,
+      "stage": "label_pi_5_004"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 2073,
+      "measured": true,
+      "stage": "label_pi_5_005"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 0,
+      "measured": true,
+      "stage": "merge_pi_0"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 0,
+      "measured": true,
+      "stage": "merge_pi_1"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 0,
+      "measured": true,
+      "stage": "merge_pi_2"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 0,
+      "measured": true,
+      "stage": "merge_pi_3"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 0,
+      "measured": true,
+      "stage": "merge_pi_4"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 0,
+      "measured": true,
+      "stage": "merge_pi_5"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 0,
+      "measured": true,
+      "stage": "prepare"
+    },
+    {
+      "attempt_name": "attempt_0000",
+      "charged": 0,
+      "measured": true,
+      "stage": "project"
+    }
+  ]
+}

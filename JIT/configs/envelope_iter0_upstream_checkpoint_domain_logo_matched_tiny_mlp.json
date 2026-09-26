@@ -1,0 +1,81 @@
+{
+  "schema": "jit_upstream_checkpoint_domain_logo_config_v1",
+  "output_dir": "JIT/runs/pi_unified_continuation_field_diagnostic/pi_0_iter0_upstream_checkpoint_domain_logo_matched_tiny_mlp_20260901",
+  "expected_protocol_sha256": "c44908d32f254b7041b774ac1d41e1977df82319888fe0a76ce42dc4cdcf4513",
+  "protocol": {
+    "schema": "jit_upstream_checkpoint_domain_logo_protocol_v1",
+    "status": "predeclared_after_matched_linear_cv_fail_before_single_nonlinear_train_cv",
+    "iteration": 0,
+    "policy_name": "pi_0",
+    "policy_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+    "policy_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+    "frozen_upstream_train_evidence": "JIT/runs/frozen_upstream_checkpoint_train/pi_0_iter0_three_checkpoint_matched_panel_20260901",
+    "frozen_upstream_train_freeze_protocol_sha256": "2df65325660ac54c914b14fca98d1d5e2f0f52a3da74bf941b4979edbc32bf1d",
+    "frozen_upstream_train_manifest_sha256": "25160e1f198d710327b8390a53869bc72ec62afced5f3d86dcc45d1543793626",
+    "prior_matched_linear_cv_summary": "JIT/runs/pi_unified_continuation_field_diagnostic/pi_0_iter0_upstream_checkpoint_domain_logo_matched_20260901/summary.json",
+    "prior_matched_linear_cv_summary_sha256": "018b296243a3d162b132186fe30367eed81f141a731cff0620d77b742557d340",
+    "expected_combined": {
+      "candidate_count": 720,
+      "positive_count": 639,
+      "negative_count": 81,
+      "parent_group_count": 15,
+      "checkpoint_domain_count": 3
+    },
+    "required_domains": [
+      "transition_4988928",
+      "transition_7987200",
+      "transition_9977856"
+    ],
+    "model": {
+      "family": "tiny_mlp_tanh",
+      "input": "unified_actor_observation",
+      "observation_size": 76,
+      "hidden_units": 8,
+      "activation": "tanh",
+      "parameter_count": 625,
+      "normalization": "fold_train_only_zscore_clip10",
+      "sample_weighting": "equal_parent_label_cell_mass",
+      "l2_weight": 0.01,
+      "optimizer": "adam_full_batch_fixed_schedule",
+      "steps": 4000,
+      "learning_rate": 0.01,
+      "seed_base": 847000
+    },
+    "diagnostic_gate": {
+      "minimum_mean_logo_roc_auc": 0.7,
+      "minimum_worst_logo_roc_auc": 0.6,
+      "require_positive_score_gap_in_every_fold": true
+    },
+    "data_policy": {
+      "train_rows_only": true,
+      "consumed_validation_rows_reused": false,
+      "consumed_validation_predictions_reused": false,
+      "test_data_used": false,
+      "final_evaluation_data_used": false
+    },
+    "method_decision": {
+      "reason": "matched_linear_checkpoint_cv_failed_after_acquisition_family_confound_was_removed",
+      "single_repair_model_only": true,
+      "hyperparameter_grid_search": false,
+      "optimization_schedule_changed_from_linear": false,
+      "fresh_validation_may_be_predeclared_only_if_train_checkpoint_gate_passes": true,
+      "automatic_model_escalation_if_fail": false
+    },
+    "interpretation": {
+      "checkpoint_domain_is_parent_group_transition_prefix": true,
+      "all_three_domains_use_same_locked_matched_panel": true,
+      "acquisition_family_confound_removed": true,
+      "actor_observation_is_three_real_fifo_frames_plus_jump_signal": true,
+      "tiny_mlp_adds_one_low_capacity_nonlinear_interaction_layer": true
+    },
+    "claim_boundary": {
+      "diagnostic_only": true,
+      "continuation_field_reselected": false,
+      "fresh_validation_bank_predeclared": false,
+      "tube_1_constructed": false,
+      "pi_1_trained": false,
+      "jce_jel_claim": false,
+      "certified_safe_set_claim": false
+    }
+  }
+}

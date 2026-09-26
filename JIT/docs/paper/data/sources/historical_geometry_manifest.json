@@ -1,0 +1,202 @@
+{
+  "baseline_scope": "all inherited and prior round witnessed cells",
+  "blank_labels": "untested",
+  "charged_new_interactions": 1275465,
+  "historical_bootstrap_cost_included": false,
+  "hulls_filled": false,
+  "inherited_recorded_charge": 195551,
+  "physical_boundary_proven": false,
+  "physical_resolution": {
+    "actor_observation_defines_capability_cells": false,
+    "full_physical_fields": [
+      "root_x_m",
+      "root_y_m",
+      "root_z_m",
+      "root_vx_mps",
+      "root_vy_mps",
+      "root_vz_mps",
+      "roll_deg",
+      "pitch_deg",
+      "yaw_deg",
+      "root_wx_degps",
+      "root_wy_degps",
+      "root_wz_degps",
+      "steering_deg",
+      "hip_deg",
+      "knee_deg",
+      "steering_rate_degps",
+      "hip_rate_degps",
+      "knee_rate_degps",
+      "rearwheel_tangent_mps",
+      "frontwheel_tangent_mps"
+    ],
+    "longitudinal_progress_coordinate": "root_x_m",
+    "phase_is_discrete": true,
+    "quantization": "nearest_grid_round_half_away_from_zero",
+    "resolution_sha256": "9f918a9dd3846e2fc8e787bd47bb008a3a8401c259cd68631bb22df7a945dcbe",
+    "resolutions": {
+      "frontwheel_tangent_mps": {
+        "resolution": 0.1,
+        "unit": "m/s"
+      },
+      "hip_deg": {
+        "resolution": 0.5,
+        "unit": "deg"
+      },
+      "hip_rate_degps": {
+        "resolution": 2.0,
+        "unit": "deg/s"
+      },
+      "knee_deg": {
+        "resolution": 0.5,
+        "unit": "deg"
+      },
+      "knee_rate_degps": {
+        "resolution": 2.0,
+        "unit": "deg/s"
+      },
+      "pitch_deg": {
+        "resolution": 0.5,
+        "unit": "deg"
+      },
+      "rearwheel_tangent_mps": {
+        "resolution": 0.1,
+        "unit": "m/s"
+      },
+      "roll_deg": {
+        "resolution": 0.5,
+        "unit": "deg"
+      },
+      "root_vx_mps": {
+        "resolution": 0.1,
+        "unit": "m/s"
+      },
+      "root_vy_mps": {
+        "resolution": 0.1,
+        "unit": "m/s"
+      },
+      "root_vz_mps": {
+        "resolution": 0.1,
+        "unit": "m/s"
+      },
+      "root_wx_degps": {
+        "resolution": 2.0,
+        "unit": "deg/s"
+      },
+      "root_wy_degps": {
+        "resolution": 2.0,
+        "unit": "deg/s"
+      },
+      "root_wz_degps": {
+        "resolution": 2.0,
+        "unit": "deg/s"
+      },
+      "root_x_m": {
+        "resolution": 0.1,
+        "unit": "m"
+      },
+      "root_y_m": {
+        "resolution": 0.1,
+        "unit": "m"
+      },
+      "root_z_m": {
+        "resolution": 0.1,
+        "unit": "m"
+      },
+      "steering_deg": {
+        "resolution": 0.5,
+        "unit": "deg"
+      },
+      "steering_rate_degps": {
+        "resolution": 2.0,
+        "unit": "deg/s"
+      },
+      "yaw_deg": {
+        "resolution": 0.5,
+        "unit": "deg"
+      }
+    },
+    "root_geometry_fields": [
+      "root_x_m",
+      "root_y_m",
+      "root_z_m",
+      "root_vx_mps",
+      "root_vy_mps",
+      "root_vz_mps",
+      "roll_deg",
+      "pitch_deg",
+      "yaw_deg",
+      "root_wx_degps",
+      "root_wy_degps",
+      "root_wz_degps"
+    ],
+    "schema": "jit_capability_state_resolution_v1",
+    "wheel_angle_phase_in_cell_identity": false,
+    "x_slice_width_m": 0.1
+  },
+  "schema": "jit_campaign_figures_v1",
+  "scope": "cumulative TRAIN arrivals by proposer; differing panels",
+  "slice_width_m": 0.05,
+  "sources": {
+    "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_000/discovery": {
+      "bank_sha256": "3f589fbbaa3aa467222f8672f27e1ec497233593667bd8a32620352670bd8553",
+      "plan_sha256": "1ae6379c411faaef23df51ad9b8cf268f8467247f6e67394bf109b63089b702b"
+    },
+    "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_000/proposers/pi_0": {
+      "bank_sha256": "08a95533661dfa3e0134ea7e0c908b7cdec8df738486f0007ec52d9a8f4ff832",
+      "plan_sha256": "2827465aff2b137961f9a2b4f33aedf2fe403f1896a92793fe7607dbe1d349fc"
+    },
+    "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_000/proposers/pi_1": {
+      "bank_sha256": "8e9624a55e1bc21640a5f42344e8a1252cac99a9af3199474171eb8959899205",
+      "plan_sha256": "775cd9a8b12795a43aa6f580d0c114f2e6c31c5b570153b7a7c70c74283f0c98"
+    },
+    "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_000/proposers/pi_3": {
+      "bank_sha256": "5ee2ecfe66970b15ee1a9b8445af883c996c6cfe42f6a0f38bd6b467559c1d79",
+      "plan_sha256": "e999752999685328c2c207d4d45611f67fe3b0f1b1a903a9dd5d50105fedb6d8"
+    },
+    "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/discovery": {
+      "bank_sha256": "ca0d36b2b2faaafa2f31f4256f4dc39065f436569059bcb0d3471a6a60f6c7bd",
+      "plan_sha256": "09dad7979bc7ae5903e212cc17023e3a2cb12a7109352ba70c7a89ce13893f1f"
+    },
+    "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_0": {
+      "bank_sha256": "6963ecdbee049eebbee95f30cb4e266f82498043f92368caa0336fb450d67e7a",
+      "plan_sha256": "1fb9ea10fcb35fceb5d796db9a55aafd011b67843c58fc26fcc9cdc24df8a031"
+    },
+    "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_1": {
+      "bank_sha256": "b1490de3434547b3ac879a206211b774fe3c3372a5a4c2f293c97535d0aaf24e",
+      "plan_sha256": "ed1b6422060195c1164b54bbec7d3b2379498165337b08e2ff5cae993f943d02"
+    },
+    "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_2": {
+      "bank_sha256": "90b3011e9660dd6105111fbaee1343beccdfc6eebb263756e6045678f59255bd",
+      "plan_sha256": "901d7b06c21c79196275464e553cbfa930d00837197a9bc2c024155b38f92ea8"
+    },
+    "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_3": {
+      "bank_sha256": "3d3cca017f9e7987d55cf70d41411539feaae5dab625489690f35e634fa30a9f",
+      "plan_sha256": "759ae2457ea813fe967f36a3a72896e0824007fb873c846a0e09d31ffc515349"
+    },
+    "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_4": {
+      "bank_sha256": "1cd694525a75c64e98e60b26d633c49fc7eb608eaa18cddf9cbf741d38119d97",
+      "plan_sha256": "6d80b8d83d70689d1ad3d3b08b62f7cb7cfc9a8e9ab0db5cece0c428f384d0fa"
+    },
+    "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/proposers/pi_5": {
+      "bank_sha256": "7f18e35367b2424fc7ebabaa1280da811717cd2f0086e5d65db856348157b1f4",
+      "plan_sha256": "09215c9c1635308884253c66ea038016ca7e168172c313f0991416700fb1ac6a"
+    },
+    "/home/qy/DVGC/JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1/round_000/discovery": {
+      "bank_sha256": "6015cc5aef52f712494b63cba35ff877497f843ede5a1846ae288631ee4424e3",
+      "plan_sha256": "daf3d42579d7a7e2b7efbfefddc2606f0e6e845ef4aa6e9c75ad0f5d4a3020ed"
+    },
+    "/home/qy/DVGC/JIT/runs/discovery/knee_boundary_v1_budgetfix/pi_1": {
+      "bank_sha256": "12e54a5d2bda034aa462d6476ea0f091bf602fec525378f43bc29a536d1fe6fe",
+      "plan_sha256": "2db2b2e2b0763c36839097dd657dc740db52a3e910ef19190fc2d93fc5501e6a"
+    },
+    "/home/qy/DVGC/JIT/runs/discovery/lower_boundary_v1/pi_2": {
+      "bank_sha256": "ea81fc7714173c491513ce17ecba722288616c726704ba713be656804e9ada01",
+      "plan_sha256": "e5e802878bbafc2608ae1681cbf11e4fcfb8b697289b436af8cb37df12855f14"
+    },
+    "/home/qy/DVGC/JIT/runs/discovery/pi2_pi4_paired_v1/pi_2": {
+      "bank_sha256": "6015cc5aef52f712494b63cba35ff877497f843ede5a1846ae288631ee4424e3",
+      "plan_sha256": "a0695a7c8a0fca2ad002bb3c64a830c39f239785d45712378651d5fd16b4550e"
+    }
+  }
+}

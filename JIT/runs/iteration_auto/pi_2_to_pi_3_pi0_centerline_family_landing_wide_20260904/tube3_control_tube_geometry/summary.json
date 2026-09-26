@@ -1,0 +1,263 @@
+{
+  "by_phase": {
+    "downstream": {
+      "raw_snapshot_count": 3399,
+      "unique_full_physical_cell_count": 2798,
+      "unique_root_geometry_cell_count": 2354,
+      "x_bin_count": 20
+    },
+    "upstream": {
+      "raw_snapshot_count": 1404,
+      "unique_full_physical_cell_count": 1001,
+      "unique_root_geometry_cell_count": 884,
+      "x_bin_count": 10
+    }
+  },
+  "cells_file": "JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/tube3_control_tube_geometry/cells.json",
+  "cells_file_sha256": "8c2de1a526f8e1068a8bf6b8f79f8552b44076e32de7502661977a9e60033bd9",
+  "claim_boundary": {
+    "actor_observation_space_used_as_physical_metric_space": false,
+    "physical_feasibility_limit_proved": false,
+    "raw_snapshot_cardinality_is_capability_expansion": false,
+    "resolution_aware_cell_occupancy_is_primary_coverage_metric": true,
+    "tube_geometry_is_certified_safe_set": false,
+    "tube_geometry_is_empirical": true
+  },
+  "entries_file": "JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/tube3_control_tube_geometry/entries.json",
+  "entries_file_sha256": "2a675d85b63680a42c0a03abdfaab844e1ea2be73a65f31d7a1aa5f1ffb65dbe",
+  "environment_interactions": 0,
+  "expansion_vs_source": {
+    "by_phase": {
+      "downstream": {
+        "new_full_physical_cell_count": 428,
+        "new_root_geometry_cell_count": 287
+      },
+      "upstream": {
+        "new_full_physical_cell_count": 469,
+        "new_root_geometry_cell_count": 427
+      }
+    },
+    "claim_boundary": {
+      "cell_growth_is_physical_feasibility_volume_proof": false,
+      "new_root_geometry_cells_are_resolution_aware_coverage_growth": true,
+      "raw_entry_growth_is_capability_volume_growth": false
+    },
+    "new_full_physical_cell_count": 897,
+    "new_root_geometry_cell_count": 714,
+    "new_root_geometry_cells_per_raw_added_snapshot": 0.6160483175150993,
+    "new_root_geometry_nearest_source_distance": {
+      "metric_units": "per-dimension declared resolution units",
+      "nearest_l2_quantiles": {
+        "max": 65.14598989960932,
+        "median": 5.385164807134504,
+        "min": 1.0,
+        "q25": 2.23606797749979,
+        "q75": 12.89369810620649
+      },
+      "nearest_linf_quantiles": {
+        "max": 52.0,
+        "median": 4.0,
+        "min": 1.0,
+        "q25": 2.0,
+        "q75": 9.0
+      }
+    },
+    "raw_added_snapshots_landing_in_new_root_geometry_cells": 772,
+    "raw_snapshot_growth": 1159,
+    "source_raw_snapshot_count": 3644,
+    "source_unique_full_physical_cell_count": 2902,
+    "source_unique_root_geometry_cell_count": 2524,
+    "target_raw_snapshot_count": 4803,
+    "target_unique_full_physical_cell_count": 3799,
+    "target_unique_root_geometry_cell_count": 3238
+  },
+  "final_evaluation_data_used": false,
+  "full_physical_density": {
+    "cell_count": 3799,
+    "multi_snapshot_cell_count": 515,
+    "occupancy_count_quantiles": {
+      "max": 12.0,
+      "median": 1.0,
+      "min": 1.0,
+      "q25": 1.0,
+      "q75": 1.0
+    },
+    "singleton_cell_count": 3284
+  },
+  "full_physical_duplicate_fraction": 0.20903601915469494,
+  "model_config": "JIT/configs/phase_u_continuation_smoke.json",
+  "model_config_sha256": "748581e00a5e9452044a02d94dabdce7c98bc4d0bb107644a29dc48bdbd84089",
+  "projected_points_csv": "JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/tube3_control_tube_geometry/projected_points.csv",
+  "projected_points_csv_sha256": "60df6663b2b9d83d2b03c5d6a2316a6770cd7be08c89e7e2c4d56c5a472883ea",
+  "raw_snapshot_count": 4803,
+  "resolution_contract": {
+    "actor_observation_defines_capability_cells": false,
+    "full_physical_fields": [
+      "root_x_m",
+      "root_y_m",
+      "root_z_m",
+      "root_vx_mps",
+      "root_vy_mps",
+      "root_vz_mps",
+      "roll_deg",
+      "pitch_deg",
+      "yaw_deg",
+      "root_wx_degps",
+      "root_wy_degps",
+      "root_wz_degps",
+      "steering_deg",
+      "hip_deg",
+      "knee_deg",
+      "steering_rate_degps",
+      "hip_rate_degps",
+      "knee_rate_degps",
+      "rearwheel_tangent_mps",
+      "frontwheel_tangent_mps"
+    ],
+    "longitudinal_progress_coordinate": "root_x_m",
+    "phase_is_discrete": true,
+    "quantization": "nearest_grid_round_half_away_from_zero",
+    "resolution_sha256": "9f918a9dd3846e2fc8e787bd47bb008a3a8401c259cd68631bb22df7a945dcbe",
+    "resolutions": {
+      "frontwheel_tangent_mps": {
+        "resolution": 0.1,
+        "unit": "m/s"
+      },
+      "hip_deg": {
+        "resolution": 0.5,
+        "unit": "deg"
+      },
+      "hip_rate_degps": {
+        "resolution": 2.0,
+        "unit": "deg/s"
+      },
+      "knee_deg": {
+        "resolution": 0.5,
+        "unit": "deg"
+      },
+      "knee_rate_degps": {
+        "resolution": 2.0,
+        "unit": "deg/s"
+      },
+      "pitch_deg": {
+        "resolution": 0.5,
+        "unit": "deg"
+      },
+      "rearwheel_tangent_mps": {
+        "resolution": 0.1,
+        "unit": "m/s"
+      },
+      "roll_deg": {
+        "resolution": 0.5,
+        "unit": "deg"
+      },
+      "root_vx_mps": {
+        "resolution": 0.1,
+        "unit": "m/s"
+      },
+      "root_vy_mps": {
+        "resolution": 0.1,
+        "unit": "m/s"
+      },
+      "root_vz_mps": {
+        "resolution": 0.1,
+        "unit": "m/s"
+      },
+      "root_wx_degps": {
+        "resolution": 2.0,
+        "unit": "deg/s"
+      },
+      "root_wy_degps": {
+        "resolution": 2.0,
+        "unit": "deg/s"
+      },
+      "root_wz_degps": {
+        "resolution": 2.0,
+        "unit": "deg/s"
+      },
+      "root_x_m": {
+        "resolution": 0.1,
+        "unit": "m"
+      },
+      "root_y_m": {
+        "resolution": 0.1,
+        "unit": "m"
+      },
+      "root_z_m": {
+        "resolution": 0.1,
+        "unit": "m"
+      },
+      "steering_deg": {
+        "resolution": 0.5,
+        "unit": "deg"
+      },
+      "steering_rate_degps": {
+        "resolution": 2.0,
+        "unit": "deg/s"
+      },
+      "yaw_deg": {
+        "resolution": 0.5,
+        "unit": "deg"
+      }
+    },
+    "root_geometry_fields": [
+      "root_x_m",
+      "root_y_m",
+      "root_z_m",
+      "root_vx_mps",
+      "root_vy_mps",
+      "root_vz_mps",
+      "roll_deg",
+      "pitch_deg",
+      "yaw_deg",
+      "root_wx_degps",
+      "root_wy_degps",
+      "root_wz_degps"
+    ],
+    "schema": "jit_capability_state_resolution_v1",
+    "wheel_angle_phase_in_cell_identity": false,
+    "x_slice_width_m": 0.1
+  },
+  "root_geometry_density": {
+    "cell_count": 3238,
+    "multi_snapshot_cell_count": 624,
+    "occupancy_count_quantiles": {
+      "max": 79.0,
+      "median": 1.0,
+      "min": 1.0,
+      "q25": 1.0,
+      "q75": 1.0
+    },
+    "singleton_cell_count": 2614
+  },
+  "root_geometry_duplicate_fraction": 0.32583801790547573,
+  "schema": "jit_capability_tube_geometry_v1",
+  "source_tube": "JIT/runs/iteration_auto/pi_1_to_pi_2_pi0_centerline_family_landing_20260904/tube_2_policy_family_landing",
+  "source_tube_manifest_sha256": "e30f0d8bf468482988f2d5d00c259c416bc88d84a9862a63c76271cafb144193",
+  "status": "completed",
+  "summary_sha256": "fa2a0a05aa88b84de6e7547a045fea15538afb9cb884d58172407949c80f23fb",
+  "test_data_used": false,
+  "training_transitions": 0,
+  "tube": "JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/tube_3_policy_family_landing",
+  "tube_iteration": 3,
+  "tube_manifest_sha256": "b5eebad447ea4ef77f624edcf2020f0045395c475c2e3297825436b0c02d701f",
+  "unique_full_physical_cell_count": 3799,
+  "unique_root_geometry_cell_count": 3238,
+  "validation_data_used": false,
+  "visualization": {
+    "basis": "unique_root_geometry_cells_not_raw_snapshot_density",
+    "files": [
+      "JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/tube3_control_tube_geometry/tube_x_z_cells.png",
+      "JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/tube3_control_tube_geometry/tube_x_vx_cells.png",
+      "JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/tube3_control_tube_geometry/tube_x_pitch_cells.png",
+      "JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/tube3_control_tube_geometry/tube_x_z_vx_cells_3d.png"
+    ],
+    "status": "generated"
+  },
+  "x_max_center_m": 4.9,
+  "x_min_center_m": 2.5,
+  "x_slice_count": 24,
+  "x_slices_file": "JIT/runs/iteration_auto/pi_2_to_pi_3_pi0_centerline_family_landing_wide_20260904/tube3_control_tube_geometry/x_slices.json",
+  "x_slices_file_sha256": "27274d7be4e2e1b8b32ebb503a639e5be55288918804dcc23dc7e30bd3614980",
+  "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+}

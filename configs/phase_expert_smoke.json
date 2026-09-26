@@ -1,0 +1,85 @@
+{
+  "ppo_layout": {
+    "num_parallel_envs": 64,
+    "episode_horizon": 200,
+    "unroll_length": 25,
+    "batch_size": 16,
+    "num_minibatches": 4,
+    "num_updates_per_batch": 1,
+    "num_evals": 2,
+    "num_eval_envs": 4
+  },
+  "policy_initial_action_std": [0.05, 0.05, 0.20, 0.05],
+  "maximum_interaction_cost": {
+    "training_transitions": 6400,
+    "brax_evaluation_transitions": 1600,
+    "fixed_evaluation_transitions": 1600,
+    "combined_transitions": 9600
+  },
+  "training_seed_namespace": "phase_u_train_v1",
+  "training_seed_count": 64,
+  "evaluation": {
+    "seed_namespace": "phase_u_fixed_evaluation_v1",
+    "seeds": [910001, 910002, 910003, 910004, 910005, 910006, 910007, 910008],
+    "environment_count": 8,
+    "episode_horizon": 200,
+    "episodes": 1
+  },
+  "checkpoint_cadence_transitions": 1600,
+  "optimization": {
+    "learning_rate": 0.0001,
+    "entropy_cost": 0.001,
+    "reward_scaling": 0.1,
+    "discounting": 0.995,
+    "gae_lambda": 0.97,
+    "clipping_epsilon": 0.1,
+    "max_grad_norm": 0.75
+  },
+  "base_mode": {
+    "training_stage": "full",
+    "use_bank_resets": false,
+    "expert_chain_termination": false,
+    "stage_reachability_objective": "",
+    "domain_randomization": false
+  },
+  "adapter_ownership": {
+    "reward": true,
+    "done": true,
+    "timeout": true
+  },
+  "stopping_conditions": [
+    "stop_after_requested_training_transitions",
+    "stop_after_brax_evaluation_ceiling",
+    "stop_after_fixed_evaluation_ceiling",
+    "stop_after_combined_interaction_ceiling",
+    "stop_on_contract_or_runtime_failure"
+  ],
+  "reward_bounds": {
+    "total_min": -50.0,
+    "total_max": 50.0
+  },
+  "phase_u_reward": {
+    "forward_propulsion_weight": 0.5,
+    "jump_window_progress_weight": 2.0,
+    "liftoff_bonus_weight": 8.0,
+    "stable_airborne_bonus_weight": 16.0,
+    "ascent_progress_weight": 8.0,
+    "coordinated_joint_propulsion_weight": 4.0,
+    "coordinated_joint_velocity_deadband": 0.15,
+    "coordinated_joint_velocity_target": 2.0,
+    "clearance_progress_weight": 2.0,
+    "apex_approach_weight": 8.0,
+    "attitude_penalty_weight": 0.5,
+    "angular_rate_penalty_weight": 1.0,
+    "angular_rate_penalty_cap_ratio": 4.0,
+    "illegal_contact_penalty_weight": 20.0,
+    "action_smoothness_weight": 0.02,
+    "action_magnitude_weight": 0.005,
+    "success_bonus": 30.0,
+    "physical_failure_penalty": 20.0,
+    "task_failure_penalty": 20.0,
+    "target_forward_velocity": 3.75,
+    "target_vertical_velocity": 1.0,
+    "clearance_floor": -0.3
+  }
+}

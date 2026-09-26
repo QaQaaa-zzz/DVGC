@@ -1,0 +1,12 @@
+{
+  "schema": "jit_additional_comparison_methods_v1",
+  "methods": [
+    {
+      "key": "repair_0070",
+      "label": "lineage_repair_0070",
+      "short_label": "repair_0070",
+      "bank": "/home/qy/DVGC/JIT/runs/experiments/neighborhood_reward005_safe256_20260916/nonfinite_recovery/attempt_0002/lineage/round_0070/expanded_bank.json",
+      "proposer": "lineage_repair_0070"
+    }
+  ]
+}

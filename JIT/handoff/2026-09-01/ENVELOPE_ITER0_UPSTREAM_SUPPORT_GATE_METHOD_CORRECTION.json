@@ -1,0 +1,71 @@
+{
+  "schema": "jit_envelope_iter0_upstream_support_gate_method_correction_v1",
+  "date": "2026-09-01",
+  "branch": "agent/two-phase-soft-tube",
+  "source_head": "7eaca425ea20461a32b831f39af3b75b0d0aa5e8",
+  "policy_name": "pi_0",
+  "iteration": 0,
+  "trigger": {
+    "artifact": "JIT/runs/pi_unified_continuation_field_diagnostic/pi_0_iter0_upstream_checkpoint_domain_logo_matched_tiny_mlp_20260901/summary.json",
+    "summary_sha256": "181053222c4de9a44aebdad16dc6afa999960a8292d5882bc9f3f0962de4c51a",
+    "model_family": "tiny_mlp_tanh",
+    "parameter_count": 625,
+    "mean_checkpoint_holdout_auc": 0.6670021573342261,
+    "worst_checkpoint_holdout_auc": 0.4395968873580814,
+    "checkpoint_domain_generalization_supported": false,
+    "fresh_validation_predeclaration_authorized": false,
+    "tube_1_authorized": false,
+    "environment_interactions": 0,
+    "training_transitions": 0
+  },
+  "method_correction": {
+    "checkpoint_domain_holdout_role": "out_of_support_extrapolation_stress_test",
+    "checkpoint_domain_holdout_is_not_a_required_jit_tube_expansion_gate": true,
+    "reason": "the original group-disjoint validation design holds out parent groups while the declared upstream support spans transition_4988928, transition_7987200, and transition_9977856; requiring one entire checkpoint family to be absent from TRAIN changes the question from unseen-parent generalization within declared support to extrapolation outside the represented support",
+    "original_validation_design": "JIT/docs/specs/2026-08-31-iter0-group-disjoint-validation-design.md",
+    "required_capability": "generalize to unseen parent groups and physical states within the declared three-checkpoint support under the locked matched panel",
+    "natural_start_style_scope_expansion_rejected": true
+  },
+  "next_train_only_gate": {
+    "config": "JIT/configs/envelope_iter0_upstream_support_stratified_parent_cv_tiny_mlp.json",
+    "expected_protocol_sha256": "bfdf8795a98720741e6edcac0d1ff82156f4eb3ec669422330a74855e28dd89c",
+    "frozen_train_manifest_sha256": "25160e1f198d710327b8390a53869bc72ec62afced5f3d86dcc45d1543793626",
+    "rows": 720,
+    "checkpoint_domains": 3,
+    "parent_groups": 15,
+    "seed_families": [
+      "1000001",
+      "1000002",
+      "1000003",
+      "1000004",
+      "1000005"
+    ],
+    "folds": 5,
+    "fold_rule": "hold out one seed family across all three checkpoint domains; train on the other four seed families across all three domains",
+    "heldout_parent_groups_per_fold": 3,
+    "train_parent_groups_per_fold": 12,
+    "model_family": "tiny_mlp_tanh",
+    "hidden_units": 8,
+    "parameter_count": 625,
+    "additional_model_search": false,
+    "consumed_validation_reused": false,
+    "environment_interactions": 0,
+    "training_transitions": 0
+  },
+  "decision_after_next_gate": {
+    "if_pass": "treat 76->8 tanh->1 as the candidate shared C_up/C_down architecture, then migrate C_down to the same architecture and require a downstream TRAIN-only group-disjoint check before predeclaring any fresh validation",
+    "if_fail": "stop tiny-MLP repair; do not automatically increase network size or collect more same-panel TRAIN data; make an explicit method decision about continuation representation or Tube construction",
+    "fresh_validation_predeclared_now": false,
+    "tube_1_authorized_now": false,
+    "pi_1_authorized_now": false
+  },
+  "claim_boundary": {
+    "checkpoint_extrapolation_failure_is_preserved_as_a_stress_result": true,
+    "checkpoint_extrapolation_success_claim": false,
+    "unseen_parent_within_support_claim_not_yet_available": true,
+    "certified_safe_set_claim": false,
+    "jce_jel_claim": false,
+    "test_data_used": false,
+    "final_evaluation_data_used": false
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "apex_frame_index": 17,
+  "captured_state_count": 178,
+  "diagnostic_data": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/diagnostics/airborne_rsi/transition_9977856/representative_diagnostic.npz",
+  "diagnostic_data_sha256": "bd59a4de3459b5efe21021760e1b330e3c76fed73b908ae1bf3671f3c4a749a2",
+  "diagnostic_plot": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/diagnostics/airborne_rsi/transition_9977856/representative_diagnostic.png",
+  "diagnostic_plot_sha256": "357055e625c735e8fe605a69c218f722d4ef177bbb78a08dcf334cb4a24e8273",
+  "encoded_frame_count": 178,
+  "environment_transitions": 177,
+  "fps": 50,
+  "post_apex_data": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/diagnostics/airborne_rsi/transition_9977856/representative_post_apex.npz",
+  "post_apex_data_sha256": "1c6b06ed52b115719894fee920ddc2cf2d9789c6e0491ee5600f3458d67d7e5f",
+  "post_apex_environment_transitions": 160,
+  "post_apex_sample_count": 161,
+  "pre_apex_data": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/diagnostics/airborne_rsi/transition_9977856/representative_pre_apex.npz",
+  "pre_apex_data_sha256": "122c8b3e9ad6bab0d62de5ea10ceaa7569c5da06a00e62fbaa8701467a92cd98",
+  "pre_apex_environment_transitions": 17,
+  "pre_apex_sample_count": 18,
+  "state_trace": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/diagnostics/airborne_rsi/transition_9977856/representative_diagnostic.npz",
+  "video": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/diagnostics/airborne_rsi/transition_9977856/representative.mp4",
+  "video_sha256": "38f47a2d4bd1f2f798543588f6f6eecb4a69c915b5fa2c6735bd8ac63a5fe189"
+}

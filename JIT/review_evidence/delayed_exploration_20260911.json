@@ -1,0 +1,21 @@
+{
+  "schema": "jit_delayed_loop_prelaunch_validation_v1",
+  "cpu_tests": {
+    "passed": 230,
+    "failed": 0,
+    "wall_seconds": 7.51
+  },
+  "gpu_validation_this_change": false,
+  "new_simulator_interactions": 0,
+  "scope": "CPU wiring/provenance/gate tests; runtime pending",
+  "supervisor_pid": 1907686,
+  "queue_phase": "waiting",
+  "queue_plan_sha256": "ae414cfd03201ecb4b6ca7e36ced2a4d48d0aef845c413665e5b58e2cb82fa3e",
+  "maximum_interactions": 4016000,
+  "engineering_maximum": 352000,
+  "pilot_maximum": 3664000,
+  "final_test_used": false,
+  "source_branch": "agent/two-phase-soft-tube",
+  "evidence_root": "/home/qy/DVGC/JIT/runs/experiments/delayed_exploration_20260911",
+  "upstream_residual_report_commit": "6121da9"
+}

@@ -1,0 +1,28 @@
+{
+  "initialization": {
+    "actor": "warm_start_frozen_unified",
+    "critic": "fresh",
+    "optimizer": "fresh",
+    "source_frozen_policy": "/home/qy/DVGC/JIT/runs/experiments/delayed_exploration_reuse_20260912/queue/stage_0_result/round_000/frozen/frozen_unified_policy.json"
+  },
+  "jump_start_probability": 0.2,
+  "pending_fraction": 0.25,
+  "ppo": {
+    "batch_size": 16,
+    "clipping_epsilon": 0.1,
+    "discounting": 0.995,
+    "entropy_cost": 0.001,
+    "episode_horizon": 400,
+    "gae_lambda": 0.97,
+    "learning_rate": 0.0001,
+    "max_grad_norm": 0.75,
+    "num_minibatches": 8,
+    "num_parallel_envs": 128,
+    "num_updates_per_batch": 1,
+    "requested_transitions": 128000,
+    "reward_scaling": 0.1,
+    "seed": 9940202,
+    "unroll_length": 25
+  },
+  "schema": "jit_iterative_candidate_training_v1"
+}

@@ -1,0 +1,68 @@
+{
+  "schema": "jit_upstream_matched_checkpoint_train_evidence_freeze_config_v1",
+  "output_dir": "JIT/runs/frozen_upstream_checkpoint_train/pi_0_iter0_three_checkpoint_matched_panel_20260901",
+  "expected_protocol_sha256": "2df65325660ac54c914b14fca98d1d5e2f0f52a3da74bf941b4979edbc32bf1d",
+  "protocol": {
+    "schema": "jit_upstream_matched_checkpoint_train_evidence_freeze_protocol_v1",
+    "status": "predeclared_after_matched_panel_audit_before_fair_checkpoint_cv",
+    "iteration": 0,
+    "policy_name": "pi_0",
+    "policy_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+    "policy_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+    "source_frozen_upstream_train_evidence": "JIT/runs/frozen_upstream_checkpoint_train/pi_0_iter0_three_checkpoint_domains_20260901",
+    "source_frozen_upstream_train_manifest_sha256": "bf0df10890585aea579efbc6e4100cb712b90359b2488c844e1b6311c89935da",
+    "source_frozen_upstream_train_labels_sha256": "4117aa6d5c74d69db9b8506e8390701d7cf9aeab92a1bc711bf6561f0e31cd56",
+    "matched_panel_audit_config": "JIT/configs/envelope_iter0_upstream_matched_panel_audit.json",
+    "matched_panel_audit_protocol_sha256": "7ed71a260e631b42c26a090691b67c20f09310a342dc98b66599452fb99b024c",
+    "required_domains": [
+      "transition_4988928",
+      "transition_7987200",
+      "transition_9977856"
+    ],
+    "expected_domain_stats": {
+      "transition_4988928": {
+        "candidate_count": 240,
+        "positive_count": 221,
+        "negative_count": 19,
+        "parent_group_count": 5
+      },
+      "transition_7987200": {
+        "candidate_count": 240,
+        "positive_count": 217,
+        "negative_count": 23,
+        "parent_group_count": 5
+      },
+      "transition_9977856": {
+        "candidate_count": 240,
+        "positive_count": 201,
+        "negative_count": 39,
+        "parent_group_count": 5
+      }
+    },
+    "expected_combined": {
+      "candidate_count": 720,
+      "positive_count": 639,
+      "negative_count": 81,
+      "parent_group_count": 15,
+      "checkpoint_domain_count": 3
+    },
+    "data_policy": {
+      "train_rows_only": true,
+      "consumed_validation_rows_read": false,
+      "consumed_validation_predictions_read": false,
+      "test_data_used": false,
+      "final_evaluation_data_used": false,
+      "environment_interactions": 0,
+      "training_transitions": 0
+    },
+    "claim_boundary": {
+      "matched_checkpoint_train_evidence_only": true,
+      "continuation_field_reselected": false,
+      "fresh_validation_bank_predeclared": false,
+      "tube_1_constructed": false,
+      "pi_1_trained": false,
+      "jce_jel_claim": false,
+      "certified_safe_set_claim": false
+    }
+  }
+}

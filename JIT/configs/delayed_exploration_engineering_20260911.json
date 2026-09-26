@@ -1,0 +1,73 @@
+{
+  "schema": "jit_delayed_exploration_loop_v1",
+  "role": "TRAIN",
+  "final_test_used": false,
+  "repo": "/home/qy/DVGC",
+  "python": "/home/qy/mujoco_playground/.venv/bin/python",
+  "rounds": 2,
+  "proposer": "pi_6",
+  "bank": "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/comparison_bank.json",
+  "witnessed_support": "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/support.json",
+  "bootstrap_config": "/home/qy/DVGC/JIT/configs/pi_unified_iter2_landing_replay_pi1_actor_warmstart_core75_natural10_20260904.json",
+  "pending_fraction": 0.25,
+  "pending_limit": 128,
+  "policy_seed": 9940201,
+  "stage_timeout_seconds": 1800,
+  "gate": {
+    "status_path": "/home/qy/STTW_CONTROL/runs/priority_survival_20260911/pipeline_status.json",
+    "process_run_path": "/home/qy/STTW_CONTROL/runs/priority_survival_20260911",
+    "process_repository_path": "/home/qy/STTW_CONTROL",
+    "process_uid": 1000
+  },
+  "explorer": {
+    "bank": "/home/qy/DVGC/JIT/runs/experiments/multicheckpoint_pi6_256k_20260911/comparison_bank.json",
+    "proposer": "pi_6",
+    "num_envs": 2,
+    "evaluation_episodes": 2,
+    "horizon": 400,
+    "batches": 1,
+    "epochs": 1,
+    "minibatch_size": 256,
+    "seed": 9940101,
+    "learning_rate": 3e-05,
+    "clip": 0.2,
+    "gamma": 0.99,
+    "gae_lambda": 0.95,
+    "value_coefficient": 0.5,
+    "entropy_coefficient": 0.001,
+    "max_grad_norm": 1.0,
+    "baseline_cells": "/home/qy/DVGC/JIT/runs/engineering/residual_suffix_ppo_20260911/baseline_seed.json",
+    "jump_start_state_sha256": "ef2f9b87b0f0760577646586220603049adceb0b717c9cdf5a80f064c5b60606",
+    "schema": "jit_frozen_policy_residual_ppo_v1",
+    "delta_limit": [
+      0.15,
+      0.15,
+      0.15,
+      0.15
+    ],
+    "max_candidates_per_episode": 4,
+    "candidate_min_x": 2.75,
+    "candidate_max_x": 8.0,
+    "candidate_spacing": 0.05,
+    "evaluator_order": [
+      "pi_6",
+      "pi_0",
+      "pi_1",
+      "pi_2",
+      "pi_3",
+      "pi_4",
+      "pi_5"
+    ],
+    "suffix_horizon": 400,
+    "suffix_budget": 0,
+    "reward_mode": "arrival_novelty_v1",
+    "candidate_selection": "phase_stratified_v1"
+  },
+  "stop_conditions": [
+    "numerical_or_provenance_error",
+    "no_pending_training_rows",
+    "declared_round_limit"
+  ],
+  "control_scope": "matched forward exploration conditional on same evolving source pi; learned-arm pending trains shared next pi",
+  "policy_steps": 3200
+}

@@ -1,0 +1,82 @@
+[
+  {
+    "active_interactions": 405,
+    "batch": 1,
+    "charged_interactions": 6400,
+    "controller_mode": "learned_residual",
+    "cumulative_cells": 309,
+    "episodes": 8,
+    "mean_losses": [
+      0.3300820589065552,
+      -0.01578422263264656,
+      0.6968976855278015,
+      2.5825843811035156
+    ],
+    "new_cells": 32.0,
+    "optimizer_updates": 2,
+    "reward_mode": "arrival_novelty_v1",
+    "successes": 7,
+    "suffix_interactions": 0,
+    "wall_seconds": 12.897386179000023
+  },
+  {
+    "active_interactions": 356,
+    "batch": 2,
+    "charged_interactions": 9600,
+    "controller_mode": "learned_residual",
+    "cumulative_cells": 341,
+    "episodes": 8,
+    "mean_losses": [
+      0.4020223617553711,
+      -0.006810804829001427,
+      0.8228962421417236,
+      2.6149563789367676
+    ],
+    "new_cells": 32.0,
+    "optimizer_updates": 2,
+    "reward_mode": "arrival_novelty_v1",
+    "successes": 8,
+    "suffix_interactions": 0,
+    "wall_seconds": 14.925198393000755
+  },
+  {
+    "active_interactions": 377,
+    "batch": 3,
+    "charged_interactions": 12800,
+    "controller_mode": "learned_residual",
+    "cumulative_cells": 373,
+    "episodes": 8,
+    "mean_losses": [
+      0.3695110082626343,
+      -0.00016741825675126165,
+      0.7443095445632935,
+      2.4763569831848145
+    ],
+    "new_cells": 32.0,
+    "optimizer_updates": 2,
+    "reward_mode": "arrival_novelty_v1",
+    "successes": 8,
+    "suffix_interactions": 0,
+    "wall_seconds": 16.95514791099413
+  },
+  {
+    "active_interactions": 350,
+    "batch": 4,
+    "charged_interactions": 16000,
+    "controller_mode": "learned_residual",
+    "cumulative_cells": 405,
+    "episodes": 8,
+    "mean_losses": [
+      0.3978133201599121,
+      -0.019331496208906174,
+      0.8393621444702148,
+      2.536294460296631
+    ],
+    "new_cells": 32.0,
+    "optimizer_updates": 2,
+    "reward_mode": "arrival_novelty_v1",
+    "successes": 8,
+    "suffix_interactions": 0,
+    "wall_seconds": 18.97955746499065
+  }
+]

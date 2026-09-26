@@ -1,0 +1,77 @@
+{
+  "schema": "jit_round2_prelaunch_handoff_v1",
+  "status": "metadata_sealed_pending_local_verification",
+  "round1_evidence": {
+    "training_run_id": "pi_unified_round1_natural10_10009600_seed821101_20260831",
+    "checkpoint_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+    "canonical_protocol_sha256": "df67f326d3963981e85bd9db1d136bbb9587488dab1e21e275329071819906bb",
+    "canonical_trace_npz_sha256": "1f67dcfd975664da3976945276ef068b5aaace51b1218e95014b2f2b3802c9b5",
+    "canonical_gate": "CANONICAL_FULL_RECOVERY_FAIL",
+    "canonical_environment_interactions": 16,
+    "failure_stage": "pre_jump",
+    "terminal_reason": "yaw_limit",
+    "jump_zone_seen": false,
+    "ascending_seen": false,
+    "height_seen": false,
+    "apex_seen": false,
+    "maximum_root_height": 0.22131437063217163,
+    "maximum_abs_roll": 0.13010403513908386,
+    "maximum_abs_pitch": 0.07539287954568863,
+    "steering_mean_abs": 0.641310453414917,
+    "steering_max_abs": 0.9452910423278809
+  },
+  "round1_training_exposure_diagnostic": {
+    "episode_metric_callback_count": 391,
+    "mean_episode_length": 38.5909,
+    "mean_episode_reset_source_natural": 1.34205,
+    "mean_episode_reset_source_soft_tube": 37.2488,
+    "derived_natural_transition_fraction": 0.03477633328064388,
+    "derivation": "mean(episode/reset/source_natural) / mean(episode/length)",
+    "interpretation": "the configured 10% natural probability is per episode, while short natural episodes reduce natural-origin transition exposure to about 3.48% in the logged training callbacks",
+    "source_binding": "derived from local completed Round-1 episode_metrics.jsonl terminal audit; raw local file SHA is not asserted here",
+    "scientific_claim": false
+  },
+  "round1_train_panel_evidence": {
+    "transition_7500800_success_count": 16,
+    "transition_7500800_episode_count": 16,
+    "transition_10009600_success_count": 16,
+    "transition_10009600_episode_count": 16,
+    "interpretation": "fixed Soft-Tube TRAIN panels reached 16/16 while the canonical natural start failed, localizing the remaining gap to natural-start coverage rather than general Tube competence"
+  },
+  "round2_method": {
+    "single_variable": "reset_distribution_only",
+    "round1_natural_reset_probability": 0.1,
+    "round1_soft_tube_probability": 0.9,
+    "round2_natural_reset_probability": 0.5,
+    "round2_soft_tube_probability": 0.5,
+    "selection": "bernoulli_per_episode",
+    "expected_natural_transition_fraction_if_round1_length_ratio_persists": 0.244863392077004,
+    "expected_fraction_is_contract": false,
+    "actor_initialization": "fresh",
+    "critic_initialization": "fresh",
+    "optimizer_initialization": "fresh",
+    "training_seed": 821101,
+    "requested_training_transitions": 10009600,
+    "ppo_unchanged": true,
+    "reward_unchanged": true,
+    "physics_unchanged": true,
+    "soft_tube_unchanged": true,
+    "train_panel_protocol_unchanged": true,
+    "validation_data_used": false,
+    "test_data_used": false
+  },
+  "round2_config": {
+    "path": "JIT/configs/pi_unified_round2_natural50.json",
+    "config_sha256": "ddb3f407a1c8a7d426d6c1296d94a31f6a3748bae4c5814fe0caf15211b8e94e",
+    "run_id": "pi_unified_round2_natural50_10009600_seed821101_20260831",
+    "output_dir": "JIT/runs/pi_unified/pi_unified_round2_natural50_10009600_seed821101_20260831"
+  },
+  "claim_boundary": {
+    "round2_is_training_iteration": true,
+    "round2_is_final_policy_evaluation": false,
+    "pi_unified_star_freeze_ready": false,
+    "jce_jel_claim": false,
+    "certified_safe_tube_claim": false,
+    "next_after_training": "independent canonical natural-start evaluation of the fixed transition_10009600 checkpoint; only a canonical GO can advance to a reachable-state Final-Recovery evaluation bank"
+  }
+}

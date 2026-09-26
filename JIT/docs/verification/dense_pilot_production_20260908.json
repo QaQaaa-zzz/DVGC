@@ -1,0 +1,99 @@
+{
+  "source_zip_sha256": "2e8cc9d0ed38e1c1ed933db4d82d35014458aaf07ca6c66e8182cebccfbaae67",
+  "summary": {
+    "backend_decisions": {
+      "pi_0": {
+        "backend": "serial",
+        "reason": "device unavailable or policy identity mismatch"
+      },
+      "pi_1": {
+        "backend": "serial",
+        "reason": "device unavailable or policy identity mismatch"
+      },
+      "pi_2": {
+        "backend": "serial",
+        "reason": "device unavailable or policy identity mismatch"
+      },
+      "pi_3": {
+        "backend": "serial",
+        "reason": "device unavailable or policy identity mismatch"
+      }
+    },
+    "candidate_count": 242,
+    "charged_interactions": 45544,
+    "figures": "/home/qy/DVGC/JIT/runs/dense_tube/pi0_5cm_pilot_v1/figures",
+    "final_test_used": false,
+    "sampling_spacing_m": 0.05,
+    "scope": "TRAIN pi0 dense pilot, not a matched-budget multi-proposer experiment",
+    "status": "completed",
+    "training_transitions": 0
+  },
+  "coverage": {
+    "baseline_scope": "previous shared-panel TRAIN support only; not all historical Tube versions",
+    "continuous_volume_claim": false,
+    "denser_sampling_is_not_by_itself_policy_improvement": true,
+    "physical_grid_unchanged": true,
+    "rows": [
+      {
+        "full_cell_cumulative": 1580,
+        "full_cell_new_panel": 230,
+        "full_cell_novel": 230,
+        "full_cell_old": 1350,
+        "policy": "pi_0",
+        "root_cell_cumulative": 1347,
+        "root_cell_new_panel": 223,
+        "root_cell_novel": 222,
+        "root_cell_old": 1125
+      },
+      {
+        "full_cell_cumulative": 1627,
+        "full_cell_new_panel": 231,
+        "full_cell_novel": 231,
+        "full_cell_old": 1396,
+        "policy": "pi_1",
+        "root_cell_cumulative": 1386,
+        "root_cell_new_panel": 224,
+        "root_cell_novel": 223,
+        "root_cell_old": 1163
+      },
+      {
+        "full_cell_cumulative": 1679,
+        "full_cell_new_panel": 230,
+        "full_cell_novel": 230,
+        "full_cell_old": 1449,
+        "policy": "pi_2",
+        "root_cell_cumulative": 1440,
+        "root_cell_new_panel": 223,
+        "root_cell_novel": 222,
+        "root_cell_old": 1218
+      },
+      {
+        "full_cell_cumulative": 1550,
+        "full_cell_new_panel": 218,
+        "full_cell_novel": 218,
+        "full_cell_old": 1332,
+        "policy": "pi_3",
+        "root_cell_cumulative": 1315,
+        "root_cell_new_panel": 212,
+        "root_cell_novel": 211,
+        "root_cell_old": 1104
+      },
+      {
+        "full_cell_cumulative": 1693,
+        "full_cell_new_panel": 235,
+        "full_cell_novel": 235,
+        "full_cell_old": 1458,
+        "policy": "union",
+        "root_cell_cumulative": 1452,
+        "root_cell_new_panel": 228,
+        "root_cell_novel": 227,
+        "root_cell_old": 1225
+      }
+    ]
+  },
+  "metrics_csv": "policy,candidate_count,successful_candidates,failed_candidates,observed_contexts,root_cells,full_cells,unique_contexts,unique_root_cells,unique_full_cells,suffix_interactions\r\npi_0,242,235,7,235,223,230,1,1,1,4244\r\npi_1,242,236,6,236,224,231,1,1,1,4078\r\npi_2,242,235,7,235,223,230,0,0,0,3872\r\npi_3,242,223,19,223,212,218,0,0,0,6036\r\nunion,242,240,2,240,228,235,,,,18230\r\n",
+  "known_measured_interactions": 19944,
+  "failed_attempt_reserved_interactions": 25600,
+  "device_error": "Warp contact__dim leaf ndim 2 vs expected 1; four device benchmarks failed; serial fallback completed labels",
+  "gpu_acceleration_verified": false
+}

@@ -1,0 +1,1100 @@
+{
+  "environment": {
+    "PYTHONPATH": "/home/qy/DVGC/JIT/src",
+    "XLA_PYTHON_CLIENT_PREALLOCATE": "false"
+  },
+  "method_contract": {
+    "causal_train_cell_growth_required_before_training": true,
+    "causal_trajectory_centered_jump_tube": true,
+    "centerline_recomputed_each_iteration": false,
+    "forward_reachability": "fixed_jump_start_connected_env_step_only",
+    "natural_start_connected": false,
+    "nominal_centerline": "JIT/runs/nominal_centerline/pi_1_jump_start_centerline_v3_20260904/centerline.json",
+    "nominal_centerline_sha256": "ebf8c7eee592664e51602aef8647f848b6b7f260e58db125911e5104295685a4",
+    "post_landing_recovery_frontier_eligible": false,
+    "rsi_establishes_forward_reachability": false,
+    "rsi_role": "continuation_evaluation_after_reachability",
+    "source_tube_is_forward_reachability_proof": false,
+    "source_tube_states_used_as_frontier_resets": false,
+    "x_step_m": 0.1
+  },
+  "schema": "jit_iteration_workflow_v1",
+  "stages": [
+    {
+      "command": [
+        "/home/qy/mujoco_playground/.venv/bin/python",
+        "JIT/cli/analyze_capability_tube.py",
+        "--tube",
+        "JIT/runs/soft_tube/soft_tube_iter1_pi0_conditioned_20260901",
+        "--output-dir",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/source_control_tube_geometry"
+      ],
+      "completion": {
+        "assertions": [
+          {
+            "op": "eq",
+            "pointer": "/status",
+            "value": "completed"
+          },
+          {
+            "op": "eq",
+            "pointer": "/resolution_contract/x_slice_width_m",
+            "value": 0.1
+          }
+        ],
+        "exports": {},
+        "kind": "json",
+        "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/source_control_tube_geometry/summary.json"
+      },
+      "cwd": "/home/qy/DVGC",
+      "name": "analyze_source_control_tube_geometry",
+      "requires": [
+        {
+          "kind": "file",
+          "path": "JIT/runs/soft_tube/soft_tube_iter1_pi0_conditioned_20260901/manifest.json"
+        },
+        {
+          "kind": "file",
+          "path": "JIT/runs/nominal_centerline/pi_1_jump_start_centerline_v3_20260904/centerline.json"
+        }
+      ]
+    },
+    {
+      "command": [
+        "/home/qy/mujoco_playground/.venv/bin/python",
+        "JIT/cli/analyze_jump_tube_view.py",
+        "--capability-geometry-summary",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/source_control_tube_geometry/summary.json",
+        "--nominal-centerline",
+        "JIT/runs/nominal_centerline/pi_1_jump_start_centerline_v3_20260904/centerline.json",
+        "--output-dir",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/source_semantic_jump_view"
+      ],
+      "completion": {
+        "assertions": [
+          {
+            "op": "eq",
+            "pointer": "/status",
+            "value": "completed"
+          },
+          {
+            "op": "eq",
+            "pointer": "/semantic_filter/post_landing_recovery_included",
+            "value": false
+          }
+        ],
+        "exports": {},
+        "kind": "json",
+        "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/source_semantic_jump_view/summary.json"
+      },
+      "cwd": "/home/qy/DVGC",
+      "name": "build_source_semantic_jump_view",
+      "requires": [
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/source_control_tube_geometry/summary.json"
+        },
+        {
+          "kind": "file",
+          "path": "JIT/runs/nominal_centerline/pi_1_jump_start_centerline_v3_20260904/centerline.json"
+        }
+      ]
+    },
+    {
+      "command": [
+        "/home/qy/mujoco_playground/.venv/bin/python",
+        "JIT/cli/run_iterative_frontier_protocol.py",
+        "prepare-plan",
+        "--selected-policy",
+        "JIT/runs/iteration_selection/pi_1_repair02_20260903/selected_policy.json",
+        "--source-tube",
+        "JIT/runs/soft_tube/soft_tube_iter1_pi0_conditioned_20260901",
+        "--output",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_plan_unrevised.json"
+      ],
+      "completion": {
+        "assertions": [
+          {
+            "op": "eq",
+            "pointer": "/status",
+            "value": "predeclared_before_frontier_outcomes"
+          },
+          {
+            "op": "eq",
+            "pointer": "/iteration",
+            "value": 1
+          }
+        ],
+        "exports": {},
+        "kind": "json",
+        "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_plan_unrevised.json"
+      },
+      "cwd": "/home/qy/DVGC",
+      "name": "prepare_unrevised_frontier_plan",
+      "requires": [
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_selection/pi_1_repair02_20260903/selected_policy.json"
+        },
+        {
+          "kind": "file",
+          "path": "JIT/runs/soft_tube/soft_tube_iter1_pi0_conditioned_20260901/manifest.json"
+        }
+      ]
+    },
+    {
+      "command": [
+        "/home/qy/mujoco_playground/.venv/bin/python",
+        "JIT/cli/prepare_resolution_aware_frontier_plan.py",
+        "--source-plan",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_plan_unrevised.json",
+        "--source-tube",
+        "JIT/runs/soft_tube/soft_tube_iter1_pi0_conditioned_20260901",
+        "--capability-geometry-summary",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/source_control_tube_geometry/summary.json",
+        "--nominal-centerline",
+        "JIT/runs/nominal_centerline/pi_1_jump_start_centerline_v3_20260904/centerline.json",
+        "--output",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_plan_causal.json"
+      ],
+      "completion": {
+        "assertions": [
+          {
+            "op": "eq",
+            "pointer": "/status",
+            "value": "predeclared_before_frontier_outcomes"
+          },
+          {
+            "op": "eq",
+            "pointer": "/iteration",
+            "value": 1
+          },
+          {
+            "op": "eq",
+            "pointer": "/protocol_revision/name",
+            "value": "conditional_jump_start_trajectory_centered_frontier_v3"
+          },
+          {
+            "op": "eq",
+            "pointer": "/jump_tube_contract/x_step_m",
+            "value": 0.1
+          },
+          {
+            "op": "eq",
+            "pointer": "/jump_tube_contract/all_centerline_slices_probed",
+            "value": true
+          },
+          {
+            "op": "eq",
+            "pointer": "/jump_tube_contract/source_tube_states_used_as_physical_resets",
+            "value": false
+          },
+          {
+            "op": "eq",
+            "pointer": "/jump_tube_contract/rsi_may_establish_forward_reachability",
+            "value": false
+          }
+        ],
+        "exports": {},
+        "kind": "json",
+        "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_plan_causal.json"
+      },
+      "cwd": "/home/qy/DVGC",
+      "name": "revise_frontier_plan_causal_trajectory_centered",
+      "requires": [
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_plan_unrevised.json"
+        },
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/source_control_tube_geometry/summary.json"
+        },
+        {
+          "kind": "file",
+          "path": "JIT/runs/nominal_centerline/pi_1_jump_start_centerline_v3_20260904/centerline.json"
+        }
+      ]
+    },
+    {
+      "command": [
+        "/home/qy/mujoco_playground/.venv/bin/python",
+        "JIT/cli/run_causal_jump_frontier_role.py",
+        "--plan",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_plan_causal.json",
+        "--role",
+        "train",
+        "--output-dir",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_train"
+      ],
+      "completion": {
+        "assertions": [
+          {
+            "op": "eq",
+            "pointer": "/status",
+            "value": "completed"
+          },
+          {
+            "op": "eq",
+            "pointer": "/role",
+            "value": "train"
+          },
+          {
+            "op": "eq",
+            "pointer": "/iteration",
+            "value": 1
+          },
+          {
+            "op": "eq",
+            "pointer": "/acquisition_mode",
+            "value": "jump_start_connected_causal_rollout_v1"
+          },
+          {
+            "op": "eq",
+            "pointer": "/jump_start_reachability_proven",
+            "value": true
+          },
+          {
+            "op": "eq",
+            "pointer": "/rsi_used_for_reachability",
+            "value": false
+          }
+        ],
+        "exports": {},
+        "kind": "json",
+        "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_train/role_manifest.json"
+      },
+      "cwd": "/home/qy/DVGC",
+      "name": "frontier_train",
+      "requires": [
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_plan_causal.json"
+        }
+      ]
+    },
+    {
+      "command": [
+        "/home/qy/mujoco_playground/.venv/bin/python",
+        "JIT/cli/run_causal_jump_frontier_role.py",
+        "--plan",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_plan_causal.json",
+        "--role",
+        "calibration",
+        "--output-dir",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_calibration"
+      ],
+      "completion": {
+        "assertions": [
+          {
+            "op": "eq",
+            "pointer": "/status",
+            "value": "completed"
+          },
+          {
+            "op": "eq",
+            "pointer": "/role",
+            "value": "calibration"
+          },
+          {
+            "op": "eq",
+            "pointer": "/iteration",
+            "value": 1
+          },
+          {
+            "op": "eq",
+            "pointer": "/acquisition_mode",
+            "value": "jump_start_connected_causal_rollout_v1"
+          },
+          {
+            "op": "eq",
+            "pointer": "/jump_start_reachability_proven",
+            "value": true
+          },
+          {
+            "op": "eq",
+            "pointer": "/rsi_used_for_reachability",
+            "value": false
+          }
+        ],
+        "exports": {},
+        "kind": "json",
+        "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_calibration/role_manifest.json"
+      },
+      "cwd": "/home/qy/DVGC",
+      "name": "frontier_calibration",
+      "requires": [
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_plan_causal.json"
+        }
+      ]
+    },
+    {
+      "command": [
+        "/home/qy/mujoco_playground/.venv/bin/python",
+        "JIT/cli/run_causal_jump_frontier_role.py",
+        "--plan",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_plan_causal.json",
+        "--role",
+        "acceptance",
+        "--output-dir",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_acceptance"
+      ],
+      "completion": {
+        "assertions": [
+          {
+            "op": "eq",
+            "pointer": "/status",
+            "value": "completed"
+          },
+          {
+            "op": "eq",
+            "pointer": "/role",
+            "value": "acceptance"
+          },
+          {
+            "op": "eq",
+            "pointer": "/iteration",
+            "value": 1
+          },
+          {
+            "op": "eq",
+            "pointer": "/acquisition_mode",
+            "value": "jump_start_connected_causal_rollout_v1"
+          },
+          {
+            "op": "eq",
+            "pointer": "/jump_start_reachability_proven",
+            "value": true
+          },
+          {
+            "op": "eq",
+            "pointer": "/rsi_used_for_reachability",
+            "value": false
+          }
+        ],
+        "exports": {},
+        "kind": "json",
+        "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_acceptance/role_manifest.json"
+      },
+      "cwd": "/home/qy/DVGC",
+      "name": "frontier_acceptance",
+      "requires": [
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_plan_causal.json"
+        }
+      ]
+    },
+    {
+      "command": [
+        "/home/qy/mujoco_playground/.venv/bin/python",
+        "JIT/cli/analyze_causal_jump_capability.py",
+        "--nominal-centerline",
+        "JIT/runs/nominal_centerline/pi_1_jump_start_centerline_v3_20260904/centerline.json",
+        "--train-root",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_train",
+        "--calibration-root",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_calibration",
+        "--acceptance-root",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_acceptance",
+        "--output-dir",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/causal_jump_capability"
+      ],
+      "completion": {
+        "assertions": [
+          {
+            "op": "eq",
+            "pointer": "/status",
+            "value": "completed"
+          },
+          {
+            "op": "eq",
+            "pointer": "/jump_start_reachability_verified",
+            "value": true
+          },
+          {
+            "op": "eq",
+            "pointer": "/rsi_used_to_establish_reachability",
+            "value": false
+          },
+          {
+            "op": "gt",
+            "pointer": "/curriculum_capability/new_train_root_geometry_cell_count_vs_source_or_centerline",
+            "value": 0
+          }
+        ],
+        "exports": {},
+        "kind": "json",
+        "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/causal_jump_capability/summary.json"
+      },
+      "cwd": "/home/qy/DVGC",
+      "name": "analyze_causal_jump_capability",
+      "requires": [
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_train/role_manifest.json"
+        },
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_calibration/role_manifest.json"
+        },
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_acceptance/role_manifest.json"
+        },
+        {
+          "kind": "file",
+          "path": "JIT/runs/nominal_centerline/pi_1_jump_start_centerline_v3_20260904/centerline.json"
+        }
+      ]
+    },
+    {
+      "command": [
+        "/home/qy/mujoco_playground/.venv/bin/python",
+        "JIT/cli/fit_iterative_continuation_fields.py",
+        "--train-root",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_train",
+        "--calibration-root",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_calibration",
+        "--output-dir",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/continuation_C1"
+      ],
+      "completion": {
+        "assertions": [
+          {
+            "op": "eq",
+            "pointer": "/status",
+            "value": "completed_calibrated"
+          },
+          {
+            "op": "eq",
+            "pointer": "/iteration",
+            "value": 1
+          },
+          {
+            "op": "eq",
+            "pointer": "/next_tube_construction_authorized",
+            "value": true
+          }
+        ],
+        "exports": {},
+        "kind": "json",
+        "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/continuation_C1/summary.json"
+      },
+      "cwd": "/home/qy/DVGC",
+      "name": "fit_and_calibrate_Ck",
+      "requires": [
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/causal_jump_capability/summary.json"
+        },
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_train/role_manifest.json"
+        },
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_calibration/role_manifest.json"
+        }
+      ]
+    },
+    {
+      "command": [
+        "/home/qy/mujoco_playground/.venv/bin/python",
+        "JIT/cli/build_iterative_tube.py",
+        "--source-tube",
+        "JIT/runs/soft_tube/soft_tube_iter1_pi0_conditioned_20260901",
+        "--train-root",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_train",
+        "--fields-root",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/continuation_C1",
+        "--output-dir",
+        "JIT/runs/soft_tube/soft_tube_iter2_pi1_conditioned_jump_start_20260904"
+      ],
+      "completion": {
+        "assertions": [
+          {
+            "op": "eq",
+            "pointer": "/status",
+            "value": "completed"
+          },
+          {
+            "op": "eq",
+            "pointer": "/iteration",
+            "value": 2
+          },
+          {
+            "op": "eq",
+            "pointer": "/source_iteration",
+            "value": 1
+          },
+          {
+            "op": "eq",
+            "pointer": "/core_retained_count",
+            "value": 3119
+          },
+          {
+            "op": "gt",
+            "pointer": "/expansion_count",
+            "value": 0
+          }
+        ],
+        "exports": {},
+        "kind": "json",
+        "path": "JIT/runs/soft_tube/soft_tube_iter2_pi1_conditioned_jump_start_20260904/manifest.json"
+      },
+      "cwd": "/home/qy/DVGC",
+      "name": "build_Tube2",
+      "requires": [
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/continuation_C1/summary.json"
+        },
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_train/role_manifest.json"
+        },
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/causal_jump_capability/summary.json"
+        }
+      ]
+    },
+    {
+      "command": [
+        "/home/qy/mujoco_playground/.venv/bin/python",
+        "JIT/cli/analyze_capability_tube.py",
+        "--tube",
+        "JIT/runs/soft_tube/soft_tube_iter2_pi1_conditioned_jump_start_20260904",
+        "--source-tube",
+        "JIT/runs/soft_tube/soft_tube_iter1_pi0_conditioned_20260901",
+        "--output-dir",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/tube2_control_tube_geometry"
+      ],
+      "completion": {
+        "assertions": [
+          {
+            "op": "eq",
+            "pointer": "/status",
+            "value": "completed"
+          },
+          {
+            "op": "eq",
+            "pointer": "/resolution_contract/x_slice_width_m",
+            "value": 0.1
+          }
+        ],
+        "exports": {},
+        "kind": "json",
+        "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/tube2_control_tube_geometry/summary.json"
+      },
+      "cwd": "/home/qy/DVGC",
+      "name": "analyze_Tube2_control_geometry",
+      "requires": [
+        {
+          "kind": "file",
+          "path": "JIT/runs/soft_tube/soft_tube_iter2_pi1_conditioned_jump_start_20260904/manifest.json"
+        }
+      ]
+    },
+    {
+      "command": [
+        "/home/qy/mujoco_playground/.venv/bin/python",
+        "JIT/cli/analyze_jump_tube_view.py",
+        "--capability-geometry-summary",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/tube2_control_tube_geometry/summary.json",
+        "--source-capability-geometry-summary",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/source_control_tube_geometry/summary.json",
+        "--nominal-centerline",
+        "JIT/runs/nominal_centerline/pi_1_jump_start_centerline_v3_20260904/centerline.json",
+        "--output-dir",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/tube2_semantic_jump_view"
+      ],
+      "completion": {
+        "assertions": [
+          {
+            "op": "eq",
+            "pointer": "/status",
+            "value": "completed"
+          },
+          {
+            "op": "eq",
+            "pointer": "/semantic_filter/post_landing_recovery_included",
+            "value": false
+          }
+        ],
+        "exports": {},
+        "kind": "json",
+        "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/tube2_semantic_jump_view/summary.json"
+      },
+      "cwd": "/home/qy/DVGC",
+      "name": "build_Tube2_semantic_jump_view",
+      "requires": [
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/tube2_control_tube_geometry/summary.json"
+        },
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/source_control_tube_geometry/summary.json"
+        }
+      ]
+    },
+    {
+      "command": [
+        "/home/qy/mujoco_playground/.venv/bin/python",
+        "JIT/cli/smoke_tube_rsi.py",
+        "--up-config",
+        "JIT/configs/phase_u_continuation_smoke.json",
+        "--down-config",
+        "JIT/configs/descent_recovery_smoke.json",
+        "--soft-tube",
+        "JIT/runs/soft_tube/soft_tube_iter2_pi1_conditioned_jump_start_20260904",
+        "--output-dir",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/tube2_smoke",
+        "--samples-per-phase",
+        "8"
+      ],
+      "completion": {
+        "assertions": [
+          {
+            "op": "eq",
+            "pointer": "/status",
+            "value": "completed"
+          },
+          {
+            "op": "eq",
+            "pointer": "/tube_rsi_smoke",
+            "value": "GO"
+          },
+          {
+            "op": "eq",
+            "pointer": "/test_data_used",
+            "value": false
+          }
+        ],
+        "exports": {},
+        "kind": "json",
+        "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/tube2_smoke/report.json"
+      },
+      "cwd": "/home/qy/DVGC",
+      "name": "smoke_Tube2",
+      "requires": [
+        {
+          "kind": "file",
+          "path": "JIT/runs/soft_tube/soft_tube_iter2_pi1_conditioned_jump_start_20260904/manifest.json"
+        },
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/causal_jump_capability/summary.json"
+        }
+      ]
+    },
+    {
+      "command": [
+        "/home/qy/mujoco_playground/.venv/bin/python",
+        "JIT/cli/audit_iterative_role_isolation.py",
+        "--train-root",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_train",
+        "--calibration-root",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_calibration",
+        "--acceptance-root",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_acceptance",
+        "--target-tube",
+        "JIT/runs/soft_tube/soft_tube_iter2_pi1_conditioned_jump_start_20260904",
+        "--output",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/role_isolation.json"
+      ],
+      "completion": {
+        "assertions": [
+          {
+            "op": "eq",
+            "pointer": "/status",
+            "value": "independent"
+          },
+          {
+            "op": "eq",
+            "pointer": "/acceptance_target_tube_overlap_count",
+            "value": 0
+          },
+          {
+            "op": "eq",
+            "pointer": "/calibration_target_tube_overlap_count",
+            "value": 0
+          }
+        ],
+        "exports": {},
+        "kind": "json",
+        "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/role_isolation.json"
+      },
+      "cwd": "/home/qy/DVGC",
+      "name": "audit_role_isolation",
+      "requires": [
+        {
+          "kind": "file",
+          "path": "JIT/runs/soft_tube/soft_tube_iter2_pi1_conditioned_jump_start_20260904/manifest.json"
+        },
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_train/role_manifest.json"
+        },
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_calibration/role_manifest.json"
+        },
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_acceptance/role_manifest.json"
+        }
+      ]
+    },
+    {
+      "command": [
+        "/home/qy/mujoco_playground/.venv/bin/python",
+        "JIT/cli/run_iterative_acceptance_gate.py",
+        "lock-baseline",
+        "--selected-policy",
+        "JIT/runs/iteration_selection/pi_1_repair02_20260903/selected_policy.json",
+        "--source-tube",
+        "JIT/runs/soft_tube/soft_tube_iter1_pi0_conditioned_20260901",
+        "--acceptance-root",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_acceptance",
+        "--output-dir",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/acceptance_baseline_lock"
+      ],
+      "completion": {
+        "assertions": [
+          {
+            "op": "eq",
+            "pointer": "/status",
+            "value": "locked_before_candidate_training"
+          },
+          {
+            "op": "eq",
+            "pointer": "/source_iteration",
+            "value": 1
+          },
+          {
+            "op": "ge",
+            "pointer": "/boundary_negative_parent_group_count",
+            "value": 2
+          }
+        ],
+        "exports": {},
+        "kind": "json",
+        "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/acceptance_baseline_lock/baseline_lock.json"
+      },
+      "cwd": "/home/qy/DVGC",
+      "name": "lock_pi_k_acceptance_baseline",
+      "requires": [
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/role_isolation.json"
+        },
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/frontier_acceptance/role_manifest.json"
+        }
+      ]
+    },
+    {
+      "command": [
+        "/home/qy/mujoco_playground/.venv/bin/python",
+        "JIT/cli/prepare_iterative_unified_training.py",
+        "--soft-tube",
+        "JIT/runs/soft_tube/soft_tube_iter2_pi1_conditioned_jump_start_20260904",
+        "--tube-rsi-smoke-report",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/tube2_smoke/report.json",
+        "--output-config",
+        "JIT/configs/pi_unified_iter2_auto_core75_natural10_jump_start_20260904.json",
+        "--run-id",
+        "pi_2_tube2_auto_core75_natural10_10009600_seed821101_jump_start_20260904"
+      ],
+      "completion": {
+        "assertions": [
+          {
+            "op": "eq",
+            "pointer": "/status",
+            "value": "completed"
+          },
+          {
+            "op": "eq",
+            "pointer": "/iteration",
+            "value": 2
+          }
+        ],
+        "exports": {},
+        "kind": "json",
+        "path": "JIT/configs/pi_unified_iter2_auto_core75_natural10_jump_start_20260904.json.prepared.json"
+      },
+      "cwd": "/home/qy/DVGC",
+      "name": "prepare_pi2_training",
+      "requires": [
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/acceptance_baseline_lock/baseline_lock.json"
+        },
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/tube2_smoke/report.json"
+        },
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/causal_jump_capability/summary.json"
+        }
+      ]
+    },
+    {
+      "command": [
+        "/home/qy/mujoco_playground/.venv/bin/python",
+        "JIT/cli/train_unified.py",
+        "--config",
+        "JIT/configs/pi_unified_iter2_auto_core75_natural10_jump_start_20260904.json",
+        "--run-id",
+        "pi_2_tube2_auto_core75_natural10_10009600_seed821101_jump_start_20260904"
+      ],
+      "completion": {
+        "assertions": [
+          {
+            "op": "eq",
+            "pointer": "/status",
+            "value": "completed"
+          },
+          {
+            "op": "eq",
+            "pointer": "/completed_training_transitions",
+            "value": 10009600
+          },
+          {
+            "op": "eq",
+            "pointer": "/checkpoint_restored",
+            "value": true
+          },
+          {
+            "op": "eq",
+            "pointer": "/test_data_used",
+            "value": false
+          }
+        ],
+        "exports": {},
+        "kind": "json",
+        "path": "JIT/runs/pi_unified/pi_2_tube2_auto_core75_natural10_10009600_seed821101_jump_start_20260904/formal_report.json"
+      },
+      "cwd": "/home/qy/DVGC",
+      "name": "train_pi2",
+      "requires": [
+        {
+          "kind": "file",
+          "path": "JIT/configs/pi_unified_iter2_auto_core75_natural10_jump_start_20260904.json"
+        },
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/acceptance_baseline_lock/baseline_lock.json"
+        }
+      ]
+    },
+    {
+      "command": [
+        "/home/qy/mujoco_playground/.venv/bin/python",
+        "JIT/cli/freeze_unified_policy.py",
+        "--config",
+        "JIT/configs/pi_unified_iter2_auto_core75_natural10_jump_start_20260904.json",
+        "--checkpoint",
+        "JIT/runs/pi_unified/pi_2_tube2_auto_core75_natural10_10009600_seed821101_jump_start_20260904/checkpoints/transition_10009600",
+        "--iteration",
+        "2",
+        "--output-dir",
+        "JIT/runs/frozen_unified/pi_2_auto_10009600_jump_start_20260904",
+        "--formal-report",
+        "JIT/runs/pi_unified/pi_2_tube2_auto_core75_natural10_10009600_seed821101_jump_start_20260904/formal_report.json"
+      ],
+      "completion": {
+        "assertions": [
+          {
+            "op": "eq",
+            "pointer": "/status",
+            "value": "frozen"
+          },
+          {
+            "op": "eq",
+            "pointer": "/policy/iteration",
+            "value": 2
+          },
+          {
+            "op": "eq",
+            "pointer": "/policy/name",
+            "value": "pi_2"
+          }
+        ],
+        "exports": {},
+        "kind": "json",
+        "path": "JIT/runs/frozen_unified/pi_2_auto_10009600_jump_start_20260904/frozen_unified_policy.json"
+      },
+      "cwd": "/home/qy/DVGC",
+      "name": "freeze_pi2",
+      "requires": [
+        {
+          "kind": "file",
+          "path": "JIT/runs/pi_unified/pi_2_tube2_auto_core75_natural10_10009600_seed821101_jump_start_20260904/formal_report.json"
+        },
+        {
+          "kind": "directory",
+          "path": "JIT/runs/pi_unified/pi_2_tube2_auto_core75_natural10_10009600_seed821101_jump_start_20260904/checkpoints/transition_10009600"
+        }
+      ]
+    },
+    {
+      "command": [
+        "/home/qy/mujoco_playground/.venv/bin/python",
+        "JIT/cli/run_iterative_acceptance_gate.py",
+        "run-candidate",
+        "--baseline-lock",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/acceptance_baseline_lock/baseline_lock.json",
+        "--candidate-frozen-policy",
+        "JIT/runs/frozen_unified/pi_2_auto_10009600_jump_start_20260904/frozen_unified_policy.json",
+        "--output-dir",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/pi_1_to_pi_2_gate"
+      ],
+      "completion": {
+        "assertions": [
+          {
+            "op": "eq",
+            "pointer": "/status",
+            "value": "completed"
+          },
+          {
+            "op": "eq",
+            "pointer": "/boundary_gate/baseline_reproduction_failure_count",
+            "value": 0
+          }
+        ],
+        "exports": {},
+        "kind": "json",
+        "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/pi_1_to_pi_2_gate/summary.json"
+      },
+      "cwd": "/home/qy/DVGC",
+      "name": "evaluate_pi1_to_pi2_locked_panel",
+      "requires": [
+        {
+          "kind": "file",
+          "path": "JIT/runs/frozen_unified/pi_2_auto_10009600_jump_start_20260904/frozen_unified_policy.json"
+        },
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/acceptance_baseline_lock/baseline_lock.json"
+        }
+      ]
+    },
+    {
+      "command": [
+        "/home/qy/mujoco_playground/.venv/bin/python",
+        "JIT/cli/analyze_capability_progression.py",
+        "--gate-summary",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/pi_1_to_pi_2_gate/summary.json",
+        "--output",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/pi_1_to_pi_2_capability_progression.json"
+      ],
+      "completion": {
+        "assertions": [
+          {
+            "op": "eq",
+            "pointer": "/status",
+            "value": "completed"
+          },
+          {
+            "op": "eq",
+            "pointer": "/retrospective_analysis",
+            "value": false
+          },
+          {
+            "op": "eq",
+            "pointer": "/empirical_envelope_expansion_observed",
+            "value": true
+          },
+          {
+            "op": "eq",
+            "pointer": "/candidate_policy_authority_eligible",
+            "value": true
+          }
+        ],
+        "exports": {},
+        "kind": "json",
+        "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/pi_1_to_pi_2_capability_progression.json"
+      },
+      "cwd": "/home/qy/DVGC",
+      "name": "analyze_pi2_capability_progression",
+      "requires": [
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/pi_1_to_pi_2_gate/summary.json"
+        },
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/causal_jump_capability/summary.json"
+        }
+      ]
+    },
+    {
+      "command": [
+        "/home/qy/mujoco_playground/.venv/bin/python",
+        "JIT/cli/select_iteration_policy.py",
+        "--frozen-policy",
+        "JIT/runs/frozen_unified/pi_2_auto_10009600_jump_start_20260904/frozen_unified_policy.json",
+        "--gate-summary",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/pi_1_to_pi_2_gate/summary.json",
+        "--capability-decision",
+        "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/pi_1_to_pi_2_capability_progression.json",
+        "--output-dir",
+        "JIT/runs/iteration_selection/pi_2_auto_jump_start_20260904"
+      ],
+      "completion": {
+        "assertions": [
+          {
+            "op": "eq",
+            "pointer": "/status",
+            "value": "selected"
+          },
+          {
+            "op": "eq",
+            "pointer": "/iteration",
+            "value": 2
+          },
+          {
+            "op": "eq",
+            "pointer": "/selection_semantics",
+            "value": "prospective_capability_progression_v1"
+          },
+          {
+            "op": "eq",
+            "pointer": "/formal_acceptance_claim",
+            "value": true
+          }
+        ],
+        "exports": {},
+        "kind": "json",
+        "path": "JIT/runs/iteration_selection/pi_2_auto_jump_start_20260904/selected_policy.json"
+      },
+      "cwd": "/home/qy/DVGC",
+      "name": "select_pi2",
+      "requires": [
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/pi_1_to_pi_2_gate/summary.json"
+        },
+        {
+          "kind": "file",
+          "path": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/pi_1_to_pi_2_capability_progression.json"
+        },
+        {
+          "kind": "file",
+          "path": "JIT/runs/frozen_unified/pi_2_auto_10009600_jump_start_20260904/frozen_unified_policy.json"
+        }
+      ]
+    }
+  ],
+  "state_dir": "JIT/runs/iteration_auto/pi_1_to_pi_2_jump_start_20260904/workflow_state",
+  "variables": {},
+  "workflow_name": "causal_trajectory_centered_pi_1_to_pi_2_jump_start_20260904"
+}

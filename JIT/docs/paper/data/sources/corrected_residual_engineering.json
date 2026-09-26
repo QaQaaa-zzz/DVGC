@@ -1,0 +1,25 @@
+{
+  "action_composition_verified": true,
+  "all_action_rows": 263,
+  "all_candidate_receipts": 4,
+  "composite_snapshot_identities_verified": true,
+  "scope": "one-update GPU engineering only; no learned exploration superiority claim",
+  "status": {
+    "active_interactions": 263,
+    "base_actor_unchanged": true,
+    "charged_interactions": 2564,
+    "final_diagnostic_new_cells": 1.0,
+    "final_successes": 2,
+    "final_test_used": false,
+    "forward_interactions": 2400,
+    "independent_repetitions": false,
+    "initial_baseline_cells": 83,
+    "padding_interactions": 2137,
+    "phase": "completed",
+    "suffix_interactions": 164,
+    "training_new_cells": 2.0,
+    "training_scheduled_interactions": 800,
+    "wall_seconds": 31.067222958998173
+  },
+  "zero_residual_equals_frozen_base": true
+}

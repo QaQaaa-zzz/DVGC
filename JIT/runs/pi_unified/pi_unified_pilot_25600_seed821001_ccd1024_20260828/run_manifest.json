@@ -1,0 +1,26 @@
+{
+  "claim_boundary": {
+    "engineering_integrity_only": true,
+    "formal_training_evidence": false,
+    "learnability_claim": false,
+    "trained_expert_claim": false,
+    "tube_or_safety_claim": false
+  },
+  "config_sha256": "16b12ca11137bf402d5bc60ea1ccb04bb1b1e8750f09fe70c36c311b225cca47",
+  "output_dir": "/home/qy/DVGC/JIT/runs/pi_unified/pi_unified_pilot_25600_seed821001_ccd1024_20260828",
+  "parent_checkpoint": null,
+  "purpose": "fresh_single_policy_tube_rsi_engineering_pilot",
+  "reference_sha256": "612fe758eb1042481b9c7642cc9b92d3e9c14b4a75c9deaf5340183c928bc41f",
+  "resume_command": "/home/qy/mujoco_playground/.venv/bin/python JIT/cli/train_unified.py --config JIT/configs/pi_unified_pilot.json --run-id pi_unified_pilot_25600_seed821001_ccd1024_20260828",
+  "resume_semantics": "fresh",
+  "run_id": "pi_unified_pilot_25600_seed821001_ccd1024_20260828",
+  "segment_seed": null,
+  "starting_training_transition": 0,
+  "stopping_conditions": [
+    "stop_after_one_exact_25600_transition_ppo_block",
+    "stop_on_nonfinite_metric",
+    "stop_on_checkpoint_restore_failure"
+  ],
+  "training_transition_ceiling": 25600,
+  "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+}

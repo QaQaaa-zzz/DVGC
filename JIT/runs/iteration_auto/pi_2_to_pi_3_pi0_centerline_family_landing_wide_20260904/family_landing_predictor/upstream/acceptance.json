@@ -1,0 +1,19 @@
+{
+  "acceptance_sha256": "65a880b7029246cf065433a62b5372b9fd36304db7e34df0254231fd87c642dc",
+  "accepted_negative_count_at_calibration_threshold": 6,
+  "candidate_count": 225,
+  "metrics": {
+    "count": 225,
+    "negative_count": 9,
+    "negative_mean_score": 0.39006451560021194,
+    "positive_count": 216,
+    "positive_mean_score": 0.9650493421697836,
+    "roc_auc": 0.8924897119341564,
+    "score_gap": 0.5749848265695716
+  },
+  "negative_count": 9,
+  "positive_count": 216,
+  "positive_recall_at_calibration_threshold": 0.9861111111111112,
+  "source_acceptance_role_manifest_sha256": "c9e10ad138001c3b909c670be2408843c1688bb9a95c8249a3cc7f345b21e68b",
+  "threshold_selected_on_acceptance": false
+}

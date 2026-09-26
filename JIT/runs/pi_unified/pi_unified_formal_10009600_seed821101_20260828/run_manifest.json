@@ -1,0 +1,27 @@
+{
+  "claim_boundary": {
+    "engineering_integrity_only": true,
+    "formal_training_evidence": false,
+    "learnability_claim": false,
+    "trained_expert_claim": false,
+    "tube_or_safety_claim": false
+  },
+  "config_sha256": "6cc68b80ffed7fad52cb7b949d253d1baa2f6d2c1720b136b5a85fceddb29f75",
+  "output_dir": "/home/qy/DVGC/JIT/runs/pi_unified/pi_unified_formal_10009600_seed821101_20260828",
+  "parent_checkpoint": null,
+  "purpose": "formal_pi_unified_tube_rsi_ppo",
+  "reference_sha256": "612fe758eb1042481b9c7642cc9b92d3e9c14b4a75c9deaf5340183c928bc41f",
+  "resume_command": "PYTHONPATH=JIT/src /home/qy/mujoco_playground/.venv/bin/python JIT/cli/train_unified.py --config JIT/configs/pi_unified_formal.json --run-id pi_unified_formal_10009600_seed821101_20260828",
+  "resume_semantics": "fresh",
+  "run_id": "pi_unified_formal_10009600_seed821101_20260828",
+  "segment_seed": 821101,
+  "starting_training_transition": 0,
+  "stopping_conditions": [
+    "stop_at_exact_transition_10009600",
+    "stop_on_nonfinite_metric",
+    "stop_on_cuda_or_oom_error",
+    "stop_on_checkpoint_or_train_panel_persistence_failure"
+  ],
+  "training_transition_ceiling": 10009600,
+  "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+}

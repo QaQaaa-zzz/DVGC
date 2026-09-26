@@ -1,0 +1,21 @@
+# Approved single-network Phase U + RSI fusion
+
+User approved 2026-09-20. No runtime policy switching or teacher-action averaging. Fresh actor and fresh supervised normalization, followed by complete-task PPO. Teacher choice determined by same-complete-state continuation success, then common task return. Source historical development rollouts become TRAIN; no independent TEST claim.
+
+Initial teacher bank: 2 teachers × 4 state stages × 32 = 256 full snapshots. Both teachers evaluated for at most 400 transitions each (204800 maximum). Successful selected continuation observations/actions form imitation data and witnessed RSI reset support. Losing/failing teachers never become positive labels. Balanced original teacher/stage sampling, full histories/events restored with documented fresh episode clocks.
+
+Initial distillation: 4000 minibatch updates of 256; supervised updates are not environment transitions. Stage A PPO: 640000 transitions. Refresh teacher labeling from 64 student-visited nonterminal states, including failed student episodes (51200 maximum teacher interactions); mix new and original supervision/support. Stage B PPO: 2560000 transitions, initialized from stage A Actor+normalizer with fresh Critic/optimizer for changed support. Total PPO 3200000. Preserve 20% complete fixed start/80% witnessed phase-balanced RSI; phase_recovery reward and stable_forward_recovery endpoint. Full physical/action/observation contracts unchanged.
+
+Training-only per-episode pulse probability .5, uniformly sampled onset among 0/5/10/15/25, three independent uniform[-.25,.25] four-channel normalized action increments, clipping[-1,1]. RSI pulse times are relative to its reset, not historical source time. Teacher reference/development evaluations use fixed complete start, exact forced pulse condition.
+
+Same-state reward is phase_recovery for both teachers. PPO includes coefficient .2 action imitation decaying to zero across each segment. Student anchors are separate supervised data, never old PPO trajectories.
+
+Development selection: new seeds, each of five onset conditions 128 episodes per teacher and each saved student candidate (640k,1280k,1920k,2560k,3200k cumulative). Criterion lexicographic highest minimum condition success rate, then mean success rate; ties earlier checkpoint. Report all five rates and both teacher baselines, no guaranteed dominance. The development panel is not reused as teacher refresh TRAIN; refresh has separate seeds. No unbounded extension.
+
+Maximum reserved budget 6500000 environment transitions includes 3200000 PPO + 204800 initial labels + 51200 refresh labels + 512000 two-teacher dev + 1280000 five student dev + 256000 fresh student data + <=8000 train panels, and limited validation overhead. Errors terminate, no silent retries; no interference with existing queues. GPU memory coexists when feasible.
+
+Implementation: teacher_fusion_data.py, policy_distillation.py, opt-in probe training pulse; orchestrator teacher_fusion_experiment.py. Verification before GPU launch, active-run desktop error/completion watcher. Preserve all source results.
+
+Validation: same-state GPU label smoke8states×2teachers×400=6400 charged; successful7/8,309 supervised observations. First3200PPO smoke exposed sparse-feature normalization amplification; retained evidence, actor normalizer unit scale floor plus coherent pseudocount fixed it. Corrected3200PPO smoke+119panel completed, KL0.007245 and frozen checkpoint restore verified. Total validation physical cost13063 including unsuccessful first smoke+144panel; included in production ceiling. CPU behavioral coverage includes exact pulse window, disabled evaluation augmentation, finite datasets, weighted action fitting, same-state success/return winner, and loss restoration.
+
+Production entry: `PYTHONPATH=JIT/src python -m jit_dvgc.teacher_fusion_experiment prepare --source <completed-four-policy-five-onset-run> --output <new-run>` then `run --spec <new-run/spec.json>`. Use immutable execution snapshot and desktop watcher. Training-mode augmentation is explicitly disabled in nominal/pulse/teacher evaluation, so exactly the external three-step window applies. New-model success remains unverified until development results complete.

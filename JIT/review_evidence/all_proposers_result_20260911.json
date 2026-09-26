@@ -1,0 +1,74 @@
+{
+  "review_date": "2026-09-11",
+  "source_code_commit": "eb9584d2e01a1ea10dc7835a6fe044dc2599c594",
+  "report_url": "https://github.com/QaQaaa-zzz/DVGC/blob/agent/jit-run-reports/reports/all_proposers_v1-e36bfec926/summary.json",
+  "production_summary": {
+    "baseline_scope": "knee, lower-boundary, and inherited pi_2/pi_4 panels",
+    "campaign_union_root_cells": 9296,
+    "charged_interactions": 1275465,
+    "completed_training_transitions": 256000,
+    "final_test_used": false,
+    "frozen_new_policies": [
+      "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_000/training_attempt_000/frozen/frozen_unified_policy.json",
+      "/home/qy/DVGC/JIT/runs/campaign/all_proposers_v1/round_001/training_attempt_000/frozen/frozen_unified_policy.json"
+    ],
+    "inherited_policy_paths": [
+      "/home/qy/DVGC/JIT/runs/campaign/empirical_envelope_smoke_callbackfix_v1/round_000/training_attempt_000/frozen/frozen_unified_policy.json"
+    ],
+    "inherited_recorded_charge": 195551,
+    "physical_boundary_proven": false,
+    "rounds": [
+      {
+        "bank_size": 6,
+        "campaign_union_root_cells": 4629,
+        "candidate_count": 3147,
+        "charged_interactions": 483320,
+        "novel_root_cells": 2940,
+        "policy": "pi_5",
+        "round": 0
+      },
+      {
+        "bank_size": 7,
+        "campaign_union_root_cells": 9296,
+        "candidate_count": 5323,
+        "charged_interactions": 1275465,
+        "novel_root_cells": 4667,
+        "policy": "pi_6",
+        "round": 1
+      }
+    ],
+    "seed_root_cells": 1689,
+    "status": "round_limit_reached",
+    "total_including_inherited_recorded_charge": 1471016
+  },
+  "interaction_breakdown": {
+    "ppo": 256000,
+    "training_panels": 142,
+    "acquisition": 15289,
+    "suffix_labels": 1004034
+  },
+  "new_acquisition_batches": 11,
+  "new_trajectories": 352,
+  "evaluator_candidate_jobs": 49346,
+  "label_subprocesses": 413,
+  "reported_retry_attempts": 0,
+  "landing_failure_conflicting_receipts": 4,
+  "lowest_unconflicted_successful_control_step_peak_root_z_m": 0.5022062063217163,
+  "lowest_proposer": "pi_0",
+  "full_wall_clock_breakdown_available": false,
+  "all_production_figures_visually_reviewed": false,
+  "proposed_not_implemented": [
+    "first_success_labeling",
+    "stage_wall_clock_breakdown",
+    "intermediate_checkpoint_capability_evaluation",
+    "adaptive_training_extension",
+    "adaptive_proposer_allocation",
+    "residual_exploration_network",
+    "diffusion_exploration"
+  ],
+  "this_turn": {
+    "documentation_only": true,
+    "production_training_run": false,
+    "regression_tests_rerun": false
+  }
+}

@@ -1,6 +1,6 @@
 {
   "xml_path": "assets/orange_bike_4kg_horizontal.xml",
-  "xml_sha256": "d7e9f43ff8fb9e4571203f81062ce9c828acfa38692ee8c71a3e5daa15ce794c",
+  "xml_sha256": "e2762bec49fdce61eff6ad01b6a67925934d8997b53929b0a67ace7f44109192",
   "model_name": "orange_bike",
   "meshdir": "meshes",
   "mesh_assets": [
@@ -49,7 +49,7 @@
     "downarm_inertial": 0.26,
     "knee_motor": 0.46,
     "uparm_inertial": 0.31,
-    "load": 4.0
+    "load": 2.0
   },
   "joints": [
     {

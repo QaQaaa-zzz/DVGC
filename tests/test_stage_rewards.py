@@ -21,6 +21,14 @@ def test_takeoff_handoff_bonus_requires_success_event():
  x=compute_stage_next_entry_reward(cfg=cfg,objective='takeoff_to_ascent',feature=f,previous_feature=f,action=a,previous_action=a,next_entry=jp.asarray(False),hard_failure=jp.asarray(False),jump_latched=jp.asarray(True),window_active=jp.asarray(True),joint_energy=jp.asarray(0.0))
  assert float(x['handoff_bonus'])==0.
 
+def test_takeoff_ascent_progress_is_zero_before_window_and_positive_inside():
+ cfg=default_config();feature=jp.zeros(16).at[8].set(cfg.takeoff_liftoff_vz);action=jp.zeros(4)
+ common=dict(cfg=cfg,objective='takeoff_to_ascent',feature=feature,previous_feature=feature,action=action,previous_action=action,next_entry=jp.asarray(False),hard_failure=jp.asarray(False),jump_latched=jp.asarray(True),joint_energy=jp.asarray(0.0))
+ outside=compute_stage_next_entry_reward(**common,window_active=jp.asarray(False))
+ inside=compute_stage_next_entry_reward(**common,window_active=jp.asarray(True))
+ assert float(outside['progress'])==0.
+ assert float(inside['progress'])>0.
+
 def test_ascent_rewards_upward_height_progress():
  cfg=default_config();p=jp.zeros(16);up=p.at[2].set(.05);down=p.at[2].set(-.05);a=jp.zeros(4)
  def r(f):return compute_stage_next_entry_reward(cfg=cfg,objective='ascent_to_apex',feature=f,previous_feature=p,action=a,previous_action=a,next_entry=jp.asarray(False),hard_failure=jp.asarray(False),jump_latched=jp.asarray(True),window_active=jp.asarray(True),joint_energy=jp.asarray(0.0))['reward']

@@ -1,0 +1,34 @@
+{
+  "report": {
+    "candidate_status_counts": {
+      "all_succeed": 93,
+      "no_success_witness": 95,
+      "policy_disagreement": 102
+    },
+    "charged_interactions": 27954,
+    "final_test_used": false,
+    "independent_repetitions": 1,
+    "report_sha256": "a6861f4e0cd4615368a7bcdaae43ab3827ae9dcb7514d78cae35798cb164bb6e",
+    "scope": "TRAIN local boundary refinement; no fair policy ranking",
+    "status": "completed",
+    "training_admission_authorized": false,
+    "training_transitions": 0,
+    "trajectories": 9,
+    "trajectory_stop_counts": {
+      "first_valid_landing": 3,
+      "task_terminated_before_landing": 6
+    },
+    "truncated_trajectories": 0
+  },
+  "source_zip_sha256": "b32d3e17147a252175b1adad82918ac39be983a444230aea46a6105cdc01e97d",
+  "evaluator_success_counts": {
+    "pi_0": 106,
+    "pi_1": 97,
+    "pi_2": 172,
+    "pi_3": 135
+  },
+  "successful_processes": 20,
+  "process_wall_seconds_sum": 1175.9287793820113,
+  "proposal_groups": 9,
+  "independent_repetitions": 1
+}

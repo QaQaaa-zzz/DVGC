@@ -1,0 +1,24 @@
+{
+  "lock_sha256": "577dbff3488612d0718c6d88e57f24b1a31d6cb3b7c396796638d73abea46ac5",
+  "schema": "jit_upstream_boundary_validation_anchor_audit_v1",
+  "selected_anchor_count": 1,
+  "selected_failure_anchors": [
+    {
+      "parent_group_id": "transition_4988928__1000006",
+      "reasons": [
+        "pitch_limit"
+      ],
+      "role": "ascending_entry",
+      "seed": 1000006,
+      "state_sha256": "274e0e4b8f69b57230c01662efecd3acfe46ab182f710e1cfe138bf82910031c",
+      "tick": 34
+    }
+  ],
+  "split": "validation",
+  "target": "V_up",
+  "test_seed_interaction_count": 0,
+  "training_transitions": 0,
+  "validation_seeds": [
+    1000006
+  ]
+}

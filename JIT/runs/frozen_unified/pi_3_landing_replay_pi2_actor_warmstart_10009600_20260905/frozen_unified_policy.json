@@ -1,0 +1,72 @@
+{
+  "claim_boundary": {
+    "certified_safe_tube_claim": false,
+    "envelope_expansion_authority": true,
+    "jce_jel_claim": false,
+    "pi_unified_star_claim": false
+  },
+  "copied_checkpoint": false,
+  "environment_interactions": 0,
+  "expert_switching_used": false,
+  "freeze_protocol_sha256": "bb89bc163fd06d41e3e6099799def10b307da7009fe2b45f17a29c1159a0e385",
+  "immutable_parameters": true,
+  "policy": {
+    "action_order": [
+      "steer",
+      "rear_wheel_drive",
+      "hip",
+      "knee"
+    ],
+    "actor_frame_fields": [
+      "gravity_x",
+      "gravity_y",
+      "gravity_z",
+      "angular_velocity_x",
+      "angular_velocity_y",
+      "angular_velocity_z",
+      "acceleration_x",
+      "acceleration_y",
+      "acceleration_z",
+      "steering_position",
+      "hip_position",
+      "knee_position",
+      "steering_velocity",
+      "hip_velocity",
+      "knee_velocity",
+      "front_wheel_velocity",
+      "rear_wheel_velocity",
+      "last_action_steer",
+      "last_action_rear_wheel_drive",
+      "last_action_hip",
+      "last_action_knee",
+      "estimated_forward_velocity",
+      "obstacle_relative_x",
+      "root_height",
+      "history_valid"
+    ],
+    "actor_sha256": "0e8ede7cc72122793345339de294abb46ed00b6740d16aafad0c230257be0014",
+    "actor_task_fields": [
+      "jump_signal"
+    ],
+    "checkpoint": "JIT/runs/pi_unified/pi_3_landing_replay_pi2_actor_warmstart_core75_natural10_10009600_seed821101_20260905/checkpoints/transition_10009600",
+    "critic_sha256": "0a59a72b140ddd9a468e71941745c7bd53ca0749a9cec2b07b656be231a0ef2b",
+    "formal_config": "JIT/configs/pi_unified_iter3_landing_replay_pi2_actor_warmstart_core75_natural10_20260905.json",
+    "formal_config_sha256": "6210768153b7fee949a1fb5f550efc1838c742145bca5da73d8ba206c3760d87",
+    "iteration": 3,
+    "name": "pi_3",
+    "normalizer_sha256": "6690bf0c39a159de87eadeab769157416182cb0d616ee637557a25fa1482775f",
+    "payload_sha256": "1b14547812c9dc199628d85561d731df591cbc5e59eda6dc3be12ffa41a01bcf",
+    "policy_role": "envelope_expansion_authority",
+    "source_reset_mixture": {
+      "natural_reset_probability": 0.1,
+      "selection": "bernoulli_per_episode",
+      "soft_tube_probability": 0.9
+    },
+    "source_training_run_id": "pi_3_landing_replay_pi2_actor_warmstart_core75_natural10_10009600_seed821101_20260905",
+    "source_training_transitions": 10009600,
+    "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+  },
+  "schema": "jit_frozen_unified_policy_v1",
+  "status": "frozen",
+  "training_transitions": 0
+}

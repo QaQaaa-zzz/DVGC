@@ -1,0 +1,412 @@
+[
+  {
+    "candidate_id": "5fb1a6463cf74b7973f9a6fea9d0c5eb4785c0361c30f0fa2372dfea4fca8ba7",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 0.9999922513961792,
+    "role": "pre_jump_zone",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "2b6732f464fe28b84f080e118d54d0200e4629d8ddf5647afb9bb77750421674",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "a76fa2c498a1621acf005b1465ae1e5ff089fc83cd6455fa726e21f9cee09109",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 0.9999839067459106,
+    "role": "jump_zone_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "8e0cb4ad86be6f665f62fe62da5787f58cecf11ca862cef9aa0c7ce512984321",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "a22067656eb9080a2df07dcaafc830136406e7c74fada9d8da2bad9df39b16d1",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 1.5540652384515852e-05,
+    "role": "ascending_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "274e0e4b8f69b57230c01662efecd3acfe46ab182f710e1cfe138bf82910031c",
+    "target": 0.0
+  },
+  {
+    "candidate_id": "498e47c4920093b04b9e9246ad4060739b3194867e3bb8371bae310ba866252f",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 0.999992847442627,
+    "role": "height_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "672bb537471d4a386e6a79b2eb8a33cfee2b18f51ca36d80d225765fe23a8d23",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "51788199ffb920c3f9c93d8c521ec203f78072b30c81efefb7238f151be9efac",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 0.999981164932251,
+    "role": "pre_apex_10",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "7157d716c807ee941d4f99c6db247ea151ce88c0096507f7886766688dc18a78",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "89dcbb2ff79d3f3f37759e97b841233f20750896a536b6924b313bc78c41ae18",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 0.9999963045120239,
+    "role": "pre_apex_5",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "46d65ea0496b0781f93323f9262e6d120a87224c57430e14c7f5798242eb2115",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "0c7aa733f983b3c4a3e9ef9e5c0bd55dc959ed2850dbf62c069d4e2aa5ef62db",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 0.9999977350234985,
+    "role": "pre_apex_1",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "c647e1a0d0df0152b6a38508c857333b89739ae28f04d7c4e0c7317e4f9b6bc9",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "2811c6b0550732d730f3d0b44f9434efc72f4eada3551c02da2e6aae2fd7341a",
+    "parent_group_id": "transition_7987200__1000006",
+    "probability": 0.9999978542327881,
+    "role": "pre_jump_zone",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "579cccdb4628d5da30448a1123ec92443b33667f85170fa02f25d69943a4e2f4",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "ec3aa2b6b54387e6d086bbedc9f92f1130749d10c905095f027e24d9202a6133",
+    "parent_group_id": "transition_7987200__1000006",
+    "probability": 0.9999902248382568,
+    "role": "jump_zone_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "fe38793fdb4e90379b8c1af0517bc17b1074ea8841ade78dd7bb7d0c6c00acc9",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "25362f870dc6e7b477755abf7984eb0e6c254df2bb22ca482b05f25aecb23304",
+    "parent_group_id": "transition_7987200__1000006",
+    "probability": 0.9999872446060181,
+    "role": "ascending_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "936b66345b60969eff7d3859185a86ef8ece6c0d4ce9f589c156abe6be1ae2cc",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "458fa132770251bc66ab8a8400d55d3dd25732b918f2d8eba2c35950878c061a",
+    "parent_group_id": "transition_7987200__1000006",
+    "probability": 0.999998927116394,
+    "role": "height_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "60e5b6d96dc00ce87b4a6fe94535d833a5e2eb8c6f84c88a427f44907176a11b",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "b4c6b01fff18de4dd0ba55a08bcbc82c611e537066476d1efe47b49d08ac1a86",
+    "parent_group_id": "transition_7987200__1000006",
+    "probability": 0.9999971389770508,
+    "role": "pre_apex_5",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "9a46243e87544fd6b11e065c3c7bc631b5564643dad5ddf3be7b9e1a21470cab",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "44b81f857a36761ffee0e32a19e9a91d672b8bdf2db3065911b3aa1ecbfcf300",
+    "parent_group_id": "transition_7987200__1000006",
+    "probability": 0.9999922513961792,
+    "role": "pre_apex_1",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "8c5d1cafe58c8a6aa34b0c4d7163864c8ecc9150ebcc634dd941ae29bd14d3dd",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "dce3ef67eb01a8ae26a04e5eda3f9c4457257af595f8fd4c9c7bfd645a213727",
+    "parent_group_id": "transition_9977856__1000006",
+    "probability": 0.9999991655349731,
+    "role": "pre_jump_zone",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "fdbc5d5ba4adcb4718ae84f3209b0815d6c6657dc63ac207c78a403a7e148663",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "54e85b4310b1bab34edeb28602f61dd320384ce6a44bfa4ef69ec8e18b36b4cd",
+    "parent_group_id": "transition_9977856__1000006",
+    "probability": 0.999995231628418,
+    "role": "jump_zone_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "4b0c404bc40c572ae769f1f5168bf95add49f2edb9eb1232090da4b8c940be3b",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "62dc0f3c06f6b26b27837dc2a834c1ff82640722ae8bce51e1ca4d7685c33fb7",
+    "parent_group_id": "transition_9977856__1000006",
+    "probability": 0.9999970197677612,
+    "role": "ascending_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "270009ae5595bf493f1ac7777d908a7da3d241b5d369691d7f567f271abc1a4a",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "f2096b751e4350c56fdc611f862e9f587b5c730f37218d0829e59376f091843d",
+    "parent_group_id": "transition_9977856__1000006",
+    "probability": 0.9999994039535522,
+    "role": "height_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "5e5756a3b2c4fe9534c7799ade56a2307c85d0d16a707fe4df097e11fcab8865",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "97c92b87ba142335ce36ce5364a06dea8598cfce22ca32c948ae1af3fbede913",
+    "parent_group_id": "transition_9977856__1000006",
+    "probability": 0.9999914169311523,
+    "role": "pre_apex_5",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "4aa3372ba91c7cb8b129d2c7a3ddbf8538ef393ff18b7d762926be564a5fc17f",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "774e704b6036835f9968ea40da3dfefa27d78aef5a1158ffb0f841cbeacabedc",
+    "parent_group_id": "transition_9977856__1000006",
+    "probability": 0.999998927116394,
+    "role": "pre_apex_1",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "c7b0c6816257aef9b5fe1d9357fbf108947959575606abfe1654faaa3b5f4fa7",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "0df634a66a842c7b46cf0b56b81edd1da5ec529d361146859921e71ccaf86409",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 0.0010960291838273406,
+    "role": "ascending_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "73998ce618359f4593f80f777b8522ff39a3fe521f2fa161b77b0942746e2569",
+    "target": 0.0
+  },
+  {
+    "candidate_id": "b23f56188f4bfb42954a14f71ba7431624dea5ce747b6d59704b52ac8d1c97ef",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 0.001584054552949965,
+    "role": "ascending_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "04f2cba02a370e9bb8850377f8efea8eb366c41fb18f6783e9c9e64957ec4582",
+    "target": 0.0
+  },
+  {
+    "candidate_id": "2c1487172e9bd6c5f4311918e011d74029344f93c14dd7a9b7379574573a1f7f",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 0.999997615814209,
+    "role": "ascending_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "76b7d8b79f0740d08beb9cd5217ee031fb3f4805bb8907744c707602cd470076",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "5bfe041abd4180ac350e8455f16f93f6da6ba76205ef22dfd8496994b35c8cde",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 0.9976000189781189,
+    "role": "ascending_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "3d054d2e7894e641b0f317b5cda622d73e66a1b5ed25aa0e8b1105da2394e930",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "bfe16084b1b12a6efb7e4196726f0347a75f4f1915dd431ff314729dd27afd44",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 0.9992961883544922,
+    "role": "ascending_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "42dd2003c39855b8bfc2e30c66ca1e9ea1bb6fa29c378a4a5737824a8ce18f35",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "b1fd5e3bdc883096c2b08f59def40a43902177965584023aaac3a0ea0c0b46b0",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 9.504727813691716e-07,
+    "role": "ascending_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "2c0523767623a648068bc35fd4b9ca82132770e6e9ea8d284f5cde60cbd75a0b",
+    "target": 0.0
+  },
+  {
+    "candidate_id": "6e6ce68d4745892d20e6c0bac3e329076b039d0f3e7cad6acba5a8e7c61875de",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 2.916512494266499e-05,
+    "role": "ascending_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "ae1423fdcce5a80f77d480b9183714e4e71d07517e17fe8f398ab6717c319a99",
+    "target": 0.0
+  },
+  {
+    "candidate_id": "f7d4a5285d8a78a50dfe3a46ae8cfba9adf46bf19054c85b6dabc3cc237bd98d",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 4.0956483644549735e-06,
+    "role": "ascending_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "57e043de92b278733e38633b685aa4a82da76b0b90d4ca0a0db357d3b7faa1ed",
+    "target": 0.0
+  },
+  {
+    "candidate_id": "94ecf7df1e75675525a8855b3f89de80ce970ad8fe089b915ceb63dffbc7ba33",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 7.958322385093197e-06,
+    "role": "ascending_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "65808e645412391c4cd1a887ab131a970d2a5a0995cee4c7c6cd676cda66af43",
+    "target": 0.0
+  },
+  {
+    "candidate_id": "978bd5bd9dbf25e92aeeec6a73df0608f7f189767d49ec2d271573a50bc7b47c",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 1.0663020475476515e-05,
+    "role": "ascending_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "1428559f3bc7f0d80a7b1cffae0985b9f5e11575568ce405c9359fbe3b0f81f7",
+    "target": 0.0
+  },
+  {
+    "candidate_id": "3fd08c22e71812ec6feda3b1c7956150334bc54f8fb4b8171b50c6d82a175fc0",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 0.9999244213104248,
+    "role": "ascending_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "b8662f340dd846441d6d541d22aed4388a4705b9911a845e4698d36e6c194c05",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "b5d88a59f0d56b37ae2ced631550284b23b7f524c37842518e3b1cd309e1685c",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 7.937059126561508e-05,
+    "role": "ascending_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "a03931e1e50b3a046391cb8cff3c351f80202bfdd0b0d131256a9f8f71023cb8",
+    "target": 0.0
+  },
+  {
+    "candidate_id": "5b00d682ce5802cbfab8d68f1547ee83d0d449b4415fb04c1a9981cf8a901036",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 0.9999165534973145,
+    "role": "ascending_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "b67a4366b905f5e0a2303dd20490ce4b574ae7c88f705c485a47e961b0a8ec26",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "2374db28e25094d309852051bea280db1815bb4f66e6ba50fae52398472b4016",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 0.9999960660934448,
+    "role": "ascending_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "7ea55323e935daac6f51cb8fc3d3e2fe8c14b0cb515cb51235c75b8228aa4112",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "c863d13e594bdfa320b285cd47e8e6c559e2f70db58e1a09d2a0bd932ec632e5",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 0.999994158744812,
+    "role": "ascending_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "3442df28608426d44ba174c94d5c7bacde51e2ed7714143974ba0ea23181fd0d",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "5e21c88959ec4e1bdb1008881909261335cfb92ad95a2d5e3dd2c843ce0647f4",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 0.9999743700027466,
+    "role": "ascending_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "68f8b942f0eb6fc2f0b306e9d5d7b6c4cbbbb382e37b88777d125f9d6e0ccc01",
+    "target": 1.0
+  },
+  {
+    "candidate_id": "e4849db25d6a302b0e65ae778df45254884e8faaa512e0d7550b72e7057edf8b",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 2.3918742044770624e-06,
+    "role": "ascending_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "2d15d11cf788b1b703268af018626eef0fd08323f9c23de9627157f1852f2e9f",
+    "target": 0.0
+  },
+  {
+    "candidate_id": "bbf2d0a7a0e3a5ba09647d083cde025ca9eb63588b30da7544de7d32d5ea6f95",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 1.48310323311307e-06,
+    "role": "ascending_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "2a442d1fad045ebd5f6ac59ab10135353655ec5ce067cb15a4eed7caf6461145",
+    "target": 0.0
+  },
+  {
+    "candidate_id": "b2ee26a456245fde61c1ae851c7e729b6eda31e4a38b96cabd561ff5ee07ff03",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 5.392829734773841e-06,
+    "role": "ascending_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "cd575b8a7d5cbbd8c3f1c5cec67390da1d308595a750bf4114b0fd3a19d21b84",
+    "target": 0.0
+  },
+  {
+    "candidate_id": "0d3af440faa61eba3c1e844c50f60ec42138cd89936bd16b9cb0f2c5339d70c5",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 1.589577368577011e-05,
+    "role": "ascending_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "01c596aa42f65c97122ee9862cf6da4241010e8d274a6eca489089f9db139a14",
+    "target": 0.0
+  },
+  {
+    "candidate_id": "26174606b531ee8ae7407bb1b8fc1c9bc1380fd41c173dc6feac645b8735f190",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 2.272111851198133e-05,
+    "role": "ascending_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "7939035e371e0c146426be98064f927a52136afddc453723538e384aa2b99026",
+    "target": 0.0
+  },
+  {
+    "candidate_id": "5560a7249eadcff3da2f6bf384de89fd84350edd9b1ae209d52540a674fb0122",
+    "parent_group_id": "transition_4988928__1000006",
+    "probability": 0.9999043941497803,
+    "role": "ascending_entry",
+    "seed": 1000006,
+    "split": "validation",
+    "state_sha256": "1d6e7129661ee44201028f8bd2adfbde81aef72fcff538c5d2805cb2d6799bdb",
+    "target": 1.0
+  }
+]

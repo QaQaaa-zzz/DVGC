@@ -1,0 +1,108 @@
+{
+  "schema": "jit_fresh_shared_continuation_validation_config_v1",
+  "output_dir": "JIT/runs/pi_unified_fresh_continuation_validation/pi_0_iter0_shared_tiny_mlp_seeds7_8_20260901",
+  "expected_protocol_sha256": "6a30e6334672c6a404fbaac245d974c358cef9f4f0ea8767d7424b37bb9222ac",
+  "protocol": {
+    "schema": "jit_fresh_shared_continuation_validation_protocol_v1",
+    "status": "predeclared_after_shared_full_train_refit_before_fresh_validation_outcomes",
+    "iteration": 0,
+    "policy_name": "pi_0",
+    "frozen_policy": "JIT/runs/frozen_unified/pi_0_round1_10009600_20260831/frozen_unified_policy.json",
+    "frozen_policy_file_sha256": "b94709172dfe4734760b567e5acde172172e853a9c5265b471c1272c7e9f0070",
+    "policy_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+    "policy_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+    "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+    "shared_refit_root": "JIT/runs/pi_unified_continuation_field/pi_0_iter0_shared_tiny_mlp_refit_20260901",
+    "shared_refit_summary_sha256": "8abbbfbc205e42bb28ee422691eeaef9ab30bdc4c56ad9067a4d55f366a2d9ef",
+    "architecture_manifest_sha256": "9ba92bd51b124d992a82001d260c40dc435e6ed60f68f4dea16485149e2e097e",
+    "upstream_field_manifest_sha256": "8d9cc945fe92c3b5ff01202c0da56ca601a7328747b8c0543ac54244e8eec807",
+    "upstream_field_file_sha256": "37ea10e9afa6048098af2ef1fd9e7a196feaeeef71e474a8ad7e345c94512f61",
+    "downstream_field_manifest_sha256": "de8bc0f69394432be788c8fcfcc6c536dace13f524743b295244407091e0cf71",
+    "downstream_field_file_sha256": "423f0584f7060c6b56480bd329d787f768a4877ef387f433091d7960e8644cc9",
+    "upstream_train_evidence": "JIT/runs/frozen_upstream_checkpoint_train/pi_0_iter0_three_checkpoint_matched_panel_20260901",
+    "upstream_train_manifest_sha256": "25160e1f198d710327b8390a53869bc72ec62afced5f3d86dcc45d1543793626",
+    "downstream_train_evidence": "JIT/runs/pi_unified_transition_band/pi_0_iter0_train_evidence_frozen_20260831",
+    "downstream_train_manifest_sha256": "27832237a85eccfa0ae2eaea7575dd2efda12535a3815fee0c6d0660f58921b8",
+    "consumed_validation_identity_catalog": "JIT/runs/pi_unified_expansion_validation/pi_0_iter0_group_disjoint_20260831/candidate_catalog.json",
+    "consumed_validation_identity_catalog_sha256": "d4ae3b42495c12e791e091cd4fa9235bde9eff9b22f44cb98816f40851475f71",
+    "fresh_seed_families": [1000007, 1000008],
+    "source_parent_generation": {
+      "frozen_experts_manifest": "JIT/runs/frozen_experts/pi_up9977856_pi_down25600_20260827/frozen_experts.json",
+      "source_checkpoints": {
+        "4988928": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_4988928",
+        "7987200": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_7987200",
+        "9977856": "JIT/runs/phase_u/phase_u_v4_pitch15penalty_9977856_seed820901_20260826/checkpoints/transition_9977856"
+      },
+      "upstream_source_transitions": [4988928, 7987200, 9977856],
+      "downstream_source_transitions": [4988928],
+      "upstream_role": "ascending_entry",
+      "downstream_role": "post_apex",
+      "max_ticks": 128,
+      "deterministic": true
+    },
+    "panels": {
+      "upstream": {
+        "action_names": ["steer", "rear_wheel_drive", "hip", "knee"],
+        "signs": [-1, 1],
+        "strengths": [0.025, 0.1],
+        "durations": [4, 8, 16],
+        "max_label_ticks": 400,
+        "terminal_clipping": true
+      },
+      "downstream": {
+        "action_names": ["hip"],
+        "signs": [1],
+        "strengths": [0.15, 0.2, 0.3, 0.32, 0.35, 0.4, 0.45, 0.5],
+        "durations": [30],
+        "max_label_ticks": 400,
+        "terminal_clipping": true
+      }
+    },
+    "near_duplicate_audit": {
+      "actor_observation_atol": 0.01,
+      "reject_train_exact_state": true,
+      "reject_train_near_duplicate_observation": true,
+      "reject_consumed_validation_exact_state": true,
+      "reject_consumed_validation_near_duplicate_observation": true,
+      "reject_duplicate_fresh_state": true,
+      "no_replacement_after_candidate_exclusion": true
+    },
+    "interaction_budget": {
+      "source_parent_rollout_maximum_environment_interactions": 768,
+      "attempt_count": 304,
+      "maximum_acquisition_environment_interactions": 3168,
+      "maximum_labeling_environment_interactions": 121600,
+      "training_transitions": 0
+    },
+    "calibration": {
+      "decision_rule": "accept_if_score_strictly_greater_than_max_fresh_validation_negative_score",
+      "minimum_validation_roc_auc": 0.7,
+      "minimum_validation_positive_recall": 0.2,
+      "require_positive_support_in_every_validation_parent": true,
+      "require_accepted_positive_in_every_validation_parent": true,
+      "accepted_validation_negative_count_must_be_zero": true,
+      "validation_hyperparameter_search": false,
+      "model_parameters_refit_on_validation": false,
+      "threshold_is_safety_certificate": false
+    },
+    "data_policy": {
+      "fresh_validation_outcomes_may_calibrate_phase_thresholds": true,
+      "fresh_validation_rows_may_enter_train_or_tube": false,
+      "consumed_validation_outcomes_read": false,
+      "consumed_validation_identity_only_overlap_audit": true,
+      "test_data_used": false,
+      "final_evaluation_data_used": false
+    },
+    "claim_boundary": {
+      "fresh_independent_validation_only": true,
+      "shared_architecture_frozen": true,
+      "field_parameters_frozen": true,
+      "phase_specific_threshold_calibration_allowed": true,
+      "certified_probability_claim": false,
+      "certified_safe_set_claim": false,
+      "tube_1_constructed": false,
+      "pi_1_trained": false,
+      "jce_jel_claim": false
+    }
+  }
+}

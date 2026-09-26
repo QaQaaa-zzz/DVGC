@@ -1,0 +1,40 @@
+{
+  "schema": "jit_envelope_iter0_downstream_shared_architecture_cv_prelaunch_v1",
+  "status": "predeclared_before_downstream_train_cv",
+  "iteration": 0,
+  "policy_name": "pi_0",
+  "upstream_support_gate": {
+    "summary_sha256": "093e9e5d6ed7845046cf3abb483fcfecee3107ffbcda771ce85a4880a1279541",
+    "pooled_oof_roc_auc": 0.902722231882378,
+    "worst_fold_roc_auc": 0.7934065934065934,
+    "worst_checkpoint_oof_roc_auc": 0.8144796380090498,
+    "supported": true
+  },
+  "shared_architecture_candidate": {
+    "family": "tiny_mlp_tanh",
+    "shape": "76->8_tanh->1",
+    "parameter_count": 625,
+    "same_architecture_for_up_and_down": true,
+    "phase_specific_weights": true,
+    "phase_specific_thresholds": true
+  },
+  "downstream_train": {
+    "frozen_manifest_sha256": "27832237a85eccfa0ae2eaea7575dd2efda12535a3815fee0c6d0660f58921b8",
+    "candidate_count": 2619,
+    "positive_count": 2589,
+    "negative_count": 30,
+    "parent_group_count": 5,
+    "fold_design": "leave_one_parent_group_out"
+  },
+  "config": "JIT/configs/envelope_iter0_downstream_parent_logo_tiny_mlp.json",
+  "protocol_sha256": "7a653eb6eb1a17d1d777e98a2f2d40da4b611d2c7fc6bb4ca5e0798bf3f23fef",
+  "decision_boundary": {
+    "consumed_validation_reused": false,
+    "environment_interactions": 0,
+    "ppo_training_transitions": 0,
+    "fresh_validation_predeclared": false,
+    "tube_1_authorized": false,
+    "if_pass": "freeze the shared 76->8 tanh->1 continuation architecture, then refit phase-specific C_up^0 and C_down^0 on full TRAIN evidence before fresh validation",
+    "if_fail": "do not search a downstream-specific architecture; make an explicit continuation-method decision"
+  }
+}

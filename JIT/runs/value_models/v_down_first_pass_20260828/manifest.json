@@ -1,0 +1,33 @@
+{
+  "activation": "tanh",
+  "continuation_protocol_sha256": "7d1e4b058f11a623bfad7d1751dfbf2abaf4173a2f951e285833f918511a7e56",
+  "environment_interactions": 0,
+  "expert_actor_sha256": "7b25f54bb1df3b97f63a15d011d66c2440682efb10b0510a266a9066725dd8be",
+  "expert_config_sha256": "85b575e6579eabe384b0a1643ba24359dd35a24d8d357ee1806e96bd6c280ed0",
+  "expert_payload_sha256": "67b0a7406e7fc2a3b73bac3024aaab2215a50f627746a0bc4b0551e3554113ea",
+  "hidden_sizes": [
+    64,
+    64
+  ],
+  "input": "actor_observation",
+  "labels_sha256": "b6cda4a633ad3b825c2cf0a52e407735ffef8c7942464139d17bc349f2308e8f",
+  "learning_rate": 0.001,
+  "manifest_sha256": "20025c88409030c77e8cc71f691ec6adcb22377e04471e649b81e273a5f3facd",
+  "model_selection_note": "first-pass fixed schedule; validation is reported and TEST rows are ignored",
+  "normalization_sha256": "fbfabea8bc587808fda85904a197a35dbfb861bfe8eef070c20712288424c4ea",
+  "observation_size": 76,
+  "optimizer": "adamw_full_batch_fixed_schedule",
+  "optimizer_steps": 2000,
+  "params_sha256": "acedbac3df76e7d6480c25a268cfff530bb6e7ecb3619883a8fbe4edad1460cc",
+  "schema": "jit_downstream_value_model_v1",
+  "seed": 830002,
+  "status": "completed",
+  "target": "V_down",
+  "target_semantics": "probability that frozen pi_down_star completes valid landing and short recovery",
+  "test_data_used": false,
+  "train_count": 105,
+  "training_transitions": 0,
+  "validation_count": 21,
+  "weight_decay": 0.0001,
+  "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+}

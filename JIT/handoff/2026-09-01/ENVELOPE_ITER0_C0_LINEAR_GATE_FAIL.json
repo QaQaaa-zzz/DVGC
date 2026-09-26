@@ -1,0 +1,66 @@
+{
+  "schema": "jit_c0_gate_failure_handoff_v1",
+  "status": "c0_gate_failed_upstream_only",
+  "date": "2026-09-01",
+  "iteration": 0,
+  "policy_name": "pi_0",
+  "policy_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+  "policy_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+  "frozen_train_manifest_sha256": "27832237a85eccfa0ae2eaea7575dd2efda12535a3815fee0c6d0660f58921b8",
+  "frozen_validation_manifest_sha256": "7a3793fd5902acbe2f9f17d85a66793755b95cd024f21f34399492c125908cd0",
+  "c0_summary_sha256": "01fb03961517b1fbdedb3e50559b22e2e26a478c5828a9b62279816c9ef5edd6",
+  "upstream": {
+    "field": "C_up^0",
+    "manifest_sha256": "69fc1b8f72336096b883c99f5bde79c69a87317b3af29ce7c43cbef97cca4d46",
+    "parameter_count": 77,
+    "train_roc_auc": 0.9496118560338744,
+    "validation_roc_auc": 0.4252704031465093,
+    "validation_positive_mean_score": 0.7704235744699658,
+    "validation_negative_mean_score": 0.8165080890539511,
+    "acceptance_threshold_exclusive": 0.9999961765569687,
+    "validation_positive_recall_at_threshold": 0.05309734513274336,
+    "accepted_positive_parent_count": 1,
+    "validation_positive_parent_count": 3,
+    "calibration_passed": false,
+    "interpretation": "ranking failure across held-out parents; not a threshold-only failure"
+  },
+  "downstream": {
+    "field": "C_down^0",
+    "manifest_sha256": "fd5186a71e3ac98dbb9ee1e787a75fbc159d8ae2645c48f556d05f6a476e39d3",
+    "parameter_count": 77,
+    "train_roc_auc": 1.0,
+    "validation_roc_auc": 1.0,
+    "validation_positive_mean_score": 0.9950834709540635,
+    "validation_negative_mean_score": 0.09828525974496977,
+    "acceptance_threshold_exclusive": 0.5684182518325387,
+    "validation_positive_recall_at_threshold": 1.0,
+    "accepted_positive_parent_count": 2,
+    "validation_positive_parent_count": 2,
+    "calibration_passed": true,
+    "disposition": "retain unchanged while upstream repair proceeds"
+  },
+  "overall": {
+    "calibration_passed": false,
+    "tube_1_authorized": false,
+    "tube_1_constructed": false,
+    "pi_1_trained": false,
+    "environment_interactions": 0,
+    "training_transitions": 0
+  },
+  "validation_policy_after_failure": {
+    "consumed_validation_may_be_reused_for_parameter_fit": false,
+    "consumed_validation_may_be_reused_for_hyperparameter_search": false,
+    "consumed_validation_may_be_reused_as_a_new_scientific_gate": false,
+    "old_validation_role": "historical diagnostic evidence only"
+  },
+  "next_gate": {
+    "name": "upstream_train_leave_one_parent_group_out_diagnostic",
+    "config": "JIT/configs/envelope_iter0_upstream_train_logo_diagnostic.json",
+    "purpose": "determine whether the exact failed upstream linear model generalizes across the five TRAIN parent groups without touching row-level validation evidence",
+    "fresh_validation_authorized": false
+  },
+  "claim_boundary": {
+    "certified_safe_set_claim": false,
+    "jce_jel_claim": false
+  }
+}

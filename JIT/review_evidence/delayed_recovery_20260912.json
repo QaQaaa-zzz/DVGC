@@ -1,0 +1,38 @@
+{
+  "actual_new_interactions": 3302,
+  "cpu_tests_passed": 233,
+  "maximum_interactions": 6000,
+  "metrics": [
+    {
+      "arm": "learned_residual",
+      "pending_root_cells": 2,
+      "previous_bank_no_witness_to_witness": 0,
+      "previously_witnessed": 14,
+      "round_index": 0,
+      "still_pending": 2,
+      "unknown_to_witness": 0,
+      "verified_root_cells": 13
+    },
+    {
+      "arm": "fixed_random",
+      "pending_root_cells": 1,
+      "previous_bank_no_witness_to_witness": 0,
+      "previously_witnessed": 15,
+      "round_index": 0,
+      "still_pending": 1,
+      "unknown_to_witness": 0,
+      "verified_root_cells": 15
+    }
+  ],
+  "old_failed_attempt_unchanged": true,
+  "panel_episodes": 4,
+  "panel_successes": 4,
+  "policy_steps": 3200,
+  "scope": "real candidate training and delayed feedback wiring; no recovered candidate or performance gain",
+  "status": "completed",
+  "pilot_maximum_interactions": 3664000,
+  "pilot_previous_supervisor_pid": 3959291,
+  "pilot_queue": "JIT/runs/experiments/delayed_exploration_reuse_20260912/queue",
+  "reused_forward_interactions": 19200,
+  "pilot_supervisor_pid": 3968951
+}

@@ -1,0 +1,18 @@
+{
+  "automatic_repair_on_gate_failure": false,
+  "candidate_frozen_policy": "JIT/runs/frozen_unified/pi_2_auto_10009600_20260904a/frozen_unified_policy.json",
+  "candidate_gate": "JIT/runs/iteration_auto/pi_1_to_pi_2_20260904a/pi_1_to_pi_2_gate/summary.json",
+  "candidate_iteration": 2,
+  "candidate_run_id": "pi_2_tube2_auto_core75_natural10_10009600_seed821101_20260904a",
+  "candidate_selected_policy": "JIT/runs/iteration_selection/pi_2_auto_20260904a/selected_policy.json",
+  "candidate_training_config": "JIT/configs/pi_unified_iter2_auto_core75_natural10_20260904a.json",
+  "schema": "jit_iterative_envelope_workflow_preparation_v1",
+  "selected_policy": "JIT/runs/iteration_selection/pi_1_repair02_20260903/selected_policy.json",
+  "source_iteration": 1,
+  "source_tube": "JIT/runs/soft_tube/soft_tube_iter1_pi0_conditioned_20260901",
+  "status": "completed",
+  "target_tube": "JIT/runs/soft_tube/soft_tube_iter2_pi1_conditioned_20260904a",
+  "test_data_used": false,
+  "work_root": "JIT/runs/iteration_auto/pi_1_to_pi_2_20260904a",
+  "workflow_config": "JIT/configs/auto_envelope_pi1_to_pi2_20260904a.json"
+}

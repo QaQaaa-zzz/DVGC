@@ -1,0 +1,65 @@
+{
+  "artifact_role": "learned_soft_feasibility_tube",
+  "certified_safe": false,
+  "diagnostics_sha256": "afb0ab608f9dbd0a1027d0125fb8543b6ef6084f71dfc67530896b7dbe020352",
+  "downstream_count": 105,
+  "entries_sha256": "ccf7d109b5cec134522bcad1a5677f0367b32985334e95a455e11284383df8be",
+  "entry_count": 222,
+  "environment_interactions": 0,
+  "frozen_experts_sha256": "505a94fa732badbd319eb286497e4f50b06b407c90acf4defb417619f0b1f584",
+  "manifest_sha256": "c1c1161ebafd16716f2566aaccfe89169fe9cb0c2b090266c0e2bf90165df28b",
+  "phase_mixture": {
+    "downstream": 0.5,
+    "upstream": 0.5
+  },
+  "pi_down_actor_sha256": "7b25f54bb1df3b97f63a15d011d66c2440682efb10b0510a266a9066725dd8be",
+  "pi_up_actor_sha256": "f218775e3cf99555ce524f1357a800172904bc815b06c54a53db8965204d9081",
+  "schema": "jit_soft_tube_v1",
+  "source_hashes": {
+    "down_nominal": {
+      "catalog_sha256": "4795623ca613ea02802aebc196d4ce3f7ea3a36452a63fbca743145ad0d591aa",
+      "declared_protocol_sha256": "7d1e4b058f11a623bfad7d1751dfbf2abaf4173a2f951e285833f918511a7e56",
+      "labels_sha256": "b6cda4a633ad3b825c2cf0a52e407735ffef8c7942464139d17bc349f2308e8f",
+      "protocol_sha256": "a39b5b89fd20415cf49961af5540b16bd459552907a6d93c81a6d36b7d54bddb"
+    },
+    "up_boundary": {
+      "catalog_sha256": "fc2c02d53bef1fdab3bf9f87caae553028e9ea30a523520347d98f05a0bfcf33",
+      "declared_protocol_sha256": "1e269bf62d9661126f9290f490390f9fad46d2c1abb8f9e96b65eb123773ae0a",
+      "labels_sha256": "617f4d32a637645303e335b3349945be120d4010f3357d5503818be649ac6ee6",
+      "protocol_sha256": "23261896b1c46bfae0c5fa7ccd040c92974f5d0faf62c0e7c847ba8eefd9fe36"
+    },
+    "up_nominal": {
+      "catalog_sha256": "52b8b1fcb0f3749d772c75f2efb495f94df974ab87f1fca37cfc509931186c2f",
+      "declared_protocol_sha256": "acb95b94151c7ef45135d66bb5883b72237d307fbd0690bffeadedffb8d49823",
+      "labels_sha256": "b22876b60da3522a1271458499b540863fcb0e8ecfe05cd21b649d59e0b29922",
+      "protocol_sha256": "eb40899709525e8d3a22db3e0bcb31b77511dfb62484d795bd44d3de82a00216"
+    }
+  },
+  "status": "completed",
+  "test_data_used": false,
+  "training_guidance_only": true,
+  "training_transitions": 0,
+  "upstream_count": 117,
+  "validation_data_used": false,
+  "value_models": {
+    "V_down": {
+      "manifest_sha256": "20025c88409030c77e8cc71f691ec6adcb22377e04471e649b81e273a5f3facd",
+      "normalization_sha256": "fbfabea8bc587808fda85904a197a35dbfb861bfe8eef070c20712288424c4ea",
+      "params_sha256": "acedbac3df76e7d6480c25a268cfff530bb6e7ecb3619883a8fbe4edad1460cc"
+    },
+    "V_up": {
+      "manifest_sha256": "fd8afee42bcad15ad2f25903fbd4c0aab8900a2a9cb023b32da533e6d6eab1a7",
+      "normalization_sha256": "9f2b5494a94a4d7d6eedbc4adf10f668e74fe3c23076198809b543df917baf28",
+      "params_sha256": "4e1647d2ed5d353e78802c234d48e4fc6061f4237f88201b8479b6cc9040fcc7"
+    }
+  },
+  "weighting": {
+    "floor": 0.05,
+    "mapping": "sampling_weight = 0.05 + 0.95 * value_score",
+    "monotonic": true,
+    "nonzero_support": true,
+    "scale": 0.95,
+    "validation_tuned": false
+  },
+  "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+}

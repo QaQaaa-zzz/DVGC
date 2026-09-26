@@ -1,0 +1,19 @@
+{
+  "date": "2026-09-09",
+  "fix": "unknown historical policy coverage and analysis-only campaign recovery",
+  "targeted_tests_passed": 25,
+  "gpu_rollouts_run": false,
+  "new_training_run": false,
+  "source_simulation_repeated": false,
+  "historical_failure_preserved": true,
+  "coverage_unknown_is_null": true,
+  "source_result": {
+    "completed_training_transitions": 25600,
+    "candidate_count": 753,
+    "bank_witnesses": 743,
+    "root_cells_in_new_panel": 734,
+    "source_charged_interactions": 99273,
+    "failure": "KeyError pi_4 in old/new coverage plotting"
+  },
+  "source_report": "reports/empirical_envelope_smoke_callbackfix_v1-f5f98fe368"
+}

@@ -6,7 +6,7 @@ from pathlib import Path
 
 from cli.descent_envelope_controller import DescentEnvelopeController
 from cli.descent_local_controller import Controller,ENTRY,LANDING,PYTHON,RUNTIME_GATE
-from cli.descent_tube_controller import failure_fuse_update
+from dvgc.construction_lifecycle import failure_fuse_update
 from dvgc.bank import SnapshotBank
 from dvgc.config import file_sha256,load_config
 from dvgc.construction_lifecycle import validate_policy_update_gate

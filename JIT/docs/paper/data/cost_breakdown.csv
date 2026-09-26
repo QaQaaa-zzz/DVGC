@@ -1,0 +1,41 @@
+scope,stage,round_index,arm,charged_interactions,maximum_interactions,active_interactions,padding_interactions,accounting,source_ids,limitation
+historical_campaign_new,policy_ppo,0,,128000,,,,measured_completed,historical_r0_training,Historical landing semantics; shared ancestor and differing proposer schedules
+historical_campaign_new,fixed_train_panel,0,,63,,,,measured_completed,historical_r0_training,Historical landing semantics; shared ancestor and differing proposer schedules
+historical_campaign_new,acquisition,0,,5546,,,,measured_completed,historical_r0_ledger0;historical_r0_ledger1;historical_r0_ledger2;historical_r0_ledger3,
+historical_campaign_new,suffix_labels,0,,349711,,,,measured_completed,historical_r0_ledger0;historical_r0_ledger1;historical_r0_ledger2;historical_r0_ledger3,
+historical_campaign_new,policy_ppo,1,,128000,,,,measured_completed,historical_r1_training,Historical landing semantics; shared ancestor and differing proposer schedules
+historical_campaign_new,fixed_train_panel,1,,79,,,,measured_completed,historical_r1_training,Historical landing semantics; shared ancestor and differing proposer schedules
+historical_campaign_new,acquisition,1,,9743,,,,measured_completed,historical_r1_ledger0;historical_r1_ledger1;historical_r1_ledger2;historical_r1_ledger3;historical_r1_ledger4;historical_r1_ledger5;historical_r1_ledger6,
+historical_campaign_new,suffix_labels,1,,654323,,,,measured_completed,historical_r1_ledger0;historical_r1_ledger1;historical_r1_ledger2;historical_r1_ledger3;historical_r1_ledger4;historical_r1_ledger5;historical_r1_ledger6,
+historical_inherited_recorded,inherited_recorded,,,195551,,,,historical_recorded_inherited,historical_summary,Not complete bootstrap lifecycle cost; do not treat as new campaign cost
+delayed_pilot,policy_ppo,0,,128000,,,,measured_completed,delayed_r0_training,Shared next policy trained from learned-arm pending only; not independent arm training
+delayed_pilot,fixed_train_panel,0,,72,,,,measured_completed,delayed_r0_training,Shared next policy trained from learned-arm pending only; not independent arm training
+delayed_pilot,forward,0,learned_residual,19200,19200,2270,16930,inherited_reused_once,delayed_r0_learned_residual_acquisition,Includes initial/final diagnostics and inactive padding; inherited arrival charged once
+delayed_pilot,forward,0,fixed_random,19200,19200,2109,17091,measured_completed,delayed_r0_fixed_random_acquisition,Includes initial/final diagnostics and inactive padding; inherited arrival charged once
+delayed_pilot,policy_ppo,1,,128000,,,,measured_completed,delayed_r1_training,Shared next policy trained from learned-arm pending only; not independent arm training
+delayed_pilot,fixed_train_panel,1,,77,,,,measured_completed,delayed_r1_training,Shared next policy trained from learned-arm pending only; not independent arm training
+delayed_pilot,forward,1,learned_residual,19200,19200,2181,17019,measured_completed,delayed_r1_learned_residual_acquisition,Includes initial/final diagnostics and inactive padding; inherited arrival charged once
+delayed_pilot,forward,1,fixed_random,19200,19200,2159,17041,measured_completed,delayed_r1_fixed_random_acquisition,Includes initial/final diagnostics and inactive padding; inherited arrival charged once
+delayed_pilot,suffix_before_learning,0,learned_residual,3429,448000,,,measured_completed,delayed_reuse_status,
+delayed_pilot,suffix_before_learning,0,fixed_random,3830,439600,,,measured_completed,delayed_reuse_status,
+delayed_pilot,suffix_after_learning,0,learned_residual,29,800,,,measured_completed,delayed_reuse_status,
+delayed_pilot,suffix_after_learning,0,fixed_random,73,2400,,,measured_completed,delayed_reuse_status,
+delayed_pilot,suffix_before_learning,1,learned_residual,4313,518400,,,measured_completed,delayed_reuse_status,
+delayed_pilot,suffix_before_learning,1,fixed_random,3418,531200,,,measured_completed,delayed_reuse_status,
+delayed_pilot,suffix_after_learning,1,fixed_random,111,,,,measured_completed,delayed_completion_summary,
+delayed_pilot,suffix_after_learning,1,learned_residual,219,,,,measured_completed,delayed_completion_summary,
+checkpoint_early,training_and_panels,,,128225,132800,,,measured_completed,early_training_summary,One shared training lineage; never sum checkpoint-prefix surcharges
+checkpoint_early,exploration,,pi_6,4225,,,,measured_completed,early_exploration_summary,Exploration acquisition plus suffix cost
+checkpoint_early,exploration,,checkpoint_32000,4058,,,,measured_completed,early_exploration_summary,Exploration acquisition plus suffix cost
+checkpoint_early,exploration,,checkpoint_64000,6502,,,,measured_completed,early_exploration_summary,Exploration acquisition plus suffix cost
+checkpoint_early,exploration,,checkpoint_128000,5948,,,,measured_completed,early_exploration_summary,Exploration acquisition plus suffix cost
+checkpoint_late,training_and_panels,,,256392,264000,,,measured_completed,late_training_summary,One shared training lineage; never sum checkpoint-prefix surcharges
+checkpoint_late,exploration,,pi_6,4135,,,,measured_completed,late_exploration_summary,Exploration acquisition plus suffix cost
+checkpoint_late,exploration,,late_checkpoint_128000,5959,,,,measured_completed,late_exploration_summary,Exploration acquisition plus suffix cost
+checkpoint_late,exploration,,late_checkpoint_192000,9191,,,,measured_completed,late_exploration_summary,Exploration acquisition plus suffix cost
+checkpoint_late,exploration,,late_checkpoint_256000,5631,,,,measured_completed,late_exploration_summary,Exploration acquisition plus suffix cost
+off_target_full_action_engineering,failed_preflight,,,4800,,,,failed_reservation,off_target_engineering,"Off-target full-action policy, not corrected residual; deterministic success collapsed"
+off_target_full_action_engineering,passed_preflight,,,4800,,,,scheduled_slots,off_target_engineering,"Off-target full-action policy, not corrected residual; deterministic success collapsed"
+off_target_full_action_engineering,pilot,,,281600,,18186,263414,scheduled_slots,off_target_engineering,"Off-target full-action policy, not corrected residual; deterministic success collapsed"
+corrected_residual_engineering,forward,,,2400,,263,2137,measured_completed,corrected_residual_engineering,One optimizer update; engineering wiring only
+corrected_residual_engineering,suffix,,,164,,,,measured_completed,corrected_residual_engineering,

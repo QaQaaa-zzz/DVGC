@@ -1,0 +1,82 @@
+{
+  "expected_protocol_sha256": "7a653eb6eb1a17d1d777e98a2f2d40da4b611d2c7fc6bb4ca5e0798bf3f23fef",
+  "output_dir": "JIT/runs/pi_unified_continuation_field_diagnostic/pi_0_iter0_downstream_parent_logo_tiny_mlp_20260901",
+  "protocol": {
+    "claim_boundary": {
+      "certified_safe_set_claim": false,
+      "continuation_fields_refit": false,
+      "diagnostic_only": true,
+      "fresh_validation_bank_predeclared": false,
+      "jce_jel_claim": false,
+      "pi_1_trained": false,
+      "shared_continuation_architecture_frozen": false,
+      "tube_1_constructed": false
+    },
+    "data_policy": {
+      "consumed_validation_predictions_reused": false,
+      "consumed_validation_rows_reused": false,
+      "final_evaluation_data_used": false,
+      "prior_upstream_summary_read_for_provenance_only": true,
+      "test_data_used": false,
+      "train_rows_only": true
+    },
+    "diagnostic_gate": {
+      "minimum_mean_fold_roc_auc": 0.7,
+      "minimum_pooled_oof_roc_auc": 0.7,
+      "minimum_worst_fold_roc_auc": 0.6,
+      "require_positive_score_gap_in_every_fold": true
+    },
+    "expected_downstream_train": {
+      "candidate_count": 2619,
+      "negative_count": 30,
+      "parent_group_count": 5,
+      "positive_count": 2589
+    },
+    "fold_design": {
+      "every_row_heldout_exactly_once": true,
+      "fold_count": 5,
+      "heldout_parent_groups_per_fold": 1,
+      "kind": "leave_one_parent_group_out",
+      "physical_parent_groups_disjoint": true,
+      "train_parent_groups_per_fold": 4
+    },
+    "frozen_train_evidence": "JIT/runs/pi_unified_transition_band/pi_0_iter0_train_evidence_frozen_20260831",
+    "frozen_train_manifest_sha256": "27832237a85eccfa0ae2eaea7575dd2efda12535a3815fee0c6d0660f58921b8",
+    "iteration": 0,
+    "method_decision": {
+      "architecture": "76->8_tanh->1",
+      "if_fail_do_not_freeze_shared_architecture": true,
+      "if_pass_freeze_shared_architecture_before_fresh_validation": true,
+      "no_consumed_validation_reuse": true,
+      "no_downstream_architecture_search": true,
+      "phase_specific_thresholds_allowed": true,
+      "phase_specific_weights_required": true,
+      "shared_up_down_architecture_required": true,
+      "upstream_within_support_gate_passed": true
+    },
+    "model": {
+      "activation": "tanh",
+      "family": "tiny_mlp_tanh",
+      "hidden_units": 8,
+      "input": "unified_actor_observation",
+      "l2_weight": 0.01,
+      "learning_rate": 0.01,
+      "normalization": "fold_train_only_zscore_clip10",
+      "observation_size": 76,
+      "optimizer": "adam_full_batch_fixed_schedule",
+      "parameter_count": 625,
+      "sample_weighting": "equal_parent_label_cell_mass",
+      "seed_base": 849000,
+      "steps": 4000
+    },
+    "phase": "downstream",
+    "policy_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+    "policy_name": "pi_0",
+    "policy_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+    "prior_upstream_support_summary": "JIT/runs/pi_unified_continuation_field_diagnostic/pi_0_iter0_upstream_support_stratified_parent_cv_tiny_mlp_20260901/summary.json",
+    "prior_upstream_support_summary_sha256": "093e9e5d6ed7845046cf3abb483fcfecee3107ffbcda771ce85a4880a1279541",
+    "schema": "jit_downstream_shared_architecture_parent_cv_protocol_v1",
+    "status": "predeclared_after_upstream_within_support_tiny_mlp_pass_before_downstream_parent_cv"
+  },
+  "schema": "jit_downstream_shared_architecture_parent_cv_config_v1"
+}

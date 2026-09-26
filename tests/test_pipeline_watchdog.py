@@ -202,13 +202,6 @@ def test_active_pipeline_pointer_selects_new_controller(monkeypatch, tmp_path):
     assert str(run)=="runs/new" and unit=="new.service" and start=="scripts/start-new.sh"
 
 
-def test_stage_next_start_script_launches_detached_systemd_unit():
-    text = Path("scripts/start_stage_next_bootstrap_controller.sh").read_text()
-    assert "systemd-run --user --unit=dvgc-stage-next-bootstrap-controller" in text
-    assert "RuntimeMaxSec=infinity" in text
-    assert "mujoco_playground/.venv/bin/python" in text
-
-
 def test_recovery_timeout_is_reported_not_raised(monkeypatch):
     status = _status(
         controller_unit="missing.service",

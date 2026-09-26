@@ -1,0 +1,18 @@
+{
+  "bank_witnesses": 260,
+  "candidate_count": 260,
+  "charged_interactions": 20735,
+  "final_test_used": false,
+  "forward_landings": 10,
+  "global_minimum_claim": false,
+  "lowest_observed_successful_peak_root_z_m": 0.6108724474906921,
+  "lowest_peak_trajectory_id": "dense_v1_train_x2.85_family2/variant_7",
+  "peak_sampling": "control-step states; not continuous-time maximum",
+  "report_sha256": "1d5db375b3225b389e88a91d8e291e85fcdbc65b0f2faf43a9630d7d5f2233d5",
+  "scope": "TRAIN observed lower-boundary search",
+  "slice_minima_form_one_trajectory": false,
+  "status": "completed",
+  "training_transitions": 0,
+  "trajectories": 16,
+  "truncated_trajectories": 0
+}

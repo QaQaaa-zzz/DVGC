@@ -1,0 +1,68 @@
+{
+  "schema": "jit_upstream_parent_diversity_train_config_v1",
+  "output_dir": "JIT/runs/pi_unified_upstream_parent_diversity/pi_0_iter0_checkpoint_domains_20260901",
+  "expected_protocol_sha256": "b4c5a491fa57b0f181e1c7c2eceac56b80f9d9a8209d93d0317bfc2f4e67b040",
+  "protocol": {
+    "schema": "jit_upstream_parent_diversity_train_protocol_v1",
+    "status": "predeclared_after_train_logo_domain_shift",
+    "purpose": "expand_upstream_train_parent_checkpoint_diversity_under_frozen_pi_0",
+    "iteration": 0,
+    "policy_name": "pi_0",
+    "frozen_policy": "JIT/runs/frozen_unified/pi_0_round1_10009600_20260831/frozen_unified_policy.json",
+    "frozen_policy_file_sha256": "b94709172dfe4734760b567e5acde172172e853a9c5265b471c1272c7e9f0070",
+    "policy_actor_sha256": "43e82928c3643e5616a665b43814819a34b7a1a5bba5b6641f2a11ad4907e029",
+    "policy_payload_sha256": "fb107a5f31b1455f9626c3be68efab36457fb801fcfbba9e99acc0deff3b5719",
+    "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+    "frozen_train_evidence": "JIT/runs/pi_unified_transition_band/pi_0_iter0_train_evidence_frozen_20260831",
+    "frozen_train_manifest_sha256": "27832237a85eccfa0ae2eaea7575dd2efda12535a3815fee0c6d0660f58921b8",
+    "prior_train_logo_summary": "JIT/runs/pi_unified_continuation_field_diagnostic/pi_0_iter0_upstream_logo_linear_20260901/summary.json",
+    "prior_train_logo_protocol_sha256": "c03e261cc2de28f48c55b65b822ab748a2ea2e390bf52541526e204fc98db0d0",
+    "prior_train_logo_summary_sha256": "7312fae1a07e7ab7cf9f488fe26f13862a5f982fd6e9dd4239f3dd002929f960",
+    "source_catalog": "JIT/runs/continuation_candidates/v_up_nominal_piup9977856_sources3_20260827/catalog.json",
+    "source_catalog_file_sha256": "52b8b1fcb0f3749d772c75f2efb495f94df974ab87f1fca37cfc509931186c2f",
+    "source_role": "ascending_entry",
+    "source_checkpoint_transitions": [7987200, 9977856],
+    "source_seeds": [1000001, 1000002, 1000003, 1000004, 1000005],
+    "forbidden_consumed_validation_seed": 1000006,
+    "panel": {
+      "action_names": ["steer", "rear_wheel_drive", "hip", "knee"],
+      "signs": [-1, 1],
+      "strengths": [0.025, 0.1],
+      "durations": [4, 8, 16],
+      "terminal_clipping": true,
+      "max_label_ticks": 400
+    },
+    "acquisition_seed": 9520000,
+    "label_seed": 9521000,
+    "near_duplicate_audit": {
+      "reject_frozen_train_exact_state": true,
+      "reject_frozen_train_actor_observation_near_duplicate": true,
+      "actor_observation_atol": 0.01,
+      "reject_duplicate_new_train_state": true
+    },
+    "interaction_budget": {
+      "parent_count": 10,
+      "attempt_count": 480,
+      "maximum_acquisition_environment_interactions": 4480,
+      "maximum_successful_labeling_environment_interactions": 192000,
+      "training_transitions": 0
+    },
+    "data_policy": {
+      "train_only": true,
+      "source_catalog_metadata_only_no_expert_outcomes": true,
+      "consumed_validation_rows_read": false,
+      "consumed_validation_predictions_read": false,
+      "test_data_used": false,
+      "final_evaluation_data_used": false
+    },
+    "claim_boundary": {
+      "checkpoint_domain_train_expansion_only": true,
+      "continuation_field_reselected": false,
+      "fresh_validation_authorized": false,
+      "tube_1_constructed": false,
+      "pi_1_trained": false,
+      "jce_jel_claim": false,
+      "certified_safe_set_claim": false
+    }
+  }
+}
