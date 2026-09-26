@@ -33,6 +33,7 @@ def main():
     parser.add_argument('--rounds',type=int,required=True)
     parser.add_argument('--active-run',type=Path,required=True)
     parser.add_argument('--allow-gpu-executable',action='append',default=[])
+    parser.add_argument('--prepare-only',action='store_true',help='Write locked recovery plan without launching; for sequenced validation')
     args=parser.parse_args()
     old=args.previous.resolve();out=args.output.resolve();repo=args.repository.resolve()
     state=read(old/'status.json');spec=read(old/'declaration.json')['spec']
@@ -99,6 +100,9 @@ def main():
     write(out/'plan.json',plan)
     manifest=dict(name=f'空闲自动接续：累计{args.rounds}轮',execution=str(out/'execution/status.json'),lineage=str(out/'lineage/status.json'))
     write(out/'ACTIVE_RUN.json',manifest)
+    if args.prepare_only:
+        print(json.dumps(dict(phase='prepared',plan=str(out/'plan.json'),completed_rounds=completed,target_total_rounds=args.rounds),indent=2))
+        return
     with (out/'supervisor.log').open('xb') as log:
         process=subprocess.Popen([new['python'],str(snapshot/'JIT/cli/run_gated_plan.py'),'--plan',str(out/'plan.json'),
             '--output-dir',str(out/'execution'),'--wait','--poll-seconds','5'],cwd=snapshot,env={**os.environ,**env},
