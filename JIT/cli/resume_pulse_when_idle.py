@@ -32,6 +32,7 @@ def main():
     parser.add_argument('--repository',type=Path,required=True)
     parser.add_argument('--rounds',type=int,required=True)
     parser.add_argument('--active-run',type=Path,required=True)
+    parser.add_argument('--allow-gpu-executable',action='append',default=[])
     args=parser.parse_args()
     old=args.previous.resolve();out=args.output.resolve();repo=args.repository.resolve()
     state=read(old/'status.json');spec=read(old/'declaration.json')['spec']
@@ -41,19 +42,8 @@ def main():
     completed=len(read(old/'training_metrics.json'))
     if not 0<completed<args.rounds:
         raise ValueError('new total round limit must exceed completed rounds')
-    boundary=read(old/'recovery.json')
-    if completed!=boundary['completed_rounds']:
-        source=read(old/'current_source.json');prior=old/f'round_{completed-1:04d}'
-        if source['completed_rounds'] != completed:
-            raise ValueError('round metrics precede source adoption; a completed boundary is required')
-        support=prior/'next_training_support.json'
-        if not support.exists():support=prior/'witnessed_support.json'
-        bank=prior/'expanded_bank.json'
-        if not bank.exists():bank=Path(read(prior/'collection_spec.json')['bank'])
-        boundary=dict(previous=str(old),completed_rounds=completed,
-            source=source['source'],explorer_checkpoint=source['explorer_checkpoint'],
-            bank=str(bank),support=str(support))
-    boundary['charged_interactions']=inherited
+    from jit_dvgc.current_policy_iteration import completed_recovery_boundary
+    boundary=completed_recovery_boundary(old)
     out.mkdir(parents=True,exist_ok=False)
     view=out/'reuse_view';view.mkdir()
     for filename in ('status.json','declaration.json'):
@@ -74,6 +64,8 @@ def main():
     write(out/'boundary.json',boundary)
     new={**spec,'rounds':args.rounds,'resume_boundary':str(out/'boundary.json'),
          'resume_stage_root':str(view),'gate':{'kind':'gpu_idle','minimum_free_mib':20000,'wait_until_idle':True}}
+    if args.allow_gpu_executable:
+        new['gate']['allowed_compute_executables']=args.allow_gpu_executable
     new['maximum_interactions']=budget_contract(new,len(new['order']))['maximum_interactions']
     new.pop('maximum_actual_interactions',None);verify_stage_reuse(spec,new)
     commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=repo,text=True).strip()

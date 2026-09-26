@@ -29,3 +29,17 @@ def test_direct_physical_failure_overrides_even_inconsistent_success_label():
 def test_missing_window_provenance_rejected():
  r=row('x');del r['pulse_cells']
  with pytest.raises(ValueError,match='pulse_cells'):pulse_feedback([r],[],W,quality_mode='discovery_conversion')
+
+def test_adoption_bonus_requires_final_decision_and_keeps_local_credit():
+ weights={**W,'conversion':.2,'adoption_bonus':1.8}
+ rows=[row('a',0,1,True,successor_adopted=False),row('b',0,1,True,successor_adopted=True),row('c',0,0,True,successor_adopted=True)]
+ rewards,mask,_,_=pulse_feedback(rows,[],weights,quality_mode='discovery_conversion')
+ np.testing.assert_allclose(rewards,[.25,2.05,-.45]);assert mask.all()
+
+def test_adoption_bonus_never_guesses_missing_final_decision():
+ with pytest.raises(ValueError,match='adoption'):
+  pulse_feedback([row('a',0,1,True)],[],{**W,'adoption_bonus':1.8},quality_mode='discovery_conversion')
+
+def test_physical_failure_never_gets_adoption_bonus():
+ rewards,_,_,_=pulse_feedback([row('a',0,1,True,prefix_terminal=True,prefix_physical_failure=True)],[],{**W,'adoption_bonus':1.8},quality_mode='discovery_conversion')
+ np.testing.assert_allclose(rewards,[-5.])

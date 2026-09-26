@@ -15,3 +15,15 @@ A hash-locked `jit_phase_checkpoint_initialization_source_v1` descriptor permits
 The20260920 experiment starts from the user's Phase U transition4988928,100 rounds,1024 candidates per round, three-step four-channel±0.25 pulses at mixed0/5/10/15/20/25, and up to128000 jump-policy PPO transitions per applicable round. Source-only support and promotion checks remain. Total conservative interaction cap115308000 includes discovery, continuation, training and checks. It queues after the existing random100 experiment; final TEST remains unopened. Its new source and new reward jointly differ from the earlier0010 experiment, so this is not a single-factor ablation against that old run.
 
 Validation:70 related CPU tests passed, including reward edge cases, Phase source parameter preservation/missing locks, and symmetric initialization. Actual checkpoint/initial distribution audit is in the run's runtime_preflight.json. Full MuJoCo Warp construction cannot run CPU-only; first GPU seed-support stage validates nominal source continuation before any outer-loop training. Failures remain recorded and stop execution. Prior experiments and code snapshots are immutable.
+
+## Adopted-success bonus (2026-09-26; opt-in)
+
+`reward_weights.adoption_bonus` enables a separate protocol. Recommended local conversion credit is0.2 and adopted bonus1.8 (total2.0 before novelty/repeat); other terms remain unchanged. The pipeline finishes both the retention panel and the successor's nominal support check BEFORE computing feedback or updating the explorer. `successor_adopted` is stored on each outcome. Missing decisions are errors; unknown outcomes stay ineligible and physical pulse failures never receive this bonus. A rejected successor's local successes keep only0.2; they are not retained capability claims. No historical feedback is rewritten.
+
+To preserve the already running learned/random comparison, numerical recovery89→100 keeps the original reward. This optional reward is implemented and unit-tested, but has no claimed training result or new100-round budget. Any follow-up with this reward needs a separate declared stage.
+
+## Numerical recovery evidence
+
+The original round0089 failed at48000 reported transitions after44800 completed, with nonfinite state/reward/optimizer metrics. A same-config, same-seed diagnostic replay on2026-09-26 completed128000 training transitions plus184 TRAIN-panel interactions with pre-optimizer checks. Thus the original NaN has not been reproduced deterministically; its first source remains unresolved. This is not proof that NaNs cannot recur.
+
+Unified PPO now checks inputs, loss and gradients before returning an update to the trainer. Invalid batches raise and save `nonfinite_update.pkl/json`; they are never zero-filled or silently accepted. The library hook is restored on exit and no shared installed Brax code is modified. First-time recovery no longer requires a pre-existing `recovery.json`. GPU idle gates optionally exempt explicit executable paths below1024MiB while preserving the minimum-free-memory margin; this run declares only the observed remote-desktop executable.

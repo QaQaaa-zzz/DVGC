@@ -183,6 +183,9 @@ def run(spec_path,output):
         if spec['order']!=[spec['proposer']] or any(spec.get(k) for k in
                 ('resume_run','reuse_results','reuse_collection','reuse_prefix_collection','witnessed_support')):
             raise ValueError('clean source lineage cannot import historical support or replay')
+    adoption_reward=bool(spec['reward_weights'].get('adoption_bonus',0.))
+    if adoption_reward and (not current_only or quality_mode!='discovery_conversion'):
+        raise ValueError('adoption bonus requires current-policy discovery conversion mode')
     initial_bank_names={m['name'] for m in bank['members']}
     base=None
     if not current_only:
@@ -266,6 +269,9 @@ def run(spec_path,output):
             source=next(m for m in bank['members'] if m['name']==boundary['source'])
             checkpoint=boundary['explorer_checkpoint'];support=read(boundary['support'])
             seen=read(previous/'visited_cells.json')
+            write(root/'visited_cells.json',seen)
+            write(root/'current_source.json',dict(source=source['name'],frozen_policy=source['frozen_policy'],
+                explorer_checkpoint=checkpoint,completed_rounds=first_round,historical_helpers_used=False))
             from .current_policy_iteration import lineage_artifact
             rows_all=[row for i in range(first_round) for row in read(lineage_artifact(previous,f'round_{i:04d}/outcomes.json'))]
             write(root/'source_pi_support.json',read(previous/'source_pi_support.json'))
@@ -390,6 +396,21 @@ def run(spec_path,output):
                     support['entries'].append(support_row(r,True));keys.add(r['snapshot_context_sha256'])
                     for filename in ['identity.json','snapshot.pkl']:
                         p=Path(r['snapshot'])/filename;support['inputs'][str(p)]=_file_sha(p)
+            # Opt-in adoption reward waits for BOTH retention and the final
+            # nominal-support decision. Reuse this seed result below; never
+            # grant the bonus before a successor is actually admissible.
+            early_nominal=None
+            if adoption_reward:
+                if adopt is not None:
+                    early_nominal=runtime(d,'next_source_seed','seed_support',{**ex,'bank':str(bank_path),
+                        'proposer':adopt['name'],'explorer_checkpoint':None,'allow_nominal_failure':True},spec['horizon']*(spec['horizon']+1))
+                    if not read(early_nominal/'status.json').get('support_ready',True):
+                        decision=read(d/'promotion.json')
+                        write(d/'promotion.json',{**decision,'panel_promote':decision['promote'],
+                            'promote':False,'reason':'nominal_recovery_failed','source_retained':source['name']})
+                        adopt=None
+                for row in rows:
+                    row['successor_adopted']=adopt is not None
             outcomes=d/'outcomes.json';write(outcomes,rows);support['inputs'][str(outcomes)]=_file_sha(outcomes);support['support_sha256']=canonical_sha256(support);write(d/'witnessed_support.json',support)
             reward,eligible,next_seen,parts=pulse_feedback(rows,seen,spec['reward_weights'],quality_mode=quality_mode)
             feedback=d/'feedback.json';write(feedback,dict(rewards=reward.tolist(),eligible=eligible.tolist(),parts=parts,component_sums={k:float(sum(v)) for k,v in parts.items()},new_cells=len(next_seen)-len(seen),outcomes=str(outcomes),outcomes_sha256=_file_sha(outcomes)))
@@ -401,12 +422,15 @@ def run(spec_path,output):
                     repeated_windows=sum(bool(r['pulse_cells']) and set(r['pulse_cells'])<=set(seen) for r in rows),
                     novelty_component_positive=float(sum(max(x,0.) for x in parts['novelty'])),
                     repeat_component=float(sum(min(x,0.) for x in parts['novelty'])))
+            if adoption_reward:
+                m['adopted_conversions']=sum(r['initial_label']==0 and r['label']==1 and r['learning_attempted'] and r['successor_adopted'] for r in rows)
+                m['adoption_bonus_total']=m['adopted_conversions']*spec['reward_weights']['adoption_bonus']
             metrics.append(dict(round=index+1,source_policy=source_name,pulse_start_step=None if spec.get('pulse_batch_mode')=='mixed' else pulse_delay(spec,index),pulse_batch_mode=spec.get('pulse_batch_mode','single'),successes=sum(r['label']==1 for r in rows),failed_after_learning=sum(r['label']==0 and r['learning_attempted'] for r in rows),new_cells=len(next_seen)-len(seen),charged_interactions=inherited_cost+sum(c['charged_interactions'] for c in costs),reward_novelty=m['reward_components']['novelty'],reward_quality=m['reward_components']['quality'],**{k:v for k,v in m.items() if k!='reward_components'}))
             seen=next_seen;rows_all.extend(rows);write(root/'visited_cells.json',seen);write(root/'training_metrics.json',metrics);export(root,metrics,rows_all);status('round_completed',completed_rounds=index+1)
             if current_only:
                 write(d/'source_ledger.json',dict(source=source_name,cells=seen))
                 if adopt is not None:
-                    nominal=runtime(d,'next_source_seed','seed_support',{**ex,'bank':str(bank_path),
+                    nominal=early_nominal or runtime(d,'next_source_seed','seed_support',{**ex,'bank':str(bank_path),
                         'proposer':adopt['name'],'explorer_checkpoint':None,'allow_nominal_failure':True},spec['horizon']*(spec['horizon']+1))
                     ready=read(nominal/'status.json').get('support_ready',True)
                     if not ready:

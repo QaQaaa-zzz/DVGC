@@ -184,3 +184,31 @@ def recovery_charge(status):
     if total != status['charged_interactions']:
         raise ValueError('recovery cost total mismatch')
     return total
+
+
+def completed_recovery_boundary(root):
+    """Recover a committed outer-round boundary, including first-ever failures."""
+    root=Path(root).resolve()
+    status=read(root/'status.json')
+    if status['phase'] not in ('error','failed','blocked'):
+        raise ValueError('only a stopped lineage can be recovered')
+    completed=len(read(root/'training_metrics.json'))
+    if not (root/'current_source.json').exists() and (root/'recovery.json').exists():
+        boundary=read(root/'recovery.json')
+        if completed and boundary['completed_rounds']==completed:
+            return {**boundary,'previous':str(root),'charged_interactions':recovery_charge(status)}
+    source=read(root/'current_source.json')
+    if not completed or source['completed_rounds']!=completed:
+        raise ValueError('round metrics precede source adoption; a completed boundary is required')
+    prior=f'round_{completed-1:04d}'
+    try:
+        support=lineage_artifact(root,prior+'/next_training_support.json')
+    except FileNotFoundError:
+        support=lineage_artifact(root,prior+'/witnessed_support.json')
+    try:
+        bank=lineage_artifact(root,prior+'/expanded_bank.json')
+    except FileNotFoundError:
+        bank=Path(read(lineage_artifact(root,prior+'/collection_spec.json'))['bank'])
+    return dict(previous=str(root),completed_rounds=completed,source=source['source'],
+        explorer_checkpoint=source['explorer_checkpoint'],bank=str(bank),support=str(support),
+        charged_interactions=recovery_charge(status))

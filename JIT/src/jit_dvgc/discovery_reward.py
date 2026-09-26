@@ -7,6 +7,9 @@ def conversion_feedback(rows, seen, weights):
     required=('novelty','conversion','repeat','failure','pulse_failure')
     if any(k not in weights or not np.isfinite(weights[k]) or weights[k]<0 for k in required):
         raise ValueError('finite nonnegative discovery reward weights required')
+    bonus=weights.get('adoption_bonus',0.)
+    if not np.isfinite(bonus) or bonus<0:
+        raise ValueError('finite nonnegative adoption bonus required')
     old=set(seen); windows=[]
     for row in rows:
         if 'pulse_cells' not in row:
@@ -34,5 +37,10 @@ def conversion_feedback(rows, seen, weights):
                     if fresh else -weights['repeat'])
         if initial==0 and trained:
             quality[i]=weights['conversion'] if final==1 else -weights['failure']
+            if final==1 and bonus:
+                if type(r.get('successor_adopted')) is not bool:
+                    raise ValueError('final adoption decision required before conversion reward')
+                if r['successor_adopted']:
+                    quality[i]+=bonus
     updated=old.union(*windows)
     return novelty+quality,mask,sorted(updated),dict(novelty=novelty.tolist(),quality=quality.tolist())

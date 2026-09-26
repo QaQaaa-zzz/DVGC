@@ -767,7 +767,9 @@ def run_unified_formal(
         }:
             trainer_kwargs["restore_params"] = load_frozen_actor_restore_params(config_path)
             trainer_kwargs["restore_value_fn"] = False
-        make_policy, _params, final_metrics = trainer(**trainer_kwargs)
+        from .ppo_numerics import guard_ppo_updates
+        with guard_ppo_updates(run_dir):
+            make_policy, _params, final_metrics = trainer(**trainer_kwargs)
         if (
             controller.completed_training_transitions
             != config.ppo.requested_transitions

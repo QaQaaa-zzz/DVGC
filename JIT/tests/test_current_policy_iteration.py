@@ -156,3 +156,29 @@ def test_recovery_keeps_incomplete_stage_maximum_charged():
     assert iteration.recovery_charge(status) == 40
     status['costs'][1]['charged_interactions']=19
     with pytest.raises(ValueError): iteration.recovery_charge(status)
+
+def test_recovery_boundary_works_without_prior_recovery_file(tmp_path):
+    from jit_dvgc.jump_evidence_validation import write
+    d=tmp_path/'round_0000';d.mkdir()
+    write(tmp_path/'status.json',{'phase':'error','charged_interactions':99,'inherited_interactions':99,'costs':[]})
+    write(tmp_path/'training_metrics.json',[{'round':1}])
+    write(tmp_path/'current_source.json',dict(completed_rounds=1,source='pi',explorer_checkpoint='explorer'))
+    write(d/'next_training_support.json',{})
+    write(d/'expanded_bank.json',{})
+    b=iteration.completed_recovery_boundary(tmp_path)
+    assert b['previous']==str(tmp_path) and b['completed_rounds']==1
+    assert b['support']==str(d/'next_training_support.json') and b['charged_interactions']==99
+    write(tmp_path/'current_source.json',dict(completed_rounds=0))
+    with pytest.raises(ValueError,match='adoption'):
+        iteration.completed_recovery_boundary(tmp_path)
+
+def test_repeated_recovery_without_new_round_reuses_committed_boundary(tmp_path):
+    from jit_dvgc.jump_evidence_validation import write
+    old=tmp_path/'old';old.mkdir();root=tmp_path/'resumed';root.mkdir()
+    write(root/'status.json',dict(phase='error',charged_interactions=200,inherited_interactions=200,costs=[]))
+    write(root/'training_metrics.json',[{'round':1}])
+    boundary=dict(previous=str(old),completed_rounds=1,source='pi',bank='bank',support='support',explorer_checkpoint='explorer',charged_interactions=100)
+    write(root/'recovery.json',boundary)
+    result=iteration.completed_recovery_boundary(root)
+    assert result['previous']==str(root) and result['charged_interactions']==200
+    assert result['source']=='pi' and result['completed_rounds']==1

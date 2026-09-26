@@ -131,7 +131,30 @@ def check_execution_gate(
             query = subprocess.run(['nvidia-smi', '--query-compute-apps=pid,used_memory',
                 '--format=csv,noheader,nounits'], check=True, text=True,
                 capture_output=True, timeout=10)
-            result = gpu_idle_assessment(query.stdout)
+            inventory=query.stdout
+            exempt=[]
+            allowed=gate.get('allowed_compute_executables',[])
+            if not isinstance(allowed,list) or any(not isinstance(p,str) or not p.startswith('/') for p in allowed):
+                raise ValueError('allowed compute executables must be explicit absolute paths')
+            if allowed:
+                remaining=[]
+                for row in inventory.splitlines():
+                    if not row.strip():continue
+                    fields=row.split(',')
+                    if len(fields)!=2 or not all(x.strip().isdigit() for x in fields):
+                        remaining.append(row);continue
+                    pid,memory_mib=map(int,fields)
+                    try:
+                        executable=os.readlink(f'/proc/{pid}/exe')
+                    except OSError:
+                        executable=None
+                    if executable in allowed and memory_mib<=1024:
+                        exempt.append(row.strip())
+                    else:
+                        remaining.append(row)
+                inventory='\n'.join(remaining)
+            result = gpu_idle_assessment(inventory)
+            result['exempt_compute_processes']=exempt
             if 'minimum_free_mib' in gate:
                 minimum = gate['minimum_free_mib']
                 if type(minimum) is not int or minimum <= 0:
