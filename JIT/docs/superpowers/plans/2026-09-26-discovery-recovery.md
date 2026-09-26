@@ -11,3 +11,7 @@ User authorized implementation, verification and bounded continuation on 2026-09
 - [ ] Run matched development evaluation of available final models after completion; finite queued budget and no final TEST. Report actual completion versus waiting/running, commit and push only relevant changes.
 
 No physics, success criterion, initial pose, perturbation semantics or historical artifacts change. A GPU desktop process is not a competing training task; never kill external processes. Numerical retries remain bounded; do not promise arbitrary simulations cannot fail.
+
+## Execution receipt
+
+Code2c58dae;100 CPU tests pass. Independent code review completed; explicit optimizer gating and repeated recovery were corrected. Diagnostic replay completed128000+184 interactions without reproducing the NaN, so root-cause task remains unresolved. Recovery CLI preparation and hash locks validated on actual89-round artifacts. Formal GPU validation and continuation are queued under idle gates, not yet completed. Original random queue supervisor was safely replaced while waiting with zero reservations. Optional adopted reward remains separately opt-in and unlaunched. Final-model matched evaluation remains pending model completion.

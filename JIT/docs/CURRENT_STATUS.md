@@ -1,5 +1,16 @@
 # JIT 当前状态与证据
 
+
+## 2026-09-26 Phase U numerical recovery queued
+
+The discovery arm completed89 outer rounds and failed in round0089 jump-policy PPO at48000 reported transitions (44800 completed), with nonfinite state/reward/optimizer metrics. A same-config/seed instrumented diagnostic replay completed128000 PPO+184 TRAIN-panel transitions without reproducing the failure; its first cause is still unresolved. No claim of permanently eliminating NaNs.
+
+Frozen code2c58dae adds explicit finite optimizer-proposal rejection (parameters and Adam state retained), first-invalid-batch evidence, initial/repeated recovery support and explicit small desktop-process exemptions under the20000MiB GPU margin.100 CPU tests passed; independent review findings addressed. The new GPU validation is queued before formal recovery; it is not yet a passed production check.
+
+Live sequence: original failed-workload GPU validation → original-reward discovery89→100 → matched Phase U random100. At launch the sequence is waiting for external GPU work, zero new reserved interactions; original failed status and89-round data remain immutable. Only the verified never-started old random queue supervisor was replaced. Each GPU child rechecks idle resources and waits; no external process is stopped. Notifications and JIT TensorBoard6012/6013 point to the new directories.
+
+[Recovery and queue index](../runs/experiments/phase_u_discovery100_20260920/nan_recovery_20260926/INDEX.md), [diagnostic report](../runs/monitoring/phase_u_nan_20260926/REPORT.md). The optional adopted-conversion reward is implemented and tested (local0.2+adopted1.8), but not enabled halfway through the original matched100-round experiment. Neither its learning benefit nor final-model matched evaluation is yet verified.
+
 ## 2026-09-20 Phase U conversion-first exploration
 
 User-authorized fresh100-round experiment: Phase U transition4988928, fresh symmetric explorer, conversion+2 / novelty≤0.05 / repeat−0.1 / failed retraining−0.5 / physical pulse failure−5. [Method and boundaries](DISCOVERY_CONVERSION.md). Prepared under `runs/experiments/phase_u_discovery100_20260920`; it queues after the previously authorized random100, preserving both existing queues. Initial Phase U parameters are unchanged in a zero-training full-task runtime binding.70 CPU tests passed; GPU seed-support validation remains pending behind the queue. No formal TEST.
