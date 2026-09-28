@@ -88,6 +88,15 @@ def test_checked_in_pitch40_config_resolves(jit_root):
     assert cfg.formal.checkpoint_transitions[-1] == cfg.ppo.requested_transitions
 
 
+def test_checked_in_pitch65_config_resolves(jit_root):
+    path = jit_root / "configs/jump_ori_sim2sim_pitch65_10m_seed820705_20260928.json"
+    cfg = load_config(path)
+    assert cfg.ppo.seed == 820705
+    assert cfg.physical_limits.max_abs_pitch == pytest.approx(np.deg2rad(65.0))
+    assert cfg.formal.checkpoint_transitions[-1] == cfg.ppo.requested_transitions
+    assert cfg.formal.fixed_evaluation_transitions == ()
+
+
 @pytest.mark.parametrize(
     ("mutate", "message"),
     [
