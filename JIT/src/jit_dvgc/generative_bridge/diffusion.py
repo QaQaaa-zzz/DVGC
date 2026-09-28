@@ -148,13 +148,16 @@ def select_checkpoint(scored):
 
 
 def train_pretrain(initial,corpus,*,predict,dev_fixture,output,identity,updates,
+                   charged_updates_before,
                    batch_size=256,max_updates=20000,warmup_updates=1000,
                    learning_rate=1e-4,min_learning_rate=1e-5,
                    validation_every=1000,max_wall_seconds):
     """Train on admitted real H16 windows; return the selected complete state.
 
-    ``updates`` is this invocation's charged update cap. ``max_updates`` is the
-    schedule's total cap, so a checkpoint can continue with its global counter.
+    ``updates`` is this invocation's charged update cap. The caller must pass
+    cumulative prior charged optimizer attempts, including discarded work;
+    checkpoint age alone cannot establish remaining budget. ``max_updates`` is
+    both the total charged cap and the learning-rate schedule's horizon.
     An existing output is never replayed automatically: reconcile its receipts
     and start a new attempt from a selected full-state checkpoint explicitly.
     """
@@ -168,16 +171,23 @@ def train_pretrain(initial,corpus,*,predict,dev_fixture,output,identity,updates,
     schedule=pretrain_learning_rate(max_updates=max_updates,warmup_updates=warmup_updates,
                                     learning_rate=learning_rate,min_learning_rate=min_learning_rate)
     if (type(updates) is not int or updates<=0 or start_update<0
-        or start_update+updates>max_updates or type(batch_size) is not int or batch_size<=0
+        or type(charged_updates_before) is not int
+        or charged_updates_before<start_update
+        or charged_updates_before+updates>max_updates or start_update+updates>max_updates
+        or type(batch_size) is not int or batch_size<=0
         or type(validation_every) is not int or validation_every<=0
         or not np.isfinite(max_wall_seconds) or max_wall_seconds<=0):
         raise ValueError('declared bounded pretraining update, batch and wall budget required')
     if not _finite(initial):raise FloatingPointError('nonfinite initial generator state')
-    if not corpus.get('groups') or not any(corpus['groups'].values()):
+    if (not corpus.get('groups') or not any(corpus['groups'].values())
+        or any(len(trace['arrays']['normalized_action_executed'])<16
+               for traces in corpus['groups'].values() for trace in traces)):
         raise ValueError('admitted real generator corpus required')
     observations,actions,k,eps=map(jp.asarray,dev_fixture)
-    if (np.shape(observations)!=(len(actions),76) or np.shape(actions)[1:]!=(16,4)
+    if (len(actions)==0 or np.shape(observations)!=(len(actions),76)
+        or np.shape(actions)[1:]!=(16,4)
         or np.shape(k)!=(len(actions),) or np.shape(eps)!=np.shape(actions)
+        or np.asarray(dev_fixture[2]).dtype.kind not in 'iu'
         or not _finite(dev_fixture) or np.any(np.asarray(k)<0) or np.any(np.asarray(k)>=100)
         or np.any(np.abs(np.asarray(actions))>1)):
         raise ValueError('invalid fixed generator dev fixture')
@@ -202,6 +212,8 @@ def train_pretrain(initial,corpus,*,predict,dev_fixture,output,identity,updates,
             obs,act,sources=sample_corpus(corpus,np.random.default_rng(seed),batch_size)
             # Charge before proposing an update: a failed/nonfinite attempt is not free.
             atomic_json(root/'cost_progress.json',{'charged_updates':i+1,
+                        'charged_updates_before':charged_updates_before,
+                        'total_charged_updates':charged_updates_before+i+1,
                         'initial_updates':start_update})
             state,value=step({**state,'rng':next_rng},jp.asarray(obs),jp.asarray(act))
             count=start_update+i+1
@@ -219,12 +231,15 @@ def train_pretrain(initial,corpus,*,predict,dev_fixture,output,identity,updates,
                 'requested_mix':corpus.get('requested_mix'),
                 'realized_mix':corpus.get('realized_mix'),
                 'wall_seconds':time.monotonic()-started,'environment_interactions':0,
-                'charged_updates':updates,'metrics':logs}
+                'charged_updates':updates,'charged_updates_before':charged_updates_before,
+                'total_charged_updates':charged_updates_before+updates,'metrics':logs}
         atomic_json(root/'generator_selection.json',report)
         return restored,report
     except BaseException as error:
         atomic_json(root/'failure.json',{'status':'failed','error':repr(error),
-            'charged_updates':json_cost(root),'completed_updates':len(logs),
+            'charged_updates':json_cost(root),'charged_updates_before':charged_updates_before,
+            'total_charged_updates':charged_updates_before+json_cost(root),
+            'completed_updates':len(logs),
             'initial_updates':start_update,'wall_seconds':time.monotonic()-started,
             'environment_interactions':0,'metrics':logs})
         raise

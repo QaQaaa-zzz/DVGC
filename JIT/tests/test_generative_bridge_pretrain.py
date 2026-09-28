@@ -63,6 +63,7 @@ def test_pretrain_selects_fixed_dev_checkpoint_and_restores_full_state(tmp_path)
     selected, report = diffusion.train_pretrain(
         _state(), _corpus(), predict=_predict, dev_fixture=_fixture(),
         output=tmp_path/'pretrain', identity={'source': 'fixture'}, updates=3,
+        charged_updates_before=0,
         max_updates=4, warmup_updates=1, validation_every=2,
         batch_size=2, max_wall_seconds=60)
     assert report['status'] == 'completed' and report['updates'] == 3
@@ -80,7 +81,8 @@ def test_pretrain_selects_fixed_dev_checkpoint_and_restores_full_state(tmp_path)
 def test_pretrain_refuses_over_budget_and_ambiguous_replay(tmp_path):
     kwargs = dict(predict=_predict, dev_fixture=_fixture(), output=tmp_path/'pretrain',
                   identity={'source': 'fixture'}, max_updates=4, warmup_updates=1,
-                  validation_every=2, batch_size=2, max_wall_seconds=60)
+                  validation_every=2, batch_size=2, max_wall_seconds=60,
+                  charged_updates_before=0)
     with pytest.raises(ValueError, match='budget'):
         diffusion.train_pretrain(_state(), _corpus(), updates=5, **kwargs)
     assert not (tmp_path/'pretrain').exists()
@@ -96,6 +98,7 @@ def test_pretrain_failure_charges_attempt_and_keeps_checkpoint(tmp_path):
         diffusion.train_pretrain(
             _state(), _corpus(), predict=nonfinite_predict, dev_fixture=_fixture(),
             output=tmp_path/'failed', identity={'source': 'fixture'}, updates=2,
+            charged_updates_before=0,
             max_updates=4, warmup_updates=1, validation_every=2,
             batch_size=2, max_wall_seconds=60)
     receipt = json.loads((tmp_path/'failed/failure.json').read_text())
@@ -103,3 +106,56 @@ def test_pretrain_failure_charges_attempt_and_keeps_checkpoint(tmp_path):
     assert receipt['charged_updates'] == 1
     assert receipt['completed_updates'] == 0
     assert (tmp_path/'failed/initial/state.msgpack').exists()
+
+
+def test_pretrain_resuming_older_selected_weights_cannot_reuse_charged_budget(tmp_path):
+    def flat_predict(params, x, obs, k):
+        return jnp.zeros_like(x) + 0 * params['w']
+    common = dict(predict=flat_predict, dev_fixture=_fixture(),
+                  identity={'source': 'fixture'}, max_updates=4, warmup_updates=1,
+                  validation_every=2, batch_size=2, max_wall_seconds=60)
+    selected, report = diffusion.train_pretrain(
+        _state(), _corpus(), output=tmp_path/'first', updates=3,
+        charged_updates_before=0, **common)
+    assert report['selected'] == 'initial' and int(selected['updates']) == 0
+    with pytest.raises(ValueError, match='budget'):
+        diffusion.train_pretrain(selected, _corpus(), output=tmp_path/'excess',
+                                 updates=2, charged_updates_before=3, **common)
+    assert not (tmp_path/'excess').exists()
+    _, resumed = diffusion.train_pretrain(selected, _corpus(), output=tmp_path/'last',
+                                          updates=1, charged_updates_before=3, **common)
+    assert resumed['total_charged_updates'] == 4
+    with pytest.raises((TypeError, ValueError)):
+        diffusion.train_pretrain(selected, _corpus(), output=tmp_path/'unaccounted',
+                                 updates=1, **common)
+
+
+@pytest.mark.parametrize('fixture', [
+    (np.zeros((0, 76), np.float32), np.zeros((0, 16, 4), np.float32),
+     np.zeros(0, np.int32), np.zeros((0, 16, 4), np.float32)),
+    (np.zeros((2, 76), np.float32), np.zeros((2, 16, 4), np.float32),
+     np.array([0.5, 99.0]), np.zeros((2, 16, 4), np.float32)),
+    (np.zeros((2, 76), np.float32), np.zeros((2, 16, 4), np.float32),
+     np.array([0, 100], np.int32), np.zeros((2, 16, 4), np.float32)),
+    (np.zeros((2, 76), np.float32), np.zeros((2, 16, 4), np.float32),
+     np.array([0, 99], np.int32), np.full((2, 16, 4), np.nan, np.float32)),
+])
+def test_pretrain_rejects_invalid_fixed_dev_before_creating_attempt(tmp_path, fixture):
+    with pytest.raises(ValueError, match='fixture'):
+        diffusion.train_pretrain(_state(), _corpus(), predict=_predict,
+            dev_fixture=fixture, output=tmp_path/'attempt', identity={'source': 'fixture'},
+            updates=1, charged_updates_before=0, max_updates=4, warmup_updates=1,
+            batch_size=2, max_wall_seconds=60)
+    assert not (tmp_path/'attempt').exists()
+
+
+def test_pretrain_rejects_train_trace_without_full_window_before_attempt(tmp_path):
+    corpus = _corpus()
+    corpus['groups']['history'][0]['arrays'] = {
+        k: v[:15] for k, v in corpus['groups']['history'][0]['arrays'].items()}
+    with pytest.raises(ValueError, match='corpus'):
+        diffusion.train_pretrain(_state(), corpus, predict=_predict,
+            dev_fixture=_fixture(), output=tmp_path/'attempt', identity={'source': 'fixture'},
+            updates=1, charged_updates_before=0, max_updates=4, warmup_updates=1,
+            batch_size=2, max_wall_seconds=60)
+    assert not (tmp_path/'attempt').exists()
