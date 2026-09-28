@@ -1,0 +1,466 @@
+{
+  "as_of": "2026-09-28T20:09:54+08:00",
+  "code_commit": "5941d6b",
+  "scope": "generative_bridge only; TRAIN/development evidence; no final TEST",
+  "protocol": {
+    "actor": "lineage_repair_0093",
+    "fixed_actor_across_rounds": true,
+    "student_steps_per_round": 128000,
+    "generator_updates_per_round": 2000,
+    "H": 16,
+    "roots_per_round": 32,
+    "original_pending": 162,
+    "different_roots_between_rounds": true,
+    "student_rejected_does_not_stop_series": true
+  },
+  "rounds": [
+    {
+      "run": "recovery_0002",
+      "status": {
+        "charged_interactions": 331449,
+        "phase": "completed",
+        "supervised_updates": 22000,
+        "wall_seconds": 12330.245063304901
+      },
+      "teacher_results_written": 32,
+      "teacher_status_counts": {
+        "verified_solution": 19,
+        "not_scheduled": 13
+      },
+      "selected_teacher_kind": {
+        "diffusion": 16,
+        "colored_noise": 3
+      },
+      "costs": {
+        "physical_charged_or_reserved": 331449,
+        "supervised_updates_charged_or_reserved": 22000,
+        "unfinished_reservations": []
+      },
+      "actor_acceptance": {
+        "actor_sha256": "097fcdbe6a0ac545f0b9cc7e44503bef376d79467a04ed8cb20237c07d2e6a3a",
+        "adopted": false,
+        "counts": {
+          "core": {
+            "gained": 5,
+            "lost": 9,
+            "old_positive": 58,
+            "retained": 49,
+            "unchanged_negative": 1,
+            "unknown": 0
+          },
+          "new_roots": {
+            "gained": 7,
+            "lost": 1,
+            "old_positive": 13,
+            "retained": 12,
+            "unchanged_negative": 12,
+            "unknown": 0
+          },
+          "nominal": {
+            "gained": 0,
+            "lost": 0,
+            "old_positive": 1,
+            "retained": 1,
+            "unchanged_negative": 0,
+            "unknown": 0
+          },
+          "protected": {
+            "gained": 7,
+            "lost": 3,
+            "old_positive": 57,
+            "retained": 54,
+            "unchanged_negative": 0,
+            "unknown": 0
+          }
+        },
+        "empirical_development_check": true,
+        "normalizer_sha256": "0a51dfb83e8f5a54b79769582345986d8a4c36021c4e093659d84a4e4e8d4013",
+        "protected_retention": 0.9473684210526315,
+        "thresholds": {
+          "core_max_new_failures": 0,
+          "new_net_gain": 1,
+          "protected_min_retention": 0.98
+        }
+      },
+      "result_matrix": {
+        "cells": [
+          {
+            "adoption": "False",
+            "count": 1,
+            "outcome_class": "teacher_not_scheduled_student_failed"
+          },
+          {
+            "adoption": "False",
+            "count": 12,
+            "outcome_class": "teacher_not_scheduled_student_succeeded"
+          },
+          {
+            "adoption": "False",
+            "count": 12,
+            "outcome_class": "teacher_solved_student_failed"
+          },
+          {
+            "adoption": "False",
+            "count": 7,
+            "outcome_class": "teacher_solved_student_succeeded"
+          },
+          {
+            "adoption": "False",
+            "count": 130,
+            "outcome_class": "unknown_or_incomplete"
+          }
+        ],
+        "teacher_status_counts": {
+          "not_scheduled": 143,
+          "verified_solution": 19
+        },
+        "total_roots": 162
+      },
+      "student": {
+        "status": "completed",
+        "completed_training_transitions": 128000,
+        "requested_training_transitions": 128000,
+        "train_panel_interactions": 174
+      },
+      "ppo_metrics_first_last": [
+        {
+          "steps": 3200,
+          "training/demo_action_mse": 0.01584053598344326,
+          "training/retention_action_mse": 2.442713412165176e-05,
+          "training/kl_mean": 4.996694564819336,
+          "training/ppo_loss": 187.91830444335938
+        },
+        {
+          "steps": 128000,
+          "training/demo_action_mse": 0.017090097069740295,
+          "training/retention_action_mse": 6.051825766917318e-05,
+          "training/kl_mean": 0.02354414388537407,
+          "training/ppo_loss": 148.71759033203125
+        }
+      ],
+      "G_corpus_counts": {
+        "actor_new": 0,
+        "history": 20,
+        "teacher_new": 19
+      },
+      "G_selection": {
+        "scores": [
+          [
+            0.07682942599058151,
+            "incumbent"
+          ],
+          [
+            0.07454901188611984,
+            "update_0500"
+          ],
+          [
+            0.0732591450214386,
+            "update_1000"
+          ],
+          [
+            0.0727699026465416,
+            "update_1500"
+          ],
+          [
+            0.07276786863803864,
+            "update_2000"
+          ]
+        ],
+        "selected": "update_2000",
+        "updates": 2000,
+        "realized_mix": {
+          "actor_new": 0.0,
+          "history": 0.6666666666666666,
+          "teacher_new": 0.3333333333333333
+        }
+      },
+      "selected_G_manifest_sha256": "c8775107b28424913a2adf5901423954e1209208ffece265ef36ec52a47f1f05",
+      "selected_actor_sha256": "74b64570a93b3e8c317788decfcd4870e71701fa0388674a244e9abff64d86ee",
+      "corpus_sha256": "5fb6f90f3295284626dac871c193d675894fe387a20cdf48297c635d55259ea1"
+    },
+    {
+      "run": "series_0001/round_0001",
+      "status": {
+        "charged_interactions": 386365,
+        "phase": "completed",
+        "supervised_updates": 2000,
+        "wall_seconds": 4219.36353468895
+      },
+      "teacher_results_written": 32,
+      "teacher_status_counts": {
+        "verified_solution": 21,
+        "not_scheduled": 11
+      },
+      "selected_teacher_kind": {
+        "colored_noise": 3,
+        "diffusion": 18
+      },
+      "costs": {
+        "physical_charged_or_reserved": 386365,
+        "supervised_updates_charged_or_reserved": 2000,
+        "unfinished_reservations": []
+      },
+      "actor_acceptance": {
+        "actor_sha256": "dc5498bf7972e9669ac405e42ab0e2eadd73c0edfc110fe8209424d65c9c933b",
+        "adopted": false,
+        "counts": {
+          "core": {
+            "gained": 5,
+            "lost": 8,
+            "old_positive": 58,
+            "retained": 50,
+            "unchanged_negative": 1,
+            "unknown": 0
+          },
+          "new_roots": {
+            "gained": 10,
+            "lost": 0,
+            "old_positive": 11,
+            "retained": 11,
+            "unchanged_negative": 11,
+            "unknown": 0
+          },
+          "nominal": {
+            "gained": 0,
+            "lost": 0,
+            "old_positive": 1,
+            "retained": 1,
+            "unchanged_negative": 0,
+            "unknown": 0
+          },
+          "protected": {
+            "gained": 5,
+            "lost": 7,
+            "old_positive": 57,
+            "retained": 50,
+            "unchanged_negative": 2,
+            "unknown": 0
+          }
+        },
+        "empirical_development_check": true,
+        "normalizer_sha256": "2c1036c8208352743a7647f6e914b5e1a86cf7a58100f3a41a045ad93eafd0c0",
+        "protected_retention": 0.8771929824561403,
+        "thresholds": {
+          "core_max_new_failures": 0,
+          "new_net_gain": 1,
+          "protected_min_retention": 0.98
+        }
+      },
+      "result_matrix": {
+        "cells": [
+          {
+            "adoption": "False",
+            "count": 11,
+            "outcome_class": "teacher_not_scheduled_student_succeeded"
+          },
+          {
+            "adoption": "False",
+            "count": 11,
+            "outcome_class": "teacher_solved_student_failed"
+          },
+          {
+            "adoption": "False",
+            "count": 10,
+            "outcome_class": "teacher_solved_student_succeeded"
+          },
+          {
+            "adoption": "False",
+            "count": 130,
+            "outcome_class": "unknown_or_incomplete"
+          }
+        ],
+        "teacher_status_counts": {
+          "not_scheduled": 141,
+          "verified_solution": 21
+        },
+        "total_roots": 162
+      },
+      "student": {
+        "status": "completed",
+        "completed_training_transitions": 128000,
+        "requested_training_transitions": 128000,
+        "train_panel_interactions": 172
+      },
+      "ppo_metrics_first_last": [
+        {
+          "steps": 3200,
+          "training/demo_action_mse": 0.010985860601067543,
+          "training/retention_action_mse": 2.2463682398665696e-05,
+          "training/kl_mean": 4.25666618347168,
+          "training/ppo_loss": 186.06109619140625
+        },
+        {
+          "steps": 128000,
+          "training/demo_action_mse": 0.010850373655557632,
+          "training/retention_action_mse": 0.00018080233712680638,
+          "training/kl_mean": 0.007631590589880943,
+          "training/ppo_loss": 145.1031494140625
+        }
+      ],
+      "G_corpus_counts": {
+        "actor_new": 0,
+        "history": 39,
+        "teacher_new": 21
+      },
+      "G_selection": {
+        "scores": [
+          [
+            0.07276786863803864,
+            "incumbent"
+          ],
+          [
+            0.07041364908218384,
+            "update_0500"
+          ],
+          [
+            0.06887241452932358,
+            "update_1000"
+          ],
+          [
+            0.06798351556062698,
+            "update_1500"
+          ],
+          [
+            0.06759215891361237,
+            "update_2000"
+          ]
+        ],
+        "selected": "update_2000",
+        "updates": 2000,
+        "realized_mix": {
+          "actor_new": 0.0,
+          "history": 0.6666666666666666,
+          "teacher_new": 0.3333333333333333
+        }
+      },
+      "selected_G_manifest_sha256": "6fda4dc6c6125d20f8baa3e4c74bf289ac673de8b15b9d7f6dc062b9f9a0d39a",
+      "selected_actor_sha256": "74b64570a93b3e8c317788decfcd4870e71701fa0388674a244e9abff64d86ee",
+      "corpus_sha256": "4b7c957f709567feea74f78780e7a4b9b8fb5c193efeb51d69e18e5891f548be"
+    },
+    {
+      "run": "series_0001/round_0002",
+      "status": {
+        "charged_interactions": 180783,
+        "phase": "running",
+        "stage": "replay_batch_0027",
+        "supervised_updates": 0,
+        "wall_seconds": 14281.49172592163
+      },
+      "teacher_results_written": 27,
+      "teacher_status_counts": {
+        "not_scheduled": 12,
+        "verified_solution": 15
+      },
+      "selected_teacher_kind": {
+        "diffusion": 13,
+        "colored_noise": 2
+      },
+      "costs": {
+        "physical_charged_or_reserved": 180783,
+        "supervised_updates_charged_or_reserved": 0,
+        "unfinished_reservations": [
+          {
+            "stage": "replay_batch_0027",
+            "maximum_physics": 12400
+          }
+        ]
+      }
+    }
+  ],
+  "source_files": [
+    {
+      "path": "recovery_0002/status.json",
+      "sha256": "d881289f307b00e46dfff459a7db09ee8152d6d67eb43e90545d4469e7cb72ff"
+    },
+    {
+      "path": "recovery_0002/costs.json",
+      "sha256": "e26983884874ad58f3bbe87357f0d64371d36d351be58b7c8d8bd4b2cdc69aa4"
+    },
+    {
+      "path": "recovery_0002/actor_acceptance.json",
+      "sha256": "e13b299d71512cc2d582adbf3bf55f5fee303071e8e2f4f5f8e6f4fc8739dbe8"
+    },
+    {
+      "path": "recovery_0002/result_matrix.json",
+      "sha256": "0273ca7aca9ffaf94353a3b11b1f2e11131b166358c39f82dc9196369e0b57d9"
+    },
+    {
+      "path": "recovery_0002/student/training/recovery_0002_student/formal_report.json",
+      "sha256": "efe07916bde92d88aa9208047a1b762031079dc6783404dc5907dbcc11746768"
+    },
+    {
+      "path": "recovery_0002/updated_corpus/manifest.json",
+      "sha256": "5fb6f90f3295284626dac871c193d675894fe387a20cdf48297c635d55259ea1"
+    },
+    {
+      "path": "recovery_0002/generator_incremental/attempt_0000/generator_selection.json",
+      "sha256": "252aa204001fa7916ea618871c9d93d25d230bc0658f8cdd0aff79cc677c2115"
+    },
+    {
+      "path": "recovery_0002/current_source.json",
+      "sha256": "5a046e9d3b701872f6b6f356c9c9a4698e0d7455642309640d4229ec589e5e74"
+    },
+    {
+      "path": "series_0001/round_0001/status.json",
+      "sha256": "f7d4a95edb51bfa410fb15fa255c3964f2a38cafcefc47941f51b0ecdf5e4cd0"
+    },
+    {
+      "path": "series_0001/round_0001/costs.json",
+      "sha256": "ba57e1180f43a1372c15f32dfb333de0dccc4dcfd678b9c4c44cd2d0a395caea"
+    },
+    {
+      "path": "series_0001/round_0001/actor_acceptance.json",
+      "sha256": "2518ace22ae10dd1a0ddc0bc99b082c902826be8290146bb8a3854f4c5718ebc"
+    },
+    {
+      "path": "series_0001/round_0001/result_matrix.json",
+      "sha256": "87b52683fd1ec1747cd9f9a1398a418864c681437291fc1f9cfa68188946fcf8"
+    },
+    {
+      "path": "series_0001/round_0001/student/training/round_0001_student/formal_report.json",
+      "sha256": "7f219dda11155c28f525f1d1243f754451c7a740f48db47d3539a420e8db4333"
+    },
+    {
+      "path": "series_0001/round_0001/updated_corpus/manifest.json",
+      "sha256": "4b7c957f709567feea74f78780e7a4b9b8fb5c193efeb51d69e18e5891f548be"
+    },
+    {
+      "path": "series_0001/round_0001/generator_incremental/attempt_0000/generator_selection.json",
+      "sha256": "2437bb35b8daec24d962833b2b142b6468a66db62180c5c1c87cfd70fb287003"
+    },
+    {
+      "path": "series_0001/round_0001/current_source.json",
+      "sha256": "34808737d624ab931c45546da0f6836448cf95d65b169ecd941a642dbf4c08f7"
+    },
+    {
+      "path": "series_0001/round_0002/status.json",
+      "sha256": "6abbb0d95536b90a52aedd50e09e3a3d29c473dc4e0f5d05c873e3c1b1d78af6"
+    },
+    {
+      "path": "series_0001/round_0002/costs.json",
+      "sha256": "b7e7288a5edfee06ea53b2ca9025dc8636830bff7448a1d63cfc82af511b34a0"
+    },
+    {
+      "path": "series_0001/status.json",
+      "sha256": "631d23a1e526658922fab0cfb6723f00786b9ea8cd169e809986d360260825a4"
+    }
+  ],
+  "series_status": {
+    "completed_rounds": 1,
+    "current_round": "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_1_20260928/series_0001/round_0002",
+    "lifetime_physics_charged_or_reserved": 717814,
+    "new_physics_charged_or_reserved": 386365,
+    "new_supervised_updates_charged": 2000,
+    "phase": "running",
+    "round": 2
+  },
+  "lifetime_physical_charged_or_reserved": 898597,
+  "lifetime_supervised_updates_charged_or_reserved": 24000,
+  "warnings": [
+    "Partial round counters are not final; reservations are not measured physical steps.",
+    "Each round uses different TRAIN roots; 7/19 versus 10/21 is descriptive, not a paired causal gain.",
+    "No student adopted so far; actor_new corpus remains empty.",
+    "Selected diffusion teacher counts do not establish generator superiority over equal-budget random search.",
+    "Same batch replay still has numerical outcome variation; conflicting selected demonstrations stop execution."
+  ]
+}
