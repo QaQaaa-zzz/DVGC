@@ -97,6 +97,34 @@ def test_checked_in_pitch65_config_resolves(jit_root):
     assert cfg.formal.fixed_evaluation_transitions == ()
 
 
+def test_checked_in_pitch65_low_speed_config_resolves(jit_root):
+    path = jit_root / "configs/jump_ori_sim2sim_pitch65_vx05_10m_seed820706_20260928.json"
+    cfg = load_config(path)
+    assert cfg.ppo.seed == 820706
+    assert cfg.physical_limits.max_abs_pitch == pytest.approx(np.deg2rad(65.0))
+    assert cfg.sim2sim_low_speed_failure.minimum_forward_velocity_mps == 0.5
+    assert cfg.sim2sim_low_speed_failure.failed_episode_return == -1000.0
+    assert cfg.formal.checkpoint_transitions[-1] == 10_002_432
+
+
+@pytest.mark.parametrize(
+    ("change", "message"),
+    [
+        (lambda p: p["reward"].update(height_coeff=41), "low speed failure method drift"),
+        (lambda p: p["sim2sim_low_speed_failure"].update(sha256="0" * 64), "low speed failure predecessor.*hash"),
+        (lambda p: p["sim2sim_low_speed_failure"].update(failed_episode_return=1000), "low speed failed episode return"),
+    ],
+)
+def test_pitch65_low_speed_config_rejects_drift(jit_root, tmp_path, change, message):
+    source = jit_root / "configs/jump_ori_sim2sim_pitch65_vx05_10m_seed820706_20260928.json"
+    payload = json.loads(source.read_text())
+    change(payload)
+    path = tmp_path / "invalid.json"
+    path.write_text(json.dumps(payload))
+    with pytest.raises(ValueError, match=message):
+        load_config(path)
+
+
 @pytest.mark.parametrize(
     ("mutate", "message"),
     [

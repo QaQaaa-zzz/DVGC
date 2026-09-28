@@ -81,6 +81,7 @@ END_YAW_LIMIT = 10
 END_JUMP_ZONE_MISSED = 11
 END_RECOVERY_SUCCESS = 12
 END_FIRST_VALID_LANDING = 13
+END_LOW_FORWARD_SPEED = 14
 
 END_REASONS = {
     END_ONGOING: "ongoing",
@@ -97,4 +98,5 @@ END_REASONS = {
     END_JUMP_ZONE_MISSED: "jump_zone_missed",
     END_RECOVERY_SUCCESS: "recovery_success",
     END_FIRST_VALID_LANDING: "first_valid_landing",
+    END_LOW_FORWARD_SPEED: "low_forward_speed",
 }

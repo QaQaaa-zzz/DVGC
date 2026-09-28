@@ -572,6 +572,7 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
             stuck=previous_up.stuck,
             yaw=geometry.yaw,
             jump_zone_seen=previous_up.jump_zone_seen,
+            forward_velocity=data.qvel[index.root_dof_address],
         )
         preliminary = classify_terminal(preliminary_inputs, self._resolved_config)
         up_events = advance_events(

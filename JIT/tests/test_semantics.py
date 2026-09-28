@@ -10,6 +10,7 @@ from jit_dvgc.constants import (
     END_ONGOING,
     END_PITCH_LIMIT,
     END_JUMP_ZONE_MISSED,
+    END_LOW_FORWARD_SPEED,
     END_ROLL_LIMIT,
     END_STUCK,
     END_TIMEOUT,
@@ -220,9 +221,25 @@ def _terminal_inputs(**overrides) -> TerminalInputs:
         stuck=jp.array(False),
         yaw=jp.array(0.0),
         jump_zone_seen=jp.array(True),
+        forward_velocity=jp.array(2.0),
     )
     values.update(overrides)
     return TerminalInputs(**values)
+
+
+@pytest.mark.parametrize(("speed", "failed"), [(0.49, True), (0.5, False), (2.0, False)])
+def test_pitch65_low_speed_failure_is_immediate_and_strict(jit_root, speed, failed):
+    config = load_config(jit_root / "configs/jump_ori_sim2sim_pitch65_vx05_10m_seed820706_20260928.json")
+    terminal = classify_terminal(_terminal_inputs(forward_velocity=jp.array(speed)), config)
+    assert bool(terminal.low_forward_speed) is failed
+    assert bool(terminal.terminated) is failed
+    assert int(terminal.end_code) == (END_LOW_FORWARD_SPEED if failed else END_ONGOING)
+
+
+def test_pitch65_without_low_speed_rule_keeps_old_terminal_semantics(jit_root):
+    config = load_config(jit_root / "configs/jump_ori_sim2sim_pitch65_10m_seed820705_20260928.json")
+    terminal = classify_terminal(_terminal_inputs(forward_velocity=jp.array(0.4)), config)
+    assert not bool(terminal.terminated)
 
 
 def test_horizon_is_truncated_not_terminated(config):

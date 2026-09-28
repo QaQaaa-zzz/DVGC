@@ -130,6 +130,12 @@ class Sim2SimRandomizationConfig:
 
 
 @dataclass(frozen=True)
+class Sim2SimLowSpeedFailureConfig:
+    minimum_forward_velocity_mps: float
+    failed_episode_return: float
+
+
+@dataclass(frozen=True)
 class PhysicalLimits:
     max_abs_roll: float
     max_abs_pitch: float
@@ -219,6 +225,7 @@ class ResolvedConfig:
     formal: FormalTrainingConfig | None
     descent: DescentConfig | None = None
     sim2sim_randomization: Sim2SimRandomizationConfig | None = None
+    sim2sim_low_speed_failure: Sim2SimLowSpeedFailureConfig | None = None
 
 
 def _dataclass_from(cls: type, payload: Mapping[str, Any]):
@@ -413,6 +420,27 @@ def _validate_sim2sim_v4(
     if prior.schema != "jit_phase_u_formal_v4" or prior.formal is None:
         raise ValueError("sim2sim reference must be a formal Phase U v4 config")
     pitch_revision = payload.get("sim2sim_pitch_limit_revision")
+    low_speed_revision = payload.get("sim2sim_low_speed_failure")
+    if low_speed_revision is not None:
+        if not isinstance(low_speed_revision, Mapping) or set(low_speed_revision) != {
+            "resolved_config", "sha256", "minimum_forward_velocity_mps", "failed_episode_return",
+        }:
+            raise ValueError("low speed failure must identify a pinned config and exact rule")
+        previous_path = Path(str(low_speed_revision["resolved_config"]))
+        if (not previous_path.is_absolute() or not previous_path.is_file()
+                or file_sha256(previous_path) != low_speed_revision["sha256"]):
+            raise ValueError("low speed failure predecessor file or hash mismatch")
+        previous = load_config(previous_path)
+        if previous.sim2sim_randomization is None or previous.sim2sim_low_speed_failure is not None:
+            raise ValueError("low speed failure predecessor must be a randomized config without this rule")
+        predecessor_identity = copy.deepcopy(dict(previous.raw))
+        successor_identity = copy.deepcopy(dict(payload))
+        successor_identity.pop("sim2sim_low_speed_failure")
+        successor_identity["ppo"]["seed"] = predecessor_identity["ppo"]["seed"]
+        if successor_identity != predecessor_identity:
+            raise ValueError("low speed failure method drift")
+        if ppo.seed == previous.ppo.seed:
+            raise ValueError("low speed failure training must have an independent seed")
     if pitch_revision is not None:
         if not isinstance(pitch_revision, Mapping) or set(pitch_revision) != {
             "resolved_config", "sha256", "new_max_abs_pitch_rad",
@@ -433,6 +461,7 @@ def _validate_sim2sim_v4(
         predecessor_identity = copy.deepcopy(dict(previous.raw))
         revision_identity = copy.deepcopy(dict(payload))
         revision_identity.pop("sim2sim_pitch_limit_revision")
+        revision_identity.pop("sim2sim_low_speed_failure", None)
         revision_identity["ppo"]["seed"] = predecessor_identity["ppo"]["seed"]
         revision_identity["physical_limits"]["max_abs_pitch"] = predecessor_identity["physical_limits"]["max_abs_pitch"]
         if revision_identity != predecessor_identity:
@@ -443,6 +472,7 @@ def _validate_sim2sim_v4(
     candidate_identity.pop("sim2sim_reference")
     candidate_identity.pop("sim2sim_randomization")
     candidate_identity.pop("sim2sim_pitch_limit_revision", None)
+    candidate_identity.pop("sim2sim_low_speed_failure", None)
     reference_identity = copy.deepcopy(dict(prior.raw))
     reference_identity.pop("rerun_reference", None)
     candidate_identity["ppo"]["seed"] = reference_identity["ppo"]["seed"]
@@ -485,6 +515,16 @@ def _parse_sim2sim_randomization(raw: Mapping[str, Any]) -> Sim2SimRandomization
             raise ValueError(f"sim2sim {name} halfwidth must be nonnegative")
         parsed[name] = numbers
     return Sim2SimRandomizationConfig(**parsed)
+
+
+def _parse_sim2sim_low_speed_failure(raw: Mapping[str, Any]) -> Sim2SimLowSpeedFailureConfig:
+    minimum = float(raw["minimum_forward_velocity_mps"])
+    failed_return = float(raw["failed_episode_return"])
+    if not math.isfinite(minimum) or minimum <= 0.0:
+        raise ValueError("low speed minimum forward velocity must be positive and finite")
+    if not math.isfinite(failed_return) or failed_return >= 0.0:
+        raise ValueError("low speed failed episode return must be negative and finite")
+    return Sim2SimLowSpeedFailureConfig(minimum, failed_return)
 
 
 def _validate_generated_v4(
@@ -882,6 +922,7 @@ def resolve_config_payload(payload: Mapping[str, Any], *, runtime_only: bool = F
     historical_rerun_v4 = "rerun_reference" in payload
     sim2sim_v4 = any(field in payload for field in (
         "sim2sim_reference", "sim2sim_randomization", "sim2sim_pitch_limit_revision",
+        "sim2sim_low_speed_failure",
     ))
     if historical_rerun_v4 and (schema != "jit_phase_u_formal_v4" or generated_v4):
         raise ValueError("rerun reference is only valid for historical v4 fresh training")
@@ -890,6 +931,10 @@ def resolve_config_payload(payload: Mapping[str, Any], *, runtime_only: bool = F
     sim2sim_randomization = (
         _parse_sim2sim_randomization(payload.get("sim2sim_randomization"))
         if sim2sim_v4 else None
+    )
+    low_speed_failure = (
+        _parse_sim2sim_low_speed_failure(payload["sim2sim_low_speed_failure"])
+        if payload.get("sim2sim_low_speed_failure") is not None else None
     )
 
     ppo_payload = dict(payload["ppo"])
@@ -1056,6 +1101,7 @@ def resolve_config_payload(payload: Mapping[str, Any], *, runtime_only: bool = F
         formal=formal,
         descent=descent,
         sim2sim_randomization=sim2sim_randomization,
+        sim2sim_low_speed_failure=low_speed_failure,
     )
 
 

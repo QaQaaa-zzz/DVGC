@@ -203,6 +203,7 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
             "reward/pre_episode_return_override": zero,
             "reward/unclipped_pre_episode_return_override": zero,
             "reward/episode_return_override": zero,
+            "reward/low_forward_speed_override": zero,
         }
         metrics.update({f"reward/{key}": zero for key in REWARD_COMPONENT_KEYS})
         for key in (
@@ -239,6 +240,7 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
             "signal/knee_force",
             "signal/joint_power",
             "terminal/physical_failure",
+            "terminal/low_forward_speed",
             "terminal/roll_limit",
             "terminal/pitch_limit",
             "terminal/jump_zone_missed",
@@ -339,6 +341,7 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
             "reward/pre_episode_return_override": jp.asarray(0., jp.float32),
             "reward/unclipped_pre_episode_return_override": jp.asarray(0., jp.float32),
             "reward/episode_return_override": jp.asarray(0., jp.float32),
+            "reward/low_forward_speed_override": jp.asarray(0., jp.float32),
             "reward/descent_roll_posture": jp.asarray(0., jp.float32),
             "reward/descent_pitch_posture": jp.asarray(0., jp.float32),
             "reward/descent_roll_rate": jp.asarray(0., jp.float32),
@@ -358,6 +361,7 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
             "terminal/descent_physical_failure": jp.asarray(0., jp.float32),
             "terminal/descent_timeout": jp.asarray(0., jp.float32),
             "terminal/physical_failure": jp.asarray(0., jp.float32),
+            "terminal/low_forward_speed": jp.asarray(0., jp.float32),
             "terminal/roll_limit": jp.asarray(0., jp.float32),
             "terminal/pitch_limit": jp.asarray(0., jp.float32),
             "terminal/jump_zone_missed": jp.asarray(0., jp.float32),
@@ -462,6 +466,7 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
             "end_code": jp.asarray(END_ONGOING, jp.int32),
             "success": false,
             "physical_failure": false,
+            "low_forward_speed": false,
             "roll_limit": false,
             "pitch_limit": false,
             "jump_zone_missed": false,
@@ -518,6 +523,7 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
             stuck=previous_events.stuck,
             yaw=geometry.yaw,
             jump_zone_seen=previous_events.jump_zone_seen,
+            forward_velocity=data.qvel[index.root_dof_address],
         )
         preliminary = classify_terminal(preliminary_inputs, self._resolved_config)
         events = advance_events(
@@ -573,6 +579,14 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
                 - state.info["episode_return"],
                 reward_result.total,
             )
+        low_speed_failure = self._resolved_config.sim2sim_low_speed_failure
+        if low_speed_failure is not None:
+            reward = jp.where(
+                terminal.low_forward_speed,
+                jp.asarray(low_speed_failure.failed_episode_return, jp.float32)
+                - state.info["episode_return"],
+                reward,
+            )
         episode_return = state.info["episode_return"] + reward
         episode_return_override = reward - reward_result.total
         observable_geometry = self._observable_geometry(data, geometry)
@@ -595,12 +609,16 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
             "reward/pre_episode_return_override": reward_result.total,
             "reward/unclipped_pre_episode_return_override": reward_result.unclipped_total,
             "reward/episode_return_override": episode_return_override,
+            "reward/low_forward_speed_override": jp.where(
+                terminal.low_forward_speed, episode_return_override, 0.0
+            ),
             **{
                 f"reward/{key}": value
                 for key, value in reward_result.components.as_dict().items()
             },
             **self._state_metrics(reward_state, geometry, events, reset_source),
             "terminal/physical_failure": terminal.physical_failure.astype(jp.float32),
+            "terminal/low_forward_speed": terminal.low_forward_speed.astype(jp.float32),
             "terminal/roll_limit": terminal.roll_limit.astype(jp.float32),
             "terminal/pitch_limit": terminal.pitch_limit.astype(jp.float32),
             "terminal/jump_zone_missed": terminal.jump_zone_missed.astype(jp.float32),
@@ -623,6 +641,7 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
             "end_code": terminal.end_code,
             "success": terminal.success,
             "physical_failure": terminal.physical_failure,
+            "low_forward_speed": terminal.low_forward_speed,
             "roll_limit": terminal.roll_limit,
             "pitch_limit": terminal.pitch_limit,
             "jump_zone_missed": terminal.jump_zone_missed,
