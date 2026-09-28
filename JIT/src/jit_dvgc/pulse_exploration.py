@@ -47,8 +47,13 @@ def seed_support_budget(spec):
     return horizon + ((horizon+stride-1)//stride)*horizon
 
 
-def pulse_feedback(rows,seen,weights,*,quality_mode='delayed'):
+def pulse_feedback(rows,seen,weights,*,quality_mode='delayed',reward_contract=None):
     """Newly visited cells stay visited after failure; unknown is not punished."""
+    if reward_contract is not None:
+        from .generative_bridge.rewards import feedback,WEIGHTS
+        if (reward_contract!='jit_bidirectional_reward_v1_1' or quality_mode!='discovery_conversion'
+                or weights!=WEIGHTS):raise ValueError('bidirectional reward contract/weights mismatch')
+        return feedback(rows,seen)
     if quality_mode=='discovery_conversion':
         from .discovery_reward import conversion_feedback
         return conversion_feedback(rows,seen,weights)
@@ -372,7 +377,8 @@ def run(spec_path,output):
                 bank_spec=dict(version=name,task=bank['task'],max_ticks=bank['max_ticks'],label_interaction_budget=bank['label_interaction_budget'],max_candidates_per_process=bank['max_candidates_per_process'],members=[dict(frozen_policy=m['frozen_policy'],roles=m['roles']) for m in bank['members']]+[dict(frozen_policy=str(d/'frozen/frozen_unified_policy.json'),roles=['proposer','evaluator'] if current_only else ['evaluator'])])
                 bank_path=d/'expanded_bank.json';bank=lock_probe_bank(bank_spec,bank_path)
                 pp=d/'pending.json';write(pp,pending)
-                after=runtime(d,'after_learning','evaluate',{**ex,'bank':str(bank_path),'candidates':str(pp),'order':[name],'budget':len(pending)*spec['horizon']},len(pending)*spec['horizon'])
+                after=runtime(d,'after_learning','evaluate',{**ex,'bank':str(bank_path),'candidates':str(pp),'order':[name],'budget':len(pending)*spec['horizon'],
+                    **({'record_actor_preobservations':True} if spec.get('record_actor_success_preobservations') else {})},len(pending)*spec['horizon'])
                 resolved={r['index']:r for r in read(after/'results.json')}
                 for r in rows:
                     if r['index'] in resolved:
@@ -412,7 +418,8 @@ def run(spec_path,output):
                 for row in rows:
                     row['successor_adopted']=adopt is not None
             outcomes=d/'outcomes.json';write(outcomes,rows);support['inputs'][str(outcomes)]=_file_sha(outcomes);support['support_sha256']=canonical_sha256(support);write(d/'witnessed_support.json',support)
-            reward,eligible,next_seen,parts=pulse_feedback(rows,seen,spec['reward_weights'],quality_mode=quality_mode)
+            reward,eligible,next_seen,parts=pulse_feedback(rows,seen,spec['reward_weights'],quality_mode=quality_mode,
+                reward_contract=spec.get('feedback_reward_contract'))
             feedback=d/'feedback.json';write(feedback,dict(rewards=reward.tolist(),eligible=eligible.tolist(),parts=parts,component_sums={k:float(sum(v)) for k,v in parts.items()},new_cells=len(next_seen)-len(seen),outcomes=str(outcomes),outcomes_sha256=_file_sha(outcomes)))
             update=runtime(d,'update','update',{**ex,'collection':str(collection),'feedback':str(feedback)},0)
             checkpoint=str(update/'state.msgpack');m=read(update/'metrics.json')

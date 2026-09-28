@@ -1,0 +1,25 @@
+{
+  "schema": "jit_bidirectional_reward_v1_1",
+  "execute": false,
+  "quality_mode": "discovery_conversion",
+  "feedback_reward_contract": "jit_bidirectional_reward_v1_1",
+  "reward_weights": {
+    "conversion": 0.0,
+    "adoption_bonus": 2.0,
+    "novelty": 0.02,
+    "repeat": 0.02,
+    "failure": 0.1,
+    "pulse_failure": 2.0
+  },
+  "teacher_success_bonus": 0.0,
+  "record_actor_success_preobservations": true,
+  "actor_environment_reward": "inherit_locked_source",
+  "generator_loss": "mean_squared_epsilon_error",
+  "teacher_ranking": [
+    "full_success_required",
+    "action_delta_cost_ascending",
+    "task_return_descending",
+    "candidate_id_ascending"
+  ],
+  "source_runtime_overlay_only": "requires_source_and_budget_resolution_not_a_launch_spec"
+}

@@ -311,6 +311,8 @@ def collect(spec, output):
 
 def evaluate(spec, output):
     """Evaluate with canonical restoration, optionally in bounded processes."""
+    if spec.get('bridge_action_plan') and spec.get('evaluation_batch_size') is not None:
+        raise ValueError('bridge candidates must be explicitly sharded with identity-bound plans')
     if spec.get('evaluation_batch_size') is not None:
         from .pulse_evaluation_batches import evaluation_shards, evaluate_batched
         rows=read(spec['candidates'])
@@ -327,6 +329,9 @@ def evaluate(spec, output):
     if jax.default_backend()!='gpu':raise RuntimeError('GPU suffix evaluation required')
     output=Path(output);output.mkdir(parents=True,exist_ok=False)
     rows=read(spec['candidates']);horizon=spec['horizon'];charged=0;active_count=0
+    from .generative_bridge.rollout import load_prefix_plan, prefix_action, observation_fields
+    bridge_plan=load_prefix_plan(spec,rows)
+    record_preobs=spec.get('record_actor_preobservations',False) or bridge_plan is not None
     bank=load_probe_bank(Path(spec['bank']));all_names=[m['name'] for m in bank['members'] if 'evaluator' in m['roles']]
     suffix=FrozenSuffixEvaluator(spec['bank'],all_names,horizon,output/'runtime',spec['budget'])
     for r in rows:r.update(attempts=[],label=None,witness=None)
@@ -345,6 +350,8 @@ def evaluate(spec, output):
         stage_start=time.monotonic()
         env,policy,_=suffix._runtime(name)
         runtime_ready=time.monotonic()
+        if record_preobs:
+            env._training_action_pulse = None
         env._reward_mode=spec.get('reward_mode',getattr(env,'_reward_mode','phase_recovery'))
         restored=[]
         for r in subset:
@@ -368,6 +375,9 @@ def evaluate(spec, output):
         if charged+count*horizon>spec['budget']:raise RuntimeError('insufficient declared suffix reservation')
         write(output/'status.json',dict(phase='running',policy=name,charged_interactions=charged,reserved_attempt_interactions=count*horizon))
         restore_ready=time.monotonic()
+        if bridge_plan is not None:
+            bridge_prefixes,bridge_source_only=map(jp.asarray,bridge_plan)
+            if len(subset)!=len(rows):raise ValueError('bridge requires all candidates in one frozen-policy batch')
         step=jax.vmap(lambda s,a:endpoint_state(env.step(s,a),spec))
         def rollout(initial):
             def frame(s,action,mask,previous):
@@ -379,17 +389,24 @@ def evaluate(spec, output):
                     first_valid_contact=~before['valid_contact_seen']&after['valid_contact_seen']&mask,
                     time_before=before['time'],time_after=after['time'],base_action=action,
                     requested_delta=jp.zeros_like(action),effective_delta=jp.zeros_like(action))
+                result.update(observation_fields(previous,s,action,enabled=record_preobs))
                 return result
             blank=frame(initial,jp.zeros((count,4)),jp.zeros(count,bool),initial)
+            if bridge_plan is not None:blank['action_origin_code']=jp.zeros(count,jp.int32)
             traces={k:jp.zeros((horizon,)+v.shape,v.dtype) for k,v in blank.items()}
             def condition(c):return (c[0]<horizon)&jp.any(c[2])
             def advance(c):
                 t,s,alive,tr=c
                 keys=jax.random.split(jax.random.fold_in(jax.random.PRNGKey(0),t),rng_count)[jp.asarray(rng_indices)]
                 action=jax.vmap(policy)(s.obs,keys)[0]
+                if bridge_plan is not None:
+                    action=prefix_action(t,action,bridge_prefixes,bridge_source_only)
                 nxt=step(s,jp.where(alive[:,None],action,0))
                 finite=jp.all(jp.isfinite(nxt.data.qpos),axis=-1)&jp.all(jp.isfinite(nxt.data.qvel),axis=-1)
-                f=frame(nxt,action,alive,s);tr={k:v.at[t].set(f[k]) for k,v in tr.items()}
+                f=frame(nxt,action,alive,s)
+                if bridge_plan is not None:
+                    f['action_origin_code']=jp.where(bridge_source_only,0,jp.where(t<16,1,2))
+                tr={k:v.at[t].set(f[k]) for k,v in tr.items()}
                 def choose(path,n,o):return n if _shared_warp(path) else jp.where(alive.reshape((count,)+(1,)*(n.ndim-1)),n,o)
                 nxt=jax.tree_util.tree_map_with_path(choose,nxt,s)
                 alive=alive&~nxt.done.astype(bool)&~endpoint_success(nxt,spec)&finite
@@ -407,7 +424,16 @@ def evaluate(spec, output):
             label,outcome=suffix_label(valid,failure,bool(tape['timeout'][last,e]),bool(tape['done'][last,e]),len(indices)>=horizon)
             if recovery_mode(spec) and label == 1: outcome='stable_forward_recovery'
             r['attempts'].append(dict(policy=name,actor_sha256=suffix.members[name]['policy']['actor_sha256'],label=label,outcome=outcome,steps=len(indices),task_return=float(tape['reward'][indices,e].sum()),trace=str(trace_path),trace_lane=e,trace_sha256=trace_sha,snapshot_context_sha256=r['snapshot_context_sha256']))
-            if label:r.update(label=1,witness=name)
+            if record_preobs:
+                r['attempts'][-1].update(recording_schema='jit_actor_success_trace_v1_1' if bridge_plan is None else 'jit_bridge_trace_v1',
+                    action_origin='actor_only' if bridge_plan is None else 'bridge_prefix_then_source_tail',
+                    normalizer_sha256=suffix.members[name]['policy']['normalizer_sha256'],
+                    model_sha256=suffix.members[name]['policy']['xml_sha256'])
+            if bridge_plan is not None:
+                # Composite-controller success is never a source Actor witness.
+                r['attempts'][-1]['controller_kind']='composite_teacher'
+                r['attempts'][-1]['source_only']=bool(bridge_plan[1][e])
+            if label:r.update(label=1,witness=name if bridge_plan is None else None)
         timings.append(dict(policy=name,candidates=count,runtime_seconds=runtime_ready-stage_start,restore_seconds=restore_ready-runtime_ready,compile_and_rollout_seconds=rollout_ready-restore_ready,export_seconds=time.monotonic()-rollout_ready))
         write(output/'timings.json',timings)
         del initial

@@ -1,0 +1,235 @@
+{
+  "GPU_physics_validation": "not_run",
+  "action_order": [
+    "steer",
+    "rear_wheel_drive",
+    "hip",
+    "knee"
+  ],
+  "actor_leaf_shapes": [
+    [
+      256
+    ],
+    [
+      76,
+      256
+    ],
+    [
+      256
+    ],
+    [
+      256,
+      256
+    ],
+    [
+      256
+    ],
+    [
+      256,
+      256
+    ],
+    [
+      8
+    ],
+    [
+      256,
+      8
+    ]
+  ],
+  "actor_parameters": 153352,
+  "audit_only_not_selected_for_new_run": true,
+  "audited_round": "/home/qy/DVGC/JIT/runs/experiments/phase_u_discovery100_20260920/nan_recovery_20260926/lineage/round_0095",
+  "control_dt": 0.02,
+  "critic_parameters": 159233,
+  "generator_checkpoint": null,
+  "gradient_updates": 0,
+  "identity_checks": {
+    "actor_sha256": true,
+    "critic_sha256": true,
+    "normalizer_sha256": true
+  },
+  "jump_start_probability": 0.2,
+  "missing": [
+    "selected_new_experiment_source",
+    "raw_pre_action_observations_in_audited_legacy_suffixes",
+    "locked_generator_train_dev_split",
+    "locked_core_protected_solver_dev_panels",
+    "execution_budgets"
+  ],
+  "new_generator_admissible_windows": 0,
+  "normalizer_shapes": {
+    "privileged_state": [
+      106
+    ],
+    "state": [
+      76
+    ]
+  },
+  "packages": {
+    "brax": "0.14.2",
+    "flax": "0.11.2",
+    "jax": "0.6.2",
+    "jaxlib": "0.6.2",
+    "mujoco": "3.6.0",
+    "mujoco-mjx": "3.6.0",
+    "optax": "0.2.6",
+    "warp-lang": "1.11.0"
+  },
+  "pending_fraction": 0.5,
+  "physics_interactions": 0,
+  "pointer": "/home/qy/DVGC/JIT/runs/experiments/phase_u_discovery100_20260920/nan_recovery_20260926/lineage/current_source.json",
+  "pointer_contents": {
+    "completed_rounds": 96,
+    "explorer_checkpoint": "/home/qy/DVGC/JIT/runs/experiments/phase_u_discovery100_20260920/nan_recovery_20260926/lineage/round_0095/update/state.msgpack",
+    "frozen_policy": "/home/qy/DVGC/JIT/runs/experiments/phase_u_discovery100_20260920/nan_recovery_20260926/lineage/round_0093/frozen/frozen_unified_policy.json",
+    "historical_helpers_used": false,
+    "source": "lineage_repair_0093"
+  },
+  "pointer_sha256": "5757a488f5accbd18a0583994c7dfc59e9bdc63f3126e6f2547cdbc2a432cde3",
+  "promotion": {
+    "fixed_start_success": true,
+    "lost": 2,
+    "minimum_retention": 0.9,
+    "new_pending_successes": 80,
+    "old_positive": 12,
+    "promote": false,
+    "retained": 10,
+    "retention_fraction": 0.8333333333333334,
+    "source": "lineage_repair_0093",
+    "successor": "lineage_repair_0095",
+    "unknown": 0,
+    "whole_tube_guarantee": false
+  },
+  "research_performance": "not_run",
+  "reward_mode": "original_all_phases",
+  "source_frozen_policy": "/home/qy/DVGC/JIT/runs/experiments/phase_u_discovery100_20260920/nan_recovery_20260926/lineage/round_0093/frozen/frozen_unified_policy.json",
+  "source_identity": {
+    "action_order": [
+      "steer",
+      "rear_wheel_drive",
+      "hip",
+      "knee"
+    ],
+    "actor_frame_fields": [
+      "gravity_x",
+      "gravity_y",
+      "gravity_z",
+      "angular_velocity_x",
+      "angular_velocity_y",
+      "angular_velocity_z",
+      "acceleration_x",
+      "acceleration_y",
+      "acceleration_z",
+      "steering_position",
+      "hip_position",
+      "knee_position",
+      "steering_velocity",
+      "hip_velocity",
+      "knee_velocity",
+      "front_wheel_velocity",
+      "rear_wheel_velocity",
+      "last_action_steer",
+      "last_action_rear_wheel_drive",
+      "last_action_hip",
+      "last_action_knee",
+      "estimated_forward_velocity",
+      "obstacle_relative_x",
+      "root_height",
+      "history_valid"
+    ],
+    "actor_sha256": "74b64570a93b3e8c317788decfcd4870e71701fa0388674a244e9abff64d86ee",
+    "actor_task_fields": [
+      "jump_signal"
+    ],
+    "checkpoint": "/home/qy/DVGC/JIT/runs/experiments/phase_u_discovery100_20260920/nan_recovery_20260926/lineage/round_0093/policy_training/lineage_repair_0093/checkpoints/transition_128000",
+    "checkpoint_identity_sha256": "aad37e2e7c6f6b1cd66a3d9f7b04a2f816385053a176b137f7798f15ea6b3e18",
+    "critic_sha256": "e72008726ca158a89357ee67df79aa648893c456c8163d013d8a94bd52419f65",
+    "data_role": "train",
+    "formal_config": "/home/qy/DVGC/JIT/runs/experiments/phase_u_discovery100_20260920/nan_recovery_20260926/lineage/round_0093/policy_config.json",
+    "formal_config_file_sha256": "abf5424485e8867ed2bfcc5b79c554cec243fe31c8c8324cabe08ec80aa769fd",
+    "formal_config_sha256": "3b0309f888d55d4bfb57b203fc97bdfbf8f4c8048f426ce9056e37ace81b175e",
+    "iteration": 1468,
+    "name": "lineage_repair_0093",
+    "normalizer_sha256": "5208d53bd7aac8f502987def7c2024ea7937b7caa66bec6c5a03e9438b274220",
+    "payload_sha256": "bb5001bb52a984306abc07cd0a76d9f87d0a29118c4fa19cf40c1c5f3c55ac99",
+    "policy_role": "development_checkpoint",
+    "source_formal_report": "/home/qy/DVGC/JIT/runs/experiments/phase_u_discovery100_20260920/nan_recovery_20260926/lineage/round_0093/policy_training/lineage_repair_0093/formal_report.json",
+    "source_formal_report_sha256": "1cfcea735d9401301b74baa02e7e8aeea3bd394434b62e224fbc2270543ca958",
+    "source_requested_training_transitions": 128000,
+    "source_reset_mixture": {
+      "natural_reset_probability": 0.2,
+      "selection": "fixed_jump_start_20pct_exact_snapshot_80pct",
+      "soft_tube_probability": 0.8
+    },
+    "source_training_run_id": "lineage_repair_0093",
+    "source_training_transitions": 128000,
+    "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+  },
+  "source_label_counts": {
+    "0": 162,
+    "1": 862
+  },
+  "student_label_counts": {
+    "0": 82,
+    "1": 80
+  },
+  "success_criterion": "stable_forward_recovery",
+  "support_phase_counts": {
+    "downstream": 5839,
+    "upstream": 82313
+  },
+  "support_status_counts": {
+    "pending": 162,
+    "witnessed": 87990
+  },
+  "support_unique_ancestors": 87074,
+  "trace_audit": [
+    {
+      "fields": [
+        "action",
+        "base_action",
+        "contact_x",
+        "contact_x_before",
+        "done",
+        "effective_delta",
+        "end_code",
+        "first_valid_contact",
+        "front_wheel_clearance",
+        "front_wheel_clearance_before",
+        "mask",
+        "maximum_wheel_penetration",
+        "maximum_wheel_penetration_before",
+        "phase_after",
+        "phase_before",
+        "physical_failure",
+        "prohibited_contact",
+        "prohibited_contact_before",
+        "qpos",
+        "qvel",
+        "rear_wheel_clearance",
+        "rear_wheel_clearance_before",
+        "recovery_ticks",
+        "recovery_ticks_before",
+        "requested_delta",
+        "reward",
+        "success",
+        "time",
+        "time_after",
+        "time_before",
+        "timeout",
+        "valid_contact",
+        "valid_contact_seen",
+        "valid_contact_seen_before"
+      ],
+      "mask_shape": [
+        399,
+        162
+      ],
+      "path": "/home/qy/DVGC/JIT/runs/experiments/phase_u_discovery100_20260920/nan_recovery_20260926/lineage/round_0095/after_learning/lineage_repair_0095_traces.npz",
+      "raw_preobs_present": false,
+      "real_control_transitions": 10113,
+      "sha256": "1a64244133a3cac23bca9da2ed344cecf229b7c7120f37791831af249939465b"
+    }
+  ],
+  "valid_pending": 162
+}

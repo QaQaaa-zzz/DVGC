@@ -1,0 +1,362 @@
+# v1.1 完整配置模板：与同版实施报告配套，不是当前仓库已支持的运行配置。
+# 默认execute=false。全部来源、角色、预算和实现校验完成前不得启动。
+# 无老师解或零教案不取消PPO；采用学生的真实TRAIN成功回流G。
+# G结构、H16和原Actor不变；旧v1运行目录、证据和配置保持只读。
+schema: jit_generative_bridge_v1_1
+status: template_requires_source_resolution
+design_version: '1.1'
+base_commit: c98701a1a84363435977736728d6d94229d427d9
+purpose: training_only_bidirectional_generator_student_improvement
+execute: false
+paths:
+  source_frozen_policy: null
+  source_experiment_spec: null
+  root_candidates: null
+  successful_trace_manifest: null
+  old_support: null
+  core_panel: null
+  output_dir: null
+  original_pending_manifest: null
+  generator_checkpoint: null
+  generator_corpus_manifest: null
+  generator_dev_manifest: null
+  solver_dev_roots: null
+task:
+  source_contract: must_resolve_and_hash_before_run
+  required_success_criterion: stable_forward_recovery
+  continuation_semantics: fresh_continuation_v1_once_at_root
+  total_horizon: 400
+  control_dt: 0.02
+  action_order:
+  - steer
+  - rear_wheel_drive
+  - hip
+  - knee
+  actor_obs_dim: 76
+  critic_obs_dim: 106
+  training_action_pulse: null
+  reward_mode: inherit_locked_source
+  reset_mixture: inherit_locked_source
+generator:
+  framework: jax_flax_optax
+  kind: conditional_action_diffusion
+  horizon: 16
+  action_dim: 4
+  observation_dim: 76
+  widths:
+  - 64
+  - 128
+  - 256
+  expected_parameter_count: 3131716
+  resblocks_per_level: 2
+  obs_encoder:
+  - 128
+  - 256
+  time_sinusoidal_dim: 128
+  time_encoder:
+  - 256
+  - 256
+  condition_dim: 512
+  film: scale_shift_1_plus_scale
+  groups: 8
+  norm_epsilon: 1.0e-05
+  dropout: 0.0
+  attention: false
+  dtype: float32
+  normalizer: fixed_copy_of_source_actor_state_statistics_with_exact_source_preprocess_contract
+  noise_schedule: squaredcos_cap_v2
+  train_noise_steps: 100
+  prediction_type: epsilon
+  inference_steps: 20
+  inference_timestep_rule: trailing_stride_5_from_99
+  inference_timesteps:
+  - 99
+  - 94
+  - 89
+  - 84
+  - 79
+  - 74
+  - 69
+  - 64
+  - 59
+  - 54
+  - 49
+  - 44
+  - 39
+  - 34
+  - 29
+  - 24
+  - 19
+  - 14
+  - 9
+  - 4
+  ddim_eta: 0.0
+  clip_predicted_clean_action: true
+  use_clipped_model_output: true
+  clip_diffusion_latent: false
+  pretrain:
+    optimizer: adamw
+    batch_size: 256
+    max_updates: 20000
+    learning_rate: 0.0001
+    warmup_updates: 1000
+    min_learning_rate: 1.0e-05
+    weight_decay: 0.0001
+    grad_clip_norm: 1.0
+    ema_decay: 0.999
+    validation_every: 1000
+  incremental_training:
+    enabled: true
+    phase: after_actor_acceptance_and_train_trace_admission
+    max_updates: 2000
+    learning_rate: 1.0e-05
+    warmup_updates: 0
+    learning_rate_schedule: constant_per_incremental_stage
+    validation_every: 500
+    restore_weights_ema_optimizer_rng: true
+    normalizer_changes: explicit_new_version_only
+    no_new_valid_windows: skip_keep_incumbent_without_optimizer_or_rng_advance
+    include_incumbent_in_selection: true
+    selected_checkpoint_must_restore_matching_full_training_state: true
+    inference_parameters: selected_checkpoint_ema
+    selection: lowest_fixed_generator_dev_denoising_loss_tie_keep_incumbent
+    fixed_dev_noise_fixture: true
+    fixed_actor_solver_gain_is_separate_metric: true
+    max_total_incremental_updates: null
+data:
+  observation_alignment: pre_action_only
+  action_semantics: executed_normalized_full_control_not_exploration_residual
+  generator_full_windows_only: true
+  split_key: root_episode_ancestor
+  train_fraction: 0.8
+  development_fraction: 0.2
+  final_test_open: false
+  exclude_initial_exploration_window_from_success_action_targets: true
+  preserve_actual_teacher_prefix_and_tail: true
+  group_balanced: true
+  allowed_action_origins:
+  - bridge_prefix
+  - source_tail
+  - source_only
+  - actor_only
+  inherit_split_across_teacher_and_student_descendants: true
+  bidirectional_corpus:
+    enabled: true
+    allowed_sources:
+    - bootstrap_actor
+    - verified_teacher
+    - adopted_actor
+    include_adopted_actor_success: true
+    include_teacher_unsolved_student_success: true
+    include_teacher_not_scheduled_student_success: true
+    actor_requires_adoption: true
+    allow_unadopted_actor_success: false
+    teacher_requires_student_adoption: false
+    require_full_task_success: true
+    require_raw_pre_action_observation: true
+    require_train_role: true
+    exclude_roles:
+    - generator_dev
+    - solver_dev
+    - final_test
+    - acceptance_only
+    deduplication: exact_trajectory_identity_with_root_source_and_protocol_then_group_balance
+    mix_weights:
+      history: 0.5
+      teacher_new: 0.25
+      actor_new: 0.25
+    empty_source_groups: renormalize_over_nonempty_groups_and_record_realized_weights
+    sampling_order:
+    - source_group
+    - root_or_ancestor_balanced
+    - valid_window
+    promote_actor_prefix_to_bridge_without_revalidation: false
+    source_adoption_bound_to_exact_checkpoint: true
+search:
+  bridge_horizon: 16
+  total_candidates: 32
+  diffusion_candidates: 16
+  colored_noise_candidates: 15
+  source_only_candidates: 1
+  max_candidate_batches_per_root: 1
+  colored_noise:
+    rho: 0.8
+    sigma: 0.2
+    reference: source_prefix_with_explicit_proposal_only_last_finite_fill
+  selected_teacher_per_root: 1
+  selected_teacher_replay_attempts: 1
+  switch_to_source_without_reset: true
+  record_completed_during_prefix_separately: true
+  success_first: true
+  success_tiebreak:
+  - executed_action_delta_cost_ascending
+  - source_task_return_descending
+  - candidate_id_ascending
+  automatic_horizon_extension: false
+  automatic_budget_extension: false
+  preserve_unsolved_and_unsearched_pending: true
+  teacher_checkpoint_missing_behavior: error_when_enabled_not_random_fallback
+  teacher_subset_selection: predeclared_no_posthoc_success_filter
+student:
+  actor: inherit_source_256x3_tanh_normal_no_architecture_change
+  initialize: copy_source_actor_and_normalizer
+  critic_and_optimizer: inherit_declared_existing_probe_initialization_protocol
+  ppo_hyperparameters: inherit_locked_source_except_explicit_steps_seed_and_auxiliary_losses
+  ppo_transitions: 128000
+  joint_loss_adapter: true
+  demo_coefficient_start: 0.2
+  demo_coefficient_end: 0.05
+  demo_coefficient_schedule: linear_over_current_invocation_transitions
+  retention_coefficient: 0.2
+  demo_batch_size: 256
+  retention_batch_size: 256
+  demo_prefix_fraction: 0.5
+  source_teacher_normalizer: frozen
+  student_normalizer: existing_ppo_protocol_do_not_refit_from_new_demos
+  offline_demo_used_as_ppo_replay: false
+  dagger_queries_per_round: 0
+  training_eligibility: original_valid_pending_not_teacher_success
+  empty_demo_behavior: disable_demo_branch_continue_ppo_and_declared_retention
+  effective_demo_coefficient_when_empty: 0.0
+  sample_demo_when_empty: false
+  damaged_demo_manifest_behavior: error_not_empty
+  record_direct_demo_available_and_actual_usage: true
+  claim_no_direct_demo_as_pure_ppo_causality: false
+  record_train_root_success_pre_observations: true
+  evaluate_all_declared_new_roots_not_only_teacher_solved: true
+acceptance:
+  inherit_existing_promotion_checks: true
+  core_max_new_failures: 0
+  protected_min_retention_fraction: 0.98
+  required_new_root_net_gain: 1
+  allow_unknown: false
+  pilot_panels:
+    new_roots: 32
+    core: 64
+    protected: 64
+    nominal: 1
+  thresholds_are_empirical_not_guarantees: true
+feedback:
+  primary: independently_verified_adopted_student_gain
+  teacher_success_bonus: 0.0
+  legacy_reward_changes: none_without_separate_new_experiment_declaration
+  student_gain_requires_teacher_found: false
+  retroactively_credit_teacher_for_student_success: false
+execution:
+  seed_master: 270901
+  root_seed_namespace: true
+  physical_batch_size_start: 32
+  sequential_gpu_stages: true
+  use_existing_resource_gate: true
+  use_existing_watchers: true
+  max_new_interactions: null
+  reserve_before_launch: true
+  stop_on_nonfinite: true
+  stop_on_oom: true
+  automatic_retry: false
+  zero_or_missing_budget_means: no_execution
+  source_local_diff_audit_required: true
+  max_new_supervised_updates: null
+  max_compute_wall_seconds: null
+budget_examples:
+  P1_semantic_smoke_max: 4800
+  P3_solver_max: 422400
+  P4_student_and_panels_max: 258400
+  P3_P4_subtotal_excluding_other_stages: 680800
+  not_a_complete_run_authorization: true
+  actor_trace_recapture_32_roots_max_if_separately_enabled: 12800
+  bidirectional_bookkeeping_new_physics_if_existing_traces_sufficient: 0
+  generator_incremental_updates_per_round_ceiling: 2000
+  P3_P4_subtotal_is_not_full_bidirectional_pipeline_budget: true
+document_contract:
+  report_filename: JIT_生成式短段桥接与单策略补训_Codex实施报告_v1.1.md
+  same_version_required: true
+  legacy_results_read_only: true
+  migrate_existing_code_incrementally: true
+  conflict_behavior: stop_and_report_before_execution
+  architecture_unchanged_from_v1_0: true
+learning_contract:
+  preserve_all_valid_pending_eligibility: true
+  pending_membership_and_weights_frozen_before_teacher_search: true
+  teacher_success_required_for_ppo: false
+  allow_empty_current_round_demo: true
+  on_teacher_no_solution: continue_declared_student_ppo_without_this_root_demo
+  on_teacher_not_scheduled: keep_original_pending_and_record_not_scheduled
+  on_teacher_invalid_or_incomplete: stop_and_preserve_evidence_do_not_silently_fallback
+  student_success_without_teacher_is_valid: true
+  reserve_student_and_acceptance_before_teacher_search: true
+  teacher_search_subset_filters_student_support: false
+  generator_or_teacher_claimed_as_student_capability_upper_bound: false
+actor_success_export:
+  enabled: true
+  preferred_source: existing_train_root_after_learning_evaluation_with_preobs_recording
+  scope: all_declared_train_roots_including_unsolved_and_not_scheduled
+  admission_phase: after_exact_student_checkpoint_adoption
+  action_origin: actor_only
+  trace_schema: jit_actor_success_trace_v1_1
+  missing_preobs_behavior: record_missing_and_require_separate_bounded_recapture_plan
+  automatic_recapture: false
+  max_recapture_roots: 0
+  recapture_interaction_budget: 0
+  keep_rejected_actor_success_for_diagnostics: true
+  default_bridge_verified_against_actor_sha256: null
+outcomes:
+  schema: jit_bidirectional_root_outcome_v1_1
+  teacher_status_values:
+  - not_scheduled
+  - searched_no_solution
+  - verified_solution
+  - incomplete
+  - invalid
+  teacher_found_mapping:
+    verified_solution: true
+    searched_no_solution: false
+    not_scheduled: null
+    incomplete: null
+    invalid: null
+  student_label_values:
+  - 0
+  - 1
+  - null
+  record_root_outcome_matrix: true
+  record_teacher_candidate_source: true
+  record_student_adoption_separately: true
+  unknown_is_failure: false
+  causal_attribution: not_identified_in_single_run
+round_commit:
+  order:
+  - freeze_models_and_support
+  - teacher_search
+  - student_training
+  - student_evaluation
+  - actor_acceptance_commit
+  - admit_train_trajectories
+  - generator_update_and_selection
+  - complete_round_commit
+  generator_updates_used_from_next_round_only: true
+  repeat_student_training_after_generator_failure: false
+  partial_round_pointer_update: false
+generator_comparison:
+  enabled: false
+  source_actor_manifest: null
+  old_generator_manifest: null
+  new_generator_manifest: null
+  root_manifest: null
+  fixed_same_tail_actor_for_both: true
+  fixed_same_root_and_candidate_noise_plan: true
+  root_role: solver_dev
+  data_return_to_training: false
+  report_diffusion_and_mixed_pool_separately: true
+  max_interactions: null
+ablation_plan:
+  enabled: false
+  arms:
+  - ppo_only_matched_total_budget
+  - colored_or_icem_teacher
+  - diffusion_teacher_only_generator_updates
+  - full_bidirectional_updates
+  - frozen_generator
+  match_actor_reward_reset_retention_and_initialization: true
+  teacher_only_vs_bidirectional_match_generator_update_count: true
+  count_generator_wall_time_separately_from_interactions: true
+  automatic_launch: false

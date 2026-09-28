@@ -1,0 +1,31 @@
+{
+  "CPU_fixture_gradient_updates": "executed; not counted as experiment updates; aggregate not instrumented",
+  "GPU_physics": "not_run",
+  "cpu": {
+    "errors": "0",
+    "failures": "0",
+    "hostname": "qy-MS-7E06",
+    "name": "pytest",
+    "skipped": "0",
+    "tests": "95",
+    "time": "17.581",
+    "timestamp": "2026-09-28T10:41:13.750180+08:00"
+  },
+  "cumulative_cpu_time": "not_instrumented; XML time covers final suite only",
+  "research_performance": "not_run",
+  "scope": "CPU logic, real Brax loss on synthetic transitions, scalar optimizer/checkpoint fixtures; no MuJoCo trajectory validation",
+  "test_counts_by_module": {
+    "tests.test_discovery_conversion_reward": 9,
+    "tests.test_generative_bridge_contracts": 22,
+    "tests.test_generative_bridge_network": 6,
+    "tests.test_generative_bridge_protocol": 6,
+    "tests.test_generative_bridge_recording": 5,
+    "tests.test_generative_bridge_student": 5,
+    "tests.test_policy_distillation": 3,
+    "tests.test_policy_retention": 6,
+    "tests.test_ppo_numerics": 6,
+    "tests.test_probe_training_action_pulse": 12,
+    "tests.test_pulse_evaluation_batches": 6,
+    "tests.test_pulse_exploration": 9
+  }
+}

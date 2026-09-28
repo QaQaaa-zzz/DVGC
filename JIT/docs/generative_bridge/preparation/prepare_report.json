@@ -1,0 +1,153 @@
+{
+  "comparison_arms": [
+    {
+      "actor_task_reward_and_resets": "same_locked_source",
+      "actor_to_generator": false,
+      "additional_original_acquisition": 3200,
+      "candidate_mix": null,
+      "common_diagnostic_and_acceptance": 130400,
+      "execute": false,
+      "name": "ppo_only_matched_total_budget",
+      "physical_interaction_ceiling": 680800,
+      "retention_coefficient": 0.2,
+      "search_interactions": 0,
+      "student_transitions": 547200,
+      "supervised_update_budget": 0,
+      "wall_time_budget": "requires_separate_declaration"
+    },
+    {
+      "actor_task_reward_and_resets": "same_locked_source",
+      "actor_to_generator": false,
+      "additional_original_acquisition": 0,
+      "candidate_mix": {
+        "colored_noise": 31,
+        "source_only": 1
+      },
+      "common_diagnostic_and_acceptance": 130400,
+      "execute": false,
+      "name": "colored_or_icem_teacher",
+      "physical_interaction_ceiling": 680800,
+      "retention_coefficient": 0.2,
+      "search_interactions": 422400,
+      "student_transitions": 128000,
+      "supervised_update_budget": "requires_separate_declaration",
+      "wall_time_budget": "requires_separate_declaration"
+    },
+    {
+      "actor_task_reward_and_resets": "same_locked_source",
+      "actor_to_generator": false,
+      "additional_original_acquisition": 0,
+      "candidate_mix": {
+        "colored_noise": 15,
+        "diffusion": 16,
+        "source_only": 1
+      },
+      "common_diagnostic_and_acceptance": 130400,
+      "execute": false,
+      "name": "diffusion_teacher_only_generator_updates",
+      "physical_interaction_ceiling": 680800,
+      "retention_coefficient": 0.2,
+      "search_interactions": 422400,
+      "student_transitions": 128000,
+      "supervised_update_budget": "requires_separate_declaration",
+      "wall_time_budget": "requires_separate_declaration"
+    },
+    {
+      "actor_task_reward_and_resets": "same_locked_source",
+      "actor_to_generator": true,
+      "additional_original_acquisition": 0,
+      "candidate_mix": {
+        "colored_noise": 15,
+        "diffusion": 16,
+        "source_only": 1
+      },
+      "common_diagnostic_and_acceptance": 130400,
+      "execute": false,
+      "name": "full_bidirectional_updates",
+      "physical_interaction_ceiling": 680800,
+      "retention_coefficient": 0.2,
+      "search_interactions": 422400,
+      "student_transitions": 128000,
+      "supervised_update_budget": "requires_separate_declaration",
+      "wall_time_budget": "requires_separate_declaration"
+    },
+    {
+      "actor_task_reward_and_resets": "same_locked_source",
+      "actor_to_generator": false,
+      "additional_original_acquisition": 0,
+      "candidate_mix": {
+        "colored_noise": 15,
+        "diffusion": 16,
+        "source_only": 1
+      },
+      "common_diagnostic_and_acceptance": 130400,
+      "execute": false,
+      "name": "frozen_generator",
+      "physical_interaction_ceiling": 680800,
+      "retention_coefficient": 0.2,
+      "search_interactions": 422400,
+      "student_transitions": 128000,
+      "supervised_update_budget": 0,
+      "wall_time_budget": "requires_separate_declaration"
+    }
+  ],
+  "cost_ledger": {
+    "actual_physics_interactions": 0,
+    "actual_supervised_updates": 0,
+    "cpu_logic_tests": "reported_separately",
+    "gpu_physics": "not_run",
+    "research_performance": "not_run",
+    "scope": "new_experiment_only_excludes_CPU_fixture_optimizer_tests"
+  },
+  "execute": false,
+  "generator_comparison": {
+    "data_return_to_training": false,
+    "enabled": false,
+    "fixed_same_root_and_candidate_noise_plan": true,
+    "fixed_same_tail_actor_for_both": true,
+    "max_interactions": null,
+    "new_generator_manifest": null,
+    "old_generator_manifest": null,
+    "report_diffusion_and_mixed_pool_separately": true,
+    "root_manifest": null,
+    "root_role": "solver_dev",
+    "source_actor_manifest": null
+  },
+  "missing": [
+    "paths.source_frozen_policy",
+    "paths.source_experiment_spec",
+    "paths.root_candidates",
+    "paths.successful_trace_manifest",
+    "paths.old_support",
+    "paths.core_panel",
+    "paths.output_dir",
+    "paths.original_pending_manifest",
+    "paths.generator_checkpoint",
+    "paths.generator_corpus_manifest",
+    "paths.generator_dev_manifest",
+    "paths.solver_dev_roots",
+    "execution.max_new_interactions",
+    "execution.max_new_supervised_updates",
+    "execution.max_compute_wall_seconds"
+  ],
+  "not_run": [
+    "source binding",
+    "GPU semantic smoke",
+    "G pretraining",
+    "teacher solve",
+    "student physical PPO",
+    "fixed Actor G comparison",
+    "formal experiments"
+  ],
+  "reward_weights": {
+    "adoption_bonus": 2.0,
+    "conversion": 0.0,
+    "failure": 0.1,
+    "novelty": 0.02,
+    "pulse_failure": 2.0,
+    "repeat": 0.02
+  },
+  "schema": "jit_generative_bridge_v1_1",
+  "spec_sha256": "7d0b27d683b558544edce25ea1429c9b2880ced74816729614aa984ff9403b75",
+  "status": "needs_input_resolution"
+}

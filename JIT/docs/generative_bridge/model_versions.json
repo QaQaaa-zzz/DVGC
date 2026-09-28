@@ -1,0 +1,88 @@
+{
+  "actor_parameters": 153352,
+  "audited_actor_not_selected": {
+    "action_order": [
+      "steer",
+      "rear_wheel_drive",
+      "hip",
+      "knee"
+    ],
+    "actor_frame_fields": [
+      "gravity_x",
+      "gravity_y",
+      "gravity_z",
+      "angular_velocity_x",
+      "angular_velocity_y",
+      "angular_velocity_z",
+      "acceleration_x",
+      "acceleration_y",
+      "acceleration_z",
+      "steering_position",
+      "hip_position",
+      "knee_position",
+      "steering_velocity",
+      "hip_velocity",
+      "knee_velocity",
+      "front_wheel_velocity",
+      "rear_wheel_velocity",
+      "last_action_steer",
+      "last_action_rear_wheel_drive",
+      "last_action_hip",
+      "last_action_knee",
+      "estimated_forward_velocity",
+      "obstacle_relative_x",
+      "root_height",
+      "history_valid"
+    ],
+    "actor_sha256": "74b64570a93b3e8c317788decfcd4870e71701fa0388674a244e9abff64d86ee",
+    "actor_task_fields": [
+      "jump_signal"
+    ],
+    "checkpoint": "/home/qy/DVGC/JIT/runs/experiments/phase_u_discovery100_20260920/nan_recovery_20260926/lineage/round_0093/policy_training/lineage_repair_0093/checkpoints/transition_128000",
+    "checkpoint_identity_sha256": "aad37e2e7c6f6b1cd66a3d9f7b04a2f816385053a176b137f7798f15ea6b3e18",
+    "critic_sha256": "e72008726ca158a89357ee67df79aa648893c456c8163d013d8a94bd52419f65",
+    "data_role": "train",
+    "formal_config": "/home/qy/DVGC/JIT/runs/experiments/phase_u_discovery100_20260920/nan_recovery_20260926/lineage/round_0093/policy_config.json",
+    "formal_config_file_sha256": "abf5424485e8867ed2bfcc5b79c554cec243fe31c8c8324cabe08ec80aa769fd",
+    "formal_config_sha256": "3b0309f888d55d4bfb57b203fc97bdfbf8f4c8048f426ce9056e37ace81b175e",
+    "iteration": 1468,
+    "name": "lineage_repair_0093",
+    "normalizer_sha256": "5208d53bd7aac8f502987def7c2024ea7937b7caa66bec6c5a03e9438b274220",
+    "payload_sha256": "bb5001bb52a984306abc07cd0a76d9f87d0a29118c4fa19cf40c1c5f3c55ac99",
+    "policy_role": "development_checkpoint",
+    "source_formal_report": "/home/qy/DVGC/JIT/runs/experiments/phase_u_discovery100_20260920/nan_recovery_20260926/lineage/round_0093/policy_training/lineage_repair_0093/formal_report.json",
+    "source_formal_report_sha256": "1cfcea735d9401301b74baa02e7e8aeea3bd394434b62e224fbc2270543ca958",
+    "source_requested_training_transitions": 128000,
+    "source_reset_mixture": {
+      "natural_reset_probability": 0.2,
+      "selection": "fixed_jump_start_20pct_exact_snapshot_80pct",
+      "soft_tube_probability": 0.8
+    },
+    "source_training_run_id": "lineage_repair_0093",
+    "source_training_transitions": 128000,
+    "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+  },
+  "base_commit": "c98701a1a84363435977736728d6d94229d427d9",
+  "critic_parameters": 159233,
+  "generator": {
+    "H": 16,
+    "action_dim": 4,
+    "architecture": "conditional_unet_v1_1",
+    "observation_dim": 76,
+    "trained_checkpoint": null,
+    "validation": "test_network_count_shapes_and_grad on CPU; initialized test params only",
+    "verified_parameter_count": 3131716
+  },
+  "implementation_commit": "use Git commit containing this file",
+  "implementation_schema": "jit_generative_bridge_v1_1",
+  "packages": {
+    "brax": "0.14.2",
+    "flax": "0.11.2",
+    "jax": "0.6.2",
+    "jaxlib": "0.6.2",
+    "mujoco": "3.6.0",
+    "mujoco-mjx": "3.6.0",
+    "optax": "0.2.6",
+    "warp-lang": "1.11.0"
+  }
+}

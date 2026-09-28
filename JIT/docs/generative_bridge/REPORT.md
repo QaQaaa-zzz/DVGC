@@ -1,0 +1,81 @@
+# JIT 双向学习 v1.1：实现、迁移审计与准备报告
+
+本交付是在现有 JIT 上新增的可选实现，没有原来的 v1.0 实现需要迁移。已按顺序阅读更新指令、完整合并报告及同版 YAML，并额外采用用户提供的奖励与损失补充。代码位于隔离分支 `agent/generative-bridge-v1-1`，基础版本为 `c98701a`。历史训练、配置、模型、结果和当前运行指针未改写。
+
+当前交付范围是模块实现、原训练器/评估器可选接口、CPU 行为测试及来源/预算准备。**不是已经接通并验证的生产实验流水线**：命令入口只支持审计与准备；即使输入填写完整，`--execute` 也会明确拒绝启动。完整老师搜索调度与重放、初始 G 预训练编排、真实来源绑定及 GPU 语义验证尚待完成。没有启动训练或补采数据，也没有训练好的新 G 或新 Actor。
+
+## 修改清单
+
+| 位置 | 实现与作用 |
+|---|---|
+| `generative_bridge/contracts.py`、`outcomes.py` | 锁定原 pending 全集与采样契约；分开记录 verified_solution、searched_no_solution、not_scheduled、incomplete、invalid；学生结果不能倒写老师结果；输出结果矩阵。 |
+| `data.py`、`feedback_data.py` | 真正执行动作和动作前后观测、TRAIN/祖先 split、完整成功、精确 Actor/normalizer 采用凭证准入；无解/未搜索老师不限制合法学生回流。history 中保留旧学生采用凭证；三组按祖先→轨迹→窗口采样，空组重新归一。 |
+| `student.py` | 复用原 Actor 恢复及原 PPO 数值保护；同一 loss 挂接可选 demo 和保持项。整轮空 demo 不创建目标、采样器或示范 RNG，继续 PPO 和声明保持项；真实执行计数区分 JIT 跟踪和消费。 |
+| `network.py`、`diffusion.py` | H=16、76D 条件、4D 动作、3,131,716 参数 U-Net；100 步 epsilon MSE、DDIM20；增量更新最多 2000 步，固定开发噪声，incumbent 参与选择，平局保留 incumbent。完整 params/EMA/optimizer/RNG/normalizer 保存恢复。 |
+| `proposals.py`、`teacher.py`、`rollout.py` | 32 候选生成、整段真实动作差分代价、完整成功优先、独立重放状态校验；第 16 步转同一续接 Actor 的接口。source-only 重查成功作为来源冲突，不能记老师救回。尚缺真实生产搜索调度层。 |
+| `protocol.py`、`artifacts.py` | 基于回调和持久凭证的阶段编排；预留 PPO/评估预算后安排老师。G 失败可显式重试、记累计成本，不重复已提交 PPO；恢复重验语料和实际 G payload，最后提交完整轮次指针。 |
+| `rewards.py`、原 `pulse_exploration.py` | 只在显式启用新契约时应用用户奖励；原 pending 构造和原补训规则保留。增加独立成功轨迹原始观测录制开关。 |
+| 原 `pulse_exploration_runtime.py` | 关闭新开关时保留原行为；开启时记录真实 pre/post observation、动作及来源代码，允许显式桥接前缀后无重置续接。该物理执行路径尚未做 GPU 验证。 |
+| 原 `training/formal.py` | 在原训练器中接入一个可选联合损失适配器，拒绝重复叠加旧 retention。 |
+| `cli/run_generative_bridge.py`、配置 | 审计/准备入口；保存原版 v1.1 YAML；单独保存显式禁执行的奖励 overlay。 |
+
+原 Actor 76D/256×3、critic 106D、动作顺序、控制时序、物理模型、原任务奖励及后扰动重置语义没有借此更改。补训资格取原支持全集，老师子集仅提供附加教案。老师正常无解或本轮不安排搜索时可以没有示范；工程错误与执行不完整不伪装成正常无解。
+
+## 奖励与损失
+
+用户补充对应 `conversion=0`、`adoption_bonus=2`、`novelty=0.02`、`repeat=0.02`、`failure=0.10`、`pulse_failure=2`、`teacher_success_bonus=0`。+2 要求学生 0→1 且该精确模型最终通过采用；局部成功但整轮拒绝不拿 +2。已执行学生失败为 −0.1；实际施加扰动导致物理失败为 −2，即使没有可量化几何 cell 也不能漏记；unknown 不当失败。该反馈与原 Actor 任务奖励是两个接口。
+
+G 使用全元素平均 epsilon MSE，不把分组采样权重再乘入损失。PPO 保持原目标，示范系数按本次训练转移从 0.2 线性衰减至 0.05，保持项 0.2 使用冻结源模型及其 normalizer。空示范情况下示范损失关闭；G 没有新合法窗口时参数、优化器和 RNG 都不推进。
+
+## 来源和迁移审计
+
+详见 [来源审计](source_audit.json) 与 [迁移审计](v1_to_v1_1_audit.md)。只读检查了用户 IDE 指定的 current_source.json，**没有把它自动选为新实验来源**。
+
+- 审计指针指向 `lineage_repair_0093`；Actor 153,352 参数，critic 159,233 参数。Actor、critic、normalizer 哈希通过核对。
+- 此来源 pending_fraction 是 **0.5**，重置为 20% 固定跳跃起点、80% 完整快照；不是套用其他历史版本的比例。
+- 审计第 95 轮 162 个有效 pending：学生成功 80、失败 82；整轮采用为 false（旧正例保持 10/12，低于 0.9）。这 80 条局部成功不能冒充已采用成功。
+- 被审计的旧后缀 NPZ 缺少原始动作前观测。本次可准入 G 的真实新窗口为 **0**；该结论仅针对列明的审计文件，不推断全部历史档案均不可用。
+- 尚缺指定的新实验源 Actor/G、锁定 TRAIN/dev 祖先划分、core/protected/solver 开发面板及执行预算。没有自动补采、打开 final TEST 或选择“最新”模型。
+
+## 验证与回流示例
+
+CPU 最终相关回归：**95 passed，17.58 秒**，无失败/跳过。原始 [JUnit](cpu_tests.xml)、[分类测试结果](test_results.json) 可复查。覆盖新模块以及原探索奖励、策略保持、蒸馏、PPO 数值保护、探索和分批评估接口；不是整个仓库所有测试。
+
+空数据测试包括：空教案保留 PPO/keep、不实例化示范采样器；零附加权重回归原 loss；真实安装的 Brax PPO loss/原网络在构造 Transition 上做受保护优化；无新 G 数据完全 no-op。恢复测试包括完整训练状态和下一步等价、G 失败后不重复学生补训、编号重试累计预算、语料及已提交 G payload 篡改拒绝。
+
+[数据回流示例](fixture_evidence/generator_corpus_update.json) 是明确标记的 **CPU 构造夹具**：老师 searched_no_solution，学生 actor-only 的 18 步完整成功，通过精确采用凭证后形成 3 个 H16 窗口。它展示准入路径，不是物理成功轨迹，未加入生产训练数据。另有 [15 格状态矩阵](fixture_evidence/result_matrix.json) 和 [逐根记录](fixture_evidence/bidirectional_root_outcomes.jsonl)。真实老师成功、真实老师无解但学生成功两类新物理示例均未采集；不能把夹具当研究证据。
+
+| 证据层 | 本次状态 |
+|---|---|
+| CPU 逻辑、损失、架构、持久化恢复 | 已通过上述 95 项测试；架构做实际初始化、前向和梯度检查 |
+| GPU 物理：恢复、H16 切换、重放、PPO | 未运行；CPU 测试不能证明物理等价 |
+| 研究性能：生成器价值、回流收益、独立种子、最终测试 | 未运行；没有性能结论 |
+
+## 模型版本和成本账本
+
+[模型/依赖版本](model_versions.json) 记录审计模型身份、固定架构、基础代码版本和环境版本；本次没有新的训练模型版本。实现版本以包含本文件的 Git 提交为准。
+
+[新实验成本账本](preparation/cost_ledger.json)：新实验物理交互 0、正式监督更新 0、GPU 物理/研究实验 not_run。CPU 测试确实执行了夹具优化步骤，**不计成实验更新，也不宣称它们没有计算成本**；本次累计 CPU 夹具更新数与全过程墙钟未统一计量，最终测试墙钟由 JUnit 记录。
+
+[五臂对照计划](preparation/comparison_plan.json) 给出每臂 680,800 次物理交互上限的示例拆分；PPO-only 将省下的搜索预算分配回原 PPO（547,200）与原采集（3,200），共同诊断/采用为 130,400。其他臂为 PPO 128,000、搜索 422,400、共同诊断/采用 130,400。所有臂保持同一源任务/重置及保持项；新旧 G 比较必须固定同一个续接 Actor。
+
+这只是物理交互预算对齐的准备表，**不是已完成等总成本实验**：监督更新、开发评估计算和墙钟预算仍须共同锁定。示例数字不构成启动授权。G 增量墙钟上限采用步骤边界检查，单个计算/开发评分可能越过截止点；严格进程级超时尚未实现。
+
+## 后续准备计划与限制
+
+1. 指定并锁定实际源 Actor、normalizer、G 初始来源、完整支持池、TRAIN/dev 祖先清单及各阶段预算；来源未解决前不启动实验。
+2. 完成源绑定的生产调度：老师 32 候选执行/选中重放/教案导出、初始 G 预训练日程、真实采用面板及各阶段凭证连接。当前 `run_round` 是可恢复回调引擎，不能冒充已有端到端启动器。
+3. 预声明小规模 GPU 工程验证预算，验证源恢复、原 pending 采样、H16 无重置交接、空 demo PPO、真实 TRAIN 回流和重启恢复；启动时按 JIT 规则启用错误/完成通知。
+4. 工程验收后再按锁定的等总预算方案实施对照；新旧 G 使用同一续接 Actor，分别报告物理交互、监督计算、开发评价和墙钟。未经声明不自动进入大训练。
+
+可复现 CPU 命令（仓库根目录）：
+
+```bash
+PYTHONPATH=JIT/src JAX_PLATFORMS=cpu /home/qy/mujoco_playground/.venv/bin/python -m pytest -q JIT/tests/test_generative_bridge_*.py JIT/tests/test_discovery_conversion_reward.py JIT/tests/test_policy_retention.py JIT/tests/test_policy_distillation.py JIT/tests/test_ppo_numerics.py JIT/tests/test_pulse_exploration.py JIT/tests/test_pulse_evaluation_batches.py JIT/tests/test_probe_training_action_pulse.py
+```
+
+准备命令使用新的输出目录，不覆盖既有产物：
+
+```bash
+PYTHONPATH=JIT/src /home/qy/mujoco_playground/.venv/bin/python JIT/cli/run_generative_bridge.py prepare --spec JIT/configs/generative_bridge_v1_1.yaml --output /tmp/jit_bridge_prepare_new
+```

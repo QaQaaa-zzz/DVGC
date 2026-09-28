@@ -1,0 +1,8 @@
+{
+  "fixture_only": true,
+  "note": "The synthetic trace exists solely to exercise admission logic; never a production dataset.",
+  "physical_interactions": 0,
+  "production_fake_samples_created": false,
+  "real_teacher_success_examples": 0,
+  "real_teacher_unsolved_student_success_examples": 0
+}

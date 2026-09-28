@@ -1,0 +1,92 @@
+[
+  {
+    "actor_task_reward_and_resets": "same_locked_source",
+    "actor_to_generator": false,
+    "additional_original_acquisition": 3200,
+    "candidate_mix": null,
+    "common_diagnostic_and_acceptance": 130400,
+    "execute": false,
+    "name": "ppo_only_matched_total_budget",
+    "physical_interaction_ceiling": 680800,
+    "retention_coefficient": 0.2,
+    "search_interactions": 0,
+    "student_transitions": 547200,
+    "supervised_update_budget": 0,
+    "wall_time_budget": "requires_separate_declaration"
+  },
+  {
+    "actor_task_reward_and_resets": "same_locked_source",
+    "actor_to_generator": false,
+    "additional_original_acquisition": 0,
+    "candidate_mix": {
+      "colored_noise": 31,
+      "source_only": 1
+    },
+    "common_diagnostic_and_acceptance": 130400,
+    "execute": false,
+    "name": "colored_or_icem_teacher",
+    "physical_interaction_ceiling": 680800,
+    "retention_coefficient": 0.2,
+    "search_interactions": 422400,
+    "student_transitions": 128000,
+    "supervised_update_budget": "requires_separate_declaration",
+    "wall_time_budget": "requires_separate_declaration"
+  },
+  {
+    "actor_task_reward_and_resets": "same_locked_source",
+    "actor_to_generator": false,
+    "additional_original_acquisition": 0,
+    "candidate_mix": {
+      "colored_noise": 15,
+      "diffusion": 16,
+      "source_only": 1
+    },
+    "common_diagnostic_and_acceptance": 130400,
+    "execute": false,
+    "name": "diffusion_teacher_only_generator_updates",
+    "physical_interaction_ceiling": 680800,
+    "retention_coefficient": 0.2,
+    "search_interactions": 422400,
+    "student_transitions": 128000,
+    "supervised_update_budget": "requires_separate_declaration",
+    "wall_time_budget": "requires_separate_declaration"
+  },
+  {
+    "actor_task_reward_and_resets": "same_locked_source",
+    "actor_to_generator": true,
+    "additional_original_acquisition": 0,
+    "candidate_mix": {
+      "colored_noise": 15,
+      "diffusion": 16,
+      "source_only": 1
+    },
+    "common_diagnostic_and_acceptance": 130400,
+    "execute": false,
+    "name": "full_bidirectional_updates",
+    "physical_interaction_ceiling": 680800,
+    "retention_coefficient": 0.2,
+    "search_interactions": 422400,
+    "student_transitions": 128000,
+    "supervised_update_budget": "requires_separate_declaration",
+    "wall_time_budget": "requires_separate_declaration"
+  },
+  {
+    "actor_task_reward_and_resets": "same_locked_source",
+    "actor_to_generator": false,
+    "additional_original_acquisition": 0,
+    "candidate_mix": {
+      "colored_noise": 15,
+      "diffusion": 16,
+      "source_only": 1
+    },
+    "common_diagnostic_and_acceptance": 130400,
+    "execute": false,
+    "name": "frozen_generator",
+    "physical_interaction_ceiling": 680800,
+    "retention_coefficient": 0.2,
+    "search_interactions": 422400,
+    "student_transitions": 128000,
+    "supervised_update_budget": 0,
+    "wall_time_budget": "requires_separate_declaration"
+  }
+]

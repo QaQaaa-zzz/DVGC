@@ -1,0 +1,52 @@
+{
+  "cells": [
+    {
+      "adoption": "False",
+      "count": 1,
+      "outcome_class": "teacher_not_scheduled_student_failed"
+    },
+    {
+      "adoption": "True",
+      "count": 1,
+      "outcome_class": "teacher_not_scheduled_student_succeeded"
+    },
+    {
+      "adoption": "False",
+      "count": 1,
+      "outcome_class": "teacher_solved_student_failed"
+    },
+    {
+      "adoption": "True",
+      "count": 1,
+      "outcome_class": "teacher_solved_student_succeeded"
+    },
+    {
+      "adoption": "False",
+      "count": 1,
+      "outcome_class": "teacher_unsolved_student_failed"
+    },
+    {
+      "adoption": "True",
+      "count": 1,
+      "outcome_class": "teacher_unsolved_student_succeeded"
+    },
+    {
+      "adoption": "False",
+      "count": 7,
+      "outcome_class": "unknown_or_incomplete"
+    },
+    {
+      "adoption": "True",
+      "count": 2,
+      "outcome_class": "unknown_or_incomplete"
+    }
+  ],
+  "teacher_status_counts": {
+    "incomplete": 3,
+    "invalid": 3,
+    "not_scheduled": 3,
+    "searched_no_solution": 3,
+    "verified_solution": 3
+  },
+  "total_roots": 15
+}

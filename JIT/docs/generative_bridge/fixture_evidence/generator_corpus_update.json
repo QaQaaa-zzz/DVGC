@@ -1,0 +1,39 @@
+{
+  "admission": [
+    {
+      "actor_sha256": "fixture_student",
+      "bridge_verified_against_actor_sha256": null,
+      "complete": true,
+      "eligible": true,
+      "evidence_role": "constructed_cpu_fixture_not_physics",
+      "full_success": true,
+      "inherited_split": "generator_train",
+      "model_sha256": "fixture_model",
+      "normalizer_sha256": "fixture_normalizer",
+      "origin_type": "adopted_actor",
+      "prior_teacher_status": "searched_no_solution",
+      "protocol_sha256": "fixture_protocol",
+      "reason": "admitted",
+      "role": "train",
+      "root_context_sha256": "fixture_context",
+      "root_episode_id": "CPU_FIXTURE_ANCESTOR",
+      "root_id": "CPU_FIXTURE_ROOT",
+      "source_actor_sha256": "fixture_old_actor",
+      "source_group": "actor_new",
+      "success_criterion": "stable_forward_recovery",
+      "trajectory_sha256": "c095d36431d1c4989a85c8d51b5b1f3a84cc4d9dbcae172d3593ccfcc648634b",
+      "window_count": 3
+    }
+  ],
+  "new_data": true,
+  "realized_mix": {
+    "actor_new": 1.0,
+    "history": 0.0,
+    "teacher_new": 0.0
+  },
+  "requested_mix": {
+    "actor_new": 0.25,
+    "history": 0.5,
+    "teacher_new": 0.25
+  }
+}

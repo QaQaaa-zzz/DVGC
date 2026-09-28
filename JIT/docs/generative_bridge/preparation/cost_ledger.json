@@ -1,0 +1,8 @@
+{
+  "actual_physics_interactions": 0,
+  "actual_supervised_updates": 0,
+  "cpu_logic_tests": "reported_separately",
+  "gpu_physics": "not_run",
+  "research_performance": "not_run",
+  "scope": "new_experiment_only_excludes_CPU_fixture_optimizer_tests"
+}
