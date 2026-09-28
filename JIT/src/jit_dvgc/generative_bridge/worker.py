@@ -19,6 +19,22 @@ def source_payload(frozen):
     return policy,payload
 
 
+def generator_reference(config):
+    """Keep G conditioning fixed when an accepted Actor changes the teacher tail."""
+    reference=config.get('generator_reference_frozen_policy')
+    if reference is None:
+        return config['source_frozen_policy']
+    if not isinstance(reference,dict) or set(reference)!={'path','sha256'}:
+        raise ValueError('generator reference requires path and sha256')
+    if file_sha(reference['path'])!=reference['sha256']:
+        raise ValueError('generator reference manifest hash drift')
+    baseline,_=source_payload(reference['path'])
+    tail,_=source_payload(config['source_frozen_policy'])
+    if baseline['xml_sha256']!=tail['xml_sha256']:
+        raise ValueError('generator reference physics differs from teacher tail')
+    return reference['path']
+
+
 def generator_template(frozen,seed):
     import jax
     import jax.numpy as jp
@@ -38,7 +54,7 @@ def run_generator(config):
     from .diffusion import train_pretrain,restore_state
     import jax
     if jax.default_backend()!='gpu':raise RuntimeError('production G worker requires GPU')
-    net,state,identity=generator_template(config['source_frozen_policy'],config['seed'])
+    net,state,identity=generator_template(generator_reference(config),config['seed'])
     corpus=load_corpus(config['corpus'])
     if file_sha(config['dev_fixture'])!=config['dev_fixture_sha256']:raise ValueError('fixed dev fixture drift')
     with np.load(config['dev_fixture'],allow_pickle=False) as a:fixture=tuple(a[k] for k in ('observations','actions','timesteps','noise'))

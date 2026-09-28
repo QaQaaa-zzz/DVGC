@@ -148,6 +148,10 @@ A阶段生产运行冻结于16d4641，运行目录campaign_0001；A0名义物理
 
 新增可选的采用谱系校验与累计教案迁移，保留原始teacher tail/normalizer身份；接受凭证必须绑定真实checkpoint及连续谱系。新增有界promotion编排协议和RSL探索采集/更新准入：每回合20%概率外部均匀覆盖，均匀分支不提供伪造策略log probability，只有当轮学习分支进入探索器PPO，更新凭证禁止重复使用。默认旧流程不变。
 
-这些是Stage B准备模块，未接入完整生产callbacks，未执行Stage B GPU训练；新Actor续接时G条件归一化身份的独立绑定及完整生产适配仍需完成。不得把CPU协议测试称为外循环已运行。新增模块不改写正在排队的code_a1快照。
+这些是Stage B准备模块，未接入完整生产callbacks，未执行Stage B GPU训练；完整生产适配仍需完成。不得把CPU协议测试称为外循环已运行。新增模块不改写正在排队的code_a1快照。
 
 本次准备模块验证：相关全套187项CPU测试通过（31.96秒）；随后episode ID 0边界修正及旧series回归11项通过；探索准入与真实RSL CPU更新补充18项通过。各测试集有重叠，不相加为总数。生产适配仍缺真实explorer admission/NPZ到coordinator的凭证验证桥接、采用Actor到累计教案的tail receipt桥接；Stage B保持关闭。
+
+G条件来源现在可通过generator_reference_frozen_policy的path/sha256独立绑定：worker训练与teacher候选生成共同使用该固定来源，校验manifest、真实checkpoint的Actor/normalizer哈希及同XML；老师续接仍使用当前source_frozen_policy。默认不指定时保持原行为。该接口不等于已完成Stage B生产适配，也不改变排队运行。
+
+上述G来源解耦后，相关完整CPU回归191项通过（32.26秒），包含worker和teacher实际调用路径选择测试。GPU验证仍待资源门禁。

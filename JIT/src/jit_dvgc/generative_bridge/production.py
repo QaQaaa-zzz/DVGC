@@ -295,6 +295,8 @@ class ProductionRunner:
                 'output':str(self.root/('generator_'+mode)),'result':str(self.root/(mode+'_result.json')),
                 'max_wall_seconds':self.spec['budgets']['max_wall_seconds'],
                 'incumbent':incumbent}
+            if 'generator_reference_frozen_policy' in self.spec:
+                config['generator_reference_frozen_policy']=self.spec['generator_reference_frozen_policy']
             path=self.root/(name+'_config.json');atomic_json(path,config)
             try:
                 self.child(name,['JIT/cli/run_generative_bridge.py','worker','--spec',path],0,updates=updates-charged)
@@ -312,7 +314,12 @@ class ProductionRunner:
             result=read(config['result'])
             return result
         stage='generator_selection' if mode=='incremental' else 'generator_pretrain'
-        result=self.journal.stage(stage,{'corpus':corpus,'incumbent':incumbent},execute)
+        inputs={'corpus':corpus,'incumbent':incumbent}
+        if 'generator_reference_frozen_policy' in self.spec:
+            from .worker import generator_reference
+            generator_reference(self.spec)
+            inputs['generator_reference_frozen_policy']=self.spec['generator_reference_frozen_policy']
+        result=self.journal.stage(stage,inputs,execute)
         from .artifacts import validate_generator_receipt
         if 'checkpoint_manifest' in result:validate_generator_receipt(result)
         return result
@@ -391,14 +398,14 @@ class ProductionRunner:
 
     def teacher_search(self,incumbent):
         if not self.panels['new_roots']:return {}
-        from .worker import generator_template
+        from .worker import generator_template,generator_reference
         from .diffusion import restore_state,ddim_sample
         from .proposals import make_candidate_pool
         from .teacher import select_teacher,search_status
         from ..unified_envelope_snapshot import load_unified_envelope_snapshot
         import jax
         import jax.numpy as jp
-        net,template,identity=generator_template(self.spec['source_frozen_policy'],self.spec['seed'])
+        net,template,identity=generator_template(generator_reference(self.spec),self.spec['seed'])
         state=restore_state(Path(incumbent['checkpoint_manifest']).parent,template,identity)
         self.teacher_in_progress=True
         source_results=self.evaluate('teacher_source',self.panels['new_roots'])
