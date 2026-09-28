@@ -14,6 +14,7 @@ def main():
     p.add_argument('--spec',type=Path)
     p.add_argument('--output',type=Path)
     p.add_argument('--previous',type=Path)
+    p.add_argument('--replay-diagnostic',type=Path)
     p.add_argument('--pointer',type=Path)
     p.add_argument('--source-round',type=Path)
     p.add_argument('--repository',type=Path)
@@ -38,7 +39,7 @@ def main():
         if any(getattr(args,k) is None for k in ('previous','output','repository')):
             p.error('recover requires --previous, --output and --repository')
         from jit_dvgc.generative_bridge.recovery import prepare_recovery
-        prepare_recovery(args.previous,args.output,args.repository)
+        prepare_recovery(args.previous,args.output,args.repository,replay_diagnostic=args.replay_diagnostic)
         print(json.dumps({'phase':'prepared','output':str(args.output)}));return
     if args.spec is None:p.error('--spec required')
     spec=json.loads(args.spec.read_text()) if args.spec.suffix=='.json' else yaml.safe_load(args.spec.read_text())

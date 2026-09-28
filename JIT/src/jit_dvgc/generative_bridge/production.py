@@ -367,6 +367,18 @@ class ProductionRunner:
             'ancestors':sorted(set(ancestors)),'role':'generator_dev','training_allowed':False})
         return {'corpus':receipt,'dev_fixture':str(fixture),'dev_fixture_sha256':file_sha(fixture)}
 
+    def replay_teacher(self,ordinal,candidates,actions,selected_id):
+        # Changing 31 search worlds into one replay world changes the GPU physics
+        # layout. Repeat the complete frozen batch, then inspect the same lane.
+        ids=[r['candidate_id'] for r in candidates]
+        if ids!=list(range(1,32)) or selected_id not in ids:
+            raise ValueError('replay requires original 31 candidate identities')
+        results=self.evaluate(f'replay_batch_{ordinal:04d}',candidates,
+            prefixes=actions,source_only=np.zeros(len(candidates),bool))
+        if [r['candidate_id'] for r in results]!=ids:
+            raise ValueError('replay candidate ordering changed or incomplete')
+        return results[ids.index(selected_id)]
+
     def teacher_search(self,incumbent):
         from .worker import generator_template
         from .diffusion import restore_state,ddim_sample
@@ -391,6 +403,7 @@ class ProductionRunner:
             if inherited:
                 if file_sha(inherited['path'])!=inherited['sha256']:raise ValueError('inherited teacher changed')
                 row=read(inherited['path'])
+                if inherited.get('proposal_path'):row['proposal_path']=inherited['proposal_path']
                 if row['generator']!=incumbent or row['source_actor_sha256']!=self.source['actor_sha256']:
                     raise ValueError('inherited teacher model changed')
                 read_teacher_traces({rid:row})
@@ -414,9 +427,9 @@ class ProductionRunner:
                 'generator':incumbent,'candidates':scored,'proposal_sha256':file_sha(poolpath),
                 'historical_source_label':0,'source_recheck_label':0,'new_gain_eligible':True,'training_eligible':True}
             if selected is not None:
-                cid=selected['candidate_id'];replay=self.evaluate(f'replay_{ordinal:04d}',[{**base,'candidate_id':cid}],
-                    prefixes=pool['actions'][cid:cid+1],source_only=np.zeros(1,bool))[0]
-                verified={'candidate_id':cid,'full_success':replay['label']==1}
+                cid=selected['candidate_id'];replay=self.replay_teacher(ordinal,candidates,pool['actions'][1:],cid)
+                verified={'candidate_id':cid,'full_success':replay['label']==1,
+                    'batch_size':31,'selected_lane':cid-1,'layout':'same_as_search'}
                 status=search_status(scored,expected_count=32,verified=verified)
                 row.update(teacher_status=status,selected_candidate_id=cid,verification=verified)
                 if status!='verified_solution':
