@@ -46,12 +46,60 @@ def _config(jit_root, tmp_path, mutate=None):
     return path
 
 
+def _pitch40_config(jit_root, tmp_path, mutate=None):
+    prior = _config(jit_root, tmp_path)
+    prior_payload = json.loads(prior.read_text())
+    candidate = json.loads(prior.read_text())
+    candidate["ppo"]["seed"] = 820703
+    candidate["physical_limits"]["max_abs_pitch"] = np.deg2rad(40.0)
+    candidate["sim2sim_pitch_limit_revision"] = {
+        "resolved_config": str(prior.resolve()),
+        "sha256": hashlib.sha256(prior.read_bytes()).hexdigest(),
+        "new_max_abs_pitch_rad": np.deg2rad(40.0),
+    }
+    assert prior_payload["physical_limits"]["max_abs_pitch"] == pytest.approx(np.deg2rad(75.0))
+    if mutate:
+        mutate(candidate)
+    path = tmp_path / "pitch40.json"
+    path.write_text(json.dumps(candidate))
+    return path
+
+
 def test_sim2sim_config_locks_reward_and_saves_every_block(jit_root, tmp_path):
     cfg = load_config(_config(jit_root, tmp_path))
     assert cfg.ppo.seed == 820702
     assert len(cfg.formal.checkpoint_transitions) == 408
     assert cfg.formal.fixed_evaluation_transitions == ()
     assert cfg.sim2sim_randomization.wheel_forward_friction == (0.35, 0.65)
+
+
+def test_pitch40_successor_changes_only_declared_limit_and_seed(jit_root, tmp_path):
+    cfg = load_config(_pitch40_config(jit_root, tmp_path))
+    assert cfg.ppo.seed == 820703
+    assert cfg.physical_limits.max_abs_pitch == pytest.approx(np.deg2rad(40.0))
+    assert cfg.sim2sim_randomization.wheel_forward_friction == (0.35, 0.65)
+
+
+def test_checked_in_pitch40_config_resolves(jit_root):
+    path = jit_root / "configs/jump_ori_sim2sim_pitch40_10m_seed820703_20260928.json"
+    cfg = load_config(path)
+    assert cfg.ppo.seed == 820703
+    assert cfg.physical_limits.max_abs_pitch == pytest.approx(np.deg2rad(40.0))
+    assert cfg.formal.checkpoint_transitions[-1] == cfg.ppo.requested_transitions
+
+
+@pytest.mark.parametrize(
+    ("mutate", "message"),
+    [
+        (lambda p: p["reward"].update(speed_coeff=9), "pitch.*drift"),
+        (lambda p: p["sim2sim_randomization"].update(actuator_scale=[0.8, 1.2]), "pitch.*drift"),
+        (lambda p: p["physical_limits"].update(max_abs_pitch=np.deg2rad(45)), "declared.*pitch"),
+        (lambda p: p["sim2sim_pitch_limit_revision"].update(sha256="0" * 64), "pitch.*hash"),
+    ],
+)
+def test_pitch40_successor_rejects_other_method_drift(jit_root, tmp_path, mutate, message):
+    with pytest.raises(ValueError, match=message):
+        load_config(_pitch40_config(jit_root, tmp_path, mutate))
 
 
 def test_domain_wrapper_model_slot_controls_runtime_model(jit_root, tmp_path):

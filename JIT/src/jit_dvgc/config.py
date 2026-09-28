@@ -412,12 +412,42 @@ def _validate_sim2sim_v4(
     prior = load_config(path)
     if prior.schema != "jit_phase_u_formal_v4" or prior.formal is None:
         raise ValueError("sim2sim reference must be a formal Phase U v4 config")
+    pitch_revision = payload.get("sim2sim_pitch_limit_revision")
+    if pitch_revision is not None:
+        if not isinstance(pitch_revision, Mapping) or set(pitch_revision) != {
+            "resolved_config", "sha256", "new_max_abs_pitch_rad",
+        }:
+            raise ValueError("pitch revision must identify a pinned config, hash, and pitch limit")
+        previous_path = Path(str(pitch_revision["resolved_config"]))
+        if (not previous_path.is_absolute() or not previous_path.is_file()
+                or file_sha256(previous_path) != pitch_revision["sha256"]):
+            raise ValueError("pitch revision file or hash mismatch")
+        previous = load_config(previous_path)
+        if previous.sim2sim_randomization is None or previous.formal is None:
+            raise ValueError("pitch revision predecessor must be a randomized formal config")
+        declared_pitch = float(pitch_revision["new_max_abs_pitch_rad"])
+        actual_pitch = float(payload["physical_limits"]["max_abs_pitch"])
+        if (not math.isfinite(declared_pitch) or not 0.0 < declared_pitch < previous.physical_limits.max_abs_pitch
+                or not math.isclose(actual_pitch, declared_pitch, rel_tol=0.0, abs_tol=1e-12)):
+            raise ValueError("declared pitch revision limit mismatch")
+        predecessor_identity = copy.deepcopy(dict(previous.raw))
+        revision_identity = copy.deepcopy(dict(payload))
+        revision_identity.pop("sim2sim_pitch_limit_revision")
+        revision_identity["ppo"]["seed"] = predecessor_identity["ppo"]["seed"]
+        revision_identity["physical_limits"]["max_abs_pitch"] = predecessor_identity["physical_limits"]["max_abs_pitch"]
+        if revision_identity != predecessor_identity:
+            raise ValueError("pitch revision method drift")
+        if ppo.seed == previous.ppo.seed:
+            raise ValueError("pitch revision training must have an independent seed")
     candidate_identity = copy.deepcopy(dict(payload))
     candidate_identity.pop("sim2sim_reference")
     candidate_identity.pop("sim2sim_randomization")
+    candidate_identity.pop("sim2sim_pitch_limit_revision", None)
     reference_identity = copy.deepcopy(dict(prior.raw))
     reference_identity.pop("rerun_reference", None)
     candidate_identity["ppo"]["seed"] = reference_identity["ppo"]["seed"]
+    if pitch_revision is not None:
+        candidate_identity["physical_limits"]["max_abs_pitch"] = reference_identity["physical_limits"]["max_abs_pitch"]
     for field in ("checkpoint_transitions", "fixed_evaluation_transitions"):
         candidate_identity["formal"][field] = reference_identity["formal"][field]
     if candidate_identity != reference_identity:
@@ -850,7 +880,9 @@ def resolve_config_payload(payload: Mapping[str, Any], *, runtime_only: bool = F
         raise ValueError("action order does not match the immutable contract")
     generated_v4 = _is_generated_v4(payload, schema)
     historical_rerun_v4 = "rerun_reference" in payload
-    sim2sim_v4 = "sim2sim_reference" in payload or "sim2sim_randomization" in payload
+    sim2sim_v4 = any(field in payload for field in (
+        "sim2sim_reference", "sim2sim_randomization", "sim2sim_pitch_limit_revision",
+    ))
     if historical_rerun_v4 and (schema != "jit_phase_u_formal_v4" or generated_v4):
         raise ValueError("rerun reference is only valid for historical v4 fresh training")
     if sim2sim_v4 and (schema != "jit_phase_u_formal_v4" or generated_v4 or historical_rerun_v4):
