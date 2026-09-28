@@ -1,10 +1,12 @@
 # JIT 当前状态与证据
 
-## 2026-09-28 Phase U speed2 1000万步复跑已排队
+## 2026-09-28 Phase U speed2 1000万步从零复跑进行中
 
 用户要求从零重开历史 Phase U speed2 训练，超过1000万训练转移并增加中途 checkpoint，按固定评估回报保存 bestmodel。新运行使用原始 `seed820701` 冻结配置及模型/参考哈希；仅将目标设为10,002,432转移，保存初始、每491,520步和最终共22个checkpoint，21个非零候选各评估同8个自然初态和8个空中RSI种子。固定评估额外最多134,400转移；总声明上限10,136,832。bestmodel按16个逐回合实际截断奖励的平均回报排序，属于开发选择，不是落地成功或独立TEST。
 
-执行代码为独立提交`ad1bc3d`的归档快照；原始实验和checkpoint未改。2026-09-28启动GPU空闲监督后状态为`waiting`，当时STTW训练PID252279占用GPU，尚无新增训练转移。桌面错误/完成监视器已启动并有心跳。以[实验入口](../runs/experiments/phaseu_speed2_dense10m_20260928/INDEX.md)、[实时状态](../runs/experiments/phaseu_speed2_dense10m_20260928/execution/status.json)和训练目录实际文件为准；不得将排队视作训练完成。
+首轮归档源码为`ad1bc3d`；训练到7,864,320步后，在同进程固定评估创建CUDA graph时显存不足而失败，保存的checkpoint及原始运行记录不改。该轮已完成的固定面板中，开发回报最高候选为6,881,280步，但自然初态8/8卡住，不能称为任务成功。相同步数比较见[诊断图](../runs/monitoring/phaseu_speed2_matched_steps_20260928/INDEX.md)：约498万步处旧运行平均回合奖励约1222，新运行约−32且93%以卡住结束；旧运行也未完成落地任务。源码版本有差异，尚未隔离证明差异的因果来源。
+
+用户选择再从零训练完整10,002,432步。新归档源码`a89b502`将固定评估延后至训练结束，并使42个面板分别在独立GPU进程执行，避免训练内评估不断累积显存。22个checkpoint、固定种子、方法参数、评估覆盖和10,136,832总上限沿用，失败记录独立保留。130项相关CPU测试通过、1项跳过；2026-09-28 12:31 CST已确认新运行以GPU backend、fresh初始化启动，通知监视器有心跳。当前结果尚未完成，以[新实验入口](../runs/experiments/phaseu_speed2_dense10m_deferred_20260928/INDEX.md)、[实时状态](../runs/experiments/phaseu_speed2_dense10m_deferred_20260928/execution/status.json)和训练目录实际文件为准。
 
 
 ## 2026-09-26 Phase U numerical recovery queued
