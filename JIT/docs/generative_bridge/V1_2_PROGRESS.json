@@ -1,0 +1,65 @@
+{
+  "version": "1.2",
+  "snapshot_utc": "2026-09-28T14:40:18.589891+00:00",
+  "implementation_commit": "16d4641e0cb6ec26ad736ac53f23cbcc7aa01a56",
+  "source_checkpoint": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/checkpoints/transition_4988928",
+  "source_training_transitions": 4988928,
+  "new_training_transitions": 0,
+  "parameter_hashes": {
+    "actor": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+    "critic": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1",
+    "normalizer": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86"
+  },
+  "action_parity": {
+    "dimension": 76,
+    "exact": true,
+    "max_absolute_difference": 0.0,
+    "observations": 64,
+    "seed": 92812
+  },
+  "cpu_tests_passed": 170,
+  "gpu_validation": "waiting_for_gpu_idle",
+  "campaign_phase": "waiting",
+  "campaign_stage": "source_nominal_gate",
+  "budgets": {
+    "bc_updates_cap": 2000,
+    "generator_updates_cap": 22000,
+    "physics_cap": 4421600,
+    "retry_physics_cap": 0,
+    "wall_seconds": 86400
+  },
+  "student_arms": {
+    "A": "PPO+keep",
+    "B": "cumulative demos+PPO+keep",
+    "C": "cumulative demos+warmup+PPO+keep"
+  },
+  "ppo_steps_per_arm": 128000,
+  "primary_candidate": "C",
+  "stage_B_execute": false,
+  "final_TEST_open": false,
+  "old_loss_records": 28,
+  "old_distinct_lost_roots": 24,
+  "old_loss_counts": {
+    "recovery_0002": {
+      "core": 9,
+      "protected": 3,
+      "new_roots": 1
+    },
+    "series_0001/round_0001": {
+      "core": 8,
+      "protected": 7,
+      "new_roots": 0
+    }
+  },
+  "old_training_stop": "user_requested_SIGINT; prior artifacts preserved",
+  "tensorboard_url": "http://127.0.0.1:6017",
+  "tensorboard_http_verified": true,
+  "new_training_scalar_loaded": false,
+  "local_evidence": "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/campaign_0001/INDEX.md",
+  "limitations": [
+    "CPU tests are not GPU validation",
+    "single planned training seed",
+    "equal PPO steps are not equal total budget",
+    "source nominal failure stops later training; no source substitution"
+  ]
+}
