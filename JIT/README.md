@@ -12,6 +12,7 @@
 - [训练路线](docs/JIT_TRAINING_ROADMAP.md) · [代码组织](docs/CODE_ORGANIZATION.md) · [验证](docs/VERIFICATION.md)
 - [论文大纲](docs/JIT_PAPER_OUTLINE.md) · [详细草稿](docs/paper/JIT_PAPER_DRAFT.md) · [PDF](docs/paper/JIT_PAPER_DRAFT.pdf)
 - [科研控制框图、结果图和重绘数据](docs/paper/README.md)
+- [固定环境与奖励方法名称：jump_ori](docs/model_aliases/README.md)
 
 核心代码在 `src/jit_dvgc/`，薄入口在 `cli/`，声明配置在 `configs/`。使用 `/home/qy/mujoco_playground/.venv/bin/python`，从仓库根目录设置 `PYTHONPATH=JIT/src`。原始工件在 `runs/`，禁止重写历史失败和旧协议结果。
 

@@ -1,0 +1,44 @@
+{
+  "configuration": {
+    "path": "/home/qy/DVGC/JIT/runs/code_snapshots/phaseu_speed2_dense10m_deferred_20260928/JIT/configs/phase_u_speed2_dense_10m_deferred_seed820701_20260928.json",
+    "sha256": "6ccff2cb79adbfa6b14a80785f16b449ff8cef44ee4a5428a95f3f0af742a4ab"
+  },
+  "description": "Phase U propulsion-ascent speed2 training environment and reward used by the fresh 10,002,432-transition deferred-evaluation run.",
+  "example_training_run": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_speed2_denseckpt_deferred_10002432_seed820701_20260928",
+  "immutability": "If any pinned byte changes, give the changed method a new alias or version. Do not silently move jump_ori.",
+  "implementation": {
+    "config_loader": {
+      "path": "/home/qy/DVGC/JIT/runs/code_snapshots/phaseu_speed2_dense10m_deferred_20260928/JIT/src/jit_dvgc/config.py",
+      "sha256": "6b0bb4dc74b58041daa3cdcc847682f3e165e2457f157c9d5f2f2102440d91a6"
+    },
+    "environment": {
+      "path": "/home/qy/DVGC/JIT/runs/code_snapshots/phaseu_speed2_dense10m_deferred_20260928/JIT/src/jit_dvgc/env.py",
+      "sha256": "3999bcbca2bb7c72b915c4153c80e9ddf87c9314e742c6a0247ed88811becaee"
+    },
+    "event_and_terminal_semantics": {
+      "path": "/home/qy/DVGC/JIT/runs/code_snapshots/phaseu_speed2_dense10m_deferred_20260928/JIT/src/jit_dvgc/semantics.py",
+      "sha256": "e7c07a53a52e428fe900b0a1073a7f2fd999860b85b67b45290a47e25ca4f024"
+    },
+    "reward": {
+      "path": "/home/qy/DVGC/JIT/runs/code_snapshots/phaseu_speed2_dense10m_deferred_20260928/JIT/src/jit_dvgc/rewards.py",
+      "sha256": "6ca5acd949326866c2e1645c645497a8b71d4bab5498fe1c35a4d1d9b6774e01"
+    }
+  },
+  "kind": "frozen_training_environment_and_reward",
+  "name": "jump_ori",
+  "physical_assets": {
+    "jump_reference": {
+      "path": "/home/qy/DVGC/JIT/runs/code_snapshots/phaseu_speed2_dense10m_deferred_20260928/data/reference_jump.csv",
+      "sha256": "612fe758eb1042481b9c7642cc9b92d3e9c14b4a75c9deaf5340183c928bc41f"
+    },
+    "mujoco_xml": {
+      "path": "/home/qy/DVGC/JIT/runs/code_snapshots/phaseu_speed2_dense10m_deferred_20260928/assets/orange_bike_4kg_horizontal.xml",
+      "sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+    }
+  },
+  "resolved_config_sha256": "7168f317dd3e2fa0decd71d2e6789d24400dd049a0944dc5affd06c054952cba",
+  "schema": "dvgc_jit_model_alias_v1",
+  "scope": "Exact environment, reward, reset, action, physical and trainer configuration in the pinned source; no trained policy checkpoint is selected by this alias.",
+  "source_commit": "a89b5020cca5fa9e93bb4d9c2fee4b889adfa19f",
+  "source_snapshot": "/home/qy/DVGC/JIT/runs/code_snapshots/phaseu_speed2_dense10m_deferred_20260928"
+}
