@@ -381,8 +381,8 @@ def _validate_historical_rerun_v4(
         raise ValueError("rerun checkpoints must span zero through target")
     if tuple(sorted(set(checkpoints))) != checkpoints or any(step % ppo.block_transitions for step in checkpoints):
         raise ValueError("rerun checkpoints must be unique sorted PPO blocks")
-    if formal.fixed_evaluation_transitions != checkpoints[1:]:
-        raise ValueError("rerun evaluation must cover every nonzero checkpoint")
+    if formal.fixed_evaluation_transitions not in ((), checkpoints[1:]):
+        raise ValueError("rerun evaluation must cover all nonzero checkpoints or be deferred")
     if formal.resume_semantics != "fresh_only":
         raise ValueError("rerun must initialize fresh")
 

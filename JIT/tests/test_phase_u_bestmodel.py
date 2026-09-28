@@ -47,6 +47,16 @@ def test_best_model_uses_actual_fixed_episode_returns_and_updates_link(tmp_path)
     assert report["mean_episode_return"] == 5.0
     assert (tmp_path / "bestmodel" / "model" / "payload.pkl").read_bytes() == b"model 200"
     assert len(report["candidates"]) == 2
+    assert [row["training_transitions"] for row in report["candidates"]] == [100, 200]
+
+
+def test_best_model_lists_candidates_in_numeric_transition_order(tmp_path):
+    for step in (1000, 200):
+        _checkpoint(tmp_path, step)
+        _panel(tmp_path, "evaluations", step, (1.0, 3.0))
+        _panel(tmp_path, "diagnostics/airborne_rsi", step, (5.0, 7.0))
+    report = update_best_model(tmp_path)
+    assert [row["training_transitions"] for row in report["candidates"]] == [200, 1000]
 
 
 def test_best_model_ignores_incomplete_panel(tmp_path):

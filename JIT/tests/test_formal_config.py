@@ -111,13 +111,23 @@ def test_historical_v4_rerun_keeps_method_and_allows_dense_checkpoints(jit_root,
         (lambda p: p["reward"].update(speed_coeff=2.0), "reference.*drift"),
         (lambda p: p["ppo"].update(seed=123), "reference.*drift"),
         (lambda p: p["rerun_reference"].update(sha256="0" * 64), "reference.*hash"),
-        (lambda p: p["formal"].update(fixed_evaluation_transitions=[]), "nonzero checkpoint"),
+        (lambda p: p["formal"].update(fixed_evaluation_transitions=[491520]), "all nonzero checkpoints or be deferred"),
         (lambda p: p["ppo"].update(num_evals=407), "num_evals"),
     ],
 )
 def test_historical_v4_rerun_rejects_method_or_schedule_drift(jit_root, tmp_path, mutate, message):
     with pytest.raises(ValueError, match=message):
         load_config(_historical_rerun_config(jit_root, tmp_path, mutate))
+
+
+def test_historical_v4_rerun_can_defer_all_fixed_panels(jit_root, tmp_path):
+    path = _historical_rerun_config(
+        jit_root, tmp_path,
+        lambda p: p["formal"].update(fixed_evaluation_transitions=[]),
+    )
+    config = load_config(path)
+    assert config.formal.fixed_evaluation_transitions == ()
+    assert len(config.formal.checkpoint_transitions) == 22
 
 
 def test_generated_v4_config_is_reference_locked_with_exact_610_block_schedule(

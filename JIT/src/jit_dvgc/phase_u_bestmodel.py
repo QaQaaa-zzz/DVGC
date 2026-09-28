@@ -45,7 +45,10 @@ def update_best_model(run_dir: Path) -> dict | None:
     """Write a bestmodel link and score only from complete paired fixed panels."""
     run_dir = Path(run_dir).resolve()
     candidates = []
-    for checkpoint in sorted((run_dir / "checkpoints").glob("transition_*")):
+    for checkpoint in sorted(
+        (run_dir / "checkpoints").glob("transition_*"),
+        key=lambda path: int(path.name.removeprefix("transition_")),
+    ):
         step = int(checkpoint.name.removeprefix("transition_"))
         if step == 0:
             continue
