@@ -11,6 +11,7 @@ import numpy as np
 import pytest
 
 from jit_dvgc.config import load_config
+from jit_dvgc.env import TwoPhaseBikeEnv
 from jit_dvgc.phase_u_sim2sim_randomization import (
     apply_root_reset_perturbation,
     sample_domain_fields,
@@ -51,6 +52,14 @@ def test_sim2sim_config_locks_reward_and_saves_every_block(jit_root, tmp_path):
     assert len(cfg.formal.checkpoint_transitions) == 408
     assert cfg.formal.fixed_evaluation_transitions == ()
     assert cfg.sim2sim_randomization.wheel_forward_friction == (0.35, 0.65)
+
+
+def test_domain_wrapper_model_slot_controls_runtime_model(jit_root, tmp_path):
+    env = TwoPhaseBikeEnv(load_config(_config(jit_root, tmp_path)), convert_model=False)
+    assert env._mjx_model is env.mjx_model
+    marker = object()
+    env._mjx_model = marker
+    assert env.mjx_model is marker
 
 
 @pytest.mark.parametrize(

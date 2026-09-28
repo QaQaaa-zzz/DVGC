@@ -79,6 +79,9 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
             raise ValueError("descent_recovery requires a snapshot pool")
         bundle = load_host_model(config)
         self._bundle: ModelBundle = put_warp_model(bundle) if convert_model else bundle
+        # Playground's domain wrapper temporarily swaps this slot while tracing
+        # each vectorized environment. Keep runtime reads tied to that slot.
+        self._mjx_model = self._bundle.mjx_model
         self._geometry = build_geometry_contract(bundle.mj_model)
         self._initial_x = float(
             bundle.mj_model.key_qpos[
@@ -109,7 +112,7 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
 
     @property
     def mjx_model(self):
-        return self._bundle.mjx_model
+        return self._mjx_model
 
     @property
     def resolved_config(self) -> ResolvedConfig:
