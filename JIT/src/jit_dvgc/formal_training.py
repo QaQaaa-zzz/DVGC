@@ -31,6 +31,7 @@ from .evaluation import (
 )
 from .ppo import make_network_factory, wrap_for_jit_training
 from .phase_u_warm_start import load_phase_u_actor_initialization
+from .phase_u_sim2sim_randomization import make_phase_u_domain_randomization
 from .provenance import (
     InteractionAccounting,
     RunDeclaration,
@@ -728,6 +729,10 @@ def run_phase_u_formal(
         restore_kwargs = {"restore_params": restore_params}
         if restore_value_fn is not None:
             restore_kwargs["restore_value_fn"] = restore_value_fn
+        if config.sim2sim_randomization is not None:
+            restore_kwargs["randomization_fn"] = make_phase_u_domain_randomization(
+                env, config.sim2sim_randomization
+            )
         make_policy, _params, final_metrics = trainer(
             environment=env,
             num_timesteps=remaining,

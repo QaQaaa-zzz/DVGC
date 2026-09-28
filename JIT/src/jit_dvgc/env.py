@@ -41,6 +41,7 @@ from .semantics import (
     initial_event_state,
 )
 from .handoff_snapshot import HandoffSnapshot, capture_snapshot, compatibility_identity, restore_snapshot
+from .phase_u_sim2sim_randomization import apply_root_reset_perturbation
 from .snapshot_pool import SnapshotPool
 from .descent_semantics import DescentSignals, initial_descent_events, advance_descent_events, classify_descent_terminal
 from .descent_rewards import DescentRewardInputs, descent_recovery_reward
@@ -375,13 +376,18 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
         model = self._require_runtime_model()
         index = self._bundle.model_index
         reset_config = self._resolved_config.reset
+        perturb_config = self._resolved_config.sim2sim_randomization
+        if perturb_config is not None:
+            sampling_rng, perturb_rng = jax.random.split(rng)
+        else:
+            sampling_rng = rng
         qpos = jp.asarray(
             self.mj_model.key_qpos[index.keyframe_id], dtype=jp.float32
         )
         qvel = jp.asarray(
             self.mj_model.key_qvel[index.keyframe_id], dtype=jp.float32
         )
-        x_key, z_key, vx_key, vz_key = jax.random.split(rng, 4)
+        x_key, z_key, vx_key, vz_key = jax.random.split(sampling_rng, 4)
         rsi_x = self._sample_range(
             x_key, reset_config.airborne_rsi_x_min, reset_config.airborne_rsi_x_max
         )
@@ -410,6 +416,11 @@ class TwoPhaseBikeEnv(mjx_env.MjxEnv):
         qvel = qvel.at[index.root_dof_address + 2].set(
             jp.where(use_airborne_rsi, rsi_vz, jp.asarray(0.0, jp.float32))
         )
+        if perturb_config is not None:
+            qpos, qvel = apply_root_reset_perturbation(
+                qpos, qvel, index.root_qpos_address, index.root_dof_address,
+                perturb_rng, perturb_config,
+            )
         last_action = jp.zeros((4,), dtype=jp.float32)
         ctrl = map_action(
             last_action,

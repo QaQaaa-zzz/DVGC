@@ -118,6 +118,18 @@ class ResetConfig:
 
 
 @dataclass(frozen=True)
+class Sim2SimRandomizationConfig:
+    wheel_lateral_friction: tuple[float, float]
+    wheel_forward_friction: tuple[float, float]
+    body_mass_inertia_scale: tuple[float, float]
+    actuator_scale: tuple[float, float]
+    reset_position_halfwidth_m: tuple[float, float, float]
+    reset_orientation_halfwidth_rad: tuple[float, float, float]
+    reset_linear_velocity_halfwidth_mps: tuple[float, float, float]
+    reset_angular_velocity_halfwidth_radps: tuple[float, float, float]
+
+
+@dataclass(frozen=True)
 class PhysicalLimits:
     max_abs_roll: float
     max_abs_pitch: float
@@ -206,6 +218,7 @@ class ResolvedConfig:
     ppo: PPOConfig
     formal: FormalTrainingConfig | None
     descent: DescentConfig | None = None
+    sim2sim_randomization: Sim2SimRandomizationConfig | None = None
 
 
 def _dataclass_from(cls: type, payload: Mapping[str, Any]):
@@ -385,6 +398,63 @@ def _validate_historical_rerun_v4(
         raise ValueError("rerun evaluation must cover all nonzero checkpoints or be deferred")
     if formal.resume_semantics != "fresh_only":
         raise ValueError("rerun must initialize fresh")
+
+
+def _validate_sim2sim_v4(
+    payload: Mapping[str, Any], ppo: PPOConfig, formal: FormalTrainingConfig
+) -> None:
+    reference = payload.get("sim2sim_reference")
+    if not isinstance(reference, Mapping) or set(reference) != {"resolved_config", "sha256"}:
+        raise ValueError("sim2sim reference must identify a pinned resolved config and hash")
+    path = Path(str(reference["resolved_config"]))
+    if not path.is_absolute() or not path.is_file() or file_sha256(path) != reference["sha256"]:
+        raise ValueError("sim2sim reference file or hash mismatch")
+    prior = load_config(path)
+    if prior.schema != "jit_phase_u_formal_v4" or prior.formal is None:
+        raise ValueError("sim2sim reference must be a formal Phase U v4 config")
+    candidate_identity = copy.deepcopy(dict(payload))
+    candidate_identity.pop("sim2sim_reference")
+    candidate_identity.pop("sim2sim_randomization")
+    reference_identity = copy.deepcopy(dict(prior.raw))
+    reference_identity.pop("rerun_reference", None)
+    candidate_identity["ppo"]["seed"] = reference_identity["ppo"]["seed"]
+    for field in ("checkpoint_transitions", "fixed_evaluation_transitions"):
+        candidate_identity["formal"][field] = reference_identity["formal"][field]
+    if candidate_identity != reference_identity:
+        raise ValueError("sim2sim reference method or reward drift")
+    if ppo.seed == prior.ppo.seed:
+        raise ValueError("sim2sim training must have an independent seed")
+    expected = tuple(range(0, ppo.requested_transitions + ppo.block_transitions, ppo.block_transitions))
+    if formal.checkpoint_transitions != expected:
+        raise ValueError("sim2sim must save a checkpoint at every PPO block")
+    if formal.fixed_evaluation_transitions:
+        raise ValueError("sim2sim training has no fixed evaluations")
+    if formal.resume_semantics != "fresh_only":
+        raise ValueError("sim2sim training must start fresh")
+
+
+def _parse_sim2sim_randomization(raw: Mapping[str, Any]) -> Sim2SimRandomizationConfig:
+    fields = Sim2SimRandomizationConfig.__dataclass_fields__
+    if not isinstance(raw, Mapping) or set(raw) != set(fields):
+        raise ValueError("sim2sim randomization fields mismatch")
+    parsed: dict[str, tuple[float, ...]] = {}
+    for name in fields:
+        value = raw[name]
+        width = 2 if name in {
+            "wheel_lateral_friction", "wheel_forward_friction",
+            "body_mass_inertia_scale", "actuator_scale",
+        } else 3
+        if not isinstance(value, (tuple, list)) or len(value) != width:
+            raise ValueError(f"sim2sim {name} must contain {width} values")
+        numbers = tuple(float(item) for item in value)
+        if not all(math.isfinite(item) for item in numbers):
+            raise ValueError(f"sim2sim {name} must be finite")
+        if width == 2 and not (0.0 < numbers[0] < numbers[1]):
+            raise ValueError(f"sim2sim {name} friction or scale bounds invalid")
+        if width == 3 and any(item < 0 for item in numbers):
+            raise ValueError(f"sim2sim {name} halfwidth must be nonnegative")
+        parsed[name] = numbers
+    return Sim2SimRandomizationConfig(**parsed)
 
 
 def _validate_generated_v4(
@@ -780,8 +850,15 @@ def resolve_config_payload(payload: Mapping[str, Any], *, runtime_only: bool = F
         raise ValueError("action order does not match the immutable contract")
     generated_v4 = _is_generated_v4(payload, schema)
     historical_rerun_v4 = "rerun_reference" in payload
+    sim2sim_v4 = "sim2sim_reference" in payload or "sim2sim_randomization" in payload
     if historical_rerun_v4 and (schema != "jit_phase_u_formal_v4" or generated_v4):
         raise ValueError("rerun reference is only valid for historical v4 fresh training")
+    if sim2sim_v4 and (schema != "jit_phase_u_formal_v4" or generated_v4 or historical_rerun_v4):
+        raise ValueError("sim2sim randomization requires its isolated formal v4 config")
+    sim2sim_randomization = (
+        _parse_sim2sim_randomization(payload.get("sim2sim_randomization"))
+        if sim2sim_v4 else None
+    )
 
     ppo_payload = dict(payload["ppo"])
     ppo_payload["held_out_seeds"] = tuple(int(x) for x in ppo_payload["held_out_seeds"])
@@ -805,6 +882,8 @@ def resolve_config_payload(payload: Mapping[str, Any], *, runtime_only: bool = F
         if not runtime_only:
             if historical_rerun_v4:
                 _validate_historical_rerun_v4(payload, ppo, formal)
+            elif sim2sim_v4:
+                _validate_sim2sim_v4(payload, ppo, formal)
             elif generated_v4:
                 _validate_generated_v4(payload, ppo, formal)
             else:
@@ -919,7 +998,7 @@ def resolve_config_payload(payload: Mapping[str, Any], *, runtime_only: bool = F
         if schema.endswith(("_v3", "_v4"))
         else _validate_approved_v2_method
     )
-    if not runtime_only and not generated_v4 and not historical_rerun_v4:
+    if not runtime_only and not generated_v4 and not historical_rerun_v4 and not sim2sim_v4:
         validator(
             schema,
             model=payload["model"],
@@ -944,6 +1023,7 @@ def resolve_config_payload(payload: Mapping[str, Any], *, runtime_only: bool = F
         ppo=ppo,
         formal=formal,
         descent=descent,
+        sim2sim_randomization=sim2sim_randomization,
     )
 
 
