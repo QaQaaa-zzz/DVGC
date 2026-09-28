@@ -107,6 +107,17 @@ def test_checked_in_pitch65_low_speed_config_resolves(jit_root):
     assert cfg.formal.checkpoint_transitions[-1] == 10_002_432
 
 
+def test_original_randomization_with_strict_speed_requirement_resolves(jit_root):
+    path = jit_root / "configs/jump_ori_sim2sim_vxgt05_10m_seed820707_20260928.json"
+    cfg = load_config(path)
+    assert cfg.ppo.seed == 820707
+    assert cfg.physical_limits.max_abs_pitch == pytest.approx(np.deg2rad(75.0))
+    assert cfg.sim2sim_low_speed_failure.minimum_forward_velocity_mps == 0.5
+    assert cfg.sim2sim_low_speed_failure.require_strictly_greater is True
+    assert cfg.sim2sim_low_speed_failure.failed_episode_return == -1000.0
+    assert cfg.formal.checkpoint_transitions[-1] == 10_002_432
+
+
 @pytest.mark.parametrize(
     ("change", "message"),
     [

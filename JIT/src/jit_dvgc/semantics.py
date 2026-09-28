@@ -206,9 +206,12 @@ def classify_terminal(inputs: TerminalInputs, config: ResolvedConfig) -> Termina
     else:
         if inputs.forward_velocity is None:
             raise ValueError("low speed failure requires post-step forward velocity")
+        speed = jp.asarray(inputs.forward_velocity)
+        minimum = config.sim2sim_low_speed_failure.minimum_forward_velocity_mps
         low_forward_speed = (
-            jp.asarray(inputs.forward_velocity)
-            < config.sim2sim_low_speed_failure.minimum_forward_velocity_mps
+            speed <= minimum
+            if config.sim2sim_low_speed_failure.require_strictly_greater
+            else speed < minimum
         )
     horizon = inputs.episode_step >= config.ppo.episode_horizon - 1
     physical_failure = jp.asarray(False)

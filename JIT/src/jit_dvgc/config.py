@@ -133,6 +133,7 @@ class Sim2SimRandomizationConfig:
 class Sim2SimLowSpeedFailureConfig:
     minimum_forward_velocity_mps: float
     failed_episode_return: float
+    require_strictly_greater: bool = False
 
 
 @dataclass(frozen=True)
@@ -422,9 +423,12 @@ def _validate_sim2sim_v4(
     pitch_revision = payload.get("sim2sim_pitch_limit_revision")
     low_speed_revision = payload.get("sim2sim_low_speed_failure")
     if low_speed_revision is not None:
-        if not isinstance(low_speed_revision, Mapping) or set(low_speed_revision) != {
+        required = {
             "resolved_config", "sha256", "minimum_forward_velocity_mps", "failed_episode_return",
-        }:
+        }
+        if not isinstance(low_speed_revision, Mapping) or set(low_speed_revision) not in (
+            required, required | {"require_strictly_greater"},
+        ):
             raise ValueError("low speed failure must identify a pinned config and exact rule")
         previous_path = Path(str(low_speed_revision["resolved_config"]))
         if (not previous_path.is_absolute() or not previous_path.is_file()
@@ -524,7 +528,10 @@ def _parse_sim2sim_low_speed_failure(raw: Mapping[str, Any]) -> Sim2SimLowSpeedF
         raise ValueError("low speed minimum forward velocity must be positive and finite")
     if not math.isfinite(failed_return) or failed_return >= 0.0:
         raise ValueError("low speed failed episode return must be negative and finite")
-    return Sim2SimLowSpeedFailureConfig(minimum, failed_return)
+    strict = raw.get("require_strictly_greater", False)
+    if type(strict) is not bool:
+        raise ValueError("low speed strict comparison must be boolean")
+    return Sim2SimLowSpeedFailureConfig(minimum, failed_return, strict)
 
 
 def _validate_generated_v4(

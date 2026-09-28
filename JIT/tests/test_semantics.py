@@ -242,6 +242,15 @@ def test_pitch65_without_low_speed_rule_keeps_old_terminal_semantics(jit_root):
     assert not bool(terminal.terminated)
 
 
+@pytest.mark.parametrize(("speed", "failed"), [(0.49, True), (0.5, True), (0.501, False)])
+def test_original_randomization_requires_vx_strictly_greater_than_half(jit_root, speed, failed):
+    config = load_config(jit_root / "configs/jump_ori_sim2sim_vxgt05_10m_seed820707_20260928.json")
+    terminal = classify_terminal(_terminal_inputs(forward_velocity=jp.array(speed)), config)
+    assert bool(terminal.low_forward_speed) is failed
+    assert bool(terminal.terminated) is failed
+    assert int(terminal.end_code) == (END_LOW_FORWARD_SPEED if failed else END_ONGOING)
+
+
 def test_horizon_is_truncated_not_terminated(config):
     terminal = classify_terminal(
         _terminal_inputs(episode_step=jp.array(config.ppo.episode_horizon - 1)), config
