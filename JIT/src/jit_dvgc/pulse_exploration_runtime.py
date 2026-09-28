@@ -150,6 +150,10 @@ def collect(spec, output):
     from .analysis.capability_tube import physical_coordinates_from_arrays, quantize_coordinates, ROOT_GEOMETRY_FIELDS, _cell_id
     from .generative_bridge.pulse_protocol import collection_draws, pulse_delta_for_step
     from .generative_bridge.rollout import observation_fields
+    from .generative_bridge.explorer_admission import (collection_mixture, episode_policy_keys,
+        collection_receipt, mix_sample)
+    mixture_learned, mixture_uniform = collection_mixture(spec)
+    mixture_keys = episode_policy_keys(spec)
     logical_draws, pulse_receipt = collection_draws(spec)
     record_preobs = bool(spec.get('record_actor_preobservations', False))
     if jax.default_backend()!='gpu':raise RuntimeError('GPU pulse collection required')
@@ -159,6 +163,11 @@ def collect(spec, output):
         state=serialization.from_bytes(state,Path(spec['explorer_checkpoint']).read_bytes())
     (output/'behavior.msgpack').write_bytes(serialization.to_bytes(state))
     normalizer=payload.observation_normalizer;params=state['params'];count=spec['num_envs']
+    admission_receipt = None
+    if mixture_learned is not None:
+        admission_receipt = collection_receipt(spec,state,mixture_learned)
+        mixture_learned,mixture_uniform,mixture_keys=map(jp.asarray,
+            (mixture_learned,mixture_uniform,mixture_keys))
     if pulse_receipt is not None:
         write(output/'pulse_protocol_manifest.json', pulse_receipt)
         logical_draws = jp.asarray(logical_draws)
@@ -212,20 +221,31 @@ def collect(spec, output):
                 value=jp.zeros(count)
             elif spec.get('explorer_backend')=='rsl_rl':
                 from .rsl_pulse import sample
-                raw,delta,log_prob,value=sample(state,explorer_obs,k)
+                if mixture_keys is None:
+                    raw,delta,log_prob,value=sample(state,explorer_obs,k)
+                else:
+                    episode_keys=jax.vmap(lambda key:jax.random.fold_in(key,tick))(mixture_keys)
+                    raw,delta,log_prob,value=jax.vmap(lambda obs,key:sample(state,obs,key))(explorer_obs,episode_keys)
             else:
                 logits=net.policy_network.apply(normalizer,params['policy'],s.obs)
                 raw=dist.sample_no_postprocessing(logits,k);delta=dist.postprocess(raw)
                 log_prob=dist.log_prob(logits,raw)
                 value=net.value_network.apply(normalizer,params['value'],s.obs)
+            if mixture_learned is not None:
+                uniform=pulse_delta_for_step(mixture_uniform,applied_steps,pulse_mask)
+                raw,delta,log_prob,value,on_policy=mix_sample(raw,delta,log_prob,value,
+                    mixture_learned,uniform,pulse_mask & alive)
             b=base(s.obs,k)[0]
-            apply_pulse=pulse_mask[:,None] if (event or mixed or full_episode or logical_draws is not None) else tick>=delay
+            apply_pulse=pulse_mask[:,None] if (event or mixed or full_episode or logical_draws is not None or mixture_learned is not None) else tick>=delay
             action,requested,effective=compose_residual_action(b,jp.where(apply_pulse,delta,0.),jp.asarray(spec['delta_limit']))
             nxt=step(s,action)
             finite=jp.all(jp.isfinite(nxt.data.qpos),axis=-1)&jp.all(jp.isfinite(nxt.data.qvel),axis=-1)
             terminal=nxt.done.astype(bool)|~finite
             after=physical_trace(env,nxt)
             tape=dict(observation=explorer_obs,raw_action=raw,log_prob=log_prob,value=value,mask=pulse_mask,prefix_mask=alive,terminal=terminal,finite=finite,action=action,base_action=b,delta=delta,requested_delta=requested,effective_delta=effective,qpos=nxt.data.qpos,qvel=nxt.data.qvel,phase=nxt.info['active_phase'],phase_before=s.info['active_phase'],phase_after=nxt.info['active_phase'],pulse_triggered=trigger_tick>=0,pulse_trigger_tick=trigger_tick,pulse_step_index=jp.where(pulse_mask,applied_steps,-1),pulse_event_ready=ready,action_clipped=jp.abs(requested-effective)>1e-7)
+            if mixture_learned is not None:
+                tape.update(explorer_learned=mixture_learned,on_policy_mask=on_policy,
+                    log_prob_valid=on_policy)
             tape.update(observation_fields(s,nxt,action,enabled=record_preobs))
             tape.update(after)
             tape.update({k+'_before':v for k,v in before.items()})
@@ -282,6 +302,10 @@ def collect(spec, output):
         np.savez_compressed(output/'prefixes.npz',**tape)
     if np.any(tape['prefix_mask']&~tape['finite']):raise ValueError('nonfinite pulse prefix')
     state['rng']=next_rng;(output/'update_state.msgpack').write_bytes(serialization.to_bytes(state))
+    if admission_receipt is not None:
+        admission_receipt['files']={name:_file_sha(output/name) for name in
+            ('prefixes.npz','behavior.msgpack','update_state.msgpack')}
+        write(output/'explorer_admission.json',admission_receipt)
     prefix_sha = _file_sha(output/'prefixes.npz')
     behavior_sha = _file_sha(output/'behavior.msgpack')
     generator={**member['policy'],'actor_sha256':canonical_sha256(dict(base=member['policy']['actor_sha256'],residual=behavior_sha,delta=spec['delta_limit'],pulse_steps=spec['pulse_steps'],pulse_start_step=delay,pulse_batch_mode=spec.get('pulse_batch_mode','single'),neighborhood_map_sha256=spec.get('neighborhood_map_sha256'),controller_mode=mode,pulse_event=event,pulse_descent_clearance=descent_limit)),'payload_sha256':behavior_sha}
@@ -303,6 +327,11 @@ def collect(spec, output):
             path=output/'snapshots'/f'{e:05d}';save_unified_envelope_snapshot(path,snap)
             endpoint=dict(snapshot=str(path),state_sha256=physical_state_sha256(snap),snapshot_context_sha256=snapshot_context_sha256(snap),endpoint_kind='continuation_snapshot')
         rows.append(dict(index=e,cell=_cell_id(phase,'root_geometry_v1',quantize_coordinates(coords,ROOT_GEOMETRY_FIELDS)),coordinates=coords,phase=phase,**endpoint,prefix_file=str(output/'prefixes.npz'),prefix_sha256=prefix_sha,behavior_sha256=behavior_sha,prefix_terminal=terminal or not stage_reached or full_episode,physical_prefix_terminal=terminal,rollout_horizon_exhausted=full_episode and not terminal,prefix_physical_failure=bool(tape['physical_failure'][t,e]) if 'physical_failure' in tape else False,pulse_start_step=trigger_step if (event or mixed) else delay,pulse_trigger_step=trigger_step,pulse_event=event,stage_reached=stage_reached,pulse_applied_steps=int(tape['mask'][:,e].sum()),label=None,learning_attempted=False))
+    if admission_receipt is not None:
+        for row,episode_id,mode_name in zip(rows,admission_receipt['episode_ids'],admission_receipt['episode_modes']):
+            row.update(explorer_episode_mode=mode_name,explorer_on_policy=mode_name=='learned',
+                explorer_lineage={k:admission_receipt[k] for k in ('run_id','round','collection_id',
+                    'behavior_actor_sha256','behavior_normalizer_sha256')},logical_episode_id=episode_id)
     if pulse_receipt is not None:
         for row, receipt in zip(rows, pulse_receipt['episodes']):
             row['logical_episode'] = {**receipt, 'master_seed': pulse_receipt['master_seed'],
@@ -516,7 +545,9 @@ def update(spec, output):
     env,payload,member,net,opt,state=networks(spec)
     source=Path(spec['collection']);state=serialization.from_bytes(state,(source/'update_state.msgpack').read_bytes())
     tape=np.load(source/'prefixes.npz');feedback=read(spec['feedback'])
-    eligible=np.array(feedback['eligible'],bool);mask=tape['mask'].astype(bool)&eligible[None,:]
+    from .generative_bridge.explorer_admission import admit_update,training_mask
+    spec=admit_update(spec,source,state,tape,payload.observation_normalizer)
+    eligible=np.array(feedback['eligible'],bool);mask=training_mask(spec,tape,feedback)
     reward=np.zeros(mask.shape,np.float32)
     for e in range(mask.shape[1]):
         ix=np.flatnonzero(mask[:,e])

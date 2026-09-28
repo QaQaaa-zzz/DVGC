@@ -195,7 +195,8 @@ def update_batch(spec,state,tape,feedback):
     from tensordict import TensorDict
     from rsl_rl.algorithms import PPO
     from rsl_rl.storage import RolloutStorage
-    mask=np.asarray(tape['mask'],bool)&np.asarray(feedback['eligible'],bool)[None,:]
+    from .generative_bridge.explorer_admission import training_mask
+    mask=training_mask(spec,tape,feedback)
     n=int(mask.sum());pulse_reward=np.zeros(mask.shape,np.float32)
     for e in range(mask.shape[1]):
         ticks=np.flatnonzero(mask[:,e])
@@ -204,10 +205,16 @@ def update_batch(spec,state,tape,feedback):
     learning=dict(mask=mask,reward=pulse_reward,returns=returns,
                   advantages=(returns-np.asarray(tape['value']))*mask)
     metrics=dict(backend='rsl_rl_3.2.0',effective_training_samples=n,
-        eligible_episodes=int(np.asarray(feedback['eligible']).sum()),reward=float(np.sum(feedback['rewards'])),
+        eligible_episodes=(int(np.any(mask,axis=0).sum()) if 'on_policy_mask' in tape else
+                           int(np.asarray(feedback['eligible']).sum())),reward=float(np.sum(feedback['rewards'])),
         reward_components=feedback['component_sums'],optimizer_updates=0,post_update_kl=0.,
         post_update_clip_fraction=0.,value_explained_variance=None,total_loss=0.,actor_loss=0.,
         critic_loss=0.,entropy=0.,gradient_norm=0.,entropy_space='latent_gaussian')
+    if 'on_policy_mask' in tape:
+        metrics.update(collection_eligible_episodes=int(np.asarray(feedback['eligible']).sum()),
+            uniform_excluded_episodes=int((~np.asarray(tape['explorer_learned'],bool)[0]).sum()),
+            learned_reward_sum=float(np.asarray(feedback['rewards'])[np.any(mask,axis=0)].sum()),
+            reward_scope='reward/reward_components retain collection totals; learned_reward_sum is PPO-only')
     if not n:return state,dict(metrics,update_skipped=True),learning,[]
     p=torch_policy(spec,state)
     saved=torch.load(io.BytesIO(state['torch_state']),map_location='cpu',weights_only=False)
@@ -309,6 +316,8 @@ def update_runtime(spec,output):
     collection_spec=read(source/'hyperparameters.json')
     spec={**spec,'behavior_matmul_precision':collection_spec.get('inference_precision','default')}
     with np.load(source/'prefixes.npz') as tape:
+        from .generative_bridge.explorer_admission import admit_update
+        spec=admit_update(spec,source,state,tape)
         state,metrics,learning,logs=update_batch(spec,state,tape,read(spec['feedback']))
     (output/'state.msgpack').write_bytes(msgpack_serialize(state))
     np.savez_compressed(output/'learning.npz',**learning)

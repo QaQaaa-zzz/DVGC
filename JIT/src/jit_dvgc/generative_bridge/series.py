@@ -140,3 +140,9 @@ def run_series(series):
         atomic_json(root/'status.json',{'phase':'failed','completed_rounds':len(summaries),
             'error':repr(e),'wall_seconds':time.time()-start,**series_costs(series)})
         raise
+
+
+def run_promotion_series(plan, callbacks):
+    """Explicit v1.2 opt-in; production stage callbacks are required separately."""
+    from .promotion import run_promotion_series as run
+    return run(plan, callbacks)
