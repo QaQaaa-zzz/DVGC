@@ -220,6 +220,10 @@ def train_pretrain(initial,corpus,*,predict,dev_fixture,output,identity,updates,
             logs.append({'update':count,'noise_mse':value,
                          'learning_rate':float(schedule(count-1)),
                          'source_counts':{g:sources.count(g) for g in corpus['groups']}})
+            import json
+            with (root/'metrics.jsonl').open('a') as stream:
+                stream.write(json.dumps({'update':count,'metrics':{'generator/noise_mse':float(value),
+                    'generator/learning_rate':float(schedule(count-1))}})+'\n')
             if count%validation_every==0 or i+1==updates:
                 name=f'update_{count:05d}' if max_updates>9999 else f'update_{count:04d}'
                 save_state(root/name,state,identity)

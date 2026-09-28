@@ -1,0 +1,270 @@
+# 待实现的新阶段配置；非现有代码即插即用配置。默认只准备，不运行GPU。
+schema: jit_generative_bridge_next_stage_v1_2
+status: design_requires_local_source_audit_and_implementation
+execute: false
+code_review_commit: 5941d6bb87f46cb11ce20e46a51dd9b6f0b77f3f
+evidence_commit: 0147bd1e76a577a6607563846ce579c0d49d14df
+source:
+  requested_phase_checkpoint: /home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/checkpoints/transition_4988928
+  source_phase_config: null
+  bound_frozen_manifest: null
+  binding: identity_locked_zero_training_full_task_runtime
+  new_training_steps_during_binding: 0
+  actor_hash_must_match_original: true
+  normalizer_hash_must_match_original: true
+  source_training_transitions: 4988928
+  auto_select_alternative_checkpoint: false
+runtime:
+  actor_obs_dim: 76
+  action_dim: 4
+  actor_hidden_sizes:
+  - 256
+  - 256
+  - 256
+  control_dt: 0.02
+  sim_dt: 0.005
+  source_reward_mode: original_all_phases
+  required_endpoint: stable_forward_recovery
+  nominal_start_x: 2.5
+  full_task_horizon: 400
+  snapshot_start_semantics: inherit_locked_source_once_at_root
+  change_physics: false
+  change_reward: false
+  recovery_ticks: resolve_from_locked_downstream_config
+roles:
+  baseline_actor: null
+  teacher_tail_actor: null
+  student_initializer: null
+  retention_reference_actor: null
+  warmup_initializer_is_not_retention_teacher: true
+  stage_A_tail: fixed_new_baseline
+  stage_B_tail: current_adopted_actor
+  reject_policy: keep_incumbent_preserve_demo_bank
+generator:
+  architecture: conditional_H16_UNet_v1_1_unchanged
+  expected_params: 3131716
+  widths:
+  - 64
+  - 128
+  - 256
+  horizon: 16
+  initialization: fresh_new_source_corpus
+  pretrain_updates_cap: 20000
+  incremental_updates_cap: 2000
+  old_generator: frozen_separate_control_only
+  normalizer: own_fixed_version_not_mutated_with_student
+  student_feedback_admission: adopted_actor_train_only
+teacher:
+  max_new_train_roots: 32
+  bridge_horizon: 16
+  total_horizon: 400
+  candidate_worlds: 32
+  diffusion_candidates: 16
+  colored_noise_candidates: 15
+  source_only_candidates: 1
+  source_control_in_same_root_batch: true
+  selected_replay: same_full_32_world_layout_once
+  max_control_steps_for_32_roots: 819200
+  reset_at_handoff: false
+  search_budget_auto_extend: false
+student_demo_bank:
+  mode: cumulative_validated_train_teachers
+  new_root_mass: 0.5
+  historical_root_mass: 0.5
+  renormalize_nonempty_groups: true
+  within_group: uniform_root_then_prefix_tail_then_tick
+  prefix_mass: 0.5
+  tail_mass: 0.5
+  one_representative_per_root: true
+  no_teacher_required_for_ppo_eligibility: true
+  empty_demo: disable_demo_loss_and_sampler_continue_ppo_keep
+warmup:
+  enabled_for_arm_C_only: true
+  initialize_from: current_incumbent_not_random
+  frozen_normalizer: true
+  max_updates: 2000
+  optimizer: adam
+  learning_rate: 1.0e-05
+  grad_clip_norm: 1.0
+  demo_weight: 1.0
+  keep_weight: 1.0
+  demo_batch_size: 256
+  keep_batch_size: 256
+  save_updates:
+  - 0
+  - 500
+  - 1000
+  - 2000
+  checkpoint_selection: predeclared_student_dev_no_final_test
+  freeze_critic: true
+  retention_teacher: explicit_pre_warmup_actor_manifest
+student_ppo:
+  transitions: 128000
+  save_transitions:
+  - 32000
+  - 64000
+  - 96000
+  - 128000
+  num_envs: 128
+  unroll_length: 25
+  batch_size: 16
+  num_minibatches: 8
+  remaining_hyperparameters: dump_and_inherit_locked_current_protocol
+  demo_coefficient_start: 0.2
+  demo_coefficient_end: 0.05
+  retention_coefficient: 0.2
+  reset_full_start_probability: 0.2
+  reset_snapshot_probability: 0.8
+  pending_fraction: 0.5
+  pending_mass_semantics: within_each_phase_where_pending_exists
+  old_off_policy_ppo_replay: false
+  resume_semantics: inference_checkpoint_is_not_optimizer_resume
+initial_pulse:
+  scope: full_task_start_only
+  onset: 0
+  steps: 3
+  action_channels:
+  - 0
+  - 1
+  - 2
+  - 3
+  training_conditions:
+  - probability: 0.2
+    amplitude: 0.0
+  - probability: 0.4
+    amplitude: 0.1
+  - probability: 0.4
+    amplitude: 0.25
+  distribution: independent_uniform_per_tick_channel
+  after_step_2_requested_delta: 0.0
+  apply_on_post_perturbation_snapshot_reset: false
+  apply_during_teacher: false
+  apply_during_retention_snapshot_eval: false
+  save_requested_and_effective: true
+  modify_initial_qpos_qvel: false
+randomness:
+  master_train_seeds:
+  - 9281201
+  - 9281202
+  - 9281203
+  diagnostic_initial_seed: 9281201
+  rng: inherit_installed_jax_impl
+  key_components:
+  - master_seed
+  - role_namespace
+  - round
+  - logical_episode_id_low32
+  - logical_episode_id_high32
+  - purpose_namespace
+  fixed_per_episode_draw_shape:
+  - 3
+  - 4
+  new_key_each_reset: true
+  invariant_requested_draw_under_batch_partition: true
+  method_pairing: same_eval_request_not_same_effective_action
+  final_test_keys_unopened: true
+data_plan:
+  train_collection:
+    episodes: 1024
+    by_amplitude:
+      '0.10': 512
+      '0.25': 512
+  id_dev:
+    onset: 0
+    by_amplitude:
+      '0.10': 256
+      '0.25': 256
+  temporal_dev:
+    onsets:
+    - 5
+    - 10
+    - 15
+    episodes_per_onset: 128
+    amplitude: 0.25
+    train_on_these_outcomes: false
+  nominal: separate_single_task_repeats_not_independent_random_conditions
+  split_unit: complete_episode_ancestor
+  dev_or_test_to_generator: false
+  teacher_roots: up_to_32_valid_train_failures_do_not_duplicate_if_insufficient
+diagnostics:
+  fixed_demo_pre_and_post: true
+  separate_prefix_tail_channels: true
+  actor_gradients:
+  - ppo_policy
+  - demo
+  - keep
+  critic_loss_is_not_actor_gradient_proxy: true
+  first_update_behavior_logprob_and_kl: true
+  normalizer_only_audit: true
+  four_combinations: true
+  max_four_combo_roots: 8
+  four_combo_max_repeats: 2
+  four_combo_max_physics: 25600
+comparisons:
+  A: PPO_keep_no_new_demo
+  B: cumulative_demo_PPO_keep
+  C: cumulative_demo_warmup_PPO_keep
+  mechanism_initialization: same_new_P0
+  shared_ppo_steps: 128000
+  same_roots_demos_for_B_C: true
+  equal_total_cost_claim_requires_full_accounting: true
+acceptance:
+  retain_existing_nominal_check: true
+  core_max_new_failures: 0
+  protected_min_retention: 0.98
+  new_root_net_gain_min: 1
+  allow_unknown: false
+  log_full_lost_root_list: true
+  save_long_term_P0_core: true
+  empirical_only: true
+active_explorer_stage:
+  enabled_initially: false
+  entry_gate: source_runtime_valid_and_demonstrated_student_absorption_and_one_adopted_candidate
+  pilot_round_cap: 2
+  initialization: fresh_symmetric_mean0_latent_std0.6
+  backend: reuse_locked_existing_backend
+  delta_limit:
+  - 0.25
+  - 0.25
+  - 0.25
+  - 0.25
+  onsets:
+  - 0
+  pulse_steps: 3
+  uniform_coverage_episode_fraction: 0.2
+  uniform_branch_on_policy_mask: false
+  random_comparison: separate_uniform_arm_with_own_actor_G_training
+  update_explorer_from_historical_roots: false
+  freeze_models_within_round: true
+  teacher_success_bonus: 0.0
+  reward_weights:
+    conversion: 0.0
+    adoption_bonus: 2.0
+    novelty: 0.02
+    repeat: 0.02
+    failure: 0.1
+    pulse_failure: 2.0
+execution:
+  stage_to_run: A0_audit_prepare_only
+  output_dir: null
+  max_new_physics: null
+  max_supervised_updates: null
+  max_wall_seconds: null
+  reserve_before_launch: true
+  resource_gate: inherit_existing
+  watcher_required: true
+  sequential_gpu_children: true
+  do_not_modify_running_lineage: true
+  no_automatic_retries_or_budget_growth: true
+  stop_on_nonfinite: true
+delivery:
+- source_swap_audit.json
+- explorer_provenance.json
+- stage_plan.json
+- learning_probe.json
+- lost_roots.csv
+- student_demo_bank_manifest.json
+- acceptance_report.json
+- cost_ledger.json
+- CORE_RESULTS.md
+- CORE_RESULTS.json

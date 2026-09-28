@@ -48,7 +48,7 @@ def test_all_source_positive_produces_no_demo_without_sampling(tmp_path,monkeypa
     monkeypatch.setattr(worker,'generator_template',lambda *a:(None,None,None))
     monkeypatch.setattr(diffusion,'restore_state',lambda *a:None)
     monkeypatch.setattr(diffusion,'ddim_sample',lambda *a:pytest.fail('must not generate fake lessons'))
-    runner=ProductionRunner.__new__(ProductionRunner)
+    runner=ProductionRunner.__new__(ProductionRunner);runner.spec={}
     runner.root=tmp_path;runner.spec={'source_frozen_policy':'locked','seed':1}
     runner.source={'actor_sha256':'source'}
     roots=[dict(root_id=str(i),label=1,attempts=[{}]) for i in range(3)]
@@ -63,7 +63,7 @@ def test_all_source_positive_produces_no_demo_without_sampling(tmp_path,monkeypa
 def test_replay_keeps_full_search_batch_lane_and_actions(tmp_path):
     import numpy as np
     from jit_dvgc.generative_bridge.production import ProductionRunner
-    runner=ProductionRunner.__new__(ProductionRunner)
+    runner=ProductionRunner.__new__(ProductionRunner);runner.spec={}
     rows=[{'candidate_id':i,'index':i,'root_id':'same'} for i in range(1,32)]
     actions=np.arange(31*16*4,dtype=np.float32).reshape(31,16,4)/2000
     calls=[]
@@ -82,7 +82,7 @@ def test_replay_keeps_full_search_batch_lane_and_actions(tmp_path):
 def test_replay_rejects_incomplete_or_reordered_batch():
     import numpy as np
     from jit_dvgc.generative_bridge.production import ProductionRunner
-    runner=ProductionRunner.__new__(ProductionRunner)
+    runner=ProductionRunner.__new__(ProductionRunner);runner.spec={}
     rows=[{'candidate_id':i} for i in range(1,32)]
     runner.evaluate=lambda *a,**k:rows[::-1]
     with pytest.raises(ValueError,match='replay candidate ordering'):

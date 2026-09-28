@@ -34,3 +34,58 @@ def load_prefix_plan(spec,rows):
     if contexts.tolist()!=[r['snapshot_context_sha256'] for r in rows]:
         raise ValueError('prefix/root ordering mismatch')
     return prefixes,source_only
+
+
+def closed_loop_action(tick, observations, keys, tail_policy, prefix_policy=None):
+    """Select a closed-loop Actor; state, clocks and counters never reset here."""
+    import jax
+    if prefix_policy is None:
+        return jax.vmap(tail_policy)(observations, keys)[0]
+    return jax.lax.cond(tick < 16,
+        lambda _: jax.vmap(prefix_policy)(observations, keys)[0],
+        lambda _: jax.vmap(tail_policy)(observations, keys)[0], operand=None)
+
+
+def validate_evaluation_options(spec, members):
+    prefix = spec.get('closed_loop_prefix_policy')
+    if prefix is not None:
+        if (not isinstance(prefix, str) or prefix not in members
+                or len(spec['order']) != 1 or spec['order'][0] not in members
+                or spec.get('horizon') != 400
+                or spec.get('success_criterion') != 'stable_forward_recovery'
+                or 'bridge_action_plan' in spec or spec.get('reuse_results')):
+            raise ValueError('invalid closed-loop prefix/tail evaluation contract')
+    if spec.get('warmup_initializer') is not None:
+        if len(spec['order']) != 1 or spec.get('reuse_results'):
+            raise ValueError('warmup candidate requires one tail and fresh evaluation')
+    return prefix
+
+
+def evaluation_controller_provenance(spec, actual_policy, members):
+    prefix = spec.get('closed_loop_prefix_policy')
+    result = dict(actor_sha256=actual_policy['actor_sha256'], actor_witness_eligible=True)
+    if spec.get('warmup_initializer') is not None:
+        result.update(controller_kind='warmup_candidate', actor_witness_eligible=False,
+                      inference_override=actual_policy.get('inference_override'), adopted=False)
+    if prefix is not None:
+        result.update(controller_kind='composite_closed_loop', actor_witness_eligible=False,
+            prefix_policy=prefix, prefix_actor_sha256=members[prefix]['policy']['actor_sha256'],
+            tail_actor_sha256=actual_policy['actor_sha256'], handoff_tick=16, reset_at_handoff=False)
+    if spec.get('bridge_action_plan') is not None:
+        result.update(controller_kind='composite_teacher', actor_witness_eligible=False)
+    return result
+
+
+def warmup_evaluation_policy(env, source_policy, reference):
+    """Build an in-memory candidate on the same locked environment/runtime."""
+    import jax
+    from pathlib import Path
+    from ..checkpoint import load_checkpoint
+    from ..unified_formal import load_unified_policy_formal_config
+    from ..unified_training import checkpoint_identity
+    from ..ppo import make_checkpoint_policy
+    from .learning_audit import warmup_inference_override
+    config = load_unified_policy_formal_config(Path(source_policy['formal_config']))
+    source = load_checkpoint(Path(source_policy['checkpoint']), expected=checkpoint_identity(config, env))
+    candidate, identity = warmup_inference_override(source, source_policy, reference)
+    return jax.jit(make_checkpoint_policy(env, candidate, deterministic=True)), identity

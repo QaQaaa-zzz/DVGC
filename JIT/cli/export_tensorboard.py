@@ -16,7 +16,7 @@ def metric_rows(source):
         for line in path.read_text().splitlines():
             if line.strip():
                 row = json.loads(line)
-                rows.append({'training_transitions': row['training_transitions'], **row['metrics']})
+                rows.append({**{k:v for k,v in row.items() if k!='metrics'}, **row.get('metrics',{})})
         return rows
     if path.suffix == '.csv':
         with path.open() as stream:

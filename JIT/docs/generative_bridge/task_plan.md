@@ -39,3 +39,22 @@ Bind locked source/support/roots/ancestor partitions, production evaluation and3
 Run CPU regression and bounded GPU semantic smoke, review all changes, predeclare selected source/budgets, launch permitted stage chain and verify real progress/notifications. Commit/push and report evidence, separating training running from complete.
 
 Continuation status: pretraining8a5e43e and charged-budget fix23dc857 committed; production binding+orchestration implemented,109CPUregressions passed, source binding/retention read-only preflight passed. User delegated source/budget choice: source0093,698400physics,22000Gupdates,128000PPO,12h. GPU semantic smoke then training to run under existing resource gate/watchers.
+
+## v1.2 source replacement and cumulative learning — user authorized 2026-09-28
+
+Old fixed-Actor series stopped by user request; preserve all prior evidence. New exact source is Phase U transition_4988928. Implement the supplied v1.2 design incrementally, retaining legacy defaults.
+
+- [x] Stop old supervisor; preserve stop request and verified termination records.
+- [x] Read complete v1.2 instructions and same-version YAML; preserve original input ZIP contents.
+- [ ] Exact source binding, unchanged Actor/normalizer, CPU action parity, full-task nominal GPU gate.
+- [x] Full-start-only three-step pulse and independent logical-episode sampling.
+- [x] Cumulative student demos, independent retention reference, actor-only warmup and learning probes.
+- [x] Finite stage runner: fresh source data, same-layout teacher search/replay, three student arms.
+- [ ] Regression tests and bounded physical verification, immutable implementation commit.
+- [ ] Launch permitted new stage with verified progress, TensorBoard and notifications.
+
+A0 reserves 1,600 physical steps. A1 reserves 1,820,000; A2 reserves 2,600,000 including PPO/development/checkpoint selection; total 4,421,600 with 24h wall cap, no automatic retry allowance. G<=22,000 and BC<=2,000 updates. Stage B remains disabled until adoption/absorption/control gates hold. The three-arm stage is a mechanism comparison, not an equal-total-cost superiority claim. Failure of the required nominal gate blocks large teacher/student training.
+
+A1 includes a separately drawn 64-episode generator development set, three acquisition steps outside the inherited 400-step suffix budget, fresh two-phase nominal reset support (<=80,400), teacher source rechecks and smoke. These are reserved explicitly before A1 begins.
+
+Validation snapshot: 170 CPU tests passed; source action parity64/64 exact. Separate A/B/C config/trainer integration checks passed. GPU nominal queued at a0_nominal (no physical execution yet); remaining validation is not claimed complete. Source_phase bootstrapG stays cold; StageB learning-explorer stage remains disabled.

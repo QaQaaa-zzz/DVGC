@@ -75,3 +75,17 @@ def test_production_generator_retry_reconciles_cost_and_keeps_committed_student(
     runner.journal.stage('student_training',{},student)
     assert student_calls==[1] and calls==[2000,1997]
     assert sum(c['charged_updates'] for c in runner.costs)==2000
+
+
+def test_v12_teacher_replay_keeps_source_control_in_same_lane():
+    import numpy as np
+    from jit_dvgc.generative_bridge.production import ProductionRunner
+    runner=ProductionRunner.__new__(ProductionRunner)
+    runner.spec={'teacher_layout':'source_control_in_32_world_batch'}
+    rows=[{'candidate_id':i} for i in range(32)]
+    def evaluate(name,candidates,**kw):
+        assert kw['prefixes'].shape==(32,16,4)
+        assert kw['source_only'].tolist()==[True]+[False]*31
+        return [{**r,'label':int(r['candidate_id']==7)} for r in candidates]
+    runner.evaluate=evaluate
+    assert runner.replay_teacher(0,rows,np.zeros((32,16,4)),7)['candidate_id']==7

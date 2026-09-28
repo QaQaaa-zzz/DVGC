@@ -69,16 +69,9 @@ def export_student_demonstrations(teachers,output):
     roots=set()
     for t in teachers:
         m=t['metadata'];a=t['arrays'];n=validate_trace(t)
-        if (m.get('origin_type')!='verified_teacher' or m.get('teacher_status')!='verified_solution'
-            or not m.get('verification_receipt_sha256') or m.get('role')!='train'
-            or m.get('inherited_split')!='generator_train' or not m.get('complete')
-            or not m.get('full_success') or not n or not a['success'][-1]
-            or np.any(a['failure']) or np.any(a['timeout'])):
-            raise ValueError('only complete verified TRAIN teacher trajectories may be demonstrations')
+        validate_student_demonstration(t)
         if m['root_id'] in roots:raise ValueError('one representative teacher per root')
         roots.add(m['root_id'])
-        if not set(a['action_origin'])<={'bridge_prefix','source_tail'}:
-            raise ValueError('student/source-only actions are not new external demonstrations')
         obs.extend(a['actor_observation_before']);actions.extend(a['normalized_action_executed'])
         sample_roots.extend([m['root_id']]*n);sample_origins.extend(a['action_origin'].tolist())
         entries.append({**m,'count':n,'trajectory_sha256':trajectory_identity(t)})
@@ -99,3 +92,17 @@ def export_student_demonstrations(teachers,output):
     else:manifest['status']='empty_valid_demo'
     atomic_json(root/'manifest.json',manifest)
     return manifest
+
+
+def validate_student_demonstration(trace):
+    """Admission shared by current and cumulative student demonstration views."""
+    m=trace['metadata'];a=trace['arrays'];n=validate_trace(trace)
+    if (m.get('origin_type')!='verified_teacher' or m.get('teacher_status')!='verified_solution'
+        or not m.get('verification_receipt_sha256') or m.get('role')!='train'
+        or m.get('inherited_split')!='generator_train' or not m.get('complete')
+        or not m.get('full_success') or not n or not a['success'][-1]
+        or np.any(a['failure']) or np.any(a['timeout'])):
+        raise ValueError('only complete verified TRAIN teacher trajectories may be demonstrations')
+    if not set(a['action_origin'])<={'bridge_prefix','source_tail'}:
+        raise ValueError('student/source-only actions are not new external demonstrations')
+    return n

@@ -68,6 +68,9 @@ def test_pretrain_selects_fixed_dev_checkpoint_and_restores_full_state(tmp_path)
         batch_size=2, max_wall_seconds=60)
     assert report['status'] == 'completed' and report['updates'] == 3
     assert report['environment_interactions'] == 0
+    live=[json.loads(line) for line in (tmp_path/'pretrain/metrics.jsonl').read_text().splitlines()]
+    assert [r['update'] for r in live]==[1,2,3]
+    assert live[-1]['metrics']['generator/noise_mse']==report['metrics'][-1]['noise_mse']
     assert [entry['update'] for entry in report['metrics']] == [1, 2, 3]
     assert [name for _, name in report['scores']] == ['initial', 'update_0002', 'update_0003']
     assert report['selected'] == 'update_0003'

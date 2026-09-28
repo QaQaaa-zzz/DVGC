@@ -10,7 +10,7 @@ from jit_dvgc.generative_bridge.protocol import atomic_json
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('command',choices=['audit','prepare','bind','run-pilot','recover','prepare-series','run-series','worker'])
+    p.add_argument('command',choices=['audit','prepare','bind','run-pilot','recover','prepare-series','run-series','prepare-v12','run-v12','worker'])
     p.add_argument('--spec',type=Path)
     p.add_argument('--output',type=Path)
     p.add_argument('--previous',type=Path)
@@ -55,9 +55,19 @@ def main():
             p.error('run-series requires declared fixed Actor series and --execute')
         from jit_dvgc.generative_bridge.series import run_series
         run_series(spec);return
+    if args.command=='prepare-v12':
+        from jit_dvgc.generative_bridge.campaign import prepare_campaign
+        if any(v is None for v in (args.previous,args.output,args.repository)):p.error('prepare-v12 needs audit directory --previous, --output, --repository')
+        result=prepare_campaign(args.spec,args.previous,args.output,args.repository)
+        print(json.dumps({'phase':'prepared','path':str(args.output/'production.json')}));return
+    if args.command=='run-v12':
+        if not args.execute or spec.get('schema')!='jit_bridge_campaign_v1_2' or spec.get('execute') is not True:p.error('explicit source-bound v1.2 execution required')
+        from jit_dvgc.generative_bridge.campaign import CampaignRunner
+        from jit_dvgc.generative_bridge.production import start_notifications
+        start_notifications(spec);CampaignRunner(spec).run();return
     if args.command=='worker':
-        from jit_dvgc.generative_bridge.worker import run_generator
-        run_generator(spec);return
+        from jit_dvgc.generative_bridge.worker import run_generator,run_warmup
+        (run_warmup if spec.get('mode')=='warmup' else run_generator)(spec);return
     if args.command=='run-pilot':
         if not args.execute or spec.get('schema')!='jit_bridge_bound_production_v1_1' or spec.get('execute') is not True:
             p.error('run-pilot requires --execute and a source-bound production manifest')

@@ -154,6 +154,8 @@ def wrap_for_jit_training(
 ):
     """Uses real resets so JIT episode events/counters never leak across done."""
 
+    pulse = getattr(env, '_training_action_pulse', None)
+    logical_pulse = pulse is not None and pulse.get('logical_episode_rng') is not None
     if randomization_fn is None:
         env = brax_training.VmapWrapper(env)
     else:
@@ -162,7 +164,11 @@ def wrap_for_jit_training(
         )
     env = brax_training.EpisodeWrapper(env, episode_length, action_repeat)
     env = _PreserveEpisodeEvidence(env)
-    env = wrapper.BraxAutoResetWrapper(env, full_reset=True)
+    if logical_pulse:
+        from .generative_bridge.pulse_training_wrapper import LogicalEpisodePulseAutoResetWrapper
+        env = LogicalEpisodePulseAutoResetWrapper(env, pulse)
+    else:
+        env = wrapper.BraxAutoResetWrapper(env, full_reset=True)
     return _ExposeEpisodeEvidence(env)
 
 

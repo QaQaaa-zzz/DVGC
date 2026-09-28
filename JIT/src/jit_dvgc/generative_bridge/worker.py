@@ -58,3 +58,58 @@ def run_generator(config):
             updates=config['updates'],max_wall_seconds=config['max_wall_seconds'])(config['corpus'])
     else:raise ValueError('unknown G worker mode')
     atomic_json(Path(config['result']),result)
+
+
+def run_warmup(config):
+    """Offline supervised worker; supervisor owns GPU authorization and DEV choice.
+
+    Required config: source_frozen_policy, retention_reference_actor {path,sha256},
+    demo_manifest {path,sha256}, retention_trace_observations, output, result,
+    seed, updates. Outputs all inference candidates, never silently adopts one.
+    """
+    import jax
+    from brax.training.acme import running_statistics as rs
+    from ..ppo import make_network_factory
+    from .student import load_retention_reference,load_retention_traces
+    from .warmup import warmup_actor
+    from .learning_audit import action_probe
+    if jax.default_backend()!='gpu':raise RuntimeError('production warmup worker requires GPU')
+    policy,payload=source_payload(config['source_frozen_policy'])
+    reference,reference_policy=load_retention_reference(config['retention_reference_actor'])
+    if reference_policy['actor_sha256']!=policy['actor_sha256']:
+        raise ValueError('first v1.2 warmup reference must be initializer P0')
+    ref=config['demo_manifest']
+    if file_sha(ref['path'])!=ref['sha256']:raise ValueError('warmup demo manifest hash drift')
+    demo=json.loads(Path(ref['path']).read_text())
+    anchors=load_retention_traces(config['retention_trace_observations'])
+    sizes={key:int(value.shape[-1]) for key,value in payload.observation_normalizer.mean.items()}
+    networks=make_network_factory()(sizes,4,preprocess_observations_fn=rs.normalize)
+    initializer=(payload.observation_normalizer,payload.actor_params,payload.critic_params)
+    def probe(update,params):
+        value=action_probe(networks,params[0],params[1],demo,reference=reference)
+        obs,weights=anchors
+        prediction=np.asarray(networks.parametric_action_distribution.mode(networks.policy_network.apply(params[0],params[1],{'state':obs})))
+        target=np.asarray(networks.parametric_action_distribution.mode(networks.policy_network.apply(reference[0],reference[1],{'state':obs})))
+        value['retention_mse_channels']=np.sum((prediction-target)**2*weights[:,None],axis=0).tolist()
+        return value
+    from torch.utils.tensorboard import SummaryWriter
+    writer=None
+    def record_metrics(row):
+        nonlocal writer
+        # warmup_actor owns exclusive output creation; create TB only afterwards.
+        if writer is None:writer=SummaryWriter(str(Path(config['output'])/'tensorboard'))
+        for key,value in row.items():
+            if key!='update':writer.add_scalar('warmup/'+key,value,row['update'])
+        writer.flush()
+    try:
+        warmup_actor(networks,initializer,reference,demo,anchors,config['output'],seed=config['seed'],
+            updates=config['updates'],probe_callback=probe,metrics_callback=record_metrics)
+    finally:
+        if writer is not None:writer.close()
+    status=json.loads((Path(config['output'])/'warmup_status.json').read_text())
+    candidates=[{**row,'source_actor_sha256':policy['actor_sha256'],'normalizer_sha256':policy['normalizer_sha256']} for row in status['checkpoints']]
+    result=dict(status=status['status'],completed_updates=status['completed_updates'],environment_interactions=0,
+        candidates=candidates,selected=None,selection_status='requires_predeclared_physical_dev_scores',
+        reference_actor_sha256=reference_policy['actor_sha256'],optimizer_restored=False)
+    atomic_json(config['result'],result)
+    return result

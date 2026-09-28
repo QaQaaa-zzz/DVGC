@@ -148,6 +148,10 @@ def collect(spec, output):
     from .continuation.device_rollout import prepare_parallel_worlds, _shared_warp
     from .iterative_probe_training import first_landing_state
     from .analysis.capability_tube import physical_coordinates_from_arrays, quantize_coordinates, ROOT_GEOMETRY_FIELDS, _cell_id
+    from .generative_bridge.pulse_protocol import collection_draws, pulse_delta_for_step
+    from .generative_bridge.rollout import observation_fields
+    logical_draws, pulse_receipt = collection_draws(spec)
+    record_preobs = bool(spec.get('record_actor_preobservations', False))
     if jax.default_backend()!='gpu':raise RuntimeError('GPU pulse collection required')
     output=Path(output);output.mkdir(parents=True,exist_ok=False)
     env,payload,member,net,opt,state=networks(spec)
@@ -155,6 +159,9 @@ def collect(spec, output):
         state=serialization.from_bytes(state,Path(spec['explorer_checkpoint']).read_bytes())
     (output/'behavior.msgpack').write_bytes(serialization.to_bytes(state))
     normalizer=payload.observation_normalizer;params=state['params'];count=spec['num_envs']
+    if pulse_receipt is not None:
+        write(output/'pulse_protocol_manifest.json', pulse_receipt)
+        logical_draws = jp.asarray(logical_draws)
     from .pulse_exploration import pulse_delay
     mode=controller_mode(spec);event=selected_event(spec)
     descent_limit=descent_clearance(spec)
@@ -197,7 +204,9 @@ def collect(spec, output):
             if neighbor_query is not None:
                 explorer_obs=jp.concatenate([explorer_obs,neighbor_query(s,pulse_mask)],axis=-1)
             if mode=='fixed_random':
-                delta=jax.random.uniform(k,(count,4),minval=-1.,maxval=1.)
+                delta=(pulse_delta_for_step(logical_draws, applied_steps, pulse_mask)
+                       if logical_draws is not None else
+                       jax.random.uniform(k,(count,4),minval=-1.,maxval=1.))
                 raw=delta
                 log_prob=jp.full((count,),-4.*jp.log(2.))
                 value=jp.zeros(count)
@@ -210,13 +219,14 @@ def collect(spec, output):
                 log_prob=dist.log_prob(logits,raw)
                 value=net.value_network.apply(normalizer,params['value'],s.obs)
             b=base(s.obs,k)[0]
-            apply_pulse=pulse_mask[:,None] if (event or mixed or full_episode) else tick>=delay
+            apply_pulse=pulse_mask[:,None] if (event or mixed or full_episode or logical_draws is not None) else tick>=delay
             action,requested,effective=compose_residual_action(b,jp.where(apply_pulse,delta,0.),jp.asarray(spec['delta_limit']))
             nxt=step(s,action)
             finite=jp.all(jp.isfinite(nxt.data.qpos),axis=-1)&jp.all(jp.isfinite(nxt.data.qvel),axis=-1)
             terminal=nxt.done.astype(bool)|~finite
             after=physical_trace(env,nxt)
             tape=dict(observation=explorer_obs,raw_action=raw,log_prob=log_prob,value=value,mask=pulse_mask,prefix_mask=alive,terminal=terminal,finite=finite,action=action,base_action=b,delta=delta,requested_delta=requested,effective_delta=effective,qpos=nxt.data.qpos,qvel=nxt.data.qvel,phase=nxt.info['active_phase'],phase_before=s.info['active_phase'],phase_after=nxt.info['active_phase'],pulse_triggered=trigger_tick>=0,pulse_trigger_tick=trigger_tick,pulse_step_index=jp.where(pulse_mask,applied_steps,-1),pulse_event_ready=ready,action_clipped=jp.abs(requested-effective)>1e-7)
+            tape.update(observation_fields(s,nxt,action,enabled=record_preobs))
             tape.update(after)
             tape.update({k+'_before':v for k,v in before.items()})
             tape['first_valid_contact']=~before['valid_contact_seen']&after['valid_contact_seen']&alive
@@ -256,7 +266,7 @@ def collect(spec, output):
     if spec.get('reuse_prefix_collection'):
         import shutil
         previous=Path(spec['reuse_prefix_collection']);old=read(previous.parent/'collection_spec.json')
-        for field in ['round_index','explorer_checkpoint','pulse_steps','num_envs','delta_limit','bank','seed','pulse_start_schedule','pulse_event_schedule','controller_mode','pulse_descent_clearance','pulse_batch_mode','neighborhood','neighborhood_map_sha256']:
+        for field in ['round_index','explorer_checkpoint','pulse_steps','num_envs','delta_limit','bank','seed','pulse_start_schedule','pulse_event_schedule','controller_mode','pulse_descent_clearance','pulse_batch_mode','neighborhood','neighborhood_map_sha256','pulse_protocol_v1_2','record_actor_preobservations']:
             if old.get(field)!=spec.get(field):raise ValueError('reused prefix contract differs: '+field)
         if _file_sha(previous/'behavior.msgpack')!=_file_sha(output/'behavior.msgpack'):raise ValueError('reused behavior differs')
         for filename in ['prefixes.npz','update_state.msgpack']:
@@ -293,6 +303,10 @@ def collect(spec, output):
             path=output/'snapshots'/f'{e:05d}';save_unified_envelope_snapshot(path,snap)
             endpoint=dict(snapshot=str(path),state_sha256=physical_state_sha256(snap),snapshot_context_sha256=snapshot_context_sha256(snap),endpoint_kind='continuation_snapshot')
         rows.append(dict(index=e,cell=_cell_id(phase,'root_geometry_v1',quantize_coordinates(coords,ROOT_GEOMETRY_FIELDS)),coordinates=coords,phase=phase,**endpoint,prefix_file=str(output/'prefixes.npz'),prefix_sha256=prefix_sha,behavior_sha256=behavior_sha,prefix_terminal=terminal or not stage_reached or full_episode,physical_prefix_terminal=terminal,rollout_horizon_exhausted=full_episode and not terminal,prefix_physical_failure=bool(tape['physical_failure'][t,e]) if 'physical_failure' in tape else False,pulse_start_step=trigger_step if (event or mixed) else delay,pulse_trigger_step=trigger_step,pulse_event=event,stage_reached=stage_reached,pulse_applied_steps=int(tape['mask'][:,e].sum()),label=None,learning_attempted=False))
+    if pulse_receipt is not None:
+        for row, receipt in zip(rows, pulse_receipt['episodes']):
+            row['logical_episode'] = {**receipt, 'master_seed': pulse_receipt['master_seed'],
+                'role': pulse_receipt['role'], 'round': pulse_receipt['round']}
     if spec.get('quality_mode')=='discovery_conversion':
         for e,row in enumerate(rows):
             cells=[]
@@ -329,11 +343,16 @@ def evaluate(spec, output):
     if jax.default_backend()!='gpu':raise RuntimeError('GPU suffix evaluation required')
     output=Path(output);output.mkdir(parents=True,exist_ok=False)
     rows=read(spec['candidates']);horizon=spec['horizon'];charged=0;active_count=0
-    from .generative_bridge.rollout import load_prefix_plan, prefix_action, observation_fields
+    from .generative_bridge.rollout import (load_prefix_plan, prefix_action, observation_fields,
+        closed_loop_action, validate_evaluation_options, evaluation_controller_provenance,
+        warmup_evaluation_policy)
     bridge_plan=load_prefix_plan(spec,rows)
-    record_preobs=spec.get('record_actor_preobservations',False) or bridge_plan is not None
+    record_preobs=(spec.get('record_actor_preobservations',False) or bridge_plan is not None
+                   or spec.get('closed_loop_prefix_policy') is not None
+                   or spec.get('warmup_initializer') is not None)
     bank=load_probe_bank(Path(spec['bank']));all_names=[m['name'] for m in bank['members'] if 'evaluator' in m['roles']]
     suffix=FrozenSuffixEvaluator(spec['bank'],all_names,horizon,output/'runtime',spec['budget'])
+    prefix_name=validate_evaluation_options(spec,suffix.members)
     for r in rows:r.update(attempts=[],label=None,witness=None)
     if spec.get('reuse_results'):
         reused=read(spec['reuse_results'])
@@ -349,6 +368,15 @@ def evaluate(spec, output):
         if not subset:continue
         stage_start=time.monotonic()
         env,policy,_=suffix._runtime(name)
+        actual_policy=suffix.members[name]['policy']
+        if spec.get('warmup_initializer') is not None:
+            policy,actual_policy=warmup_evaluation_policy(env,actual_policy,spec['warmup_initializer'])
+        closed_prefix_policy=None
+        if prefix_name is not None:
+            _,closed_prefix_policy,_=suffix._runtime(prefix_name)
+            if suffix.members[prefix_name]['policy']['xml_sha256'] != actual_policy['xml_sha256']:
+                raise ValueError('closed-loop prefix/tail physics differ')
+        controller_provenance=evaluation_controller_provenance(spec,actual_policy,suffix.members)
         runtime_ready=time.monotonic()
         if record_preobs:
             env._training_action_pulse = None
@@ -392,13 +420,13 @@ def evaluate(spec, output):
                 result.update(observation_fields(previous,s,action,enabled=record_preobs))
                 return result
             blank=frame(initial,jp.zeros((count,4)),jp.zeros(count,bool),initial)
-            if bridge_plan is not None:blank['action_origin_code']=jp.zeros(count,jp.int32)
+            if bridge_plan is not None or prefix_name is not None:blank['action_origin_code']=jp.zeros(count,jp.int32)
             traces={k:jp.zeros((horizon,)+v.shape,v.dtype) for k,v in blank.items()}
             def condition(c):return (c[0]<horizon)&jp.any(c[2])
             def advance(c):
                 t,s,alive,tr=c
                 keys=jax.random.split(jax.random.fold_in(jax.random.PRNGKey(0),t),rng_count)[jp.asarray(rng_indices)]
-                action=jax.vmap(policy)(s.obs,keys)[0]
+                action=closed_loop_action(t,s.obs,keys,policy,closed_prefix_policy)
                 if bridge_plan is not None:
                     action=prefix_action(t,action,bridge_prefixes,bridge_source_only)
                 nxt=step(s,jp.where(alive[:,None],action,0))
@@ -406,6 +434,8 @@ def evaluate(spec, output):
                 f=frame(nxt,action,alive,s)
                 if bridge_plan is not None:
                     f['action_origin_code']=jp.where(bridge_source_only,0,jp.where(t<16,1,2))
+                elif prefix_name is not None:
+                    f['action_origin_code']=jp.full(count,jp.where(t<16,3,2),jp.int32)
                 tr={k:v.at[t].set(f[k]) for k,v in tr.items()}
                 def choose(path,n,o):return n if _shared_warp(path) else jp.where(alive.reshape((count,)+(1,)*(n.ndim-1)),n,o)
                 nxt=jax.tree_util.tree_map_with_path(choose,nxt,s)
@@ -423,23 +453,25 @@ def evaluate(spec, output):
             if not np.isfinite(tape['qpos'][indices,e]).all() or not np.isfinite(tape['qvel'][indices,e]).all():raise ValueError('nonfinite suffix')
             label,outcome=suffix_label(valid,failure,bool(tape['timeout'][last,e]),bool(tape['done'][last,e]),len(indices)>=horizon)
             if recovery_mode(spec) and label == 1: outcome='stable_forward_recovery'
-            r['attempts'].append(dict(policy=name,actor_sha256=suffix.members[name]['policy']['actor_sha256'],label=label,outcome=outcome,steps=len(indices),task_return=float(tape['reward'][indices,e].sum()),trace=str(trace_path),trace_lane=e,trace_sha256=trace_sha,snapshot_context_sha256=r['snapshot_context_sha256']))
+            r['attempts'].append(dict(policy=name,actor_sha256=actual_policy['actor_sha256'],label=label,outcome=outcome,steps=len(indices),task_return=float(tape['reward'][indices,e].sum()),trace=str(trace_path),trace_lane=e,trace_sha256=trace_sha,snapshot_context_sha256=r['snapshot_context_sha256']))
+            r['attempts'][-1].update(controller_provenance)
             if record_preobs:
                 r['attempts'][-1].update(recording_schema='jit_actor_success_trace_v1_1' if bridge_plan is None else 'jit_bridge_trace_v1',
-                    action_origin='actor_only' if bridge_plan is None else 'bridge_prefix_then_source_tail',
-                    normalizer_sha256=suffix.members[name]['policy']['normalizer_sha256'],
-                    model_sha256=suffix.members[name]['policy']['xml_sha256'])
+                    action_origin=('closed_loop_prefix_then_tail' if prefix_name is not None else
+                                   'actor_only' if bridge_plan is None else 'bridge_prefix_then_source_tail'),
+                    normalizer_sha256=actual_policy['normalizer_sha256'],
+                    model_sha256=actual_policy['xml_sha256'])
             if bridge_plan is not None:
                 # Composite-controller success is never a source Actor witness.
                 r['attempts'][-1]['controller_kind']='composite_teacher'
                 r['attempts'][-1]['source_only']=bool(bridge_plan[1][e])
-            if label:r.update(label=1,witness=name if bridge_plan is None else None)
+            if label:r.update(label=1,witness=name if controller_provenance['actor_witness_eligible'] else None)
         timings.append(dict(policy=name,candidates=count,runtime_seconds=runtime_ready-stage_start,restore_seconds=restore_ready-runtime_ready,compile_and_rollout_seconds=rollout_ready-restore_ready,export_seconds=time.monotonic()-rollout_ready))
         write(output/'timings.json',timings)
         del initial
         jax.clear_caches()
     for r in rows:
-        if r.get('prefix_terminal'):r.update(label=r.get('prefix_label'),witness=spec['proposer'] if r.get('prefix_label')==1 else None)
+        if r.get('prefix_terminal'):r.update(label=r.get('prefix_label'),witness=spec['proposer'] if r.get('prefix_label')==1 and not (bridge_plan is not None or prefix_name is not None or spec.get('warmup_initializer') is not None) else None)
         elif r['label']!=1:r['label']=aggregate_labels(r['attempts'],spec['order'])
     write(output/'results.json',rows)
     import resource

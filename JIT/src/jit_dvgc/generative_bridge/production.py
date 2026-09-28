@@ -204,7 +204,7 @@ class ProductionRunner:
         self.costs=read(self.root/'costs.json') if (self.root/'costs.json').exists() else []
         self.runtime=manifest['source_runtime'];self.repo=Path(manifest['repository'])
         self.source=manifest['source'];self.panels=read(self.root/'panels.json')
-        self.protocol=digest({'version':'1.1','task':'stable_forward_recovery','H':16,'horizon':400,
+        self.protocol=digest({'version':manifest.get('protocol_version','1.1'),'task':'stable_forward_recovery','H':16,'horizon':400,
             'source_physics':self.source['xml_sha256'],'source_reward':self.runtime['reward_mode']})
         from .recovery import RecoveryJournal
         self.journal=RecoveryJournal(self.root/'stages',manifest)
@@ -367,19 +367,30 @@ class ProductionRunner:
             'ancestors':sorted(set(ancestors)),'role':'generator_dev','training_allowed':False})
         return {'corpus':receipt,'dev_fixture':str(fixture),'dev_fixture_sha256':file_sha(fixture)}
 
-    def replay_teacher(self,ordinal,candidates,actions,selected_id):
+    def replay_teacher(self,ordinal,candidates,actions,selected_id,*,search_results=None):
         # Changing 31 search worlds into one replay world changes the GPU physics
         # layout. Repeat the complete frozen batch, then inspect the same lane.
         ids=[r['candidate_id'] for r in candidates]
-        if ids!=list(range(1,32)) or selected_id not in ids:
-            raise ValueError('replay requires original 31 candidate identities')
+        full=self.spec.get('teacher_layout')=='source_control_in_32_world_batch'
+        if ids!=list(range(0 if full else 1,32)) or selected_id not in ids:
+            raise ValueError('replay requires original candidate identities')
         results=self.evaluate(f'replay_batch_{ordinal:04d}',candidates,
-            prefixes=actions,source_only=np.zeros(len(candidates),bool))
+            prefixes=actions,source_only=np.asarray([cid==0 for cid in ids],bool))
         if [r['candidate_id'] for r in results]!=ids:
             raise ValueError('replay candidate ordering changed or incomplete')
-        return results[ids.index(selected_id)]
+        selected=results[ids.index(selected_id)]
+        if full and search_results is not None:
+            changed=[cid for cid,a,b in zip(ids,search_results,results) if a['label']!=b['label']]
+            atomic_json(self.root/'teachers'/f'{ordinal:04d}_layout_repeat.json',{
+                'candidate_ids':ids,'search_labels':[r['label'] for r in search_results],
+                'repeat_labels':[r['label'] for r in results],'changed_candidate_ids':changed,
+                'selected_candidate_id':selected_id,'robust_probability_claim':False})
+            if 0 in changed or results[0]['label'] is None:
+                selected={**selected,'label':None,'source_control_repeat_conflict':True}
+        return selected
 
     def teacher_search(self,incumbent):
+        if not self.panels['new_roots']:return {}
         from .worker import generator_template
         from .diffusion import restore_state,ddim_sample
         from .proposals import make_candidate_pool
@@ -418,18 +429,29 @@ class ProductionRunner:
             pool=make_candidate_pool(rid,actual['normalized_action_executed'][:16],generated,seed=self.spec['seed'])
             poolpath=teacher_dir/f'{ordinal:04d}_proposals.npz'
             if not poolpath.exists():np.savez_compressed(poolpath,actions=pool['actions'],diffusion_noise=noise,colored_raw_draws=pool['colored_raw_draws'])
-            candidates=[{**base,'index':cid,'candidate_id':cid} for cid in range(1,32)]
-            results=self.evaluate(f'teacher_{ordinal:04d}',candidates,prefixes=pool['actions'][1:],source_only=np.zeros(31,bool))
-            scored=[teacher_candidate(base,'source_only',0,snapshot.last_action)]
+            full=self.spec.get('teacher_layout')=='source_control_in_32_world_batch'
+            first=0 if full else 1
+            candidates=[{**base,'index':cid,'candidate_id':cid} for cid in range(first,32)]
+            results=self.evaluate(f'teacher_{ordinal:04d}',candidates,prefixes=pool['actions'][first:],
+                source_only=np.asarray([r['candidate_id']==0 for r in candidates],bool))
+            if full and results[0]['label']!=0:
+                conflict=dict(root_id=rid,teacher_status='not_scheduled' if results[0]['label']==1 else 'invalid',
+                    reason='same_layout_source_recheck',source_recheck_label=results[0]['label'],
+                    historical_source_label=0,new_gain_eligible=False,training_eligible=True,
+                    source_actor_sha256=self.source['actor_sha256'])
+                atomic_json(teacher_dir/f'{ordinal:04d}_result.json',conflict);output[rid]=conflict
+                if results[0]['label'] is None:raise ValueError('unknown same-layout source recheck')
+                continue
+            scored=[] if full else [teacher_candidate(base,'source_only',0,snapshot.last_action)]
             scored.extend(teacher_candidate(r,pool['kinds'][r['candidate_id']],r['candidate_id'],snapshot.last_action) for r in results)
             selected=select_teacher(scored)
             row={'root_id':rid,'teacher_status':'searched_no_solution','source_actor_sha256':self.source['actor_sha256'],
                 'generator':incumbent,'candidates':scored,'proposal_sha256':file_sha(poolpath),
                 'historical_source_label':0,'source_recheck_label':0,'new_gain_eligible':True,'training_eligible':True}
             if selected is not None:
-                cid=selected['candidate_id'];replay=self.replay_teacher(ordinal,candidates,pool['actions'][1:],cid)
+                cid=selected['candidate_id'];replay=self.replay_teacher(ordinal,candidates,pool['actions'][first:],cid,search_results=results)
                 verified={'candidate_id':cid,'full_success':replay['label']==1,
-                    'batch_size':31,'selected_lane':cid-1,'layout':'same_as_search'}
+                    'batch_size':len(candidates),'selected_lane':cid-first,'layout':'same_as_search'}
                 status=search_status(scored,expected_count=32,verified=verified)
                 row.update(teacher_status=status,selected_candidate_id=cid,verification=verified)
                 if status!='verified_solution':
@@ -629,7 +651,7 @@ def start_notifications(manifest):
     env.setdefault('DBUS_SESSION_BUS_ADDRESS',f'unix:path=/run/user/{os.getuid()}/bus')
     # A successful notify-send is delivery evidence, not proof the user saw it.
     subprocess.run(['notify-send','--app-name=JIT','JIT 训练监视已启动',
-        '双向学习 v1.1：错误和整轮结束将单独通知。'],env=env,check=True,timeout=10)
+        '双向学习 '+manifest.get('protocol_version','1.1')+'：错误和整轮结束将单独通知。'],env=env,check=True,timeout=10)
     with (state/'watcher.log').open('ab') as log:
         process=subprocess.Popen([sys.executable,str(repo/'JIT/cli/watch_run_errors.py'),
             '--active-run',str(active),'--state-dir',str(state)],cwd=repo,env=env,

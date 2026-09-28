@@ -227,17 +227,60 @@ def validate_training_action_pulse(pulse, *, horizon=400):
         or not 0 <= probability <= 1):
         raise ValueError('invalid training_action_pulse schedule, limits, or probability')
 
+    scope = pulse.get('pulse_scope', pulse.get('scope', 'all_resets'))
+    if scope not in ('all_resets', 'full_task_start_only'):
+        raise ValueError('unsupported pulse_scope')
+    if 'scope' in pulse and 'pulse_scope' in pulse and pulse['scope'] != pulse['pulse_scope']:
+        raise ValueError('conflicting pulse scope fields')
+    if scope == 'full_task_start_only' and (onsets != [0] or steps != 3):
+        raise ValueError('full_task_start_only requires control steps 0/1/2')
+    conditions = pulse.get('training_conditions')
+    if conditions is not None:
+        if (scope != 'full_task_start_only' or not isinstance(conditions, list) or not conditions
+            or any(not isinstance(c, dict) or type(c.get('probability')) not in (int, float)
+                or not math.isfinite(c['probability']) or not 0 <= c['probability'] <= 1
+                or type(c.get('amplitude')) not in (int, float)
+                or not math.isfinite(c['amplitude']) or not 0 <= c['amplitude'] <= min(limits)
+                for c in conditions)
+            or not math.isclose(sum(c['probability'] for c in conditions), 1., abs_tol=1e-8)):
+            raise ValueError('invalid training pulse condition mixture')
+    if pulse.get('logical_episode_rng') is not None:
+        from .generative_bridge.pulse_training_wrapper import validate_training_episode_protocol
+        validate_training_episode_protocol(pulse)
 
-def initialize_training_action_pulse(info, reset_rng, pulse):
+
+def initialize_training_action_pulse(info, reset_rng, pulse, *, full_task_start=None, logical_key=None):
     """Keep the physical snapshot RNG; derive a separate stream from fresh reset RNG.
 
-    Clock zero is the reset, for fixed-start and RSI alike, not source trajectory
-    time or liftoff. Disabled config is the exact historical path.
+    Legacy clock zero is every reset. The opt-in full-task scope requires reset
+    provenance and leaves snapshots unperturbed. Disabled config is unchanged.
     """
     if pulse is None:
         return info
     import jax
     import jax.numpy as jp
+    scope = pulse.get('pulse_scope', pulse.get('scope', 'all_resets'))
+    if scope == 'full_task_start_only':
+        if full_task_start is None:
+            raise ValueError('full_task_start reset provenance is required')
+        from .generative_bridge.pulse_protocol import requested_draws
+        key = jax.random.fold_in(reset_rng, 0x50554C53) if logical_key is None else logical_key
+        conditions = pulse.get('training_conditions')
+        if conditions is None:
+            amplitude = jp.asarray(1., jp.float32)
+            draws = requested_draws(key) * jp.asarray(pulse['delta_limit'], jp.float32)
+        else:
+            condition_key = jax.random.fold_in(key, 0x434F4E44)
+            index = jax.random.categorical(condition_key, jp.log(jp.asarray([c['probability'] for c in conditions])))
+            amplitude = jp.asarray([c['amplitude'] for c in conditions], jp.float32)[index]
+            draws = requested_draws(key, amplitude)
+        enabled = jax.random.bernoulli(jax.random.fold_in(key, 0x454E4142), float(pulse['probability']))
+        return {**info, 'training_pulse_rng': key, 'training_pulse_draws': draws,
+            'training_pulse_amplitude': amplitude, 'training_pulse_onset': jp.asarray(0, jp.int32),
+            'training_pulse_enabled': jp.asarray(full_task_start) & enabled,
+            'training_pulse_tick': jp.asarray(0, jp.int32),
+            'training_pulse_request': jp.zeros(4, jp.float32),
+            'training_pulse_effective': jp.zeros(4, jp.float32)}
     rng, onset_rng, enabled_rng = jax.random.split(jax.random.fold_in(reset_rng, 0x50554C53), 3)
     return {**info, 'training_pulse_rng': rng,
         'training_pulse_onset': jax.random.choice(onset_rng, jp.asarray(pulse['onsets'], jp.int32)),
@@ -257,7 +300,8 @@ def apply_training_action_pulse(info, action, pulse):
     tick, onset = info['training_pulse_tick'], info['training_pulse_onset']
     active = info['training_pulse_enabled'] & (tick >= onset) & (tick < onset + pulse['steps'])
     limits = jp.asarray(pulse['delta_limit'], jp.float32)
-    draw = jax.random.uniform(draw_rng, (4,), minval=-1., maxval=1.) * limits
+    draw = (info['training_pulse_draws'][jp.minimum(tick, 2)] if 'training_pulse_draws' in info
+            else jax.random.uniform(draw_rng, (4,), minval=-1., maxval=1.) * limits)
     requested = jp.where(active, draw, jp.zeros_like(draw))
     base = jp.clip(jp.asarray(action, jp.float32), -1., 1.)
     actual = jp.clip(base + requested, -1., 1.)
@@ -436,11 +480,11 @@ def build_environment(config, *, panel=False):
     validate_training_action_pulse(pulse, horizon=config.ppo.episode_horizon)
 
     class ProbeEnv(UnifiedTubeRSIEnv):
-        def _with_training_pulse(self, state, rng):
+        def _with_training_pulse(self, state, rng, *, full_task_start):
             pulse = self._training_action_pulse
             if pulse is None:
                 return state
-            info = initialize_training_action_pulse(state.info, rng, pulse)
+            info = initialize_training_action_pulse(state.info, rng, pulse, full_task_start=full_task_start)
             _, _, zeros = apply_training_action_pulse(info, jp.zeros(4), pulse)
             return state.replace(info=info, metrics={**state.metrics,
                 **{name: jp.zeros_like(value) for name, value in zeros.items()}})
@@ -458,12 +502,12 @@ def build_environment(config, *, panel=False):
                 'down_events':{n:jp.asarray(getattr(down,n)) for n in start['down_events']}}
             state=self._reset_from_tube_sample(self._select_reset_sample(jump,start,tube))
             state = self._with_reset_source(state,soft_tube=~jump,jump_start=jump)
-            return self._with_training_pulse(state, rng)
+            return self._with_training_pulse(state, rng, full_task_start=jump)
 
         def reset_tube_index(self,phase_index,entry_index):
             sample=fresh_sample(self._tube_pool.sample_at(phase_index,entry_index), config.raw['success_criterion']=='stable_forward_recovery')
             state = self._with_reset_source(self._reset_from_tube_sample(sample),soft_tube=True)
-            return self._with_training_pulse(state, sample['rng'])
+            return self._with_training_pulse(state, sample['rng'], full_task_start=False)
 
         def step(self,state,action):
             pulse = self._training_action_pulse
