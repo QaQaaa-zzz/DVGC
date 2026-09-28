@@ -184,6 +184,13 @@ def teacher_candidate(row,kind,candidate_id,last_action):
         attempt=attempt)
 
 
+def source_recheck_disposition(label):
+    if label==0:return None
+    if label!=1:raise ValueError('unknown source recheck is invalid, not a normal no-solution result')
+    return dict(teacher_status='not_scheduled',reason='source_recheck_succeeded',
+                historical_source_label=0,source_recheck_label=1,new_gain_eligible=False,training_eligible=True)
+
+
 class ProductionRunner:
     def __init__(self,manifest):
         import jax
@@ -199,8 +206,8 @@ class ProductionRunner:
         self.source=manifest['source'];self.panels=read(self.root/'panels.json')
         self.protocol=digest({'version':'1.1','task':'stable_forward_recovery','H':16,'horizon':400,
             'source_physics':self.source['xml_sha256'],'source_reward':self.runtime['reward_mode']})
-        from .protocol import StageJournal
-        self.journal=StageJournal(self.root/'stages',manifest)
+        from .recovery import RecoveryJournal
+        self.journal=RecoveryJournal(self.root/'stages',manifest)
 
     def status(self,phase,**kwargs):
         atomic_json(self.root/'status.json',{'phase':phase,'charged_interactions':sum(c['charged_interactions'] for c in self.costs),
@@ -375,7 +382,21 @@ class ProductionRunner:
         output={};teacher_dir=self.root/'teachers';teacher_dir.mkdir(exist_ok=True)
         for ordinal,base in enumerate(source_results):
             rid=base['root_id'];self.active_teacher_root=rid;source_attempt=base['attempts'][0]
-            if base['label']!=0:raise ValueError('source_succeeded_or_unknown_on_recheck: quarantine root, do not label teacher rescue')
+            disposition=source_recheck_disposition(base['label'])
+            if disposition is not None:
+                row=dict(root_id=rid,source_actor_sha256=self.source['actor_sha256'],**disposition)
+                atomic_json(teacher_dir/f'{ordinal:04d}_result.json',row);output[rid]=row
+                continue
+            inherited=self.spec.get('recovery',{}).get('teachers',{}).get(rid)
+            if inherited:
+                if file_sha(inherited['path'])!=inherited['sha256']:raise ValueError('inherited teacher changed')
+                row=read(inherited['path'])
+                if row['generator']!=incumbent or row['source_actor_sha256']!=self.source['actor_sha256']:
+                    raise ValueError('inherited teacher model changed')
+                read_teacher_traces({rid:row})
+                row.update(historical_source_label=0,source_recheck_label=0,new_gain_eligible=True,training_eligible=True)
+                atomic_json(teacher_dir/f'{ordinal:04d}_result.json',row);output[rid]=row
+                continue
             snapshot=load_unified_envelope_snapshot(Path(base['snapshot']))
             actual=lane_arrays(source_attempt);obs=actual['actor_observation_before'][0]
             noise=np.stack([np.random.default_rng(stable_seed(self.spec['seed'],rid,cid)).normal(size=(16,4)) for cid in range(1,17)]).astype(np.float32)
@@ -390,7 +411,8 @@ class ProductionRunner:
             scored.extend(teacher_candidate(r,pool['kinds'][r['candidate_id']],r['candidate_id'],snapshot.last_action) for r in results)
             selected=select_teacher(scored)
             row={'root_id':rid,'teacher_status':'searched_no_solution','source_actor_sha256':self.source['actor_sha256'],
-                'generator':incumbent,'candidates':scored,'proposal_sha256':file_sha(poolpath)}
+                'generator':incumbent,'candidates':scored,'proposal_sha256':file_sha(poolpath),
+                'historical_source_label':0,'source_recheck_label':0,'new_gain_eligible':True,'training_eligible':True}
             if selected is not None:
                 cid=selected['candidate_id'];replay=self.evaluate(f'replay_{ordinal:04d}',[{**base,'candidate_id':cid}],
                     prefixes=pool['actions'][cid:cid+1],source_only=np.zeros(1,bool))[0]
@@ -460,7 +482,9 @@ class ProductionRunner:
         if ledger['source']!=self.source['name']:raise ValueError('feedback source arrival ledger mismatch')
         rows=read(source_round/'bank_evaluation/results.json')
         selected={r['snapshot_context_sha256']:r['label'] for r in after}
+        rechecked={r['snapshot_context_sha256']:r['label'] for r in self.evaluate('teacher_source',self.panels['new_roots'])}
         for r in rows:
+            if r['snapshot_context_sha256'] in rechecked:r['source_recheck_label']=rechecked[r['snapshot_context_sha256']]
             initial=r['label'];r['initial_label']=initial
             r['learning_attempted']=r['snapshot_context_sha256'] in selected
             if r['learning_attempted']:r['label']=selected[r['snapshot_context_sha256']]
@@ -508,7 +532,7 @@ class ProductionRunner:
             nominal=self.journal.stage('nominal',{},self.nominal)
             before={k:self.evaluate('before_'+k,self.panels[k]) for k in ('core','protected')}
             teachers=self.journal.stage('teacher_search',incumbent,lambda:self.teacher_search(incumbent))
-            before['new_roots']=read(self.root/'evaluations/teacher_source/rollout/results.json')
+            before['new_roots']=self.evaluate('teacher_source',self.panels['new_roots'])
             before['nominal']=nominal['results']
             student=self.journal.stage('student_training',teachers,lambda:self.student(teachers))
             after={k:self.evaluate('after_'+k,nominal['rows'] if k=='nominal' else self.panels[k],
@@ -522,6 +546,8 @@ class ProductionRunner:
             for r in after['new_roots']:
                 t=teachers[r['root_id']]
                 rows.append(root_outcome(dict(root_id=r['root_id'],teacher_status=t['teacher_status'],
+                    historical_source_label=t['historical_source_label'],source_recheck_label=t['source_recheck_label'],
+                    new_gain_eligible=t['new_gain_eligible'],training_eligible=True,teacher_reason=t.get('reason'),
                     student_label=r['label'],student_adopted=decision['adopted'],
                     student_checkpoint_sha256=student['actor_sha256'],student_normalizer_sha256=student['normalizer_sha256'],
                     n_direct_demo_examples_available=t.get('demo',{}).get('count',0),

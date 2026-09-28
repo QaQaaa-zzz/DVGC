@@ -8,6 +8,16 @@
 
 CPU 相关回归已通过 109 项（19.89 秒，[本轮 JUnit](cpu_production_tests.xml)）；真实来源绑定和 37 个源策略保持锚点的加载已核对。GPU 物理验收与研究性能在此报告更新时仍未产生结果，不能用 CPU 通过代替。启动状态以新运行的 status.json 为准。
 
+## 2026-09-28 来源复查中断修复与恢复
+
+pilot_0001 停在 teacher_search：历史 pending 的 32 个固定评价根，当前源 Actor 复查为 19 失败、13 成功、0 unknown。旧 guard 将合法的源成功当作错误；当时学生 PPO 尚未开始。改为 not_scheduled，reason=source_recheck_succeeded，保留全部 162 个原 pending 及原采样配置；未知结果仍属于工程异常。历史标签与当前复查标签分别保留。当前源已成功的根不能记老师救回，也不能领取学生新增 0→1 的 +2；失败 −0.1、真实扰动物理失败 −2、其他奖励权重均保持原值。采用检查继续使用当前源复查结果作基线。
+
+新增显式 recover 入口，只迁移这个已诊断、尚无学生执行的失败状态。恢复写入独立目录，冻结旧凭证及其文件哈希，复用 17 个已完成阶段凭证、2 条已验证教案与 G update_04000；不搬用未提交的 teacher_search.running。继承物理交互 34,931、G 更新 20,000 及原 started_unix；总上限仍为 698,400 / 22,000 / 12 小时，排队与修复时间不清零。原配置、结果、失败矩阵及全局来源指针不覆盖。
+
+独立审查发现旧 CLI 用 YAML 解析 JSON，导致 1e-05 的数值类型与文件不同；恢复精确保留原执行合同，并校验原合同 SHA，今后 JSON 按 JSON 解析，不做宽泛类型归一化。真实旧运行的 CPU 恢复预检已通过：成功导入烟测、语料、G、源 nominal、core/protected 与 teacher_source，未重复任何物理或优化操作。
+
+CPU：116 项相关回归通过（20.17 秒，[JUnit](cpu_recovery_tests.xml)），包含当前源成功无教案、unknown 拒绝、奖励增益/失败项和恢复输入/凭证篡改检查。GPU：旧 pilot 已完成源/桥接/独立重放语义烟测，2 条教案独立重放成功；本次修复尚无新 GPU 结果。研究性能：学生未训练、未采用，不能据此声称能力提升。新恢复状态与成本以运行目录 status.json、costs.json 为准。
+
 ## 修改清单
 
 | 位置 | 实现与作用 |
@@ -16,7 +26,7 @@ CPU 相关回归已通过 109 项（19.89 秒，[本轮 JUnit](cpu_production_te
 | `data.py`、`feedback_data.py` | 真正执行动作和动作前后观测、TRAIN/祖先 split、完整成功、精确 Actor/normalizer 采用凭证准入；无解/未搜索老师不限制合法学生回流。history 中保留旧学生采用凭证；三组按祖先→轨迹→窗口采样，空组重新归一。 |
 | `student.py` | 复用原 Actor 恢复及原 PPO 数值保护；同一 loss 挂接可选 demo 和保持项。整轮空 demo 不创建目标、采样器或示范 RNG，继续 PPO 和声明保持项；真实执行计数区分 JIT 跟踪和消费。 |
 | `network.py`、`diffusion.py` | H=16、76D 条件、4D 动作、3,131,716 参数 U-Net；100 步 epsilon MSE、DDIM20；增量更新最多 2000 步，固定开发噪声，incumbent 参与选择，平局保留 incumbent。完整 params/EMA/optimizer/RNG/normalizer 保存恢复。 |
-| `proposals.py`、`teacher.py`、`rollout.py` | 32 候选生成、整段真实动作差分代价、完整成功优先、独立重放状态校验；第 16 步转同一续接 Actor 的接口。source-only 重查成功作为来源冲突，不能记老师救回。由 production.py 连接到身份绑定的 GPU 执行及独立重放。 |
+| `proposals.py`、`teacher.py`、`rollout.py` | 32 候选生成、整段真实动作差分代价、完整成功优先、独立重放状态校验；第 16 步转同一续接 Actor 的接口。source-only 重查成功记录 not_scheduled，保留补训资格，不能记老师救回。由 production.py 连接到身份绑定的 GPU 执行及独立重放。 |
 | `protocol.py`、`artifacts.py` | 基于回调和持久凭证的阶段编排；预留 PPO/评估预算后安排老师。G 失败可显式重试、记累计成本，不重复已提交 PPO；恢复重验语料和实际 G payload，最后提交完整轮次指针。 |
 | `rewards.py`、原 `pulse_exploration.py` | 只在显式启用新契约时应用用户奖励；原 pending 构造和原补训规则保留。增加独立成功轨迹原始观测录制开关。 |
 | 原 `pulse_exploration_runtime.py` | 关闭新开关时保留原行为；开启时记录真实 pre/post observation、动作及来源代码，允许显式桥接前缀后无重置续接。该物理执行路径尚未做 GPU 验证。 |
