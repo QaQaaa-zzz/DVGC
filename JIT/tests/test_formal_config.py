@@ -77,6 +77,49 @@ def _generated_v4_config(jit_root, tmp_path, mutate=None):
     return path
 
 
+def _historical_rerun_config(jit_root, tmp_path, mutate=None):
+    reference = jit_root / "configs" / "phase_u_continuation_10m.json"
+    payload = json.loads(reference.read_text(encoding="utf-8"))
+    target = 10_002_432
+    checkpoints = [0, *(block * 24_576 for block in range(20, 408, 20)), target]
+    payload["ppo"].update(requested_transitions=target, num_evals=408)
+    payload["formal"].update(
+        checkpoint_transitions=checkpoints,
+        fixed_evaluation_transitions=checkpoints[1:],
+    )
+    payload["rerun_reference"] = {
+        "resolved_config": str(reference.resolve()),
+        "sha256": _file_sha256(reference),
+    }
+    if mutate is not None:
+        mutate(payload)
+    path = tmp_path / "historical_rerun.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    return path
+
+
+def test_historical_v4_rerun_keeps_method_and_allows_dense_checkpoints(jit_root, tmp_path):
+    config = load_config(_historical_rerun_config(jit_root, tmp_path))
+    assert config.ppo.requested_transitions == 10_002_432
+    assert config.formal.checkpoint_transitions[-1] == 10_002_432
+    assert len(config.formal.checkpoint_transitions) == 22
+
+
+@pytest.mark.parametrize(
+    ("mutate", "message"),
+    [
+        (lambda p: p["reward"].update(speed_coeff=2.0), "reference.*drift"),
+        (lambda p: p["ppo"].update(seed=123), "reference.*drift"),
+        (lambda p: p["rerun_reference"].update(sha256="0" * 64), "reference.*hash"),
+        (lambda p: p["formal"].update(fixed_evaluation_transitions=[]), "nonzero checkpoint"),
+        (lambda p: p["ppo"].update(num_evals=407), "num_evals"),
+    ],
+)
+def test_historical_v4_rerun_rejects_method_or_schedule_drift(jit_root, tmp_path, mutate, message):
+    with pytest.raises(ValueError, match=message):
+        load_config(_historical_rerun_config(jit_root, tmp_path, mutate))
+
+
 def test_generated_v4_config_is_reference_locked_with_exact_610_block_schedule(
     jit_root, tmp_path
 ):

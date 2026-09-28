@@ -349,6 +349,44 @@ def _is_generated_v4(payload: Mapping[str, Any], schema: str) -> bool:
     return bool(present)
 
 
+def _validate_historical_rerun_v4(
+    payload: Mapping[str, Any], ppo: PPOConfig, formal: FormalTrainingConfig
+) -> None:
+    reference = payload.get("rerun_reference")
+    if not isinstance(reference, Mapping) or set(reference) != {"resolved_config", "sha256"}:
+        raise ValueError("rerun reference must identify a frozen resolved config and hash")
+    reference_path = Path(str(reference["resolved_config"]))
+    if not reference_path.is_absolute() or not reference_path.is_file():
+        raise ValueError("rerun reference must name an existing absolute config")
+    if file_sha256(reference_path) != str(reference["sha256"]):
+        raise ValueError("rerun reference hash mismatch")
+    reference_payload = json.loads(reference_path.read_text(encoding="utf-8"))
+    if reference_payload.get("schema") != "jit_phase_u_formal_v4" or "rerun_reference" in reference_payload:
+        raise ValueError("rerun reference must be an original v4 run config")
+    resolve_config_payload(reference_payload, runtime_only=True)
+
+    candidate_identity = copy.deepcopy(dict(payload))
+    candidate_identity.pop("rerun_reference")
+    reference_identity = copy.deepcopy(reference_payload)
+    for field in ("requested_transitions", "num_evals"):
+        candidate_identity["ppo"][field] = reference_identity["ppo"][field]
+    for field in ("checkpoint_transitions", "fixed_evaluation_transitions"):
+        candidate_identity["formal"][field] = reference_identity["formal"][field]
+    if candidate_identity != reference_identity:
+        raise ValueError("rerun reference method or seed drift")
+    if ppo.num_evals != ppo.requested_transitions // ppo.block_transitions + 1:
+        raise ValueError("rerun num_evals must equal PPO blocks plus one")
+    checkpoints = formal.checkpoint_transitions
+    if not checkpoints or checkpoints[0] != 0 or checkpoints[-1] != ppo.requested_transitions:
+        raise ValueError("rerun checkpoints must span zero through target")
+    if tuple(sorted(set(checkpoints))) != checkpoints or any(step % ppo.block_transitions for step in checkpoints):
+        raise ValueError("rerun checkpoints must be unique sorted PPO blocks")
+    if formal.fixed_evaluation_transitions != checkpoints[1:]:
+        raise ValueError("rerun evaluation must cover every nonzero checkpoint")
+    if formal.resume_semantics != "fresh_only":
+        raise ValueError("rerun must initialize fresh")
+
+
 def _validate_generated_v4(
     payload: Mapping[str, Any], ppo: PPOConfig, formal: FormalTrainingConfig
 ) -> None:
@@ -741,6 +779,9 @@ def resolve_config_payload(payload: Mapping[str, Any], *, runtime_only: bool = F
     if tuple(payload.get("action_order", ACTION_ORDER)) != ACTION_ORDER:
         raise ValueError("action order does not match the immutable contract")
     generated_v4 = _is_generated_v4(payload, schema)
+    historical_rerun_v4 = "rerun_reference" in payload
+    if historical_rerun_v4 and (schema != "jit_phase_u_formal_v4" or generated_v4):
+        raise ValueError("rerun reference is only valid for historical v4 fresh training")
 
     ppo_payload = dict(payload["ppo"])
     ppo_payload["held_out_seeds"] = tuple(int(x) for x in ppo_payload["held_out_seeds"])
@@ -762,7 +803,9 @@ def resolve_config_payload(payload: Mapping[str, Any], *, runtime_only: bool = F
             block_transitions=ppo.block_transitions,
         )
         if not runtime_only:
-            if generated_v4:
+            if historical_rerun_v4:
+                _validate_historical_rerun_v4(payload, ppo, formal)
+            elif generated_v4:
                 _validate_generated_v4(payload, ppo, formal)
             else:
                 _validate_formal(schema, ppo, formal)
@@ -876,7 +919,7 @@ def resolve_config_payload(payload: Mapping[str, Any], *, runtime_only: bool = F
         if schema.endswith(("_v3", "_v4"))
         else _validate_approved_v2_method
     )
-    if not runtime_only and not generated_v4:
+    if not runtime_only and not generated_v4 and not historical_rerun_v4:
         validator(
             schema,
             model=payload["model"],
