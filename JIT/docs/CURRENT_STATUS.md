@@ -1,5 +1,11 @@
 # JIT 当前状态与证据
 
+## 2026-09-28 Phase U speed2 1000万步复跑已排队
+
+用户要求从零重开历史 Phase U speed2 训练，超过1000万训练转移并增加中途 checkpoint，按固定评估回报保存 bestmodel。新运行使用原始 `seed820701` 冻结配置及模型/参考哈希；仅将目标设为10,002,432转移，保存初始、每491,520步和最终共22个checkpoint，21个非零候选各评估同8个自然初态和8个空中RSI种子。固定评估额外最多134,400转移；总声明上限10,136,832。bestmodel按16个逐回合实际截断奖励的平均回报排序，属于开发选择，不是落地成功或独立TEST。
+
+执行代码为独立提交`ad1bc3d`的归档快照；原始实验和checkpoint未改。2026-09-28启动GPU空闲监督后状态为`waiting`，当时STTW训练PID252279占用GPU，尚无新增训练转移。桌面错误/完成监视器已启动并有心跳。以[实验入口](../runs/experiments/phaseu_speed2_dense10m_20260928/INDEX.md)、[实时状态](../runs/experiments/phaseu_speed2_dense10m_20260928/execution/status.json)和训练目录实际文件为准；不得将排队视作训练完成。
+
 
 ## 2026-09-26 Phase U numerical recovery queued
 
