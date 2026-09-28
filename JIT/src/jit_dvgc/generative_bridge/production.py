@@ -539,9 +539,14 @@ class ProductionRunner:
         from .outcomes import root_outcome,result_matrix
         try:
             self.journal.stage('semantic_smoke',{},self.smoke)
-            bootstrap=self.journal.stage('bootstrap',{},self.bootstrap)
+            continuation=self.spec.get('continuation')
+            if continuation:
+                from .artifacts import validate_generator_receipt
+                validate_generator_receipt(continuation['generator']);load_corpus(continuation['corpus'])
+            bootstrap=self.journal.stage('bootstrap',{},
+                (lambda:{k:continuation[k] for k in ('corpus','dev_fixture','dev_fixture_sha256')}) if continuation else self.bootstrap)
             if file_sha(bootstrap['dev_fixture'])!=bootstrap['dev_fixture_sha256']:raise ValueError('dev fixture changed')
-            incumbent=self.generator('pretrain',bootstrap['corpus'],bootstrap['dev_fixture'])
+            incumbent=continuation['generator'] if continuation else self.generator('pretrain',bootstrap['corpus'],bootstrap['dev_fixture'])
             nominal=self.journal.stage('nominal',{},self.nominal)
             before={k:self.evaluate('before_'+k,self.panels[k]) for k in ('core','protected')}
             teachers=self.journal.stage('teacher_search',incumbent,lambda:self.teacher_search(incumbent))
@@ -575,7 +580,8 @@ class ProductionRunner:
                         'student_normalizer_sha256':student['normalizer_sha256']},round_demo_samples_used=total))
             atomic_json(self.root/'root_outcomes.json',rows);atomic_json(self.root/'result_matrix.json',result_matrix(rows))
             def export():
-                history=load_corpus(bootstrap['corpus'])['groups']['history']
+                from .series import corpus_history
+                history=corpus_history(load_corpus(bootstrap['corpus']))
                 actors=actor_traces(after['new_roots'],student['policy'],self.protocol,self.panels['splits'])
                 corpus=build_corpus(history,read_teacher_traces(teachers),actors,adoption=decision,
                     expected={'model_sha256':self.source['xml_sha256'],'protocol_sha256':self.protocol},splits=self.panels['splits'])
