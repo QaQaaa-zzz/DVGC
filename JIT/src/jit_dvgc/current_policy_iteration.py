@@ -85,7 +85,7 @@ def seed_support(spec, output):
     from .pulse_exploration import support_row
     output = Path(output)
     output.mkdir(parents=True, exist_ok=False)
-    nominal = {**spec, 'nominal_source_rollout': True, 'num_envs': 1, 'pulse_steps': spec['horizon'],
+    nominal = {**spec, 'nominal_source_rollout': True, 'num_envs': 1, 'nominal_repeats': 1, 'pulse_steps': spec['horizon'],
                'pulse_start_schedule': [0], 'round_index': 0,
                'delta_limit': [0., 0., 0., 0.], 'explorer_checkpoint': None}
     collect(nominal, output / 'nominal')

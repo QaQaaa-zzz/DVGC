@@ -191,3 +191,16 @@ def test_explicit_nominal_repeats_preserve_full_zero_residual_contract():
     assert pulse_delay(spec,0)==0
     for change in ({'nominal_repeats':1},{'nominal_repeats':0},{'pulse_steps':3},{'delta_limit':[.1]*4}):
         with pytest.raises(ValueError):pulse_delay({**spec,**change},0)
+
+
+def test_seed_support_resets_inherited_nominal_repeat_count(tmp_path,monkeypatch):
+    from jit_dvgc import pulse_exploration_runtime as runtime
+    from jit_dvgc.pulse_exploration import pulse_delay
+    class Inspected(Exception):pass
+    def inspect(spec,output):
+        assert spec['num_envs']==1
+        assert pulse_delay(spec,0)==0
+        raise Inspected()
+    monkeypatch.setattr(runtime,'collect',inspect)
+    with pytest.raises(Inspected):
+        iteration.seed_support({'nominal_repeats':4,'horizon':400},tmp_path/'seed')
