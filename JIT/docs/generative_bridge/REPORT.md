@@ -155,3 +155,13 @@ A阶段生产运行冻结于16d4641，运行目录campaign_0001；A0名义物理
 G条件来源现在可通过generator_reference_frozen_policy的path/sha256独立绑定：worker训练与teacher候选生成共同使用该固定来源，校验manifest、真实checkpoint的Actor/normalizer哈希及同XML；老师续接仍使用当前source_frozen_policy。默认不指定时保持原行为。该接口不等于已完成Stage B生产适配，也不改变排队运行。
 
 上述G来源解耦后，相关完整CPU回归191项通过（32.26秒），包含worker和teacher实际调用路径选择测试。GPU验证仍待资源门禁。
+
+## 2026-09-29 名义验证启动错误与显式恢复
+
+campaign_0001 在 A0 失败，未进入 G/PPO。配置 num_envs=4、pulse_steps=3 与历史 nominal_source_rollout 的单条/全horizon合同不符；日志在reset/step之前抛ValueError，无prefixes轨迹。新增显式nominal_repeats，仍要求全400步、零残差、无探索器checkpoint；旧默认保持单条。prepare_campaign在创建运行前CPU预检该合同。
+
+相关CPU回归181项通过（29.54秒），含四次名义重复、错配次数/非零扰动/3步拒绝。执行代码254d670；独立code_recovery_0001快照与recovery_0001/campaign已启动，先做GPU名义验证。源transition_4988928、奖励/物理/PPO预算未改。原失败工件保留，旧1,600预留与新4,420,000上限合计不超过4,421,600；截止沿用旧A0开始+24小时，不重置。
+
+恢复入口为JIT/runs/experiments/generative_bridge_v1_2_20260928/recovery_0001/INDEX.md；TensorBoard端口6019，HTTP200已核验，尚无训练标量。通知监视器有实际心跳、无投递错误。GPU成功与学习收益仍须实际结果，不能用本次CPU检查代替。
+
+继续核验：recovery_0001的A0实际GPU四次均成功，计费1600（active309/padding1291）。随后seed_support继承nominal_repeats4却自行改num_envs1，被同一合同拒绝；新增真实调用回归先复现，再令seed_support显式nominal_repeats1。30项相关CPU回归通过。执行代码2554c75，recovery_0002已启动并实际进入GPU fresh_seed_support，复用锁定A0结果不重复仿真。旧失败预留1600+80400单列，新尝试物理上限4,339,600含复用A0计费，合计仍4,421,600；旧24小时截止保持。当前TensorBoard6020，通知和实时状态在recovery_0002/campaign。G/PPO尚未开始，后续阶段未验证。
