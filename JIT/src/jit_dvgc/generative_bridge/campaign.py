@@ -43,8 +43,10 @@ def prepare_campaign(stage_plan, audit_dir, output, repository):
     if (plan['source_checkpoint']!=audit['source_checkpoint'] or plan['actor_sha256']!=audit['parameter_hashes']['actor']
             or plan['normalizer_sha256']!=audit['parameter_hashes']['normalizer'] or audit['new_training_transitions']!=0
             or audit['action_parity']['exact'] is not True):raise ValueError('source audit/plan mismatch')
-    commit=implementation_identity(repo);root.mkdir(parents=True,exist_ok=False)
     base=Path(stage_plan).resolve().parent;runtime=read(base/'a0_nominal/spec.json')
+    from ..pulse_exploration import pulse_delay
+    pulse_delay(runtime,runtime['round_index'])  # CPU preflight before queueing GPU work.
+    commit=implementation_identity(repo);root.mkdir(parents=True,exist_ok=False)
     runtime.update(bootstrap_config=audit['runtime_config'],nominal_source_rollout=False,
         full_episode_rollout=False,num_envs=32,pulse_steps=3,pulse_start_schedule=[0],
         pulse_batch_mode='single',delta_limit=[.25]*4,pending_fraction=.5)

@@ -182,3 +182,12 @@ def test_repeated_recovery_without_new_round_reuses_committed_boundary(tmp_path)
     result=iteration.completed_recovery_boundary(root)
     assert result['previous']==str(root) and result['charged_interactions']==200
     assert result['source']=='pi' and result['completed_rounds']==1
+
+
+def test_explicit_nominal_repeats_preserve_full_zero_residual_contract():
+    from jit_dvgc.pulse_exploration import pulse_delay
+    spec=dict(nominal_source_rollout=True,pulse_start_schedule=[0],pulse_steps=400,
+              horizon=400,num_envs=4,nominal_repeats=4,delta_limit=[0.]*4)
+    assert pulse_delay(spec,0)==0
+    for change in ({'nominal_repeats':1},{'nominal_repeats':0},{'pulse_steps':3},{'delta_limit':[.1]*4}):
+        with pytest.raises(ValueError):pulse_delay({**spec,**change},0)
