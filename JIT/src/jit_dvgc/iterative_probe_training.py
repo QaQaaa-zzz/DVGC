@@ -371,7 +371,10 @@ def load_config(path):
                 or recovery.recovery_ticks * CTRL_DT <= 0):
             raise ValueError('stable recovery requires positive integer recovery_ticks and continuous stability')
     init=raw['initialization']
-    if init['actor'] not in ('fresh','warm_start_frozen_unified','warm_start_phase_checkpoint') or init['critic']!='fresh' or init['optimizer']!='fresh':raise ValueError('probe initialization drift')
+    if raw.get('continuous_learner') is not None:
+        from .generative_bridge.learner_continuation import validate_declaration
+        validate_declaration(raw)
+    elif init['actor'] not in ('fresh','warm_start_frozen_unified','warm_start_phase_checkpoint') or init['critic']!='fresh' or init['optimizer']!='fresh':raise ValueError('probe initialization drift')
     if init['actor']=='fresh' and init.get('normalizer')!='fresh':
         raise ValueError('fresh Actor requires fresh observation normalization')
     if init['actor']=='warm_start_phase_checkpoint':

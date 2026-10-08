@@ -177,6 +177,9 @@ def make_joint_student_trainer(trainer, demo_manifest, *, retention,
 def trainer_from_config(trainer, raw, run_dir):
     """Canonical formal entry point, still under the existing full-gradient guard."""
     import json
+    if raw.get('continuous_learner') is not None:
+        from .learner_continuation import continuing_trainer
+        trainer=continuing_trainer(trainer,raw,run_dir)
     from ..policy_retention import load_anchor
     if raw.get('action_retention') is not None:
         raise ValueError('bridge joint loss cannot nest action_retention wrappers')
@@ -216,9 +219,12 @@ def trainer_from_config(trainer, raw, run_dir):
         atomic_json(Path(run_dir)/'bridge_student_contract.json',{**contract,
             'demo_count':0 if demo is None else demo['count'],
             'empty_demo_behavior':'disable_sampler_continue_ppo_keep',
-            'critic_and_optimizer':'fresh_inherited_probe_protocol',
+            'critic_and_optimizer':raw.get('continuous_learner','fresh_inherited_probe_protocol'),
             'offline_demo_ppo_replay':False,'source_actor_sha256':source['actor_sha256']})
         warm=contract.get('warmup_initializer')
+        if raw.get('continuous_learner') is not None:
+            if warm is not None:raise ValueError('continuous learner cannot apply an offline warmup initializer')
+            kwargs['restore_value_fn']=True
         if warm is not None:
             import pickle
             from ..handoff_bank import pytree_sha256

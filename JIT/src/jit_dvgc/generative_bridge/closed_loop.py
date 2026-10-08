@@ -20,6 +20,15 @@ def continuation_decision(student, nominal, learner_completed):
         'authorization':'user 2026-10-08: allow forgetting; iterate and evaluate generalization'}
 
 
+def continuous_decision(student,learner_completed):
+    if not learner_completed:raise ValueError('incomplete learner cannot continue')
+    return {**{k:student[k] for k in ('actor_sha256','normalizer_sha256') if k in student},
+        'adopted':True,'scope':'experimental_continuous_training','formal_adopted':False,
+        'nominal_evaluation':'disabled_by_user','performance_gate':False,
+        'criterion':'continue completed finite learner regardless of performance',
+        'authorization':'user 2026-10-08: cancel nominal checks; continue the student across 200 rounds'}
+
+
 def feedback_rows(before, after, teachers, decision):
     after={r['root_id']:r for r in after};rows=[]
     for original in before:
@@ -113,7 +122,7 @@ def continuation_budget(rounds):
                 student_transitions=128000*rounds,generator_updates=2000*rounds,explorer_epochs_per_round=4)
 
 
-def prepare_continuation(previous,output,repository,*,rounds):
+def prepare_continuation(previous,output,repository,*,rounds,continuous=False):
     """Continue only a completed published bundle, in a fresh bounded series."""
     from .artifacts import validate_generator_receipt,load_corpus
     from .worker import source_payload
@@ -143,6 +152,25 @@ def prepare_continuation(previous,output,repository,*,rounds):
     for path in (bundle_path,old/'status.json',old/'plan.json',*map(Path,panels.values())):
         plan['locks'][str(path)]=file_sha(path)
     root.mkdir(parents=True,exist_ok=False)
+    if continuous:
+        # The legacy pilot retained C. User now explicitly chooses its latest student.
+        bundle=deepcopy(bundle)
+        candidate=bundle['evaluated_student'];source_payload(candidate['frozen_policy'])
+        decision=continuous_decision(candidate,read(Path(candidate['training'])/'status.json')['status']=='completed')
+        old_source=bundle['actor']['policy'];bundle['actor']=candidate
+        spec=read(old/f"round_{bundle['round']:04d}/production.json")
+        if candidate['actor_sha256']!=old_source['actor_sha256']:
+            bundle['tail_lineage'].append(adopt_tail(root/'initial_continuous_tail.json',spec['baseline_identity'],
+                old_source,candidate,decision))
+        bundle['learner']=candidate.get('learner')
+        if 'seed_support' not in bundle:
+            seed=Path(read(old/f"round_{bundle['round']:04d}/source_phase_result.json")['panel_support_path'])
+            bundle['seed_support']={'path':str(seed),'sha256':file_sha(seed)}
+        initial=root/'initial_continuation.json';atomic_json(initial,bundle)
+        plan.update(continuous_learning=True,nominal_evaluation=False,
+            continuation_bundle={'path':str(initial),'sha256':file_sha(initial)},
+            allow_legacy_optimizer_bootstrap=bundle['learner'] is None)
+        plan['locks'][str(initial)]=file_sha(initial)
     atomic_json(root/'plan.json',plan)
     atomic_json(root/'status.json',dict(phase='prepared',completed_rounds=0,declared_rounds=rounds,
                                       round_offset=bundle['round']))
@@ -224,9 +252,15 @@ class ClosedLoopRound(CampaignRunner):
         from .series import corpus_history
         from .rewards import feedback,WEIGHTS
         previous=self.spec['continuation'];index=self.spec['round_index']
-        # A real current-source nominal rollout supplies both reset phases.
-        seed={**self.runtime,'controller_mode':'fixed_random','nominal_repeats':1}
-        seed_path=self.measured('seed_support','seed_support',seed,80400)
+        if self.spec.get('continuous_learning'):
+            seed=previous['seed_support'];seed_support=Path(seed['path'])
+            if file_sha(seed_support)!=seed['sha256']:raise ValueError('historical seed support changed')
+            atomic_json(self.root/'seed_support_reuse.json',dict(**seed,physics=0,
+                purpose='historical witnessed TRAIN reset states; not current Actor nominal qualification'))
+        else:
+            seed={**self.runtime,'controller_mode':'fixed_random','nominal_repeats':1}
+            seed_path=self.measured('seed_support','seed_support',seed,80400)
+            seed_support=seed_path/'support.json'
         cfg={**self.runtime,'controller_mode':'learned_residual','explorer_backend':'rsl_rl',
             'explorer_initialization':{'mode':'symmetric','latent_std':.6},
             'explorer_checkpoint':previous.get('explorer'),'num_envs':128,'round_index':index,
@@ -253,7 +287,8 @@ class ClosedLoopRound(CampaignRunner):
         atomic_json(aggregate,dict(rows=rows,source_policy=self.source['name'],prior_labels_imported=False,
             inputs={str(collected/'candidates.json'):file_sha(collected/'candidates.json')}))
         support=self.root/'training_support.json'
-        build_training_support(seed_path/'support.json',aggregate,support,source_policy=self.source['name'])
+        build_training_support(seed_support,aggregate,support,source_policy=self.source['name'],
+            allow_historical_seed=bool(self.spec.get('continuous_learning')))
         retain_pending(support,previous['support'])
         self.panels=fresh_panels(rows,seed=self.spec['seed']+index)
         history=corpus_history(load_corpus(previous['corpus']))
@@ -267,7 +302,7 @@ class ClosedLoopRound(CampaignRunner):
         demo=build_student_demo_bank(teaching,self.root/'student_demo_bank',
             source_identity=tail_identity(self.source,self.protocol),previous=previous['demo'],round_id=index,
             baseline_identity=self.spec['baseline_identity'],teacher_tail_lineage=previous['tail_lineage'])
-        phase=dict(support_path=str(support),panel_support_path=str(seed_path/'support.json'),
+        phase=dict(support_path=str(support),panel_support_path=str(seed_support),
             retention_ref=self.spec['retention_ref'],demo_manifest={'path':str(self.root/'student_demo_bank/manifest.json'),
                 'sha256':file_sha(self.root/'student_demo_bank/manifest.json')})
         atomic_json(self.root/'source_phase_result.json',phase)
@@ -278,16 +313,18 @@ class ClosedLoopRound(CampaignRunner):
             'order':[student['policy']['name']],'nominal_source_rollout':True,'full_episode_rollout':True,
             'num_envs':4,'nominal_repeats':4,'pulse_steps':400,'pulse_start_schedule':[0],
             'delta_limit':[0.]*4,'explorer_checkpoint':None}
-        nominal_path=self.measured('student_nominal','collect',nominal_cfg,1600)
-        nominal=[r['prefix_label'] for r in read(nominal_path/'candidates.json')]
+        if not self.spec.get('continuous_learning'):
+            nominal_path=self.measured('student_nominal','collect',nominal_cfg,1600)
+            nominal=[r['prefix_label'] for r in read(nominal_path/'candidates.json')]
         from .worker import source_payload
         _,payload=source_payload(student['frozen_policy'])
         import jax
         if not all(np.isfinite(np.asarray(v)).all() for v in jax.tree.leaves(
                 (payload.actor_params,payload.observation_normalizer,payload.critic_params))):
             raise ValueError('nonfinite student checkpoint')
-        decision=continuation_decision(student,nominal,
-            read(Path(student['training'])/'status.json')['status']=='completed')
+        learner_completed=read(Path(student['training'])/'status.json')['status']=='completed'
+        decision=(continuous_decision(student,learner_completed) if self.spec.get('continuous_learning')
+                  else continuation_decision(student,nominal,learner_completed))
         atomic_json(self.root/'acceptance.json',decision)
         from .outcomes import root_outcome,result_matrix
         usage=read(Path(student['training'])/'bridge_demo_usage.json')['demo_samples_by_root']
@@ -335,6 +372,8 @@ class ClosedLoopRound(CampaignRunner):
             support=str(support),tail_lineage=tail_lineage,arrival_ledgers=ledgers,
             round=index,acceptance=decision,stress=stress,evaluated_student=student,formal_adopted=False,
             feedback_counts={k:len(v) for k,v in corpus['groups'].items()},explorer_metrics=e_metrics)
+        if self.spec.get('continuous_learning'):
+            bundle.update(learner=student['learner'],seed_support=previous['seed_support'])
         if self.spec.get('neighborhood') is not None:
             from .neighborhood_history import actor_evidence,teacher_evidence,source_recheck_evidence
             ancestors={r['root_episode_id'] for r in rows}
@@ -440,6 +479,8 @@ def _run_closed_loop(plan):
                     import shutil
                     if shutil.disk_usage(root).free<plan['minimum_free_disk_bytes']:
                         raise RuntimeError('free disk below declared 20GiB margin')
+                remaining_physics=plan['budgets']['max_physics']-write_costs(plan)['charged_interactions']
+                if remaining_physics<=0:raise ValueError('series physical budget exhausted')
                 actor=previous['actor'];directory=root/f'round_{index:04d}';directory.mkdir()
                 bank=read(parent['source_runtime']['bank'])
                 bank={k:bank[k] for k in ('task','max_ticks','label_interaction_budget','max_candidates_per_process')}
@@ -460,9 +501,13 @@ def _run_closed_loop(plan):
                     generator_reference_frozen_policy={'path':plan['baseline_frozen_policy'],'sha256':file_sha(plan['baseline_frozen_policy'])},
                     retention_reference_frozen_policy=plan['baseline_frozen_policy'],retention_ref=phase['retention_ref'],
                     teacher_layout='source_control_in_32_world_batch',locks=locks,
-                    budgets={'max_physics':plan['budgets']['per_round_physics']+(230400 if index==1 else 0),
+                    budgets={'max_physics':min(remaining_physics,plan['budgets']['per_round_physics']+(230400 if index==1 else 0)),
                              'max_supervised_updates':2000,'max_wall_seconds':plan['budgets']['max_wall_seconds']-(time.time()-started)})
                 if plan.get('neighborhood') is not None:spec['neighborhood']=plan['neighborhood']
+                if plan.get('continuous_learning'):
+                    if plan.get('nominal_evaluation') is not False:raise ValueError('continuous nominal check must be disabled')
+                    spec.update(continuous_learning=True,allow_legacy_optimizer_bootstrap=
+                        bool(index==plan['round_offset']+1 and plan.get('allow_legacy_optimizer_bootstrap')))
                 if index==1 and plan.get('baseline_reuse'):spec['baseline_reuse']=plan['baseline_reuse']
                 atomic_json(directory/'production.json',spec);atomic_json(directory/'panels.json',{})
                 runner=ClosedLoopRound(spec)
@@ -491,9 +536,11 @@ def _run_closed_loop(plan):
 
 def write_costs(plan):
     costs=[dict(c,round=p.parent.name) for p in Path(plan['output']).glob('round_*/costs.json') for c in read(p)]
-    physical=sum(c['charged_interactions'] for c in costs)
+    carried=plan.get('carried_physics',0)
+    if type(carried) is not int or carried<0:raise ValueError('invalid carried physics cost')
+    physical=carried+sum(c['charged_interactions'] for c in costs)
     if physical>plan['budgets']['max_physics']:raise ValueError('series physical budget exceeded')
     result=dict(charged_interactions=physical,lifetime_physics_charged=physical+plan['prior_physics_charged'],supervised_updates=sum(c.get('charged_updates',0) for c in costs),
                 explorer_optimizer_updates=sum(c.get('explorer_optimizer_updates',0) for c in costs))
-    atomic_json(Path(plan['output'])/'cost_ledger.json',dict(costs=costs,limits=plan['budgets'],**result))
+    atomic_json(Path(plan['output'])/'cost_ledger.json',dict(costs=costs,carried_physics=carried,limits=plan['budgets'],**result))
     return result

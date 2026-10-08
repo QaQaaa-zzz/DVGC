@@ -64,3 +64,32 @@ Pilot audit: 85 completed execution children and160 finite metric rows; R1/R2
 nominal3/4 each so C retained. E optimizer8+6; G4000 performed but incumbent kept.
 Stress P0=186/288, C=228/288, R1=112/288, R2=204/288, unknown0. No claim that the
 continuing Actor improved or that G has a causal advantage.
+
+## User correction: genuinely continuous student learning (2026-10-08)
+
+This supersedes nominal-gated continuation above. User explicitly cancels nominal
+checks and wants the 200 rounds to train the previous student continuously.
+Stop series0004 (interrupted during teacher search, before any new student block).
+The replacement continues latest evaluated R2 student, NOT retained C. It does
+not execute student_nominal or source seed_support nominal qualification. Existing
+valid historical witnessed seed states are reused with their original Actor labels;
+new current TRAIN rows and all valid pending retain their own provenance.
+
+Each finite completed student is the next experimental training source regardless
+of success/forgetting; formal adoption remains false. Only real successful TRAIN
+student trajectories enter G corpus. Invalid numerical state remains an engineering
+error; it is not a performance adoption threshold.
+
+Legacy pilot inference checkpoints did not save PPO optimizer/RNG. Restore its R2
+Actor+normalizer+critic, bootstrap optimizer once and disclose that boundary. Then
+save and restore full Brax TrainingState (Adam state, Actor, critic, normalizer),
+training RNG and cumulative counters every block, with matching inference hashes.
+New round simulator episodes reset to new declared TRAIN support, so this is full
+learner continuity, not restoration of simulator contact/episode state. A narrow,
+source-hash-pinned adapter adds host init/checkpoint hooks to installed Brax; rollout,
+PPO and auxiliary loss equations are unchanged. Missing later learner state fails.
+
+Reuse the existing 200-round/7-day budget; charge interrupted work and <=12800
+engineering validation physics within the same total cap. Old pilot, interruption,
+engineering and production results remain separate. E continuation, G's existing
+checkpoint-selection protocol, rewards, H16, mappings and physics remain unchanged.

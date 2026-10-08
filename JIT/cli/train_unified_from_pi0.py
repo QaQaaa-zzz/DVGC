@@ -2,8 +2,9 @@
 """Train a unified policy from frozen preceding-policy Actor parameters.
 
 The historical filename is retained for command compatibility. Observation
-normalizer and Actor come from the declared frozen unified policy; critic and
-optimizer remain fresh.
+normalizer and Actor come from the declared frozen unified policy. Legacy
+configs keep critic/optimizer fresh; continuous_learner explicitly restores
+the complete learner across blocks.
 """
 from __future__ import annotations
 

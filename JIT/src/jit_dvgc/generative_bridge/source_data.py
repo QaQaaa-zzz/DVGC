@@ -129,14 +129,15 @@ def aggregate_collection(plan_path, output, *, source_actor_sha256):
     return artifact
 
 
-def build_training_support(seed_support_path, aggregated_path, output, *, source_policy):
+def build_training_support(seed_support_path, aggregated_path, output, *, source_policy,allow_historical_seed=False):
     """Combine only freshly witnessed source states and every valid TRAIN negative."""
     from ..iterative_probe_training import candidate_support_view
     from ..pulse_exploration import support_row
     from ..evidence_integrity import canonical_sha256
     seed_support_path = Path(seed_support_path)
     seed_status = read(seed_support_path.parent/'status.json')
-    if (seed_status.get('source_policy') != source_policy or seed_status.get('historical_support_imported') is not False
+    seed_policy=seed_status.get('source_policy') if allow_historical_seed else source_policy
+    if (not seed_policy or seed_status.get('source_policy') != seed_policy or seed_status.get('historical_support_imported') is not False
             or seed_status.get('phase') != 'completed'):
         raise ValueError('fresh same-source seed_support provenance required')
     witnessed = deepcopy(read(seed_support_path)); aggregated = read(aggregated_path)
@@ -144,10 +145,11 @@ def build_training_support(seed_support_path, aggregated_path, output, *, source
         raise ValueError('same-source fresh collection required')
     if {r['phase'] for r in witnessed['entries']} != {'upstream','downstream'}:
         raise ValueError('both fresh witnessed phases required')
-    if any(r.get('labels') != {source_policy:1} for r in witnessed['entries']):
+    if any(r.get('labels') != {seed_policy:1} for r in witnessed['entries']):
         raise ValueError('seed support contains other source labels')
     inputs = {**aggregated['inputs'],str(Path(aggregated_path).resolve()):file_sha(aggregated_path),
-              str(seed_support_path.resolve()):file_sha(seed_support_path)}
+              str(seed_support_path.resolve()):file_sha(seed_support_path),
+              str((seed_support_path.parent/'status.json').resolve()):file_sha(seed_support_path.parent/'status.json')}
     pending,seen = [],{r['key'] for r in witnessed['entries']}
     for row in aggregated['rows']:
         if row['data_role']!='train' or row.get('prefix_terminal') or row['label'] not in (0,1):

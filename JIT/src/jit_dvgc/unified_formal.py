@@ -745,7 +745,8 @@ def run_unified_formal(
             "started_utc": datetime.now(timezone.utc).isoformat(),
             "training_seed": config.ppo.seed,
             "target_training_transition": config.ppo.requested_transitions,
-            "resume_semantics": "fresh",
+            "resume_semantics": ("full_learner_new_physical_episodes" if config.raw.get("continuous_learner",{}).get("parent")
+                else "legacy_actor_critic_optimizer_bootstrap" if config.raw.get("continuous_learner") else "fresh"),
         },
     )
 
@@ -812,6 +813,9 @@ def run_unified_formal(
         if config.raw.get("checkpoint_evaluation"):
             report["checkpoint_evaluation"] = config.raw["checkpoint_evaluation"]
             report["fixed_train_panel"] = config.raw["fixed_train_panel"]
+        if config.raw.get("continuous_learner"):
+            report["continuous_learner"] = config.raw["continuous_learner"]
+            report["learner_checkpoint"] = read_json(run_dir / "learner/latest.json")
         _write_json(run_dir / "formal_report.json", report)
         close_run(
             run_dir,

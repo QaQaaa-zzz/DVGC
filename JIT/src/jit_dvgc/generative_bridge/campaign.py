@@ -195,7 +195,19 @@ class CampaignRunner(ProductionRunner):
             'demo_coefficient_start':0. if name=='A' else .2,'demo_coefficient_end':0. if name=='A' else .05,
             'max_first_behavior_kl':.05,'retention_coefficient':.2,'demo_batch_size':256,'retention_batch_size':256}
         if warmup is not None:contract['warmup_initializer']=warmup
-        raw['generative_bridge_student']=contract;atomic_json(config,raw)
+        raw['generative_bridge_student']=contract
+        if self.spec.get('continuous_learning'):
+            from brax.training.agents.ppo import train as upstream
+            from .learner_continuation import trainer_sha
+            parent=self.spec['continuation'].get('learner')
+            if parent is None and not self.spec.get('allow_legacy_optimizer_bootstrap'):
+                raise ValueError('continuous round missing preceding full learner')
+            raw['continuous_learner']=dict(schema='jit_bridge_full_ppo_learner_v1',parent=parent,
+                trainer_sha256=trainer_sha(upstream.train),legacy_optimizer_bootstrap=parent is None)
+            raw['initialization'].update(critic='warm_start_frozen_unified',
+                optimizer='resume_learner' if parent else 'fresh_once')
+            if parent:raw['input_files'][parent['path']]=parent['sha256']
+        atomic_json(config,raw)
         cost=self.child('student_'+name,['JIT/cli/train_unified_from_pi0.py','--config',config,'--run-id',raw['run_declaration']['run_id']],
             136000,extra_env={'JIT_RUN_ROOT':str(directory/'training')})
         training=directory/'training'/raw['run_declaration']['run_id'];report=read(training/'formal_report.json')
@@ -207,8 +219,13 @@ class CampaignRunner(ProductionRunner):
         bank.update(version=name,members=[{'frozen_policy':str(frozen),'roles':['proposer','evaluator']},
             {'frozen_policy':self.spec['source_frozen_policy'],'roles':['proposer','evaluator']}])
         lock_probe_bank(bank,directory/'bank.json')
-        return {'frozen_policy':str(frozen),'policy':policy,'bank':str(directory/'bank.json'),
+        result={'frozen_policy':str(frozen),'policy':policy,'bank':str(directory/'bank.json'),
             'actor_sha256':policy['actor_sha256'],'normalizer_sha256':policy['normalizer_sha256'],'training':str(training)}
+        if self.spec.get('continuous_learning'):
+            from .learner_continuation import validate_saved_learner
+            result['learner']=read(training/'learner/latest.json')
+            validate_saved_learner(result['learner'],policy,expected_local_transitions=128000)
+        return result
 
     def checkpoint_probes(self,student,source_phase,warmup):
         import pickle

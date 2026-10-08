@@ -96,3 +96,14 @@ def test_support_keeps_all_pending_and_excludes_development(tmp_path):
     assert len(pending)==130
     assert sum(r['sampling_weight'] for r in pending)==pytest.approx(.5)
     assert result['pending_fraction']==.5
+
+
+def test_historical_seed_keeps_its_labels_without_current_nominal_success(tmp_path):
+    from jit_dvgc.generative_bridge.source_data import build_training_support
+    seed=tmp_path/'seed/support.json'
+    write(seed,{'entries':[{'key':p,'phase':p,'labels':{'old_actor':1}} for p in ('upstream','downstream')],'inputs':{}})
+    write(seed.parent/'status.json',dict(phase='completed',source_policy='old_actor',historical_support_imported=False))
+    rows=tmp_path/'rows.json';write(rows,dict(source_policy='new_actor',prior_labels_imported=False,rows=[],inputs={}))
+    with pytest.raises(ValueError):build_training_support(seed,rows,tmp_path/'rejected.json',source_policy='new_actor')
+    result=build_training_support(seed,rows,tmp_path/'support.json',source_policy='new_actor',allow_historical_seed=True)
+    assert all(r['labels']=={'old_actor':1} for r in result['entries'])
