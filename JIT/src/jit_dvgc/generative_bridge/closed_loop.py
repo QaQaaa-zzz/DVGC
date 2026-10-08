@@ -70,7 +70,7 @@ def adopt_tail(path, baseline, previous, student, decision):
     return {'path':str(path),'sha256':file_sha(path)}
 
 
-def prepare_closed_loop(previous,output,repository):
+def prepare_closed_loop(previous,output,repository,*,neighborhood=False):
     from .artifacts import validate_generator_receipt,load_corpus
     from .worker import source_payload
     previous=Path(previous).resolve();output=Path(output).resolve();repo=Path(repository).resolve()
@@ -94,7 +94,14 @@ def prepare_closed_loop(previous,output,repository):
         final_test_open=False,automatic_extension=False,automatic_retry=False,
         locks={str(previous/'current_source.json'):file_sha(previous/'current_source.json'),
                str(campaign/'acceptance_report.json'):file_sha(campaign/'acceptance_report.json')})
-    output.mkdir(parents=True,exist_ok=False);atomic_json(output/'plan.json',spec)
+    output.mkdir(parents=True,exist_ok=False)
+    if neighborhood:
+        from .neighborhood_history import seed_history,neighborhood_config
+        history=output/'initial_neighborhood_history.json'
+        atomic_json(history,seed_history(campaign))
+        spec.update(neighborhood=neighborhood_config(),neighborhood_history=str(history))
+        spec['locks'][str(history)]=file_sha(history)
+    atomic_json(output/'plan.json',spec)
     atomic_json(output/'status.json',{'phase':'prepared','completed_rounds':0})
     return spec
 
@@ -153,6 +160,11 @@ class ClosedLoopRound(CampaignRunner):
             'full_episode_rollout':False,'delta_limit':[.25]*4,'pulse_start_schedule':[0],
             'explorer_admission_v1_2':dict(run_id=self.spec['series_id'],collection_id=f'round_{index}',
                 master_seed=self.spec['seed'],round=index,episode_ids=list(range(128)),uniform_episode_fraction=.2)}
+        if self.spec.get('neighborhood') is not None:
+            from .neighborhood_history import freeze_history
+            path=self.root/'neighborhood_map.json'
+            freeze_history(path,previous['neighborhood_history'],self.source['actor_sha256'],self.spec['neighborhood'],index)
+            cfg.update(neighborhood=self.spec['neighborhood'],neighborhood_map=str(path),neighborhood_map_sha256=file_sha(path))
         collected=self.measured('collection','collect',cfg,384)
         original=read(collected/'candidates.json')
         for row in original:
@@ -248,6 +260,14 @@ class ClosedLoopRound(CampaignRunner):
             support=str(support),tail_lineage=tail_lineage,arrival_ledgers=ledgers,
             round=index,acceptance=decision,stress=stress,evaluated_student=student,formal_adopted=False,
             feedback_counts={k:len(v) for k,v in corpus['groups'].items()},explorer_metrics=e_metrics)
+        if self.spec.get('neighborhood') is not None:
+            from .neighborhood_history import actor_evidence,teacher_evidence,source_recheck_evidence
+            ancestors={r['root_episode_id'] for r in rows}
+            bundle['neighborhood_history']=(previous['neighborhood_history']+
+                actor_evidence(rows,ancestors,str(aggregate))+
+                actor_evidence(after,ancestors,str(self.root/'evaluations/student_train'))+
+                teacher_evidence(teachers,rows,str(self.root/'teachers'))+
+                source_recheck_evidence(teachers,rows,str(self.root/'teachers')))
         atomic_json(self.root/'current_source.json',bundle)
         self.status('completed',stage='closed_loop_round',training_transitions=128000)
         return bundle
@@ -313,6 +333,10 @@ def _run_closed_loop(plan):
         demo=plan['initial_bundle']['student_demo_bank'],dev_fixture=phase['bootstrap']['dev_fixture'],
         dev_fixture_sha256=phase['bootstrap']['dev_fixture_sha256'],
         support=phase['support_path'],tail_lineage=lineage,explorer=None)
+    if plan.get('neighborhood') is not None:
+        history=plan['neighborhood_history']
+        if file_sha(history)!=plan['locks'][history]:raise ValueError('initial history changed')
+        previous['neighborhood_history']=read(history)
     try:
         with wall_deadline(plan['budgets']['max_wall_seconds']):
             for index in range(1,plan['rounds']+1):
@@ -337,6 +361,7 @@ def _run_closed_loop(plan):
                     teacher_layout='source_control_in_32_world_batch',locks=locks,
                     budgets={'max_physics':plan['budgets']['per_round_physics']+(230400 if index==1 else 0),
                              'max_supervised_updates':2000,'max_wall_seconds':plan['budgets']['max_wall_seconds']-(time.time()-started)})
+                if plan.get('neighborhood') is not None:spec['neighborhood']=plan['neighborhood']
                 atomic_json(directory/'production.json',spec);atomic_json(directory/'panels.json',{})
                 runner=ClosedLoopRound(spec)
                 atomic_json(root/'status.json',dict(phase='running',round=index,completed_rounds=len(completed),current_round=str(directory)))

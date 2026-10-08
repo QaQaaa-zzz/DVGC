@@ -29,10 +29,12 @@ def _config(config):
     values = dict(DEFAULT_CONFIG)
     if config is not None:
         unknown = set(config) - set(DEFAULT_CONFIG) - {
-            'feature_dim', 'summary_dim', 'base_dim', 'stats_dim'}
+            'feature_dim', 'summary_dim', 'base_dim', 'stats_dim', 'evidence_scope'}
         if unknown:
             raise ValueError(f'unknown neighborhood configuration: {sorted(unknown)}')
         values.update(config)
+    if values.get('evidence_scope','source_only') not in ('source_only','train_history_v1'):
+        raise ValueError('unsupported neighborhood evidence scope')
     k = values['neighbors']
     if isinstance(k, (bool, np.bool_)) or not isinstance(k, (int, np.integer)) or k <= 0:
         raise ValueError('neighbors must be a positive integer')
@@ -107,11 +109,17 @@ class FrozenNeighborhood:
             raise ValueError('source_actor_sha256 must be a nonempty string')
         widths = _freeze_array(values['medium_halfwidths'])
         records = {}
+        history = values.get('evidence_scope') == 'train_history_v1'
+        historical_labels = {}
         for row in rows:
             attempts = row.get('attempts') or []
             source = (row['source_actor_sha256'] if 'source_actor_sha256' in row
                       else attempts[0].get('actor_sha256') if attempts else None)
-            if source != source_actor_sha256:
+            if history:
+                if row.get('data_role')!='train':raise ValueError('neighborhood history requires TRAIN evidence')
+                source=row.get('evaluated_actor_sha256')
+                if not source:raise ValueError('history requires actual evaluated policy identity')
+            elif source != source_actor_sha256:
                 continue
             phase = _phase(row['phase'])
             context = row.get('snapshot_context_sha256', row.get('context_sha256'))
@@ -130,10 +138,15 @@ class FrozenNeighborhood:
             current = _known(row['initial_label'] if 'initial_label' in row
                              else attempts[0].get('label') if attempts else None)
             repair = _known(row.get('label')) if row.get('learning_attempted', False) else None
-            if current is not None:
-                records[key][1].add(current)
-            if repair is not None:
-                records[key][2].add(repair)
+            if history:
+                label=_known(row.get('label'))
+                kind=row.get('evidence_kind','actor')
+                if kind not in ('actor','verified_teacher'):raise ValueError('unknown historical evidence kind')
+                if kind=='actor' and source==source_actor_sha256 and label is not None:records[key][1].add(label)
+                if label is not None:historical_labels.setdefault(key,{}).setdefault((kind,source),set()).add(label)
+            else:
+                if current is not None:records[key][1].add(current)
+                if repair is not None:records[key][2].add(repair)
         indices = []
         for phase in (0, 1):
             # Canonical context order supplies the final tie break independently
@@ -143,8 +156,14 @@ class FrozenNeighborhood:
                 indices.append(None)
                 continue
             coordinates = _freeze_array([r[0] / widths for r in selected])
-            flags = _freeze_array([[float(r[1] == {1}), float(r[1] == {0}),
-                                    float(r[2] == {1}), float(r[2] == {0})] for r in selected])
+            if history:
+                flags = _freeze_array([[float(records[key][1]=={1}),float(records[key][1]=={0}),
+                    float(any(k[0]=='actor' and v=={1} for k,v in historical_labels.get(key,{}).items())),
+                    float(any(k[0]=='verified_teacher' and v=={1} for k,v in historical_labels.get(key,{}).items()))]
+                    for key in sorted(records) if key[0]==phase])
+            else:
+                flags = _freeze_array([[float(r[1] == {1}), float(r[1] == {0}),
+                                        float(r[2] == {1}), float(r[2] == {0})] for r in selected])
             indices.append(_PhaseIndex(coordinates, flags, cKDTree(coordinates, copy_data=True)))
         object.__setattr__(self, 'source_actor_sha256', source_actor_sha256)
         object.__setattr__(self, 'config', MappingProxyType(values))

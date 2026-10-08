@@ -37,6 +37,7 @@ def neighborhood_config(config):
         result[key] = int(value)
     if result['feature_dim'] < 2:
         raise ValueError('neighborhood feature_dim must include features and a valid mask')
+    if 'evidence_scope' in config:result['evidence_scope']=config['evidence_scope']
     return dict(result, medium_halfwidths=list(config['medium_halfwidths']),
                 far_scale=float(config['far_scale']))
 

@@ -20,3 +20,13 @@ Implementation tasks:
 Initialization: Actor+normalizer warm start and fresh PPO critic/optimizer per student round (not exact optimizer resume); G optimizer checkpoint continues; E optimizer checkpoint continues. History and source hashes preserved. Current research facts live only in shared research-hub/PROJECT_STATE.md.
 
 Validation before launch: CPU193 passed (30.15s), focused7 passed after review fixes; actual saved C/hash and cumulative1679-demo/62-pending provenance check passed without physics. Independent review found and resolved reservation overflow, startup-failure status, quarantine metadata, exact budget validation and evaluated-candidate identity. GPU closed-loop validation remains pending resource gate.
+
+## User-authorized neighborhood input (2026-10-08)
+
+The unexecuted series_0001 GPU queue is cancelled and replaced, with the same two-round budget. Actor C and saved G remain unchanged; E starts fresh with neighborhood encoder, no 106D checkpoint migration. Opt-in `train_history_v1` observation semantics: base106 +16 neighbors*(relative physical state12 +current Actor success/failure2 +historical Actor success1 +verified teacher success1 +valid mask1) +near/far statistics8 =386 raw inputs. Existing learned encoder compresses neighborhood to64; Actor/Critic heads receive178. Feature scope is checkpoint-bound; legacy configurations retain their original interpretation.
+
+All historical map rows are TRAIN-only real post-pulse contexts. Initial history uses1024 original TRAIN roots,32 C TRAIN evaluations and25 verified teachers, retaining actual evaluated-policy identity. Same-policy conflicting labels are unknown. Arrivals survive Actor changes; current ability flags only match actual evaluated Actor. Teacher success is never converted to student success. E sees sparse nearest historical samples, not a complete or certified reachable set.
+
+Each collection freezes map contents and SHA before sampling. The E behavior receipt pins config/map hash and update validates it. Current collection and future teacher/student outcomes only join the next-round map. No development or final TEST rows enter the map. E uses its recorded386D observation for PPO, never recomputes with a newer map. Reward weights and source-specific novelty ledger are unchanged.
+
+Neighborhood validation:233 CPU tests passed (30.40s), including actual RSL PPO on386D neighborhood observations, uniform/unknown exclusion, map mutation rejection and checkpoint scope mismatch. Initial map1116 evidence rows/1024unique TRAIN contexts includes35source recheck records; known same-policy0/1 conflicts are unknown. Independent review complete; new GPU physical validation remains pending the resource gate.

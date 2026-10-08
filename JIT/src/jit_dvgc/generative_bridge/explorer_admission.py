@@ -17,8 +17,16 @@ def validate_collection_options(spec):
         or spec.get('pulse_steps')!=3 or spec.get('pulse_start_schedule')!=[0]
         or spec.get('delta_limit')!=[.25]*4 or spec.get('pulse_event_schedule')
         or spec.get('pulse_protocol_v1_2') or spec.get('initial_velocity_randomization')
-        or spec.get('nominal_source_rollout') or spec.get('neighborhood')):
+        or spec.get('nominal_source_rollout')):
         raise ValueError('Stage B requires the declared RSL complete-start three-step pulse contract')
+    if spec.get('neighborhood') is not None:
+        from ..neighborhood import _config
+        _config(spec['neighborhood'])
+        path=spec.get('neighborhood_map');sha=spec.get('neighborhood_map_sha256')
+        if not path or not sha or file_sha(path)!=sha:raise ValueError('frozen neighborhood map missing or changed')
+        payload=json.loads(Path(path).read_text())
+        if payload.get('config')!=spec['neighborhood'] or payload.get('frozen_before_collection') is not True:
+            raise ValueError('neighborhood must be frozen before current collection')
     if (not isinstance(cfg,dict) or not isinstance(cfg.get('run_id'),str) or not cfg['run_id']
         or not isinstance(cfg.get('collection_id'),str) or not cfg['collection_id']
         or cfg.get('round')!=spec.get('round_index') or cfg.get('uniform_episode_fraction')!=.2
@@ -74,7 +82,8 @@ def collection_receipt(spec,state,learned,normalizer=None):
     identity=behavior_identity(state,normalizer)
     for k,v in identity.items():
         if k in cfg and cfg[k]!=v:raise ValueError('declared explorer behavior identity drift: '+k)
-    return dict(cfg,**identity,fresh_collection=True,
+    return dict(cfg,**identity,neighborhood=spec.get('neighborhood'),
+                neighborhood_map_sha256=spec.get('neighborhood_map_sha256'),fresh_collection=True,
                 episode_modes=['learned' if flag else 'uniform' for flag in learned],
                 mode_codes={'learned':1,'uniform':0},uniform_branch_on_policy=False,
                 learned_episode_count=int(np.asarray(learned).sum()),
@@ -89,6 +98,8 @@ def validate_admission(spec,receipt,tape,actual_identity):
                 'behavior_actor_sha256','behavior_normalizer_sha256'):
         if key not in cfg or cfg[key]!=receipt.get(key):raise ValueError('explorer lineage mismatch: '+key)
     if receipt.get('fresh_collection') is not True:raise ValueError('historical root replay is forbidden')
+    for key in ('neighborhood','neighborhood_map_sha256'):
+        if spec.get(key)!=receipt.get(key):raise ValueError('explorer neighborhood behavior mismatch')
     for key,value in actual_identity.items():
         if receipt.get(key)!=value:raise ValueError('explorer behavior mismatch: '+key)
     modes=receipt['episode_modes']
