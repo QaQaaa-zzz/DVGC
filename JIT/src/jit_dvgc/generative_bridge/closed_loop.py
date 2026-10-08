@@ -106,6 +106,49 @@ def prepare_closed_loop(previous,output,repository,*,neighborhood=False):
     return spec
 
 
+def continuation_budget(rounds):
+    if type(rounds) is not int or not 1<=rounds<=200:
+        raise ValueError('additional rounds must be an integer in [1,200]')
+    return dict(max_physics=1500000*rounds,per_round_physics=1500000,max_wall_seconds=604800,
+                student_transitions=128000*rounds,generator_updates=2000*rounds,explorer_epochs_per_round=4)
+
+
+def prepare_continuation(previous,output,repository,*,rounds):
+    """Continue only a completed published bundle, in a fresh bounded series."""
+    from .artifacts import validate_generator_receipt,load_corpus
+    from .worker import source_payload
+    old=Path(previous).resolve();root=Path(output).resolve();repo=Path(repository).resolve()
+    status=read(old/'status.json');plan=read(old/'plan.json')
+    if status['phase']!='completed' or status['completed_rounds']!=plan['rounds']:
+        raise ValueError('completed parent series required')
+    bundle_path=old/'current_source.json';bundle=read(bundle_path)
+    source_payload(bundle['actor']['frozen_policy'])
+    validate_generator_receipt(bundle['generator']);load_corpus(bundle['corpus'])
+    for path,h in [(bundle['explorer'],bundle['explorer_sha256']),
+                   (bundle['demo']['path'],bundle['demo']['sha256']),
+                   (bundle['dev_fixture'],bundle['dev_fixture_sha256'])]:
+        if file_sha(path)!=h:raise ValueError('parent continuation artifact changed')
+    panels=plan.get('reference_panels',dict(baseline=str(old/'round_0001/baseline_stress.json'),
+                                          initial=str(old/'round_0001/initial_stress.json')))
+    plan=deepcopy(plan)
+    for key in ('original_started_unix','baseline_reuse','recovery'):
+        plan.pop(key,None)
+    plan.update(schema='jit_bridge_experimental_continuation_v1',output=str(root),repository=str(repo),
+        implementation_commit=implementation_identity(repo),implementation_files=implementation_files(repo),
+        rounds=rounds,round_offset=bundle['round'],budgets=continuation_budget(rounds),
+        authorization='user_requested_additional_rounds',continuation_parent=str(old),
+        continuation_bundle={'path':str(bundle_path),'sha256':file_sha(bundle_path)},
+        reference_panels=panels,minimum_free_disk_bytes=20*1024**3,
+        prior_physics_charged=status['lifetime_physics_charged'])
+    for path in (bundle_path,old/'status.json',old/'plan.json',*map(Path,panels.values())):
+        plan['locks'][str(path)]=file_sha(path)
+    root.mkdir(parents=True,exist_ok=False)
+    atomic_json(root/'plan.json',plan)
+    atomic_json(root/'status.json',dict(phase='prepared',completed_rounds=0,declared_rounds=rounds,
+                                      round_offset=bundle['round']))
+    return plan
+
+
 def baseline_reuse(name, mode, spec, maximum, entry):
     """Reuse only pinned completed P0 evaluation, never learning or partial work."""
     if name not in {f'baseline_stress_{i:02d}' for i in range(9)} or mode!='collect':
@@ -344,11 +387,23 @@ def _run_closed_loop(plan):
     atomic_json(root/'started.json',{'started_unix':started});start_notifications(plan)
     remaining_wall=plan['budgets']['max_wall_seconds']-(time.time()-started)
     if remaining_wall<=0:raise TimeoutError('original closed-loop deadline exhausted')
-    if plan.get('rounds')!=2 or plan.get('experimental_adoption') is not True or plan.get('formal_adoption') is not False:
-        raise ValueError('explicit two-round experimental continuation required')
-    if plan['budgets']!=dict(max_physics=3300000,per_round_physics=1500000,max_wall_seconds=86400,
-            student_transitions=256000,generator_updates=4000,explorer_epochs_per_round=4):
+    continuation=plan.get('schema')=='jit_bridge_experimental_continuation_v1'
+    if plan.get('experimental_adoption') is not True or plan.get('formal_adoption') is not False:
+        raise ValueError('explicit experimental continuation required')
+    if continuation:
+        if plan.get('authorization')!='user_requested_additional_rounds':raise ValueError('missing continuation authorization')
+        expected=continuation_budget(plan['rounds'])
+        if type(plan.get('round_offset')) is not int or plan['round_offset']<1:
+            raise ValueError('invalid completed-round offset')
+        if plan.get('minimum_free_disk_bytes')!=20*1024**3:raise ValueError('disk guard changed')
+    else:
+        if plan.get('rounds')!=2:raise ValueError('explicit two-round experimental continuation required')
+        expected=dict(max_physics=3300000,per_round_physics=1500000,max_wall_seconds=86400,
+            student_transitions=256000,generator_updates=4000,explorer_epochs_per_round=4)
+    if plan['budgets']!=expected:
         raise ValueError('declared closed-loop budget changed')
+    for path,h in plan['locks'].items():
+        if file_sha(path)!=h:raise ValueError('closed-loop input changed: '+path)
     if implementation_identity(plan['repository'])!=plan['implementation_commit']:
         raise ValueError('closed-loop code identity changed')
     parent=read(Path(plan['parent_campaign'])/'production.json')
@@ -356,24 +411,35 @@ def _run_closed_loop(plan):
     baseline,_=source_payload(plan['baseline_frozen_policy'])
     protocol=digest({'version':'1.2','task':'stable_forward_recovery','H':16,'horizon':400,
                      'source_physics':baseline['xml_sha256'],'source_reward':parent['source_runtime']['reward_mode']})
-    identity=tail_identity(baseline,protocol);initial=plan['initial_student']
-    # Existing C passed all four nominal checks; this explicit new receipt does not alter old rejection.
-    olddecision=read(Path(plan['parent_campaign'])/'acceptance_report.json')['C']['acceptance']
-    n=olddecision['counts']['nominal']
-    if n['retained']!=4 or n['lost'] or n['unknown']:raise ValueError('initial C nominal evidence invalid')
-    decision=continuation_decision(initial,[1]*4,True)
-    lineage=[adopt_tail(root/'initial_experimental_adoption.json',identity,baseline,initial,decision)]
-    previous=dict(actor=initial,generator=plan['initial_bundle']['generator'],corpus=plan['initial_bundle']['corpus'],
-        demo=plan['initial_bundle']['student_demo_bank'],dev_fixture=phase['bootstrap']['dev_fixture'],
-        dev_fixture_sha256=phase['bootstrap']['dev_fixture_sha256'],
-        support=phase['support_path'],tail_lineage=lineage,explorer=None)
-    if plan.get('neighborhood') is not None:
-        history=plan['neighborhood_history']
-        if file_sha(history)!=plan['locks'][history]:raise ValueError('initial history changed')
-        previous['neighborhood_history']=read(history)
+    identity=tail_identity(baseline,protocol)
+    if continuation:
+        item=plan['continuation_bundle']
+        if file_sha(item['path'])!=item['sha256']:raise ValueError('published continuation changed')
+        previous=read(item['path'])
+        if previous['round']!=plan['round_offset']:raise ValueError('continuation round mismatch')
+    else:
+        initial=plan['initial_student']
+        # Existing C passed all four nominal checks; this explicit new receipt does not alter old rejection.
+        olddecision=read(Path(plan['parent_campaign'])/'acceptance_report.json')['C']['acceptance']
+        n=olddecision['counts']['nominal']
+        if n['retained']!=4 or n['lost'] or n['unknown']:raise ValueError('initial C nominal evidence invalid')
+        decision=continuation_decision(initial,[1]*4,True)
+        lineage=[adopt_tail(root/'initial_experimental_adoption.json',identity,baseline,initial,decision)]
+        previous=dict(actor=initial,generator=plan['initial_bundle']['generator'],corpus=plan['initial_bundle']['corpus'],
+            demo=plan['initial_bundle']['student_demo_bank'],dev_fixture=phase['bootstrap']['dev_fixture'],
+            dev_fixture_sha256=phase['bootstrap']['dev_fixture_sha256'],
+            support=phase['support_path'],tail_lineage=lineage,explorer=None)
+        if plan.get('neighborhood') is not None:
+            history=plan['neighborhood_history']
+            if file_sha(history)!=plan['locks'][history]:raise ValueError('initial history changed')
+            previous['neighborhood_history']=read(history)
     try:
         with wall_deadline(remaining_wall):
-            for index in range(1,plan['rounds']+1):
+            for index in range(plan.get('round_offset',0)+1,plan.get('round_offset',0)+plan['rounds']+1):
+                if continuation:
+                    import shutil
+                    if shutil.disk_usage(root).free<plan['minimum_free_disk_bytes']:
+                        raise RuntimeError('free disk below declared 20GiB margin')
                 actor=previous['actor'];directory=root/f'round_{index:04d}';directory.mkdir()
                 bank=read(parent['source_runtime']['bank'])
                 bank={k:bank[k] for k in ('task','max_ticks','label_interaction_budget','max_candidates_per_process')}
@@ -400,14 +466,14 @@ def _run_closed_loop(plan):
                 if index==1 and plan.get('baseline_reuse'):spec['baseline_reuse']=plan['baseline_reuse']
                 atomic_json(directory/'production.json',spec);atomic_json(directory/'panels.json',{})
                 runner=ClosedLoopRound(spec)
-                atomic_json(root/'status.json',dict(phase='running',round=index,completed_rounds=len(completed),current_round=str(directory)))
+                atomic_json(root/'status.json',dict(phase='running',round=index,completed_rounds=len(completed),declared_rounds=plan['rounds'],round_offset=plan.get('round_offset',0),current_round=str(directory)))
                 atomic_json(root/'ACTIVE_RUN.json',dict(name=root.name,lineage=str(root/'status.json'),execution=str(directory/'status.json')))
                 if index==1:
                     runner.stress('baseline_stress',parent['source_runtime']['bank'],baseline['name'])
                     runner.stress('initial_stress',runtime['bank'],actor['policy']['name'])
                 previous=runner.run();completed.append(str(directory))
-                baseline_panel=read(root/'round_0001/baseline_stress.json')
-                initial_panel=read(root/'round_0001/initial_stress.json')
+                baseline_panel=read(plan['reference_panels']['baseline'] if continuation else root/'round_0001/baseline_stress.json')
+                initial_panel=read(plan['reference_panels']['initial'] if continuation else root/'round_0001/initial_stress.json')
                 atomic_json(directory/'generalization_comparison.json',dict(
                     versus_P0=compare_stress(baseline_panel,previous['stress']),
                     versus_initial_C=compare_stress(initial_panel,previous['stress']),
@@ -416,7 +482,7 @@ def _run_closed_loop(plan):
                 atomic_json(root/'current_source.json',previous)
                 atomic_json(root/'completed_rounds.json',completed)
                 write_costs(plan)
-        atomic_json(root/'status.json',dict(phase='completed',completed_rounds=len(completed),**write_costs(plan)))
+        atomic_json(root/'status.json',dict(phase='completed',completed_rounds=len(completed),declared_rounds=plan['rounds'],round_offset=plan.get('round_offset',0),**write_costs(plan)))
     except BaseException as error:
         atomic_json(root/'status.json',dict(phase='failed',completed_rounds=len(completed),error=repr(error),**write_costs(plan)))
         raise

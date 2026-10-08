@@ -34,11 +34,14 @@ def main():
     from tensorboardX import SummaryWriter
     declaration = json.loads(args.manifest.read_text())
     args.output.mkdir(parents=True, exist_ok=False)
-    writers, seen, source_hashes = {}, {}, {}
+    writers, seen, source_hashes, finished = {}, {}, {}, set()
     try:
         while True:
             for source in declaration['sources']:
                 name = source['name']
+                path = Path(source['path'])
+                if name in finished or (args.watch and not path.is_file()):
+                    continue
                 if name not in writers:
                     writers[name] = SummaryWriter(str(args.output/name))
                     seen[name] = set()
@@ -47,6 +50,13 @@ def main():
                         writers[name].add_text('configuration/'+Path(config).name,
                             '```json\n'+Path(config).read_text()+'\n```')
                 path = Path(source['path'])
+                # Observe completion before reading metrics: final rows must already be flushed.
+                completed = False
+                if source.get('completion_status'):
+                    try:
+                        completed = json.loads(Path(source['completion_status']).read_text()).get('status') == 'completed'
+                    except (OSError, ValueError):
+                        pass
                 try:
                     rows = metric_rows(source)
                 except (OSError, ValueError):
@@ -70,6 +80,9 @@ def main():
                             writers[name].add_scalar(tag, number, step)
                             seen[name].add(identity)
                 writers[name].flush()
+                if completed:
+                    writers.pop(name).close()
+                    finished.add(name)
             receipt = dict(phase='watching' if args.watch else 'completed',
                 updated_unix=time.time(), scalar_count=sum(map(len, seen.values())),
                 sources=source_hashes, manifest=str(args.manifest.resolve()),

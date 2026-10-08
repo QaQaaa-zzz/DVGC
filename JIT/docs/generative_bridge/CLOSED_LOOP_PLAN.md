@@ -40,3 +40,27 @@ A successor directory may reuse only completed, hash-pinned P0 stress collection
 with identical scientific configuration (gate excluded). Reused physical costs
 remain charged within the original two-round budget and original wall deadline.
 Never reuse partial stages or replay optimizer updates through this mechanism.
+
+## Bounded continuation after completed pilot (2026-10-08)
+
+User requests 200 additional rounds after checking current results. The completed
+2-round series is immutable. A new series continues global rounds3..202 from its
+published bundle: accepted Actor C, selected G checkpoint, E optimizer state,
+TRAIN history, pending support, demos, corpus, novelty and tail lineage. Students
+retain the existing weights-only Actor/normalizer start and fresh PPO critic and
+optimizer each round; E/G continue their selected saved optimizer states.
+
+Budget: 200*128000 student transitions, G<=200*2000 updates, E<=4epochs/round,
+physical<=200*1500000, 7days, >=20GiB free disk before each round. Keep shared GPU
+startup memory gate. Error/nonfinite/deadline/budget/disk failure stops with saved
+artifacts, no automatic retry or extension. Baseline P0/start-C panels are locked
+and reused without physics charges; per-round student stress panels remain full.
+Round identities/seeds continue monotonically; no duplicate historical collection.
+
+Engineering tasks: validate bounded continuation contract; test retained E/G and
+round offsets with a fake runner; verify real parent identities; launch a pinned
+snapshot; verify current scalar visibility and update shared PROJECT_STATE.md.
+Pilot audit: 85 completed execution children and160 finite metric rows; R1/R2
+nominal3/4 each so C retained. E optimizer8+6; G4000 performed but incumbent kept.
+Stress P0=186/288, C=228/288, R1=112/288, R2=204/288, unknown0. No claim that the
+continuing Actor improved or that G has a causal advantage.
