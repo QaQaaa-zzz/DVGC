@@ -165,3 +165,11 @@ campaign_0001 在 A0 失败，未进入 G/PPO。配置 num_envs=4、pulse_steps=
 恢复入口为JIT/runs/experiments/generative_bridge_v1_2_20260928/recovery_0001/INDEX.md；TensorBoard端口6019，HTTP200已核验，尚无训练标量。通知监视器有实际心跳、无投递错误。GPU成功与学习收益仍须实际结果，不能用本次CPU检查代替。
 
 继续核验：recovery_0001的A0实际GPU四次均成功，计费1600（active309/padding1291）。随后seed_support继承nominal_repeats4却自行改num_envs1，被同一合同拒绝；新增真实调用回归先复现，再令seed_support显式nominal_repeats1。30项相关CPU回归通过。执行代码2554c75，recovery_0002已启动并实际进入GPU fresh_seed_support，复用锁定A0结果不重复仿真。旧失败预留1600+80400单列，新尝试物理上限4,339,600含复用A0计费，合计仍4,421,600；旧24小时截止保持。当前TensorBoard6020，通知和实时状态在recovery_0002/campaign。G/PPO尚未开始，后续阶段未验证。
+
+## 2026-10-08 完整有限对照翻转隔离与恢复
+
+recovery_0002在第二个老师根失败：选中候选6搜索和重放均成功，仅source-only lane0从失败翻转为成功。旧代码把选中候选label改成None并停止整轮。现保留候选真实label，将完整有限的source翻转单独隔离为invalid/reason=source_control_repeat_conflict；不准入该教案、不计老师新增收益，原pending训练资格保留。只有完整有限重放且选中候选仍成功可进入此分支；未知、不完整、真正老师重放失败仍停止。采用面板冲突source保持unknown，未解决前不伪造采用通过。
+
+新增recover-v12只迁移经证据验证、学生尚未开始的这一失败路径。校验旧合同/数据轨迹/G/开发夹具/教师凭证，复用已完成采集、G update_20000、第一条有效教案、旧search/replay阶段；旧失败记录不修改。真实CPU恢复预检已抵达teacher_0002前的首次新GPU请求，旧冲突根隔离、旧教案保留；新增物理与G更新均0。185项相关CPU回归通过（30.47秒）；CLI数值预算兼容修正后18项相关回归通过（3.00秒），测试集不相加。
+
+当前执行recovery_0003/campaign，冻结代码d26af57。已实际进入teacher_0002。继承物理计费/预留541504，全部尝试总上限4421600、剩余3880096；继承G20000，余G增量2000、BC2000，三臂PPO各128000未改。原窗口已过期，用户本次明确续跑授权下重新声明24小时窗口；历史成本不清零。TensorBoard6021独立新运行目录，不把继承G日志冒充新更新；通知心跳正常。学生尚未开始，GPU后续/采用/性能结果待运行。
