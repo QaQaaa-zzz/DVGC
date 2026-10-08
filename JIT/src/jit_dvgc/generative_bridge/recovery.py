@@ -209,7 +209,7 @@ def prepare_campaign_recovery(previous,output,repository,*,max_wall_seconds=8640
         raise ValueError('requires failed v1.2 campaign')
     if 'teacher replay invalid' not in status.get('error','') or (previous/'students').exists() or (previous/'warmup').exists():
         raise ValueError('only diagnosed pre-student teacher conflict recovery allowed')
-    if type(max_wall_seconds) is not int or not 0<max_wall_seconds<=86400:
+    if type(max_wall_seconds) not in (int,float) or not 0<max_wall_seconds<=86400:
         raise ValueError('explicit positive wall window at most 24 hours required')
     contract=read(previous/'stages/round_contract.json')
     if contract!={'contract':old,'sha256':digest(old)}:raise ValueError('old contract drift')
