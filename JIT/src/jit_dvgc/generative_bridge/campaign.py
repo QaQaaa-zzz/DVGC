@@ -186,10 +186,10 @@ class CampaignRunner(ProductionRunner):
         raw['training_action_pulse']={'onsets':[0],'steps':3,'delta_limit':[.25]*4,'probability':1.,
             'pulse_scope':'full_task_start_only','training_conditions':[{'probability':.2,'amplitude':0.},
                 {'probability':.4,'amplitude':.1},{'probability':.4,'amplitude':.25}],
-            'logical_episode_rng':{'master_seed':self.spec['seed'],'role':'student_ppo','round':0,'slot_ids':list(range(128))}}
+            'logical_episode_rng':{'master_seed':self.spec['seed'],'role':'student_ppo','round':self.spec.get('round_index',0),'slot_ids':list(range(128))}}
         contract={'schema':'jit_bridge_student_v1_2','source_actor_sha256':self.source['actor_sha256'],
             'source_normalizer_sha256':self.source['normalizer_sha256'],
-            'retention_reference_actor':{'path':self.spec['source_frozen_policy'],'sha256':file_sha(self.spec['source_frozen_policy'])},
+            'retention_reference_actor':{'path':self.spec.get('retention_reference_frozen_policy',self.spec['source_frozen_policy']),'sha256':file_sha(self.spec.get('retention_reference_frozen_policy',self.spec['source_frozen_policy']))},
             'retention_trace_observations':source_phase['retention_ref'],
             'demo_manifest':None if name=='A' else source_phase['demo_manifest'],
             'demo_coefficient_start':0. if name=='A' else .2,'demo_coefficient_end':0. if name=='A' else .05,
