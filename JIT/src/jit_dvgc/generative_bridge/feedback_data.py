@@ -77,20 +77,32 @@ def build_corpus(history, teachers, actors, *, adoption, expected, splits):
             'realized_mix':realized_mix(counts),'new_data':bool(groups['teacher_new'] or groups['actor_new'])}
 
 
-def sample_corpus(corpus, rng, batch_size):
+def sample_corpus(corpus, rng, batch_size, *, return_metadata=False):
     """Choose source, ancestor, trajectory, then window; loss is not reweighted."""
     names=list(MIX);probs=[corpus['realized_mix'][k] for k in names]
     if not any(probs):raise ValueError('empty corpus cannot be sampled')
-    observations=[];actions=[];sources=[]
+    observations=[];actions=[];sources=[];metadata=[]
     for _ in range(batch_size):
         group=names[int(rng.choice(3,p=probs))];traces=corpus['groups'][group]
         ancestors=sorted({t['metadata']['root_episode_id'] for t in traces})
         ancestor=ancestors[int(rng.integers(len(ancestors)))]
         choices=[t for t in traces if t['metadata']['root_episode_id']==ancestor]
-        windows=build_action_windows(choices[int(rng.integers(len(choices)))])
+        trace=choices[int(rng.integers(len(choices)))]
+        windows=build_action_windows(trace)
         i=int(rng.integers(len(windows['actions'])))
         observations.append(windows['observations'][i]);actions.append(windows['actions'][i]);sources.append(group)
-    return np.asarray(observations),np.asarray(actions),sources
+        if return_metadata:
+            start=int(windows['start_indices'][i]);m=trace['metadata']
+            origins=sorted(set(trace['arrays']['action_origin'][start:start+16].tolist()))
+            offset=m.get('trace_start_step')
+            metadata.append({'source_group':group,'recency':'history' if group=='history' else 'new',
+                'root_episode_id':ancestor,'root_id':m.get('root_id'),'onset':m.get('onset'),
+                'window_start':start,'window_end_exclusive':start+16,
+                'window_start_step':None if offset is None else int(offset)+start,
+                'window_end_step_exclusive':None if offset is None else int(offset)+start+16,
+                'segment':origins[0] if len(origins)==1 else 'mixed','action_origins':origins})
+    result=(np.asarray(observations),np.asarray(actions),sources)
+    return (*result,metadata) if return_metadata else result
 
 
 def trace_from_evaluation(attempt, metadata):

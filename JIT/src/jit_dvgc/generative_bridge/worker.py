@@ -65,13 +65,28 @@ def run_generator(config):
             identity=identity,updates=config['updates'],charged_updates_before=0,max_wall_seconds=config['max_wall_seconds'])
         manifest=root/report['selected']/'manifest.json'
         result={'checkpoint_manifest':str(manifest),'checkpoint_manifest_sha256':file_sha(manifest),
-            'status':'completed','updates':report['updates'],'mode':'pretrain'}
+            'status':'completed','updates':report['updates'],'mode':'pretrain',
+            'total_charged_updates':report['total_charged_updates'],'charged_updates_scope':'lifetime',
+            'state_updates':json.loads(manifest.read_text())['updates'],'inference_parameters':'ema'}
     elif config['mode']=='incremental':
         manifest=Path(config['incumbent']['checkpoint_manifest'])
         if file_sha(manifest)!=config['incumbent']['checkpoint_manifest_sha256']:raise ValueError('incumbent identity changed')
         state=restore_state(manifest.parent,state,identity)
+        from ..handoff_bank import pytree_sha256
+        declared_state=config['incumbent'].get('selected_state_sha256')
+        if declared_state is not None and declared_state!=pytree_sha256(state):
+            raise ValueError('incumbent full-state identity changed')
+        charged_before=config.get('charged_updates_before')
+        if charged_before is None and config['incumbent'].get('charged_updates_scope')=='lifetime':
+            charged_before=config['incumbent']['total_charged_updates']
+        if charged_before is None and config.get('generator_update_policy','fixed_dev_best')=='last_valid':
+            raise ValueError('last_valid requires reconciled lifetime charged_updates_before for legacy incumbent')
         result=GeneratorUpdateStage(root,state=state,predict=predict,dev_fixture=fixture,identity=identity,
-            updates=config['updates'],max_wall_seconds=config['max_wall_seconds'])(config['corpus'])
+            updates=config['updates'],max_wall_seconds=config['max_wall_seconds'],
+            generator_update_policy=config.get('generator_update_policy','fixed_dev_best'),
+            charged_updates_before=charged_before)(config['corpus'])
+        if result['status']=='skipped_no_new_data':
+            result={**config['incumbent'],**result}
     else:raise ValueError('unknown G worker mode')
     atomic_json(Path(config['result']),result)
 

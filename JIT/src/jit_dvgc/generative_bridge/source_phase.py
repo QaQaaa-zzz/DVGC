@@ -9,11 +9,18 @@ from .production import read, actor_traces, lane_arrays, read_teacher_traces, is
 from .source_data import prepare_collection_plan, aggregate_collection, build_training_support
 
 
-def fresh_panels(rows, *, seed):
+def fresh_panels(rows, *, seed, teacher_onsets=None):
     splits = {r['root_episode_id']:('generator_train' if r['data_role']=='train' else 'generator_dev')
               for r in rows if r['data_role'] in ('train','generator_dev')}
     pending = [r for r in rows if r['data_role']=='train' and r['label']==0 and not r.get('prefix_terminal')]
     ordered = sorted(pending,key=lambda r:stable_seed(seed,r['root_id'],'teacher_panel'))
+    if teacher_onsets is not None:
+        if teacher_onsets!=[0,5,10,15]:raise ValueError('declared teacher strata changed')
+        groups={s:[r for r in ordered if r.get('pulse_scheduled_start_step',r.get('pulse_start_step'))==s] for s in teacher_onsets}
+        if sum(map(len,groups.values()))!=len(ordered):raise ValueError('teacher root lacks declared onset')
+        # Round robin guarantees quota8 when available, then redistributes deficits.
+        ordered=[group[i] for i in range(max(map(len,groups.values()),default=0))
+                 for group in groups.values() if i<len(group)]
     selected=[]; seen=set()
     for row in ordered:
         if row['root_episode_id'] in seen:continue

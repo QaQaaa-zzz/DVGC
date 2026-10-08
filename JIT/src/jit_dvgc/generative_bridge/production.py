@@ -158,7 +158,9 @@ def trace_metadata(row,policy,protocol,splits,origin):
         root_context_sha256=row['snapshot_context_sha256'],actor_sha256=policy['actor_sha256'],
         normalizer_sha256=policy['normalizer_sha256'],source_actor_sha256=policy['actor_sha256'],
         model_sha256=policy['xml_sha256'],protocol_sha256=protocol,origin_type=origin,
-        role='train',inherited_split=splits[row['root_episode_id']],complete=True,full_success=True,
+        role=row.get('data_role','train'),inherited_split=splits[row['root_episode_id']],complete=True,full_success=True,
+        onset=row.get('pulse_scheduled_start_step',row.get('pulse_start_step')),
+        trace_start_step=row.get('snapshot_control_step',row.get('pulse_start_step',0)+row.get('pulse_applied_steps',0)),
         success_criterion='stable_forward_recovery')
 
 
@@ -299,7 +301,20 @@ class ProductionRunner:
     def generator(self,mode,corpus,dev_fixture,*,incumbent=None):
         def execute():
             if mode=='incremental' and not corpus['new_data']:
-                return {**incumbent,'status':'skipped_no_new_data','updates':0}
+                from .artifacts import validate_generator_full_state,load_corpus
+                load_corpus(corpus)
+                state=validate_generator_full_state(incumbent)
+                policy=self.spec.get('generator_update_policy','fixed_dev_best')
+                result={**incumbent,'status':'skipped_no_new_data','updates':0,'charged_updates':0,
+                    'generator_update_policy':policy,'state_updates':int(state['updates']),
+                    'initial_state_updates':int(state['updates']),'rng_advanced':False,
+                    'old_dev_metric':'monitor_only' if policy=='last_valid' else 'selection',
+                    'inference_parameters':'ema','monitoring_evaluation_performed':False}
+                if self.spec.get('generator_update_policy')=='last_valid':
+                    result.update(total_charged_updates=self.spec['generator_charged_updates_before'],
+                        charged_updates_scope='lifetime',
+                        historical_charge_accounting=self.spec.get('generator_charged_updates_scope','lifetime'))
+                return result
             previous=[c for c in self.costs if c['stage'].startswith('generator_'+mode+'_')]
             if previous and (mode!='incremental' or not self.retry_generator):
                 raise RuntimeError('generator retry requires explicit --retry-generator after receipt reconciliation')
@@ -312,7 +327,9 @@ class ProductionRunner:
                 'dev_fixture_sha256':file_sha(dev_fixture),'updates':updates,
                 'output':str(self.root/('generator_'+mode)),'result':str(self.root/(mode+'_result.json')),
                 'max_wall_seconds':self.spec['budgets']['max_wall_seconds'],
-                'incumbent':incumbent}
+                'incumbent':incumbent,'generator_update_policy':self.spec.get('generator_update_policy','fixed_dev_best')}
+            if self.spec.get('generator_charged_updates_before') is not None:
+                config['charged_updates_before']=self.spec['generator_charged_updates_before']
             if 'generator_reference_frozen_policy' in self.spec:
                 config['generator_reference_frozen_policy']=self.spec['generator_reference_frozen_policy']
             path=self.root/(name+'_config.json');atomic_json(path,config)
@@ -333,6 +350,7 @@ class ProductionRunner:
             return result
         stage='generator_selection' if mode=='incremental' else 'generator_pretrain'
         inputs={'corpus':corpus,'incumbent':incumbent}
+        if 'generator_update_policy' in self.spec:inputs['generator_update_policy']=self.spec['generator_update_policy']
         if 'generator_reference_frozen_policy' in self.spec:
             from .worker import generator_reference
             generator_reference(self.spec)

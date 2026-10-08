@@ -83,3 +83,14 @@ def test_recovery_reuses_preparation_without_collection_or_pretrain(tmp_path,mon
     with pytest.raises(ReachedTeacher):phase.run_source_phase(runner)
     path.write_text('{}')
     with pytest.raises(ValueError,match='drift'):phase.run_source_phase(runner)
+
+
+def test_teacher_panel_balances_onsets_then_redistributes_shortage():
+    from jit_dvgc.generative_bridge.source_phase import fresh_panels
+    rows=[dict(root_episode_id=f'e{s}-{i}',root_id=f'r{s}-{i}',data_role='train',label=0,
+               pulse_start_step=s) for s,n in ((0,20),(5,20),(10,20),(15,2)) for i in range(n)]
+    panel=fresh_panels(rows,seed=1,teacher_onsets=[0,5,10,15])
+    from collections import Counter
+    counts=Counter(r['pulse_start_step'] for r in panel['new_roots'])
+    assert counts=={0:10,5:10,10:10,15:2}
+    assert len(panel['original_pending'])==62

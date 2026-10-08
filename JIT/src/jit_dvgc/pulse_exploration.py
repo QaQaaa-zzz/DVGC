@@ -78,6 +78,8 @@ def pulse_feedback(rows,seen,weights,*,quality_mode='delayed',reward_contract=No
 
 
 def pulse_delay(spec,index):
+    from .generative_bridge.pulse_protocol import normalize_pulse_contract
+    normalize_pulse_contract(spec)
     if spec.get('pulse_event_schedule') and not spec.get('nominal_source_rollout'):
         return -1  # An event-triggered pulse has no fixed global onset tick.
     schedule=spec.get('pulse_start_schedule',[0])
@@ -94,9 +96,11 @@ def pulse_delay(spec,index):
 
 
 def budget_contract(spec,evaluators):
+    from .generative_bridge.pulse_protocol import normalize_pulse_contract
+    contract=normalize_pulse_contract(spec)
     rounds=spec['rounds'];n=spec['num_envs'];h=spec['horizon']
     if any(type(spec[k]) is not int or spec[k]<=0 for k in ['rounds','num_envs','horizon','pulse_steps','policy_steps']):raise ValueError('positive pulse budgets required')
-    if spec['pulse_steps']>5 or h!=400 or spec['policy_steps']%3200:raise ValueError('short-pulse/horizon/aligned learning contract')
+    if (contract is None and spec['pulse_steps']>5) or h!=400 or spec['policy_steps']%3200:raise ValueError('short-pulse/horizon/aligned learning contract')
     baseline=evaluators*h
     prefixes=sum(prefix_budget(spec,i) for i in range(rounds))
     mode=spec.get('training_mode','adaptive')

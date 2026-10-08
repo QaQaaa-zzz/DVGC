@@ -186,3 +186,82 @@ Pre-push verification (2026-10-08): all184 bridge/generative_bridge tests passed
 in62.23s;72 learner-continuation/execution-gate/TensorBoard/neighborhood tests passed
 in9.84s (256 total). Independent read-only code review found no blocking issue.
 These are software regressions, not new physical-performance experiments.
+
+## Scheduled single pulse and continuous G (2026-10-08 implementation task)
+
+User-approved design: scheduled_single_pulse_v1 chooses one balanced onset among
+0/5/10/15 per episode; L defaults3 and is validated/parameterized, with request
+bounds0.25. Each lane freezes its full post-pulse state at its own onset+L.
+New-profile G continuation is last_valid full state with EMA inference; old fixed
+dev MSE is monitoring only. Legacy protocols/results are immutable. Student full
+learner, reward/loss/physics/H16 and data-role isolation remain unchanged.
+
+Work plan (current task):
+- [x] E timing, early terminal classes, masks, receipts and L1/3/5/8 CPU tests.
+- [x] G complete last-valid inheritance, provenance telemetry and adversarial tests.
+- [x] Strict profile, stopped-parent completed-bundle validation, CLI dry-run and budgets.
+- [x] Independent review and relevant regressions. Immutable plan prepared after code commit.
+- [ ] Two-round integration pilot: student128000/round, G<=2000/round, E<=4epochs,
+      <=1500000 physical/round, <=3000000 total,24h; stage failures stop, no retries.
+- [ ] If and only if pilot engineering acceptance passes, launch user's explicitly
+      requested200-round successor with its own frozen budget/resource gate.
+
+Pilot acceptance: both atomic bundles fully published; exact parent-child
+Actor/E/G state identities and learner RNG/optimizer continuity checked; collection
+arrays prove all four single onsets and local snapshot endpoints; G receipt points
+to actual last full state even if old-dev best is older; TRAIN/DEV separation and
+cost ceilings hold. Physical success improvement is not an engineering gate or a
+claim implied by acceptance. Finite optional paired G monitoring is reported
+separately, with NA for no failing-tail denominator and unknowns kept explicit.
+
+Stopped-parent source must resolve to the latest actually published complete
+bundle. series0005 published no new round; use its declared ancestor series0003
+round2 bundle, including its published Actor C, NOT its unadopted evaluated R2
+student or interrupted round3 components. Legacy missing learner permits only
+one explicitly recorded optimizer bootstrap; next pilot round must fully resume.
+
+Implementation evidence: scheduled E runtime reports requested/effective residual,
+clipping, each lane's snapshot_control_step and early-terminal class. The on-policy
+mask excludes pre-pulse, terminal padding and unexecuted actions; a single episode
+feedback is deposited once, with gamma1 returns on its genuine action decisions.
+Teacher root selection round-robins onset strata (8 each if available), then fills
+shortages without dropping any pending student's training support. G sample records
+retain source/onset/window offset/segment/recency; unchanged .5/.25/.25 probabilities.
+
+Profile fields map directly to normalized pulse contract/round spec/collection
+receipt and generator worker policy; unknown fields are rejected. New-profile CLI
+requires --execute for physical work, --dry-run is hash/config/budget inspection.
+The original snapshot reconstruction preserves episode/phase/source counters,
+FIFO, RNG and task events; its mjx.make_data/forward reconstruction is unchanged,
+and is not claimed bitwise restoration of contact-solver internals.
+
+Historical G billing reconciliation:20500 updates in the published retained state,
+28000 conservatively billed proposals across its explicit lineage (pretrain20000,
+old incremental2000, pilot4000, interrupted reservation2000). Durable proposed
+charges27655 imply27654..27655 completed updates; distinguish all three counters.
+Interrupted stage reservation is not erased or presented as completed training.
+
+New scientific claims remain pending. Optional paired G physical recovery@K
+monitoring is explicitly disabled in this first integration budget; existing fixed
+student pressure panels run once per round and are DEV only. The pilot establishes
+actual pulse/snapshot execution and full-state inheritance, not superiority of G.
+
+Software verification before pilot:335 relevant CPU tests passed in37.67s;
+physical integration and performance conclusions remain pending. Existing dirty
+AGENTS/PROJECT/CURRENT_STATUS edits are preserved outside this code submission.
+
+Diagram revision instructions: add Execute + current pi continuation + full-task
+verification before Teacher data; replace Return to controllable states with
+Bridge to successful policy continuation (empirical, not a controllability proof).
+Connect verified teacher successes and independent student TRAIN successes to G's
+denoising corpus. Learning progress to E comes from paired TRAIN before/after;
+generalization stays a read-only DEV/TEST branch. Next round replaces both pi_k
+positions with pi_(k+1); Fixed parameters means frozen within collection/teacher
+stage. Show E_k/G_k collection and teaching before student training and subsequent
+E_(k+1)/G_(k+1) updates. G's76D three-frame observation and E's TRAIN neighborhood
+history are separate inputs.
+
+Two-round read-only acceptance entry: call
+`jit_dvgc.generative_bridge.integration_audit.audit_integration(run_root)` after
+completion; only `ready_for_200=true` authorizes the separately declared successor
+under the user's conditional instruction. It does not score recovery improvement.

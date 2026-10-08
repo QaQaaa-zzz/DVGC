@@ -61,11 +61,35 @@ def sample_initial_velocity_noise(keys, model_index, qvel_size, spec):
 
 def collection_steps(spec, delays, event):
     """Opt-in fixed-random evaluation runs through the declared episode horizon."""
+    from .generative_bridge.pulse_protocol import normalize_pulse_contract
+    normalize_pulse_contract(spec)
     if spec.get('full_episode_rollout'):
         if controller_mode(spec) != 'fixed_random':
             raise ValueError('full episode collection is a fixed-random evaluation only')
         return spec['horizon']
     return spec['horizon'] if event else int(delays.max()) + spec['pulse_steps']
+
+
+def collection_budget(spec, index):
+    """Conservative tensor charge and actual-prefix upper bound, before failures."""
+    delays = lane_onsets(spec, index)
+    event = selected_event(spec)
+    ticks = collection_steps(spec, delays, event)
+    charged = spec['num_envs'] * ticks
+    active = charged if event or spec.get('full_episode_rollout') else int((delays+spec['pulse_steps']).sum())
+    return dict(collection_steps=ticks, charged_maximum=charged,
+                active_prefix_maximum=active, padding_maximum=charged-active)
+
+
+def pulse_outcome(applied_steps, pulse_steps, terminal):
+    """Classify actual executed pulse actions, including last-action terminals."""
+    if not 0 <= applied_steps <= pulse_steps:
+        raise ValueError('invalid applied pulse count')
+    if terminal:
+        return 'pre_pulse_terminal' if applied_steps == 0 else 'during_pulse_terminal'
+    if applied_steps != pulse_steps:
+        raise ValueError('incomplete nonterminal pulse is not a recovery snapshot')
+    return 'valid_post_pulse'
 
 
 def descent_clearance(spec):

@@ -257,53 +257,85 @@ def json_cost(root):
 
 
 def train_incremental(incumbent,corpus,*,predict,dev_fixture,output,identity,
-                      updates,batch_size=256,max_wall_seconds):
-    """Bounded supervised phase; callers must reserve global compute budget first.
+                      updates,batch_size=256,max_wall_seconds,
+                      generator_update_policy='fixed_dev_best',charged_updates_before=None):
+    """Bounded update with explicit continuation and separate old-dev monitoring.
 
-    All checkpoint candidates contain corresponding optimizer/RNG/EMA states.
-    No new data returns the very same incumbent without touching any RNG.
+    last_valid returns the final durable full state, including its inference EMA.
+    Legacy fixed_dev_best retains the historical dev selection rule. Neither mode
+    recovers silently after a failed proposal or checkpoint write.
     """
-    if not corpus['new_data']:
-        return incumbent,{'status':'skipped_no_new_data','updates':0,'rng_advanced':False}
     import time
     import jax
     import jax.numpy as jp
     from pathlib import Path
     from .feedback_data import sample_corpus
     from .protocol import atomic_json
-    if type(updates) is not int or not 0<updates<=2000 or not 0<max_wall_seconds<float('inf'):
+    if generator_update_policy not in ('fixed_dev_best','last_valid'):
+        raise ValueError('unknown generator update policy')
+    initial_updates=int(incumbent['updates'])
+    if charged_updates_before is None:charged_updates_before=initial_updates
+    if type(charged_updates_before) is not int or charged_updates_before<initial_updates:
+        raise ValueError('cumulative charged updates must cover incumbent state updates')
+    common={'generator_update_policy':generator_update_policy,'inference_parameters':'ema',
+            'initial_state_updates':initial_updates,'charged_updates_before':charged_updates_before}
+    if not _finite(incumbent):raise FloatingPointError('nonfinite incumbent generator state')
+    if not corpus['new_data']:
+        return incumbent,{**common,'status':'skipped_no_new_data','updates':0,'charged_updates':0,
+            'rng_advanced':False,'state_updates':initial_updates,
+            'total_charged_updates':charged_updates_before}
+    if (type(updates) is not int or not 0<updates<=2000
+        or type(batch_size) is not int or batch_size<=0
+        or not 0<max_wall_seconds<float('inf')):
         raise ValueError('declared bounded incremental compute budget required')
     root=Path(output);root.mkdir(parents=True,exist_ok=False);start=time.monotonic()
-    step=make_train_step(predict,learning_rate=1e-5)
-    observations,actions,k,eps=map(jp.asarray,dev_fixture)
-    if not _finite(dev_fixture):raise FloatingPointError('invalid fixed dev noise fixture')
-    ab=jp.asarray(cosine_schedule()[1])[k,None,None]
-    def score(state):
-        obs=(observations-state['normalizer']['mean'])/state['normalizer']['std']
-        loss=float(noise_mse(predict(state['ema'],jp.sqrt(ab)*actions+jp.sqrt(1-ab)*eps,obs,k),eps))
-        if not np.isfinite(loss):raise FloatingPointError('nonfinite generator dev score')
-        return loss
-    save_state(root/'incumbent',incumbent,identity)
-    scores=[(score(incumbent),'incumbent')];state=incumbent;logs=[]
+    logs=[];state=incumbent;scores=[];state_counts={'incumbent':initial_updates}
     try:
+        step=make_train_step(predict,learning_rate=1e-5)
+        observations,actions,k,eps=map(jp.asarray,dev_fixture)
+        if not _finite(dev_fixture):raise FloatingPointError('invalid fixed dev noise fixture')
+        ab=jp.asarray(cosine_schedule()[1])[k,None,None]
+        def score(state):
+            obs=(observations-state['normalizer']['mean'])/state['normalizer']['std']
+            loss=float(noise_mse(predict(state['ema'],jp.sqrt(ab)*actions+jp.sqrt(1-ab)*eps,obs,k),eps))
+            if not np.isfinite(loss):raise FloatingPointError('nonfinite generator dev score')
+            return loss
+        save_state(root/'incumbent',incumbent,identity)
+        scores.append((score(incumbent),'incumbent'))
         for i in range(updates):
             if time.monotonic()-start>max_wall_seconds:raise TimeoutError('generator compute budget exhausted')
             next_rng,data_key=jax.random.split(state['rng'])
             seed=int(jax.random.bits(data_key,(),dtype=jp.uint32))
-            obs,act,sources=sample_corpus(corpus,np.random.default_rng(seed),batch_size)
-            atomic_json(root/'cost_progress.json',{'charged_updates':i+1})
+            obs,act,sources,provenance=sample_corpus(corpus,np.random.default_rng(seed),batch_size,
+                                                  return_metadata=True)
+            atomic_json(root/'cost_progress.json',{**common,'charged_updates':i+1,
+                'total_charged_updates':charged_updates_before+i+1})
             state,value=step({**state,'rng':next_rng},jp.asarray(obs),jp.asarray(act))
-            logs.append({'update':i+1,'noise_mse':value,'source_counts':{g:sources.count(g) for g in corpus['groups']}})
+            logs.append({'update':i+1,'state_updates':int(state['updates']),'noise_mse':value,
+                'source_counts':{g:sources.count(g) for g in corpus['groups']},
+                'history_fraction':sources.count('history')/batch_size,
+                'new_fraction':1-sources.count('history')/batch_size,'sample_provenance':provenance})
             if (i+1)%500==0 or i+1==updates:
-                name=f'update_{i+1:04d}';save_state(root/name,state,identity);scores.append((score(state),name))
-        selected=select_checkpoint(scores)
+                name=f'update_{i+1:04d}'
+                save_state(root/name,state,identity)
+                state_counts[name]=int(state['updates']);scores.append((score(state),name))
+        monitoring_best=select_checkpoint(scores)
+        selected=name if generator_update_policy=='last_valid' else monitoring_best
         restored=restore_state(root/selected,incumbent,identity)
-        report={'status':'completed','updates':updates,'selected':selected,'scores':scores,
+        best={'checkpoint':monitoring_best,'noise_mse':dict((n,v) for v,n in scores)[monitoring_best],
+            'state_updates':state_counts[monitoring_best],
+            'age_updates':int(state['updates'])-state_counts[monitoring_best]}
+        report={**common,'status':'completed','updates':updates,'charged_updates':updates,
+            'total_charged_updates':charged_updates_before+updates,'state_updates':int(restored['updates']),
+            'last_state_updates':int(state['updates']),'selected':selected,'scores':scores,
+            'monitoring_best':best,'old_dev_metric':'monitor_only' if generator_update_policy=='last_valid' else 'selection',
             'requested_mix':corpus['requested_mix'],'realized_mix':corpus['realized_mix'],
             'wall_seconds':time.monotonic()-start,'environment_interactions':0,'metrics':logs}
         atomic_json(root/'generator_selection.json',report)
         return restored,report
     except BaseException as e:
-        atomic_json(root/'failure.json',{'error':repr(e),'completed_updates':len(logs),
+        atomic_json(root/'failure.json',{**common,'status':'failed','error':repr(e),
+            'completed_updates':len(logs),'charged_updates':json_cost(root),
+            'total_charged_updates':charged_updates_before+json_cost(root),
             'wall_seconds':time.monotonic()-start,'metrics':logs,'environment_interactions':0})
         raise

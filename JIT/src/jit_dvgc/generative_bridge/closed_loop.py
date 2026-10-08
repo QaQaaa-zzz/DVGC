@@ -123,8 +123,13 @@ def continuation_budget(rounds):
                 student_transitions=128000*rounds,generator_updates=2000*rounds,explorer_epochs_per_round=4)
 
 
-def prepare_continuation(previous,output,repository,*,rounds,continuous=False):
+def prepare_continuation(previous,output,repository,*,rounds,continuous=False,profile=None,allow_stopped_parent=False):
     """Continue only a completed published bundle, in a fresh bounded series."""
+    if profile is not None:
+        if not continuous:raise ValueError('scheduled profile requires continuous student')
+        return prepare_profile_continuation(previous,output,repository,rounds=rounds,profile=profile,
+            allow_stopped_parent=allow_stopped_parent)
+    if allow_stopped_parent:raise ValueError('stopped-parent migration requires explicit new profile')
     from .artifacts import validate_generator_receipt,load_corpus
     from .worker import source_payload
     old=Path(previous).resolve();root=Path(output).resolve();repo=Path(repository).resolve()
@@ -276,7 +281,13 @@ class ClosedLoopRound(CampaignRunner):
             path=self.root/'neighborhood_map.json'
             freeze_history(path,previous['neighborhood_history'],self.source['actor_sha256'],self.spec['neighborhood'],index)
             cfg.update(neighborhood=self.spec['neighborhood'],neighborhood_map=str(path),neighborhood_map_sha256=file_sha(path))
-        collected=self.measured('collection','collect',cfg,384)
+        if self.spec.get('pulse_contract_version'):
+            from .pulse_protocol import normalize_pulse_contract
+            cfg.update(normalize_pulse_contract(self.spec))
+        from ..pulse_schedule import collection_budget
+        budget=collection_budget(cfg,index)
+        atomic_json(self.root/'collection_budget.json',budget)
+        collected=self.measured('collection','collect',cfg,budget['charged_maximum'])
         original=read(collected/'candidates.json')
         for row in original:
             row.update(root_id=row['snapshot_context_sha256'],root_episode_id=row['prefix_file']+'::'+str(row['index']))
@@ -292,7 +303,8 @@ class ClosedLoopRound(CampaignRunner):
         build_training_support(seed_support,aggregate,support,source_policy=self.source['name'],
             allow_historical_seed=bool(self.spec.get('continuous_learning')))
         retain_pending(support,previous['support'])
-        self.panels=fresh_panels(rows,seed=self.spec['seed']+index)
+        self.panels=fresh_panels(rows,seed=self.spec['seed']+index,
+            teacher_onsets=self.spec.get('pulse_start_schedule') if self.spec.get('pulse_contract_version') else None)
         history=corpus_history(load_corpus(previous['corpus']))
         for trace in history:
             m=trace['metadata'];self.panels['splits'][m['root_episode_id']]=m['inherited_split']
@@ -374,6 +386,9 @@ class ClosedLoopRound(CampaignRunner):
             support=str(support),tail_lineage=tail_lineage,arrival_ledgers=ledgers,
             round=index,acceptance=decision,stress=stress,evaluated_student=student,formal_adopted=False,
             feedback_counts={k:len(v) for k,v in corpus['groups'].items()},explorer_metrics=e_metrics)
+        if self.spec.get('generator_update_policy')=='last_valid':
+            bundle['generator_lifetime_charged_updates']=updated_g.get('total_charged_updates',self.spec['generator_charged_updates_before'])
+            bundle['generator_charged_updates_scope']=self.spec.get('generator_charged_updates_scope','lifetime')
         if self.spec.get('continuous_learning'):
             bundle.update(learner=student['learner'],seed_support=previous['seed_support'])
         if self.spec.get('neighborhood') is not None:
@@ -433,7 +448,10 @@ def _run_closed_loop(plan):
         raise ValueError('explicit experimental continuation required')
     if continuation:
         if plan.get('authorization')!='user_requested_additional_rounds':raise ValueError('missing continuation authorization')
-        expected=continuation_budget(plan['rounds'])
+        if plan.get('profile'):
+            from .continuation_profile import profile_budget,inspect_plan
+            inspect_plan(plan);expected=profile_budget(plan['rounds'])
+        else:expected=continuation_budget(plan['rounds'])
         if type(plan.get('round_offset')) is not int or plan['round_offset']<1:
             raise ValueError('invalid completed-round offset')
         if plan.get('minimum_free_disk_bytes')!=20*1024**3:raise ValueError('disk guard changed')
@@ -508,6 +526,12 @@ def _run_closed_loop(plan):
                     teacher_colored_noise_candidates=plan.get('teacher_colored_noise_candidates',15),
                     budgets={'max_physics':min(remaining_physics,plan['budgets']['per_round_physics']+(230400 if index==1 else 0)),
                              'max_supervised_updates':2000,'max_wall_seconds':plan['budgets']['max_wall_seconds']-(time.time()-started)})
+                if plan.get('profile'):
+                    from .pulse_protocol import normalize_pulse_contract
+                    spec.update(normalize_pulse_contract(plan['profile']),
+                        generator_update_policy=plan['profile']['generator_update_policy'],
+                        generator_charged_updates_before=previous['generator_lifetime_charged_updates'],
+                        generator_charged_updates_scope=previous.get('generator_charged_updates_scope','lifetime'))
                 if plan.get('neighborhood') is not None:spec['neighborhood']=plan['neighborhood']
                 if plan.get('continuous_learning'):
                     if plan.get('nominal_evaluation') is not False:raise ValueError('continuous nominal check must be disabled')
@@ -549,3 +573,58 @@ def write_costs(plan):
                 explorer_optimizer_updates=sum(c.get('explorer_optimizer_updates',0) for c in costs))
     atomic_json(Path(plan['output'])/'cost_ledger.json',dict(costs=costs,carried_physics=carried,limits=plan['budgets'],**result))
     return result
+
+
+def prepare_profile_continuation(previous,output,repository,*,rounds,profile,allow_stopped_parent=False):
+    """New exposure protocol from a single verified published boundary only."""
+    from .continuation_profile import load_profile,profile_budget,budget_dry_run
+    from .continuation_boundary import resolve_completed_boundary
+    cfg=load_profile(profile);budget=profile_budget(rounds)
+    boundary=resolve_completed_boundary(previous,allow_stopped_parent=allow_stopped_parent)
+    old=Path(boundary['bundle_series']);root=Path(output).resolve();repo=Path(repository).resolve()
+    parent=read(old/'plan.json');bundle=deepcopy(boundary['bundle'])
+    # Never substitute evaluated_student for the actual published Actor.
+    bundle['learner']=bundle.get('learner') or bundle['actor'].get('learner')
+    locks=dict(boundary['locks'])
+    if 'seed_support' not in bundle:
+        phase_path=old/f"round_{bundle['round']:04d}/source_phase_result.json"
+        phase=read(phase_path);seed=Path(phase['panel_support_path'])
+        bundle['seed_support']={'path':str(seed),'sha256':file_sha(seed)}
+        locks[str(phase_path)]=file_sha(phase_path);locks[str(seed)]=file_sha(seed)
+    from .generator_costs import reconcile_generator_billing
+    billed=reconcile_generator_billing(boundary)
+    locks.update(billed['locks'])
+    gcharged=billed['total_charged_updates'];scope=billed['charged_updates_scope']
+    bundle['generator_lifetime_charged_updates']=gcharged
+    bundle['generator_charged_updates_scope']=scope
+    panels=parent.get('reference_panels',dict(baseline=str(old/'round_0001/baseline_stress.json'),
+                                             initial=str(old/'round_0001/initial_stress.json')))
+    for path in panels.values():locks[path]=file_sha(path)
+    profile_path=str(Path(profile).resolve());locks[profile_path]=file_sha(profile_path)
+    plan=deepcopy(parent)
+    for key in ('initial_bundle','initial_student','original_started_unix','baseline_reuse','recovery','carried_physics'):
+        plan.pop(key,None)
+    plan.update(schema='jit_bridge_experimental_continuation_v1',output=str(root),repository=str(repo),
+        implementation_commit=implementation_identity(repo),implementation_files=implementation_files(repo),
+        rounds=rounds,round_offset=bundle['round'],budgets=budget,profile=cfg,profile_path=profile_path,
+        profile_sha256=digest(cfg),authorization='user_requested_additional_rounds',
+        continuation_parent=str(Path(previous).resolve()),reference_panels=panels,
+        minimum_free_disk_bytes=20*1024**3,prior_physics_charged=boundary['prior_physics_charged'],
+        prior_optimization_costs=billed,continuous_learning=True,nominal_evaluation=False,
+        uniform_episode_fraction=0.,teacher_colored_noise_candidates=0,
+        allow_legacy_optimizer_bootstrap=bundle['learner'] is None,
+        final_test_open=False,automatic_extension=False,automatic_retry=False,locks=locks)
+    report=budget_dry_run(plan)
+    root.mkdir(parents=True,exist_ok=False)
+    initial=root/'initial_continuation.json';atomic_json(initial,bundle)
+    migration=dict(boundary['migration'],parent_series=boundary['parent_series'],bundle_series=str(old),
+        source_bundle=boundary['bundle_path'],source_bundle_sha256=file_sha(boundary['bundle_path']),
+        initial_bundle_sha256=file_sha(initial),profile=cfg,prior_optimization_costs=billed,
+        generator_charged_updates_before=gcharged,generator_charged_updates_scope=scope,
+        change_scope='sampling exposure and G continuation only; learner architecture/loss/physics unchanged')
+    atomic_json(root/'migration.json',migration)
+    plan['continuation_bundle']={'path':str(initial),'sha256':file_sha(initial)}
+    plan['locks'].update({str(initial):file_sha(initial),str(root/'migration.json'):file_sha(root/'migration.json')})
+    atomic_json(root/'plan.json',plan);atomic_json(root/'budget_dry_run.json',report)
+    atomic_json(root/'status.json',dict(phase='prepared',completed_rounds=0,declared_rounds=rounds,round_offset=bundle['round']))
+    return plan

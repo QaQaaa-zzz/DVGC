@@ -2,19 +2,24 @@
 import json
 from pathlib import Path
 import numpy as np
-from .pulse_protocol import EpisodeKeyRegistry, requested_draws
+from .pulse_protocol import EpisodeKeyRegistry, requested_draws, normalize_pulse_contract
 from .contracts import file_sha
 
 EXPLORER_NAMESPACE = 0x4558504C
 
 
 def validate_collection_options(spec):
+    contract=normalize_pulse_contract(spec)
     cfg=spec.get('explorer_admission_v1_2')
+    if contract is not None and spec.get('controller_mode','learned_residual')!='fixed_random':
+        if cfg is None:raise ValueError('scheduled learned collection requires fresh on-policy admission')
+        if cfg.get('uniform_episode_fraction')!=0.:
+            raise ValueError('scheduled main collection requires learned-only episodes')
     if cfg is None:return None
     if any(spec.get(k) for k in ('reuse_prefix_collection','reuse_collection','reuse_results','historical_roots')):
         raise ValueError('explorer updates require a fresh current-round collection')
     if (spec.get('controller_mode')!='learned_residual' or spec.get('explorer_backend')!='rsl_rl'
-        or spec.get('pulse_steps')!=3 or spec.get('pulse_start_schedule')!=[0]
+        or (contract is None and (spec.get('pulse_steps')!=3 or spec.get('pulse_start_schedule')!=[0]))
         or spec.get('delta_limit')!=[.25]*4 or spec.get('pulse_event_schedule')
         or spec.get('pulse_protocol_v1_2') or spec.get('initial_velocity_randomization')
         or spec.get('nominal_source_rollout')):
@@ -54,14 +59,14 @@ def collection_mixture(spec):
         key=registry.claim(cfg['master_seed'],EXPLORER_NAMESPACE,cfg['round'],i,'condition')
         learned.append(not bool(jax.random.bernoulli(key,float(cfg['uniform_episode_fraction']))))
         key=registry.claim(cfg['master_seed'],EXPLORER_NAMESPACE,cfg['round'],i,'pulse')
-        draws.append(np.asarray(requested_draws(key)))
+        draws.append(np.asarray(requested_draws(key,pulse_steps=spec['pulse_steps'])))
     return np.asarray(learned,bool),np.stack(draws)
 
 
 def mix_sample(raw,delta,log_prob,value,learned,uniform,pulse_mask):
     import jax.numpy as jp
     valid=learned & pulse_mask
-    return (jp.where(learned[:,None],raw,jp.nan),
+    return (jp.where(valid[:,None],raw,jp.nan),
             jp.where(learned[:,None],delta,uniform),
             jp.where(valid,log_prob,jp.nan),jp.where(learned,value,0.),valid)
 
@@ -79,10 +84,16 @@ def behavior_identity(state, normalizer=None):
 
 def collection_receipt(spec,state,learned,normalizer=None):
     cfg=validate_collection_options(spec)
+    contract=normalize_pulse_contract(spec)
+    timing={}
+    if contract is not None:
+        from ..pulse_schedule import lane_onsets, collection_budget
+        timing=dict(pulse_contract=contract, lane_onsets=lane_onsets(spec,spec['round_index']).tolist(),
+                    collection_budget=collection_budget(spec,spec['round_index']))
     identity=behavior_identity(state,normalizer)
     for k,v in identity.items():
         if k in cfg and cfg[k]!=v:raise ValueError('declared explorer behavior identity drift: '+k)
-    return dict(cfg,**identity,neighborhood=spec.get('neighborhood'),
+    return dict(cfg,**identity,**timing,neighborhood=spec.get('neighborhood'),
                 neighborhood_map_sha256=spec.get('neighborhood_map_sha256'),fresh_collection=True,
                 episode_modes=['learned' if flag else 'uniform' for flag in learned],
                 mode_codes={'learned':1,'uniform':0},uniform_branch_on_policy=False,
@@ -108,6 +119,40 @@ def validate_admission(spec,receipt,tape,actual_identity):
     if cfg['uniform_episode_fraction']==0. and 'uniform' in modes:
         raise ValueError('uniform episodes forbidden by learned-only collection protocol')
     mask=np.asarray(tape['mask'],bool);prefix=np.asarray(tape['prefix_mask'],bool)
+    contract=normalize_pulse_contract(spec)
+    if contract is not None:
+        from ..pulse_schedule import lane_onsets, collection_budget
+        delays=lane_onsets(spec,spec['round_index'])
+        budget=collection_budget(spec,spec['round_index'])
+        if (receipt.get('pulse_contract')!=contract or receipt.get('lane_onsets')!=delays.tolist()
+            or receipt.get('collection_budget')!=budget):
+            raise ValueError('explorer pulse contract/receipt mismatch')
+        shape=(budget['collection_steps'],spec['num_envs'])
+        if mask.shape!=shape or prefix.shape!=shape:
+            raise ValueError('scheduled pulse tape shape mismatch')
+        tick=np.arange(shape[0])[:,None]
+        terminal=np.asarray(tape['terminal'],bool)
+        if terminal.shape!=shape:raise ValueError('scheduled pulse terminal shape mismatch')
+        expected_prefix=tick < (delays+spec['pulse_steps'])[None,:]
+        # A terminal action is real; all subsequent actions are padding.
+        stopped_before=np.cumsum(terminal & prefix,axis=0)-(terminal & prefix)
+        expected_prefix &= stopped_before==0
+        expected_pulse=expected_prefix & (tick>=delays[None,:])
+        if not np.array_equal(prefix,expected_prefix) or not np.array_equal(mask,expected_pulse):
+            raise ValueError('scheduled pulse tape contains missing or phantom actions')
+        request=np.asarray(tape['requested_delta']);base=np.asarray(tape['base_action'])
+        action=np.asarray(tape['action']);effective=np.asarray(tape['effective_delta'])
+        if any(x.shape!=shape+(4,) for x in (request,base,action,effective)):
+            raise ValueError('scheduled pulse action shape mismatch')
+        if (not all(np.isfinite(x[prefix]).all() for x in (request,base,action,effective))
+            or np.any(np.abs(request)>np.asarray(contract['delta_limit'])+1e-7)
+            or np.any(request[~mask]!=0)
+            or not np.allclose(action[prefix],np.clip(base+request,-1,1)[prefix],atol=1e-7)
+            or not np.allclose(effective[prefix],(action-base)[prefix],atol=1e-7)):
+            raise ValueError('scheduled pulse requested/effective/action evidence mismatch')
+        clipped=np.asarray(tape['action_clipped'],bool)
+        if clipped.shape!=request.shape or not np.array_equal(clipped[prefix],(np.abs(request-effective)>1e-7)[prefix]):
+            raise ValueError('scheduled pulse clipping evidence mismatch')
     expected=mask & prefix & np.asarray([m=='learned' for m in modes])[None,:]
     learned=np.broadcast_to(np.asarray([m=='learned' for m in modes]),mask.shape)
     for key,truth in [('explorer_learned',learned),('on_policy_mask',expected),('log_prob_valid',expected)]:
@@ -117,6 +162,9 @@ def validate_admission(spec,receipt,tape,actual_identity):
         raise ValueError('missing actual learned raw-action log probability')
     if not np.isfinite(np.asarray(tape['raw_action'])[expected]).all():
         raise ValueError('missing actual learned raw action')
+    if contract is not None and (not np.isnan(np.asarray(tape['raw_action'])[~expected]).all()
+            or not np.isnan(np.asarray(tape['log_prob'])[~expected]).all()):
+        raise ValueError('nonexecuted pulse actions cannot carry learned raw action/log probability')
     uniform=~learned
     if (not np.isnan(np.asarray(tape['log_prob'])[uniform]).all()
         or not np.isnan(np.asarray(tape['raw_action'])[uniform]).all()):

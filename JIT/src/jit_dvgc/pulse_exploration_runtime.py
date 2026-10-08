@@ -11,6 +11,42 @@ from .pulse_schedule import (controller_mode, selected_event, event_ready,
     initial_velocity_randomization, sample_initial_velocity_noise)
 
 
+def freeze_inactive_worlds(following, previous, alive):
+    """Freeze complete per-world state while retaining shared Warp allocator leaves."""
+    import jax
+    import jax.numpy as jp
+    from .continuation.device_rollout import _shared_warp
+    count=alive.shape[0]
+    def choose(path,new,old):
+        return new if _shared_warp(path) else jp.where(alive.reshape((count,)+(1,)*(new.ndim-1)),new,old)
+    return jax.tree_util.tree_map_with_path(choose,following,previous)
+
+
+def scheduled_pulse_summary(spec,tape,rows):
+    """Small receipt over all declared episodes; raw tapes remain authoritative."""
+    from .generative_bridge.pulse_protocol import normalize_pulse_contract
+    from .pulse_schedule import collection_budget
+    contract=normalize_pulse_contract(spec)
+    if contract is None:return {}
+    delays=lane_onsets(spec,spec['round_index']);groups={}
+    mask=np.asarray(tape['mask'],bool)
+    for onset in np.unique(delays):
+        lanes=np.flatnonzero(delays==onset)
+        actual=mask[:,lanes]
+        request=np.asarray(tape['requested_delta'])[:,lanes][actual]
+        effective=np.asarray(tape['effective_delta'])[:,lanes][actual]
+        groups[str(int(onset))]=dict(episodes=len(lanes),applied_actions=int(actual.sum()),
+            snapshot_control_steps=[rows[i]['snapshot_control_step'] for i in lanes
+                                    if rows[i]['pulse_outcome']=='valid_post_pulse'],
+            requested_absolute_max=float(np.max(np.abs(request))) if request.size else 0.,
+            effective_absolute_max=float(np.max(np.abs(effective))) if effective.size else 0.,
+            clipped_channels=int(np.asarray(tape['action_clipped'])[:,lanes][actual].sum()))
+    return dict(pulse_contract=contract,collection_budget=collection_budget(spec,spec['round_index']),
+        episode_performance_denominator=len(rows),pulse_onset_summary=groups,
+        pulse_outcome_counts={outcome:sum(r['pulse_outcome']==outcome for r in rows) for outcome in
+            ('pre_pulse_terminal','during_pulse_terminal','valid_post_pulse')})
+
+
 def suffix_label(valid, failure, timeout, done, horizon_reached):
     from .unified_continuation_labels import classify_first_valid_landing_outcome
     if valid and failure:return None,'simultaneous_landing_failure_unresolved'
@@ -148,11 +184,12 @@ def collect(spec, output):
     from .continuation.device_rollout import prepare_parallel_worlds, _shared_warp
     from .iterative_probe_training import first_landing_state
     from .analysis.capability_tube import physical_coordinates_from_arrays, quantize_coordinates, ROOT_GEOMETRY_FIELDS, _cell_id
-    from .generative_bridge.pulse_protocol import collection_draws, pulse_delta_for_step
+    from .generative_bridge.pulse_protocol import collection_draws, pulse_delta_for_step, normalize_pulse_contract
     from .generative_bridge.rollout import observation_fields
     from .generative_bridge.explorer_admission import (collection_mixture, episode_policy_keys,
         collection_receipt, mix_sample)
     mixture_learned, mixture_uniform = collection_mixture(spec)
+    pulse_contract=normalize_pulse_contract(spec)
     mixture_keys = episode_policy_keys(spec)
     logical_draws, pulse_receipt = collection_draws(spec)
     record_preobs = bool(spec.get('record_actor_preobservations', False))
@@ -239,6 +276,8 @@ def collect(spec, output):
             apply_pulse=pulse_mask[:,None] if (event or mixed or full_episode or logical_draws is not None or mixture_learned is not None) else tick>=delay
             action,requested,effective=compose_residual_action(b,jp.where(apply_pulse,delta,0.),jp.asarray(spec['delta_limit']))
             nxt=step(s,action)
+            if pulse_contract is not None:
+                nxt=freeze_inactive_worlds(nxt,s,alive)
             finite=jp.all(jp.isfinite(nxt.data.qpos),axis=-1)&jp.all(jp.isfinite(nxt.data.qvel),axis=-1)
             terminal=nxt.done.astype(bool)|~finite
             after=physical_trace(env,nxt)
@@ -255,9 +294,7 @@ def collect(spec, output):
             if full_episode:
                 tape['success']=endpoint_success(nxt,spec)
             tape.update({'snap/'+k:v for k,v in snapshot_arrays(nxt).items()})
-            def choose(path,n,o):
-                return n if _shared_warp(path) else jp.where(alive.reshape((count,)+(1,)*(n.ndim-1)),n,o)
-            nxt=jax.tree_util.tree_map_with_path(choose,nxt,s)
+            nxt=freeze_inactive_worlds(nxt,s,alive)
             applied_steps=applied_steps+pulse_mask.astype(jp.int32)
             active=alive&~terminal
             if (event or mixed) and not full_episode:active=active&(applied_steps<spec['pulse_steps'])
@@ -286,7 +323,7 @@ def collect(spec, output):
     if spec.get('reuse_prefix_collection'):
         import shutil
         previous=Path(spec['reuse_prefix_collection']);old=read(previous.parent/'collection_spec.json')
-        for field in ['round_index','explorer_checkpoint','pulse_steps','num_envs','delta_limit','bank','seed','pulse_start_schedule','pulse_event_schedule','controller_mode','pulse_descent_clearance','pulse_batch_mode','neighborhood','neighborhood_map_sha256','pulse_protocol_v1_2','record_actor_preobservations']:
+        for field in ['round_index','explorer_checkpoint','pulse_steps','num_envs','delta_limit','bank','seed','pulse_start_schedule','pulse_event_schedule','controller_mode','pulse_descent_clearance','pulse_batch_mode','neighborhood','neighborhood_map_sha256','pulse_protocol_v1_2','record_actor_preobservations','pulse_contract_version','single_pulse_per_episode','maximum_collection_steps']:
             if old.get(field)!=spec.get(field):raise ValueError('reused prefix contract differs: '+field)
         if _file_sha(previous/'behavior.msgpack')!=_file_sha(output/'behavior.msgpack'):raise ValueError('reused behavior differs')
         for filename in ['prefixes.npz','update_state.msgpack']:
@@ -309,13 +346,15 @@ def collect(spec, output):
     prefix_sha = _file_sha(output/'prefixes.npz')
     behavior_sha = _file_sha(output/'behavior.msgpack')
     generator={**member['policy'],'actor_sha256':canonical_sha256(dict(base=member['policy']['actor_sha256'],residual=behavior_sha,delta=spec['delta_limit'],pulse_steps=spec['pulse_steps'],pulse_start_step=delay,pulse_batch_mode=spec.get('pulse_batch_mode','single'),neighborhood_map_sha256=spec.get('neighborhood_map_sha256'),controller_mode=mode,pulse_event=event,pulse_descent_clearance=descent_limit)),'payload_sha256':behavior_sha}
+    if pulse_contract is not None:
+        generator['actor_sha256']=canonical_sha256(dict(legacy_identity=generator['actor_sha256'],pulse_contract=pulse_contract))
     rows=[]
     for e in range(count):
         t=int(np.flatnonzero(tape['prefix_mask'][:,e])[-1])
         arrays={k[5:]:v[t,e] for k,v in tape.items() if k.startswith('snap/')}
         terminal=bool(tape['terminal'][t,e])
         trigger_step=int(tape['pulse_trigger_tick'][t,e]) if 'pulse_trigger_tick' in tape else (delay if tape['mask'][:,e].any() else -1)
-        stage_reached=event is None or trigger_step>=0
+        stage_reached=trigger_step>=0 if pulse_contract is not None else event is None or trigger_step>=0
         phase='upstream' if int(arrays['info/active_phase'])==0 else 'downstream'
         coords=physical_coordinates_from_arrays(tape['qpos'][t,e],tape['qvel'][t,e],bundle=env._bundle)
         endpoint=completed_trace_endpoint(arrays=arrays, terminal=terminal, stage_reached=stage_reached,
@@ -327,6 +366,11 @@ def collect(spec, output):
             path=output/'snapshots'/f'{e:05d}';save_unified_envelope_snapshot(path,snap)
             endpoint=dict(snapshot=str(path),state_sha256=physical_state_sha256(snap),snapshot_context_sha256=snapshot_context_sha256(snap),endpoint_kind='continuation_snapshot')
         rows.append(dict(index=e,cell=_cell_id(phase,'root_geometry_v1',quantize_coordinates(coords,ROOT_GEOMETRY_FIELDS)),coordinates=coords,phase=phase,**endpoint,prefix_file=str(output/'prefixes.npz'),prefix_sha256=prefix_sha,behavior_sha256=behavior_sha,prefix_terminal=terminal or not stage_reached or full_episode,physical_prefix_terminal=terminal,rollout_horizon_exhausted=full_episode and not terminal,prefix_physical_failure=bool(tape['physical_failure'][t,e]) if 'physical_failure' in tape else False,pulse_start_step=trigger_step if (event or mixed) else delay,pulse_trigger_step=trigger_step,pulse_event=event,stage_reached=stage_reached,pulse_applied_steps=int(tape['mask'][:,e].sum()),label=None,learning_attempted=False))
+        if pulse_contract is not None:
+            from .pulse_schedule import pulse_outcome
+            rows[-1].update(pulse_outcome=pulse_outcome(rows[-1]['pulse_applied_steps'],spec['pulse_steps'],terminal),
+                pulse_scheduled_start_step=int(delays[e]),pulse_contract=pulse_contract,
+                snapshot_control_step=t+1,episode_performance_denominator=True)
     if admission_receipt is not None:
         for row,episode_id,mode_name in zip(rows,admission_receipt['episode_ids'],admission_receipt['episode_modes']):
             row.update(explorer_episode_mode=mode_name,explorer_on_policy=mode_name=='learned',
@@ -349,7 +393,7 @@ def collect(spec, output):
     write(output/'hyperparameters.json',{**spec,'pulse_descent_clearance':descent_limit,
         **({'inference_precision':'highest'} if spec.get('explorer_backend')=='rsl_rl' else {})})
     active_count=int(tape['prefix_mask'].sum());physical_count=count*executed_ticks
-    write(output/'status.json',dict(phase='completed',charged_interactions=0 if spec.get('reuse_prefix_collection') else physical_count,active_interactions=active_count,padding_interactions=physical_count-active_count,waiting_interactions=active_count-int(tape['mask'].sum()),pulse_training_steps=int(tape['mask'].sum()) if mode=='learned_residual' else 0,pulse_applied_steps=int(tape['mask'].sum()),pulse_start_step=delay if event is None and not mixed else None,pulse_batch_mode=spec.get('pulse_batch_mode','single'),onset_counts={str(int(t)):int((delays==t).sum()) for t in np.unique(delays)},pulse_event=event,stage_not_reached=sum(not r['stage_reached'] for r in rows),executed_ticks=executed_ticks,wall_seconds=time.monotonic()-start))
+    write(output/'status.json',dict(phase='completed',charged_interactions=0 if spec.get('reuse_prefix_collection') else physical_count,active_interactions=active_count,padding_interactions=physical_count-active_count,waiting_interactions=active_count-int(tape['mask'].sum()),pulse_training_steps=int(tape['mask'].sum()) if mode=='learned_residual' else 0,pulse_applied_steps=int(tape['mask'].sum()),pulse_start_step=delay if event is None and not mixed else None,pulse_batch_mode=spec.get('pulse_batch_mode','single'),onset_counts={str(int(t)):int((delays==t).sum()) for t in np.unique(delays)},pulse_event=event,stage_not_reached=sum(not r['stage_reached'] for r in rows),executed_ticks=executed_ticks,wall_seconds=time.monotonic()-start,**scheduled_pulse_summary(spec,tape,rows)))
 
 
 def evaluate(spec, output):

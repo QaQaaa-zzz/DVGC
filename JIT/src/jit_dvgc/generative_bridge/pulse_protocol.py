@@ -2,6 +2,44 @@
 import hashlib
 import numpy as np
 
+SCHEDULED_SINGLE_PULSE_VERSION = 'scheduled_single_pulse_v1'
+
+
+def normalize_pulse_contract(spec):
+    """Explicit opt-in identity; unversioned artifacts retain their old contract.
+
+    The horizon is the original episode control clock. At least one task step
+    must remain after the pulse; continuation's existing administrative clock
+    handling is not changed here. Single-onset panels use mode='single'.
+    """
+    version = spec.get('pulse_contract_version')
+    if version is None:
+        return None
+    if version != SCHEDULED_SINGLE_PULSE_VERSION:
+        raise ValueError('unknown pulse_contract_version')
+    length = spec.get('pulse_steps', 3)
+    horizon = spec.get('horizon', 400)
+    onsets = spec.get('pulse_start_schedule', [0, 5, 10, 15])
+    mode = spec.get('pulse_batch_mode', 'mixed')
+    limits = spec.get('delta_limit', [.25]*4)
+    maximum = spec.get('maximum_collection_steps', horizon-1 if type(horizon) is int else 0)
+    if (type(length) is not int or length < 1 or type(horizon) is not int or horizon < 2
+        or type(maximum) is not int or not 1 <= maximum < horizon
+        or not isinstance(onsets, list) or not onsets
+        or any(type(t) is not int or t < 0 for t in onsets)
+        or len(set(onsets)) != len(onsets) or max(onsets)+length > maximum):
+        raise ValueError('invalid scheduled pulse length/onsets/maximum or remaining episode horizon')
+    if (mode not in ('single', 'mixed') or spec.get('single_pulse_per_episode', True) is not True
+        or limits != [.25]*4 or spec.get('pulse_event_schedule')
+        or spec.get('initial_velocity_randomization') or spec.get('nominal_source_rollout')
+        or spec.get('full_episode_rollout')):
+        raise ValueError('scheduled pulse requires one bounded action-only pulse per episode')
+    return dict(pulse_contract_version=version, pulse_steps=length,
+                pulse_start_schedule=list(onsets), pulse_batch_mode=mode,
+                delta_limit=list(limits), single_pulse_per_episode=True,
+                horizon=horizon, maximum_collection_steps=maximum,
+                explorer_reward_attribution='one_terminal_reward_per_episode_gamma1_returns')
+
 # Fixed namespaces are part of the protocol, never Python's randomized hash().
 NAMESPACES = {'train': 0x54524149, 'student_ppo': 0x5350504F, 'student_eval': 0x53504556, 'student_dev': 0x53544456,
               'generator_dev': 0x47454456, 'solver_dev': 0x534F4456,
@@ -35,9 +73,11 @@ def logical_episode_key(master_seed, role, round_index, episode_id, purpose):
     return key
 
 
-def requested_draws(key, amplitude=1.):
+def requested_draws(key, amplitude=1., pulse_steps=3):
     import jax
-    return jax.random.uniform(key, (3, 4), minval=-1., maxval=1.) * amplitude
+    if type(pulse_steps) is not int or pulse_steps < 1:
+        raise ValueError('positive integer pulse_steps required')
+    return jax.random.uniform(key, (pulse_steps, 4), minval=-1., maxval=1.) * amplitude
 
 
 class EpisodeKeyRegistry:
@@ -68,10 +108,11 @@ def validate_ancestor_splits(splits):
 def collection_draws(spec, *, registry=None):
     """Validate before simulation; returns lane x 3 x 4 normalized requests + receipt."""
     import jax
+    contract = normalize_pulse_contract(spec)
     protocol = spec.get('pulse_protocol_v1_2')
     if protocol is None:
         return None, None
-    if (spec.get('controller_mode') != 'fixed_random' or spec.get('pulse_steps') != 3
+    if (spec.get('controller_mode') != 'fixed_random' or (contract is None and spec.get('pulse_steps') != 3)
             or spec.get('pulse_event_schedule') or spec.get('initial_velocity_randomization')):
         raise ValueError('logical pulse protocol requires fixed_random three-step action-only pulses')
     ids = protocol['episode_ids']
@@ -83,19 +124,23 @@ def collection_draws(spec, *, registry=None):
     draws, records = [], []
     for episode_id in ids:
         key = registry.claim(protocol['master_seed'], protocol['role'], protocol['round'], episode_id, 'pulse')
-        draw = np.asarray(requested_draws(key), dtype=np.float32)
+        draw = np.asarray(requested_draws(key, pulse_steps=spec['pulse_steps']), dtype=np.float32)
         draws.append(draw)
         records.append(dict(episode_id=episode_id, key=np.asarray(key).tolist(),
                             key_sha256=hashlib.sha256(np.asarray(key).tobytes()).hexdigest(),
                             draw_sha256=hashlib.sha256(draw.tobytes()).hexdigest()))
     return np.stack(draws), dict(schema='jit_logical_episode_pulse_v1_2',
         master_seed=protocol['master_seed'], role=protocol['role'], round=protocol['round'],
-        purpose='pulse', rng_impl=str(jax.config.jax_default_prng_impl), draw_shape=[3, 4],
+        purpose='pulse', rng_impl=str(jax.config.jax_default_prng_impl), draw_shape=[spec['pulse_steps'], 4],
+        **({'pulse_contract': contract} if contract is not None else {}),
         requested_pairing_only=True, episodes=records)
 
 
 def pulse_delta_for_step(draws, applied_steps, active):
     """Select each lane's fixed request, suppressing inactive/finished episodes."""
     import jax.numpy as jp
-    selected = draws[jp.arange(draws.shape[0]), jp.clip(applied_steps, 0, 2)]
-    return jp.where((active & (applied_steps < 3))[:, None], selected, 0.)
+    if len(draws.shape) != 3 or draws.shape[1] < 1 or draws.shape[2] != 4:
+        raise ValueError('pulse draws must have shape lanes x L x 4')
+    length = draws.shape[1]
+    selected = draws[jp.arange(draws.shape[0]), jp.clip(applied_steps, 0, length-1)]
+    return jp.where((active & (applied_steps >= 0) & (applied_steps < length))[:, None], selected, 0.)
