@@ -106,9 +106,41 @@ def prepare_closed_loop(previous,output,repository,*,neighborhood=False):
     return spec
 
 
+def baseline_reuse(name, mode, spec, maximum, entry):
+    """Reuse only pinned completed P0 evaluation, never learning or partial work."""
+    if name not in {f'baseline_stress_{i:02d}' for i in range(9)} or mode!='collect':
+        raise ValueError('only baseline stress collection can be reused')
+    output=Path(entry['output'])
+    required={entry['spec'],entry['execution'],str(output/'status.json'),str(output/'candidates.json')}
+    if not required.issubset(entry['locks']):raise ValueError('missing reuse evidence locks')
+    for p,h in entry['locks'].items():
+        if file_sha(p)!=h:raise ValueError('reuse evidence changed')
+    before=read(entry['spec'])
+    if {k:v for k,v in before.items() if k!='gate'}!={k:v for k,v in spec.items() if k!='gate'}:
+        raise ValueError('reused baseline protocol differs')
+    status=read(output/'status.json');execution=read(entry['execution']);cost=entry['cost']
+    if (status['phase']!='completed' or execution['phase']!='completed'
+            or not execution['stages'] or any(s['phase']!='completed' or s['returncode']!=0 for s in execution['stages'])
+            or cost['stage']!=name or cost.get('accounting')!='measured' or cost.get('phase')!='completed'
+            or cost.get('charged_updates')!=0 or type(status['charged_interactions']) is not int
+            or not 0<=status['charged_interactions']<=maximum
+            or cost['charged_interactions']!=status['charged_interactions']
+            or len(read(output/'candidates.json'))!=32):
+        raise ValueError('incomplete or inconsistent baseline reuse')
+    return output
+
+
 class ClosedLoopRound(CampaignRunner):
     """Reuse the validated teacher/student implementations, with fresh round data."""
     def measured(self,name,mode,spec,maximum,*,output=None):
+        entry=self.spec.get('baseline_reuse',{}).get(name)
+        if entry is not None:
+            reused=baseline_reuse(name,mode,spec,maximum,entry)
+            if any(c['stage']==name for c in self.costs):raise ValueError('duplicate reuse charge')
+            self.costs.append({**entry['cost'],'reused_from':str(reused)})
+            atomic_json(self.root/'costs.json',self.costs)
+            atomic_json(self.root/(name+'_reuse.json'),entry)
+            return reused
         path=self.root/(name+'_spec.json');atomic_json(path,spec)
         output=Path(output) if output else self.root/name
         cost=self.child(name,['JIT/cli/run_pulse_exploration.py','--mode',mode,
@@ -307,9 +339,11 @@ def run_closed_loop(plan):
 def _run_closed_loop(plan):
     from ..probe_bank import lock_probe_bank
     from .worker import source_payload
-    root=Path(plan['output']);started=time.time();completed=[]
+    root=Path(plan['output']);started=plan.get('original_started_unix',time.time());completed=[]
     if (root/'started.json').exists():raise ValueError('explicit recovery required; never replay E updates')
     atomic_json(root/'started.json',{'started_unix':started});start_notifications(plan)
+    remaining_wall=plan['budgets']['max_wall_seconds']-(time.time()-started)
+    if remaining_wall<=0:raise TimeoutError('original closed-loop deadline exhausted')
     if plan.get('rounds')!=2 or plan.get('experimental_adoption') is not True or plan.get('formal_adoption') is not False:
         raise ValueError('explicit two-round experimental continuation required')
     if plan['budgets']!=dict(max_physics=3300000,per_round_physics=1500000,max_wall_seconds=86400,
@@ -338,7 +372,7 @@ def _run_closed_loop(plan):
         if file_sha(history)!=plan['locks'][history]:raise ValueError('initial history changed')
         previous['neighborhood_history']=read(history)
     try:
-        with wall_deadline(plan['budgets']['max_wall_seconds']):
+        with wall_deadline(remaining_wall):
             for index in range(1,plan['rounds']+1):
                 actor=previous['actor'];directory=root/f'round_{index:04d}';directory.mkdir()
                 bank=read(parent['source_runtime']['bank'])
@@ -348,6 +382,7 @@ def _run_closed_loop(plan):
                 runtime={**parent['source_runtime'],'bank':str(directory/'bank.json'),
                          'proposer':actor['policy']['name'],'order':[actor['policy']['name']],
                          'seed':plan['seed']+index,'round_index':index}
+                if plan.get('execution_gate') is not None:runtime['gate']=plan['execution_gate']
                 locks={**plan['locks'],previous['dev_fixture']:previous['dev_fixture_sha256'],
                     actor['frozen_policy']:file_sha(actor['frozen_policy'])}
                 if previous.get('explorer'):locks[previous['explorer']]=previous['explorer_sha256']
@@ -362,6 +397,7 @@ def _run_closed_loop(plan):
                     budgets={'max_physics':plan['budgets']['per_round_physics']+(230400 if index==1 else 0),
                              'max_supervised_updates':2000,'max_wall_seconds':plan['budgets']['max_wall_seconds']-(time.time()-started)})
                 if plan.get('neighborhood') is not None:spec['neighborhood']=plan['neighborhood']
+                if index==1 and plan.get('baseline_reuse'):spec['baseline_reuse']=plan['baseline_reuse']
                 atomic_json(directory/'production.json',spec);atomic_json(directory/'panels.json',{})
                 runner=ClosedLoopRound(spec)
                 atomic_json(root/'status.json',dict(phase='running',round=index,completed_rounds=len(completed),current_round=str(directory)))

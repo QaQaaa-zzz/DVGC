@@ -49,7 +49,7 @@ def test_child_overcharge_is_not_accepted(tmp_path):
     from jit_dvgc.generative_bridge.closed_loop import ClosedLoopRound
     from jit_dvgc.generative_bridge.protocol import atomic_json
     runner=ClosedLoopRound.__new__(ClosedLoopRound);runner.root=tmp_path
-    runner.costs=[];runner.child=lambda *args,**kwargs: {}
+    runner.spec={};runner.costs=[];runner.child=lambda *args,**kwargs: {}
     atomic_json(tmp_path/'worker/status.json',{'phase':'completed','charged_interactions':11})
     with pytest.raises(ValueError,match='reservation'):
         runner.measured('worker','collect',{},10)

@@ -125,9 +125,12 @@ def check_execution_gate(
             raise ValueError('immediate execution requires explicit declared authorization')
         return dict(ready=True, phase='user_requested_immediate',
                     reasons=['User explicitly requested immediate launch; GPU idle is not required'])
-    if gate.get('kind') == 'gpu_idle':
+    if gate.get('kind') in ('gpu_idle', 'gpu_shared'):
         import subprocess
         try:
+            if gate['kind'] == 'gpu_shared' and (gate.get('authorization') != 'start_without_gpu_idle_wait'
+                    or 'minimum_free_mib' not in gate):
+                raise ValueError('shared GPU requires explicit authorization and memory margin')
             query = subprocess.run(['nvidia-smi', '--query-compute-apps=pid,used_memory',
                 '--format=csv,noheader,nounits'], check=True, text=True,
                 capture_output=True, timeout=10)
@@ -154,6 +157,10 @@ def check_execution_gate(
                         remaining.append(row)
                 inventory='\n'.join(remaining)
             result = gpu_idle_assessment(inventory)
+            if gate['kind'] == 'gpu_shared':
+                if any(not re.fullmatch(r'\d+\s*,\s*\d+', row.strip()) for row in inventory.splitlines() if row.strip()):
+                    raise ValueError('unreadable GPU compute inventory')
+                result.update(ready=True, phase='shared', reasons=[])
             result['exempt_compute_processes']=exempt
             if 'minimum_free_mib' in gate:
                 minimum = gate['minimum_free_mib']

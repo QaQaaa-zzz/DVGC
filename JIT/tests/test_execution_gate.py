@@ -164,3 +164,18 @@ def test_gpu_query_failure_closes_gate(tmp_path,monkeypatch):
     monkeypatch.setattr(subprocess,'run',fail)
     result=check_execution_gate(config,process_inventory=lambda:[])
     assert not result['ready'] and any('gpu_process_query_failed' in r for r in result['reasons'])
+
+
+def test_shared_gpu_keeps_memory_guard(monkeypatch):
+    import subprocess
+    from types import SimpleNamespace
+    free = [22000]
+    def query(argv, **kwargs):
+        return SimpleNamespace(stdout=f'{free[0]}, 24564\n' if '--query-gpu=memory.free,memory.total' in argv else '123, 1184\n')
+    monkeypatch.setattr(subprocess, 'run', query)
+    config = dict(kind='gpu_shared', authorization='start_without_gpu_idle_wait', minimum_free_mib=20000)
+    assert check_execution_gate(config)['ready']
+    free[0] = 19000
+    assert not check_execution_gate(config)['ready']
+    config.pop('authorization')
+    assert not check_execution_gate(config)['ready']

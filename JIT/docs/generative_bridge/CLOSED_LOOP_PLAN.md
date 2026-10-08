@@ -30,3 +30,13 @@ All historical map rows are TRAIN-only real post-pulse contexts. Initial history
 Each collection freezes map contents and SHA before sampling. The E behavior receipt pins config/map hash and update validates it. Current collection and future teacher/student outcomes only join the next-round map. No development or final TEST rows enter the map. E uses its recorded386D observation for PPO, never recomputes with a newer map. Reward weights and source-specific novelty ledger are unchanged.
 
 Neighborhood validation:233 CPU tests passed (30.40s), including actual RSL PPO on386D neighborhood observations, uniform/unknown exclusion, map mutation rejection and checkpoint scope mismatch. Initial map1116 evidence rows/1024unique TRAIN contexts includes35source recheck records; known same-policy0/1 conflicts are unknown. Independent review complete; new GPU physical validation remains pending the resource gate.
+
+## Shared GPU continuation (2026-10-08)
+
+User requested concurrent execution instead of GPU-idle waiting. `gpu_shared`
+requires explicit authorization and a 20,000 MiB free-memory margin; compute
+processes do not veto launch. Other jobs remain running; throughput is not guaranteed.
+A successor directory may reuse only completed, hash-pinned P0 stress collections
+with identical scientific configuration (gate excluded). Reused physical costs
+remain charged within the original two-round budget and original wall deadline.
+Never reuse partial stages or replay optimizer updates through this mechanism.
