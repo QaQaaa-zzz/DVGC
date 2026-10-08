@@ -193,3 +193,116 @@ def import_replay_diagnostic(previous,diagnostic,old,contract,stages,locks,costs
     costs.append({'stage':name+'_diagnostic','phase':'completed','charged_interactions':measured['charged_interactions'],
         'charged_updates':0,'accounting':'measured independent matched-batch replay, reused after recovery',
         'wall_seconds':measured['wall_seconds'],'receipt':str(diagnostic/'rollout/status.json')})
+
+
+def prepare_campaign_recovery(previous,output,repository,*,max_wall_seconds=86400):
+    """Resume a completed A1 preparation after a finite source-control conflict.
+
+    A new user-authorized wall window is explicit; lifetime physics/optimizer
+    costs remain charged. No collector, optimizer or simulator runs here.
+    """
+    from .production import implementation_identity,implementation_files,read_teacher_traces
+    from .artifacts import validate_generator_receipt,load_corpus
+    previous=Path(previous).resolve();output=Path(output).resolve()
+    old=read(previous/'production.json');status=read(previous/'status.json')
+    if old.get('schema')!='jit_bridge_campaign_v1_2' or status.get('phase')!='failed':
+        raise ValueError('requires failed v1.2 campaign')
+    if 'teacher replay invalid' not in status.get('error','') or (previous/'students').exists() or (previous/'warmup').exists():
+        raise ValueError('only diagnosed pre-student teacher conflict recovery allowed')
+    if type(max_wall_seconds) is not int or not 0<max_wall_seconds<=86400:
+        raise ValueError('explicit positive wall window at most 24 hours required')
+    contract=read(previous/'stages/round_contract.json')
+    if contract!={'contract':old,'sha256':digest(old)}:raise ValueError('old contract drift')
+    costs=read(previous/'costs.json')
+    if any(c.get('phase','completed')!='completed' for c in costs):raise ValueError('unreconciled child cost')
+    locks=dict(old['locks'])
+    for path,sha in locks.items():
+        if file_sha(path)!=sha:raise ValueError('old source lock drift: '+path)
+    def pin(path):
+        path=str(Path(path).resolve());locks[path]=file_sha(path);return path
+    for name in ['production.json','status.json','costs.json','panels.json','source_rows.json',
+                 'training_support.json','seed_support/support.json','source_collections/plan.json',
+                 'retention_observations.json','retention_observations.npz','generator_dev_fixture.npz',
+                 'generator_pretrain_0000_config.json','pretrain_result.json','gpu_semantic_smoke.json']:
+        pin(previous/name)
+    source_rows=read(previous/'source_rows.json')
+    if source_rows['source_actor_sha256']!=old['source']['actor_sha256']:raise ValueError('source rows drift')
+    # Verify each distinct recorded trajectory at migration, keeping its own receipt.
+    verified=set()
+    for row in source_rows['rows']:
+        refs=[(row['prefix_file'],row['prefix_sha256'])]
+        refs.extend((a['trace'],a['trace_sha256']) for a in row.get('attempts',[]))
+        for path,sha in refs:
+            if path in verified:continue
+            if file_sha(path)!=sha:raise ValueError('source trajectory drift')
+            verified.add(path)
+    gen=read(previous/'pretrain_result.json');validate_generator_receipt(gen)
+    pin(gen['checkpoint_manifest']);pin(Path(gen['checkpoint_manifest']).parent/'state.msgpack')
+    config=read(previous/'generator_pretrain_0000_config.json');load_corpus(config['corpus'])
+    if file_sha(config['dev_fixture'])!=config['dev_fixture_sha256']:raise ValueError('G dev fixture drift')
+    if read(previous/'gpu_semantic_smoke.json')['status']!='passed':raise ValueError('smoke not passed')
+    stages={}
+    for path in sorted((previous/'stages').glob('eval_*.json')):
+        if path.name.endswith('.running.json'):continue
+        record=read(path)
+        if record['output_sha256']!=digest(record['result']):raise ValueError('evaluation stage drift')
+        result=record['result']
+        if file_sha(result['path'])!=result['sha256']:raise ValueError('evaluation result drift')
+        pin(path);pin(result['path'])
+        for row in read(result['path']):
+            for attempt in row.get('attempts',[]):
+                if file_sha(attempt['trace'])!=attempt['trace_sha256']:raise ValueError('evaluation trace drift')
+        stages[path.stem]={'path':str(path),'sha256':file_sha(path)}
+    teachers={};conflicts=[]
+    for path in sorted((previous/'teachers').glob('*_result.json')):
+        row=read(path)
+        if row['teacher_status']=='verified_solution':
+            read_teacher_traces({row['root_id']:row})
+            proposal=path.with_name(path.name.replace('_result.json','_proposals.npz'))
+            if file_sha(proposal)!=row['proposal_sha256']:raise ValueError('teacher proposal drift')
+            pin(path);pin(proposal);pin(row['demo']['path'])
+            teachers[row['root_id']]={'path':str(path),'sha256':file_sha(path),'proposal_path':str(proposal)}
+        elif row['teacher_status']=='invalid':
+            repeat=path.with_name(path.name.replace('_result.json','_layout_repeat.json'));e=read(repeat)
+            cid=e['selected_candidate_id']
+            if (e['changed_candidate_ids']!=[0] or e['search_labels'][0]!=0 or e['repeat_labels'][0]!=1
+                or e['search_labels'][cid]!=1 or e['repeat_labels'][cid]!=1
+                or any(v not in (0,1) for v in e['search_labels']+e['repeat_labels'])):
+                raise ValueError('failure not a complete finite source-only conflict')
+            pin(path);pin(repeat);conflicts.append(row['root_id'])
+    if not conflicts:raise ValueError('no diagnosed finite conflict')
+    # Prior two engineering failures are accounted by the previous recovery receipt.
+    ledger=read(previous.parent/'recovery_audit.json')
+    historical=ledger['old_reserved_physics']
+    lifetime_cap=ledger['total_physics_cap']
+    lifetime_spent=historical+sum(c['charged_interactions'] for c in costs)
+    if lifetime_spent>=lifetime_cap:raise ValueError('lifetime physics budget exhausted')
+    commit=implementation_identity(repository)
+    output.mkdir(parents=True,exist_ok=False)
+    preparation=dict(source_actor_sha256=old['source']['actor_sha256'],panels=read(previous/'panels.json'),
+        aggregate_path=str(previous/'source_rows.json'),support_path=str(previous/'training_support.json'),
+        seed_dir=str(previous/'seed_support'),collection_plan=str(previous/'source_collections/plan.json'),
+        retention_ref=read(previous/'retention_observations.json'),incumbent=gen,
+        bootstrap={'corpus':config['corpus'],'dev_fixture':config['dev_fixture'],'dev_fixture_sha256':config['dev_fixture_sha256']},
+        inputs={p:h for p,h in locks.items() if p.startswith(str(previous)+'/')})
+    atomic_json(output/'reused_preparation.json',preparation)
+    spec=deepcopy(old);spec.update(output=str(output),repository=str(Path(repository).resolve()),
+        implementation_commit=commit,implementation_files=implementation_files(repository),locks=locks,
+        recovery_preparation={'path':str(output/'reused_preparation.json'),'sha256':file_sha(output/'reused_preparation.json')},
+        recovery={'previous':str(previous),'previous_contract_identity':digest(old),'stages':stages,'teachers':teachers},
+        stage_plan=str(output/'stage_plan.json'))
+    spec['budgets'].update(max_physics=lifetime_cap,max_wall_seconds=max_wall_seconds)
+    stage_plan=read(old['stage_plan']);stage_plan['budgets'].update(physics_cap=lifetime_cap,wall_seconds=max_wall_seconds)
+    atomic_json(output/'stage_plan.json',stage_plan)
+    costs=[{'stage':'prior_failed_reservations','charged_interactions':historical,'charged_updates':0,
+            'accounting':'inherited failed-attempt reservations','phase':'completed'}]+costs
+    atomic_json(output/'costs.json',costs);atomic_json(output/'panels.json',preparation['panels'])
+    atomic_json(output/'production.json',spec)
+    atomic_json(output/'recovery_audit.json',dict(previous=str(previous),diagnosed_conflict_roots=conflicts,
+        inherited_physics_charged_or_reserved=lifetime_spent,total_physics_cap=lifetime_cap,
+        remaining_physics=lifetime_cap-lifetime_spent,old_reserved_physics=historical,
+        new_wall_window_seconds=max_wall_seconds,old_deadline_expired=True,
+        reused_G_updates=gen['updates'],new_pretraining_updates=0,new_physics=0,
+        source_trajectories_verified=len(verified)))
+    atomic_json(output/'status.json',{'phase':'prepared','charged_interactions':lifetime_spent,'supervised_updates':20000})
+    return spec

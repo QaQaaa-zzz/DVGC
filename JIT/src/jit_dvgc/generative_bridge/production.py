@@ -191,6 +191,24 @@ def source_recheck_disposition(label):
                 historical_source_label=0,source_recheck_label=1,new_gain_eligible=False,training_eligible=True)
 
 
+def is_source_conflict_quarantine(row):
+    return (row.get('teacher_status')=='invalid' and row.get('reason')=='source_control_repeat_conflict'
+        and row.get('source_control_labels') in ([0,1],[1,0])
+        and row.get('selected_replay_label')==1 and row.get('complete_finite_replay') is True
+        and row.get('new_gain_eligible') is False and row.get('training_eligible') is True
+        and row.get('source_recheck_label') is None and 'demo' not in row)
+
+
+def quarantine_source_conflict(row,replay):
+    if (replay.get('source_control_repeat_conflict') is not True or replay.get('label')!=1
+        or replay.get('source_control_labels') not in ([0,1],[1,0])
+        or replay.get('complete_finite_replay') is not True):return None
+    return {**row,'teacher_status':'invalid','reason':'source_control_repeat_conflict',
+        'source_control_labels':replay['source_control_labels'],'selected_replay_label':replay['label'],
+        'complete_finite_replay':True,'source_recheck_label':None,
+        'new_gain_eligible':False,'training_eligible':True,'quarantined':True}
+
+
 class ProductionRunner:
     def __init__(self,manifest):
         import jax
@@ -393,7 +411,9 @@ class ProductionRunner:
                 'repeat_labels':[r['label'] for r in results],'changed_candidate_ids':changed,
                 'selected_candidate_id':selected_id,'robust_probability_claim':False})
             if 0 in changed or results[0]['label'] is None:
-                selected={**selected,'label':None,'source_control_repeat_conflict':True}
+                selected={**selected,'source_control_repeat_conflict':True,
+                    'source_control_labels':[search_results[0]['label'],results[0]['label']],
+                    'complete_finite_replay':all(r['label'] in (0,1) for r in search_results+results)}
         return selected
 
     def teacher_search(self,incumbent):
@@ -457,6 +477,13 @@ class ProductionRunner:
                 'historical_source_label':0,'source_recheck_label':0,'new_gain_eligible':True,'training_eligible':True}
             if selected is not None:
                 cid=selected['candidate_id'];replay=self.replay_teacher(ordinal,candidates,pool['actions'][first:],cid,search_results=results)
+                quarantine=quarantine_source_conflict(row,replay)
+                if quarantine is not None:
+                    quarantine['selected_candidate_id']=cid
+                    atomic_json(teacher_dir/f'{ordinal:04d}_result.json',quarantine);output[rid]=quarantine
+                    continue
+                if replay.get('source_control_repeat_conflict'):
+                    raise ValueError('unknown or failed teacher/control repeat; incomplete execution is not quarantine')
                 verified={'candidate_id':cid,'full_success':replay['label']==1,
                     'batch_size':len(candidates),'selected_lane':cid-first,'layout':'same_as_search'}
                 status=search_status(scored,expected_count=32,verified=verified)

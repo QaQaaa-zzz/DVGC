@@ -10,7 +10,7 @@ from jit_dvgc.generative_bridge.protocol import atomic_json
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('command',choices=['audit','prepare','bind','run-pilot','recover','prepare-series','run-series','prepare-v12','run-v12','worker'])
+    p.add_argument('command',choices=['audit','prepare','bind','run-pilot','recover','prepare-series','run-series','prepare-v12','run-v12','recover-v12','worker'])
     p.add_argument('--spec',type=Path)
     p.add_argument('--output',type=Path)
     p.add_argument('--previous',type=Path)
@@ -42,6 +42,11 @@ def main():
         from jit_dvgc.generative_bridge.series import prepare_series
         report=prepare_series(args.previous,args.output,args.repository,rounds=args.rounds)
         print(json.dumps({'phase':'prepared','budgets':report['budgets']}));return
+    if args.command=='recover-v12':
+        if any(v is None for v in (args.previous,args.output,args.repository)):p.error('recover-v12 needs --previous --output --repository')
+        from jit_dvgc.generative_bridge.recovery import prepare_campaign_recovery
+        prepare_campaign_recovery(args.previous,args.output,args.repository,max_wall_seconds=args.max_wall_seconds or 86400)
+        print(json.dumps({'phase':'prepared','output':str(args.output)}));return
     if args.command=='recover':
         if any(getattr(args,k) is None for k in ('previous','output','repository')):
             p.error('recover requires --previous, --output and --repository')

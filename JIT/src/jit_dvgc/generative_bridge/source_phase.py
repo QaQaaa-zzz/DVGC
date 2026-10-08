@@ -5,7 +5,7 @@ import numpy as np
 from .contracts import digest, file_sha
 from .protocol import atomic_json
 from .proposals import stable_seed
-from .production import read, actor_traces, lane_arrays, read_teacher_traces
+from .production import read, actor_traces, lane_arrays, read_teacher_traces, is_source_conflict_quarantine
 from .source_data import prepare_collection_plan, aggregate_collection, build_training_support
 
 
@@ -101,42 +101,59 @@ def run_source_phase(runner):
     """Execute only A1 with caller-owned gating, budgets, notifications and journal."""
     from .student_demo_bank import build_student_demo_bank
     runner.status('running',stage='fresh_source_A1')
-    seed_spec={**runner.runtime,'seed_stride':10,'record_actor_preobservations':True,
-        'controller_mode':'fixed_random','full_episode_rollout':False,
-        'order':[runner.source['name']], 'horizon':400}
-    for key in ('pulse_protocol_v1_2','pulse_event_schedule','initial_velocity_randomization',
-                'reuse_results','reuse_collection','reuse_prefix_collection','bridge_action_plan','evaluation_batch_size'):
-        seed_spec.pop(key,None)
-    seed_path=runner.root/'seed_support_spec.json';atomic_json(seed_path,seed_spec)
-    seed_dir=runner.root/'seed_support'
-    _measured_child(runner,'fresh_seed_support','seed_support',seed_path,seed_dir,80400)
-    seed_support=read(seed_dir/'support.json')
-    if {r['phase'] for r in seed_support['entries']} != {'upstream','downstream'}:
-        raise ValueError('fresh nominal seed support must witness both phases')
-    plan=prepare_collection_plan(runner.runtime,runner.root/'source_collections',master_seed=runner.spec['seed'])
-    for index,batch in enumerate(plan['batches']):
-        _measured_child(runner,f'source_collect_{index:03d}','collect',batch['collection_spec'],
-            batch['collection_output'],32*(400 if batch['full_episode'] else 3))
-        if not batch['full_episode']:
-            _measured_child(runner,f'source_suffix_{index:03d}','evaluate',batch['suffix_spec'],
-                batch['suffix_output'],32*400)
-    aggregate_path=runner.root/'source_rows.json'
-    aggregate=aggregate_collection(runner.root/'source_collections/plan.json',aggregate_path,
-                                   source_actor_sha256=runner.source['actor_sha256'])
-    support_path=runner.root/'training_support.json'
-    build_training_support(seed_dir/'support.json',aggregate_path,support_path,source_policy=runner.source['name'])
-    runner.panels=fresh_panels(aggregate['rows'],seed=runner.spec['seed'])
-    atomic_json(runner.root/'panels.json',runner.panels)
-    retention=retention_from_successes(runner,aggregate['rows'])
-    bootstrap=bootstrap_from_results(runner,runner.panels['bootstrap'])
-    incumbent=runner.generator('pretrain',bootstrap['corpus'],bootstrap['dev_fixture'])
-    smoke=runner.smoke()
-    if smoke.get('status')!='passed':raise ValueError('semantic smoke did not pass')
+    reused=runner.spec.get('recovery_preparation')
+    if reused:
+        if file_sha(reused['path'])!=reused['sha256']:raise ValueError('recovery preparation drift')
+        prepared=read(reused['path'])
+        for path,sha in prepared['inputs'].items():
+            if file_sha(path)!=sha:raise ValueError('recovery input drift: '+path)
+        if prepared['source_actor_sha256']!=runner.source['actor_sha256']:
+            raise ValueError('recovery source identity mismatch')
+        aggregate_path=Path(prepared['aggregate_path']);support_path=Path(prepared['support_path'])
+        seed_dir=Path(prepared['seed_dir']);collection_plan=prepared['collection_plan']
+        runner.panels=prepared['panels'];retention=prepared['retention_ref']
+        bootstrap=prepared['bootstrap'];incumbent=prepared['incumbent']
+        from .artifacts import validate_generator_receipt,load_corpus
+        validate_generator_receipt(incumbent);load_corpus(bootstrap['corpus'])
+    else:
+        seed_spec={**runner.runtime,'seed_stride':10,'record_actor_preobservations':True,
+            'controller_mode':'fixed_random','full_episode_rollout':False,
+            'order':[runner.source['name']], 'horizon':400}
+        for key in ('pulse_protocol_v1_2','pulse_event_schedule','initial_velocity_randomization',
+                    'reuse_results','reuse_collection','reuse_prefix_collection','bridge_action_plan','evaluation_batch_size'):
+            seed_spec.pop(key,None)
+        seed_path=runner.root/'seed_support_spec.json';atomic_json(seed_path,seed_spec)
+        seed_dir=runner.root/'seed_support'
+        _measured_child(runner,'fresh_seed_support','seed_support',seed_path,seed_dir,80400)
+        seed_support=read(seed_dir/'support.json')
+        if {r['phase'] for r in seed_support['entries']} != {'upstream','downstream'}:
+            raise ValueError('fresh nominal seed support must witness both phases')
+        plan=prepare_collection_plan(runner.runtime,runner.root/'source_collections',master_seed=runner.spec['seed'])
+        for index,batch in enumerate(plan['batches']):
+            _measured_child(runner,f'source_collect_{index:03d}','collect',batch['collection_spec'],
+                batch['collection_output'],32*(400 if batch['full_episode'] else 3))
+            if not batch['full_episode']:
+                _measured_child(runner,f'source_suffix_{index:03d}','evaluate',batch['suffix_spec'],
+                    batch['suffix_output'],32*400)
+        aggregate_path=runner.root/'source_rows.json'
+        aggregate=aggregate_collection(runner.root/'source_collections/plan.json',aggregate_path,
+                                       source_actor_sha256=runner.source['actor_sha256'])
+        support_path=runner.root/'training_support.json'
+        build_training_support(seed_dir/'support.json',aggregate_path,support_path,source_policy=runner.source['name'])
+        runner.panels=fresh_panels(aggregate['rows'],seed=runner.spec['seed'])
+        atomic_json(runner.root/'panels.json',runner.panels)
+        retention=retention_from_successes(runner,aggregate['rows'])
+        bootstrap=bootstrap_from_results(runner,runner.panels['bootstrap'])
+        incumbent=runner.generator('pretrain',bootstrap['corpus'],bootstrap['dev_fixture'])
+        smoke=runner.smoke()
+        if smoke.get('status')!='passed':raise ValueError('semantic smoke did not pass')
+        collection_plan=str(runner.root/'source_collections/plan.json')
     if runner.spec.get('teacher_layout')!='source_control_in_32_world_batch':
         raise ValueError('A1 teacher requires source control in declared 32-world layout')
     teachers=runner.teacher_search(incumbent)
     # Exceptions and unknown source/teacher outcomes are never an empty-demo arm.
-    if any(r.get('teacher_status') in ('invalid','incomplete') for r in teachers.values()):
+    if any(r.get('teacher_status') in ('invalid','incomplete') and not is_source_conflict_quarantine(r)
+           for r in teachers.values()):
         raise ValueError('unknown or incomplete teacher prevents A1 completion')
     demo=build_student_demo_bank(read_teacher_traces(teachers),runner.root/'student_demo_bank',
         source_identity=dict(actor_sha256=runner.source['actor_sha256'],
@@ -146,7 +163,7 @@ def run_source_phase(runner):
         demo_manifest=dict(path=str(runner.root/'student_demo_bank/manifest.json'),
                            sha256=file_sha(runner.root/'student_demo_bank/manifest.json')),
         retention_ref=retention,aggregate_path=str(aggregate_path),support_path=str(support_path),
-        collection_plan=str(runner.root/'source_collections/plan.json'),
+        collection_plan=collection_plan,
         panel_support_path=str(seed_dir/'support.json'),panels=runner.panels,
         source_actor_sha256=runner.source['actor_sha256'],new_training_transitions=0,
         generator_updates=incumbent.get('updates'),demo_count=demo['count'])

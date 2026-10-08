@@ -32,7 +32,7 @@ def acceptance_v12(before,after,student):
 
 
 def source_root_labels(rows,teachers):
-    return [None if teachers[r['root_id']].get('reason')=='same_layout_source_recheck'
+    return [None if teachers[r['root_id']].get('reason')in ('same_layout_source_recheck','source_control_repeat_conflict')
         else teachers[r['root_id']]['source_recheck_label'] for r in rows]
 
 
@@ -354,7 +354,8 @@ class CampaignRunner(ProductionRunner):
             return {'phase':'needs_input_resolution','source_substitution_allowed':False}
         require_stage(plan,'A1',evidence)
         measured=read(gate/'rollout/status.json')['charged_interactions']
-        self.costs.append({'stage':'A0_nominal','charged_interactions':measured,'accounting':'measured separate nominal receipt'})
+        if not any(c['stage']=='A0_nominal' for c in self.costs):
+            self.costs.append({'stage':'A0_nominal','charged_interactions':measured,'accounting':'measured separate nominal receipt'})
         source_phase=self.journal.stage('fresh_source_phase',{},lambda:run_source_phase(self))
         evidence.update(data_ready=True,teacher_semantics_valid=True)
         require_stage(plan,'A2',evidence)

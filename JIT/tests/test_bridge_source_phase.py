@@ -17,7 +17,7 @@ def test_fresh_panel_selection_retains_denominator_and_separates_generator_dev()
     assert panel['splits']['dev']=='generator_dev'
 
 
-@pytest.mark.parametrize('invalid',[False,True])
+@pytest.mark.parametrize('invalid',[False,True,'quarantine'])
 def test_a1_orchestration_preserves_teacher_unknown_stop(tmp_path,monkeypatch,invalid):
     calls=[]
     runner=SimpleNamespace(root=tmp_path,runtime={'evaluation_batch_size':32},source=dict(name='P0',actor_sha256='actor',
@@ -27,6 +27,13 @@ def test_a1_orchestration_preserves_teacher_unknown_stop(tmp_path,monkeypatch,in
     runner.generator=lambda *a,**k:(calls.append('generator') or {'updates':20000})
     runner.smoke=lambda:(calls.append('smoke') or {'status':'passed'})
     runner.teacher_search=lambda x:(calls.append('teachers') or {'root':{'teacher_status':'invalid' if invalid else 'searched_no_solution'}})
+    if invalid=='quarantine':
+        def quarantined(_):
+            calls.append('teachers')
+            return {'root':dict(teacher_status='invalid',reason='source_control_repeat_conflict',
+                source_control_labels=[0,1],selected_replay_label=1,complete_finite_replay=True,
+                source_recheck_label=None,new_gain_eligible=False,training_eligible=True)}
+        runner.teacher_search=quarantined
     def child(*args,**kwargs):
         calls.append(args[2])
         if args[2]=='seed_support':
@@ -47,7 +54,7 @@ def test_a1_orchestration_preserves_teacher_unknown_stop(tmp_path,monkeypatch,in
     def bank(*args,**kwargs):
         calls.append('demo');atomic_json(tmp_path/'student_demo_bank/manifest.json',{'count':0});return {'count':0}
     monkeypatch.setattr(student_demo_bank,'build_student_demo_bank',bank)
-    if invalid:
+    if invalid is True:
         with pytest.raises(ValueError,match='unknown or incomplete'):phase.run_source_phase(runner)
         assert 'demo' not in calls
         assert not (tmp_path/'source_phase_result.json').exists()
@@ -56,3 +63,23 @@ def test_a1_orchestration_preserves_teacher_unknown_stop(tmp_path,monkeypatch,in
         assert result['new_training_transitions']==0
         assert result['collection_plan']==str(tmp_path/'source_collections/plan.json')
         assert calls==['seed_support','collect','evaluate','generator','smoke','teachers','demo']
+
+
+def test_recovery_reuses_preparation_without_collection_or_pretrain(tmp_path,monkeypatch):
+    from jit_dvgc.generative_bridge.contracts import file_sha
+    from jit_dvgc.generative_bridge import artifacts
+    prepared=dict(inputs={},source_actor_sha256='actor',aggregate_path='rows.json',support_path='support.json',
+        seed_dir='seed',collection_plan='plan.json',panels={},retention_ref={},bootstrap={'corpus':{}},incumbent={})
+    path=tmp_path/'prepared.json';atomic_json(path,prepared)
+    runner=SimpleNamespace(root=tmp_path,source={'actor_sha256':'actor'},spec={
+        'recovery_preparation':{'path':str(path),'sha256':file_sha(path)},
+        'teacher_layout':'source_control_in_32_world_batch'},status=lambda *a,**k:None)
+    class ReachedTeacher(Exception):pass
+    def teacher(_):raise ReachedTeacher()
+    runner.teacher_search=teacher
+    monkeypatch.setattr(artifacts,'validate_generator_receipt',lambda x:None)
+    monkeypatch.setattr(artifacts,'load_corpus',lambda x:None)
+    monkeypatch.setattr(phase,'_measured_child',lambda *a,**k:pytest.fail('must not recollect'))
+    with pytest.raises(ReachedTeacher):phase.run_source_phase(runner)
+    path.write_text('{}')
+    with pytest.raises(ValueError,match='drift'):phase.run_source_phase(runner)
