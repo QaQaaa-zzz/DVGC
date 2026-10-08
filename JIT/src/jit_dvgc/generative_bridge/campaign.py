@@ -11,6 +11,21 @@ from .contracts import file_sha,digest
 from .stage_plan import require_stage
 
 
+def warmup_selection(root):
+    """Resolve the selection beside the receipt's checkpoint, including recovery."""
+    record=read(Path(root)/'stages/warmup.json')
+    candidate=record['result']
+    if digest(candidate)!=record['output_sha256']:
+        raise ValueError('warmup receipt changed')
+    checkpoint=Path(candidate['path'])
+    if file_sha(checkpoint)!=candidate['sha256']:
+        raise ValueError('warmup checkpoint changed')
+    selection=read(checkpoint.parent.parent/'selection.json')
+    if selection['selected_update']!=candidate['update']:
+        raise ValueError('warmup selection changed')
+    return selection
+
+
 def nominal_evidence(status, rows):
     if status.get('phase')!='completed':raise ValueError('nominal execution not completed')
     return {'source_identity_valid':True,'action_parity':True,
@@ -314,10 +329,15 @@ class CampaignRunner(ProductionRunner):
             'student_demo_bank':source_phase['demo_manifest'],'stage_B_enabled':False,
             'control_arms_do_not_supply_primary_generator':True}
         atomic_json(self.root/'current_source.json',bundle)
+        self.write_reports(source_phase,results,corpus)
+
+    def write_reports(self,source_phase,results,corpus,output=None):
+        """Report existing evidence only; never train or run physics."""
+        output=self.root if output is None else Path(output)
         learning={name:{'loss_audit':read(Path(r['student']['training'])/'learning_probe.json'),
             'checkpoints':read(Path(r['student']['training'])/'checkpoint_action_probes.json')} for name,r in results.items()}
-        atomic_json(self.root/'learning_probe.json',{'arms':learning,'four_combinations':read(self.root/'four_combinations.json'),
-            'warmup_selection':read(self.root/'warmup/selection.json')})
+        atomic_json(output/'learning_probe.json',{'arms':learning,'four_combinations':read(self.root/'four_combinations.json'),
+            'warmup_selection':warmup_selection(self.root)})
         summary={'source_checkpoint':read(self.spec['source_audit'])['source_checkpoint'],
             'source_actor_sha256':self.source['actor_sha256'],'stage':'A2_completed','final_test_open':False,
             'arms':{name:r['acceptance'] for name,r in results.items()},'primary_arm':'C',
@@ -328,7 +348,7 @@ class CampaignRunner(ProductionRunner):
             'supervised_updates_charged':sum(c.get('charged_updates',0) for c in self.costs),
             'limitations':['single training seed','equal PPO is not equal total cost',
                 'Stage B disabled; no learned explorer update','cumulative bank has only one new-source round']}
-        atomic_json(self.root/'CORE_RESULTS.json',summary)
+        atomic_json(output/'CORE_RESULTS.json',summary)
         lines=['# v1.2 核心结果','',f"源 Actor：{self.source['actor_sha256']}。PPO 每臂 128,000 步；主候选 C。",
             '', '| 臂 | 采用 | core lost | protected lost | 新根 gained/lost |',
             '|---|---:|---:|---:|---:|']
@@ -336,8 +356,8 @@ class CampaignRunner(ProductionRunner):
             a=r['acceptance'];c=a['counts']
             lines.append(f"| {name} | {a['adopted']} | {c['core']['lost']} | {c['protected']['lost']} | {c['new_roots']['gained']}/{c['new_roots']['lost']} |")
         lines.extend(['','仅单种子开发结果；等 PPO 步数不代表等总预算。最终 TEST 未开启，主动探索未训练。',
-            '完整逐失败根见 lost_roots.csv；监督和物理成本见 cost_ledger.json。'])
-        (self.root/'CORE_RESULTS.md').write_text('\n'.join(lines)+'\n')
+            f'完整逐失败根：[lost_roots.csv]({self.root}/lost_roots.csv)；监督和物理成本见 cost_ledger.json。'])
+        (output/'CORE_RESULTS.md').write_text('\n'.join(lines)+'\n')
 
     def _run(self):
         from .source_phase import run_source_phase
@@ -387,3 +407,57 @@ class CampaignRunner(ProductionRunner):
         atomic_json(self.root/'cost_ledger.json',{'costs':self.costs,'limits':plan['budgets'],'comparison':'equal PPO only; all other costs charged'})
         self.status('completed',stage='A2',training_transitions=384000)
         return results
+
+
+def finalize_saved_campaign(previous,output):
+    """Complete reports from committed feedback; preserve the failed run verbatim."""
+    from .artifacts import load_corpus,validate_generator_receipt
+    previous=Path(previous).resolve();output=Path(output).resolve()
+    if output.exists():raise FileExistsError(output)
+    status=read(previous/'status.json')
+    if status['phase']!='failed':raise ValueError('requires a failed reporting attempt')
+    bundle=read(previous/'current_source.json')
+    validate_generator_receipt(bundle['generator'])
+    corpus=load_corpus(bundle['corpus'])
+    results=read(previous/'acceptance_report.json')
+    if set(results)!={'A','B','C'}:raise ValueError('incomplete arm results')
+    if results['C']['acceptance']!=bundle['actor_acceptance']:
+        raise ValueError('feedback adoption mismatch')
+    inputs={}
+    def record(path):
+        path=Path(path);inputs[str(path)]=file_sha(path)
+    for name,result in results.items():
+        receipt=read(previous/('stages/train_'+name+'.json'))
+        if receipt['result']!=result['student'] or receipt['output_sha256']!=digest(receipt['result']):
+            raise ValueError('student receipt mismatch')
+        training=Path(result['student']['training'])
+        if read(training/'status.json')['status']!='completed':raise ValueError('student incomplete')
+        for filename in ('status.json','learning_probe.json','checkpoint_action_probes.json'):
+            record(training/filename)
+        record(previous/('stages/train_'+name+'.json'))
+    phase_record=read(previous/'stages/fresh_source_phase.json')
+    if phase_record['output_sha256']!=digest(phase_record['result']):raise ValueError('source phase changed')
+    warmup_selection(previous)
+    for filename in ('status.json','production.json','current_source.json','acceptance_report.json',
+                     'costs.json','four_combinations.json','stages/fresh_source_phase.json','stages/warmup.json'):
+        record(previous/filename)
+    candidate=read(previous/'stages/warmup.json')['result']
+    record(Path(candidate['path']).parent.parent/'selection.json')
+    runner=CampaignRunner.__new__(CampaignRunner)  # No runtime initialization or stage execution.
+    runner.root=previous;runner.spec=read(previous/'production.json')
+    runner.source=runner.spec['source'];runner.costs=read(previous/'costs.json')
+    output.mkdir(parents=True)
+    runner.write_reports(phase_record['result'],results,corpus,output=output)
+    atomic_json(output/'current_source.json',bundle)
+    atomic_json(output/'cost_ledger.json',{'costs':runner.costs,'limits':read(runner.spec['stage_plan'])['budgets'],
+        'comparison':'equal PPO only; inherited reservations retained; report-only recovery adds zero cost'})
+    atomic_json(output/'recovery_audit.json',{'previous':str(previous),'input_sha256':inputs,
+        'mode':'reports_only','additional_physics':0,'additional_supervised_updates':0})
+    if any(file_sha(path)!=sha for path,sha in inputs.items()):
+        raise ValueError('report inputs changed during finalization')
+    atomic_json(output/'status.json',{'phase':'completed','stage':'A2','mode':'reports_only',
+        'training_transitions':sum(read(Path(r['student']['training'])/'status.json')['interaction_accounting']['training'] for r in results.values()),
+        'charged_interactions':sum(c['charged_interactions'] for c in runner.costs),
+        'supervised_updates':sum(c.get('charged_updates',0) for c in runner.costs),
+        'previous':str(previous)})
+    return output
