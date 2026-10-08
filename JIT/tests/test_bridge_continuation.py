@@ -41,6 +41,7 @@ def test_continuation_runs_next_rounds_without_replaying_baseline(tmp_path,monke
         uniform_episode_fraction=0.,teacher_colored_noise_candidates=0)
     if not learned_only:
         plan.pop('uniform_episode_fraction');plan.pop('teacher_colored_noise_candidates')
+    else:plan['teacher_replay_failure_policy']='reject_finite_candidate'
     (tmp_path/'run').mkdir()
     monkeypatch.setattr(loop,'start_notifications',lambda p:None)
     monkeypatch.setattr(loop,'implementation_identity',lambda p:'commit')
@@ -67,5 +68,6 @@ def test_continuation_runs_next_rounds_without_replaying_baseline(tmp_path,monke
                and x['teacher_colored_noise_candidates']==(0 if learned_only else 15) for x in seen)
     assert all(x['teacher_layout']==('source_control_in_candidate_batch' if learned_only
                                     else 'source_control_in_32_world_batch') for x in seen)
+    assert all(x.get('teacher_replay_failure_policy')==('reject_finite_candidate' if learned_only else None) for x in seen)
     assert result['round']==9
     with pytest.raises(ValueError,match='explicit recovery'):loop.run_closed_loop(plan)

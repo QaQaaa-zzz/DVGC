@@ -532,6 +532,10 @@ def _run_closed_loop(plan):
                         generator_update_policy=plan['profile']['generator_update_policy'],
                         generator_charged_updates_before=previous['generator_lifetime_charged_updates'],
                         generator_charged_updates_scope=previous.get('generator_charged_updates_scope','lifetime'))
+                if plan.get('teacher_replay_failure_policy') is not None:
+                    if plan['teacher_replay_failure_policy']!='reject_finite_candidate':
+                        raise ValueError('unknown teacher replay failure policy')
+                    spec['teacher_replay_failure_policy']=plan['teacher_replay_failure_policy']
                 if plan.get('neighborhood') is not None:spec['neighborhood']=plan['neighborhood']
                 if plan.get('continuous_learning'):
                     if plan.get('nominal_evaluation') is not False:raise ValueError('continuous nominal check must be disabled')

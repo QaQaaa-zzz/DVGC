@@ -265,3 +265,34 @@ Two-round read-only acceptance entry: call
 `jit_dvgc.generative_bridge.integration_audit.audit_integration(run_root)` after
 completion; only `ready_for_200=true` authorizes the separately declared successor
 under the user's conditional instruction. It does not score recovery improvement.
+
+
+## Finite teacher replay rejection and bounded recovery (2026-10-08)
+
+The200-round successor completed3 rounds(R5--R7), then stopped inR8 teacher
+candidate6: search success, same17-lane replay failure, source0 in both. Locked
+prefix plans/seeds/context match. Saved selected-lane qvel first differs by
+3.814697e-6 at the first physical step; tail actions diverge after the16-step
+G prefix. This establishes nonrepeatability, not its exact numerical cause.
+Old failure records remain immutable. User explicitly authorized fixing and continuing.
+
+Explicit plan/round teacher_replay_failure_policy=reject_finite_candidate accepts
+only complete finite, hash/Actor/normalizer/model/context/lane-bound search and
+repeat records, unchanged source0/0, selected1/0. Terminal labels are reconstructed
+with the existing rule. The candidate is replay_rejected, teacher_found unknown,
+no demo and no G teacher sample; valid independent TRAIN feedback/PPO eligibility
+remains. No alternate candidate is retrospectively promoted. Missing, unknown,
+nonfinite, incomplete or identity-inconsistent execution still stops. Without the
+explicit policy the historical abort behavior remains unchanged. Physics and
+success criteria are not relaxed; numerical reproducibility is not claimed fixed.
+
+Recovery is from the last complete R7 bundle, never a splice of failedR8. Target
+remains200 total:3 complete plus197 remaining. Prior870612 charged physical steps
+(including failedR8),6000 G updates and384000 student steps remain booked. New
+stage ceiling295500000 physical/394000 G/25216000 student lies within the original
+aggregate300000000/400000/25600000 ceilings. Carry the original200-series wall-start
+so the7-day deadline is not silently reset. No automatic retries or extra rounds.
+
+Verification:264 related CPU regressions passed in35.40s. Strict guard replayed
+the saved failing17-lane records without new simulation; rejected as intended,
+no demonstration created. Independent review found no blocker for this contract.

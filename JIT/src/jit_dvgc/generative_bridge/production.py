@@ -211,6 +211,18 @@ def quarantine_source_conflict(row,replay):
         'new_gain_eligible':False,'training_eligible':True,'quarantined':True}
 
 
+def reject_finite_replay(row,replay):
+    """Reject an unrepeatable teacher without inventing a verified demonstration."""
+    proof=replay.get('finite_replay_rejection')
+    if (not proof or replay.get('label')!=0 or proof.get('source_labels')!=[0,0]
+        or proof.get('selected_labels')!=[1,0] or proof.get('complete_finite') is not True):return None
+    if 'demo' in row:raise ValueError('rejected replay cannot contain a demonstration')
+    return {**row,'teacher_status':'replay_rejected','reason':'selected_candidate_failed_repeat',
+        'selected_candidate_id':replay['candidate_id'],'selected_replay_label':0,
+        'source_recheck_label':0,'training_eligible':True,'replay_rejection':proof,
+        'verification':{'candidate_id':replay['candidate_id'],'full_success':False}}
+
+
 class ProductionRunner:
     def __init__(self,manifest):
         import jax
@@ -424,6 +436,8 @@ class ProductionRunner:
             raise ValueError('replay candidate ordering changed or incomplete')
         selected=results[ids.index(selected_id)]
         if full and search_results is not None:
+            if [r['candidate_id'] for r in search_results]!=ids:
+                raise ValueError('search candidate ordering changed or incomplete')
             changed=[cid for cid,a,b in zip(ids,search_results,results) if a['label']!=b['label']]
             atomic_json(self.root/'teachers'/f'{ordinal:04d}_layout_repeat.json',{
                 'candidate_ids':ids,'search_labels':[r['label'] for r in search_results],
@@ -433,6 +447,38 @@ class ProductionRunner:
                 selected={**selected,'source_control_repeat_conflict':True,
                     'source_control_labels':[search_results[0]['label'],results[0]['label']],
                     'complete_finite_replay':all(r['label'] in (0,1) for r in search_results+results)}
+            if (self.spec.get('teacher_replay_failure_policy')=='reject_finite_candidate'
+                and search_results[ids.index(selected_id)]['label']==1 and selected['label']==0
+                and search_results[0]['label']==results[0]['label']==0
+                and all(r['label'] in (0,1) for r in search_results+results)):
+                # Verify durable real trajectories, not merely the scalar labels.
+                from ..pulse_exploration_runtime import suffix_label
+                source=self.spec['source'];horizon=self.spec['source_runtime']['horizon']
+                for batch in (search_results,results):
+                    for lane,result in enumerate(batch):
+                        original=candidates[lane]
+                        if any(result.get(k)!=original[k] for k in ('root_id','snapshot_context_sha256')):
+                            raise ValueError('replay root/context identity changed')
+                        if len(result.get('attempts',[]))!=1:raise ValueError('missing completed replay trace')
+                        attempt=result['attempts'][0]
+                        expected=dict(trace_lane=lane,actor_sha256=source['actor_sha256'],
+                            normalizer_sha256=source['normalizer_sha256'],model_sha256=source['xml_sha256'],
+                            snapshot_context_sha256=original['snapshot_context_sha256'],label=result['label'])
+                        if any(attempt.get(k)!=v for k,v in expected.items()):
+                            raise ValueError('replay trace identity/label changed')
+                        arrays=lane_arrays(attempt)
+                        if any(not np.isfinite(a).all() for a in arrays.values() if a.dtype.kind in 'fc'):
+                            raise ValueError('nonfinite teacher replay trajectory')
+                        n=len(arrays['done'])
+                        if n!=attempt.get('steps') or not (arrays['done'][-1] or n>=horizon):
+                            raise ValueError('incomplete teacher replay trajectory')
+                        label,_=suffix_label(bool(arrays['valid_contact'][-1]),bool(arrays['physical_failure'][-1]),
+                            bool(arrays['timeout'][-1]),bool(arrays['done'][-1]),n>=horizon)
+                        if label!=result['label']:raise ValueError('replay terminal label mismatch')
+                proof=self.root/'teachers'/f'{ordinal:04d}_layout_repeat.json'
+                selected={**selected,'finite_replay_rejection':dict(source_labels=[0,0],
+                    selected_labels=[1,0],complete_finite=True,repeat_receipt=str(proof),
+                    repeat_receipt_sha256=file_sha(proof),search=search_results,repeat=results)}
         return selected
 
     def teacher_search(self,incumbent):
@@ -504,6 +550,10 @@ class ProductionRunner:
                     continue
                 if replay.get('source_control_repeat_conflict'):
                     raise ValueError('unknown or failed teacher/control repeat; incomplete execution is not quarantine')
+                rejected=reject_finite_replay(row,replay)
+                if rejected is not None:
+                    atomic_json(teacher_dir/f'{ordinal:04d}_result.json',rejected);output[rid]=rejected
+                    continue
                 verified={'candidate_id':cid,'full_success':replay['label']==1,
                     'batch_size':len(candidates),'selected_lane':cid-first,'layout':'same_as_search'}
                 status=search_status(scored,expected_count=len(pool['actions']),verified=verified)
