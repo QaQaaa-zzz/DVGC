@@ -15,7 +15,8 @@ def test_budget_is_finite_and_scales_exactly():
         with pytest.raises(ValueError):continuation_budget(invalid)
 
 
-def test_continuation_runs_next_rounds_without_replaying_baseline(tmp_path,monkeypatch):
+@pytest.mark.parametrize('learned_only',[False,True])
+def test_continuation_runs_next_rounds_without_replaying_baseline(tmp_path,monkeypatch,learned_only):
     import jit_dvgc.generative_bridge.closed_loop as loop
     from jit_dvgc import probe_bank
     from jit_dvgc.generative_bridge import worker
@@ -36,7 +37,10 @@ def test_continuation_runs_next_rounds_without_replaying_baseline(tmp_path,monke
         prior_physics_charged=55,minimum_free_disk_bytes=20*1024**3,
         continuation_bundle={'path':str(tmp_path/'bundle.json'),'sha256':file_sha(tmp_path/'bundle.json')},
         reference_panels={'baseline':str(tmp_path/'baseline.json'),'initial':str(tmp_path/'initial.json')},
-        execution_gate={'kind':'gpu_shared'},neighborhood={'enabled':True})
+        execution_gate={'kind':'gpu_shared'},neighborhood={'enabled':True},
+        uniform_episode_fraction=0.,teacher_colored_noise_candidates=0)
+    if not learned_only:
+        plan.pop('uniform_episode_fraction');plan.pop('teacher_colored_noise_candidates')
     (tmp_path/'run').mkdir()
     monkeypatch.setattr(loop,'start_notifications',lambda p:None)
     monkeypatch.setattr(loop,'implementation_identity',lambda p:'commit')
@@ -59,5 +63,9 @@ def test_continuation_runs_next_rounds_without_replaying_baseline(tmp_path,monke
     assert all(x['continuation']['generator']=={'saved':'G'} for x in seen)
     assert seen[0]['continuation']['tail_lineage']==['old_tail']
     assert all(x['budgets']['max_physics']==1500000 for x in seen)
+    assert all(x['uniform_episode_fraction']==(0. if learned_only else .2)
+               and x['teacher_colored_noise_candidates']==(0 if learned_only else 15) for x in seen)
+    assert all(x['teacher_layout']==('source_control_in_candidate_batch' if learned_only
+                                    else 'source_control_in_32_world_batch') for x in seen)
     assert result['round']==9
     with pytest.raises(ValueError,match='explicit recovery'):loop.run_closed_loop(plan)

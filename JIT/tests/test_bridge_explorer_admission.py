@@ -116,3 +116,23 @@ def test_disk_admission_binds_artifacts_and_rejects_replay_or_optout(tmp_path):
     with pytest.raises(ValueError,match='bypass'):a.admit_update({},tmp_path,state,t)
     (tmp_path/'prefixes.npz').write_bytes(b'tampered')
     with pytest.raises(ValueError,match='artifact drift'):a.admit_update(s,tmp_path,state,t)
+
+
+def test_zero_uniform_fraction_keeps_every_episode_on_learned_policy():
+    s=spec(range(128));s['explorer_admission_v1_2']['uniform_episode_fraction']=0.
+    learned,draws=a.collection_mixture(s)
+    assert learned.all() and draws.shape==(128,3,4)
+    raw,delta,lp,values,valid=a.mix_sample(jp.ones((128,4)),jp.ones((128,4))*.15,
+        jp.full(128,-.5),jp.ones(128),jp.asarray(learned),jp.asarray(draws[:,0]),jp.ones(128,bool))
+    assert np.isfinite(raw).all() and np.isfinite(lp).all() and valid.all()
+    np.testing.assert_allclose(delta,.15)
+
+
+def test_admission_rejects_uniform_tape_under_learned_only_protocol():
+    s,r,t,identity=receipt_and_tape()
+    s['explorer_admission_v1_2']['uniform_episode_fraction']=0.
+    with pytest.raises(ValueError,match='mixture|uniform'):
+        a.validate_admission(s,r,t,identity)
+    r['uniform_episode_fraction']=0.
+    with pytest.raises(ValueError,match='uniform'):
+        a.validate_admission(s,r,t,identity)

@@ -393,11 +393,12 @@ class ProductionRunner:
         return {'corpus':receipt,'dev_fixture':str(fixture),'dev_fixture_sha256':file_sha(fixture)}
 
     def replay_teacher(self,ordinal,candidates,actions,selected_id,*,search_results=None):
-        # Changing 31 search worlds into one replay world changes the GPU physics
+        # Changing the search batch into one replay world changes the GPU physics
         # layout. Repeat the complete frozen batch, then inspect the same lane.
         ids=[r['candidate_id'] for r in candidates]
-        full=self.spec.get('teacher_layout')=='source_control_in_32_world_batch'
-        if ids!=list(range(0 if full else 1,32)) or selected_id not in ids:
+        full=self.spec.get('teacher_layout') in ('source_control_in_32_world_batch','source_control_in_candidate_batch')
+        count=17+self.spec.get('teacher_colored_noise_candidates',15)
+        if ids!=list(range(0 if full else 1,count)) or selected_id not in ids:
             raise ValueError('replay requires original candidate identities')
         results=self.evaluate(f'replay_batch_{ordinal:04d}',candidates,
             prefixes=actions,source_only=np.asarray([cid==0 for cid in ids],bool))
@@ -453,12 +454,13 @@ class ProductionRunner:
             noise=np.stack([np.random.default_rng(stable_seed(self.spec['seed'],rid,cid)).normal(size=(16,4)) for cid in range(1,17)]).astype(np.float32)
             normalized=(jp.asarray(np.repeat(obs[None],16,axis=0))-state['normalizer']['mean'])/state['normalizer']['std']
             generated=jax.device_get(ddim_sample(lambda x,o,k:net.apply(state['ema'],x,o,k),normalized,jp.asarray(noise)))
-            pool=make_candidate_pool(rid,actual['normalized_action_executed'][:16],generated,seed=self.spec['seed'])
+            pool=make_candidate_pool(rid,actual['normalized_action_executed'][:16],generated,seed=self.spec['seed'],
+                colored_noise_candidates=self.spec.get('teacher_colored_noise_candidates',15))
             poolpath=teacher_dir/f'{ordinal:04d}_proposals.npz'
             if not poolpath.exists():np.savez_compressed(poolpath,actions=pool['actions'],diffusion_noise=noise,colored_raw_draws=pool['colored_raw_draws'])
-            full=self.spec.get('teacher_layout')=='source_control_in_32_world_batch'
+            full=self.spec.get('teacher_layout') in ('source_control_in_32_world_batch','source_control_in_candidate_batch')
             first=0 if full else 1
-            candidates=[{**base,'index':cid,'candidate_id':cid} for cid in range(first,32)]
+            candidates=[{**base,'index':cid,'candidate_id':cid} for cid in range(first,len(pool['actions']))]
             results=self.evaluate(f'teacher_{ordinal:04d}',candidates,prefixes=pool['actions'][first:],
                 source_only=np.asarray([r['candidate_id']==0 for r in candidates],bool))
             if full and results[0]['label']!=0:
@@ -486,7 +488,7 @@ class ProductionRunner:
                     raise ValueError('unknown or failed teacher/control repeat; incomplete execution is not quarantine')
                 verified={'candidate_id':cid,'full_success':replay['label']==1,
                     'batch_size':len(candidates),'selected_lane':cid-first,'layout':'same_as_search'}
-                status=search_status(scored,expected_count=32,verified=verified)
+                status=search_status(scored,expected_count=len(pool['actions']),verified=verified)
                 row.update(teacher_status=status,selected_candidate_id=cid,verification=verified)
                 if status!='verified_solution':
                     atomic_json(teacher_dir/f'{ordinal:04d}_result.json',row)

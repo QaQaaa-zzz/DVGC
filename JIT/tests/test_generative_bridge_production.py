@@ -89,3 +89,19 @@ def test_v12_teacher_replay_keeps_source_control_in_same_lane():
         return [{**r,'label':int(r['candidate_id']==7)} for r in candidates]
     runner.evaluate=evaluate
     assert runner.replay_teacher(0,rows,np.zeros((32,16,4)),7)['candidate_id']==7
+
+
+def test_reduced_teacher_replay_keeps_all_17_lanes_and_source_control(tmp_path):
+    import numpy as np
+    from jit_dvgc.generative_bridge.production import ProductionRunner
+    runner=ProductionRunner.__new__(ProductionRunner);runner.root=tmp_path
+    runner.spec={'teacher_layout':'source_control_in_candidate_batch','teacher_colored_noise_candidates':0}
+    rows=[{'candidate_id':i,'label':int(i==7)} for i in range(17)]
+    def evaluate(name,candidates,*,prefixes,source_only):
+        assert [r['candidate_id'] for r in candidates]==list(range(17))
+        assert prefixes.shape==(17,16,4)
+        assert source_only.tolist()==[True]+[False]*16
+        return rows
+    runner.evaluate=evaluate
+    selected=runner.replay_teacher(0,rows,np.zeros((17,16,4)),7,search_results=rows)
+    assert selected['label']==1 and selected['candidate_id']==7

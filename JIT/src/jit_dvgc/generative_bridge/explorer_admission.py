@@ -29,7 +29,7 @@ def validate_collection_options(spec):
             raise ValueError('neighborhood must be frozen before current collection')
     if (not isinstance(cfg,dict) or not isinstance(cfg.get('run_id'),str) or not cfg['run_id']
         or not isinstance(cfg.get('collection_id'),str) or not cfg['collection_id']
-        or cfg.get('round')!=spec.get('round_index') or cfg.get('uniform_episode_fraction')!=.2
+        or cfg.get('round')!=spec.get('round_index') or cfg.get('uniform_episode_fraction') not in (0.,.2)
         or len(cfg.get('episode_ids',[]))!=spec.get('num_envs') or not cfg['episode_ids']):
         raise ValueError('invalid current-round explorer lineage/mixture')
     if not spec.get('explorer_checkpoint') and spec.get('explorer_initialization')!={'mode':'symmetric','latent_std':.6}:
@@ -52,7 +52,7 @@ def collection_mixture(spec):
     registry=EpisodeKeyRegistry();learned=[];draws=[]
     for i in cfg['episode_ids']:
         key=registry.claim(cfg['master_seed'],EXPLORER_NAMESPACE,cfg['round'],i,'condition')
-        learned.append(not bool(jax.random.bernoulli(key,.2)))
+        learned.append(not bool(jax.random.bernoulli(key,float(cfg['uniform_episode_fraction']))))
         key=registry.claim(cfg['master_seed'],EXPLORER_NAMESPACE,cfg['round'],i,'pulse')
         draws.append(np.asarray(requested_draws(key)))
     return np.asarray(learned,bool),np.stack(draws)
@@ -95,7 +95,7 @@ def validate_admission(spec,receipt,tape,actual_identity):
     cfg=validate_collection_options(spec)
     if cfg is None:raise ValueError('mixture tape requires explicit current-round admission')
     for key in ('run_id','round','collection_id','master_seed','episode_ids',
-                'behavior_actor_sha256','behavior_normalizer_sha256'):
+                'behavior_actor_sha256','behavior_normalizer_sha256','uniform_episode_fraction'):
         if key not in cfg or cfg[key]!=receipt.get(key):raise ValueError('explorer lineage mismatch: '+key)
     if receipt.get('fresh_collection') is not True:raise ValueError('historical root replay is forbidden')
     for key in ('neighborhood','neighborhood_map_sha256'):
@@ -105,6 +105,8 @@ def validate_admission(spec,receipt,tape,actual_identity):
     modes=receipt['episode_modes']
     if len(modes)!=spec['num_envs'] or any(m not in ('learned','uniform') for m in modes):
         raise ValueError('invalid per-episode explorer modes')
+    if cfg['uniform_episode_fraction']==0. and 'uniform' in modes:
+        raise ValueError('uniform episodes forbidden by learned-only collection protocol')
     mask=np.asarray(tape['mask'],bool);prefix=np.asarray(tape['prefix_mask'],bool)
     expected=mask & prefix & np.asarray([m=='learned' for m in modes])[None,:]
     learned=np.broadcast_to(np.asarray([m=='learned' for m in modes]),mask.shape)

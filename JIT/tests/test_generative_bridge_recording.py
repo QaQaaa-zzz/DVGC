@@ -69,3 +69,13 @@ def test_evaluation_provenance_cannot_be_replaced_by_metadata(tmp_path):
     for change in [{'model_sha256':'wrong'},{'action_origin':'bridge_prefix'},
                    {'outcome':'first_valid_landing'},{'recording_schema':None}]:
         with pytest.raises(ValueError):m.trace_from_evaluation({**attempt,**change},t['metadata'])
+
+
+def test_no_colored_pool_keeps_source_and_all_generated_proposals():
+    from jit_dvgc.generative_bridge.proposals import make_candidate_pool
+    generated=np.linspace(-1,1,16*16*4).reshape(16,16,4).astype(np.float32)
+    pool=make_candidate_pool('root',np.ones((16,4))*.2,generated,seed=21,colored_noise_candidates=0)
+    assert pool['actions'].shape==(17,16,4)
+    assert pool['kinds']==['source_only']+['diffusion']*16
+    assert pool['colored_raw_draws'].size==0
+    np.testing.assert_array_equal(pool['actions'][1:],generated)

@@ -97,6 +97,7 @@ def prepare_closed_loop(previous,output,repository,*,neighborhood=False):
         prior_physics_charged=read(previous/'status.json')['charged_interactions'],
         protocol_version='1.2_experimental',initial_bundle=bundle,baseline_frozen_policy=parent['source_frozen_policy'],
         source_runtime=parent['source_runtime'],rounds=2,seed=8100802,
+        uniform_episode_fraction=0.,teacher_colored_noise_candidates=0,
         budgets=dict(max_physics=3300000,per_round_physics=1500000,max_wall_seconds=86400,
                      student_transitions=256000,generator_updates=4000,explorer_epochs_per_round=4),
         stress_panel=stress_conditions(),experimental_adoption=True,formal_adoption=False,
@@ -146,6 +147,7 @@ def prepare_continuation(previous,output,repository,*,rounds,continuous=False):
         implementation_commit=implementation_identity(repo),implementation_files=implementation_files(repo),
         rounds=rounds,round_offset=bundle['round'],budgets=continuation_budget(rounds),
         authorization='user_requested_additional_rounds',continuation_parent=str(old),
+        uniform_episode_fraction=0.,teacher_colored_noise_candidates=0,
         continuation_bundle={'path':str(bundle_path),'sha256':file_sha(bundle_path)},
         reference_panels=panels,minimum_free_disk_bytes=20*1024**3,
         prior_physics_charged=status['lifetime_physics_charged'])
@@ -268,7 +270,7 @@ class ClosedLoopRound(CampaignRunner):
             'value_coefficient':1.,'entropy_coefficient':.01,'epochs':4,
             'full_episode_rollout':False,'delta_limit':[.25]*4,'pulse_start_schedule':[0],
             'explorer_admission_v1_2':dict(run_id=self.spec['series_id'],collection_id=f'round_{index}',
-                master_seed=self.spec['seed'],round=index,episode_ids=list(range(128)),uniform_episode_fraction=.2)}
+                master_seed=self.spec['seed'],round=index,episode_ids=list(range(128)),uniform_episode_fraction=self.spec.get('uniform_episode_fraction',.2))}
         if self.spec.get('neighborhood') is not None:
             from .neighborhood_history import freeze_history
             path=self.root/'neighborhood_map.json'
@@ -500,7 +502,10 @@ def _run_closed_loop(plan):
                     series_id=root.name,continuation=previous,baseline_identity=identity,
                     generator_reference_frozen_policy={'path':plan['baseline_frozen_policy'],'sha256':file_sha(plan['baseline_frozen_policy'])},
                     retention_reference_frozen_policy=plan['baseline_frozen_policy'],retention_ref=phase['retention_ref'],
-                    teacher_layout='source_control_in_32_world_batch',locks=locks,
+                    teacher_layout=('source_control_in_candidate_batch' if plan.get('teacher_colored_noise_candidates')==0
+                                    else 'source_control_in_32_world_batch'),locks=locks,
+                    uniform_episode_fraction=plan.get('uniform_episode_fraction',.2),
+                    teacher_colored_noise_candidates=plan.get('teacher_colored_noise_candidates',15),
                     budgets={'max_physics':min(remaining_physics,plan['budgets']['per_round_physics']+(230400 if index==1 else 0)),
                              'max_supervised_updates':2000,'max_wall_seconds':plan['budgets']['max_wall_seconds']-(time.time()-started)})
                 if plan.get('neighborhood') is not None:spec['neighborhood']=plan['neighborhood']
