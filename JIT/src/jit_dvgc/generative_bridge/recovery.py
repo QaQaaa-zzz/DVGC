@@ -205,6 +205,8 @@ def prepare_campaign_recovery(previous,output,repository,*,max_wall_seconds=8640
     from .artifacts import validate_generator_receipt,load_corpus
     previous=Path(previous).resolve();output=Path(output).resolve()
     old=read(previous/'production.json');status=read(previous/'status.json')
+    if status.get('error')=="RuntimeError('student_A: failed')":
+        return prepare_student_start_recovery(previous,output,repository)
     if old.get('schema')!='jit_bridge_campaign_v1_2' or status.get('phase')!='failed':
         raise ValueError('requires failed v1.2 campaign')
     if 'teacher replay invalid' not in status.get('error','') or (previous/'students').exists() or (previous/'warmup').exists():
@@ -305,4 +307,59 @@ def prepare_campaign_recovery(previous,output,repository,*,max_wall_seconds=8640
         reused_G_updates=gen['updates'],new_pretraining_updates=0,new_physics=0,
         source_trajectories_verified=len(verified)))
     atomic_json(output/'status.json',{'phase':'prepared','charged_interactions':lifetime_spent,'supervised_updates':20000})
+    return spec
+
+
+def prepare_student_start_recovery(previous,output,repository):
+    """Reuse completed source/BC stages after evaluator initialization failed at zero PPO steps."""
+    from .production import implementation_identity,implementation_files,read_teacher_traces
+    previous=Path(previous).resolve();output=Path(output).resolve()
+    old=read(previous/'production.json');status=read(previous/'status.json')
+    if old.get('schema')!='jit_bridge_campaign_v1_2' or status.get('phase')!='failed' or status.get('error')!="RuntimeError('student_A: failed')":
+        raise ValueError('requires diagnosed pre-update student_A failure')
+    training=previous/'students/A/training'/f'{previous.name}_A'
+    state=read(training/'status.json');probe=read(training/'learning_probe.json')
+    if (state.get('environment_transitions')!=0 or probe.get('executed_loss_calls')!=0
+        or 'declared PPO slot_ids' not in state.get('reason','')
+        or any((training/'checkpoints').glob('transition_*'))):
+        raise ValueError('student has executed work or different failure; no fresh restart allowed')
+    deadline=read(previous/'started.json')['started_unix']+old['budgets']['max_wall_seconds']
+    remaining=deadline-time.time()
+    if remaining<=0:raise TimeoutError('existing recovery wall window exhausted')
+    if read(previous/'stages/round_contract.json')!={'contract':old,'sha256':digest(old)}:
+        raise ValueError('old campaign contract drift')
+    costs=read(previous/'costs.json')
+    if sum(c['charged_interactions'] for c in costs)>=old['budgets']['max_physics']:
+        raise ValueError('lifetime budget exhausted')
+    if [c['stage'] for c in costs if c.get('phase','completed')!='completed']!=['student_A']:
+        raise ValueError('unexpected incomplete costs')
+    locks=dict(old['locks']);stages={}
+    for p,h in locks.items():
+        if file_sha(p)!=h:raise ValueError('inherited input drift: '+p)
+    for name in ('fresh_source_phase','warmup'):
+        path=previous/'stages'/(name+'.json');record=read(path)
+        if record['output_sha256']!=digest(record['result']):raise ValueError('stage output drift')
+        stages[name]={'path':str(path),'sha256':file_sha(path)};locks[str(path)]=file_sha(path)
+    source=read(stages['fresh_source_phase']['path'])['result']
+    read_teacher_traces(source['teachers'])
+    for ref in (source['demo_manifest'],source['retention_ref'],read(stages['warmup']['path'])['result']):
+        if file_sha(ref['path'])!=ref['sha256']:raise ValueError('reused payload drift')
+        locks[ref['path']]=ref['sha256']
+    for path in (training/'status.json',training/'learning_probe.json',previous/'status.json',previous/'costs.json'):
+        locks[str(path)]=file_sha(path)
+    spec=deepcopy(old);spec.update(output=str(output),repository=str(Path(repository).resolve()),
+        implementation_commit=implementation_identity(repository),implementation_files=implementation_files(repository),
+        locks=locks,recovery={'previous':str(previous),'previous_contract_identity':digest(old),'stages':stages},
+        stage_plan=str(output/'stage_plan.json'))
+    spec['budgets']['max_wall_seconds']=remaining
+    output.mkdir(parents=True,exist_ok=False)
+    atomic_json(output/'panels.json',source['panels']);atomic_json(output/'stage_plan.json',read(old['stage_plan']))
+    atomic_json(output/'costs.json',costs);atomic_json(output/'production.json',spec)
+    atomic_json(output/'status.json',{'phase':'prepared','stage':'student_A','inherited_updates':22000})
+    atomic_json(output/'recovery_audit.json',dict(previous=str(previous),original_deadline_unix=deadline,
+        restart_boundary='student_A before any rollout/loss; weights-only P0, not optimizer resume',
+        reused_stages=list(stages),reused_teacher_roots=len([v for v in source['teachers'].values() if v['teacher_status']=='verified_solution']),
+        inherited_physics_charged_or_reserved=sum(c['charged_interactions'] for c in costs),
+        total_physics_cap=old['budgets']['max_physics'],failed_student_reservation_retained=136000,
+        inherited_supervised_updates=sum(c.get('charged_updates',0) for c in costs),new_pretrain_or_warmup_updates=0))
     return spec

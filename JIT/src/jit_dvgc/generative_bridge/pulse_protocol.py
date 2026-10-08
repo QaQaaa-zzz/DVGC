@@ -3,7 +3,7 @@ import hashlib
 import numpy as np
 
 # Fixed namespaces are part of the protocol, never Python's randomized hash().
-NAMESPACES = {'train': 0x54524149, 'student_ppo': 0x5350504F, 'student_dev': 0x53544456,
+NAMESPACES = {'train': 0x54524149, 'student_ppo': 0x5350504F, 'student_eval': 0x53504556, 'student_dev': 0x53544456,
               'generator_dev': 0x47454456, 'solver_dev': 0x534F4456,
               'test': 0x54455354, 'pulse': 0x50554C53, 'policy': 0x504F4C49,
               'generator': 0x47454E45, 'minibatch': 0x4D494E49,

@@ -80,3 +80,17 @@ def test_ppo_key_matches_declared_lineage_and_rejects_duplicate_slots():
     env = wrap_for_jit_training(FakeEnv([7,8]), episode_length=100)
     with pytest.raises(ValueError, match='slot_ids'):
         env.reset(jax.random.split(jax.random.PRNGKey(0),1))
+
+
+def test_brax_evaluator_uses_distinct_eight_lane_identity_without_mutating_training():
+    from jit_dvgc.ppo import logical_pulse_evaluation_env
+    original=FakeEnv(list(range(128)))
+    evaluation=logical_pulse_evaluation_env(original,8)
+    train=wrap_for_jit_training(original,episode_length=100)
+    evaluate=wrap_for_jit_training(evaluation,episode_length=100)
+    training_state=jax.jit(train.reset)(jax.random.split(jax.random.PRNGKey(0),128))
+    eval_state=jax.jit(evaluate.reset)(jax.random.split(jax.random.PRNGKey(1),8))
+    assert training_state.done.shape==(128,) and eval_state.done.shape==(8,)
+    assert original._training_action_pulse['logical_episode_rng']['slot_ids']==list(range(128))
+    assert original._training_action_pulse['logical_episode_rng']['role']=='student_ppo'
+    assert not set(map(tuple,np.asarray(training_state.info['training_pulse_key']))) & set(map(tuple,np.asarray(eval_state.info['training_pulse_key'])))

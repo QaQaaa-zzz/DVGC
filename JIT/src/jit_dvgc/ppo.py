@@ -146,6 +146,23 @@ class _ExposeEpisodeEvidence(wrapper.Wrapper):
         return self._expose(self.env.step(state, action))
 
 
+class _LogicalPulseEvaluationEnv(wrapper.Wrapper):
+    """Separate evaluator RNG declaration; physical environment is unchanged."""
+    def __init__(self, env, num_envs):
+        from copy import deepcopy
+        super().__init__(env)
+        self._training_action_pulse=deepcopy(env._training_action_pulse)
+        self._training_action_pulse['logical_episode_rng'].update(
+            role='student_eval',slot_ids=list(range(num_envs)))
+
+
+def logical_pulse_evaluation_env(env,num_envs):
+    pulse=getattr(env,'_training_action_pulse',None)
+    if pulse is None or pulse.get('logical_episode_rng') is None:return None
+    if type(num_envs) is not int or num_envs<=0:raise ValueError('positive evaluator lane count required')
+    return _LogicalPulseEvaluationEnv(env,num_envs)
+
+
 def wrap_for_jit_training(
     env: Any,
     episode_length: int = 1000,
@@ -304,6 +321,7 @@ def run_phase_u_smoke(
             seed=config.ppo.seed,
             num_evals=config.ppo.num_evals,
             num_eval_envs=config.ppo.num_eval_envs,
+            eval_env=logical_pulse_evaluation_env(env,config.ppo.num_eval_envs),
             deterministic_eval=True,
             log_training_metrics=True,
             progress_fn=progress,

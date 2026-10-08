@@ -20,8 +20,8 @@ def validate_training_episode_protocol(pulse):
         raise ValueError('logical_episode_rng must be an object')
     _uint(protocol['master_seed'], 32, 'master_seed')
     _uint(protocol['round'], 32, 'round')
-    if protocol['role'] != 'student_ppo':
-        raise ValueError('PPO logical episode role must be student_ppo')
+    if protocol['role'] not in ('student_ppo','student_eval'):
+        raise ValueError('PPO logical episode role must be student_ppo or student_eval')
     slots = protocol.get('slot_ids')
     if not isinstance(slots, list) or not slots:
         raise ValueError('explicit PPO slot_ids are required')

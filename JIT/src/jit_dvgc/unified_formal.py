@@ -24,7 +24,7 @@ from .checkpoint import (
 from .constants import ACTION_ORDER, ACTOR_FRAME_FIELDS, ACTOR_TASK_FIELDS
 from .formal_training import FormalRunController, PanelResult, _flatten_finite_metrics
 from .handoff_bank import pytree_sha256
-from .ppo import make_network_factory, wrap_for_jit_training
+from .ppo import make_network_factory, wrap_for_jit_training, logical_pulse_evaluation_env
 from .provenance import (
     InteractionAccounting,
     RunDeclaration,
@@ -582,6 +582,8 @@ def build_unified_formal_trainer_kwargs(
         "run_evals": False,
     }
 
+    evaluation=logical_pulse_evaluation_env(environment,kwargs['num_eval_envs'])
+    if evaluation is not None:kwargs['eval_env']=evaluation
     kl = config.raw.get('kl_control')
     if kl:
         kwargs.update(learning_rate_schedule='ADAPTIVE_KL', desired_kl=kl['target'],
