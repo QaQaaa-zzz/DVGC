@@ -1,0 +1,6 @@
+scope,baseline_seconds,optimized_seconds,accepted,qualification
+corpus_sampling_4096,2.44738,0.032908,True,index build .37417 s excluded
+G_worker_100_updates,62.938640899,43.539510984,True,single paired diagnostic; calibrated FP32
+G_standalone_100_total,20.7378,20.6471,True,no meaningful total gain
+G_standalone_99_warm,4.81375,1.16576,True,excludes startup
+teacher_ABA,60.13162,31.97847,False,different labels and physical work

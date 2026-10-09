@@ -12,18 +12,10 @@ class VerifiedFileCache:
     def __init__(self,max_entries=32768):
         self.max_entries=max_entries
         self.entries=OrderedDict();self.changes=_FileChanges();self.lock=RLock()
-        self.watch_ids={}
         self.stats=dict(hash_bytes=0,reads=0,hits=0)
 
     def _watch(self,path):
-        # Avoid linear scans of all file watches for the large production lock set.
-        old=self.watch_ids.get(path)
-        if old is not None and self.changes.paths.get(old)==path:return True
-        if self.changes.fd<0:return False
-        wd=self.changes.lib.inotify_add_watch(self.changes.fd,os.fsencode(path),0x2|0x4|0x8|0x400|0x800)
-        if wd<0:return False
-        self.changes.paths[wd]=path;self.watch_ids[path]=wd
-        return True
+        return self.changes.watch(path)
 
     def verify(self,path,expected):
         path=str(Path(path).absolute())
@@ -48,9 +40,8 @@ class VerifiedFileCache:
                 if digest!=expected:raise ValueError('locked input hash mismatch: '+path)
             if watched:self.entries[path]=(signature,expected)
             while len(self.entries)>self.max_entries:
-                old,_=self.entries.popitem(last=False);wd=self.watch_ids.pop(old,None)
-                if wd is not None:
-                    self.changes.lib.inotify_rm_watch(self.changes.fd,wd);self.changes.paths.pop(wd,None)
+                old,_=self.entries.popitem(last=False)
+                self.changes.forget(old)
             return expected
 
 

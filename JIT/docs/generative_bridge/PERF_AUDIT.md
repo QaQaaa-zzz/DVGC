@@ -37,3 +37,58 @@ CPU synthetic sampling speedups (~19x) concern sampling only. Lock cache speedup
 concerns repeated validation only. Neither proves whole-round acceleration,
 physical replay equivalence, improved G recovery, or better learning outcomes.
 Bounded GPU results and remaining adoption gates are recorded with benchmark artifacts.
+
+## Bounded results, 2026-10-09
+
+Actual 4482-trace corpus, 4096 fixed-seed draws: legacy sampling 2.44738 s,
+indexed 0.032908 s (74.37x sampling only), index build 0.37417 s. Observations,
+actions, sample provenance and RNG match exactly.
+
+The complete G worker benchmark includes loading, 100 updates, sample logging
+and checkpoint publication: 62.93864 -> 43.53951 s (1.446x, 30.82% less wall).
+All 25600 sample records match. RNG, normalizer and counter match exactly;
+params/EMA/Adam pass the predeclared calibrated FP32 rtol=1e-5, atol=2e-6.
+The initial tighter tolerance failed; repeating the original implementation also
+failed that tolerance (Adam max difference 1.124e-6). The calibrated acceptance
+was frozen before a separate new-seed GPU test. Earlier failures are retained.
+Standalone warm updates improve about 4.13x, but their complete process time
+is 20.7378 -> 20.6471 s: startup dominates. No whole-round speedup is established.
+
+Persistent B1 A->B->A FAILED acceptance. Baseline repeated A success IDs were
+[1,7,13]; persistent repeated A changed from [1,7,13] to [1,5,7,13]. Initial
+observations/actions match, but physical trajectories differ. Even baseline
+repetition is not bitwise identical. Scratch contamination versus intrinsic
+backend nondeterminism remains UNKNOWN. 60.13162 -> 31.97847 s is NOT an
+accepted speedup: charged physical work differs (3757 vs 7089). Production
+requires a hash-bound passed acceptance receipt; B1 is blocked. B4/B8 were not run.
+
+The original 200-round campaign was paused by user request at R33; last complete
+R32 corresponds to 28/200 campaign rounds. Its frozen code and models are unchanged.
+An independent one-round integration uses the original teacher execution path,
+PPO128000 and G2000 from a complete R30 bundle. It is not a continuation of the
+paused campaign and cannot automatically adopt or extend to 200 rounds.
+
+Raw evidence root: `/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008`.
+Subdirectories: `performance_generator_20261009`,
+`performance_generator_baseline_repeat_20261009`,
+`performance_generator_calibrated_20261009`,
+`performance_generator_pipeline_20261009`, `performance_benchmark_20261009_v3`.
+Original failed attempts remain beside these directories.
+
+## Reproduction and rollback
+
+From this repository, use the existing bounded plan without overwriting artifacts:
+
+```bash
+JAX_PLATFORMS=cpu PYTHONPATH=JIT/src /home/qy/mujoco_playground/.venv/bin/python JIT/cli/benchmark_bridge_performance.py --mode prepare --input /home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/performance_benchmark_20261009_v3/plan.json --output /tmp/jit_perf_reproduction
+JAX_PLATFORMS=cpu PYTHONPATH=JIT/src /home/qy/mujoco_playground/.venv/bin/python JIT/cli/run_gated_plan.py --plan /tmp/jit_perf_reproduction/plan.json --output-dir /tmp/jit_perf_reproduction/execution
+```
+
+The cloned plan retains original frozen source identities, bounds and resource
+gates. Choose a fresh output path. This reproduces the diagnostic, not production
+adoption. Rollback uses the original `code_2e296f2` snapshot and original profile;
+no historical model/result or success criterion was overwritten.
+
+Implementation and CPU correctness do not prove physical equivalence or improved
+G recovery. Full-round timing, stable repeated end-to-end gain and learning
+effectiveness remain unverified. Unmeasured performance event fields remain null.

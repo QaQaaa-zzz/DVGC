@@ -1,0 +1,55 @@
+{
+  "generator_pipeline": {
+    "passed": true,
+    "sample_provenance_exact": true,
+    "draws": 25600,
+    "updates": 100,
+    "checks": {
+      "ema": {
+        "exact": false,
+        "passed": true,
+        "max_abs": 2.384185791015625e-07
+      },
+      "normalizer": {
+        "exact": true,
+        "passed": true,
+        "max_abs": 0.0
+      },
+      "optimizer": {
+        "exact": false,
+        "passed": true,
+        "max_abs": 1.159787643700838e-06
+      },
+      "params": {
+        "exact": false,
+        "passed": true,
+        "max_abs": 4.76837158203125e-07
+      },
+      "rng": {
+        "exact": true,
+        "passed": true,
+        "max_abs": 0.0
+      },
+      "updates": {
+        "exact": true,
+        "passed": true,
+        "max_abs": 0.0
+      }
+    },
+    "end_to_end_seconds": {
+      "baseline": 62.93864089901035,
+      "optimized": 43.53951098398829
+    },
+    "speedup": 1.445552315049108,
+    "physical_interactions": 0,
+    "formal_adoption": false
+  },
+  "persistent_b1": {
+    "passed": false,
+    "reason": "Repeated A success IDs differ",
+    "production_adoption": false
+  },
+  "full_round_speedup_verified": false,
+  "learning_improvement_verified": false,
+  "raw_evidence_root": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008"
+}

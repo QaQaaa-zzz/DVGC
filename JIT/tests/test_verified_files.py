@@ -18,3 +18,13 @@ def test_replace_inode_and_eviction(tmp_path):
     assert len(c.entries)==1
     p=tmp_path/'a';replacement=tmp_path/'new';replacement.write_bytes(b'b');replacement.replace(p)
     with pytest.raises(ValueError):c.verify(p,hashlib.sha256(b'a').hexdigest())
+
+
+def test_hardlink_alias_change_invalidates_both_even_with_hidden_stat(tmp_path,monkeypatch):
+    import jit_dvgc.generative_bridge.verified_files as module
+    p=tmp_path/'a';q=tmp_path/'b';p.write_bytes(b'abc');os.link(p,q)
+    sha=hashlib.sha256(b'abc').hexdigest();c=VerifiedFileCache()
+    signature=module._signature(p.stat());monkeypatch.setattr(module,'_signature',lambda stat:signature)
+    c.verify(p,sha);c.verify(q,sha);q.write_bytes(b'xyz')
+    with pytest.raises(ValueError):c.verify(p,sha)
+    with pytest.raises(ValueError):c.verify(q,sha)

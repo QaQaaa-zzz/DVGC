@@ -28,22 +28,31 @@ class _FileChanges:
     def __init__(self):
         self.fd = -1
         self.paths = {}
+        self.aliases = {}
+        self.path_watches = {}
         self.lib = ctypes.CDLL(None, use_errno=True)
         if hasattr(self.lib, 'inotify_init1'):
             self.fd = self.lib.inotify_init1(os.O_NONBLOCK | os.O_CLOEXEC)
 
+    def forget(self, path):
+        path=str(path);wd=self.path_watches.pop(path,None)
+        if wd is None:return
+        aliases=self.aliases.get(wd,set());aliases.discard(path)
+        if aliases:self.paths[wd]=next(iter(aliases))
+        else:
+            self.lib.inotify_rm_watch(self.fd,wd)
+            self.aliases.pop(wd,None);self.paths.pop(wd,None)
+
     def watch(self, path):
-        if self.fd < 0:
-            return False
-        # IN_MODIFY, IN_ATTRIB, IN_CLOSE_WRITE, IN_DELETE_SELF, IN_MOVE_SELF.
-        wd = self.lib.inotify_add_watch(self.fd, os.fsencode(path), 0x2 | 0x4 | 0x8 | 0x400 | 0x800)
-        if wd < 0:
-            return False
-        for old_wd, old_path in list(self.paths.items()):
-            if old_path == str(path) and old_wd != wd:
-                self.lib.inotify_rm_watch(self.fd, old_wd)
-                self.paths.pop(old_wd, None)
-        self.paths[wd] = str(path)
+        if self.fd < 0:return False
+        path=str(path)
+        wd=self.lib.inotify_add_watch(self.fd,os.fsencode(path),0x2|0x4|0x8|0x400|0x800)
+        if wd < 0:return False
+        old=self.path_watches.get(path)
+        if old is not None and old!=wd:self.forget(path)
+        self.path_watches[path]=wd
+        self.aliases.setdefault(wd,set()).add(path)
+        self.paths[wd]=path
         return True
 
     def poll(self):
@@ -64,16 +73,17 @@ class _FileChanges:
                 if mask & 0x4000:  # IN_Q_OVERFLOW: no cached signature is trustworthy.
                     return None
                 if wd in self.paths:
-                    changed.add(self.paths[wd])
+                    aliases=self.aliases.get(wd,{self.paths[wd]})
+                    changed.update(aliases)
                     if mask & 0x8000:  # IN_IGNORED
-                        self.paths.pop(wd, None)
+                        for path in aliases:
+                            if self.path_watches.get(path)==wd:self.path_watches.pop(path,None)
+                        self.paths.pop(wd,None);self.aliases.pop(wd,None)
         return changed
 
     def retain(self, paths):
-        for wd, path in list(self.paths.items()):
-            if path not in paths:
-                self.lib.inotify_rm_watch(self.fd, wd)
-                self.paths.pop(wd, None)
+        for path in list(self.path_watches):
+            if path not in paths:self.forget(path)
 
     def __del__(self):
         if self.fd >= 0:

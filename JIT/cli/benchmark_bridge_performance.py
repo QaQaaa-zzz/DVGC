@@ -7,11 +7,25 @@ import time
 
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--mode',choices=('audit','evaluate','generator'),required=True)
+    p=argparse.ArgumentParser();p.add_argument('--mode',choices=('audit','prepare','evaluate','generator'),required=True)
     p.add_argument('--input',required=True);p.add_argument('--output',required=True)
     p.add_argument('--persistent',action='store_true');args=p.parse_args()
     root=Path(args.output);root.mkdir(parents=True,exist_ok=False)
     from jit_dvgc.generative_bridge.protocol import atomic_json
+    if args.mode=='prepare':
+        from jit_dvgc.generative_bridge.contracts import file_sha
+        plan=json.loads(Path(args.input).read_text())
+        if plan.get('schema')!='jit_gated_plan_v1':raise ValueError('gated diagnostic plan required')
+        for stage in plan['stages']:
+            argv=stage['argv']
+            if '--output' not in argv or '--mode' not in argv:
+                raise ValueError('prepare only clones bounded benchmark CLI plans')
+            argv[argv.index('--output')+1]=str((root/stage['name']).resolve())
+            stage['env']['JIT_PERFORMANCE_FILE']=str((root/'performance.jsonl').resolve())
+        plan['input_files'][str(Path(args.input).resolve())]=file_sha(args.input)
+        atomic_json(root/'plan.json',plan)
+        print(str(root/'plan.json'))
+        return
     if args.mode=='audit':
         from jit_dvgc.generative_bridge.performance import audit_round
         atomic_json(root/'audit.json',audit_round(args.input));return
