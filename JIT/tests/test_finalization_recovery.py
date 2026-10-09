@@ -6,7 +6,7 @@ def test_only_exact_finalization_abort_can_be_recovered():
     status={'phase':'failed','stages':[{'phase':'failed','returncode':-6}]}
     log='Fatal Python error: PyInterpreterState_Delete: remaining subinterpreters\nPython runtime state: finalizing'
     validate_exit(status,log)
-    for code in (0,1,-9):
+    for code in (0,1,-9,-11):
         with pytest.raises(ValueError):validate_exit({'phase':'failed','stages':[{'returncode':code}]},log)
     with pytest.raises(ValueError):validate_exit(status,'segmentation fault')
     with pytest.raises(ValueError):validate_exit(status,log.replace('finalizing','initialized'))

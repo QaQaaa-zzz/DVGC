@@ -71,6 +71,9 @@ def main():
         from jit_dvgc.generative_bridge.production import start_notifications
         start_notifications(spec);CampaignRunner(spec).run();return
     if args.command=='worker':
+        # Native faults must preserve Python thread stacks in the gated worker log.
+        import faulthandler
+        faulthandler.enable(all_threads=True)
         from jit_dvgc.generative_bridge.worker import run_generator,run_warmup
         if spec.get('mode')=='incremental' and spec.get('generator_update_policy')=='last_valid':
             from jit_dvgc.generative_bridge.worker_lifecycle import run_generator_process

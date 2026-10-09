@@ -200,3 +200,20 @@ physical interactions. Duplicate coordinates across different sources are an
 error, rather than silently merging different attempts. Historical files remain
 unchanged. R3 starts this learner accounting lineage at zero; earlier historical
 training is not fabricated onto that axis.
+
+### R31 native fault (2026-10-09)
+
+R28-R30 completed with the isolated G completion path. R31 instead exited with
+SIGSEGV (-11) during G optimization: the last charged proposal is1168, the last
+saved full state is local update1000 (state age77500), and no completed/result
+receipt exists. This is not eligible for finalization-publication recovery.
+The kernel instruction pointer resolves to CPython's frame evaluator; without a
+crash stack/core, the responsible library or environment cause is UNKNOWN.
+Worker CLI now enables faulthandler before importing/executing workers. A CPU
+SIGSEGV injection verifies that the gated log will contain a Python thread stack;
+20 targeted tests pass. This adds diagnostics, not a proven crash fix.
+A return to the complete R30 bundle while still finishing200 rounds requires an
+explicit additional128000 student transitions and2000 G update budget. The
+unapproved retry proposal and original failure evidence are preserved under
+bridge_four_onsets_continuous_20261008/segfault_diagnostic_20261009_R31. No retry
+was launched; original failed artifacts and costs remain unchanged.
