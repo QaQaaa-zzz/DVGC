@@ -45,3 +45,8 @@ B4/B8 are deferred. Full-round integration and production adoption remain pendin
 Follow-up: six-request physical repeatability completed; labels match on this
 repeat but old failure retained. User authorized an isolated experimental B1
 trial; scoped receipt cannot extend to next round. Formal acceptance remains unproved.
+
+- [x] One explicitly authorized B1 integration completed, complete bundle verified.
+- [x] Independent review, CPU regressions and remote code/report delivery.
+- [ ] Formal physical equivalence and learning benefit (not claimed).
+Original200 remains paused; no second trial or long campaign auto-launch.

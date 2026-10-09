@@ -1,0 +1,36 @@
+{
+  "complete_bundle_verified": true,
+  "round": 31,
+  "reward_points": 40,
+  "reward_last": [
+    1791537954.5691123,
+    3712000,
+    703.9923095703125
+  ],
+  "formal_physical_equivalence": false,
+  "learning_improvement_verified": false,
+  "phase": "completed",
+  "completed_rounds": 1,
+  "declared_rounds": 1,
+  "implementation_commit": "1a4d3ef",
+  "wall_seconds": 862.4359781742096,
+  "historical_wall_seconds": 3997.1722655296326,
+  "wall_reduction_fraction": 0.7842384763820192,
+  "physical_interactions": 345618,
+  "historical_physical_interactions": 332621,
+  "student_transitions": 128000,
+  "generator_updates": 2000,
+  "roots": 32,
+  "search_batches": 31,
+  "replay_batches": 11,
+  "teacher_statuses": {
+    "verified_solution": 10,
+    "replay_rejected": 1,
+    "searched_no_solution": 20,
+    "not_scheduled": 1
+  },
+  "teacher_worker_seconds": 274.3,
+  "generator_worker_seconds": 76.41,
+  "comparison": "observed full-round wall; not controlled equal-work or equal-trajectory comparison",
+  "original200": "paused; no automatic restart"
+}

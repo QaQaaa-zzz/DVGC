@@ -114,3 +114,27 @@ cannot authorize a subsequent round or automatically restart the original200.
 The production physical-acceptance path remains distinct; no passing receipt
 is fabricated from this user authorization. Full search/replay, thresholds,
 replay rejection, RNG mapping and full learner inheritance remain unchanged.
+
+## Completed B1 one-round experimental integration
+
+Frozen code1a4d3ef, performance_b1_trial_0001_20261009, independent complete
+R30->R31: completed1/1, PPO128000, G2000. Published full continuation bundle
+passed resolve_completed_boundary, including artifact identities and learner
+continuation receipts. TensorBoard HTTP reward loaded40 points.
+
+Actual full-round wall862.43598s (14m22s), versus historical original R31
+3997.17227s (66m37s): observed78.42% less wall. Actual charged physics
+345618 vs332621, with different sampled trajectories/outcomes; this is NOT
+a paired equal-work speedup proof. Teacher worker274.30s; G worker76.41s
+versus historical472.77s. Machine load and corpus/outcome differences remain.
+
+All32 roots have result records;31 search batches and11 independent replays
+ran. Outcomes:10 verified_solution,1 replay_rejected,20 searched_no_solution,
+1 not_scheduled. The rejected replay remains rejected; no success threshold
+was relaxed. Worker compiled2 kernels, charged74499 physical steps,36434 active.
+
+Decision: retain the implemented optimization and completed experimental trial.
+Formal trajectory equivalence, repeatable matched-work speedup and improved G
+recovery remain unverified. Previous ABA failure remains in the evidence. The
+original200 campaign stays paused; no automatic extension or checkpoint adoption.
+Raw integration_report.json includes measured counts and caveats.
