@@ -28,7 +28,7 @@ def main():
             for i,path in enumerate(request['specs']):
                 spec=json.loads(Path(path).read_text())
                 rows=json.loads(Path(spec['candidates']).read_text())
-                if len(rows)!=17 or spec.get('role')!='train':
+                if len(rows)!=17 or spec.get('role') not in ('train','TRAIN'):
                     raise ValueError('diagnostic requires 17-lane TRAIN roots')
                 if charged+spec['budget']>request['max_interactions']:raise ValueError('diagnostic reservation exhausted')
                 t=time.perf_counter();out=root/f'request_{i:03d}'
