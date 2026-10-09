@@ -35,6 +35,7 @@ class PersistentTeacherRunner(ProductionRunner):
 def dispatch_teacher(parent,incumbent):
     if parent.spec.get('teacher_layout')!='source_control_in_candidate_batch' or parent.spec.get('teacher_colored_noise_candidates')!=0:
         raise ValueError('persistent B1 requires original 17-world candidate layout')
+    validate_teacher_acceptance(parent.spec)
     root=parent.root/'teacher_worker';root.mkdir(exist_ok=False)
     maximum=len(parent.panels['new_roots'])*400*(1+17*2)
     spec={**parent.spec,'output':str(root),'teacher_execution':'worker_internal',
@@ -87,3 +88,17 @@ def run(request):
     except BaseException as exc:
         runner.status('failed',error=repr(exc));raise
     finally:runner.session.close()
+
+
+def validate_teacher_acceptance(spec):
+    """Experimental B1 cannot enter production on a CPU-only or failed audit."""
+    receipt=spec.get('teacher_physical_acceptance')
+    if not receipt or set(receipt)!={'path','sha256'}:
+        raise ValueError('persistent B1 requires a passed physical acceptance receipt')
+    if file_sha(receipt['path'])!=receipt['sha256']:raise ValueError('teacher acceptance changed')
+    report=read(receipt['path'])
+    if (report.get('schema')!='jit_b1_physical_acceptance_v1'
+        or report.get('implementation_commit')!=spec['implementation_commit']
+        or any(report.get(k) is not True for k in ('aba_passed','baseline_comparison_passed',
+                  'full_search_replay_passed','rng_mapping_passed'))):
+        raise ValueError('persistent B1 physical acceptance missing or failed')

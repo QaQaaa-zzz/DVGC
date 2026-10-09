@@ -14,6 +14,7 @@ from pathlib import Path
 from threading import RLock
 from types import MappingProxyType
 import numpy as np
+from .performance import measure
 
 TRACE_ARRAY_SCHEMA = 'jit_trace_arrays_npz_v1'
 
@@ -128,7 +129,7 @@ class VerifiedTraceCache:
                 arrays = self._entries[key][0]
                 self._entries.move_to_end(key)
             else:
-                with np.load(io.BytesIO(payload), allow_pickle=False) as raw:
+                with measure('npz_read_decompress',input_bytes=len(payload),cache_hit=False), np.load(io.BytesIO(payload), allow_pickle=False) as raw:
                     arrays = {}
                     for name in raw.files:
                         value = raw[name]

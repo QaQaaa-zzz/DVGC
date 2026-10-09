@@ -1,4 +1,5 @@
 """JSON receipt adapters for corpus and bounded offline generator stages."""
+from .performance import timed
 import json
 import os
 import tempfile
@@ -10,6 +11,7 @@ from .protocol import atomic_json
 from .data import validate_trace,trajectory_identity
 
 
+@timed('corpus_write')
 def save_corpus(corpus,path):
     """Publish a corpus manifest, retaining verified historical blob references.
 
@@ -52,6 +54,7 @@ def save_corpus(corpus,path):
     return {'path':str(target.resolve()),'sha256':file_sha(target),'new_data':corpus['new_data']}
 
 
+@timed('corpus_load_validate')
 def load_corpus(receipt):
     from .verified_trace_cache import TRACE_CACHE
     if file_sha(receipt['path'])!=receipt['sha256']:raise ValueError('corpus receipt hash changed')

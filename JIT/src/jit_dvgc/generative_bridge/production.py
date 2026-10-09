@@ -1,4 +1,5 @@
 """Source-bound, bounded production stages for the opt-in v1.1 pilot."""
+from .performance import timed
 from copy import deepcopy
 import json
 from pathlib import Path
@@ -175,6 +176,7 @@ def actor_traces(results,policy,protocol,splits,*,bootstrap=False):
     return traces
 
 
+@timed('candidate_scoring')
 def teacher_candidate(row,kind,candidate_id,last_action):
     from .teacher import action_delta_cost
     attempt=row['attempts'][0];a=lane_arrays(attempt)
@@ -228,6 +230,8 @@ class ProductionRunner:
             raise ValueError('teacher worker requires dedicated GPU entrypoint')
         if not _teacher_worker and jax.default_backend()!='cpu':raise ValueError('production supervisor must use JAX_PLATFORMS=cpu; GPU work belongs to gated children')
         self.spec=manifest;self.root=Path(manifest['output']);self.start=time.monotonic()
+        import os
+        os.environ['JIT_PERFORMANCE_FILE']=str(self.root/'performance.jsonl')
         self.retry_generator=False;self.active_teacher_root=None;self.teacher_in_progress=False
         self.manifest_sha256=file_sha(self.root/'production.json')
         started=self.root/'started.json'
@@ -498,10 +502,13 @@ class ProductionRunner:
         from ..unified_envelope_snapshot import load_unified_envelope_snapshot
         import jax
         import jax.numpy as jp
-        net,template,identity=generator_template(generator_reference(self.spec),self.spec['seed'])
-        state=restore_state(Path(incumbent['checkpoint_manifest']).parent,template,identity)
+        from .performance import measure
+        with measure('model_actor_generator_load',backend=jax.default_backend(),component='generator'):
+            net,template,identity=generator_template(generator_reference(self.spec),self.spec['seed'])
+            state=restore_state(Path(incumbent['checkpoint_manifest']).parent,template,identity)
         generation=jax.jit(lambda observations,noise:ddim_sample(
             lambda x,o,k:net.apply(state['ema'],x,o,k),observations,noise)) if getattr(self,'persistent_teacher',False) else None
+        generation_compiled=None
         self.teacher_in_progress=True
         source_results=self.evaluate('teacher_source',self.panels['new_roots'])
         output={};teacher_dir=self.root/'teachers';teacher_dir.mkdir(exist_ok=True)
@@ -528,8 +535,11 @@ class ProductionRunner:
             noise=np.stack([np.random.default_rng(stable_seed(self.spec['seed'],rid,cid)).normal(size=(16,4)) for cid in range(1,17)]).astype(np.float32)
             normalized=(jp.asarray(np.repeat(obs[None],16,axis=0))-state['normalizer']['mean'])/state['normalizer']['std']
             from .performance import measure
+            if generation is not None and generation_compiled is None:
+                with measure('ddim_compile',backend=jax.default_backend(),batch_size=16):
+                    generation_compiled=generation.lower(normalized,jp.asarray(noise)).compile()
             with measure('ddim_generation',backend=jax.default_backend(),root=rid,batch_size=16):
-                generated=jax.device_get(generation(normalized,jp.asarray(noise)) if generation is not None
+                generated=jax.device_get(generation_compiled(normalized,jp.asarray(noise)) if generation is not None
                     else ddim_sample(lambda x,o,k:net.apply(state['ema'],x,o,k),normalized,jp.asarray(noise)))
             pool=make_candidate_pool(rid,actual['normalized_action_executed'][:16],generated,seed=self.spec['seed'],
                 colored_noise_candidates=self.spec.get('teacher_colored_noise_candidates',15))

@@ -19,3 +19,10 @@ def test_rng_and_actor_changes_do_not_reuse_kernel():
     key=kernel_identity(spec,policy,17,True,None,True)
     assert key!=kernel_identity(spec,{**policy,'actor_sha256':'b'},17,True,None,True)
     assert key!=kernel_identity({**spec,'suffix_rng_indices':list(reversed(range(17)))},policy,17,True,None,True)
+
+
+def test_unverified_persistent_worker_cannot_be_adopted():
+    import pytest
+    from jit_dvgc.generative_bridge.teacher_worker import validate_teacher_acceptance
+    with pytest.raises(ValueError,match='physical acceptance'):
+        validate_teacher_acceptance({'implementation_commit':'example'})

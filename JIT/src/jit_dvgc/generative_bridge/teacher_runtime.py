@@ -26,7 +26,7 @@ class TeacherEvaluationSession:
             with measure('jax_trace_lower_compile',backend='gpu'):
                 self.kernels[key]=jax.jit(function).lower(*args).compile()
             self.compile_count+=1
-        with measure('warm_rollout',backend='gpu',cache_hit=hit):
+        with measure('warm_rollout' if hit else 'first_rollout',backend='gpu',cache_hit=hit):
             return jax.device_get(self.kernels[key](*args))
 
     def close(self):

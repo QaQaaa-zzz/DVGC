@@ -109,7 +109,10 @@ def make_train_step(predict,*,learning_rate):
         proposed={**state,'params':params,'ema':ema,'optimizer':optstate,'rng':rng,
                   'updates':state['updates']+1}
         # Gradients and complete state stay on device; no buffer donation on rejection.
-        return proposed,(finite_device((proposed,value,grad)),value)
+        # Keep the original optimizer kernel outputs so the safety reduction
+        # does not change its fusion/rounding graph. Gradients remain on device.
+        return proposed,value,grad
+    proposal_guard=jax.jit(lambda proposed,value,grad:finite_device((proposed,value,grad)))
     def step(state,observations,actions):
         if np.shape(observations)!=(len(actions),76) or np.shape(actions)[1:]!=(16,4):
             raise ValueError('generator batch shape mismatch')
@@ -122,8 +125,8 @@ def make_train_step(predict,*,learning_rate):
         # This event includes the fused proposal-finiteness reduction.
         with measure('forward_backward_optimizer',backend=jax.default_backend(),batch_size=len(actions),
                      includes_proposal_guard=True,device_to_host_bytes=5):
-            proposed,checks=propose(state,observations,actions)
-            finite,value=jax.device_get(checks)
+            proposed,value,grad=propose(state,observations,actions)
+            finite,value=jax.device_get((proposal_guard(proposed,value,grad),value))
         if not finite:raise FloatingPointError('nonfinite generator proposal rejected')
         return proposed,float(value)
     return step

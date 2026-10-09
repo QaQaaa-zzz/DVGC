@@ -443,7 +443,10 @@ def evaluate(spec, output, *, session=None):
         subset=[r for r in rows if (spec.get('full_matrix',False) or r['label']!=1) and not r.get('prefix_terminal',False) and not any(a['policy']==name for a in r['attempts'])]
         if not subset:continue
         stage_start=time.monotonic()
-        env,policy,_=suffix._runtime(name)
+        from .generative_bridge.performance import measure,record_event
+        import os
+        with measure('model_actor_generator_load',backend='gpu',stage=name):
+            env,policy,_=suffix._runtime(name)
         actual_policy=suffix.members[name]['policy']
         if spec.get('warmup_initializer') is not None:
             policy,actual_policy=warmup_evaluation_policy(env,actual_policy,spec['warmup_initializer'])
@@ -457,6 +460,7 @@ def evaluate(spec, output, *, session=None):
         if record_preobs:
             env._training_action_pulse = None
         env._reward_mode=spec.get('reward_mode',getattr(env,'_reward_mode','phase_recovery'))
+        restore_wall=time.time()
         restored=[]
         for r in subset:
             snap=load_unified_envelope_snapshot(Path(r['snapshot']))
@@ -479,6 +483,8 @@ def evaluate(spec, output, *, session=None):
         if charged+count*horizon>spec['budget']:raise RuntimeError('insufficient declared suffix reservation')
         write(output/'status.json',dict(phase='running',policy=name,charged_interactions=charged,reserved_attempt_interactions=count*horizon))
         restore_ready=time.monotonic()
+        record_event(os.environ.get('JIT_PERFORMANCE_FILE'),'snapshot_read_and_restore',restore_wall,
+            restore_ready-runtime_ready,backend='gpu',batch_size=count,stage=name)
         if bridge_plan is not None:
             bridge_prefixes,bridge_source_only=map(jp.asarray,bridge_plan)
             if len(subset)!=len(rows):raise ValueError('bridge requires all candidates in one frozen-policy batch')

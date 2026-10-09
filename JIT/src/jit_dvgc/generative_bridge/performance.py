@@ -76,3 +76,14 @@ def audit_round(root):
         outside_child_seconds=sum(b-a for a,b in gaps),child_intervals=union,
         outside_intervals=gaps,stages=stages,
         attribution='Uninstrumented historical gaps have unknown internal causes.')
+
+
+def timed(event):
+    """Measure a host operation without adding device completion barriers."""
+    from functools import wraps
+    def decorate(function):
+        @wraps(function)
+        def wrapped(*args,**kwargs):
+            with measure(event):return function(*args,**kwargs)
+        return wrapped
+    return decorate
