@@ -14,7 +14,7 @@
 
 ![训练奖励与优化诊断](results/kd5/training_comparison.png)
 
-[高度、姿态、每步及累计奖励](results/kd5/paired_diagnostics.png)。三条最终轨迹均在 PhysX 中评估，Source 9904128 表示未经目标域续训的源策略，不表示该曲线来自 MJX。蓝虚线参考仅是从初始位置以 2 m/s 前进的几何参考，不是可行性或奖励目标更改。
+[高度、姿态、每步及累计奖励](results/kd5/paired_diagnostics.png)。三条最终轨迹均在 PhysX 中评估，Source 9904128 表示未经目标域续训的源策略，不表示该曲线来自 MJX。黑色虚线参考仅是从初始位置以 2 m/s 前进的几何参考，不是可行性或奖励目标更改。
 
 ## 模型与详细参数
 
