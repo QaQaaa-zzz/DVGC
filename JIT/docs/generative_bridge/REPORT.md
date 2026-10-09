@@ -173,3 +173,30 @@ recovery_0002在第二个老师根失败：选中候选6搜索和重放均成功
 新增recover-v12只迁移经证据验证、学生尚未开始的这一失败路径。校验旧合同/数据轨迹/G/开发夹具/教师凭证，复用已完成采集、G update_20000、第一条有效教案、旧search/replay阶段；旧失败记录不修改。真实CPU恢复预检已抵达teacher_0002前的首次新GPU请求，旧冲突根隔离、旧教案保留；新增物理与G更新均0。185项相关CPU回归通过（30.47秒）；CLI数值预算兼容修正后18项相关回归通过（3.00秒），测试集不相加。
 
 当前执行recovery_0003/campaign，冻结代码d26af57。已实际进入teacher_0002。继承物理计费/预留541504，全部尝试总上限4421600、剩余3880096；继承G20000，余G增量2000、BC2000，三臂PPO各128000未改。原窗口已过期，用户本次明确续跑授权下重新声明24小时窗口；历史成本不清零。TensorBoard6021独立新运行目录，不把继承G日志冒充新更新；通知心跳正常。学生尚未开始，GPU后续/采用/性能结果待运行。
+
+## 2026-10-09 worker completion and continuous metrics
+
+The last-valid incremental G worker can finish training and write its final
+state, then abort inside CPython finalization with `remaining subinterpreters`.
+The CLI now uses an isolated-process completion path: normal worker return,
+async-effect barrier, full checkpoint/parent/update/billing checks, filesystem
+sync, an explicit `process_commit.json`, then process exit without native Python
+teardown. Failures before commit propagate. This contains the observed teardown
+failure; it does not establish which native library caused it.
+
+`finalization_recovery.recover_finalization` is an explicit, narrow metadata
+publication recovery. It accepts only the diagnosed final G shutdown signature,
+validates the same-round stages and full learner/G state, retains all original
+failed artifacts and billed costs, and creates a new publication-only container.
+It does not rerun physics or optimization and cannot be passed to the training
+runner. A continuation inherits only its audited whole-round bundle.
+
+`export_tensorboard.py` accepts distinct source `name` and optional shared `run`,
+plus nonnegative `step_offset` and optional `step_offset_receipt` pointing to
+the actual learner initialization field. A missing future receipt defers export;
+an unequal or noninteger offset is rejected. The cumulative student axis is local training
+transitions plus the saved learner initialization offset; it is not total
+physical interactions. Duplicate coordinates across different sources are an
+error, rather than silently merging different attempts. Historical files remain
+unchanged. R3 starts this learner accounting lineage at zero; earlier historical
+training is not fabricated onto that axis.

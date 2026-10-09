@@ -58,3 +58,28 @@ A0 reserves 1,600 physical steps. A1 reserves 1,820,000; A2 reserves 2,600,000 i
 A1 includes a separately drawn 64-episode generator development set, three acquisition steps outside the inherited 400-step suffix budget, fresh two-phase nominal reset support (<=80,400), teacher source rechecks and smoke. These are reserved explicitly before A1 begins.
 
 Validation snapshot: 170 CPU tests passed; source action parity64/64 exact. Separate A/B/C config/trainer integration checks passed. GPU nominal queued at a0_nominal (no physical execution yet); remaining validation is not claimed complete. Source_phase bootstrapG stays cold; StageB learning-explorer stage remains disabled.
+
+## 2026-10-09 finite continuation repair and training visibility
+
+User authorizes continuing the original 200-round task, preserving every jump
+model, and joining TensorBoard across rounds. Preserve failed original series
+and existing checkpoints. R3-R27 inventory is derived from saved receipts, not
+new physical evaluation.
+
+1. Contain CPython finalization failure only after a last-valid incremental G
+   worker normally returns, full state/lineage/cost validation passes, and files
+   are fsynced. Training exceptions remain failures; the native library root
+   cause remains unknown.
+2. Audit the already executed R27 stages and publish one complete same-round
+   bundle in a new metadata-only recovery container. Public continuation must
+   reject it until all validations finish. Preserve old failed statuses and all
+   charged work; do not rerun the 128000 student transitions or 2000 G updates.
+3. Add grouped TensorBoard runs with offsets bound to learner initialization
+   receipts. Preserve original logs, reject overlapping scalar coordinates, and
+   carry future rounds onto the same cumulative learner-step axis.
+4. Run focused CPU regressions, inspect real saved states, and perform budget
+   dry-run. Continue R28-R204 (177 rounds) only after publication validation, with
+   the original seven-day clock and resource gate. No additional round budget.
+5. Check live HTTP scalars, desktop watcher, model index, Git delivery, and
+   shared research ledger. Software checks and state inheritance are not proof
+   of improved recovery or jumping capability.

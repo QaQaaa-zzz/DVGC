@@ -72,7 +72,12 @@ def main():
         start_notifications(spec);CampaignRunner(spec).run();return
     if args.command=='worker':
         from jit_dvgc.generative_bridge.worker import run_generator,run_warmup
-        (run_warmup if spec.get('mode')=='warmup' else run_generator)(spec);return
+        if spec.get('mode')=='incremental' and spec.get('generator_update_policy')=='last_valid':
+            from jit_dvgc.generative_bridge.worker_lifecycle import run_generator_process
+            run_generator_process(spec)
+        else:
+            (run_warmup if spec.get('mode')=='warmup' else run_generator)(spec)
+        return
     if args.command=='run-pilot':
         if not args.execute or spec.get('schema')!='jit_bridge_bound_production_v1_1' or spec.get('execute') is not True:
             p.error('run-pilot requires --execute and a source-bound production manifest')

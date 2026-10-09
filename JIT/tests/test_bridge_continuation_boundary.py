@@ -149,3 +149,51 @@ def test_orphan_ppo_child_blocks_stopped_parent(tmp_path,monkeypatch):
         with pytest.raises(ValueError,match='worker is still running'):m.resolve_completed_boundary(root,True)
     finally:
         proc.terminate();proc.wait()
+
+
+def test_public_resolver_blocks_pending_publication_until_commit(tmp_path,monkeypatch):
+    m,root,bundle=parent(tmp_path,monkeypatch)
+    pending=root/'publication_pending.json';write(pending,{'phase':'validating'})
+    with pytest.raises(ValueError,match='not committed'):m.resolve_completed_boundary(root)
+    # Private inspection runs every normal validator, but cannot publish.
+    assert m._resolve_completed_boundary(root,pending_root=root)['bundle']==bundle
+    with pytest.raises(ValueError,match='not committed'):m.resolve_completed_boundary(root)
+    pending.unlink()
+    assert m.resolve_completed_boundary(root)['bundle']==bundle
+
+
+def test_pending_ancestor_is_never_bypassed_by_private_child_audit(tmp_path,monkeypatch):
+    m,root,_=parent(tmp_path,monkeypatch)
+    write(root/'publication_pending.json',{})
+    child=tmp_path/'child';write(child/'publication_pending.json',{})
+    write(child/'status.json',{'phase':'failed','completed_rounds':0})
+    write(child/'plan.json',{'rounds':1,'continuation_parent':str(root)})
+    with pytest.raises(ValueError,match='not committed'):
+        m._resolve_completed_boundary(child,True,pending_root=child)
+
+
+def test_private_pending_audit_keeps_semantic_validators(tmp_path,monkeypatch):
+    m,root,_=parent(tmp_path,monkeypatch)
+    write(root/'publication_pending.json',{})
+    write(root/'round_0002/stages/train_student.json',{})
+    with pytest.raises(ValueError,match='stage output identity'):
+        m._resolve_completed_boundary(root,pending_root=root)
+    with pytest.raises(ValueError,match='restricted to requested root'):
+        m._resolve_completed_boundary(root,pending_root=tmp_path)
+
+
+def test_publication_receipt_and_original_failure_are_locked(tmp_path,monkeypatch):
+    m,root,_=parent(tmp_path,monkeypatch)
+    original=tmp_path/'original';old=write(original/'status.json',{'phase':'failed'})
+    plan=json.loads((root/'plan.json').read_text())
+    plan.update(publication_only=True,continuation_parent=str(original));write(root/'plan.json',plan)
+    receipt={'schema':'jit_finalization_publication_recovery_v1','original_execution_phase':'failed',
+             'original_returncode':-6,'new_physics':0,'new_student_transitions':0,'new_generator_updates':0,
+             'original_series':str(original),'locks':{old['path']:old['sha256']}}
+    path=root/'recovery_receipt.json';write(path,receipt)
+    result=m.resolve_completed_boundary(root)
+    assert str(path) in result['locks'] and old['path'] in result['locks']
+    write(path,dict(receipt,schema='unknown'))
+    with pytest.raises(ValueError,match='invalid publication recovery receipt'):m.resolve_completed_boundary(root)
+    write(path,receipt);write(original/'status.json',{'phase':'completed'})
+    with pytest.raises(ValueError,match='hash mismatch'):m.resolve_completed_boundary(root)

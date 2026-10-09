@@ -376,32 +376,43 @@ class ClosedLoopRound(CampaignRunner):
             expected={'model_sha256':self.source['xml_sha256'],'protocol_sha256':self.protocol},splits=self.panels['splits'])
         corpus_receipt=save_corpus(corpus,self.root/'feedback_corpus')
         updated_g=self.generator('incremental',corpus_receipt,previous['dev_fixture'],incumbent=previous['generator'])
-        tail_lineage=list(previous['tail_lineage'])
-        if decision['adopted']:
-            tail_lineage.append(adopt_tail(self.root/'tail_adoption.json',self.spec['baseline_identity'],self.source,student,decision))
-        ledgers={**previous.get('arrival_ledgers',{}),self.source['actor_sha256']:cells}
-        bundle=dict(actor=student if decision['adopted'] else previous['actor'],generator=updated_g,
-            explorer=str(updated_e/'state.msgpack'),explorer_sha256=file_sha(updated_e/'state.msgpack'),
-            corpus=corpus_receipt,demo=phase['demo_manifest'],dev_fixture=previous['dev_fixture'],dev_fixture_sha256=previous['dev_fixture_sha256'],
-            support=str(support),tail_lineage=tail_lineage,arrival_ledgers=ledgers,
-            round=index,acceptance=decision,stress=stress,evaluated_student=student,formal_adopted=False,
-            feedback_counts={k:len(v) for k,v in corpus['groups'].items()},explorer_metrics=e_metrics)
-        if self.spec.get('generator_update_policy')=='last_valid':
-            bundle['generator_lifetime_charged_updates']=updated_g.get('total_charged_updates',self.spec['generator_charged_updates_before'])
-            bundle['generator_charged_updates_scope']=self.spec.get('generator_charged_updates_scope','lifetime')
-        if self.spec.get('continuous_learning'):
-            bundle.update(learner=student['learner'],seed_support=previous['seed_support'])
-        if self.spec.get('neighborhood') is not None:
-            from .neighborhood_history import actor_evidence,teacher_evidence,source_recheck_evidence
-            ancestors={r['root_episode_id'] for r in rows}
-            bundle['neighborhood_history']=(previous['neighborhood_history']+
-                actor_evidence(rows,ancestors,str(aggregate))+
-                actor_evidence(after,ancestors,str(self.root/'evaluations/student_train'))+
-                teacher_evidence(teachers,rows,str(self.root/'teachers'))+
-                source_recheck_evidence(teachers,rows,str(self.root/'teachers')))
+        bundle=assemble_completed_bundle(self.root,self.spec,self.source,self.protocol,
+            student=student,decision=decision,updated_g=updated_g,updated_e=updated_e,
+            corpus_receipt=corpus_receipt,corpus=corpus,phase=phase,support=support,
+            stress=stress,e_metrics=e_metrics,cells=cells,rows=rows,after=after,teachers=teachers,aggregate=aggregate)
         atomic_json(self.root/'current_source.json',bundle)
         self.status('completed',stage='closed_loop_round',training_transitions=128000)
         return bundle
+
+
+def assemble_completed_bundle(root,spec,source,protocol,*,student,decision,updated_g,updated_e,
+        corpus_receipt,corpus,phase,support,stress,e_metrics,cells,rows,after,teachers,aggregate):
+    """Publication metadata only; callers must validate all completed inputs."""
+    previous=spec['continuation'];index=spec['round_index']
+    tail_lineage=list(previous['tail_lineage'])
+    if decision['adopted']:
+        tail_lineage.append(adopt_tail(root/'tail_adoption.json',spec['baseline_identity'],source,student,decision))
+    ledgers={**previous.get('arrival_ledgers',{}),source['actor_sha256']:cells}
+    bundle=dict(actor=student if decision['adopted'] else previous['actor'],generator=updated_g,
+        explorer=str(updated_e/'state.msgpack'),explorer_sha256=file_sha(updated_e/'state.msgpack'),
+        corpus=corpus_receipt,demo=phase['demo_manifest'],dev_fixture=previous['dev_fixture'],dev_fixture_sha256=previous['dev_fixture_sha256'],
+        support=str(support),tail_lineage=tail_lineage,arrival_ledgers=ledgers,
+        round=index,acceptance=decision,stress=stress,evaluated_student=student,formal_adopted=False,
+        feedback_counts={k:len(v) for k,v in corpus['groups'].items()},explorer_metrics=e_metrics)
+    if spec.get('generator_update_policy')=='last_valid':
+        bundle['generator_lifetime_charged_updates']=updated_g.get('total_charged_updates',spec['generator_charged_updates_before'])
+        bundle['generator_charged_updates_scope']=spec.get('generator_charged_updates_scope','lifetime')
+    if spec.get('continuous_learning'):
+        bundle.update(learner=student['learner'],seed_support=previous['seed_support'])
+    if spec.get('neighborhood') is not None:
+        from .neighborhood_history import actor_evidence,teacher_evidence,source_recheck_evidence
+        ancestors={r['root_episode_id'] for r in rows}
+        bundle['neighborhood_history']=(previous['neighborhood_history']+
+            actor_evidence(rows,ancestors,str(aggregate))+
+            actor_evidence(after,ancestors,str(root/'evaluations/student_train'))+
+            teacher_evidence(teachers,rows,str(root/'teachers'))+
+            source_recheck_evidence(teachers,rows,str(root/'teachers')))
+    return bundle
 
 
 def retain_pending(current,previous):
@@ -424,6 +435,8 @@ def retain_pending(current,previous):
 
 
 def run_closed_loop(plan):
+    if plan.get('publication_only'):
+        raise ValueError('publication-only recovery cannot execute training')
     root=Path(plan['output'])
     if (root/'started.json').exists():raise ValueError('explicit recovery required; never replay E updates')
     try:return _run_closed_loop(plan)
@@ -436,6 +449,8 @@ def run_closed_loop(plan):
 
 
 def _run_closed_loop(plan):
+    if plan.get('publication_only'):
+        raise ValueError('publication-only recovery cannot execute training')
     from ..probe_bank import lock_probe_bank
     from .worker import source_payload
     root=Path(plan['output']);started=plan.get('original_started_unix',time.time());completed=[]
@@ -606,7 +621,7 @@ def prepare_profile_continuation(previous,output,repository,*,rounds,profile,all
     for path in panels.values():locks[path]=file_sha(path)
     profile_path=str(Path(profile).resolve());locks[profile_path]=file_sha(profile_path)
     plan=deepcopy(parent)
-    for key in ('initial_bundle','initial_student','original_started_unix','baseline_reuse','recovery','carried_physics'):
+    for key in ('initial_bundle','initial_student','original_started_unix','baseline_reuse','recovery','carried_physics','publication_only','new_training_authorized'):
         plan.pop(key,None)
     plan.update(schema='jit_bridge_experimental_continuation_v1',output=str(root),repository=str(repo),
         implementation_commit=implementation_identity(repo),implementation_files=implementation_files(repo),

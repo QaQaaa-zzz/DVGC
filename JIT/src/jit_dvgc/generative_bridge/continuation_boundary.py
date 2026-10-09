@@ -73,6 +73,11 @@ def _assert_not_live(root, lock):
 
 
 def resolve_completed_boundary(previous, allow_stopped_parent=False):
+    """Resolve only committed publications; pending recovery views are private."""
+    return _resolve_completed_boundary(previous, allow_stopped_parent)
+
+
+def _resolve_completed_boundary(previous, allow_stopped_parent=False, *, pending_root=None):
     """Return validated bundle, dependency locks and retained historical costs.
 
     Paths in the result are absolute strings. ``parent_series`` is the requested
@@ -80,6 +85,8 @@ def resolve_completed_boundary(previous, allow_stopped_parent=False):
     This function does not write files, deserialize optimizer state, or run physics.
     """
     requested=Path(previous).resolve(); root=requested; locks={}; legacy=[]; ancestry=[]
+    if pending_root is not None and pending_root!=requested:
+        raise ValueError('pending publication audit is restricted to requested root')
     def lock(path, expected=None):
         path=Path(path).resolve(); actual=file_sha(path)
         if expected is not None and actual!=expected:
@@ -107,8 +114,21 @@ def resolve_completed_boundary(previous, allow_stopped_parent=False):
     while True:
         if root in visited:raise ValueError('continuation parent cycle')
         visited.add(root)
+        if (root/'publication_pending.json').exists() and root!=pending_root:
+            raise ValueError('publication recovery is not committed: '+str(root))
         lock(root/'status.json');lock(root/'plan.json')
         status=_read(root/'status.json');plan=_read(root/'plan.json')
+        if plan.get('publication_only'):
+            receipt_path=root/'recovery_receipt.json';lock(receipt_path);receipt=_read(receipt_path)
+            if (receipt.get('schema')!='jit_finalization_publication_recovery_v1' or
+                    receipt.get('original_execution_phase')!='failed' or receipt.get('original_returncode')!=-6 or
+                    any(receipt.get(key)!=0 for key in ('new_physics','new_student_transitions','new_generator_updates')) or
+                    receipt.get('original_series')!=plan.get('continuation_parent')):
+                raise ValueError('invalid publication recovery receipt')
+            dependencies(receipt)
+            original_status=Path(receipt['original_series'])/'status.json';lock(original_status)
+            if _read(original_status).get('phase')!='failed':
+                raise ValueError('recovery original failed status changed')
         _assert_not_live(root,lock)
         phase=status.get('phase'); count=status.get('completed_rounds')
         if type(count) is not int or count<0:raise ValueError('invalid completed round count')
