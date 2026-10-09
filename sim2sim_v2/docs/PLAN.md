@@ -9,3 +9,5 @@ Approved design: user TASK.md, executed in isolated worktree. Historical evidenc
 Diagnostics first declaration: <=64 scored episodes, <=400 control steps each, <=102400 scored physics steps for single lanes; full384 lane probes count all actual lanes separately and predeclare before launch. No PPO allowed until explicit diagnostic gates recorded.
 
 2026-10-09 completion: P0 verified; P1 diagnostics executed, gate HOLD (layout/reset contact divergence unresolved). 26 focused tests pass. E1 prepared/offline tested, training unrun; E2/E3 unrun. See ../REPORT.md.
+
+Latest user priority: same frozen model lands on both engines, no required forward speed. Verified transition_01966080 on one paired natural start; details runs/no_speed_dual_landing/REPORT.md. E1/E2/E3 remain unrun; no further training needed for this narrow engineering goal. Solver-history n1 complete, n2/n384 unrun.

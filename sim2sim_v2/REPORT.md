@@ -1,5 +1,7 @@
 # Jump landing V2：P0 / P1 诊断报告（2026-10-09）
 
+> 最新用户目标：同一模型两边稳定落地，不要求保持前进速度。已找到并配对验证 `transition_01966080`；见[新增双引擎报告](runs/no_speed_dual_landing/REPORT.md)。下文保留此前P0/P1旧协议与未放行门槛，不回写历史结论。
+
 先看 [XY、速度、高度、侧倾、真实平台支撑及逐步奖励对照图](runs/p1_analysis/paired_diagnostics.png)，以及 [PhysX 中间 checkpoint 对照](runs/p1_physx/checkpoint_candidates.png)。图中的2m/s直线仅为几何参考，不代表可行性保证；实际轨迹保留真实终点。
 
 ## 状态与结论

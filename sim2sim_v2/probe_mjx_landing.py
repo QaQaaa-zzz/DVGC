@@ -1,4 +1,4 @@
-"""Exact9904128 nominal MJX-Warp, record real solver contacts at all four substeps."""
+"""Frozen actor in nominal source MJX-Warp, with real contacts at every substep."""
 import os,sys,json,time,hashlib,dataclasses,traceback
 from pathlib import Path
 os.environ.update(XLA_PYTHON_CLIENT_PREALLOCATE='false',OPENBLAS_NUM_THREADS='1',OMP_NUM_THREADS='4')
@@ -17,22 +17,26 @@ from policy_runtime import Actor
 from fast_path_probe import wheel_kinematics
 from landing_evaluation import evaluate_landing,LandingCriteria
 import argparse
-parser=argparse.ArgumentParser();parser.add_argument('--output',default='runs/p1_mjx_9904128_retry02');args=parser.parse_args()
+parser=argparse.ArgumentParser();parser.add_argument('--output',default='runs/p1_mjx_9904128_retry02');parser.add_argument('--actor');parser.add_argument('--no-forward-speed',action='store_true');args=parser.parse_args()
 OUT=ROOT/args.output;OUT.mkdir(parents=True,exist_ok=False)
 cp=Path('/home/qy/DVGC/JIT/runs/phase_u/phase_u_jump_ori_sim2sim_vxgt02_10002432_seed820707_20260928')
 actorpath=Path('/home/qy/ISAAC——SIM/runs/experiments/physx_jump_ori_from9904128_kd5_5ms_10m_20260928/initial_policy/actor.npz')
+if args.actor:actorpath=Path(args.actor)
+criteria=LandingCriteria(schema='landing_no_forward_speed_20261009',min_forward_speed=None) if args.no_forward_speed else LandingCriteria()
 sha=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest()
 def dump(n,x):(OUT/n).write_text(json.dumps(x,indent=2,allow_nan=False))
-dump('declaration.json',dict(source_checkpoint=str(cp/'checkpoints/transition_9904128'),actor=str(actorpath),actor_sha256=sha(actorpath),source_root=str(SRC),source_config_sha256=sha(cp/'resolved_config.json'),source_env_sha256=sha(SRC/'jit_dvgc/env.py'),max_control_ticks=400,max_physics_steps=1600,training_transitions=0,protocol='Exact checkpoint config, nominal fixed natural reset; reset randomization explicitly disabled, no physics DR wrapper; low speed terminal preserved',landing_criteria=dataclasses.asdict(LandingCriteria())))
+dump('declaration.json',dict(source_environment_run=str(cp),actor_checkpoint=str(actorpath.parent),actor=str(actorpath),actor_sha256=sha(actorpath),source_root=str(SRC),source_config_sha256=sha(cp/'resolved_config.json'),source_env_sha256=sha(SRC/'jit_dvgc/env.py'),max_control_ticks=400,max_physics_steps=1600,training_transitions=0,protocol='Exact checkpoint config, nominal fixed natural reset; reset randomization explicitly disabled, no physics DR wrapper; low speed terminal disabled only under explicit no-forward-speed evaluation flag',landing_criteria=dataclasses.asdict(criteria),no_forward_speed=args.no_forward_speed))
 rows=[];contacts=[];evalrows=[];start=time.monotonic();steps=0
 try:
  cfg=load_config(cp/'resolved_config.json',runtime_only=True);cfg=dataclasses.replace(cfg,sim2sim_randomization=None)
+ if args.no_forward_speed:cfg=dataclasses.replace(cfg,sim2sim_low_speed_failure=None)
  env=TwoPhaseBikeEnv(cfg);m=env.mj_model;actor=Actor(actorpath)
  assert Path(sys.modules[TwoPhaseBikeEnv.__module__].__file__).is_relative_to(SRC)
  assert sha(env.xml_path)==cfg.model['xml_sha256']
  assert np.isclose(m.opt.timestep,.005) and env.dt==.02 and env.n_substeps==4
- identity=json.loads(actorpath.with_name('identity.json').read_text());assert identity['parent']['payload_sha256']==sha(cp/'checkpoints/transition_9904128/payload.pkl')
- dump('evaluated_config.json',dict(original_resolved_config=json.loads((cp/'resolved_config.json').read_text()),explicit_overrides={'sim2sim_randomization':None},physics_randomization_wrapper=False))
+ if not args.actor:
+  identity=json.loads(actorpath.with_name('identity.json').read_text());assert identity['parent']['payload_sha256']==sha(cp/'checkpoints/transition_9904128/payload.pkl')
+ dump('evaluated_config.json',dict(original_resolved_config=json.loads((cp/'resolved_config.json').read_text()),explicit_overrides=dict(sim2sim_randomization=None,**({'sim2sim_low_speed_failure':None} if args.no_forward_speed else {})),physics_randomization_wrapper=False))
  reset=jax.jit(env.reset_natural);state=reset(jax.random.PRNGKey(980001));jax.block_until_ready(state)
  np.testing.assert_allclose(np.asarray(state.data.qpos)[:3],[1.5,0,.15],atol=1e-6)
  def instrumented_step(state,action):
@@ -80,7 +84,7 @@ try:
   if tick%25==0:print('TICK',tick+1,flush=True)
   if bool(state.done):break
  arrays={k:np.asarray([r[k] for r in rows]) for k in rows[0]};np.savez_compressed(OUT/'trace.npz',**arrays);dump('contacts.json',contacts);dump('landing_inputs.json',evalrows)
- landing=evaluate_landing(evalrows,float(m.body_mass.sum()*9.81));dump('landing.json',landing)
+ landing=evaluate_landing(evalrows,float(m.body_mass.sum()*9.81),criteria);dump('landing.json',landing)
  dump('status.json',dict(status='complete',control_steps=len(rows),physics_steps=steps,training_transitions=0,end_code=rows[-1]['end_code'],apex_seen=rows[-1]['apex_seen'],strict_landing_1p0s=landing['strict_landing_1p0s'],stable_landing_0p5s=landing['stable_landing_0p5s'],wall_s=time.monotonic()-start))
 except Exception:
  dump('status.json',dict(status='error',error=traceback.format_exc(),actual_physics_steps=steps,training_transitions=0,completed_controls=len(rows)));raise

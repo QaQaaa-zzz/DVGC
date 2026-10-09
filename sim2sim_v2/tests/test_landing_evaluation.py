@@ -24,3 +24,12 @@ def test_no_success_from_airborne_reset():
  assert not evaluate_landing(rs,50,reset_type='airborne_rsi')['strict_landing_1p0s']
  rs[0]['contact_valid']=False
  assert not evaluate_landing(rs,50)['strict_landing_1p0s']
+
+def test_stationary_landing_only_under_explicit_no_speed_contract():
+ from landing_evaluation import LandingCriteria
+ rs=[row(0),row(.02),row(.04,support_floor_N=0,vz=1,min_wheel_clearance_m=.1),row(.06,support_floor_N=0,vz=1,min_wheel_clearance_m=.1)]
+ rs += [row(.08+i*.02,x=4,support_floor_N=0,support_step_N=50,vx=0.) for i in range(55)]
+ assert not evaluate_landing(rs,50)['strict_landing_1p0s']
+ revised=LandingCriteria(schema='landing_no_forward_speed_20261009',min_forward_speed=None)
+ assert evaluate_landing(rs,50,revised)['strict_landing_1p0s']
+ assert 'no forward-speed requirement' in evaluate_landing(rs,50,revised)['claim']
