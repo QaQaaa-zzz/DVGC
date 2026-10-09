@@ -47,9 +47,451 @@
   "persistent_b1": {
     "passed": false,
     "reason": "Repeated A success IDs differ",
-    "production_adoption": false
+    "production_adoption": false,
+    "experimental_trial_user_authorized": true
   },
   "full_round_speedup_verified": false,
   "learning_improvement_verified": false,
-  "raw_evidence_root": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008"
+  "raw_evidence_root": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008",
+  "followup_repeatability": {
+    "physical_only": true,
+    "training_feedback": false,
+    "arms": {
+      "baseline": {
+        "success_ids": [
+          [
+            1,
+            7,
+            13
+          ],
+          [],
+          [
+            1,
+            7,
+            13
+          ],
+          [
+            1,
+            7,
+            13
+          ],
+          [],
+          [
+            1,
+            7,
+            13
+          ]
+        ],
+        "within_root_labels_stable": true,
+        "comparisons": [
+          {
+            "root": "A",
+            "requests": [
+              0,
+              2
+            ],
+            "labels_equal": true,
+            "first_step_max_abs": {
+              "actor_observation_before": 0.0,
+              "normalized_action_executed": 0.0,
+              "qpos": 8.952617645263672e-05,
+              "qvel": 0.005999565124511719
+            },
+            "trajectory_shapes": [
+              [
+                69,
+                17,
+                12
+              ],
+              [
+                69,
+                17,
+                12
+              ]
+            ]
+          },
+          {
+            "root": "A",
+            "requests": [
+              0,
+              3
+            ],
+            "labels_equal": true,
+            "first_step_max_abs": {
+              "actor_observation_before": 0.0,
+              "normalized_action_executed": 0.0,
+              "qpos": 6.794929504394531e-06,
+              "qvel": 0.00024127960205078125
+            },
+            "trajectory_shapes": [
+              [
+                69,
+                17,
+                12
+              ],
+              [
+                69,
+                17,
+                12
+              ]
+            ]
+          },
+          {
+            "root": "A",
+            "requests": [
+              0,
+              5
+            ],
+            "labels_equal": true,
+            "first_step_max_abs": {
+              "actor_observation_before": 0.0,
+              "normalized_action_executed": 0.0,
+              "qpos": 8.916854858398438e-05,
+              "qvel": 0.005963802337646484
+            },
+            "trajectory_shapes": [
+              [
+                69,
+                17,
+                12
+              ],
+              [
+                70,
+                17,
+                12
+              ]
+            ]
+          },
+          {
+            "root": "A",
+            "requests": [
+              2,
+              3
+            ],
+            "labels_equal": true,
+            "first_step_max_abs": {
+              "actor_observation_before": 0.0,
+              "normalized_action_executed": 0.0,
+              "qpos": 8.916854858398438e-05,
+              "qvel": 0.005908966064453125
+            },
+            "trajectory_shapes": [
+              [
+                69,
+                17,
+                12
+              ],
+              [
+                69,
+                17,
+                12
+              ]
+            ]
+          },
+          {
+            "root": "A",
+            "requests": [
+              2,
+              5
+            ],
+            "labels_equal": true,
+            "first_step_max_abs": {
+              "actor_observation_before": 0.0,
+              "normalized_action_executed": 0.0,
+              "qpos": 6.794929504394531e-06,
+              "qvel": 0.00016319751739501953
+            },
+            "trajectory_shapes": [
+              [
+                69,
+                17,
+                12
+              ],
+              [
+                70,
+                17,
+                12
+              ]
+            ]
+          },
+          {
+            "root": "A",
+            "requests": [
+              3,
+              5
+            ],
+            "labels_equal": true,
+            "first_step_max_abs": {
+              "actor_observation_before": 0.0,
+              "normalized_action_executed": 0.0,
+              "qpos": 8.881092071533203e-05,
+              "qvel": 0.005873203277587891
+            },
+            "trajectory_shapes": [
+              [
+                69,
+                17,
+                12
+              ],
+              [
+                70,
+                17,
+                12
+              ]
+            ]
+          },
+          {
+            "root": "B",
+            "requests": [
+              1,
+              4
+            ],
+            "labels_equal": true,
+            "first_step_max_abs": {
+              "actor_observation_before": 0.0,
+              "normalized_action_executed": 0.0,
+              "qpos": 1.5497207641601562e-06,
+              "qvel": 5.14984130859375e-05
+            },
+            "trajectory_shapes": [
+              [
+                245,
+                17,
+                12
+              ],
+              [
+                240,
+                17,
+                12
+              ]
+            ]
+          }
+        ],
+        "end_to_end_seconds": 112.92269074999786,
+        "charged_interactions": 12954
+      },
+      "persistent": {
+        "success_ids": [
+          [
+            1,
+            7,
+            13
+          ],
+          [],
+          [
+            1,
+            7,
+            13
+          ],
+          [
+            1,
+            7,
+            13
+          ],
+          [],
+          [
+            1,
+            7,
+            13
+          ]
+        ],
+        "within_root_labels_stable": true,
+        "comparisons": [
+          {
+            "root": "A",
+            "requests": [
+              0,
+              2
+            ],
+            "labels_equal": true,
+            "first_step_max_abs": {
+              "actor_observation_before": 0.0,
+              "normalized_action_executed": 0.0,
+              "qpos": 7.49826431274414e-05,
+              "qvel": 0.005721092224121094
+            },
+            "trajectory_shapes": [
+              [
+                77,
+                17,
+                12
+              ],
+              [
+                75,
+                17,
+                12
+              ]
+            ]
+          },
+          {
+            "root": "A",
+            "requests": [
+              0,
+              3
+            ],
+            "labels_equal": true,
+            "first_step_max_abs": {
+              "actor_observation_before": 0.0,
+              "normalized_action_executed": 0.0,
+              "qpos": 6.9141387939453125e-06,
+              "qvel": 0.0006239414215087891
+            },
+            "trajectory_shapes": [
+              [
+                77,
+                17,
+                12
+              ],
+              [
+                72,
+                17,
+                12
+              ]
+            ]
+          },
+          {
+            "root": "A",
+            "requests": [
+              0,
+              5
+            ],
+            "labels_equal": true,
+            "first_step_max_abs": {
+              "actor_observation_before": 0.0,
+              "normalized_action_executed": 0.0,
+              "qpos": 2.396106719970703e-05,
+              "qvel": 0.0009403228759765625
+            },
+            "trajectory_shapes": [
+              [
+                77,
+                17,
+                12
+              ],
+              [
+                74,
+                17,
+                12
+              ]
+            ]
+          },
+          {
+            "root": "A",
+            "requests": [
+              2,
+              3
+            ],
+            "labels_equal": true,
+            "first_step_max_abs": {
+              "actor_observation_before": 0.0,
+              "normalized_action_executed": 0.0,
+              "qpos": 7.486343383789062e-05,
+              "qvel": 0.005672454833984375
+            },
+            "trajectory_shapes": [
+              [
+                75,
+                17,
+                12
+              ],
+              [
+                72,
+                17,
+                12
+              ]
+            ]
+          },
+          {
+            "root": "A",
+            "requests": [
+              2,
+              5
+            ],
+            "labels_equal": true,
+            "first_step_max_abs": {
+              "actor_observation_before": 0.0,
+              "normalized_action_executed": 0.0,
+              "qpos": 7.49826431274414e-05,
+              "qvel": 0.005627632141113281
+            },
+            "trajectory_shapes": [
+              [
+                75,
+                17,
+                12
+              ],
+              [
+                74,
+                17,
+                12
+              ]
+            ]
+          },
+          {
+            "root": "A",
+            "requests": [
+              3,
+              5
+            ],
+            "labels_equal": true,
+            "first_step_max_abs": {
+              "actor_observation_before": 0.0,
+              "normalized_action_executed": 0.0,
+              "qpos": 2.5033950805664062e-05,
+              "qvel": 0.00095367431640625
+            },
+            "trajectory_shapes": [
+              [
+                72,
+                17,
+                12
+              ],
+              [
+                74,
+                17,
+                12
+              ]
+            ]
+          },
+          {
+            "root": "B",
+            "requests": [
+              1,
+              4
+            ],
+            "labels_equal": true,
+            "first_step_max_abs": {
+              "actor_observation_before": 0.0,
+              "normalized_action_executed": 0.0,
+              "qpos": 7.152557373046875e-07,
+              "qvel": 0.00025272369384765625
+            },
+            "trajectory_shapes": [
+              [
+                69,
+                17,
+                12
+              ],
+              [
+                79,
+                17,
+                12
+              ]
+            ]
+          }
+        ],
+        "end_to_end_seconds": 38.87274687898753,
+        "charged_interactions": 7582
+      }
+    },
+    "cross_arm_labels_equal": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "formal_acceptance": false
+  }
 }

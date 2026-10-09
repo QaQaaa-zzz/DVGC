@@ -91,7 +91,26 @@ def run(request):
 
 
 def validate_teacher_acceptance(spec):
-    """Experimental B1 cannot enter production on a CPU-only or failed audit."""
+    """Require physical acceptance or a user-authorized, single-round trial.
+
+    A trial records unresolved evidence and never constitutes formal acceptance.
+    Its exact output/round binding prevents reuse for a subsequent campaign.
+    """
+    trial=spec.get('teacher_experimental_trial')
+    if trial is not None:
+        if set(trial)!={'path','sha256'} or file_sha(trial['path'])!=trial['sha256']:
+            raise ValueError('experimental trial receipt changed')
+        report=read(trial['path'])
+        if (report.get('schema')!='jit_b1_experimental_trial_v1'
+            or report.get('implementation_commit')!=spec['implementation_commit']
+            or report.get('output')!=str(Path(spec['output']).resolve())
+            or report.get('round_index')!=spec['round_index']
+            or report.get('user_authorized') is not True
+            or report.get('formal_acceptance') is not False
+            or not report.get('known_limitations')
+            or not 0<spec['budgets']['max_physics']<=report.get('max_physics',0)<=1500000):
+            raise ValueError('experimental trial scope mismatch')
+        return
     receipt=spec.get('teacher_physical_acceptance')
     if not receipt or set(receipt)!={'path','sha256'}:
         raise ValueError('persistent B1 requires a passed physical acceptance receipt')

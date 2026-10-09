@@ -57,6 +57,16 @@ def budget_dry_run(plan):
 
 
 def inspect_plan(plan):
+    if plan.get('teacher_experimental_trial'):
+        if plan['rounds']!=1 or plan.get('automatic_extension') is not False:
+            raise ValueError('experimental teacher trial requires exactly one round without extension')
+        from .teacher_worker import validate_teacher_acceptance
+        validate_teacher_acceptance(dict(
+            teacher_experimental_trial=plan['teacher_experimental_trial'],
+            implementation_commit=plan['implementation_commit'],
+            output=str(Path(plan['output'])/f"round_{plan['round_offset']+1:04d}"),
+            round_index=plan['round_offset']+1,
+            budgets={'max_physics':plan['budgets']['per_round_physics']}))
     from .production import implementation_identity
     if implementation_identity(plan['repository'])!=plan['implementation_commit']:
         raise ValueError('implementation identity changed')

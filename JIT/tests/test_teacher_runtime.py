@@ -26,3 +26,25 @@ def test_unverified_persistent_worker_cannot_be_adopted():
     from jit_dvgc.generative_bridge.teacher_worker import validate_teacher_acceptance
     with pytest.raises(ValueError,match='physical acceptance'):
         validate_teacher_acceptance({'implementation_commit':'example'})
+
+
+def test_explicit_trial_is_bound_to_one_output_round_and_code(tmp_path):
+    import json,pytest
+    from jit_dvgc.generative_bridge.teacher_worker import validate_teacher_acceptance
+    from jit_dvgc.generative_bridge.contracts import file_sha
+    report=tmp_path/'trial.json';out=tmp_path/'round'
+    report.write_text(json.dumps(dict(schema='jit_b1_experimental_trial_v1',implementation_commit='test',output=str(out),round_index=31,user_authorized=True,formal_acceptance=False,max_physics=1500000,known_limitations=['prior label mismatch','physical trajectories not identical'])))
+    spec=dict(implementation_commit='test',output=str(out),round_index=31,budgets={'max_physics':1500000},teacher_experimental_trial={'path':str(report),'sha256':file_sha(report)})
+    validate_teacher_acceptance(spec)
+    for field,value in [('output',str(tmp_path/'other')),('round_index',32),('implementation_commit','other')]:
+        with pytest.raises(ValueError,match='trial'):
+            validate_teacher_acceptance({**spec,field:value})
+    report.write_text('{}')
+    with pytest.raises(ValueError,match='trial'):validate_teacher_acceptance(spec)
+
+
+def test_trial_multiround_rejected_before_source_loading():
+    import pytest
+    from jit_dvgc.generative_bridge.continuation_profile import inspect_plan
+    with pytest.raises(ValueError,match='exactly one round'):
+        inspect_plan(dict(teacher_experimental_trial={'path':'unused'},rounds=2,automatic_extension=False))

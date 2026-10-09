@@ -92,3 +92,25 @@ no historical model/result or success criterion was overwritten.
 Implementation and CPU correctness do not prove physical equivalence or improved
 G recovery. Full-round timing, stable repeated end-to-end gain and learning
 effectiveness remain unverified. Unmeasured performance event fields remain null.
+
+## Follow-up repeatability and explicitly authorized trial
+
+User questioned whether original physics is itself variable and explicitly favored
+trying B1. Six requests A/B/A/A/B/A per arm were executed with frozen inputs:
+all six cross-arm success-ID sets match and each arm's repeated labels are stable.
+A succeeds at IDs1/7/13, B has no successes. Both arms still show first-step
+physical differences despite exact initial observations/actions. Baseline first-step
+qvel repeat differences reach0.006; persistent reaches0.00572. This weakens an
+assertion that the previous mismatch alone proves worker contamination; it does
+not disprove intermittent failures or prove state equivalence. Previous failed
+ABA remains part of the evidence.
+
+Measured wall112.92269 vs38.87275seconds, charged physics12954 vs7582, so this
+is not an equal-work throughput comparison. Evidence: performance_repeatability_20261009.
+A separate user-authorized experimental trial receipt is now supported, bound
+to one exact output directory, round, implementation commit and <=1.5M physics.
+It explicitly records formal_acceptance=false and unresolved limitations. It
+cannot authorize a subsequent round or automatically restart the original200.
+The production physical-acceptance path remains distinct; no passing receipt
+is fabricated from this user authorization. Full search/replay, thresholds,
+replay rejection, RNG mapping and full learner inheritance remain unchanged.

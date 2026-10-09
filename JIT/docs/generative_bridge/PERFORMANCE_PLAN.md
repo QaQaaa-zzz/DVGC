@@ -41,3 +41,7 @@ No old artifact or success standard is rewritten.
 Validation status: cache alias invalidation also covers multiple hardlink paths.
 B1 implementation is present but physical acceptance failed; it remains disabled.
 B4/B8 are deferred. Full-round integration and production adoption remain pending.
+
+Follow-up: six-request physical repeatability completed; labels match on this
+repeat but old failure retained. User authorized an isolated experimental B1
+trial; scoped receipt cannot extend to next round. Formal acceptance remains unproved.
