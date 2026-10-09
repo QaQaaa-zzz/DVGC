@@ -2743,21 +2743,6 @@
       "sha256": "123c3cb96dd7adbaad9b48529e2bc6ad408d49ec0e1acac1c3655ca6361a5f10"
     },
     {
-      "path": "models/physx/runtime/__pycache__/collision_geometry.cpython-311.pyc",
-      "bytes": 2793,
-      "sha256": "58fb34b44281f47be0cdc0354378d1f6c17144ca5b957ab44a9ad66c52e98b4e"
-    },
-    {
-      "path": "models/physx/runtime/__pycache__/drive_calibration.cpython-311.pyc",
-      "bytes": 2767,
-      "sha256": "4d189fba6f8979438fad67a12b2b92f5f8cfc14be1e320142488aee9ffe946fd"
-    },
-    {
-      "path": "models/physx/runtime/__pycache__/usd_model.cpython-311.pyc",
-      "bytes": 28590,
-      "sha256": "014df44821e42188e5ed2de36b2f03ac7d0c3cbeebd1fc08becf19897cbbcc8c"
-    },
-    {
       "path": "models/physx/runtime/actuator_audit.py",
       "bytes": 10879,
       "sha256": "fbb56232a3b805ddf3e0c79aa8d1979758090c61e96d92ccec1a3a859b931a24"
@@ -3763,7 +3748,7 @@
       "sha256": "864c207a3d002d3f713e70b2b410413f62f067b787814fc87ad3221eccf7032b"
     }
   ],
-  "total_bytes_without_manifest": 108990353,
+  "total_bytes_without_manifest": 108956203,
   "excluded": [
     "videos",
     "duplicate PDF figures",
