@@ -1,0 +1,15 @@
+{
+  "run": "/home/qy/ISAAC\u2014\u2014SIM/runs/experiments/physx_jump_ori_from9904128_kd5_5ms_10m_20260928/training",
+  "experiment": "/home/qy/ISAAC\u2014\u2014SIM/runs/experiments/physx_jump_ori_from9904128_kd5_5ms_10m_20260928",
+  "status": "/home/qy/ISAAC\u2014\u2014SIM/runs/experiments/physx_jump_ori_from9904128_kd5_5ms_10m_20260928/training/status.json",
+  "initialization": "source_checkpoint",
+  "initial_checkpoint": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_jump_ori_sim2sim_vxgt02_10002432_seed820707_20260928/checkpoints/transition_9904128",
+  "budget": 10002432,
+  "rear_kd": 5,
+  "physics_dt": 0.005,
+  "control_dt": 0.02,
+  "service": "isaac-9904128-kd5-10m-20260928.service",
+  "tensorboard_url": "http://127.0.0.1:6011",
+  "watcher": "isaac-9904128-kd5-watch-20260928.service",
+  "launched_at": "2026-09-28T19:17:36.886755+08:00"
+}

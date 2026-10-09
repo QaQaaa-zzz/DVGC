@@ -1,0 +1,211 @@
+{
+  "schema": "isaac-jump-ori-warmstart-5ms-v1",
+  "backend_required": "PhysX",
+  "requested_training_transitions": 10002432,
+  "initial_actor": null,
+  "reward": {
+    "action_coeff": 1.5,
+    "action_magnitude_scale": 0.1,
+    "action_smoothness_scale": 0.0001,
+    "apex_success_bonus": 50.0,
+    "desired_velocity": 2.0,
+    "failed_episode_return": -100.0,
+    "height_coeff": 40.0,
+    "illegal_contact_penalty": 0.0,
+    "joint_energy_penalty_coeff": 2.0,
+    "jump_reward_min_height": 0.35,
+    "jump_zone_missed_penalty": 200.0,
+    "low_height_penalty": 5.0,
+    "low_height_penalty_full_at": 0.15,
+    "max_beneficial_height": 0.8,
+    "peak_reward_height": 0.5,
+    "physical_failure_penalty": 30.0,
+    "pitch_angular_velocity_coeff": 0.15,
+    "pitch_coeff": 1.0,
+    "rear_wheel_action_diff_penalty": 2.0,
+    "roll_coeff": 3.0,
+    "roll_pitch_failure_penalty": 400.0,
+    "speed_coeff": 1.0,
+    "speed_sigma": 0.5,
+    "steering_action_diff_penalty": 1.0,
+    "steering_magnitude_penalty": 0.25,
+    "stuck_penalty": 100.0,
+    "survival_reward": 1.5,
+    "timeout_penalty": 10.0,
+    "total_max": 50.0,
+    "total_min": -400.0,
+    "yaw_coeff": 0.3,
+    "yaw_limit_penalty": 100.0
+  },
+  "reset": {
+    "airborne_rsi_probability": 0.08,
+    "airborne_rsi_vx_max": 2.2,
+    "airborne_rsi_vx_min": 1.8,
+    "airborne_rsi_vz_max": 3.6,
+    "airborne_rsi_vz_min": 3.0,
+    "airborne_rsi_x_max": 2.9,
+    "airborne_rsi_x_min": 2.7,
+    "airborne_rsi_z_max": 0.45,
+    "airborne_rsi_z_min": 0.38,
+    "initial_forward_velocity": 2.0,
+    "keyframe": "initial_state"
+  },
+  "target_drive_gains": {
+    "rearwheel_joint": {
+      "kp": 0.0,
+      "kd": 5.0
+    },
+    "steering_joint": {
+      "kp": 2.5,
+      "kd": 0.4
+    },
+    "hip_joint": {
+      "kp": 100.0,
+      "kd": 6.0
+    },
+    "knee_joint": {
+      "kp": 100.0,
+      "kd": 6.0
+    }
+  },
+  "contact_required": {
+    "mode": "forward_axis_matched_isotropic",
+    "static_friction": 0.5,
+    "dynamic_friction": 0.5,
+    "combine": "min",
+    "source_initial_forward_coefficient": 0.5,
+    "source_lateral_coefficient_not_preserved": 5.0
+  },
+  "physics_dt": 0.005,
+  "control_dt": 0.02,
+  "episode_horizon": 400,
+  "best_selection": {
+    "metric": null,
+    "selection": "not performed; deferred evaluation like jump_ori"
+  },
+  "launch_ready": true,
+  "actuator_mode": {
+    "rearwheel_joint": "native_implicit",
+    "steering_joint": "native_implicit",
+    "hip_joint": "explicit_PD_capped",
+    "knee_joint": "explicit_PD_capped"
+  },
+  "ppo": {
+    "batch_size": 16,
+    "clipping_epsilon": 0.2,
+    "discounting": 0.99,
+    "entropy_cost": 0.01,
+    "episode_horizon": 400,
+    "gae_lambda": 0.95,
+    "held_out_seeds": [
+      980001,
+      980002,
+      980003,
+      980004,
+      980005,
+      980006,
+      980007,
+      980008
+    ],
+    "learning_rate": 0.0001,
+    "max_grad_norm": 0.5,
+    "num_eval_envs": 8,
+    "num_evals": 408,
+    "num_minibatches": 24,
+    "num_parallel_envs": 384,
+    "num_updates_per_batch": 8,
+    "requested_transitions": 10002432,
+    "reward_scaling": 0.1,
+    "seed": 820701,
+    "unroll_length": 64
+  },
+  "implementation_notes": [
+    "Actor, critic and observation statistics from transition_9904128; fresh Adam and rollout RNG.",
+    "Original jump_ori task/reward/reset; no sim2sim DR or low-speed extension.",
+    "Real PhysX 5ms, control20ms; platform present; original four Actor outputs, no PI or hold override.",
+    "407 complete PPO blocks=10,002,432 new transitions; engineering excluded.",
+    "Calibrated rear kd=5 (user requested) steering2.5/.4; scalar friction.5/min; these are explicit PhysX approximations."
+  ],
+  "verification": {
+    "engineering_gate": "/home/qy/ISAAC\u2014\u2014SIM/runs/experiments/physx_jump_ori_from9904128_kd5_5ms_10m_20260928/launch_gate.json"
+  },
+  "evaluation_seed_role": "development and test namespaces fixed, 4 identical deterministic ground resets + 4 sampled airborne resets",
+  "source_ppo_port": true,
+  "initial_checkpoint": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_jump_ori_sim2sim_vxgt02_10002432_seed820707_20260928/checkpoints/transition_9904128",
+  "initialization": "source_checkpoint",
+  "configuration_reference_checkpoint": null,
+  "configuration_reference_identity": {
+    "configuration": {
+      "path": "/home/qy/DVGC/JIT/runs/code_snapshots/phaseu_speed2_dense10m_deferred_20260928/JIT/configs/phase_u_speed2_dense_10m_deferred_seed820701_20260928.json",
+      "sha256": "6ccff2cb79adbfa6b14a80785f16b449ff8cef44ee4a5428a95f3f0af742a4ab"
+    },
+    "description": "Phase U propulsion-ascent speed2 training environment and reward used by the fresh 10,002,432-transition deferred-evaluation run.",
+    "example_training_run": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_speed2_denseckpt_deferred_10002432_seed820701_20260928",
+    "immutability": "If any pinned byte changes, give the changed method a new alias or version. Do not silently move jump_ori.",
+    "implementation": {
+      "config_loader": {
+        "path": "/home/qy/DVGC/JIT/runs/code_snapshots/phaseu_speed2_dense10m_deferred_20260928/JIT/src/jit_dvgc/config.py",
+        "sha256": "6b0bb4dc74b58041daa3cdcc847682f3e165e2457f157c9d5f2f2102440d91a6"
+      },
+      "environment": {
+        "path": "/home/qy/DVGC/JIT/runs/code_snapshots/phaseu_speed2_dense10m_deferred_20260928/JIT/src/jit_dvgc/env.py",
+        "sha256": "3999bcbca2bb7c72b915c4153c80e9ddf87c9314e742c6a0247ed88811becaee"
+      },
+      "event_and_terminal_semantics": {
+        "path": "/home/qy/DVGC/JIT/runs/code_snapshots/phaseu_speed2_dense10m_deferred_20260928/JIT/src/jit_dvgc/semantics.py",
+        "sha256": "e7c07a53a52e428fe900b0a1073a7f2fd999860b85b67b45290a47e25ca4f024"
+      },
+      "reward": {
+        "path": "/home/qy/DVGC/JIT/runs/code_snapshots/phaseu_speed2_dense10m_deferred_20260928/JIT/src/jit_dvgc/rewards.py",
+        "sha256": "6ca5acd949326866c2e1645c645497a8b71d4bab5498fe1c35a4d1d9b6774e01"
+      }
+    },
+    "kind": "frozen_training_environment_and_reward",
+    "name": "jump_ori",
+    "physical_assets": {
+      "jump_reference": {
+        "path": "/home/qy/DVGC/JIT/runs/code_snapshots/phaseu_speed2_dense10m_deferred_20260928/data/reference_jump.csv",
+        "sha256": "612fe758eb1042481b9c7642cc9b92d3e9c14b4a75c9deaf5340183c928bc41f"
+      },
+      "mujoco_xml": {
+        "path": "/home/qy/DVGC/JIT/runs/code_snapshots/phaseu_speed2_dense10m_deferred_20260928/assets/orange_bike_4kg_horizontal.xml",
+        "sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+      }
+    },
+    "resolved_config_sha256": "7168f317dd3e2fa0decd71d2e6789d24400dd049a0944dc5affd06c054952cba",
+    "schema": "dvgc_jit_model_alias_v1",
+    "scope": "Exact environment, reward, reset, action, physical and trainer configuration in the pinned source; no trained policy checkpoint is selected by this alias.",
+    "source_commit": "a89b5020cca5fa9e93bb4d9c2fee4b889adfa19f",
+    "source_snapshot": "/home/qy/DVGC/JIT/runs/code_snapshots/phaseu_speed2_dense10m_deferred_20260928"
+  },
+  "formal": {
+    "checkpoint_transitions": [
+      0,
+      491520,
+      983040,
+      1474560,
+      1966080,
+      2457600,
+      2949120,
+      3440640,
+      3932160,
+      4423680,
+      4915200,
+      5406720,
+      5898240,
+      6389760,
+      6881280,
+      7372800,
+      7864320,
+      8355840,
+      8847360,
+      9338880,
+      9830400,
+      10002432
+    ],
+    "fixed_evaluation_transitions": [],
+    "resume_semantics": "source_checkpoint_warmstart_fresh_optimizer"
+  },
+  "evaluation_mode": "deferred",
+  "configuration_alias": "jump_ori"
+}

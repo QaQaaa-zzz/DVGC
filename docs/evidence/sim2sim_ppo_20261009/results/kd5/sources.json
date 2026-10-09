@@ -1,0 +1,194 @@
+[
+  {
+    "label": "warmstart",
+    "run": "/home/qy/ISAAC\u2014\u2014SIM/runs/experiments/physx_jump_ori_from9904128_kd5_5ms_10m_20260928",
+    "panel": "/home/qy/ISAAC\u2014\u2014SIM/runs/experiments/physx_jump_ori_from9904128_kd5_5ms_10m_20260928/visualizations/final_review_20261008",
+    "identity": {
+      "schema": "physx_original_brax_learner_v1",
+      "training_transitions": 10002432,
+      "parent": {
+        "action_order": [
+          "steer",
+          "rear_wheel_drive",
+          "hip",
+          "knee"
+        ],
+        "actor_frame_fields": [
+          "gravity_x",
+          "gravity_y",
+          "gravity_z",
+          "angular_velocity_x",
+          "angular_velocity_y",
+          "angular_velocity_z",
+          "acceleration_x",
+          "acceleration_y",
+          "acceleration_z",
+          "steering_position",
+          "hip_position",
+          "knee_position",
+          "steering_velocity",
+          "hip_velocity",
+          "knee_velocity",
+          "front_wheel_velocity",
+          "rear_wheel_velocity",
+          "last_action_steer",
+          "last_action_rear_wheel_drive",
+          "last_action_hip",
+          "last_action_knee",
+          "estimated_forward_velocity",
+          "obstacle_relative_x",
+          "root_height",
+          "history_valid"
+        ],
+        "actor_task_fields": [
+          "jump_signal"
+        ],
+        "config_sha256": "16a6b63df1679ca626792f5841b9c1a585c4711ae227ef8fd16eeb4a33f603c7",
+        "payload_sha256": "b09f4ab4da336f114b0fda50d66ed7730db04b42fd4151abfbc200d431804f2d",
+        "training_transitions": 9904128,
+        "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+      },
+      "source_checkpoint": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_jump_ori_sim2sim_vxgt02_10002432_seed820707_20260928/checkpoints/transition_9904128",
+      "optimizer_initialization": "fresh_optax_adam_source_checkpoint_has_no_optimizer",
+      "exact_environment_resume": false,
+      "learner_state_sha256": "f620dde45b6bbed286e56d0cfebaacb63b6d6700750a6dcf8fb1069b5f6d2e18",
+      "actor_sha256": "1124c9b5075257ef39ec307bc1f18920cfaf9af771ffc53837a5191f31cc3964",
+      "initialization": "source_checkpoint",
+      "initial_normalizer_count": 9904128,
+      "pretrained_weights_loaded": true,
+      "versions": {
+        "jax": "0.6.2",
+        "jaxlib": "0.6.2",
+        "brax": "0.14.2",
+        "flax": "0.11.2",
+        "optax": "0.2.6"
+      },
+      "original_brax_sha256": {
+        "losses.py": "b6dfe0aefeb1e3d11252fc40c6ec4512757fc7fccc0b3e37ec9ccd349351007c",
+        "ppo_networks.py": "3cbab3dbb3c7240f1f36477c3f92444aaf1812c59dc99d6dcb6c37bac4b0bca4",
+        "running_statistics.py": "9591566ebcd151d35dd1a9167de3b1b00df92100892b5889bc9514252fb8c0c4"
+      }
+    },
+    "initial_identity": {
+      "schema": "physx_original_brax_learner_v1",
+      "training_transitions": 0,
+      "parent": {
+        "action_order": [
+          "steer",
+          "rear_wheel_drive",
+          "hip",
+          "knee"
+        ],
+        "actor_frame_fields": [
+          "gravity_x",
+          "gravity_y",
+          "gravity_z",
+          "angular_velocity_x",
+          "angular_velocity_y",
+          "angular_velocity_z",
+          "acceleration_x",
+          "acceleration_y",
+          "acceleration_z",
+          "steering_position",
+          "hip_position",
+          "knee_position",
+          "steering_velocity",
+          "hip_velocity",
+          "knee_velocity",
+          "front_wheel_velocity",
+          "rear_wheel_velocity",
+          "last_action_steer",
+          "last_action_rear_wheel_drive",
+          "last_action_hip",
+          "last_action_knee",
+          "estimated_forward_velocity",
+          "obstacle_relative_x",
+          "root_height",
+          "history_valid"
+        ],
+        "actor_task_fields": [
+          "jump_signal"
+        ],
+        "config_sha256": "16a6b63df1679ca626792f5841b9c1a585c4711ae227ef8fd16eeb4a33f603c7",
+        "payload_sha256": "b09f4ab4da336f114b0fda50d66ed7730db04b42fd4151abfbc200d431804f2d",
+        "training_transitions": 9904128,
+        "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+      },
+      "source_checkpoint": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_jump_ori_sim2sim_vxgt02_10002432_seed820707_20260928/checkpoints/transition_9904128",
+      "optimizer_initialization": "fresh_optax_adam_source_checkpoint_has_no_optimizer",
+      "exact_environment_resume": false,
+      "learner_state_sha256": "294e9da8e44fc8102cb24597cde85f6a03cf6cc416c8881de5b4e75440f3ccc7",
+      "actor_sha256": "b7a6b3abdea4b7f2cad49aaaa87dbe3d2f5aca096e680acf5e6c4e6da2007c04",
+      "initialization": "source_checkpoint",
+      "initial_normalizer_count": 9904128,
+      "pretrained_weights_loaded": true,
+      "versions": {
+        "jax": "0.6.2",
+        "jaxlib": "0.6.2",
+        "brax": "0.14.2",
+        "flax": "0.11.2",
+        "optax": "0.2.6"
+      },
+      "original_brax_sha256": {
+        "losses.py": "b6dfe0aefeb1e3d11252fc40c6ec4512757fc7fccc0b3e37ec9ccd349351007c",
+        "ppo_networks.py": "3cbab3dbb3c7240f1f36477c3f92444aaf1812c59dc99d6dcb6c37bac4b0bca4",
+        "running_statistics.py": "9591566ebcd151d35dd1a9167de3b1b00df92100892b5889bc9514252fb8c0c4"
+      }
+    }
+  },
+  {
+    "label": "fresh",
+    "run": "/home/qy/ISAAC\u2014\u2014SIM/runs/experiments/physx_jump_ori_fresh_kd5_5ms_10m_20260928",
+    "panel": "/home/qy/ISAAC\u2014\u2014SIM/runs/experiments/physx_jump_ori_fresh_kd5_5ms_10m_20260928/visualizations/final_review_20261008",
+    "identity": {
+      "schema": "physx_original_brax_learner_v1",
+      "training_transitions": 10002432,
+      "parent": null,
+      "source_checkpoint": null,
+      "optimizer_initialization": "fresh_optax_adam",
+      "exact_environment_resume": false,
+      "learner_state_sha256": "36a1e3ecabce119823a1ed4d5e75d55db01612d9929d38207c6207f7b93b39c9",
+      "actor_sha256": "d83469f6f022c83339ba26f3cfb6add890de552bbeefbeaf5a5a6d376eecec8a",
+      "initialization": "fresh",
+      "initial_normalizer_count": 0,
+      "pretrained_weights_loaded": false,
+      "versions": {
+        "jax": "0.6.2",
+        "jaxlib": "0.6.2",
+        "brax": "0.14.2",
+        "flax": "0.11.2",
+        "optax": "0.2.6"
+      },
+      "original_brax_sha256": {
+        "losses.py": "b6dfe0aefeb1e3d11252fc40c6ec4512757fc7fccc0b3e37ec9ccd349351007c",
+        "ppo_networks.py": "3cbab3dbb3c7240f1f36477c3f92444aaf1812c59dc99d6dcb6c37bac4b0bca4",
+        "running_statistics.py": "9591566ebcd151d35dd1a9167de3b1b00df92100892b5889bc9514252fb8c0c4"
+      }
+    },
+    "initial_identity": {
+      "schema": "physx_original_brax_learner_v1",
+      "training_transitions": 0,
+      "parent": null,
+      "source_checkpoint": null,
+      "optimizer_initialization": "fresh_optax_adam",
+      "exact_environment_resume": false,
+      "learner_state_sha256": "f236f1f3d3c44ef9e58e6817fa8c9977e1d763cefeb4276a38bbf0be30929634",
+      "actor_sha256": "3cc00b6632ef9d9ffeb239a0d67b0df62132e53a4e6d389efcd62b3ad5384b6f",
+      "initialization": "fresh",
+      "initial_normalizer_count": 0,
+      "pretrained_weights_loaded": false,
+      "versions": {
+        "jax": "0.6.2",
+        "jaxlib": "0.6.2",
+        "brax": "0.14.2",
+        "flax": "0.11.2",
+        "optax": "0.2.6"
+      },
+      "original_brax_sha256": {
+        "losses.py": "b6dfe0aefeb1e3d11252fc40c6ec4512757fc7fccc0b3e37ec9ccd349351007c",
+        "ppo_networks.py": "3cbab3dbb3c7240f1f36477c3f92444aaf1812c59dc99d6dcb6c37bac4b0bca4",
+        "running_statistics.py": "9591566ebcd151d35dd1a9167de3b1b00df92100892b5889bc9514252fb8c0c4"
+      }
+    }
+  }
+]

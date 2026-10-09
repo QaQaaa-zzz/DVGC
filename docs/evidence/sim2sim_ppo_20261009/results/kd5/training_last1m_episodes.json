@@ -1,0 +1,53 @@
+{
+  "warmstart": {
+    "ground": {
+      "episodes": 2576,
+      "apex_seen": 2510,
+      "end_codes": {
+        "9": 2152,
+        "4": 34,
+        "3": 233,
+        "10": 141,
+        "8": 16
+      },
+      "steps_sum": 920250,
+      "mean_episode_steps": 357.2399068322981
+    },
+    "airborne": {
+      "episodes": 213,
+      "apex_seen": 213,
+      "end_codes": {
+        "9": 201,
+        "10": 12
+      },
+      "steps_sum": 84203,
+      "mean_episode_steps": 395.3192488262911
+    }
+  },
+  "fresh": {
+    "ground": {
+      "episodes": 4128,
+      "apex_seen": 0,
+      "end_codes": {
+        "3": 5,
+        "8": 3616,
+        "10": 506,
+        "4": 1
+      },
+      "steps_sum": 877724,
+      "mean_episode_steps": 212.62693798449612
+    },
+    "airborne": {
+      "episodes": 348,
+      "apex_seen": 348,
+      "end_codes": {
+        "3": 14,
+        "10": 11,
+        "9": 310,
+        "4": 13
+      },
+      "steps_sum": 129137,
+      "mean_episode_steps": 371.0833333333333
+    }
+  }
+}

@@ -1,0 +1,110 @@
+{
+  "warmstart": {
+    "max_kl": 0.42324620485305786,
+    "batches_kl_over_0_2": 1,
+    "large_kl": [
+      {
+        "training_transitions": 2138112,
+        "kl_mean": 0.42324620485305786,
+        "grad_norm": 160.2008819580078,
+        "mean_step_reward": 5.863115678164675
+      }
+    ]
+  },
+  "fresh": {
+    "max_kl": 101.22396087646484,
+    "batches_kl_over_0_2": 15,
+    "large_kl": [
+      {
+        "training_transitions": 24576,
+        "kl_mean": 101.22396087646484,
+        "grad_norm": 104.82173156738281,
+        "mean_step_reward": -25.698305196278387
+      },
+      {
+        "training_transitions": 3588096,
+        "kl_mean": 0.6157693862915039,
+        "grad_norm": 20.771556854248047,
+        "mean_step_reward": 0.8931584314643738
+      },
+      {
+        "training_transitions": 3784704,
+        "kl_mean": 0.29029542207717896,
+        "grad_norm": 18.956281661987305,
+        "mean_step_reward": 0.39524046176142535
+      },
+      {
+        "training_transitions": 5038080,
+        "kl_mean": 8.219168663024902,
+        "grad_norm": 25.106857299804688,
+        "mean_step_reward": 0.2909392728567678
+      },
+      {
+        "training_transitions": 5234688,
+        "kl_mean": 55.420955657958984,
+        "grad_norm": 18.879114151000977,
+        "mean_step_reward": 0.4859315481936586
+      },
+      {
+        "training_transitions": 5332992,
+        "kl_mean": 8.647492408752441,
+        "grad_norm": 25.162403106689453,
+        "mean_step_reward": 0.4427200849936879
+      },
+      {
+        "training_transitions": 5529600,
+        "kl_mean": 0.232164204120636,
+        "grad_norm": 29.065839767456055,
+        "mean_step_reward": 0.7128455288492287
+      },
+      {
+        "training_transitions": 5603328,
+        "kl_mean": 3.800271987915039,
+        "grad_norm": 20.680400848388672,
+        "mean_step_reward": 0.5550755451254171
+      },
+      {
+        "training_transitions": 6242304,
+        "kl_mean": 0.2173488438129425,
+        "grad_norm": 18.386293411254883,
+        "mean_step_reward": 1.0975734519961888
+      },
+      {
+        "training_transitions": 6291456,
+        "kl_mean": 9.707198143005371,
+        "grad_norm": 26.984600067138672,
+        "mean_step_reward": 0.741720218615129
+      },
+      {
+        "training_transitions": 6340608,
+        "kl_mean": 0.5997358560562134,
+        "grad_norm": 24.449161529541016,
+        "mean_step_reward": 0.6910651829181363
+      },
+      {
+        "training_transitions": 6537216,
+        "kl_mean": 0.34544146060943604,
+        "grad_norm": 24.909805297851562,
+        "mean_step_reward": 0.2793163486270112
+      },
+      {
+        "training_transitions": 8454144,
+        "kl_mean": 0.35459375381469727,
+        "grad_norm": 25.283111572265625,
+        "mean_step_reward": 0.34885423985260317
+      },
+      {
+        "training_transitions": 8503296,
+        "kl_mean": 0.24177774786949158,
+        "grad_norm": 33.29304122924805,
+        "mean_step_reward": 0.3722379913077644
+      },
+      {
+        "training_transitions": 8945664,
+        "kl_mean": 0.45100903511047363,
+        "grad_norm": 43.2408561706543,
+        "mean_step_reward": 0.032693949182201865
+      }
+    ]
+  }
+}

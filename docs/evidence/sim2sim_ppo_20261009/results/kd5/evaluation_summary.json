@@ -1,0 +1,41 @@
+[
+  {
+    "model": "Source 9904128",
+    "apex": true,
+    "apex_time_s": 1.26,
+    "end_s": 1.52,
+    "end_code": 3,
+    "max_root_z": 0.5610991716384888,
+    "final_x": 3.5045597553253174,
+    "final_vx": -0.06745266610078926,
+    "return_total": 597.2262303000981,
+    "vx_rmse": 0.7877321518486508,
+    "window": "own episode; not a matched-duration score"
+  },
+  {
+    "model": "warmstart final",
+    "apex": true,
+    "apex_time_s": 1.1,
+    "end_s": 1.78,
+    "end_code": 3,
+    "max_root_z": 0.5713884830474854,
+    "final_x": 4.360228061676025,
+    "final_vx": 0.39550986413257117,
+    "return_total": 801.8053515071429,
+    "vx_rmse": 0.5694783800273506,
+    "window": "own episode; not a matched-duration score"
+  },
+  {
+    "model": "fresh final",
+    "apex": false,
+    "apex_time_s": null,
+    "end_s": 3.18,
+    "end_code": 8,
+    "max_root_z": 0.1499999761581421,
+    "final_x": 2.5001039505004883,
+    "final_vx": 0.09002666774538023,
+    "return_total": -100.0000000000004,
+    "vx_rmse": 1.7550615426891463,
+    "window": "own episode; not a matched-duration score"
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "environment_transitions": 10002432,
+  "interaction_accounting": {
+    "brax_evaluation": 0,
+    "diagnostic": 0,
+    "fixed_evaluation": 0,
+    "training": 10002432
+  },
+  "reason": "formal Phase U target and frozen held-out panels completed; trained-expert promotion remains evaluation-dependent",
+  "status": "completed"
+}

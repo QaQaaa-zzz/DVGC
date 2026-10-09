@@ -1,0 +1,20 @@
+{
+  "warmstart_kd5": {
+    "completed_transitions": 10002432,
+    "scalar_batches": 407,
+    "raw_episode_records": 41067,
+    "actor_and_learner_hashes_verified": true
+  },
+  "fresh_kd5": {
+    "completed_transitions": 10002432,
+    "scalar_batches": 407,
+    "raw_episode_records": 70194,
+    "actor_and_learner_hashes_verified": true
+  },
+  "no_videos": true,
+  "no_duplicate_pdf": true,
+  "source_mjcf_hash_verified": true,
+  "model_export": "Both MJCF load and native USD conversion succeeded; no dynamics rerun",
+  "README_local_links": "checked after manifest creation",
+  "raw_episode_logs": "gzip lossless; JSON parsed record by record"
+}

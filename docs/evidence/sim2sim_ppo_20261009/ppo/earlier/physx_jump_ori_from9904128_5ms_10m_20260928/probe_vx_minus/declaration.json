@@ -1,0 +1,188 @@
+{
+  "protocol": {
+    "actor": "/home/qy/ISAAC\u2014\u2014SIM/runs/experiments/physx_jump_ori_from9904128_5ms_10m_20260928/initial_policy/actor.npz",
+    "actor_sha256": "b7a6b3abdea4b7f2cad49aaaa87dbe3d2f5aca096e680acf5e6c4e6da2007c04",
+    "checkpoint": "transition_9904128",
+    "cases": [
+      {
+        "name": "natural",
+        "qpos": [
+          1.5,
+          0.0,
+          0.15,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          -1.2,
+          2.5
+        ],
+        "qvel": [
+          2.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "role": "calibration",
+        "reset_type": "ground_natural"
+      },
+      {
+        "name": "vx_minus",
+        "qpos": [
+          1.5,
+          0.0,
+          0.15,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          -1.2,
+          2.5
+        ],
+        "qvel": [
+          1.95,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "role": "calibration",
+        "reset_type": "ground_perturbation"
+      },
+      {
+        "name": "x_minus",
+        "qpos": [
+          1.49,
+          0.0,
+          0.15,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          -1.2,
+          2.5
+        ],
+        "qvel": [
+          2.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "role": "calibration",
+        "reset_type": "ground_perturbation"
+      },
+      {
+        "name": "vx_plus",
+        "qpos": [
+          1.5,
+          0.0,
+          0.15,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          -1.2,
+          2.5
+        ],
+        "qvel": [
+          2.05,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "role": "validation",
+        "reset_type": "ground_perturbation"
+      },
+      {
+        "name": "x_plus",
+        "qpos": [
+          1.51,
+          0.0,
+          0.15,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          -1.2,
+          2.5
+        ],
+        "qvel": [
+          2.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "role": "validation",
+        "reset_type": "ground_perturbation"
+      }
+    ],
+    "control_dt": 0.02,
+    "max_ticks": 400,
+    "success_definition": "original Phase U events.apex_seen; post-apex physical failure separately retained",
+    "training_transitions": 0,
+    "divergence_thresholds": {
+      "observation_standardized": 0.01,
+      "action_abs": 0.001,
+      "qpos_abs": 0.001,
+      "qvel_abs": 0.01,
+      "angular_velocity_rad_s": 0.01,
+      "acceleration_m_s2": 0.1,
+      "numerical_abs": 1e-05
+    },
+    "stop": "first original environment done or 400 ticks; no auto-reset",
+    "remove_platform": false
+  },
+  "engine": "physx",
+  "code_sha256": "771e58da1c6ae837271a384581751643ddbbeadcec31957a80609d4cca90b50c",
+  "actor_sha256": "b7a6b3abdea4b7f2cad49aaaa87dbe3d2f5aca096e680acf5e6c4e6da2007c04",
+  "training_transitions": 0
+}

@@ -1,0 +1,9 @@
+{
+  "reward": true,
+  "reset": true,
+  "ppo": true,
+  "target_drive_gains": true,
+  "physics_dt": true,
+  "control_dt": true,
+  "contact_required": true
+}

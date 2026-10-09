@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "decoded_videos": [
+    "/home/qy/ISAAC\u2014\u2014SIM/runs/experiments/physx_jump_ori_from9904128_kd5_5ms_10m_20260928/visualizations/final_review_20261008/videos/natural_realtime.mp4",
+    "/home/qy/ISAAC\u2014\u2014SIM/runs/experiments/physx_jump_ori_from9904128_kd5_5ms_10m_20260928/visualizations/final_review_20261008/videos/natural_slow4x.mp4",
+    "/home/qy/ISAAC\u2014\u2014SIM/runs/experiments/physx_jump_ori_fresh_kd5_5ms_10m_20260928/visualizations/final_review_20261008/videos/natural_realtime.mp4",
+    "/home/qy/ISAAC\u2014\u2014SIM/runs/experiments/physx_jump_ori_fresh_kd5_5ms_10m_20260928/visualizations/final_review_20261008/videos/natural_slow4x.mp4"
+  ],
+  "actor_hashes_verified": true,
+  "physics_dt_and_kd_readback_verified": true,
+  "plots_checked": true,
+  "training_not_restarted": true
+}

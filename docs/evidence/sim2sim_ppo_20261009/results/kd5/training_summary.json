@@ -1,0 +1,26 @@
+{
+  "warmstart": {
+    "steps": 10002432,
+    "wall_hours": 4.715403543519167,
+    "reward_first20": 5.971363447335407,
+    "reward_last20": 6.734555767956456,
+    "reward_last": 7.319445286665044,
+    "speed_rmse_first20": 1.0168449079921804,
+    "speed_rmse_last20": 1.6208194567708165,
+    "peak_batch_reward": 10.066485927546923,
+    "peak_batch_at_steps": 24576,
+    "all_scalars_finite": true
+  },
+  "fresh": {
+    "steps": 10002432,
+    "wall_hours": 4.6008470162791655,
+    "reward_first20": -9.035084126500777,
+    "reward_last20": 0.464665578759229,
+    "reward_last": -0.24374635703171973,
+    "speed_rmse_first20": 0.9023117071045045,
+    "speed_rmse_last20": 1.6475629693299587,
+    "peak_batch_reward": 1.341742569265976,
+    "peak_batch_at_steps": 3538944,
+    "all_scalars_finite": true
+  }
+}

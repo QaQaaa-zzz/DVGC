@@ -1,0 +1,28 @@
+{
+  "claim_boundary": {
+    "engineering_integrity_only": false,
+    "formal_training_evidence": true,
+    "learnability_claim": false,
+    "trained_expert_claim": false,
+    "tube_or_safety_claim": false
+  },
+  "config_sha256": "16a6b63df1679ca626792f5841b9c1a585c4711ae227ef8fd16eeb4a33f603c7",
+  "output_dir": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_jump_ori_sim2sim_vxgt02_10002432_seed820707_20260928",
+  "parent_checkpoint": null,
+  "purpose": "formal_propulsion_ascent_ppo",
+  "reference_sha256": "612fe758eb1042481b9c7642cc9b92d3e9c14b4a75c9deaf5340183c928bc41f",
+  "resume_command": "/home/qy/mujoco_playground/.venv/bin/python JIT/cli/train_phase_expert.py --phase propulsion_ascent --config /home/qy/DVGC/JIT/runs/code_snapshots/jump_ori_sim2sim_vxgt02_20260928/JIT/configs/jump_ori_sim2sim_vxgt02_10m_seed820707_20260928.json --run-id phase_u_jump_ori_sim2sim_vxgt02_10002432_seed820707_20260928 --formal",
+  "resume_semantics": "fresh",
+  "run_id": "phase_u_jump_ori_sim2sim_vxgt02_10002432_seed820707_20260928",
+  "segment_seed": 820707,
+  "starting_training_transition": 0,
+  "stopping_conditions": [
+    "stop_at_absolute_transition_10002432",
+    "stop_on_nonfinite_metric",
+    "stop_on_cuda_or_oom_error",
+    "stop_on_checkpoint_identity_or_restore_failure",
+    "stop_on_trace_persistence_failure"
+  ],
+  "training_transition_ceiling": 10002432,
+  "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+}
