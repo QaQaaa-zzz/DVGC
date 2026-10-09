@@ -32,10 +32,13 @@ def main():
                     raise ValueError('diagnostic requires 17-lane TRAIN roots')
                 if charged+spec['budget']>request['max_interactions']:raise ValueError('diagnostic reservation exhausted')
                 t=time.perf_counter();out=root/f'request_{i:03d}'
-                if session is None:evaluate(spec,out)
+                if session is None:
+                    import subprocess,sys,jit_dvgc
+                    cli=Path(jit_dvgc.__file__).resolve().parents[2]/'cli/run_pulse_exploration.py'
+                    subprocess.run([sys.executable,str(cli),'--mode','evaluate','--spec',str(path),'--output',str(out)],check=True)
                 else:evaluate(spec,out,session=session)
                 status=json.loads((out/'status.json').read_text());charged+=status['charged_interactions']
-                records.append(dict(request=i,spec=path,wall_seconds=time.perf_counter()-t,**status))
+                records.append(dict(status,request=i,spec=path,process_end_to_end_seconds=time.perf_counter()-t))
                 atomic_json(root/'progress.json',dict(completed=i+1,total=len(request['specs']),charged_interactions=charged))
         finally:
             if session is not None:session.close()

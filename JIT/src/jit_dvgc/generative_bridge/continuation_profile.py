@@ -15,8 +15,10 @@ FIXED=dict(schema=PROFILE_SCHEMA,pulse_contract_version='scheduled_single_pulse_
 
 
 def validate_profile(value):
-    if not isinstance(value,dict) or set(value)!=set(FIXED)|{'pulse_steps'}:
+    if not isinstance(value,dict) or set(value)-{'teacher_execution'}!=set(FIXED)|{'pulse_steps'}:
         raise ValueError('unknown or missing profile fields')
+    if 'teacher_execution' in value and value['teacher_execution']!='persistent_b1':
+        raise ValueError('only original-layout persistent B1 is supported')
     for key,expected in FIXED.items():
         if value[key]!=expected or (isinstance(expected,bool) and value[key] is not expected):
             raise ValueError('profile contract changed: '+key)

@@ -1,0 +1,18 @@
+schema: jit_bridge_continuation_profile_v1
+pulse_contract_version: scheduled_single_pulse_v1
+pulse_start_schedule: [0, 5, 10, 15]
+pulse_batch_mode: mixed
+pulse_steps: 3
+delta_limit: [0.25, 0.25, 0.25, 0.25]
+single_pulse_per_episode: true
+uniform_episode_fraction: 0.0
+teacher_colored_noise_candidates: 0
+continuous_learning: true
+nominal_evaluation: false
+generator_update_policy: last_valid
+generator_old_dev_metric: monitor_only
+generator_inference_parameters: ema
+final_test_open: false
+automatic_extension: false
+automatic_retry: false
+teacher_execution: persistent_b1

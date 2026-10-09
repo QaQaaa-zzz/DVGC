@@ -50,3 +50,11 @@ def test_round_passes_scheduled_profile_into_actual_collection(tmp_path):
         raise Collected
     runner.measured=measured
     with pytest.raises(Collected):runner._run()
+
+
+def test_opt_in_persistent_teacher_preserves_budget_and_rejects_other_layouts():
+    from jit_dvgc.generative_bridge.continuation_profile import validate_profile,budget_dry_run,profile_budget
+    p={**profile(),'teacher_execution':'persistent_b1'}
+    assert validate_profile(p)==p
+    assert budget_dry_run(dict(profile=p,rounds=2,budgets=profile_budget(2)))['total_maximum']==budget_dry_run(dict(profile=profile(),rounds=2,budgets=profile_budget(2)))['total_maximum']
+    with pytest.raises(ValueError):validate_profile({**p,'teacher_execution':'persistent_b8'})

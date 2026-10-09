@@ -547,6 +547,8 @@ def _run_closed_loop(plan):
                         generator_update_policy=plan['profile']['generator_update_policy'],
                         generator_charged_updates_before=previous['generator_lifetime_charged_updates'],
                         generator_charged_updates_scope=previous.get('generator_charged_updates_scope','lifetime'))
+                if plan.get('profile',{}).get('teacher_execution') is not None:
+                    spec['teacher_execution']=plan['profile']['teacher_execution']
                 if plan.get('teacher_replay_failure_policy') is not None:
                     if plan['teacher_replay_failure_policy']!='reject_finite_candidate':
                         raise ValueError('unknown teacher replay failure policy')
