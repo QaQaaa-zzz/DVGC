@@ -78,12 +78,16 @@ def _validate(plan: dict[str, Any]) -> None:
 
 
 def _verify_locks(plan: dict[str, Any], plan_path: Path, digest: str) -> None:
-    if _sha(plan_path) != digest:
-        raise ValueError("immutable plan changed")
-    for kind in ("input_files", "source_locks"):
-        for path, expected in plan[kind].items():
-            if _sha(Path(path)) != expected:
-                raise ValueError(f"{kind} hash mismatch: {path}")
+    from .generative_bridge.verified_files import LOCK_CACHE
+    from .generative_bridge.performance import measure
+    before=dict(LOCK_CACHE.stats)
+    with measure('source_lock_verification') as event:
+        LOCK_CACHE.verify(plan_path,digest)
+        for kind in ('input_files','source_locks'):
+            for path,expected in plan[kind].items():
+                LOCK_CACHE.verify(path,expected)
+        event.update(hash_bytes=LOCK_CACHE.stats['hash_bytes']-before['hash_bytes'],
+                     cache_hits=LOCK_CACHE.stats['hits']-before['hits'])
 
 
 def _write_status(output: Path, status: dict[str, Any]) -> None:
@@ -114,6 +118,7 @@ def _stop_owned_process(process: subprocess.Popen, grace_seconds: float = 5) -> 
 def run_gated_plan(plan_path: Path, output_dir: Path, *, wait: bool = False,
                    poll_seconds: float = 30.0) -> dict[str, Any]:
     """Execute one fresh output once; record blocked/failure state without retry."""
+    from .generative_bridge.performance import record_event
     plan_path, output = Path(plan_path).resolve(), Path(output_dir).resolve()
     if not _positive(poll_seconds) or poll_seconds > 30:
         raise ValueError("poll_seconds must be positive and at most 30")
@@ -134,9 +139,12 @@ def run_gated_plan(plan_path: Path, output_dir: Path, *, wait: bool = False,
     try:
         for stage in plan["stages"]:
             gate_start = time.monotonic()
+            gate_wall_start = time.time()
             while True:
                 _verify_locks(plan, plan_path, digest)
-                assessment = check_execution_gate(plan["gate"])
+                from .generative_bridge.performance import measure
+                with measure('resource_gate_check'):
+                    assessment = check_execution_gate(plan["gate"])
                 status["gate"] = assessment
                 if assessment["ready"]:
                     break
@@ -165,7 +173,8 @@ def run_gated_plan(plan_path: Path, output_dir: Path, *, wait: bool = False,
                     _verify_locks(plan, plan_path, digest)
                     while True:
                         _verify_locks(plan, plan_path, digest)
-                        assessment = check_execution_gate(plan["gate"])
+                        with measure('resource_gate_check'):
+                            assessment = check_execution_gate(plan['gate'])
                         status["gate"] = assessment
                         if assessment["ready"]:
                             record["phase"] = "launching"
@@ -180,8 +189,10 @@ def run_gated_plan(plan_path: Path, output_dir: Path, *, wait: bool = False,
                             record['phase'] = status['phase'] = 'gate_timeout'
                             return status
                         time.sleep(poll_seconds if plan['gate'].get('wait_until_idle',False) else min(poll_seconds, remaining))
+                    perf_path=stage["env"].get("JIT_PERFORMANCE_FILE", os.environ.get("JIT_PERFORMANCE_FILE"))
+                    record_event(perf_path,"gate_and_lock_prelaunch",gate_wall_start,time.monotonic()-gate_start,stage=stage["name"], backend=stage.get("execution_backend","gpu"),includes_hash_verification=True)
                     process = subprocess.Popen(stage["argv"], cwd=stage["cwd"],
-                        env={**os.environ, **stage["env"]}, stdout=log, stderr=subprocess.STDOUT,
+                        env={**os.environ, **stage["env"], "JIT_PROCESS_STARTED_UNIX":str(time.time())}, stdout=log, stderr=subprocess.STDOUT,
                         start_new_session=True)
                     status["reserved_interactions"] += stage["max_interactions"]
                     record["pid"] = process.pid

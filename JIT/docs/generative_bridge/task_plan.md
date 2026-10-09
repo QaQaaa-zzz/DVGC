@@ -83,3 +83,11 @@ new physical evaluation.
 5. Check live HTTP scalars, desktop watcher, model index, Git delivery, and
    shared research ledger. Software checks and state inheritance are not proof
    of improved recovery or jumping capability.
+
+## 2026-10-09 authorized 4090D acceleration
+
+User requests implementation of JIT_4090D_acceleration_Codex_handoff_20261009.md.
+See PERFORMANCE_PLAN.md and PERF_AUDIT.md. Preserve original frozen training,
+prior reset-cancellation decision and all learner/physical/data-role semantics.
+Independent modules: sampling index, verified I/O reuse, compact G safety/logging,
+opt-in resident B1 teacher, timing/diagnostic tools. No new long training launch.

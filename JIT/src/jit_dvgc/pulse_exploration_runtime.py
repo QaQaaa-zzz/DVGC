@@ -396,7 +396,7 @@ def collect(spec, output):
     write(output/'status.json',dict(phase='completed',charged_interactions=0 if spec.get('reuse_prefix_collection') else physical_count,active_interactions=active_count,padding_interactions=physical_count-active_count,waiting_interactions=active_count-int(tape['mask'].sum()),pulse_training_steps=int(tape['mask'].sum()) if mode=='learned_residual' else 0,pulse_applied_steps=int(tape['mask'].sum()),pulse_start_step=delay if event is None and not mixed else None,pulse_batch_mode=spec.get('pulse_batch_mode','single'),onset_counts={str(int(t)):int((delays==t).sum()) for t in np.unique(delays)},pulse_event=event,stage_not_reached=sum(not r['stage_reached'] for r in rows),executed_ticks=executed_ticks,wall_seconds=time.monotonic()-start,**scheduled_pulse_summary(spec,tape,rows)))
 
 
-def evaluate(spec, output):
+def evaluate(spec, output, *, session=None):
     """Evaluate with canonical restoration, optionally in bounded processes."""
     if spec.get('bridge_action_plan') and spec.get('evaluation_batch_size') is not None:
         raise ValueError('bridge candidates must be explicitly sharded with identity-bound plans')
@@ -424,8 +424,11 @@ def evaluate(spec, output):
                    or spec.get('closed_loop_prefix_policy') is not None
                    or spec.get('warmup_initializer') is not None)
     bank=load_probe_bank(Path(spec['bank']));all_names=[m['name'] for m in bank['members'] if 'evaluator' in m['roles']]
-    suffix=FrozenSuffixEvaluator(spec['bank'],all_names,horizon,output/'runtime',spec['budget'])
+    suffix=(FrozenSuffixEvaluator(spec['bank'],all_names,horizon,output/'runtime',spec['budget'])
+            if session is None else session.suffix(spec,all_names,output/'runtime'))
     prefix_name=validate_evaluation_options(spec,suffix.members)
+    if session is not None and (prefix_name is not None or spec.get('warmup_initializer') is not None):
+        raise ValueError('teacher session forbids unpinned alternate controllers')
     for r in rows:r.update(attempts=[],label=None,witness=None)
     if spec.get('reuse_results'):
         reused=read(spec['reuse_results'])
@@ -480,7 +483,7 @@ def evaluate(spec, output):
             bridge_prefixes,bridge_source_only=map(jp.asarray,bridge_plan)
             if len(subset)!=len(rows):raise ValueError('bridge requires all candidates in one frozen-policy batch')
         step=jax.vmap(lambda s,a:endpoint_state(env.step(s,a),spec))
-        def rollout(initial):
+        def rollout(initial,bridge_prefixes,bridge_source_only):
             def frame(s,action,mask,previous):
                 result=dict(qpos=s.data.qpos,qvel=s.data.qvel,action=action,reward=s.reward,mask=mask,done=s.done,success=s.info['success'],physical_failure=s.info['physical_failure'],timeout=s.info['timeout'],end_code=s.info['end_code'],valid_contact=endpoint_success(s,spec))
                 before=physical_trace(env,previous);after=physical_trace(env,s)
@@ -516,7 +519,16 @@ def evaluate(spec, output):
                 return t+1,nxt,alive,tr
             tick,final,_,tr=jax.lax.while_loop(condition,advance,(jp.array(0),initial,jp.ones(count,bool),traces))
             return tick,tr
-        tick,tape=jax.device_get(jax.jit(rollout)(initial));tick=int(tick);tape={k:v[:tick] for k,v in tape.items()}
+        if bridge_plan is None:
+            bridge_prefixes=jp.zeros((count,16,4),jp.float32)
+            bridge_source_only=jp.ones(count,bool)
+        if session is None:
+            tick,tape=jax.device_get(jax.jit(rollout)(initial,bridge_prefixes,bridge_source_only))
+        else:
+            from .generative_bridge.teacher_runtime import kernel_identity
+            key=kernel_identity(spec,actual_policy,count,record_preobs,prefix_name,bridge_plan is not None)
+            tick,tape=session.execute(key,rollout,initial,bridge_prefixes,bridge_source_only)
+        tick=int(tick);tape={k:v[:tick] for k,v in tape.items()}
         rollout_ready=time.monotonic()
         cost=count*tick;charged+=cost;active_count+=int(tape['mask'].sum())
         trace_path=output/(name+'_traces.npz');np.savez_compressed(trace_path,**tape)
@@ -542,7 +554,7 @@ def evaluate(spec, output):
         timings.append(dict(policy=name,candidates=count,runtime_seconds=runtime_ready-stage_start,restore_seconds=restore_ready-runtime_ready,compile_and_rollout_seconds=rollout_ready-restore_ready,export_seconds=time.monotonic()-rollout_ready))
         write(output/'timings.json',timings)
         del initial
-        jax.clear_caches()
+        if session is None:jax.clear_caches()
     for r in rows:
         if r.get('prefix_terminal'):r.update(label=r.get('prefix_label'),witness=spec['proposer'] if r.get('prefix_label')==1 and not (bridge_plan is not None or prefix_name is not None or spec.get('warmup_initializer') is not None) else None)
         elif r['label']!=1:r['label']=aggregate_labels(r['attempts'],spec['order'])

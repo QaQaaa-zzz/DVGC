@@ -1,5 +1,7 @@
 """JSON receipt adapters for corpus and bounded offline generator stages."""
 import json
+import os
+import tempfile
 from pathlib import Path
 import time
 import numpy as np
@@ -9,15 +11,41 @@ from .data import validate_trace,trajectory_identity
 
 
 def save_corpus(corpus,path):
+    """Publish a corpus manifest, retaining verified historical blob references.
+
+    New blobs are content named and atomically installed in this new corpus
+    directory. Historical blobs remain at their immutable original locations;
+    there is no shared writable store, hardlink, or garbage collection.
+    """
+    from .verified_trace_cache import TRACE_CACHE
     path=Path(path);path.mkdir(parents=True,exist_ok=False)
     groups={k:[] for k in corpus['groups']}
     for group,traces in corpus['groups'].items():
-        for i,trace in enumerate(traces):
-            target=path/f'{group}_{i:06d}.npz'
-            np.savez_compressed(target,**trace['arrays'])
+        for trace in traces:
+            validate_trace(trace)
+            identity=trajectory_identity(trace)
+            reference=trace.get('_verified_blob')
+            if reference and reference['trajectory_sha256']==identity:
+                arrays=TRACE_CACHE.load(reference['path'],reference['sha256'],schema='jit_corpus_trace_arrays_v1_1')
+                if trajectory_identity({'metadata':trace['metadata'],'arrays':arrays})!=identity:
+                    raise ValueError('corpus blob reference does not match current trace')
+                blob={'path':reference['path'],'sha256':reference['sha256']}
+            else:
+                target=path/(identity+'.npz')
+                if not target.exists():
+                    temporary=None
+                    try:
+                        with tempfile.NamedTemporaryFile(dir=path,suffix='.npz',delete=False) as stream:
+                            temporary=Path(stream.name)
+                            np.savez_compressed(stream,**trace['arrays'])
+                            stream.flush();os.fsync(stream.fileno())
+                        temporary.chmod(0o444)
+                        os.replace(temporary,target)
+                    finally:
+                        if temporary is not None and temporary.exists():temporary.unlink()
+                blob={'path':str(target.resolve()),'sha256':file_sha(target)}
             groups[group].append({'metadata':trace['metadata'],'adoption':trace.get('adoption'),
-                'path':str(target.resolve()),'sha256':file_sha(target),
-                'trajectory_sha256':trajectory_identity(trace)})
+                **blob,'trajectory_sha256':identity})
     manifest={**{k:v for k,v in corpus.items() if k!='groups'},'groups':groups,
               'schema':'jit_generator_corpus_update_v1_1'}
     target=path/'manifest.json';atomic_json(target,manifest)
@@ -25,6 +53,7 @@ def save_corpus(corpus,path):
 
 
 def load_corpus(receipt):
+    from .verified_trace_cache import TRACE_CACHE
     if file_sha(receipt['path'])!=receipt['sha256']:raise ValueError('corpus receipt hash changed')
     raw=json.loads(Path(receipt['path']).read_text());groups={}
     if raw['new_data']!=receipt['new_data']:raise ValueError('corpus new-data status drift')
@@ -32,14 +61,14 @@ def load_corpus(receipt):
     for group,records in raw['groups'].items():
         groups[group]=[]
         for record in records:
-            if file_sha(record['path'])!=record['sha256']:raise ValueError('corpus trace changed')
-            with np.load(record['path'],allow_pickle=False) as a:
-                trace={'metadata':record['metadata'],'arrays':{k:a[k] for k in a.files}}
+            arrays=TRACE_CACHE.load(record['path'],record['sha256'],schema='jit_corpus_trace_arrays_v1_1')
+            trace={'metadata':record['metadata'],'arrays':dict(arrays)}
             if record.get('adoption') is not None:trace['adoption']=record['adoption']
             validate_trace(trace)
             identity=trajectory_identity(trace)
             if identity!=record['trajectory_sha256'] or identity not in admitted:
                 raise ValueError('trace lacks matching committed admission')
+            trace['_verified_blob']={k:record[k] for k in ('path','sha256','trajectory_sha256')}
             groups[group].append(trace)
     return {**raw,'groups':groups}
 

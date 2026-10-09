@@ -1,5 +1,6 @@
 """Explicit DDPM mean epsilon loss and trailing DDIM20; no physics execution."""
 import numpy as np
+from .performance import measure
 
 TIMESTEPS=tuple(range(99,-1,-5))
 
@@ -86,6 +87,12 @@ def make_train_step(predict,*,learning_rate):
     if not callable(learning_rate) and (not np.isfinite(learning_rate) or learning_rate<=0):
         raise ValueError('finite positive LR required')
     optimizer=_optimizer();ab=jp.asarray(cosine_schedule()[1])
+    def finite_device(tree):
+        return jp.all(jp.stack([jp.all(jp.isfinite(v)) for v in jax.tree.leaves(tree)]))
+    @jax.jit
+    def input_guard(state,observations,actions):
+        return jp.stack((finite_device((state,observations,actions)),
+                         jp.all(jp.abs(actions)<=1)))
     @jax.jit
     def propose(state,observations,actions):
         rng,key_k,key_noise=jax.random.split(state['rng'],3)
@@ -99,20 +106,35 @@ def make_train_step(predict,*,learning_rate):
         lr=learning_rate(state['updates']) if callable(learning_rate) else learning_rate
         params=optax.apply_updates(state['params'],jax.tree.map(lambda x:lr*x,delta))
         ema=jax.tree.map(lambda a,b:.999*a+.001*b,state['ema'],params)
-        return {**state,'params':params,'ema':ema,'optimizer':optstate,'rng':rng,
-                'updates':state['updates']+1},value,grad
+        proposed={**state,'params':params,'ema':ema,'optimizer':optstate,'rng':rng,
+                  'updates':state['updates']+1}
+        # Gradients and complete state stay on device; no buffer donation on rejection.
+        return proposed,(finite_device((proposed,value,grad)),value)
     def step(state,observations,actions):
         if np.shape(observations)!=(len(actions),76) or np.shape(actions)[1:]!=(16,4):
             raise ValueError('generator batch shape mismatch')
-        if not _finite((state,observations,actions)):raise FloatingPointError('nonfinite generator inputs')
-        if np.any(np.abs(np.asarray(actions))>1):raise ValueError('action permission drift')
-        proposed,value,grad=propose(state,observations,actions)
-        if not _finite((proposed,value,grad)):raise FloatingPointError('nonfinite generator proposal rejected')
+        with measure('numerical_guard',backend=jax.default_backend(),batch_size=len(actions),
+                     phase='inputs',device_to_host_bytes=2):
+            finite,bounded=jax.device_get(input_guard(state,observations,actions))
+        if not finite:raise FloatingPointError('nonfinite generator inputs')
+        if not bounded:raise ValueError('action permission drift')
+        # The existing post-proposal safety transfer is the completion boundary.
+        # This event includes the fused proposal-finiteness reduction.
+        with measure('forward_backward_optimizer',backend=jax.default_backend(),batch_size=len(actions),
+                     includes_proposal_guard=True,device_to_host_bytes=5):
+            proposed,checks=propose(state,observations,actions)
+            finite,value=jax.device_get(checks)
+        if not finite:raise FloatingPointError('nonfinite generator proposal rejected')
         return proposed,float(value)
     return step
 
 
 def save_state(path,state,identity):
+    with measure('checkpoint_write',checkpoint=str(path)):
+        return _save_state(path,state,identity)
+
+
+def _save_state(path,state,identity):
     from pathlib import Path
     from flax import serialization
     import jax
@@ -120,10 +142,16 @@ def save_state(path,state,identity):
     from .protocol import atomic_json
     if not _finite(state):raise FloatingPointError('cannot checkpoint nonfinite G state')
     path=Path(path);path.mkdir(parents=True,exist_ok=False)
-    payload=path/'state.msgpack';payload.write_bytes(serialization.to_bytes(jax.device_get(state)))
+    import os
+    from .provenance import _sync_directory
+    payload=path/'state.msgpack'
+    with payload.open('xb') as stream:
+        stream.write(serialization.to_bytes(jax.device_get(state)))
+        stream.flush();os.fsync(stream.fileno())
     atomic_json(path/'manifest.json',{'schema':'jit_generator_training_state_v1_1',
         'identity':identity,'state_sha256':file_sha(payload),'updates':int(state['updates']),
         'inference_parameters':'ema','includes':['params','ema','optimizer','rng','normalizer','updates']})
+    _sync_directory(path);_sync_directory(path.parent)
 
 
 def restore_state(path,template,identity):
@@ -166,6 +194,7 @@ def train_pretrain(initial,corpus,*,predict,dev_fixture,output,identity,updates,
     import jax.numpy as jp
     from pathlib import Path
     from .feedback_data import sample_corpus
+    from .corpus_index import compile_corpus_index
     from .protocol import atomic_json
     start_update=int(initial['updates'])
     schedule=pretrain_learning_rate(max_updates=max_updates,warmup_updates=warmup_updates,
@@ -203,13 +232,16 @@ def train_pretrain(initial,corpus,*,predict,dev_fixture,output,identity,updates,
     try:
         save_state(root/'initial',state,identity)
         scores.append((score(state),'initial'))
+        with measure('corpus_index_build',backend='cpu',batch_size=batch_size):
+            compiled_corpus=compile_corpus_index(corpus)
         step=make_train_step(predict,learning_rate=schedule)
         for i in range(updates):
             if time.monotonic()-started>=max_wall_seconds:
                 raise TimeoutError('generator pretraining wall budget exhausted')
             next_rng,data_key=jax.random.split(state['rng'])
             seed=int(jax.random.bits(data_key,(),dtype=jp.uint32))
-            obs,act,sources=sample_corpus(corpus,np.random.default_rng(seed),batch_size)
+            with measure('corpus_sampling',backend='cpu',batch_size=batch_size,update=i+1):
+                obs,act,sources=sample_corpus(compiled_corpus,np.random.default_rng(seed),batch_size)
             # Charge before proposing an update: a failed/nonfinite attempt is not free.
             atomic_json(root/'cost_progress.json',{'charged_updates':i+1,
                         'charged_updates_before':charged_updates_before,
@@ -237,7 +269,8 @@ def train_pretrain(initial,corpus,*,predict,dev_fixture,output,identity,updates,
                 'wall_seconds':time.monotonic()-started,'environment_interactions':0,
                 'charged_updates':updates,'charged_updates_before':charged_updates_before,
                 'total_charged_updates':charged_updates_before+updates,'metrics':logs}
-        atomic_json(root/'generator_selection.json',report)
+        with measure('logs_and_reports',backend='cpu',batch_size=batch_size):
+            atomic_json(root/'generator_selection.json',report)
         return restored,report
     except BaseException as error:
         atomic_json(root/'failure.json',{'status':'failed','error':repr(error),
@@ -270,6 +303,7 @@ def train_incremental(incumbent,corpus,*,predict,dev_fixture,output,identity,
     import jax.numpy as jp
     from pathlib import Path
     from .feedback_data import sample_corpus
+    from .corpus_index import compile_corpus_index
     from .protocol import atomic_json
     if generator_update_policy not in ('fixed_dev_best','last_valid'):
         raise ValueError('unknown generator update policy')
@@ -289,8 +323,13 @@ def train_incremental(incumbent,corpus,*,predict,dev_fixture,output,identity,
         or not 0<max_wall_seconds<float('inf')):
         raise ValueError('declared bounded incremental compute budget required')
     root=Path(output);root.mkdir(parents=True,exist_ok=False);start=time.monotonic()
+    from .provenance import CompactProvenance
+    provenance_log=CompactProvenance(updates=updates,batch_size=batch_size)
+    provenance_pointer=None
     logs=[];state=incumbent;scores=[];state_counts={'incumbent':initial_updates}
     try:
+        with measure('corpus_index_build',backend='cpu',batch_size=batch_size):
+            compiled_corpus=compile_corpus_index(corpus,include_trajectory_identity=True)
         step=make_train_step(predict,learning_rate=1e-5)
         observations,actions,k,eps=map(jp.asarray,dev_fixture)
         if not _finite(dev_fixture):raise FloatingPointError('invalid fixed dev noise fixture')
@@ -306,15 +345,17 @@ def train_incremental(incumbent,corpus,*,predict,dev_fixture,output,identity,
             if time.monotonic()-start>max_wall_seconds:raise TimeoutError('generator compute budget exhausted')
             next_rng,data_key=jax.random.split(state['rng'])
             seed=int(jax.random.bits(data_key,(),dtype=jp.uint32))
-            obs,act,sources,provenance=sample_corpus(corpus,np.random.default_rng(seed),batch_size,
-                                                  return_metadata=True)
+            with measure('corpus_sampling',backend='cpu',batch_size=batch_size,update=i+1):
+                obs,act,sources,provenance=sample_corpus(compiled_corpus,np.random.default_rng(seed),batch_size,
+                    return_metadata=True,include_trajectory_identity=True)
+            provenance_log.append(provenance,update=i+1,state_updates=initial_updates+i+1,sampling_seed=seed)
             atomic_json(root/'cost_progress.json',{**common,'charged_updates':i+1,
                 'total_charged_updates':charged_updates_before+i+1})
             state,value=step({**state,'rng':next_rng},jp.asarray(obs),jp.asarray(act))
             logs.append({'update':i+1,'state_updates':int(state['updates']),'noise_mse':value,
                 'source_counts':{g:sources.count(g) for g in corpus['groups']},
                 'history_fraction':sources.count('history')/batch_size,
-                'new_fraction':1-sources.count('history')/batch_size,'sample_provenance':provenance})
+                'new_fraction':1-sources.count('history')/batch_size,'sample_provenance_index':i})
             if (i+1)%500==0 or i+1==updates:
                 name=f'update_{i+1:04d}'
                 save_state(root/name,state,identity)
@@ -325,16 +366,24 @@ def train_incremental(incumbent,corpus,*,predict,dev_fixture,output,identity,
         best={'checkpoint':monitoring_best,'noise_mse':dict((n,v) for v,n in scores)[monitoring_best],
             'state_updates':state_counts[monitoring_best],
             'age_updates':int(state['updates'])-state_counts[monitoring_best]}
-        report={**common,'status':'completed','updates':updates,'charged_updates':updates,
+        with measure('logs_and_reports',backend='cpu',batch_size=batch_size):
+            provenance_pointer=provenance_log.save(root)
+        report={**common,'sample_provenance':provenance_pointer,'status':'completed','updates':updates,'charged_updates':updates,
             'total_charged_updates':charged_updates_before+updates,'state_updates':int(restored['updates']),
             'last_state_updates':int(state['updates']),'selected':selected,'scores':scores,
             'monitoring_best':best,'old_dev_metric':'monitor_only' if generator_update_policy=='last_valid' else 'selection',
             'requested_mix':corpus['requested_mix'],'realized_mix':corpus['realized_mix'],
             'wall_seconds':time.monotonic()-start,'environment_interactions':0,'metrics':logs}
-        atomic_json(root/'generator_selection.json',report)
+        with measure('logs_and_reports',backend='cpu',batch_size=batch_size):
+            atomic_json(root/'generator_selection.json',report)
         return restored,report
     except BaseException as e:
-        atomic_json(root/'failure.json',{**common,'status':'failed','error':repr(e),
+        provenance_error=None
+        if provenance_pointer is None:
+            try:provenance_pointer=provenance_log.save(root)
+            except BaseException as error:provenance_error=repr(error)
+        atomic_json(root/'failure.json',{'sample_provenance':provenance_pointer,
+            'provenance_write_error':provenance_error,**common,'status':'failed','error':repr(e),
             'completed_updates':len(logs),'charged_updates':json_cost(root),
             'total_charged_updates':charged_updates_before+json_cost(root),
             'wall_seconds':time.monotonic()-start,'metrics':logs,'environment_interactions':0})

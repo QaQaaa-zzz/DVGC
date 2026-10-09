@@ -39,7 +39,9 @@ def test_old_dev_prefers_incumbent_but_continuation_is_explicit(tmp_path,policy,
         assert not np.array_equal(state['rng'],selected['rng'])
         assert pytree_sha256(state['optimizer'])!=pytree_sha256(selected['optimizer'])
         assert pytree_sha256(state['normalizer'])==pytree_sha256(selected['normalizer'])
-    samples=report['metrics'][0]['sample_provenance']
+    from jit_dvgc.generative_bridge.provenance import load_sample_provenance
+    samples=load_sample_provenance(tmp_path/'train',report['sample_provenance'],
+                                   report['metrics'][0]['sample_provenance_index'])
     assert all(r['onset']==15 and r['source_group']=='actor_new' for r in samples)
     assert all(r['window_start_step']==18+r['window_start'] for r in samples)
 

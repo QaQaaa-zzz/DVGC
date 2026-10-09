@@ -77,37 +77,43 @@ def build_corpus(history, teachers, actors, *, adoption, expected, splits):
             'realized_mix':realized_mix(counts),'new_data':bool(groups['teacher_new'] or groups['actor_new'])}
 
 
-def sample_corpus(corpus, rng, batch_size, *, return_metadata=False):
-    """Choose source, ancestor, trajectory, then window; loss is not reweighted."""
-    names=list(MIX);probs=[corpus['realized_mix'][k] for k in names]
+def sample_corpus(corpus, rng, batch_size, *, return_metadata=False, include_trajectory_identity=False):
+    """Choose source, ancestor, trajectory, then window; loss is not reweighted.
+
+    Pass compile_corpus_index(corpus) to reuse an explicit immutable snapshot.
+    The historical dict API builds a fresh index, never silently caches writes.
+    """
+    from .corpus_index import CompiledCorpusIndex, compile_corpus_index
+    index = corpus if isinstance(corpus, CompiledCorpusIndex) else compile_corpus_index(corpus,include_trajectory_identity=include_trajectory_identity)
+    if include_trajectory_identity and not index.includes_trajectory_identity:
+        raise ValueError('compile corpus index with trajectory identities enabled')
+    names=index.names;probs=index.probabilities
     if not any(probs):raise ValueError('empty corpus cannot be sampled')
     observations=[];actions=[];sources=[];metadata=[]
     for _ in range(batch_size):
-        group=names[int(rng.choice(3,p=probs))];traces=corpus['groups'][group]
-        ancestors=sorted({t['metadata']['root_episode_id'] for t in traces})
-        ancestor=ancestors[int(rng.integers(len(ancestors)))]
-        choices=[t for t in traces if t['metadata']['root_episode_id']==ancestor]
+        group_index=int(rng.choice(3,p=probs));group=names[group_index]
+        ancestors=index.groups[group_index]
+        ancestor,choices=ancestors[int(rng.integers(len(ancestors)))]
         trace=choices[int(rng.integers(len(choices)))]
-        windows=build_action_windows(trace)
-        i=int(rng.integers(len(windows['actions'])))
-        observations.append(windows['observations'][i]);actions.append(windows['actions'][i]);sources.append(group)
+        i=int(rng.integers(len(trace.starts)));start=trace.starts[i]
+        observations.append(trace.observations[start]);actions.append(trace.actions[start:start+16]);sources.append(group)
         if return_metadata:
-            start=int(windows['start_indices'][i]);m=trace['metadata']
-            origins=sorted(set(trace['arrays']['action_origin'][start:start+16].tolist()))
-            offset=m.get('trace_start_step')
+            origins=sorted(set(trace.origins[start:start+16].tolist()))
+            offset=trace.trace_start_step
             metadata.append({'source_group':group,'recency':'history' if group=='history' else 'new',
-                'root_episode_id':ancestor,'root_id':m.get('root_id'),'onset':m.get('onset'),
+                'root_episode_id':ancestor,'root_id':trace.root_id,'onset':trace.onset,
                 'window_start':start,'window_end_exclusive':start+16,
                 'window_start_step':None if offset is None else int(offset)+start,
                 'window_end_step_exclusive':None if offset is None else int(offset)+start+16,
                 'segment':origins[0] if len(origins)==1 else 'mixed','action_origins':origins})
+            if include_trajectory_identity:metadata[-1]['trajectory_sha256']=trace.trajectory_sha256
     result=(np.asarray(observations),np.asarray(actions),sources)
     return (*result,metadata) if return_metadata else result
 
 
 def trace_from_evaluation(attempt, metadata):
     """Read an existing lane; absence of preobs is explicit, never recaptured here."""
-    from .contracts import file_sha
+    from .verified_trace_cache import TRACE_CACHE
     if (attempt.get('recording_schema')!='jit_actor_success_trace_v1_1'
             or attempt.get('action_origin')!='actor_only'
             or attempt.get('outcome')!='stable_forward_recovery'
@@ -117,15 +123,14 @@ def trace_from_evaluation(attempt, metadata):
                           ('snapshot_context_sha256','root_context_sha256')]:
         if attempt.get(source)!=metadata.get(target):raise ValueError('evaluation identity mismatch: '+source)
     if attempt.get('controller_kind')=='composite_teacher':raise ValueError('teacher cannot become actor_only')
-    if file_sha(attempt['trace'])!=attempt['trace_sha256']:raise ValueError('evaluation trace hash changed')
-    with np.load(attempt['trace'],allow_pickle=False) as raw:
-        if 'actor_observation_before' not in raw:
-            return {'metadata':dict(metadata),'arrays':{}}
-        lane=attempt['trace_lane'];mask_key='valid_mask' if 'valid_mask' in raw else 'mask'
-        valid=np.asarray(raw[mask_key][:,lane],bool)
-        ids=np.flatnonzero(valid)
-        if len(ids) and not np.array_equal(ids,np.arange(len(ids))):raise ValueError('noncontiguous real evaluation lane')
-        arrays={k:raw[k][ids,lane] for k in raw.files}
+    raw=TRACE_CACHE.load(attempt['trace'],attempt['trace_sha256'])
+    if 'actor_observation_before' not in raw:
+        return {'metadata':dict(metadata),'arrays':{}}
+    lane=attempt['trace_lane'];mask_key='valid_mask' if 'valid_mask' in raw else 'mask'
+    valid=np.asarray(raw[mask_key][:,lane],bool)
+    ids=np.flatnonzero(valid)
+    if len(ids) and not np.array_equal(ids,np.arange(len(ids))):raise ValueError('noncontiguous real evaluation lane')
+    arrays={k:value[:len(ids),lane] for k,value in raw.items()}
     if 'failure' not in arrays:arrays['failure']=arrays['physical_failure']
     arrays['valid_mask']=np.ones(len(ids),bool)
     if 'action_origin' in arrays and set(arrays['action_origin'])!={'actor_only'}:

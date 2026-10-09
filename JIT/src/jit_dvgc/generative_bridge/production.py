@@ -144,12 +144,10 @@ def prepare_bound_run(*,pointer,source_round,output,repository,max_interactions,
 
 
 def lane_arrays(attempt):
-    if file_sha(attempt['trace'])!=attempt['trace_sha256']:raise ValueError('trace payload changed')
-    with np.load(attempt['trace'],allow_pickle=False) as a:
-        lane=attempt['trace_lane'];ids=np.flatnonzero(a['mask'][:,lane])
-        if not len(ids) or not np.array_equal(ids,np.arange(len(ids))):raise ValueError('missing or noncontiguous real lane')
-        arrays={k:a[k][ids,lane] for k in a.files}
-    arrays['valid_mask']=np.ones(len(ids),bool);arrays['failure']=arrays['physical_failure']
+    from .verified_trace_cache import TRACE_CACHE
+    arrays=TRACE_CACHE.lane(attempt['trace'],attempt['trace_sha256'],attempt['trace_lane'])
+    arrays['valid_mask']=np.ones(len(arrays['mask']),bool)
+    arrays['failure']=arrays['physical_failure']
     return arrays
 
 
@@ -224,9 +222,11 @@ def reject_finite_replay(row,replay):
 
 
 class ProductionRunner:
-    def __init__(self,manifest):
+    def __init__(self,manifest,*,_teacher_worker=False):
         import jax
-        if jax.default_backend()!='cpu':raise ValueError('production supervisor must use JAX_PLATFORMS=cpu; GPU work belongs to gated children')
+        if _teacher_worker and (type(self).__name__!='PersistentTeacherRunner' or jax.default_backend()!='gpu'):
+            raise ValueError('teacher worker requires dedicated GPU entrypoint')
+        if not _teacher_worker and jax.default_backend()!='cpu':raise ValueError('production supervisor must use JAX_PLATFORMS=cpu; GPU work belongs to gated children')
         self.spec=manifest;self.root=Path(manifest['output']);self.start=time.monotonic()
         self.retry_generator=False;self.active_teacher_root=None;self.teacher_in_progress=False
         self.manifest_sha256=file_sha(self.root/'production.json')
@@ -257,17 +257,22 @@ class ProductionRunner:
             raise ValueError('physical budget exhausted before child')
         if sum(c.get('charged_updates',0) for c in self.costs)+updates>self.spec['budgets']['max_supervised_updates']:
             raise ValueError('supervised update budget exhausted before child')
+        from .verified_files import LOCK_CACHE
         for p,h in self.spec['locks'].items():
-            if file_sha(p)!=h:raise ValueError('locked input drift: '+p)
+            LOCK_CACHE.verify(p,h)
         inputs={}
         for i,a in enumerate(argv[:-1]):
-            if a in ('--spec','--config'):inputs[str(Path(argv[i+1]).resolve())]=file_sha(argv[i+1])
+            if a in ('--spec','--config','--request'):inputs[str(Path(argv[i+1]).resolve())]=file_sha(argv[i+1])
+        if '--request' in argv:
+            request=read(argv[argv.index('--request')+1])
+            inputs.update(request.get('input_files',{}))
         inputs[str(self.root/'production.json')]=file_sha(self.root/'production.json')
         plan=dict(schema='jit_gated_plan_v1',gate={**self.runtime['gate'],'wait_until_idle':False},
             input_files=inputs,source_locks={**self.spec['locks'],**self.spec['implementation_files']},max_interactions=max(1,maximum),
             wait_timeout_seconds=remaining,stages=[dict(name=name,argv=[sys.executable,*map(str,argv)],
             cwd=str(self.repo),env=dict(JAX_PLATFORMS='cuda,cpu',PYTHONPATH=str(self.repo/'JIT/src'),
-            XLA_PYTHON_CLIENT_PREALLOCATE='false',JIT_AUTO_PUBLISH='0',**(extra_env or {})),
+            XLA_PYTHON_CLIENT_PREALLOCATE='false',JIT_AUTO_PUBLISH='0',
+            JIT_PERFORMANCE_FILE=str(self.root/'performance.jsonl'),**(extra_env or {})),
             timeout_seconds=remaining,max_interactions=maximum)])
         directory=self.root/'execution';directory.mkdir(exist_ok=True)
         planpath=directory/(name+'_plan.json');atomic_json(planpath,plan)
@@ -483,6 +488,9 @@ class ProductionRunner:
 
     def teacher_search(self,incumbent):
         if not self.panels['new_roots']:return {}
+        if self.spec.get('teacher_execution')=='persistent_b1':
+            from .teacher_worker import dispatch_teacher
+            return dispatch_teacher(self,incumbent)
         from .worker import generator_template,generator_reference
         from .diffusion import restore_state,ddim_sample
         from .proposals import make_candidate_pool
@@ -492,6 +500,8 @@ class ProductionRunner:
         import jax.numpy as jp
         net,template,identity=generator_template(generator_reference(self.spec),self.spec['seed'])
         state=restore_state(Path(incumbent['checkpoint_manifest']).parent,template,identity)
+        generation=jax.jit(lambda observations,noise:ddim_sample(
+            lambda x,o,k:net.apply(state['ema'],x,o,k),observations,noise)) if getattr(self,'persistent_teacher',False) else None
         self.teacher_in_progress=True
         source_results=self.evaluate('teacher_source',self.panels['new_roots'])
         output={};teacher_dir=self.root/'teachers';teacher_dir.mkdir(exist_ok=True)
@@ -517,7 +527,10 @@ class ProductionRunner:
             actual=lane_arrays(source_attempt);obs=actual['actor_observation_before'][0]
             noise=np.stack([np.random.default_rng(stable_seed(self.spec['seed'],rid,cid)).normal(size=(16,4)) for cid in range(1,17)]).astype(np.float32)
             normalized=(jp.asarray(np.repeat(obs[None],16,axis=0))-state['normalizer']['mean'])/state['normalizer']['std']
-            generated=jax.device_get(ddim_sample(lambda x,o,k:net.apply(state['ema'],x,o,k),normalized,jp.asarray(noise)))
+            from .performance import measure
+            with measure('ddim_generation',backend=jax.default_backend(),root=rid,batch_size=16):
+                generated=jax.device_get(generation(normalized,jp.asarray(noise)) if generation is not None
+                    else ddim_sample(lambda x,o,k:net.apply(state['ema'],x,o,k),normalized,jp.asarray(noise)))
             pool=make_candidate_pool(rid,actual['normalized_action_executed'][:16],generated,seed=self.spec['seed'],
                 colored_noise_candidates=self.spec.get('teacher_colored_noise_candidates',15))
             poolpath=teacher_dir/f'{ordinal:04d}_proposals.npz'
