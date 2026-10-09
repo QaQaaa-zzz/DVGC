@@ -489,7 +489,10 @@ def evaluate(spec, output, *, session=None):
             bridge_prefixes,bridge_source_only=map(jp.asarray,bridge_plan)
             if len(subset)!=len(rows):raise ValueError('bridge requires all candidates in one frozen-policy batch')
         step=jax.vmap(lambda s,a:endpoint_state(env.step(s,a),spec))
-        def rollout(initial,bridge_prefixes,bridge_source_only):
+        if bridge_plan is None:
+            bridge_prefixes=jp.zeros((count,16,4),jp.float32)
+            bridge_source_only=jp.ones(count,bool)
+        def rollout(initial,bridge_prefixes=bridge_prefixes,bridge_source_only=bridge_source_only):
             def frame(s,action,mask,previous):
                 result=dict(qpos=s.data.qpos,qvel=s.data.qvel,action=action,reward=s.reward,mask=mask,done=s.done,success=s.info['success'],physical_failure=s.info['physical_failure'],timeout=s.info['timeout'],end_code=s.info['end_code'],valid_contact=endpoint_success(s,spec))
                 before=physical_trace(env,previous);after=physical_trace(env,s)
@@ -529,7 +532,8 @@ def evaluate(spec, output, *, session=None):
             bridge_prefixes=jp.zeros((count,16,4),jp.float32)
             bridge_source_only=jp.ones(count,bool)
         if session is None:
-            tick,tape=jax.device_get(jax.jit(rollout)(initial,bridge_prefixes,bridge_source_only))
+            # Default path keeps original closed-over constant prefix semantics.
+            tick,tape=jax.device_get(jax.jit(rollout)(initial))
         else:
             from .generative_bridge.teacher_runtime import kernel_identity
             key=kernel_identity(spec,actual_policy,count,record_preobs,prefix_name,bridge_plan is not None)
