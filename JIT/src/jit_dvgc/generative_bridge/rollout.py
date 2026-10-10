@@ -36,13 +36,19 @@ def load_prefix_plan(spec,rows):
     return prefixes,source_only
 
 
-def closed_loop_action(tick, observations, keys, tail_policy, prefix_policy=None):
+def closed_loop_action(tick, observations, keys, tail_policy, prefix_policy=None, source_only=None):
     """Select a closed-loop Actor; state, clocks and counters never reset here."""
     import jax
     if prefix_policy is None:
         return jax.vmap(tail_policy)(observations, keys)[0]
+    def first(_):
+        import jax.numpy as jp
+        actions=jax.vmap(prefix_policy)(observations,keys)[0]
+        if source_only is not None:
+            actions=jp.where(source_only[:,None],jax.vmap(tail_policy)(observations,keys)[0],actions)
+        return actions
     return jax.lax.cond(tick < 16,
-        lambda _: jax.vmap(prefix_policy)(observations, keys)[0],
+        first,
         lambda _: jax.vmap(tail_policy)(observations, keys)[0], operand=None)
 
 
@@ -55,6 +61,11 @@ def validate_evaluation_options(spec, members):
                 or spec.get('success_criterion') != 'stable_forward_recovery'
                 or 'bridge_action_plan' in spec or spec.get('reuse_results')):
             raise ValueError('invalid closed-loop prefix/tail evaluation contract')
+    if spec.get('closed_loop_prefix_initializer') is not None and prefix is None:
+        raise ValueError('prefix initializer requires prefix policy')
+    if spec.get('closed_loop_prefix_source_only') is not None:
+        mask=np.asarray(spec['closed_loop_prefix_source_only'])
+        if prefix is None or mask.dtype!=bool or mask.ndim!=1:raise ValueError('invalid closed-loop source mask')
     if spec.get('warmup_initializer') is not None:
         if len(spec['order']) != 1 or spec.get('reuse_results'):
             raise ValueError('warmup candidate requires one tail and fresh evaluation')

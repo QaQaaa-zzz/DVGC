@@ -229,6 +229,11 @@ def collect(spec, output):
         neighbor_query=prepare_neighbor_query(spec,env,member,output)
     if event and (spec['horizon']!=400 or not 1<=spec['pulse_steps']<=5):
         raise ValueError('event pulse requires horizon400 and one to five pulse steps')
+    if spec.get('warmup_initializer') is not None:
+        from .generative_bridge.learning_audit import warmup_inference_override
+        payload,actual_policy=warmup_inference_override(payload,member['policy'],spec['warmup_initializer'])
+        member={**member,'policy':actual_policy}
+        write(output/'inference_override.json',actual_policy)
     base=make_checkpoint_policy(env,payload,deterministic=True);dist=net.parametric_action_distribution if net else None
     reset=jax.vmap(env._reset_jump_start_unified)
     initial_arrays=None
@@ -466,6 +471,7 @@ def evaluate(spec, output, *, session=None):
     suffix=(FrozenSuffixEvaluator(spec['bank'],all_names,horizon,output/'runtime',spec['budget'])
             if session is None else session.suffix(spec,all_names,output/'runtime'))
     prefix_name=validate_evaluation_options(spec,suffix.members)
+    if spec.get('closed_loop_prefix_source_only') is not None and len(spec['closed_loop_prefix_source_only'])!=len(rows):raise ValueError('source mask/root layout mismatch')
     if session is not None and (prefix_name is not None or spec.get('warmup_initializer') is not None):
         raise ValueError('teacher session forbids unpinned alternate controllers')
     for r in rows:r.update(attempts=[],label=None,witness=None)
@@ -494,7 +500,12 @@ def evaluate(spec, output, *, session=None):
             _,closed_prefix_policy,_=suffix._runtime(prefix_name)
             if suffix.members[prefix_name]['policy']['xml_sha256'] != actual_policy['xml_sha256']:
                 raise ValueError('closed-loop prefix/tail physics differ')
+        prefix_override=None
+        if spec.get('closed_loop_prefix_initializer') is not None:
+            if prefix_name is None:raise ValueError('prefix initializer requires an explicit prefix policy')
+            closed_prefix_policy,prefix_override=warmup_evaluation_policy(env,suffix.members[prefix_name]['policy'],spec['closed_loop_prefix_initializer'])
         controller_provenance=evaluation_controller_provenance(spec,actual_policy,suffix.members)
+        if prefix_override is not None:controller_provenance.update(prefix_actor_sha256=prefix_override['actor_sha256'],prefix_inference_override=prefix_override['inference_override'])
         runtime_ready=time.monotonic()
         if record_preobs:
             env._training_action_pulse = None
@@ -564,7 +575,8 @@ def evaluate(spec, output, *, session=None):
             def advance(c):
                 t,s,alive,tr=c
                 keys=jax.random.split(jax.random.fold_in(jax.random.PRNGKey(0),t),rng_count)[jp.asarray(rng_indices)]
-                action=closed_loop_action(t,s.obs,keys,policy,closed_prefix_policy)
+                action=closed_loop_action(t,s.obs,keys,policy,closed_prefix_policy,
+                    jp.asarray(spec['closed_loop_prefix_source_only'],bool) if spec.get('closed_loop_prefix_source_only') is not None else None)
                 if bridge_plan is not None:
                     action=prefix_action(t,action,bridge_prefixes,bridge_source_only)
                 nxt=step(s,jp.where(alive[:,None],action,0))
@@ -573,7 +585,7 @@ def evaluate(spec, output, *, session=None):
                 if bridge_plan is not None:
                     f['action_origin_code']=jp.where(bridge_source_only,0,jp.where(t<16,1,2))
                 elif prefix_name is not None:
-                    f['action_origin_code']=jp.full(count,jp.where(t<16,3,2),jp.int32)
+                    f['action_origin_code']=jp.where(jp.asarray(spec.get('closed_loop_prefix_source_only',[False]*count)),0,jp.where(t<16,3,2))
                 tr={k:v.at[t].set(f[k]) for k,v in tr.items()}
                 def choose(path,n,o):return n if _shared_warp(path) else jp.where(alive.reshape((count,)+(1,)*(n.ndim-1)),n,o)
                 nxt=jax.tree_util.tree_map_with_path(choose,nxt,s)

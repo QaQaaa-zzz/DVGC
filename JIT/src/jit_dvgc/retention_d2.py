@@ -27,7 +27,7 @@ def prepare(evidence,output,repository):
     for entry in m['TRAIN']:
         if entry['role']!='TRAIN' or sha(entry['path'])!=entry['sha256']:raise ValueError('teacher lesson drift')
         with np.load(entry['path']) as f:o=f['observations'];a=f['actions'];origin=f['origins']
-        # Action-origin enum is defined by evaluator: bridge16 prefix code=2; source=0.
+        # Action-origin enum is defined by evaluator: bridge16 prefix code=1; pi0 tail=2; source-only=0.
         segments=np.where(np.arange(len(o))<16,'bridge_prefix','source_tail')
         w=np.zeros(len(o))
         for label in ('bridge_prefix','source_tail'):

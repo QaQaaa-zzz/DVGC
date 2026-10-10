@@ -43,10 +43,11 @@ def warmup_actor(network, initializer, retention_reference, demo_manifest, reten
             full=output/f'learner_update_{step:04d}.pkl'
             with full.open('xb') as stream:pickle.dump(jax.device_get(dict(normalizer=normalizer,actor=actor,critic=critic,optimizer_state=state,rng=key,completed_supervised_updates=step,seed=seed,sampling='fold_in(rng,absolute_update)',optimizer='Adam1e-5/clip1',phase='BC')),stream)
             atomic_json(output/f'learner_update_{step:04d}.json',dict(path=str(full.resolve()),sha256=file_sha(full),completed_supervised_updates=step,actor_sha256=pytree_sha256(actor),optimizer_sha256=pytree_sha256(state),normalizer_sha256=fixed_hash,critic_sha256=critic_hash))
-        if checkpoint_callback is not None:checkpoint_callback(step,(normalizer,actor,critic))
+        stop_requested=bool(checkpoint_callback(step,(normalizer,actor,critic))) if checkpoint_callback is not None else False
         probe=probe_callback(step,(normalizer,actor,critic)) if probe_callback is not None else None
         report['checkpoints'].append(dict(update=step,actor_sha256=pytree_sha256(actor),probe=probe,path=str(path.resolve()),sha256=file_sha(path)))
         atomic_json(output/'warmup_status.json',report)
+        return stop_requested
     checkpoint(0)
     if data is None:
         report['status']='skipped_empty_demo';atomic_json(output/'warmup_status.json',report)
@@ -94,10 +95,12 @@ def warmup_actor(network, initializer, retention_reference, demo_manifest, reten
                 row=dict(update=index,loss=float(value),demo=float(parts[0]),keep=float(parts[1]),actor_grad_norm=float(norm),**{k:float(v) for k,v in telemetry.items()})
                 stream.write(json.dumps(row)+'\n');stream.flush()
                 if metrics_callback is not None:metrics_callback(row)
-                if index in ((100,500,1000,2000) if full_learner else (500,1000,2000)) or index==updates:checkpoint(index)
+                if index in ((100,500,1000,2000) if full_learner else (500,1000,2000)) or index==updates:
+                    if checkpoint(index):
+                        report['status']='stopped_retention_guard';break
         if pytree_sha256(normalizer)!=fixed_hash or pytree_sha256(critic)!=critic_hash:
             raise ValueError('warmup changed frozen normalizer or critic')
-        report['status']='completed'
+        if report['status']!='stopped_retention_guard':report['status']='completed'
     except BaseException:
         report['status']='error';raise
     finally:
