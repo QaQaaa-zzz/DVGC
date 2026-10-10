@@ -1,0 +1,9 @@
+{
+  "campaign_completed_rounds": 69,
+  "campaign_target": 200,
+  "completed_rounds": 12,
+  "declared_rounds": 143,
+  "error": "RuntimeError('round 74 exited 1; no automatic retry')",
+  "phase": "failed",
+  "updated_unix": 1791613516.0223758
+}

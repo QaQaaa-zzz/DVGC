@@ -1,0 +1,209 @@
+{
+  "phase_u": {
+    "label": "Phase U（4,988,928步）",
+    "policy": {
+      "action_order": [
+        "steer",
+        "rear_wheel_drive",
+        "hip",
+        "knee"
+      ],
+      "actor_frame_fields": [
+        "gravity_x",
+        "gravity_y",
+        "gravity_z",
+        "angular_velocity_x",
+        "angular_velocity_y",
+        "angular_velocity_z",
+        "acceleration_x",
+        "acceleration_y",
+        "acceleration_z",
+        "steering_position",
+        "hip_position",
+        "knee_position",
+        "steering_velocity",
+        "hip_velocity",
+        "knee_velocity",
+        "front_wheel_velocity",
+        "rear_wheel_velocity",
+        "last_action_steer",
+        "last_action_rear_wheel_drive",
+        "last_action_hip",
+        "last_action_knee",
+        "estimated_forward_velocity",
+        "obstacle_relative_x",
+        "root_height",
+        "history_valid"
+      ],
+      "actor_sha256": "cda34a6e7225302a1f764004ae2858751d49c158fad56f00acad209fec65f5de",
+      "actor_task_fields": [
+        "jump_signal"
+      ],
+      "checkpoint": "/home/qy/DVGC/JIT/runs/experiments/neighborhood_mixed_rsl_20260916/lineage/round_0010/policy_training/lineage_repair_0010/checkpoints/transition_128000",
+      "checkpoint_identity_sha256": "c9b064fb70eebee10a649ac211fa220fc54ad3715bde6f542d5d20614a669217",
+      "critic_sha256": "31ead30418a83a7a437820a04a0dc876a405638d387cf893c5101c6d9936691a",
+      "data_role": "train",
+      "formal_config": "/home/qy/DVGC/JIT/runs/experiments/neighborhood_mixed_rsl_20260916/lineage/round_0010/policy_config.json",
+      "formal_config_file_sha256": "d1f93c6ea856f619718e1b5e576740f92b73315115f03ef83b95eec0bb021a68",
+      "formal_config_sha256": "1d9a31addf5184eb4fccb8b57f2c56eeac3393fe8d2c824fc2d171e0f8a36a47",
+      "iteration": 1049,
+      "name": "lineage_repair_0010",
+      "normalizer_sha256": "8af15caa7ed7efb279d84d503559d8f2160ffc912ee0f673330b96859fe0a1db",
+      "payload_sha256": "750f25a82e731b32ee38524d150b2f117855699f0219937e8a48e59d31316362",
+      "policy_role": "development_checkpoint",
+      "source_formal_report": "/home/qy/DVGC/JIT/runs/experiments/neighborhood_mixed_rsl_20260916/lineage/round_0010/policy_training/lineage_repair_0010/formal_report.json",
+      "source_formal_report_sha256": "b3ad09e37fc27b5e4ea73f23fa974a76e4ab963eb4f979f5636f6b464f4e6cea",
+      "source_requested_training_transitions": 128000,
+      "source_reset_mixture": {
+        "natural_reset_probability": 0.2,
+        "selection": "fixed_jump_start_20pct_exact_snapshot_80pct",
+        "soft_tube_probability": 0.8
+      },
+      "source_training_run_id": "lineage_repair_0010",
+      "source_training_transitions": 128000,
+      "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+    },
+    "phase_policy": {
+      "input_files": {
+        "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/checkpoints/transition_4988928/identity.json": "0c15bb4f49938b2420d3dc2d7451e06d83b222b1912c2c9ee8dc9f8d87178fd3",
+        "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/checkpoints/transition_4988928/payload.pkl": "b388de198628b56309e83b3b4993ecf0c655f341c259883a2d43f19e954c6f5e",
+        "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/resolved_config.json": "557e048980f90627b571f2bbbc554c5e66bfab2128ac8cbd799f36058eb7f7e3"
+      },
+      "name": "phase_u",
+      "source_checkpoint": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/checkpoints/transition_4988928",
+      "source_phase_config": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/resolved_config.json"
+    }
+  },
+  "bridge_latest": {
+    "label": "Generative bridge R71 student",
+    "policy": {
+      "action_order": [
+        "steer",
+        "rear_wheel_drive",
+        "hip",
+        "knee"
+      ],
+      "actor_frame_fields": [
+        "gravity_x",
+        "gravity_y",
+        "gravity_z",
+        "angular_velocity_x",
+        "angular_velocity_y",
+        "angular_velocity_z",
+        "acceleration_x",
+        "acceleration_y",
+        "acceleration_z",
+        "steering_position",
+        "hip_position",
+        "knee_position",
+        "steering_velocity",
+        "hip_velocity",
+        "knee_velocity",
+        "front_wheel_velocity",
+        "rear_wheel_velocity",
+        "last_action_steer",
+        "last_action_rear_wheel_drive",
+        "last_action_hip",
+        "last_action_knee",
+        "estimated_forward_velocity",
+        "obstacle_relative_x",
+        "root_height",
+        "history_valid"
+      ],
+      "actor_sha256": "e8692ea462298ea618abe6816465558f4f844487cf9c4865d406967049f7ef17",
+      "actor_task_fields": [
+        "jump_signal"
+      ],
+      "checkpoint": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0011_b1_resume_143/segment_0071/round_0071/students/student/training/round_0071_student/checkpoints/transition_128000",
+      "checkpoint_identity_sha256": "02e19628f5f62fde18101ce0bb8849f0718ca87e0ed7de7daf07996df42776a3",
+      "critic_sha256": "27abd9a9d8cff98d46e624fd478f2c883e1c3df2f99189d44c303483a740ef24",
+      "data_role": "train",
+      "formal_config": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0011_b1_resume_143/segment_0071/round_0071/students/student/config.json",
+      "formal_config_file_sha256": "49ace2c0f6dd197de4081808d1f0550d3395c987bfd4230933eddd4a8017f25b",
+      "formal_config_sha256": "08725fb9ae4b309466ad5f377d36c33386451eef1c4d9938e0d7044f9c504aaf",
+      "iteration": 1,
+      "name": "round_0071_student",
+      "normalizer_sha256": "315754b4c11e810339c42f07f03387f9b4471e7319a54e85986b478273a6b9ad",
+      "payload_sha256": "91c8d7db4ac4d217ee09425244c01cf65c2f89434f3e1b608c79f9259027d656",
+      "policy_role": "development_checkpoint",
+      "source_formal_report": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0011_b1_resume_143/segment_0071/round_0071/students/student/training/round_0071_student/formal_report.json",
+      "source_formal_report_sha256": "14c40933a47a9bd2a8b27ac63c28bcd44104afea1f52f62e2a5e20338895fd77",
+      "source_requested_training_transitions": 128000,
+      "source_reset_mixture": {
+        "natural_reset_probability": 0.2,
+        "selection": "fixed_jump_start_20pct_exact_snapshot_80pct",
+        "soft_tube_probability": 0.8
+      },
+      "source_training_run_id": "round_0071_student",
+      "source_training_transitions": 128000,
+      "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+    },
+    "phase_policy": null
+  },
+  "bridge_pi0": {
+    "label": "桥接初始π0",
+    "policy": {
+      "action_order": [
+        "steer",
+        "rear_wheel_drive",
+        "hip",
+        "knee"
+      ],
+      "actor_frame_fields": [
+        "gravity_x",
+        "gravity_y",
+        "gravity_z",
+        "angular_velocity_x",
+        "angular_velocity_y",
+        "angular_velocity_z",
+        "acceleration_x",
+        "acceleration_y",
+        "acceleration_z",
+        "steering_position",
+        "hip_position",
+        "knee_position",
+        "steering_velocity",
+        "hip_velocity",
+        "knee_velocity",
+        "front_wheel_velocity",
+        "rear_wheel_velocity",
+        "last_action_steer",
+        "last_action_rear_wheel_drive",
+        "last_action_hip",
+        "last_action_knee",
+        "estimated_forward_velocity",
+        "obstacle_relative_x",
+        "root_height",
+        "history_valid"
+      ],
+      "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+      "actor_task_fields": [
+        "jump_signal"
+      ],
+      "checkpoint": "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/binding/bridge_baseline/checkpoints/transition_0",
+      "checkpoint_identity_sha256": "0307799fa5059cd55d81eedec9f33e89a53b75d1f718e29c919b74e01d1445e8",
+      "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1",
+      "data_role": "train",
+      "formal_config": "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/runtime_config.json",
+      "formal_config_file_sha256": "c135ef71f5d5907274c08ef1692705bcf3ffe0f3695674f1ef11b5f2d3bcc51f",
+      "formal_config_sha256": "82872dd8ed1de87eee67f9b63fa3a3636fd00118ad4c0fcd88ba48b2dfac69ce",
+      "initialization_receipt": "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/binding/initialization_receipt.json",
+      "initialization_receipt_sha256": "f86103a249983fb058240d85dd13c259c75a054ade6398c9518ec3b494aef953",
+      "iteration": 0,
+      "name": "bridge_baseline",
+      "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+      "payload_sha256": "dc74f572683e873dcf7661e454a53f259171efd82ec33edcf7afb071acfdad31",
+      "policy_role": "initialization_only",
+      "source_frozen_policy": "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/phase_source.json",
+      "source_frozen_policy_sha256": "09ac7d40e15d0c6a2a3a42803bc359f7ea371bbc0543c05663b7cf2c3484052e",
+      "source_reset_mixture": {
+        "natural_reset_probability": 0.2,
+        "selection": "fixed_jump_start_20pct_exact_snapshot_80pct",
+        "soft_tube_probability": 0.8
+      },
+      "source_training_run_id": "bridge_baseline",
+      "source_training_transitions": 0,
+      "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+    }
+  }
+}

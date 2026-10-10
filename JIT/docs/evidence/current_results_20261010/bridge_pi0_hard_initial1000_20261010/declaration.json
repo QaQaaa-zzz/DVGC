@@ -1,0 +1,299 @@
+{
+  "created_unix": 1791609784.0269172,
+  "models": [
+    {
+      "key": "bridge_pi0",
+      "label": "桥接初始π0（直接加载）",
+      "template": {
+        "bank": "/home/qy/DVGC/JIT/runs/monitoring/bridge_pi0_hard_initial1000_20261010/bank.json",
+        "proposer": "bridge_baseline",
+        "explorer_architecture": {
+          "action_dim": 4,
+          "activation": "elu",
+          "base_input_dim": 106,
+          "hidden_dims": [
+            128,
+            128,
+            128
+          ],
+          "init_noise_std": 0.6,
+          "input_dim": 386,
+          "neighborhood_summary_dim": 64,
+          "state_dependent_std": true
+        },
+        "explorer_backend": "rsl_rl",
+        "neighborhood": {
+          "base_dim": 106,
+          "far_scale": 2.0,
+          "feature_dim": 17,
+          "medium_halfwidths": [
+            0.2,
+            0.05,
+            0.1,
+            0.4,
+            0.2,
+            0.6,
+            2.0,
+            5.0,
+            5.0,
+            10.0,
+            20.0,
+            20.0
+          ],
+          "neighbors": 16,
+          "stats_dim": 8,
+          "summary_dim": 64
+        },
+        "neighborhood_map": "/home/qy/DVGC/JIT/runs/experiments/neighborhood_reward005_safe256_20260916/idle_resume_100/lineage/round_0099/neighborhood_map.json",
+        "neighborhood_map_sha256": "836c0479c93a43e366a2decd6c1d6e2bfe16970213b6c5da5c012153153e821e",
+        "learning_rate": 0.001,
+        "max_grad_norm": 1.0,
+        "reward_mode": "original_all_phases",
+        "success_criterion": "stable_forward_recovery",
+        "explorer_checkpoint": "/home/qy/DVGC/JIT/runs/experiments/neighborhood_reward005_safe256_20260916/idle_resume_100/lineage/round_0099/update/state.msgpack",
+        "frozen_explorer_evaluation": true,
+        "full_episode_rollout": true,
+        "controller_mode": "learned_residual",
+        "neighborhood_reference_actor_sha256": "edcc20a300bdd88f52f1773a3876828451e095ee78e94aa532f03a972509b8df",
+        "pulse_batch_mode": "mixed",
+        "pulse_steps": 3,
+        "delta_limit": [
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "horizon": 400,
+        "num_envs": 250,
+        "round_index": 0,
+        "initial_state_bank": "/home/qy/DVGC/JIT/runs/monitoring/all_models_hard_initial1000_20261010/initial_onset_00.npz",
+        "pulse_start_schedule": [
+          0
+        ],
+        "seed": 101020260
+      }
+    },
+    {
+      "key": "phase_u",
+      "label": "Phase U（4,988,928步）",
+      "template": {
+        "bank": "/home/qy/DVGC/JIT/runs/experiments/neighborhood_reward005_safe256_20260916/initial_bank.json",
+        "phase_policy": {
+          "input_files": {
+            "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/checkpoints/transition_4988928/identity.json": "0c15bb4f49938b2420d3dc2d7451e06d83b222b1912c2c9ee8dc9f8d87178fd3",
+            "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/checkpoints/transition_4988928/payload.pkl": "b388de198628b56309e83b3b4993ecf0c655f341c259883a2d43f19e954c6f5e",
+            "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/resolved_config.json": "557e048980f90627b571f2bbbc554c5e66bfab2128ac8cbd799f36058eb7f7e3"
+          },
+          "name": "phase_u",
+          "source_checkpoint": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/checkpoints/transition_4988928",
+          "source_phase_config": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/resolved_config.json"
+        },
+        "proposer": "lineage_repair_0010",
+        "explorer_architecture": {
+          "action_dim": 4,
+          "activation": "elu",
+          "base_input_dim": 106,
+          "hidden_dims": [
+            128,
+            128,
+            128
+          ],
+          "init_noise_std": 0.6,
+          "input_dim": 386,
+          "neighborhood_summary_dim": 64,
+          "state_dependent_std": true
+        },
+        "explorer_backend": "rsl_rl",
+        "neighborhood": {
+          "base_dim": 106,
+          "far_scale": 2.0,
+          "feature_dim": 17,
+          "medium_halfwidths": [
+            0.2,
+            0.05,
+            0.1,
+            0.4,
+            0.2,
+            0.6,
+            2.0,
+            5.0,
+            5.0,
+            10.0,
+            20.0,
+            20.0
+          ],
+          "neighbors": 16,
+          "stats_dim": 8,
+          "summary_dim": 64
+        },
+        "neighborhood_map": "/home/qy/DVGC/JIT/runs/experiments/neighborhood_reward005_safe256_20260916/idle_resume_100/lineage/round_0099/neighborhood_map.json",
+        "neighborhood_map_sha256": "836c0479c93a43e366a2decd6c1d6e2bfe16970213b6c5da5c012153153e821e",
+        "learning_rate": 0.001,
+        "max_grad_norm": 1.0,
+        "reward_mode": "original_all_phases",
+        "success_criterion": "stable_forward_recovery",
+        "explorer_checkpoint": "/home/qy/DVGC/JIT/runs/experiments/neighborhood_reward005_safe256_20260916/idle_resume_100/lineage/round_0099/update/state.msgpack",
+        "frozen_explorer_evaluation": true,
+        "full_episode_rollout": true,
+        "controller_mode": "learned_residual",
+        "neighborhood_reference_actor_sha256": "edcc20a300bdd88f52f1773a3876828451e095ee78e94aa532f03a972509b8df",
+        "pulse_batch_mode": "mixed",
+        "pulse_steps": 3,
+        "delta_limit": [
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "horizon": 400,
+        "num_envs": 250,
+        "round_index": 0
+      },
+      "nominal_trace": "/home/qy/DVGC/JIT/runs/experiments/five_policy_random_initial_pulse_20260921/attempt_0002/onset_00/nominal/phase_u/prefixes.npz",
+      "generate_nominal": true
+    },
+    {
+      "key": "bridge_latest",
+      "label": "Generative bridge R71 student",
+      "template": {
+        "bank": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0011_b1_resume_143/segment_0071/round_0071/students/student/bank.json",
+        "proposer": "round_0071_student",
+        "bootstrap_config": "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/runtime_config.json",
+        "explorer_architecture": {
+          "action_dim": 4,
+          "activation": "elu",
+          "base_input_dim": 106,
+          "hidden_dims": [
+            128,
+            128,
+            128
+          ],
+          "init_noise_std": 0.6,
+          "input_dim": 386,
+          "neighborhood_summary_dim": 64,
+          "state_dependent_std": true
+        },
+        "explorer_backend": "rsl_rl",
+        "neighborhood": {
+          "base_dim": 106,
+          "far_scale": 2.0,
+          "feature_dim": 17,
+          "medium_halfwidths": [
+            0.2,
+            0.05,
+            0.1,
+            0.4,
+            0.2,
+            0.6,
+            2.0,
+            5.0,
+            5.0,
+            10.0,
+            20.0,
+            20.0
+          ],
+          "neighbors": 16,
+          "stats_dim": 8,
+          "summary_dim": 64
+        },
+        "neighborhood_map": "/home/qy/DVGC/JIT/runs/experiments/neighborhood_reward005_safe256_20260916/idle_resume_100/lineage/round_0099/neighborhood_map.json",
+        "neighborhood_map_sha256": "836c0479c93a43e366a2decd6c1d6e2bfe16970213b6c5da5c012153153e821e",
+        "learning_rate": 0.001,
+        "max_grad_norm": 1.0,
+        "reward_mode": "original_all_phases",
+        "success_criterion": "stable_forward_recovery",
+        "explorer_checkpoint": "/home/qy/DVGC/JIT/runs/experiments/neighborhood_reward005_safe256_20260916/idle_resume_100/lineage/round_0099/update/state.msgpack",
+        "frozen_explorer_evaluation": true,
+        "full_episode_rollout": true,
+        "controller_mode": "learned_residual",
+        "neighborhood_reference_actor_sha256": "edcc20a300bdd88f52f1773a3876828451e095ee78e94aa532f03a972509b8df",
+        "pulse_batch_mode": "mixed",
+        "pulse_steps": 3,
+        "delta_limit": [
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "horizon": 400,
+        "num_envs": 250,
+        "round_index": 0
+      }
+    }
+  ],
+  "stages": [
+    "onset_00_bridge_pi0",
+    "onset_05_bridge_pi0",
+    "onset_10_bridge_pi0",
+    "onset_15_bridge_pi0",
+    "nominal_bridge_pi0"
+  ],
+  "locks": {
+    "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/binding/frozen_unified_policy.json": "779fc377146c7e4fe2110584996b2555979c125c49263c718a38b5ac8559ff56",
+    "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/runtime_config.json": "c135ef71f5d5907274c08ef1692705bcf3ffe0f3695674f1ef11b5f2d3bcc51f",
+    "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/binding/bridge_baseline/checkpoints/transition_0/identity.json": "0307799fa5059cd55d81eedec9f33e89a53b75d1f718e29c919b74e01d1445e8",
+    "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/binding/bridge_baseline/checkpoints/transition_0/payload.pkl": "dc74f572683e873dcf7661e454a53f259171efd82ec33edcf7afb071acfdad31",
+    "/home/qy/DVGC/JIT/runs/monitoring/bridge_pi0_hard_initial1000_20261010/bank.json": "94933066b0af71d95a991d9663194104828b6c6ac0113eb1015088fec2b9008e",
+    "/home/qy/DVGC/JIT/runs/experiments/neighborhood_reward005_safe256_20260916/idle_resume_100/lineage/round_0099/update/state.msgpack": "f05bf7fe16d4391b2bc20968bd98221737a7ce7530168765f621b02a275dd03b",
+    "/home/qy/DVGC/JIT/runs/experiments/neighborhood_reward005_safe256_20260916/idle_resume_100/lineage/round_0099/neighborhood_map.json": "836c0479c93a43e366a2decd6c1d6e2bfe16970213b6c5da5c012153153e821e",
+    "/home/qy/DVGC/JIT/runs/monitoring/bridge_pi0_hard_initial1000_20261010/onset_10_bridge_pi0_spec.json": "75d40a2a6ab22e1b36586b788124fc065405e6da0b2b7ee087ef14943deaf021",
+    "/home/qy/DVGC/JIT/runs/monitoring/bridge_pi0_hard_initial1000_20261010/onset_05_bridge_pi0_spec.json": "199d91c2327d7da3338d9ed60da3395212808dd6228e8782e3fea9ae4d35e168",
+    "/home/qy/DVGC/JIT/runs/monitoring/bridge_pi0_hard_initial1000_20261010/onset_00_bridge_pi0_spec.json": "50df4c125ec7c69fdefaf765940a7c7ffeb3f022bf13d502452a2472edfac68d",
+    "/home/qy/DVGC/JIT/runs/monitoring/bridge_pi0_hard_initial1000_20261010/nominal_bridge_pi0_spec.json": "c9e18bdcec55e55f3a18201ef43678f74392d8faca1f33a314c1b5c2144ea15f",
+    "/home/qy/DVGC/JIT/runs/monitoring/bridge_pi0_hard_initial1000_20261010/onset_15_bridge_pi0_spec.json": "54912067faa3de7ebdd38d0539c6d85e946b0796e7387eab2061c6fbe3382954",
+    "/home/qy/DVGC/JIT/runs/monitoring/bridge_pi0_hard_initial1000_20261010/initial_onset_10.npz": "f0bdd2e48414b7764550272fcdb33522ac197b636fe47d9897ab2bdb6ba31164",
+    "/home/qy/DVGC/JIT/runs/monitoring/bridge_pi0_hard_initial1000_20261010/initial_onset_15.npz": "641666a09628955f9c0454e29d768eb921d4171832ae708fc9107093a4e0829b",
+    "/home/qy/DVGC/JIT/runs/monitoring/bridge_pi0_hard_initial1000_20261010/initial_onset_05.npz": "4e9a968415973193d365b665816af422ffd5cb1ffa37fe2808e72f841631be5a",
+    "/home/qy/DVGC/JIT/runs/monitoring/bridge_pi0_hard_initial1000_20261010/initial_nominal.npz": "db4696441abc12875cda391f4a342561e869a73628cede22c50371db33151002",
+    "/home/qy/DVGC/JIT/runs/monitoring/bridge_pi0_hard_initial1000_20261010/initial_bank_all.npz": "e4f0301b1b464d41c3b9e97f1549a4dfbdd1470239f88dee72df52baa6e1e2bc",
+    "/home/qy/DVGC/JIT/runs/monitoring/bridge_pi0_hard_initial1000_20261010/initial_onset_00.npz": "ae6f833edc6db6cc4004ca7af859bb1c4e517e99bbb86ecaf301c3c33d5e60b9",
+    "/home/qy/DVGC/JIT/runs/monitoring/bridge_pi0_hard_initial1000_20261010/run.py": "3432e9a9363b1fc5857765cd95fe9772b6a9f8db81df0bc4fa662e8345755186",
+    "/home/qy/DVGC/JIT/runs/monitoring/bridge_pi0_hard_initial1000_20261010/analyze.py": "eeb46b9201a8e26fbc8f22b2be29f9fb2c59300fbbf9d48f88d4b4429b185a10"
+  },
+  "onsets": [
+    0,
+    5,
+    10,
+    15
+  ],
+  "batch_size": 250,
+  "evaluation_episodes_per_model": 1000,
+  "scored_episodes": 1000,
+  "nominal_capacity": 250,
+  "nominal_unique_conditions_per_model": 1,
+  "maximum_interactions": 500000,
+  "engineering_maximum": 0,
+  "training_steps": 0,
+  "initial_bank_seed": 10102026,
+  "initial_bank_source": "/home/qy/DVGC/JIT/runs/monitoring/three_model_multidim1000_20261010/initial_bank_all.npz",
+  "reset_noise": "x .1m,y .05m;roll/pitch/yaw3deg;vx/vy .2m/s;angular .1rad/s; independent uniform; no vz/joint noise",
+  "role": "development stress; common frozen adaptive explorer, shared initial states and sampling seeds, state-dependent actual pulses",
+  "code": "/home/qy/DVGC/runs/worktrees/multidim-envelope",
+  "bridge_frozen_round": 71,
+  "bridge_latest_at_declaration": true,
+  "protocol_assumption": "explicit user request: direct bridge pi0 checkpoint rerun, same frozen explorer and four onsets250; compare frozen R71 and original PhaseU saved results",
+  "multidimensional_bins": [
+    0.05,
+    0.05,
+    0.05,
+    3,
+    3,
+    3,
+    0.2,
+    0.2,
+    0.2,
+    0.2,
+    0.2,
+    0.2
+  ],
+  "protocol_confirmed_unix": 1791610049.5033638,
+  "explorer": "/home/qy/DVGC/JIT/runs/experiments/neighborhood_reward005_safe256_20260916/idle_resume_100/lineage/round_0099/update/state.msgpack",
+  "atlas": "/home/qy/DVGC/JIT/runs/experiments/neighborhood_reward005_safe256_20260916/idle_resume_100/lineage/round_0099/neighborhood_map.json",
+  "code_revision": "04aaf6fc76ce8a9adfc923ac1888c58918e628bf",
+  "new_models": 1,
+  "reused_models": [
+    "phase_u",
+    "bridge_latest"
+  ],
+  "reused_source": "/home/qy/DVGC/JIT/runs/monitoring/all_models_hard_initial1000_20261010"
+}

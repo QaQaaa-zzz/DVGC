@@ -1,0 +1,38 @@
+{
+  "totals": {
+    "bridge_pi0": 651,
+    "bridge_latest": 309,
+    "phase_u": 658
+  },
+  "onset_successes": {
+    "bridge_pi0": [
+      196,
+      148,
+      127,
+      180
+    ],
+    "bridge_latest": [
+      92,
+      81,
+      63,
+      73
+    ],
+    "phase_u": [
+      198,
+      146,
+      130,
+      184
+    ]
+  },
+  "bridge_minus_pi0_pp": -34.2,
+  "bridge_gained": 84,
+  "bridge_lost": 426,
+  "paired_bootstrap95_pp": [
+    -38.0,
+    -30.3
+  ],
+  "pi0_vs_original_phaseu_disagreements": 33,
+  "new_scored_episodes": 1000,
+  "reused_scored_episodes": 2000,
+  "actual_pulses_state_dependent": true
+}

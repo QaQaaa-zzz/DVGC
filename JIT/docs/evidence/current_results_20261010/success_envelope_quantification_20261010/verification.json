@@ -1,0 +1,11 @@
+{
+  "equal_success_samples_per_onset": 30,
+  "total_samples_per_model": 120,
+  "width_repeats": 200,
+  "coverage_disjoint_support_query": true,
+  "coverage_repeats": 50,
+  "coverage_categories_sum_to_one": true,
+  "pi0_index_is_100": true,
+  "geometric_width_scale_properties_checked": true,
+  "no_new_physics": true
+}

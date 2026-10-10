@@ -1,0 +1,78 @@
+{
+  "bridge_pi0": {
+    "action_order": [
+      "steer",
+      "rear_wheel_drive",
+      "hip",
+      "knee"
+    ],
+    "actor_frame_fields": [
+      "gravity_x",
+      "gravity_y",
+      "gravity_z",
+      "angular_velocity_x",
+      "angular_velocity_y",
+      "angular_velocity_z",
+      "acceleration_x",
+      "acceleration_y",
+      "acceleration_z",
+      "steering_position",
+      "hip_position",
+      "knee_position",
+      "steering_velocity",
+      "hip_velocity",
+      "knee_velocity",
+      "front_wheel_velocity",
+      "rear_wheel_velocity",
+      "last_action_steer",
+      "last_action_rear_wheel_drive",
+      "last_action_hip",
+      "last_action_knee",
+      "estimated_forward_velocity",
+      "obstacle_relative_x",
+      "root_height",
+      "history_valid"
+    ],
+    "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+    "actor_task_fields": [
+      "jump_signal"
+    ],
+    "checkpoint": "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/binding/bridge_baseline/checkpoints/transition_0",
+    "checkpoint_identity_sha256": "0307799fa5059cd55d81eedec9f33e89a53b75d1f718e29c919b74e01d1445e8",
+    "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1",
+    "data_role": "train",
+    "formal_config": "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/runtime_config.json",
+    "formal_config_file_sha256": "c135ef71f5d5907274c08ef1692705bcf3ffe0f3695674f1ef11b5f2d3bcc51f",
+    "formal_config_sha256": "82872dd8ed1de87eee67f9b63fa3a3636fd00118ad4c0fcd88ba48b2dfac69ce",
+    "initialization_receipt": "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/binding/initialization_receipt.json",
+    "initialization_receipt_sha256": "f86103a249983fb058240d85dd13c259c75a054ade6398c9518ec3b494aef953",
+    "iteration": 0,
+    "name": "bridge_baseline",
+    "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+    "payload_sha256": "dc74f572683e873dcf7661e454a53f259171efd82ec33edcf7afb071acfdad31",
+    "policy_role": "initialization_only",
+    "source_frozen_policy": "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/phase_source.json",
+    "source_frozen_policy_sha256": "09ac7d40e15d0c6a2a3a42803bc359f7ea371bbc0543c05663b7cf2c3484052e",
+    "source_reset_mixture": {
+      "natural_reset_probability": 0.2,
+      "selection": "fixed_jump_start_20pct_exact_snapshot_80pct",
+      "soft_tube_probability": 0.8
+    },
+    "source_training_run_id": "bridge_baseline",
+    "source_training_transitions": 0,
+    "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+  },
+  "phase_u_source": {
+    "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+    "checkpoint": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/checkpoints/transition_4988928",
+    "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1",
+    "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+    "source_kind": "phase_checkpoint",
+    "source_phase_config": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/resolved_config.json",
+    "source_training_transitions": 4988928
+  },
+  "same_actor": true,
+  "same_normalizer": true,
+  "same_critic": true,
+  "initialization_interactions": 0
+}

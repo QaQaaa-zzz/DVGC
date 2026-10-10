@@ -1,0 +1,12 @@
+{
+  "phase": "completed",
+  "pid": 1990422,
+  "updated_unix": 1791613517.1566644,
+  "total_stages": 5,
+  "scored_episodes": 1000,
+  "models": 3,
+  "training_steps": 0,
+  "completed_stages": 5,
+  "charged_interactions": 500000,
+  "evaluation_status": "raw_complete_analysis_pending"
+}

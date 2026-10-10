@@ -1,0 +1,9 @@
+{
+  "all_five_new_stages_verified": true,
+  "independent_recount_matched": true,
+  "comparison_image_visually_checked": true,
+  "relative_links_exist": true,
+  "new_scored_episodes": 1000,
+  "reused_scored_episodes": 2000,
+  "training_steps": 0
+}

@@ -1,0 +1,9 @@
+{
+  "charged_interactions": 227359,
+  "completed_rounds": 0,
+  "error": "RuntimeError('student_student: failed')",
+  "explorer_optimizer_updates": 0,
+  "lifetime_physics_charged": 27924919,
+  "phase": "failed",
+  "supervised_updates": 0
+}

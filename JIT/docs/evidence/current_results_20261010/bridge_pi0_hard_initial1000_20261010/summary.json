@@ -1,0 +1,249 @@
+{
+  "totals": {
+    "bridge_pi0": {
+      "label": "桥接初始π0（直接加载）",
+      "n": 1000,
+      "successes": 651,
+      "success_rate": 0.651,
+      "wilson95": [
+        0.6209297417330122,
+        0.679914534893898
+      ],
+      "physical_failures": 349,
+      "end_codes": {
+        "12": 651,
+        "3": 283,
+        "4": 57,
+        "5": 9
+      },
+      "nominal_lane0_success": true,
+      "nominal_replica_successes": 195,
+      "nominal_replica_count": 250,
+      "nominal_first_qpos_spread": 1.8328428268432617e-06,
+      "nominal_first_qvel_spread": 0.00025266408920288086,
+      "successful_peak_z_q05_q50_q95": [
+        0.6024990677833557,
+        0.6335880160331726,
+        0.6657439172267914
+      ],
+      "successful_landing_x_q05_q50_q95": [
+        3.8550236225128174,
+        4.008321285247803,
+        4.156277418136597
+      ],
+      "successful_max_abs_y_q05_q50_q95": [
+        0.04161647520959377,
+        0.21764841675758362,
+        0.5940291285514832
+      ],
+      "successful_relative_radius_q50_q95": [
+        3.36140114244171,
+        7.806043284757009
+      ]
+    },
+    "phase_u": {
+      "label": "Phase U（4,988,928步）",
+      "n": 1000,
+      "successes": 658,
+      "success_rate": 0.658,
+      "wilson95": [
+        0.6280430834689386,
+        0.6867476165777622
+      ],
+      "physical_failures": 342,
+      "end_codes": {
+        "12": 658,
+        "3": 275,
+        "4": 57,
+        "5": 10
+      },
+      "nominal_lane0_success": true,
+      "nominal_replica_successes": 198,
+      "nominal_replica_count": 250,
+      "nominal_first_qpos_spread": 1.9371509552001953e-06,
+      "nominal_first_qvel_spread": 0.00026738643646240234,
+      "successful_peak_z_q05_q50_q95": [
+        0.6023915499448776,
+        0.633510559797287,
+        0.6646420329809188
+      ],
+      "successful_landing_x_q05_q50_q95": [
+        3.854946792125702,
+        4.006622314453125,
+        4.158904075622559
+      ],
+      "successful_max_abs_y_q05_q50_q95": [
+        0.04252709113061428,
+        0.2109496369957924,
+        0.5751925557851791
+      ],
+      "successful_relative_radius_q50_q95": [
+        3.3878221602405483,
+        7.842043797615721
+      ]
+    },
+    "bridge_latest": {
+      "label": "Generative bridge R71 student",
+      "n": 1000,
+      "successes": 309,
+      "success_rate": 0.309,
+      "wilson95": [
+        0.2811363607125768,
+        0.3383255145474245
+      ],
+      "physical_failures": 690,
+      "end_codes": {
+        "12": 309,
+        "3": 521,
+        "5": 155,
+        "4": 14,
+        "8": 1
+      },
+      "nominal_lane0_success": true,
+      "nominal_replica_successes": 236,
+      "nominal_replica_count": 250,
+      "nominal_first_qpos_spread": 2.473592758178711e-06,
+      "nominal_first_qvel_spread": 0.00019788742065429688,
+      "successful_peak_z_q05_q50_q95": [
+        0.548755943775177,
+        0.5959382653236389,
+        0.663354218006134
+      ],
+      "successful_landing_x_q05_q50_q95": [
+        3.691532516479492,
+        3.9356067180633545,
+        4.321048927307128
+      ],
+      "successful_max_abs_y_q05_q50_q95": [
+        0.06439048796892166,
+        0.2472546100616455,
+        0.8193998098373408
+      ],
+      "successful_relative_radius_q50_q95": [
+        3.085233307461008,
+        7.856006449026232
+      ]
+    }
+  },
+  "onsets": [
+    {
+      "model": "bridge_pi0",
+      "onset": 0,
+      "n": 250,
+      "successes": 196,
+      "success_rate": 0.784
+    },
+    {
+      "model": "bridge_pi0",
+      "onset": 5,
+      "n": 250,
+      "successes": 148,
+      "success_rate": 0.592
+    },
+    {
+      "model": "bridge_pi0",
+      "onset": 10,
+      "n": 250,
+      "successes": 127,
+      "success_rate": 0.508
+    },
+    {
+      "model": "bridge_pi0",
+      "onset": 15,
+      "n": 250,
+      "successes": 180,
+      "success_rate": 0.72
+    },
+    {
+      "model": "phase_u",
+      "onset": 0,
+      "n": 250,
+      "successes": 198,
+      "success_rate": 0.792
+    },
+    {
+      "model": "phase_u",
+      "onset": 5,
+      "n": 250,
+      "successes": 146,
+      "success_rate": 0.584
+    },
+    {
+      "model": "phase_u",
+      "onset": 10,
+      "n": 250,
+      "successes": 130,
+      "success_rate": 0.52
+    },
+    {
+      "model": "phase_u",
+      "onset": 15,
+      "n": 250,
+      "successes": 184,
+      "success_rate": 0.736
+    },
+    {
+      "model": "bridge_latest",
+      "onset": 0,
+      "n": 250,
+      "successes": 92,
+      "success_rate": 0.368
+    },
+    {
+      "model": "bridge_latest",
+      "onset": 5,
+      "n": 250,
+      "successes": 81,
+      "success_rate": 0.324
+    },
+    {
+      "model": "bridge_latest",
+      "onset": 10,
+      "n": 250,
+      "successes": 63,
+      "success_rate": 0.252
+    },
+    {
+      "model": "bridge_latest",
+      "onset": 15,
+      "n": 250,
+      "successes": 73,
+      "success_rate": 0.292
+    }
+  ],
+  "paired_differences": [
+    {
+      "model": "bridge_pi0",
+      "reference": "phase_u",
+      "gained": 13,
+      "lost": 20,
+      "difference_pp": -0.7000000000000001
+    },
+    {
+      "model": "phase_u",
+      "reference": "bridge_pi0",
+      "gained": 20,
+      "lost": 13,
+      "difference_pp": 0.7000000000000001
+    },
+    {
+      "model": "bridge_latest",
+      "reference": "phase_u",
+      "gained": 82,
+      "lost": 431,
+      "difference_pp": -34.9
+    },
+    {
+      "model": "bridge_latest",
+      "reference": "bridge_pi0",
+      "gained": 84,
+      "lost": 426,
+      "difference_pp": -34.2
+    }
+  ],
+  "common_frozen_explorer": true,
+  "actual_pulses_state_dependent": true,
+  "training_steps": 0,
+  "formal_charged_interactions": 500000,
+  "engineering_interactions": 0
+}

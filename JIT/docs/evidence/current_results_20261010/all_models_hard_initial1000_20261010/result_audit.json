@@ -1,0 +1,1086 @@
+{
+  "totals": {
+    "phase_u": {
+      "label": "Phase U（4,988,928步）",
+      "successes": 658,
+      "physical_failures": 342,
+      "end_codes": {
+        "12": 658,
+        "3": 275,
+        "4": 57,
+        "5": 10
+      },
+      "median_active_steps": 68.0,
+      "request_rms_mean": 0.12812713196955391,
+      "effective_rms_mean": 0.127667124294728,
+      "zero_pulse_episodes": 0,
+      "physical_failure_before_pulse_end": 0,
+      "onsets": [
+        {
+          "onset": 0,
+          "successes": 198,
+          "physical_failures": 52,
+          "mean_request_rms": 0.14236842340856345
+        },
+        {
+          "onset": 5,
+          "successes": 146,
+          "physical_failures": 104,
+          "mean_request_rms": 0.10406811881018722
+        },
+        {
+          "onset": 10,
+          "successes": 130,
+          "physical_failures": 120,
+          "mean_request_rms": 0.10973599995798775
+        },
+        {
+          "onset": 15,
+          "successes": 184,
+          "physical_failures": 66,
+          "mean_request_rms": 0.15633598570147722
+        }
+      ]
+    },
+    "bridge_latest": {
+      "label": "Generative bridge R71 student",
+      "successes": 309,
+      "physical_failures": 690,
+      "end_codes": {
+        "12": 309,
+        "3": 521,
+        "5": 155,
+        "4": 14,
+        "8": 1
+      },
+      "median_active_steps": 64.0,
+      "request_rms_mean": 0.13616734481020307,
+      "effective_rms_mean": 0.13453500996172152,
+      "zero_pulse_episodes": 0,
+      "physical_failure_before_pulse_end": 0,
+      "onsets": [
+        {
+          "onset": 0,
+          "successes": 92,
+          "physical_failures": 158,
+          "mean_request_rms": 0.1511687704710057
+        },
+        {
+          "onset": 5,
+          "successes": 81,
+          "physical_failures": 168,
+          "mean_request_rms": 0.1127995526218197
+        },
+        {
+          "onset": 10,
+          "successes": 63,
+          "physical_failures": 187,
+          "mean_request_rms": 0.15160080720752667
+        },
+        {
+          "onset": 15,
+          "successes": 73,
+          "physical_failures": 177,
+          "mean_request_rms": 0.1291002489404603
+        }
+      ]
+    },
+    "baseline": {
+      "label": "lineage_repair_0010",
+      "successes": 292,
+      "physical_failures": 553,
+      "end_codes": {
+        "12": 292,
+        "3": 519,
+        "9": 49,
+        "10": 95,
+        "4": 19,
+        "8": 11,
+        "5": 15
+      },
+      "median_active_steps": 56.0,
+      "request_rms_mean": 0.13921859591922453,
+      "effective_rms_mean": 0.13850263245096078,
+      "zero_pulse_episodes": 4,
+      "physical_failure_before_pulse_end": 0,
+      "onsets": [
+        {
+          "onset": 0,
+          "successes": 76,
+          "physical_failures": 131,
+          "mean_request_rms": 0.1463752626773128
+        },
+        {
+          "onset": 5,
+          "successes": 94,
+          "physical_failures": 132,
+          "mean_request_rms": 0.1039536701629029
+        },
+        {
+          "onset": 10,
+          "successes": 59,
+          "physical_failures": 142,
+          "mean_request_rms": 0.1509431357163856
+        },
+        {
+          "onset": 15,
+          "successes": 63,
+          "physical_failures": 148,
+          "mean_request_rms": 0.15586871705852567
+        }
+      ]
+    },
+    "repair_0098": {
+      "label": "lineage_repair_0098",
+      "successes": 184,
+      "physical_failures": 772,
+      "end_codes": {
+        "12": 184,
+        "3": 728,
+        "4": 20,
+        "5": 24,
+        "10": 32,
+        "8": 12
+      },
+      "median_active_steps": 45.0,
+      "request_rms_mean": 0.1427385378602361,
+      "effective_rms_mean": 0.1417891095306152,
+      "zero_pulse_episodes": 2,
+      "physical_failure_before_pulse_end": 0,
+      "onsets": [
+        {
+          "onset": 0,
+          "successes": 61,
+          "physical_failures": 177,
+          "mean_request_rms": 0.14851172532027374
+        },
+        {
+          "onset": 5,
+          "successes": 45,
+          "physical_failures": 199,
+          "mean_request_rms": 0.11049061420062802
+        },
+        {
+          "onset": 10,
+          "successes": 39,
+          "physical_failures": 197,
+          "mean_request_rms": 0.15351526346814837
+        },
+        {
+          "onset": 15,
+          "successes": 39,
+          "physical_failures": 199,
+          "mean_request_rms": 0.15856314531150448
+        }
+      ]
+    },
+    "random_0099": {
+      "label": "Random exploration final 0099",
+      "successes": 222,
+      "physical_failures": 754,
+      "end_codes": {
+        "12": 222,
+        "4": 52,
+        "3": 685,
+        "10": 17,
+        "5": 17,
+        "8": 7
+      },
+      "median_active_steps": 47.0,
+      "request_rms_mean": 0.144110825926392,
+      "effective_rms_mean": 0.14354777356538856,
+      "zero_pulse_episodes": 2,
+      "physical_failure_before_pulse_end": 0,
+      "onsets": [
+        {
+          "onset": 0,
+          "successes": 57,
+          "physical_failures": 187,
+          "mean_request_rms": 0.147154207957411
+        },
+        {
+          "onset": 5,
+          "successes": 62,
+          "physical_failures": 184,
+          "mean_request_rms": 0.11187949139029786
+        },
+        {
+          "onset": 10,
+          "successes": 49,
+          "physical_failures": 193,
+          "mean_request_rms": 0.16006357891670062
+        },
+        {
+          "onset": 15,
+          "successes": 54,
+          "physical_failures": 190,
+          "mean_request_rms": 0.15745276092111624
+        }
+      ]
+    },
+    "fresh_rsi": {
+      "label": "全新RSI（8,000,000步）",
+      "successes": 134,
+      "physical_failures": 552,
+      "end_codes": {
+        "10": 86,
+        "5": 12,
+        "3": 514,
+        "8": 228,
+        "4": 26,
+        "12": 134
+      },
+      "median_active_steps": 46.0,
+      "request_rms_mean": 0.14155414345933548,
+      "effective_rms_mean": 0.13487106907393015,
+      "zero_pulse_episodes": 5,
+      "physical_failure_before_pulse_end": 0,
+      "onsets": [
+        {
+          "onset": 0,
+          "successes": 25,
+          "physical_failures": 136,
+          "mean_request_rms": 0.1459262272955711
+        },
+        {
+          "onset": 5,
+          "successes": 11,
+          "physical_failures": 126,
+          "mean_request_rms": 0.13100492232939176
+        },
+        {
+          "onset": 10,
+          "successes": 41,
+          "physical_failures": 148,
+          "mean_request_rms": 0.1479942887792602
+        },
+        {
+          "onset": 15,
+          "successes": 57,
+          "physical_failures": 142,
+          "mean_request_rms": 0.141366919384358
+        }
+      ]
+    },
+    "repair_0070": {
+      "label": "lineage_repair_0070",
+      "successes": 219,
+      "physical_failures": 747,
+      "end_codes": {
+        "3": 701,
+        "4": 21,
+        "12": 219,
+        "10": 26,
+        "5": 25,
+        "8": 8
+      },
+      "median_active_steps": 48.0,
+      "request_rms_mean": 0.14356146594115865,
+      "effective_rms_mean": 0.14253451299648118,
+      "zero_pulse_episodes": 1,
+      "physical_failure_before_pulse_end": 0,
+      "onsets": [
+        {
+          "onset": 0,
+          "successes": 60,
+          "physical_failures": 184,
+          "mean_request_rms": 0.14857777461747992
+        },
+        {
+          "onset": 5,
+          "successes": 55,
+          "physical_failures": 191,
+          "mean_request_rms": 0.11192855650872185
+        },
+        {
+          "onset": 10,
+          "successes": 54,
+          "physical_failures": 182,
+          "mean_request_rms": 0.1534520568830606
+        },
+        {
+          "onset": 15,
+          "successes": 50,
+          "physical_failures": 190,
+          "mean_request_rms": 0.16035464848554978
+        }
+      ]
+    },
+    "student_2560000": {
+      "label": "融合学生（累计256万步）",
+      "successes": 205,
+      "physical_failures": 728,
+      "end_codes": {
+        "3": 622,
+        "12": 205,
+        "5": 71,
+        "8": 33,
+        "10": 34,
+        "4": 35
+      },
+      "median_active_steps": 47.0,
+      "request_rms_mean": 0.13598994393296185,
+      "effective_rms_mean": 0.1286417484954957,
+      "zero_pulse_episodes": 1,
+      "physical_failure_before_pulse_end": 5,
+      "onsets": [
+        {
+          "onset": 0,
+          "successes": 49,
+          "physical_failures": 181,
+          "mean_request_rms": 0.14984269817428109
+        },
+        {
+          "onset": 5,
+          "successes": 45,
+          "physical_failures": 192,
+          "mean_request_rms": 0.11718271017474123
+        },
+        {
+          "onset": 10,
+          "successes": 52,
+          "physical_failures": 185,
+          "mean_request_rms": 0.15678547759471537
+        },
+        {
+          "onset": 15,
+          "successes": 59,
+          "physical_failures": 170,
+          "mean_request_rms": 0.12008527109676495
+        }
+      ]
+    },
+    "baseline_phase_u": {
+      "label": "lineage_repair_0010 + Phase U",
+      "successes": 188,
+      "physical_failures": 591,
+      "end_codes": {
+        "12": 188,
+        "3": 471,
+        "5": 95,
+        "4": 25,
+        "8": 153,
+        "10": 48,
+        "9": 19,
+        "0": 1
+      },
+      "median_active_steps": 49.0,
+      "request_rms_mean": 0.1390739755606191,
+      "effective_rms_mean": 0.1387913795557821,
+      "zero_pulse_episodes": 0,
+      "physical_failure_before_pulse_end": 0,
+      "onsets": [
+        {
+          "onset": 0,
+          "successes": 36,
+          "physical_failures": 160,
+          "mean_request_rms": 0.1489215439882845
+        },
+        {
+          "onset": 5,
+          "successes": 47,
+          "physical_failures": 122,
+          "mean_request_rms": 0.10180803651575991
+        },
+        {
+          "onset": 10,
+          "successes": 52,
+          "physical_failures": 143,
+          "mean_request_rms": 0.15585982048962962
+        },
+        {
+          "onset": 15,
+          "successes": 53,
+          "physical_failures": 166,
+          "mean_request_rms": 0.1497065012488024
+        }
+      ]
+    },
+    "fresh_rsi_phase_u": {
+      "label": "全新RSI（8,000,000步） + Phase U",
+      "successes": 158,
+      "physical_failures": 741,
+      "end_codes": {
+        "12": 158,
+        "3": 502,
+        "8": 79,
+        "5": 215,
+        "10": 22,
+        "4": 24
+      },
+      "median_active_steps": 36.0,
+      "request_rms_mean": 0.1435408100215039,
+      "effective_rms_mean": 0.14075573175558903,
+      "zero_pulse_episodes": 0,
+      "physical_failure_before_pulse_end": 0,
+      "onsets": [
+        {
+          "onset": 0,
+          "successes": 46,
+          "physical_failures": 160,
+          "mean_request_rms": 0.15209052936147543
+        },
+        {
+          "onset": 5,
+          "successes": 42,
+          "physical_failures": 180,
+          "mean_request_rms": 0.11799668497272267
+        },
+        {
+          "onset": 10,
+          "successes": 36,
+          "physical_failures": 198,
+          "mean_request_rms": 0.16029419963247676
+        },
+        {
+          "onset": 15,
+          "successes": 34,
+          "physical_failures": 203,
+          "mean_request_rms": 0.1437818261193407
+        }
+      ]
+    },
+    "repair_0070_phase_u": {
+      "label": "lineage_repair_0070 + Phase U",
+      "successes": 345,
+      "physical_failures": 225,
+      "end_codes": {
+        "8": 231,
+        "5": 79,
+        "3": 133,
+        "10": 58,
+        "9": 141,
+        "12": 345,
+        "4": 13
+      },
+      "median_active_steps": 70.0,
+      "request_rms_mean": 0.13522501987277358,
+      "effective_rms_mean": 0.1344901127543244,
+      "zero_pulse_episodes": 0,
+      "physical_failure_before_pulse_end": 0,
+      "onsets": [
+        {
+          "onset": 0,
+          "successes": 32,
+          "physical_failures": 51,
+          "mean_request_rms": 0.1486944737939299
+        },
+        {
+          "onset": 5,
+          "successes": 101,
+          "physical_failures": 46,
+          "mean_request_rms": 0.10538264139948987
+        },
+        {
+          "onset": 10,
+          "successes": 101,
+          "physical_failures": 67,
+          "mean_request_rms": 0.13505270346518394
+        },
+        {
+          "onset": 15,
+          "successes": 111,
+          "physical_failures": 61,
+          "mean_request_rms": 0.15177026083249057
+        }
+      ]
+    },
+    "fresh_rsi_1m": {
+      "label": "Fresh RSI 0.9984M",
+      "successes": 0,
+      "physical_failures": 46,
+      "end_codes": {
+        "8": 954,
+        "3": 46
+      },
+      "median_active_steps": 4.0,
+      "request_rms_mean": 0.14378312116181594,
+      "effective_rms_mean": 0.14224586941392908,
+      "zero_pulse_episodes": 700,
+      "physical_failure_before_pulse_end": 11,
+      "onsets": [
+        {
+          "onset": 0,
+          "successes": 0,
+          "physical_failures": 5,
+          "mean_request_rms": 0.14271294391005707
+        },
+        {
+          "onset": 5,
+          "successes": 0,
+          "physical_failures": 18,
+          "mean_request_rms": 0.1331117813040904
+        },
+        {
+          "onset": 10,
+          "successes": 0,
+          "physical_failures": 11,
+          "mean_request_rms": 0.1697335854032824
+        },
+        {
+          "onset": 15,
+          "successes": 0,
+          "physical_failures": 12,
+          "mean_request_rms": 0.13997930368830527
+        }
+      ]
+    },
+    "fusion_last": {
+      "label": "Fusion last 3.20M",
+      "successes": 26,
+      "physical_failures": 806,
+      "end_codes": {
+        "3": 643,
+        "12": 26,
+        "5": 110,
+        "8": 48,
+        "4": 53,
+        "10": 120
+      },
+      "median_active_steps": 42.0,
+      "request_rms_mean": 0.1385797516474318,
+      "effective_rms_mean": 0.1301028016302121,
+      "zero_pulse_episodes": 1,
+      "physical_failure_before_pulse_end": 5,
+      "onsets": [
+        {
+          "onset": 0,
+          "successes": 16,
+          "physical_failures": 204,
+          "mean_request_rms": 0.15019549536147808
+        },
+        {
+          "onset": 5,
+          "successes": 3,
+          "physical_failures": 207,
+          "mean_request_rms": 0.11244895453399419
+        },
+        {
+          "onset": 10,
+          "successes": 5,
+          "physical_failures": 201,
+          "mean_request_rms": 0.15237385855258623
+        },
+        {
+          "onset": 15,
+          "successes": 2,
+          "physical_failures": 194,
+          "mean_request_rms": 0.13930359350911548
+        }
+      ]
+    },
+    "discovery_0093": {
+      "label": "Phase U discovery repair0093",
+      "successes": 299,
+      "physical_failures": 700,
+      "end_codes": {
+        "3": 659,
+        "12": 299,
+        "4": 27,
+        "5": 14,
+        "8": 1
+      },
+      "median_active_steps": 61.0,
+      "request_rms_mean": 0.14109921147709673,
+      "effective_rms_mean": 0.14050911058794793,
+      "zero_pulse_episodes": 0,
+      "physical_failure_before_pulse_end": 0,
+      "onsets": [
+        {
+          "onset": 0,
+          "successes": 73,
+          "physical_failures": 177,
+          "mean_request_rms": 0.1467140869988387
+        },
+        {
+          "onset": 5,
+          "successes": 84,
+          "physical_failures": 166,
+          "mean_request_rms": 0.10431266872348745
+        },
+        {
+          "onset": 10,
+          "successes": 71,
+          "physical_failures": 179,
+          "mean_request_rms": 0.1520073726908798
+        },
+        {
+          "onset": 15,
+          "successes": 71,
+          "physical_failures": 178,
+          "mean_request_rms": 0.1613627174951809
+        }
+      ]
+    },
+    "phase_u_10m": {
+      "label": "Fresh Phase U 10.002432M",
+      "successes": 194,
+      "physical_failures": 578,
+      "end_codes": {
+        "5": 157,
+        "3": 405,
+        "12": 194,
+        "10": 44,
+        "8": 143,
+        "9": 41,
+        "4": 16
+      },
+      "median_active_steps": 53.0,
+      "request_rms_mean": 0.13473894324933716,
+      "effective_rms_mean": 0.1346914233558573,
+      "zero_pulse_episodes": 0,
+      "physical_failure_before_pulse_end": 0,
+      "onsets": [
+        {
+          "onset": 0,
+          "successes": 55,
+          "physical_failures": 134,
+          "mean_request_rms": 0.14711665476133046
+        },
+        {
+          "onset": 5,
+          "successes": 51,
+          "physical_failures": 157,
+          "mean_request_rms": 0.10830481887273476
+        },
+        {
+          "onset": 10,
+          "successes": 41,
+          "physical_failures": 150,
+          "mean_request_rms": 0.1434874994213904
+        },
+        {
+          "onset": 15,
+          "successes": 47,
+          "physical_failures": 137,
+          "mean_request_rms": 0.14004679994189298
+        }
+      ]
+    }
+  },
+  "paired": [
+    {
+      "model": "bridge_latest",
+      "reference": "phase_u",
+      "gained": 82,
+      "lost": 431,
+      "difference_pp": -34.9,
+      "bootstrap95_pp": [
+        -38.6,
+        -30.997500000000034
+      ]
+    },
+    {
+      "model": "bridge_latest",
+      "reference": "baseline",
+      "gained": 214,
+      "lost": 197,
+      "difference_pp": 1.7000000000000002,
+      "bootstrap95_pp": [
+        -2.2024999999999997,
+        5.699999999999999
+      ]
+    },
+    {
+      "model": "repair_0098",
+      "reference": "baseline",
+      "gained": 100,
+      "lost": 208,
+      "difference_pp": -10.8,
+      "bootstrap95_pp": [
+        -14.2,
+        -7.4
+      ]
+    },
+    {
+      "model": "random_0099",
+      "reference": "baseline",
+      "gained": 109,
+      "lost": 179,
+      "difference_pp": -7.000000000000001,
+      "bootstrap95_pp": [
+        -10.2,
+        -3.6975000000000358
+      ]
+    },
+    {
+      "model": "repair_0098",
+      "reference": "random_0099",
+      "gained": 83,
+      "lost": 121,
+      "difference_pp": -3.8,
+      "bootstrap95_pp": [
+        -6.6,
+        -1.0975000000000361
+      ]
+    },
+    {
+      "model": "discovery_0093",
+      "reference": "phase_u",
+      "gained": 100,
+      "lost": 459,
+      "difference_pp": -35.9,
+      "bootstrap95_pp": [
+        -40.0,
+        -31.900000000000002
+      ]
+    },
+    {
+      "model": "phase_u_10m",
+      "reference": "phase_u",
+      "gained": 55,
+      "lost": 519,
+      "difference_pp": -46.400000000000006,
+      "bootstrap95_pp": [
+        -50.0,
+        -42.7
+      ]
+    }
+  ],
+  "initial_x_strata": {
+    "phase_u": [
+      {
+        "lower": 2.4,
+        "upper": 2.5,
+        "n": 499,
+        "successes": 346
+      },
+      {
+        "lower": 2.5,
+        "upper": 2.6,
+        "n": 501,
+        "successes": 312
+      }
+    ],
+    "bridge_latest": [
+      {
+        "lower": 2.4,
+        "upper": 2.5,
+        "n": 499,
+        "successes": 143
+      },
+      {
+        "lower": 2.5,
+        "upper": 2.6,
+        "n": 501,
+        "successes": 166
+      }
+    ],
+    "baseline": [
+      {
+        "lower": 2.4,
+        "upper": 2.5,
+        "n": 499,
+        "successes": 97
+      },
+      {
+        "lower": 2.5,
+        "upper": 2.6,
+        "n": 501,
+        "successes": 195
+      }
+    ],
+    "repair_0098": [
+      {
+        "lower": 2.4,
+        "upper": 2.5,
+        "n": 499,
+        "successes": 40
+      },
+      {
+        "lower": 2.5,
+        "upper": 2.6,
+        "n": 501,
+        "successes": 144
+      }
+    ],
+    "random_0099": [
+      {
+        "lower": 2.4,
+        "upper": 2.5,
+        "n": 499,
+        "successes": 43
+      },
+      {
+        "lower": 2.5,
+        "upper": 2.6,
+        "n": 501,
+        "successes": 179
+      }
+    ],
+    "fresh_rsi": [
+      {
+        "lower": 2.4,
+        "upper": 2.5,
+        "n": 499,
+        "successes": 59
+      },
+      {
+        "lower": 2.5,
+        "upper": 2.6,
+        "n": 501,
+        "successes": 75
+      }
+    ],
+    "repair_0070": [
+      {
+        "lower": 2.4,
+        "upper": 2.5,
+        "n": 499,
+        "successes": 41
+      },
+      {
+        "lower": 2.5,
+        "upper": 2.6,
+        "n": 501,
+        "successes": 178
+      }
+    ],
+    "student_2560000": [
+      {
+        "lower": 2.4,
+        "upper": 2.5,
+        "n": 499,
+        "successes": 95
+      },
+      {
+        "lower": 2.5,
+        "upper": 2.6,
+        "n": 501,
+        "successes": 110
+      }
+    ],
+    "baseline_phase_u": [
+      {
+        "lower": 2.4,
+        "upper": 2.5,
+        "n": 499,
+        "successes": 74
+      },
+      {
+        "lower": 2.5,
+        "upper": 2.6,
+        "n": 501,
+        "successes": 114
+      }
+    ],
+    "fresh_rsi_phase_u": [
+      {
+        "lower": 2.4,
+        "upper": 2.5,
+        "n": 499,
+        "successes": 47
+      },
+      {
+        "lower": 2.5,
+        "upper": 2.6,
+        "n": 501,
+        "successes": 111
+      }
+    ],
+    "repair_0070_phase_u": [
+      {
+        "lower": 2.4,
+        "upper": 2.5,
+        "n": 499,
+        "successes": 272
+      },
+      {
+        "lower": 2.5,
+        "upper": 2.6,
+        "n": 501,
+        "successes": 73
+      }
+    ],
+    "fresh_rsi_1m": [
+      {
+        "lower": 2.4,
+        "upper": 2.5,
+        "n": 499,
+        "successes": 0
+      },
+      {
+        "lower": 2.5,
+        "upper": 2.6,
+        "n": 501,
+        "successes": 0
+      }
+    ],
+    "fusion_last": [
+      {
+        "lower": 2.4,
+        "upper": 2.5,
+        "n": 499,
+        "successes": 14
+      },
+      {
+        "lower": 2.5,
+        "upper": 2.6,
+        "n": 501,
+        "successes": 12
+      }
+    ],
+    "discovery_0093": [
+      {
+        "lower": 2.4,
+        "upper": 2.5,
+        "n": 499,
+        "successes": 137
+      },
+      {
+        "lower": 2.5,
+        "upper": 2.6,
+        "n": 501,
+        "successes": 162
+      }
+    ],
+    "phase_u_10m": [
+      {
+        "lower": 2.4,
+        "upper": 2.5,
+        "n": 499,
+        "successes": 124
+      },
+      {
+        "lower": 2.5,
+        "upper": 2.6,
+        "n": 501,
+        "successes": 70
+      }
+    ]
+  },
+  "nominal_diagnostics": {
+    "phase_u": {
+      "end_codes": {
+        "12": 198,
+        "3": 52
+      },
+      "first_qpos_max_spread": 1.9371509552001953e-06,
+      "first_qvel_max_spread": 0.00026738643646240234
+    },
+    "bridge_latest": {
+      "end_codes": {
+        "12": 236,
+        "3": 14
+      },
+      "first_qpos_max_spread": 2.473592758178711e-06,
+      "first_qvel_max_spread": 0.00019788742065429688
+    },
+    "baseline": {
+      "end_codes": {
+        "12": 248,
+        "4": 1,
+        "3": 1
+      },
+      "first_qpos_max_spread": 2.682209014892578e-06,
+      "first_qvel_max_spread": 0.0002319328486919403
+    },
+    "repair_0098": {
+      "end_codes": {
+        "12": 248,
+        "3": 1,
+        "4": 1
+      },
+      "first_qpos_max_spread": 3.814697265625e-06,
+      "first_qvel_max_spread": 0.0002636909484863281
+    },
+    "random_0099": {
+      "end_codes": {
+        "12": 201,
+        "3": 34,
+        "5": 10,
+        "4": 5
+      },
+      "first_qpos_max_spread": 3.829598426818848e-06,
+      "first_qvel_max_spread": 0.00035762786865234375
+    },
+    "fresh_rsi": {
+      "end_codes": {
+        "12": 250
+      },
+      "first_qpos_max_spread": 4.217028617858887e-06,
+      "first_qvel_max_spread": 0.0003445148468017578
+    },
+    "repair_0070": {
+      "end_codes": {
+        "12": 249,
+        "3": 1
+      },
+      "first_qpos_max_spread": 2.637505531311035e-06,
+      "first_qvel_max_spread": 0.00018298625946044922
+    },
+    "student_2560000": {
+      "end_codes": {
+        "12": 250
+      },
+      "first_qpos_max_spread": 3.0547380447387695e-06,
+      "first_qvel_max_spread": 0.00028586387634277344
+    },
+    "baseline_phase_u": {
+      "end_codes": {
+        "12": 239,
+        "3": 10,
+        "5": 1
+      },
+      "first_qpos_max_spread": 2.1904706954956055e-06,
+      "first_qvel_max_spread": 0.00022232532501220703
+    },
+    "fresh_rsi_phase_u": {
+      "end_codes": {
+        "3": 205,
+        "5": 33,
+        "12": 4,
+        "4": 8
+      },
+      "first_qpos_max_spread": 2.0563602447509766e-06,
+      "first_qvel_max_spread": 0.0001919269561767578
+    },
+    "repair_0070_phase_u": {
+      "end_codes": {
+        "10": 106,
+        "3": 99,
+        "9": 45
+      },
+      "first_qpos_max_spread": 2.5480985641479492e-06,
+      "first_qvel_max_spread": 0.00019407272338867188
+    },
+    "fresh_rsi_1m": {
+      "end_codes": {
+        "8": 250
+      },
+      "first_qpos_max_spread": 2.5331974029541016e-06,
+      "first_qvel_max_spread": 0.0001163482666015625
+    },
+    "fusion_last": {
+      "end_codes": {
+        "4": 72,
+        "3": 90,
+        "12": 38,
+        "10": 41,
+        "5": 9
+      },
+      "first_qpos_max_spread": 3.2782554626464844e-06,
+      "first_qvel_max_spread": 0.0002880096435546875
+    },
+    "discovery_0093": {
+      "end_codes": {
+        "12": 241,
+        "3": 9
+      },
+      "first_qpos_max_spread": 2.1010637283325195e-06,
+      "first_qvel_max_spread": 0.00018310546875
+    },
+    "phase_u_10m": {
+      "end_codes": {
+        "12": 229,
+        "8": 13,
+        "3": 2,
+        "4": 2,
+        "5": 4
+      },
+      "first_qpos_max_spread": 2.130866050720215e-06,
+      "first_qvel_max_spread": 0.00028324127197265625
+    }
+  },
+  "role": "audit of all 15000 existing evaluation episodes; no new physics"
+}

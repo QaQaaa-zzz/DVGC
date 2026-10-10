@@ -1,0 +1,16 @@
+{
+  "url": "http://localhost:6037",
+  "tags": [
+    "02_recovery/fixed_dev_success",
+    "04_student/ppo_loss",
+    "01_reward/episode_return",
+    "08_runtime/minutes_per_round",
+    "03_teacher/verified_fraction",
+    "05_student/KL",
+    "07_generator/train_noise_MSE",
+    "06_student/clip_fraction"
+  ],
+  "reward_points": 73,
+  "last_round": 73,
+  "runtime_points": 72
+}

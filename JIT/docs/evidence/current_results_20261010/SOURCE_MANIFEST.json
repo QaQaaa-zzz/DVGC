@@ -1,0 +1,13 @@
+{
+  "source_code_revision": "5b3f376",
+  "snapshot_date": "2026-10-10",
+  "scope": "key results only; no episode data or weights",
+  "sources": {
+    "all_models_hard_initial1000_20261010": "/home/qy/DVGC/JIT/runs/monitoring/all_models_hard_initial1000_20261010",
+    "bridge_pi0_hard_initial1000_20261010": "/home/qy/DVGC/JIT/runs/monitoring/bridge_pi0_hard_initial1000_20261010",
+    "success_envelope_quantification_20261010": "/home/qy/DVGC/JIT/runs/monitoring/success_envelope_quantification_20261010",
+    "continuous_key_metrics_20261010": "/home/qy/DVGC/JIT/runs/monitoring/continuous_key_metrics_20261010",
+    "ledger": "/home/qy/STTW_CONTROL/research-hub",
+    "training_failure_R74": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0011_b1_resume_143"
+  }
+}
