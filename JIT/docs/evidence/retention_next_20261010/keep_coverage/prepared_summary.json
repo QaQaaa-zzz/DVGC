@@ -1,0 +1,110 @@
+{
+  "schema": "jit_retention_B_keep_coverage_v1",
+  "source_B": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/plan.json",
+  "budget": {
+    "keep_collection": 32000,
+    "DEV_baselines": 0,
+    "snapshot_nodes": 510000,
+    "B_full_DEV": 102400,
+    "B_warning_repeat": 204800,
+    "selected_train_repeat": 108800,
+    "selected_train_composites": 0,
+    "R5_focus_repeat": 0,
+    "reset_GPU": 0,
+    "total": 958000,
+    "prior_charged": 388036,
+    "hard_cap": 2000000,
+    "wall_seconds": 43200,
+    "B_updates": 2000,
+    "PPO_updates": 0,
+    "D2_cumulative_maximum": 1346036
+  },
+  "status": {
+    "phase": "prepared",
+    "stage": "D2_B_keep_coverage",
+    "charged_interactions": 0,
+    "D2_prior_charged": 388036,
+    "completed_supervised_updates": 0,
+    "planned_supervised_updates": 2000,
+    "execution_authorized": false,
+    "original_D2_started_unix": 1791622384.6936376,
+    "remaining_wall_seconds": 19534.073563575745,
+    "execution_blockers": [
+      "missing_new_stage_authorization"
+    ]
+  },
+  "evaluation_status": "not_started",
+  "new_keep_collection": "PENDING",
+  "reliable_recovery_improvement": "NOT_ESTABLISHED",
+  "learner_last": null,
+  "stage_candidate": null,
+  "frozen_R5": {
+    "bank": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0002_continuous_200/round_0005/students/student/bank.json",
+    "proposer": "round_0005_student",
+    "policy": {
+      "action_order": [
+        "steer",
+        "rear_wheel_drive",
+        "hip",
+        "knee"
+      ],
+      "actor_frame_fields": [
+        "gravity_x",
+        "gravity_y",
+        "gravity_z",
+        "angular_velocity_x",
+        "angular_velocity_y",
+        "angular_velocity_z",
+        "acceleration_x",
+        "acceleration_y",
+        "acceleration_z",
+        "steering_position",
+        "hip_position",
+        "knee_position",
+        "steering_velocity",
+        "hip_velocity",
+        "knee_velocity",
+        "front_wheel_velocity",
+        "rear_wheel_velocity",
+        "last_action_steer",
+        "last_action_rear_wheel_drive",
+        "last_action_hip",
+        "last_action_knee",
+        "estimated_forward_velocity",
+        "obstacle_relative_x",
+        "root_height",
+        "history_valid"
+      ],
+      "actor_sha256": "db2f3deb1c4a5193d63ccf44c5d60855ba0aa4a8dd2e31f4e4c31a49a7c3d8a6",
+      "actor_task_fields": [
+        "jump_signal"
+      ],
+      "checkpoint": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0002_continuous_200/round_0005/students/student/training/round_0005_student/checkpoints/transition_128000",
+      "checkpoint_identity_sha256": "855e89a896b874674d8fc8d2dd7c2d4aa6f3c0d609127ca18e9ff6007ffc56aa",
+      "critic_sha256": "2ab357822700a09398493fddb133269a0a273fce625ee29f07458da8e6f56e9a",
+      "data_role": "train",
+      "formal_config": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0002_continuous_200/round_0005/students/student/config.json",
+      "formal_config_file_sha256": "1e145105458fa130c4b8f0337cd675fe40f4ca5a48508b4231c81968082b984a",
+      "formal_config_sha256": "79e230fd787d070390e37e11ddf1b58e80c553cb486b29c1b1587779308aea58",
+      "iteration": 1,
+      "name": "round_0005_student",
+      "normalizer_sha256": "c9b365c78abea6a971fc58e53ae01b0df478bbfc0fbac6e69c0299f01570acd7",
+      "payload_sha256": "4b88d97cb27f8a8ef0093754b279d01af49c52c020b5a17be8084af613ab9028",
+      "policy_role": "development_checkpoint",
+      "source_formal_report": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0002_continuous_200/round_0005/students/student/training/round_0005_student/formal_report.json",
+      "source_formal_report_sha256": "7f60ccf8b668c7f0fa005bcb9ae26a5f765cdd908fcadcad9ade527e9487d38b",
+      "source_requested_training_transitions": 128000,
+      "source_reset_mixture": {
+        "natural_reset_probability": 0.2,
+        "selection": "fixed_jump_start_20pct_exact_snapshot_80pct",
+        "soft_tube_probability": 0.8
+      },
+      "source_training_run_id": "round_0005_student",
+      "source_training_transitions": 128000,
+      "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+    },
+    "frozen_policy": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0002_continuous_200/round_0005/students/student/frozen/frozen_unified_policy.json"
+  },
+  "published_policy": null,
+  "automatic_next_stage": false
+}

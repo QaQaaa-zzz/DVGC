@@ -1,0 +1,18 @@
+{
+  "keep_collection": 32000,
+  "DEV_baselines": 0,
+  "snapshot_nodes": 510000,
+  "B_full_DEV": 102400,
+  "B_warning_repeat": 204800,
+  "selected_train_repeat": 108800,
+  "selected_train_composites": 0,
+  "R5_focus_repeat": 0,
+  "reset_GPU": 0,
+  "total": 958000,
+  "prior_charged": 388036,
+  "hard_cap": 2000000,
+  "wall_seconds": 43200,
+  "B_updates": 2000,
+  "PPO_updates": 0,
+  "D2_cumulative_maximum": 1346036
+}

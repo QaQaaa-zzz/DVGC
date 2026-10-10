@@ -39,3 +39,6 @@ Actual charged total993809 = V800000+D1180909+D2engineering12900. No TEST opened
 ## D2 B-only finite execution
 
 [BC+keep实际结果、三组XY、逐根转化与旧能力损失](B_only/INDEX.md)。2000监督更新完成；BC1000为阶段候选，learner_last2000，R5冻结全局候选，未发布。TRAIN稳定4/8、未见SOLVER_DEV3/7，配对旧成功仍有损失；暂不启动PPO，先闭环与保持覆盖诊断。
+
+
+- [B_keep_coverage独立入口与零仿真准备](keep_coverage/INDEX.md)：当前prepared，缺新阶段执行授权，真实采集/BC均未启动。

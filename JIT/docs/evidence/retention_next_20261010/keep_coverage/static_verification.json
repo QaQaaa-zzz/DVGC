@@ -1,0 +1,20 @@
+{
+  "checked_at": "2026-10-10T23:28:58.288962+08:00",
+  "phase": "passed",
+  "plan_sha256": "e8debea8a7144eb01109e41c42f3f0a76ab1695c80504405ba38dde6550d8d12",
+  "forbidden_imports": [
+    "jax",
+    "mujoco",
+    "torch",
+    "warp"
+  ],
+  "forbidden_imports_seen": [],
+  "subprocess_calls": 0,
+  "physics_steps": 0,
+  "student_BC_updates": 0,
+  "status": "prepared",
+  "authorization_denial": "explicit new-stage execution authorization required",
+  "worker_denial_before_collection": "merged keep missing; collection must complete first",
+  "code_revision": "0ebfd3ce64a28d2fd76068bc55afce9c2ec7ee42",
+  "original_D2_deadline": "2026-10-11T04:53:04.693638+08:00"
+}
