@@ -1,0 +1,16 @@
+{
+  "result": "passed",
+  "pi0_R5_checkpoint_verified": true,
+  "E73_G73_files": {
+    "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0011_b1_resume_143/segment_0073/round_0073/explorer_update/state.msgpack": "3f77e061873a2534865d27bd933293f5a867e7c38299bfb4bccf8cdde12f9c4d",
+    "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0011_b1_resume_143/segment_0073/round_0073/generator_incremental/attempt_0000/update_2000/manifest.json": "0d4621583fb56a72d9668b0b672faf6aa9bce4353114040b0b2adc79dc6e6213",
+    "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0011_b1_resume_143/segment_0073/round_0073/generator_incremental/attempt_0000/update_2000/state.msgpack": "84fb92c8ed5756786a0d15a29f7e12abb44b962f252aa023162d24dbf3e08efe"
+  },
+  "source_and_proposal_hashes_verified": true,
+  "raw_loss_events_verified": true,
+  "counts_and_budget_verified": true,
+  "locked_inputs_verified": true,
+  "charged_D2": 388036,
+  "new_physics": 0,
+  "new_BC_updates": 0
+}

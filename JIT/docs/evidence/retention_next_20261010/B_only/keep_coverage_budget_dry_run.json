@@ -1,0 +1,15 @@
+{
+  "collect_pi0_keep": 32000,
+  "checkpoint_snapshot_eval": 510000,
+  "checkpoint_full_DEV": 102400,
+  "warning_source_candidate_repeat": 204800,
+  "selected_train_repeat": 108800,
+  "total_proposed": 958000,
+  "prior_D2": 388036,
+  "hard_cap_D2": 2000000,
+  "supervised_updates_proposed": 2000,
+  "supervised_updates_completed_previous": 2000,
+  "original_D2_started_unix": 1791622384.6936376,
+  "original_wall_cap_seconds": 43200,
+  "D2_maximum_if_executed": 1346036
+}

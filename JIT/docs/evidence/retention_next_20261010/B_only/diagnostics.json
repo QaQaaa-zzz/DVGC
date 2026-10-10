@@ -1,0 +1,1132 @@
+{
+  "schema": "jit_saved_bc_diagnosis_v1",
+  "source_HEAD": "aee1dbe741cf66cce01818009db0e2ac3c07e6d3",
+  "inputs": {
+    "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/plan.json": "c114727acd645b39904a515440160d9b153b5b7db58328eb69b0aeba07cb557a",
+    "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/B_checkpoint_results.json": "c303495daca257dd5a655772ba12e1967009b2ff0fe8e9c5689c0ef922d5ccd2",
+    "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/B1000_warning_repeat.json": "a85203e5bc64ad0026f7ec0b2d3054f21b7e1f7f9dc07d4bab7c7aaf819d1eeb",
+    "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D2_002/keep_receipt.json": "863513f137c9049829be9a3f12160cb775ba58dc2f0dfb5a2032ca489e8016b7",
+    "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/train_roots.json": "d3b9cdd245f4ca0851dbd3fe2761bca9a7aa9afe588a88df668a52f3fa484c11",
+    "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/B/update_0000.pkl": "2fee93a58c39a79abda9ecd876aa660f4039e9399b37996b75daab77e818e120"
+  },
+  "new_physics": 0,
+  "new_supervised_updates": 0,
+  "old_losses": [
+    {
+      "case": "B_06",
+      "lane": 22,
+      "runs": [
+        {
+          "run": "first",
+          "pi0": {
+            "steps": 74,
+            "success": true,
+            "end_code": 12,
+            "first_valid_contact": 41,
+            "roll_limit": null,
+            "prohibited_contact": null,
+            "physical_failure": null,
+            "recovery_ticks_end": 25,
+            "last_roll": -0.003364561591297388
+          },
+          "student": {
+            "steps": 78,
+            "success": false,
+            "end_code": 5,
+            "first_valid_contact": 41,
+            "roll_limit": null,
+            "prohibited_contact": 77,
+            "physical_failure": 77,
+            "recovery_ticks_end": 0,
+            "last_roll": -0.4069966673851013
+          },
+          "difference": {
+            "common_steps": 74,
+            "observation": {
+              "first": 1,
+              "maxabs": 235.110107421875
+            },
+            "executed_action": {
+              "first": 0,
+              "maxabs": 1.1624380350112915
+            },
+            "qpos_after": {
+              "first": 0,
+              "maxabs": 3.4851150512695312
+            },
+            "qvel_after": {
+              "first": 0,
+              "maxabs": 31.1596736907959
+            },
+            "action_rmse_channels": [
+              0.3791356682777405,
+              0.4755591154098511,
+              0.16374877095222473,
+              0.16563820838928223
+            ],
+            "initial_observation_maxabs": 0.0
+          },
+          "pi0_keep_distance": {
+            "median": 0.25353862273347116,
+            "maximum": 0.7478389819566191,
+            "p90": 0.43958100146563006,
+            "first": 0.0
+          },
+          "student_keep_distance": {
+            "median": 0.38759012426676354,
+            "maximum": 0.8877759942621486,
+            "p90": 0.6834456248710797,
+            "first": 0.0
+          },
+          "pi0_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_001/DEV_pi0/prefixes.npz",
+          "student_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/B1000_DEV/prefixes.npz",
+          "initial_action_delta_student_minus_pi0": [
+            0.0024882256984710693,
+            -0.0023151449859142303,
+            0.0020291805267333984,
+            0.0026797354221343994
+          ],
+          "initial_exact_keep_observation_matches": 20
+        },
+        {
+          "run": "repeat",
+          "pi0": {
+            "steps": 74,
+            "success": true,
+            "end_code": 12,
+            "first_valid_contact": 41,
+            "roll_limit": null,
+            "prohibited_contact": null,
+            "physical_failure": null,
+            "recovery_ticks_end": 25,
+            "last_roll": 0.012313549406826496
+          },
+          "student": {
+            "steps": 78,
+            "success": false,
+            "end_code": 3,
+            "first_valid_contact": 41,
+            "roll_limit": 77,
+            "prohibited_contact": null,
+            "physical_failure": 77,
+            "recovery_ticks_end": 0,
+            "last_roll": -0.6544678807258606
+          },
+          "difference": {
+            "common_steps": 74,
+            "observation": {
+              "first": 1,
+              "maxabs": 234.3527374267578
+            },
+            "executed_action": {
+              "first": 0,
+              "maxabs": 1.1596052646636963
+            },
+            "qpos_after": {
+              "first": 0,
+              "maxabs": 3.489788055419922
+            },
+            "qvel_after": {
+              "first": 0,
+              "maxabs": 41.81742858886719
+            },
+            "action_rmse_channels": [
+              0.36002296209335327,
+              0.4839283227920532,
+              0.178074911236763,
+              0.15873084962368011
+            ],
+            "initial_observation_maxabs": 0.0
+          },
+          "pi0_keep_distance": {
+            "median": 0.24972971435987024,
+            "maximum": 0.7478979991529429,
+            "p90": 0.42270644812599506,
+            "first": 0.0
+          },
+          "student_keep_distance": {
+            "median": 0.4010481262128715,
+            "maximum": 1.1659646989107337,
+            "p90": 0.7777845549861342,
+            "first": 0.0
+          },
+          "pi0_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/B1000_repeat_pi0_DEV/prefixes.npz",
+          "student_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/B1000_repeat_DEV/prefixes.npz",
+          "initial_action_delta_student_minus_pi0": [
+            0.0024882256984710693,
+            -0.0023151449859142303,
+            0.0020291805267333984,
+            0.0026797354221343994
+          ],
+          "initial_exact_keep_observation_matches": 20
+        }
+      ],
+      "gradient_allowed": false
+    },
+    {
+      "case": "C_10",
+      "lane": 42,
+      "runs": [
+        {
+          "run": "first",
+          "pi0": {
+            "steps": 79,
+            "success": true,
+            "end_code": 12,
+            "first_valid_contact": 42,
+            "roll_limit": null,
+            "prohibited_contact": null,
+            "physical_failure": null,
+            "recovery_ticks_end": 25,
+            "last_roll": 0.0025384859181940556
+          },
+          "student": {
+            "steps": 67,
+            "success": false,
+            "end_code": 3,
+            "first_valid_contact": 43,
+            "roll_limit": 66,
+            "prohibited_contact": null,
+            "physical_failure": 66,
+            "recovery_ticks_end": 0,
+            "last_roll": -0.6515771746635437
+          },
+          "difference": {
+            "common_steps": 67,
+            "observation": {
+              "first": 1,
+              "maxabs": 221.28390502929688
+            },
+            "executed_action": {
+              "first": 0,
+              "maxabs": 1.146414875984192
+            },
+            "qpos_after": {
+              "first": 0,
+              "maxabs": 5.539033889770508
+            },
+            "qvel_after": {
+              "first": 0,
+              "maxabs": 44.53935241699219
+            },
+            "action_rmse_channels": [
+              0.5690744519233704,
+              0.28829124569892883,
+              0.14157859981060028,
+              0.15791794657707214
+            ],
+            "initial_observation_maxabs": 0.0
+          },
+          "pi0_keep_distance": {
+            "median": 0.2610379602635653,
+            "maximum": 0.7508449863182886,
+            "p90": 0.42717780268458566,
+            "first": 0.0
+          },
+          "student_keep_distance": {
+            "median": 0.48838849943660423,
+            "maximum": 1.0573500186495015,
+            "p90": 0.858875922060478,
+            "first": 0.0
+          },
+          "pi0_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_001/DEV_pi0/prefixes.npz",
+          "student_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/B1000_DEV/prefixes.npz",
+          "initial_action_delta_student_minus_pi0": [
+            0.0024882256984710693,
+            -0.0023151449859142303,
+            0.0020291805267333984,
+            0.0026797354221343994
+          ],
+          "initial_exact_keep_observation_matches": 20
+        },
+        {
+          "run": "repeat",
+          "pi0": {
+            "steps": 83,
+            "success": true,
+            "end_code": 12,
+            "first_valid_contact": 42,
+            "roll_limit": null,
+            "prohibited_contact": null,
+            "physical_failure": null,
+            "recovery_ticks_end": 25,
+            "last_roll": -0.0023258619476109743
+          },
+          "student": {
+            "steps": 67,
+            "success": false,
+            "end_code": 3,
+            "first_valid_contact": 43,
+            "roll_limit": 66,
+            "prohibited_contact": null,
+            "physical_failure": 66,
+            "recovery_ticks_end": 0,
+            "last_roll": -0.6480320692062378
+          },
+          "difference": {
+            "common_steps": 67,
+            "observation": {
+              "first": 1,
+              "maxabs": 233.6241455078125
+            },
+            "executed_action": {
+              "first": 0,
+              "maxabs": 1.275378942489624
+            },
+            "qpos_after": {
+              "first": 0,
+              "maxabs": 3.552793502807617
+            },
+            "qvel_after": {
+              "first": 0,
+              "maxabs": 27.52244758605957
+            },
+            "action_rmse_channels": [
+              0.5472366213798523,
+              0.3488650321960449,
+              0.16289681196212769,
+              0.17869296669960022
+            ],
+            "initial_observation_maxabs": 0.0
+          },
+          "pi0_keep_distance": {
+            "median": 0.34447314417415864,
+            "maximum": 1.142580840250387,
+            "p90": 0.5621211070223757,
+            "first": 0.0
+          },
+          "student_keep_distance": {
+            "median": 0.48594814381188856,
+            "maximum": 1.110295047130939,
+            "p90": 0.8583389787012076,
+            "first": 0.0
+          },
+          "pi0_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/B1000_repeat_pi0_DEV/prefixes.npz",
+          "student_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/B1000_repeat_DEV/prefixes.npz",
+          "initial_action_delta_student_minus_pi0": [
+            0.0024882256984710693,
+            -0.0023151449859142303,
+            0.0020291805267333984,
+            0.0026797354221343994
+          ],
+          "initial_exact_keep_observation_matches": 20
+        }
+      ],
+      "gradient_allowed": false
+    }
+  ],
+  "train": [
+    {
+      "root_id": "TRAIN-1010233101-68",
+      "snapshot_control_step": 3,
+      "student": {
+        "steps": 63,
+        "success": true,
+        "end_code": 12,
+        "first_valid_contact": 36,
+        "roll_limit": null,
+        "prohibited_contact": null,
+        "physical_failure": null,
+        "recovery_ticks_end": 25,
+        "last_roll": 0.0004649648326449096
+      },
+      "teacher": {
+        "steps": 65,
+        "success": true,
+        "end_code": 12,
+        "first_valid_contact": 39,
+        "roll_limit": null,
+        "prohibited_contact": null,
+        "physical_failure": null,
+        "recovery_ticks_end": 25,
+        "last_roll": 0.0057192472741007805
+      },
+      "difference": {
+        "common_steps": 63,
+        "observation": {
+          "first": 1,
+          "maxabs": 259.24432373046875
+        },
+        "executed_action": {
+          "first": 0,
+          "maxabs": 0.6608717441558838
+        },
+        "qpos_after": {
+          "first": 0,
+          "maxabs": 8.398594856262207
+        },
+        "qvel_after": {
+          "first": 0,
+          "maxabs": 45.40688705444336
+        },
+        "action_rmse_channels": [
+          0.2179899513721466,
+          0.30326539278030396,
+          0.24238437414169312,
+          0.09371727705001831
+        ],
+        "initial_observation_maxabs": 0.0
+      },
+      "student_keep_distance": {
+        "median": 0.38714851402178146,
+        "maximum": 0.8686173577986492,
+        "p90": 0.5981733280206886,
+        "first": 0.22067099761212405
+      },
+      "teacher_keep_distance": {
+        "median": 0.3479514937833357,
+        "maximum": 0.9696985243060973,
+        "p90": 0.778216292039201,
+        "first": 0.22067099761212405
+      },
+      "student_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/B1000_TRAIN_root00_independent_pi0/bridge_baseline_traces.npz",
+      "teacher_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_002/root_000_G_repeat2/bridge_baseline_traces.npz",
+      "student_post_contact_keep_distance": {
+        "median": 0.27514135975968634,
+        "maximum": 0.8686173577986492,
+        "p90": 0.7332097996593955,
+        "first": 0.37119659727148385
+      },
+      "matched_tick_normalized_observation_rmse": {
+        "prefix16": 0.48472136787011366,
+        "after16": 0.6706241710391109
+      }
+    },
+    {
+      "root_id": "TRAIN-1010233101-37",
+      "snapshot_control_step": 8,
+      "student": {
+        "steps": 59,
+        "success": true,
+        "end_code": 12,
+        "first_valid_contact": 32,
+        "roll_limit": null,
+        "prohibited_contact": null,
+        "physical_failure": null,
+        "recovery_ticks_end": 25,
+        "last_roll": 0.0014685856876894832
+      },
+      "teacher": {
+        "steps": 62,
+        "success": true,
+        "end_code": 12,
+        "first_valid_contact": 36,
+        "roll_limit": null,
+        "prohibited_contact": null,
+        "physical_failure": null,
+        "recovery_ticks_end": 25,
+        "last_roll": 0.009379127062857151
+      },
+      "difference": {
+        "common_steps": 59,
+        "observation": {
+          "first": 1,
+          "maxabs": 97.56101989746094
+        },
+        "executed_action": {
+          "first": 0,
+          "maxabs": 1.1247612237930298
+        },
+        "qpos_after": {
+          "first": 0,
+          "maxabs": 5.620745658874512
+        },
+        "qvel_after": {
+          "first": 0,
+          "maxabs": 39.766510009765625
+        },
+        "action_rmse_channels": [
+          0.2539893686771393,
+          0.24396753311157227,
+          0.31681960821151733,
+          0.08242538571357727
+        ],
+        "initial_observation_maxabs": 0.0
+      },
+      "student_keep_distance": {
+        "median": 0.18999885787564358,
+        "maximum": 0.6317058820614543,
+        "p90": 0.37608131257092003,
+        "first": 0.20176511165390215
+      },
+      "teacher_keep_distance": {
+        "median": 0.24721794489878368,
+        "maximum": 0.4976772658018936,
+        "p90": 0.33996292659038513,
+        "first": 0.20176511165390215
+      },
+      "student_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/B1000_TRAIN_root01_independent_pi0/bridge_baseline_traces.npz",
+      "teacher_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_002/root_001_G_repeat2/bridge_baseline_traces.npz",
+      "student_post_contact_keep_distance": {
+        "median": 0.19584530844560485,
+        "maximum": 0.6317058820614543,
+        "p90": 0.5357148584131587,
+        "first": 0.16995646126619268
+      },
+      "matched_tick_normalized_observation_rmse": {
+        "prefix16": 0.5151426355895794,
+        "after16": 0.7077475131314078
+      }
+    },
+    {
+      "root_id": "TRAIN-1010233101-10",
+      "snapshot_control_step": 13,
+      "student": {
+        "steps": 61,
+        "success": true,
+        "end_code": 12,
+        "first_valid_contact": 30,
+        "roll_limit": null,
+        "prohibited_contact": null,
+        "physical_failure": null,
+        "recovery_ticks_end": 25,
+        "last_roll": 0.009795400314033031
+      },
+      "teacher": {
+        "steps": 70,
+        "success": true,
+        "end_code": 12,
+        "first_valid_contact": 30,
+        "roll_limit": null,
+        "prohibited_contact": null,
+        "physical_failure": null,
+        "recovery_ticks_end": 25,
+        "last_roll": 0.004369072150439024
+      },
+      "difference": {
+        "common_steps": 61,
+        "observation": {
+          "first": 1,
+          "maxabs": 73.8596420288086
+        },
+        "executed_action": {
+          "first": 0,
+          "maxabs": 0.8097943663597107
+        },
+        "qpos_after": {
+          "first": 0,
+          "maxabs": 4.620197296142578
+        },
+        "qvel_after": {
+          "first": 0,
+          "maxabs": 32.9015007019043
+        },
+        "action_rmse_channels": [
+          0.3576573431491852,
+          0.20388400554656982,
+          0.24604308605194092,
+          0.158935546875
+        ],
+        "initial_observation_maxabs": 0.0
+      },
+      "student_keep_distance": {
+        "median": 0.39582062764279313,
+        "maximum": 0.6406006918460043,
+        "p90": 0.6060923502812492,
+        "first": 0.358234497051512
+      },
+      "teacher_keep_distance": {
+        "median": 0.3014942995362294,
+        "maximum": 0.6309661510326541,
+        "p90": 0.4801089836847797,
+        "first": 0.358234497051512
+      },
+      "student_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/B1000_TRAIN_root02_independent_pi0/bridge_baseline_traces.npz",
+      "teacher_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_002/root_005_G_repeat2/bridge_baseline_traces.npz",
+      "student_post_contact_keep_distance": {
+        "median": 0.3098692318714904,
+        "maximum": 0.6406006918460043,
+        "p90": 0.5265020030983383,
+        "first": 0.3299784349367811
+      },
+      "matched_tick_normalized_observation_rmse": {
+        "prefix16": 0.44791611353398963,
+        "after16": 0.6909052242455663
+      }
+    },
+    {
+      "root_id": "TRAIN-1010233101-18",
+      "snapshot_control_step": 13,
+      "student": {
+        "steps": 73,
+        "success": false,
+        "end_code": 3,
+        "first_valid_contact": 29,
+        "roll_limit": 72,
+        "prohibited_contact": null,
+        "physical_failure": 72,
+        "recovery_ticks_end": 0,
+        "last_roll": -0.6601317524909973
+      },
+      "teacher": {
+        "steps": 82,
+        "success": true,
+        "end_code": 12,
+        "first_valid_contact": 29,
+        "roll_limit": null,
+        "prohibited_contact": null,
+        "physical_failure": null,
+        "recovery_ticks_end": 25,
+        "last_roll": 0.001679332577623427
+      },
+      "difference": {
+        "common_steps": 73,
+        "observation": {
+          "first": 1,
+          "maxabs": 74.13775634765625
+        },
+        "executed_action": {
+          "first": 0,
+          "maxabs": 1.0758068561553955
+        },
+        "qpos_after": {
+          "first": 0,
+          "maxabs": 5.20274543762207
+        },
+        "qvel_after": {
+          "first": 0,
+          "maxabs": 40.754150390625
+        },
+        "action_rmse_channels": [
+          0.1932714283466339,
+          0.43805184960365295,
+          0.14993096888065338,
+          0.1038915142416954
+        ],
+        "initial_observation_maxabs": 0.0
+      },
+      "student_keep_distance": {
+        "median": 0.4194890727074897,
+        "maximum": 1.240613828895596,
+        "p90": 0.6820547961246618,
+        "first": 0.3741577988292056
+      },
+      "teacher_keep_distance": {
+        "median": 0.37889876227036345,
+        "maximum": 0.6719677885334803,
+        "p90": 0.6010754375360375,
+        "first": 0.3741577988292056
+      },
+      "student_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/B1000_TRAIN_root03_independent_pi0/bridge_baseline_traces.npz",
+      "teacher_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_002/root_007_G_repeat2/bridge_baseline_traces.npz",
+      "student_post_contact_keep_distance": {
+        "median": 0.47281098813240663,
+        "maximum": 1.240613828895596,
+        "p90": 0.8212286447992075,
+        "first": 0.29174438611522274
+      },
+      "matched_tick_normalized_observation_rmse": {
+        "prefix16": 0.3971847596300982,
+        "after16": 0.7857727988849688
+      }
+    },
+    {
+      "root_id": "TRAIN-1010233101-26",
+      "snapshot_control_step": 13,
+      "student": {
+        "steps": 45,
+        "success": false,
+        "end_code": 3,
+        "first_valid_contact": 28,
+        "roll_limit": 44,
+        "prohibited_contact": null,
+        "physical_failure": 44,
+        "recovery_ticks_end": 0,
+        "last_roll": -0.64697265625
+      },
+      "teacher": {
+        "steps": 66,
+        "success": true,
+        "end_code": 12,
+        "first_valid_contact": 29,
+        "roll_limit": null,
+        "prohibited_contact": null,
+        "physical_failure": null,
+        "recovery_ticks_end": 25,
+        "last_roll": 0.004575650207698345
+      },
+      "difference": {
+        "common_steps": 45,
+        "observation": {
+          "first": 1,
+          "maxabs": 102.03340148925781
+        },
+        "executed_action": {
+          "first": 0,
+          "maxabs": 0.788794219493866
+        },
+        "qpos_after": {
+          "first": 0,
+          "maxabs": 5.095709800720215
+        },
+        "qvel_after": {
+          "first": 0,
+          "maxabs": 30.36849594116211
+        },
+        "action_rmse_channels": [
+          0.17281359434127808,
+          0.26987287402153015,
+          0.28202322125434875,
+          0.1533847153186798
+        ],
+        "initial_observation_maxabs": 0.0
+      },
+      "student_keep_distance": {
+        "median": 0.5962339286221322,
+        "maximum": 0.9298792685881239,
+        "p90": 0.8193132086674552,
+        "first": 0.28368400148053047
+      },
+      "teacher_keep_distance": {
+        "median": 0.3600726405264457,
+        "maximum": 1.0565648871664346,
+        "p90": 0.5872472124907144,
+        "first": 0.28368400148053047
+      },
+      "student_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/B1000_TRAIN_root04_independent_pi0/bridge_baseline_traces.npz",
+      "teacher_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_002/root_009_G_repeat2/bridge_baseline_traces.npz",
+      "student_post_contact_keep_distance": {
+        "median": 0.7212464853702311,
+        "maximum": 0.9298792685881239,
+        "p90": 0.8513544663756089,
+        "first": 0.46994040132036735
+      },
+      "matched_tick_normalized_observation_rmse": {
+        "prefix16": 0.27966494073102915,
+        "after16": 0.9290698824736179
+      }
+    },
+    {
+      "root_id": "TRAIN-1010233101-30",
+      "snapshot_control_step": 13,
+      "student": {
+        "steps": 67,
+        "success": true,
+        "end_code": 12,
+        "first_valid_contact": 29,
+        "roll_limit": null,
+        "prohibited_contact": null,
+        "physical_failure": null,
+        "recovery_ticks_end": 25,
+        "last_roll": 0.015070104040205479
+      },
+      "teacher": {
+        "steps": 64,
+        "success": true,
+        "end_code": 12,
+        "first_valid_contact": 29,
+        "roll_limit": null,
+        "prohibited_contact": null,
+        "physical_failure": null,
+        "recovery_ticks_end": 25,
+        "last_roll": 0.012157579883933067
+      },
+      "difference": {
+        "common_steps": 64,
+        "observation": {
+          "first": 1,
+          "maxabs": 121.98987579345703
+        },
+        "executed_action": {
+          "first": 0,
+          "maxabs": 0.4268301725387573
+        },
+        "qpos_after": {
+          "first": 0,
+          "maxabs": 1.0250320434570312
+        },
+        "qvel_after": {
+          "first": 0,
+          "maxabs": 27.821271896362305
+        },
+        "action_rmse_channels": [
+          0.18701501190662384,
+          0.1709560602903366,
+          0.09297828376293182,
+          0.08748642355203629
+        ],
+        "initial_observation_maxabs": 0.0
+      },
+      "student_keep_distance": {
+        "median": 0.3508926512407182,
+        "maximum": 1.0106382772000613,
+        "p90": 0.6071666965072111,
+        "first": 0.41251478703646705
+      },
+      "teacher_keep_distance": {
+        "median": 0.37054134843816733,
+        "maximum": 0.9347695116662565,
+        "p90": 0.6421338607745138,
+        "first": 0.41251478703646705
+      },
+      "student_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/B1000_TRAIN_root05_independent_pi0/bridge_baseline_traces.npz",
+      "teacher_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_002/root_011_G_repeat2/bridge_baseline_traces.npz",
+      "student_post_contact_keep_distance": {
+        "median": 0.30131946674812027,
+        "maximum": 1.0106382772000613,
+        "p90": 0.5280985671946933,
+        "first": 0.22278727655445735
+      },
+      "matched_tick_normalized_observation_rmse": {
+        "prefix16": 0.33823119455137496,
+        "after16": 0.4604945080174784
+      }
+    },
+    {
+      "root_id": "TRAIN-1010233101-55",
+      "snapshot_control_step": 18,
+      "student": {
+        "steps": 89,
+        "success": false,
+        "end_code": 5,
+        "first_valid_contact": 25,
+        "roll_limit": null,
+        "prohibited_contact": 88,
+        "physical_failure": 88,
+        "recovery_ticks_end": 0,
+        "last_roll": -0.15554054081439972
+      },
+      "teacher": {
+        "steps": 55,
+        "success": true,
+        "end_code": 12,
+        "first_valid_contact": 24,
+        "roll_limit": null,
+        "prohibited_contact": null,
+        "physical_failure": null,
+        "recovery_ticks_end": 25,
+        "last_roll": -0.0010141097009181976
+      },
+      "difference": {
+        "common_steps": 55,
+        "observation": {
+          "first": 1,
+          "maxabs": 72.20784759521484
+        },
+        "executed_action": {
+          "first": 0,
+          "maxabs": 1.1207115650177002
+        },
+        "qpos_after": {
+          "first": 0,
+          "maxabs": 2.417323112487793
+        },
+        "qvel_after": {
+          "first": 0,
+          "maxabs": 36.66370391845703
+        },
+        "action_rmse_channels": [
+          0.3911610245704651,
+          0.18570643663406372,
+          0.16130322217941284,
+          0.1645042896270752
+        ],
+        "initial_observation_maxabs": 0.0
+      },
+      "student_keep_distance": {
+        "median": 0.30492331939551215,
+        "maximum": 1.052022757479166,
+        "p90": 0.5249506817708053,
+        "first": 0.3387971986052227
+      },
+      "teacher_keep_distance": {
+        "median": 0.301067602857762,
+        "maximum": 0.9758126590273773,
+        "p90": 0.4659489260613278,
+        "first": 0.3387971986052227
+      },
+      "student_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/B1000_TRAIN_root06_independent_pi0/bridge_baseline_traces.npz",
+      "teacher_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_003/worker_root_012/root_012_G_repeat2/bridge_baseline_traces.npz",
+      "student_post_contact_keep_distance": {
+        "median": 0.35358621112898925,
+        "maximum": 1.052022757479166,
+        "p90": 0.54863969965615,
+        "first": 0.423282453475068
+      },
+      "matched_tick_normalized_observation_rmse": {
+        "prefix16": 0.20819726482136833,
+        "after16": 0.7608459361637439
+      }
+    },
+    {
+      "root_id": "TRAIN-1010233101-63",
+      "snapshot_control_step": 18,
+      "student": {
+        "steps": 71,
+        "success": false,
+        "end_code": 3,
+        "first_valid_contact": 24,
+        "roll_limit": 70,
+        "prohibited_contact": null,
+        "physical_failure": 70,
+        "recovery_ticks_end": 0,
+        "last_roll": -0.6189101338386536
+      },
+      "teacher": {
+        "steps": 61,
+        "success": true,
+        "end_code": 12,
+        "first_valid_contact": 24,
+        "roll_limit": null,
+        "prohibited_contact": null,
+        "physical_failure": null,
+        "recovery_ticks_end": 25,
+        "last_roll": 0.01694423519074917
+      },
+      "difference": {
+        "common_steps": 61,
+        "observation": {
+          "first": 1,
+          "maxabs": 71.44841003417969
+        },
+        "executed_action": {
+          "first": 0,
+          "maxabs": 1.064005732536316
+        },
+        "qpos_after": {
+          "first": 0,
+          "maxabs": 1.6505708694458008
+        },
+        "qvel_after": {
+          "first": 0,
+          "maxabs": 39.563785552978516
+        },
+        "action_rmse_channels": [
+          0.21638360619544983,
+          0.34775304794311523,
+          0.13390563428401947,
+          0.13759076595306396
+        ],
+        "initial_observation_maxabs": 0.0
+      },
+      "student_keep_distance": {
+        "median": 0.37511302639149685,
+        "maximum": 1.2555943887582657,
+        "p90": 0.7592534721944785,
+        "first": 0.2177964010621708
+      },
+      "teacher_keep_distance": {
+        "median": 0.25494255529336923,
+        "maximum": 0.7337294664335287,
+        "p90": 0.42515348415318616,
+        "first": 0.2177964010621708
+      },
+      "student_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/B1000_TRAIN_root07_independent_pi0/bridge_baseline_traces.npz",
+      "teacher_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_003/worker_root_014/root_014_G_repeat2/bridge_baseline_traces.npz",
+      "student_post_contact_keep_distance": {
+        "median": 0.5217032966458686,
+        "maximum": 1.2555943887582657,
+        "p90": 0.868531480287762,
+        "first": 0.22895493724319566
+      },
+      "matched_tick_normalized_observation_rmse": {
+        "prefix16": 0.0847706903296784,
+        "after16": 0.6518085266618653
+      }
+    }
+  ],
+  "keep_phase_records": [
+    {
+      "ancestor": "TRAIN_KEEP-1010257101-0",
+      "group": "nominal",
+      "steps": 82,
+      "first_valid_contact": 42,
+      "post_contact_observations": 40
+    },
+    {
+      "ancestor": "TRAIN_KEEP-1010257101-1",
+      "group": "nominal",
+      "steps": 76,
+      "first_valid_contact": 42,
+      "post_contact_observations": 34
+    },
+    {
+      "ancestor": "TRAIN_KEEP-1010257101-2",
+      "group": "nominal",
+      "steps": 77,
+      "first_valid_contact": 41,
+      "post_contact_observations": 36
+    },
+    {
+      "ancestor": "TRAIN_KEEP-1010257101-3",
+      "group": "nominal",
+      "steps": 77,
+      "first_valid_contact": 41,
+      "post_contact_observations": 36
+    },
+    {
+      "ancestor": "TRAIN_KEEP-1010257101-4",
+      "group": "nominal",
+      "steps": 96,
+      "first_valid_contact": 41,
+      "post_contact_observations": 55
+    },
+    {
+      "ancestor": "TRAIN_KEEP-1010257101-5",
+      "group": "nominal",
+      "steps": 76,
+      "first_valid_contact": 42,
+      "post_contact_observations": 34
+    },
+    {
+      "ancestor": "TRAIN_KEEP-1010257101-6",
+      "group": "nominal",
+      "steps": 77,
+      "first_valid_contact": 41,
+      "post_contact_observations": 36
+    },
+    {
+      "ancestor": "TRAIN_KEEP-1010257101-7",
+      "group": "nominal",
+      "steps": 82,
+      "first_valid_contact": 42,
+      "post_contact_observations": 40
+    },
+    {
+      "ancestor": "TRAIN_KEEP-1010257101-9",
+      "group": "nominal",
+      "steps": 77,
+      "first_valid_contact": 41,
+      "post_contact_observations": 36
+    },
+    {
+      "ancestor": "TRAIN_KEEP-1010257101-10",
+      "group": "nominal",
+      "steps": 75,
+      "first_valid_contact": 42,
+      "post_contact_observations": 33
+    },
+    {
+      "ancestor": "TRAIN_KEEP-1010257101-11",
+      "group": "nominal",
+      "steps": 78,
+      "first_valid_contact": 41,
+      "post_contact_observations": 37
+    },
+    {
+      "ancestor": "TRAIN_KEEP-1010257101-12",
+      "group": "nominal",
+      "steps": 77,
+      "first_valid_contact": 41,
+      "post_contact_observations": 36
+    },
+    {
+      "ancestor": "TRAIN_KEEP-1010257101-13",
+      "group": "nominal",
+      "steps": 77,
+      "first_valid_contact": 41,
+      "post_contact_observations": 36
+    },
+    {
+      "ancestor": "TRAIN_KEEP-1010257101-14",
+      "group": "nominal",
+      "steps": 77,
+      "first_valid_contact": 41,
+      "post_contact_observations": 36
+    },
+    {
+      "ancestor": "TRAIN_KEEP-1010257101-16",
+      "group": "random",
+      "steps": 68,
+      "first_valid_contact": 41,
+      "post_contact_observations": 27
+    },
+    {
+      "ancestor": "TRAIN_KEEP-1010257101-17",
+      "group": "random",
+      "steps": 69,
+      "first_valid_contact": 43,
+      "post_contact_observations": 26
+    },
+    {
+      "ancestor": "TRAIN_KEEP-1010257101-20",
+      "group": "random",
+      "steps": 69,
+      "first_valid_contact": 42,
+      "post_contact_observations": 27
+    },
+    {
+      "ancestor": "TRAIN_KEEP-1010257101-21",
+      "group": "random",
+      "steps": 79,
+      "first_valid_contact": 42,
+      "post_contact_observations": 37
+    },
+    {
+      "ancestor": "TRAIN_KEEP-1010257101-22",
+      "group": "random",
+      "steps": 68,
+      "first_valid_contact": 42,
+      "post_contact_observations": 26
+    },
+    {
+      "ancestor": "TRAIN_KEEP-1010257101-23",
+      "group": "random",
+      "steps": 71,
+      "first_valid_contact": 42,
+      "post_contact_observations": 29
+    },
+    {
+      "ancestor": "TRAIN_KEEP-1010257101-25",
+      "group": "random",
+      "steps": 69,
+      "first_valid_contact": 43,
+      "post_contact_observations": 26
+    },
+    {
+      "ancestor": "TRAIN_KEEP-1010257101-26",
+      "group": "random",
+      "steps": 69,
+      "first_valid_contact": 43,
+      "post_contact_observations": 26
+    },
+    {
+      "ancestor": "TRAIN_KEEP-1010257101-27",
+      "group": "random",
+      "steps": 69,
+      "first_valid_contact": 42,
+      "post_contact_observations": 27
+    },
+    {
+      "ancestor": "TRAIN_KEEP-1010257101-28",
+      "group": "random",
+      "steps": 68,
+      "first_valid_contact": 42,
+      "post_contact_observations": 26
+    },
+    {
+      "ancestor": "TRAIN_KEEP-1010257101-29",
+      "group": "random",
+      "steps": 69,
+      "first_valid_contact": 43,
+      "post_contact_observations": 26
+    },
+    {
+      "ancestor": "TRAIN_KEEP-1010257101-30",
+      "group": "random",
+      "steps": 79,
+      "first_valid_contact": 42,
+      "post_contact_observations": 37
+    }
+  ],
+  "keep_phase_summary": {
+    "nominal": {
+      "trajectories": 14,
+      "observations": 1104,
+      "post_contact_observations": 525
+    },
+    "random": {
+      "trajectories": 12,
+      "observations": 847,
+      "post_contact_observations": 340
+    }
+  },
+  "distance_definition": "Unclipped raw 76D observation nearest-neighbor RMSE scaled by fixed pi0 std; descriptive, not a membership threshold or causal proof.",
+  "budget": {
+    "charged_D2": 388036,
+    "charged_remaining": 1611964,
+    "original_started_unix": 1791622384.6936376,
+    "checked_unix": 1791630364.7562244,
+    "wall_remaining_seconds": 35219.9374127388
+  }
+}
