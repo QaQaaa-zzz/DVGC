@@ -196,13 +196,15 @@ def source_recheck_disposition(label):
 def is_source_conflict_quarantine(row):
     return (row.get('teacher_status')=='invalid' and row.get('reason')=='source_control_repeat_conflict'
         and row.get('source_control_labels') in ([0,1],[1,0])
-        and row.get('selected_replay_label')==1 and row.get('complete_finite_replay') is True
+        and row.get('selected_replay_label') in (0,1) and row.get('complete_finite_replay') is True
         and row.get('new_gain_eligible') is False and row.get('training_eligible') is True
         and row.get('source_recheck_label') is None and 'demo' not in row)
 
 
 def quarantine_source_conflict(row,replay):
-    if (replay.get('source_control_repeat_conflict') is not True or replay.get('label')!=1
+    # A finite selected failure does not resolve a contradictory source label.
+    # Quarantine both finite outcomes; unknown/incomplete execution still stops.
+    if (replay.get('source_control_repeat_conflict') is not True or replay.get('label') not in (0,1)
         or replay.get('source_control_labels') not in ([0,1],[1,0])
         or replay.get('complete_finite_replay') is not True):return None
     return {**row,'teacher_status':'invalid','reason':'source_control_repeat_conflict',
@@ -761,6 +763,14 @@ def read_teacher_traces(teachers):
 def start_notifications(manifest):
     """Use the existing JIT watcher and verify its actual heartbeat."""
     import os,subprocess,sys
+    owner=manifest.get('notification_owner')
+    if owner:
+        record=read(owner['status_path'])
+        argv=Path(f"/proc/{record['pid']}/cmdline").read_bytes().split(b'\0')
+        if (str(owner['active_run']).encode() not in argv or record.get('delivery_errors')
+            or not 0<=time.time()-record.get('checked_unix',0)<30):
+            raise RuntimeError('campaign notification watcher unhealthy')
+        return record  # Owner sends errors, ten-round progress, and final completion.
     root=Path(manifest['output']);repo=Path(manifest['repository']);state=root/'notifications'
     active=root/'ACTIVE_RUN.json'
     atomic_json(active,{'name':root.name,'lineage':str(root/'status.json')})

@@ -83,6 +83,18 @@ def check_once(manifests, state, send=notify):
             if failure is None:
                 completion = find_completion(manifest)
                 if completion is None:
+                    config=read_json(manifest)
+                    interval=config.get('progress_interval',0)
+                    if type(interval) is int and interval>0:
+                        path=Path(config['lineage'])
+                        if not path.is_absolute():path=Path(manifest).parent/path
+                        current=read_json(path)
+                        count=current.get('campaign_completed_rounds',0)
+                        milestone=(count//interval)*interval
+                        key=f"progress:{path.resolve()}:{milestone}"
+                        if milestone>config.get('progress_initial',0) and key not in seen:
+                            send("JIT 训练进度"+title_suffix,f"已完成 {count} 轮。\n状态文件：{path}")
+                            seen[key]={'round':milestone,'notified_unix':time.time()}
                     continue
                 fingerprint = hashlib.sha256(json.dumps(completion, sort_keys=True).encode()).hexdigest()
                 if fingerprint not in seen:

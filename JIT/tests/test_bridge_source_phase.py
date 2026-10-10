@@ -17,7 +17,7 @@ def test_fresh_panel_selection_retains_denominator_and_separates_generator_dev()
     assert panel['splits']['dev']=='generator_dev'
 
 
-@pytest.mark.parametrize('invalid',[False,True,'quarantine'])
+@pytest.mark.parametrize('invalid',[False,True,'quarantine','quarantine_failed'])
 def test_a1_orchestration_preserves_teacher_unknown_stop(tmp_path,monkeypatch,invalid):
     calls=[]
     runner=SimpleNamespace(root=tmp_path,runtime={'evaluation_batch_size':32},source=dict(name='P0',actor_sha256='actor',
@@ -27,11 +27,11 @@ def test_a1_orchestration_preserves_teacher_unknown_stop(tmp_path,monkeypatch,in
     runner.generator=lambda *a,**k:(calls.append('generator') or {'updates':20000})
     runner.smoke=lambda:(calls.append('smoke') or {'status':'passed'})
     runner.teacher_search=lambda x:(calls.append('teachers') or {'root':{'teacher_status':'invalid' if invalid else 'searched_no_solution'}})
-    if invalid=='quarantine':
+    if invalid in ('quarantine','quarantine_failed'):
         def quarantined(_):
             calls.append('teachers')
             return {'root':dict(teacher_status='invalid',reason='source_control_repeat_conflict',
-                source_control_labels=[0,1],selected_replay_label=1,complete_finite_replay=True,
+                source_control_labels=[0,1],selected_replay_label=int(invalid=='quarantine'),complete_finite_replay=True,
                 source_recheck_label=None,new_gain_eligible=False,training_eligible=True)}
         runner.teacher_search=quarantined
     def child(*args,**kwargs):
