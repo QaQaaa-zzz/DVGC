@@ -14,7 +14,7 @@ def select_warmup_checkpoint(scores):
 
 def warmup_actor(network, initializer, retention_reference, demo_manifest, retention,
                  output, *, seed=0, updates=2000, checkpoint_callback=None,
-                 probe_callback=None, batch_size=256, metrics_callback=None):
+                 probe_callback=None, batch_size=256, metrics_callback=None, full_learner=False, actual_gradient_audit=False):
     import jax
     import jax.numpy as jp
     import optax
@@ -28,15 +28,21 @@ def warmup_actor(network, initializer, retention_reference, demo_manifest, reten
     normalizer,actor,critic=initializer
     output=Path(output);output.mkdir(parents=True,exist_ok=False)
     fixed_hash=pytree_sha256(normalizer); critic_hash=pytree_sha256(critic)
+    optimizer=optax.chain(optax.clip_by_global_norm(1.),optax.adam(1e-5));state=optimizer.init(actor)
+    key=jax.random.PRNGKey(seed)
     report=dict(schema='jit_bridge_warmup_v1_2',requested_updates=updates,completed_updates=0,
         learning_rate=1e-5,optimizer='Adam',grad_clip_norm=1.,demo_coefficient=1.,keep_coefficient=1.,
-        environment_interactions=0,checkpoint_semantics='inference Actor plus unchanged normalizer/critic; no optimizer resume',
+        environment_interactions=0,checkpoint_semantics='full BC Actor/critic/normalizer/Adam/RNG/update clock' if full_learner else 'inference Actor plus unchanged normalizer/critic; no optimizer resume',
         normalizer_sha256=fixed_hash,critic_sha256=critic_hash,checkpoints=[],status='running')
     def checkpoint(step):
         import pickle
         from .contracts import file_sha
         path=output/f'update_{step:04d}.pkl'
         with path.open('xb') as stream:pickle.dump(jax.device_get((normalizer,actor,critic)),stream)
+        if full_learner:
+            full=output/f'learner_update_{step:04d}.pkl'
+            with full.open('xb') as stream:pickle.dump(jax.device_get(dict(normalizer=normalizer,actor=actor,critic=critic,optimizer_state=state,rng=key,completed_supervised_updates=step,seed=seed,sampling='fold_in(rng,absolute_update)',optimizer='Adam1e-5/clip1',phase='BC')),stream)
+            atomic_json(output/f'learner_update_{step:04d}.json',dict(path=str(full.resolve()),sha256=file_sha(full),completed_supervised_updates=step,actor_sha256=pytree_sha256(actor),optimizer_sha256=pytree_sha256(state),normalizer_sha256=fixed_hash,critic_sha256=critic_hash))
         if checkpoint_callback is not None:checkpoint_callback(step,(normalizer,actor,critic))
         probe=probe_callback(step,(normalizer,actor,critic)) if probe_callback is not None else None
         report['checkpoints'].append(dict(update=step,actor_sha256=pytree_sha256(actor),probe=probe,path=str(path.resolve()),sha256=file_sha(path)))
@@ -55,7 +61,6 @@ def warmup_actor(network, initializer, retention_reference, demo_manifest, reten
     reference_norm,reference_actor=jax.tree.map(jax.lax.stop_gradient,retention_reference)
     def prediction(norm,params,x):
         return network.parametric_action_distribution.mode(network.policy_network.apply(norm,params,{'state':x}))
-    optimizer=optax.chain(optax.clip_by_global_norm(1.),optax.adam(1e-5));state=optimizer.init(actor)
     @jax.jit
     def step(params,state,key):
         dk,kk=jax.random.split(key)
@@ -70,21 +75,26 @@ def warmup_actor(network, initializer, retention_reference, demo_manifest, reten
         delta,new_state=optimizer.update(grad,state,params)
         candidate=optax.apply_updates(params,delta)
         finite=jp.all(jp.stack([jp.all(jp.isfinite(x)) for x in jax.tree.leaves((value,grad,candidate,new_state))]))
-        return candidate,new_state,value,parts,optax.global_norm(grad),finite
+        telemetry={}
+        if actual_gradient_audit:
+            from .actual_update import weighted_actor_metrics
+            telemetry=weighted_actor_metrics(params,dict(demo=lambda p:loss(p)[1][0],keep=lambda p:loss(p)[1][1]))
+            telemetry.update({'actual/actor_adam_delta_norm':optax.global_norm(delta),'actual/global_clip_scale':jp.minimum(1.,1./jp.maximum(optax.global_norm(grad),1e-20))})
+        return candidate,new_state,value,parts,optax.global_norm(grad),finite,telemetry
     started=time.monotonic();key=jax.random.PRNGKey(seed)
     try:
         with (output/'metrics.jsonl').open('x') as stream:
             import json
             for index in range(1,updates+1):
                 result=step(actor,state,jax.random.fold_in(key,index))
-                candidate,new_state,value,parts,norm,finite=result
+                candidate,new_state,value,parts,norm,finite,telemetry=result
                 if not bool(finite):raise FloatingPointError('nonfinite warmup update rejected')
                 actor,state=candidate,new_state
                 report['completed_updates']=index
-                row=dict(update=index,loss=float(value),demo=float(parts[0]),keep=float(parts[1]),actor_grad_norm=float(norm))
+                row=dict(update=index,loss=float(value),demo=float(parts[0]),keep=float(parts[1]),actor_grad_norm=float(norm),**{k:float(v) for k,v in telemetry.items()})
                 stream.write(json.dumps(row)+'\n');stream.flush()
                 if metrics_callback is not None:metrics_callback(row)
-                if index in (500,1000,2000) or index==updates:checkpoint(index)
+                if index in ((100,500,1000,2000) if full_learner else (500,1000,2000)) or index==updates:checkpoint(index)
         if pytree_sha256(normalizer)!=fixed_hash or pytree_sha256(critic)!=critic_hash:
             raise ValueError('warmup changed frozen normalizer or critic')
         report['status']='completed'

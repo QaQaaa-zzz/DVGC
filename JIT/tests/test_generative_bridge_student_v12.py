@@ -74,6 +74,10 @@ def test_warmup_actor_only_frozen_normalizer_and_bounded(tmp_path):
     result=warmup_actor(net,(normalizer,actor,critic),(normalizer,jp.array(0.)),demo,(np.ones((2,76)),np.ones(2)),tmp_path/'warm',updates=2,batch_size=2,checkpoint_callback=lambda step,p:checkpoints.append(step))
     assert result[0] is normalizer and result[2] is critic
     assert float(result[1])<float(actor) and checkpoints==[0,2]
+    full=warmup_actor(net,(normalizer,actor,critic),(normalizer,jp.array(0.)),demo,(np.ones((2,76)),np.ones(2)),tmp_path/'full',updates=2,batch_size=2,full_learner=True,actual_gradient_audit=True)
+    import pickle
+    with (tmp_path/'full/learner_update_0002.pkl').open('rb') as f:saved=pickle.load(f)
+    assert saved['completed_supervised_updates']==2 and 'optimizer_state' in saved and 'rng' in saved
     assert select_warmup_checkpoint({0:3,500:3,1000:2})==0
     with pytest.raises(ValueError,match='budget'):warmup_actor(net,(normalizer,actor,critic),(normalizer,actor),demo,None,tmp_path/'bad',updates=2001)
 

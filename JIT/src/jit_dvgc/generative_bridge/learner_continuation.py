@@ -28,9 +28,9 @@ def learner_contract(raw):
 
 
 class LearnerHooks:
-    def __init__(self,root,*,contract,trainer_sha,parent):
+    def __init__(self,root,*,contract,trainer_sha,parent,preserve_stage_clock=False):
         self.root=Path(root);self.contract=contract;self.trainer_sha=trainer_sha
-        self.parent=parent;self.offset=0;self.latest=None
+        self.parent=parent;self.offset=0;self.latest=None;self.preserve_stage_clock=preserve_stage_clock
 
     def initialize(self,state,key):
         if self.parent is not None:
@@ -47,8 +47,8 @@ class LearnerHooks:
                 raise ValueError('learner shapes changed')
             if pytree_sha256((restored.params,restored.normalizer_params))!=pytree_sha256((state.params,state.normalizer_params)):
                 raise ValueError('learner does not match preceding Actor/critic/normalizer')
-            self.offset=m['lifetime_transitions']
-            state=restored.replace(env_steps=state.env_steps)
+            self.offset=m['lifetime_transitions']-int(restored.env_steps) if self.preserve_stage_clock else m['lifetime_transitions']
+            state=restored if self.preserve_stage_clock else restored.replace(env_steps=state.env_steps)
         if not all(np.isfinite(np.asarray(v)).all() for v in jax.tree.leaves((state,key))):
             raise ValueError('nonfinite learner state')
         atomic_json(self.root/'initialization.json',dict(
@@ -56,7 +56,7 @@ class LearnerHooks:
             parent=self.parent,lifetime_transition_offset=self.offset,
             actor_sha256=pytree_sha256(state.params.policy),critic_sha256=pytree_sha256(state.params.value),
             normalizer_sha256=pytree_sha256(state.normalizer_params),optimizer_sha256=pytree_sha256(state.optimizer_state),
-            rng_sha256=pytree_sha256(key),simulator_state_restored=False,
+            rng_sha256=pytree_sha256(key),simulator_state_restored=False,preserve_stage_clock=self.preserve_stage_clock,
             simulator_reset_reason='new round declared TRAIN support; fresh physical episodes'))
         return state,key
 
@@ -110,7 +110,7 @@ def continuing_trainer(trainer,raw,run_dir):
     contract=raw['continuous_learner']
     if trainer_sha(trainer)!=contract['trainer_sha256']:raise ValueError('upstream PPO trainer identity changed')
     hooks=LearnerHooks(Path(run_dir)/'learner',contract=learner_contract(raw),
-        trainer_sha=contract['trainer_sha256'],parent=contract['parent'])
+        trainer_sha=contract['trainer_sha256'],parent=contract['parent'],preserve_stage_clock=contract.get('preserve_stage_clock',False))
     return instrument_trainer(trainer,hooks.initialize,hooks.save)
 
 

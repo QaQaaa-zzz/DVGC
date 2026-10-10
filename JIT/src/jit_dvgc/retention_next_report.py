@@ -84,16 +84,46 @@ def report_v(plan,out):
     return out/'INDEX.md'
 
 
-def trace_anomalies(attempt):
+def trace_anomalies(attempt,context=None):
     with CachedArchive(attempt['trace']) as f:
         lane=attempt['trace_lane'];mask=f['mask'][:,lane];n=int(mask.sum());first={}
-        liftoff=liftoff_tick(f['front_wheel_clearance'][:n,lane],f['rear_wheel_clearance'][:n,lane])
+        offset=0;front=f['front_wheel_clearance'][:n,lane];rear=f['rear_wheel_clearance'][:n,lane]
+        if context is not None:
+            offset=context['snapshot_control_step']
+            with CachedArchive(Path(context['collection'])/'prefixes.npz') as prefix:
+                front=np.concatenate((prefix['front_wheel_clearance'][:offset,context['collection_lane']],front))
+                rear=np.concatenate((prefix['rear_wheel_clearance'][:offset,context['collection_lane']],rear))
+        liftoff=liftoff_tick(front,rear)
         for name in ('roll_limit','prohibited_contact','physical_failure','first_valid_contact'):
             ids=np.flatnonzero(f[name][:,lane]&mask) if name in f.files else []
             tick=int(ids[0]) if len(ids) else None
-            phase=None if tick is None else 'post_contact' if bool(f['valid_contact_seen_before'][tick,lane]) else 'airborne_before_valid_contact' if liftoff is not None and tick>=liftoff else 'pre_liftoff_or_no_ground_in_suffix'
-            first[name]=dict(tick=tick,phase=phase)
+            phase=None if tick is None else 'post_contact' if bool(f['valid_contact_seen_before'][tick,lane]) else 'airborne_before_valid_contact' if liftoff is not None and tick+offset>=liftoff else 'pre_liftoff_or_no_ground_in_suffix'
+            first[name]=dict(suffix_tick=tick,original_episode_tick=None if tick is None else tick+offset,phase=phase,substep='UNKNOWN; control-step trace only')
         return dict(steps=n,label=attempt['label'],first=first,end_code=int(f['end_code'][n-1,lane]))
+
+
+def d1_xy(plan,selected,results,out):
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    qi=plan['indices']['root_qpos'];by={r['root_id']:r for r in results}
+    fig,axes=plt.subplots(4,6,figsize=(24,16))
+    for ax,r in zip(axes.flat,selected):
+        with CachedArchive(Path(r['collection'])/'prefixes.npz') as f:
+            lane=r['collection_lane'];n=r['snapshot_control_step'];q=f['qpos'][:n,lane]
+            ax.plot(q[:,qi],q[:,qi+1],color='gray',label='pi0+E prefix');ax.scatter(q[-1,qi],q[-1,qi+1],s=12,color='gray')
+        attempts=[('pi0',r['pi0_attempt'])]
+        for method,m in by[r['root_id']]['methods'].items():
+            if m['verified_attempts']:attempts.append((method+' fixed winner',m['verified_attempts'][-1]))
+        for label,a in attempts:
+            with CachedArchive(a['trace']) as f:
+                lane=a['trace_lane'];mask=f['mask'][:,lane];q=f['qpos'][mask,lane]
+                ax.plot(q[:,qi],q[:,qi+1],lw=1,label=label)
+                ax.scatter(q[-1,qi],q[-1,qi+1],s=10,marker='o' if a['label']==1 else 'x')
+        ax.set(title=f"{r['role']} {r['logical_episode_id']} onset{r['onset']}\n{by[r['root_id']]['conversion_cell']}",xlabel='World x (m)',ylabel='World y (m)');ax.set_aspect('equal',adjustable='datalim');ax.grid(alpha=.2);ax.legend(fontsize=7)
+    for ax in list(axes.flat)[len(selected):]:ax.set_visible(False)
+    fig.suptitle('D1 all selected roots: actual XY prefix and independent continuations; endpoints at actual success/failure\nNo prescribed XY path; missing winner means search found none; source ambiguity remains quarantined')
+    fig.tight_layout();fig.savefig(out/'xy_teacher_roots.png',dpi=120);plt.close(fig)
 
 
 def report_d1(plan,out):
@@ -118,8 +148,11 @@ def report_d1(plan,out):
         source_lock_sha256=sha(root/'source_lock.json'),D1_receipt=str(root/'D1_completed.json'),D1_receipt_sha256=sha(root/'D1_completed.json'),
         solver_dev_training_allowed=False,G_updates=0,student_updates=0,qualified_gate=gate)
     write(out/'teacher_dataset_manifest.json',manifest)
-    anomalies={r['root_id']:{method:[trace_anomalies(a) for a in m['verified_attempts']] for method,m in r['methods'].items()} for r in results}
+    contexts={r['root_id']:r for r in selected}
+    anomalies={r['root_id']:{method:[trace_anomalies(a,contexts[r['root_id']]) for a in m['verified_attempts']] for method,m in r['methods'].items()} for r in results}
+    for row in selected:anomalies[row['root_id']]['independent_pi0']=[trace_anomalies(row['pi0_attempt'],row)]
     write(out/'teacher_anomalies.json',anomalies)
+    d1_xy(plan,selected,results,out)
     costs=read(root/'costs.json');summary=dict(stage='D1',teacher_conversion_matrix=matrix,qualified_incremental_lessons=len(dataset),
         distinct_TRAIN_ancestors=len(set(r['root_episode_id'] for r in qualified)),qualified_onsets=sorted(set(r['onset'] for r in qualified)),D2_preparation_gate=gate,
         collection_denominator=len(ledger),collection_outcomes={x:sum(r['pulse_outcome']==x for r in ledger) for x in ('pre_pulse_terminal','during_pulse_terminal','valid_post_pulse')},
@@ -133,7 +166,7 @@ def report_d1(plan,out):
     write(out/'R5_snapshot_contrast.json',dict(n=len(selected),pi0_fail_R5_success=sum(r['R5_label']==1 for r in selected),
         interpretation='R5 continuation after pi0+E prefix; not independent complete R5 success'))
     d2='Prepare a separate D2 plan; no automatic execution.' if gate else 'D2 preparation gate failed: do not start students or increase perturbation strength.'
-    text=f'# D1 fixed teachers\n\n0 student/E/G updates. Charged {summary["budget_charged"]}/{summary["budget_hard_cap"]}.\n\n|Role|G only|Noise only|Both|Neither|Ambiguous|\n|---|---|---|---|---|---|\n'
+    text=f'# D1 fixed teachers\n\n![Actual XY all roots](xy_teacher_roots.png)\n\n0 student/E/G updates. Charged {summary["budget_charged"]}/{summary["budget_hard_cap"]}.\n\n|Role|G only|Noise only|Both|Neither|Ambiguous|\n|---|---|---|---|---|---|\n'
     for role,row in matrix.items():text+='|'+role+'|'+'|'.join(str(row[k]) for k in ('G_only','Noise_only','both','neither','ambiguous'))+'|\n'
     text+=f'\nQualified G incremental lessons: {len(dataset)} distinct TRAIN ancestors, onsets {summary["qualified_onsets"]}. {d2}\n\nTeachers are fixed17-world search +2 original-batch replays with one frozen winner; source ambiguity is quarantined. Every selected baseline has3 independent pi0 labels before teacher searches. Complete collection denominator {len(ledger)}, outcomes {summary["collection_outcomes"]}. No DEV failures entered TRAIN.\n\nStudent absorption, student retention loss and independent student success: NOT_RUN. D0 gained87 is not a teacher conversion. G and Noise evidence does not establish diffusion necessity.\n\n[Full matrix](teacher_conversion_matrix.json), [qualified dataset](teacher_dataset_manifest.json), [first anomalies](teacher_anomalies.json), [summary](summary.json), [raw root results](../teacher_results.json).\n'
     (out/'INDEX.md').write_text(text);(out/'analysis_update.md').write_text(text)
@@ -146,20 +179,5 @@ def report(path,output=None):
 
 
 def prepare_d2(evidence_dir,output,repository):
-    evidence=Path(evidence_dir);manifest=read(evidence/'teacher_dataset_manifest.json')
-    if not manifest['qualified_gate']:raise ValueError('no reliable incremental lessons: D2 remains unprepared')
-    receipt=read(manifest['D1_receipt'])
-    if receipt['phase']!='completed' or sha(manifest['D1_receipt'])!=manifest['D1_receipt_sha256']:raise ValueError('completed D1 changed')
-    # D2 preparation must inspect real reset pools, solver-dev and inherited hyperparams.
-    # Fail closed rather than pretend target-only configuration is executable.
-    root=Path(output).resolve();root.mkdir(parents=True,exist_ok=False)
-    plan=dict(stage='D2',schema='jit_retention_D2_preparation_v1',executable=False,execute_authorized=False,
-        teacher_dataset=str(evidence/'teacher_dataset_manifest.json'),teacher_dataset_sha256=sha(evidence/'teacher_dataset_manifest.json'),
-        prerequisite='Qualified real D1 receipt verified',arms=dict(A='pi0 -> PPO+keep <=128000',B='pi0 -> BC+keep <=2000',C='same selected B -> PPO+demo+keep <=128000'),
-        freeze_actor_normalizer=True,normalizer_scope='entire actor and privileged critic statistics',demo_clock='completed_transitions',
-        schedule='one cumulative128000 stage across32k checkpoints, BC uses supervised_update clock',
-        reset_mixture=dict(nominal_complete=.25,random_complete=.25,pi0_success_snapshots=.25,teacher_recoverable=.25),
-        independent_gpu_micro_validation='required before student stage',actual_same_update_weighted_gradients='required; old probe metrics insufficient',
-        implementation_gates=['new TRAIN successful keep trajectories and independent solver-dev bank','inherited BC LR and quarter-PPO LR lock','actual loss-call Actor decomposition and Adam delta','full learner and128k cumulative resume clock','GPU micro and TensorBoard current reward check'],
-        max_physics=2000000,max_BC_updates=2000,max_wall_seconds=43200,automatic_training=False)
-    write(root/'plan.json',plan);return root/'plan.json'
+    from .retention_d2 import prepare
+    return prepare(evidence_dir,output,repository)

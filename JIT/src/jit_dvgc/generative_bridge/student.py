@@ -24,7 +24,7 @@ def make_joint_student_trainer(trainer, demo_manifest, *, retention,
         transitions=128000, demo_coefficient_start=.2, demo_coefficient_end=.05,
         keep_coefficient=.2, demo_batch_size=256, retention_batch_size=256,
         demo_sampler=None, usage_sink=None, retention_reference=None, audit_enabled=False, max_first_behavior_kl=None,
-        first_update_audit_path=None, freeze_actor_normalizer=False, demo_clock="normalizer_count"):
+        first_update_audit_path=None, freeze_actor_normalizer=False, demo_clock="normalizer_count", actual_gradient_audit=False):
     """Must be invoked inside the existing guard_ppo_updates scope.
 
     Empty data creates no device target, sampler or demo RNG operation. Both
@@ -127,6 +127,7 @@ def make_joint_student_trainer(trainer, demo_manifest, *, retention,
             total=base;demo_mse=jp.asarray(0.);keep_mse=jp.asarray(0.);scale=jp.asarray(0.)
             if use_demo:
                 ids=sampler(jax.random.fold_in(rng,173),len(demo_obs),(demo_batch_size,),p=demo_probs)
+                demo_ids=ids
                 jax.debug.callback(record_usage,ids)
                 prediction=mode(apply(normalizer_params,params.policy,{'state':demo_obs[ids]}))
                 demo_mse=action_mse(prediction,demo_targets[ids])
@@ -137,11 +138,29 @@ def make_joint_student_trainer(trainer, demo_manifest, *, retention,
                 total=total+scale*demo_mse
             if keep_coefficient:
                 ids=jax.random.choice(jax.random.fold_in(rng,719),len(keep_obs),(retention_batch_size,),p=keep_probs)
+                keep_ids=ids
                 anchor={'state':keep_obs[ids]}
                 teacher=mode(apply(source_normalizer,source_actor,anchor))
                 prediction=mode(apply(normalizer_params,params.policy,anchor))
                 keep_mse=action_mse(prediction,teacher)
                 total=total+keep_coefficient*keep_mse
+            if actual_gradient_audit:
+                from .actual_update import weighted_actor_metrics
+                def ppo_objective(actor):
+                    return original(params.replace(policy=actor),normalizer_params,data,rng,ppo_network,**options)[1]['policy_loss']
+                def entropy_objective(actor):
+                    return original(params.replace(policy=actor),normalizer_params,data,rng,ppo_network,**options)[1]['entropy_loss']
+                def demo_objective_actual(actor):
+                    if not use_demo:return jp.asarray(0.)
+                    pred=mode(apply(normalizer_params,actor,{'state':demo_obs[demo_ids]}))
+                    return scale*action_mse(pred,demo_targets[demo_ids])
+                def keep_objective_actual(actor):
+                    if not keep_coefficient:return jp.asarray(0.)
+                    pred=mode(apply(normalizer_params,actor,{'state':keep_obs[keep_ids]}))
+                    target=jax.lax.stop_gradient(mode(apply(source_normalizer,source_actor,{'state':keep_obs[keep_ids]})))
+                    return keep_coefficient*action_mse(pred,target)
+                metrics={**metrics,**weighted_actor_metrics(params.policy,dict(ppo=ppo_objective,entropy=entropy_objective,demo=demo_objective_actual,keep=keep_objective_actual)),
+                    'actual/reward_per_transition':jp.mean(data.reward)}
             if audit_enabled:
                 from .learning_audit import joint_loss_metrics,critic_loss_metrics
                 def policy_objective(actor):
@@ -227,7 +246,7 @@ def trainer_from_config(trainer, raw, run_dir):
         max_first_behavior_kl=contract.get('max_first_behavior_kl'),
         first_update_audit_path=Path(run_dir)/'first_loss_gate.json',
         freeze_actor_normalizer=contract.get('freeze_actor_normalizer',False),
-        demo_clock=contract.get('demo_clock','normalizer_count'))
+        demo_clock=contract.get('demo_clock','normalizer_count'),actual_gradient_audit=contract.get('actual_gradient_audit',False))
     def train(**kwargs):
         from .protocol import atomic_json
         atomic_json(Path(run_dir)/'bridge_student_contract.json',{**contract,
