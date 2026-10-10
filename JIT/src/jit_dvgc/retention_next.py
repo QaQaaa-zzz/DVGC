@@ -176,7 +176,7 @@ def audit(path):
     for file,h in p['locks'].items():
         if sha(file)!=h:raise ValueError('input changed '+file)
     if sha(p['original_campaign_status_path'])!=p['original_campaign_status_sha256']:raise ValueError('original stopped state changed')
-    budget=budget_layout(p['stage'])
+    budget=(resume_budget(p['resume']['inherited_charge'],len(p['resume']['remaining_indices']),p['resume']['inherited_wall_seconds']) if p.get('resume') else budget_layout(p['stage']))
     if budget!=p['budget'] or budget['total']>budget['hard_cap']:raise ValueError('actual layout budget drift')
     if p['training_transitions'] or p['optimizer_updates'] or p['automatic_next_stage']:raise ValueError('stage scope drift')
     actual=identities(p['models'])
@@ -192,3 +192,72 @@ def audit(path):
         frozen['G']=dict(manifest_sha256=sha(p['G']['manifest']),state_sha256=sha(statefile),reference=expected,updates=g['updates'],inference='ema',tail_validation='NOT_ESTABLISHED_BY_IDENTITY')
     result=dict(phase='passed',identities=actual,frozen_E_G=frozen,budget=budget,physics_steps=0,optimizer_updates=0)
     write(Path(p['output'])/'audit.json',result);return result
+
+
+def resume_budget(inherited_charge,remaining_roots,elapsed):
+    if inherited_charge<0 or not 0<=remaining_roots<=40 or not 0<=elapsed<21600:raise ValueError('invalid bounded resume')
+    result=dict(inherited_charge=inherited_charge,remaining_teacher_roots=remaining_roots,
+        remaining_teacher_search_and_replay=remaining_roots*2*3*17*400,
+        total=inherited_charge+remaining_roots*2*3*17*400,hard_cap=2000000,wall_seconds=21600-elapsed)
+    if result['total']>2000000:raise ValueError('resume exceeds original charged cap')
+    return result
+
+
+def prepare_resume(previous,output,repository):
+    """Explicit new attempt; inherit completed roots only, retain unknown failed charge."""
+    previous=Path(previous).resolve();old=read(previous/'plan.json');status=read(previous/'status.json')
+    if old['stage']!='D1' or status['phase']!='failed':raise ValueError('only a failed finite D1 can be resumed')
+    # Original code is verified against the actual committed tree, not current edited paths.
+    for file,h in old['locks'].items():
+        fp=Path(file)
+        if fp.is_relative_to(Path(old['code'])/'JIT/src'):
+            import hashlib
+            rel=str(fp.relative_to(old['code']))
+            raw=subprocess.check_output(['git','show',old['code_revision']+':'+rel],cwd=repository)
+            if hashlib.sha256(raw).hexdigest()!=h:raise ValueError('old code provenance changed '+file)
+        elif sha(fp)!=h:raise ValueError('inherited locked input changed '+file)
+    selected=read(previous/'selected_roots.json');completed=read(previous/'teacher_results.json')
+    done={r['root_id'] for r in completed}
+    if len(done)!=len(completed) or not done<=set(r['root_id'] for r in selected):raise ValueError('invalid partial roots')
+    locks={k:v for k,v in old['locks'].items() if not Path(k).is_relative_to(Path(old['code'])/'JIT/src')}
+    for file in ('plan.json','status.json','costs.json','selected_roots.json','teacher_results.json','collection_ledger.json','source_lock.json'):
+        locks[str(previous/file)]=sha(previous/file)
+    for r in completed:
+        locks[r['proposals']]=sha(r['proposals'])
+        if locks[r['proposals']]!=r['proposals_sha256']:raise ValueError('inherited actions changed')
+        for m in r['methods'].values():
+            for a in m['verified_attempts']:
+                if sha(a['trace'])!=a['trace_sha256']:raise ValueError('inherited winner trace changed')
+                locks[a['trace']]=a['trace_sha256']
+    remaining=[(i,r) for i,r in enumerate(selected) if r['root_id'] not in done]
+    # Keep whole search/replay batches immutable, including source lanes and losing candidates.
+    for folder in previous.glob('root_*_*'):
+        if not folder.is_dir() or not (folder/'results.json').exists():continue
+        results=read(folder/'results.json')
+        for file in ('results.json','status.json'):
+            locks[str(folder/file)]=sha(folder/file)
+        for r in results:
+            for a in r['attempts']:
+                if sha(a['trace'])!=a['trace_sha256']:raise ValueError('inherited batch trace changed')
+                locks[a['trace']]=a['trace_sha256']
+    for i,r in remaining:
+        prop=previous/f'root_{i:03d}_proposals.npz'
+        if prop.exists():locks[str(prop)]=sha(prop)
+    root=Path(output).resolve();root.mkdir(parents=True,exist_ok=False);code=Path(repository).resolve()
+    for file in ['retention_next.py','retention_next_runtime.py','retention_next_report.py','pulse_exploration_runtime.py','generative_bridge/teacher_runtime.py']:
+        fp=code/'JIT/src/jit_dvgc'/file;locks[str(fp)]=sha(fp)
+    import time
+    elapsed=time.time()-(status['updated_unix']-status['wall_seconds'])
+    budget=resume_budget(status['charged_interactions'],len(remaining),elapsed)
+    resumed={**old,'output':str(root),'code':str(code),'code_revision':subprocess.check_output(['git','rev-parse','HEAD'],cwd=code,text=True).strip(),
+        'locks':locks,'budget':budget,'resume':dict(previous=str(previous),remaining_indices=[i for i,r in remaining],
+            completed_indices=[i for i,r in enumerate(selected) if r['root_id'] in done],inherited_charge=status['charged_interactions'],
+            inherited_wall_seconds=elapsed,previous_execution_wall_seconds=status['wall_seconds'],worker_lifetime='one root, same17world layout, search+2fixedreplays per method',
+            reason='OOM during canonical snapshot mjx.forward after72 batched teacher dispatches; bounded root worker lifetimes prevent inter-root accumulation',
+            completed_roots_recomputed=False,failed_search_label='UNKNOWN',automatic_retry=False)}
+    write(root/'plan.json',resumed);write(root/'experiment_plan.json',resumed);write(root/'budget_dry_run.json',budget)
+    write(root/'source_lock.json',dict(identities=identities(old['models']),E=old['E'],G=old['G'],locks=locks,
+        parent=str(previous/'source_lock.json'),original_code=old['code_revision']))
+    write(root/'selected_roots.json',selected);write(root/'collection_ledger.json',read(previous/'collection_ledger.json'))
+    write(root/'status.json',dict(phase='prepared',stage='D1',charged_interactions=status['charged_interactions'],training_updates=0))
+    audit(root/'plan.json');return root/'plan.json'

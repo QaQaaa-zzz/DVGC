@@ -116,7 +116,7 @@ def select_with_repeats(stage,rows,first,prefix,target):
     return selected,labels
 
 
-def teachers(stage,selected):
+def teachers(stage,selected,ordinal_offset=0,proposal_reference=None):
     import jax
     import jax.numpy as jp
     from .generative_bridge.worker import generator_template
@@ -132,7 +132,7 @@ def teachers(stage,selected):
     generation=jax.jit(lambda obs,noise:ddim_sample(lambda x,o,k:net.apply(state['ema'],x,o,k),obs,noise))
     session=TeacherEvaluationSession();output=[]
     try:
-        for ordinal,base in enumerate(selected):
+        for ordinal,base in enumerate(selected,start=ordinal_offset):
             snap=load_unified_envelope_snapshot(Path(base['snapshot']));actual=lane_arrays(base['pi0_attempt'])
             reference=actual['normalized_action_executed'][:16]
             if not len(reference):raise ValueError('no source trajectory')
@@ -146,7 +146,13 @@ def teachers(stage,selected):
             for tick in range(1,16):colored[:,tick]=rho*colored[:,tick-1]+np.sqrt(1-rho*rho)*noise_raw[:,tick]
             noise_actions=np.clip(reference[None]+stage.p['config']['noise_scale']*colored,-1,1).astype('f4')
             pools={'G':np.concatenate((reference[None],generated)),'Noise':np.concatenate((reference[None],noise_actions))}
-            proposal=stage.root/f'root_{ordinal:03d}_proposals.npz';np.savez_compressed(proposal,G=pools['G'],Noise=pools['Noise'],G_noise=gnoise,noise_raw=noise_raw)
+            proposal=stage.root/f'root_{ordinal:03d}_proposals.npz'
+            if proposal_reference is not None:
+                if sha(proposal_reference['path'])!=proposal_reference['sha256']:raise ValueError('failed-root frozen proposals changed')
+                import shutil
+                shutil.copyfile(proposal_reference['path'],proposal)
+                with np.load(proposal) as saved:pools={k:saved[k] for k in ('G','Noise')}
+            else:np.savez_compressed(proposal,G=pools['G'],Noise=pools['Noise'],G_noise=gnoise,noise_raw=noise_raw)
             result=dict(root_id=base['root_id'],root_episode_id=base['root_episode_id'],role=base['role'],onset=base['onset'],
                 snapshot=base['snapshot'],state_sha256=base['state_sha256'],snapshot_context_sha256=base['snapshot_context_sha256'],
                 pi0_labels=base['pi0_labels'],R5_label=base['R5_label'],tail=stage.p['models']['pi0']['policy'],G=stage.p['G'],
@@ -201,7 +207,7 @@ def run_d1(stage):
 
 def run(path):
     # Set platform before audit imports JAX or deserializes device arrays.
-    if read(path)['stage']=='D1':os.environ['JAX_PLATFORMS']='cuda,cpu'
+    if read(path)['stage']=='D1' and not read(path).get('resume'):os.environ['JAX_PLATFORMS']='cuda,cpu'
     stage=Stage(path)
     write(stage.root/'ACTIVE_RUN.json',dict(execution=str(stage.root/'status.json'),lineage=str(stage.root/'status.json')))
     with (stage.root/'watcher.log').open('x') as log:
@@ -211,8 +217,63 @@ def run(path):
         if stage.p['stage']=='V':
             from .retention_repair_execution import verify
             for b in stage.p['batches']:stage.collect(b);verify(b,stage.root)
+        elif stage.p.get('resume'):
+            run_resume(stage)
         else:
             os.environ.update(stage.env)
             run_d1(stage)
         audit(path);stage.status('completed',result='evaluation_complete; no automatic next stage')
     except BaseException as exc:stage.status('failed',error=repr(exc));raise
+
+
+def worker(request_path):
+    request=read(request_path)
+    if request.get('execute_authorized') is not True:raise ValueError('worker lacks finite parent authorization')
+    if sha(request['plan'])!=request['plan_sha256']:raise ValueError('worker plan changed')
+    os.environ['JAX_PLATFORMS']='cuda,cpu'
+    audit(request['plan']);p=read(request['plan']);root=Path(request['output']);root.mkdir(exist_ok=False)
+    # Only this root's six original17-world batches live in the GPU process.
+    stage=object.__new__(Stage);stage.plan_path=Path(request['plan']);stage.p=p;stage.root=root;stage.code=Path(p['code'])
+    stage.start=time.monotonic();stage.costs=[];stage.active='worker_start';stage.env=dict(os.environ)
+    try:
+        results=teachers(stage,[request['root']],ordinal_offset=request['ordinal'],proposal_reference=request.get('proposal_reference'))
+        stage.status('completed');write(root/'completed.json',dict(phase='completed',results=results,
+            charged_interactions=sum(c['charged_interactions'] for c in stage.costs),costs=stage.costs,
+            original_layout=17,search_and_repeat_counts=3,student_E_G_updates=0))
+    except BaseException as exc:stage.status('failed',error=repr(exc));raise
+
+
+def run_resume(stage):
+    previous=Path(stage.p['resume']['previous']);all_roots=read(stage.root/'selected_roots.json')
+    results=read(previous/'teacher_results.json')
+    stage.costs.append(dict(stage='inherited_attempt_including_failed_reservation',charged_interactions=stage.p['resume']['inherited_charge'],
+        phase='inherited_completed_and_engineering_failure',source=str(previous/'costs.json'),optimizer_updates=0))
+    write(stage.root/'teacher_results.json',results)
+    for ordinal in stage.p['resume']['remaining_indices']:
+        out=stage.root/f'worker_root_{ordinal:03d}';request=dict(plan=str(stage.plan_path),plan_sha256=sha(stage.plan_path),root=all_roots[ordinal],
+            ordinal=ordinal,output=str(out),execute_authorized=True)
+        prior=previous/f'root_{ordinal:03d}_proposals.npz'
+        if prior.exists():request['proposal_reference']=dict(path=str(prior),sha256=sha(prior))
+        req=stage.root/f'worker_root_{ordinal:03d}_request.json';write(req,request)
+        cost=stage.reserve(f'worker_root_{ordinal:03d}',2*3*17*400)
+        with (stage.root/f'worker_root_{ordinal:03d}.log').open('x') as log:
+            child=subprocess.Popen([PY,str(stage.code/'JIT/cli/run_retention_next.py'),'worker','--request',str(req)],cwd=stage.code,
+                env=stage.env,stdout=log,stderr=subprocess.STDOUT)
+            stage.status('running',child_pid=child.pid)
+            try:rc=child.wait(timeout=max(.1,stage.p['budget']['wall_seconds']-(time.monotonic()-stage.start)))
+            except subprocess.TimeoutExpired:
+                child.terminate()
+                try:child.wait(timeout=10)
+                except subprocess.TimeoutExpired:child.kill();child.wait()
+                raise TimeoutError('D1 global remaining wall budget exhausted')
+        if rc:raise RuntimeError(f'root{ordinal} worker exited{rc}; no automatic retry')
+        receipt=read(out/'completed.json')
+        if receipt['phase']!='completed' or receipt['charged_interactions']>cost['reservation']:raise ValueError('worker receipt invalid')
+        cost.update(phase='completed',charged_interactions=receipt['charged_interactions'],receipt=str(out/'completed.json'),
+            receipt_sha256=sha(out/'completed.json'))
+        results.extend(receipt['results']);write(stage.root/'teacher_results.json',results);write(stage.root/'costs.json',stage.costs)
+    if set(r['root_id'] for r in results)!=set(r['root_id'] for r in all_roots):raise ValueError('incomplete resumed D1')
+    write(stage.root/'D1_completed.json',dict(phase='completed',selected_train=sum(r['role']=='TRAIN' for r in all_roots),
+        selected_solver_dev=sum(r['role']=='SOLVER_DEV' for r in all_roots),selected_roots_sha256=sha(stage.root/'selected_roots.json'),
+        teacher_results_sha256=sha(stage.root/'teacher_results.json'),updates=dict(student=0,E=0,G=0),source_lock_sha256=sha(stage.root/'source_lock.json'),
+        previous_failed_status=str(previous/'status.json'),failure_charges_retained=True))

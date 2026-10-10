@@ -36,3 +36,12 @@ def test_other_actor_labels_cannot_populate_current_pi0_flags():
     v=idx.query(np.zeros((1,12)),np.zeros(1,int))
     assert v[0,12:14].tolist()==[0.,0.]
     assert v[0,14]==1
+
+
+def test_resume_budget_retains_failed_reservation_and_only_remaining_roots():
+    from jit_dvgc.retention_next import resume_budget
+    b=resume_budget(116258,12,489.315)
+    assert b['total']==116258+12*2*3*17*400
+    assert b['inherited_charge']==116258
+    assert b['wall_seconds']<21600
+    with pytest.raises(ValueError):resume_budget(1900000,12,489)
