@@ -200,6 +200,8 @@ def run_d1(stage):
 
 
 def run(path):
+    # Set platform before audit imports JAX or deserializes device arrays.
+    if read(path)['stage']=='D1':os.environ['JAX_PLATFORMS']='cuda,cpu'
     stage=Stage(path)
     write(stage.root/'ACTIVE_RUN.json',dict(execution=str(stage.root/'status.json'),lineage=str(stage.root/'status.json')))
     with (stage.root/'watcher.log').open('x') as log:
