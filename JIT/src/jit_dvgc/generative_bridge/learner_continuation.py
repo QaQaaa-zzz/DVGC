@@ -101,7 +101,9 @@ def instrument_trainer(trainer,initialize,save):
     if counts!=[1,2]:raise ValueError('unsupported upstream PPO hook layout')
     namespace={**trainer.__globals__,'_learner_initialize':initialize,'_learner_save':save}
     exec(compile(ast.fix_missing_locations(tree),'<pinned PPO learner continuation>','exec'),namespace)
-    return namespace[trainer.__name__]
+    wrapped=namespace[trainer.__name__]
+    wrapped._jit_source_text=ast.unparse(ast.fix_missing_locations(tree))
+    return wrapped
 
 
 def continuing_trainer(trainer,raw,run_dir):

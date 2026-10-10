@@ -1,0 +1,37 @@
+{
+  "phase": "passed",
+  "planned_charge_with_padding": 1200000,
+  "identities": {
+    "pi0": {
+      "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+      "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1",
+      "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+      "checkpoint": "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/binding/bridge_baseline/checkpoints/transition_0"
+    },
+    "R5": {
+      "actor_sha256": "db2f3deb1c4a5193d63ccf44c5d60855ba0aa4a8dd2e31f4e4c31a49a7c3d8a6",
+      "critic_sha256": "2ab357822700a09398493fddb133269a0a273fce625ee29f07458da8e6f56e9a",
+      "normalizer_sha256": "c9b365c78abea6a971fc58e53ae01b0df478bbfc0fbac6e69c0299f01570acd7",
+      "checkpoint": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0002_continuous_200/round_0005/students/student/training/round_0005_student/checkpoints/transition_128000"
+    },
+    "R21": {
+      "actor_sha256": "4b9c898b48724953250827692075917ce25960180ef0ddf017b56aa23bf8081d",
+      "critic_sha256": "ab1cb740dac3687ed3834eb15a8d2e835bdd0e51195e4a863f538e1574cc6a9b",
+      "normalizer_sha256": "105a92a94f7c217b27d040305590292e8f51104f7ee243e85b570d35b0fa1ca6",
+      "checkpoint": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0003_replay_recovery_197/round_0021/students/student/training/round_0021_student/checkpoints/transition_128000"
+    },
+    "R71": {
+      "actor_sha256": "e8692ea462298ea618abe6816465558f4f844487cf9c4865d406967049f7ef17",
+      "critic_sha256": "27abd9a9d8cff98d46e624fd478f2c883e1c3df2f99189d44c303483a740ef24",
+      "normalizer_sha256": "315754b4c11e810339c42f07f03387f9b4471e7319a54e85986b478273a6b9ad",
+      "checkpoint": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0011_b1_resume_143/segment_0071/round_0071/students/student/training/round_0071_student/checkpoints/transition_128000"
+    },
+    "R73": {
+      "actor_sha256": "a6565a650bc29e92e4f2229d1e47dbab337f9e5d380e5b4bd7723a5604b2160f",
+      "critic_sha256": "d7def0b979adab446bd5d8a80d60758eb2fa64ecea2923397ed489dd6a7c6931",
+      "normalizer_sha256": "cb22a08458105ed134078758327c67239a0823c54d1fcfbd6d2585d69fc5aa5e",
+      "checkpoint": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0011_b1_resume_143/segment_0073/round_0073/students/student/training/round_0073_student/checkpoints/transition_128000"
+    }
+  },
+  "optimizer_updates": 0
+}

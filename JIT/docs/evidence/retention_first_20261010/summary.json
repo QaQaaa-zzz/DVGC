@@ -1,0 +1,1899 @@
+{
+  "four_cells": {
+    "pi0": {
+      "A": {
+        "successes": 49,
+        "n": 64,
+        "N01_new_vs_pi0": 0,
+        "N10_lost_vs_pi0": 0,
+        "net": 0,
+        "failed_before_liftoff": 0,
+        "failed_airborne": 0,
+        "failed_after_contact": 15
+      },
+      "B": {
+        "successes": 105,
+        "n": 128,
+        "N01_new_vs_pi0": 0,
+        "N10_lost_vs_pi0": 0,
+        "net": 0,
+        "failed_before_liftoff": 0,
+        "failed_airborne": 2,
+        "failed_after_contact": 21
+      },
+      "C": {
+        "successes": 89,
+        "n": 128,
+        "N01_new_vs_pi0": 0,
+        "N10_lost_vs_pi0": 0,
+        "net": 0,
+        "failed_before_liftoff": 0,
+        "failed_airborne": 1,
+        "failed_after_contact": 38
+      },
+      "D": {
+        "successes": 89,
+        "n": 128,
+        "N01_new_vs_pi0": 0,
+        "N10_lost_vs_pi0": 0,
+        "net": 0,
+        "failed_before_liftoff": 0,
+        "failed_airborne": 1,
+        "failed_after_contact": 38
+      }
+    },
+    "R5": {
+      "A": {
+        "successes": 64,
+        "n": 64,
+        "N01_new_vs_pi0": 15,
+        "N10_lost_vs_pi0": 0,
+        "net": 15,
+        "failed_before_liftoff": 0,
+        "failed_airborne": 0,
+        "failed_after_contact": 0
+      },
+      "B": {
+        "successes": 114,
+        "n": 128,
+        "N01_new_vs_pi0": 21,
+        "N10_lost_vs_pi0": 12,
+        "net": 9,
+        "failed_before_liftoff": 0,
+        "failed_airborne": 0,
+        "failed_after_contact": 14
+      },
+      "C": {
+        "successes": 127,
+        "n": 128,
+        "N01_new_vs_pi0": 39,
+        "N10_lost_vs_pi0": 1,
+        "net": 38,
+        "failed_before_liftoff": 0,
+        "failed_airborne": 0,
+        "failed_after_contact": 1
+      },
+      "D": {
+        "successes": 100,
+        "n": 128,
+        "N01_new_vs_pi0": 27,
+        "N10_lost_vs_pi0": 16,
+        "net": 11,
+        "failed_before_liftoff": 0,
+        "failed_airborne": 1,
+        "failed_after_contact": 27
+      }
+    },
+    "R21": {
+      "A": {
+        "successes": 64,
+        "n": 64,
+        "N01_new_vs_pi0": 15,
+        "N10_lost_vs_pi0": 0,
+        "net": 15,
+        "failed_before_liftoff": 0,
+        "failed_airborne": 0,
+        "failed_after_contact": 0
+      },
+      "B": {
+        "successes": 96,
+        "n": 128,
+        "N01_new_vs_pi0": 17,
+        "N10_lost_vs_pi0": 26,
+        "net": -9,
+        "failed_before_liftoff": 0,
+        "failed_airborne": 0,
+        "failed_after_contact": 32
+      },
+      "C": {
+        "successes": 123,
+        "n": 128,
+        "N01_new_vs_pi0": 37,
+        "N10_lost_vs_pi0": 3,
+        "net": 34,
+        "failed_before_liftoff": 0,
+        "failed_airborne": 1,
+        "failed_after_contact": 4
+      },
+      "D": {
+        "successes": 88,
+        "n": 128,
+        "N01_new_vs_pi0": 27,
+        "N10_lost_vs_pi0": 28,
+        "net": -1,
+        "failed_before_liftoff": 0,
+        "failed_airborne": 1,
+        "failed_after_contact": 39
+      }
+    },
+    "R71": {
+      "A": {
+        "successes": 60,
+        "n": 64,
+        "N01_new_vs_pi0": 13,
+        "N10_lost_vs_pi0": 2,
+        "net": 11,
+        "failed_before_liftoff": 0,
+        "failed_airborne": 4,
+        "failed_after_contact": 0
+      },
+      "B": {
+        "successes": 44,
+        "n": 128,
+        "N01_new_vs_pi0": 6,
+        "N10_lost_vs_pi0": 67,
+        "net": -61,
+        "failed_before_liftoff": 0,
+        "failed_airborne": 14,
+        "failed_after_contact": 70
+      },
+      "C": {
+        "successes": 87,
+        "n": 128,
+        "N01_new_vs_pi0": 29,
+        "N10_lost_vs_pi0": 31,
+        "net": -2,
+        "failed_before_liftoff": 0,
+        "failed_airborne": 11,
+        "failed_after_contact": 21
+      },
+      "D": {
+        "successes": 35,
+        "n": 128,
+        "N01_new_vs_pi0": 10,
+        "N10_lost_vs_pi0": 64,
+        "net": -54,
+        "failed_before_liftoff": 0,
+        "failed_airborne": 17,
+        "failed_after_contact": 72
+      }
+    },
+    "R73": {
+      "A": {
+        "successes": 62,
+        "n": 64,
+        "N01_new_vs_pi0": 15,
+        "N10_lost_vs_pi0": 2,
+        "net": 13,
+        "failed_before_liftoff": 0,
+        "failed_airborne": 1,
+        "failed_after_contact": 1
+      },
+      "B": {
+        "successes": 27,
+        "n": 128,
+        "N01_new_vs_pi0": 5,
+        "N10_lost_vs_pi0": 83,
+        "net": -78,
+        "failed_before_liftoff": 0,
+        "failed_airborne": 31,
+        "failed_after_contact": 70
+      },
+      "C": {
+        "successes": 91,
+        "n": 128,
+        "N01_new_vs_pi0": 33,
+        "N10_lost_vs_pi0": 31,
+        "net": 2,
+        "failed_before_liftoff": 0,
+        "failed_airborne": 10,
+        "failed_after_contact": 23
+      },
+      "D": {
+        "successes": 31,
+        "n": 128,
+        "N01_new_vs_pi0": 8,
+        "N10_lost_vs_pi0": 66,
+        "net": -58,
+        "failed_before_liftoff": 0,
+        "failed_airborne": 29,
+        "failed_after_contact": 66
+      }
+    }
+  },
+  "onset_strata": [
+    {
+      "model": "pi0",
+      "group": "A",
+      "onset": 0,
+      "n": 64,
+      "successes": 49
+    },
+    {
+      "model": "pi0",
+      "group": "B",
+      "onset": 0,
+      "n": 32,
+      "successes": 27
+    },
+    {
+      "model": "pi0",
+      "group": "B",
+      "onset": 5,
+      "n": 32,
+      "successes": 26
+    },
+    {
+      "model": "pi0",
+      "group": "B",
+      "onset": 10,
+      "n": 32,
+      "successes": 26
+    },
+    {
+      "model": "pi0",
+      "group": "B",
+      "onset": 15,
+      "n": 32,
+      "successes": 26
+    },
+    {
+      "model": "pi0",
+      "group": "C",
+      "onset": 0,
+      "n": 32,
+      "successes": 30
+    },
+    {
+      "model": "pi0",
+      "group": "C",
+      "onset": 5,
+      "n": 32,
+      "successes": 23
+    },
+    {
+      "model": "pi0",
+      "group": "C",
+      "onset": 10,
+      "n": 32,
+      "successes": 12
+    },
+    {
+      "model": "pi0",
+      "group": "C",
+      "onset": 15,
+      "n": 32,
+      "successes": 24
+    },
+    {
+      "model": "pi0",
+      "group": "D",
+      "onset": 0,
+      "n": 32,
+      "successes": 26
+    },
+    {
+      "model": "pi0",
+      "group": "D",
+      "onset": 5,
+      "n": 32,
+      "successes": 21
+    },
+    {
+      "model": "pi0",
+      "group": "D",
+      "onset": 10,
+      "n": 32,
+      "successes": 18
+    },
+    {
+      "model": "pi0",
+      "group": "D",
+      "onset": 15,
+      "n": 32,
+      "successes": 24
+    },
+    {
+      "model": "R5",
+      "group": "A",
+      "onset": 0,
+      "n": 64,
+      "successes": 64
+    },
+    {
+      "model": "R5",
+      "group": "B",
+      "onset": 0,
+      "n": 32,
+      "successes": 27
+    },
+    {
+      "model": "R5",
+      "group": "B",
+      "onset": 5,
+      "n": 32,
+      "successes": 30
+    },
+    {
+      "model": "R5",
+      "group": "B",
+      "onset": 10,
+      "n": 32,
+      "successes": 30
+    },
+    {
+      "model": "R5",
+      "group": "B",
+      "onset": 15,
+      "n": 32,
+      "successes": 27
+    },
+    {
+      "model": "R5",
+      "group": "C",
+      "onset": 0,
+      "n": 32,
+      "successes": 32
+    },
+    {
+      "model": "R5",
+      "group": "C",
+      "onset": 5,
+      "n": 32,
+      "successes": 31
+    },
+    {
+      "model": "R5",
+      "group": "C",
+      "onset": 10,
+      "n": 32,
+      "successes": 32
+    },
+    {
+      "model": "R5",
+      "group": "C",
+      "onset": 15,
+      "n": 32,
+      "successes": 32
+    },
+    {
+      "model": "R5",
+      "group": "D",
+      "onset": 0,
+      "n": 32,
+      "successes": 28
+    },
+    {
+      "model": "R5",
+      "group": "D",
+      "onset": 5,
+      "n": 32,
+      "successes": 22
+    },
+    {
+      "model": "R5",
+      "group": "D",
+      "onset": 10,
+      "n": 32,
+      "successes": 25
+    },
+    {
+      "model": "R5",
+      "group": "D",
+      "onset": 15,
+      "n": 32,
+      "successes": 25
+    },
+    {
+      "model": "R21",
+      "group": "A",
+      "onset": 0,
+      "n": 64,
+      "successes": 64
+    },
+    {
+      "model": "R21",
+      "group": "B",
+      "onset": 0,
+      "n": 32,
+      "successes": 26
+    },
+    {
+      "model": "R21",
+      "group": "B",
+      "onset": 5,
+      "n": 32,
+      "successes": 25
+    },
+    {
+      "model": "R21",
+      "group": "B",
+      "onset": 10,
+      "n": 32,
+      "successes": 20
+    },
+    {
+      "model": "R21",
+      "group": "B",
+      "onset": 15,
+      "n": 32,
+      "successes": 25
+    },
+    {
+      "model": "R21",
+      "group": "C",
+      "onset": 0,
+      "n": 32,
+      "successes": 31
+    },
+    {
+      "model": "R21",
+      "group": "C",
+      "onset": 5,
+      "n": 32,
+      "successes": 30
+    },
+    {
+      "model": "R21",
+      "group": "C",
+      "onset": 10,
+      "n": 32,
+      "successes": 30
+    },
+    {
+      "model": "R21",
+      "group": "C",
+      "onset": 15,
+      "n": 32,
+      "successes": 32
+    },
+    {
+      "model": "R21",
+      "group": "D",
+      "onset": 0,
+      "n": 32,
+      "successes": 23
+    },
+    {
+      "model": "R21",
+      "group": "D",
+      "onset": 5,
+      "n": 32,
+      "successes": 19
+    },
+    {
+      "model": "R21",
+      "group": "D",
+      "onset": 10,
+      "n": 32,
+      "successes": 19
+    },
+    {
+      "model": "R21",
+      "group": "D",
+      "onset": 15,
+      "n": 32,
+      "successes": 27
+    },
+    {
+      "model": "R71",
+      "group": "A",
+      "onset": 0,
+      "n": 64,
+      "successes": 60
+    },
+    {
+      "model": "R71",
+      "group": "B",
+      "onset": 0,
+      "n": 32,
+      "successes": 13
+    },
+    {
+      "model": "R71",
+      "group": "B",
+      "onset": 5,
+      "n": 32,
+      "successes": 12
+    },
+    {
+      "model": "R71",
+      "group": "B",
+      "onset": 10,
+      "n": 32,
+      "successes": 8
+    },
+    {
+      "model": "R71",
+      "group": "B",
+      "onset": 15,
+      "n": 32,
+      "successes": 11
+    },
+    {
+      "model": "R71",
+      "group": "C",
+      "onset": 0,
+      "n": 32,
+      "successes": 25
+    },
+    {
+      "model": "R71",
+      "group": "C",
+      "onset": 5,
+      "n": 32,
+      "successes": 7
+    },
+    {
+      "model": "R71",
+      "group": "C",
+      "onset": 10,
+      "n": 32,
+      "successes": 30
+    },
+    {
+      "model": "R71",
+      "group": "C",
+      "onset": 15,
+      "n": 32,
+      "successes": 25
+    },
+    {
+      "model": "R71",
+      "group": "D",
+      "onset": 0,
+      "n": 32,
+      "successes": 8
+    },
+    {
+      "model": "R71",
+      "group": "D",
+      "onset": 5,
+      "n": 32,
+      "successes": 7
+    },
+    {
+      "model": "R71",
+      "group": "D",
+      "onset": 10,
+      "n": 32,
+      "successes": 8
+    },
+    {
+      "model": "R71",
+      "group": "D",
+      "onset": 15,
+      "n": 32,
+      "successes": 12
+    },
+    {
+      "model": "R73",
+      "group": "A",
+      "onset": 0,
+      "n": 64,
+      "successes": 62
+    },
+    {
+      "model": "R73",
+      "group": "B",
+      "onset": 0,
+      "n": 32,
+      "successes": 5
+    },
+    {
+      "model": "R73",
+      "group": "B",
+      "onset": 5,
+      "n": 32,
+      "successes": 8
+    },
+    {
+      "model": "R73",
+      "group": "B",
+      "onset": 10,
+      "n": 32,
+      "successes": 7
+    },
+    {
+      "model": "R73",
+      "group": "B",
+      "onset": 15,
+      "n": 32,
+      "successes": 7
+    },
+    {
+      "model": "R73",
+      "group": "C",
+      "onset": 0,
+      "n": 32,
+      "successes": 21
+    },
+    {
+      "model": "R73",
+      "group": "C",
+      "onset": 5,
+      "n": 32,
+      "successes": 13
+    },
+    {
+      "model": "R73",
+      "group": "C",
+      "onset": 10,
+      "n": 32,
+      "successes": 31
+    },
+    {
+      "model": "R73",
+      "group": "C",
+      "onset": 15,
+      "n": 32,
+      "successes": 26
+    },
+    {
+      "model": "R73",
+      "group": "D",
+      "onset": 0,
+      "n": 32,
+      "successes": 11
+    },
+    {
+      "model": "R73",
+      "group": "D",
+      "onset": 5,
+      "n": 32,
+      "successes": 7
+    },
+    {
+      "model": "R73",
+      "group": "D",
+      "onset": 10,
+      "n": 32,
+      "successes": 3
+    },
+    {
+      "model": "R73",
+      "group": "D",
+      "onset": 15,
+      "n": 32,
+      "successes": 10
+    }
+  ],
+  "numerical_repeats": [
+    {
+      "model": "pi0",
+      "case": "A_000",
+      "labels": [
+        true,
+        true,
+        false
+      ],
+      "flipped": true,
+      "first_failure_ticks": [
+        null,
+        null,
+        67
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "A_001",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "A_002",
+      "labels": [
+        true,
+        true,
+        false
+      ],
+      "flipped": true,
+      "first_failure_ticks": [
+        null,
+        null,
+        67
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "A_003",
+      "labels": [
+        true,
+        true,
+        false
+      ],
+      "flipped": true,
+      "first_failure_ticks": [
+        null,
+        null,
+        66
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "A_004",
+      "labels": [
+        false,
+        true,
+        true
+      ],
+      "flipped": true,
+      "first_failure_ticks": [
+        67,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "A_005",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "A_006",
+      "labels": [
+        false,
+        true,
+        false
+      ],
+      "flipped": true,
+      "first_failure_ticks": [
+        74,
+        null,
+        57
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "A_007",
+      "labels": [
+        true,
+        true,
+        false
+      ],
+      "flipped": true,
+      "first_failure_ticks": [
+        null,
+        null,
+        67
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "B_000",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "B_001",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "B_002",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "B_016",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "B_032",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "B_048",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "B_064",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "B_080",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "B_096",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "B_112",
+      "labels": [
+        false,
+        false,
+        false
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        57,
+        53,
+        57
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "C_000",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "C_001",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "C_002",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "C_016",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "C_032",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "C_048",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "C_064",
+      "labels": [
+        false,
+        false,
+        false
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        52,
+        52,
+        52
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "C_080",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "C_096",
+      "labels": [
+        true,
+        false,
+        true
+      ],
+      "flipped": true,
+      "first_failure_ticks": [
+        null,
+        62,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "C_112",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "D_000",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "D_001",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "D_002",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "D_003",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "D_016",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "D_032",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "D_048",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "D_064",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "D_080",
+      "labels": [
+        false,
+        false,
+        false
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        49,
+        49,
+        49
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "D_096",
+      "labels": [
+        false,
+        false,
+        false
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        58,
+        58,
+        58
+      ]
+    },
+    {
+      "model": "pi0",
+      "case": "D_112",
+      "labels": [
+        false,
+        false,
+        false
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        55,
+        56,
+        56
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "A_000",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "A_001",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "A_002",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "A_003",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "A_004",
+      "labels": [
+        false,
+        true,
+        true
+      ],
+      "flipped": true,
+      "first_failure_ticks": [
+        85,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "A_005",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "A_006",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "A_007",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "B_000",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "B_001",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "B_002",
+      "labels": [
+        true,
+        true,
+        false
+      ],
+      "flipped": true,
+      "first_failure_ticks": [
+        null,
+        null,
+        70
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "B_016",
+      "labels": [
+        false,
+        false,
+        false
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        42,
+        42,
+        42
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "B_032",
+      "labels": [
+        false,
+        false,
+        false
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        62,
+        54,
+        99
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "B_048",
+      "labels": [
+        false,
+        false,
+        false
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        63,
+        74,
+        61
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "B_064",
+      "labels": [
+        false,
+        false,
+        false
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        42,
+        42,
+        42
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "B_080",
+      "labels": [
+        false,
+        false,
+        false
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        54,
+        56,
+        58
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "B_096",
+      "labels": [
+        false,
+        false,
+        false
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        68,
+        65,
+        63
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "B_112",
+      "labels": [
+        false,
+        false,
+        false
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        37,
+        37,
+        37
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "C_000",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "C_001",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "C_002",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "C_016",
+      "labels": [
+        false,
+        false,
+        false
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        67,
+        66,
+        65
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "C_032",
+      "labels": [
+        false,
+        false,
+        false
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        53,
+        53,
+        53
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "C_048",
+      "labels": [
+        false,
+        false,
+        false
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        58,
+        52,
+        61
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "C_064",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "C_080",
+      "labels": [
+        true,
+        true,
+        false
+      ],
+      "flipped": true,
+      "first_failure_ticks": [
+        null,
+        null,
+        86
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "C_096",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "C_112",
+      "labels": [
+        false,
+        false,
+        false
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        78,
+        87,
+        80
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "D_000",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "D_001",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "D_002",
+      "labels": [
+        true,
+        true,
+        true
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "D_003",
+      "labels": [
+        false,
+        false,
+        false
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        59,
+        60,
+        65
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "D_016",
+      "labels": [
+        false,
+        false,
+        false
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        40,
+        40,
+        40
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "D_032",
+      "labels": [
+        false,
+        false,
+        false
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        48,
+        51,
+        46
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "D_048",
+      "labels": [
+        false,
+        false,
+        false
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        72,
+        73,
+        73
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "D_064",
+      "labels": [
+        false,
+        false,
+        false
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        41,
+        37,
+        37
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "D_080",
+      "labels": [
+        false,
+        false,
+        false
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        56,
+        58,
+        52
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "D_096",
+      "labels": [
+        false,
+        false,
+        false
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        68,
+        62,
+        68
+      ]
+    },
+    {
+      "model": "R71",
+      "case": "D_112",
+      "labels": [
+        false,
+        false,
+        false
+      ],
+      "flipped": false,
+      "first_failure_ticks": [
+        37,
+        37,
+        37
+      ]
+    }
+  ],
+  "repeat_distinct_physical_conditions": {
+    "pi0": 32,
+    "R71": 32
+  },
+  "repeat_case_id_count": {
+    "pi0": 39,
+    "R71": 39
+  },
+  "adaptive_E_historical": {
+    "adaptive_disturbance": true,
+    "source": "/home/qy/DVGC/JIT/runs/monitoring/bridge_pi0_hard_initial1000_20261010/comparison.json"
+  },
+  "teacher_student_same_root": "NOT_EXECUTED: D1 requires independent TRAIN roots and pi0 suffixes; D0 four-cell gains are full-task paired observations, not teacher conversion",
+  "physical_charged_completed": 1400000,
+  "scored_main": 2240,
+  "repeat_episodes": 234,
+  "training_updates": 0,
+  "complete": true,
+  "D0b": {
+    "schema": "jit_retention_zero_update_D0b_v1",
+    "observations": 4096,
+    "optimizer_updates": 0,
+    "hashes": {
+      "actor": {
+        "source": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+        "copy": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8"
+      },
+      "normalizer": {
+        "source": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+        "copy": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86"
+      },
+      "critic": {
+        "source": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1",
+        "copy": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1"
+      }
+    },
+    "copy_action_max_abs_difference": 0.0,
+    "export_action_max_abs_difference": 0.0,
+    "normalizer_only_actor_unchanged": true,
+    "normalizer_before_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+    "normalizer_after_sha256": "c1f1388985c73ffef739c6913fd39085e200be3683d6908c7a558082922f6cc6",
+    "normalizer_only_action_rmse_channels": [
+      0.0001909404672915116,
+      0.00011424024705775082,
+      0.00010384586494183168,
+      0.00015158488531596959
+    ],
+    "normalizer_only_action_max_abs_difference": 0.0005768537521362305,
+    "fifo_shift_max_abs_error": 0.0,
+    "observation_continuity_max_abs_error": 0.0,
+    "success_before_25_recovery_ticks": 0,
+    "nonzero_initial_recovery_counters": 0,
+    "schedule_audit": "historical student.py lambda_demo uses normalizer.count; frozen-normalizer pilot requires explicit completed-transition clock",
+    "actor_gradients": "NO_OPTIMIZER_IN_D0; not measured. Existing joint_loss_metrics separately records PPO/demo/keep norms and cosines during training",
+    "normalizer_drift_interpretation": "fixed Actor observation-coordinate change only; not evidence it alone explains R71 retention loss"
+  }
+}

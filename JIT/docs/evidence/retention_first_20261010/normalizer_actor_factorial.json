@@ -1,0 +1,123 @@
+{
+  "observations_role": "D0 DEV diagnostic only; never TRAIN anchors",
+  "observations": 4096,
+  "results": {
+    "R5": {
+      "pi0_actor_student_normalizer": {
+        "rmse_channels": [
+          0.019798245280981064,
+          0.018128398805856705,
+          0.00975719839334488,
+          0.0112210214138031
+        ],
+        "max_abs_difference": 0.051274463534355164
+      },
+      "student_actor_pi0_normalizer": {
+        "rmse_channels": [
+          0.07714075595140457,
+          0.1898961216211319,
+          0.1617884635925293,
+          0.09597869217395782
+        ],
+        "max_abs_difference": 0.5737439393997192
+      },
+      "student_actor_student_normalizer": {
+        "rmse_channels": [
+          0.08417774736881256,
+          0.17597290873527527,
+          0.16368944942951202,
+          0.10053899139165878
+        ],
+        "max_abs_difference": 0.569269061088562
+      }
+    },
+    "R21": {
+      "pi0_actor_student_normalizer": {
+        "rmse_channels": [
+          0.08247791975736618,
+          0.03835811838507652,
+          0.03904716670513153,
+          0.05299428105354309
+        ],
+        "max_abs_difference": 0.3157240152359009
+      },
+      "student_actor_pi0_normalizer": {
+        "rmse_channels": [
+          0.15126051008701324,
+          0.177434504032135,
+          0.1519382894039154,
+          0.18952105939388275
+        ],
+        "max_abs_difference": 0.8227546811103821
+      },
+      "student_actor_student_normalizer": {
+        "rmse_channels": [
+          0.13352027535438538,
+          0.15891298651695251,
+          0.15344619750976562,
+          0.19308294355869293
+        ],
+        "max_abs_difference": 0.8874615430831909
+      }
+    },
+    "R71": {
+      "pi0_actor_student_normalizer": {
+        "rmse_channels": [
+          0.1682557612657547,
+          0.10012674331665039,
+          0.09775594621896744,
+          0.13587337732315063
+        ],
+        "max_abs_difference": 0.6748206615447998
+      },
+      "student_actor_pi0_normalizer": {
+        "rmse_channels": [
+          0.2288871556520462,
+          0.22909992933273315,
+          0.16573479771614075,
+          0.17402984201908112
+        ],
+        "max_abs_difference": 1.4051806926727295
+      },
+      "student_actor_student_normalizer": {
+        "rmse_channels": [
+          0.19120025634765625,
+          0.16793598234653473,
+          0.16519469022750854,
+          0.2059623748064041
+        ],
+        "max_abs_difference": 1.4799602031707764
+      }
+    },
+    "R73": {
+      "pi0_actor_student_normalizer": {
+        "rmse_channels": [
+          0.16962817311286926,
+          0.10324877500534058,
+          0.0993114784359932,
+          0.13786575198173523
+        ],
+        "max_abs_difference": 0.6868154406547546
+      },
+      "student_actor_pi0_normalizer": {
+        "rmse_channels": [
+          0.22033743560314178,
+          0.21058405935764313,
+          0.16332405805587769,
+          0.1689196228981018
+        ],
+        "max_abs_difference": 1.3830828666687012
+      },
+      "student_actor_student_normalizer": {
+        "rmse_channels": [
+          0.18433457612991333,
+          0.1584567129611969,
+          0.14883607625961304,
+          0.19859561324119568
+        ],
+        "max_abs_difference": 1.384500503540039
+      }
+    }
+  },
+  "limitation": "fixed-observation action sensitivity; swapping normalizer is not a physically tested repaired policy or causal effect on success"
+}

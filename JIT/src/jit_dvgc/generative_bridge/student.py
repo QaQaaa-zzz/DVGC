@@ -24,12 +24,18 @@ def make_joint_student_trainer(trainer, demo_manifest, *, retention,
         transitions=128000, demo_coefficient_start=.2, demo_coefficient_end=.05,
         keep_coefficient=.2, demo_batch_size=256, retention_batch_size=256,
         demo_sampler=None, usage_sink=None, retention_reference=None, audit_enabled=False, max_first_behavior_kl=None,
-        first_update_audit_path=None):
+        first_update_audit_path=None, freeze_actor_normalizer=False, demo_clock="normalizer_count"):
     """Must be invoked inside the existing guard_ppo_updates scope.
 
     Empty data creates no device target, sampler or demo RNG operation. Both
     coefficients zero preserves the original function object, not base+0*NaN.
     """
+    if demo_clock not in ('normalizer_count','completed_transitions'):
+        raise ValueError('unknown demo clock')
+    if freeze_actor_normalizer and demo_clock!='completed_transitions':
+        raise ValueError('frozen normalizer requires explicit completed transitions')
+    if demo_clock=='completed_transitions' and not freeze_actor_normalizer:
+        raise ValueError('explicit clock requires instrumented fixed-normalizer pilot')
     coefficients=(demo_coefficient_start,demo_coefficient_end,keep_coefficient)
     if any(not np.isfinite(v) or v<0 for v in coefficients):raise ValueError('invalid auxiliary coefficient')
     if any(type(v) is not int or v<=0 for v in (transitions,demo_batch_size,retention_batch_size)):
@@ -54,7 +60,11 @@ def make_joint_student_trainer(trainer, demo_manifest, *, retention,
 
     def train(**kwargs):
         if kwargs.get('restore_params') is None:raise ValueError('copy source Actor and normalizer required')
-        if not use_demo and not keep_coefficient:return trainer(**kwargs)
+        effective_trainer=trainer
+        if freeze_actor_normalizer:
+            from .student_clock import instrument_frozen_normalizer
+            effective_trainer=instrument_frozen_normalizer(trainer)
+        if not use_demo and not keep_coefficient:return effective_trainer(**kwargs)
         import jax
         import jax.numpy as jp
         from brax.training.agents.ppo import losses
@@ -120,8 +130,10 @@ def make_joint_student_trainer(trainer, demo_manifest, *, retention,
                 jax.debug.callback(record_usage,ids)
                 prediction=mode(apply(normalizer_params,params.policy,{'state':demo_obs[ids]}))
                 demo_mse=action_mse(prediction,demo_targets[ids])
-                fraction=jp.clip((_count_float(normalizer_params.count)-start_count)/transitions,0,1)
-                scale=demo_coefficient_start+(demo_coefficient_end-demo_coefficient_start)*fraction
+                from .student_clock import demo_weight
+                clock=(_count_float(normalizer_params.count)-start_count if demo_clock=='normalizer_count'
+                    else jp.max(data.extras['policy_extras']['completed_training_transitions']))
+                scale=demo_weight(clock,transitions,demo_coefficient_start,demo_coefficient_end)
                 total=total+scale*demo_mse
             if keep_coefficient:
                 ids=jax.random.choice(jax.random.fold_in(rng,719),len(keep_obs),(retention_batch_size,),p=keep_probs)
@@ -167,7 +179,7 @@ def make_joint_student_trainer(trainer, demo_manifest, *, retention,
                 'retention_coefficient':jp.asarray(keep_coefficient),'total_loss':total}
         losses.compute_ppo_loss=loss
         try:
-            result=trainer(**kwargs)
+            result=effective_trainer(**kwargs)
             jax.effects_barrier()
             return result
         finally:losses.compute_ppo_loss=original
@@ -213,7 +225,9 @@ def trainer_from_config(trainer, raw, run_dir):
         demo_batch_size=contract['demo_batch_size'],retention_batch_size=contract['retention_batch_size'],retention_reference=reference,
         audit_enabled=contract.get('schema')=='jit_bridge_student_v1_2',
         max_first_behavior_kl=contract.get('max_first_behavior_kl'),
-        first_update_audit_path=Path(run_dir)/'first_loss_gate.json')
+        first_update_audit_path=Path(run_dir)/'first_loss_gate.json',
+        freeze_actor_normalizer=contract.get('freeze_actor_normalizer',False),
+        demo_clock=contract.get('demo_clock','normalizer_count'))
     def train(**kwargs):
         from .protocol import atomic_json
         atomic_json(Path(run_dir)/'bridge_student_contract.json',{**contract,

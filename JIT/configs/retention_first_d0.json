@@ -1,0 +1,10 @@
+{
+  "schema": "jit_retention_d0_sources_v1",
+  "monitor": "/home/qy/DVGC/JIT/runs/monitoring",
+  "campaign": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008",
+  "diagnostic_rounds": [5, 21, 71, 73],
+  "initial_seed": 1010212026,
+  "request_seed": 1010222026,
+  "execution_seed": 1010232026,
+  "teacher_train_seed": 1010233101
+}

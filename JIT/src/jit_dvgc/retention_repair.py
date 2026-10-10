@@ -4,8 +4,10 @@ import json
 from pathlib import Path
 import numpy as np
 
-MONITOR=Path('/home/qy/DVGC/JIT/runs/monitoring')
-CAMPAIGN=Path('/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008')
+SOURCE_CONFIG=Path(__file__).resolve().parents[2]/'configs/retention_first_d0.json'
+SOURCES=json.loads(SOURCE_CONFIG.read_text())
+MONITOR=Path(SOURCES['monitor'])
+CAMPAIGN=Path(SOURCES['campaign'])
 
 def sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
@@ -52,12 +54,12 @@ def prepare(output):
     lineage=read(MONITOR/'continuous_key_metrics_20261010/lineage.json')
     template=read(MONITOR/'bridge_pi0_hard_initial1000_20261010/onset_00_bridge_pi0_spec.json')
     banks={'pi0':(template['bank'],template['proposer'])}
-    for r in (5,21,71,73):
+    for r in SOURCES['diagnostic_rounds']:
         bank=Path(lineage[str(r)])/'students/student/bank.json'
         members=read(bank)['members'];name=f'round_{r:04d}_student'
         if not any(m['name']==name for m in members):raise ValueError('missing actual diagnostic student '+name)
         banks[f'R{r}']=(str(bank),name)
-    models={};locks={}
+    models={};locks={str(SOURCE_CONFIG):sha(SOURCE_CONFIG)}
     for key,(bank,name) in banks.items():
         member=next(m for m in read(bank)['members'] if m['name']==name);p=member['policy']
         paths=[bank,p['formal_config'],str(Path(p['checkpoint'])/'payload.pkl'),str(Path(p['checkpoint'])/'identity.json')]
@@ -66,7 +68,7 @@ def prepare(output):
     # Same published hard-initial bounds, independent DEV RNG and ancestry.
     indices=read(MONITOR/'three_model_multidim1000_20261010/model_indices.json')
     qi,vi=indices['root_qpos'],indices['root_dof'];baseq=np.array(indices['nominal_qpos']);basev=np.array(indices['nominal_qvel'])
-    rng=np.random.default_rng(1010212026);offset=np.zeros((128,12))
+    rng=np.random.default_rng(SOURCES['initial_seed']);offset=np.zeros((128,12))
     offset[:,:2]=rng.uniform(-1,1,(128,2))*[.1,.05];offset[:,3:6]=rng.uniform(-3,3,(128,3))
     offset[:,6:8]=rng.uniform(-.2,.2,(128,2));offset[:,9:12]=rng.uniform(-.1,.1,(128,3))
     q=np.tile(baseq,(128,1));v=np.tile(basev,(128,1));q[:,qi:qi+3]+=offset[:,:3]
@@ -89,20 +91,22 @@ def prepare(output):
         legality.append({'random_index':i,'z_correction':dz,'remaining_penetration':max([-data.contact[j].dist for j in range(data.ncon)],default=0.),'excluded':False})
     write(root/'initial_precheck.json',legality)
     np.savez_compressed(root/'random_initials.npz',qpos=q.astype('f4'),qvel=v.astype('f4'),offset=offset,z_correction=zshift)
-    actions=np.random.default_rng(1010222026).uniform(-.25,.25,(128,3,4)).astype('f4')
+    actions=np.random.default_rng(SOURCES['request_seed']).uniform(-.25,.25,(128,3,4)).astype('f4')
     main=[]
     for group,n in [('A',64),('B',128),('C',128),('D',128)]:
         for i in range(n):
             onset=(0,5,10,15)[i//32] if group in ('B','C','D') else 0
             random=group in ('B','D');pulse=group in ('C','D')
             main.append({'case':f'{group}_{i:03d}','group':group,'condition_index':i,'onset':onset,
-                'ancestor':f'DEV-retention-1010212026-'+(f'random-{i}' if random else 'nominal'),
-                'request_id':f'DEV-request-1010222026-{i}' if pulse else 'zero',
+                'ancestor':f"DEV-retention-{SOURCES['initial_seed']}-"+(f'random-{i}' if random else 'nominal'),
+                'request_id':f"DEV-request-{SOURCES['request_seed']}-{i}" if pulse else 'zero',
                 'qpos':(q[i] if random else baseq).tolist(),'qvel':(v[i] if random else basev).tolist(),
                 'request':(actions[i] if pulse else np.zeros((3,4))).tolist(),'repeat':0,'role':'DEV'})
+    # Exactly32 distinct physical conditions: one unique nominal plus31 others.
     reps=[]
-    for group in ('A','B','C','D'):
-        selected=[x for x in main if x['group']==group][::16][:8] if group!='A' else [x for x in main if x['group']==group][:8]
+    for group,wanted in [('A',1),('B',10),('C',10),('D',11)]:
+        candidates=[x for x in main if x['group']==group]
+        selected=[candidates[int(i)] for i in np.linspace(0,len(candidates)-1,wanted)]
         for c in selected:
             for rep in range(1,4):reps.append({**c,'repeat':rep})
     batches=[]
@@ -118,7 +122,7 @@ def prepare(output):
             np.savez_compressed(requestfile,requested=request,onsets=onsets)
             spec={k:v for k,v in template.items() if k not in ('neighborhood','neighborhood_map','neighborhood_map_sha256','neighborhood_reference_actor_sha256','explorer_checkpoint','explorer_backend','initial_state_bank')}
             spec.update(bank=m['bank'],proposer=m['proposer'],controller_mode='fixed_random',num_envs=250,
-                seed=1010232026,initial_state_bank=str(bankfile),delta_limit=[.25]*4,
+                seed=SOURCES['execution_seed'],initial_state_bank=str(bankfile),delta_limit=[.25]*4,
                 frozen_request_table={'path':str(requestfile),'sha256':sha(requestfile)},record_actor_preobservations=True,
                 record_retention_diagnostics=True,pulse_start_schedule=[0],pulse_batch_mode='mixed',role='DEV')
             sp=root/(name+'_spec.json');write(sp,spec)

@@ -1,0 +1,38 @@
+{
+  "schema": "jit_retention_zero_update_D0b_v1",
+  "observations": 4096,
+  "optimizer_updates": 0,
+  "hashes": {
+    "actor": {
+      "source": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+      "copy": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8"
+    },
+    "normalizer": {
+      "source": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+      "copy": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86"
+    },
+    "critic": {
+      "source": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1",
+      "copy": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1"
+    }
+  },
+  "copy_action_max_abs_difference": 0.0,
+  "export_action_max_abs_difference": 0.0,
+  "normalizer_only_actor_unchanged": true,
+  "normalizer_before_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+  "normalizer_after_sha256": "c1f1388985c73ffef739c6913fd39085e200be3683d6908c7a558082922f6cc6",
+  "normalizer_only_action_rmse_channels": [
+    0.0001909404672915116,
+    0.00011424024705775082,
+    0.00010384586494183168,
+    0.00015158488531596959
+  ],
+  "normalizer_only_action_max_abs_difference": 0.0005768537521362305,
+  "fifo_shift_max_abs_error": 0.0,
+  "observation_continuity_max_abs_error": 0.0,
+  "success_before_25_recovery_ticks": 0,
+  "nonzero_initial_recovery_counters": 0,
+  "schedule_audit": "historical student.py lambda_demo uses normalizer.count; frozen-normalizer pilot requires explicit completed-transition clock",
+  "actor_gradients": "NO_OPTIMIZER_IN_D0; not measured. Existing joint_loss_metrics separately records PPO/demo/keep norms and cosines during training",
+  "normalizer_drift_interpretation": "fixed Actor observation-coordinate change only; not evidence it alone explains R71 retention loss"
+}

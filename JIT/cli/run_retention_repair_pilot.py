@@ -7,6 +7,7 @@ a=sub.add_parser('prepare');a.add_argument('--stage',choices=['D0'],required=Tru
 for name in ('audit','run','report'):
     a=sub.add_parser(name);a.add_argument('--plan',type=Path,required=True)
     if name=='run':a.add_argument('--execute',action='store_true',required=True)
+    if name=='report':a.add_argument('--output',type=Path)
 a=p.parse_args()
 if a.command=='prepare':
     from jit_dvgc.retention_repair import prepare
@@ -19,4 +20,4 @@ elif a.command=='run':
     run(a.plan)
 else:
     from jit_dvgc.retention_repair_report import report
-    print(report(a.plan))
+    print(report(a.plan,a.output))

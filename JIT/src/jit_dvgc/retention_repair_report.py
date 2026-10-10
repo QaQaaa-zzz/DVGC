@@ -6,14 +6,28 @@ import numpy as np
 from .retention_repair import read,write,sha
 
 
-def zero_update_audit(plan):
+class CachedArchive:
+    """Decompress each requested NPZ array once per analysis scope."""
+    def __init__(self,path):self.raw=np.load(path,allow_pickle=False);self.files=self.raw.files;self.cache={}
+    def __enter__(self):return self
+    def __exit__(self,*args):self.raw.close()
+    def __getitem__(self,key):
+        if key not in self.cache:self.cache[key]=self.raw[key]
+        return self.cache[key]
+
+def normalized_actor_observations(stats,obs,privileged):
+    from brax.training.acme import running_statistics
+    return np.asarray(running_statistics.normalize({'state':obs,'privileged_state':privileged},stats)['state'])
+
+
+def zero_update_audit(plan,output=None):
     import jax
     from brax.training.acme import running_statistics
     from brax.training.agents.ppo import networks as ppo_networks
     from .ppo import make_network_factory
     from .checkpoint import save_checkpoint,load_checkpoint
     from .handoff_bank import pytree_sha256
-    root=Path(plan['output']);pol=plan['models']['pi0']['policy']
+    rawroot=Path(plan['output']);root=Path(output or rawroot);pol=plan['models']['pi0']['policy']
     with (Path(pol['checkpoint'])/'payload.pkl').open('rb') as f:source=pickle.load(f)
     copy=root/'D0b_pi0_zero_update_copy'
     if not copy.exists():save_checkpoint(copy,source)
@@ -22,7 +36,7 @@ def zero_update_audit(plan):
     obs=[];priv=[];fifo_max=0.;continuity_max=0.;counter_mismatch=0;initial_counters=[]
     for b in plan['batches']:
         if b['model']!='pi0' or b['kind']!='main':continue
-        with np.load(root/b['name']/'prefixes.npz') as f:
+        with CachedArchive(rawroot/b['name']/'prefixes.npz') as f:
             m=f['prefix_mask'][:,:b['scored']];before=f['actor_observation_before'][:,:b['scored']];after=f['actor_observation_after'][:,:b['scored']]
             obs.append(before[m][::max(1,int(m.sum())//2048)][:2048]);priv.append(f['observation'][:,:b['scored']][m][::max(1,int(m.sum())//2048)][:2048])
             # Compare actual old->new FIFO observable coordinates excluding valid flags.
@@ -42,8 +56,8 @@ def zero_update_audit(plan):
     # Actor has no gradient and never changes: only installed normalization update.
     updated=running_statistics.update(source.observation_normalizer,{'state':obs,'privileged_state':priv})
     drifted=np.asarray(predict(updated,source.actor_params,obs))
-    norm_raw=np.asarray(running_statistics.normalize({'state':obs},source.observation_normalizer)['state'])
-    norm_changed=np.asarray(running_statistics.normalize({'state':obs},updated)['state'])
+    norm_raw=normalized_actor_observations(source.observation_normalizer,obs,priv)
+    norm_changed=normalized_actor_observations(updated,obs,priv)
     np.savez_compressed(root/'D0b_fixed_observations.npz',raw_obs=obs,normalized_source=norm_raw,normalized_updated=norm_changed,
         source_action=original,copied_action=copied,exported_action=action_export,normalizer_only_action=drifted)
     hashes={name:{'source':pytree_sha256(getattr(source,field)),'copy':pytree_sha256(getattr(restored,field))} for name,field in [('actor','actor_params'),('normalizer','observation_normalizer'),('critic','critic_params')]}
@@ -62,22 +76,31 @@ def zero_update_audit(plan):
     write(root/'D0b_audit.json',result);return result
 
 
+def liftoff_tick(front,rear):
+    ground=np.flatnonzero((front<=0)|(rear<=0))
+    if not len(ground):return None
+    airborne=(front>.01)&(rear>.01)
+    for t in range(int(ground[0])+1,len(front)-2):
+        if airborne[t:t+3].all():return t
+    return None
+
+
 def rows_for_batch(plan,b):
     root=Path(plan['output']);rows=[];qi=plan['indices']['root_qpos'];vi=plan['indices']['root_dof']
-    with np.load(root/b['name']/'prefixes.npz') as f:
+    with CachedArchive(root/b['name']/'prefixes.npz') as f:
         for lane,c in enumerate(b['cases']):
             mask=f['prefix_mask'][:,lane];n=int(mask.sum());end=n-1
             def first(field):
                 ids=np.flatnonzero(f[field][:,lane]&mask);return int(ids[0]) if len(ids) else None
+            liftoff=liftoff_tick(f['front_wheel_clearance'][:n,lane],f['rear_wheel_clearance'][:n,lane])
             def phase(t):
                 if t is None:return None
                 if bool(f['valid_contact_seen_before'][t,lane]):return 'post_contact'
-                if bool(f['airborne_seen'][t,lane]):return 'airborne_before_valid_contact'
+                if liftoff is not None and t>=liftoff:return 'airborne_before_valid_contact'
                 return 'pre_liftoff'
             roll=first('roll_limit');contact=first('prohibited_contact');fail=first('physical_failure');valid=first('first_valid_contact')
             # Plot diagnostic liftoff at control resolution; no endpoint change.
-            airborne=(f['front_wheel_clearance'][:,lane]>.01)&(f['rear_wheel_clearance'][:,lane]>.01)&mask
-            ids=np.flatnonzero(airborne);liftoff=int(ids[0]) if len(ids) else None
+            # Initial3cm suspension is not called liftoff: ground seen then3 airborne frames.
             rewards={k[7:]:float(f[k][:n,lane].sum()) for k in f.files if k.startswith('metric/reward/')}
             row={'model':b['model'],'group':c['group'],'case':c['case'],'repeat':c['repeat'],'onset':c['onset'],'ancestor':c['ancestor'],
                 'role':'DEV','request_sha256':sha(read(b['spec'])['frozen_request_table']['path']),
@@ -90,15 +113,20 @@ def rows_for_batch(plan,b):
                 'roll_rate_at_first_valid_contact_rad_s':None if valid is None else float(f['roll_rate'][valid,lane]),
                 'return':float(f['reward'][:n,lane].sum()),'terminal_reward':float(f['reward'][end,lane]),
                 'clipped_channel_fraction':float(np.mean(f['action_clipped'][:n,lane])),
+                'pulse_clipped_channel_fraction':float(np.mean(f['action_clipped'][:n,lane][f['mask'][:n,lane]])) if f['mask'][:n,lane].any() else None,
                 'reward_components':rewards,'batch':b['name'],'lane':lane}
             rows.append(row)
     return rows
 
 
-def report(plan_path):
-    plan=read(plan_path);root=Path(plan['output']);rows=[]
+def report(plan_path,output=None):
+    plan=read(plan_path);rawroot=Path(plan['output']);root=Path(output or rawroot);rows=[]
+    root.mkdir(parents=True,exist_ok=True)
+    if (root/'summary.json').exists():raise FileExistsError('preserve existing report')
+    amendment=rawroot/'repeat_amendment.json'
+    if amendment.exists():plan={**plan,'batches':plan['batches']+read(amendment)['batches']}
     for b in plan['batches']:
-        if (root/b['name']/'verification.json').exists():rows.extend(rows_for_batch(plan,b))
+        if (rawroot/b['name']/'verification.json').exists():rows.extend(rows_for_batch(plan,b))
     if not rows:raise ValueError('no completed evidence; report cannot launch evaluation')
     write(root/'episodes.json',rows)
     scalar=[k for k in rows[0] if k!='reward_components']
@@ -126,26 +154,38 @@ def report(plan_path):
             rr=[r for r in rows if r['model']==model and r['case']==case and r['repeat']>0]
             repeats.append({'model':model,'case':case,'labels':[r['success'] for r in rr],'flipped':len(set(r['success'] for r in rr))>1,
                 'first_failure_ticks':[r['first_physical_failure_tick'] for r in rr]})
+    case_specs={c['case']:c for b in plan['batches'] if b['kind']=='main' for c in b['cases']}
+    physical_repeat_keys={}
+    import hashlib,json
+    for r in repeats:
+        c=case_specs[r['case']]
+        key=hashlib.sha256(json.dumps([c['qpos'],c['qvel'],c['request'],c['onset']]).encode()).hexdigest()
+        physical_repeat_keys.setdefault(r['model'],set()).add(key)
     summary={'four_cells':four,'onset_strata':strata,'numerical_repeats':repeats,
+        'repeat_distinct_physical_conditions':{m:len(k) for m,k in physical_repeat_keys.items()},
+        'repeat_case_id_count':{m:sum(r['model']==m for r in repeats) for m in ('pi0','R71')},
         'adaptive_E_historical':plan['adaptive_E_historical'],'teacher_student_same_root':'NOT_EXECUTED: D1 requires independent TRAIN roots and pi0 suffixes; D0 four-cell gains are full-task paired observations, not teacher conversion',
-        'physical_charged_completed':sum(read(root/b['name']/'status.json')['charged_interactions'] for b in plan['batches'] if (root/b['name']/'verification.json').exists()),
+        'physical_charged_completed':sum(read(rawroot/b['name']/'status.json')['charged_interactions'] for b in plan['batches'] if (rawroot/b['name']/'verification.json').exists()),
         'scored_main':len(main),'repeat_episodes':sum(r['repeat']>0 for r in rows),'training_updates':0}
-    complete=all((root/b['name']/'verification.json').exists() for b in plan['batches'])
+    complete=all((rawroot/b['name']/'verification.json').exists() for b in plan['batches'])
     summary['complete']=complete
-    if complete:summary['D0b']=zero_update_audit(plan)
+    if complete:summary['D0b']=zero_update_audit(plan,root)
     write(root/'summary.json',summary)
     plot(plan,main,root)
     text='# D0 / D0b retention diagnostic\n\n![XY actual trajectories](xy_four_cells.png)\n\n'
     text+='Stage D0 only; zero policy updates. Baseline is bridge transition_0, not R73. All five same250-world layout; uniform exogenous requests, DEV only. A repeats one unique nominal state. C/D share request sequences; B/D share initial states. Effective action clipping and trajectories may differ. Historical adaptive E remains a separate negative stress test.\n\n'
     text+='|Model|A nominal/no pulse|B random/no pulse|C nominal/pulse|D random/pulse|\n|---|---|---|---|---|\n'
     for m,g in four.items():text+='|'+m+'|'+ '|'.join(f"{g[x]['successes']}/{g[x]['n']} (new {g[x]['N01_new_vs_pi0']}, lost {g[x]['N10_lost_vs_pi0']})" for x in 'ABCD')+'|\n'
-    text+=f"\nCharged physical transitions (padding included): {summary['physical_charged_completed']}; main episodes {len(main)}, repeats {summary['repeat_episodes']}; 4h /1.5M cap. Complete={complete}. No E/G/student optimization or policy publication.\n\n"
+    text+=f"\nRepeat physical conditions: {summary['repeat_distinct_physical_conditions']} (original repeated nominal IDs and7-condition supplement preserved in repeat_amendment.json).\n\nCharged physical transitions (padding included): {summary['physical_charged_completed']}; main episodes {len(main)}, repeats {summary['repeat_episodes']}; 4h /1.5M cap. Complete={complete}. No E/G/student optimization or policy publication.\n\n"
     if complete:
         a=summary['D0b'];text+=f"D0b copy and exported inference max action difference: {a['copy_action_max_abs_difference']}/{a['export_action_max_abs_difference']}. Actor/normalizer/critic copied byte-tree identities agree. FIFO shift error {a['fifo_shift_max_abs_error']}, continuity {a['observation_continuity_max_abs_error']}; success before25 recovery ticks {a['success_before_25_recovery_ticks']}. Frozen Actor, normalizer-only update action RMSE by channel: {a['normalizer_only_action_rmse_channels']}. This diagnoses coordinate sensitivity; it does not isolate the cause of historical forgetting.\n\n"
     text+='Same-root pi0/teacher/student conversion: **NOT EXECUTED**, no D1 TRAIN roots or teacher search in this stage. Training Actor gradient norms/KL: **NOT MEASURED**; no PPO batch or optimization in D0. Reward components and first roll/prohibited-contact/failure phases are in episodes.json/CSV. Missing teacher labels remain UNKNOWN, never new capability.\n\n'
     text+='Decision: keep pi0 fixed and R74 stopped. Do not launch D1/D2 automatically. Prepare an independent TRAIN-root qualification plan only after inspecting D0 and numerical repeat limits. A future frozen-normalizer student must use explicit completed-transition scheduling, same pi0 initialization and separate learner/best/published pointers. No reward or success-standard change is supported by loss/MSE alone.\n\n'
-    text+='Evidence: [input plan](plan.json), [identity audit](audit.json), [full results](summary.json), [episodes](episodes.csv), [reward components and first anomalies](episodes.json), [D0b](D0b_audit.json), [raw fixed observations](D0b_fixed_observations.npz). Liftoff is a control-resolution plotting diagnostic; substep event mechanisms remain unobserved. DEV samples share paired ancestors, nominal repetitions are not independent starts; no TEST or training-seed claim.\n'
+    text+='Evidence: [input plan](../plan.json), [identity audit](../audit.json), [full results](summary.json), [episodes](episodes.csv), [reward components and first anomalies](episodes.json), [D0b](D0b_audit.json), [raw fixed observations](D0b_fixed_observations.npz). Liftoff is a control-resolution plotting diagnostic; substep event mechanisms remain unobserved. DEV samples share paired ancestors, nominal repetitions are not independent starts; no TEST or training-seed claim.\n'
     (root/'D0_diagnostic_report.md').write_text(text);(root/'INDEX.md').write_text(text)
+    if complete:
+        from .retention_repair_analysis import extend
+        extend(plan_path,root)
     return root/'D0_diagnostic_report.md'
 
 
@@ -153,11 +193,12 @@ def plot(plan,rows,root):
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
+    rawroot=Path(plan['output'])
     fig,axes=plt.subplots(1,4,figsize=(18,5));qi=plan['indices']['root_qpos']
     colors=dict(zip(plan['models'],('black','tab:blue','tab:orange','tab:green','tab:red')))
     for b in plan['batches']:
-        if b['kind']!='main' or not (root/b['name']/'verification.json').exists():continue
-        with np.load(root/b['name']/'prefixes.npz') as f:
+        if b['kind']!='main' or not (rawroot/b['name']/'verification.json').exists():continue
+        with CachedArchive(rawroot/b['name']/'prefixes.npz') as f:
             for group,ax in zip('ABCD',axes):
                 group_rows=[r for r in rows if r['batch']==b['name'] and r['group']==group]
                 # deterministic representative subset; full rows and tapes retained
