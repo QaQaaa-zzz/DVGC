@@ -1,0 +1,16 @@
+2026-10-10 14:25:14.253148: W external/xla/xla/service/gpu/autotuning/dot_search_space.cc:200] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs?Working around this by using the full hints set instead.
+2026-10-10 14:25:14.253248: W external/xla/xla/service/gpu/autotuning/dot_search_space.cc:200] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs?Working around this by using the full hints set instead.
+2026-10-10 14:25:14.253359: W external/xla/xla/service/gpu/autotuning/dot_search_space.cc:200] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs?Working around this by using the full hints set instead.
+2026-10-10 14:25:14.253468: W external/xla/xla/service/gpu/autotuning/dot_search_space.cc:200] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs?Working around this by using the full hints set instead.
+2026-10-10 14:25:14.253515: W external/xla/xla/service/gpu/autotuning/dot_search_space.cc:200] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs?Working around this by using the full hints set instead.
+2026-10-10 14:25:14.253535: W external/xla/xla/service/gpu/autotuning/dot_search_space.cc:200] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs?Working around this by using the full hints set instead.
+2026-10-10 14:25:14.945505: F external/xla/xla/service/gpu/autotuning/gemm_fusion_autotuner.cc:1136] Non-OK-status: executable.status()
+Status: INTERNAL: ptxas exited with non-zero error code 139, output:  - Failure occured when compiling fusion gemm_fusion_dot.917 with config '{block_m:64,block_n:32,block_k:128,split_k:1,num_stages:3,num_warps:2,num_ctas:1}'
+Fused HLO computation:
+%gemm_fusion_dot.917_computation (parameter_0.4: f32[512,76], parameter_1.4: f32[256,76], parameter_2: f32[76,256]) -> f32[768,256] {
+  %parameter_0.4 = f32[512,76]{1,0} parameter(0)
+  %parameter_1.4 = f32[256,76]{1,0} parameter(1)
+  %concatenate.2210 = f32[768,76]{1,0} concatenate(%parameter_0.4, %parameter_1.4), dimensions={0}, metadata={op_name="pmap(training_epoch)/jit(main)/while/body/while/body/while/body/div" source_file="/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/brax/training/acme/running_statistics.py" source_line=312}
+  %parameter_2 = f32[76,256]{1,0} parameter(2)
+  ROOT %dot.956 = f32[768,256]{1,0} dot(%concatenate.2210, %parameter_2), lhs_contracting_dims={1}, rhs_contracting_dims={0}, metadata={op_name="pmap(training_epoch)/jit(main)/while/body/while/body/while/body/jvp(jvp(MLP))/hidden_0/dot_general" source_file="/home/qy/mujoco_playground/.venv/lib/python3.12/site-packages/flax/linen/linear.py" source_line=287}
+}
