@@ -35,3 +35,7 @@ Real GPU micro100/100transitions,2actual SGD updates passed all invariants in29.
 Four shared TRAIN reset pools and new64episode DEV four-cell inputs are locked in the server-side preparation supplement. GPU execution of the four-pool reset adapter and new DEV physical baselines remain required before a separate finite B launch. B selection: independent student success count on seven fixed solver-dev roots, confirmed B/D retention guard, earliest checkpoint on ties; no absorption means no automatic PPO. Formal A/B/C, student absorption, student old-capability loss and final independent student success are NOT_RUN. R5 remains frozen candidate; nothing published as a new policy.
 
 Actual charged total993809 = V800000+D1180909+D2engineering12900. No TEST opened.57related CPU tests passed; GPU micro is separate evidence. [Machine-readable summary](summary.json).
+
+## D2 B-only finite execution
+
+[BC+keep实际结果、三组XY、逐根转化与旧能力损失](B_only/INDEX.md)。2000监督更新完成；BC1000为阶段候选，learner_last2000，R5冻结全局候选，未发布。TRAIN稳定4/8、未见SOLVER_DEV3/7，配对旧成功仍有损失；暂不启动PPO，先闭环与保持覆盖诊断。

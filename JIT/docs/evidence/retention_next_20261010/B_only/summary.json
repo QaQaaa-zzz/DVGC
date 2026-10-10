@@ -1,0 +1,1014 @@
+{
+  "core_code_revision": "9955b8ee217544f2517df3581f349631babc1d6f",
+  "review_base": "0b938ae29e685052df30f299a32a98d7b2aac967",
+  "failed_first_attempt": "455f92c",
+  "raw_run": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002",
+  "source_lock": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/source_lock.json",
+  "source_input_lock_sha256": "ddbb716a39f430a8ba4691c355c7b494800f53c16251ec74e51eeef9c4206a34",
+  "pi0": {
+    "action_order": [
+      "steer",
+      "rear_wheel_drive",
+      "hip",
+      "knee"
+    ],
+    "actor_frame_fields": [
+      "gravity_x",
+      "gravity_y",
+      "gravity_z",
+      "angular_velocity_x",
+      "angular_velocity_y",
+      "angular_velocity_z",
+      "acceleration_x",
+      "acceleration_y",
+      "acceleration_z",
+      "steering_position",
+      "hip_position",
+      "knee_position",
+      "steering_velocity",
+      "hip_velocity",
+      "knee_velocity",
+      "front_wheel_velocity",
+      "rear_wheel_velocity",
+      "last_action_steer",
+      "last_action_rear_wheel_drive",
+      "last_action_hip",
+      "last_action_knee",
+      "estimated_forward_velocity",
+      "obstacle_relative_x",
+      "root_height",
+      "history_valid"
+    ],
+    "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+    "actor_task_fields": [
+      "jump_signal"
+    ],
+    "checkpoint": "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/binding/bridge_baseline/checkpoints/transition_0",
+    "checkpoint_identity_sha256": "0307799fa5059cd55d81eedec9f33e89a53b75d1f718e29c919b74e01d1445e8",
+    "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1",
+    "data_role": "train",
+    "formal_config": "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/runtime_config.json",
+    "formal_config_file_sha256": "c135ef71f5d5907274c08ef1692705bcf3ffe0f3695674f1ef11b5f2d3bcc51f",
+    "formal_config_sha256": "82872dd8ed1de87eee67f9b63fa3a3636fd00118ad4c0fcd88ba48b2dfac69ce",
+    "initialization_receipt": "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/binding/initialization_receipt.json",
+    "initialization_receipt_sha256": "f86103a249983fb058240d85dd13c259c75a054ade6398c9518ec3b494aef953",
+    "iteration": 0,
+    "name": "bridge_baseline",
+    "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+    "payload_sha256": "dc74f572683e873dcf7661e454a53f259171efd82ec33edcf7afb071acfdad31",
+    "policy_role": "initialization_only",
+    "source_frozen_policy": "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/phase_source.json",
+    "source_frozen_policy_sha256": "09ac7d40e15d0c6a2a3a42803bc359f7ea371bbc0543c05663b7cf2c3484052e",
+    "source_reset_mixture": {
+      "natural_reset_probability": 0.2,
+      "selection": "fixed_jump_start_20pct_exact_snapshot_80pct",
+      "soft_tube_probability": 0.8
+    },
+    "source_training_run_id": "bridge_baseline",
+    "source_training_transitions": 0,
+    "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+  },
+  "R5": {
+    "action_order": [
+      "steer",
+      "rear_wheel_drive",
+      "hip",
+      "knee"
+    ],
+    "actor_frame_fields": [
+      "gravity_x",
+      "gravity_y",
+      "gravity_z",
+      "angular_velocity_x",
+      "angular_velocity_y",
+      "angular_velocity_z",
+      "acceleration_x",
+      "acceleration_y",
+      "acceleration_z",
+      "steering_position",
+      "hip_position",
+      "knee_position",
+      "steering_velocity",
+      "hip_velocity",
+      "knee_velocity",
+      "front_wheel_velocity",
+      "rear_wheel_velocity",
+      "last_action_steer",
+      "last_action_rear_wheel_drive",
+      "last_action_hip",
+      "last_action_knee",
+      "estimated_forward_velocity",
+      "obstacle_relative_x",
+      "root_height",
+      "history_valid"
+    ],
+    "actor_sha256": "db2f3deb1c4a5193d63ccf44c5d60855ba0aa4a8dd2e31f4e4c31a49a7c3d8a6",
+    "actor_task_fields": [
+      "jump_signal"
+    ],
+    "checkpoint": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0002_continuous_200/round_0005/students/student/training/round_0005_student/checkpoints/transition_128000",
+    "checkpoint_identity_sha256": "855e89a896b874674d8fc8d2dd7c2d4aa6f3c0d609127ca18e9ff6007ffc56aa",
+    "critic_sha256": "2ab357822700a09398493fddb133269a0a273fce625ee29f07458da8e6f56e9a",
+    "data_role": "train",
+    "formal_config": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0002_continuous_200/round_0005/students/student/config.json",
+    "formal_config_file_sha256": "1e145105458fa130c4b8f0337cd675fe40f4ca5a48508b4231c81968082b984a",
+    "formal_config_sha256": "79e230fd787d070390e37e11ddf1b58e80c553cb486b29c1b1587779308aea58",
+    "iteration": 1,
+    "name": "round_0005_student",
+    "normalizer_sha256": "c9b365c78abea6a971fc58e53ae01b0df478bbfc0fbac6e69c0299f01570acd7",
+    "payload_sha256": "4b88d97cb27f8a8ef0093754b279d01af49c52c020b5a17be8084af613ab9028",
+    "policy_role": "development_checkpoint",
+    "source_formal_report": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0002_continuous_200/round_0005/students/student/training/round_0005_student/formal_report.json",
+    "source_formal_report_sha256": "7f60ccf8b668c7f0fa005bcb9ae26a5f765cdd908fcadcad9ade527e9487d38b",
+    "source_requested_training_transitions": 128000,
+    "source_reset_mixture": {
+      "natural_reset_probability": 0.2,
+      "selection": "fixed_jump_start_20pct_exact_snapshot_80pct",
+      "soft_tube_probability": 0.8
+    },
+    "source_training_run_id": "round_0005_student",
+    "source_training_transitions": 128000,
+    "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+  },
+  "E73": {
+    "checkpoint": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0011_b1_resume_143/segment_0073/round_0073/explorer_update/state.msgpack",
+    "sha256": "3f77e061873a2534865d27bd933293f5a867e7c38299bfb4bccf8cdde12f9c4d",
+    "config": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0011_b1_resume_143/segment_0073/round_0073/explorer_update_spec.json",
+    "selection": "R73 last complete E; fixed for pilot"
+  },
+  "G73": {
+    "manifest": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0011_b1_resume_143/segment_0073/round_0073/generator_incremental/attempt_0000/update_2000/manifest.json",
+    "manifest_sha256": "0d4621583fb56a72d9668b0b672faf6aa9bce4353114040b0b2adc79dc6e6213",
+    "identity": {
+      "identity": {
+        "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+        "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+        "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+      },
+      "includes": [
+        "params",
+        "ema",
+        "optimizer",
+        "rng",
+        "normalizer",
+        "updates"
+      ],
+      "inference_parameters": "ema",
+      "schema": "jit_generator_training_state_v1_1",
+      "state_sha256": "84fb92c8ed5756786a0d15a29f7e12abb44b962f252aa023162d24dbf3e08efe",
+      "updates": 162500
+    },
+    "inference": "ema",
+    "selection": "R73 last_valid complete; fixed for pilot"
+  },
+  "baseline_counts": {
+    "pi0": {
+      "A": 7,
+      "B": 12,
+      "C": 8,
+      "D": 11
+    },
+    "R5": {
+      "A": 16,
+      "B": 11,
+      "C": 15,
+      "D": 10
+    }
+  },
+  "checkpoint_counts": {
+    "0": {
+      "train_success": 0,
+      "solver_success": 0,
+      "cells": {
+        "A": {
+          "n": 16,
+          "success": 7,
+          "N01": 0,
+          "N10": 0
+        },
+        "B": {
+          "n": 16,
+          "success": 12,
+          "N01": 0,
+          "N10": 0
+        },
+        "C": {
+          "n": 16,
+          "success": 8,
+          "N01": 0,
+          "N10": 0
+        },
+        "D": {
+          "n": 16,
+          "success": 11,
+          "N01": 0,
+          "N10": 0
+        }
+      },
+      "warning_cells": [],
+      "confirmed_regression": [],
+      "eligible": true,
+      "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+      "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+      "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1"
+    },
+    "100": {
+      "train_success": 5,
+      "solver_success": 1,
+      "cells": {
+        "A": {
+          "n": 16,
+          "success": 16,
+          "N01": 9,
+          "N10": 0
+        },
+        "B": {
+          "n": 16,
+          "success": 13,
+          "N01": 3,
+          "N10": 2
+        },
+        "C": {
+          "n": 16,
+          "success": 12,
+          "N01": 5,
+          "N10": 1
+        },
+        "D": {
+          "n": 16,
+          "success": 10,
+          "N01": 3,
+          "N10": 4
+        }
+      },
+      "warning_cells": [
+        "D"
+      ],
+      "confirmed_regression": [],
+      "eligible": true,
+      "actor_sha256": "31dd760b93f1d49337bff61e42c90632873e9d6491a512b787fe34c815e97060",
+      "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+      "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1"
+    },
+    "500": {
+      "train_success": 3,
+      "solver_success": 1,
+      "cells": {
+        "A": {
+          "n": 16,
+          "success": 16,
+          "N01": 9,
+          "N10": 0
+        },
+        "B": {
+          "n": 16,
+          "success": 13,
+          "N01": 3,
+          "N10": 2
+        },
+        "C": {
+          "n": 16,
+          "success": 14,
+          "N01": 7,
+          "N10": 1
+        },
+        "D": {
+          "n": 16,
+          "success": 11,
+          "N01": 2,
+          "N10": 2
+        }
+      },
+      "warning_cells": [],
+      "confirmed_regression": [],
+      "eligible": true,
+      "actor_sha256": "ec297a17049adb7413d8417b6d4ea5951caec45f71d0a147cedab2d5dc844e56",
+      "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+      "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1"
+    },
+    "1000": {
+      "train_success": 4,
+      "solver_success": 3,
+      "cells": {
+        "A": {
+          "n": 16,
+          "success": 16,
+          "N01": 9,
+          "N10": 0
+        },
+        "B": {
+          "n": 16,
+          "success": 10,
+          "N01": 2,
+          "N10": 4
+        },
+        "C": {
+          "n": 16,
+          "success": 15,
+          "N01": 8,
+          "N10": 1
+        },
+        "D": {
+          "n": 16,
+          "success": 10,
+          "N01": 1,
+          "N10": 2
+        }
+      },
+      "warning_cells": [
+        "B",
+        "D"
+      ],
+      "confirmed_regression": [],
+      "eligible": true,
+      "actor_sha256": "c40c96527cbf7832e0c4b177d9d55285f22b08e9d0c5575a54323bd98939a1a1",
+      "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+      "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1"
+    },
+    "2000": {
+      "train_success": 5,
+      "solver_success": 3,
+      "cells": {
+        "A": {
+          "n": 16,
+          "success": 16,
+          "N01": 9,
+          "N10": 0
+        },
+        "B": {
+          "n": 16,
+          "success": 12,
+          "N01": 2,
+          "N10": 2
+        },
+        "C": {
+          "n": 16,
+          "success": 12,
+          "N01": 5,
+          "N10": 1
+        },
+        "D": {
+          "n": 16,
+          "success": 11,
+          "N01": 1,
+          "N10": 1
+        }
+      },
+      "warning_cells": [],
+      "confirmed_regression": [],
+      "eligible": true,
+      "actor_sha256": "81650b636f218517b76cedf6b0ced67bfbdd43baff5b88df11a00470f3ac7fb1",
+      "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+      "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1"
+    }
+  },
+  "actual_updates": [
+    {
+      "update": 1,
+      "loss": 0.021249476820230484,
+      "demo": 0.021249476820230484,
+      "keep": 1.3656741007701291e-14,
+      "actor_grad_norm": 0.38299983739852905,
+      "actual/actor_adam_delta_norm": 0.003900595474988222,
+      "actual/actor_gradient_sum_norm": 0.38299983739852905,
+      "actual/cosine_demo_keep": 0.012659014202654362,
+      "actual/global_clip_scale": 1.0,
+      "actual/gradient_norm_demo": 0.38299983739852905,
+      "actual/gradient_norm_keep": 1.3477122706717637e-07
+    },
+    {
+      "update": 100,
+      "loss": 0.006168126128613949,
+      "demo": 0.00553499162197113,
+      "keep": 0.0006331343320198357,
+      "actor_grad_norm": 0.03278399258852005,
+      "actual/actor_adam_delta_norm": 0.001704799011349678,
+      "actual/actor_gradient_sum_norm": 0.03278399258852005,
+      "actual/cosine_demo_keep": -0.6606932282447815,
+      "actual/global_clip_scale": 1.0,
+      "actual/gradient_norm_demo": 0.04176919162273407,
+      "actual/gradient_norm_keep": 0.03717254847288132
+    },
+    {
+      "update": 500,
+      "loss": 0.003938778303563595,
+      "demo": 0.0033690263517200947,
+      "keep": 0.0005697521846741438,
+      "actor_grad_norm": 0.020244555547833443,
+      "actual/actor_adam_delta_norm": 0.0011040178360417485,
+      "actual/actor_gradient_sum_norm": 0.020244555547833443,
+      "actual/cosine_demo_keep": -0.4329826533794403,
+      "actual/global_clip_scale": 1.0,
+      "actual/gradient_norm_demo": 0.019154779613018036,
+      "actual/gradient_norm_keep": 0.018863532692193985
+    },
+    {
+      "update": 1000,
+      "loss": 0.002231471473351121,
+      "demo": 0.0017832701560109854,
+      "keep": 0.0004482013755477965,
+      "actor_grad_norm": 0.013336780481040478,
+      "actual/actor_adam_delta_norm": 0.000867040827870369,
+      "actual/actor_gradient_sum_norm": 0.013336780481040478,
+      "actual/cosine_demo_keep": -0.6116290092468262,
+      "actual/global_clip_scale": 1.0,
+      "actual/gradient_norm_demo": 0.01670711487531662,
+      "actual/gradient_norm_keep": 0.011996453627943993
+    },
+    {
+      "update": 2000,
+      "loss": 0.0014674424892291427,
+      "demo": 0.0011925273574888706,
+      "keep": 0.00027491513174027205,
+      "actor_grad_norm": 0.015163354575634003,
+      "actual/actor_adam_delta_norm": 0.0008792911539785564,
+      "actual/actor_gradient_sum_norm": 0.015163354575634003,
+      "actual/cosine_demo_keep": 0.013030478730797768,
+      "actual/global_clip_scale": 1.0,
+      "actual/gradient_norm_demo": 0.01312943734228611,
+      "actual/gradient_norm_keep": 0.007416702341288328
+    }
+  ],
+  "TRAIN_repeat_counts": {
+    "stable_success": 4,
+    "stable_failure": 3,
+    "ambiguous": 1,
+    "unknown": 0
+  },
+  "paired_retention": {
+    "first_lost": 7,
+    "first_gain": 20,
+    "repeat_lost": 3,
+    "both_pair_lost": 2,
+    "by_cell": {
+      "A": {
+        "first_lost": 0,
+        "repeat_lost": 0,
+        "both_pair_lost_cases": [],
+        "source_label_flips": 9,
+        "student_label_flips": 0
+      },
+      "B": {
+        "first_lost": 4,
+        "repeat_lost": 2,
+        "both_pair_lost_cases": [
+          "B_06"
+        ],
+        "source_label_flips": 1,
+        "student_label_flips": 3
+      },
+      "C": {
+        "first_lost": 1,
+        "repeat_lost": 1,
+        "both_pair_lost_cases": [
+          "C_10"
+        ],
+        "source_label_flips": 1,
+        "student_label_flips": 0
+      },
+      "D": {
+        "first_lost": 2,
+        "repeat_lost": 0,
+        "both_pair_lost_cases": [],
+        "source_label_flips": 0,
+        "student_label_flips": 3
+      }
+    },
+    "warning_repeat_confirmed": []
+  },
+  "R5_focus_confirmations": [
+    [
+      {
+        "root_id": "TRAIN-1010233101-10",
+        "role": "TRAIN",
+        "pi0_labels": [
+          0,
+          0,
+          0
+        ],
+        "R5_label": 0,
+        "G_verified": true,
+        "Noise_verified": false,
+        "combinations": {
+          "independent": {
+            "label": 1,
+            "lane": 11,
+            "attempt": {
+              "action_origin": "actor_only",
+              "actor_sha256": "db2f3deb1c4a5193d63ccf44c5d60855ba0aa4a8dd2e31f4e4c31a49a7c3d8a6",
+              "actor_witness_eligible": true,
+              "label": 1,
+              "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+              "normalizer_sha256": "c9b365c78abea6a971fc58e53ae01b0df478bbfc0fbac6e69c0299f01570acd7",
+              "outcome": "stable_forward_recovery",
+              "policy": "round_0005_student",
+              "recording_schema": "jit_actor_success_trace_v1_1",
+              "snapshot_context_sha256": "1560772022e71b40f7dc743546635caffd00efdb09897e046b4576a64f1f9c5f",
+              "steps": 60,
+              "task_return": 1289.185546875,
+              "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/B1000_TRAIN_root00_independent_confirm0_R5/round_0005_student_traces.npz",
+              "trace_lane": 11,
+              "trace_sha256": "e6a161cd90f6b8f609ead0af91490f1b0b99287fe823bc8b2d15970f99780b0a"
+            },
+            "all_lane_labels": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              0,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1
+            ]
+          },
+          "teacher_H16_pi0": {
+            "label": 1,
+            "attempt": {
+              "action_origin": "bridge_prefix_then_source_tail",
+              "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+              "actor_witness_eligible": false,
+              "controller_kind": "composite_teacher",
+              "label": 1,
+              "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+              "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+              "outcome": "stable_forward_recovery",
+              "policy": "bridge_baseline",
+              "recording_schema": "jit_bridge_trace_v1",
+              "snapshot_context_sha256": "1560772022e71b40f7dc743546635caffd00efdb09897e046b4576a64f1f9c5f",
+              "source_only": false,
+              "steps": 70,
+              "task_return": 1090.310302734375,
+              "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_002/root_005_G_repeat2/bridge_baseline_traces.npz",
+              "trace_lane": 11,
+              "trace_sha256": "c43411553c8b1de036e9a043003d961686492a82045ff2aba036556f856c3edb"
+            },
+            "reused": true
+          }
+        }
+      },
+      {
+        "root_id": "TRAIN-1010233101-55",
+        "role": "TRAIN",
+        "pi0_labels": [
+          0,
+          0,
+          0
+        ],
+        "R5_label": 0,
+        "G_verified": true,
+        "Noise_verified": true,
+        "combinations": {
+          "independent": {
+            "label": 0,
+            "lane": 6,
+            "attempt": {
+              "action_origin": "actor_only",
+              "actor_sha256": "db2f3deb1c4a5193d63ccf44c5d60855ba0aa4a8dd2e31f4e4c31a49a7c3d8a6",
+              "actor_witness_eligible": true,
+              "label": 0,
+              "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+              "normalizer_sha256": "c9b365c78abea6a971fc58e53ae01b0df478bbfc0fbac6e69c0299f01570acd7",
+              "outcome": "airborne_physical_failure",
+              "policy": "round_0005_student",
+              "recording_schema": "jit_actor_success_trace_v1_1",
+              "snapshot_context_sha256": "0539cd85a49ec690d8ecf5297a4b27530de11d7fc0c95bd4ac27b6af23e0ed98",
+              "steps": 41,
+              "task_return": 307.8792724609375,
+              "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/B1000_TRAIN_root01_independent_confirm0_R5/round_0005_student_traces.npz",
+              "trace_lane": 6,
+              "trace_sha256": "27694d93298aa530fbe19d8b038eaf0f4269383aee2ba5d66814aad83c448ec1"
+            },
+            "all_lane_labels": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "teacher_H16_pi0": {
+            "label": 1,
+            "attempt": {
+              "action_origin": "bridge_prefix_then_source_tail",
+              "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+              "actor_witness_eligible": false,
+              "controller_kind": "composite_teacher",
+              "label": 1,
+              "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+              "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+              "outcome": "stable_forward_recovery",
+              "policy": "bridge_baseline",
+              "recording_schema": "jit_bridge_trace_v1",
+              "snapshot_context_sha256": "0539cd85a49ec690d8ecf5297a4b27530de11d7fc0c95bd4ac27b6af23e0ed98",
+              "source_only": false,
+              "steps": 55,
+              "task_return": 1031.8602294921875,
+              "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_003/worker_root_012/root_012_G_repeat2/bridge_baseline_traces.npz",
+              "trace_lane": 6,
+              "trace_sha256": "97e6b00d00b84af4d213a47c0033e0e11de3f2f81d845cecf4793ba4b2d0f450"
+            },
+            "reused": true
+          }
+        }
+      },
+      {
+        "root_id": "TRAIN-1010233101-63",
+        "role": "TRAIN",
+        "pi0_labels": [
+          0,
+          0,
+          0
+        ],
+        "R5_label": 0,
+        "G_verified": true,
+        "Noise_verified": true,
+        "combinations": {
+          "independent": {
+            "label": 0,
+            "lane": 6,
+            "attempt": {
+              "action_origin": "actor_only",
+              "actor_sha256": "db2f3deb1c4a5193d63ccf44c5d60855ba0aa4a8dd2e31f4e4c31a49a7c3d8a6",
+              "actor_witness_eligible": true,
+              "label": 0,
+              "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+              "normalizer_sha256": "c9b365c78abea6a971fc58e53ae01b0df478bbfc0fbac6e69c0299f01570acd7",
+              "outcome": "airborne_physical_failure",
+              "policy": "round_0005_student",
+              "recording_schema": "jit_actor_success_trace_v1_1",
+              "snapshot_context_sha256": "13830e30fe5c0e558142bc0294bb95d5e04443d87613c910471979378e998114",
+              "steps": 40,
+              "task_return": 319.4032897949219,
+              "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/B1000_TRAIN_root02_independent_confirm0_R5/round_0005_student_traces.npz",
+              "trace_lane": 6,
+              "trace_sha256": "92968b4f83e7805b990276e3ba6af4ed7bb1a79a3fd0f95065f396d19d284835"
+            },
+            "all_lane_labels": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "teacher_H16_pi0": {
+            "label": 1,
+            "attempt": {
+              "action_origin": "bridge_prefix_then_source_tail",
+              "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+              "actor_witness_eligible": false,
+              "controller_kind": "composite_teacher",
+              "label": 1,
+              "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+              "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+              "outcome": "stable_forward_recovery",
+              "policy": "bridge_baseline",
+              "recording_schema": "jit_bridge_trace_v1",
+              "snapshot_context_sha256": "13830e30fe5c0e558142bc0294bb95d5e04443d87613c910471979378e998114",
+              "source_only": false,
+              "steps": 61,
+              "task_return": 988.04541015625,
+              "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_003/worker_root_014/root_014_G_repeat2/bridge_baseline_traces.npz",
+              "trace_lane": 6,
+              "trace_sha256": "f77f178ad7fe7de974f8a72f7347b2038c7908ec98e640a55dbf1851db2b85b7"
+            },
+            "reused": true
+          }
+        }
+      }
+    ],
+    [
+      {
+        "root_id": "TRAIN-1010233101-10",
+        "role": "TRAIN",
+        "pi0_labels": [
+          0,
+          0,
+          0
+        ],
+        "R5_label": 0,
+        "G_verified": true,
+        "Noise_verified": false,
+        "combinations": {
+          "independent": {
+            "label": 1,
+            "lane": 11,
+            "attempt": {
+              "action_origin": "actor_only",
+              "actor_sha256": "db2f3deb1c4a5193d63ccf44c5d60855ba0aa4a8dd2e31f4e4c31a49a7c3d8a6",
+              "actor_witness_eligible": true,
+              "label": 1,
+              "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+              "normalizer_sha256": "c9b365c78abea6a971fc58e53ae01b0df478bbfc0fbac6e69c0299f01570acd7",
+              "outcome": "stable_forward_recovery",
+              "policy": "round_0005_student",
+              "recording_schema": "jit_actor_success_trace_v1_1",
+              "snapshot_context_sha256": "1560772022e71b40f7dc743546635caffd00efdb09897e046b4576a64f1f9c5f",
+              "steps": 60,
+              "task_return": 1287.68994140625,
+              "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/B1000_TRAIN_root00_independent_confirm1_R5/round_0005_student_traces.npz",
+              "trace_lane": 11,
+              "trace_sha256": "ffdb90841b56e7fe374aac8f83ae531f19d97229ec572bc86c6b05b2cf756d8e"
+            },
+            "all_lane_labels": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              0,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1
+            ]
+          },
+          "teacher_H16_pi0": {
+            "label": 1,
+            "attempt": {
+              "action_origin": "bridge_prefix_then_source_tail",
+              "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+              "actor_witness_eligible": false,
+              "controller_kind": "composite_teacher",
+              "label": 1,
+              "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+              "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+              "outcome": "stable_forward_recovery",
+              "policy": "bridge_baseline",
+              "recording_schema": "jit_bridge_trace_v1",
+              "snapshot_context_sha256": "1560772022e71b40f7dc743546635caffd00efdb09897e046b4576a64f1f9c5f",
+              "source_only": false,
+              "steps": 70,
+              "task_return": 1090.310302734375,
+              "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_002/root_005_G_repeat2/bridge_baseline_traces.npz",
+              "trace_lane": 11,
+              "trace_sha256": "c43411553c8b1de036e9a043003d961686492a82045ff2aba036556f856c3edb"
+            },
+            "reused": true
+          }
+        }
+      },
+      {
+        "root_id": "TRAIN-1010233101-55",
+        "role": "TRAIN",
+        "pi0_labels": [
+          0,
+          0,
+          0
+        ],
+        "R5_label": 0,
+        "G_verified": true,
+        "Noise_verified": true,
+        "combinations": {
+          "independent": {
+            "label": 0,
+            "lane": 6,
+            "attempt": {
+              "action_origin": "actor_only",
+              "actor_sha256": "db2f3deb1c4a5193d63ccf44c5d60855ba0aa4a8dd2e31f4e4c31a49a7c3d8a6",
+              "actor_witness_eligible": true,
+              "label": 0,
+              "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+              "normalizer_sha256": "c9b365c78abea6a971fc58e53ae01b0df478bbfc0fbac6e69c0299f01570acd7",
+              "outcome": "airborne_physical_failure",
+              "policy": "round_0005_student",
+              "recording_schema": "jit_actor_success_trace_v1_1",
+              "snapshot_context_sha256": "0539cd85a49ec690d8ecf5297a4b27530de11d7fc0c95bd4ac27b6af23e0ed98",
+              "steps": 41,
+              "task_return": 307.8731689453125,
+              "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/B1000_TRAIN_root01_independent_confirm1_R5/round_0005_student_traces.npz",
+              "trace_lane": 6,
+              "trace_sha256": "9dcce6f81cc9dd378ad72a1b73838c977796a7d5aa5aab80f2b8b65f697a881a"
+            },
+            "all_lane_labels": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "teacher_H16_pi0": {
+            "label": 1,
+            "attempt": {
+              "action_origin": "bridge_prefix_then_source_tail",
+              "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+              "actor_witness_eligible": false,
+              "controller_kind": "composite_teacher",
+              "label": 1,
+              "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+              "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+              "outcome": "stable_forward_recovery",
+              "policy": "bridge_baseline",
+              "recording_schema": "jit_bridge_trace_v1",
+              "snapshot_context_sha256": "0539cd85a49ec690d8ecf5297a4b27530de11d7fc0c95bd4ac27b6af23e0ed98",
+              "source_only": false,
+              "steps": 55,
+              "task_return": 1031.8602294921875,
+              "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_003/worker_root_012/root_012_G_repeat2/bridge_baseline_traces.npz",
+              "trace_lane": 6,
+              "trace_sha256": "97e6b00d00b84af4d213a47c0033e0e11de3f2f81d845cecf4793ba4b2d0f450"
+            },
+            "reused": true
+          }
+        }
+      },
+      {
+        "root_id": "TRAIN-1010233101-63",
+        "role": "TRAIN",
+        "pi0_labels": [
+          0,
+          0,
+          0
+        ],
+        "R5_label": 0,
+        "G_verified": true,
+        "Noise_verified": true,
+        "combinations": {
+          "independent": {
+            "label": 0,
+            "lane": 6,
+            "attempt": {
+              "action_origin": "actor_only",
+              "actor_sha256": "db2f3deb1c4a5193d63ccf44c5d60855ba0aa4a8dd2e31f4e4c31a49a7c3d8a6",
+              "actor_witness_eligible": true,
+              "label": 0,
+              "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+              "normalizer_sha256": "c9b365c78abea6a971fc58e53ae01b0df478bbfc0fbac6e69c0299f01570acd7",
+              "outcome": "airborne_physical_failure",
+              "policy": "round_0005_student",
+              "recording_schema": "jit_actor_success_trace_v1_1",
+              "snapshot_context_sha256": "13830e30fe5c0e558142bc0294bb95d5e04443d87613c910471979378e998114",
+              "steps": 40,
+              "task_return": 317.96051025390625,
+              "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/B1000_TRAIN_root02_independent_confirm1_R5/round_0005_student_traces.npz",
+              "trace_lane": 6,
+              "trace_sha256": "80607e7f2173b064485d15a57fb62e76802df6ac179cd3baa025c4f2f3472d44"
+            },
+            "all_lane_labels": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "teacher_H16_pi0": {
+            "label": 1,
+            "attempt": {
+              "action_origin": "bridge_prefix_then_source_tail",
+              "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+              "actor_witness_eligible": false,
+              "controller_kind": "composite_teacher",
+              "label": 1,
+              "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+              "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+              "outcome": "stable_forward_recovery",
+              "policy": "bridge_baseline",
+              "recording_schema": "jit_bridge_trace_v1",
+              "snapshot_context_sha256": "13830e30fe5c0e558142bc0294bb95d5e04443d87613c910471979378e998114",
+              "source_only": false,
+              "steps": 61,
+              "task_return": 988.04541015625,
+              "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_003/worker_root_014/root_014_G_repeat2/bridge_baseline_traces.npz",
+              "trace_lane": 6,
+              "trace_sha256": "f77f178ad7fe7de974f8a72f7347b2038c7908ec98e640a55dbf1851db2b85b7"
+            },
+            "reused": true
+          }
+        }
+      }
+    ]
+  ],
+  "budget": {
+    "reset_GPU": 0,
+    "DEV_baselines": 0,
+    "snapshot_nodes": 408000,
+    "B_full_DEV": 102400,
+    "B_warning_repeat": 204800,
+    "selected_train_repeat": 108800,
+    "R5_focus_repeat": 40800,
+    "selected_train_composites": 54400,
+    "total": 919200,
+    "B_updates": 2000,
+    "PPO_updates": 0,
+    "hard_cap": 2000000,
+    "prior_charged": 74810,
+    "wall_seconds": 43200,
+    "D2_cumulative_maximum": 994010,
+    "remaining_wall_seconds": 40047.71624541283
+  },
+  "B001_charged": 61910,
+  "B002_charged": 313226,
+  "D2_cumulative_charged": 388036,
+  "active_physics": 125803,
+  "padding_physics": 187423,
+  "wall_seconds": 2125.230160474777,
+  "D2_original_elapsed_seconds": 5319.347317934036,
+  "BC_wall_including_checkpoint_evaluations_seconds": 1471.1706185509975,
+  "finish": {
+    "phase": "completed",
+    "completed_updates": 2000,
+    "termination": "completed",
+    "selected_update": 1000,
+    "selection_scores": {
+      "0": 0,
+      "100": 1,
+      "500": 1,
+      "1000": 3,
+      "2000": 3
+    },
+    "eligible": {
+      "0": true,
+      "100": true,
+      "500": true,
+      "1000": true,
+      "2000": true
+    },
+    "learner_last": {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/B/learner_update_2000.json",
+      "sha256": "630f057d890e436acfcf9f30334d2ec3a3417c78f5b7e8ac1a27d235d2234018"
+    },
+    "candidate": {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/B/update_1000.pkl",
+      "sha256": "7785fe7085b0998c67f7db9bee1a37abe8dda5082b9bd726a39ea6780063c1cf",
+      "update": 1000
+    },
+    "published_policy": null,
+    "PPO_launched": false,
+    "source": "pi0",
+    "normalizer_frozen": true,
+    "critic_frozen": true,
+    "BC_optimizer_preserved": true,
+    "BC_RNG_and_supervised_clock_preserved": true
+  },
+  "decision": "BC distillation works on some seen roots and transfers to the three G-solved unseen DEV roots, but is incomplete and retains paired old losses. Prioritize closed-loop prefix/tail diagnosis and independently sampled TRAIN/keep coverage before PPO; propose any A/C only after separate four-pool GPU validation and actual shared-clipping audit. No automatic next stage.",
+  "TensorBoard": "http://localhost:6027",
+  "PPO_E_G_updates": 0,
+  "published_policy": null,
+  "best_dev_candidate": "frozen R5"
+}

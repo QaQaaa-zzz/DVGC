@@ -67,3 +67,11 @@ def test_fixed_train_probe_reads_manifest_provenance(tmp_path):
     result=fixed_train_probe(network,(None,jp.array(.5),None),(None,jp.array(.5)),manifest,(np.ones((4,76)),np.ones(4)/4),{'episodes':[{'group':'nominal','steps':2},{'group':'random','steps':2}]})
     assert len(result['demo'])==1 and set(result['keep'])=={'nominal','random'}
     assert result['keep']['nominal']['mse_by_action']==[0]*4
+
+
+def test_repeat_classification_never_turns_mixed_labels_into_absorption():
+    from jit_dvgc.retention_b_report import classify_repeats
+    assert classify_repeats([1,1,1])=='stable_success'
+    assert classify_repeats([0,0,0])=='stable_failure'
+    assert classify_repeats([0,1,0])=='ambiguous'
+    assert classify_repeats([1,None,1])=='unknown'

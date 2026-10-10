@@ -1,0 +1,102 @@
+{
+  "threshold": 1e-06,
+  "checks": [
+    {
+      "root_id": "TRAIN-1010233101-68",
+      "comparison": "student_full_vs_student_H16_pi0",
+      "actor_observation_before_first16_maxabs": 0.0333099365234375,
+      "actor_observation_before_first_difference_over1e6": 1,
+      "normalized_action_executed_first16_maxabs": 0.00037166476249694824,
+      "normalized_action_executed_first_difference_over1e6": 1,
+      "qpos_first16_maxabs": 0.0019989013671875,
+      "qpos_first_difference_over1e6": 1,
+      "qvel_first16_maxabs": 0.02552509307861328,
+      "qvel_first_difference_over1e6": 0
+    },
+    {
+      "root_id": "TRAIN-1010233101-68",
+      "comparison": "teacher_H16_pi0_vs_teacher_H16_student",
+      "actor_observation_before_first16_maxabs": 0.005290985107421875,
+      "actor_observation_before_first_difference_over1e6": 1,
+      "normalized_action_executed_first16_maxabs": 0.0,
+      "normalized_action_executed_first_difference_over1e6": null,
+      "qpos_first16_maxabs": 0.000545501708984375,
+      "qpos_first_difference_over1e6": 1,
+      "qvel_first16_maxabs": 0.004982948303222656,
+      "qvel_first_difference_over1e6": 0
+    },
+    {
+      "root_id": "TRAIN-1010233101-10",
+      "comparison": "student_full_vs_student_H16_pi0",
+      "actor_observation_before_first16_maxabs": 0.0,
+      "actor_observation_before_first_difference_over1e6": null,
+      "normalized_action_executed_first16_maxabs": 0.0,
+      "normalized_action_executed_first_difference_over1e6": null,
+      "qpos_first16_maxabs": 0.0,
+      "qpos_first_difference_over1e6": null,
+      "qvel_first16_maxabs": 0.0,
+      "qvel_first_difference_over1e6": null
+    },
+    {
+      "root_id": "TRAIN-1010233101-10",
+      "comparison": "teacher_H16_pi0_vs_teacher_H16_student",
+      "actor_observation_before_first16_maxabs": 0.0,
+      "actor_observation_before_first_difference_over1e6": null,
+      "normalized_action_executed_first16_maxabs": 0.0,
+      "normalized_action_executed_first_difference_over1e6": null,
+      "qpos_first16_maxabs": 0.0,
+      "qpos_first_difference_over1e6": null,
+      "qvel_first16_maxabs": 0.0,
+      "qvel_first_difference_over1e6": null
+    },
+    {
+      "root_id": "TRAIN-1010233101-55",
+      "comparison": "student_full_vs_student_H16_pi0",
+      "actor_observation_before_first16_maxabs": 0.0,
+      "actor_observation_before_first_difference_over1e6": null,
+      "normalized_action_executed_first16_maxabs": 0.0,
+      "normalized_action_executed_first_difference_over1e6": null,
+      "qpos_first16_maxabs": 0.0,
+      "qpos_first_difference_over1e6": null,
+      "qvel_first16_maxabs": 0.0,
+      "qvel_first_difference_over1e6": null
+    },
+    {
+      "root_id": "TRAIN-1010233101-55",
+      "comparison": "teacher_H16_pi0_vs_teacher_H16_student",
+      "actor_observation_before_first16_maxabs": 0.0,
+      "actor_observation_before_first_difference_over1e6": null,
+      "normalized_action_executed_first16_maxabs": 0.0,
+      "normalized_action_executed_first_difference_over1e6": null,
+      "qpos_first16_maxabs": 0.0,
+      "qpos_first_difference_over1e6": null,
+      "qvel_first16_maxabs": 0.0,
+      "qvel_first_difference_over1e6": null
+    },
+    {
+      "root_id": "TRAIN-1010233101-63",
+      "comparison": "student_full_vs_student_H16_pi0",
+      "actor_observation_before_first16_maxabs": 0.0,
+      "actor_observation_before_first_difference_over1e6": null,
+      "normalized_action_executed_first16_maxabs": 0.0,
+      "normalized_action_executed_first_difference_over1e6": null,
+      "qpos_first16_maxabs": 0.0,
+      "qpos_first_difference_over1e6": null,
+      "qvel_first16_maxabs": 0.0,
+      "qvel_first_difference_over1e6": null
+    },
+    {
+      "root_id": "TRAIN-1010233101-63",
+      "comparison": "teacher_H16_pi0_vs_teacher_H16_student",
+      "actor_observation_before_first16_maxabs": 0.0,
+      "actor_observation_before_first_difference_over1e6": null,
+      "normalized_action_executed_first16_maxabs": 0.0,
+      "normalized_action_executed_first_difference_over1e6": null,
+      "qpos_first16_maxabs": 0.0,
+      "qpos_first_difference_over1e6": null,
+      "qvel_first16_maxabs": 0.0,
+      "qvel_first_difference_over1e6": null
+    }
+  ],
+  "claim": "numeric matching diagnostics; never resets/changes success labels"
+}
