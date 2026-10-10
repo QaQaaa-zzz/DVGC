@@ -40,5 +40,7 @@ def kernel_identity(spec,policy,count,record_preobs,prefix_name,bridge):
         reward=spec.get('reward_mode'),success=spec.get('success_criterion'),
         record_preobs=record_preobs,prefix_name=prefix_name,bridge=bridge,
         warmup=spec.get('warmup_initializer'),
+        preserve_context=spec.get('preserve_snapshot_episode_context',False),
+        retention_diagnostics=spec.get('record_retention_diagnostics',False),
         rng_count=spec.get('suffix_rng_count',count),
         rng_indices=spec.get('suffix_rng_indices',list(range(count)))))

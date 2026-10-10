@@ -1,0 +1,19 @@
+{
+  "schema": "jit_retention_next_config_v1",
+  "onsets": [0, 5, 10, 15],
+  "V_initial_seed": 1010244101,
+  "V_request_seed": 1010244102,
+  "V_execution_seed": 1010244103,
+  "TRAIN_seed": 1010233101,
+  "solver_dev_seed": 1010245101,
+  "proposal_seed": 1010246101,
+  "root_target": 16,
+  "root_cap": 32,
+  "solver_dev_target": 8,
+  "baseline_repeats": 3,
+  "teacher_repeats": 3,
+  "noise_rho": 0.8,
+  "noise_scale": 0.2,
+  "D2_min_distinct_train": 8,
+  "D2_min_onsets": 2
+}

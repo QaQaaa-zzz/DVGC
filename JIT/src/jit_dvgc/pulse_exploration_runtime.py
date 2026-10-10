@@ -504,8 +504,18 @@ def evaluate(spec, output, *, session=None):
         for r in subset:
             snap=load_unified_envelope_snapshot(Path(r['snapshot']))
             if snapshot_context_sha256(snap)!=r['snapshot_context_sha256']:raise ValueError('suffix snapshot identity changed')
-            state=fresh_unified_continuation_start(snap,env)
-            if recovery_mode(spec):
+            if spec.get('preserve_snapshot_episode_context'):
+                from .unified_envelope_snapshot import restore_unified_envelope_snapshot
+                state=restore_unified_envelope_snapshot(snap,env)
+                if not np.array_equal(np.asarray(state.obs['state']),np.asarray(snap.observation)):
+                    raise ValueError('restored Actor observation/history differs')
+                # Snapshot schema keeps event/episode clocks but omits MuJoCo time.
+                # New retention roots bind the actual recorded post-pulse time.
+                if 'snapshot_time' not in r:raise ValueError('retention snapshot requires recorded time')
+                state=state.replace(data=state.data.replace(time=jp.asarray(r['snapshot_time'],jp.float32)))
+            else:
+                state=fresh_unified_continuation_start(snap,env)
+            if recovery_mode(spec) and not spec.get('preserve_snapshot_episode_context'):
                 state=state.replace(info={**state.info,'down_events':state.info['down_events'].replace(post_contact_ticks=jp.asarray(0,jp.int32),recovery_success=jp.asarray(False))})
             restored.append(state)
         count=len(restored);initial=prepare_parallel_worlds(stack_worlds(restored),env,count)
@@ -542,6 +552,10 @@ def evaluate(spec, output, *, session=None):
                     time_before=before['time'],time_after=after['time'],base_action=action,
                     requested_delta=jp.zeros_like(action),effective_delta=jp.zeros_like(action))
                 result.update(observation_fields(previous,s,action,enabled=record_preobs))
+                if spec.get('record_retention_diagnostics'):
+                    result.update(roll=s.info['reward_state'].roll,roll_rate=s.info['reward_state'].roll_rate,
+                        roll_limit=s.info['roll_limit'],phase_episode_step=s.info['phase_episode_step'],episode_step=s.info['episode_step'])
+                    result.update({'metric/'+k:v for k,v in s.metrics.items() if k.startswith(('reward/','terminal/','event/'))})
                 return result
             blank=frame(initial,jp.zeros((count,4)),jp.zeros(count,bool),initial)
             if bridge_plan is not None or prefix_name is not None:blank['action_origin_code']=jp.zeros(count,jp.int32)
