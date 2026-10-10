@@ -255,7 +255,8 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
         )
 
     def _reset_jump_start_unified(
-        self, rng: jax.Array, initial_velocity_noise: jax.Array | None = None
+        self, rng: jax.Array, initial_velocity_noise: jax.Array | None = None,
+        initial_qpos: jax.Array | None = None, initial_qvel: jax.Array | None = None
     ) -> mjx_env.State:
         """Reset at the fixed ground jump start without using a Tube snapshot."""
         tube_sample = self._tube_pool.sample(rng)
@@ -268,6 +269,16 @@ class UnifiedTubeRSIEnv(TwoPhaseBikeEnv):
         index = self._bundle.model_index
         root_x = jp.asarray(JUMP_START_X_M, jp.float32)
         qpos = sample["qpos"].at[index.root_qpos_address].set(root_x)
+        if initial_qpos is not None:
+            qpos = jp.asarray(initial_qpos, jp.float32)
+            if qpos.shape != sample["qpos"].shape:
+                raise ValueError("initial qpos shape mismatch")
+            root_x = qpos[index.root_qpos_address]
+        if initial_qvel is not None:
+            qvel = jp.asarray(initial_qvel, jp.float32)
+            if qvel.shape != sample["qvel"].shape:
+                raise ValueError("initial qvel shape mismatch")
+            sample = {**sample, "qvel": qvel}
         up_events = initial_event_state(root_x, self._resolved_config)
         down_events = initial_descent_events(root_x)
         sample = {

@@ -224,14 +224,26 @@ def collect(spec, output):
         raise ValueError('event pulse requires horizon400 and one to five pulse steps')
     base=make_checkpoint_policy(env,payload,deterministic=True);dist=net.parametric_action_distribution if net else None
     reset=jax.vmap(env._reset_jump_start_unified)
+    initial_arrays=None
+    if spec.get('initial_state_bank'):
+        if not spec.get('frozen_explorer_evaluation'):
+            raise ValueError('explicit initial state bank requires frozen evaluation')
+        from .evaluation_initial_state import load_initial_state_bank
+        initial_arrays=load_initial_state_bank(spec['initial_state_bank'],count=count,
+            nq=env.mj_model.nq,nv=env.mj_model.nv,root_qpos=env._bundle.model_index.root_qpos_address)
     step=jax.vmap(lambda s,a:endpoint_state(env.step(s,a),spec))
     def run(rng):
         reset_key, noise_key, pulse_key = jax.random.split(rng, 3)
         initial_velocity_noise = sample_initial_velocity_noise(
             jax.random.split(noise_key, count), env._bundle.model_index,
             env.mj_model.nv, spec)
-        initial=prepare_parallel_worlds(
-            reset(jax.random.split(reset_key, count), initial_velocity_noise), env, count)
+        if initial_arrays is None:
+            initial=prepare_parallel_worlds(
+                reset(jax.random.split(reset_key, count), initial_velocity_noise), env, count)
+        else:
+            q,v=initial_arrays
+            initial=prepare_parallel_worlds(reset(jax.random.split(reset_key,count),
+                initial_velocity_noise,jp.asarray(q),jp.asarray(v)),env,count)
         def advance(carry,tick):
             s,key,alive,trigger_tick,applied_steps,previous_vz=carry;key,k=jax.random.split(key)
             before=physical_trace(env,s)
@@ -317,8 +329,13 @@ def collect(spec, output):
         tape['initial_velocity_noise'] = jp.broadcast_to(
             initial_velocity_noise, (prefix_steps, count, env.mj_model.nv)
         )
+        if initial_arrays is not None:
+            tape['initial_qpos']=initial.data.qpos
+            tape['initial_qvel']=initial.data.qvel
         return carry[1],ticks,tape
     start=time.monotonic();rng,key=jax.random.split(state['rng'])
+    if spec.get('frozen_explorer_evaluation'):
+        key=jax.random.PRNGKey(spec['seed'])
     write(output/'status.json',dict(phase='running',charged_interactions=count*prefix_steps))
     if spec.get('reuse_prefix_collection'):
         import shutil
@@ -335,7 +352,7 @@ def collect(spec, output):
         write(output/'reuse.json',dict(previous=str(previous),physics_replayed=False,charged_interactions=0))
     else:
         next_rng,executed_ticks,tape=jax.device_get(jax.jit(run)(key))
-        executed_ticks=int(executed_ticks);tape={k:v[:executed_ticks] for k,v in tape.items()}
+        executed_ticks=int(executed_ticks);tape={k:(v if k in ('initial_qpos','initial_qvel') else v[:executed_ticks]) for k,v in tape.items()}
         np.savez_compressed(output/'prefixes.npz',**tape)
     if np.any(tape['prefix_mask']&~tape['finite']):raise ValueError('nonfinite pulse prefix')
     state['rng']=next_rng;(output/'update_state.msgpack').write_bytes(serialization.to_bytes(state))
@@ -389,11 +406,11 @@ def collect(spec, output):
                 cells.append(_cell_id(phase,'root_geometry_v1',quantize_coordinates(coords,ROOT_GEOMETRY_FIELDS)))
             row['pulse_cells']=cells
     write(output/'candidates.json',rows)
-    write(output/'network_inventory.json',dict(**explorer_inventory(spec,params),base_actor_frozen=True,base_critic_frozen=True,inputs=int(np.asarray(state['normalizer_mean']).size) if spec.get('explorer_backend')=='rsl_rl' else 106,history_frames=3,output_actions=4,controller_mode=mode,explorer_actor_used=mode=='learned_residual',explorer_trainable=mode=='learned_residual',exploration_critic_used=mode=='learned_residual',random_distribution='uniform[-1,1]' if mode=='fixed_random' else None,trace_schema='jit_pulse_physical_trace_v2',event_time_resolution_seconds=.02))
+    write(output/'network_inventory.json',dict(**explorer_inventory(spec,params),base_actor_frozen=True,base_critic_frozen=True,inputs=int(np.asarray(state['normalizer_mean']).size) if spec.get('explorer_backend')=='rsl_rl' else 106,history_frames=3,output_actions=4,controller_mode=mode,explorer_actor_used=mode=='learned_residual',explorer_trainable=mode=='learned_residual' and not spec.get('frozen_explorer_evaluation',False),exploration_critic_used=mode=='learned_residual',random_distribution='uniform[-1,1]' if mode=='fixed_random' else None,trace_schema='jit_pulse_physical_trace_v2',event_time_resolution_seconds=.02))
     write(output/'hyperparameters.json',{**spec,'pulse_descent_clearance':descent_limit,
         **({'inference_precision':'highest'} if spec.get('explorer_backend')=='rsl_rl' else {})})
     active_count=int(tape['prefix_mask'].sum());physical_count=count*executed_ticks
-    write(output/'status.json',dict(phase='completed',charged_interactions=0 if spec.get('reuse_prefix_collection') else physical_count,active_interactions=active_count,padding_interactions=physical_count-active_count,waiting_interactions=active_count-int(tape['mask'].sum()),pulse_training_steps=int(tape['mask'].sum()) if mode=='learned_residual' else 0,pulse_applied_steps=int(tape['mask'].sum()),pulse_start_step=delay if event is None and not mixed else None,pulse_batch_mode=spec.get('pulse_batch_mode','single'),onset_counts={str(int(t)):int((delays==t).sum()) for t in np.unique(delays)},pulse_event=event,stage_not_reached=sum(not r['stage_reached'] for r in rows),executed_ticks=executed_ticks,wall_seconds=time.monotonic()-start,**scheduled_pulse_summary(spec,tape,rows)))
+    write(output/'status.json',dict(phase='completed',charged_interactions=0 if spec.get('reuse_prefix_collection') else physical_count,active_interactions=active_count,padding_interactions=physical_count-active_count,waiting_interactions=active_count-int(tape['mask'].sum()),pulse_training_steps=int(tape['mask'].sum()) if mode=='learned_residual' and not spec.get('frozen_explorer_evaluation') else 0,pulse_applied_steps=int(tape['mask'].sum()),pulse_start_step=delay if event is None and not mixed else None,pulse_batch_mode=spec.get('pulse_batch_mode','single'),onset_counts={str(int(t)):int((delays==t).sum()) for t in np.unique(delays)},pulse_event=event,stage_not_reached=sum(not r['stage_reached'] for r in rows),executed_ticks=executed_ticks,wall_seconds=time.monotonic()-start,**scheduled_pulse_summary(spec,tape,rows)))
 
 
 def evaluate(spec, output, *, session=None):

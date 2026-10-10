@@ -17,6 +17,10 @@ def prepare_neighbor_query(spec, env, member, output):
     path=Path(spec['neighborhood_map'])
     if _file_sha(path)!=spec['neighborhood_map_sha256']:raise ValueError('frozen neighborhood map drift')
     payload=read(path);actor=member['policy']['actor_sha256']
+    if spec.get('neighborhood_reference_actor_sha256'):
+        if not spec.get('frozen_explorer_evaluation'):
+            raise ValueError('reference atlas override requires frozen evaluation')
+        actor=spec['neighborhood_reference_actor_sha256']
     if payload['source_actor_sha256']!=actor or payload['config']!=cfg:
         raise ValueError('neighborhood source/config mismatch')
     start=time.monotonic();index=FrozenNeighborhood(payload['rows'],actor,cfg)

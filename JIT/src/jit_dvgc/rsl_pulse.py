@@ -308,6 +308,8 @@ def update_batch(spec,state,tape,feedback):
 
 
 def update_runtime(spec,output):
+    if spec.get("frozen_explorer_evaluation"):
+        raise ValueError("frozen evaluation cannot update explorer")
     from flax.serialization import msgpack_serialize
     from .exploration_loop import read,write
     from torch.utils.tensorboard import SummaryWriter

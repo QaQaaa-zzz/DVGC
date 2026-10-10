@@ -56,3 +56,5 @@ Do not open final TEST. TRAIN adaptation and development ACCEPTANCE are not fina
 - prepare只生成声明，生产launch另按授权执行。每次run启动时必须同时启动/更新本文件规定的桌面错误与正常完成watcher，使用该实验`ACTIVE_RUN.json`与`notifications/`并核对heartbeat。只监视顶层整体完成，不为每个训练子阶段发完成弹窗；失败保留全部日志与尝试，不自动重训。
 
 - 七策略评估失败后使用 `run_seven_policy_phase_u.py prepare-resume --previous <旧实验根> --output <新尝试目录> --execution-repository <修复代码快照>`，再对新spec执行run。复用身份锁定的已完成训练和成员批次；不重新训练，不修改旧失败日志。重试物理成本单列并计入总成本。full_episode达到采样上限保留真实terminal=false，记录horizon_exhausted，不创建探索接续快照。
+
+Shared research rules: read `/home/qy/STTW_CONTROL/research-hub/AGENTS.md` and canonical `/home/qy/STTW_CONTROL/research-hub/PROJECT_STATE.md`; update under `.write.lock`.

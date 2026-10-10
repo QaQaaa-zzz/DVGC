@@ -64,8 +64,8 @@ def collection_steps(spec, delays, event):
     from .generative_bridge.pulse_protocol import normalize_pulse_contract
     normalize_pulse_contract(spec)
     if spec.get('full_episode_rollout'):
-        if controller_mode(spec) != 'fixed_random':
-            raise ValueError('full episode collection is a fixed-random evaluation only')
+        if controller_mode(spec) != 'fixed_random' and not spec.get('frozen_explorer_evaluation',False):
+            raise ValueError('full episode learned collection requires frozen evaluation')
         return spec['horizon']
     return spec['horizon'] if event else int(delays.max()) + spec['pulse_steps']
 
