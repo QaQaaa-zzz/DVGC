@@ -112,6 +112,8 @@ def test_phase_policy_preserves_payload_and_rejects_runtime_drift(tmp_path,monke
     assert restored is payload
     assert record['policy']['normalizer_sha256']==pytree_sha256(payload.observation_normalizer)
     assert member['name']=='baseline' and 'actor_sha256' not in member['policy']
+    frozen_spec={**spec,'controller_mode':'learned_residual','frozen_explorer_evaluation':True}
+    assert comparison.load_phase_evaluation_policy(frozen_spec,config,member)[0] is payload
     config.up_config_sha256='wrong'
     with pytest.raises(ValueError,match='runtime differs'):comparison.load_phase_evaluation_policy(spec,config,member)
     config_path.write_text('{}')
@@ -142,6 +144,7 @@ def test_descendant_runtime_compatibility_allows_only_declared_training_changes(
     descendant['initialization']={'actor':'warm_start_frozen_development'}
     descendant['training_reference']={'resolved_config':'unused','sha256':'unused'}
     descendant['run_declaration']={'run_id':'descendant'}
+    descendant['rerun_reference']={'resolved_config':'unused','sha256':'unused'}
     validate_phase_runtime_compatibility(descendant,historical)
     for field in ('model','action','reset','events','physical_limits','reward','training_wrapper','action_order','actor_frame_fields','actor_task_fields','phase'):
         changed=copy.deepcopy(descendant);changed[field]='changed'
@@ -178,3 +181,17 @@ def test_phase_descendant_loader_checks_locked_historical_contract_and_keeps_ide
     assert record['policy']['source_config_sha256']==comparison.canonical_sha256(descendant)
     descendant['reward']={'changed':True};write(cp,descendant);phase['input_files'][str(cp)]=file_sha(cp)
     with pytest.raises(ValueError,match='runtime'):comparison.load_phase_evaluation_policy(spec,config,member)
+
+
+def test_continuous_learner_initialization_is_evaluation_only():
+    import pytest
+    from jit_dvgc.iterative_probe_training import validate_initialization
+    raw = {'initialization': {'actor':'warm_start_frozen_unified',
+           'critic':'warm_start_frozen_unified','optimizer':'resume_learner'},
+           'continuous_learner': {'schema':'jit_bridge_full_ppo_learner_v1',
+           'parent':{'path':'unused','sha256':'a'*64},
+           'legacy_optimizer_bootstrap':False,'trainer_sha256':'b'*64}}
+    with pytest.raises(ValueError):validate_initialization(raw)
+    validate_initialization(raw, evaluation_only=True)
+    raw['initialization']['actor']='unknown'
+    with pytest.raises(ValueError):validate_initialization(raw,evaluation_only=True)

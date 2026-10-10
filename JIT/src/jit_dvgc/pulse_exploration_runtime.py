@@ -114,7 +114,14 @@ def networks(spec):
     from .handoff_bank import pytree_sha256
     bank=load_probe_bank(Path(spec['bank']))
     member=next(m for m in bank['members'] if m['name']==spec['proposer'])
-    config,_,env=build_unified_formal_environment(Path(member['policy']['formal_config']))
+    config_path = Path(member['policy']['formal_config'])
+    raw_config = read(config_path)
+    if spec.get('frozen_explorer_evaluation') and raw_config.get('continuous_learner') is not None:
+        from .iterative_probe_training import load_config, build_environment
+        config = load_config(config_path, evaluation_only=True)
+        _, env = build_environment(config)
+    else:
+        config,_,env=build_unified_formal_environment(config_path)
     # This runtime owns its declared pulse schedule. Never apply the training
     # augmentation a second time, including nominal and snapshot continuations.
     env._training_action_pulse = None

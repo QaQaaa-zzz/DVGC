@@ -315,7 +315,31 @@ def apply_training_action_pulse(info, action, pulse):
     return actual, next_info, metrics
 
 
-def load_config(path):
+def validate_initialization(raw, *, evaluation_only=False):
+    """Read frozen continuing-learner provenance without enabling its training."""
+    init = raw['initialization']
+    c = raw.get('continuous_learner')
+    if evaluation_only and c is not None:
+        parent = c.get('parent')
+        if (c.get('schema') != 'jit_bridge_full_ppo_learner_v1'
+                or init['actor'] != 'warm_start_frozen_unified'
+                or init['critic'] != 'warm_start_frozen_unified'
+                or init['optimizer'] != ('resume_learner' if parent else 'fresh_once')
+                or c.get('legacy_optimizer_bootstrap') is not (parent is None)
+                or not isinstance(c.get('trainer_sha256'), str)
+                or len(c['trainer_sha256']) != 64):
+            raise ValueError('invalid continuous learner evaluation provenance')
+        return
+    if c is not None:
+        from .generative_bridge.learner_continuation import validate_declaration
+        validate_declaration(raw)
+        return
+    if (init['actor'] not in ('fresh','warm_start_frozen_unified','warm_start_phase_checkpoint')
+            or init['critic'] != 'fresh' or init['optimizer'] != 'fresh'):
+        raise ValueError('probe initialization drift')
+
+
+def load_config(path, *, evaluation_only=False):
     from .unified_formal import UnifiedFormalConfig,UnifiedFormalSchedule,UnifiedResetMixture
     from .unified_training import UnifiedPPOConfig
     raw=read(path)
@@ -371,10 +395,7 @@ def load_config(path):
                 or recovery.recovery_ticks * CTRL_DT <= 0):
             raise ValueError('stable recovery requires positive integer recovery_ticks and continuous stability')
     init=raw['initialization']
-    if raw.get('continuous_learner') is not None:
-        from .generative_bridge.learner_continuation import validate_declaration
-        validate_declaration(raw)
-    elif init['actor'] not in ('fresh','warm_start_frozen_unified','warm_start_phase_checkpoint') or init['critic']!='fresh' or init['optimizer']!='fresh':raise ValueError('probe initialization drift')
+    validate_initialization(raw, evaluation_only=evaluation_only)
     if init['actor']=='fresh' and init.get('normalizer')!='fresh':
         raise ValueError('fresh Actor requires fresh observation normalization')
     if init['actor']=='warm_start_phase_checkpoint':

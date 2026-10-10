@@ -18,7 +18,7 @@ def validate_phase_runtime_compatibility(source, historical):
     import copy
     def runtime(raw):
         raw = copy.deepcopy(raw)
-        for key in ('initialization', 'training_reference', 'run_declaration'):
+        for key in ('initialization', 'training_reference', 'run_declaration', 'rerun_reference'):
             raw.pop(key, None)
         for key in ('seed', 'requested_transitions', 'num_evals'):
             raw.get('ppo', {}).pop(key, None)
@@ -37,8 +37,10 @@ def load_phase_evaluation_policy(spec, config, member):
     """Use an unchanged historical Phase U payload in a matched full-task runtime."""
     from .iterative_probe_training import load_phase_initializer
     from .handoff_bank import pytree_sha256
-    if spec.get('controller_mode') != 'fixed_random' or not spec.get('full_episode_rollout'):
-        raise ValueError('phase policy override requires fixed_random full-episode evaluation')
+    frozen_learned = (spec.get('controller_mode') == 'learned_residual'
+                      and spec.get('frozen_explorer_evaluation') is True)
+    if (spec.get('controller_mode') != 'fixed_random' and not frozen_learned) or not spec.get('full_episode_rollout'):
+        raise ValueError('phase policy override requires fixed_random or frozen learned full-episode evaluation')
     source = spec['phase_policy']
     for path, sha in source['input_files'].items():
         if file_sha(path) != sha:
