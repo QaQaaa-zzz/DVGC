@@ -30,7 +30,7 @@ def select_B(scores,eligible):
     return min(valid,key=lambda k:(-scores[k],k))
 
 
-def prepare(output,repository):
+def prepare(output,repository,previous_zero=None):
     code=Path(repository).resolve();root=Path(output).resolve();root.mkdir(parents=True,exist_ok=False)
     original=read(BASE/'plan.json');supp=read(BASE/'report_004/formal_preparation.json');locks={}
     for f,h in supp['locks'].items():
@@ -95,9 +95,36 @@ def prepare(output,repository):
     remaining=43200-(time.time()-start)
     if remaining<=0:raise ValueError('original D2 wall budget exhausted')
     layout=budget(len(solvers));layout['remaining_wall_seconds']=remaining
+    reused=None
+    if previous_zero is not None:
+        oldp=read(previous_zero);oldroot=Path(oldp['output']);oldrows=read(oldroot/'B_checkpoint_results.json')
+        if set(oldrows)!= {'0'} or (oldroot/'B/metrics.jsonl').exists():raise ValueError('zero-update-only retry; no BC resume implemented')
+        if oldp['models']!=original['models'] or oldp['demo_manifest']!=original['demo_manifest']:raise ValueError('reuse source identity changed')
+        for oldbatch,newbatch in zip(oldp['batches'],batches):
+            if oldbatch['cases']!=newbatch['cases']:raise ValueError('new DEV cases differ from physical baseline')
+            from .retention_repair_execution import verify
+            verify(oldbatch,oldroot)
+        for f,h in oldp['locks'].items():
+            f=Path(f)
+            if f.is_relative_to(code) and f.suffix=='.py':
+                import hashlib
+                blob=subprocess.check_output(['git','show',oldp['code_revision']+':'+str(f.relative_to(code))],cwd=code)
+                if hashlib.sha256(blob).hexdigest()!=h:raise ValueError('old execution source drift')
+            elif sha(f)!=h:raise ValueError('reused input drift '+str(f))
+        for row in oldrows['0']['train']+oldrows['0']['solver']:
+            a=row['combinations']['independent']['attempt']
+            if sha(a['trace'])!=a['trace_sha256']:raise ValueError('reused zero trace drift')
+            locks[a['trace']]=a['trace_sha256']
+        for f in (Path(previous_zero),oldroot/'B_checkpoint_results.json',oldroot/'costs.json'):
+            locks[str(f)]=sha(f)
+        prior=sum(x['charged'] for x in read(oldroot/'costs.json'))+oldp['budget']['prior_charged']
+        layout['prior_charged']=prior;layout['DEV_baselines']=0;layout['snapshot_nodes']-=15*17*400
+        layout['total']=sum(layout[k] for k in ('reset_GPU','DEV_baselines','snapshot_nodes','B_full_DEV','B_warning_repeat','selected_train_repeat','R5_focus_repeat','selected_train_composites'))
+        layout['D2_cumulative_maximum']=prior+layout['total']
+        reused=dict(plan=str(previous_zero),zero_checkpoint=str(oldroot/'B_checkpoint_results.json'),DEV={x['model']:str(oldroot/x['name']) for x in oldp['batches']},reason='failed fixed-probe import before any BC update; continuous fresh pi0 BC, not optimizer resume')
     plan=dict(schema='jit_retention_B_v1',stage='D2_B',output=str(root),code=str(code),code_revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=code,text=True).strip(),locks=locks,
         source_plan=str(BASE/'plan.json'),source_supplement=str(BASE/'report_004/formal_preparation.json'),models=original['models'],indices=original['indices'],budget=layout,
-        original_D2_started_unix=start,keep_receipt=str(BASE/'keep_receipt.json'),demo_manifest=original['demo_manifest'],reset_inventory=supp['reset_pool_inventory'],batches=batches,
+        reused_zero=reused,tensorboard_port=6027 if reused else 6026,original_D2_started_unix=start,keep_receipt=str(BASE/'keep_receipt.json'),demo_manifest=original['demo_manifest'],reset_inventory=supp['reset_pool_inventory'],batches=batches,
         BC=original['BC'],BC_selection=supp['BC_selection'],solver_roots=str(root/'solver_roots.json'),train_roots=str(root/'train_roots.json'),seed=1010267101,training_updates=2000,ppo_updates=0,E_G_updates=0,
         learner_last=None,best_dev_candidate=original['models']['R5'],published_policy=None,authorized_stage='DEV baselines, finite B only',reset_gate=False,diagnostic_train_roots=[x['root']['root_id'] for x in train if x['root']['R5_label']!=1]+[next(x['root']['root_id'] for x in train if x['root']['R5_label']==1)],automatic_next_stage=False)
     write(root/'budget_dry_run.json',layout);write(root/'source_lock.json',dict(identities=original['identities'],locks=locks));write(root/'plan.json',plan)
@@ -110,10 +137,10 @@ class Run:
         self.p=read(path);self.path=Path(path);self.root=Path(self.p['output']);self.costs=[]
         self.env=dict(os.environ,PYTHONPATH=str(Path(self.p['code'])/'JIT/src'),JAX_PLATFORMS='cuda,cpu',XLA_PYTHON_CLIENT_PREALLOCATE='false',OPENBLAS_NUM_THREADS='1',OMP_NUM_THREADS='1')
     def status(self,phase,stage,**extra):
-        write(self.root/'status.json',dict(phase=phase,stage=stage,pid=os.getpid(),updated_unix=time.time(),charged_interactions=sum(c['charged'] for c in self.costs),D2_prior_charged=12900,planned_supervised_updates=2000,PPO_updates=0,E_G_updates=0,completed_supervised_updates=getattr(self,'current_update',0),**extra))
+        write(self.root/'status.json',dict(phase=phase,stage=stage,pid=os.getpid(),updated_unix=time.time(),charged_interactions=sum(c['charged'] for c in self.costs),D2_prior_charged=self.p['budget']['prior_charged'],planned_supervised_updates=2000,PPO_updates=0,E_G_updates=0,completed_supervised_updates=getattr(self,'current_update',0),**extra))
     def child(self,name,command,maximum):
         if time.time()-self.p['original_D2_started_unix']>=43200:raise TimeoutError('D2 original12h budget')
-        if 12900+sum(c['charged'] for c in self.costs)+maximum>2000000:raise ValueError('D2 physics reserve before dispatch')
+        if self.p['budget']['prior_charged']+sum(c['charged'] for c in self.costs)+maximum>2000000:raise ValueError('D2 physics reserve before dispatch')
         c=dict(stage=name,charged=maximum,reservation=maximum,phase='running');self.costs.append(c);write(self.root/'costs.json',self.costs);self.status('running',name)
         with (self.root/(name+'.log')).open('x') as f:
             proc=subprocess.Popen(command,cwd=self.p['code'],env=self.env,stdout=f,stderr=subprocess.STDOUT)
@@ -191,12 +218,12 @@ def audit(path):
     return dict(phase='passed',budget=p['budget'],source='pi0',normalizer_critic_frozen=True,automatic_PPO=False)
 
 
-def reward_http(root,step):
+def reward_http(root,step,port):
     import urllib.request,json
     last=None
     for _ in range(20):
         try:
-            url='http://localhost:6026/data/plugin/scalars/scalars?run=.&tag=DEV%2FB_reward_per_transition'
+            url=f'http://localhost:{port}/data/plugin/scalars/scalars?run=.&tag=DEV%2FB_reward_per_transition'
             values=json.loads(urllib.request.urlopen(url,timeout=3).read())
             if any(int(v[1])==step for v in values):
                 write(Path(root)/f'TensorBoard_reward_http_{step:04d}.json',dict(url=url,values=values,verified_step=step));return
@@ -214,10 +241,10 @@ def run(path):
     r=Run(path);write(root/'ACTIVE_RUN.json',dict(execution=str(root/'status.json'),lineage=str(root/'status.json'),name='retention D2 finite BC+keep'))
     with (root/'watcher.log').open('x') as f:w=subprocess.Popen([PY,str(Path(p['code'])/'JIT/cli/watch_run_errors.py'),'--active-run',str(root/'ACTIVE_RUN.json'),'--state-dir',str(root/'notifications')],cwd=p['code'],env=r.env,stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
     with (root/'tensorboard.log').open('x') as f:
-        tb=subprocess.Popen([PY,'-m','tensorboard.main','--logdir',str(root/'tensorboard'),'--port','6026','--host','0.0.0.0','--reload_interval','1'],env=r.env,stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
-    write(root/'launch.json',dict(pid=os.getpid(),watcher_pid=w.pid,tensorboard_pid=tb.pid,tensorboard_url='http://localhost:6026',started_unix=time.time(),plan=str(path)))
+        tb=subprocess.Popen([PY,'-m','tensorboard.main','--logdir',str(root/'tensorboard'),'--port',str(p['tensorboard_port']),'--host','0.0.0.0','--reload_interval','1'],env=r.env,stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
+    write(root/'launch.json',dict(pid=os.getpid(),watcher_pid=w.pid,tensorboard_pid=tb.pid,tensorboard_url=f"http://localhost:{p['tensorboard_port']}",started_unix=time.time(),plan=str(path)))
     try:
-        for b in p['batches']:
+        for b in ([] if p['reused_zero'] else p['batches']):
             out=r.child(b['name'],[PY,str(Path(p['code'])/'JIT/cli/run_pulse_exploration.py'),'--mode','collect','--spec',b['spec'],'--output',str(root/b['name'])],25600)
             from .retention_repair_execution import verify
             verify(b,root)
@@ -275,38 +302,26 @@ def B_worker(path):
     from .handoff_bank import pytree_sha256
     r=Run(path);r.costs=read(r.root/'pre_B_costs.json');p=r.p;root=r.root;rows={};scores={};eligible={};writer=SummaryWriter(str(root/'tensorboard'))
     pol,payload=source_payload(p['models']['pi0']['frozen_policy']);net=make_network_factory()({'state':76,'privileged_state':106},4,preprocess_observations_fn=running_statistics.normalize)
-    keep=load_retention_traces(read(p['keep_receipt']));demo=read(p['demo_manifest']);baseline=full_results(p,root/'DEV_pi0')
-    writer.add_scalar('DEV/pi0_reward_per_transition',baseline['reward_per_transition'],0);writer.add_scalar('DEV/R5_reward_per_transition',full_results(p,root/'DEV_R5')['reward_per_transition'],0);writer.flush()
+    keep=load_retention_traces(read(p['keep_receipt']));demo=read(p['demo_manifest']);baseline=full_results(p,Path(p['reused_zero']['DEV']['pi0']) if p['reused_zero'] else root/'DEV_pi0')
+    writer.add_scalar('DEV/pi0_reward_per_transition',baseline['reward_per_transition'],0);writer.add_scalar('DEV/R5_reward_per_transition',full_results(p,Path(p['reused_zero']['DEV']['R5']) if p['reused_zero'] else root/'DEV_R5')['reward_per_transition'],0);writer.flush()
     def metrics(row):
         r.current_update=row['update']
         for k,v in row.items():writer.add_scalar('BC/'+k,v,row['update'])
         if row['update']%10==0:writer.flush();r.status('running','BC+keep')
     def probe(step,params):
-        from .student import load_optional_demo
-        import jax.numpy as jp
-        obs,targets,_=load_optional_demo(demo)
-        predict=lambda x:np.asarray(net.parametric_action_distribution.mode(net.policy_network.apply(params[0],params[1],{'state':jp.asarray(x)})))
-        prediction=predict(obs)
-        roots=np.asarray(demo['sample_roots']);origins=np.asarray(demo['sample_origins'])
-        result={}
-        for ancestor in np.unique(roots):
-            result[str(ancestor)]={}
-            for origin in np.unique(origins):
-                ids=(roots==ancestor)&(origins==origin)
-                result[str(ancestor)][str(origin)]=dict(n=int(ids.sum()),mse_by_action=np.mean((prediction[ids]-targets[ids])**2,axis=0).tolist())
-        ko,kp=keep
-        reference_action=np.asarray(net.parametric_action_distribution.mode(net.policy_network.apply(payload.observation_normalizer,payload.actor_params,{'state':jp.asarray(ko)})))
-        groups=np.concatenate([np.repeat(x['group'],x['steps']) for x in read(p['keep_receipt'])['episodes']])
-        keep_error=(predict(ko)-reference_action)**2
-        keep_rows={str(g):dict(n=int((groups==g).sum()),mse_by_action=keep_error[groups==g].mean(axis=0).tolist()) for g in np.unique(groups)}
-        out=dict(description='fixed TRAIN probes; separate from actual optimizer batch contributions',demo=result,keep=keep_rows)
+        out=fixed_train_probe(net,params,(payload.observation_normalizer,payload.actor_params),demo,keep,read(p['keep_receipt']))
         write(root/f'B{step:04d}_TRAIN_probes.json',out);return out
     def checkpoint(step,params):
         r.current_update=step
         if pytree_sha256(params[0])!=p['models']['pi0']['policy']['normalizer_sha256'] or pytree_sha256(params[2])!=pytree_sha256(payload.critic_params):raise ValueError('BC frozen statistics or critic changed')
         if step==0 and pytree_sha256(params[1])!=p['models']['pi0']['policy']['actor_sha256']:raise ValueError('BC did not start from original pi0')
         if step==0:
-            full=baseline;solver=solver_combinations(r,0,zero_only=True);train=solver_combinations(r,0,zero_only=True,role='TRAIN');warnings=[];confirmed=[]
+            full=baseline
+            if p['reused_zero']:
+                zero=read(p['reused_zero']['zero_checkpoint'])['0'];solver=zero['solver'];train=zero['train']
+            else:
+                solver=solver_combinations(r,0,zero_only=True);train=solver_combinations(r,0,zero_only=True,role='TRAIN')
+            warnings=[];confirmed=[]
         else:
             full,solver,train=evaluate_checkpoint(r,step);warnings=warning_cells(baseline['labels'],full['labels']);confirmed=[]
             if warnings:
@@ -329,16 +344,17 @@ def B_worker(path):
         writer.add_scalar('SOLVER_DEV/independent_success',score,step)
         for g,c in cells.items():
             for k in ('success','N01','N10'):writer.add_scalar('DEV/'+g+'/'+k,c[k],step)
-        writer.flush();reward_http(root,step);r.status('running','B_checkpoint_checked')
+        writer.flush();reward_http(root,step,p['tensorboard_port']);r.status('running','B_checkpoint_checked')
         return bool(confirmed)
     try:
         warmup_actor(net,(payload.observation_normalizer,payload.actor_params,payload.critic_params),(payload.observation_normalizer,payload.actor_params),demo,keep,root/'B',seed=p['seed'],updates=2000,batch_size=256,full_learner=True,actual_gradient_audit=True,metrics_callback=metrics,checkpoint_callback=checkpoint,probe_callback=probe)
         status=read(root/'B/warmup_status.json');selected=select_B(scores,eligible);completed=status['completed_updates']
-        diagnostics=solver_combinations(r,selected,role='TRAIN',only_roots=p['diagnostic_train_roots'])
-        confirmations=[solver_combinations(r,selected,zero_only=True,role='TRAIN',repeat=f'_confirm{i}') for i in range(2)]
+        diagnostic_step=selected if selected>0 else min((k for k in rows if k>0),key=lambda k:(-rows[k]['train_success'],k))
+        diagnostics=solver_combinations(r,diagnostic_step,role='TRAIN',only_roots=p['diagnostic_train_roots'])
+        confirmations=[solver_combinations(r,diagnostic_step,zero_only=True,role='TRAIN',repeat=f'_confirm{i}') for i in range(2)]
         focus=[x['root']['root_id'] for x in read(p['train_roots']) if x['root']['R5_label']!=1]
-        R5_confirmations=[solver_combinations(r,selected,zero_only=True,role='TRAIN',repeat=f'_confirm{i}',model='R5',only_roots=focus) for i in range(2)]
-        write(root/'selected_diagnostics.json',dict(selected_update=selected,combinations=diagnostics,TRAIN_confirmations=confirmations,R5_focus_confirmations=R5_confirmations))
+        R5_confirmations=[solver_combinations(r,diagnostic_step,zero_only=True,role='TRAIN',repeat=f'_confirm{i}',model='R5',only_roots=focus) for i in range(2)]
+        write(root/'selected_diagnostics.json',dict(selected_update=selected,diagnostic_update=diagnostic_step,TRAIN_confirmation_update=diagnostic_step,diagnostic_rule='selected nonzero; if baseline wins tie, earliest maximal TRAIN absorption nonzero is diagnostic only',combinations=diagnostics,TRAIN_confirmations=confirmations,R5_focus_confirmations=R5_confirmations))
         learner=root/'B'/f'learner_update_{completed:04d}.json';chosen=root/'B'/f'update_{selected:04d}.pkl'
         with (root/'B'/f'learner_update_{completed:04d}.pkl').open('rb') as f:saved=pickle.load(f)
         if saved['completed_supervised_updates']!=completed or pytree_sha256(saved['normalizer'])!=pytree_sha256(payload.observation_normalizer) or pytree_sha256(saved['critic'])!=pytree_sha256(payload.critic_params):raise ValueError('saved BC full-state invariants')
@@ -354,3 +370,25 @@ def B_worker(path):
 def report(path):
     from .retention_b_report import build_report
     return build_report(path)
+
+
+def fixed_train_probe(net,params,reference,manifest,keep,keep_receipt):
+    from .generative_bridge.student import load_optional_demo
+    import jax.numpy as jp
+    obs,targets,_=load_optional_demo(manifest)
+    predict=lambda x:np.asarray(net.parametric_action_distribution.mode(net.policy_network.apply(params[0],params[1],{'state':jp.asarray(x)})))
+    prediction=predict(obs)
+    roots=np.asarray(manifest['sample_roots']);origins=np.asarray(manifest['sample_origins'])
+    result={}
+    for ancestor in np.unique(roots):
+        result[str(ancestor)]={}
+        for origin in np.unique(origins):
+            ids=(roots==ancestor)&(origins==origin)
+            result[str(ancestor)][str(origin)]=dict(n=int(ids.sum()),mse_by_action=np.mean((prediction[ids]-targets[ids])**2,axis=0).tolist())
+    ko,kp=keep
+    reference_action=np.asarray(net.parametric_action_distribution.mode(net.policy_network.apply(reference[0],reference[1],{'state':jp.asarray(ko)})))
+    groups=np.concatenate([np.repeat(x['group'],x['steps']) for x in keep_receipt['episodes']])
+    keep_error=(predict(ko)-reference_action)**2
+    keep_rows={str(g):dict(n=int((groups==g).sum()),mse_by_action=keep_error[groups==g].mean(axis=0).tolist()) for g in np.unique(groups)}
+    out=dict(description='fixed TRAIN probes; separate from actual optimizer batch contributions',demo=result,keep=keep_rows)
+    return out

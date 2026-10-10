@@ -54,3 +54,16 @@ def test_student_prefix_preserves_batch_source_and_handover():
     first=closed_loop_action(jp.array(15),obs,keys,tail,prefix,source_only=jp.array([True,False]))
     after=closed_loop_action(jp.array(16),obs,keys,tail,prefix,source_only=jp.array([True,False]))
     np.testing.assert_array_equal(first,[[0]*4,[1]*4]);np.testing.assert_array_equal(after,np.zeros((2,4)))
+
+
+def test_fixed_train_probe_reads_manifest_provenance(tmp_path):
+    from types import SimpleNamespace as NS
+    import jax.numpy as jp
+    from .test_generative_bridge_student_v12 import teacher
+    from jit_dvgc.generative_bridge.data import export_student_demonstrations
+    from jit_dvgc.retention_b import fixed_train_probe
+    manifest=export_student_demonstrations([teacher()],tmp_path/'demo')
+    network=NS(policy_network=NS(apply=lambda norm,p,o:jp.ones((len(o['state']),4))*p),parametric_action_distribution=NS(mode=lambda x:x))
+    result=fixed_train_probe(network,(None,jp.array(.5),None),(None,jp.array(.5)),manifest,(np.ones((4,76)),np.ones(4)/4),{'episodes':[{'group':'nominal','steps':2},{'group':'random','steps':2}]})
+    assert len(result['demo'])==1 and set(result['keep'])=={'nominal','random'}
+    assert result['keep']['nominal']['mse_by_action']==[0]*4
