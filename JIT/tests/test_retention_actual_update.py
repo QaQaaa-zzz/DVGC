@@ -26,3 +26,10 @@ def test_stage_resume_keeps_transition_clock(tmp_path):
     assert int(restored.env_steps)==50 and second.offset==0
     second.save(100,restored,jax.random.PRNGKey(2))
     assert second.latest_receipt()['lifetime_transitions']==100
+
+
+def test_prepared_d2_cannot_launch_formal_arms(tmp_path):
+    import json,pytest
+    from jit_dvgc.retention_next_runtime import run
+    path=tmp_path/'plan.json';path.write_text(json.dumps({'stage':'D2'}))
+    with pytest.raises(ValueError,match='preparation only'):run(path)

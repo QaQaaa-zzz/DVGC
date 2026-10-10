@@ -1,0 +1,17 @@
+{
+  "PPO_A_C": 256000,
+  "BC_supervised_updates": 2000,
+  "keep_collection": 12800,
+  "GPU_micro": 100,
+  "new_dev_pi0_R5": 51200,
+  "BC_checkpoints_dev": 102400,
+  "AC_stop_checks": 102400,
+  "final_four_cells": 76800,
+  "final_teacher_student_combinations": 571200,
+  "hard_cap": 2000000,
+  "wall_seconds": 43200,
+  "physics_total": 1846700,
+  "BC_solver_dev_selection": 571200,
+  "warning_repeat_confirm": 102400,
+  "formal_reset_GPU_check": 200
+}

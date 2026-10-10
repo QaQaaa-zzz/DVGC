@@ -1,0 +1,57 @@
+{
+  "schema": "jit_retention_D2_formal_supplement_v1",
+  "original_plan": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D2_002/plan.json",
+  "original_plan_sha256": "7e9f0f1ca497b7316cbb217da9ef3e81bdbf9f4b1620cc2db952955ac811f0af",
+  "reset_pool_inventory": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D2_002/report_004/reset_pool_inventory.json",
+  "new_DEV": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D2_002/report_004/new_dev_cases.json",
+  "BC_entry": "generative_bridge.warmup.warmup_actor(full_learner=True,actual_gradient_audit=True,updates=2000); run B first after separate finite launch",
+  "PPO_fresh_once": "A starts pi0, C exact selected B Actor/critic/normalizer with one explicitly fresh PPO optimizer; BC optimizer is separate and retained",
+  "same_stage_resume": "LearnerHooks(preserve_stage_clock=True); restore full learner after each32k; do not rebootstrap critic/Adam",
+  "formal_execution_authorized": false,
+  "formal_training_started": false,
+  "automatic_next_stage": false,
+  "remaining_execution_gates": [
+    "GPU verification of four-pool training reset adapter and full context",
+    "new DEV physical baselines and finite B launch"
+  ],
+  "budget": {
+    "PPO_A_C": 256000,
+    "BC_supervised_updates": 2000,
+    "keep_collection": 12800,
+    "GPU_micro": 100,
+    "new_dev_pi0_R5": 51200,
+    "BC_checkpoints_dev": 102400,
+    "AC_stop_checks": 102400,
+    "final_four_cells": 76800,
+    "final_teacher_student_combinations": 571200,
+    "hard_cap": 2000000,
+    "wall_seconds": 43200,
+    "physics_total": 1846700,
+    "BC_solver_dev_selection": 571200,
+    "warning_repeat_confirm": 102400,
+    "formal_reset_GPU_check": 200
+  },
+  "BC_selection": {
+    "candidates": [
+      0,
+      100,
+      500,
+      1000,
+      2000
+    ],
+    "primary": "independent student success count on locked7solver_dev roots",
+    "retention_guard": "new full-task DEV B/D decline>5pp versus pi0 requires repeat confirmation; exclude confirmed regressed checkpoint",
+    "tie": "earliest update",
+    "no_absorption": "no PPO launch if no independent solver-dev gain",
+    "Teacher_no_solution": "NA, never failure or student success"
+  },
+  "actual_engineering_charged": 12900,
+  "physics_charged_in_this_report": 0,
+  "locks": {
+    "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D2_002/report_004/reset_pool_inventory.json": "74196cc4a6b87bd17630ba22c100973f91422b3f01024fea91e077492f8f329d",
+    "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D2_002/report_004/new_dev_cases.json": "20b6e743c390c2176c30fe059599554caeeba17af6d77bb4135b7d23e61262c0",
+    "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D2_002/report_004/eval_contract.json": "d5e322edaff1c175407a3c220b3ace06b57b5604bbbb1c2be1732ed82f29eb00",
+    "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D2_002/report_004/budget_dry_run.json": "5bc162d0ad73ac623dc69712c3e44d8be956d37971b7f4a49c119032342ed2d1",
+    "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D2_002/report_004/TRAIN_label_conflict_review.json": "dcebcf3dd403d8e9fe19a92e5347007ea878e3f4719a44f5707a38c0bdb64159"
+  }
+}

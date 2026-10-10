@@ -1,0 +1,53 @@
+{
+  "independent_pi0": {
+    "roll_limit": {
+      "post_contact": 19,
+      "None": 4
+    },
+    "prohibited_contact": {
+      "None": 23
+    },
+    "physical_failure": {
+      "post_contact": 23
+    },
+    "attempts": 23
+  },
+  "R5": {
+    "roll_limit": {
+      "None": 13,
+      "post_contact": 10
+    },
+    "prohibited_contact": {
+      "None": 23
+    },
+    "physical_failure": {
+      "None": 10,
+      "post_contact": 13
+    },
+    "attempts": 23
+  },
+  "G": {
+    "roll_limit": {
+      "None": 36
+    },
+    "prohibited_contact": {
+      "None": 36
+    },
+    "physical_failure": {
+      "None": 36
+    },
+    "attempts": 36
+  },
+  "Noise": {
+    "roll_limit": {
+      "None": 42
+    },
+    "prohibited_contact": {
+      "None": 42
+    },
+    "physical_failure": {
+      "None": 42
+    },
+    "attempts": 42
+  }
+}

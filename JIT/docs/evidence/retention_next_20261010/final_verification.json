@@ -1,0 +1,34 @@
+{
+  "V_002": {
+    "phase": "passed",
+    "collection_code": "e2603dadcfd6af01bb7e6622dc1bf2f68c38212a",
+    "locks": 48,
+    "historical_code_verified_from_committed_tree": 3,
+    "status": "completed"
+  },
+  "D1_002": {
+    "phase": "passed",
+    "collection_code": "53fd1ba60e3ba216e9fa6a9c152b0519feae991e",
+    "locks": 33,
+    "historical_code_verified_from_committed_tree": 3,
+    "status": "failed"
+  },
+  "D1_003": {
+    "phase": "passed",
+    "collection_code": "584a84edd22d456adde458ba843d7a950ea69d04",
+    "locks": 269,
+    "historical_code_verified_from_committed_tree": 3,
+    "status": "completed"
+  },
+  "D2_002": {
+    "phase": "passed",
+    "collection_code": "f1b1ced39c9990fcc627a8ce0ba05127cba37c78",
+    "locks": 28,
+    "historical_code_verified_from_committed_tree": 0,
+    "status": "completed"
+  },
+  "verified_teacher_trace_proposal_files": 101,
+  "GPU_micro": "passed",
+  "formal_students": "NOT_RUN",
+  "R74_status": "unchanged file SHA verified against all original V/D1 plans"
+}

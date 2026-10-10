@@ -1,0 +1,90 @@
+{
+  "coefficients": {
+    "ppo_policy": 1.0,
+    "entropy": 0.001,
+    "entropy_gradient": "already multiplied by entropy_cost",
+    "demo": "effective_lambda_demo per row",
+    "keep": 0.2
+  },
+  "actual_updates": [
+    {
+      "actual/NEW_TRAIN_probe_action_change_mse": 2.071334620268317e-06,
+      "actual/actor_adam_delta_norm": 0.004395644646137953,
+      "actual/actor_gradient_norm": 11.261985778808594,
+      "actual/actor_gradient_norm_sum_difference": 0.00027942657470703125,
+      "actual/actor_gradient_sum_norm": 11.2622652053833,
+      "actual/cosine_demo_keep": 0.16394516825675964,
+      "actual/cosine_entropy_demo": 0.0490153469145298,
+      "actual/cosine_entropy_keep": -0.1274077296257019,
+      "actual/cosine_ppo_demo": -0.1761990487575531,
+      "actual/cosine_ppo_entropy": -0.09623152762651443,
+      "actual/cosine_ppo_keep": -0.1117560863494873,
+      "actual/critic_adam_delta_norm": 0.004485697485506535,
+      "actual/critic_gradient_norm": 272.6819763183594,
+      "actual/global_actor_critic_gradient_norm": 272.9144592285156,
+      "actual/global_clip_scale": 0.002748113824054599,
+      "actual/gradient_norm_demo": 0.06397969275712967,
+      "actual/gradient_norm_entropy": 0.009066564962267876,
+      "actual/gradient_norm_keep": 1.1312342174107926e-08,
+      "actual/gradient_norm_ppo": 11.274230003356934,
+      "actual/reward_per_transition": 10.779226303100586,
+      "demo_action_mse": 0.01332433894276619,
+      "effective_lambda_demo": 0.19994141161441803,
+      "ppo_loss": 22.56147003173828,
+      "retention_action_mse": 2.3794442978453123e-15,
+      "retention_coefficient": 0.20000000298023224,
+      "total_loss": 22.56413459777832
+    },
+    {
+      "actual/NEW_TRAIN_probe_action_change_mse": 1.9840354070765898e-06,
+      "actual/actor_adam_delta_norm": 0.004512384533882141,
+      "actual/actor_gradient_norm": 6.940206527709961,
+      "actual/actor_gradient_norm_sum_difference": 3.0994415283203125e-05,
+      "actual/actor_gradient_sum_norm": 6.940175533294678,
+      "actual/cosine_demo_keep": 0.32631272077560425,
+      "actual/cosine_entropy_demo": 0.10057273507118225,
+      "actual/cosine_entropy_keep": 0.08809198439121246,
+      "actual/cosine_ppo_demo": -0.06191810593008995,
+      "actual/cosine_ppo_entropy": -0.15066306293010712,
+      "actual/cosine_ppo_keep": -0.07312773168087006,
+      "actual/critic_adam_delta_norm": 0.004832975100725889,
+      "actual/critic_gradient_norm": 1153.11328125,
+      "actual/global_actor_critic_gradient_norm": 1153.1341552734375,
+      "actual/global_clip_scale": 0.0006504013435915112,
+      "actual/gradient_norm_demo": 0.06150365620851517,
+      "actual/gradient_norm_entropy": 0.007641160394996405,
+      "actual/gradient_norm_keep": 0.0004683737934101373,
+      "actual/gradient_norm_ppo": 6.944886207580566,
+      "actual/reward_per_transition": 28.62229347229004,
+      "demo_action_mse": 0.016651637852191925,
+      "effective_lambda_demo": 0.19988282024860382,
+      "ppo_loss": 114.27729034423828,
+      "retention_action_mse": 9.868833785731113e-07,
+      "retention_coefficient": 0.20000000298023224,
+      "total_loss": 114.2806167602539
+    }
+  ],
+  "fixed_probes": [
+    {
+      "before_transition": 0,
+      "after_transition": 50,
+      "keep_mse_before": 0.0,
+      "keep_mse_after": 1.0851113074750174e-06,
+      "demo_mse_before": 0.010648372583091259,
+      "demo_mse_after": 0.01069438736885786,
+      "action_change_mse": 1.0851113074750174e-06
+    },
+    {
+      "before_transition": 50,
+      "after_transition": 100,
+      "keep_mse_before": 1.0851113074750174e-06,
+      "keep_mse_after": 4.914793862553779e-06,
+      "demo_mse_before": 0.01069438736885786,
+      "demo_mse_after": 0.010758748278021812,
+      "action_change_mse": 1.4624708910560003e-06
+    }
+  ],
+  "global_clip": "one combined Actor+critic norm, max0.75; Adam delta is actual parameter change, not per-term attribution",
+  "scope": "2 engineering PPO+demo+keep updates; insufficient to infer long-run retention",
+  "keep_at_zero_update": "pi0 copy has near-zero keep error/gradient by construction; does not justify multiplying keep600"
+}

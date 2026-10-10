@@ -1,0 +1,28 @@
+{
+  "phase": "passed",
+  "checks": {
+    "real_GPU": true,
+    "normalizer_unchanged": true,
+    "actor_changed": true,
+    "critic_changed": true,
+    "optimizer_changed": true,
+    "completed_transitions": 100,
+    "resume_clock": 100,
+    "actual_optimizer_updates": 2,
+    "lambda_values": [
+      0.19994141161441803,
+      0.19988282024860382
+    ],
+    "serialization_action_max_abs": 0.0,
+    "full_state_restore_exact": true,
+    "actual_gradient_sum_norm_error": 0.00027942657470703125
+  },
+  "wall_seconds": 29.273988703993382,
+  "scope": "engineering only; not ability improvement or formal A/B/C",
+  "learner_last": {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D2_002/gpu_micro/learner/transition_000100/manifest.json",
+    "sha256": "593f16b584db56856d641e107cd2d531cc9852494fea03defcd9daca0e74376c",
+    "lifetime_transitions": 100
+  },
+  "published_policy": null
+}

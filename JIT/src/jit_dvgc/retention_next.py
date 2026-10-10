@@ -172,6 +172,10 @@ def prepare(stage,evidence_dir,output,repository):
 
 def audit(path):
     p=read(path)
+    if p.get('schema')=='jit_retention_D2_preparation_v2':
+        from .retention_d2 import audit as audit_d2
+        d=audit_d2(path)
+        return dict(phase='passed',stage='D2_preparation',identities=d['identities'],budget=d['budget'],physics_steps=0,optimizer_updates=0,formal_execution_authorized=False)
     if p['schema']!='jit_retention_next_v1' or p['stage'] not in ('V','D1'):raise ValueError('unsupported executable plan')
     for file,h in p['locks'].items():
         if sha(file)!=h:raise ValueError('input changed '+file)

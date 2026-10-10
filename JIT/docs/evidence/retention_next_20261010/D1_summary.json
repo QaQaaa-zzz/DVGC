@@ -1,0 +1,49 @@
+{
+  "stage": "D1",
+  "teacher_conversion_matrix": {
+    "TRAIN": {
+      "G_only": 3,
+      "Noise_only": 5,
+      "both": 5,
+      "neither": 2,
+      "ambiguous": 1
+    },
+    "SOLVER_DEV": {
+      "G_only": 1,
+      "Noise_only": 1,
+      "both": 2,
+      "neither": 3,
+      "ambiguous": 0
+    }
+  },
+  "qualified_incremental_lessons": 8,
+  "distinct_TRAIN_ancestors": 8,
+  "qualified_onsets": [
+    0,
+    5,
+    10,
+    15
+  ],
+  "D2_preparation_gate": true,
+  "collection_denominator": 160,
+  "collection_outcomes": {
+    "pre_pulse_terminal": 0,
+    "during_pulse_terminal": 0,
+    "valid_post_pulse": 160
+  },
+  "selected_train": 16,
+  "selected_solver_dev": 7,
+  "budget_charged": 180909,
+  "budget_hard_cap": 2000000,
+  "updates": {
+    "student": 0,
+    "E": 0,
+    "G": 0
+  },
+  "student_absorption": "NOT_RUN",
+  "student_old_capability_loss": "NOT_RUN",
+  "student_independent_success": "NOT_RUN",
+  "G_matches_pi0_tail": "finite root-specific evidence only; normalization-reference identity is not physical validation",
+  "D0_new87": "different full-task DEV paired gain; never teacher conversion",
+  "published_policy": null
+}

@@ -1,0 +1,23 @@
+{
+  "watcher_pid": 2453100,
+  "TensorBoard_pid": 2435265,
+  "url": "http://localhost:6025",
+  "logdir": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D2_002/gpu_micro/tensorboard",
+  "HTTP_verified": true,
+  "current_reward_scalar": "actual/reward_per_transition",
+  "loaded_run": ".",
+  "loaded_points": [
+    [
+      1791622444.9670866,
+      50,
+      10.779226303100586
+    ],
+    [
+      1791622445.266875,
+      100,
+      28.62229347229004
+    ]
+  ],
+  "verified_unix": 1791622467.0623994,
+  "original_watcher_error": "missing PYTHONPATH; preserved watcher.log; only owned watcher restarted"
+}

@@ -1,0 +1,26 @@
+{
+  "phase": "passed",
+  "identities": {
+    "pi0": {
+      "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+      "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+      "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1",
+      "checkpoint": "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/binding/bridge_baseline/checkpoints/transition_0"
+    },
+    "R5": {
+      "actor_sha256": "db2f3deb1c4a5193d63ccf44c5d60855ba0aa4a8dd2e31f4e4c31a49a7c3d8a6",
+      "normalizer_sha256": "c9b365c78abea6a971fc58e53ae01b0df478bbfc0fbac6e69c0299f01570acd7",
+      "critic_sha256": "2ab357822700a09398493fddb133269a0a273fce625ee29f07458da8e6f56e9a",
+      "checkpoint": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0002_continuous_200/round_0005/students/student/training/round_0005_student/checkpoints/transition_128000"
+    }
+  },
+  "frozen_E_G": {},
+  "budget": {
+    "main": 800000,
+    "total": 800000,
+    "hard_cap": 1000000,
+    "wall_seconds": 14400
+  },
+  "physics_steps": 0,
+  "optimizer_updates": 0
+}

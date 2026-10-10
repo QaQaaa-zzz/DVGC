@@ -1,0 +1,41 @@
+{
+  "source_base": "b83b586a64b685d33660aa376a83e6cfd553a1b8",
+  "V": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/V_002/report_001/INDEX.md",
+  "D1": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_003/report_003/INDEX.md",
+  "D2": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D2_002/report_004/INDEX.md",
+  "original_R74_status_unchanged": true,
+  "R73_continuation": false,
+  "D0_rerun": false,
+  "formal_student_arms": "NOT_RUN",
+  "R5": "best_dev_candidate",
+  "published_policy": null,
+  "physics_charged": {
+    "V": 800000,
+    "D1": 180909,
+    "D2_engineering": 12900,
+    "total": 993809
+  },
+  "student_absorption": "NOT_RUN",
+  "student_old_ability_loss": "NOT_RUN",
+  "student_independent_success": "NOT_RUN",
+  "CPU_related_tests": 57,
+  "failure_preserved": {
+    "original_D1_002": "CUDA allocation failed during root012 search after72 teacher dispatches; UNKNOWN result, failed6800 reservation retained",
+    "explicit_D1_003": "per-root finite GPU workers, same17world layout; original root012 proposals reused; all remaining11roots completed"
+  },
+  "D1_G8_R5_same_snapshot": {
+    "R5_success": 5,
+    "R5_failure": 3
+  },
+  "D1_pi0_first_failure": {
+    "post_valid_contact": 23,
+    "roll_limit": 19,
+    "prohibited_contact": 0
+  },
+  "TensorBoard": "http://localhost:6025",
+  "D2_formal_gates": [
+    "four-pool reset GPU execution",
+    "new independent DEV physical baselines",
+    "separate finite B launch before decision on PPO"
+  ]
+}

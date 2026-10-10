@@ -1,0 +1,324 @@
+[
+  {
+    "root": "TRAIN-1010233101-68",
+    "role": "TRAIN",
+    "onset": 0,
+    "pi0_labels": [
+      0,
+      0,
+      0
+    ],
+    "R5_label": 1,
+    "conversion_cell": "both",
+    "teacher_charged": 7599,
+    "baseline_cost_allocation": "shared original dispatches; refer original costs.json, not independent per-root count"
+  },
+  {
+    "root": "TRAIN-1010233101-37",
+    "role": "TRAIN",
+    "onset": 5,
+    "pi0_labels": [
+      0,
+      0,
+      0
+    ],
+    "R5_label": 1,
+    "conversion_cell": "both",
+    "teacher_charged": 7582,
+    "baseline_cost_allocation": "shared original dispatches; refer original costs.json, not independent per-root count"
+  },
+  {
+    "root": "TRAIN-1010233101-2",
+    "role": "TRAIN",
+    "onset": 10,
+    "pi0_labels": [
+      0,
+      0,
+      0
+    ],
+    "R5_label": 1,
+    "conversion_cell": "Noise_only",
+    "teacher_charged": 6103,
+    "baseline_cost_allocation": "shared original dispatches; refer original costs.json, not independent per-root count"
+  },
+  {
+    "root": "TRAIN-1010233101-7",
+    "role": "TRAIN",
+    "onset": 15,
+    "pi0_labels": [
+      0,
+      0,
+      0
+    ],
+    "R5_label": 0,
+    "conversion_cell": "Noise_only",
+    "teacher_charged": 5355,
+    "baseline_cost_allocation": "shared original dispatches; refer original costs.json, not independent per-root count"
+  },
+  {
+    "root": "TRAIN-1010233101-80",
+    "role": "TRAIN",
+    "onset": 0,
+    "pi0_labels": [
+      0,
+      0,
+      0
+    ],
+    "R5_label": 1,
+    "conversion_cell": "ambiguous",
+    "teacher_charged": 8738,
+    "baseline_cost_allocation": "shared original dispatches; refer original costs.json, not independent per-root count"
+  },
+  {
+    "root": "TRAIN-1010233101-10",
+    "role": "TRAIN",
+    "onset": 10,
+    "pi0_labels": [
+      0,
+      0,
+      0
+    ],
+    "R5_label": 0,
+    "conversion_cell": "G_only",
+    "teacher_charged": 7497,
+    "baseline_cost_allocation": "shared original dispatches; refer original costs.json, not independent per-root count"
+  },
+  {
+    "root": "TRAIN-1010233101-23",
+    "role": "TRAIN",
+    "onset": 15,
+    "pi0_labels": [
+      0,
+      0,
+      0
+    ],
+    "R5_label": 0,
+    "conversion_cell": "Noise_only",
+    "teacher_charged": 5049,
+    "baseline_cost_allocation": "shared original dispatches; refer original costs.json, not independent per-root count"
+  },
+  {
+    "root": "TRAIN-1010233101-18",
+    "role": "TRAIN",
+    "onset": 10,
+    "pi0_labels": [
+      0,
+      0,
+      0
+    ],
+    "R5_label": 1,
+    "conversion_cell": "G_only",
+    "teacher_charged": 8959,
+    "baseline_cost_allocation": "shared original dispatches; refer original costs.json, not independent per-root count"
+  },
+  {
+    "root": "TRAIN-1010233101-27",
+    "role": "TRAIN",
+    "onset": 15,
+    "pi0_labels": [
+      0,
+      0,
+      0
+    ],
+    "R5_label": 0,
+    "conversion_cell": "Noise_only",
+    "teacher_charged": 6307,
+    "baseline_cost_allocation": "shared original dispatches; refer original costs.json, not independent per-root count"
+  },
+  {
+    "root": "TRAIN-1010233101-26",
+    "role": "TRAIN",
+    "onset": 10,
+    "pi0_labels": [
+      0,
+      0,
+      0
+    ],
+    "R5_label": 1,
+    "conversion_cell": "G_only",
+    "teacher_charged": 9027,
+    "baseline_cost_allocation": "shared original dispatches; refer original costs.json, not independent per-root count"
+  },
+  {
+    "root": "TRAIN-1010233101-51",
+    "role": "TRAIN",
+    "onset": 15,
+    "pi0_labels": [
+      0,
+      0,
+      0
+    ],
+    "R5_label": 0,
+    "conversion_cell": "Noise_only",
+    "teacher_charged": 5355,
+    "baseline_cost_allocation": "shared original dispatches; refer original costs.json, not independent per-root count"
+  },
+  {
+    "root": "TRAIN-1010233101-30",
+    "role": "TRAIN",
+    "onset": 10,
+    "pi0_labels": [
+      0,
+      0,
+      0
+    ],
+    "R5_label": 1,
+    "conversion_cell": "both",
+    "teacher_charged": 9112,
+    "baseline_cost_allocation": "shared original dispatches; refer original costs.json, not independent per-root count"
+  },
+  {
+    "root": "TRAIN-1010233101-55",
+    "role": "TRAIN",
+    "onset": 15,
+    "pi0_labels": [
+      0,
+      0,
+      0
+    ],
+    "R5_label": 0,
+    "conversion_cell": "both",
+    "teacher_charged": 6953,
+    "baseline_cost_allocation": "shared original dispatches; refer original costs.json, not independent per-root count"
+  },
+  {
+    "root": "TRAIN-1010233101-34",
+    "role": "TRAIN",
+    "onset": 10,
+    "pi0_labels": [
+      0,
+      0,
+      0
+    ],
+    "R5_label": 1,
+    "conversion_cell": "neither",
+    "teacher_charged": 4539,
+    "baseline_cost_allocation": "shared original dispatches; refer original costs.json, not independent per-root count"
+  },
+  {
+    "root": "TRAIN-1010233101-63",
+    "role": "TRAIN",
+    "onset": 15,
+    "pi0_labels": [
+      0,
+      0,
+      0
+    ],
+    "R5_label": 0,
+    "conversion_cell": "both",
+    "teacher_charged": 9333,
+    "baseline_cost_allocation": "shared original dispatches; refer original costs.json, not independent per-root count"
+  },
+  {
+    "root": "TRAIN-1010233101-42",
+    "role": "TRAIN",
+    "onset": 10,
+    "pi0_labels": [
+      0,
+      0,
+      0
+    ],
+    "R5_label": 0,
+    "conversion_cell": "neither",
+    "teacher_charged": 4182,
+    "baseline_cost_allocation": "shared original dispatches; refer original costs.json, not independent per-root count"
+  },
+  {
+    "root": "SOLVER_DEV-1010245101-4",
+    "role": "SOLVER_DEV",
+    "onset": 0,
+    "pi0_labels": [
+      0,
+      0,
+      0
+    ],
+    "R5_label": 0,
+    "conversion_cell": "both",
+    "teacher_charged": 7157,
+    "baseline_cost_allocation": "shared original dispatches; refer original costs.json, not independent per-root count"
+  },
+  {
+    "root": "SOLVER_DEV-1010245101-21",
+    "role": "SOLVER_DEV",
+    "onset": 5,
+    "pi0_labels": [
+      0,
+      0,
+      0
+    ],
+    "R5_label": 1,
+    "conversion_cell": "both",
+    "teacher_charged": 6834,
+    "baseline_cost_allocation": "shared original dispatches; refer original costs.json, not independent per-root count"
+  },
+  {
+    "root": "SOLVER_DEV-1010245101-6",
+    "role": "SOLVER_DEV",
+    "onset": 10,
+    "pi0_labels": [
+      0,
+      0,
+      0
+    ],
+    "R5_label": 0,
+    "conversion_cell": "neither",
+    "teacher_charged": 3774,
+    "baseline_cost_allocation": "shared original dispatches; refer original costs.json, not independent per-root count"
+  },
+  {
+    "root": "SOLVER_DEV-1010245101-19",
+    "role": "SOLVER_DEV",
+    "onset": 15,
+    "pi0_labels": [
+      0,
+      0,
+      0
+    ],
+    "R5_label": 0,
+    "conversion_cell": "Noise_only",
+    "teacher_charged": 6664,
+    "baseline_cost_allocation": "shared original dispatches; refer original costs.json, not independent per-root count"
+  },
+  {
+    "root": "SOLVER_DEV-1010245101-10",
+    "role": "SOLVER_DEV",
+    "onset": 10,
+    "pi0_labels": [
+      0,
+      0,
+      0
+    ],
+    "R5_label": 0,
+    "conversion_cell": "neither",
+    "teacher_charged": 3774,
+    "baseline_cost_allocation": "shared original dispatches; refer original costs.json, not independent per-root count"
+  },
+  {
+    "root": "SOLVER_DEV-1010245101-14",
+    "role": "SOLVER_DEV",
+    "onset": 10,
+    "pi0_labels": [
+      0,
+      0,
+      0
+    ],
+    "R5_label": 0,
+    "conversion_cell": "neither",
+    "teacher_charged": 3774,
+    "baseline_cost_allocation": "shared original dispatches; refer original costs.json, not independent per-root count"
+  },
+  {
+    "root": "SOLVER_DEV-1010245101-18",
+    "role": "SOLVER_DEV",
+    "onset": 10,
+    "pi0_labels": [
+      0,
+      0,
+      0
+    ],
+    "R5_label": 1,
+    "conversion_cell": "G_only",
+    "teacher_charged": 7667,
+    "baseline_cost_allocation": "shared original dispatches; refer original costs.json, not independent per-root count"
+  }
+]

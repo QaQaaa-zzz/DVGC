@@ -113,6 +113,7 @@ def d1_xy(plan,selected,results,out):
             lane=r['collection_lane'];n=r['snapshot_control_step'];q=f['qpos'][:n,lane]
             ax.plot(q[:,qi],q[:,qi+1],color='gray',label='pi0+E prefix');ax.scatter(q[-1,qi],q[-1,qi+1],s=12,color='gray')
         attempts=[('pi0',r['pi0_attempt'])]
+        if r.get('R5_attempt'):attempts.append(('R5 frozen',r['R5_attempt']))
         for method,m in by[r['root_id']]['methods'].items():
             if m['verified_attempts']:attempts.append((method+' fixed winner',m['verified_attempts'][-1]))
         for label,a in attempts:
@@ -130,6 +131,12 @@ def report_d1(plan,out):
     root=Path(plan['output']);receipt=read(root/'D1_completed.json')
     if receipt['phase']!='completed' or receipt['teacher_results_sha256']!=sha(root/'teacher_results.json'):raise ValueError('D1 incomplete or changed')
     results=read(root/'teacher_results.json');ledger=read(root/'collection_ledger.json');selected=read(root/'selected_roots.json')
+    # Original control receipts remain in the pre-resume collection directory.
+    for row in selected:
+        pattern='train_block*_R5_control/results.json' if row['role']=='TRAIN' else 'solver_dev_R5_control/results.json'
+        for path in Path(row['collection']).parent.glob(pattern):
+            match=next((x for x in read(path) if x['root_id']==row['root_id']),None)
+            if match:row['R5_attempt']=match['attempts'][0];break
     matrix={role:{k:sum(r['role']==role and r['conversion_cell']==k for r in results) for k in ('G_only','Noise_only','both','neither','ambiguous')} for role in ('TRAIN','SOLVER_DEV')}
     qualified=[r for r in results if r['qualified_G_incremental_lesson']]
     gate=len(set(r['root_episode_id'] for r in qualified))>=plan['config']['D2_min_distinct_train'] and len(set(r['onset'] for r in qualified))>=plan['config']['D2_min_onsets']
@@ -151,6 +158,22 @@ def report_d1(plan,out):
     contexts={r['root_id']:r for r in selected}
     anomalies={r['root_id']:{method:[trace_anomalies(a,contexts[r['root_id']]) for a in m['verified_attempts']] for method,m in r['methods'].items()} for r in results}
     for row in selected:anomalies[row['root_id']]['independent_pi0']=[trace_anomalies(row['pi0_attempt'],row)]
+    all_batches=[];root_costs=[]
+    for ordinal,result in enumerate(results):
+        context=contexts[result['root_id']];directory=Path(result['proposals']).parent
+        for method in ('G','Noise'):
+            batches=[]
+            for suffix in ('search','repeat1','repeat2'):
+                path=directory/f'root_{ordinal:03d}_{method}_{suffix}'
+                rows=read(path/'results.json');status=read(path/'status.json')
+                batches.append(dict(phase=suffix,charged=status['charged_interactions'],results=str(path/'results.json'),sha256=sha(path/'results.json'),labels=[x['label'] for x in rows],candidate_ids=[x['candidate_id'] for x in rows]))
+                if suffix=='search':anomalies[result['root_id']][method+'_batch_source']=[trace_anomalies(rows[0]['attempts'][0],context)]
+            all_batches.append(dict(root=result['root_id'],role=result['role'],onset=result['onset'],method=method,batches=batches))
+        if context.get('R5_attempt'):anomalies[result['root_id']]['R5']=[trace_anomalies(context['R5_attempt'],context)]
+        root_costs.append(dict(root=result['root_id'],role=result['role'],onset=result['onset'],pi0_labels=result['pi0_labels'],R5_label=result['R5_label'],conversion_cell=result['conversion_cell'],
+            teacher_charged=sum(b['charged'] for item in all_batches if item['root']==result['root_id'] for b in item['batches']),
+            baseline_cost_allocation='shared original dispatches; refer original costs.json, not independent per-root count'))
+    write(out/'all_candidate_batch_receipts.json',all_batches);write(out/'root_labels_and_costs.json',root_costs)
     write(out/'teacher_anomalies.json',anomalies)
     d1_xy(plan,selected,results,out)
     costs=read(root/'costs.json');summary=dict(stage='D1',teacher_conversion_matrix=matrix,qualified_incremental_lessons=len(dataset),
@@ -174,7 +197,12 @@ def report_d1(plan,out):
 
 
 def report(path,output=None):
-    plan=read(path);out=Path(output or Path(plan['output'])/'report_001');out.mkdir(parents=True,exist_ok=False)
+    plan=read(path)
+    if plan.get('stage')=='D2':
+        from .retention_d2_report import finish
+        if output is not None:raise ValueError('D2 report chooses a new immutable report directory')
+        return finish(path)
+    out=Path(output or Path(plan['output'])/'report_001');out.mkdir(parents=True,exist_ok=False)
     return report_v(plan,out) if plan['stage']=='V' else report_d1(plan,out)
 
 

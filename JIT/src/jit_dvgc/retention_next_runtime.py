@@ -206,6 +206,7 @@ def run_d1(stage):
 
 
 def run(path):
+    if read(path)['stage']=='D2':raise ValueError('D2 is preparation only; formal arms require a separate finite launch; engineering anchors/micro use run_retention_d2.py')
     # Set platform before audit imports JAX or deserializes device arrays.
     if read(path)['stage']=='D1' and not read(path).get('resume'):os.environ['JAX_PLATFORMS']='cuda,cpu'
     stage=Stage(path)
