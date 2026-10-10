@@ -1,0 +1,6 @@
+# Retention-first D0 / D0b execution contract
+User-approved taskbook: /home/qy/下载/JIT_retention_first_repair_Codex_20261010.md. Scope only D0/D0b; no D1-D3 training. Implementation: existing collect backend plus validated immutable fixed request tables; CLI prepare/audit/run --execute/report. No runtime snapshot edits, reward/physics/success changes.
+
+A64 repeats of one nominal state; B/C/D128 each; paired B/D states and C/D requests, onsets0/5/10/15 x32. Uniform request [-.25,.25], L3, one pulse. pi0/R5/R21/R71/R73 only. Independent DEV seeds and ancestors; adaptive-E hard1000 preserved as historical stress. All five use identical250 capacity,400 horizon, inference precision and runtime;12 batches including padding =1,200,000 transitions.4h stop,1.5M hard cap. No automatic retry. Verify inputs and CPU tests first, then run explicitly. Preserve invalids/failures and numerical repeats. Reports distinguish implementation from physical evidence.
+
+D0b: saved zero-update pi0 copy, frozen observation actions/export equality, independent normalizer-only update, raw/normalized FIFO, success-counter audit and actual reward components. Actor gradients already instrumented by learning_audit; D0 has no optimizer so measured training gradients are unavailable. Future frozen-normalizer scheduling must use actual completed transitions, never count.

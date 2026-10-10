@@ -331,6 +331,8 @@ def validate_initialization(raw, *, evaluation_only=False):
             raise ValueError('invalid continuous learner evaluation provenance')
         return
     if c is not None:
+        if not isinstance(raw.get('input_files'), dict):
+            raise ValueError('full training input provenance required')
         from .generative_bridge.learner_continuation import validate_declaration
         validate_declaration(raw)
         return

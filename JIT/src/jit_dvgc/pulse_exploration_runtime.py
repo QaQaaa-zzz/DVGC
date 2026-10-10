@@ -238,6 +238,11 @@ def collect(spec, output):
         from .evaluation_initial_state import load_initial_state_bank
         initial_arrays=load_initial_state_bank(spec['initial_state_bank'],count=count,
             nq=env.mj_model.nq,nv=env.mj_model.nv,root_qpos=env._bundle.model_index.root_qpos_address)
+    fixed_requests=None
+    if spec.get('frozen_request_table'):
+        from .retention_repair import load_requests
+        fixed_requests,delays=load_requests(spec)
+        fixed_requests=jp.asarray(fixed_requests)
     step=jax.vmap(lambda s,a:endpoint_state(env.step(s,a),spec))
     def run(rng):
         reset_key, noise_key, pulse_key = jax.random.split(rng, 3)
@@ -293,7 +298,12 @@ def collect(spec, output):
                     mixture_learned,uniform,pulse_mask & alive)
             b=base(s.obs,k)[0]
             apply_pulse=pulse_mask[:,None] if (event or mixed or full_episode or logical_draws is not None or mixture_learned is not None) else tick>=delay
-            action,requested,effective=compose_residual_action(b,jp.where(apply_pulse,delta,0.),jp.asarray(spec['delta_limit']))
+            if fixed_requests is not None:
+                requested=jp.where(alive[:,None],fixed_requests[tick],0.)
+                action=jp.clip(b+requested,-1.,1.)
+                effective=action-b
+            else:
+                action,requested,effective=compose_residual_action(b,jp.where(apply_pulse,delta,0.),jp.asarray(spec['delta_limit']))
             nxt=step(s,action)
             if pulse_contract is not None:
                 nxt=freeze_inactive_worlds(nxt,s,alive)
@@ -305,6 +315,11 @@ def collect(spec, output):
                 tape.update(explorer_learned=mixture_learned,on_policy_mask=on_policy,
                     log_prob_valid=on_policy)
             tape.update(observation_fields(s,nxt,action,enabled=record_preobs))
+            if spec.get('record_retention_diagnostics'):
+                tape['reward']=nxt.reward
+                tape.update({'metric/'+k:v for k,v in nxt.metrics.items() if k.startswith(('reward/','terminal/','event/'))})
+                tape.update(roll=nxt.info['reward_state'].roll,roll_rate=nxt.info['reward_state'].roll_rate,
+                    airborne_seen=nxt.info['down_events'].airborne_seen,roll_limit=nxt.info['roll_limit'])
             tape.update(after)
             tape.update({k+'_before':v for k,v in before.items()})
             tape['first_valid_contact']=~before['valid_contact_seen']&after['valid_contact_seen']&alive
