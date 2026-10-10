@@ -5,6 +5,8 @@ from .retention_repair import read,write
 
 
 def build_report(path):
+    from .retention_b import COVERAGE_SCHEMA
+    if read(path).get('schema')==COVERAGE_SCHEMA:return coverage_report(path)
     p=read(path);root=Path(p['output']);status=read(root/'status.json')
     out=root/'report_001';out.mkdir(exist_ok=False)
     if status['phase']!='completed':
@@ -89,7 +91,9 @@ def analyze(p,rows,diagnostics,costs,out):
             detail[group]=dict(first_lost=int((a&~b).sum()),repeat_lost=int((ar&~br).sum()),both_pair_lost_cases=[cases[i] for i in np.flatnonzero(a&ar&~b&~br)],source_label_flips=int((a!=ar).sum()),student_label_flips=int((b!=br).sum()))
         retention.update(repeat_lost=sum(v['repeat_lost'] for v in detail.values()),both_pair_lost=sum(len(v['both_pair_lost_cases']) for v in detail.values()),by_cell=detail,warning_repeat_confirmed=paired['confirmed'])
     write(out/'paired_retention.json',retention)
-    prefix_equivalence=read(root/'H16_prefix_equivalence.json');write(out/'H16_prefix_equivalence.json',prefix_equivalence)
+    from .retention_b import COVERAGE_SCHEMA
+    prefix_equivalence=read(root/'H16_prefix_equivalence.json') if p.get('schema')!=COVERAGE_SCHEMA else dict(status='not_repeated',reason='new stage changes keep only; original four-combination receipts retained in source B')
+    write(out/'H16_prefix_equivalence.json',prefix_equivalence)
     write(out/'BC_full_state_verification.json',read(root/'BC_full_state_verification.json'))
     decision='BC distillation works on some seen roots and transfers to the three G-solved unseen DEV roots, but is incomplete and retains paired old losses. Prioritize closed-loop prefix/tail diagnosis and independently sampled TRAIN/keep coverage before PPO; propose any A/C only after separate four-pool GPU validation and actual shared-clipping audit. No automatic next stage.'
     return dict(decision=decision,TRAIN_repeat_counts=repeat_counts,paired_retention=retention,active_physics=active,padding_physics=padding,wall_seconds=read(root/'status.json')['updated_unix']-read(root/'launch.json')['started_unix'],conversion_matrix=matrix,R5_focus_confirmations=diagnostics['R5_focus_confirmations'])
@@ -116,7 +120,7 @@ def compact_xy(p,rows,finish,out):
                     mask=z['prefix_mask'][:,lane];xy=z['qpos'][mask,lane,:2];success=bool(np.any(z['success'][:,lane]&mask))
                     ax.plot(xy[:,0],xy[:,1],color=color,lw=.7,alpha=.7,label=name if j==0 else None);ax.scatter(*xy[-1],s=10,c=color,marker='o' if success else 'x')
                 ax.set_title(f'{group}:16 paired DEV cases');ax.set_xlabel('x (m)');ax.set_ylabel('y (m)');ax.set_aspect('equal',adjustable='datalim')
-    axes.flat[0].legend(fontsize=8);fig.suptitle('Complete tasks: actual XY and true endpoints; pi0/R5/BC1000')
+    axes.flat[0].legend(fontsize=8);fig.suptitle(f'Complete tasks: actual XY and true endpoints; pi0/R5/BC{selected}')
     fig.tight_layout();fig.savefig(out/'xy_DEV_overview.png',dpi=140);plt.close(fig)
     meta={e['root']['root_id']:e for e in read(p['train_roots'])+read(p['solver_roots'])}
     for role in ('train','solver'):
@@ -133,3 +137,70 @@ def compact_xy(p,rows,finish,out):
         if len(entries)<8:axes.flat[-1].axis('off')
         axes.flat[0].legend(fontsize=7);fig.suptitle(f'{role.upper()}: actual same-snapshot XY, endpoints; G without verified solution is NA')
         fig.tight_layout();fig.savefig(out/f'xy_{role}_roots.png',dpi=140);plt.close(fig)
+
+
+def coverage_report(path):
+    """New-stage results only. Prepared/failed outputs never claim policy improvement."""
+    p=read(path);root=Path(p['output']);status=read(root/'status.json')
+    number=max([0]+[int(x.name.split('_')[-1]) for x in root.glob('coverage_report_*') if x.is_dir()])+1
+    out=root/f'coverage_report_{number:04d}';out.mkdir(exist_ok=False)
+    summary=dict(schema=p['schema'],source_B=p['source_B'],budget=p['budget'],status=status,
+        evaluation_status='not_started',new_keep_collection='PENDING',reliable_recovery_improvement='NOT_ESTABLISHED',
+        learner_last=status.get('learner_last'),stage_candidate=status.get('stage_candidate'),
+        frozen_R5=p['best_dev_candidate'],published_policy=None,automatic_next_stage=False)
+    text=['# B_keep_coverage independent stage','',f"Execution: {status['phase']}; evaluation: not_started; reliable recovery improvement NOT_ESTABLISHED.",
+        '',f"New stage cap {p['budget']['total']}; inherited D2 {p['budget']['prior_charged']}; cumulative maximum {p['budget']['D2_cumulative_maximum']}/2000000. Additional BC2000 separate. Original12h start {p['original_D2_started_unix']}; never reset.",
+        '',f"Execution blockers: {status.get('execution_blockers',[])}. New successful keep, collection counts and stage coverage are PENDING until physical collection.",
+        '', 'Original pi0/fresh Adam/RNG; Actor only, frozen statistics/critic; no PPO/E/G/TEST. Old source B retained. Prepared code and CPU contracts do not establish physical recovery.']
+    outcomes=root/'new_keep_outcomes.json'
+    if outcomes.exists():summary['new_keep_collection']=read(outcomes)
+    if (root/'keep_receipt.json').exists():summary['merged_keep']=read(root/'keep_receipt.json')
+    if status['phase']=='completed':
+        rows=read(root/'B_checkpoint_results.json');finish=read(root/'B_completed.json');costs=read(root/'costs.json')
+        derived=analyze(p,rows,read(root/'selected_diagnostics.json'),costs,out)
+        compact_xy(p,rows,finish,out)
+        selected=str(finish['selected_update']);chosen=rows[selected]
+        parentroot=Path(read(p['source_B'])['output']);parent_rows=read(parentroot/'B_checkpoint_results.json');parent_finish=read(parentroot/'B_completed.json');parent=parent_rows[str(parent_finish['selected_update'])]
+        from .retention_b import full_results
+        baseline=full_results(p,Path(p['reused_zero']['DEV']['pi0']))
+        repeated={}
+        for step,row in rows.items():
+            file=root/f'B{int(step):04d}_warning_repeat.json'
+            if file.exists():
+                pair=read(file);cells={}
+                for g in 'ABCD':
+                    a,b,ar,br=[np.asarray(pair[k]['labels'][g],bool) for k in ('baseline','original','repeated_pi0','repeated')]
+                    cells[g]=dict(N01=int((~ar&br).sum()),N10=int((ar&~br).sum()),net=int(br.sum()-ar.sum()),source_label_flips=int((a!=ar).sum()),student_label_flips=int((b!=br).sum()),both_pair_old_loss=int((a&ar&~b&~br).sum()))
+                repeated[step]=dict(warned=pair['warned'],confirmed=pair['confirmed'],cells=cells)
+        old_stable=read(parentroot/'report_001/TRAIN_repeat_labels.json')
+        old_stable_ids={e['root_id'] for e in old_stable if e['classification']=='stable_success'}
+        new_repeat=read(out/'TRAIN_repeat_labels.json')
+        lost_absorbed=[e['root_id'] for e in new_repeat if e['root_id'] in old_stable_ids and e['classification']=='stable_failure']
+        old_loss=sum(c['N10'] for c in parent['cells'].values());new_loss=sum(c['N10'] for c in chosen['cells'].values())
+        summary.update(derived,finish=finish,checkpoints=rows,baseline=baseline,warning_repetitions=repeated,
+            learner_last=finish['learner_last'],stage_candidate=finish['candidate'],evaluation_status='complete',
+            new_physics=sum(c['charged'] for c in costs),comparison_to_source_B=dict(
+                source_selected_update=parent_finish['selected_update'],new_selected_update=finish['selected_update'],
+                first_old_loss_before=old_loss,first_old_loss_after=new_loss,
+                TRAIN_before=parent['train_success'],TRAIN_after=chosen['train_success'],
+                SOLVER_DEV_before=parent['solver_success'],SOLVER_DEV_after=chosen['solver_success'],
+                stable_absorbed_roots_now_stable_failed=lost_absorbed,comparison='used development data, conditional on fixed protocol; repeats not independent training seeds'))
+        summary['decision']='Retain pi0/R5; stop this stage. If old losses did not decrease or absorbed roots are lost, next investigate TRAIN student-visited states; never automatically start PPO.'
+        summary['first_old_loss_decreased']=new_loss<old_loss
+        summary['repeat_old_loss_decreased']='UNKNOWN'
+        source_rep=parentroot/f"B{parent_finish['selected_update']:04d}_warning_repeat.json"
+        if selected in repeated and source_rep.exists():
+            sr=read(source_rep);old_repeat=sum(sum(a and not b for a,b in zip(sr['repeated_pi0']['labels'][g],sr['repeated']['labels'][g])) for g in 'ABCD')
+            summary['repeat_old_loss_decreased']=sum(c['N10'] for c in repeated[selected]['cells'].values())<old_repeat
+        text=['# B_keep_coverage independent development results','',
+            '![Actual complete-task XY](xy_DEV_overview.png)','![Seen TRAIN XY](xy_train_roots.png)','![All7 SOLVER_DEV XY](xy_solver_roots.png)',
+            '', '|update|TRAIN /8|SOLVER_DEV /7|A /16|B /16|C /16|D /16|new|lost|net|eligible|',
+            '|---|---|---|---|---|---|---|---|---|---|---|']
+        for k,v in rows.items():
+            c=v['cells'];gain=sum(x['N01'] for x in c.values());loss=sum(x['N10'] for x in c.values())
+            text.append('|'+ '|'.join(map(str,[k,v['train_success'],v['solver_success'],*[c[g]['success'] for g in 'ABCD'],gain,loss,gain-loss,v['eligible']]))+'|')
+        text+=['',f"Selected {selected}, learner_last {finish['completed_updates']}, frozen global candidate R5, published_policy null. Selection unchanged: all7 primary, earliest tie, fixed B/D confirmation.",
+            '',f"Source B old loss {old_loss}, new stage {new_loss}; stable absorbed roots now stably failed {lost_absorbed}. Repeat decrease {summary['repeat_old_loss_decreased']}; first-pass and repeat outcomes remain separate.",
+            '', 'G teacher reference remains NA on4 solver roots; all7 student outcomes evaluated. TRAIN absorption differs from DEV transfer; used DEV is never final TEST. Collection success/failure/ambiguity, phase coverage, weights and actual worker input provenance in summary. Actor gradients are actual same-batch contributions, fixed probes separate.',
+            '',summary['decision'], '', 'This finite development comparison does not establish reliable recovery improvement or eliminate forgetting. No next stage automatically launches.']
+    write(out/'summary.json',summary);(out/'INDEX.md').write_text('\n'.join(text)+'\n');return out
