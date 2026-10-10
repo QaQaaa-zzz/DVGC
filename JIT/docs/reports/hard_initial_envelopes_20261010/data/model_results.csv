@@ -1,0 +1,16 @@
+key,label,episodes,successes,success_rate,onset0_successes,onset5_successes,onset10_successes,onset15_successes
+phase_u,"Phase U（4,988,928步）",1000,658,0.658,198,146,130,184
+repair_0070_phase_u,lineage_repair_0070 + Phase U,1000,345,0.345,32,101,101,111
+bridge_latest,Generative bridge R71 student,1000,309,0.309,92,81,63,73
+discovery_0093,Phase U discovery repair0093,1000,299,0.299,73,84,71,71
+baseline,lineage_repair_0010,1000,292,0.292,76,94,59,63
+random_0099,Random exploration final 0099,1000,222,0.222,57,62,49,54
+repair_0070,lineage_repair_0070,1000,219,0.219,60,55,54,50
+student_2560000,融合学生（累计256万步）,1000,205,0.205,49,45,52,59
+phase_u_10m,Fresh Phase U 10.002432M,1000,194,0.194,55,51,41,47
+baseline_phase_u,lineage_repair_0010 + Phase U,1000,188,0.188,36,47,52,53
+repair_0098,lineage_repair_0098,1000,184,0.184,61,45,39,39
+fresh_rsi_phase_u,"全新RSI（8,000,000步） + Phase U",1000,158,0.158,46,42,36,34
+fresh_rsi,"全新RSI（8,000,000步）",1000,134,0.134,25,11,41,57
+fusion_last,Fusion last 3.20M,1000,26,0.026,16,3,5,2
+fresh_rsi_1m,Fresh RSI 0.9984M,1000,0,0.0,0,0,0,0

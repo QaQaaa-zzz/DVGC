@@ -1,0 +1,108 @@
+{
+  "source_type": "repo_artifact",
+  "verification": "artifact_checked",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 8054,
+      "sha256": "1c42ee14c2e033e04cfb7d95046593561ee690de5f60f553a207d8e8beff39b0",
+      "source": "derived from linked source JSON"
+    },
+    {
+      "path": "data/all_models_summary.json",
+      "bytes": 28757,
+      "sha256": "2d6958ce497ca5136f7b987dea8ddc73a5ad74199fab41b1573298aee346e173",
+      "source": "/home/qy/DVGC/JIT/runs/monitoring/all_models_hard_initial1000_20261010/summary.json"
+    },
+    {
+      "path": "data/envelope_indices.csv",
+      "bytes": 438,
+      "sha256": "ff23d2627fde38fa1732367cd7b4643fd165e94fca44d29b2287477910cf9b7d",
+      "source": "derived from linked source JSON"
+    },
+    {
+      "path": "data/envelope_summary.json",
+      "bytes": 10633,
+      "sha256": "26b0986eb23311c16f78f945008eaf3bcd3633cd0a77a1897354c8419e2cd8fd",
+      "source": "/home/qy/DVGC/JIT/runs/monitoring/success_envelope_quantification_20261010/event_aligned/summary.json"
+    },
+    {
+      "path": "data/model_identities.json",
+      "bytes": 51896,
+      "sha256": "66030870808db964854a9248a446215293cc97248bd7fda994cd0fd71c2fde89",
+      "source": "/home/qy/DVGC/JIT/runs/monitoring/all_models_hard_initial1000_20261010/models.json"
+    },
+    {
+      "path": "data/model_results.csv",
+      "bytes": 1114,
+      "sha256": "d4dbb8bf36c8f5ee2f466bb5fcf49d665fb898619c783ecffdfb25f1ed620d7c",
+      "source": "derived from linked source JSON"
+    },
+    {
+      "path": "data/numerical_repeat.json",
+      "bytes": 1105,
+      "sha256": "97ba2d50542a47cce4f8e5c3f661fd971b206a1a73a3423dbd9bfd5a946665e8",
+      "source": "/home/qy/DVGC/JIT/runs/monitoring/bridge_pi0_hard_initial1000_20261010/repeat_numerical_diagnostics.json"
+    },
+    {
+      "path": "data/pi0_comparison.json",
+      "bytes": 606,
+      "sha256": "e82af12467726b9d717ee3582a381f7fc285931d2f0539227b5f6aa6d092737c",
+      "source": "/home/qy/DVGC/JIT/runs/monitoring/bridge_pi0_hard_initial1000_20261010/comparison.json"
+    },
+    {
+      "path": "data/pi0_identity.json",
+      "bytes": 3490,
+      "sha256": "d0696ae8ff15e3d4ad8f0b4d543ec397042f79042b50a9f0e868d89d2dbc4d7d",
+      "source": "/home/qy/DVGC/JIT/runs/monitoring/bridge_pi0_hard_initial1000_20261010/identity_comparison.json"
+    },
+    {
+      "path": "data/protocol.json",
+      "bytes": 1326,
+      "sha256": "e0827ad255f081055ce90e149067a3dc62aec3897e1aa890060809b414650773",
+      "source": "derived from linked source JSON"
+    },
+    {
+      "path": "data/typical_dimension_widths.json",
+      "bytes": 1555,
+      "sha256": "971b59803f70b1fd55e8d2c5ba23f764675eec4a3ab8949814377cb5a9dea1b7",
+      "source": "/home/qy/DVGC/JIT/runs/monitoring/success_envelope_quantification_20261010/event_aligned/typical_dimension_widths.json"
+    },
+    {
+      "path": "figures/audited_ranking.png",
+      "bytes": 180252,
+      "sha256": "ed0504d301ca2d667034cded09aeee74cbb36bd2e9fb28612d65478f63116397",
+      "source": "/home/qy/DVGC/JIT/runs/monitoring/all_models_hard_initial1000_20261010/audited_ranking.png"
+    },
+    {
+      "path": "figures/joint_coverage.png",
+      "bytes": 69807,
+      "sha256": "ced3a02fc57f88247d2d70bb73afe06f12dffb95e7ac9f90fdc616c72fbb9d21",
+      "source": "/home/qy/DVGC/JIT/runs/monitoring/success_envelope_quantification_20261010/event_aligned/joint_coverage.png"
+    },
+    {
+      "path": "figures/key_models_strata.png",
+      "bytes": 126176,
+      "sha256": "1b58ff9abf0c501b0282c25fbe43452443f74522133c30dcc026345bee794875",
+      "source": "/home/qy/DVGC/JIT/runs/monitoring/all_models_hard_initial1000_20261010/key_models_strata.png"
+    },
+    {
+      "path": "figures/key_models_xy_xz.png",
+      "bytes": 454760,
+      "sha256": "8db2dff6d7bb20b7637ffe6ccdbf4aa9694998c0178fea68fcb517be04f7580a",
+      "source": "/home/qy/DVGC/JIT/runs/monitoring/all_models_hard_initial1000_20261010/key_models_xy_xz.png"
+    },
+    {
+      "path": "figures/pi0_vs_r71.png",
+      "bytes": 273359,
+      "sha256": "cbd26f3f4bf52d1964371a8786e46b2a731df3b12fd93a2a6ca2a1b10d49a4e6",
+      "source": "/home/qy/DVGC/JIT/runs/monitoring/bridge_pi0_hard_initial1000_20261010/pi0_vs_r71.png"
+    },
+    {
+      "path": "figures/width_comparison.png",
+      "bytes": 168220,
+      "sha256": "1047d5be220e33f90757490e8e2ad6ed76b32f3647d6b17125e611b66ee38695",
+      "source": "/home/qy/DVGC/JIT/runs/monitoring/success_envelope_quantification_20261010/event_aligned/width_comparison.png"
+    }
+  ]
+}

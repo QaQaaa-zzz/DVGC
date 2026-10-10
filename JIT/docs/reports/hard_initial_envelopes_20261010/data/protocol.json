@@ -1,0 +1,29 @@
+{
+  "onsets": [
+    0,
+    5,
+    10,
+    15
+  ],
+  "batch_size": 250,
+  "evaluation_episodes_per_model": 1000,
+  "initial_bank_seed": 10102026,
+  "reset_noise": "x .1m,y .05m;roll/pitch/yaw3deg;vx/vy .2m/s;angular .1rad/s; independent uniform; no vz/joint noise",
+  "role": "development stress; common frozen adaptive explorer, shared initial states and sampling seeds, state-dependent actual pulses",
+  "code_revision": "04aaf6fc76ce8a9adfc923ac1888c58918e628bf",
+  "bridge_frozen_round": 71,
+  "explorer": "/home/qy/DVGC/JIT/runs/experiments/neighborhood_reward005_safe256_20260916/idle_resume_100/lineage/round_0099/update/state.msgpack",
+  "atlas": "/home/qy/DVGC/JIT/runs/experiments/neighborhood_reward005_safe256_20260916/idle_resume_100/lineage/round_0099/neighborhood_map.json",
+  "new_scored_episodes": 16000,
+  "additional_nominal_replicas": 4000,
+  "nominal_unique_conditions_per_model": 1,
+  "formal_charged_control_transitions": 8000000,
+  "engineering_interactions": 4800,
+  "training_steps": 0,
+  "actual_pulses_state_dependent": true,
+  "raw_source_directories": [
+    "/home/qy/DVGC/JIT/runs/monitoring/all_models_hard_initial1000_20261010",
+    "/home/qy/DVGC/JIT/runs/monitoring/bridge_pi0_hard_initial1000_20261010",
+    "/home/qy/DVGC/JIT/runs/monitoring/success_envelope_quantification_20261010"
+  ]
+}
