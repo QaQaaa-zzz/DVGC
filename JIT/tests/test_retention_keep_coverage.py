@@ -159,3 +159,14 @@ def test_collection_merge_routes_loaded_data_to_new_successful_train_only(tmp_pa
     assert w[:6].sum()==pytest.approx(.5)  # group-order includes one old and one new nominal
     assert len(json.loads((root/'new_keep_outcomes.json').read_text()))==80
     assert not (root/'B').exists()
+
+
+def test_frozen_config_checks_canonical_identity_then_locks_file_bytes(tmp_path):
+    import hashlib
+    from jit_dvgc.retention_b import lock_frozen_config
+    f=tmp_path/'config.json';write(f,{'reward':{'unchanged':1}})
+    canonical=hashlib.sha256(json.dumps(json.loads(f.read_text()),sort_keys=True,separators=(',',':'),allow_nan=False).encode()).hexdigest()
+    assert canonical!=sha(f)
+    assert lock_frozen_config(f,canonical)==sha(f)
+    write(f,{'reward':{'unchanged':2}})
+    with pytest.raises(ValueError,match='configuration drift'):lock_frozen_config(f,canonical)

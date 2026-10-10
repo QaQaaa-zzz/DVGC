@@ -538,6 +538,14 @@ def _keep_records(receipt):
     return result
 
 
+def lock_frozen_config(path,canonical_digest):
+    """Historical formal inputs bind canonical JSON, not serialized whitespace."""
+    import json,hashlib
+    canonical=json.dumps(read(path),sort_keys=True,separators=(',',':'),allow_nan=False).encode()
+    if hashlib.sha256(canonical).hexdigest()!=canonical_digest:raise ValueError('frozen physical/task configuration drift')
+    return sha(path)
+
+
 def prepare_keep_coverage(proposal,parent,output,repository):
     """Static file preparation; no environment import or physics/optimizer call."""
     import shutil
@@ -561,8 +569,7 @@ def prepare_keep_coverage(proposal,parent,output,repository):
         formal=read(pol['formal_config'])
         for phase in ('up','down'):
             ref=formal['inputs'][phase+'_config_path'];h=formal['inputs'][phase+'_config_sha256']
-            if sha(ref)!=h:raise ValueError('frozen physical/task configuration drift')
-            locks[ref]=h
+            locks[ref]=lock_frozen_config(ref,h)
         physical=read(formal['inputs']['up_config_path'])['model']
         for key in ('xml','reference'):
             asset=code/physical[key+'_path'];h=physical[key+'_sha256']
