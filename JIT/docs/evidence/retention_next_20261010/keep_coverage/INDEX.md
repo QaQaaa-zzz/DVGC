@@ -1,55 +1,37 @@
-# B_keep_coverage 独立试点：实现、审计与准备
+# B_keep_coverage：单次覆盖试点的完成结果
 
-审阅基准 `7b467877`，当时实际HEAD匹配且工作树干净，未回退。实现提交 `47b4aad`，配置身份修正后的执行代码 `0ebfd3ce64a28d2fd76068bc55afce9c2ec7ee42`。本轮只准备，不执行。有效目录 `/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003`，当前 **prepared、0 charged、0真实学生BC更新**。早期001/002是零成本准备快照，保留不覆盖，003为本次交付入口。
+![同输入完整任务实际XY](xy_DEV_overview.png)
 
-新增 `run_retention_b.py prepare-keep-coverage --proposal --parent --output --repository`，新schema `jit_retention_B_keep_coverage_v1`。没有修改旧BASE、旧准备授权布尔或warmup优化器；旧prepare/run行为及旧keep路由兼容。新schema的run和直接worker都在GPU导入前检查新阶段授权与原时钟，缺任一项拒绝；按目录排他claim防并发重复执行，无自动重试/恢复。
+只检验旧技能TRAIN保持数据覆盖；不是完整遗忘方案，不预设容量足够或不足。用户“继续／你继续就好”授权本次已审阅有限执行。运行 `B_keep_coverage_003`，执行HEAD `cb1e139df2661c18580056d48fadb0ccdf89d338`，Python执行锁仍对应 `0ebfd3c`。原始π0/fresh Adam/RNG；normalizer/critic冻结；Actor-only Adam1e-5/demo1/keep1/batch256/clip1；原G8教案525帧、观测、网络、动作、物理、奖励、H16和成功标准全部不变。无PPO/E/G更新，无DEV回流。demo+keep本来就是双来源监督，不加重复蒸馏项。
 
-源B必须已完成2000更新，历史费用从原costs复算为388036。π0/R5 checkpoint完整payload、身份文件、bank/frozen/config、物理XML与reference、新旧数据及执行Python代码均锁定；历史源码按旧提交核对，和当前执行源码锁分开。旧formal输入SHA是规范JSON身份，先验证它，再锁当前序列化字节；不将JSON缩进差异误判成奖励/物理变更。审计完全基于文件，不导入JAX/MuJoCo/Warp/Torch、不启动子进程或环境。
+80回合keep仅收真实成功61条（名义6/16、随机55/64）；19个物理失败排除且收费，没有补seed。旧26条1951帧全部保留；合并87条6289帧，接触帧及之后2636帧。名义只有1个物理条件的重复。名义/随机组各50%采样质量，祖先/轨迹均衡。真实worker加载新merged keep，路径和hash见[worker_inputs](worker_inputs.json)。
 
-复用已有80回合数组字节：seed1010269101、16名义数值重复＋64随机TRAIN，400步上限、固定π0、全零请求。新角色manifest有完整80个TRAIN祖先、来源初态bank、seed、lane、名义同条件标志，与7个SOLVER_DEV祖先隔离；新独立TRAIN namespace只来自新回合，TEST保持未打开。不使用B_06/C_10或其他DEV失败状态/动作生成数据。名义组是1个物理条件的16次数值重复，随机keep采集不改变E的初始化协议。
+|节点|TRAIN吸收/8|SOLVER_DEV/7|A/16|B/16|C/16|D/16|完整DEV新增|丢失|净差|
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+|0|0|0|7|12|8|11|0|0|0|
+|100|3|1|16|12|13|10|21|8|13|
+|500|3|2|16|13|15|10|20|4|16|
+|1000|5|3|16|14|15|10|22|5|17|
+|2000|5|2|16|15|12|12|21|4|17|
 
-**运行接线已实现，真实采集仍PENDING。** 将来获授权后仅采一次，正常失败保留标签和收费；工程异常不填0；只准入正式成功且没有物理失败冲突的完整真实轨迹，未知/冲突单列，不补seed。保留全部旧keep，另写新不可变npz/receipt/merged lock；名义/随机各50%采样质量，组内祖先均衡、祖先内轨迹均衡、轨迹内真实帧均匀。保存全部80结果、入池/排除理由、旧/新阶段观测数和着陆后观测数、名义重复条件及采样权重。当前没有新keep成功数，不能把CPU夹具数据写成TRAIN物理数据。
+选1000（全7根主分数，平局选早，固定B/D警戒复核规则未改）；learner_last=2000，stage_candidate=BC1000，冻结全局候选仍R5，published_policy=null。R5自身Actor+normalizer完整DEV基线复用16/11/15/10，不自动发布学生。
 
-真实B_worker通过 `worker_keep_inputs()` 加载新merged receipt；新schema在合并尚未完成或哈希漂移时拒绝，绝不回退旧keep。旧schema仍读原keep。运行时保存 `worker_inputs.json` 绑定实际数据路径/哈希、教案、seed和初始化。学生原始π0＋fresh Adam/RNG，冻结整个normalizer/critic，Actor-only Adam1e-5/demo1/keep1/batch256/clip1；525条G8教案文件、祖先/前缀尾部权重、BC base seed和warmup逐步split/fold_in规则均保持原样。无BC2000/micro-last初始化，无E/G或PPO更新，无动作/物理/奖励/观测/成功标准变更。
+8条TRAIN老师均有合格G解；所选学生首次学会5/8，固定三次仅4根稳定成功：68/37/10/26；18/30/55稳定失败；63=[1,1,0]歧义。原B稳定成功30本次稳定失败，原B失败26本次稳定成功，稳定吸收总数仍4/8。root30是历史学生学会的新技能损失，和π0旧能力损失分开。全7根SOLVER_DEV成功3/7（4/21/18），均为有G参考的3根；其余4根G参考NA、学生均失败。它是已用于选模的小样本DEV迁移，不是最终TEST。四格新增22不是老师转化结果。
 
-保存0/100/500/1000/2000全部完整节点。新阶段独立重测5节点×15根×17世界：8根TRAIN与全部7根SOLVER_DEV；4个非零节点64题四格，原π0/R5完整任务基线凭原身份复用。7根中4个G参考仍NA，学生仍评价全部7根。选模仍全部7根主分数、最早平局、原B/D>5pp警戒及每节点最多一次固定源/候选确认；不调整阈值以求通过。选中候选8根固定两次复核。没有额外R5或四组合重测，它们保留原B证据，不超预算。
+完整DEV首次旧损失原B7→本次5，固定重复原B3→本次4；未证明可靠保留性改善。当前重复新增17、丢失4、净差13；两次配对均失去B_04/C_10/D_03/D_09。B_06旧损失消失，C_10保留。源标签翻转A/B/C/D=7/1/2/0，学生=0/1/0/1；D_07首次失败、重复成功。16题每格一题=6.25pp。数值重复不是独立训练seed，不把首次改善写成稳健效果。
 
-新report分支分别输出各节点TRAIN吸收、SOLVER_DEV迁移、四格N01/N10/净差、源/学生重复翻转、逐根转化矩阵与物理阶段，区分learner_last、stage_candidate、冻结R5和published_policy。未运行报告写PENDING/NOT_ESTABLISHED。已用DEV仍是开发数据，不能称新holdout或TEST。旧损失未降低或已吸收教案稳定丢失时保留π0/R5、结束本阶段，下一步仅考虑TRAIN学生自身访问状态诊断；无任何自动PPO或200轮入口。
+[闭环诊断](diagnostics.json)：这4道重复损失题首次物理侧倾越界都在有效接触后；root30接触42、侧倾失败57控制帧。子步首次事件未知，不能只看终止码，也不能因此把恢复H16后移。2000次实际同mini-batch梯度余弦为负91.7%、均值−0.402，clip均为1；Adam参数增量全部保存。梯度冲突是描述性证据，不等于已证明权衡或容量问题；MSE下降不等于闭环学会。
 
-|项目|新增charged上限|
-|---|---:|
-|80回合keep|32000|
-|5节点×15根×17×400|510000|
-|4节点×64完整DEV×400|102400|
-|最多4次固定源/候选警戒复核|204800|
-|选中候选8根两次复核|108800|
-|合计|958000|
+下一试验只建议 **B：TRAIN学生自身访问状态上的闭环指导诊断**，不自动执行，不自动补同类keep。先冻结当前学生，仅8个原TRAIN根，在原H16内j=[4,8,12]预声明查询；固定π0尾部，G16+source同17世界，固定赢家2次重放，执行长度H16-j且原交接时间不变。未达采样点记缺失，不换点补成功。π0能救/老师能救/学生根是否成功分别记，禁止平均旧老师与恢复老师动作。
 
-此前388036，全部执行后最多1346036／2000000；额外2000监督更新另计。原12小时起点 `1791622384.6936376`，截止 **2026-10-11T04:53:04.693638+08:00**。审计时约剩5小时25分，启动前必须重核，不重置。当前缺新阶段明确执行授权，故停在prepared。若授权到达时原时钟已过，仍拒绝，需另行明确有限时间边界。没有启动新TensorBoard/桌面watcher；只有将来授权run才启动独立6028与watcher并验证实际DEV奖励HTTP，不能把预留URL冒充已加载的训练标量。
+独立拟定上限：访问状态采集8×17×400=54400；24查询×3批（搜索+2固定重放）×17×400=489600；总 **544000 charged、3小时、0 BC/PPO/E/G更新**。本次D2累计776098，若另获授权完成该诊断最多1320098/2000000；这不是剩余预算执行许可。未来时钟必须另行冻结和授权，不重置本次原时钟。当前仅设计，尚无可执行输入锁/剩余窗口接口验证。详见[下一试验提案](next_experiment_proposal.json)。
 
-定向回归 **60 passed /13.61s**：包括原入口、冻结初始化/完整状态、组/祖先/轨迹权重、DEV共祖先拒绝、失败排除与非有限拒绝、新worker实际使用merged loader、缺授权/过期/漂移拒绝、并发claim、阶段预算预留拒绝、prepare报告不编造效果，以及静态audit的禁止GPU模块与子进程检查。真实80回合输入已完成prepare/audit/dry-run/report，并再次对实际plan检查禁止导入/子进程、prepared零收费和缺数据拒绝。CPU通过不代表GPU采集、额外2000BC或可靠物理恢复已验证。
+若G在自身访问状态可验证救回、学生仍失败，支持可行动的闭环分布偏移；π0独自可救说明旧参考指导可用；都未找到解只说明该有限oracle无见证，不能推断物理无解或容量不足。获得可靠指导也不等于学生已吸收；新BC需另外批准。A的权重对照暂缓，因为冲突梯度并非因果证据；C的容量对照仅准备设计，因为本次既换了哪些根吸收也保留重复旧损失，未建立容量瓶颈。宽Actor声明/零更新迁移/独立老师与Adam边界见[设计报告](../../../plans/retention_next_20261010.md)，未实现或验证。
 
-[actual-layout预算](budget_dry_run.json)、[实际audit](audit.json)、[零GPU/零仿真检查](static_verification.json)、[80回合祖先角色](TRAIN_keep_manifest.json)、[输入与源身份](input_summary.json)、[执行代码锁](code_lock.json)、[准备报告](prepared_summary.json)、[测试原文](tests.txt)。完整plan/input_lock与初态/request数组在服务器有效目录。
+本次实际新增388062 charged（active136500、padding251562），此前388036，D2累计 **776098/2000000**；2000监督更新单列。执行用时2297.8秒，原截止2026-10-11 04:53:04.693638+08:00未重置，完成于该截止前。0/100/500/1000/2000真实序列化Actor/Adam计数与矩、RNG/绝对时钟、normalizer/critic、推理配对均[审计通过](BC_full_state_verification.json)；保存完整状态不冒充已实现resume。TB6028实际本轮奖励及BC标量加载；桌面完成通知送达、无delivery_errors。
 
-仅只读命令：
+首次report因缺独立BC状态审计文件失败，保留coverage_report_0002；以[CPU saved-state审计脚本](verify_saved.py)核验后补齐真实证据，再生成完整coverage_report_0003；0仿真/0更新，未改训练源代码或锁。不是额外训练重试。
 
-```bash
-cd /home/qy/DVGC/runs/worktrees/jit-retention-first
-export PYTHONPATH="$PWD/JIT/src" JAX_PLATFORMS=cpu
-PY=/home/qy/mujoco_playground/.venv/bin/python
-PLAN=/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/plan.json
-"$PY" JIT/cli/run_retention_b.py audit --plan "$PLAN"
-"$PY" JIT/cli/run_retention_b.py dry-run --plan "$PLAN"
-```
+[同根老师—学生矩阵](conversion_matrix.json)、[TRAIN三次标签](TRAIN_repeat_labels.json)、[逐节点物理阶段](trajectory_diagnostics.json)、[配对保持与翻转](paired_retention.json)、[全部输入/节点/费用](summary.json)、[TRAIN实际XY](xy_train_roots.png)、[全7 DEV实际XY](xy_solver_roots.png)。无预设XY路径；所有端点取真实失败/成功终点。保留π0/R5，本阶段停止；未证明可靠恢复能力提升，不自动开PPO或200轮。
 
-首次准备命令已实际运行（不可复用同一output覆盖）：
-
-```bash
-"$PY" JIT/cli/run_retention_b.py prepare-keep-coverage \
-  --proposal /home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_preparation_001/proposal.json \
-  --parent /home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_002/plan.json \
-  --output /home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003 \
-  --repository /home/qy/DVGC/runs/worktrees/jit-retention-first
-```
-
-将来**只有新阶段获明确执行授权后**才能 `run --plan "$PLAN" --execute --authorization "$AUTH"`。授权凭证需schema `jit_keep_coverage_execution_authorization_v1`，绑定当前plan SHA，scope `collect80_and_BC2000_keep_coverage_only`、2000更新、958000上限、原起点、`source=explicit_user_instruction`及真实授权指令引用；本轮未生成它。即使有该凭证，也不能绕过原时钟和输入/代码锁。
+准备阶段历史说明、测试和静态审计见[原准备交付](preparation_description.md)，它的prepared/未授权状态只描述当时，不能冒充当前。运行原始权重/物理NPZ在服务器，不入Git。

@@ -1,0 +1,91 @@
+{
+  "phase": "passed",
+  "execution_phase": "completed",
+  "source_HEAD": "cb1e139df2661c18580056d48fadb0ccdf89d338",
+  "locked_input_files_checked": 530,
+  "locked_execution_code_files_checked": 337,
+  "new_charged": 388062,
+  "D2_cumulative_charged": 776098,
+  "supervised_updates": 2000,
+  "PPO_E_G_updates": 0,
+  "finished_within_original_deadline": true,
+  "tensorboard_url": "http://localhost:6028",
+  "actual_scalar_HTTP": {
+    "BC/loss": {
+      "points": 1000,
+      "last": [
+        1791649231.9718986,
+        2000,
+        0.001524120569229126
+      ]
+    },
+    "BC/actual/gradient_norm_demo": {
+      "points": 1000,
+      "last": [
+        1791649231.9719245,
+        2000,
+        0.013773716054856777
+      ]
+    },
+    "BC/actual/gradient_norm_keep": {
+      "points": 1000,
+      "last": [
+        1791649231.9719274,
+        2000,
+        0.007435220759361982
+      ]
+    },
+    "BC/actual/actor_adam_delta_norm": {
+      "points": 1000,
+      "last": [
+        1791649231.9719126,
+        2000,
+        0.0009002989972941577
+      ]
+    },
+    "DEV/B_reward_per_transition": {
+      "points": 5,
+      "last": [
+        1791649594.835183,
+        2000,
+        13.564536094665527
+      ]
+    },
+    "SOLVER_DEV/independent_success": {
+      "points": 5,
+      "last": [
+        1791649594.8352008,
+        2000,
+        2.0
+      ]
+    }
+  },
+  "notification": {
+    "delivered": {
+      "75a0df470520e9196b970db35db349a505a842e40cfb7f9d7bcc268e957c9247": {
+        "phase": "completed",
+        "paths": [
+          "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/status.json",
+          "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/status.json"
+        ],
+        "notified_unix": 1791649961.0154552
+      }
+    },
+    "delivery_errors": [],
+    "pid": 3626402,
+    "checked_unix": 1791650571.0609288,
+    "manifests": [
+      "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/ACTIVE_RUN.json"
+    ]
+  },
+  "full_state_audit": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/BC_full_state_verification.json",
+  "report_generation": {
+    "first_attempt": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/coverage_report_0002",
+    "first_error": "FileNotFoundError: BC_full_state_verification.json missing; full-state audit was a separate prerequisite",
+    "remedy": "CPU verification of actual five serialized states; zero simulation or optimizer updates; runtime source unmodified",
+    "successful_report": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/coverage_report_0003"
+  },
+  "resume_implemented": false,
+  "published_policy": null,
+  "reliable_recovery_improvement": "NOT_ESTABLISHED"
+}

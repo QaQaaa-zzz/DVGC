@@ -1,0 +1,56 @@
+{
+  "schema": "jit_TRAIN_student_visited_diagnostic_proposal_v1",
+  "status": "design_only_not_prepared_or_authorized",
+  "chosen_option": "B",
+  "parent_run": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003",
+  "frozen_student": {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B/update_1000.pkl",
+    "sha256": "b981714174b59e5fbea4178582e43318b6d3bae8fb73db18c412c1b518d63f09",
+    "update": 1000
+  },
+  "fixed_reference": "original_pi0",
+  "frozen_G": "G73",
+  "TRAIN_roots": [
+    "TRAIN-1010233101-68",
+    "TRAIN-1010233101-37",
+    "TRAIN-1010233101-10",
+    "TRAIN-1010233101-18",
+    "TRAIN-1010233101-26",
+    "TRAIN-1010233101-30",
+    "TRAIN-1010233101-55",
+    "TRAIN-1010233101-63"
+  ],
+  "query_offsets_in_original_H16": [
+    4,
+    8,
+    12
+  ],
+  "tail": "fixed_original_pi0",
+  "candidate_layout": "G16 plus source pi0 in original 17-world layout",
+  "fixed_winner_replays": 2,
+  "original_handoff_clock": "remaining H16-j; no additional H16 window",
+  "budget": {
+    "visited_state_collection": 54400,
+    "queries_search_and_two_replays": 489600,
+    "charged_max": 544000,
+    "wall_hours": 3,
+    "BC_updates": 0,
+    "PPO_updates": 0,
+    "E_G_updates": 0
+  },
+  "execution_authorized": false,
+  "DEV_or_TEST_to_TRAIN": false,
+  "require_before_any_execution": [
+    "full visited snapshot/history/context lineage and role locks",
+    "remaining-window masking and original H16 handoff checks",
+    "source policy/teacher/actual layout budget locks",
+    "explicit independent time and execution authorization"
+  ],
+  "expected_discriminating_results": [
+    "student roots fail but G verified at visited states: supports actionable closed-loop distribution mismatch; absorption still untested",
+    "pi0 alone succeeds at visited states: old-reference guidance exists; keep root-level and visited-state labels separate",
+    "no verified G/source rescue: limited oracle/proposal coverage result, not physical impossibility or capacity proof",
+    "later student fails to absorb verified guidance: requires separate learning-path/weight/capacity comparison, not automatic updates"
+  ],
+  "why_B_first": "Repeated old losses did not decrease and historically stable new root30 was lost; failures occur after contact. Resolve whether TRAIN student-visited guidance is valid before weight or capacity training. Gradient conflict is descriptive, not causal proof."
+}

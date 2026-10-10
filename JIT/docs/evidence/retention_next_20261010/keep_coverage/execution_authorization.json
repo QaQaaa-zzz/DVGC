@@ -1,0 +1,15 @@
+{
+  "authorization": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/user_execution_grant.json",
+  "sha256": "ccd8b00e26718653bd768694004bf39a1e8c0af614ee6fb67346c1186366a097",
+  "grant": {
+    "schema": "jit_keep_coverage_execution_authorization_v1",
+    "plan_sha256": "e8debea8a7144eb01109e41c42f3f0a76ab1695c80504405ba38dde6550d8d12",
+    "scope": "collect80_and_BC2000_keep_coverage_only",
+    "authorized_updates": 2000,
+    "charged_upper_bound": 958000,
+    "original_D2_started_unix": 1791622384.6936376,
+    "source": "explicit_user_instruction",
+    "instruction_reference": "2026-10-10 user: 继续; followed by 不用管 你继续就好. Execute previously reviewed finite B_keep_coverage only; original deadline retained.",
+    "recorded_at": "2026-10-10T23:54:15.709103+08:00"
+  }
+}

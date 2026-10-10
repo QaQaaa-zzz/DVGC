@@ -41,4 +41,4 @@ Actual charged total993809 = V800000+D1180909+D2engineering12900. No TEST opened
 [BC+keep实际结果、三组XY、逐根转化与旧能力损失](B_only/INDEX.md)。2000监督更新完成；BC1000为阶段候选，learner_last2000，R5冻结全局候选，未发布。TRAIN稳定4/8、未见SOLVER_DEV3/7，配对旧成功仍有损失；暂不启动PPO，先闭环与保持覆盖诊断。
 
 
-- [B_keep_coverage独立入口与零仿真准备](keep_coverage/INDEX.md)：当前prepared，缺新阶段执行授权，真实采集/BC均未启动。
+- [B_keep_coverage单次覆盖试点完成结果](keep_coverage/INDEX.md)：2000BC完成、选1000；稳定吸收仍4/8但root30丢失，SOLVER_DEV3/7；首次旧损失7→5、重复3→4，可靠保留性改善未建立。D2累计776098/2000000；停止阶段、保留π0/R5。只提出TRAIN自身访问状态指导诊断B，544000charged/3h/0更新，未授权或执行。

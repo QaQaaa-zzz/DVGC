@@ -1,0 +1,70 @@
+{
+  "phase": "passed",
+  "checkpoints": [
+    {
+      "clock": 0,
+      "Adam": 0,
+      "RNG": [
+        0,
+        1010267101
+      ],
+      "normalizer": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+      "critic": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1",
+      "actor": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+      "file_sha256": "57e4deff752b32ef293b01d7059af4bba9eca3da7ed9523137a1ff843be0b84c"
+    },
+    {
+      "clock": 100,
+      "Adam": 100,
+      "RNG": [
+        0,
+        1010267101
+      ],
+      "normalizer": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+      "critic": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1",
+      "actor": "82339a11522b9ec42681f263bd701268a8c4b4271da80e7dcca0ce649b4898ea",
+      "file_sha256": "a1c51da11f1b317ee991ac767952bc623d960ac63ba1a75d4efbb7a1f2306234"
+    },
+    {
+      "clock": 500,
+      "Adam": 500,
+      "RNG": [
+        0,
+        1010267101
+      ],
+      "normalizer": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+      "critic": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1",
+      "actor": "b2a4a5af5bb4d591d2162ceed3bc55065179cf147ba9e73919097064c3b07a6c",
+      "file_sha256": "53c375ebe1064afd765478abd88081d27c687eabe84209c6b9f1dcc24e838f4f"
+    },
+    {
+      "clock": 1000,
+      "Adam": 1000,
+      "RNG": [
+        0,
+        1010267101
+      ],
+      "normalizer": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+      "critic": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1",
+      "actor": "f1d1d460082fbc20eafc39d0ad4f318a38877b5b1b4122195ed3f12d8a52057e",
+      "file_sha256": "72cc46db54d91547a4487643647f3d8523ed8c887826f908a22e034e12b6ac57"
+    },
+    {
+      "clock": 2000,
+      "Adam": 2000,
+      "RNG": [
+        0,
+        1010267101
+      ],
+      "normalizer": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+      "critic": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1",
+      "actor": "87bf4c70b9e0e43ffaa6d8ec3dc50ad590343600616016c8e81c1cb8cb1974a3",
+      "file_sha256": "6fb4438a95cc57597e02229082753103839011309b29a8e66c4ca7e5fc1b3f0b"
+    }
+  ],
+  "resume_implemented": false,
+  "simulation_steps": 0,
+  "supervised_updates": 0,
+  "backend": "cpu",
+  "scope": "Actual serialized BC state, inference pairing, fresh initialization and absolute clocks"
+}

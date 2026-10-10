@@ -1,0 +1,3132 @@
+{
+  "physical": [
+    {
+      "update": 0,
+      "root_id": "TRAIN-1010233101-68",
+      "role": "TRAIN",
+      "steps": 54,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 53,
+          "original_episode_tick": 56,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 53,
+          "original_episode_tick": 56,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 38,
+          "original_episode_tick": 41,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 0,
+      "root_id": "TRAIN-1010233101-37",
+      "role": "TRAIN",
+      "steps": 47,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 46,
+          "original_episode_tick": 54,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 33,
+          "original_episode_tick": 41,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 4
+    },
+    {
+      "update": 0,
+      "root_id": "TRAIN-1010233101-10",
+      "role": "TRAIN",
+      "steps": 49,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 48,
+          "original_episode_tick": 61,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 48,
+          "original_episode_tick": 61,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 30,
+          "original_episode_tick": 43,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 0,
+      "root_id": "TRAIN-1010233101-18",
+      "role": "TRAIN",
+      "steps": 41,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 40,
+          "original_episode_tick": 53,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 40,
+          "original_episode_tick": 53,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 29,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 0,
+      "root_id": "TRAIN-1010233101-26",
+      "role": "TRAIN",
+      "steps": 43,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 42,
+          "original_episode_tick": 55,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 42,
+          "original_episode_tick": 55,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 29,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 0,
+      "root_id": "TRAIN-1010233101-30",
+      "role": "TRAIN",
+      "steps": 40,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 39,
+          "original_episode_tick": 52,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 39,
+          "original_episode_tick": 52,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 28,
+          "original_episode_tick": 41,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 0,
+      "root_id": "TRAIN-1010233101-55",
+      "role": "TRAIN",
+      "steps": 39,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 38,
+          "original_episode_tick": 56,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 38,
+          "original_episode_tick": 56,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 24,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 0,
+      "root_id": "TRAIN-1010233101-63",
+      "role": "TRAIN",
+      "steps": 40,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 39,
+          "original_episode_tick": 57,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 39,
+          "original_episode_tick": 57,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 24,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 0,
+      "root_id": "SOLVER_DEV-1010245101-4",
+      "role": "SOLVER_DEV",
+      "steps": 51,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 50,
+          "original_episode_tick": 53,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 50,
+          "original_episode_tick": 53,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 39,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 0,
+      "root_id": "SOLVER_DEV-1010245101-21",
+      "role": "SOLVER_DEV",
+      "steps": 38,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 37,
+          "original_episode_tick": 45,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 37,
+          "original_episode_tick": 45,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 35,
+          "original_episode_tick": 43,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 0,
+      "root_id": "SOLVER_DEV-1010245101-6",
+      "role": "SOLVER_DEV",
+      "steps": 33,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 32,
+          "original_episode_tick": 45,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 32,
+          "original_episode_tick": 45,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 28,
+          "original_episode_tick": 41,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 0,
+      "root_id": "SOLVER_DEV-1010245101-19",
+      "role": "SOLVER_DEV",
+      "steps": 47,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 46,
+          "original_episode_tick": 64,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 46,
+          "original_episode_tick": 64,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 24,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 0,
+      "root_id": "SOLVER_DEV-1010245101-10",
+      "role": "SOLVER_DEV",
+      "steps": 33,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 32,
+          "original_episode_tick": 45,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 29,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 4
+    },
+    {
+      "update": 0,
+      "root_id": "SOLVER_DEV-1010245101-14",
+      "role": "SOLVER_DEV",
+      "steps": 32,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 31,
+          "original_episode_tick": 44,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 31,
+          "original_episode_tick": 44,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 29,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 0,
+      "root_id": "SOLVER_DEV-1010245101-18",
+      "role": "SOLVER_DEV",
+      "steps": 39,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 38,
+          "original_episode_tick": 51,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 38,
+          "original_episode_tick": 51,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 31,
+          "original_episode_tick": 44,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 100,
+      "root_id": "TRAIN-1010233101-68",
+      "role": "TRAIN",
+      "steps": 73,
+      "label": 1,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 38,
+          "original_episode_tick": 41,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 12
+    },
+    {
+      "update": 100,
+      "root_id": "TRAIN-1010233101-37",
+      "role": "TRAIN",
+      "steps": 64,
+      "label": 1,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 33,
+          "original_episode_tick": 41,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 12
+    },
+    {
+      "update": 100,
+      "root_id": "TRAIN-1010233101-10",
+      "role": "TRAIN",
+      "steps": 63,
+      "label": 1,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 31,
+          "original_episode_tick": 44,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 12
+    },
+    {
+      "update": 100,
+      "root_id": "TRAIN-1010233101-18",
+      "role": "TRAIN",
+      "steps": 43,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 42,
+          "original_episode_tick": 55,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 42,
+          "original_episode_tick": 55,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 29,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 100,
+      "root_id": "TRAIN-1010233101-26",
+      "role": "TRAIN",
+      "steps": 45,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 44,
+          "original_episode_tick": 57,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 44,
+          "original_episode_tick": 57,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 29,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 100,
+      "root_id": "TRAIN-1010233101-30",
+      "role": "TRAIN",
+      "steps": 39,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 38,
+          "original_episode_tick": 51,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 27,
+          "original_episode_tick": 40,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 4
+    },
+    {
+      "update": 100,
+      "root_id": "TRAIN-1010233101-55",
+      "role": "TRAIN",
+      "steps": 78,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 77,
+          "original_episode_tick": 95,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 77,
+          "original_episode_tick": 95,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 24,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 100,
+      "root_id": "TRAIN-1010233101-63",
+      "role": "TRAIN",
+      "steps": 92,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 91,
+          "original_episode_tick": 109,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 91,
+          "original_episode_tick": 109,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 24,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 100,
+      "root_id": "SOLVER_DEV-1010245101-4",
+      "role": "SOLVER_DEV",
+      "steps": 72,
+      "label": 1,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 38,
+          "original_episode_tick": 41,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 12
+    },
+    {
+      "update": 100,
+      "root_id": "SOLVER_DEV-1010245101-21",
+      "role": "SOLVER_DEV",
+      "steps": 41,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 40,
+          "original_episode_tick": 48,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 31,
+          "original_episode_tick": 39,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 4
+    },
+    {
+      "update": 100,
+      "root_id": "SOLVER_DEV-1010245101-6",
+      "role": "SOLVER_DEV",
+      "steps": 35,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 34,
+          "original_episode_tick": 47,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 26,
+          "original_episode_tick": 39,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 4
+    },
+    {
+      "update": 100,
+      "root_id": "SOLVER_DEV-1010245101-19",
+      "role": "SOLVER_DEV",
+      "steps": 44,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 43,
+          "original_episode_tick": 61,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 43,
+          "original_episode_tick": 61,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 25,
+          "original_episode_tick": 43,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 100,
+      "root_id": "SOLVER_DEV-1010245101-10",
+      "role": "SOLVER_DEV",
+      "steps": 34,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 33,
+          "original_episode_tick": 46,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 28,
+          "original_episode_tick": 41,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 4
+    },
+    {
+      "update": 100,
+      "root_id": "SOLVER_DEV-1010245101-14",
+      "role": "SOLVER_DEV",
+      "steps": 35,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 34,
+          "original_episode_tick": 47,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 34,
+          "original_episode_tick": 47,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 28,
+          "original_episode_tick": 41,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 100,
+      "root_id": "SOLVER_DEV-1010245101-18",
+      "role": "SOLVER_DEV",
+      "steps": 41,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 40,
+          "original_episode_tick": 53,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 40,
+          "original_episode_tick": 53,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 30,
+          "original_episode_tick": 43,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 500,
+      "root_id": "TRAIN-1010233101-68",
+      "role": "TRAIN",
+      "steps": 66,
+      "label": 1,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 40,
+          "original_episode_tick": 43,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 12
+    },
+    {
+      "update": 500,
+      "root_id": "TRAIN-1010233101-37",
+      "role": "TRAIN",
+      "steps": 63,
+      "label": 1,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 33,
+          "original_episode_tick": 41,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 12
+    },
+    {
+      "update": 500,
+      "root_id": "TRAIN-1010233101-10",
+      "role": "TRAIN",
+      "steps": 64,
+      "label": 1,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 30,
+          "original_episode_tick": 43,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 12
+    },
+    {
+      "update": 500,
+      "root_id": "TRAIN-1010233101-18",
+      "role": "TRAIN",
+      "steps": 50,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 49,
+          "original_episode_tick": 62,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 49,
+          "original_episode_tick": 62,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 29,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 500,
+      "root_id": "TRAIN-1010233101-26",
+      "role": "TRAIN",
+      "steps": 70,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 69,
+          "original_episode_tick": 82,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 69,
+          "original_episode_tick": 82,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 29,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 500,
+      "root_id": "TRAIN-1010233101-30",
+      "role": "TRAIN",
+      "steps": 44,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 43,
+          "original_episode_tick": 56,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 43,
+          "original_episode_tick": 56,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 29,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 500,
+      "root_id": "TRAIN-1010233101-55",
+      "role": "TRAIN",
+      "steps": 45,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 44,
+          "original_episode_tick": 62,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 44,
+          "original_episode_tick": 62,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 25,
+          "original_episode_tick": 43,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 500,
+      "root_id": "TRAIN-1010233101-63",
+      "role": "TRAIN",
+      "steps": 44,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 43,
+          "original_episode_tick": 61,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 43,
+          "original_episode_tick": 61,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 25,
+          "original_episode_tick": 43,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 500,
+      "root_id": "SOLVER_DEV-1010245101-4",
+      "role": "SOLVER_DEV",
+      "steps": 71,
+      "label": 1,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 38,
+          "original_episode_tick": 41,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 12
+    },
+    {
+      "update": 500,
+      "root_id": "SOLVER_DEV-1010245101-21",
+      "role": "SOLVER_DEV",
+      "steps": 61,
+      "label": 1,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 34,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 12
+    },
+    {
+      "update": 500,
+      "root_id": "SOLVER_DEV-1010245101-6",
+      "role": "SOLVER_DEV",
+      "steps": 35,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 34,
+          "original_episode_tick": 47,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 27,
+          "original_episode_tick": 40,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 4
+    },
+    {
+      "update": 500,
+      "root_id": "SOLVER_DEV-1010245101-19",
+      "role": "SOLVER_DEV",
+      "steps": 41,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 40,
+          "original_episode_tick": 58,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 40,
+          "original_episode_tick": 58,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 24,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 500,
+      "root_id": "SOLVER_DEV-1010245101-10",
+      "role": "SOLVER_DEV",
+      "steps": 34,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 33,
+          "original_episode_tick": 46,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 28,
+          "original_episode_tick": 41,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 4
+    },
+    {
+      "update": 500,
+      "root_id": "SOLVER_DEV-1010245101-14",
+      "role": "SOLVER_DEV",
+      "steps": 35,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 34,
+          "original_episode_tick": 47,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 34,
+          "original_episode_tick": 47,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 26,
+          "original_episode_tick": 39,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 500,
+      "root_id": "SOLVER_DEV-1010245101-18",
+      "role": "SOLVER_DEV",
+      "steps": 50,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 49,
+          "original_episode_tick": 62,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 49,
+          "original_episode_tick": 62,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 31,
+          "original_episode_tick": 44,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 1000,
+      "root_id": "TRAIN-1010233101-68",
+      "role": "TRAIN",
+      "steps": 63,
+      "label": 1,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 36,
+          "original_episode_tick": 39,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 12
+    },
+    {
+      "update": 1000,
+      "root_id": "TRAIN-1010233101-37",
+      "role": "TRAIN",
+      "steps": 59,
+      "label": 1,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 32,
+          "original_episode_tick": 40,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 12
+    },
+    {
+      "update": 1000,
+      "root_id": "TRAIN-1010233101-10",
+      "role": "TRAIN",
+      "steps": 61,
+      "label": 1,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 30,
+          "original_episode_tick": 43,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 12
+    },
+    {
+      "update": 1000,
+      "root_id": "TRAIN-1010233101-18",
+      "role": "TRAIN",
+      "steps": 74,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 73,
+          "original_episode_tick": 86,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 73,
+          "original_episode_tick": 86,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 29,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 1000,
+      "root_id": "TRAIN-1010233101-26",
+      "role": "TRAIN",
+      "steps": 66,
+      "label": 1,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 29,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 12
+    },
+    {
+      "update": 1000,
+      "root_id": "TRAIN-1010233101-30",
+      "role": "TRAIN",
+      "steps": 45,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 44,
+          "original_episode_tick": 57,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 44,
+          "original_episode_tick": 57,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 29,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 1000,
+      "root_id": "TRAIN-1010233101-55",
+      "role": "TRAIN",
+      "steps": 98,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 97,
+          "original_episode_tick": 115,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 97,
+          "original_episode_tick": 115,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 25,
+          "original_episode_tick": 43,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 1000,
+      "root_id": "TRAIN-1010233101-63",
+      "role": "TRAIN",
+      "steps": 158,
+      "label": 1,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 24,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 12
+    },
+    {
+      "update": 1000,
+      "root_id": "SOLVER_DEV-1010245101-4",
+      "role": "SOLVER_DEV",
+      "steps": 66,
+      "label": 1,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 40,
+          "original_episode_tick": 43,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 12
+    },
+    {
+      "update": 1000,
+      "root_id": "SOLVER_DEV-1010245101-21",
+      "role": "SOLVER_DEV",
+      "steps": 61,
+      "label": 1,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 34,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 12
+    },
+    {
+      "update": 1000,
+      "root_id": "SOLVER_DEV-1010245101-6",
+      "role": "SOLVER_DEV",
+      "steps": 35,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 34,
+          "original_episode_tick": 47,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 34,
+          "original_episode_tick": 47,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 29,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 1000,
+      "root_id": "SOLVER_DEV-1010245101-19",
+      "role": "SOLVER_DEV",
+      "steps": 43,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 42,
+          "original_episode_tick": 60,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 42,
+          "original_episode_tick": 60,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 24,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 1000,
+      "root_id": "SOLVER_DEV-1010245101-10",
+      "role": "SOLVER_DEV",
+      "steps": 34,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 33,
+          "original_episode_tick": 46,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 29,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 4
+    },
+    {
+      "update": 1000,
+      "root_id": "SOLVER_DEV-1010245101-14",
+      "role": "SOLVER_DEV",
+      "steps": 37,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 36,
+          "original_episode_tick": 49,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 36,
+          "original_episode_tick": 49,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 26,
+          "original_episode_tick": 39,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 1000,
+      "root_id": "SOLVER_DEV-1010245101-18",
+      "role": "SOLVER_DEV",
+      "steps": 66,
+      "label": 1,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 30,
+          "original_episode_tick": 43,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 12
+    },
+    {
+      "update": 2000,
+      "root_id": "TRAIN-1010233101-68",
+      "role": "TRAIN",
+      "steps": 63,
+      "label": 1,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 35,
+          "original_episode_tick": 38,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 12
+    },
+    {
+      "update": 2000,
+      "root_id": "TRAIN-1010233101-37",
+      "role": "TRAIN",
+      "steps": 61,
+      "label": 1,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 33,
+          "original_episode_tick": 41,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 12
+    },
+    {
+      "update": 2000,
+      "root_id": "TRAIN-1010233101-10",
+      "role": "TRAIN",
+      "steps": 60,
+      "label": 1,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 30,
+          "original_episode_tick": 43,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 12
+    },
+    {
+      "update": 2000,
+      "root_id": "TRAIN-1010233101-18",
+      "role": "TRAIN",
+      "steps": 64,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 63,
+          "original_episode_tick": 76,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 63,
+          "original_episode_tick": 76,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 30,
+          "original_episode_tick": 43,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 2000,
+      "root_id": "TRAIN-1010233101-26",
+      "role": "TRAIN",
+      "steps": 75,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 74,
+          "original_episode_tick": 87,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 74,
+          "original_episode_tick": 87,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 29,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 2000,
+      "root_id": "TRAIN-1010233101-30",
+      "role": "TRAIN",
+      "steps": 66,
+      "label": 1,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 29,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 12
+    },
+    {
+      "update": 2000,
+      "root_id": "TRAIN-1010233101-55",
+      "role": "TRAIN",
+      "steps": 65,
+      "label": 1,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 25,
+          "original_episode_tick": 43,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 12
+    },
+    {
+      "update": 2000,
+      "root_id": "TRAIN-1010233101-63",
+      "role": "TRAIN",
+      "steps": 90,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": 89,
+          "original_episode_tick": 107,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 89,
+          "original_episode_tick": 107,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 24,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 5
+    },
+    {
+      "update": 2000,
+      "root_id": "SOLVER_DEV-1010245101-4",
+      "role": "SOLVER_DEV",
+      "steps": 66,
+      "label": 1,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 39,
+          "original_episode_tick": 42,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 12
+    },
+    {
+      "update": 2000,
+      "root_id": "SOLVER_DEV-1010245101-21",
+      "role": "SOLVER_DEV",
+      "steps": 61,
+      "label": 1,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 35,
+          "original_episode_tick": 43,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 12
+    },
+    {
+      "update": 2000,
+      "root_id": "SOLVER_DEV-1010245101-6",
+      "role": "SOLVER_DEV",
+      "steps": 35,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 34,
+          "original_episode_tick": 47,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 34,
+          "original_episode_tick": 47,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 28,
+          "original_episode_tick": 41,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 2000,
+      "root_id": "SOLVER_DEV-1010245101-19",
+      "role": "SOLVER_DEV",
+      "steps": 44,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 43,
+          "original_episode_tick": 61,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 43,
+          "original_episode_tick": 61,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 25,
+          "original_episode_tick": 43,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 2000,
+      "root_id": "SOLVER_DEV-1010245101-10",
+      "role": "SOLVER_DEV",
+      "steps": 35,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 34,
+          "original_episode_tick": 47,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 34,
+          "original_episode_tick": 47,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 28,
+          "original_episode_tick": 41,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 2000,
+      "root_id": "SOLVER_DEV-1010245101-14",
+      "role": "SOLVER_DEV",
+      "steps": 36,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 35,
+          "original_episode_tick": 48,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 35,
+          "original_episode_tick": 48,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 27,
+          "original_episode_tick": 40,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    },
+    {
+      "update": 2000,
+      "root_id": "SOLVER_DEV-1010245101-18",
+      "role": "SOLVER_DEV",
+      "steps": 89,
+      "label": 0,
+      "first": {
+        "roll_limit": {
+          "suffix_tick": 88,
+          "original_episode_tick": 101,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "prohibited_contact": {
+          "suffix_tick": null,
+          "original_episode_tick": null,
+          "phase": null,
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "physical_failure": {
+          "suffix_tick": 88,
+          "original_episode_tick": 101,
+          "phase": "post_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        },
+        "first_valid_contact": {
+          "suffix_tick": 31,
+          "original_episode_tick": 44,
+          "phase": "airborne_before_valid_contact",
+          "substep": "UNKNOWN; control-step trace only"
+        }
+      },
+      "end_code": 3
+    }
+  ],
+  "latest_student_teacher_difference": [
+    {
+      "root_id": "TRAIN-1010233101-68",
+      "update": 2000,
+      "initial_observation_maxabs": 0.0,
+      "first_action_difference": 0,
+      "first_preaction_observation_difference": 1,
+      "prefix_action_RMSE": 0.18767307698726654,
+      "student_anomaly": {
+        "steps": 63,
+        "label": 1,
+        "first": {
+          "roll_limit": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "prohibited_contact": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "physical_failure": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "first_valid_contact": {
+            "suffix_tick": 35,
+            "original_episode_tick": 38,
+            "phase": "airborne_before_valid_contact",
+            "substep": "UNKNOWN; control-step trace only"
+          }
+        },
+        "end_code": 12
+      },
+      "teacher_anomaly": {
+        "steps": 65,
+        "label": 1,
+        "first": {
+          "roll_limit": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "prohibited_contact": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "physical_failure": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "first_valid_contact": {
+            "suffix_tick": 39,
+            "original_episode_tick": 42,
+            "phase": "airborne_before_valid_contact",
+            "substep": "UNKNOWN; control-step trace only"
+          }
+        },
+        "end_code": 12
+      },
+      "threshold": 1e-06,
+      "causal_claim": "temporal diagnostic only"
+    },
+    {
+      "root_id": "TRAIN-1010233101-37",
+      "update": 2000,
+      "initial_observation_maxabs": 0.0,
+      "first_action_difference": 0,
+      "first_preaction_observation_difference": 1,
+      "prefix_action_RMSE": 0.1868351399898529,
+      "student_anomaly": {
+        "steps": 61,
+        "label": 1,
+        "first": {
+          "roll_limit": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "prohibited_contact": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "physical_failure": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "first_valid_contact": {
+            "suffix_tick": 33,
+            "original_episode_tick": 41,
+            "phase": "airborne_before_valid_contact",
+            "substep": "UNKNOWN; control-step trace only"
+          }
+        },
+        "end_code": 12
+      },
+      "teacher_anomaly": {
+        "steps": 62,
+        "label": 1,
+        "first": {
+          "roll_limit": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "prohibited_contact": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "physical_failure": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "first_valid_contact": {
+            "suffix_tick": 36,
+            "original_episode_tick": 44,
+            "phase": "airborne_before_valid_contact",
+            "substep": "UNKNOWN; control-step trace only"
+          }
+        },
+        "end_code": 12
+      },
+      "threshold": 1e-06,
+      "causal_claim": "temporal diagnostic only"
+    },
+    {
+      "root_id": "TRAIN-1010233101-10",
+      "update": 2000,
+      "initial_observation_maxabs": 0.0,
+      "first_action_difference": 0,
+      "first_preaction_observation_difference": 1,
+      "prefix_action_RMSE": 0.21569201350212097,
+      "student_anomaly": {
+        "steps": 60,
+        "label": 1,
+        "first": {
+          "roll_limit": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "prohibited_contact": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "physical_failure": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "first_valid_contact": {
+            "suffix_tick": 30,
+            "original_episode_tick": 43,
+            "phase": "airborne_before_valid_contact",
+            "substep": "UNKNOWN; control-step trace only"
+          }
+        },
+        "end_code": 12
+      },
+      "teacher_anomaly": {
+        "steps": 70,
+        "label": 1,
+        "first": {
+          "roll_limit": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "prohibited_contact": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "physical_failure": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "first_valid_contact": {
+            "suffix_tick": 30,
+            "original_episode_tick": 43,
+            "phase": "airborne_before_valid_contact",
+            "substep": "UNKNOWN; control-step trace only"
+          }
+        },
+        "end_code": 12
+      },
+      "threshold": 1e-06,
+      "causal_claim": "temporal diagnostic only"
+    },
+    {
+      "root_id": "TRAIN-1010233101-18",
+      "update": 2000,
+      "initial_observation_maxabs": 0.0,
+      "first_action_difference": 0,
+      "first_preaction_observation_difference": 1,
+      "prefix_action_RMSE": 0.16146065294742584,
+      "student_anomaly": {
+        "steps": 64,
+        "label": 0,
+        "first": {
+          "roll_limit": {
+            "suffix_tick": 63,
+            "original_episode_tick": 76,
+            "phase": "post_contact",
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "prohibited_contact": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "physical_failure": {
+            "suffix_tick": 63,
+            "original_episode_tick": 76,
+            "phase": "post_contact",
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "first_valid_contact": {
+            "suffix_tick": 30,
+            "original_episode_tick": 43,
+            "phase": "airborne_before_valid_contact",
+            "substep": "UNKNOWN; control-step trace only"
+          }
+        },
+        "end_code": 3
+      },
+      "teacher_anomaly": {
+        "steps": 82,
+        "label": 1,
+        "first": {
+          "roll_limit": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "prohibited_contact": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "physical_failure": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "first_valid_contact": {
+            "suffix_tick": 29,
+            "original_episode_tick": 42,
+            "phase": "airborne_before_valid_contact",
+            "substep": "UNKNOWN; control-step trace only"
+          }
+        },
+        "end_code": 12
+      },
+      "threshold": 1e-06,
+      "causal_claim": "temporal diagnostic only"
+    },
+    {
+      "root_id": "TRAIN-1010233101-26",
+      "update": 2000,
+      "initial_observation_maxabs": 0.0,
+      "first_action_difference": 0,
+      "first_preaction_observation_difference": 1,
+      "prefix_action_RMSE": 0.1147228553891182,
+      "student_anomaly": {
+        "steps": 75,
+        "label": 0,
+        "first": {
+          "roll_limit": {
+            "suffix_tick": 74,
+            "original_episode_tick": 87,
+            "phase": "post_contact",
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "prohibited_contact": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "physical_failure": {
+            "suffix_tick": 74,
+            "original_episode_tick": 87,
+            "phase": "post_contact",
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "first_valid_contact": {
+            "suffix_tick": 29,
+            "original_episode_tick": 42,
+            "phase": "airborne_before_valid_contact",
+            "substep": "UNKNOWN; control-step trace only"
+          }
+        },
+        "end_code": 3
+      },
+      "teacher_anomaly": {
+        "steps": 66,
+        "label": 1,
+        "first": {
+          "roll_limit": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "prohibited_contact": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "physical_failure": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "first_valid_contact": {
+            "suffix_tick": 29,
+            "original_episode_tick": 42,
+            "phase": "airborne_before_valid_contact",
+            "substep": "UNKNOWN; control-step trace only"
+          }
+        },
+        "end_code": 12
+      },
+      "threshold": 1e-06,
+      "causal_claim": "temporal diagnostic only"
+    },
+    {
+      "root_id": "TRAIN-1010233101-30",
+      "update": 2000,
+      "initial_observation_maxabs": 0.0,
+      "first_action_difference": 0,
+      "first_preaction_observation_difference": 1,
+      "prefix_action_RMSE": 0.13881947100162506,
+      "student_anomaly": {
+        "steps": 66,
+        "label": 1,
+        "first": {
+          "roll_limit": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "prohibited_contact": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "physical_failure": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "first_valid_contact": {
+            "suffix_tick": 29,
+            "original_episode_tick": 42,
+            "phase": "airborne_before_valid_contact",
+            "substep": "UNKNOWN; control-step trace only"
+          }
+        },
+        "end_code": 12
+      },
+      "teacher_anomaly": {
+        "steps": 64,
+        "label": 1,
+        "first": {
+          "roll_limit": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "prohibited_contact": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "physical_failure": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "first_valid_contact": {
+            "suffix_tick": 29,
+            "original_episode_tick": 42,
+            "phase": "airborne_before_valid_contact",
+            "substep": "UNKNOWN; control-step trace only"
+          }
+        },
+        "end_code": 12
+      },
+      "threshold": 1e-06,
+      "causal_claim": "temporal diagnostic only"
+    },
+    {
+      "root_id": "TRAIN-1010233101-55",
+      "update": 2000,
+      "initial_observation_maxabs": 0.0,
+      "first_action_difference": 0,
+      "first_preaction_observation_difference": 1,
+      "prefix_action_RMSE": 0.13865725696086884,
+      "student_anomaly": {
+        "steps": 65,
+        "label": 1,
+        "first": {
+          "roll_limit": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "prohibited_contact": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "physical_failure": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "first_valid_contact": {
+            "suffix_tick": 25,
+            "original_episode_tick": 43,
+            "phase": "airborne_before_valid_contact",
+            "substep": "UNKNOWN; control-step trace only"
+          }
+        },
+        "end_code": 12
+      },
+      "teacher_anomaly": {
+        "steps": 55,
+        "label": 1,
+        "first": {
+          "roll_limit": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "prohibited_contact": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "physical_failure": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "first_valid_contact": {
+            "suffix_tick": 24,
+            "original_episode_tick": 42,
+            "phase": "airborne_before_valid_contact",
+            "substep": "UNKNOWN; control-step trace only"
+          }
+        },
+        "end_code": 12
+      },
+      "threshold": 1e-06,
+      "causal_claim": "temporal diagnostic only"
+    },
+    {
+      "root_id": "TRAIN-1010233101-63",
+      "update": 2000,
+      "initial_observation_maxabs": 0.0,
+      "first_action_difference": 0,
+      "first_preaction_observation_difference": 1,
+      "prefix_action_RMSE": 0.03705589473247528,
+      "student_anomaly": {
+        "steps": 90,
+        "label": 0,
+        "first": {
+          "roll_limit": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "prohibited_contact": {
+            "suffix_tick": 89,
+            "original_episode_tick": 107,
+            "phase": "post_contact",
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "physical_failure": {
+            "suffix_tick": 89,
+            "original_episode_tick": 107,
+            "phase": "post_contact",
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "first_valid_contact": {
+            "suffix_tick": 24,
+            "original_episode_tick": 42,
+            "phase": "airborne_before_valid_contact",
+            "substep": "UNKNOWN; control-step trace only"
+          }
+        },
+        "end_code": 5
+      },
+      "teacher_anomaly": {
+        "steps": 61,
+        "label": 1,
+        "first": {
+          "roll_limit": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "prohibited_contact": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "physical_failure": {
+            "suffix_tick": null,
+            "original_episode_tick": null,
+            "phase": null,
+            "substep": "UNKNOWN; control-step trace only"
+          },
+          "first_valid_contact": {
+            "suffix_tick": 24,
+            "original_episode_tick": 42,
+            "phase": "airborne_before_valid_contact",
+            "substep": "UNKNOWN; control-step trace only"
+          }
+        },
+        "end_code": 12
+      },
+      "threshold": 1e-06,
+      "causal_claim": "temporal diagnostic only"
+    }
+  ]
+}

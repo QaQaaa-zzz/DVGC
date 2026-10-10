@@ -1,0 +1,753 @@
+{
+  "selected_update": 1000,
+  "complete_DEV_old_losses": [
+    {
+      "case": "B_04",
+      "lane": 20,
+      "labels": [
+        1,
+        0,
+        1,
+        0
+      ],
+      "labels_order": [
+        "pi0_first",
+        "student_first",
+        "pi0_repeat",
+        "student_repeat"
+      ],
+      "gradient_allowed": false,
+      "trajectories": [
+        {
+          "repetition": "first",
+          "pi0": {
+            "steps": 68,
+            "success": true,
+            "end_code": 12,
+            "recovery_ticks_end": 25,
+            "first": {
+              "first_valid_contact": {
+                "control_tick": 42,
+                "phase": "at_or_before_first_valid_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "roll_limit": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "prohibited_contact": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "physical_failure": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              }
+            }
+          },
+          "student": {
+            "steps": 72,
+            "success": false,
+            "end_code": 3,
+            "recovery_ticks_end": 0,
+            "first": {
+              "first_valid_contact": {
+                "control_tick": 43,
+                "phase": "at_or_before_first_valid_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "roll_limit": {
+                "control_tick": 71,
+                "phase": "post_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "prohibited_contact": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "physical_failure": {
+                "control_tick": 71,
+                "phase": "post_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              }
+            }
+          },
+          "pi0_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_001/DEV_pi0/prefixes.npz",
+          "student_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_DEV/prefixes.npz"
+        },
+        {
+          "repetition": "repeat",
+          "pi0": {
+            "steps": 68,
+            "success": true,
+            "end_code": 12,
+            "recovery_ticks_end": 25,
+            "first": {
+              "first_valid_contact": {
+                "control_tick": 42,
+                "phase": "at_or_before_first_valid_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "roll_limit": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "prohibited_contact": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "physical_failure": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              }
+            }
+          },
+          "student": {
+            "steps": 68,
+            "success": false,
+            "end_code": 3,
+            "recovery_ticks_end": 0,
+            "first": {
+              "first_valid_contact": {
+                "control_tick": 42,
+                "phase": "at_or_before_first_valid_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "roll_limit": {
+                "control_tick": 67,
+                "phase": "post_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "prohibited_contact": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "physical_failure": {
+                "control_tick": 67,
+                "phase": "post_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              }
+            }
+          },
+          "pi0_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_repeat_pi0_DEV/prefixes.npz",
+          "student_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_repeat_DEV/prefixes.npz"
+        }
+      ]
+    },
+    {
+      "case": "C_10",
+      "lane": 42,
+      "labels": [
+        1,
+        0,
+        1,
+        0
+      ],
+      "labels_order": [
+        "pi0_first",
+        "student_first",
+        "pi0_repeat",
+        "student_repeat"
+      ],
+      "gradient_allowed": false,
+      "trajectories": [
+        {
+          "repetition": "first",
+          "pi0": {
+            "steps": 79,
+            "success": true,
+            "end_code": 12,
+            "recovery_ticks_end": 25,
+            "first": {
+              "first_valid_contact": {
+                "control_tick": 42,
+                "phase": "at_or_before_first_valid_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "roll_limit": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "prohibited_contact": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "physical_failure": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              }
+            }
+          },
+          "student": {
+            "steps": 63,
+            "success": false,
+            "end_code": 3,
+            "recovery_ticks_end": 0,
+            "first": {
+              "first_valid_contact": {
+                "control_tick": 41,
+                "phase": "at_or_before_first_valid_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "roll_limit": {
+                "control_tick": 62,
+                "phase": "post_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "prohibited_contact": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "physical_failure": {
+                "control_tick": 62,
+                "phase": "post_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              }
+            }
+          },
+          "pi0_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_001/DEV_pi0/prefixes.npz",
+          "student_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_DEV/prefixes.npz"
+        },
+        {
+          "repetition": "repeat",
+          "pi0": {
+            "steps": 82,
+            "success": true,
+            "end_code": 12,
+            "recovery_ticks_end": 25,
+            "first": {
+              "first_valid_contact": {
+                "control_tick": 43,
+                "phase": "at_or_before_first_valid_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "roll_limit": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "prohibited_contact": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "physical_failure": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              }
+            }
+          },
+          "student": {
+            "steps": 66,
+            "success": false,
+            "end_code": 3,
+            "recovery_ticks_end": 0,
+            "first": {
+              "first_valid_contact": {
+                "control_tick": 41,
+                "phase": "at_or_before_first_valid_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "roll_limit": {
+                "control_tick": 65,
+                "phase": "post_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "prohibited_contact": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "physical_failure": {
+                "control_tick": 65,
+                "phase": "post_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              }
+            }
+          },
+          "pi0_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_repeat_pi0_DEV/prefixes.npz",
+          "student_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_repeat_DEV/prefixes.npz"
+        }
+      ]
+    },
+    {
+      "case": "D_03",
+      "lane": 51,
+      "labels": [
+        1,
+        0,
+        1,
+        0
+      ],
+      "labels_order": [
+        "pi0_first",
+        "student_first",
+        "pi0_repeat",
+        "student_repeat"
+      ],
+      "gradient_allowed": false,
+      "trajectories": [
+        {
+          "repetition": "first",
+          "pi0": {
+            "steps": 69,
+            "success": true,
+            "end_code": 12,
+            "recovery_ticks_end": 25,
+            "first": {
+              "first_valid_contact": {
+                "control_tick": 43,
+                "phase": "at_or_before_first_valid_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "roll_limit": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "prohibited_contact": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "physical_failure": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              }
+            }
+          },
+          "student": {
+            "steps": 58,
+            "success": false,
+            "end_code": 3,
+            "recovery_ticks_end": 0,
+            "first": {
+              "first_valid_contact": {
+                "control_tick": 41,
+                "phase": "at_or_before_first_valid_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "roll_limit": {
+                "control_tick": 57,
+                "phase": "post_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "prohibited_contact": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "physical_failure": {
+                "control_tick": 57,
+                "phase": "post_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              }
+            }
+          },
+          "pi0_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_001/DEV_pi0/prefixes.npz",
+          "student_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_DEV/prefixes.npz"
+        },
+        {
+          "repetition": "repeat",
+          "pi0": {
+            "steps": 68,
+            "success": true,
+            "end_code": 12,
+            "recovery_ticks_end": 25,
+            "first": {
+              "first_valid_contact": {
+                "control_tick": 42,
+                "phase": "at_or_before_first_valid_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "roll_limit": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "prohibited_contact": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "physical_failure": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              }
+            }
+          },
+          "student": {
+            "steps": 68,
+            "success": false,
+            "end_code": 3,
+            "recovery_ticks_end": 0,
+            "first": {
+              "first_valid_contact": {
+                "control_tick": 41,
+                "phase": "at_or_before_first_valid_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "roll_limit": {
+                "control_tick": 67,
+                "phase": "post_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "prohibited_contact": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "physical_failure": {
+                "control_tick": 67,
+                "phase": "post_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              }
+            }
+          },
+          "pi0_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_repeat_pi0_DEV/prefixes.npz",
+          "student_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_repeat_DEV/prefixes.npz"
+        }
+      ]
+    },
+    {
+      "case": "D_07",
+      "lane": 55,
+      "labels": [
+        1,
+        0,
+        1,
+        1
+      ],
+      "labels_order": [
+        "pi0_first",
+        "student_first",
+        "pi0_repeat",
+        "student_repeat"
+      ],
+      "gradient_allowed": false,
+      "trajectories": [
+        {
+          "repetition": "first",
+          "pi0": {
+            "steps": 77,
+            "success": true,
+            "end_code": 12,
+            "recovery_ticks_end": 25,
+            "first": {
+              "first_valid_contact": {
+                "control_tick": 42,
+                "phase": "at_or_before_first_valid_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "roll_limit": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "prohibited_contact": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "physical_failure": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              }
+            }
+          },
+          "student": {
+            "steps": 107,
+            "success": false,
+            "end_code": 3,
+            "recovery_ticks_end": 0,
+            "first": {
+              "first_valid_contact": {
+                "control_tick": 43,
+                "phase": "at_or_before_first_valid_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "roll_limit": {
+                "control_tick": 106,
+                "phase": "post_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "prohibited_contact": {
+                "control_tick": 106,
+                "phase": "post_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "physical_failure": {
+                "control_tick": 106,
+                "phase": "post_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              }
+            }
+          },
+          "pi0_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_001/DEV_pi0/prefixes.npz",
+          "student_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_DEV/prefixes.npz"
+        },
+        {
+          "repetition": "repeat",
+          "pi0": {
+            "steps": 77,
+            "success": true,
+            "end_code": 12,
+            "recovery_ticks_end": 25,
+            "first": {
+              "first_valid_contact": {
+                "control_tick": 42,
+                "phase": "at_or_before_first_valid_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "roll_limit": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "prohibited_contact": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "physical_failure": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              }
+            }
+          },
+          "student": {
+            "steps": 80,
+            "success": true,
+            "end_code": 12,
+            "recovery_ticks_end": 25,
+            "first": {
+              "first_valid_contact": {
+                "control_tick": 41,
+                "phase": "at_or_before_first_valid_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "roll_limit": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "prohibited_contact": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "physical_failure": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              }
+            }
+          },
+          "pi0_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_repeat_pi0_DEV/prefixes.npz",
+          "student_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_repeat_DEV/prefixes.npz"
+        }
+      ]
+    },
+    {
+      "case": "D_09",
+      "lane": 57,
+      "labels": [
+        1,
+        0,
+        1,
+        0
+      ],
+      "labels_order": [
+        "pi0_first",
+        "student_first",
+        "pi0_repeat",
+        "student_repeat"
+      ],
+      "gradient_allowed": false,
+      "trajectories": [
+        {
+          "repetition": "first",
+          "pi0": {
+            "steps": 89,
+            "success": true,
+            "end_code": 12,
+            "recovery_ticks_end": 25,
+            "first": {
+              "first_valid_contact": {
+                "control_tick": 43,
+                "phase": "at_or_before_first_valid_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "roll_limit": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "prohibited_contact": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "physical_failure": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              }
+            }
+          },
+          "student": {
+            "steps": 67,
+            "success": false,
+            "end_code": 3,
+            "recovery_ticks_end": 0,
+            "first": {
+              "first_valid_contact": {
+                "control_tick": 43,
+                "phase": "at_or_before_first_valid_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "roll_limit": {
+                "control_tick": 66,
+                "phase": "post_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "prohibited_contact": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "physical_failure": {
+                "control_tick": 66,
+                "phase": "post_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              }
+            }
+          },
+          "pi0_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_001/DEV_pi0/prefixes.npz",
+          "student_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_DEV/prefixes.npz"
+        },
+        {
+          "repetition": "repeat",
+          "pi0": {
+            "steps": 89,
+            "success": true,
+            "end_code": 12,
+            "recovery_ticks_end": 25,
+            "first": {
+              "first_valid_contact": {
+                "control_tick": 43,
+                "phase": "at_or_before_first_valid_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "roll_limit": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "prohibited_contact": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "physical_failure": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              }
+            }
+          },
+          "student": {
+            "steps": 67,
+            "success": false,
+            "end_code": 3,
+            "recovery_ticks_end": 0,
+            "first": {
+              "first_valid_contact": {
+                "control_tick": 43,
+                "phase": "at_or_before_first_valid_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "roll_limit": {
+                "control_tick": 66,
+                "phase": "post_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "prohibited_contact": {
+                "control_tick": null,
+                "phase": null,
+                "substep": "UNKNOWN; control-step trace only"
+              },
+              "physical_failure": {
+                "control_tick": 66,
+                "phase": "post_contact",
+                "substep": "UNKNOWN; control-step trace only"
+              }
+            }
+          },
+          "pi0_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_repeat_pi0_DEV/prefixes.npz",
+          "student_trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_repeat_DEV/prefixes.npz"
+        }
+      ]
+    }
+  ],
+  "actual_same_update_gradients": {
+    "actual/cosine_demo_keep": {
+      "mean": -0.4018237815930479,
+      "minimum": -0.9017686247825623,
+      "maximum": 0.5281888246536255,
+      "negative_fraction": 0.917
+    },
+    "actual/gradient_norm_demo": {
+      "mean": 0.028152199948206544,
+      "minimum": 0.006965708918869495,
+      "maximum": 0.38299983739852905,
+      "negative_fraction": 0.0
+    },
+    "actual/gradient_norm_keep": {
+      "mean": 0.016507821522081714,
+      "minimum": 1.2412010619300418e-07,
+      "maximum": 0.08406851440668106,
+      "negative_fraction": 0.0
+    },
+    "actual/global_clip_scale": {
+      "mean": 1.0,
+      "minimum": 1.0,
+      "maximum": 1.0,
+      "negative_fraction": 0.0
+    },
+    "actual/actor_adam_delta_norm": {
+      "mean": 0.0010551379880926106,
+      "minimum": 0.0007132366299629211,
+      "maximum": 0.003900595474988222,
+      "negative_fraction": 0.0
+    }
+  },
+  "supervision_updates": 2000,
+  "scope": "Saved-data development diagnosis; no causal or capacity proof; no DEV to TRAIN",
+  "next_experiment": "B: TRAIN student-visited-state guidance diagnosis only",
+  "next_budget_proposal": {
+    "charged_max": 544000,
+    "wall_hours": 3,
+    "BC_updates": 0,
+    "PPO_updates": 0,
+    "E_G_updates": 0,
+    "execution_authorized": false
+  }
+}

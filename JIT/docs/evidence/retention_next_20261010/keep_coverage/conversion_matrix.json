@@ -1,0 +1,1226 @@
+[
+  {
+    "root_id": "TRAIN-1010233101-68",
+    "role": "TRAIN",
+    "G_solution": 1,
+    "student_independent": 1,
+    "R5_original": 1,
+    "combinations": {
+      "independent": {
+        "label": 1,
+        "lane": 10,
+        "attempt": {
+          "action_origin": "actor_only",
+          "actor_sha256": "f1d1d460082fbc20eafc39d0ad4f318a38877b5b1b4122195ed3f12d8a52057e",
+          "actor_witness_eligible": false,
+          "adopted": false,
+          "controller_kind": "warmup_candidate",
+          "inference_override": {
+            "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+            "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B/update_1000.pkl",
+            "sha256": "b981714174b59e5fbea4178582e43318b6d3bae8fb73db18c412c1b518d63f09",
+            "source_actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8"
+          },
+          "label": 1,
+          "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "outcome": "stable_forward_recovery",
+          "policy": "bridge_baseline",
+          "recording_schema": "jit_actor_success_trace_v1_1",
+          "snapshot_context_sha256": "6577c8adb1b6d72030e2dc8d98a5104f59a245d145779f34a5686baaa01ccbfb",
+          "steps": 63,
+          "task_return": 1112.24462890625,
+          "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_TRAIN_root00_independent_pi0/bridge_baseline_traces.npz",
+          "trace_lane": 10,
+          "trace_sha256": "bea9238b2287013ef2a24ea14afcd83b2aee91a5ce3d5672cd4f8751aee9ade9"
+        },
+        "all_lane_labels": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "teacher_H16_pi0": {
+        "label": 1,
+        "attempt": {
+          "action_origin": "bridge_prefix_then_source_tail",
+          "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+          "actor_witness_eligible": false,
+          "controller_kind": "composite_teacher",
+          "label": 1,
+          "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "outcome": "stable_forward_recovery",
+          "policy": "bridge_baseline",
+          "recording_schema": "jit_bridge_trace_v1",
+          "snapshot_context_sha256": "6577c8adb1b6d72030e2dc8d98a5104f59a245d145779f34a5686baaa01ccbfb",
+          "source_only": false,
+          "steps": 65,
+          "task_return": 1113.0841064453125,
+          "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_002/root_000_G_repeat2/bridge_baseline_traces.npz",
+          "trace_lane": 10,
+          "trace_sha256": "f034a2d80a043a8b118094212be0238230c6c20cdbaf45a962a2cc4c5fff4bbc"
+        },
+        "reused": true
+      }
+    },
+    "TRAIN_repeat_update": 1000,
+    "diagnostic_combinations": null,
+    "diagnostic_update": 1000,
+    "TRAIN_repeat_labels": [
+      1,
+      1
+    ]
+  },
+  {
+    "root_id": "TRAIN-1010233101-37",
+    "role": "TRAIN",
+    "G_solution": 1,
+    "student_independent": 1,
+    "R5_original": 1,
+    "combinations": {
+      "independent": {
+        "label": 1,
+        "lane": 3,
+        "attempt": {
+          "action_origin": "actor_only",
+          "actor_sha256": "f1d1d460082fbc20eafc39d0ad4f318a38877b5b1b4122195ed3f12d8a52057e",
+          "actor_witness_eligible": false,
+          "adopted": false,
+          "controller_kind": "warmup_candidate",
+          "inference_override": {
+            "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+            "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B/update_1000.pkl",
+            "sha256": "b981714174b59e5fbea4178582e43318b6d3bae8fb73db18c412c1b518d63f09",
+            "source_actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8"
+          },
+          "label": 1,
+          "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "outcome": "stable_forward_recovery",
+          "policy": "bridge_baseline",
+          "recording_schema": "jit_actor_success_trace_v1_1",
+          "snapshot_context_sha256": "127fe80c95bdb64be9529056a622d53c336c79e1a89d9b2b79e9b427f1d976a6",
+          "steps": 59,
+          "task_return": 1062.6480712890625,
+          "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_TRAIN_root01_independent_pi0/bridge_baseline_traces.npz",
+          "trace_lane": 3,
+          "trace_sha256": "69cde155ae606bed45345ffe9abe12ed6538c0b260b7ac68e491be8b94cb2bd0"
+        },
+        "all_lane_labels": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "teacher_H16_pi0": {
+        "label": 1,
+        "attempt": {
+          "action_origin": "bridge_prefix_then_source_tail",
+          "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+          "actor_witness_eligible": false,
+          "controller_kind": "composite_teacher",
+          "label": 1,
+          "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "outcome": "stable_forward_recovery",
+          "policy": "bridge_baseline",
+          "recording_schema": "jit_bridge_trace_v1",
+          "snapshot_context_sha256": "127fe80c95bdb64be9529056a622d53c336c79e1a89d9b2b79e9b427f1d976a6",
+          "source_only": false,
+          "steps": 62,
+          "task_return": 1181.2628173828125,
+          "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_002/root_001_G_repeat2/bridge_baseline_traces.npz",
+          "trace_lane": 3,
+          "trace_sha256": "7a2d1b735f296d943b28a1949d318debde4e3b90ad00ff2ed3587dc53a5a1564"
+        },
+        "reused": true
+      }
+    },
+    "TRAIN_repeat_update": 1000,
+    "diagnostic_combinations": null,
+    "diagnostic_update": 1000,
+    "TRAIN_repeat_labels": [
+      1,
+      1
+    ]
+  },
+  {
+    "root_id": "TRAIN-1010233101-10",
+    "role": "TRAIN",
+    "G_solution": 1,
+    "student_independent": 1,
+    "R5_original": 0,
+    "combinations": {
+      "independent": {
+        "label": 1,
+        "lane": 11,
+        "attempt": {
+          "action_origin": "actor_only",
+          "actor_sha256": "f1d1d460082fbc20eafc39d0ad4f318a38877b5b1b4122195ed3f12d8a52057e",
+          "actor_witness_eligible": false,
+          "adopted": false,
+          "controller_kind": "warmup_candidate",
+          "inference_override": {
+            "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+            "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B/update_1000.pkl",
+            "sha256": "b981714174b59e5fbea4178582e43318b6d3bae8fb73db18c412c1b518d63f09",
+            "source_actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8"
+          },
+          "label": 1,
+          "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "outcome": "stable_forward_recovery",
+          "policy": "bridge_baseline",
+          "recording_schema": "jit_actor_success_trace_v1_1",
+          "snapshot_context_sha256": "1560772022e71b40f7dc743546635caffd00efdb09897e046b4576a64f1f9c5f",
+          "steps": 61,
+          "task_return": 1129.7877197265625,
+          "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_TRAIN_root02_independent_pi0/bridge_baseline_traces.npz",
+          "trace_lane": 11,
+          "trace_sha256": "0fb7704260e4964c91e9f8ab9c01eead82cbc1e0344e7b01f09c1c16109f2cdf"
+        },
+        "all_lane_labels": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "teacher_H16_pi0": {
+        "label": 1,
+        "attempt": {
+          "action_origin": "bridge_prefix_then_source_tail",
+          "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+          "actor_witness_eligible": false,
+          "controller_kind": "composite_teacher",
+          "label": 1,
+          "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "outcome": "stable_forward_recovery",
+          "policy": "bridge_baseline",
+          "recording_schema": "jit_bridge_trace_v1",
+          "snapshot_context_sha256": "1560772022e71b40f7dc743546635caffd00efdb09897e046b4576a64f1f9c5f",
+          "source_only": false,
+          "steps": 70,
+          "task_return": 1090.310302734375,
+          "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_002/root_005_G_repeat2/bridge_baseline_traces.npz",
+          "trace_lane": 11,
+          "trace_sha256": "c43411553c8b1de036e9a043003d961686492a82045ff2aba036556f856c3edb"
+        },
+        "reused": true
+      }
+    },
+    "TRAIN_repeat_update": 1000,
+    "diagnostic_combinations": null,
+    "diagnostic_update": 1000,
+    "TRAIN_repeat_labels": [
+      1,
+      1
+    ]
+  },
+  {
+    "root_id": "TRAIN-1010233101-18",
+    "role": "TRAIN",
+    "G_solution": 1,
+    "student_independent": 0,
+    "R5_original": 1,
+    "combinations": {
+      "independent": {
+        "label": 0,
+        "lane": 12,
+        "attempt": {
+          "action_origin": "actor_only",
+          "actor_sha256": "f1d1d460082fbc20eafc39d0ad4f318a38877b5b1b4122195ed3f12d8a52057e",
+          "actor_witness_eligible": false,
+          "adopted": false,
+          "controller_kind": "warmup_candidate",
+          "inference_override": {
+            "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+            "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B/update_1000.pkl",
+            "sha256": "b981714174b59e5fbea4178582e43318b6d3bae8fb73db18c412c1b518d63f09",
+            "source_actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8"
+          },
+          "label": 0,
+          "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "outcome": "airborne_physical_failure",
+          "policy": "bridge_baseline",
+          "recording_schema": "jit_actor_success_trace_v1_1",
+          "snapshot_context_sha256": "a99dcff1b7e88fe9015ef99bcb5557bdf41c47b6d853d049a370137217db2bb1",
+          "steps": 74,
+          "task_return": -365.8029479980469,
+          "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_TRAIN_root03_independent_pi0/bridge_baseline_traces.npz",
+          "trace_lane": 12,
+          "trace_sha256": "bf1e8bc7ccfee2f8fb9af64b9d92d2bcbc6e2284723552613892ec8bc9f45059"
+        },
+        "all_lane_labels": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "teacher_H16_pi0": {
+        "label": 1,
+        "attempt": {
+          "action_origin": "bridge_prefix_then_source_tail",
+          "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+          "actor_witness_eligible": false,
+          "controller_kind": "composite_teacher",
+          "label": 1,
+          "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "outcome": "stable_forward_recovery",
+          "policy": "bridge_baseline",
+          "recording_schema": "jit_bridge_trace_v1",
+          "snapshot_context_sha256": "a99dcff1b7e88fe9015ef99bcb5557bdf41c47b6d853d049a370137217db2bb1",
+          "source_only": false,
+          "steps": 82,
+          "task_return": 74.66962432861328,
+          "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_002/root_007_G_repeat2/bridge_baseline_traces.npz",
+          "trace_lane": 12,
+          "trace_sha256": "e3a59138fb1445f61b065bc0a54e10f91ae53c39ce1cfefba23467bb580871c3"
+        },
+        "reused": true
+      }
+    },
+    "TRAIN_repeat_update": 1000,
+    "diagnostic_combinations": null,
+    "diagnostic_update": 1000,
+    "TRAIN_repeat_labels": [
+      0,
+      0
+    ]
+  },
+  {
+    "root_id": "TRAIN-1010233101-26",
+    "role": "TRAIN",
+    "G_solution": 1,
+    "student_independent": 1,
+    "R5_original": 1,
+    "combinations": {
+      "independent": {
+        "label": 1,
+        "lane": 14,
+        "attempt": {
+          "action_origin": "actor_only",
+          "actor_sha256": "f1d1d460082fbc20eafc39d0ad4f318a38877b5b1b4122195ed3f12d8a52057e",
+          "actor_witness_eligible": false,
+          "adopted": false,
+          "controller_kind": "warmup_candidate",
+          "inference_override": {
+            "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+            "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B/update_1000.pkl",
+            "sha256": "b981714174b59e5fbea4178582e43318b6d3bae8fb73db18c412c1b518d63f09",
+            "source_actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8"
+          },
+          "label": 1,
+          "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "outcome": "stable_forward_recovery",
+          "policy": "bridge_baseline",
+          "recording_schema": "jit_actor_success_trace_v1_1",
+          "snapshot_context_sha256": "fb1558e60b97dff7ffe1de33438713068fd158015fc23414985f72352487f8cc",
+          "steps": 66,
+          "task_return": 1209.3577880859375,
+          "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_TRAIN_root04_independent_pi0/bridge_baseline_traces.npz",
+          "trace_lane": 14,
+          "trace_sha256": "e8709634e97dbd58604104eb7e5246e89f5a2dc605824cbf4ee87bf94b3aed34"
+        },
+        "all_lane_labels": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "teacher_H16_pi0": {
+        "label": 1,
+        "attempt": {
+          "action_origin": "bridge_prefix_then_source_tail",
+          "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+          "actor_witness_eligible": false,
+          "controller_kind": "composite_teacher",
+          "label": 1,
+          "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "outcome": "stable_forward_recovery",
+          "policy": "bridge_baseline",
+          "recording_schema": "jit_bridge_trace_v1",
+          "snapshot_context_sha256": "fb1558e60b97dff7ffe1de33438713068fd158015fc23414985f72352487f8cc",
+          "source_only": false,
+          "steps": 66,
+          "task_return": 1203.3802490234375,
+          "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_002/root_009_G_repeat2/bridge_baseline_traces.npz",
+          "trace_lane": 14,
+          "trace_sha256": "c6c9bc7d2a6e327ecf0abd30fe59c6d8e243873477c6aeab3d52e84f3a3d4ddd"
+        },
+        "reused": true
+      }
+    },
+    "TRAIN_repeat_update": 1000,
+    "diagnostic_combinations": null,
+    "diagnostic_update": 1000,
+    "TRAIN_repeat_labels": [
+      1,
+      1
+    ]
+  },
+  {
+    "root_id": "TRAIN-1010233101-30",
+    "role": "TRAIN",
+    "G_solution": 1,
+    "student_independent": 0,
+    "R5_original": 1,
+    "combinations": {
+      "independent": {
+        "label": 0,
+        "lane": 9,
+        "attempt": {
+          "action_origin": "actor_only",
+          "actor_sha256": "f1d1d460082fbc20eafc39d0ad4f318a38877b5b1b4122195ed3f12d8a52057e",
+          "actor_witness_eligible": false,
+          "adopted": false,
+          "controller_kind": "warmup_candidate",
+          "inference_override": {
+            "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+            "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B/update_1000.pkl",
+            "sha256": "b981714174b59e5fbea4178582e43318b6d3bae8fb73db18c412c1b518d63f09",
+            "source_actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8"
+          },
+          "label": 0,
+          "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "outcome": "airborne_physical_failure",
+          "policy": "bridge_baseline",
+          "recording_schema": "jit_actor_success_trace_v1_1",
+          "snapshot_context_sha256": "e76c915fba3fba07427cbba4586af536d678e6194836bbae809a42b610716056",
+          "steps": 45,
+          "task_return": 435.05072021484375,
+          "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_TRAIN_root05_independent_pi0/bridge_baseline_traces.npz",
+          "trace_lane": 9,
+          "trace_sha256": "0f5e9aca7beb37324544ddc8e17d12cec6891a1ab24ffe6a297c4e7cf7804bed"
+        },
+        "all_lane_labels": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "teacher_H16_pi0": {
+        "label": 1,
+        "attempt": {
+          "action_origin": "bridge_prefix_then_source_tail",
+          "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+          "actor_witness_eligible": false,
+          "controller_kind": "composite_teacher",
+          "label": 1,
+          "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "outcome": "stable_forward_recovery",
+          "policy": "bridge_baseline",
+          "recording_schema": "jit_bridge_trace_v1",
+          "snapshot_context_sha256": "e76c915fba3fba07427cbba4586af536d678e6194836bbae809a42b610716056",
+          "source_only": false,
+          "steps": 64,
+          "task_return": 1198.7476806640625,
+          "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_002/root_011_G_repeat2/bridge_baseline_traces.npz",
+          "trace_lane": 9,
+          "trace_sha256": "6af7f1cc4cf9174f46e23e2b0f5c40b6c5138ca3427b2728f017213b4fa891cf"
+        },
+        "reused": true
+      }
+    },
+    "TRAIN_repeat_update": 1000,
+    "diagnostic_combinations": null,
+    "diagnostic_update": 1000,
+    "TRAIN_repeat_labels": [
+      0,
+      0
+    ]
+  },
+  {
+    "root_id": "TRAIN-1010233101-55",
+    "role": "TRAIN",
+    "G_solution": 1,
+    "student_independent": 0,
+    "R5_original": 0,
+    "combinations": {
+      "independent": {
+        "label": 0,
+        "lane": 6,
+        "attempt": {
+          "action_origin": "actor_only",
+          "actor_sha256": "f1d1d460082fbc20eafc39d0ad4f318a38877b5b1b4122195ed3f12d8a52057e",
+          "actor_witness_eligible": false,
+          "adopted": false,
+          "controller_kind": "warmup_candidate",
+          "inference_override": {
+            "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+            "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B/update_1000.pkl",
+            "sha256": "b981714174b59e5fbea4178582e43318b6d3bae8fb73db18c412c1b518d63f09",
+            "source_actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8"
+          },
+          "label": 0,
+          "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "outcome": "airborne_physical_failure",
+          "policy": "bridge_baseline",
+          "recording_schema": "jit_actor_success_trace_v1_1",
+          "snapshot_context_sha256": "0539cd85a49ec690d8ecf5297a4b27530de11d7fc0c95bd4ac27b6af23e0ed98",
+          "steps": 98,
+          "task_return": -475.711669921875,
+          "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_TRAIN_root06_independent_pi0/bridge_baseline_traces.npz",
+          "trace_lane": 6,
+          "trace_sha256": "fcbb7a6501fa50c987e2a71c2451c9dc869f722ea9a1139d9b06a70bcf7b7698"
+        },
+        "all_lane_labels": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "teacher_H16_pi0": {
+        "label": 1,
+        "attempt": {
+          "action_origin": "bridge_prefix_then_source_tail",
+          "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+          "actor_witness_eligible": false,
+          "controller_kind": "composite_teacher",
+          "label": 1,
+          "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "outcome": "stable_forward_recovery",
+          "policy": "bridge_baseline",
+          "recording_schema": "jit_bridge_trace_v1",
+          "snapshot_context_sha256": "0539cd85a49ec690d8ecf5297a4b27530de11d7fc0c95bd4ac27b6af23e0ed98",
+          "source_only": false,
+          "steps": 55,
+          "task_return": 1031.8602294921875,
+          "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_003/worker_root_012/root_012_G_repeat2/bridge_baseline_traces.npz",
+          "trace_lane": 6,
+          "trace_sha256": "97e6b00d00b84af4d213a47c0033e0e11de3f2f81d845cecf4793ba4b2d0f450"
+        },
+        "reused": true
+      }
+    },
+    "TRAIN_repeat_update": 1000,
+    "diagnostic_combinations": null,
+    "diagnostic_update": 1000,
+    "TRAIN_repeat_labels": [
+      0,
+      0
+    ]
+  },
+  {
+    "root_id": "TRAIN-1010233101-63",
+    "role": "TRAIN",
+    "G_solution": 1,
+    "student_independent": 1,
+    "R5_original": 0,
+    "combinations": {
+      "independent": {
+        "label": 1,
+        "lane": 6,
+        "attempt": {
+          "action_origin": "actor_only",
+          "actor_sha256": "f1d1d460082fbc20eafc39d0ad4f318a38877b5b1b4122195ed3f12d8a52057e",
+          "actor_witness_eligible": false,
+          "adopted": false,
+          "controller_kind": "warmup_candidate",
+          "inference_override": {
+            "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+            "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B/update_1000.pkl",
+            "sha256": "b981714174b59e5fbea4178582e43318b6d3bae8fb73db18c412c1b518d63f09",
+            "source_actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8"
+          },
+          "label": 1,
+          "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "outcome": "stable_forward_recovery",
+          "policy": "bridge_baseline",
+          "recording_schema": "jit_actor_success_trace_v1_1",
+          "snapshot_context_sha256": "13830e30fe5c0e558142bc0294bb95d5e04443d87613c910471979378e998114",
+          "steps": 158,
+          "task_return": -74.67774200439453,
+          "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_TRAIN_root07_independent_pi0/bridge_baseline_traces.npz",
+          "trace_lane": 6,
+          "trace_sha256": "3210fe187195e65f57fa9772de0b836e8d939c6d7e6161760723650eb585bdfd"
+        },
+        "all_lane_labels": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "teacher_H16_pi0": {
+        "label": 1,
+        "attempt": {
+          "action_origin": "bridge_prefix_then_source_tail",
+          "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+          "actor_witness_eligible": false,
+          "controller_kind": "composite_teacher",
+          "label": 1,
+          "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "outcome": "stable_forward_recovery",
+          "policy": "bridge_baseline",
+          "recording_schema": "jit_bridge_trace_v1",
+          "snapshot_context_sha256": "13830e30fe5c0e558142bc0294bb95d5e04443d87613c910471979378e998114",
+          "source_only": false,
+          "steps": 61,
+          "task_return": 988.04541015625,
+          "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_003/worker_root_014/root_014_G_repeat2/bridge_baseline_traces.npz",
+          "trace_lane": 6,
+          "trace_sha256": "f77f178ad7fe7de974f8a72f7347b2038c7908ec98e640a55dbf1851db2b85b7"
+        },
+        "reused": true
+      }
+    },
+    "TRAIN_repeat_update": 1000,
+    "diagnostic_combinations": null,
+    "diagnostic_update": 1000,
+    "TRAIN_repeat_labels": [
+      1,
+      0
+    ]
+  },
+  {
+    "root_id": "SOLVER_DEV-1010245101-4",
+    "role": "SOLVER_DEV",
+    "G_solution": 1,
+    "student_independent": 1,
+    "R5_original": 0,
+    "combinations": {
+      "independent": {
+        "label": 1,
+        "lane": 1,
+        "attempt": {
+          "action_origin": "actor_only",
+          "actor_sha256": "f1d1d460082fbc20eafc39d0ad4f318a38877b5b1b4122195ed3f12d8a52057e",
+          "actor_witness_eligible": false,
+          "adopted": false,
+          "controller_kind": "warmup_candidate",
+          "inference_override": {
+            "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+            "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B/update_1000.pkl",
+            "sha256": "b981714174b59e5fbea4178582e43318b6d3bae8fb73db18c412c1b518d63f09",
+            "source_actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8"
+          },
+          "label": 1,
+          "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "outcome": "stable_forward_recovery",
+          "policy": "bridge_baseline",
+          "recording_schema": "jit_actor_success_trace_v1_1",
+          "snapshot_context_sha256": "bf86c9c910bb0185a0eb5830db3988197fd7a8e154f7509e8020a7b7fe6c9d51",
+          "steps": 66,
+          "task_return": 1200.126220703125,
+          "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_SOLVER_DEV_root00_independent_pi0/bridge_baseline_traces.npz",
+          "trace_lane": 1,
+          "trace_sha256": "1e0d80060b697b181b01aff47288612444fb8c569ec19aa400356f0de7757a48"
+        },
+        "all_lane_labels": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "teacher_H16_pi0": {
+        "label": 1,
+        "attempt": {
+          "action_origin": "bridge_prefix_then_source_tail",
+          "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+          "actor_witness_eligible": false,
+          "controller_kind": "composite_teacher",
+          "label": 1,
+          "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "outcome": "stable_forward_recovery",
+          "policy": "bridge_baseline",
+          "recording_schema": "jit_bridge_trace_v1",
+          "snapshot_context_sha256": "bf86c9c910bb0185a0eb5830db3988197fd7a8e154f7509e8020a7b7fe6c9d51",
+          "source_only": false,
+          "steps": 75,
+          "task_return": 1288.793701171875,
+          "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_003/worker_root_016/root_016_G_repeat2/bridge_baseline_traces.npz",
+          "trace_lane": 1,
+          "trace_sha256": "606fb79e07c6c8d347ef888ebe18c18094342c03dda95db13db639946d7ed55d"
+        },
+        "reused": true
+      }
+    },
+    "TRAIN_repeat_update": 1000,
+    "diagnostic_combinations": null,
+    "diagnostic_update": 1000,
+    "TRAIN_repeat_labels": null
+  },
+  {
+    "root_id": "SOLVER_DEV-1010245101-21",
+    "role": "SOLVER_DEV",
+    "G_solution": 1,
+    "student_independent": 1,
+    "R5_original": 1,
+    "combinations": {
+      "independent": {
+        "label": 1,
+        "lane": 3,
+        "attempt": {
+          "action_origin": "actor_only",
+          "actor_sha256": "f1d1d460082fbc20eafc39d0ad4f318a38877b5b1b4122195ed3f12d8a52057e",
+          "actor_witness_eligible": false,
+          "adopted": false,
+          "controller_kind": "warmup_candidate",
+          "inference_override": {
+            "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+            "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B/update_1000.pkl",
+            "sha256": "b981714174b59e5fbea4178582e43318b6d3bae8fb73db18c412c1b518d63f09",
+            "source_actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8"
+          },
+          "label": 1,
+          "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "outcome": "stable_forward_recovery",
+          "policy": "bridge_baseline",
+          "recording_schema": "jit_actor_success_trace_v1_1",
+          "snapshot_context_sha256": "d6d22c2600ca4cb5b4684adcc72387d39c1457c02b2806034b9db449b640e808",
+          "steps": 61,
+          "task_return": 1116.387939453125,
+          "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_SOLVER_DEV_root01_independent_pi0/bridge_baseline_traces.npz",
+          "trace_lane": 3,
+          "trace_sha256": "858f007c57d3e6ea933c2846f6d4ce36ba3802cb92e66135ced73fc1d001df6e"
+        },
+        "all_lane_labels": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "teacher_H16_pi0": {
+        "label": 1,
+        "attempt": {
+          "action_origin": "bridge_prefix_then_source_tail",
+          "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+          "actor_witness_eligible": false,
+          "controller_kind": "composite_teacher",
+          "label": 1,
+          "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "outcome": "stable_forward_recovery",
+          "policy": "bridge_baseline",
+          "recording_schema": "jit_bridge_trace_v1",
+          "snapshot_context_sha256": "d6d22c2600ca4cb5b4684adcc72387d39c1457c02b2806034b9db449b640e808",
+          "source_only": false,
+          "steps": 60,
+          "task_return": 1206.5335693359375,
+          "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_003/worker_root_017/root_017_G_repeat2/bridge_baseline_traces.npz",
+          "trace_lane": 3,
+          "trace_sha256": "c5165015c390ea64116f22de72a06dc37c7dccafc5e3fadce4863c60a023e0e6"
+        },
+        "reused": true
+      }
+    },
+    "TRAIN_repeat_update": 1000,
+    "diagnostic_combinations": null,
+    "diagnostic_update": 1000,
+    "TRAIN_repeat_labels": null
+  },
+  {
+    "root_id": "SOLVER_DEV-1010245101-6",
+    "role": "SOLVER_DEV",
+    "G_solution": null,
+    "student_independent": 0,
+    "R5_original": 0,
+    "combinations": {
+      "independent": {
+        "label": 0,
+        "lane": 1,
+        "attempt": {
+          "action_origin": "actor_only",
+          "actor_sha256": "f1d1d460082fbc20eafc39d0ad4f318a38877b5b1b4122195ed3f12d8a52057e",
+          "actor_witness_eligible": false,
+          "adopted": false,
+          "controller_kind": "warmup_candidate",
+          "inference_override": {
+            "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+            "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B/update_1000.pkl",
+            "sha256": "b981714174b59e5fbea4178582e43318b6d3bae8fb73db18c412c1b518d63f09",
+            "source_actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8"
+          },
+          "label": 0,
+          "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "outcome": "airborne_physical_failure",
+          "policy": "bridge_baseline",
+          "recording_schema": "jit_actor_success_trace_v1_1",
+          "snapshot_context_sha256": "267c73ec9ec083bba6d916a9aa5f4b9226d33fec70685bb0240338e3ea2b4f5b",
+          "steps": 35,
+          "task_return": 516.9389038085938,
+          "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_SOLVER_DEV_root02_independent_pi0/bridge_baseline_traces.npz",
+          "trace_lane": 1,
+          "trace_sha256": "231598e60b9d70d52211a2b8f9830529569ee71dd24f33bba6ecbb2561dc611a"
+        },
+        "all_lane_labels": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "teacher_H16_pi0": {
+        "label": null,
+        "reason": "G has no verified winner; NA"
+      },
+      "teacher_H16_student": {
+        "label": null,
+        "reason": "no fixed verified teacher; NA"
+      }
+    },
+    "TRAIN_repeat_update": 1000,
+    "diagnostic_combinations": null,
+    "diagnostic_update": 1000,
+    "TRAIN_repeat_labels": null
+  },
+  {
+    "root_id": "SOLVER_DEV-1010245101-19",
+    "role": "SOLVER_DEV",
+    "G_solution": null,
+    "student_independent": 0,
+    "R5_original": 0,
+    "combinations": {
+      "independent": {
+        "label": 0,
+        "lane": 1,
+        "attempt": {
+          "action_origin": "actor_only",
+          "actor_sha256": "f1d1d460082fbc20eafc39d0ad4f318a38877b5b1b4122195ed3f12d8a52057e",
+          "actor_witness_eligible": false,
+          "adopted": false,
+          "controller_kind": "warmup_candidate",
+          "inference_override": {
+            "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+            "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B/update_1000.pkl",
+            "sha256": "b981714174b59e5fbea4178582e43318b6d3bae8fb73db18c412c1b518d63f09",
+            "source_actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8"
+          },
+          "label": 0,
+          "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "outcome": "airborne_physical_failure",
+          "policy": "bridge_baseline",
+          "recording_schema": "jit_actor_success_trace_v1_1",
+          "snapshot_context_sha256": "79904f44f10bcd33aff62923791afc84b8437dd5e62791ffc0145f91e14364ee",
+          "steps": 43,
+          "task_return": 340.650146484375,
+          "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_SOLVER_DEV_root03_independent_pi0/bridge_baseline_traces.npz",
+          "trace_lane": 1,
+          "trace_sha256": "8dbbf7fa555446d568a58e474dc32502a4b18b880c5e13585869fc4d60533c11"
+        },
+        "all_lane_labels": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "teacher_H16_pi0": {
+        "label": null,
+        "reason": "G has no verified winner; NA"
+      },
+      "teacher_H16_student": {
+        "label": null,
+        "reason": "no fixed verified teacher; NA"
+      }
+    },
+    "TRAIN_repeat_update": 1000,
+    "diagnostic_combinations": null,
+    "diagnostic_update": 1000,
+    "TRAIN_repeat_labels": null
+  },
+  {
+    "root_id": "SOLVER_DEV-1010245101-10",
+    "role": "SOLVER_DEV",
+    "G_solution": null,
+    "student_independent": 0,
+    "R5_original": 0,
+    "combinations": {
+      "independent": {
+        "label": 0,
+        "lane": 1,
+        "attempt": {
+          "action_origin": "actor_only",
+          "actor_sha256": "f1d1d460082fbc20eafc39d0ad4f318a38877b5b1b4122195ed3f12d8a52057e",
+          "actor_witness_eligible": false,
+          "adopted": false,
+          "controller_kind": "warmup_candidate",
+          "inference_override": {
+            "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+            "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B/update_1000.pkl",
+            "sha256": "b981714174b59e5fbea4178582e43318b6d3bae8fb73db18c412c1b518d63f09",
+            "source_actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8"
+          },
+          "label": 0,
+          "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "outcome": "airborne_physical_failure",
+          "policy": "bridge_baseline",
+          "recording_schema": "jit_actor_success_trace_v1_1",
+          "snapshot_context_sha256": "cc26ef5b7de72f829080e568f65464fe9778f9d3b38373fd3a27245e530b502f",
+          "steps": 34,
+          "task_return": 598.887451171875,
+          "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_SOLVER_DEV_root04_independent_pi0/bridge_baseline_traces.npz",
+          "trace_lane": 1,
+          "trace_sha256": "9f3007dba231cb3d034087ec96a276818ba3301ce8fb8012bcaa2f637a7f341c"
+        },
+        "all_lane_labels": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "teacher_H16_pi0": {
+        "label": null,
+        "reason": "G has no verified winner; NA"
+      },
+      "teacher_H16_student": {
+        "label": null,
+        "reason": "no fixed verified teacher; NA"
+      }
+    },
+    "TRAIN_repeat_update": 1000,
+    "diagnostic_combinations": null,
+    "diagnostic_update": 1000,
+    "TRAIN_repeat_labels": null
+  },
+  {
+    "root_id": "SOLVER_DEV-1010245101-14",
+    "role": "SOLVER_DEV",
+    "G_solution": null,
+    "student_independent": 0,
+    "R5_original": 0,
+    "combinations": {
+      "independent": {
+        "label": 0,
+        "lane": 1,
+        "attempt": {
+          "action_origin": "actor_only",
+          "actor_sha256": "f1d1d460082fbc20eafc39d0ad4f318a38877b5b1b4122195ed3f12d8a52057e",
+          "actor_witness_eligible": false,
+          "adopted": false,
+          "controller_kind": "warmup_candidate",
+          "inference_override": {
+            "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+            "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B/update_1000.pkl",
+            "sha256": "b981714174b59e5fbea4178582e43318b6d3bae8fb73db18c412c1b518d63f09",
+            "source_actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8"
+          },
+          "label": 0,
+          "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "outcome": "airborne_physical_failure",
+          "policy": "bridge_baseline",
+          "recording_schema": "jit_actor_success_trace_v1_1",
+          "snapshot_context_sha256": "fcbbd44e6c6a42788a298e81e9d0c89e09615a3a000ea793eb4577de6acb3e21",
+          "steps": 37,
+          "task_return": 540.131103515625,
+          "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_SOLVER_DEV_root05_independent_pi0/bridge_baseline_traces.npz",
+          "trace_lane": 1,
+          "trace_sha256": "921f05e78b29ad338ba587ee35049d039ee7f43a4c9b4adab25ef716ea4f20e4"
+        },
+        "all_lane_labels": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "teacher_H16_pi0": {
+        "label": null,
+        "reason": "G has no verified winner; NA"
+      },
+      "teacher_H16_student": {
+        "label": null,
+        "reason": "no fixed verified teacher; NA"
+      }
+    },
+    "TRAIN_repeat_update": 1000,
+    "diagnostic_combinations": null,
+    "diagnostic_update": 1000,
+    "TRAIN_repeat_labels": null
+  },
+  {
+    "root_id": "SOLVER_DEV-1010245101-18",
+    "role": "SOLVER_DEV",
+    "G_solution": 1,
+    "student_independent": 1,
+    "R5_original": 1,
+    "combinations": {
+      "independent": {
+        "label": 1,
+        "lane": 7,
+        "attempt": {
+          "action_origin": "actor_only",
+          "actor_sha256": "f1d1d460082fbc20eafc39d0ad4f318a38877b5b1b4122195ed3f12d8a52057e",
+          "actor_witness_eligible": false,
+          "adopted": false,
+          "controller_kind": "warmup_candidate",
+          "inference_override": {
+            "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+            "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B/update_1000.pkl",
+            "sha256": "b981714174b59e5fbea4178582e43318b6d3bae8fb73db18c412c1b518d63f09",
+            "source_actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8"
+          },
+          "label": 1,
+          "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "outcome": "stable_forward_recovery",
+          "policy": "bridge_baseline",
+          "recording_schema": "jit_actor_success_trace_v1_1",
+          "snapshot_context_sha256": "a3cd05af74837abc7a5f30975a69c47a7f164f7d8007d282690af9a96ce6a4d2",
+          "steps": 66,
+          "task_return": 1160.9849853515625,
+          "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_SOLVER_DEV_root06_independent_pi0/bridge_baseline_traces.npz",
+          "trace_lane": 7,
+          "trace_sha256": "29e5e8c34541b206a2813a068ca6e573b86bf286ff7f20c1523035329f822929"
+        },
+        "all_lane_labels": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "teacher_H16_pi0": {
+        "label": 1,
+        "attempt": {
+          "action_origin": "bridge_prefix_then_source_tail",
+          "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+          "actor_witness_eligible": false,
+          "controller_kind": "composite_teacher",
+          "label": 1,
+          "model_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "outcome": "stable_forward_recovery",
+          "policy": "bridge_baseline",
+          "recording_schema": "jit_bridge_trace_v1",
+          "snapshot_context_sha256": "a3cd05af74837abc7a5f30975a69c47a7f164f7d8007d282690af9a96ce6a4d2",
+          "source_only": false,
+          "steps": 69,
+          "task_return": 1098.1787109375,
+          "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_003/worker_root_022/root_022_G_repeat2/bridge_baseline_traces.npz",
+          "trace_lane": 7,
+          "trace_sha256": "5de068ce97edd730180eaf144c436749753dc8ee48fc33e8c56cb74c71d2b7d0"
+        },
+        "reused": true
+      }
+    },
+    "TRAIN_repeat_update": 1000,
+    "diagnostic_combinations": null,
+    "diagnostic_update": 1000,
+    "TRAIN_repeat_labels": null
+  }
+]

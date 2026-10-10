@@ -1,0 +1,1442 @@
+[
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-0",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-0"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 0,
+    "group": "nominal",
+    "condition_id": "nominal_same_condition",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 34,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-1",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-1"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 1,
+    "group": "nominal",
+    "condition_id": "nominal_same_condition",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 36,
+    "first_valid_contact": 41
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-2",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-2"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 2,
+    "group": "nominal",
+    "condition_id": "nominal_same_condition",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": false,
+    "reason": "physical_failure",
+    "source_kind": "new_keep",
+    "post_contact_observations": 16,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-3",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-3"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 3,
+    "group": "nominal",
+    "condition_id": "nominal_same_condition",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": false,
+    "reason": "physical_failure",
+    "source_kind": "new_keep",
+    "post_contact_observations": 16,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-4",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-4"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 4,
+    "group": "nominal",
+    "condition_id": "nominal_same_condition",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 35,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-5",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-5"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 5,
+    "group": "nominal",
+    "condition_id": "nominal_same_condition",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 36,
+    "first_valid_contact": 41
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-6",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-6"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 6,
+    "group": "nominal",
+    "condition_id": "nominal_same_condition",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": false,
+    "reason": "physical_failure",
+    "source_kind": "new_keep",
+    "post_contact_observations": 16,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-7",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-7"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 7,
+    "group": "nominal",
+    "condition_id": "nominal_same_condition",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": false,
+    "reason": "physical_failure",
+    "source_kind": "new_keep",
+    "post_contact_observations": 16,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-8",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-8"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 8,
+    "group": "nominal",
+    "condition_id": "nominal_same_condition",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": false,
+    "reason": "physical_failure",
+    "source_kind": "new_keep",
+    "post_contact_observations": 15,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-9",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-9"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 9,
+    "group": "nominal",
+    "condition_id": "nominal_same_condition",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": false,
+    "reason": "physical_failure",
+    "source_kind": "new_keep",
+    "post_contact_observations": 16,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-10",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-10"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 10,
+    "group": "nominal",
+    "condition_id": "nominal_same_condition",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": false,
+    "reason": "physical_failure",
+    "source_kind": "new_keep",
+    "post_contact_observations": 16,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-11",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-11"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 11,
+    "group": "nominal",
+    "condition_id": "nominal_same_condition",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": false,
+    "reason": "physical_failure",
+    "source_kind": "new_keep",
+    "post_contact_observations": 16,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-12",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-12"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 12,
+    "group": "nominal",
+    "condition_id": "nominal_same_condition",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": false,
+    "reason": "physical_failure",
+    "source_kind": "new_keep",
+    "post_contact_observations": 16,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-13",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-13"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 13,
+    "group": "nominal",
+    "condition_id": "nominal_same_condition",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": false,
+    "reason": "physical_failure",
+    "source_kind": "new_keep",
+    "post_contact_observations": 16,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-14",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-14"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 14,
+    "group": "nominal",
+    "condition_id": "nominal_same_condition",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 36,
+    "first_valid_contact": 41
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-15",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-15"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 15,
+    "group": "nominal",
+    "condition_id": "nominal_same_condition",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 37,
+    "first_valid_contact": 41
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-16",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-16"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 16,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-16",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 27,
+    "first_valid_contact": 43
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-17",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-17"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 17,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-17",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 43
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-18",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-18"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 18,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-18",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-19",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-19"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 19,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-19",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 43
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-20",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-20"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 20,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-20",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": false,
+    "reason": "physical_failure",
+    "source_kind": "new_keep",
+    "post_contact_observations": 9,
+    "first_valid_contact": 41
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-21",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-21"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 21,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-21",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-22",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-22"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 22,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-22",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": false,
+    "reason": "physical_failure",
+    "source_kind": "new_keep",
+    "post_contact_observations": 6,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-23",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-23"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 23,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-23",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 42,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-24",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-24"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 24,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-24",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-25",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-25"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 25,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-25",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 41
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-26",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-26"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 26,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-26",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 28,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-27",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-27"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 27,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-27",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-28",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-28"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 28,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-28",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 44
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-29",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-29"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 29,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-29",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 27,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-30",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-30"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 30,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-30",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": false,
+    "reason": "physical_failure",
+    "source_kind": "new_keep",
+    "post_contact_observations": 18,
+    "first_valid_contact": 41
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-31",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-31"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 31,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-31",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 43
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-32",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-32"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 32,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-32",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 27,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-33",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-33"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 33,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-33",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 29,
+    "first_valid_contact": 41
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-34",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-34"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 34,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-34",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": false,
+    "reason": "physical_failure",
+    "source_kind": "new_keep",
+    "post_contact_observations": 13,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-35",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-35"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 35,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-35",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-36",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-36"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 36,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-36",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-37",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-37"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 37,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-37",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-38",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-38"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 38,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-38",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 43
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-39",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-39"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 39,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-39",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 27,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-40",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-40"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 40,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-40",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 42,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-41",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-41"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 41,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-41",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 28,
+    "first_valid_contact": 41
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-42",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-42"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 42,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-42",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 44
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-43",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-43"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 43,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-43",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 43
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-44",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-44"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 44,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-44",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 43
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-45",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-45"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 45,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-45",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 43
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-46",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-46"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 46,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-46",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 41
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-47",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-47"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 47,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-47",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": false,
+    "reason": "physical_failure",
+    "source_kind": "new_keep",
+    "post_contact_observations": 17,
+    "first_valid_contact": 43
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-48",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-48"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 48,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-48",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 38,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-49",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-49"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 49,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-49",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-50",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-50"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 50,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-50",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 30,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-51",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-51"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 51,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-51",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-52",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-52"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 52,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-52",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": false,
+    "reason": "physical_failure",
+    "source_kind": "new_keep",
+    "post_contact_observations": 16,
+    "first_valid_contact": 44
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-53",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-53"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 53,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-53",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 42,
+    "first_valid_contact": 41
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-54",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-54"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 54,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-54",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 43
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-55",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-55"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 55,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-55",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 28,
+    "first_valid_contact": 40
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-56",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-56"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 56,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-56",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 31,
+    "first_valid_contact": 43
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-57",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-57"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 57,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-57",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-58",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-58"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 58,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-58",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 28,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-59",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-59"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 59,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-59",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": false,
+    "reason": "physical_failure",
+    "source_kind": "new_keep",
+    "post_contact_observations": 13,
+    "first_valid_contact": 39
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-60",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-60"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 60,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-60",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 36,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-61",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-61"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 61,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-61",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-62",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-62"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 62,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-62",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 43
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-63",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-63"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 63,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-63",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-64",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-64"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 64,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-64",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-65",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-65"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 65,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-65",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": false,
+    "reason": "physical_failure",
+    "source_kind": "new_keep",
+    "post_contact_observations": 10,
+    "first_valid_contact": 43
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-66",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-66"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 66,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-66",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-67",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-67"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 67,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-67",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 45
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-68",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-68"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 68,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-68",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": false,
+    "reason": "physical_failure",
+    "source_kind": "new_keep",
+    "post_contact_observations": 25,
+    "first_valid_contact": 43
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-69",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-69"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 69,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-69",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-70",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-70"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 70,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-70",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 32,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-71",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-71"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 71,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-71",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 43
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-72",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-72"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 72,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-72",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-73",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-73"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 73,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-73",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-74",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-74"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 74,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-74",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 28,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-75",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-75"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 75,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-75",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 43
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-76",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-76"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 76,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-76",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 30,
+    "first_valid_contact": 41
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-77",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-77"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 77,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-77",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 27,
+    "first_valid_contact": 41
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-78",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-78"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 78,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-78",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 26,
+    "first_valid_contact": 42
+  },
+  {
+    "ancestor": "TRAIN_KEEP-1010269101-79",
+    "ancestry": [
+      "TRAIN_KEEP-1010269101-79"
+    ],
+    "role": "TRAIN",
+    "data_role": "TRAIN",
+    "lane": 79,
+    "group": "random",
+    "condition_id": "TRAIN_KEEP-1010269101-79",
+    "source_initial_bank": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_initial.npz",
+    "source_seed": 1010269101,
+    "success": true,
+    "reason": "success",
+    "source_kind": "new_keep",
+    "post_contact_observations": 46,
+    "first_valid_contact": 40
+  }
+]

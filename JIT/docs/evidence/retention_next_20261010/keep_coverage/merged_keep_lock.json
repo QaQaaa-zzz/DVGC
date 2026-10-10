@@ -1,0 +1,8 @@
+{
+  "receipt": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_receipt.json",
+  "sha256": "abd681817f6f6a458abb49bc476c26c064954c525241377ca6341e7f99e4864e",
+  "data": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_anchors.npz",
+  "data_sha256": "a5156fff73e99d21478a87ab95a2bcda8e8b874268ce123dfe0bbfea7f4c11ba",
+  "new_outcomes": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/new_keep_outcomes.json",
+  "outcomes_sha256": "bda73df3cae96031e566d12b14e26b8a6781a98e59b0b7bc14f1e252229bea57"
+}
