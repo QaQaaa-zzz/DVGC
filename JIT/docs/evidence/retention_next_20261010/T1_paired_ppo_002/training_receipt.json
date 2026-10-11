@@ -1,0 +1,166 @@
+{
+  "run_directory": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002",
+  "code_revision": "29174b3",
+  "training_verification": {
+    "engineering/PPO_keep": {
+      "phase": "passed",
+      "checks": {
+        "normalizer_frozen": true,
+        "full_state_finite": true,
+        "transition_clock": true,
+        "optimizer_clock": true,
+        "loss_clock": true,
+        "actor_changed": true,
+        "critic_changed": true,
+        "actual_actor_delta_positive": true,
+        "actual_critic_delta_positive": true,
+        "first_loss_passed": true,
+        "pi0_actor_at_zero": true,
+        "pi0_critic_at_zero": true,
+        "fresh_Adam_at_zero": true,
+        "inference_matches_learner": true,
+        "full_state_restore_exact": true
+      },
+      "completed_training_transitions": 3200,
+      "actual_optimizer_updates": 8,
+      "learner": {
+        "lifetime_transitions": 3200,
+        "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/engineering/PPO_keep/learner/transition_003200/manifest.json",
+        "sha256": "2b5a50047ceac8fbb0957da273329179da1db21092242fdebfeed60796610486"
+      }
+    },
+    "engineering/PPO_demo_keep": {
+      "phase": "passed",
+      "checks": {
+        "normalizer_frozen": true,
+        "full_state_finite": true,
+        "transition_clock": true,
+        "optimizer_clock": true,
+        "loss_clock": true,
+        "actor_changed": true,
+        "critic_changed": true,
+        "actual_actor_delta_positive": true,
+        "actual_critic_delta_positive": true,
+        "first_loss_passed": true,
+        "pi0_actor_at_zero": true,
+        "pi0_critic_at_zero": true,
+        "fresh_Adam_at_zero": true,
+        "inference_matches_learner": true,
+        "full_state_restore_exact": true
+      },
+      "completed_training_transitions": 3200,
+      "actual_optimizer_updates": 8,
+      "learner": {
+        "lifetime_transitions": 3200,
+        "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/engineering/PPO_demo_keep/learner/transition_003200/manifest.json",
+        "sha256": "048c2e84469e98d4f229ac8b843eff5e1b8d953103640321e01d8903cec69e9f"
+      }
+    },
+    "training/PPO_keep": {
+      "phase": "passed",
+      "checks": {
+        "normalizer_frozen": true,
+        "full_state_finite": true,
+        "transition_clock": true,
+        "optimizer_clock": true,
+        "loss_clock": true,
+        "actor_changed": true,
+        "critic_changed": true,
+        "actual_actor_delta_positive": true,
+        "actual_critic_delta_positive": true,
+        "first_loss_passed": true,
+        "pi0_actor_at_zero": true,
+        "pi0_critic_at_zero": true,
+        "fresh_Adam_at_zero": true,
+        "inference_matches_learner": true,
+        "full_state_restore_exact": true
+      },
+      "completed_training_transitions": 32000,
+      "actual_optimizer_updates": 80,
+      "learner": {
+        "lifetime_transitions": 32000,
+        "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/training/PPO_keep/learner/transition_032000/manifest.json",
+        "sha256": "dce2515a22ce146b3eaf12655c67fc178271558ed85e440eca9706ef137d9ff6"
+      }
+    },
+    "training/PPO_demo_keep": {
+      "phase": "passed",
+      "checks": {
+        "normalizer_frozen": true,
+        "full_state_finite": true,
+        "transition_clock": true,
+        "optimizer_clock": true,
+        "loss_clock": true,
+        "actor_changed": true,
+        "critic_changed": true,
+        "actual_actor_delta_positive": true,
+        "actual_critic_delta_positive": true,
+        "first_loss_passed": true,
+        "pi0_actor_at_zero": true,
+        "pi0_critic_at_zero": true,
+        "fresh_Adam_at_zero": true,
+        "inference_matches_learner": true,
+        "full_state_restore_exact": true
+      },
+      "completed_training_transitions": 32000,
+      "actual_optimizer_updates": 80,
+      "learner": {
+        "lifetime_transitions": 32000,
+        "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/training/PPO_demo_keep/learner/transition_032000/manifest.json",
+        "sha256": "491d217360aed285f198d210583badb53bc5bbc77fdc4af3ed5061b64d8f7bd2"
+      }
+    }
+  },
+  "tensorboard_http": "http://localhost:6033",
+  "formal_scalars_loaded": {
+    "PPO_keep": {
+      "training/reward_per_transition": [
+        1791726822.9952738,
+        32000,
+        6.280267238616943
+      ],
+      "total_loss": [
+        1791726822.9952564,
+        80,
+        143.08148193359375
+      ]
+    },
+    "PPO_demo_keep": {
+      "training/reward_per_transition": [
+        1791726884.6742246,
+        32000,
+        10.709917068481445
+      ],
+      "total_loss": [
+        1791726884.6742067,
+        80,
+        66.6338119506836
+      ]
+    }
+  },
+  "source_receipts": [
+    {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/engineering/PPO_keep/verification.json",
+      "sha256": "2b5762fa7573f0372b2b8a68d95b6e7fbfb2f4904d9ac25e6e842acfc0e8db8d"
+    },
+    {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/engineering/PPO_demo_keep/verification.json",
+      "sha256": "4f63147de250ac00f8281d0399ab005956e5f36e97d732019c1b06dfb8caed81"
+    },
+    {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/training/PPO_keep/verification.json",
+      "sha256": "f31f94c4a1a61d371174e4ecbde71fd1fa5932d7919d1be8a085e04c5e89774e"
+    },
+    {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/training/PPO_demo_keep/verification.json",
+      "sha256": "cb28e6949e98448ab0977e9eeba53166ea5885a246846bd54d9890288e2e2878"
+    }
+  ],
+  "evaluation_status": "running",
+  "t1_passed": null,
+  "prior_charged": 1123052,
+  "stage_cap": 700200,
+  "D2_cumulative_maximum": 1823252,
+  "published_policy": null,
+  "final_test_used": false
+}

@@ -159,3 +159,5 @@ Final preparation refinement: supplement `D2_002/report_004/formal_preparation.j
 研究事实及活动状态唯一维护在共享PROJECT_STATE.md；本节为固定执行合同。代码、测试、门槛收据与实际运行链接在完成时补入本节。
 
 2026-10-11执行收据：T0通过；T1_paired_ppo_001在四池构建RNG形状混用时停止，两臂0/32000、保守charged200、D2累计1123052。原失败不重试；共同边界统一typed RNG并新增真实构造器CPU回归，GPU尚未重检。下一执行阶段应新建plan、重新计入工程预算并核实reward/loss HTTP，不能恢复001或释放正式矩阵。详见[工程停止收据](../evidence/retention_next_20261010/T1_paired_ppo_001/INDEX.md)。
+
+用户随后明确“修复并且继续”：T1_002源码29174b3，carry prior001失败200，prior1123052，本阶段700200，最坏累计1823252。GPUreset与两臂工程门通过；正式两臂各32000/80更新、完整learner验收通过，当前固定评价运行中。独立TensorBoard6033的两个正式reward/total_loss已HTTP加载，watcher已送达训练阶段完成。原001失败不改写，TEST与正式15运行关闭。见[新阶段收据](../evidence/retention_next_20261010/T1_paired_ppo_002/INDEX.md)。
