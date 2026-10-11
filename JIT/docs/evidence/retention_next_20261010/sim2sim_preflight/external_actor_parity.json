@@ -1,0 +1,20 @@
+{
+  "schema": "jit_external_actor_offline_parity_v1",
+  "status": "passed",
+  "external_module": "/home/qy/ISAAC\u2014\u2014SIM/worktrees/jump-landing-v2/sim2sim_v2/policy_runtime.py",
+  "external_module_sha256": "077ad838211a6c627332215a3373c1319e756333d64a6329532bdff2235afeb4",
+  "actor_npz": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/sim2sim_preflight_001/pi0_export_with_timing/actor.npz",
+  "actor_npz_sha256": "1be6724e5ec5236df225e44c7d45730dbe271a32eefd00b3713f685e0b91c290",
+  "saved_observations": 525,
+  "max_abs_error": 4.76837158203125e-07,
+  "tolerance": 3e-05,
+  "new_physics_control_steps": 0,
+  "new_physics_substeps": 0,
+  "updates": 0,
+  "final_test_used": false,
+  "external_files_modified": false,
+  "scope": "Existing Isaac Actor on saved TRAIN observations only; no Observation/PhysxTask/scorer instantiated",
+  "observation_adapter_parity": "not_run",
+  "success_scorer_parity": "not_run",
+  "engine_task_success": "not_run"
+}

@@ -9,7 +9,7 @@ def norm(tree):
     return jp.sqrt(sum(jp.sum(jp.square(x)) for x in jax.tree.leaves(tree)))
 
 
-def weighted_actor_metrics(actor,objectives):
+def weighted_actor_metrics(actor,objectives,*,return_sum=False):
     gradients={name:jax.grad(fn)(actor) for name,fn in objectives.items()}
     result={f'actual/gradient_norm_{name}':norm(g) for name,g in gradients.items()}
     total=jax.tree.map(lambda *x:sum(x),*gradients.values())
@@ -19,10 +19,18 @@ def weighted_actor_metrics(actor,objectives):
         for b in names[i+1:]:
             dot=sum(jp.sum(x*y) for x,y in zip(jax.tree.leaves(gradients[a]),jax.tree.leaves(gradients[b])))
             result[f'actual/cosine_{a}_{b}']=jp.clip(dot/jp.maximum(norm(gradients[a])*norm(gradients[b]),1e-20),-1.,1.)
-    return result
+    return (result,total) if return_sum else result
 
 
-def instrument_updates(trainer,sink,*,max_grad_norm,probe):
+def adam_update_count(optimizer_state):
+    """Find the one Adam counter through optional Optax transform nesting."""
+    is_adam=lambda value: all(hasattr(value, key) for key in ('count','mu','nu'))
+    states=[v for v in jax.tree.leaves(optimizer_state,is_leaf=is_adam) if is_adam(v)]
+    if len(states)!=1:raise ValueError('exactly one Adam state required for update clock')
+    return states[0].count
+
+
+def instrument_updates(trainer,sink,*,max_grad_norm,probe,record_optimizer_count=False):
     """Observe pre-clipping gradients and actual Adam deltas without changing math."""
     source=getattr(trainer,'_jit_source_text',None) or inspect.getsource(trainer)
     tree=ast.parse(source);count=[0]
@@ -30,24 +38,33 @@ def instrument_updates(trainer,sink,*,max_grad_norm,probe):
         def visit_Assign(self,node):
             if len(node.targets)==1 and ast.unparse(node.targets[0])=='params' and ast.unparse(node.value)=='optax.apply_updates(params, params_update)':
                 count[0]+=1
-                return [*ast.parse('_actual_before_params = params').body,node,*ast.parse('metrics = _actual_update_metrics(_actual_before_params, params, grads, metrics, normalizer_params, ppo_network)').body]
+                arguments=', optimizer_state' if record_optimizer_count else ''
+                return [*ast.parse('_actual_before_params = params').body,node,*ast.parse('metrics = _actual_update_metrics(_actual_before_params, params, grads, metrics, normalizer_params, ppo_network'+arguments+')').body]
             return self.generic_visit(node)
     tree=Hooks().visit(tree)
     if count!=[1]:raise ValueError('unsupported upstream optimizer update layout')
     def record(values):sink({k:float(v) for k,v in values.items()})
     probe=jp.asarray(probe)
-    def update(before,after,grads,metrics,normalizer,network):
+    def update(before,after,grads,metrics,normalizer,network,optimizer_state=None):
+        metrics=dict(metrics)
+        expected_actor_gradient=metrics.pop('_actual_weighted_actor_gradient_sum',None)
         gn=norm(grads);scale=jp.minimum(1.,max_grad_norm/jp.maximum(gn,1e-20))
         delta=jax.tree.map(lambda a,b:a-b,after.policy,before.policy)
         prediction=lambda p:network.parametric_action_distribution.mode(network.policy_network.apply(normalizer,p,{'state':probe}))
-        values={**{k:v for k,v in metrics.items() if k.startswith(('actual/','effective_lambda','retention_coefficient','ppo_loss','total_loss','demo_action_mse','retention_action_mse'))},
+        prefixes=('actual/','effective_lambda','retention_coefficient','ppo_loss','total_loss','demo_action_mse','retention_action_mse')
+        if record_optimizer_count:prefixes+=('audit/','fixed_probe/')
+        values={**{k:v for k,v in metrics.items() if k.startswith(prefixes)},
             'actual/global_actor_critic_gradient_norm':gn,'actual/global_clip_scale':scale,
             'actual/actor_gradient_norm':norm(grads.policy),'actual/critic_gradient_norm':norm(grads.value),
             'actual/actor_adam_delta_norm':norm(delta),
             'actual/critic_adam_delta_norm':norm(jax.tree.map(lambda a,b:a-b,after.value,before.value)),
             'actual/NEW_TRAIN_probe_action_change_mse':jp.mean(jp.square(prediction(after.policy)-prediction(before.policy)))}
         if 'actual/actor_gradient_sum_norm' in values:
-            values['actual/actor_gradient_norm_sum_difference']=jp.abs(values['actual/actor_gradient_sum_norm']-values['actual/actor_gradient_norm'])
+            values['actual/actor_gradient_norm_sum_difference']=(
+                norm(jax.tree.map(lambda a,b:a-b,grads.policy,expected_actor_gradient)) if expected_actor_gradient is not None
+                else jp.abs(values['actual/actor_gradient_sum_norm']-values['actual/actor_gradient_norm']))
+        if record_optimizer_count:
+            values['actual/optimizer_updates']=adam_update_count(optimizer_state)
         jax.debug.callback(record,values,ordered=False)
         return {**metrics,**values}
     namespace={**trainer.__globals__,'_actual_update_metrics':update}

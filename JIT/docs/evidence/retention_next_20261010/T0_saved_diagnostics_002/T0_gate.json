@@ -1,0 +1,96 @@
+{
+  "schema": "jit_retention_T0_saved_diagnostics_v1",
+  "phase": "passed",
+  "t1_allowed": true,
+  "tolerance": 0.0055946409702301025,
+  "blocking_failures": [],
+  "simulation_steps": 0,
+  "supervised_updates": 0,
+  "input_identities": {
+    "control": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003",
+    "intervention": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001",
+    "models": {
+      "control_0": {
+        "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B/update_0000.pkl",
+        "file_sha256": "2fee93a58c39a79abda9ecd876aa660f4039e9399b37996b75daab77e818e120",
+        "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+        "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+        "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1"
+      },
+      "control_100": {
+        "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B/update_0100.pkl",
+        "file_sha256": "01bd5b65ea9f7919ade461696a90e22449921fbc58683e14e9884a9d80fff4cc",
+        "actor_sha256": "82339a11522b9ec42681f263bd701268a8c4b4271da80e7dcca0ce649b4898ea",
+        "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+        "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1"
+      },
+      "control_500": {
+        "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B/update_0500.pkl",
+        "file_sha256": "8866d0b713486fd870dd00453fdf1b269899ce009a2eb5962bf0398bf54581db",
+        "actor_sha256": "b2a4a5af5bb4d591d2162ceed3bc55065179cf147ba9e73919097064c3b07a6c",
+        "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+        "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1"
+      },
+      "control_1000": {
+        "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B/update_1000.pkl",
+        "file_sha256": "b981714174b59e5fbea4178582e43318b6d3bae8fb73db18c412c1b518d63f09",
+        "actor_sha256": "f1d1d460082fbc20eafc39d0ad4f318a38877b5b1b4122195ed3f12d8a52057e",
+        "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+        "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1"
+      },
+      "intervention_0": {
+        "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001/B/update_0000.pkl",
+        "file_sha256": "2fee93a58c39a79abda9ecd876aa660f4039e9399b37996b75daab77e818e120",
+        "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+        "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+        "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1"
+      },
+      "intervention_100": {
+        "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001/B/update_0100.pkl",
+        "file_sha256": "17b2be8727362bfc1dbc922356ffb4899007df6633a91745ce03d4648c996fcd",
+        "actor_sha256": "cb70cd836644ea546105217e7a999c1529df0affa83047085a2b9061b88061c8",
+        "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+        "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1"
+      },
+      "intervention_500": {
+        "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001/B/update_0500.pkl",
+        "file_sha256": "add810b5b8f7b365fd3d6272542b53c22cbbc1cd7f09c5fd9beab4f438b9a138",
+        "actor_sha256": "2482e1af53123a454af449d6139436a3edd0f64584d328eda181e8b4e5c5959e",
+        "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+        "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1"
+      },
+      "intervention_1000": {
+        "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001/B/update_1000.pkl",
+        "file_sha256": "542d26e4df61aa45083c1116f9ba1165f20e4dcdbbe7cd8e703d385dc3613d8a",
+        "actor_sha256": "61e35b23a2100129ed4925fafebea01c6bba72dae7119ac78d43e2407192cae1",
+        "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+        "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1"
+      }
+    },
+    "candidate_actor_sha256": "61e35b23a2100129ed4925fafebea01c6bba72dae7119ac78d43e2407192cae1",
+    "source_pi0_actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+    "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+    "execution_code_revision": "0f4ed45d506fcfa816eb3250eea57c19e33405ed"
+  },
+  "corpus_counts": {
+    "old_demo": 525,
+    "added_demo": 228,
+    "keep": 6289,
+    "old_stable_student": 249
+  },
+  "backend": "cpu",
+  "source_files_unchanged": true,
+  "TEST_opened": false,
+  "checked_unix": 1791723749.3803108,
+  "wall_seconds": 21.568783283233643,
+  "acceptance_scope": "implementation chain and artifact integrity only; no recovery/retention/capacity claim",
+  "numerical_reconstruction": {
+    "pi0_independent_cpu_vs_saved_maxabs": 0.0005594640970230103,
+    "all_independent_cpu_vs_saved_maxabs": 0.000741865485906601,
+    "all_native_cpu_vs_saved_maxabs": 0.000741809606552124,
+    "all_independent_cpu_vs_native_maxabs": 2.682209014892578e-07,
+    "interpretation": "independent-vs-native CPU separates reconstruction code error from the shared CPU-to-saved-execution discrepancy; exact backend kernel cause is not established",
+    "state_drift_threshold": 1e-06,
+    "state_drift_not_used_for_action_gate": true
+  }
+}

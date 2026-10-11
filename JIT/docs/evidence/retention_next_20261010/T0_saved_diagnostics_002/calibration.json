@@ -1,0 +1,7 @@
+{
+  "rule": "max(1e-6, 10*pi0_reconstruction_maxabs)",
+  "tolerance": 0.0055946409702301025,
+  "pi0_reconstruction_maxabs": 0.0005594640970230103,
+  "calibration_cases": 16,
+  "frozen_before_candidate_gate": true
+}

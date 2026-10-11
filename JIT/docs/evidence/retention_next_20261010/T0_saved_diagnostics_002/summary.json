@@ -1,0 +1,1001 @@
+{
+  "gate": {
+    "schema": "jit_retention_T0_saved_diagnostics_v1",
+    "phase": "passed",
+    "t1_allowed": true,
+    "tolerance": 0.0055946409702301025,
+    "blocking_failures": [],
+    "simulation_steps": 0,
+    "supervised_updates": 0,
+    "input_identities": {
+      "control": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003",
+      "intervention": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001",
+      "models": {
+        "control_0": {
+          "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B/update_0000.pkl",
+          "file_sha256": "2fee93a58c39a79abda9ecd876aa660f4039e9399b37996b75daab77e818e120",
+          "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1"
+        },
+        "control_100": {
+          "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B/update_0100.pkl",
+          "file_sha256": "01bd5b65ea9f7919ade461696a90e22449921fbc58683e14e9884a9d80fff4cc",
+          "actor_sha256": "82339a11522b9ec42681f263bd701268a8c4b4271da80e7dcca0ce649b4898ea",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1"
+        },
+        "control_500": {
+          "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B/update_0500.pkl",
+          "file_sha256": "8866d0b713486fd870dd00453fdf1b269899ce009a2eb5962bf0398bf54581db",
+          "actor_sha256": "b2a4a5af5bb4d591d2162ceed3bc55065179cf147ba9e73919097064c3b07a6c",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1"
+        },
+        "control_1000": {
+          "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B/update_1000.pkl",
+          "file_sha256": "b981714174b59e5fbea4178582e43318b6d3bae8fb73db18c412c1b518d63f09",
+          "actor_sha256": "f1d1d460082fbc20eafc39d0ad4f318a38877b5b1b4122195ed3f12d8a52057e",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1"
+        },
+        "intervention_0": {
+          "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001/B/update_0000.pkl",
+          "file_sha256": "2fee93a58c39a79abda9ecd876aa660f4039e9399b37996b75daab77e818e120",
+          "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1"
+        },
+        "intervention_100": {
+          "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001/B/update_0100.pkl",
+          "file_sha256": "17b2be8727362bfc1dbc922356ffb4899007df6633a91745ce03d4648c996fcd",
+          "actor_sha256": "cb70cd836644ea546105217e7a999c1529df0affa83047085a2b9061b88061c8",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1"
+        },
+        "intervention_500": {
+          "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001/B/update_0500.pkl",
+          "file_sha256": "add810b5b8f7b365fd3d6272542b53c22cbbc1cd7f09c5fd9beab4f438b9a138",
+          "actor_sha256": "2482e1af53123a454af449d6139436a3edd0f64584d328eda181e8b4e5c5959e",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1"
+        },
+        "intervention_1000": {
+          "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001/B/update_1000.pkl",
+          "file_sha256": "542d26e4df61aa45083c1116f9ba1165f20e4dcdbbe7cd8e703d385dc3613d8a",
+          "actor_sha256": "61e35b23a2100129ed4925fafebea01c6bba72dae7119ac78d43e2407192cae1",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1"
+        }
+      },
+      "candidate_actor_sha256": "61e35b23a2100129ed4925fafebea01c6bba72dae7119ac78d43e2407192cae1",
+      "source_pi0_actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+      "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+      "execution_code_revision": "0f4ed45d506fcfa816eb3250eea57c19e33405ed"
+    },
+    "corpus_counts": {
+      "old_demo": 525,
+      "added_demo": 228,
+      "keep": 6289,
+      "old_stable_student": 249
+    },
+    "backend": "cpu",
+    "source_files_unchanged": true,
+    "TEST_opened": false,
+    "checked_unix": 1791723749.3803108,
+    "wall_seconds": 21.568783283233643,
+    "acceptance_scope": "implementation chain and artifact integrity only; no recovery/retention/capacity claim",
+    "numerical_reconstruction": {
+      "pi0_independent_cpu_vs_saved_maxabs": 0.0005594640970230103,
+      "all_independent_cpu_vs_saved_maxabs": 0.000741865485906601,
+      "all_native_cpu_vs_saved_maxabs": 0.000741809606552124,
+      "all_independent_cpu_vs_native_maxabs": 2.682209014892578e-07,
+      "interpretation": "independent-vs-native CPU separates reconstruction code error from the shared CPU-to-saved-execution discrepancy; exact backend kernel cause is not established",
+      "state_drift_threshold": 1e-06,
+      "state_drift_not_used_for_action_gate": true
+    }
+  },
+  "corpora": {
+    "old_demo": {
+      "n": 525,
+      "roots": [
+        "TRAIN-1010233101-68",
+        "TRAIN-1010233101-37",
+        "TRAIN-1010233101-10",
+        "TRAIN-1010233101-18",
+        "TRAIN-1010233101-26",
+        "TRAIN-1010233101-30",
+        "TRAIN-1010233101-55",
+        "TRAIN-1010233101-63"
+      ],
+      "source_weight_sum": 0.9999999999999999,
+      "role": "TRAIN"
+    },
+    "added_demo": {
+      "n": 228,
+      "roots": [
+        "TRAIN-1010233101-18",
+        "TRAIN-1010233101-30",
+        "TRAIN-1010233101-55"
+      ],
+      "source_weight_sum": 0.20833333333333331,
+      "role": "TRAIN"
+    },
+    "keep": {
+      "n": 6289,
+      "roots": [
+        "TRAIN_KEEP-1010257101-0",
+        "TRAIN_KEEP-1010257101-1",
+        "TRAIN_KEEP-1010257101-2",
+        "TRAIN_KEEP-1010257101-3",
+        "TRAIN_KEEP-1010257101-4",
+        "TRAIN_KEEP-1010257101-5",
+        "TRAIN_KEEP-1010257101-6",
+        "TRAIN_KEEP-1010257101-7",
+        "TRAIN_KEEP-1010257101-9",
+        "TRAIN_KEEP-1010257101-10",
+        "TRAIN_KEEP-1010257101-11",
+        "TRAIN_KEEP-1010257101-12",
+        "TRAIN_KEEP-1010257101-13",
+        "TRAIN_KEEP-1010257101-14",
+        "TRAIN_KEEP-1010269101-0",
+        "TRAIN_KEEP-1010269101-1",
+        "TRAIN_KEEP-1010269101-4",
+        "TRAIN_KEEP-1010269101-5",
+        "TRAIN_KEEP-1010269101-14",
+        "TRAIN_KEEP-1010269101-15",
+        "TRAIN_KEEP-1010257101-16",
+        "TRAIN_KEEP-1010257101-17",
+        "TRAIN_KEEP-1010257101-20",
+        "TRAIN_KEEP-1010257101-21",
+        "TRAIN_KEEP-1010257101-22",
+        "TRAIN_KEEP-1010257101-23",
+        "TRAIN_KEEP-1010257101-25",
+        "TRAIN_KEEP-1010257101-26",
+        "TRAIN_KEEP-1010257101-27",
+        "TRAIN_KEEP-1010257101-28",
+        "TRAIN_KEEP-1010257101-29",
+        "TRAIN_KEEP-1010257101-30",
+        "TRAIN_KEEP-1010269101-16",
+        "TRAIN_KEEP-1010269101-17",
+        "TRAIN_KEEP-1010269101-18",
+        "TRAIN_KEEP-1010269101-19",
+        "TRAIN_KEEP-1010269101-21",
+        "TRAIN_KEEP-1010269101-23",
+        "TRAIN_KEEP-1010269101-24",
+        "TRAIN_KEEP-1010269101-25",
+        "TRAIN_KEEP-1010269101-26",
+        "TRAIN_KEEP-1010269101-27",
+        "TRAIN_KEEP-1010269101-28",
+        "TRAIN_KEEP-1010269101-29",
+        "TRAIN_KEEP-1010269101-31",
+        "TRAIN_KEEP-1010269101-32",
+        "TRAIN_KEEP-1010269101-33",
+        "TRAIN_KEEP-1010269101-35",
+        "TRAIN_KEEP-1010269101-36",
+        "TRAIN_KEEP-1010269101-37",
+        "TRAIN_KEEP-1010269101-38",
+        "TRAIN_KEEP-1010269101-39",
+        "TRAIN_KEEP-1010269101-40",
+        "TRAIN_KEEP-1010269101-41",
+        "TRAIN_KEEP-1010269101-42",
+        "TRAIN_KEEP-1010269101-43",
+        "TRAIN_KEEP-1010269101-44",
+        "TRAIN_KEEP-1010269101-45",
+        "TRAIN_KEEP-1010269101-46",
+        "TRAIN_KEEP-1010269101-48",
+        "TRAIN_KEEP-1010269101-49",
+        "TRAIN_KEEP-1010269101-50",
+        "TRAIN_KEEP-1010269101-51",
+        "TRAIN_KEEP-1010269101-53",
+        "TRAIN_KEEP-1010269101-54",
+        "TRAIN_KEEP-1010269101-55",
+        "TRAIN_KEEP-1010269101-56",
+        "TRAIN_KEEP-1010269101-57",
+        "TRAIN_KEEP-1010269101-58",
+        "TRAIN_KEEP-1010269101-60",
+        "TRAIN_KEEP-1010269101-61",
+        "TRAIN_KEEP-1010269101-62",
+        "TRAIN_KEEP-1010269101-63",
+        "TRAIN_KEEP-1010269101-64",
+        "TRAIN_KEEP-1010269101-66",
+        "TRAIN_KEEP-1010269101-67",
+        "TRAIN_KEEP-1010269101-69",
+        "TRAIN_KEEP-1010269101-70",
+        "TRAIN_KEEP-1010269101-71",
+        "TRAIN_KEEP-1010269101-72",
+        "TRAIN_KEEP-1010269101-73",
+        "TRAIN_KEEP-1010269101-74",
+        "TRAIN_KEEP-1010269101-75",
+        "TRAIN_KEEP-1010269101-76",
+        "TRAIN_KEEP-1010269101-77",
+        "TRAIN_KEEP-1010269101-78",
+        "TRAIN_KEEP-1010269101-79"
+      ],
+      "source_weight_sum": 1.0,
+      "role": "TRAIN"
+    },
+    "old_stable_student": {
+      "n": 249,
+      "roots": [
+        "TRAIN-1010233101-68",
+        "TRAIN-1010233101-37",
+        "TRAIN-1010233101-10",
+        "TRAIN-1010233101-26"
+      ],
+      "source_weight_sum": 1.0,
+      "role": "TRAIN"
+    }
+  },
+  "focus": {
+    "TRAIN-1010233101-30": {
+      "control": {
+        "labels": [
+          0,
+          0,
+          0
+        ],
+        "teacher_same_state": {
+          "n": 64,
+          "mse": 0.00225987203571631,
+          "mse_by_action": [
+            0.003102841120730878,
+            0.0024136850350343934,
+            0.0026703354815993128,
+            0.0008526265055006573
+          ],
+          "rmse": 0.047538111402497994,
+          "maxabs": 0.2855033352971077,
+          "p95_frame_rmse": 0.10439701226910228
+        },
+        "closed_loop_prefix16_rmse": 0.2808547914028168,
+        "teacher_first_observation_difference": {
+          "first_tick": 1,
+          "initial_maxabs": 0.0,
+          "compared_ticks": 45,
+          "maxabs": 268.7127380371094,
+          "quantity": "actor_observation_before",
+          "threshold_per_component": 1e-06,
+          "units": "per raw feature: mixed physical units and flags; not a physical vector norm",
+          "gate_used": false,
+          "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+        },
+        "repeat_divergence": [
+          {
+            "qpos": {
+              "first_tick": null,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 45,
+              "maxabs": 0.0,
+              "quantity": "qpos",
+              "threshold_per_component": 1e-06,
+              "units": "per component: translation m, quaternion unitless, joint rad",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "qvel": {
+              "first_tick": null,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 45,
+              "maxabs": 0.0,
+              "quantity": "qvel",
+              "threshold_per_component": 1e-06,
+              "units": "per component: translation m/s, angular/joint rad/s",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "actor_observation_before": {
+              "first_tick": null,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 45,
+              "maxabs": 0.0,
+              "quantity": "actor_observation_before",
+              "threshold_per_component": 1e-06,
+              "units": "per raw feature: mixed physical units and flags; not a physical vector norm",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "normalized_action_executed": {
+              "first_tick": null,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 45,
+              "maxabs": 0.0,
+              "quantity": "normalized_action_executed",
+              "threshold_per_component": 1e-06,
+              "units": "normalized action, unitless",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            }
+          },
+          {
+            "qpos": {
+              "first_tick": null,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 45,
+              "maxabs": 0.0,
+              "quantity": "qpos",
+              "threshold_per_component": 1e-06,
+              "units": "per component: translation m, quaternion unitless, joint rad",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "qvel": {
+              "first_tick": null,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 45,
+              "maxabs": 0.0,
+              "quantity": "qvel",
+              "threshold_per_component": 1e-06,
+              "units": "per component: translation m/s, angular/joint rad/s",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "actor_observation_before": {
+              "first_tick": null,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 45,
+              "maxabs": 0.0,
+              "quantity": "actor_observation_before",
+              "threshold_per_component": 1e-06,
+              "units": "per raw feature: mixed physical units and flags; not a physical vector norm",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "normalized_action_executed": {
+              "first_tick": null,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 45,
+              "maxabs": 0.0,
+              "quantity": "normalized_action_executed",
+              "threshold_per_component": 1e-06,
+              "units": "normalized action, unitless",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            }
+          }
+        ]
+      },
+      "intervention": {
+        "labels": [
+          1,
+          1,
+          1
+        ],
+        "teacher_same_state": {
+          "n": 64,
+          "mse": 0.0032069047346688683,
+          "mse_by_action": [
+            0.004177412705909062,
+            0.004244373054992775,
+            0.0031273002355998473,
+            0.0012785329421737893
+          ],
+          "rmse": 0.0566295394177709,
+          "maxabs": 0.31772495806217194,
+          "p95_frame_rmse": 0.11590570837848264
+        },
+        "closed_loop_prefix16_rmse": 0.20187748968601227,
+        "teacher_first_observation_difference": {
+          "first_tick": 1,
+          "initial_maxabs": 0.0,
+          "compared_ticks": 64,
+          "maxabs": 123.00823974609375,
+          "quantity": "actor_observation_before",
+          "threshold_per_component": 1e-06,
+          "units": "per raw feature: mixed physical units and flags; not a physical vector norm",
+          "gate_used": false,
+          "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+        },
+        "repeat_divergence": [
+          {
+            "qpos": {
+              "first_tick": 50,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 74,
+              "maxabs": 0.2350778579711914,
+              "quantity": "qpos",
+              "threshold_per_component": 1e-06,
+              "units": "per component: translation m, quaternion unitless, joint rad",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "qvel": {
+              "first_tick": 50,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 74,
+              "maxabs": 14.062332153320312,
+              "quantity": "qvel",
+              "threshold_per_component": 1e-06,
+              "units": "per component: translation m/s, angular/joint rad/s",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "actor_observation_before": {
+              "first_tick": 51,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 74,
+              "maxabs": 60.664276123046875,
+              "quantity": "actor_observation_before",
+              "threshold_per_component": 1e-06,
+              "units": "per raw feature: mixed physical units and flags; not a physical vector norm",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "normalized_action_executed": {
+              "first_tick": 51,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 74,
+              "maxabs": 0.3248312473297119,
+              "quantity": "normalized_action_executed",
+              "threshold_per_component": 1e-06,
+              "units": "normalized action, unitless",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            }
+          },
+          {
+            "qpos": {
+              "first_tick": 50,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 74,
+              "maxabs": 0.4754610061645508,
+              "quantity": "qpos",
+              "threshold_per_component": 1e-06,
+              "units": "per component: translation m, quaternion unitless, joint rad",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "qvel": {
+              "first_tick": 50,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 74,
+              "maxabs": 19.530902862548828,
+              "quantity": "qvel",
+              "threshold_per_component": 1e-06,
+              "units": "per component: translation m/s, angular/joint rad/s",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "actor_observation_before": {
+              "first_tick": 51,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 74,
+              "maxabs": 56.660465240478516,
+              "quantity": "actor_observation_before",
+              "threshold_per_component": 1e-06,
+              "units": "per raw feature: mixed physical units and flags; not a physical vector norm",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "normalized_action_executed": {
+              "first_tick": 51,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 74,
+              "maxabs": 0.35597342252731323,
+              "quantity": "normalized_action_executed",
+              "threshold_per_component": 1e-06,
+              "units": "normalized action, unitless",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            }
+          }
+        ]
+      }
+    },
+    "TRAIN-1010233101-68": {
+      "control": {
+        "labels": [
+          1,
+          1,
+          1
+        ],
+        "teacher_same_state": {
+          "n": 65,
+          "mse": 0.0036893742552251718,
+          "mse_by_action": [
+            0.002959936924056115,
+            0.002946714376116062,
+            0.0049055498520461805,
+            0.0039452958686823315
+          ],
+          "rmse": 0.060740219420291626,
+          "maxabs": 0.4406738430261612,
+          "p95_frame_rmse": 0.10583261586811238
+        },
+        "closed_loop_prefix16_rmse": 0.24351240694522858,
+        "teacher_first_observation_difference": {
+          "first_tick": 1,
+          "initial_maxabs": 0.0,
+          "compared_ticks": 63,
+          "maxabs": 288.0310363769531,
+          "quantity": "actor_observation_before",
+          "threshold_per_component": 1e-06,
+          "units": "per raw feature: mixed physical units and flags; not a physical vector norm",
+          "gate_used": false,
+          "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+        },
+        "repeat_divergence": [
+          {
+            "qpos": {
+              "first_tick": 1,
+              "initial_maxabs": 4.172325134277344e-07,
+              "compared_ticks": 63,
+              "maxabs": 0.7755000591278076,
+              "quantity": "qpos",
+              "threshold_per_component": 1e-06,
+              "units": "per component: translation m, quaternion unitless, joint rad",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "qvel": {
+              "first_tick": 0,
+              "initial_maxabs": 3.24249267578125e-05,
+              "compared_ticks": 63,
+              "maxabs": 22.94761085510254,
+              "quantity": "qvel",
+              "threshold_per_component": 1e-06,
+              "units": "per component: translation m/s, angular/joint rad/s",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "actor_observation_before": {
+              "first_tick": 1,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 63,
+              "maxabs": 128.8470916748047,
+              "quantity": "actor_observation_before",
+              "threshold_per_component": 1e-06,
+              "units": "per raw feature: mixed physical units and flags; not a physical vector norm",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "normalized_action_executed": {
+              "first_tick": 2,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 63,
+              "maxabs": 0.9764230251312256,
+              "quantity": "normalized_action_executed",
+              "threshold_per_component": 1e-06,
+              "units": "normalized action, unitless",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            }
+          },
+          {
+            "qpos": {
+              "first_tick": 0,
+              "initial_maxabs": 1.430511474609375e-06,
+              "compared_ticks": 63,
+              "maxabs": 0.4286794662475586,
+              "quantity": "qpos",
+              "threshold_per_component": 1e-06,
+              "units": "per component: translation m, quaternion unitless, joint rad",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "qvel": {
+              "first_tick": 0,
+              "initial_maxabs": 9.72747802734375e-05,
+              "compared_ticks": 63,
+              "maxabs": 26.969406127929688,
+              "quantity": "qvel",
+              "threshold_per_component": 1e-06,
+              "units": "per component: translation m/s, angular/joint rad/s",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "actor_observation_before": {
+              "first_tick": 1,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 63,
+              "maxabs": 62.861167907714844,
+              "quantity": "actor_observation_before",
+              "threshold_per_component": 1e-06,
+              "units": "per raw feature: mixed physical units and flags; not a physical vector norm",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "normalized_action_executed": {
+              "first_tick": 2,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 63,
+              "maxabs": 0.23066316545009613,
+              "quantity": "normalized_action_executed",
+              "threshold_per_component": 1e-06,
+              "units": "normalized action, unitless",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            }
+          }
+        ]
+      },
+      "intervention": {
+        "labels": [
+          0,
+          0,
+          0
+        ],
+        "teacher_same_state": {
+          "n": 65,
+          "mse": 0.003331336022919943,
+          "mse_by_action": [
+            0.002546646034195092,
+            0.002157619421604689,
+            0.004776487643909807,
+            0.003844590991970181
+          ],
+          "rmse": 0.057717727111520456,
+          "maxabs": 0.4278761148452759,
+          "p95_frame_rmse": 0.10308437651420979
+        },
+        "closed_loop_prefix16_rmse": 0.29362601041793823,
+        "teacher_first_observation_difference": {
+          "first_tick": 1,
+          "initial_maxabs": 0.0,
+          "compared_ticks": 59,
+          "maxabs": 136.24961853027344,
+          "quantity": "actor_observation_before",
+          "threshold_per_component": 1e-06,
+          "units": "per raw feature: mixed physical units and flags; not a physical vector norm",
+          "gate_used": false,
+          "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+        },
+        "repeat_divergence": [
+          {
+            "qpos": {
+              "first_tick": 1,
+              "initial_maxabs": 4.172325134277344e-07,
+              "compared_ticks": 59,
+              "maxabs": 0.3030853271484375,
+              "quantity": "qpos",
+              "threshold_per_component": 1e-06,
+              "units": "per component: translation m, quaternion unitless, joint rad",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "qvel": {
+              "first_tick": 0,
+              "initial_maxabs": 3.0517578125e-05,
+              "compared_ticks": 59,
+              "maxabs": 4.793598175048828,
+              "quantity": "qvel",
+              "threshold_per_component": 1e-06,
+              "units": "per component: translation m/s, angular/joint rad/s",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "actor_observation_before": {
+              "first_tick": 1,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 59,
+              "maxabs": 9.712425231933594,
+              "quantity": "actor_observation_before",
+              "threshold_per_component": 1e-06,
+              "units": "per raw feature: mixed physical units and flags; not a physical vector norm",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "normalized_action_executed": {
+              "first_tick": 2,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 59,
+              "maxabs": 0.09274101257324219,
+              "quantity": "normalized_action_executed",
+              "threshold_per_component": 1e-06,
+              "units": "normalized action, unitless",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            }
+          },
+          {
+            "qpos": {
+              "first_tick": 1,
+              "initial_maxabs": 6.705522537231445e-08,
+              "compared_ticks": 59,
+              "maxabs": 0.46150875091552734,
+              "quantity": "qpos",
+              "threshold_per_component": 1e-06,
+              "units": "per component: translation m, quaternion unitless, joint rad",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "qvel": {
+              "first_tick": 0,
+              "initial_maxabs": 7.224082946777344e-05,
+              "compared_ticks": 59,
+              "maxabs": 3.1731910705566406,
+              "quantity": "qvel",
+              "threshold_per_component": 1e-06,
+              "units": "per component: translation m/s, angular/joint rad/s",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "actor_observation_before": {
+              "first_tick": 1,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 59,
+              "maxabs": 22.405786514282227,
+              "quantity": "actor_observation_before",
+              "threshold_per_component": 1e-06,
+              "units": "per raw feature: mixed physical units and flags; not a physical vector norm",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "normalized_action_executed": {
+              "first_tick": 1,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 59,
+              "maxabs": 0.13352826237678528,
+              "quantity": "normalized_action_executed",
+              "threshold_per_component": 1e-06,
+              "units": "normalized action, unitless",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            }
+          }
+        ]
+      }
+    },
+    "TRAIN-1010233101-55": {
+      "control": {
+        "labels": [
+          0,
+          0,
+          0
+        ],
+        "teacher_same_state": {
+          "n": 55,
+          "mse": 0.0009615990690823721,
+          "mse_by_action": [
+            0.0010050868043987259,
+            0.0006107058896066599,
+            0.002058691829341918,
+            0.00017191175298218484
+          ],
+          "rmse": 0.031009660899183857,
+          "maxabs": 0.16579867154359818,
+          "p95_frame_rmse": 0.06607940704119632
+        },
+        "closed_loop_prefix16_rmse": 0.16243772208690643,
+        "teacher_first_observation_difference": {
+          "first_tick": 1,
+          "initial_maxabs": 0.0,
+          "compared_ticks": 55,
+          "maxabs": 65.35356903076172,
+          "quantity": "actor_observation_before",
+          "threshold_per_component": 1e-06,
+          "units": "per raw feature: mixed physical units and flags; not a physical vector norm",
+          "gate_used": false,
+          "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+        },
+        "repeat_divergence": [
+          {
+            "qpos": {
+              "first_tick": 26,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 92,
+              "maxabs": 1.0878314971923828,
+              "quantity": "qpos",
+              "threshold_per_component": 1e-06,
+              "units": "per component: translation m, quaternion unitless, joint rad",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "qvel": {
+              "first_tick": 26,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 92,
+              "maxabs": 24.112852096557617,
+              "quantity": "qvel",
+              "threshold_per_component": 1e-06,
+              "units": "per component: translation m/s, angular/joint rad/s",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "actor_observation_before": {
+              "first_tick": 27,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 92,
+              "maxabs": 97.74061584472656,
+              "quantity": "actor_observation_before",
+              "threshold_per_component": 1e-06,
+              "units": "per raw feature: mixed physical units and flags; not a physical vector norm",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "normalized_action_executed": {
+              "first_tick": 27,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 92,
+              "maxabs": 0.4267893433570862,
+              "quantity": "normalized_action_executed",
+              "threshold_per_component": 1e-06,
+              "units": "normalized action, unitless",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            }
+          },
+          {
+            "qpos": {
+              "first_tick": 26,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 98,
+              "maxabs": 2.5456790924072266,
+              "quantity": "qpos",
+              "threshold_per_component": 1e-06,
+              "units": "per component: translation m, quaternion unitless, joint rad",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "qvel": {
+              "first_tick": 26,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 98,
+              "maxabs": 29.011863708496094,
+              "quantity": "qvel",
+              "threshold_per_component": 1e-06,
+              "units": "per component: translation m/s, angular/joint rad/s",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "actor_observation_before": {
+              "first_tick": 27,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 98,
+              "maxabs": 257.4614562988281,
+              "quantity": "actor_observation_before",
+              "threshold_per_component": 1e-06,
+              "units": "per raw feature: mixed physical units and flags; not a physical vector norm",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "normalized_action_executed": {
+              "first_tick": 27,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 98,
+              "maxabs": 1.0395934581756592,
+              "quantity": "normalized_action_executed",
+              "threshold_per_component": 1e-06,
+              "units": "normalized action, unitless",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            }
+          }
+        ]
+      },
+      "intervention": {
+        "labels": [
+          1,
+          0,
+          0
+        ],
+        "teacher_same_state": {
+          "n": 55,
+          "mse": 0.0015045520979879222,
+          "mse_by_action": [
+            0.0016709261659115344,
+            0.0008709667973278657,
+            0.003260361743636429,
+            0.00021595368507585917
+          ],
+          "rmse": 0.03878855627614828,
+          "maxabs": 0.2261083424091339,
+          "p95_frame_rmse": 0.07999204707985855
+        },
+        "closed_loop_prefix16_rmse": 0.19732066988945007,
+        "teacher_first_observation_difference": {
+          "first_tick": 1,
+          "initial_maxabs": 0.0,
+          "compared_ticks": 55,
+          "maxabs": 72.44775390625,
+          "quantity": "actor_observation_before",
+          "threshold_per_component": 1e-06,
+          "units": "per raw feature: mixed physical units and flags; not a physical vector norm",
+          "gate_used": false,
+          "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+        },
+        "repeat_divergence": [
+          {
+            "qpos": {
+              "first_tick": 25,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 71,
+              "maxabs": 1.088369369506836,
+              "quantity": "qpos",
+              "threshold_per_component": 1e-06,
+              "units": "per component: translation m, quaternion unitless, joint rad",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "qvel": {
+              "first_tick": 24,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 71,
+              "maxabs": 18.99890899658203,
+              "quantity": "qvel",
+              "threshold_per_component": 1e-06,
+              "units": "per component: translation m/s, angular/joint rad/s",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "actor_observation_before": {
+              "first_tick": 25,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 71,
+              "maxabs": 85.31755065917969,
+              "quantity": "actor_observation_before",
+              "threshold_per_component": 1e-06,
+              "units": "per raw feature: mixed physical units and flags; not a physical vector norm",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "normalized_action_executed": {
+              "first_tick": 26,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 71,
+              "maxabs": 1.1601482629776,
+              "quantity": "normalized_action_executed",
+              "threshold_per_component": 1e-06,
+              "units": "normalized action, unitless",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            }
+          },
+          {
+            "qpos": {
+              "first_tick": 25,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 84,
+              "maxabs": 2.1029624938964844,
+              "quantity": "qpos",
+              "threshold_per_component": 1e-06,
+              "units": "per component: translation m, quaternion unitless, joint rad",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "qvel": {
+              "first_tick": 24,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 84,
+              "maxabs": 24.98392677307129,
+              "quantity": "qvel",
+              "threshold_per_component": 1e-06,
+              "units": "per component: translation m/s, angular/joint rad/s",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "actor_observation_before": {
+              "first_tick": 25,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 84,
+              "maxabs": 85.25336456298828,
+              "quantity": "actor_observation_before",
+              "threshold_per_component": 1e-06,
+              "units": "per raw feature: mixed physical units and flags; not a physical vector norm",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            },
+            "normalized_action_executed": {
+              "first_tick": 26,
+              "initial_maxabs": 0.0,
+              "compared_ticks": 84,
+              "maxabs": 0.8468210697174072,
+              "quantity": "normalized_action_executed",
+              "threshold_per_component": 1e-06,
+              "units": "normalized action, unitless",
+              "gate_used": false,
+              "interpretation": "first any-component numerical difference only; not a physical significance threshold"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "limitations": [
+    "fixed TRAIN diagnostics are not independent tests",
+    "three rollouts are not independent training seeds",
+    "gradient conflict is not proof of insufficient capacity",
+    "same-tick own-state action differences are not same-state imitation errors",
+    "no simulator, policy/optimizer update, DEV training data, or TEST access"
+  ]
+}

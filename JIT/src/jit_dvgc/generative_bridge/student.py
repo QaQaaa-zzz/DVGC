@@ -24,7 +24,9 @@ def make_joint_student_trainer(trainer, demo_manifest, *, retention,
         transitions=128000, demo_coefficient_start=.2, demo_coefficient_end=.05,
         keep_coefficient=.2, demo_batch_size=256, retention_batch_size=256,
         demo_sampler=None, usage_sink=None, retention_reference=None, audit_enabled=False, max_first_behavior_kl=None,
-        first_update_audit_path=None, freeze_actor_normalizer=False, demo_clock="normalizer_count", actual_gradient_audit=False):
+        first_update_audit_path=None, freeze_actor_normalizer=False, demo_clock="normalizer_count", actual_gradient_audit=False,
+        audit_callback_enabled=True,
+        record_update_clock=False):
     """Must be invoked inside the existing guard_ppo_updates scope.
 
     Empty data creates no device target, sampler or demo RNG operation. Both
@@ -36,6 +38,8 @@ def make_joint_student_trainer(trainer, demo_manifest, *, retention,
         raise ValueError('frozen normalizer requires explicit completed transitions')
     if demo_clock=='completed_transitions' and not freeze_actor_normalizer:
         raise ValueError('explicit clock requires instrumented fixed-normalizer pilot')
+    if record_update_clock and demo_clock!='completed_transitions':
+        raise ValueError('actual update clock requires completed transitions')
     coefficients=(demo_coefficient_start,demo_coefficient_end,keep_coefficient)
     if any(not np.isfinite(v) or v<0 for v in coefficients):raise ValueError('invalid auxiliary coefficient')
     if any(type(v) is not int or v<=0 for v in (transitions,demo_batch_size,retention_batch_size)):
@@ -159,8 +163,15 @@ def make_joint_student_trainer(trainer, demo_manifest, *, retention,
                     pred=mode(apply(normalizer_params,actor,{'state':keep_obs[keep_ids]}))
                     target=jax.lax.stop_gradient(mode(apply(source_normalizer,source_actor,{'state':keep_obs[keep_ids]})))
                     return keep_coefficient*action_mse(pred,target)
-                metrics={**metrics,**weighted_actor_metrics(params.policy,dict(ppo=ppo_objective,entropy=entropy_objective,demo=demo_objective_actual,keep=keep_objective_actual)),
+                gradient_metrics=weighted_actor_metrics(params.policy,dict(ppo=ppo_objective,entropy=entropy_objective,demo=demo_objective_actual,keep=keep_objective_actual),return_sum=record_update_clock)
+                if record_update_clock:
+                    gradient_metrics,gradient_sum=gradient_metrics
+                    metrics={**metrics,'_actual_weighted_actor_gradient_sum':gradient_sum}
+                metrics={**metrics,**gradient_metrics,
                     'actual/reward_per_transition':jp.mean(data.reward)}
+            if record_update_clock:
+                metrics={**metrics,'actual/completed_training_transitions':
+                    jp.max(data.extras['policy_extras']['completed_training_transitions'])}
             if audit_enabled:
                 from .learning_audit import joint_loss_metrics,critic_loss_metrics
                 def policy_objective(actor):
@@ -190,8 +201,9 @@ def make_joint_student_trainer(trainer, demo_manifest, *, retention,
                         count=jp.maximum(mask.sum(),1)
                         for channel in range(4):
                             metrics[f'fixed_probe/{segment}/mse_channel_{channel}']=jp.sum(fixed_error[:,channel]*mask)/count
-                jax.debug.callback(record_audit,{key:value for key,value in metrics.items()
-                    if key.startswith(('audit/','fixed_probe/'))})
+                if audit_callback_enabled:
+                    jax.debug.callback(record_audit,{key:value for key,value in metrics.items()
+                        if key.startswith(('audit/','fixed_probe/'))})
             return total,{**metrics,'ppo_loss':base,'demo_action_mse':demo_mse,
                 'effective_lambda_demo':scale,'retention_action_mse':keep_mse,
                 'demo_samples_per_loss':jp.asarray(demo_batch_size if use_demo else 0),

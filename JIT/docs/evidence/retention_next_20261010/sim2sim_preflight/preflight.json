@@ -1,0 +1,219 @@
+{
+  "engine_evaluation_status": "not_run",
+  "final_test_used": false,
+  "input_files": {
+    "/home/qy/DVGC/JIT/configs/descent_stable_forward_0p5s.json": "70a249e540474a1c0b4e517729ea42d0f2fd1ff68dd730cfc25d766507d100cd",
+    "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/binding/bridge_baseline/checkpoints/transition_0/identity.json": "0307799fa5059cd55d81eedec9f33e89a53b75d1f718e29c919b74e01d1445e8",
+    "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/binding/bridge_baseline/checkpoints/transition_0/payload.pkl": "dc74f572683e873dcf7661e454a53f259171efd82ec33edcf7afb071acfdad31",
+    "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/runtime_config.json": "c135ef71f5d5907274c08ef1692705bcf3ffe0f3695674f1ef11b5f2d3bcc51f",
+    "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/sim2sim_preflight_001/observations.json": "f6f48afeaa15c27eeee99cbb448f8b046104cc06c4d64038e5aaad5ac0ae417a",
+    "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/resolved_config.json": "557e048980f90627b571f2bbbc554c5e66bfab2128ac8cbd799f36058eb7f7e3",
+    "/home/qy/DVGC/runs/worktrees/jit-retention-first/JIT/src/jit_dvgc/constants.py": "5b468917cc1f407e0b8dc120a699992d0a4c9e4df7dc33841925ba00b3819589",
+    "/home/qy/DVGC/runs/worktrees/jit-retention-first/JIT/src/jit_dvgc/env.py": "3999bcbca2bb7c72b915c4153c80e9ddf87c9314e742c6a0247ed88811becaee",
+    "/home/qy/DVGC/runs/worktrees/jit-retention-first/JIT/src/jit_dvgc/model.py": "e3eb7e27afda018685c9b3e1df028344f19d26e4ed53e6aa3ed223cc08d78f83",
+    "/home/qy/DVGC/runs/worktrees/jit-retention-first/assets/orange_bike_4kg_horizontal.xml": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+  },
+  "limitations": [
+    "No environment, reset, contact or success scorer was executed.",
+    "Existing external probes require explicit task adapter/scorer changes before retention evaluation.",
+    "Checkpoint-bound task config does not certify any separate training/evaluation runtime overrides.",
+    "Array inference parity is not sim2sim task success or observation-adapter parity."
+  ],
+  "new_physics_control_steps": 0,
+  "new_physics_substeps": 0,
+  "output_files": {
+    "actor.npz": "1be6724e5ec5236df225e44c7d45730dbe271a32eefd00b3713f685e0b91c290",
+    "identity.json": "0307799fa5059cd55d81eedec9f33e89a53b75d1f718e29c919b74e01d1445e8",
+    "phase_configs.json": "8ad0a3244075a47cab5dd7cd693c3fba4ca04c3a123f8040d904eae64b092f4b",
+    "reference_inference.npz": "63bca72563868521c1f7e052372ffbacc026e35a0fc5f43256eb0fe03add3b3c",
+    "task_config.json": "c135ef71f5d5907274c08ef1692705bcf3ffe0f3695674f1ef11b5f2d3bcc51f"
+  },
+  "parity": {
+    "backend": "cpu",
+    "max_abs_error": 4.76837158203125e-07,
+    "observation_count": 525,
+    "tolerance": 3e-05
+  },
+  "saved_observations": [
+    {
+      "available_rows": 65,
+      "key": "observations",
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_003/report_003/lesson_000.npz",
+      "role": "TRAIN",
+      "selection": "first rows in declared order",
+      "sha256": "e1baf0d24e592689247220589cf16334c27c85bc6ce84d2d7ccc5f11ec7fd827",
+      "used_rows": 65
+    },
+    {
+      "available_rows": 62,
+      "key": "observations",
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_003/report_003/lesson_001.npz",
+      "role": "TRAIN",
+      "selection": "first rows in declared order",
+      "sha256": "b9fabe61839f8a478cb733b92afdf323d1f79b076007bc217a32a552ee12d538",
+      "used_rows": 62
+    },
+    {
+      "available_rows": 70,
+      "key": "observations",
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_003/report_003/lesson_002.npz",
+      "role": "TRAIN",
+      "selection": "first rows in declared order",
+      "sha256": "77205c92d544ca268aaa572a9a183de1f5ffff4398e0c1af13220d607d08c790",
+      "used_rows": 70
+    },
+    {
+      "available_rows": 82,
+      "key": "observations",
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_003/report_003/lesson_003.npz",
+      "role": "TRAIN",
+      "selection": "first rows in declared order",
+      "sha256": "a097f09020fd1ecbc1b1005c21d6adcd790e16c7cc3005caf60cda00238f8045",
+      "used_rows": 82
+    },
+    {
+      "available_rows": 66,
+      "key": "observations",
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_003/report_003/lesson_004.npz",
+      "role": "TRAIN",
+      "selection": "first rows in declared order",
+      "sha256": "3f34ce7c62a51d98095ec47f1bbf7e746c2ae06c765a698d9bd59fdf50b9e5f6",
+      "used_rows": 66
+    },
+    {
+      "available_rows": 64,
+      "key": "observations",
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_003/report_003/lesson_005.npz",
+      "role": "TRAIN",
+      "selection": "first rows in declared order",
+      "sha256": "5a31e42610b89bc461724dd7b8a79ee9c0a61e366e6b923308ac611871299620",
+      "used_rows": 64
+    },
+    {
+      "available_rows": 55,
+      "key": "observations",
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_003/report_003/lesson_006.npz",
+      "role": "TRAIN",
+      "selection": "first rows in declared order",
+      "sha256": "591aff6e75b0bd9646377ad8a03ed629653f17cb6447dbbaa94070e1d25f35e6",
+      "used_rows": 55
+    },
+    {
+      "available_rows": 61,
+      "key": "observations",
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_003/report_003/lesson_007.npz",
+      "role": "TRAIN",
+      "selection": "first rows in declared order",
+      "sha256": "a8ead73a56fe04f72232d8518e2f0cc6ba008a3f3ad469db6fa21093debae924",
+      "used_rows": 61
+    }
+  ],
+  "schema": "jit_sim2sim_offline_export_v1",
+  "source": {
+    "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+    "checkpoint": "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/binding/bridge_baseline/checkpoints/transition_0",
+    "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+    "payload_sha256": "dc74f572683e873dcf7661e454a53f259171efd82ec33edcf7afb071acfdad31",
+    "training_transitions": 0
+  },
+  "status": "offline_export_verified",
+  "target_adapter_ready": false,
+  "task_contract": {
+    "action_order": [
+      "steer",
+      "rear_wheel_drive",
+      "hip",
+      "knee"
+    ],
+    "actor_angular_velocity_frame": "body_local",
+    "actor_dimensions": 76,
+    "actor_frame_fields": [
+      "gravity_x",
+      "gravity_y",
+      "gravity_z",
+      "angular_velocity_x",
+      "angular_velocity_y",
+      "angular_velocity_z",
+      "acceleration_x",
+      "acceleration_y",
+      "acceleration_z",
+      "steering_position",
+      "hip_position",
+      "knee_position",
+      "steering_velocity",
+      "hip_velocity",
+      "knee_velocity",
+      "front_wheel_velocity",
+      "rear_wheel_velocity",
+      "last_action_steer",
+      "last_action_rear_wheel_drive",
+      "last_action_hip",
+      "last_action_knee",
+      "estimated_forward_velocity",
+      "obstacle_relative_x",
+      "root_height",
+      "history_valid"
+    ],
+    "actor_history_frames": 3,
+    "actor_task_fields": [
+      "jump_signal"
+    ],
+    "angular_velocity_unit": "rad/s",
+    "checkpoint_snapshot_reset_contract": "fresh episode and phase clocks; preserve saved event and controller context",
+    "control_dt_s": 0.02,
+    "position_frame": "world; meters; no trajectory recentering for scoring",
+    "reset_requirement": "full observation history, controller/event state and engine solver state",
+    "reward_angular_velocity_frame": "world",
+    "root_velocity_conversion": "v_root_world = v_com_world - omega_world cross r_com_world; exactly once",
+    "scoring_status": "declared source configuration only; no target scorer equivalence verified",
+    "sim_dt_s": 0.005,
+    "source_action": {
+      "base_rear_speed": 12.0,
+      "joint_target_semantics": "keyframe_centered_absolute",
+      "rear_speed_delta": 12.0
+    },
+    "success": {
+      "action_smoothness_penalty_coeff": 0.01,
+      "contact_clearance_threshold": 0.0,
+      "continuous_stability": true,
+      "max_wheel_penetration": 0.01,
+      "min_airborne_clearance": 0.05,
+      "min_post_contact_forward_progress": 0.0,
+      "penalty_bad_contact": 10.0,
+      "penalty_failure": 30.0,
+      "penalty_timeout": 5.0,
+      "pitch_posture_coeff": 0.5,
+      "pitch_rate_penalty_coeff": 0.15,
+      "recovery_ticks": 25,
+      "reward_contact": 5.0,
+      "reward_forward_progress": 2.0,
+      "reward_recovery_tick": 1.0,
+      "reward_success": 30.0,
+      "roll_posture_coeff": 3.0,
+      "roll_rate_penalty_coeff": 0.5,
+      "stable_max_abs_pitch": 0.2617993877991494,
+      "stable_max_abs_roll": 0.17453292519943295,
+      "stable_max_wheel_clearance": 0.02,
+      "stable_min_forward_velocity": 0.5,
+      "terminate_on_body_contact": true,
+      "total_max": 50.0,
+      "total_min": -100.0
+    },
+    "success_criterion": "stable_forward_recovery",
+    "success_endpoint": "valid takeoff and contact followed by continuously stable recovery ticks; concurrent physical failure or timeout is not success; preserve source event ordering",
+    "timing": {
+      "json_declares_timing": false,
+      "physics_substeps_per_control": 4,
+      "raw_xml_timestep_s": [
+        0.001
+      ],
+      "source_files": {
+        "constants.py": "/home/qy/DVGC/runs/worktrees/jit-retention-first/JIT/src/jit_dvgc/constants.py",
+        "env.py": "/home/qy/DVGC/runs/worktrees/jit-retention-first/JIT/src/jit_dvgc/env.py",
+        "model.py": "/home/qy/DVGC/runs/worktrees/jit-retention-first/JIT/src/jit_dvgc/model.py"
+      },
+      "validation": "source_constants_and_override_audited; no environment instantiated"
+    }
+  },
+  "training_updates": 0
+}

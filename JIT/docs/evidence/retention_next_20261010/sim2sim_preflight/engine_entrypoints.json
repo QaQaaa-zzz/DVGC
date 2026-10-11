@@ -1,0 +1,53 @@
+{
+  "schema": "jit_sim2sim_entrypoint_audit_v1",
+  "role": "engineering_preflight",
+  "new_physics": 0,
+  "source_code_revision": "84f382a2a3b1145ec94becb6863a4bf914a5a420 plus new migration files",
+  "files": [
+    {
+      "path": "/home/qy/ISAAC\u2014\u2014SIM/worktrees/jump-landing-v2/sim2sim_v2/export_policy.py",
+      "sha256": "186a728de19537d0ad6cb0a8d704f38adf25395cd362d926dbceeea0fc23cf02",
+      "finding": "Historical hardcoded checkpoint and shared policy output; not invoked or edited."
+    },
+    {
+      "path": "/home/qy/ISAAC\u2014\u2014SIM/worktrees/jump-landing-v2/sim2sim_v2/probe_mjx_landing.py",
+      "sha256": "e14fcc3bc23e7d6c77d76406879893dfd34423fe417f91c8d8280c4cca33e124",
+      "finding": "Accepts actor/output but hardcodes different jump_ori source snapshot, config and x1.5 reset; not compatible with retention task."
+    },
+    {
+      "path": "/home/qy/ISAAC\u2014\u2014SIM/worktrees/jump-landing-v2/sim2sim_v2/probe_physx_factors.py",
+      "sha256": "cf67790d69e3ee9a01ebaaa68ce68e7db3e474c5660b7067953be24e1fd1d7c4",
+      "finding": "Actor/config/output CLI exists; PhysxTask task/event implementation and common retention scorer still need audited adapter."
+    },
+    {
+      "path": "/home/qy/ISAAC\u2014\u2014SIM/worktrees/jump-landing-v2/sim2sim_v2/physx_task.py",
+      "sha256": "8b50d2e754f3d3f7189e2c10aaf87c59d83de2152c8cc36008bdb9a7139b439a",
+      "finding": "Model path is local ROOT/model/source.xml; existing COM-to-root velocity correction retained."
+    },
+    {
+      "path": "/home/qy/ISAAC\u2014\u2014SIM/worktrees/jump-landing-v2/sim2sim_v2/policy_runtime.py",
+      "sha256": "077ad838211a6c627332215a3373c1319e756333d64a6329532bdff2235afeb4",
+      "finding": "Existing NPZ Actor independently checked offline; Observation history and frames not executed."
+    },
+    {
+      "path": "/home/qy/ISAAC\u2014\u2014SIM/worktrees/jump-landing-v2/sim2sim_v2/landing_evaluation.py",
+      "sha256": "0e875984611bd83c9f402d8b68057f06aac1d5587187de07ca3f118721854b62",
+      "finding": "Existing 1s/no-speed gate differs from retention 25 ticks/vx>=.5; not substituted."
+    }
+  ],
+  "implementation_scope": "JIT exporter only; external engine source read-only",
+  "not_run": [
+    "engine observation-adapter parity",
+    "full history/FIFO/reset comparison",
+    "crossengine shared success scorer",
+    "new MJX or PhysX rollout",
+    "TEST"
+  ],
+  "remaining_parameters": [
+    "explicit source checkpoint and bundled normalizer",
+    "retention unified up/down task configs rather than implicit jump_ori config",
+    "independent output directory",
+    "common complete starts, event/reset semantics and task endpoint",
+    "declared target actuator/contact calibration; no parameter fitting from TEST"
+  ]
+}

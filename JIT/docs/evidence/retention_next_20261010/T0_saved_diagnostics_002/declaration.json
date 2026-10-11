@@ -1,0 +1,28 @@
+{
+  "schema": "jit_retention_T0_saved_diagnostics_v1",
+  "control": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003",
+  "intervention": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001",
+  "nodes": [
+    0,
+    100,
+    500,
+    1000
+  ],
+  "declared_corpora": [
+    "old_demo525",
+    "added_demo228",
+    "keep6289",
+    "old_four_stable_TRAIN_roots"
+  ],
+  "old_stable_representative": "fixed second confirmation of selected control BC1000",
+  "tolerance_rule": "max(1e-6, 10*pi0_reconstruction_maxabs)",
+  "calibration_scope": "saved TRAIN pi0 execution actions only",
+  "descriptive_state_drift_threshold": 1e-06,
+  "descriptive_state_drift_scope": "each raw component in its native units; distinct from engineering action gate",
+  "inference": "all declared observations, all eight stage/checkpoint pairs",
+  "gradient": "fixed TRAIN per ancestor and keep group; no optimizer step",
+  "simulation_steps": 0,
+  "supervised_updates": 0,
+  "TEST_opened": false,
+  "started_unix": 1791723727.8115277
+}

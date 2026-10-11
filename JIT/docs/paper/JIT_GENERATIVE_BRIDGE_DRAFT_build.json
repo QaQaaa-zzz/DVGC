@@ -1,8 +1,8 @@
 {
   "source": "/home/qy/DVGC/runs/worktrees/jit-retention-first/JIT/docs/paper/JIT_GENERATIVE_BRIDGE_DRAFT.md",
-  "source_sha256": "f78e54122c882fb3c1a018a5efef622b3748521af8eaaf9d2f5f2c8195514188",
+  "source_sha256": "fdc9527c4ecaacdbee50f5fe587df21203da04121d9e63a53107f92e06197d3a",
   "docx": "/home/qy/DVGC/runs/worktrees/jit-retention-first/JIT/docs/paper/JIT_GENERATIVE_BRIDGE_DRAFT.docx",
-  "docx_sha256": "b70920d388b2a35538aa836088b3a31ff00f9cbdcd5e3c47890267753099d6d5",
+  "docx_sha256": "cb919ed87af2da399d484b81d7abccb3467aa675cd45edb8667e88f37ce40fe1",
   "images": [
     "/home/qy/DVGC/runs/worktrees/jit-retention-first/JIT/docs/paper/generative_bridge_assets/framework.png",
     "/home/qy/DVGC/runs/worktrees/jit-retention-first/JIT/docs/evidence/retention_next_20261010/self_visit/root_03_xy.png",
@@ -17,6 +17,6 @@
   "math": "editable Office Math linear notation",
   "pdf_built": true,
   "pdf": "/home/qy/DVGC/runs/worktrees/jit-retention-first/JIT/docs/paper/JIT_GENERATIVE_BRIDGE_DRAFT.pdf",
-  "pdf_sha256": "957016306656e046daa29234d55f32fb93473d10a248dbecea5b2723ae0c21c8",
-  "pdfinfo": "Title:           JIT：面向跳跃策略能力扩展的可学习探索与生成式恢复指导\nSubject:         中文研究草稿；真实开发证据与待补实验分开标注\nAuthor:          DVGC / JIT Research\nCreator:         Writer\nProducer:        LibreOffice 7.3\nCreationDate:    Sun Oct 11 17:45:21 2026 CST\nCustom Metadata: no\nMetadata Stream: no\nTagged:          no\nUserProperties:  no\nSuspects:        no\nForm:            none\nJavaScript:      no\nPages:           17\nEncrypted:       no\nPage size:       595.304 x 841.89 pts (A4)\nPage rot:        0\nFile size:       1511849 bytes\nOptimized:       no\nPDF version:     1.6\n"
+  "pdf_sha256": "747f2c53b90337968e0e392d251ec2f18132b0dc6f840164ac493b2cbbd3e55d",
+  "pdfinfo": "Title:           JIT：面向跳跃策略能力扩展的可学习探索与生成式恢复指导\nSubject:         中文研究草稿；真实开发证据与待补实验分开标注\nAuthor:          DVGC / JIT Research\nCreator:         Writer\nProducer:        LibreOffice 7.3\nCreationDate:    Sun Oct 11 21:09:23 2026 CST\nCustom Metadata: no\nMetadata Stream: no\nTagged:          no\nUserProperties:  no\nSuspects:        no\nForm:            none\nJavaScript:      no\nPages:           18\nEncrypted:       no\nPage size:       595.304 x 841.89 pts (A4)\nPage rot:        0\nFile size:       1524772 bytes\nOptimized:       no\nPDF version:     1.6\n"
 }
