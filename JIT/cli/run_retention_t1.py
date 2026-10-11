@@ -9,7 +9,7 @@ from pathlib import Path
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('mode', choices=('prepare', 'audit', 'dry-run', 'run', 'report', 'worker'))
-    for field in ('parent', 't0-gate', 'output', 'plan', 'request', 'repository'):
+    for field in ('parent', 't0-gate', 'output', 'plan', 'request', 'repository', 'prior-failed-plan'):
         parser.add_argument('--' + field, type=Path)
     parser.add_argument('--tensorboard-port', type=int, default=6032)
     args = parser.parse_args()
@@ -27,7 +27,7 @@ def main():
         from jit_dvgc import retention_t1
         if args.mode == 'prepare':
             result = retention_t1.prepare(args.parent, args.t0_gate, args.output,
-                args.repository, tensorboard_port=args.tensorboard_port)
+                args.repository, tensorboard_port=args.tensorboard_port, prior_failed_plan=args.prior_failed_plan)
         else:
             result = getattr(retention_t1, args.mode.replace('-', '_'))(args.plan)
     print(json.dumps(result, indent=2, default=str, allow_nan=False))

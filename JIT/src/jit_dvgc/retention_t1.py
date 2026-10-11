@@ -165,7 +165,7 @@ def _validate_data(plan):
     return demo, keep, inventory
 
 
-def prepare(parent, t0_gate, output, repository, tensorboard_port=6032):
+def prepare(parent, t0_gate, output, repository, tensorboard_port=6032, prior_failed_plan=None):
     """Freeze the new pilot without physics, training, processes or GPU imports."""
     parent, t0_gate = Path(parent).resolve(), Path(t0_gate).resolve()
     require_t0(t0_gate)
@@ -176,6 +176,22 @@ def prepare(parent, t0_gate, output, repository, tensorboard_port=6032):
     prior = old['budget']['prior_charged'] + sum(x['charged'] for x in read(oldroot/'costs.json'))
     if read(oldroot/'status.json')['charged_interactions'] != prior - old['budget']['prior_charged']:
         raise ValueError('parent measured cost mismatch')
+    failed_receipts = []
+    if prior_failed_plan is not None:
+        previous_path = Path(prior_failed_plan).resolve()
+        previous = read(previous_path); previous_root = Path(previous['output'])
+        previous_status = read(previous_root/'status.json')
+        previous_costs = read(previous_root/'costs.json')
+        failed_cost = sum(row['charged'] for row in previous_costs)
+        if (previous.get('schema') != SCHEMA or Path(previous['parent']).resolve() != parent
+                or previous_status.get('phase') != 'failed'
+                or previous_status.get('formal_training_transitions') != 0
+                or previous_status.get('engineering_training_transitions') != 0
+                or previous_status.get('charged_interactions') != failed_cost
+                or previous['budget']['prior_charged'] != prior):
+            raise ValueError('prior failed engineering receipt mismatch')
+        prior += failed_cost
+        failed_receipts = [str(previous_path), str(previous_root/'status.json'), str(previous_root/'costs.json')]
     locks, history = _history_locks(old['locks'],old,code)
     root = Path(output).resolve()
     if root.exists():
@@ -220,6 +236,9 @@ def prepare(parent, t0_gate, output, repository, tensorboard_port=6032):
                     'generative_bridge/actual_update.py','generative_bridge/learner_continuation.py',
                     'pulse_exploration_runtime.py','retention_b.py','checkpoint.py','unified_formal.py',
                     'unified_env.py','continuation/device_rollout.py','error_notifications.py')
+    files.extend(failed_receipts)
+    for receipt in failed_receipts: locks[receipt] = sha(receipt)
+    p['prior_failed_receipts'] = failed_receipts
     for name in source_names:
         f = code/'JIT/src/jit_dvgc'/name; locks[str(f)] = sha(f)
     cli = code/'JIT/cli/run_retention_t1.py'; locks[str(cli)] = sha(cli)
