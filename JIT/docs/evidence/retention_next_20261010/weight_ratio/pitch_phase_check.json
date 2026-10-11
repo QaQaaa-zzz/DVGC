@@ -1,0 +1,12 @@
+[
+  {
+    "case": "D_05",
+    "repetition": "repeat",
+    "first_pitch_limit_control_tick": 113,
+    "first_valid_contact_control_tick": 41,
+    "phase": "post_contact",
+    "raw_key": "metric/terminal/pitch_limit",
+    "trace": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_weight_ratio_001/B0100_repeat_DEV/prefixes.npz",
+    "substep": "UNKNOWN"
+  }
+]

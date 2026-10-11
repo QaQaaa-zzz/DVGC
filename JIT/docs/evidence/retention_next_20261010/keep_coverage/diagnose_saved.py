@@ -8,14 +8,19 @@ import numpy as np
 parser = argparse.ArgumentParser()
 parser.add_argument("--run", type=Path, required=True)
 parser.add_argument("--output", type=Path, required=True)
+parser.add_argument("--update", type=int, help="Diagnose a rejected trained node without changing candidate selection")
 args = parser.parse_args()
 root, output = args.run.resolve(), args.output.resolve()
 read = lambda p: json.loads(Path(p).read_text())
 plan = read(root / "plan.json")
 finish = read(root / "B_completed.json")
-selected = str(finish["selected_update"])
+selected = str(finish["selected_update"] if args.update is None else args.update)
 row = read(root / "B_checkpoint_results.json")[selected]
-pair = read(root / f"B{int(selected):04d}_warning_repeat.json")
+repeat_file = root / f"B{int(selected):04d}_warning_repeat.json"
+pair = read(repeat_file) if repeat_file.exists() else dict(baseline=read(root/"B_checkpoint_results.json")["0"]["full"], original=row["full"])
+repetitions = [("first", pair["baseline"], pair["original"])]
+if repeat_file.exists():
+    repetitions.append(("repeat", pair["repeated_pi0"], pair["repeated"]))
 cases = plan["batches"][0]["cases"]
 
 
@@ -40,13 +45,12 @@ losses = []
 for group in "ABCD":
     lanes = [i for i, c in enumerate(cases) if c["group"] == group]
     for index, lane in enumerate(lanes):
-        labels = [int(pair[k]["labels"][group][index]) for k in ("baseline", "original", "repeated_pi0", "repeated")]
-        if labels[0] and not labels[1] or labels[2] and not labels[3]:
+        labels = [int(pair[k]["labels"][group][index]) for k in (("baseline", "original", "repeated_pi0", "repeated") if repeat_file.exists() else ("baseline", "original"))]
+        if any(labels[i] and not labels[i+1] for i in range(0,len(labels),2)):
             losses.append(dict(case=cases[lane]["case"], lane=lane, labels=labels,
-                               labels_order=["pi0_first", "student_first", "pi0_repeat", "student_repeat"],
+                               labels_order=["pi0_first", "student_first", "pi0_repeat", "student_repeat"][:len(labels)],
                                gradient_allowed=False, trajectories=[]))
-for repetition, baseline, student in (("first", pair["baseline"], pair["original"]),
-                                      ("repeat", pair["repeated_pi0"], pair["repeated"])):
+for repetition, baseline, student in repetitions:
     ap, bp = Path(baseline["output"]) / "prefixes.npz", Path(student["output"]) / "prefixes.npz"
     with np.load(ap) as a, np.load(bp) as b:
         for case in losses:
@@ -55,7 +59,7 @@ for repetition, baseline, student in (("first", pair["baseline"], pair["original
             case["trajectories"].append(dict(repetition=repetition, pi0=ae, student=be,
                                               pi0_trace=str(ap), student_trace=str(bp)))
 metrics = [json.loads(line) for line in (root / "B/metrics.jsonl").read_text().splitlines()]
-assert [x["update"] for x in metrics] == list(range(1, 2001))
+assert [x["update"] for x in metrics] == list(range(1, finish["completed_updates"]+1))
 gradients = {}
 for key in ("actual/cosine_demo_keep", "actual/gradient_norm_demo", "actual/gradient_norm_keep",
             "actual/global_clip_scale", "actual/actor_adam_delta_norm"):
@@ -63,7 +67,7 @@ for key in ("actual/cosine_demo_keep", "actual/gradient_norm_demo", "actual/grad
     assert np.isfinite(values).all()
     gradients[key] = dict(mean=float(values.mean()), minimum=float(values.min()),
                           maximum=float(values.max()), negative_fraction=float((values < 0).mean()))
-result = dict(selected_update=int(selected), complete_DEV_old_losses=losses,
+result = dict(selected_update=finish["selected_update"], diagnostic_update=int(selected), complete_DEV_old_losses=losses,
               actual_same_update_gradients=gradients, supervision_updates=len(metrics),
               scope="Saved-data development diagnosis; no causal or capacity proof; no DEV to TRAIN",
               next_experiment="B: TRAIN student-visited-state guidance diagnosis only",

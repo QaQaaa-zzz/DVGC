@@ -1,0 +1,160 @@
+{
+  "run": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_weight_ratio_001",
+  "execution_revision": "3cc875e6fb88a2d65c2d820032c96f7aac579b99",
+  "BC": {
+    "learning_rate": 1e-05,
+    "demo_coefficient": 0.5,
+    "keep_coefficient": 1.5,
+    "updates": 2000,
+    "checkpoints": [
+      100,
+      500,
+      1000,
+      2000
+    ],
+    "source_record": "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/recovery_0003/campaign/warmup/training/warmup_status.json"
+  },
+  "finish": {
+    "phase": "completed",
+    "completed_updates": 100,
+    "termination": "stopped_retention_guard",
+    "selected_update": 0,
+    "selection_scores": {
+      "0": 0,
+      "100": 2
+    },
+    "eligible": {
+      "0": true,
+      "100": false
+    },
+    "learner_last": {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_weight_ratio_001/B/learner_update_0100.json",
+      "sha256": "a53700f194e6d81b9e2b6bc76a2c52dc804c611699993becf64ba9bd63624d49"
+    },
+    "candidate": {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_weight_ratio_001/B/update_0000.pkl",
+      "sha256": "2fee93a58c39a79abda9ecd876aa660f4039e9399b37996b75daab77e818e120",
+      "update": 0
+    },
+    "published_policy": null,
+    "PPO_launched": false,
+    "source": "pi0",
+    "normalizer_frozen": true,
+    "critic_frozen": true,
+    "BC_optimizer_preserved": true,
+    "BC_RNG_and_supervised_clock_preserved": true
+  },
+  "actual_charged": 101416,
+  "prior_D2": 776098,
+  "cumulative_D2": 877514,
+  "wall_seconds": 735.6874439716339,
+  "active": 37003,
+  "padding": 64413,
+  "first_four_grid": {
+    "0": {
+      "A": {
+        "n": 16,
+        "success": 7,
+        "N01": 0,
+        "N10": 0,
+        "net": 0
+      },
+      "B": {
+        "n": 16,
+        "success": 12,
+        "N01": 0,
+        "N10": 0,
+        "net": 0
+      },
+      "C": {
+        "n": 16,
+        "success": 8,
+        "N01": 0,
+        "N10": 0,
+        "net": 0
+      },
+      "D": {
+        "n": 16,
+        "success": 11,
+        "N01": 0,
+        "N10": 0,
+        "net": 0
+      }
+    },
+    "100": {
+      "A": {
+        "n": 16,
+        "success": 16,
+        "N01": 9,
+        "N10": 0,
+        "net": 9
+      },
+      "B": {
+        "n": 16,
+        "success": 11,
+        "N01": 3,
+        "N10": 4,
+        "net": -1
+      },
+      "C": {
+        "n": 16,
+        "success": 14,
+        "N01": 6,
+        "N10": 0,
+        "net": 6
+      },
+      "D": {
+        "n": 16,
+        "success": 13,
+        "N01": 4,
+        "N10": 2,
+        "net": 2
+      }
+    }
+  },
+  "source_lock": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_weight_ratio_001/source_lock.json",
+  "input_lock": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_weight_ratio_001/input_lock.json",
+  "code_lock": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_weight_ratio_001/code_lock.json",
+  "worker_inputs": {
+    "schema": "jit_retention_B_weight_ratio_v1",
+    "keep_receipt": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_receipt.json",
+    "keep_receipt_sha256": "abd681817f6f6a458abb49bc476c26c064954c525241377ca6341e7f99e4864e",
+    "keep_data": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_anchors.npz",
+    "keep_data_sha256": "a5156fff73e99d21478a87ab95a2bcda8e8b874268ce123dfe0bbfea7f4c11ba",
+    "demo_manifest": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D2_002/demo_manifest.json",
+    "demo_manifest_sha256": "8cff96d687facb25afba1a93299f5c44d14bdafe2cd60f90da4cf0689ddf06b7",
+    "seed": 1010267101,
+    "initializer": "original_pi0_fresh_Adam_RNG",
+    "original_D2_started_unix": 1791622384.6936376,
+    "BC": {
+      "learning_rate": 1e-05,
+      "demo_coefficient": 0.5,
+      "keep_coefficient": 1.5,
+      "updates": 2000,
+      "checkpoints": [
+        100,
+        500,
+        1000,
+        2000
+      ],
+      "source_record": "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/recovery_0003/campaign/warmup/training/warmup_status.json"
+    }
+  },
+  "input_identity": {
+    "pi0": {
+      "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+      "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+      "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1",
+      "checkpoint": "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/binding/bridge_baseline/checkpoints/transition_0"
+    },
+    "R5": {
+      "actor_sha256": "db2f3deb1c4a5193d63ccf44c5d60855ba0aa4a8dd2e31f4e4c31a49a7c3d8a6",
+      "normalizer_sha256": "c9b365c78abea6a971fc58e53ae01b0df478bbfc0fbac6e69c0299f01570acd7",
+      "critic_sha256": "2ab357822700a09398493fddb133269a0a273fce625ee29f07458da8e6f56e9a",
+      "checkpoint": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0002_continuous_200/round_0005/students/student/training/round_0005_student/checkpoints/transition_128000"
+    }
+  },
+  "best_dev_candidate": "frozen R5",
+  "published_policy": null,
+  "automatic_next_stage": false
+}

@@ -42,3 +42,5 @@ Actual charged total993809 = V800000+D1180909+D2engineering12900. No TEST opened
 
 
 - [B_keep_coverage单次覆盖试点完成结果](keep_coverage/INDEX.md)：2000BC完成、选1000；稳定吸收仍4/8但root30丢失，SOLVER_DEV3/7；首次旧损失7→5、重复3→4，可靠保留性改善未建立。D2累计776098/2000000；停止阶段、保留π0/R5。只提出TRAIN自身访问状态指导诊断B，544000charged/3h/0更新，未授权或执行。
+
+- [固定数据keep/demo1.5/0.5：BC100确认B格退化后早停；吸收/未见迁移/旧损失分别报告](weight_ratio/INDEX.md)

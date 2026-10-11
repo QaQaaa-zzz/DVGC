@@ -1,0 +1,19 @@
+{
+  "phase": "passed",
+  "execution": "completed",
+  "training_termination": "stopped_retention_guard",
+  "supervised_updates": 100,
+  "charged": 101416,
+  "D2_cumulative": 877514,
+  "full_state_nodes": [
+    0,
+    100
+  ],
+  "future_nodes_absent_due_to_guard": true,
+  "input_and_code_locks_unchanged": true,
+  "teacher_student_matrix_rows": 15,
+  "markdown_links_checked": 8,
+  "XY_images_checked": 3,
+  "physical_simulation_for_verification": 0,
+  "additional_optimizer_updates": 0
+}

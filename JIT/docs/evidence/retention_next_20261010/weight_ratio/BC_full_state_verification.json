@@ -1,0 +1,34 @@
+{
+  "phase": "passed",
+  "checkpoints": [
+    {
+      "clock": 0,
+      "Adam": 0,
+      "RNG": [
+        0,
+        1010267101
+      ],
+      "normalizer": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+      "critic": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1",
+      "actor": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+      "file_sha256": "109bb84d98f16873cedb3535cf60325fe252b5ed3127a9eabb6ee0868baa81f5"
+    },
+    {
+      "clock": 100,
+      "Adam": 100,
+      "RNG": [
+        0,
+        1010267101
+      ],
+      "normalizer": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+      "critic": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1",
+      "actor": "21fb317398c2d91ede4e69b7f6c0d4ae0a8d3a3f45d79aa3693b375f157ce00a",
+      "file_sha256": "a24b0a7bc610f89e0fc53ae9cbe338e2bdd5735c410f614e04e015d05d1e280d"
+    }
+  ],
+  "resume_implemented": false,
+  "simulation_steps": 0,
+  "supervised_updates": 0,
+  "backend": "cpu",
+  "scope": "Actual serialized BC state, inference pairing, fresh initialization and absolute clocks"
+}

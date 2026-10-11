@@ -54,7 +54,9 @@ Final preparation refinement: supplement `D2_002/report_004/formal_preparation.j
 - [x] 写失败测试：权重真正进入total loss和同mini-batch梯度；默认1/1兼容；同batch/RNG；比例/源数据/时钟/预算漂移拒绝。
 - [x] warmup_actor显式demo_coefficient/keep_coefficient，默认1/1；原优化器和采样不改；完整状态与实际加权梯度记录系数。
 - [x] 现有run_retention_b新增prepare-weight-ratio，独立schema/目录/输入与代码锁/预算/grant/3h时钟；静态audit无GPU；worker实际读取原合并keep，无采集。
-- [ ] CPU定向回归、实际输入audit/dry-run、零GPU检查，commit执行版本后prepare；登记有限阶段后真实GPU连续≤2000，TB新目录/HTTP标量和watcher同步核验。
-- [ ] 完整状态审计、同根吸收/全部7DEV/64题保持与固定复核、XY图/梯度与参数增量；比较固定1/1、记录π0旧损失和历史学生新技能损失；选候选后停止、台账与Git交付。
+- [x] CPU定向回归、实际输入audit/dry-run、零GPU检查，commit执行版本后prepare；登记有限阶段后真实GPU连续≤2000，TB新目录/HTTP标量和watcher同步核验。
+- [x] 完整状态审计、同根吸收/全部7DEV/64题保持与固定复核、XY图/梯度与参数增量；比较固定1/1、记录π0旧损失和历史学生新技能损失；选候选后停止、台账与Git交付。
 
 可区分结果：更保旧而少吸收支持此数据通路上的权衡；二者都改善属于有限开发证据；keep误差下降而闭环不改善，不能继续扫权重制造通过；失败不推断容量不足。不新增旧模型蒸馏项，不启用自身状态新标签或宽网络，不开启PPO/E/G。
+
+本次A已完成并停止：B_weight_ratio_001，执行3cc875e，BC100 B格保持性复核确认退化，learner_last100/选BC0。TRAIN首次2/8、未见DEV2/7；首次新22旧损失6，复核新17旧损失7，同更新1/1为3/8、1/7、新21旧8、复核新16旧8。旧损失虽部分下降，随机无扰动B两次少1/16仍按原警戒拒绝，未建立可靠改善。新增101416charged、累计877514/2M、735.7s；0/100fullBC通过真实保存状态核验，未来节点不伪造。保留π0/R5，下一步仍只提案B自身访问诊断544000/3h/0更新，不自动执行。证据见../evidence/retention_next_20261010/weight_ratio/INDEX.md。
