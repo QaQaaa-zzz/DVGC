@@ -1,0 +1,44 @@
+{
+  "first_lost": 5,
+  "first_gain": 22,
+  "repeat_lost": 4,
+  "both_pair_lost": 4,
+  "by_cell": {
+    "A": {
+      "first_lost": 0,
+      "repeat_lost": 0,
+      "both_pair_lost_cases": [],
+      "source_label_flips": 7,
+      "student_label_flips": 0
+    },
+    "B": {
+      "first_lost": 1,
+      "repeat_lost": 1,
+      "both_pair_lost_cases": [
+        "B_04"
+      ],
+      "source_label_flips": 1,
+      "student_label_flips": 1
+    },
+    "C": {
+      "first_lost": 1,
+      "repeat_lost": 1,
+      "both_pair_lost_cases": [
+        "C_10"
+      ],
+      "source_label_flips": 2,
+      "student_label_flips": 0
+    },
+    "D": {
+      "first_lost": 3,
+      "repeat_lost": 2,
+      "both_pair_lost_cases": [
+        "D_03",
+        "D_09"
+      ],
+      "source_label_flips": 0,
+      "student_label_flips": 1
+    }
+  },
+  "warning_repeat_confirmed": []
+}

@@ -1,5 +1,25 @@
 # JIT 论文、科研图件与维护索引
 
+## 2026-10-11 当前生成式恢复指导中文稿
+
+- **[可编辑Word](JIT_GENERATIVE_BRIDGE_DRAFT.docx) · [同版PDF](JIT_GENERATIVE_BRIDGE_DRAFT.pdf)**
+- [Markdown源稿](JIT_GENERATIVE_BRIDGE_DRAFT.md) · [待补证据与填稿位置](JIT_GENERATIVE_BRIDGE_GAPS.md)
+- [用户提供的原框图](generative_bridge_assets/JIT-core-method-network-icons.pdf) · [框图来源](generative_bridge_assets/framework_provenance.json)
+- [方法／源码对齐](generative_bridge_assets/method_alignment.md) · [原始证据核对目录](generative_bridge_assets/evidence_catalog.json)
+- [本轮学习结果与完整XY](../evidence/retention_next_20261010/self_visit_demo/INDEX.md) · [文稿构建记录](JIT_GENERATIVE_BRIDGE_DRAFT_build.json) · [交付核验](generative_bridge_assets/delivery_validation.json)
+
+本文按E—G—π及学习进展反馈组织，嵌入用户原PDF框图。真实开发数据与负结果已填入；正式等成本、多训练种子、模块消融、同身份迁移与实机缺口均有黄色编号。现有sim2sim属于另一模型谱系。没有将本轮稳定TRAIN4/8写成总体吸收改善，也未将首次DEV旧损失下降写成可靠无遗忘。9月12日旧包线稿和下方历史记录保留。
+
+复建仅为CPU作者侧操作，不调用仿真或训练。使用python-docx 1.2.0、lxml、Pillow与LibreOffice；可安装到临时依赖目录，避免修改训练环境：
+
+```bash
+/home/qy/mujoco_playground/.venv/bin/python -m pip install --target /tmp/jit_word_authoring_deps --no-deps python-docx==1.2.0
+PYTHONPATH=/tmp/jit_word_authoring_deps /home/qy/mujoco_playground/.venv/bin/python JIT/docs/paper/build_word.py --source JIT/docs/paper/JIT_GENERATIVE_BRIDGE_DRAFT.md --output JIT/docs/paper
+```
+
+Word保留可编辑正文、表格和Office Math线性公式；框图和实际轨迹以图片嵌入。PDF直接由同一DOCX导出。跨设备字体替换可能影响Word分页，固定阅读版以PDF为准。本文证据链接指向本机／仓库工件，完整checkpoint与逐步轨迹仍保存在原运行目录。
+
+
 ## 2026-09-15 完整方法总体框图
 
 新增图按用户要求展示完整设计：阶段触发的短时残差、当前策略同状态续接、新旧支持混合补训、保留检查、延迟反馈，以及经验tube和最终单策略两个输出。图内不标实验进度或结果。

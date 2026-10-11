@@ -1,0 +1,474 @@
+{
+  "declared_updates": [
+    0,
+    100,
+    500,
+    1000
+  ],
+  "available_updates": [
+    0,
+    100,
+    500,
+    1000
+  ],
+  "missing_updates": [],
+  "nodes": {
+    "0": {
+      "control": {
+        "TRAIN_success": 0,
+        "SOLVER_DEV_success": 0,
+        "old_losses": 0,
+        "new_gains": 0,
+        "eligible": true,
+        "cells": {
+          "A": {
+            "n": 16,
+            "success": 7,
+            "N01": 0,
+            "N10": 0,
+            "net": 0
+          },
+          "B": {
+            "n": 16,
+            "success": 12,
+            "N01": 0,
+            "N10": 0,
+            "net": 0
+          },
+          "C": {
+            "n": 16,
+            "success": 8,
+            "N01": 0,
+            "N10": 0,
+            "net": 0
+          },
+          "D": {
+            "n": 16,
+            "success": 11,
+            "N01": 0,
+            "N10": 0,
+            "net": 0
+          }
+        },
+        "TRAIN_labels": {
+          "TRAIN-1010233101-68": 0,
+          "TRAIN-1010233101-37": 0,
+          "TRAIN-1010233101-10": 0,
+          "TRAIN-1010233101-18": 0,
+          "TRAIN-1010233101-26": 0,
+          "TRAIN-1010233101-30": 0,
+          "TRAIN-1010233101-55": 0,
+          "TRAIN-1010233101-63": 0
+        },
+        "SOLVER_DEV_labels": {
+          "SOLVER_DEV-1010245101-4": 0,
+          "SOLVER_DEV-1010245101-21": 0,
+          "SOLVER_DEV-1010245101-6": 0,
+          "SOLVER_DEV-1010245101-19": 0,
+          "SOLVER_DEV-1010245101-10": 0,
+          "SOLVER_DEV-1010245101-14": 0,
+          "SOLVER_DEV-1010245101-18": 0
+        }
+      },
+      "intervention": {
+        "TRAIN_success": 0,
+        "SOLVER_DEV_success": 0,
+        "old_losses": 0,
+        "new_gains": 0,
+        "eligible": true,
+        "cells": {
+          "A": {
+            "n": 16,
+            "success": 7,
+            "N01": 0,
+            "N10": 0,
+            "net": 0
+          },
+          "B": {
+            "n": 16,
+            "success": 12,
+            "N01": 0,
+            "N10": 0,
+            "net": 0
+          },
+          "C": {
+            "n": 16,
+            "success": 8,
+            "N01": 0,
+            "N10": 0,
+            "net": 0
+          },
+          "D": {
+            "n": 16,
+            "success": 11,
+            "N01": 0,
+            "N10": 0,
+            "net": 0
+          }
+        },
+        "TRAIN_labels": {
+          "TRAIN-1010233101-68": 0,
+          "TRAIN-1010233101-37": 0,
+          "TRAIN-1010233101-10": 0,
+          "TRAIN-1010233101-18": 0,
+          "TRAIN-1010233101-26": 0,
+          "TRAIN-1010233101-30": 0,
+          "TRAIN-1010233101-55": 0,
+          "TRAIN-1010233101-63": 0
+        },
+        "SOLVER_DEV_labels": {
+          "SOLVER_DEV-1010245101-4": 0,
+          "SOLVER_DEV-1010245101-21": 0,
+          "SOLVER_DEV-1010245101-6": 0,
+          "SOLVER_DEV-1010245101-19": 0,
+          "SOLVER_DEV-1010245101-10": 0,
+          "SOLVER_DEV-1010245101-14": 0,
+          "SOLVER_DEV-1010245101-18": 0
+        }
+      }
+    },
+    "100": {
+      "control": {
+        "TRAIN_success": 3,
+        "SOLVER_DEV_success": 1,
+        "old_losses": 8,
+        "new_gains": 21,
+        "eligible": true,
+        "cells": {
+          "A": {
+            "n": 16,
+            "success": 16,
+            "N01": 9,
+            "N10": 0,
+            "net": 9
+          },
+          "B": {
+            "n": 16,
+            "success": 12,
+            "N01": 3,
+            "N10": 3,
+            "net": 0
+          },
+          "C": {
+            "n": 16,
+            "success": 13,
+            "N01": 7,
+            "N10": 2,
+            "net": 5
+          },
+          "D": {
+            "n": 16,
+            "success": 10,
+            "N01": 2,
+            "N10": 3,
+            "net": -1
+          }
+        },
+        "TRAIN_labels": {
+          "TRAIN-1010233101-68": 1,
+          "TRAIN-1010233101-37": 1,
+          "TRAIN-1010233101-10": 1,
+          "TRAIN-1010233101-18": 0,
+          "TRAIN-1010233101-26": 0,
+          "TRAIN-1010233101-30": 0,
+          "TRAIN-1010233101-55": 0,
+          "TRAIN-1010233101-63": 0
+        },
+        "SOLVER_DEV_labels": {
+          "SOLVER_DEV-1010245101-4": 1,
+          "SOLVER_DEV-1010245101-21": 0,
+          "SOLVER_DEV-1010245101-6": 0,
+          "SOLVER_DEV-1010245101-19": 0,
+          "SOLVER_DEV-1010245101-10": 0,
+          "SOLVER_DEV-1010245101-14": 0,
+          "SOLVER_DEV-1010245101-18": 0
+        }
+      },
+      "intervention": {
+        "TRAIN_success": 3,
+        "SOLVER_DEV_success": 0,
+        "old_losses": 8,
+        "new_gains": 21,
+        "eligible": true,
+        "cells": {
+          "A": {
+            "n": 16,
+            "success": 16,
+            "N01": 9,
+            "N10": 0,
+            "net": 9
+          },
+          "B": {
+            "n": 16,
+            "success": 12,
+            "N01": 3,
+            "N10": 3,
+            "net": 0
+          },
+          "C": {
+            "n": 16,
+            "success": 12,
+            "N01": 6,
+            "N10": 2,
+            "net": 4
+          },
+          "D": {
+            "n": 16,
+            "success": 11,
+            "N01": 3,
+            "N10": 3,
+            "net": 0
+          }
+        },
+        "TRAIN_labels": {
+          "TRAIN-1010233101-68": 1,
+          "TRAIN-1010233101-37": 1,
+          "TRAIN-1010233101-10": 1,
+          "TRAIN-1010233101-18": 0,
+          "TRAIN-1010233101-26": 0,
+          "TRAIN-1010233101-30": 0,
+          "TRAIN-1010233101-55": 0,
+          "TRAIN-1010233101-63": 0
+        },
+        "SOLVER_DEV_labels": {
+          "SOLVER_DEV-1010245101-4": 0,
+          "SOLVER_DEV-1010245101-21": 0,
+          "SOLVER_DEV-1010245101-6": 0,
+          "SOLVER_DEV-1010245101-19": 0,
+          "SOLVER_DEV-1010245101-10": 0,
+          "SOLVER_DEV-1010245101-14": 0,
+          "SOLVER_DEV-1010245101-18": 0
+        }
+      }
+    },
+    "500": {
+      "control": {
+        "TRAIN_success": 3,
+        "SOLVER_DEV_success": 2,
+        "old_losses": 4,
+        "new_gains": 20,
+        "eligible": true,
+        "cells": {
+          "A": {
+            "n": 16,
+            "success": 16,
+            "N01": 9,
+            "N10": 0,
+            "net": 9
+          },
+          "B": {
+            "n": 16,
+            "success": 13,
+            "N01": 2,
+            "N10": 1,
+            "net": 1
+          },
+          "C": {
+            "n": 16,
+            "success": 15,
+            "N01": 8,
+            "N10": 1,
+            "net": 7
+          },
+          "D": {
+            "n": 16,
+            "success": 10,
+            "N01": 1,
+            "N10": 2,
+            "net": -1
+          }
+        },
+        "TRAIN_labels": {
+          "TRAIN-1010233101-68": 1,
+          "TRAIN-1010233101-37": 1,
+          "TRAIN-1010233101-10": 1,
+          "TRAIN-1010233101-18": 0,
+          "TRAIN-1010233101-26": 0,
+          "TRAIN-1010233101-30": 0,
+          "TRAIN-1010233101-55": 0,
+          "TRAIN-1010233101-63": 0
+        },
+        "SOLVER_DEV_labels": {
+          "SOLVER_DEV-1010245101-4": 1,
+          "SOLVER_DEV-1010245101-21": 1,
+          "SOLVER_DEV-1010245101-6": 0,
+          "SOLVER_DEV-1010245101-19": 0,
+          "SOLVER_DEV-1010245101-10": 0,
+          "SOLVER_DEV-1010245101-14": 0,
+          "SOLVER_DEV-1010245101-18": 0
+        }
+      },
+      "intervention": {
+        "TRAIN_success": 4,
+        "SOLVER_DEV_success": 2,
+        "old_losses": 4,
+        "new_gains": 20,
+        "eligible": true,
+        "cells": {
+          "A": {
+            "n": 16,
+            "success": 16,
+            "N01": 9,
+            "N10": 0,
+            "net": 9
+          },
+          "B": {
+            "n": 16,
+            "success": 12,
+            "N01": 2,
+            "N10": 2,
+            "net": 0
+          },
+          "C": {
+            "n": 16,
+            "success": 15,
+            "N01": 8,
+            "N10": 1,
+            "net": 7
+          },
+          "D": {
+            "n": 16,
+            "success": 11,
+            "N01": 1,
+            "N10": 1,
+            "net": 0
+          }
+        },
+        "TRAIN_labels": {
+          "TRAIN-1010233101-68": 1,
+          "TRAIN-1010233101-37": 0,
+          "TRAIN-1010233101-10": 1,
+          "TRAIN-1010233101-18": 0,
+          "TRAIN-1010233101-26": 1,
+          "TRAIN-1010233101-30": 1,
+          "TRAIN-1010233101-55": 0,
+          "TRAIN-1010233101-63": 0
+        },
+        "SOLVER_DEV_labels": {
+          "SOLVER_DEV-1010245101-4": 1,
+          "SOLVER_DEV-1010245101-21": 1,
+          "SOLVER_DEV-1010245101-6": 0,
+          "SOLVER_DEV-1010245101-19": 0,
+          "SOLVER_DEV-1010245101-10": 0,
+          "SOLVER_DEV-1010245101-14": 0,
+          "SOLVER_DEV-1010245101-18": 0
+        }
+      }
+    },
+    "1000": {
+      "control": {
+        "TRAIN_success": 5,
+        "SOLVER_DEV_success": 3,
+        "old_losses": 5,
+        "new_gains": 22,
+        "eligible": true,
+        "cells": {
+          "A": {
+            "n": 16,
+            "success": 16,
+            "N01": 9,
+            "N10": 0,
+            "net": 9
+          },
+          "B": {
+            "n": 16,
+            "success": 14,
+            "N01": 3,
+            "N10": 1,
+            "net": 2
+          },
+          "C": {
+            "n": 16,
+            "success": 15,
+            "N01": 8,
+            "N10": 1,
+            "net": 7
+          },
+          "D": {
+            "n": 16,
+            "success": 10,
+            "N01": 2,
+            "N10": 3,
+            "net": -1
+          }
+        },
+        "TRAIN_labels": {
+          "TRAIN-1010233101-68": 1,
+          "TRAIN-1010233101-37": 1,
+          "TRAIN-1010233101-10": 1,
+          "TRAIN-1010233101-18": 0,
+          "TRAIN-1010233101-26": 1,
+          "TRAIN-1010233101-30": 0,
+          "TRAIN-1010233101-55": 0,
+          "TRAIN-1010233101-63": 1
+        },
+        "SOLVER_DEV_labels": {
+          "SOLVER_DEV-1010245101-4": 1,
+          "SOLVER_DEV-1010245101-21": 1,
+          "SOLVER_DEV-1010245101-6": 0,
+          "SOLVER_DEV-1010245101-19": 0,
+          "SOLVER_DEV-1010245101-10": 0,
+          "SOLVER_DEV-1010245101-14": 0,
+          "SOLVER_DEV-1010245101-18": 1
+        }
+      },
+      "intervention": {
+        "TRAIN_success": 5,
+        "SOLVER_DEV_success": 3,
+        "old_losses": 2,
+        "new_gains": 20,
+        "eligible": true,
+        "cells": {
+          "A": {
+            "n": 16,
+            "success": 16,
+            "N01": 9,
+            "N10": 0,
+            "net": 9
+          },
+          "B": {
+            "n": 16,
+            "success": 13,
+            "N01": 2,
+            "N10": 1,
+            "net": 1
+          },
+          "C": {
+            "n": 16,
+            "success": 15,
+            "N01": 8,
+            "N10": 1,
+            "net": 7
+          },
+          "D": {
+            "n": 16,
+            "success": 12,
+            "N01": 1,
+            "N10": 0,
+            "net": 1
+          }
+        },
+        "TRAIN_labels": {
+          "TRAIN-1010233101-68": 0,
+          "TRAIN-1010233101-37": 1,
+          "TRAIN-1010233101-10": 1,
+          "TRAIN-1010233101-18": 0,
+          "TRAIN-1010233101-26": 1,
+          "TRAIN-1010233101-30": 1,
+          "TRAIN-1010233101-55": 1,
+          "TRAIN-1010233101-63": 0
+        },
+        "SOLVER_DEV_labels": {
+          "SOLVER_DEV-1010245101-4": 1,
+          "SOLVER_DEV-1010245101-21": 1,
+          "SOLVER_DEV-1010245101-6": 0,
+          "SOLVER_DEV-1010245101-19": 0,
+          "SOLVER_DEV-1010245101-10": 0,
+          "SOLVER_DEV-1010245101-14": 0,
+          "SOLVER_DEV-1010245101-18": 1
+        }
+      }
+    }
+  },
+  "comparison": "same update count; TRAIN absorption and used SOLVER_DEV/paired DEV, not independent training seeds or final TEST"
+}

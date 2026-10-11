@@ -1,0 +1,58 @@
+{
+  "phase": "passed",
+  "checkpoints": [
+    {
+      "clock": 0,
+      "Adam": 0,
+      "RNG": [
+        0,
+        1010267101
+      ],
+      "normalizer": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+      "critic": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1",
+      "actor": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+      "file_sha256": "fe599da8a3c17778c86d1da9d0cd0001db8f3261424274adca068ce33993ad55"
+    },
+    {
+      "clock": 100,
+      "Adam": 100,
+      "RNG": [
+        0,
+        1010267101
+      ],
+      "normalizer": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+      "critic": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1",
+      "actor": "cb70cd836644ea546105217e7a999c1529df0affa83047085a2b9061b88061c8",
+      "file_sha256": "2d16b47acd27c2b6219533821ffcda00308036a4eb3bfbff10c4cf41da9b966c"
+    },
+    {
+      "clock": 500,
+      "Adam": 500,
+      "RNG": [
+        0,
+        1010267101
+      ],
+      "normalizer": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+      "critic": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1",
+      "actor": "2482e1af53123a454af449d6139436a3edd0f64584d328eda181e8b4e5c5959e",
+      "file_sha256": "0fa0316b365e52b7a25b70622ceb5455cc7e30f87dbb4e1a31fc2bdd9432969c"
+    },
+    {
+      "clock": 1000,
+      "Adam": 1000,
+      "RNG": [
+        0,
+        1010267101
+      ],
+      "normalizer": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+      "critic": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1",
+      "actor": "61e35b23a2100129ed4925fafebea01c6bba72dae7119ac78d43e2407192cae1",
+      "file_sha256": "ea008ca932ad388866577900ba4d502adf285e814eb40def762c604d22c5f4fc"
+    }
+  ],
+  "resume_implemented": false,
+  "simulation_steps": 0,
+  "supervised_updates": 0,
+  "backend": "cpu",
+  "scope": "Actual serialized BC state, inference pairing, fresh initialization and absolute clocks"
+}

@@ -126,3 +126,20 @@ Final preparation refinement: supplement `D2_002/report_004/formal_preparation.j
 执行分工：root负责协调器/冻结配置/有界启动和台账；训练审查负责示范准入、逐帧来源及报告；独立证据审查负责80轨迹/来源身份及学习接口审查。首诊断代码已push90a3ddc；学习阶段须通过定向CPU测试、真实输入file-only prepare/audit、独立审查后另commit冻结再启动。
 
 性能复用：本学习阶段沿用原17世界snapshot/64世界DEV批量入口、warmup_actor实际batch256；进程间共享本阶段持久JAX编译缓存，复用身份一致π0/R5/零节点物理证据。STTW的DirectCommandPPO/scan(50)/几何vmap属于不同控制器与任务，不移植其数值语义。本阶段不引用历史加速倍数，实际耗时由launch/status和逐子阶段日志记录。
+
+
+## 2026-10-11 中文论文草稿交付任务
+
+用户要求：本次运行结束后，按既有JIT思路撰写中文论文，使用用户提供的JIT-core-method-network-icons.pdf；已证实内容直接纳入，证据缺口留空并说明需补结果，优先Word。写作期间只读使用正在完成的冻结run，不改执行代码，不启动新实验。采用正式论文结构：摘要/引言/相关工作/问题定义/E-G-π方法/实验协议/实测结果/讨论/结论；稿内区分方法设计、实际执行与有效性证据，引用源论文核对。
+
+- [x] 当前BC阶段完整收尾、实际状态与checkpoint审计、派生报告与台账更新。
+- [x] 对齐用户原框图和当前E/G/π实现，审计已有D1、保持性、自访问及sim2sim证据；为每个主张绑定实验/模型/分母/数据角色。
+- [x] 编写新生成桥接主线中文稿、证据缺口清单和可编辑Word，保留9月旧包线版本及原始结果。
+- [x] 输出与Word一致的PDF；检查框图/公式/表格/中文字体与分页、缺口标记，独立审稿；提交文稿工件，复制到用户下载目录并交付链接。
+
+本稿使用JIT/docs/paper/JIT_GENERATIVE_BRIDGE_DRAFT.md为生成桥接主线源；9月12日JIT_PAPER_DRAFT.*保留历史定位，paper/README更新当前入口。本段是交付计划，当前科研结论仍只在共享PROJECT_STATE.md维护。
+
+
+交付核验：当前BC1000及既定评价已完成，新charged147537，累计D2为1122852；稳定TRAIN仍4/8，root30修复伴root68丢失，root55为1/0/0，完整DEV首次56/64、G20/L2但完整配对重复NOT_RUN。此结论与17页中文稿表5一致；未恢复旧外循环、未开TEST、未发布学生。完整状态及原NPZ标签核验见self_visit_demo/independent_final_audit.json。
+
+中文稿通过独立方法／证据审阅；用户原框图PDF身份一致，Word嵌入图像与原渲染字节一致。9条可编辑公式、11张可编辑表格、4幅图、14个本地正文链接及PDF页面边界检查通过；原9月文稿保持不变。Word/PDF及独立待补清单已复制到用户下载目录，构建和验收收据见paper/generative_bridge_assets/delivery_validation.json。Git交付回执以最终回复和唯一台账为准。

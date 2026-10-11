@@ -1,0 +1,3 @@
+# Preserve manuscript and user-supplied figure bytes; PDF headers may contain long XML text.
+*.pdf binary
+*.docx binary

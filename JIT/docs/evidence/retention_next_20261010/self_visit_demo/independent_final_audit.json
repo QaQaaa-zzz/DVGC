@@ -1,0 +1,530 @@
+{
+  "schema": "jit_self_visit_demo_final_independent_cpu_audit_v1",
+  "phase": "passed",
+  "checked_unix": 1791711351.460051,
+  "run": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001",
+  "code_revision": "0f4ed45d506fcfa816eb3250eea57c19e33405ed",
+  "scope": "saved artifacts and local TensorBoard HTTP only; zero simulator steps, zero training updates",
+  "simulation_steps": 0,
+  "supervised_updates": 0,
+  "state_verifier": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001/BC_full_state_verification.json",
+  "report": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001/self_visit_demo_report_0003",
+  "checkpoint_nodes": [
+    {
+      "update": 0,
+      "full_DEV_npz_labels_match": true,
+      "DEV_cases": 64,
+      "TRAIN_roots": 8,
+      "SOLVER_DEV_roots": 7
+    },
+    {
+      "update": 100,
+      "full_DEV_npz_labels_match": true,
+      "DEV_cases": 64,
+      "TRAIN_roots": 8,
+      "SOLVER_DEV_roots": 7
+    },
+    {
+      "update": 500,
+      "full_DEV_npz_labels_match": true,
+      "DEV_cases": 64,
+      "TRAIN_roots": 8,
+      "SOLVER_DEV_roots": 7
+    },
+    {
+      "update": 1000,
+      "full_DEV_npz_labels_match": true,
+      "DEV_cases": 64,
+      "TRAIN_roots": 8,
+      "SOLVER_DEV_roots": 7
+    }
+  ],
+  "TRAIN_final_raw_npz_checks": [
+    {
+      "root_id": "TRAIN-1010233101-68",
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "outcomes": [
+        "airborne_physical_failure",
+        "airborne_physical_failure",
+        "airborne_physical_failure"
+      ],
+      "raw_npz_labels_match": true
+    },
+    {
+      "root_id": "TRAIN-1010233101-37",
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "outcomes": [
+        "stable_forward_recovery",
+        "stable_forward_recovery",
+        "stable_forward_recovery"
+      ],
+      "raw_npz_labels_match": true
+    },
+    {
+      "root_id": "TRAIN-1010233101-10",
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "outcomes": [
+        "stable_forward_recovery",
+        "stable_forward_recovery",
+        "stable_forward_recovery"
+      ],
+      "raw_npz_labels_match": true
+    },
+    {
+      "root_id": "TRAIN-1010233101-18",
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "outcomes": [
+        "airborne_physical_failure",
+        "airborne_physical_failure",
+        "airborne_physical_failure"
+      ],
+      "raw_npz_labels_match": true
+    },
+    {
+      "root_id": "TRAIN-1010233101-26",
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "outcomes": [
+        "stable_forward_recovery",
+        "stable_forward_recovery",
+        "stable_forward_recovery"
+      ],
+      "raw_npz_labels_match": true
+    },
+    {
+      "root_id": "TRAIN-1010233101-30",
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "outcomes": [
+        "stable_forward_recovery",
+        "stable_forward_recovery",
+        "stable_forward_recovery"
+      ],
+      "raw_npz_labels_match": true
+    },
+    {
+      "root_id": "TRAIN-1010233101-55",
+      "labels": [
+        1,
+        0,
+        0
+      ],
+      "outcomes": [
+        "stable_forward_recovery",
+        "airborne_physical_failure",
+        "airborne_physical_failure"
+      ],
+      "raw_npz_labels_match": true
+    },
+    {
+      "root_id": "TRAIN-1010233101-63",
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "outcomes": [
+        "airborne_physical_failure",
+        "airborne_physical_failure",
+        "airborne_physical_failure"
+      ],
+      "raw_npz_labels_match": true
+    }
+  ],
+  "full_DEV": {
+    "first": {
+      "A": {
+        "source_success": 7,
+        "student_success": 16,
+        "gained": [
+          "A_00",
+          "A_01",
+          "A_02",
+          "A_04",
+          "A_06",
+          "A_07",
+          "A_12",
+          "A_13",
+          "A_14"
+        ],
+        "lost": [],
+        "retained": 7
+      },
+      "B": {
+        "source_success": 12,
+        "student_success": 13,
+        "gained": [
+          "B_07",
+          "B_12"
+        ],
+        "lost": [
+          "B_06"
+        ],
+        "retained": 11
+      },
+      "C": {
+        "source_success": 8,
+        "student_success": 15,
+        "gained": [
+          "C_04",
+          "C_08",
+          "C_09",
+          "C_11",
+          "C_12",
+          "C_13",
+          "C_14",
+          "C_15"
+        ],
+        "lost": [
+          "C_10"
+        ],
+        "retained": 7
+      },
+      "D": {
+        "source_success": 11,
+        "student_success": 12,
+        "gained": [
+          "D_12"
+        ],
+        "lost": [],
+        "retained": 11
+      }
+    },
+    "first_success": 56,
+    "first_pi0_success": 38,
+    "first_retained": 36,
+    "first_gained": 20,
+    "first_lost": 2,
+    "repeat_status": "NOT_RUN",
+    "repeat_reason": "no B/D >5pp guard warning at any declared node; no extra repeat authorized",
+    "guard_warnings": {
+      "0": [],
+      "100": [],
+      "500": [],
+      "1000": []
+    },
+    "guard_confirmed": {
+      "0": [],
+      "100": [],
+      "500": [],
+      "1000": []
+    }
+  },
+  "worker_data": {
+    "old_demo_frames": 525,
+    "added_demo_frames": 228,
+    "demo_frames": 753,
+    "qualified_added_queries": 4,
+    "keep_frames": 6289,
+    "old_observations_actions_unchanged": true,
+    "keep_hash_verified": true,
+    "demo_hash_verified": true,
+    "sampling_mass": {
+      "old_mass": 0.7916666666666665,
+      "added_mass": 0.20833333333333331
+    },
+    "added_queries": [
+      {
+        "ancestor": "TRAIN-1010233101-18",
+        "capture_step": 4,
+        "remaining_horizon": 12,
+        "frames": 58
+      },
+      {
+        "ancestor": "TRAIN-1010233101-30",
+        "capture_step": 4,
+        "remaining_horizon": 12,
+        "frames": 62
+      },
+      {
+        "ancestor": "TRAIN-1010233101-55",
+        "capture_step": 8,
+        "remaining_horizon": 8,
+        "frames": 57
+      },
+      {
+        "ancestor": "TRAIN-1010233101-55",
+        "capture_step": 12,
+        "remaining_horizon": 4,
+        "frames": 51
+      }
+    ],
+    "initializer": "original_pi0_fresh_Adam_RNG",
+    "seed": 1010267101
+  },
+  "stage_state": {
+    "phase": "completed",
+    "stage": "D2_B_self_visit_demo",
+    "pid": 91769,
+    "updated_unix": 1791710965.0626867,
+    "charged_interactions": 147537,
+    "D2_prior_charged": 975315,
+    "planned_supervised_updates": 1000,
+    "PPO_updates": 0,
+    "E_G_updates": 0,
+    "completed_supervised_updates": 1000,
+    "result": "B complete or confirmed retention stop; no automatic PPO",
+    "learner_last": {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001/B/learner_update_1000.json",
+      "sha256": "5875c2e0a2bf1147d3c0f0576ae68d0c9af63a9f1c90f62b505c0a6f16e83c44"
+    },
+    "stage_candidate": {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001/B/update_1000.pkl",
+      "sha256": "542d26e4df61aa45083c1116f9ba1165f20e4dcdbbe7cd8e703d385dc3613d8a",
+      "update": 1000
+    },
+    "B_selected_candidate": {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001/B/update_1000.pkl",
+      "sha256": "542d26e4df61aa45083c1116f9ba1165f20e4dcdbbe7cd8e703d385dc3613d8a",
+      "update": 1000
+    },
+    "best_dev_candidate": {
+      "bank": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0002_continuous_200/round_0005/students/student/bank.json",
+      "proposer": "round_0005_student",
+      "policy": {
+        "action_order": [
+          "steer",
+          "rear_wheel_drive",
+          "hip",
+          "knee"
+        ],
+        "actor_frame_fields": [
+          "gravity_x",
+          "gravity_y",
+          "gravity_z",
+          "angular_velocity_x",
+          "angular_velocity_y",
+          "angular_velocity_z",
+          "acceleration_x",
+          "acceleration_y",
+          "acceleration_z",
+          "steering_position",
+          "hip_position",
+          "knee_position",
+          "steering_velocity",
+          "hip_velocity",
+          "knee_velocity",
+          "front_wheel_velocity",
+          "rear_wheel_velocity",
+          "last_action_steer",
+          "last_action_rear_wheel_drive",
+          "last_action_hip",
+          "last_action_knee",
+          "estimated_forward_velocity",
+          "obstacle_relative_x",
+          "root_height",
+          "history_valid"
+        ],
+        "actor_sha256": "db2f3deb1c4a5193d63ccf44c5d60855ba0aa4a8dd2e31f4e4c31a49a7c3d8a6",
+        "actor_task_fields": [
+          "jump_signal"
+        ],
+        "checkpoint": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0002_continuous_200/round_0005/students/student/training/round_0005_student/checkpoints/transition_128000",
+        "checkpoint_identity_sha256": "855e89a896b874674d8fc8d2dd7c2d4aa6f3c0d609127ca18e9ff6007ffc56aa",
+        "critic_sha256": "2ab357822700a09398493fddb133269a0a273fce625ee29f07458da8e6f56e9a",
+        "data_role": "train",
+        "formal_config": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0002_continuous_200/round_0005/students/student/config.json",
+        "formal_config_file_sha256": "1e145105458fa130c4b8f0337cd675fe40f4ca5a48508b4231c81968082b984a",
+        "formal_config_sha256": "79e230fd787d070390e37e11ddf1b58e80c553cb486b29c1b1587779308aea58",
+        "iteration": 1,
+        "name": "round_0005_student",
+        "normalizer_sha256": "c9b365c78abea6a971fc58e53ae01b0df478bbfc0fbac6e69c0299f01570acd7",
+        "payload_sha256": "4b88d97cb27f8a8ef0093754b279d01af49c52c020b5a17be8084af613ab9028",
+        "policy_role": "development_checkpoint",
+        "source_formal_report": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0002_continuous_200/round_0005/students/student/training/round_0005_student/formal_report.json",
+        "source_formal_report_sha256": "7f60ccf8b668c7f0fa005bcb9ae26a5f765cdd908fcadcad9ade527e9487d38b",
+        "source_requested_training_transitions": 128000,
+        "source_reset_mixture": {
+          "natural_reset_probability": 0.2,
+          "selection": "fixed_jump_start_20pct_exact_snapshot_80pct",
+          "soft_tube_probability": 0.8
+        },
+        "source_training_run_id": "round_0005_student",
+        "source_training_transitions": 128000,
+        "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+      },
+      "frozen_policy": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0002_continuous_200/round_0005/students/student/frozen/frozen_unified_policy.json"
+    },
+    "published_policy": null
+  },
+  "cost": {
+    "child_receipts": 64,
+    "all_children_completed": true,
+    "active": 72892,
+    "padding": 74645,
+    "charged": 147537,
+    "prior_charged": 975315,
+    "actual_cumulative": 1122852,
+    "declared_new_maximum": 645200,
+    "declared_cumulative_maximum": 1620515,
+    "hard_cap": 2000000
+  },
+  "time": {
+    "declaration_start_unix": 1791709702.090996,
+    "launch_unix": 1791709746.556218,
+    "finished_unix": 1791710965.0626867,
+    "deadline_unix": 1791720502.090996,
+    "declaration_to_finish_seconds": 1262.9716906547546,
+    "launch_to_finish_seconds": 1218.5064687728882,
+    "within_3h": true,
+    "finish_Asia_Shanghai": "2026-10-11T17:29:25.062687+08:00"
+  },
+  "metrics": {
+    "rows": 1000,
+    "contiguous_updates": true,
+    "first": {
+      "update": 1,
+      "loss": 0.019519232213497162,
+      "demo": 0.019519232213497162,
+      "keep": 1.2095317084600925e-14,
+      "actor_grad_norm": 0.3503383696079254,
+      "actual/actor_adam_delta_norm": 0.0039004250429570675,
+      "actual/actor_gradient_sum_norm": 0.3503383696079254,
+      "actual/cosine_demo_keep": 0.011708671227097511,
+      "actual/global_clip_scale": 1.0,
+      "actual/gradient_norm_demo": 0.3503383696079254,
+      "actual/gradient_norm_keep": 1.2412010619300418e-07
+    },
+    "last": {
+      "update": 1000,
+      "loss": 0.0020397743210196495,
+      "demo": 0.001749503193423152,
+      "keep": 0.0002902710693888366,
+      "actor_grad_norm": 0.017993628978729248,
+      "actual/actor_adam_delta_norm": 0.000976234267000109,
+      "actual/actor_gradient_sum_norm": 0.017993628978729248,
+      "actual/cosine_demo_keep": -0.2503306269645691,
+      "actual/global_clip_scale": 1.0,
+      "actual/gradient_norm_demo": 0.01813841052353382,
+      "actual/gradient_norm_keep": 0.008463072590529919
+    },
+    "mean_demo_keep_gradient_cosine": -0.5007686859089882,
+    "negative_gradient_cosine_fraction": 0.969,
+    "meaning": "optimizer diagnostics only; not evidence of causality or capacity limits"
+  },
+  "tensorboard": {
+    "url": "http://localhost:6031",
+    "http_status": 200,
+    "scalars": {
+      "DEV/B_reward_per_transition": {
+        "points_loaded": 4,
+        "latest": [
+          1791710663.4368856,
+          1000,
+          14.549785614013672
+        ]
+      },
+      "BC/loss": {
+        "points_loaded": 1000,
+        "latest": [
+          1791710361.0211408,
+          1000,
+          0.0020397743210196495
+        ]
+      },
+      "BC/demo": {
+        "points_loaded": 1000,
+        "latest": [
+          1791710361.0211453,
+          1000,
+          0.001749503193423152
+        ]
+      },
+      "BC/keep": {
+        "points_loaded": 1000,
+        "latest": [
+          1791710361.021149,
+          1000,
+          0.0002902710693888366
+        ]
+      }
+    },
+    "reward_role": "DEV physical evaluation reward; this pure BC stage has no PPO rollout training reward"
+  },
+  "notification": {
+    "delivered": {
+      "fd831a9d4b30753ebb1dcc4d36b6f51c6e84f7a421676bbacce13b408365a2ac": {
+        "phase": "completed",
+        "paths": [
+          "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001/status.json",
+          "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001/status.json"
+        ],
+        "notified_unix": 1791710966.6714108
+      }
+    },
+    "delivery_errors": [],
+    "pid": 91781,
+    "checked_unix": 1791711346.6978443,
+    "manifests": [
+      "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001/ACTIVE_RUN.json"
+    ]
+  },
+  "limitations": [
+    "TRAIN is seen guidance; SOLVER_DEV and full DEV are used development data, not final TEST.",
+    "Three deterministic repetitions do not constitute independent training seeds.",
+    "Nominal A has 16 numerical copies of one physical start; do not treat as 16 independent conditions.",
+    "No full paired DEV repeat in this stage; stable retention improvement is UNKNOWN.",
+    "Stable TRAIN successes remain 4/8: root30 gained versus control, root68 lost; root55 ambiguous.",
+    "No PPO, E/G update, policy publication or automatic next stage."
+  ],
+  "source_artifacts": {
+    "plan.json": {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001/plan.json",
+      "sha256": "8321271307fc65629fffd6f9e1f0ad12d0074121431bbbf7bb296a5b733fd210"
+    },
+    "status.json": {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001/status.json",
+      "sha256": "b3ee084e91fc0920cd8e218fabe3d659f9c2532b1cadb07bf7c8fbcc95febac4"
+    },
+    "B_completed.json": {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001/B_completed.json",
+      "sha256": "ad4d71735bc8143861a7bd0e7ce145f1e488ab1ffaaceda4a78573635fff74a6"
+    },
+    "B_checkpoint_results.json": {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001/B_checkpoint_results.json",
+      "sha256": "5607ee36ebc3aecae13294fd3044d15db197df1b12e288b2a36e443d3ecb1fbf"
+    },
+    "selected_diagnostics.json": {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001/selected_diagnostics.json",
+      "sha256": "997e0c236181f97451379cc468f032ee5cb05c2318dcb6ba8eee7c6cd102929b"
+    },
+    "worker_inputs.json": {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001/worker_inputs.json",
+      "sha256": "ba1a7b7e039d9fcd1f4e1e1b9e21e54d6cf2e0056090082d877cb6797cc4496e"
+    },
+    "costs.json": {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001/costs.json",
+      "sha256": "1e346220185a73dde666faceaaf1bbb95e0aa4493d2a81d0bf8143a9b4370c58"
+    },
+    "BC_full_state_verification.json": {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001/BC_full_state_verification.json",
+      "sha256": "230cb4f8de33b9f2ec13aae232eb42a011e9f0515e75f8118d650aee5b0c4b2a"
+    },
+    "B/metrics.jsonl": {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001/B/metrics.jsonl",
+      "sha256": "b4ad0b3b79206f05123e9bd879c7563fedc7773af58e84183afc170512f3f8ec"
+    }
+  }
+}

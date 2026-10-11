@@ -1,0 +1,24 @@
+{
+  "schema": "jit_retention_B_self_visit_demo_v1",
+  "keep_receipt": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_receipt.json",
+  "keep_receipt_sha256": "abd681817f6f6a458abb49bc476c26c064954c525241377ca6341e7f99e4864e",
+  "keep_data": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/keep_anchors.npz",
+  "keep_data_sha256": "a5156fff73e99d21478a87ab95a2bcda8e8b874268ce123dfe0bbfea7f4c11ba",
+  "demo_manifest": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_demo_001/demo/manifest.json",
+  "demo_manifest_sha256": "513de5570c34ef9918d8d398edd0238696a3ef4ddffadfd01574f65ffdfa76d1",
+  "seed": 1010267101,
+  "initializer": "original_pi0_fresh_Adam_RNG",
+  "original_D2_started_unix": 1791622384.6936376,
+  "BC": {
+    "learning_rate": 1e-05,
+    "demo_coefficient": 1.0,
+    "keep_coefficient": 1.0,
+    "updates": 1000,
+    "checkpoints": [
+      100,
+      500,
+      1000
+    ],
+    "source_record": "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/recovery_0003/campaign/warmup/training/warmup_status.json"
+  }
+}
