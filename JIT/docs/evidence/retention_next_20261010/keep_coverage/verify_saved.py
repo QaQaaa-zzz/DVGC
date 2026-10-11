@@ -18,7 +18,8 @@ root = args.run.resolve()
 plan = json.loads((root / "plan.json").read_text())
 source = plan["models"]["pi0"]["policy"]
 checks = []
-for step in (0, 100, 500, 1000, 2000):
+completed = json.loads((root / 'B_completed.json').read_text())['completed_updates']
+for step in (s for s in (0, 100, 500, 1000, 2000) if s <= completed):
     metadata = json.loads((root / "B" / f"learner_update_{step:04d}.json").read_text())
     path = Path(metadata["path"])
     digest = hashlib.sha256(path.read_bytes()).hexdigest()
@@ -28,6 +29,8 @@ for step in (0, 100, 500, 1000, 2000):
     with (root / "B" / f"update_{step:04d}.pkl").open("rb") as stream:
         inference = pickle.load(stream)
     assert state["phase"] == "BC"
+    for coefficient in ("demo_coefficient", "keep_coefficient"):
+        assert state.get(coefficient, 1.) == plan["BC"][coefficient]
     assert state["completed_supervised_updates"] == step
     assert state["seed"] == plan["seed"]
     assert state["sampling"] == "fold_in(rng,absolute_update)"

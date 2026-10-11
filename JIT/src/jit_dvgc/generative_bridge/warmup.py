@@ -14,7 +14,8 @@ def select_warmup_checkpoint(scores):
 
 def warmup_actor(network, initializer, retention_reference, demo_manifest, retention,
                  output, *, seed=0, updates=2000, checkpoint_callback=None,
-                 probe_callback=None, batch_size=256, metrics_callback=None, full_learner=False, actual_gradient_audit=False):
+                 probe_callback=None, batch_size=256, metrics_callback=None, full_learner=False, actual_gradient_audit=False,
+                 demo_coefficient=1., keep_coefficient=1.):
     import jax
     import jax.numpy as jp
     import optax
@@ -23,6 +24,8 @@ def warmup_actor(network, initializer, retention_reference, demo_manifest, reten
     from ..handoff_bank import pytree_sha256
     if type(updates) is not int or not 0<=updates<=2000:raise ValueError('warmup budget is 0..2000')
     if type(batch_size) is not int or batch_size<=0:raise ValueError('positive batch required')
+    if not all(np.isfinite(x) and x>0 for x in (demo_coefficient,keep_coefficient)):
+        raise ValueError('positive finite supervised coefficients required')
     if initializer is None or retention_reference is None:raise ValueError('explicit initializer and reference required')
     data=load_optional_demo(demo_manifest)
     normalizer,actor,critic=initializer
@@ -31,7 +34,7 @@ def warmup_actor(network, initializer, retention_reference, demo_manifest, reten
     optimizer=optax.chain(optax.clip_by_global_norm(1.),optax.adam(1e-5));state=optimizer.init(actor)
     key=jax.random.PRNGKey(seed)
     report=dict(schema='jit_bridge_warmup_v1_2',requested_updates=updates,completed_updates=0,
-        learning_rate=1e-5,optimizer='Adam',grad_clip_norm=1.,demo_coefficient=1.,keep_coefficient=1.,
+        learning_rate=1e-5,optimizer='Adam',grad_clip_norm=1.,demo_coefficient=demo_coefficient,keep_coefficient=keep_coefficient,
         environment_interactions=0,checkpoint_semantics='full BC Actor/critic/normalizer/Adam/RNG/update clock' if full_learner else 'inference Actor plus unchanged normalizer/critic; no optimizer resume',
         normalizer_sha256=fixed_hash,critic_sha256=critic_hash,checkpoints=[],status='running')
     def checkpoint(step):
@@ -41,7 +44,7 @@ def warmup_actor(network, initializer, retention_reference, demo_manifest, reten
         with path.open('xb') as stream:pickle.dump(jax.device_get((normalizer,actor,critic)),stream)
         if full_learner:
             full=output/f'learner_update_{step:04d}.pkl'
-            with full.open('xb') as stream:pickle.dump(jax.device_get(dict(normalizer=normalizer,actor=actor,critic=critic,optimizer_state=state,rng=key,completed_supervised_updates=step,seed=seed,sampling='fold_in(rng,absolute_update)',optimizer='Adam1e-5/clip1',phase='BC')),stream)
+            with full.open('xb') as stream:pickle.dump(jax.device_get(dict(normalizer=normalizer,actor=actor,critic=critic,optimizer_state=state,rng=key,completed_supervised_updates=step,seed=seed,sampling='fold_in(rng,absolute_update)',optimizer='Adam1e-5/clip1',phase='BC',demo_coefficient=demo_coefficient,keep_coefficient=keep_coefficient)),stream)
             atomic_json(output/f'learner_update_{step:04d}.json',dict(path=str(full.resolve()),sha256=file_sha(full),completed_supervised_updates=step,actor_sha256=pytree_sha256(actor),optimizer_sha256=pytree_sha256(state),normalizer_sha256=fixed_hash,critic_sha256=critic_hash))
         stop_requested=bool(checkpoint_callback(step,(normalizer,actor,critic))) if checkpoint_callback is not None else False
         probe=probe_callback(step,(normalizer,actor,critic)) if probe_callback is not None else None
@@ -71,7 +74,7 @@ def warmup_actor(network, initializer, retention_reference, demo_manifest, reten
         def loss(p):
             demo=action_mse(prediction(normalizer,p,obs[ids]),targets[ids])
             keep=action_mse(prediction(normalizer,p,keep_obs[kids]),teacher)
-            return demo+keep,(demo,keep)
+            return demo_coefficient*demo+keep_coefficient*keep,(demo,keep)
         (value,parts),grad=jax.value_and_grad(loss,has_aux=True)(params)
         delta,new_state=optimizer.update(grad,state,params)
         candidate=optax.apply_updates(params,delta)
@@ -79,7 +82,7 @@ def warmup_actor(network, initializer, retention_reference, demo_manifest, reten
         telemetry={}
         if actual_gradient_audit:
             from .actual_update import weighted_actor_metrics
-            telemetry=weighted_actor_metrics(params,dict(demo=lambda p:loss(p)[1][0],keep=lambda p:loss(p)[1][1]))
+            telemetry=weighted_actor_metrics(params,dict(demo=lambda p:demo_coefficient*loss(p)[1][0],keep=lambda p:keep_coefficient*loss(p)[1][1]))
             telemetry.update({'actual/actor_adam_delta_norm':optax.global_norm(delta),'actual/global_clip_scale':jp.minimum(1.,1./jp.maximum(optax.global_norm(grad),1e-20))})
         return candidate,new_state,value,parts,optax.global_norm(grad),finite,telemetry
     started=time.monotonic();key=jax.random.PRNGKey(seed)

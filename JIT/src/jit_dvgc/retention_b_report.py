@@ -5,8 +5,8 @@ from .retention_repair import read,write
 
 
 def build_report(path):
-    from .retention_b import COVERAGE_SCHEMA
-    if read(path).get('schema')==COVERAGE_SCHEMA:return coverage_report(path)
+    from .retention_b import COVERAGE_SCHEMA,RATIO_SCHEMA
+    if read(path).get('schema') in (COVERAGE_SCHEMA,RATIO_SCHEMA):return coverage_report(path)
     p=read(path);root=Path(p['output']);status=read(root/'status.json')
     out=root/'report_001';out.mkdir(exist_ok=False)
     if status['phase']!='completed':
@@ -91,8 +91,8 @@ def analyze(p,rows,diagnostics,costs,out):
             detail[group]=dict(first_lost=int((a&~b).sum()),repeat_lost=int((ar&~br).sum()),both_pair_lost_cases=[cases[i] for i in np.flatnonzero(a&ar&~b&~br)],source_label_flips=int((a!=ar).sum()),student_label_flips=int((b!=br).sum()))
         retention.update(repeat_lost=sum(v['repeat_lost'] for v in detail.values()),both_pair_lost=sum(len(v['both_pair_lost_cases']) for v in detail.values()),by_cell=detail,warning_repeat_confirmed=paired['confirmed'])
     write(out/'paired_retention.json',retention)
-    from .retention_b import COVERAGE_SCHEMA
-    prefix_equivalence=read(root/'H16_prefix_equivalence.json') if p.get('schema')!=COVERAGE_SCHEMA else dict(status='not_repeated',reason='new stage changes keep only; original four-combination receipts retained in source B')
+    from .retention_b import COVERAGE_SCHEMA,RATIO_SCHEMA
+    prefix_equivalence=read(root/'H16_prefix_equivalence.json') if p.get('schema') not in (COVERAGE_SCHEMA,RATIO_SCHEMA) else dict(status='not_repeated',reason='finite single-factor stage; original four-combination receipts retained in source lineage')
     write(out/'H16_prefix_equivalence.json',prefix_equivalence)
     write(out/'BC_full_state_verification.json',read(root/'BC_full_state_verification.json'))
     decision='BC distillation works on some seen roots and transfers to the three G-solved unseen DEV roots, but is incomplete and retains paired old losses. Prioritize closed-loop prefix/tail diagnosis and independently sampled TRAIN/keep coverage before PPO; propose any A/C only after separate four-pool GPU validation and actual shared-clipping audit. No automatic next stage.'
@@ -142,17 +142,25 @@ def compact_xy(p,rows,finish,out):
 def coverage_report(path):
     """New-stage results only. Prepared/failed outputs never claim policy improvement."""
     p=read(path);root=Path(p['output']);status=read(root/'status.json')
-    number=max([0]+[int(x.name.split('_')[-1]) for x in root.glob('coverage_report_*') if x.is_dir()])+1
-    out=root/f'coverage_report_{number:04d}';out.mkdir(exist_ok=False)
+    from .retention_b import RATIO_SCHEMA,stage_deadline
+    ratio=p['schema']==RATIO_SCHEMA
+    title='B_weight_ratio keep1.5/demo0.5' if ratio else 'B_keep_coverage'
+    prefix='weight_ratio_report' if ratio else 'coverage_report'
+    number=max([0]+[int(x.name.split('_')[-1]) for x in root.glob(prefix+'_*') if x.is_dir()])+1
+    out=root/f'{prefix}_{number:04d}';out.mkdir(exist_ok=False)
     summary=dict(schema=p['schema'],source_B=p['source_B'],budget=p['budget'],status=status,
-        evaluation_status='not_started',new_keep_collection='PENDING',reliable_recovery_improvement='NOT_ESTABLISHED',
+        evaluation_status='not_started',new_keep_collection='not_collected_fixed_source_reused' if ratio else 'PENDING',reliable_recovery_improvement='NOT_ESTABLISHED',
         learner_last=status.get('learner_last'),stage_candidate=status.get('stage_candidate'),
         frozen_R5=p['best_dev_candidate'],published_policy=None,automatic_next_stage=False)
-    text=['# B_keep_coverage independent stage','',f"Execution: {status['phase']}; evaluation: not_started; reliable recovery improvement NOT_ESTABLISHED.",
+    text=['# '+title+' independent stage','',f"Execution: {status['phase']}; evaluation: not_started; reliable recovery improvement NOT_ESTABLISHED.",
         '',f"New stage cap {p['budget']['total']}; inherited D2 {p['budget']['prior_charged']}; cumulative maximum {p['budget']['D2_cumulative_maximum']}/2000000. Additional BC2000 separate. Original12h start {p['original_D2_started_unix']}; never reset.",
         '',f"Execution blockers: {status.get('execution_blockers',[])}. New successful keep, collection counts and stage coverage are PENDING until physical collection.",
         '', 'Original pi0/fresh Adam/RNG; Actor only, frozen statistics/critic; no PPO/E/G/TEST. Old source B retained. Prepared code and CPU contracts do not establish physical recovery.']
     outcomes=root/'new_keep_outcomes.json'
+    if ratio:
+        summary.update(BC=p['BC'],only_changed_factor=p['only_changed_factor'],merged_keep=read(p['keep_receipt']),source_report=p['source_report'],stage_deadline_unix=stage_deadline(p))
+        text[4]+=f" New independent clock {p['weight_ratio_started_unix']}, deadline {stage_deadline(p)}; declared3h."
+        text[6]='Fixed successful TRAIN keep reused with identical receipt/data hashes; zero new collection.'
     if outcomes.exists():summary['new_keep_collection']=read(outcomes)
     if (root/'keep_receipt.json').exists():summary['merged_keep']=read(root/'keep_receipt.json')
     if status['phase']=='completed':
@@ -172,7 +180,7 @@ def coverage_report(path):
                     a,b,ar,br=[np.asarray(pair[k]['labels'][g],bool) for k in ('baseline','original','repeated_pi0','repeated')]
                     cells[g]=dict(N01=int((~ar&br).sum()),N10=int((ar&~br).sum()),net=int(br.sum()-ar.sum()),source_label_flips=int((a!=ar).sum()),student_label_flips=int((b!=br).sum()),both_pair_old_loss=int((a&ar&~b&~br).sum()))
                 repeated[step]=dict(warned=pair['warned'],confirmed=pair['confirmed'],cells=cells)
-        old_stable=read(parentroot/'report_001/TRAIN_repeat_labels.json')
+        old_stable=read(Path(p['source_report'])/'TRAIN_repeat_labels.json' if ratio else parentroot/'report_001/TRAIN_repeat_labels.json')
         old_stable_ids={e['root_id'] for e in old_stable if e['classification']=='stable_success'}
         new_repeat=read(out/'TRAIN_repeat_labels.json')
         lost_absorbed=[e['root_id'] for e in new_repeat if e['root_id'] in old_stable_ids and e['classification']=='stable_failure']
@@ -192,7 +200,7 @@ def coverage_report(path):
         if selected in repeated and source_rep.exists():
             sr=read(source_rep);old_repeat=sum(sum(a and not b for a,b in zip(sr['repeated_pi0']['labels'][g],sr['repeated']['labels'][g])) for g in 'ABCD')
             summary['repeat_old_loss_decreased']=sum(c['N10'] for c in repeated[selected]['cells'].values())<old_repeat
-        text=['# B_keep_coverage independent development results','',
+        text=['# '+title+' independent development results','',
             '![Actual complete-task XY](xy_DEV_overview.png)','![Seen TRAIN XY](xy_train_roots.png)','![All7 SOLVER_DEV XY](xy_solver_roots.png)',
             '', '|update|TRAIN /8|SOLVER_DEV /7|A /16|B /16|C /16|D /16|new|lost|net|eligible|',
             '|---|---|---|---|---|---|---|---|---|---|---|']
@@ -203,4 +211,6 @@ def coverage_report(path):
             '',f"Source B old loss {old_loss}, new stage {new_loss}; stable absorbed roots now stably failed {lost_absorbed}. Repeat decrease {summary['repeat_old_loss_decreased']}; first-pass and repeat outcomes remain separate.",
             '', 'G teacher reference remains NA on4 solver roots; all7 student outcomes evaluated. TRAIN absorption differs from DEV transfer; used DEV is never final TEST. Collection success/failure/ambiguity, phase coverage, weights and actual worker input provenance in summary. Actor gradients are actual same-batch contributions, fixed probes separate.',
             '',summary['decision'], '', 'This finite development comparison does not establish reliable recovery improvement or eliminate forgetting. No next stage automatically launches.']
+    if ratio:
+        text+=['',f"Fixed control keep/demo=1/1; intervention keep/demo=1.5/0.5. Same TRAIN data, per-source batch256, fresh pi0/Adam/RNG. New charged physics {summary.get('new_physics','PENDING')}/{p['budget']['total']}; prior {p['budget']['prior_charged']}; independent3h clock, original12h metadata retained."]
     write(out/'summary.json',summary);(out/'INDEX.md').write_text('\n'.join(text)+'\n');return out
