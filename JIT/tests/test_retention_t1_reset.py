@@ -116,3 +116,51 @@ def test_t1_capacity_guard_survives_terminal_reset():
     with pytest.raises(Exception,match='scratch saturation'):
         result=jax.jit(wrapped.step)(initial,jp.ones((4,4)))
         jax.block_until_ready(result)
+
+
+def test_constructor_stacks_legacy_fresh_rng_with_typed_snapshot_rng_without_changing_context(tmp_path,monkeypatch):
+    """Exercise __init__, which the earlier wrapper-only fixture bypassed."""
+    from types import SimpleNamespace
+    import jit_dvgc.unified_envelope_snapshot as snapshots
+    import jit_dvgc.handoff_snapshot as handoff
+    from jit_dvgc.retention_repair import sha
+    from jit_dvgc.continuation.device_rollout import take_world
+    states=[saved_state(i) for i in range(4)]
+    random_path=tmp_path/'random.npz'
+    np.savez(random_path,qpos=np.asarray(states[1].data.qpos)[None],qvel=np.asarray(states[1].data.qvel)[None])
+    identity={'test':'no physics'}
+    saved={str(tmp_path/f'snapshot{i}'):SimpleNamespace(
+        compatibility_identity=identity,observation=np.asarray(states[i].obs['state']),
+        observation_fifo=np.asarray(states[i].info['history'].frames),state=states[i]) for i in (2,3)}
+    monkeypatch.setattr(snapshots,'load_unified_envelope_snapshot',lambda path:saved[str(path)])
+    monkeypatch.setattr(snapshots,'snapshot_context_sha256',lambda snapshot:'test-context')
+    monkeypatch.setattr(snapshots,'restore_unified_envelope_snapshot',lambda snapshot,env:snapshot.state)
+    monkeypatch.setattr(handoff,'compatibility_identity',lambda env:identity)
+    class InitializerOnly(NoPhysicsEnv):
+        def _reset_jump_start_unified(self,rng,initial_qpos,initial_qvel):
+            group=int(initial_qpos[0])-10
+            # Production natural reset carries this incoming legacy RNG unchanged.
+            return states[group].replace(data=states[group].data.replace(qpos=initial_qpos,qvel=initial_qvel),
+                                         info={**states[group].info,'rng':rng})
+        def step(self,state,action):raise AssertionError('no physics allowed')
+    inventory={'role':'TRAIN',
+        'nominal_complete':dict(probability=.25,qpos=np.asarray(states[0].data.qpos),qvel=np.asarray(states[0].data.qvel)),
+        'random_complete':dict(probability=.25,path=str(random_path),sha256=sha(random_path),lanes=[0])}
+    for group,name in ((2,'pi0_success_snapshots'),(3,'teacher_recoverable')):
+        inventory[name]=dict(probability=.25,entries=[dict(role='TRAIN',snapshot=str(tmp_path/f'snapshot{group}'),
+            snapshot_context_sha256='test-context',snapshot_time=float(states[group].data.time))])
+    resetter=FourPoolReset(InitializerOnly(),inventory)
+    for group in range(4):
+        actual=take_world(resetter.pool,group);expected=states[group]
+        np.testing.assert_array_equal(actual.data.qpos,expected.data.qpos)
+        np.testing.assert_array_equal(actual.data.qvel,expected.data.qvel)
+        np.testing.assert_array_equal(actual.obs['state'],expected.obs['state'])
+        np.testing.assert_array_equal(actual.data.time,expected.data.time)
+        for key,value in expected.info.items():
+            if key in ('rng','retention_reset_index'):continue
+            for a,b in zip(jax.tree.leaves(actual.info[key]),jax.tree.leaves(value)):
+                np.testing.assert_array_equal(a,b)
+        original=jax.random.PRNGKey(101) if group<2 else expected.info['rng']
+        assert actual.info['rng'].shape==()
+        np.testing.assert_array_equal(jax.random.key_data(actual.info['rng']),jax.random.key_data(original))
+        np.testing.assert_array_equal(jax.random.uniform(actual.info['rng'],(8,)),jax.random.uniform(original,(8,)))

@@ -1,0 +1,8 @@
+{
+  "plan": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_001/plan.json",
+  "plan_sha256": "395f412d45811ec106a00ad782427d7c64411002e21088eabd734c94d4510000",
+  "status": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_001/status.json",
+  "status_sha256": "7bfb21578815c98a8fcd651c4a979d078d193db38493ad32e2046a51f6a2f512",
+  "evaluation_results_sha256": null,
+  "costs_sha256": "a80c63725246a8a54527f8157d623e66adb4700ccab5d558160e7392ac606cab"
+}

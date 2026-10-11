@@ -1,0 +1,9 @@
+{
+  "pid": 812477,
+  "started_unix": 1791724933.585197,
+  "plan": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_001/plan.json",
+  "plan_sha256": "395f412d45811ec106a00ad782427d7c64411002e21088eabd734c94d4510000",
+  "watcher_pid": 812523,
+  "tensorboard_pid": 812524,
+  "tensorboard_url": "http://localhost:6032"
+}

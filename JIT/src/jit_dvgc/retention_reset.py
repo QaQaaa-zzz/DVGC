@@ -51,6 +51,11 @@ class FourPoolReset:
         keys=set().union(*(s.info.keys() for s in states));mkeys=set().union(*(s.metrics.keys() for s in states))
         def align(state,group,index):
             info=dict(state.info);metrics=dict(state.metrics)
+            # Natural resets retain legacy uint32[2] keys; snapshot restoration
+            # returns scalar typed keys. Normalize representation before stacking,
+            # preserving the exact key bits and PRNG implementation of both.
+            rng=info['rng']
+            info['rng']=jax.random.wrap_key_data(jax.random.key_data(rng),impl=jax.random.key_impl(rng))
             for key in keys-set(info):
                 if not key.startswith('reset_from_'):raise ValueError('nonadministrative reset info mismatch '+key)
                 info[key]=jp.asarray(False)

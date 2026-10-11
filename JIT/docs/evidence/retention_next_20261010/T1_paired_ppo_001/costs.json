@@ -1,0 +1,9 @@
+[
+  {
+    "stage": "reset",
+    "category": "reset_GPU",
+    "reservation": 200,
+    "charged": 200,
+    "phase": "running"
+  }
+]

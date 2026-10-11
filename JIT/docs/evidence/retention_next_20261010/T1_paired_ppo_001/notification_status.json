@@ -1,0 +1,25 @@
+{
+  "delivered": {
+    "63a0edf328596738ba5d19b8b43b8648921ebd2a6cd22d42d39a31ff4298b07a": {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_001/status.json",
+      "stage": "T1",
+      "error": "CalledProcessError(1, ['/home/qy/mujoco_playground/.venv/bin/python', '/home/qy/DVGC/runs/worktrees/jit-retention-first/JIT/cli/run_retention_t1.py', 'worker', '--request', '/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_001/reset_request.json'])",
+      "phase": "failed",
+      "notified_unix": 1791724973.6270185
+    },
+    "3072d9cfb50da4d1fcdf9c9332ebe9e3ad3739c3eecf4679b867274b284021e8": {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_001/training/status.json",
+      "stage": "T1_training",
+      "error": "CalledProcessError(1, ['/home/qy/mujoco_playground/.venv/bin/python', '/home/qy/DVGC/runs/worktrees/jit-retention-first/JIT/cli/run_retention_t1.py', 'worker', '--request', '/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_001/reset_request.json'])",
+      "phase": "failed",
+      "notified_unix": 1791724973.6346254
+    }
+  },
+  "delivery_errors": [],
+  "pid": 812523,
+  "checked_unix": 1791725033.638063,
+  "manifests": [
+    "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_001/ACTIVE_RUN.json",
+    "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_001/TRAINING_ACTIVE_RUN.json"
+  ]
+}

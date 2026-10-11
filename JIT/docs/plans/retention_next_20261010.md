@@ -157,3 +157,5 @@ Final preparation refinement: supplement `D2_002/report_004/formal_preparation.j
 - 论文原位补图：原框图、真实XY反例、5臂3seed主表、教师→学生转化、物理/GPU学习曲线、模块消融、同身份sim2sim、负结果/身份/费用附录。全阶段总封顶119948600，条件性释放，不一次排队。
 
 研究事实及活动状态唯一维护在共享PROJECT_STATE.md；本节为固定执行合同。代码、测试、门槛收据与实际运行链接在完成时补入本节。
+
+2026-10-11执行收据：T0通过；T1_paired_ppo_001在四池构建RNG形状混用时停止，两臂0/32000、保守charged200、D2累计1123052。原失败不重试；共同边界统一typed RNG并新增真实构造器CPU回归，GPU尚未重检。下一执行阶段应新建plan、重新计入工程预算并核实reward/loss HTTP，不能恢复001或释放正式矩阵。详见[工程停止收据](../evidence/retention_next_20261010/T1_paired_ppo_001/INDEX.md)。

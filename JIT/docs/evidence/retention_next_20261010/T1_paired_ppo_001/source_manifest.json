@@ -1,0 +1,40 @@
+{
+  "raw_run": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_001",
+  "files": [
+    {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_001/status.json",
+      "sha256": "7bfb21578815c98a8fcd651c4a979d078d193db38493ad32e2046a51f6a2f512"
+    },
+    {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_001/plan.json",
+      "sha256": "395f412d45811ec106a00ad782427d7c64411002e21088eabd734c94d4510000"
+    },
+    {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_001/costs.json",
+      "sha256": "a80c63725246a8a54527f8157d623e66adb4700ccab5d558160e7392ac606cab"
+    },
+    {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_001/reset.log",
+      "sha256": "f080656d8d3d3587dbfd9d2dd910e224baaccbc3615abd5b2efdbe3f1b77d378"
+    },
+    {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_001/launch.json",
+      "sha256": "78aa118e7cb3f33abf6748bf1e907b2ca06602ed2473eb1c5e1c5ad8278f7517"
+    },
+    {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_001/notifications/notification_status.json",
+      "sha256": "344c16492f3c99cc4f69caaad9ee2751f99eed86e450cca8f07e4186dadf336d"
+    },
+    {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_001/report_0001/summary.json",
+      "sha256": "02cc0292206a5ba6bb4a3e1869acc31853c0be0df0e2f6bbdeeadc5a50a7fc83"
+    },
+    {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_001/report_0001/source_receipts.json",
+      "sha256": "05cca4926d99562f1cc75ce5e89faffd64be5b1fa91cfd8a01260554363e9189"
+    }
+  ],
+  "tensorboard_http_tags": {},
+  "reward_loss_loaded": false,
+  "no_training_started": true
+}

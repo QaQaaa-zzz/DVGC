@@ -1,0 +1,27 @@
+{
+  "phase": "failed",
+  "stage": "T1",
+  "pid": 812477,
+  "updated_unix": 1791724965.0363173,
+  "started_unix": 1791724933.585197,
+  "deadline_unix": 1791746533.585197,
+  "charged_interactions": 200,
+  "maximum_new_interactions": 700200,
+  "cumulative_charged": 1123052,
+  "formal_training_transitions": 0,
+  "formal_by_arm": {
+    "PPO_keep": 0,
+    "PPO_demo_keep": 0
+  },
+  "engineering_training_transitions": 0,
+  "engineering_by_arm": {
+    "PPO_keep": 0,
+    "PPO_demo_keep": 0
+  },
+  "E_updates": 0,
+  "G_updates": 0,
+  "automatic_next_stage": false,
+  "published_policy": null,
+  "error": "CalledProcessError(1, ['/home/qy/mujoco_playground/.venv/bin/python', '/home/qy/DVGC/runs/worktrees/jit-retention-first/JIT/cli/run_retention_t1.py', 'worker', '--request', '/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_001/reset_request.json'])",
+  "wall_seconds": 31.450863361358643
+}

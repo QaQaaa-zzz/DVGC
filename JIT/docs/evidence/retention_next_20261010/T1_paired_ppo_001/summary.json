@@ -1,0 +1,38 @@
+{
+  "evaluation_status": "partial",
+  "t1_passed": null,
+  "automatic_next_stage": false,
+  "published_policy": null,
+  "endpoint_transition": 32000,
+  "schema": "jit_retention_T1_report_v1",
+  "execution_status": "failed",
+  "missing_or_invalid_artifacts": [
+    "PPO_keep: missing completed training status or saved verification",
+    "PPO_demo_keep: missing completed training status or saved verification",
+    "PPO_keep: TRAIN requires three complete repeats",
+    "PPO_keep: DEV requires three complete repeats",
+    "PPO_keep: seven finite SOLVER_DEV labels required",
+    "PPO_demo_keep: TRAIN requires three complete repeats",
+    "PPO_demo_keep: DEV requires three complete repeats",
+    "PPO_demo_keep: seven finite SOLVER_DEV labels required",
+    "pi0: three complete DEV repeats required"
+  ],
+  "saved_training_verification": {},
+  "new_physics_control_steps": 0,
+  "new_training_updates": 0,
+  "final_test_used": false,
+  "report_method": "saved files only; no worker, optimizer, restore or evaluation invoked",
+  "costs": {
+    "charged": 200,
+    "prior_charged": 1122852,
+    "D2_cumulative": 1123052,
+    "stage_cap": 700200,
+    "D2_cap": 2000000,
+    "active_known": 0,
+    "padding_known": 0,
+    "charged_without_active_padding_split": 200,
+    "failed_or_unfinished_reserved_charged": 200
+  },
+  "claim_boundary": "One fixed endpoint, one pilot seed, finite saved conditions; not paper significance, policy adoption or automatic extension.",
+  "report_directory": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_001/report_0001"
+}
