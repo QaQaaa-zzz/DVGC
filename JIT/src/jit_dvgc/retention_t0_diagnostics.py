@@ -553,7 +553,7 @@ def run(control, intervention, output):
         cross, _, independent_checks = cross_inference(models, corpora, predict)
         write_json(out/'cross_inference.json', cross)
         with (out/'cross_inference_overview.csv').open('w') as stream:
-            writer = csv.writer(stream)
+            writer = csv.writer(stream, lineterminator="\n")
             writer.writerow(['model', 'corpus', 'group', 'n', 'mse', 'rmse', 'maxabs', *ACTION_ORDER])
             for model, by_corpus in cross.items():
                 for corpus, groups in by_corpus.items():
