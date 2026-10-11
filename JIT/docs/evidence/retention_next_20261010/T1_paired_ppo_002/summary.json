@@ -1,0 +1,394 @@
+{
+  "schema": "jit_T1_saved_review_v1",
+  "run": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002",
+  "new_physical_steps": 0,
+  "new_optimizer_updates": 0,
+  "TEST_used": false,
+  "gate_recomputed_equal": true,
+  "evaluation_status": "complete",
+  "t1_passed": false,
+  "budget": {
+    "charged": 328308,
+    "prior_charged": 1123052,
+    "D2_cumulative": 1451360,
+    "stage_cap": 700200,
+    "D2_cap": 2000000,
+    "active_known": 84260,
+    "padding_known": 173448,
+    "charged_without_active_padding_split": 70600,
+    "failed_or_unfinished_reserved_charged": 0
+  },
+  "arms": {
+    "PPO_keep": {
+      "DEV": {
+        "per_repeat_success": [
+          56,
+          56,
+          57
+        ],
+        "per_group_success": {
+          "A": [
+            16,
+            16,
+            16
+          ],
+          "B": [
+            15,
+            15,
+            15
+          ],
+          "C": [
+            14,
+            14,
+            14
+          ],
+          "D": [
+            11,
+            11,
+            12
+          ]
+        },
+        "stable_success": 56,
+        "stable_failure": 7,
+        "ambiguous": 1
+      },
+      "stable_train": 1,
+      "solver_first_success": 1,
+      "stable_gained": [
+        "A_13",
+        "B_10",
+        "B_12",
+        "C_04",
+        "C_08",
+        "C_09",
+        "C_11",
+        "C_13",
+        "C_14",
+        "D_12"
+      ],
+      "stable_lost": [
+        "C_07",
+        "C_10",
+        "D_05"
+      ],
+      "stable_net": 7,
+      "old_ambiguous": [],
+      "TRAIN_labels": {
+        "TRAIN-1010233101-68": [
+          1,
+          1,
+          1
+        ],
+        "TRAIN-1010233101-37": [
+          0,
+          0,
+          0
+        ],
+        "TRAIN-1010233101-10": [
+          0,
+          0,
+          0
+        ],
+        "TRAIN-1010233101-18": [
+          0,
+          0,
+          0
+        ],
+        "TRAIN-1010233101-26": [
+          0,
+          0,
+          0
+        ],
+        "TRAIN-1010233101-30": [
+          0,
+          0,
+          0
+        ],
+        "TRAIN-1010233101-55": [
+          0,
+          0,
+          0
+        ],
+        "TRAIN-1010233101-63": [
+          0,
+          0,
+          0
+        ]
+      },
+      "confirmed_regression": [],
+      "warning_cells_by_repeat": [
+        [],
+        [],
+        []
+      ]
+    },
+    "PPO_demo_keep": {
+      "DEV": {
+        "per_repeat_success": [
+          54,
+          55,
+          54
+        ],
+        "per_group_success": {
+          "A": [
+            16,
+            16,
+            16
+          ],
+          "B": [
+            12,
+            13,
+            12
+          ],
+          "C": [
+            13,
+            13,
+            13
+          ],
+          "D": [
+            13,
+            13,
+            13
+          ]
+        },
+        "stable_success": 54,
+        "stable_failure": 9,
+        "ambiguous": 1
+      },
+      "stable_train": 1,
+      "solver_first_success": 1,
+      "stable_gained": [
+        "A_13",
+        "C_11",
+        "C_13",
+        "C_14",
+        "D_00",
+        "D_04"
+      ],
+      "stable_lost": [],
+      "stable_net": 6,
+      "old_ambiguous": [],
+      "TRAIN_labels": {
+        "TRAIN-1010233101-68": [
+          1,
+          0,
+          1
+        ],
+        "TRAIN-1010233101-37": [
+          0,
+          0,
+          0
+        ],
+        "TRAIN-1010233101-10": [
+          1,
+          1,
+          1
+        ],
+        "TRAIN-1010233101-18": [
+          0,
+          0,
+          0
+        ],
+        "TRAIN-1010233101-26": [
+          0,
+          0,
+          0
+        ],
+        "TRAIN-1010233101-30": [
+          0,
+          0,
+          0
+        ],
+        "TRAIN-1010233101-55": [
+          0,
+          0,
+          0
+        ],
+        "TRAIN-1010233101-63": [
+          0,
+          0,
+          0
+        ]
+      },
+      "confirmed_regression": [],
+      "warning_cells_by_repeat": [
+        [],
+        [],
+        [
+          "B"
+        ]
+      ]
+    }
+  },
+  "source_DEV": {
+    "per_repeat_success": [
+      38,
+      41,
+      47
+    ],
+    "per_group_success": {
+      "A": [
+        7,
+        10,
+        13
+      ],
+      "B": [
+        12,
+        12,
+        13
+      ],
+      "C": [
+        8,
+        8,
+        10
+      ],
+      "D": [
+        11,
+        11,
+        11
+      ]
+    },
+    "stable_success": 35,
+    "stable_failure": 15,
+    "ambiguous": 14
+  },
+  "TRAIN_endpoint_reasons": {
+    "PPO_keep": {
+      "stable_forward_recovery": 3,
+      "roll_limit": 21
+    },
+    "PPO_demo_keep": {
+      "stable_forward_recovery": 5,
+      "roll_limit": 16,
+      "roll_limit+pitch_limit": 3
+    }
+  },
+  "actual_update_diagnostics": {
+    "PPO_keep": {
+      "actual/gradient_norm_ppo": {
+        "min": 1.8189475536346436,
+        "median": 3.3472996950149536,
+        "max": 7.3445940017700195
+      },
+      "actual/gradient_norm_demo": {
+        "min": 0.0,
+        "median": 0.0,
+        "max": 0.0
+      },
+      "actual/gradient_norm_keep": {
+        "min": 3.8471238639203875e-08,
+        "median": 0.001753954857122153,
+        "max": 0.002823367714881897
+      },
+      "actual/critic_gradient_norm": {
+        "min": 244.14801025390625,
+        "median": 506.7619171142578,
+        "max": 1158.570068359375
+      },
+      "actual/actor_gradient_norm": {
+        "min": 1.820086121559143,
+        "median": 3.347531318664551,
+        "max": 7.343384265899658
+      },
+      "actual/global_clip_scale": {
+        "min": 0.0006473460234701633,
+        "median": 0.0014799449127167463,
+        "max": 0.003071713261306286
+      },
+      "actual/actor_adam_delta_norm": {
+        "min": 0.0006016361876390874,
+        "median": 0.000802575028501451,
+        "max": 0.0028885153587907553
+      },
+      "actual/critic_adam_delta_norm": {
+        "min": 0.0012554213171824813,
+        "median": 0.0015550037496723235,
+        "max": 0.0029911003075540066
+      },
+      "actual/cosine_ppo_demo": {
+        "min": 0.0,
+        "median": 0.0,
+        "max": 0.0
+      },
+      "effective_lambda_demo": {
+        "min": 0.0,
+        "median": 0.0,
+        "max": 0.0
+      },
+      "weighted_demo_to_ppo_norm": {
+        "min": 0.0,
+        "median": 0.0,
+        "max": 0.0
+      },
+      "weighted_keep_to_ppo_norm": {
+        "min": 9.90757823240232e-09,
+        "median": 0.0005165691322794998,
+        "max": 0.0011363768648861698
+      },
+      "negative_ppo_demo_cosine_updates": 0
+    },
+    "PPO_demo_keep": {
+      "actual/gradient_norm_ppo": {
+        "min": 2.1952250003814697,
+        "median": 2.99334180355072,
+        "max": 8.051212310791016
+      },
+      "actual/gradient_norm_demo": {
+        "min": 0.03550343960523605,
+        "median": 0.05796131677925587,
+        "max": 0.08146870881319046
+      },
+      "actual/gradient_norm_keep": {
+        "min": 3.8471238639203875e-08,
+        "median": 0.0018106709467247128,
+        "max": 0.0038326680660247803
+      },
+      "actual/critic_gradient_norm": {
+        "min": 226.42051696777344,
+        "median": 509.28041076660156,
+        "max": 1621.7843017578125
+      },
+      "actual/actor_gradient_norm": {
+        "min": 2.1929872035980225,
+        "median": 2.9838638305664062,
+        "max": 8.056379318237305
+      },
+      "actual/global_clip_scale": {
+        "min": 0.00046245299745351076,
+        "median": 0.0014726546360179782,
+        "max": 0.0033122655004262924
+      },
+      "actual/actor_adam_delta_norm": {
+        "min": 0.0005448625888675451,
+        "median": 0.0007727657211944461,
+        "max": 0.00289389630779624
+      },
+      "actual/critic_adam_delta_norm": {
+        "min": 0.0011865108972415328,
+        "median": 0.0015331640606746078,
+        "max": 0.0029910472221672535
+      },
+      "actual/cosine_ppo_demo": {
+        "min": -0.295510858297348,
+        "median": 0.007060433505102992,
+        "max": 0.38866329193115234
+      },
+      "effective_lambda_demo": {
+        "min": 0.16249999403953552,
+        "median": 0.17937500774860382,
+        "max": 0.19625000655651093
+      },
+      "weighted_demo_to_ppo_norm": {
+        "min": 0.008230722792274341,
+        "median": 0.018815141491815984,
+        "max": 0.02920875795023363
+      },
+      "weighted_keep_to_ppo_norm": {
+        "min": 8.985556409811101e-09,
+        "median": 0.0005614579356935038,
+        "max": 0.0014362213151525509
+      },
+      "negative_ppo_demo_cosine_updates": 37
+    }
+  }
+}

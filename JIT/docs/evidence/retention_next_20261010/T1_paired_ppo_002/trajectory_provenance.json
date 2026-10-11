@@ -1,0 +1,386 @@
+[
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_keep_TRAIN_repeat0_root00/bridge_baseline_traces.npz",
+    "sha256": "f6f80641501157967ddacab9c8c34db4da42fd151c9a441e9671b4fdb62ba7d5",
+    "lane": 10,
+    "root": "TRAIN-1010233101-68",
+    "arm": "PPO_keep",
+    "repeat": 0
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_keep_TRAIN_repeat1_root00/bridge_baseline_traces.npz",
+    "sha256": "515b9434b61456cd46ca31623f82cc6ffde9a8d912faae140ec7d44ab9484349",
+    "lane": 10,
+    "root": "TRAIN-1010233101-68",
+    "arm": "PPO_keep",
+    "repeat": 1
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_keep_TRAIN_repeat2_root00/bridge_baseline_traces.npz",
+    "sha256": "df0d8643f157af03c6ea6c92b74578a729c36964075b1235ad9606a189c27ca4",
+    "lane": 10,
+    "root": "TRAIN-1010233101-68",
+    "arm": "PPO_keep",
+    "repeat": 2
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_demo_keep_TRAIN_repeat0_root00/bridge_baseline_traces.npz",
+    "sha256": "382399b9e1053413b4179f42e01bc766c2a1f8c9fdefd5df176e7f729fcfa78a",
+    "lane": 10,
+    "root": "TRAIN-1010233101-68",
+    "arm": "PPO_demo_keep",
+    "repeat": 0
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_demo_keep_TRAIN_repeat1_root00/bridge_baseline_traces.npz",
+    "sha256": "7c1637eeb7c0499e8a2319591a81d97d384279c9a69b4cce97fb85bde9ca70d1",
+    "lane": 10,
+    "root": "TRAIN-1010233101-68",
+    "arm": "PPO_demo_keep",
+    "repeat": 1
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_demo_keep_TRAIN_repeat2_root00/bridge_baseline_traces.npz",
+    "sha256": "3851c8db91192b4dc969fa0e840c773e8baecb37b67da085026cceb2667f03df",
+    "lane": 10,
+    "root": "TRAIN-1010233101-68",
+    "arm": "PPO_demo_keep",
+    "repeat": 2
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_keep_TRAIN_repeat0_root01/bridge_baseline_traces.npz",
+    "sha256": "76cfb5dcf7d68d560cc0145b57eb2be71b9b39a84a830709e68930bb1d8bb97d",
+    "lane": 3,
+    "root": "TRAIN-1010233101-37",
+    "arm": "PPO_keep",
+    "repeat": 0
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_keep_TRAIN_repeat1_root01/bridge_baseline_traces.npz",
+    "sha256": "916ee776f8d809a7c6183d28f317c7fc930061640b15d1f4d1487ce9190026cd",
+    "lane": 3,
+    "root": "TRAIN-1010233101-37",
+    "arm": "PPO_keep",
+    "repeat": 1
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_keep_TRAIN_repeat2_root01/bridge_baseline_traces.npz",
+    "sha256": "1ac49df659ada7f494e643863d1213ddea729671e2b850931af977390af32f91",
+    "lane": 3,
+    "root": "TRAIN-1010233101-37",
+    "arm": "PPO_keep",
+    "repeat": 2
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_demo_keep_TRAIN_repeat0_root01/bridge_baseline_traces.npz",
+    "sha256": "646452012a94d3f471515e5b6c3b2fff7cfefe1010a3d4133d48ef3b3ee99406",
+    "lane": 3,
+    "root": "TRAIN-1010233101-37",
+    "arm": "PPO_demo_keep",
+    "repeat": 0
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_demo_keep_TRAIN_repeat1_root01/bridge_baseline_traces.npz",
+    "sha256": "9f868afdd78c754600b3031da571fe2802efbe07951ba4ef3dce1c8ea0010894",
+    "lane": 3,
+    "root": "TRAIN-1010233101-37",
+    "arm": "PPO_demo_keep",
+    "repeat": 1
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_demo_keep_TRAIN_repeat2_root01/bridge_baseline_traces.npz",
+    "sha256": "ac937c21192b9031373d25bacd35ead308400d3cff2c51e96aae46dacab6d7fe",
+    "lane": 3,
+    "root": "TRAIN-1010233101-37",
+    "arm": "PPO_demo_keep",
+    "repeat": 2
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_keep_TRAIN_repeat0_root02/bridge_baseline_traces.npz",
+    "sha256": "c63b15a84d04a463480296df9974d39f33f3e3309e491a7b53116860eca62cf1",
+    "lane": 11,
+    "root": "TRAIN-1010233101-10",
+    "arm": "PPO_keep",
+    "repeat": 0
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_keep_TRAIN_repeat1_root02/bridge_baseline_traces.npz",
+    "sha256": "a2bf1a021ad4ffab3fd7746b07fcd122dd240d036c69994521ba0829703b3ac6",
+    "lane": 11,
+    "root": "TRAIN-1010233101-10",
+    "arm": "PPO_keep",
+    "repeat": 1
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_keep_TRAIN_repeat2_root02/bridge_baseline_traces.npz",
+    "sha256": "b1c8a904389d5d4f43e2c6a4bceb5bb49d8b5c080b9dfd8d959a933435036fb9",
+    "lane": 11,
+    "root": "TRAIN-1010233101-10",
+    "arm": "PPO_keep",
+    "repeat": 2
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_demo_keep_TRAIN_repeat0_root02/bridge_baseline_traces.npz",
+    "sha256": "964236e3c28d172c042ba35e697e06503874b54d633dcd8384b691e1972dc8f5",
+    "lane": 11,
+    "root": "TRAIN-1010233101-10",
+    "arm": "PPO_demo_keep",
+    "repeat": 0
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_demo_keep_TRAIN_repeat1_root02/bridge_baseline_traces.npz",
+    "sha256": "b54d9019c59fecb626eb77deac5e11656f03879421eb5997e7d545d3a817ffb8",
+    "lane": 11,
+    "root": "TRAIN-1010233101-10",
+    "arm": "PPO_demo_keep",
+    "repeat": 1
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_demo_keep_TRAIN_repeat2_root02/bridge_baseline_traces.npz",
+    "sha256": "203521a004e96334feca8374c4fc3205d16c557be4cfc27c414e101897acafe1",
+    "lane": 11,
+    "root": "TRAIN-1010233101-10",
+    "arm": "PPO_demo_keep",
+    "repeat": 2
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_keep_TRAIN_repeat0_root03/bridge_baseline_traces.npz",
+    "sha256": "e9ece8bf8633e2da1bf9d05d7a45609d485e04cd7b2e4e0f41e3228a38afa7b4",
+    "lane": 12,
+    "root": "TRAIN-1010233101-18",
+    "arm": "PPO_keep",
+    "repeat": 0
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_keep_TRAIN_repeat1_root03/bridge_baseline_traces.npz",
+    "sha256": "e0d1de2b36055f87a5f49cf71a0be6ccf0a18ab9d28a7b4c262c33ea5bb47452",
+    "lane": 12,
+    "root": "TRAIN-1010233101-18",
+    "arm": "PPO_keep",
+    "repeat": 1
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_keep_TRAIN_repeat2_root03/bridge_baseline_traces.npz",
+    "sha256": "0fd0abda9cbff76b95f80971c40e31a5768e69d1a2ab49325f7b96564faf036c",
+    "lane": 12,
+    "root": "TRAIN-1010233101-18",
+    "arm": "PPO_keep",
+    "repeat": 2
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_demo_keep_TRAIN_repeat0_root03/bridge_baseline_traces.npz",
+    "sha256": "adc11172ff8d886bad3876e3d875a9a51392072a07905fb453a356e6fc95fe50",
+    "lane": 12,
+    "root": "TRAIN-1010233101-18",
+    "arm": "PPO_demo_keep",
+    "repeat": 0
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_demo_keep_TRAIN_repeat1_root03/bridge_baseline_traces.npz",
+    "sha256": "ccf652e2269b9fbdb2265a3a614bcf3aa7706814b80036176000312bf7c367de",
+    "lane": 12,
+    "root": "TRAIN-1010233101-18",
+    "arm": "PPO_demo_keep",
+    "repeat": 1
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_demo_keep_TRAIN_repeat2_root03/bridge_baseline_traces.npz",
+    "sha256": "e03cd475456bd8f75f6e1c3cefc6bb4286e1558ba0237acb618f72386b5721b2",
+    "lane": 12,
+    "root": "TRAIN-1010233101-18",
+    "arm": "PPO_demo_keep",
+    "repeat": 2
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_keep_TRAIN_repeat0_root04/bridge_baseline_traces.npz",
+    "sha256": "df67dfe8b27c72c26d4c41a57eabd4d91c454832c90a04fe4a372d8c23a6094d",
+    "lane": 14,
+    "root": "TRAIN-1010233101-26",
+    "arm": "PPO_keep",
+    "repeat": 0
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_keep_TRAIN_repeat1_root04/bridge_baseline_traces.npz",
+    "sha256": "57a1dbb14d51ed781f0ff42042fb27aeaf1f98902b8e83ef3a39cdded34dced4",
+    "lane": 14,
+    "root": "TRAIN-1010233101-26",
+    "arm": "PPO_keep",
+    "repeat": 1
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_keep_TRAIN_repeat2_root04/bridge_baseline_traces.npz",
+    "sha256": "26b36c200261f358fa0e5c11789389713e41b420dbca75852520bf5129a11afe",
+    "lane": 14,
+    "root": "TRAIN-1010233101-26",
+    "arm": "PPO_keep",
+    "repeat": 2
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_demo_keep_TRAIN_repeat0_root04/bridge_baseline_traces.npz",
+    "sha256": "98448a8792f98e59590316bb9477fdea4490d36d833ac9b0f349b1ebbbda5eb2",
+    "lane": 14,
+    "root": "TRAIN-1010233101-26",
+    "arm": "PPO_demo_keep",
+    "repeat": 0
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_demo_keep_TRAIN_repeat1_root04/bridge_baseline_traces.npz",
+    "sha256": "68fe0ffea0484d8f9d35c73e04c39c9756a76cf00e1a605c8ba74824ed89c9bc",
+    "lane": 14,
+    "root": "TRAIN-1010233101-26",
+    "arm": "PPO_demo_keep",
+    "repeat": 1
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_demo_keep_TRAIN_repeat2_root04/bridge_baseline_traces.npz",
+    "sha256": "4a79656daa36e27ef1ed56764e67f08d3430c04c703ad30018dfeab623071d08",
+    "lane": 14,
+    "root": "TRAIN-1010233101-26",
+    "arm": "PPO_demo_keep",
+    "repeat": 2
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_keep_TRAIN_repeat0_root05/bridge_baseline_traces.npz",
+    "sha256": "133a59f9bb3fc47aa99d45647875dc6a25a19e02033e8d21a3a1706f34318cd9",
+    "lane": 9,
+    "root": "TRAIN-1010233101-30",
+    "arm": "PPO_keep",
+    "repeat": 0
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_keep_TRAIN_repeat1_root05/bridge_baseline_traces.npz",
+    "sha256": "01f4c53bb8e85084b0a52cb9c64a170a7fa5627a9000118a64f6af9147bd3b61",
+    "lane": 9,
+    "root": "TRAIN-1010233101-30",
+    "arm": "PPO_keep",
+    "repeat": 1
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_keep_TRAIN_repeat2_root05/bridge_baseline_traces.npz",
+    "sha256": "5e782a834e370c5797b04c0c2720421022db0d6ead0f4f13d93ab7ce2d1dda4a",
+    "lane": 9,
+    "root": "TRAIN-1010233101-30",
+    "arm": "PPO_keep",
+    "repeat": 2
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_demo_keep_TRAIN_repeat0_root05/bridge_baseline_traces.npz",
+    "sha256": "5ed39fbef82f22e6acdd341852dc0da303e0c2da14bcc06672a83090bb9905ea",
+    "lane": 9,
+    "root": "TRAIN-1010233101-30",
+    "arm": "PPO_demo_keep",
+    "repeat": 0
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_demo_keep_TRAIN_repeat1_root05/bridge_baseline_traces.npz",
+    "sha256": "6534b7d1b9517ab52f40dfb9d27fb1f32c8c010446e7dd81732455faf0bd7735",
+    "lane": 9,
+    "root": "TRAIN-1010233101-30",
+    "arm": "PPO_demo_keep",
+    "repeat": 1
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_demo_keep_TRAIN_repeat2_root05/bridge_baseline_traces.npz",
+    "sha256": "ed800b5588010d19d64aa94a0314e281d932f87321d6f3f1dd5b4129f5e41755",
+    "lane": 9,
+    "root": "TRAIN-1010233101-30",
+    "arm": "PPO_demo_keep",
+    "repeat": 2
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_keep_TRAIN_repeat0_root06/bridge_baseline_traces.npz",
+    "sha256": "e6ab4123badfdc551635d0e0b7b5edc98a4de21a0596b9ffd0dead918d10cedd",
+    "lane": 6,
+    "root": "TRAIN-1010233101-55",
+    "arm": "PPO_keep",
+    "repeat": 0
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_keep_TRAIN_repeat1_root06/bridge_baseline_traces.npz",
+    "sha256": "7768cc92199b5ef84bd00b8fb35e984734cfaf0200d95e609bd1e7d294d47ce8",
+    "lane": 6,
+    "root": "TRAIN-1010233101-55",
+    "arm": "PPO_keep",
+    "repeat": 1
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_keep_TRAIN_repeat2_root06/bridge_baseline_traces.npz",
+    "sha256": "fae830e3d4476e8e57439376f6a981d722b7a7ea3c957366368858bee95a4fc2",
+    "lane": 6,
+    "root": "TRAIN-1010233101-55",
+    "arm": "PPO_keep",
+    "repeat": 2
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_demo_keep_TRAIN_repeat0_root06/bridge_baseline_traces.npz",
+    "sha256": "65beb3b83c0f82cc404bbd3fd244dd9d94456dee166aa38e104220ad094f3525",
+    "lane": 6,
+    "root": "TRAIN-1010233101-55",
+    "arm": "PPO_demo_keep",
+    "repeat": 0
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_demo_keep_TRAIN_repeat1_root06/bridge_baseline_traces.npz",
+    "sha256": "e463135bcac03661fad83b0de60206bc3cca6f831ab6a1ff5327ffb208aa5e6a",
+    "lane": 6,
+    "root": "TRAIN-1010233101-55",
+    "arm": "PPO_demo_keep",
+    "repeat": 1
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_demo_keep_TRAIN_repeat2_root06/bridge_baseline_traces.npz",
+    "sha256": "8add0e125860c8ec067bbf984a626961d06351d18933d8799c061fa6a63c8091",
+    "lane": 6,
+    "root": "TRAIN-1010233101-55",
+    "arm": "PPO_demo_keep",
+    "repeat": 2
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_keep_TRAIN_repeat0_root07/bridge_baseline_traces.npz",
+    "sha256": "4f5b1b8ae6d354635302716616892e46949acc0e74692b7c265dd19a1ab4cf51",
+    "lane": 6,
+    "root": "TRAIN-1010233101-63",
+    "arm": "PPO_keep",
+    "repeat": 0
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_keep_TRAIN_repeat1_root07/bridge_baseline_traces.npz",
+    "sha256": "4a170d181984e24e23c2abe02bf883b945ced5e17650eae9fc77e8987dea94aa",
+    "lane": 6,
+    "root": "TRAIN-1010233101-63",
+    "arm": "PPO_keep",
+    "repeat": 1
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_keep_TRAIN_repeat2_root07/bridge_baseline_traces.npz",
+    "sha256": "d6da0e2184984d0ba538f37f975c09808b8454608b2f81f957a09f10618e6d2f",
+    "lane": 6,
+    "root": "TRAIN-1010233101-63",
+    "arm": "PPO_keep",
+    "repeat": 2
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_demo_keep_TRAIN_repeat0_root07/bridge_baseline_traces.npz",
+    "sha256": "16be132b920f51bcf75c8c48350bccc138790f9e768b5dd51fbd855a427e03cb",
+    "lane": 6,
+    "root": "TRAIN-1010233101-63",
+    "arm": "PPO_demo_keep",
+    "repeat": 0
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_demo_keep_TRAIN_repeat1_root07/bridge_baseline_traces.npz",
+    "sha256": "ff52f5937e36f5d7251068fd192f493f905f734e94d742954c632036c0d60c10",
+    "lane": 6,
+    "root": "TRAIN-1010233101-63",
+    "arm": "PPO_demo_keep",
+    "repeat": 1
+  },
+  {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/T1_paired_ppo_002/PPO_demo_keep_TRAIN_repeat2_root07/bridge_baseline_traces.npz",
+    "sha256": "ec1371857d6279341b055cb292539b5d19c4b3282c6820c2f6064b53e3285b4c",
+    "lane": 6,
+    "root": "TRAIN-1010233101-63",
+    "arm": "PPO_demo_keep",
+    "repeat": 2
+  }
+]

@@ -1,0 +1,38 @@
+{
+  "pi0": {
+    "group_A_requested_max": 0.0,
+    "group_A_initial_qpos_range": 0.0,
+    "group_A_initial_qvel_range": 0.0,
+    "first_component_differences_by_tick": {
+      "actor_observation_before": 1,
+      "base_action": 5,
+      "qpos": 3,
+      "qvel": 0
+    },
+    "scope": "within first fixed batch, identical nominal complete initial states/no requested pulse; descriptive threshold1e-6, no causal numerical diagnosis"
+  },
+  "keep": {
+    "group_A_requested_max": 0.0,
+    "group_A_initial_qpos_range": 0.0,
+    "group_A_initial_qvel_range": 0.0,
+    "first_component_differences_by_tick": {
+      "actor_observation_before": 1,
+      "base_action": 4,
+      "qpos": 3,
+      "qvel": 0
+    },
+    "scope": "within first fixed batch, identical nominal complete initial states/no requested pulse; descriptive threshold1e-6, no causal numerical diagnosis"
+  },
+  "demo": {
+    "group_A_requested_max": 0.0,
+    "group_A_initial_qpos_range": 0.0,
+    "group_A_initial_qvel_range": 0.0,
+    "first_component_differences_by_tick": {
+      "actor_observation_before": 1,
+      "base_action": 5,
+      "qpos": 1,
+      "qvel": 0
+    },
+    "scope": "within first fixed batch, identical nominal complete initial states/no requested pulse; descriptive threshold1e-6, no causal numerical diagnosis"
+  }
+}

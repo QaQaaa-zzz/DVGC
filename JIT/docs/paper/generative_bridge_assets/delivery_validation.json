@@ -1,81 +1,100 @@
 {
-  "schema": "jit_paper_delivery_validation_v3",
-  "stage": "T0 completed; T1 engineering failure before PPO; no mechanism conclusion",
-  "source_sha256": "efb87267ad959531121a2203900e347736f084b53ab54c2b75cb1f62afdf2daa",
-  "docx_sha256": "ca024eee83e440f4a768b941b0f1b3ebe8e81093731d5b431bfdbb9b794ff9ae",
-  "pdf_sha256": "f9ed1d08ed7ed7a439cbf9b7400a2d8b568eaacec523b29cadb5e0d25cfa4a75",
-  "pdf_pages": 18,
+  "schema": "jit_paper_delivery_v4",
+  "stage": "T1 complete and gate rejected; saved-only diagnostics completed",
+  "source_sha256": "1ef4b9106bc37b9a4caeb057d92e0c6757b7a74057d0ab35ff6f0d5847c9946c",
+  "docx_sha256": "ee595e00af58aa6911b763c5e426ed19a46eb85bca4b59d6a1b9a879aa332c8a",
+  "pdf_sha256": "c31523708bc692d5cc23e1dac61830feea48ec1ffeb8399ec72931fffb6b0ae6",
+  "pages": 19,
   "editable_equations": 9,
-  "tables": 11,
-  "embedded_images": 4,
+  "editable_tables": 12,
+  "embedded_images": 5,
   "all_local_links_exist": true,
-  "local_link_count": 17,
+  "local_link_count": 19,
+  "text_bounds_checked": true,
   "prior_delivery_receipt": {
-    "schema": "jit_chinese_manuscript_delivery_v2",
-    "verified_unix": 1791724305.3670409,
-    "stage": "T0 evidence and authorized protocol update; T1 pending",
-    "source_sha256": "fdc9527c4ecaacdbee50f5fe587df21203da04121d9e63a53107f92e06197d3a",
-    "docx_sha256": "cb919ed87af2da399d484b81d7abccb3467aa675cd45edb8667e88f37ce40fe1",
-    "pdf_sha256": "747f2c53b90337968e0e392d251ec2f18132b0dc6f840164ac493b2cbbd3e55d",
-    "pages": 18,
-    "math_count": 9,
-    "table_count": 11,
-    "embedded_images_exact": true,
-    "local_links_checked": 16,
-    "text_bounds_checked": true,
-    "visually_checked_changed_pages": [
-      12,
-      14,
-      17
-    ],
-    "new_physics": 0,
-    "training_updates": 0,
+    "schema": "jit_paper_delivery_validation_v3",
+    "stage": "T0 completed; T1 engineering failure before PPO; no mechanism conclusion",
+    "source_sha256": "efb87267ad959531121a2203900e347736f084b53ab54c2b75cb1f62afdf2daa",
+    "docx_sha256": "ca024eee83e440f4a768b941b0f1b3ebe8e81093731d5b431bfdbb9b794ff9ae",
+    "pdf_sha256": "f9ed1d08ed7ed7a439cbf9b7400a2d8b568eaacec523b29cadb5e0d25cfa4a75",
+    "pdf_pages": 18,
+    "editable_equations": 9,
+    "tables": 11,
+    "embedded_images": 4,
+    "all_local_links_exist": true,
+    "local_link_count": 17,
     "prior_delivery_receipt": {
-      "schema": "jit_chinese_paper_delivery_v1",
-      "checked_at": "2026-10-11T09:45:53.696108+00:00",
-      "phase": "passed",
-      "source_sha256": "f78e54122c882fb3c1a018a5efef622b3748521af8eaaf9d2f5f2c8195514188",
-      "docx_sha256": "b70920d388b2a35538aa836088b3a31ff00f9cbdcd5e3c47890267753099d6d5",
-      "pdf_sha256": "957016306656e046daa29234d55f32fb93473d10a248dbecea5b2723ae0c21c8",
-      "pages": 17,
-      "editable_office_math_count": 9,
-      "editable_tables": 11,
-      "embedded_figures": 4,
-      "framework_pdf_matches_user_original": true,
-      "framework_png_embedded_byte_exact": true,
-      "local_manuscript_links_checked": 14,
-      "local_manuscript_links_missing": [],
-      "web_references": 9,
-      "web_reference_scope": "primary source pages checked during authoring, not automated by this script",
-      "rendered_equations_1_to_9_present": true,
-      "text_page_boundary_violations": [],
-      "current_stage_table_matches_frozen_summary": true,
-      "training_status": "completed_1000_of_1000",
-      "review_status": "method review ten items resolved; independent evidence review data and boundaries checked",
-      "authoring_simulator_interactions": 0,
-      "authoring_training_updates": 0,
-      "outputs": {
-        "JIT_中文论文草稿_20261011.docx": {
-          "path": "/home/qy/下载/JIT_中文论文草稿_20261011.docx",
-          "sha256": "b70920d388b2a35538aa836088b3a31ff00f9cbdcd5e3c47890267753099d6d5",
-          "bytes": 983199
+      "schema": "jit_chinese_manuscript_delivery_v2",
+      "verified_unix": 1791724305.3670409,
+      "stage": "T0 evidence and authorized protocol update; T1 pending",
+      "source_sha256": "fdc9527c4ecaacdbee50f5fe587df21203da04121d9e63a53107f92e06197d3a",
+      "docx_sha256": "cb919ed87af2da399d484b81d7abccb3467aa675cd45edb8667e88f37ce40fe1",
+      "pdf_sha256": "747f2c53b90337968e0e392d251ec2f18132b0dc6f840164ac493b2cbbd3e55d",
+      "pages": 18,
+      "math_count": 9,
+      "table_count": 11,
+      "embedded_images_exact": true,
+      "local_links_checked": 16,
+      "text_bounds_checked": true,
+      "visually_checked_changed_pages": [
+        12,
+        14,
+        17
+      ],
+      "new_physics": 0,
+      "training_updates": 0,
+      "prior_delivery_receipt": {
+        "schema": "jit_chinese_paper_delivery_v1",
+        "checked_at": "2026-10-11T09:45:53.696108+00:00",
+        "phase": "passed",
+        "source_sha256": "f78e54122c882fb3c1a018a5efef622b3748521af8eaaf9d2f5f2c8195514188",
+        "docx_sha256": "b70920d388b2a35538aa836088b3a31ff00f9cbdcd5e3c47890267753099d6d5",
+        "pdf_sha256": "957016306656e046daa29234d55f32fb93473d10a248dbecea5b2723ae0c21c8",
+        "pages": 17,
+        "editable_office_math_count": 9,
+        "editable_tables": 11,
+        "embedded_figures": 4,
+        "framework_pdf_matches_user_original": true,
+        "framework_png_embedded_byte_exact": true,
+        "local_manuscript_links_checked": 14,
+        "local_manuscript_links_missing": [],
+        "web_references": 9,
+        "web_reference_scope": "primary source pages checked during authoring, not automated by this script",
+        "rendered_equations_1_to_9_present": true,
+        "text_page_boundary_violations": [],
+        "current_stage_table_matches_frozen_summary": true,
+        "training_status": "completed_1000_of_1000",
+        "review_status": "method review ten items resolved; independent evidence review data and boundaries checked",
+        "authoring_simulator_interactions": 0,
+        "authoring_training_updates": 0,
+        "outputs": {
+          "JIT_中文论文草稿_20261011.docx": {
+            "path": "/home/qy/下载/JIT_中文论文草稿_20261011.docx",
+            "sha256": "b70920d388b2a35538aa836088b3a31ff00f9cbdcd5e3c47890267753099d6d5",
+            "bytes": 983199
+          },
+          "JIT_中文论文草稿_20261011.pdf": {
+            "path": "/home/qy/下载/JIT_中文论文草稿_20261011.pdf",
+            "sha256": "957016306656e046daa29234d55f32fb93473d10a248dbecea5b2723ae0c21c8",
+            "bytes": 1511849
+          },
+          "JIT_待补证据清单_20261011.md": {
+            "path": "/home/qy/下载/JIT_待补证据清单_20261011.md",
+            "sha256": "b0cf3301752f05e8770521e25b3b6cdddbf343173e4f4afe9c341bba874713ce",
+            "bytes": 2786,
+            "transformation": "Relative links point to the renamed Word/PDF files in Downloads"
+          }
         },
-        "JIT_中文论文草稿_20261011.pdf": {
-          "path": "/home/qy/下载/JIT_中文论文草稿_20261011.pdf",
-          "sha256": "957016306656e046daa29234d55f32fb93473d10a248dbecea5b2723ae0c21c8",
-          "bytes": 1511849
-        },
-        "JIT_待补证据清单_20261011.md": {
-          "path": "/home/qy/下载/JIT_待补证据清单_20261011.md",
-          "sha256": "b0cf3301752f05e8770521e25b3b6cdddbf343173e4f4afe9c341bba874713ce",
-          "bytes": 2786,
-          "transformation": "Relative links point to the renamed Word/PDF files in Downloads"
-        }
-      },
-      "all_17_pages_visually_reviewed": true,
-      "algorithm_heading_kept_with_first_step": true,
-      "figure_and_equation_pages_inspected": true
-    }
+        "all_17_pages_visually_reviewed": true,
+        "algorithm_heading_kept_with_first_step": true,
+        "figure_and_equation_pages_inspected": true
+      }
+    },
+    "text_bounds_checked": true
   },
-  "text_bounds_checked": true
+  "visually_checked_changed_pages": [
+    13
+  ],
+  "TRAIN_XY_checked": true,
+  "DEV_full_observation_mask_checked": "prefix_mask, not pulse mask"
 }

@@ -1,0 +1,28 @@
+{
+  "phase": "completed",
+  "stage": "T1_complete",
+  "pid": 890577,
+  "updated_unix": 1791728195.1802847,
+  "started_unix": 1791726603.539246,
+  "deadline_unix": 1791748203.539246,
+  "charged_interactions": 328308,
+  "maximum_new_interactions": 700200,
+  "cumulative_charged": 1451360,
+  "formal_training_transitions": 64000,
+  "formal_by_arm": {
+    "PPO_keep": 32000,
+    "PPO_demo_keep": 32000
+  },
+  "engineering_training_transitions": 6400,
+  "engineering_by_arm": {
+    "PPO_keep": 3200,
+    "PPO_demo_keep": 3200
+  },
+  "E_updates": 0,
+  "G_updates": 0,
+  "automatic_next_stage": false,
+  "published_policy": null,
+  "evaluation_status": "complete",
+  "t1_passed": false,
+  "wall_seconds": 1591.6371457576752
+}

@@ -1,0 +1,767 @@
+[
+  {
+    "stage": "reset",
+    "category": "reset_GPU",
+    "reservation": 200,
+    "charged": 200,
+    "phase": "completed"
+  },
+  {
+    "stage": "engineering_PPO_keep",
+    "category": "engineering_ppo",
+    "reservation": 3200,
+    "charged": 3200,
+    "phase": "completed",
+    "completed_training_transitions": 3200,
+    "actual_optimizer_updates": 8,
+    "wall_seconds": 52.016636963002384
+  },
+  {
+    "stage": "engineering_PPO_demo_keep",
+    "category": "engineering_ppo",
+    "reservation": 3200,
+    "charged": 3200,
+    "phase": "completed",
+    "completed_training_transitions": 3200,
+    "actual_optimizer_updates": 8,
+    "wall_seconds": 51.1576898179992
+  },
+  {
+    "stage": "train_PPO_keep",
+    "category": "PPO",
+    "reservation": 32000,
+    "charged": 32000,
+    "phase": "completed",
+    "completed_training_transitions": 32000,
+    "actual_optimizer_updates": 80,
+    "wall_seconds": 56.03320088400142
+  },
+  {
+    "stage": "train_PPO_demo_keep",
+    "category": "PPO",
+    "reservation": 32000,
+    "charged": 32000,
+    "phase": "completed",
+    "completed_training_transitions": 32000,
+    "actual_optimizer_updates": 80,
+    "wall_seconds": 56.53647769500094
+  },
+  {
+    "stage": "pi0_DEV_repeat1",
+    "category": "source_DEV_repeats",
+    "reservation": 25600,
+    "charged": 25600,
+    "phase": "completed",
+    "active_interactions": 4241,
+    "padding_interactions": 21359,
+    "wall_seconds": 13.331770689997938
+  },
+  {
+    "stage": "pi0_DEV_repeat2",
+    "category": "source_DEV_repeats",
+    "reservation": 25600,
+    "charged": 25600,
+    "phase": "completed",
+    "active_interactions": 4339,
+    "padding_interactions": 21261,
+    "wall_seconds": 8.950154336002015
+  },
+  {
+    "stage": "PPO_keep_DEV_repeat0",
+    "category": "student_DEV",
+    "reservation": 25600,
+    "charged": 25600,
+    "phase": "completed",
+    "active_interactions": 4520,
+    "padding_interactions": 21080,
+    "wall_seconds": 13.009823660999245
+  },
+  {
+    "stage": "PPO_keep_TRAIN_repeat0_root00",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 1139,
+    "phase": "completed",
+    "active_interactions": 1139,
+    "padding_interactions": 0,
+    "wall_seconds": 18.568366879000678
+  },
+  {
+    "stage": "PPO_keep_TRAIN_repeat0_root01",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 765,
+    "phase": "completed",
+    "active_interactions": 765,
+    "padding_interactions": 0,
+    "wall_seconds": 13.905046567000682
+  },
+  {
+    "stage": "PPO_keep_TRAIN_repeat0_root02",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 867,
+    "phase": "completed",
+    "active_interactions": 863,
+    "padding_interactions": 4,
+    "wall_seconds": 13.860489293998398
+  },
+  {
+    "stage": "PPO_keep_TRAIN_repeat0_root03",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 731,
+    "phase": "completed",
+    "active_interactions": 683,
+    "padding_interactions": 48,
+    "wall_seconds": 13.745006748999003
+  },
+  {
+    "stage": "PPO_keep_TRAIN_repeat0_root04",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 833,
+    "phase": "completed",
+    "active_interactions": 829,
+    "padding_interactions": 4,
+    "wall_seconds": 13.580090354997083
+  },
+  {
+    "stage": "PPO_keep_TRAIN_repeat0_root05",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 629,
+    "phase": "completed",
+    "active_interactions": 629,
+    "padding_interactions": 0,
+    "wall_seconds": 13.575143518999539
+  },
+  {
+    "stage": "PPO_keep_TRAIN_repeat0_root06",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 782,
+    "phase": "completed",
+    "active_interactions": 782,
+    "padding_interactions": 0,
+    "wall_seconds": 13.6549527199968
+  },
+  {
+    "stage": "PPO_keep_TRAIN_repeat0_root07",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 731,
+    "phase": "completed",
+    "active_interactions": 731,
+    "padding_interactions": 0,
+    "wall_seconds": 13.508418952998909
+  },
+  {
+    "stage": "PPO_keep_DEV_repeat1",
+    "category": "student_DEV",
+    "reservation": 25600,
+    "charged": 25600,
+    "phase": "completed",
+    "active_interactions": 4498,
+    "padding_interactions": 21102,
+    "wall_seconds": 6.810014275000867
+  },
+  {
+    "stage": "PPO_keep_TRAIN_repeat1_root00",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 1139,
+    "phase": "completed",
+    "active_interactions": 1139,
+    "padding_interactions": 0,
+    "wall_seconds": 13.737783337997826
+  },
+  {
+    "stage": "PPO_keep_TRAIN_repeat1_root01",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 765,
+    "phase": "completed",
+    "active_interactions": 765,
+    "padding_interactions": 0,
+    "wall_seconds": 13.607434789999388
+  },
+  {
+    "stage": "PPO_keep_TRAIN_repeat1_root02",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 867,
+    "phase": "completed",
+    "active_interactions": 866,
+    "padding_interactions": 1,
+    "wall_seconds": 13.605669403998036
+  },
+  {
+    "stage": "PPO_keep_TRAIN_repeat1_root03",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 680,
+    "phase": "completed",
+    "active_interactions": 680,
+    "padding_interactions": 0,
+    "wall_seconds": 13.565261044997897
+  },
+  {
+    "stage": "PPO_keep_TRAIN_repeat1_root04",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 833,
+    "phase": "completed",
+    "active_interactions": 832,
+    "padding_interactions": 1,
+    "wall_seconds": 13.60419903699949
+  },
+  {
+    "stage": "PPO_keep_TRAIN_repeat1_root05",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 629,
+    "phase": "completed",
+    "active_interactions": 629,
+    "padding_interactions": 0,
+    "wall_seconds": 13.506080939998355
+  },
+  {
+    "stage": "PPO_keep_TRAIN_repeat1_root06",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 782,
+    "phase": "completed",
+    "active_interactions": 782,
+    "padding_interactions": 0,
+    "wall_seconds": 13.596389638998517
+  },
+  {
+    "stage": "PPO_keep_TRAIN_repeat1_root07",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 731,
+    "phase": "completed",
+    "active_interactions": 731,
+    "padding_interactions": 0,
+    "wall_seconds": 13.581728436998674
+  },
+  {
+    "stage": "PPO_keep_DEV_repeat2",
+    "category": "student_DEV",
+    "reservation": 25600,
+    "charged": 25600,
+    "phase": "completed",
+    "active_interactions": 4522,
+    "padding_interactions": 21078,
+    "wall_seconds": 6.79705144500258
+  },
+  {
+    "stage": "PPO_keep_TRAIN_repeat2_root00",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 1139,
+    "phase": "completed",
+    "active_interactions": 1139,
+    "padding_interactions": 0,
+    "wall_seconds": 13.744708539001294
+  },
+  {
+    "stage": "PPO_keep_TRAIN_repeat2_root01",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 765,
+    "phase": "completed",
+    "active_interactions": 765,
+    "padding_interactions": 0,
+    "wall_seconds": 13.533651585999905
+  },
+  {
+    "stage": "PPO_keep_TRAIN_repeat2_root02",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 867,
+    "phase": "completed",
+    "active_interactions": 866,
+    "padding_interactions": 1,
+    "wall_seconds": 13.551799372999085
+  },
+  {
+    "stage": "PPO_keep_TRAIN_repeat2_root03",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 680,
+    "phase": "completed",
+    "active_interactions": 680,
+    "padding_interactions": 0,
+    "wall_seconds": 13.478263487999357
+  },
+  {
+    "stage": "PPO_keep_TRAIN_repeat2_root04",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 833,
+    "phase": "completed",
+    "active_interactions": 828,
+    "padding_interactions": 5,
+    "wall_seconds": 13.591233095001371
+  },
+  {
+    "stage": "PPO_keep_TRAIN_repeat2_root05",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 629,
+    "phase": "completed",
+    "active_interactions": 629,
+    "padding_interactions": 0,
+    "wall_seconds": 13.451205692999793
+  },
+  {
+    "stage": "PPO_keep_TRAIN_repeat2_root06",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 782,
+    "phase": "completed",
+    "active_interactions": 782,
+    "padding_interactions": 0,
+    "wall_seconds": 13.602003249001427
+  },
+  {
+    "stage": "PPO_keep_TRAIN_repeat2_root07",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 731,
+    "phase": "completed",
+    "active_interactions": 731,
+    "padding_interactions": 0,
+    "wall_seconds": 13.571211468999536
+  },
+  {
+    "stage": "PPO_keep_SOLVER_DEV_repeat0_root00",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 1122,
+    "phase": "completed",
+    "active_interactions": 1122,
+    "padding_interactions": 0,
+    "wall_seconds": 13.808613423996576
+  },
+  {
+    "stage": "PPO_keep_SOLVER_DEV_repeat0_root01",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 714,
+    "phase": "completed",
+    "active_interactions": 710,
+    "padding_interactions": 4,
+    "wall_seconds": 13.526124982003239
+  },
+  {
+    "stage": "PPO_keep_SOLVER_DEV_repeat0_root02",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 561,
+    "phase": "completed",
+    "active_interactions": 561,
+    "padding_interactions": 0,
+    "wall_seconds": 13.539682662001724
+  },
+  {
+    "stage": "PPO_keep_SOLVER_DEV_repeat0_root03",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 680,
+    "phase": "completed",
+    "active_interactions": 680,
+    "padding_interactions": 0,
+    "wall_seconds": 13.548178634999203
+  },
+  {
+    "stage": "PPO_keep_SOLVER_DEV_repeat0_root04",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 561,
+    "phase": "completed",
+    "active_interactions": 561,
+    "padding_interactions": 0,
+    "wall_seconds": 13.600243142002
+  },
+  {
+    "stage": "PPO_keep_SOLVER_DEV_repeat0_root05",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 544,
+    "phase": "completed",
+    "active_interactions": 544,
+    "padding_interactions": 0,
+    "wall_seconds": 13.362445798000408
+  },
+  {
+    "stage": "PPO_keep_SOLVER_DEV_repeat0_root06",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 663,
+    "phase": "completed",
+    "active_interactions": 663,
+    "padding_interactions": 0,
+    "wall_seconds": 13.522569427001145
+  },
+  {
+    "stage": "PPO_demo_keep_DEV_repeat0",
+    "category": "student_DEV",
+    "reservation": 25600,
+    "charged": 25600,
+    "phase": "completed",
+    "active_interactions": 4336,
+    "padding_interactions": 21264,
+    "wall_seconds": 10.13850379699943
+  },
+  {
+    "stage": "PPO_demo_keep_TRAIN_repeat0_root00",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 1122,
+    "phase": "completed",
+    "active_interactions": 1094,
+    "padding_interactions": 28,
+    "wall_seconds": 16.917557327000395
+  },
+  {
+    "stage": "PPO_demo_keep_TRAIN_repeat0_root01",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 731,
+    "phase": "completed",
+    "active_interactions": 730,
+    "padding_interactions": 1,
+    "wall_seconds": 13.454717137999978
+  },
+  {
+    "stage": "PPO_demo_keep_TRAIN_repeat0_root02",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 1530,
+    "phase": "completed",
+    "active_interactions": 1242,
+    "padding_interactions": 288,
+    "wall_seconds": 14.026919837000605
+  },
+  {
+    "stage": "PPO_demo_keep_TRAIN_repeat0_root03",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 697,
+    "phase": "completed",
+    "active_interactions": 697,
+    "padding_interactions": 0,
+    "wall_seconds": 13.613615776997904
+  },
+  {
+    "stage": "PPO_demo_keep_TRAIN_repeat0_root04",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 714,
+    "phase": "completed",
+    "active_interactions": 714,
+    "padding_interactions": 0,
+    "wall_seconds": 13.511773091999203
+  },
+  {
+    "stage": "PPO_demo_keep_TRAIN_repeat0_root05",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 663,
+    "phase": "completed",
+    "active_interactions": 663,
+    "padding_interactions": 0,
+    "wall_seconds": 13.424869661997946
+  },
+  {
+    "stage": "PPO_demo_keep_TRAIN_repeat0_root06",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 680,
+    "phase": "completed",
+    "active_interactions": 680,
+    "padding_interactions": 0,
+    "wall_seconds": 13.561502704000304
+  },
+  {
+    "stage": "PPO_demo_keep_TRAIN_repeat0_root07",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 663,
+    "phase": "completed",
+    "active_interactions": 663,
+    "padding_interactions": 0,
+    "wall_seconds": 13.560443090998888
+  },
+  {
+    "stage": "PPO_demo_keep_DEV_repeat1",
+    "category": "student_DEV",
+    "reservation": 25600,
+    "charged": 25600,
+    "phase": "completed",
+    "active_interactions": 4370,
+    "padding_interactions": 21230,
+    "wall_seconds": 6.806170249998104
+  },
+  {
+    "stage": "PPO_demo_keep_TRAIN_repeat1_root00",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 1122,
+    "phase": "completed",
+    "active_interactions": 1079,
+    "padding_interactions": 43,
+    "wall_seconds": 13.825254027997289
+  },
+  {
+    "stage": "PPO_demo_keep_TRAIN_repeat1_root01",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 731,
+    "phase": "completed",
+    "active_interactions": 730,
+    "padding_interactions": 1,
+    "wall_seconds": 13.517046470999048
+  },
+  {
+    "stage": "PPO_demo_keep_TRAIN_repeat1_root02",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 1224,
+    "phase": "completed",
+    "active_interactions": 1224,
+    "padding_interactions": 0,
+    "wall_seconds": 13.812296281997988
+  },
+  {
+    "stage": "PPO_demo_keep_TRAIN_repeat1_root03",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 697,
+    "phase": "completed",
+    "active_interactions": 697,
+    "padding_interactions": 0,
+    "wall_seconds": 13.517593287000636
+  },
+  {
+    "stage": "PPO_demo_keep_TRAIN_repeat1_root04",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 714,
+    "phase": "completed",
+    "active_interactions": 714,
+    "padding_interactions": 0,
+    "wall_seconds": 13.469799829999829
+  },
+  {
+    "stage": "PPO_demo_keep_TRAIN_repeat1_root05",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 663,
+    "phase": "completed",
+    "active_interactions": 663,
+    "padding_interactions": 0,
+    "wall_seconds": 13.504870474997006
+  },
+  {
+    "stage": "PPO_demo_keep_TRAIN_repeat1_root06",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 680,
+    "phase": "completed",
+    "active_interactions": 680,
+    "padding_interactions": 0,
+    "wall_seconds": 13.539511765000498
+  },
+  {
+    "stage": "PPO_demo_keep_TRAIN_repeat1_root07",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 663,
+    "phase": "completed",
+    "active_interactions": 663,
+    "padding_interactions": 0,
+    "wall_seconds": 13.557073583000602
+  },
+  {
+    "stage": "PPO_demo_keep_DEV_repeat2",
+    "category": "student_DEV",
+    "reservation": 25600,
+    "charged": 25600,
+    "phase": "completed",
+    "active_interactions": 4344,
+    "padding_interactions": 21256,
+    "wall_seconds": 6.708403248998366
+  },
+  {
+    "stage": "PPO_demo_keep_TRAIN_repeat2_root00",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 1122,
+    "phase": "completed",
+    "active_interactions": 1103,
+    "padding_interactions": 19,
+    "wall_seconds": 13.839521533998777
+  },
+  {
+    "stage": "PPO_demo_keep_TRAIN_repeat2_root01",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 748,
+    "phase": "completed",
+    "active_interactions": 733,
+    "padding_interactions": 15,
+    "wall_seconds": 13.564906965999398
+  },
+  {
+    "stage": "PPO_demo_keep_TRAIN_repeat2_root02",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 1904,
+    "phase": "completed",
+    "active_interactions": 1264,
+    "padding_interactions": 640,
+    "wall_seconds": 14.156868493999355
+  },
+  {
+    "stage": "PPO_demo_keep_TRAIN_repeat2_root03",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 697,
+    "phase": "completed",
+    "active_interactions": 697,
+    "padding_interactions": 0,
+    "wall_seconds": 13.563149292000162
+  },
+  {
+    "stage": "PPO_demo_keep_TRAIN_repeat2_root04",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 714,
+    "phase": "completed",
+    "active_interactions": 714,
+    "padding_interactions": 0,
+    "wall_seconds": 13.570285321999108
+  },
+  {
+    "stage": "PPO_demo_keep_TRAIN_repeat2_root05",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 663,
+    "phase": "completed",
+    "active_interactions": 663,
+    "padding_interactions": 0,
+    "wall_seconds": 13.490799372000765
+  },
+  {
+    "stage": "PPO_demo_keep_TRAIN_repeat2_root06",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 680,
+    "phase": "completed",
+    "active_interactions": 680,
+    "padding_interactions": 0,
+    "wall_seconds": 13.611939145001088
+  },
+  {
+    "stage": "PPO_demo_keep_TRAIN_repeat2_root07",
+    "category": "TRAIN_repeats",
+    "reservation": 6800,
+    "charged": 663,
+    "phase": "completed",
+    "active_interactions": 663,
+    "padding_interactions": 0,
+    "wall_seconds": 13.656911850001052
+  },
+  {
+    "stage": "PPO_demo_keep_SOLVER_DEV_repeat0_root00",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 1122,
+    "phase": "completed",
+    "active_interactions": 1122,
+    "padding_interactions": 0,
+    "wall_seconds": 13.834676506001415
+  },
+  {
+    "stage": "PPO_demo_keep_SOLVER_DEV_repeat0_root01",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 901,
+    "phase": "completed",
+    "active_interactions": 901,
+    "padding_interactions": 0,
+    "wall_seconds": 13.570611200000712
+  },
+  {
+    "stage": "PPO_demo_keep_SOLVER_DEV_repeat0_root02",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 561,
+    "phase": "completed",
+    "active_interactions": 561,
+    "padding_interactions": 0,
+    "wall_seconds": 13.516011296000215
+  },
+  {
+    "stage": "PPO_demo_keep_SOLVER_DEV_repeat0_root03",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 680,
+    "phase": "completed",
+    "active_interactions": 680,
+    "padding_interactions": 0,
+    "wall_seconds": 13.451845205003337
+  },
+  {
+    "stage": "PPO_demo_keep_SOLVER_DEV_repeat0_root04",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 561,
+    "phase": "completed",
+    "active_interactions": 561,
+    "padding_interactions": 0,
+    "wall_seconds": 13.434882454999752
+  },
+  {
+    "stage": "PPO_demo_keep_SOLVER_DEV_repeat0_root05",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 544,
+    "phase": "completed",
+    "active_interactions": 544,
+    "padding_interactions": 0,
+    "wall_seconds": 13.455123742998694
+  },
+  {
+    "stage": "PPO_demo_keep_SOLVER_DEV_repeat0_root06",
+    "category": "snapshot_first",
+    "reservation": 6800,
+    "charged": 680,
+    "phase": "completed",
+    "active_interactions": 679,
+    "padding_interactions": 1,
+    "wall_seconds": 13.48825649400169
+  },
+  {
+    "stage": "panel_PPO_keep",
+    "category": "TRAIN_panels",
+    "reservation": 1600,
+    "charged": 1600,
+    "phase": "completed",
+    "active_interactions": 254,
+    "padding_interactions": 1346
+  },
+  {
+    "stage": "panel_PPO_demo_keep",
+    "category": "TRAIN_panels",
+    "reservation": 1600,
+    "charged": 1600,
+    "phase": "completed",
+    "active_interactions": 232,
+    "padding_interactions": 1368
+  }
+]

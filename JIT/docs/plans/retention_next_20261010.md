@@ -161,3 +161,7 @@ Final preparation refinement: supplement `D2_002/report_004/formal_preparation.j
 2026-10-11执行收据：T0通过；T1_paired_ppo_001在四池构建RNG形状混用时停止，两臂0/32000、保守charged200、D2累计1123052。原失败不重试；共同边界统一typed RNG并新增真实构造器CPU回归，GPU尚未重检。下一执行阶段应新建plan、重新计入工程预算并核实reward/loss HTTP，不能恢复001或释放正式矩阵。详见[工程停止收据](../evidence/retention_next_20261010/T1_paired_ppo_001/INDEX.md)。
 
 用户随后明确“修复并且继续”：T1_002源码29174b3，carry prior001失败200，prior1123052，本阶段700200，最坏累计1823252。GPUreset与两臂工程门通过；正式两臂各32000/80更新、完整learner验收通过，当前固定评价运行中。独立TensorBoard6033的两个正式reward/total_loss已HTTP加载，watcher已送达训练阶段完成。原001失败不改写，TEST与正式15运行关闭。见[新阶段收据](../evidence/retention_next_20261010/T1_paired_ppo_002/INDEX.md)。
+
+2026-10-11结果回收：T1_002完整机制未通过，TRAIN稳定两臂1/8、solver1/7；DEV对照56/56/57、教案54/55/54，稳定新增/旧失/净增10/3/+7与6/0/+6。新charged328308、D2累计1451360，正式矩阵/TEST暂停，未采用。用户要求分析并继续，本轮完成保存48条TRAIN轨迹、全64 DEV×三模型×三次及solver XY、独立门槛重算、7291共同TRAIN观测交叉推理、六个保存节点固定TRAIN求导；物理0/学习0。
+
+下一有限机制方案（设计，尚未执行）：从同π0、同数据、同四池和同pilot重新只做一个3200转移工程批次，更新全部丢弃；目标不是新的能力排名，而是记录真实minibatch四目标梯度、Adam前状态、clip前后和实际参数增量，离线逐项移除/缩放必须clone同一个前状态，不新采样、不调用DEV梯度。首更新记录完整参数/RNG/minibatchID，后七次只为验证实际流，既有运行不改写。具体capture接口与配置需补齐，当前不提供假命令冒充可执行；不自动使用剩余548640，也不增加旧T1到64k/128k。不修改physics/network/目标判据、不换种子，formal gate仍原标准。待归因结果支持具体优化变化后才能冻结另一个学习试验；若没有可验证机制，交付UNKNOWN并暂停训练。本次完成的是零交互诊断，capture实验尚未开始。

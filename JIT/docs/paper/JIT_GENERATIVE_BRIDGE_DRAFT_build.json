@@ -1,22 +1,23 @@
 {
   "source": "/home/qy/DVGC/runs/worktrees/jit-retention-first/JIT/docs/paper/JIT_GENERATIVE_BRIDGE_DRAFT.md",
-  "source_sha256": "efb87267ad959531121a2203900e347736f084b53ab54c2b75cb1f62afdf2daa",
+  "source_sha256": "1ef4b9106bc37b9a4caeb057d92e0c6757b7a74057d0ab35ff6f0d5847c9946c",
   "docx": "/home/qy/DVGC/runs/worktrees/jit-retention-first/JIT/docs/paper/JIT_GENERATIVE_BRIDGE_DRAFT.docx",
-  "docx_sha256": "ca024eee83e440f4a768b941b0f1b3ebe8e81093731d5b431bfdbb9b794ff9ae",
+  "docx_sha256": "ee595e00af58aa6911b763c5e426ed19a46eb85bca4b59d6a1b9a879aa332c8a",
   "images": [
     "/home/qy/DVGC/runs/worktrees/jit-retention-first/JIT/docs/paper/generative_bridge_assets/framework.png",
     "/home/qy/DVGC/runs/worktrees/jit-retention-first/JIT/docs/evidence/retention_next_20261010/self_visit/root_03_xy.png",
     "/home/qy/DVGC/runs/worktrees/jit-retention-first/JIT/docs/evidence/retention_next_20261010/self_visit_demo/xy_train_roots.png",
+    "/home/qy/DVGC/runs/worktrees/jit-retention-first/JIT/docs/paper/generative_bridge_assets/t1_train_roots.png",
     "/home/qy/DVGC/runs/worktrees/jit-retention-first/JIT/docs/paper/generative_bridge_assets/sim2sim_paired_landing.png"
   ],
-  "image_count": 4,
+  "image_count": 5,
   "equation_count": 9,
-  "table_count": 11,
+  "table_count": 12,
   "simulator_interactions": 0,
   "training_updates": 0,
   "math": "editable Office Math linear notation",
   "pdf_built": true,
   "pdf": "/home/qy/DVGC/runs/worktrees/jit-retention-first/JIT/docs/paper/JIT_GENERATIVE_BRIDGE_DRAFT.pdf",
-  "pdf_sha256": "f9ed1d08ed7ed7a439cbf9b7400a2d8b568eaacec523b29cadb5e0d25cfa4a75",
-  "pdfinfo": "Title:           JIT：面向跳跃策略能力扩展的可学习探索与生成式恢复指导\nSubject:         中文研究草稿；真实开发证据与待补实验分开标注\nAuthor:          DVGC / JIT Research\nCreator:         Writer\nProducer:        LibreOffice 7.3\nCreationDate:    Sun Oct 11 21:25:17 2026 CST\nCustom Metadata: no\nMetadata Stream: no\nTagged:          no\nUserProperties:  no\nSuspects:        no\nForm:            none\nJavaScript:      no\nPages:           18\nEncrypted:       no\nPage size:       595.304 x 841.89 pts (A4)\nPage rot:        0\nFile size:       1531577 bytes\nOptimized:       no\nPDF version:     1.6\n"
+  "pdf_sha256": "c31523708bc692d5cc23e1dac61830feea48ec1ffeb8399ec72931fffb6b0ae6",
+  "pdfinfo": "Title:           JIT：面向跳跃策略能力扩展的可学习探索与生成式恢复指导\nSubject:         中文研究草稿；真实开发证据与待补实验分开标注\nAuthor:          DVGC / JIT Research\nCreator:         Writer\nProducer:        LibreOffice 7.3\nCreationDate:    Sun Oct 11 23:13:21 2026 CST\nCustom Metadata: no\nMetadata Stream: no\nTagged:          no\nUserProperties:  no\nSuspects:        no\nForm:            none\nJavaScript:      no\nPages:           19\nEncrypted:       no\nPage size:       595.304 x 841.89 pts (A4)\nPage rot:        0\nFile size:       1764367 bytes\nOptimized:       no\nPDF version:     1.6\n"
 }
