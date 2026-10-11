@@ -11,13 +11,39 @@ def observation_fields(previous,next_state,action,*,enabled):
             'actuator_targets_after_mapping':next_state.data.ctrl}
 
 
-def prefix_action(tick,source_action,prefixes,source_only):
+def prefix_action(tick,source_action,prefixes,source_only,*,execution_horizon=16):
     import jax.numpy as jp
-    return jp.where(((tick<16)&~source_only)[:,None],
+    return jp.where(((tick<execution_horizon)&~source_only)[:,None],
                     prefixes[:,jp.minimum(tick,15),:],source_action)
 
 
+def bridge_execution_horizon(spec):
+    horizon=spec.get('bridge_execution_horizon',16)
+    if type(horizon) is not int or horizon not in (4,8,12,16):
+        raise ValueError('bridge execution horizon must be4/8/12/16')
+    if 'bridge_execution_horizon' in spec and spec.get('bridge_action_plan') is None:
+        raise ValueError('bridge execution horizon requires a bridge plan')
+    return horizon
+
+
+def validate_snapshot_capture(spec,count):
+    """Opt-in post-step capture uses explicit lanes in one complete batch."""
+    steps=spec.get('capture_snapshot_steps',[]);lanes=spec.get('capture_snapshot_lanes',[])
+    if not steps and not lanes and 'capture_snapshot_steps' not in spec and 'capture_snapshot_lanes' not in spec:
+        return [],[]
+    if (not isinstance(steps,list) or not steps or steps!=sorted(set(steps))
+            or any(type(s) is not int or not 1<=s<=spec.get('horizon',0) for s in steps)
+            or not isinstance(lanes,list) or not lanes or len(set(lanes))!=len(lanes)
+            or any(type(l) is not int or not 0<=l<count for l in lanes)
+            or len(spec.get('order',[]))!=1 or spec.get('full_matrix') is not True
+            or spec.get('preserve_snapshot_episode_context') is not True
+            or spec.get('reuse_results') or spec.get('evaluation_batch_size') is not None):
+        raise ValueError('invalid complete-layout snapshot capture contract')
+    return steps,lanes
+
+
 def load_prefix_plan(spec,rows):
+    bridge_execution_horizon(spec)
     plan=spec.get('bridge_action_plan')
     if plan is None:return None
     if len(spec['order'])!=1 or spec.get('success_criterion')!='stable_forward_recovery':
@@ -53,6 +79,7 @@ def closed_loop_action(tick, observations, keys, tail_policy, prefix_policy=None
 
 
 def validate_evaluation_options(spec, members):
+    bridge_execution_horizon(spec)
     prefix = spec.get('closed_loop_prefix_policy')
     if prefix is not None:
         if (not isinstance(prefix, str) or prefix not in members
@@ -83,7 +110,8 @@ def evaluation_controller_provenance(spec, actual_policy, members):
             prefix_policy=prefix, prefix_actor_sha256=members[prefix]['policy']['actor_sha256'],
             tail_actor_sha256=actual_policy['actor_sha256'], handoff_tick=16, reset_at_handoff=False)
     if spec.get('bridge_action_plan') is not None:
-        result.update(controller_kind='composite_teacher', actor_witness_eligible=False)
+        result.update(controller_kind='composite_teacher', actor_witness_eligible=False,
+                      handoff_tick=bridge_execution_horizon(spec),reset_at_handoff=False)
     return result
 
 

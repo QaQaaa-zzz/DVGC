@@ -1,0 +1,259 @@
+{
+  "schema": "jit_sim2sim_identity_audit_v1",
+  "audited_at": "2026-10-11T05:37:47.768721+00:00",
+  "source_type": "repo_artifact",
+  "verification_level": "artifact_checked",
+  "verification_scope": "Live file hashes, identities, existing raw criterion inputs and offline exact rescoring; no new dynamics reproduction.",
+  "new_interactions": {
+    "control_transitions": 0,
+    "physics_substeps": 0,
+    "student_updates": 0,
+    "PPO_updates": 0,
+    "E_updates": 0,
+    "G_updates": 0
+  },
+  "sim2sim_model": {
+    "checkpoint": "/home/qy/ISAAC——SIM/runs/experiments/physx_jump_ori_from9904128_kd5_5ms_10m_20260928/training/checkpoints/transition_01966080",
+    "actor_npz": "/home/qy/ISAAC——SIM/runs/experiments/physx_jump_ori_from9904128_kd5_5ms_10m_20260928/training/checkpoints/transition_01966080/actor.npz",
+    "actor_npz_sha256": "d2648c4f33b3e191293d2a4281d9a95f475f2a2be09c14a0ad8f605235c2d1a0",
+    "saved_copy": "/home/qy/ISAAC——SIM/worktrees/jump-landing-v2/sim2sim_v2/runs/deliveries/dual_landing_01966080_20261009/checkpoint/actor.npz",
+    "saved_copy_sha256": "d2648c4f33b3e191293d2a4281d9a95f475f2a2be09c14a0ad8f605235c2d1a0",
+    "actor_npz_includes_normalizer": true,
+    "parent_checkpoint": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_jump_ori_sim2sim_vxgt02_10002432_seed820707_20260928/checkpoints/transition_9904128",
+    "parent_training_transitions": 9904128,
+    "parent_payload_sha256": "b09f4ab4da336f114b0fda50d66ed7730db04b42fd4151abfbc200d431804f2d",
+    "additional_PhysX_training_transitions": 1966080,
+    "optimizer_initialization": "fresh_optax_adam_source_checkpoint_has_no_optimizer",
+    "source_environment_declaration": "/home/qy/ISAAC——SIM/worktrees/jump-landing-v2/sim2sim_v2/runs/no_speed_dual_landing/mjx_warm01966080/declaration.json",
+    "source_environment_root": "/home/qy/DVGC/JIT/runs/code_snapshots/jump_ori_sim2sim_vxgt02_20260928/JIT/src",
+    "evaluation_overrides": {
+      "sim2sim_randomization": null,
+      "sim2sim_low_speed_failure": null
+    },
+    "adoption_status": "engineering_display_candidate; paper_generalization_not_adopted"
+  },
+  "sim2sim_evidence": {
+    "report": "/home/qy/ISAAC——SIM/worktrees/jump-landing-v2/sim2sim_v2/runs/no_speed_dual_landing/REPORT.md",
+    "XY_and_landing_figure": "/home/qy/ISAAC——SIM/worktrees/jump-landing-v2/sim2sim_v2/runs/no_speed_dual_landing/paired_landing.png",
+    "paired_identity": "/home/qy/ISAAC——SIM/worktrees/jump-landing-v2/sim2sim_v2/runs/no_speed_dual_landing/paired_identity.json",
+    "paired_results": [
+      {
+        "engine": "MJX-Warp",
+        "checkpoint": "transition_01966080",
+        "actor_sha256": "d2648c4f33b3e191293d2a4281d9a95f475f2a2be09c14a0ad8f605235c2d1a0",
+        "takeoff_s": 0.74,
+        "apex_s": 1.0,
+        "touchdown_s": 1.3,
+        "strict_landing_s": 2.68,
+        "longest_hold_s": 1.1000000000000005,
+        "end_s": 8.0,
+        "end_code": 9,
+        "final_x_m": 18.80554962158203,
+        "final_y_m": 0.3462080955505371,
+        "final_z_m": 0.11892379075288773,
+        "strict_pass": true,
+        "contact_invalid_ticks": 0
+      },
+      {
+        "engine": "Isaac / PhysX",
+        "checkpoint": "transition_01966080",
+        "actor_sha256": "d2648c4f33b3e191293d2a4281d9a95f475f2a2be09c14a0ad8f605235c2d1a0",
+        "takeoff_s": 0.98,
+        "apex_s": 1.24,
+        "touchdown_s": 1.54,
+        "strict_landing_s": 2.8000000000000003,
+        "longest_hold_s": 5.679999999999967,
+        "end_s": 8.0,
+        "end_code": 9,
+        "final_x_m": 8.17945671081543,
+        "final_y_m": 0.5246222019195557,
+        "final_z_m": 0.1195095106959343,
+        "strict_pass": true,
+        "contact_invalid_ticks": 0
+      }
+    ],
+    "offline_score_recomputation": [
+      {
+        "input_path": "/home/qy/ISAAC——SIM/worktrees/jump-landing-v2/sim2sim_v2/runs/no_speed_dual_landing/mjx_warm01966080/landing_inputs.json",
+        "result_path": "/home/qy/ISAAC——SIM/worktrees/jump-landing-v2/sim2sim_v2/runs/no_speed_dual_landing/mjx_warm01966080/landing.json",
+        "rows": 400,
+        "offline_score_exact_equal": true
+      },
+      {
+        "input_path": "/home/qy/ISAAC——SIM/worktrees/jump-landing-v2/sim2sim_v2/runs/no_speed_dual_landing/physx_warm01966080/landing_inputs_lane_0.json",
+        "result_path": "/home/qy/ISAAC——SIM/worktrees/jump-landing-v2/sim2sim_v2/runs/no_speed_dual_landing/physx_warm01966080/landing_lane_0.json",
+        "rows": 400,
+        "offline_score_exact_equal": true
+      }
+    ],
+    "scorer": "/home/qy/ISAAC——SIM/worktrees/jump-landing-v2/sim2sim_v2/landing_evaluation.py",
+    "scorer_sha256": "0e875984611bd83c9f402d8b68057f06aac1d5587187de07ca3f118721854b62",
+    "data_role": "fixed development natural start used for checkpoint screening",
+    "independent_starts_per_engine": 1,
+    "nominal_root_position_m": [
+      1.5,
+      0.0,
+      0.15
+    ],
+    "criteria": {
+      "schema": "landing_no_forward_speed_20261009",
+      "physics_dt": 0.005,
+      "control_dt": 0.02,
+      "contact_weight_fraction": 0.02,
+      "support_weight_fraction": 0.1,
+      "nonwheel_weight_fraction": 0.01,
+      "roll_limit_rad": 0.17453292519943295,
+      "pitch_limit_rad": 0.2617993877991494,
+      "angular_rate_limit": 1.0,
+      "lateral_speed_limit": 0.25,
+      "min_forward_speed": null,
+      "speed_tracking_reference": 2.0,
+      "speed_tracking_tolerance": 0.2,
+      "hold_times_s": [
+        0.5,
+        1.0
+      ],
+      "ground_contact_confirm_ticks": 2,
+      "touchdown_confirm_ticks": 2,
+      "angular_rate_convention": "body angular velocity x/y, not Euler angle derivatives",
+      "takeoff_confirm_ticks": 2,
+      "min_takeoff_vz": 0.05,
+      "min_clearance_m": 0.002,
+      "platform_front_m": 3.6
+    },
+    "target_calibration": {
+      "rear_kd": 5.0,
+      "physics_dt_s": 0.005,
+      "control_dt_s": 0.02,
+      "isotropic_friction": 0.5,
+      "combine": "min",
+      "source_anisotropic_contact_preserved": false
+    },
+    "delivery_index": "/home/qy/ISAAC——SIM/worktrees/jump-landing-v2/sim2sim_v2/runs/deliveries/dual_landing_01966080_20261009/INDEX.md",
+    "local_implementation_commit": "074096518cb7523c0897554d042a0a24d65626b3",
+    "remote_status": "latest dual-landing success local-only per ledger; remote not rechecked"
+  },
+  "retention_pi0": {
+    "identity_comparison": "/home/qy/DVGC/JIT/runs/monitoring/bridge_pi0_hard_initial1000_20261010/identity_comparison.json",
+    "checkpoint": "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/binding/bridge_baseline/checkpoints/transition_0",
+    "phase_u_source_checkpoint": "/home/qy/DVGC/JIT/runs/phase_u/phase_u_v4_speed2_roll400_missed200_9977856_seed820701_20260826/checkpoints/transition_4988928",
+    "actor_pytree_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+    "normalizer_pytree_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+    "payload_sha256_recomputed": "dc74f572683e873dcf7661e454a53f259171efd82ec33edcf7afb071acfdad31",
+    "zero_update_binding": true,
+    "formal_config": "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/runtime_config.json",
+    "success_criterion": "stable_forward_recovery",
+    "descent_config": "/home/qy/DVGC/JIT/configs/descent_stable_forward_0p5s.json",
+    "descent_config_file_sha256": "70a249e540474a1c0b4e517729ea42d0f2fd1ff68dd730cfc25d766507d100cd",
+    "descent_config_canonical_sha256": "9819ec3e24c090d7662654f46caed68f635c51ce335fbd23f2682f0d17c906a8",
+    "success_contract": {
+      "recovery_ticks": 25,
+      "continuous_stability": true,
+      "stable_min_forward_velocity": 0.5,
+      "stable_max_abs_roll": 0.17453292519943295,
+      "stable_max_abs_pitch": 0.2617993877991494,
+      "stable_max_wheel_clearance": 0.02,
+      "max_wheel_penetration": 0.01,
+      "terminate_on_body_contact": true
+    },
+    "endpoint": "Valid contact followed by 25 subsequent continuously stable control ticks (0.5 s); no concurrent physical failure or timeout.",
+    "nominal_root_position_m": [
+      2.5,
+      0.0,
+      0.15
+    ]
+  },
+  "identity_comparison": {
+    "same_model": false,
+    "same_success_protocol": false,
+    "retention_source_transitions": 4988928,
+    "sim2sim_source_transitions": 9904128,
+    "sim2sim_target_adaptation_transitions": 1966080,
+    "export_of_retention_phase_source": "/home/qy/ISAAC——SIM/policy/actor.npz",
+    "export_identity_file": "/home/qy/ISAAC——SIM/policy/identity.json",
+    "export_npz_sha256": "c454c998b193c16f24ab0bb78834f852599eb56d2934dc4f2b0227bb5852e6fb",
+    "array_comparison_against_sim2sim": {
+      "hidden_0_bias": {
+        "equal": false,
+        "max_abs_difference": 0.11764891445636749
+      },
+      "hidden_0_kernel": {
+        "equal": false,
+        "max_abs_difference": 0.5223417282104492
+      },
+      "hidden_1_bias": {
+        "equal": false,
+        "max_abs_difference": 0.13651253283023834
+      },
+      "hidden_1_kernel": {
+        "equal": false,
+        "max_abs_difference": 0.3958697021007538
+      },
+      "hidden_2_bias": {
+        "equal": false,
+        "max_abs_difference": 0.17590738832950592
+      },
+      "hidden_2_kernel": {
+        "equal": false,
+        "max_abs_difference": 0.3253974914550781
+      },
+      "hidden_3_bias": {
+        "equal": false,
+        "max_abs_difference": 0.03772251680493355
+      },
+      "hidden_3_kernel": {
+        "equal": false,
+        "max_abs_difference": 0.30014538764953613
+      },
+      "mean": {
+        "equal": false,
+        "max_abs_difference": 3.0703392028808594
+      },
+      "std": {
+        "equal": false,
+        "max_abs_difference": 7.644706726074219
+      }
+    },
+    "hash_warning": "NPZ file digests and parameter-pytree digests are different representations. Model distinction uses lineage and exported array comparison, not cross-format digest comparison."
+  },
+  "jump_ori_alias": {
+    "manifest": "/home/qy/DVGC/JIT/runs/model_registry/jump_ori/manifest.json",
+    "verified_pinned_file_count": 7,
+    "names_environment_not_actor": true,
+    "sim2sim_run_is_derived_DR_and_low_speed_variant": true
+  },
+  "limitations": [
+    "Only one fixed development natural start per engine, selected through historical checkpoint screening; not independent TEST or a generalization estimate.",
+    "The candidate received 1,966,080 PhysX PPO transitions, so this is not zero-shot MuJoCo-to-PhysX transfer.",
+    "Sim2sim 1 s landing has no minimum forward speed; retention uses a different 0.5 s recovery window and forward velocity >=0.5 m/s.",
+    "Nominal start differs: sim2sim x=1.5 m versus retention x=2.5 m.",
+    "PhysX actuator/contact calibration differs from MJX; reset/contact-history and batch-layout sensitivity remains unresolved.",
+    "No evidence checked here establishes dual-engine landing for retention pi0, R5, or the BC student.",
+    "No sim2real evidence.",
+    "Offline rescoring reuses the existing scorer and recorded criterion inputs, without new extraction from raw contacts or dynamics reproduction."
+  ],
+  "minimum_next_evidence_matrix_proposal": {
+    "execution_authorized_by_this_file": false,
+    "models": [
+      "retention pi0",
+      "frozen selected student",
+      "sim2sim01966080 as separate engineering reference"
+    ],
+    "source_task": [
+      "fixed paired natural starts without pulse",
+      "same starts with predeclared pulse onsets/amplitudes",
+      "retained/new capability subsets with both/gained/lost/unknown counts"
+    ],
+    "transfer_task": [
+      "pi0 and selected student through the same explicit deployment adapter",
+      "paired unseen small natural-start perturbations under one frozen common task criterion"
+    ],
+    "report": [
+      "per-model actor/normalizer/config identity",
+      "single-policy natural-start completion, teacher-assisted suffix separately",
+      "success numerator/denominator, failure causes, paired gained/lost, complete cost",
+      "XY and height, contact/attitude/velocity, hold intervals and failures"
+    ],
+    "boundary": "Do not aggregate 0.5 s forward recovery and 1 s no-speed landing, or distinct model lineages, into one success percentage."
+  }
+}

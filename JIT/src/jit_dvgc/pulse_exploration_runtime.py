@@ -440,8 +440,59 @@ def collect(spec, output):
     write(output/'status.json',dict(phase='completed',charged_interactions=0 if spec.get('reuse_prefix_collection') else physical_count,active_interactions=active_count,padding_interactions=physical_count-active_count,waiting_interactions=active_count-int(tape['mask'].sum()),pulse_training_steps=int(tape['mask'].sum()) if mode=='learned_residual' and not spec.get('frozen_explorer_evaluation') else 0,pulse_applied_steps=int(tape['mask'].sum()),pulse_start_step=delay if event is None and not mixed else None,pulse_batch_mode=spec.get('pulse_batch_mode','single'),onset_counts={str(int(t)):int((delays==t).sum()) for t in np.unique(delays)},pulse_event=event,stage_not_reached=sum(not r['stage_reached'] for r in rows),executed_ticks=executed_ticks,wall_seconds=time.monotonic()-start,**scheduled_pulse_summary(spec,tape,rows)))
 
 
+def snapshot_capture_fields(state,lanes):
+    """Retain canonical post-step snapshot leaves only for requested lanes."""
+    from .exploration_continuation import snapshot_arrays
+    return {'snap/'+k:v[np.asarray(lanes)] for k,v in snapshot_arrays(state).items()}
+
+
+def export_evaluation_snapshots(spec,rows,tape,env,record,trace_path,output):
+    """Save reached nonterminal contexts; no reconstruction from q/qdot alone."""
+    from .generative_bridge.rollout import validate_snapshot_capture
+    from .exploration_continuation import snapshot_from_arrays
+    from .unified_envelope_snapshot import save_unified_envelope_snapshot,snapshot_context_sha256,physical_state_sha256
+    steps,lanes=validate_snapshot_capture(spec,len(rows));output=Path(output);results=[]
+    snapshot_record=dict(record)
+    if record.get('inference_override'):
+        snapshot_record['payload_sha256']=record['inference_override']['sha256']
+    for step in steps:
+        tick=step-1
+        for ordinal,lane in enumerate(lanes):
+            source=rows[lane]
+            row={k:v for k,v in source.items() if k not in ('attempts','label','witness','snapshot','snapshot_time','state_sha256','snapshot_context_sha256')}
+            row.update(root_id=str(source['root_id'])+'::student_step_'+str(step),parent_root_id=source['root_id'],
+                parent_snapshot_context_sha256=source.get('snapshot_context_sha256'),
+                capture_step=step,capture_lane=lane,capture_status='excluded',snapshot=None,
+                snapshot_control_step=source.get('snapshot_control_step',0)+step,
+                trace=str(trace_path),trace_lane=lane,actor_sha256=record['actor_sha256'],
+                inference_override=record.get('inference_override'))
+            if tick>=len(tape['mask']) or not bool(tape['mask'][tick,lane]):
+                row['reason']='step_not_reached'
+            elif any(bool(tape[k][tick,lane]) for k in ('done','physical_failure','success','timeout')):
+                row['reason']='terminal_state'
+            else:
+                arrays={k[5:]:v[tick,ordinal] for k,v in tape.items() if k.startswith('snap/')}
+                if not arrays or not all(np.isfinite(v).all() for v in arrays.values()) or not np.isfinite(tape['time_after'][tick,lane]):
+                    raise FloatingPointError('nonfinite or missing self-visited snapshot context')
+                if bool(arrays['info/done']):raise ValueError('snapshot tape terminal flags disagree')
+                trace_sha=_file_sha(Path(trace_path))
+                snapshot=snapshot_from_arrays(arrays,env=env,record=snapshot_record,
+                    parent_trajectory=str(trace_path)+'::'+str(lane)+'::'+str(step),parent_state_sha256=trace_sha)
+                dest=output/'snapshots'/f'step_{step:04d}_lane_{lane:04d}'
+                save_unified_envelope_snapshot(dest,snapshot)
+                row.update(capture_status='captured',snapshot=str(dest),snapshot_time=float(tape['time_after'][tick,lane]),
+                    state_sha256=physical_state_sha256(snapshot),snapshot_context_sha256=snapshot_context_sha256(snapshot),
+                    trace_sha256=trace_sha,prefix_terminal=False)
+            results.append(row)
+    write(output/'snapshots.json',results)
+    return results
+
+
 def evaluate(spec, output, *, session=None):
     """Evaluate with canonical restoration, optionally in bounded processes."""
+    if 'capture_snapshot_steps' in spec or 'capture_snapshot_lanes' in spec:
+        from .generative_bridge.rollout import validate_snapshot_capture
+        validate_snapshot_capture(spec,len(read(spec['candidates'])))
     if spec.get('bridge_action_plan') and spec.get('evaluation_batch_size') is not None:
         raise ValueError('bridge candidates must be explicitly sharded with identity-bound plans')
     if spec.get('evaluation_batch_size') is not None:
@@ -462,8 +513,10 @@ def evaluate(spec, output, *, session=None):
     rows=read(spec['candidates']);horizon=spec['horizon'];charged=0;active_count=0
     from .generative_bridge.rollout import (load_prefix_plan, prefix_action, observation_fields,
         closed_loop_action, validate_evaluation_options, evaluation_controller_provenance,
-        warmup_evaluation_policy)
+        warmup_evaluation_policy,bridge_execution_horizon,validate_snapshot_capture)
     bridge_plan=load_prefix_plan(spec,rows)
+    bridge_horizon=bridge_execution_horizon(spec)
+    capture_steps,capture_lanes=validate_snapshot_capture(spec,len(rows))
     record_preobs=(spec.get('record_actor_preobservations',False) or bridge_plan is not None
                    or spec.get('closed_loop_prefix_policy') is not None
                    or spec.get('warmup_initializer') is not None)
@@ -486,6 +539,7 @@ def evaluate(spec, output, *, session=None):
     start=time.monotonic(); timings=[]
     for name in spec['order']:
         subset=[r for r in rows if (spec.get('full_matrix',False) or r['label']!=1) and not r.get('prefix_terminal',False) and not any(a['policy']==name for a in r['attempts'])]
+        if capture_steps and len(subset)!=len(rows):raise ValueError('snapshot capture requires the complete original lane layout')
         if not subset:continue
         stage_start=time.monotonic()
         from .generative_bridge.performance import measure,record_event
@@ -563,6 +617,7 @@ def evaluate(spec, output, *, session=None):
                     time_before=before['time'],time_after=after['time'],base_action=action,
                     requested_delta=jp.zeros_like(action),effective_delta=jp.zeros_like(action))
                 result.update(observation_fields(previous,s,action,enabled=record_preobs))
+                if capture_steps:result.update(snapshot_capture_fields(s,capture_lanes))
                 if spec.get('record_retention_diagnostics'):
                     result.update(roll=s.info['reward_state'].roll,roll_rate=s.info['reward_state'].roll_rate,
                         roll_limit=s.info['roll_limit'],phase_episode_step=s.info['phase_episode_step'],episode_step=s.info['episode_step'])
@@ -578,12 +633,12 @@ def evaluate(spec, output, *, session=None):
                 action=closed_loop_action(t,s.obs,keys,policy,closed_prefix_policy,
                     jp.asarray(spec['closed_loop_prefix_source_only'],bool) if spec.get('closed_loop_prefix_source_only') is not None else None)
                 if bridge_plan is not None:
-                    action=prefix_action(t,action,bridge_prefixes,bridge_source_only)
+                    action=prefix_action(t,action,bridge_prefixes,bridge_source_only,execution_horizon=bridge_horizon)
                 nxt=step(s,jp.where(alive[:,None],action,0))
                 finite=jp.all(jp.isfinite(nxt.data.qpos),axis=-1)&jp.all(jp.isfinite(nxt.data.qvel),axis=-1)
                 f=frame(nxt,action,alive,s)
                 if bridge_plan is not None:
-                    f['action_origin_code']=jp.where(bridge_source_only,0,jp.where(t<16,1,2))
+                    f['action_origin_code']=jp.where(bridge_source_only,0,jp.where(t<bridge_horizon,1,2))
                 elif prefix_name is not None:
                     f['action_origin_code']=jp.where(jp.asarray(spec.get('closed_loop_prefix_source_only',[False]*count)),0,jp.where(t<16,3,2))
                 tr={k:v.at[t].set(f[k]) for k,v in tr.items()}
@@ -608,6 +663,8 @@ def evaluate(spec, output, *, session=None):
         cost=count*tick;charged+=cost;active_count+=int(tape['mask'].sum())
         trace_path=output/(name+'_traces.npz');np.savez_compressed(trace_path,**tape)
         trace_sha = _file_sha(trace_path)
+        if capture_steps:
+            export_evaluation_snapshots(spec,subset,tape,env,actual_policy,trace_path,output)
         for e,r in enumerate(subset):
             indices=np.flatnonzero(tape['mask'][:,e]);last=int(indices[-1]);valid=bool(tape['valid_contact'][last,e]);failure=bool(tape['physical_failure'][last,e])
             if not np.isfinite(tape['qpos'][indices,e]).all() or not np.isfinite(tape['qvel'][indices,e]).all():raise ValueError('nonfinite suffix')
