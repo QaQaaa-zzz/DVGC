@@ -1,0 +1,108 @@
+{
+  "query_count": 24,
+  "declared_queries": 24,
+  "counts": {
+    "G_incremental_verified": 12,
+    "source_recoverable": 6,
+    "searched_no_solution": 4,
+    "source_ambiguous": 1,
+    "winner_ambiguous": 1
+  },
+  "coverage": {
+    "complete": true,
+    "observed": 24,
+    "expected": 24,
+    "missing": []
+  },
+  "evaluation_status": "complete",
+  "completed_roots": 8,
+  "training_updates": 0,
+  "identity": {
+    "student": "f1d1d460082fbc20eafc39d0ad4f318a38877b5b1b4122195ed3f12d8a52057e",
+    "pi0": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+    "G": {
+      "manifest": "/home/qy/DVGC/JIT/runs/experiments/bridge_four_onsets_continuous_20261008/series_0011_b1_resume_143/segment_0073/round_0073/generator_incremental/attempt_0000/update_2000/manifest.json",
+      "manifest_sha256": "0d4621583fb56a72d9668b0b672faf6aa9bce4353114040b0b2adc79dc6e6213",
+      "identity": {
+        "identity": {
+          "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+          "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+          "xml_sha256": "0b56d3672773ef05a2b5982117fa53a7fdffcaf2b7f3f04a7a7941233d6e9c8a"
+        },
+        "includes": [
+          "params",
+          "ema",
+          "optimizer",
+          "rng",
+          "normalizer",
+          "updates"
+        ],
+        "inference_parameters": "ema",
+        "schema": "jit_generator_training_state_v1_1",
+        "state_sha256": "84fb92c8ed5756786a0d15a29f7e12abb44b962f252aa023162d24dbf3e08efe",
+        "updates": 162500
+      },
+      "inference": "ema",
+      "selection": "R73 last_valid complete; fixed for pilot"
+    }
+  },
+  "scope": "TRAIN diagnosis; not student improvement, final TEST, diffusion superiority or sim2sim evidence",
+  "costs": [
+    {
+      "name": "root_00",
+      "charged": 9962,
+      "reservation": 68000,
+      "phase": "completed",
+      "active": 9412
+    },
+    {
+      "name": "root_01",
+      "charged": 8908,
+      "reservation": 68000,
+      "phase": "completed",
+      "active": 8842
+    },
+    {
+      "name": "root_02",
+      "charged": 13702,
+      "reservation": 68000,
+      "phase": "completed",
+      "active": 9568
+    },
+    {
+      "name": "root_03",
+      "charged": 9673,
+      "reservation": 68000,
+      "phase": "completed",
+      "active": 7505
+    },
+    {
+      "name": "root_04",
+      "charged": 14756,
+      "reservation": 68000,
+      "phase": "completed",
+      "active": 8360
+    },
+    {
+      "name": "root_05",
+      "charged": 12036,
+      "reservation": 68000,
+      "phase": "completed",
+      "active": 8973
+    },
+    {
+      "name": "root_06",
+      "charged": 12733,
+      "reservation": 68000,
+      "phase": "completed",
+      "active": 8765
+    },
+    {
+      "name": "root_07",
+      "charged": 16031,
+      "reservation": 68000,
+      "phase": "completed",
+      "active": 9600
+    }
+  ]
+}

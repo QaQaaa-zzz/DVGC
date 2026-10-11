@@ -8,6 +8,8 @@ a=s.add_parser('prepare-keep-coverage',help='Prepare a separate keep-only stage;
 for key in ('proposal','parent','output','repository'):a.add_argument('--'+key,type=Path,required=True)
 a=s.add_parser('prepare-weight-ratio',help='Prepare fixed-data keep1.5/demo0.5; no collection or training.')
 for key in ('parent','output','repository'):a.add_argument('--'+key,type=Path,required=True)
+a=s.add_parser('prepare-self-visit-demo',help='Prepare qualified TRAIN learner-state guidance and fixed keep; no physics or training.')
+for key in ('parent','diagnostic','output','repository'):a.add_argument('--'+key,type=Path,required=True)
 for name in ('run','audit','dry-run','report','worker-reset','worker-B'):
  a=s.add_parser(name);a.add_argument('--plan',type=Path,required=True)
  if name=='run':
@@ -18,6 +20,7 @@ from jit_dvgc import retention_b
 if a.command=='prepare':print(retention_b.prepare(a.output,a.repository,a.previous_zero))
 elif a.command=='prepare-keep-coverage':print(retention_b.prepare_keep_coverage(a.proposal,a.parent,a.output,a.repository))
 elif a.command=='prepare-weight-ratio':print(retention_b.prepare_weight_ratio(a.parent,a.output,a.repository))
+elif a.command=='prepare-self-visit-demo':print(retention_b.prepare_self_visit_demo(a.parent,a.diagnostic,a.output,a.repository))
 elif a.command=='run':retention_b.run(a.plan,a.authorization)
 elif a.command=='audit':print(retention_b.audit(a.plan))
 elif a.command=='dry-run':print(retention_b.audit(a.plan)['budget'])

@@ -5,8 +5,8 @@ from .retention_repair import read,write
 
 
 def build_report(path):
-    from .retention_b import COVERAGE_SCHEMA,RATIO_SCHEMA
-    if read(path).get('schema') in (COVERAGE_SCHEMA,RATIO_SCHEMA):return coverage_report(path)
+    from .retention_b import COVERAGE_SCHEMA,RATIO_SCHEMA,DEMO_SCHEMA
+    if read(path).get('schema') in (COVERAGE_SCHEMA,RATIO_SCHEMA,DEMO_SCHEMA):return coverage_report(path)
     p=read(path);root=Path(p['output']);status=read(root/'status.json')
     out=root/'report_001';out.mkdir(exist_ok=False)
     if status['phase']!='completed':
@@ -91,12 +91,15 @@ def analyze(p,rows,diagnostics,costs,out):
             detail[group]=dict(first_lost=int((a&~b).sum()),repeat_lost=int((ar&~br).sum()),both_pair_lost_cases=[cases[i] for i in np.flatnonzero(a&ar&~b&~br)],source_label_flips=int((a!=ar).sum()),student_label_flips=int((b!=br).sum()))
         retention.update(repeat_lost=sum(v['repeat_lost'] for v in detail.values()),both_pair_lost=sum(len(v['both_pair_lost_cases']) for v in detail.values()),by_cell=detail,warning_repeat_confirmed=paired['confirmed'])
     write(out/'paired_retention.json',retention)
-    from .retention_b import COVERAGE_SCHEMA,RATIO_SCHEMA
-    prefix_equivalence=read(root/'H16_prefix_equivalence.json') if p.get('schema') not in (COVERAGE_SCHEMA,RATIO_SCHEMA) else dict(status='not_repeated',reason='finite single-factor stage; original four-combination receipts retained in source lineage')
+    from .retention_b import COVERAGE_SCHEMA,RATIO_SCHEMA,DEMO_SCHEMA
+    prefix_equivalence=read(root/'H16_prefix_equivalence.json') if p.get('schema') not in (COVERAGE_SCHEMA,RATIO_SCHEMA,DEMO_SCHEMA) else dict(status='not_repeated',reason='finite single-factor stage; original four-combination receipts retained in source lineage')
     write(out/'H16_prefix_equivalence.json',prefix_equivalence)
     write(out/'BC_full_state_verification.json',read(root/'BC_full_state_verification.json'))
     decision='BC distillation works on some seen roots and transfers to the three G-solved unseen DEV roots, but is incomplete and retains paired old losses. Prioritize closed-loop prefix/tail diagnosis and independently sampled TRAIN/keep coverage before PPO; propose any A/C only after separate four-pool GPU validation and actual shared-clipping audit. No automatic next stage.'
-    return dict(decision=decision,TRAIN_repeat_counts=repeat_counts,paired_retention=retention,active_physics=active,padding_physics=padding,wall_seconds=read(root/'status.json')['updated_unix']-read(root/'launch.json')['started_unix'],conversion_matrix=matrix,R5_focus_confirmations=diagnostics['R5_focus_confirmations'])
+    if p.get('schema')==DEMO_SCHEMA:
+        decision='Bounded self-visited TRAIN demo stage finished. Assess matched-update outcomes and fixed repeats against the coverage control; these development results alone do not establish reliable recovery improvement. Retain pi0/R5; no policy publication or automatic next stage.'
+    started=p['demo_started_unix'] if p.get('schema')==DEMO_SCHEMA else read(root/'launch.json')['started_unix']
+    return dict(decision=decision,TRAIN_repeat_counts=repeat_counts,paired_retention=retention,active_physics=active,padding_physics=padding,wall_seconds=read(root/'status.json')['updated_unix']-started,conversion_matrix=matrix,R5_focus_confirmations=diagnostics['R5_focus_confirmations'])
 
 
 def classify_repeats(labels):
@@ -139,28 +142,57 @@ def compact_xy(p,rows,finish,out):
         fig.tight_layout();fig.savefig(out/f'xy_{role}_roots.png',dpi=140);plt.close(fig)
 
 
+def _matched_demo_updates(control,intervention):
+    """Compare completed node records only; selected-checkpoint comparisons are separate."""
+    declared=[0,100,500,1000]
+    def metrics(row):
+        return dict(TRAIN_success=row['train_success'],SOLVER_DEV_success=row['solver_success'],
+            old_losses=sum(c['N10'] for c in row['cells'].values()),new_gains=sum(c['N01'] for c in row['cells'].values()),
+            eligible=row['eligible'],cells=row['cells'],
+            TRAIN_labels={e['root_id']:e['combinations']['independent']['label'] for e in row['train']},
+            SOLVER_DEV_labels={e['root_id']:e['combinations']['independent']['label'] for e in row['solver']})
+    available=[k for k in declared if str(k) in control and str(k) in intervention]
+    return dict(declared_updates=declared,available_updates=available,missing_updates=[k for k in declared if k not in available],
+        nodes={str(k):dict(control=metrics(control[str(k)]),intervention=metrics(intervention[str(k)])) for k in available},
+        comparison='same update count; TRAIN absorption and used SOLVER_DEV/paired DEV, not independent training seeds or final TEST')
+
+
 def coverage_report(path):
     """New-stage results only. Prepared/failed outputs never claim policy improvement."""
     p=read(path);root=Path(p['output']);status=read(root/'status.json')
-    from .retention_b import RATIO_SCHEMA,stage_deadline
+    from .retention_b import RATIO_SCHEMA,DEMO_SCHEMA,stage_deadline
     ratio=p['schema']==RATIO_SCHEMA
-    title='B_weight_ratio keep1.5/demo0.5' if ratio else 'B_keep_coverage'
-    prefix='weight_ratio_report' if ratio else 'coverage_report'
+    demo=p['schema']==DEMO_SCHEMA
+    title='B_self_visit_demo' if demo else 'B_weight_ratio keep1.5/demo0.5' if ratio else 'B_keep_coverage'
+    prefix='self_visit_demo_report' if demo else 'weight_ratio_report' if ratio else 'coverage_report'
     number=max([0]+[int(x.name.split('_')[-1]) for x in root.glob(prefix+'_*') if x.is_dir()])+1
     out=root/f'{prefix}_{number:04d}';out.mkdir(exist_ok=False)
     summary=dict(schema=p['schema'],source_B=p['source_B'],budget=p['budget'],status=status,
-        evaluation_status='not_started',new_keep_collection='not_collected_fixed_source_reused' if ratio else 'PENDING',reliable_recovery_improvement='NOT_ESTABLISHED',
+        evaluation_status='not_started',new_keep_collection='not_collected_fixed_source_reused' if ratio or demo else 'PENDING',reliable_recovery_improvement='NOT_ESTABLISHED',
         learner_last=status.get('learner_last'),stage_candidate=status.get('stage_candidate'),
         frozen_R5=p['best_dev_candidate'],published_policy=None,automatic_next_stage=False)
     text=['# '+title+' independent stage','',f"Execution: {status['phase']}; evaluation: not_started; reliable recovery improvement NOT_ESTABLISHED.",
-        '',f"New stage cap {p['budget']['total']}; inherited D2 {p['budget']['prior_charged']}; cumulative maximum {p['budget']['D2_cumulative_maximum']}/2000000. Additional BC2000 separate. Original12h start {p['original_D2_started_unix']}; never reset.",
+        '',f"New stage cap {p['budget']['total']}; inherited D2 {p['budget']['prior_charged']}; cumulative maximum {p['budget']['D2_cumulative_maximum']}/2000000. Additional BC{p['budget']['B_updates']} separate. Original12h start {p['original_D2_started_unix']}; never reset.",
         '',f"Execution blockers: {status.get('execution_blockers',[])}. New successful keep, collection counts and stage coverage are PENDING until physical collection.",
         '', 'Original pi0/fresh Adam/RNG; Actor only, frozen statistics/critic; no PPO/E/G/TEST. Old source B retained. Prepared code and CPU contracts do not establish physical recovery.']
     outcomes=root/'new_keep_outcomes.json'
-    if ratio:
+    if ratio or demo:
         summary.update(BC=p['BC'],only_changed_factor=p['only_changed_factor'],merged_keep=read(p['keep_receipt']),source_report=p['source_report'],stage_deadline_unix=stage_deadline(p))
-        text[4]+=f" New independent clock {p['weight_ratio_started_unix']}, deadline {stage_deadline(p)}; declared3h."
+        clock='demo_started_unix' if demo else 'weight_ratio_started_unix'
+        text[4]+=f" New independent clock {clock}={p[clock]}, deadline {stage_deadline(p)}; declared3h."
         text[6]='Fixed successful TRAIN keep reused with identical receipt/data hashes; zero new collection.'
+    if demo:
+        manifest=read(p['demo_manifest'])
+        summary.update(demo_support=dict(old_frames=manifest['old_count'],added_frames=manifest['new_count'],total_frames=manifest['count'],added_queries=manifest['eligible_query_count']),
+            fixed_keep_frames=sum(summary['merged_keep']['summary']['observations'].values()),demo_started_unix=p['demo_started_unix'])
+        rowfile=root/'B_checkpoint_results.json'
+        parentroot=Path(read(p['source_B'])['output'])
+        rows=read(rowfile) if rowfile.exists() else {}
+        control=read(parentroot/'B_checkpoint_results.json') if rows else {}
+        summary['matched_update_comparison']=_matched_demo_updates(control,rows)
+        if rows and status['phase']!='completed':
+            summary['evaluation_status']='partial'
+            text[2]=f"Execution: {status['phase']}; evaluation: partial; reliable recovery improvement NOT_ESTABLISHED."
     if outcomes.exists():summary['new_keep_collection']=read(outcomes)
     if (root/'keep_receipt.json').exists():summary['merged_keep']=read(root/'keep_receipt.json')
     if status['phase']=='completed':
@@ -180,7 +212,7 @@ def coverage_report(path):
                     a,b,ar,br=[np.asarray(pair[k]['labels'][g],bool) for k in ('baseline','original','repeated_pi0','repeated')]
                     cells[g]=dict(N01=int((~ar&br).sum()),N10=int((ar&~br).sum()),net=int(br.sum()-ar.sum()),source_label_flips=int((a!=ar).sum()),student_label_flips=int((b!=br).sum()),both_pair_old_loss=int((a&ar&~b&~br).sum()))
                 repeated[step]=dict(warned=pair['warned'],confirmed=pair['confirmed'],cells=cells)
-        old_stable=read(Path(p['source_report'])/'TRAIN_repeat_labels.json' if ratio else parentroot/'report_001/TRAIN_repeat_labels.json')
+        old_stable=read(Path(p['source_report'])/'TRAIN_repeat_labels.json' if ratio or demo else parentroot/'report_001/TRAIN_repeat_labels.json')
         old_stable_ids={e['root_id'] for e in old_stable if e['classification']=='stable_success'}
         new_repeat=read(out/'TRAIN_repeat_labels.json')
         lost_absorbed=[e['root_id'] for e in new_repeat if e['root_id'] in old_stable_ids and e['classification']=='stable_failure']
@@ -193,7 +225,7 @@ def coverage_report(path):
                 TRAIN_before=parent['train_success'],TRAIN_after=chosen['train_success'],
                 SOLVER_DEV_before=parent['solver_success'],SOLVER_DEV_after=chosen['solver_success'],
                 stable_absorbed_roots_now_stable_failed=lost_absorbed,comparison='used development data, conditional on fixed protocol; repeats not independent training seeds'))
-        summary['decision']='Retain pi0/R5; stop this stage. If old losses did not decrease or absorbed roots are lost, next investigate TRAIN student-visited states; never automatically start PPO.'
+        summary['decision']=derived['decision'] if demo else 'Retain pi0/R5; stop this stage. If old losses did not decrease or absorbed roots are lost, next investigate TRAIN student-visited states; never automatically start PPO.'
         summary['first_old_loss_decreased']=new_loss<old_loss
         summary['repeat_old_loss_decreased']='UNKNOWN'
         source_rep=parentroot/f"B{parent_finish['selected_update']:04d}_warning_repeat.json"
@@ -213,4 +245,15 @@ def coverage_report(path):
             '',summary['decision'], '', 'This finite development comparison does not establish reliable recovery improvement or eliminate forgetting. No next stage automatically launches.']
     if ratio:
         text+=['',f"Fixed control keep/demo=1/1; intervention keep/demo=1.5/0.5. Same TRAIN data, per-source batch256, fresh pi0/Adam/RNG. New charged physics {summary.get('new_physics','PENDING')}/{p['budget']['total']}; prior {p['budget']['prior_charged']}; independent3h clock, original12h metadata retained."]
+    if demo:
+        d=summary['demo_support'];matched=summary['matched_update_comparison']
+        text+=['',f"BC1000 cap; only TRAIN demo support changes at matched updates 0/100/500/1000. Original {d['old_frames']} + {d['added_frames']} = {d['total_frames']} demo frames; added guidance comes from {d['added_queries']} qualified self-visited queries. Fixed {summary['fixed_keep_frames']} keep frames, zero new keep collection. Keep/demo coefficients remain 1/1; original pi0, fresh Adam/RNG, architecture and loss unchanged. Source control report: {p['source_report']}.",
+            'Old observations/actions are preserved; trajectory balancing redistributes their sampling mass within ancestors, so frame counts are not sampling proportions.',
+            f"Independent demo_started_unix={p['demo_started_unix']}, deadline {stage_deadline(p)}; cap {p['budget']['wall_seconds']}s. Original12h metadata {p['original_D2_started_unix']} retained. New charged physics {summary.get('new_physics',status.get('charged_interactions',0))}/{p['budget']['total']}; cumulative maximum {p['budget']['D2_cumulative_maximum']}/2000000.",
+            '', '|matched update|TRAIN control/demo|SOLVER_DEV control/demo|old losses control/demo|new gains control/demo|eligible control/demo|',
+            '|---|---|---|---|---|---|']
+        for k,v in matched['nodes'].items():
+            a,b=v['control'],v['intervention']
+            text.append('|'+ '|'.join([k]+[f"{a[field]}/{b[field]}" for field in ('TRAIN_success','SOLVER_DEV_success','old_losses','new_gains','eligible')])+'|')
+        text+=['',f"Uncompleted matched updates: {matched['missing_updates']}. Selection-based comparisons remain separate. TRAIN is seen guidance, DEV is used development data; repeats are not independent training seeds. Reliable recovery improvement NOT_ESTABLISHED; no policy publication or automatic next stage."]
     write(out/'summary.json',summary);(out/'INDEX.md').write_text('\n'.join(text)+'\n');return out

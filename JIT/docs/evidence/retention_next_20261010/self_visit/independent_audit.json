@@ -1,0 +1,659 @@
+{
+  "schema": "jit_retention_self_visit_independent_audit_v1",
+  "audited_at": "2026-10-11T09:02:27.292234+00:00",
+  "verification_level": "artifact_checked",
+  "phase": "passed",
+  "execution_code": "90a3ddcb6c509d5a1836ecb16b32df6b8cb02dd0",
+  "source_plan": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_self_visit_001/plan.json",
+  "source_plan_sha256": "465aeec6055c0852429cab9d043926622305c9262502206c16472d0f77592861",
+  "complete_unique_queries": 24,
+  "complete_ancestor_roots": 8,
+  "classification_counts": {
+    "G_incremental_verified": 12,
+    "source_recoverable": 6,
+    "searched_no_solution": 4,
+    "source_ambiguous": 1,
+    "winner_ambiguous": 1
+  },
+  "query_checks": [
+    {
+      "root_id": "TRAIN-1010233101-68",
+      "step": 4,
+      "remaining_horizon": 12,
+      "classification": "G_incremental_verified",
+      "student_full_label": 1,
+      "historical_student_labels": [
+        1,
+        1,
+        1
+      ],
+      "source_labels": [
+        0,
+        0,
+        0
+      ],
+      "fixed_winner": 14,
+      "winner_labels": [
+        1,
+        1,
+        1
+      ],
+      "historical_stable_failure_G_query": false
+    },
+    {
+      "root_id": "TRAIN-1010233101-68",
+      "step": 8,
+      "remaining_horizon": 8,
+      "classification": "source_recoverable",
+      "student_full_label": 1,
+      "historical_student_labels": [
+        1,
+        1,
+        1
+      ],
+      "source_labels": [
+        1,
+        1,
+        1
+      ],
+      "fixed_winner": 16,
+      "winner_labels": [
+        1,
+        1,
+        1
+      ],
+      "historical_stable_failure_G_query": false
+    },
+    {
+      "root_id": "TRAIN-1010233101-68",
+      "step": 12,
+      "remaining_horizon": 4,
+      "classification": "source_recoverable",
+      "student_full_label": 1,
+      "historical_student_labels": [
+        1,
+        1,
+        1
+      ],
+      "source_labels": [
+        1,
+        1,
+        1
+      ],
+      "fixed_winner": 6,
+      "winner_labels": [
+        1,
+        1,
+        1
+      ],
+      "historical_stable_failure_G_query": false
+    },
+    {
+      "root_id": "TRAIN-1010233101-37",
+      "step": 4,
+      "remaining_horizon": 12,
+      "classification": "source_recoverable",
+      "student_full_label": 1,
+      "historical_student_labels": [
+        1,
+        1,
+        1
+      ],
+      "source_labels": [
+        1,
+        1,
+        1
+      ],
+      "fixed_winner": 1,
+      "winner_labels": [
+        1,
+        1,
+        1
+      ],
+      "historical_stable_failure_G_query": false
+    },
+    {
+      "root_id": "TRAIN-1010233101-37",
+      "step": 8,
+      "remaining_horizon": 8,
+      "classification": "source_recoverable",
+      "student_full_label": 1,
+      "historical_student_labels": [
+        1,
+        1,
+        1
+      ],
+      "source_labels": [
+        1,
+        1,
+        1
+      ],
+      "fixed_winner": 2,
+      "winner_labels": [
+        1,
+        1,
+        1
+      ],
+      "historical_stable_failure_G_query": false
+    },
+    {
+      "root_id": "TRAIN-1010233101-37",
+      "step": 12,
+      "remaining_horizon": 4,
+      "classification": "source_recoverable",
+      "student_full_label": 1,
+      "historical_student_labels": [
+        1,
+        1,
+        1
+      ],
+      "source_labels": [
+        1,
+        1,
+        1
+      ],
+      "fixed_winner": 9,
+      "winner_labels": [
+        1,
+        1,
+        1
+      ],
+      "historical_stable_failure_G_query": false
+    },
+    {
+      "root_id": "TRAIN-1010233101-10",
+      "step": 4,
+      "remaining_horizon": 12,
+      "classification": "G_incremental_verified",
+      "student_full_label": 1,
+      "historical_student_labels": [
+        1,
+        1,
+        1
+      ],
+      "source_labels": [
+        0,
+        0,
+        0
+      ],
+      "fixed_winner": 9,
+      "winner_labels": [
+        1,
+        1,
+        1
+      ],
+      "historical_stable_failure_G_query": false
+    },
+    {
+      "root_id": "TRAIN-1010233101-10",
+      "step": 8,
+      "remaining_horizon": 8,
+      "classification": "source_recoverable",
+      "student_full_label": 1,
+      "historical_student_labels": [
+        1,
+        1,
+        1
+      ],
+      "source_labels": [
+        1,
+        1,
+        1
+      ],
+      "fixed_winner": 16,
+      "winner_labels": [
+        1,
+        1,
+        1
+      ],
+      "historical_stable_failure_G_query": false
+    },
+    {
+      "root_id": "TRAIN-1010233101-10",
+      "step": 12,
+      "remaining_horizon": 4,
+      "classification": "G_incremental_verified",
+      "student_full_label": 1,
+      "historical_student_labels": [
+        1,
+        1,
+        1
+      ],
+      "source_labels": [
+        0,
+        0,
+        0
+      ],
+      "fixed_winner": 9,
+      "winner_labels": [
+        1,
+        1,
+        1
+      ],
+      "historical_stable_failure_G_query": false
+    },
+    {
+      "root_id": "TRAIN-1010233101-18",
+      "step": 4,
+      "remaining_horizon": 12,
+      "classification": "G_incremental_verified",
+      "student_full_label": 0,
+      "historical_student_labels": [
+        0,
+        0,
+        0
+      ],
+      "source_labels": [
+        0,
+        0,
+        0
+      ],
+      "fixed_winner": 1,
+      "winner_labels": [
+        1,
+        1,
+        1
+      ],
+      "historical_stable_failure_G_query": true
+    },
+    {
+      "root_id": "TRAIN-1010233101-18",
+      "step": 8,
+      "remaining_horizon": 8,
+      "classification": "searched_no_solution",
+      "student_full_label": 0,
+      "historical_student_labels": [
+        0,
+        0,
+        0
+      ],
+      "source_labels": [
+        0,
+        0,
+        0
+      ],
+      "fixed_winner": null,
+      "winner_labels": null,
+      "historical_stable_failure_G_query": false
+    },
+    {
+      "root_id": "TRAIN-1010233101-18",
+      "step": 12,
+      "remaining_horizon": 4,
+      "classification": "searched_no_solution",
+      "student_full_label": 0,
+      "historical_student_labels": [
+        0,
+        0,
+        0
+      ],
+      "source_labels": [
+        0,
+        0,
+        0
+      ],
+      "fixed_winner": null,
+      "winner_labels": null,
+      "historical_stable_failure_G_query": false
+    },
+    {
+      "root_id": "TRAIN-1010233101-26",
+      "step": 4,
+      "remaining_horizon": 12,
+      "classification": "G_incremental_verified",
+      "student_full_label": 1,
+      "historical_student_labels": [
+        1,
+        1,
+        1
+      ],
+      "source_labels": [
+        0,
+        0,
+        0
+      ],
+      "fixed_winner": 4,
+      "winner_labels": [
+        1,
+        1,
+        1
+      ],
+      "historical_stable_failure_G_query": false
+    },
+    {
+      "root_id": "TRAIN-1010233101-26",
+      "step": 8,
+      "remaining_horizon": 8,
+      "classification": "G_incremental_verified",
+      "student_full_label": 1,
+      "historical_student_labels": [
+        1,
+        1,
+        1
+      ],
+      "source_labels": [
+        0,
+        0,
+        0
+      ],
+      "fixed_winner": 1,
+      "winner_labels": [
+        1,
+        1,
+        1
+      ],
+      "historical_stable_failure_G_query": false
+    },
+    {
+      "root_id": "TRAIN-1010233101-26",
+      "step": 12,
+      "remaining_horizon": 4,
+      "classification": "G_incremental_verified",
+      "student_full_label": 1,
+      "historical_student_labels": [
+        1,
+        1,
+        1
+      ],
+      "source_labels": [
+        0,
+        0,
+        0
+      ],
+      "fixed_winner": 1,
+      "winner_labels": [
+        1,
+        1,
+        1
+      ],
+      "historical_stable_failure_G_query": false
+    },
+    {
+      "root_id": "TRAIN-1010233101-30",
+      "step": 4,
+      "remaining_horizon": 12,
+      "classification": "G_incremental_verified",
+      "student_full_label": 0,
+      "historical_student_labels": [
+        0,
+        0,
+        0
+      ],
+      "source_labels": [
+        0,
+        0,
+        0
+      ],
+      "fixed_winner": 12,
+      "winner_labels": [
+        1,
+        1,
+        1
+      ],
+      "historical_stable_failure_G_query": true
+    },
+    {
+      "root_id": "TRAIN-1010233101-30",
+      "step": 8,
+      "remaining_horizon": 8,
+      "classification": "searched_no_solution",
+      "student_full_label": 0,
+      "historical_student_labels": [
+        0,
+        0,
+        0
+      ],
+      "source_labels": [
+        0,
+        0,
+        0
+      ],
+      "fixed_winner": null,
+      "winner_labels": null,
+      "historical_stable_failure_G_query": false
+    },
+    {
+      "root_id": "TRAIN-1010233101-30",
+      "step": 12,
+      "remaining_horizon": 4,
+      "classification": "source_ambiguous",
+      "student_full_label": 0,
+      "historical_student_labels": [
+        0,
+        0,
+        0
+      ],
+      "source_labels": [
+        0,
+        0,
+        1
+      ],
+      "fixed_winner": 16,
+      "winner_labels": [
+        1,
+        1,
+        1
+      ],
+      "historical_stable_failure_G_query": false
+    },
+    {
+      "root_id": "TRAIN-1010233101-55",
+      "step": 4,
+      "remaining_horizon": 12,
+      "classification": "searched_no_solution",
+      "student_full_label": 0,
+      "historical_student_labels": [
+        0,
+        0,
+        0
+      ],
+      "source_labels": [
+        0,
+        0,
+        0
+      ],
+      "fixed_winner": null,
+      "winner_labels": null,
+      "historical_stable_failure_G_query": false
+    },
+    {
+      "root_id": "TRAIN-1010233101-55",
+      "step": 8,
+      "remaining_horizon": 8,
+      "classification": "G_incremental_verified",
+      "student_full_label": 0,
+      "historical_student_labels": [
+        0,
+        0,
+        0
+      ],
+      "source_labels": [
+        0,
+        0,
+        0
+      ],
+      "fixed_winner": 6,
+      "winner_labels": [
+        1,
+        1,
+        1
+      ],
+      "historical_stable_failure_G_query": true
+    },
+    {
+      "root_id": "TRAIN-1010233101-55",
+      "step": 12,
+      "remaining_horizon": 4,
+      "classification": "G_incremental_verified",
+      "student_full_label": 0,
+      "historical_student_labels": [
+        0,
+        0,
+        0
+      ],
+      "source_labels": [
+        0,
+        0,
+        0
+      ],
+      "fixed_winner": 1,
+      "winner_labels": [
+        1,
+        1,
+        1
+      ],
+      "historical_stable_failure_G_query": true
+    },
+    {
+      "root_id": "TRAIN-1010233101-63",
+      "step": 4,
+      "remaining_horizon": 12,
+      "classification": "G_incremental_verified",
+      "student_full_label": 0,
+      "historical_student_labels": [
+        1,
+        1,
+        0
+      ],
+      "source_labels": [
+        0,
+        0,
+        0
+      ],
+      "fixed_winner": 11,
+      "winner_labels": [
+        1,
+        1,
+        1
+      ],
+      "historical_stable_failure_G_query": false
+    },
+    {
+      "root_id": "TRAIN-1010233101-63",
+      "step": 8,
+      "remaining_horizon": 8,
+      "classification": "winner_ambiguous",
+      "student_full_label": 0,
+      "historical_student_labels": [
+        1,
+        1,
+        0
+      ],
+      "source_labels": [
+        0,
+        0,
+        0
+      ],
+      "fixed_winner": 13,
+      "winner_labels": [
+        1,
+        0,
+        0
+      ],
+      "historical_stable_failure_G_query": false
+    },
+    {
+      "root_id": "TRAIN-1010233101-63",
+      "step": 12,
+      "remaining_horizon": 4,
+      "classification": "G_incremental_verified",
+      "student_full_label": 0,
+      "historical_student_labels": [
+        1,
+        1,
+        0
+      ],
+      "source_labels": [
+        0,
+        0,
+        0
+      ],
+      "fixed_winner": 15,
+      "winner_labels": [
+        1,
+        1,
+        1
+      ],
+      "historical_stable_failure_G_query": false
+    }
+  ],
+  "costs": {
+    "charged": 97801,
+    "active": 71025,
+    "padding": 26776,
+    "declared": 544000,
+    "prior": 877514,
+    "cumulative": 975315,
+    "hard_cap": 2000000,
+    "wall_seconds": 705.105635881424
+  },
+  "checks": {
+    "locked_files": 338,
+    "post_run_workspace_changes": [
+      {
+        "path": "/home/qy/DVGC/runs/worktrees/jit-retention-first/JIT/src/jit_dvgc/pulse_exploration_runtime.py",
+        "frozen_commit_sha_matches": true,
+        "mtime_after_stage_completion_s": 35.28205752372742
+      },
+      {
+        "path": "/home/qy/DVGC/runs/worktrees/jit-retention-first/JIT/src/jit_dvgc/retention_b.py",
+        "frozen_commit_sha_matches": true,
+        "mtime_after_stage_completion_s": 35.27705717086792
+      }
+    ],
+    "original_layout_traces_checked": 80,
+    "source_labels_recomputed_from_saved_endpoint": true,
+    "winner_recomputed_from_first_search_only": true,
+    "same_full_17_candidate_layout_and_actions_for_two_repeats": true,
+    "executed_G_prefix_max_abs_error": 0.0,
+    "captured_observation_time_and_recovery_counters_match_query_initial": true,
+    "snapshot_payload_and_student_identity_checked": true,
+    "zero_model_updates": true
+  },
+  "historical_student_label_sources": [
+    "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_TRAIN_combinations_pi0.json",
+    "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_TRAIN_combinations_confirm0_pi0.json",
+    "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/B_keep_coverage_003/B1000_TRAIN_combinations_confirm1_pi0.json"
+  ],
+  "prospective_TRAIN_query_candidates_from_historical_stable_failures": [
+    {
+      "root_id": "TRAIN-1010233101-18",
+      "step": 4,
+      "remaining_horizon": 12,
+      "fixed_winner": 1
+    },
+    {
+      "root_id": "TRAIN-1010233101-30",
+      "step": 4,
+      "remaining_horizon": 12,
+      "fixed_winner": 12
+    },
+    {
+      "root_id": "TRAIN-1010233101-55",
+      "step": 8,
+      "remaining_horizon": 8,
+      "fixed_winner": 6
+    },
+    {
+      "root_id": "TRAIN-1010233101-55",
+      "step": 12,
+      "remaining_horizon": 4,
+      "fixed_winner": 1
+    }
+  ],
+  "candidate_scope": "Four branch points from three TRAIN ancestors; not four independent demonstrations or proved learned skills. No training authorization.",
+  "limitations": [
+    "24 states share 8 TRAIN ancestors and one BC1000 model; within-root queries and repeated deterministic evaluations are dependent.",
+    "G12 counts teacher-plus-pi0 composite recovery from student-visited states, not 12 new student skills.",
+    "Historical successful/ambiguous students are excluded from the minimal stable-failure teaching subset.",
+    "No-solution means no witnessed solution in this fixed proposal set/window/tail, not physical impossibility.",
+    "Canonical controller/event/time context preservation is not bitwise simulator restoration.",
+    "capture.coordinates/phase/cell inherit old parent metadata; actual new state is identified by snapshot/trace and physical_state_sha256. Do not use inherited descriptors as new-state measurements.",
+    "Offline verification does not establish independent TEST, superiority, retention improvement or sim2sim."
+  ],
+  "new_audit_interactions": {
+    "control": 0,
+    "physics": 0,
+    "optimizer_updates": 0
+  }
+}

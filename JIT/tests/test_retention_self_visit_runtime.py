@@ -100,7 +100,7 @@ def test_capture_exports_exact_poststep_context_and_excludes_terminal_or_unreach
     tape['snap/down/post_contact_ticks'][3,0]=9
     trace=tmp_path/'trace.npz';np.savez_compressed(trace,**tape)
     rows=[dict(root_id='TRAIN-root',root_episode_id='ancestor',candidate_id=i,index=i,
-               snapshot_control_step=3,snapshot_context_sha256='f'*64,role='TRAIN') for i in range(17)]
+               snapshot_control_step=3,snapshot_context_sha256='f'*64,role='TRAIN',coordinates={'x':123.}) for i in range(17)]
     spec=dict(horizon=400,order=['pi0'],full_matrix=True,preserve_snapshot_episode_context=True,
               capture_snapshot_steps=[4,8,12],capture_snapshot_lanes=[7])
     result=export_evaluation_snapshots(spec,rows,tape,env,record,trace,tmp_path)
@@ -109,6 +109,7 @@ def test_capture_exports_exact_poststep_context_and_excludes_terminal_or_unreach
     assert result[0]['snapshot_time']==pytest.approx(.08)
     assert result[0]['snapshot_control_step']==7 and result[0]['capture_lane']==7
     assert result[0]['parent_root_id']=='TRAIN-root' and result[0]['root_episode_id']=='ancestor'
+    assert 'coordinates' not in result[0] and result[0]['parent_coordinates']=={'x':123.}
     assert result[1]['snapshot'] is None and result[2]['snapshot'] is None
     saved=load_unified_envelope_snapshot(result[0]['snapshot'])
     np.testing.assert_array_equal(saved.observation,state.obs['state'][7])

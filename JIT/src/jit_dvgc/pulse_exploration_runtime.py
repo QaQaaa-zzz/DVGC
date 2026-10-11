@@ -460,6 +460,8 @@ def export_evaluation_snapshots(spec,rows,tape,env,record,trace_path,output):
         for ordinal,lane in enumerate(lanes):
             source=rows[lane]
             row={k:v for k,v in source.items() if k not in ('attempts','label','witness','snapshot','snapshot_time','state_sha256','snapshot_context_sha256')}
+            # The source coordinates describe the parent, not this new state.
+            if 'coordinates' in row:row['parent_coordinates']=row.pop('coordinates')
             row.update(root_id=str(source['root_id'])+'::student_step_'+str(step),parent_root_id=source['root_id'],
                 parent_snapshot_context_sha256=source.get('snapshot_context_sha256'),
                 capture_step=step,capture_lane=lane,capture_status='excluded',snapshot=None,

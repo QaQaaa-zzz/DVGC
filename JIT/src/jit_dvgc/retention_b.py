@@ -135,12 +135,12 @@ def prepare(output,repository,previous_zero=None):
 class Run:
     def __init__(self,path):
         self.p=read(path);self.path=Path(path);self.root=Path(self.p['output']);self.costs=[]
-        self.env=dict(os.environ,PYTHONPATH=str(Path(self.p['code'])/'JIT/src'),JAX_PLATFORMS='cuda,cpu',XLA_PYTHON_CLIENT_PREALLOCATE='false',OPENBLAS_NUM_THREADS='1',OMP_NUM_THREADS='1')
+        self.env=dict(os.environ,PYTHONPATH=str(Path(self.p['code'])/'JIT/src'),JAX_PLATFORMS='cuda,cpu',XLA_PYTHON_CLIENT_PREALLOCATE='false',OPENBLAS_NUM_THREADS='1',OMP_NUM_THREADS='1',JIT_AUTO_PUBLISH='0',JAX_COMPILATION_CACHE_DIR=str(self.root/'jax_cache'))
     def status(self,phase,stage,**extra):
-        write(self.root/'status.json',dict(phase=phase,stage=stage,pid=os.getpid(),updated_unix=time.time(),charged_interactions=sum(c['charged'] for c in self.costs),D2_prior_charged=self.p['budget']['prior_charged'],planned_supervised_updates=2000,PPO_updates=0,E_G_updates=0,completed_supervised_updates=getattr(self,'current_update',0),**extra))
+        write(self.root/'status.json',dict(phase=phase,stage=stage,pid=os.getpid(),updated_unix=time.time(),charged_interactions=sum(c['charged'] for c in self.costs),D2_prior_charged=self.p['budget']['prior_charged'],planned_supervised_updates=self.p.get('BC',{}).get('updates',2000),PPO_updates=0,E_G_updates=0,completed_supervised_updates=getattr(self,'current_update',0),**extra))
     def child(self,name,command,maximum):
         if time.time()>=stage_deadline(self.p):raise TimeoutError('D2 declared stage wall budget')
-        if self.p.get('schema') in (COVERAGE_SCHEMA,RATIO_SCHEMA) and sum(c['charged'] for c in self.costs)+maximum>self.p['budget']['total']:
+        if self.p.get('schema') in (COVERAGE_SCHEMA,RATIO_SCHEMA,DEMO_SCHEMA) and sum(c['charged'] for c in self.costs)+maximum>self.p['budget']['total']:
             raise ValueError('finite BC stage physics reserve exceeds declaration')
         if self.p['budget']['prior_charged']+sum(c['charged'] for c in self.costs)+maximum>2000000:raise ValueError('D2 physics reserve before dispatch')
         c=dict(stage=name,charged=maximum,reservation=maximum,phase='running');self.costs.append(c);write(self.root/'costs.json',self.costs);self.status('running',name)
@@ -215,11 +215,12 @@ def audit(path):
     p=read(path)
     coverage=p.get('schema')==COVERAGE_SCHEMA
     ratio=p.get('schema')==RATIO_SCHEMA
-    if p['stage']!=('D2_B_weight_ratio' if ratio else 'D2_B_keep_coverage' if coverage else 'D2_B') or p['automatic_next_stage'] or p['ppo_updates'] or p['E_G_updates']:raise ValueError('B-only authorization contract')
+    demo=p.get('schema')==DEMO_SCHEMA
+    if p['stage']!=('D2_B_self_visit_demo' if demo else 'D2_B_weight_ratio' if ratio else 'D2_B_keep_coverage' if coverage else 'D2_B') or p['automatic_next_stage'] or p['ppo_updates'] or p['E_G_updates']:raise ValueError('B-only authorization contract')
     for f,h in p['locks'].items():
         if sha(f)!=h:raise ValueError('input drift '+f)
     if len(read(p['train_roots']))!=8 or len(read(p['solver_roots']))!=7:raise ValueError('root count')
-    extra=audit_weight_ratio(p) if ratio else audit_keep_coverage(p) if coverage else {}
+    extra=audit_self_visit_demo(p) if demo else audit_weight_ratio(p) if ratio else audit_keep_coverage(p) if coverage else {}
     return dict(phase='passed',budget=p['budget'],source='pi0',normalizer_critic_frozen=True,automatic_PPO=False,**extra)
 
 
@@ -237,6 +238,25 @@ def reward_http(root,step,port):
     raise RuntimeError('current B DEV reward scalar not visible '+str(last))
 
 
+def bounded_worker(command,*,cwd,env,stdout,timeout):
+    """Own one process group so a deadline also stops its evaluation children."""
+    import signal
+    proc=subprocess.Popen(command,cwd=cwd,env=env,stdout=stdout,stderr=subprocess.STDOUT,start_new_session=True)
+    try:
+        rc=proc.wait(timeout=timeout)
+        if rc:raise subprocess.CalledProcessError(rc,command)
+    except BaseException:
+        # This group was created by this call; never signal another run/service.
+        for sig in (signal.SIGTERM,signal.SIGKILL):
+            try:os.killpg(proc.pid,sig)
+            except ProcessLookupError:break
+            if sig==signal.SIGTERM:
+                try:proc.wait(timeout=2)
+                except subprocess.TimeoutExpired:pass
+        proc.wait(timeout=5)
+        raise
+
+
 def run(path,authorization=None):
     audit(path)
     p=read(path);root=Path(p['output'])
@@ -245,8 +265,9 @@ def run(path,authorization=None):
     if read(root/'status.json')['phase']!='prepared':raise ValueError('no implicit rerun')
     coverage=p.get('schema')==COVERAGE_SCHEMA
     ratio=p.get('schema')==RATIO_SCHEMA
-    if coverage or ratio:
-        grant=require_ratio_execution(path,authorization) if ratio else require_coverage_execution(path,authorization)
+    demo=p.get('schema')==DEMO_SCHEMA
+    if coverage or ratio or demo:
+        grant=require_demo_execution(path,authorization) if demo else require_ratio_execution(path,authorization) if ratio else require_coverage_execution(path,authorization)
         claim_coverage_stage(root,'execution',path)
         write(root/'execution_authorization.json',dict(authorization=str(Path(authorization).resolve()),sha256=sha(authorization),grant=grant))
     r=Run(path);write(root/'ACTIVE_RUN.json',dict(execution=str(root/'status.json'),lineage=str(root/'status.json'),name='retention D2 finite BC+keep'))
@@ -264,7 +285,7 @@ def run(path,authorization=None):
         # launch bounded GPU evaluation subprocesses; no additional student exists.
         r.status('running','BC+keep');write(root/'pre_B_costs.json',r.costs)
         with (root/'B.log').open('x') as f:
-            subprocess.run([PY,str(Path(p['code'])/'JIT/cli/run_retention_b.py'),'worker-B','--plan',str(path)],cwd=p['code'],env=r.env,stdout=f,stderr=subprocess.STDOUT,check=True,timeout=max(1,stage_deadline(p)-time.time()))
+            bounded_worker([PY,str(Path(p['code'])/'JIT/cli/run_retention_b.py'),'worker-B','--plan',str(path)],cwd=p['code'],env=r.env,stdout=f,timeout=max(1,stage_deadline(p)-time.time()))
         r.costs=read(root/'costs.json');state=read(root/'B_completed.json')
         r.current_update=state['completed_updates']
         r.status('completed',p['stage'],result='B complete or confirmed retention stop; no automatic PPO',learner_last=state['learner_last'],stage_candidate=state['candidate'],B_selected_candidate=state['candidate'],best_dev_candidate=p['models']['R5'],published_policy=None)
@@ -275,7 +296,7 @@ def run(path,authorization=None):
 
 
 def reset_worker(path):
-    if read(path).get('schema') in (COVERAGE_SCHEMA,RATIO_SCHEMA):raise ValueError('finite BC variant has no PPO reset worker')
+    if read(path).get('schema') in (COVERAGE_SCHEMA,RATIO_SCHEMA,DEMO_SCHEMA):raise ValueError('finite BC variant has no PPO reset worker')
     p=read(path);root=Path(p['output'])/'reset_GPU';root.mkdir(exist_ok=False)
     import jax,jax.numpy as jp
     if jax.default_backend()!='gpu':raise ValueError('real GPU reset check')
@@ -306,13 +327,14 @@ def reset_worker(path):
 
 def B_worker(path):
     declared=read(path);ratio=declared.get('schema')==RATIO_SCHEMA
-    coverage=declared.get('schema') in (COVERAGE_SCHEMA,RATIO_SCHEMA)
+    demo_stage=declared.get('schema')==DEMO_SCHEMA
+    coverage=declared.get('schema') in (COVERAGE_SCHEMA,RATIO_SCHEMA,DEMO_SCHEMA)
     if coverage:
         # Direct worker invocation must not bypass permission, clock, or file locks.
         audit(path)
         receipt=read(Path(declared['output'])/'execution_authorization.json')
         if sha(receipt['authorization'])!=receipt['sha256']:raise ValueError('authorization drift')
-        (require_ratio_execution if ratio else require_coverage_execution)(path,receipt['authorization'])
+        (require_demo_execution if demo_stage else require_ratio_execution if ratio else require_coverage_execution)(path,receipt['authorization'])
         worker_keep_inputs(declared)
         claim_coverage_stage(Path(declared['output']),'worker_B',path)
     import jax
@@ -343,7 +365,7 @@ def B_worker(path):
         if step==0 and pytree_sha256(params[1])!=p['models']['pi0']['policy']['actor_sha256']:raise ValueError('BC did not start from original pi0')
         if step==0:
             full=baseline
-            if p['reused_zero'] and (not coverage or ratio):
+            if p['reused_zero'] and (not coverage or ratio or demo_stage):
                 zero=read(p['reused_zero']['zero_checkpoint'])['0'];solver=zero['solver'];train=zero['train']
             else:
                 solver=solver_combinations(r,0,zero_only=True);train=solver_combinations(r,0,zero_only=True,role='TRAIN')
@@ -373,7 +395,7 @@ def B_worker(path):
         writer.flush();reward_http(root,step,p['tensorboard_port']);r.status('running','B_checkpoint_checked')
         return bool(confirmed)
     try:
-        warmup_actor(net,(payload.observation_normalizer,payload.actor_params,payload.critic_params),(payload.observation_normalizer,payload.actor_params),demo,keep,root/'B',seed=p['seed'],updates=2000,batch_size=256,full_learner=True,actual_gradient_audit=True,metrics_callback=metrics,checkpoint_callback=checkpoint,probe_callback=probe,demo_coefficient=p['BC']['demo_coefficient'],keep_coefficient=p['BC']['keep_coefficient'])
+        warmup_actor(net,(payload.observation_normalizer,payload.actor_params,payload.critic_params),(payload.observation_normalizer,payload.actor_params),demo,keep,root/'B',seed=p['seed'],updates=p['BC']['updates'],batch_size=256,full_learner=True,actual_gradient_audit=True,metrics_callback=metrics,checkpoint_callback=checkpoint,probe_callback=probe,demo_coefficient=p['BC']['demo_coefficient'],keep_coefficient=p['BC']['keep_coefficient'])
         status=read(root/'B/warmup_status.json');selected=select_B(scores,eligible);completed=status['completed_updates']
         diagnostic_step=selected if coverage else selected if selected>0 else min((k for k in rows if k>0),key=lambda k:(-rows[k]['train_success'],k))
         diagnostics=[] if coverage else solver_combinations(r,diagnostic_step,role='TRAIN',only_roots=p['diagnostic_train_roots'])
@@ -422,9 +444,12 @@ def fixed_train_probe(net,params,reference,manifest,keep,keep_receipt):
 
 COVERAGE_SCHEMA='jit_retention_B_keep_coverage_v1'
 RATIO_SCHEMA='jit_retention_B_weight_ratio_v1'
+DEMO_SCHEMA='jit_retention_B_self_visit_demo_v1'
 
 
 def stage_deadline(plan):
+    if plan.get('schema')==DEMO_SCHEMA:
+        return plan['demo_started_unix']+plan['budget']['wall_seconds']
     if plan.get('schema')==RATIO_SCHEMA:
         return plan['weight_ratio_started_unix']+plan['budget']['wall_seconds']
     return plan['original_D2_started_unix']+43200
@@ -439,6 +464,133 @@ def weight_ratio_budget(prior):
     b['D2_cumulative_maximum']=prior+b['total']
     if prior<0 or b['D2_cumulative_maximum']>2000000:raise ValueError('ratio cumulative cap exceeded')
     return b
+
+
+def self_visit_demo_budget(prior):
+    """Same physical checks per node as the control, bounded at BC1000."""
+    b=dict(keep_collection=0,DEV_baselines=0,snapshot_nodes=3*15*17*400,
+        B_full_DEV=3*64*400,B_warning_repeat=3*2*64*400,selected_train_repeat=2*8*17*400,
+        selected_train_composites=0,R5_focus_repeat=0,reset_GPU=0)
+    b.update(total=sum(b.values()),prior_charged=prior,hard_cap=2000000,
+        wall_seconds=10800,B_updates=1000,PPO_updates=0)
+    b['D2_cumulative_maximum']=prior+b['total']
+    if prior<0 or b['D2_cumulative_maximum']>2000000:raise ValueError('demo cumulative cap exceeded')
+    return b
+
+
+def require_demo_execution(path,authorization=None,*,now=None):
+    p=read(path)
+    if p.get('schema')!=DEMO_SCHEMA:return None
+    if authorization is None:raise ValueError('hash-bound self-visit stage grant required')
+    a=read(authorization)
+    expected=dict(schema='jit_self_visit_demo_execution_v1',plan_sha256=sha(path),
+        execute=True,authorized_updates=1000,charged_upper_bound=p['budget']['total'])
+    if any(a.get(k)!=v for k,v in expected.items()) or not a.get('instruction_reference'):
+        raise ValueError('demo authorization identity/scope mismatch')
+    if (p['BC']['updates'],p['BC']['keep_coefficient'],p['BC']['demo_coefficient'])!=(1000,1.,1.):
+        raise ValueError('demo stage update/loss contract drift')
+    if (time.time() if now is None else now)>=stage_deadline(p):raise TimeoutError('demo declared3h clock expired')
+    return a
+
+
+def _completed_self_visit_cost(diagnostic,parent):
+    d=Path(diagnostic);q=read(d/'plan.json');status=read(d/'status.json');costs=read(d/'costs.json')
+    summary=read(d/'report/summary.json')
+    if (Path(q['parent']).resolve()!=Path(read(parent)['output']).resolve() or status['phase']!='completed'
+            or status['evaluation_status']!='complete' or summary['evaluation_status']!='complete'
+            or status['completed_roots']!=8 or len(costs)!=8
+            or any(c['phase']!='completed' for c in costs)):
+        raise ValueError('complete matching self-visit diagnostic required')
+    # The exporter independently validates every raw query and selected trace.
+    if status['charged_interactions']!=sum(c['charged'] for c in costs):raise ValueError('diagnostic cost mismatch')
+    return q['budget']['prior_charged']+sum(c['charged'] for c in costs)
+
+
+def prepare_self_visit_demo(parent,diagnostic,output,repository):
+    """No physics: freeze qualified TRAIN guidance, unchanged keep, and BC1000."""
+    from .retention_self_visit_learning import prepare_demo
+    old=read(parent);oldroot=Path(old['output']);code=Path(repository).resolve();diagnostic=Path(diagnostic).resolve()
+    if (old.get('schema')!=COVERAGE_SCHEMA or read(oldroot/'status.json')['phase']!='completed'
+            or old['initializer']!='original_pi0_fresh_Adam_RNG'
+            or (old['BC']['demo_coefficient'],old['BC']['keep_coefficient'])!=(1.,1.)):
+        raise ValueError('completed fixed-data1/1 coverage control required')
+    layout=self_visit_demo_budget(_completed_self_visit_cost(diagnostic,parent))
+    locks,history=_history_locks(old['locks'],old,code)
+    keep_path=worker_keep_inputs(old);keep=read(keep_path)
+    reports=[x for x in oldroot.glob('coverage_report_*') if (x/'summary.json').exists() and read(x/'summary.json').get('evaluation_status')=='complete']
+    if not reports:raise ValueError('complete control report required')
+    source_report=max(reports,key=lambda x:x.name)
+    zero=read(oldroot/'B_checkpoint_results.json')['0'];m=old['models']['pi0']['policy']
+    if any(zero[k]!=m[k] for k in ('actor_sha256','normalizer_sha256','critic_sha256')):raise ValueError('reused zero identity mismatch')
+    for entry in zero['train']+zero['solver']:
+        a=entry['combinations']['independent']['attempt']
+        if sha(a['trace'])!=a['trace_sha256']:raise ValueError('zero physical trace drift')
+        locks[a['trace']]=a['trace_sha256']
+    for name in old['reused_zero']['DEV'].values():
+        for f in (Path(name)/'prefixes.npz',Path(name)/'status.json',Path(name)/'spec.json'):
+            if f.exists():locks[str(f)]=sha(f)
+    root=Path(output).resolve();root.mkdir(parents=True,exist_ok=False)
+    manifest=prepare_demo(oldroot,diagnostic,root/'demo')
+    locks.update(read(root/'demo/source_lock.json')['locks'])
+    for f in [Path(parent),oldroot/'status.json',oldroot/'costs.json',oldroot/'B_completed.json',oldroot/'B_checkpoint_results.json',
+              oldroot/'merged_keep_lock.json',Path(keep_path),Path(keep['path']),source_report/'summary.json',source_report/'TRAIN_repeat_labels.json',
+              diagnostic/'plan.json',diagnostic/'costs.json',diagnostic/'status.json',diagnostic/'report/summary.json',diagnostic/'report/query_matrix.json',
+              *sorted((root/'demo').iterdir())]:
+        if f.is_file():locks[str(f)]=sha(f)
+    code_locks={str(f):sha(f) for directory in ('JIT/src/jit_dvgc','JIT/cli') for f in (code/directory).rglob('*.py')}
+    locks.update(code_locks)
+    p={**old,'schema':DEMO_SCHEMA,'stage':'D2_B_self_visit_demo','output':str(root),'code':str(code),
+        'code_revision':subprocess.check_output(['git','rev-parse','HEAD'],cwd=code,text=True).strip(),
+        'source_B':str(Path(parent).resolve()),'source_report':str(source_report),'diagnostic_root':str(diagnostic),
+        'only_changed_factor':'TRAIN_student_visited_demo_support_at_matched_updates',
+        'locks':locks,'historical_code_locks':history,'budget':layout,'demo_manifest':str(manifest),
+        'BC':{**old['BC'],'updates':1000,'checkpoints':[100,500,1000]},
+        'BC_selection':{**old['BC_selection'],'candidates':[0,100,500,1000]},
+        'training_updates':1000,'keep_receipt':keep_path,'keep_collection':None,
+        'demo_started_unix':time.time(),'tensorboard_port':6031,
+        'performance':dict(persistent_jax_cache=str(root/'jax_cache'),snapshot_worlds=17,full_DEV_batch=64,
+            reused_physics='locked pi0/R5 DEV and zero-node15roots',implementation='existing warmup_actor and full-layout pulse runtime'),
+        'reused_zero':dict(DEV=old['reused_zero']['DEV'],zero_checkpoint=str(oldroot/'B_checkpoint_results.json'),
+            reason='original pi0 identity, same root context and17-world layout; physical0 and DEV baselines reused'),
+        'learner_last':None,'stage_candidate':None,'published_policy':None,'diagnostic_train_roots':[],
+        'acceptance':dict(primary='unchanged7SOLVER_DEV selection and B/D repeat-confirmed retention guard',
+            mechanism='compare independent student outcomes at matched updates against coverage control, including fixed selected TRAIN repeats',
+            limitations='TRAIN guidance and used DEV only; no final TEST, G-versus-Noise superiority, or adoption claim'),
+        'execution_permission':dict(status='not_authorized',requires_explicit_new_stage=True)}
+    write(root/'plan.json',p);write(root/'code_lock.json',dict(revision=p['code_revision'],files=code_locks))
+    write(root/'input_lock.json',locks);write(root/'source_lock.json',dict(identities=read(oldroot/'source_lock.json')['identities'],locks=locks))
+    write(root/'budget_dry_run.json',layout)
+    write(root/'status.json',dict(phase='prepared',stage=p['stage'],charged_interactions=0,D2_prior_charged=layout['prior_charged'],
+        completed_supervised_updates=0,planned_supervised_updates=1000,execution_authorized=False,
+        original_D2_started_unix=p['original_D2_started_unix'],demo_started_unix=p['demo_started_unix'],
+        deadline_unix=stage_deadline(p),execution_blockers=['missing_hash_bound_stage_grant']))
+    audit(root/'plan.json');return root/'plan.json'
+
+
+def audit_self_visit_demo(p):
+    old=read(p['source_B']);oldroot=Path(old['output']);demo=read(p['demo_manifest'])
+    unchanged=('models','indices','seed','train_roots','solver_roots','batches','initializer','original_D2_started_unix')
+    if (any(p[k]!=old[k] for k in unchanged)
+            or p['BC']!={**old['BC'],'updates':1000,'checkpoints':[100,500,1000]}
+            or p['BC_selection']!={**old['BC_selection'],'candidates':[0,100,500,1000]}
+            or p['training_updates']!=1000 or p['only_changed_factor']!='TRAIN_student_visited_demo_support_at_matched_updates'):
+        raise ValueError('self-visit demo single-factor/control contract drift')
+    if p['keep_collection'] is not None or p['budget']!=self_visit_demo_budget(_completed_self_visit_cost(p['diagnostic_root'],p['source_B'])):
+        raise ValueError('demo fixed-keep/budget drift')
+    if (p['reused_zero']['zero_checkpoint']!=str(oldroot/'B_checkpoint_results.json')
+            or p['reused_zero']['DEV']!=old['reused_zero']['DEV'] or p['demo_started_unix']<=p['original_D2_started_unix']):
+        raise ValueError('demo zero/baseline/independent clock drift')
+    original=read(old['demo_manifest'])
+    if (demo['role']!='TRAIN' or demo['old_count']!=original['count'] or demo['new_count']<=0
+            or demo['original_manifest']!=str(Path(old['demo_manifest']).resolve())
+            or demo['source_normalizer_sha256']!=p['models']['pi0']['policy']['normalizer_sha256']
+            or sha(demo['path'])!=demo['sha256'] or demo['training_updates'] or demo['physical_interactions']):
+        raise ValueError('qualified demo identity/content drift')
+    worker_keep_inputs(p)
+    return dict(only_changed_factor=p['only_changed_factor'],BC=p['BC'],new_keep_collection=False,
+        demo_frames=demo['count'],new_demo_frames=demo['new_count'],new_queries=demo['eligible_query_count'],
+        deadline_unix=stage_deadline(p),remaining_wall_seconds=max(0,stage_deadline(p)-time.time()),
+        original_clock_unchanged=True,zero_and_DEV_baselines_reused=True)
 
 
 def require_ratio_execution(path,authorization=None,*,now=None):
@@ -567,7 +719,7 @@ def balanced_keep_records(records,forbidden):
 
 def worker_keep_inputs(plan):
     """Shared real worker route: coverage cannot fall back to the old anchors."""
-    if plan.get('schema')==RATIO_SCHEMA:
+    if plan.get('schema') in (RATIO_SCHEMA,DEMO_SCHEMA):
         parent=read(plan['source_B']);expected=worker_keep_inputs(parent)
         if plan['keep_receipt']!=expected:raise ValueError('ratio keep route drift')
         receipt=read(expected)
