@@ -1,6 +1,23 @@
 # JIT 论文、科研图件与维护索引
 
-## 2026-10-11 当前生成式恢复指导中文稿
+## 2026-10-12 当前英文期刊结构稿
+
+**[PDF](JIT_GENERATIVE_BRIDGE_MANUSCRIPT_EN.pdf) · [LaTeX](JIT_GENERATIVE_BRIDGE_MANUSCRIPT_EN.tex) · [Word](JIT_GENERATIVE_BRIDGE_MANUSCRIPT_EN.docx)**
+
+- [作者修改入口与缺失结果图表位置](JIT_GENERATIVE_BRIDGE_AUTHOR_NOTES.md)
+- [Markdown作者源](JIT_GENERATIVE_BRIDGE_MANUSCRIPT_EN.md) · [构建收据](JIT_GENERATIVE_BRIDGE_MANUSCRIPT_EN_build.json)
+- [公式源码审计](generative_bridge_assets/method_equation_audit.md) · [参照文献与英文审读](generative_bridge_assets/reference_style_audit.md) · [BibTeX](generative_bridge_assets/references_verified.bib)
+- 原E→G→π框图、实测pilot结果和明确标记的待补结果图表均已纳入。中文旧稿保留为历史版本。
+
+英文稿根据用户反馈整体重写，参考RAS自行车残差控制论文与LineRides的论证结构。正文围绕恢复探索、生成教学、独立学生学习和反馈展开，完整数学细节放在方法及附录。没有新增实验或开放TEST。
+
+从仓库根进行作者侧构建（Pandoc和Tectonic可在独立目录安装，不修改训练依赖）：
+
+    PYTHONPATH=/tmp/jit_word_authoring_deps /home/qy/mujoco_playground/.venv/bin/python JIT/docs/paper/build_english_manuscript.py --source JIT/docs/paper/JIT_GENERATIVE_BRIDGE_MANUSCRIPT_EN.md --output JIT/docs/paper --project-dir /tmp/JIT_English_LaTeX_20261012
+
+导出的独立工程使用相对图片路径、可编辑LaTeX公式、引用键和公式标签；在工程目录运行 xelatex main.tex 两次或 tectonic main.tex。PDF由TeX直接编译，Word另由同一数学源转换为结构化Office Math。下载工程包含全部所需图件，原框图PDF一并附带。
+
+## 2026-10-11 历史生成式恢复指导中文稿
 
 - **[可编辑Word](JIT_GENERATIVE_BRIDGE_DRAFT.docx) · [同版PDF](JIT_GENERATIVE_BRIDGE_DRAFT.pdf)**
 - [Markdown源稿](JIT_GENERATIVE_BRIDGE_DRAFT.md) · [待补证据与填稿位置](JIT_GENERATIVE_BRIDGE_GAPS.md)

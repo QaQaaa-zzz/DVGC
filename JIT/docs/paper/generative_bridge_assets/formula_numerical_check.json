@@ -1,0 +1,10 @@
+{
+  "schema": "jit_manuscript_formula_numerical_check_v1",
+  "reward_samples": 256,
+  "reward_max_abs_error": 2.8492754495346162e-05,
+  "action_samples": 81,
+  "action_max_abs_error": 4.768371586472142e-08,
+  "physics_steps": 0,
+  "optimizer_updates": 0,
+  "scope": "Appendix A dense/event reward and action map versus native source; floating point tolerance 1e-4 and 1e-6; episode-return override and event logic source-audited separately"
+}

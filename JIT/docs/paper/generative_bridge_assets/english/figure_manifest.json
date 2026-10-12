@@ -1,0 +1,31 @@
+{
+  "schema": "jit_english_manuscript_figures_v1",
+  "source": "/home/qy/DVGC/runs/worktrees/jit-retention-first/JIT/docs/evidence/retention_next_20261010/T1_paired_ppo_002/summary.json",
+  "source_sha256": "b6a2308c42adb2a04cc1cbad1922514f730dc8fdf710f23f33b1eb27a0415134",
+  "measured_figures": [
+    "pilot_stable_success"
+  ],
+  "empty_templates": [
+    "template_main_comparison",
+    "template_learning_curves",
+    "template_sim2sim"
+  ],
+  "synthetic_measurements": false,
+  "new_physical_steps": 0,
+  "new_optimizer_updates": 0,
+  "pilot_counts": {
+    "TRAIN_stable": [
+      1,
+      1
+    ],
+    "DEV_stable_pi0_control_demo": [
+      35,
+      56,
+      54
+    ],
+    "TRAIN_denominator": 8,
+    "DEV_denominator": 64,
+    "training_seeds": 1,
+    "fixed_evaluation_repetitions": 3
+  }
+}
