@@ -232,7 +232,12 @@ def validate_training_action_pulse(pulse, *, horizon=400):
         raise ValueError('unsupported pulse_scope')
     if 'scope' in pulse and 'pulse_scope' in pulse and pulse['scope'] != pulse['pulse_scope']:
         raise ValueError('conflicting pulse scope fields')
-    if scope == 'full_task_start_only' and (onsets != [0] or steps != 3):
+    selection=pulse.get('onset_selection')
+    if selection is not None:
+        if (selection!='uniform_complete_start' or scope!='full_task_start_only'
+            or onsets != [0,5,10,15] or steps!=3 or probability!=1. or limits!=[.25]*4):
+            raise ValueError('uniform_complete_start requires checked four-onset .25 three-tick pulse')
+    elif scope == 'full_task_start_only' and (onsets != [0] or steps != 3):
         raise ValueError('full_task_start_only requires control steps 0/1/2')
     conditions = pulse.get('training_conditions')
     if conditions is not None:
@@ -276,7 +281,9 @@ def initialize_training_action_pulse(info, reset_rng, pulse, *, full_task_start=
             draws = requested_draws(key, amplitude)
         enabled = jax.random.bernoulli(jax.random.fold_in(key, 0x454E4142), float(pulse['probability']))
         return {**info, 'training_pulse_rng': key, 'training_pulse_draws': draws,
-            'training_pulse_amplitude': amplitude, 'training_pulse_onset': jp.asarray(0, jp.int32),
+            'training_pulse_amplitude': amplitude, 'training_pulse_onset': (
+                jax.random.choice(jax.random.fold_in(key,0x4F4E5345),jp.asarray(pulse['onsets'],jp.int32))
+                if pulse.get('onset_selection')=='uniform_complete_start' else jp.asarray(0, jp.int32)),
             'training_pulse_enabled': jp.asarray(full_task_start) & enabled,
             'training_pulse_tick': jp.asarray(0, jp.int32),
             'training_pulse_request': jp.zeros(4, jp.float32),
@@ -300,7 +307,7 @@ def apply_training_action_pulse(info, action, pulse):
     tick, onset = info['training_pulse_tick'], info['training_pulse_onset']
     active = info['training_pulse_enabled'] & (tick >= onset) & (tick < onset + pulse['steps'])
     limits = jp.asarray(pulse['delta_limit'], jp.float32)
-    draw = (info['training_pulse_draws'][jp.minimum(tick, 2)] if 'training_pulse_draws' in info
+    draw = (info['training_pulse_draws'][jp.clip(tick-onset, 0, 2)] if 'training_pulse_draws' in info
             else jax.random.uniform(draw_rng, (4,), minval=-1., maxval=1.) * limits)
     requested = jp.where(active, draw, jp.zeros_like(draw))
     base = jp.clip(jp.asarray(action, jp.float32), -1., 1.)
@@ -384,7 +391,13 @@ def load_config(path, *, evaluation_only=False):
     if (ppo.num_parallel_envs!=128 or ppo.batch_size!=16 or ppo.num_minibatches!=8 or ppo.unroll_length!=25
         or ppo.episode_horizon!=400 or ppo.requested_transitions<=0 or ppo.requested_transitions%ppo.block_transitions):
         raise ValueError('invalid aligned probe PPO budget')
-    if raw['jump_start_probability']!=.2 or raw['success_criterion'] not in ('first_valid_landing','stable_forward_recovery'):raise ValueError('probe reset/endpoint drift')
+    recovery_reset=raw.get('student_reset_inventory') is not None
+    if recovery_reset:
+        from .retention_reset import validate_inventory
+        path=raw['student_reset_inventory']
+        if raw['input_files'].get(path)!=file_sha(path):raise ValueError('student reset inventory input lock missing')
+        validate_inventory(read(path))
+    if raw['jump_start_probability']!=(.4 if recovery_reset else .2) or raw['success_criterion'] not in ('first_valid_landing','stable_forward_recovery'):raise ValueError('probe reset/endpoint drift')
     if raw['success_criterion']=='stable_forward_recovery':
         from .config import load_config as phase_config
         from .constants import CTRL_DT
@@ -415,7 +428,8 @@ def load_config(path, *, evaluation_only=False):
         if raw.get('fixed_train_panel') != fixed_train_panel_identity(panel_support, plan, raw['success_criterion']):
             raise ValueError('fixed TRAIN panel identity drift')
     return UnifiedFormalConfig(schema=raw['schema'],raw=raw,config_sha256=canonical_sha256(raw),
-        runtime_naccdmax=1024,reset_mixture=UnifiedResetMixture('fixed_jump_start_20pct_exact_snapshot_80pct',.2,.8),
+        runtime_naccdmax=1024,reset_mixture=(UnifiedResetMixture('complete_start_40pct_current_teacher_30pct_historical_success_30pct',.4,.6)
+            if recovery_reset else UnifiedResetMixture('fixed_jump_start_20pct_exact_snapshot_80pct',.2,.8)),
         ppo=ppo,formal=UnifiedFormalSchedule(tuple(plan['checkpoint_transitions']),tuple(plan['train_panel_transitions']),plan['samples_per_phase'],'fresh_only'),
         up_config_path=raw['inputs']['up_config_path'],up_config_sha256=raw['inputs']['up_config_sha256'],
         down_config_path=raw['inputs']['down_config_path'],down_config_sha256=raw['inputs']['down_config_sha256'],
@@ -559,6 +573,9 @@ def build_environment(config, *, panel=False):
     uw,dw=weights(up_rows),weights(down_rows)
     env._tube_pool=TubeRSIPool(artifact,pool,uw,dw,jp.log(uw/uw.sum()),jp.log(dw/dw.sum()),
                               len(up_rows),len(down_rows),0,0,None)
+    if not panel and config.raw.get('student_reset_inventory') is not None:
+        from .retention_reset import install_declared_student_reset
+        install_declared_student_reset(env,config.raw)
     return artifact,env
 
 

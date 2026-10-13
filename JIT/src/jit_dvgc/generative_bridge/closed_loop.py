@@ -276,6 +276,11 @@ class ClosedLoopRound(CampaignRunner):
             'full_episode_rollout':False,'delta_limit':[.25]*4,'pulse_start_schedule':[0],
             'explorer_admission_v1_2':dict(run_id=self.spec['series_id'],collection_id=f'round_{index}',
                 master_seed=self.spec['seed'],round=index,episode_ids=list(range(128)),uniform_episode_fraction=self.spec.get('uniform_episode_fraction',.2))}
+        recovery=self.spec.get('recovery_training_contract')
+        if recovery:
+            from .student import validate_recovery_training_contract
+            validate_recovery_training_contract(recovery)
+            cfg.update(self.spec['recovery_explorer'])
         if self.spec.get('neighborhood') is not None:
             from .neighborhood_history import freeze_history
             path=self.root/'neighborhood_map.json'
@@ -291,6 +296,10 @@ class ClosedLoopRound(CampaignRunner):
         original=read(collected/'candidates.json')
         for row in original:
             row.update(root_id=row['snapshot_context_sha256'],root_episode_id=row['prefix_file']+'::'+str(row['index']))
+            if recovery and not row.get('prefix_terminal'):
+                from .recovery_campaign import snapshot_entry
+                clock=snapshot_entry(row,index)
+                row.update(snapshot_time=clock['snapshot_time'],snapshot_time_source=clock['snapshot_time_source'])
         # Batched evaluate preserves the original 128-row order, including terminal prefixes.
         rows=self.evaluate('source_suffix',original)
         for row in rows:
@@ -305,6 +314,12 @@ class ClosedLoopRound(CampaignRunner):
         retain_pending(support,previous['support'])
         self.panels=fresh_panels(rows,seed=self.spec['seed']+index,
             teacher_onsets=self.spec.get('pulse_start_schedule') if self.spec.get('pulse_contract_version') else None)
+        if recovery:
+            # Every physically eligible explorer episode receives a teacher query;
+            # do not use the source/student success label to pick easy queries.
+            self.panels['new_roots']=[r for r in rows if not r.get('prefix_terminal')]
+            self.panels['original_pending']=list(self.panels['new_roots'])
+            self.panels['selection']='all current TRAIN explorer roots before G search; terminal prefixes separately charged'
         history=corpus_history(load_corpus(previous['corpus']))
         for trace in history:
             m=trace['metadata'];self.panels['splits'][m['root_episode_id']]=m['inherited_split']
@@ -320,6 +335,9 @@ class ClosedLoopRound(CampaignRunner):
             retention_ref=self.spec['retention_ref'],demo_manifest={'path':str(self.root/'student_demo_bank/manifest.json'),
                 'sha256':file_sha(self.root/'student_demo_bank/manifest.json')})
         atomic_json(self.root/'source_phase_result.json',phase)
+        if recovery:
+            from .recovery_campaign import make_reset_inventory
+            self.spec['student_reset_inventory']=make_reset_inventory(self,rows,teachers,seed_support)
         student=self.journal.stage('train_student',phase,lambda:self.train_arm('student',phase,None))
         self.checkpoint_probes(student,phase,None)
         after=self.evaluate('student_train',rows,policy_bank=student['bank'],policy_name=student['policy']['name'])
@@ -339,6 +357,8 @@ class ClosedLoopRound(CampaignRunner):
         learner_completed=read(Path(student['training'])/'status.json')['status']=='completed'
         decision=(continuous_decision(student,learner_completed) if self.spec.get('continuous_learning')
                   else continuation_decision(student,nominal,learner_completed))
+        if recovery:
+            decision['authorization']='user 2026-10-13: new teacher-recovery100 experimental training'
         atomic_json(self.root/'acceptance.json',decision)
         from .outcomes import root_outcome,result_matrix
         usage=read(Path(student['training'])/'bridge_demo_usage.json')['demo_samples_by_root']
@@ -358,11 +378,19 @@ class ClosedLoopRound(CampaignRunner):
         feedback_input=feedback_rows(rows,after,teachers,decision)
         # Novelty is relative to this frozen source's own arrival ledger.
         seen=previous.get('arrival_ledgers',{}).get(self.source['actor_sha256'],[])
-        reward,eligible,cells,parts=feedback(feedback_input,seen)
+        if recovery:
+            from .rewards import teacher_feedback,teacher_reward_rows,TEACHER_WEIGHTS
+            feedback_input=teacher_reward_rows(rows,teachers)
+            reward,eligible,cells,parts=teacher_feedback(rows,seen,teachers)
+            weights=TEACHER_WEIGHTS
+        else:
+            reward,eligible,cells,parts=feedback(feedback_input,seen)
+            weights=WEIGHTS
         feedback_path=self.root/'explorer_feedback.json'
         atomic_json(feedback_path,dict(rewards=reward.tolist(),eligible=eligible.tolist(),components=parts,
-            component_sums={k:float(np.sum(v)) for k,v in parts.items()},weights=WEIGHTS,
-            teacher_success_bonus=0.,rows=feedback_input,adoption_scope='experimental_continuation'))
+            component_sums={k:float(np.sum(v)) for k,v in parts.items()},weights=weights,
+            teacher_success_bonus=weights.get('teacher_success_bonus',0.),rows=feedback_input,
+            adoption_scope='teacher_qualification_only' if recovery else 'experimental_continuation'))
         receipt=read(collected/'explorer_admission.json')
         update_cfg={**cfg,'collection':str(collected),'feedback':str(feedback_path),'epochs':4,
             'explorer_admission_v1_2':{**cfg['explorer_admission_v1_2'],
@@ -381,7 +409,7 @@ class ClosedLoopRound(CampaignRunner):
             corpus_receipt=corpus_receipt,corpus=corpus,phase=phase,support=support,
             stress=stress,e_metrics=e_metrics,cells=cells,rows=rows,after=after,teachers=teachers,aggregate=aggregate)
         atomic_json(self.root/'current_source.json',bundle)
-        self.status('completed',stage='closed_loop_round',training_transitions=128000)
+        self.status('completed',stage='closed_loop_round',training_transitions=recovery['student_transitions'] if recovery else 128000)
         return bundle
 
 

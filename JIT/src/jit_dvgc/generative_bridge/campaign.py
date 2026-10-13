@@ -178,9 +178,16 @@ class CampaignRunner(ProductionRunner):
         from ..probe_bank import lock_probe_bank
         directory=self.root/'students'/name;directory.mkdir(parents=True,exist_ok=False)
         config=directory/'config.json';support=read(source_phase['support_path'])
+        recovery=self.spec.get('recovery_training_contract')
+        transitions=128000;milestones=[32000,64000,96000,128000]
+        if recovery is not None:
+            from .student import validate_recovery_training_contract
+            validate_recovery_training_contract(recovery)
+            if name=='A' or warmup is not None:raise ValueError('recovery requires joint student without offline warmup')
+            transitions=recovery['student_transitions'];milestones=[16000,32000]
         candidate=support['schema']=='jit_iterative_candidate_support_v1'
         raw=make_config(source_phase['support_path'],self.spec['source_frozen_policy'],self.runtime['bootstrap_config'],
-            config,self.root.name+'_'+name,1,128000,self.spec['seed'],checkpoints=[32000,64000,96000,128000],
+            config,self.root.name+'_'+name,1,transitions,self.spec['seed'],checkpoints=milestones,
             panel_support_path=source_phase['panel_support_path'] if candidate else None,
             pending_fraction=.5 if candidate else None,reward_mode='original_all_phases')
         raw['training_action_pulse']={'onsets':[0],'steps':3,'delta_limit':[.25]*4,'probability':1.,
@@ -194,8 +201,27 @@ class CampaignRunner(ProductionRunner):
             'demo_manifest':None if name=='A' else source_phase['demo_manifest'],
             'demo_coefficient_start':0. if name=='A' else .2,'demo_coefficient_end':0. if name=='A' else .05,
             'max_first_behavior_kl':.05,'retention_coefficient':.2,'demo_batch_size':256,'retention_batch_size':256}
+        if recovery is not None:
+            raw['recovery_training_contract']=dict(recovery)
+            raw['ppo']['learning_rate']=recovery['student_learning_rate']
+            raw.pop('kl_control',None)  # Fixed LR declared for this fresh lineage only.
+            inventory=self.spec['student_reset_inventory']
+            from ..retention_reset import validate_inventory
+            validate_inventory(read(inventory))
+            raw['student_reset_inventory']=inventory;raw['input_files'][inventory]=file_sha(inventory)
+            raw['jump_start_probability']=.4
+            raw['snapshot_reset_contract']='preserve original history, observation, phase, event, episode and declared absolute time; no clock relabeling'
+            raw['training_action_pulse'].update(onsets=[0,5,10,15],onset_selection='uniform_complete_start')
+            raw['training_action_pulse'].pop('training_conditions')
+            contract.update(ppo_coefficient=recovery['ppo_coefficient'],
+                demo_coefficient_start=recovery['demo_coefficient'],demo_coefficient_end=recovery['demo_coefficient'],
+                retention_coefficient=recovery['retention_coefficient'],retention_batch_size=recovery['retention_batch_size'],
+                freeze_actor_normalizer=True,demo_clock='completed_transitions',actual_gradient_audit=True,
+                record_update_clock=True,record_actual_updates=True,exact_demo_fresh_history=True)
         if warmup is not None:contract['warmup_initializer']=warmup
         raw['generative_bridge_student']=contract
+        if recovery is not None and not self.spec.get('continuous_learning'):
+            raise ValueError('recovery requires complete PPO learner continuation')
         if self.spec.get('continuous_learning'):
             from brax.training.agents.ppo import train as upstream
             from .learner_continuation import trainer_sha
@@ -209,11 +235,11 @@ class CampaignRunner(ProductionRunner):
             if parent:raw['input_files'][parent['path']]=parent['sha256']
         atomic_json(config,raw)
         cost=self.child('student_'+name,['JIT/cli/train_unified_from_pi0.py','--config',config,'--run-id',raw['run_declaration']['run_id']],
-            136000,extra_env={'JIT_RUN_ROOT':str(directory/'training')})
+            raw['checkpoint_evaluation']['maximum_total_interactions'] if recovery is not None else 136000,extra_env={'JIT_RUN_ROOT':str(directory/'training')})
         training=directory/'training'/raw['run_declaration']['run_id'];report=read(training/'formal_report.json')
         cost.update(charged_interactions=report['completed_training_transitions']+report['train_panel_interactions'],accounting='measured')
         atomic_json(self.root/'costs.json',self.costs)
-        freeze_development_checkpoint(directory/'frozen',config_path=config,checkpoint=training/'checkpoints/transition_128000',name=self.root.name+'_'+name)
+        freeze_development_checkpoint(directory/'frozen',config_path=config,checkpoint=training/'checkpoints'/f'transition_{transitions}',name=self.root.name+'_'+name)
         frozen=directory/'frozen/frozen_unified_policy.json';policy=read(frozen)['policy']
         bank=read(self.runtime['bank']);bank={k:bank[k] for k in ('task','max_ticks','label_interaction_budget','max_candidates_per_process')}
         bank.update(version=name,members=[{'frozen_policy':str(frozen),'roles':['proposer','evaluator']},
@@ -224,7 +250,7 @@ class CampaignRunner(ProductionRunner):
         if self.spec.get('continuous_learning'):
             from .learner_continuation import validate_saved_learner
             result['learner']=read(training/'learner/latest.json')
-            validate_saved_learner(result['learner'],policy,expected_local_transitions=128000)
+            validate_saved_learner(result['learner'],policy,expected_local_transitions=transitions)
         return result
 
     def checkpoint_probes(self,student,source_phase,warmup):
@@ -244,7 +270,8 @@ class CampaignRunner(ProductionRunner):
             if file_sha(warmup['path'])!=warmup['sha256']:raise ValueError('warmup selected checkpoint changed')
             with Path(warmup['path']).open('rb') as stream:initial=pickle.load(stream)[:2]
         probes={'0':action_probe(net,*initial,demo,reference=reference)}
-        for step in (32000,64000,96000,128000):
+        checkpoints=(16000,32000) if self.spec.get('recovery_training_contract') is not None else (32000,64000,96000,128000)
+        for step in checkpoints:
             payload=load_checkpoint(Path(student['training'])/'checkpoints'/f'transition_{step}',expected=final.identity)
             probes[str(step)]=action_probe(net,payload.observation_normalizer,payload.actor_params,demo,reference=reference)
         for step,probe in probes.items():

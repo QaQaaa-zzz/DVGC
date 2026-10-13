@@ -1,4 +1,4 @@
-"""One gated GPU lifetime for source checks, B1 search and independent B1 replay."""
+"""Gated teacher lifetime with legacy replay and opt-in two-review recovery."""
 from pathlib import Path
 import json
 import shutil
@@ -37,7 +37,7 @@ def dispatch_teacher(parent,incumbent):
         raise ValueError('persistent B1 requires original 17-world candidate layout')
     validate_teacher_acceptance(parent.spec)
     root=parent.root/'teacher_worker';root.mkdir(exist_ok=False)
-    maximum=len(parent.panels['new_roots'])*400*(1+17*2)
+    maximum=teacher_reservation(parent.spec,len(parent.panels['new_roots']))
     spec={**parent.spec,'output':str(root),'teacher_execution':'worker_internal',
           'budgets':{**parent.spec['budgets'],'max_physics':maximum}}
     atomic_json(root/'production.json',spec);atomic_json(root/'panels.json',parent.panels)
@@ -96,6 +96,9 @@ def validate_teacher_acceptance(spec):
     A trial records unresolved evidence and never constitutes formal acceptance.
     Its exact output/round binding prevents reuse for a subsequent campaign.
     """
+    if recovery_training_enabled(spec):
+        validate_recovery_authorization(spec)
+        return
     trial=spec.get('teacher_experimental_trial')
     if trial is not None:
         if set(trial)!={'path','sha256'} or file_sha(trial['path'])!=trial['sha256']:
@@ -121,3 +124,172 @@ def validate_teacher_acceptance(spec):
         or any(report.get(k) is not True for k in ('aba_passed','baseline_comparison_passed',
                   'full_search_replay_passed','rng_mapping_passed'))):
         raise ValueError('persistent B1 physical acceptance missing or failed')
+
+
+def recovery_training_enabled(spec):
+    contract=spec.get('recovery_training_contract')
+    if contract is None:return False
+    if not isinstance(contract,dict) or contract.get('schema')!='jit_teacher_recovery_training_v1':
+        raise ValueError('unknown recovery training contract')
+    return True
+
+
+def teacher_reservation(spec,query_count):
+    recovery=recovery_training_enabled(spec)
+    if type(query_count) is not int or query_count<0 or (recovery and query_count>128):
+        raise ValueError('recovery teacher query count must be within 128')
+    return query_count*400*(1+17*(3 if recovery else 2))
+
+
+def validate_recovery_authorization(spec):
+    """Bind the new authorized campaign; leave legacy trial/acceptance untouched."""
+    receipt=spec.get('teacher_recovery_authorization')
+    if (not receipt or set(receipt)!={'path','sha256'}
+            or file_sha(receipt['path'])!=receipt['sha256']):
+        raise ValueError('recovery campaign authorization missing or changed')
+    report=read(receipt['path'])
+    campaign=Path(spec.get('campaign_output','')).resolve()
+    output=Path(spec['output']).resolve()
+    round_index=spec.get('round_index')
+    if (report.get('schema')!='jit_teacher_recovery_campaign_authorization_v1'
+            or report.get('implementation_commit')!=spec['implementation_commit']
+            or report.get('campaign_output')!=str(campaign)
+            or not output.is_relative_to(campaign) or output==campaign
+            or report.get('rounds')!=100 or type(round_index) is not int or not 1<=round_index<=100
+            or report.get('user_authorized') is not True or report.get('formal_acceptance') is not False
+            or not report.get('known_limitations')
+            or report.get('max_physics_per_round')!=3500000
+            or not 0<spec['budgets']['max_physics']<=3500000
+            or report.get('teacher_query_count')!=128
+            or report.get('teacher_generated_candidates')!=16 or report.get('teacher_reviews')!=2
+            or spec.get('teacher_layout')!='source_control_in_candidate_batch'
+            or spec.get('teacher_colored_noise_candidates')!=0):
+        raise ValueError('recovery campaign authorization scope mismatch')
+
+
+def _complete_recovery_result(result,base,source,horizon,lane):
+    """Verify a completed real lane under the already frozen endpoint contract."""
+    import numpy as np
+    from .production import lane_arrays
+    from ..pulse_exploration_runtime import suffix_label
+    if (any(result.get(k)!=base[k] for k in ('root_id','snapshot_context_sha256'))
+            or result.get('label') not in (0,1) or len(result.get('attempts',[]))!=1):
+        raise ValueError('incomplete recovery teacher result or changed root identity')
+    attempt=result['attempts'][0]
+    expected=dict(trace_lane=lane,actor_sha256=source['actor_sha256'],
+        normalizer_sha256=source['normalizer_sha256'],model_sha256=source['xml_sha256'],
+        snapshot_context_sha256=base['snapshot_context_sha256'],label=result['label'])
+    if any(attempt.get(k)!=v for k,v in expected.items()):
+        raise ValueError('recovery teacher trace identity changed')
+    arrays=lane_arrays(attempt)
+    if any(not np.isfinite(a).all() for a in arrays.values() if a.dtype.kind in 'fc'):
+        raise ValueError('nonfinite recovery teacher trace')
+    n=len(arrays['done'])
+    if n!=attempt.get('steps') or not n or not (arrays['done'][-1] or n>=horizon):
+        raise ValueError('incomplete recovery teacher trace')
+    label,_=suffix_label(bool(arrays['valid_contact'][-1]),bool(arrays['physical_failure'][-1]),
+        bool(arrays['timeout'][-1]),bool(arrays['done'][-1]),n>=horizon)
+    if label!=result['label']:raise ValueError('recovery teacher terminal label mismatch')
+    return arrays
+
+
+def recovery_teacher_search(runner,incumbent):
+    """Search G independently, then review the fixed winner twice in its layout."""
+    import numpy as np
+    import jax
+    import jax.numpy as jp
+    from .worker import generator_template,generator_reference
+    from .diffusion import restore_state,ddim_sample
+    from .proposals import make_candidate_pool,stable_seed
+    from .teacher import select_teacher
+    from .production import lane_arrays,teacher_candidate,trace_metadata
+    from .performance import measure
+    from ..unified_envelope_snapshot import load_unified_envelope_snapshot
+    validate_recovery_authorization(runner.spec)
+    teacher_reservation(runner.spec,len(runner.panels['new_roots']))
+    horizon=runner.spec['source_runtime']['horizon']
+    if horizon!=400:raise ValueError('recovery teacher preserves the frozen 400-step horizon')
+    originals={r['root_id']:r for r in runner.panels['new_roots']}
+    if len(originals)!=len(runner.panels['new_roots']):raise ValueError('duplicate recovery teacher roots')
+    with measure('model_actor_generator_load',backend=jax.default_backend(),component='generator'):
+        net,template,identity=generator_template(generator_reference(runner.spec),runner.spec['seed'])
+        state=restore_state(Path(incumbent['checkpoint_manifest']).parent,template,identity)
+    generation=jax.jit(lambda obs,noise:ddim_sample(lambda x,o,k:net.apply(state['ema'],x,o,k),obs,noise)) if getattr(runner,'persistent_teacher',False) else None
+    compiled=None
+    runner.teacher_in_progress=True
+    source_results=runner.evaluate('teacher_source',runner.panels['new_roots'])
+    if [r['root_id'] for r in source_results]!=list(originals):raise ValueError('recovery source roots changed or incomplete')
+    output={};directory=runner.root/'teachers';directory.mkdir(exist_ok=True)
+    for ordinal,base in enumerate(source_results):
+        rid=base['root_id'];runner.active_teacher_root=rid
+        if base.get('label') not in (0,1):raise ValueError('unknown recovery source recheck')
+        if len(base.get('attempts',[]))!=1:raise ValueError('incomplete recovery source trace')
+        _complete_recovery_result(base,originals[rid],runner.source,horizon,base['attempts'][0]['trace_lane'])
+        snapshot=load_unified_envelope_snapshot(Path(base['snapshot']))
+        actual=lane_arrays(base['attempts'][0]);obs=actual['actor_observation_before'][0]
+        noise=np.stack([np.random.default_rng(stable_seed(runner.spec['seed'],rid,cid)).normal(size=(16,4)) for cid in range(1,17)]).astype(np.float32)
+        normalized=(jp.asarray(np.repeat(obs[None],16,axis=0))-state['normalizer']['mean'])/state['normalizer']['std']
+        if generation is not None and compiled is None:
+            with measure('ddim_compile',backend=jax.default_backend(),batch_size=16):
+                compiled=generation.lower(normalized,jp.asarray(noise)).compile()
+        with measure('ddim_generation',backend=jax.default_backend(),root=rid,batch_size=16):
+            generated=jax.device_get(compiled(normalized,jp.asarray(noise)) if compiled is not None else
+                ddim_sample(lambda x,o,k:net.apply(state['ema'],x,o,k),normalized,jp.asarray(noise)))
+        pool=make_candidate_pool(rid,actual['normalized_action_executed'][:16],generated,
+            seed=runner.spec['seed'],colored_noise_candidates=0)
+        path=directory/f'{ordinal:04d}_proposals.npz'
+        if path.exists():raise ValueError('recovery teacher proposals already exist; no silent retry')
+        np.savez_compressed(path,actions=pool['actions'],diffusion_noise=noise,colored_raw_draws=pool['colored_raw_draws'])
+        candidates=[{**base,'index':cid,'candidate_id':cid} for cid in range(17)]
+        controls=np.asarray([True]+[False]*16)
+        results=runner.evaluate(f'teacher_{ordinal:04d}',candidates,prefixes=pool['actions'],source_only=controls)
+        if [r['candidate_id'] for r in results]!=list(range(17)):raise ValueError('incomplete recovery search candidate ordering')
+        for lane,result in enumerate(results):_complete_recovery_result(result,base,runner.source,horizon,lane)
+        scored=[teacher_candidate(r,pool['kinds'][r['candidate_id']],r['candidate_id'],snapshot.last_action) for r in results]
+        selected=select_teacher([c for c in scored if c['kind']=='diffusion'])
+        source_labels=[originals[rid]['label'],base['label'],results[0]['label']]
+        row=dict(root_id=rid,teacher_status='searched_no_solution',source_actor_sha256=runner.source['actor_sha256'],
+            generator=incumbent,candidates=scored,proposal_sha256=file_sha(path),generated_only_search=True,
+            historical_source_label=originals[rid]['label'],training_eligible=True,teacher_query_completed=True)
+        reviews=[];last_arrays=None
+        if selected is not None:
+            cid=selected['candidate_id']
+            for review in (1,2):
+                repeated=runner.evaluate(f'review_batch_{ordinal:04d}_{review}',candidates,
+                    prefixes=pool['actions'],source_only=controls)
+                if [r['candidate_id'] for r in repeated]!=list(range(17)):
+                    raise ValueError('incomplete recovery review candidate ordering')
+                for lane,result in enumerate(repeated):
+                    arrays=_complete_recovery_result(result,base,runner.source,horizon,lane)
+                    if lane==cid:last_arrays=arrays
+                source_labels.append(repeated[0]['label'])
+                reviews.append(dict(review=review,candidate_id=cid,full_success=repeated[cid]['label']==1,
+                    complete=True,selected_label=repeated[cid]['label'],candidate_ids=list(range(17)),
+                    labels=[r['label'] for r in repeated],selected_attempt=repeated[cid]['attempts'][0]))
+            verification=dict(candidate_id=cid,full_success=all(r['full_success'] for r in reviews),
+                batch_size=17,selected_lane=cid,layout='same_as_search',
+                repeat_labels=[r['selected_label'] for r in reviews],repeat_complete=[r['complete'] for r in reviews],
+                reviews=reviews,fixed_selection=True)
+            atomic_json(directory/f'{ordinal:04d}_reviews.json',verification)
+            row.update(selected_candidate_id=cid,verification=verification,
+                teacher_status='verified_solution' if verification['full_success'] else 'replay_rejected')
+            if not verification['full_success']:row['reason']='fixed_generated_candidate_failed_review'
+        consistent=all(label in (0,1) and label==source_labels[0] for label in source_labels)
+        row.update(source_control_label_history=source_labels,source_control_consistent=consistent,
+            source_recheck_label=source_labels[0] if consistent else None,new_gain_eligible=consistent)
+        if not consistent:
+            row.update(teacher_status='invalid' if selected is not None else 'not_scheduled',
+                reason='source_control_repeat_conflict',quarantined=True,
+                source_control_labels=[source_labels[0],next(v for v in source_labels if v!=source_labels[0])],
+                selected_replay_label=reviews[-1]['selected_label'] if reviews else None,complete_finite_replay=True)
+        elif row['teacher_status']=='verified_solution':
+            # Only the final successful review is exported, after both reviews.
+            last_arrays['action_origin']=np.where(last_arrays['action_origin_code']==1,'bridge_prefix','source_tail')
+            metadata=trace_metadata(base,runner.source,runner.protocol,runner.panels['splits'],'verified_teacher')
+            metadata.update(teacher_status='verified_solution',verification_receipt_sha256=digest(row['verification']),
+                generator_checkpoint_manifest_sha256=incumbent['checkpoint_manifest_sha256'])
+            trace=directory/f'{ordinal:04d}_verified.npz';np.savez_compressed(trace,**last_arrays)
+            row['demo']=dict(count=len(last_arrays['done']),path=str(trace),sha256=file_sha(trace),metadata=metadata)
+        atomic_json(directory/f'{ordinal:04d}_result.json',row);output[rid]=row
+    runner.teacher_in_progress=False;runner.active_teacher_root=None
+    return output

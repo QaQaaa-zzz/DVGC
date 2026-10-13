@@ -22,17 +22,28 @@ def trainer_sha(trainer):
 
 
 def learner_contract(raw):
-    return digest(dict(ppo={k:v for k,v in raw['ppo'].items() if k not in ('seed','requested_transitions')},
+    contract=dict(ppo={k:v for k,v in raw['ppo'].items() if k not in ('seed','requested_transitions')},
         inputs=raw['inputs'],reward_mode=raw['reward_mode'],reward_contract=raw['reward_contract'],
-        snapshot_reset_contract=raw['snapshot_reset_contract']))
+        snapshot_reset_contract=raw['snapshot_reset_contract'])
+    if raw.get('recovery_training_contract') is not None:
+        contract['recovery_training_contract']=raw['recovery_training_contract']
+        fields=('ppo_coefficient','demo_coefficient_start','demo_coefficient_end','retention_coefficient',
+            'demo_batch_size','retention_batch_size','freeze_actor_normalizer','demo_clock','exact_demo_fresh_history')
+        contract['student_loss']={k:raw['generative_bridge_student'][k] for k in fields}
+    return digest(contract)
 
 
 class LearnerHooks:
-    def __init__(self,root,*,contract,trainer_sha,parent,preserve_stage_clock=False):
+    def __init__(self,root,*,contract,trainer_sha,parent,preserve_stage_clock=False,require_fresh_adam=False):
         self.root=Path(root);self.contract=contract;self.trainer_sha=trainer_sha
         self.parent=parent;self.offset=0;self.latest=None;self.preserve_stage_clock=preserve_stage_clock
+        self.require_fresh_adam=require_fresh_adam
 
     def initialize(self,state,key):
+        if self.require_fresh_adam and self.parent is None:
+            from .actual_update import adam_update_count
+            if int(adam_update_count(state.optimizer_state))!=0 or any(np.any(np.asarray(x)!=0) for x in jax.tree.leaves(state.optimizer_state)):
+                raise ValueError('recovery first round requires fresh Adam counters and moments')
         if self.parent is not None:
             p=self.parent
             if file_sha(p['path'])!=p['sha256']:raise ValueError('learner manifest changed')
@@ -52,7 +63,8 @@ class LearnerHooks:
         if not all(np.isfinite(np.asarray(v)).all() for v in jax.tree.leaves((state,key))):
             raise ValueError('nonfinite learner state')
         atomic_json(self.root/'initialization.json',dict(
-            mode='full_learner_continuation' if self.parent else 'one_time_legacy_optimizer_bootstrap',
+            mode=('full_learner_continuation' if self.parent else 'pi0_actor_critic_fresh_adam'
+                if self.require_fresh_adam else 'one_time_legacy_optimizer_bootstrap'),
             parent=self.parent,lifetime_transition_offset=self.offset,
             actor_sha256=pytree_sha256(state.params.policy),critic_sha256=pytree_sha256(state.params.value),
             normalizer_sha256=pytree_sha256(state.normalizer_params),optimizer_sha256=pytree_sha256(state.optimizer_state),
@@ -110,7 +122,8 @@ def continuing_trainer(trainer,raw,run_dir):
     contract=raw['continuous_learner']
     if trainer_sha(trainer)!=contract['trainer_sha256']:raise ValueError('upstream PPO trainer identity changed')
     hooks=LearnerHooks(Path(run_dir)/'learner',contract=learner_contract(raw),
-        trainer_sha=contract['trainer_sha256'],parent=contract['parent'],preserve_stage_clock=contract.get('preserve_stage_clock',False))
+        trainer_sha=contract['trainer_sha256'],parent=contract['parent'],preserve_stage_clock=contract.get('preserve_stage_clock',False),
+        require_fresh_adam=raw.get('recovery_training_contract') is not None)
     return instrument_trainer(trainer,hooks.initialize,hooks.save)
 
 

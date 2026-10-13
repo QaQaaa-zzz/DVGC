@@ -51,7 +51,7 @@ def instrument_updates(trainer,sink,*,max_grad_norm,probe,record_optimizer_count
         gn=norm(grads);scale=jp.minimum(1.,max_grad_norm/jp.maximum(gn,1e-20))
         delta=jax.tree.map(lambda a,b:a-b,after.policy,before.policy)
         prediction=lambda p:network.parametric_action_distribution.mode(network.policy_network.apply(normalizer,p,{'state':probe}))
-        prefixes=('actual/','effective_lambda','retention_coefficient','ppo_loss','total_loss','demo_action_mse','retention_action_mse')
+        prefixes=('actual/','effective_lambda','retention_coefficient','ppo_loss','total_loss','demo_action_mse','retention_action_mse','ppo_coefficient','weighted_ppo_loss','learning_rate')
         if record_optimizer_count:prefixes+=('audit/','fixed_probe/')
         values={**{k:v for k,v in metrics.items() if k.startswith(prefixes)},
             'actual/global_actor_critic_gradient_norm':gn,'actual/global_clip_scale':scale,

@@ -5,6 +5,35 @@ from .contracts import file_sha
 from ..policy_distillation import load_dataset
 
 
+def recovery_training_contract():
+    return dict(schema='jit_teacher_recovery_training_v1',student_transitions=32000,
+        student_learning_rate=3e-5,ppo_coefficient=.1,demo_coefficient=1.,
+        retention_coefficient=1.,demo_batch_size=256,retention_batch_size=512)
+
+
+def validate_recovery_training_contract(contract):
+    if contract!=recovery_training_contract():raise ValueError('teacher recovery training contract drift')
+    return contract
+
+
+def apply_recovery_runtime_contract(raw,student,kwargs):
+    """Check the actual loss/optimizer inputs and restore the inherited critic."""
+    recovery=raw.get('recovery_training_contract')
+    if recovery is None:return kwargs
+    validate_recovery_training_contract(recovery)
+    if kwargs.get('learning_rate')!=recovery['student_learning_rate'] or kwargs.get('learning_rate_schedule') is not None:
+        raise ValueError('actual student learning rate/schedule differs from frozen recovery declaration')
+    expected=dict(ppo_coefficient=recovery['ppo_coefficient'],
+        demo_coefficient_start=recovery['demo_coefficient'],demo_coefficient_end=recovery['demo_coefficient'],
+        retention_coefficient=recovery['retention_coefficient'],demo_batch_size=recovery['demo_batch_size'],
+        retention_batch_size=recovery['retention_batch_size'],freeze_actor_normalizer=True,
+        demo_clock='completed_transitions',exact_demo_fresh_history=True)
+    if any(student.get(k)!=v for k,v in expected.items()):
+        raise ValueError('actual recovery student loss/frozen normalizer contract drift')
+    kwargs['restore_value_fn']=True
+    return kwargs
+
+
 def load_optional_demo(manifest):
     if manifest is None:return None
     if manifest.get('schema') not in ('jit_bridge_demo_v1_1','jit_bridge_demo_v1_2'):raise ValueError('demo schema required')
@@ -26,7 +55,7 @@ def make_joint_student_trainer(trainer, demo_manifest, *, retention,
         demo_sampler=None, usage_sink=None, retention_reference=None, audit_enabled=False, max_first_behavior_kl=None,
         first_update_audit_path=None, freeze_actor_normalizer=False, demo_clock="normalizer_count", actual_gradient_audit=False,
         audit_callback_enabled=True,
-        record_update_clock=False):
+        record_update_clock=False, ppo_coefficient=1., exact_demo_fresh_history=False):
     """Must be invoked inside the existing guard_ppo_updates scope.
 
     Empty data creates no device target, sampler or demo RNG operation. Both
@@ -40,7 +69,7 @@ def make_joint_student_trainer(trainer, demo_manifest, *, retention,
         raise ValueError('explicit clock requires instrumented fixed-normalizer pilot')
     if record_update_clock and demo_clock!='completed_transitions':
         raise ValueError('actual update clock requires completed transitions')
-    coefficients=(demo_coefficient_start,demo_coefficient_end,keep_coefficient)
+    coefficients=(demo_coefficient_start,demo_coefficient_end,keep_coefficient,ppo_coefficient)
     if any(not np.isfinite(v) or v<0 for v in coefficients):raise ValueError('invalid auxiliary coefficient')
     if any(type(v) is not int or v<=0 for v in (transitions,demo_batch_size,retention_batch_size)):
         raise ValueError('positive transition and batch budgets required')
@@ -54,6 +83,14 @@ def make_joint_student_trainer(trainer, demo_manifest, *, retention,
         if not isinstance(sample_roots,list) or len(sample_roots)!=len(demo[0]):
             raise ValueError('per-example root provenance required for demo usage')
     use_demo=demo is not None and (demo_coefficient_start>0 or demo_coefficient_end>0)
+    fresh_history_probs=None
+    if exact_demo_fresh_history:
+        if not use_demo or demo_batch_size%2:raise ValueError('both fresh/history demo groups and even batch required')
+        roots=np.asarray(sample_roots);fresh=np.isin(roots,demo_manifest.get('new_roots',[]))
+        if not fresh.any() or fresh.all():raise ValueError('both fresh/history demo groups required')
+        fresh_history_probs=[np.where(mask,demo[2],0.) for mask in (fresh,~fresh)]
+        fresh_history_probs=[p/p.sum() for p in fresh_history_probs]
+        usage['demo_sampling']='exact equal fresh/history minibatch; original root/segment weights within each group'
     if keep_coefficient:
         if retention is None:raise ValueError('declared keep term requires locked successful anchors')
         obs,weights=map(np.asarray,retention)
@@ -68,7 +105,7 @@ def make_joint_student_trainer(trainer, demo_manifest, *, retention,
         if freeze_actor_normalizer:
             from .student_clock import instrument_frozen_normalizer
             effective_trainer=instrument_frozen_normalizer(trainer)
-        if not use_demo and not keep_coefficient:return effective_trainer(**kwargs)
+        if not use_demo and not keep_coefficient and ppo_coefficient==1.:return effective_trainer(**kwargs)
         import jax
         import jax.numpy as jp
         from brax.training.agents.ppo import losses
@@ -128,9 +165,13 @@ def make_joint_student_trainer(trainer, demo_manifest, *, retention,
             base,metrics=original(params,normalizer_params,data,rng,ppo_network,**options)
             apply=ppo_network.policy_network.apply
             mode=ppo_network.parametric_action_distribution.mode
-            total=base;demo_mse=jp.asarray(0.);keep_mse=jp.asarray(0.);scale=jp.asarray(0.)
+            total=ppo_coefficient*base;demo_mse=jp.asarray(0.);keep_mse=jp.asarray(0.);scale=jp.asarray(0.)
             if use_demo:
-                ids=sampler(jax.random.fold_in(rng,173),len(demo_obs),(demo_batch_size,),p=demo_probs)
+                if fresh_history_probs is None:
+                    ids=sampler(jax.random.fold_in(rng,173),len(demo_obs),(demo_batch_size,),p=demo_probs)
+                else:
+                    ids=jp.concatenate([sampler(jax.random.fold_in(rng,173+i),len(demo_obs),
+                        (demo_batch_size//2,),p=jp.asarray(probs)) for i,probs in enumerate(fresh_history_probs)])
                 demo_ids=ids
                 jax.debug.callback(record_usage,ids)
                 prediction=mode(apply(normalizer_params,params.policy,{'state':demo_obs[ids]}))
@@ -151,9 +192,9 @@ def make_joint_student_trainer(trainer, demo_manifest, *, retention,
             if actual_gradient_audit:
                 from .actual_update import weighted_actor_metrics
                 def ppo_objective(actor):
-                    return original(params.replace(policy=actor),normalizer_params,data,rng,ppo_network,**options)[1]['policy_loss']
+                    return ppo_coefficient*original(params.replace(policy=actor),normalizer_params,data,rng,ppo_network,**options)[1]['policy_loss']
                 def entropy_objective(actor):
-                    return original(params.replace(policy=actor),normalizer_params,data,rng,ppo_network,**options)[1]['entropy_loss']
+                    return ppo_coefficient*original(params.replace(policy=actor),normalizer_params,data,rng,ppo_network,**options)[1]['entropy_loss']
                 def demo_objective_actual(actor):
                     if not use_demo:return jp.asarray(0.)
                     pred=mode(apply(normalizer_params,actor,{'state':demo_obs[demo_ids]}))
@@ -175,9 +216,9 @@ def make_joint_student_trainer(trainer, demo_manifest, *, retention,
             if audit_enabled:
                 from .learning_audit import joint_loss_metrics,critic_loss_metrics
                 def policy_objective(actor):
-                    return original(params.replace(policy=actor),normalizer_params,data,rng,ppo_network,**options)[1]['policy_loss']
+                    return ppo_coefficient*original(params.replace(policy=actor),normalizer_params,data,rng,ppo_network,**options)[1]['policy_loss']
                 def value_objective(critic):
-                    return original(params.replace(value=critic),normalizer_params,data,rng,ppo_network,**options)[1]['v_loss']
+                    return ppo_coefficient*original(params.replace(value=critic),normalizer_params,data,rng,ppo_network,**options)[1]['v_loss']
                 # Fixed bounded stratified offline probes; they never enter PPO replay.
                 def demo_objective(actor):
                     if not use_demo:return jp.asarray(0.)
@@ -204,7 +245,7 @@ def make_joint_student_trainer(trainer, demo_manifest, *, retention,
                 if audit_callback_enabled:
                     jax.debug.callback(record_audit,{key:value for key,value in metrics.items()
                         if key.startswith(('audit/','fixed_probe/'))})
-            return total,{**metrics,'ppo_loss':base,'demo_action_mse':demo_mse,
+            return total,{**metrics,'ppo_loss':base,'weighted_ppo_loss':ppo_coefficient*base,'ppo_coefficient':jp.asarray(ppo_coefficient),'demo_action_mse':demo_mse,
                 'effective_lambda_demo':scale,'retention_action_mse':keep_mse,
                 'demo_samples_per_loss':jp.asarray(demo_batch_size if use_demo else 0),
                 'retention_coefficient':jp.asarray(keep_coefficient),'total_loss':total}
@@ -247,7 +288,13 @@ def trainer_from_config(trainer, raw, run_dir):
     if contract.get('schema')=='jit_bridge_student_v1_2':
         reference,reference_source=load_retention_reference(contract['retention_reference_actor'])
     anchors=load_retention_traces(contract['retention_trace_observations']) if contract.get('retention_trace_observations') is not None else (load_anchor(keep,reference_source['name']) if keep is not None else None)
-    usage={}
+    usage={};actual_updates=[]
+    if contract.get('record_actual_updates',False):
+        from .actual_update import instrument_updates
+        if not contract.get('record_update_clock') or not contract.get('actual_gradient_audit'):
+            raise ValueError('actual updates require gradient sum and completed clock instrumentation')
+        trainer=instrument_updates(trainer,actual_updates.append,max_grad_norm=raw['ppo']['max_grad_norm'],
+            probe=anchors[0][:32],record_optimizer_count=True)
     wrapped=make_joint_student_trainer(trainer,demo,retention=anchors,usage_sink=usage,
         transitions=raw['ppo']['requested_transitions'],
         demo_coefficient_start=contract['demo_coefficient_start'],
@@ -258,9 +305,12 @@ def trainer_from_config(trainer, raw, run_dir):
         max_first_behavior_kl=contract.get('max_first_behavior_kl'),
         first_update_audit_path=Path(run_dir)/'first_loss_gate.json',
         freeze_actor_normalizer=contract.get('freeze_actor_normalizer',False),
-        demo_clock=contract.get('demo_clock','normalizer_count'),actual_gradient_audit=contract.get('actual_gradient_audit',False))
+        demo_clock=contract.get('demo_clock','normalizer_count'),actual_gradient_audit=contract.get('actual_gradient_audit',False),
+        ppo_coefficient=contract.get('ppo_coefficient',1.),record_update_clock=contract.get('record_update_clock',False),
+        exact_demo_fresh_history=contract.get('exact_demo_fresh_history',False))
     def train(**kwargs):
         from .protocol import atomic_json
+        apply_recovery_runtime_contract(raw,contract,kwargs)
         atomic_json(Path(run_dir)/'bridge_student_contract.json',{**contract,
             'demo_count':0 if demo is None else demo['count'],
             'empty_demo_behavior':'disable_sampler_continue_ppo_keep',
@@ -301,6 +351,10 @@ def trainer_from_config(trainer, raw, run_dir):
                     'kl_definition':'installed Brax KL(behavior || current), numerical +1e-5 inside log; self KL is recorded',
                     'four_combinations':{'status':'not_executed_by_training_loss'},
                     'optimizer_update_acceptance':'loss execution does not itself prove optimizer acceptance'})
+            if contract.get('record_actual_updates',False):
+                atomic_json(Path(run_dir)/'actual_updates.json',{'schema':'jit_bridge_actual_updates_v1',
+                    'training_completed':completed,'rows':actual_updates,
+                    'actual_learning_rate':kwargs.get('learning_rate'),'ppo_coefficient':contract.get('ppo_coefficient',1.)})
             atomic_json(Path(run_dir)/'bridge_demo_usage.json',{**usage,'training_completed':completed,
                 'count_semantics':'actual executed joint loss batches; excludes compilation; failures are not accepted training',
                 'round_used_teacher_demo':completed and sum(usage['demo_samples_by_root'].values())>0})

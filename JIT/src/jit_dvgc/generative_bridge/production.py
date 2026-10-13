@@ -497,6 +497,10 @@ class ProductionRunner:
         if self.spec.get('teacher_execution')=='persistent_b1':
             from .teacher_worker import dispatch_teacher
             return dispatch_teacher(self,incumbent)
+        if self.spec.get('recovery_training_contract') is not None:
+            from .teacher_worker import recovery_training_enabled,recovery_teacher_search
+            if recovery_training_enabled(self.spec):
+                return recovery_teacher_search(self,incumbent)
         from .worker import generator_template,generator_reference
         from .diffusion import restore_state,ddim_sample
         from .proposals import make_candidate_pool
