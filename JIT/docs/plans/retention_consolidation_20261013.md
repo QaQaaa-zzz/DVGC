@@ -202,3 +202,25 @@ development calibration, not independent TEST evidence. Only proven unspent
 reservation is released; a fresh calibration and main stage retain total
 reservation997,200 within the original one-million pilot cap. Calibration
 receipts bind this policy and preserve seen-condition validation roles.
+
+
+The user subsequently explicitly authorized bounded candidate diagnostic
+training with nominal retention unverified and automatic adoption prohibited.
+This is a new explicit branch, not a relaxation of the default strict receipt.
+`continuation_eligible` is separate from adoption eligibility; diagnostic
+checkpoints are never selected as an accepted improvement. Behavior calibration
+uses a separate diagnostic schema without `calibrated=true` or closed-loop
+qualification. Other mandatory stable-reference cohorts keep their zero-loss
+and unresolved-student blocking gates.
+
+All six complete parent numerical repetitions from both failed attempts are
+reused with exact condition/controller/normalizer/physical context verification;
+nominal labels remain [1,1,1,0,0,1]. Each actual student has three fresh repeats,
+and exact reference/student counts are explicit per condition. P0 reuses the49
+collect cases and executes only the seven solver cases. New calibration performs
+20 fresh attempts and only one three-repeat physical check at attempt20
+(76,800 maximum); its weights and Adam state never initialize the main arms.
+Prior charged cost153,600 plus this calibration and the conservative766,800
+main reserve is997,200, within the original cap. Actual fully completed main
+physical maximum is690,000 because its49-case P0 cache adds no transitions;
+therefore maximum actual cost920,400. All raw failures remain immutable.

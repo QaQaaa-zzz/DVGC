@@ -71,6 +71,9 @@ def _selection_config(config):
         raise ValueError('positive predeclared min_expansion_gain required')
     if config.get('baseline_mixed_policy','block') not in ('block','diagnostic_only'):
         raise ValueError('baseline_mixed_policy must be block or diagnostic_only')
+    if type(config.get('diagnostic_training',False)) is not bool:raise ValueError('diagnostic_training must be explicit boolean')
+    for key in ('expected_repeats','reference_expected_repeats','expansion_reference_expected_repeats','teacher_expected_repeats'):
+        if key in config and (type(config[key]) is not int or config[key]<1):raise ValueError('positive integer repeat cardinality required: '+key)
     return groups
 
 
@@ -82,6 +85,10 @@ def evaluate_capability_groups(rows, selection_config):
     """
     required = _selection_config(selection_config)
     repeats = selection_config.get('expected_repeats',3)
+    reference_repeats=selection_config.get('reference_expected_repeats',repeats)
+    teacher_repeats=selection_config.get('teacher_expected_repeats',repeats)
+    diagnostic_training=selection_config.get('diagnostic_training',False)
+    cardinalities={}
     diagnostic_mixed=selection_config.get('baseline_mixed_policy','block')=='diagnostic_only'
     normalized = []; conditions = set(); cases = set()
     for row in rows:
@@ -97,12 +104,20 @@ def evaluate_capability_groups(rows, selection_config):
         if case in cases or condition in conditions:
             raise ValueError('duplicate case or condition is not independent evidence')
         cases.add(case); conditions.add(condition)
-        labels = {name: stable_repeat_label(row[name+'_labels'],repeats)
+        ref_count=row.get('reference_expected_repeats',selection_config.get('expansion_reference_expected_repeats',repeats) if row['role']=='DEV_EXPANSION' else reference_repeats)
+        student_count=row.get('student_expected_repeats',repeats)
+        if any(type(n) is not int or n<1 for n in (ref_count,student_count)):
+            raise ValueError('positive exact per-case repeat cardinality required')
+        cardinalities[case]=dict(reference=ref_count,student=student_count,teacher=teacher_repeats)
+        labels = {name: stable_repeat_label(row[name+'_labels'],student_count if name=='student' else ref_count)
                   for name in ('parent','pi0','student')}
         if row.get('execution') != 'independent_complete':
             labels['student'] = 'unknown'
         normalized.append((row,labels))
-    result = dict(parent={},pi0={},gates={},eligible=True,
+    result = dict(parent={},pi0={},gates={},eligible=True,continuation_eligible=True,
+                  diagnostic_training=diagnostic_training,adoption_prohibited=diagnostic_training,
+                  repeat_cardinality=dict(reference=reference_repeats,student=repeats,teacher=teacher_repeats),
+                  reference_expected_repeats_scope='retention_roles',case_repeat_cardinality=cardinalities,
                   repeat_semantics='label_stability_not_training_seeds',
                   policy_semantics='deterministic_policy_retention',seen_condition_validation={},
                   baseline_mixed_policy=selection_config.get('baseline_mixed_policy','block'),
@@ -134,14 +149,20 @@ def evaluate_capability_groups(rows, selection_config):
         result['gates'][group] = dict(passed=not reasons,reasons=reasons,limits=deepcopy(limits),
             gate_cohort=counts,gate_denominator=counts['total'],full_denominator=len(group_rows),
             baseline_mixed_diagnostic_count=len(excluded),
-            cohort_semantics='stable_frozen_parent_reference' if diagnostic_mixed else 'full_declared_group')
+            cohort_semantics='stable_frozen_parent_reference' if diagnostic_mixed else 'full_declared_group',
+            retention_status='UNVERIFIED' if counts['old_positive']==0 else ('passed' if not reasons else 'failed'))
         result['eligible'] &= not reasons
+        nominal_unverified=(diagnostic_training and group=='old_nominal' and bool(group_rows)
+            and reasons==['no_stable_parent_success_to_protect'])
+        result['gates'][group]['continuation_passed']=not reasons or nominal_unverified
+        result['gates'][group]['nominal_unverified_diagnostic_only']=nominal_unverified
+        result['continuation_eligible'] &= not reasons or nominal_unverified
     expansion_rows = [(r,l) for r,l in normalized if r['role']=='DEV_EXPANSION']
     expansion = paired_capability_counts([l['parent'] for _,l in expansion_rows],
                                          [l['student'] for _,l in expansion_rows])
     expansion['independent_success'] = sum(l['student']==1 for _,l in expansion_rows)
     expansion['teacher_verified_absorption'] = sum(l['parent']==0 and l['student']==1
-        and stable_repeat_label(r.get('teacher_repeat_labels',[None]*repeats),repeats)==1
+        and stable_repeat_label(r.get('teacher_repeat_labels',[None]*teacher_repeats),teacher_repeats)==1
         for r,l in expansion_rows)
     result['expansion'] = expansion
     result['total_old_lost'] = sum(v['lost'] for v in result['parent'].values())
@@ -149,11 +170,12 @@ def evaluate_capability_groups(rows, selection_config):
     expansion_gate=paired_capability_counts([l['parent'] for _,l in expansion_gate_rows],[l['student'] for _,l in expansion_gate_rows])
     expansion['gate_cohort']=expansion_gate
     if diagnostic_mixed and any(l['parent'] in ('execution_error','timeout') or l['student'] in ('execution_error','timeout') for _,l in normalized):
-        result['eligible']=False
+        result['eligible']=False;result['continuation_eligible']=False
     if (expansion['execution_error'] or expansion['timeout']
         or (expansion_gate['mixed'] and selection_config['mixed_policy']=='block')
         or (expansion_gate['unknown'] and selection_config['unknown_policy']=='block')):
-        result['eligible'] = False
+        result['eligible'] = False;result['continuation_eligible']=False
+    if diagnostic_training:result['eligible']=False
     return result
 
 

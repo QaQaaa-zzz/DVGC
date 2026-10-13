@@ -287,7 +287,7 @@ def _audit_teacher_sources(teacher,missing):
         raise ValueError('teacher dataset has unaccounted frames')
 
 
-def _audit_thresholds(guard,guard_manifest,parent_identity,missing):
+def _audit_thresholds(guard,guard_manifest,parent_identity,missing,*,diagnostic_training=False):
     import numpy as np
     limit=guard.get('max_consecutive_rejections')
     if limit is None:missing.append('guard_config.max_consecutive_rejections')
@@ -303,11 +303,22 @@ def _audit_thresholds(guard,guard_manifest,parent_identity,missing):
             except (TypeError,ValueError):raise ValueError('invalid guard threshold '+group)
             if array.shape!=(4,) or not np.isfinite(array).all() or np.any(array<0):
                 raise ValueError('four finite nonnegative channel thresholds required: '+group)
-    if guard.get('calibrated') is not True or not guard.get('calibration_receipt'):
+    diagnostic=guard.get('behavior_calibrated') is True
+    if diagnostic and not diagnostic_training:
+        raise ValueError('diagnostic behavior receipt requires explicitly authorized diagnostic training')
+    if (not diagnostic and guard.get('calibrated') is not True) or not guard.get('calibration_receipt'):
         missing.append('guard_config.calibration');return
     receipt=_descriptor_json(guard['calibration_receipt'])
-    if (receipt.get('schema')!='frontierbridge_guard_calibration_v1'
-        or receipt.get('calibrated') is not True or receipt.get('data_role') not in ('TRAIN_GUARD','DEV_RETENTION')
+    if diagnostic:
+        if (receipt.get('schema')!='frontierbridge_guard_behavior_calibration_diagnostic_v1'
+            or receipt.get('behavior_calibrated') is not True or receipt.get('closed_loop_qualified') is not False
+            or guard.get('closed_loop_qualified') is not False or receipt.get('calibrated') is True
+            or guard.get('calibrated') is True
+            or receipt.get('mandatory_group_status',{}).get('old_nominal')!='UNVERIFIED_BASELINE_MIXED'):
+            raise ValueError('diagnostic receipt must preserve unverified nominal qualification')
+    elif receipt.get('schema')!='frontierbridge_guard_calibration_v1' or receipt.get('calibrated') is not True:
+        raise ValueError('actual calibrated receipt identity mismatch')
+    if (receipt.get('data_role') not in ('TRAIN_GUARD','DEV_RETENTION')
         or not receipt.get('cost_ledger') or not receipt.get('candidate_thresholds')
         or receipt.get('guard_bank_sha256')!=guard_manifest.get('sha256')
         or receipt.get('parent_actor_sha256')!=parent_identity.get('actor_sha256')
@@ -475,7 +486,8 @@ def audit(plan):
             missing.append('data_roles.TEACHER.repeat_labels')
     guard=c.get('guard_config')
     if guard:
-        _audit_thresholds(guard,banks.get('TRAIN_GUARD',{}),identities.get('parent',{}),missing)
+        _audit_thresholds(guard,banks.get('TRAIN_GUARD',{}),identities.get('parent',{}),missing,
+            diagnostic_training=(c.get('selection_config') or {}).get('diagnostic_training') is True)
     selection=c.get('selection_config')
     if selection:
         from .retention_consolidation_evaluation import _selection_config
@@ -499,6 +511,10 @@ def require_execution(plan,authorization):
     grant=read(authorization);p=read(plan)
     if grant.get('schema')!='frontierbridge_execution_authorization_v1' or grant.get('execute') is not True or grant.get('plan_sha256')!=file_sha(plan) or grant.get('cost_limits')!=p['config']['cost_limits'] or grant.get('arms')!=['P0','P1','P2'] or not grant.get('user_authorization_record'):
         raise ValueError('authorization must bind new plan, arms, budgets and actual user record')
+    if (p['config']['selection_config'].get('diagnostic_training') is True
+        and (grant.get('diagnostic_training') is not True or grant.get('automatic_adoption') is not False
+             or grant.get('nominal_retention_status')!='UNVERIFIED_BASELINE_MIXED')):
+        raise ValueError('diagnostic execution must explicitly bind unverified nominal and prohibited adoption')
     return p,grant
 
 
@@ -538,6 +554,11 @@ def report(plan):
     elif result.get('selection',{}).get('P2',{}).get('phase')=='accepted_dev_improvement':result['conclusion']='absorption_and_retention_dev_gates_passed'
     elif p2.get('status')=='completed':result['conclusion']='no_accepted_improvement'
     if status['phase']=='failed':result['conclusion']='engineering_error'
+    if (p['config'].get('selection_config') or {}).get('diagnostic_training') is True:
+        result.update(closed_loop_qualified=False,automatic_adoption=False,deterministic_policy_retention='UNVERIFIED',
+            nominal_retention_status='UNVERIFIED_BASELINE_MIXED')
+        if status['phase']=='completed' and p2.get('status')=='completed':
+            result['conclusion']='diagnostic_training_only_retention_unverified'
     # Optional report assets are derived solely from completed saved observations.
     if (root/'checkpoint_results.json').exists():
         from .retention_consolidation_report import generate_figures

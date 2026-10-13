@@ -91,3 +91,37 @@ def test_calibration_watcher_defers_completion_to_overall_lineage(tmp_path):
     pointer=calibration.monitoring_pointer(root,{'overall_lineage_status':str(overall)})
     assert pointer['execution']==str(root/'status.json')
     assert pointer['lineage']==str(overall.resolve())
+
+
+def test_diagnostic_threshold_receipt_cannot_masquerade_as_strict_skill_qualification():
+    rows=[point(i,False) for i in calibration.STEPS]
+    rows[-1]['capabilities'].update(continuation_eligible=True,retention_status={'old_nominal':'UNVERIFIED'})
+    result=calibration.freeze_thresholds(rows,['old'],diagnostic=True)
+    assert result['behavior_calibrated'] is True
+    assert result['closed_loop_qualified'] is False
+    assert result['nominal_qualification']=='UNVERIFIED'
+    assert result['threshold_rule']==calibration.DIAGNOSTIC_SELECTION_RULE
+    assert 'calibrated' not in result
+    with pytest.raises(ValueError):calibration.freeze_thresholds(rows,['old'])
+
+
+def test_diagnostic_does_not_waive_other_group_failure():
+    rows=[point(i,False) for i in calibration.STEPS]
+    rows[-1]['capabilities'].update(continuation_eligible=False,retention_status={'old_nominal':'UNVERIFIED'})
+    with pytest.raises(ValueError,match='no qualifying'):
+        calibration.freeze_thresholds(rows,['old'],diagnostic=True)
+
+
+def test_diagnostic_grant_reuses_all_six_and_only_reserves_update20(tmp_path,monkeypatch):
+    import json
+    from jit_dvgc.generative_bridge.contracts import file_sha
+    plan,auth,grant=reservation_fixture(tmp_path,monkeypatch)
+    p=json.loads(plan.read_text());p['config']['selection_config']={'diagnostic_training':True};plan.write_text(json.dumps(p))
+    grant.update(schema=calibration.DIAGNOSTIC_AUTH_SCHEMA,stage_plan_sha256=file_sha(plan),selection_rule=calibration.DIAGNOSTIC_SELECTION_RULE,
+        physical_checkpoint_steps=[20],environment_transitions=76800,baseline_reference_cache=['all','six'])
+    auth.write_text(json.dumps(grant));calls=[]
+    monkeypatch.setattr(calibration,'load_baseline_reference_cache',lambda p,g,panel:calls.append(g['baseline_reference_cache']) or ({},{'reference_expected_repeats':6}))
+    _,_,panel=calibration.require_reservation(plan,auth)
+    assert calls==[['all','six']] and len(panel['cases'])==4
+    grant['schema']=calibration.AUTH_SCHEMA;auth.write_text(json.dumps(grant))
+    with pytest.raises(ValueError):calibration.require_reservation(plan,auth)

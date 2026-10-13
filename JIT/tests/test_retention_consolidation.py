@@ -85,3 +85,42 @@ def test_completed_execution_with_guard_rejection_is_not_method_success(tmp_path
     result=report(plan)
     assert result['conclusion']=='blocked_by_guard'
     assert result['arms']['P2']['accepted_updates']==0
+
+
+def test_diagnostic_behavior_receipt_requires_explicit_diagnostic_mode(tmp_path):
+    from jit_dvgc.retention_consolidation import _audit_thresholds,REQUIRED_GROUPS
+    from jit_dvgc.generative_bridge.contracts import file_sha
+    thresholds={g:[.01]*4 for g in REQUIRED_GROUPS}
+    receipt=dict(schema='frontierbridge_guard_behavior_calibration_diagnostic_v1',
+        behavior_calibrated=True,closed_loop_qualified=False,data_role='TRAIN_GUARD',
+        guard_bank_sha256='bank',parent_actor_sha256='actor',
+        cost_ledger={'path':'ledger'},candidate_thresholds=[{'attempt':20}],
+        mandatory_group_status={'old_nominal':'UNVERIFIED_BASELINE_MIXED'},
+        mse_thresholds=thresholds,p99_thresholds=thresholds)
+    path=tmp_path/'receipt.json';path.write_text(json.dumps(receipt))
+    guard=dict(behavior_calibrated=True,closed_loop_qualified=False,
+        max_consecutive_rejections=10,mse_thresholds=thresholds,p99_thresholds=thresholds,
+        calibration_receipt=dict(path=str(path),sha256=file_sha(path)))
+    missing=[]
+    _audit_thresholds(guard,{'sha256':'bank'},{'actor_sha256':'actor'},missing,diagnostic_training=True)
+    assert missing==[]
+    with pytest.raises(ValueError,match='diagnostic'):
+        _audit_thresholds(guard,{'sha256':'bank'},{'actor_sha256':'actor'},[],diagnostic_training=False)
+    receipt['closed_loop_qualified']=True;path.write_text(json.dumps(receipt))
+    guard['calibration_receipt']['sha256']=file_sha(path)
+    with pytest.raises(ValueError,match='diagnostic'):
+        _audit_thresholds(guard,{'sha256':'bank'},{'actor_sha256':'actor'},[],diagnostic_training=True)
+
+
+def test_diagnostic_completed_report_keeps_qualification_unverified(tmp_path):
+    from jit_dvgc.retention_consolidation import report,read
+    plan=prepare(tmp_path);p=read(plan)
+    p['config']['selection_config']={'diagnostic_training':True}
+    Path(plan).write_text(json.dumps(p))
+    root=tmp_path/'output';(root/'status.json').write_text(json.dumps({'phase':'completed'}))
+    (root/'P2').mkdir();(root/'P2/warmup_status.json').write_text(json.dumps({'status':'completed','attempts':1000,'accepted_updates':1000}))
+    result=report(plan)
+    assert result['conclusion']=='diagnostic_training_only_retention_unverified'
+    assert result['closed_loop_qualified'] is False and result['automatic_adoption'] is False
+    assert result['deterministic_policy_retention']=='UNVERIFIED'
+    assert result['published_policy'] is None

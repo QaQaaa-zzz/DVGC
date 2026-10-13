@@ -5,6 +5,36 @@ import numpy as np
 from .generative_bridge.protocol import atomic_json
 
 
+def _trajectory_binding(root,arm,selection,case_id,*,diagnostic=False):
+    """Choose existing evaluated evidence, separately from adoption selection."""
+    root=Path(root)
+    if arm=='P0':
+        return dict(arm=arm,tag='P0',checkpoint=None,attempt=0,accepted_updates=0,
+                    policy_status='fixed_parent',fallback_reason=None)
+    audits=selection.get('audits',[])
+    selected=selection.get('learner_last') if diagnostic else selection.get('stage_candidate')
+    if not isinstance(selected,str) and not diagnostic:return None
+    available=[]
+    for audit in audits:
+        if type(audit.get('attempt')) is not int or audit['attempt']<0:continue
+        tag='P0' if audit['attempt']==0 else f"{arm}_{audit['attempt']:04d}"
+        path=root/(tag+'_evaluation.json')
+        try:record=json.loads(path.read_text()).get(case_id,{})
+        except (OSError,ValueError):continue
+        if not isinstance(record,dict) or not record.get('receipts') or not all(Path(folder).is_dir() for folder in record['receipts']):continue
+        available.append((audit,tag))
+    preferred=next(((a,tag) for a,tag in available if a.get('checkpoint')==selected),None)
+    if preferred is None:
+        if not diagnostic or not available:return None
+        chosen,tag=max(available,key=lambda pair:pair[0]['attempt'])
+        reason='learner_last_has_no_saved_evaluation'
+    else:chosen,tag=preferred;reason=None
+    return dict(arm=arm,tag=tag,checkpoint=chosen['checkpoint'],attempt=chosen['attempt'],
+                accepted_updates=chosen.get('accepted_updates','UNKNOWN'),
+                policy_status='UNQUALIFIED_diagnostic_nonadopted' if diagnostic else 'stage_candidate',
+                fallback_reason=reason)
+
+
 def generate_figures(plan, report):
     import matplotlib
     matplotlib.use('Agg')
@@ -22,24 +52,24 @@ def generate_figures(plan, report):
     def saved_json(path):
         try:return json.loads(Path(path).read_text())
         except (OSError,ValueError):gaps.append('saved receipt unavailable: '+str(path));return {}
-    trajectory_count=0
+    diagnostic=(plan['config'].get('selection_config') or {}).get('diagnostic_training') is True
+    trajectory_count=0;trajectory_sources=[]
     for case in panel.get('cases',[]):
         address=case.get('root_qpos_address')
         if type(address) is not int or address<0:
             gaps.append('trajectory coordinate schema unavailable: '+case['case_id']);continue
         fig,ax=plt.subplots();drawn=False
         for arm in ('P0','P1','P2'):
-            tag='P0'
-            if arm!='P0':
-                selection=report.get('selection',{}).get(arm,{})
-                selected=selection.get('stage_candidate')
-                if not isinstance(selected,str):continue
-                matching=[a for a in selection.get('audits',[]) if a['checkpoint']==selected]
-                if not matching:continue
-                tag=f"{arm}_{matching[0]['attempt']:04d}"
-            receipt=root/(tag+'_evaluation.json')
-            if not receipt.is_file():continue
+            binding=_trajectory_binding(root,arm,report.get('selection',{}).get(arm,{}),case['case_id'],diagnostic=diagnostic)
+            if binding is None:
+                gaps.append('trajectory evidence missing: '+case['case_id']+'/'+arm);continue
+            tag=binding['tag'];receipt=root/(tag+'_evaluation.json')
+            if not receipt.is_file():
+                gaps.append('trajectory evidence missing: '+case['case_id']+'/'+arm);continue
             evidence=saved_json(receipt).get(case['case_id'],{})
+            if not evidence.get('receipts'):
+                gaps.append('trajectory evidence missing: '+case['case_id']+'/'+arm);continue
+            arm_drawn=False
             for repeat,out in enumerate(evidence.get('receipts',[])):
                 out=Path(out);lane=case['lane'];trace=None
                 if case['mode']=='evaluate':
@@ -57,11 +87,16 @@ def generate_figures(plan, report):
                         if q.ndim!=3 or q.shape[-1]<=address+2:raise ValueError('incompatible root coordinates')
                         x=q[mask,lane,address];z=q[mask,lane,address+2]
                         if not len(x) or not np.isfinite(x).all() or not np.isfinite(z).all():raise ValueError('invalid trajectory')
-                    ax.plot(x,z,label=f'{arm} repeat {repeat+1}',alpha=.65)
-                    ax.scatter(x[-1],z[-1],s=15);drawn=True
+                    status=' UNQUALIFIED (not adopted)' if diagnostic and arm!='P0' else ''
+                    clocks=f" attempt={binding['attempt']} accepted={binding['accepted_updates']}" if arm!='P0' else ''
+                    ax.plot(x,z,label=f'{arm}{status}{clocks} repeat {repeat+1}',alpha=.65)
+                    ax.scatter(x[-1],z[-1],s=15);drawn=True;arm_drawn=True
                 except (OSError,KeyError,ValueError,IndexError):gaps.append('trajectory array unavailable: '+str(trace))
+            if arm_drawn:trajectory_sources.append(dict(case_id=case['case_id'],evaluation_receipt=str(receipt),**binding))
+            else:gaps.append('trajectory evidence missing: '+case['case_id']+'/'+arm)
         if drawn:
-            ax.set(xlabel='world x (m)',ylabel='root height z (m)',title=case['case_id']+' — independent saved trajectories')
+            scope='; seen training condition' if case.get('role')=='TRAIN_RETENTION' else ''
+            ax.set(xlabel='world x (m)',ylabel='root height z (m)',title=case['case_id']+' — saved single-Actor trajectories'+scope)
             ax.set_aspect('equal',adjustable='datalim');ax.legend(fontsize=7)
             save(fig,'trajectory_'+str(trajectory_count));trajectory_count+=1
         else:plt.close(fig);gaps.append('trajectory evidence missing: '+case['case_id'])
@@ -80,7 +115,9 @@ def generate_figures(plan, report):
             axes[1].plot(attempts,lost,'x--',label=arm+' old lost')
         axes[0].set(xlabel='old stable successes lost (count)',ylabel='independent DEV gains (count)')
         axes[1].set(xlabel='attempted updates',ylabel='condition count')
-        for ax in axes:ax.legend();ax.grid(alpha=.2)
+        for ax in axes:
+            if ax.get_legend_handles_labels()[0]:ax.legend()
+            ax.grid(alpha=.2)
         save(fig,'retention_expansion')
         groups=sorted({g for s in selections.values() for a in s.get('audits',[]) for g in a.get('evaluation',{}).get('parent',{})})
         if groups:
@@ -144,9 +181,11 @@ def generate_figures(plan, report):
             gaps.append('separate guard/proposal timing unavailable: '+arm+'; aggregate time is not a decomposition')
         update_costs[arm]=costs
     result=dict(phase='partial_saved_evidence' if gaps else 'complete_saved_evidence',files=files,gaps=sorted(set(gaps)),
-        environment_steps=0,update_costs=update_costs,source='saved checkpoint capability/cost receipts and original trajectory NPZ')
+        environment_steps=0,update_costs=update_costs,source='saved checkpoint capability/cost receipts and original trajectory NPZ',
+        trajectory_sources=trajectory_sources,diagnostic_candidates_unqualified=diagnostic)
     atomic_json(dest/'index.json',result)
     text=['# Saved evidence figures','', 'Trajectory figures are listed first. Missing source evidence remains explicit.','']
+    if diagnostic:text.extend(['Diagnostic student trajectories are UNQUALIFIED and not adopted; the adoption selector retains the parent.',''])
     text.extend(f'- [{Path(path).stem}]({Path(path).name})' for path in files)
     text.extend(['','Gaps:']+[f'- {gap}' for gap in result['gaps']])
     (dest/'INDEX.md').write_text('\n'.join(text)+'\n')

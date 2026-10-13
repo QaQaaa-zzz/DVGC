@@ -105,10 +105,14 @@ class Evaluator:
         result=copy.deepcopy(spec);result.update(bank=str(path),proposer=policy['name'],order=[policy['name']])
         return result
 
-    def evaluate(self,tag,params_path,policy,reference_descriptor=None):
+    def evaluate(self,tag,params_path,policy,reference_descriptor=None,*,case_ids=None):
         from .retention_consolidation_evaluation import (build_independent_replay_spec,
             independent_replay_label,independent_collection_label)
         panel=_descriptor_json(self.p['config']['evaluation_panel']);results={};jobs={}
+        if case_ids is not None:
+            if not case_ids or not set(case_ids)<=set(c['case_id'] for c in panel['cases']):
+                raise ValueError('explicit existing nonempty evaluation subset required')
+            panel=dict(panel,cases=[c for c in panel['cases'] if c['case_id'] in case_ids])
         initializer=dict(path=str(params_path),sha256=file_sha(params_path),
             source_actor_sha256=policy['actor_sha256'],normalizer_sha256=policy['normalizer_sha256'])
         for ordinal,case in enumerate(panel['cases']):
@@ -137,11 +141,16 @@ class Evaluator:
         return results
 
 
-def _rows(panel,parent,pi0,student):
-    return [dict(case_id=c['case_id'],condition_identity=c['condition_identity'],group=c['group'],role=c['role'],
+def _rows(panel,parent,pi0,student,*,diagnostic=False):
+    rows=[dict(case_id=c['case_id'],condition_identity=c['condition_identity'],group=c['group'],role=c['role'],
         parent_labels=parent[c['case_id']]['labels'],pi0_labels=pi0[c['case_id']]['labels'],
         student_labels=student[c['case_id']]['labels'],execution='independent_complete',
         teacher_repeat_labels=c.get('teacher_repeat_labels',[None]*3),seen_condition_validation=c.get('seen_condition_validation')) for c in panel['cases']]
+    if diagnostic:
+        for row in rows:
+            if len(row['parent_labels'])!=len(row['pi0_labels']):raise ValueError('reference repeat provenance differs')
+            row.update(reference_expected_repeats=len(row['parent_labels']),student_expected_repeats=len(row['student_labels']))
+    return rows
 
 
 def _scalar_http(p,arm,step):
@@ -200,17 +209,25 @@ def train_stage(plan):
         with path.open('xb') as f:pickle.dump(jax.device_get(params),f)
         return path
     parent_path=store('parent',initializer);pi0_path=store('pi0',pi0)
-    parent_eval=evaluator.evaluate('P0',parent_path,policy,c['parent'])
+    diagnostic=c['selection_config'].get('diagnostic_training') is True
+    if diagnostic:
+        from .retention_guard_calibration import load_baseline_reference_cache
+        parent_eval,reuse=load_baseline_reference_cache(p,c,panel)
+        atomic_json(root/'P0_reference_reuse.json',reuse)
+        fresh_ids=[case['case_id'] for case in panel['cases'] if case['case_id'] not in parent_eval]
+        if fresh_ids:parent_eval.update(evaluator.evaluate('P0',parent_path,policy,c['parent'],case_ids=fresh_ids))
+        atomic_json(root/'P0_evaluation.json',parent_eval)
+    else:parent_eval=evaluator.evaluate('P0',parent_path,policy,c['parent'])
     if (file_sha(c['parent']['path'])==file_sha(c['pi0_reference']['path']) and pytree_sha256(initializer)==pytree_sha256(pi0)):
         pi0_eval=copy.deepcopy(parent_eval)
         atomic_json(root/'pi0_reference_evaluation.json',pi0_eval)
         evaluator.ledger['pi0_reference_reuse']=dict(source='P0',reason='identical frozen descriptor and complete initializer trees',new_transitions=0)
         atomic_json(root/'cost_ledger.json',evaluator.ledger)
     else:pi0_eval=evaluator.evaluate('pi0_reference',pi0_path,pi0_policy,c['pi0_reference'])
-    parent_rows=_rows(panel,parent_eval,pi0_eval,parent_eval)
+    parent_rows=_rows(panel,parent_eval,pi0_eval,parent_eval,diagnostic=diagnostic)
     preflight=evaluate_capability_groups(parent_rows,c['selection_config'])
     atomic_json(root/'parent_preflight.json',preflight)
-    if not preflight['eligible']:raise ValueError('parent preflight has missing/unstable mandatory capability groups; zero optimizer updates')
+    if not preflight['continuation_eligible' if diagnostic else 'eligible']:raise ValueError('parent preflight has missing/unstable mandatory capability groups; zero optimizer updates')
     arms={};evaluator.ledger['supervised_environment_transitions']=0
     candidates={};atomic_json(root/'checkpoint_results.json',candidates)
     for arm in ('P1','P2'):
@@ -233,7 +250,7 @@ def train_stage(plan):
             if pytree_sha256(params[0])!=pytree_sha256(initializer[0]) or pytree_sha256(params[2])!=pytree_sha256(initializer[2]):raise ValueError('frozen parent statistics/critic changed')
             path=root/arm/f'attempt_{attempt:04d}.pkl'
             ev=parent_eval if attempt==0 else evaluator.evaluate(f'{arm}_{attempt:04d}',path,policy,c['parent'])
-            rows=_rows(panel,parent_eval,pi0_eval,ev)
+            rows=_rows(panel,parent_eval,pi0_eval,ev,diagnostic=diagnostic)
             candidates[arm].append(dict(checkpoint=str(path),attempt=attempt,accepted_updates=count.get('accepted',0),
                 identity_valid=True,data_valid=True,numerical_valid=True,rows=rows))
             atomic_json(root/'checkpoint_results.json',candidates)
@@ -241,7 +258,7 @@ def train_stage(plan):
             atomic_json(root/f'{arm}_{attempt:04d}_capabilities.json',result)
             writer.add_scalar('DEV/independent_success',result['expansion']['independent_success'],attempt)
             writer.add_scalar('DEV/old_lost',result['total_old_lost'],attempt);writer.flush()
-            return not result['eligible']
+            return not result['continuation_eligible' if diagnostic else 'eligible']
         try:
             warmup_actor(network,initializer,initializer[:2],demo,(fit['observations'],fit['weights']),root/arm,
                 seed=c['seed'],updates=c['max_attempted_updates'],batch_size=256,demo_coefficient=1.,keep_coefficient=1.,
@@ -257,7 +274,9 @@ def train_stage(plan):
                 evaluator.ledger['supervised_attempts']=sum(evaluator.ledger.get(a,{}).get('attempts',0) for a in ('P1','P2'))
                 evaluator.ledger['accepted_updates']=sum(evaluator.ledger.get(a,{}).get('accepted',0) for a in ('P1','P2'))
             atomic_json(root/'cost_ledger.json',evaluator.ledger)
-    atomic_json(root/'status.json',dict(phase='completed',stage='P0_P1_P2',arms=arms,published_policy=None,automatic_next_stage=False))
+    atomic_json(root/'status.json',dict(phase='completed',stage='P0_P1_P2',arms=arms,published_policy=None,automatic_next_stage=False,
+        diagnostic_training=diagnostic,closed_loop_qualified=False if diagnostic else 'SEE_DEV_GATES',
+        automatic_adoption=False,nominal_retention_status='UNVERIFIED_BASELINE_MIXED' if diagnostic else 'SEE_DEV_GATES'))
     return report(plan)
 
 

@@ -221,3 +221,67 @@ def test_mixed_baseline_student_execution_error_still_blocks():
     result=evaluation.evaluate_capability_groups(rows,cfg)
     assert not result['eligible']
     assert result['parent']['old_nominal']['execution_error']==1
+
+
+def six_reference_rows():
+    rows=candidate()['rows']
+    for entry in rows:
+        if entry['role']!='DEV_EXPANSION':
+            entry['parent_labels']*=2;entry['pi0_labels']*=2
+    rows[0]['parent_labels']=[1,1,1,0,0,0]
+    rows[0]['pi0_labels']=[1,1,1,0,0,0]
+    return rows
+
+
+def test_six_reference_repeats_three_student_never_cherry_pick_and_diagnostic_only_continuation():
+    rows=six_reference_rows();cfg=config()
+    cfg.update(reference_expected_repeats=6,expected_repeats=3,baseline_mixed_policy='diagnostic_only',diagnostic_training=True)
+    result=evaluation.evaluate_capability_groups(rows,cfg)
+    assert not result['eligible'] and result['continuation_eligible']
+    assert result['gates']['old_nominal']['retention_status']=='UNVERIFIED'
+    assert result['parent']['old_nominal']['mixed']==1
+    assert result['baseline_mixed_diagnostics'][0]['parent_labels']==[1,1,1,0,0,0]
+    assert result['repeat_cardinality']==dict(reference=6,student=3,teacher=3)
+    c=candidate();c['rows']=rows
+    assert evaluation.select_checkpoint([c],'parent',cfg)['phase']=='no_accepted_improvement'
+    cfg['diagnostic_training']=False
+    assert not evaluation.evaluate_capability_groups(rows,cfg)['continuation_eligible']
+
+
+@pytest.mark.parametrize('student',[0,'unknown','mixed','execution_error','timeout'])
+def test_diagnostic_nominal_continuation_still_enforces_other_stable_groups(student):
+    rows=six_reference_rows();rows[1]['student_labels']=([1,0,1] if student=='mixed' else [student]*3)
+    cfg=config();cfg.update(reference_expected_repeats=6,baseline_mixed_policy='diagnostic_only',diagnostic_training=True)
+    result=evaluation.evaluate_capability_groups(rows,cfg)
+    assert not result['eligible'] and not result['continuation_eligible']
+
+
+def test_reference_repeat_cardinality_is_exact_not_first_three():
+    cfg=config();cfg.update(reference_expected_repeats=6,baseline_mixed_policy='diagnostic_only',diagnostic_training=True)
+    with pytest.raises(ValueError):evaluation.evaluate_capability_groups(candidate()['rows'],cfg)
+    rows=six_reference_rows();rows[1]['student_labels']=[1]*6
+    with pytest.raises(ValueError):evaluation.evaluate_capability_groups(rows,cfg)
+
+
+def test_cached_six_preflight_and_fresh_three_solver_overrides_are_explicit():
+    rows=six_reference_rows()
+    for entry in rows:
+        if entry['role']!='DEV_EXPANSION':
+            entry['student_labels']=list(entry['parent_labels']);entry['student_expected_repeats']=6
+    solver=row('solver_diagnostic',group='solver_unverified',parent=0,student=0,role='DEV_RETENTION')
+    solver['reference_expected_repeats']=3;rows.append(solver)
+    cfg=config();cfg.update(reference_expected_repeats=6,baseline_mixed_policy='diagnostic_only',diagnostic_training=True)
+    result=evaluation.evaluate_capability_groups(rows,cfg)
+    assert result['continuation_eligible'] and not result['eligible']
+    assert result['case_repeat_cardinality']['old']==dict(reference=6,student=6,teacher=3)
+    assert result['case_repeat_cardinality']['solver_diagnostic']['reference']==3
+    assert result['case_repeat_cardinality']['new']['reference']==3
+
+
+def test_diagnostic_training_never_adopts_even_when_all_retention_gates_pass():
+    cfg=config();cfg['diagnostic_training']=True
+    c=candidate();result=evaluation.evaluate_capability_groups(c['rows'],cfg)
+    assert result['continuation_eligible'] and not result['eligible'] and result['adoption_prohibited']
+    assert evaluation.select_checkpoint([c],'parent',cfg)['stage_candidate']=='parent'
+    rows=c['rows'][1:]
+    assert not evaluation.evaluate_capability_groups(rows,cfg)['continuation_eligible']

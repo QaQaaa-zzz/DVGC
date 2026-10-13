@@ -7,7 +7,8 @@ import pytest
 from jit_dvgc import retention_consolidation_runtime as runtime
 
 
-def test_train_stage_real_toy_warmup_and_per_arm_accounting(tmp_path,monkeypatch):
+@pytest.mark.parametrize('diagnostic',[False,True])
+def test_train_stage_real_toy_warmup_and_per_arm_accounting(tmp_path,monkeypatch,diagnostic):
     import jax
     from .test_retention_guard import setup_warm
     from jit_dvgc import ppo
@@ -23,7 +24,15 @@ def test_train_stage_real_toy_warmup_and_per_arm_accounting(tmp_path,monkeypatch
         cost_limits={'wall_seconds':20,'environment_transitions':0},tensorboard={'port':6029},seed=2,
         max_attempted_updates=2,checkpoint_steps=[0,1,2],selection_config=dict(required_groups={'old':{'max_lost':0,'max_rate_drop':0}},
         mixed_policy='block',unknown_policy='block',min_expansion_gain=1))
-    (tmp_path/'parent').write_text('parent');(tmp_path/'pi0').write_text('pi0')
+    if diagnostic:
+        from jit_dvgc import retention_guard_calibration
+        cases.append(dict(case_id='nominal',condition_identity='nominal',group='old_nominal',role='DEV_RETENTION'))
+        cfg['selection_config'].update(diagnostic_training=True,baseline_mixed_policy='diagnostic_only',reference_expected_repeats=6)
+        cfg['selection_config']['required_groups']['old_nominal']={'max_lost':0,'max_rate_drop':0}
+        cfg['baseline_reference_cache']=['six_full_reference_repetitions_fixture']
+        monkeypatch.setattr(retention_guard_calibration,'load_baseline_reference_cache',
+            lambda *a:({'old':{'labels':[1]*6,'receipts':[]},'nominal':{'labels':[1,1,1,0,0,1],'receipts':[]}}, {'new_transitions':0}),raising=False)
+    (tmp_path/'parent').write_text('parent');(tmp_path/'pi0').write_text('parent' if diagnostic else 'pi0')
     cfg['parent']['path']=str(tmp_path/'parent');cfg['pi0_reference']['path']=str(tmp_path/'pi0')
     plan=root/'plan.json';plan.write_text(json.dumps(dict(output=str(root),repository=str(tmp_path),config=cfg)))
     monkeypatch.setattr(jax,'default_backend',lambda:'gpu');monkeypatch.setattr(jax,'device_count',lambda:1)
@@ -45,9 +54,12 @@ def test_train_stage_real_toy_warmup_and_per_arm_accounting(tmp_path,monkeypatch
     class Evaluation:
         def __init__(self,p):self.ledger={'eval_reserved_transitions':0,'entries':[]};self.tags=[]
         def check_clock(self):pass
-        def evaluate(self,tag,path,policy,descriptor=None):
+        def evaluate(self,tag,path,policy,descriptor=None,**kwargs):
             self.tags.append(tag)
-            return {'old':{'labels':[1]*3,'receipts':[]},'new':{'labels':([0]*3 if tag in ('P0','pi0_reference') else [1]*3),'receipts':[]}}
+            result={'old':{'labels':[1]*3,'receipts':[]},'new':{'labels':([0]*3 if tag in ('P0','pi0_reference') else [1]*3),'receipts':[]}}
+            if diagnostic:result['nominal']={'labels':[0,0,1],'receipts':[]}
+            if kwargs.get('case_ids') is not None:result={k:v for k,v in result.items() if k in kwargs['case_ids']}
+            return result
     monkeypatch.setattr(runtime,'Evaluator',Evaluation)
     monkeypatch.setattr(runtime,'_descriptor_json',lambda desc:desc)
     monkeypatch.setattr(runtime,'_scalar_http',lambda *a:None)
@@ -61,6 +73,13 @@ def test_train_stage_real_toy_warmup_and_per_arm_accounting(tmp_path,monkeypatch
     assert result['arms']['P1']['training_status']=='completed'
     assert result['arms']['P2']['attempts']==2
     assert result['published_policy'] is None
+    if diagnostic:
+        preflight=json.loads((root/'parent_preflight.json').read_text())
+        assert preflight['continuation_eligible'] is True and preflight['eligible'] is False
+        assert preflight['case_repeat_cardinality']['nominal']['reference']==6
+        candidate=json.loads((root/'P2_0001_capabilities.json').read_text())
+        assert candidate['case_repeat_cardinality']['nominal']['student']==3
+        assert result['nominal_retention_status']=='UNVERIFIED_BASELINE_MIXED'
 
 
 def test_reference_bank_uses_actual_parent_descriptor(tmp_path,monkeypatch):
