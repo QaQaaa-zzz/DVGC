@@ -1,0 +1,18 @@
+{
+  "schema": "frontierbridge_retention_consolidation_v1",
+  "parent": null,
+  "pi0_reference": null,
+  "task_identity": null,
+  "data_roles": {"TRAIN_FIT": null, "TRAIN_GUARD": null, "TEACHER": null},
+  "guard_config": null,
+  "selection_config": null,
+  "seed": 10101301,
+  "max_attempted_updates": 1000,
+  "checkpoint_steps": [0, 100, 250, 500, 1000],
+  "cost_limits": null,
+  "execution_code_identity": null,
+  "automatic_next_stage": false,
+  "arms": ["P0", "P1", "P2"],
+  "evaluation_panel": null,
+  "tensorboard": {"host": "127.0.0.1", "port": null}
+}

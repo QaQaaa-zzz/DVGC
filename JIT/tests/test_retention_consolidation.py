@@ -1,0 +1,87 @@
+"""No physical environment is needed to prepare or refuse execution."""
+import json
+from pathlib import Path
+import pytest
+
+
+def config():
+    return dict(schema='frontierbridge_retention_consolidation_v1',
+        parent=None, pi0_reference=None, data_roles={}, guard_config=None,
+        selection_config=None, seed=13, max_attempted_updates=1000,
+        checkpoint_steps=[0,100,250,500,1000], cost_limits=None,
+        execution_code_identity=None, automatic_next_stage=False,
+        arms=['P0','P1','P2'], evaluation_panel=None,
+        tensorboard=dict(host='127.0.0.1',port=None))
+
+
+def prepare(tmp_path):
+    from jit_dvgc.retention_consolidation import prepare
+    c=tmp_path/'config.json';c.write_text(json.dumps(config()))
+    repo=Path(__file__).resolve().parents[2]
+    return prepare(c,tmp_path/'output',repo)
+
+
+def test_prepare_dry_run_no_optimizer_or_physics(tmp_path, monkeypatch):
+    import optax
+    monkeypatch.setattr(optax,'adam',lambda *a,**k:pytest.fail('optimizer created'))
+    from jit_dvgc.retention_consolidation import dry_run
+    plan=prepare(tmp_path)
+    report=dry_run(plan)
+    assert report['status']=='blocked'
+    assert {'parent','guard_config','cost_limits'}<=set(report['unresolved'])
+    assert report['environment_transitions']==report['optimizer_updates']==0
+    assert (tmp_path/'output/parent_manifest.json').exists()
+    assert (tmp_path/'output/input_lock.json').exists()
+
+
+def test_run_and_worker_cannot_bypass_unresolved_or_authorization(tmp_path):
+    from jit_dvgc.retention_consolidation import run,worker
+    plan=prepare(tmp_path)
+    for fn in (run,worker):
+        with pytest.raises(ValueError,match='blocked|authorization'):
+            fn(plan,None)
+    assert json.loads((tmp_path/'output/status.json').read_text())['phase']=='prepared'
+
+
+def test_config_drift_fails_closed(tmp_path):
+    from jit_dvgc.retention_consolidation import audit
+    plan=prepare(tmp_path)
+    (tmp_path/'config.json').write_text('{}')
+    with pytest.raises(ValueError,match='drift'):
+        audit(plan)
+
+
+def test_no_historical_budget_or_automatic_stage(tmp_path):
+    from jit_dvgc.retention_consolidation import validate_config
+    c=config();c['automatic_next_stage']=True
+    with pytest.raises(ValueError,match='automatic'):validate_config(c)
+    c=config();c['max_attempted_updates']=1001
+    with pytest.raises(ValueError,match='attempt'):validate_config(c)
+    c=config();c['cost_limits']={'environment_transitions':1,'wall_seconds':1,
+        'supervised_attempts':1,'prior_charged':1}
+    with pytest.raises(ValueError,match='attempt|budget'):validate_config(c)
+
+
+def test_panel_rejects_test_composite_and_missing_repeats():
+    from jit_dvgc.retention_consolidation import validate_panel
+    case=dict(case_id='one',group='old_nominal',role='TEST',mode='evaluate',
+        lane=0,capacity=1,horizon=400,spec={'bridge_action_plan':{}},repeat_seeds=[1])
+    with pytest.raises(ValueError):validate_panel({'cases':[case]})
+
+
+def test_report_without_training_does_not_claim_improvement(tmp_path):
+    from jit_dvgc.retention_consolidation import report
+    result=report(prepare(tmp_path))
+    assert result['published_policy'] is None
+    assert result['training']=='not_run'
+    assert result['conclusion']=='engineering_blocked'
+
+
+def test_completed_execution_with_guard_rejection_is_not_method_success(tmp_path):
+    from jit_dvgc.retention_consolidation import report
+    plan=prepare(tmp_path);root=tmp_path/'output'
+    (root/'status.json').write_text(json.dumps({'phase':'completed'}))
+    (root/'P2').mkdir();(root/'P2/warmup_status.json').write_text(json.dumps({'status':'blocked_by_guard','attempts':1,'accepted_updates':0}))
+    result=report(plan)
+    assert result['conclusion']=='blocked_by_guard'
+    assert result['arms']['P2']['accepted_updates']==0
