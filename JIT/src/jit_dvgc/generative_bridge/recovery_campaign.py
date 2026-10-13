@@ -217,6 +217,35 @@ def verify_evaluation_boundary(previous):
         raise ValueError('post-learning recovery cannot discard later E/G or completed round work')
     contract=read(rd/'stages/round_contract.json');spec=read(rd/'production.json')
     if contract!={'sha256':digest(spec),'contract':spec}:raise ValueError('failed round contract changed')
+    inherited=spec.get('recovery_completed_student')
+    if inherited is not None:
+        # Each explicitly requested evaluation-only successor keeps the same
+        # original learning/teacher proof and adds its failed reservation.
+        for path,sha in inherited['locks'].items():
+            if file_sha(path)!=sha:raise ValueError('inherited completed boundary changed: '+path)
+        original=verify_evaluation_boundary(Path(inherited['phase']['path']).parent.parent)
+        for key in ('schema','phase','student','student_stage','inventory','checkpoint_probes','teachers',
+            'teacher_roots','completed_training_transitions','optimizer_updates','learner_state_sha256',
+            'optimizer_sha256','rng_sha256','extra_actor_updates','simulator_frame_continuity'):
+            if inherited[key]!=original[key]:raise ValueError('inherited completed student identity changed: '+key)
+        stage_path=rd/'stages/train_student.json';stage=read(stage_path);phase=read(inherited['phase']['path'])
+        if (stage['input_sha256']!=digest({'round':contract['sha256'],'inputs':phase})
+            or stage['output_sha256']!=digest(inherited['student']) or stage['result']!=inherited['student']):
+            raise ValueError('inherited student journal changed')
+        carried=read(root/'declaration.json')['engineering_recovery']['carried_round_costs']
+        costs=read(rd/'costs.json');extra=costs[len(carried):]
+        if (costs[:len(carried)]!=carried or not extra or any(c.get('stage')!='student_train_batch_0000'
+            or c.get('phase')!='failed' or c.get('charged_updates',0)!=0
+            or c.get('charged_interactions')!=12800 for c in extra)):
+            raise ValueError('chained recovery permits only failed student evaluation reservations')
+        charge=sum(c['charged_interactions'] for c in costs)
+        if charge!=status['charged_interactions'] or sum(c['charged_interactions'] for c in carried)!=inherited['charged_interactions']:
+            raise ValueError('chained failed round cost ledger changed')
+        proof=deepcopy(inherited);proof.update(charged_interactions=charge,
+            failed_evaluation_upper=inherited['failed_evaluation_upper']+sum(c['charged_interactions'] for c in extra))
+        for name in ('production.json','status.json','costs.json','stages/round_contract.json','stages/train_student.json'):
+            path=str(rd/name);proof['locks'][path]=file_sha(path)
+        return proof
     phase_path=rd/'source_phase_result.json';phase=read(phase_path);stage_path=rd/'stages/train_student.json';stage=read(stage_path)
     if (stage['input_sha256']!=digest({'round':contract['sha256'],'inputs':phase})
         or stage['output_sha256']!=digest(stage['result'])):raise ValueError('completed student stage changed')
@@ -314,12 +343,18 @@ def prepare_evaluation_recovery(previous,output,repository,*,port=None):
     for path,sha in old['locks'].items():
         if file_sha(path)!=sha:raise ValueError('original initialization changed: '+path)
     stages={'train_student':proof['student_stage']};source_locks={}
-    for path in sorted((rd/'stages').glob('eval_source_suffix_batch_*.json')):
-        if path.name.endswith('.running.json'):continue
+    inherited_stages=spec.get('recovery',{}).get('stages',{}) if spec.get('recovery_completed_student') else {}
+    source_refs={name:ref for name,ref in inherited_stages.items() if name.startswith('eval_source_suffix_batch_')}
+    if not inherited_stages:
+        source_refs={path.stem:dict(path=str(path),sha256=file_sha(path))
+            for path in sorted((rd/'stages').glob('eval_source_suffix_batch_*.json')) if not path.name.endswith('.running.json')}
+    for name,ref in source_refs.items():
+        path=Path(ref['path'])
+        if file_sha(path)!=ref['sha256']:raise ValueError('inherited source suffix journal changed')
         record=read(path)
         if record['output_sha256']!=digest(record['result']) or file_sha(record['result']['path'])!=record['result']['sha256']:
             raise ValueError('completed source suffix stage changed')
-        stages[path.stem]=dict(path=str(path),sha256=file_sha(path))
+        stages[name]=ref
         source_locks[str(path)]=file_sha(path)
         source_locks[record['result']['path']]=record['result']['sha256']
         for row in read(record['result']['path']):
@@ -338,8 +373,10 @@ def prepare_evaluation_recovery(previous,output,repository,*,port=None):
     root.mkdir(parents=True,exist_ok=False);atomic_json(root/'initial_bundle.json',read(parent/'initial_bundle.json'))
     atomic_json(root/'post_learning_boundary.json',proof)
     d=deepcopy(old);d.pop('storage_continuation',None);d.pop('active_authorization_path',None)
+    original_contract=(spec['recovery']['previous_contract_identity'] if spec.get('recovery_completed_student')
+                       else read(rd/'stages/round_contract.json')['sha256'])
     info=dict(previous_campaign=str(parent),previous_round=str(rd),previous_spec_sha256=file_sha(rd/'production.json'),
-        previous_contract_identity=read(rd/'stages/round_contract.json')['sha256'],previous_costs_sha256=file_sha(rd/'costs.json'),
+        previous_contract_identity=original_contract,previous_costs_sha256=file_sha(rd/'costs.json'),
         original_round_started_unix=read(rd/'started.json')['started_unix'],carried_round_costs=carried,stages=stages,
         collection=collection,completed_student=proof,additional_round_budget=additional,cumulative_round_upper=cumulative,
         maximum_additional_round_interactions=sum(additional.values()),original_round_ceiling=spec['budgets']['max_physics'],

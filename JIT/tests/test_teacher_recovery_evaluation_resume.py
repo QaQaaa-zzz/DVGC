@@ -125,3 +125,27 @@ def test_sibling_prepare_spec_carries_all_fees_without_student_update(tmp_path,m
     assert sum(c['charged_interactions'] for c in json.loads((successor/'round_0001/costs.json').read_text()))==44810
     assert not (successor/'round_0001/students').exists()
     assert json.loads((rd/'stages/train_student.json').read_text())['result']==student
+    # A later explicit evaluation-only repair must keep the original stage identity.
+    next_rd=successor/'round_0001';next_contract=digest(recovered)
+    (next_rd/'stages').mkdir()
+    atomic_json(next_rd/'stages/round_contract.json',{'sha256':next_contract,'contract':recovered})
+    atomic_json(next_rd/'stages/train_student.json',dict(input_sha256=digest({'round':next_contract,'inputs':phase}),
+        output_sha256=digest(student),result=student))
+    costs=json.loads((next_rd/'costs.json').read_text())
+    costs.append(dict(stage='student_train_batch_0000',phase='failed',charged_interactions=12800))
+    atomic_json(next_rd/'costs.json',costs)
+    atomic_json(next_rd/'status.json',dict(phase='failed',error='student_train_batch_0000: failed',charged_interactions=57610))
+    atomic_json(next_rd/'started.json',{'started_unix':123});atomic_json(successor/'started.json',{})
+    atomic_json(successor/'status.json',dict(phase='failed',completed_rounds=0))
+    third=prepare_evaluation_recovery(successor,tmp_path/'third',tmp_path/'repo')
+    chain=third['engineering_recovery']
+    assert chain['completed_student']['charged_interactions']==57610
+    assert chain['completed_student']['failed_evaluation_upper']==25600
+    assert chain['previous_contract_identity']==contract
+    assert chain['stages']==info['stages']
+    assert chain['completed_student']['student']==student
+    assert sum(c['charged_interactions'] for c in chain['carried_round_costs'])==57610
+    costs.append(dict(stage='explorer_update',phase='completed',charged_interactions=0))
+    atomic_json(next_rd/'costs.json',costs)
+    with pytest.raises(ValueError,match='only failed student evaluation'):
+        prepare_evaluation_recovery(successor,tmp_path/'fourth',tmp_path/'repo')

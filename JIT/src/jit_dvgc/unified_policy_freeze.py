@@ -423,9 +423,20 @@ def verify_frozen_unified_record(record: Mapping[str, Any]) -> FrozenUnifiedPoli
             iteration=int(record["iteration"]),
         )
     expected = _record_payload(inspected)
-    if dict(record) != expected:
+    compared = dict(record)
+    # Storage migration may retain original manifest paths as symlink aliases.
+    # Only these declared path fields may compare by their resolved target;
+    # every content hash, role, budget and additional field remains strict.
+    for key in ("checkpoint", "formal_config", "source_formal_report",
+                "source_frozen_policy", "initialization_receipt"):
+        actual_path, expected_path = compared.get(key), expected.get(key)
+        if (isinstance(actual_path, str) and isinstance(expected_path, str)
+                and Path(actual_path).resolve() == Path(expected_path).resolve()):
+            compared[key] = expected_path
+    if compared != expected:
         differing = sorted(
-            key for key in set(record) | set(expected) if record.get(key) != expected.get(key)
+            key for key in set(compared) | set(expected)
+            if key not in compared or key not in expected or compared[key] != expected[key]
         )
         raise ValueError(f"frozen unified policy record drift: {differing}")
     return inspected
