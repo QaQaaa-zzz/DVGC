@@ -150,6 +150,11 @@ def _constrained_warmup(network, initializer, retention_reference, demo_manifest
     fixed_hash=pytree_sha256(normalizer);critic_hash=pytree_sha256(critic)
     guard=update_guard or {};enabled=guard.get('enabled',True) if update_guard is not None else False
     bank,config=guard.get('bank'),guard.get('config')
+    learning_rate=(config or {}).get('learning_rate',1e-5)
+    if type(learning_rate) not in (int,float) or not np.isfinite(learning_rate) or learning_rate<=0:
+        raise ValueError('positive finite learning rate required')
+    learning_rate=float(learning_rate)
+    optimizer_identity='Adam1e-5/clip1' if learning_rate==1e-5 else f'Adam{learning_rate!r}/clip1'
     reference_norm,reference_actor=jax.tree.map(jax.lax.stop_gradient,retention_reference)
     @jax.jit
     def prediction(p,x):
@@ -171,10 +176,10 @@ def _constrained_warmup(network, initializer, retention_reference, demo_manifest
         normalizer_sha256=fixed_hash,critic_sha256=critic_hash,parent_sha256=pytree_sha256(retention_reference),
         initializer_sha256=pytree_sha256(initializer),data_sha256=pytree_sha256(data),keep_sha256=pytree_sha256(retention),
         guard_sha256=pytree_sha256(bank) if bank is not None else None,guard_identity=guard.get('identity'),
-        guard_config=config,guard_enabled=enabled,checkpoint_steps=schedule,optimizer='Adam1e-5/clip1',sampling='fold_in(base_rng,absolute_attempt)')
+        guard_config=config,guard_enabled=enabled,checkpoint_steps=schedule,optimizer=optimizer_identity,sampling='fold_in(base_rng,absolute_attempt)')
     # Canonical JSON removes tuple/numpy scalar distinctions from resume contracts.
     identity=json.loads(json.dumps(identity))
-    optimizer=optax.chain(optax.clip_by_global_norm(1.),optax.adam(1e-5));state=optimizer.init(actor)
+    optimizer=optax.chain(optax.clip_by_global_norm(1.),optax.adam(learning_rate));state=optimizer.init(actor)
     key=jax.random.PRNGKey(seed);attempts=accepted=rejected=backtracking=consecutive=0
     if resume_checkpoint is not None:
         resume_checkpoint=Path(resume_checkpoint)

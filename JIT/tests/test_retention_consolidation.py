@@ -124,3 +124,18 @@ def test_diagnostic_completed_report_keeps_qualification_unverified(tmp_path):
     assert result['closed_loop_qualified'] is False and result['automatic_adoption'] is False
     assert result['deterministic_policy_retention']=='UNVERIFIED'
     assert result['published_policy'] is None
+
+
+def test_record_only_execution_requires_matching_user_grant(tmp_path,monkeypatch):
+    from jit_dvgc import retention_consolidation as stage
+    from jit_dvgc.generative_bridge.contracts import file_sha
+    plan=prepare(tmp_path);p=stage.read(plan)
+    p['config']['selection_config']={'diagnostic_training':True,'retention_gate_mode':'record_only'}
+    Path(plan).write_text(json.dumps(p));monkeypatch.setattr(stage,'audit',lambda _:dict(status='ready'))
+    grant=dict(schema='frontierbridge_execution_authorization_v1',execute=True,plan_sha256=file_sha(plan),
+        cost_limits=p['config']['cost_limits'],arms=['P0','P1','P2'],user_authorization_record='actual user',
+        diagnostic_training=True,automatic_adoption=False,nominal_retention_status='UNVERIFIED_BASELINE_MIXED')
+    auth=tmp_path/'auth.json';auth.write_text(json.dumps(grant))
+    with pytest.raises(ValueError,match='record.only'):stage.require_execution(plan,auth)
+    grant['retention_gate_mode']='record_only';auth.write_text(json.dumps(grant))
+    stage.require_execution(plan,auth)

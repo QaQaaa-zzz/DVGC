@@ -250,3 +250,50 @@ def test_attempt_records_separate_measured_costs(tmp_path):
     row=json.loads((out/'update_audit.jsonl').read_text())
     for key in ('sampling_seconds','proposal_seconds','diagnostic_seconds','guard_seconds'):
         assert 0<=row[key]<=row['wall_seconds']
+
+
+def test_declared_guard_learning_rate_controls_real_adam_and_saved_identity(tmp_path):
+    import pickle
+    from jit_dvgc.generative_bridge.warmup import warmup_actor
+    net,initial,reference,demo,keep,guard=setup_warm(tmp_path)
+    fast=warmup_actor(net,initial,reference,demo,keep,tmp_path/'default_lr',updates=1,batch_size=2,seed=7,update_guard=guard)
+    guard['config']['learning_rate']=1e-6
+    slow=warmup_actor(net,initial,reference,demo,keep,tmp_path/'declared_lr',updates=1,batch_size=2,seed=7,update_guard=guard)
+    fast_delta=float(initial[1]-fast[1]);slow_delta=float(initial[1]-slow[1])
+    assert slow_delta==pytest.approx(fast_delta*.1,rel=.03)
+    saved=pickle.load((tmp_path/'declared_lr/learner_attempt_0001.pkl').open('rb'))
+    default=pickle.load((tmp_path/'default_lr/learner_attempt_0001.pkl').open('rb'))
+    assert saved['identity']['optimizer']=='Adam1e-06/clip1'
+    assert default['identity']['optimizer']=='Adam1e-5/clip1'
+    assert int(saved['optimizer_state'][1][0].count)==1
+
+
+@pytest.mark.parametrize('rate',[0.,-1.,float('nan'),float('inf'),True,'1e-6',None])
+def test_invalid_declared_guard_learning_rate_is_rejected_before_optimizer(tmp_path,rate,monkeypatch):
+    from jit_dvgc.generative_bridge.warmup import warmup_actor
+    net,initial,reference,demo,keep,guard=setup_warm(tmp_path)
+    guard['config']['learning_rate']=rate
+    monkeypatch.setattr(optax,'adam',lambda *args,**kwargs:pytest.fail('invalid LR reached optimizer'))
+    with pytest.raises(ValueError,match='learning rate'):
+        warmup_actor(net,initial,reference,demo,keep,tmp_path/'invalid_lr',updates=1,batch_size=2,update_guard=guard)
+
+
+def test_resume_cannot_change_declared_learning_rate(tmp_path):
+    from jit_dvgc.generative_bridge.warmup import warmup_actor
+    net,initial,reference,demo,keep,guard=setup_warm(tmp_path)
+    guard['config']['learning_rate']=1e-6
+    warmup_actor(net,initial,reference,demo,keep,tmp_path/'lr_part',updates=1,batch_size=2,update_guard=guard)
+    guard['config']['learning_rate']=1e-5
+    with pytest.raises(ValueError,match='resume identity'):
+        warmup_actor(net,initial,reference,demo,keep,tmp_path/'lr_resume',updates=2,batch_size=2,update_guard=guard,
+            resume_checkpoint=tmp_path/'lr_part/learner_attempt_0001.pkl')
+
+
+def test_opt_in_p1_and_p2_use_the_same_declared_learning_rate(tmp_path):
+    from jit_dvgc.generative_bridge.warmup import warmup_actor
+    net,initial,reference,demo,keep,guard=setup_warm(tmp_path)
+    guard['config']['learning_rate']=1e-6
+    common=dict(updates=3,batch_size=2,seed=11)
+    p1=warmup_actor(net,initial,reference,demo,keep,tmp_path/'lr_P1',update_guard={**guard,'enabled':False},**common)
+    p2=warmup_actor(net,initial,reference,demo,keep,tmp_path/'lr_P2',update_guard=guard,**common)
+    eq(p1,p2)

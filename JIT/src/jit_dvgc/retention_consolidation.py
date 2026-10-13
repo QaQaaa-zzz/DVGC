@@ -25,6 +25,8 @@ def validate_config(c):
     n=c.get('max_attempted_updates')
     if type(n) is not int or not 0<n<=1000:raise ValueError('attempt budget must be 1..1000')
     if type(c.get('seed')) is not int:raise ValueError('explicit integer seed required')
+    lr=c.get('learning_rate',1e-5)
+    if type(lr) not in (int,float) or not math.isfinite(lr) or lr<=0:raise ValueError('finite positive learning rate required')
     steps=c.get('checkpoint_steps')
     if not isinstance(steps,list) or steps!=sorted(set(steps)) or not steps or steps[0]!=0 or any(type(x) is not int or x<0 or x>n for x in steps) or steps[-1]!=n:
         raise ValueError('checkpoint schedule must include zero and final attempt')
@@ -488,6 +490,10 @@ def audit(plan):
     if guard:
         _audit_thresholds(guard,banks.get('TRAIN_GUARD',{}),identities.get('parent',{}),missing,
             diagnostic_training=(c.get('selection_config') or {}).get('diagnostic_training') is True)
+        if guard.get('learning_rate',1e-5)!=c.get('learning_rate',1e-5):raise ValueError('guard and actual optimizer learning rates differ')
+        if guard.get('calibration_receipt'):
+            receipt=_descriptor_json(guard['calibration_receipt'])
+            if receipt.get('learning_rate',1e-5)!=c.get('learning_rate',1e-5):raise ValueError('calibration and actual optimizer learning rates differ')
     selection=c.get('selection_config')
     if selection:
         from .retention_consolidation_evaluation import _selection_config
@@ -515,6 +521,9 @@ def require_execution(plan,authorization):
         and (grant.get('diagnostic_training') is not True or grant.get('automatic_adoption') is not False
              or grant.get('nominal_retention_status')!='UNVERIFIED_BASELINE_MIXED')):
         raise ValueError('diagnostic execution must explicitly bind unverified nominal and prohibited adoption')
+    if (p['config']['selection_config'].get('retention_gate_mode')=='record_only'
+        and grant.get('retention_gate_mode')!='record_only'):
+        raise ValueError('record-only execution must bind the actual user continuation choice')
     return p,grant
 
 

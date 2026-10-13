@@ -224,3 +224,23 @@ Prior charged cost153,600 plus this calibration and the conservative766,800
 main reserve is997,200, within the original cap. Actual fully completed main
 physical maximum is690,000 because its49-case P0 cache adds no transitions;
 therefore maximum actual cost920,400. All raw failures remain immutable.
+
+
+Latest explicit user decision: retention thresholds are recorded without
+blocking subsequent bounded diagnostic stages; automatic adoption stays off.
+The historical20-update failed run is preserved. Publish prior compact results
+first (completed at report commit3d4964a5,403453-byte archive). Then evaluate
+the saved5/10 checkpoints plus a contemporaneous pi0 control, run fresh20
+calibration at learning_rate1e-6, and compare fresh P1/P2 from identical pi0
+with the same data/minibatches. P2 still accepts/backtracks/rejects proposals
+against finite measured behavior budgets; closed-loop failure is recorded.
+Consecutive rejection limit1001 exceeds the1000-attempt stage budget so it
+does not prevent the final declared checkpoint evaluation.
+
+Keep the original1,000,000 physical-control-transition and12h total bounds.
+Previously charged230400 + saved-model review230400 + new calibration76800
++ conservative main426000 =963600. Main checkpoint schedule0/100/1000
+limits physical evaluation costs; P0 collect49 uses all six original cached
+repeats, while its seven solver conditions execute fresh. Main actual bound
+is349200, so fully completed actual lineage bound886800. No silent baseline
+cherry-picking, no physics/reward/network/data change, no E/G/PPO or TEST.

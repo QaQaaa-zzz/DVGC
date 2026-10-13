@@ -74,6 +74,8 @@ def _selection_config(config):
     if type(config.get('diagnostic_training',False)) is not bool:raise ValueError('diagnostic_training must be explicit boolean')
     for key in ('expected_repeats','reference_expected_repeats','expansion_reference_expected_repeats','teacher_expected_repeats'):
         if key in config and (type(config[key]) is not int or config[key]<1):raise ValueError('positive integer repeat cardinality required: '+key)
+    if config.get('retention_gate_mode','block') not in ('block','record_only'):
+        raise ValueError('retention_gate_mode must be block or record_only')
     return groups
 
 
@@ -88,6 +90,7 @@ def evaluate_capability_groups(rows, selection_config):
     reference_repeats=selection_config.get('reference_expected_repeats',repeats)
     teacher_repeats=selection_config.get('teacher_expected_repeats',repeats)
     diagnostic_training=selection_config.get('diagnostic_training',False)
+    retention_mode=selection_config.get('retention_gate_mode','block')
     cardinalities={}
     diagnostic_mixed=selection_config.get('baseline_mixed_policy','block')=='diagnostic_only'
     normalized = []; conditions = set(); cases = set()
@@ -115,7 +118,10 @@ def evaluate_capability_groups(rows, selection_config):
             labels['student'] = 'unknown'
         normalized.append((row,labels))
     result = dict(parent={},pi0={},gates={},eligible=True,continuation_eligible=True,
-                  diagnostic_training=diagnostic_training,adoption_prohibited=diagnostic_training,
+                  diagnostic_training=diagnostic_training,retention_gate_mode=retention_mode,
+                  adoption_prohibited=diagnostic_training or retention_mode=='record_only',
+                  engineering_execution_errors=[dict(case_id=r['case_id'],policy=name) for r,l in normalized
+                      for name in ('parent','pi0','student') if l[name]=='execution_error'],
                   repeat_cardinality=dict(reference=reference_repeats,student=repeats,teacher=teacher_repeats),
                   reference_expected_repeats_scope='retention_roles',case_repeat_cardinality=cardinalities,
                   repeat_semantics='label_stability_not_training_seeds',
@@ -175,7 +181,17 @@ def evaluate_capability_groups(rows, selection_config):
         or (expansion_gate['mixed'] and selection_config['mixed_policy']=='block')
         or (expansion_gate['unknown'] and selection_config['unknown_policy']=='block')):
         result['eligible'] = False;result['continuation_eligible']=False
-    if diagnostic_training:result['eligible']=False
+    result['capability_eligible']=result['eligible']
+    if retention_mode=='record_only':
+        # Physical horizon/episode timeouts remain descriptive outcome labels.
+        # Process timeouts/nonfinite dispatch failures still raise in runtime;
+        # an explicit execution_error label is an engineering failure here.
+        missing=any('missing_required_group' in gate['reasons'] for gate in result['gates'].values())
+        result['continuation_eligible']=not result['engineering_execution_errors'] and not missing
+        for gate in result['gates'].values():
+            gate['continuation_disposition']='record_only'
+        result['physical_timeout_disposition']='record_only_outcome; not_success'
+    if result['adoption_prohibited']:result['eligible']=False
     return result
 
 

@@ -125,3 +125,29 @@ def test_diagnostic_grant_reuses_all_six_and_only_reserves_update20(tmp_path,mon
     assert calls==[['all','six']] and len(panel['cases'])==4
     grant['schema']=calibration.AUTH_SCHEMA;auth.write_text(json.dumps(grant))
     with pytest.raises(ValueError):calibration.require_reservation(plan,auth)
+
+
+def test_record_only_freezes_finite_observed_drift_and_preserves_failed_gates():
+    rows=[point(i,False) for i in calibration.STEPS]
+    rows[-1]['capabilities'].update(continuation_eligible=False,reasons=['lost_old_skill'])
+    result=calibration.freeze_thresholds(rows,['old'],diagnostic=True,retention_gate_mode='record_only',learning_rate=1e-6)
+    assert result['threshold_rule']==calibration.RECORD_ONLY_SELECTION_RULE
+    assert result['closed_loop_qualified'] is False and 'calibrated' not in result
+    assert result['learning_rate']==1e-6
+    assert result['observed_attempts']==[20] and result['qualified_attempts']==[]
+    assert result['recorded_retention_gates']['reasons']==['lost_old_skill']
+    rows[-1]['finite']=False
+    with pytest.raises(FloatingPointError):calibration.freeze_thresholds(rows,['old'],diagnostic=True,retention_gate_mode='record_only')
+
+
+def test_record_only_reservation_binds_mode_and_distinct_rule(tmp_path,monkeypatch):
+    import json
+    from jit_dvgc.generative_bridge.contracts import file_sha
+    plan,auth,grant=reservation_fixture(tmp_path,monkeypatch)
+    p=json.loads(plan.read_text());p['config']['selection_config']={'diagnostic_training':True,'retention_gate_mode':'record_only'};plan.write_text(json.dumps(p))
+    grant.update(schema=calibration.DIAGNOSTIC_AUTH_SCHEMA,stage_plan_sha256=file_sha(plan),selection_rule=calibration.RECORD_ONLY_SELECTION_RULE,
+        retention_gate_mode='record_only',physical_checkpoint_steps=[20],environment_transitions=76800)
+    monkeypatch.setattr(calibration,'load_baseline_reference_cache',lambda *args:({},{}))
+    auth.write_text(json.dumps(grant));calibration.require_reservation(plan,auth)
+    grant.pop('retention_gate_mode');auth.write_text(json.dumps(grant))
+    with pytest.raises(ValueError):calibration.require_reservation(plan,auth)

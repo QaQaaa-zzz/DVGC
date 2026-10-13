@@ -20,8 +20,14 @@ DIAGNOSTIC_AUTH_SCHEMA='frontierbridge_behavior_calibration_diagnostic_authoriza
 DIAGNOSTIC_RECEIPT_SCHEMA='frontierbridge_guard_behavior_calibration_diagnostic_v1'
 DIAGNOSTIC_SELECTION_RULE='observed_update20_behavior_drift_with_nominal_unverified_and_other_groups_zero_loss_v1'
 
+RECORD_ONLY_SELECTION_RULE='observed_update20_behavior_drift_record_only_v1'
 
-def freeze_thresholds(candidates,groups,*,diagnostic=False):
+
+def freeze_thresholds(candidates,groups,*,diagnostic=False,retention_gate_mode='enforce',learning_rate=1e-5):
+    if retention_gate_mode not in ('enforce','record_only') or (retention_gate_mode=='record_only' and not diagnostic):
+        raise ValueError('record-only calibration requires explicit diagnostic mode')
+    if not math.isfinite(learning_rate) or learning_rate<=0:raise ValueError('finite positive learning rate required')
+    record_only=retention_gate_mode=='record_only'
     if [row.get('attempt') for row in candidates]!=STEPS:
         raise ValueError('fixed calibration schedule 0/5/10/20 required')
     usable=[]
@@ -35,14 +41,15 @@ def freeze_thresholds(candidates,groups,*,diagnostic=False):
                 if values.shape!=(4,) or not np.isfinite(values).all() or np.any(values<0):
                     raise FloatingPointError('invalid finite calibration group/channel drift')
         eligibility='continuation_eligible' if diagnostic else 'eligible'
-        if row['attempt']==20 and row.get('capabilities',{}).get(eligibility) is True:usable.append(row)
+        if row['attempt']==20 and (record_only or row.get('capabilities',{}).get(eligibility) is True):usable.append(row)
     if not usable:raise ValueError('no qualifying nonzero calibration candidate; thresholds remain unresolved')
     result=dict(mse_thresholds={g:np.max([r['guard']['groups'][g]['mse'] for r in usable],axis=0).tolist() for g in groups},
         p99_thresholds={g:np.max([r['guard']['groups'][g]['p99'] for r in usable],axis=0).tolist() for g in groups},
-        qualified_attempts=[r['attempt'] for r in usable],threshold_rule=DIAGNOSTIC_SELECTION_RULE if diagnostic else SELECTION_RULE,
+        qualified_attempts=[r['attempt'] for r in usable],threshold_rule=RECORD_ONLY_SELECTION_RULE if record_only else DIAGNOSTIC_SELECTION_RULE if diagnostic else SELECTION_RULE,learning_rate=learning_rate,
         units={'mse':'normalized_action_squared_error','p99':'normalized_action_absolute_error'},
         zero_channel_budget='preserved_exactly_no_arbitrary_floor',
         evidence_boundary='finite TRAIN_GUARD behavior plus used DEV_RETENTION; no global retention or independent TEST claim')
+    if record_only:result.update(qualified_attempts=[],observed_attempts=[20],retention_gate_mode='record_only',recorded_retention_gates=usable[0].get('capabilities',{}))
     if diagnostic:result.update(behavior_calibrated=True,closed_loop_qualified=False,nominal_qualification='UNVERIFIED',automatic_adoption=False)
     return result
 
@@ -144,10 +151,13 @@ def require_reservation(stage_plan,authorization):
     plan=read(stage_plan);grant=read(authorization)
     diagnostic=plan.get('config',{}).get('selection_config',{}).get('diagnostic_training') is True
     physical_steps=[20] if diagnostic else PHYSICAL_STEPS
-    rule=DIAGNOSTIC_SELECTION_RULE if diagnostic else SELECTION_RULE
+    mode=plan.get('config',{}).get('selection_config',{}).get('retention_gate_mode','enforce')
+    if mode not in ('enforce','record_only') or (mode=='record_only' and not diagnostic):raise ValueError('record-only calibration requires diagnostic authorization')
+    rule=RECORD_ONLY_SELECTION_RULE if mode=='record_only' else DIAGNOSTIC_SELECTION_RULE if diagnostic else SELECTION_RULE
     schema=DIAGNOSTIC_AUTH_SCHEMA if diagnostic else AUTH_SCHEMA
     if (grant.get('schema')!=schema or grant.get('stage_plan_sha256')!=file_sha(stage_plan)
             or grant.get('execute') is not True or not grant.get('user_authorization_record')
+            or grant.get('retention_gate_mode','enforce')!=mode
             or grant.get('selection_rule')!=rule or grant.get('checkpoint_steps')!=STEPS
             or grant.get('physical_checkpoint_steps')!=physical_steps
             or grant.get('calibration_attempts')!=20 or grant.get('max_supervised_attempts')!=22
@@ -187,7 +197,7 @@ def _gpu_micro(network,initializer,demo,fit,bank,thresholds,seed,output):
     ids=jax.random.choice(dk,len(obs),(256,),p=weights);kids=jax.random.choice(kk,len(keep),(256,),p=jp.asarray(fit['weights']))
     teacher=predict(actor,keep[kids])
     def loss(p):return action_mse(predict(p,obs[ids]),targets[ids])+action_mse(predict(p,keep[kids]),teacher)
-    optimizer=optax.chain(optax.clip_by_global_norm(1.),optax.adam(1e-5));state=optimizer.init(actor)
+    optimizer=optax.chain(optax.clip_by_global_norm(1.),optax.adam(thresholds.get('learning_rate',1e-5)));state=optimizer.init(actor)
     value,gradient=jax.jit(jax.value_and_grad(loss))(actor)
     delta,proposed=optimizer.update(gradient,state,actor);proposal=(value,gradient,delta,proposed)
     require_finite(proposal,'GPU micro proposal')
@@ -224,6 +234,8 @@ def run(stage_plan,authorization):
     """Foreground bounded run; caller must reserve global cost before dispatch."""
     plan,grant,panel=require_reservation(stage_plan,authorization)
     diagnostic=plan.get('config',{}).get('selection_config',{}).get('diagnostic_training') is True
+    mode=plan['config'].get('selection_config',{}).get('retention_gate_mode','enforce')
+    rule=RECORD_ONLY_SELECTION_RULE if mode=='record_only' else DIAGNOSTIC_SELECTION_RULE if diagnostic else SELECTION_RULE
     cached_results,cache_receipt=load_baseline_reference_cache(plan,grant,panel) if diagnostic else ({},None)
     import jax
     if jax.default_backend()!='gpu' or jax.device_count()!=1:raise ValueError('actual calibration requires exactly one GPU')
@@ -252,7 +264,7 @@ def run(stage_plan,authorization):
     p=copy.deepcopy(plan);p['output']=str(root);p['config']['evaluation_panel']=dict(path=str(panel_path),sha256=file_sha(panel_path))
     p['config']['cost_limits'].update(environment_transitions=grant['environment_transitions'],wall_seconds=grant['wall_seconds'])
     p['config']['tensorboard']=dict(host='127.0.0.1',port=grant['tensorboard_port'])
-    atomic_json(root/'calibration_config.json',dict(plan=p,steps=STEPS,selection_rule=DIAGNOSTIC_SELECTION_RULE if diagnostic else SELECTION_RULE,seed=p['config']['seed']))
+    atomic_json(root/'calibration_config.json',dict(plan=p,steps=STEPS,selection_rule=rule,retention_gate_mode=mode,seed=p['config']['seed']))
     if diagnostic:atomic_json(root/'baseline_reference_cache.json',cache_receipt)
     evaluator=Evaluator(p);writer=None;candidates=[]
     try:
@@ -282,7 +294,7 @@ def run(stage_plan,authorization):
         _,fit,_=load_retention_bank(c['data_roles']['TRAIN_FIT']['path'],allowed_roles=('TRAIN_FIT',))
         guard_manifest,bank,_=load_retention_bank(c['data_roles']['TRAIN_GUARD']['path'],allowed_roles=('TRAIN_GUARD',))
         demo=_descriptor_json(c['data_roles']['TEACHER']);groups=sorted(guard_manifest['group_weights'])
-        ceiling=dict(mse_thresholds={g:[4.]*4 for g in groups},p99_thresholds={g:[2.]*4 for g in groups})
+        ceiling=dict(learning_rate=c.get('learning_rate',1e-5),mse_thresholds={g:[4.]*4 for g in groups},p99_thresholds={g:[2.]*4 for g in groups})
         def prediction(actor,x):return network.parametric_action_distribution.mode(network.policy_network.apply(initializer[0],actor,{'state':jax.numpy.asarray(x)}))
         prediction=jax.jit(prediction)
         if not np.array_equal(np.asarray(prediction(initializer[1],bank['observations'])),bank['reference_actions']):raise ValueError('actual parent guard labels drift')
@@ -303,7 +315,7 @@ def run(stage_plan,authorization):
                 caps=evaluate_capability_groups(rows,selection)
             candidates.append(dict(attempt=attempt,finite=True,closed_loop_evaluated=attempt in PHYSICAL_STEPS,capabilities=caps,guard=metrics,checkpoint=str(path),checkpoint_sha256=file_sha(path),results=results))
             atomic_json(root/'calibration_candidates.json',candidates)
-            return attempt==0 and not caps['continuation_eligible' if diagnostic else 'eligible']
+            return mode!='record_only' and attempt==0 and not caps['continuation_eligible' if diagnostic else 'eligible']
         def metrics(row):
             evaluator.check_clock();evaluator.ledger['supervised_attempts']=row['attempt'];atomic_json(root/'cost_ledger.json',evaluator.ledger)
             for key in ('loss','demo','keep','actor_grad_norm'):writer.add_scalar('BC/'+key,row[key],row['attempt'])
@@ -313,7 +325,7 @@ def run(stage_plan,authorization):
         warmup_actor(network,initializer,initializer[:2],demo,(fit['observations'],fit['weights']),root/'learner',seed=c['seed'],updates=20,batch_size=256,
             update_guard=dict(bank=bank,config=ceiling,identity=guard_manifest['identity'],enabled=False),checkpoint_steps=STEPS,checkpoint_callback=checkpoint,metrics_callback=metrics,actual_gradient_audit=True)
         if len(candidates)==1:raise ValueError('parent closed-loop preflight failed; zero calibration optimizer updates')
-        frozen=freeze_thresholds(candidates,groups,diagnostic=diagnostic)
+        frozen=freeze_thresholds(candidates,groups,diagnostic=diagnostic,retention_gate_mode=mode,learning_rate=c.get('learning_rate',1e-5))
         receipt=dict(schema=DIAGNOSTIC_RECEIPT_SCHEMA if diagnostic else 'frontierbridge_guard_calibration_v1',data_role='TRAIN_GUARD',
             guard_bank_sha256=guard_manifest['sha256'],parent_actor_sha256=pytree_sha256(initializer[1]),
             cost_ledger=dict(path=str(root/'cost_ledger.json'),sha256=file_sha(root/'cost_ledger.json')),

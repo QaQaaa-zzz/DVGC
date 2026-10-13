@@ -285,3 +285,43 @@ def test_diagnostic_training_never_adopts_even_when_all_retention_gates_pass():
     assert evaluation.select_checkpoint([c],'parent',cfg)['stage_candidate']=='parent'
     rows=c['rows'][1:]
     assert not evaluation.evaluate_capability_groups(rows,cfg)['continuation_eligible']
+
+
+@pytest.mark.parametrize('label',[0,'mixed','unknown','timeout'])
+def test_record_only_retention_logs_failures_without_blocking_candidate_training(label):
+    rows=candidate()['rows'];rows[1]['student_labels']=([1,0,1] if label=='mixed' else [label]*3)
+    cfg=config();cfg.update(diagnostic_training=True,retention_gate_mode='record_only')
+    result=evaluation.evaluate_capability_groups(rows,cfg)
+    assert result['continuation_eligible'] and not result['eligible']
+    assert not result['gates']['accepted_parent_recovery']['passed']
+    assert result['adoption_prohibited'] and result['retention_gate_mode']=='record_only'
+    assert result['gates']['accepted_parent_recovery']['reasons']
+    c=candidate();c['rows']=rows
+    assert evaluation.select_checkpoint([c],'parent',cfg)['phase']=='no_accepted_improvement'
+
+
+@pytest.mark.parametrize('label',['mixed','unknown','timeout'])
+def test_record_only_expansion_uncertainty_remains_uncertain_but_nonblocking(label):
+    rows=candidate()['rows'];rows[-1]['student_labels']=([1,0,1] if label=='mixed' else [label]*3)
+    cfg=config();cfg.update(diagnostic_training=True,retention_gate_mode='record_only')
+    result=evaluation.evaluate_capability_groups(rows,cfg)
+    assert result['continuation_eligible'] and not result['eligible']
+    assert result['expansion'][label]==1
+    assert result['expansion']['gained']==0 and result['expansion']['teacher_verified_absorption']==0
+
+
+def test_record_only_execution_error_and_missing_protocol_group_still_block():
+    cfg=config();cfg.update(diagnostic_training=True,retention_gate_mode='record_only')
+    rows=candidate()['rows'];rows[1]['student_labels']=['execution_error']*3
+    result=evaluation.evaluate_capability_groups(rows,cfg)
+    assert not result['continuation_eligible'] and result['engineering_execution_errors']
+    assert not evaluation.evaluate_capability_groups(rows[1:],cfg)['continuation_eligible']
+    cfg['retention_gate_mode']='invalid'
+    with pytest.raises(ValueError):evaluation.evaluate_capability_groups(rows,cfg)
+
+
+def test_record_only_always_prohibits_adoption_even_without_diagnostic_flag():
+    cfg=config();cfg['retention_gate_mode']='record_only'
+    result=evaluation.evaluate_capability_groups(candidate()['rows'],cfg)
+    assert result['capability_eligible'] and result['continuation_eligible']
+    assert not result['eligible'] and result['adoption_prohibited']
