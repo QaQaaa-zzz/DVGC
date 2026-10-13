@@ -280,3 +280,59 @@ def test_forged_snapshot_clock_fails_before_physics(tmp_path,monkeypatch):
         dump(path,rows)
     plan,c=prepare_fixture(tmp_path,monkeypatch,change)
     with pytest.raises(ValueError,match='active recorded source frame'):audit(plan)
+
+
+def test_only_declared_repository_model_assets_use_repository_fallback(tmp_path):
+    from jit_dvgc.retention_consolidation import _lock_descriptors
+    repo=tmp_path/'repo';(repo/'assets').mkdir(parents=True)
+    asset=repo/'assets/model.xml';asset.write_text('<mujoco/>')
+    old_config=tmp_path/'old/run';old_config.mkdir(parents=True)
+    locks={};missing=[]
+    _lock_descriptors(dict(model=dict(xml_path='assets/model.xml',xml_sha256=file_sha(asset))),
+        locks,missing,prefix='source',base=old_config,repository_root=repo)
+    assert not missing and str(asset) in locks
+    generic_locks={};generic_missing=[]
+    _lock_descriptors(dict(snapshot='assets/model.xml'),generic_locks,generic_missing,
+        prefix='source',base=old_config,repository_root=repo)
+    assert generic_missing and not generic_locks
+    with pytest.raises(ValueError,match='hash drift'):
+        _lock_descriptors(dict(model=dict(xml_path='assets/model.xml',xml_sha256='0'*64)),
+            {},[],prefix='source',base=old_config,repository_root=repo)
+
+
+def test_real_parent_config_tree_prepare_locks_actual_repository_assets(tmp_path):
+    """Regression for nested historical source configs with relative model paths."""
+    import os
+    from jit_dvgc.retention_consolidation import _lock_descriptors
+    path=Path(os.environ.get('FRONTIERBRIDGE_REAL_PI0', '/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/binding/frozen_unified_policy.json'))
+    if not path.exists():pytest.skip('external production pi0 unavailable')
+    root=Path(__file__).resolve().parents[2]
+    locked={};missing=[]
+    _lock_descriptors(dict(parent=dict(path=str(path),sha256=file_sha(path))),locked,missing,
+        base=tmp_path,repository_root=root)
+    assert missing==[]
+    policy=json.loads(path.read_text())['policy']
+    raw=json.loads(Path(policy['formal_config']).read_text())
+    for key in ('up_config_path','down_config_path'):
+        phase=json.loads(Path(raw['inputs'][key]).read_text())
+        assert str((root/phase['model']['xml_path']).resolve()) in locked
+
+
+def test_full_real_prepared_stage_has_only_uncalibrated_guard_blocker(tmp_path,monkeypatch):
+    from jit_dvgc.retention_consolidation import prepare,audit
+    import jit_dvgc.retention_consolidation as stage
+    source=Path('/home/qy/DVGC/JIT/runs/experiments/frontierbridge_pi0_pilot_20261013/calibration_stage_config.json')
+    if not source.exists():pytest.skip('external real prepared pilot inputs unavailable')
+    c=json.loads(source.read_text());c['execution_code_identity']=None;c['guard_config']=None
+    path=tmp_path/'actual_config.json';path.write_text(json.dumps(c))
+    # This test concerns actual frozen inputs; current dirty-code drift is tested
+    # independently and does not depend on other team edits during pytest.
+    monkeypatch.setattr(stage,'code_identity',lambda repo:{'commit':'fixture_code_audit_scope'})
+    repo=Path(__file__).resolve().parents[2]
+    plan=prepare(path,tmp_path/'prepared',repo)
+    result=audit(plan)
+    assert result['status']=='blocked'
+    assert result['unresolved']==['guard_config'],result['unresolved']
+    actual=json.loads(Path(plan).read_text())
+    assert actual['preparation_missing']==[]
+    assert str((repo/'assets/orange_bike_4kg_horizontal.xml').resolve()) in actual['input_locks']

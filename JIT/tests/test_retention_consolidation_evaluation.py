@@ -172,3 +172,14 @@ def test_collection_failure_requires_terminal_endpoint():
     assert evaluation.independent_collection_label(tape,0,2)=='unknown'
     tape['terminal'][-1,0]=True
     assert evaluation.independent_collection_label(tape,0,2)==0
+
+
+def test_nominal_seen_training_condition_scoped_gate_is_not_independent_dev():
+    rows=candidate()['rows'];rows[0]['role']='TRAIN_RETENTION'
+    rows[0]['seen_condition_validation']=dict(schema='frontierbridge_seen_condition_validation_v1',
+        training_condition_revisit=True,group='old_nominal',independent_dev=False,source_train_condition_identity='old')
+    result=evaluation.evaluate_capability_groups(rows,config())
+    assert result['eligible']
+    assert result['seen_condition_validation']['old_nominal']['total']==1
+    rows[0]['group']='accepted_parent_recovery'
+    with pytest.raises(ValueError):evaluation.evaluate_capability_groups(rows,config())

@@ -23,6 +23,8 @@ def test_train_stage_real_toy_warmup_and_per_arm_accounting(tmp_path,monkeypatch
         cost_limits={'wall_seconds':20,'environment_transitions':0},tensorboard={'port':6029},seed=2,
         max_attempted_updates=2,checkpoint_steps=[0,1,2],selection_config=dict(required_groups={'old':{'max_lost':0,'max_rate_drop':0}},
         mixed_policy='block',unknown_policy='block',min_expansion_gain=1))
+    (tmp_path/'parent').write_text('parent');(tmp_path/'pi0').write_text('pi0')
+    cfg['parent']['path']=str(tmp_path/'parent');cfg['pi0_reference']['path']=str(tmp_path/'pi0')
     plan=root/'plan.json';plan.write_text(json.dumps(dict(output=str(root),repository=str(tmp_path),config=cfg)))
     monkeypatch.setattr(jax,'default_backend',lambda:'gpu');monkeypatch.setattr(jax,'device_count',lambda:1)
     monkeypatch.setattr(ppo,'make_network_factory',lambda:lambda *a,**kw:net)
@@ -131,3 +133,40 @@ def test_notification_check_scoped_return_receipt_not_popup_claim(tmp_path,monke
     assert calls[0][0][0][0]=='notify-send'
     assert receipt['command_returncode']==0 and receipt['user_saw_popup']=='UNKNOWN'
     assert (tmp_path/'notification_service_verified.json').is_file()
+
+
+def test_frozen_external_requests_are_exact_conditions_not_explorer(tmp_path):
+    requested=np.zeros((400,2,4),np.float32);requested[0,0,0]=.2
+    path=tmp_path/'requests.npz';np.savez(path,requested=requested,onsets=np.array([0,0]))
+    from jit_dvgc.generative_bridge.contracts import file_sha
+    spec=dict(full_episode_rollout=True,controller_mode='fixed_random',delta_limit=[.25]*4,
+        horizon=400,num_envs=2,frozen_explorer_evaluation=True,pulse_steps=3,frozen_request_table={'path':str(path),'sha256':file_sha(path)})
+    runtime.validate_collection(spec)
+    tape=dict(prefix_mask=np.ones((2,2),bool),requested_delta=requested[:2].copy())
+    runtime.validate_collection_requests(spec,tape)
+    tape['requested_delta'][1,0,1]=.1
+    with pytest.raises(ValueError,match='frozen'):runtime.validate_collection_requests(spec,tape)
+
+
+def test_evaluator_shared_batch_dispatches_once_per_repeat(tmp_path,monkeypatch):
+    from jit_dvgc.generative_bridge.contracts import file_sha
+    root=tmp_path/'stage';root.mkdir();params=root/'params.pkl';params.write_bytes(b'fixture')
+    spec=dict(bank='bank',proposer='pi0',full_episode_rollout=True,controller_mode='fixed_random',delta_limit=0,
+        horizon=400,num_envs=2)
+    cases=[dict(case_id=str(lane),spec=spec,mode='collect',capacity=2,horizon=400,lane=lane,repeat_seeds=[5]*3)
+           for lane in range(2)]
+    p=dict(output=str(root),repository=str(tmp_path),config=dict(cost_limits={'wall_seconds':20},evaluation_panel={'cases':cases}))
+    monkeypatch.setattr(runtime,'_descriptor_json',lambda d:d)
+    ev=runtime.Evaluator(p);monkeypatch.setattr(ev,'reference_spec',lambda spec,*a:spec)
+    calls=[]
+    def child(name,spec,mode,reserve):
+        calls.append(name);out=root/name;out.mkdir()
+        np.savez(out/'prefixes.npz',prefix_mask=np.ones((2,2),bool),finite=np.ones((2,2),bool),
+            success=np.array([[False,False],[True,True]]),terminal=np.array([[False,False],[True,True]]),
+            physical_failure=np.zeros((2,2),bool),requested_delta=np.zeros((2,2,4)))
+        return out
+    monkeypatch.setattr(ev,'child',child)
+    result=ev.evaluate('P0',params,{'actor_sha256':'actor','normalizer_sha256':'norm'},{'path':'parent'})
+    assert len(calls)==3
+    assert result['0']['labels']==[1]*3 and result['1']['labels']==[1]*3
+    assert result['0']['receipts']==result['1']['receipts']

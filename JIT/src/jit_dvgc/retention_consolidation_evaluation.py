@@ -82,8 +82,14 @@ def evaluate_capability_groups(rows, selection_config):
     repeats = selection_config.get('expected_repeats',3)
     normalized = []; conditions = set(); cases = set()
     for row in rows:
-        if row.get('role') not in ('DEV_RETENTION','DEV_EXPANSION'):
+        if row.get('role') not in ('DEV_RETENTION','DEV_EXPANSION','TRAIN_RETENTION'):
             raise ValueError('only DEV capability rows permitted')
+        if row.get('role')=='TRAIN_RETENTION':
+            proof=row.get('seen_condition_validation',{})
+            if (row.get('group')!='old_nominal' or proof.get('schema')!='frontierbridge_seen_condition_validation_v1'
+                    or proof.get('training_condition_revisit') is not True or proof.get('independent_dev') is not False
+                    or proof.get('group')!='old_nominal' or proof.get('source_train_condition_identity')!=row.get('condition_identity')):
+                raise ValueError('only explicit nominal training-condition revisit gate permitted')
         case = row['case_id']; condition = row.get('condition_identity',case)
         if case in cases or condition in conditions:
             raise ValueError('duplicate case or condition is not independent evidence')
@@ -95,13 +101,15 @@ def evaluate_capability_groups(rows, selection_config):
         normalized.append((row,labels))
     result = dict(parent={},pi0={},gates={},eligible=True,
                   repeat_semantics='label_stability_not_training_seeds',
-                  policy_semantics='deterministic_policy_retention')
+                  policy_semantics='deterministic_policy_retention',seen_condition_validation={})
     groups = sorted(set(r['group'] for r,_ in normalized) | set(required))
     for group in groups:
-        group_rows = [(r,l) for r,l in normalized if r['group']==group and r['role']=='DEV_RETENTION']
+        group_rows = [(r,l) for r,l in normalized if r['group']==group and r['role'] in ('DEV_RETENTION','TRAIN_RETENTION')]
         for reference in ('parent','pi0'):
             result[reference][group] = paired_capability_counts(
                 [l[reference] for _,l in group_rows],[l['student'] for _,l in group_rows])
+        revisit=[(r,l) for r,l in group_rows if r['role']=='TRAIN_RETENTION']
+        if revisit:result['seen_condition_validation'][group]=paired_capability_counts([l['parent'] for _,l in revisit],[l['student'] for _,l in revisit])
         if group not in required:
             continue
         counts = result['parent'][group]; limits = required[group]; reasons=[]

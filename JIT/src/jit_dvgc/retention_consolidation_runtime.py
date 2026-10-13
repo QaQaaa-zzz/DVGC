@@ -17,9 +17,40 @@ from .generative_bridge.protocol import atomic_json
 
 def validate_collection(spec):
     if (spec.get('full_episode_rollout') is not True or spec.get('controller_mode')!='fixed_random'
-            or spec.get('delta_limit')!=0 or spec.get('explorer_checkpoint')
+            or (not spec.get('frozen_request_table') and np.any(np.asarray(spec.get('delta_limit',1))!=0)) or spec.get('explorer_checkpoint')
             or spec.get('episode_policy_mixture') or spec.get('reuse_prefix_collection')):
-        raise ValueError('independent collection requires complete deterministic Actor and zero exploration residual')
+        raise ValueError('independent collection requires complete deterministic Actor and zero learned exploration residual')
+    if spec.get('frozen_request_table'):
+        from .retention_repair import load_requests
+        load_requests(spec)
+
+
+def validate_collection_requests(spec,tape):
+    """External frozen requests may perturb the Actor; never accept learned pulses."""
+    mask=np.asarray(tape['prefix_mask'],bool)
+    actual=np.asarray(tape['requested_delta'])
+    if actual.shape!=mask.shape+(4,) or not np.isfinite(actual).all():
+        raise ValueError('invalid actual requested action tape')
+    if spec.get('frozen_request_table'):
+        from .retention_repair import load_requests
+        expected,_=load_requests(spec)
+        if mask.shape[1]!=expected.shape[1] or len(mask)>len(expected):raise ValueError('frozen request layout differs')
+        if not np.array_equal(actual[mask],expected[:len(mask)][mask]):
+            raise ValueError('actual requests differ from fixed frozen condition')
+    elif np.any(actual[mask]!=0):raise ValueError('independent collection contains learned/random residual')
+
+
+def evaluation_reservation(cases):
+    """Full physical reserve for unique batched jobs; repeat indices never alias."""
+    jobs={}
+    for case in cases:
+        for repeat,seed in enumerate(case['repeat_seeds']):
+            spec=copy.deepcopy(case['spec']);spec['seed']=seed
+            key=(case['mode'],repeat,json.dumps(spec,sort_keys=True))
+            cost=case['capacity']*case['horizon']
+            if key in jobs and jobs[key]!=cost:raise ValueError('shared job reservation layout differs')
+            jobs[key]=cost
+    return sum(jobs.values())
 
 
 class Evaluator:
@@ -77,7 +108,7 @@ class Evaluator:
     def evaluate(self,tag,params_path,policy,reference_descriptor=None):
         from .retention_consolidation_evaluation import (build_independent_replay_spec,
             independent_replay_label,independent_collection_label)
-        panel=_descriptor_json(self.p['config']['evaluation_panel']);results={}
+        panel=_descriptor_json(self.p['config']['evaluation_panel']);results={};jobs={}
         initializer=dict(path=str(params_path),sha256=file_sha(params_path),
             source_actor_sha256=policy['actor_sha256'],normalizer_sha256=policy['normalizer_sha256'])
         for ordinal,case in enumerate(panel['cases']):
@@ -91,14 +122,15 @@ class Evaluator:
                 else:
                     validate_collection(spec);spec['warmup_initializer']=initializer
                 name=f'{tag}_case{ordinal:03d}_repeat{repeat}'
-                out=self.child(name,spec,case['mode'],case['capacity']*case['horizon'])
+                job=(case['mode'],repeat,json.dumps(spec,sort_keys=True))
+                if job not in jobs:jobs[job]=self.child(name,spec,case['mode'],case['capacity']*case['horizon'])
+                out=jobs[job]
                 if case['mode']=='evaluate':
                     rows=read(out/'results.json');label=independent_replay_label(rows[case['lane']])
                 else:
                     with np.load(out/'prefixes.npz',allow_pickle=False) as tape:
                         label=independent_collection_label(tape,case['lane'],case['horizon'])
-                        mask=tape['prefix_mask']
-                        if np.any(tape['delta'][mask]!=0):raise ValueError('independent collection contains exploration residual')
+                        validate_collection_requests(spec,tape)
                 labels.append(label);receipts.append(str(out))
             results[case['case_id']]=dict(labels=labels,receipts=receipts)
         atomic_json(self.root/(tag+'_evaluation.json'),results)
@@ -109,7 +141,7 @@ def _rows(panel,parent,pi0,student):
     return [dict(case_id=c['case_id'],condition_identity=c['condition_identity'],group=c['group'],role=c['role'],
         parent_labels=parent[c['case_id']]['labels'],pi0_labels=pi0[c['case_id']]['labels'],
         student_labels=student[c['case_id']]['labels'],execution='independent_complete',
-        teacher_repeat_labels=c.get('teacher_repeat_labels',[None]*3)) for c in panel['cases']]
+        teacher_repeat_labels=c.get('teacher_repeat_labels',[None]*3),seen_condition_validation=c.get('seen_condition_validation')) for c in panel['cases']]
 
 
 def _scalar_http(p,arm,step):
@@ -166,7 +198,13 @@ def train_stage(plan):
         with path.open('xb') as f:pickle.dump(jax.device_get(params),f)
         return path
     parent_path=store('parent',initializer);pi0_path=store('pi0',pi0)
-    parent_eval=evaluator.evaluate('P0',parent_path,policy,c['parent']);pi0_eval=evaluator.evaluate('pi0_reference',pi0_path,pi0_policy,c['pi0_reference'])
+    parent_eval=evaluator.evaluate('P0',parent_path,policy,c['parent'])
+    if (file_sha(c['parent']['path'])==file_sha(c['pi0_reference']['path']) and pytree_sha256(initializer)==pytree_sha256(pi0)):
+        pi0_eval=copy.deepcopy(parent_eval)
+        atomic_json(root/'pi0_reference_evaluation.json',pi0_eval)
+        evaluator.ledger['pi0_reference_reuse']=dict(source='P0',reason='identical frozen descriptor and complete initializer trees',new_transitions=0)
+        atomic_json(root/'cost_ledger.json',evaluator.ledger)
+    else:pi0_eval=evaluator.evaluate('pi0_reference',pi0_path,pi0_policy,c['pi0_reference'])
     parent_rows=_rows(panel,parent_eval,pi0_eval,parent_eval)
     preflight=evaluate_capability_groups(parent_rows,c['selection_config'])
     atomic_json(root/'parent_preflight.json',preflight)

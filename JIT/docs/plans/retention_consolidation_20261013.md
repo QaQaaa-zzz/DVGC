@@ -149,3 +149,43 @@ The default historical BC path stays unchanged. No teacher/E/G/PPO/physics/
 reward/network redesign, rollout expansion, model adoption or TEST opening.
 Guard performance on real GPU banks and the P0/P1/P2 ability comparison remain
 unverified; CPU fixture success is not evidence of knowledge absorption.
+
+## Explicit training authorization and real startup adapter
+
+The user subsequently requested training and explicitly selected frozen pi0 as
+parent. The independent pilot is
+`/home/qy/DVGC/JIT/runs/experiments/frontierbridge_pi0_pilot_20261013`.
+This new declaration caps all calibration/micro/main physical work at
+1,000,000 transitions and 12 hours; it inherits no old D2 balance. Calibration
+uses a separate fresh Adam for20 updates plus one proposal for two micro guard
+checks, never carrying its optimizer into P1/P2. Only0/20 are evaluated in
+physics; full guard forward diagnostics also cover5/10. update20 must pass
+every mandatory zero-old-loss gate before its measured group/channel MSE/p99
+budgets can be frozen; failure blocks the main stage, with no auto-relaxation.
+
+The real source adapter preserves525 teacher frames/eight TRAIN roots and
+original weights. Banks contain4103 real frames from81 complete successful
+Actor episodes, with FIT/GUARD reuse explicitly declared. Target GPU labels
+and both inference graphs match exactly. Parent equals pi0, so the inherited
+post-contact parent group does not imply new parent-relative capability.
+
+Nominal fixed-start repeats collapse to one explicitly seen TRAIN_RETENTION
+condition. That nominal gate is training-condition validation, not independent
+DEV. Other conditions remain split-checked. Panel56 consists of this nominal
+revisit,48 DEV retention conditions and seven solver roots (three verified
+expansions, four unverified-teacher diagnostics). All retain true denominators.
+
+Fixed external request tables are now admitted through exact array checks of
+the requested actions, initial states, SHA and active-step timing. Identical
+batch jobs are shared, without changing control/physical semantics. One policy
+costs85,200 reserved transitions; main P0 plus eight nonzero checkpoints costs
+766,800, with pi0 reference aliased to identical P0. Calibration reserves153,600,
+so the combined reservation is920,400 within the independent cap.
+
+New thin entries: `prepare_frontierbridge_banks.py` and
+`run_retention_guard_calibration.py`. Real source prepare/audit exposed and
+fixed repository-relative asset resolution: fallback is restricted to hashed
+model assets, not arbitrary missing inputs. Final startup regression including
+all prior required files: **234 passed in28.02 seconds, zero skips/failures**.
+Actual process/progress, scalar HTTP verification and outcomes belong to the
+pilot's live receipts and the locked shared research state.

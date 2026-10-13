@@ -49,7 +49,13 @@ def validate_panel(panel):
         key=c.get('case_id')
         if not key or key in seen:raise ValueError('unique condition case_id required')
         seen.add(key)
-        if c.get('role') not in ('DEV_RETENTION','DEV_EXPANSION'):raise ValueError('DEV panel only; final TEST closed')
+        if c.get('role') not in ('DEV_RETENTION','DEV_EXPANSION','TRAIN_RETENTION'):raise ValueError('DEV or scoped seen nominal panel only; final TEST closed')
+        if c.get('role')=='TRAIN_RETENTION':
+            seen_contract=c.get('seen_condition_validation',{})
+            if (c.get('group')!='old_nominal' or seen_contract.get('schema')!='frontierbridge_seen_condition_validation_v1'
+                or seen_contract.get('training_condition_revisit') is not True or seen_contract.get('independent_dev') is not False
+                or seen_contract.get('group')!='old_nominal' or seen_contract.get('source_train_condition_identity')!=c.get('condition_identity')):
+                raise ValueError('only explicit nominal training-condition revisit permitted')
         if not c.get('condition_identity') or not c.get('group'):raise ValueError('condition/group identities required')
         seeds=c.get('repeat_seeds')
         if not isinstance(seeds,list) or len(seeds)!=3 or any(type(s) is not int for s in seeds):raise ValueError('three declared numerical repeats required')
@@ -65,8 +71,9 @@ def validate_panel(panel):
             validate_collection(s)
             if s.get('num_envs')!=c['capacity']:raise ValueError('collect capacity must equal num_envs')
             if len(set(seeds))!=1:raise ValueError('collect numerical repeats must preserve identical condition seed')
-            if s.get('frozen_request_table') or s.get('frozen_initial_state_bank'):
-                raise ValueError('external frozen requests/initial banks require separate validated runtime support')
+            if s.get('frozen_request_table'):
+                from .retention_consolidation_runtime import validate_collection
+                validate_collection(s)
         if s.get('budget')!=c['capacity']*c['horizon']:
             raise ValueError('panel budget must exactly reserve actual capacity*horizon')
         if c['mode']=='evaluate' and (s.get('preserve_snapshot_episode_context') is not True or not s.get('candidates')):
@@ -125,7 +132,7 @@ def code_identity(repository):
         dirty=bool(patch or extra))
 
 
-def _lock_descriptors(value,locks,missing,prefix='',base=None,visited=None):
+def _lock_descriptors(value,locks,missing,prefix='',base=None,visited=None,repository_root=None):
     """Traverse manifests and known input paths, including their JSON references.
 
     Descriptor hashes are checked when supplied. Undeclared referenced payloads
@@ -136,16 +143,25 @@ def _lock_descriptors(value,locks,missing,prefix='',base=None,visited=None):
     base=Path.cwd() if base is None else Path(base)
     path_keys={'checkpoint','candidates','snapshot','spec_path','config_path',
                'source_frozen_policy','model_xml','xml_path','payload_path','bank','spec',
-               'up_config_path','down_config_path','formal_config'}
-    def lock(path,expected=None,label=prefix):
-        path=Path(path)
-        if not path.is_absolute():path=base/path
+               'up_config_path','down_config_path','formal_config','initial_state_bank'}
+    def lock(path,expected=None,label=prefix,repository_asset=False):
+        original=Path(path)
+        path=original if original.is_absolute() else base/original
+        if (not path.exists() and repository_asset and repository_root is not None
+            and not original.is_absolute() and original.parts and original.parts[0]=='assets'
+            and '..' not in original.parts):
+            # Official model.xml_path is repository-relative; adjacent manifests
+            # and all generic references retain their original resolution rules.
+            path=Path(repository_root)/original
         path=path.resolve()
         if path.is_dir():
             names=('identity.json','snapshot.pkl') if (path/'snapshot.pkl').exists() else ('identity.json','payload.pkl')
             for name in names:lock(path/name,label=label+'/'+name)
             return
         if not path.is_file():missing.append(label+':missing_file');return
+        if str(path) in locks:
+            if expected is not None and locks[str(path)]!=expected:raise ValueError('input hash drift '+str(path))
+            return
         actual=file_sha(path)
         if expected is not None and actual!=expected:raise ValueError('input hash drift '+str(path))
         locks[str(path)]=actual
@@ -153,7 +169,7 @@ def _lock_descriptors(value,locks,missing,prefix='',base=None,visited=None):
             visited.add(path)
             content=read(path)
             if isinstance(content,dict) and content.get('role')=='TEST':return
-            _lock_descriptors(content,locks,missing,label,path.parent,visited)
+            _lock_descriptors(content,locks,missing,label,path.parent,visited,repository_root)
     if isinstance(value,dict):
         if value.get('role')=='TEST':return
         if 'path' in value:
@@ -163,10 +179,13 @@ def _lock_descriptors(value,locks,missing,prefix='',base=None,visited=None):
         for key,child in value.items():
             if key in ('path','sha256'):continue
             if key in path_keys and isinstance(child,str):
-                lock(child,label=prefix+'.'+key)
-            else:_lock_descriptors(child,locks,missing,prefix+'.'+key,base,visited)
+                model_asset=key=='xml_path' and prefix.endswith('.model') and child.startswith('assets/')
+                expected=value.get('xml_sha256') if model_asset else None
+                if model_asset and not expected:missing.append(prefix+'.xml_path:unbound_asset_identity')
+                lock(child,expected,label=prefix+'.'+key,repository_asset=model_asset and expected is not None)
+            else:_lock_descriptors(child,locks,missing,prefix+'.'+key,base,visited,repository_root)
     elif isinstance(value,list):
-        for i,child in enumerate(value):_lock_descriptors(child,locks,missing,prefix+f'[{i}]',base,visited)
+        for i,child in enumerate(value):_lock_descriptors(child,locks,missing,prefix+f'[{i}]',base,visited,repository_root)
 
 
 def _audit_policy(descriptor,name,missing):
@@ -300,7 +319,7 @@ def prepare(config,output,repository):
     c=validate_config(read(config));root=Path(output).resolve()
     root.mkdir(parents=True,exist_ok=False)
     locks={str(Path(config).resolve()):file_sha(config)};missing=[]
-    _lock_descriptors(c,locks,missing,base=Path(config).resolve().parent)
+    _lock_descriptors(c,locks,missing,base=Path(config).resolve().parent,repository_root=repository)
     identity=code_identity(repository)
     from .generative_bridge.retention_bank import environment_provenance
     parent_manifest=dict(schema='frontierbridge_parent_manifest_v1',source_pi0=c.get('pi0_reference'),
@@ -334,7 +353,7 @@ def audit(plan):
     p=read(plan);c=validate_config(p['config']);missing=list(p.get('preparation_missing',[]))
     if p.get('schema')!=SCHEMA or read(p['config_path'])!=c:raise ValueError('embedded plan config drift')
     expected_locks={str(Path(p['config_path']).resolve()):file_sha(p['config_path'])};current_missing=[]
-    _lock_descriptors(c,expected_locks,current_missing,base=Path(p['config_path']).parent)
+    _lock_descriptors(c,expected_locks,current_missing,base=Path(p['config_path']).parent,repository_root=p['repository'])
     if expected_locks!=p['input_locks']:raise ValueError('recursive input lock membership/hash drift')
     for f,h in p['input_locks'].items():
         if file_sha(f)!=h:raise ValueError('input drift '+f)
@@ -352,14 +371,19 @@ def audit(plan):
     if c.get('evaluation_panel'):
         panel=_descriptor_json(c['evaluation_panel']);cases=validate_panel(panel)
         # Parent + independent pi0 three repeats; P1/P2 checkpoints (zero reused).
-        reserve=sum(x['capacity']*x['horizon']*3 for x in cases)*(2+2*(len(c['checkpoint_steps'])-1))
+        jobs={}
+        for case in cases:
+            key=digest(dict(mode=case['mode'],spec=case['spec'],repeat_seeds=case['repeat_seeds']))
+            jobs[key]=case['capacity']*case['horizon']*3
+        baseline_count=1 if c.get('parent')==c.get('pi0_reference') and c.get('parent') else 2
+        reserve=sum(jobs.values())*(baseline_count+2*(len(c['checkpoint_steps'])-1))
         details['evaluation_reservation']=reserve
         if c.get('cost_limits') and reserve>c['cost_limits']['environment_transitions']:missing.append('cost_limits.evaluation_reserve')
-        dev_records=panel.get('split_records',[])
+        dev_records=[row for row in panel.get('split_records',[]) if row.get('role')!='TRAIN_RETENTION']
         if not any(case['role']=='DEV_EXPANSION' for case in cases):missing.append('evaluation_panel.DEV_EXPANSION')
-        if set(REQUIRED_GROUPS)-{case['group'] for case in cases if case['role']=='DEV_RETENTION'}:
+        if set(REQUIRED_GROUPS)-{case['group'] for case in cases if case['role'] in ('DEV_RETENTION','TRAIN_RETENTION')}:
             missing.append('evaluation_panel.required_groups')
-        if any(not any(row.get('condition_identity')==case['condition_identity'] and row.get('role')==case['role'] for row in dev_records) for case in cases):
+        if any(not any(row.get('condition_identity')==case['condition_identity'] and row.get('role')==case['role'] for row in dev_records) for case in cases if case['role']!='TRAIN_RETENTION'):
             missing.append('evaluation_panel.split_records')
     else:dev_records=[]
     identities={}
@@ -395,6 +419,13 @@ def audit(plan):
                 raise ValueError('bank protocol identity mismatch')
             banks[role]=manifest;all_records.extend(manifest['records']);details[role]=result
         details['split_isolation']=audit_split_isolation(all_records+dev_records)
+        for case in cases if c.get('evaluation_panel') else []:
+            if case['role']!='TRAIN_RETENTION':continue
+            if c.get('seen_condition_validation')!=case['seen_condition_validation']:
+                raise ValueError('configuration must explicitly bind seen nominal condition scope')
+            if not any(row['capability_group']=='old_nominal' and row['condition_identity']==case['condition_identity'] for row in all_records):
+                raise ValueError('seen nominal revisit must bind an actual TRAIN bank condition')
+            details['nominal_seen_condition']=case['seen_condition_validation']
     if roles.get('TEACHER'):
         from .generative_bridge.student import load_optional_demo
         teacher=_descriptor_json(roles['TEACHER'])
