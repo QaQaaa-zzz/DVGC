@@ -25,3 +25,7 @@ def compose(base,latent):
 
 def write_json(p,data):
  tmp=Path(str(p)+'.tmp');tmp.write_text(json.dumps(data,indent=2,allow_nan=False));tmp.replace(p)
+
+def resolve_identity_path(path,workspace_root):
+ candidate=Path(path)
+ return candidate if candidate.is_absolute() else Path(workspace_root)/candidate

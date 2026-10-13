@@ -16,3 +16,11 @@ def test_frozen_existing_explorer_identity():
  assert len(state['normalizer_mean'])==386
  assert spec['pulse_steps']==3 and spec['delta_limit']==[.25]*4
  assert state['backend']=='rsl_rl_3.2.0'
+
+def test_identity_paths_do_not_depend_on_notification_cwd(tmp_path,monkeypatch):
+ from dual_stress_protocol import resolve_identity_path
+ workspace=tmp_path/'workspace';expected=workspace/'sim2sim_v2/runs/panel/bank.npz'
+ expected.parent.mkdir(parents=True);expected.write_bytes(b'bank')
+ other=tmp_path/'other';other.mkdir();monkeypatch.chdir(other)
+ assert resolve_identity_path('sim2sim_v2/runs/panel/bank.npz',workspace)==expected
+ assert resolve_identity_path(str(expected),workspace)==expected

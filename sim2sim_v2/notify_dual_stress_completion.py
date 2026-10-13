@@ -3,7 +3,7 @@ import argparse,os,select,subprocess,json,hashlib,fcntl,re,traceback,ctypes,plat
 from pathlib import Path
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from dual_stress_protocol import write_json
+from dual_stress_protocol import write_json,resolve_identity_path
 parser=argparse.ArgumentParser();parser.add_argument('--pid',type=int,required=True);a=parser.parse_args()
 root=Path(__file__).resolve().parent;out=root/'runs/dual_stress1000_20261013'
 def open_pidfd(pid):
@@ -36,7 +36,7 @@ try:
  if any(s['state']!='complete' or s['completed_cases']!=1000 for s in states.values()):raise RuntimeError('Incomplete engine results: '+json.dumps(states))
  declaration=json.loads((out/'declaration.json').read_text())
  for path,expected in declaration['identities'].items():
-  if hashlib.sha256(Path(path).read_bytes()).hexdigest()!=expected:raise RuntimeError('Frozen identity drift: '+path)
+  if hashlib.sha256(resolve_identity_path(path,root.parent).read_bytes()).hexdigest()!=expected:raise RuntimeError('Frozen identity drift: '+path)
  subprocess.run(['/home/qy/ISAAC——SIM/.venv/bin/python',str(root/'report_dual_stress.py')],check=True,cwd=root)
  summary=json.loads((out/'summary.json').read_text());m=summary['totals']['mjx'];p=summary['totals']['physx']
  # Preserve both projects under the shared ledger lock.
