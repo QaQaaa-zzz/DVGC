@@ -159,7 +159,7 @@ def round_spec(declaration, previous, round_index):
     runtime=dict(d['source_runtime'],bank=str(root/'bank.json'),proposer=source['name'],
         order=[source['name']],seed=d['seed']+round_index,round_index=round_index,
         preserve_snapshot_episode_context=True,
-        gate=dict(kind='gpu_shared',minimum_free_mib=20000,authorization='user_authorized_new100'))
+        gate=dict(kind='gpu_shared',minimum_free_mib=20000,authorization='start_without_gpu_idle_wait'))
     baseline=read(d['baseline_frozen_policy'])['policy']
     protocol=digest(dict(version='1.2',task='stable_forward_recovery',H=16,horizon=400,
         source_physics=baseline['xml_sha256'],source_reward=runtime['reward_mode']))
