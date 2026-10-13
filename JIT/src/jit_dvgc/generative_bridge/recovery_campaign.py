@@ -81,6 +81,236 @@ def complete_start_arrays(repository, runtime_config):
     return dict(qpos=qpos.tolist(),qvel=qvel.tolist())
 
 
+def reconcile_teacher_costs(parent_costs,worker_costs,completed_stages):
+    """Replace a whole-worker reservation only with certified lower-level charges.
+
+    Uncommitted stages keep their entire original reservation. This returns a
+    new ledger; the failed attempt and its whole-worker reservation stay intact.
+    """
+    rows=deepcopy(parent_costs);matches=[i for i,c in enumerate(rows) if c['stage']=='teacher_worker']
+    if len(matches)!=1 or not worker_costs:raise ValueError('one failed teacher worker ledger required')
+    position=matches[0];original=rows[position]
+    if original.get('phase')!='failed' or any(c.get('charged_updates',0) for c in parent_costs+worker_costs):
+        raise ValueError('engineering recovery requires zero optimization and failed teacher worker')
+    seen=set();completed=0;partial=0
+    for i,c in enumerate(worker_costs):
+        name=c['stage'];charge=c['charged_interactions']
+        if name in seen or type(charge) is not int or charge<0:raise ValueError('invalid teacher cost ledger')
+        seen.add(name)
+        if c.get('phase')=='completed':
+            proof=completed_stages.get(name)
+            if proof is None or proof.get('charged_interactions')!=charge:
+                raise ValueError('completed teacher cost lacks matching certified receipt')
+            completed+=charge
+        else:
+            if i!=len(worker_costs)-1 or c.get('phase') not in ('running','failed'):
+                raise ValueError('only the final uncommitted teacher stage may retain an upper bound')
+            partial+=charge
+    if set(completed_stages)!={c['stage'] for c in worker_costs if c.get('phase')=='completed'}:
+        raise ValueError('completed teacher receipt set differs from ledger')
+    total=completed+partial
+    if total>original['charged_interactions']:raise ValueError('reconciled teacher exceeds original reservation')
+    rows[position]={**original,'stage':'teacher_worker_prior_attempt','charged_interactions':total,
+        'original_worker_reservation':original['charged_interactions'],
+        'completed_interactions':completed,'partial_upper_interactions':partial,
+        'accounting':'certified completed stage actuals plus full uncommitted stage reservation; original ledger immutable'}
+    return rows
+
+
+def reuse_completed_collection(reference,actual_config,new_round):
+    """Require identical scientific/RNG configuration and immutable saved output."""
+    for path,sha in reference['files'].items():
+        if file_sha(path)!=sha:raise ValueError('saved collection changed: '+path)
+    output=Path(reference['output']);status=read(output/'status.json')
+    if status.get('phase')!='completed' or status.get('charged_interactions')!=reference['charged_interactions']:
+        raise ValueError('saved collection completion/charge changed')
+    old=Path(reference['previous_round']);new=Path(new_round)
+    def normalize(value):
+        if isinstance(value,dict):return {k:normalize(v) for k,v in value.items()}
+        if isinstance(value,list):return [normalize(v) for v in value]
+        if isinstance(value,str) and value.startswith(str(new)+'/'):
+            return str(old)+value[len(str(new)):]
+        return value
+    if normalize(actual_config)!=read(reference.get('spec_path',output/'hyperparameters.json')):
+        raise ValueError('saved collection protocol/RNG differs from explicit recovery')
+    return output
+
+
+def dry_check_recovery_collection(original_spec,reference,directory):
+    """Exercise the actual closed-loop configuration path, stopping before physics."""
+    from .closed_loop import ClosedLoopRound
+    directory=Path(directory);directory.mkdir(parents=True,exist_ok=False)
+    runner=ClosedLoopRound.__new__(ClosedLoopRound)
+    runner.spec=deepcopy(original_spec);runner.spec['output']=str(directory)
+    runner.root=directory;runner.runtime=runner.spec['source_runtime'];runner.source=runner.spec['source']
+    class ConfigurationChecked(Exception):pass
+    def stop(name,mode,config,maximum,**kwargs):
+        if name!='collection' or mode!='collect':raise ValueError('unexpected stage before collection recovery check')
+        reuse_completed_collection(reference,config,directory)
+        atomic_json(directory/'collection_configuration_check.json',dict(phase='passed',
+            original_spec_sha256=digest(original_spec),actual_configuration=config,new_physics_interactions=0))
+        raise ConfigurationChecked()
+    runner.measured=stop
+    try:ClosedLoopRound._run(runner)
+    except ConfigurationChecked:
+        return read(directory/'collection_configuration_check.json')
+    raise ValueError('collection configuration check did not stop before execution')
+
+
+def _resume_stage_refs(stages):
+    return {'eval_'+name:dict(path=row['journal_path'],sha256=row['journal_sha256'])
+            for name,row in stages.items()}
+
+
+def resume_round_spec(declaration):
+    """Prepare the one explicitly recovered round; preserve every scientific field."""
+    from .production import implementation_files
+    d=declaration;info=d['engineering_recovery'];old=Path(info['previous_round'])
+    if file_sha(old/'production.json')!=info['previous_spec_sha256']:
+        raise ValueError('failed round declaration changed')
+    spec=deepcopy(read(old/'production.json'));root=Path(d['campaign_output'])/'round_0001'
+    root.mkdir(exist_ok=False)
+    spec.update(output=str(root),repository=d['repository'],implementation_commit=d['implementation_commit'],
+        implementation_files=implementation_files(d['repository']),campaign_output=d['campaign_output'],
+        teacher_recovery_authorization=dict(path=str(Path(d['campaign_output'])/'declaration.json'),
+            sha256=file_sha(Path(d['campaign_output'])/'declaration.json')),
+        locks={**spec['locks'],**d['locks']},
+        recovery=dict(previous=str(old),previous_contract_identity=info['previous_contract_identity'],stages=info['stages']),
+        recovery_collection=info['collection'],recovery_teacher_worker=info['teacher_worker'],
+        recovery_completed_teacher_roots=info['completed_teacher_roots'],
+        recovery_started_unix=info.get('original_round_started_unix'))
+    atomic_json(root/'production.json',spec);atomic_json(root/'panels.json',{})
+    atomic_json(root/'costs.json',info['carried_round_costs'])
+    atomic_json(root/'cost_reconciliation.json',dict(previous_round=str(old),
+        previous_costs_sha256=info.get('previous_costs_sha256'),carried_costs=info['carried_round_costs'],
+        audit=info.get('teacher_audit'),additional_physics_for_reuse=0,
+        automatic_retry=False,partial_stage='UNKNOWN; retained full original stage reservation'))
+    return spec
+
+
+def _verify_resume_audit(path):
+    from .verified_files import LOCK_CACHE
+    audit=read(path)
+    if (audit.get('schema')!='jit_teacher_worker_partial_audit_v1' or audit.get('phase')!='certified_partial'
+        or audit.get('student_E_G_updates_started') is not False or audit.get('optimizer_updates')!=0):
+        raise ValueError('certified pre-optimization teacher partial audit required')
+    for filename,sha in audit['input_locks'].items():LOCK_CACHE.verify(filename,sha)
+    return audit
+
+
+def prepare_resume(previous,output,repository,*,teacher_audit,engineering_receipts=(),engineering_reports=(),port=None):
+    """Explicit fresh attempt after first-round engineering failure, zero GPU work."""
+    from .production import implementation_identity
+    parent=Path(previous).resolve();root=Path(output).resolve();repo=Path(repository).resolve()
+    old=read(parent/'declaration.json');status=read(parent/'status.json');rd=parent/'round_0001'
+    if root==parent or root.is_relative_to(parent):raise ValueError('fresh sibling attempt output required')
+    if status.get('phase')!='failed' or status.get('completed_rounds')!=0:
+        raise ValueError('resume supports only failed pre-optimization first round')
+    if any((rd/name).exists() for name in ('students','explorer_update','generator_incremental')):
+        raise ValueError('teacher engineering recovery cannot discard started optimization')
+    if read(rd/'status.json').get('phase')!='failed':raise ValueError('failed original round required')
+    # Preserve old execution even when its status is already failed.
+    started=read(parent/'started.json');pid=started.get('pid')
+    if pid and (Path('/proc')/str(pid)/'cmdline').exists():
+        command=(Path('/proc')/str(pid)/'cmdline').read_bytes()
+        if str(parent).encode() in command:raise ValueError('failed campaign coordinator is still alive')
+    audit_path=Path(teacher_audit).resolve();audit=_verify_resume_audit(audit_path)
+    if (Path(audit['round_dir'])!=rd or audit.get('round_index')!=1
+        or audit['round_manifest_sha256']!=file_sha(rd/'production.json')):
+        raise ValueError('teacher audit belongs to a different failed round')
+    original_spec=read(rd/'production.json');round_contract=read(rd/'stages/round_contract.json')
+    if round_contract!={'sha256':digest(original_spec),'contract':original_spec}:
+        raise ValueError('original round contract changed')
+    parent_costs=read(rd/'costs.json');worker_costs=read(Path(audit['worker_dir'])/'costs.json')
+    carried=reconcile_teacher_costs(parent_costs,worker_costs,audit['completed_stages'])
+    if sum(c['charged_interactions'] for c in carried)!=audit['cost_reconciliation']['reconciled_round_interactions']:
+        raise ValueError('audit and recomputed cost reconciliation disagree')
+    for path,sha in old['locks'].items():
+        if file_sha(path)!=sha:raise ValueError('original initialization lock changed: '+path)
+    engineering=[];engineering_qualification=[];engineering_seen=set()
+    for i,path in enumerate(engineering_receipts):
+        path=Path(path).resolve()
+        if str(path) in engineering_seen:raise ValueError('duplicate engineering cost receipt')
+        engineering_seen.add(str(path));record=read(path);charge=record.get('charged_interactions')
+        if record.get('phase')!='completed' or type(charge) is not int or charge<0:
+            raise ValueError('completed engineering receipt with actual charged_interactions required')
+        engineering.append(dict(path=str(path),sha256=file_sha(path),charged_interactions=charge))
+        carried.append(dict(stage=f'engineering_recovery_check_{i:03d}',phase='completed',charged_updates=0,
+            charged_interactions=charge,accounting='explicit bounded engineering receipt',receipt=str(path),receipt_sha256=file_sha(path)))
+    for path in engineering_reports:
+        path=Path(path).resolve();record=read(path)
+        engineering_qualification.append(dict(path=str(path),sha256=file_sha(path),
+            phase=record.get('phase'),cost_semantics='qualification evidence only; physical child charges separately retained'))
+    completed=deepcopy(audit['completed_roots'])
+    protocol=digest(dict(version=original_spec.get('protocol_version','1.1'),task='stable_forward_recovery',H=16,horizon=400,
+        source_physics=original_spec['source']['xml_sha256'],source_reward=original_spec['source_runtime']['reward_mode']))
+    for row in completed.values():row['protocol_sha256']=protocol
+    remaining=audit['total_teacher_roots']-len(completed)
+    additional_components=dict(teacher_remaining_upper=remaining*20800,student_training=32000,
+        student_suffix_evaluation=128*400,student_stress=9*32*400,checkpoint_train_panels=2*2*2*400)
+    maximum_new=sum(additional_components.values())
+    cumulative=sum(c['charged_interactions'] for c in carried)+maximum_new
+    if cumulative>original_spec['budgets']['max_physics']:
+        raise ValueError('explicit recovery cumulative original round physical ceiling insufficient')
+    collection=rd/'collection';collection_spec=rd/'collection_spec.json'
+    files={str(p):file_sha(p) for p in collection.glob('*.json')}
+    files[str(collection_spec)]=file_sha(collection_spec)
+    for name in ('prefixes.npz','update_state.msgpack'):
+        path=collection/name
+        if not path.is_file():raise ValueError('completed collection payload missing: '+name)
+        files[str(path)]=file_sha(path)
+    collection_ref=dict(output=str(collection),previous_round=str(rd),spec_path=str(collection_spec),files=files,
+        charged_interactions=read(collection/'status.json')['charged_interactions'])
+    if read(collection/'status.json').get('phase')!='completed':raise ValueError('collection not completed')
+    stages={};source_artifacts={}
+    for path in sorted((rd/'stages').glob('eval_source_suffix_batch_*.json')):
+        if path.name.endswith('.running.json'):continue
+        record=read(path)
+        if record['output_sha256']!=digest(record['result']) or file_sha(record['result']['path'])!=record['result']['sha256']:
+            raise ValueError('completed source suffix receipt changed')
+        results=read(record['result']['path']);status_path=Path(record['result']['path']).parent/'status.json'
+        stage_status=read(status_path)
+        if stage_status.get('phase')!='completed':raise ValueError('source suffix not completed')
+        for row in results:
+            for attempt in row.get('attempts',[]):
+                trace=attempt['trace'];sha=attempt['trace_sha256']
+                if trace in source_artifacts and source_artifacts[trace]!=sha:raise ValueError('source trace identity conflict')
+                source_artifacts[trace]=sha
+        source_artifacts[str(status_path)]=file_sha(status_path)
+        source_artifacts[record['result']['path']]=record['result']['sha256']
+        stages[path.stem]=dict(path=str(path),sha256=file_sha(path))
+    if len(stages)!=4:raise ValueError('all original four source suffix batches required')
+    from .verified_files import LOCK_CACHE
+    for path,sha in source_artifacts.items():LOCK_CACHE.verify(path,sha)
+    root.mkdir(parents=True,exist_ok=False)
+    initial=read(parent/'initial_bundle.json');atomic_json(root/'initial_bundle.json',initial)
+    d=deepcopy(old);d.update(campaign_output=str(root),repository=str(repo),implementation_commit=implementation_identity(repo),
+        original_scientific_campaign=old.get('original_scientific_campaign',str(parent)),
+        series_id=original_spec['series_id'],tensorboard_port=old['tensorboard_port'] if port is None else port,
+        initial_bundle_sha256=file_sha(root/'initial_bundle.json'))
+    info=dict(previous_campaign=str(parent),previous_round=str(rd),previous_spec_sha256=file_sha(rd/'production.json'),
+        previous_costs_sha256=file_sha(rd/'costs.json'),previous_contract_identity=round_contract['sha256'],
+        original_round_started_unix=read(rd/'started.json')['started_unix'],carried_round_costs=carried,stages=stages,
+        collection=collection_ref,teacher_worker=dict(previous=audit['worker_dir'],
+            previous_contract_identity=audit['worker_contract_sha256'],stages=_resume_stage_refs(audit['completed_stages']),
+            partial_root=audit.get('partial_root'),artifact_locks=audit['input_locks']),
+        completed_teacher_roots=completed,teacher_audit=dict(path=str(audit_path),sha256=file_sha(audit_path)),
+        engineering_receipts=engineering,engineering_qualification_reports=engineering_qualification,
+        source_artifacts=source_artifacts,additional_round_budget=additional_components,maximum_additional_round_interactions=maximum_new,
+        cumulative_round_upper=cumulative,original_round_ceiling=original_spec['budgets']['max_physics'],
+        reason='explicit engineering repair after kernel OOM; preserve all outcomes, seeds, protocol and failed costs',automatic_retry=False)
+    d['engineering_recovery']=info
+    d['locks']={**old['locks'],str(root/'initial_bundle.json'):file_sha(root/'initial_bundle.json'),
+        str(parent/'declaration.json'):file_sha(parent/'declaration.json'),str(parent/'status.json'):file_sha(parent/'status.json'),
+        str(rd/'production.json'):file_sha(rd/'production.json'),str(rd/'costs.json'):file_sha(rd/'costs.json'),
+        str(audit_path):file_sha(audit_path),**{x['path']:x['sha256'] for x in engineering+engineering_qualification}}
+    atomic_json(root/'declaration.json',d)
+    atomic_json(root/'recovery_preflight.json',dict(phase='prepared',**info,new_training_transitions=0,new_physics_interactions=0))
+    atomic_json(root/'status.json',dict(phase='prepared',completed_rounds=0,declared_rounds=100,
+        recovered_round=1,original_campaign=str(parent),automatic_retry=False))
+    return d
+
+
 def prepare(parent, output, repository, *, monitor_panel, monitor_initial, seed=8113001, port=6038):
     from .production import implementation_identity, implementation_files
     from .worker import source_payload
@@ -172,7 +402,7 @@ def round_spec(declaration, previous, round_index):
         output=str(root),repository=d['repository'],implementation_commit=d['implementation_commit'],
         implementation_files=implementation_files(d['repository']),
         source_frozen_policy=actor['frozen_policy'],source=source,source_runtime=runtime,
-        seed=d['seed']+round_index,round_index=round_index,series_id=Path(d['campaign_output']).name,
+        seed=d['seed']+round_index,round_index=round_index,series_id=d.get('series_id',Path(d['campaign_output']).name),
         continuation=previous,baseline_identity=identity,
         generator_reference_frozen_policy=dict(path=d['baseline_frozen_policy'],sha256=file_sha(d['baseline_frozen_policy'])),
         retention_reference_frozen_policy=d['baseline_frozen_policy'],retention_ref=d['retention_ref'],
@@ -239,7 +469,24 @@ def record_round_metrics(root, round_index, bundle):
 def run_round(path):
     from .closed_loop import ClosedLoopRound
     spec=read(path)
-    return ClosedLoopRound(spec).run()
+    if spec.get('recovery_collection') is None:return ClosedLoopRound(spec).run()
+    class ExplicitRecoveredRound(ClosedLoopRound):
+        def __init__(self,manifest):
+            super().__init__(manifest)
+            original=manifest.get('recovery_started_unix')
+            if original is not None:
+                new_start=self.started_unix;self.started_unix=original
+                atomic_json(self.root/'started.json',dict(started_unix=original,attempt_started_unix=new_start,
+                    original_budget_clock_preserved=True,simulator_frame_continuity=False))
+        def measured(self,name,mode,config,maximum,**kwargs):
+            if name!='collection':return super().measured(name,mode,config,maximum,**kwargs)
+            if mode!='collect' or getattr(self,'_collection_reused',False):raise ValueError('single explicit completed collection reuse required')
+            output=reuse_completed_collection(self.spec['recovery_collection'],config,self.root)
+            self._collection_reused=True
+            atomic_json(self.root/'collection_reuse.json',dict(source=self.spec['recovery_collection'],
+                additional_physics_interactions=0,charged_in_carried_costs=True))
+            return output
+    return ExplicitRecoveredRound(spec).run()
 
 
 def stop_owned_child(process, root):
@@ -292,6 +539,12 @@ def run_campaign(declaration_path):
         raise ValueError('implementation revision drift')
     for p,h in d['locks'].items():
         if file_sha(p)!=h:raise ValueError('locked initialization changed: '+p)
+    if d.get('engineering_recovery') is not None:
+        audit=d['engineering_recovery']['teacher_audit']
+        if file_sha(audit['path'])!=audit['sha256']:raise ValueError('engineering recovery audit changed')
+        _verify_resume_audit(audit['path'])
+        from .verified_files import LOCK_CACHE
+        for filename,sha in d['engineering_recovery'].get('source_artifacts',{}).items():LOCK_CACHE.verify(filename,sha)
     atomic_json(root/'started.json',dict(pid=os.getpid(),started_unix=time.time()))
     env=dict(os.environ,PYTHONPATH=str(repo/'JIT/src'),JAX_PLATFORMS='cpu',
         XLA_PYTHON_CLIENT_PREALLOCATE='false',JIT_AUTO_PUBLISH='0',
@@ -342,7 +595,7 @@ def run_campaign(declaration_path):
             import shutil
             if shutil.disk_usage(root).free<20*1024**3:
                 raise RuntimeError('free disk below20GiB margin; no artifact deletion')
-            spec=round_spec(d,previous,i);rd=Path(spec['output']);status('running',current_round=i,current_stage='full_loop')
+            spec=(resume_round_spec(d) if i==1 and d.get('engineering_recovery') is not None else round_spec(d,previous,i));rd=Path(spec['output']);status('running',current_round=i,current_stage='full_loop')
             atomic_json(root/'ACTIVE_RUN.json',dict(name=root.name,execution=str(rd/'status.json'),lineage=str(root/'status.json')))
             p=spawn(f'round_{i:04d}',[py,str(repo/'JIT/cli/run_teacher_recovery_campaign.py'),'round','--spec',str(rd/'production.json')])
             active=p

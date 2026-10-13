@@ -15,8 +15,17 @@
 - Every round actual cost, model identities, real metrics, last/published and reason. No automatic retry/extension. Supervise first five rounds, then stop active polling, leave authorized100 running and desktop notifications.
 
 ## Tasks
-- [ ] Task1: teacher-only E reward/telemetry, compatibility defaults and tests. Files rewards.py + focused new telemetry module/tests, root wires closed_loop.py.
-- [ ] Task2: student coefficients/frozen stats/reset mixture and checked four-onset pulses. Files student.py and trainer/reset modules/tests; expose explicit config, root wires configs.
-- [ ] Task3: fixed teacher development monitor module/CLI, candidate-budget metrics, leakage and provenance tests; root hooks checkpoints/launcher.
-- [ ] Task4: integrate closed_loop/prepare/schema/launcher, pi0/G73 identity, fresh learner initialization, preflight budget/declaration, baseline and CPU tests, code review, commit.
+- [x] Task1: teacher-only E reward/telemetry, compatibility defaults and tests. Files rewards.py + focused new telemetry module/tests, root wires closed_loop.py.
+- [x] Task2: student coefficients/frozen stats/reset mixture and checked four-onset pulses. Files student.py and trainer/reset modules/tests; expose explicit config, root wires configs.
+- [x] Task3: fixed teacher development monitor module/CLI, candidate-budget metrics, leakage and provenance tests; root hooks checkpoints/launcher.
+- [x] Task4: integrate closed_loop/prepare/schema/launcher, pi0/G73 identity, fresh learner initialization, preflight budget/declaration, baseline and CPU tests, code review, commit.
 - [ ] Task5: necessary bounded GPU check then launch100 with independent TB and notifications, verify loadedreward/loss, supervise five whole loops; diagnose errors without changing scientific settings silently; synchronize shared ledger before handoff.
+
+
+## Engineering recovery, 2026-10-13
+
+The first attempt failed before any student/E/G update: the kernel killed the persistent teacher worker for host OOM. Preserve the failed attempt and all completed/partial outcomes. Eager snapshot restoration creates fresh vendored Warp FFI callbacks whose native graph caches outlive evaluations. Release graphs through the actual MuJoCo backend official API after host traces are written; retain explicitly compiled rollout/G kernels and stop at an 8 GiB worker RSS boundary without automatic retry.
+
+An independent audit certified 57 completed stages (71,065 controls), plus a 6,800-control upper bound for the unfinished review; 19 completed roots comprise 15 verified, three unsolved and one quarantined. Explicit recovery uses a sibling attempt, pinned collection/source/search/review receipts and original proposal bytes, unchanged seeds/configuration, and carries all previous charges. No failed label is rewritten or winner reselected.
+
+The first strict historical-trajectory check failed despite identical 17 labels (1,207 controls); retain that negative receipt. A causal four-evaluation control passed all 17 labels, exact initial observations/generated prefixes and retained compiled-kernel identity; actual vendored graph captures fell to zero and RSS was about 2.79 GB (4,828 controls). Full trajectory differences remain descriptive. Both costs count against the original round ceiling. Focused integration: 77 tests passed; subsequent recovery locks received focused tests and the actual collection configuration passed a zero-physics dry check. Full 128-root memory behavior and five complete rounds still require live supervision.

@@ -29,6 +29,8 @@ class PersistentTeacherRunner(ProductionRunner):
         start=time.monotonic()
         evaluate(read(config),out,session=self.session)
         cost.update(phase='completed',wall_seconds=time.monotonic()-start)
+        self.session.memory_boundary(name,self.root,
+            max_rss_bytes=self.spec.get('teacher_host_rss_limit_bytes',8*1024**3))
         return cost
 
 
@@ -37,9 +39,14 @@ def dispatch_teacher(parent,incumbent):
         raise ValueError('persistent B1 requires original 17-world candidate layout')
     validate_teacher_acceptance(parent.spec)
     root=parent.root/'teacher_worker';root.mkdir(exist_ok=False)
-    maximum=teacher_reservation(parent.spec,len(parent.panels['new_roots']))
+    roots={r['root_id'] for r in parent.panels['new_roots']}
+    reused=set(parent.spec.get('recovery_completed_teacher_roots',{}))
+    if not reused<=roots:raise ValueError('teacher reuse contains undeclared roots')
+    maximum=teacher_reservation(parent.spec,len(roots-reused))
     spec={**parent.spec,'output':str(root),'teacher_execution':'worker_internal',
           'budgets':{**parent.spec['budgets'],'max_physics':maximum}}
+    if parent.spec.get('recovery_teacher_worker') is not None:
+        spec['recovery']=parent.spec['recovery_teacher_worker']
     atomic_json(root/'production.json',spec);atomic_json(root/'panels.json',parent.panels)
     request=root/'request.json';atomic_json(request,dict(production=str(root/'production.json'),incumbent=incumbent,
         input_files={str(root/name):file_sha(root/name) for name in ('production.json','panels.json')}))
@@ -193,6 +200,86 @@ def _complete_recovery_result(result,base,source,horizon,lane):
     return arrays
 
 
+def _recovery_proposals(reference,root_id,seed):
+    import numpy as np
+    from .proposals import stable_seed
+    path=Path(reference['proposal_path'])
+    if file_sha(path)!=reference['proposal_sha256']:raise ValueError('teacher reuse proposal changed')
+    with np.load(path,allow_pickle=False) as data:
+        arrays={k:data[k] for k in ('actions','diffusion_noise','colored_raw_draws')}
+    expected=np.stack([np.random.default_rng(stable_seed(seed,root_id,cid)).normal(size=(16,4))
+        for cid in range(1,17)]).astype(np.float32)
+    if (arrays['actions'].shape!=(17,16,4) or arrays['colored_raw_draws'].shape!=(0,16,4)
+            or not np.array_equal(arrays['diffusion_noise'],expected)
+            or not np.isfinite(arrays['actions']).all() or np.any(np.abs(arrays['actions'])>1)):
+        raise ValueError('teacher reuse original candidate/noise layout changed')
+    return arrays
+
+
+def reusable_teacher_roots(runner,incumbent,originals):
+    """Validate every original search/review trace before any resumed physics."""
+    from copy import deepcopy
+    from .production import lane_arrays
+    from .teacher import select_teacher
+    refs=runner.spec.get('recovery_completed_teacher_roots',{})
+    if not isinstance(refs,dict) or not set(refs)<=set(originals):raise ValueError('teacher reuse roots differ')
+    output={}
+    for rid,ref in refs.items():
+        base=originals[rid]
+        context=ref.get('root_context_sha256',ref.get('snapshot_context_sha256'))
+        if (context!=base['snapshot_context_sha256'] or ref.get('source_actor_sha256')!=runner.source['actor_sha256']
+                or ref.get('generator_checkpoint_manifest_sha256')!=incumbent['checkpoint_manifest_sha256']
+                or ref.get('protocol_sha256')!=runner.protocol or file_sha(ref['path'])!=ref['sha256']):
+            raise ValueError('teacher reuse identity or result receipt changed')
+        row=read(ref['path'])
+        if (row.get('root_id')!=rid or row.get('source_actor_sha256')!=runner.source['actor_sha256']
+                or row.get('generator')!=incumbent or row.get('generated_only_search') is not True
+                or row.get('proposal_sha256')!=ref['proposal_sha256']
+                or row.get('historical_source_label')!=base['label']):
+            raise ValueError('teacher reuse recorded search binding changed')
+        _recovery_proposals(ref,rid,runner.spec['seed'])
+        candidates=row.get('candidates',[])
+        if ([c.get('candidate_id') for c in candidates]!=list(range(17))
+                or [c.get('kind') for c in candidates]!=['source_only']+['diffusion']*16):
+            raise ValueError('teacher reuse candidate layout changed')
+        for lane,candidate in enumerate(candidates):
+            if type(candidate.get('full_success')) is not bool or candidate.get('invalid') or candidate.get('incomplete'):
+                raise ValueError('teacher reuse incomplete candidate')
+            result=dict(root_id=rid,snapshot_context_sha256=context,label=int(candidate['full_success']),
+                attempts=[candidate['attempt']])
+            _complete_recovery_result(result,base,runner.source,400,lane)
+        selected=select_teacher(candidates[1:])
+        if selected is not None:
+            verification=row.get('verification',{});reviews=verification.get('reviews',[])
+            cid=selected['candidate_id']
+            if (row.get('selected_candidate_id')!=cid or verification.get('candidate_id')!=cid
+                    or len(reviews)!=2 or verification.get('repeat_complete')!=[True,True]):
+                raise ValueError('teacher reuse fixed winner/reviews incomplete')
+            for review in reviews:
+                if (review.get('candidate_id')!=cid or review.get('candidate_ids')!=list(range(17))
+                        or len(review.get('labels',[]))!=17 or review.get('complete') is not True):
+                    raise ValueError('teacher reuse review layout changed')
+                for lane,label in enumerate(review['labels']):
+                    attempt=deepcopy(review['selected_attempt']);attempt.update(trace_lane=lane,label=label)
+                    attempt['steps']=len(lane_arrays(attempt)['done'])
+                    _complete_recovery_result(dict(root_id=rid,snapshot_context_sha256=context,label=label,
+                        attempts=[attempt]),base,runner.source,400,lane)
+            labels=[r['labels'][cid] for r in reviews]
+            if labels!=verification.get('repeat_labels') or (row.get('teacher_status')=='verified_solution' and labels!=[1,1]):
+                raise ValueError('teacher reuse verified labels changed')
+        if row.get('teacher_status')=='verified_solution':
+            demo=row.get('demo',{});metadata=demo.get('metadata',{})
+            if (file_sha(demo['path'])!=demo['sha256'] or metadata.get('protocol_sha256')!=runner.protocol
+                    or metadata.get('root_context_sha256')!=context
+                    or metadata.get('normalizer_sha256')!=runner.source['normalizer_sha256']
+                    or metadata.get('model_sha256')!=runner.source['xml_sha256']
+                    or metadata.get('verification_receipt_sha256')!=digest(row['verification'])):
+                raise ValueError('teacher reuse demonstration identity changed')
+        row.update(proposal_path=ref['proposal_path'],reused_from=deepcopy(ref))
+        output[rid]=row
+    return output
+
+
 def recovery_teacher_search(runner,incumbent):
     """Search G independently, then review the fixed winner twice in its layout."""
     import numpy as np
@@ -211,6 +298,10 @@ def recovery_teacher_search(runner,incumbent):
     if horizon!=400:raise ValueError('recovery teacher preserves the frozen 400-step horizon')
     originals={r['root_id']:r for r in runner.panels['new_roots']}
     if len(originals)!=len(runner.panels['new_roots']):raise ValueError('duplicate recovery teacher roots')
+    reused=reusable_teacher_roots(runner,incumbent,originals)
+    if reused:
+        atomic_json(runner.root/'teacher_root_reuse.json',dict(schema='jit_teacher_root_reuse_v1',
+            roots=runner.spec['recovery_completed_teacher_roots'],new_physics_interactions=0,optimizer_updates=0))
     with measure('model_actor_generator_load',backend=jax.default_backend(),component='generator'):
         net,template,identity=generator_template(generator_reference(runner.spec),runner.spec['seed'])
         state=restore_state(Path(incumbent['checkpoint_manifest']).parent,template,identity)
@@ -222,6 +313,12 @@ def recovery_teacher_search(runner,incumbent):
     output={};directory=runner.root/'teachers';directory.mkdir(exist_ok=True)
     for ordinal,base in enumerate(source_results):
         rid=base['root_id'];runner.active_teacher_root=rid
+        if rid in reused:
+            if (base.get('snapshot_context_sha256')!=originals[rid]['snapshot_context_sha256']
+                    or base.get('label')!=reused[rid]['source_control_label_history'][1]):
+                raise ValueError('teacher reuse source control/context changed')
+            atomic_json(directory/f'{ordinal:04d}_result.json',reused[rid]);output[rid]=reused[rid]
+            continue
         if base.get('label') not in (0,1):raise ValueError('unknown recovery source recheck')
         if len(base.get('attempts',[]))!=1:raise ValueError('incomplete recovery source trace')
         _complete_recovery_result(base,originals[rid],runner.source,horizon,base['attempts'][0]['trace_lane'])
@@ -229,17 +326,28 @@ def recovery_teacher_search(runner,incumbent):
         actual=lane_arrays(base['attempts'][0]);obs=actual['actor_observation_before'][0]
         noise=np.stack([np.random.default_rng(stable_seed(runner.spec['seed'],rid,cid)).normal(size=(16,4)) for cid in range(1,17)]).astype(np.float32)
         normalized=(jp.asarray(np.repeat(obs[None],16,axis=0))-state['normalizer']['mean'])/state['normalizer']['std']
-        if generation is not None and compiled is None:
+        partial=runner.spec.get('recovery_teacher_worker',{}).get('partial_root',{})
+        inherited_proposal=partial.get('root_id')==rid
+        if inherited_proposal and (partial.get('ordinal')!=ordinal
+                or partial.get('snapshot_context_sha256')!=base['snapshot_context_sha256']):
+            raise ValueError('teacher reuse partial root ordinal/context changed')
+        if generation is not None and compiled is None and not inherited_proposal:
             with measure('ddim_compile',backend=jax.default_backend(),batch_size=16):
                 compiled=generation.lower(normalized,jp.asarray(noise)).compile()
-        with measure('ddim_generation',backend=jax.default_backend(),root=rid,batch_size=16):
-            generated=jax.device_get(compiled(normalized,jp.asarray(noise)) if compiled is not None else
-                ddim_sample(lambda x,o,k:net.apply(state['ema'],x,o,k),normalized,jp.asarray(noise)))
-        pool=make_candidate_pool(rid,actual['normalized_action_executed'][:16],generated,
-            seed=runner.spec['seed'],colored_noise_candidates=0)
+        if inherited_proposal:
+            inherited_arrays=_recovery_proposals(partial,rid,runner.spec['seed'])
+            pool=dict(actions=inherited_arrays['actions'],kinds=['source_only']+['diffusion']*16,
+                colored_raw_draws=inherited_arrays['colored_raw_draws'])
+        else:
+            with measure('ddim_generation',backend=jax.default_backend(),root=rid,batch_size=16):
+                generated=jax.device_get(compiled(normalized,jp.asarray(noise)) if compiled is not None else
+                    ddim_sample(lambda x,o,k:net.apply(state['ema'],x,o,k),normalized,jp.asarray(noise)))
+            pool=make_candidate_pool(rid,actual['normalized_action_executed'][:16],generated,
+                seed=runner.spec['seed'],colored_noise_candidates=0)
         path=directory/f'{ordinal:04d}_proposals.npz'
         if path.exists():raise ValueError('recovery teacher proposals already exist; no silent retry')
-        np.savez_compressed(path,actions=pool['actions'],diffusion_noise=noise,colored_raw_draws=pool['colored_raw_draws'])
+        if inherited_proposal:shutil.copyfile(partial['proposal_path'],path)
+        else:np.savez_compressed(path,actions=pool['actions'],diffusion_noise=noise,colored_raw_draws=pool['colored_raw_draws'])
         candidates=[{**base,'index':cid,'candidate_id':cid} for cid in range(17)]
         controls=np.asarray([True]+[False]*16)
         results=runner.evaluate(f'teacher_{ordinal:04d}',candidates,prefixes=pool['actions'],source_only=controls)
