@@ -32,7 +32,7 @@ with (ROOT/'episodes.csv').open('w') as f:
  w=csv.DictWriter(f,fieldnames=allrows[0]);w.writeheader();w.writerows(allrows)
 summary=dict(protocol_source=d['protocol_source'],actor=d['actor'],actor_sha256=d['actor_sha256'],criterion=d['landing'],training_updates=0,totals={},onsets={},budgets=budgets)
 for e,rr in records.items():
- k=sum(r['success'] for r in rr);summary['totals'][e]=dict(successes=k,n=1000,rate=k/1000,ci95=wilson(k,1000),end_code_counts=dict(Counter(r['end_code'] for r in rr)),takeoff_count=sum(r['takeoff_s'] is not None for r in rr),pulse_requested_rms=float(np.mean([r['pulse_requested_rms'] for r in rr])),pulse_effective_rms=float(np.mean([r['pulse_effective_rms'] for r in rr])))
+ k=sum(r['success'] for r in rr);summary['totals'][e]=dict(successes=k,n=1000,rate=k/1000,ci95=wilson(k,1000),end_code_counts=dict(Counter(r['end_code'] for r in rr)),success_end_code_counts=dict(Counter(r['end_code'] for r in rr if r['success'])),landing_and_timeout_count=sum(r['success'] and r['end_code']==9 for r in rr),landing_then_failed_count=sum(r['success'] and r['end_code']!=9 for r in rr),failure_stages=dict(Counter('no_legal_takeoff' if r['takeoff_s'] is None else 'no_confirmed_touchdown' if r['touchdown_s'] is None else 'touchdown_hold_insufficient' for r in rr if not r['success'])),takeoff_count=sum(r['takeoff_s'] is not None for r in rr),pulse_requested_rms=float(np.mean([r['pulse_requested_rms'] for r in rr])),pulse_effective_rms=float(np.mean([r['pulse_effective_rms'] for r in rr])))
  summary['onsets'][e]={str(onset):dict(successes=sum(r['success'] for r in rr if r['onset']==onset),n=250) for onset in d['onsets']}
 m=np.array([r['success'] for r in records['mjx']]);p=np.array([r['success'] for r in records['physx']]);summary['paired']=dict(both_success=int((m&p).sum()),mjx_only=int((m&~p).sum()),physx_only=int((~m&p).sum()),both_failure=int((~m&~p).sum()))
 rng=np.random.default_rng(10132026);delta=p.astype(float)-m.astype(float);boot=np.concatenate([rng.choice(delta[gi*250:(gi+1)*250],(10000,250),replace=True).mean(1)[:,None] for gi in range(4)],axis=1).mean(1)
@@ -78,6 +78,8 @@ text+=f"""
 原MJX-Warp sim5ms/ctrl20ms，关闭训练DR/低速失败包装；PhysX既有kd5/5ms/20ms。同Actor/normalizer冻结、没有策略/探索/生成训练更新，未改正式环境/物理/动作映射。采用源端native vmap/shared Warp容量、共享JAX cache与同形状编译复用；目标原生vector task。缓存和批处理不代表跨引擎轨迹逐位相等。
 
 正式charged预算MJX {budgets['mjx']['charged_controls']}控制/{budgets['mjx']['physics_steps']}物理、PhysX {budgets['physx']['charged_controls']}控制/{budgets['physx']['physics_steps']}物理；其中inactive padding物理仍计费，计分有效控制各{budgets['mjx']['scored_controls']}/{budgets['physx']['scored_controls']}。PhysX正式charged含500个接触标定控制。工程兼容性另296控制/1184物理，首导入错误0物理保留。每端实际1000个计分回合，没有重跑历史基线。
+
+达到稳定落地后最终失败终止的回合，MJX {a['landing_then_failed_count']}、PhysX {b['landing_then_failed_count']}；落地且运行至8秒没有失败终止的分别{a['landing_and_timeout_count']}/1000、{b['landing_and_timeout_count']}/1000。这项附加统计不把timeout本身当成功，仍先要求真实落地与1秒稳定。
 
 这是声明初态与自适应探索施扰分布下、一个冻结训练checkpoint的开发压力结果；Wilson与配对bootstrap区间仅反映回合抽样，不代表多训练种子或未见工况泛化。失败全部保留；不自动训练或更换checkpoint。
 """
