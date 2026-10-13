@@ -395,7 +395,7 @@ def round_spec(declaration, previous, round_index):
         source_physics=baseline['xml_sha256'],source_reward=runtime['reward_mode']))
     identity=dict(actor_sha256=baseline['actor_sha256'],normalizer_sha256=baseline['normalizer_sha256'],
         model_sha256=baseline['xml_sha256'],protocol_sha256=protocol)
-    declaration_path=Path(d['campaign_output'])/'declaration.json'
+    declaration_path=Path(d.get('active_authorization_path',str(Path(d['campaign_output'])/'declaration.json')))
     from .teacher_monitor import should_evaluate_round
     monitor_reservation=145600 if should_evaluate_round(round_index) else 0
     spec=dict(schema='jit_bridge_experimental_round_v1',protocol_version='1.2',execute=True,
@@ -489,6 +489,143 @@ def run_round(path):
     return ExplicitRecoveredRound(spec).run()
 
 
+def verify_storage_completed_round(root):
+    """Verify the completed first-round learner/E/G boundary without any update."""
+    import io,pickle
+    import jax,numpy as np,torch
+    from .worker import source_payload
+    from .learner_continuation import validate_saved_learner
+    from .actual_update import adam_update_count
+    from .artifacts import validate_generator_full_state
+    from ..handoff_bank import pytree_sha256
+    from ..rsl_pulse import restore
+    root=Path(root).resolve();rd=root/'round_0001';status=read(rd/'status.json')
+    if status.get('phase')!='completed' or status.get('training_transitions')!=32000:
+        raise ValueError('storage handoff requires a fully completed32k first round')
+    if (root/'round_0002').exists():raise ValueError('round2 already exists; storage handoff cannot replay it')
+    costs=read(rd/'costs.json');charge=sum(c['charged_interactions'] for c in costs)
+    if charge!=status['charged_interactions']:raise ValueError('completed round cost ledger mismatch')
+    bundle=read(rd/'current_source.json')
+    if bundle.get('round')!=1:raise ValueError('completed source round identity mismatch')
+    policy,_=source_payload(bundle['actor']['frozen_policy'])
+    if policy!=bundle['actor']['policy']:raise ValueError('completed source policy identity mismatch')
+    m=validate_saved_learner(bundle['learner'],policy,expected_local_transitions=32000)
+    with Path(m['state_path']).open('rb') as stream:saved=pickle.load(stream)
+    state=saved['training_state'];rng=saved['rng']
+    def finite(tree):
+        for leaf in jax.tree.leaves(tree):
+            value=np.asarray(leaf)
+            if value.dtype.kind in 'fciub' and not np.isfinite(value).all():raise ValueError('nonfinite storage boundary state')
+    finite((state,rng))
+    for field,value in (('actor_sha256',state.params.policy),('critic_sha256',state.params.value),
+        ('normalizer_sha256',state.normalizer_params),('optimizer_sha256',state.optimizer_state)):
+        if pytree_sha256(value)!=m[field]:raise ValueError('serialized learner '+field+' mismatch')
+    if pytree_sha256(rng)!=m['rng_sha256']:raise ValueError('serialized learner RNG mismatch')
+    updates=int(adam_update_count(state.optimizer_state))
+    if int(state.env_steps)!=32000 or m['lifetime_transitions']!=32000 or updates<1:
+        raise ValueError('completed learner transition/optimizer clock mismatch')
+    if file_sha(bundle['explorer'])!=bundle['explorer_sha256']:raise ValueError('completed explorer payload changed')
+    e=restore(bundle['explorer']);esaved=torch.load(io.BytesIO(e['torch_state']),map_location='cpu',weights_only=False)
+    if not esaved.get('optimizer') or 'rng' not in esaved or int(e['total_updates'])<1:
+        raise ValueError('completed explorer requires optimizer and RNG')
+    finite((e['params'],e['normalizer_mean'],e['normalizer_std'],e['rng'],esaved))
+    g=validate_generator_full_state(bundle['generator'])
+    gpath=Path(bundle['generator']['checkpoint_manifest']);gm=read(gpath)
+    locks={str(rd/name):file_sha(rd/name) for name in ('status.json','current_source.json','costs.json')}
+    for filename in (bundle['actor']['frozen_policy'],bundle['learner']['path'],m['state_path'],
+        bundle['explorer'],str(gpath),str(gpath.parent/'state.msgpack')):locks[filename]=file_sha(filename)
+    return dict(schema='jit_completed_round_storage_boundary_v1',phase='verified',round=1,next_round=2,
+        completed_training_transitions=32000,charged_interactions=charge,locks=locks,
+        source=dict(path=str(rd/'current_source.json'),sha256=file_sha(rd/'current_source.json')),
+        learner=dict(manifest=bundle['learner'],state_sha256=m['state_sha256'],
+            actor_sha256=m['actor_sha256'],critic_sha256=m['critic_sha256'],normalizer_sha256=m['normalizer_sha256'],
+            optimizer_sha256=m['optimizer_sha256'],rng_sha256=m['rng_sha256'],optimizer_updates=updates),
+        explorer=dict(path=bundle['explorer'],sha256=bundle['explorer_sha256'],updates=int(e['total_updates']),
+            optimizer_sha256=pytree_sha256(esaved['optimizer']),rng_sha256=pytree_sha256((e['rng'],esaved['rng']))),
+        generator=dict(manifest=bundle['generator'],state_sha256=gm['state_sha256'],updates=int(g['updates']),
+            optimizer_sha256=pytree_sha256(g['optimizer']),rng_sha256=pytree_sha256(g['rng'])),
+        simulator_frame_continuity=False,extra_actor_updates=0,new_physics_interactions=0)
+
+
+def record_round_metrics_once(root,index,bundle):
+    """Commit the completed round's missing coordinator metrics once."""
+    root=Path(root);path=root/'monitoring/round_scalars.jsonl'
+    rows=[json.loads(line) for line in path.read_text().splitlines() if line.strip()] if path.exists() else []
+    matching=[r for r in rows if r.get('round')==index]
+    artifact=root/'plotting'/f'round_{index:04d}_artifacts.json'
+    if matching:
+        if len(matching)!=1 or not artifact.is_file():raise ValueError('partial/duplicate round metric publication requires reconciliation')
+        old=read(artifact)
+        if old['generator']!=bundle['generator'] or old['student']!=bundle['actor'] or old['explorer']!=bundle['explorer']:
+            raise ValueError('completed round metric source changed')
+        return
+    (root/'monitoring').mkdir(exist_ok=True)
+    record_round_metrics(root,index,bundle)
+
+
+def prepare_storage_resume(existingrunroot_physical,repository,*,port=None):
+    """Write a separate successor declaration after a completed storage boundary."""
+    from .production import implementation_identity
+    root=Path(existingrunroot_physical).resolve();repo=Path(repository).resolve()
+    successor=root/'declaration_storage.json'
+    if successor.exists():raise ValueError('storage successor declaration already exists')
+    original=root/'declaration.json';old=read(original);original_sha=file_sha(original)
+    proof=verify_storage_completed_round(root);bundle=read(proof['source']['path'])
+    implementation_commit=implementation_identity(repo)
+    for filename,sha in old['locks'].items():
+        if file_sha(filename)!=sha:raise ValueError('original initialization lock changed: '+filename)
+    transition=root/'storage_transition'
+    receipt=transition/'completed_round1_verification.json'
+    if receipt.exists():raise ValueError('storage boundary receipt already exists')
+    done=[dict(round=1,learner=bundle['learner'],charged_interactions=proof['charged_interactions'])]
+    current=root/'current_source.json';journal=root/'completed_rounds.json'
+    if current.exists() and read(current)!=bundle:raise ValueError('coordinator source differs from completed round1')
+    if journal.exists() and read(journal) not in ([],done):raise ValueError('completed coordinator journal differs')
+    transition.mkdir(exist_ok=True)
+    atomic_json(receipt,proof)
+    if not current.exists():atomic_json(current,bundle)
+    atomic_json(journal,done)
+    record_round_metrics_once(root,1,bundle)
+    d=deepcopy(old);d.update(repository=str(repo),implementation_commit=implementation_commit,
+        campaign_output=str(root),active_authorization_path=str(successor),
+        tensorboard_port=old['tensorboard_port'] if port is None else port,
+        storage_continuation=dict(schema='jit_completed_round_storage_continuation_v1',
+            completed_rounds=1,next_round=2,boundary=dict(path=str(receipt),sha256=file_sha(receipt)),
+            original_declaration=dict(path=str(original),sha256=original_sha),
+            source=proof['source'],completed_journal=done,simulator_frame_continuity=False,
+            authorization='user explicitly approved storage-only migration; continue declared rounds2..100',
+            automatic_retry=False,extra_actor_updates=0),
+        locks={**old['locks'],**proof['locks'],str(original):original_sha,str(receipt):file_sha(receipt)})
+    atomic_json(successor,d)
+    return d
+
+
+def campaign_start_state(declaration,root):
+    """Fresh campaigns start1; an explicit completed storage boundary starts2."""
+    storage=declaration.get('storage_continuation')
+    if storage is None:return read(Path(root)/'initial_bundle.json'),[],1
+    if (storage.get('schema')!='jit_completed_round_storage_continuation_v1'
+        or storage.get('completed_rounds')!=1 or storage.get('next_round')!=2):
+        raise ValueError('invalid completed storage cursor')
+    for ref in (storage['boundary'],storage['source'],storage['original_declaration']):
+        if file_sha(ref['path'])!=ref['sha256']:raise ValueError('storage continuation boundary changed')
+    return read(storage['source']['path']),deepcopy(storage['completed_journal']),2
+
+
+def monitoring_sources(root,*,start_round=1,existing_event_runs=False):
+    root=Path(root);sources=[]
+    for i in range(start_round,101):
+        training=root/f'round_{i:04d}/students/student/training/round_{i:04d}_student'
+        for kind,filename in [('loss','metrics.jsonl'),('reward','episode_metrics.jsonl')]:
+            run='student_'+kind
+            if existing_event_runs:run=str(root/'monitoring/events'/run)
+            sources.append(dict(name=f'round{i}_{kind}',run=run,path=str(training/filename),
+                step='training_transitions',step_offset=(i-1)*32000,completion_status=str(training/'status.json')))
+    run=str(root/'monitoring/events/outer_loop') if existing_event_runs else 'outer_loop'
+    sources.append(dict(name='outer_loop_metrics',run=run,path=str(root/'monitoring/round_scalars.jsonl'),step='round'))
+    return sources
+
+
 def stop_owned_child(process, root):
     """Stop a verified active child's descendants; leave all monitoring services."""
     import signal
@@ -533,19 +670,22 @@ def run_campaign(declaration_path):
     from .production import implementation_identity,start_notifications
     from .teacher_monitor import should_evaluate_round
     d=read(declaration_path);root=Path(d['campaign_output']);repo=Path(d['repository'])
-    if (root/'started.json').exists():
+    storage=d.get('storage_continuation') is not None
+    started_path=(root/'storage_transition/started_storage.json') if storage else root/'started.json'
+    if started_path.exists():
         raise ValueError('explicit recovery required; no automatic restart')
     if implementation_identity(repo)!=d['implementation_commit']:
         raise ValueError('implementation revision drift')
     for p,h in d['locks'].items():
         if file_sha(p)!=h:raise ValueError('locked initialization changed: '+p)
-    if d.get('engineering_recovery') is not None:
+    if d.get('engineering_recovery') is not None and not storage:
         audit=d['engineering_recovery']['teacher_audit']
         if file_sha(audit['path'])!=audit['sha256']:raise ValueError('engineering recovery audit changed')
         _verify_resume_audit(audit['path'])
         from .verified_files import LOCK_CACHE
         for filename,sha in d['engineering_recovery'].get('source_artifacts',{}).items():LOCK_CACHE.verify(filename,sha)
-    atomic_json(root/'started.json',dict(pid=os.getpid(),started_unix=time.time()))
+    previous,done,first_round=campaign_start_state(d,root)
+    atomic_json(started_path,dict(pid=os.getpid(),started_unix=time.time(),declaration=str(Path(declaration_path).resolve()),next_round=first_round))
     env=dict(os.environ,PYTHONPATH=str(repo/'JIT/src'),JAX_PLATFORMS='cpu',
         XLA_PYTHON_CLIENT_PREALLOCATE='false',JIT_AUTO_PUBLISH='0',
         JAX_COMPILATION_CACHE_DIR=d['compiler']['cache'],XLA_FLAGS=d['compiler']['XLA_FLAGS'],
@@ -554,7 +694,8 @@ def run_campaign(declaration_path):
         with (root/(name+'.log')).open('ab') as stream:
             p=subprocess.Popen(args,cwd=repo,env=environment,stdout=stream,stderr=stream,start_new_session=True)
         atomic_json(root/(name+'_pid.json'),dict(pid=p.pid,argv=args));return p
-    py=sys.executable;done=[];previous=read(root/'initial_bundle.json');active=None
+    py=sys.executable;active=None
+    initial=read(root/'initial_bundle.json');inherited_generator_cost=initial.get('generator_lifetime_charged_updates')
     initial_cost=read(Path(d['monitor_initial']).parent/'status.json')['charged_interactions']
     monitor_costs=[dict(round=0,charged_interactions=initial_cost,path=d['monitor_initial'])]
     def status(phase,**kwargs):
@@ -569,29 +710,24 @@ def run_campaign(declaration_path):
         atomic_json(root/'cost_ledger.json',dict(rounds=done,round_stage_costs=owned_round_costs,
             teacher_monitors=list(monitor_records.values()),
             new_charged_interactions=physics,new_physical_cap=cap,
-            inherited_generator_cost=previous.get('generator_lifetime_charged_updates'),
+            inherited_generator_cost=inherited_generator_cost,
             optimization_units='G optimizer updates separate from physical control steps'))
         atomic_json(root/'status.json',dict(phase=phase,declared_rounds=100,completed_rounds=len(done),
             completed_student_transitions=len(done)*32000,student_transition_target=3200000,
             charged_interactions=physics,updated_unix=time.time(),**kwargs))
-    monitoring=root/'monitoring';monitoring.mkdir()
-    sources=[]
-    for i in range(1,101):
-        training=root/f'round_{i:04d}/students/student/training/round_{i:04d}_student'
-        for kind,filename in [('loss','metrics.jsonl'),('reward','episode_metrics.jsonl')]:
-            sources.append(dict(name=f'round{i}_{kind}',run='student_'+kind,path=str(training/filename),
-                step='training_transitions',step_offset=(i-1)*32000,completion_status=str(training/'status.json')))
-    sources.append(dict(name='outer_loop_metrics',run='outer_loop',path=str(monitoring/'round_scalars.jsonl'),step='round'))
-    atomic_json(monitoring/'tensorboard_manifest.json',dict(sources=sources))
-    spawn('exporter',[py,str(repo/'JIT/cli/export_tensorboard.py'),'--manifest',str(monitoring/'tensorboard_manifest.json'),
-        '--output',str(monitoring/'events'),'--watch'])
+    monitoring=root/'monitoring';monitoring.mkdir(exist_ok=storage)
+    manifest=monitoring/('tensorboard_manifest_storage.json' if storage else 'tensorboard_manifest.json')
+    export_output=monitoring/'export_storage_receipt' if storage else monitoring/'events'
+    atomic_json(manifest,dict(sources=monitoring_sources(root,start_round=first_round,existing_event_runs=storage)))
+    spawn('exporter',[py,str(repo/'JIT/cli/export_tensorboard.py'),'--manifest',str(manifest),
+        '--output',str(export_output),'--watch'])
     spawn('tensorboard',[py,'-m','tensorboard.main','--logdir',str(monitoring/'events'),'--host','0.0.0.0',
         '--port',str(d['tensorboard_port']),'--reload_interval','5'])
     atomic_json(root/'ACTIVE_RUN.json',dict(name=root.name,execution=str(root/'status.json'),lineage=str(root/'status.json')))
     status('starting')
     start_notifications(dict(output=str(root),repository=str(repo),protocol_version='teacher-recovery100'))
     try:
-        for i in range(1,101):
+        for i in range(first_round,101):
             import shutil
             if shutil.disk_usage(root).free<20*1024**3:
                 raise RuntimeError('free disk below20GiB margin; no artifact deletion')
