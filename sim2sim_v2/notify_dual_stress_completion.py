@@ -1,11 +1,19 @@
 """Wait for process-exit event; finalize evidence and notify desktop once."""
-import argparse,os,select,subprocess,json,hashlib,fcntl,re,traceback
+import argparse,os,select,subprocess,json,hashlib,fcntl,re,traceback,ctypes,platform
 from pathlib import Path
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from dual_stress_protocol import write_json
 parser=argparse.ArgumentParser();parser.add_argument('--pid',type=int,required=True);a=parser.parse_args()
 root=Path(__file__).resolve().parent;out=root/'runs/dual_stress1000_20261013'
+def open_pidfd(pid):
+ if hasattr(os,'pidfd_open'):return os.pidfd_open(pid)
+ # Local Linux x86_64 header defines __NR_pidfd_open=434.
+ if platform.machine()!='x86_64':raise RuntimeError('Unsupported pidfd syscall architecture')
+ lib=ctypes.CDLL(None,use_errno=True);call=lib.syscall;call.restype=ctypes.c_long
+ fd=int(call(ctypes.c_long(434),ctypes.c_int(pid),ctypes.c_uint(0)))
+ if fd<0:raise OSError(ctypes.get_errno(),'pidfd_open syscall')
+ return fd
 def stamp():return datetime.now(ZoneInfo('Asia/Shanghai')).isoformat()
 def notify(title,text,kind):
  env=os.environ.copy();commands=[]
@@ -18,7 +26,7 @@ try:
  try:
   cmd=Path(f'/proc/{a.pid}/cmdline').read_bytes().decode().replace('\0',' ')
   if 'dual_stress_run.py --engine physx' not in cmd:raise ValueError('PID is not owned PhysX evaluation')
-  fd=os.pidfd_open(a.pid)
+  fd=open_pidfd(a.pid)
  except FileNotFoundError:fd=None
  write_json(out/'completion_watch.json',dict(state='waiting_for_process_exit_event',target_pid=a.pid,watcher_pid=os.getpid(),mechanism='Linux pidfd select event; no recurring status-file reads',started_at=stamp()))
  if fd is not None:
@@ -48,4 +56,4 @@ repo_artifact/reproduced：同Actor01966080/冻结round0099探索器/现成hard1
  notify('双引擎1000回合测评完成',f"MJX：{m['successes']}/1000（{m['rate']:.1%}）\nIsaac：{p['successes']}/1000（{p['rate']:.1%}）\n落地后至8秒未失败终止：{m['landing_and_timeout_count']}/{p['landing_and_timeout_count']}（各分母1000）\n\n统计、轨迹和对比图已保存：\n{out/'INDEX.md'}",'complete')
 except Exception:
  error=traceback.format_exc();(out/'completion_error.log').write_text(error);write_json(out/'completion_watch.json',dict(state='error',error=error,finished_at=stamp()))
- notify('双引擎测评出错',f'失败日志已保留。\n{out/"completion_error.log"}','error');raise
+ notify('双引擎测评或完成通知出错',f'失败日志已保留。\n{out/"completion_error.log"}','error');raise
