@@ -496,7 +496,7 @@ def first_landing_state(state):
     return state.replace(done=jp.maximum(state.done,success.astype(state.done.dtype)),info=info,metrics=metrics)
 
 
-def build_environment(config, *, panel=False):
+def build_environment(config, *, panel=False, inference=False):
     import jax
     import jax.numpy as jp
     from .config import load_config as phase_config
@@ -516,7 +516,7 @@ def build_environment(config, *, panel=False):
         manifest={'schema':support['schema'],'status':'completed','training_guidance_only':True,
                   'test_data_used':False,'validation_data_used':False,'manifest_sha256':support['support_sha256']})
 
-    pulse = None if panel else config.raw.get('training_action_pulse')
+    pulse = None if panel or inference else config.raw.get('training_action_pulse')
     validate_training_action_pulse(pulse, horizon=config.ppo.episode_horizon)
 
     class ProbeEnv(UnifiedTubeRSIEnv):
@@ -530,6 +530,10 @@ def build_environment(config, *, panel=False):
                 **{name: jp.zeros_like(value) for name, value in zeros.items()}})
 
         def reset(self,rng):
+            if inference:
+                # Frozen full-task inference owns a canonical complete start;
+                # TRAIN support and teacher snapshot quotas are PPO-only.
+                return self._reset_jump_start_unified(rng)
             decision,key=jax.random.split(rng)
             jump=jax.random.bernoulli(decision,.2)
             tube=self._tube_pool.sample(key)
@@ -573,7 +577,7 @@ def build_environment(config, *, panel=False):
     uw,dw=weights(up_rows),weights(down_rows)
     env._tube_pool=TubeRSIPool(artifact,pool,uw,dw,jp.log(uw/uw.sum()),jp.log(dw/dw.sum()),
                               len(up_rows),len(down_rows),0,0,None)
-    if not panel and config.raw.get('student_reset_inventory') is not None:
+    if not panel and not inference and config.raw.get('student_reset_inventory') is not None:
         from .retention_reset import install_declared_student_reset
         install_declared_student_reset(env,config.raw)
     return artifact,env

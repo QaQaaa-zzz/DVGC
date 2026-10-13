@@ -308,10 +308,13 @@ class ClosedLoopRound(CampaignRunner):
         aggregate=self.root/'source_rows.json'
         atomic_json(aggregate,dict(rows=rows,source_policy=self.source['name'],prior_labels_imported=False,
             inputs={str(collected/'candidates.json'):file_sha(collected/'candidates.json')}))
-        support=self.root/'training_support.json'
-        build_training_support(seed_support,aggregate,support,source_policy=self.source['name'],
-            allow_historical_seed=bool(self.spec.get('continuous_learning')))
-        retain_pending(support,previous['support'])
+        completed_student=self.spec.get('recovery_completed_student')
+        support=(Path(read(completed_student['phase']['path'])['support_path']) if completed_student
+                 else self.root/'training_support.json')
+        if completed_student is None:
+            build_training_support(seed_support,aggregate,support,source_policy=self.source['name'],
+                allow_historical_seed=bool(self.spec.get('continuous_learning')))
+            retain_pending(support,previous['support'])
         self.panels=fresh_panels(rows,seed=self.spec['seed']+index,
             teacher_onsets=self.spec.get('pulse_start_schedule') if self.spec.get('pulse_contract_version') else None)
         if recovery:
@@ -328,16 +331,20 @@ class ClosedLoopRound(CampaignRunner):
         if any(t.get('teacher_status') in ('invalid','incomplete') and not is_source_conflict_quarantine(t)
                for t in teachers.values()):raise ValueError('teacher incomplete or engineering error')
         teaching=read_teacher_traces(teachers)
-        demo=build_student_demo_bank(teaching,self.root/'student_demo_bank',
-            source_identity=tail_identity(self.source,self.protocol),previous=previous['demo'],round_id=index,
-            baseline_identity=self.spec['baseline_identity'],teacher_tail_lineage=previous['tail_lineage'])
-        phase=dict(support_path=str(support),panel_support_path=str(seed_support),
-            retention_ref=self.spec['retention_ref'],demo_manifest={'path':str(self.root/'student_demo_bank/manifest.json'),
-                'sha256':file_sha(self.root/'student_demo_bank/manifest.json')})
-        atomic_json(self.root/'source_phase_result.json',phase)
-        if recovery:
-            from .recovery_campaign import make_reset_inventory
-            self.spec['student_reset_inventory']=make_reset_inventory(self,rows,teachers,seed_support)
+        if completed_student:
+            from .recovery_campaign import completed_student_phase
+            phase=completed_student_phase(self)
+        else:
+            demo=build_student_demo_bank(teaching,self.root/'student_demo_bank',
+                source_identity=tail_identity(self.source,self.protocol),previous=previous['demo'],round_id=index,
+                baseline_identity=self.spec['baseline_identity'],teacher_tail_lineage=previous['tail_lineage'])
+            phase=dict(support_path=str(support),panel_support_path=str(seed_support),
+                retention_ref=self.spec['retention_ref'],demo_manifest={'path':str(self.root/'student_demo_bank/manifest.json'),
+                    'sha256':file_sha(self.root/'student_demo_bank/manifest.json')})
+            atomic_json(self.root/'source_phase_result.json',phase)
+            if recovery:
+                from .recovery_campaign import make_reset_inventory
+                self.spec['student_reset_inventory']=make_reset_inventory(self,rows,teachers,seed_support)
         student=self.journal.stage('train_student',phase,lambda:self.train_arm('student',phase,None))
         self.checkpoint_probes(student,phase,None)
         after=self.evaluate('student_train',rows,policy_bank=student['bank'],policy_name=student['policy']['name'])

@@ -71,7 +71,11 @@ def test_evaluation_runtime_disables_training_augmentation_before_rollout(monkey
     monkeypatch.setattr(runtime, 'descent_clearance', lambda spec: 0.)
     monkeypatch.setattr(runtime, 'load_probe_bank', lambda path: {'members': [
         {'name': 'student', 'policy': {'formal_config': 'student.json'}}]})
-    monkeypatch.setattr(unified_formal, 'build_unified_formal_environment', lambda path: (cfg, None, env))
+    monkeypatch.setattr(runtime, 'read', lambda path: {})
+    def build(path, *, inference=False):
+        assert inference is True
+        return cfg, None, env
+    monkeypatch.setattr(unified_formal, 'build_unified_formal_environment', build)
     # Stop before checkpoint loading; exercise the actual common runtime builder
     # used by nominal, fixed-window, and teacher-label continuations.
     with pytest.raises(ValueError, match='endpoint differ'):

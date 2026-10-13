@@ -119,9 +119,9 @@ def networks(spec):
     if spec.get('frozen_explorer_evaluation') and raw_config.get('continuous_learner') is not None:
         from .iterative_probe_training import load_config, build_environment
         config = load_config(config_path, evaluation_only=True)
-        _, env = build_environment(config)
+        _, env = build_environment(config,inference=True)
     else:
-        config,_,env=build_unified_formal_environment(config_path)
+        config,_,env=build_unified_formal_environment(config_path,inference=True)
     # This runtime owns its declared pulse schedule. Never apply the training
     # augmentation a second time, including nominal and snapshot continuations.
     env._training_action_pulse = None

@@ -426,10 +426,11 @@ def _build_unified_formal_environment(
     config: UnifiedFormalConfig,
     *,
     env_factory: Callable[..., Any] = UnifiedTubeRSIEnv,
+    inference: bool = False,
 ):
     if config.schema in ITERATIVE_TRAINING_SCHEMAS:
         from .iterative_probe_training import build_environment
-        return build_environment(config)
+        return build_environment(config,inference=True) if inference else build_environment(config)
     up_config, down_config, artifact, _ = _load_runtime(config)
     env = env_factory(
         up_config,
@@ -440,6 +441,9 @@ def _build_unified_formal_environment(
     )
     if env._bundle.xml_sha256 != up_config.model["xml_sha256"]:
         raise ValueError("unified formal runtime XML identity mismatch")
+    if inference:
+        env._training_action_pulse = None
+        env.reset = env._reset_jump_start_unified
     return artifact, env
 
 
@@ -447,10 +451,18 @@ def build_unified_formal_environment(
     config_path: Path,
     *,
     env_factory: Callable[..., Any] = UnifiedTubeRSIEnv,
+    inference: bool = False,
 ):
-    """Build the stable unified runtime without creating a run or training."""
+    """Build the original runtime, explicitly isolating frozen inference resets.
+
+    Inference preserves the source configuration/checkpoint identity while
+    disabling TRAIN reset inventories and action augmentation. Its complete
+    reset is canonical; evaluation callers own their declared disturbances.
+    """
     config = load_unified_policy_formal_config(config_path)
-    artifact, env = _build_unified_formal_environment(config, env_factory=env_factory)
+    options={"env_factory":env_factory}
+    if inference:options["inference"]=True
+    artifact, env = _build_unified_formal_environment(config, **options)
     return config, artifact, env
 
 

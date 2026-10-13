@@ -107,7 +107,7 @@ class FrozenSuffixEvaluator:
         record = load_frozen_unified_manifest(Path(member['frozen_policy']))['policy']
         if record != member['policy']:
             raise ValueError('frozen evaluator identity drift')
-        config, _, env = build_unified_formal_environment(Path(record['formal_config']))
+        config, _, env = build_unified_formal_environment(Path(record['formal_config']),inference=True)
         payload = load_checkpoint(Path(record['checkpoint']), expected=checkpoint_identity(config, env))
         for field, value in (('actor_sha256', payload.actor_params), ('normalizer_sha256', payload.observation_normalizer),
                              ('critic_sha256', payload.critic_params)):
