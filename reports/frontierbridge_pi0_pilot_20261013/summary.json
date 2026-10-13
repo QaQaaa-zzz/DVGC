@@ -1,0 +1,813 @@
+{
+  "schema": "frontierbridge_diagnostic_calibration_outcome_v1",
+  "execution": "20 optimizer updates completed; calibration then rejected",
+  "P1_P2": "not_started",
+  "calibration_attempts": 20,
+  "accepted_updates": 20,
+  "old_lost_cases": [
+    "B_11",
+    "B_14",
+    "C_05",
+    "D_14"
+  ],
+  "caps": {
+    "adoption_prohibited": true,
+    "baseline_mixed_diagnostics": [
+      {
+        "case_id": "A_03",
+        "counts_as_gain_or_absorption": false,
+        "group": "old_nominal",
+        "parent_labels": [
+          1,
+          1,
+          1,
+          0,
+          0,
+          1
+        ],
+        "role": "TRAIN_RETENTION",
+        "student_labels": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "case_id": "B_00",
+        "counts_as_gain_or_absorption": false,
+        "group": "old_random",
+        "parent_labels": [
+          1,
+          0,
+          1,
+          1,
+          1,
+          1
+        ],
+        "role": "DEV_RETENTION",
+        "student_labels": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "case_id": "B_01",
+        "counts_as_gain_or_absorption": false,
+        "group": "old_random",
+        "parent_labels": [
+          1,
+          1,
+          0,
+          0,
+          0,
+          1
+        ],
+        "role": "DEV_RETENTION",
+        "student_labels": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "case_id": "C_12",
+        "counts_as_gain_or_absorption": false,
+        "group": "old_recovery",
+        "parent_labels": [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "role": "DEV_RETENTION",
+        "student_labels": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "case_id": "C_13",
+        "counts_as_gain_or_absorption": false,
+        "group": "old_recovery",
+        "parent_labels": [
+          0,
+          0,
+          1,
+          0,
+          1,
+          0
+        ],
+        "role": "DEV_RETENTION",
+        "student_labels": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "case_id": "C_14",
+        "counts_as_gain_or_absorption": false,
+        "group": "old_recovery",
+        "parent_labels": [
+          1,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        "role": "DEV_RETENTION",
+        "student_labels": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "case_id": "C_15",
+        "counts_as_gain_or_absorption": false,
+        "group": "old_recovery",
+        "parent_labels": [
+          1,
+          1,
+          1,
+          0,
+          1,
+          1
+        ],
+        "role": "DEV_RETENTION",
+        "student_labels": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "case_id": "D_05",
+        "counts_as_gain_or_absorption": false,
+        "group": "accepted_parent_recovery",
+        "parent_labels": [
+          1,
+          1,
+          1,
+          0,
+          1,
+          1
+        ],
+        "role": "DEV_RETENTION",
+        "student_labels": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "case_id": "D_09",
+        "counts_as_gain_or_absorption": false,
+        "group": "accepted_parent_recovery",
+        "parent_labels": [
+          0,
+          0,
+          1,
+          0,
+          1,
+          0
+        ],
+        "role": "DEV_RETENTION",
+        "student_labels": [
+          0,
+          1,
+          1
+        ]
+      }
+    ],
+    "baseline_mixed_policy": "diagnostic_only",
+    "case_repeat_cardinality": {
+      "A_03": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "B_00": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "B_01": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "B_02": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "B_03": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "B_04": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "B_05": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "B_06": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "B_07": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "B_08": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "B_09": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "B_10": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "B_11": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "B_12": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "B_13": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "B_14": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "B_15": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "C_00": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "C_01": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "C_02": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "C_03": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "C_04": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "C_05": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "C_06": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "C_07": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "C_08": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "C_09": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "C_10": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "C_11": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "C_12": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "C_13": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "C_14": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "C_15": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "D_00": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "D_01": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "D_02": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "D_03": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "D_04": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "D_05": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "D_06": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "D_07": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "D_08": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "D_09": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "D_10": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "D_11": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "D_12": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "D_13": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "D_14": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      },
+      "D_15": {
+        "reference": 6,
+        "student": 3,
+        "teacher": 3
+      }
+    },
+    "continuation_eligible": false,
+    "diagnostic_training": true,
+    "eligible": false,
+    "expansion": {
+      "execution_error": 0,
+      "gained": 0,
+      "gate_cohort": {
+        "execution_error": 0,
+        "gained": 0,
+        "lost": 0,
+        "mixed": 0,
+        "old_positive": 0,
+        "reference_positive": 0,
+        "reference_success_rate": null,
+        "retained": 0,
+        "retention_rate": null,
+        "student_positive": 0,
+        "student_success_rate": null,
+        "timeout": 0,
+        "total": 0,
+        "unchanged_negative": 0,
+        "unknown": 0,
+        "unresolved": 0
+      },
+      "independent_success": 0,
+      "lost": 0,
+      "mixed": 0,
+      "old_positive": 0,
+      "reference_positive": 0,
+      "reference_success_rate": null,
+      "retained": 0,
+      "retention_rate": null,
+      "student_positive": 0,
+      "student_success_rate": null,
+      "teacher_verified_absorption": 0,
+      "timeout": 0,
+      "total": 0,
+      "unchanged_negative": 0,
+      "unknown": 0,
+      "unresolved": 0
+    },
+    "gates": {
+      "accepted_parent_recovery": {
+        "baseline_mixed_diagnostic_count": 2,
+        "cohort_semantics": "stable_frozen_parent_reference",
+        "continuation_passed": false,
+        "full_denominator": 16,
+        "gate_cohort": {
+          "execution_error": 0,
+          "gained": 2,
+          "lost": 1,
+          "mixed": 1,
+          "old_positive": 9,
+          "reference_positive": 9,
+          "reference_success_rate": 0.6428571428571429,
+          "retained": 8,
+          "retention_rate": 0.8888888888888888,
+          "student_positive": 10,
+          "student_success_rate": 0.7142857142857143,
+          "timeout": 0,
+          "total": 14,
+          "unchanged_negative": 2,
+          "unknown": 0,
+          "unresolved": 1
+        },
+        "gate_denominator": 14,
+        "limits": {
+          "max_lost": 0,
+          "max_rate_drop": 0.0
+        },
+        "nominal_unverified_diagnostic_only": false,
+        "passed": false,
+        "reasons": [
+          "old_success_loss_limit",
+          "unresolved_required_group"
+        ],
+        "retention_status": "failed"
+      },
+      "old_nominal": {
+        "baseline_mixed_diagnostic_count": 1,
+        "cohort_semantics": "stable_frozen_parent_reference",
+        "continuation_passed": true,
+        "full_denominator": 1,
+        "gate_cohort": {
+          "execution_error": 0,
+          "gained": 0,
+          "lost": 0,
+          "mixed": 0,
+          "old_positive": 0,
+          "reference_positive": 0,
+          "reference_success_rate": null,
+          "retained": 0,
+          "retention_rate": null,
+          "student_positive": 0,
+          "student_success_rate": null,
+          "timeout": 0,
+          "total": 0,
+          "unchanged_negative": 0,
+          "unknown": 0,
+          "unresolved": 0
+        },
+        "gate_denominator": 0,
+        "limits": {
+          "max_lost": 0,
+          "max_rate_drop": 0.0
+        },
+        "nominal_unverified_diagnostic_only": true,
+        "passed": false,
+        "reasons": [
+          "no_stable_parent_success_to_protect"
+        ],
+        "retention_status": "UNVERIFIED"
+      },
+      "old_random": {
+        "baseline_mixed_diagnostic_count": 2,
+        "cohort_semantics": "stable_frozen_parent_reference",
+        "continuation_passed": false,
+        "full_denominator": 16,
+        "gate_cohort": {
+          "execution_error": 0,
+          "gained": 2,
+          "lost": 2,
+          "mixed": 1,
+          "old_positive": 11,
+          "reference_positive": 11,
+          "reference_success_rate": 0.7857142857142857,
+          "retained": 9,
+          "retention_rate": 0.8181818181818182,
+          "student_positive": 11,
+          "student_success_rate": 0.7857142857142857,
+          "timeout": 0,
+          "total": 14,
+          "unchanged_negative": 0,
+          "unknown": 0,
+          "unresolved": 1
+        },
+        "gate_denominator": 14,
+        "limits": {
+          "max_lost": 0,
+          "max_rate_drop": 0.0
+        },
+        "nominal_unverified_diagnostic_only": false,
+        "passed": false,
+        "reasons": [
+          "old_success_loss_limit",
+          "unresolved_required_group"
+        ],
+        "retention_status": "failed"
+      },
+      "old_recovery": {
+        "baseline_mixed_diagnostic_count": 4,
+        "cohort_semantics": "stable_frozen_parent_reference",
+        "continuation_passed": false,
+        "full_denominator": 16,
+        "gate_cohort": {
+          "execution_error": 0,
+          "gained": 2,
+          "lost": 1,
+          "mixed": 0,
+          "old_positive": 8,
+          "reference_positive": 8,
+          "reference_success_rate": 0.6666666666666666,
+          "retained": 7,
+          "retention_rate": 0.875,
+          "student_positive": 9,
+          "student_success_rate": 0.75,
+          "timeout": 0,
+          "total": 12,
+          "unchanged_negative": 2,
+          "unknown": 0,
+          "unresolved": 0
+        },
+        "gate_denominator": 12,
+        "limits": {
+          "max_lost": 0,
+          "max_rate_drop": 0.0
+        },
+        "nominal_unverified_diagnostic_only": false,
+        "passed": false,
+        "reasons": [
+          "old_success_loss_limit"
+        ],
+        "retention_status": "failed"
+      }
+    },
+    "parent": {
+      "accepted_parent_recovery": {
+        "execution_error": 0,
+        "gained": 2,
+        "lost": 1,
+        "mixed": 3,
+        "old_positive": 9,
+        "reference_positive": 9,
+        "reference_success_rate": 0.5625,
+        "retained": 8,
+        "retention_rate": 0.8888888888888888,
+        "student_positive": 11,
+        "student_success_rate": 0.6875,
+        "timeout": 0,
+        "total": 16,
+        "unchanged_negative": 2,
+        "unknown": 0,
+        "unresolved": 3
+      },
+      "old_nominal": {
+        "execution_error": 0,
+        "gained": 0,
+        "lost": 0,
+        "mixed": 1,
+        "old_positive": 0,
+        "reference_positive": 0,
+        "reference_success_rate": 0.0,
+        "retained": 0,
+        "retention_rate": null,
+        "student_positive": 1,
+        "student_success_rate": 1.0,
+        "timeout": 0,
+        "total": 1,
+        "unchanged_negative": 0,
+        "unknown": 0,
+        "unresolved": 1
+      },
+      "old_random": {
+        "execution_error": 0,
+        "gained": 2,
+        "lost": 2,
+        "mixed": 3,
+        "old_positive": 11,
+        "reference_positive": 11,
+        "reference_success_rate": 0.6875,
+        "retained": 9,
+        "retention_rate": 0.8181818181818182,
+        "student_positive": 12,
+        "student_success_rate": 0.75,
+        "timeout": 0,
+        "total": 16,
+        "unchanged_negative": 0,
+        "unknown": 0,
+        "unresolved": 3
+      },
+      "old_recovery": {
+        "execution_error": 0,
+        "gained": 2,
+        "lost": 1,
+        "mixed": 4,
+        "old_positive": 8,
+        "reference_positive": 8,
+        "reference_success_rate": 0.5,
+        "retained": 7,
+        "retention_rate": 0.875,
+        "student_positive": 13,
+        "student_success_rate": 0.8125,
+        "timeout": 0,
+        "total": 16,
+        "unchanged_negative": 2,
+        "unknown": 0,
+        "unresolved": 4
+      }
+    },
+    "pi0": {
+      "accepted_parent_recovery": {
+        "execution_error": 0,
+        "gained": 2,
+        "lost": 1,
+        "mixed": 3,
+        "old_positive": 9,
+        "reference_positive": 9,
+        "reference_success_rate": 0.5625,
+        "retained": 8,
+        "retention_rate": 0.8888888888888888,
+        "student_positive": 11,
+        "student_success_rate": 0.6875,
+        "timeout": 0,
+        "total": 16,
+        "unchanged_negative": 2,
+        "unknown": 0,
+        "unresolved": 3
+      },
+      "old_nominal": {
+        "execution_error": 0,
+        "gained": 0,
+        "lost": 0,
+        "mixed": 1,
+        "old_positive": 0,
+        "reference_positive": 0,
+        "reference_success_rate": 0.0,
+        "retained": 0,
+        "retention_rate": null,
+        "student_positive": 1,
+        "student_success_rate": 1.0,
+        "timeout": 0,
+        "total": 1,
+        "unchanged_negative": 0,
+        "unknown": 0,
+        "unresolved": 1
+      },
+      "old_random": {
+        "execution_error": 0,
+        "gained": 2,
+        "lost": 2,
+        "mixed": 3,
+        "old_positive": 11,
+        "reference_positive": 11,
+        "reference_success_rate": 0.6875,
+        "retained": 9,
+        "retention_rate": 0.8181818181818182,
+        "student_positive": 12,
+        "student_success_rate": 0.75,
+        "timeout": 0,
+        "total": 16,
+        "unchanged_negative": 0,
+        "unknown": 0,
+        "unresolved": 3
+      },
+      "old_recovery": {
+        "execution_error": 0,
+        "gained": 2,
+        "lost": 1,
+        "mixed": 4,
+        "old_positive": 8,
+        "reference_positive": 8,
+        "reference_success_rate": 0.5,
+        "retained": 7,
+        "retention_rate": 0.875,
+        "student_positive": 13,
+        "student_success_rate": 0.8125,
+        "timeout": 0,
+        "total": 16,
+        "unchanged_negative": 2,
+        "unknown": 0,
+        "unresolved": 4
+      }
+    },
+    "policy_semantics": "deterministic_policy_retention",
+    "reference_expected_repeats_scope": "retention_roles",
+    "repeat_cardinality": {
+      "reference": 6,
+      "student": 3,
+      "teacher": 3
+    },
+    "repeat_semantics": "label_stability_not_training_seeds",
+    "seen_condition_validation": {
+      "old_nominal": {
+        "execution_error": 0,
+        "gained": 0,
+        "lost": 0,
+        "mixed": 1,
+        "old_positive": 0,
+        "reference_positive": 0,
+        "reference_success_rate": 0.0,
+        "retained": 0,
+        "retention_rate": null,
+        "student_positive": 1,
+        "student_success_rate": 1.0,
+        "timeout": 0,
+        "total": 1,
+        "unchanged_negative": 0,
+        "unknown": 0,
+        "unresolved": 1
+      }
+    },
+    "total_old_lost": 4
+  },
+  "new_physical_transitions": 76800,
+  "lineage_physical_transitions": 230400,
+  "nominal_retention_status": "UNVERIFIED_BASELINE_MIXED",
+  "guard_thresholds": "UNRESOLVED",
+  "published_policy": null,
+  "automatic_adoption": false,
+  "environment_reward_improvement": "NOT_EVALUATED",
+  "DEV_EXPANSION": "NOT_EVALUATED",
+  "final_TEST": "NOT_OPENED",
+  "causal_boundary": "Six reference and three student numerical repetitions; neither independent training seeds nor proof separating policy effects from simulator variability.",
+  "case_count": 49,
+  "trajectory_count": 441,
+  "code_revision": "46d2c445e03880fd85e6e6a9512a5c0341306a44",
+  "new_user_decision": "Future retention gates record-only; no automatic adoption; prior stopped run preserved."
+}
