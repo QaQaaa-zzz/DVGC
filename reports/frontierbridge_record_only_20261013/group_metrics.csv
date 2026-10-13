@@ -1,0 +1,17 @@
+arm,attempt,group,total,old_positive,retained,lost,gained,mixed,unknown
+P1,100,old_nominal,1,0,0,0,0,1,0
+P1,100,old_random,16,11,7,4,2,2,0
+P1,100,old_recovery,16,8,8,0,1,5,0
+P1,100,accepted_parent_recovery,16,9,7,2,2,2,0
+P1,1000,old_nominal,1,0,0,0,0,1,0
+P1,1000,old_random,16,11,9,1,2,3,0
+P1,1000,old_recovery,16,8,6,2,3,4,0
+P1,1000,accepted_parent_recovery,16,9,8,1,2,2,0
+P2,100,old_nominal,1,0,0,0,0,1,0
+P2,100,old_random,16,11,11,0,0,2,0
+P2,100,old_recovery,16,8,8,0,0,4,0
+P2,100,accepted_parent_recovery,16,9,7,2,0,2,0
+P2,1000,old_nominal,1,0,0,0,0,1,0
+P2,1000,old_random,16,11,10,0,0,3,0
+P2,1000,old_recovery,16,8,8,0,0,4,0
+P2,1000,accepted_parent_recovery,16,9,6,2,0,3,0

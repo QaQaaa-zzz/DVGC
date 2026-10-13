@@ -1,0 +1,5 @@
+arm,attempt,accepted,old_positive,retained,lost,old_positive_unresolved,retention_panel_gained,teacher_absorbed,teacher_cases
+P1,100,100,28,22,6,0,5,1,3
+P1,1000,1000,28,23,4,1,7,1,3
+P2,100,20,28,26,2,0,0,0,3
+P2,1000,20,28,24,2,2,0,0,3
