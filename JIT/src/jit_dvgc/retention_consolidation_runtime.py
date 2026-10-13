@@ -188,10 +188,12 @@ def train_stage(plan):
     bank_manifest,bank,_=load_retention_bank(c['data_roles']['TRAIN_GUARD']['path'],allowed_roles=('TRAIN_GUARD',))
     demo=_descriptor_json(c['data_roles']['TEACHER'])
     # Both arms access identical data; all frozen labels must use this parent.
+    reference_norm,reference_actor=jax.tree.map(jax.lax.stop_gradient,initializer[:2])
+    @jax.jit
     def prediction(obs):
-        return np.asarray(network.parametric_action_distribution.mode(network.policy_network.apply(initializer[0],initializer[1],{'state':jax.numpy.asarray(obs)})))
+        return network.parametric_action_distribution.mode(network.policy_network.apply(reference_norm,reference_actor,{'state':jax.numpy.asarray(obs)}))
     for b in (fit,bank):
-        if not np.array_equal(prediction(b['observations']),b['reference_actions']):raise ValueError('retention labels do not match fixed parent')
+        if not np.array_equal(np.asarray(prediction(b['observations'])),b['reference_actions']):raise ValueError('retention labels do not match fixed parent')
     panel=_descriptor_json(c['evaluation_panel'])
     def store(name,params):
         path=root/(name+'.pkl')

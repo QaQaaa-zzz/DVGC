@@ -183,3 +183,41 @@ def test_nominal_seen_training_condition_scoped_gate_is_not_independent_dev():
     assert result['seen_condition_validation']['old_nominal']['total']==1
     rows[0]['group']='accepted_parent_recovery'
     with pytest.raises(ValueError):evaluation.evaluate_capability_groups(rows,config())
+
+
+def test_opt_in_baseline_mixed_is_diagnostic_full_denominator_kept():
+    rows=candidate()['rows'];uncertain=row('source_mixed');uncertain['parent_labels']=[1,0,1]
+    uncertain['student_labels']=[1,0,1];rows.append(uncertain)
+    cfg=config();cfg['baseline_mixed_policy']='diagnostic_only'
+    result=evaluation.evaluate_capability_groups(rows,cfg)
+    assert result['eligible']
+    assert result['parent']['old_nominal']['total']==2
+    assert result['parent']['old_nominal']['mixed']==1
+    gate=result['gates']['old_nominal']
+    assert gate['baseline_mixed_diagnostic_count']==1 and gate['gate_cohort']['total']==1
+    assert gate['gate_cohort']['old_positive']==1
+    assert not evaluation.evaluate_capability_groups(rows,config())['eligible']
+
+
+@pytest.mark.parametrize('student',[0,'mixed','unknown','execution_error','timeout'])
+def test_baseline_mixed_opt_in_never_hides_stable_parent_loss_or_uncertain_student(student):
+    rows=candidate()['rows'];rows[0]['student_labels']=([1,0,1] if student=='mixed' else [student]*3)
+    cfg=config();cfg['baseline_mixed_policy']='diagnostic_only'
+    result=evaluation.evaluate_capability_groups(rows,cfg)
+    assert not result['eligible']
+
+
+@pytest.mark.parametrize('label',['unknown','execution_error','timeout'])
+def test_baseline_uncertainty_opt_in_is_only_numerical_mixed(label):
+    rows=candidate()['rows'];rows[0]['parent_labels']=[label]*3
+    cfg=config();cfg['baseline_mixed_policy']='diagnostic_only'
+    assert not evaluation.evaluate_capability_groups(rows,cfg)['eligible']
+
+
+def test_mixed_baseline_student_execution_error_still_blocks():
+    rows=candidate()['rows'];uncertain=row('source_mixed');uncertain['parent_labels']=[1,0,1]
+    uncertain['student_labels']=['execution_error']*3;rows.append(uncertain)
+    cfg=config();cfg['baseline_mixed_policy']='diagnostic_only'
+    result=evaluation.evaluate_capability_groups(rows,cfg)
+    assert not result['eligible']
+    assert result['parent']['old_nominal']['execution_error']==1

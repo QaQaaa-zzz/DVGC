@@ -69,6 +69,8 @@ def _selection_config(config):
             raise ValueError('explicit '+key+' required')
     if type(config.get('min_expansion_gain')) is not int or config['min_expansion_gain'] < 1:
         raise ValueError('positive predeclared min_expansion_gain required')
+    if config.get('baseline_mixed_policy','block') not in ('block','diagnostic_only'):
+        raise ValueError('baseline_mixed_policy must be block or diagnostic_only')
     return groups
 
 
@@ -80,6 +82,7 @@ def evaluate_capability_groups(rows, selection_config):
     """
     required = _selection_config(selection_config)
     repeats = selection_config.get('expected_repeats',3)
+    diagnostic_mixed=selection_config.get('baseline_mixed_policy','block')=='diagnostic_only'
     normalized = []; conditions = set(); cases = set()
     for row in rows:
         if row.get('role') not in ('DEV_RETENTION','DEV_EXPANSION','TRAIN_RETENTION'):
@@ -101,7 +104,11 @@ def evaluate_capability_groups(rows, selection_config):
         normalized.append((row,labels))
     result = dict(parent={},pi0={},gates={},eligible=True,
                   repeat_semantics='label_stability_not_training_seeds',
-                  policy_semantics='deterministic_policy_retention',seen_condition_validation={})
+                  policy_semantics='deterministic_policy_retention',seen_condition_validation={},
+                  baseline_mixed_policy=selection_config.get('baseline_mixed_policy','block'),
+                  baseline_mixed_diagnostics=[dict(case_id=r['case_id'],group=r['group'],role=r['role'],
+                      parent_labels=list(r['parent_labels']),student_labels=list(r['student_labels']),
+                      counts_as_gain_or_absorption=False) for r,l in normalized if l['parent']=='mixed'])
     groups = sorted(set(r['group'] for r,_ in normalized) | set(required))
     for group in groups:
         group_rows = [(r,l) for r,l in normalized if r['group']==group and r['role'] in ('DEV_RETENTION','TRAIN_RETENTION')]
@@ -112,14 +119,22 @@ def evaluate_capability_groups(rows, selection_config):
         if revisit:result['seen_condition_validation'][group]=paired_capability_counts([l['parent'] for _,l in revisit],[l['student'] for _,l in revisit])
         if group not in required:
             continue
-        counts = result['parent'][group]; limits = required[group]; reasons=[]
+        excluded=[(r,l) for r,l in group_rows if diagnostic_mixed and l['parent']=='mixed']
+        gate_rows=[(r,l) for r,l in group_rows if not(diagnostic_mixed and l['parent']=='mixed')]
+        counts=paired_capability_counts([l['parent'] for _,l in gate_rows],[l['student'] for _,l in gate_rows])
+        limits = required[group]; reasons=[]
+        if any(l['student'] in ('execution_error','timeout') for _,l in excluded):
+            reasons.append('diagnostic_condition_execution_failed')
         if not group_rows: reasons.append('missing_required_group')
         if counts['old_positive'] == 0: reasons.append('no_stable_parent_success_to_protect')
         if counts['lost'] > limits['max_lost']: reasons.append('old_success_loss_limit')
         if counts['unresolved']: reasons.append('unresolved_required_group')
-        if group_rows and counts['reference_success_rate']-counts['student_success_rate'] > limits['max_rate_drop'] + 1e-12:
+        if gate_rows and counts['reference_success_rate']-counts['student_success_rate'] > limits['max_rate_drop'] + 1e-12:
             reasons.append('group_success_rate_drop')
-        result['gates'][group] = dict(passed=not reasons,reasons=reasons,limits=deepcopy(limits))
+        result['gates'][group] = dict(passed=not reasons,reasons=reasons,limits=deepcopy(limits),
+            gate_cohort=counts,gate_denominator=counts['total'],full_denominator=len(group_rows),
+            baseline_mixed_diagnostic_count=len(excluded),
+            cohort_semantics='stable_frozen_parent_reference' if diagnostic_mixed else 'full_declared_group')
         result['eligible'] &= not reasons
     expansion_rows = [(r,l) for r,l in normalized if r['role']=='DEV_EXPANSION']
     expansion = paired_capability_counts([l['parent'] for _,l in expansion_rows],
@@ -130,9 +145,14 @@ def evaluate_capability_groups(rows, selection_config):
         for r,l in expansion_rows)
     result['expansion'] = expansion
     result['total_old_lost'] = sum(v['lost'] for v in result['parent'].values())
+    expansion_gate_rows=[(r,l) for r,l in expansion_rows if not(diagnostic_mixed and l['parent']=='mixed')]
+    expansion_gate=paired_capability_counts([l['parent'] for _,l in expansion_gate_rows],[l['student'] for _,l in expansion_gate_rows])
+    expansion['gate_cohort']=expansion_gate
+    if diagnostic_mixed and any(l['parent'] in ('execution_error','timeout') or l['student'] in ('execution_error','timeout') for _,l in normalized):
+        result['eligible']=False
     if (expansion['execution_error'] or expansion['timeout']
-        or (expansion['mixed'] and selection_config['mixed_policy']=='block')
-        or (expansion['unknown'] and selection_config['unknown_policy']=='block')):
+        or (expansion_gate['mixed'] and selection_config['mixed_policy']=='block')
+        or (expansion_gate['unknown'] and selection_config['unknown_policy']=='block')):
         result['eligible'] = False
     return result
 

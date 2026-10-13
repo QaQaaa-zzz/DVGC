@@ -189,3 +189,16 @@ model assets, not arbitrary missing inputs. Final startup regression including
 all prior required files: **234 passed in28.02 seconds, zero skips/failures**.
 Actual process/progress, scalar HTTP verification and outcomes belong to the
 pilot's live receipts and the locked shared research state.
+
+The first real parent preflight completed76,800 charged transitions, then
+stopped at zero optimizer updates: six reference conditions were mixed across
+three executions. All49 conditions and their31 stable successes/12 stable
+failures/six mixed labels remain in the original failed receipt. The explicit
+new `baseline_mixed_policy=diagnostic_only` option reports all49 and gates the
+43 stable frozen-parent conditions. Stable-reference student uncertainty,
+losses, execution errors and timeouts still block; mixed reference conditions
+never count as gains or absorption. The default remains blocking. This is used
+development calibration, not independent TEST evidence. Only proven unspent
+reservation is released; a fresh calibration and main stage retain total
+reservation997,200 within the original one-million pilot cap. Calibration
+receipts bind this policy and preserve seen-condition validation roles.

@@ -191,7 +191,7 @@ def run(stage_plan,authorization):
             if attempt in PHYSICAL_STEPS:
                 results=evaluator.evaluate(f'calibration_{attempt:04d}',path,policy,c['parent'])
                 if attempt==0:parent_results.update(results)
-                rows=[dict(case_id=case['case_id'],condition_identity=case['condition_identity'],group=case['group'],role='DEV_RETENTION',declared_role=case['role'],
+                rows=[dict(case_id=case['case_id'],condition_identity=case['condition_identity'],group=case['group'],role=case['role'],seen_condition_validation=case.get('seen_condition_validation'),
                     parent_labels=parent_results[case['case_id']]['labels'],pi0_labels=parent_results[case['case_id']]['labels'],student_labels=results[case['case_id']]['labels'],execution='independent_complete') for case in panel['cases']]
                 caps=evaluate_capability_groups(rows,selection)
             candidates.append(dict(attempt=attempt,finite=True,closed_loop_evaluated=attempt in PHYSICAL_STEPS,capabilities=caps,guard=metrics,checkpoint=str(path),checkpoint_sha256=file_sha(path),results=results))
@@ -210,6 +210,7 @@ def run(stage_plan,authorization):
         receipt=dict(schema='frontierbridge_guard_calibration_v1',calibrated=True,data_role='TRAIN_GUARD',
             guard_bank_sha256=guard_manifest['sha256'],parent_actor_sha256=pytree_sha256(initializer[1]),
             cost_ledger=dict(path=str(root/'cost_ledger.json'),sha256=file_sha(root/'cost_ledger.json')),
+            selection_config=selection,baseline_mixed_policy=selection.get('baseline_mixed_policy','block'),
             retention_gate_roles={case['case_id']:case['role'] for case in panel['cases']},
             seen_train_cases=[case['case_id'] for case in panel['cases'] if case['role']=='TRAIN_RETENTION'],
             candidate_thresholds=candidates,**frozen)
