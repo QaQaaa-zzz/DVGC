@@ -1,0 +1,960 @@
+{
+  "TRAIN": {
+    "pi0": 0,
+    "R_BC": 7,
+    "R_PPO": 7,
+    "S1": 2,
+    "S2": 6,
+    "S3": 5
+  },
+  "denominator": 8,
+  "repeat_count": 3,
+  "final_TEST_opened": false,
+  "adopted": false,
+  "R_PPO_interactions": 640000,
+  "R_PPO_actor_updates": 1600,
+  "R_PPO_critic_updates": 1600,
+  "raw_rows": 8112,
+  "limitations": [
+    "TRAIN_seen_roots, not independent training seeds",
+    "R1 and R2 successful root subsets differ",
+    "Historical G numerical replay is not bitwise equivalent",
+    "Old nominal pi0 baseline is mixed",
+    "Models and full learner checkpoints remain server-side"
+  ],
+  "R1_solver_DEV": {
+    "SOLVER_DEV-1010245101-18": {
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/R1_solver_DEV/panel_case002_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/R1_solver_DEV/panel_case002_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/R1_solver_DEV/panel_case002_repeat2"
+      ]
+    },
+    "SOLVER_DEV-1010245101-21": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/R1_solver_DEV/panel_case001_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/R1_solver_DEV/panel_case001_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/R1_solver_DEV/panel_case001_repeat2"
+      ]
+    },
+    "SOLVER_DEV-1010245101-4": {
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/R1_solver_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/R1_solver_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/R1_solver_DEV/panel_case000_repeat2"
+      ]
+    }
+  },
+  "S2_retention_DEV": {
+    "A_03": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_00": {
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_01": {
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_02": {
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_03": {
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_04": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_05": {
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_06": {
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_07": {
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_08": {
+      "labels": [
+        0,
+        1,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_09": {
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_10": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_11": {
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_12": {
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_13": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_14": {
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_15": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_00": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_01": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_02": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_03": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_04": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_05": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_06": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_07": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_08": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_09": {
+      "labels": [
+        0,
+        1,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_10": {
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_11": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_12": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_13": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_14": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_15": {
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "SOLVER_DEV-1010245101-18": {
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case035_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case035_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case035_repeat2"
+      ]
+    },
+    "SOLVER_DEV-1010245101-21": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case034_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case034_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case034_repeat2"
+      ]
+    },
+    "SOLVER_DEV-1010245101-4": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case033_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case033_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S2_retention_DEV/panel_case033_repeat2"
+      ]
+    }
+  },
+  "S3_retention_DEV": {
+    "A_03": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_00": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_01": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_02": {
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_03": {
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_04": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_05": {
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_06": {
+      "labels": [
+        1,
+        0,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_07": {
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_08": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_09": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_10": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_11": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_12": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_13": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_14": {
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "B_15": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_00": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_01": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_02": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_03": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_04": {
+      "labels": [
+        1,
+        0,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_05": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_06": {
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_07": {
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_08": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_09": {
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_10": {
+      "labels": [
+        0,
+        0,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_11": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_12": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_13": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_14": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "C_15": {
+      "labels": [
+        0,
+        1,
+        0
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case000_repeat2"
+      ]
+    },
+    "SOLVER_DEV-1010245101-18": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case035_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case035_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case035_repeat2"
+      ]
+    },
+    "SOLVER_DEV-1010245101-21": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case034_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case034_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case034_repeat2"
+      ]
+    },
+    "SOLVER_DEV-1010245101-4": {
+      "labels": [
+        1,
+        1,
+        1
+      ],
+      "receipts": [
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case033_repeat0",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case033_repeat1",
+        "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S3_retention_DEV/panel_case033_repeat2"
+      ]
+    }
+  },
+  "retention": {
+    "S2": {
+      "baseline_unqualified": 14,
+      "baseline_stable_success": 19,
+      "lost": 8,
+      "retained": 10,
+      "mixed_or_unknown": 1,
+      "DEV_new_success": 2
+    },
+    "S3": {
+      "baseline_unqualified": 14,
+      "baseline_stable_success": 19,
+      "lost": 7,
+      "retained": 11,
+      "mixed_or_unknown": 1,
+      "DEV_new_success": 3
+    }
+  },
+  "S3_timeout_roots": [
+    "TRAIN-1010233101-18"
+  ],
+  "solver_DEV": {
+    "R_BC": 1,
+    "S2": 2,
+    "S3": 3,
+    "denominator": 3,
+    "training_used": false,
+    "role": "previously-used development not final TEST"
+  }
+}

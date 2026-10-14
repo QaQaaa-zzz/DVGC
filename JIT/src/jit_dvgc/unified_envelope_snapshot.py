@@ -103,7 +103,17 @@ class UnifiedEnvelopeSnapshot:
     policy_iteration: int
     compatibility_identity: Mapping[str, Any]
 
+    snapshot_time: float | None = None
+    expert_switching_used: bool = False
+
     def __post_init__(self) -> None:
+        if self.snapshot_time is not None:
+            self.snapshot_time = float(self.snapshot_time)
+            if not np.isfinite(self.snapshot_time) or self.snapshot_time < 0:
+                raise ValueError("recovery snapshot time must be finite and nonnegative")
+        self.expert_switching_used = bool(self.expert_switching_used)
+        if self.expert_switching_used and self.snapshot_time is None:
+            raise ValueError("expert-assisted context requires versioned recovery snapshot time")
         for name in (
             "qpos",
             "qvel",
@@ -189,6 +199,8 @@ def snapshot_context_sha256(snapshot: UnifiedEnvelopeSnapshot) -> str:
               "phase_episode_step", "episode_return", "reset_from_soft_tube", "source_tick",
               "parent_group_index", "tube_entry_index", "tube_global_index",
               "xml_sha256", "compatibility_identity")
+    if getattr(snapshot, "snapshot_time", None) is not None:
+        fields += ("snapshot_time", "expert_switching_used")
     return canonical_sha256({"schema": "jit_snapshot_context_identity_v1",
                              **{field: encode(getattr(snapshot, field)) for field in fields}})
 
@@ -203,12 +215,13 @@ def capture_unified_envelope_snapshot(
     policy_actor_sha256: str,
     policy_payload_sha256: str,
     policy_iteration: int,
+    capture_recovery_context: bool = False,
 ) -> UnifiedEnvelopeSnapshot:
     """Capture a nonterminal unified state without dropping continuation context."""
     if bool(np.asarray(jax.device_get(state.done))):
         raise ValueError("cannot capture a terminal unified envelope state")
     info = state.info
-    if bool(np.asarray(jax.device_get(info["expert_switching_used"]))):
+    if bool(np.asarray(jax.device_get(info["expert_switching_used"]))) and not capture_recovery_context:
         raise ValueError("unified envelope snapshot cannot originate from expert switching")
     history = info["history"]
     return UnifiedEnvelopeSnapshot(
@@ -243,6 +256,8 @@ def capture_unified_envelope_snapshot(
         policy_payload_sha256=str(policy_payload_sha256),
         policy_iteration=int(policy_iteration),
         compatibility_identity=compatibility_identity(env),
+        snapshot_time=float(np.asarray(jax.device_get(state.data.time))) if capture_recovery_context else None,
+        expert_switching_used=bool(np.asarray(jax.device_get(info["expert_switching_used"]))) if capture_recovery_context else False,
     )
 
 
@@ -255,7 +270,7 @@ def save_unified_envelope_snapshot(path: Path, snapshot: UnifiedEnvelopeSnapshot
     payload = directory / "snapshot.pkl"
     os.replace(temporary, payload)
     identity = {
-        "schema": UNIFIED_ENVELOPE_SNAPSHOT_SCHEMA,
+        "schema": "jit_unified_envelope_recovery_snapshot_v2" if getattr(snapshot, "snapshot_time", None) is not None else UNIFIED_ENVELOPE_SNAPSHOT_SCHEMA,
         "payload_sha256": _sha256(payload),
         "physical_state_sha256": physical_state_sha256(snapshot),
         "parent_trajectory": snapshot.parent_trajectory,
@@ -270,6 +285,8 @@ def save_unified_envelope_snapshot(path: Path, snapshot: UnifiedEnvelopeSnapshot
         "phase_episode_step": snapshot.phase_episode_step,
         "compatibility_identity": snapshot.compatibility_identity,
     }
+    if getattr(snapshot, "snapshot_time", None) is not None:
+        identity.update(snapshot_time=snapshot.snapshot_time, expert_switching_used=snapshot.expert_switching_used)
     (directory / "identity.json").write_text(
         json.dumps(identity, indent=2, sort_keys=True, allow_nan=False) + "\n",
         encoding="utf-8",
@@ -279,7 +296,7 @@ def save_unified_envelope_snapshot(path: Path, snapshot: UnifiedEnvelopeSnapshot
 def load_unified_envelope_snapshot(path: Path) -> UnifiedEnvelopeSnapshot:
     directory = Path(path)
     sidecar = json.loads((directory / "identity.json").read_text(encoding="utf-8"))
-    if sidecar.get("schema") != UNIFIED_ENVELOPE_SNAPSHOT_SCHEMA:
+    if sidecar.get("schema") not in (UNIFIED_ENVELOPE_SNAPSHOT_SCHEMA, "jit_unified_envelope_recovery_snapshot_v2"):
         raise ValueError("unsupported unified envelope snapshot schema")
     payload_path = directory / "snapshot.pkl"
     if _sha256(payload_path) != sidecar.get("payload_sha256"):
@@ -302,6 +319,10 @@ def load_unified_envelope_snapshot(path: Path) -> UnifiedEnvelopeSnapshot:
         "phase_episode_step": snapshot.phase_episode_step,
         "compatibility_identity": snapshot.compatibility_identity,
     }
+    if sidecar["schema"] == "jit_unified_envelope_recovery_snapshot_v2":
+        expected.update(snapshot_time=snapshot.snapshot_time, expert_switching_used=snapshot.expert_switching_used)
+        if not np.isfinite(snapshot.snapshot_time):
+            raise ValueError("invalid recovery snapshot time")
     for key, value in expected.items():
         if sidecar.get(key) != value:
             raise ValueError(f"unified envelope snapshot {key} provenance mismatch")
@@ -340,6 +361,8 @@ def _restore_unified_envelope_payload(payload: Mapping[str, Any], env: Any) -> m
         naccdmax=env._reset_data_naccdmax(),
         njmax=int(env.resolved_config.model["njmax"]),
     )
+    if getattr(snapshot, "snapshot_time", None) is not None:
+        data = data.replace(time=jp.asarray(snapshot.snapshot_time, jp.float32))
     data = mjx.forward(model, data)
     geometry = extract_geometry(data, env._geometry)
     observable_geometry = env._observable_geometry(data, geometry)
@@ -373,7 +396,7 @@ def _restore_unified_envelope_payload(payload: Mapping[str, Any], env: Any) -> m
         "active_phase": active_phase,
         "start_phase": start_phase,
         "phase_transitioned": jp.asarray(snapshot.phase_transitioned),
-        "expert_switching_used": false,
+        "expert_switching_used": jp.asarray(getattr(snapshot, "expert_switching_used", False)),
         "last_action": jp.asarray(snapshot.last_action),
         "reward_state": reward_state,
         "episode_step": jp.asarray(snapshot.episode_step, jp.int32),

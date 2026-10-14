@@ -96,7 +96,8 @@ class Evaluator:
     def reference_spec(self,spec,policy,descriptor):
         from .probe_bank import load_probe_bank,lock_probe_bank
         source=load_probe_bank(Path(spec['bank']))
-        path=self.root/('reference_bank_'+file_sha(descriptor['path'])[:16]+'.json')
+        from .generative_bridge.contracts import digest
+        path=self.root/('reference_bank_'+file_sha(descriptor['path'])[:16]+'_'+digest(source)[:16]+'.json')
         if not path.exists():
             bank_spec={key:source[key] for key in ('task','max_ticks','label_interaction_budget','max_candidates_per_process')}
             bank_spec.update(version='retention_reference_'+file_sha(descriptor['path'])[:16],

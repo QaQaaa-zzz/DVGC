@@ -1,0 +1,99 @@
+{
+  "config": {
+    "schema": "frontierbridge_skill_transfer_v1",
+    "repository": "/home/qy/DVGC/runs/worktrees/jit-skill-transfer",
+    "user_authorization": "2026-10-14 explicit attachment implementation and execution; R first independently then S; no keep; record-only scientific gates",
+    "final_test_opened": false,
+    "automatic_adoption": false,
+    "review_blocks_not_total_stop_conditions": true,
+    "pi0_descriptor": {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/binding/frozen_unified_policy.json",
+      "sha256": "779fc377146c7e4fe2110584996b2555979c125c49263c718a38b5ac8559ff56",
+      "bank": "/home/qy/DVGC/JIT/runs/monitoring/bridge_pi0_hard_initial1000_20261010/bank.json"
+    },
+    "teacher_manifest": {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_pi0_pilot_20261013/inputs/teacher_manifest.json",
+      "sha256": "fee0433e23a8172761dbfc7cd5004675be98e3ca33b6c53dcf6830eb6e6d3e17"
+    },
+    "source_rows": {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D1_003/selected_roots.json",
+      "sha256": "fd65aed4045c04aeee064fe726aff6c8676648fbc1cfd4099713db3d722cf2a3"
+    },
+    "runtime_config": {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/generative_bridge_v1_2_20260928/audit/runtime_config.json",
+      "sha256": "c135ef71f5d5907274c08ef1692705bcf3ffe0f3695674f1ef11b5f2d3bcc51f"
+    },
+    "recovery_summary": {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/R1_full_train_summary.json",
+      "sha256": "fe2274d265f5e3228f5033e06d722d38b6924cf9cbe17246524122439c8adc51"
+    },
+    "student_reset_inventory": {
+      "path": "/home/qy/DVGC/JIT/runs/experiments/retention_next_20261010/D2_002/report_004/reset_pool_inventory.json",
+      "sha256": "74196cc4a6b87bd17630ba22c100973f91422b3f01024fea91e077492f8f329d"
+    }
+  },
+  "BC_R1": {
+    "actor_sha256": "b2aff9473a2e8cea891027cce01e0dcb04efd7ffb04b717778b75f3d683bcd21",
+    "completed_supervised_updates": 2000,
+    "contract_sha256": "0293e98bcb94875ec5fb7dc4828c0641af21b5e25b5e02465e4b1d06d9769801",
+    "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1",
+    "inference_path": "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/R1_all/learner/update_2000.pkl",
+    "inference_sha256": "0a425586d091189d1d65593dbb919abc44f3ddb45991171ce215a19a7c968b0c",
+    "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+    "optimizer_sha256": "5cc407ff60d24f3fec034d3057736a50539e03d9a831697f39ec7823c8c18795",
+    "path": "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/R1_all/learner/learner_update_2000.pkl",
+    "rng_sha256": "f3946ec10a1782ecb517e4d2ebb0df0e54c88d6da34bab9b2c5d47065d1eec1c",
+    "sha256": "82ffa3aa3bcd55473a3db1ec88521b4948bab7ef636a68ef66174d4dd53cbcbd"
+  },
+  "PPO_R_final": {
+    "actor_sha256": "acc3c24e63ce16e3a7fea5e97c7a17b7409f072999012a78d949a684f22957b8",
+    "checkpoint": "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/R2_stage00/checkpoints/transition_128000",
+    "critic_sha256": "074821e182092e658c27eb35fff46241f9b05e7109017178038fe64397620e9b",
+    "curriculum_weights": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "inference": "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/R2_stage00/inference_128000.pkl",
+    "inference_sha256": "0325b717ec8e2ea538f524d9e08f9ddc446cd675bae00ef16a99965d228a4fff",
+    "learner": {
+      "lifetime_transitions": 640000,
+      "path": "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/R2_stage00/learner/transition_128000/manifest.json",
+      "sha256": "d06ac42e5710d3ee4d49306b3ff951c2851fc362bb90fb5bac4d7df5b533b18e"
+    },
+    "lifetime_transitions": 640000,
+    "local_transitions": 128000,
+    "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+    "schema": "jit_recovery_ppo_checkpoint_v1",
+    "simulator_state_restored": false
+  },
+  "S2": {
+    "actor_sha256": "326ffffda9102be73964cb3e310f06a7be83ec6074d97c53bb4cda73c769cb78",
+    "completed_supervised_updates": 2000,
+    "contract_sha256": "c88885c2220770b748bc7e50b2e493e81c67a437187f0391b7509f168a70ea2b",
+    "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1",
+    "inference_path": "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S_online_early_repair003/learner/update_2000.pkl",
+    "inference_sha256": "a884cf78ccafe709d140d2ca6f625be52a14b4f75635e684f8bfa6f6713dce8b",
+    "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+    "optimizer_sha256": "c0fb8c1262922513f12f2dd7b1049c1d475fe22f95f8b03b91c4c20374c8c2a6",
+    "path": "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S_online_early_repair003/learner/learner_update_2000.pkl",
+    "rng_sha256": "a8aaa43d2b149a687b3883aa0c106fa46c333cd767281e643d3af8aad03e1155",
+    "sha256": "97a23ac0b7d3f6a8318ab27f892a0f622f40afd64f29d3fdae98d483074ac1cc"
+  },
+  "S3": {
+    "actor_sha256": "c40d16feef0e937df1c4cf9200cfa4e6d7a8ae5d435f1b2b489b8c2f72a1c309",
+    "completed_supervised_updates": 2000,
+    "contract_sha256": "c2693a0f8e3ca96a37041f611ac3fc2d7893d30c19e318713324e4c798cd86a2",
+    "critic_sha256": "5b8641318c99dffab036ffe1999c2278059d4ac0513be3843393d3122b9302f1",
+    "inference_path": "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S_online_dagger004/learner/update_2000.pkl",
+    "inference_sha256": "ab0be72ef9bc977fe613cd0ed3941b6239f55ee58845fc603ea732dc271dbebd",
+    "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86",
+    "optimizer_sha256": "561fed344e0c7db484c1bab2303372a15230bb8ac9aadf6096c6c4a309bdd366",
+    "path": "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S_online_dagger004/learner/learner_update_2000.pkl",
+    "rng_sha256": "a8aaa43d2b149a687b3883aa0c106fa46c333cd767281e643d3af8aad03e1155",
+    "sha256": "a43371ab611f7e4549f9c903f39d8933dbd8127b13385069cb539f007537b6e1"
+  },
+  "execution_source_provenance": "R0 source files archived in code_R0; later stages ran managed worktree before final source commit. Checkpoint/config/learner source identities stored in actual receipts; historical replay equivalence not claimed."
+}

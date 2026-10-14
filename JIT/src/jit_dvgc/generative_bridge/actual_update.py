@@ -30,7 +30,17 @@ def adam_update_count(optimizer_state):
     return states[0].count
 
 
-def instrument_updates(trainer,sink,*,max_grad_norm,probe,record_optimizer_count=False):
+def adam_update_counts(optimizer_state):
+    """Explicit branch clocks, retaining the historical single-Adam clock."""
+    from .split_optimizer import SplitOptimizerState
+    if isinstance(optimizer_state,SplitOptimizerState):
+        return dict(actor_adam_count=adam_update_count(optimizer_state.actor),
+                    critic_adam_count=adam_update_count(optimizer_state.critic))
+    return dict(optimizer_updates=adam_update_count(optimizer_state))
+
+
+def instrument_updates(trainer,sink,*,max_grad_norm,probe,record_optimizer_count=False,
+                       split_clip_norms=None):
     """Observe pre-clipping gradients and actual Adam deltas without changing math."""
     source=getattr(trainer,'_jit_source_text',None) or inspect.getsource(trainer)
     tree=ast.parse(source);count=[0]
@@ -59,12 +69,22 @@ def instrument_updates(trainer,sink,*,max_grad_norm,probe,record_optimizer_count
             'actual/actor_adam_delta_norm':norm(delta),
             'actual/critic_adam_delta_norm':norm(jax.tree.map(lambda a,b:a-b,after.value,before.value)),
             'actual/NEW_TRAIN_probe_action_change_mse':jp.mean(jp.square(prediction(after.policy)-prediction(before.policy)))}
+        if split_clip_norms is not None:
+            # A shared norm here is descriptive only; clipping is per branch.
+            values.pop('actual/global_clip_scale')
+            for branch,gradient,limit in zip(('actor','critic'),(grads.policy,grads.value),split_clip_norms):
+                branch_norm=norm(gradient)
+                branch_scale=jp.minimum(1.,limit/jp.maximum(branch_norm,1e-20))
+                values['actual/'+branch+'_clip_scale']=branch_scale
+                values['actual/'+branch+'_clipped_gradient_norm']=branch_norm*branch_scale
+            if 'actual/gradient_norm_demo' in values and 'actual/gradient_norm_ppo' in values:
+                values['actual/demo_to_ppo_gradient_norm_ratio']=values['actual/gradient_norm_demo']/jp.maximum(values['actual/gradient_norm_ppo'],1e-20)
         if 'actual/actor_gradient_sum_norm' in values:
             values['actual/actor_gradient_norm_sum_difference']=(
                 norm(jax.tree.map(lambda a,b:a-b,grads.policy,expected_actor_gradient)) if expected_actor_gradient is not None
                 else jp.abs(values['actual/actor_gradient_sum_norm']-values['actual/actor_gradient_norm']))
         if record_optimizer_count:
-            values['actual/optimizer_updates']=adam_update_count(optimizer_state)
+            values.update({'actual/'+k:v for k,v in adam_update_counts(optimizer_state).items()})
         jax.debug.callback(record,values,ordered=False)
         return {**metrics,**values}
     namespace={**trainer.__globals__,'_actual_update_metrics':update}

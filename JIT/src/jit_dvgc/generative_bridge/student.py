@@ -68,7 +68,7 @@ def make_joint_student_trainer(trainer, demo_manifest, *, retention,
         if freeze_actor_normalizer:
             from .student_clock import instrument_frozen_normalizer
             effective_trainer=instrument_frozen_normalizer(trainer)
-        if not use_demo and not keep_coefficient:return effective_trainer(**kwargs)
+        if not use_demo and not keep_coefficient and not record_update_clock:return effective_trainer(**kwargs)
         import jax
         import jax.numpy as jp
         from brax.training.agents.ppo import losses

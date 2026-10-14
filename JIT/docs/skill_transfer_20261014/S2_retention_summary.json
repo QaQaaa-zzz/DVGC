@@ -1,0 +1,697 @@
+{
+  "counts_all_six_pi0_repeats": {
+    "baseline_unqualified": 14,
+    "baseline_stable_success": 19,
+    "lost": 8,
+    "retained": 10,
+    "mixed_or_unknown": 1,
+    "DEV_new_success": 2
+  },
+  "counts_first_three_pi0_repeats": {
+    "baseline_stable_success": 21,
+    "retained": 11,
+    "lost": 9,
+    "mixed_or_unknown": 1
+  },
+  "rows": [
+    {
+      "case": "A_03",
+      "group": "old_nominal",
+      "pi0": "mixed",
+      "student": 1,
+      "pi0_labels": [
+        1,
+        1,
+        1,
+        0,
+        0,
+        1
+      ],
+      "student_labels": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "case": "B_00",
+      "group": "old_random",
+      "pi0": "mixed",
+      "student": 0,
+      "pi0_labels": [
+        1,
+        0,
+        1,
+        1,
+        1,
+        1
+      ],
+      "student_labels": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "case": "B_01",
+      "group": "old_random",
+      "pi0": "mixed",
+      "student": 0,
+      "pi0_labels": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        1
+      ],
+      "student_labels": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "case": "B_02",
+      "group": "old_random",
+      "pi0": 1,
+      "student": 0,
+      "pi0_labels": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "student_labels": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "case": "B_03",
+      "group": "old_random",
+      "pi0": 1,
+      "student": 0,
+      "pi0_labels": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "student_labels": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "case": "B_04",
+      "group": "old_random",
+      "pi0": 1,
+      "student": 1,
+      "pi0_labels": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "student_labels": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "case": "B_05",
+      "group": "old_random",
+      "pi0": 1,
+      "student": 0,
+      "pi0_labels": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "student_labels": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "case": "B_06",
+      "group": "old_random",
+      "pi0": 1,
+      "student": 0,
+      "pi0_labels": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "student_labels": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "case": "B_07",
+      "group": "old_random",
+      "pi0": 0,
+      "student": 0,
+      "pi0_labels": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "student_labels": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "case": "B_08",
+      "group": "old_random",
+      "pi0": 1,
+      "student": "mixed",
+      "pi0_labels": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "student_labels": [
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "case": "B_09",
+      "group": "old_random",
+      "pi0": 1,
+      "student": 0,
+      "pi0_labels": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "student_labels": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "case": "B_10",
+      "group": "old_random",
+      "pi0": 0,
+      "student": 1,
+      "pi0_labels": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "student_labels": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "case": "B_11",
+      "group": "old_random",
+      "pi0": 1,
+      "student": 0,
+      "pi0_labels": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "student_labels": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "case": "B_12",
+      "group": "old_random",
+      "pi0": 0,
+      "student": 0,
+      "pi0_labels": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "student_labels": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "case": "B_13",
+      "group": "old_random",
+      "pi0": 1,
+      "student": 1,
+      "pi0_labels": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "student_labels": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "case": "B_14",
+      "group": "old_random",
+      "pi0": 1,
+      "student": 0,
+      "pi0_labels": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "student_labels": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "case": "B_15",
+      "group": "old_random",
+      "pi0": 1,
+      "student": 1,
+      "pi0_labels": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "student_labels": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "case": "C_00",
+      "group": "old_recovery",
+      "pi0": 1,
+      "student": 1,
+      "pi0_labels": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "student_labels": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "case": "C_01",
+      "group": "old_recovery",
+      "pi0": 1,
+      "student": 1,
+      "pi0_labels": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "student_labels": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "case": "C_02",
+      "group": "old_recovery",
+      "pi0": 1,
+      "student": 1,
+      "pi0_labels": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "student_labels": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "case": "C_03",
+      "group": "old_recovery",
+      "pi0": 1,
+      "student": 1,
+      "pi0_labels": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "student_labels": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "case": "C_04",
+      "group": "old_recovery",
+      "pi0": 0,
+      "student": 1,
+      "pi0_labels": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "student_labels": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "case": "C_05",
+      "group": "old_recovery",
+      "pi0": 1,
+      "student": 1,
+      "pi0_labels": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "student_labels": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "case": "C_06",
+      "group": "old_recovery",
+      "pi0": 1,
+      "student": 1,
+      "pi0_labels": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "student_labels": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "case": "C_07",
+      "group": "old_recovery",
+      "pi0": 1,
+      "student": 1,
+      "pi0_labels": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "student_labels": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "case": "C_08",
+      "group": "old_recovery",
+      "pi0": 0,
+      "student": 1,
+      "pi0_labels": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "student_labels": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "case": "C_09",
+      "group": "old_recovery",
+      "pi0": 0,
+      "student": "mixed",
+      "pi0_labels": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "student_labels": [
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "case": "C_10",
+      "group": "old_recovery",
+      "pi0": 1,
+      "student": 0,
+      "pi0_labels": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "student_labels": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "case": "C_11",
+      "group": "old_recovery",
+      "pi0": 0,
+      "student": 1,
+      "pi0_labels": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "student_labels": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "case": "C_12",
+      "group": "old_recovery",
+      "pi0": "mixed",
+      "student": 1,
+      "pi0_labels": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "student_labels": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "case": "C_13",
+      "group": "old_recovery",
+      "pi0": "mixed",
+      "student": 1,
+      "pi0_labels": [
+        0,
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "student_labels": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "case": "C_14",
+      "group": "old_recovery",
+      "pi0": "mixed",
+      "student": 1,
+      "pi0_labels": [
+        1,
+        0,
+        1,
+        0,
+        0,
+        0
+      ],
+      "student_labels": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "case": "C_15",
+      "group": "old_recovery",
+      "pi0": "mixed",
+      "student": 0,
+      "pi0_labels": [
+        1,
+        1,
+        1,
+        0,
+        1,
+        1
+      ],
+      "student_labels": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "case": "SOLVER_DEV-1010245101-4",
+      "group": "teacher_verified_expansion",
+      "pi0": 0,
+      "student": 1,
+      "pi0_labels": [
+        0,
+        0,
+        0
+      ],
+      "student_labels": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "case": "SOLVER_DEV-1010245101-21",
+      "group": "teacher_verified_expansion",
+      "pi0": 0,
+      "student": 1,
+      "pi0_labels": [
+        0,
+        0,
+        0
+      ],
+      "student_labels": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "case": "SOLVER_DEV-1010245101-18",
+      "group": "teacher_verified_expansion",
+      "pi0": 0,
+      "student": 0,
+      "pi0_labels": [
+        0,
+        0,
+        0
+      ],
+      "student_labels": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "baseline_source": "frozen main/P0_evaluation.json; matching original pi0/panel; no new baseline transitions",
+  "nominal_retention": "UNVERIFIED_BASELINE_MIXED",
+  "final_TEST_opened": false,
+  "adopted": false
+}
