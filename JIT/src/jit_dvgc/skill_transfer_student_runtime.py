@@ -13,7 +13,7 @@ def student_visit_choices(root_count, old_offset=0):
 def strict_branch_labels(*, success, bad, failure, timeout, done):
     success,bad,failure,timeout,done=[np.asarray(a,bool) for a in (success,bad,failure,timeout,done)]
     if len({a.shape for a in (success,bad,failure,timeout,done)})!=1:raise ValueError('unaligned branch flags')
-    return np.where(bad,-1,np.where(success&failure,-3,np.where(timeout|~done,-2,success.astype(int))))
+    return np.where(bad,-1,np.where(success&failure,-3,np.where(timeout|(~done&~success),-2,success.astype(int))))
 
 def run_student_block(config,output,recovery_inference,*,updates=2000,visit_steps=4,seed=0):
     if type(visit_steps) is not int or not 0<=visit_steps<400:raise ValueError('bounded predeclared visitation steps required')

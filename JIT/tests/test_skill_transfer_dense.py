@@ -13,3 +13,7 @@ def test_strict_branch_outcomes_do_not_turn_timeout_or_conflict_into_negative():
     result=runtime.strict_branch_labels(success=[1,0,0,1,0],bad=[0,0,1,0,0],
         failure=[0,0,0,1,1],timeout=[0,1,0,0,0],done=[1,1,0,1,1])
     np.testing.assert_array_equal(result,[1,-2,-1,-3,0])
+
+def test_verified_endpoint_success_is_not_a_budget_timeout_when_done_is_false():
+    result=runtime.strict_branch_labels(success=[1],bad=[0],failure=[0],timeout=[0],done=[0])
+    np.testing.assert_array_equal(result,[1])

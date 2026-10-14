@@ -22,6 +22,8 @@ def run_dense(config,output):
     for key in ('student_initializer','recovery_inference','retention_panel'):
         if file_sha(c[key]['path'])!=c[key]['sha256']:raise ValueError('dense input identity drift: '+key)
     positions=(0,1,2,4,8,12,16);banks=[];started=time.time()
+    query_writer=SummaryWriter(str(root/'tensorboard'))
+    charged=0
     atomic_json(root/'declaration.json',dict(config=c,positions=list(positions),batches=4,
         teacher_transition_ceiling=940800,visitation_transition_ceiling=2408,BC_updates=2000,
         final_TEST_opened=False,automatic_adoption=False))
@@ -37,9 +39,16 @@ def run_dense(config,output):
                 status('running',stage='queries',block=name,completed_blocks=len(banks),declared_blocks=28)
                 run_student_block(cfg,root/name,c['recovery_inference']['path'],updates=0,visit_steps=position)
                 banks.append(root/name/'labels.json')
+                receipt=root/name/'query_receipts.json'
+                q=json.loads(receipt.read_text()) if receipt.exists() else {}
+                charged+=q.get('charged_interactions',0)
+                query_writer.add_scalar('queries/completed_blocks',len(banks),len(banks))
+                query_writer.add_scalar('queries/labeled_states',q.get('labeled_queries',0),len(banks))
+                query_writer.add_scalar('queries/charged_interactions',charged,len(banks));query_writer.flush()
                 # Drop per-env executable captures; disk compilation cache and
                 # immutable inputs remain. Never retain28 full Warp allocators.
                 jax.clear_caches()
+        query_writer.close()
         manifest=merge_verified_labels(banks,root/'bank')
         with Path(c['student_initializer']['path']).open('rb') as f:initializer=pickle.load(f)
         network=make_network_factory()({'state':76,'privileged_state':106},4,preprocess_observations_fn=rs.normalize)
@@ -63,5 +72,6 @@ def run_dense(config,output):
         status('completed',verified_labels=manifest['count'],TRAIN_stable_successes=train['stable_successes'],
             full_TRAIN_denominator=8,wall_seconds=time.time()-started,adopted=False,final_TEST_opened=False)
     except BaseException as exc:
+        query_writer.close()
         status('error',error=repr(exc),wall_seconds=time.time()-started)
         raise
