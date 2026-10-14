@@ -168,7 +168,8 @@ def resume_round_spec(declaration):
     d=declaration;info=d['engineering_recovery'];old=Path(info['previous_round'])
     if file_sha(old/'production.json')!=info['previous_spec_sha256']:
         raise ValueError('failed round declaration changed')
-    spec=deepcopy(read(old/'production.json'));root=Path(d['campaign_output'])/'round_0001'
+    index=info.get('round_index',1)
+    spec=deepcopy(read(old/'production.json'));root=Path(d['campaign_output'])/f'round_{index:04d}'
     root.mkdir(exist_ok=False)
     spec.update(output=str(root),repository=d['repository'],implementation_commit=d['implementation_commit'],
         implementation_files=implementation_files(d['repository']),campaign_output=d['campaign_output'],
@@ -178,6 +179,7 @@ def resume_round_spec(declaration):
         recovery=dict(previous=str(old),previous_contract_identity=info['previous_contract_identity'],stages=info['stages']),
         recovery_collection=info['collection'],
         recovery_started_unix=info.get('original_round_started_unix'))
+    if info.get('active_wall_seconds') is not None:spec['recovery_active_wall_seconds']=info['active_wall_seconds']
     if info.get('completed_student') is not None:
         spec['recovery_completed_student']=info['completed_student']
         spec.pop('recovery_teacher_worker',None);spec.pop('recovery_completed_teacher_roots',None)
@@ -203,15 +205,16 @@ def _verify_resume_audit(path):
     return audit
 
 
-def verify_evaluation_boundary(previous):
+def verify_evaluation_boundary(previous,*,round_index=1,stopped=False):
     """Certify the failed first round's completed teachers and32k student."""
     import pickle,jax,numpy as np
     from .worker import source_payload
     from .learner_continuation import validate_saved_learner
     from .actual_update import adam_update_count
     from ..handoff_bank import pytree_sha256
-    root=Path(previous).resolve();rd=root/'round_0001';status=read(rd/'status.json')
-    if status.get('phase')!='failed' or 'student_train_batch_0000' not in status.get('error',''):
+    root=Path(previous).resolve();rd=root/f'round_{round_index:04d}';status=read(rd/'status.json')
+    valid_stop=stopped and status.get('phase')=='stopped' and status.get('stage','').startswith('student_train_batch_') and status.get('training_transitions')==32000
+    if not valid_stop and (status.get('phase')!='failed' or 'student_train_batch_0000' not in status.get('error','')):
         raise ValueError('diagnosed first post-learning student evaluation failure required')
     if any((rd/name).exists() for name in ('explorer_update','generator_incremental','current_source.json')):
         raise ValueError('post-learning recovery cannot discard later E/G or completed round work')
@@ -223,7 +226,10 @@ def verify_evaluation_boundary(previous):
         # original learning/teacher proof and adds its failed reservation.
         for path,sha in inherited['locks'].items():
             if file_sha(path)!=sha:raise ValueError('inherited completed boundary changed: '+path)
-        original=verify_evaluation_boundary(Path(inherited['phase']['path']).parent.parent)
+        original_round=Path(inherited['phase']['path']).parent
+        original_index=read(original_round/'production.json')['round_index']
+        original=verify_evaluation_boundary(original_round.parent,round_index=original_index,
+            stopped=read(original_round/'status.json').get('phase')=='stopped')
         for key in ('schema','phase','student','student_stage','inventory','checkpoint_probes','teachers',
             'teacher_roots','completed_training_transitions','optimizer_updates','learner_state_sha256',
             'optimizer_sha256','rng_sha256','extra_actor_updates','simulator_frame_continuity'):
@@ -234,8 +240,10 @@ def verify_evaluation_boundary(previous):
             raise ValueError('inherited student journal changed')
         carried=read(root/'declaration.json')['engineering_recovery']['carried_round_costs']
         costs=read(rd/'costs.json');extra=costs[len(carried):]
-        if (costs[:len(carried)]!=carried or not extra or any(c.get('stage')!='student_train_batch_0000'
-            or c.get('phase')!='failed' or c.get('charged_updates',0)!=0
+        allowed_stage=status['stage'] if stopped else 'student_train_batch_0000'
+        allowed_phase='stopped' if stopped else 'failed'
+        if (costs[:len(carried)]!=carried or not extra or any(c.get('stage')!=allowed_stage
+            or c.get('phase')!=allowed_phase or c.get('charged_updates',0)!=0
             or c.get('charged_interactions')!=12800 for c in extra)):
             raise ValueError('chained recovery permits only failed student evaluation reservations')
         charge=sum(c['charged_interactions'] for c in costs)
@@ -264,7 +272,7 @@ def verify_evaluation_boundary(previous):
         ('normalizer_sha256',state.normalizer_params),('optimizer_sha256',state.optimizer_state),('rng_sha256',rng)):
         if pytree_sha256(value)!=m[field]:raise ValueError('completed student '+field+' changed')
     updates=int(adam_update_count(state.optimizer_state))
-    if int(state.env_steps)!=32000 or m['lifetime_transitions']!=32000 or updates<1:
+    if int(state.env_steps)!=32000 or m['lifetime_transitions']!=round_index*32000 or updates<1:
         raise ValueError('completed student learner/optimizer clock mismatch')
     worker=rd/'teacher_worker';receipt=read(worker/'completed.json');teachers=read(worker/'results.json')
     panels=read(rd/'panels.json');roots={r['root_id'] for r in panels['new_roots']}
@@ -298,7 +306,7 @@ def verify_evaluation_boundary(previous):
     if charge!=status['charged_interactions']:raise ValueError('failed round cost ledger changed')
     completed=[c for c in costs if c['stage']=='student_student' and c['phase']=='completed']
     teacher_cost=[c for c in costs if c['stage']=='teacher_worker' and c['phase']=='completed']
-    failed=[c for c in costs if c['stage']=='student_train_batch_0000' and c['phase']=='failed']
+    failed=[c for c in costs if c['stage']==(status['stage'] if stopped else 'student_train_batch_0000') and c['phase']==('stopped' if stopped else 'failed')]
     if (len(completed)!=1 or completed[0]['charged_interactions']!=32000+report['train_panel_interactions']
         or len(teacher_cost)!=1 or teacher_cost[0]['charged_interactions']!=receipt['charged_interactions']
         or teacher_cost[0]['worker_receipt_sha256']!=file_sha(worker/'completed.json') or len(failed)!=1):
@@ -309,6 +317,7 @@ def verify_evaluation_boundary(previous):
         checkpoint_probes=dict(path=str(probes),sha256=file_sha(probes)),
         teachers=dict(path=str(worker/'results.json'),sha256=file_sha(worker/'results.json')),
         teacher_roots=128,completed_training_transitions=32000,optimizer_updates=updates,
+        round_index=round_index,lifetime_training_transitions=m['lifetime_transitions'],
         learner_state_sha256=m['state_sha256'],optimizer_sha256=m['optimizer_sha256'],rng_sha256=m['rng_sha256'],
         charged_interactions=charge,failed_evaluation_upper=failed[0]['charged_interactions'],locks=locks,
         extra_actor_updates=0,new_physics_interactions=0,simulator_frame_continuity=False)
@@ -389,6 +398,112 @@ def prepare_evaluation_recovery(previous,output,repository,*,port=None):
             str(root/'post_learning_boundary.json'):file_sha(root/'post_learning_boundary.json')})
     atomic_json(root/'declaration.json',d);atomic_json(root/'status.json',dict(phase='prepared',completed_rounds=0,declared_rounds=100,
         completed_student_transitions=32000,recovered_round=1,extra_actor_updates=0,automatic_retry=False))
+    return d
+
+
+def prepare_stopped_resume(previous,output,repository,*,port=None):
+    """Explicitly continue a stopped post-learning round, preserving its prefix."""
+    from .production import implementation_identity
+    from .teacher_monitor import should_evaluate_round
+    import shutil
+    parent=Path(previous).resolve();root=Path(output).resolve();repo=Path(repository).resolve()
+    if root==parent or root.is_relative_to(parent):raise ValueError('fresh sibling attempt output required')
+    old=read(parent/'declaration.json');status=read(parent/'status.json');index=status.get('current_round')
+    if (status.get('phase')!='stopped' or type(index) is not int or not 1<=index<=100
+        or status.get('completed_rounds')!=index-1):raise ValueError('stopped post-learning campaign cursor required')
+    proof=verify_evaluation_boundary(parent,round_index=index,stopped=True);rd=parent/f'round_{index:04d}';spec=read(rd/'production.json')
+    commit=implementation_identity(repo);locks={**old['locks'],**proof['locks']}
+    for path,sha in locks.items():
+        if file_sha(path)!=sha:raise ValueError('stopped resume input changed: '+path)
+    if (parent/'started.json').exists():
+        pid=read(parent/'started.json').get('pid');command=Path('/proc')/str(pid)/'cmdline'
+        if pid and command.exists() and str(parent).encode() in command.read_bytes():raise ValueError('stopped coordinator is still alive')
+    journal=read(parent/'completed_rounds.json')
+    if [r.get('round') for r in journal]!=list(range(1,index)):raise ValueError('sequential completed prefix required')
+    training_paths={};prefix_charge=0
+    for row in journal:
+        i=row['round'];directory=parent/f'round_{i:04d}';child=read(directory/'status.json');source=read(directory/'current_source.json')
+        costs=read(directory/'costs.json');charge=sum(c['charged_interactions'] for c in costs)
+        manifest=read(source['learner']['path'])
+        if (child.get('phase')!='completed' or child.get('training_transitions')!=32000 or source.get('round')!=i
+            or child['charged_interactions']!=charge or row['charged_interactions']!=charge or row['learner']!=source['learner']
+            or file_sha(source['learner']['path'])!=source['learner']['sha256'] or manifest['local_transitions']!=32000
+            or manifest['lifetime_transitions']!=i*32000):raise ValueError('completed prefix learner/cost identity changed')
+        for path in (directory/'status.json',directory/'current_source.json',directory/'costs.json',Path(source['learner']['path'])):locks[str(path)]=file_sha(path)
+        training_paths[str(i)]=source['actor']['training'];prefix_charge+=charge
+    previous_source=parent/'current_source.json'
+    if read(previous_source)!=spec['continuation']:raise ValueError('stopped round preceding source bundle changed')
+    locks[str(previous_source)]=file_sha(previous_source)
+    monitors=[]
+    for i in (0,*[r for r in range(1,index) if should_evaluate_round(r)]):
+        path=Path(old['monitor_initial']) if i==0 else parent/f'teacher_monitor/G{i}/report.json';record=read(path.parent/'status.json')
+        if record.get('phase')!='completed' or record.get('round')!=i or read(path).get('phase')!='completed':raise ValueError('completed fixed monitor required')
+        monitors.append(dict(round=i,charged_interactions=record['charged_interactions'],path=str(path)))
+        locks[str(path)]=file_sha(path);locks[str(path.parent/'status.json')]=file_sha(path.parent/'status.json')
+    current_student=rd/'stages/train_student.json'
+    stages={'train_student':dict(path=str(current_student),sha256=file_sha(current_student))};completed_student_batches=[]
+    for path in sorted((rd/'stages').glob('eval_*.json')):
+        name=path.stem
+        if name.endswith('.running'):continue
+        if not name.startswith(('eval_source_suffix_batch_','eval_student_train_batch_')):raise ValueError('unexpected later evaluation work')
+        record=read(path);result=record['result']
+        if record['output_sha256']!=digest(result) or file_sha(result['path'])!=result['sha256']:raise ValueError('completed evaluation journal changed')
+        stages[name]=dict(path=str(path),sha256=file_sha(path));locks[str(path)]=file_sha(path);locks[result['path']]=result['sha256']
+        for row in read(result['path']):
+            for attempt in row.get('attempts',[]):locks[attempt['trace']]=attempt['trace_sha256']
+        if name.startswith('eval_student_train_batch_'):completed_student_batches.append(int(name.rsplit('_',1)[1]))
+    if (len([n for n in stages if n.startswith('eval_source_suffix_batch_')])!=4
+        or completed_student_batches!=list(range(len(completed_student_batches))) or len(completed_student_batches)>=4):
+        raise ValueError('sequential source/student completed batches required')
+    if read(rd/'status.json')['stage']!=f'student_train_batch_{len(completed_student_batches):04d}':raise ValueError('pending evaluation cursor changed')
+    for path,sha in locks.items():
+        if file_sha(path)!=sha:raise ValueError('stopped resume artifact changed: '+path)
+    reference=spec.get('recovery_collection')
+    if reference is None:
+        collection=rd/'collection';collection_spec=rd/'collection_spec.json'
+        files={str(p):file_sha(p) for p in collection.glob('*.json')};files[str(collection_spec)]=file_sha(collection_spec)
+        for name in ('prefixes.npz','update_state.msgpack'):files[str(collection/name)]=file_sha(collection/name)
+        if read(collection/'status.json').get('phase')!='completed':raise ValueError('completed stopped collection required')
+        reference=dict(output=str(collection),previous_round=str(rd),spec_path=str(collection_spec),files=files,
+            charged_interactions=read(collection/'status.json')['charged_interactions'])
+    for path,sha in reference['files'].items():
+        if file_sha(path)!=sha:raise ValueError('inherited completed collection changed')
+    carried=read(rd/'costs.json');additional=dict(student_suffix_evaluation=(4-len(completed_student_batches))*12800,student_stress=9*32*400)
+    cumulative=proof['charged_interactions']+sum(additional.values())
+    if cumulative>spec['budgets']['max_physics']:raise ValueError('stopped resume exceeds original round ceiling')
+    start=read(rd/'started.json')['started_unix'];child_status=read(rd/'status.json');stop=child_status.get('updated_unix',start+child_status['wall_seconds'])
+    for candidate in (parent/'user_stop_receipt.json',parent/'acceleration_audit_20261014/user_stop_receipt.json'):
+        if candidate.is_file():stop=read(candidate).get('stopped_unix',stop);locks[str(candidate)]=file_sha(candidate)
+    active=max(float(child_status['wall_seconds']),float(stop)-float(start))
+    if active>=spec['budgets']['max_wall_seconds']:raise ValueError('recorded active engineering wall budget exhausted')
+    root.mkdir(parents=True,exist_ok=False);atomic_json(root/'initial_bundle.json',read(parent/'initial_bundle.json'))
+    atomic_json(root/'post_learning_boundary.json',proof);atomic_json(root/'completed_rounds.json',journal);atomic_json(root/'current_source.json',read(previous_source))
+    for row in journal:(root/f"round_{row['round']:04d}").symlink_to(parent/f"round_{row['round']:04d}",target_is_directory=True)
+    for record in monitors:
+        if record['round']:
+            target=root/f"teacher_monitor/G{record['round']}";target.parent.mkdir(exist_ok=True);target.symlink_to(Path(record['path']).parent,target_is_directory=True)
+    for dirname in ('monitoring','plotting'):
+        target=root/dirname;target.mkdir(exist_ok=True)
+        originals=(parent/dirname).glob('round_*')
+        for path in originals:
+            if path.is_file():shutil.copyfile(path,target/path.name)
+    training_paths[str(index)]=proof['student']['training']
+    info=dict(previous_campaign=str(parent),previous_round=str(rd),round_index=index,previous_spec_sha256=file_sha(rd/'production.json'),
+        previous_contract_identity=read(rd/'stages/round_contract.json')['sha256'],previous_costs_sha256=file_sha(rd/'costs.json'),
+        original_round_started_unix=start,active_wall_seconds=active,original_status_wall_seconds=child_status['wall_seconds'],
+        stopped_unix=stop,excluded_user_pause_seconds=max(0.,time.time()-stop),carried_round_costs=carried,stages=stages,
+        collection=reference,completed_student=proof,additional_round_budget=additional,cumulative_round_upper=cumulative,
+        maximum_additional_round_interactions=sum(additional.values()),automatic_retry=False)
+    d=deepcopy(old);d.pop('storage_continuation',None);d.pop('active_authorization_path',None)
+    d.update(campaign_output=str(root),repository=str(repo),implementation_commit=commit,engineering_recovery=info,
+        campaign_resume=dict(schema='jit_stopped_post_learning_resume_v1',next_round=index,completed_journal=journal,
+            previous_source=dict(path=str(previous_source),sha256=file_sha(previous_source)),teacher_monitors=monitors,training_paths=training_paths),
+        series_id=spec['series_id'],tensorboard_port=old['tensorboard_port'] if port is None else port,
+        initial_bundle_sha256=file_sha(root/'initial_bundle.json'),locks={**locks,str(parent/'declaration.json'):file_sha(parent/'declaration.json'),
+            str(parent/'status.json'):file_sha(parent/'status.json'),str(parent/'completed_rounds.json'):file_sha(parent/'completed_rounds.json'),
+            str(root/'initial_bundle.json'):file_sha(root/'initial_bundle.json'),str(root/'post_learning_boundary.json'):file_sha(root/'post_learning_boundary.json')})
+    atomic_json(root/'declaration.json',d);atomic_json(root/'status.json',dict(phase='prepared',completed_rounds=index-1,current_round=index,
+        completed_student_transitions=index*32000,declared_rounds=100,extra_actor_updates=0,automatic_retry=False))
     return d
 
 
@@ -667,6 +782,12 @@ def run_round(path):
     class ExplicitRecoveredRound(ClosedLoopRound):
         def __init__(self,manifest):
             super().__init__(manifest)
+            active=manifest.get('recovery_active_wall_seconds')
+            if active is not None:
+                self.started_unix=time.time()-active
+                atomic_json(self.root/'started.json',dict(started_unix=self.started_unix,previous_active_wall_seconds=active,
+                    original_started_unix=manifest.get('recovery_started_unix'),explicit_user_pause_excluded=True,simulator_frame_continuity=False))
+                return
             original=manifest.get('recovery_started_unix')
             if original is not None:
                 new_start=self.started_unix;self.started_unix=original
@@ -822,6 +943,12 @@ def prepare_storage_resume(existingrunroot_physical,repository,*,port=None):
 
 def campaign_start_state(declaration,root):
     """Fresh campaigns start1; an explicit completed storage boundary starts2."""
+    resume=declaration.get('campaign_resume')
+    if resume:
+        index=resume['next_round'];done=resume['completed_journal'];ref=resume['previous_source']
+        if (resume.get('schema')!='jit_stopped_post_learning_resume_v1' or [r['round'] for r in done]!=list(range(1,index))
+            or file_sha(ref['path'])!=ref['sha256']):raise ValueError('stopped campaign cursor/source changed')
+        return read(ref['path']),deepcopy(done),index
     storage=declaration.get('storage_continuation')
     if storage is None:return read(Path(root)/'initial_bundle.json'),[],1
     if (storage.get('schema')!='jit_completed_round_storage_continuation_v1'
@@ -832,11 +959,12 @@ def campaign_start_state(declaration,root):
     return read(storage['source']['path']),deepcopy(storage['completed_journal']),2
 
 
-def monitoring_sources(root,*,start_round=1,existing_event_runs=False,completed_student_training=None):
+def monitoring_sources(root,*,start_round=1,existing_event_runs=False,completed_student_training=None,training_paths=None):
     root=Path(root);sources=[]
     for i in range(start_round,101):
         training=root/f'round_{i:04d}/students/student/training/round_{i:04d}_student'
         if i==1 and completed_student_training is not None:training=Path(completed_student_training)
+        if training_paths and str(i) in training_paths:training=Path(training_paths[str(i)])
         for kind,filename in [('loss','metrics.jsonl'),('reward','episode_metrics.jsonl')]:
             run='student_'+kind
             if existing_event_runs:run=str(root/'monitoring/events'/run)
@@ -919,7 +1047,7 @@ def run_campaign(declaration_path):
     py=sys.executable;active=None
     initial=read(root/'initial_bundle.json');inherited_generator_cost=initial.get('generator_lifetime_charged_updates')
     initial_cost=read(Path(d['monitor_initial']).parent/'status.json')['charged_interactions']
-    monitor_costs=[dict(round=0,charged_interactions=initial_cost,path=d['monitor_initial'])]
+    monitor_costs=deepcopy(d.get('campaign_resume',{}).get('teacher_monitors')) or [dict(round=0,charged_interactions=initial_cost,path=d['monitor_initial'])]
     def status(phase,**kwargs):
         owned_round_costs=[dict(c,round=p.parent.name) for p in root.glob('round_*/costs.json') for c in read(p)]
         monitor_records={x['round']:x for x in monitor_costs}
@@ -935,13 +1063,14 @@ def run_campaign(declaration_path):
             inherited_generator_cost=inherited_generator_cost,
             optimization_units='G optimizer updates separate from physical control steps'))
         atomic_json(root/'status.json',dict(phase=phase,declared_rounds=100,completed_rounds=len(done),
-            completed_student_transitions=max(len(done),int(completed_student is not None))*32000,student_transition_target=3200000,
+            completed_student_transitions=max(len(done),d.get('campaign_resume',{}).get('next_round',int(completed_student is not None)))*32000,student_transition_target=3200000,
             charged_interactions=physics,updated_unix=time.time(),**kwargs))
-    monitoring=root/'monitoring';monitoring.mkdir(exist_ok=storage)
+    monitoring=root/'monitoring';monitoring.mkdir(exist_ok=storage or bool(d.get('campaign_resume')))
     manifest=monitoring/('tensorboard_manifest_storage.json' if storage else 'tensorboard_manifest.json')
     export_output=monitoring/'export_storage_receipt' if storage else monitoring/'events'
-    atomic_json(manifest,dict(sources=monitoring_sources(root,start_round=first_round,existing_event_runs=storage,
-        completed_student_training=completed_student['student']['training'] if completed_student else None)))
+    atomic_json(manifest,dict(sources=monitoring_sources(root,start_round=1 if d.get('campaign_resume') else first_round,existing_event_runs=storage,
+        completed_student_training=completed_student['student']['training'] if completed_student else None,
+        training_paths=d.get('campaign_resume',{}).get('training_paths'))))
     spawn('exporter',[py,str(repo/'JIT/cli/export_tensorboard.py'),'--manifest',str(manifest),
         '--output',str(export_output),'--watch'])
     spawn('tensorboard',[py,'-m','tensorboard.main','--logdir',str(monitoring/'events'),'--host','0.0.0.0',
@@ -954,7 +1083,8 @@ def run_campaign(declaration_path):
             import shutil
             if shutil.disk_usage(root).free<20*1024**3:
                 raise RuntimeError('free disk below20GiB margin; no artifact deletion')
-            spec=(resume_round_spec(d) if i==1 and d.get('engineering_recovery') is not None else round_spec(d,previous,i));rd=Path(spec['output']);status('running',current_round=i,current_stage='full_loop')
+            recovering=d.get('engineering_recovery') is not None and i==d['engineering_recovery'].get('round_index',1)
+            spec=(resume_round_spec(d) if recovering else round_spec(d,previous,i));rd=Path(spec['output']);status('running',current_round=i,current_stage='full_loop')
             atomic_json(root/'ACTIVE_RUN.json',dict(name=root.name,execution=str(rd/'status.json'),lineage=str(root/'status.json')))
             p=spawn(f'round_{i:04d}',[py,str(repo/'JIT/cli/run_teacher_recovery_campaign.py'),'round','--spec',str(rd/'production.json')])
             active=p
