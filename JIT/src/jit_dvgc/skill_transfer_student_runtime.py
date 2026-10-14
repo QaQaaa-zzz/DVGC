@@ -57,12 +57,16 @@ def run_student_block(config,output,recovery_inference,*,updates=2000,visit_step
     def action(actor,obs):return network.parametric_action_distribution.mode(network.policy_network.apply(pi0[0],actor,{'state':obs}))
     student_action=jax.jit(lambda s:action(student[1],s.obs['state']))
     step=jax.jit(jax.vmap(env.step));visit_trace=[]
+    from .pulse_exploration_runtime import freeze_inactive_worlds
+    alive=~states.done.astype(bool)&~states.info['success']
     atomic_json(out/'declaration.json',dict(schema='frontierbridge_S_block_v1',config=c,recovery_inference=str(recovery_inference),recovery_sha256=file_sha(recovery_inference),teachers=teachers,full_train_root_denominator=8,acquired_root_ids=[r['root_id'] for r in roots],visit_steps=visit_steps,initial_new_old_mass=[.5,.5],old_category_draw_counts=[3,2,2],teacher_repeats=3,student_initializer=c.get('student_initializer','pi0'),student_actor_sha256=pytree_sha256(student[1]),fresh_BC_optimizer=True,updates=updates,final_TEST_opened=False,automatic_adoption=False))
     for tick in range(visit_steps):
-        a=student_action(states);visit_trace.append(dict(observation=np.asarray(states.obs['state']),action=np.asarray(a),qpos=np.asarray(states.data.qpos)))
-        states=step(states,a);jax.block_until_ready(states)
+        a=jp.where(alive[:,None],student_action(states),0)
+        visit_trace.append(dict(observation=np.asarray(states.obs['state']),action=np.asarray(a),qpos=np.asarray(states.data.qpos),mask=np.asarray(alive)))
+        following=step(states,a);states=freeze_inactive_worlds(following,states,alive)
+        alive=alive&~states.done.astype(bool)&~states.info['success'];jax.block_until_ready(states)
         atomic_json(out/'status.json',dict(stage='S_visitation',state='running',completed_control_steps=tick+1,declared_control_steps=visit_steps))
-    np.savez(out/'student_visitation.npz',observations=np.stack([r['observation'] for r in visit_trace]) if visit_trace else np.asarray(states.obs['state'])[None],actions=np.stack([r['action'] for r in visit_trace]) if visit_trace else np.empty((0,len(indices),4)),qpos=np.stack([r['qpos'] for r in visit_trace]) if visit_trace else np.asarray(states.data.qpos)[None])
+    np.savez(out/'student_visitation.npz',observations=np.stack([r['observation'] for r in visit_trace]) if visit_trace else np.asarray(states.obs['state'])[None],actions=np.stack([r['action'] for r in visit_trace]) if visit_trace else np.empty((0,len(indices),4)),qpos=np.stack([r['qpos'] for r in visit_trace]) if visit_trace else np.asarray(states.data.qpos)[None],mask=np.stack([r['mask'] for r in visit_trace]) if visit_trace else np.empty((0,len(indices)),bool))
     queries=[];query_states=[]
     groups=['old_nominal','old_random','old_recovery','new_recovery']
     for lane,((group,index),poolindex) in enumerate(zip(choices,indices)):
