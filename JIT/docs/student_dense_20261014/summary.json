@@ -1,0 +1,50 @@
+{
+  "TRAIN": {
+    "pi0": 0,
+    "R_BC": 7,
+    "S3": 5,
+    "S4": 6
+  },
+  "TRAIN_denominator": 8,
+  "old_retention": {
+    "baseline_unqualified": 14,
+    "old_stable_baseline": 19,
+    "retained": 14,
+    "unresolved": 2,
+    "lost": 3,
+    "DEV_success": 2
+  },
+  "label_count": 314,
+  "group_counts": {
+    "new_recovery": 158,
+    "old_nominal": 58,
+    "old_random": 41,
+    "old_recovery": 57
+  },
+  "chosen_teachers": {
+    "R": 109,
+    "pi0": 205
+  },
+  "queries": 392,
+  "abstentions": 78,
+  "queried_phase_counts": {
+    "0": 364,
+    "1": 28
+  },
+  "labeled_phase_counts": {
+    "0": 291,
+    "1": 23
+  },
+  "unique_contexts": 392,
+  "known_teacher_charged": 197344,
+  "interrupted_block_unknown_reserved": 33600,
+  "student_live_visitation_transitions": 2408,
+  "BC_updates": 2000,
+  "added_R_PPO_steps": 0,
+  "previous_S1_S2_S3_labels_reused": 0,
+  "finish_phase_seconds": 358.41108870506287,
+  "approximate_total_wall_seconds": 3409.487313747406,
+  "terminal_mask_audit": "no resurrection; inactive observations/qpos frozen in all saved visitation traces",
+  "final_TEST_opened": false,
+  "adopted": false
+}

@@ -1,0 +1,56 @@
+{
+  "config_sha256": "953b05e2dac7ccd1b5617a17eb42b274664d18f8745922fd7a7296c0983eea8d",
+  "query_code_commit": "38c28d10",
+  "process_isolation_commit": "d8521e11",
+  "parent_student": {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/S_online_dagger004/learner/update_2000.pkl",
+    "sha256": "ab0be72ef9bc977fe613cd0ed3941b6239f55ee58845fc603ea732dc271dbebd"
+  },
+  "R_teacher": {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_skill_transfer_20261014/R1_all/learner/update_2000.pkl",
+    "sha256": "0a425586d091189d1d65593dbb919abc44f3ddb45991171ce215a19a7c968b0c"
+  },
+  "final_checkpoint": {
+    "path": "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_student_dense_20261014/learner/update_2000.pkl",
+    "sha256": "1405bc020dbdba357c57d4223aa143a62a9681ab1767ea2bbab622783ecaa04e"
+  },
+  "bank_receipt_sha256": "0de651c8e98dde9e2403b615abf51b349cb626fff0bfbcb4f737eea7c533d187",
+  "teacher_identities": {
+    "R": {
+      "actor_sha256": "b2aff9473a2e8cea891027cce01e0dcb04efd7ffb04b717778b75f3d683bcd21",
+      "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86"
+    },
+    "pi0": {
+      "actor_sha256": "a06acbc81aead7120a291cf82359189bff36ccfecde132615ae0f264ee3126e8",
+      "normalizer_sha256": "db84aad7750991d6b720e9f065ed7e49f862893c7753f9839c593d7951b6ea86"
+    }
+  },
+  "late_query_run": {
+    "declaration": {
+      "positions": [
+        24,
+        40,
+        80,
+        120,
+        200,
+        320
+      ],
+      "old_offsets": [
+        0,
+        14
+      ],
+      "blocks": 12,
+      "student_initializer": "frozen S3; same as preceding dense query collection",
+      "teacher_transition_ceiling": 403200,
+      "student_visitation_ceiling": 21952,
+      "student_updates": 0,
+      "R_PPO_steps": 0,
+      "final_TEST_opened": false,
+      "adopted": false,
+      "code_commit": "d8521e11",
+      "reason": "User requests actual early/middle/late supervision coverage, no additional training"
+    },
+    "config_sha256": "953b05e2dac7ccd1b5617a17eb42b274664d18f8745922fd7a7296c0983eea8d",
+    "runner_sha256": "5de22fe940f87e22d496a17396e515e2db337d1401a80aead6992f68e8ee2f80"
+  }
+}

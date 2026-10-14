@@ -12,3 +12,13 @@ Maximum teacher charged work four*seven*14*two*three*400=940800 transitions; vis
 Merge only audited newly queried labels under identical teachers; quarantine observable conflicts, balance new/old and old categories, then one Actor-only BC2000 review stage with fresh declared Adam from S3. All checkpoints/Adam/RNG preserved. Evaluate original eight TRAIN roots plus the36-condition old/teacher-verified DEV panel; final TEST unopened. No automatic extension.
 
 Implementation also fixes query outcome audit to retain timeouts/conflicting endpoint flags as unresolved rather than negative; legacy outcome path remains opt-in compatible. Query namespaces prevent cross-batch receipt collisions.
+
+## Latest user steering: audit teaching data before more training
+
+The declared BC2000 stage completed before the latest user message. Do not add R PPO or S optimization stages. Preserve the completed S4 result and report the same19-condition old-positive denominator, including each loss and unresolved case.
+
+Only extend the query dataset: freeze the same S3 Actor and teachers; two offsets0/14 × positions24/40/80/120/200/320, twelve fresh-process query-only blocks. Maximum403200 teacher transitions,21952 scheduled student lane-steps; zero S updates and zero R PPO. Save empty terminal blocks, branch abstentions and observable conflicts. Never manufacture labels after success/failure termination. Late labels remain separate, not automatically merged or trained.
+
+Audit actual selected pi0 labels per old root, phase/time coverage and saved terminal masks. Existing early data uses314 labels (316 verified minus2 same-observation conflicts); it does not reuse the old26-label banks. Historical visitation lacks a complete termination chain, so historical termination safety remains UNKNOWN; S3 initialization still inherits its historical learning. A corrected replay does not isolate a causal effect of the terminal fix.
+
+Completed runs, exact identities, XY trajectories and per-case retention are published compactly in `JIT/docs/student_dense_20261014/`. Full weights, learner state, simulator contexts and raw failures stay in the original run directories. Scientific gates record only; no adoption/final TEST.
