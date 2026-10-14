@@ -52,5 +52,79 @@
     },
     "config_sha256": "953b05e2dac7ccd1b5617a17eb42b274664d18f8745922fd7a7296c0983eea8d",
     "runner_sha256": "5de22fe940f87e22d496a17396e515e2db337d1401a80aead6992f68e8ee2f80"
+  },
+  "S4_actual_query_20261015": {
+    "primary": {
+      "experiment_id": "frontierbridge_S4_query_coverage_20261015",
+      "recorded_at": "2026-10-15 Asia/Shanghai",
+      "question": "Actual S4 recoverable windows and missing pi0 old-root labels",
+      "code_commit": "4af40d15d4317e5711329e9bf0c49e150b99ed3f",
+      "config_sha256": "f4f4491a5a063fcfeab5e4453c0e7628d092fd575407ca0923918bb25ff16901",
+      "runner_sha256": "db0a35ee92fabf945feee92d6b5323c09b65001eac2fd9ee4d0f0f83faeace97",
+      "student": {
+        "path": "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_student_dense_20261014/learner/update_2000.pkl",
+        "sha256": "1405bc020dbdba357c57d4223aa143a62a9681ab1767ea2bbab622783ecaa04e"
+      },
+      "frozen_teachers": [
+        "pi0",
+        "R1_BC"
+      ],
+      "positions": [
+        0,
+        8,
+        16,
+        24,
+        40
+      ],
+      "old_offsets": [
+        7,
+        21
+      ],
+      "blocks": 10,
+      "teacher_transition_ceiling": 336000,
+      "student_visitation_ceiling": 2464,
+      "student_updates": 0,
+      "R_PPO_steps": 0,
+      "final_TEST_opened": false,
+      "adopted": false,
+      "split": "TRAIN_only",
+      "repeat_semantics": "3 numerical stability repeats; not independent training seeds",
+      "execution": "teacher-free frozen S4 visitation; two complete independent teacher branches; record abstentions/conflicts and empty terminal blocks",
+      "reuse_policy": "no old query labels merged; no training",
+      "initialization": "frozen inference only; no optimizer/critic updates",
+      "optimizations": "existing14-lane vmap GPU entry; fresh process per query block; existing shared JAX disk cache; no unadopted acceleration branch"
+    },
+    "refinement": {
+      "reason": "Measured root26/30 teacher rescue disappears before step8; random_complete is not a pi0-success pool",
+      "parent_run": "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_S4_query_coverage_20261015",
+      "positions": [
+        1,
+        2,
+        4
+      ],
+      "old_offsets": [
+        28
+      ],
+      "blocks": 3,
+      "student": {
+        "path": "/home/qy/DVGC/JIT/runs/experiments/frontierbridge_student_dense_20261014/learner/update_2000.pkl",
+        "sha256": "1405bc020dbdba357c57d4223aa143a62a9681ab1767ea2bbab622783ecaa04e"
+      },
+      "code_commit": "4af40d15d4317e5711329e9bf0c49e150b99ed3f",
+      "runner_sha256": "d0574fd51ebc6f7b97fd7c6c73d4915c048a38a51e3060cf454b2fc5ff80c00e",
+      "teacher_transition_ceiling": 100800,
+      "aggregate_teacher_ceiling_including_parent": 336000,
+      "student_visitation_ceiling": 98,
+      "new_success_witness_ancestors": [
+        "TRAIN_KEEP-1010257101-10",
+        "TRAIN_KEEP-1010257101-11"
+      ],
+      "student_updates": 0,
+      "R_PPO_steps": 0,
+      "final_TEST_opened": false,
+      "adopted": false,
+      "budget_gate": "parent completed known charge +100800 <=336000 before any new physics"
+    },
+    "report_runner_sha256": "352b9e7eb311ea69b5294f9296824d21580ec5b1fce2d4092ece2a815ea21523"
   }
 }

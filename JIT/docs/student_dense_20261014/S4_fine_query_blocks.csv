@@ -1,0 +1,4 @@
+block,visit_step,queries,labels,inactive_trace_steps,known_teacher_charged
+batch00_step001,1,14,14,0,6300
+batch00_step002,2,14,14,0,6972
+batch00_step004,4,14,12,0,6552

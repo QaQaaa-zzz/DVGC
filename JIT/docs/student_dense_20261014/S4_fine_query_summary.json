@@ -1,0 +1,74 @@
+{
+  "status": {
+    "R_PPO_steps": 0,
+    "adopted": false,
+    "completed_blocks": 3,
+    "declared_blocks": 3,
+    "final_TEST_opened": false,
+    "known_teacher_charged": 19824,
+    "phase": "completed",
+    "student_updates": 0,
+    "updated_unix": 1792018682.7187102,
+    "wall_seconds": 133.65285539627075
+  },
+  "blocks": [
+    {
+      "block": "batch00_step001",
+      "visit_step": 1,
+      "queries": 14,
+      "labels": 14,
+      "inactive_trace_steps": 0,
+      "known_teacher_charged": 6300
+    },
+    {
+      "block": "batch00_step002",
+      "visit_step": 2,
+      "queries": 14,
+      "labels": 14,
+      "inactive_trace_steps": 0,
+      "known_teacher_charged": 6972
+    },
+    {
+      "block": "batch00_step004",
+      "visit_step": 4,
+      "queries": 14,
+      "labels": 12,
+      "inactive_trace_steps": 0,
+      "known_teacher_charged": 6552
+    }
+  ],
+  "queries": 42,
+  "verified_labels": 40,
+  "query_phase_counts": {
+    "0": 42
+  },
+  "label_phase_counts": {
+    "0": 40
+  },
+  "label_groups": {
+    "new_recovery": 20,
+    "old_random": 8,
+    "old_recovery": 6,
+    "old_nominal": 6
+  },
+  "chosen_teachers": {
+    "pi0": 24,
+    "R": 16
+  },
+  "branch_classes": {
+    "both_success": 15,
+    "R_only": 16,
+    "pi0_only": 9,
+    "both_failure": 1,
+    "unresolved": 1
+  },
+  "inactive_trace_steps_audited": 0,
+  "live_visitation_steps": 98,
+  "terminal_freeze_audit": "no resurrection; exact frozen inactive observations/qpos",
+  "terminal_cause_limitation": "mask combines success and done; saved visitation NPZ cannot separately count completed success and failure",
+  "student_updates": 0,
+  "R_PPO_steps": 0,
+  "labels_merged_into_training": false,
+  "final_TEST_opened": false,
+  "adopted": false
+}
