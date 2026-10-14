@@ -18,18 +18,20 @@ def run_dense(config,output):
     from .retention_consolidation_runtime import Evaluator,evaluation_reservation
     c=json.loads(Path(config).read_text());audit(c)
     root=Path(output);root.mkdir(parents=True,exist_ok=True)
-    if (root/'dense_status.json').exists():raise FileExistsError('dense run already exists')
+    completed=c.get('completed_query_banks')
+    if (root/'dense_status.json').exists() and not completed:raise FileExistsError('dense run already exists')
+    if completed and len(completed)!=28:raise ValueError('all28 complete query blocks required')
     for key in ('student_initializer','recovery_inference','retention_panel'):
         if file_sha(c[key]['path'])!=c[key]['sha256']:raise ValueError('dense input identity drift: '+key)
-    positions=(0,1,2,4,8,12,16);banks=[];started=time.time()
+    positions=(0,1,2,4,8,12,16);banks=[Path(p) for p in completed] if completed else [];started=time.time()
     query_writer=SummaryWriter(str(root/'tensorboard'))
     charged=0
-    atomic_json(root/'declaration.json',dict(config=c,positions=list(positions),batches=4,
+    atomic_json(root/('finish_declaration.json' if completed else 'declaration.json'),dict(config=c,positions=list(positions),batches=4,
         teacher_transition_ceiling=940800,visitation_transition_ceiling=2408,BC_updates=2000,
         final_TEST_opened=False,automatic_adoption=False))
     def status(phase,**kw):atomic_json(root/'dense_status.json',dict(phase=phase,updated_unix=time.time(),**kw))
     try:
-        for batch in range(4):
+        for batch in (() if completed else range(4)):
             for position in positions:
                 name=f'batch{batch:02d}_step{position:02d}';child=dict(c)
                 child.update(student_initializer=c['student_initializer']['path'],student_old_offset=batch*7,
