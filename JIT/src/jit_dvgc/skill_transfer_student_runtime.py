@@ -5,6 +5,16 @@ import numpy as np
 from .generative_bridge.contracts import digest,file_sha
 from .generative_bridge.protocol import atomic_json
 
+def student_visit_choices(root_count, old_offset=0):
+    if type(root_count) is not int or root_count<=0 or type(old_offset) is not int or old_offset<0:
+        raise ValueError('positive root count and nonnegative old offset required')
+    return [(3,i) for i in range(root_count)]+[((i+old_offset)%3,(i+old_offset)//3) for i in range(root_count)]
+
+def strict_branch_labels(*, success, bad, failure, timeout, done):
+    success,bad,failure,timeout,done=[np.asarray(a,bool) for a in (success,bad,failure,timeout,done)]
+    if len({a.shape for a in (success,bad,failure,timeout,done)})!=1:raise ValueError('unaligned branch flags')
+    return np.where(bad,-1,np.where(success&failure,-3,np.where(timeout|~done,-2,success.astype(int))))
+
 def run_student_block(config,output,recovery_inference,*,updates=2000,visit_steps=4,seed=0):
     if type(visit_steps) is not int or not 0<=visit_steps<400:raise ValueError('bounded predeclared visitation steps required')
     import jax,jax.numpy as jp
@@ -47,7 +57,7 @@ def run_student_block(config,output,recovery_inference,*,updates=2000,visit_step
     adapter=FourPoolReset(env,inv)
     # Initial visitation is exactly half new / half old. Category balancing is
     # explicit in labels; finite seven-old draw uses 3/2/2 counts.
-    choices=[(3,i) for i in range(len(roots))]+[(i%3,i//3) for i in range(len(roots))]
+    choices=student_visit_choices(len(roots),c.get('student_old_offset',0))
     indices=[int(adapter.starts[g])+i%int(adapter.lengths[g]) for g,i in choices]
     states=prepare_parallel_worlds(stack_worlds([take_world(adapter.pool,i) for i in indices]),env,len(indices))
     # The pool's administrative metric is not emitted by the native env step.
@@ -59,7 +69,7 @@ def run_student_block(config,output,recovery_inference,*,updates=2000,visit_step
     step=jax.jit(jax.vmap(env.step));visit_trace=[]
     from .pulse_exploration_runtime import freeze_inactive_worlds
     alive=~states.done.astype(bool)&~states.info['success']
-    atomic_json(out/'declaration.json',dict(schema='frontierbridge_S_block_v1',config=c,recovery_inference=str(recovery_inference),recovery_sha256=file_sha(recovery_inference),teachers=teachers,full_train_root_denominator=8,acquired_root_ids=[r['root_id'] for r in roots],visit_steps=visit_steps,initial_new_old_mass=[.5,.5],old_category_draw_counts=[3,2,2],teacher_repeats=3,student_initializer=c.get('student_initializer','pi0'),student_actor_sha256=pytree_sha256(student[1]),fresh_BC_optimizer=True,updates=updates,final_TEST_opened=False,automatic_adoption=False))
+    atomic_json(out/'declaration.json',dict(schema='frontierbridge_S_block_v1',config=c,recovery_inference=str(recovery_inference),recovery_sha256=file_sha(recovery_inference),teachers=teachers,full_train_root_denominator=8,acquired_root_ids=[r['root_id'] for r in roots],visit_steps=visit_steps,initial_new_old_mass=[.5,.5],old_category_draw_counts=np.bincount([g for g,i in choices],minlength=4)[:3].tolist(),teacher_repeats=3,student_initializer=c.get('student_initializer','pi0'),student_actor_sha256=pytree_sha256(student[1]),fresh_BC_optimizer=True,updates=updates,final_TEST_opened=False,automatic_adoption=False))
     for tick in range(visit_steps):
         a=jp.where(alive[:,None],student_action(states),0)
         visit_trace.append(dict(observation=np.asarray(states.obs['state']),action=np.asarray(a),qpos=np.asarray(states.data.qpos),mask=np.asarray(alive)))
@@ -74,14 +84,21 @@ def run_student_block(config,output,recovery_inference,*,updates=2000,visit_step
         if bool(s.done) or bool(s.info['success']):continue
         if not np.isfinite(np.asarray(s.obs['state'])).all():raise FloatingPointError('nonfinite student visit')
         entry=adapter.entries[poolindex];root=roots[index]['root_id'] if group==3 else str(entry['ancestor'])
-        sample=f'query_{lane:03d}_step{visit_steps:03d}'
+        namespace=c.get('query_namespace','')
+        if namespace and not all(x.isalnum() or x=='_' for x in namespace):raise ValueError('unsafe query namespace')
+        sample=f'{namespace}query_{lane:03d}_step{visit_steps:03d}'
         snap=capture_unified_envelope_snapshot(s,env=env,parent_trajectory=str(out/'student_visitation.npz'),parent_state_sha256=file_sha(out/'student_visitation.npz'),config_sha256=c['runtime_config']['sha256'],policy_actor_sha256=pytree_sha256(student[1]),policy_payload_sha256=file_sha(c['student_initializer']) if c.get('student_initializer') else policy['payload_sha256'],policy_iteration=policy['iteration'],capture_recovery_context=True)
         dest=out/'contexts'/sample;save_unified_envelope_snapshot(dest,snap)
         # Receipt binds every serialized full-context file, not merely qpos.
         receipt=dest/'query_context.json';atomic_json(receipt,dict(files=[dict(path=str(p),sha256=file_sha(p)) for p in sorted(dest.iterdir()) if p.is_file()],episode_step=snap.episode_step,time=snap.snapshot_time))
         q=dict(sample_id=sample,root_id=root,ancestor_root_id=str(entry['ancestor']),student_actor_sha256=pytree_sha256(student[1]),context_sha256=file_sha(receipt),context_receipt=dict(path=str(receipt),sha256=file_sha(receipt)),split='TRAIN',source_type='student_visited_query',student_closed_loop=True,teacher_used_as_driver=False,task_group=groups[group],time_before=snap.snapshot_time,remaining_horizon=400-snap.episode_step,control_step=snap.episode_step,model_sha256=policy['xml_sha256'],protocol_sha256=sources[0][0]['protocol_sha256'],timestamp=time.strftime('%Y-%m-%dT%H:%M:%S'),observation_before=np.asarray(s.obs['state']).tolist())
         queries.append(q);query_states.append(s)
-    if not queries:raise RuntimeError('no nonterminal S visited queries')
+    if not queries:
+        if updates==0 and c.get('allow_empty_queries',False):
+            atomic_json(out/'labels.json',dict(schema=SCHEMA,teachers=teachers,labels=[]))
+            atomic_json(out/'status.json',dict(stage='S_queries',state='completed',total_queries=0,labeled_queries=0,reason='all_visited_lanes_terminal'))
+            return None
+        raise RuntimeError('no nonterminal S visited queries')
     count=len(queries);initial=prepare_parallel_worlds(stack_worlds(query_states+query_states),env,2*count)
     maxh=max(q['remaining_horizon'] for q in queries);limits=jp.asarray([q['remaining_horizon'] for q in queries]*2)
     def branch_action(state):
@@ -103,14 +120,17 @@ def run_student_block(config,output,recovery_inference,*,updates=2000,visit_step
     for repeat in range(3):
         atomic_json(out/'status.json',dict(stage='S_teacher_queries',state='running',repeat=repeat,queries=count,charged_interactions=cost))
         tick,final,alive,bad,success,counts=run(initial);jax.block_until_ready(final)
-        labels=np.where(np.asarray(bad),-1,np.asarray(success).astype(int));repeat_labels.append(labels.tolist());cost+=int(tick)*2*count
-        np.savez(out/f'branches_repeat{repeat}.npz',labels=labels,counts=np.asarray(counts),final_qpos=np.asarray(final.data.qpos),final_qvel=np.asarray(final.data.qvel),final_observation=np.asarray(final.obs['state']),initial_action=first)
+        failure=np.asarray(final.info['physical_failure']);timeout=np.asarray(final.info['timeout']);done=np.asarray(final.done,bool)
+        labels=(strict_branch_labels(success=success,bad=bad,failure=failure,timeout=timeout,done=done)
+            if c.get('strict_query_outcomes',False) else np.where(np.asarray(bad),-1,np.asarray(success).astype(int)))
+        repeat_labels.append(labels.tolist());cost+=int(tick)*2*count
+        np.savez(out/f'branches_repeat{repeat}.npz',labels=labels,counts=np.asarray(counts),final_qpos=np.asarray(final.data.qpos),final_qvel=np.asarray(final.data.qvel),final_observation=np.asarray(final.obs['state']),initial_action=first,physical_failure=failure,timeout=timeout,done=done)
     labels=[];outcomes=[]
     for i,q in enumerate(queries):
         refs={}
         for name,offset in [('pi0',0),('R',count)]:
             record={k:q[k] for k in ('context_sha256','root_id','ancestor_root_id','split','time_before','remaining_horizon','model_sha256','protocol_sha256','control_step')};raw=[r[i+offset] for r in repeat_labels]
-            record.update(teacher=name,execution_mode='independent_frozen_teacher',success_criterion='stable_forward_recovery',observation_sha256=digest(q['observation_before']),repeat_labels=['execution_error' if v<0 else v for v in raw],normalized_action=first[i+offset].tolist(),**teachers[name])
+            record.update(teacher=name,execution_mode='independent_frozen_teacher',success_criterion='stable_forward_recovery',observation_sha256=digest(q['observation_before']),repeat_labels=[{-1:'execution_error',-2:'timeout',-3:'unknown'}.get(v,v) for v in raw],normalized_action=first[i+offset].tolist(),**teachers[name])
             p=out/'branches'/f'{q["sample_id"]}_{name}.json';p.parent.mkdir(exist_ok=True);atomic_json(p,record);refs[name]=dict(path=str(p),sha256=file_sha(p))
         label=label_verified_query(q,refs,teachers)
         outcomes.append(dict(query=q,branch_receipts=refs,labeled=label is not None))
@@ -118,7 +138,11 @@ def run_student_block(config,output,recovery_inference,*,updates=2000,visit_step
     conflicts=observation_conflicts(labels);excluded={s for row in conflicts for s in row['sample_ids']};labels=[r for r in labels if r['sample_id'] not in excluded]
     atomic_json(out/'query_receipts.json',dict(queries=outcomes,conflicts=conflicts,total_queries=count,labeled_queries=len(labels),charged_interactions=cost,student_visitation_interactions=len(indices)*visit_steps))
     atomic_json(out/'labels.json',dict(schema=SCHEMA,teachers=teachers,labels=labels))
-    if not labels:raise RuntimeError('all teacher query outcomes abstained; preserved raw evidence')
+    if not labels:
+        if updates==0 and c.get('allow_empty_queries',False):
+            atomic_json(out/'status.json',dict(stage='S_queries',state='completed',total_queries=count,labeled_queries=0,reason='all_queries_abstained'))
+            return None
+        raise RuntimeError('all teacher query outcomes abstained; preserved raw evidence')
     weights=consolidation_weights(labels);path=out/'online_labels.npz';np.savez(path,observations=np.asarray([r['observation_before'] for r in labels],np.float32),actions=np.asarray([r['target_action'] for r in labels],np.float32),weights=weights)
     manifest=dict(schema=SCHEMA,path=str(path),sha256=file_sha(path),count=len(labels),sample_roots=[r['root_id'] for r in labels],sample_origins=['student_visited_query']*len(labels),sampling_weights=weights.tolist(),label_receipt=dict(path=str(out/'labels.json'),sha256=file_sha(out/'labels.json')));atomic_json(out/'online_manifest.json',manifest)
     if c.get('previous_online_banks'):
@@ -128,6 +152,10 @@ def run_student_block(config,output,recovery_inference,*,updates=2000,visit_step
             if file_sha(ref['path'])!=ref['sha256']:raise ValueError('past queried bank changed')
             previous.append(ref['path'])
         manifest=merge_verified_labels(previous+[str(out/'labels.json')],out/'aggregate')
+    if updates==0 and c.get('query_only',False):
+        atomic_json(out/'status.json',dict(stage='S_queries',state='completed',total_queries=count,
+            labeled_queries=len(labels),charged_interactions=cost,optimizer_updates=0))
+        return str(out/'online_manifest.json')
     writer=SummaryWriter(str(out/'tensorboard'))
     def metrics(row):
         writer.add_scalar('S_BC/loss',row['loss'],row['update']);writer.add_scalar('S_BC/supervised_reward',-row['loss'],row['update']);writer.flush()

@@ -58,3 +58,5 @@ Do not open final TEST. TRAIN adaptation and development ACCEPTANCE are not fina
 - 七策略评估失败后使用 `run_seven_policy_phase_u.py prepare-resume --previous <旧实验根> --output <新尝试目录> --execution-repository <修复代码快照>`，再对新spec执行run。复用身份锁定的已完成训练和成员批次；不重新训练，不修改旧失败日志。重试物理成本单列并计入总成本。full_episode达到采样上限保留真实terminal=false，记录horizon_exhausted，不创建探索接续快照。
 
 Shared research rules: read `/home/qy/STTW_CONTROL/research-hub/AGENTS.md` and canonical `/home/qy/STTW_CONTROL/research-hub/PROJECT_STATE.md`; update under `.write.lock`.
+
+Dense-student continuation: read /home/qy/STTW_CONTROL/research-hub/AGENTS.md and /home/qy/STTW_CONTROL/research-hub/PROJECT_STATE.md before work; parent experiment c5e43d78 remains frozen. No STTW edits/runs in this task.
