@@ -39,7 +39,7 @@ for engine,folder in [('mjx','mjx_warm01966080'),('physx','physx_warm01966080')]
  snapshots[engine]=dict(indices=ids,times_s=times[ids].tolist(),qpos=q[ids].tolist(),events=['approach','takeoff','apex','touchdown','x5'],terminal_x=float(q[-1,0]),terminal_t=float(times[-1]),strict_hold_1s_completed_before_x5=bool(land['success_times']['1.0']<=times[-1]))
 (OUT/'data/snapshot_states.json').write_text(json.dumps(snapshots,indent=2))
 def lines(engine,variant):
- return dict(color=('#0072B2' if engine=='mjx' else '#D55E00') if variant=='color' else ('#1c1c1c' if engine=='mjx' else '#707070'),ls='-' if engine=='mjx' else '--',lw=1.35,label='MuJoCo/MJX' if engine=='mjx' else 'Isaac/PhysX')
+ return dict(color=('#0072B2' if engine=='mjx' else '#D55E00') if variant=='color' else ('#1c1c1c' if engine=='mjx' else '#707070'),ls='-' if engine=='mjx' else '--',lw=1.35,label='MuJoCo' if engine=='mjx' else 'Isaac')
 def finish(fig,axes,name,variant):
  axes=np.atleast_1d(axes).ravel()
  for ax in axes:ax.grid(False);ax.tick_params(labelsize=8)
@@ -76,7 +76,7 @@ for variant in ['color','grayscale']:
   axs[0].bar(j,rate,color=kw['color'],width=.55,hatch=None if e=='mjx' else '///',label=kw['label']);axs[0].errorbar(j,rate,yerr=[[rate-ci[0]],[ci[1]-rate]],color='black',fmt='none',capsize=3,lw=.9)
   x=np.arange(4)+(-.18 if e=='mjx' else .18);rate=np.array([summary['onsets'][e][str(k)]['successes']/2.5 for k in [0,5,10,15]])
   axs[1].bar(x,rate,width=.34,color=kw['color'],hatch=None if e=='mjx' else '///',label=kw['label'])
- axs[0].set(xticks=[0,1],xticklabels=['MuJoCo/MJX','Isaac/PhysX'],ylabel='Success rate (%)',ylim=(0,40))
+ axs[0].set(xticks=[0,1],xticklabels=['MuJoCo','Isaac'],ylabel='Success rate (%)',ylim=(0,40))
  axs[1].set(xticks=np.arange(4),xticklabels=[0,5,10,15],xlabel='Pulse onset (control steps)',ylabel='Success rate (%)',ylim=(0,40))
  finish(fig,axs,'06_robustness',variant)
 import sys

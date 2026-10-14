@@ -1,4 +1,4 @@
-"""Five logged poses rendered in a level Isaac RTX view, without dynamics."""
+"""Target logged poses rendered in native Isaac RTX, without dynamics."""
 import os,json,sys
 from pathlib import Path
 os.environ.update(OMNI_KIT_ACCEPT_EULA='YES',OPENBLAS_NUM_THREADS='1')
@@ -17,6 +17,8 @@ from scene_visuals import enhance
 from PIL import Image,ImageDraw,ImageFont
 world=World(physics_dt=.005,rendering_dt=.02);world.get_physics_context().enable_fabric(False)
 stage=omni.usd.get_context().get_stage();m,_=build(stage,ROOT/'model/source.xml');enhance(stage,m)
+from publication_knee_visual import stretch_isaac_visual
+knee_audit=stretch_isaac_visual(stage,m)
 UsdLux.DomeLight.Define(stage,'/World/Light').CreateIntensityAttr(1200)
 robot=world.scene.add(SingleArticulation('/World/Bike',name='bike'));world.reset()
 camera=Camera('/World/Camera',frequency=-1,resolution=(1800,750));camera.initialize();camera.set_focal_length(3.0)
@@ -29,7 +31,7 @@ def paint(root,rgb):
  mat=UsdShade.Material.Define(stage,root+'_material');shader=UsdShade.Shader.Define(stage,root+'_material/shader');shader.CreateIdAttr('UsdPreviewSurface');shader.CreateInput('diffuseColor',Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(*rgb));shader.CreateInput('roughness',Sdf.ValueTypeNames.Float).Set(.8)
  mat.CreateSurfaceOutput().ConnectToSource(shader.ConnectableAPI(),'surface');UsdShade.MaterialBindingAPI.Apply(stage.GetPrimAtPath(root)).Bind(mat,UsdShade.Tokens.strongerThanDescendants)
 try:
- for engine in ['mjx','physx']:
+ for engine in ['physx']:
   # Hide prior row's ghosts, build canonical bodies at actual recorded qpos.
   for root in ghost_roots:UsdGeom.Imageable(stage.GetPrimAtPath(root)).MakeInvisible()
   ghosts=[]
@@ -62,7 +64,7 @@ try:
   camera.set_resolution((1800,750));set_camera_view(eye=[3.3,-7.2,.55],target=[3.3,0,.55],camera_prim_path='/World/Camera')
   print('RENDERED',engine,flush=True)
  assert not events
- (OUT/'renders/verification.json').write_text(json.dumps(dict(physics_steps=0,max_root_replay_error_m=max_error,pose_edits=False,cutoff='first sample rootx>=5m',source_states=str(OUT/'data/snapshot_states.json'),camera_eye=[3.3,-7.2,.55],camera_target=[3.3,0,.55],ground_visible=True),indent=2))
+ (OUT/'renders/verification.json').write_text(json.dumps(dict(physics_steps=0,max_root_replay_error_m=max_error,pose_edits=False,cutoff='first sample rootx>=5m',source_states=str(OUT/'data/snapshot_states.json'),camera_eye=[3.3,-7.2,.55],camera_target=[3.3,0,.55],ground_visible=True,renderer='Isaac native RTX',knee_visual=knee_audit),indent=2))
 except Exception:
  import traceback
  (OUT/'renders/error.log').write_text(traceback.format_exc());raise

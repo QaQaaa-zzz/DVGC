@@ -40,6 +40,19 @@ for e,folder,n in [('mjx','mjx_warm01966080',88),('physx','physx_warm01966080',1
 original=list(csv.DictReader((STRESS/'episodes.csv').open()));copied=list(csv.DictReader((OUT/'data/stress_episodes_full_window.csv').open()));assert original==copied and len(copied)==2000
 rv=load(OUT/'renders/verification.json');assert rv['physics_steps']==0 and not rv['pose_edits'] and rv['max_root_replay_error_m']<1e-6
 assert rv['camera_eye'][2]==rv['camera_target'][2]
+mv=load(OUT/'renders/mujoco_verification.json')
+assert mv['renderer']=='MuJoCo native OpenGL EGL' and rv['renderer']=='Isaac native RTX'
+assert mv['physics_steps']==0 and not mv['pose_edits'] and mv['camera_elevation_deg']==0
+for audit in [mv['knee_visual'],rv['knee_visual']]:
+ assert audit['physical_properties_unchanged'] and abs(audit['stretch_factor']-1.3457943575866018)<1e-7
+ assert abs(audit['mesh_end_after_m']-audit['knee_anchor_z_m'])<1e-8
+report['native_renderers']=['MuJoCo OpenGL EGL','Isaac RTX'];report['knee_stretch_factor']=mv['knee_visual']['stretch_factor']
+for p in (OUT/'figures').glob('*.svg'):
+ import xml.etree.ElementTree as ET
+ labels=' '.join(''.join(e.itertext()) for e in ET.parse(p).getroot().iter() if e.tag.endswith('}text'))
+ assert 'MJX' not in labels and 'PhysX' not in labels
+for p in (OUT/'text').glob('captions.*'):
+ assert 'MJX' not in p.read_text() and 'PhysX' not in p.read_text()
 for p in (OUT/'figures').glob('*.png'):
  with Image.open(p) as im:im.load();assert im.width>=1000
  for ext in ['pdf','svg']:assert p.with_suffix('.'+ext).stat().st_size>1000
