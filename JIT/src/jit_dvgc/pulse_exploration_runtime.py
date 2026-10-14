@@ -6,6 +6,7 @@ import numpy as np
 from .exploration_loop import read, write
 from .probe_bank import load_probe_bank, _file_sha
 from .evidence_integrity import canonical_sha256
+from .preserved_snapshot_restore import restore_preserved_snapshot_rows
 from .pulse_schedule import (controller_mode, selected_event, event_ready,
     pulse_activity, descent_clearance, lane_onsets, collection_steps,
     initial_velocity_randomization, sample_initial_velocity_noise)
@@ -567,29 +568,24 @@ def evaluate(spec, output, *, session=None):
             env._training_action_pulse = None
         env._reward_mode=spec.get('reward_mode',getattr(env,'_reward_mode','phase_recovery'))
         restore_wall=time.time()
-        restored=[]
-        for r in subset:
-            snap=load_unified_envelope_snapshot(Path(r['snapshot']))
-            if snapshot_context_sha256(snap)!=r['snapshot_context_sha256']:raise ValueError('suffix snapshot identity changed')
-            if spec.get('preserve_snapshot_episode_context'):
-                from .unified_envelope_snapshot import restore_unified_envelope_snapshot
-                state=restore_unified_envelope_snapshot(snap,env)
-                if not np.array_equal(np.asarray(state.obs['state']),np.asarray(snap.observation)):
-                    raise ValueError('restored Actor observation/history differs')
-                # Snapshot schema keeps event/episode clocks but omits MuJoCo time.
-                # New retention roots bind the actual recorded post-pulse time.
-                if 'snapshot_time' not in r:raise ValueError('retention snapshot requires recorded time')
-                state=state.replace(data=state.data.replace(time=jp.asarray(r['snapshot_time'],jp.float32)))
-            else:
+        restore_receipt=None
+        if spec.get('preserve_snapshot_episode_context'):
+            restored,restore_receipt=restore_preserved_snapshot_rows(subset,env)
+        else:
+            restored=[]
+            for r in subset:
+                snap=load_unified_envelope_snapshot(Path(r['snapshot']))
+                if snapshot_context_sha256(snap)!=r['snapshot_context_sha256']:raise ValueError('suffix snapshot identity changed')
                 state=fresh_unified_continuation_start(snap,env)
-            if recovery_mode(spec) and not spec.get('preserve_snapshot_episode_context'):
-                state=state.replace(info={**state.info,'down_events':state.info['down_events'].replace(post_contact_ticks=jp.asarray(0,jp.int32),recovery_success=jp.asarray(False))})
-            restored.append(state)
+                if recovery_mode(spec):
+                    state=state.replace(info={**state.info,'down_events':state.info['down_events'].replace(post_contact_ticks=jp.asarray(0,jp.int32),recovery_success=jp.asarray(False))})
+                restored.append(state)
+            del state,snap
         count=len(restored);initial=prepare_parallel_worlds(stack_worlds(restored),env,count)
         # The stacked world now owns every required leaf; release individual worlds
         # before compiling/stepping to avoid retaining two full state representations.
         jax.block_until_ready(initial)
-        del restored,state,snap
+        del restored
         rng_count=spec.get('suffix_rng_count',count)
         rng_indices=spec.get('suffix_rng_indices',list(range(count)))
         if (type(rng_count) is not int or rng_count<count or len(rng_indices)!=count
@@ -600,7 +596,8 @@ def evaluate(spec, output, *, session=None):
         write(output/'status.json',dict(phase='running',policy=name,charged_interactions=charged,reserved_attempt_interactions=count*horizon))
         restore_ready=time.monotonic()
         record_event(os.environ.get('JIT_PERFORMANCE_FILE'),'snapshot_read_and_restore',restore_wall,
-            restore_ready-runtime_ready,backend='gpu',batch_size=count,stage=name)
+            restore_ready-runtime_ready,backend='gpu',batch_size=count,stage=name,
+            restore_receipt=restore_receipt)
         if bridge_plan is not None:
             bridge_prefixes,bridge_source_only=map(jp.asarray,bridge_plan)
             if len(subset)!=len(rows):raise ValueError('bridge requires all candidates in one frozen-policy batch')

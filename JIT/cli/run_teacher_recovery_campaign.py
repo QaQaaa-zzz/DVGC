@@ -1,6 +1,6 @@
 """Prepare or execute the explicitly approved fresh teacher-recovery100 campaign."""
 import argparse
-from jit_dvgc.generative_bridge.recovery_campaign import prepare,prepare_resume,prepare_storage_resume,prepare_evaluation_recovery,run_campaign,run_round
+from jit_dvgc.generative_bridge.recovery_campaign import prepare,prepare_resume,prepare_storage_resume,prepare_completed_resume,prepare_evaluation_recovery,run_campaign,run_round
 
 p=argparse.ArgumentParser(description=__doc__)
 sub=p.add_subparsers(dest='mode',required=True)
@@ -22,6 +22,12 @@ q=sub.add_parser('prepare-storage-resume')
 q.add_argument('--run-root',required=True)
 q.add_argument('--repository',required=True)
 q.add_argument('--port',type=int)
+q=sub.add_parser('prepare-completed-resume')
+q.add_argument('--run-root',required=True)
+q.add_argument('--repository',required=True)
+q.add_argument('--completed-round',type=int,required=True)
+q.add_argument('--engineering-receipt')
+q.add_argument('--port',type=int)
 q=sub.add_parser('run');q.add_argument('--declaration',required=True)
 q=sub.add_parser('round');q.add_argument('--spec',required=True)
 a=p.parse_args()
@@ -35,5 +41,8 @@ elif a.mode=='prepare-storage-resume':
     print(prepare_storage_resume(a.run_root,a.repository,port=a.port)['active_authorization_path'])
 elif a.mode=='prepare-evaluation-recovery':
     print(prepare_evaluation_recovery(a.previous,a.output,a.repository,port=a.port)['campaign_output'])
+elif a.mode=='prepare-completed-resume':
+    print(prepare_completed_resume(a.run_root,a.repository,completed_round=a.completed_round,port=a.port,
+        engineering_receipt=a.engineering_receipt)['active_authorization_path'])
 elif a.mode=='run':run_campaign(a.declaration)
 else:run_round(a.spec)
